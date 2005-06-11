@@ -8,8 +8,8 @@
 
 extern "C"
 {
-#include "garnet/extern/jpeglib.h"
-#include "garnet/extern/jerror.h"
+#include <jpeglib.h>
+#include <jerror.h>
 }
 #include <setjmp.h>
 

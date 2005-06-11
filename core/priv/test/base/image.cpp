@@ -1,5 +1,5 @@
 #include "../testCommon.h"
-#include "garnet/extern/png.h"
+#include <png.h>
 
 static uint8_t              gBuf[10000];
 static GN::MemFile<uint8_t> gFile(gBuf,10000,"a.png");

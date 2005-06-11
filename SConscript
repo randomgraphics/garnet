@@ -225,14 +225,14 @@ def default_env( options = None ):
     env.SConsignFile( os.path.join( 'build','.sconsign.dbm') )
 
     # 缺省编译选项
-    def generate_default_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
-    cppdefines = generate_default_options();
-    cpppath    = generate_default_options();
-    libpath    = generate_default_options();
-    libs       = generate_default_options();
-    ccflags    = generate_default_options();
-    cxxflags   = generate_default_options();
-    linkflags  = generate_default_options();
+    def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
+    cppdefines = generate_empty_options();
+    cpppath    = generate_empty_options();
+    libpath    = generate_empty_options();
+    libs       = generate_empty_options();
+    ccflags    = generate_empty_options();
+    cxxflags   = generate_empty_options();
+    linkflags  = generate_empty_options();
 
     # 定制不同平台的编译选项
     if 'win32' == env['PLATFORM']:
@@ -507,14 +507,12 @@ GN_conf.update(conf)
 
 env = default_env()
 
-env.BuildDir( build_dir, 'core' )
-target_dir = build_dir
-#target_dir = '#core'
-
-env.Append(
-    CPPPATH = ['%s/src/inc'%target_dir] + Split(GN_conf['boost_inc_path']),
+env.Prepend(
+    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':build_dir}) + Split(GN_conf['boost_inc_path']),
     LIBS    = Split(GN_conf['boost_libs']),
     )
+
+env.BuildDir( build_dir, 'core' )
 
 ################################################################################
 #
@@ -553,5 +551,4 @@ env.Export(
 #
 ################################################################################
 
-SConscript( dirs = target_dir )
-
+SConscript( dirs = [build_dir] )

@@ -8,7 +8,7 @@
 
 extern "C"
 {
-#include "garnet/extern/png.h"
+#include <png.h>
 }
 
 //! png image reader
