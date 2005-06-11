@@ -68,7 +68,7 @@
 //!
 //! Meet unexpected value
 //!
-#define GN_UNEXPECTED() GN_ASSERT_FAILURE( "Unexpected value" )
+#define GN_UNEXPECTED() GN_ASSERT_FAILURE( "Unexpected value or behaviour" )
 
 //!
 //! Unimplemented functionality
