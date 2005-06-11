@@ -33,10 +33,9 @@ namespace GN
     template<typename CHAR>
     inline int strCmp( const CHAR * s1, const CHAR * s2 )
     {
-        if ( s1 == s2 ) return true;
-
-        if ( 0 == s1 || 0 == s2 ) return false;
-
+        if ( s1 == s2 ) return 0;
+        if ( 0 == s1 ) return -1;
+        if ( 0 == s2 ) return 1;
         while( *s1 && *s2 )
         {
             if ( *s1 < *s2 ) return -1;
@@ -340,10 +339,7 @@ namespace GN
         //!
         friend bool operator == ( const CHAR * s1, const Str & s2 )
         {
-            if ( 0 == s1 ) return s2.empty();
-            size_t l1 = strLen<CHAR>(s1);
-            if ( l1 != s2.mLen ) return false;
-            return 0 == comp( s1, l1, s2.mPtr, s2.mLen );
+            return 0 == strCmp( s1, s2.mPtr );
         }
 
         //!
@@ -351,10 +347,7 @@ namespace GN
         //!
         friend bool operator == ( const Str & s1, const CHAR * s2 )
         {
-            if ( 0 == s2 ) return s1.empty();
-            size_t l2 = strLen<CHAR>(s2);
-            if ( s1.mLen != l2 ) return false;
-            return 0 == comp( s1.mPtr, s1.mLen, s2, l2 );
+            return 0 == strCmp( s1.mPtr, s2 );
         }
 
         //!
@@ -362,8 +355,7 @@ namespace GN
         //!
         friend bool operator == ( const Str & s1, const Str & s2 )
         {
-            if ( s1.mLen != s2.mLen ) return false;
-            return 0 == comp( s1.mPtr, s1.mLen, s2.mPtr, s2.mLen );
+            return 0 == strCmp( s1.mPtr, s2.mPtr ); 
         }
 
         //!
@@ -371,7 +363,7 @@ namespace GN
         //!
         friend bool operator != ( const CHAR * s1, const Str & s2 )
         {
-            return !(s1==s2);
+            return 0 != strCmp( s1, s2.mPtr ); 
         }
 
         //!
@@ -379,7 +371,7 @@ namespace GN
         //!
         friend bool operator != ( const Str & s1, const CHAR * s2 )
         {
-            return !(s1==s2);
+            return 0 != strCmp( s1.mPtr, s2 ); 
         }
 
         //!
@@ -387,8 +379,33 @@ namespace GN
         //!
         friend bool operator != ( const Str & s1, const Str & s2 )
         {
-            return !(s1==s2);
+            return 0 != strCmp( s1.mPtr, s2.mPtr ); 
         }
+
+        //!
+        //! less operator(1)
+        //!
+        friend bool operator < ( const CHAR * s1, const Str & s2 )
+        {
+            return -1 == strCmp( s1, s2.mPtr ); 
+        }
+
+        //!
+        //! less operator(2)
+        //!
+        friend bool operator < ( const Str & s1, const CHAR * s2 )
+        {
+            return -1 == strCmp( s1.mPtr, s2 ); 
+        }
+
+        //!
+        //! less operator(3)
+        //!
+        friend bool operator < ( const Str & s1, const Str & s2 )
+        {
+            return -1 == strCmp( s1.mPtr, s2.mPtr ); 
+        }
+
 
         //!
         //! concatnate operator(1)
@@ -430,23 +447,6 @@ namespace GN
             caps |= caps >> 2;
             caps |= caps >> 1;
             return caps;
-        }
-
-        static int comp( const CHAR * s1, size_t l1, const CHAR * s2, size_t l2 )
-        {
-            GN_ASSERT( s1 && s2 && l1 == l2 );
-            size_t i = 0;
-            while( l1 > 0 && l2 > 0 )
-            {
-                if ( s1[i] < s2[i] ) return -1;
-                if ( s1[i] > s2[i] ) return 1;
-                --l1;
-                --l2;
-                ++i;
-            }
-            if ( l1 < l2 ) return -1;
-            if ( l1 > l2 ) return 1;
-            return 0;
         }
 
         static CHAR * alloc( size_t len )
