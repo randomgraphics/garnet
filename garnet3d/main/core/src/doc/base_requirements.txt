@@ -1,0 +1,29 @@
+coding style
+============
+
+- ClassName classInstance;
+- ClassName gClassInstance;
+- ClassName sClassInstance;
+- createNewInstanceByIndex(...)
+
+
+TODO
+====
+
+- vector/matrix ut
+- a general way to create class instance
+- a way to exchange interface between sub-systems
+
+DONE
+====
+
+- boost.build or scons?
+  - currently, both
+- sigslot, with ut
+- general functor, with ut
+- general file stream class
+- log: use externel function
+- numberic types
+  - stdint.h
+- string
+

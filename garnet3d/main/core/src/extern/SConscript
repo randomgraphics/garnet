@@ -1,0 +1,33 @@
+Import( 'env GN_targets GN_func' )
+
+if 'icl' == env['CC']:
+    extern_env = env.Copy( CCFLAGS= Split( str(env.Dictionary('CCFLAGS')).replace( '/W4', '/w' ) ) )
+else:
+    extern_env = env.Copy( CCFLAGS= Split( str(env.Dictionary('CCFLAGS')).replace( '/W4', '/W3' ) ) )
+
+extern_env.Append( CPPPATH = '../inc/garnet/extern' )
+
+# compile jpeg library
+jpeg_env = extern_env.Copy()
+jpeg_env.Append( CPPPATH = [Dir('jpeg').srcnode()] )
+if 'gcc' == env['CC']:
+    jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
+jpeg_objs = GN_func['build_static_objects'](
+    jpeg_env,
+    GN_func['glob']( '*.c', 'jpeg' ),
+    pdb = 'GnExtern.pdb'
+    )
+
+# build source list
+srcs = GN_func['glob']( '*.c', 'glew' ) \
+     + GN_func['glob']( '*.c', 'lua' ) \
+     + GN_func['glob']( '*.cpp', 'tinyxml' ) \
+     + GN_func['glob']( '*.c', 'zlib' ) \
+     + GN_func['glob']( '*.c', 'png' ) \
+     + jpeg_objs
+
+GN_targets['GnExtern'] = GN_func['build_static_library'](
+    extern_env,
+    'GnExtern',
+    srcs,
+    pdb = 'GnExtern.pdb' )

@@ -1,0 +1,21 @@
+Import( 'env GN_targets GN_func' )
+
+import sys, glob
+
+# initialize local environment
+e = env.Copy()
+e.Append(
+    CPPPATH = ['.'],
+    LIBS = [ GN_targets['GnBase'], GN_targets['GnExtern'] ],
+    )
+
+# generate cxxtest glue file.
+cases   = GN_func['glob']('*.cpp', 'base')
+cxxtest = e.Command(
+    'ut.cpp', cases,
+    '%s %s --error-printer -o $TARGET ${SOURCES.abspath}'%(
+        sys.executable,
+        File('cxxtestgen.py').srcnode().path)
+    )
+
+GN_targets['GnTest'] = GN_func["build_program"]( e, 'GnTest', ['testCommon.cpp',cxxtest] )

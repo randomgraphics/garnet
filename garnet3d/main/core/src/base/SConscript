@@ -1,0 +1,9 @@
+Import( 'env GN_targets GN_func' )
+
+GN_targets['GnBase'] = GN_func['build_static_library'](
+    env,
+    'GnBase',
+    GN_func['glob']('*.cpp'),
+    'pch.h',
+    'pch.cpp',
+    'GnBase.pdb' )
