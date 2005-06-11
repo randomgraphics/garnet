@@ -84,9 +84,9 @@ namespace GN
             const SlotBase * slot;
         };
 
-        typedef typename ::std::list<SlotDesc>                 SlotContainor;
-        typedef typename ::std::list<SlotDesc>::iterator       SlotIter;
-        typedef typename ::std::list<SlotDesc>::const_iterator ConstSlotIter;
+        typedef typename ::std::list<SlotDesc>         SlotContainer;
+        typedef typename SlotContainer::iterator       SlotIter;
+        typedef typename SlotContainer::const_iterator ConstSlotIter;
 
         struct EqualSlotClassPtr
         {
@@ -137,9 +137,19 @@ namespace GN
             }
         };
 
-        mutable SlotContainor mSlots;
+        mutable SlotContainer mSlots;
 
     public:
+
+        ~SIGNAL_NAME()
+        {
+            // disconnect with all slots
+            for( SlotIter i = mSlots.begin(); i != mSlots.end(); ++i )
+            {
+                if ( (*i).slot ) disconnectToSlot( *(*i).slot );
+            }
+            mSlots.clear();
+        }
 
         void connect( R (*staticFuncPtr)(PARAM_TYPES) ) const
         {
@@ -183,8 +193,8 @@ namespace GN
 
         void disconnect( const SlotBase & slot ) const
         {
-            slotDisconnect(slot);
-            slot.signalDisconnect( *this );
+            slotDisconnect(slot);   // remove slot from private slot list
+            disconnectToSlot(slot); // inform the slot to discoonect with myself.
         }
 
         R emit( PARAM_LIST ) const
@@ -192,6 +202,8 @@ namespace GN
             Emitter<R,ConstSlotIter> e;
             e.emit( mSlots.begin(), mSlots.end() PARAM_COMMA PARAM_VALUES );
         }
+
+        size_t getNumSlots() const { return mSlots.size(); }
 
     private:
 
@@ -316,6 +328,7 @@ namespace GN
             virtual void slotDisconnect( const GN::SlotBase & ) const {}
         protected:
             void connectToSlot( const GN::SlotBase & slot ) const;
+            void disconnectToSlot( const GN::SlotBase & slot ) const;
         public:
             virtual ~SignalBase() {}
         };
@@ -338,17 +351,21 @@ namespace GN
         virtual ~SlotBase()
         {
             // disconnect with all signals
-            for( SignalContainor::iterator i = mSignals.begin(); i != mSignals.end(); ++i )
+            for( SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i )
             {
                 (*i)->slotDisconnect( *this );
             }
             mSignals.clear();
         }
 
+    public:
+
+        size_t getNumSignals() const { return mSignals.size(); }
+
     private:
         friend class detail::SignalBase;
-        typedef std::list<const detail::SignalBase*> SignalContainor;
-        mutable SignalContainor mSignals;
+        typedef std::list<const detail::SignalBase*> SignalContainer;
+        mutable SignalContainer mSignals;
     private:
         void signalConnect( const detail::SignalBase & signal ) const
         {
@@ -363,6 +380,10 @@ namespace GN
     inline void detail::SignalBase::connectToSlot( const SlotBase & slot ) const
     {
         slot.signalConnect(*this);
+    }
+    inline void detail::SignalBase::disconnectToSlot( const SlotBase & slot ) const
+    {
+        slot.signalDisconnect(*this);
     }
 }
 
