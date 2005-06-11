@@ -13,7 +13,7 @@ e.Append(
 cases   = GN_func['glob']('*.cpp', 'base')
 cxxtest = e.Command(
     'ut.cpp', cases,
-    '%s %s --error-printer -o $TARGET ${SOURCES.abspath}'%(
+    '%s %s --error-printer --include="garnet/GnBase.h" -o $TARGET ${SOURCES.abspath}'%(
         sys.executable,
         File('cxxtestgen.py').srcnode().path)
     )

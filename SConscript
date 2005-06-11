@@ -245,10 +245,10 @@ def default_env( options = None ):
         libs['common']     += Split('X11 glut GL GLU')
 
     # 定制不同编译模式的编译选项
-    cppdefines['debug']   += Split('GN_DEBUG=1')
+    cppdefines['debug']   += ['GN_DEBUG=1']
     cppdefines['release'] += ['NDEBUG']
-    cppdefines['stdbg']   += ['GN_STATIC=1']
-    cppdefines['strel']   += ['GN_STATIC=1 NDEBUG']
+    cppdefines['stdbg']   += ['GN_STATIC=1', 'GN_DEBUG=1']
+    cppdefines['strel']   += ['GN_STATIC=1', 'NDEBUG']
 
     # 定制不同编译器的编译选项
     if 'cl' == env['CC']:
