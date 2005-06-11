@@ -428,7 +428,7 @@ namespace GN
     enum RenderState
     {
         #define GN_DEFINE_RS( tag, defval ) RS_##tag,
-        #include "rsMeta.h"
+        #include "renderStateMeta.h"
         #undef GN_DEFINE_RS
 
         NUM_RENDER_STATES,   //!< number of available render states
@@ -476,7 +476,7 @@ namespace GN
     enum RenderStateValue
     {
         #define GN_DEFINE_RSV( tag, d3dval, glval ) RSV_##tag,
-        #include "rsvMeta.h"
+        #include "renderStateValueMeta.h"
         #undef GN_DEFINE_RSV
 
         NUM_RENDER_STATE_VALUES,    //!< number of available render states
@@ -521,11 +521,11 @@ namespace GN
     //!
     //! Texture Stage States
     //!
-    enum TextureStates
+    enum TextureState
     {
         #define GN_DEFINE_TS( tag, defval0, defval, \
                               d3dname, glname1, glname2 ) TS_##tag,
-        #include "tsMeta.h"
+        #include "textureStateMeta.h"
         #undef GN_DEFINE_TS
 
         NUM_TEXTURE_STATES, //!< number of available texture stage states
@@ -537,22 +537,22 @@ namespace GN
     //!
     //! \return Return error message if failed.
     //!
-    const char * ts2str( TextureStates );
+    const char * ts2str( TextureState );
 
     //!
     //! Convert TS type to string, return false if failed.
     //!
-    bool ts2str( StrA & result, TextureStates tss );
+    bool ts2str( StrA & result, TextureState tss );
 
     //!
     //! Convert string to TS type, return TS_INVALID if failed.
     //!
-    TextureStates str2ts( const char * );
+    TextureState str2ts( const char * );
 
     //!
     //! Convert string to TS type, return false if failed.
     //!
-    bool str2ts( TextureStates & result, const char * str );
+    bool str2ts( TextureState & result, const char * str );
 
     //! \def GN_DEFINE_TSV
     //! Define texture stage state values
@@ -560,10 +560,10 @@ namespace GN
     //!
     //! Texture Stage State Values
     //!
-    enum TextureStatesValue
+    enum TextureStateValue
     {
         #define GN_DEFINE_TSV( tag, d3dval, glval1, glval2 ) TSV_##tag,
-        #include "tsvMeta.h"
+        #include "textureStateValueMeta.h"
         #undef GN_DEFINE_TSV
 
         NUM_TEXTURE_STATE_VALUES,   //!< number of available texture stage state values
@@ -575,29 +575,159 @@ namespace GN
     //!
     //! \return Return error message if failed.
     //!
-    const char * tsv2str( TextureStatesValue );
+    const char * tsv2str( TextureStateValue );
 
     //!
     //! Convert TS value to string, return false if failed.
     //!
-    bool tsv2str( StrA & result, TextureStatesValue tssval );
+    bool tsv2str( StrA & result, TextureStateValue tssval );
 
     //!
     //! Convert string to TS value, return TS_INVALID if failed.
     //!
-    TextureStatesValue str2tsv( const char * );
+    TextureStateValue str2tsv( const char * );
 
     //!
     //! Convert string to TS value, return false if failed.
     //!
-    bool str2tsv( TextureStatesValue & result, const char * str );
+    bool str2tsv( TextureStateValue & result, const char * str );
 
     //@}
+
+    // ************************************************************************
+    //! \name Vertex format
+    // ************************************************************************
+
+    //@{
+
+    //! \name vertex semantices
+    //@{
+
+    //! \def GN_VERTEX_SEMANTIC
+    //! define vertex semantic tag
+
+    //!
+    //! vertex semantic tags
+    //!
+    enum VertexSemantic
+    {
+        #define GN_VERTEX_SEMANTIC( tag, d3decl, d3dindex, \
+                                     glname, glindex, cgname ) VERTSEM_##tag,
+        #include "vertexSemanticMeta.h"
+        #undef GN_VERTEX_SEMANTIC
+
+        //!
+        //! num of vertex semantic tags
+        //!
+        NUM_VERTSEMS,
+
+        //!
+        //! indicate an invalid vertex semantic.
+        //!
+        VERTSEM_INVALID,
+    };
+
+    //!
+    //! Convert vertex semantic tag to string.
+    //!
+    //! \return Return error message if failed.
+    //!
+    const char * vertsem2str( VertexSemantic );
+
+    //!
+    //! Convert vertex semantic tag to string
+    //!
+    //! \return Return false if failed.
+    //!
+    bool vertsem2str( StrA &, VertexSemantic );
+
+    //!
+    //! Convert string to vertex semantic
+    //!
+    //! \return Return VERTSEM_INVALID, if failed.
+    VertexSemantic str2vertsem( const char * );
+
+    //!
+    //! Convert string to vertex semantic
+    //!
+    //! \return Return false if failed.
+    //!
+    bool str2vertsem( VertexSemantic &, const char * );
+
+    //@}
+
+    //!
+    //! Vertex format descriptor
+    //!
+    struct VertexFormatDesc
+    {
+        //!
+        //! Vertex attribute descriptor
+        //!
+        struct AttribDesc
+        {
+            bool        used;     //!< Is this attribute used or not?
+            uint8_t     stream;   //!< stream index.
+            uint8_t     offset;   //!< offset in vertex stream.
+            ColorFormat format;   //!< attribute format (FMT_XXX).
+        };
+
+        //!
+        //! Vertex stream descriptor
+        //!
+        struct StreamDesc
+        {
+            VertexSemantic attribs[NUM_VERTSEMS]; //!< attribute indices into attribute array.
+            uint8_t        numAttribs;            //!< number of attributes in this stream.
+            uint8_t        stride;                //!< stream stride in bytes.
+        };
+
+        AttribDesc attribs[NUM_VERTSEMS]; //!< vertex attribute array, indexed by vertex semantic.
+        StreamDesc streams[NUM_VERTSEMS]; //!< vertex stream array.
+        uint8_t    numStreams;            //!< stream count.
+
+        //!
+        //! Constructor
+        //!
+        VertexFormatDesc() { reset(); }
+
+        //!
+        //! Reset to empty declarator.
+        //!
+        void reset();
+
+        //!
+        //! Add new attribute into vertex format declarator.
+        //!
+        //! \param stream
+        //!     StreamDesc index of the attribute.
+        //! \param offset
+        //!     AttribDesc offset in the stream. Can be 0, which means packed with last attribute.
+        //! \param semantic
+        //!     AttribDesc semantic (VERTSEM_XXX)
+        //! \param format
+        //!     AttribDesc format (FMT_XXXX)
+        //!
+        bool addAttrib(
+            uint8_t        stream,
+            uint8_t        offset,
+            VertexSemantic semantic,
+            ColorFormat    format );
+
+        //!
+        //! µÈÖµÅÐ¶Ï
+        //!
+        bool operator == ( const VertexFormatDesc & rhs ) const;
+    };
+
+    //@}
+
 }
 
 #if GN_ENABLE_INLINE
 #include "image.inl"
 #include "renderState.inl"
+#include "vertexFormat.inl"
 #endif
 
 // *****************************************************************************

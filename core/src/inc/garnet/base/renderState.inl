@@ -19,7 +19,7 @@ GN_INLINE const char * GN::rs2str( RenderState rs )
     static const char * table [] =
     {
     #define GN_DEFINE_RS( tag, defval ) #tag,
-    #include "rsMeta.h"
+    #include "renderStateMeta.h"
     #undef GN_DEFINE_RS
     };
     if( 0 <= rs && rs < NUM_RENDER_STATES ) return table[rs];
@@ -37,7 +37,7 @@ GN_INLINE GN::RenderState GN::str2rs( const char * str )
     static const char * table [] =
     {
     #define GN_DEFINE_RS( tag, defval ) #tag,
-    #include "rsMeta.h"
+    #include "renderStateMeta.h"
     #undef GN_DEFINE_RS
     };
     if( str )
@@ -65,7 +65,7 @@ GN_INLINE const char * GN::rsv2str( RenderStateValue rsval )
     static const char * table [] =
     {
     #define GN_DEFINE_RSV( tag, d3dval, glval ) #tag,
-    #include "rsvMeta.h"
+    #include "renderStateValueMeta.h"
     #undef GN_DEFINE_RSV
     };
     if( 0 <= rsval && rsval < NUM_RENDER_STATE_VALUES ) return table[rsval];
@@ -83,7 +83,7 @@ GN_INLINE GN::RenderStateValue GN::str2rsv( const char * str )
     static const char * table [] =
     {
     #define GN_DEFINE_RSV( tag, d3dval, glval ) #tag,
-    #include "rsvMeta.h"
+    #include "renderStateValueMeta.h"
     #undef GN_DEFINE_RSV
     };
     if( str )
@@ -106,46 +106,46 @@ GN_INLINE bool GN::str2rsv( RenderStateValue & result, const char * str )
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::ts2str( TextureStates tss )
+GN_INLINE const char * GN::ts2str( TextureState tss )
 {
     static const char * table [] =
     {
     #define GN_DEFINE_TS( tag, defval0, defval, \
                           d3dname, glname1, glname2 ) #tag,
-    #include "tsMeta.h"
+    #include "textureStateMeta.h"
     #undef GN_DEFINE_TS
     };
     if( 0 <= tss && tss < NUM_TEXTURE_STATES ) return table[tss];
     else return "BAD_TS";
 }
 //
-GN_INLINE bool GN::ts2str( StrA & result, TextureStates tss )
+GN_INLINE bool GN::ts2str( StrA & result, TextureState tss )
 {
     result = ts2str( tss );
     return "BAD_TS" != result;
 }
 //
-GN_INLINE GN::TextureStates GN::str2ts( const char * str )
+GN_INLINE GN::TextureState GN::str2ts( const char * str )
 {
     static const char * table [] =
     {
     #define GN_DEFINE_TS( tag, defval0, defval, \
                           d3dname, glname1, glname2 ) #tag,
-    #include "tsMeta.h"
+    #include "textureStateMeta.h"
     #undef GN_DEFINE_TS
     };
     if( str )
     {
         for( size_t i = 0; i < NUM_TEXTURE_STATES; ++i )
         {
-            if( 0 == ::strcmp(table[i],str) ) return (TextureStates)i;
+            if( 0 == ::strcmp(table[i],str) ) return (TextureState)i;
         }
     }
     // failed
     return TS_INVALID;
 }
 //
-GN_INLINE bool GN::str2ts( TextureStates & result, const char * str )
+GN_INLINE bool GN::str2ts( TextureState & result, const char * str )
 {
     result = str2ts( str );
     return TS_INVALID != result;
@@ -154,44 +154,44 @@ GN_INLINE bool GN::str2ts( TextureStates & result, const char * str )
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::tsv2str( TextureStatesValue tssval )
+GN_INLINE const char * GN::tsv2str( TextureStateValue tssval )
 {
     static const char * table [] =
     {
     #define GN_DEFINE_TSV( tag, d3dval, glval1, glval2 ) #tag,
-    #include "tsvMeta.h"
+    #include "textureStateValueMeta.h"
     #undef GN_DEFINE_TSV
     };
     if( 0 <= tssval && tssval < NUM_TEXTURE_STATE_VALUES ) return table[tssval];
-    else return "BAD_TSVAL";
+    else return "BAD_TSV";
 }
 //
-GN_INLINE bool GN::tsv2str( StrA & result, TextureStatesValue tssval )
+GN_INLINE bool GN::tsv2str( StrA & result, TextureStateValue tssval )
 {
     result = tsv2str( tssval );
-    return "BAD_TSVAL" != result;
+    return "BAD_TSV" != result;
 }
 //
-GN_INLINE GN::TextureStatesValue GN::str2tsv( const char * str )
+GN_INLINE GN::TextureStateValue GN::str2tsv( const char * str )
 {
     static const char * table [] =
     {
     #define GN_DEFINE_TSV( tag, d3dval, glval1, glval2 ) #tag,
-    #include "tsvMeta.h"
+    #include "textureStateValueMeta.h"
     #undef GN_DEFINE_TSV
     };
     if( str )
     {
         for( size_t i = 0; i < NUM_TEXTURE_STATE_VALUES; ++i )
         {
-            if( 0 == ::strcmp(table[i],str) ) return (TextureStatesValue)i;
+            if( 0 == ::strcmp(table[i],str) ) return (TextureStateValue)i;
         }
     }
     // failed
     return TSV_INVALID;
 }
 //
-GN_INLINE bool GN::str2tsv( TextureStatesValue & result, const char * str )
+GN_INLINE bool GN::str2tsv( TextureStateValue & result, const char * str )
 {
     result = str2tsv( str );
     return TSV_INVALID != result;

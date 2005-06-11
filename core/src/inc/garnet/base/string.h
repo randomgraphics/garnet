@@ -33,28 +33,20 @@ namespace GN
     template<typename CHAR>
     inline int strCmp( const CHAR * s1, const CHAR * s2 )
     {
-        if ( 0 == s1 )
+        if ( s1 == s2 ) return true;
+
+        if ( 0 == s1 || 0 == s2 ) return false;
+
+        while( *s1 && *s2 )
         {
-            if ( 0 == s2 ) return 0;
-            else return -1;
+            if ( *s1 < *s2 ) return -1;
+            if ( *s1 > *s2 ) return 1;
+            ++s1;
+            ++s2;
         }
-        else if ( 0 == s2 )
-        {
-            return 1;
-        }
-        else
-        {
-            while( *s1 && *s2 )
-            {
-                if ( *s1 < *s2 ) return -1;
-                if ( *s1 > *s2 ) return 1;
-                ++s1;
-                ++s2;
-            }
-            if ( 0 != *s1 ) return 1;
-            if ( 0 != *s2 ) return -1;
-            return 0;
-        }
+        if ( 0 != *s1 ) return 1;
+        if ( 0 != *s2 ) return -1;
+        return 0;
     }
 
     //!
