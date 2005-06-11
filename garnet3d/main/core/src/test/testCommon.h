@@ -12,6 +12,18 @@
 namespace CxxTest 
 {
     CXXTEST_TEMPLATE_INSTANTIATION
+    bool equals<const char *>( const char * x, const char * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    bool equals<const wchar_t *>( const wchar_t * x, const wchar_t * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
     class ValueTraits< GN::StrA > 
     {
         GN::StrA s;
