@@ -1,0 +1,16 @@
+project
+    : requirements
+        <link>static
+        <toolset>msvc:<cflags>/Fpc:\\pch.pch
+    : 
+    ;
+
+obj pch
+    : pch.cpp
+    : <toolset>msvc:<cflags>/Ycpch.h
+    ;
+
+lib GnBase
+    : debug.cpp file.cpp log.cpp string.cpp pch
+    : <toolset>msvc:<cflags>/Yupch.h
+    ;
