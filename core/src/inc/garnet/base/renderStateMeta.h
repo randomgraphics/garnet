@@ -37,17 +37,17 @@ GN_DEFINE_RS( BLEND_SRC       , BLEND_SA    )
 //!
 GN_DEFINE_RS( BLEND_DST       , BLEND_ISA   )
 
-# ifdef GN_LEFT_HAND
+#if GN_LEFT_HAND
 //!
 //! culling mode, default is CULL_CCW
 //!
 GN_DEFINE_RS( CULL_MODE       , CULL_CCW    )
-# else
+#else
 //!
 //! culling mode, default is CULL_CW
 //!
 GN_DEFINE_RS( CULL_MODE       , CULL_CW     )
-# endif
+#endif
 
 //!
 //! fog enable, default is false

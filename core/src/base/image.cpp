@@ -224,7 +224,7 @@ public:
 
         GN_ASSERT( !mSrc.empty() );
 
-        # define READ_HEADER( reader ) \
+        #define READ_HEADER( reader ) \
             if( !reader.readHeader( o_desc, &mSrc[0], mSrc.size() ) ) \
             { mState = INVALID; return false; }
 
@@ -268,7 +268,7 @@ public:
             return false;
         }
 
-        # define READ_IMAGE( reader ) \
+        #define READ_IMAGE( reader ) \
             if( !reader.readImage( o_data ) ) \
             { mState = INVALID; return false; }
 

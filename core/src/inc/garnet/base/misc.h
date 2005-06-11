@@ -10,7 +10,7 @@
 //! Execute only limited times during the entir life of the
 //! application, no matter how many time it is called.
 //!
-# define GN_DO_LIMITED_TIMES(n,X)     \
+#define GN_DO_LIMITED_TIMES(n,X)      \
     if (true)                         \
     {                                 \
         static size_t s_counter = n;  \
@@ -24,12 +24,12 @@
 //!
 //! Do something only once. 通常用来在内层循环中输出一些调试和错误信息。
 //!
-# define GN_DO_ONCE(X) GN_DO_LIMITED_TIMES(1,X)
+#define GN_DO_ONCE(X) GN_DO_LIMITED_TIMES(1,X)
 
 //!
 //! "Use" unused parameter (to avoid compiler warnings)
 //!
-# define GN_UNUSED_PARAM(X) ((void)(X))
+#define GN_UNUSED_PARAM(X) ((void)(X))
 
 namespace GN
 {
@@ -41,12 +41,12 @@ namespace GN
     template < class TO, class FROM >
     GN_FORCE_INLINE TO safe_cast( FROM from )
     {
-    # if defined(GN_DEBUG) && ( !defined(GN_MSVC) || defined(_CPPRTTI) )
+    #if defined(GN_DEBUG) && ( !defined(GN_MSVC) || defined(_CPPRTTI) )
         GN_ASSERT( dynamic_cast<TO>(from) );
         return dynamic_cast<TO>(from);
-    # else
+    #else
         return static_cast<TO>(from);
-    # endif
+    #endif
     }
 
     //!
