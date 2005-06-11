@@ -91,7 +91,7 @@
 // GN_LEFT_HAND
 // ============
 //
-// 是否使用左手坐标系
+// 是否使用左手坐标系，缺省使用右手系
 //
 #ifndef GN_LEFT_HAND
 #define GN_LEFT_HAND 0
