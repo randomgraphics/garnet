@@ -240,7 +240,7 @@ public:
                 return false;
         }
 
-        # undef READ_HEADER
+        #undef READ_HEADER
 
         // success
         mState = HEADER_READEN;
@@ -284,7 +284,7 @@ public:
                 return false;
         }
 
-        # undef READ_IMAGE
+        #undef READ_IMAGE
 
         // success
         mState = DATA_READEN;
