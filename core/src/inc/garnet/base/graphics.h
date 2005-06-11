@@ -22,7 +22,7 @@ namespace GN
     //!
     enum ColorFormat
     {
-        #define GN_COLOR_FORMAT( format, bits, fourcc, channels ) FMT_##format,
+        #define GN_COLOR_FORMAT( format, bits, channels ) FMT_##format,
         #include "formatMeta.h"
         #undef GN_COLOR_FORMAT
 
@@ -59,19 +59,6 @@ namespace GN
         TYPE_SINT,
     };
 
-    //!
-    //! color swizzle type
-    //!
-    enum ColorSwizzle
-    {
-        SWIZZLE_0,
-        SWIZZLE_1,
-        SWIZZLE_X,
-        SWIZZLE_Y,
-        SWIZZLE_Z,
-        SWIZZLE_W,
-    };
-
     // commonly used color class
     typedef Vector4<float>   Float4;
     typedef Vector3<float>   Float3;
@@ -105,20 +92,28 @@ namespace GN
     //!
     struct ColorFormatDesc
     {
-        const char * name;         //!< format name
-        uint8_t      bits;         //!< bits per pixel
-        uint8_t      blockWidth;   //!< block width
-                                   //!< 1 for non-compressed format,
-                                   //!< 4 for DXT format
-        uint8_t      blockHeight;  //!< block width
-                                   //!< 1 for non-compressed format,
-                                   //!< 4 for DXT format
-        uint8_t      numChannels;  //!< 0 means fourcc format
+        const char * name;          //!< format name
+        uint8_t      bits;          //!< bits per pixel
+        uint8_t      blockWidth;    //!< block width
+                                    //!< 1 for non-compressed format,
+                                    //!< 4 for DXT format
+        uint8_t      blockHeight;   //!< block width
+                                    //!< 1 for non-compressed format,
+                                    //!< 4 for DXT format
         union
         {
-            uint32_t    fourcc;      //!< valid when numChannels == 0
-            ChannelDesc channels[4]; //!< valid when numChannels > 0
+            uint32_t swizzle;       //!< Swizzle. Ignored for compressed format.
+            struct
+            {
+                char swizzle_x;     //!< Swizzle X. One of 'R', 'G', 'B', 'A', '0' or '1'.
+                char swizzle_y;     //!< Swizzle Y.
+                char swizzle_z;     //!< Swizzle Z.
+                char swizzle_w;     //!< Swizzle W.
+            };
         };
+
+        uint8_t      numChannels;   //!< 0 means compressed format
+        ChannelDesc  channels[4];   //!< valid when numChannels > 0
     };
 
     //!
