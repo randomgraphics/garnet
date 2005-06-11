@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GnBase.h"
 #include "image_dds.h"
 
 // ****************************************************************************

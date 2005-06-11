@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GnBase.h"
 #include "image_png.h"
 
 #if GN_MSVC

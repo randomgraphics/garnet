@@ -60,10 +60,12 @@ env = Environment( options = opts )
 #
 ################################################################################
 
-if 'all' in COMMAND_LINE_TARGETS: conf['build'] = all;
+if 'all' in COMMAND_LINE_TARGETS: conf['build'] = 'all'
+
+import copy
 
 if 'all' == conf['build'] or 'debug' == conf['build'] or 'debug' in COMMAND_LINE_TARGETS:
-    c = conf;
+    c = copy.copy(conf);
     c['build'] = 'debug'
     env.SConscript(
         'SConscript',
@@ -75,7 +77,7 @@ if 'all' == conf['build'] or 'debug' == conf['build'] or 'debug' in COMMAND_LINE
         )
 
 if 'all' == conf['build'] or 'release' == conf['build'] or 'release' in COMMAND_LINE_TARGETS:
-    c = conf;
+    c = copy.copy(conf);
     c['build'] = 'release'
     env.SConscript(
         'SConscript',
@@ -87,7 +89,7 @@ if 'all' == conf['build'] or 'release' == conf['build'] or 'release' in COMMAND_
         )
 
 if 'all' == conf['build'] or 'stdbg' == conf['build'] or 'stdbg' in COMMAND_LINE_TARGETS:
-    c = conf;
+    c = copy.copy(conf);
     c['build'] = 'stdbg'
     env.SConscript(
         'SConscript',
@@ -99,7 +101,7 @@ if 'all' == conf['build'] or 'stdbg' == conf['build'] or 'stdbg' in COMMAND_LINE
         )
 
 if 'all' == conf['build'] or 'strel' == conf['build'] or 'strel' in COMMAND_LINE_TARGETS:
-    c = conf;
+    c = copy.copy(conf);
     c['build'] = 'strel'
     env.SConscript(
         'SConscript',

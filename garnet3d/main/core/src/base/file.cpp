@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GnBase.h"
 
 // ****************************************************************************
 //                   implementation of StdFile

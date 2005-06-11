@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GnBase.h"
 
 #if GN_MSVC
 #define vsnprintf  _vsnprintf
