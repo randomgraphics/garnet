@@ -18,7 +18,7 @@ default_configs = {
 # 定义编译类型
 # can be 'debug', 'release', 'stdbg', 'strel', 'static', 'all'
 conf['build'] = ARGUMENTS.get('build', default_configs['build'] )
-if not conf['build'] in Split('debug releae stdbg strel all'):
+if not conf['build'] in Split('debug release stdbg strel all'):
     print 'Invalid build type! Must be one of (debug releae stdbg strel all)';
     Exit(-1)
 
