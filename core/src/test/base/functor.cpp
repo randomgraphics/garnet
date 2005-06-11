@@ -189,6 +189,7 @@ public:
         s1.connect( &foo1 );
         s1.connect( &a, &aaa::foo1 ); // duplicate member function
         s1.connect( &foo1 );          // duplicate free function
+        TS_ASSERT_EQUALS( s1.getNumSlots(), 3 );
         g_callSequence.clear();
         s1.emit(0,0);
         TS_ASSERT_EQUALS( g_callSequence.size(), 3 );
@@ -205,6 +206,10 @@ public:
 
             s1.connect( &b, &bbb::foo );
             s1.connect( &b, &aaa::foo1 );
+
+            TS_ASSERT_EQUALS( s1.getNumSlots(), 5 );
+            TS_ASSERT_EQUALS( b.getNumSignals(), 2 );
+
             g_callSequence.clear();
             s1.emit(1,1);
             TS_ASSERT_EQUALS( g_callSequence.size(), 5 );
@@ -224,6 +229,10 @@ public:
                 GN::Signal2<void,int,int> s2;
                 s2.connect( &b, &bbb::foo );
                 s2.connect( &a, &aaa::foo1 );
+
+                TS_ASSERT_EQUALS( s2.getNumSlots(), 2 );
+                TS_ASSERT_EQUALS( b.getNumSignals(), 3 );
+
                 g_callSequence.clear();
                 s2.emit(5,5);
                 TS_ASSERT_EQUALS( g_callSequence.size(), 2 );
@@ -234,9 +243,13 @@ public:
                 TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1()" );
 #endif
             }
+
+            TS_ASSERT_EQUALS( s1.getNumSlots(), 5 );
+            TS_ASSERT_EQUALS( b.getNumSignals(), 2 );
         }
 
         // connection to b should be released automatically.
+        TS_ASSERT_EQUALS( s1.getNumSlots(), 3 );
         g_callSequence.clear();
         s1.emit(0,0);
         TS_ASSERT_EQUALS( g_callSequence.size(), 3 );

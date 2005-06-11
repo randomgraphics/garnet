@@ -60,8 +60,14 @@ public:
         s1 = L"haha";
         s2 = L"hehe";
         s3 = L"hehe";
-        TS_ASSERT(s1 != s2);
-        TS_ASSERT(s2 == s3);
+        TS_ASSERT( s1==s1 );
+        TS_ASSERT( !(s1<s1) );
+        TS_ASSERT( s1!=s2 );
+        TS_ASSERT( s1<s2 );
+        TS_ASSERT( !(s2<s1) );
+        TS_ASSERT( s2==s3 );
+        TS_ASSERT( !(s2<s3) );
+        TS_ASSERT( !(s3<s2) );
 
         // size(),clear(),empty()
         TS_ASSERT_EQUALS( 4, s1.size() );

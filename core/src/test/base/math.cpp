@@ -50,9 +50,9 @@ class MathTest : public CxxTest::TestSuite
 public:
     void testVector()
     {
-        GN::Vector2<int> a2, b2;
-        GN::Vector3<int> a3, b3;
-        GN::Vector4<int> a4, b4;
+        GN::Vector2<int> a2(rand(),rand()), b2(rand(),rand());
+        GN::Vector3<int> a3(rand(),rand(),rand()), b3(rand(),rand(),rand());
+        GN::Vector4<int> a4(rand(),rand(),rand(),rand()), b4(rand(),rand(),rand(),rand());
 
         vector_tests(a2,b2);
         vector_tests(a3,b3);
