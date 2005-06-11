@@ -111,7 +111,7 @@ def GN_glob( pattern, dir = '.',
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb ):
     if 'cl' != e['CC']: return;
-    if GN_conf['debug'] and pdb: # produce PDB only for debug build
+    if pdb:
         #pdb = File(pdb).path
         #e.Append(
         #    CCFLAGS = ['/Zi', '/Fd%s'%pdb],
