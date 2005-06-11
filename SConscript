@@ -240,8 +240,8 @@ def default_env( options = None ):
     else:
         cpppath['common']  += Split('/usr/X11R6/include /usr/local/include')
         libpath['common']  += Split('/usr/X11R6/lib /usr/local/lib')
-        libpath['debug']   += GN_conf['bindir']; # 链接bin目录下的dynamic core library
-        libpath['release'] += GN_conf['bindir']; # 链接bin目录下的dynamic core library
+        #libpath['debug']   += GN_conf['bindir']; # 链接bin目录下的dynamic core library
+        #libpath['release'] += GN_conf['bindir']; # 链接bin目录下的dynamic core library
         libs['common']     += Split('X11 glut GL GLU')
 
     # 定制不同编译模式的编译选项
