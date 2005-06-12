@@ -542,7 +542,7 @@ namespace GN
     //!
     //! Convert TS type to string, return false if failed.
     //!
-    bool ts2str( StrA & result, TextureState tss );
+    bool ts2str( StrA & result, TextureState ts );
 
     //!
     //! Convert string to TS type, return TS_INVALID if failed.
@@ -591,6 +591,114 @@ namespace GN
     //! Convert string to TS value, return false if failed.
     //!
     bool str2tsv( TextureStateValue & result, const char * str );
+
+    //!
+    //! Render State Block Description Structure
+    //!
+    struct RenderStateBlockDesc
+    {
+        static const RenderStateBlockDesc DEFAULT; //!< default rsblock
+        static const RenderStateBlockDesc INVALID; //!< invalid rsblock
+
+        //!
+        //! 最多8层贴图
+        enum { MAX_STAGES = 8 };
+        //!
+
+        //!
+        //! reset flag
+        //!
+        enum ResetFlag
+        {
+            RESET_TO_INVALID, //!< reset all fields to "RSV_INVALID"
+            RESET_TO_DEFAULT, //!< reset all fields to default value
+        };
+
+        //!
+        //! render states
+        //!
+        RenderStateValue  rs[GN::NUM_RENDER_STATES];
+
+        //!
+        //! texture stage states
+        //!
+        TextureStateValue ts[MAX_STAGES][GN::NUM_TEXTURE_STATES];
+
+        // ********************************
+        //! \name constructors
+        // ********************************
+    public :
+
+        //@{
+
+        //!
+        //! default constructor
+        //!
+        RenderStateBlockDesc() {}
+
+        //!
+        //! construct & reset a rsblock description structure
+        //!
+        RenderStateBlockDesc( ResetFlag flag )
+        {
+            reset( flag );
+        }
+
+        //@}
+
+        // ********************************
+        //! \name  public operations
+        // ********************************
+    public :
+
+        //@{
+
+        //!
+        //! reset all fields to default/invalid value
+        //!
+        void reset( ResetFlag flag );
+
+        //@}
+
+        // ********************************
+        //! \name   public operators
+        // ********************************
+    public :
+
+        //@{
+
+        //!
+        //! 等值判定
+        //!
+        bool operator == ( const RenderStateBlockDesc & ) const;
+
+        //!
+        //! 等值判定
+        //!
+        bool operator != ( const RenderStateBlockDesc & ) const;
+
+        //!
+        //! 求和（将参数中所有的非invalid项复写到this中）. 
+        //! <b>注意，此加法运算不符合交换率，(A+B) != (B+A)</b>
+        //!
+        RenderStateBlockDesc & operator += ( const RenderStateBlockDesc & );
+
+        //!
+        //! 求和
+        //!
+        RenderStateBlockDesc   operator +  ( const RenderStateBlockDesc & ) const;
+
+        //!
+        //! 求差（相同的项相减结果为 RSV_INVALID 或者 TSV_INVALID）
+        //!
+        RenderStateBlockDesc & operator -= ( const RenderStateBlockDesc & );
+
+        //!
+        //! 求差
+        //!
+        RenderStateBlockDesc   operator  - ( const RenderStateBlockDesc & ) const;
+
+    };
 
     //@}
 
