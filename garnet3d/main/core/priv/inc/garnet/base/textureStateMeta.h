@@ -5,7 +5,7 @@
  *        own header or source files.
  *
  * syntax : GN_DEFINE_TS(
- *               tss,
+ *               ts,
  *               defvalue-for-stage-0,
  *               defvalue-for-stage-1to7,
  *               d3dname,
