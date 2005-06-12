@@ -6,11 +6,6 @@
 //! \author  chenlee (2005.6.4)
 // *****************************************************************************
 
-
-// ****************************************************************************
-//  Render states inline functions
-// ****************************************************************************
-
 //
 //
 // ----------------------------------------------------------------------------
@@ -106,7 +101,7 @@ GN_INLINE bool GN::str2rsv( RenderStateValue & result, const char * str )
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::ts2str( TextureState tss )
+GN_INLINE const char * GN::ts2str( TextureState ts )
 {
     static const char * table [] =
     {
@@ -115,13 +110,13 @@ GN_INLINE const char * GN::ts2str( TextureState tss )
     #include "textureStateMeta.h"
     #undef GN_DEFINE_TS
     };
-    if( 0 <= tss && tss < NUM_TEXTURE_STATES ) return table[tss];
+    if( 0 <= ts && ts < NUM_TEXTURE_STATES ) return table[ts];
     else return "BAD_TS";
 }
 //
-GN_INLINE bool GN::ts2str( StrA & result, TextureState tss )
+GN_INLINE bool GN::ts2str( StrA & result, TextureState ts )
 {
-    result = ts2str( tss );
+    result = ts2str( ts );
     return "BAD_TS" != result;
 }
 //
@@ -195,6 +190,92 @@ GN_INLINE bool GN::str2tsv( TextureStateValue & result, const char * str )
 {
     result = str2tsv( str );
     return TSV_INVALID != result;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+GN_INLINE bool
+GN::RenderStateBlockDesc::operator == ( const RenderStateBlockDesc & rhs ) const
+{
+    // shortcut for comparing with itself
+    if( &rhs == this ) return true;
+
+    return 0 == ::memcmp( this, &rhs, sizeof(RenderStateBlockDesc) );
+}
+//
+GN_INLINE bool
+GN::RenderStateBlockDesc::operator != ( const RenderStateBlockDesc & rhs ) const
+{
+    return !( *this == rhs );
+}
+//
+GN_INLINE GN::RenderStateBlockDesc &
+GN::RenderStateBlockDesc::operator += ( const RenderStateBlockDesc & rhs )
+{
+    int i, j;
+
+    // evaluate RSs
+    for( i = 0; i < GN::NUM_RENDER_STATES; ++i )
+    {
+        if( RSV_INVALID != rhs.rs[i] ) rs[i] = rhs.rs[i];
+    }
+
+    // evaluate TSSs
+    for( i = 0; i < MAX_STAGES; ++i )
+    {
+        TextureStateValue       * t1 = ts[i];
+        const TextureStateValue * t2 = rhs.ts[i];
+        for( j = 0; j < GN::NUM_TEXTURE_STATES; ++j )
+        {
+            if( TSV_INVALID != t2[j] ) t1[j] = t2[j];
+        }
+    }
+
+    // success
+    return *this;
+}
+//
+GN_INLINE GN::RenderStateBlockDesc &
+GN::RenderStateBlockDesc::operator -= ( const RenderStateBlockDesc & rhs )
+{
+    int i, j;
+
+    // evaluate RSs
+    for( i = 0; i < GN::NUM_RENDER_STATES; ++i )
+    {
+        if(  rs[i] == rhs.rs[i]  ) rs[i] = RSV_INVALID;
+    }
+
+    // evaluate TSSs
+    for( i = 0; i < MAX_STAGES; ++i )
+    {
+        TextureStateValue       * t1 = ts[i];
+        const TextureStateValue * t2 = rhs.ts[i];
+        for( j = 0; j < GN::NUM_TEXTURE_STATES; ++j )
+        {
+            if( t1[j] == t2[j] ) t1[j] = TSV_INVALID;
+        }
+    }
+
+    // success
+    return *this;
+}
+//
+GN_INLINE GN::RenderStateBlockDesc
+GN::RenderStateBlockDesc::operator + ( const RenderStateBlockDesc & rhs ) const
+{
+    RenderStateBlockDesc result( *this );
+    result += rhs;
+    return result;
+}
+//
+GN_INLINE GN::RenderStateBlockDesc
+GN::RenderStateBlockDesc::operator - ( const RenderStateBlockDesc & rhs ) const
+{
+    RenderStateBlockDesc result( *this );
+    result -= rhs;
+    return result;
 }
 
 // *****************************************************************************
