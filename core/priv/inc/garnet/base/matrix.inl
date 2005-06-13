@@ -1,11 +1,3 @@
-#ifndef __GN_BASE_MATRIX_INL__
-#define __GN_BASE_MATRIX_INL__
-// *****************************************************************************
-//! \file    matrix.inl
-//! \brief   inline functions of matrix classes
-//! \author  chenlee (2005.5.8)
-// *****************************************************************************
-
 namespace GN
 {
     // *************************************************************************
@@ -21,8 +13,8 @@ namespace GN
         Matrix33<T> t;
 
         #define M33_CALCULATE_ONE_CELL(r, c) t[r][c] = rows[r][0] * m[0][c] + \
-                                                        rows[r][1] * m[1][c] + \
-                                                        rows[r][2] * m[2][c];
+                                                       rows[r][1] * m[1][c] + \
+                                                       rows[r][2] * m[2][c];
 
         M33_CALCULATE_ONE_CELL(0, 0);
         M33_CALCULATE_ONE_CELL(0, 1);
@@ -293,7 +285,7 @@ namespace GN
         #define M44_CALCULATE_ONE_CELL(r, c)  t[r][c] = rows[r][0] * m[0][c] + \
                                                         rows[r][1] * m[1][c] + \
                                                         rows[r][2] * m[2][c] + \
-                                                        rows[r][3] * m[3][c];  \
+                                                        rows[r][3] * m[3][c];
 
         M44_CALCULATE_ONE_CELL(0, 0);
         M44_CALCULATE_ONE_CELL(0, 1);
@@ -837,8 +829,3 @@ namespace GN
             rows[3][0], rows[3][1], rows[3][2], rows[3][3] );
     }
 }
-
-// *****************************************************************************
-//                           End of matrix.inl
-// *****************************************************************************
-#endif // __GN_BASE_MATRIX_INL__

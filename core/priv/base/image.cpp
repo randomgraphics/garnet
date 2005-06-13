@@ -124,13 +124,13 @@ class GN::ImageReader::Impl
     };
 
     std::vector<uint8_t> mSrc;
-    JpegReader        mJpg;
-    //bmp_reader_c         mBmp;
-    PngReader         mPng;
-    dds_reader_c         mDds;
 
-    FileFormat       mFormat;
-    ReaderState            mState;
+    JpegReader  mJpg;
+    PngReader   mPng;
+    DDSReader   mDds;
+
+    FileFormat  mFormat;
+    ReaderState mState;
 
 public:
 

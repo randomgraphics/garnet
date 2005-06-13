@@ -245,7 +245,13 @@
 //!
 //! namespace for garnet library
 //!
-namespace GN{}
+namespace GN
+{
+    //!
+    //! Implementation details of garnet library
+    //!
+    namespace detail {}
+}
 
 // define numeric types
 #if GN_MSVC
@@ -282,9 +288,6 @@ namespace GN{}
 
 // graphics
 #include "base/graphics.h"
-//#include "base/primitive.h"
-//#include "base/vertex.h"
-//#include "base/rsblock.h"
 
 /* standard class definition
 #include "garnet/types/_types_stdclass.h"

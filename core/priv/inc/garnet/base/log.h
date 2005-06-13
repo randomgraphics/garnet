@@ -64,11 +64,11 @@ namespace GN
     //!
     //! \param level
     //!     log level.
-    //! \param prefix
-    //!     log prefix.
+    //! \param category
+    //!     log category.
     //! \param msg
     //!     log message.
-    //! \param file, line
+    //! \param func, file, line
     //!     source position. NULL file string indicates lacking of information
     //!     about source position.
     //!

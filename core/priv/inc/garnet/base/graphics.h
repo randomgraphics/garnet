@@ -708,9 +708,6 @@ namespace GN
 
     //@{
 
-    //! \name vertex semantices
-    //@{
-
     //! \def GN_VERTEX_SEMANTIC
     //! define vertex semantic tag
 
@@ -761,8 +758,6 @@ namespace GN
     //! \return Return false if failed.
     //!
     bool str2vertsem( VertexSemantic &, const char * );
-
-    //@}
 
     //!
     //! Vertex format descriptor
@@ -829,7 +824,6 @@ namespace GN
     };
 
     //@}
-
 }
 
 #if GN_ENABLE_INLINE

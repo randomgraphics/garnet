@@ -1,3 +1,8 @@
+// *****************************************************************************
+//! \file    sigslot.h
+//! \brief   signal slot implementation
+//! \author  chenlee (2005.5.6)
+// *****************************************************************************
 #ifdef GN_SIGSLOT_TEMPL_N
 
 #ifndef GN_CONCATNATE
@@ -303,11 +308,6 @@ namespace GN
 
 #elif !defined(__GN_BASE_SIGSLOT_H__)
 #define __GN_BASE_SIGSLOT_H__
-// *****************************************************************************
-//! \file    sigslot.h
-//! \brief   signal slot implementation
-//! \author  chenlee (2005.5.6)
-// *****************************************************************************
 
 #include <list>
 #include <algorithm>

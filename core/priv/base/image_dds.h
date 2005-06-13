@@ -11,20 +11,20 @@
 //!
 struct DDPixelFormat
 {
-    uint32_t size;
-    uint32_t flags;
-    uint32_t fourcc;
-    uint32_t bits;
-    uint32_t rMask;  // R, Y
-    uint32_t gMask;  // G, U
-    uint32_t bMask;  // B, V
-    uint32_t aMask;  // A, A
+    uint32_t size;   //!< size of this structure
+    uint32_t flags;  //!< pixel format flags
+    uint32_t fourcc; //!< fourcc
+    uint32_t bits;   //!< bits of the format
+    uint32_t rMask;  //!< R, Y
+    uint32_t gMask;  //!< G, U
+    uint32_t bMask;  //!< B, V
+    uint32_t aMask;  //!< A, A
 };
 
 //!
 //! DDS file header
 //!
-struct DdsHeader
+struct DDSFileHeader
 {
     uint32_t        size;
     uint32_t        flags;
@@ -45,9 +45,9 @@ struct DdsHeader
 //!
 //! dds image reader
 //!
-class dds_reader_c
+class DDSReader
 {
-    DdsHeader       mHeader;
+    DDSFileHeader   mHeader;
     GN::ImageDesc   mImgDesc;
 
     const uint8_t * mSrc;
@@ -55,20 +55,30 @@ class dds_reader_c
 
 public:
 
-    dds_reader_c()
+    //!
+    //! Constructor
+    //!
+    DDSReader()
     {
     }
 
-    ~dds_reader_c()
+    //!
+    //! Destructor
+    //!
+    ~DDSReader()
     {
     }
 
+    //!
+    //! Read DDS header
+    //!
     bool readHeader(
         GN::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
-  
-    bool readImage( void * o_data ) const;
 
-private:
+    //!
+    //! Read DDS image
+    //!
+    bool readImage( void * o_data ) const;
 };
 
 // *****************************************************************************

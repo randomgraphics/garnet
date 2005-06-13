@@ -1,3 +1,8 @@
+// *****************************************************************************
+//! \file    functor.h
+//! \brief   general functor class
+//! \author  chenlee (2005.5.14)
+// *****************************************************************************
 #ifdef GN_FUNCTOR_TEMPL_N
 
 #ifndef GN_CONCATNATE
@@ -490,11 +495,6 @@ namespace GN
 
 #elif !defined(__GN_BASE_FUNCTOR_H__)
 #define __GN_BASE_FUNCTOR_H__
-// *****************************************************************************
-//! \file    functor.h
-//! \brief   general functor class
-//! \author  chenlee (2005.5.14)
-// *****************************************************************************
 
 namespace GN
 {
