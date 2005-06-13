@@ -29,6 +29,9 @@ class JpegErrorHandler : public jpeg_error_mgr
         longjmp( *err->mJumpBuf, -1 );
     }
 public:
+    //!
+    //! Construct JPEG error handler
+    //!
     JpegErrorHandler( jmp_buf * buf ) : mJumpBuf(buf)
     {
         GN_ASSERT( buf );
@@ -80,6 +83,9 @@ class JpegDataSource : public jpeg_source_mgr
 
 public:
 
+    //!
+    //! Initialize JPEG data source
+    //!
     void init( const JOCTET * i_buf, size_t i_size )
     {
         GN_ASSERT( i_buf && i_size );
@@ -111,19 +117,31 @@ class JpegReader
 
 public:
 
+    //!
+    //! constructor
+    //!
     JpegReader() : mErr(&mJumpBuf)
     {
         memset( &mCInfo, 0, sizeof(mCInfo) );
     }
 
+    //!
+    //! destructor
+    //!
     ~JpegReader()
     {
         jpeg_destroy_decompress(&mCInfo);
     }
 
+    //!
+    //! read JPEG header
+    //!
     bool readHeader(
         GN::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
   
+    //!
+    //! read JPEG image
+    //!
     bool readImage( void * o_data );
 };
 // *****************************************************************************

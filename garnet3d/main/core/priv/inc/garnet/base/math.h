@@ -8,12 +8,20 @@
 
 #include <math.h>
 
-//! \name 圆周率
-//@{
+//!
+//! 圆周率
+//!
 #define GN_PI       3.1415926535897932385f
+
+//!
+//! 圆周率/2
+//!
 #define GN_HALF_PI  (GN_PI / 2.0f)
+
+//!
+//! 圆周率*2
+//!
 #define GN_TWO_PI   (GN_PI * 2.0f)
-//@}
 
 namespace GN
 {

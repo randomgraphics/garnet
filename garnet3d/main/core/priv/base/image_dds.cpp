@@ -129,7 +129,7 @@ static struct DdpfDesc
 //! return IMG_INVAID if falied
 // ----------------------------------------------------------------------------
 static GN::ImageDesc::ImageType
-getImageType( const DdsHeader & header )
+getImageType( const DDSFileHeader & header )
 {
     if( DDS_DDSD_DEPTH & header.flags &&
          DDS_CAPS_COMPLEX & header.caps &&
@@ -213,13 +213,13 @@ static GN::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
 }
 
 // ****************************************************************************
-// dds_reader_c public functions
+// DDSReader public functions
 // ****************************************************************************
 
 //
 //
 // ----------------------------------------------------------------------------
-bool dds_reader_c::readHeader(
+bool DDSReader::readHeader(
     GN::ImageDesc & o_desc, const uint8_t * i_buff, size_t i_size )
 {
     GN_GUARD;
@@ -329,7 +329,7 @@ bool dds_reader_c::readHeader(
 //
 //
 // ----------------------------------------------------------------------------
-bool dds_reader_c::readImage( void * o_data ) const
+bool DDSReader::readImage( void * o_data ) const
 {
     GN_GUARD;
 

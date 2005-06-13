@@ -1,11 +1,3 @@
-#ifndef __GN_BASE_RENDERSTATE_INL__
-#define __GN_BASE_RENDERSTATE_INL__
-// *****************************************************************************
-//! \file    renderState.inl
-//! \brief   render state inline functions
-//! \author  chenlee (2005.6.4)
-// *****************************************************************************
-
 //
 //
 // ----------------------------------------------------------------------------
@@ -277,8 +269,3 @@ GN::RenderStateBlockDesc::operator - ( const RenderStateBlockDesc & rhs ) const
     result -= rhs;
     return result;
 }
-
-// *****************************************************************************
-//                           End of renderState.inl
-// *****************************************************************************
-#endif // __GN_BASE_RENDERSTATE_INL__
