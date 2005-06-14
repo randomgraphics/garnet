@@ -289,13 +289,7 @@ namespace GN
 // graphics
 #include "base/graphics.h"
 
-/* standard class definition
-#include "garnet/types/_types_stdclass.h"
-
-// reference counted auto pointer class
-#include "garnet/types/_types_refcounter.h"
-
-// reference counted auto pointer class
+/* reference counted auto pointer class
 #include "garnet/types/_types_autoscope.h"
 
 // singleton class
