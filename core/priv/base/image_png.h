@@ -11,7 +11,9 @@ extern "C"
 #include <png.h>
 }
 
-//! png image reader
+//!
+//! png image reader.
+//!
 class PngReader
 {
     png_struct    * mPng;
