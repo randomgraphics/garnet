@@ -1,0 +1,49 @@
+Import( 'env GN_targets' )
+
+import sys
+from string import Template
+
+def gen_doxyfile(target,source,env):
+
+    fp = open( source[0].path )
+    templ = Template( fp.read() )
+    fp.close();
+
+    doxy_dict = env['DOXYGEN']
+
+    str = templ.substitute(
+        OUTPUT_DIRECTORY    = doxy_dict['OUTPUT_DIRECTORY'],
+        CHM_FILE            = doxy_dict['CHM_FILE'],
+        HHC_LOCATION        = doxy_dict['HHC_LOCATION']
+        )
+
+    fp = open( target[0].path, 'w' )
+    fp.write( str )
+    fp.close();
+
+    env.Depends( target, doxy_dict['HHC_LOCATION'] )
+
+    return None
+
+if 'win32' == env['PLATFORM']:
+    doxygen = env.File('#core/pub/bin/win32/doxygen.exe').path
+    genchm = 'YES'
+else:
+    doxygen = 'doxygen'
+    genchm = 'NO'
+
+doxyfile = env.Command(
+    'Doxyfile',
+    'Doxyfile.in',
+    '%s %s $SOURCE OUTPUT_DIRECTORY=%s GENERATE_HTMLHELP=%s CHM_FILE=%s HHC_LOCATION=%s > $TARGET'%(
+        sys.executable,
+        File('gendoxyfile.py').path,
+        env.Dir('.').path,
+        genchm,
+        env.File('garnet3d.chm').abspath,
+        env.File('#core/pub/bin/win32/hhc.exe').abspath,
+        ),
+    )
+env.Depends( doxyfile, 'gendoxyfile.py' )
+
+GN_targets['GnDoc'] = env.Command( 'garnet3d.chm', doxyfile, '%s $SOURCE'%doxygen )

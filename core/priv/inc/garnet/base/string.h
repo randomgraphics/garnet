@@ -18,6 +18,7 @@ namespace GN
     template<typename CHAR>
     inline size_t strLen( const CHAR * s )
     {
+        if ( 0 == s ) return 0;
         size_t l = 0;
         while( 0 != *s )
         {
@@ -28,7 +29,7 @@ namespace GN
     }
 
     //!
-    //! string comparation
+    //! string comparation (case sensitive)
     //!
     template<typename CHAR>
     inline int strCmp( const CHAR * s1, const CHAR * s2 )
@@ -40,6 +41,32 @@ namespace GN
         {
             if ( *s1 < *s2 ) return -1;
             if ( *s1 > *s2 ) return 1;
+            ++s1;
+            ++s2;
+        }
+        if ( 0 != *s1 ) return 1;
+        if ( 0 != *s2 ) return -1;
+        return 0;
+    }
+
+    //!
+    //! string comparation (case insensitive)
+    //!
+    template<typename CHAR>
+    inline int strCmpI( const CHAR * s1, const CHAR * s2 )
+    {
+        if ( s1 == s2 ) return 0;
+        if ( 0 == s1 ) return -1;
+        if ( 0 == s2 ) return 1;
+        int a, b;
+        while( *s1 && *s2 )
+        {
+            a = (int)*s1;
+            b = (int)*s2;
+            if ( 'a' <= a && a <= 'z' ) a += 'A'-'a'; 
+            if ( 'a' <= b && b <= 'z' ) b += 'A'-'a'; 
+            if ( a < b ) return -1;
+            if ( a > b ) return 1;
             ++s1;
             ++s2;
         }
@@ -311,8 +338,7 @@ namespace GN
         //!
         Str & operator = ( const CHAR * s )
         {
-            if ( s ) assign( s, strLen<CHAR>(s) );
-            else clear();
+            assign( s, strLen<CHAR>(s) );
             return *this;
         }
 

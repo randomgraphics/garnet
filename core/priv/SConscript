@@ -1,1 +1,1 @@
-SConscript( dirs=Split('base test') )
+SConscript( dirs=Split('base test doc') )
