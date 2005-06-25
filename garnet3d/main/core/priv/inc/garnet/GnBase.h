@@ -279,9 +279,6 @@ namespace GN
 #include "base/math.h"
 #include "base/geometry.h"
 
-// misc.
-#include "base/misc.h"
-
 // functor & callback
 #include "base/functor.h"
 #include "base/sigslot.h"
@@ -289,13 +286,9 @@ namespace GN
 // graphics
 #include "base/graphics.h"
 
-/* reference counted auto pointer class
-#include "garnet/types/_types_autoscope.h"
+// misc.
+#include "base/misc.h"
 
-// singleton class
-#include "garnet/types/_types_singleton.h"
-
-*/
 // ****************************************************************************
 //                           END of GnBase.h
 // ****************************************************************************

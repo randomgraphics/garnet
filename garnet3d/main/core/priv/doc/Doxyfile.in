@@ -1,0 +1,16 @@
+# Doxyfile 1.4.3
+PROJECT_NAME           = Garnet3D
+OUTPUT_DIRECTORY       = "$OUTPUT_DIRECTORY"
+OUTPUT_LANGUAGE        = Chinese
+TAB_SIZE               = 4
+EXTRACT_LOCAL_CLASSES  = NO
+SORT_BY_SCOPE_NAME     = YES
+QUIET                  = YES
+INPUT                  = core/priv
+RECURSIVE              = YES
+GENERATE_HTMLHELP      = "$GENERATE_HTMLHELP"
+CHM_FILE               = "$CHM_FILE"
+HHC_LOCATION           = "$HHC_LOCATION"
+GENERATE_TREEVIEW      = YES
+GENERATE_LATEX         = NO
+MACRO_EXPANSION        = YES

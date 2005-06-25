@@ -11,6 +11,10 @@ public:
     void testCtor()
     {
         {
+            GN::Str<wchar_t> s(0);
+            TS_ASSERT_EQUALS(s,L"");
+        }
+        {
             GN::Str<wchar_t> s;
             TS_ASSERT_EQUALS(s,L"");
         }
@@ -40,6 +44,12 @@ public:
     void testMethod()
     {
         GN::Str<wchar_t> s1, s2, s3;
+
+        // append
+        s1.append(0);
+        TS_ASSERT_EQUALS( s1, L"" );
+        s1.append(L"a",2);
+        TS_ASSERT_EQUALS( s1, L"a" );
 
         // assignment
         s1.assign(0,1);
@@ -101,13 +111,23 @@ public:
 #if !GN_CYGWIN
         s1.format(L"haha%d",100);
         TS_ASSERT_EQUALS(s1,L"haha100");
+        s1.format(0,100);
+        TS_ASSERT_EQUALS(s1,L"");
 #else
         TS_WARN( "wide-char string formatting is not implemented on cygwin" );
 #endif
     }
 
-    void strfunc_test()
+    void testEquality()
     {
+        GN::Str<wchar_t> s1, s2, s3, s4, s5;
+
+        s1 = L"haha";
+        s2 = L"hehe";
+        s3 = L"hehe";
+        s4 = L"Hehe";
+        s5 = L"Hehe__";
+
         TS_ASSERT_EQUALS(  0, GN::strCmp<wchar_t>(0,0) );
         TS_ASSERT_EQUALS( -1, GN::strCmp<wchar_t>(0,L"") );
         TS_ASSERT_EQUALS(  1, GN::strCmp<wchar_t>(L"",0) );
@@ -118,6 +138,19 @@ public:
         TS_ASSERT_EQUALS(  1, GN::strCmp(L"abc",L"ABC") );
         TS_ASSERT_EQUALS( -1, GN::strCmp(L"abc",L"abcd") );
 
+        TS_ASSERT( -1 == GN::strCmpI<wchar_t>( 0, s1.cstr() ) );
+        TS_ASSERT( 1 == GN::strCmpI<wchar_t>( s1.cstr(), 0 ) );
+        TS_ASSERT( 1 == GN::strCmpI( s5.cstr(), s3.cstr() ) );
+        TS_ASSERT( 0 == GN::strCmpI( s4.cstr(), s4.cstr() ) );
+        TS_ASSERT( 0 == GN::strCmpI( s2.cstr(), s4.cstr() ) );
+        TS_ASSERT( 0 == GN::strCmpI( s4.cstr(), s2.cstr() ) );
+        TS_ASSERT( -1 == GN::strCmpI( s1.cstr(), s4.cstr() ) );
+        TS_ASSERT( 1 == GN::strCmpI( s4.cstr(), s1.cstr() ) );
+
+    }
+
+    void testStrFunc()
+    {
         GN::StrA s1("abcd");
         GN::StrW s2;
 

@@ -54,14 +54,14 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
     if ( 0 == l ) l = strLen(i);
 
     o.setCaps( l + 1 );
-    l = ::wcstombs( &o[0], i, l );
+    l = ::wcstombs( o.mPtr, i, l );
     if( (size_t)-1 == l || 0 == l )
     {
         o.clear();
     }
     else
     {
-        o[l] = 0;
+        o.mPtr[l] = 0;
         o.mLen = l;
     }
 }
@@ -85,14 +85,14 @@ void GN::mbs2wcs( StrW & o, const char * i, size_t l )
     if ( 0 == l ) l = strLen(i);
 
     o.setCaps( l + 1 );
-    l = ::mbstowcs( &o[0], i, l );
+    l = ::mbstowcs( o.mPtr, i, l );
     if( (size_t)-1 == l || 0 == l )
     {
         o.clear();
     }
     else
     {
-        o[l] = 0;
+        o.mPtr[l] = 0;
         o.mLen = l;
     }
 }
