@@ -26,7 +26,7 @@ def gen_doxyfile(target,source,env):
     return None
 
 if 'win32' == env['PLATFORM']:
-    doxygen = env.File('#core/pub/bin/win32/doxygen.exe').path
+    doxygen = env.File('#core/pub/tool/win32/doxygen.exe').path
     genchm = 'YES'
 else:
     doxygen = 'doxygen'
@@ -41,7 +41,7 @@ doxyfile = env.Command(
         env.Dir('.').path,
         genchm,
         env.File('garnet3d.chm').abspath,
-        env.File('#core/pub/bin/win32/hhc.exe').abspath,
+        env.File('#core/pub/tool/win32/hhc.exe').abspath,
         ),
     )
 env.Depends( doxyfile, 'gendoxyfile.py' )

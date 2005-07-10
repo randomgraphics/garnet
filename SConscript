@@ -226,23 +226,33 @@ def default_env( options = None ):
 
     # 缺省编译选项
     def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
-    cppdefines = generate_empty_options();
-    cpppath    = generate_empty_options();
-    libpath    = generate_empty_options();
-    libs       = generate_empty_options();
-    ccflags    = generate_empty_options();
-    cxxflags   = generate_empty_options();
-    linkflags  = generate_empty_options();
+    cppdefines = generate_empty_options()
+    cpppath    = generate_empty_options()
+    libpath    = generate_empty_options()
+    libs       = generate_empty_options()
+    ccflags    = generate_empty_options()
+    cxxflags   = generate_empty_options()
+    linkflags  = generate_empty_options()
+
+    cpppath['common']  = ['#core/pub/sdk/inc/common']
+    cpppath['debug']   = ['#core/pub/sdk/inc/debug']
+    cpppath['release'] = ['#core/pub/sdk/inc/release']
+    cpppath['stdbg']   = ['#core/pub/sdk/inc/stdbg']
+    cpppath['strel']   = ['#core/pub/sdk/inc/strel']
+
+    libpath['common']  = ['#core/pub/sdk/lib/%s/common'%env['PLATFORM']]
+    libpath['debug']   = ['#core/pub/sdk/lib/%s/debug'%env['PLATFORM']]
+    libpath['release'] = ['#core/pub/sdk/lib/%s/release'%env['PLATFORM']]
+    libpath['stdbg']   = ['#core/pub/sdk/lib/%s/stdbg'%env['PLATFORM']]
+    libpath['strel']   = ['#core/pub/sdk/lib/%s/strel'%env['PLATFORM']]
 
     # 定制不同平台的编译选项
     if 'win32' == env['PLATFORM']:
         libs['common'] += Split('kernel32 user32 gdi32')
     else:
-        cpppath['common']  += Split('/usr/X11R6/include /usr/local/include')
-        libpath['common']  += Split('/usr/X11R6/lib /usr/local/lib')
-        #libpath['debug']   += GN_conf['bindir']; # 链接bin目录下的dynamic core library
-        #libpath['release'] += GN_conf['bindir']; # 链接bin目录下的dynamic core library
-        libs['common']     += Split('X11 glut GL GLU')
+        cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
+        libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
+        libs['common']    += Split('X11 glut GL GLU')
 
     # 定制不同编译模式的编译选项
     cppdefines['debug']   += ['GN_DEBUG=1']
@@ -316,14 +326,15 @@ def default_env( options = None ):
             CPPDEFINES = cppdefines[build],
             CPPPATH = cpppath[build],
             LIBPATH = libpath[build],
-            LIBS    = libs[build],
             CCFLAGS = ccflags[build],
             CXXFLAGS = cxxflags[build],
             LINKFLAGS = linkflags[build] );
+        env.Prepend(
+            LIBS    = libs[build] ); # for gcc link
 
     # apply compile options based on current build
-    apply_options( env, 'common')
-    apply_options( env, GN_conf['build'])
+    apply_options( env, GN_conf['build'] )
+    apply_options( env, 'common' )
 
     # end of function default_env()
     return env
