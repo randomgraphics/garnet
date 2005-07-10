@@ -286,6 +286,9 @@ namespace GN
 // graphics
 #include "base/graphics.h"
 
+// registry class
+#include "base/registry.h"
+
 // misc.
 #include "base/misc.h"
 

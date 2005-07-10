@@ -1,12 +1,12 @@
 macro GN_HFileHeader()
 {
-	// let use input module name
+	// let user input module name
 	module = ask("Module name?")
 	module = toupper(module)
 
 	// username is always chenlee
 	username = "chenlee"
-	
+
 	hbuf = GetCurrentBuf()
 	fullpath = GetBufName( hbuf )
 	date = GetSysTime(true)
@@ -76,4 +76,67 @@ macro GN_HFileHeader()
 	// put the insertion point inside the header comment
 	SetBufIns( hbuf, 4, 14 )
 }
+
+macro GN_StdClassDecl()
+{
+	// let user input parent name
+	parentName = ask("Parent class name?")
+
+	hbuf = GetCurrentBuf()
+	className = GetBufSelText(hbuf)
+
+	currentLine = GetBufLnCur(hbuf)
+
+	SetBufSelText( hbuf, "" )
+
+	InsBufLine( hbuf,  currentLine+ 0, "//!" )
+	InsBufLine( hbuf,  currentLine+ 1, "//! " )
+	InsBufLine( hbuf,  currentLine+ 2, "//!" )
+	InsBufLine( hbuf,  currentLine+ 3, "class @className@ : public @parentName@" )
+	InsBufLine( hbuf,  currentLine+ 4, "{" )
+	InsBufLine( hbuf,  currentLine+ 5, "     GN_DECLARE_STDCLASS( @className@, @parentName@ );" )
+    InsBufLine( hbuf,  currentLine+ 6, "" )
+	InsBufLine( hbuf,  currentLine+ 7, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+ 8, "    //! \name  ctor/dtor" )
+	InsBufLine( hbuf,  currentLine+ 9, "    // ********************************" )
+    InsBufLine( hbuf,  currentLine+10, "" )
+	InsBufLine( hbuf,  currentLine+11, "    //\@{" )
+	InsBufLine( hbuf,  currentLine+12, "public:" )
+	InsBufLine( hbuf,  currentLine+13, "    @className@()          { clear(); }" )
+	InsBufLine( hbuf,  currentLine+14, "    virtual ~@className@() { quit(); }" )
+	InsBufLine( hbuf,  currentLine+15, "    //\@}" )
+    InsBufLine( hbuf,  currentLine+16, "" )
+	InsBufLine( hbuf,  currentLine+17, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+18, "    //! \name standard init/quit" )
+	InsBufLine( hbuf,  currentLine+19, "    // ********************************" )
+    InsBufLine( hbuf,  currentLine+20, "" )
+	InsBufLine( hbuf,  currentLine+21, "    //\@{" )
+	InsBufLine( hbuf,  currentLine+22, "public:" )
+	InsBufLine( hbuf,  currentLine+23, "    bool init();" )
+	InsBufLine( hbuf,  currentLine+24, "    void quit() { GN_STDCLASS_QUIT(); }" )
+	InsBufLine( hbuf,  currentLine+25, "    bool ok() const { return MyParent::ok(); }" )
+	InsBufLine( hbuf,  currentLine+26, "private:" )
+	InsBufLine( hbuf,  currentLine+27, "    void clear() {}" )
+	InsBufLine( hbuf,  currentLine+28, "    //\@}" )
+    InsBufLine( hbuf,  currentLine+29, "" )
+	InsBufLine( hbuf,  currentLine+30, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+31, "    //   public functions" )
+	InsBufLine( hbuf,  currentLine+32, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+33, "public:" )
+    InsBufLine( hbuf,  currentLine+34, "" )
+	InsBufLine( hbuf,  currentLine+35, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+36, "    //   private variables" )
+	InsBufLine( hbuf,  currentLine+37, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+38, "private:" )
+    InsBufLine( hbuf,  currentLine+39, "" )
+	InsBufLine( hbuf,  currentLine+40, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+41, "    //   private functions" )
+	InsBufLine( hbuf,  currentLine+42, "    // ********************************" )
+	InsBufLine( hbuf,  currentLine+43, "private:" )
+	InsBufLine( hbuf,  currentLine+44, "};" )
+
+	// put the insertion point inside the header comment
+	SetBufIns( hbuf, currentLine+1, 4 )
+}
+
 
