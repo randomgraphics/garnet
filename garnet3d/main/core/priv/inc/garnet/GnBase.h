@@ -272,6 +272,9 @@ namespace GN
 // string types
 #include "base/string.h"
 
+// misc.
+#include "base/misc.h"
+
 // file types
 #include "base/file.h"
 
@@ -288,9 +291,6 @@ namespace GN
 
 // registry class
 #include "base/registry.h"
-
-// misc.
-#include "base/misc.h"
 
 // ****************************************************************************
 //                           END of GnBase.h

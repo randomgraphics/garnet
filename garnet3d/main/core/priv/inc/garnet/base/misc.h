@@ -204,6 +204,25 @@ namespace GN
     };
 
     //!
+    //! Disable copy semantic of all descendants.
+    //!
+    class NoCopy
+    {
+    protected:
+        //!
+        //! Default constructor
+        //!
+        NoCopy() {}
+        //!
+        //! Destructor
+        //!
+        ~NoCopy() {}
+    private:  // emphasize the following members are private
+        NoCopy( const NoCopy & );
+        const NoCopy & operator = ( const NoCopy& );
+    };
+
+    //!
     //! 引用计数器
     //!
     //! 提供基本的引用技术功能，用于和 AutoRef 一起实现自动指针类
@@ -215,7 +234,7 @@ namespace GN
     //!       必须首先打开引用环，否则将造成内存泄漏，环中的变量将永远无法释放
     //!     - 就这些吧，其它的以后想到再说....
     //!
-    class RefCounter
+    class RefCounter : public NoCopy
     {
         // ********************************
         //       reference management
@@ -275,7 +294,7 @@ namespace GN
         // ********************************
     private:
 
-        // Make this class noncopyable.
+        // Make this class NoCopy.
         RefCounter( const RefCounter& );
         const RefCounter& operator=( const RefCounter& );
 
