@@ -46,7 +46,7 @@ public:
         GN::Str<wchar_t> s1, s2, s3;
 
         // append
-        s1.append(0);
+        s1.append((const wchar_t*)NULL);
         TS_ASSERT_EQUALS( s1, L"" );
         s1.append(L"a",2);
         TS_ASSERT_EQUALS( s1, L"a" );

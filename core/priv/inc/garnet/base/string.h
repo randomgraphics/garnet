@@ -13,17 +13,30 @@
 namespace GN
 {
     //!
-    //! get string length
+    //! Get string length.
+    //!
+    //! if maxLen > 0, then return min(maxLen,realLength).
     //!
     template<typename CHAR>
-    inline size_t strLen( const CHAR * s )
+    inline size_t strLen( const CHAR * s, size_t maxLen = 0 )
     {
         if ( 0 == s ) return 0;
         size_t l = 0;
-        while( 0 != *s )
+        if ( maxLen > 0 )
         {
-            ++l;
-            ++s;
+            while( 0 != *s && l < maxLen )
+            {
+                ++l;
+                ++s;
+            }
+        }
+        else
+        {
+            while( 0 != *s )
+            {
+                ++l;
+                ++s;
+            }
         }
         return l;
     }
@@ -107,7 +120,7 @@ namespace GN
     //!
     //! Custom string class
     //!
-    template< typename CHAR>
+    template<typename CHAR>
     class Str
     {
     public:
@@ -144,9 +157,7 @@ namespace GN
             }
             else
             {
-                size_t ll = strLen<CHAR>(s);
-                if ( 0 == l ) l = ll;
-                else if ( l > ll ) l = ll;
+                l = strLen<CHAR>(s,l);
                 mCaps = calcCaps(l);
                 mPtr = alloc(mCaps+1);
                 mLen = l;
@@ -169,9 +180,7 @@ namespace GN
         void append( const CHAR * s, size_t l = 0 )
         {
             if ( 0 == s ) return;
-            size_t ll = strLen<CHAR>(s);
-            if ( 0 == l ) l = ll;
-            else if ( l > ll ) l = ll;
+            l = strLen<CHAR>(s,l);
             setCaps( mLen + l );
             ::memcpy( mPtr+mLen, s, l*sizeof(CHAR) );
             mLen += l;
@@ -187,6 +196,15 @@ namespace GN
         }
 
         //!
+        //! append to this string
+        //!
+        void append( CHAR ch )
+        {
+            if ( 0 == ch ) return;
+            append( &ch, 1 );
+        }
+
+        //!
         //! assign value to string class
         //!
         void assign( const CHAR * s, size_t l = 0 )
@@ -198,9 +216,7 @@ namespace GN
             }
             else
             {
-                size_t ll = strLen<CHAR>(s);
-                if ( 0 == l ) l = ll;
-                else if ( l > ll ) l = ll;
+                l = strLen<CHAR>(s,l);
                 setCaps(l);
                 mLen = l;
                 ::memcpy( mPtr, s, l*sizeof(CHAR) );
@@ -343,7 +359,7 @@ namespace GN
         }
 
         //!
-        //! += operator
+        //! += operator (1)
         //!
         Str & operator += ( const Str & s )
         {
@@ -352,11 +368,29 @@ namespace GN
         }
 
         //!
-        //! += operator
+        //! += operator (2)
         //!
         Str & operator += ( const CHAR * s )
         {
             append( s, 0 );
+            return *this;
+        }
+
+        //!
+        //! += operator (3)
+        //!
+        Str & operator += ( CHAR ch )
+        {
+            append( ch );
+            return *this;
+        }
+
+        //!
+        //! += operator (4)
+        //!
+        Str & operator += ( std::basic_string<CHAR> & s )
+        {
+            append( s.c_str(), 0 );
             return *this;
         }
 
@@ -463,7 +497,22 @@ namespace GN
             return r;
         }
 
+        //!
+        //! concatnate operator(4)
+        //!
+        friend Str operator + ( const Str & s1, const std::basic_string<CHAR> & s2 )
+        {
+            Str r(s1);
+            r.append( s2.c_str() );
+            return r;
+        }
+
     private:
+
+        size_t getStrLength( const CHAR * s, size_t maxLen )
+        {
+            
+        }
 
         size_t calcCaps( size_t caps )
         {
