@@ -227,7 +227,7 @@ def default_env( options = None ):
         env.Append( BUILDERS={'PCH':bld} )
 
     # 定义sconsign文件
-    env.SConsignFile( os.path.join( build_dir,'.sconsign.dbm') )
+    env.SConsignFile( File('build/scons/%s/.sconsign.dbm'%env['PLATFORM']).path )
 
     # 缺省编译选项
     def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
