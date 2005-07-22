@@ -55,10 +55,8 @@ GN::Quaternion<T> & GN::Quaternion<T>::fromMatrix33( const Matrix33<T> & m )
 //
 // ----------------------------------------------------------------------------
 template < typename T >
-GN::Matrix33<T> GN::Quaternion<T>::toMatrix33() const
+void GN::Quaternion<T>::toMatrix33( Matrix33<T> & out ) const
 {
-    Matrix33<T> m;
-
     /*
     If q is guaranteed to be a unit quaternion, s will always
     be 1.  In that case, this calculation can be optimized out.
@@ -86,23 +84,21 @@ GN::Matrix33<T> GN::Quaternion<T>::toMatrix33() const
     /*
     x axis
     */
-    m[0][0] = 1.0f - (yy + zz);
-    m[1][0] = xy + wz;
-    m[2][0] = xz - wy;
+    out[0][0] = 1.0f - (yy + zz);
+    out[1][0] = xy + wz;
+    out[2][0] = xz - wy;
 
     /*
     y axis
     */
-    m[0][1] = xy - wz;
-    m[1][1] = 1.0f - (xx + zz);
-    m[2][1] = yz + wx;
+    out[0][1] = xy - wz;
+    out[1][1] = 1.0f - (xx + zz);
+    out[2][1] = yz + wx;
 
     /*
     z axis
     */
-    m[0][2] = xz + wy;
-    m[1][2] = yz - wx;
-    m[2][2] = 1.0f - (xx + yy);
-
-    return m;
+    out[0][2] = xz + wy;
+    out[1][2] = yz - wx;
+    out[2][2] = 1.0f - (xx + yy);
 }

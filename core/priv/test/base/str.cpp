@@ -96,8 +96,8 @@ public:
 #endif
 
         // []
-        TS_ASSERT_EQUALS( 'h', s2[0] );
-        TS_ASSERT_EQUALS( 0, s2[4] );
+        TS_ASSERT_EQUALS( L'h', s2[0] );
+        TS_ASSERT_EQUALS( L'\0', s2[4] );
 
         // +, +=
         s1 += s2;

@@ -4,10 +4,7 @@ import sys, glob
 
 # initialize local environment
 e = env.Copy()
-e.Append(
-    CPPPATH = ['.'],
-    LIBS = [ GN_targets['GnBase'], GN_targets['GnExtern'] ],
-    )
+e.Append( CPPPATH = ['.'] )
 
 # generate cxxtest glue file.
 cases   = GN_func['glob']('*.cpp', 'base')

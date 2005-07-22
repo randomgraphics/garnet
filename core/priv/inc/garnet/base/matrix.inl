@@ -259,9 +259,9 @@ namespace GN
     // 将矩阵的内容打印到字符串中
     // -------------------------------------------------------------------------
     template < typename T >
-    StrA Matrix33<T>::print() const
+    void Matrix33<T>::print( StrA & s ) const
     {
-        return formatStr(
+        s.format(
             "%f,\t%f,\t%f\n"
             "%f,\t%f,\t%f\n"
             "%f,\t%f,\t%f\n",
@@ -816,9 +816,9 @@ namespace GN
     //  将矩阵的内容打印到字符串中
     // -------------------------------------------------------------------------
     template < typename T >
-    StrA Matrix44<T>::print() const
+    void Matrix44<T>::print( StrA & s ) const
     {
-        return formatStr(
+		s.format(
             "%f,\t%f,\t%f,\t%f,\n"
             "%f,\t%f,\t%f,\t%f,\n"
             "%f,\t%f,\t%f,\t%f,\n"
