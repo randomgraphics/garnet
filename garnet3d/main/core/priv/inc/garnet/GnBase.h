@@ -242,6 +242,13 @@
 
 //@}
 
+// define standard numeric types
+#if GN_MSVC
+#include "base/stdint.h"
+#else
+#include <stdint.h>
+#endif
+
 //!
 //! namespace for garnet library
 //!
@@ -252,13 +259,6 @@ namespace GN
     //!
     namespace detail {}
 }
-
-// define numeric types
-#if GN_MSVC
-#include "base/stdint.h"
-#else
-#include <stdint.h>
-#endif
 
 // macros and functions for debug
 #include "base/debug.h"

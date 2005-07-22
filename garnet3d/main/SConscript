@@ -26,9 +26,9 @@ GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
 #
 ################################################################################
 
-build_dir   = Dir( os.path.join('build', GN_conf['platform'], GN_conf['build'] ) ).abspath
-conf_dir    = os.path.join( build_dir, 'conf' )
-cache_dir   = Dir( os.path.join( 'build', 'cache' ) ).abspath
+build_dir = Dir( os.path.join('build', 'scons', GN_conf['platform'], GN_conf['build'] ) ).abspath
+conf_dir  = os.path.join( build_dir, 'conf' )
+cache_dir = os.path.join( build_dir, 'cache' )
 
 # 创建必要的目录
 if not os.path.exists( build_dir ) : os.makedirs( build_dir )
@@ -166,7 +166,10 @@ def GN_build_shared_library(local_env,target=None,sources=[],pchstop=0,pchcpp=0,
     if GN_conf['static']:
         lib = e.Library(target,sources)
     else:
-        lib = e.SharedLibrary(target,sources)
+        extra = [];
+        if 'GnCore' != target: extra += [ GN_targets['GnCore'] ]
+        extra += [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
+        lib = e.SharedLibrary(target,sources+extra)
 
     """if len(list(lib)) >= 4:
         # 0:dll, 1:pdb, 2:lib, 3:exp
@@ -182,17 +185,19 @@ def GN_build_dynamic_library(local_env,target=None,sources=[],pchstop=0,pchcpp=0
     e = local_env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
-    return e.SharedLibrary(target,sources)
+    extra = [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
+    return e.SharedLibrary(target,sources+extra)
 
 # 编译可执行文件
 def GN_build_program(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
     e = local_env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
+    extra = [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
     if target:
-        prog = e.Program(target,sources)
+        prog = e.Program(target,sources+extra)
     else:
-        prog = e.Program(sources)
+        prog = e.Program(sources+extra)
     return prog
 
 ################################################################################
@@ -222,7 +227,7 @@ def default_env( options = None ):
         env.Append( BUILDERS={'PCH':bld} )
 
     # 定义sconsign文件
-    env.SConsignFile( os.path.join( 'build','.sconsign.dbm') )
+    env.SConsignFile( os.path.join( build_dir,'.sconsign.dbm') )
 
     # 缺省编译选项
     def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }

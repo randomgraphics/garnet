@@ -256,15 +256,7 @@ namespace GN
         //!
         Vector2 & normalize()
         {
-            ElementType m = length();
-
-            if( m > 0.0F )
-            {
-                m = 1.0F / m;
-                x *= m;
-                y *= m;
-            }
-
+			normalize( *this, *this );
             return *this;
         }
 
@@ -273,19 +265,29 @@ namespace GN
         //!
         static Vector2 normalize( const Vector2 & v )
         {
-            Vector2 r(v);
-            r.normalize();
+            Vector2 r;
+            normalize( r, v );
             return r;
         }
 
         //!
         //! Normalize a Vector2
         //!
-        static Vector2 & normalize( Vector2 & o, const Vector2 & i )
+        static void normalize( Vector2 & o, const Vector2 & i )
         {
-            o = i;
-            o.normalize();
-            return o;
+            ElementType m = i.length();
+
+            if( m > 0.0F )
+            {
+                m = 1.0F / m;
+                o.x = i.x * m;
+                o.y = i.y * m;
+            }
+			else
+			{
+				o.x = 0.0f;
+				o.y = 0.0f;
+			}
         }
 
         //!
@@ -576,14 +578,7 @@ namespace GN
         //!
         Vector3 & normalize()
         {
-            ElementType m = length();
-            if (m > 0.0F)
-              m = 1.0F / m;
-            else
-              m = 0.0F;
-            x *= m;
-            y *= m;
-            z *= m;
+			normalize( *this, *this );
             return *this;
         }
         //!
@@ -591,18 +586,30 @@ namespace GN
         //!
         static Vector3 normalize( const Vector3 & v )
         {
-            Vector3 r(v);
-            r.normalize();
+            Vector3 r;
+            normalize( r, v );
             return r;
         }
         //!
         //! Normalize a Vector3
         //!
-        static Vector3 & normalize( Vector3 & o, const Vector3 & i )
+        static void normalize( Vector3 & o, const Vector3 & i )
         {
-            o = i;
-            o.normalize();
-            return o;
+            ElementType m = i.length();
+
+            if( m > 0.0F )
+            {
+                m = 1.0F / m;
+                o.x = i.x * m;
+                o.y = i.y * m;
+				o.z = i.z * m;
+            }
+			else
+			{
+				o.x = 0.0f;
+				o.y = 0.0f;
+				o.z = 0.0f;
+			}
         }
         //!
         //! dot production
@@ -623,12 +630,11 @@ namespace GN
         //!
         //! get cross product of v1 and v2, and store the result into o
         //!
-        static Vector3 & cross( Vector3 & o, const Vector3 & v1, const Vector3 & v2 )
+        static void cross( Vector3 & o, const Vector3 & v1, const Vector3 & v2 )
         {
             o.set( v1.y * v2.z - v1.z * v2.y,
                    v1.z * v2.x - v1.x * v2.z,
                    v1.x * v2.y - v1.y * v2.x);
-            return o;
         }
     };
 
@@ -936,15 +942,7 @@ namespace GN
         //!
         Vector4 & normalize()
         {
-            ElementType m = length();
-            if (m > 0.0F)
-                m = 1.0F / m;
-            else
-                m = 0.0F;
-            x *= m;
-            y *= m;
-            z *= m;
-            w *= m;
+			normalize( *this, *this );
             return *this;
         }
         //!
@@ -952,18 +950,32 @@ namespace GN
         //!
         static Vector4 normalize( const Vector4 & v )
         {
-            Vector4 r(v);
-            r.normalize();
+            Vector4 r;
+            normalize( r, v );
             return r;
         }
         //!
         //! Normalize a Vector4
         //!
-        static Vector4 & normalize( Vector4 & o, const Vector4 & i )
+        static void normalize( Vector4 & o, const Vector4 & i )
         {
-            o = i;
-            o.normalize();
-            return o;
+            ElementType m = i.length();
+
+            if( m > 0.0F )
+            {
+                m = 1.0F / m;
+                o.x = i.x * m;
+                o.y = i.y * m;
+				o.z = i.z * m;
+				o.w = i.w * m;
+            }
+			else
+			{
+				o.x = 0.0f;
+				o.y = 0.0f;
+				o.z = 0.0f;
+				o.w = 0.0f;
+			}
         }
         //!
         //! Convert to a 3D vector (divide by w)
@@ -1221,20 +1233,19 @@ namespace GN
         //!
         //! Çó×ªÖÃ¾ØÕó
         //!
+        static void transpose( Matrix33 & dst, const Matrix33 & src )
+        {
+            dst = src;
+            dst.transpose();
+        }
+        //!
+        //! Çó×ªÖÃ¾ØÕó
+        //!
         static Matrix33 transpose( const Matrix33 & src )
         {
             Matrix33 r(src);
             r.transpose();
             return r;
-        }
-        //!
-        //! Çó×ªÖÃ¾ØÕó
-        //!
-        static Matrix33 & transpose( Matrix33 & o, const Matrix33 & i )
-        {
-            o = i;
-            o.transpose();
-            return o;
         }
         //!
         //! ½«±¾¾ØÕóÖÃÄæ
@@ -1243,20 +1254,19 @@ namespace GN
         //!
         //! ÇóÄæ¾ØÕó
         //!
+        static void invert( Matrix33 & dst, const Matrix33 & src )
+        {
+            dst = src;
+            dst.invert();
+        }
+        //!
+        //! ÇóÄæ¾ØÕó
+        //!
         static Matrix33 invert( const Matrix33 & src )
         {
             Matrix33 r(src);
             r.invert();
             return r;
-        }
-        //!
-        //! ÇóÄæ¾ØÕó
-        //!
-        static Matrix33 & invert( Matrix33 & o, const Matrix33 & i )
-        {
-            o = i;
-            o.invert();
-            return o;
         }
         //!
         //! Ëõ·Å¾ØÕó
@@ -1325,7 +1335,7 @@ namespace GN
         //!
         //! ´òÓ¡¾ØÕóÄÚÈÝµ½×Ö·û´®ÖÐ, mainly for debug purpose.
         //!
-        StrA print() const;
+        void print( StrA & ) const;
     };
 
     // static member
@@ -1586,7 +1596,7 @@ namespace GN
         Matrix44 & set( const Matrix33<T> & m33,
                         const Vector3<T> & col3 = Vector3<T>(0,0,0),
                         const Vector3<T> & row3 = Vector3<T>(0,0,0),
-                        ElementType        _33  = 1.0f )
+                        ElementType         _33 = 1.0f )
         {
             rows[0].set( m33[0], col3.x );
             rows[1].set( m33[1], col3.y );
@@ -1621,20 +1631,19 @@ namespace GN
         //!
         //! Çó×ªÖÃ¾ØÕó
         //!
+        static void transpose( Matrix44 & dst, const Matrix44 & src )
+        {
+            dst = src;
+            dst.transpose();
+        }
+        //!
+        //! Çó×ªÖÃ¾ØÕó
+        //!
         static Matrix44 transpose( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.transpose();
             return r;
-        }
-        //!
-        //! Çó×ªÖÃ¾ØÕó
-        //!
-        static Matrix44 & transpose( Matrix44 & o, const Matrix44 & i )
-        {
-            o = i;
-            o.transpose();
-            return o;
         }
         //!
         //! ½«±¾¾ØÕóÖÃÄæ
@@ -1643,20 +1652,19 @@ namespace GN
         //!
         //! ÇóÄæ¾ØÕó
         //!
+        static void invert( Matrix44 & dst, const Matrix44 & src )
+        {
+            dst = src;
+            dst.invert();
+        }
+        //!
+        //! ÇóÄæ¾ØÕó
+        //!
         static Matrix44 invert( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.invert();
             return r;
-        }
-        //!
-        //! ÇóÄæ¾ØÕó
-        //!
-        static Matrix44 & invert( Matrix44 & o, const Matrix44 & i )
-        {
-            o = i;
-            o.invert();
-            return o;
         }
         //!
         //! inverse and tranpose
@@ -1669,20 +1677,19 @@ namespace GN
         //!
         //! inverse and tranpose
         //!
+        static void invtrans( Matrix44 & dst, const Matrix44 & src )
+        {
+            dst = src;
+            dst.invtrans();
+        }
+        //!
+        //! inverse and tranpose
+        //!
         static Matrix44 invtrans( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.invtrans();
             return r;
-        }
-        //!
-        //! inverse and tranpose
-        //!
-        static Matrix44 & invtrans( Matrix44 & o, const Matrix44 & i )
-        {
-            o = i;
-            o.invtrans();
-            return o;
         }
         //!
         //! ÇóÐý×ª¾ØÕó
@@ -1914,19 +1921,25 @@ namespace GN
         //!
         //! transform a 3-D point by this matrix
         //!
-        Vector3<T> transformPoint( const Vector3<T> & c ) const
+        void transformPoint( Vector3<T> & dst, const Vector3<T> & src ) const
         {
-            Vector3<T> result(
-                rows[0].x * c.x + rows[0].y * c.y + rows[0].z * c.z + rows[0].w,
-                rows[1].x * c.x + rows[1].y * c.y + rows[1].z * c.z + rows[1].w,
-                rows[2].x * c.x + rows[2].y * c.y + rows[2].z * c.z + rows[2].w );
+            dst.x = rows[0].x * src.x + rows[0].y * src.y + rows[0].z * src.z + rows[0].w;
+            dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z + rows[1].w;
+            dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z + rows[2].w;
 
-            float k = rows[3].x*c.x + rows[3].y*c.y + rows[3].z*c.z + rows[3].w;
+            float k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
 
-            if( .0f != k ) result /= k;
+            if( .0f != k ) dst /= k;
             else GN_WARN( "the vertex is transformed to infinite place" );
-
-            return result;
+        }
+        //!
+        //! transform a 3-D point by this matrix
+        //!
+        Vector3<T> transformPoint( const Vector3<T> & src ) const
+        {
+			Vector3<T> dst;
+			transformPoint( dst, src );
+			return dst;
         }
         //!
         //! transform a vector by this matrix
@@ -1934,18 +1947,37 @@ namespace GN
         //! \note
         //!     To transform an normal, you should use invtrans of the desired matrix.
         //!
-        Vector3<T> transformVector( const Vector3<T> & n ) const
+        void transformVector( Vector3<T> & dst, const Vector3<T> & src ) const
         {
-            Vector3<T> result(
-                rows[0].x * n.x + rows[0].y * n.y + rows[0].z * n.z,
-                rows[1].x * n.x + rows[1].y * n.y + rows[1].z * n.z,
-                rows[2].x * n.x + rows[2].y * n.y + rows[2].z * n.z );
-            return result;
+            dst.x = rows[0].x * src.x + rows[0].y * src.y + rows[0].z * src.z;
+            dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z;
+            dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z;
+        }
+        //!
+        //! transform a vector by this matrix
+        //!
+        //! \note
+        //!     To transform an normal, you should use invtrans of the desired matrix.
+        //!
+        Vector3<T> transformVector( const Vector3<T> & src ) const
+        {
+            Vector3<T> dst;
+			transformVector( dst, src );
+            return dst;
         }
         //!
         //! ´òÓ¡¾ØÕóÄÚÈÝµ½×Ö·û´®
         //!
-        StrA print() const;
+        void print( StrA & ) const;
+        //!
+        //! ´òÓ¡¾ØÕóÄÚÈÝµ½×Ö·û´®
+        //!
+        StrA print() const
+        {
+			StrA s;
+			print(s);
+			return s;
+        }
     };
 
     // static member
@@ -2086,6 +2118,14 @@ namespace GN
         //!
         //! normalize a quaternion
         //!
+        static void normalize( Quaternion & dst, const Quaternion & src )
+        {
+            dst = src;
+            dst.normalize();
+        }
+        //!
+        //! normalize a quaternion
+        //!
         static Quaternion normalize( const Quaternion & src )
         {
             Quaternion r(src);
@@ -2098,6 +2138,14 @@ namespace GN
         Quaternion & conjugate()
         {
             v = -v; return *this;
+        }
+        //!
+        //! conjugate
+        //!
+        static void conjugate( Quaternion & dst, const Quaternion & src )
+        {
+            dst = src;
+            dst.conjugate();
         }
         //!
         //! conjugate
@@ -2121,6 +2169,14 @@ namespace GN
             { w = 0.0f; v.set(0, 0, 0); }
 
             return *this;
+        }
+        //!
+        //! invert
+        //!
+        static void invert( Quaternion & dst, const Quaternion & src )
+        {
+            dst = src;
+            dst.invert();
         }
         //!
         //! invert
@@ -2194,7 +2250,7 @@ namespace GN
         //!
         Quaternion & fromEuler( const Vector3<T> & euler )
         {
-            return from_euler( euler.x, euler.y, euler.z );
+            return fromEuler( euler.x, euler.y, euler.z );
         }
         //!
         //! construct from matrix33
@@ -2203,7 +2259,16 @@ namespace GN
         //!
         //! convert to matrix33
         //!
-        Matrix33<T> toMatrix33() const;
+        void toMatrix33( Matrix33<T> & out ) const;
+        //!
+        //! convert to matrix33
+        //!
+        Matrix33<T> toMatrix33() const
+        {
+			Matrix33<T> out;
+			toMatrix33( out );
+			return out;
+        }
     };
 
     // static member
@@ -2345,6 +2410,15 @@ namespace GN
             ElementType f = n.length();
             if( f ) { n /= f; d /= f; }
             return *this;
+        }
+        //!
+        //! Normalize the plane (so that |a,b,c| == 1)
+        //!
+        static void normalize( Plane3 & dst, const Plane3 & src )
+        {
+            dst = src;
+            dst.normalize();
+            return dst;
         }
         //!
         //! Normalize the plane (so that |a,b,c| == 1)
@@ -2500,6 +2574,14 @@ namespace GN
         //!
         //! Get normalize rectangle
         //!
+        static void normalize( Rect<T> & dst, const Rect<T> & src )
+        {
+			dst = src;
+            dst.normalize();
+        }
+        //!
+        //! Get normalize rectangle
+        //!
         static Rect<T> normalize( const Rect<T> & src )
         {
             Rect<T> dst(src);
@@ -2635,6 +2717,10 @@ namespace GN
         //!
         VertexType center() const { return ( vmin + vmax ) / 2.0f; }
         //!
+        //! return box center
+        //!
+        void center( VertexType & out ) const { out = ( vmin + vmax ) / 2.0f; }
+        //!
         //! value set
         //!
         void set( const VertexType & v1, const VertexType & v2 )
@@ -2644,20 +2730,29 @@ namespace GN
         //!
         //! normalization
         //!
-        void normalize()
+        Box & normalize()
         {
             if( vmin.x > vmax.x ) std::swap(vmin.x, vmax.x);
             if( vmin.y > vmax.y ) std::swap(vmin.y, vmax.y);
             if( vmin.z > vmax.z ) std::swap(vmin.z, vmax.z);
+			return *this;
         }
         //!
         //! normalization (store result into another variable)
         //!
-        static Box normalize( const Box & b )
+        static void normalize( Box & dst, const Box & src )
         {
-            Box r(b);
-            r.normalize();
-            return r;
+			dst = src;
+            dst.normalize();
+        }
+        //!
+        //! normalization (store result into another variable)
+        //!
+        static Box normalize( const Box & src )
+        {
+            Box dst(src);
+            dst.normalize();
+            return dst;
         }
         //!
         //! intersection test with point

@@ -46,4 +46,5 @@ doxyfile = env.Command(
     )
 env.Depends( doxyfile, 'gendoxyfile.py' )
 
-GN_targets['GnDoc'] = env.Command( 'garnet3d.chm', doxyfile, '%s $SOURCE'%doxygen )
+if 'YES' == genchm :
+    GN_targets['GnDoc'] = env.Command( 'garnet3d.chm', doxyfile, '%s $SOURCE'%doxygen )

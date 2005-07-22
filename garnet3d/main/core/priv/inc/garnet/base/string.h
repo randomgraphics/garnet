@@ -509,11 +509,6 @@ namespace GN
 
     private:
 
-        size_t getStrLength( const CHAR * s, size_t maxLen )
-        {
-            
-        }
-
         size_t calcCaps( size_t caps )
         {
             caps |= caps >> 16;
