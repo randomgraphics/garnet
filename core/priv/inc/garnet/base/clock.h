@@ -54,22 +54,22 @@ namespace GN
         }
 
         //!
-        //!
+        //! 重置时钟到初始状态
         //!
         void reset();
 
         //!
-        //!
+        //! 恢复时钟运行
         //!
         void resume();
 
         //!
-        //!
+        //! 暂停时钟
         //!
         void pause();
 
         //!
-        //!
+        //! 当前时钟是否暂停
         //!
         bool paused() const { return mPaused; }
 

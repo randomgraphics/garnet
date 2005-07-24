@@ -227,6 +227,8 @@ namespace GN
         //!
         //! \param dirName    在什么目录下
         //! \param pattern    搜索什么文件
+        //! \param recursive  是否递归搜索子目录
+        //! \param useRegex   是否使用正则匹配
         //!
         virtual std::vector<StrA>
         findFiles( const StrA & dirName,
@@ -289,7 +291,7 @@ namespace GN
         //!
         //! register a file device
         //!
-        //! \param device_name    Device name
+        //! \param deviceName     Device name
         //! \param device         Pointer to device instance, can't be NULL
         //!                       Reference counter of the device will be increased.
         //! \param override       Override the existing file device?
@@ -316,8 +318,8 @@ namespace GN
         //!
         //! 打开文件
         //!
-        //! \param path      File path (w/ or w/o device name)
-        //! \param openmode  one or combination of FileOpenMode
+        //! \param path  File path (w/ or w/o device name)
+        //! \param mode  one or combination of FileOpenMode
         //!
         AutoRef<File>
         openFile( const StrA & path, int mode ) const;
@@ -337,7 +339,8 @@ namespace GN
         //!
         //! \param dirName    在什么目录下, should be a valid directory locator
         //! \param pattern    搜索什么文件, in format of regualr expression
-        //! \param flags      searching flag, one or combination of ff_t
+        //! \param recursive  是否递归搜索子目录
+        //! \param useRegex   是否使用正则匹配
         //!
         std::vector<StrA>
         findFiles( const StrA & dirName,

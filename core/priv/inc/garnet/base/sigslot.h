@@ -214,11 +214,7 @@ namespace GN
 
         virtual void slotDisconnect( const SlotBase & slot ) const
         {
-            SlotIter new_end = std::remove_if(
-                mSlots.begin(),
-                mSlots.end(),
-                EqualSlotClassPtr(&slot) );
-            mSlots.erase( new_end, mSlots.end() );
+            mSlots.remove_if( EqualSlotClassPtr(&slot) );
         }
 
         void AddSlot( const SlotDesc & desc ) const
@@ -327,7 +323,9 @@ namespace GN
             friend class GN::SlotBase;
             virtual void slotDisconnect( const GN::SlotBase & ) const {}
         protected:
+            /** add itself to target slot's signal-array */
             void connectToSlot( const GN::SlotBase & slot ) const;
+            /** remove itself from target slot's signal-array */
             void disconnectToSlot( const GN::SlotBase & slot ) const;
         public:
             virtual ~SignalBase() {}
@@ -338,12 +336,8 @@ namespace GN
     //! Base slot class. Derive your class from this, if you want automatic
     //! management of connections between signal and slot.
     //!
-    class SlotBase
+    class SlotBase : public NoCopy
     {
-        // overload these to ensure signal list is not copied around.
-        SlotBase( const SlotBase & ) {}
-        SlotBase & operator=( const SlotBase & ) { return *this; }
-
     protected:
 
         SlotBase() {}
@@ -360,37 +354,38 @@ namespace GN
 
     public:
 
+        /** 返回与当前slot连接的信号数 */
         size_t getNumSignals() const { return mSignals.size(); }
 
     private:
         friend class detail::SignalBase;
         typedef std::list<const detail::SignalBase*> SignalContainer;
         mutable SignalContainer mSignals;
-    private:
-        void signalConnect( const detail::SignalBase & signal ) const
-        {
-            mSignals.push_back( &signal );
-        }
-        void signalDisconnect( const detail::SignalBase & signal ) const
-        {
-            mSignals.remove( &signal );
-        }
     };
 
     inline void detail::SignalBase::connectToSlot( const SlotBase & slot ) const
     {
-        slot.signalConnect(*this);
+        slot.mSignals.push_back( this );
     }
     inline void detail::SignalBase::disconnectToSlot( const SlotBase & slot ) const
     {
-        slot.signalDisconnect(*this);
+        slot.mSignals.remove( this );
     }
 }
 
 #define GN_SIGSLOT_TEMPL_N 0
 #include "sigslot.h"
 
+#define GN_SIGSLOT_TEMPL_N 1
+#include "sigslot.h"
+
 #define GN_SIGSLOT_TEMPL_N 2
+#include "sigslot.h"
+
+#define GN_SIGSLOT_TEMPL_N 3
+#include "sigslot.h"
+
+#define GN_SIGSLOT_TEMPL_N 4
 #include "sigslot.h"
 
 // *****************************************************************************
