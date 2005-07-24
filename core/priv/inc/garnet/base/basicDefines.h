@@ -147,6 +147,8 @@
 #if GN_MSVC
 #include "base/stdint.h"
 #else
+#include <stddef.h>
+#include <wchar.h>
 #include <stdint.h>
 #endif
 
