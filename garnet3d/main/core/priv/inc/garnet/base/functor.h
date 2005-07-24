@@ -500,11 +500,14 @@ namespace GN
 {
     namespace detail
     {
+        //!
+        //! Private type indicating functor type
+        //!
         enum ClosureType
         {
-            FREE_FUNC,
-            MEM_FUNC,
-            CONST_MEM_FUNC,
+            FREE_FUNC,      //!< Normal global/static function
+            MEM_FUNC,       //!< non-const member function
+            CONST_MEM_FUNC, //!< const member function
         };
     }
 }

@@ -1,5 +1,5 @@
 #ifndef GN_COLOR_FORMAT
-#error "GN_COLOR_FORMAT not defined
+#error "GN_COLOR_FORMAT not defined"
 #endif
 
 //               format                  bits               swizzle         ch_0                   ch_1                   ch_2                   ch_3

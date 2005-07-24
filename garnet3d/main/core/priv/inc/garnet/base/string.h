@@ -507,6 +507,16 @@ namespace GN
             return r;
         }
 
+        //!
+        //! concatnate operator(5)
+        //!
+        friend Str operator + ( const std::basic_string<CHAR> & s1, const Str & s2 )
+        {
+            Str r(s2);
+            r.append( s1.c_str() );
+            return r;
+        }
+
     private:
 
         size_t calcCaps( size_t caps )
@@ -521,12 +531,12 @@ namespace GN
 
         static CHAR * alloc( size_t len )
         {
-            return (CHAR*)::malloc( sizeof(CHAR) * len );
+            return (CHAR*)memAlloc( sizeof(CHAR) * len );
         }
 
         static void dealloc( CHAR * ptr )
         {
-            if ( ptr ) ::free( ptr );
+            if ( ptr ) memFree( ptr );
         }
 
         size_t mLen;   //!< string length in charecters, not including pending zero
