@@ -92,7 +92,7 @@ namespace GN
             // make this class uncopyable
             CLOSUREBASE_NAME( const CLOSUREBASE_NAME & );
 
-            CLOSUREBASE_NAME operator=( const CLOSUREBASE_NAME & );
+            CLOSUREBASE_NAME & operator=( const CLOSUREBASE_NAME & );
 
         protected:
 

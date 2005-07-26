@@ -488,7 +488,7 @@ namespace GN
         //!
         //! Get the instance pointer (might be NULL)
         //!
-        static T * getInstance() { return msInstance; }
+        static T * getInstancePtr() { return msInstance; }
     };
 
     //!

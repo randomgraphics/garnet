@@ -10,14 +10,26 @@
 #SourceSignatures( "timestamp" )
 #TargetSignatures( "content" )
 
-conf = {}
+# 记录当前的OS
+conf = {
+    'platform' : Environment()['PLATFORM'],
+}
 
 # 定义缺省的选项
+if 'win32' == conf['platform']: default_compiler = 'vs71'
+else: default_compiler = 'gcc'
 default_configs = {
     'build'             : 'debug',
-    'use_cg'            : 1,    # use Cg by default.
-    'enable_profile'    : 0,    # disabled by default
+    'compiler'          : default_compiler, # default compiler
+    'use_cg'            : 1,                # use Cg by default.
+    'enable_profile'    : 0,                # disabled by default
     }
+
+# 定义编译器类型
+conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])
+if not conf['compiler'] in Split('%s vs8 icl'%default_compiler):
+    print 'Invalid compiler type! Must be one of (%s vs8 icl)'%default_compiler;
+    Exit(-1)
 
 # 定义编译类型
 # can be 'debug', 'release', 'stdbg', 'strel', 'static', 'all'
@@ -43,6 +55,10 @@ alias   = []
 ################################################################################
 
 opts = Options()
+opts.Add(
+    'compiler',
+    'Specify compiler. Could be : %s vs8 icl'%default_compiler,
+    default_configs['compiler'] )
 opts.Add(
     'build',
     'Specify build variant. Could be : debug, release, stdbg, strel or all',
