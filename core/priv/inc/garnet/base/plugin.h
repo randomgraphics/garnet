@@ -28,15 +28,35 @@ namespace GN
     //!
     //! Plugin ID. "0" is invalid ID
     //!
-    union PluginID
+    struct PluginID
     {
-        uint32_t u32;
-        int32_t  i32;
-        struct
+        union
         {
-            PluginTypeID type;
-            uint16_t     name;
+            uint32_t u32;
+            int32_t  i32;
+            struct
+            {
+                PluginTypeID type;
+                uint16_t     name;
+            };
         };
+
+        static PluginID INVALID;
+
+        bool operator < ( const PluginID & rhs ) const
+        {
+            return u32 < rhs.u32;
+        }
+
+        bool operator == ( const PluginID & rhs ) const
+        {
+            return u32 == rhs.u32;
+        }
+
+        bool operator != ( const PluginID & rhs ) const
+        {
+            return u32 != rhs.u32;
+        }
     };
 
     //!
@@ -63,51 +83,61 @@ namespace GN
         //@{
     public:
         bool init();
-        void quit() { GN_STDCLASS_QUIT(); }
+        void quit();
         bool ok() const { return MyParent::ok(); }
     private:
         void clear() {}
         //@}
 
         // ********************************
-        //   public functions
+        //! \name Plugin Management
         // ********************************
-    public:
 
-        //!
-        //! Create new instance of specific plugin
-        //!
-        AutoRef<PluginBase> createInstance( const StrA & type, const StrA & name );
+        //@{
+    public:
 
         //!
         //! Retrieve specific plugin's type ID by its name.
         //!
-        PluginTypeID getPluginTypeID( const StrA & );
+        PluginTypeID getPluginTypeID( const StrA & ) const;
 
         //!
         //! Get specific plugin's type name
         //!
-        const StrA & getPluginTypeName( PluginTypeID );
+        const StrA & getPluginTypeName( PluginTypeID ) const;
 
         //!
         //! Get specific plugin's type description
         //!
-        const StrA & getPluginTypeDesc( PluginTypeID );
+        const StrA & getPluginTypeDesc( PluginTypeID ) const;
+
+        //!
+        //! Retrieve plugin ID by its type-ID and name
+        //!
+        PluginID getPluginID( PluginTypeID type, const StrA & name ) const;
 
         //!
         //! Retrieve plugin ID by its type and name
         //!
-        PluginID getPluginID( const StrA & type, const StrA & name );
+        PluginID getPluginID( const StrA & type, const StrA & name ) const
+        {
+            return getPluginID( getPluginTypeID(type), name );
+        }
+
+        //!
+        //! Valid plugin ID or not?
+        //!
+        bool validID( PluginID ) const;
 
         //!
         //! Get specific plugin's name
         //!
-        const StrA & getPluginName( PluginID );
+        const StrA & getPluginName( PluginID ) const;
 
         //!
         //! Get specific plugin's description
         //!
-        const StrA & getPluginDesc( PluginID );
+        const StrA & getPluginDesc( PluginID ) const;
 
         //!
         //! Register new plugin type. Return 0 if failed.
@@ -166,14 +196,39 @@ namespace GN
             removePlugin( getPluginID( type, name ) );
         }
 
+        //!
+        //! Create new instance of specific plugin
+        //!
+        AutoRef<PluginBase> createInstance( PluginID id, void * param ) const;
+
+        //!
+        //! Create new instance of specific plugin
+        //!
+        AutoRef<PluginBase> createInstance(
+            const StrA & type,
+            const StrA & name,
+            void * param ) const
+        {
+            return createInstance( getPluginID( type, name ), param );
+        }
+
+        //@}
+
         // ********************************
         //!\name plugin library management
         // ********************************
 
         //@{
+    public:
 
+        //!
+        //! Not implemented
+        //!
         void importPluginLibrary( const StrA & libraryPath );
 
+        //!
+        //! Not implemented
+        //!
         void removePluginLibrary( const StrA & libraryPath );
 
         //@}
@@ -183,21 +238,65 @@ namespace GN
         // ********************************
     private:
 
-        struct PluginDesc
+        struct TypeItem
         {
-            StrA               type;
-            StrA               name;
+            StrA type;
+            StrA desc;
+
+            TypeItem( const StrA & t, const StrA & d ) : type(t), desc(d) {}
+        };
+
+        struct NameItem
+        {
+            StrA   name;
+            size_t count;
+
+            NameItem( const StrA & n ) : name(n), count(1) {}
+        };
+
+        struct PluginItem
+        {
+            StrA               desc;
             PluginCreationFunc factory;
         };
 
-        std::map<PluginID,PluginDesc> mPlugins;
+        typedef PluginTypeID TypeHandle;
+        typedef uint16_t     NameHandle;
+
+        HandleManager<TypeItem,TypeHandle> mTypes;
+        HandleManager<NameItem,NameHandle> mNames;
+        std::map<PluginID,PluginItem>      mPlugins;
 
         // ********************************
         //   private functions
         // ********************************
     private:
+
+        struct TypeEqual
+        {
+            const StrA & mRef;
+            TypeEqual( const StrA & ref ) : mRef(ref) {}
+            bool operator () ( const TypeItem & item ) const
+            {
+                return item.type == mRef;
+            }
+        };
+
+        struct NameEqual
+        {
+            const StrA & mRef;
+            NameEqual( const StrA & ref ) : mRef(ref) {}
+            bool operator () ( const NameItem & item ) const
+            {
+                return item.name == mRef;
+            }
+        };
     };
 }
+
+#if GN_ENABLE_INLINE
+#include "plugin.inl"
+#endif
 
 // *****************************************************************************
 //                           End of plugin.h

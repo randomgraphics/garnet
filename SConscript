@@ -10,15 +10,9 @@ import os, os.path, re, fnmatch
 #
 ################################################################################
 
-GN_conf['platform'] = Environment()['PLATFORM']
-
 # 定义编译类型
 GN_conf['static'] = ( 'stdbg' == GN_conf['build'] or 'strel' == GN_conf['build'] )
 GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
-
-# 定义binary和lib目录
-#GN_conf['bindir'] = os.path.join( '#bin', GN_conf['platform'], GN_conf['build'] )
-#GN_conf['libdir'] = os.path.join( '#lib', GN_conf['platform'], GN_conf['build'] )
 
 ################################################################################
 #
@@ -26,11 +20,14 @@ GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
 #
 ################################################################################
 
-build_dir = Dir( os.path.join('build', 'scons', GN_conf['platform'], GN_conf['build'] ) ).abspath
+root_dir = Dir( os.path.join('build', 'scons' ) ).abspath
+build_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['build'] )
 conf_dir  = os.path.join( build_dir, 'conf' )
-cache_dir = os.path.join( build_dir, 'cache' )
+cache_dir = os.path.join( root_dir, 'cache' )
+sig_file = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], '.sconsign.dbm' )
 
 # 创建必要的目录
+if not os.path.exists( root_dir ) : os.makedirs( root_dir )
 if not os.path.exists( build_dir ) : os.makedirs( build_dir )
 if not os.path.exists( conf_dir ) : os.makedirs( conf_dir )
 if not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
@@ -210,10 +207,15 @@ def GN_build_program(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
 # 创建缺省编译环境
 # ================
 def default_env( options = None ):
+    tools = ['default']
+    msvs_version = '7.1'
+    if 'icl' == GN_conf['compiler'] :
+        tools += ['intelc']
+    elif 'vs8' == GN_conf['compiler'] :
+        msvs_version = '8.0'
     env = Environment(
-        # Note: if you want to use intel compiler, uncomment this line.
-        # tools = ['default','intelc'],
-        MSVS_VERSION = '7.1',
+        tools = tools,
+        MSVS_VERSION = msvs_version,
         options = options,
         )
 
@@ -227,7 +229,7 @@ def default_env( options = None ):
         env.Append( BUILDERS={'PCH':bld} )
 
     # 定义sconsign文件
-    env.SConsignFile( File('build/scons/%s/.sconsign.dbm'%env['PLATFORM']).path )
+    env.SConsignFile( sig_file )
 
     # 缺省编译选项
     def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
@@ -529,6 +531,7 @@ env.Prepend(
     )
 
 env.BuildDir( build_dir, 'core' )
+env.CacheDir( cache_dir )
 
 ################################################################################
 #

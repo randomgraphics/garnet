@@ -27,6 +27,9 @@
 // string types
 #include "base/string.h"
 
+// handle manager
+#include "base/handle.h"
+
 // misc.
 #include "base/misc.h"
 

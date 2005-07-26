@@ -125,6 +125,8 @@ namespace GN
     {
     public:
 
+        static Str EMPTYSTR;
+
         //!
         //! default constructor
         //!
@@ -548,6 +550,9 @@ namespace GN
         friend Str<wchar_t> mbs2wcs( const char *, size_t );
         friend void mbs2wcs( Str<wchar_t> &, const char *, size_t );
     };
+
+    // Implement static data member
+    template <typename CHAR> Str<CHAR> Str<CHAR>::EMPTYSTR;
 
     //!
     //! multi-byte string class
