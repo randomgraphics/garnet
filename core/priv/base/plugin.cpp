@@ -4,34 +4,12 @@
 #include "garnet/base/plugin.inl"
 #endif
 
-GN::PluginID GN::PluginID::INVALID = {0};
-
-// *****************************************************************************
-// Initialize and shutdown
-// *****************************************************************************
+GN::PluginID GN::PluginID::INVALID(0);
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::PluginManager::init()
-{
-    GN_GUARD;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( PluginManager, () );
-
-    // Do custom init here
-
-    // success
-    return selfOk();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::PluginManager::quit()
+void GN::PluginManager::reset()
 {
     GN_GUARD;
 
@@ -40,15 +18,8 @@ void GN::PluginManager::quit()
     mNames.clear();
     mPlugins.clear();
 
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
     GN_UNGUARD;
 }
-
-// *****************************************************************************
-// Plugin Management
-// *****************************************************************************
 
 //
 //
@@ -65,26 +36,17 @@ GN::PluginManager::getPluginID( PluginTypeID type, const StrA & name ) const
         return PluginID::INVALID;
     }
     
-    PluginID id;
+    PluginID id( type, mNames.findIf( NameEqual(name) ) );
 
-    id.type = type;
-
-    NameHandle h = mNames.first();
-
-    while( 0 != h )
+    if ( validID(id) )
     {
-        if ( mNames[h].name == name )
-        {
-            id.name = h;
-            if ( validID(id) ) return id;  // found
-            else return PluginID::INVALID; // not found
-        }
-        h = mNames.next(h);
+        return id;
     }
-
-    GN_ERROR( "invalid plugin name '%s'!", name.cstr() );
-
-    return PluginID::INVALID; // not found
+    else
+    {
+        GN_ERROR( "invalid plugin name '%s'!", name.cstr() );
+        return PluginID::INVALID;
+    }
 
     GN_UNGUARD;
 }
@@ -97,7 +59,7 @@ GN::PluginManager::registerPluginType( const StrA & type, const StrA & desc )
 {
     GN_GUARD;
 
-    PluginTypeID id = getPluginTypeID( type );
+    PluginTypeID id( getPluginTypeID( type ) );
     if ( id > 0 )
     {
         GN_ERROR( "Plugin type '%s' already exists!", type.cstr() );
@@ -155,7 +117,7 @@ GN::PluginID GN::PluginManager::registerPlugin(
     PluginTypeID type,
     const StrA & name,
     const StrA & desc,
-    PluginCreationFunc factoryFunc,
+    const PluginFactory & factory,
     bool overrideExistingPlugin )
 {
     GN_GUARD;
@@ -166,34 +128,15 @@ GN::PluginID GN::PluginManager::registerPlugin(
         return PluginID::INVALID;
     }
 
-    if ( 0 == factoryFunc )
+    if ( factory.empty() )
     {
         GN_ERROR( "NULL factory function!" );
         return PluginID::INVALID;
     }
 
-    PluginID id = getPluginID( type, name );
-    if ( PluginID::INVALID == id )
-    {
-        // This is a new plugin
-        
-        GN_ASSERT( mTypes.validHandle( type ) );
-        id.type = type;
-        id.name = mNames.findIf( NameEqual(name) );
-        if ( 0 == id.name )
-        {
-            id.name = mNames.add( NameItem(name) );
-        }
-        else
-        {
-            GN_ASSERT( mNames[id.name].name == name );
-            GN_ASSERT( mNames[id.name].count > 0 );
-            ++mNames[id.name].count;
-        }
+    PluginID id( type, mNames.findIf( NameEqual(name) ) );
 
-        GN_ASSERT( mPlugins.end() == mPlugins.find(id) );
-    }
-    else
+    if ( validID(id) )
     {
         // This is a existing plugin
         
@@ -207,6 +150,24 @@ GN::PluginID GN::PluginManager::registerPlugin(
 
         GN_ASSERT( mPlugins.end() != mPlugins.find(id) );
     }
+    else
+    {
+        // This is a new plugin
+        
+        if ( 0 == id.name )
+        {
+            id.name = mNames.add( NameItem(name) );
+        }
+        else
+        {
+            GN_ASSERT( mNames[id.name].count > 0 );
+            ++mNames[id.name].count;
+        }
+
+        GN_ASSERT( mTypes.validHandle( id.type ) );
+        GN_ASSERT( mNames.validHandle( id.name ) );
+        GN_ASSERT( mPlugins.end() == mPlugins.find(id) );
+    }
 
     GN_ASSERT( mNames[id.name].name == name );
     GN_ASSERT( mNames[id.name].count > 0 );
@@ -214,7 +175,7 @@ GN::PluginID GN::PluginManager::registerPlugin(
     // success
     PluginItem & item = mPlugins[id];
     item.desc = desc;
-    item.factory = factoryFunc;
+    item.factory = factory;
     return id;
 
     GN_UNGUARD;
@@ -248,22 +209,24 @@ void GN::PluginManager::removePlugin( PluginID id )
 //
 //
 // -----------------------------------------------------------------------------
-GN::AutoRef<GN::PluginBase>
+GN::PluginBase *
 GN::PluginManager::createInstance( PluginID id, void * param ) const
 {
     GN_GUARD;
 
-    GN::AutoRef<GN::PluginBase> ret;
-    
     std::map<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
     if ( mPlugins.end() == i )
     {
         GN_ERROR( "Invalid plugin ID!" );
-        return ret;
+        return 0;
     }
 
-    GN_ASSERT( i->second.factory );
-    return i->second.factory( param );
+    GN_ASSERT( !i->second.factory.empty() );
+
+    PluginBase * p = i->second.factory( param );
+    if ( p ) p->mID = id;
+
+    return p;
 
     GN_UNGUARD;
 }

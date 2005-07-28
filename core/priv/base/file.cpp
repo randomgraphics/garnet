@@ -297,8 +297,9 @@ bool GN::FileSys::isDir( const StrA & iPath ) const
 //
 //
 // ----------------------------------------------------------------------------
-std::vector<GN::StrA>
-GN::FileSys::findFiles( const StrA & dirName,
+void
+GN::FileSys::findFiles( std::vector<StrA> & result,
+                        const StrA & dirName,
                         const StrA & pattern,
                         bool         recursive,
                         bool         useRegex ) const
@@ -306,21 +307,17 @@ GN::FileSys::findFiles( const StrA & dirName,
     GN_GUARD;
 
     StrA device, path;
-    if( ! sParsePath( device, path, dirName ) )
-    {
-        return std::vector<GN::StrA>();
-    }
+    if( !sParsePath( device, path, dirName ) ) return;
 
     if( "native" == device )
     {
         DeviceMap::const_iterator di = mDevices.find( "native" );
         GN_ASSERT( mDevices.end() != di && !di->second.empty() );
-        return di->second->findFiles( path, pattern, recursive, useRegex );
+        di->second->findFiles( result, path, pattern, recursive, useRegex );
     }
     else
     {
         GN_ERROR( "unknown device '%s'", device.cstr() );
-        return std::vector<GN::StrA>();
     }
 
     GN_UNGUARD;

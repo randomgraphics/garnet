@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GnBase.h"
+
 #if defined(WIN32) || defined(_WIN32)
 #define NOMINMAX
 #include <windows.h>
@@ -21,6 +22,8 @@
 #include <string>
 #include <vector>
 #include <exception>
+
+#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

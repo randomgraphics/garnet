@@ -9,18 +9,6 @@
 namespace GN
 {
     //!
-    //! Basic plugin class
-    //!
-    struct PluginBase : public RefCounter
-    {
-    };
-
-    //!
-    //! Plugin factory function
-    //!
-    typedef GN::AutoRef<PluginBase> (*PluginCreationFunc)( void * parameter );
-
-    //!
     //! Plugin type ID. "0" is invalid ID
     //!
     typedef uint16_t PluginTypeID;
@@ -32,27 +20,74 @@ namespace GN
     {
         union
         {
-            uint32_t u32;
-            int32_t  i32;
+            uint32_t u32; //!< Plugin ID as unsigned integer
             struct
             {
-                PluginTypeID type;
-                uint16_t     name;
+                PluginTypeID type; //!< Plugin type ID
+                uint16_t     name; //!< Plugin name ID
             };
         };
 
-        static PluginID INVALID;
+        static PluginID INVALID; //!< invalid ID
 
+        //!
+        //! Default constructor
+        //!
+        PluginID() {}
+
+        //!
+        //! construct from unsigned integer
+        //!
+        PluginID( uint32_t u ) : u32(u) {}
+
+        //!
+        //! construct from type and name ID
+        //!
+        PluginID( PluginTypeID t, uint16_t n ) : type(t), name(n) {}
+
+        //!
+        //! copy constructor
+        //!
+        PluginID( const PluginID & id ) : u32(id.u32) {}
+
+        //!
+        //! Convert to unsigned integer
+        //!
+        operator uint32_t &() { return u32; }
+
+        //!
+        //! Convert to unsigned integer
+        //!
+        operator const uint32_t &() const { return u32; }
+
+        //!
+        //! Copy operator
+        //!
+        PluginID & operator = ( const PluginID & rhs )
+        {
+            u32 = rhs.u32;
+            return *this;
+        }
+
+        //!
+        //! Less operator
+        //!
         bool operator < ( const PluginID & rhs ) const
         {
             return u32 < rhs.u32;
         }
 
+        //!
+        //! Equality operator
+        //!
         bool operator == ( const PluginID & rhs ) const
         {
             return u32 == rhs.u32;
         }
 
+        //!
+        //! Equality operator
+        //!
         bool operator != ( const PluginID & rhs ) const
         {
             return u32 != rhs.u32;
@@ -60,33 +95,86 @@ namespace GN
     };
 
     //!
+    //! Basic plugin class
+    //!
+    class PluginBase
+    {
+        PluginID mID;
+
+        friend class PluginManager;
+
+    public:
+
+        //!
+        //! Default constructor
+        //!
+        PluginBase() {}
+
+        //!
+        //! Virtual destructor
+        //!
+        virtual ~PluginBase() {}
+
+        //!
+        //! Get ID of the plugin
+        //!
+        PluginID getID() const { return mID; }
+    };
+
+    //!
+    //! Plugin factory class
+    //!
+    class PluginFactory
+    {
+        typedef PluginBase* (*FactoryFuncPtr)( void * );
+        typedef Functor1<PluginBase*, void *> FactoryFunctor;
+
+        FactoryFunctor mFunc;
+
+    public:
+        //!
+        //! Default constructor
+        //!
+        PluginFactory() {}
+
+        //!
+        //! Construct from functor
+        //!
+        PluginFactory( const FactoryFunctor & func ) : mFunc(func) {}
+
+        //!
+        //! Construct from free function pointer
+        //!
+        PluginFactory( const FactoryFuncPtr & func ) { mFunc.bind(func); }
+
+        //!
+        //! Is NULL factory or not?
+        //!
+        bool empty() const { return mFunc.empty(); }
+
+        //!
+        //! Call operator
+        //!
+        PluginBase * operator()( void * param ) const
+        {
+            GN_ASSERT( !mFunc.empty() );
+            return mFunc(param);
+        }
+    };
+
+    //!
     //! Plugin Manager
     //!
-    class PluginManager : public StdClass
+    class PluginManager
     {
-         GN_DECLARE_STDCLASS( PluginManager, StdClass );
-
         // ********************************
         //! \name  ctor/dtor
         // ********************************
 
         //@{
     public:
-        PluginManager()          { clear(); }
-        virtual ~PluginManager() { quit(); }
-        //@}
-
-        // ********************************
-        //! \name standard init/quit
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit();
-        bool ok() const { return MyParent::ok(); }
-    private:
-        void clear() {}
+        PluginManager()          {}
+        virtual ~PluginManager() { reset(); }
         //@}
 
         // ********************************
@@ -97,9 +185,19 @@ namespace GN
     public:
 
         //!
+        //! Reset to initial status (clear all plugins)
+        //!
+        void reset();
+
+        //!
+        //! Get number of plugins in manager
+        //!
+        size_t size() const { return mPlugins.size(); }
+
+        //!
         //! Retrieve specific plugin's type ID by its name.
         //!
-        PluginTypeID getPluginTypeID( const StrA & ) const;
+        GN_INLINE PluginTypeID getPluginTypeID( const StrA & ) const;
 
         //!
         //! Get specific plugin's type name
@@ -165,7 +263,7 @@ namespace GN
             PluginTypeID type,
             const StrA & name,
             const StrA & desc,
-            PluginCreationFunc factoryFunc,
+            const PluginFactory & factory,
             bool overrideExistingPlugin = false );
 
         //!
@@ -175,12 +273,12 @@ namespace GN
             const StrA & type,
             const StrA & name,
             const StrA & desc,
-            PluginCreationFunc factoryFunc,
+            const PluginFactory & factory,
             bool overrideExistingPlugin = false )
         {
             return registerPlugin(
                 getPluginTypeID( type ),
-                name, desc, factoryFunc, overrideExistingPlugin );
+                name, desc, factory, overrideExistingPlugin );
         }
 
         //!
@@ -199,15 +297,15 @@ namespace GN
         //!
         //! Create new instance of specific plugin
         //!
-        AutoRef<PluginBase> createInstance( PluginID id, void * param ) const;
+        PluginBase * createInstance( PluginID id, void * param = 0 ) const;
 
         //!
         //! Create new instance of specific plugin
         //!
-        AutoRef<PluginBase> createInstance(
+        PluginBase * createInstance(
             const StrA & type,
             const StrA & name,
-            void * param ) const
+            void * param = 0 ) const
         {
             return createInstance( getPluginID( type, name ), param );
         }
@@ -256,8 +354,8 @@ namespace GN
 
         struct PluginItem
         {
-            StrA               desc;
-            PluginCreationFunc factory;
+            StrA          desc;
+            PluginFactory factory;
         };
 
         typedef PluginTypeID TypeHandle;

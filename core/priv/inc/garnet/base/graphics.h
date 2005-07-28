@@ -247,32 +247,32 @@ namespace GN
         //!
         //! total bytes of the whole image
         //!
-        size_t getTotalBytes() const;
+        GN_INLINE size_t getTotalBytes() const;
 
         //!
         //! bytes of one mip level
         //!
-        size_t getLevelBytes( uint8_t level ) const;
+        GN_INLINE size_t getLevelBytes( uint8_t level ) const;
 
         //!
         //! offset of specific pixel
         //!
-        size_t getPixelOffset( uint8_t level, uint16_t x, uint16_t y, uint16_t z ) const;
+        GN_INLINE size_t getPixelOffset( uint8_t level, uint16_t x, uint16_t y, uint16_t z ) const;
 
         //!
         //! offset of specific scanline
         //!
-        size_t getScanlineOffset( uint8_t level, uint16_t y, uint16_t z ) const;
+        GN_INLINE size_t getScanlineOffset( uint8_t level, uint16_t y, uint16_t z ) const;
 
         //!
         //! offset of specific slice
         //!
-        size_t getSliceOffset( uint8_t level, uint16_t z ) const;
+        GN_INLINE size_t getSliceOffset( uint8_t level, uint16_t z ) const;
 
         //!
         //! offset of specific mip level
         //!
-        size_t getLevelOffset( uint8_t level ) const { return getSliceOffset(level,0); }
+        GN_INLINE size_t getLevelOffset( uint8_t level ) const { return getSliceOffset(level,0); }
 
         //@}
 
@@ -797,7 +797,7 @@ namespace GN
         //!
         //! Reset to empty declarator.
         //!
-        void reset();
+        GN_INLINE void reset();
 
         //!
         //! Add new attribute into vertex format declarator.

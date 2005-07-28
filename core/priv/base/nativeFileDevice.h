@@ -35,8 +35,9 @@ namespace GN { namespace detail {
 
         bool isDir( const StrA & path ) const;
 
-        std::vector<GN::StrA>
-        findFiles( const StrA & dirName,
+        void
+        findFiles( std::vector<GN::StrA> & result,
+                   const StrA & dirName,
                    const StrA & pattern,
                    bool         recursive,
                    bool         useRegex ) const;

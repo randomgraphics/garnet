@@ -143,7 +143,9 @@ bool GN::detail::NativeFileDevice::isDir( const GN::StrA & path ) const
 //
 //
 // ----------------------------------------------------------------------------
-StrVec GN::detail::NativeFileDevice::findFiles(
+void
+GN::detail::NativeFileDevice::findFiles(
+    std::vector<GN::StrA> & result,
     const StrA & dirPath,
     const StrA & pattern,
     bool recursive,
@@ -157,27 +159,21 @@ StrVec GN::detail::NativeFileDevice::findFiles(
 
         if( !bfs::exists(d) )
         {
-            GN_ERROR( "'%s' does not exist!", dirPath.cstr() );
-            return StrVec();
+            GN_WARN( "'%s' does not exist!", dirPath.cstr() );
+            return;
         }
 
         if( !bfs::is_directory(d) )
         {
-            GN_ERROR( "'%s' is not directory!", dirPath.cstr() );
-            return StrVec();
+            GN_WARN( "'%s' is not directory!", dirPath.cstr() );
+            return;
         }
 
-        StrVec result;
-
         sResursiveFind( result, d, pattern, recursive, useRegex );
-
-        // success
-        return result;
     }
     GN_CATCH( const bfs::filesystem_error & e )
     {
         GN_ERROR( e.what() );
-        return StrVec();
     }
 
     GN_UNGUARD;
