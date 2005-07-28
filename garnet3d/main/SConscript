@@ -20,7 +20,7 @@ GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
 #
 ################################################################################
 
-root_dir = Dir( os.path.join('build', 'scons' ) ).abspath
+root_dir = Dir( os.path.join('tmp', 'scons' ) ).abspath
 build_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['build'] )
 conf_dir  = os.path.join( build_dir, 'conf' )
 cache_dir = os.path.join( root_dir, 'cache' )
@@ -107,7 +107,6 @@ def GN_glob( pattern, dir = '.',
 
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb ):
-    if 'cl' != e['CC']: return;
     if pdb:
         #pdb = File(pdb).path
         #e.Append(
@@ -207,6 +206,8 @@ def GN_build_program(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
 # 创建缺省编译环境
 # ================
 def default_env( options = None ):
+
+    # create environment instance
     tools = ['default']
     msvs_version = '7.1'
     if 'icl' == GN_conf['compiler'] :
@@ -299,11 +300,10 @@ def default_env( options = None ):
         linkflags['strel']   += ['/OPT:REF']
 
     elif 'icl' == env['CC']:
-        #ccflags['common']  = Split('/W4 /WX')
         ccflags['common']  += Split('/W4 /WX /Qpchi- /Zc:forScope')
-        ccflags['debug']   += Split('/MDd /GR')
+        ccflags['debug']   += Split('/MDd /GR /Ge /traceback')
         ccflags['release'] += Split('/O2 /MD')
-        ccflags['stdbg']   += Split('/MTd /GR')
+        ccflags['stdbg']   += Split('/MTd /GR /Ge /traceback')
         ccflags['strel']   += Split('/O2 /MT')
 
         cxxflags['common'] += ['/EHs']
@@ -526,7 +526,8 @@ GN_conf.update(conf)
 env = default_env()
 
 env.Prepend(
-    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':build_dir}) + Split(GN_conf['boost_inc_path']),
+    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':build_dir}) +
+              Split(GN_conf['boost_inc_path']),
     LIBS    = Split(GN_conf['boost_libs']),
     )
 

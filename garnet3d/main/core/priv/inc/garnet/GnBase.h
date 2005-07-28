@@ -6,11 +6,34 @@
 //! \author  chenlee(2005.4.10)
 // ****************************************************************************
 
+//!
+//! namespace for garnet library
+//!
+namespace GN
+{
+    //!
+    //! Implementation details of garnet library
+    //!
+    namespace detail {}
+}
+
 // user configable compile switches
 #include "base/userConfig.h"
 
 // basic defines
 #include "base/basicDefines.h"
+
+// global pragma
+#include "base/pragma.h"
+
+// standard numeric types
+#if GN_MSVC
+#include "base/stdint.h"
+#else
+#include <stddef.h>
+#include <wchar.h>
+#include <stdint.h>
+#endif
 
 // macros and functions for debug
 #include "base/debug.h"

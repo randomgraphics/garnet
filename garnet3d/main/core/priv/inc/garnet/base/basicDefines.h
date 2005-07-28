@@ -16,35 +16,12 @@
 #undef GN_MSVC
 #define GN_MSVC 1
 #define GN_COMPILER "msvc"
-#pragma warning( disable : 4127 ) // 条件表达式是常数
-#pragma warning( disable : 4201 ) // nameless struct/union
-#pragma warning( disable : 4251 ) // need DLL interface ...
-#pragma warning( disable : 4511 ) // can't generate copy constructor
-#pragma warning( disable : 4512 ) // can't generate assignment operator
-#pragma warning( disable : 4714 ) // 标记为 __forceinline 的函数未内联
-#pragma warning( disable : 4786 ) // symbol trunc to 255 ...
-#if defined(NDEBUG)
-#pragma warning( disable : 4702 ) // 无法访问的代码
-#endif
 #elif defined(__ICL)
 #undef GN_MSVC
 #undef GN_ICL
 #define GN_MSVC 1                  // treat intel compiler as VC compiler
 #define GN_ICL  1
 #define GN_COMPILER "icl"
-#pragma warning(disable:9)        // nested comment is not allowed
-#pragma warning(disable:271)      // trailing comma is nonstandard
-#pragma warning(disable:279)      // controlling expression is constant
-#pragma warning(disable:373)      // xxx is inaccessible
-#pragma warning(disable:383)      // reference to temporary
-#pragma warning(disable:424)      // extra ";" ignored
-#pragma warning(disable:444)      // destructor for xxx is not virtual
-#pragma warning(disable:858)      // type qualifier on return type is meaningless
-#pragma warning(disable:981)      // operands are evaluated in unspecified order
-#pragma warning(disable:985)      // debug symbol greater than 255 chars
-#pragma warning(disable:1418)     // external definition with no prior declaration overridden
-#pragma warning(disable:1419)     // external declaration in primary source file
-#pragma warning(disable:1572)     // floating-point comparison
 #elif defined(__BORLANDC__)
 #undef GN_BCB
 #define GN_BCB 1
@@ -81,11 +58,6 @@
 #define GN_PLATFORM "posix"
 #else
 #error "unknown platform!"
-#endif
-
-// 定义语言属性
-#if GN_MSVC
-#pragma setlocale( GN_LOCALE )
 #endif
 
 //!
@@ -142,26 +114,6 @@
 #define GN_CONCATNATE_DIRECT(s1, s2)  s1##s2
 
 //@}
-
-// define standard numeric types
-#if GN_MSVC
-#include "base/stdint.h"
-#else
-#include <stddef.h>
-#include <wchar.h>
-#include <stdint.h>
-#endif
-
-//!
-//! namespace for garnet library
-//!
-namespace GN
-{
-    //!
-    //! Implementation details of garnet library
-    //!
-    namespace detail {}
-}
 
 // *****************************************************************************
 //                           End of basicDefines.h

@@ -333,9 +333,13 @@ namespace GN
         //!
         //! construct from a normal pointer
         //!
+        //! Y should be a class that can be <b>implicitly</b> convert to
+        //! X, such as a sub-class of X.
+        //!
         //! if p is not NULL, increase its reference counter
         //!
-        explicit AutoRef( XPTR p ) throw()
+        template <class Y>
+        AutoRef<X>( Y * p ) throw()
             : mPtr(p)
         { if(mPtr) mPtr->incref(); }
 
@@ -345,7 +349,8 @@ namespace GN
         //! Y should be a class that can be <b>implicitly</b> convert to
         //! X, such as a sub-class of X.
         //!
-        template <class Y> AutoRef<X>( const AutoRef<Y> & p ) throw()
+        template <class Y>
+        AutoRef<X>( const AutoRef<Y> & p ) throw()
             : mPtr( p.get() )
         { if(mPtr) mPtr->incref(); }
 

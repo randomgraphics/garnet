@@ -123,9 +123,9 @@ public:
 // -----------------------------------------------------------------------------
 void GN::detail::defaultLogImpl(
     LogLevel     level,
-    const char * category,
+    const char * /*category*/,
     const char * msg,
-    const char * func,
+    const char * /*func*/,
     const char * file,
     int          line )
 {
@@ -137,28 +137,29 @@ void GN::detail::defaultLogImpl(
 
     if( LOGLEVEL_INFO == level )
     {
-        if( category )
-        {
-            ::fprintf( stdout, "%s : %s\n", category, msg );
-        }
-        else
-        {
-            ::fprintf( stdout, "%s\n", msg );
-        }
+        ::fprintf( stdout, "%s\n", msg );
     }
     else
     {
         // output to console
         ::fprintf(
             level > GN::LOGLEVEL_INFO ? stdout : stderr,
-            "%s(%d) : %s : %s : %s : %s\n",
+            "%s(%d) : %s : %s\n",
             file?file:"UNKNOWN_FILE",
             line,
-            func?func:"UNKNOWN_FUNC",
             levelStr(level).cstr(),
-            category?category:"",
             msg );
 
-        // TODO: output to debugger
+        // output to debugger
+        #if GN_WIN32
+        char buf[4096];
+        _snprintf( buf, 4096,
+            "%s(%d) : %s : %s\n",
+            file?file:"UNKNOWN_FILE",
+            line,
+            levelStr(level).cstr(),
+            msg );
+        ::OutputDebugStringA( buf );
+        #endif
     }
 }

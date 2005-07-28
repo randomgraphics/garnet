@@ -68,8 +68,10 @@ namespace CxxTest
             _reported = false;
         }
 
-        void enterTest( const TestDescription & )
+        void enterTest( const TestDescription & desc )
         {
+            (*_o) << "Enter case " << desc.suiteName() << "::" << desc.testName() << endl;
+            _o->flush();
             _reported = false;
         }
 

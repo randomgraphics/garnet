@@ -225,13 +225,15 @@ namespace GN
         //!
         //! 查找指定文件
         //!
+        //! \param result     返回搜索结果
         //! \param dirName    在什么目录下
         //! \param pattern    搜索什么文件
         //! \param recursive  是否递归搜索子目录
         //! \param useRegex   是否使用正则匹配
         //!
-        virtual std::vector<StrA>
-        findFiles( const StrA & dirName,
+        virtual void
+        findFiles( std::vector<StrA> & result,
+                   const StrA & dirName,
                    const StrA & pattern,
                    bool         recursive,
                    bool         useRegex ) const = 0;
@@ -337,16 +339,17 @@ namespace GN
         //!
         //! 查找指定文件
         //!
+        //! \param result     返回搜索结果
         //! \param dirName    在什么目录下, should be a valid directory locator
         //! \param pattern    搜索什么文件, in format of regualr expression
         //! \param recursive  是否递归搜索子目录
         //! \param useRegex   是否使用正则匹配
         //!
-        std::vector<StrA>
-        findFiles( const StrA & dirName,
-                   const StrA & pattern,
-                   bool         recursive,
-                   bool         useRegex ) const;
+        void findFiles( std::vector<StrA> & result,
+                        const StrA & dirName,
+                        const StrA & pattern,
+                        bool         recursive,
+                        bool         useRegex ) const;
 
         //@}
 

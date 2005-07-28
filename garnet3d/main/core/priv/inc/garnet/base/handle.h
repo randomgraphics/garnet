@@ -72,13 +72,13 @@ namespace GN
         HANDLE_TYPE next( HANDLE_TYPE h ) const
         {
             if ( !validHandle(h) ) return (HANDLE_TYPE)0;
-            size_t idx = h - 1;
-            while( !mItems[idx].used )
+            size_t idx = h; // That is: (h-1)+1
+            while( idx < mItems.size() && !mItems[idx].used )
             {
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
             }
-            return (HANDLE_TYPE)(idx+1);
+            return idx < mItems.size() ? (HANDLE_TYPE)(idx+1) : (HANDLE_TYPE)0;
         }
 
         //!
@@ -119,15 +119,6 @@ namespace GN
         }
 
         //!
-        //! Get item from manager
-        //!
-        T & get( HANDLE_TYPE h ) const
-        {
-            GN_ASSERT( validHandle(h) );
-            return mItems[h-1].value;
-        }
-
-        //!
         //! Find specific item (always return first found)
         //!
         HANDLE_TYPE find( const T & val ) const
@@ -165,11 +156,16 @@ namespace GN
         //!
         //! Get item from manager
         //!
-        T & operator[]( HANDLE_TYPE h ) const
+        T & get( HANDLE_TYPE h ) const
         {
             GN_ASSERT( validHandle(h) );
             return mItems[h-1].value;
         }
+
+        //!
+        //! Get item from manager
+        //!
+        T & operator[]( HANDLE_TYPE h ) const { return get(h); }
     };
 }
 
