@@ -247,13 +247,18 @@ namespace GN
     };
     
     //!
-    //! General file system, which contains multiple file devices.
+    //! General file system, which contains multiple file devices. There's a
+    //! built-in device named "native", means OS-native file system.
     //!
-    //! - Full path of file includes: [device][root][relpath]
-    //! - We always use "/" as path separator.
-    //! - Device name must be end with "::". Default device is
-    //!   "native::", if omitted.
-    //! - "root" could be : "c:/", "d:", "/" and etc...
+    //! - Path specification:
+    //!   - Full path of file includes: [device][root][relpath]
+    //!   - We always use "/" as path separator.
+    //!   - Device name must be end with "::".
+    //!   - Default device is "native::", if omitted.
+    //!   - "root" could be :
+    //!     - dos-style drive name: "c:/", "d:"
+    //!     - unix style: "/"
+    //!     - application startup directory: "#"
     //!
     class FileSys : public StdClass
     {
