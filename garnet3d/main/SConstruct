@@ -15,19 +15,29 @@ conf = {
     'platform' : Environment()['PLATFORM'],
 }
 
+# 读取环境变量
+def getenv( name, defval ):
+    import os
+    if name in os.environ: return os.environ[name]
+    else: return defval
+
 # 定义缺省的选项
 if 'win32' == conf['platform']: default_compiler = 'vs71'
 else: default_compiler = 'gcc'
 default_configs = {
-    'genconf'           : 0,                # force (re)generation of build configuration
-    'build'             : 'debug',
-    'compiler'          : default_compiler, # default compiler
-    'use_cg'            : 1,                # use Cg by default.
-    'enable_profile'    : 0,                # disabled by default
+    'genconf'           : getenv('GN_BUILD_GENCONF', 0), # force (re)generation of build configuration
+    'enable_cache'      : getenv('GN_BUILD_ENABLE_CACHE', 1), # enable build cache
+    'build'             : getenv('GN_BUILD', 'debug'),
+    'compiler'          : getenv('GN_BUILD_COMPILER', default_compiler), # default compiler
+    'enable_cg'         : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
+    'enable_profile'    : getenv('GN_BUILD_ENABLE_PROFILE', 0) # disabled by default
     }
 
 # 是否强制生成配置信息
 conf['genconf']  = ARGUMENTS.get('genconf', default_configs['genconf'] )
+
+# 是否使用build cache
+conf['enable_cache']  = ARGUMENTS.get('enable_cache', default_configs['enable_cache'] )
 
 # 定义编译器类型
 conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])
@@ -43,7 +53,7 @@ if not conf['build'] in Split('debug release stdbg strel all'):
     Exit(-1)
 
 # 是否支持Cg语言.
-conf['use_cg']  = ARGUMENTS.get('cg', default_configs['use_cg'] )
+conf['enable_cg']  = ARGUMENTS.get('cg', default_configs['enable_cg'] )
 
 # 是否启用profiler.
 conf['enable_profile'] = ARGUMENTS.get('prof', default_configs['enable_profile'] )
@@ -60,24 +70,28 @@ alias   = []
 
 opts = Options()
 opts.Add(
-    'genconf',
-    'Force (re)generation of build configuration.',
+    'conf',
+    'Force (re)generation of build configuration. (GN_BUILD_GENCONF)',
     default_configs['genconf'] )
 opts.Add(
+    'cache',
+    'Use scons build cache.',
+    default_configs['enable_cache'] )
+opts.Add(
     'compiler',
-    'Specify compiler. Could be : %s vs8 icl'%default_compiler,
+    'Specify compiler. Could be : %s vs8 icl. (GN_BUILD_COMPILER)'%default_compiler,
     default_configs['compiler'] )
 opts.Add(
     'build',
-    'Specify build variant. Could be : debug, release, stdbg, strel or all',
+    'Specify build variant. Could be : debug, release, stdbg, strel or all. (GN_BUILD)',
     default_configs['build'] )
 opts.Add(
     'cg',
-    'Support Cg language or not.',
-    default_configs['use_cg'] )
+    'Support Cg language or not. (GN_BUILD_ENABLE_CG)',
+    default_configs['enable_cg'] )
 opts.Add(
     'prof',
-    'Enable performance profiler.',
+    'Enable performance profiler. (GN_BUILD_ENABLE_PROFILE)',
     default_configs['enable_profile'] )
 
 env = Environment( options = opts )
