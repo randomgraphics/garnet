@@ -325,6 +325,8 @@ namespace GN
 
     public :
 
+        static AutoRef<X> EMPTYPTR;
+
         //!
         //! default constructor
         //!
@@ -458,6 +460,8 @@ namespace GN
             return tmp;
         }
     };
+
+    template<typename X> AutoRef<X> AutoRef<X>::EMPTYPTR;
 
     //!
     //! µ¥¼þÀà

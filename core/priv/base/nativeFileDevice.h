@@ -37,12 +37,12 @@ namespace GN { namespace detail {
 
         void
         findFiles( std::vector<GN::StrA> & result,
-                   const StrA & dirName,
-                   const StrA & pattern,
-                   bool         recursive,
-                   bool         useRegex ) const;
+                   const GN::StrA & dirName,
+                   const GN::StrA & pattern,
+                   bool recursive,
+                   bool useRegex ) const;
 
-        StrA rel2abs( const StrA & ) const;
+        StrA rel2abs( const GN::StrA & relPath, const GN::StrA & base ) const;
 
         // ********************************
         //   private variables
