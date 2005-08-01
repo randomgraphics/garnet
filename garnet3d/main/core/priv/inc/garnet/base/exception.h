@@ -155,6 +155,7 @@ namespace GN
 
 #define GN_GUARD_ALWAYS                 GN_TRY {
 #define GN_UNGUARD_ALWAYS               GN_UNGUARD_ALWAYS_DO( throw; )
+#define GN_UNGUARD_ALWAYS_NO_THROW      GN_UNGUARD_ALWAYS_DO( ; )
 
 #if !GN_DISABLE_GUARD
 #define GN_GUARD                       GN_GUARD_ALWAYS

@@ -24,11 +24,8 @@ jpeg_objs = GN_func['build_static_objects'](
     )
 
 # build source list
-srcs = GN_func['glob']( '*.c', 'glew' ) \
-     + GN_func['glob']( '*.c', 'lua' ) \
-     + GN_func['glob']( '*.cpp', 'tinyxml' ) \
-     + GN_func['glob']( '*.c', 'zlib' ) \
-     + GN_func['glob']( '*.c', 'png' ) \
+srcs = GN_func['glob']( '*.c', Split('glew lua zlib png pcre') ) \
+     + GN_func['glob']( ['*.cpp', '*.cc'], Split('tinyxml pcre') ) \
      + jpeg_objs
 
 GN_targets['GnExtern'] = GN_func['build_static_library'](
