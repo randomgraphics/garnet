@@ -34,10 +34,10 @@ default_configs = {
     }
 
 # 是否强制生成配置信息
-conf['genconf']  = ARGUMENTS.get('genconf', default_configs['genconf'] )
+conf['genconf']  = ARGUMENTS.get('conf', default_configs['genconf'] )
 
 # 是否使用build cache
-conf['enable_cache']  = ARGUMENTS.get('enable_cache', default_configs['enable_cache'] )
+conf['enable_cache']  = ARGUMENTS.get('cache', default_configs['enable_cache'] )
 
 # 定义编译器类型
 conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])

@@ -220,6 +220,8 @@ namespace GN
         //!
         //! if the path points to a directoy?
         //!
+        //! \param path  File path (no device name)
+        //!
         virtual bool isDir( const StrA & path ) const = 0;
 
         //!
@@ -239,11 +241,12 @@ namespace GN
                    bool         useRegex ) const = 0;
 
         //!
-        //! convert relative path to absolute path
+        //! Resolve relative path to absolute path.
+        //! Input pathes should not contain device name.
         //!
         //! \return Empty string, if failed
         //!
-        virtual StrA rel2abs( const StrA & ) const = 0;
+        virtual StrA rel2abs( const StrA & relPath, const StrA & base = "" ) const = 0;
     };
     
     //!
@@ -370,7 +373,7 @@ namespace GN
         StrA normalizePath( const StrA & ) const;
 
         //!
-        //! Covert relative path to absolute path
+        //! Resolve relative path to absolute path
         //!
         //! \param relPath
         //!     The relative path that'll be converted.

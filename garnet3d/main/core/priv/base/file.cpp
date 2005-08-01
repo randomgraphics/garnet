@@ -203,22 +203,14 @@ size_t GN::AnsiFile::tell() const
 //                   implementation of FileSys
 // ****************************************************************************
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/exception.hpp>
-namespace bfs = boost::filesystem;
-
-// ****************************************************************************
-//                     local path functions
-// ****************************************************************************
-
 //
-//! convert '\\' to '/'
+//! convert '\\' to '/', then remove pending '/'
 // ----------------------------------------------------------------------------
 static inline GN::StrA sNormalizePath( const GN::StrA & path )
 {
     GN::StrA ret;
 
+    // convert '\\' to '/'
     ret.setCaps( path.size() );
     for( size_t i = 0; i < path.size(); ++i )
     {
@@ -234,8 +226,15 @@ static inline GN::StrA sNormalizePath( const GN::StrA & path )
         }
     }
 
+    // Detect pending '/'
+    size_t n = ret.size();
+    while( n > 0 && '/' == ret[n-1] )
+    {
+        --n;
+    }
+
     // success
-    return ret;
+    return GN::StrA( ret.cstr(), n );
 }
 
 //!
@@ -278,14 +277,6 @@ sParsePath( GN::StrA & device, GN::StrA & path, const GN::StrA & fullpath )
     return true;
 
     GN_UNGUARD;
-}
-
-//!
-//! Convert string to boost path
-// ----------------------------------------------------------------------------
-static inline bfs::path sString2Path( const GN::StrA & str )
-{
-    return bfs::path( str.cstr(), bfs::native );
 }
 
 // ****************************************************************************
@@ -528,7 +519,7 @@ GN::StrA GN::FileSys::rel2abs( const StrA & relPath, const StrA & base ) const
         return d1 + "::" + di->second->rel2abs( p1 );
     }
 
-    // analyze relPath and relPath
+    // analyze relPath and base
     StrA d1, d2, p1, p2;
     if( !sParsePath(d1,p1,relPath) || !sParsePath(d2,p2,base) )
     {
@@ -551,21 +542,9 @@ GN::StrA GN::FileSys::rel2abs( const StrA & relPath, const StrA & base ) const
     }
     GN_ASSERT( !di->second.empty() );
 
-    // resolve base relPath
-    p2 = di->second->rel2abs( p2 );
-    if( p2.empty() ) return "";
-
-    GN_TRY
-    {
-        return
-            d1 + "::" +
-            bfs::complete( sString2Path(p1), sString2Path(p2) ).string();
-    }
-    GN_CATCH( const bfs::filesystem_error & e )
-    {
-        GN_ERROR( e.what() );
-        return "";
-    }
+    // resolve base path
+    StrA abspath = di->second->rel2abs( p1, p2 );
+    return abspath.empty() ? "" : d1 + "::" + abspath;
 
     GN_UNGUARD;
 }
@@ -580,18 +559,14 @@ GN::StrA GN::FileSys::getParent( const StrA & iPath ) const
     StrA device, path;
     if( ! sParsePath( device, path, iPath ) ) return false;
 
-    GN_TRY
+    size_t i = path.size();
+    while( i > 0 && '/' != path[i-1] )
     {
-        // success
-        return
-            device + "::" +
-            sString2Path(path).branch_path().string();
+        --i;
     }
-    GN_CATCH( const bfs::filesystem_error & e )
-    {
-        GN_ERROR( e.what() );
-        return "";
-    }
+
+    // success
+    return device + "::" + StrA(path.cstr(),i);
 
     GN_UNGUARD;
 }

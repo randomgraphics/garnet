@@ -23,14 +23,14 @@ GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
 root_dir = Dir( os.path.join('tmp', 'scons' ) ).abspath
 build_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['build'] )
 conf_dir  = os.path.join( build_dir, 'conf' )
-cache_dir = os.path.join( root_dir, 'cache' )
 sig_file = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], '.sconsign.dbm' )
+if GN_conf['enable_cache']: cache_dir = os.path.join( root_dir, 'cache' )
 
 # 创建必要的目录
 if not os.path.exists( root_dir ) : os.makedirs( root_dir )
 if not os.path.exists( build_dir ) : os.makedirs( build_dir )
 if not os.path.exists( conf_dir ) : os.makedirs( conf_dir )
-if not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
+if GN_conf['enable_cache'] and not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
 
 ################################################################################
 #
@@ -403,45 +403,6 @@ def check_config( conf, conf_dir ):
         );
 
     # =================
-    # 检查boost headers
-    # =================
-    boost_inc_path = ''
-    if (os.environ.has_key('BOOST_INC_PATH')):
-        env.Prepend( CPPPATH=os.environ['BOOST_INC_PATH'] )
-        boost_inc_path = os.environ['BOOST_INC_PATH']
-    if not c.CheckCXXHeader('boost/any.hpp'):
-        GN_error(
-            '没有找到Boost库，请使用环境变量BOOST_INC_PATH来指定Boost库的正确位置!' )
-        Exit(-1)
-    elif not 'win32' == env['PLATFORM']:
-        # 打印boost信息
-        boost_any = env.FindFile( 'boost/any.hpp', env['CPPPATH']+['/usr/include','/include'] )
-        assert(boost_any)
-        GN_info( 'Using Boost library at %s'%os.path.dirname(str(boost_any)) )
-    conf['boost_inc_path'] = boost_inc_path
-
-    # =====================
-    # check boost libraries
-    # =====================
-    boost_libs = ''
-    """if 'g++' == env['CXX']:
-        if c.CheckLib('boost_filesystem-gcc'):
-            boost_libs = 'boost_filesystem-gcc'
-        elif c.CheckLib('boost_filesystem'):
-            boost_libs = 'boost_filesystem'
-        else:
-            GN_error( 'boost filesystem library not found!')
-            Exit(-1)
-        if c.CheckLib('boost_regex-gcc'):
-            boost_libs += ' boost_regex-gcc'
-        elif c.CheckLib('boost_regex'):
-            boost_libs += ' boost_regex'
-        else:
-            GN_error( 'boost regex library not found!')
-            Exit(-1)"""
-    conf['boost_libs'] = boost_libs
-
-    # =================
     # 是否支持Cg shader
     # =================
     conf['has_cg'] = c.CheckCHeader('cg/cg.h')
@@ -525,13 +486,12 @@ GN_conf.update(conf)
 env = default_env()
 
 env.Prepend(
-    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':build_dir}) +
-              Split(GN_conf['boost_inc_path']),
-    LIBS    = Split(GN_conf['boost_libs']),
+    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':build_dir})
     )
 
 env.BuildDir( build_dir, 'core' )
-env.CacheDir( cache_dir )
+
+if GN_conf['enable_cache']: env.CacheDir( cache_dir )
 
 ################################################################################
 #

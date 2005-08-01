@@ -1,10 +1,6 @@
 #include "pch.h"
 #include "nativeFileDevice.h"
 #include <pcrecpp.h>
-#include <boost/filesystem/exception.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
-namespace bfs = boost::filesystem;
 
 typedef std::vector<GN::StrA> StrVec;
 
@@ -12,60 +8,113 @@ typedef std::vector<GN::StrA> StrVec;
 //                            local functions
 // ****************************************************************************
 
+//
+//
+// ----------------------------------------------------------------------------
+static bool sPathExist( const GN::StrA & path )
+{
+#if GN_WIN32
+
+    WIN32_FIND_DATA wfd;
+    HANDLE fh = ::FindFirstFileA( path.cstr(), &wfd );
+    if( INVALID_HANDLE_VALUE == fh )
+    {
+        return false;
+    }
+    else
+    {
+        ::FindClose( fh );
+        return true;
+    }
+
+#else
+    GN_UNUSED_PARAM(path);
+    GN_UNIMPL();
+    return false;
+#endif
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+bool sIsDir( const GN::StrA & path )
+{
+#if GN_WIN32
+
+    WIN32_FIND_DATA wfd;
+    HANDLE fh = ::FindFirstFileA( path.cstr(), &wfd );
+    if( INVALID_HANDLE_VALUE == fh )
+    {
+        return false;
+    }
+    else
+    {
+        ::FindClose( fh );
+        return !!(FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes);
+    }
+
+#else
+    GN_UNUSED_PARAM(path);
+    GN_UNIMPL();
+    return false;
+#endif
+}
+
+//
+//
+// ----------------------------------------------------------------------------
 static void sResursiveFind( StrVec & result,
-                            const bfs::path & dirPath,
+                            const GN::StrA & dirPath,
                             const GN::StrA & pattern,
                             bool recursive,
                             bool useRegex )
 {
     GN_GUARD;
 
+    GN_UNIMPL();
     // validate dirPath
-    GN_ASSERT( bfs::exists(dirPath) && bfs::is_directory(dirPath) );
+    GN_ASSERT( sPathExist(dirPath) && sIsDir(dirPath) );
 
-    // default construction yields past-the-end
-    bfs::directory_iterator end_itr;
+#if GN_WIN32
 
-    for ( bfs::directory_iterator itr( dirPath ); itr != end_itr; ++itr )
+    WIN32_FIND_DATA wfd;
+    HANDLE fh;
+
+    GN::StrA findPattern = dirPath + "\\" + (useRegex ? "*.*" : pattern);
+
+    fh = ::FindFirstFileA( findPattern.cstr(), &wfd );
+    if( FAILED(fh) ) return;
+
+    std::auto_ptr<pcrecpp::RE> re;
+    if( useRegex ) re.reset( new pcrecpp::RE( pattern.cstr() ) );
+
+    do
     {
-        if( bfs::is_directory( *itr ) )
+        if( FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes )
         {
             if( recursive )
             {
-                sResursiveFind( result, *itr, pattern, recursive, useRegex );
+                sResursiveFind( result, wfd.cFileName, pattern, recursive, useRegex );
             }
         }
-        else
+        else if( !useRegex || re->FullMatch( wfd.cFileName ) )
         {
-            if( useRegex )
-            {
-                pcrecpp::RE re( pattern.cstr() );
-                if( re.FullMatch( itr->leaf() ) )
-                {
-                    // found!
-                    result.push_back( itr->leaf().c_str() );
-                }
-            }
-            else
-            {
-                if( itr->leaf().c_str() == pattern )
-                {
-                    // found!
-                    result.push_back( pattern );
-                    return;
-                }
-            }
+            result.push_back( wfd.cFileName ); // found one
         }
-    }
+    } while( ::FindNextFileA( fh, &wfd ) );
+
+    ::FindClose( fh );
+
+#else
+    GN_UNUSED_PARAM( result );
+    GN_UNUSED_PARAM( dirPath );
+    GN_UNUSED_PARAM( pattern );
+    GN_UNUSED_PARAM( recursive );
+    GN_UNUSED_PARAM( useRegex );
+    GN_UNIMPL();
+#endif
 
     GN_UNGUARD;
-}
-
-//! \brief convert string to boost path
-static inline bfs::path
-sStr2Path( const GN::StrA & str )
-{
-    return bfs::path( str.cstr(), bfs::native );
 }
 
 // ****************************************************************************
@@ -80,21 +129,13 @@ GN::detail::NativeFileDevice::openFile( const GN::StrA & path, int openmode ) co
 {
     GN_GUARD;
 
-    GN_TRY
-    {
-        GN::AutoRef<GN::AnsiFile> file( new GN::AnsiFile );
+    GN::AutoRef<GN::AnsiFile> file( new GN::AnsiFile );
 
-        if( !file->open( path, openmode ) )
-            return GN::AutoRef<GN::File>();
+    if( !file->open( path, openmode ) )
+        return GN::AutoRef<GN::File>::EMPTYPTR;
 
-        // success
-        return file;
-    }
-    GN_CATCH( const bfs::filesystem_error & e )
-    {
-        GN_ERROR( e.what() );
-        return GN::AutoRef<GN::File>();
-    }
+    // success
+    return file;
 
     GN_UNGUARD;
 }
@@ -106,15 +147,7 @@ bool GN::detail::NativeFileDevice::isExist( const GN::StrA & path ) const
 {
     GN_GUARD;
 
-    GN_TRY
-    {
-        return bfs::exists( sStr2Path(path) );
-    }
-    GN_CATCH( const bfs::filesystem_error & e )
-    {
-        GN_ERROR( e.what() );
-        return false;
-    }
+    return sPathExist( path );
 
     GN_UNGUARD;
 }
@@ -126,15 +159,7 @@ bool GN::detail::NativeFileDevice::isDir( const GN::StrA & path ) const
 {
     GN_GUARD;
 
-    GN_TRY
-    {
-        return bfs::is_directory( sStr2Path(path) );
-    }
-    GN_CATCH( const bfs::filesystem_error & e )
-    {
-        GN_ERROR( e.what() );
-        return false;
-    }
+    return sIsDir( path );
 
     GN_UNGUARD;
 }
@@ -145,35 +170,26 @@ bool GN::detail::NativeFileDevice::isDir( const GN::StrA & path ) const
 void
 GN::detail::NativeFileDevice::findFiles(
     std::vector<GN::StrA> & result,
-    const StrA & dirPath,
-    const StrA & pattern,
+    const GN::StrA & dirPath,
+    const GN::StrA & pattern,
     bool recursive,
     bool useRegex ) const
 {
     GN_GUARD;
 
-    GN_TRY
+    if( !sPathExist(dirPath) )
     {
-        bfs::path d = sStr2Path(dirPath);
-
-        if( !bfs::exists(d) )
-        {
-            GN_WARN( "'%s' does not exist!", dirPath.cstr() );
-            return;
-        }
-
-        if( !bfs::is_directory(d) )
-        {
-            GN_WARN( "'%s' is not directory!", dirPath.cstr() );
-            return;
-        }
-
-        sResursiveFind( result, d, pattern, recursive, useRegex );
+        GN_WARN( "'%s' does not exist!", dirPath.cstr() );
+        return;
     }
-    GN_CATCH( const bfs::filesystem_error & e )
+
+    if( !sIsDir(dirPath) )
     {
-        GN_ERROR( e.what() );
+        GN_WARN( "'%s' is not directory!", dirPath.cstr() );
+        return;
     }
+
+    sResursiveFind( result, dirPath, pattern, recursive, useRegex );
 
     GN_UNGUARD;
 }
@@ -181,21 +197,15 @@ GN::detail::NativeFileDevice::findFiles(
 //
 //
 // ----------------------------------------------------------------------------
-GN::StrA GN::detail::NativeFileDevice::rel2abs( const GN::StrA & path ) const
+GN::StrA GN::detail::NativeFileDevice::rel2abs(
+    const GN::StrA & path,
+    const GN::StrA & base ) const
 {
     GN_GUARD;
 
-    GN_TRY
-    {
-        static GN::StrA s_empty_path( "." );
-        return bfs::system_complete(
-            sStr2Path( path.empty() ? s_empty_path : path ) ).string().c_str();
-    }
-    GN_CATCH( const bfs::filesystem_error & e )
-    {
-        GN_ERROR( e.what() );
-        return "";
-    }
+    GN_UNIMPL();
+
+    return base + "/" + path;
 
     GN_UNGUARD;
 }
