@@ -19,11 +19,15 @@ conf = {
 if 'win32' == conf['platform']: default_compiler = 'vs71'
 else: default_compiler = 'gcc'
 default_configs = {
+    'genconf'           : 0,                # force (re)generation of build configuration
     'build'             : 'debug',
     'compiler'          : default_compiler, # default compiler
     'use_cg'            : 1,                # use Cg by default.
     'enable_profile'    : 0,                # disabled by default
     }
+
+# 是否强制生成配置信息
+conf['genconf']  = ARGUMENTS.get('genconf', default_configs['genconf'] )
 
 # 定义编译器类型
 conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])
@@ -55,6 +59,10 @@ alias   = []
 ################################################################################
 
 opts = Options()
+opts.Add(
+    'genconf',
+    'Force (re)generation of build configuration.',
+    default_configs['genconf'] )
 opts.Add(
     'compiler',
     'Specify compiler. Could be : %s vs8 icl'%default_compiler,

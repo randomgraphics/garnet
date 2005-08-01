@@ -508,11 +508,8 @@ def check_config( conf, conf_dir ):
 
 
 conf_file = os.path.join( conf_dir, 'build.conf' )
-
-GN_targets['conf'] = conf_file
-
 conf  = {}
-if not read_config( conf, conf_file ) or 'conf' in COMMAND_LINE_TARGETS:
+if not read_config( conf, conf_file ) or GN_conf['genconf']:
     check_config( conf, conf_dir )
     write_config( conf, conf_file )
 GN_conf.update(conf)
