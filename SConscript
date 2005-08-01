@@ -90,19 +90,24 @@ def GN_relpath(target, base):
     return os.path.join(*rel_list)
 
 # 查找指定目录下的文件
-def GN_glob( pattern, dir = '.',
+def GN_glob( patterns, dirs = ['.'],
              recursive = False ):
+    patterns = Flatten( [patterns] )
+    dirs = Flatten( [dirs] )
     files = []
-    root = Dir(dir).srcnode().abspath;
-    for file in os.listdir( root ):
-        if recursive \
-          and os.path.isdir( os.path.join(root,file) ) \
-          and ( not '.svn' == file ) : # ignore subversion directory
-            files = files + GN_glob( pattern, os.path.join(dir,file), recursive )
-        else:
-            # Note: ignore precompiled header
-            if fnmatch.fnmatch(file, pattern) and (not ('pch.cpp' == file or 'stdafx.cpp' == file) ) :
-                files.append( os.path.join( dir, file ) )
+    for dir in dirs:
+        root = Dir(dir).srcnode().abspath;
+        for file in os.listdir( root ):
+            if recursive \
+              and os.path.isdir( os.path.join(root,file) ) \
+              and ( not '.svn' == file ) : # ignore subversion directory
+                files = files + GN_glob( patterns, os.path.join(dir,file), recursive )
+            else:
+                # Note: ignore precompiled header
+                if not ('pch.cpp' == file or 'stdafx.cpp' == file):
+                    for pattern in patterns:
+                        if fnmatch.fnmatch(file, pattern):
+                            files.append( os.path.join( dir, file ) )
     return files
 
 # setup environment for producing PCH and PDB
@@ -407,9 +412,6 @@ def check_config( conf, conf_dir ):
     if not c.CheckCXXHeader('boost/any.hpp'):
         GN_error(
             '没有找到Boost库，请使用环境变量BOOST_INC_PATH来指定Boost库的正确位置!' )
-        Exit(-1)
-    elif not c.CheckCXXHeader('boost/algorithm/string.hpp'):
-        GN_error( '需要1.32.0以上的boost库支持!' )
         Exit(-1)
     elif not 'win32' == env['PLATFORM']:
         # 打印boost信息

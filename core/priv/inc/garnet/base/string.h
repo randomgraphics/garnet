@@ -8,7 +8,6 @@
 
 #include <stdarg.h>
 #include <string>
-#include <boost/format.hpp>
 
 namespace GN
 {

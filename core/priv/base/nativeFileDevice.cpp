@@ -1,7 +1,6 @@
 #include "pch.h"
-
 #include "nativeFileDevice.h"
-#include <boost/regex.hpp>
+#include <pcrecpp.h>
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -40,8 +39,8 @@ static void sResursiveFind( StrVec & result,
         {
             if( useRegex )
             {
-                boost::regex re( pattern.cstr() );
-                if( boost::regex_match( itr->leaf(), re ) )
+                pcrecpp::RE re( pattern.cstr() );
+                if( re.FullMatch( itr->leaf() ) )
                 {
                     // found!
                     result.push_back( itr->leaf().c_str() );
