@@ -110,8 +110,8 @@
 //!
 //! 连接两个名称
 //!
-#define GN_CONCATNATE(s1, s2)         GN_CONCATNATE_DIRECT(s1, s2)
-#define GN_CONCATNATE_DIRECT(s1, s2)  s1##s2
+#define GN_JOIN(s1, s2)         GN_JOIN_DIRECT(s1, s2)
+#define GN_JOIN_DIRECT(s1, s2)  s1##s2
 
 //@}
 

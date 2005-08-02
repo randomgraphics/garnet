@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/base/plugin.h"
 #if !GN_ENABLE_INLINE
 #include "garnet/base/plugin.inl"
 #endif

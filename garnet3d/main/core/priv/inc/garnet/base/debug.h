@@ -75,7 +75,15 @@
 //!
 #define GN_UNIMPL() GN_ASSERT_FAILURE( "Unimplemented!" )
 
-//@}
+//!
+//! Compile-time assert
+//!
+#define GN_CASSERT_EX( exp, msg ) struct GN_JOIN(__GN_cassert_, GN_JOIN( msg,__LINE__)){ int data[(exp)?1:-1]; };
+
+//!
+//! Compile-time assert
+//!
+#define GN_CASSERT( exp ) GN_CASSERT_EX( exp, )
 
 // ****************************************************************************
 //! \name                       WIN32 check macros

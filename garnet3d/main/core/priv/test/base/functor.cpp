@@ -1,6 +1,8 @@
 #include "../testCommon.h"
-#include <boost/bind.hpp>
 #include <vector>
+#ifdef HAS_BOOST
+#include <boost/bind.hpp>
+#endif
 
 using namespace GN;
 
@@ -168,6 +170,7 @@ public:
         f2(1,2);
         TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
 
+#ifdef HAS_BOOST
         // working with boost::bind
         boost::bind<void>( f1, 1, 2 )();
         int i = 2;
@@ -178,6 +181,7 @@ public:
         TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
         TS_ASSERT_EQUALS( g_int1, 2 );
         TS_ASSERT_EQUALS( g_int2, 2 );
+#endif
     }
 
     void testSigslot()

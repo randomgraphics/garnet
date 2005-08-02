@@ -5,8 +5,8 @@
 // *****************************************************************************
 #ifdef GN_SIGSLOT_TEMPL_N
 
-#ifndef GN_CONCATNATE
-#define GN_CONCATNATE(s1, s2)         GN_CONCATNATE_DIRECT(s1, s2)
+#ifndef GN_JOIN
+#define GN_JOIN(s1, s2)         GN_CONCATNATE_DIRECT(s1, s2)
 #define GN_CONCATNATE_DIRECT(s1, s2)  s1##s2
 #endif
 
@@ -20,7 +20,7 @@
 #define PARAM_TEMPLS_7 PARAM_TEMPLS_6, class Param7
 #define PARAM_TEMPLS_8 PARAM_TEMPLS_7, class Param8
 #define PARAM_TEMPLS_9 PARAM_TEMPLS_8, class Param9
-#define PARAM_TEMPLS   GN_CONCATNATE( PARAM_TEMPLS_, GN_SIGSLOT_TEMPL_N)
+#define PARAM_TEMPLS   GN_JOIN( PARAM_TEMPLS_, GN_SIGSLOT_TEMPL_N)
 
 #define PARAM_TYPES_0
 #define PARAM_TYPES_1 Param1
@@ -32,7 +32,7 @@
 #define PARAM_TYPES_7 PARAM_TYPES_6, Param7
 #define PARAM_TYPES_8 PARAM_TYPES_7, Param8
 #define PARAM_TYPES_9 PARAM_TYPES_8, Param9
-#define PARAM_TYPES   GN_CONCATNATE( PARAM_TYPES_, GN_SIGSLOT_TEMPL_N)
+#define PARAM_TYPES   GN_JOIN( PARAM_TYPES_, GN_SIGSLOT_TEMPL_N)
 
 #define PARAM_VALUES_0
 #define PARAM_VALUES_1 p1
@@ -44,7 +44,7 @@
 #define PARAM_VALUES_7 PARAM_VALUES_6, p7
 #define PARAM_VALUES_8 PARAM_VALUES_7, p8
 #define PARAM_VALUES_9 PARAM_VALUES_8, p9
-#define PARAM_VALUES   GN_CONCATNATE( PARAM_VALUES_, GN_SIGSLOT_TEMPL_N)
+#define PARAM_VALUES   GN_JOIN( PARAM_VALUES_, GN_SIGSLOT_TEMPL_N)
 
 #define PARAM_LIST_0
 #define PARAM_LIST_1 Param1 p1
@@ -56,7 +56,7 @@
 #define PARAM_LIST_7 PARAM_LIST_6, Param7 p7
 #define PARAM_LIST_8 PARAM_LIST_7, Param8 p8
 #define PARAM_LIST_9 PARAM_LIST_8, Param9 p9
-#define PARAM_LIST   GN_CONCATNATE( PARAM_LIST_, GN_SIGSLOT_TEMPL_N)
+#define PARAM_LIST   GN_JOIN( PARAM_LIST_, GN_SIGSLOT_TEMPL_N)
 
 #define PARAM_COMMA_0
 #define PARAM_COMMA_1 ,
@@ -68,10 +68,10 @@
 #define PARAM_COMMA_7 ,
 #define PARAM_COMMA_8 ,
 #define PARAM_COMMA_9 ,
-#define PARAM_COMMA   GN_CONCATNATE( PARAM_COMMA_, GN_SIGSLOT_TEMPL_N)
+#define PARAM_COMMA   GN_JOIN( PARAM_COMMA_, GN_SIGSLOT_TEMPL_N)
 
-#define SIGNAL_NAME     GN_CONCATNATE(Signal,GN_SIGSLOT_TEMPL_N)
-#define FUNCTOR_NAME    GN_CONCATNATE(Functor,GN_SIGSLOT_TEMPL_N)
+#define SIGNAL_NAME     GN_JOIN(Signal,GN_SIGSLOT_TEMPL_N)
+#define FUNCTOR_NAME    GN_JOIN(Functor,GN_SIGSLOT_TEMPL_N)
 
 namespace GN
 {
@@ -168,11 +168,11 @@ namespace GN
         template<class X, class Y>
         inline void connect( Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) ) const
         {
-            BOOST_STATIC_ASSERT( !boost::is_const<Y>::value ); // Y can't const class
+            GN_ASSERT( !IsConst<Y>::value ); // Y can't be const class
             if( 0 == classPtr || 0 == memFuncPtr ) return;
             SlotDesc desc;
             desc.func.bind( classPtr, memFuncPtr );
-            desc.slot = boost::is_base_and_derived<SlotBase,Y>::value ? (SlotBase*)classPtr : NULL;
+            desc.slot = IsBaseAndDerived<SlotBase,Y>::value ? (SlotBase*)classPtr : NULL;
             AddSlot( desc );
         }
 
@@ -182,7 +182,7 @@ namespace GN
             if( 0 == classPtr || 0 == memFuncPtr ) return;
             SlotDesc desc;
             desc.func.bind( classPtr, memFuncPtr );
-            desc.slot = boost::is_base_and_derived<SlotBase,Y>::value ? (SlotBase*)classPtr : NULL;
+            desc.slot = IsBaseAndDerived<SlotBase,Y>::value ? (SlotBase*)classPtr : NULL;
             AddSlot( desc );
         }
 
@@ -307,7 +307,6 @@ namespace GN
 
 #include <list>
 #include <algorithm>
-#include <boost/type_traits.hpp>
 
 namespace GN
 {

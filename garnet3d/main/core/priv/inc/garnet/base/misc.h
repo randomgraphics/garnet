@@ -216,7 +216,7 @@ namespace GN
         //!
         //! Destructor
         //!
-        ~NoCopy() {}
+        virtual ~NoCopy() {}
     private:  // emphasize the following members are private
         NoCopy( const NoCopy & );
         const NoCopy & operator = ( const NoCopy& );

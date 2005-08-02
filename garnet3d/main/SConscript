@@ -412,6 +412,11 @@ def check_config( conf, conf_dir ):
     # ===========
     conf['has_d3d'] = c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
 
+    # =========================
+    # 检查是否存在boost library
+    # =========================
+    conf['has_boost'] = c.CheckCXXHeader( 'boost/any.hpp' )
+
     # =================
     # 是否支持freetype2
     # =================
