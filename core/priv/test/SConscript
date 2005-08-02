@@ -16,4 +16,11 @@ cxxtest = env.Command(
         File('cxxtestgen.py').srcnode().path)
     )
 
+# build unit test application
 GN_targets['GnTest'] = GN_func["build_program"]( env, 'GnTest', ['testCommon.cpp',cxxtest] )
+
+# run unit test
+def run_test( target, source, env ):
+    import os
+    return os.spawnl( os.P_WAIT, target[0].path )
+AddPostAction( GN_targets['GnTest'][0], run_test )
