@@ -525,6 +525,7 @@ int RE::NumberOfCapturingGroups() {
                                   NULL,         // We did not study the pattern
                                   PCRE_INFO_CAPTURECOUNT,
                                   &result);
+  ((void)pcre_retval); // fix unused varialble warning, in release build
   assert(pcre_retval == 0);
   return result;
 }
