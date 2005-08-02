@@ -27,7 +27,6 @@ REM ===========
 
 alias root "cd /d %GARNET_ROOT%\$*"
 alias priv "cd /d %GARNET_ROOT%\core\priv\$*"
-alias pub "cd /d %GARNET_ROOT%\core\pub\$*"
 alias base "cd /d %GARNET_ROOT%\core\priv\base\$*"
 alias test "cd /d %GARNET_ROOT%\core\priv\test\$*"
 alias inc "cd /d %GARNET_ROOT%\core\priv\inc\garnet\$*"
