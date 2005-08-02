@@ -388,14 +388,7 @@ namespace GN
         //! <pre>
         //! if( path.device() == base.device() )
         //! {
-        //!     if( base.empty() )
-        //!     {
-        //!         resolve path using FileDevice::rel2abs();
-        //!     }
-        //!     else
-        //!     {
-        //!         compose full path in the same way as boost::complete()
-        //!     }
+        //!   resolve path using FileDevice::rel2abs();
         //! }
         //! else
         //! {

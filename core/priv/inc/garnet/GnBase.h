@@ -35,6 +35,9 @@ namespace GN
 #include <stdint.h>
 #endif
 
+// type traits
+#include "base/typeTraits.h"
+
 // macros and functions for debug
 #include "base/debug.h"
 
@@ -72,6 +75,9 @@ namespace GN
 
 // registry class
 #include "base/registry.h"
+
+// plugin manager
+#include "base/plugin.h"
 
 // ****************************************************************************
 //                           END of GnBase.h

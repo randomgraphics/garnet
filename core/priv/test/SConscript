@@ -1,18 +1,19 @@
-Import( 'env GN_targets GN_func' )
+Import( 'env GN_conf GN_targets GN_func' )
 
 import sys, glob
 
 # initialize local environment
-e = env.Copy()
-e.Append( CPPPATH = ['.'] )
+env = env.Copy()
+env.Append( CPPPATH = ['.'] )
+if GN_conf['has_boost']: env.Append( CPPDEFINES = ['HAS_BOOST'] )
 
 # generate cxxtest glue file.
 cases   = GN_func['glob']('*.cpp', 'base')
-cxxtest = e.Command(
+cxxtest = env.Command(
     'ut.cpp', cases,
     '%s %s --error-printer --include="garnet/GnBase.h" -o $TARGET ${SOURCES.abspath}'%(
         sys.executable,
         File('cxxtestgen.py').srcnode().path)
     )
 
-GN_targets['GnTest'] = GN_func["build_program"]( e, 'GnTest', ['testCommon.cpp',cxxtest] )
+GN_targets['GnTest'] = GN_func["build_program"]( env, 'GnTest', ['testCommon.cpp',cxxtest] )

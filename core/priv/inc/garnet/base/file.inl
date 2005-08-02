@@ -1,6 +1,3 @@
-#include <boost/type_traits/is_const.hpp>
-#include <boost/static_assert.hpp>
-
 //
 //
 //  ----------------------------------------------------------------------------
@@ -61,8 +58,8 @@ GN::MemFile<T>::write( const void * buf, size_t size )
 {
     GN_GUARD;
 
-    // check for constness
-    BOOST_STATIC_ASSERT( !boost::is_const<T>::value );
+    // T can't be a constant type
+    GN_CASSERT( !IsConst<T>::value );
 
     // check for no-op
     if( 0 == size ) return 0;
