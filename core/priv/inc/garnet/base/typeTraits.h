@@ -34,7 +34,13 @@ namespace GN
             static typename AddRef<FROM>::type mFrom;
             static long isConvertibleTester( typename NonRefToConstRef<TO>::type );
             static char isConvertibleTester(...);
+#if GN_ICL
+#pragma warning(disable:1595) // non-POD class type passed through ellipsis
+#endif
             static const bool value = sizeof(isConvertibleTester(mFrom)) == sizeof(long);
+#if GN_ICL
+#pragma warning(default:1595)
+#endif
         };
     }
     //! \endcond
