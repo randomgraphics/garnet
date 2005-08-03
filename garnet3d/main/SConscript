@@ -239,11 +239,11 @@ def default_env( options = None ):
             return (target, source)
         def static_pch_emitter(target,source,env):
             return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
-        def static_pch_emitter(target,source,env):
-            return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
+        def shared_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.SharedObjectEmitter)
         for suffix in Split('.c .C .cc .cxx .cpp .c++'):
             env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
-            env['BUILDERS']['SharedObject'].add_emitter( suffix, static_pch_emitter );
+            env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
     # 定义sconsign文件
     env.SConsignFile( sig_file )
