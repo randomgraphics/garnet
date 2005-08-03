@@ -229,9 +229,9 @@ def default_env( options = None ):
             action = '$CXXCOM',
             suffix = '.h.gch' )
         env.Append( BUILDERS={'PCH':bld} )
-        import SCons.Defaults
 
         # Sets up the PCH dependencies for an object file
+        import SCons.Defaults
         def pch_emitter( target, source, env, parent_emitter ):
             parent_emitter( target, source, env )
             if env.has_key('PCH') and env['PCH']:
