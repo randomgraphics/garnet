@@ -113,10 +113,6 @@ def GN_glob( patterns, dirs = ['.'],
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb ):
     if pdb:
-        #pdb = File(pdb).path
-        #e.Append(
-        #    CCFLAGS = ['/Zi', '/Fd%s'%pdb],
-        #    LINKFLAGS = ['/DEBUG', '/PDB:%s'%pdb] )
         e['PDB'] = pdb
     if 'PCH' in e['BUILDERS'] and pchcpp:
         e['PCH'] = e.PCH(pchcpp)[0]
@@ -225,14 +221,29 @@ def default_env( options = None ):
         options = options,
         )
 
-    # attach gch builder
+    # setup builder for gcc precompiled header
     if 'g++' == env['CXX']:
+
+        # attach gch builder
         bld = Builder(
-            #action = GN_build_pch
             action = '$CXXCOM',
-            #action = '$CXX $CXXFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -x c++ -c -o $TARGET $SOURCES',
             suffix = '.h.gch' )
         env.Append( BUILDERS={'PCH':bld} )
+        import SCons.Defaults
+
+        # Sets up the PCH dependencies for an object file
+        def pch_emitter( target, source, env, parent_emitter ):
+            parent_emitter( target, source, env )
+            if env.has_key('PCH') and env['PCH']:
+                env.Depends(target, env['PCH'])
+            return (target, source)
+        def static_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
+        def static_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
+        for suffix in Split('.c .C .cc .cxx .cpp .c++'):
+            env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
+            env['BUILDERS']['SharedObject'].add_emitter( suffix, static_pch_emitter );
 
     # 定义sconsign文件
     env.SConsignFile( sig_file )
