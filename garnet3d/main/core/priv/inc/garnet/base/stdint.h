@@ -6,9 +6,6 @@
 //! author  chenlee (2005.4.17)
 // *****************************************************************************
 
-#include <stddef.h>
-#include <wchar.h>
-
 /* Exact-width integer types */
 
 #ifndef __int8_t_defined
