@@ -34,10 +34,25 @@ static bool sPathExist( const GN::StrA & path )
 #endif
 }
 
+//!
+//! Get current working directory
+// ----------------------------------------------------------------------------
+static inline void sPwd( GN::StrA & result )
+{
+#if GN_WIN32
+    char buf[MAX_PATH+1];
+    ::GetCurrentDirectoryA( MAX_PATH, buf );
+    result = buf;
+#else
+    GN_UNIMPL();
+    result = "/";
+#endif
+}
+
 //
 //
 // ----------------------------------------------------------------------------
-bool sIsDir( const GN::StrA & path )
+static bool sIsDir( const GN::StrA & path )
 {
 #if GN_WIN32
 
@@ -117,9 +132,44 @@ static void sResursiveFind( StrVec & result,
     GN_UNGUARD;
 }
 
+//!
+//! Split fullpath to root and relative path
+// ----------------------------------------------------------------------------
+static inline bool
+sParsePath( GN::StrA * root, GN::StrA * relpath, const GN::StrA & fullpath )
+{
+    GN_GUARD;
+
+    // compile a regex parser
+    static const pcrecpp::RE sParser( "^(#|/|.:/?)?(.+)$" );
+    //                                  1        2
+
+    std::string s1, s2;
+    if( !sParser.FullMatch( fullpath.cstr(), &s1, &s2 ) )
+    {
+        GN_ERROR( "'%s' is not a valid path!", fullpath.cstr() );
+        return false;
+    }
+    if( root ) *root  = s1.c_str();
+    if( relpath ) *relpath = s2.c_str();
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
 // ****************************************************************************
 //                            public functions
 // ****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+GN::detail::NativeFileDevice::NativeFileDevice()
+{
+    sPwd(mStartupDir);
+}
 
 //
 //
@@ -198,14 +248,61 @@ GN::detail::NativeFileDevice::findFiles(
 //
 // ----------------------------------------------------------------------------
 GN::StrA GN::detail::NativeFileDevice::rel2abs(
-    const GN::StrA & path,
+    const GN::StrA & relpath,
     const GN::StrA & base ) const
 {
     GN_GUARD;
 
     GN_UNIMPL();
 
-    return base + "/" + path;
+    // if relative path has root already...
+    StrA root;
+    if( !sParsePath( &root, 0, relpath ) ) return StrA::EMPTYSTR;
+    if( 1 == root.size() )
+    {
+        if( '#' == root[0] )
+        {
+            if( !relpath.empty() && '/' == relpath[0] )
+                return mStartupDir + &relpath[1];
+            else
+                return mStartupDir + "/" + relpath;
+        }
+        else
+        {
+            GN_ASSERT( '/' == root[0] );
+#if GN_WIN32
+            sPwd( root );
+            GN_ASSERT( root.size() >= 2 );
+            return root[0] + ":" + relpath; // c:/thepath
+#else
+            // this is a absolute unix path, do nothing
+            return relpath;
+#endif
+        }
+    }
+    else if ( !root.empty() )
+    {
+        // input path is already an absolute path, do nothing.
+        return relpath;
+    }
+
+    // if base is empty, then set base to current working directory (pwd)
+    StrA effectiveBase;
+    if( base.empty() ) sPwd( effectiveBase );
+    else
+    {
+#if GN_WIN32
+        char buf[MAX_PATH+1];
+        _fullpath( buf, base.cstr(), MAX_PATH );
+        effectiveBase = buf;
+#else
+        GN_UNIMPL();
+#endif
+    }
+
+    // success
+    GN_ASSERT( relpath.empty() || '/' != relpath[0] );
+    return base + "/" + relpath;
 
     GN_UNGUARD;
 }

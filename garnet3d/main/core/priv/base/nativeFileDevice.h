@@ -19,7 +19,7 @@ namespace GN { namespace detail {
 
         //@{
     public:
-        NativeFileDevice()          {}
+        NativeFileDevice();
         virtual ~NativeFileDevice() {}
         //@}
 
@@ -48,6 +48,8 @@ namespace GN { namespace detail {
         //   private variables
         // ********************************
     private:
+
+        GN::StrA mStartupDir;
 
         // ********************************
         //   private functions
