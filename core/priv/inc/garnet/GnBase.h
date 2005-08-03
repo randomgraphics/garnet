@@ -27,12 +27,12 @@ namespace GN
 #include "base/pragma.h"
 
 // standard numeric types
-#if GN_MSVC
-#include "base/stdint.h"
-#else
 #include <stddef.h>
 #include <wchar.h>
+#if GN_POSIX
 #include <stdint.h>
+#else
+#include "base/stdint.h"
 #endif
 
 // type traits
