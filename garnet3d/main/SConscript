@@ -157,25 +157,16 @@ def GN_build_static_library(local_env,target=None,sources=[],pchstop=0, pchcpp=0
 
 # Брвы shared library
 def GN_build_shared_library(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
-    if not pdb and target: pdb = target + '.pdb'
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
     if GN_conf['static']:
-        lib = e.Library(target,sources)
+        return GN_build_static_library( local_env, target, sources, pchstop, pchcpp, pdb )
     else:
+        e = local_env.Copy()
+        if not pdb and target: pdb = target + '.pdb'
+        GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
         extra = [];
         if 'GnCore' != target: extra += [ GN_targets['GnCore'] ]
         extra += [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
-        lib = e.SharedLibrary(target,sources+extra)
-
-    """if len(list(lib)) >= 4:
-        # 0:dll, 1:pdb, 2:lib, 3:exp
-        # note: only msvc may produces more than 2 targets
-        assert( 'cl' == local_env['CC'] or 'icl' == local_env['CC'] )
-        return [ lib[0], lib[2] ]
-    else:
-        return lib"""
-    return lib
+        return e.SharedLibrary(target,sources+extra)
 
 # Брвы dynamic library
 def GN_build_dynamic_library(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
