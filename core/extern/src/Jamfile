@@ -1,0 +1,5 @@
+lib GnExtern
+	: [ glob */*.c */*.cpp ]
+	: <link>static
+	  <include>$(TOP)/core/extern/inc
+	;
