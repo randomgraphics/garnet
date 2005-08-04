@@ -209,7 +209,7 @@ void GN::PluginManager::removePlugin( PluginID id )
 //
 // -----------------------------------------------------------------------------
 GN::PluginBase *
-GN::PluginManager::createInstance( PluginID id, void * param ) const
+GN::PluginManager::doInstanceCreation( PluginID id, void * param ) const
 {
     GN_GUARD;
 

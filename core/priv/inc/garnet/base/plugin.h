@@ -297,17 +297,22 @@ namespace GN
         //!
         //! Create new instance of specific plugin
         //!
-        PluginBase * createInstance( PluginID id, void * param = 0 ) const;
+        template<typename T>
+        T * createInstance( PluginID id, void * param = 0 ) const
+        {
+            return safeCast<T*>(doInstanceCreation( id, param ));
+        }
 
         //!
         //! Create new instance of specific plugin
         //!
-        PluginBase * createInstance(
+        template<typename T>
+        T * createInstance(
             const StrA & type,
             const StrA & name,
             void * param = 0 ) const
         {
-            return createInstance( getPluginID( type, name ), param );
+            return createInstance<T>( getPluginID( type, name ), param );
         }
 
         //@}
@@ -369,6 +374,8 @@ namespace GN
         //   private functions
         // ********************************
     private:
+
+        PluginBase * doInstanceCreation( PluginID id, void * param = 0 ) const;
 
         struct TypeEqual
         {
