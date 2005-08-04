@@ -11,46 +11,52 @@ namespace GN
     //!
     //! high resolution clock system
     //!
-    class Clock : public StdClass
+    class Clock
     {
-         GN_DECLARE_STDCLASS( Clock, StdClass );
-
         // ********************************
         //! name  ctor/dtor
         // ********************************
 
         //@{
     public:
-        Clock()          { clear(); }
-        virtual ~Clock() { quit(); }
+        Clock()  { reset(); }
+        ~Clock() {}
         //@}
 
         // ********************************
-        //! name standard init/quit
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit() { GN_STDCLASS_QUIT(); }
-        bool ok() const { return MyParent::ok(); }
-    private:
-        void clear() {}
-        //@}
-
-        // ********************************
-        //   public functions
+        //   public interface
         // ********************************
     public:
+
+        //!
+        //! Clock cycle type
+        //!
+        typedef int64_t CycleType;
+
+        //!
+        //! 获得当前时间计数
+        //!
+        CycleType getCycleCount() const
+        {
+            return getCleanCycleCount();
+        }
 
         //!
         //! 获得当前时间
         //!
-        float getTime() const
+        double getTimeD() const
         {
             double c1 = static_cast<double>( getCleanCycleCount() );
             double c2 = static_cast<double>( mSystemCycleFrequency );
-            return static_cast<float>( c1 / c2 );
+            return c1 / c2;
+        }
+
+        //!
+        //! 获得当前时间
+        //!
+        float getTimef() const
+        {
+            return (float)getTimeD();
         }
 
         //!
@@ -78,13 +84,13 @@ namespace GN
         // ********************************
     private:
 
-        typedef int64_t CycleType;
+        CycleType mResetTime;    //!< 计时器复位时的cycle数
+        CycleType mPauseTime;    //!< 计时器暂停时的cycle数
+        CycleType mPauseElapsed; //!< 计时器总计暂停的cycle数
+        bool      mPaused;       //!< 计时器是否暂停
 
-        CycleType mSystemCycleFrequency; //!< 系统计时器的频率（每秒钟的cycle数）
-        CycleType mResetTime;            //!< 计时器复位时的cycle数
-        CycleType mPauseTime;            //!< 计时器暂停时的cycle数
-        CycleType mPauseElapsed;         //!< 计时器总计暂停的cycle数
-        bool      mPaused;               //!< 计时器是否暂停
+        //!< 系统计时器的频率（每秒钟的cycle数）
+        static CycleType mSystemCycleFrequency;
 
         // ********************************
         //   private functions
@@ -109,11 +115,6 @@ namespace GN
         //! 用返回值除以计时器的主频，就可以换算成秒。
         //!
         CycleType getSystemCycleCount() const;
-
-        //!
-        //! 获得计数器的主频
-        //!
-        CycleType getSystemCycleFrequency() const;
     };
 }
 

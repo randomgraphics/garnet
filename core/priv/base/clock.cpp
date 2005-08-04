@@ -8,29 +8,67 @@
 #define USE_RTDSC 0
 
 // ****************************************************************************
-//                        init/quit functions
+//                        local functions
 // ****************************************************************************
 
-//
-// 初始化计时器
+//!
+//! 获得计数器的主频
 // ----------------------------------------------------------------------------
-bool GN::Clock::init()
+static GN::Clock::CycleType sGetSystemCycleFrequency()
 {
-    GN_STDCLASS_INIT( Clock, () );
+    GN_GUARD;
 
-    // get CPU frequency
-    mSystemCycleFrequency = getSystemCycleFrequency();
+    GN::Clock::CycleType r;
 
-    // reset timer
-    reset();
+#if USE_RTDSC
+
+    // 获得CPU的频率
+    //
+    // FIXME: timer may warp in this second
+    //
+    GN_INFO( "Clock : Evaluating CPU Frequency ......" );
+
+    GN::Clock::CycleType c1 = getSystemCycleCount();
+#if GN_WIN32
+    Sleep(100);
+    GN::Clock::CycleType c2 = getSystemCycleCount();
+    r = (c2 - c1) * 10;
+#else
+    sleep(1);
+    GN::Clock::CycleType c2 = getSystemCycleCount();
+    r = (c2 - c1);
+#endif
+
+    GN_INFO( "Clock : OK! Current CPU Frequency is %d MHz!",
+        (uint32_t)(r / 1000000) ) );
+
+#else // !USE_RTDSC
+
+#if GN_WIN32
+    if( !QueryPerformanceFrequency((LARGE_INTEGER*)&r) )
+    {
+        GN_INFO( "Current system do NOT support high-res "
+            "performance counter, use getTickCount()!" );
+        r = 1000;  // getTickCount()返回的是毫秒
+    }
+#else
+    r = 1000;
+#endif
+
+#endif // USE_RTDSC
 
     // success
-    return true;
+    return r;
+
+    GN_UNGUARD;
 }
 
 // ****************************************************************************
 //                      interface functions
 // ****************************************************************************
+
+GN::Clock::CycleType
+GN::Clock::mSystemCycleFrequency = sGetSystemCycleFrequency();
 
 //
 // 计时器复位
@@ -73,58 +111,6 @@ void GN::Clock::resume()
 // ****************************************************************************
 //                      Private Functions
 // ****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-GN::Clock::CycleType GN::Clock::getSystemCycleFrequency() const
-{
-    GN_GUARD;
-
-    CycleType r;
-
-#if USE_RTDSC
-
-    // 获得CPU的频率
-    //
-    // FIXME: timer may warp in this second
-    //
-    GN_INFO( "Clock : Evaluating CPU Frequency ......" );
-
-    CycleType c1 = getSystemCycleCount();
-#if GN_WIN32
-    Sleep(100);
-    CycleType c2 = getSystemCycleCount();
-    r = (c2 - c1) * 10;
-#else
-    sleep(1);
-    CycleType c2 = getSystemCycleCount();
-    r = (c2 - c1);
-#endif
-
-    GN_INFO( "Clock : OK! Current CPU Frequency is %d MHz!",
-        (uint32_t)(r / 1000000) ) );
-
-#else // !USE_RTDSC
-
-#if GN_WIN32
-    if( !QueryPerformanceFrequency((LARGE_INTEGER*)&r) )
-    {
-        GN_INFO( "Current system do NOT support high-res "
-            "performance counter, use getTickCount()!" );
-        r = 1000;  // getTickCount()返回的是毫秒
-    }
-#else
-    r = 1000;
-#endif
-
-#endif // USE_RTDSC
-
-    // success
-    return r;
-
-    GN_UNGUARD;
-}
 
 //
 //
