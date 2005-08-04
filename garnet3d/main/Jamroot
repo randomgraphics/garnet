@@ -1,7 +1,15 @@
 project
     : requirements
-        <include>core/src/inc
+        <include>core/priv/inc
         <variant>debug:<define>GN_DEBUG=1
+        <variant>release:<define>NDEBUG
         <variant>profile:<define>GN_ENABLE_PROFILE=1
-    : build-dir build
+        #<toolset>msvc:<cflags>"/W4 /WX"
+        #<toolset>gcc:<cflags>"-Werror -Wall"
+    : build-dir tmp/bjam
     ;
+
+path-constant TOP : . ;
+
+build-project core/priv/base ;
+build-project core/extern/src ;

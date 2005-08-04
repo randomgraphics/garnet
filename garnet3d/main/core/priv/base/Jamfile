@@ -1,8 +1,9 @@
 project
     : requirements
         <link>static
-        <toolset>msvc:<cflags>/Fpc:\\pch.pch
-    : 
+        <include>$(TOP)/core/extern/inc
+        <toolset>msvc:<cflags>/Fppch.pch
+    :
     ;
 
 obj pch
@@ -11,6 +12,22 @@ obj pch
     ;
 
 lib GnBase
-    : debug.cpp file.cpp log.cpp string.cpp pch
+    : clock.cpp
+      debug.cpp
+      file.cpp
+      format.cpp
+      image.cpp
+      image_dds.cpp
+      image_jpg.cpp
+      image_png.cpp
+      log.cpp
+      memory.cpp
+      nativeFileDevice.cpp
+      plugin.cpp
+      registry.cpp
+      renderState.cpp
+      string.cpp
+      vertex.cpp
+      pch
     : <toolset>msvc:<cflags>/Yupch.h
     ;
