@@ -27,7 +27,7 @@ else: default_compiler = 'gcc'
 default_configs = {
     'genconf'           : getenv('GN_BUILD_GENCONF', 0), # force (re)generation of build configuration
     'enable_cache'      : getenv('GN_BUILD_ENABLE_CACHE', 1), # enable build cache
-    'build'             : getenv('GN_BUILD', 'debug'),
+    'variant'           : getenv('GN_BUILD_VARIANT', 'debug'),
     'compiler'          : getenv('GN_BUILD_COMPILER', default_compiler), # default compiler
     'enable_cg'         : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
     'enable_profile'    : getenv('GN_BUILD_ENABLE_PROFILE', 0) # disabled by default
@@ -47,9 +47,9 @@ if not conf['compiler'] in Split('%s vs8 icl'%default_compiler):
 
 # 定义编译类型
 # can be 'debug', 'release', 'stdbg', 'strel', 'static', 'all'
-conf['build'] = ARGUMENTS.get('build', default_configs['build'] )
-if not conf['build'] in Split('debug release stdbg strel all'):
-    print 'Invalid build type! Must be one of (debug releae stdbg strel all)';
+conf['variant'] = ARGUMENTS.get('variant', default_configs['variant'] )
+if not conf['variant'] in Split('debug release stdbg strel all'):
+    print 'Invalid variant type! Must be one of (debug releae stdbg strel all)';
     Exit(-1)
 
 # 是否支持Cg语言.
@@ -82,9 +82,9 @@ opts.Add(
     'Specify compiler. Could be : %s vs8 icl. (GN_BUILD_COMPILER)'%default_compiler,
     default_configs['compiler'] )
 opts.Add(
-    'build',
-    'Specify build variant. Could be : debug, release, stdbg, strel or all. (GN_BUILD)',
-    default_configs['build'] )
+    'variant',
+    'Specify variant. Could be : debug, release, stdbg, strel or all. (GN_BUILD_VARIANT)',
+    default_configs['variant'] )
 opts.Add(
     'cg',
     'Support Cg language or not. (GN_BUILD_ENABLE_CG)',
@@ -102,13 +102,13 @@ env = Environment( options = opts )
 #
 ################################################################################
 
-if 'all' in COMMAND_LINE_TARGETS: conf['build'] = 'all'
+if 'all' in COMMAND_LINE_TARGETS: conf['variant'] = 'all'
 
 import copy
 
-if 'all' == conf['build'] or 'debug' == conf['build'] or 'debug' in COMMAND_LINE_TARGETS:
+if 'all' == conf['variant'] or 'debug' == conf['variant'] or 'debug' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
-    c['build'] = 'debug'
+    c['variant'] = 'debug'
     env.SConscript(
         'SConscript',
         exports={
@@ -118,9 +118,9 @@ if 'all' == conf['build'] or 'debug' == conf['build'] or 'debug' in COMMAND_LINE
             },
         )
 
-if 'all' == conf['build'] or 'release' == conf['build'] or 'release' in COMMAND_LINE_TARGETS:
+if 'all' == conf['variant'] or 'release' == conf['variant'] or 'release' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
-    c['build'] = 'release'
+    c['variant'] = 'release'
     env.SConscript(
         'SConscript',
         exports={
@@ -130,9 +130,9 @@ if 'all' == conf['build'] or 'release' == conf['build'] or 'release' in COMMAND_
             },
         )
 
-if 'all' == conf['build'] or 'stdbg' == conf['build'] or 'stdbg' in COMMAND_LINE_TARGETS:
+if 'all' == conf['variant'] or 'stdbg' == conf['variant'] or 'stdbg' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
-    c['build'] = 'stdbg'
+    c['variant'] = 'stdbg'
     env.SConscript(
         'SConscript',
         exports={
@@ -142,9 +142,9 @@ if 'all' == conf['build'] or 'stdbg' == conf['build'] or 'stdbg' in COMMAND_LINE
             },
         )
 
-if 'all' == conf['build'] or 'strel' == conf['build'] or 'strel' in COMMAND_LINE_TARGETS:
+if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
-    c['build'] = 'strel'
+    c['variant'] = 'strel'
     env.SConscript(
         'SConscript',
         exports={

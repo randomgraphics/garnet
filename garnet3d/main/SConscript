@@ -11,8 +11,8 @@ import os, os.path, re, fnmatch
 ################################################################################
 
 # 定义编译类型
-GN_conf['static'] = ( 'stdbg' == GN_conf['build'] or 'strel' == GN_conf['build'] )
-GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
+GN_conf['static'] = ( 'stdbg' == GN_conf['variant'] or 'strel' == GN_conf['variant'] )
+GN_conf['debug'] = ('debug' == GN_conf['variant'] or 'stdbg' == GN_conf['variant'])
 
 ################################################################################
 #
@@ -21,14 +21,14 @@ GN_conf['debug'] = ('debug' == GN_conf['build'] or 'stdbg' == GN_conf['build'])
 ################################################################################
 
 root_dir = Dir( os.path.join('tmp', 'scons' ) ).abspath
-build_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['build'] )
-conf_dir  = os.path.join( build_dir, 'conf' )
+variant_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['variant'] )
+conf_dir = os.path.join( variant_dir, 'conf' )
 sig_file = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], '.sconsign.dbm' )
 if GN_conf['enable_cache']: cache_dir = os.path.join( root_dir, 'cache' )
 
 # 创建必要的目录
 if not os.path.exists( root_dir ) : os.makedirs( root_dir )
-if not os.path.exists( build_dir ) : os.makedirs( build_dir )
+if not os.path.exists( variant_dir ) : os.makedirs( variant_dir )
 if not os.path.exists( conf_dir ) : os.makedirs( conf_dir )
 if GN_conf['enable_cache'] and not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
 
@@ -335,19 +335,19 @@ def default_env( options = None ):
         print 'unknown compiler: ' + env['CC']
         Exit(-1)
 
-    def apply_options( env, build ):
+    def apply_options( env, variant ):
         env.Append(
-            CPPDEFINES = cppdefines[build],
-            CPPPATH = cpppath[build],
-            LIBPATH = libpath[build],
-            CCFLAGS = ccflags[build],
-            CXXFLAGS = cxxflags[build],
-            LINKFLAGS = linkflags[build] );
+            CPPDEFINES = cppdefines[variant],
+            CPPPATH = cpppath[variant],
+            LIBPATH = libpath[variant],
+            CCFLAGS = ccflags[variant],
+            CXXFLAGS = cxxflags[variant],
+            LINKFLAGS = linkflags[variant] );
         env.Prepend(
-            LIBS    = libs[build] ); # for gcc link
+            LIBS    = libs[variant] ); # for gcc link
 
     # apply compile options based on current build
-    apply_options( env, GN_conf['build'] )
+    apply_options( env, GN_conf['variant'] )
     apply_options( env, 'common' )
 
     # end of function default_env()
@@ -427,13 +427,13 @@ def check_config( conf, conf_dir ):
     ft2_libs = ''
     if 'win32' == env['PLATFORM']:
         if c.CheckCHeader( Split('ft2build.h freetype/freetype.h') ):
-            if 'debug' == GN_conf['build']:
+            if 'debug' == GN_conf['variant']:
                 if c.CheckLib('ft2MDd','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MDd'
-            elif 'release' == GN_conf['build']:
+            elif 'release' == GN_conf['variant']:
                 if c.CheckLib('ft2MD','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MD'
-            elif 'stdbg' == GN_conf['build']:
+            elif 'stdbg' == GN_conf['variant']:
                 if c.CheckLib('ft2MTd','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MTd'
-            elif 'strel' == GN_conf['build']:
+            elif 'strel' == GN_conf['variant']:
                 if c.CheckLib('ft2MT','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MT'
             if ft2_libs: has_ft2 = True
     else:
@@ -493,10 +493,10 @@ GN_conf.update(conf)
 env = default_env()
 
 env.Prepend(
-    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':build_dir})
+    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':variant_dir})
     )
 
-env.BuildDir( build_dir, 'core' )
+env.BuildDir( variant_dir, 'core' )
 
 if GN_conf['enable_cache']: env.CacheDir( cache_dir )
 
@@ -537,4 +537,4 @@ env.Export(
 #
 ################################################################################
 
-SConscript( dirs = [build_dir] )
+SConscript( dirs = [variant_dir] )
