@@ -33,11 +33,10 @@ struct Plugin3 : public MyPlugin
     }
 };
 
-static int whoAreYou( GN::PluginBase * p )
+static int whoAreYou( MyPlugin * p )
 {
     if ( 0 == p ) return -1;
-    MyPlugin * pp = GN::safeCast<MyPlugin*>( p );
-    return pp->whoAmI();
+    return p->whoAmI();
 }
 
 class PluginTest : public CxxTest::TestSuite
@@ -115,15 +114,15 @@ public:
         // can't override existing plugin by default
         TS_ASSERT( !mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance ) );
 
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance( "a", "p" ) ), 1 );
+        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "a", "p" ) ), 1 );
 
         // force override existing plugin
         TS_ASSERT( mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance, true ) );
 
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance( "a", "p" ) ), 2 );
+        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "a", "p" ) ), 2 );
 
         // create instance of invalid plugin
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance( "A", "p" ) ), -1 );
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance( "a", "P" ) ), -1 );
+        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "A", "p" ) ), -1 );
+        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "a", "P" ) ), -1 );
     }
 };
