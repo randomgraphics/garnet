@@ -26,6 +26,7 @@ struct DDPixelFormat
 //!
 struct DDSFileHeader
 {
+    //! \cond NEVER
     uint32_t        size;
     uint32_t        flags;
     uint32_t        height;
@@ -40,6 +41,7 @@ struct DDSFileHeader
     uint32_t        caps3;
     uint32_t        caps4;
     uint32_t        reserved2;
+    //! \endcond
 };
 
 //!

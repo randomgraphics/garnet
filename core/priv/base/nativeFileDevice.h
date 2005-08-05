@@ -11,7 +11,7 @@ namespace GN { namespace detail {
     //!
     //! Native file device class
     //!
-    class NativeFileDevice : public GN::FileDevice
+    class NativeFileDevice : public FileDevice
     {
         // ********************************
         //! \name  ctor/dtor
@@ -29,27 +29,27 @@ namespace GN { namespace detail {
     public:
 
         GN::AutoRef<GN::File>
-        openFile( const GN::StrA & path, int mode ) const;
+        openFile( const StrA & path, int mode ) const;
 
         bool isExist( const StrA & path ) const;
 
         bool isDir( const StrA & path ) const;
 
         void
-        findFiles( std::vector<GN::StrA> & result,
-                   const GN::StrA & dirName,
-                   const GN::StrA & pattern,
+        findFiles( std::vector<StrA> & result,
+                   const StrA & dirName,
+                   const StrA & pattern,
                    bool recursive,
                    bool useRegex ) const;
 
-        StrA rel2abs( const GN::StrA & relPath, const GN::StrA & base ) const;
+        StrA rel2abs( const StrA & relPath, const StrA & base ) const;
 
         // ********************************
         //   private variables
         // ********************************
     private:
 
-        GN::StrA mStartupDir;
+        StrA mStartupDir;
 
         // ********************************
         //   private functions

@@ -1112,7 +1112,7 @@ namespace GN
         //!
         //! Multiply the Matrix33 by another Matrix33
         //!
-        Matrix33 & operator *= ( const Matrix33 & m );
+        Matrix33<T> & operator *= ( const Matrix33<T> & m );
         //!
         //! Multiply the Matrix33 by a ElementType
         //!
@@ -1482,7 +1482,7 @@ namespace GN
         //!
         //! Multiply the Matrix44 by another Matrix44
         //!
-        Matrix44 & operator *= ( const Matrix44 & m );
+        Matrix44<T> & operator *= ( const Matrix44<T> & m );
         //!
         //! Multiply the Matrix44 by a ElementType
         //!
@@ -2611,10 +2611,8 @@ namespace GN
         //!
         typedef Vector3<T> VertexType;
 
-        //!
-        //! box corners
-        //!
-        VertexType vmin, vmax;
+        VertexType vmin, //!< box corner 1
+                   vmax; //!< box corner 2
 
         // ********************************
         // constructors

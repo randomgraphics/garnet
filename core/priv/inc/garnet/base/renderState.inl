@@ -1,3 +1,5 @@
+//! \cond NEVER
+
 //
 //
 // ----------------------------------------------------------------------------
@@ -269,3 +271,5 @@ GN::RenderStateBlockDesc::operator - ( const RenderStateBlockDesc & rhs ) const
     result -= rhs;
     return result;
 }
+
+//! \endcond

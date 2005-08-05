@@ -494,7 +494,7 @@ namespace GN
 #undef GN_FUNCTOR_TEMPL_N
 
 #elif !defined(__GN_BASE_FUNCTOR_H__)
-#define __GN_BASE_FUNCTOR_H__
+#define __GN_BASE_FUNCTOR_H__ //!< Including protector for functor.h
 
 namespace GN
 {
@@ -512,6 +512,9 @@ namespace GN
     }
 }
 
+//!
+//! Functor parameter count
+//!
 #define GN_FUNCTOR_TEMPL_N 0
 #include "functor.h"
 

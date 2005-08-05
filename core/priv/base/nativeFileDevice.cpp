@@ -2,8 +2,6 @@
 #include "nativeFileDevice.h"
 #include <pcrecpp.h>
 
-typedef std::vector<GN::StrA> StrVec;
-
 // ****************************************************************************
 //                            local functions
 // ****************************************************************************
@@ -78,7 +76,7 @@ static bool sIsDir( const GN::StrA & path )
 //
 //
 // ----------------------------------------------------------------------------
-static void sResursiveFind( StrVec & result,
+static void sResursiveFind( std::vector<GN::StrA> & result,
                             const GN::StrA & dirPath,
                             const GN::StrA & pattern,
                             bool recursive,
@@ -175,14 +173,14 @@ GN::detail::NativeFileDevice::NativeFileDevice()
 //
 // ----------------------------------------------------------------------------
 GN::AutoRef<GN::File>
-GN::detail::NativeFileDevice::openFile( const GN::StrA & path, int openmode ) const
+GN::detail::NativeFileDevice::openFile( const StrA & path, int openmode ) const
 {
     GN_GUARD;
 
-    GN::AutoRef<GN::AnsiFile> file( new GN::AnsiFile );
+    AutoRef<AnsiFile> file( new AnsiFile );
 
     if( !file->open( path, openmode ) )
-        return GN::AutoRef<GN::File>::EMPTYPTR;
+        return AutoRef<File>::EMPTYPTR;
 
     // success
     return file;
@@ -193,7 +191,7 @@ GN::detail::NativeFileDevice::openFile( const GN::StrA & path, int openmode ) co
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::detail::NativeFileDevice::isExist( const GN::StrA & path ) const
+bool GN::detail::NativeFileDevice::isExist( const StrA & path ) const
 {
     GN_GUARD;
 
@@ -205,7 +203,7 @@ bool GN::detail::NativeFileDevice::isExist( const GN::StrA & path ) const
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::detail::NativeFileDevice::isDir( const GN::StrA & path ) const
+bool GN::detail::NativeFileDevice::isDir( const StrA & path ) const
 {
     GN_GUARD;
 
@@ -219,9 +217,9 @@ bool GN::detail::NativeFileDevice::isDir( const GN::StrA & path ) const
 // ----------------------------------------------------------------------------
 void
 GN::detail::NativeFileDevice::findFiles(
-    std::vector<GN::StrA> & result,
-    const GN::StrA & dirPath,
-    const GN::StrA & pattern,
+    std::vector<StrA> & result,
+    const StrA & dirPath,
+    const StrA & pattern,
     bool recursive,
     bool useRegex ) const
 {
@@ -248,8 +246,8 @@ GN::detail::NativeFileDevice::findFiles(
 //
 // ----------------------------------------------------------------------------
 GN::StrA GN::detail::NativeFileDevice::rel2abs(
-    const GN::StrA & relpath,
-    const GN::StrA & base ) const
+    const StrA & relpath,
+    const StrA & base ) const
 {
     GN_GUARD;
 

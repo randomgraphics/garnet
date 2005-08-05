@@ -1,3 +1,5 @@
+//! \cond NEVER
+
 //
 //
 // ----------------------------------------------------------------------------
@@ -177,3 +179,5 @@ GN::VertexFormatDesc::operator == ( const VertexFormatDesc & rhs ) const
     // program goes here means equal decl.
     return true;
 }
+
+//! \endcond
