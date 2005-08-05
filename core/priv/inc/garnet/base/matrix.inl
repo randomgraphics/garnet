@@ -337,7 +337,7 @@ namespace GN
             rowMax = c;
             for (r=c+1; r<4; r++)
             {
-                if (::fabs(a[r][c]) > ::fabs(a[rowMax][c]))
+                if(::fabs(a[r][c]) > ::fabs(a[rowMax][c]))
                 {
                     rowMax = r;
                 }
