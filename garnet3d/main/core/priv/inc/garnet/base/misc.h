@@ -254,7 +254,7 @@ namespace GN
         void decref() const
         {
             GN_ASSERT( m_ref>0 );
-            if ( 0 == --m_ref ) delete this;
+            if( 0 == --m_ref ) delete this;
         }
 
         //!
@@ -279,7 +279,7 @@ namespace GN
         //!
         virtual ~RefCounter()
         {
-            if ( m_ref > 0 )
+            if( m_ref > 0 )
             {
                 GN_ERROR(
                     "destructing a refcounter with its reference counter "
@@ -426,8 +426,8 @@ namespace GN
         //!
         void reset( XPTR p = 0 )
         {
-            if ( p ) p->incref();
-            if ( mPtr ) mPtr->decref();
+            if( p ) p->incref();
+            if( mPtr ) mPtr->decref();
             mPtr = p;
         }
 
@@ -553,74 +553,29 @@ namespace GN
         value = vmin > value ? vmin : vmax < value ? vmax : value;
     }
 
-    //! \cond NEVER
-    namespace detail
-    {
-        //!
-        //! Free one object instance
-        //!
-        template < typename T >
-        struct freeElement
-        {
-            //!
-            //! Free one object instance
-            //!
-            static void deallocate( const void * ptr )
-            {
-                ::free( ptr );
-            }
-        };
-        //!
-        //! delete one object instance
-        //!
-        template < typename T >
-        struct deleteElement
-        {
-            //!
-            //! delete one object instance
-            //!
-            static void deallocate( T * ptr )
-            {
-                delete ptr;
-            }
-        };
-
-        //!
-        //! delete an object array
-        //!
-        template < typename T >
-        struct deleteArray
-        {
-            //!
-            //! delete an object array
-            //!
-            static void deallocate( T * ptr )
-            {
-                delete [] ptr;
-            }
-        };
-
-        //template < typename T >
-        //struct release_object
-        //{
-        //    static void deallocate( T * & ptr )
-        //    {
-        //        ptr->release();
-        //    }
-        //};
-    }
-    //! \endcond
-
     //!
-    //! general safe delocation routine
+    //! general safe delLocation routine
     // ------------------------------------------------------------------------
-    template < typename T, typename DeallocPolicy >
+    template < typename T, typename DEALLOC_FUNC >
     GN_FORCE_INLINE void safeDealloc( T * & ptr )
     {
         if( ptr )
         {
-            DeallocPolicy::deallocate( ptr );
-            ptr = NULL;
+            DEALLOC_FUNC( ptr );
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! free one object
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeFree( T * & ptr )
+    {
+        if( ptr )
+        {
+            memFree( ptr );
+            ptr = 0;
         }
     }
 
@@ -630,7 +585,11 @@ namespace GN
     template < typename T >
     GN_FORCE_INLINE void safeDelete( T * & ptr )
     {
-        safeDealloc<T,detail::deleteElement<T> >(ptr);
+        if( ptr )
+        {
+            delete ptr;
+            ptr = 0;
+        }
     }
 
     //!
@@ -639,7 +598,11 @@ namespace GN
     template < typename T >
     GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
     {
-        safeDealloc<T,detail::deleteArray<T> >(ptr);
+        if( ptr )
+        {
+            delete [] ptr;
+            ptr = 0;
+        }
     }
 }
 
