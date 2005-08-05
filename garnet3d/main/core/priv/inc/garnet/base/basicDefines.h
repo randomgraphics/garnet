@@ -6,10 +6,10 @@
 //! \author  chenlee (2005.7.24)
 // *****************************************************************************
 
-#define GN_MSVC 0
-#define GN_ICL  0
-#define GN_GCC  0
-#define GN_BCB  0
+#define GN_MSVC 0 //!< If 1, means current compiler is msvc (or icl)
+#define GN_ICL  0 //!< If 1, means current compiler is intel c++ compiler 
+#define GN_GCC  0 //!< If 1, means current compierl is gcc/g++
+#define GN_BCB  0 //!< If 1, means current compierl is boland c++ compiler
 
 // 辨识编译器
 #if defined(_MSC_VER) && !defined(__ICL)
@@ -36,9 +36,9 @@
 
 
 // 辨识操作系统
-#define GN_WIN32  0
-#define GN_CYGWIN 0
-#define GN_POSIX  0
+#define GN_WIN32  0 //!< If 1, means current platform is Windows
+#define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
+#define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
 #if defined( _WIN32 ) || defined( WIN32 )      // Win32
 //! WIN32 platform
 #undef GN_WIN32
@@ -78,10 +78,17 @@
 #define GN_INLINE
 #endif
 
-// export/import function tag
+// Export/Import function tag
+
+//! \def GN_EXPORT
+//! Export function tag
+
+//! \def GN_IMPORT
+//! Import function tag
+
 #if GN_MSVC && !GN_STATIC
-#define GN_IMPORT         __declspec(dllimport)
-#define GN_EXPORT         __declspec(dllexport)
+#define GN_EXPORT       __declspec(dllexport)
+#define GN_IMPORT       __declspec(dllimport)
 #else
 #define GN_IMPORT
 #define GN_EXPORT
@@ -111,7 +118,7 @@
 //! 连接两个名称
 //!
 #define GN_JOIN(s1, s2)         GN_JOIN_DIRECT(s1, s2)
-#define GN_JOIN_DIRECT(s1, s2)  s1##s2
+#define GN_JOIN_DIRECT(s1, s2)  s1##s2 //!< Auxillary macro used by GN_JOIN
 
 //@}
 

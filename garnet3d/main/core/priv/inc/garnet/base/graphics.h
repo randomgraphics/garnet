@@ -196,10 +196,9 @@ namespace GN
         //!
         struct MipDesc
         {
-            //!
-            //! mipmap dimension in pixel
-            //!
-            uint16_t width, height, depth;
+            uint16_t width,  //!< mipmap width in pixel
+                     height, //!< mipmap height in pixel
+                     depth;  //!< mipmap depth in pixel
 
             //!
             //! bytes of one row. For DXT compressed texture, this

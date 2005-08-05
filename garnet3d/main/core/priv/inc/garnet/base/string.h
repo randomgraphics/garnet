@@ -124,6 +124,9 @@ namespace GN
     {
     public:
 
+        //!
+        //! Instance of empty string
+        //!
         static Str EMPTYSTR;
 
         //!

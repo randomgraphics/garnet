@@ -10,9 +10,15 @@
 
 namespace GN
 {
+    //!
+    //! Handle Manager
+    //!
     template<typename T, typename HANDLE_TYPE = size_t >    
     class HandleManager
     {
+        //!
+        //! Handle item used internally by manager
+        //!
         struct Item
         {
             mutable T value;

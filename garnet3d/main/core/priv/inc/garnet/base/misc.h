@@ -325,6 +325,9 @@ namespace GN
 
     public :
 
+        //!
+        //! Instance of empty reference pointer
+        //!
         static AutoRef<X> EMPTYPTR;
 
         //!
@@ -550,7 +553,7 @@ namespace GN
         value = vmin > value ? vmin : vmax < value ? vmax : value;
     }
 
-    //! \cond
+    //! \cond NEVER
     namespace detail
     {
         //!

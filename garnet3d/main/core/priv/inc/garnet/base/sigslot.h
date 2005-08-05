@@ -303,7 +303,7 @@ namespace GN
 #undef GN_SIGSLOT_TEMPL_N
 
 #elif !defined(__GN_BASE_SIGSLOT_H__)
-#define __GN_BASE_SIGSLOT_H__
+#define __GN_BASE_SIGSLOT_H__ //!< Include protector
 
 #include <list>
 #include <algorithm>
@@ -372,6 +372,9 @@ namespace GN
     }
 }
 
+//!
+//! Signal/Slot parameter count
+//!
 #define GN_SIGSLOT_TEMPL_N 0
 #include "sigslot.h"
 

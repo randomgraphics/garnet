@@ -8,7 +8,7 @@
 
 namespace GN
 {
-    //! \cond
+    //! \cond NEVER
     namespace detail
     {
         template <typename T>
@@ -49,32 +49,50 @@ namespace GN
     //! Test constness
     //!
     template <typename T>
-    struct IsConst { static const bool value = false; };
+    struct IsConst
+    {
+        static const bool value = false; //!< as is.
+    };
 
     //!
     //! Test constness
     //!
     template <typename T>
-    struct IsConst<const T> { static const bool value = true; };
+    struct IsConst<const T>
+    {
+        static const bool value = true; //!< as is.
+    };
 
     //!
     //! Is class type or not?
     //!
     template <typename T>
-    struct IsClass { static const bool value = detail::IsClassHelper<T>::value; };
+    struct IsClass
+    {
+        static const bool value = detail::IsClassHelper<T>::value; //!< as is.
+    };
 
     //!
     //! Can type 'FROM' convert to type 'TO'
     //!
     template <typename FROM, typename TO>
-    struct IsConvertible { static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; };
+    struct IsConvertible
+    {
+        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; //!< as is.
+    };
 
     //!
     //! Is class D derived from class B?
     //!
     template <typename B, typename D>
-    struct IsBaseAndDerived { static const bool value =
-        IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value; };
+    struct IsBaseAndDerived
+    {
+        //!
+        //! as is.
+        //!
+        static const bool value =
+            IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value;
+    };
 }
 
 // *****************************************************************************
