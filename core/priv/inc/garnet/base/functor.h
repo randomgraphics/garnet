@@ -423,6 +423,34 @@ namespace GN
             }
         }
     };
+
+    template<typename R PARAM_COMMA PARAM_TEMPLS>
+    inline FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES>
+    makeFunctor( R(*f)(PARAM_TYPES) )
+    {
+        FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES> fn;
+        fn.bind(f);
+        return fn;
+    }
+
+    template<class X, class Y, typename R PARAM_COMMA PARAM_TEMPLS>
+    inline FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES>
+    makeFunctor( Y * x, R(X::*f)(PARAM_TYPES) )
+    {
+        GN_CASSERT( !IsConst<Y>::value );
+        FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES> fn;
+        fn.bind<X,Y>(x,f);
+        return fn;
+    }
+
+    template<class X, class Y, typename R PARAM_COMMA PARAM_TEMPLS>
+    inline FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES>
+    makeFunctor( const Y * x, R(X::*f)(PARAM_TYPES) const )
+    {
+        FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES> fn;
+        fn.bind<X,Y>(x,f);
+        return fn;
+    }
 }
 
 #undef PARAM_TEMPLS_0
