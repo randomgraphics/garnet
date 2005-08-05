@@ -95,6 +95,21 @@ bool unequal( const F1 & f1, const F2 & f2 )
 class FunctorTest : public CxxTest::TestSuite
 {
 public:
+
+    void testMakeFunctor()
+    {
+        aaa a;
+        const aaa & ca = a;
+        GN::Functor2<void,int,int> f1, f2, f3;
+        f1 = GN::makeFunctor( &foo1 );
+        f2 = GN::makeFunctor<aaa,aaa>( &a, &aaa::foo1 );
+        f3 = GN::makeFunctor<aaa,aaa>( &ca, &aaa::foo1 );
+
+        f1(0,0); TS_ASSERT_EQUALS( g_funcName, "foo1()" );
+        f2(0,0); TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
+        f3(0,0); TS_ASSERT_EQUALS( g_funcName, "aaa::foo1() const" );
+    }
+
     void testFunctor()
     {
         aaa a;
