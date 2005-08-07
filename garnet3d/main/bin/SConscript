@@ -1,0 +1,19 @@
+Import( 'env GN_conf GN_targets' )
+
+import os, os.path
+
+root = os.path.join( GN_conf['platform'], GN_conf['compiler'], GN_conf['variant'] )
+
+def doInstall( dir, names ):
+    dir = os.path.join( root, dir )
+    for name in names:
+        if name in GN_targets and GN_targets[name]:
+            GN_targets[name] = env.Install( dir, GN_targets[name] )
+
+# populate sample directory
+doInstall( 'samples', Split('GnCore GnTest GnDoc') )
+
+# run unit test
+def run_test( target, source, env ):
+    return os.spawnl( os.P_WAIT, target[0].path )
+AddPostAction( GN_targets['GnTest'][0], run_test )

@@ -39,7 +39,7 @@
 //! Implement default log
 //!
 #define GN_IMPLEMENT_DEFAULT_LOG() \
-    GN_EXPORT void ::GN::doLog( \
+    GN_PUBLIC void ::GN::doLog( \
         GN::LogLevel level, const char * category, const char * msg, \
         const char * func, const char * file, int line ) \
     { ::GN::detail::defaultLogImpl(level,category,msg,func,file,line); }
@@ -75,7 +75,7 @@ namespace GN
     //! \note It is client's responsibility to implement this function
     //!
     // ------------------------------------------------------------------------
-    GN_EXPORT void
+    GN_PUBLIC void
     doLog(
         LogLevel     level,
         const char * category,

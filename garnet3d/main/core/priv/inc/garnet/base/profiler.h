@@ -118,7 +118,7 @@ namespace GN
     //!
     class ScopeTimer
     {
-        ProfilerManager * mMgr;
+        ProfilerManager & mMgr;
         const char * mName;
 
     public :
@@ -126,11 +126,11 @@ namespace GN
         //!
         //! start the timer
         //!
-        ScopeTimer( ProfilerManager * mgr, const char * name )
+        ScopeTimer( ProfilerManager & mgr, const char * name )
             : mMgr(mgr), mName(name)
         {
-            GN_ASSERT( mgr && name );
-            mgr->startTimer(name);
+            GN_ASSERT( name );
+            mgr.startTimer(name);
         }
 
         //!
@@ -148,8 +148,7 @@ namespace GN
         {
             if( mName )
             {
-                GN_ASSERT( mMgr );
-                mMgr->stopTimer(mName);
+                mMgr.stopTimer(mName);
                 mName = 0;
             }
         }

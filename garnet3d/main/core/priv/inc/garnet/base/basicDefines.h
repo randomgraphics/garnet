@@ -78,7 +78,7 @@
 #define GN_INLINE
 #endif
 
-// Export/Import function tag
+// Export/Import function/variable tag
 
 //! \def GN_EXPORT
 //! Export function tag
@@ -92,6 +92,17 @@
 #else
 #define GN_IMPORT
 #define GN_EXPORT
+#endif
+
+//!
+//! Public/global function/variable tag
+//!
+#ifdef _GN_CORE
+#define GN_PUBLIC   GN_EXPORT
+#elif defined(_GN_DLL)
+#define GN_PUBLIC   GN_IMPORT
+#else
+#define GN_PUBLIC
 #endif
 
 //!
