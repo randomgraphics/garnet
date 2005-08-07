@@ -39,7 +39,7 @@ namespace GN
 #include "base/typeTraits.h"
 
 // macros and functions for debug
-#include "base/debug.h"
+#include "base/assert.h"
 
 // log functions and macros
 #include "base/log.h"

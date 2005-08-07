@@ -1,8 +1,8 @@
-#ifndef __GN_BASE_DEBUG_H__
-#define __GN_BASE_DEBUG_H__
+#ifndef __GN_BASE_ASSERT_H__
+#define __GN_BASE_ASSERT_H__
 // *****************************************************************************
-//! \file    debug.h
-//! \brief   debug functions and macros
+//! \file    assert.h
+//! \brief   assert functions and macros
 //! \author  chenlee (2005.4.17)
 // *****************************************************************************
 
@@ -161,6 +161,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of debug.h
+//                           End of assert.h
 // *****************************************************************************
-#endif // __GN_BASE_DEBUG_H__
+#endif // __GN_BASE_ASSERT_H__
