@@ -439,7 +439,7 @@ namespace GN
     {
         GN_CASSERT( !IsConst<Y>::value );
         FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES> fn;
-        fn.bind<X,Y>(x,f);
+        fn.bind(x,f);
         return fn;
     }
 
@@ -448,7 +448,7 @@ namespace GN
     makeFunctor( const Y * x, R(X::*f)(PARAM_TYPES) const )
     {
         FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES> fn;
-        fn.bind<X,Y>(x,f);
+        fn.bind(x,f);
         return fn;
     }
 }
