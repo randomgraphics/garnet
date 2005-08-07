@@ -38,7 +38,7 @@ namespace GN
 // type traits
 #include "base/typeTraits.h"
 
-// macros and functions for debug
+// assert macros and functions
 #include "base/assert.h"
 
 // log functions and macros
