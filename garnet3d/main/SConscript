@@ -250,6 +250,10 @@ def default_env( options = None ):
     cxxflags   = generate_empty_options()
     linkflags  = generate_empty_options()
 
+    # define profile tag
+    if float(GN_conf['enable_profile']):
+        cppdefines['common'] = ['GN_ENABLE_PROFILE=1']
+
     cpppath['common']  = ['#core/pub/sdk/inc/common']
     cpppath['debug']   = ['#core/pub/sdk/inc/debug']
     cpppath['release'] = ['#core/pub/sdk/inc/release']

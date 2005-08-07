@@ -472,7 +472,7 @@ namespace GN
     template<typename T>
     class Singleton
     {
-        static T * msInstance;
+        GN_PUBLIC static T * msInstance;
 
     public:
 
@@ -508,7 +508,7 @@ namespace GN
     //!
     //! 在实现单件类的源文件中使用该宏。
     //!
-    #define GN_IMPLEMENT_SINGLETON( T ) T * T::msInstance = 0;
+    #define GN_IMPLEMENT_SINGLETON( T ) T * ::GN::Singleton<T>::msInstance = 0;
 
     //!
     //! type cast function

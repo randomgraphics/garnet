@@ -9,21 +9,41 @@
 #include <limits>
 #include <map>
 
+//! \name prof macros
+//@{
+#ifdef GN_ENABLE_PROFILE
+//!
+//! start a profile timer
+//!
+#define GN_PROF(name) ::GN::core::ScopeTimer GN_JOIN(__prof_,name)( #name )
+//!
+//! stop a previously defined profile timer
+//!
+//! Normally, you don't need to use this macro, because profile timer
+//! will stop automatically when out of its life scope.
+//!
+#define GN_PROF_END(name) GN_JOIN(__prof_,name).end()
+#else
+#define GN_PROF(name)
+#define GN_PROF_END(name)
+#endif
+//@}
+
 namespace GN
 {
     //!
     //! Profiler Manager
     //!
-    class ProfilerManager
+    class ProfilerManager : public Singleton<ProfilerManager>
     {
         // ********************************
         //! \name  ctor/dtor
         // ********************************
 
         //@{
-    protected:
-        ProfilerManager();
-        virtual ~ProfilerManager();
+    private:
+        ProfilerManager() {}
+        ~ProfilerManager() {}
         //@}
 
         // ********************************
@@ -118,7 +138,6 @@ namespace GN
     //!
     class ScopeTimer
     {
-        ProfilerManager & mMgr;
         const char * mName;
 
     public :
@@ -126,11 +145,10 @@ namespace GN
         //!
         //! start the timer
         //!
-        ScopeTimer( ProfilerManager & mgr, const char * name )
-            : mMgr(mgr), mName(name)
+        ScopeTimer( const char * name ) : mName(name)
         {
             GN_ASSERT( name );
-            mgr.startTimer(name);
+            ProfilerManager::getInstance().startTimer(name);
         }
 
         //!
@@ -148,7 +166,7 @@ namespace GN
         {
             if( mName )
             {
-                mMgr.stopTimer(mName);
+                ProfilerManager::getInstance().stopTimer(mName);
                 mName = 0;
             }
         }
