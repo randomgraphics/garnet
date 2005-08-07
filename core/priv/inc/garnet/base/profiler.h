@@ -41,7 +41,7 @@ namespace GN
         // ********************************
 
         //@{
-    private:
+    public:
         ProfilerManager() {}
         ~ProfilerManager() {}
         //@}

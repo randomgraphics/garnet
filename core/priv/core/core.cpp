@@ -6,7 +6,10 @@ GN_IMPLEMENT_DEFAULT_LOG();
 
 // implement static member of profile manager
 GN_IMPLEMENT_SINGLETON( ::GN::ProfilerManager );
-    
+
+// instance of profile manager
+static ::GN::ProfilerManager sProfilerMgr;
+
 // Implement global variables
 namespace GN
 {
