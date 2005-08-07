@@ -55,7 +55,7 @@ if not conf['variant'] in Split('debug release stdbg strel all'):
 # 是否支持Cg语言.
 conf['enable_cg']  = ARGUMENTS.get('cg', default_configs['enable_cg'] )
 
-# 是否启用profiler.
+# 是否启用profiler.`
 conf['enable_profile'] = ARGUMENTS.get('prof', default_configs['enable_profile'] )
 
 # 定义target dict
@@ -75,7 +75,7 @@ opts.Add(
     default_configs['genconf'] )
 opts.Add(
     'cache',
-    'Use scons build cache.',
+    'Use scons build cache. (GN_BUILD_ENABLE_CACHE)',
     default_configs['enable_cache'] )
 opts.Add(
     'compiler',

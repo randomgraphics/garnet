@@ -1,0 +1,12 @@
+Import( 'env GN_targets GN_func' )
+
+env = env.Copy()
+env.Append( CPPDEFINES = ['_GN_CORE'] )
+
+GN_targets['GnCore'] = GN_func['build_shared_library'](
+    env,
+    'GnCore',
+    GN_func['glob']('*.cpp'),
+    'pch.h',
+    'pch.cpp',
+    'GnCore.pdb' )

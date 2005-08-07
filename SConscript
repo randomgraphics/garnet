@@ -24,13 +24,13 @@ root_dir = Dir( os.path.join('tmp', 'scons' ) ).abspath
 variant_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['variant'] )
 conf_dir = os.path.join( variant_dir, 'conf' )
 sig_file = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], '.sconsign.dbm' )
-if GN_conf['enable_cache']: cache_dir = os.path.join( root_dir, 'cache' )
+cache_dir = os.path.join( root_dir, 'cache' )
 
 # ¥¥Ω®±ÿ“™µƒƒø¬º
 if not os.path.exists( root_dir ) : os.makedirs( root_dir )
 if not os.path.exists( variant_dir ) : os.makedirs( variant_dir )
 if not os.path.exists( conf_dir ) : os.makedirs( conf_dir )
-if GN_conf['enable_cache'] and not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
+if not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
 
 ################################################################################
 #
@@ -111,81 +111,82 @@ def GN_glob( patterns, dirs = ['.'],
     return files
 
 # setup environment for producing PCH and PDB
-def GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb ):
+def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
     if pdb:
-        e['PDB'] = pdb
-    if 'PCH' in e['BUILDERS'] and pchcpp:
-        e['PCH'] = e.PCH(pchcpp)[0]
-        e['PCHSTOP'] = pchstop
+        env['PDB'] = pdb
+    if 'PCH' in env['BUILDERS'] and pchcpp:
+        env['PCH'] = env.PCH(pchcpp)[0]
+        env['PCHSTOP'] = pchstop
 
 # ±‡“Î static object
-def GN_build_static_object(local_env,source=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
-    return e.Object(source)
+def GN_build_static_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
+    env = env.Copy()
+    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    return env.Object(source)
 
 # ±‡“Î static object list
-def GN_build_static_objects(local_env,sources=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
-    return [e.Object(x) for x in sources]
+def GN_build_static_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
+    env = env.Copy()
+    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    return [env.Object(x) for x in sources]
 
 # ±‡“Î shared object
-def GN_build_shared_object(local_env,source=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
+def GN_build_shared_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
+    env = env.Copy()
+    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
-        return e.Object(source)
+        return env.Object(source)
     else:
-        return e.SharedObject(source)
+        return env.SharedObject(source)
 
 # ±‡“Î shared object list
-def GN_build_shared_objects(local_env,sources=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
+def GN_build_shared_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
+    env = env.Copy()
+    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
-        return [e.Object(x) for x in sources]
+        return [env.Object(x) for x in sources]
     else:
-        return [e.SharedObject(x) for x in sources]
+        return [env.SharedObject(x) for x in sources]
 
 # ±‡“Î static library
-def GN_build_static_library(local_env,target=None,sources=[],pchstop=0, pchcpp=0,pdb=0):
-    e = local_env.Copy()
+def GN_build_static_library(env,target=None,sources=[],pchstop=0, pchcpp=0,pdb=0):
+    env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
-    return e.Library(target,sources)
+    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    return env.Library(target,sources)
 
 # ±‡“Î shared library
-def GN_build_shared_library(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_shared_library(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
     if GN_conf['static']:
-        return GN_build_static_library( local_env, target, sources, pchstop, pchcpp, pdb )
+        return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb )
     else:
-        e = local_env.Copy()
+        env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
-        GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
-        extra = [];
-        if 'GnCore' != target: extra += [ GN_targets['GnCore'] ]
-        extra += [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
-        return e.SharedLibrary(target,sources+extra)
-
-# ±‡“Î dynamic library
-def GN_build_dynamic_library(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
-    if not pdb and target: pdb = target + '.pdb'
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
-    extra = [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
-    return e.SharedLibrary(target,sources+extra)
+        GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+        if 'gcc' == env['CC']:
+            def addLib( env, name ):
+                dir = os.path.dirname(GN_targets[name][0].abspath)
+                env.Prepend( LIBPATH = [dir], LIBS = [name] )
+            if 'GnCore' != target: addLib( env, 'GnCore' )
+            addLib( env, 'GnBase' )
+            addLib( env, 'GnExtern' )
+            return env.SharedLibrary(target,sources)
+        else:
+            extra = [];
+            if 'GnCore' != target: extra += [ GN_targets['GnCore'] ]
+            extra += [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
+            return env.SharedLibrary(target,sources+extra)
 
 # ±‡“Îø…÷¥––Œƒº˛
-def GN_build_program(local_env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
-    e = local_env.Copy()
+def GN_build_program(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
+    env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
-    GN_setup_PCH_PDB( e, pchstop, pchcpp, pdb )
+    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     extra = [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
     if target:
-        prog = e.Program(target,sources+extra)
+        prog = env.Program(target,sources+extra)
     else:
-        prog = e.Program(sources+extra)
+        prog = env.Program(sources+extra)
     return prog
 
 ################################################################################
@@ -498,7 +499,7 @@ env.Prepend(
 
 env.BuildDir( variant_dir, 'core' )
 
-if GN_conf['enable_cache']: env.CacheDir( cache_dir )
+if float(GN_conf['enable_cache']): env.CacheDir( cache_dir )
 
 ################################################################################
 #
@@ -519,7 +520,6 @@ GN_func = {
     'build_shared_objects'  : GN_build_shared_objects,
     'build_static_library'  : GN_build_static_library,
     'build_shared_library'  : GN_build_shared_library,
-    'build_dynamic_library' : GN_build_dynamic_library,
     'build_program'         : GN_build_program,
     }
 
@@ -537,4 +537,4 @@ env.Export(
 #
 ################################################################################
 
-SConscript( dirs = [variant_dir] )
+SConscript( dirs = [variant_dir] + ['bin'] )
