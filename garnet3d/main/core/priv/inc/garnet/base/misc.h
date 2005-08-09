@@ -472,7 +472,7 @@ namespace GN
     template<typename T>
     class Singleton
     {
-        GN_PUBLIC static T * msInstance; //!< 指向singleton的实例
+        static GN_PUBLIC T * msInstance; //!< 指向singleton的实例
 
     public:
 
@@ -504,7 +504,7 @@ namespace GN
     };
 
     // 实现单件类中的静态变量
-    template<typename T> T * ::GN::Singleton<T>::msInstance = 0;
+    template<typename T> T * Singleton<T>::msInstance = 0;
 
     //!
     //! type cast function
