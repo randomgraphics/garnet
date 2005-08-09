@@ -155,6 +155,13 @@ def GN_build_static_library(env,target=None,sources=[],pchstop=0, pchcpp=0,pdb=0
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return env.Library(target,sources)
 
+# Add libraries to link list of a program or DLL
+def GN_add_libs( env, libs ):
+    libs.reverse()
+    for lib in libs:
+        dir = os.path.dirname(GN_targets[lib][0].abspath)
+        env.Prepend( LIBPATH = [dir], LIBS = [lib] )
+
 # 编译 shared library
 def GN_build_shared_library(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
     if GN_conf['static']:
@@ -163,31 +170,18 @@ def GN_build_shared_library(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0)
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-        if 'gcc' == env['CC']:
-            def addLib( env, name ):
-                dir = os.path.dirname(GN_targets[name][0].abspath)
-                env.Prepend( LIBPATH = [dir], LIBS = [name] )
-            if 'GnCore' != target: addLib( env, 'GnCore' )
-            addLib( env, 'GnBase' )
-            addLib( env, 'GnExtern' )
-            return env.SharedLibrary(target,sources)
-        else:
-            extra = [];
-            if 'GnCore' != target: extra += [ GN_targets['GnCore'] ]
-            extra += [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
-            return env.SharedLibrary(target,sources+extra)
+        libs = Split('GnBase GnExtern')
+        if not 'GnCore' == target : libs += ['GnCore'];
+        GN_add_libs( env, libs  )
+        return env.SharedLibrary( target, sources )
 
 # 编译可执行文件
 def GN_build_program(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    extra = [ GN_targets['GnBase'], GN_targets['GnExtern'] ]
-    if target:
-        prog = env.Program(target,sources+extra)
-    else:
-        prog = env.Program(sources+extra)
-    return prog
+    GN_add_libs( env, Split('GnCore GnBase GnExtern') )
+    return env.Program( target, sources )
 
 ################################################################################
 #

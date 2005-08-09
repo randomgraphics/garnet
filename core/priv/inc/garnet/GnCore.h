@@ -15,10 +15,6 @@ namespace GN
     //!
     namespace core
     {
-        //!
-        //! Global plugin manager
-        //!
-        GN_PUBLIC PluginManager   gPluginMgr;
     }
 }
 
