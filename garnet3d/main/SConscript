@@ -149,7 +149,7 @@ def GN_build_shared_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
         return [env.SharedObject(x) for x in sources]
 
 # ±‡“Î static library
-def GN_build_static_library(env,target=None,sources=[],pchstop=0, pchcpp=0,pdb=0):
+def GN_build_static_library(env,target,sources=[],pchstop=0, pchcpp=0,pdb=0):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
@@ -163,25 +163,35 @@ def GN_add_libs( env, libs ):
         env.Prepend( LIBPATH = [dir], LIBS = [lib] )
 
 # ±‡“Î shared library
-def GN_build_shared_library(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0):
     if GN_conf['static']:
         return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb )
     else:
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-        libs = Split('GnBase GnExtern')
-        if not 'GnCore' == target : libs += ['GnCore'];
+        if 'GnCore' == target: libs = Split('GnBase GnExtern')
+        else: libs = Split('GnCore GnBase GnExtern')
         GN_add_libs( env, libs  )
-        return env.SharedLibrary( target, sources )
+        result = env.SharedLibrary( target, sources )
+        manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target )
+        if os.path.exists( manifest ):
+            env.SideEffect( manifest, result )
+            result += [manifest]
+        return result
 
 # ±‡“Îø…÷¥––Œƒº˛
-def GN_build_program(env,target=None,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     GN_add_libs( env, Split('GnCore GnBase GnExtern') )
-    return env.Program( target, sources )
+    result = env.Program( target, sources )
+    manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target )
+    if os.path.exists( manifest ):
+        env.SideEffect( manifest, result )
+        result += [manifest]
+    return result
 
 ################################################################################
 #
