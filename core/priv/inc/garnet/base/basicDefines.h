@@ -37,22 +37,30 @@
 
 // 辨识操作系统
 #define GN_WIN32  0 //!< If 1, means current platform is Windows
+#define GN_AMD64  0 //!< If 1, means current platform is Windows x64
 #define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
 #define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
 #if defined( _WIN32 ) || defined( WIN32 )      // Win32
-//! WIN32 platform
+// Windows platform
 #undef GN_WIN32
 #define GN_WIN32 1
+#if defined( _WIN64 ) || defined( WIN64 )
+// Amd64 platform
+#define GN_WIN64 1
+#define GN_PLATFORM "amd64"
+#else
+// Win32 platform
 #define GN_PLATFORM "win32"
+#endif
 #elif defined(__CYGWIN__)
-//! Cygwin platform
+// Cygwin platform
 #undef GN_CYGWIN
 #undef GN_POSIX
 #define GN_CYGWIN 1
 #define GN_POSIX  1 // cygwin also provides some posix compabilities
 #define GN_PLATFORM "cygwin"
 #elif defined( __unix ) || defined( __unix__ )
-//! posix-like platform
+// posix-like platform
 #undef GN_POSIX
 #define GN_POSIX 1
 #define GN_PLATFORM "posix"
@@ -99,10 +107,8 @@
 //!
 #ifdef _GN_CORE
 #define GN_PUBLIC   GN_EXPORT
-#elif defined(_GN_DLL)
-#define GN_PUBLIC   GN_IMPORT
 #else
-#define GN_PUBLIC
+#define GN_PUBLIC   GN_IMPORT
 #endif
 
 //!
