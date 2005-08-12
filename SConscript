@@ -63,12 +63,6 @@ def GN_relpath(target, base):
     Base can be a directory specified either as absolute or relative to current dir.
     """
 
-    if not os.path.exists(target):
-        raise OSError, 'Target does not exist: '+target
-
-    if not os.path.isdir(base):
-        raise OSError, 'Base is not a directory or does not exist: '+base
-
     base_list = (os.path.abspath(base)).split(os.sep)
     target_list = (os.path.abspath(target)).split(os.sep)
 
@@ -98,10 +92,9 @@ def GN_glob( patterns, dirs = ['.'],
     for dir in dirs:
         root = Dir(dir).srcnode().abspath;
         for file in os.listdir( root ):
-            if recursive \
-              and os.path.isdir( os.path.join(root,file) ) \
-              and ( not '.svn' == file ) : # ignore subversion directory
-                files = files + GN_glob( patterns, os.path.join(dir,file), recursive )
+            if os.path.isdir( os.path.join(root,file) ):
+                if recursive and ( not '.svn' == file ) : # ignore subversion directory
+                    files = files + GN_glob( patterns, os.path.join(dir,file), recursive )
             else:
                 # Note: ignore precompiled header
                 if not ('pch.cpp' == file or 'stdafx.cpp' == file):
@@ -163,15 +156,16 @@ def GN_add_libs( env, libs ):
         env.Prepend( LIBPATH = [dir], LIBS = [lib] )
 
 # 编译 shared library
-def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
     if GN_conf['static']:
         return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb )
     else:
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-        if 'GnCore' == target: libs = Split('GnBase GnExtern')
-        else: libs = Split('GnCore GnBase GnExtern')
+        if 0 == len(libs):
+            if 'GnCore' == target: libs = Split('GnBase GnExtern')
+            else: libs = Split('GnCore GnBase GnExtern')
         GN_add_libs( env, libs  )
         result = env.SharedLibrary( target, sources )
         manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target )
@@ -181,11 +175,12 @@ def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0):
         return result
 
 # 编译可执行文件
-def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    GN_add_libs( env, Split('GnCore GnBase GnExtern') )
+    if 0 == len(libs): libs = Split('GnCore GnBase GnExtern')
+    GN_add_libs( env, libs )
     result = env.Program( target, sources )
     manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target )
     if os.path.exists( manifest ):
