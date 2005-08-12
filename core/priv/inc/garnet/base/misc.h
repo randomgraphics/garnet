@@ -46,11 +46,11 @@ namespace GN
     //! \param parent  待声明类的父类的名字
     //! \note 在所有基于stdclass类型的声明中使用这个宏
     //!
-    //! 这个宏声明了两个别名：MySelf和MyParent，和标准私有函数： selfOk()
+    //! 这个宏声明了两个别名：MySelf和MyParent，和标准私有函数： selfOK()
     //!
     #define GN_DECLARE_STDCLASS(self, parent)                           \
                 private : typedef self MySelf; typedef parent MyParent; \
-                private : bool selfOk() const { return MySelf::ok(); }
+                private : bool selfOK() const { return MySelf::ok(); }
 
 
     //!
@@ -65,13 +65,13 @@ namespace GN
     //! 更多信息参见下面的例子
     #define GN_STDCLASS_INIT( class_name, param_list )     \
         /* check for twice init */                         \
-        if( selfOk() )                                     \
+        if( selfOK() )                                     \
         {                                                  \
             GN_ERROR( "u call init() twice!" );            \
-            quit(); return selfOk();                       \
+            quit(); return selfOK();                       \
         }                                                  \
         /* call parent's init() */                         \
-        if( !MyParent::init param_list )  { quit(); return selfOk(); }
+        if( !MyParent::init param_list )  { quit(); return selfOK(); }
 
     //!
     //! stdclass类型的标准退出过程
@@ -112,16 +112,16 @@ namespace GN
     //!   - 用来检查是否已经初始化过。成功调用 init() 后返回true，
     //!     调用 quit() 后返回false。
     //! \n
-    //! - selfOk() : 私有函数。
-    //!   - selfOk() 是 ok() 的“非虚”版本，强制调用本类的 ok() 函数。
-    //!   - 关于 selfOk() 的详细使用规则见下面的注解。
+    //! - selfOK() : 私有函数。
+    //!   - selfOK() 是 ok() 的“非虚”版本，强制调用本类的 ok() 函数。
+    //!   - 关于 selfOK() 的详细使用规则见下面的注解。
     //! \n
     //! - clear()     : 私有函数。
     //!   - 用于将私有成员变量清零，被构造函数和 quit() 调用
     //!
-    //! \note  selfOk() 是虚函数 ok() 的“非虚”版本，其功能是强制调用
+    //! \note  selfOK() 是虚函数 ok() 的“非虚”版本，其功能是强制调用
     //!        本类型的 ok() ，而不是象通常的虚函数那样根据实例的类型
-    //!        来调用相应的 ok() 。 selfOk() 是私有函数，只能在本类的成
+    //!        来调用相应的 ok() 。 selfOK() 是私有函数，只能在本类的成
     //!        员函数中使用。 举个例子：
     //! \code
     //!    class A : public StdClass
@@ -130,7 +130,7 @@ namespace GN
     //!    public:
     //!        virtual bool ok() const { return 1; }
     //!        bool test()             { return ok(); }
-    //!        bool test2()            { return selfOk(); }
+    //!        bool test2()            { return selfOK(); }
     //!    }
     //!    class B : public A
     //!    {
@@ -165,14 +165,14 @@ namespace GN
         //!
         bool init()
         {
-            if( selfOk() )
+            if( selfOK() )
             {
                 GN_ERROR( "u call init() twice!" );
-                quit(); return selfOk();
+                quit(); return selfOK();
             }
 
             m_ok = 1;
-            return selfOk();
+            return selfOK();
         }
 
         //!
@@ -195,7 +195,7 @@ namespace GN
         //!
         //! private initialization check routine
         //!
-        bool selfOk() const { return StdClass::ok(); }
+        bool selfOK() const { return StdClass::ok(); }
 
         //!
         //! initialization flag
@@ -483,8 +483,8 @@ namespace GN
         {
             GN_ASSERT( 0 == msInstance );
             // This is code 64-bit compatible?
-            int offset = (int)(T*)1 - (int)(Singleton<T>*)(T*)1;
-            msInstance = (T*)((int)this+offset);
+            size_t offset = (size_t)(T*)1 - (size_t)(Singleton<T>*)(T*)1;
+            msInstance = (T*)((size_t)this+offset);
         }
 
         //!
@@ -597,6 +597,19 @@ namespace GN
         if( ptr )
         {
             delete [] ptr;
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! Safe release COM interface
+    //!
+    template < typename T >
+    GN_FORCE_INLINE void safeRelease( T * & ptr )
+    {
+        if( ptr )
+        {
+            ptr->Release();
             ptr = 0;
         }
     }
