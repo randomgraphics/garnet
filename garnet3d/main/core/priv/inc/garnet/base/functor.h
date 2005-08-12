@@ -329,6 +329,11 @@ namespace GN
         }
 
         //!
+        //! Convert to boolean
+        //!
+        operator bool() const { return 0 != mClosure; }
+
+        //!
         //! call embbed function pointer
         //!
         R operator()( PARAM_LIST ) const
