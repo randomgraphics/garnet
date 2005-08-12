@@ -13,7 +13,7 @@ static bool sPathExist( const GN::StrA & path )
 {
 #if GN_WIN32
 
-    WIN32_FIND_DATA wfd;
+    WIN32_FIND_DATAA wfd;
     HANDLE fh = ::FindFirstFileA( path.cstr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
@@ -54,7 +54,7 @@ static bool sIsDir( const GN::StrA & path )
 {
 #if GN_WIN32
 
-    WIN32_FIND_DATA wfd;
+    WIN32_FIND_DATAA wfd;
     HANDLE fh = ::FindFirstFileA( path.cstr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
@@ -90,13 +90,13 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
 
 #if GN_WIN32
 
-    WIN32_FIND_DATA wfd;
+    WIN32_FIND_DATAA wfd;
     HANDLE fh;
 
     GN::StrA findPattern = dirPath + "\\" + (useRegex ? "*.*" : pattern);
 
     fh = ::FindFirstFileA( findPattern.cstr(), &wfd );
-    if( FAILED(fh) ) return;
+    if( INVALID_HANDLE_VALUE == fh ) return;
 
     std::auto_ptr<pcrecpp::RE> re;
     if( useRegex ) re.reset( new pcrecpp::RE( pattern.cstr() ) );

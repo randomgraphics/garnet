@@ -372,7 +372,7 @@ bool DDSReader::readImage( void * o_data ) const
     else
     {
         // 1D, 2D, 3D texture
-        uint32_t nbytes = mImgDesc.getTotalBytes();
+        size_t nbytes = mImgDesc.getTotalBytes();
         if( nbytes != mSize )
         {
             GN_ERROR( "image size is incorrect!" );

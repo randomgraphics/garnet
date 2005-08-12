@@ -298,11 +298,11 @@ bool GN::FileSys::init()
     if( !registerDevice( "native", nd.get(), false ) )
     {
         GN_ERROR( "fail to register native file device!" );
-        quit(); return selfOk();
+        quit(); return selfOK();
     }
 
     // success
-    return selfOk();
+    return selfOK();
 
     GN_UNGUARD;
 }

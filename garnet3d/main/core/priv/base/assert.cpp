@@ -69,7 +69,7 @@ GN::assertFunc(
 // -----------------------------------------------------------------------------
 #if GN_WIN32
 const char *
-GN::getOsErrorInfo() throw()
+GN::getOSErrorInfo() throw()
 {
     static char info[4096];
 
