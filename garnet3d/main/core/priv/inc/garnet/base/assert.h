@@ -12,7 +12,11 @@
 #if GN_GCC
 #define GN_DEBUG_BREAK asm("int $3")
 #elif GN_MSVC
+#if GN_WIN64
+#define GN_DEBUG_BREAK
+#else
 #define GN_DEBUG_BREAK __asm { int 3 }
+#endif
 #else
 #define GN_DEBUG_BREAK
 #endif
@@ -101,7 +105,7 @@
         RETURN_TYPE rr = func;                              \
         if( 0 == rr )                                       \
         {                                                   \
-            GN_ERROR( GN::getOsErrorInfo() );               \
+            GN_ERROR( GN::getOSErrorInfo() );               \
             something                                       \
         }                                                   \
     } else void(0)
@@ -154,7 +158,7 @@ namespace GN
     //!
     //! get OS error info (WIN32 specific)
     //!
-    const char * getOsErrorInfo() throw();
+    const char * getOSErrorInfo() throw();
 #endif
 
     //@}
