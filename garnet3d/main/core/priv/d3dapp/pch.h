@@ -20,7 +20,6 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>
-#define ATL_NO_LEAN_AND_MEAN
 
 #include "garnet/base/pragma.h"
 
