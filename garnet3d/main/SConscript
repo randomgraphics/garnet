@@ -120,6 +120,7 @@ def GN_build_static_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
 # Брвы static object list
 def GN_build_static_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
     env = env.Copy()
+    env.Append( CPPDEFINES=['_LIB'] )
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return [env.Object(x) for x in sources]
 
@@ -144,6 +145,7 @@ def GN_build_shared_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
 # Брвы static library
 def GN_build_static_library(env,target,sources=[],pchstop=0, pchcpp=0,pdb=0):
     env = env.Copy()
+    env.Append( CPPDEFINES=['_LIB'] )
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return env.Library(target,sources)
@@ -153,7 +155,10 @@ def GN_add_libs( env, libs ):
     libs.reverse()
     for lib in libs:
         dir = os.path.dirname(GN_targets[lib][0].abspath)
-        env.Prepend( LIBPATH = [dir], LIBS = [lib] )
+        if 'GnCoreLib' == lib:
+            env.Prepend( LIBPATH = [dir], LIBS = ['GnCore'] )
+        else:
+            env.Prepend( LIBPATH = [dir], LIBS = [lib] )
 
 # Брвы shared library
 def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
@@ -165,8 +170,8 @@ def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
         if 0 == len(libs):
             if 'GnCore' == target: libs = Split('GnBase GnExtern')
-            else: libs = Split('GnCore GnBase GnExtern')
-        GN_add_libs( env, libs  )
+            else: libs = Split('GnCoreLib GnBase GnExtern')
+        GN_add_libs( env, libs )
         result = env.SharedLibrary( target, sources )
         manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target )
         if os.path.exists( manifest ):
@@ -179,7 +184,7 @@ def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    if 0 == len(libs): libs = Split('GnCore GnBase GnExtern')
+    if 0 == len(libs): libs = Split('GnCoreLib GnBase GnExtern')
     GN_add_libs( env, libs )
     result = env.Program( target, sources )
     manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target )
