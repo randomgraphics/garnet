@@ -9,8 +9,7 @@
 #pragma comment(lib, "d3dx9.lib")
 #endif
 
-// implement log function
-GN_IMPLEMENT_DEFAULT_LOG();
+#include "../core/core.cpp"
 
 // *****************************************************************************
 // local variables and functions
@@ -129,13 +128,22 @@ static LPD3DXMESH sLoadMesh( const GN::StrA & name )
 }
 
 // instance of singletons
-static ::GN::ProfilerManager        sProfilerMgr;
-static ::GN::d3dapp::TextureManager sTextureMgr( GN::makeFunctor(&sLoadTexture),
-                                                 GN::makeFunctor(&GN::safeRelease<IDirect3DBaseTexture9>) );
-static ::GN::d3dapp::EffectManager  sEffectMgr( GN::makeFunctor(&sLoadEffect),
-                                                GN::makeFunctor(&GN::safeRelease<ID3DXEffect>) );
-static ::GN::d3dapp::MeshManager    sMeshMgr( GN::makeFunctor(&sLoadMesh),
-                                              GN::makeFunctor(&GN::safeRelease<ID3DXMesh>));
+GN_IMPLEMENT_SINGLETON( GN::d3dapp::D3D );
+
+static GN::d3dapp::TextureManager sTextureMgr(
+    GN::makeFunctor(&sLoadTexture),
+    GN::makeFunctor(&GN::safeRelease<IDirect3DBaseTexture9>) );
+GN_IMPLEMENT_SINGLETON( GN::d3dapp::TextureManager )
+
+static GN::d3dapp::EffectManager sEffectMgr(
+    GN::makeFunctor(&sLoadEffect),
+    GN::makeFunctor(&GN::safeRelease<ID3DXEffect>) );
+GN_IMPLEMENT_SINGLETON( GN::d3dapp::EffectManager )
+
+static GN::d3dapp::MeshManager sMeshMgr(
+    GN::makeFunctor(&sLoadMesh),
+    GN::makeFunctor(&GN::safeRelease<ID3DXMesh>));
+GN_IMPLEMENT_SINGLETON( GN::d3dapp::MeshManager )
 
 // *****************************************************************************
 // Initialize and shutdown
