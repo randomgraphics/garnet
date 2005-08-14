@@ -12,13 +12,12 @@
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
-#define NOMINMAX
+#define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
 #include <atlbase.h> // COM smart pointer
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>
-#define ATL_NO_LEAN_AND_MEAN
 
 // Check dx version
 #if DIRECT3D_VERSION < 0x0900
@@ -92,14 +91,17 @@ namespace GN
         //!
         struct D3DInitParams
         {
-            bool refDevice;
-            bool fullScreen;
-            bool hwvp;
-			bool showWindow;
-            uint32_t width;
-            uint32_t height;
-            const char * winTitle;
+            bool refDevice;  //!< use reference device.
+            bool fullScreen; //!< use fullscreen mode.
+            bool hwvp;       //!< use hardware vertex processing
+			bool showWindow; //!< show render window auotmatically while starting up.
+            uint32_t width;  //!< render window width.
+            uint32_t height; //!< render window height.
+            const char * winTitle; //!< render window title.
 
+            //!
+            //! Default constructor
+            //!
             D3DInitParams()
                 : refDevice(false)
                 , fullScreen(false)
