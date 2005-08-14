@@ -105,7 +105,9 @@
 //!
 //! Public/global function/variable tag
 //!
-#ifdef _GN_CORE
+#if defined(_LIB)
+#define GN_PUBLIC // GN_PUBLIC is meaningless for static library
+#elif defined(_GN_CORE)
 #define GN_PUBLIC   GN_EXPORT
 #else
 #define GN_PUBLIC   GN_IMPORT
