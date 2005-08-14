@@ -4,33 +4,44 @@ import os, os.path
 
 root = os.path.join( GN_conf['platform'], GN_conf['compiler'] )
 
-def doInstall( dir, names ):
+def doInstall( alias, dir, names ):
     for name in names:
         if name in GN_targets and GN_targets[name]:
-            GN_targets[name] = env.Install( dir, GN_targets[name] )
+            item = env.Install( dir, GN_targets[name] )
+            GN_targets[name] = item
+            env.Alias( alias, item )
 
-def doCopyDir( target, source ):
+def doCopyDir( alias, target, source ):
     relpath = GN_func['relpath']
     for src in GN_func['glob']('*.*', source, True):
         dst = os.path.join( target, relpath(src,source) )
         env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
+        env.Alias( alias, dst )
 
 # populate sample directory
-doInstall( os.path.join(root,'samples', GN_conf['variant']), Split('GnCore GnTest GnDoc') )
+doInstall(
+    'samples',
+    os.path.join(root,'samples', GN_conf['variant']),
+    Split('GnCoreBin GnTest') )
+if 'GnCoreBin' in GN_targets: env.Depends( GN_targets['GnTest'], GN_targets['GnCoreBin'] )
 
 # run unit test
 def run_test( target, source, env ):
+    print target[0].path
     return os.spawnl( os.P_WAIT, target[0].path )
 AddPostAction( GN_targets['GnTest'][0], run_test )
 
 # populate SDK directory
-sdk_root = os.path.join( root, 'sdk' )
+sdk_root = os.path.join( root, 'sdk', GN_conf['variant'] )
 doInstall(
-    os.path.join(sdk_root,'lib',GN_conf['variant']),
-    Split('GnCore GnBase GnExtern GnD3DApp') )
+    'sdk',
+    os.path.join(sdk_root,'lib'),
+    Split('GnCoreLib GnBase GnExtern GnD3DApp GnDoc') )
 doInstall(
-    os.path.join(sdk_root,'bin',GN_conf['variant']),
-    Split('GnCore') )
+    'sdk',
+    os.path.join(sdk_root,'bin'),
+    Split('GnCoreBin') )
 doCopyDir(
+    'sdk',
     os.path.join(sdk_root,'inc'),
     os.path.join('#core','priv','inc') )

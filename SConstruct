@@ -171,6 +171,7 @@ for x in all_targets:
     env.Alias( x[0], x[1] )
     env.Alias( 'all', x[1] )
     env.Default( x[1] )
+env.Default( Split('sdk') )
 
 ################################################################################
 #
@@ -180,7 +181,9 @@ for x in all_targets:
 
 targets_text = ''
 for x in Split('all debug release stdbg strel'):
-    targets_text += '%25s : %s\n'%( x, 'Build %s build(s)'%x )
+    targets_text += '%25s : %s\n'%( x, 'Build %s variant(s)'%x )
+for x in Split('samples sdk'):
+    targets_text += '%25s : %s\n'%( x, 'Build %s'%x )
 for x in all_targets:
     targets_text += '%25s : %s\n'%( x[0], env.File(x[1]) )
 
