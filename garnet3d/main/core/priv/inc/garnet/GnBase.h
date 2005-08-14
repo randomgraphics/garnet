@@ -58,6 +58,9 @@ namespace GN
 
 // misc.
 #include "base/misc.h"
+#include "base/refCounter.h"
+#include "base/stdClass.h"
+#include "base/singleton.h"
 
 // file system
 #include "base/file.h"
