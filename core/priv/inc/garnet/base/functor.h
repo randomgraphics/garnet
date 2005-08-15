@@ -347,6 +347,7 @@ namespace GN
         //!
         MyType & operator=( const MyType & other )
         {
+            if( mClosure ) mClosure->release();
             mClosure = other.mClosure;
             if( mClosure ) mClosure->addref();
             return *this;
