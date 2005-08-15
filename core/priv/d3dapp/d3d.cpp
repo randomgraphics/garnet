@@ -268,11 +268,11 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
     }
 
     // show the window
-	if( params.showWindow )
-	{
-		ShowWindow( mWindow, SW_NORMAL );
-		UpdateWindow( mWindow );
-	}
+    if( params.showWindow )
+    {
+        ShowWindow( mWindow, SW_NORMAL );
+        UpdateWindow( mWindow );
+    }
 
     mMinimized = false;
     mClosed = false;

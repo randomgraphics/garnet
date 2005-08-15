@@ -94,7 +94,7 @@ namespace GN
             bool refDevice;  //!< use reference device.
             bool fullScreen; //!< use fullscreen mode.
             bool hwvp;       //!< use hardware vertex processing
-			bool showWindow; //!< show render window auotmatically while starting up.
+            bool showWindow; //!< show render window auotmatically while starting up.
             uint32_t width;  //!< render window width.
             uint32_t height; //!< render window height.
             const char * winTitle; //!< render window title.
@@ -106,7 +106,7 @@ namespace GN
                 : refDevice(false)
                 , fullScreen(false)
                 , hwvp(true)
-				, showWindow(true)
+                , showWindow(true)
                 , width(640)
                 , height(480)
                 , winTitle("D3DApp")
