@@ -473,8 +473,7 @@ bool GN::FileSys::isDir( const StrA & iPath ) const
 //
 //
 // ----------------------------------------------------------------------------
-void
-GN::FileSys::findFiles( std::vector<StrA> & result,
+void GN::FileSys::glob( std::vector<StrA> & result,
                         const StrA & dirName,
                         const StrA & pattern,
                         bool         recursive,
@@ -489,7 +488,7 @@ GN::FileSys::findFiles( std::vector<StrA> & result,
     {
         DeviceMap::const_iterator di = mDevices.find( "native" );
         GN_ASSERT( mDevices.end() != di && !di->second.empty() );
-        di->second->findFiles( result, path, pattern, recursive, useRegex );
+        di->second->glob( result, path, pattern, recursive, useRegex );
     }
     else
     {

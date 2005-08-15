@@ -243,11 +243,11 @@ namespace GN
         //! \param useRegex   是否使用正则匹配
         //!
         virtual void
-        findFiles( std::vector<StrA> & result,
-                   const StrA & dirName,
-                   const StrA & pattern,
-                   bool         recursive,
-                   bool         useRegex ) const = 0;
+        glob( std::vector<StrA> & result,
+              const StrA & dirName,
+              const StrA & pattern,
+              bool         recursive,
+              bool         useRegex ) const = 0;
 
         //!
         //! Resolve relative path to absolute path.
@@ -362,11 +362,11 @@ namespace GN
         //! \param recursive  是否递归搜索子目录
         //! \param useRegex   是否使用正则匹配
         //!
-        void findFiles( std::vector<StrA> & result,
-                        const StrA & dirName,
-                        const StrA & pattern,
-                        bool         recursive,
-                        bool         useRegex ) const;
+        void glob( std::vector<StrA> & result,
+                   const StrA & dirName,
+                   const StrA & pattern,
+                   bool         recursive,
+                   bool         useRegex ) const;
 
         //@}
 
