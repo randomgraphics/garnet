@@ -216,7 +216,7 @@ bool GN::detail::NativeFileDevice::isDir( const StrA & path ) const
 //
 // ----------------------------------------------------------------------------
 void
-GN::detail::NativeFileDevice::findFiles(
+GN::detail::NativeFileDevice::glob(
     std::vector<StrA> & result,
     const StrA & dirPath,
     const StrA & pattern,
