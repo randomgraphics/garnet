@@ -140,8 +140,17 @@ namespace GN
         //! open a file
         //!
         //! \param fname File name
-        //! \param flags File open flags (ANSI compatible)
+        //! \param flags File open flags
+        //!
         bool open( const StrA & fname, int32_t flags );
+
+        //!
+        //! open a file
+        //!
+        //! \param fname File name
+        //! \param mode  ANSI compatible open mode, such as "r", "w+".
+        //!
+        bool open( const StrA & fname, const StrA & mode );
 
         //!
         //! close the file

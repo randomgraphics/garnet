@@ -36,16 +36,6 @@ bool GN::AnsiFile::open(  const StrA & filename, int32_t openmode )
 {
     GN_GUARD;
 
-    // close previous file
-    close();
-
-    // check parameter(s)
-    if( filename.empty() )
-    {
-        GN_ERROR( "empty filename!" );
-        close(); return false;
-    }
-
     // NOTE : these tables must always be syncronized with
     //        defintion of fopen_t ( see types/file.h )
     static const char * rw_table[] = {
@@ -61,16 +51,39 @@ bool GN::AnsiFile::open(  const StrA & filename, int32_t openmode )
     };
 
     // build open mode string
-    StrA fmode;
-    fmode  = rw_table[openmode&0xF];
-    fmode += fmt_table[openmode>>4];
+    StrA mode;
+    mode  = rw_table[openmode&0xF];
+    mode += fmt_table[openmode>>4];
+
+    // do open
+    return open( filename, mode );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+bool GN::AnsiFile::open( const StrA & filename, const StrA & mode )
+{
+    GN_GUARD;
+
+    // close previous file
+    close();
+
+    // check parameter(s)
+    if( filename.empty() )
+    {
+        GN_ERROR( "empty filename!" );
+        close(); return false;
+    }
 
     // 打开文件
-    FILE * fp = ::fopen( filename.cstr(), fmode.cstr() );
+    FILE * fp = ::fopen( filename.cstr(), mode.cstr() );
     if( 0 == fp )
     {
         GN_ERROR( "fail to open file '%s' with mode '%s'!",
-            filename.cstr(), fmode.cstr() );
+            filename.cstr(), mode.cstr() );
         close(); return false;
     }
 
