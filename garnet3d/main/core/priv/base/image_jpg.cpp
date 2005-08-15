@@ -59,12 +59,12 @@ bool JpegReader::readHeader(
     // fill image descriptor
     GN::ImageDesc::MipDesc & m = o_desc.mips[0];
     o_desc.type     = GN::ImageDesc::IMG_2D;
-    o_desc.numMips = 1;
+    o_desc.numMips  = 1;
     m.width         = (uint16_t)mCInfo.image_width;
     m.height        = (uint16_t)mCInfo.image_height;
     m.depth         = 1;
-    m.rowPitch     = sizeof(JOCTET) * bpp * mCInfo.image_width;
-    m.slicePitch   = m.rowPitch * m.height;
+    m.rowPitch      = (uint32_t)(sizeof(JOCTET) * bpp * mCInfo.image_width);
+    m.slicePitch    = m.rowPitch * m.height;
 
     // success
     GN_ASSERT( o_desc.validate() );
@@ -119,7 +119,7 @@ bool JpegReader::readImage( void * o_data )
     while( left_scanlines > 0 )
     {
         readen_scanlines = jpeg_read_scanlines(
-            &mCInfo, &scanlines[0], scanlines.size() );
+            &mCInfo, &scanlines[0], (JDIMENSION)scanlines.size() );
         GN_ASSERT( readen_scanlines <= left_scanlines );
         left_scanlines -= readen_scanlines;
 
