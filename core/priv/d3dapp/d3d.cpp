@@ -84,7 +84,7 @@ static LPD3DXEFFECT sLoadEffect( const GN::StrA & name )
 
     CComPtr<ID3DXBuffer> err;
 
-    if( FAILED(D3DXCreateEffectFromFile(
+    if( FAILED(D3DXCreateEffectFromFileA(
         gD3D.getDevice(),
         name.cstr(),
         0, 0, // no defines, no includes
@@ -111,7 +111,7 @@ static LPD3DXMESH sLoadMesh( const GN::StrA & name )
 
     LPD3DXMESH mesh;
 
-    if( FAILED(D3DXLoadMeshFromX(
+    if( FAILED(D3DXLoadMeshFromXA(
         name.cstr(),
         D3DXMESH_MANAGED,
         gD3D.getDevice(),
