@@ -363,8 +363,8 @@ namespace GN
         };
 
         typedef ResourceManager<LPDIRECT3DBASETEXTURE9> TextureManager; //!< Texture manager
-        typedef ResourceManager<LPD3DXEFFECT> EffectManager; //!< Texture manager
-        typedef ResourceManager<LPD3DXMESH> MeshManager; //!< Texture manager
+        typedef ResourceManager<LPD3DXEFFECT> EffectManager; //!< Effect manager
+        typedef ResourceManager<LPD3DXMESH> MeshManager; //!< Mesh manager
     }
 }
 
