@@ -173,7 +173,6 @@ namespace GN
             //!
             const D3DPRESENT_PARAMETERS & getPresentParams() const { return mPresentParams; }
 
-
             //!
             //! Is render window closed?
             //!
@@ -271,6 +270,21 @@ namespace GN
             ~ResourceManager() {}
 
             //!
+            //! Get default creator
+            //!
+            const Creator & getDefaultCreator() const { return mDefaultCreator; }
+
+            //!
+            //! Get default deletor
+            //!
+            const Deletor & getDefaultDeletor() const { return mDefaultDeletor; }
+
+            //!
+            //! Get NULL instance creator
+            //!
+            const Creator & getNullCreator() const { return mNullCreator; }
+
+            //!
             //! Set default creator
             //!
             void setDefaultCreator( const Creator & c ) { mDefaultCreator = c; }
@@ -299,10 +313,29 @@ namespace GN
             //!
             void dispose()
             {
+                GN_GUARD;
                 std::for_each(
                     mResPool.begin(),
                     mResPool.end(),
                     makeFunctor(this,&MyType::doDispose) );
+                GN_UNGUARD;
+            }
+
+            //!
+            //! Preload all resources
+            //!
+            bool preload()
+            {
+                GN_GUARD;
+                RES res;
+                bool ok = true;
+                ResMap::const_iterator ci = mResPool.begin();
+                for( ci = mResPool.begin(); ci != mResPool.end(); ++ci )
+                {
+                    ok |= getResource( res, ci->first );
+                }
+                return ok;
+                GN_UNGUARD;
             }
 
             //!
@@ -311,10 +344,13 @@ namespace GN
             bool addResource(
                 const StrA & name,
                 const Creator & creator = Creator(),
-                const Deletor & deletor = Deletor() )
+                const Deletor & deletor = Deletor(),
+                bool overrideExistingResource = false )
             {
+                GN_GUARD;
+
                 ResMap::const_iterator ci = mResPool.find(name);
-                if( mResPool.end() != ci )
+                if( mResPool.end() != ci && overrideExistingResource )
                 {
                     D3DAPP_ERROR( "resource '%s' already exist!", name.cstr() );
                     return false;
@@ -324,19 +360,23 @@ namespace GN
                 newItem.deletor = deletor;
                 newItem.res = 0;
                 return true;
+
+                GN_UNGUARD;
             }
 
             //!
             //! Get resource by name
             //!
-            RES getResource( const StrA & name )
+            bool getResource( RES & result, const StrA & name )
             {
+                GN_GUARD_SLOW;
+
                 ResMap::iterator iter = mResPool.find( name );
                 if( mResPool.end() == iter )
                 {
                     D3DAPP_ERROR( "resource '%s' not found!", name.cstr() );
-                    if( mNullCreator ) return mNullCreator(name);
-                    else return RES(0);
+                    if( mNullCreator ) result = mNullCreator(name);
+                    else return false;
                 }
                 if( !iter->second.res )
                 {
@@ -348,17 +388,43 @@ namespace GN
                     {
                         iter->second.res = mDefaultCreator( name );
                     }
-                    else if( mNullCreator )
-                    {
-                        D3DAPP_WARN( "Use Null instance for resource '%s'.", name.cstr() );
-                        iter->second.res = mNullCreator(name);
-                    }
-                    else
+                    else if( !mNullCreator )
                     {
                         D3DAPP_ERROR( "No creator found!" );
+                        return false;
+                    }
+
+                    if( !iter->second.res )
+                    {
+                        D3DAPP_WARN( "Fallback to null instance for resource '%s'.", name.cstr() );
+                        if( mNullCreator )
+                        {
+                            iter->second.res = mNullCreator(name);
+                        }
+                        if( !iter->second.res )
+                        {
+                            D3DAPP_ERROR( "Fail to create NULL instance for resource '%s'.", name.cstr() );
+                            return false;
+                        }
                     }
                 }
-                return iter->second.res;
+                GN_ASSERT( iter->second.res );
+                result = iter->second.res;
+                return true;
+
+                GN_UNGUARD_SLOW;
+            }
+
+            //!
+            //! Get resource by name
+            //!
+            RES getResource( const StrA & name )
+            {
+                GN_GUARD_SLOW;
+                RES res;
+                if( getResource( res, name ) ) return res;
+                else return RES();
+                GN_UNGUARD_SLOW;
             }
         };
 
