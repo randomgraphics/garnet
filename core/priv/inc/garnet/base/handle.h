@@ -170,7 +170,7 @@ namespace GN
         }
 
         //!
-        //! Get item from manager
+        //! Get item from manager. Handle must be valid.
         //!
         T & get( HANDLE_TYPE h ) const
         {
@@ -179,7 +179,7 @@ namespace GN
         }
 
         //!
-        //! Get item from manager
+        //! Get item from manager. Handle must be valid.
         //!
         T & operator[]( HANDLE_TYPE h ) const { return get(h); }
     };
