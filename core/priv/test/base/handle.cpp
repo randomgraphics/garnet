@@ -3,6 +3,7 @@
 class HandleTest : public CxxTest::TestSuite
 {
 public:
+
     void test1()
     {
         GN::HandleManager<int> hm;
@@ -62,5 +63,14 @@ public:
         TS_ASSERT_EQUALS( hm.size(), 0 );
         TS_ASSERT_EQUALS( hm.first(), 0 );
         TS_ASSERT_EQUALS( hm.next(0), 0 );
+    }
+
+    void testCapacity()
+    {
+        GN::HandleManager<int> hm;
+        hm.reserve( 1 );
+        TS_ASSERT_LESS_EQUALS( 1, hm.capacity() );
+        hm.reserve( 1000 );
+        TS_ASSERT_LESS_EQUALS( 1000, hm.capacity() );
     }
 };

@@ -22,9 +22,9 @@ namespace GN
         struct Item
         {
             mutable T value;
-            bool      used;
+            bool      occupied;
 
-            Item( const T & v ) : value(v), used(true) {}
+            Item( const T & v ) : value(v), occupied(true) {}
         };
 
         std::vector<Item>   mItems;
@@ -58,13 +58,23 @@ namespace GN
         }
 
         //!
+        //! get current capacity
+        //!
+        size_t capacity() const { return mItems.capacity(); }
+
+        //!
+        //! set capacity
+        //!
+        void reserve( size_t n ) { mItems.reserve(n); mFreeList.reserve(n); }
+
+        //!
         //! return first handle
         //!
         HANDLE_TYPE first() const
         {
             if ( empty() ) return (HANDLE_TYPE)0;
             size_t idx = 0;
-            while( !mItems[idx].used )
+            while( !mItems[idx].occupied )
             {
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
@@ -79,7 +89,7 @@ namespace GN
         {
             if ( !validHandle(h) ) return (HANDLE_TYPE)0;
             size_t idx = h; // That is: (h-1)+1
-            while( idx < mItems.size() && !mItems[idx].used )
+            while( idx < mItems.size() && !mItems[idx].occupied )
             {
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
@@ -101,9 +111,9 @@ namespace GN
             {
                 size_t i = mFreeList.back();
                 mFreeList.pop_back();
-                GN_ASSERT( !mItems[i].used );
+                GN_ASSERT( !mItems[i].occupied );
                 mItems[i].value = val;
-                mItems[i].used = true;
+                mItems[i].occupied = true;
                 return (HANDLE_TYPE)(i+1);
             }
         }
@@ -120,7 +130,7 @@ namespace GN
             else
             {
                 mFreeList.push_back(h-1);
-                mItems[h-1].used = false;
+                mItems[h-1].occupied = false;
             }
         }
 
@@ -131,7 +141,7 @@ namespace GN
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
-                if ( !mItems[i].used ) continue;
+                if ( !mItems[i].occupied ) continue;
                 if ( mItems[i].value == val ) return (HANDLE_TYPE)(i+1); // found!
             }
             return (HANDLE_TYPE)0; // not found
@@ -145,7 +155,7 @@ namespace GN
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
-                if ( !mItems[i].used ) continue;
+                if ( !mItems[i].occupied ) continue;
                 if ( fp(mItems[i].value) ) return (HANDLE_TYPE)(i+1); // found!
             }
             return (HANDLE_TYPE)0; // not found
@@ -156,7 +166,7 @@ namespace GN
         //!
         bool validHandle( HANDLE_TYPE h ) const
         {
-            return 0 != h && h <= mItems.size() && mItems[h-1].used;
+            return 0 != h && h <= mItems.size() && mItems[h-1].occupied;
         }
 
         //!
