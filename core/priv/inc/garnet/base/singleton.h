@@ -15,7 +15,7 @@ namespace GN
     template<typename T>
     class Singleton
     {
-        GN_PUBLIC static T * msInstancePtr; //!< 指向singleton的实例
+        static GN_PUBLIC T * msInstancePtr; //!< 指向singleton的实例
 
     public:
 
