@@ -189,8 +189,9 @@ def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
     result = env.Program( target, sources )
     manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target )
     if os.path.exists( manifest ):
-        env.SideEffect( manifest, result )
-        result += [manifest]
+        node = File(manifest)
+        env.SideEffect( node, result )
+        result += [node]
     return result
 
 ################################################################################
