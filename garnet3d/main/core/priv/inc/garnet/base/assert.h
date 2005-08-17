@@ -12,7 +12,7 @@
 #if GN_GCC
 #define GN_DEBUG_BREAK asm("int $3")
 #elif GN_MSVC
-#if GN_WIN64
+#if GN_AMD64
 #define GN_DEBUG_BREAK // TODO: implement amd64 debug break macro
 #else
 #define GN_DEBUG_BREAK __asm { int 3 }
