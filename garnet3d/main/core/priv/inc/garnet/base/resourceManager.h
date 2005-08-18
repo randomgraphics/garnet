@@ -11,9 +11,22 @@ namespace GN
     namespace detail
     {
         //!
-        //! Default parent class for resource manager
+        //! Singleton selector
         //!
-        struct DefaultParent {};
+        template<class C, int>
+        struct SingletonSelector
+        {
+            typedef Singleton<C> type; //!< singleton type
+        };
+
+        //!
+        //! Singleton selector
+        //!
+        template<class C>
+        struct SingletonSelector<C,0>
+        {
+            struct type {}; //!< non-singleton type
+        };
     }
 
     //!
@@ -21,8 +34,8 @@ namespace GN
     //!
     //! RES must support default constructor and assignment operation.
     //!
-    template<typename RES, class PARENT = detail::DefaultParent>
-    class ResourceManager : public PARENT
+    template<typename RES, bool SINGLETON=false>
+    class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,SINGLETON>,SINGLETON>::type
     {
     public:
 
@@ -304,7 +317,7 @@ namespace GN
 
     private:
 
-        typedef ResourceManager<RES,PARENT> MyType;
+        typedef ResourceManager<RES,SINGLETON> MyType;
 
         struct ResDesc
         {

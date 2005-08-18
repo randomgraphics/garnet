@@ -29,7 +29,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
     GN_INFO( "Clock : Evaluating CPU Frequency ......" );
 
     GN::Clock::CycleType c1 = getSystemCycleCount();
-#if GN_WIN32
+#if GN_WINNT
     Sleep(100);
     GN::Clock::CycleType c2 = getSystemCycleCount();
     r = (c2 - c1) * 10;
@@ -44,7 +44,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
 
 #else // !USE_RTDSC
 
-#if GN_WIN32
+#if GN_WINNT
     if( !QueryPerformanceFrequency((LARGE_INTEGER*)&r) )
     {
         GN_INFO( "Current system do NOT support high-res "
@@ -149,7 +149,7 @@ GN::Clock::CycleType GN::Clock::getSystemCycleCount() const
 
 #else // !USE_RTDSC
 
-#if GN_WIN32
+#if GN_WINNT
     CycleType r;
     if( 1000 != mSystemCycleFrequency )
     {

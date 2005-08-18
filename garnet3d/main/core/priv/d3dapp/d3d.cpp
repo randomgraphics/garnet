@@ -1,12 +1,28 @@
 #include "pch.h"
 #include "garnet/GnD3DApp.h"
 
-#pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "dxerr9.lib" )
 #if GN_DEBUG
 #pragma comment(lib, "d3dx9d.lib")
 #else
 #pragma comment(lib, "d3dx9.lib")
+#endif
+
+#if GN_XENON
+#if GN_DEBUG
+#pragma comment(lib, "d3d9d.lib")
+#pragma comment(lib, "xapilibd.lib")
+#pragma comment(lib, "xgraphicsd.lib")
+#else
+#pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "xapilib.lib")
+#pragma comment(lib, "xgraphics.lib")
+#endif
+#pragma comment(lib, "xboxkrnl.lib")
+#pragma comment(lib, "xbdm.lib")
+// more libraries: xnetd.lib xaudiod.lib xactd.lib vcompd.lib
+#else
+#pragma comment(lib, "d3d9.lib") // D3D for PC has no d3d9d.lib
 #endif
 
 #include "../core/core.cpp"
@@ -18,7 +34,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-static LPDIRECT3DBASETEXTURE9 sLoadTexture( const GN::StrA & name )
+static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name )
 {
     GN_GUARD;
 
@@ -27,12 +43,12 @@ static LPDIRECT3DBASETEXTURE9 sLoadTexture( const GN::StrA & name )
     if( FAILED(D3DXGetImageInfoFromFileA( name.cstr(), &info )) )
     {
         D3DAPP_ERROR( "can't get image information of texture '%s'.", name.cstr() );
-        return 0;
+        return false;
     }
 
     LPDIRECT3DDEVICE9 dev = gD3D.getDevice();
 
-    LPDIRECT3DBASETEXTURE9 tex = 0;
+    result = 0;
 
     // load texture contents
     switch ( info.ResourceType )
@@ -41,21 +57,21 @@ static LPDIRECT3DBASETEXTURE9 sLoadTexture( const GN::StrA & name )
         {
             LPDIRECT3DTEXTURE9 tex2d;
             if ( D3D_OK == D3DXCreateTextureFromFileA( dev, name.cstr(), &tex2d ) )
-                tex = tex2d;
+                result = tex2d;
             break;
         }
         case D3DRTYPE_VOLUMETEXTURE :
         {
             LPDIRECT3DVOLUMETEXTURE9 tex3d;
             if( D3D_OK == D3DXCreateVolumeTextureFromFileA( dev, name.cstr(), &tex3d ) )
-                tex = tex3d;
+                result = tex3d;
             break;
         }
         case D3DRTYPE_CUBETEXTURE :
         {
             LPDIRECT3DCUBETEXTURE9 texcube;
             if( D3D_OK == D3DXCreateCubeTextureFromFileA( dev, name.cstr(), &texcube ) )
-                tex = texcube;
+                result = texcube;
             break;
         }
         default:
@@ -66,9 +82,15 @@ static LPDIRECT3DBASETEXTURE9 sLoadTexture( const GN::StrA & name )
         }
     }
 
-    if( 0 == tex ) D3DAPP_ERROR( "Fail to load texture '%s'.", name.cstr() );
-
-    return tex;
+    if( 0 == result )
+    {
+        D3DAPP_ERROR( "Fail to load texture '%s'.", name.cstr() );
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 
     GN_UNGUARD;
 }
@@ -76,13 +98,53 @@ static LPDIRECT3DBASETEXTURE9 sLoadTexture( const GN::StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-static LPD3DXEFFECT sLoadEffect( const GN::StrA & name )
+static bool sLoadVShader( LPDIRECT3DVERTEXSHADER9 & result, const GN::StrA & name )
+{
+	GN_GUARD;
+
+	GN::AnsiFile fp;
+	if( !fp.open( name, "rt" ) ) return false;
+
+	std::vector<char> buf;
+	buf.resize( fp.size()+1 );
+	size_t sz = fp.read( &buf[0], fp.size() );
+
+	result = GN::d3dapp::compileVS( &buf[0], sz );
+
+	return 0 != result;
+
+	GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sLoadPShader( LPDIRECT3DPIXELSHADER9 & result, const GN::StrA & name )
+{
+	GN_GUARD;
+
+	GN::AnsiFile fp;
+	if( !fp.open( name, "rt" ) ) return false;
+
+	std::vector<char> buf;
+	buf.resize( fp.size()+1 );
+	size_t sz = fp.read( &buf[0], fp.size() );
+
+	result = GN::d3dapp::compilePS( &buf[0], sz );
+
+	return 0 != result;
+
+	GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sLoadEffect( LPD3DXEFFECT & result, const GN::StrA & name )
 {
     GN_GUARD;
 
-    LPD3DXEFFECT eff;
-
-    CComPtr<ID3DXBuffer> err;
+    GN::AutoComPtr<ID3DXBuffer> err;
 
     if( FAILED(D3DXCreateEffectFromFileA(
         gD3D.getDevice(),
@@ -90,14 +152,15 @@ static LPD3DXEFFECT sLoadEffect( const GN::StrA & name )
         0, 0, // no defines, no includes
         D3DXSHADER_DEBUG,
         0, // no pool
-        &eff, &err)) )
+        &result, &err)) )
     {
         D3DAPP_ERROR( "Fail to load effect '%s'.", name.cstr() );
         if( err ) D3DAPP_ERROR( "Effect compile error:\n%s", (const char*)err->GetBufferPointer() );
-        return 0;
+        return false;
     }
 
-    return eff;
+    // success
+    return true;
 
     GN_UNGUARD;
 }
@@ -105,24 +168,22 @@ static LPD3DXEFFECT sLoadEffect( const GN::StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-static LPD3DXMESH sLoadMesh( const GN::StrA & name )
+static bool sLoadMesh( LPD3DXMESH & result, const GN::StrA & name )
 {
     GN_GUARD;
-
-    LPD3DXMESH mesh;
 
     if( FAILED(D3DXLoadMeshFromXA(
         name.cstr(),
         D3DXMESH_MANAGED,
         gD3D.getDevice(),
         0, 0, 0, 0,
-        &mesh )) )
+        &result )) )
     {
         D3DAPP_ERROR( "Fail to load mesh '%s'.", name.cstr() );
-        return 0;
+        return false;
     }
 
-    return mesh;
+    return true;
 
     GN_UNGUARD;
 }
@@ -132,16 +193,31 @@ GN_IMPLEMENT_SINGLETON( GN::d3dapp::D3D );
 
 static GN::d3dapp::TextureManager sTextureMgr(
     GN::makeFunctor(&sLoadTexture),
+    GN::d3dapp::TextureManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DBaseTexture9>) );
 GN_IMPLEMENT_SINGLETON( GN::d3dapp::TextureManager )
 
+static GN::d3dapp::VShaderManager sVShaderMgr(
+    GN::makeFunctor(&sLoadVShader),
+    GN::d3dapp::VShaderManager::Creator(), // empty nullor
+    GN::makeFunctor(&GN::safeRelease<IDirect3DVertexShader9>) );
+GN_IMPLEMENT_SINGLETON( GN::d3dapp::VShaderManager )
+
+static GN::d3dapp::PShaderManager sPShaderMgr(
+    GN::makeFunctor(&sLoadPShader),
+    GN::d3dapp::PShaderManager::Creator(), // empty nullor
+    GN::makeFunctor(&GN::safeRelease<IDirect3DPixelShader9>) );
+GN_IMPLEMENT_SINGLETON( GN::d3dapp::PShaderManager )
+
 static GN::d3dapp::EffectManager sEffectMgr(
     GN::makeFunctor(&sLoadEffect),
+    GN::d3dapp::EffectManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXEffect>) );
 GN_IMPLEMENT_SINGLETON( GN::d3dapp::EffectManager )
 
 static GN::d3dapp::MeshManager sMeshMgr(
     GN::makeFunctor(&sLoadMesh),
+    GN::d3dapp::MeshManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXMesh>));
 GN_IMPLEMENT_SINGLETON( GN::d3dapp::MeshManager )
 
@@ -180,11 +256,13 @@ void GN::d3dapp::D3D::quit()
     gEffectMgr.clear();
     gMeshMgr.clear();
 
+#if !GN_XENON
     if( mWindow )
     {
         DestroyWindow( mWindow );
         mWindow = 0;
     }
+#endif
 
     safeRelease( mDevice );
     safeRelease( mD3D );
@@ -226,6 +304,9 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
 {
     GN_GUARD;
 
+#if GN_XENON
+	mWindow = 0;
+#else
     // register window class
     WNDCLASSEXA wcex;
     wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -273,6 +354,7 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
         ShowWindow( mWindow, SW_NORMAL );
         UpdateWindow( mWindow );
     }
+#endif
 
     mMinimized = false;
     mClosed = false;
@@ -298,7 +380,37 @@ bool GN::d3dapp::D3D::createD3D( const D3DInitParams & params )
         return false;
     }
 
-    // setup present parameters
+    // setup present parameters and create device
+
+	ZeroMemory( &mPresentParams, sizeof(mPresentParams) );
+
+#if GN_XENON
+
+    mPresentParams.EnableAutoDepthStencil     = TRUE;
+    mPresentParams.AutoDepthStencilFormat     = D3DFMT_D24S8;
+    mPresentParams.Windowed                   = false; // Xenon has no windowed mode
+    mPresentParams.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+    mPresentParams.BackBufferCount            = 1;
+    mPresentParams.BackBufferFormat           = D3DFMT_X8R8G8B8;
+    mPresentParams.BackBufferWidth            = params.width;
+    mPresentParams.BackBufferHeight           = params.height;
+    mPresentParams.SwapEffect                 = D3DSWAPEFFECT_COPY;
+    mPresentParams.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
+    mPresentParams.hDeviceWindow              = mWindow;
+    mPresentParams.MultiSampleType            = D3DMULTISAMPLE_NONE;
+    mPresentParams.MultiSampleQuality         = 0;
+    mPresentParams.Flags                      = 0;
+
+	DX_CHECK_RV( mD3D->CreateDevice(
+            D3DADAPTER_DEFAULT,
+            D3DDEVTYPE_HAL,
+            mWindow,
+            D3DCREATE_HARDWARE_VERTEXPROCESSING,
+            &mPresentParams,
+            &mDevice ),
+        false );
+#else
+
     mPresentParams.EnableAutoDepthStencil     = 1;
     mPresentParams.AutoDepthStencilFormat     = D3DFMT_D24S8;
     mPresentParams.Windowed                   = !params.fullScreen;
@@ -314,8 +426,7 @@ bool GN::d3dapp::D3D::createD3D( const D3DInitParams & params )
     mPresentParams.MultiSampleQuality         = 0;
     mPresentParams.Flags                      = 0;
 
-    // create device
-    DX_CHECK_RV( mD3D->CreateDevice(
+	DX_CHECK_RV( mD3D->CreateDevice(
             D3DADAPTER_DEFAULT,
             params.refDevice ? D3DDEVTYPE_REF : D3DDEVTYPE_HAL,
             mWindow,
@@ -323,6 +434,7 @@ bool GN::d3dapp::D3D::createD3D( const D3DInitParams & params )
             &mPresentParams,
             &mDevice ),
         false );
+#endif
 
     // success
     return true;
@@ -337,6 +449,7 @@ void GN::d3dapp::D3D::processWindowMessages()
 {
     GN_GUARD_SLOW;
 
+#if GN_WINPC
     MSG msg;
     while( true )
     {
@@ -356,6 +469,7 @@ void GN::d3dapp::D3D::processWindowMessages()
         }
         else return; // Idle time!
     }
+#endif
 
     GN_UNGUARD_SLOW;
 }
@@ -367,6 +481,13 @@ LRESULT GN::d3dapp::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
+#if GN_XENON
+	GN_UNUSED_PARAM(wnd);
+	GN_UNUSED_PARAM(msg);
+	GN_UNUSED_PARAM(wp);
+	GN_UNUSED_PARAM(lp);
+	return 0;
+#else
     if( !selfOK() ) return ::DefWindowProc( wnd, msg, wp, lp );
 
     switch (msg)
@@ -386,6 +507,7 @@ LRESULT GN::d3dapp::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     }
 
     return ::DefWindowProc( wnd, msg, wp, lp );
+#endif
 
     GN_UNGUARD;
 }

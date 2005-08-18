@@ -1,5 +1,4 @@
 #include "../testCommon.h"
-#include "garnet/base/resourceManager.h"
 
 typedef GN::ResourceManager<int> ResMgr;
 

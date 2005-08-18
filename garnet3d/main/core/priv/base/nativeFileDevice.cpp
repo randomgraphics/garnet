@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------------
 static bool sPathExist( const GN::StrA & path )
 {
-#if GN_WIN32
+#if GN_WINPC
 
     WIN32_FIND_DATAA wfd;
     HANDLE fh = ::FindFirstFileA( path.cstr(), &wfd );
@@ -37,7 +37,7 @@ static bool sPathExist( const GN::StrA & path )
 // ----------------------------------------------------------------------------
 static inline void sPwd( GN::StrA & result )
 {
-#if GN_WIN32
+#if GN_WINPC
     char buf[MAX_PATH+1];
     ::GetCurrentDirectoryA( MAX_PATH, buf );
     result = buf;
@@ -52,7 +52,7 @@ static inline void sPwd( GN::StrA & result )
 // ----------------------------------------------------------------------------
 static bool sIsDir( const GN::StrA & path )
 {
-#if GN_WIN32
+#if GN_WINPC
 
     WIN32_FIND_DATAA wfd;
     HANDLE fh = ::FindFirstFileA( path.cstr(), &wfd );
@@ -88,7 +88,7 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
     // validate dirPath
     GN_ASSERT( sPathExist(dirPath) && sIsDir(dirPath) );
 
-#if GN_WIN32
+#if GN_WINPC
 
     WIN32_FIND_DATAA wfd;
     HANDLE fh;
@@ -268,7 +268,7 @@ GN::StrA GN::detail::NativeFileDevice::rel2abs(
         else
         {
             GN_ASSERT( '/' == root[0] );
-#if GN_WIN32
+#if GN_WINNT
             sPwd( root );
             GN_ASSERT( root.size() >= 2 );
             return root[0] + ":" + relpath; // c:/thepath
@@ -289,7 +289,7 @@ GN::StrA GN::detail::NativeFileDevice::rel2abs(
     if( base.empty() ) sPwd( effectiveBase );
     else
     {
-#if GN_WIN32
+#if GN_WINNT
         char buf[MAX_PATH+1];
         _fullpath( buf, base.cstr(), MAX_PATH );
         effectiveBase = buf;

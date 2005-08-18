@@ -14,9 +14,13 @@
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
+#if GN_XENON
+#include <xtl.h>
+#elif GN_WINNT
 #define NOMINMAX
 #include <windows.h>
-#include <atlbase.h> // COM smart pointer
+#endif
+
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>

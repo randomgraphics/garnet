@@ -10,7 +10,7 @@ GN::assertFunc(
     int          line,
     bool *       ignore ) throw()
 {
-#if GN_WIN32
+#if GN_WINPC
     char buf[1024];
     ::_snprintf( buf, 1023,
         "%s(%d)\n"
@@ -26,7 +26,7 @@ GN::assertFunc(
         MB_YESNOCANCEL|MB_ICONQUESTION
         );
 
-    if(*ignore) *ignore = ( IDCANCEL == ret );
+    if(ignore) *ignore = ( IDCANCEL == ret );
     return IDYES == ret;
 #else
     ::fprintf(
@@ -67,12 +67,24 @@ GN::assertFunc(
 //
 //
 // -----------------------------------------------------------------------------
-#if GN_WIN32
+void GN::debugBreak()
+{
+	::DebugBreak();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+#if GN_WINNT
 const char *
 GN::getOSErrorInfo() throw()
 {
     static char info[4096];
 
+#if GN_XENON
+    // TODO: unimplemented
+    info[0] = 0;
+#else
     ::FormatMessageA(
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -90,6 +102,7 @@ GN::getOSErrorInfo() throw()
         --n;
     }
     info[n] = 0;
+#endif
 
     // success
     return info;
