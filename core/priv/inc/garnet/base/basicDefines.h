@@ -36,22 +36,37 @@
 
 
 // 辨识操作系统
-#define GN_WIN32  0 //!< If 1, means current platform is Windows
+#define GN_WINNT  0 //!< If 1, means current platform is Windows serias
+#define GN_WIN32  0 //!< If 1, means current platform is Windows x86
 #define GN_AMD64  0 //!< If 1, means current platform is Windows x64
+#define GN_WINPC  (GN_WIN32||GN_AMD64) //!< If 1, means windows on PC
+#define GN_XENON  0 //!< If 1, means current platform is Xbox 360
 #define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
 #define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
-#if defined( _WIN32 ) || defined( WIN32 )      // Win32
+
+#if defined( _WIN32 )      // Windows
 // Windows platform
-#undef GN_WIN32
-#define GN_WIN32 1
+#undef GN_WINNT
+#define GN_WINNT 1
 #if defined( _WIN64 ) || defined( WIN64 )
 // Amd64 platform
-#define GN_WIN64 1
+#undef GN_AMD64
+#define GN_AMD64 1
 #define GN_PLATFORM "amd64"
+#elif defined(_XENON)
+#ifndef _XBOX
+#error _XBOX is required for Xenon platform!
+#endif
+#undef GN_XENON
+#define GN_XENON 1
+#define GN_PLATFORM "Xenon"
 #else
 // Win32 platform
+#undef GN_WIN32
+#define GN_WIN32 1
 #define GN_PLATFORM "win32"
 #endif
+
 #elif defined(__CYGWIN__)
 // Cygwin platform
 #undef GN_CYGWIN
@@ -59,11 +74,13 @@
 #define GN_CYGWIN 1
 #define GN_POSIX  1 // cygwin also provides some posix compabilities
 #define GN_PLATFORM "cygwin"
+
 #elif defined( __unix ) || defined( __unix__ )
 // posix-like platform
 #undef GN_POSIX
 #define GN_POSIX 1
 #define GN_PLATFORM "posix"
+
 #else
 #error "unknown platform!"
 #endif

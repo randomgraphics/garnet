@@ -8,10 +8,13 @@
 
 #include "garnet/GnBase.h"
 
-#if defined(WIN32) || defined(_WIN32)
+#if GN_XENON
+#include <xtl.h>
+#elif GN_WINNT
 #define NOMINMAX
 #include <windows.h>
 #endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -12,8 +12,8 @@
 #if GN_GCC
 #define GN_DEBUG_BREAK asm("int $3")
 #elif GN_MSVC
-#if GN_AMD64
-#define GN_DEBUG_BREAK // TODO: implement amd64 debug break macro
+#if GN_AMD64 || GN_XENON
+#define GN_DEBUG_BREAK ::GN::debugBreak()
 #else
 #define GN_DEBUG_BREAK __asm { int 3 }
 #endif
@@ -90,17 +90,17 @@
 #define GN_CASSERT( exp ) GN_CASSERT_EX( exp, )
 
 // ****************************************************************************
-//! \name                       WIN32 check macros
+//! \name                       windows error check macros
 // ****************************************************************************
 
 //@{
 
-#ifdef GN_WIN32
+#ifdef GN_WINNT
 
 //!
-//! check return value of WIN32 function (general version)
+//! check return value of Windows function (general version)
 //!
-#define GN_W32_CHECK_DO( RETURN_TYPE, func, something )     \
+#define GN_WIN_CHECK_DO( RETURN_TYPE, func, something )     \
     if( true ) {                                            \
         RETURN_TYPE rr = func;                              \
         if( 0 == rr )                                       \
@@ -111,26 +111,26 @@
     } else void(0)
 
 //!
-//! check return value of WIN32 function
+//! check return value of Windows function
 //!
 #if GN_DEBUG
-#define GN_W32_CHECK( RETURN_TYPE, func ) \
-            GN_W32_CHECK_DO( RETURN_TYPE, func, void(0); )
+#define GN_WIN_CHECK( RETURN_TYPE, func ) \
+            GN_WIN_CHECK_DO( RETURN_TYPE, func, void(0); )
 #else
-#define GN_W32_CHECK( RETURN_TYPE, func )      func
+#define GN_WIN_CHECK( RETURN_TYPE, func )      func
 #endif
 
 //!
-//! check return value of WIN32 function, return if failed
+//! check return value of Windows function, return if failed
 //!
-#define GN_W32_CHECK_R( RETURN_TYPE, func ) \
-            GN_W32_CHECK_DO( RETURN_TYPE, func, return; )
+#define GN_WIN_CHECK_R( RETURN_TYPE, func ) \
+            GN_WIN_CHECK_DO( RETURN_TYPE, func, return; )
 
 //!
-//! check return value of WIN32 function, return if failed
+//! check return value of Windows function, return if failed
 //!
-#define GN_W32_CHECK_RV( RETURN_TYPE, func, rval ) \
-            GN_W32_CHECK_DO( RETURN_TYPE, func, return rval; )
+#define GN_WIN_CHECK_RV( RETURN_TYPE, func, rval ) \
+            GN_WIN_CHECK_DO( RETURN_TYPE, func, return rval; )
 
 #endif
 
@@ -154,9 +154,14 @@ namespace GN
         int          line,
         bool *       ignore ) throw();
 
-#ifdef GN_WIN32
+	//!
+	//! Debug break function
+	//!
+	void debugBreak();
+
+#ifdef GN_WINNT
     //!
-    //! get OS error info (WIN32 specific)
+    //! get OS error info (Windows specific)
     //!
     const char * getOSErrorInfo() throw();
 #endif

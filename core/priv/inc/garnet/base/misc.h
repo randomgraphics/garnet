@@ -165,6 +165,136 @@ namespace GN
             ptr = 0;
         }
     }
+
+    //!
+    //! Automatic COM pointer class
+    //!
+    template <class T>
+    class AutoComPtr
+    {
+    	T* mPtr;
+    public:
+
+        //!
+        //! Default constructor
+        //!
+    	AutoComPtr() throw()
+    	{
+    		mPtr = NULL;
+    	}
+
+        //!
+        //! Construct from normal pointer (will Addref)
+        //!
+    	AutoComPtr(T* lp) throw()
+    	{
+    		mPtr = lp;
+    		if (mPtr) mPtr->AddRef();
+    	}
+
+        //!
+        //! Destructor
+        //!
+    	~AutoComPtr() throw()
+    	{
+    		if (mPtr) mPtr->Release();
+    	}
+
+        //!
+        //! Convert to T*
+        //!
+    	operator T*() const throw()
+    	{
+    		return mPtr;
+    	}
+
+        //!
+        //! dereference operator
+        //!
+    	T& operator*() const throw()
+    	{
+    		GN_ASSERT(mPtr!=NULL);
+    		return *mPtr;
+    	}
+
+        //!
+        //! Get address of pointer.
+        //!
+    	//! The assert on operator& usually indicates a bug.  If this is really
+    	//! what is needed, however, take the address of the mPtr member explicitly.
+    	//!
+    	T** operator&() throw()
+    	{
+    		GN_ASSERT(mPtr==NULL);
+    		return &mPtr;
+    	}
+
+        //!
+        //! self explain.
+        //!
+    	T* operator->() const throw()
+    	{
+    		GN_ASSERT(mPtr!=NULL);
+    		return mPtr;
+    	}
+
+        //!
+        //! NOT operator
+        //!
+    	bool operator!() const throw()
+    	{
+    		return (mPtr == NULL);
+    	}
+
+        //!
+        //! LESS operator
+        //!
+    	bool operator<(T* pT) const throw()
+    	{
+    		return mPtr < pT;
+    	}
+
+        //!
+        //! EQ operator
+        //!
+    	bool operator==(T* pT) const throw()
+    	{
+    		return mPtr == pT;
+    	}
+
+        //!
+    	//! Release the interface and set to NULL
+        //!
+    	void release() throw()
+    	{
+    		T* pTemp = mPtr;
+    		if (pTemp)
+    		{
+    			mPtr = NULL;
+    			pTemp->Release();
+    		}
+    	}
+
+        //!
+    	//! Attach to an existing interface (does not AddRef)
+        //!
+    	void attach(T* p2) throw()
+    	{
+    		if (mPtr)
+    			mPtr->Release();
+    		mPtr = p2;
+    	}
+
+        //!
+    	//! Detach the interface (does not Release)
+        //!
+    	T* detach() throw()
+    	{
+    		T* pt = mPtr;
+    		mPtr = NULL;
+    		return pt;
+    	}
+    };
 }
 
 // *****************************************************************************

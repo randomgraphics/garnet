@@ -82,6 +82,9 @@ namespace GN
 // plugin manager
 #include "base/plugin.h"
 
+// resource manager
+#include "base/resourceManager.h"
+
 // others
 #include "base/clock.h"
 #include "base/profiler.h"

@@ -12,9 +12,13 @@
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
+#if GN_XENON
+#include <xtl.h>
+#elif GN_WINPC
 #define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
-#include <atlbase.h> // COM smart pointer
+#endif
+
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>
@@ -213,224 +217,41 @@ namespace GN
             static LRESULT staticProc( HWND, UINT, WPARAM, LPARAM );
         };
 
+        typedef ResourceManager<LPDIRECT3DBASETEXTURE9,true>  TextureManager; //!< Texture manager
+        typedef ResourceManager<LPDIRECT3DVERTEXSHADER9,true> VShaderManager; //!< Vertex shader manager
+        typedef ResourceManager<LPDIRECT3DPIXELSHADER9,true>  PShaderManager; //!< Pixel shader manager
+        typedef ResourceManager<LPD3DXEFFECT,true> EffectManager; //!< Effect manager
+        typedef ResourceManager<LPD3DXEFFECT,true> EffectManager; //!< Effect manager
+        typedef ResourceManager<LPD3DXMESH,true> MeshManager; //!< Mesh manager
+
+        // Util functions
+
         //!
-        //! Resource manager
+        //! Compile vertex shader from string
         //!
-        template<typename RES>
-        class ResourceManager : public Singleton< ResourceManager<RES> >
-        {
-            typedef ResourceManager<RES>       MyType;
-            typedef Functor1<RES,const StrA &> Creator;
-            typedef Functor1<void,RES&>        Deletor;
+        LPDIRECT3DVERTEXSHADER9 compileVS( const char * code, size_t len, uint32_t flags = 0, const char * entryFunc = "main" );
 
-            struct ResDesc
-            {
-                Creator creator;
-                Deletor deletor;
-                RES     res;
-            };
+        //!
+        //! Assemble vertex shader from string
+        //!
+        LPDIRECT3DVERTEXSHADER9 assembleVS( const char * code, size_t len, uint32_t flags = 0 );
 
-            typedef std::map<StrA,ResDesc> ResMap;
+        //!
+        //! Compile pixel shader from string
+        //!
+        LPDIRECT3DPIXELSHADER9 compilePS( const char * code, size_t len, uint32_t flags = 0, const char * entryFunc = "main" );
 
-            static MyType msInstance;
+        //!
+        //! Assemble pixel shader from string
+        //!
+        LPDIRECT3DPIXELSHADER9 assemblePS( const char * code, size_t len, uint32_t flags = 0 );
 
-            ResMap  mResPool;
-            Creator mDefaultCreator;
-            Creator mNullCreator; // Use to create "NULL" instance.
-            Deletor mDefaultDeletor;
-
-            void doDispose( std::pair<const StrA,ResDesc> & item )
-            {
-                ResDesc & desc = item.second;
-                if( desc.deletor ) desc.deletor( desc.res );
-                else if( mDefaultDeletor ) mDefaultDeletor( desc.res );
-                desc.res = 0;
-            }
-
-        public:
-
-            typedef RES ResType; //!< resource type
-
-            //!
-            //! Default constructor
-            //!
-            ResourceManager(
-                const Creator & defaultCreator = Creator(),
-                const Deletor & defaultDeletor = Deletor(),
-                const Creator & nullCreator = Creator() )
-                : mDefaultCreator(defaultCreator)
-                , mDefaultDeletor(defaultDeletor)
-                , mNullCreator(nullCreator)
-            {
-            }
-
-            //!
-            //! Default destructor
-            //!
-            ~ResourceManager() {}
-
-            //!
-            //! Get default creator
-            //!
-            const Creator & getDefaultCreator() const { return mDefaultCreator; }
-
-            //!
-            //! Get default deletor
-            //!
-            const Deletor & getDefaultDeletor() const { return mDefaultDeletor; }
-
-            //!
-            //! Get NULL instance creator
-            //!
-            const Creator & getNullCreator() const { return mNullCreator; }
-
-            //!
-            //! Set default creator
-            //!
-            void setDefaultCreator( const Creator & c ) { mDefaultCreator = c; }
-
-            //!
-            //! Set default deletor
-            //!
-            void setDefaultDeletor( const Deletor & d ) { mDefaultDeletor = d; }
-
-            //!
-            //! Set NULL instance creator
-            //!
-            void setNullCreator( const Creator & n ) { mNullCreator = n; }
-
-            //!
-            //! Clear all resources.
-            //!
-            void clear()
-            {
-                dispose();
-                mResPool.clear();
-            }
-
-            //!
-            //! Invalidate all resources. But keep all resources items.
-            //!
-            void dispose()
-            {
-                GN_GUARD;
-                std::for_each(
-                    mResPool.begin(),
-                    mResPool.end(),
-                    makeFunctor(this,&MyType::doDispose) );
-                GN_UNGUARD;
-            }
-
-            //!
-            //! Preload all resources
-            //!
-            bool preload()
-            {
-                GN_GUARD;
-                RES res;
-                bool ok = true;
-                ResMap::const_iterator ci = mResPool.begin();
-                for( ci = mResPool.begin(); ci != mResPool.end(); ++ci )
-                {
-                    ok |= getResource( res, ci->first );
-                }
-                return ok;
-                GN_UNGUARD;
-            }
-
-            //!
-            //! Add new resource item to manager
-            //!
-            bool addResource(
-                const StrA & name,
-                const Creator & creator = Creator(),
-                const Deletor & deletor = Deletor(),
-                bool overrideExistingResource = false )
-            {
-                GN_GUARD;
-
-                ResMap::const_iterator ci = mResPool.find(name);
-                if( mResPool.end() != ci && overrideExistingResource )
-                {
-                    D3DAPP_ERROR( "resource '%s' already exist!", name.cstr() );
-                    return false;
-                }
-                ResDesc & newItem = mResPool[name];
-                newItem.creator = creator;
-                newItem.deletor = deletor;
-                newItem.res = 0;
-                return true;
-
-                GN_UNGUARD;
-            }
-
-            //!
-            //! Get resource by name
-            //!
-            bool getResource( RES & result, const StrA & name )
-            {
-                GN_GUARD_SLOW;
-
-                ResMap::iterator iter = mResPool.find( name );
-                if( mResPool.end() == iter )
-                {
-                    D3DAPP_ERROR( "resource '%s' not found!", name.cstr() );
-                    if( mNullCreator ) result = mNullCreator(name);
-                    else return false;
-                }
-                if( !iter->second.res )
-                {
-                    if( iter->second.creator )
-                    {
-                        iter->second.res = iter->second.creator( name );
-                    }
-                    else if( mDefaultCreator )
-                    {
-                        iter->second.res = mDefaultCreator( name );
-                    }
-                    else if( !mNullCreator )
-                    {
-                        D3DAPP_ERROR( "No creator found!" );
-                        return false;
-                    }
-
-                    if( !iter->second.res )
-                    {
-                        D3DAPP_WARN( "Fallback to null instance for resource '%s'.", name.cstr() );
-                        if( mNullCreator )
-                        {
-                            iter->second.res = mNullCreator(name);
-                        }
-                        if( !iter->second.res )
-                        {
-                            D3DAPP_ERROR( "Fail to create NULL instance for resource '%s'.", name.cstr() );
-                            return false;
-                        }
-                    }
-                }
-                GN_ASSERT( iter->second.res );
-                result = iter->second.res;
-                return true;
-
-                GN_UNGUARD_SLOW;
-            }
-
-            //!
-            //! Get resource by name
-            //!
-            RES getResource( const StrA & name )
-            {
-                GN_GUARD_SLOW;
-                RES res;
-                if( getResource( res, name ) ) return res;
-                else return RES();
-                GN_UNGUARD_SLOW;
-            }
-        };
-
-        typedef ResourceManager<LPDIRECT3DBASETEXTURE9> TextureManager; //!< Texture manager
-        typedef ResourceManager<LPD3DXEFFECT> EffectManager; //!< Effect manager
-        typedef ResourceManager<LPD3DXMESH> MeshManager; //!< Mesh manager
+        //!
+        //! Draw screen aligned quad on screen
+        //!
+        void drawScreenAlignedQuad(
+            double fLeft = 0.0, double fTop = 0.0, double fRight = 1.0, double fBottom = 1.0,
+            float fLeftU = 0.0f, float fTopV = 0.0f, float fRightU = 1.0f, float fBottomV = 1.0f );
     }
 }
 
