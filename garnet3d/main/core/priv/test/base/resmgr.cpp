@@ -45,14 +45,17 @@ public:
 
         TS_ASSERT( rm.addResource( "1" ) );
 
+        TS_ASSERT_EQUALS( 0, rm.getResource( "2" ) );
+
         // default nullor failure
         rm.setDefaultNullor( GN::makeFunctor(&failedCreator) );
         TS_ASSERT_EQUALS( 0, rm.getResource( "1" ) );
+        TS_ASSERT_EQUALS( 0, rm.getResource( "2" ) );
 
         // default nullor success
         rm.setDefaultNullor( GN::makeFunctor(&nullCreator) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "1" ) );
-
+        TS_ASSERT_EQUALS( -1, rm.getResource( "2" ) );
     }
 
     // per-resource nullor
@@ -94,6 +97,24 @@ public:
     // per-resource creator
     void testCreator()
     {
+        // TODO: implement this test case
+    }
+
+    // override existing resource
+    void testOverrideExistingResource()
+    {
+        ResMgr rm;
+
+        TS_ASSERT( rm.addResource( "1", GN::makeFunctor(&defCreator), ResMgr::Creator(), false ) );
+        TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
+
+        // default is not overriding
+        TS_ASSERT( !rm.addResource( "1" ) );
+        TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
+
+        // override existing
+        TS_ASSERT( rm.addResource( "1", GN::makeFunctor(&nullCreator), ResMgr::Creator(), true ) );
+        TS_ASSERT_EQUALS( -1, rm.getResource( "1" ) );
     }
 
     void testName2Handle()
@@ -105,6 +126,9 @@ public:
 
         ResMgr::ResHandle h1 = rm.addResource( "1" );
         TS_ASSERT( h1 );
+
+        // rm should NOT be empty
+        TS_ASSERT( !rm.empty() );
 
         // handle -> name
         TS_ASSERT_EQUALS( "1", rm.getResourceName(h1) );

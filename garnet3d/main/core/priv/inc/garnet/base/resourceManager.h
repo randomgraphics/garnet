@@ -139,8 +139,7 @@ namespace GN
             }
             if( mNullInstance )
             {
-                GN_ASSERT( mNullDeletor );
-                mNullDeletor( *mNullInstance );
+                if( mNullDeletor ) mNullDeletor( *mNullInstance );
                 mNullInstance = 0;
                 mNullDeletor.clear();
             }
@@ -361,6 +360,7 @@ namespace GN
             if( item->disposed )
             {
                 bool ok = false;
+
                 if( item->creator )
                 {
                     ok = item->creator( item->res, item->name );
@@ -387,7 +387,9 @@ namespace GN
                         return false;
                     }
                 }
+
                 GN_ASSERT( ok );
+                item->disposed = false;
             }
 
             // success
