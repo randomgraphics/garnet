@@ -170,7 +170,7 @@ namespace GN
             ResHandle h;
             for( h = mResHandles.first(); h != 0; h = mResHandles.next(h) )
             {
-                ok |= getResource( res, h );
+                ok &= getResource( res, h );
             }
             return ok;
             GN_UNGUARD;
