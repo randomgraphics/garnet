@@ -12,7 +12,7 @@
 #if GN_GCC
 #define GN_DEBUG_BREAK asm("int $3")
 #elif GN_MSVC
-#if GN_AMD64 || GN_XENON
+#if GN_WINX64 || GN_XENON
 #define GN_DEBUG_BREAK ::GN::debugBreak()
 #else
 #define GN_DEBUG_BREAK __asm { int 3 }
@@ -154,10 +154,12 @@ namespace GN
         int          line,
         bool *       ignore ) throw();
 
+#if GN_WINX64 || GN_XENON
 	//!
 	//! Debug break function
 	//!
 	void debugBreak();
+#endif
 
 #ifdef GN_WINNT
     //!

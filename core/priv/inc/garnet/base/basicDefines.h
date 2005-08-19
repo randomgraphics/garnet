@@ -38,8 +38,8 @@
 // 辨识操作系统
 #define GN_WINNT  0 //!< If 1, means current platform is Windows serias
 #define GN_WIN32  0 //!< If 1, means current platform is Windows x86
-#define GN_AMD64  0 //!< If 1, means current platform is Windows x64
-#define GN_WINPC  (GN_WIN32||GN_AMD64) //!< If 1, means windows on PC
+#define GN_WINX64  0 //!< If 1, means current platform is Windows x64
+#define GN_WINPC  (GN_WIN32||GN_WINX64) //!< If 1, means windows on PC
 #define GN_XENON  0 //!< If 1, means current platform is Xbox 360
 #define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
 #define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
@@ -50,8 +50,8 @@
 #define GN_WINNT 1
 #if defined( _WIN64 ) || defined( WIN64 )
 // Amd64 platform
-#undef GN_AMD64
-#define GN_AMD64 1
+#undef GN_WINX64
+#define GN_WINX64 1
 #define GN_PLATFORM "amd64"
 #elif defined(_XENON)
 #ifndef _XBOX

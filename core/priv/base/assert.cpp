@@ -64,6 +64,7 @@ GN::assertFunc(
 #endif
 }
 
+#if GN_WINX64 || GN_XENON
 //
 //
 // -----------------------------------------------------------------------------
@@ -71,6 +72,7 @@ void GN::debugBreak()
 {
 	::DebugBreak();
 }
+#endif
 
 //
 //
