@@ -102,14 +102,7 @@ static bool sLoadVShader( LPDIRECT3DVERTEXSHADER9 & result, const GN::StrA & nam
 {
 	GN_GUARD;
 
-	GN::AnsiFile fp;
-	if( !fp.open( name, "rt" ) ) return false;
-
-	std::vector<char> buf;
-	buf.resize( fp.size()+1 );
-	size_t sz = fp.read( &buf[0], fp.size() );
-
-	result = GN::d3dapp::compileVS( &buf[0], sz );
+	result = GN::d3dapp::compileVSFromFile( name.cstr() );
 
 	return 0 != result;
 
@@ -123,14 +116,7 @@ static bool sLoadPShader( LPDIRECT3DPIXELSHADER9 & result, const GN::StrA & name
 {
 	GN_GUARD;
 
-	GN::AnsiFile fp;
-	if( !fp.open( name, "rt" ) ) return false;
-
-	std::vector<char> buf;
-	buf.resize( fp.size()+1 );
-	size_t sz = fp.read( &buf[0], fp.size() );
-
-	result = GN::d3dapp::compilePS( &buf[0], sz );
+	result = GN::d3dapp::compilePSFromFile( name.cstr() );
 
 	return 0 != result;
 
