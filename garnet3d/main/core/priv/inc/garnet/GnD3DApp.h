@@ -79,6 +79,8 @@
 //@{
 #define gD3D       (::GN::d3dapp::D3D::getInstance()) //!< global D3D object
 #define gTexMgr    (::GN::d3dapp::TextureManager::getInstance()) //!< Global texture manager
+#define gVSMgr     (::GN::d3dapp::VShaderManager::getInstance()) //!< Global vertex shader manager
+#define gPSMgr     (::GN::d3dapp::PShaderManager::getInstance()) //!< Global pixel shader manager
 #define gEffectMgr (::GN::d3dapp::EffectManager::getInstance()) //!< Global effect manager
 #define gMeshMgr   (::GN::d3dapp::MeshManager::getInstance()) //!< Global mesh manager
 //@}
@@ -232,9 +234,19 @@ namespace GN
         LPDIRECT3DVERTEXSHADER9 compileVS( const char * code, size_t len, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
+        //! Compile vertex shader from file
+        //!
+        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
+
+        //!
         //! Assemble vertex shader from string
         //!
         LPDIRECT3DVERTEXSHADER9 assembleVS( const char * code, size_t len, uint32_t flags = 0 );
+
+        //!
+        //! Assemble vertex shader from file
+        //!
+        LPDIRECT3DVERTEXSHADER9 assembleVSFromFile( const char * file, uint32_t flags = 0 );
 
         //!
         //! Compile pixel shader from string
@@ -242,9 +254,19 @@ namespace GN
         LPDIRECT3DPIXELSHADER9 compilePS( const char * code, size_t len, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
+        //! Compile pixel shader from file
+        //!
+        LPDIRECT3DPIXELSHADER9 compilePSFromFile( const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
+
+        //!
         //! Assemble pixel shader from string
         //!
         LPDIRECT3DPIXELSHADER9 assemblePS( const char * code, size_t len, uint32_t flags = 0 );
+
+        //!
+        //! Assemble pixel shader from file
+        //!
+        LPDIRECT3DPIXELSHADER9 assemblePSFromFile( const char * file, uint32_t flags = 0 );
 
         //!
         //! Draw screen aligned quad on screen
