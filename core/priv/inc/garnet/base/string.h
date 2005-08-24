@@ -276,6 +276,11 @@ namespace GN
         const CHAR * end() const { return mPtr+mLen; }
 
         //!
+        //! get first character of the string. If string is empty, return 0.
+        //!
+        CHAR first() const { return mPtr[0]; }
+
+        //!
         //! printf-like string formatting
         //!
         const CHAR * format( const CHAR * fmt, ... )
@@ -309,6 +314,11 @@ namespace GN
         //! get string caps
         //!
         size_t getCaps() const { return mCaps; }
+
+        //!
+        //! get last character of the string. If string is empty, return 0.
+        //!
+        CHAR last() const { return mLen>0 ? mPtr[mLen-1] : (CHAR)0; }
 
         //!
         //! Replace specific character with another
