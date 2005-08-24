@@ -196,7 +196,12 @@ namespace GN
         //!
         void append( const Str & s )
         {
-            append( s.cstr(), s.size() );
+            if( s.empty() ) return;
+            size_t l = s.size();
+            setCaps( mLen + l );
+            ::memcpy( mPtr+mLen, s.cstr(), l*sizeof(CHAR) );
+            mLen += l;
+            mPtr[mLen] = 0;
         }
 
         //!
@@ -205,7 +210,10 @@ namespace GN
         void append( CHAR ch )
         {
             if ( 0 == ch ) return;
-            append( &ch, 1 );
+            setCaps( mLen + 1 );
+            mPtr[mLen] = ch;
+            ++mLen;
+            mPtr[mLen] = 0;
         }
 
         //!
@@ -303,6 +311,18 @@ namespace GN
         size_t getCaps() const { return mCaps; }
 
         //!
+        //! Replace specific character with another
+        //!
+        void replace( char from, char to )
+        {
+            CHAR * p = mPtr;
+            for( size_t i = 0; i < mLen; ++i, ++p )
+            {
+                if( from == *p ) *p = to;
+            }
+        }
+
+        //!
         //! set string caps
         //!
         void setCaps( size_t newCaps )
@@ -321,6 +341,16 @@ namespace GN
         size_t size() const { return mLen; }
 
         //!
+        //! Return sub string
+        //!
+        Str subString( size_t offset, size_t length ) const
+        {
+            if( offset >= mLen ) return EMPTYSTR;
+            if( offset + length > mLen ) length = mLen - offset;
+            return Str( mPtr+offset, length );
+        }
+
+        //!
         //! convert to STL string(1)
         void toSTL( std::basic_string<CHAR> & s ) const
         {
@@ -332,6 +362,49 @@ namespace GN
         std::basic_string<CHAR> toSTL() const
         {
             return std::basic_string<CHAR>(mPtr,mLen);
+        }
+
+        //!
+        //! Trim characters for both side
+        //!
+        void trim( char ch )
+        {
+            trimRight( ch );
+            trimLeft( ch );
+        }
+
+        //!
+        //! Trim left characters
+        //!
+        void trimLeft( char ch )
+        {
+            CHAR * p = mPtr;
+            CHAR * e = mPtr+mLen;
+            while( p < e && ch == *p )
+            {
+                ++p;
+            }
+            mLen = e - p;
+            for( size_t i = 0; i < mLen; ++i )
+            {
+                mPtr[i] = p[i];
+            }
+            mPtr[mLen] = 0;
+        }
+
+        //!
+        //! Trim right characters
+        //!
+        void trimRight( char ch )
+        {
+            if( 0 == mLen ) return;
+            CHAR * p = mPtr + mLen - 1;
+            while( p > mPtr && ch == *p )
+            {
+                *p = 0;
+                --p;
+            }
+            mLen = p - mPtr + 1;
         }
 
         //!
