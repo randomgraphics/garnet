@@ -9,7 +9,10 @@ static uint32_t sRefineFlags( uint32_t flags, bool forCompile )
 #if GN_DEBUG
     flags |= D3DXSHADER_DEBUG;
     if( forCompile ) flags |= D3DXSHADER_SKIPOPTIMIZATION;
+#else
+    GN_UNUSED_PARAM(forCompile);
 #endif
+
 #if GN_XENON
     if( forCompile ) 
     {
