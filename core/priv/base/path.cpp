@@ -1,7 +1,9 @@
 #include "pch.h"
 #include <pcrecpp.h>
 #if GN_WINNT
+#if GN_WINPC
 #include <shlwapi.h>
+#endif
 #include <direct.h>
 #elif GN_POSIX
 #include <dirent.h>
@@ -25,10 +27,16 @@
 // ----------------------------------------------------------------------------
 static inline GN::StrA sPwd()
 {
+#if GN_XENON
+    return "game:";
+#else
     char buf[MAX_PATH_LENGTH+1];
     getcwd( buf, MAX_PATH_LENGTH );
     buf[MAX_PATH_LENGTH] = 0;
-    return buf;
+    GN::StrA ret(buf);
+    ret.trimRight( PATH_SEPARATOR );
+    return ret;
+#endif
 }
 
 //
@@ -275,25 +283,29 @@ bool GN::path::resolve( StrA & result, const StrA & path )
 
     StrA relPath = toNative(path);
 
+#if GN_WINPC || GN_POSIX
+
     char absPath[MAX_PATH_LENGTH+1];
-#if GN_WINNT
-    if( 0 == _fullpath( absPath, relPath.cstr(), MAX_PATH_LENGTH ) )
-    {
-        GN_ERROR( "invalid path '%s'.", path.cstr() );
-        return false;
-    }
-#else
+
+#if GN_POSIX
     if( 0 == realpath( relPath.cstr(), absPath ) )
+#else
+    if( 0 == _fullpath( absPath, relPath.cstr(), MAX_PATH_LENGTH ) )
+#endif
     {
         GN_ERROR( "invalid path '%s'.", path.cstr() );
         return false;
     }
-#endif
 
     // success
     absPath[MAX_PATH_LENGTH] = 0;
     result.assign( absPath );
     return true;
+
+#else
+    result = relPath;
+    return true;
+#endif
 
     GN_UNGUARD;
 }
@@ -301,7 +313,7 @@ bool GN::path::resolve( StrA & result, const StrA & path )
 //
 //
 // ----------------------------------------------------------------------------
-void
+std::vector<GN::StrA> &
 GN::path::glob(
     std::vector<StrA> & result,
     const StrA & dirName,
@@ -314,16 +326,17 @@ GN::path::glob(
     if( !exist(dirName) )
     {
         GN_WARN( "'%s' does not exist!", dirName.cstr() );
-        return;
+        return result;
     }
 
     if( !isDir(dirName) )
     {
         GN_WARN( "'%s' is not directory!", dirName.cstr() );
-        return;
+        return result;
     }
 
-    sResursiveFind( result, resolve(dirName), pattern, recursive, useRegex );
+    sResursiveFind( result, dirName, pattern, recursive, useRegex );
+    return result;
 
     GN_UNGUARD;
 }
