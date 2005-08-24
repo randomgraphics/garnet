@@ -59,114 +59,6 @@ namespace GN
     };
 
     //!
-    //! type cast function
-    //!
-    //! perform dynamic cast in debug build, and static cast in release build.
-    // ------------------------------------------------------------------------
-    template < class TO, class FROM >
-    GN_FORCE_INLINE TO safeCast( FROM from )
-    {
-    #if GN_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
-        GN_ASSERT( 0 == from || dynamic_cast<TO>(from) );
-        return dynamic_cast<TO>(from);
-    #else
-        return static_cast<TO>(from);
-    #endif
-    }
-
-    //!
-    //! vector to pointer
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE T * vec2ptr( std::vector<T> & vec )
-    {
-        return vec.empty() ? 0 : &vec[0];
-    }
-
-    //!
-    //! vector to pointer
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE const T * vec2ptr( const std::vector<T> & vec )
-    {
-        return vec.empty() ? 0 : &vec[0];
-    }
-
-    //!
-    //! 将value限定在[vmin, vmax]区间内
-    // ------------------------------------------------------------------------
-    template < typename T >
-    inline void clamp( T & value, const T & vmin, const T & vmax )
-    {
-        value = vmin > value ? vmin : vmax < value ? vmax : value;
-    }
-
-    //!
-    //! general safe delLocation routine
-    // ------------------------------------------------------------------------
-    template < typename T, typename DEALLOC_FUNC >
-    GN_FORCE_INLINE void safeDealloc( T * & ptr )
-    {
-        if( ptr )
-        {
-            DEALLOC_FUNC( ptr );
-            ptr = 0;
-        }
-    }
-
-    //!
-    //! free one object
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE void safeFree( T * & ptr )
-    {
-        if( ptr )
-        {
-            memFree( ptr );
-            ptr = 0;
-        }
-    }
-
-    //!
-    //! delete one object
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE void safeDelete( T * & ptr )
-    {
-        if( ptr )
-        {
-            delete ptr;
-            ptr = 0;
-        }
-    }
-
-    //!
-    //! delete object array
-    // ------------------------------------------------------------------------
-    template < typename T >
-    GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
-    {
-        if( ptr )
-        {
-            delete [] ptr;
-            ptr = 0;
-        }
-    }
-
-    //!
-    //! Safe release COM interface
-    //!
-    template < typename T >
-    GN_FORCE_INLINE void safeRelease( T * & ptr )
-    {
-        if( ptr )
-        {
-            ptr->Release();
-            ptr = 0;
-        }
-    }
-
-    //!
     //! Automatic COM pointer class
     //!
     template <class T>
@@ -295,6 +187,119 @@ namespace GN
     		return pt;
     	}
     };
+
+    //!
+    //! type cast function
+    //!
+    //! perform dynamic cast in debug build, and static cast in release build.
+    // ------------------------------------------------------------------------
+    template < class TO, class FROM >
+    GN_FORCE_INLINE TO safeCast( FROM from )
+    {
+    #if GN_DEBUG && ( !GN_MSVC || defined(_CPPRTTI) )
+        GN_ASSERT( 0 == from || dynamic_cast<TO>(from) );
+        return dynamic_cast<TO>(from);
+    #else
+        return static_cast<TO>(from);
+    #endif
+    }
+
+    //!
+    //! vector to pointer
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE T * vec2ptr( std::vector<T> & vec )
+    {
+        return vec.empty() ? 0 : &vec[0];
+    }
+
+    //!
+    //! vector to pointer
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE const T * vec2ptr( const std::vector<T> & vec )
+    {
+        return vec.empty() ? 0 : &vec[0];
+    }
+
+    //!
+    //! 将value限定在[vmin, vmax]区间内
+    // ------------------------------------------------------------------------
+    template < typename T >
+    inline void clamp( T & value, const T & vmin, const T & vmax )
+    {
+        value = vmin > value ? vmin : vmax < value ? vmax : value;
+    }
+
+    //!
+    //! general safe delLocation routine
+    // ------------------------------------------------------------------------
+    template < typename T, typename DEALLOC_FUNC >
+    GN_FORCE_INLINE void safeDealloc( T * & ptr )
+    {
+        if( ptr )
+        {
+            DEALLOC_FUNC( ptr );
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! free one object
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeFree( T * & ptr )
+    {
+        if( ptr )
+        {
+            memFree( ptr );
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! delete one object
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeDelete( T * & ptr )
+    {
+        if( ptr )
+        {
+            delete ptr;
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! delete object array
+    // ------------------------------------------------------------------------
+    template < typename T >
+    GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
+    {
+        if( ptr )
+        {
+            delete [] ptr;
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! Safe release COM interface
+    //!
+    template < typename T >
+    GN_FORCE_INLINE void safeRelease( T * & ptr )
+    {
+        if( ptr )
+        {
+            ptr->Release();
+            ptr = 0;
+        }
+    }
+
+    //!
+    //! get environment variable
+    //!
+    bool getEnv( StrA & result, const char * name );
 }
 
 // *****************************************************************************
