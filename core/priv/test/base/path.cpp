@@ -1,5 +1,14 @@
 #include "../testCommon.h"
 
+#if GN_WINNT
+#define PSC '\\'
+#define PSS "\\"
+#else
+#define PSC '/'
+#define PSS "/"
+#endif
+
+
 class PathTest : public CxxTest::TestSuite
 {
 public:
@@ -13,6 +22,12 @@ public:
         TS_ASSERT_EQUALS( "/", GN::path::toNative("\\") );
         TS_ASSERT_EQUALS( "/a/b", GN::path::toNative("\\a\\\\b\\") );
 #endif
+    }
+
+    void testJoin()
+    {
+        TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", GN::path::join( "\\a\\", "\\b\\", "\\c\\" ) );
+        TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", GN::path::join( "/a/", "/b/", "/c/" ) );
     }
 
     void testExist()

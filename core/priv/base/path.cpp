@@ -58,22 +58,30 @@ static AppDir sAppDir;
 //
 // 
 // ----------------------------------------------------------------------------
-static void sNormalizePathSeparator(
-    GN::StrA & result, const GN::StrA & path, char from, char to )
+static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
+#if GN_WINNT
+    char from = '/';
+    char to = '\\';
+#else
+    char from = '\\';
+    char to = '/';
+#endif
+    
     // convert 'from' to 'to'
     result.setCaps( path.size() );
     for( size_t i = 0; i < path.size(); ++i )
     {
-        const char & ch = path[i];
+        char ch = path[i];
 
         if( from == ch )
         {
             // ignore redundant path separator
-            if( 0 == i || result[i-1] != to ) result.append( to );
+            if( 0 == i || result.last() != to ) result.append( to );
         }
-        else
+        else if( to != ch || 0 == i || to != result.last() )
         {
+            // ignore redundant path separator
             result.append( ch );
         }
     }
@@ -151,11 +159,7 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
 // ----------------------------------------------------------------------------
 void GN::path::toNative( StrA & result, const StrA & path )
 {
-#if GN_WINNT
-    sNormalizePathSeparator( result, path, '/', '\\' );
-#else
-    sNormalizePathSeparator( result, path, '\\', '/' );
-#endif
+    sNormalizePathSeparator( result, path );
 
     // handle path prefixes
     StrA root;
@@ -263,15 +267,16 @@ void GN::path::join(
     const StrA & path3,
     const StrA & path4 )
 {
-    result.clear();
+    StrA tmp;
     const StrA * parts[] = { &path1, &path2, &path3, &path4 };
     for( size_t i = 0; i < sizeof(parts)/sizeof(parts[0]); ++i )
     {
         const StrA & p = *parts[i];
         if( p.empty() ) continue;
-        result.append( PATH_SEPARATOR );
-        result.append( p );
+        tmp.append( PATH_SEPARATOR );
+        tmp.append( p );
     }
+    sNormalizePathSeparator( result, tmp );
 }
 
 //
