@@ -175,9 +175,28 @@ namespace GN
             IDirect3DDevice9 * getDevice() const { GN_ASSERT(mDevice); return mDevice; }
 
             //!
+            //! Get D3D monitor handle
+            //!
+            HMONITOR getMonitor() const { return mMonitor; }
+
+            //!
+            //! Get D3D adapter ID
+            //!
+            uint32_t getAdapter() const { return mAdapter; }
+
+            //!
+            //! Get D3D device behavior flags
+            uint32_t getBehaviorFlags() const { return mBehaviorFlags; }
+
+            //!
             //! Get D3D present parameters
             //!
             const D3DPRESENT_PARAMETERS & getPresentParams() const { return mPresentParams; }
+
+            //!
+            //! Get D3D device caps
+            //!
+            const D3DCAPS9 & getDevCaps() const { return mDevCaps; }
 
             //!
             //! Is render window closed?
@@ -190,28 +209,42 @@ namespace GN
             //!
             //! This function handles device-lost, windows messages.
             //!
-            void present();
+            //! \return Return false, if device restore/recreation is failed.
+            //!
+            bool present();
 
             // ********************************
             // private variables
             // ********************************
         private:
 
+            D3DInitParams           mInitParams;
             HWND                    mWindow;
+            HMONITOR                mMonitor;
+            uint32_t                mAdapter;
+            D3DDEVTYPE              mDevType;
+            uint32_t                mBehaviorFlags;
+            D3DPRESENT_PARAMETERS   mPresentParams;
+            D3DCAPS9                mDevCaps;
             LPDIRECT3D9             mD3D;
             LPDIRECT3DDEVICE9       mDevice;
-            D3DPRESENT_PARAMETERS   mPresentParams;
 
             bool mClosed;
             bool mMinimized;
+            bool mInsideSizeMove;
+            bool mSizeChanged;
 
             // ********************************
             // private functions
             // ********************************
         private:
 
-            bool createWindow( const D3DInitParams & );
-            bool createD3D( const D3DInitParams & );
+            bool createWindow();
+            bool createD3D();
+
+            void setupPresentParameters();
+            bool restoreDevice();
+            bool recreateDevice();
 
             void processWindowMessages();
 

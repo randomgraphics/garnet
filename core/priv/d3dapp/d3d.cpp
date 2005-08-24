@@ -174,6 +174,22 @@ static bool sLoadMesh( LPD3DXMESH & result, const GN::StrA & name )
     GN_UNGUARD;
 }
 
+#if GN_WINPC
+//
+//
+// -----------------------------------------------------------------------------
+static void sGetClientSize( HWND window, UINT & width, UINT & height )
+{
+    GN_ASSERT( IsWindow(window) );
+    RECT rc;
+    GN_WIN_CHECK( BOOL, GetClientRect( window, &rc ) );
+    width = (UINT)(rc.right - rc.left);
+    height = (UINT)(rc.bottom - rc.top);
+    if( width < 10 ) width = 10;
+    if( height < 10 ) height = 10;
+}
+#endif
+
 // instance of singletons
 GN_IMPLEMENT_SINGLETON( GN::d3dapp::D3D );
 
@@ -221,8 +237,10 @@ bool GN::d3dapp::D3D::init( const D3DInitParams & params )
     // standard init procedure
     GN_STDCLASS_INIT( D3D, () );
 
-    if( !createWindow(params) ) { quit(); return selfOK(); }
-    if( !createD3D(params) ) { quit(); return selfOK(); }
+    mInitParams = params;
+
+    if( !createWindow() ) { quit(); return selfOK(); }
+    if( !createD3D() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -266,15 +284,64 @@ void GN::d3dapp::D3D::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3dapp::D3D::present()
+bool GN::d3dapp::D3D::present()
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
-    DX_CHECK( mDevice->Present(0,0,0,0) );
-
     processWindowMessages();
+
+#if GN_WINPC
+    // respond to window size-move
+    GN_ASSERT( !mMinimized );
+
+    if( mSizeChanged )
+    {
+        mSizeChanged = false;
+
+        HMONITOR newMonitor = MonitorFromWindow( mWindow, MONITOR_DEFAULTTOPRIMARY );
+
+        UINT width, height;
+        sGetClientSize( mWindow, width, height );
+
+        if( newMonitor != mMonitor )
+        {
+            if( !recreateDevice() ) return false;
+        }
+        else if( width != mPresentParams.BackBufferWidth ||
+            height != mPresentParams.BackBufferHeight )
+        {
+            if( !restoreDevice() ) return false;
+        }
+    }
+#endif
+
+    // check for device lost
+    HRESULT r = mDevice->TestCooperativeLevel();
+    if( D3D_OK == r )
+    {
+        DX_CHECK( mDevice->Present( 0, 0, mWindow, 0 ) );
+    }
+    else if( D3DERR_DEVICENOTRESET == r )
+    {
+        // try restore lost device
+        if( !restoreDevice() ) return false;
+    }
+    else if( D3DERR_DEVICELOST == r )
+    {
+        // device lost and can't be reset currently
+        Sleep(20);
+    }
+    else
+    {
+        // fatal error
+        D3DAPP_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9(r) );
+        return false;
+    }
+
+    // success
+    return true;
 
     GN_UNGUARD_SLOW;
 }
@@ -286,7 +353,7 @@ void GN::d3dapp::D3D::present()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
+bool GN::d3dapp::D3D::createWindow()
 {
     GN_GUARD;
 
@@ -315,13 +382,13 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
 
     // calculate window size
     DWORD style = WS_OVERLAPPEDWINDOW;
-    RECT rc = { 0, 0, params.width, params.height };
+    RECT rc = { 0, 0, mInitParams.width, mInitParams.height };
     AdjustWindowRect( &rc, style, 0 );
 
     // create window
     mWindow = CreateWindowA(
         "GarnetD3DAppWindowClass",
-        params.winTitle,
+        mInitParams.winTitle,
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         rc.right - rc.left, rc.bottom - rc.top,
@@ -335,7 +402,7 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
     }
 
     // show the window
-    if( params.showWindow )
+    if( mInitParams.showWindow )
     {
         ShowWindow( mWindow, SW_NORMAL );
         UpdateWindow( mWindow );
@@ -344,6 +411,8 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
 
     mMinimized = false;
     mClosed = false;
+    mInsideSizeMove = false;
+    mSizeChanged = false;
 
     // success
     return true;
@@ -354,7 +423,7 @@ bool GN::d3dapp::D3D::createWindow( const D3DInitParams & params )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::createD3D( const D3DInitParams & params )
+bool GN::d3dapp::D3D::createD3D()
 {
     GN_GUARD;
 
@@ -366,64 +435,200 @@ bool GN::d3dapp::D3D::createD3D( const D3DInitParams & params )
         return false;
     }
 
-    // setup present parameters and create device
+    // setup present parameters
+    setupPresentParameters();
 
-	ZeroMemory( &mPresentParams, sizeof(mPresentParams) );
+    // setup device creation parameters
 
 #if GN_XENON
 
+    mMonitor = 0;
+    mAdapter = D3DADAPTER_DEFAULT;
+    mDevType = D3DDEVTYPE_HAL;
+    mBehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+
+#else // !GN_XENON
+
+    // update monitor handle
+    mMonitor = MonitorFromWindow( mWindow, MONITOR_DEFAULTTOPRIMARY );
+
+    // Look for an adapter ordinal that is tied to a HMONITOR
+    uint32_t nAdapter = mD3D->GetAdapterCount();
+    mAdapter = 0;
+    for( uint32_t i = 0; i < nAdapter; ++i )
+    {
+        if( mD3D->GetAdapterMonitor( i ) == mMonitor )
+        {
+            mAdapter = i;
+            break;
+        }
+    }
+
+    // prepare device type candidates
+    std::vector<D3DDEVTYPE> devtypes;
+    if( !mInitParams.refDevice ) devtypes.push_back( D3DDEVTYPE_HAL );
+    devtypes.push_back( D3DDEVTYPE_REF );
+    devtypes.push_back( D3DDEVTYPE_NULLREF );
+
+    // create device
+    HRESULT r = D3D_OK;
+    for( size_t t = 0; t < devtypes.size(); ++ t )
+    {
+        mDevType = devtypes[t];
+
+        // check device type
+        D3DCAPS9 caps;
+        r = mD3D->GetDeviceCaps( mAdapter, mDevType, &caps );
+        if( D3DERR_NOTAVAILABLE == r ) continue;
+        if( D3D_OK != r )
+        {
+            D3DAPP_WARN( DXGetErrorString9(r) );
+            continue;
+        }
+
+        if( !mInitParams.hwvp || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
+        {
+            mBehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+        }
+#if GN_DEBUG
+        // use pure device only in non-debug build
+        else if( D3DDEVCAPS_PUREDEVICE & caps.DevCaps )
+        {
+            mBehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_PUREDEVICE;
+        }
+#endif
+        else
+        {
+            mBehaviorFlags = D3DCREATE_MIXED_VERTEXPROCESSING;
+        }
+
+        // device found!
+        break;
+    }
+
+#endif // GN_XENON
+
+    // create device
+	DX_CHECK_RV( mD3D->CreateDevice(
+            mAdapter,
+            mDevType,
+            mWindow,
+            mBehaviorFlags,
+            &mPresentParams,
+            &mDevice ),
+        false );
+
+    // get device caps
+    DX_CHECK_RV( mDevice->GetDeviceCaps( &mDevCaps ), false );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::d3dapp::D3D::setupPresentParameters()
+{
+#if GN_XENON
+    // setup present parameters and create device
+	ZeroMemory( &mPresentParams, sizeof(mPresentParams) );
     mPresentParams.EnableAutoDepthStencil     = TRUE;
     mPresentParams.AutoDepthStencilFormat     = D3DFMT_D24S8;
     mPresentParams.Windowed                   = false; // Xenon has no windowed mode
     mPresentParams.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     mPresentParams.BackBufferCount            = 1;
     mPresentParams.BackBufferFormat           = D3DFMT_X8R8G8B8;
-    mPresentParams.BackBufferWidth            = params.width;
-    mPresentParams.BackBufferHeight           = params.height;
+    mPresentParams.BackBufferWidth            = mInitParams.width;
+    mPresentParams.BackBufferHeight           = mInitParams.height;
     mPresentParams.SwapEffect                 = D3DSWAPEFFECT_COPY;
     mPresentParams.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
     mPresentParams.hDeviceWindow              = mWindow;
     mPresentParams.MultiSampleType            = D3DMULTISAMPLE_NONE;
     mPresentParams.MultiSampleQuality         = 0;
     mPresentParams.Flags                      = 0;
-
-	DX_CHECK_RV( mD3D->CreateDevice(
-            D3DADAPTER_DEFAULT,
-            D3DDEVTYPE_HAL,
-            mWindow,
-            D3DCREATE_HARDWARE_VERTEXPROCESSING,
-            &mPresentParams,
-            &mDevice ),
-        false );
 #else
 
+    UINT width, height;
+    if( mInitParams.fullScreen )
+    {
+        width = mInitParams.width;
+        height = mInitParams.height;
+    }
+    else
+    {
+        sGetClientSize( mWindow, width, height );
+    }
+
+	ZeroMemory( &mPresentParams, sizeof(mPresentParams) );
     mPresentParams.EnableAutoDepthStencil     = 1;
     mPresentParams.AutoDepthStencilFormat     = D3DFMT_D24S8;
-    mPresentParams.Windowed                   = !params.fullScreen;
+    mPresentParams.Windowed                   = !mInitParams.fullScreen;
     mPresentParams.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     mPresentParams.BackBufferCount            = 0;
     mPresentParams.BackBufferFormat           = D3DFMT_X8R8G8B8;
-    mPresentParams.BackBufferWidth            = params.width;
-    mPresentParams.BackBufferHeight           = params.height;
+    mPresentParams.BackBufferWidth            = width;
+    mPresentParams.BackBufferHeight           = height;
     mPresentParams.SwapEffect                 = D3DSWAPEFFECT_COPY;
     mPresentParams.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
     mPresentParams.hDeviceWindow              = mWindow;
     mPresentParams.MultiSampleType            = D3DMULTISAMPLE_NONE;
     mPresentParams.MultiSampleQuality         = 0;
     mPresentParams.Flags                      = 0;
-
-	DX_CHECK_RV( mD3D->CreateDevice(
-            D3DADAPTER_DEFAULT,
-            params.refDevice ? D3DDEVTYPE_REF : D3DDEVTYPE_HAL,
-            mWindow,
-            params.hwvp ? D3DCREATE_HARDWARE_VERTEXPROCESSING : D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-            &mPresentParams,
-            &mDevice ),
-        false );
 #endif
+
+    D3DAPP_INFO( "Back buffer size: %dx%d.",
+        mPresentParams.BackBufferWidth,
+        mPresentParams.BackBufferHeight );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::d3dapp::D3D::restoreDevice()
+{
+    GN_GUARD;
+
+    D3DAPP_INFO( "Restore D3D device" );
+
+    // release all D3D resources
+    gTexMgr.dispose();
+    gMeshMgr.dispose();
+
+    // reset device
+    setupPresentParameters();
+    DX_CHECK_RV( mDevice->Reset( &mPresentParams ), false );
 
     // success
     return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::d3dapp::D3D::recreateDevice()
+{
+    GN_GUARD;
+
+    D3DAPP_INFO( "Recreate D3D device" );
+
+    // release all D3D resources
+    gTexMgr.dispose();
+    gMeshMgr.dispose();
+    gVSMgr.dispose();
+    gPSMgr.dispose();
+    gEffectMgr.dispose();
+
+    // delete D3D device
+    safeRelease( mDevice );
+    safeRelease( mD3D );
+
+    // recreate devices
+    return createD3D();
 
     GN_UNGUARD;
 }
@@ -482,14 +687,24 @@ LRESULT GN::d3dapp::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
             ::PostQuitMessage(0);
             return 0;
 
-        // 防止不必要的清除背景的操作
-        case WM_ERASEBKGND :
-            return 1;
+        case WM_ENTERSIZEMOVE :
+            mInsideSizeMove = true;
+            break;
+
+        case WM_EXITSIZEMOVE :
+            mInsideSizeMove = false;
+            mSizeChanged = true;
+            break;
 
         case WM_SIZE :
             //D3DAPP_INFO( "window resize to %dx%d", LOWORD(lParam), HIWORD(lParam) ) );
             mMinimized = ( SIZE_MINIMIZED == wp );
+            if( !mMinimized && !mInsideSizeMove ) mSizeChanged = true;
             break;
+
+        // 防止不必要的清除背景的操作
+        case WM_ERASEBKGND :
+            return 1;
     }
 
     return ::DefWindowProc( wnd, msg, wp, lp );
