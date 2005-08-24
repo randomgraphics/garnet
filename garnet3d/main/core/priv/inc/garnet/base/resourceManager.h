@@ -25,7 +25,10 @@ namespace GN
         template<class C>
         struct SingletonSelector<C,0>
         {
-            typedef struct {} type; //!< non-singleton type
+            //!
+            //! non-singleton type
+            //!
+            struct type {};
         };
     }
 
