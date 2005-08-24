@@ -8,6 +8,36 @@ class StringTest : public CxxTest::TestSuite
 {
 public:
 
+    void testAppend()
+    {
+        GN::StrW s1;
+
+        s1.append( L"1111", 3 );
+        TS_ASSERT_EQUALS( s1, L"111" );
+
+        s1.clear();
+        s1.append( L"2222", 4 );
+        TS_ASSERT_EQUALS( s1, L"2222" );
+
+        s1.clear();
+        s1.append( L"3333", 5 );
+        TS_ASSERT_EQUALS( s1, L"3333" );
+
+        s1.clear();
+        s1.append( GN::StrW(L"4444") );
+        TS_ASSERT_EQUALS( s1, L"4444" );
+
+        s1.append( L'5' );
+        TS_ASSERT_EQUALS( s1, L"44445" );
+    }
+
+    void testTrim()
+    {
+        GN::StrW s1( L" 123 " );
+        s1.trim( L' ' );
+        TS_ASSERT_EQUALS( s1, L"123" );
+    }
+
     void testCtor()
     {
         {
