@@ -15,6 +15,7 @@
 #include <windows.h>
 #endif
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
