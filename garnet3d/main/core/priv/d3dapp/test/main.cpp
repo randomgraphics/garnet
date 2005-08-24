@@ -3,9 +3,8 @@
 
 bool init()
 {
-    LPDIRECT3DBASETEXTURE9 tex = gTexMgr.getResource( "haha.bmp" );
-
-    return tex != 0;
+    gTexMgr.getResource( "haha.bmp" );
+    return true;
 }
 
 void quit()
