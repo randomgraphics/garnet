@@ -310,8 +310,9 @@ namespace GN
         //! \param pattern    搜索什么文件
         //! \param recursive  是否递归搜索子目录
         //! \param useRegex   是否使用正则匹配
+        //! \return           返回参数 result
         //!
-        void
+        std::vector<StrA> &
         glob(
             std::vector<StrA> & result,
             const StrA & dirName,
