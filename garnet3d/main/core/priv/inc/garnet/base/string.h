@@ -313,7 +313,7 @@ namespace GN
         //!
         //! Replace specific character with another
         //!
-        void replace( char from, char to )
+        void replace( CHAR from, CHAR to )
         {
             CHAR * p = mPtr;
             for( size_t i = 0; i < mLen; ++i, ++p )
@@ -367,7 +367,7 @@ namespace GN
         //!
         //! Trim characters for both side
         //!
-        void trim( char ch )
+        void trim( CHAR ch )
         {
             trimRight( ch );
             trimLeft( ch );
@@ -376,7 +376,7 @@ namespace GN
         //!
         //! Trim left characters
         //!
-        void trimLeft( char ch )
+        void trimLeft( CHAR ch )
         {
             CHAR * p = mPtr;
             CHAR * e = mPtr+mLen;
@@ -395,7 +395,7 @@ namespace GN
         //!
         //! Trim right characters
         //!
-        void trimRight( char ch )
+        void trimRight( CHAR ch )
         {
             if( 0 == mLen ) return;
             CHAR * p = mPtr + mLen - 1;
