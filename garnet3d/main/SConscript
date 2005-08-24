@@ -273,7 +273,7 @@ def default_env( options = None ):
 
     # 定制不同平台的编译选项
     if 'win32' == env['PLATFORM']:
-        libs['common'] += Split('kernel32 user32 gdi32')
+        libs['common'] += Split('kernel32 user32 gdi32 shlwapi')
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
