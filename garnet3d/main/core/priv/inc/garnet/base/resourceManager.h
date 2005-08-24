@@ -25,7 +25,7 @@ namespace GN
         template<class C>
         struct SingletonSelector<C,0>
         {
-            struct type {}; //!< non-singleton type
+            typedef struct {} type; //!< non-singleton type
         };
     }
 
@@ -223,6 +223,24 @@ namespace GN
             item->disposed = true;
             return h;
 
+            GN_UNGUARD;
+        }
+
+        //!
+        //! Add a bunch of new resources to manager
+        //!
+        void addResources(
+            const std::vector<StrA> & names,
+            const Creator & creator = Creator(),
+            const Creator & nullor  = Creator(),
+            bool overrideExistingResource = false )
+        {
+            GN_GUARD;
+            std::vector<StrA>::const_iterator i;
+            for( i = names.begin(); i != names.end(); ++i )
+            {
+                addResources( (*i), creator, nullor, overrideExistingResource );
+            }
             GN_UNGUARD;
         }
 
