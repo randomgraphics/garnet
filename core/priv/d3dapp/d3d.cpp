@@ -596,6 +596,7 @@ bool GN::d3dapp::D3D::restoreDevice()
     // release all D3D resources
     gTexMgr.dispose();
     gMeshMgr.dispose();
+    gEffectMgr.dispose();
 
     // reset device
     setupPresentParameters();
