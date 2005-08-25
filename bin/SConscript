@@ -28,8 +28,8 @@ if 'GnCoreBin' in GN_targets: env.Depends( GN_targets['GnTest'], GN_targets['GnC
 # HACK: Make GnTest.exe depends on GnTest.exe.manifest, to make sure GNTest.exe.manifest are copied
 #       to sample directory, before execution of GnTest.exe
 if 'vs8' == GN_conf['compiler']:
-    sz = len(GN_targets['GnTest'])
-    if sz > 1: env.Depends( GN_targets['GnTest'][0], GN_targets['GnTest'][sz-1] )
+    for x in GN_targets['GnTest'][1:]:
+        env.Depends( GN_targets['GnTest'][0], x )
 
 # run unit test
 def run_test( target, source, env ):
