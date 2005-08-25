@@ -1,7 +1,7 @@
 TODO
 ====
 
-- implement POSIX version path functions.
+- implement POSIX version of GN::path:glob()
 - UT for path functions: resolve, glob
 
 DONE
