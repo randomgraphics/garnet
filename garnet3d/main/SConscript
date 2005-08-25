@@ -183,10 +183,13 @@ def GN_build_shared_library( env, target, sources=[],
             else: libs = Split('GnCoreLib GnBase GnExtern')
         add_libs( env, libs )
         result = env.SharedLibrary( target, sources )
-        manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target )
-        if os.path.exists( manifest ):
+
+        # handle manifest file
+        if 'vs8' == GN_conf['compiler']:
+            manifest = File( os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target ) )
             env.SideEffect( manifest, result )
             result += [manifest]
+
         if addToTargetList: GN_targets[target] = result
         return result
 
@@ -201,11 +204,13 @@ def GN_build_program( env, target, sources=[],
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if 0 == len(libs): libs = Split('GnCoreLib GnBase GnExtern')
     result = env.Program( target, sources + [ '#' + GN_targets[x][0].path for x in libs ] )
-    manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target )
-    if os.path.exists( manifest ):
-        node = File(manifest)
-        env.SideEffect( node, result )
-        result += [node]
+
+    # handle manifest file
+    if 'vs8' == GN_conf['compiler']:
+        manifest = File( os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target ) )
+        env.SideEffect( manifest, result )
+        result += [manifest]
+
     if( addToTargetList ): GN_targets[target] = result
     return result
 
