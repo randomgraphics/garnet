@@ -17,4 +17,4 @@ cxxtest = env.Command(
     )
 
 # build unit test application
-GN_targets['GnTest'] = GN_func["build_program"]( env, 'GnTest', ['testCommon.cpp',cxxtest] )
+env.GN_build_program( 'GnTest', ['testCommon.cpp',cxxtest] )

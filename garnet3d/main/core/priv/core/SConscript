@@ -3,13 +3,12 @@ Import( 'env GN_targets GN_func GN_conf' )
 env = env.Copy()
 env.Append( CPPDEFINES = ['_GN_CORE'] )
 
-core = GN_func['build_shared_library'](
-    env,
+core = env.GN_build_shared_library(
     'GnCore',
     GN_func['glob']('*.cpp'),
     'pch.h',
     'pch.cpp',
-    'GnCore.pdb' )
+    addToTargetList=0 )
 
 if GN_conf['static'] or 'posix' == env['PLATFORM']:
     GN_targets['GnCoreLib'] = core
