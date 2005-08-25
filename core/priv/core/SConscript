@@ -12,7 +12,10 @@ core = env.GN_build_shared_library(
 if GN_conf['static'] or 'posix' == env['PLATFORM']:
     GN_targets['GnCoreLib'] = core
 elif 'win32' == env['PLATFORM']:
-    GN_targets['GnCoreBin'] = [ core[0], core[1] ]
+    if 'vs8' == GN_conf['compiler']:
+        GN_targets['GnCoreBin'] = [ core[0], core[1], core[4] ]
+    else:
+        GN_targets['GnCoreBin'] = [ core[0], core[1] ]
     GN_targets['GnCoreLib'] = [ core[2], core[3] ]
 elif 'cygwin' == env['PLATFORM']:
     GN_targets['GnCoreBin'] = core
