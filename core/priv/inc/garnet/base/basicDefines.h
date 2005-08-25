@@ -122,12 +122,12 @@
 //!
 //! Public/global function/variable tag
 //!
-#if defined(_LIB)
-#define GN_PUBLIC // GN_PUBLIC is meaningless for static library
+#if defined(_GN_LIB) || defined(_LIB)
+#define GN_PUBLIC             // GN_PUBLIC is meaningless for static library
 #elif defined(_GN_CORE)
-#define GN_PUBLIC   GN_EXPORT
+#define GN_PUBLIC   GN_EXPORT // Only core module exports symbols
 #else
-#define GN_PUBLIC   GN_IMPORT
+#define GN_PUBLIC   GN_IMPORT // All other modules only imports symbols
 #endif
 
 //!
