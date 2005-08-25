@@ -38,6 +38,31 @@ public:
         TS_ASSERT_EQUALS( s1, L"123" );
     }
 
+    void testTrimUntil()
+    {
+        struct Local
+        {
+            static inline bool stop( wchar_t ch ) { return L'3' == ch; }
+        };
+        
+        GN::StrW s1( L"12345" );
+        s1.trimRightUntil( &Local::stop );
+        TS_ASSERT_EQUALS( s1, L"123" );
+    }
+
+    void testInsert()
+    {
+        GN::StrW s1( L"123" );
+        s1.insert( 0, L'0' );
+        TS_ASSERT_EQUALS( s1, L"0123" );
+        s1.insert( 1, L' ' );
+        TS_ASSERT_EQUALS( s1, L"0 123" );
+        s1.insert( 5, L'4' );
+        TS_ASSERT_EQUALS( s1, L"0 1234" );
+        s1.insert( 100, L'5' );
+        TS_ASSERT_EQUALS( s1, L"0 12345" );
+    }
+
     void testCtor()
     {
         {

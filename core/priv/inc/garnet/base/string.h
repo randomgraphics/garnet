@@ -132,9 +132,9 @@ namespace GN
         //!
         //! default constructor
         //!
-        Str() : mLen(0), mCaps(1)
+        Str() : mLen(0), mCaps(0)
         {
-            mPtr = alloc(2);
+            mPtr = alloc(mCaps);
             mPtr[0] = 0;
         }
 
@@ -143,7 +143,7 @@ namespace GN
         //!
         Str( const Str & s ) : mLen(s.mLen), mCaps(calcCaps(s.mLen))
         {
-            mPtr = alloc(mCaps+1);
+            mPtr = alloc(mCaps);
             ::memcpy( mPtr, s.mPtr, (mLen+1)*sizeof(CHAR) );
         }
 
@@ -154,16 +154,16 @@ namespace GN
         {
             if ( 0 == s )
             {
-                mCaps = 1;
+                mCaps = 0;
                 mLen = 0;
-                mPtr = alloc(2);
+                mPtr = alloc(mCaps);
                 mPtr[0] = 0;
             }
             else
             {
                 l = strLen<CHAR>(s,l);
                 mCaps = calcCaps(l);
-                mPtr = alloc(mCaps+1);
+                mPtr = alloc(mCaps);
                 mLen = l;
                 ::memcpy( mPtr, s, l*sizeof(CHAR) );
                 mPtr[l] = 0;
@@ -316,6 +316,28 @@ namespace GN
         size_t getCaps() const { return mCaps; }
 
         //!
+        //! Insert a character at specific position
+        //!
+        void insert( size_t pos, CHAR ch )
+        {
+            if( 0 == ch ) return;
+            if( pos >= mLen )
+            {
+                append( ch );
+            }
+            else
+            {
+                setCaps( mLen + 1 );
+                for( size_t i = mLen+1; i > pos; --i )
+                {
+                    mPtr[i] = mPtr[i-1];
+                }
+                mPtr[pos] = ch;
+                ++mLen;
+            }
+        }
+
+        //!
         //! get last character of the string. If string is empty, return 0.
         //!
         CHAR last() const { return mLen>0 ? mPtr[mLen-1] : (CHAR)0; }
@@ -339,8 +361,8 @@ namespace GN
         {
             if ( mCaps >= newCaps ) return;
             mCaps = calcCaps(newCaps);
-            CHAR * newPtr = alloc(mCaps+1);
-            ::memcpy( newPtr, mPtr, sizeof(CHAR)*mLen );
+            CHAR * newPtr = alloc(mCaps);
+            ::memcpy( newPtr, mPtr, sizeof(CHAR)*(mLen+1) );
             dealloc(mPtr);
             mPtr = newPtr;
         }
@@ -410,6 +432,22 @@ namespace GN
             if( 0 == mLen ) return;
             CHAR * p = mPtr + mLen - 1;
             while( p > mPtr && ch == *p )
+            {
+                *p = 0;
+                --p;
+            }
+            mLen = p - mPtr + 1;
+        }
+
+        //!
+        //! Trim right characters until meet a character that match specific condition.
+        //!
+        template<typename PRED>
+        void trimRightUntil( const PRED & pred )
+        {
+            if( 0 == mLen ) return;
+            CHAR * p = mPtr + mLen - 1;
+            while( p > mPtr && !pred(*p) )
             {
                 *p = 0;
                 --p;
@@ -606,19 +644,20 @@ namespace GN
 
     private:
 
-        size_t calcCaps( size_t caps )
+        size_t calcCaps( size_t len )
         {
-            caps |= caps >> 16;
-            caps |= caps >> 8;
-            caps |= caps >> 4;
-            caps |= caps >> 2;
-            caps |= caps >> 1;
-            return caps;
+            len |= len >> 16;
+            len |= len >> 8;
+            len |= len >> 4;
+            len |= len >> 2;
+            len |= len >> 1;
+            return len;
         }
 
+        // Allocate a memory buffer that can hold at least 'len' characters, and one extra '\0'.
         static CHAR * alloc( size_t len )
         {
-            return (CHAR*)memAlloc( sizeof(CHAR) * len );
+            return (CHAR*)memAlloc( sizeof(CHAR) * (len+1) );
         }
 
         static void dealloc( CHAR * ptr )
@@ -626,8 +665,8 @@ namespace GN
             if ( ptr ) memFree( ptr );
         }
 
-        size_t mLen;   //!< string length in charecters, not including pending zero
-        size_t mCaps;  //!< string buffer size in characters. Must >= mLen+1.
+        size_t mLen;   //!< How many charecters in the string, not including pending zero.
+        size_t mCaps;  //!< How many characters can we hold?
         CHAR * mPtr;   //!< string buffer pointer.
 
         friend Str<char> wcs2mbs( const wchar_t *, size_t );
