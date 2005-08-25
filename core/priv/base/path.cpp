@@ -42,18 +42,37 @@ static inline GN::StrA sPwd()
 //
 //
 // ----------------------------------------------------------------------------
-struct AppDir
+static inline GN::StrA sGetAppDir()
 {
-    GN::StrA appDir;
-    GN::StrA startupDir;
-    
-    AppDir()
+#if GN_WINPC
+    char buf[MAX_PATH_LENGTH+1];
+    GN_WIN_CHECK_RV( DWORD, GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
+    return GN::path::getParent( buf );
+#elif GN_XENON
+    return "game:";
+#elif GN_POSIX
+    char buf[MAX_PATH_LENGTH+1];
+    sprintf( buf, "/proc/%d/exename", getpid() );
+    GN::AnsiFile fp;
+    if( fp.open(buf,"r") )
     {
-        startupDir = sPwd();
+        if( NULL == fgets( buf, MAX_PATH_LENGTH, fp ) )
+        {
+            GN_ERROR( "Fail to open PID file." );
+        }
+        else
+        {
+            // success
+            return GN::path::getParent( buf );
+        }
     }
-};
-
-static AppDir sAppDir;
+    else
+    {
+        GN_ERROR( "Fail to open file '%s' to get application name.", buf );
+    }
+    return GN::StrA::EMPTYSTR;
+#endif
+}
 
 //
 // 
@@ -67,7 +86,7 @@ static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
     char from = '\\';
     char to = '/';
 #endif
-    
+
     // convert 'from' to 'to'
     result.setCaps( path.size() );
     for( size_t i = 0; i < path.size(); ++i )
@@ -92,6 +111,23 @@ static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
         result.trimRight( to );
         if( result.empty() )
             result.append( to ); // special case for "/" and "\\"
+    }
+
+    // try convert "aaa:bbb" to "aaa:/bbb",
+    // but leave "aaa:" and "aaa/bbb:ccc" as it was.
+    bool foundSlash = false;
+    for( size_t i = 0; i < result.size(); ++i )
+    {
+        char ch = result[i];
+        foundSlash |= to==ch;
+        if( ':' == ch &&
+            !foundSlash &&
+            i < result.size()-1 &&
+            result[i+1] != to )
+        {
+            result.insert( i+1, to );
+            break;
+        }
     }
 }
 
@@ -157,35 +193,36 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
 //
 //
 // ----------------------------------------------------------------------------
+static GN::StrA sStartupDir = sPwd();
 void GN::path::toNative( StrA & result, const StrA & path )
 {
-    sNormalizePathSeparator( result, path );
-
     // handle path prefixes
-    StrA root;
-    size_t pos;
-    if( "app:" == result.subString(0,4) )
+    StrA tmp;
+    size_t pos = 0;
+    if( "app:" == path.subString(0,4) )
     {
+        static GN::StrA sAppDir = sGetAppDir();
         pos = 4;
-        root = sAppDir.appDir;
+        tmp = sAppDir;
+        tmp.append( PATH_SEPARATOR );
     }
     else if( "pwd:" == path.subString(0,4) )
     {
         pos = 4;
-        root = sPwd();
+        tmp = sPwd();
+        tmp.append( PATH_SEPARATOR );
     }
     else if( "startup:" == path.subString(0,8) )
     {
         pos = 8;
-        root = sAppDir.startupDir;
+        tmp = sStartupDir;
+        tmp.append( PATH_SEPARATOR );
     }
-    else return; // ======================>
 
-    if( result.size() <= pos || result[pos] != PATH_SEPARATOR )
-    {
-        root.append( PATH_SEPARATOR );
-    }
-    result = root + result.subString(pos,(size_t)-1);
+    tmp.append( path.subString( pos, (size_t)-1 ) );
+
+    // normalize it
+    sNormalizePathSeparator( result, tmp );
 }
 
 //
@@ -250,11 +287,19 @@ bool GN::path::isDir( const StrA & path )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::path::getParent( StrA & result, const StrA &  path )
+void GN::path::getParent( StrA & result, const StrA & path )
 {
-    GN_UNUSED_PARAM(result);
-    GN_UNUSED_PARAM(path);
-    GN_UNIMPL();
+    struct Local
+    {
+        static inline bool isPathSeperator( char ch )
+        {
+            return ch == PATH_SEPARATOR;
+        }
+    };
+
+    sNormalizePathSeparator( result, path );
+    result.trimRightUntil( &Local::isPathSeperator );
+    result.trimRight( PATH_SEPARATOR );
 }
 
 //
