@@ -7,8 +7,7 @@ core = env.GN_build_shared_library(
     'GnCore',
     GN_func['glob']('*.cpp'),
     'pch.h',
-    'pch.cpp',
-    addToTargetList=0 )
+    'pch.cpp' )
 
 if GN_conf['static'] or 'posix' == env['PLATFORM']:
     GN_targets['GnCoreLib'] = core
