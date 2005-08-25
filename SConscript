@@ -155,16 +155,6 @@ def GN_build_static_library( env, target, sources=[],
     if addToTargetList: GN_targets[target] = result
     return result
 
-# Add libraries to link list of a program or DLL
-def GN_add_libs( env, libs ):
-    libs.reverse()
-    for lib in libs:
-        dir = os.path.dirname(GN_targets[lib][0].abspath)
-        if 'GnCoreLib' == lib:
-            env.Prepend( LIBPATH = [dir], LIBS = ['GnCore'] )
-        else:
-            env.Prepend( LIBPATH = [dir], LIBS = [lib] )
-
 # Брвы shared library
 def GN_build_shared_library( env, target, sources=[],
                              pchstop=0, pchcpp=0,
@@ -174,13 +164,24 @@ def GN_build_shared_library( env, target, sources=[],
     if GN_conf['static']:
         return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb, addToTargetList )
     else:
+
+        # Add libraries to link list
+        def add_libs( env, libs ):
+            libs.reverse()
+            for lib in libs:
+                dir = os.path.dirname(GN_targets[lib][0].abspath)
+                if 'GnCoreLib' == lib:
+                    env.Prepend( LIBPATH = [dir], LIBS = ['GnCore'] )
+                else:
+                    env.Prepend( LIBPATH = [dir], LIBS = [lib] )
+
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
         if 0 == len(libs):
             if 'GnCore' == target: libs = Split('GnBase GnExtern')
             else: libs = Split('GnCoreLib GnBase GnExtern')
-        GN_add_libs( env, libs )
+        add_libs( env, libs )
         result = env.SharedLibrary( target, sources )
         manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target )
         if os.path.exists( manifest ):
@@ -199,8 +200,7 @@ def GN_build_program( env, target, sources=[],
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if 0 == len(libs): libs = Split('GnCoreLib GnBase GnExtern')
-    GN_add_libs( env, libs )
-    result = env.Program( target, sources )
+    result = env.Program( target, sources + [ '#' + GN_targets[x][0].path for x in libs ] )
     manifest = os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target )
     if os.path.exists( manifest ):
         node = File(manifest)
