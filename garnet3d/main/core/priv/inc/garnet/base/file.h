@@ -157,6 +157,11 @@ namespace GN
         //!
         void close() throw();
 
+        //!
+        //! Convert to ANSI FILE *
+        //!
+        operator FILE* () const { GN_ASSERT(mFile); return mFile; }
+
         // from File
     public:
         size_t read( void * buffer, size_t size );
