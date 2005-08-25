@@ -336,7 +336,7 @@ bool GN::d3dapp::D3D::present()
     else
     {
         // fatal error
-        D3DAPP_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9(r) );
+        D3DAPP_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9A(r) );
         return false;
     }
 
@@ -482,7 +482,7 @@ bool GN::d3dapp::D3D::createD3D()
         if( D3DERR_NOTAVAILABLE == r ) continue;
         if( D3D_OK != r )
         {
-            D3DAPP_WARN( DXGetErrorString9(r) );
+            D3DAPP_WARN( DXGetErrorString9A(r) );
             continue;
         }
 
