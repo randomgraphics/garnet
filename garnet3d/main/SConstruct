@@ -171,7 +171,7 @@ for x in all_targets:
     env.Alias( x[0], x[1] )
     env.Alias( 'all', x[1] )
     env.Default( x[1] )
-env.Default( Split('sdk') )
+env.Default( Split('samples sdk') )
 
 ################################################################################
 #
