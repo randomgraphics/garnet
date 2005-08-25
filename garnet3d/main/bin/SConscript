@@ -30,7 +30,6 @@ if 'GnCoreBin' in GN_targets: env.Depends( GN_targets['GnTest'], GN_targets['GnC
 if 'vs8' == GN_conf['compiler']:
     for target in Split('GnTest GnCoreBin'):
         for x in GN_targets[target][1:]:
-            print '%s depends on %s'%(GN_targets[target][0], x)
             env.Depends( GN_targets[target][0], x )
 
 # run unit test
