@@ -112,20 +112,20 @@ def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
         env['PCHSTOP'] = pchstop
 
 # ±‡“Î static object
-def GN_build_static_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_static_object( env, source=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return env.Object(source)
 
 # ±‡“Î static object list
-def GN_build_static_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_static_objects( env, sources=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
     env.Append( CPPDEFINES=['_GN_LIB'] )
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return [env.Object(x) for x in sources]
 
 # ±‡“Î shared object
-def GN_build_shared_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_shared_object( env, source=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
@@ -134,7 +134,7 @@ def GN_build_shared_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
         return env.SharedObject(source)
 
 # ±‡“Î shared object list
-def GN_build_shared_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
+def GN_build_shared_objects( env, sources=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
@@ -143,12 +143,17 @@ def GN_build_shared_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
         return [env.SharedObject(x) for x in sources]
 
 # ±‡“Î static library
-def GN_build_static_library(env,target,sources=[],pchstop=0, pchcpp=0,pdb=0):
+def GN_build_static_library( env, target, sources=[],
+                             pchstop=0, pchcpp=0,
+                             pdb=0,
+                             addToTargetList=1 ):
     env = env.Copy()
     env.Append( CPPDEFINES=['_GN_LIB'] )
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    return env.Library(target,sources)
+    result = env.Library(target,sources)
+    if addToTargetList: GN_targets[target] = result
+    return result
 
 # Add libraries to link list of a program or DLL
 def GN_add_libs( env, libs ):
@@ -161,9 +166,13 @@ def GN_add_libs( env, libs ):
             env.Prepend( LIBPATH = [dir], LIBS = [lib] )
 
 # ±‡“Î shared library
-def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
+def GN_build_shared_library( env, target, sources=[],
+                             pchstop=0, pchcpp=0,
+                             pdb=0,
+                             libs=[],
+                             addToTargetList=1 ):
     if GN_conf['static']:
-        return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb )
+        return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb, addToTargetList )
     else:
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
@@ -177,10 +186,15 @@ def GN_build_shared_library(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=
         if os.path.exists( manifest ):
             env.SideEffect( manifest, result )
             result += [manifest]
+        if addToTargetList: GN_targets[target] = result
         return result
 
 # ±‡“Îø…÷¥––Œƒº˛
-def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
+def GN_build_program( env, target, sources=[],
+                      pchstop=0, pchcpp=0,
+                      pdb=0,
+                      libs=[],
+                      addToTargetList=1 ):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
@@ -192,7 +206,18 @@ def GN_build_program(env,target,sources=[],pchstop=0,pchcpp=0,pdb=0,libs=[]):
         node = File(manifest)
         env.SideEffect( node, result )
         result += [node]
+    if( addToTargetList ): GN_targets[target] = result
     return result
+
+# register custom builder to scons.
+from SCons.Script.SConscript import SConsEnvironment
+SConsEnvironment.GN_build_static_object = GN_build_static_object
+SConsEnvironment.GN_build_static_objects = GN_build_static_objects
+SConsEnvironment.GN_build_shared_object = GN_build_shared_object
+SConsEnvironment.GN_build_shared_objects = GN_build_shared_objects
+SConsEnvironment.GN_build_static_library = GN_build_static_library
+SConsEnvironment.GN_build_shared_library = GN_build_shared_library
+SConsEnvironment.GN_build_program = GN_build_program
 
 ################################################################################
 #
@@ -522,14 +547,7 @@ GN_func = {
     'error'                 : GN_error,
     'glob'                  : GN_glob,
     'relpath'               : GN_relpath,
-    #'build_setup_PCH_PDB'   : GN_setup_PCH_PDB,
-    'build_static_object'   : GN_build_static_object,
-    'build_static_objects'  : GN_build_static_objects,
-    'build_shared_object'   : GN_build_shared_object,
-    'build_shared_objects'  : GN_build_shared_objects,
-    'build_static_library'  : GN_build_static_library,
-    'build_shared_library'  : GN_build_shared_library,
-    'build_program'         : GN_build_program,
+    #'setup_PCH_PDB'         : GN_setup_PCH_PDB,
     }
 
 env.Export(

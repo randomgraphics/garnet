@@ -1,11 +1,9 @@
 Import( 'env GN_targets GN_func' )
 
 if 'win32' == env['PLATFORM']:
-    GN_targets['GnD3DApp'] = GN_func['build_static_library'](
-        env,
+    env.GN_build_static_library(
         'GnD3DApp',
         GN_func['glob']('*.cpp'),
         'pch.h',
-        'pch.cpp',
-        'GnD3DApp.pdb' )
+        'pch.cpp' )
     SConscript( 'test/SConscript' )
