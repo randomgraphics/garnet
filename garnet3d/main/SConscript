@@ -120,7 +120,7 @@ def GN_build_static_object(env,source=[],pchstop=0,pchcpp=0,pdb=0):
 # Брвы static object list
 def GN_build_static_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
     env = env.Copy()
-    env.Append( CPPDEFINES=['_LIB'] )
+    env.Append( CPPDEFINES=['_GN_LIB'] )
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return [env.Object(x) for x in sources]
 
@@ -145,7 +145,7 @@ def GN_build_shared_objects(env,sources=[],pchstop=0,pchcpp=0,pdb=0):
 # Брвы static library
 def GN_build_static_library(env,target,sources=[],pchstop=0, pchcpp=0,pdb=0):
     env = env.Copy()
-    env.Append( CPPDEFINES=['_LIB'] )
+    env.Append( CPPDEFINES=['_GN_LIB'] )
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return env.Library(target,sources)
@@ -298,7 +298,7 @@ def default_env( options = None ):
 
         if float(env['MSVS_VERSION']) >= 8.0:
             # Note: disable CRT deprecate warnings by now.
-            ccflags['common']   += Split('/W4 /WX /D_CRT_SECURE_NO_DEPRECATE')
+            ccflags['common']   += Split('/W4 /WX /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE')
             cxxflags['common']  += ['/EHa']
             linkflags['common'] += Split( '/NODEFAULTLIB:libcp.lib' )
         else:
