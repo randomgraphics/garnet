@@ -1,1 +1,1 @@
-SConscript( dirs=Split('base core d3dapp test doc') )
+SConscript( dirs=Split('base core d3d test doc') )

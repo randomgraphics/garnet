@@ -6,7 +6,7 @@
 // \author  chenlee (2005.4.18)
 // *****************************************************************************
 
-#include "garnet/GnBase.h"
+#include "garnet/GNbase.h"
 
 #if GN_XENON
 #include <xtl.h>

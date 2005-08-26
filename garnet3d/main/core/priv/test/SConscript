@@ -11,10 +11,10 @@ if GN_conf['has_boost']: env.Append( CPPDEFINES = ['HAS_BOOST'] )
 cases   = GN_func['glob']('*.cpp', 'base')
 cxxtest = env.Command(
     'ut.cpp', cases,
-    '%s %s --error-printer --include="garnet/GnBase.h" -o $TARGET ${SOURCES.abspath}'%(
+    '%s %s --error-printer --include="garnet/GNbase.h" -o $TARGET ${SOURCES.abspath}'%(
         sys.executable,
         File('cxxtestgen.py').srcnode().path)
     )
 
 # build unit test application
-env.GN_build_program( 'GnTest', ['testCommon.cpp',cxxtest] )
+env.GN_build_program( 'GNtest', ['testCommon.cpp',cxxtest] )

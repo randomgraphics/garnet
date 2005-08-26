@@ -81,9 +81,9 @@ public:
         TS_ASSERT( GN::path::exist("startup:/SConstruct") );
         TS_ASSERT( GN::path::exist("startup:SConstruct") );
 
-        TS_ASSERT( GN::path::exist("app:GnTest.exe") );
-        TS_ASSERT( GN::path::exist("app:/GnTest.exe") );
-        TS_ASSERT( GN::path::exist("app:\\GnTest.exe") );
+        TS_ASSERT( GN::path::exist("app:GNtest.exe") );
+        TS_ASSERT( GN::path::exist("app:/GNtest.exe") );
+        TS_ASSERT( GN::path::exist("app:\\GNtest.exe") );
 
         TS_ASSERT( GN::path::exist("pwd:") );
         TS_ASSERT( GN::path::exist("pwd:/") );

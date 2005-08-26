@@ -1,6 +1,6 @@
 Import( 'env GN_targets GN_func' )
 
 env.GN_build_program(
-        'GnD3DAppTest',
+        'GNd3dTest',
         GN_func['glob']('*.cpp'),
-        libs=Split('GnD3DApp GnBase GnExtern') )
+        libs=Split('GNd3d GNbase GNextern') )

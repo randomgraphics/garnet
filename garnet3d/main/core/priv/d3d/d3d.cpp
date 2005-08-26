@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "garnet/GnD3DApp.h"
+#include "garnet/GNd3d.h"
 
 #pragma comment(lib, "dxerr9.lib" )
 #if GN_DEBUG
@@ -102,7 +102,7 @@ static bool sLoadVShader( LPDIRECT3DVERTEXSHADER9 & result, const GN::StrA & nam
 {
 	GN_GUARD;
 
-	result = GN::d3dapp::compileVSFromFile( name.cstr() );
+	result = GN::d3d::compileVSFromFile( name.cstr() );
 
 	return 0 != result;
 
@@ -116,7 +116,7 @@ static bool sLoadPShader( LPDIRECT3DPIXELSHADER9 & result, const GN::StrA & name
 {
 	GN_GUARD;
 
-	result = GN::d3dapp::compilePSFromFile( name.cstr() );
+	result = GN::d3d::compilePSFromFile( name.cstr() );
 
 	return 0 != result;
 
@@ -191,37 +191,37 @@ static void sGetClientSize( HWND window, UINT & width, UINT & height )
 #endif
 
 // instance of singletons
-GN_IMPLEMENT_SINGLETON( GN::d3dapp::D3D );
+GN_IMPLEMENT_SINGLETON( GN::d3d::D3D );
 
-static GN::d3dapp::TextureManager sTextureMgr(
+static GN::d3d::TextureManager sTextureMgr(
     GN::makeFunctor(&sLoadTexture),
-    GN::d3dapp::TextureManager::Creator(), // empty nullor
+    GN::d3d::TextureManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DBaseTexture9>) );
-GN_IMPLEMENT_SINGLETON( GN::d3dapp::TextureManager )
+GN_IMPLEMENT_SINGLETON( GN::d3d::TextureManager )
 
-static GN::d3dapp::VShaderManager sVShaderMgr(
+static GN::d3d::VShaderManager sVShaderMgr(
     GN::makeFunctor(&sLoadVShader),
-    GN::d3dapp::VShaderManager::Creator(), // empty nullor
+    GN::d3d::VShaderManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DVertexShader9>) );
-GN_IMPLEMENT_SINGLETON( GN::d3dapp::VShaderManager )
+GN_IMPLEMENT_SINGLETON( GN::d3d::VShaderManager )
 
-static GN::d3dapp::PShaderManager sPShaderMgr(
+static GN::d3d::PShaderManager sPShaderMgr(
     GN::makeFunctor(&sLoadPShader),
-    GN::d3dapp::PShaderManager::Creator(), // empty nullor
+    GN::d3d::PShaderManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DPixelShader9>) );
-GN_IMPLEMENT_SINGLETON( GN::d3dapp::PShaderManager )
+GN_IMPLEMENT_SINGLETON( GN::d3d::PShaderManager )
 
-static GN::d3dapp::EffectManager sEffectMgr(
+static GN::d3d::EffectManager sEffectMgr(
     GN::makeFunctor(&sLoadEffect),
-    GN::d3dapp::EffectManager::Creator(), // empty nullor
+    GN::d3d::EffectManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXEffect>) );
-GN_IMPLEMENT_SINGLETON( GN::d3dapp::EffectManager )
+GN_IMPLEMENT_SINGLETON( GN::d3d::EffectManager )
 
-static GN::d3dapp::MeshManager sMeshMgr(
+static GN::d3d::MeshManager sMeshMgr(
     GN::makeFunctor(&sLoadMesh),
-    GN::d3dapp::MeshManager::Creator(), // empty nullor
+    GN::d3d::MeshManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXMesh>));
-GN_IMPLEMENT_SINGLETON( GN::d3dapp::MeshManager )
+GN_IMPLEMENT_SINGLETON( GN::d3d::MeshManager )
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -230,7 +230,7 @@ GN_IMPLEMENT_SINGLETON( GN::d3dapp::MeshManager )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::init( const D3DInitParams & params )
+bool GN::d3d::D3D::init( const D3DInitParams & params )
 {
     GN_GUARD;
 
@@ -251,7 +251,7 @@ bool GN::d3dapp::D3D::init( const D3DInitParams & params )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3dapp::D3D::quit()
+void GN::d3d::D3D::quit()
 {
     GN_GUARD;
 
@@ -284,7 +284,7 @@ void GN::d3dapp::D3D::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::present()
+bool GN::d3d::D3D::present()
 {
     GN_GUARD_SLOW;
 
@@ -353,7 +353,7 @@ bool GN::d3dapp::D3D::present()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::createWindow()
+bool GN::d3d::D3D::createWindow()
 {
     GN_GUARD;
 
@@ -423,7 +423,7 @@ bool GN::d3dapp::D3D::createWindow()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::createD3D()
+bool GN::d3d::D3D::createD3D()
 {
     GN_GUARD;
 
@@ -530,7 +530,7 @@ bool GN::d3dapp::D3D::createD3D()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3dapp::D3D::setupPresentParameters()
+void GN::d3d::D3D::setupPresentParameters()
 {
 #if GN_XENON
     // setup present parameters and create device
@@ -587,7 +587,7 @@ void GN::d3dapp::D3D::setupPresentParameters()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::restoreDevice()
+bool GN::d3d::D3D::restoreDevice()
 {
     GN_GUARD;
 
@@ -611,7 +611,7 @@ bool GN::d3dapp::D3D::restoreDevice()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::d3dapp::D3D::recreateDevice()
+bool GN::d3d::D3D::recreateDevice()
 {
     GN_GUARD;
 
@@ -637,7 +637,7 @@ bool GN::d3dapp::D3D::recreateDevice()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3dapp::D3D::processWindowMessages()
+void GN::d3d::D3D::processWindowMessages()
 {
     GN_GUARD_SLOW;
 
@@ -669,7 +669,7 @@ void GN::d3dapp::D3D::processWindowMessages()
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT GN::d3dapp::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+LRESULT GN::d3d::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
@@ -717,7 +717,7 @@ LRESULT GN::d3dapp::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT GN::d3dapp::D3D::staticProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+LRESULT GN::d3d::D3D::staticProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     return D3D::getInstance().windowProc( wnd, msg, wp, lp );
 }

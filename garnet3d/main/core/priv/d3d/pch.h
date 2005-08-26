@@ -2,13 +2,13 @@
 #define __GN_D3DAPP_PCH_H__
 // *****************************************************************************
 // \file    pch.h
-// \brief   Precompiled header for d3dapp module
+// \brief   Precompiled header for d3d module
 // \author  chenlee (2005.8.7)
 // *****************************************************************************
 
 #define _GN_CORE
 
-#include "garnet/GnBase.h"
+#include "garnet/GNbase.h"
 
 #ifdef GN_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"

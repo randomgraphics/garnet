@@ -1,12 +1,12 @@
 #ifndef __GN_CORE_GNCORE_H__
 #define __GN_CORE_GNCORE_H__
 // *****************************************************************************
-//! \file    GnCore.h
+//! \file    GNcore.h
 //! \brief   Public interface of garnet core module.
 //! \author  chenlee (2005.8.7)
 // *****************************************************************************
 
-#include "GnBase.h"
+#include "GNbase.h"
 
 namespace GN
 {
@@ -19,6 +19,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of GnCore.h
+//                           End of GNcore.h
 // *****************************************************************************
 #endif // __GN_CORE_GNCORE_H__

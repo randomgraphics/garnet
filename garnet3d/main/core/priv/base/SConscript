@@ -1,7 +1,7 @@
 Import( 'env GN_targets GN_func' )
 
 env.GN_build_static_library(
-    'GnBase',
+    'GNbase',
     GN_func['glob']('*.cpp'),
     'pch.h',
     'pch.cpp' )
