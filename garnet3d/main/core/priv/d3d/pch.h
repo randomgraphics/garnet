@@ -2,7 +2,7 @@
 #define __GN_D3DAPP_PCH_H__
 // *****************************************************************************
 // \file    pch.h
-// \brief   Precompiled header for d3d module
+// \brief   Precompiled header
 // \author  chenlee (2005.8.7)
 // *****************************************************************************
 
