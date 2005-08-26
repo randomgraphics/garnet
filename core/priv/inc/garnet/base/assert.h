@@ -90,7 +90,7 @@
 #define GN_CASSERT( exp ) GN_CASSERT_EX( exp, )
 
 // ****************************************************************************
-//! \name                       windows error check macros
+//! \name windows error check macros
 // ****************************************************************************
 
 //@{
@@ -102,7 +102,7 @@
 //!
 #define GN_WIN_CHECK_DO( RETURN_TYPE, func, something )     \
     if( true ) {                                            \
-        RETURN_TYPE rr = func;                              \
+        RETURN_TYPE rr = (func);                            \
         if( 0 == rr )                                       \
         {                                                   \
             GN_ERROR( GN::getOSErrorInfo() );               \
