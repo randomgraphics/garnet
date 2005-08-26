@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "garnet/GnD3DApp.h"
+#include "garnet/GNd3d.h"
 
 //
 //
@@ -26,7 +26,7 @@ static uint32_t sRefineFlags( uint32_t flags, bool forCompile )
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3dapp::compileVS( const char * code, size_t len, uint32_t flags, const char * entryFunc )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( const char * code, size_t len, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
 
@@ -64,7 +64,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3dapp::compileVS( const char * code, size_t len, ui
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3dapp::compileVSFromFile( const char * file, uint32_t flags, const char * entryFunc )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( const char * file, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
 
@@ -102,7 +102,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3dapp::compileVSFromFile( const char * file, uint32
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3dapp::assembleVS( const char * code, size_t len, uint32_t flags )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( const char * code, size_t len, uint32_t flags )
 {
     GN_GUARD;
 
@@ -137,7 +137,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3dapp::assembleVS( const char * code, size_t len, u
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3dapp::assembleVSFromFile( const char * file, uint32_t flags )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( const char * file, uint32_t flags )
 {
     GN_GUARD;
 
@@ -172,7 +172,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3dapp::assembleVSFromFile( const char * file, uint3
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3dapp::compilePS( const char * code, size_t len, uint32_t flags, const char * entryFunc )
+LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( const char * code, size_t len, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
 
@@ -210,7 +210,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3dapp::compilePS( const char * code, size_t len, uin
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3dapp::compilePSFromFile( const char * file, uint32_t flags, const char * entryFunc )
+LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( const char * file, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
 
@@ -248,7 +248,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3dapp::compilePSFromFile( const char * file, uint32_
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3dapp::assemblePS( const char * code, size_t len, uint32_t flags )
+LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( const char * code, size_t len, uint32_t flags )
 {
     GN_GUARD;
 
@@ -283,7 +283,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3dapp::assemblePS( const char * code, size_t len, ui
 //
 //
 // ----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3dapp::assemblePSFromFile( const char * file, uint32_t flags )
+LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t flags )
 {
     GN_GUARD;
 
@@ -318,7 +318,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3dapp::assemblePSFromFile( const char * file, uint32
 //
 //
 // ----------------------------------------------------------------------------
-void GN::d3dapp::drawScreenAlignedQuad(
+void GN::d3d::drawScreenAlignedQuad(
     double fLeft, double fTop, double fRight, double fBottom,
     float fLeftU, float fTopV, float fRightU, float fBottomV )
 {

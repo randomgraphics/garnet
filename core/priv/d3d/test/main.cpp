@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "garnet/GnD3DApp.h"
+#include "garnet/GNd3d.h"
 
 bool init()
 {
@@ -28,8 +28,8 @@ int main()
     _CrtSetDbgFlag(tmpDbgFlag);
 #endif
 
-    GN::d3dapp::D3DInitParams d3dip;
-    GN::d3dapp::D3D d3d;
+    GN::d3d::D3DInitParams d3dip;
+    GN::d3d::D3D d3d;
     if( !d3d.init(d3dip) ) return -1;
 
     if( !init() ) { quit(); return -1; }

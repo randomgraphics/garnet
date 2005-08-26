@@ -11,7 +11,7 @@ obj pch
     : <toolset>msvc:<cflags>/Ycpch.h
     ;
 
-lib GnBase
+lib GNbase
     : clock.cpp
       debug.cpp
       file.cpp

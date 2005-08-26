@@ -22,27 +22,27 @@ def doCopyDir( alias, target, source ):
 doInstall(
     'samples',
     os.path.join( root, 'samples' ),
-    Split('GnCoreBin GnTest') )
-if 'GnCoreBin' in GN_targets: env.Depends( GN_targets['GnTest'], GN_targets['GnCoreBin'] )
+    Split('GNcoreBin GNtest') )
+if 'GNcoreBin' in GN_targets: env.Depends( GN_targets['GNtest'], GN_targets['GNcoreBin'] )
 
-# HACK: Make GnTest.exe depends on GnTest.exe.manifest, to make sure GNTest.exe.manifest are copied
-#       to sample directory, before execution of GnTest.exe
+# HACK: Make GNtest.exe depends on GNtest.exe.manifest, to make sure GNTest.exe.manifest are copied
+#       to sample directory, before execution of GNtest.exe
 if 'vs8' == GN_conf['compiler']:
-    for target in Split('GnTest GnCoreBin'):
+    for target in Split('GNtest GNcoreBin'):
         for x in GN_targets[target][1:]:
             env.Depends( GN_targets[target][0], x )
 
 # run unit test
 def run_test( target, source, env ):
     return os.spawnl( os.P_WAIT, target[0].path )
-AddPostAction( GN_targets['GnTest'][0], run_test )
+AddPostAction( GN_targets['GNtest'][0], run_test )
 
 # populate SDK directory
 sdk_root = os.path.join( root, 'sdk' )
 doInstall(
     'sdk',
     os.path.join(sdk_root,'bin'),
-    Split('GnCoreBin') )
+    Split('GNcoreBin') )
 doCopyDir(
     'sdk',
     os.path.join(sdk_root,'inc'),
@@ -50,8 +50,8 @@ doCopyDir(
 doInstall(
     'sdk',
     os.path.join(sdk_root,'lib'),
-    Split('GnCoreLib GnBase GnExtern GnD3DApp') )
+    Split('GNcoreLib GNbase GNextern GNd3d') )
 doInstall(
     'sdk',
     os.path.join(sdk_root,'doc'),
-    Split('GnDoc') )
+    Split('GNdoc') )

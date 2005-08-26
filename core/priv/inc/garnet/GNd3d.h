@@ -1,12 +1,12 @@
-#ifndef __GN_D3DAPP_GND3DAPP_H__
-#define __GN_D3DAPP_GND3DAPP_H__
+#ifndef __GN_D3DAPP_GND3D_H__
+#define __GN_D3DAPP_GND3D_H__
 // *****************************************************************************
-//! \file    GnD3DApp.h
-//! \brief   Public interface for d3dapp module
+//! \file    GNd3d.h
+//! \brief   Public interface for d3d module
 //! \author  chenlee (2005.8.11)
 // *****************************************************************************
 
-#include "garnet/GnBase.h"
+#include "garnet/GNbase.h"
 
 #ifdef GN_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
@@ -29,17 +29,17 @@
 #endif
 
 //!
-//! d3dapp module error log macro
+//! d3d module error log macro
 //!
 #define D3DAPP_ERROR GN_ERROR
 
 //!
-//! d3dapp module warning log macro
+//! d3d module warning log macro
 //!
 #define D3DAPP_WARN GN_WARN
 
 //!
-//! d3dapp module informational log macro
+//! d3d module informational log macro
 //!
 #define D3DAPP_INFO GN_INFO
 
@@ -77,20 +77,20 @@
 
 //! \name Alias for singleton objects
 //@{
-#define gD3D       (::GN::d3dapp::D3D::getInstance()) //!< global D3D object
-#define gTexMgr    (::GN::d3dapp::TextureManager::getInstance()) //!< Global texture manager
-#define gVSMgr     (::GN::d3dapp::VShaderManager::getInstance()) //!< Global vertex shader manager
-#define gPSMgr     (::GN::d3dapp::PShaderManager::getInstance()) //!< Global pixel shader manager
-#define gEffectMgr (::GN::d3dapp::EffectManager::getInstance()) //!< Global effect manager
-#define gMeshMgr   (::GN::d3dapp::MeshManager::getInstance()) //!< Global mesh manager
+#define gD3D       (::GN::d3d::D3D::getInstance()) //!< global D3D object
+#define gTexMgr    (::GN::d3d::TextureManager::getInstance()) //!< Global texture manager
+#define gVSMgr     (::GN::d3d::VShaderManager::getInstance()) //!< Global vertex shader manager
+#define gPSMgr     (::GN::d3d::PShaderManager::getInstance()) //!< Global pixel shader manager
+#define gEffectMgr (::GN::d3d::EffectManager::getInstance()) //!< Global effect manager
+#define gMeshMgr   (::GN::d3d::MeshManager::getInstance()) //!< Global mesh manager
 //@}
 
 namespace GN
 {
     //!
-    //! Namespace for d3dapp module
+    //! Namespace for d3d module
     //!
-    namespace d3dapp
+    namespace d3d
     {
         //!
         //! D3D initialization parameters
@@ -311,6 +311,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of GnD3DApp.h
+//                           End of GNd3d.h
 // *****************************************************************************
-#endif // __GN_D3DAPP_GND3DAPP_H__
+#endif // __GN_D3DAPP_GND3D_H__

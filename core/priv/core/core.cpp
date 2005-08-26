@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "garnet/GnBase.h"
+#include "garnet/GNbase.h"
 
 // implement log function
 GN_IMPLEMENT_DEFAULT_LOG();
