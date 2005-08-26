@@ -3,7 +3,7 @@
 
 bool init()
 {
-    gTexMgr.getResource( "haha.bmp" );
+    GN::d3d::gTexMgr.getResource( "haha.bmp" );
     return true;
 }
 

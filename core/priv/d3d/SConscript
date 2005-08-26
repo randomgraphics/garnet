@@ -1,4 +1,4 @@
-Import( 'env GN_targets GN_func' )
+Import( 'env GN_func' )
 
 if 'win32' == env['PLATFORM']:
     env.GN_build_static_library(

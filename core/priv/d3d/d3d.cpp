@@ -42,7 +42,7 @@ static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name
     D3DXIMAGE_INFO info;
     if( FAILED(D3DXGetImageInfoFromFileA( name.cstr(), &info )) )
     {
-        D3DAPP_ERROR( "can't get image information of texture '%s'.", name.cstr() );
+        GND3D_ERROR( "can't get image information of texture '%s'.", name.cstr() );
         return false;
     }
 
@@ -76,7 +76,7 @@ static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name
         }
         default:
         {
-            D3DAPP_ERROR( "unknown resource type!" );
+            GND3D_ERROR( "unknown resource type!" );
             GN_UNEXPECTED();
             break;
         }
@@ -84,7 +84,7 @@ static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name
 
     if( 0 == result )
     {
-        D3DAPP_ERROR( "Fail to load texture '%s'.", name.cstr() );
+        GND3D_ERROR( "Fail to load texture '%s'.", name.cstr() );
         return false;
     }
     else
@@ -140,8 +140,8 @@ static bool sLoadEffect( LPD3DXEFFECT & result, const GN::StrA & name )
         0, // no pool
         &result, &err)) )
     {
-        D3DAPP_ERROR( "Fail to load effect '%s'.", name.cstr() );
-        if( err ) D3DAPP_ERROR( "Effect compile error:\n%s", (const char*)err->GetBufferPointer() );
+        GND3D_ERROR( "Fail to load effect '%s'.", name.cstr() );
+        if( err ) GND3D_ERROR( "Effect compile error:\n%s", (const char*)err->GetBufferPointer() );
         return false;
     }
 
@@ -165,7 +165,7 @@ static bool sLoadMesh( LPD3DXMESH & result, const GN::StrA & name )
         0, 0, 0, 0,
         &result )) )
     {
-        D3DAPP_ERROR( "Fail to load mesh '%s'.", name.cstr() );
+        GND3D_ERROR( "Fail to load mesh '%s'.", name.cstr() );
         return false;
     }
 
@@ -190,42 +190,39 @@ static void sGetClientSize( HWND window, UINT & width, UINT & height )
 }
 #endif
 
-// instance of singletons
-GN_IMPLEMENT_SINGLETON( GN::d3d::D3D );
 
-static GN::d3d::TextureManager sTextureMgr(
+// Global instances
+
+GN::d3d::TextureManager GN::d3d::gTexMgr(
     GN::makeFunctor(&sLoadTexture),
     GN::d3d::TextureManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DBaseTexture9>) );
-GN_IMPLEMENT_SINGLETON( GN::d3d::TextureManager )
 
-static GN::d3d::VShaderManager sVShaderMgr(
+GN::d3d::VShaderManager GN::d3d::gVSMgr(
     GN::makeFunctor(&sLoadVShader),
     GN::d3d::VShaderManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DVertexShader9>) );
-GN_IMPLEMENT_SINGLETON( GN::d3d::VShaderManager )
 
-static GN::d3d::PShaderManager sPShaderMgr(
+GN::d3d::PShaderManager GN::d3d::gPSMgr(
     GN::makeFunctor(&sLoadPShader),
     GN::d3d::PShaderManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DPixelShader9>) );
-GN_IMPLEMENT_SINGLETON( GN::d3d::PShaderManager )
 
-static GN::d3d::EffectManager sEffectMgr(
+GN::d3d::EffectManager GN::d3d::gEffectMgr(
     GN::makeFunctor(&sLoadEffect),
     GN::d3d::EffectManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXEffect>) );
-GN_IMPLEMENT_SINGLETON( GN::d3d::EffectManager )
 
-static GN::d3d::MeshManager sMeshMgr(
+GN::d3d::MeshManager GN::d3d::gMeshMgr(
     GN::makeFunctor(&sLoadMesh),
     GN::d3d::MeshManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXMesh>));
-GN_IMPLEMENT_SINGLETON( GN::d3d::MeshManager )
 
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
+
+GN_IMPLEMENT_SINGLETON( GN::d3d::D3D );
 
 //
 //
@@ -336,7 +333,7 @@ bool GN::d3d::D3D::present()
     else
     {
         // fatal error
-        D3DAPP_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9A(r) );
+        GND3D_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9A(r) );
         return false;
     }
 
@@ -376,7 +373,7 @@ bool GN::d3d::D3D::createWindow()
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == RegisterClassExA(&wcex) )
     {
-        D3DAPP_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
+        GND3D_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
     }
 
@@ -397,7 +394,7 @@ bool GN::d3d::D3D::createWindow()
         (HINSTANCE)GetModuleHandle(0), NULL );
     if( 0 == mWindow )
     {
-        D3DAPP_ERROR( "fail to create window, %s!", getOSErrorInfo() );
+        GND3D_ERROR( "fail to create window, %s!", getOSErrorInfo() );
         return false;
     }
 
@@ -431,7 +428,7 @@ bool GN::d3d::D3D::createD3D()
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if( !mD3D )
     {
-        D3DAPP_ERROR( "incorrect SDK version!" );
+        GND3D_ERROR( "incorrect SDK version!" );
         return false;
     }
 
@@ -482,7 +479,7 @@ bool GN::d3d::D3D::createD3D()
         if( D3DERR_NOTAVAILABLE == r ) continue;
         if( D3D_OK != r )
         {
-            D3DAPP_WARN( DXGetErrorString9A(r) );
+            GND3D_WARN( DXGetErrorString9A(r) );
             continue;
         }
 
@@ -579,7 +576,7 @@ void GN::d3d::D3D::setupPresentParameters()
     mPresentParams.Flags                      = 0;
 #endif
 
-    D3DAPP_INFO( "Back buffer size: %dx%d.",
+    GND3D_INFO( "Back buffer size: %dx%d.",
         mPresentParams.BackBufferWidth,
         mPresentParams.BackBufferHeight );
 }
@@ -591,7 +588,7 @@ bool GN::d3d::D3D::restoreDevice()
 {
     GN_GUARD;
 
-    D3DAPP_INFO( "Restore D3D device" );
+    GND3D_INFO( "Restore D3D device" );
 
     // release all D3D resources
     gTexMgr.dispose();
@@ -615,7 +612,7 @@ bool GN::d3d::D3D::recreateDevice()
 {
     GN_GUARD;
 
-    D3DAPP_INFO( "Recreate D3D device" );
+    GND3D_INFO( "Recreate D3D device" );
 
     // release all D3D resources
     gTexMgr.dispose();
@@ -698,7 +695,7 @@ LRESULT GN::d3d::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
             break;
 
         case WM_SIZE :
-            //D3DAPP_INFO( "window resize to %dx%d", LOWORD(lParam), HIWORD(lParam) ) );
+            //GND3D_INFO( "window resize to %dx%d", LOWORD(lParam), HIWORD(lParam) ) );
             mMinimized = ( SIZE_MINIMIZED == wp );
             if( !mMinimized && !mInsideSizeMove ) mSizeChanged = true;
             break;
