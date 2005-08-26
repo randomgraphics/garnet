@@ -1,0 +1,8 @@
+Import( 'env GN_func' )
+
+env.GN_build_static_library(
+    'GNogl',
+    GN_func['glob']('*.cpp'),
+    'pch.h',
+    'pch.cpp' )
+SConscript( 'test/SConscript' )

@@ -1,0 +1,6 @@
+Import( 'env GN_targets GN_func' )
+
+env.GN_build_program(
+        'GNoglTest',
+        GN_func['glob']('*.cpp'),
+        libs=Split('GNogl GNbase GNextern') )
