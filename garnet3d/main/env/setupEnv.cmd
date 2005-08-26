@@ -28,9 +28,13 @@ REM ===========
 alias root "cd /d %GARNET_ROOT%\$*"
 alias priv "cd /d %GARNET_ROOT%\core\priv\$*"
 alias base "cd /d %GARNET_ROOT%\core\priv\base\$*"
+alias core "cd /d %GARNET_ROOT%\core\priv\core\$*"
+alias d3d "cd /d %GARNET_ROOT%\core\priv\d3d\$*"
+alias ogl "cd /d %GARNET_ROOT%\core\priv\ogl\$*"
 alias test "cd /d %GARNET_ROOT%\core\priv\test\$*"
 alias inc "cd /d %GARNET_ROOT%\core\priv\inc\garnet\$*"
 alias extern "cd /d %GARNET_ROOT%\core\extern\$*"
+alias env "cd /d %GARNET_ROOT%\env\$*"
 
 REM =====
 REM Misc.
