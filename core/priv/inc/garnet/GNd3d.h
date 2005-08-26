@@ -31,17 +31,17 @@
 //!
 //! d3d module error log macro
 //!
-#define D3DAPP_ERROR GN_ERROR
+#define GND3D_ERROR GN_ERROR
 
 //!
 //! d3d module warning log macro
 //!
-#define D3DAPP_WARN GN_WARN
+#define GND3D_WARN GN_WARN
 
 //!
 //! d3d module informational log macro
 //!
-#define D3DAPP_INFO GN_INFO
+#define GND3D_INFO GN_INFO
 
 //!
 //! DX error check routine
@@ -51,7 +51,7 @@
         HRESULT rr = func;                          \
         if (D3D_OK != rr)                           \
         {                                           \
-            D3DAPP_ERROR( DXGetErrorString9A(rr) ); \
+            GND3D_ERROR( DXGetErrorString9A(rr) ); \
             something                               \
         }                                           \
     } else void(0)
@@ -75,15 +75,10 @@
 //!
 #define DX_CHECK_RV( func, rval ) DX_CHECK_DO( func, return rval; )
 
-//! \name Alias for singleton objects
-//@{
-#define gD3D       (::GN::d3d::D3D::getInstance()) //!< global D3D object
-#define gTexMgr    (::GN::d3d::TextureManager::getInstance()) //!< Global texture manager
-#define gVSMgr     (::GN::d3d::VShaderManager::getInstance()) //!< Global vertex shader manager
-#define gPSMgr     (::GN::d3d::PShaderManager::getInstance()) //!< Global pixel shader manager
-#define gEffectMgr (::GN::d3d::EffectManager::getInstance()) //!< Global effect manager
-#define gMeshMgr   (::GN::d3d::MeshManager::getInstance()) //!< Global mesh manager
-//@}
+//!
+//! Global D3D object. Must instantiate and initialize it before using d3d module.
+//!
+#define gD3D (::GN::d3d::D3D::getInstance())
 
 namespace GN
 {
@@ -252,14 +247,24 @@ namespace GN
             static LRESULT staticProc( HWND, UINT, WPARAM, LPARAM );
         };
 
-        typedef ResourceManager<LPDIRECT3DBASETEXTURE9,true>  TextureManager; //!< Texture manager
-        typedef ResourceManager<LPDIRECT3DVERTEXSHADER9,true> VShaderManager; //!< Vertex shader manager
-        typedef ResourceManager<LPDIRECT3DPIXELSHADER9,true>  PShaderManager; //!< Pixel shader manager
-        typedef ResourceManager<LPD3DXEFFECT,true> EffectManager; //!< Effect manager
-        typedef ResourceManager<LPD3DXEFFECT,true> EffectManager; //!< Effect manager
-        typedef ResourceManager<LPD3DXMESH,true> MeshManager; //!< Mesh manager
+        typedef ResourceManager<LPDIRECT3DBASETEXTURE9>  TextureManager; //!< Texture manager
+        typedef ResourceManager<LPDIRECT3DVERTEXSHADER9> VShaderManager; //!< Vertex shader manager
+        typedef ResourceManager<LPDIRECT3DPIXELSHADER9>  PShaderManager; //!< Pixel shader manager
+        typedef ResourceManager<LPD3DXEFFECT> EffectManager; //!< Effect manager
+        typedef ResourceManager<LPD3DXEFFECT> EffectManager; //!< Effect manager
+        typedef ResourceManager<LPD3DXMESH> MeshManager; //!< Mesh manager
 
-        // Util functions
+        //! \name Global variables
+        //@{
+        extern TextureManager gTexMgr; //!< Global texture manager
+        extern VShaderManager gVSMgr; //!< Global vertex shader manager
+        extern PShaderManager gPSMgr; //!< Global pixel shader manager
+        extern EffectManager gEffectMgr; //!< Global effect manager
+        extern MeshManager gMeshMgr; //!< Global mesh manager
+        //@}
+
+        //! \name Util functions
+        //@{
 
         //!
         //! Compile vertex shader from string
@@ -307,6 +312,8 @@ namespace GN
         void drawScreenAlignedQuad(
             double fLeft = 0.0, double fTop = 0.0, double fRight = 1.0, double fBottom = 1.0,
             float fLeftU = 0.0f, float fTopV = 0.0f, float fRightU = 1.0f, float fBottomV = 1.0f );
+
+        //@}
     }
 }
 
