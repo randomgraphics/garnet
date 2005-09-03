@@ -51,7 +51,7 @@
         HRESULT rr = func;                          \
         if (D3D_OK != rr)                           \
         {                                           \
-            GND3D_ERROR( DXGetErrorString9A(rr) ); \
+            GND3D_ERROR( DXGetErrorString9A(rr) );  \
             something                               \
         }                                           \
     } else void(0)
