@@ -50,7 +50,7 @@ doCopyDir(
 doInstall(
     'sdk',
     os.path.join(sdk_root,'lib'),
-    Split('GNcoreLib GNbase GNextern GNd3d') )
+    Split('GNcoreLib GNbase GNextern GNd3d GNogl') )
 doInstall(
     'sdk',
     os.path.join(sdk_root,'doc'),
