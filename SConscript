@@ -536,8 +536,6 @@ env.Prepend(
     CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':variant_dir})
     )
 
-env.BuildDir( variant_dir, 'core' )
-
 if float(GN_conf['enable_cache']): env.CacheDir( cache_dir )
 
 ################################################################################
@@ -569,4 +567,6 @@ env.Export(
 #
 ################################################################################
 
-SConscript( dirs = [variant_dir] + ['bin'] )
+SConscript( dirs = [variant_dir], src_dir='core', build_dir=variant_dir )
+SConscript( dirs = ['bin'] )
+SConscript( dirs = ['msvc'], src_dir='msvc', build_dir=os.path.join(variant_dir,'msvc') )
