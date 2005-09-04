@@ -164,6 +164,7 @@ for x in targets[0].items(): env.Alias( 'debug', x[1] )
 for x in targets[1].items(): env.Alias( 'release', x[1] )
 for x in targets[2].items(): env.Alias( 'stdbg', x[1] )
 for x in targets[3].items(): env.Alias( 'strel', x[1] )
+env.Alias( 'msvc', '#msvc' )
 
 all_targets = targets[0].items() + targets[1].items() + targets[2].items() + targets[3].items()
 all_targets.sort()
@@ -182,8 +183,9 @@ env.Default( Split('samples sdk') )
 targets_text = ''
 for x in Split('all debug release stdbg strel'):
     targets_text += '%25s : %s\n'%( x, 'Build %s variant(s)'%x )
-for x in Split('samples sdk'):
-    targets_text += '%25s : %s\n'%( x, 'Build %s'%x )
+targets_text += '%25s : %s\n'%( 'samples', 'Build samples' )
+targets_text += '%25s : %s\n'%( 'sdk', 'Build garnet SDK' )
+targets_text += '%25s : %s\n'%( 'msvc', 'Build MSVC projects' )
 for x in all_targets:
     targets_text += '%25s : %s\n'%( x[0], env.File(x[1]) )
 
