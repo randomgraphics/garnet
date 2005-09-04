@@ -29,12 +29,7 @@ def build_proj( target, srcdir=[], incdir=['#core/priv/inc'] ):
         misc        = [],
         )
 
-    #env.Depends( proj, sources + includes + localincs )
-
     env.AlwaysBuild( proj );
-
-    if not 'msvc' in GN_targets: GN_targets['msvc'] = []
-    GN_targets['msvc'] += proj
 
 ###############################################################################
 #
