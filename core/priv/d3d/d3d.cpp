@@ -312,7 +312,6 @@ bool GN::d3d::D3D::present()
             if( !restoreDevice() ) return false;
         }
     }
-#endif
 
     // check for device lost
     HRESULT r = mDevice->TestCooperativeLevel();
@@ -336,6 +335,7 @@ bool GN::d3d::D3D::present()
         GND3D_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9A(r) );
         return false;
     }
+#endif
 
     // success
     return true;
