@@ -9,6 +9,7 @@ HIDE_IN_BODY_DOCS      = NO
 SORT_BY_SCOPE_NAME     = YES
 QUIET                  = YES
 INPUT                  = core/priv
+FILE_PATTERNS          = *.h *.inl
 RECURSIVE              = YES
 GENERATE_HTMLHELP      = "$GENERATE_HTMLHELP"
 CHM_FILE               = "$CHM_FILE"
