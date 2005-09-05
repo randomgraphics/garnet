@@ -1,7 +1,7 @@
 #ifndef __GN_GNGL_GNGL_H__
 #define __GN_GNGL_GNGL_H__
 // *****************************************************************************
-//! \file    GnGL.h
+//! \file    GNogl.h
 //! \brief   Public interface for opengl application.
 //! \author  chenlee (2005.8.26)
 // *****************************************************************************
