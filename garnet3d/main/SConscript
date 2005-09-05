@@ -103,6 +103,9 @@ def GN_glob( patterns, dirs = ['.'],
                             files.append( os.path.join( dir, file ) )
     return files
 
+# 编译器是否会生成manifest文件
+def GN_has_manifest(env): return 'vs8' == GN_conf['compiler'] and not GN_conf['static']
+
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
     if pdb:
@@ -185,7 +188,7 @@ def GN_build_shared_library( env, target, sources=[],
         result = env.SharedLibrary( target, sources )
 
         # handle manifest file
-        if 'vs8' == GN_conf['compiler']:
+        if GN_has_manifest(env):
             manifest = File( os.path.join( os.path.dirname(result[0].abspath), '%s.dll.manifest'%target ) )
             env.SideEffect( manifest, result )
             result += [manifest]
@@ -206,7 +209,7 @@ def GN_build_program( env, target, sources=[],
     result = env.Program( target, sources + [ '#' + GN_targets[x][0].path for x in libs ] )
 
     # handle manifest file
-    if 'vs8' == GN_conf['compiler']:
+    if GN_has_manifest(env):
         manifest = File( os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target ) )
         env.SideEffect( manifest, result )
         result += [manifest]
@@ -216,6 +219,7 @@ def GN_build_program( env, target, sources=[],
 
 # register custom builder to scons.
 from SCons.Script.SConscript import SConsEnvironment
+SConsEnvironment.GN_has_manifest = GN_has_manifest
 SConsEnvironment.GN_build_static_object = GN_build_static_object
 SConsEnvironment.GN_build_static_objects = GN_build_static_objects
 SConsEnvironment.GN_build_shared_object = GN_build_shared_object
@@ -569,4 +573,4 @@ env.Export(
 
 SConscript( dirs = [variant_dir], src_dir='core', build_dir=variant_dir )
 SConscript( dirs = ['bin'] )
-SConscript( dirs = ['msvc'], src_dir='msvc', build_dir=os.path.join(variant_dir,'msvc') )
+if 'cl' == env['CC']: SConscript( dirs = ['msvc'], src_dir='msvc', build_dir=os.path.join(variant_dir,'msvc') )
