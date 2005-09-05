@@ -25,12 +25,13 @@ doInstall(
     Split('GNcoreBin GNtest') )
 if 'GNcoreBin' in GN_targets: env.Depends( GN_targets['GNtest'], GN_targets['GNcoreBin'] )
 
-# HACK: Make GNtest.exe depends on GNtest.exe.manifest, to make sure GNTest.exe.manifest are copied
-#       to sample directory, before execution of GNtest.exe
-if 'vs8' == GN_conf['compiler']:
+# Make GNtest.exe depends on GNtest.exe.manifest, to make sure GNTest.exe.manifest are copied
+# to sample directory, before execution of GNtest.exe
+if env.GN_has_manifest():
     for target in Split('GNtest GNcoreBin'):
-        for x in GN_targets[target][1:]:
-            env.Depends( GN_targets[target][0], x )
+        if target in GN_targets:
+            for x in GN_targets[target][1:]:
+                env.Depends( GN_targets[target][0], x )
 
 # run unit test
 def run_test( target, source, env ):
