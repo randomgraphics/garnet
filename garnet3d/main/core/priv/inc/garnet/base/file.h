@@ -221,7 +221,7 @@ namespace GN
     namespace path
     {
         //!
-        //! 文件是否存在
+        //! 路径是否存在
         //!
         bool exist( const StrA & );
 
@@ -229,6 +229,11 @@ namespace GN
         //! if the path points to a directoy?
         //!
         bool isDir( const StrA & );
+
+        //!
+        //! if the path points to a file
+        //!
+        inline bool isFile( const StrA & path ) { return exist(path) && !isDir(path); }
 
         //!
         //! Conver path to platform native format. This function will do:
