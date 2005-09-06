@@ -111,7 +111,7 @@ public:
         TS_ASSERT_EQUALS( "", GN::path::getParent("a") );
         TS_ASSERT_EQUALS( "", GN::path::getParent("a/") );
         TS_ASSERT_EQUALS( PSS, GN::path::getParent("/") );
-        TS_ASSERT_EQUALS( "hah", GN::path::getParent("") );
+        TS_ASSERT_EQUALS( "", GN::path::getParent("") );
         TS_ASSERT_EQUALS( "startup:"PSS"a", GN::path::getParent("startup:a/b") );
         TS_ASSERT_EQUALS( "startup:"PSS, GN::path::getParent("startup:/a") );
         TS_ASSERT_EQUALS( "startup:"PSS, GN::path::getParent("startup:a") );
