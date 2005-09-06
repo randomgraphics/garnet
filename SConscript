@@ -571,6 +571,6 @@ env.Export(
 #
 ################################################################################
 
-SConscript( dirs = [variant_dir], src_dir='core', build_dir=variant_dir )
+SConscript( dirs = [variant_dir], src_dir='core', build_dir=variant_dir, duplicate=0 )
 SConscript( dirs = ['bin'] )
 if 'cl' == env['CC']: SConscript( dirs = ['msvc'], src_dir='msvc', build_dir=os.path.join(variant_dir,'msvc') )
