@@ -102,6 +102,16 @@ public:
         TS_ASSERT( !GN::path::isDir("haha,heihei,hoho,huhu,mama,papa") );
     }
 
+    void testIsFile()
+    {
+        TS_ASSERT( GN::path::isFile("startup:\\SConstruct") );
+        TS_ASSERT( GN::path::isFile("app:GNtest.exe") );
+        TS_ASSERT( !GN::path::isFile("startup:") );
+        TS_ASSERT( !GN::path::isFile("app:") );
+        TS_ASSERT( !GN::path::isFile("pwd:") );
+        TS_ASSERT( !GN::path::isFile("haha,heihei,hoho,huhu,mama,papa") );
+    }
+
     void testGetParent()
     {
         TS_ASSERT_EQUALS( "a", GN::path::getParent("a/b") );
