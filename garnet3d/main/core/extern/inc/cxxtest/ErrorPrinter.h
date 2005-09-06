@@ -28,7 +28,7 @@ namespace CxxTest
     class ErrorPrinter : public ErrorFormatter
     {
     public:
-        ErrorPrinter( CXXTEST_STD(ostream) &o = CXXTEST_STD(cout), const char *preLine = ":", const char *postLine = "" ) :
+        ErrorPrinter( CXXTEST_STD(ostream) &o = CXXTEST_STD(cout), const char *preLine = "(", const char *postLine = ")" ) :
             ErrorFormatter( new Adapter(o), preLine, postLine ) {}
         virtual ~ErrorPrinter() { delete outputStream(); }
 

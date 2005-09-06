@@ -373,13 +373,23 @@ namespace GN
         size_t size() const { return mLen; }
 
         //!
+        //! Get sub string
+        //!
+        void subString( Str & result, size_t offset, size_t length ) const
+        {
+            if( offset >= mLen ) { result.clear(); return; }
+            if( offset + length > mLen ) length = mLen - offset;
+            result.assign( mPtr+offset, length );
+        }
+
+        //!
         //! Return sub string
         //!
         Str subString( size_t offset, size_t length ) const
         {
-            if( offset >= mLen ) return EMPTYSTR;
-            if( offset + length > mLen ) length = mLen - offset;
-            return Str( mPtr+offset, length );
+            Str ret;
+            subString( ret, offset, length );
+            return ret;
         }
 
         //!
@@ -431,7 +441,7 @@ namespace GN
         {
             if( 0 == mLen ) return;
             CHAR * p = mPtr + mLen - 1;
-            while( p > mPtr && ch == *p )
+            while( p >= mPtr && ch == *p )
             {
                 *p = 0;
                 --p;
@@ -447,7 +457,7 @@ namespace GN
         {
             if( 0 == mLen ) return;
             CHAR * p = mPtr + mLen - 1;
-            while( p > mPtr && !pred(*p) )
+            while( p >= mPtr && !pred(*p) )
             {
                 *p = 0;
                 --p;

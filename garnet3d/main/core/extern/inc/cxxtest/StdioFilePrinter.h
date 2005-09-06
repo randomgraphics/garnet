@@ -16,7 +16,7 @@ namespace CxxTest
     class StdioFilePrinter : public ErrorFormatter
     {
     public:
-        StdioFilePrinter( FILE *o, const char *preLine = ":", const char *postLine = "" ) :
+        StdioFilePrinter( FILE *o, const char *preLine = "(", const char *postLine = ")" ) :
             ErrorFormatter( new Adapter(o), preLine, postLine ) {}
         virtual ~StdioFilePrinter() { delete outputStream(); }
 
