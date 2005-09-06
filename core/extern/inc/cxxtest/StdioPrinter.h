@@ -14,7 +14,7 @@ namespace CxxTest
     class StdioPrinter : public StdioFilePrinter
     {
     public:
-        StdioPrinter( FILE *o = stdout, const char *preLine = ":", const char *postLine = "" ) :
+        StdioPrinter( FILE *o = stdout, const char *preLine = "(", const char *postLine = ")" ) :
             StdioFilePrinter( o, preLine, postLine ) {}
     };
 }

@@ -75,7 +75,7 @@ static inline GN::StrA sGetAppDir()
 }
 
 //
-// 
+//
 // ----------------------------------------------------------------------------
 static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
@@ -113,8 +113,8 @@ static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
             result.append( to ); // special case for "/" and "\\"
     }
 
-    // try convert "aaa:bbb" to "aaa:/bbb",
-    // but leave "aaa:" and "aaa/bbb:ccc" as it was.
+    // try convert "aaa:..." to "aaa:/...",
+    // but leave "aaa/bbb:cccc" as it is.
     bool foundSlash = false;
     for( size_t i = 0; i < result.size(); ++i )
     {
@@ -122,13 +122,33 @@ static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
         foundSlash |= to==ch;
         if( ':' == ch &&
             !foundSlash &&
-            i < result.size()-1 &&
             result[i+1] != to )
         {
             result.insert( i+1, to );
             break;
         }
     }
+}
+
+//
+// Return true for path like: "/", "aaa:/", but return false for path like "aaa/bbb:/".
+//
+static inline bool sIsRoot( const GN::StrA & path )
+{
+    if( path.last() != PATH_SEPARATOR ) return false;
+
+    if( 1 == path.size() ) return true;
+
+    GN_ASSERT( path.size() >= 2 );
+
+    if( ':' != path[path.size()-2] ) return false;
+
+    for( size_t i = 0; i < path.size()-2; ++i )
+    {
+        if( PATH_SEPARATOR == path[i] ) return false;
+    }
+
+    return true;
 }
 
 //
@@ -299,7 +319,28 @@ void GN::path::getParent( StrA & result, const StrA & path )
 
     sNormalizePathSeparator( result, path );
     result.trimRightUntil( &Local::isPathSeperator );
-    result.trimRight( PATH_SEPARATOR );
+    if( !sIsRoot(result) ) result.trimRight( PATH_SEPARATOR );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::path::getExt( StrA & result, const StrA & path )
+{
+    StrA tmp;
+    sNormalizePathSeparator( tmp, path );
+    size_t n = tmp.size();
+    while( n > 0 )
+    {
+        --n;
+        if( '.' == tmp[n] )
+        {
+            tmp.subString( result, n, 0 );
+            return;
+        }
+    }
+    // no extension found.
+    result.clear();
 }
 
 //

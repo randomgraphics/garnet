@@ -250,7 +250,19 @@ namespace GN
         }
 
         //!
-        //! Get the parent path (directory) of the path
+        //! Get the parent path (directory) of the path.
+        //! Samples:
+        //!     - "a/b" -> "a"
+        //!     - "a/b/" -> "a"
+        //!     - "/a" -> "/"
+        //!     - "/a/" -> "/"
+        //!     - "a" -> ""
+        //!     - "a/" -> ""
+        //!     - "/" -> "/"
+        //!     - "" -> ""
+        //!     - "c:a/b" -> "c:/a"
+        //!     - "c:a" -> "c:/"
+        //!     - "c:" -> "c:/"
         //!
         void getParent( StrA &, const StrA & );
 
@@ -258,6 +270,22 @@ namespace GN
         //! Get the parent path (directory) of the path
         //!
         inline StrA getParent( const StrA & path ) { StrA ret; getParent(ret,path); return ret; }
+
+        //!
+        //! Get extension name of the path, with prefixing dot.
+        //! Samples:
+        //!     - "a.b.c" -> ".c"
+        //!     - "a.c" -> ".c"
+        //!     - ".c" -> ".c"
+        //!     - "a." -> "."
+        //!     - "a" -> ""
+        //!
+        void getExt( StrA &, const StrA & );
+
+        //!
+        //! Get extension name of the path.
+        //!
+        inline StrA getExt( const StrA & path ) { StrA ret; getExt(ret,path); return ret; }
 
         //!
         //! Join path

@@ -33,21 +33,47 @@ public:
 
     void testTrim()
     {
-        GN::StrW s1( L" 123 " );
+        GN::StrW s1( L" 123 " ), s2( L"   " );
         s1.trim( L' ' );
+        s2.trim( L' ' );
         TS_ASSERT_EQUALS( s1, L"123" );
+        TS_ASSERT_EQUALS( s2, L"" );
+    }
+
+    void testTrimLeft()
+    {
+        GN::StrW s1( L" 123 " ), s2( L"   " );
+        s1.trimLeft( L' ' );
+        s2.trimLeft( L' ' );
+        TS_ASSERT_EQUALS( s1, L"123 " );
+        TS_ASSERT_EQUALS( s2, L"" );
+    }
+
+    void testTrimRight()
+    {
+        GN::StrW s1( L" 123 " ), s2( L"   " );
+        s1.trimRight( L' ' );
+        s2.trimRight( L' ' );
+        TS_ASSERT_EQUALS( s1, L" 123" );
+        TS_ASSERT_EQUALS( s2, L"" );
     }
 
     void testTrimUntil()
     {
         struct Local
         {
-            static inline bool stop( wchar_t ch ) { return L'3' == ch; }
+            static bool stop0( wchar_t ch ) { return L'0' == ch; }
+            static bool stop1( wchar_t ch ) { return L'1' == ch; }
+            static bool stop3( wchar_t ch ) { return L'3' == ch; }
         };
         
         GN::StrW s1( L"12345" );
-        s1.trimRightUntil( &Local::stop );
+        s1.trimRightUntil( &Local::stop3 );
         TS_ASSERT_EQUALS( s1, L"123" );
+        s1.trimRightUntil( &Local::stop1 );
+        TS_ASSERT_EQUALS( s1, L"1" );
+        s1.trimRightUntil( &Local::stop0 );
+        TS_ASSERT_EQUALS( s1, L"" );
     }
 
     void testInsert()
@@ -61,6 +87,11 @@ public:
         TS_ASSERT_EQUALS( s1, L"0 1234" );
         s1.insert( 100, L'5' );
         TS_ASSERT_EQUALS( s1, L"0 12345" );
+    }
+
+    void testSubString()
+    {
+        // TODO: implement this test case.
     }
 
     void testCtor()

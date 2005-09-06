@@ -306,6 +306,48 @@ namespace GN
         //!
         LPDIRECT3DPIXELSHADER9 assemblePSFromFile( const char * file, uint32_t flags = 0 );
 
+#if GN_XENON
+        //!
+        //! Assemble XVS shader from string
+        //!
+        inline LPDIRECT3DVERTEXSHADER9 assembleXVS( const char * code, size_t len, uint32_t flags = 0 )
+        {
+	        GN_GUARD;
+	        return ::assembleVS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
+	        GN_UNGUARD;
+        }
+
+        //!
+        //! Assemble XVS shader from file
+        //!
+        inline LPDIRECT3DVERTEXSHADER9 assembleXVSFromFile( const char * file, uint32_t flags = 0 )
+        {
+	        GN_GUARD;
+	        return assembleVSFromFile( file, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
+	        GN_UNGUARD;
+        }
+
+        //!
+        //! Assemble XPS shader from string
+        //!
+        inline LPDIRECT3DPIXELSHADER9 assembleXPS( const char * code, size_t len, uint32_t flags = 0 )
+        {
+	        GN_GUARD;
+	        return assemblePS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
+	        GN_UNGUARD;
+        }
+
+        //!
+        //! Assemble XPS shader from file
+        //!
+        inline LPDIRECT3DPIXELSHADER9 assembleXPSFromFile( const char * file, uint32_t flags = 0 )
+        {
+	        GN_GUARD;
+	        return assemblePSFromFile( file, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
+	        GN_UNGUARD;
+        }
+#endif
+
         //!
         //! Draw screen aligned quad on screen
         //!
