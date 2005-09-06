@@ -34,10 +34,9 @@ else:
 
 doxyfile = env.Command(
     'Doxyfile',
-    'Doxyfile.in',
-    '%s %s $SOURCE OUTPUT_DIRECTORY=%s GENERATE_HTMLHELP=%s CHM_FILE=%s HHC_LOCATION=%s > $TARGET'%(
+    Split('gendoxyfile.py Doxyfile.in'),
+    '%s $SOURCES OUTPUT_DIRECTORY=%s GENERATE_HTMLHELP=%s CHM_FILE=%s HHC_LOCATION=%s > $TARGET'%(
         sys.executable,
-        File('gendoxyfile.py').path,
         env.Dir('.').path,
         genchm,
         env.File('garnet3d.chm').abspath,
