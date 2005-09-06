@@ -44,16 +44,17 @@ public:
 
         TS_ASSERT( rm.addResource( "1" ) );
 
-        TS_ASSERT_EQUALS( 0, rm.getResource( "2" ) );
+        TS_ASSERT( !rm.getResource( "2", false ) );
 
         // default nullor failure
-        rm.setDefaultNullor( GN::makeFunctor(&failedCreator) );
+        rm.setNullor( GN::makeFunctor(&failedCreator) );
         TS_ASSERT_EQUALS( 0, rm.getResource( "1" ) );
-        TS_ASSERT_EQUALS( 0, rm.getResource( "2" ) );
+        TS_ASSERT_EQUALS( 0, rm.getResource( "2", false ) );
 
         // default nullor success
-        rm.setDefaultNullor( GN::makeFunctor(&nullCreator) );
+        rm.setNullor( GN::makeFunctor(&nullCreator) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "1" ) );
+        TS_ASSERT_EQUALS( -1, rm.getResource( "2", false ) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "2" ) );
     }
 
@@ -85,11 +86,12 @@ public:
         TS_ASSERT( rm.addResource( "1" ) );
 
         // default nullor failure
-        rm.setDefaultCreator( GN::makeFunctor(&failedCreator) );
+        rm.setCreator( GN::makeFunctor(&failedCreator) );
         TS_ASSERT_EQUALS( 0, rm.getResource( "1" ) );
 
         // default nullor success
-        rm.setDefaultCreator( GN::makeFunctor(&defCreator) );
+        rm.dispose();
+        rm.setCreator( GN::makeFunctor(&defCreator) );
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
     }
 
