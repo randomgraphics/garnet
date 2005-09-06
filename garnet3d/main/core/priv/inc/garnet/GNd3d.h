@@ -313,7 +313,7 @@ namespace GN
         inline LPDIRECT3DVERTEXSHADER9 assembleXVS( const char * code, size_t len, uint32_t flags = 0 )
         {
 	        GN_GUARD;
-	        return ::assembleVS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
+	        return assembleVS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
 	        GN_UNGUARD;
         }
 
