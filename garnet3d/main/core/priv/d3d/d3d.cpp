@@ -195,27 +195,22 @@ static void sGetClientSize( HWND window, UINT & width, UINT & height )
 
 GN::d3d::TextureManager GN::d3d::gTexMgr(
     GN::makeFunctor(&sLoadTexture),
-    GN::d3d::TextureManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DBaseTexture9>) );
 
 GN::d3d::VShaderManager GN::d3d::gVSMgr(
     GN::makeFunctor(&sLoadVShader),
-    GN::d3d::VShaderManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DVertexShader9>) );
 
 GN::d3d::PShaderManager GN::d3d::gPSMgr(
     GN::makeFunctor(&sLoadPShader),
-    GN::d3d::PShaderManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<IDirect3DPixelShader9>) );
 
 GN::d3d::EffectManager GN::d3d::gEffectMgr(
     GN::makeFunctor(&sLoadEffect),
-    GN::d3d::EffectManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXEffect>) );
 
 GN::d3d::MeshManager GN::d3d::gMeshMgr(
     GN::makeFunctor(&sLoadMesh),
-    GN::d3d::MeshManager::Creator(), // empty nullor
     GN::makeFunctor(&GN::safeRelease<ID3DXMesh>));
 
 // *****************************************************************************

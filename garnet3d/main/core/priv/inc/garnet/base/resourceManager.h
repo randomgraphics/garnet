@@ -50,16 +50,20 @@ namespace GN
 
         typedef Functor1<void,RES&> Deletor; //!< Resource deletion functor
 
+        typedef Functor1<bool,const StrA&> Searcher; //!< Resource searcher.
+
         //!
         //! Default constructor
         //!
         ResourceManager(
-            const Creator & defaultCreator = Creator(),
-            const Creator & defaultNullor = Creator(),
-            const Deletor & deletor = Deletor() )
-            : mDefaultCreator(defaultCreator)
-            , mDefaultNullor(defaultNullor)
+            const Creator & creator = Creator(),
+            const Deletor & deletor = Deletor(),
+            const Creator & nullor = makeFunctor(&defaultNullor),
+            const Searcher & searcher = makeFunctor(&path::isFile) )
+            : mCreator(creator)
             , mDeletor(deletor)
+            , mNullor(nullor)
+            , mSearcher(searcher)
             , mNullInstance(0)
         {
         }
@@ -72,12 +76,7 @@ namespace GN
         //!
         //! Get default creator
         //!
-        const Creator & getDefaultCreator() const { return mDefaultCreator; }
-
-        //!
-        //! Get defaut NULL instance creator
-        //!
-        const Creator & getDefaultNullor() const { return mDefaultNullor; }
+        const Creator & getCreator() const { return mCreator; }
 
         //!
         //! Get deletor
@@ -92,19 +91,44 @@ namespace GN
         }
 
         //!
+        //! Get defaut NULL instance creator
+        //!
+        const Creator & getNullor() const { return mNullor; }
+
+        //!
+        //! Get resource searcher
+        //!
+        const Searcher & getSearcher() const { return mSearcher; }
+
+        //!
         //! Set default creator
         //!
-        void setDefaultCreator( const Creator & c ) { mDefaultCreator = c; }
+        void setCreator( const Creator & c ) { mCreator = c; }
 
         //!
         //! Set default NULL instance creator
         //!
-        void setDefaultNullor( const Creator & n ) { mDefaultNullor = n; }
+        void setNullor( const Creator & n )
+        {
+            mNullor = n;
+            // delete old null resource instance
+            if( mNullInstance )
+            {
+                if( mNullDeletor ) mNullDeletor( *mNullInstance );
+                mNullInstance = 0;
+                mNullDeletor.clear();
+            }
+        }
 
         //!
         //! Set deletor
         //!
         void setDeletor( const Deletor & d ) { mDeletor = d; }
+
+        //!
+        //! Set resource searcher
+        //!
+        void setSearcher( const Searcher & s ) { mSearcher = s; }
 
         //!
         //! Clear all resources.
@@ -261,11 +285,13 @@ namespace GN
         //!
         //! Get resource handle
         //!
-        ResHandle getResourceHandle( const StrA & name ) const
+        ResHandle getResourceHandle( const StrA & name )
         {
             GN_GUARD_SLOW;
             StringMap::const_iterator iter = mResNames.find( name );
-            return mResNames.end() != iter ? iter->second : 0;
+            if( mResNames.end() != iter ) return iter->second;
+            if( mSearcher && mSearcher(name) ) return addResource( name );
+            return 0; // failed
             GN_UNGUARD_SLOW;
         }
 
@@ -311,14 +337,12 @@ namespace GN
         //!
         //! Get resource by name
         //!
-        bool getResource( RES & result, const StrA & name )
+        bool getResource( RES & result, const StrA & name, bool addInvalidNameToManager = true )
         {
             GN_GUARD_SLOW;
-            StringMap::const_iterator iter = mResNames.find( name );
-            return getResourceByHandle(
-                result,
-                mResNames.end() != iter ? iter->second : 0,
-                name.cstr() );
+            ResHandle h = getResourceHandle( name );
+            if( 0 == h && addInvalidNameToManager ) h = addResource( name );
+            return getResourceByHandle( result, h, name.cstr() );
             GN_UNGUARD_SLOW;
         }
 
@@ -327,11 +351,11 @@ namespace GN
         //!
         //! If failed, return default constructed resource instance.
         //!
-        RES getResource( const StrA & name )
+        RES getResource( const StrA & name, bool addInvalidNameToManager = true )
         {
             GN_GUARD_SLOW;
             RES res;
-            if( getResource( res, name ) ) return res;
+            if( getResource( res, name, addInvalidNameToManager ) ) return res;
             else return RES();
             GN_UNGUARD_SLOW;
         }
@@ -356,9 +380,12 @@ namespace GN
 
         ResHangleMgr mResHandles;
         StringMap    mResNames;
-        Creator      mDefaultCreator;
-        Creator      mDefaultNullor; // Use to create default "NULL" instance.
+
+        // global resource manipulators
+        Creator      mCreator;
         Deletor      mDeletor;
+        Creator      mNullor; // Use to create default "NULL" instance.
+        Searcher     mSearcher;
 
         RES   * mNullInstance;
         Deletor mNullDeletor;
@@ -373,8 +400,8 @@ namespace GN
                 if( 0 == mNullInstance )
                 {
                     RES * tmp = new RES;   
-                    if( !mDefaultNullor ||
-                        !mDefaultNullor(*tmp,nullName) )
+                    if( !mNullor ||
+                        !mNullor(*tmp,nullName) )
                     {
                         GN_ERROR( "Fail to create null resource '%s'.", nullName );
                         delete tmp;
@@ -399,9 +426,9 @@ namespace GN
                 {
                     ok = item->creator( item->res, item->name );
                 }
-                else if( mDefaultCreator )
+                else if( mCreator )
                 {
-                    ok = mDefaultCreator( item->res, item->name );
+                    ok = mCreator( item->res, item->name );
                 }
 
                 if( !ok )
@@ -411,9 +438,9 @@ namespace GN
                     {
                         ok = item->nullor( item->res, item->name );
                     }
-                    if( !ok && mDefaultNullor )
+                    if( !ok && mNullor )
                     {
-                        ok = mDefaultNullor( item->res, item->name );
+                        ok = mNullor( item->res, item->name );
                     }
                     if( !ok )
                     {
@@ -441,6 +468,12 @@ namespace GN
                 if( mDeletor ) mDeletor( item->res );
                 item->disposed = true;
             }
+        }
+
+        static inline bool defaultNullor( RES & result, const StrA & )
+        {
+            result = RES();
+            return true;
         }
     };
 }
