@@ -141,6 +141,7 @@ void GN::detail::defaultLogImpl(
     }
     else
     {
+#if !GN_XENON // Xenon has no console output
         // output to console
         ::fprintf(
             level > GN::LOGLEVEL_INFO ? stdout : stderr,
@@ -149,6 +150,7 @@ void GN::detail::defaultLogImpl(
             line,
             levelStr(level).cstr(),
             msg );
+#endif
 
         // output to debugger
         #if GN_WINNT
