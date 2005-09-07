@@ -16,8 +16,8 @@ public:
             #undef GN_VERTEX_SEMANTIC
         };
 
-        StrA     s;
-        GN::VertexSemantic t;
+        StrA s;
+        GN::VertexSemantic t = GN::VERTSEM_INVALID;
 
         for( int i = 0; i < GN::NUM_VERTSEMS; ++i )
         {
@@ -54,7 +54,7 @@ public:
         };
 
         StrA s;
-        GN::RenderState  t;
+        GN::RenderState t = GN::RS_INVALID;
 
         for( int i = 0; i < GN::NUM_RENDER_STATES; ++i )
         {
@@ -90,8 +90,8 @@ public:
             #undef GN_DEFINE_RSV
         };
 
-        StrA   s;
-        GN::RenderStateValue t;
+        StrA s;
+        GN::RenderStateValue t = GN::RSV_INVALID;
 
         for( int i = 0; i < GN::NUM_RENDER_STATE_VALUES; ++i )
         {
@@ -128,7 +128,7 @@ public:
         };
 
         StrA s;
-        GN::TextureState t;
+        GN::TextureState t = GN::TS_INVALID;
 
         for( int i = 0; i < GN::NUM_TEXTURE_STATES; ++i )
         {
@@ -164,8 +164,8 @@ public:
             #undef GN_DEFINE_TSV
         };
 
-        StrA    s;
-        GN::TextureStateValue t;
+        StrA s;
+        GN::TextureStateValue t = GN::TSV_INVALID;
 
         for( int i = 0; i < GN::NUM_TEXTURE_STATE_VALUES; ++i )
         {
