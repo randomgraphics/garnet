@@ -11,12 +11,18 @@ def to_relpath( files ):
 #
 #
 # -----------------------------------------------------------------------------
-def build_proj( target, srcdir=[], incdir=['#core/priv/inc'] ):
+def build_proj( target, srcdir=[], incdir=[] ):
     if not target in GN_targets: return
 
-    sources = GN_func['glob']( '*.[c]*', srcdir, True )
-    includes = GN_func['glob']( '*.[hi]*', incdir, True )
-    localincs = GN_func['glob']( '*.[hi]*', srcdir, True )
+    glob = GN_func['glob']
+
+    sources = glob( '*.[c]*', srcdir, True )
+    if 0 == len(incdir):
+        includes = glob( '%s.h'%target, '#core/priv/inc/garnet' )
+        includes += glob( '*.[hi]*', ['#core/priv/inc/garnet/%s'%target[2:]], True )
+    else:
+        includes = glob( '*.[hi]*', incdir, True )
+    localincs = glob( '*.[hi]*', srcdir, True )
 
     proj = env.MSVSProject(
         target      = target + env['MSVSPROJECTSUFFIX'],
@@ -45,4 +51,3 @@ build_proj( 'GNd3dTest', ['#core/priv/d3d/test'] )
 build_proj( 'GNogl', ['#core/priv/ogl'] )
 build_proj( 'GNoglTest', ['#core/priv/ogl/test'] )
 build_proj( 'GNtest', ['#core/priv/test'] )
-
