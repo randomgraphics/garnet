@@ -41,7 +41,7 @@ namespace GN
     }
 
     //!
-    //! string comparation (case sensitive)
+    //! string comparison (case sensitive)
     //!
     template<typename CHAR>
     inline int strCmp( const CHAR * s1, const CHAR * s2 )
@@ -62,7 +62,7 @@ namespace GN
     }
 
     //!
-    //! string comparation (case insensitive)
+    //! string comparison (case insensitive)
     //!
     template<typename CHAR>
     inline int strCmpI( const CHAR * s1, const CHAR * s2 )
