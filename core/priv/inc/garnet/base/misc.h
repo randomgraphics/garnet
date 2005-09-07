@@ -58,6 +58,156 @@ namespace GN
         const NoCopy & operator = ( const NoCopy& );
     };
 
+    namespace detail
+    {
+        //!
+        //! Basic auto pointer class
+        //!
+        template<typename T, class RELEASE>
+        class BaseAutoPtr : public NoCopy
+        {
+            T * mPtr;
+
+            typedef BaseAutoPtr<T,RELEASE> MyType;
+
+            void release()
+            {
+                RELEASE::doRelease(mPtr);
+                mPtr = 0;
+            }
+
+        public:
+
+            //!
+            //! Construct from C-style
+            //!
+            explicit BaseAutoPtr( T * p ) throw() : mPtr(p) {}
+
+            //!
+            //! Destructor
+            //!
+            ~BaseAutoPtr() { release(); }
+
+            //!
+            //! Get internel pointer
+            //!
+            T* get() const { return mPtr; }
+
+            //!
+            //! destroy old pointer and store new pointer
+            //!
+            void reset( T * p = 0 )
+            {
+                if( p != mPtr )
+                {
+                    release();
+                    mPtr = p;
+                }
+            }
+
+            //!
+            //! Release ownership of private pointer
+            //!
+            T * detatch() throw()
+            {
+                T * tmp = mPtr;
+                mPtr = 0;
+                return tmp;
+            }
+
+            //!
+            //! dereference operator
+            //!
+            T & operator*() const { GN_ASSERT( mPtr ); return *mPtr; }
+
+            //!
+            //! arrow operator
+            //!
+            T * operator->() const { return mPtr; }
+        };
+
+        //!
+        //! delete one object
+        //!
+        template<typename T>
+        struct DeleteObj { static inline void doRelease( T * p ) { if(p) delete p; } };
+
+        //!
+        //! delete object array
+        //!
+        template<typename T>
+        struct DeleteObjArray { static inline void doRelease( T * p ) { if(p) delete [] p; } };
+
+        //!
+        //! delete C-style type array
+        //!
+        template<typename T>
+        struct DeleteTypePtr { static inline void doRelease( T * p ) { if(p) memFree(p); } };
+    }
+
+    //!
+    //! Automatic object pointer
+    //!
+    template<typename T>
+    class AutoObjPtr : public detail::BaseAutoPtr< T, detail::DeleteObj<T> >
+    {
+        typedef detail::BaseAutoPtr< T, detail::DeleteObj<T> > ParentType;
+
+        static void doRelease( T * p )
+        {
+            if( p ) delete p;
+        }
+
+    public:
+
+        //!
+        //! Construct from C-style pointer
+        //!
+        explicit AutoObjPtr( T * p = 0 ) throw() : ParentType(p) {}
+    };
+
+    //!
+    //! Automatic object array
+    //!
+    template<typename T>
+    class AutoObjArray : public detail::BaseAutoPtr< T, detail::DeleteObjArray<T> >
+    {
+        typedef detail::BaseAutoPtr< T, detail::DeleteObjArray<T> > ParentType;
+
+        static void doRelease( T * p )
+        {
+            if( p ) delete [] p;
+        }
+
+    public:
+
+        //!
+        //! Construct from C-style pointer
+        //!
+        explicit AutoObjArray( T * p = 0 ) throw() : ParentType(p) {}
+    };
+
+    //!
+    //! Automatic C-style array created by memAlloc
+    //!
+    template<typename T>
+    class AutoTypePtr : public detail::BaseAutoPtr< T, detail::DeleteTypePtr<T> >
+    {
+        typedef detail::BaseAutoPtr< T, detail::DeleteTypePtr<T> > ParentType;
+
+        static void doRelease( T * p )
+        {
+            if( p ) memFree(p);
+        }
+
+    public:
+
+        //!
+        //! Construct from C-style pointer
+        //!
+        explicit AutoTypePtr( T * p = 0 ) throw() : ParentType(p) {}
+    };
+
     //!
     //! Automatic COM pointer class
     //!
@@ -68,17 +218,9 @@ namespace GN
     public:
 
         //!
-        //! Default constructor
-        //!
-    	AutoComPtr() throw()
-    	{
-    		mPtr = NULL;
-    	}
-
-        //!
         //! Construct from normal pointer (will Addref)
         //!
-    	AutoComPtr(T* lp) throw()
+    	AutoComPtr( T * lp = 0 ) throw()
     	{
     		mPtr = lp;
     		if (mPtr) mPtr->AddRef();
