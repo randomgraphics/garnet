@@ -91,16 +91,19 @@ def GN_glob( patterns, dirs = ['.'],
     files = []
     for dir in dirs:
         root = Dir(dir).srcnode().abspath;
-        for file in os.listdir( root ):
-            if os.path.isdir( os.path.join(root,file) ):
-                if recursive and ( not '.svn' == file ) : # ignore subversion directory
-                    files = files + GN_glob( patterns, os.path.join(dir,file), recursive )
-            else:
-                # Note: ignore precompiled header
-                if not ('pch.cpp' == file or 'stdafx.cpp' == file):
-                    for pattern in patterns:
-                        if fnmatch.fnmatch(file, pattern):
-                            files.append( os.path.join( dir, file ) )
+        try:
+            for file in os.listdir( root ):
+                if os.path.isdir( os.path.join(root,file) ):
+                    if recursive and ( not '.svn' == file ) : # ignore subversion directory
+                        files = files + GN_glob( patterns, os.path.join(dir,file), recursive )
+                else:
+                    # Note: ignore precompiled header
+                    if not ('pch.cpp' == file or 'stdafx.cpp' == file):
+                        for pattern in patterns:
+                            if fnmatch.fnmatch(file, pattern):
+                                files.append( os.path.join( dir, file ) )
+        except WindowsError:
+            pass
     return files
 
 # 编译器是否会生成manifest文件
