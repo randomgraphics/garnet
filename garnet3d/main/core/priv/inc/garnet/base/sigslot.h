@@ -199,7 +199,7 @@ namespace GN
         void disconnect( const SlotBase & slot ) const
         {
             slotDisconnect(slot);   // remove slot from private slot list
-            disconnectToSlot(slot); // inform the slot to discoonect with myself.
+            disconnectToSlot(slot); // inform the slot to disconnect with myself.
         }
 
         R emit( PARAM_LIST ) const

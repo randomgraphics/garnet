@@ -160,7 +160,7 @@ namespace GN
         }
 
         //!
-        //! end the timer manally
+        //! end the timer manually
         //!
         void stop()
         {

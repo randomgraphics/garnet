@@ -396,7 +396,7 @@ namespace GN
 
             if( !mResHandles.validHandle(handle) )
             {
-                GN_ERROR( "Resource '%s' is invalid. Fallback to null instance...", nullName );
+                GN_ERROR( "Resource '%s' is invalid. Fall back to null instance...", nullName );
                 if( 0 == mNullInstance )
                 {
                     RES * tmp = new RES;   
@@ -433,7 +433,7 @@ namespace GN
 
                 if( !ok )
                 {
-                    GN_WARN( "Fallback to null instance for resource '%s'.", item->name.cstr() );
+                    GN_WARN( "Fall back to null instance for resource '%s'.", item->name.cstr() );
                     if( item->nullor )
                     {
                         ok = item->nullor( item->res, item->name );
