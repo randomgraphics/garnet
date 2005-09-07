@@ -3,6 +3,9 @@
 #if GN_WINNT
 #if GN_WINPC
 #include <shlwapi.h>
+#if GN_MSVC
+#pragma comment( lib, "shlwapi.lib" )
+#endif
 #endif
 #include <direct.h>
 #elif GN_POSIX
