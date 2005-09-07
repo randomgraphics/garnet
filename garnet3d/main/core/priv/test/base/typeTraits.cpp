@@ -1,13 +1,12 @@
 #include "../testCommon.h"
 
-class a : public GN::NoCopy { protected: virtual ~a() {}  };
-class b : public a {};
-class c {};
-class d : public c, public b {};
-typedef const d cd;
-
 class TypeTraitsTest : public CxxTest::TestSuite
 {
+    class a : public GN::NoCopy { protected: virtual ~a() {}  };
+    class b : public a {};
+    class c {};
+    class d : public c, public b {};
+    typedef const d cd;
 public:
 
     void testIsConst()
