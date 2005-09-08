@@ -316,9 +316,14 @@ bool GN::d3d::D3D::present()
 
     GN_ASSERT( selfOK() );
 
+#if GN_XENON
+
+    DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+
+#else
+
     processWindowMessages();
 
-#if GN_WINPC
     // respond to window size-move
     GN_ASSERT( !mMinimized );
 
@@ -468,6 +473,7 @@ bool GN::d3d::D3D::createD3D()
 
 #if GN_XENON
 
+    GN_ASSERT( 0 == mWindow );
     mMonitor = 0;
     mAdapter = D3DADAPTER_DEFAULT;
     mDevType = D3DDEVTYPE_HAL;
@@ -563,18 +569,14 @@ void GN::d3d::D3D::setupPresentParameters()
 	ZeroMemory( &mPresentParams, sizeof(mPresentParams) );
     mPresentParams.EnableAutoDepthStencil     = TRUE;
     mPresentParams.AutoDepthStencilFormat     = D3DFMT_D24S8;
-    mPresentParams.Windowed                   = false; // Xenon has no windowed mode
-    mPresentParams.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
     mPresentParams.BackBufferCount            = 1;
-    mPresentParams.BackBufferFormat           = D3DFMT_X8R8G8B8;
+    mPresentParams.BackBufferFormat           = D3DFMT_A8R8G8B8;
     mPresentParams.BackBufferWidth            = mInitParams.width;
     mPresentParams.BackBufferHeight           = mInitParams.height;
-    mPresentParams.SwapEffect                 = D3DSWAPEFFECT_COPY;
+    mPresentParams.SwapEffect                 = D3DSWAPEFFECT_DISCARD;
     mPresentParams.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
-    mPresentParams.hDeviceWindow              = mWindow;
     mPresentParams.MultiSampleType            = D3DMULTISAMPLE_NONE;
     mPresentParams.MultiSampleQuality         = 0;
-    mPresentParams.Flags                      = 0;
 #else
 
     UINT width, height;
@@ -665,9 +667,10 @@ bool GN::d3d::D3D::recreateDevice()
 // -----------------------------------------------------------------------------
 void GN::d3d::D3D::processWindowMessages()
 {
+#if GN_WINPC
+
     GN_GUARD_SLOW;
 
-#if GN_WINPC
     MSG msg;
     while( true )
     {
@@ -687,25 +690,22 @@ void GN::d3d::D3D::processWindowMessages()
         }
         else return; // Idle time!
     }
-#endif
 
     GN_UNGUARD_SLOW;
+
+#endif
 }
 
 //
 //
 // -----------------------------------------------------------------------------
+#if GN_XENON
+LRESULT GN::d3d::D3D::windowProc( HWND, UINT, WPARAM, LPARAM ) { return 0; }
+#else
 LRESULT GN::d3d::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-#if GN_XENON
-	GN_UNUSED_PARAM(wnd);
-	GN_UNUSED_PARAM(msg);
-	GN_UNUSED_PARAM(wp);
-	GN_UNUSED_PARAM(lp);
-	return 0;
-#else
     if( !selfOK() ) return ::DefWindowProc( wnd, msg, wp, lp );
 
     switch (msg)
@@ -735,10 +735,10 @@ LRESULT GN::d3d::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     }
 
     return ::DefWindowProc( wnd, msg, wp, lp );
-#endif
 
     GN_UNGUARD;
 }
+#endif
 
 //
 //
