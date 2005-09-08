@@ -208,7 +208,7 @@ static bool sLoadMesh( LPD3DXMESH & result, const GN::StrA & name )
     GN_UNGUARD;
 }
 
-#if GN_WINPC
+#if GN_PC
 //
 //
 // -----------------------------------------------------------------------------
@@ -667,7 +667,7 @@ bool GN::d3d::D3D::recreateDevice()
 // -----------------------------------------------------------------------------
 void GN::d3d::D3D::processWindowMessages()
 {
-#if GN_WINPC
+#if GN_PC
 
     GN_GUARD_SLOW;
 

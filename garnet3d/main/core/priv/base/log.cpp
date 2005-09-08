@@ -69,7 +69,7 @@ static GN::StrA levelStr( GN::LogLevel l )
 
 class ConsoleColor
 {
-#if GN_WINPC
+#if GN_WINNT & GN_PC
     HANDLE       mConsole;
     WORD         mAttrib;
 public:

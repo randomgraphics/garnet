@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <pcrecpp.h>
 #if GN_WINNT
-#if GN_WINPC
+#if GN_PC
 #include <shlwapi.h>
 #if GN_MSVC
 #pragma comment( lib, "shlwapi.lib" )
@@ -47,7 +47,7 @@ static inline GN::StrA sPwd()
 // ----------------------------------------------------------------------------
 static inline GN::StrA sGetAppDir()
 {
-#if GN_WINPC
+#if GN_WINNT && GN_PC
     char buf[MAX_PATH_LENGTH+1];
     GN_WIN_CHECK_RV( DWORD, GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
     return GN::path::getParent( buf );
@@ -254,10 +254,11 @@ void GN::path::toNative( StrA & result, const StrA & path )
 bool GN::path::exist( const StrA & path )
 {
     StrA native = toNative(path);
-    
-#if GN_WINPC
+
+#if GN_WINNT
+#if GN_PC
     return !!::PathFileExistsA( native.cstr() );
-#elif GN_WINNT
+#else
     WIN32_FIND_DATAA wfd;
     HANDLE fh = ::FindFirstFileA( native.cstr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
@@ -269,6 +270,7 @@ bool GN::path::exist( const StrA & path )
         ::FindClose( fh );
         return true;
     }
+#endif
 #else
     if( isDir(native) ) return true;
     FILE * fp = fopen( native.cstr(), "r" );
@@ -285,9 +287,10 @@ bool GN::path::isDir( const StrA & path )
 {
     StrA native = toNative(path);
     
-#if GN_WINPC
+#if GN_WINNT
+#if GN_PC
     return !!::PathIsDirectoryA( native.cstr() );
-#elif GN_WINNT
+#else
     WIN32_FIND_DATAA wfd;
     HANDLE fh = ::FindFirstFileA( native.cstr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
@@ -299,6 +302,7 @@ bool GN::path::isDir( const StrA & path )
         ::FindClose( fh );
         return !!(FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes);
     }
+#endif
 #else
     DIR * d = opendir( native.cstr() );
     if( 0 == d ) return false;
@@ -377,7 +381,7 @@ bool GN::path::resolve( StrA & result, const StrA & path )
 
     StrA relPath = toNative(path);
 
-#if GN_WINPC || GN_POSIX
+#if (GN_WINNT & GN_PC) || GN_POSIX
 
     char absPath[MAX_PATH_LENGTH+1];
 

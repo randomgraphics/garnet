@@ -9,16 +9,16 @@
 //!
 //! µ÷ÊÔÆ÷¶Ïµã
 //!
+#if GN_X86
 #if GN_GCC
 #define GN_DEBUG_BREAK asm("int $3")
 #elif GN_MSVC
-#if GN_WINX64 || GN_XENON
-#define GN_DEBUG_BREAK ::GN::debugBreak()
-#else
 #define GN_DEBUG_BREAK __asm { int 3 }
+#else
+#error "Unsupport compiler!"
 #endif
 #else
-#define GN_DEBUG_BREAK
+#define GN_DEBUG_BREAK ::GN::debugBreak()
 #endif
 
 //!
@@ -154,7 +154,7 @@ namespace GN
         int          line,
         bool *       ignore ) throw();
 
-#if GN_WINX64 || GN_XENON
+#if !GN_X86
 	//!
 	//! Debug break function
 	//!
