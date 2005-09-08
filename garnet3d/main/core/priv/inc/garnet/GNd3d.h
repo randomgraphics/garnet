@@ -307,6 +307,11 @@ namespace GN
         LPDIRECT3DPIXELSHADER9 assemblePSFromFile( const char * file, uint32_t flags = 0 );
 
 #if GN_XENON
+
+#ifndef D3DXSHADER_MICROCODE_TARGET_FINAL
+#define D3DXSHADER_MICROCODE_TARGET_FINAL 0
+#endif
+
         //!
         //! Assemble XVS shader from string
         //!
