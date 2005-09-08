@@ -10,7 +10,8 @@ GN::assertFunc(
     int          line,
     bool *       ignore ) throw()
 {
-#if GN_WINPC
+#if GN_PC
+#if GN_WINNT
     char buf[1024];
     ::_snprintf( buf, 1023,
         "%s(%d)\n"
@@ -62,15 +63,26 @@ GN::assertFunc(
         }
     }
 #endif
+#else
+    GN_UNUSED_PARAM( msg );
+    GN_UNUSED_PARAM( file );
+    GN_UNUSED_PARAM( line );
+    if( *ignore ) *ignore = false;
+    return true;
+#endif
 }
 
-#if GN_WINX64 || GN_XENON
+#if !GN_X86
 //
 //
 // -----------------------------------------------------------------------------
 void GN::debugBreak()
 {
+#if GN_MSVC
 	::DebugBreak();
+#else
+#error "Debug break unimplemented!"
+#endif
 }
 #endif
 

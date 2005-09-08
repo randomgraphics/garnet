@@ -6,12 +6,18 @@
 //! \author  chenlee (2005.7.24)
 // *****************************************************************************
 
+// *****************************************************************************
+// 辨识编译器
+// *****************************************************************************
+
 #define GN_MSVC 0 //!< If 1, means current compiler is msvc (or icl)
 #define GN_ICL  0 //!< If 1, means current compiler is intel c++ compiler 
 #define GN_GCC  0 //!< If 1, means current compierl is gcc/g++
 #define GN_BCB  0 //!< If 1, means current compierl is boland c++ compiler
 
-// 辨识编译器
+//! \def GN_COMPILER
+//! Indicate current compiler
+
 #if defined(_MSC_VER) && !defined(__ICL)
 #undef GN_MSVC
 #define GN_MSVC 1
@@ -32,58 +38,98 @@
 #define GN_COMPILER "gcc"
 #else
 #error "Unknown compiler!"
+#define GN_COMPILER "unknown"
 #endif
 
 
+// *****************************************************************************
 // 辨识操作系统
+// *****************************************************************************
+
 #define GN_WINNT  0 //!< If 1, means current platform is Windows serias
-#define GN_WIN32  0 //!< If 1, means current platform is Windows x86
-#define GN_WINX64  0 //!< If 1, means current platform is Windows x64
-#define GN_WINPC  (GN_WIN32||GN_WINX64) //!< If 1, means windows on PC
-#define GN_XENON  0 //!< If 1, means current platform is Xbox 360
 #define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
 #define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
+
+//! \def GN_OS
+//! Indicate current OS
 
 #if defined( _WIN32 )      // Windows
 // Windows platform
 #undef GN_WINNT
 #define GN_WINNT 1
-#if defined( _WIN64 ) || defined( WIN64 )
-// Amd64 platform
-#undef GN_WINX64
-#define GN_WINX64 1
-#define GN_PLATFORM "amd64"
-#elif defined(_XENON)
-#ifndef _XBOX
-#error _XBOX is required for Xenon platform!
-#endif
-#undef GN_XENON
-#define GN_XENON 1
-#define GN_PLATFORM "Xenon"
-#else
-// Win32 platform
-#undef GN_WIN32
-#define GN_WIN32 1
-#define GN_PLATFORM "win32"
-#endif
-
+#define GN_OS "winnt"
 #elif defined(__CYGWIN__)
 // Cygwin platform
 #undef GN_CYGWIN
 #undef GN_POSIX
 #define GN_CYGWIN 1
 #define GN_POSIX  1 // cygwin also provides some posix compabilities
-#define GN_PLATFORM "cygwin"
-
+#define GN_OS "cygwin"
 #elif defined( __unix ) || defined( __unix__ )
 // posix-like platform
 #undef GN_POSIX
 #define GN_POSIX 1
-#define GN_PLATFORM "posix"
-
+#define GN_OS "posix"
 #else
-#error "unknown platform!"
+#error "unknown OS!"
+#define GN_OS "unknown"
 #endif
+
+// *****************************************************************************
+// 辨识系统平台
+// *****************************************************************************
+
+#define GN_PC 0    //!< PC
+#define GN_XBOX1 0 //!< Xbox
+#define GN_XENON 0 //!< Xbox 360
+
+//! \def GN_SYSTEM
+//! Indicate current system
+
+#ifdef _XBOX_VER
+#if _XBOX_VER >= 200
+#undef GN_XENON
+#define GN_XENON 1
+#define GN_SYSTEM "xenon"
+#else
+#undef GN_XBOX1
+#define GN_XBOX1 1
+#define GN_SYSTEM "xbox1"
+#endif
+#else
+#undef GN_PC
+#define GN_PC 1
+#define GN_SYSTEM "pc"
+#endif
+
+// *****************************************************************************
+// 辨识CPU
+// *****************************************************************************
+
+#define GN_X86 0 //!< 32-bit x86
+#define GN_X64 0 //!< 64-bit amd64
+#define GN_PPC 0 //!< power pc
+
+//! \def GN_CPU
+//! Indicate current CPU
+
+#if defined( _WIN64 ) || defined( WIN64 )
+#undef GN_X64
+#define GN_X64 1
+#define GN_CPU "x64"
+#elif defined( _PPC_ ) || GN_XENON
+#undef GN_PPC
+#define GN_PPC 1
+#define GN_CPU "ppc"
+#else
+#undef GN_X86
+#define GN_X86 1
+#define GN_CPU "x86"
+#endif
+
+// *****************************************************************************
+// 定义函数和变量声明
+// *****************************************************************************
 
 //!
 //! force inline macro
@@ -139,6 +185,10 @@
 #define C_LINKAGE
 #endif
 
+// *****************************************************************************
+// Misc.
+// *****************************************************************************
+
 //!
 //! 函数名称
 //!
@@ -155,8 +205,6 @@
 //!
 #define GN_JOIN(s1, s2)         GN_JOIN_DIRECT(s1, s2)
 #define GN_JOIN_DIRECT(s1, s2)  s1##s2 //!< Auxillary macro used by GN_JOIN
-
-//@}
 
 // *****************************************************************************
 //                           End of basicDefines.h

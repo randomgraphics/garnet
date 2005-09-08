@@ -466,7 +466,7 @@ void GN::ogl::OGL::processWindowMessages()
 {
     GN_GUARD_SLOW;
 
-#if GN_WINPC
+#if GN_WINNT & GN_PC
     MSG msg;
     while( true )
     {

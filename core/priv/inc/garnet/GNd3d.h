@@ -14,7 +14,7 @@
 
 #if GN_XENON
 #include <xtl.h>
-#elif GN_WINPC
+#elif GN_PC
 #define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
 #endif
