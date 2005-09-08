@@ -13,7 +13,7 @@ static uint32_t sRefineFlags( uint32_t flags, bool forCompile )
     GN_UNUSED_PARAM(forCompile);
 #endif
 
-#if GN_XENON
+#if GN_XENON && defined(D3DXSHADER_MICROCODE_TARGET_FINAL) && defined(D3DXSHADER_MICROCODE_TARGET_ALPHA2)
     if( forCompile ) 
     {
         flags |= D3DXSHADER_MICROCODE_TARGET_FINAL | D3DXSHADER_MICROCODE_TARGET_ALPHA2;
