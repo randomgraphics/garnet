@@ -91,7 +91,7 @@ namespace GN
             //!
             //! Get internel pointer
             //!
-            T* get() const { return mPtr; }
+            T * get() const { return mPtr; }
 
             //!
             //! destroy old pointer and store new pointer
@@ -214,120 +214,116 @@ namespace GN
     template <class T>
     class AutoComPtr
     {
-    	T* mPtr;
+        T * mPtr;
     public:
 
         //!
-        //! Construct from normal pointer (will Addref)
+        //! Construct from normal pointer (will AddRef)
         //!
-    	AutoComPtr( T * lp = 0 ) throw()
-    	{
-    		mPtr = lp;
-    		if (mPtr) mPtr->AddRef();
-    	}
+        AutoComPtr( T * lp = 0 ) throw()
+        {
+            mPtr = lp;
+            if (mPtr) mPtr->AddRef();
+        }
 
         //!
         //! Destructor
         //!
-    	~AutoComPtr() throw()
-    	{
-    		if (mPtr) mPtr->Release();
-    	}
+        ~AutoComPtr() throw()
+        {
+            if (mPtr) mPtr->Release();
+        }
 
         //!
-        //! Convert to T*
+        //! Convert to T *
         //!
-    	operator T*() const throw()
-    	{
-    		return mPtr;
-    	}
+        operator T*() const throw()
+        {
+            return mPtr;
+        }
 
         //!
         //! dereference operator
         //!
-    	T& operator*() const throw()
-    	{
-    		GN_ASSERT(mPtr!=NULL);
-    		return *mPtr;
-    	}
+        T & operator*() const throw()
+        {
+            GN_ASSERT( mPtr );
+            return *mPtr;
+        }
 
         //!
         //! Get address of pointer.
         //!
-    	//! The assert on operator& usually indicates a bug.  If this is really
-    	//! what is needed, however, take the address of the mPtr member explicitly.
-    	//!
-    	T** operator&() throw()
-    	{
-    		GN_ASSERT(mPtr==NULL);
-    		return &mPtr;
-    	}
+        //! The assert on operator& usually indicates a bug.  If this is really
+        //! what is needed, however, take the address of the mPtr member explicitly.
+        //!
+        T ** operator&() throw()
+        {
+            GN_ASSERT(mPtr==NULL);
+            return &mPtr;
+        }
 
         //!
         //! self explain.
         //!
-    	T* operator->() const throw()
-    	{
-    		GN_ASSERT(mPtr!=NULL);
-    		return mPtr;
-    	}
+        T * operator->() const throw()
+        {
+            GN_ASSERT( mPtr );
+            return mPtr;
+        }
 
         //!
         //! NOT operator
         //!
-    	bool operator!() const throw()
-    	{
-    		return (mPtr == NULL);
-    	}
+        bool operator!() const throw()
+        {
+            return mPtr == NULL;
+        }
 
         //!
         //! LESS operator
         //!
-    	bool operator<(T* pT) const throw()
-    	{
-    		return mPtr < pT;
-    	}
+        bool operator<( T * pT ) const throw()
+        {
+            return mPtr < pT;
+        }
 
         //!
         //! EQ operator
         //!
-    	bool operator==(T* pT) const throw()
-    	{
-    		return mPtr == pT;
-    	}
+        bool operator==( T * pT ) const throw()
+        {
+            return mPtr == pT;
+        }
 
         //!
-    	//! Release the interface and set to NULL
+        //! Release existing interface, then hold new interface
         //!
-    	void release() throw()
-    	{
-    		T* pTemp = mPtr;
-    		if (pTemp)
-    		{
-    			mPtr = NULL;
-    			pTemp->Release();
-    		}
-    	}
+        void reset( T * p = 0 ) throw()
+        {
+            if( p ) p->AddRef();
+            if( mPtr ) mPtr->Release();
+            mPtr = p;
+        }
 
         //!
-    	//! Attach to an existing interface (does not AddRef)
+        //! Attach to an existing interface (does not AddRef)
         //!
-    	void attach(T* p2) throw()
-    	{
-    		if (mPtr)
-    			mPtr->Release();
-    		mPtr = p2;
-    	}
+        void attach( T * p2 ) throw()
+        {
+            if (mPtr) mPtr->Release();
+            mPtr = p2;
+        }
 
         //!
-    	//! Detach the interface (does not Release)
+        //! Detach the interface (does not Release)
         //!
-    	T* detach() throw()
-    	{
-    		T* pt = mPtr;
-    		mPtr = NULL;
-    		return pt;
-    	}
+        T * detach() throw()
+        {
+            T * pt = mPtr;
+            mPtr = NULL;
+            return pt;
+        }
     };
 
     //!
