@@ -484,25 +484,42 @@ bool GN::d3d::D3D::createD3D()
     // update monitor handle
     mMonitor = MonitorFromWindow( mWindow, MONITOR_DEFAULTTOPRIMARY );
 
-    // Look for an adapter ordinal that is tied to a HMONITOR
+    // get adapter count
     uint32_t nAdapter = mD3D->GetAdapterCount();
+
+    std::vector<D3DDEVTYPE> devtypes;
+
+    // Look for nvidia adapter
     mAdapter = 0;
     for( uint32_t i = 0; i < nAdapter; ++i )
     {
-        if( mD3D->GetAdapterMonitor( i ) == mMonitor )
+        D3DADAPTER_IDENTIFIER9 Identifier;
+        DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
+        if( 0 == strcmp(Identifier.Description,"NVIDIA NVPerfHUD") )
         {
             mAdapter = i;
+            devtypes.push_back( D3DDEVTYPE_REF );
             break;
         }
     }
 
-    // prepare device type candidates
-    std::vector<D3DDEVTYPE> devtypes;
-    if( !mInitParams.refDevice ) devtypes.push_back( D3DDEVTYPE_HAL );
-    devtypes.push_back( D3DDEVTYPE_REF );
-    devtypes.push_back( D3DDEVTYPE_NULLREF );
+    // Look for an adapter ordinal that is tied to a HMONITOR, only if NVPerfHUD adapter is not available.
+    if( 0 == mAdapter )
+    {
+        for( uint32_t i = 0; i < nAdapter; ++i )
+        {
+            if( mD3D->GetAdapterMonitor( i ) == mMonitor )
+            {
+                mAdapter = i;
+                break;
+            }
+        }
+        if( !mInitParams.refDevice ) devtypes.push_back( D3DDEVTYPE_HAL );
+        devtypes.push_back( D3DDEVTYPE_REF );
+        devtypes.push_back( D3DDEVTYPE_NULLREF );
+    }
 
-    // create device
+    // Check device caps and termin device behavior flags.
     HRESULT r = D3D_OK;
     for( size_t t = 0; t < devtypes.size(); ++ t )
     {
@@ -534,6 +551,8 @@ bool GN::d3d::D3D::createD3D()
             mBehaviorFlags = D3DCREATE_MIXED_VERTEXPROCESSING;
         }
 
+        // look for NVPerfHUD device
+
         // device found!
         break;
     }
@@ -552,6 +571,86 @@ bool GN::d3d::D3D::createD3D()
 
     // get device caps
     DX_CHECK_RV( mDevice->GetDeviceCaps( &mDevCaps ), false );
+
+    // get device info
+    StrA devTypeStr;
+    switch( mDevCaps.DeviceType )
+    {
+        case D3DDEVTYPE_HAL : devTypeStr = "HAL";     break;
+        case D3DDEVTYPE_REF : devTypeStr = "REF";     break;
+        case D3DDEVTYPE_SW  : devTypeStr = "SW";      break;
+        default             : devTypeStr = "UNKNOWN"; break;
+    }
+    if( D3DCREATE_HARDWARE_VERTEXPROCESSING & mBehaviorFlags &&
+         D3DCREATE_PUREDEVICE & mBehaviorFlags )
+    {
+        devTypeStr += "( Pure-HW )";
+    }
+    else if( D3DCREATE_HARDWARE_VERTEXPROCESSING & mBehaviorFlags )
+    {
+        devTypeStr += "( Hardware )";
+    }
+    else if( D3DCREATE_MIXED_VERTEXPROCESSING & mBehaviorFlags )
+    {
+        devTypeStr += "( Mixed )";
+    }
+    else if( D3DCREATE_SOFTWARE_VERTEXPROCESSING & mBehaviorFlags )
+    {
+        devTypeStr += "( Software )";
+    }
+    uint32_t vsver_major, vsver_minor, psver_major, psver_minor;
+    vsver_major = (mDevCaps.VertexShaderVersion & 0xFF00) >> 8;
+    vsver_minor = mDevCaps.VertexShaderVersion & 0xFF;
+    psver_major = (mDevCaps.PixelShaderVersion & 0xFF00) >> 8;
+    psver_minor = mDevCaps.PixelShaderVersion & 0xFF;
+    StrA vsver = formatStr( "%d.%d", vsver_major, vsver_minor );
+    StrA psver = formatStr( "%d.%d", psver_major, psver_minor );
+    StrA hwtnl;
+    if( D3DDEVCAPS_HWTRANSFORMANDLIGHT & mDevCaps.DevCaps )
+        hwtnl = "Supported";
+    else
+        hwtnl = "Unsupported";
+
+    // get adapter and driver information
+    D3DADAPTER_IDENTIFIER9 aid;
+    memset( &aid, 0, sizeof(aid) );
+    DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
+
+    // print out device information
+    GN_INFO(
+        "\n\n"
+        "===========================================================\n"
+        "            DirectX Implementation Capabilities\n"
+        "-----------------------------------------------------------\n"
+        "    Device Type                    : %s\n"
+        "    Driver                         : %s(%d.%d.%d.%d)\n"
+        "    Adapter                        : %s\n"
+        "    GDI Device Name                : %s\n"
+        "    Backbuffer Size                : %d,%d\n"
+        "    Display Mode                   : %s\n"
+        "    Vertex Shader Version          : %s\n"
+        "    Pixel Shader Version           : %s\n"
+        "    Hardware TnL (FFP)             : %s\n"
+        "    Texture Blend Stages (FFP)     : %d\n"
+        "    Max Simulaneous Textures (FFP) : %d\n"
+        "===========================================================\n"
+        "\n\n",
+        devTypeStr.cstr(),
+        aid.Driver,
+        HIWORD(aid.DriverVersion.HighPart),
+        LOWORD(aid.DriverVersion.HighPart),
+        HIWORD(aid.DriverVersion.LowPart),
+        LOWORD(aid.DriverVersion.LowPart),
+        aid.Description,
+        aid.DeviceName,
+        mPresentParams.BackBufferWidth,
+        mPresentParams.BackBufferHeight,
+        mPresentParams.Windowed ? "Windowed" : "Fullscreen",
+        vsver.cstr(),
+        psver.cstr(),
+        hwtnl.cstr(),
+        mDevCaps.MaxTextureBlendStages,
+        mDevCaps.MaxSimultaneousTextures );
 
     // success
     return true;

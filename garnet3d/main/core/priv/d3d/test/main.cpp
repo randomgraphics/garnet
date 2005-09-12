@@ -13,6 +13,7 @@ void quit()
 
 void render()
 {
+    gD3D.getDevice()->Clear( 0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 0, 1.0f, 0 );
     gD3D.present();
 }
 
