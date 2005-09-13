@@ -205,10 +205,12 @@ namespace GN
         R emit( PARAM_LIST ) const
         {
             Emitter<R,ConstSlotIter> e;
-            e.emit( mSlots.begin(), mSlots.end() PARAM_COMMA PARAM_VALUES );
+            return e.emit( mSlots.begin(), mSlots.end() PARAM_COMMA PARAM_VALUES );
         }
 
         size_t getNumSlots() const { return mSlots.size(); }
+
+        R operator()( PARAM_LIST ) const { return emit( PARAM_VALUES ); }
 
     private:
 
