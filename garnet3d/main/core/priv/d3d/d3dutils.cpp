@@ -72,7 +72,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( const char * file, uint32_t 
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXCompileShaderFromFileA(
-            file,
+            GN::path::toNative(file).cstr(),
             NULL, NULL, // no macros, no includes,
             entryFunc,
             D3DXGetVertexShaderProfile( gD3D.getDevice() ), // the highest possible version
@@ -145,7 +145,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( const char * file, uint32_t
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXAssembleShaderFromFileA(
-            file,
+            GN::path::toNative(file).cstr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags,false),
             &bin,
@@ -218,7 +218,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( const char * file, uint32_t f
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXCompileShaderFromFileA(
-            file,
+            GN::path::toNative(file).cstr(),
             NULL, NULL, // no macros, no includes,
             entryFunc,
             D3DXGetPixelShaderProfile( gD3D.getDevice() ), // the hightest possible version
@@ -291,7 +291,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t 
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXAssembleShaderFromFileA(
-            file,
+            GN::path::toNative(file).cstr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags,false),
             &bin,

@@ -267,6 +267,7 @@ bool GN::d3d::D3D::init( const D3DInitParams & params )
 
     if( !createWindow() ) { quit(); return selfOK(); }
     if( !createD3D() ) { quit(); return selfOK(); }
+    if( !restoreDevice() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -281,10 +282,7 @@ void GN::d3d::D3D::quit()
 {
     GN_GUARD;
 
-    // release all resources
-    gTexMgr.clear();
-    gEffectMgr.clear();
-    gMeshMgr.clear();
+    destroyD3D();
 
 #if !GN_XENON
     if( mWindow )
@@ -293,9 +291,6 @@ void GN::d3d::D3D::quit()
         mWindow = 0;
     }
 #endif
-
-    safeRelease( mDevice );
-    safeRelease( mD3D );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -652,8 +647,35 @@ bool GN::d3d::D3D::createD3D()
         mDevCaps.MaxTextureBlendStages,
         mDevCaps.MaxSimultaneousTextures );
 
+    // trigger device initialization signal
+    if( !sigDeviceCreate.emit() ) return false;
+
     // success
     return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::d3d::D3D::destroyD3D()
+{
+    GN_GUARD;
+
+    // release all D3D resources
+    gTexMgr.dispose();
+    gMeshMgr.dispose();
+    gVSMgr.dispose();
+    gPSMgr.dispose();
+    gEffectMgr.dispose();
+
+    // trigger device destroy signal
+    if( mDevice ) sigDeviceDestroy.emit();
+
+    // delete D3D device
+    safeRelease( mDevice );
+    safeRelease( mD3D );
 
     GN_UNGUARD;
 }
@@ -725,9 +747,15 @@ bool GN::d3d::D3D::restoreDevice()
     gMeshMgr.dispose();
     gEffectMgr.dispose();
 
+    // trigger device invalidation signal
+    sigDeviceInvalidate.emit();
+
     // reset device
     setupPresentParameters();
     DX_CHECK_RV( mDevice->Reset( &mPresentParams ), false );
+
+    // trigger device restore signal
+    if( !sigDeviceRestore.emit() ) return false;
 
     // success
     return true;
@@ -744,18 +772,8 @@ bool GN::d3d::D3D::recreateDevice()
 
     GND3D_INFO( "Recreate D3D device" );
 
-    // release all D3D resources
-    gTexMgr.dispose();
-    gMeshMgr.dispose();
-    gVSMgr.dispose();
-    gPSMgr.dispose();
-    gEffectMgr.dispose();
-
-    // delete D3D device
-    safeRelease( mDevice );
-    safeRelease( mD3D );
-
     // recreate devices
+    destroyD3D();
     return createD3D();
 
     GN_UNGUARD;

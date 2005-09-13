@@ -8,12 +8,14 @@
 
 #include "garnet/GNbase.h"
 
-#ifdef GN_DEBUG
+#if GN_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
 #if GN_XENON
 #include <xtl.h>
+#include <xgraphics.h>
+#include <xboxmath.h>
 #elif GN_PC
 #define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
@@ -59,7 +61,7 @@
 //!
 //! DX error check routine
 //!
-#ifdef GN_DEBUG
+#if GN_DEBUG
 #define DX_CHECK( func )         DX_CHECK_DO( func, )
 #else
 #define DX_CHECK( func )         func
@@ -150,6 +152,22 @@ namespace GN
             //@}
 
             // ********************************
+            // public signals
+            // ********************************
+        public:
+
+            Signal0<bool> sigDeviceCreate;
+            Signal0<bool> sigDeviceRestore;
+            Signal0<void> sigDeviceInvalidate;
+            Signal0<void> sigDeviceDestroy;
+
+#define GN_D3DSIG_CONNECT_TO(PTR,CLASS) \
+    gD3D.sigDeviceCreate.connect( PTR, &CLASS::onDeviceCreate ); \
+    gD3D.sigDeviceRestore.connect( PTR, &CLASS::onDeviceRestore ); \
+    gD3D.sigDeviceInvalidate.connect( PTR, &CLASS::onDeviceInvalidate ); \
+    gD3D.sigDeviceDestroy.connect( PTR, &CLASS::onDeviceDestroy );
+
+            // ********************************
             // public functions
             // ********************************
         public:
@@ -236,6 +254,7 @@ namespace GN
 
             bool createWindow();
             bool createD3D();
+            void destroyD3D();
 
             void setupPresentParameters();
             bool restoreDevice();
