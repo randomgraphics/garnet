@@ -312,13 +312,9 @@ namespace GN
     public:
 
         //!
-        //! Construct from normal pointer (will AddRef)
+        //! Default constructor
         //!
-        AutoComPtr( T * lp = 0 ) throw()
-        {
-            mPtr = lp;
-            if (mPtr) mPtr->AddRef();
-        }
+        AutoComPtr() throw() : mPtr(0) {}
 
         //!
         //! Destructor
@@ -389,6 +385,11 @@ namespace GN
         {
             return mPtr == pT;
         }
+
+        //!
+        //! Is empty pointer?
+        //!
+        bool empty() const { return 0 == mPtr; }
 
         //!
         //! Release existing interface, then hold new interface
