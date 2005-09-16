@@ -320,7 +320,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t 
 // ----------------------------------------------------------------------------
 void GN::d3d::drawScreenAlignedQuad(
     double fLeft, double fTop, double fRight, double fBottom,
-    float fLeftU, float fTopV, float fRightU, float fBottomV )
+    double fLeftU, double fTopV, double fRightU, double fBottomV )
 {
     GN_GUARD;
 
@@ -346,17 +346,16 @@ void GN::d3d::drawScreenAlignedQuad(
     };
 
     SCREEN_VERTEX v[4];
-    v[0].p = XMFLOAT4( l-0.5f, t-0.5f, 1.0f, 1.0f); v[0].t = XMFLOAT2(  fLeftU,    fTopV );
-    v[1].p = XMFLOAT4( r-0.5f, t-0.5f, 1.0f, 1.0f); v[1].t = XMFLOAT2( fRightU,    fTopV );
-    v[2].p = XMFLOAT4( l-0.5f, b-0.5f, 1.0f, 1.0f); v[2].t = XMFLOAT2(  fLeftU, fBottomV );
-    v[3].p = XMFLOAT4( r-0.5f, b-0.5f, 1.0f, 1.0f); v[3].t = XMFLOAT2( fRightU, fBottomV );
+    v[0].p = XMFLOAT4( l-0.5f, t-0.5f, 0.0f, 1.0f); v[0].t = XMFLOAT2( (float) fLeftU, (float)   fTopV );
+    v[1].p = XMFLOAT4( r-0.5f, t-0.5f, 0.0f, 1.0f); v[1].t = XMFLOAT2( (float)fRightU, (float)   fTopV );
+    v[2].p = XMFLOAT4( l-0.5f, b-0.5f, 0.0f, 1.0f); v[2].t = XMFLOAT2( (float) fLeftU, (float)fBottomV );
+    v[3].p = XMFLOAT4( r-0.5f, b-0.5f, 0.0f, 1.0f); v[3].t = XMFLOAT2( (float)fRightU, (float)fBottomV );
 
     // capture current render states
     AutoComPtr<IDirect3DStateBlock9> rsb;
     DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
     rsb->Capture();
 
-    dev->SetRenderState( D3DRS_ZENABLE, FALSE );
     dev->SetRenderState( D3DRS_VIEWPORTENABLE, FALSE );
 
     dev->SetFVF( D3DFVF_XYZW | D3DFVF_TEX1 );
@@ -384,10 +383,10 @@ void GN::d3d::drawScreenAlignedQuad(
 
     SCREEN_VERTEX v[4] =
     {
-        { l, t, 1.0f, 1.0f,  fLeftU,    fTopV },
-        { r, t, 1.0f, 1.0f, fRightU,    fTopV },
-        { l, b, 1.0f, 1.0f,  fLeftU, fBottomV },
-        { r, b, 1.0f, 1.0f, fRightU, fBottomV },
+        { l, t, 0.0f, 1.0f, (float) fLeftU, (float)   fTopV },
+        { r, t, 0.0f, 1.0f, (float)fRightU, (float)   fTopV },
+        { l, b, 0.0f, 1.0f, (float) fLeftU, (float)fBottomV },
+        { r, b, 0.0f, 1.0f, (float)fRightU, (float)fBottomV },
     };
 
     // capture current render states
@@ -395,7 +394,6 @@ void GN::d3d::drawScreenAlignedQuad(
     DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
     rsb->Capture();
 
-    dev->SetRenderState( D3DRS_ZENABLE, FALSE );
     dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
     dev->SetFVF( D3DFVF_XYZRHW | D3DFVF_TEX1 );
 

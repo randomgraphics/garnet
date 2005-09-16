@@ -377,7 +377,7 @@ namespace GN
         //!
         void drawScreenAlignedQuad(
             double fLeft = 0.0, double fTop = 0.0, double fRight = 1.0, double fBottom = 1.0,
-            float fLeftU = 0.0f, float fTopV = 0.0f, float fRightU = 1.0f, float fBottomV = 1.0f );
+            double fLeftU = 0.0, double fTopV = 0.0, double fRightU = 1.0, double fBottomV = 1.0 );
 
         //@}
     }
