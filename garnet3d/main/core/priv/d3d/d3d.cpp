@@ -572,12 +572,14 @@ bool GN::d3d::D3D::createD3D()
     switch( mDevCaps.DeviceType )
     {
         case D3DDEVTYPE_HAL : devTypeStr = "HAL";     break;
+#if !GN_XENON
         case D3DDEVTYPE_REF : devTypeStr = "REF";     break;
         case D3DDEVTYPE_SW  : devTypeStr = "SW";      break;
+#endif
         default             : devTypeStr = "UNKNOWN"; break;
     }
     if( D3DCREATE_HARDWARE_VERTEXPROCESSING & mBehaviorFlags &&
-         D3DCREATE_PUREDEVICE & mBehaviorFlags )
+        D3DCREATE_PUREDEVICE & mBehaviorFlags )
     {
         devTypeStr += "( Pure-HW )";
     }
@@ -585,6 +587,7 @@ bool GN::d3d::D3D::createD3D()
     {
         devTypeStr += "( Hardware )";
     }
+#if !GN_XENON
     else if( D3DCREATE_MIXED_VERTEXPROCESSING & mBehaviorFlags )
     {
         devTypeStr += "( Mixed )";
@@ -593,6 +596,7 @@ bool GN::d3d::D3D::createD3D()
     {
         devTypeStr += "( Software )";
     }
+#endif
     uint32_t vsver_major, vsver_minor, psver_major, psver_minor;
     vsver_major = (mDevCaps.VertexShaderVersion & 0xFF00) >> 8;
     vsver_minor = mDevCaps.VertexShaderVersion & 0xFF;
