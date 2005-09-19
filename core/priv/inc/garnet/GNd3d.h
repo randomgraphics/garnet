@@ -152,20 +152,67 @@ namespace GN
             //@}
 
             // ********************************
-            // public signals
+            //! \name device management signals
+            //! - These signales provide standard way to handle device lost/restore
+            //!   and device recreation.
+            //! - During class initialization, sigDeviceCreate and sigDeviceRestore
+            //!   will be triggered; during class destory sigDeviceInvalidate
+            //!   and sigDeviceDestroyr will be triggerd.
+            //! - signals may be triggered several times in life-time of application,
+            //!   but must be in strict order:
+            //!   <pre>
+            //!                           +--------------+
+            //!                           |              |
+            //!                          \|/             |
+            //!                           '              |
+            //!   (start)-->create----->restore------->invalidate------>destroy-->(end)
+            //!               .                                          |
+            //!              /|\                                         |
+            //!               |                                          |
+            //!               +------------------------------------------+
+            //!   </pre>
             // ********************************
         public:
 
+            //@{
+
+            //!
+            //! Device creation signal. This signal will be triggered
+            //! after D3D device (re)creation.
+            //!
             Signal0<bool> sigDeviceCreate;
+
+            //!
+            //! Device restore signal. This signal will be triggered
+            //! after D3D device is resetted. You may recreate D3D resources in
+            //! default pool here.
+            //!
             Signal0<bool> sigDeviceRestore;
+
+            //!
+            //! Device invalidate(lost) signal. This signal will be triggered
+            //! before resetting lost device. You should release all D3D resources
+            //! in default pool, to prepare for device reset.
+            //!
             Signal0<void> sigDeviceInvalidate;
+
+            //!
+            //! Device destroy signal. This signal will be triggered right before
+            //! destroy of D3D device. You map release all device-dependent
+            //! resources here.
+            //!
             Signal0<void> sigDeviceDestroy;
 
-#define GN_D3DSIG_CONNECT_TO(PTR,CLASS) \
-    gD3D.sigDeviceCreate.connect( PTR, &CLASS::onDeviceCreate ); \
-    gD3D.sigDeviceRestore.connect( PTR, &CLASS::onDeviceRestore ); \
-    gD3D.sigDeviceInvalidate.connect( PTR, &CLASS::onDeviceInvalidate ); \
-    gD3D.sigDeviceDestroy.connect( PTR, &CLASS::onDeviceDestroy );
+            //!
+            //! Macro to facilliate connection to device management signals.
+            //!
+            #define GN_D3DSIG_CONNECT_TO(PTR,CLASS) \
+                gD3D.sigDeviceCreate.connect( PTR, &CLASS::onDeviceCreate ); \
+                gD3D.sigDeviceRestore.connect( PTR, &CLASS::onDeviceRestore ); \
+                gD3D.sigDeviceInvalidate.connect( PTR, &CLASS::onDeviceInvalidate ); \
+                gD3D.sigDeviceDestroy.connect( PTR, &CLASS::onDeviceDestroy );
+
+            //@}
 
             // ********************************
             // public functions
