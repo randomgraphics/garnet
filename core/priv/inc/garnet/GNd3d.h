@@ -78,7 +78,7 @@
 #define DX_CHECK_RV( func, rval ) DX_CHECK_DO( func, return rval; )
 
 //!
-//! Global D3D object. Must instantiate and initialize it before using d3d module.
+//! Global D3D object. Must be instantiated and initialized before using d3d module.
 //!
 #define gD3D (::GN::d3d::D3D::getInstance())
 
