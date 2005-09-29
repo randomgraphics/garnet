@@ -54,5 +54,5 @@ doInstall(
     Split('GNcoreLib GNbase GNextern GNd3d GNogl') )
 doInstall(
     'sdk',
-    os.path.join(sdk_root,'doc'),
-    Split('GNdoc') )
+    os.path.join(sdk_root,'manual'),
+    Split('GNman') )
