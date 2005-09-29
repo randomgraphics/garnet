@@ -168,7 +168,7 @@ namespace GN
     class PluginManager : public Singleton<PluginManager>
     {
         // ********************************
-        //! \name  ctor/dtor
+        // ctor/dtor
         // ********************************
 
         //@{

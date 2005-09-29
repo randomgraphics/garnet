@@ -37,7 +37,7 @@ namespace GN
     class ProfilerManager : public Singleton<ProfilerManager>
     {
         // ********************************
-        //! \name  ctor/dtor
+        // ctor/dtor
         // ********************************
 
         //@{
