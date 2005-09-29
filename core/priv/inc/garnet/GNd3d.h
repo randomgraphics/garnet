@@ -124,7 +124,7 @@ namespace GN
              GN_DECLARE_STDCLASS( D3D, StdClass );
 
             // ********************************
-            //! \name  ctor/dtor
+            // ctor/dtor
             // ********************************
 
             //@{
@@ -153,8 +153,8 @@ namespace GN
 
             // ********************************
             //! \name device management signals
-            //! - These signales provide standard way to handle device lost/restore
-            //!   and device recreation.
+            //! - These signales provide standard way for device restoration and
+            //!   and recreation.
             //! - During class initialization, sigDeviceCreate and sigDeviceRestore
             //!   will be triggered; during class destory sigDeviceInvalidate
             //!   and sigDeviceDestroyr will be triggerd.
@@ -311,6 +311,78 @@ namespace GN
 
             LRESULT windowProc( HWND, UINT, WPARAM, LPARAM );
             static LRESULT staticProc( HWND, UINT, WPARAM, LPARAM );
+        };
+
+        //!
+        //! D3D application framework
+        //!
+        class App : public NoCopy
+        {
+            // ********************************
+            //! \name public interface
+            // ********************************
+
+            //@{
+        public:
+            App() {}
+            virtual ~App() { quit(); }
+
+            void setInitParams( const D3DInitParams & ip ) { mInitParams = ip; }
+            void setAppInitFunc( const Functor0<bool> & fp ) { mAppInitFunc = fp; }
+            void setDevCreateFunc( const Functor0<bool> & fp ) { mDevCreateFunc = fp; }
+            void setDevRestoreFunc( const Functor0<bool> & fp ) { mDevRestoreFunc = fp; }
+            void setDevInvalidateFunc( const Functor0<void> & fp ) { mDevInvalidateFunc = fp; }
+            void setDevDestroyFunc( const Functor0<void> & fp ) { mDevDestroyFunc = fp; }
+            void setAppQuitFunc( const Functor0<void> & fp ) { mAppQuitFunc = fp; }
+            void setUpdateFunc( const Functor0<void> & fp ) { mUpdateFunc = fp; }
+            void setRenderFunc( const Functor0<void> & fp ) { mRenderFunc = fp; }
+            
+            int run();
+            //@}
+
+            // ********************************
+            //! \name application framework
+            // ********************************
+
+            //@{
+        protected:
+            virtual bool appInit() { if( mAppInitFunc ) return mAppInitFunc(); else return true; }
+            virtual bool devCreate() { if( mDevCreateFunc ) return mDevCreateFunc(); else return true; }
+            virtual bool devRestore() { if( mDevRestoreFunc ) return mDevRestoreFunc(); else return true; }
+            virtual void devInvalidate()  { if( mDevInvalidateFunc ) mDevInvalidateFunc(); }
+            virtual void devDestroy()  { if( mDevDestroyFunc ) mDevDestroyFunc(); }
+            virtual void appQuit() { if( mAppQuitFunc ) mAppQuitFunc(); }
+            virtual void update() { if( mUpdateFunc ) mUpdateFunc(); }
+            virtual void render()
+            {
+                LPDIRECT3DDEVICE9 dev = mD3D.getDevice();
+                if( D3D_OK == dev->BeginScene() )
+                {
+                    if( mRenderFunc ) mRenderFunc();
+                    DX_CHECK( dev->EndScene() );
+                }
+                mD3D.present();
+            }
+            //@}
+
+            // ********************************
+            // private variables
+            // ********************************
+        private:
+
+            D3D mD3D;
+
+            D3DInitParams mInitParams;
+
+            Functor0<bool> mAppInitFunc, mDevCreateFunc, mDevRestoreFunc;
+            Functor0<void> mDevInvalidateFunc, mDevDestroyFunc, mAppQuitFunc, mUpdateFunc, mRenderFunc;
+
+            // ********************************
+            // private functions
+            // ********************************
+        private:
+            bool init();
+            void quit();
         };
 
         typedef ResourceManager<LPDIRECT3DBASETEXTURE9>  TextureManager; //!< Texture manager
