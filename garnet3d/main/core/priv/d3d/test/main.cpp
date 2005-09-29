@@ -14,34 +14,12 @@ void quit()
 void render()
 {
     gD3D.getDevice()->Clear( 0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 0, 1.0f, 0 );
-    gD3D.present();
 }
 
 int main()
 {
-    //
-    // 如果是Debug版本，则启用CRT的内存泄漏检测功能
-    //
-#if GN_DEBUG
-    int tmpDbgFlag;
-    tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-    tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
-    _CrtSetDbgFlag(tmpDbgFlag);
-#endif
-
-    GN::d3d::D3DInitParams d3dip;
-    GN::d3d::D3D d3d;
-    if( !d3d.init(d3dip) ) return -1;
-
-    if( !init() ) { quit(); return -1; }
-
-    // run
-    while( !d3d.windowClosed() )
-    {
-        render();
-    }
-
-    quit();
-
-    return 0;
+    GN::d3d::App myApp;
+    myApp.setDevCreateFunc( &init );
+    myApp.setRenderFunc( &render );
+    return myApp.run();
 }
