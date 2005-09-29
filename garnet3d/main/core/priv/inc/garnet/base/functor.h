@@ -264,6 +264,15 @@ namespace GN
         }
 
         //!
+        //! construct from free function
+        //!
+        FUNCTOR_NAME( R(*f)(PARAM_TYPES) )
+            : mClosure(0)
+        {
+            bind( f );
+        }
+
+        //!
         //! destructor
         //!
         ~FUNCTOR_NAME() { clear(); }
