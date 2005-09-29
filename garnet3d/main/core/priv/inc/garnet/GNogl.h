@@ -101,7 +101,7 @@ namespace GN
              GN_DECLARE_STDCLASS( OGL, StdClass );
 
             // ********************************
-            //! \name  ctor/dtor
+            // ctor/dtor
             // ********************************
 
             //@{
