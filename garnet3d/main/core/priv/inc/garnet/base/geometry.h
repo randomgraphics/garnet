@@ -2837,6 +2837,13 @@ namespace GN
 #include "matrix.inl"
 #include "quaternion.inl"
 
+namespace GN
+{
+    typedef Vector3<float> Vector3f; //!< 3-D float vector
+    typedef Vector4<float> Vector4f; //!< 4-D float vector
+    typedef Plane3<float> Plane3f;   //!< 3-D plane (sinle precesion)
+}
+
 // *****************************************************************************
 //                           End of geometry.h
 // *****************************************************************************
