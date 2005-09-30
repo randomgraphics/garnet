@@ -1,4 +1,5 @@
 #include "../testCommon.h"
+#include "garnet/GNgfx.h"
 
 class Tag2StrTest : public CxxTest::TestSuite
 {
@@ -187,11 +188,11 @@ public:
         TS_ASSERT_EQUALS( GN::TSV_INVALID, GN::str2TextureStateValue( "haha" ) );
         TS_ASSERT_EQUALS( GN::TSV_INVALID, GN::str2TextureStateValue( NULL ) );
     }
-/*
-    //void testShaderUsage()
+
+    void testShaderUsage()
     {
         StrA str;
-        GN::gfx::shader_usage_t susage;
+        GN::gfx::ShaderUsage usage;
 
         TS_ASSERT( GN::gfx::shaderUsage2Str( str, GN::gfx::SUSAGE_PIXEL ) );
         TS_ASSERT_EQUALS( str, "PIXEL" );
@@ -203,24 +204,23 @@ public:
         TS_ASSERT_EQUALS( "VERTEX", GN::gfx::shaderUsage2Str(GN::gfx::SUSAGE_VERTEX) );
         TS_ASSERT_EQUALS( "BAD_SHADER_USAGE", GN::gfx::shaderUsage2Str(GN::gfx::NUM_SUSAGES) );
 
-        TS_ASSERT( GN::gfx::str2ShaderUsage(susage,"VERTEX") );
-        TS_ASSERT_EQUALS( susage, GN::gfx::SUSAGE_VERTEX );
-        TS_ASSERT( GN::gfx::str2ShaderUsage(susage,"PIXEL") );
-        TS_ASSERT_EQUALS( susage, GN::gfx::SUSAGE_PIXEL );
-        TS_ASSERT( !GN::gfx::str2ShaderUsage(susage,NULL) );
-        TS_ASSERT( !GN::gfx::str2ShaderUsage(susage,"haha") );
+        TS_ASSERT( GN::gfx::str2ShaderUsage(usage,"VERTEX") );
+        TS_ASSERT_EQUALS( usage, GN::gfx::SUSAGE_VERTEX );
+        TS_ASSERT( GN::gfx::str2ShaderUsage(usage,"PIXEL") );
+        TS_ASSERT_EQUALS( usage, GN::gfx::SUSAGE_PIXEL );
+        TS_ASSERT( !GN::gfx::str2ShaderUsage(usage,NULL) );
+        TS_ASSERT( !GN::gfx::str2ShaderUsage(usage,"haha") );
     }
 
-
-    //void testShadingLanguage()
+    void testShadingLanguage()
     {
         StrA str;
-        GN::gfx::shading_language_t slang;
+        GN::gfx::ShadingLanguage lang;
 
         static struct slang_s
         {
-            GN::gfx::shading_language_t tag;
-            const char *                 str;
+            GN::gfx::ShadingLanguage tag;
+            const char * str;
         } slang_table [] =
         {
             { GN::gfx::SLANG_FFP, "FFP" },
@@ -233,23 +233,23 @@ public:
         for( size_t i = 0; i < sizeof(slang_table)/sizeof(slang_table[0]); ++i )
         {
             TS_ASSERT( GN::gfx::shadingLanguage2Str( str, slang_table[i].tag ) );
-            CHECK_EQUAL( str, slang_table[i].str );
+            TS_ASSERT_EQUALS( str, slang_table[i].str );
 
             TS_ASSERT_EQUALS( slang_table[i].str, GN::gfx::shadingLanguage2Str(slang_table[i].tag) );
 
-            TS_ASSERT( GN::gfx::str2ShadingLanguage( slang, slang_table[i].str ) );
-            TS_ASSERT_EQUALS( slang, slang_table[i].tag );
+            TS_ASSERT( GN::gfx::str2ShadingLanguage( lang, slang_table[i].str ) );
+            TS_ASSERT_EQUALS( lang, slang_table[i].tag );
         }
         TS_ASSERT( !GN::gfx::shadingLanguage2Str( str, GN::gfx::NUM_SLANGS ) );
         TS_ASSERT_EQUALS( "BAD_SHADING_LANGUAGE", GN::gfx::shadingLanguage2Str(GN::gfx::NUM_SLANGS) );
-        TS_ASSERT( !GN::gfx::str2ShadingLanguage( slang, NULL ) );
-        TS_ASSERT( !GN::gfx::str2ShadingLanguage( slang, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2ShadingLanguage( lang, NULL ) );
+        TS_ASSERT( !GN::gfx::str2ShadingLanguage( lang, "haha" ) );
 
     }
 
-    //void testTexType()
+    void testTexType()
     {
-        GN::gfx::textype_t tag[] = {
+        GN::gfx::TexType tag[] = {
             GN::gfx::TEXTYPE_1D,
             GN::gfx::TEXTYPE_2D,
             GN::gfx::TEXTYPE_3D,
@@ -262,8 +262,8 @@ public:
             "CUBE",
         };
 
-        StrA           s;
-        GN::gfx::textype_t t;
+        StrA             s;
+        GN::gfx::TexType t;
 
         for( int i = 0; i < 4; ++i )
         {
@@ -282,9 +282,9 @@ public:
         TS_ASSERT( !GN::gfx::str2TexType( t, NULL ) );
     }
 
-    //void testTexFilter()
+    void testTexFilter()
     {
-        GN::gfx::texfilter_t tag[] = {
+        GN::gfx::TexFilter tag[] = {
             GN::gfx::TEXFILTER_NEAREST,
             GN::gfx::TEXFILTER_LINEAR,
             GN::gfx::TEXFILTER_N_MIP_N,
@@ -301,8 +301,8 @@ public:
             "L_MIP_L",
         };
 
-        StrA           s;
-        GN::gfx::texfilter_t t;
+        StrA               s;
+        GN::gfx::TexFilter t;
 
         for( int i = 0; i < 6; ++i )
         {
@@ -321,9 +321,9 @@ public:
         TS_ASSERT( !GN::gfx::str2TexFilter( t, NULL ) );
     }
 
-    //void testTexWrap()
+    void testTexWrap()
     {
-        GN::gfx::texwrap_t tag[] = {
+        GN::gfx::TexWrap tag[] = {
             GN::gfx::TEXWRAP_REPEAT,
             GN::gfx::TEXWRAP_CLAMP,
             GN::gfx::TEXWRAP_CLAMP_TO_EDGE,
@@ -334,8 +334,8 @@ public:
             "CLAMP_TO_EDGE",
         };
 
-        StrA           s;
-        GN::gfx::texwrap_t t;
+        StrA             s;
+        GN::gfx::TexWrap t;
 
         for( int i = 0; i < 3; ++i )
         {
@@ -352,5 +352,5 @@ public:
         TS_ASSERT_EQUALS( "BAD_TEXTURE_WRAP", GN::gfx::texWrap2Str(GN::gfx::NUM_TEXWRAPS) );
         TS_ASSERT( !GN::gfx::str2TexWrap( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2TexWrap( t, NULL ) );
-    }*/
+    }
 };
