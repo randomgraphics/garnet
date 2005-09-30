@@ -4,67 +4,65 @@
 //
 // ----------------------------------------------------------------------------
 GN_INLINE const char *
-GN::vertsem2str( VertexSemantic vsem )
+GN::vtxSem2Str( VtxSem vsem )
 {
     static const char * table[] =
     {
-    #define GN_VERTEX_SEMANTIC( tag, d3decl, d3dindex, \
-                                 glname, glindex, cgname ) #tag,
+    #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
     #include "vertexSemanticMeta.h"
-    #undef GN_VERTEX_SEMANTIC
+    #undef GN_VTXSEM
     };
-    if( 0 <= vsem && vsem < NUM_VERTSEMS ) return table[vsem];
-    else return "BAD_VERTSEM";
+    if( 0 <= vsem && vsem < NUM_VTXSEMS ) return table[vsem];
+    else return "BAD_VTXSEM";
 }
 //
 GN_INLINE bool
-GN::vertsem2str( StrA & result, VertexSemantic vsem )
+GN::vtxSem2Str( StrA & result, VtxSem vsem )
 {
-    result = vertsem2str( vsem );
-    return "BAD_VERTSEM" != result;
+    result = vtxSem2Str( vsem );
+    return "BAD_VTXSEM" != result;
 }
 
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE GN::VertexSemantic
-GN::str2vertsem( const char * str )
+GN_INLINE GN::VtxSem
+GN::str2VtxSem( const char * str )
 {
     static const char * table[] =
     {
-    #define GN_VERTEX_SEMANTIC( tag, d3decl, d3dindex, \
-                                glname, glindex, cgname ) #tag,
+    #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
     #include "vertexSemanticMeta.h"
-    #undef GN_VERTEX_SEMANTIC
+    #undef GN_VTXSEM
     };
     if ( str )
     {
-        for( size_t i = 0; i < NUM_VERTSEMS; ++i )
+        for( size_t i = 0; i < NUM_VTXSEMS; ++i )
         {
-            if( 0 == ::strcmp(table[i],str) ) return VertexSemantic(i);
+            if( 0 == ::strcmp(table[i],str) ) return VtxSem(i);
         }
     }
     // failed
-    return VERTSEM_INVALID;
+    return VTXSEM_INVALID;
 }
 //
 GN_INLINE bool
-GN::str2vertsem( VertexSemantic & result, const char * str )
+GN::str2VtxSem( VtxSem & result, const char * str )
 {
-    result = str2vertsem( str );
-    return VERTSEM_INVALID != result;
+    result = str2VtxSem( str );
+    return VTXSEM_INVALID != result;
 }
 
 // ****************************************************************************
-// inline function of class VertexFormatDesc
+// inline function of class VtxFmtDesc
 // ****************************************************************************
 
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE void GN::VertexFormatDesc::reset()
+GN_INLINE void GN::VtxFmtDesc::reset()
 {
-    for( int i = 0; i < NUM_VERTSEMS; ++i )
+    for( int i = 0; i < NUM_VTXSEMS; ++i )
     {
         attribs[i].used = false;
         streams[i].numAttribs = 0;
@@ -76,29 +74,29 @@ GN_INLINE void GN::VertexFormatDesc::reset()
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE bool GN::VertexFormatDesc::addAttrib(
+GN_INLINE bool GN::VtxFmtDesc::addAttrib(
     uint8_t         stream,
     uint8_t         offset,
-    VertexSemantic  semantic,
-    ColorFormat     format )
+    VtxSem  semantic,
+    ClrFmt     format )
 {
     // check parameters
-    if( stream >= NUM_VERTSEMS )
+    if( stream >= NUM_VTXSEMS )
     {
         GN_ERROR( "invalid stream index!" );
         return false;
     }
-    if( semantic >= NUM_VERTSEMS )
+    if( semantic >= NUM_VTXSEMS )
     {
         GN_ERROR( "invalid attribute semantic!" );
         return false;
     }
     if( attribs[semantic].used )
     {
-        GN_ERROR( "semantic '%s' is already occupied!", vertsem2str(semantic) );
+        GN_ERROR( "semantic '%s' is already occupied!", vtxSem2Str(semantic) );
         return false;
     }
-    if( format >= NUM_COLOR_FORMATS )
+    if( format >= NUM_CLRFMTS )
     {
         GN_ERROR( "invalid attribute format!" );
         return false;
@@ -109,7 +107,7 @@ GN_INLINE bool GN::VertexFormatDesc::addAttrib(
 
     // calculate attribute offset and stream stride
     if ( 0 == offset ) offset = s.stride;
-    uint8_t new_stride = getColorFormatDesc(format).bits / 8;
+    uint8_t new_stride = getClrFmtDesc(format).bits / 8;
     if ( 0 == new_stride )
     {
         GN_ERROR( "pixel size of the format must be larger than 1 byte!" );
@@ -142,7 +140,7 @@ GN_INLINE bool GN::VertexFormatDesc::addAttrib(
 //
 // ----------------------------------------------------------------------------
 GN_INLINE bool
-GN::VertexFormatDesc::operator == ( const VertexFormatDesc & rhs ) const
+GN::VtxFmtDesc::operator == ( const VtxFmtDesc & rhs ) const
 {
     // check streams
     if( numStreams != rhs.numStreams ) return false;
@@ -161,7 +159,7 @@ GN::VertexFormatDesc::operator == ( const VertexFormatDesc & rhs ) const
     }
 
     // check attributes
-    for( int i = 0; i < NUM_VERTSEMS; ++i )
+    for( int i = 0; i < NUM_VTXSEMS; ++i )
     {
         const AttribDesc & a1 = attribs[i];
         const AttribDesc & a2 = rhs.attribs[i];

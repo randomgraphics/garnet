@@ -68,8 +68,8 @@ enum DdsFlag
 //!
 static struct DdpfDesc
 {
-    GN::ColorFormat clrfmt;
-    DDPixelFormat          ddpf;
+    GN::ClrFmt    clrfmt;
+    DDPixelFormat ddpf;
 } const s_ddpfDescTable[] = {
     { GN::FMT_BGR_8_8_8,               { DDS_DDPF_SIZE, DDS_DDPF_RGB,                                     0, 24,   0xff0000,   0x00ff00,   0x0000ff,          0 } },
     { GN::FMT_BGRA_8_8_8_8,            { DDS_DDPF_SIZE, DDS_DDPF_RGB | DDS_DDPF_ALPHAPIXELS,              0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 } },
@@ -153,7 +153,7 @@ getImageType( const DDSFileHeader & header )
 //
 //! \brief return FMT_INVAID if falied
 // ----------------------------------------------------------------------------
-static GN::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
+static GN::ClrFmt getImageFormat( const DDPixelFormat & ddpf )
 {
     GN_GUARD;
 
@@ -201,7 +201,7 @@ static GN::ColorFormat getImageFormat( const DDPixelFormat & ddpf )
         if( a && ddpf.aMask != desc.ddpf.aMask ) continue;
 
         // found!
-        GN_ASSERT( 0 <= desc.clrfmt && desc.clrfmt < GN::NUM_COLOR_FORMATS );
+        GN_ASSERT( 0 <= desc.clrfmt && desc.clrfmt < GN::NUM_CLRFMTS );
         return desc.clrfmt;
    }
 
@@ -279,7 +279,7 @@ bool DDSReader::readHeader(
     bool has_mipmap = ( DDS_DDSD_MIPMAPCOUNT & mHeader.flags )
                    && ( DDS_CAPS_MIPMAP & mHeader.caps )
                    && ( DDS_CAPS_COMPLEX & mHeader.caps );
-    uint8_t bits = GN::getColorFormatDesc(mImgDesc.format).bits;
+    uint8_t bits = GN::getClrFmtDesc(mImgDesc.format).bits;
     mImgDesc.numMips = has_mipmap ? uint8_t(mHeader.mipCount) : 1;
     if( 0 == mImgDesc.numMips ) mImgDesc.numMips = 1;
     for( uint8_t i = 0; i < mImgDesc.numMips; ++i )

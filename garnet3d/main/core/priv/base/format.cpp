@@ -3,13 +3,13 @@
 //
 //
 // -------------------------------------------------------------------------
-const GN::ColorFormatDesc & GN::getColorFormatDesc( GN::ColorFormat fmt )
+const GN::ClrFmtDesc & GN::getClrFmtDesc( GN::ClrFmt fmt )
 {
     GN_GUARD;
 
     static struct ClrDescTable
     {
-        ColorFormatDesc table[NUM_COLOR_FORMATS+1];
+        ClrFmtDesc table[NUM_CLRFMTS+1];
 
         #define MAKE_FOURCC_INT(ch0, ch1, ch2, ch3) \
                 ((uint32_t)(uint8_t)(ch0) |         \
@@ -60,7 +60,7 @@ const GN::ColorFormatDesc & GN::getColorFormatDesc( GN::ColorFormat fmt )
         //! fourcc handler
         //!
         static inline void
-        handleFourcc( ColorFormatDesc & desc, uint32_t fourcc )
+        handleFourcc( ClrFmtDesc & desc, uint32_t fourcc )
         {
 
             switch( fourcc )
@@ -101,7 +101,7 @@ const GN::ColorFormatDesc & GN::getColorFormatDesc( GN::ColorFormat fmt )
             // clear description table
             memset( table, 0, sizeof(table) );
 
-            ColorFormatDesc * pdesc;
+            ClrFmtDesc * pdesc;
 
             // initialize the table
             #define GN_COLOR_FORMAT( format_, bits_, channels_ ) \
@@ -120,7 +120,7 @@ const GN::ColorFormatDesc & GN::getColorFormatDesc( GN::ColorFormat fmt )
         }
     } s_table;
 
-    GN_ASSERT( 0 <= fmt && fmt <= NUM_COLOR_FORMATS );
+    GN_ASSERT( 0 <= fmt && fmt <= NUM_CLRFMTS );
     return s_table.table[fmt];
 
     GN_UNGUARD;

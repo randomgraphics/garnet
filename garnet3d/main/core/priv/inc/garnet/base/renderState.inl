@@ -3,7 +3,7 @@
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::rs2str( RenderState rs )
+GN_INLINE const char * GN::renderState2Str( RenderState rs )
 {
     static const char * table [] =
     {
@@ -15,13 +15,13 @@ GN_INLINE const char * GN::rs2str( RenderState rs )
     else return "BAD_RS";
 }
 //
-GN_INLINE bool GN::rs2str( StrA & result, RenderState rs )
+GN_INLINE bool GN::renderState2Str( StrA & result, RenderState rs )
 {
-    result = rs2str(rs);
+    result = renderState2Str(rs);
     return "BAD_RS" != result;
 }
 //
-GN_INLINE GN::RenderState GN::str2rs( const char * str )
+GN_INLINE GN::RenderState GN::str2RenderState( const char * str )
 {
     static const char * table [] =
     {
@@ -40,16 +40,16 @@ GN_INLINE GN::RenderState GN::str2rs( const char * str )
     return RS_INVALID;
 }
 //
-GN_INLINE bool GN::str2rs( RenderState & result, const char * str )
+GN_INLINE bool GN::str2RenderState( RenderState & result, const char * str )
 {
-    result = str2rs( str );
+    result = str2RenderState( str );
     return RS_INVALID != result;
 }
 
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::rsv2str( RenderStateValue rsval )
+GN_INLINE const char * GN::renderStateValue2Str( RenderStateValue rsval )
 {
     static const char * table [] =
     {
@@ -61,13 +61,13 @@ GN_INLINE const char * GN::rsv2str( RenderStateValue rsval )
     else return "BAD_RSV";
 }
 //
-GN_INLINE bool GN::rsv2str( StrA & result, RenderStateValue rsval )
+GN_INLINE bool GN::renderStateValue2Str( StrA & result, RenderStateValue rsval )
 {
-    result = rsv2str( rsval );
+    result = renderStateValue2Str( rsval );
     return "BAD_RSV" != result;
 }
 //
-GN_INLINE GN::RenderStateValue GN::str2rsv( const char * str )
+GN_INLINE GN::RenderStateValue GN::str2RenderStateValue( const char * str )
 {
     static const char * table [] =
     {
@@ -86,16 +86,16 @@ GN_INLINE GN::RenderStateValue GN::str2rsv( const char * str )
     return RSV_INVALID;
 }
 //
-GN_INLINE bool GN::str2rsv( RenderStateValue & result, const char * str )
+GN_INLINE bool GN::str2RenderStateValue( RenderStateValue & result, const char * str )
 {
-    result = str2rsv( str );
+    result = str2RenderStateValue( str );
     return RSV_INVALID != result;
 }
 
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::ts2str( TextureState ts )
+GN_INLINE const char * GN::textureState2Str( TextureState ts )
 {
     static const char * table [] =
     {
@@ -108,13 +108,13 @@ GN_INLINE const char * GN::ts2str( TextureState ts )
     else return "BAD_TS";
 }
 //
-GN_INLINE bool GN::ts2str( StrA & result, TextureState ts )
+GN_INLINE bool GN::textureState2Str( StrA & result, TextureState ts )
 {
-    result = ts2str( ts );
+    result = textureState2Str( ts );
     return "BAD_TS" != result;
 }
 //
-GN_INLINE GN::TextureState GN::str2ts( const char * str )
+GN_INLINE GN::TextureState GN::str2TextureState( const char * str )
 {
     static const char * table [] =
     {
@@ -134,16 +134,16 @@ GN_INLINE GN::TextureState GN::str2ts( const char * str )
     return TS_INVALID;
 }
 //
-GN_INLINE bool GN::str2ts( TextureState & result, const char * str )
+GN_INLINE bool GN::str2TextureState( TextureState & result, const char * str )
 {
-    result = str2ts( str );
+    result = str2TextureState( str );
     return TS_INVALID != result;
 }
 
 //
 //
 // ----------------------------------------------------------------------------
-GN_INLINE const char * GN::tsv2str( TextureStateValue tssval )
+GN_INLINE const char * GN::textureStateValue2Str( TextureStateValue tssval )
 {
     static const char * table [] =
     {
@@ -155,13 +155,13 @@ GN_INLINE const char * GN::tsv2str( TextureStateValue tssval )
     else return "BAD_TSV";
 }
 //
-GN_INLINE bool GN::tsv2str( StrA & result, TextureStateValue tssval )
+GN_INLINE bool GN::textureStateValue2Str( StrA & result, TextureStateValue tssval )
 {
-    result = tsv2str( tssval );
+    result = textureStateValue2Str( tssval );
     return "BAD_TSV" != result;
 }
 //
-GN_INLINE GN::TextureStateValue GN::str2tsv( const char * str )
+GN_INLINE GN::TextureStateValue GN::str2TextureStateValue( const char * str )
 {
     static const char * table [] =
     {
@@ -180,9 +180,9 @@ GN_INLINE GN::TextureStateValue GN::str2tsv( const char * str )
     return TSV_INVALID;
 }
 //
-GN_INLINE bool GN::str2tsv( TextureStateValue & result, const char * str )
+GN_INLINE bool GN::str2TextureStateValue( TextureStateValue & result, const char * str )
 {
-    result = str2tsv( str );
+    result = str2TextureStateValue( str );
     return TSV_INVALID != result;
 }
 

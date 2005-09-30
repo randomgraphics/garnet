@@ -32,7 +32,7 @@ GN_INLINE size_t GN::ImageDesc::getPixelOffset(
         x < mips[level].width &&
         y <mips[level].height &&
         z < mips[level].depth );
-    return getScanlineOffset(level,y,z) + getColorFormatDesc(format).bits * x / 8;
+    return getScanlineOffset(level,y,z) + getClrFmtDesc(format).bits * x / 8;
 }
 
 //
