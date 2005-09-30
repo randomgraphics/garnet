@@ -18,18 +18,18 @@ namespace GN
     //! Define color format
 
     //!
-    //! color format class
+    //! color format
     //!
-    enum ColorFormat
+    enum ClrFmt
     {
         #define GN_COLOR_FORMAT( format, bits, channels ) FMT_##format,
         #include "formatMeta.h"
         #undef GN_COLOR_FORMAT
 
-        NUM_COLOR_FORMATS,
+        NUM_CLRFMTS,
 
         // common alias
-        FMT_INVALID  = NUM_COLOR_FORMATS,
+        FMT_INVALID  = NUM_CLRFMTS,
         FMT_UNKNOWN  = FMT_INVALID,
         FMT_DEFAULT  = FMT_INVALID,
 
@@ -90,7 +90,7 @@ namespace GN
     //!
     //! color format descriptor
     //!
-    struct ColorFormatDesc
+    struct ClrFmtDesc
     {
         const char * name;          //!< format name
         uint8_t      bits;          //!< bits per pixel
@@ -119,7 +119,7 @@ namespace GN
     //!
     //! get format description
     //!
-    const ColorFormatDesc & getColorFormatDesc( ColorFormat );
+    const ClrFmtDesc & getClrFmtDesc( ClrFmt );
 
     //!
     //! convert 4 floats to uint32
@@ -226,7 +226,7 @@ namespace GN
         //@{
 
         ImageType   type;                //!< image type
-        ColorFormat format;              //!< color format
+        ClrFmt      format;              //!< color format
         uint8_t     numMips;             //!< number of avaliable mipmaps
         MipDesc     mips[MAX_MIPLEVELS]; //!< mipmaps
 
@@ -440,7 +440,7 @@ namespace GN
     //! \return
     //!     Return error message if failed.
     //!
-    const char * rs2str( RenderState rs );
+    const char * renderState2Str( RenderState rs );
 
     //!
     //! Convert render state type to string
@@ -448,7 +448,7 @@ namespace GN
     //! \return
     //!     Return false if failed.
     //!
-    bool rs2str( StrA & result, RenderState rs );
+    bool renderState2Str( StrA & result, RenderState rs );
 
     //!
     //! Convert string to render state type
@@ -456,7 +456,7 @@ namespace GN
     //! \return
     //!     Return RS_INVALID if failed.
     //!
-    RenderState str2rs( const char * );
+    RenderState str2RenderState( const char * );
 
     //!
     //! Convert string to render state type
@@ -464,7 +464,7 @@ namespace GN
     //! \return
     //!     Return false if failed.
     //!
-    bool str2rs( RenderState & result, const char * str );
+    bool str2RenderState( RenderState & result, const char * str );
 
     //! \def GN_DEFINE_RSV
     //! Define render state values
@@ -488,7 +488,7 @@ namespace GN
     //! \return
     //!     Return error message if failed.
     //!
-    const char * rsv2str( RenderStateValue );
+    const char * renderStateValue2Str( RenderStateValue );
 
     //!
     //! Convert render state value type to string
@@ -496,7 +496,7 @@ namespace GN
     //! \return
     //!     Return false if failed.
     //!
-    bool rsv2str( StrA & result, RenderStateValue rsval );
+    bool renderStateValue2Str( StrA & result, RenderStateValue rsval );
 
     //!
     //! Convert string to render value state type,
@@ -504,7 +504,7 @@ namespace GN
     //! \return
     //!     Return RSV_INVALID if failed, return false if failed.
     //!
-    RenderStateValue str2rsv( const char * );
+    RenderStateValue str2RenderStateValue( const char * );
 
     //!
     //! Convert string to render value state type
@@ -512,7 +512,7 @@ namespace GN
     //! \return
     //!     Return false if failed.
     //!
-    bool str2rsv( RenderStateValue & result, const char * str );
+    bool str2RenderStateValue( RenderStateValue & result, const char * str );
 
     //! \def GN_DEFINE_TS
     //! Define texture stage states
@@ -536,22 +536,22 @@ namespace GN
     //!
     //! \return Return error message if failed.
     //!
-    const char * ts2str( TextureState );
+    const char * textureState2Str( TextureState );
 
     //!
     //! Convert TS type to string, return false if failed.
     //!
-    bool ts2str( StrA & result, TextureState ts );
+    bool textureState2Str( StrA & result, TextureState ts );
 
     //!
     //! Convert string to TS type, return TS_INVALID if failed.
     //!
-    TextureState str2ts( const char * );
+    TextureState str2TextureState( const char * );
 
     //!
     //! Convert string to TS type, return false if failed.
     //!
-    bool str2ts( TextureState & result, const char * str );
+    bool str2TextureState( TextureState & result, const char * str );
 
     //! \def GN_DEFINE_TSV
     //! Define texture stage state values
@@ -574,22 +574,22 @@ namespace GN
     //!
     //! \return Return error message if failed.
     //!
-    const char * tsv2str( TextureStateValue );
+    const char * textureStateValue2Str( TextureStateValue );
 
     //!
     //! Convert TS value to string, return false if failed.
     //!
-    bool tsv2str( StrA & result, TextureStateValue tssval );
+    bool textureStateValue2Str( StrA & result, TextureStateValue tssval );
 
     //!
     //! Convert string to TS value, return TS_INVALID if failed.
     //!
-    TextureStateValue str2tsv( const char * );
+    TextureStateValue str2TextureStateValue( const char * );
 
     //!
     //! Convert string to TS value, return false if failed.
     //!
-    bool str2tsv( TextureStateValue & result, const char * str );
+    bool str2TextureStateValue( TextureStateValue & result, const char * str );
 
     //!
     //! Render State Block Description Structure
@@ -707,28 +707,27 @@ namespace GN
 
     //@{
 
-    //! \def GN_VERTEX_SEMANTIC
+    //! \def GN_VTXSEM
     //! define vertex semantic tag
 
     //!
     //! vertex semantic tags
     //!
-    enum VertexSemantic
+    enum VtxSem
     {
-        #define GN_VERTEX_SEMANTIC( tag, d3decl, d3dindex, \
-                                     glname, glindex, cgname ) VERTSEM_##tag,
+        #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) VTXSEM_##tag,
         #include "vertexSemanticMeta.h"
-        #undef GN_VERTEX_SEMANTIC
+        #undef GN_VTXSEM
 
         //!
         //! num of vertex semantic tags
         //!
-        NUM_VERTSEMS,
+        NUM_VTXSEMS,
 
         //!
         //! indicate an invalid vertex semantic.
         //!
-        VERTSEM_INVALID,
+        VTXSEM_INVALID,
     };
 
     //!
@@ -736,32 +735,32 @@ namespace GN
     //!
     //! \return Return error message if failed.
     //!
-    const char * vertsem2str( VertexSemantic );
+    const char * vtxSem2Str( VtxSem );
 
     //!
     //! Convert vertex semantic tag to string
     //!
     //! \return Return false if failed.
     //!
-    bool vertsem2str( StrA &, VertexSemantic );
+    bool vtxSem2Str( StrA &, VtxSem );
 
     //!
     //! Convert string to vertex semantic
     //!
-    //! \return Return VERTSEM_INVALID, if failed.
-    VertexSemantic str2vertsem( const char * );
+    //! \return Return VTXSEM_INVALID, if failed.
+    VtxSem str2VtxSem( const char * );
 
     //!
     //! Convert string to vertex semantic
     //!
     //! \return Return false if failed.
     //!
-    bool str2vertsem( VertexSemantic &, const char * );
+    bool str2VtxSem( VtxSem &, const char * );
 
     //!
     //! Vertex format descriptor
     //!
-    struct VertexFormatDesc
+    struct VtxFmtDesc
     {
         //!
         //! Vertex attribute descriptor
@@ -771,7 +770,7 @@ namespace GN
             bool        used;     //!< Is this attribute used or not?
             uint8_t     stream;   //!< stream index.
             uint8_t     offset;   //!< offset in vertex stream.
-            ColorFormat format;   //!< attribute format (FMT_XXX).
+            ClrFmt      format;   //!< attribute format (FMT_XXX).
         };
 
         //!
@@ -779,19 +778,19 @@ namespace GN
         //!
         struct StreamDesc
         {
-            VertexSemantic attribs[NUM_VERTSEMS]; //!< attribute indices into attribute array.
+            VtxSem attribs[NUM_VTXSEMS]; //!< attribute indices into attribute array.
             uint8_t        numAttribs;            //!< number of attributes in this stream.
             uint8_t        stride;                //!< stream stride in bytes.
         };
 
-        AttribDesc attribs[NUM_VERTSEMS]; //!< vertex attribute array, indexed by vertex semantic.
-        StreamDesc streams[NUM_VERTSEMS]; //!< vertex stream array.
+        AttribDesc attribs[NUM_VTXSEMS]; //!< vertex attribute array, indexed by vertex semantic.
+        StreamDesc streams[NUM_VTXSEMS]; //!< vertex stream array.
         uint8_t    numStreams;            //!< stream count.
 
         //!
         //! Constructor
         //!
-        VertexFormatDesc() { reset(); }
+        VtxFmtDesc() { reset(); }
 
         //!
         //! Reset to empty declarator.
@@ -806,20 +805,20 @@ namespace GN
         //! \param offset
         //!     AttribDesc offset in the stream. Can be 0, which means packed with last attribute.
         //! \param semantic
-        //!     AttribDesc semantic (VERTSEM_XXX)
+        //!     AttribDesc semantic (VTXSEM_XXX)
         //! \param format
         //!     AttribDesc format (FMT_XXXX)
         //!
         bool addAttrib(
             uint8_t        stream,
             uint8_t        offset,
-            VertexSemantic semantic,
-            ColorFormat    format );
+            VtxSem         semantic,
+            ClrFmt         format );
 
         //!
         //! µÈÖµÅÐ¶Ï
         //!
-        bool operator == ( const VertexFormatDesc & rhs ) const;
+        bool operator == ( const VtxFmtDesc & rhs ) const;
     };
 
     //@}

@@ -23,7 +23,7 @@ bool GN::ImageDesc::validate() const
     }
 
     // check format
-    if( format < 0 || format >= NUM_COLOR_FORMATS )
+    if( format < 0 || format >= NUM_CLRFMTS )
     {
         GN_ERROR( "invalid image format!" );
         return false;
@@ -36,7 +36,7 @@ bool GN::ImageDesc::validate() const
         return false;
     }
 
-    const GN::ColorFormatDesc & fd = GN::getColorFormatDesc( format );
+    const GN::ClrFmtDesc & fd = GN::getClrFmtDesc( format );
 
     // check mipmaps
     for ( uint8_t i = 0; i < numMips; ++ i )

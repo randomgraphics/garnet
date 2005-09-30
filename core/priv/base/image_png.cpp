@@ -9,7 +9,7 @@
 // local functions
 // ****************************************************************************
 
-static GN::ColorFormat
+static GN::ClrFmt
 s_get_png_clrfmt( png_struct * png, const png_info * info )
 {
     // switch to little endian
@@ -109,7 +109,7 @@ bool PngReader::readHeader(
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
     if ( GN::FMT_UNKNOWN == o_desc.format ) return false;
-    uint32_t bpp = GN::getColorFormatDesc(o_desc.format).bits;
+    uint32_t bpp = GN::getClrFmtDesc(o_desc.format).bits;
 
     // update o_desc
     GN::ImageDesc::MipDesc & m = o_desc.mips[0];
