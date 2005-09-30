@@ -54,7 +54,7 @@ void GN::d3d::App::quit()
 {
     GN_GUARD;
 
-    devInvalidate();
+    devDispose();
     devDestroy();
     appQuit();
 
