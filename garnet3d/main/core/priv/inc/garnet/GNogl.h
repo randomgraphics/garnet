@@ -1,5 +1,5 @@
-#ifndef __GN_GNGL_GNGL_H__
-#define __GN_GNGL_GNGL_H__
+#ifndef __GN_GNOGL_GNOGL_H__
+#define __GN_GNOGL_GNOGL_H__
 // *****************************************************************************
 //! \file    GNogl.h
 //! \brief   Public interface for opengl application.
@@ -92,7 +92,7 @@ namespace GN
                 , winTitle("OGLApp")
             {}
         };
-        
+
         //!
         //! Main ogl class
         //!
@@ -215,4 +215,4 @@ namespace GN
 // *****************************************************************************
 //                           End of GnGL.h
 // *****************************************************************************
-#endif // __GN_GNGL_GNGL_H__
+#endif // __GN_GNOGL_GNOGL_H__
