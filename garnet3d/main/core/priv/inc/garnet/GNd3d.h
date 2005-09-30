@@ -156,7 +156,7 @@ namespace GN
             //! - These signales provide standard way for device restoration and
             //!   and recreation.
             //! - During class initialization, sigDeviceCreate and sigDeviceRestore
-            //!   will be triggered; during class destory sigDeviceInvalidate
+            //!   will be triggered; during class destory sigDeviceDispose
             //!   and sigDeviceDestroyr will be triggerd.
             //! - signals may be triggered several times in life-time of application,
             //!   but must be in strict order:
@@ -165,7 +165,7 @@ namespace GN
             //!                           |              |
             //!                          \|/             |
             //!                           '              |
-            //!   (start)-->create----->restore------->invalidate------>destroy-->(end)
+            //!   (start)-->create----->restore------->dispose------>destroy-->(end)
             //!               .                                          |
             //!              /|\                                         |
             //!               |                                          |
@@ -190,11 +190,11 @@ namespace GN
             Signal0<bool> sigDeviceRestore;
 
             //!
-            //! Device invalidate(lost) signal. This signal will be triggered
+            //! Device dispose(lost) signal. This signal will be triggered
             //! before resetting lost device. You should release all D3D resources
             //! in default pool, to prepare for device reset.
             //!
-            Signal0<void> sigDeviceInvalidate;
+            Signal0<void> sigDeviceDispose;
 
             //!
             //! Device destroy signal. This signal will be triggered right before
@@ -202,15 +202,6 @@ namespace GN
             //! resources here.
             //!
             Signal0<void> sigDeviceDestroy;
-
-            //!
-            //! Macro to facilliate connection to device management signals.
-            //!
-            #define GN_D3DSIG_CONNECT_TO(PTR,CLASS) \
-                gD3D.sigDeviceCreate.connect( PTR, &CLASS::onDeviceCreate ); \
-                gD3D.sigDeviceRestore.connect( PTR, &CLASS::onDeviceRestore ); \
-                gD3D.sigDeviceInvalidate.connect( PTR, &CLASS::onDeviceInvalidate ); \
-                gD3D.sigDeviceDestroy.connect( PTR, &CLASS::onDeviceDestroy );
 
             //@}
 
@@ -331,7 +322,7 @@ namespace GN
             void setAppInitFunc( const Functor0<bool> & fp ) { mAppInitFunc = fp; }
             void setDevCreateFunc( const Functor0<bool> & fp ) { mDevCreateFunc = fp; }
             void setDevRestoreFunc( const Functor0<bool> & fp ) { mDevRestoreFunc = fp; }
-            void setDevInvalidateFunc( const Functor0<void> & fp ) { mDevInvalidateFunc = fp; }
+            void setDevDisposeFunc( const Functor0<void> & fp ) { mDevDisposeFunc = fp; }
             void setDevDestroyFunc( const Functor0<void> & fp ) { mDevDestroyFunc = fp; }
             void setAppQuitFunc( const Functor0<void> & fp ) { mAppQuitFunc = fp; }
             void setUpdateFunc( const Functor0<void> & fp ) { mUpdateFunc = fp; }
@@ -349,7 +340,7 @@ namespace GN
             virtual bool appInit() { if( mAppInitFunc ) return mAppInitFunc(); else return true; }
             virtual bool devCreate() { if( mDevCreateFunc ) return mDevCreateFunc(); else return true; }
             virtual bool devRestore() { if( mDevRestoreFunc ) return mDevRestoreFunc(); else return true; }
-            virtual void devInvalidate()  { if( mDevInvalidateFunc ) mDevInvalidateFunc(); }
+            virtual void devDispose()  { if( mDevDisposeFunc ) mDevDisposeFunc(); }
             virtual void devDestroy()  { if( mDevDestroyFunc ) mDevDestroyFunc(); }
             virtual void appQuit() { if( mAppQuitFunc ) mAppQuitFunc(); }
             virtual void update() { if( mUpdateFunc ) mUpdateFunc(); }
@@ -375,7 +366,7 @@ namespace GN
             D3DInitParams mInitParams;
 
             Functor0<bool> mAppInitFunc, mDevCreateFunc, mDevRestoreFunc;
-            Functor0<void> mDevInvalidateFunc, mDevDestroyFunc, mAppQuitFunc, mUpdateFunc, mRenderFunc;
+            Functor0<void> mDevDisposeFunc, mDevDestroyFunc, mAppQuitFunc, mUpdateFunc, mRenderFunc;
 
             // ********************************
             // private functions

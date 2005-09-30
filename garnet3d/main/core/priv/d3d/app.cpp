@@ -40,6 +40,8 @@ bool GN::d3d::App::init()
 
     if( !mD3D.init(mInitParams) ) return false;
 
+    // TODO: connect to D3D signals
+
     return appInit() && devCreate() && devRestore();
 
     GN_UNGUARD;

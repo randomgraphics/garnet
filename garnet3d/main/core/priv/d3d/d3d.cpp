@@ -751,8 +751,8 @@ bool GN::d3d::D3D::restoreDevice()
     gMeshMgr.dispose();
     gEffectMgr.dispose();
 
-    // trigger device invalidation signal
-    sigDeviceInvalidate.emit();
+    // trigger device dispose signal
+    sigDeviceDispose.emit();
 
     // reset device
     setupPresentParameters();
