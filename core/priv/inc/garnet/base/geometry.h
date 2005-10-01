@@ -2839,9 +2839,44 @@ namespace GN
 
 namespace GN
 {
-    typedef Vector3<float> Vector3f; //!< 3-D float vector
-    typedef Vector4<float> Vector4f; //!< 4-D float vector
-    typedef Plane3<float> Plane3f;   //!< 3-D plane (sinle precesion)
+    //! \name Alias for commonly used geometry classes.
+    //@{
+    typedef Vector2<float>      Vector2f;
+    typedef Vector2<double>     Vector2d;
+    typedef Vector2<int>        Vector2i;
+
+    typedef Vector3<float>      Vector3f;
+    typedef Vector3<double>     Vector3d;
+    typedef Vector3<int>        Vector3i;
+
+    typedef Vector4<float>      Vector4f;
+    typedef Vector4<double>     Vector4d;
+    typedef Vector4<int>        Vector4i;
+
+    typedef Matrix33<float>     Matrix33f;
+    typedef Matrix33<double>    Matrix33d;
+    typedef Matrix33<int>       Matrix33i;
+
+    typedef Matrix44<float>     Matrix44f;
+    typedef Matrix44<double>    Matrix44d;
+    typedef Matrix44<int>       Matrix44i;
+
+    typedef Plane3<float>       Plane3f;
+    typedef Plane3<double>      Plane3d;
+    typedef Plane3<int>         Plane3i;
+
+    typedef Rect<float>         Rectf;
+    typedef Rect<double>        Rectd;
+    typedef Rect<int>           Recti;
+
+    typedef Box<float>          Boxf;
+    typedef Box<double>         Boxd;
+    typedef Box<int>            Boxi;
+
+    typedef Sphere<float>       Spheref;
+    typedef Sphere<double>      Sphered;
+    typedef Sphere<int>         Spherei;
+    //@}
 }
 
 // *****************************************************************************
