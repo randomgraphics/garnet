@@ -139,7 +139,7 @@ namespace GN
                 quit(); return selfOK();
             }
 
-            m_ok = 1;
+            mOK = true;
             return selfOK();
         }
 
@@ -151,14 +151,14 @@ namespace GN
         //!
         //! 是否初始化过？
         //!
-        virtual bool ok() const { return m_ok; }
+        virtual bool ok() const { return mOK; }
 
     private :
 
         //!
         //! initialize data members
         //!
-        void clear() { m_ok = 0; }
+        void clear() { mOK = false; }
 
         //!
         //! private initialization check routine
@@ -168,7 +168,7 @@ namespace GN
         //!
         //! initialization flag
         //!
-        bool m_ok;
+        bool mOK;
     };
 
 }
