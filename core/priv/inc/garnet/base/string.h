@@ -701,7 +701,7 @@ namespace GN
     //!
     //! printf-like string format function
     //!
-    inline StrA formatStr( const char * fmt, ... )
+    inline StrA strFormat( const char * fmt, ... )
     {
         StrA s;
         va_list arglist;
@@ -714,7 +714,7 @@ namespace GN
     //!
     //! printf-like string format function (wide-char version)
     //!
-    inline StrW formatStr( const wchar_t * fmt, ... )
+    inline StrW strFormat( const wchar_t * fmt, ... )
     {
         StrW s;
         va_list arglist;

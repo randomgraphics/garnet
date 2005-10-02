@@ -64,7 +64,7 @@ static GN::StrA levelStr( GN::LogLevel l )
     {
         s = "UNKNOWN_LOG_LEVEL";
     }
-    return GN::formatStr( "%s(%d)",s,l);
+    return GN::strFormat( "%s(%d)",s,l);
 }
 
 class ConsoleColor

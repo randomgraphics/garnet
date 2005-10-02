@@ -602,8 +602,8 @@ bool GN::d3d::D3D::createD3D()
     vsver_minor = mDevCaps.VertexShaderVersion & 0xFF;
     psver_major = (mDevCaps.PixelShaderVersion & 0xFF00) >> 8;
     psver_minor = mDevCaps.PixelShaderVersion & 0xFF;
-    StrA vsver = formatStr( "%d.%d", vsver_major, vsver_minor );
-    StrA psver = formatStr( "%d.%d", psver_major, psver_minor );
+    StrA vsver = strFormat( "%d.%d", vsver_major, vsver_minor );
+    StrA psver = strFormat( "%d.%d", psver_major, psver_minor );
     StrA hwtnl;
     if( D3DDEVCAPS_HWTRANSFORMANDLIGHT & mDevCaps.DevCaps )
         hwtnl = "Supported";
