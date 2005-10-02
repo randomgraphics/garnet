@@ -1,0 +1,8 @@
+Import('env')
+
+objs = env.GN_build_shared_objects(
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp',
+    'gfxCommon.pdb' )
+
+Return( 'objs' )

@@ -1,0 +1,7 @@
+Import( 'env GNgfxCommonObjs' )
+
+env.GN_build_shared_library(
+    'GNgfxD3D',
+    env.GN_glob('*.cpp') + GNgfxCommonObjs,
+    'pch.h',
+    'pch.cpp' )

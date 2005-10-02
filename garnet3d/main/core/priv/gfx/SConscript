@@ -1,0 +1,8 @@
+Import( 'env' )
+
+objs = SConscript( dirs=Split('common') )
+
+dirs = ['ogl']
+if 'win32' == env['PLATFORM']: dirs += ['d3d']
+
+SConscript( dirs=dirs, exports={'GNgfxCommonObjs':objs} )
