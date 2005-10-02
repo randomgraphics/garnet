@@ -100,9 +100,9 @@
 //!
 //! check return value of Windows function (general version)
 //!
-#define GN_WIN_CHECK_DO( RETURN_TYPE, func, something )     \
+#define GN_WIN_CHECK_DO( func, something )                  \
     if( true ) {                                            \
-        RETURN_TYPE rr = (func);                            \
+        void * rr = (void*)(func);                          \
         if( 0 == rr )                                       \
         {                                                   \
             GN_ERROR( GN::getOSErrorInfo() );               \
@@ -114,23 +114,20 @@
 //! check return value of Windows function
 //!
 #if GN_DEBUG
-#define GN_WIN_CHECK( RETURN_TYPE, func ) \
-            GN_WIN_CHECK_DO( RETURN_TYPE, func, void(0); )
+#define GN_WIN_CHECK( func ) GN_WIN_CHECK_DO( func, void(0); )
 #else
-#define GN_WIN_CHECK( RETURN_TYPE, func )      func
+#define GN_WIN_CHECK( func )      func
 #endif
 
 //!
 //! check return value of Windows function, return if failed
 //!
-#define GN_WIN_CHECK_R( RETURN_TYPE, func ) \
-            GN_WIN_CHECK_DO( RETURN_TYPE, func, return; )
+#define GN_WIN_CHECK_R( func ) GN_WIN_CHECK_DO( func, return; )
 
 //!
 //! check return value of Windows function, return if failed
 //!
-#define GN_WIN_CHECK_RV( RETURN_TYPE, func, rval ) \
-            GN_WIN_CHECK_DO( RETURN_TYPE, func, return rval; )
+#define GN_WIN_CHECK_RV( func, rval ) GN_WIN_CHECK_DO( func, return rval; )
 
 #endif
 
