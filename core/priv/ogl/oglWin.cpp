@@ -29,7 +29,7 @@ static int sChoosePixelFormat( HDC hdc )
 
     // Get number of available pixel formats.
     int num;
-    GN_WIN_CHECK_RV( int, (num=DescribePixelFormat(hdc, 1, 0, 0)), 0 );
+    GN_WIN_CHECK_RV( num=DescribePixelFormat(hdc, 1, 0, 0), 0 );
     GNOGL_INFO( "%d pixelformats in total.", num );
 
     int candidates[4] =
@@ -42,7 +42,7 @@ static int sChoosePixelFormat( HDC hdc )
 
     for ( int i = 1; i <= num; i++ )
     {
-        GN_WIN_CHECK_RV( int, DescribePixelFormat(hdc, i, sizeof(pfd), &pfd), 0 );
+        GN_WIN_CHECK_RV( DescribePixelFormat(hdc, i, sizeof(pfd), &pfd), 0 );
 
         // check pfd flags;
         if( (pfd.dwFlags & requiredFlags) != requiredFlags ) continue;
@@ -153,7 +153,7 @@ static bool sSetupPixelFormat( HDC hdc )
     if( 0 == n ) return false;
 
     // Set the pixel format for the device context
-    GN_WIN_CHECK_RV( BOOL, SetPixelFormat(hdc, n, &pfd), false );
+    GN_WIN_CHECK_RV( SetPixelFormat(hdc, n, &pfd), false );
 
     // success
     return true;
@@ -340,13 +340,13 @@ bool GN::ogl::OGL::createOGL()
 
     GN_ASSERT( mWindow );
 
-    GN_WIN_CHECK_RV( HDC, (mDC = GetDC(mWindow)), false );
+    GN_WIN_CHECK_RV( mDC = GetDC(mWindow), false );
 
     if( !sSetupPixelFormat(mDC) ) return false;
 
-    GN_WIN_CHECK_RV( HGLRC, (mRC = wglCreateContext(mDC)), false );
+    GN_WIN_CHECK_RV( mRC = wglCreateContext(mDC), false );
 
-    GN_WIN_CHECK_RV( BOOL, wglMakeCurrent(mDC, mRC), false );
+    GN_WIN_CHECK_RV( wglMakeCurrent(mDC, mRC), false );
 
     // success
     return true;
@@ -377,7 +377,7 @@ bool GN::ogl::OGL::setupDisplayMode()
         }
         MONITORINFOEXA mi;
         mi.cbSize = sizeof(mi);
-        GN_WIN_CHECK_RV( BOOL, GetMonitorInfoA( hmonitor, &mi ), false );
+        GN_WIN_CHECK_RV( GetMonitorInfoA( hmonitor, &mi ), false );
 
         // change display mode
         DEVMODEA dm;
@@ -413,22 +413,22 @@ bool GN::ogl::OGL::setupDisplayMode()
         }
 
         // modify window style
-        GN_WIN_CHECK( HWND, SetParent( mWindow, 0 ) );
-        GN_WIN_CHECK( BOOL, SetMenu( mWindow, 0 ) );
-        GN_WIN_CHECK( LONG, SetWindowLong( mWindow, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
+        GN_WIN_CHECK( SetParent( mWindow, 0 ) );
+        GN_WIN_CHECK( SetMenu( mWindow, 0 ) );
+        GN_WIN_CHECK( SetWindowLong( mWindow, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
         if( IsIconic(mWindow) )
         {
-            GN_WIN_CHECK( BOOL, ShowWindow( mWindow, SW_SHOWNORMAL ) );
+            GN_WIN_CHECK( ShowWindow( mWindow, SW_SHOWNORMAL ) );
         }
         GNOGL_INFO( "move fullscreen window to %d, %d", mi.rcWork.left, mi.rcWork.top );
-        GN_WIN_CHECK( BOOL, SetWindowPos(
+        GN_WIN_CHECK( SetWindowPos(
             mWindow, HWND_TOPMOST,
             mi.rcWork.left, mi.rcWork.top,
             mInitParams.width, mInitParams.height,
             SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
 
         // trigger a redraw operation
-        GN_WIN_CHECK( BOOL, UpdateWindow( mWindow ) );
+        GN_WIN_CHECK( UpdateWindow( mWindow ) );
     }
 
     // success

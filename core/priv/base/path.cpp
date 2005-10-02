@@ -49,7 +49,7 @@ static inline GN::StrA sGetAppDir()
 {
 #if GN_WINNT && GN_PC
     char buf[MAX_PATH_LENGTH+1];
-    GN_WIN_CHECK_RV( DWORD, GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
+    GN_WIN_CHECK_RV( GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
     return GN::path::getParent( buf );
 #elif GN_XENON
     return "game:";

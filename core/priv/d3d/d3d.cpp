@@ -216,7 +216,7 @@ static void sGetClientSize( HWND window, UINT & width, UINT & height )
 {
     GN_ASSERT( IsWindow(window) );
     RECT rc;
-    GN_WIN_CHECK( BOOL, GetClientRect( window, &rc ) );
+    GN_WIN_CHECK( GetClientRect( window, &rc ) );
     width = (UINT)(rc.right - rc.left);
     height = (UINT)(rc.bottom - rc.top);
     if( width < 10 ) width = 10;
