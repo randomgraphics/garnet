@@ -337,7 +337,7 @@ namespace GN
     //! Base slot class. Derive your class from this, if you want automatic
     //! management of connections between signal and slot.
     //!
-    class SlotBase : public NoCopy
+    class SlotBase
     {
     protected:
 
