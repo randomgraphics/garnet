@@ -189,27 +189,27 @@ public:
         TS_ASSERT_EQUALS( GN::TSV_INVALID, GN::str2TextureStateValue( NULL ) );
     }
 
-    void testShaderUsage()
+    void testShaderType()
     {
         StrA str;
-        GN::gfx::ShaderUsage usage;
+        GN::gfx::ShaderType type;
 
-        TS_ASSERT( GN::gfx::shaderUsage2Str( str, GN::gfx::SUSAGE_PIXEL ) );
+        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::PIXEL_SHADER ) );
         TS_ASSERT_EQUALS( str, "PIXEL" );
-        TS_ASSERT( GN::gfx::shaderUsage2Str( str, GN::gfx::SUSAGE_VERTEX ) );
+        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::VERTEX_SHADER ) );
         TS_ASSERT_EQUALS( str, "VERTEX" );
-        TS_ASSERT( !GN::gfx::shaderUsage2Str( str, GN::gfx::NUM_SUSAGES ) );
+        TS_ASSERT( !GN::gfx::shaderType2Str( str, GN::gfx::NUM_SHADER_TYPES ) );
 
-        TS_ASSERT_EQUALS( "PIXEL", GN::gfx::shaderUsage2Str(GN::gfx::SUSAGE_PIXEL) );
-        TS_ASSERT_EQUALS( "VERTEX", GN::gfx::shaderUsage2Str(GN::gfx::SUSAGE_VERTEX) );
-        TS_ASSERT_EQUALS( "BAD_SHADER_USAGE", GN::gfx::shaderUsage2Str(GN::gfx::NUM_SUSAGES) );
+        TS_ASSERT_EQUALS( "PIXEL", GN::gfx::shaderType2Str(GN::gfx::PIXEL_SHADER) );
+        TS_ASSERT_EQUALS( "VERTEX", GN::gfx::shaderType2Str(GN::gfx::VERTEX_SHADER) );
+        TS_ASSERT_EQUALS( "BAD_SHADER_TYPE", GN::gfx::shaderType2Str(GN::gfx::NUM_SHADER_TYPES) );
 
-        TS_ASSERT( GN::gfx::str2ShaderUsage(usage,"VERTEX") );
-        TS_ASSERT_EQUALS( usage, GN::gfx::SUSAGE_VERTEX );
-        TS_ASSERT( GN::gfx::str2ShaderUsage(usage,"PIXEL") );
-        TS_ASSERT_EQUALS( usage, GN::gfx::SUSAGE_PIXEL );
-        TS_ASSERT( !GN::gfx::str2ShaderUsage(usage,NULL) );
-        TS_ASSERT( !GN::gfx::str2ShaderUsage(usage,"haha") );
+        TS_ASSERT( GN::gfx::str2ShaderType(type,"VERTEX") );
+        TS_ASSERT_EQUALS( type, GN::gfx::VERTEX_SHADER );
+        TS_ASSERT( GN::gfx::str2ShaderType(type,"PIXEL") );
+        TS_ASSERT_EQUALS( type, GN::gfx::PIXEL_SHADER );
+        TS_ASSERT( !GN::gfx::str2ShaderType(type,NULL) );
+        TS_ASSERT( !GN::gfx::str2ShaderType(type,"haha") );
     }
 
     void testShadingLanguage()
@@ -217,31 +217,30 @@ public:
         StrA str;
         GN::gfx::ShadingLanguage lang;
 
-        static struct slang_s
+        static struct LangItem
         {
             GN::gfx::ShadingLanguage tag;
             const char * str;
-        } slang_table [] =
+        } sTable [] =
         {
-            { GN::gfx::SLANG_FFP, "FFP" },
-            { GN::gfx::SLANG_OGL_ARB, "OGL_ARB" },
-            { GN::gfx::SLANG_OGL_GLSL, "OGL_GLSL" },
-            { GN::gfx::SLANG_D3D_ASM, "D3D_ASM" },
-            { GN::gfx::SLANG_D3D_HLSL, "D3D_HLSL" },
-            { GN::gfx::SLANG_CG, "CG" },
+            { GN::gfx::LANG_OGL_ARB, "OGL_ARB" },
+            { GN::gfx::LANG_OGL_GLSL, "OGL_GLSL" },
+            { GN::gfx::LANG_D3D_ASM, "D3D_ASM" },
+            { GN::gfx::LANG_D3D_HLSL, "D3D_HLSL" },
+            { GN::gfx::LANG_CG, "CG" },
         };
-        for( size_t i = 0; i < sizeof(slang_table)/sizeof(slang_table[0]); ++i )
+        for( size_t i = 0; i < sizeof(sTable)/sizeof(sTable[0]); ++i )
         {
-            TS_ASSERT( GN::gfx::shadingLanguage2Str( str, slang_table[i].tag ) );
-            TS_ASSERT_EQUALS( str, slang_table[i].str );
+            TS_ASSERT( GN::gfx::shadingLanguage2Str( str, sTable[i].tag ) );
+            TS_ASSERT_EQUALS( str, sTable[i].str );
 
-            TS_ASSERT_EQUALS( slang_table[i].str, GN::gfx::shadingLanguage2Str(slang_table[i].tag) );
+            TS_ASSERT_EQUALS( sTable[i].str, GN::gfx::shadingLanguage2Str(sTable[i].tag) );
 
-            TS_ASSERT( GN::gfx::str2ShadingLanguage( lang, slang_table[i].str ) );
-            TS_ASSERT_EQUALS( lang, slang_table[i].tag );
+            TS_ASSERT( GN::gfx::str2ShadingLanguage( lang, sTable[i].str ) );
+            TS_ASSERT_EQUALS( lang, sTable[i].tag );
         }
-        TS_ASSERT( !GN::gfx::shadingLanguage2Str( str, GN::gfx::NUM_SLANGS ) );
-        TS_ASSERT_EQUALS( "BAD_SHADING_LANGUAGE", GN::gfx::shadingLanguage2Str(GN::gfx::NUM_SLANGS) );
+        TS_ASSERT( !GN::gfx::shadingLanguage2Str( str, GN::gfx::NUM_SHADING_LANGUAGES ) );
+        TS_ASSERT_EQUALS( "BAD_SHADING_LANGUAGE", GN::gfx::shadingLanguage2Str(GN::gfx::NUM_SHADING_LANGUAGES) );
         TS_ASSERT( !GN::gfx::str2ShadingLanguage( lang, NULL ) );
         TS_ASSERT( !GN::gfx::str2ShadingLanguage( lang, "haha" ) );
 
