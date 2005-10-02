@@ -1,4 +1,4 @@
-Import( 'env GN_targets GN_func' )
+Import( 'env GN_targets' )
 
 import sys
 from string import Template
@@ -47,5 +47,5 @@ env.Depends( doxyfile, 'gendoxyfile.py' )
 
 if 'YES' == genchm :
     manual = env.Command( 'garnet3d.chm', doxyfile, '%s $SOURCE'%doxygen )
-    env.Depends( manual, GN_func['glob']( ['*.h','*.inl'], ['#core/priv'], True ) )
+    env.Depends( manual, env.GN_glob( ['*.h','*.inl'], ['#core/priv'], True ) )
     GN_targets['GNman'] = manual

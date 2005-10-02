@@ -1,4 +1,4 @@
-Import( 'env GN_conf GN_targets GN_func' )
+Import( 'env GN_conf' )
 
 import sys, glob
 
@@ -8,7 +8,7 @@ env.Append( CPPPATH = ['.'] )
 if GN_conf['has_boost']: env.Append( CPPDEFINES = ['HAS_BOOST'] )
 
 # generate cxxtest glue file.
-cases   = GN_func['glob']('*.cpp', 'base')
+cases   = env.GN_glob('*.cpp', 'base')
 cxxtest = env.Command(
     'ut.cpp', cases,
     '%s %s --error-printer --include="garnet/GNbase.h" -o $TARGET ${SOURCES.abspath}'%(

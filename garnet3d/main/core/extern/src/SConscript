@@ -1,4 +1,4 @@
-Import( 'env GN_targets GN_func' )
+Import( 'env' )
 
 env = env.Copy()
 if '/W4' in env['CCFLAGS']: env['CCFLAGS'].remove('/W4')
@@ -16,11 +16,11 @@ env.Append( CPPPATH = '../inc/garnet/extern' )
 jpeg_env = env.Copy()
 jpeg_env.Append( CPPPATH = [Dir('jpeg').srcnode()] )
 if 'gcc' == env['CC']: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
-jpeg_objs = jpeg_env.GN_build_static_objects( GN_func['glob']( '*.c', 'jpeg' ), pdb = 'GNextern.pdb' )
+jpeg_objs = jpeg_env.GN_build_static_objects( env.GN_glob( '*.c', 'jpeg' ), pdb = 'GNextern.pdb' )
 
 # build source list
-srcs = GN_func['glob']( '*.c', Split('glew lua zlib png pcre') ) \
-     + GN_func['glob']( ['*.cpp', '*.cc'], Split('tinyxml pcre') ) \
+srcs = env.GN_glob( '*.c', Split('glew lua zlib png pcre') ) \
+     + env.GN_glob( ['*.cpp', '*.cc'], Split('tinyxml pcre') ) \
      + jpeg_objs
 
 env.GN_build_static_library( 'GNextern', srcs )
