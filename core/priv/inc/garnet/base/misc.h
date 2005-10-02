@@ -152,6 +152,37 @@ namespace GN
     bool getEnv( StrA & result, const char * name );
 
     //!
+    //! Data type with initialized value.
+    //!
+    template<typename T, T DEFAULT_VALUE>
+    class Initialized
+    {
+        T mValue;
+
+    public:
+
+        //!
+        //! Default constructor
+        //!
+        Initialized() : mValue(DEFAULT_VALUE) {}
+
+        //!
+        //! Construct from T
+        //!
+        Initialized( const T & value ) : mValue(value) {}
+
+        //!
+        //! Convert to T
+        //!
+        operator T & () { return mValue; }
+
+        //!
+        //! Convert to constant T
+        //!
+        operator const T & () const { return mValue; }
+    };
+
+    //!
     //! Disable copy semantic of all descendants.
     //!
     class NoCopy
