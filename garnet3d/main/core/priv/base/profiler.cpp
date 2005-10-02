@@ -17,7 +17,7 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
     for( i = mTimers.begin(); i != e; ++i )
     {
         const TimerDesc & t = i->second;
-        rval += GN::formatStr(
+        rval += GN::strFormat(
             "    %s : count(%.0f), sum(%.0f), ave(%.0f), min(%.0f), max(%.0f)\n",
             i->first,
             t.count,
