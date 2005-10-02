@@ -1,4 +1,4 @@
-Import('env GN_targets GN_conf GN_func')
+Import('env GN_targets GN_conf')
 
 import os.path
 
@@ -6,7 +6,7 @@ import os.path
 #
 # -----------------------------------------------------------------------------
 def to_relpath( files ):
-    return [ GN_func['relpath']( File(x).path, Dir('.').srcnode().path ) for x in files ]
+    return [ env.GN_relpath( File(x).path, Dir('.').srcnode().path ) for x in files ]
 
 #
 #
@@ -14,15 +14,13 @@ def to_relpath( files ):
 def build_proj( target, srcdir=[], incdir=[] ):
     if not target in GN_targets: return
 
-    glob = GN_func['glob']
-
-    sources = glob( '*.[c]*', srcdir, True )
+    sources = env.GN_glob( '*.[c]*', srcdir, True )
     if 0 == len(incdir):
-        includes = glob( '%s.h'%target, '#core/priv/inc/garnet' )
-        includes += glob( '*.[hi]*', ['#core/priv/inc/garnet/%s'%target[2:]], True )
+        includes = env.GN_glob( '%s.h'%target, '#core/priv/inc/garnet' )
+        includes += env.GN_glob( '*.[hi]*', ['#core/priv/inc/garnet/%s'%target[2:]], True )
     else:
-        includes = glob( '*.[hi]*', incdir, True )
-    localincs = glob( '*.[hi]*', srcdir, True )
+        includes = env.GN_glob( '*.[hi]*', incdir, True )
+    localincs = env.GN_glob( '*.[hi]*', srcdir, True )
 
     proj = env.MSVSProject(
         target      = target + env['MSVSPROJECTSUFFIX'],

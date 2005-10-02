@@ -39,25 +39,25 @@ if not os.path.exists( cache_dir ) : os.makedirs( cache_dir )
 ################################################################################
 
 # 输出提示信息
-def GN_info( msg ):
+def GN_info( env, msg ):
     print '===================================================================='
     print 'INFO : %s'%msg
     print '===================================================================='
 
 # 输出警告信息
-def GN_warn( msg ):
+def GN_warn( env, msg ):
     print '===================================================================='
     print 'WARNING : %s'%msg
     print '===================================================================='
 
 # 输出错误信息
-def GN_error( msg ):
+def GN_error( env, msg ):
     print '===================================================================='
     print 'ERROR : %s'%msg
     print '===================================================================='
 
 # 生成从target到base的相对路径
-def GN_relpath(target, base):
+def GN_relpath( env, target, base ):
     """
     Return a relative path to the target from either the current dir or an optional base dir.
     Base can be a directory specified either as absolute or relative to current dir.
@@ -84,7 +84,9 @@ def GN_relpath(target, base):
     return os.path.join(*rel_list)
 
 # 查找指定目录下的文件
-def GN_glob( patterns, dirs = ['.'],
+def GN_glob( env,
+             patterns,
+             dirs = ['.'],
              recursive = False ):
     patterns = Flatten( [patterns] )
     dirs = Flatten( [dirs] )
@@ -95,7 +97,7 @@ def GN_glob( patterns, dirs = ['.'],
             for file in os.listdir( root ):
                 if os.path.isdir( os.path.join(root,file) ):
                     if recursive and ( not '.svn' == file ) : # ignore subversion directory
-                        files = files + GN_glob( patterns, os.path.join(dir,file), recursive )
+                        files = files + GN_glob( env, patterns, os.path.join(dir,file), recursive )
                 else:
                     # Note: ignore precompiled header
                     if not ('pch.cpp' == file or 'stdafx.cpp' == file):
@@ -220,8 +222,14 @@ def GN_build_program( env, target, sources=[],
     if( addToTargetList ): GN_targets[target] = result
     return result
 
-# register custom builder to scons.
+# register custom functions to scons.
 from SCons.Script.SConscript import SConsEnvironment
+SConsEnvironment.GN_info = GN_info;
+SConsEnvironment.GN_warn = GN_warn;
+SConsEnvironment.GN_error = GN_error;
+SConsEnvironment.GN_relpath = GN_relpath;
+#SConsEnvironment.GN_setup_PCH_PDB = GN_setup_PCH_PDB;
+SConsEnvironment.GN_glob = GN_glob
 SConsEnvironment.GN_has_manifest = GN_has_manifest
 SConsEnvironment.GN_build_static_object = GN_build_static_object
 SConsEnvironment.GN_build_static_objects = GN_build_static_objects
@@ -551,21 +559,11 @@ if float(GN_conf['enable_cache']): env.CacheDir( cache_dir )
 #
 ################################################################################
 
-GN_func = {
-    'info'                  : GN_info,
-    'warn'                  : GN_warn,
-    'error'                 : GN_error,
-    'glob'                  : GN_glob,
-    'relpath'               : GN_relpath,
-    #'setup_PCH_PDB'         : GN_setup_PCH_PDB,
-    }
-
 env.Export(
     'env',
     'GN_conf',
     'GN_alias',
     'GN_targets',
-    'GN_func',
     )
 
 ################################################################################
