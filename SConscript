@@ -304,18 +304,6 @@ def default_env( options = None ):
     if float(GN_conf['enable_profile']):
         cppdefines['common'] = ['GN_ENABLE_PROFILE=1']
 
-    cpppath['common']  = ['#core/pub/sdk/inc/common']
-    cpppath['debug']   = ['#core/pub/sdk/inc/debug']
-    cpppath['release'] = ['#core/pub/sdk/inc/release']
-    cpppath['stdbg']   = ['#core/pub/sdk/inc/stdbg']
-    cpppath['strel']   = ['#core/pub/sdk/inc/strel']
-
-    libpath['common']  = ['#core/pub/sdk/lib/%s/common'%env['PLATFORM']]
-    libpath['debug']   = ['#core/pub/sdk/lib/%s/debug'%env['PLATFORM']]
-    libpath['release'] = ['#core/pub/sdk/lib/%s/release'%env['PLATFORM']]
-    libpath['stdbg']   = ['#core/pub/sdk/lib/%s/stdbg'%env['PLATFORM']]
-    libpath['strel']   = ['#core/pub/sdk/lib/%s/strel'%env['PLATFORM']]
-
     # 定制不同平台的编译选项
     if 'win32' == env['PLATFORM']:
         libs['common'] += Split('kernel32 user32 gdi32 shlwapi')
