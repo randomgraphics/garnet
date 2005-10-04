@@ -2,7 +2,7 @@
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 GN_INLINE const char * GN::renderState2Str( RenderState rs )
 {
     static const char * table [] =
@@ -48,7 +48,7 @@ GN_INLINE bool GN::str2RenderState( RenderState & result, const char * str )
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 GN_INLINE const char * GN::renderStateValue2Str( RenderStateValue rsval )
 {
     static const char * table [] =
@@ -94,7 +94,7 @@ GN_INLINE bool GN::str2RenderStateValue( RenderStateValue & result, const char *
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 GN_INLINE const char * GN::textureState2Str( TextureState ts )
 {
     static const char * table [] =
@@ -142,7 +142,7 @@ GN_INLINE bool GN::str2TextureState( TextureState & result, const char * str )
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 GN_INLINE const char * GN::textureStateValue2Str( TextureStateValue tssval )
 {
     static const char * table [] =
@@ -188,7 +188,7 @@ GN_INLINE bool GN::str2TextureStateValue( TextureStateValue & result, const char
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 GN_INLINE bool
 GN::RenderStateBlockDesc::operator == ( const RenderStateBlockDesc & rhs ) const
 {
