@@ -176,15 +176,6 @@
 #define GN_PUBLIC   GN_IMPORT // All other modules only imports symbols
 #endif
 
-//!
-//! C style function tag
-//!
-#ifdef __cplusplus
-#define C_LINKAGE         "C"
-#else
-#define C_LINKAGE
-#endif
-
 // *****************************************************************************
 // Misc.
 // *****************************************************************************
