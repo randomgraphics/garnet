@@ -5,7 +5,7 @@
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlAttribute::PrintToString( TiXmlString & str, int /*depth*/ ) const
 {
     TIXML_STRING n, v;
@@ -32,7 +32,7 @@ void TiXmlAttribute::PrintToString( TiXmlString & str, int /*depth*/ ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlElement::PrintToString( TiXmlString & str, int depth ) const
 {
     int i;
@@ -87,7 +87,7 @@ void TiXmlElement::PrintToString( TiXmlString & str, int depth ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlComment::PrintToString( TiXmlString & str, int depth ) const
 {
     for ( int i=0; i<depth; i++ )
@@ -99,7 +99,7 @@ void TiXmlComment::PrintToString( TiXmlString & str, int depth ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlText::PrintToString( TiXmlString & str, int depth ) const
 {
     TIXML_STRING buffer;
@@ -109,7 +109,7 @@ void TiXmlText::PrintToString( TiXmlString & str, int depth ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlDeclaration::PrintToString( TiXmlString & str, int depth ) const
 {
     str.append( "<?xml " );
@@ -137,7 +137,7 @@ void TiXmlDeclaration::PrintToString( TiXmlString & str, int depth ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlCData::PrintToString( TiXmlString & str, int depth ) const
 {
     str.append( "<![CDATA[" );
@@ -147,7 +147,7 @@ void TiXmlCData::PrintToString( TiXmlString & str, int depth ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlUnknown::PrintToString( TiXmlString & str, int depth ) const
 {
     for ( int i=0; i<depth; i++ )
@@ -159,7 +159,7 @@ void TiXmlUnknown::PrintToString( TiXmlString & str, int depth ) const
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void TiXmlDocument::PrintToString( TiXmlString & str, int depth ) const
 {
     TiXmlNode* node;
