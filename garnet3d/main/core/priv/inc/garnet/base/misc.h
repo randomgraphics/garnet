@@ -152,10 +152,10 @@ namespace GN
     bool getEnv( StrA & result, const char * name );
 
     //!
-    //! Data type with initialized value.
+    //! Data type with automatic-initialization.
     //!
     template<typename T, T DEFAULT_VALUE>
-    class Initialized
+    class AutoInit
     {
         T mValue;
 
@@ -164,12 +164,12 @@ namespace GN
         //!
         //! Default constructor
         //!
-        Initialized() : mValue(DEFAULT_VALUE) {}
+        AutoInit() : mValue(DEFAULT_VALUE) {}
 
         //!
         //! Construct from T
         //!
-        Initialized( const T & value ) : mValue(value) {}
+        AutoInit( const T & value ) : mValue(value) {}
 
         //!
         //! Convert to T
