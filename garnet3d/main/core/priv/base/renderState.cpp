@@ -8,7 +8,7 @@ const GN::RenderStateBlockDesc GN::RenderStateBlockDesc::INVALID( RenderStateBlo
 
 //
 //
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 void GN::RenderStateBlockDesc::reset( ResetFlag flag )
 {
     if( RESET_TO_DEFAULT == flag )
