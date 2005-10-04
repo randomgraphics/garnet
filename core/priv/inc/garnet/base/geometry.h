@@ -65,6 +65,14 @@ namespace GN
 
     public:
         //!
+        //! Convert to float *
+        //!
+        operator T *() { return &x; }
+        //!
+        //! Convert to const float *
+        //!
+        operator const T *() const { return &x; }
+        //!
         //! Are these two Vector2's equal?
         //!
         bool operator == ( const Vector2 & a ) const
@@ -369,6 +377,14 @@ namespace GN
         // ********************************
     public:
 
+        //!
+        //! Convert to float *
+        //!
+        operator T *() { return &x; }
+        //!
+        //! Convert to const float *
+        //!
+        operator const T *() const { return &x; }
         //!
         //! less operator
         //!
@@ -719,6 +735,14 @@ namespace GN
         // ********************************
     public:
 
+        //!
+        //! Convert to float *
+        //!
+        operator T *() { return &x; }
+        //!
+        //! Convert to const float *
+        //!
+        operator const T *() const { return &x; }
         //!
         //! less operator
         //!
