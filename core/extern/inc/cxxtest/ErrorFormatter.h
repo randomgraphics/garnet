@@ -70,7 +70,7 @@ namespace CxxTest
 
         void enterTest( const TestDescription & desc )
         {
-            (*_o) << "Enter case " << desc.suiteName() << "::" << desc.testName();
+            (*_o) << "Enter case " << desc.suiteName() << "::" << desc.testName() << "\n";
             _o->flush();
             _reported = false;
         }
@@ -78,7 +78,6 @@ namespace CxxTest
         void leaveTest( const TestDescription & )
         {
             if ( !tracker().testFailed() ) {
-                ((*_o) << ".\n").flush();
                 _dotting = true;
             }
         }
