@@ -170,7 +170,7 @@ def GN_build_shared_library( env, target, sources=[],
                              libs=[],
                              addToTargetList=1 ):
     if GN_conf['static']:
-        return GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb, addToTargetList )
+        result = GN_build_static_library( env, target, sources, pchstop, pchcpp, pdb, addToTargetList )
     else:
 
         # Add libraries to link list
@@ -198,8 +198,25 @@ def GN_build_shared_library( env, target, sources=[],
             env.SideEffect( manifest, result )
             result += [manifest]
 
-        if addToTargetList: GN_targets[target] = result
-        return result
+    # setup alias for shared library
+    if addToTargetList:
+        GN_targets[target] = result
+        if GN_conf['static'] or 'posix' == env['PLATFORM']:
+            GN_targets['%sLib'%target] = result
+        elif 'win32' == env['PLATFORM']:
+            if GN_has_manifest(env):
+                GN_targets['%sBin'%target] = [ result[0], result[1], result[4] ]
+            else:
+                GN_targets['%sBin'%target] = [ result[0], result[1] ]
+            GN_targets['%sLib'%target] = [ result[2], result[3] ]
+        elif 'cygwin' == env['PLATFORM']:
+            GN_targets['%sBin'%target] = result
+            GN_targets['%sLib'%target] = result
+        else:
+            GN_error( env, 'Unsupport platform: %s'%env['PLATFORM'] )
+            Exit(-1)
+
+    return result
 
 # 编译可执行文件
 def GN_build_program( env, target, sources=[],

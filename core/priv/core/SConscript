@@ -8,18 +8,3 @@ core = env.GN_build_shared_library(
     env.GN_glob('*.cpp'),
     'pch.h',
     'pch.cpp' )
-
-if GN_conf['static'] or 'posix' == env['PLATFORM']:
-    GN_targets['GNcoreLib'] = core
-elif 'win32' == env['PLATFORM']:
-    if env.GN_has_manifest():
-        GN_targets['GNcoreBin'] = [ core[0], core[1], core[4] ]
-    else:
-        GN_targets['GNcoreBin'] = [ core[0], core[1] ]
-    GN_targets['GNcoreLib'] = [ core[2], core[3] ]
-elif 'cygwin' == env['PLATFORM']:
-    GN_targets['GNcoreBin'] = core
-    GN_targets['GNcoreLib'] = core
-else:
-    env.GN_error( 'Unsupport platform: %s'%env['PLATFORM'] )
-    Exit(-1)
