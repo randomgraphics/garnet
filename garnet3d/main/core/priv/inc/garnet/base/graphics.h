@@ -59,11 +59,6 @@ namespace GN
         TYPE_SINT,
     };
 
-    // commonly used color class
-    typedef Vector4<float>   Float4;
-    typedef Vector3<float>   Float3;
-    typedef Vector2<float>   Float2;
-
     //!
     //! color channel descriptor
     //!
@@ -124,7 +119,7 @@ namespace GN
     //!
     //! convert 4 floats to uint32
     //!
-    GN_FORCE_INLINE uint32_t float4ToRGBA32( const Float4 & color )
+    GN_FORCE_INLINE uint32_t float4ToRGBA32( const Vector4f & color )
     {
         return
             ( (uint32_t)(color.r*255.0f) << 0 ) |
@@ -136,7 +131,7 @@ namespace GN
     //!
     //! convert 4 floats to uint32
     //!
-    GN_FORCE_INLINE uint32_t float4ToBGRA32( const Float4 & color )
+    GN_FORCE_INLINE uint32_t float4ToBGRA32( const Vector4f & color )
     {
         return
             ( (uint32_t)(color.b*255.0f) << 0 ) |
