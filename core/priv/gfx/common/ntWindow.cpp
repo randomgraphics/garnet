@@ -94,11 +94,13 @@ GN::gfx::Window::createWindow(
 
     // calculate window size
     DWORD style = WS_POPUP | WS_BORDER | WS_CAPTION | WS_SIZEBOX; // sizable popup window.
+    DWORD exStyle = WS_EX_TOOLWINDOW;
     RECT rc = { 0, 0, width, height };
-    AdjustWindowRect( &rc, style, 0 );
+    AdjustWindowRectEx( &rc, style, 0, exStyle );
 
     // create window
-    HWND wnd = CreateWindowA(
+    HWND wnd = CreateWindowExA(
+        exStyle,
         sClassName,
         "", // no title
         style,
