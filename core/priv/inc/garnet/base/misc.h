@@ -232,6 +232,11 @@ namespace GN
             ~BaseAutoPtr() { release(); }
 
             //!
+            //! Is pointer empty or not.
+            //!
+            bool empty() const { return 0 == mPtr; }
+
+            //!
             //! Get internel pointer
             //!
             T * get() const { return mPtr; }
@@ -257,6 +262,11 @@ namespace GN
                 mPtr = 0;
                 return tmp;
             }
+
+            //!
+            //! Convert to boolean
+            //!
+            operator bool() const { return 0 != mPtr; }
 
             //!
             //! dereference operator
