@@ -36,6 +36,7 @@ namespace GN
             ElementType x;
             ElementType u;
             ElementType s;
+            ElementType width;
         };
 
         //!
@@ -46,6 +47,7 @@ namespace GN
             ElementType y;
             ElementType v;
             ElementType t;
+            ElementType height;
         };
 
         // ********************************
