@@ -11,41 +11,19 @@
 #include "garnet/GNgfx.h"
 
 #if GN_WINNT
-#define NOMINMAX
+#define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
 #endif
 
-#include <exception>
-#include <malloc.h>
-#include <stdlib.h>
+#include <glew.h>
+#if GN_WINNT
+#include <wglew.h>
+#else
+#include <glxew.h>
+#endif
+#include <GL/glu.h>
 
 #include "garnet/base/pragma.h"
-
-//!
-//! gfx module fatal error
-//!
-#define GNGFX_FATAL GN_FATAL
-
-//!
-//! gfx module error log macro
-//!
-#define GNGFX_ERROR GN_ERROR
-
-//!
-//! gfx module warning log macro
-//!
-#define GNGFX_WARN GN_WARN
-
-//!
-//! gfx module informational log macro
-//!
-#define GNGFX_INFO GN_INFO
-
-//!
-//! gfx module tracing macro
-//!
-#define GNGFX_TRACE GN_TRACE
-
 
 // *****************************************************************************
 //                           End of pch.h
