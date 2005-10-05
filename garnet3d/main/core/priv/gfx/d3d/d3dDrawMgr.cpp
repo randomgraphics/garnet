@@ -200,7 +200,7 @@ bool GN::gfx::D3DRenderer::handleDeviceLost()
         ::Sleep( 500 );
         return false;
     }
-    else if (D3DERR_DEVICELOST != hr)
+    else if (D3D_OK != hr)
     {
         // fatal error
         GND3D_ERROR( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
