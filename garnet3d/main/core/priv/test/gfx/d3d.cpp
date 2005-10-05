@@ -30,12 +30,14 @@ protected:
 
     void multiRenderer()
     {
+        if( !mCreator ) return;
+
         GN::AutoObjPtr<GN::gfx::Renderer> r1, r2;
 
         GN::gfx::DeviceSettings ds;
 
         ds.width = 320;
-        ds.height = 240;
+        ds.height = 640;
         r1.reset( mCreator(ds) );
         TS_ASSERT( r1 );
 
@@ -43,7 +45,14 @@ protected:
         {
             const GN::gfx::DispDesc & dd = r1->getDispDesc();
             TS_ASSERT_EQUALS( dd.width, 320 );
-            TS_ASSERT_EQUALS( dd.height, 240 );
+            TS_ASSERT_EQUALS( dd.height, 640 );
+            bool b = r1->drawBegin();
+            TS_ASSERT( b );
+            if( b )
+            {
+                r1->clearScreen( GN::Vector4f(1,0,0,1) );
+                r1->drawEnd();
+            }
         }
 
         ds.width = 512;
@@ -56,6 +65,13 @@ protected:
             const GN::gfx::DispDesc & dd = r2->getDispDesc();
             TS_ASSERT_EQUALS( dd.width, 512 );
             TS_ASSERT_EQUALS( dd.height, 256 );
+            bool b = r2->drawBegin();
+            TS_ASSERT( b );
+            if( b )
+            {
+                r2->clearScreen( GN::Vector4f(0,0,1,1) );
+                r2->drawEnd();
+            }
         }
     }
 };
@@ -87,4 +103,3 @@ public:
 
     //void testMultiRenderer() { multiRenderer(); }
 };
-
