@@ -14,6 +14,11 @@ namespace GN { namespace gfx
     struct VtxBuf : public RefCounter
     {
         //!
+        //! Get buffer length in bytes
+        //!
+        size_t getLength() const { return mLength; }
+        
+        //!
         //! Lock specific stream
         //!
         //! \param offset
@@ -33,6 +38,23 @@ namespace GN { namespace gfx
         //! Unlock specific stream
         //!
         virtual void unlock() = 0;
+
+    protected:
+
+        //!
+        //! Set buffer length
+        //!
+        void setLength( size_t newValue ) { mLength = newValue; }
+
+        //!
+        //! Set buffer usage
+        //!
+        void setUsage( ResourceUsage newValue ) { mUsage = newValue; }
+
+    private:
+
+        size_t        mLength; //!< Length in bytes
+        ResourceUsage mUsage;  //!< Buffer usage
     };
 
     //!

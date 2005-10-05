@@ -6,25 +6,23 @@
 //! \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-//!
-//! Global renderer instance
-//!
-#define gBasicRenderer (::GN::gfx::BasicRenderer::getInstance())
+#if GN_WINNT
+#include "ntWindow.h"
+#else
+#include "xWindow.h"
+#endif
 
 //!
 //! trace the call sequence of device reset/recreate
 //!
-#define _GN_RENDER_DEVICE_TRACE()  //GN_TRACE( GN_FUNCTION_NAME )
+#define _GN_RENDER_DEVICE_TRACE()  //GNGFX_TRACE( GN_FUNCTION_NAME )
 
 namespace GN { namespace gfx
 {
     //!
     //! basic renderer class
     //!
-    class BasicRenderer : public Renderer,
-                          public StdClass,
-                          public LocalSingleton<BasicRenderer>,
-                          public SlotBase
+    class BasicRenderer : public Renderer, public StdClass
     {
         GN_DECLARE_STDCLASS( BasicRenderer, StdClass );
 
@@ -39,7 +37,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        //! \name standard init / quit
+        // standard init / quit
         // ********************************
 
         //@{
@@ -49,54 +47,77 @@ namespace GN { namespace gfx
         bool ok() const
         {
             return MyParent::ok()
-                && dispOk();
+                && dispOk()
+                && drawOk();
         }
     private :
         void clear()
         {
+            drawClear();
             dispClear();
         }
         //@}
 
-    // ****************************************************************************
-    //
-    //! \name                   Device manager
-    //
-    // ****************************************************************************
+        // *****************************************************************************
+        //
+        //! \name                   Device manager
+        //
+        // *****************************************************************************
 
         //@{
 
     protected:
-        bool deviceCreate( const DeviceSettings & ds );
-        bool deviceRestore( const DeviceSettings & ds );
-        void deviceDispose();
-        void deviceDestroy();
+        bool deviceCreate() { return true; }
+        bool deviceRestore() { return true; }
+        void deviceDispose() {}
+        void deviceDestroy() {}
 
         //@}
 
-    // ****************************************************************************
-    //
-    //! \name                   Display Manager
-    //
-    // ****************************************************************************
+        // *****************************************************************************
+        //
+        //! \name                   Display Manager
+        //
+        // *****************************************************************************
 
         //@{
 
-    public:
-
     private :
         bool dispInit() { return true; }
-        void dispQuit() { /* do nothing */ }
+        void dispQuit() { mWindow.quit(); }
         bool dispOk() const { return true; }
-        void dispClear()    { invalidateScreenDesc(); }
+        void dispClear() { }
+
+    protected:
+
+        //!
+        //! Called by sub-classes to initialize display descriptor
+        //! based on device settings.
+        //!
+        bool setupDispDesc( const DeviceSettings & );
 
     private:
-        bool dispDeviceCreate();
-        bool dispDeviceRestore();
-        void dispDeviceDispose() { invalidateScreenDesc(); }
-        void dispDeviceDestroy() {}
+        Window mWindow;
 
         //@}
+
+        // *****************************************************************************
+        //
+        //! \name                   Draw Manager
+        //
+        // *****************************************************************************
+
+        //@{
+    public:
+        virtual void drawTextA( const char * text, int x, int y, const Vector4f & color );
+
+    private:
+        bool drawInit()     { return true; }
+        void drawQuit()     {}
+        bool drawOk() const { return true; }
+        void drawClear()    { mNumPrims = 0; mNumDraws = 0; }
+        //@}
+
     };
 }}
 

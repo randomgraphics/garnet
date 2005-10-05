@@ -9,14 +9,36 @@
 namespace GN { namespace gfx
 {
     //!
-    //! Device setting structure
+    //! Device setting structure. Represents user-requested renderer options.
     //!
     struct DeviceSettings
     {
         //!
-        //! Handle of render window
+        //! Use external render window or not.
         //!
-        void * renderWindow;
+        bool useExternalWindow;
+
+        union
+        {
+            //!
+            //! Handle of external render window.
+            //! Effective if useExternalWindow is true.
+            //!
+            void * renderWindow;
+
+            //!
+            //! Handle of parent window. Can be NULL.
+            //! Effective if useExternalWindow is false.
+            //!
+            void * parentWindow;
+        };
+
+        //!
+        //! Monitor handle. 0 means using the monitor where render/parent window stays in.
+        //! If monitorHandle and render/parent window are both zero, default(primary)
+        //! monitor will be chosen.
+        //!
+        void * monitorHandle;
 
         //!
         //! fullscreen or windowed mode.
@@ -24,38 +46,30 @@ namespace GN { namespace gfx
         bool fullscreen;
 
         //!
-        //! Width of fullscreen mode. Ignored in windowed mode.
-        //! 0 means using current display mode's width.
+        //! Backbuffer width. If zero, means current display width (in fullscreen mode )
+        //! or renderWindow width (in windowed mode). If renderWindow is not avaiable,
+        //! default width 640 will be chosen.
         //!
-        uint32_t fullscreenWidth;
+        uint32_t width;
 
         //!
-        //! Height of fullscreen mode. Ignored in windowed mode.
-        //! 0 means using current display mode's height.
+        //! Backbuffer height. If zero, means current display height (in fullscreen mode )
+        //! or render window height (in windowed mode). If renderWindow is not avaiable,
+        //! default height 480 will be chosen.
         //!
-        uint32_t fullscreenHeight;
+        uint32_t height;
 
         //!
-        //! Color depth of fullscreen mode. Ignored in windowed mode.
+        //! Backbuffer color depth. Ignored in windowed mode.
         //! 0 means using current display mode's color depth.
         //!
-        uint32_t fullscreenDepth;
+        uint32_t depth;
 
         //!
-        //! Refresh rate of fullscreen mode. Ignored in windowed mode.
+        //! Refresh rate. Ignored in windowed mode.
         //! 0 means using current display mode's color depth.
         //!
-        uint32_t fullscreenRefrate;
-
-        //!
-        //! Width of windowed mode. Ignored in fullscreen mode.
-        //!
-        uint32_t windowedWidth;
-
-        //!
-        //! Width of windowed mode. Ignored in fullscreen mode.
-        //!
-        uint32_t windowedHeight;
+        uint32_t refrate;
 
         bool vsync;      //!< ÊÇ·ñÍ¬²½Ë¢ÐÂ
 
@@ -94,18 +108,62 @@ namespace GN { namespace gfx
         {
             return 0 != ::memcmp( this, &rhs, sizeof(rhs) );
         }
+
+        //!
+        //! Construct a default device settings
+        //!
+        DeviceSettings()
+            : useExternalWindow(false)
+            , parentWindow(0)
+            , monitorHandle(0)
+            , fullscreen(false)
+            , width(0)
+            , height(0)
+            , depth(0)
+            , refrate(0)
+            , vsync(false)
+            , software(false)
+            , reference(false)
+            , autoRestore(true)
+        {}
     };
 
     //!
-    //! äÖÈ¾ÆÁÄ»ÃèÊö (screen descriptor)
+    //! Display descriptor. This is the render options actually used by Renderer.
+    //! It may or may not be the same as settings in DeviceSettings.
     //!
-    struct ScreenDesc
+    //! \sa DeviceSettings.
+    //!
+    struct DispDesc
     {
-        bool fullscreen;  //!< fullscreen or windowed mode
-        uint32_t width;   //!< screen width
-        uint32_t height;  //!< screen height
-        uint32_t depth;   //!< screen depth
-        uint32_t refrate; //!< refresh rate
+        void * windowHandle;  //!< Render window handle
+        void * monitorHandle; //!< Monitor handle
+        bool fullscreen;      //!< Is fullscreen or not
+        uint32_t width;       //!< Back buffer width
+        uint32_t height;      //!< Back buffer height
+        uint32_t depth;       //!< Back buffer depth
+        uint32_t refrate;     //!< Screen refresh rate
+        bool vsync;           //!< Same as DeviceSettings::vsync
+        bool software;        //!< Same as DeviceSettings::software
+        bool reference;       //!< Same as DeviceSettings::reference
+        bool autoRestore;     //!< Same as DeviceSettings::autoRestore
+
+        //!
+        //! Default constructor
+        //!
+        DispDesc() : windowHandle(0) {}
+
+        //!
+        //! equality operator
+        //!
+        bool operator==(const DispDesc & rhs ) const
+        { return 0 == ::memcmp(this,&rhs,sizeof(rhs)); }
+
+        //!
+        //! equality operator
+        //!
+        bool operator!=(const DispDesc & rhs ) const
+        { return 0 != ::memcmp(this,&rhs,sizeof(rhs)); }
     };
 
     //! \def GNGFX_CAPS

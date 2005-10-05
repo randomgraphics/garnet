@@ -1,6 +1,6 @@
-// ****************************************************************************
+// *****************************************************************************
 // caps functions
-// ****************************************************************************
+// *****************************************************************************
 
 namespace GN { namespace gfx
 {
@@ -40,6 +40,26 @@ namespace GN { namespace gfx
         for( size_t i = 0; i < NUM_CAPS; ++i )
         {
             mCaps[i].reset();
+        }
+        GN_UNGUARD;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline AutoRef<Shader>
+    Renderer::createShader( ShaderType      type,
+                            ShadingLanguage lang,
+                            const StrA &    code )
+    {
+        GN_GUARD;
+        switch( type )
+        {
+            case VERTEX_SHADER : return createVertexShader( lang, code );
+            case PIXEL_SHADER  : return createPixelShader( lang, code );
+            default :
+                GN_ERROR( "invalid shader type!" );
+                return AutoRef<Shader>();
         }
         GN_UNGUARD;
     }

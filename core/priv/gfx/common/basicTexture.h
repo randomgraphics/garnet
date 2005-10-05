@@ -50,8 +50,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GN_ERROR( "dupilcate lock! lock/unlock() "
-                         "must be called accordinglly!" );
+                GND3D_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }
@@ -68,8 +67,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GN_ERROR( "dupilcate unlock! lock/unlock() "
-                         "must be called accordinglly!" );
+                GND3D_ERROR( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }

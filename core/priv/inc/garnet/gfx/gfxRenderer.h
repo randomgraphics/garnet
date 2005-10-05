@@ -1,10 +1,10 @@
 #ifndef __GN_GFX_GFXRENDERER_H__
 #define __GN_GFX_GFXRENDERER_H__
-// ****************************************************************************
+// *****************************************************************************
 //! \file    gfxRenderer.h
 //! \brief   Main renderer interface of GFX module
 //! \author  chenlee (2005.9.30)
-// ****************************************************************************
+// *****************************************************************************
 
 namespace GN { namespace gfx
 {
@@ -22,17 +22,6 @@ namespace GN { namespace gfx
         // ********************************************************************
 
         //@{
-
-    private:
-
-        DeviceSettings mDeviceSettings;
-
-    protected:
-
-        //!
-        //! Update device settings
-        //!
-        void setDeviceSettings( const DeviceSettings & ds ) { mDeviceSettings = ds; }
 
     public:
 
@@ -60,11 +49,6 @@ namespace GN { namespace gfx
         Signal0<void> sigDeviceDispose;
 
         //!
-        //! 获得当前的设备选项
-        //!
-        const DeviceSettings & getDeviceSettings() const { return mDeviceSettings; }
-
-        //!
         //! Change device configuration.
         //!
         //! \param ds
@@ -75,7 +59,7 @@ namespace GN { namespace gfx
         //!     This function may trigger sigDeviceRestore.
         //!
         virtual bool changeDevice( const DeviceSettings & ds,
-                                    bool forceDeviceRecreation = false ) = 0;
+                                   bool forceDeviceRecreation = false ) = 0;
 
         //@}
 
@@ -94,36 +78,24 @@ namespace GN { namespace gfx
 
     private:
 
-        ScreenDesc              mScreenDesc;
-        Initialized<bool,false> mScreenDescOK;
+        DispDesc mDispDesc;
 
     protected:
 
         //!
-        //! Update screen descriptor
+        //! Update render window handle
         //!
-        void setScreenDesc( const ScreenDesc & desc )
+        void setDispDesc( const DispDesc & desc )
         {
-            mScreenDesc = desc;
-            mScreenDescOK = true;
+            mDispDesc = desc;
         }
-
-        //!
-        //! Invalidate screen descriptor
-        //!
-        void invalidateScreenDesc() { mScreenDescOK = false; }
-
-        //!
-        //! Is screen descriptor valid or not.
-        //!
-        bool isScreenDescOK() const { return mScreenDescOK; }
 
     public:
 
         //!
-        //! 获得当前的屏幕描述
+        //! 获得当前的渲染窗口句柄
         //!
-        const ScreenDesc & getScreenDesc() const { GN_ASSERT(mScreenDescOK); return mScreenDesc; }
+        const DispDesc & getDispDesc() const { return mDispDesc; }
 
         //!
         //! For D3D, return pointer to current D3D device; for OGL, return NULL.
@@ -145,10 +117,10 @@ namespace GN { namespace gfx
 
         //@{
 
-    private:
+    protected:
 
         //!
-        //! caps structure
+        //! caps descriptor
         //!
         class CapsDesc
         {
@@ -183,6 +155,8 @@ namespace GN { namespace gfx
             //!
             void reset();
         };
+
+    private:
 
         CapsDesc mCaps[NUM_CAPS];
 
@@ -241,11 +215,10 @@ namespace GN { namespace gfx
         //!
         //! \param type        shader type
         //! \param lang        shading language
-        //! \param code        shader code string. (ignored for FFP shaders)
+        //! \param code        shader code string
         //! \return            instance of shader
-        //! \sa                create_vshader()
-        //! \sa                create_pshader()
-        //! \note              This is inline function implemented in rshader.h
+        //!
+        //! \note              This is inline function implemented in gfxRenderer.inl
         //!
         AutoRef<Shader>
         createShader( ShaderType      type,
@@ -279,7 +252,7 @@ namespace GN { namespace gfx
         //!
         //! Bind render state block to rendering device
         //!
-        virtual bindRenderStateBlock( const RenderStateBlock & ) = 0;
+        virtual void bindRenderStateBlock( const RenderStateBlock & ) = 0;
 
         //@}
 
@@ -296,7 +269,7 @@ namespace GN { namespace gfx
         //!
         //! \param textype     texture type
         //! \param sx, sy, sz  texture size
-        //! \param miplevels   how many mipmap levels?
+        //! \param levels      how many mipmap levels?
         //!                    "0" means generate full mipmap levels down to 1x1
         //! \param format      texture format, FMT_DEFAULT means
         //!                    using default/appropriating format of current
@@ -309,7 +282,7 @@ namespace GN { namespace gfx
         virtual AutoRef<Texture>
         createTexture( TexType textype,
                        uint32_t sx, uint32_t sy, uint32_t sz,
-                       uint32_t miplevels = 0,
+                       uint32_t levels = 0,
                        ClrFmt format = FMT_DEFAULT,
                        uint32_t usages = USAGE_NORMAL ) = 0;
 
@@ -384,7 +357,8 @@ namespace GN { namespace gfx
         //! \param count    Stream count in buffer list.
         //!
         virtual void
-        bindVtxBufs( const VtxBuf * const buffers[], uint32_t start, uint32_t count ) = 0;
+        bindVtxBufs( const VtxBuf * const buffers[],
+                     uint32_t start, uint32_t count ) = 0;
 
         //!
         //! Bind index buffer to rendering device
@@ -401,15 +375,32 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void setParameter( RenderParameter, uint32_t );
-        virtual void setParameter( RenderParameter, float );
-        virtual void setParameter( RenderParameter, const double & );
-        virtual void setParameter( RenderParameter, const Vector4f & );
-        virtual void setParameter( RenderParameter, const Matrix44f & );
-        virtual void setParameter( RenderParameter, const Vector4f * );
-        virtual void setParameter( RenderParameter, const Matrix44f * );
-        virtual void pushParameter( RenderParameter );
-        virtual void popParameter( RenderParameter );
+        // TODO: comment these functions.
+
+        virtual void setParameter( RenderParameter, uint32_t ) = 0;
+        virtual void setParameter( RenderParameter, float ) = 0;
+        virtual void setParameter( RenderParameter, const double & ) = 0;
+        virtual void setParameter( RenderParameter, const Vector4f & ) = 0;
+        virtual void setParameter( RenderParameter, const Matrix44f & ) = 0;
+        virtual void setParameter( RenderParameter, const Vector4f * ) = 0;
+        virtual void setParameter( RenderParameter, const Matrix44f * ) = 0;
+        virtual void pushParameter( RenderParameter ) = 0;
+        virtual void popParameter( RenderParameter ) = 0;
+
+        virtual Matrix44f &
+        computePerspectiveMatrix( Matrix44f & result,
+                                  float fovy,
+                                  float ratio,
+                                  float znear,
+                                  float zfar ) const = 0;
+        virtual Matrix44f &
+        computeOrthoMatrix( Matrix44f & result,
+                            float left,
+                            float bottom,
+                            float width,
+                            float height,
+                            float znear,
+                            float zfar ) const = 0;
 
         //@}
 
@@ -420,6 +411,12 @@ namespace GN { namespace gfx
         // ********************************************************************
 
         //@{
+
+    protected:
+
+        AutoInit<size_t,0> mNumPrims; //!< Number of primitives per frame.
+        AutoInit<size_t,0> mNumDraws; //!< Number of draws per frame.
+
     public :
 
         //!
@@ -449,16 +446,6 @@ namespace GN { namespace gfx
         //!
         virtual void setRenderDepth( const Texture * texture,
                                      TexFace face = TEXFACE_PX ) = 0;
-
-        //!
-        //! user defined clip plane
-        //!
-        //! \param index
-        //!     Clip plane index, must be in range of [0,caps_max_clip_planes())
-        //! \param plane
-        //!     Clip plane parameters. Set to NULL to disable it.
-        //!
-        virtual void setClipPlane( size_t index, const Plane3f * plane ) = 0;
 
         //!
         //! 开始绘图操作.
@@ -566,30 +553,33 @@ namespace GN { namespace gfx
         //!
         //! 返回上一次 drawEnd() 到现在所绘制的原语的个数
         //!
-        virtual size_t getNumPrimitives() const = 0;
+        size_t getNumPrimitives() const { return mNumPrims; }
 
         //!
         //! 返回上一次 drawEnd() 到现在 draw() / drawindexed() 的次数
         //!
-        virtual size_t getNumDraws() const = 0;
+        size_t getNumDraws() const { return mNumDraws; }
 
         //!
         //! 返回上一次 drawEnd() 到现在平均每次 draw()/drawIndexed() 的原语数
         //!
         size_t getNumPrimsPerDraw() const
         {
-            size_t np = getNumPrimitives();
-            size_t nd = getNumDraws();
-            return 0 == nd ? 0 : np / nd;
+            return 0 == mNumDraws ? 0 : mNumPrims / mNumDraws;
         }
 
         //@}
     };
+
+    //!
+    //! Function prototype to create instance of renderer.
+    //!
+    typedef Renderer * (*CreateRendererFunc)( const DeviceSettings & );
 }}
 
 #include "gfxRenderer.inl"
 
-// ****************************************************************************
+// *****************************************************************************
 //                           End of gfxRenderer.h
-// ****************************************************************************
+// *****************************************************************************
 #endif // __GN_GFX_GFXRENDERER_H__
