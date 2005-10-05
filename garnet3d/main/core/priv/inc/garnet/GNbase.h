@@ -61,6 +61,7 @@ namespace GN
 #include "base/refCounter.h"
 #include "base/stdClass.h"
 #include "base/singleton.h"
+#include "base/sharedLib.h"
 
 // file system
 #include "base/file.h"
