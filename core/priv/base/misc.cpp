@@ -17,3 +17,17 @@ bool GN::getEnv( StrA & result, const char * name )
         return true;
     }
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::sleep( uint32_t microSeconds )
+{
+#if GN_WINNT
+    ::Sleep( microSeconds );
+#elif GN_POSIX
+    ::usleep( microSeconds );
+#else
+    GN_CASSERT_EX( 0, "Unimplmented" );
+#endif
+}
