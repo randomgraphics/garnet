@@ -282,14 +282,17 @@ def default_env( options = None ):
     # setup builder for gcc precompiled header
     if 'g++' == env['CXX']:
 
+        import SCons.Defaults
+        import SCons.Tool
+    
         # attach gch builder
         bld = Builder(
             action = '$CXXCOM',
-            suffix = '.h.gch' )
+            suffix = '.h.gch',
+            source_scanner = SCons.Tool.SourceFileScanner )
         env.Append( BUILDERS={'PCH':bld} )
 
         # Sets up the PCH dependencies for an object file
-        import SCons.Defaults
         def pch_emitter( target, source, env, parent_emitter ):
             parent_emitter( target, source, env )
             if env.has_key('PCH') and env['PCH']:
