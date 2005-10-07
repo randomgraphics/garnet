@@ -1,9 +1,9 @@
 #ifndef __GN_TEST_GFX_COMMON_H__
 #define __GN_TEST_GFX_COMMON_H__
 // *****************************************************************************
-//! \file    common.h
-//! \brief   common header of GFX test case
-//! \author  chenlee (2005.10.7)
+// \file    common.h
+// \brief   common header of GFX test case
+// \author  chenlee (2005.10.7)
 // *****************************************************************************
 
 #include "../testCommon.h"
