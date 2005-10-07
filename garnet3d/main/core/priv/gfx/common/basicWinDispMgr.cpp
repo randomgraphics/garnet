@@ -172,7 +172,7 @@ GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
     }
     else if( ds.fullscreen )
     {
-        if( !sGetMonitorSize( desc.windowHandle, w, h ) ) return false;
+        if( !sGetMonitorSize( desc.monitorHandle, w, h ) ) return false;
         desc.width = (0==ds.width) ? w : ds.width;
         desc.height = (0==ds.height) ? h : ds.height;
     }
