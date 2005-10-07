@@ -152,6 +152,11 @@ namespace GN
     bool getEnv( StrA & result, const char * name );
 
     //!
+    //! Sleep calling thread
+    //!
+    void sleep( uint32_t microSeconds );
+
+    //!
     //! Data type with automatic-initialization.
     //!
     template<typename T, T DEFAULT_VALUE>
