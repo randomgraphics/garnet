@@ -27,13 +27,12 @@ doInstall(
 for x in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
     if x in GN_targets: env.Depends( GN_targets['GNtest'], GN_targets[x] )
 
-# Make binaries depend on manifest files, to make sure manifest files are copied
+# Make binaries depend on manifest and PDB files, to make sure those files are copied
 # to binary directory, before execution of the binaries.
-if env.GN_has_manifest():
-    for target in Split('GNtest GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
-        if target in GN_targets:
-            for x in GN_targets[target][1:]:
-                env.Depends( GN_targets[target][0], x )
+for target in Split('GNtest GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
+    if target in GN_targets:
+        for x in GN_targets[target][1:]:
+            env.Depends( GN_targets[target][0], x )
 
 # run unit test
 def run_test( target, source, env ):
