@@ -44,6 +44,7 @@ def build_proj( target, srcdir=[], incdir=[] ):
 build_proj( 'GNextern', ['#core/extern/src'], ['#core/extern/inc'] )
 build_proj( 'GNbase', ['#core/priv/base'] )
 build_proj( 'GNcore', ['#core/priv/core'] )
+build_proj( 'GNgfxCommon', ['#core/priv/gfx/common'] )
 build_proj( 'GNgfxD3D', ['#core/priv/gfx/d3d'] )
 build_proj( 'GNgfxOGL', ['#core/priv/gfx/ogl'] )
 build_proj( 'GNd3d', ['#core/priv/d3d'] )

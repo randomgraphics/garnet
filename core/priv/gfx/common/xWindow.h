@@ -1,8 +1,8 @@
 #ifndef __GN_GFX_NTWINDOW_H__
 #define __GN_GFX_NTWINDOW_H__
 // *****************************************************************************
-//! \file    ntWindow.h
-//! \brief   Window class on NT platform
+//! \file    xWindow.h
+//! \brief   Window class on X Window platform
 //! \author  chenlee (2005.10.4)
 // *****************************************************************************
 

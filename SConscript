@@ -186,9 +186,8 @@ def GN_build_shared_library( env, target, sources=[],
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-        if 0 == len(libs):
-            if 'GNcore' == target: libs = Split('GNbase GNextern')
-            else: libs = Split('GNcoreLib GNbase GNextern')
+        if 'GNcore' == target: libs += Split('GNbase GNextern')
+        else: libs += Split('GNcoreLib GNbase GNextern')
         add_libs( env, libs )
         result = env.SharedLibrary( target, sources )
 
@@ -227,7 +226,7 @@ def GN_build_program( env, target, sources=[],
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    if 0 == len(libs): libs = Split('GNcoreLib GNbase GNextern')
+    libs += Split('GNcoreLib GNbase GNextern')
     result = env.Program( target, sources + [ '#' + GN_targets[x][0].path for x in libs ] )
 
     # handle manifest file

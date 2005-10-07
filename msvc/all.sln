@@ -39,6 +39,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxOGL", "GNgfxOGL.vcproj
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxCommon", "GNgfxCommon.vcproj", "{351F298C-528A-47EC-99AC-8EFD4E35F309}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
 		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
@@ -130,6 +134,14 @@ Global
 		{8610F200-C249-468C-9639-CD9C88CC95E3}.Stdbg.Build.0 = Stdbg|Win32
 		{8610F200-C249-468C-9639-CD9C88CC95E3}.Strel.ActiveCfg = Strel|Win32
 		{8610F200-C249-468C-9639-CD9C88CC95E3}.Strel.Build.0 = Strel|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Debug.ActiveCfg = Debug|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Debug.Build.0 = Debug|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Release.ActiveCfg = Release|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Release.Build.0 = Release|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Stdbg.ActiveCfg = Stdbg|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Stdbg.Build.0 = Stdbg|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Strel.ActiveCfg = Strel|Win32
+		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Strel.Build.0 = Strel|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
