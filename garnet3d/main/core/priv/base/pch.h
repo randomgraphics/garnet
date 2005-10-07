@@ -13,6 +13,8 @@
 #elif GN_WINNT
 #define NOMINMAX
 #include <windows.h>
+#elif GN_POSIX
+#include <unistd.h>
 #endif
 
 #include <errno.h>
