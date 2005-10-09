@@ -1,0 +1,7 @@
+Import('env')
+
+env.GN_build_program(
+    'GNgfxTest',
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp',
+    'GNgfxTest.pdb' )
