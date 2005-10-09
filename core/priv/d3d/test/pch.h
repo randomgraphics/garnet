@@ -20,7 +20,6 @@
 #endif
 
 #include <crtdbg.h>
-#include <atlbase.h> // COM smart pointer
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>
