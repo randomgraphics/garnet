@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-#include "../common/BasicRenderer.h"
+#include "../common/basicRenderer.h"
 
 #if GN_MSVC
 #pragma warning(push)
