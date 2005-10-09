@@ -5,6 +5,12 @@ TODO
 - UT for path functions: resolve, glob
 - implement GNogl using glut.
 - UT for GFX module: using external render window
+- Refine GFX:
+  - Refine ntWindow class:
+    - support external window
+    - getClientSize();
+  - remove platform specific code from display manager.
+  - new renderer function: processRenderWindowMessages().
 
 DONE
 ====
