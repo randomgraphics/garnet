@@ -535,7 +535,7 @@ bool GN::d3d::D3D::createD3D()
         {
             mBehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
         }
-#if GN_DEBUG
+#if !GN_DEBUG
         // use pure device only in non-debug build
         else if( D3DDEVCAPS_PUREDEVICE & caps.DevCaps )
         {
