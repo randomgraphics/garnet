@@ -16,8 +16,8 @@ def build_proj( target, srcdir=[], incdir=[] ):
 
     sources = env.GN_glob( '*.[c]*', srcdir, True )
     if 0 == len(incdir):
-        includes = env.GN_glob( '%s.h'%target, '#core/priv/inc/garnet' )
-        includes += env.GN_glob( '*.[hi]*', ['#core/priv/inc/garnet/%s'%target[2:]], True )
+        includes = env.GN_glob( '%s.h'%target, '#src/priv/inc/garnet' )
+        includes += env.GN_glob( '*.[hi]*', ['#src/priv/inc/garnet/%s'%target[2:]], True )
     else:
         includes = env.GN_glob( '*.[hi]*', incdir, True )
     localincs = env.GN_glob( '*.[hi]*', srcdir, True )
@@ -41,14 +41,14 @@ def build_proj( target, srcdir=[], incdir=[] ):
 #
 ###############################################################################
 
-build_proj( 'GNextern', ['#core/extern/src'], ['#core/extern/inc'] )
-build_proj( 'GNbase', ['#core/priv/base'] )
-build_proj( 'GNcore', ['#core/priv/core'] )
-build_proj( 'GNgfxCommon', ['#core/priv/gfx/common'] )
-build_proj( 'GNgfxD3D', ['#core/priv/gfx/d3d'] )
-build_proj( 'GNgfxOGL', ['#core/priv/gfx/ogl'] )
-build_proj( 'GNd3d', ['#core/priv/d3d'] )
-build_proj( 'GNd3dTest', ['#core/priv/d3d/test'] )
-build_proj( 'GNogl', ['#core/priv/ogl'] )
-build_proj( 'GNoglTest', ['#core/priv/ogl/test'] )
-build_proj( 'GNtest', ['#core/priv/test'] )
+build_proj( 'GNextern', ['#src/extern/src'], ['#src/extern/inc'] )
+build_proj( 'GNbase', ['#src/priv/base'] )
+build_proj( 'GNcore', ['#src/priv/core'] )
+build_proj( 'GNgfxCommon', ['#src/priv/gfx/common'] )
+build_proj( 'GNgfxD3D', ['#src/priv/gfx/d3d'] )
+build_proj( 'GNgfxOGL', ['#src/priv/gfx/ogl'] )
+build_proj( 'GNd3d', ['#src/priv/d3d'] )
+build_proj( 'GNd3dTest', ['#src/priv/d3d/test'] )
+build_proj( 'GNogl', ['#src/priv/ogl'] )
+build_proj( 'GNoglTest', ['#src/priv/ogl/test'] )
+build_proj( 'GNtest', ['#src/priv/test'] )

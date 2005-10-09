@@ -1,6 +1,6 @@
 project
     : requirements
-        <include>core/priv/inc
+        <include>src/priv/inc
         <variant>debug:<define>GN_DEBUG=1
         <variant>release:<define>NDEBUG
         <variant>profile:<define>GN_ENABLE_PROFILE=1
@@ -11,5 +11,5 @@ project
 
 path-constant TOP : . ;
 
-build-project core/priv/base ;
-build-project core/extern/src ;
+build-project src/priv/base ;
+build-project src/extern/src ;
