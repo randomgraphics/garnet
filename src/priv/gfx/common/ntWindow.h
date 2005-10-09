@@ -49,6 +49,11 @@ namespace GN { namespace gfx {
         //!
         HWND getHandle() const { return mHandle; }
 
+        //!
+        //! Process windows messages
+        //!
+        void processMessages();
+
         // ********************************
         // private variables
         // ********************************

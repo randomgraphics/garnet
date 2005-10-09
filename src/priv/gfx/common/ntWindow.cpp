@@ -44,6 +44,40 @@ void GN::gfx::Window::quit()
 }
 
 // *****************************************************************************
+// public functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::Window::processMessages()
+{
+    GN_GUARD_SLOW;
+
+    MSG msg;
+    while( true )
+    {
+        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+        {
+            if( WM_QUIT == msg.message )
+            {
+                mClosed = true;
+                return;
+            }
+            ::TranslateMessage( &msg );
+            ::DispatchMessage(&msg);
+        }
+        else if( mMinimized )
+        {
+            ::WaitMessage();
+        }
+        else return; // Idle time!
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
 // private functions
 // *****************************************************************************
 
@@ -94,7 +128,7 @@ GN::gfx::Window::createWindow(
 
     // calculate window size
     DWORD style = WS_POPUP | WS_BORDER | WS_CAPTION | WS_SIZEBOX; // sizable popup window.
-    DWORD exStyle = WS_EX_TOOLWINDOW;
+    DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
     RECT rc = { 0, 0, width, height };
     AdjustWindowRectEx( &rc, style, 0, exStyle );
 
