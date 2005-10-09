@@ -8,6 +8,12 @@
 #define PSS "/"
 #endif
 
+#if GN_WINNT || GN_CYGWIN
+#define APPEXT ".exe"
+#else
+#define APPEXT ""
+#endif
+
 
 class PathTest : public CxxTest::TestSuite
 {
@@ -74,9 +80,9 @@ public:
         TS_ASSERT( GN::path::exist("startup:/SConstruct") );
         TS_ASSERT( GN::path::exist("startup:SConstruct") );
 
-        TS_ASSERT( GN::path::exist("app:GNtest.exe") );
-        TS_ASSERT( GN::path::exist("app:/GNtest.exe") );
-        TS_ASSERT( GN::path::exist("app:\\GNtest.exe") );
+        TS_ASSERT( GN::path::exist("app:GNtest"APPEXT) );
+        TS_ASSERT( GN::path::exist("app:/GNtest"APPEXT) );
+        TS_ASSERT( GN::path::exist("app:\\GNtest"APPEXT) );
 
         TS_ASSERT( GN::path::exist("pwd:") );
         TS_ASSERT( GN::path::exist("pwd:/") );
@@ -105,7 +111,7 @@ public:
     void testIsFile()
     {
         TS_ASSERT( GN::path::isFile("startup:\\SConstruct") );
-        TS_ASSERT( GN::path::isFile("app:GNtest.exe") );
+        TS_ASSERT( GN::path::isFile("app:GNtest"APPEXT) );
         TS_ASSERT( !GN::path::isFile("startup:") );
         TS_ASSERT( !GN::path::isFile("app:") );
         TS_ASSERT( !GN::path::isFile("pwd:") );
