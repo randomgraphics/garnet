@@ -51,7 +51,7 @@ namespace GN
     template <typename T>
     struct IsConst
     {
-        static const bool value = false; //!< as is.
+        static const bool value = false; //!< 如题.
     };
 
     //!
@@ -60,7 +60,7 @@ namespace GN
     template <typename T>
     struct IsConst<const T>
     {
-        static const bool value = true; //!< as is.
+        static const bool value = true; //!< 如题.
     };
 
     //!
@@ -69,7 +69,7 @@ namespace GN
     template <typename T>
     struct IsClass
     {
-        static const bool value = detail::IsClassHelper<T>::value; //!< as is.
+        static const bool value = detail::IsClassHelper<T>::value; //!< 如题.
     };
 
     //!
@@ -78,7 +78,7 @@ namespace GN
     template <typename FROM, typename TO>
     struct IsConvertible
     {
-        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; //!< as is.
+        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; //!< 如题.
     };
 
     //!
@@ -88,7 +88,7 @@ namespace GN
     struct IsBaseAndDerived
     {
         //!
-        //! as is.
+        //! 如题.
         //!
         static const bool value =
             IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value;
