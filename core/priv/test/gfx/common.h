@@ -87,7 +87,6 @@ protected:
         ds.width = 256;
         ds.height = 128;
         TS_ASSERT( r->changeDevice(ds) );
-        TS_ASSERT( r->changeDevice(ds) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
     }
@@ -99,9 +98,9 @@ protected:
         GN::gfx::DeviceSettings ds;
 
         ds.fullscreen = true;
+
         ds.width = 640;
         ds.height = 480;
-
         r.reset( mCreator(ds) );
         TS_ASSERT(r);
         if( !r ) return;
@@ -110,13 +109,37 @@ protected:
         clearBlue(*r);
         GN::sleep( 500 );
 
-        ds.width = 0;
-        ds.height = 0;
+        ds.width = 1024;
+        ds.height = 768;
         TS_ASSERT( r->changeDevice( ds ) );
         clearRed(*r);
         GN::sleep( 500 );
         clearBlue(*r);
         GN::sleep( 500 );
+    }
+
+    void defaultBackbufferSize()
+    {
+        if( !mCreator ) return;
+
+        GN::AutoObjPtr<GN::gfx::Renderer> r;
+
+        GN::gfx::DeviceSettings ds;
+        ds.useExternalWindow = false;
+        ds.parentWindow = 0;
+        ds.width = ds.height = 0;
+
+        r.reset( mCreator(ds) );
+        TS_ASSERT(r);
+        if( !r ) return;
+
+        const GN::gfx::DispDesc & dd = r->getDispDesc();
+        TS_ASSERT_EQUALS( dd.width, 640 );
+        TS_ASSERT_EQUALS( dd.height, 480 );
+
+        clearRed(*r);
+
+        GN::sleep(1000);
     }
 
     void multiRenderer()

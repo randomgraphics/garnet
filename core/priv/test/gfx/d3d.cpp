@@ -13,5 +13,7 @@ public:
 
     void testFullscreen() { fullscreen(); }
 
+    void testDefaultBackbufferSize() { defaultBackbufferSize(); }
+
     void testMultiRenderer() { multiRenderer(); }
 };
