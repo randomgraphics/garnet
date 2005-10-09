@@ -9,6 +9,8 @@
 #include "../testCommon.h"
 #include "garnet/GNgfx.h"
 
+//! \cond
+
 #if GN_WINNT
 #define EXTNAME ".dll"
 #else
@@ -177,6 +179,8 @@ protected:
         }
     }
 };
+
+//! \endcond
 
 // *****************************************************************************
 //                           End of common.h
