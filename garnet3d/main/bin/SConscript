@@ -21,15 +21,17 @@ def doCopyDir( alias, target, source ):
 doInstall(
     'samples',
     os.path.join( root, 'samples' ),
-    Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest') )
+    Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest GNgfxTest') )
 
 # make test executable depends on all shared libraries.
-for x in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
-    if x in GN_targets: env.Depends( GN_targets['GNtest'], GN_targets[x] )
+for y in Split('GNtest GNgfxTest'):
+    if y in GN_targets:
+        for x in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
+            if x in GN_targets: env.Depends( GN_targets[y], GN_targets[x] )
 
 # Make binaries depend on manifest and PDB files, to make sure those files are copied
 # to binary directory, before execution of the binaries.
-for target in Split('GNtest GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
+for target in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNTest GNgfxTest'):
     if target in GN_targets:
         for x in GN_targets[target][1:]:
             env.Depends( GN_targets[target][0], x )
