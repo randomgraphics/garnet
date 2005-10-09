@@ -47,33 +47,24 @@ static inline GN::StrA sPwd()
 // -----------------------------------------------------------------------------
 static inline GN::StrA sGetAppDir()
 {
-#if GN_WINNT && GN_PC
+#if GN_XENON
+    return "game:";
+#elif GN_WINNT
     char buf[MAX_PATH_LENGTH+1];
     GN_WIN_CHECK_RV( GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
     return GN::path::getParent( buf );
-#elif GN_XENON
-    return "game:";
 #elif GN_POSIX
-    char buf[MAX_PATH_LENGTH+1];
-    sprintf( buf, "/proc/%d/exename", getpid() );
-    GN::AnsiFile fp;
-    if( fp.open(buf,"r") )
+    char linkName[MAX_PATH_LENGTH+1];
+    char realPath[MAX_PATH_LENGTH+1];
+    sprintf( linkName, "/proc/%d/exe", getpid() );
+    if( 0 == realpath( linkName, realPath) )
     {
-        if( NULL == fgets( buf, MAX_PATH_LENGTH, fp ) )
-        {
-            GN_ERROR( "Fail to open PID file." );
-        }
-        else
-        {
-            // success
-            return GN::path::getParent( buf );
-        }
+        GN_ERROR( "Fail to get real path of file '%s'.", linkName );
+        return GN::StrA::EMPTYSTR;
     }
-    else
-    {
-        GN_ERROR( "Fail to open file '%s' to get application name.", buf );
-    }
-    return GN::StrA::EMPTYSTR;
+    return GN::path::getParent( realPath );
+#else
+#error Unknown platform!
 #endif
 }
 
