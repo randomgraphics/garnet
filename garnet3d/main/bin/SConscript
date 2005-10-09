@@ -48,7 +48,7 @@ doInstall(
 doCopyDir(
     'sdk',
     os.path.join(sdk_root,'inc'),
-    os.path.join('#core','priv','inc') )
+    os.path.join('#src','priv','inc') )
 doInstall(
     'sdk',
     os.path.join(sdk_root,'lib'),
