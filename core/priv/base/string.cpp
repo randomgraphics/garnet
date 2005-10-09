@@ -28,6 +28,9 @@ GN::strPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args 
     {
     #if GN_CYGWIN
         buf[0] = 0; // no implementation on cygwin
+    #elif GN_POSIX
+        vswprintf( buf, bufSize, fmt, args );
+        buf[bufSize-1] = 0;
     #else
         vsnwprintf( buf, bufSize, fmt, args );
         buf[bufSize-1] = 0;
