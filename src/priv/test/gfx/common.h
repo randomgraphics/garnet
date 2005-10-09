@@ -11,10 +11,12 @@
 
 //! \cond
 
-#if GN_WINNT
-#define EXTNAME ".dll"
+#if GN_WINNT || GN_CYGWIN
+#define LIB_PREF ""
+#define LIB_SUFF ".dll"
 #else
-#define EXTNAME ".so"
+#define LIB_PREF "lib"
+#define LIB_SUFF ".so"
 #endif
 
 class GfxTest
@@ -48,7 +50,7 @@ protected:
     void libInit( const char * api )
     {
         GN::StrA libName = GN::StrA("GNgfx") + api;
-        TS_ASSERT( mLib.load( (libName+EXTNAME).cstr() ) );
+        TS_ASSERT( mLib.load( (LIB_PREF+libName+LIB_SUFF).cstr() ) );
         TS_ASSERT( mLib.load( libName.cstr() ) );
         mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
         TS_ASSERT( mCreator );
