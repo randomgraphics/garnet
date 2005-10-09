@@ -329,7 +329,7 @@ def default_env( options = None ):
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
-        libs['common']    += Split('X11 glut GL GLU')
+        libs['common']    += Split('X11 glut GL GLU') # FIXME: make sure glut exists, before using it.
 
     # 定制不同编译模式的编译选项
     cppdefines['debug']   += ['GN_DEBUG=1']
