@@ -1,7 +1,7 @@
 #ifndef __GN_GFXCOMMON_BASICRENDERER_H__
 #define __GN_GFXCOMMON_BASICRENDERER_H__
 // *****************************************************************************
-//! \file    BasicRenderer.h
+//! \file    basicRenderer.h
 //! \brief   Basic renderer class
 //! \author  chenlee (2005.10.1)
 // *****************************************************************************
@@ -122,6 +122,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of BasicRenderer.h
+//                           End of basicRenderer.h
 // *****************************************************************************
 #endif // __GN_GFXCOMMON_BASICRENDERER_H__

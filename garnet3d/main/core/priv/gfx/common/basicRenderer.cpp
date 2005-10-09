@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "BasicRenderer.h"
+#include "basicRenderer.h"
 
 // *****************************************************************************
 //                         BasicRenderer init / quit functions
