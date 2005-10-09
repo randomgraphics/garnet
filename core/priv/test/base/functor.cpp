@@ -199,6 +199,20 @@ public:
 #endif
     }
 
+    void testConstAndNonConst()
+    {
+        aaa a;
+        const aaa & b = a;
+        GN::Signal2<void,int,int> s1;
+        s1.connect( &a, &aaa::foo1 );
+        s1.connect<aaa,aaa>( &b, &aaa::foo1 );
+        TS_ASSERT_EQUALS( s1.getNumSlots(), 2 );
+        g_callSequence.clear();
+        s1(0,1);
+        TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
+        TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1() const" );
+    }
+
     void testSigslot()
     {
         aaa a;
@@ -212,13 +226,8 @@ public:
         g_callSequence.clear();
         s1.emit(0,0);
         TS_ASSERT_EQUALS( g_callSequence.size(), 3 );
-#if GN_GCC
-        TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1() const" );
-        TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2() const" );
-#else
         TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
         TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2()" );
-#endif
         TS_ASSERT_EQUALS( g_callSequence[2], "foo1()" );
         {
             bbb b;
@@ -232,15 +241,9 @@ public:
             g_callSequence.clear();
             s1.emit(1,1);
             TS_ASSERT_EQUALS( g_callSequence.size(), 5 );
-#if GN_GCC
-            TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1() const" );
-            TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2() const" );
-            TS_ASSERT_EQUALS( g_callSequence[4], "aaa::foo1() const" );
-#else
             TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
             TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2()" );
             TS_ASSERT_EQUALS( g_callSequence[4], "aaa::foo1()" );
-#endif
             TS_ASSERT_EQUALS( g_callSequence[2], "foo1()" );
             TS_ASSERT_EQUALS( g_callSequence[3], "bbb::foo()" );
 
@@ -256,11 +259,7 @@ public:
                 s2.emit(5,5);
                 TS_ASSERT_EQUALS( g_callSequence.size(), 2 );
                 TS_ASSERT_EQUALS( g_callSequence[0], "bbb::foo()" );
-#if GN_GCC
-                TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1() const" );
-#else
                 TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1()" );
-#endif
             }
 
             TS_ASSERT_EQUALS( s1.getNumSlots(), 5 );
@@ -272,13 +271,8 @@ public:
         g_callSequence.clear();
         s1.emit(0,0);
         TS_ASSERT_EQUALS( g_callSequence.size(), 3 );
-#if GN_GCC
-        TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1() const" );
-        TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2() const" );
-#else
         TS_ASSERT_EQUALS( g_callSequence[0], "aaa::foo1()" );
         TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo2()" );
-#endif
         TS_ASSERT_EQUALS( g_callSequence[2], "foo1()" );
     }
 };
