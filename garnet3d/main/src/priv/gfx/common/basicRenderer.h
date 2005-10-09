@@ -96,6 +96,11 @@ namespace GN { namespace gfx
         //!
         bool setupDispDesc( const DeviceSettings & );
 
+        //!
+        //! Process windows messages
+        //!
+        void processWindowsMessages() { mWindow.processMessages(); }
+
     private:
         Window mWindow;
 
