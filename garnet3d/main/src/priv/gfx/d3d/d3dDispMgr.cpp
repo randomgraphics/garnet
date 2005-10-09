@@ -190,32 +190,48 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     const DispDesc & dd = getDispDesc();
 
+    UINT nAdapter = mD3D->GetAdapterCount();
     HWND window = (HWND)dd.windowHandle;
     HMONITOR monitor = (HMONITOR)dd.monitorHandle;
-    GN_ASSERT( window && monitor );
+    GN_ASSERT( nAdapter && window && monitor );
 
-    // Look for an adapter ordinal that is tied to a HMONITOR
-    UINT nAdapter = mD3D->GetAdapterCount();
+    std::vector<D3DDEVTYPE> devtypes;
+
+    // Look for nvidia adapter
     mAdapter = 0;
-    for( UINT i = 0; i < nAdapter; ++i )
+    for( uint32_t i = 0; i < nAdapter; ++i )
     {
-        if( mD3D->GetAdapterMonitor( i ) == monitor )
+        D3DADAPTER_IDENTIFIER9 Identifier;
+        DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
+        if( 0 == strcmp(Identifier.Description,"NVIDIA NVPerfHUD") )
         {
             mAdapter = i;
+            devtypes.push_back( D3DDEVTYPE_REF );
             break;
         }
+    }
+
+    // Look for an adapter ordinal that is tied to a HMONITOR, only if NVPerfHUD adapter is not available.
+    if( 0 == mAdapter )
+    {
+        for( UINT i = 0; i < nAdapter; ++i )
+        {
+            if( mD3D->GetAdapterMonitor( i ) == monitor )
+            {
+                mAdapter = i;
+                break;
+            }
+        }
+        // prepare device type candidates
+        if( !dd.reference ) devtypes.push_back( D3DDEVTYPE_HAL );
+        devtypes.push_back( D3DDEVTYPE_REF );
+        devtypes.push_back( D3DDEVTYPE_NULLREF );
     }
 
     // init d3d present parameters
     if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd ) ) return false;
 
-    // prepare device type candidates
-    std::vector<D3DDEVTYPE> devtypes;
-    if( !dd.reference ) devtypes.push_back( D3DDEVTYPE_HAL );
-    devtypes.push_back( D3DDEVTYPE_REF );
-    devtypes.push_back( D3DDEVTYPE_NULLREF );
-
-    // create device
+    // Check device caps and termin device behavior flags.
     HRESULT r = D3D_OK;
     for( size_t t = 0; t < devtypes.size(); ++ t )
     {
@@ -247,7 +263,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             mBehavior = D3DCREATE_MIXED_VERTEXPROCESSING;
         }
 
-        // create device
+        // device found, create it!
         DX_CHECK_RV(
             mD3D->CreateDevice(
                 mAdapter,

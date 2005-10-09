@@ -515,6 +515,7 @@ bool GN::d3d::D3D::createD3D()
     }
 
     // Check device caps and termin device behavior flags.
+    bool found = false;
     HRESULT r = D3D_OK;
     for( size_t t = 0; t < devtypes.size(); ++ t )
     {
@@ -546,10 +547,14 @@ bool GN::d3d::D3D::createD3D()
             mBehaviorFlags = D3DCREATE_MIXED_VERTEXPROCESSING;
         }
 
-        // look for NVPerfHUD device
-
         // device found!
+        found = true;
         break;
+    }
+    if( !found )
+    {
+        GND3D_ERROR( "No suitable D3D device found!" );
+        return false;
     }
 
 #endif // GN_XENON
