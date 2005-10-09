@@ -15,7 +15,7 @@ void GN::RenderStateBlockDesc::reset( ResetFlag flag )
     {
         // initiate all RSs to default value
         #define GN_DEFINE_RS( tag, defval ) rs[RS_##tag] = RSV_##defval;
-        //#include "garnet/base/renderStateMeta.h"
+        #include "garnet/base/renderStateMeta.h"
         #undef GN_DEFINE_RS
 
         // initiate all TSSs to default value
@@ -28,7 +28,7 @@ void GN::RenderStateBlockDesc::reset( ResetFlag flag )
         {
             #define GN_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 ) \
                 ts[i][TS_##tag] = TSV_##defval;
-            //#include "garnet/base/textureStateMeta.h"
+            #include "garnet/base/textureStateMeta.h"
             #undef GN_DEFINE_TS
         }
     }
