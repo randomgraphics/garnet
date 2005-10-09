@@ -2,8 +2,8 @@
 #if !GN_ENABLE_INLINE
 #include "garnet/base/image.inl"
 #endif
-#include "image_jpg.h"
 #include "image_png.h"
+#include "image_jpg.h"
 #include "image_dds.h"
 
 // *****************************************************************************
