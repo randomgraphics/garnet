@@ -329,7 +329,10 @@ def default_env( options = None ):
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
-        libs['common']    += Split('X11 glut GL GLU') # FIXME: make sure glut exists, before using it.
+        if ('has_glut' in GN_conf) and GN_conf['has_glut']:
+            libs['common'] += Split('X11 glut GL GLU')
+        else:
+            libs['common'] += Split('X11 GL GLU')
 
     # 定制不同编译模式的编译选项
     cppdefines['debug']   += ['GN_DEBUG=1']
@@ -475,6 +478,11 @@ def check_config( conf, conf_dir ):
     # 是否支持D3D
     # ===========
     conf['has_d3d'] = c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
+
+    # ============
+    # 是否支持GLUT
+    # ============
+    conf['has_glut'] = c.CheckCHeader( 'GL/glut.h' )
 
     # =========================
     # 检查是否存在boost library
