@@ -157,6 +157,14 @@ namespace GN
     void sleep( uint32_t microSeconds );
 
     //!
+    //! Process window message.
+    //!
+    //! \param quit
+    //!     Return true, if the application requests to quit.
+    //!
+    void processWindowMessages( bool * quit = NULL );
+
+    //!
     //! Data type with automatic-initialization.
     //!
     template<typename T, T DEFAULT_VALUE>
