@@ -43,10 +43,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxCommon", "GNgfxCommon.
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxTest", "GNgfxTest.vcproj", "{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
-	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
-		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
-	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
@@ -142,9 +143,20 @@ Global
 		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Stdbg.Build.0 = Stdbg|Win32
 		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Strel.ActiveCfg = Strel|Win32
 		{351F298C-528A-47EC-99AC-8EFD4E35F309}.Strel.Build.0 = Strel|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Debug.ActiveCfg = Debug|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Debug.Build.0 = Debug|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Release.ActiveCfg = Release|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Release.Build.0 = Release|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Stdbg.ActiveCfg = Stdbg|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Stdbg.Build.0 = Stdbg|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Strel.ActiveCfg = Strel|Win32
+		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Strel.Build.0 = Strel|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
 	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
 	EndGlobalSection
 EndGlobal
