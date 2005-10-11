@@ -62,7 +62,7 @@ bool GN::gfx::D3DRenderer::init(const DeviceSettings & ds )
 // -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::quit()
 {
-    GN_GUARD_ALWAYS;
+    GN_GUARD;
 
     deviceDispose();
     deviceDestroy();
@@ -77,7 +77,7 @@ void GN::gfx::D3DRenderer::quit()
 
     GN_STDCLASS_QUIT();
 
-    GN_UNGUARD_ALWAYS_NO_THROW;
+    GN_UNGUARD;
 }
 
 // *****************************************************************************
