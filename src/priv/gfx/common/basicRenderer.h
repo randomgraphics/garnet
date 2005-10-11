@@ -6,11 +6,7 @@
 //! \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#if GN_WINNT
-#include "ntWindow.h"
-#else
-#include "xWindow.h"
-#endif
+#include "renderWindow.h"
 
 //!
 //! trace the call sequence of device reset/recreate
@@ -84,9 +80,9 @@ namespace GN { namespace gfx
 
     private :
         bool dispInit() { return true; }
-        void dispQuit() { mWindow.quit(); }
+        void dispQuit() { mWindow.reset(); }
         bool dispOk() const { return true; }
-        void dispClear() { }
+        void dispClear() {}
 
     protected:
 
@@ -96,13 +92,8 @@ namespace GN { namespace gfx
         //!
         bool setupDispDesc( const DeviceSettings & );
 
-        //!
-        //! Process windows messages
-        //!
-        void processWindowsMessages() { mWindow.processMessages(); }
-
     private:
-        Window mWindow;
+        AutoObjPtr<RenderWindow> mWindow;
 
         //@}
 

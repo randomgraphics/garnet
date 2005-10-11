@@ -60,9 +60,6 @@ void GN::gfx::D3DRenderer::drawEnd()
     DX_CHECK( mDevice->EndScene() );
     DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
 
-    // process windows messages
-    processWindowsMessages();
-
     GN_UNGUARD_SLOW;
 }
 
