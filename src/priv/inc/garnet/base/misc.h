@@ -164,6 +164,17 @@ namespace GN
     //!
     void processWindowMessages( bool * quit = NULL );
 
+#if GN_WINNT
+    //!
+    //! Convert Windows message ID to string.
+    //!
+    //! \note
+    //!     This function is neither 100% correct, nor effecient.
+    //!     Please use it for debug only.
+    //!
+    const char * winMsg2Str( uint32_t msg );
+#endif
+
     //!
     //! Data type with automatic-initialization.
     //!
