@@ -16,6 +16,8 @@ namespace GN { namespace gfx {
     //!
     class XRenderWindow : public RenderWindow
     {
+        uint32_t mWidth, mHeight;
+        
         //@{
     public:
         XRenderWindow()  {}
@@ -27,11 +29,11 @@ namespace GN { namespace gfx {
         // ********************************
     public:
 
-        virtual bool init( const DeviceSettings & ) { return true; }
+        virtual bool init( const DeviceSettings & ds ) { mWidth = ds.width; mHeight = ds.height; return true; }
         virtual void quit() {}
         virtual void * getWindow() const { return (void*)1; }
         virtual void * getMonitor() const { return (void*)1; }
-        virtual bool getClientSize( uint32_t & width , uint32_t & height ) { width = 640; height = 480; return true; }
+        virtual bool getClientSize( uint32_t & width , uint32_t & height ) const { width = mWidth; height = mHeight; return true; }
     };
 }}
 

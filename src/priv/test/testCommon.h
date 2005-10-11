@@ -9,6 +9,11 @@
 #include "garnet/GNbase.h"
 #include "cxxtest/TestSuite.h"
 
+#if GN_WINNT
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 //!
 //! namespace of CxxTest framework
 //!

@@ -9,6 +9,8 @@ public:
 
     void tearDown() { libFree(); }
 
+    void testExternalWindow() { externalWindow(); }
+
     void testChangeDevice() { changeDevice(); }
 
     void testFullscreen() { fullscreen(); }

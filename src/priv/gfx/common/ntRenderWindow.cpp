@@ -307,14 +307,16 @@ GN::gfx::NTRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM
 {
     GN_GUARD;
 
+    //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+
     NTRenderWindow * ptr;
 
     // handle WM_NCCREATE
     if( WM_NCCREATE == msg )
     {
         GN_ASSERT( lp );
-        ptr = (NTRenderWindow*)lp;
-        ::SetWindowLongA( wnd, GWL_USERDATA, lp );
+        ptr = (NTRenderWindow*)((CREATESTRUCT*)lp)->lpCreateParams;
+        ::SetWindowLongA( wnd, GWL_USERDATA, (LONG)ptr );
     }
     else
     {
