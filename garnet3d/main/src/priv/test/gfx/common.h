@@ -61,6 +61,35 @@ protected:
         mLib.free();
     }
 
+    void externalWindow()
+    {
+        if( !mCreator) return;
+
+        GN::Window win;
+        GN::Window::CreateParam cp;
+        cp.clientWidth = 236;
+        cp.clientHeight = 189;
+        TS_ASSERT( win.create( cp ) );
+        if( !win.getWindow() ) return;
+
+        GN::AutoObjPtr<GN::gfx::Renderer> r;
+        GN::gfx::DeviceSettings ds;
+
+        ds.useExternalWindow = true;
+        ds.renderWindow = win.getWindow();
+        ds.software = true;
+        r.reset( mCreator(ds) );
+
+        clearBlue(*r);
+
+        const GN::gfx::DispDesc & dd = r->getDispDesc();
+
+        TS_ASSERT_EQUALS( dd.windowHandle, win.getWindow() );
+        TS_ASSERT_EQUALS( dd.monitorHandle, win.getMonitor() );
+        TS_ASSERT_EQUALS( dd.width, cp.clientWidth );
+        TS_ASSERT_EQUALS( dd.height, cp.clientHeight );
+    }
+
     void changeDevice()
     {
         if( !mCreator) return;

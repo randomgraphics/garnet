@@ -86,8 +86,13 @@ namespace GN
 // resource manager
 #include "base/resourceManager.h"
 
-// others
+// window wrapper
+#include "base/window.h"
+
+// hight resolution clock
 #include "base/clock.h"
+
+// light-weight performance profiler
 #include "base/profiler.h"
 
 // *****************************************************************************

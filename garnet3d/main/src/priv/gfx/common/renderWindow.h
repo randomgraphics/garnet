@@ -8,6 +8,9 @@
 
 namespace GN { namespace gfx {
 
+    //!
+    //! Base class of render window
+    //!
     class RenderWindow
     {
     public:
