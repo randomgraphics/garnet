@@ -151,7 +151,7 @@ namespace GN
             // disconnect with all slots
             for( SlotIter i = mSlots.begin(); i != mSlots.end(); ++i )
             {
-                if ( (*i).slot ) disconnectToSlot( *(*i).slot );
+                if ( (*i).slot ) disconnectFromSlot( *(*i).slot );
             }
             mSlots.clear();
         }
@@ -196,10 +196,16 @@ namespace GN
             if( i != mSlots.end() ) mSlots.remove(i);
         }
 
-        void disconnect( const SlotBase & slot ) const
+        template<class X>
+        void disconnect( const X * slot ) const
         {
-            slotDisconnect(slot);   // remove slot from private slot list
-            disconnectToSlot(slot); // inform the slot to disconnect with myself.
+            if( !slot ) return;
+            removeSlot(&slot);  // remove slot from private slot list
+            if( IsBaseAndDerived<SlotBase,X>::value )
+            {
+                // remove itself from target slot's singal array.
+                disconnectFromSlot( *safeCast<const SlotBase*>(slot) );
+            }
         }
 
         R emit( PARAM_LIST ) const
@@ -214,9 +220,10 @@ namespace GN
 
     private:
 
-        virtual void slotDisconnect( const SlotBase & slot ) const
+        virtual void removeSlot( const void * slot ) const
         {
-            mSlots.remove_if( EqualSlotClassPtr(&slot) );
+            GN_ASSERT( slot );
+            mSlots.remove_if( EqualSlotClassPtr(slot) );
         }
 
         void AddSlot( const SlotDesc & desc ) const
@@ -322,12 +329,13 @@ namespace GN
         class SignalBase
         {
             friend class GN::SlotBase;
-            virtual void slotDisconnect( const GN::SlotBase & ) const {}
+            /** remove slot from signal's private slot list */
+            virtual void removeSlot( const void * ) const {}
         protected:
-            /** add itself to target slot's signal-array */
+            /** add itself to target slot's signal list */
             void connectToSlot( const GN::SlotBase & slot ) const;
-            /** remove itself from target slot's signal-array */
-            void disconnectToSlot( const GN::SlotBase & slot ) const;
+            /** remove itself from target slot's signal list */
+            void disconnectFromSlot( const GN::SlotBase & slot ) const;
         public:
             virtual ~SignalBase() {}
         };
@@ -348,7 +356,7 @@ namespace GN
             // disconnect with all signals
             for( SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i )
             {
-                (*i)->slotDisconnect( *this );
+                (*i)->removeSlot( this );
             }
             mSignals.clear();
         }
@@ -368,7 +376,7 @@ namespace GN
     {
         slot.mSignals.push_back( this );
     }
-    inline void detail::SignalBase::disconnectToSlot( const SlotBase & slot ) const
+    inline void detail::SignalBase::disconnectFromSlot( const SlotBase & slot ) const
     {
         slot.mSignals.remove( this );
     }
