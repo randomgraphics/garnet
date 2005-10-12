@@ -176,6 +176,16 @@ namespace GN
 #endif
 
     //!
+    //! Hard to explain in english, please see code by your self :)
+    //!
+    struct ScopeBool
+    {
+        bool & mValue;
+        ScopeBool( bool & v ) : mValue(v) { mValue = true; }
+        ~ScopeBool() { mValue = false; }
+    };
+
+    //!
     //! Data type with automatic-initialization.
     //!
     template<typename T, T DEFAULT_VALUE>
