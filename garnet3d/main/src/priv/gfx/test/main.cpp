@@ -11,6 +11,16 @@ class GfxTest
 
     bool mDone;
 
+    //!
+    //! Check if specific key is pressed
+    //!
+    bool keyDown( int keycode )
+    {
+#if GN_WINNT
+        return !!( 0x8000 & ::GetKeyState(keycode) );
+#endif
+    }
+
 public:
 
     //!
@@ -84,7 +94,16 @@ public:
     void update()
     {
 #if GN_WINNT
-    mDone = !!(0x8000 & ::GetKeyState( VK_ESCAPE ));
+        mDone = keyDown(VK_ESCAPE);
+
+        if( keyDown(VK_RETURN) && keyDown(VK_MENU) )
+        {
+            // toggle fullscreen mode
+            GN::gfx::DeviceSettings ds;
+            ds.fullscreen = !mRenderer->getDispDesc().fullscreen;
+            if( !mRenderer->changeDevice(ds) )
+                mDone = true;
+        }
 #endif
     }
 
