@@ -226,8 +226,13 @@ def GN_build_program( env, target, sources=[],
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    if GN_conf['static']:
+        libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL')
     libs += Split('GNcoreLib GNbase GNextern')
-    result = env.Program( target, sources + [ '#' + GN_targets[x][0].path for x in libs ] )
+    extra = []
+    for x in libs:
+        if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
+    result = env.Program( target, sources + extra )
 
     # handle manifest file
     if GN_has_manifest(env):
