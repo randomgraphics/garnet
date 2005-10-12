@@ -47,13 +47,30 @@ class GfxTest
 
 protected:
 
-    void libInit( const char * api )
+    void d3dInit()
     {
-        GN::StrA libName = GN::StrA("GNgfx") + api;
+#if GN_STATIC
+        mCreator = &GN::gfx::createD3DRenderer;
+#else
+        GN::StrA libName = GN::StrA("GNgfxD3D");
         TS_ASSERT( mLib.load( (LIB_PREF+libName+LIB_SUFF).cstr() ) );
         TS_ASSERT( mLib.load( libName.cstr() ) );
         mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
         TS_ASSERT( mCreator );
+#endif
+    }
+
+    void oglInit()
+    {
+#if GN_STATIC
+        mCreator = &GN::gfx::createOGLRenderer;
+#else
+        GN::StrA libName = GN::StrA("GNgfxOGL");
+        TS_ASSERT( mLib.load( (LIB_PREF+libName+LIB_SUFF).cstr() ) );
+        TS_ASSERT( mLib.load( libName.cstr() ) );
+        mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
+        TS_ASSERT( mCreator );
+#endif
     }
 
     void libFree()

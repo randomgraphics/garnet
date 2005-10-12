@@ -5,7 +5,7 @@ class GfxD3DTest : public CxxTest::TestSuite, public GfxTest
 
 public:
 
-    void setUp() { libInit("D3D"); }
+    void setUp() { d3dInit(); }
 
     void tearDown() { libFree(); }
 
