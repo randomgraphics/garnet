@@ -5,7 +5,7 @@ class GfxOGLTest : public CxxTest::TestSuite, public GfxTest
 
 public:
 
-    void setUp() { libInit("OGL"); }
+    void setUp() { oglInit(); }
 
     void tearDown() { libFree(); }
 
