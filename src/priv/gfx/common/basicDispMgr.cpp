@@ -1,13 +1,8 @@
 #include "pch.h"
 #include "basicRenderer.h"
 #include <limits.h>
-#if GN_WINNT
 #include "ntRenderWindow.h"
-typedef GN::gfx::NTRenderWindow TheWindow;
-#else
 #include "xRenderWindow.h"
-typedef GN::gfx::XRenderWindow TheWindow;
-#endif
 
 
 // ****************************************************************************
@@ -59,11 +54,11 @@ GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
 
     DispDesc desc;
 
-    mWindow.reset( new ::TheWindow );
-    if( !mWindow || !mWindow->init(ds) ) return false;
+    // (re)initialize render window.
+    if( !mWindow.init(ds) ) return false;
 
-    desc.monitorHandle = mWindow->getMonitor();
-    desc.windowHandle = mWindow->getWindow();
+    desc.monitorHandle = mWindow.getMonitor();
+    desc.windowHandle = mWindow.getWindow();
     GN_ASSERT( desc.monitorHandle && desc.windowHandle );
 
     // get back buffer size
@@ -75,7 +70,7 @@ GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
     else
     {
         uint32_t w, h;
-        if( !mWindow->getClientSize( w, h ) ) return false;
+        if( !mWindow.getClientSize( w, h ) ) return false;
         desc.width = (0==ds.width) ? w : ds.width;
         desc.height = (0==ds.height) ? h : ds.height;
     }
@@ -88,7 +83,7 @@ GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
     }
     else
     {
-        desc.depth = sGetCurrentDisplayDepth( mWindow->getWindow() );
+        desc.depth = sGetCurrentDisplayDepth( mWindow.getWindow() );
         if( 0 == desc.depth ) return false;
     }
     GN_ASSERT( desc.depth > 0 );

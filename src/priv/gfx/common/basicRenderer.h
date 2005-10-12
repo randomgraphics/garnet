@@ -6,7 +6,8 @@
 //! \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "renderWindow.h"
+#include "ntRenderWindow.h"
+#include "xRenderWindow.h"
 
 //!
 //! trace the call sequence of device reset/recreate
@@ -80,7 +81,7 @@ namespace GN { namespace gfx
 
     private :
         bool dispInit() { return true; }
-        void dispQuit() { mWindow.reset(); }
+        void dispQuit() { mWindow.quit(); }
         bool dispOk() const { return true; }
         void dispClear() {}
 
@@ -92,8 +93,18 @@ namespace GN { namespace gfx
         //!
         bool setupDispDesc( const DeviceSettings & );
 
-    private:
-        AutoObjPtr<RenderWindow> mWindow;
+    protected:
+
+        //!
+        //! Render window class (platform independent)
+        //!
+#if GN_WINNT
+        typedef NTRenderWindow RenderWindow;
+#else
+        typedef XRenderWindow RenderWindow;
+#endif
+
+        RenderWindow mWindow; //!< Render window instance
 
         //@}
 

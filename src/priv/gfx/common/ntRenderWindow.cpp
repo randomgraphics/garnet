@@ -26,6 +26,8 @@ sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
     GN_UNGUARD;
 }
 
+std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -76,7 +78,21 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
             GNGFX_ERROR( "External render window handle must be valid." );
             return false;
         }
+        if( msInstanceMap.end() != msInstanceMap.find(ds.renderWindow) )
+        {
+            GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
+            return false;
+        }
+
         mWindow = (HWND)ds.renderWindow;
+
+        // register a message hook to rende window.
+        mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+        if( 0 == mHook )
+        {
+            GNGFX_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
+            return false;
+        }
     }
     else
     {
@@ -108,6 +124,10 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
     GN_ASSERT( mWindow );
     mUseExternalWindow = ds.useExternalWindow;
 
+    // add window handle to instance map
+    GN_ASSERT( msInstanceMap.end() == msInstanceMap.find(mWindow) );
+    msInstanceMap[mWindow] = this;
+
     // success
     return true;
 
@@ -121,13 +141,21 @@ void GN::gfx::NTRenderWindow::quit()
 {
     GN_GUARD;
 
-    // delete window
-    if( ::IsWindow( mWindow ) && !mUseExternalWindow)
-    {
-        ::DestroyWindow( mWindow );
-    }
-    mWindow = 0;
+    // delete hook
+    if( mHook ) ::UnhookWindowsHookEx( mHook ), mHook = 0;
 
+    // delete window
+    if( ::IsWindow( mWindow ) )
+    {
+        if( !mUseExternalWindow) ::DestroyWindow( mWindow );
+
+        GN_ASSERT( msInstanceMap.end() != msInstanceMap.find(mWindow) );
+        msInstanceMap.erase(mWindow);
+
+        mWindow = 0;
+    }
+
+    // clear monitor handle
     mMonitor = 0;
 
     GN_UNGUARD;
@@ -217,7 +245,7 @@ GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t hei
         parent,
         0, // no menu
         moduleHandle,
-        this );
+        0 );
     if( 0 == mWindow )
     {
         GNGFX_ERROR( "fail to create window, %s!", getOSErrorInfo() );
@@ -246,17 +274,8 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-/*    static int level = 0;
-
-    struct Local
-    {
-        int & l;
-        Local( int & l_ ) : l(l_) { ++l; }
-        ~Local() { --l; }
-    };
-    Local haha(level);*/
-
-    //GN_INFO( "Proc level = %d", level );
+    // trigger the message signal
+    sigMessage( wnd, msg, wp, lp );
 
     switch (msg)
     {
@@ -275,7 +294,7 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 
         case WM_SIZE :
             {
-                //GNGFX_INFO( "window resize to %dx%d", LOWORD(lParam), HIWORD(lParam) ) );
+                //GNGFX_INFO( "window resize to %dx%d", LOWORD(lp), HIWORD(lp) ) );
                 bool minimized = ( SIZE_MINIMIZED == wp );
                 if( !minimized && !mInsideSizeMove ) mSizeChanged = true;
             }
@@ -294,6 +313,7 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
         mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
     }
 
+    // call default procedure
     return ::DefWindowProc( wnd, msg, wp, lp );
 
     GN_UNGUARD;
@@ -302,31 +322,52 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT
+LRESULT CALLBACK
 GN::gfx::NTRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
     //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
 
-    NTRenderWindow * ptr;
+    std::map<void*,NTRenderWindow*>::const_iterator iter = msInstanceMap.find(wnd);
 
-    // handle WM_NCCREATE
-    if( WM_NCCREATE == msg )
+    // call class specific window procedure
+    if( msInstanceMap.end() == iter )
     {
-        GN_ASSERT( lp );
-        ptr = (NTRenderWindow*)((CREATESTRUCT*)lp)->lpCreateParams;
-        ::SetWindowLongA( wnd, GWL_USERDATA, (LONG)ptr );
+        return ::DefWindowProc( wnd, msg, wp, lp );
     }
     else
     {
-        ptr = (NTRenderWindow*)::GetWindowLong( wnd, GWL_USERDATA );
+        GN_ASSERT( iter->second );
+        return iter->second->windowProc( wnd, msg, wp, lp );
     }
 
-    // call Renderer specific window procedure
-    return ptr
-        ? ptr->windowProc( wnd, msg, wp, lp )
-        : ::DefWindowProc( wnd, msg, wp, lp );
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LRESULT CALLBACK
+GN::gfx::NTRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
+{
+    GN_GUARD;
+
+    //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+
+    std::map<void*,NTRenderWindow*>::const_iterator iter =
+        msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );
+
+    if( msInstanceMap.end() != iter )
+    {
+        // trigger render window message signal.
+        CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
+        NTRenderWindow * wnd = iter->second;
+        GN_ASSERT( cwp && wnd );
+        wnd->sigMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+    }
+
+    return ::CallNextHookEx( 0, code, wp, lp );
 
     GN_UNGUARD;
 }

@@ -8,13 +8,11 @@
 
 #if GN_WINNT
 
-#include "renderWindow.h"
-
 namespace GN { namespace gfx {
     //!
     //! Render window class on NT platform
     //!
-    class NTRenderWindow : public RenderWindow
+    class NTRenderWindow
     {
         // ********************************
         // ctor/dtor
@@ -22,22 +20,64 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        NTRenderWindow() : mWindow(0), mMonitor(0) {}
+        NTRenderWindow() : mWindow(0), mMonitor(0), mHook(0) {}
         ~NTRenderWindow() { quit(); }
         //@}
 
         // ********************************
-        // from RenderWindow
+        // public interface
         // ********************************
 
     public:
 
-        virtual bool init( const DeviceSettings & );
-        virtual void quit();
-        virtual void * getWindow() const { return mWindow; }
-        virtual void * getMonitor() const { return mMonitor; }
-        virtual bool getClientSize( uint32_t & width, uint32_t & height ) const;
+        //!
+        //! initialize or reinitialize the render window based on current device setting.
+        //!
+        bool init( const DeviceSettings & );
 
+        //!
+        //! Delete render window
+        //!
+        void quit();
+
+        //!
+        //! Get window handle
+        //!
+        void * getWindow() const { return mWindow; }
+
+        //!
+        //! Get monitor handle
+        //!
+        void * getMonitor() const { return mMonitor; }
+
+        //!
+        //! Get client size
+        //!
+        bool getClientSize( uint32_t & width, uint32_t & height ) const;
+
+        //!
+        //! This is hook functor.
+        //!
+        typedef Functor4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
+
+        //!
+        //! This signal will be triggered, whenever the windows receive a message.
+        //!
+        Signal4<void,HWND,UINT,WPARAM,LPARAM> sigMessage;
+
+/*
+        //!
+        //! Add message hook.
+        //!
+        //! Note that this function has no XWin conterpart, neither removeMsgHook().
+        //!
+        void addMsgHook( UINT msg, const MsgHook & hook );
+
+        //!
+        //! Remove message hook.
+        //!
+        void removeMsgHook( const MsgHook & hook );
+*/
         // ********************************
         // private variables
         // ********************************
@@ -45,10 +85,13 @@ namespace GN { namespace gfx {
 
         HWND mWindow;
         HMONITOR mMonitor;
+        HHOOK mHook;
         bool mUseExternalWindow;
 
         bool mInsideSizeMove;
         bool mSizeChanged;
+
+        static std::map<void*,NTRenderWindow*> msInstanceMap;
 
         // ********************************
         // private functions
@@ -57,7 +100,9 @@ namespace GN { namespace gfx {
 
         bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
-        static LRESULT staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
+        static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
+        static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );
+
     };
 }}
 
