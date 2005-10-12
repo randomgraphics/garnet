@@ -575,6 +575,18 @@ namespace GN { namespace gfx
     //! Function prototype to create instance of renderer.
     //!
     typedef Renderer * (*CreateRendererFunc)( const DeviceSettings & );
+
+#if GN_STATIC
+    //!
+    //! Create instance of D3D renderer.
+    //!
+    Renderer * createD3DRenderer( const DeviceSettings & );
+
+    //!
+    //! Create instance of OGL renderer.
+    //!
+    Renderer * createOGLRenderer( const DeviceSettings & );
+#endif
 }}
 
 #include "gfxRenderer.inl"
