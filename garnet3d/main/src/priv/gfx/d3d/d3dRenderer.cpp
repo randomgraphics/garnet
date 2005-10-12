@@ -12,16 +12,27 @@
 #endif
 #endif
 
+// *****************************************************************************
+// Global functions
+// *****************************************************************************
+
+namespace GN { namespace gfx {
+    Renderer * createD3DRenderer( const DeviceSettings & ds )
+    {
+        GN_GUARD;
+
+        GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
+        if( !p->init(ds) ) return 0;
+        return p.detatch();
+
+        GN_UNGUARD;
+    }
+}}
+
 extern "C" GN_EXPORT GN::gfx::Renderer *
 GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
 {
-    GN_GUARD;
-
-    GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
-    if( !p->init(ds) ) return 0;
-    return p.detatch();
-
-    GN_UNGUARD;
+    return GN::gfx::createD3DRenderer(ds);
 }
 
 // *****************************************************************************
@@ -92,21 +103,13 @@ bool GN::gfx::D3DRenderer::changeDevice(
 {
     GN_GUARD;
 
-    struct SetToFalse
-    {
-        bool & mVar;
-        SetToFalse( bool & var ) : mVar(var) {}
-        ~SetToFalse() { mVar = false; }
-    };
-
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
         GND3D_WARN( "This call to changeDevice() is ignored to avoid function re-entance!" );
         return true;
     }
-    mDeviceChanging = true;
-    SetToFalse __dummy(mDeviceChanging);
+    ScopeBool __dummy__(mDeviceChanging);
 
     // store old display descriptor
     const DispDesc oldDesc = getDispDesc();

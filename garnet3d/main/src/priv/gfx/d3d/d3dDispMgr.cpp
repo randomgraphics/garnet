@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "d3dRenderer.h"
 
-//
-//! \brief 枚举符合条件的显示模式，并返回相应的D3DFormat
+//!
+//! 枚举符合条件的显示模式，并返回相应的D3DFormat
 // ------------------------------------------------------------------------
 static D3DFORMAT
 sCheckD3DFormat( IDirect3D9 & d3d, UINT adapter, const GN::gfx::DispDesc & dd )
@@ -71,8 +71,8 @@ sCheckD3DFormat( IDirect3D9 & d3d, UINT adapter, const GN::gfx::DispDesc & dd )
     GN_UNGUARD;
 }
 
-//
-//! \brief 根据显示模式和option设定present parameters
+//!
+//! 根据显示模式和option设定present parameters
 // ------------------------------------------------------------------------
 static bool
 sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
