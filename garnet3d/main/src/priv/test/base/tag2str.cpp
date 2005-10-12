@@ -192,7 +192,7 @@ public:
     void testShaderType()
     {
         StrA str;
-        GN::gfx::ShaderType type;
+        GN::gfx::ShaderType type = GN::gfx::NUM_SHADER_TYPES;
 
         TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::PIXEL_SHADER ) );
         TS_ASSERT_EQUALS( str, "PIXEL" );
@@ -215,7 +215,7 @@ public:
     void testShadingLanguage()
     {
         StrA str;
-        GN::gfx::ShadingLanguage lang;
+        GN::gfx::ShadingLanguage lang = GN::gfx::NUM_SHADING_LANGUAGES;
 
         static struct LangItem
         {
@@ -262,7 +262,7 @@ public:
         };
 
         StrA             s;
-        GN::gfx::TexType t;
+        GN::gfx::TexType t = GN::gfx::NUM_TEXTYPES;
 
         for( int i = 0; i < 4; ++i )
         {
@@ -301,7 +301,7 @@ public:
         };
 
         StrA               s;
-        GN::gfx::TexFilter t;
+        GN::gfx::TexFilter t = GN::gfx::NUM_TEXFILTERS;
 
         for( int i = 0; i < 6; ++i )
         {
@@ -334,7 +334,7 @@ public:
         };
 
         StrA             s;
-        GN::gfx::TexWrap t;
+        GN::gfx::TexWrap t = GN::gfx::NUM_TEXWRAPS;
 
         for( int i = 0; i < 3; ++i )
         {

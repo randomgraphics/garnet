@@ -39,6 +39,7 @@ GN::assertFunc(
         "%s\n"
         "----------------------------------------------------------------\n"
         "              Break(B), Continue(C), Ignore(I)\n"
+        "      (Choose Ignore to suppress further assert warnings)\n"
         "================================================================\n",
         file?file:"",
         line,

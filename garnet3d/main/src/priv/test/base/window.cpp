@@ -1,4 +1,4 @@
-#include "testCommon.h"
+#include "../testCommon.h"
 
 class WindowTest : public CxxTest::TestSuite
 {

@@ -187,7 +187,7 @@ def GN_build_shared_library( env, target, sources=[],
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
         if 'GNcore' == target: libs += Split('GNbase GNextern')
-        else: libs += Split('GNcoreLib GNbase GNextern')
+        else: libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
         add_libs( env, libs )
         result = env.SharedLibrary( target, sources )
 
@@ -228,7 +228,7 @@ def GN_build_program( env, target, sources=[],
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
         libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL')
-    libs += Split('GNcoreLib GNbase GNextern')
+    libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
     extra = []
     for x in libs:
         if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
