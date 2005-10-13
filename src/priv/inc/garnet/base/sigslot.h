@@ -86,21 +86,37 @@ namespace GN
         struct SlotDesc
         {
             FunctorType      func;
-            const SlotBase * slot;
+            const void *     classPtr;
+            const SlotBase * basePtr;
         };
 
         typedef typename ::std::list<SlotDesc>         SlotContainer;
         typedef typename SlotContainer::iterator       SlotIter;
         typedef typename SlotContainer::const_iterator ConstSlotIter;
 
-        struct EqualSlotClassPtr
+        struct EqualClassPtr
         {
             const void * mPtr;
 
-            EqualSlotClassPtr( const void * ptr ) : mPtr(ptr) {}
+            EqualClassPtr( const void * ptr ) : mPtr(ptr) {}
 
             bool operator() ( const SlotDesc & desc ) const
-            { return mPtr == desc.slot; }
+            {
+                const void * p = desc.classPtr;
+                return mPtr == p;
+            }
+        };
+
+        struct EqualBaseSlotPtr
+        {
+            const SlotBase * mPtr;
+
+            EqualBaseSlotPtr( const SlotBase * ptr ) : mPtr(ptr) {}
+
+            bool operator() ( const SlotDesc & desc ) const
+            {
+                return mPtr == desc.basePtr;
+            }
         };
 
         template<class RetType,class IterType>
@@ -151,7 +167,7 @@ namespace GN
             // disconnect with all slots
             for( SlotIter i = mSlots.begin(); i != mSlots.end(); ++i )
             {
-                if ( (*i).slot ) disconnectFromSlot( *(*i).slot );
+                if( (*i).basePtr ) disconnectFromSlotClass( *(*i).basePtr );
             }
             mSlots.clear();
         }
@@ -161,8 +177,9 @@ namespace GN
             if( 0 == staticFuncPtr ) return;
             SlotDesc desc;
             desc.func.bind(staticFuncPtr);
-            desc.slot = 0;
-            AddSlot( desc );
+            desc.classPtr = 0;
+            desc.basePtr = 0;
+            addSlotItem( desc );
         }
 
         template<class X, class Y>
@@ -172,8 +189,9 @@ namespace GN
             if( 0 == classPtr || 0 == memFuncPtr ) return;
             SlotDesc desc;
             desc.func.bind( classPtr, memFuncPtr );
-            desc.slot = IsBaseAndDerived<SlotBase,Y>::value ? (SlotBase*)classPtr : NULL;
-            AddSlot( desc );
+            desc.classPtr = classPtr;
+            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
+            addSlotItem( desc );
         }
 
         template<class X, class Y>
@@ -182,8 +200,9 @@ namespace GN
             if( 0 == classPtr || 0 == memFuncPtr ) return;
             SlotDesc desc;
             desc.func.bind( classPtr, memFuncPtr );
-            desc.slot = IsBaseAndDerived<SlotBase,Y>::value ? (SlotBase*)classPtr : NULL;
-            AddSlot( desc );
+            desc.classPtr = classPtr;
+            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
+            addSlotItem( desc );
         }
 
         void disconnect( R (*staticFuncPtr)(PARAM_TYPES) ) const
@@ -191,20 +210,24 @@ namespace GN
             if( 0 == staticFuncPtr ) return;
             SlotDesc desc;
             desc.func.bind(staticFuncPtr);
-            desc.slot = 0;
-            ConstSlotIter i = FindSlot(desc);
-            if( i != mSlots.end() ) mSlots.remove(i);
+            desc.classPtr = 0;
+            desc.basePtr = 0;
+            SlotIter i = findSlotItem(desc);
+            if( i != mSlots.end() ) mSlots.erase(i);
         }
 
         template<class X>
-        void disconnect( const X * slot ) const
+        void disconnect( const X * slotPtr ) const
         {
-            if( !slot ) return;
-            removeSlot(&slot);  // remove slot from private slot list
+            if( !slotPtr ) return;
+
+            // remove the class from private slot list
+            mSlots.remove_if( EqualClassPtr(slotPtr) );
+
             if( IsBaseAndDerived<SlotBase,X>::value )
             {
                 // remove itself from target slot's singal array.
-                disconnectFromSlot( *safeCast<const SlotBase*>(slot) );
+                disconnectFromSlotClass( *(const SlotBase*)slotPtr );
             }
         }
 
@@ -220,23 +243,22 @@ namespace GN
 
     private:
 
-        virtual void removeSlot( const void * slot ) const
+        virtual void removeBaseSlotClass( const SlotBase & base ) const
         {
-            GN_ASSERT( slot );
-            mSlots.remove_if( EqualSlotClassPtr(slot) );
+            mSlots.remove_if( EqualBaseSlotPtr(&base) );
         }
 
-        void AddSlot( const SlotDesc & desc ) const
+        void addSlotItem( const SlotDesc & desc ) const
         {
-            if( mSlots.end() != FindSlot(desc) ) return;
+            if( mSlots.end() != findSlotItem(desc) ) return;
             mSlots.push_back(desc);
-            if( desc.slot ) connectToSlot( *desc.slot );
+            if( desc.basePtr ) connectToSlotClass( *desc.basePtr );
         }
 
-        ConstSlotIter
-        FindSlot( const SlotDesc & desc ) const
+        SlotIter
+        findSlotItem( const SlotDesc & desc ) const
         {
-            ConstSlotIter i;
+            SlotIter i;
             for( i = mSlots.begin(); i != mSlots.end(); ++i )
             {
                 if( (*i).func == desc.func ) return i;
@@ -330,12 +352,12 @@ namespace GN
         {
             friend class GN::SlotBase;
             /** remove slot from signal's private slot list */
-            virtual void removeSlot( const void * ) const {}
+            virtual void removeBaseSlotClass( const SlotBase & ) const {}
         protected:
             /** add itself to target slot's signal list */
-            void connectToSlot( const GN::SlotBase & slot ) const;
+            void connectToSlotClass( const GN::SlotBase & slot ) const;
             /** remove itself from target slot's signal list */
-            void disconnectFromSlot( const GN::SlotBase & slot ) const;
+            void disconnectFromSlotClass( const GN::SlotBase & slot ) const;
         public:
             virtual ~SignalBase() {}
         };
@@ -356,7 +378,7 @@ namespace GN
             // disconnect with all signals
             for( SignalContainer::iterator i = mSignals.begin(); i != mSignals.end(); ++i )
             {
-                (*i)->removeSlot( this );
+                (*i)->removeBaseSlotClass( *this );
             }
             mSignals.clear();
         }
@@ -372,11 +394,11 @@ namespace GN
         mutable SignalContainer mSignals;
     };
 
-    inline void detail::SignalBase::connectToSlot( const SlotBase & slot ) const
+    inline void detail::SignalBase::connectToSlotClass( const SlotBase & slot ) const
     {
         slot.mSignals.push_back( this );
     }
-    inline void detail::SignalBase::disconnectFromSlot( const SlotBase & slot ) const
+    inline void detail::SignalBase::disconnectFromSlotClass( const SlotBase & slot ) const
     {
         slot.mSignals.remove( this );
     }
