@@ -37,9 +37,10 @@ for target in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNTest GNgfxTest'):
             env.Depends( GN_targets[target][0], x )
 
 # run unit test
-def run_test( target, source, env ):
-    return os.spawnl( os.P_WAIT, target[0].path )
-AddPostAction( GN_targets['GNtest'][0], run_test )
+if GN_conf['run_unit_tests']:
+    def run_test( target, source, env ):
+        return os.spawnl( os.P_WAIT, target[0].path )
+    AddPostAction( GN_targets['GNtest'][0], run_test )
 
 # populate SDK directory
 sdk_root = os.path.join( root, 'sdk' )
