@@ -8,6 +8,7 @@
 
 #include <stdarg.h>
 #include <string>
+#include <ostream>
 
 namespace GN
 {
@@ -650,6 +651,15 @@ namespace GN
             Str r(s2);
             r.append( s1.c_str() );
             return r;
+        }
+
+        //!
+        //! Output to ostream
+        //!
+        friend std::ostream & operator << ( std::ostream & os, const Str & str )
+        {
+            os << str.cstr();
+            return os;
         }
 
     private:
