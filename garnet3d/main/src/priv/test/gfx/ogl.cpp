@@ -9,5 +9,13 @@ public:
 
     void tearDown() { libFree(); }
 
-    //void testMultiRenderer() { multiRenderer(); }
+    void testExternalWindow() { externalWindow(); }
+
+    void testChangeDevice() { changeDevice(); }
+
+    void testFullscreen() { fullscreen(); }
+
+    void testDefaultBackbufferSize() { defaultBackbufferSize(); }
+
+    void testMultiRenderer() { multiRenderer(); }
 };
