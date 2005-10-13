@@ -45,31 +45,6 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
     // so here we can use one check for both of them.
     bool windowValid = !!::IsWindow((HWND)ds.renderWindow);
 
-    // initialize monitor handle
-    if( 0 == ds.monitorHandle )
-    {
-        if( !windowValid )
-        {
-            // make sure pt is outside of any possible display monitor.
-            POINT pt = { LONG_MIN, LONG_MIN };
-            mMonitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
-            if( 0 == mMonitor )
-            {
-                GN_ERROR( "Fail to get primary monitor handle." );
-                return false;
-            }
-        }
-        else
-        {
-            mMonitor = ::MonitorFromWindow( (HWND)ds.renderWindow, MONITOR_DEFAULTTONEAREST );
-        }
-    }
-    else
-    {
-        mMonitor = (HMONITOR)ds.monitorHandle;
-    }
-    GN_ASSERT( mMonitor );
-
     // initialize render window
     if( ds.useExternalWindow )
     {
@@ -101,7 +76,32 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
         {
             if( ds.fullscreen )
             {
-                if( !::sGetMonitorSize( mMonitor, w, h ) ) return false;
+                // Get user specified monitor size
+                HMONITOR monitor;
+                if( 0 == ds.monitorHandle )
+                {
+                    if( !windowValid )
+                    {
+                        POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primaray monitore are returned.
+                        monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
+                        if( 0 == monitor )
+                        {
+                            GN_ERROR( "Fail to get primary monitor handle." );
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        monitor = ::MonitorFromWindow( (HWND)ds.renderWindow, MONITOR_DEFAULTTONEAREST );
+                    }
+                }
+                else
+                {
+                    monitor = (HMONITOR)ds.monitorHandle;
+                }
+                GN_ASSERT( monitor );
+
+                if( !::sGetMonitorSize( monitor, w, h ) ) return false;
             }
             else
             {
@@ -154,9 +154,6 @@ void GN::gfx::NTRenderWindow::quit()
 
         mWindow = 0;
     }
-
-    // clear monitor handle
-    mMonitor = 0;
 
     GN_UNGUARD;
 }
@@ -307,12 +304,6 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
         default: ; // do nothing
     }
 
-    // update monitor handle
-    if( mSizeChanged )
-    {
-        mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
-    }
-
     // call default procedure
     return ::DefWindowProc( wnd, msg, wp, lp );
 
@@ -371,5 +362,67 @@ GN::gfx::NTRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
 
     GN_UNGUARD;
 }
+
+// *****************************************************************************
+// class WinProp
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::WinProp::save( HWND hwnd )
+{
+    GN_GUARD;
+
+    mParent = ::GetParent( hwnd );
+    mMenu = ::GetMenu( hwnd );
+    GN_WIN_CHECK( ::GetWindowRect( hwnd, &mBoundsRect ) );
+    if( mParent )
+    {
+        // transform mBoundsRect to mParent's space
+        POINT offset = {0,0};
+        ::ScreenToClient( mParent, &offset );
+        mBoundsRect.left += offset.x;
+        mBoundsRect.right += offset.x;
+        mBoundsRect.top += offset.y;
+        mBoundsRect.bottom += offset.y;
+    }
+    mStyle   = ::GetWindowLong( hwnd, GWL_STYLE );
+    mExStyle = ::GetWindowLong( hwnd, GWL_EXSTYLE );
+    mZoomed  = ::IsZoomed( hwnd );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::WinProp::restore( HWND hwnd )
+{
+    GN_GUARD;
+
+    if( !(WS_CHILD & mStyle) )
+    {
+        // NOTE: can't attach mMenu to child window
+        GN_WIN_CHECK( ::SetMenu( hwnd, mMenu ) );
+    }
+    ::SetWindowLong( hwnd, GWL_STYLE, mStyle );
+    ::SetWindowLong( hwnd, GWL_EXSTYLE, mExStyle );
+    GN_WIN_CHECK( ::SetParent( hwnd, mParent ) );
+    GN_WIN_CHECK( ::SetWindowPos(
+        hwnd,
+        WS_EX_TOPMOST & mExStyle ? HWND_TOPMOST : HWND_NOTOPMOST,
+        mBoundsRect.left, mBoundsRect.top,
+        mBoundsRect.right-mBoundsRect.left,
+        mBoundsRect.bottom-mBoundsRect.top,
+        SWP_FRAMECHANGED | SWP_NOOWNERZORDER | SWP_SHOWWINDOW ) );
+    GN_WIN_CHECK( ::UpdateWindow( hwnd ) );
+
+    GN_UNGUARD;
+}
+
 
 #endif // GN_WINNT

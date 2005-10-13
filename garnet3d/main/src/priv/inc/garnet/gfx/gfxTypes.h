@@ -22,23 +22,30 @@ namespace GN { namespace gfx
         {
             //!
             //! Handle of external render window.
-            //! Effective if useExternalWindow is true.
+            //!
+            //! \notes Effective only if useExternalWindow is true.
             //!
             void * renderWindow;
 
-            //!
-            //! Handle of parent window. Can be NULL.
-            //! Effective if useExternalWindow is false.
-            //!
-            void * parentWindow;
-        };
+            struct
+            {
+                //!
+                //! Handle of parent window. Can be NULL.
+                //!
+                //! \notes Effective only if useExternalWindow is false.
+                //!
+                void * parentWindow;
 
-        //!
-        //! Monitor handle. 0 means using the monitor where render/parent window stays in.
-        //! If monitorHandle and render/parent window are both zero, default(primary)
-        //! monitor will be chosen.
-        //!
-        void * monitorHandle;
+                //!
+                //! Monitor handle. 0 means using the monitor where parent window stays in.
+                //! If monitorHandle and parent window are both zero, default(primary)
+                //! monitor will be chosen.
+                //!
+                //! \notes Effective only if useExternalWindow is false.
+                //!
+                void * monitorHandle;
+            };
+        };
 
         //!
         //! fullscreen or windowed mode.
@@ -115,7 +122,6 @@ namespace GN { namespace gfx
         DeviceSettings()
             : useExternalWindow(false)
             , parentWindow(0)
-            , monitorHandle(0)
             , fullscreen(false)
             , width(0)
             , height(0)
@@ -137,7 +143,6 @@ namespace GN { namespace gfx
     struct DispDesc
     {
         void * windowHandle;  //!< Render window handle
-        void * monitorHandle; //!< Monitor handle
         bool fullscreen;      //!< Is fullscreen or not
         uint32_t width;       //!< Back buffer width
         uint32_t height;      //!< Back buffer height

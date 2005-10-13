@@ -43,11 +43,6 @@ namespace GN { namespace gfx {
         void * getWindow() const { return (void*)1; }
 
         //!
-        //! Get monitor handle
-        //!
-        void * getMonitor() const { return (void*)1; }
-
-        //!
         //! Get client size
         //!
         bool getClientSize( uint32_t & width , uint32_t & height ) const { width = mWidth; height = mHeight; return true; }

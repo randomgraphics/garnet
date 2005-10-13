@@ -4,10 +4,13 @@ TODO
 - implement POSIX version of GN::path:glob()
 - UT for path functions: resolve, glob
 - implement GNogl using glut.
-- Fix link problem of GFX module in static build.
+- Refine GFX:
+  - move window property save/restore code to a centrol place,
+    such as in changeDevice().
 
 DONE
 ====
+- Fix link problem of GFX module in static build.
 - Refine GFX:
   - Refine ntWindow class:
     - support external window

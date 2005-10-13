@@ -1,31 +1,29 @@
-#ifndef __GN_GFX_D3DRENDERER_H__
-#define __GN_GFX_D3DRENDERER_H__
+#ifndef __GN_GFX_OGLRENDERER_H__
+#define __GN_GFX_OGLRENDERER_H__
 // *****************************************************************************
-//! \file    d3dRenderer.h
-//! \brief   D3D renderer class
+//! \file    oglRenderer.h
+//! \brief   OGL renderer class
 //! \author  chenlee (2005.10.2)
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
+#include "oglTypes.h"
 
 #if GN_MSVC
 #pragma warning(push)
 #pragma warning(disable:4100) // unused parameters
 #endif
 
-//! \def GND3D_CAPS
-//! Define D3D special caps.
-
 namespace GN { namespace gfx {
 
-    struct D3DResource; // Forward declaration of D3DResource.
+    struct OGLResource; // Forward declaration of OGLResource.
 
     //!
-    //! D3D renderer class
+    //! OGL renderer class
     //!
-    class D3DRenderer : public BasicRenderer
+    class OGLRenderer : public BasicRenderer
     {
-        GN_DECLARE_STDCLASS(D3DRenderer, BasicRenderer);
+        GN_DECLARE_STDCLASS(OGLRenderer, BasicRenderer);
 
         // ********************************
         // ctor/dtor
@@ -33,8 +31,8 @@ namespace GN { namespace gfx {
 
         //@{
     public :
-        D3DRenderer()          { clear(); }
-        virtual ~D3DRenderer() { quit(); }
+        OGLRenderer()          { clear(); }
+        virtual ~OGLRenderer() { quit(); }
         //@}
 
         // ********************************
@@ -115,29 +113,21 @@ namespace GN { namespace gfx {
         //@{
 
     public :
-        virtual void * getD3DDevice() const { return getDevice(); }
-        virtual void * getOGLRC() const { return 0; }
+        virtual void * getD3DDevice() const { return 0; }
+        virtual void * getOGLRC() const { return mRenderContext; }
 
-    public :
-        //
-        // Access to D3D interfaces
-        //
-        IDirect3D9                  * getD3D() const { GN_ASSERT(mD3D); return mD3D; }
-        IDirect3DDevice9            * getDevice() const { GN_ASSERT(mDevice); return mDevice; }
-        UINT                          getAdapter() const { return mAdapter; }
-        D3DDEVTYPE                    getDeviceType() const { return mDeviceType; }
-        UINT                          getBehavior() const { return mBehavior; }
-        const D3DPRESENT_PARAMETERS & getPresentParameters() const { return mPresentParameters; }
-
+#if GN_WINNT
     private :
-        bool dispInit();
-        void dispQuit();
-        bool dispOK() const { return 0 != mD3D; }
+        bool dispInit() { return true; }
+        void dispQuit() {}
+        bool dispOK() const { return true; }
         void dispClear()
         {
             mDispOK = false;
-            mD3D = 0;
-            mDevice = 0;
+            mDeviceContext = 0;
+            mRenderContext = 0;
+            mDisplayModeActivated = false;
+            mIgnoreMsgHook = false;
         }
 
         bool dispDeviceCreate();
@@ -145,14 +135,35 @@ namespace GN { namespace gfx {
         void dispDeviceDispose();
         void dispDeviceDestroy();
 
+        bool activateDisplayMode();
+        void restoreDisplayMode();
+        void msgHook( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
+
     private :
-        bool                    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
-        UINT                    mAdapter;
-        D3DDEVTYPE              mDeviceType;
-        UINT                    mBehavior;
-        D3DPRESENT_PARAMETERS   mPresentParameters;
-        IDirect3D9            * mD3D;
-        IDirect3DDevice9      * mDevice;
+
+        bool    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
+        HDC     mDeviceContext;
+        HGLRC   mRenderContext;
+        bool    mDisplayModeActivated;
+        bool    mIgnoreMsgHook;
+#else
+    private :
+        bool dispInit() { return true; }
+        void dispQuit() {}
+        bool dispOK() const { return true; }
+        void dispClear()
+        {
+            mRenderContext = 0;
+        }
+
+        bool dispDeviceCreate() { mRenderContext = (void*)1; return true; }
+        bool dispDeviceRestore() { return true; }
+        void dispDeviceDispose() {}
+        void dispDeviceDestroy() {}
+
+    private :
+        void * mRenderContext;
+#endif
 
         //@}
 
@@ -167,24 +178,12 @@ namespace GN { namespace gfx {
     public :
 
         //!
-        //! define API dependent caps
+        //! get OGL special caps
         //!
-        enum D3DCaps
+        uint32_t getOGLCaps( OGLCaps c ) const
         {
-            #define GND3D_CAPS(X) D3DCAPS_##X,
-            #include "d3dCapsMeta.h"
-            #undef GND3D_CAPS
-            NUM_D3DCAPS,
-            D3DCAPS_INVALID,
-        };
-
-        //!
-        //! get D3D special caps
-        //!
-        uint32_t getD3DCaps( D3DCaps c ) const
-        {
-            GN_ASSERT( 0 <= c && c < NUM_D3DCAPS );
-            return mD3DCaps[c].get();
+            GN_ASSERT( 0 <= c && c < NUM_OGLCAPS );
+            return mOGLCaps[c].get();
         }
 
     private :
@@ -194,13 +193,13 @@ namespace GN { namespace gfx {
         void capsClear() {}
 
         bool capsDeviceCreate();
-        bool capsDeviceRestore();
+        bool capsDeviceRestore() { return true; }
         void capsDeviceDispose() {}
         void capsDeviceDestroy();
 
     private :
 
-        CapsDesc mD3DCaps[NUM_D3DCAPS];
+        CapsDesc mOGLCaps[NUM_OGLCAPS];
 
         //@}
 
@@ -358,18 +357,18 @@ namespace GN { namespace gfx {
 
         //!
         //! Insert resource into resource list. Can be only called by
-        //! constructor of D3DResource.
+        //! constructor of OGLResource.
         //!
-        void insertResource( D3DResource * p )
+        void insertResource( OGLResource * p )
         {
             mResourceList.push_back(p);
         }
 
         //!
         //! Remove resource from resource list. Can be only called by
-        //! destructor of D3DResource.
+        //! destructor of OGLResource.
         //!
-        void removeResource( D3DResource * p )
+        void removeResource( OGLResource * p )
         {
             mResourceList.remove(p);
         }
@@ -383,7 +382,7 @@ namespace GN { namespace gfx {
 
     private :
 
-        std::list<D3DResource*> mResourceList;
+        std::list<OGLResource*> mResourceList;
 
         //@}
 
@@ -477,6 +476,6 @@ namespace GN { namespace gfx {
 #endif
 
 // *****************************************************************************
-//                           End of d3dRenderer.h
+//                           End of oglRenderer.h
 // *****************************************************************************
-#endif // __GN_GFX_D3DRENDERER_H__
+#endif // __GN_GFX_OGLRENDERER_H__

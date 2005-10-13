@@ -1,15 +1,9 @@
 #include "pch.h"
-#include "d3dRenderer.h"
-#include "d3dResource.h"
+#include "oglRenderer.h"
 
 #if GN_MSVC
-#pragma comment(lib, "d3d9.lib")
-#pragma comment(lib, "dxerr9.lib" )
-#if GN_DEBUG
-#pragma comment(lib, "d3dx9d.lib")
-#else
-#pragma comment(lib, "d3dx9.lib")
-#endif
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "glu32.lib" )
 #endif
 
 // *****************************************************************************
@@ -17,11 +11,11 @@
 // *****************************************************************************
 
 namespace GN { namespace gfx {
-    Renderer * createD3DRenderer( const DeviceSettings & ds )
+    Renderer * createOGLRenderer( const DeviceSettings & ds )
     {
         GN_GUARD;
 
-        GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
+        GN::AutoObjPtr<GN::gfx::OGLRenderer> p( new GN::gfx::OGLRenderer );
         if( !p->init(ds) ) return 0;
         return p.detatch();
 
@@ -32,7 +26,7 @@ namespace GN { namespace gfx {
 extern "C" GN_EXPORT GN::gfx::Renderer *
 GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
 {
-    return GN::gfx::createD3DRenderer(ds);
+    return GN::gfx::createOGLRenderer(ds);
 }
 
 // *****************************************************************************
@@ -42,12 +36,12 @@ GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::init(const DeviceSettings & ds )
+bool GN::gfx::OGLRenderer::init(const DeviceSettings & ds )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DRenderer, () );
+    GN_STDCLASS_INIT( GN::gfx::OGLRenderer, () );
 
     // init sub-components
     if( !dispInit()    ) { quit(); return selfOK(); }
@@ -71,7 +65,7 @@ bool GN::gfx::D3DRenderer::init(const DeviceSettings & ds )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::quit()
+void GN::gfx::OGLRenderer::quit()
 {
     GN_GUARD;
 
@@ -98,7 +92,7 @@ void GN::gfx::D3DRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::changeDevice(
+bool GN::gfx::OGLRenderer::changeDevice(
     const DeviceSettings & ds, bool forceRecreation )
 {
     GN_GUARD;
@@ -106,27 +100,21 @@ bool GN::gfx::D3DRenderer::changeDevice(
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GND3D_WARN( "This call to changeDevice() is ignored to avoid function re-entance!" );
+        GNOGL_WARN( "This call to changeDevice() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
 
     // store old display descriptor
     const DispDesc oldDesc = getDispDesc();
-    HMONITOR oldMonitor = oldDesc.windowHandle
-        ? ::MonitorFromWindow( (HWND)oldDesc.windowHandle, MONITOR_DEFAULTTONEAREST )
-        : 0;
 
     // setup new display descriptor
     if( !setupDispDesc( ds ) ) return false;
+
     const DispDesc & newDesc = getDispDesc();
-    HMONITOR newMonitor = ::MonitorFromWindow( (HWND)newDesc.windowHandle, MONITOR_DEFAULTTONEAREST );
 
     if( forceRecreation ||
-        oldDesc.windowHandle != newDesc.windowHandle ||
-        oldMonitor != newMonitor ||
-        oldDesc.reference != newDesc.reference ||
-        oldDesc.software != newDesc.software )
+        oldDesc.windowHandle != newDesc.windowHandle )
     {
         // we have to perform a full device recreation
         deviceDispose();
@@ -151,7 +139,7 @@ bool GN::gfx::D3DRenderer::changeDevice(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::deviceCreate()
+bool GN::gfx::OGLRenderer::deviceCreate()
 {
     GN_GUARD;
 
@@ -177,7 +165,7 @@ bool GN::gfx::D3DRenderer::deviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::deviceRestore()
+bool GN::gfx::OGLRenderer::deviceRestore()
 {
     GN_GUARD;
 
@@ -197,7 +185,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
     // trigger reset event
     if( !sigDeviceRestore() )
     {
-        GND3D_ERROR( "fail to process D3D device restore signal!" );
+        GNOGL_ERROR( "fail to process OGL device restore signal!" );
         return false;
     }
 
@@ -210,7 +198,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::deviceDispose()
+void GN::gfx::OGLRenderer::deviceDispose()
 {
     GN_GUARD;
 
@@ -236,7 +224,7 @@ void GN::gfx::D3DRenderer::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::deviceDestroy()
+void GN::gfx::OGLRenderer::deviceDestroy()
 {
     GN_GUARD;
 
@@ -263,13 +251,13 @@ void GN::gfx::D3DRenderer::deviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::resourceDeviceCreate()
+bool GN::gfx::OGLRenderer::resourceDeviceCreate()
 {
     GN_GUARD;
 
     _GN_RENDER_DEVICE_TRACE();
 
-    std::list<D3DResource*>::iterator i, e = mResourceList.end();
+    std::list<OGLResource*>::iterator i, e = mResourceList.end();
     for( i = mResourceList.begin(); i != e; ++i )
     {
         if( !(*i)->deviceCreate() ) return false;
@@ -284,13 +272,13 @@ bool GN::gfx::D3DRenderer::resourceDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::resourceDeviceRestore()
+bool GN::gfx::OGLRenderer::resourceDeviceRestore()
 {
     GN_GUARD;
 
     _GN_RENDER_DEVICE_TRACE();
 
-    std::list<D3DResource*>::iterator i, e = mResourceList.end();
+    std::list<OGLResource*>::iterator i, e = mResourceList.end();
     for( i = mResourceList.begin(); i != e; ++i )
     {
         if( !(*i)->deviceRestore() ) return false;
@@ -305,14 +293,14 @@ bool GN::gfx::D3DRenderer::resourceDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::resourceDeviceDispose()
+void GN::gfx::OGLRenderer::resourceDeviceDispose()
 {
     GN_GUARD;
 
     _GN_RENDER_DEVICE_TRACE();
 
     std::for_each( mResourceList.rbegin(), mResourceList.rend(),
-        std::mem_fun(&D3DResource::deviceDispose) );
+        std::mem_fun(&OGLResource::deviceDispose) );
 
     GN_UNGUARD;
 }
@@ -320,14 +308,14 @@ void GN::gfx::D3DRenderer::resourceDeviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::resourceDeviceDestroy()
+void GN::gfx::OGLRenderer::resourceDeviceDestroy()
 {
     GN_GUARD;
 
     _GN_RENDER_DEVICE_TRACE();
 
     std::for_each( mResourceList.rbegin(), mResourceList.rend(),
-        std::mem_fun(&D3DResource::deviceDestroy) );
+        std::mem_fun(&OGLResource::deviceDestroy) );
 
     GN_UNGUARD;
 }

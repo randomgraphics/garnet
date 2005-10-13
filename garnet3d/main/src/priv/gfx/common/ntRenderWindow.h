@@ -20,7 +20,7 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        NTRenderWindow() : mWindow(0), mMonitor(0), mHook(0) {}
+        NTRenderWindow() : mWindow(0), mHook(0) {}
         ~NTRenderWindow() { quit(); }
         //@}
 
@@ -44,11 +44,6 @@ namespace GN { namespace gfx {
         //! Get window handle
         //!
         void * getWindow() const { return mWindow; }
-
-        //!
-        //! Get monitor handle
-        //!
-        void * getMonitor() const { return mMonitor; }
 
         //!
         //! Get client size
@@ -84,7 +79,6 @@ namespace GN { namespace gfx {
     private:
 
         HWND mWindow;
-        HMONITOR mMonitor;
         HHOOK mHook;
         bool mUseExternalWindow;
 
@@ -103,6 +97,36 @@ namespace GN { namespace gfx {
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );
 
+    };
+
+    //!
+    //! Window properties containor.
+    //!
+    class WinProp
+    {
+        HWND  mParent;
+        HMENU mMenu;
+        RECT  mBoundsRect;
+        DWORD mStyle;
+        DWORD mExStyle;
+        BOOL  mZoomed;
+
+    public:
+
+        //!
+        //! Ctor
+        //!
+        //WinProp() {}
+
+        //!
+        //! save window properties
+        //!
+        bool save( HWND hwnd );
+
+        //!
+        //! Restore previously stored properites
+        //!
+        void restore( HWND hwnd );
     };
 }}
 

@@ -57,9 +57,8 @@ GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
     // (re)initialize render window.
     if( !mWindow.init(ds) ) return false;
 
-    desc.monitorHandle = mWindow.getMonitor();
     desc.windowHandle = mWindow.getWindow();
-    GN_ASSERT( desc.monitorHandle && desc.windowHandle );
+    GN_ASSERT( desc.windowHandle );
 
     // get back buffer size
     if( ds.width && ds.height )

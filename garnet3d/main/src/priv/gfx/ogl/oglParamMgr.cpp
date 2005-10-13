@@ -1,22 +1,22 @@
 #include "pch.h"
-#include "d3dRenderer.h"
+#include "oglRenderer.h"
 
 //
 // matrix computation
 // -----------------------------------------------------------------------------
 GN::Matrix44f &
-GN::gfx::D3DRenderer::computePerspectiveMatrix(
+GN::gfx::OGLRenderer::computePerspectiveMatrix(
     Matrix44f & result,
     float fovy,
     float ratio,
     float znear,
     float zfar ) const
 {
-    return result.perspectiveD3D( fovy, ratio, znear, zfar );
+    return result.perspectiveOGL( fovy, ratio, znear, zfar );
 }
 //
 GN::Matrix44f &
-GN::gfx::D3DRenderer::computeOrthoMatrix(
+GN::gfx::OGLRenderer::computeOrthoMatrix(
     Matrix44f & result,
     float left,
     float bottom,
@@ -25,7 +25,7 @@ GN::gfx::D3DRenderer::computeOrthoMatrix(
     float znear,
     float zfar ) const
 {
-    return result.orthoD3D(
+    return result.orthoOGL(
         left,
         left+width,
         bottom,
