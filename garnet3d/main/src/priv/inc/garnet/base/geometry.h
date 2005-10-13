@@ -1825,63 +1825,63 @@ namespace GN
         //!     同的变换矩阵。 因此特别设置了两套分别适用于opengl和directx的计算
         //!     投影矩阵的函数。
         //!
-        Matrix44 & orthoOpenGLLh( ElementType left, ElementType right,
-                                  ElementType bottom, ElementType top,
-                                  ElementType znear, ElementType zfar );
+        Matrix44 & orthoOGLLh( ElementType left, ElementType right,
+                               ElementType bottom, ElementType top,
+                               ElementType znear, ElementType zfar );
 
         //!
         //! 求右手正交投影矩阵
         //!
-        //! \sa orthoOpenGLLh
+        //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoOpenGLRh( ElementType left, ElementType right,
-                                  ElementType bottom, ElementType top,
-                                  ElementType znear, ElementType zfar );
+        Matrix44 & orthoOGLRh( ElementType left, ElementType right,
+                               ElementType bottom, ElementType top,
+                               ElementType znear, ElementType zfar );
 
         //!
         //! 求正交投影矩阵
         //!
-        //! \sa orthoOpenGLLh
+        //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoOpenGL( ElementType left, ElementType right,
-                                ElementType bottom, ElementType top,
-                                ElementType znear, ElementType zfar )
+        Matrix44 & orthoOGL( ElementType left, ElementType right,
+                             ElementType bottom, ElementType top,
+                             ElementType znear, ElementType zfar )
         {
 #if GN_LEFT_HAND
-            return orthoOpenGLLh( left, right, bottom, top, znear, zfar );
+            return orthoOGLLh( left, right, bottom, top, znear, zfar );
 #else
-            return orthoOpenGLRh( left, right, bottom, top, znear, zfar );
+            return orthoOGLRh( left, right, bottom, top, znear, zfar );
 #endif
         }
         //!
         //! 求左手正交投影矩阵
         //!
-        //! \sa orthoOpenGLLh
+        //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoDirect3DLh( ElementType left, ElementType right,
-                                    ElementType bottom, ElementType top,
-                                    ElementType znear, ElementType zfar );
+        Matrix44 & orthoD3DLh( ElementType left, ElementType right,
+                               ElementType bottom, ElementType top,
+                               ElementType znear, ElementType zfar );
         //!
         //! 求右手正交投影矩阵
         //!
-        //! \sa orthoOpenGLLh
+        //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoDirect3DRh( ElementType left, ElementType right,
-                                    ElementType bottom, ElementType top,
-                                    ElementType znear, ElementType zfar );
+        Matrix44 & orthoD3DRh( ElementType left, ElementType right,
+                               ElementType bottom, ElementType top,
+                               ElementType znear, ElementType zfar );
         //!
         //! 求正交投影矩阵
         //!
-        //! \sa orthoOpenGLLh
+        //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoDirect3D( ElementType left, ElementType right,
-                                  ElementType bottom, ElementType top,
-                                  ElementType znear, ElementType zfar )
+        Matrix44 & orthoD3D( ElementType left, ElementType right,
+                             ElementType bottom, ElementType top,
+                             ElementType znear, ElementType zfar )
         {
 #if GN_LEFT_HAND
-            return orthoDirect3DLh( left, right, bottom, top, znear, zfar );
+            return orthoD3DLh( left, right, bottom, top, znear, zfar );
 #else
-            return orthoDirect3DRh( left, right, bottom, top, znear, zfar );
+            return orthoD3DRh( left, right, bottom, top, znear, zfar );
 #endif
         }
         //!
@@ -1893,55 +1893,55 @@ namespace GN
         //!
         //! \note fovy和ratio不能为0，znear不能等于zfar，否则会引起除0错误。
         //!
-        Matrix44 & perspectiveOpenGLLh( ElementType fovy, ElementType ratio,
-                                        ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveOGLLh( ElementType fovy, ElementType ratio,
+                                     ElementType znear, ElementType zfar );
         //!
         //! 求右手透视投影矩阵
         //!
-        //! \sa perspectiveOpenGLLh
+        //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveOpenGLRh( ElementType fovy, ElementType ratio,
-                                        ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveOGLRh( ElementType fovy, ElementType ratio,
+                                     ElementType znear, ElementType zfar );
         //!
         //! 求透视投影矩阵
         //!
-        //! \sa perspectiveOpenGLLh
+        //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveOpenGL( ElementType fovy, ElementType ratio,
-                                      ElementType znear, ElementType zfar )
+        Matrix44 & perspectiveOGL( ElementType fovy, ElementType ratio,
+                                   ElementType znear, ElementType zfar )
         {
 #if GN_LEFT_HAND
-            return perspectiveOpenGLLh( fovy, ratio, znear, zfar );
+            return perspectiveOGLLh( fovy, ratio, znear, zfar );
 #else
-            return perspectiveOpenGLRh( fovy, ratio, znear, zfar );
+            return perspectiveOGLRh( fovy, ratio, znear, zfar );
 #endif
         }
         //!
         //! 求左手透视投影矩阵
         //!
-        //! \sa perspectiveOpenGLLh
+        //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveDirect3DLh( ElementType fovy, ElementType ratio,
-                                          ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveD3DLh( ElementType fovy, ElementType ratio,
+                                     ElementType znear, ElementType zfar );
         //!
         //! 求右手透视投影矩阵
         //!
-        //! \sa perspectiveOpenGLLh
+        //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveDirect3DRh( ElementType fovy, ElementType ratio,
-                                          ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveD3DRh( ElementType fovy, ElementType ratio,
+                                     ElementType znear, ElementType zfar );
         //!
         //! 求透视投影矩阵
         //!
-        //! \sa perspectiveOpenGLLh
+        //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveDirect3D( ElementType fovy, ElementType ratio,
-                                        ElementType znear, ElementType zfar )
+        Matrix44 & perspectiveD3D( ElementType fovy, ElementType ratio,
+                                   ElementType znear, ElementType zfar )
         {
 #if GN_LEFT_HAND
-            return perspectiveDirect3DLh( fovy, ratio, znear, zfar );
+            return perspectiveD3DLh( fovy, ratio, znear, zfar );
 #else
-            return perspectiveDirect3DRh( fovy, ratio, znear, zfar );
+            return perspectiveD3DRh( fovy, ratio, znear, zfar );
 #endif
         }
         //!
