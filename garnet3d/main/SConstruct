@@ -30,7 +30,8 @@ default_configs = {
     'variant'           : getenv('GN_BUILD_VARIANT', 'debug'),
     'compiler'          : getenv('GN_BUILD_COMPILER', default_compiler), # default compiler
     'enable_cg'         : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
-    'enable_profile'    : getenv('GN_BUILD_ENABLE_PROFILE', 0) # disabled by default
+    'enable_profile'    : getenv('GN_BUILD_ENABLE_PROFILE', 0), # disabled by default
+    'run_unit_tests'    : getenv('GN_BUILD_RUN_UNIT_TESTS', 0), # Do not run unit tests after build by default.
     }
 
 # 是否强制生成配置信息
@@ -55,8 +56,11 @@ if not conf['variant'] in Split('debug release stdbg strel all'):
 # 是否支持Cg语言.
 conf['enable_cg']  = ARGUMENTS.get('cg', default_configs['enable_cg'] )
 
-# 是否启用profiler.`
+# 是否启用profiler.
 conf['enable_profile'] = ARGUMENTS.get('prof', default_configs['enable_profile'] )
+
+# 是否自动运行UnitTest.
+conf['run_unit_tests'] = ARGUMENTS.get('ut', default_configs['run_unit_tests'] )
 
 # 定义target dict
 targets = [{}, {}, {}, {}]
@@ -93,6 +97,10 @@ opts.Add(
     'prof',
     'Enable performance profiler. (GN_BUILD_ENABLE_PROFILE)',
     default_configs['enable_profile'] )
+opts.Add(
+    'ut',
+    'Run unit tests after build. (GN_BUILD_RUN_UNIT_TESTS)',
+    default_configs['run_unit_tests'] )
 
 env = Environment( options = opts )
 
