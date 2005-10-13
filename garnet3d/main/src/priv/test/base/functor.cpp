@@ -25,6 +25,8 @@ void foo2(int, int)
 
 struct aaa
 {
+    virtual ~aaa() {}
+
     void foo1(int a, int b)
     {
         g_funcName = "aaa::foo1()";
@@ -61,6 +63,8 @@ struct aaa
 
 struct bbb : public aaa, public GN::SlotBase
 {
+    virtual ~bbb() {}
+
     void foo( int, int ) const
     {
         g_funcName = "bbb::foo()";
@@ -213,7 +217,63 @@ public:
         TS_ASSERT_EQUALS( g_callSequence[1], "aaa::foo1() const" );
     }
 
-    void testSigslot()
+    void testSigslotToFreeFunction()
+    {
+        GN::Signal2<void,int,int> s;
+
+        s.connect( &foo1 );
+        TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
+        s.disconnect( &foo1 );
+        TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
+    }
+
+    void testSigslotToMethod()
+    {
+        aaa a;
+        GN::Signal2<void,int,int> s;
+
+        s.connect( &a, &aaa::foo1 );
+        TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
+        s.disconnect( &a );
+        TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
+    }
+
+    void testSigslotToSlotClass()
+    {
+        bbb b;
+        GN::Signal2<void,int,int> s;
+
+        s.connect( &b, &bbb::foo1 );
+        TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
+        s.disconnect( &b );
+        TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
+    }
+
+    void testSigslotAutoDisconnection1()
+    {
+        GN::Signal2<void,int,int> s;
+        {
+            bbb b;
+            s.connect( &b, &bbb::foo1 );
+            TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
+            TS_ASSERT_EQUALS( b.getNumSignals(), 1 );
+        }
+        TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
+    }
+
+    void testSigslotAutoDisconnection2()
+    {
+        bbb b;
+        {
+            GN::Signal2<void,int,int> s;
+            s.connect( &b, &bbb::foo1 );
+            TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
+            TS_ASSERT_EQUALS( b.getNumSignals(), 1 );
+        }
+        TS_ASSERT_EQUALS( b.getNumSignals(), 0 );
+    }
+
+    void testSigslotComplex()
     {
         aaa a;
         GN::Signal2<void,int,int> s1;
@@ -232,7 +292,7 @@ public:
         {
             bbb b;
 
-            s1.connect( &b, &bbb::foo );
+			s1.connect( &b, &bbb::foo );
             s1.connect( &b, &aaa::foo1 );
 
             TS_ASSERT_EQUALS( s1.getNumSlots(), 5 );
