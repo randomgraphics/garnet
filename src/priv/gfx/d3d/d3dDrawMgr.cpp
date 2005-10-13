@@ -33,6 +33,8 @@ bool GN::gfx::D3DRenderer::drawBegin()
 
     GN_ASSERT( !mDrawBegan );
 
+    // TODO: handle monitor switch.
+
     // check for device lost
     if( !handleDeviceLost() ) return false;
 

@@ -103,12 +103,12 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
         setCaps(CAPS_##name, sCapsInit_##name( d3dcaps ) );
-    #define GNGFX_D3DCAPS( name ) \
+    #define GND3D_CAPS( name ) \
         mD3DCaps[D3DCAPS_##name].set( sD3DCapsInit_##name( d3dcaps ) );
     #include "garnet/gfx/gfxCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GNGFX_D3DCAPS
+    #undef GND3D_CAPS
 
     // successful
     return true;
@@ -137,7 +137,7 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
                       " is modified by device reset" ); \
             return false; \
         }
-    #define GNGFX_D3DCAPS( name ) \
+    #define GND3D_CAPS( name ) \
         if( getD3DCaps(D3DCAPS_##name) != sD3DCapsInit_##name( d3dcaps ) ) \
         { \
             GND3D_ERROR( "D3DCAPS_" #name \
@@ -147,7 +147,7 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
     #include "garnet/gfx/gfxCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GNGFX_D3DCAPS
+    #undef GND3D_CAPS
 
     // output device info
     StrA devtype;

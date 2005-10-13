@@ -113,9 +113,9 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3dpp.BackBufferHeight           = dd.height;
         d3dpp.SwapEffect                 = D3DSWAPEFFECT_FLIP;
 
-        //// modify device window style
-        //GN_WIN_CHECK( SetMenu( (HWND)dd.windowHandle, 0 ) );
-        //SetWindowLong( (HWND)dd.windowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE );
+        // modify render window style
+        GN_WIN_CHECK( SetMenu( (HWND)dd.windowHandle, 0 ) );
+        SetWindowLong( (HWND)dd.windowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE );
     }
     else // windowed mode
     {
@@ -192,7 +192,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     UINT nAdapter = mD3D->GetAdapterCount();
     HWND window = (HWND)dd.windowHandle;
-    HMONITOR monitor = (HMONITOR)dd.monitorHandle;
+    HMONITOR monitor = ::MonitorFromWindow( window, MONITOR_DEFAULTTONEAREST );
     GN_ASSERT( nAdapter && window && monitor );
 
     std::vector<D3DDEVTYPE> devtypes;
