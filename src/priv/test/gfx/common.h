@@ -155,17 +155,17 @@ protected:
         TS_ASSERT(r);
         if( !r ) return;
         clearRed(*r);
-        GN::sleep( 500 );
+        //GN::sleep( 500 );
         clearBlue(*r);
-        GN::sleep( 500 );
+        //GN::sleep( 500 );
 
         ds.width = 1024;
         ds.height = 768;
         TS_ASSERT( r->changeDevice( ds ) );
         clearRed(*r);
-        GN::sleep( 500 );
+        //GN::sleep( 500 );
         clearBlue(*r);
-        GN::sleep( 500 );
+        //GN::sleep( 500 );
     }
 
     void defaultBackbufferSize()
@@ -188,8 +188,6 @@ protected:
         TS_ASSERT_EQUALS( dd.height, 480 );
 
         clearRed(*r);
-
-        GN::sleep(1000);
     }
 
     void multiRenderer()
