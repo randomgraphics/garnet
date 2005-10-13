@@ -565,8 +565,8 @@ namespace GN
     template < typename T >
     Matrix44<T> &
     Matrix44<T>::lookAtRh( const Vector3<T> & eye,
-                               const Vector3<T> & to,
-                               const Vector3<T> & up )
+                           const Vector3<T> & to,
+                           const Vector3<T> & up )
     {
         Vector3<T> F = to - eye;
         F.normalize();
@@ -609,9 +609,9 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoOpenGLLh( ElementType left, ElementType right,
-                                ElementType bottom, ElementType top,
-                                ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoOGLLh( ElementType left, ElementType right,
+                             ElementType bottom, ElementType top,
+                             ElementType znear, ElementType zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
@@ -636,9 +636,9 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoOpenGLRh( ElementType left, ElementType right,
-                                ElementType bottom, ElementType top,
-                                ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoOGLRh( ElementType left, ElementType right,
+                             ElementType bottom, ElementType top,
+                             ElementType znear, ElementType zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
@@ -663,9 +663,9 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoDirect3DLh( ElementType left, ElementType right,
-                                  ElementType bottom, ElementType top,
-                                  ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoD3DLh( ElementType left, ElementType right,
+                             ElementType bottom, ElementType top,
+                             ElementType znear, ElementType zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
@@ -690,9 +690,9 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoDirect3DRh( ElementType left, ElementType right,
-                                  ElementType bottom, ElementType top,
-                                  ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoD3DRh( ElementType left, ElementType right,
+                             ElementType bottom, ElementType top,
+                             ElementType znear, ElementType zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
@@ -717,8 +717,8 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveOpenGLLh( ElementType fovy, ElementType ratio,
-                                      ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveOGLLh( ElementType fovy, ElementType ratio,
+                                   ElementType znear, ElementType zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
@@ -742,8 +742,8 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveOpenGLRh( ElementType fovy, ElementType ratio,
-                                      ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveOGLRh( ElementType fovy, ElementType ratio,
+                                   ElementType znear, ElementType zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
@@ -767,8 +767,8 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveDirect3DLh( ElementType fovy, ElementType ratio,
-                                        ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveD3DLh( ElementType fovy, ElementType ratio,
+                                   ElementType znear, ElementType zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
@@ -792,8 +792,8 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveDirect3DRh( ElementType fovy, ElementType ratio,
-                                        ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveD3DRh( ElementType fovy, ElementType ratio,
+                                   ElementType znear, ElementType zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
