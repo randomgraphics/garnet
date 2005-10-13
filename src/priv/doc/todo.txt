@@ -7,6 +7,8 @@ TODO
 - Refine GFX:
   - move window property save/restore code to a centrol place,
     such as in changeDevice().
+- Looks like OGL extension string has '\0' in it.
+- Startup of GFXOGL module sometimes very slow.
 
 DONE
 ====
