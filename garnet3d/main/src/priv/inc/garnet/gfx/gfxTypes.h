@@ -23,7 +23,7 @@ namespace GN { namespace gfx
             //!
             //! Handle of external render window.
             //!
-            //! \notes Effective only if useExternalWindow is true.
+            //! \note Effective only if useExternalWindow is true.
             //!
             void * renderWindow;
 
@@ -32,7 +32,7 @@ namespace GN { namespace gfx
                 //!
                 //! Handle of parent window. Can be NULL.
                 //!
-                //! \notes Effective only if useExternalWindow is false.
+                //! \note Effective only if useExternalWindow is false.
                 //!
                 void * parentWindow;
 
@@ -41,7 +41,7 @@ namespace GN { namespace gfx
                 //! If monitorHandle and parent window are both zero, default(primary)
                 //! monitor will be chosen.
                 //!
-                //! \notes Effective only if useExternalWindow is false.
+                //! \note Effective only if useExternalWindow is false.
                 //!
                 void * monitorHandle;
             };

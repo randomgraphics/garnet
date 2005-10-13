@@ -180,8 +180,16 @@ namespace GN
     //!
     struct ScopeBool
     {
-        bool & mValue;
+        bool & mValue; //!< Reference to the boolean variable.
+
+        //!
+        //! Ctor
+        //!
         ScopeBool( bool & v ) : mValue(v) { mValue = true; }
+
+        //!
+        //! Dtor
+        //!
         ~ScopeBool() { mValue = false; }
     };
 
