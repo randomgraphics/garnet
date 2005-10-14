@@ -9,11 +9,10 @@ TODO
     such as in changeDevice().
 - Looks like OGL extension string has '\0' in it:
   - only happens on msra-chenli-x64
-- Startup of GFXOGL module sometimes very slow.
-  - only happens on msra-chenli-x64
+- Startup of GFXOGL module sometimes very slow:
+  - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
 - Run UT for both GFXD3D and GFXOGL will throw exception.
-  - Seems caused by memory leak in UT of base module: plugin.cpp, resmgr.cpp
-  - happens on home pc.
+  - happens on home-pc, msra-chenli and msra-chenli-x64 (all are NVidia cards)
 
 DONE
 ====
