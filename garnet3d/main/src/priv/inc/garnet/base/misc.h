@@ -164,7 +164,7 @@ namespace GN
     //!
     void processWindowMessages( bool * quit = NULL );
 
-#if GN_WINNT
+#if GN_WINNT && !GN_XENON
     //!
     //! Convert Windows message ID to string.
     //!
