@@ -17,7 +17,7 @@ public:
             #undef GN_VTXSEM
         };
 
-        StrA s;
+        GN::StrA s;
         GN::VtxSem t = GN::VTXSEM_INVALID;
 
         for( int i = 0; i < GN::NUM_VTXSEMS; ++i )
@@ -54,7 +54,7 @@ public:
             #undef GN_DEFINE_RS
         };
 
-        StrA s;
+        GN::StrA s;
         GN::RenderState t = GN::RS_INVALID;
 
         for( int i = 0; i < GN::NUM_RENDER_STATES; ++i )
@@ -91,7 +91,7 @@ public:
             #undef GN_DEFINE_RSV
         };
 
-        StrA s;
+        GN::StrA s;
         GN::RenderStateValue t = GN::RSV_INVALID;
 
         for( int i = 0; i < GN::NUM_RENDER_STATE_VALUES; ++i )
@@ -128,7 +128,7 @@ public:
             #undef GN_DEFINE_TS
         };
 
-        StrA s;
+        GN::StrA s;
         GN::TextureState t = GN::TS_INVALID;
 
         for( int i = 0; i < GN::NUM_TEXTURE_STATES; ++i )
@@ -165,7 +165,7 @@ public:
             #undef GN_DEFINE_TSV
         };
 
-        StrA s;
+        GN::StrA s;
         GN::TextureStateValue t = GN::TSV_INVALID;
 
         for( int i = 0; i < GN::NUM_TEXTURE_STATE_VALUES; ++i )
@@ -191,7 +191,7 @@ public:
 
     void testShaderType()
     {
-        StrA str;
+        GN::StrA str;
         GN::gfx::ShaderType type = GN::gfx::NUM_SHADER_TYPES;
 
         TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::PIXEL_SHADER ) );
@@ -214,7 +214,7 @@ public:
 
     void testShadingLanguage()
     {
-        StrA str;
+        GN::StrA str;
         GN::gfx::ShadingLanguage lang = GN::gfx::NUM_SHADING_LANGUAGES;
 
         static struct LangItem
@@ -261,7 +261,7 @@ public:
             "CUBE",
         };
 
-        StrA             s;
+        GN::StrA         s;
         GN::gfx::TexType t = GN::gfx::NUM_TEXTYPES;
 
         for( int i = 0; i < 4; ++i )
@@ -300,7 +300,7 @@ public:
             "L_MIP_L",
         };
 
-        StrA               s;
+        GN::StrA           s;
         GN::gfx::TexFilter t = GN::gfx::NUM_TEXFILTERS;
 
         for( int i = 0; i < 6; ++i )
@@ -333,7 +333,7 @@ public:
             "CLAMP_TO_EDGE",
         };
 
-        StrA             s;
+        GN::StrA         s;
         GN::gfx::TexWrap t = GN::gfx::NUM_TEXWRAPS;
 
         for( int i = 0; i < 3; ++i )
