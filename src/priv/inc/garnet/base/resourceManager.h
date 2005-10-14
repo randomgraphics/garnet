@@ -110,14 +110,8 @@ namespace GN
         //!
         void setNullor( const Creator & n )
         {
+            deleteNullInstance();
             mNullor = n;
-            // delete old null resource instance
-            if( mNullInstance )
-            {
-                if( mNullDeletor ) mNullDeletor( *mNullInstance );
-                mNullInstance = 0;
-                mNullDeletor.clear();
-            }
         }
 
         //!
@@ -177,12 +171,7 @@ namespace GN
                 doDispose( mResHandles.get(h) );
                 h = mResHandles.next( h );
             }
-            if( mNullInstance )
-            {
-                if( mNullDeletor ) mNullDeletor( *mNullInstance );
-                mNullInstance = 0;
-                mNullDeletor.clear();
-            }
+            deleteNullInstance();
             GN_UNGUARD;
         }
 
@@ -468,6 +457,21 @@ namespace GN
                 if( mDeletor ) mDeletor( item->res );
                 item->disposed = true;
             }
+        }
+
+        void deleteNullInstance()
+        {
+            if( mNullInstance )
+            {
+                if( mNullDeletor )
+                {
+                    mNullDeletor( *mNullInstance );
+                    mNullDeletor.clear();
+                }
+                delete mNullInstance;
+                mNullInstance = 0;
+            }
+            GN_ASSERT( !mNullDeletor && !mNullInstance );
         }
 
         static inline bool defaultNullor( RES & result, const StrA & )
