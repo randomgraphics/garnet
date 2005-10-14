@@ -304,8 +304,9 @@ namespace GN
             }
             else
             {
-                CHAR buf[4096];  // should be enough in most cases
-                strPrintf( buf, 4096, fmt, args );
+                CHAR buf[16384];  // 16k should be enough in most cases
+                strPrintf( buf, 16384, fmt, args );
+                buf[16383] = 0;
                 assign( buf );
             }
             return mPtr;

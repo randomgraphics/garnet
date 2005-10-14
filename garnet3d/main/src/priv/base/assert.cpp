@@ -109,6 +109,7 @@ GN::getOSErrorInfo() throw()
         info,
         4096,
         NULL );
+    info[4095] = 0;
 
     // 除去信息末尾多余的回车符
     size_t n = strLen(info);
