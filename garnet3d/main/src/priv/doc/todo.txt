@@ -12,7 +12,7 @@ TODO
 - Startup of GFXOGL module sometimes very slow.
   - only happens on msra-chenli-x64
 - Run UT for both GFXD3D and GFXOGL will throw exception.
-  - Seems caused by memory leak in UT of base module
+  - Seems caused by memory leak in UT of base module: plugin.cpp, resmgr.cpp
   - happens on home pc.
 
 DONE
