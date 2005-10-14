@@ -4,12 +4,10 @@
 #include <boost/bind.hpp>
 #endif
 
-using namespace GN;
-
-std::vector<StrA>   g_callSequence;
-StrA                g_funcName;
-int                 g_int1 = 0;
-int                 g_int2 = 0;
+std::vector<GN::StrA>   g_callSequence;
+GN::StrA                g_funcName;
+int                     g_int1 = 0;
+int                     g_int2 = 0;
 
 void foo1(int, int)
 {
