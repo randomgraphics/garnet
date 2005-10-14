@@ -106,6 +106,8 @@ public:
         GN::PluginManager & mgr = GN::PluginManager::getInstance();
         mgr.reset();
 
+        GN::AutoObjPtr<MyPlugin> p;
+
         TS_ASSERT( mgr.registerPluginType( "a", "aa" ) );
 
         // can't override existing plugin type
@@ -116,15 +118,19 @@ public:
         // can't override existing plugin by default
         TS_ASSERT( !mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance ) );
 
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "a", "p" ) ), 1 );
+        p.reset( mgr.createInstance<MyPlugin>( "a", "p" ) );
+        TS_ASSERT_EQUALS( whoAreYou( p.get() ), 1 );
 
         // force override existing plugin
         TS_ASSERT( mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance, true ) );
 
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "a", "p" ) ), 2 );
+        p.reset( mgr.createInstance<MyPlugin>( "a", "p" ) );
+        TS_ASSERT_EQUALS( whoAreYou( p.get() ), 2 );
 
         // create instance of invalid plugin
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "A", "p" ) ), -1 );
-        TS_ASSERT_EQUALS( whoAreYou( mgr.createInstance<MyPlugin>( "a", "P" ) ), -1 );
+        p.reset( mgr.createInstance<MyPlugin>( "A", "p" ) );
+        TS_ASSERT_EQUALS( whoAreYou( p.get() ), -1 );
+        p.reset( mgr.createInstance<MyPlugin>( "a", "P" ) );
+        TS_ASSERT_EQUALS( whoAreYou( p.get() ), -1 );
     }
 };
