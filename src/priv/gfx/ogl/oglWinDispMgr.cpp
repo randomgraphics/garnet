@@ -21,6 +21,7 @@ static int sChoosePixelFormat( HDC hdc )
     // flags that can not exist
     DWORD xxx_flags = PFD_NEED_PALETTE; // we're aiming for a RGB device
 
+    GNOGL_INFO( "Enumerating pixelformats..." );
     int num = DescribePixelFormat(hdc, 1, 0, 0);
     GNOGL_INFO( "%d pixelformats in total.", num );
 
