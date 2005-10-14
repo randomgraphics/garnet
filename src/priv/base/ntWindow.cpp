@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if GN_WINNT
+#if GN_WINNT && !GN_XENON
 
 // *****************************************************************************
 // Implementation of GN::Window::Impl
@@ -215,4 +215,4 @@ size_t GN::Window::ntWinProc( void * hwnd, unsigned int msg, size_t wp, size_t l
     GN_UNGUARD;
 }
 
-#endif // GN_WINNT
+#endif // GN_WINNT && !GN_XENON

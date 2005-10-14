@@ -37,11 +37,11 @@ void GN::sleep( uint32_t microSeconds )
 // -----------------------------------------------------------------------------
 void GN::processWindowMessages( bool * quit )
 {
-#if GN_WINNT
+#if GN_WINNT && !GN_XENON
 
     GN_GUARD;
 
-    if( *quit ) *quit = false;
+    if( quit ) *quit = false;
 
     MSG msg;
     while( true )
@@ -65,10 +65,14 @@ void GN::processWindowMessages( bool * quit )
 
     GN_UNGUARD;
 
+#else
+
+    if( quit ) *quit = false;
+
 #endif
 }
 
-#if GN_WINNT
+#if GN_WINNT && !GN_XENON
 //
 //
 // -----------------------------------------------------------------------------
