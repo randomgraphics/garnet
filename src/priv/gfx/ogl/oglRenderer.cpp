@@ -23,11 +23,13 @@ namespace GN { namespace gfx {
     }
 }}
 
+#if !GN_STATIC
 extern "C" GN_EXPORT GN::gfx::Renderer *
 GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
 {
     return GN::gfx::createOGLRenderer(ds);
 }
+#endif
 
 // *****************************************************************************
 // init/quit functions
