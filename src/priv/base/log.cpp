@@ -154,13 +154,14 @@ void GN::detail::defaultLogImpl(
 
         // output to debugger
         #if GN_WINNT
-        char buf[4096];
-        _snprintf( buf, 4096,
+        char buf[16384];
+        _snprintf( buf, 16384,
             "%s(%d) : %s : %s\n",
             file?file:"UNKNOWN_FILE",
             line,
             levelStr(level).cstr(),
             msg );
+        buf[16383] = 0;
         ::OutputDebugStringA( buf );
         #endif
     }
