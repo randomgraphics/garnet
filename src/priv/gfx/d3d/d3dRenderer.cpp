@@ -120,7 +120,7 @@ bool GN::gfx::D3DRenderer::changeDevice(
         : 0;
 
     // setup new display descriptor
-    if( !setupDispDesc( ds ) ) return false;
+    if( !setupDispDesc( ds, "D3D" ) ) return false;
     const DispDesc & newDesc = getDispDesc();
     HMONITOR newMonitor = ::MonitorFromWindow( (HWND)newDesc.windowHandle, MONITOR_DEFAULTTONEAREST );
 

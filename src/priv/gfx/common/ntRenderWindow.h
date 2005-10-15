@@ -33,7 +33,7 @@ namespace GN { namespace gfx {
         //!
         //! initialize or reinitialize the render window based on current device setting.
         //!
-        bool init( const DeviceSettings & );
+        bool init( const DeviceSettings &, const char * api );
 
         //!
         //! Delete render window
@@ -92,7 +92,7 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
-        bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen );
+        bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen, const char * api );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );

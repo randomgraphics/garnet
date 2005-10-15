@@ -11,8 +11,6 @@ TODO
   - only happens on msra-chenli-x64
 - Startup of GFXOGL module sometimes very slow:
   - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
-- Run UT for both GFXD3D and GFXOGL will throw exception.
-  - happens on home-pc, msra-chenli and msra-chenli-x64 (all are NVidia cards)
 
 DONE
 ====
@@ -23,3 +21,5 @@ DONE
     - getClientSize();
   - remove platform specific code from display manager.
   - UT for GFX module: using external render window
+- Run UT for both GFXD3D and GFXOGL will throw exception.
+  - FIXED: should use different render window class for GNgfxD3D and GNgfxOGL module.
