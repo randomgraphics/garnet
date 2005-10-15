@@ -35,7 +35,7 @@ std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
+bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds, const char * api )
 {
     GN_GUARD;
 
@@ -61,7 +61,7 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
 
         mWindow = (HWND)ds.renderWindow;
 
-        // register a message hook to rende window.
+        // register a message hook to render window.
         mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
         if( 0 == mHook )
         {
@@ -119,7 +119,7 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
             h = ds.height;
         }
         GN_ASSERT( w > 0 && h > 0 );
-        if( !createWindow( (HWND)ds.parentWindow, w, h, ds.fullscreen ) ) return false;
+        if( !createWindow( (HWND)ds.parentWindow, w, h, ds.fullscreen, api ) ) return false;
     }
     GN_ASSERT( mWindow );
     mUseExternalWindow = ds.useExternalWindow;
@@ -186,21 +186,31 @@ bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen )
+GN::gfx::NTRenderWindow::createWindow(
+    HWND parent, uint32_t width, uint32_t height, bool fullscreen, const char * api )
 {
     GN_GUARD;
 
     // check parent
     if( 0 != parent && !::IsWindow(parent) ) parent = 0;
 
-    static const char * sClassName = "GNgfxWindowClass";
+    // check api
+    if( strEmpty(api) )
+    {
+        GNGFX_ERROR( "Parameter 'api' can't be empty!" );
+        return false;
+    }
 
-    HINSTANCE moduleHandle = (HINSTANCE)::GetModuleHandle(0);
+    // compose windows class name.
+    StrA className;
+    className.format( "GNgfx%sWindowClass", api );
+
+    HINSTANCE moduleInstance = (HINSTANCE)GetModuleHandleA(0);
 
     WNDCLASSEXA wcex;
 
     // find the window class
-    if( !::GetClassInfoEx( moduleHandle, sClassName, &wcex ) )
+    if( !::GetClassInfoEx( moduleInstance, className.cstr(), &wcex ) )
     {
         // register window class
         wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -208,12 +218,12 @@ GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t hei
         wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
         wcex.cbClsExtra     = 0;
         wcex.cbWndExtra     = 0;
-        wcex.hInstance      = moduleHandle;
+        wcex.hInstance      = moduleInstance;
         wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
         wcex.hCursor        = LoadCursor (0,IDC_ARROW);
         wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
         wcex.lpszMenuName   = 0;
-        wcex.lpszClassName  = sClassName;
+        wcex.lpszClassName  = className.cstr();
         wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
         if( 0 == ::RegisterClassExA(&wcex) )
         {
@@ -234,14 +244,14 @@ GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t hei
     // create window
     mWindow = ::CreateWindowExA(
         exStyle,
-        sClassName,
+        className.cstr(),
         "", // no title
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         rc.right - rc.left, rc.bottom - rc.top,
         parent,
         0, // no menu
-        moduleHandle,
+        moduleInstance,
         0 );
     if( 0 == mWindow )
     {
