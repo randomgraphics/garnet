@@ -386,6 +386,9 @@ bool GN::d3d::D3D::createWindow()
 #if GN_XENON
 	mWindow = 0;
 #else
+
+    HINSTANCE moduleHandle = (HINSTANCE)GetModuleHandle(0);
+
     // register window class
     WNDCLASSEXA wcex;
     wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -393,7 +396,7 @@ bool GN::d3d::D3D::createWindow()
     wcex.lpfnWndProc    = (WNDPROC)&staticProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
-    wcex.hInstance      = (HINSTANCE)GetModuleHandle(0);
+    wcex.hInstance      = moduleHandle;
     wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
@@ -420,7 +423,7 @@ bool GN::d3d::D3D::createWindow()
         rc.right - rc.left, rc.bottom - rc.top,
         0, // no parent
         0, // no menu
-        (HINSTANCE)GetModuleHandle(0), NULL );
+        moduleHandle, NULL );
     if( 0 == mWindow )
     {
         GND3D_ERROR( "fail to create window, %s!", getOSErrorInfo() );
