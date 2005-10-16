@@ -22,4 +22,4 @@ DONE
   - remove platform specific code from display manager.
   - UT for GFX module: using external render window
 - Run UT for both GFXD3D and GFXOGL will throw exception.
-  - FIXED: should use different render window class for GNgfxD3D and GNgfxOGL module.
+  - FIXED: should use different render window class for each instance of NTRenderWindow.

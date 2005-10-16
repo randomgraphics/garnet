@@ -3,6 +3,10 @@
 
 #if GN_WINNT
 
+static HINSTANCE sDllHandle = 0;
+unsigned int GN::gfx::NTRenderWindow::msInstanceID = 0;
+std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
+
 //!
 //! get current display width and height
 // ----------------------------------------------------------------------------
@@ -26,7 +30,29 @@ sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
     GN_UNGUARD;
 }
 
-std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
+//!
+//! Main DLL entry point
+// ----------------------------------------------------------------------------
+BOOL WINAPI
+DllMain(
+  HANDLE hinstDLL, 
+  DWORD dwReason, 
+  LPVOID /*lpvReserved*/ )
+{
+    //GN_INFO( "DLL handle: 0x%X", hinstDLL );
+    if( DLL_PROCESS_ATTACH == dwReason )
+    {
+        //GN_INFO( "DLL_PROCESS_ATTACH");
+        sDllHandle = (HINSTANCE)hinstDLL;
+    }
+    else if( DLL_PROCESS_DETACH == dwReason )
+    {
+        //GN_INFO( "DLL_PROCESS_DETACH");
+        sDllHandle = 0;
+    }
+
+    return TRUE;
+}
 
 // *****************************************************************************
 // public functions
@@ -35,7 +61,7 @@ std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds, const char * api )
+bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
 {
     GN_GUARD;
 
@@ -119,7 +145,7 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds, const char * api 
             h = ds.height;
         }
         GN_ASSERT( w > 0 && h > 0 );
-        if( !createWindow( (HWND)ds.parentWindow, w, h, ds.fullscreen, api ) ) return false;
+        if( !createWindow( (HWND)ds.parentWindow, w, h, ds.fullscreen ) ) return false;
     }
     GN_ASSERT( mWindow );
     mUseExternalWindow = ds.useExternalWindow;
@@ -155,6 +181,13 @@ void GN::gfx::NTRenderWindow::quit()
         mWindow = 0;
     }
 
+    // unregister window class
+    if( !mClassName.empty() )
+    {
+        GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), sDllHandle ) );
+        mClassName.clear();
+    }
+
     GN_UNGUARD;
 }
 
@@ -187,49 +220,41 @@ bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height
 // -----------------------------------------------------------------------------
 bool
 GN::gfx::NTRenderWindow::createWindow(
-    HWND parent, uint32_t width, uint32_t height, bool fullscreen, const char * api )
+    HWND parent, uint32_t width, uint32_t height, bool fullscreen )
 {
     GN_GUARD;
 
     // check parent
     if( 0 != parent && !::IsWindow(parent) ) parent = 0;
 
-    // check api
-    if( strEmpty(api) )
-    {
-        GNGFX_ERROR( "Parameter 'api' can't be empty!" );
-        return false;
-    }
+    // compose windows class na1me.
+#if !GN_STATIC
+    GN_ASSERT( 0 != sDllHandle );
+#endif
+    mClassName.format( "GNgfxWindowClass_0x%X_%03d", sDllHandle, msInstanceID );
 
-    // compose windows class name.
-    StrA className;
-    className.format( "GNgfx%sWindowClass", api );
-
-    HINSTANCE moduleInstance = (HINSTANCE)GetModuleHandleA(0);
+    HINSTANCE moduleInstance = sDllHandle;
 
     WNDCLASSEXA wcex;
 
     // find the window class
-    if( !::GetClassInfoEx( moduleInstance, className.cstr(), &wcex ) )
+    // register window class
+    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.style          = 0;//CS_NOCLOSE;
+    wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
+    wcex.cbClsExtra     = 0;
+    wcex.cbWndExtra     = 0;
+    wcex.hInstance      = moduleInstance;
+    wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
+    wcex.hCursor        = LoadCursor (0,IDC_ARROW);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszMenuName   = 0;
+    wcex.lpszClassName  = mClassName.cstr();
+    wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
+    if( 0 == ::RegisterClassExA(&wcex) )
     {
-        // register window class
-        wcex.cbSize         = sizeof(WNDCLASSEX);
-        wcex.style          = 0;//CS_NOCLOSE;
-        wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
-        wcex.cbClsExtra     = 0;
-        wcex.cbWndExtra     = 0;
-        wcex.hInstance      = moduleInstance;
-        wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
-        wcex.hCursor        = LoadCursor (0,IDC_ARROW);
-        wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-        wcex.lpszMenuName   = 0;
-        wcex.lpszClassName  = className.cstr();
-        wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-        if( 0 == ::RegisterClassExA(&wcex) )
-        {
-            GNGFX_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
-            return false;
-        }
+        GNGFX_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
+        return false;
     }
 
     // setup window style
@@ -244,7 +269,7 @@ GN::gfx::NTRenderWindow::createWindow(
     // create window
     mWindow = ::CreateWindowExA(
         exStyle,
-        className.cstr(),
+        mClassName.cstr(),
         "", // no title
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,

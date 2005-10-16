@@ -48,14 +48,14 @@ sGetCurrentDisplayDepth( void * window )
 //
 // ----------------------------------------------------------------------------
 bool
-GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds, const char * api )
+GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
 {
     GN_GUARD;
 
     DispDesc desc;
 
     // (re)initialize render window.
-    if( !mWindow.init(ds,api) ) return false;
+    if( !mWindow.init(ds) ) return false;
 
     desc.windowHandle = mWindow.getWindow();
     GN_ASSERT( desc.windowHandle );
