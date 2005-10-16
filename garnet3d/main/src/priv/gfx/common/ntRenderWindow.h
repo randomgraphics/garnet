@@ -20,7 +20,7 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        NTRenderWindow() : mWindow(0), mHook(0) {}
+        NTRenderWindow() : mWindow(0), mHook(0) { ++msInstanceID; }
         ~NTRenderWindow() { quit(); }
         //@}
 
@@ -33,7 +33,7 @@ namespace GN { namespace gfx {
         //!
         //! initialize or reinitialize the render window based on current device setting.
         //!
-        bool init( const DeviceSettings &, const char * api );
+        bool init( const DeviceSettings & );
 
         //!
         //! Delete render window
@@ -78,6 +78,7 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
+        StrA mClassName;
         HWND mWindow;
         HHOOK mHook;
         bool mUseExternalWindow;
@@ -85,6 +86,7 @@ namespace GN { namespace gfx {
         bool mInsideSizeMove;
         bool mSizeChanged;
 
+        static unsigned int msInstanceID;
         static std::map<void*,NTRenderWindow*> msInstanceMap;
 
         // ********************************
@@ -92,7 +94,7 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
-        bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen, const char * api );
+        bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );
