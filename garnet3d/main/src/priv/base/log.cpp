@@ -11,21 +11,22 @@ GN::detail::LogHelper::log( const char * fmt, ... )
     va_start( arglist, fmt );
     s.format( fmt, arglist );
     va_end( arglist );
-    GN::doLog( mLevel, mCate, s.cstr(), mFunc, mFile, mLine );
+    GN::doLog( mDesc, s.cstr() );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 void
-GN::detail::LogHelper::logc( const char * category, const char * fmt, ... )
+GN::detail::LogHelper::logc( const char * cate, const char * fmt, ... )
 {
     StrA s;
     va_list arglist;
     va_start( arglist, fmt );
     s.format( fmt, arglist );
     va_end( arglist );
-    GN::doLog( mLevel, category, s.cstr(), mFunc, mFile, mLine );
+    mDesc.cate = cate ? cate : "";
+    GN::doLog( mDesc, s.cstr() );
 }
 
 //
@@ -33,14 +34,16 @@ GN::detail::LogHelper::logc( const char * category, const char * fmt, ... )
 // -----------------------------------------------------------------------------
 void
 GN::detail::LogHelper::loglc(
-    LogLevel level, const char * category, const char * fmt, ... )
+    LogLevel level, const char * cate, const char * fmt, ... )
 {
     StrA s;
     va_list arglist;
     va_start( arglist, fmt );
     s.format( fmt, arglist );
     va_end( arglist );
-    GN::doLog( level, category, s.cstr(), mFunc, mFile, mLine );
+    mDesc.level = level;
+    mDesc.cate = cate ? cate : "";
+    GN::doLog( mDesc, s.cstr() );
 }
 
 //
@@ -121,21 +124,16 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-void GN::detail::defaultLogImpl(
-    LogLevel     level,
-    const char * /*category*/,
-    const char * msg,
-    const char * /*func*/,
-    const char * file,
-    int          line )
+void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 {
-    using namespace ::GN;
-
     if( 0 == msg || 0 == msg[0] ) return;
 
-    ConsoleColor cc(level);
+    const char * cate = desc.cate ? desc.cate : "";
+    const char * file = desc.file ? desc.file : "UNKNOWN FILE";
 
-    if( LOGLEVEL_INFO == level )
+    ConsoleColor cc(desc.level);
+
+    if( LOGLEVEL_INFO == desc.level )
     {
         ::fprintf( stdout, "%s\n", msg );
     }
@@ -144,25 +142,23 @@ void GN::detail::defaultLogImpl(
 #if !GN_XENON // Xenon has no console output
         // output to console
         ::fprintf(
-            level > GN::LOGLEVEL_INFO ? stdout : stderr,
-            "%s(%d) : %s : %s\n",
-            file?file:"UNKNOWN_FILE",
-            line,
-            levelStr(level).cstr(),
+            desc.level > GN::LOGLEVEL_INFO ? stdout : stderr,
+            "%s(%d) : %s : %s : %s\n",
+            file, desc.line,
+            cate, levelStr(desc.level).cstr(),
             msg );
 #endif
 
         // output to debugger
-        #if GN_WINNT
+#if GN_WINNT
         char buf[16384];
         _snprintf( buf, 16384,
             "%s(%d) : %s : %s\n",
-            file?file:"UNKNOWN_FILE",
-            line,
-            levelStr(level).cstr(),
+            file, desc.line,
+            cate, levelStr(desc.level).cstr(),
             msg );
         buf[16383] = 0;
         ::OutputDebugStringA( buf );
-        #endif
+#endif
     }
 }
