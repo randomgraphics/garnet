@@ -9,28 +9,28 @@
 //!
 //! output fatal error message
 //!
-#define GN_FATAL  ::GN::detail::LogHelper( __FILE__, __LINE__, GN::LOGLEVEL_FATAL, NULL ).log
+#define GN_FATAL  ::GN::detail::LogHelper( GN::LOGLEVEL_FATAL, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 
 //!
 //! output error message
 //!
-#define GN_ERROR  ::GN::detail::LogHelper( GN_FUNCTION, __FILE__, __LINE__, GN::LOGLEVEL_ERROR, NULL ).log
+#define GN_ERROR  ::GN::detail::LogHelper( GN::LOGLEVEL_ERROR, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 
 //!
 //! output warning message
 //!
-#define GN_WARN  ::GN::detail::LogHelper( GN_FUNCTION, __FILE__, __LINE__, GN::LOGLEVEL_WARN, NULL ).log
+#define GN_WARN  ::GN::detail::LogHelper( GN::LOGLEVEL_WARN, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 
 //!
 //! output informational message
 //!
-#define GN_INFO  ::GN::detail::LogHelper( GN_FUNCTION, __FILE__, __LINE__, GN::LOGLEVEL_INFO, NULL ).log
+#define GN_INFO  ::GN::detail::LogHelper( GN::LOGLEVEL_INFO, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 
 //!
 //! output trace message
 //!
 #if GN_DEBUG
-#define GN_TRACE  ::GN::detail::LogHelper( GN_FUNCTION, __FILE__, __LINE__, GN::LOGLEVEL_TRACE, NULL ).log
+#define GN_TRACE  ::GN::detail::LogHelper( GN::LOGLEVEL_TRACE, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 #else
 #define GN_TRACE  ::GN::detail::LogHelper::fake
 #endif
@@ -39,10 +39,8 @@
 //! Implement default log
 //!
 #define GN_IMPLEMENT_DEFAULT_LOG() \
-    GN_PUBLIC void ::GN::doLog( \
-        GN::LogLevel level, const char * category, const char * msg, \
-        const char * func, const char * file, int line ) \
-    { ::GN::detail::defaultLogImpl(level,category,msg,func,file,line); }
+    GN_PUBLIC void ::GN::doLog( const LogDesc & desc, const char * msg ) \
+    { ::GN::detail::defaultLogImpl(desc,msg); }
 
 namespace GN
 {
@@ -60,29 +58,48 @@ namespace GN
     };
 
     //!
+    //! Log description structure
+    //!
+    struct LogDesc
+    {
+        LogLevel     level; //!< Log level/severity (required)
+        const char * cate;  //!< Log category (optional). Set to NULL if you don't need it.
+        const char * func;  //!< Log location: function name (optional). Set to NULL if you don't need it.
+        const char * file;  //!< Log location: file name (optional). Set to NULL if you don't need it.
+        int          line;  //!< Log location: line number (optional). Set to NULL if you don't need it.
+
+        //!
+        //! Default constructor. Do nothing.
+        //!
+        LogDesc() {}
+
+        //!
+        //! Construct log descriptor
+        //!
+        LogDesc(
+            LogLevel     lvl_,
+            const char * cate_,
+            const char * func_,
+            const char * file_,
+            int          line_ )
+            : level(lvl_)
+            , cate(cate_)
+            , func(func_)
+            , file(file_)
+            , line(line_)
+        {}
+    };
+
+    //!
     //! log function (general version)
     //!
-    //! \param level
-    //!     log level.
-    //! \param category
-    //!     log category.
-    //! \param msg
-    //!     log message.
-    //! \param func, file, line
-    //!     source position. NULL file string indicates lacking of information
-    //!     about source position.
+    //! \param desc Log descriptor.
+    //! \param msg  Log message.
     //!
     //! \note It is client's responsibility to implement this function
     //!
     // ------------------------------------------------------------------------
-    GN_PUBLIC void
-    doLog(
-        LogLevel     level,
-        const char * category,
-        const char * msg,
-        const char * func,
-        const char * file,
-        int          line );
+    GN_PUBLIC void doLog( const LogDesc & desc, const char * msg );
 
     namespace detail
     {
@@ -93,11 +110,7 @@ namespace GN
         //!
         class LogHelper
         {
-            const char * mFunc;
-            const char * mFile;
-            int          mLine;
-            LogLevel     mLevel;
-            const char * mCate;
+            LogDesc mDesc;
 
         public:
 
@@ -105,16 +118,12 @@ namespace GN
             //! constructor
             //!
             LogHelper(
+                LogLevel     level,
+                const char * cate,
                 const char * func,
                 const char * file,
-                int          line,
-                LogLevel     level,
-                const char * category )
-                : mFunc(func)
-                , mFile(file)
-                , mLine(line)
-                , mLevel(level)
-                , mCate(category)
+                int          line )
+                : mDesc(level,cate,func,file,line)
             {}
 
             //!
@@ -128,27 +137,20 @@ namespace GN
             void log( const char * fmt, ... );
 
             //!
-            //! do log, with predefined level
+            //! do log, with predefined level and user-specified category
             //!
-            void logc( const char * category, const char * fmt, ... );
+            void logc( const char * cate, const char * fmt, ... );
 
             //!
-            //! do log, with specifc level and category
+            //! do log, with user-specified level and category
             //!
-            void loglc( LogLevel level, const char * category, const char * fmt, ... );
+            void loglc( LogLevel level, const char * cate, const char * fmt, ... );
         };
 
         //!
         //! Default implementation of log function.
         //!
-        void
-        defaultLogImpl(
-            LogLevel     level,
-            const char * category,
-            const char * msg,
-            const char * func,
-            const char * file,
-            int          line );
+        void defaultLogImpl( const LogDesc & desc, const char * msg );
     }
 } // end of namespace GN
 
