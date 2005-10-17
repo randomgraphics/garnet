@@ -31,7 +31,7 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
 //!
 //! function use to determine a extension is supported or not
 // ------------------------------------------------------------------------
-GN_INLINE static bool
+static GN_INLINE bool
 sFindExtension( const std::vector<GN::StrA> & glexts, const char * ext )
 {
     return glexts.end() != std::find( glexts.begin(), glexts.end(), ext );

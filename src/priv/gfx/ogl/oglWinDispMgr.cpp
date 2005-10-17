@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "oglRenderer.h"
 
+#if GN_WINNT
+
 // ****************************************************************************
 // local functions
 // ****************************************************************************
@@ -96,7 +98,7 @@ static int sChoosePixelFormat( HDC hdc )
     }
     else if( candidates[2] > 0 )
     {
-        GNOGL_INFO( "select pixelformat #%d(???).", candidates[2] );
+        GNOGL_INFO( "select pixelformat #%d(what's this?).", candidates[2] );
         return candidates[2];
     }
     else if( candidates[3] > 0 )
@@ -419,3 +421,5 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     GN_UNGUARD;
 }
+
+#endif // GN_WINNT

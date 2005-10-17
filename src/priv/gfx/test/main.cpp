@@ -18,6 +18,8 @@ class GfxTest
     {
 #if GN_WINNT
         return !!( 0x8000 & ::GetKeyState(keycode) );
+#else
+        return false;
 #endif
     }
 
