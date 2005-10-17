@@ -196,7 +196,7 @@ LRESULT GN::NTWindow::winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT GN::NTWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+LRESULT CALLBACK GN::NTWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
