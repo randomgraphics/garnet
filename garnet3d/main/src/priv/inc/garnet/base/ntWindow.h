@@ -50,7 +50,7 @@ namespace GN
 
         //@{
         NTWindow() {}
-        virtual ~NTWindow() {}
+        virtual ~NTWindow() { destroy(); }
         //@}
 
         //!
@@ -104,7 +104,7 @@ namespace GN
 
         LRESULT winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
 
-        static LRESULT sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
+        static LRESULT CALLBACK sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
     };
 }
 
