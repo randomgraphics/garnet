@@ -58,7 +58,7 @@ namespace GN
     //!
     //! 返回不小于n的最小的2的整幂
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE uint32_t nextPowerOf2( uint32_t n )
+    GN_FORCE_INLINE uint32_t ceilPowerOf2( uint32_t n )
     {
         n -= 1;
 
@@ -74,7 +74,7 @@ namespace GN
     //!
     //! 返回不大于n的最大的2的整幂
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE uint32_t prevPowerOf2( uint32_t n )
+    GN_FORCE_INLINE uint32_t floorPowerOf2( uint32_t n )
     {
         n |= n >> 16;
         n |= n >> 8;
