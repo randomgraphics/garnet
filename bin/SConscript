@@ -36,7 +36,6 @@ for y in Split('GNtest GNgfxTest'):
 for target in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest GNgfxTest'):
     if target in GN_targets:
         for x in GN_targets[target][1:]:
-            print "make %s depends on %s"%(GN_targets[target][0].path, x.path)
             env.Depends( GN_targets[target][0], x )
     else:
         env.GN_warn( "Target '%s' is not avaliable!"%target )
