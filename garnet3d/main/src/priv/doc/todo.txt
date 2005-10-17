@@ -9,6 +9,7 @@ TODO
     such as in changeDevice().
 - Startup of GFXOGL module sometimes very slow:
   - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
+- Seems NTRenderWindow class is incompatible with NTWindow class. Write a UT for verify that.
 
 DONE
 ====
