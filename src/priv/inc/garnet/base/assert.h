@@ -102,7 +102,7 @@
 //!
 #define GN_WIN_CHECK_DO( func, something )                  \
     if( true ) {                                            \
-        void * rr = (void*)(func);                          \
+        intptr_t rr = (intptr_t)(func);                     \
         if( 0 == rr )                                       \
         {                                                   \
             GN_ERROR( GN::getOSErrorInfo() );               \
