@@ -197,25 +197,21 @@ void GN::ogl::OGL::quit()
 
     if( mRC )
     {
-        wglMakeCurrent(0, 0);
-        wglDeleteContext(mRC);
+        ::wglMakeCurrent(0, 0);
+        ::wglDeleteContext(mRC);
         mRC = 0;
     }
 
     if( mDC )
     {
-        GN_ASSERT( IsWindow(mWindow) );
-        ReleaseDC( mWindow, mDC );
+        GN_ASSERT( ::IsWindow(mWindow.getWindow()) );
+        ::ReleaseDC( mWindow.getWindow(), mDC );
         mDC = 0;
     }
 
     restoreDisplayMode();
 
-    if( mWindow )
-    {
-        DestroyWindow( mWindow );
-        mWindow = 0;
-    }
+    mWindow.destroy();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -266,59 +262,16 @@ bool GN::ogl::OGL::createWindow()
 {
     GN_GUARD;
 
-#if GN_XENON
-	mWindow = 0;
-#else
-    HINSTANCE moduleHandle = (HINSTANCE)::GetModuleHandle(0);
+    NTWindow::CreateParam cp;
 
-    // register window class
-    WNDCLASSEXA wcex;
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = 0;//CS_NOCLOSE;
-    wcex.lpfnWndProc    = (WNDPROC)&staticProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = moduleHandle;
-    wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
-    wcex.hCursor        = LoadCursor (0,IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = "GarnetOGLAppWindowClass";
-    wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-    if( 0 == RegisterClassExA(&wcex) )
-    {
-        GNOGL_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
-        return false;
-    }
+    cp.clientWidth = mInitParams.width;
+    cp.clientHeight = mInitParams.height;
 
-    // calculate window size
-    DWORD style = WS_OVERLAPPEDWINDOW;
-    RECT rc = { 0, 0, mInitParams.width, mInitParams.height };
-    AdjustWindowRect( &rc, style, 0 );
+    mWindow.setWindowProcedure( makeFunctor(this,&OGL::windowProc) );
 
-    // create window
-    mWindow = CreateWindowA(
-        "GarnetOGLAppWindowClass",
-        mInitParams.winTitle,
-        style,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        rc.right - rc.left, rc.bottom - rc.top,
-        0, // no parent
-        0, // no menu
-        moduleHandle, NULL );
-    if( 0 == mWindow )
-    {
-        GNOGL_ERROR( "fail to create window, %s!", getOSErrorInfo() );
-        return false;
-    }
+    if( !mWindow.create(cp) ) return false;
 
-    // show the window
-    if( mInitParams.showWindow )
-    {
-        ShowWindow( mWindow, SW_NORMAL );
-        UpdateWindow( mWindow );
-    }
-#endif
+    mWindow.showWindow( mInitParams.showWindow );
 
     mMinimized = false;
     mClosed = false;
@@ -340,15 +293,15 @@ bool GN::ogl::OGL::createOGL()
 
     if( !setupDisplayMode() ) return false;
 
-    GN_ASSERT( mWindow );
+    GN_ASSERT( mWindow.getWindow() );
 
-    GN_WIN_CHECK_RV( mDC = GetDC(mWindow), false );
+    GN_WIN_CHECK_RV( mDC = ::GetDC(mWindow.getWindow()), false );
 
     if( !sSetupPixelFormat(mDC) ) return false;
 
-    GN_WIN_CHECK_RV( mRC = wglCreateContext(mDC), false );
+    GN_WIN_CHECK_RV( mRC = ::wglCreateContext(mDC), false );
 
-    GN_WIN_CHECK_RV( wglMakeCurrent(mDC, mRC), false );
+    GN_WIN_CHECK_RV( ::wglMakeCurrent(mDC, mRC), false );
 
     // success
     return true;
@@ -368,10 +321,10 @@ bool GN::ogl::OGL::setupDisplayMode()
     // only change display mode if we are in fullscreen mode
     if( mInitParams.fullScreen )
     {
-        GN_ASSERT( IsWindow(mWindow) );
+        GN_ASSERT( ::IsWindow(mWindow.getWindow()) );
 
         // get monitor information
-        HMONITOR hmonitor = MonitorFromWindow( mWindow, MONITOR_DEFAULTTOPRIMARY );
+        HMONITOR hmonitor = mWindow.getMonitor();
         if( 0 == hmonitor )
         {
             GNOGL_ERROR( "fail to get monitor handle!" );
@@ -379,7 +332,7 @@ bool GN::ogl::OGL::setupDisplayMode()
         }
         MONITORINFOEXA mi;
         mi.cbSize = sizeof(mi);
-        GN_WIN_CHECK_RV( GetMonitorInfoA( hmonitor, &mi ), false );
+        GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
         // change display mode
         DEVMODEA dm;
@@ -390,7 +343,7 @@ bool GN::ogl::OGL::setupDisplayMode()
         dm.dmBitsPerPel       = 32;
         dm.dmFields           = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
 
-        if( DISP_CHANGE_SUCCESSFUL != ChangeDisplaySettingsExA(
+        if( DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettingsExA(
             mi.szDevice,
             &dm,
             NULL,
@@ -405,32 +358,29 @@ bool GN::ogl::OGL::setupDisplayMode()
 
         // update monitor information
         mi.cbSize = sizeof(mi);
-        if( !GetMonitorInfoA(
-            MonitorFromWindow( mWindow,
-                               MONITOR_DEFAULTTOPRIMARY ),
-            &mi ) )
+        if( !::GetMonitorInfoA( mWindow.getMonitor(), &mi ) )
         {
             GNOGL_ERROR( "fail to update monitor information!" );
             return false;
         }
 
         // modify window style
-        GN_WIN_CHECK( SetParent( mWindow, 0 ) );
-        GN_WIN_CHECK( SetMenu( mWindow, 0 ) );
-        GN_WIN_CHECK( SetWindowLong( mWindow, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
-        if( IsIconic(mWindow) )
+        GN_WIN_CHECK( ::SetParent( mWindow.getWindow(), 0 ) );
+        GN_WIN_CHECK( ::SetMenu( mWindow.getWindow(), 0 ) );
+        GN_WIN_CHECK( ::SetWindowLong( mWindow.getWindow(), GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
+        if( ::IsIconic(mWindow.getWindow()) )
         {
-            GN_WIN_CHECK( ShowWindow( mWindow, SW_SHOWNORMAL ) );
+            GN_WIN_CHECK( ::ShowWindow( mWindow.getWindow(), SW_SHOWNORMAL ) );
         }
         GNOGL_INFO( "move fullscreen window to %d, %d", mi.rcWork.left, mi.rcWork.top );
-        GN_WIN_CHECK( SetWindowPos(
-            mWindow, HWND_TOPMOST,
+        GN_WIN_CHECK( ::SetWindowPos(
+            mWindow.getWindow(), HWND_TOPMOST,
             mi.rcWork.left, mi.rcWork.top,
             mInitParams.width, mInitParams.height,
             SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
 
         // trigger a redraw operation
-        GN_WIN_CHECK( UpdateWindow( mWindow ) );
+        GN_WIN_CHECK( ::UpdateWindow( mWindow.getWindow() ) );
     }
 
     // success
@@ -451,7 +401,7 @@ void GN::ogl::OGL::restoreDisplayMode()
         mFullscreenModeInitialized = false;
 
         // restore display mode
-        if( DISP_CHANGE_SUCCESSFUL != ChangeDisplaySettings(0, 0) )
+        if( DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettings(0, 0) )
         {
             GNOGL_ERROR( "Failed to restore display mode, %s!", GN::getOSErrorInfo() );
         }
@@ -464,45 +414,14 @@ void GN::ogl::OGL::restoreDisplayMode()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::ogl::OGL::processWindowMessages()
-{
-    GN_GUARD_SLOW;
-
-#if GN_WINNT & GN_PC
-    MSG msg;
-    while( true )
-    {
-        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
-        {
-            if( WM_QUIT == msg.message )
-            {
-                mClosed = true;
-                return;
-            }
-            ::TranslateMessage( &msg );
-            ::DispatchMessage(&msg);
-        }
-        else if( mMinimized )
-        {
-            ::WaitMessage();
-        }
-        else return; // Idle time!
-    }
-#endif
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 LRESULT GN::ogl::OGL::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    if( selfOK() ) switch (msg)
+    switch (msg)
     {
         case WM_CLOSE :
+            mClosed = true;
             ::PostQuitMessage(0);
             return 0;
 
@@ -529,14 +448,6 @@ LRESULT GN::ogl::OGL::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     return ::DefWindowProc( wnd, msg, wp, lp );
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-LRESULT GN::ogl::OGL::staticProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
-{
-    return OGL::getInstance().windowProc( wnd, msg, wp, lp );
 }
 
 #endif // GN_WINNT

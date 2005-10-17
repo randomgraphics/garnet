@@ -7,11 +7,8 @@ TODO
 - Refine GFX:
   - move window property save/restore code to a centrol place,
     such as in changeDevice().
-- Looks like OGL extension string has '\0' in it:
-  - only happens on msra-chenli-x64
 - Startup of GFXOGL module sometimes very slow:
   - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
-- Replace HWND in GNd3d and GNogl module with class Window.
 
 DONE
 ====

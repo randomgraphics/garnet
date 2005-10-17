@@ -86,9 +86,6 @@ namespace GN
 // resource manager
 #include "base/resourceManager.h"
 
-// window wrapper
-#include "base/window.h"
-
 // hight resolution clock
 #include "base/clock.h"
 

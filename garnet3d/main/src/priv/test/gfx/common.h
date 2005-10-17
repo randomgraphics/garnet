@@ -8,6 +8,7 @@
 
 #include "../testCommon.h"
 #include "garnet/GNgfx.h"
+#include "garnet/base/ntWindow.h"
 
 //! \cond
 
@@ -82,8 +83,9 @@ protected:
     {
         if( !mCreator) return;
 
-        GN::Window win;
-        GN::Window::CreateParam cp;
+#if GN_WINNT
+        GN::NTWindow win;
+        GN::NTWindow::CreateParam cp;
         cp.clientWidth = 236;
         cp.clientHeight = 189;
         TS_ASSERT( win.create( cp ) );
@@ -105,6 +107,7 @@ protected:
         //TS_ASSERT_EQUALS( dd.monitorHandle, win.getMonitor() );
         TS_ASSERT_EQUALS( dd.width, cp.clientWidth );
         TS_ASSERT_EQUALS( dd.height, cp.clientHeight );
+#endif        
     }
 
     void changeDevice()
