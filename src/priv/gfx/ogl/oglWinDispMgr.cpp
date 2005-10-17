@@ -88,7 +88,7 @@ static int sChoosePixelFormat( HDC hdc )
     // prefer hardware than mixed, than software
     if( candidates[0] > 0 )
     {
-        GNOGL_INFO( "select ixelformat #%d (ICD).", candidates[0] );
+        GNOGL_INFO( "select pixelformat #%d (ICD).", candidates[0] );
         return candidates[0];
     }
     else if( candidates[1] > 0 )
