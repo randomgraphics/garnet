@@ -208,23 +208,6 @@ static bool sLoadMesh( LPD3DXMESH & result, const GN::StrA & name )
     GN_UNGUARD;
 }
 
-#if GN_PC
-//
-//
-// -----------------------------------------------------------------------------
-static void sGetClientSize( HWND window, UINT & width, UINT & height )
-{
-    GN_ASSERT( IsWindow(window) );
-    RECT rc;
-    GN_WIN_CHECK( GetClientRect( window, &rc ) );
-    width = (UINT)(rc.right - rc.left);
-    height = (UINT)(rc.bottom - rc.top);
-    if( width < 10 ) width = 10;
-    if( height < 10 ) height = 10;
-}
-#endif
-
-
 // Global instances
 
 GN::d3d::TextureManager GN::d3d::gTexMgr(
@@ -285,11 +268,7 @@ void GN::d3d::D3D::quit()
     destroyD3D();
 
 #if !GN_XENON
-    if( mWindow )
-    {
-        DestroyWindow( mWindow );
-        mWindow = 0;
-    }
+    mWindow.destroy();
 #endif
 
     // standard quit procedure
@@ -326,13 +305,14 @@ bool GN::d3d::D3D::present()
     {
         mSizeChanged = false;
 
-        HMONITOR newMonitor = MonitorFromWindow( mWindow, MONITOR_DEFAULTTOPRIMARY );
+        HMONITOR newMonitor = mWindow.getMonitor();
 
-        UINT width, height;
-        sGetClientSize( mWindow, width, height );
+        uint32_t width, height;
+        mWindow.getClientSize( width, height );
 
-        if( newMonitor != mMonitor )
+        if( newMonitor != mOldMonitor )
         {
+            mOldMonitor = newMonitor;
             if( !recreateDevice() ) return false;
         }
         else if( width != mPresentParams.BackBufferWidth ||
@@ -346,7 +326,7 @@ bool GN::d3d::D3D::present()
     HRESULT r = mDevice->TestCooperativeLevel();
     if( D3D_OK == r )
     {
-        DX_CHECK( mDevice->Present( 0, 0, mWindow, 0 ) );
+        DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
     }
     else if( D3DERR_DEVICENOTRESET == r )
     {
@@ -383,59 +363,13 @@ bool GN::d3d::D3D::createWindow()
 {
     GN_GUARD;
 
-#if GN_XENON
-	mWindow = 0;
-#else
-
-    HINSTANCE moduleHandle = (HINSTANCE)GetModuleHandle(0);
-
-    // register window class
-    WNDCLASSEXA wcex;
-    wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = 0;//CS_NOCLOSE;
-    wcex.lpfnWndProc    = (WNDPROC)&staticProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = moduleHandle;
-    wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
-    wcex.hCursor        = LoadCursor (0,IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = "GarnetD3DAppWindowClass";
-    wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-    if( 0 == RegisterClassExA(&wcex) )
-    {
-        GND3D_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
-        return false;
-    }
-
-    // calculate window size
-    DWORD style = WS_OVERLAPPEDWINDOW;
-    RECT rc = { 0, 0, mInitParams.width, mInitParams.height };
-    AdjustWindowRect( &rc, style, 0 );
-
-    // create window
-    mWindow = CreateWindowA(
-        "GarnetD3DAppWindowClass",
-        mInitParams.winTitle,
-        style,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        rc.right - rc.left, rc.bottom - rc.top,
-        0, // no parent
-        0, // no menu
-        moduleHandle, NULL );
-    if( 0 == mWindow )
-    {
-        GND3D_ERROR( "fail to create window, %s!", getOSErrorInfo() );
-        return false;
-    }
-
-    // show the window
-    if( mInitParams.showWindow )
-    {
-        ShowWindow( mWindow, SW_NORMAL );
-        UpdateWindow( mWindow );
-    }
+#if !GN_XENON
+    NTWindow::CreateParam cp;
+    cp.clientWidth = mInitParams.width;
+    cp.clientHeight = mInitParams.height;
+    mWindow.setWindowProcedure( makeFunctor(this,&D3D::winProc) );
+    if( !mWindow.create(cp) ) return false;
+    mWindow.showWindow( mInitParams.showWindow );
 #endif
 
     mMinimized = false;
@@ -467,25 +401,31 @@ bool GN::d3d::D3D::createD3D()
     // setup present parameters
     setupPresentParameters();
 
-    // setup device creation parameters
-
 #if GN_XENON
 
-    GN_ASSERT( 0 == mWindow );
-    mMonitor = 0;
+    mOldMonitor = 0;
     mAdapter = D3DADAPTER_DEFAULT;
     mDevType = D3DDEVTYPE_HAL;
     mBehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
-#else // !GN_XENON
+	DX_CHECK_RV( mD3D->CreateDevice(
+            mAdapter,
+            mDevType,
+            0,
+            mBehaviorFlags,
+            &mPresentParams,
+            &mDevice ),
+        false );
 
-    // update monitor handle
-    mMonitor = MonitorFromWindow( mWindow, MONITOR_DEFAULTTOPRIMARY );
+#else // !GN_XENON
 
     // get adapter count
     uint32_t nAdapter = mD3D->GetAdapterCount();
 
     std::vector<D3DDEVTYPE> devtypes;
+
+    // update monitor handle
+    mOldMonitor = mWindow.getMonitor();
 
     // Look for nvidia adapter
     mAdapter = 0;
@@ -506,7 +446,7 @@ bool GN::d3d::D3D::createD3D()
     {
         for( uint32_t i = 0; i < nAdapter; ++i )
         {
-            if( mD3D->GetAdapterMonitor( i ) == mMonitor )
+            if( mD3D->GetAdapterMonitor( i ) == mOldMonitor )
             {
                 mAdapter = i;
                 break;
@@ -560,17 +500,17 @@ bool GN::d3d::D3D::createD3D()
         return false;
     }
 
-#endif // GN_XENON
-
     // create device
 	DX_CHECK_RV( mD3D->CreateDevice(
             mAdapter,
             mDevType,
-            mWindow,
+            mWindow.getWindow(),
             mBehaviorFlags,
             &mPresentParams,
             &mDevice ),
         false );
+
+#endif // GN_XENON
 
     // get device caps
     DX_CHECK_RV( mDevice->GetDeviceCaps( &mDevCaps ), false );
@@ -712,7 +652,7 @@ void GN::d3d::D3D::setupPresentParameters()
     mPresentParams.MultiSampleQuality         = 0;
 #else
 
-    UINT width, height;
+    uint32_t width, height;
     if( mInitParams.fullScreen )
     {
         width = mInitParams.width;
@@ -720,7 +660,7 @@ void GN::d3d::D3D::setupPresentParameters()
     }
     else
     {
-        sGetClientSize( mWindow, width, height );
+        mWindow.getClientSize( width, height );
     }
 
 	ZeroMemory( &mPresentParams, sizeof(mPresentParams) );
@@ -734,7 +674,7 @@ void GN::d3d::D3D::setupPresentParameters()
     mPresentParams.BackBufferHeight           = height;
     mPresentParams.SwapEffect                 = D3DSWAPEFFECT_COPY;
     mPresentParams.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
-    mPresentParams.hDeviceWindow              = mWindow;
+    mPresentParams.hDeviceWindow              = mWindow.getWindow();
     mPresentParams.MultiSampleType            = D3DMULTISAMPLE_NONE;
     mPresentParams.MultiSampleQuality         = 0;
     mPresentParams.Flags                      = 0;
@@ -794,52 +734,17 @@ bool GN::d3d::D3D::recreateDevice()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::d3d::D3D::processWindowMessages()
-{
-#if GN_PC
-
-    GN_GUARD_SLOW;
-
-    MSG msg;
-    while( true )
-    {
-        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
-        {
-            if( WM_QUIT == msg.message )
-            {
-                mClosed = true;
-                return;
-            }
-            ::TranslateMessage( &msg );
-            ::DispatchMessage(&msg);
-        }
-        else if( mMinimized )
-        {
-            ::WaitMessage();
-        }
-        else return; // Idle time!
-    }
-
-    GN_UNGUARD_SLOW;
-
-#endif
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 #if GN_XENON
-LRESULT GN::d3d::D3D::windowProc( HWND, UINT, WPARAM, LPARAM ) { return 0; }
+LRESULT GN::d3d::D3D::winProc( HWND, UINT, WPARAM, LPARAM ) { return 0; }
 #else
-LRESULT GN::d3d::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+LRESULT GN::d3d::D3D::winProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
-
-    if( !selfOK() ) return ::DefWindowProc( wnd, msg, wp, lp );
 
     switch (msg)
     {
         case WM_CLOSE :
+            mClosed = true;
             ::PostQuitMessage(0);
             return 0;
 
@@ -868,11 +773,3 @@ LRESULT GN::d3d::D3D::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     GN_UNGUARD;
 }
 #endif
-
-//
-//
-// -----------------------------------------------------------------------------
-LRESULT GN::d3d::D3D::staticProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
-{
-    return D3D::getInstance().windowProc( wnd, msg, wp, lp );
-}

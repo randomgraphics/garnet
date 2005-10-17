@@ -25,6 +25,8 @@
 #include <d3dx9.h>
 #include <dxerr9.h>
 
+#include "garnet/base/ntWindow.h"
+
 // Check dx version
 #if DIRECT3D_VERSION < 0x0900
 #error "directx 9.0 or higher is required!"
@@ -145,7 +147,6 @@ namespace GN
         private:
             void clear()
             {
-                mWindow = 0;
                 mD3D = 0;
                 mDevice = 0;
             }
@@ -213,7 +214,26 @@ namespace GN
             //!
             //! Get render window handle
             //!
-            HWND getWindow() const { return mWindow; }
+            HWND getWindow() const
+            {
+#if GN_XENON
+                return 0;
+#else
+                return mWindow.getWindow();
+#endif
+            }
+
+            //!
+            //! Get D3D monitor handle
+            //!
+            HMONITOR getMonitor() const
+            {
+#if GN_XENON
+                return 0;
+#else
+                return mWindow.getMonitor();
+#endif
+            }
 
             //!
             //! Get D3D object
@@ -224,11 +244,6 @@ namespace GN
             //! Get device object
             //!
             IDirect3DDevice9 * getDevice() const { GN_ASSERT(mDevice); return mDevice; }
-
-            //!
-            //! Get D3D monitor handle
-            //!
-            HMONITOR getMonitor() const { return mMonitor; }
 
             //!
             //! Get D3D adapter ID
@@ -270,8 +285,10 @@ namespace GN
         private:
 
             D3DInitParams           mInitParams;
-            HWND                    mWindow;
-            HMONITOR                mMonitor;
+#if !GN_XENON
+            NTWindow                mWindow;
+            HMONITOR                mOldMonitor;
+#endif
             uint32_t                mAdapter;
             D3DDEVTYPE              mDevType;
             uint32_t                mBehaviorFlags;
@@ -298,10 +315,7 @@ namespace GN
             bool restoreDevice();
             bool recreateDevice();
 
-            void processWindowMessages();
-
-            LRESULT windowProc( HWND, UINT, WPARAM, LPARAM );
-            static LRESULT staticProc( HWND, UINT, WPARAM, LPARAM );
+            LRESULT winProc( HWND, UINT, WPARAM, LPARAM );
         };
 
         //!

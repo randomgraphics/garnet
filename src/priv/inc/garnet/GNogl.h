@@ -10,6 +10,7 @@
 
 #if GN_WINNT
 #include <windows.h>
+#include "garnet/base/ntWindow.h"
 #endif
 
 #include <glew.h>
@@ -123,7 +124,6 @@ namespace GN
             void clear()
             {
 #if GN_WINNT
-                mWindow = 0;
                 mDC = 0;
                 mRC = 0;
                 mFullscreenModeInitialized = false;
@@ -140,7 +140,7 @@ namespace GN
             //!
             //! Get render window handle
             //!
-            HWND getWindow() const { return mWindow; }
+            HWND getWindow() const { return mWindow.getWindow(); }
 
             //!
             //! Get OGL render context
@@ -169,15 +169,15 @@ namespace GN
 
             OGLInitParams mInitParams;
 #if GN_WINNT
-            HWND  mWindow;
-            HDC   mDC;
-            HGLRC mRC;
-            bool  mFullscreenModeInitialized;
-            bool  mMinimized;
-            bool  mInsideSizeMove;
-            bool  mSizeChanged;
+            NTWindow mWindow;
+            HDC      mDC;
+            HGLRC    mRC;
+            bool     mFullscreenModeInitialized;
+            bool     mMinimized;
+            bool     mInsideSizeMove;
+            bool     mSizeChanged;
 #endif
-            bool  mClosed;
+            bool     mClosed;
 
             // ********************************
             // private functions
@@ -188,11 +188,7 @@ namespace GN
             bool createOGL();
             bool setupDisplayMode();
             void restoreDisplayMode();
-            void processWindowMessages();
-#if GN_WINNT
-            LRESULT windowProc( HWND, UINT, WPARAM, LPARAM );
-            static LRESULT staticProc( HWND, UINT, WPARAM, LPARAM );
-#endif
+            LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         };
 
         //! \name Util functions
