@@ -153,7 +153,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 #if GN_WINNT
         char buf[16384];
         _snprintf( buf, 16384,
-            "%s(%d) : %s : %s\n",
+            "%s(%d) : %s : %s : %s\n",
             file, desc.line,
             cate, levelStr(desc.level).cstr(),
             msg );
