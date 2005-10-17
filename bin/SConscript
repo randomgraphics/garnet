@@ -28,13 +28,18 @@ for y in Split('GNtest GNgfxTest'):
     if y in GN_targets:
         for x in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
             if x in GN_targets: env.Depends( GN_targets[y], GN_targets[x] )
+    else:
+        env.GN_warn( "Target '%s' is not avaliable!"%y )
 
 # Make binaries depend on manifest and PDB files, to make sure those files are copied
 # to binary directory, before execution of the binaries.
-for target in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNTest GNgfxTest'):
+for target in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest GNgfxTest'):
     if target in GN_targets:
         for x in GN_targets[target][1:]:
+            print "make %s depends on %s"%(GN_targets[target][0].path, x.path)
             env.Depends( GN_targets[target][0], x )
+    else:
+        env.GN_warn( "Target '%s' is not avaliable!"%target )
 
 # run unit test
 if GN_conf['run_unit_tests']:
