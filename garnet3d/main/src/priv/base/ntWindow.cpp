@@ -166,8 +166,8 @@ public:
         return mOwner.ntWinProc( hwnd, msg, wp, lp );
     }
 
-    LRESULT
-    static sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+    static LRESULT
+    sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     {
         GN_GUARD;
 
