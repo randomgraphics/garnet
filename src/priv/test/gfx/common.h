@@ -79,6 +79,30 @@ protected:
         mLib.free();
     }
 
+    //
+    // Make sure ntWindow and NTRenderWindow can work with each other.
+    //
+    void ntWindowAndNTRenderWindow()
+    {
+#if GN_WINNT
+        GN::NTWindow win;
+        GN::NTWindow::CreateParam cp;
+        cp.clientWidth = 236;
+        cp.clientHeight = 189;
+        TS_ASSERT( win.create( cp ) );
+        win.showWindow();
+
+        if( !mCreator) return;
+        GN::AutoObjPtr<GN::gfx::Renderer> r;
+        GN::gfx::DeviceSettings ds;
+        ds.software = true;
+        r.reset( mCreator(ds) );
+        TS_ASSERT( r );
+        if( !r ) return;
+        clearRed(*r);
+#endif
+    }
+
     void externalWindow()
     {
         if( !mCreator) return;
