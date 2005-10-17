@@ -3,7 +3,6 @@
 
 #if GN_WINNT
 
-static HINSTANCE sDllHandle = 0;
 unsigned int GN::gfx::NTRenderWindow::msInstanceID = 0;
 std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
 
@@ -28,30 +27,6 @@ sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
     return true;
 
     GN_UNGUARD;
-}
-
-//!
-//! Main DLL entry point
-// ----------------------------------------------------------------------------
-BOOL WINAPI
-DllMain(
-  HANDLE hinstDLL, 
-  DWORD dwReason, 
-  LPVOID /*lpvReserved*/ )
-{
-    //GN_INFO( "DLL handle: 0x%X", hinstDLL );
-    if( DLL_PROCESS_ATTACH == dwReason )
-    {
-        //GN_INFO( "DLL_PROCESS_ATTACH");
-        sDllHandle = (HINSTANCE)hinstDLL;
-    }
-    else if( DLL_PROCESS_DETACH == dwReason )
-    {
-        //GN_INFO( "DLL_PROCESS_DETACH");
-        sDllHandle = 0;
-    }
-
-    return TRUE;
 }
 
 // *****************************************************************************
@@ -184,7 +159,9 @@ void GN::gfx::NTRenderWindow::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), sDllHandle ) );
+        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
+        GN_ASSERT( mModuleInstance );
+        GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -227,24 +204,25 @@ GN::gfx::NTRenderWindow::createWindow(
     // check parent
     if( 0 != parent && !::IsWindow(parent) ) parent = 0;
 
-    // compose windows class na1me.
-#if !GN_STATIC
-    GN_ASSERT( 0 != sDllHandle );
-#endif
-    mClassName.format( "GNgfxWindowClass_0x%X_%03d", sDllHandle, msInstanceID );
-
-    HINSTANCE moduleInstance = sDllHandle;
+    mModuleInstance = (HINSTANCE)GetModuleHandleA(0);
+    GN_ASSERT( 0 != mModuleInstance );
 
     WNDCLASSEXA wcex;
 
-    // find the window class
+    // generate an unique window class name
+    do
+    {
+        mClassName.format( "GNgfxRenderWindow_%d", rand() );
+    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cstr(), &wcex ) );
+
     // register window class
+    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = 0;//CS_NOCLOSE;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
-    wcex.hInstance      = moduleInstance;
+    wcex.hInstance      = mModuleInstance;
     wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
@@ -276,7 +254,7 @@ GN::gfx::NTRenderWindow::createWindow(
         rc.right - rc.left, rc.bottom - rc.top,
         parent,
         0, // no menu
-        moduleInstance,
+        mModuleInstance,
         0 );
     if( 0 == mWindow )
     {
@@ -353,7 +331,7 @@ GN::gfx::NTRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM
 {
     GN_GUARD;
 
-    //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+    //GNGFX_INFO( "GN::gfx::NTRenderWindow procedure: wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
 
     std::map<void*,NTRenderWindow*>::const_iterator iter = msInstanceMap.find(wnd);
 

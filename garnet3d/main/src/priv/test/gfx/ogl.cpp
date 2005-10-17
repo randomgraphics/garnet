@@ -9,6 +9,8 @@ public:
 
     void tearDown() { libFree(); }
 
+    void testntWindowAndNTRenderWindow() { ntWindowAndNTRenderWindow(); }
+
     void testExternalWindow() { externalWindow(); }
 
     void testChangeDevice() { changeDevice(); }

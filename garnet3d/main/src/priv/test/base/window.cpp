@@ -12,10 +12,12 @@ public:
         GN::NTWindow::CreateParam cp;
 
         TS_ASSERT( parent.create( cp ) );
+        parent.showWindow( true );
         TS_ASSERT( parent.getWindow() );
 
         cp.parent = parent.getWindow();
         TS_ASSERT( child.create( cp ) );
+        child.showWindow( true );
         TS_ASSERT( child.getWindow() );
 #endif
     }
@@ -29,6 +31,7 @@ public:
         cp.style = WS_DLGFRAME;
 
         TS_ASSERT( win.create(cp) );
+        win.showWindow( true );
 
         TS_ASSERT( WS_DLGFRAME | ::GetWindowLong( (HWND)win.getWindow(), GWL_STYLE ) );
 #endif
@@ -45,6 +48,7 @@ public:
         cp.clientHeight = 189;
 
         TS_ASSERT( win.create( cp ) );
+        win.showWindow( true );
         if( !win.getWindow() ) return;
 
         uint32_t w, h;

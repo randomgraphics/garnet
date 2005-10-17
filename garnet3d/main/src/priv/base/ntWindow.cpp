@@ -21,16 +21,18 @@ bool GN::NTWindow::create( const CreateParam & cp )
 
     WNDCLASSEXA wcex;
 
+    // get instance handle
+    mInstanceHandle = (HINSTANCE)::GetModuleHandle(0);
+
     // generate an unique window class name
     do
     {
         mClassName.format( "GNbaseWindowWrapper_%d", rand() );
     } while( ::GetClassInfoExA( mInstanceHandle, mClassName.cstr(), &wcex ) );
 
-    // get instance handle
-    mInstanceHandle = (HINSTANCE)::GetModuleHandle(0);
-
     // register window class
+    GN_INFO( "Register window class: %s (module handle: 0x%X)",
+        mClassName.cstr(), mInstanceHandle );
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = 0;//CS_NOCLOSE;
     wcex.lpfnWndProc    = (WNDPROC)&sMsgRouter;
@@ -112,6 +114,8 @@ void GN::NTWindow::destroy()
 
     if( !mClassName.empty() )
     {
+        GN_INFO( "Unregister window class: %s (module handle: 0x%X)",
+            mClassName.cstr(), mInstanceHandle );
         GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), mInstanceHandle ) );
         mClassName.clear();
     }
@@ -200,7 +204,7 @@ LRESULT CALLBACK GN::NTWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM
 {
     GN_GUARD;
 
-    //GN_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+    //GN_INFO( "GN::NTWindow procedure: wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
 
     NTWindow * ptr;
 

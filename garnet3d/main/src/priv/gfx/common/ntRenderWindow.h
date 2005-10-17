@@ -78,8 +78,9 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
-        StrA mClassName;
         HWND mWindow;
+        StrA mClassName;
+        HINSTANCE mModuleInstance;
         HHOOK mHook;
         bool mUseExternalWindow;
 

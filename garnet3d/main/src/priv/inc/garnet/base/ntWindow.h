@@ -49,7 +49,7 @@ namespace GN
         };
 
         //@{
-        NTWindow() {}
+        NTWindow() : mWindow(0) {}
         virtual ~NTWindow() { destroy(); }
         //@}
 
@@ -66,7 +66,7 @@ namespace GN
         //!
         //! Show/Hide the window
         //!
-        void showWindow( bool show ) const;
+        void showWindow( bool show = true ) const;
 
         //!
         //! Get window handle
@@ -95,9 +95,9 @@ namespace GN
 
     private:
 
-        HINSTANCE mInstanceHandle;
-        StrA mClassName;
         HWND mWindow;
+        StrA mClassName;
+        HINSTANCE mInstanceHandle;
         WindowProcedure mWinProc;
 
     private:
