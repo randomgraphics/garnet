@@ -14,7 +14,11 @@
 #define SHLIB_FREE( lib )              (!dlclose( lib ))
 #define SHLIB_LOAD_SYMBOL( lib, symb ) static_cast<void*>(dlsym(lib, symb))
 #define SHLIB_ERROR()                  dlerror()
+#if GN_CYGWIN
+#define SHLIB_EXT                      ".dll"
+#else
 #define SHLIB_EXT                      ".so"
+#endif
 #else
 #error "Unknown platform!"
 #endif
