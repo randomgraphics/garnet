@@ -11,8 +11,10 @@
 //!
 class GN::Window::Impl
 {
-    GN::Window & mOwner;
+    Window & mOwner;
 
+    HINSTANCE mInstanceHandle;
+    StrA mClassName;
     HWND mWindow;
 
     void destroy()
@@ -21,9 +23,15 @@ class GN::Window::Impl
 
         if( ::IsWindow( mWindow ) )
         {
-            ::DestroyWindow( mWindow );
+            GN_WIN_CHECK( ::DestroyWindow( mWindow ) );
         }
         mWindow = 0;
+
+        if( !mClassName.empty() )
+        {
+            GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), mInstanceHandle ) );
+            mClassName.clear();
+        }
 
         GN_UNGUARD;
     }
@@ -43,33 +51,34 @@ public:
         // check parent
         HWND parent = ::IsWindow((HWND)cp.parent) ? (HWND)cp.parent : 0;
 
-        static const char * sClassName = "GNbaseWindowWrapper";
-
-        HINSTANCE moduleHandle = (HINSTANCE)::GetModuleHandle(0);
-
         WNDCLASSEXA wcex;
 
-        // find the window class
-        if( !::GetClassInfoEx( moduleHandle, sClassName, &wcex ) )
+        // generate an unique window class name
+        do
         {
-            // register window class
-            wcex.cbSize         = sizeof(WNDCLASSEX);
-            wcex.style          = 0;//CS_NOCLOSE;
-            wcex.lpfnWndProc    = (WNDPROC)&sMsgRouter;
-            wcex.cbClsExtra     = 0;
-            wcex.cbWndExtra     = 0;
-            wcex.hInstance      = moduleHandle;
-            wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
-            wcex.hCursor        = LoadCursor (0,IDC_ARROW);
-            wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-            wcex.lpszMenuName   = 0;
-            wcex.lpszClassName  = sClassName;
-            wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-            if( 0 == ::RegisterClassExA(&wcex) )
-            {
-                GN_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
-                return false;
-            }
+            mClassName.format( "GNbaseWindowWrapper_%d", rand() );
+        } while( ::GetClassInfoExA( mInstanceHandle, mClassName.cstr(), &wcex ) );
+
+        // get instance handle
+        mInstanceHandle = (HINSTANCE)::GetModuleHandle(0);
+
+        // register window class
+        wcex.cbSize         = sizeof(WNDCLASSEX);
+        wcex.style          = 0;//CS_NOCLOSE;
+        wcex.lpfnWndProc    = (WNDPROC)&sMsgRouter;
+        wcex.cbClsExtra     = 0;
+        wcex.cbWndExtra     = 0;
+        wcex.hInstance      = mInstanceHandle;
+        wcex.hIcon          = LoadIcon (0, IDI_APPLICATION);
+        wcex.hCursor        = LoadCursor (0,IDC_ARROW);
+        wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+        wcex.lpszMenuName   = 0;
+        wcex.lpszClassName  = mClassName.cstr();
+        wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
+        if( 0 == ::RegisterClassExA(&wcex) )
+        {
+            GN_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
+            return false;
         }
 
         // setup window style
@@ -99,14 +108,14 @@ public:
         // create window
         mWindow = ::CreateWindowExA(
             exStyle,
-            sClassName,
+            mClassName.cstr(),
             cp.title,
             style,
             cp.left, cp.top,
             rc.right - rc.left, rc.bottom - rc.top,
             parent,
             (HMENU)cp.menu,
-            moduleHandle,
+            mInstanceHandle,
             this );
         if( 0 == mWindow )
         {
@@ -171,20 +180,20 @@ public:
     {
         GN_GUARD;
 
-        Impl * ptr;
-
         //GN_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+
+        Impl * ptr;
 
         // handle WM_NCCREATE
         if( WM_NCCREATE == msg )
         {
             GN_ASSERT( lp );
             ptr = (Impl*)((CREATESTRUCT*)lp)->lpCreateParams;
-            ::SetWindowLongA( wnd, GWL_USERDATA, (LONG)ptr );
+            ::SetWindowLongPtrA( wnd, GWLP_USERDATA, (LONG_PTR)ptr );
         }
         else
         {
-            ptr = (Impl*)::GetWindowLong( wnd, GWL_USERDATA );
+            ptr = (Impl*)::GetWindowLongPtrA( wnd, GWLP_USERDATA );
         }
 
         // call Window specific procedure
