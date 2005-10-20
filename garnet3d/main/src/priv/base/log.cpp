@@ -135,7 +135,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 
     if( LOGLEVEL_INFO == desc.level )
     {
-        ::fprintf( stdout, "%s\n", msg );
+        std::cout << msg << std::endl;
     }
     else
     {
