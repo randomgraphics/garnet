@@ -403,7 +403,6 @@ bool GN::d3d::D3D::createD3D()
 
 #if GN_XENON
 
-    mOldMonitor = 0;
     mAdapter = D3DADAPTER_DEFAULT;
     mDevType = D3DDEVTYPE_HAL;
     mBehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
