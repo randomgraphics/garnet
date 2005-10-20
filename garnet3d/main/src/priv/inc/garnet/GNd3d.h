@@ -50,6 +50,7 @@
 //!
 //! DX error check routine
 //!
+#if !defined(D3DCOMPILE_USEVOIDS)
 #define DX_CHECK_DO( func, something )              \
     if( true ) {                                    \
         HRESULT rr = func;                          \
@@ -59,6 +60,9 @@
             something                               \
         }                                           \
     } else void(0)
+#else
+#define DX_CHECK_DO( func, something ) func
+#endif
 
 //!
 //! DX error check routine
@@ -185,7 +189,7 @@ namespace GN
 
             //!
             //! Device restore signal. This signal will be triggered
-            //! after D3D device is resetted. You may recreate D3D resources in
+            //! after D3D device is reseted. You may recreate D3D resources in
             //! default pool here.
             //!
             Signal0<bool> sigDeviceRestore;
@@ -412,7 +416,7 @@ namespace GN
         //!
         //! Compile vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVS( const char * code, size_t len, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DVERTEXSHADER9 compileVS( const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
         //! Compile vertex shader from file
@@ -422,7 +426,7 @@ namespace GN
         //!
         //! Assemble vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 assembleVS( const char * code, size_t len, uint32_t flags = 0 );
+        LPDIRECT3DVERTEXSHADER9 assembleVS( const char * code, size_t len = 0, uint32_t flags = 0 );
 
         //!
         //! Assemble vertex shader from file
@@ -432,7 +436,7 @@ namespace GN
         //!
         //! Compile pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 compilePS( const char * code, size_t len, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DPIXELSHADER9 compilePS( const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
         //! Compile pixel shader from file
@@ -442,7 +446,7 @@ namespace GN
         //!
         //! Assemble pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 assemblePS( const char * code, size_t len, uint32_t flags = 0 );
+        LPDIRECT3DPIXELSHADER9 assemblePS( const char * code, size_t len = 0, uint32_t flags = 0 );
 
         //!
         //! Assemble pixel shader from file
@@ -458,7 +462,7 @@ namespace GN
         //!
         //! Assemble XVS shader from string
         //!
-        inline LPDIRECT3DVERTEXSHADER9 assembleXVS( const char * code, size_t len, uint32_t flags = 0 )
+        inline LPDIRECT3DVERTEXSHADER9 assembleXVS( const char * code, size_t len = 0, uint32_t flags = 0 )
         {
 	        GN_GUARD;
 	        return assembleVS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
@@ -478,7 +482,7 @@ namespace GN
         //!
         //! Assemble XPS shader from string
         //!
-        inline LPDIRECT3DPIXELSHADER9 assembleXPS( const char * code, size_t len, uint32_t flags = 0 )
+        inline LPDIRECT3DPIXELSHADER9 assembleXPS( const char * code, size_t len = 0, uint32_t flags = 0 )
         {
 	        GN_GUARD;
 	        return assemblePS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
@@ -497,11 +501,23 @@ namespace GN
 #endif
 
         //!
-        //! Draw screen aligned quad on screen
+        //! Draw screen aligned quad on screen.
+        //!
+        //! \param left, top, right, bottom
+        //!     Quad position.
+        //!     - On PC platform, position (0,0,1,1) will draw quad that fulfill current viewport,
+        //!       when there's no active vertex shader; or you may achieve same effect by using
+        //!       a "pass-through" vertex shader.
+        //!     - On Xenon, a valid vertex shader must be provided before calling this
+        //!       function. Similar with PC case, position (0,0,1,1) will draw quad as large as
+        //!       current viewport, if you pass-through vertex position in your shader.
+        //!
+        //! \param leftU, topV, rightU, bottomV
+        //!     Texture coordinates of quad corners.
         //!
         void drawScreenAlignedQuad(
-            double fLeft = 0.0, double fTop = 0.0, double fRight = 1.0, double fBottom = 1.0,
-            double fLeftU = 0.0, double fTopV = 0.0, double fRightU = 1.0, double fBottomV = 1.0 );
+            double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
+            double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 );
 
         //@}
     }

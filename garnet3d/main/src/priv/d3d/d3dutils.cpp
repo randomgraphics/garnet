@@ -34,7 +34,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( const char * code, size_t len, uint3
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXCompileShader(
-            code, (UINT)len,
+            code, (UINT)( len ? len : strLen(code) ),
             NULL, NULL, // no macros, no includes,
             entryFunc,
             D3DXGetVertexShaderProfile( gD3D.getDevice() ), // the highest possible version
@@ -110,7 +110,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( const char * code, size_t len, uint
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXAssembleShader(
-            code, (UINT)len,
+            code, (UINT)( len ? len : strLen(code) ),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags,false),
             &bin,
@@ -180,7 +180,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( const char * code, size_t len, uint32
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXCompileShader(
-            code, (UINT)len,
+            code, (UINT)( len ? len : strLen(code) ),
             NULL, NULL, // no macros, no includes,
             entryFunc,
             D3DXGetPixelShaderProfile( gD3D.getDevice() ), // the hightest possible version
@@ -256,7 +256,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( const char * code, size_t len, uint3
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     if( FAILED(D3DXAssembleShader(
-            code, (UINT)len,
+            code, (UINT)( len ? len : strLen(code) ),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags,false),
             &bin,
@@ -328,15 +328,17 @@ void GN::d3d::drawScreenAlignedQuad(
 
 #if GN_XENON
 
+    float l, t, r, b;
+
     D3DVIEWPORT9 vp;
     dev->GetViewport( &vp );
     float w = (float)vp.Width;
     float h = (float)vp.Height;
 
-    float l = (float)fLeft * w;
-    float t = (float)fTop * h;
-    float r = (float)fRight * w;
-    float b = (float)fBottom * h;
+    l = (float)fLeft * w;
+    t = (float)fTop * h;
+    r = (float)fRight * w;
+    b = (float)fBottom * h;
 
     // Draw the quad
     struct SCREEN_VERTEX
@@ -356,9 +358,11 @@ void GN::d3d::drawScreenAlignedQuad(
     DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
     rsb->Capture();
 
-    dev->SetRenderState( D3DRS_VIEWPORTENABLE, FALSE );
+    dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
+    dev->SetRenderState( D3DRS_VIEWPORTENABLE, false );
 
     dev->SetFVF( D3DFVF_XYZW | D3DFVF_TEX1 );
+
     dev->DrawPrimitiveUP( D3DPT_TRIANGLESTRIP, 2, v, sizeof(SCREEN_VERTEX) );
 
     // restore render states
@@ -366,14 +370,40 @@ void GN::d3d::drawScreenAlignedQuad(
 
 #else
 
-    // get viewport
-    D3DVIEWPORT9 vp;
-    DX_CHECK( dev->GetViewport( &vp ) );
+    // check for active vertex shader.
+    bool hasVS;
+    {
+        AutoComPtr<IDirect3DVertexShader9> vs;
+        dev->GetVertexShader( &vs );
+        hasVS = !vs.empty();
+    }
 
-    float l = (float)fLeft * vp.Width;
-    float t = (float)fTop * vp.Width;
-    float r = (float)fRight * vp.Height;
-    float b = (float)fBottom * vp.Height;
+    float l, t, r, b;
+    DWORD fvf;
+
+    if( hasVS )
+    {
+        // X: [0,1] -> [-1,+1]
+        // Y: [0,1] -> [+1,-1]
+        l = (float)( (fLeft - 0.5) * 2.0 );
+        t = (float)( (0.5 - fTop) * 2.0 );
+        r = (float)( (fRight - 0.5) * 2.0 );
+        b = (float)( (0.5 - fBottom) * 2.0 );
+        fvf = D3DFVF_XYZW | D3DFVF_TEX1;
+    }
+    else
+    {
+        // get viewport
+        D3DVIEWPORT9 vp;
+        DX_CHECK( dev->GetViewport( &vp ) );
+
+        l = (float)fLeft * vp.Width;
+        t = (float)fTop * vp.Height;
+        r = (float)fRight * vp.Width;
+        b = (float)fBottom * vp.Height;
+
+        fvf = D3DFVF_XYZRHW | D3DFVF_TEX1;
+    }
 
     // Compose vertex buffer
     struct SCREEN_VERTEX
@@ -392,16 +422,17 @@ void GN::d3d::drawScreenAlignedQuad(
     // capture current render states
     AutoComPtr<IDirect3DStateBlock9> rsb;
     DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
-    rsb->Capture();
+    DX_CHECK( rsb->Capture() );
 
-    dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
-    dev->SetFVF( D3DFVF_XYZRHW | D3DFVF_TEX1 );
+    DX_CHECK( dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE ) );
+
+    DX_CHECK( dev->SetFVF( fvf ) );
 
     // draw the quad
-    dev->DrawPrimitiveUP( D3DPT_TRIANGLESTRIP, 2, v, sizeof(SCREEN_VERTEX) );
+    DX_CHECK( dev->DrawPrimitiveUP( D3DPT_TRIANGLESTRIP, 2, v, sizeof(SCREEN_VERTEX) ) );
 
     // restore render states
-    rsb->Apply();
+    DX_CHECK( rsb->Apply() );
 #endif
 
     GN_UNGUARD;
