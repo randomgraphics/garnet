@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <exception>
+#include <iostream>
 
 #include "garnet/base/pragma.h"
 
