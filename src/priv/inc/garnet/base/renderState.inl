@@ -192,10 +192,10 @@ GN_INLINE bool GN::str2TextureStateValue( TextureStateValue & result, const char
 GN_INLINE bool
 GN::RenderStateBlockDesc::operator == ( const RenderStateBlockDesc & rhs ) const
 {
-    // shortcut for comparing with itself
-    if( &rhs == this ) return true;
-
-    return 0 == ::memcmp( this, &rhs, sizeof(RenderStateBlockDesc) );
+    return
+        this == &rhs || // shortcut for comparing with self
+        0 == ::memcmp( rs, rhs.rs, sizeof(rs) ) &&
+        0 == ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
 }
 //
 GN_INLINE bool
