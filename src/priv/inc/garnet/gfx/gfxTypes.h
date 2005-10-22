@@ -9,7 +9,25 @@
 namespace GN { namespace gfx
 {
     //!
+    //! Display mode structure
+    //!
+    struct DisplayMode
+    {
+        uint32_t width;   //!< Screen width. Zero means using current screen width. Default value is zero.
+        uint32_t height;  //!< Screen height. Zero means using current screen height. Defualt value is zero.
+        uint32_t depth;   //!< Color depth. Zero means using current color depth. Default value is zero.
+        uint32_t refrate; //!< Referesh rate. Zero means using adapter default rate. Default value is zero.
+
+        //!
+        //! Ctor
+        //!
+        DisplayMode() : width(0), height(0), depth(0), refrate(0) {}
+    };
+
+    //!
     //! Device setting structure. Represents user-requested renderer options.
+    //!
+    //! \sa gfxRenderer::getUserOptions()
     //!
     struct UserOptions
     {
@@ -58,42 +76,36 @@ namespace GN { namespace gfx
         bool autoBackbufferResizing;
 
         //!
+        //! Display mode for fullscreen mode. Ignored in windowed mode.
+        //!
+        DisplayMode displayMode;
+
+        //!
+        //! Backbuffer width for windowed mode. Ignored in fullscreen mode.
+        //! Zero means using client width of render window. If render window
+        //! is also not avaiable, default width 640 will be used.
+        //! 缺省为0.
+        //!
+        uint32_t windowedWidth;
+
+        //!
+        //! Backbuffer height for windowed mode. Ignored in fullscreen mode.
+        //! Zero means using client height of render window. If render window
+        //! is also not avaiable, default height 480 will be used.
+        //! 缺省为0.
+        //!
+        uint32_t windowedHeight;
+
+        //!
         //! fullscreen or windowed mode.
         //! 缺省为false.
         //!
         bool fullscreen;
 
         //!
-        //! Backbuffer width. If zero, means current display width (in fullscreen mode )
-        //! or renderWindow width (in windowed mode). If renderWindow is not avaiable,
-        //! default width 640 will be chosen.
-        //! 缺省为0.
+        //! 是否同步刷新. 缺省为false.
         //!
-        uint32_t width;
-
-        //!
-        //! Backbuffer height. If zero, means current display height (in fullscreen mode )
-        //! or render window height (in windowed mode). If renderWindow is not avaiable,
-        //! default height 480 will be chosen.
-        //! 缺省为0.
-        //!
-        uint32_t height;
-
-        //!
-        //! Backbuffer color depth. Ignored in windowed mode.
-        //! 0 means using current display mode's color depth.
-        //! 缺省为0.
-        //!
-        uint32_t depth;
-
-        //!
-        //! Refresh rate. Ignored in windowed mode.
-        //! 0 means using current display mode's color depth.
-        //! 缺省为0.
-        //!
-        uint32_t refrate;
-
-        bool vsync; //!< 是否同步刷新. 缺省为false.
+        bool vsync;
 
         //! \name D3D only parameters
         //@{
@@ -118,22 +130,6 @@ namespace GN { namespace gfx
         //@}
 
         //!
-        //! Equality operator
-        //!
-        bool operator == ( const UserOptions & rhs ) const
-        {
-            return 0 == ::memcmp( this, &rhs, sizeof(rhs) );
-        }
-
-        //!
-        //! un-equality operator
-        //!
-        bool operator != ( const UserOptions & rhs ) const
-        {
-            return 0 != ::memcmp( this, &rhs, sizeof(rhs) );
-        }
-
-        //!
         //! Construct a default device settings
         //!
         UserOptions()
@@ -141,11 +137,9 @@ namespace GN { namespace gfx
             , parentWindow(0)
             , monitorHandle(0)
             , autoBackbufferResizing(true)
+            , windowedWidth(0)
+            , windowedHeight(0)
             , fullscreen(false)
-            , width(0)
-            , height(0)
-            , depth(0)
-            , refrate(0)
             , vsync(false)
             , software(false)
             , reference(false)
@@ -154,43 +148,33 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Display descriptor. This is the render options actually used by Renderer.
-    //! It may or may not be the same as settings in UserOptions.
+    //! Display descriptor.
     //!
-    //! \sa UserOptions.
+    //! \sa UserOptions, gfxRenderer::getDispDesc()
     //!
     struct DispDesc
     {
         void * windowHandle;         //!< Render window handle
         void * monitorHandle;        //!< Monitor handle.
-        bool autoBackbufferResizing; //!< Same as UserOptions::autoBackBufferResizeing
-        bool autoMonitorSwitch;      //!< Same as UserOptions::autoMonitorSwitch
-        bool fullscreen;             //!< Is fullscreen or not
         uint32_t width;              //!< Back buffer width
         uint32_t height;             //!< Back buffer height
         uint32_t depth;              //!< Back buffer depth
         uint32_t refrate;            //!< Screen refresh rate
-        bool vsync;                  //!< Same as UserOptions::vsync
-        bool software;               //!< Same as UserOptions::software
-        bool reference;              //!< Same as UserOptions::reference
-        bool autoRestore;            //!< Same as UserOptions::autoRestore
-
-        //!
-        //! Default constructor
-        //!
-        DispDesc() : windowHandle(0) {}
 
         //!
         //! equality operator
         //!
-        bool operator==(const DispDesc & rhs ) const
-        { return 0 == ::memcmp(this,&rhs,sizeof(rhs)); }
-
-        //!
-        //! equality operator
-        //!
-        bool operator!=(const DispDesc & rhs ) const
-        { return 0 != ::memcmp(this,&rhs,sizeof(rhs)); }
+        bool operator!=( const DispDesc & rhs ) const
+        {
+            if( this == &rhs ) return false;
+            return
+                windowHandle != rhs.windowHandle ||
+                monitorHandle != rhs.monitorHandle ||
+                width != rhs.width ||
+                height != rhs.height ||
+                depth != rhs.depth ||
+                refrate != rhs.refrate;
+        }
     };
 
     //! \def GNGFX_CAPS

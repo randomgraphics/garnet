@@ -108,6 +108,7 @@ namespace GN { namespace gfx {
         StrA mClassName;
         HINSTANCE mModuleInstance;
         HHOOK mHook;
+
         bool mUseExternalWindow;
 
         bool mInsideSizeMove;
@@ -123,6 +124,11 @@ namespace GN { namespace gfx {
         // private functions
         // ********************************
     private:
+
+        bool initExternalWindow( const UserOptions & uo );
+        bool initInternalWindow( const UserOptions & uo );
+        bool resizeInternalWindow( const UserOptions & uo );
+        bool determineInternalWindowSize( const UserOptions & uo, uint32_t & width, uint32_t & height );
 
         bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen );
         void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

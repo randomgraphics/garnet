@@ -5,15 +5,18 @@
 //! 枚举符合条件的显示模式，并返回相应的D3DFormat
 // ------------------------------------------------------------------------
 static D3DFORMAT
-sCheckD3DFormat( IDirect3D9 & d3d, UINT adapter, const GN::gfx::DispDesc & dd )
+sCheckD3DFormat( IDirect3D9 & d3d,
+                 UINT adapter,
+                 const GN::gfx::DispDesc & dd,
+                 bool fullscreen )
 {
     GN_GUARD;
 
     D3DDISPLAYMODE d3ddm;
     d3ddm.Format = D3DFMT_UNKNOWN;
 
-    // if window mode, retrieve current videomode directly
-    if( !dd.fullscreen )
+    // if window mode, then use current display mode
+    if( !fullscreen )
     {
         DX_CHECK_RV(
             d3d.GetAdapterDisplayMode(adapter, &d3ddm),
@@ -78,12 +81,14 @@ static bool
 sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
              IDirect3D9 & d3d,
              UINT adapter,
-             const GN::gfx::DispDesc & dd )
+             const GN::gfx::DispDesc & dd,
+             bool fullscreen,
+             bool vsync )
 {
     GN_GUARD;
 
-    // get d3dformat from displaymode
-    D3DFORMAT d3dfmt = sCheckD3DFormat( d3d, adapter, dd );
+    // get d3dformat from display mode
+    D3DFORMAT d3dfmt = sCheckD3DFormat( d3d, adapter, dd, fullscreen );
     if( D3DFMT_UNKNOWN == d3dfmt ) return 0;
 
     // clear all field, first
@@ -98,15 +103,15 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     d3dpp.AutoDepthStencilFormat = D3DFMT_D24X8;
 
     // set display mode parameters
-    d3dpp.Windowed = !dd.fullscreen;
+    d3dpp.Windowed = !fullscreen;
 
-    // set backbuffer parameters
+    // set back buffer parameters
     d3dpp.BackBufferCount  = 0;
     d3dpp.BackBufferFormat = d3dfmt;
 
     // set display mode specific parameters
     GN_ASSERT( dd.height > 0 && dd.width > 0 );
-    if( dd.fullscreen )
+    if( fullscreen )
     {
         d3dpp.FullScreen_RefreshRateInHz = dd.refrate;
         d3dpp.BackBufferWidth            = dd.width;
@@ -125,8 +130,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     }
 
     // set other parameters
-    d3dpp.PresentationInterval = dd.vsync
-        ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+    d3dpp.PresentationInterval = vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     d3dpp.hDeviceWindow        = (HWND)dd.windowHandle;
 
     // success
@@ -188,6 +192,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     GN_ASSERT( !mDispOK && mD3D );
 
+    const UserOptions & uo = getUserOptions();
     const DispDesc & dd = getDispDesc();
 
     UINT nAdapter = mD3D->GetAdapterCount();
@@ -223,13 +228,13 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             }
         }
         // prepare device type candidates
-        if( !dd.reference ) devtypes.push_back( D3DDEVTYPE_HAL );
+        if( !uo.reference ) devtypes.push_back( D3DDEVTYPE_HAL );
         devtypes.push_back( D3DDEVTYPE_REF );
         devtypes.push_back( D3DDEVTYPE_NULLREF );
     }
 
     // init d3d present parameters
-    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd ) ) return false;
+    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, uo.fullscreen, uo.vsync ) ) return false;
 
     // Check device caps and termin device behavior flags.
     HRESULT r = D3D_OK;
@@ -247,7 +252,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             continue;
         }
 
-        if( dd.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
+        if( uo.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
         {
             mBehavior = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
         }
@@ -296,10 +301,11 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
 
     GN_ASSERT( !mDispOK && mD3D && mDevice );
 
+    const UserOptions & uo = getUserOptions();
     const DispDesc & dd = getDispDesc();
 
     // rebuild d3dpp based on current device settings
-    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd ) ) return false;
+    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, uo.fullscreen, uo.vsync ) ) return false;
 
     // NOTE: Applications can expect messages to be sent to them during this
     //       call (for example, before this call is returned); applications

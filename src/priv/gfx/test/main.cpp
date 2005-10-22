@@ -101,13 +101,9 @@ public:
         if( keyDown(VK_RETURN) && keyDown(VK_MENU) )
         {
             // toggle fullscreen mode
-            const GN::gfx::DispDesc & dd = mRenderer->getDispDesc();
-            GN::gfx::UserOptions uo;
-            uo.fullscreen = !dd.fullscreen;
-            uo.width = dd.width;
-            uo.height = dd.height;
-            if( !mRenderer->changeDevice(uo) )
-                mDone = true;
+            GN::gfx::UserOptions uo = mRenderer->getUserOptions();
+            uo.fullscreen = !uo.fullscreen;
+            if( !mRenderer->changeDevice(uo) ) mDone = true;
         }
 #endif
     }

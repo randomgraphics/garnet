@@ -82,7 +82,7 @@ namespace GN { namespace gfx {
         //@{
 
     public:
-        virtual bool changeDevice( const UserOptions & ds,
+        virtual bool changeDevice( const UserOptions & uo,
                                    bool forceDeviceRecreation );
 
     protected :

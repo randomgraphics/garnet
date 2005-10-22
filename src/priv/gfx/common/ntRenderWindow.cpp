@@ -40,87 +40,23 @@ bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
 {
     GN_GUARD;
 
-    quit(); // release old window
-
-    // Note: uo.renderWindow and uo.parentWindow are actually same variable,
-    // so here we can use one check for both of them.
-    bool windowValid = !!::IsWindow((HWND)uo.renderWindow);
-
     // initialize render window
     if( uo.useExternalWindow )
     {
-        if( !windowValid )
-        {
-            GNGFX_ERROR( "External render window handle must be valid." );
-            return false;
-        }
-        if( msInstanceMap.end() != msInstanceMap.find(uo.renderWindow) )
-        {
-            GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
-            return false;
-        }
-
-        mWindow = (HWND)uo.renderWindow;
-
-        // register a message hook to render window.
-        mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
-        if( 0 == mHook )
-        {
-            GNGFX_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
-            return false;
-        }
+        quit();
+        if( !initExternalWindow( uo ) ) return false;
     }
     else
     {
-        uint32_t w, h;
-        if( 0 == uo.width || 0 == uo.height )
+        if( !mUseExternalWindow && mWindow )
         {
-            if( uo.fullscreen )
-            {
-                // Get user specified monitor size
-                HMONITOR monitor;
-                if( 0 == uo.monitorHandle )
-                {
-                    if( !windowValid )
-                    {
-                        POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
-                        monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
-                        if( 0 == monitor )
-                        {
-                            GN_ERROR( "Fail to get primary monitor handle." );
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        monitor = ::MonitorFromWindow( (HWND)uo.renderWindow, MONITOR_DEFAULTTONEAREST );
-                    }
-                }
-                else
-                {
-                    monitor = (HMONITOR)uo.monitorHandle;
-                }
-                GN_ASSERT( monitor );
-
-                if( !::sGetMonitorSize( monitor, w, h ) ) return false;
-            }
-            else
-            {
-                // Both fullsreen and windowValid are false. So we have to use
-                // default width and height
-                w = 640;
-                h = 480;
-            }
-            w = uo.width ? uo.width : w;
-            h = uo.height ? uo.height : h;
+            if( !resizeInternalWindow( uo ) ) return false;
         }
         else
         {
-            w = uo.width;
-            h = uo.height;
+            quit();
+            if( !initInternalWindow( uo ) ) return false;
         }
-        GN_ASSERT( w > 0 && h > 0 );
-        if( !createWindow( (HWND)uo.parentWindow, w, h, uo.fullscreen ) ) return false;
     }
     GN_ASSERT( mWindow );
     mUseExternalWindow = uo.useExternalWindow;
@@ -134,8 +70,15 @@ bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
     }
 
     // add window handle to instance map
-    GN_ASSERT( msInstanceMap.end() == msInstanceMap.find(mWindow) );
+    GN_ASSERT(
+        msInstanceMap.end() == msInstanceMap.find(mWindow) ||
+        this == msInstanceMap.find(mWindow)->second );
     msInstanceMap[mWindow] = this;
+
+    // clear all state flags
+    mInsideSizeMove = false;
+    mSizeChanged = false;
+    mMonitorSwitch = false;
 
     // success
     return true;
@@ -199,6 +142,163 @@ bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height
 // *****************************************************************************
 // private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::NTRenderWindow::initExternalWindow( const UserOptions & uo )
+{
+    GN_GUARD;
+
+    GN_ASSERT( uo.useExternalWindow );
+
+    if( !::IsWindow((HWND)uo.renderWindow) )
+    {
+        GNGFX_ERROR( "External render window handle must be valid." );
+        return false;
+    }
+
+    if( msInstanceMap.end() != msInstanceMap.find(uo.renderWindow) )
+    {
+        GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
+        return false;
+    }
+
+    mWindow = (HWND)uo.renderWindow;
+
+    // register a message hook to render window.
+    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    if( 0 == mHook )
+    {
+        GNGFX_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::NTRenderWindow::initInternalWindow( const UserOptions & uo )
+{
+    GN_GUARD;
+
+    GN_ASSERT( !uo.useExternalWindow );
+
+    uint32_t w, h;
+    if( !determineInternalWindowSize( uo, w, h ) ) return false;
+    GN_ASSERT( w > 0 && h > 0 );
+
+    if( !createWindow( (HWND)uo.parentWindow, w, h, uo.fullscreen ) ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::NTRenderWindow::resizeInternalWindow( const UserOptions & uo )
+{
+    GN_GUARD;
+
+    GN_ASSERT( !uo.useExternalWindow && !!::IsWindow(mWindow) );
+
+    uint32_t w, h;
+    if( !determineInternalWindowSize( uo, w, h ) ) return false;
+    GN_ASSERT( w > 0 && h > 0 );
+
+    // calculate boundary size
+    RECT rc = { 0, 0, w, h };
+    GN_WIN_CHECK_RV(
+        ::AdjustWindowRectEx(
+            &rc,
+            ::GetWindowLongA( mWindow, GWL_STYLE ),
+            0,
+            ::GetWindowLongA( mWindow, GWL_EXSTYLE ) ),
+        false );
+
+    // resize the window
+    GN_WIN_CHECK_RV(
+        ::SetWindowPos(
+            mWindow, HWND_TOP,
+            0, 0, // position, ignored.
+            rc.right-rc.left, rc.bottom-rc.top, // size
+            SWP_NOMOVE ),
+        false );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::NTRenderWindow::determineInternalWindowSize(
+    const UserOptions & uo, uint32_t & width, uint32_t & height )
+{
+    GN_GUARD;
+
+    // Determine window size
+    if( uo.fullscreen )
+    {
+        const DisplayMode & dm = uo.displayMode;
+
+        if( 0 == dm.width || 0 == dm.height )
+        {
+            // In fullscreen mode, default window size is determined by display mode.
+
+            // Get user specified monitor size
+            HMONITOR monitor;
+            if( 0 == uo.monitorHandle )
+            {
+                if( !::IsWindow((HWND)uo.parentWindow) )
+                {
+                    POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
+                    monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
+                    if( 0 == monitor )
+                    {
+                        GN_ERROR( "Fail to get primary monitor handle." );
+                        return false;
+                    }
+                }
+                else
+                {
+                    monitor = ::MonitorFromWindow( (HWND)uo.renderWindow, MONITOR_DEFAULTTONEAREST );
+                }
+            }
+            else
+            {
+                monitor = (HMONITOR)uo.monitorHandle;
+            }
+            GN_ASSERT( monitor );
+
+            if( !::sGetMonitorSize( monitor, width, height ) ) return false;
+        }
+
+        if( dm.width ) width = dm.width;
+        if( dm.height ) height = dm.height;
+    }
+    else
+    {
+        // In windowed mode, default window size is 640x480
+        width = uo.windowedWidth ? uo.windowedWidth : 640;
+        height = uo.windowedHeight ? uo.windowedHeight : 480;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
 
 //
 //
@@ -273,9 +373,6 @@ GN::gfx::NTRenderWindow::createWindow(
     // show the window
     ::ShowWindow( mWindow, SW_NORMAL );
     ::UpdateWindow( mWindow );
-
-    mInsideSizeMove = false;
-    mSizeChanged = false;
 
     // success
     return true;

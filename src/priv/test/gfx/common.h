@@ -142,27 +142,27 @@ protected:
 
         GN::gfx::UserOptions uo;
 
-        uo.width = 320;
-        uo.height = 640;
+        uo.windowedWidth = 320;
+        uo.windowedHeight = 640;
         uo.software = true;
         r.reset( mCreator(uo) );
         TS_ASSERT( r );
         if( !r ) return;
         const GN::gfx::DispDesc & dd = r->getDispDesc();
-        TS_ASSERT_EQUALS( dd.software, true );
+        TS_ASSERT_EQUALS( r->getUserOptions().software, true );
         clearRed(*r);
 
         // recreate the device
         uo.software = false;
         TS_ASSERT( r->changeDevice(uo) );
-        TS_ASSERT_EQUALS( dd.software, false );
+        TS_ASSERT_EQUALS( r->getUserOptions().software, false );
         TS_ASSERT_EQUALS( dd.width, 320 );
         TS_ASSERT_EQUALS( dd.height, 640 );
         clearBlue(*r);
 
         // reset the device
-        uo.width = 256;
-        uo.height = 128;
+        uo.windowedWidth = 256;
+        uo.windowedHeight = 128;
         TS_ASSERT( r->changeDevice(uo) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
@@ -176,8 +176,8 @@ protected:
 
         uo.fullscreen = true;
 
-        uo.width = 640;
-        uo.height = 480;
+        uo.displayMode.width = 640;
+        uo.displayMode.height = 480;
         r.reset( mCreator(uo) );
         TS_ASSERT(r);
         if( !r ) return;
@@ -186,8 +186,8 @@ protected:
         clearBlue(*r);
         //GN::sleep( 500 );
 
-        uo.width = 1024;
-        uo.height = 768;
+        uo.displayMode.width = 1024;
+        uo.displayMode.height = 768;
         TS_ASSERT( r->changeDevice( uo ) );
         clearRed(*r);
         //GN::sleep( 500 );
@@ -204,7 +204,6 @@ protected:
         GN::gfx::UserOptions uo;
         uo.useExternalWindow = false;
         uo.parentWindow = 0;
-        uo.width = uo.height = 0;
 
         r.reset( mCreator(uo) );
         TS_ASSERT(r);
@@ -225,8 +224,8 @@ protected:
 
         GN::gfx::UserOptions uo;
 
-        uo.width = 320;
-        uo.height = 640;
+        uo.windowedWidth = 320;
+        uo.windowedHeight = 640;
         r1.reset( mCreator(uo) );
         TS_ASSERT( r1 );
 
@@ -238,8 +237,8 @@ protected:
             clearRed( *r1 );
         }
 
-        uo.width = 512;
-        uo.height = 256;
+        uo.windowedWidth = 512;
+        uo.windowedHeight = 256;
         r2.reset( mCreator(uo) );
         TS_ASSERT( r2 );
 

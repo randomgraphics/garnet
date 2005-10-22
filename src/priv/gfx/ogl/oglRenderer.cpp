@@ -111,7 +111,7 @@ bool GN::gfx::OGLRenderer::changeDevice(
     const DispDesc oldDesc = getDispDesc();
 
     // setup new display descriptor
-    if( !setupDispDesc( uo ) ) return false;
+    if( !processUserOptions( uo ) ) return false;
 
     const DispDesc & newDesc = getDispDesc();
 
