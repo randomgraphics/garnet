@@ -106,7 +106,7 @@ env = Environment( options = opts )
 
 ################################################################################
 #
-# call SConscript
+# Build variants
 #
 ################################################################################
 
@@ -164,17 +164,26 @@ if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_
 
 ################################################################################
 #
+# Build headers and manual
+#
+################################################################################
+
+manual = {}
+SConscript( 'src/priv/manual/SConscript',
+            build_dir = 'tmp/scons',
+            exports={'GN_targets':manual} )
+SConscript( 'bin/SConsInstallManualAndHeaders',
+            exports={'GN_targets':manual} )
+
+################################################################################
+#
 # ∂®“Â phony targets
 #
 ################################################################################
 
-for x in targets[0].items(): env.Alias( 'debug', x[1] )
-for x in targets[1].items(): env.Alias( 'release', x[1] )
-for x in targets[2].items(): env.Alias( 'stdbg', x[1] )
-for x in targets[3].items(): env.Alias( 'strel', x[1] )
 env.Alias( 'msvc', '#msvc' )
 
-all_targets = targets[0].items() + targets[1].items() + targets[2].items() + targets[3].items()
+all_targets = targets[0].items() + targets[1].items() + targets[2].items() + targets[3].items() + manual.items()
 all_targets.sort()
 for x in all_targets:
     env.Alias( x[0], x[1] )
@@ -189,8 +198,7 @@ env.Default( Split('samples sdk') )
 ################################################################################
 
 targets_text = ''
-for x in Split('all debug release stdbg strel'):
-    targets_text += '%25s : %s\n'%( x, 'Build %s variant(s)'%x )
+targets_text += '%25s : %s\n'%( 'all', 'Build all targets of all variants' )
 targets_text += '%25s : %s\n'%( 'samples', 'Build samples' )
 targets_text += '%25s : %s\n'%( 'sdk', 'Build garnet SDK' )
 targets_text += '%25s : %s\n'%( 'msvc', 'Build MSVC projects' )
