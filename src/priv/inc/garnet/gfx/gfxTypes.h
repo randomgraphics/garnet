@@ -11,10 +11,11 @@ namespace GN { namespace gfx
     //!
     //! Device setting structure. Represents user-requested renderer options.
     //!
-    struct DeviceSettings
+    struct UserOptions
     {
         //!
         //! Use external render window or not.
+        //! 缺省为false.
         //!
         bool useExternalWindow;
 
@@ -22,6 +23,7 @@ namespace GN { namespace gfx
         {
             //!
             //! Handle of external render window.
+            //! 缺省为0.
             //!
             //! \note Effective only if useExternalWindow is true.
             //!
@@ -31,6 +33,7 @@ namespace GN { namespace gfx
             {
                 //!
                 //! Handle of parent window. Can be NULL.
+                //! 缺省为0.
                 //!
                 //! \note Effective only if useExternalWindow is false.
                 //!
@@ -40,6 +43,7 @@ namespace GN { namespace gfx
                 //! Monitor handle. 0 means using the monitor where parent window stays in.
                 //! If monitorHandle and parent window are both zero, default(primary)
                 //! monitor will be chosen.
+                //! 缺省为0.
                 //!
                 //! \note Effective only if useExternalWindow is false.
                 //!
@@ -48,7 +52,14 @@ namespace GN { namespace gfx
         };
 
         //!
+        //! 是否监视渲染窗口的大小，并自动对渲染设备作相应的调整
+        //! 缺省为true.
+        //!
+        bool autoBackbufferResizing;
+
+        //!
         //! fullscreen or windowed mode.
+        //! 缺省为false.
         //!
         bool fullscreen;
 
@@ -56,6 +67,7 @@ namespace GN { namespace gfx
         //! Backbuffer width. If zero, means current display width (in fullscreen mode )
         //! or renderWindow width (in windowed mode). If renderWindow is not avaiable,
         //! default width 640 will be chosen.
+        //! 缺省为0.
         //!
         uint32_t width;
 
@@ -63,38 +75,43 @@ namespace GN { namespace gfx
         //! Backbuffer height. If zero, means current display height (in fullscreen mode )
         //! or render window height (in windowed mode). If renderWindow is not avaiable,
         //! default height 480 will be chosen.
+        //! 缺省为0.
         //!
         uint32_t height;
 
         //!
         //! Backbuffer color depth. Ignored in windowed mode.
         //! 0 means using current display mode's color depth.
+        //! 缺省为0.
         //!
         uint32_t depth;
 
         //!
         //! Refresh rate. Ignored in windowed mode.
         //! 0 means using current display mode's color depth.
+        //! 缺省为0.
         //!
         uint32_t refrate;
 
-        bool vsync;      //!< 是否同步刷新
+        bool vsync; //!< 是否同步刷新. 缺省为false.
 
         //! \name D3D only parameters
         //@{
-        bool software;   //!< using software device
-        bool reference;  //!< using reference device
+        bool software;   //!< using software device. 缺省为false.
+        bool reference;  //!< using reference device. 缺省为false.
         //@}
 
         //! \name OGL only parameters
         //@{
 
+        //!
         //! Restore display mode while render window is deactivated.
         //!
         //! Note that this is a OGL only parameter. For D3D, you may use
         //! "Enable Multi-mon Debugging" option in DirectX control panel,
         //! and startup your application through an debugger to make that
         //! option effective.
+        //! 缺省为true.
         //!
         bool autoRestore;
 
@@ -103,7 +120,7 @@ namespace GN { namespace gfx
         //!
         //! Equality operator
         //!
-        bool operator == ( const DeviceSettings & rhs ) const
+        bool operator == ( const UserOptions & rhs ) const
         {
             return 0 == ::memcmp( this, &rhs, sizeof(rhs) );
         }
@@ -111,7 +128,7 @@ namespace GN { namespace gfx
         //!
         //! un-equality operator
         //!
-        bool operator != ( const DeviceSettings & rhs ) const
+        bool operator != ( const UserOptions & rhs ) const
         {
             return 0 != ::memcmp( this, &rhs, sizeof(rhs) );
         }
@@ -119,9 +136,11 @@ namespace GN { namespace gfx
         //!
         //! Construct a default device settings
         //!
-        DeviceSettings()
+        UserOptions()
             : useExternalWindow(false)
             , parentWindow(0)
+            , monitorHandle(0)
+            , autoBackbufferResizing(true)
             , fullscreen(false)
             , width(0)
             , height(0)
@@ -136,22 +155,25 @@ namespace GN { namespace gfx
 
     //!
     //! Display descriptor. This is the render options actually used by Renderer.
-    //! It may or may not be the same as settings in DeviceSettings.
+    //! It may or may not be the same as settings in UserOptions.
     //!
-    //! \sa DeviceSettings.
+    //! \sa UserOptions.
     //!
     struct DispDesc
     {
-        void * windowHandle;  //!< Render window handle
-        bool fullscreen;      //!< Is fullscreen or not
-        uint32_t width;       //!< Back buffer width
-        uint32_t height;      //!< Back buffer height
-        uint32_t depth;       //!< Back buffer depth
-        uint32_t refrate;     //!< Screen refresh rate
-        bool vsync;           //!< Same as DeviceSettings::vsync
-        bool software;        //!< Same as DeviceSettings::software
-        bool reference;       //!< Same as DeviceSettings::reference
-        bool autoRestore;     //!< Same as DeviceSettings::autoRestore
+        void * windowHandle;         //!< Render window handle
+        void * monitorHandle;        //!< Monitor handle.
+        bool autoBackbufferResizing; //!< Same as UserOptions::autoBackBufferResizeing
+        bool autoMonitorSwitch;      //!< Same as UserOptions::autoMonitorSwitch
+        bool fullscreen;             //!< Is fullscreen or not
+        uint32_t width;              //!< Back buffer width
+        uint32_t height;             //!< Back buffer height
+        uint32_t depth;              //!< Back buffer depth
+        uint32_t refrate;            //!< Screen refresh rate
+        bool vsync;                  //!< Same as UserOptions::vsync
+        bool software;               //!< Same as UserOptions::software
+        bool reference;              //!< Same as UserOptions::reference
+        bool autoRestore;            //!< Same as UserOptions::autoRestore
 
         //!
         //! Default constructor

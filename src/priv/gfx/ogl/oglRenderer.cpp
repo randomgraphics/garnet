@@ -11,12 +11,12 @@
 // *****************************************************************************
 
 namespace GN { namespace gfx {
-    Renderer * createOGLRenderer( const DeviceSettings & ds )
+    Renderer * createOGLRenderer( const UserOptions & uo )
     {
         GN_GUARD;
 
         GN::AutoObjPtr<GN::gfx::OGLRenderer> p( new GN::gfx::OGLRenderer );
-        if( !p->init(ds) ) return 0;
+        if( !p->init(uo) ) return 0;
         return p.detatch();
 
         GN_UNGUARD;
@@ -25,9 +25,9 @@ namespace GN { namespace gfx {
 
 #if !GN_STATIC
 extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
+GNgfxCreateRenderer( const GN::gfx::UserOptions & uo )
 {
-    return GN::gfx::createOGLRenderer(ds);
+    return GN::gfx::createOGLRenderer(uo);
 }
 #endif
 
@@ -38,7 +38,7 @@ GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::init(const DeviceSettings & ds )
+bool GN::gfx::OGLRenderer::init(const UserOptions & uo )
 {
     GN_GUARD;
 
@@ -56,7 +56,7 @@ bool GN::gfx::OGLRenderer::init(const DeviceSettings & ds )
     if( !drawInit()    ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !changeDevice( ds, true ) ) { quit(); return selfOK(); }
+    if( !changeDevice( uo, true ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -95,7 +95,7 @@ void GN::gfx::OGLRenderer::quit()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::OGLRenderer::changeDevice(
-    const DeviceSettings & ds, bool forceRecreation )
+    const UserOptions & uo, bool forceRecreation )
 {
     GN_GUARD;
 
@@ -111,7 +111,7 @@ bool GN::gfx::OGLRenderer::changeDevice(
     const DispDesc oldDesc = getDispDesc();
 
     // setup new display descriptor
-    if( !setupDispDesc( ds ) ) return false;
+    if( !setupDispDesc( uo ) ) return false;
 
     const DispDesc & newDesc = getDispDesc();
 

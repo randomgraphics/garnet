@@ -36,31 +36,31 @@ sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
+bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
 {
     GN_GUARD;
 
     quit(); // release old window
 
-    // Note: ds.renderWindow and ds.parentWindow are actually same variable,
+    // Note: uo.renderWindow and uo.parentWindow are actually same variable,
     // so here we can use one check for both of them.
-    bool windowValid = !!::IsWindow((HWND)ds.renderWindow);
+    bool windowValid = !!::IsWindow((HWND)uo.renderWindow);
 
     // initialize render window
-    if( ds.useExternalWindow )
+    if( uo.useExternalWindow )
     {
         if( !windowValid )
         {
             GNGFX_ERROR( "External render window handle must be valid." );
             return false;
         }
-        if( msInstanceMap.end() != msInstanceMap.find(ds.renderWindow) )
+        if( msInstanceMap.end() != msInstanceMap.find(uo.renderWindow) )
         {
             GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
             return false;
         }
 
-        mWindow = (HWND)ds.renderWindow;
+        mWindow = (HWND)uo.renderWindow;
 
         // register a message hook to render window.
         mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
@@ -73,17 +73,17 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
     else
     {
         uint32_t w, h;
-        if( 0 == ds.width || 0 == ds.height )
+        if( 0 == uo.width || 0 == uo.height )
         {
-            if( ds.fullscreen )
+            if( uo.fullscreen )
             {
                 // Get user specified monitor size
                 HMONITOR monitor;
-                if( 0 == ds.monitorHandle )
+                if( 0 == uo.monitorHandle )
                 {
                     if( !windowValid )
                     {
-                        POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primaray monitore are returned.
+                        POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
                         monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
                         if( 0 == monitor )
                         {
@@ -93,12 +93,12 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
                     }
                     else
                     {
-                        monitor = ::MonitorFromWindow( (HWND)ds.renderWindow, MONITOR_DEFAULTTONEAREST );
+                        monitor = ::MonitorFromWindow( (HWND)uo.renderWindow, MONITOR_DEFAULTTONEAREST );
                     }
                 }
                 else
                 {
-                    monitor = (HMONITOR)ds.monitorHandle;
+                    monitor = (HMONITOR)uo.monitorHandle;
                 }
                 GN_ASSERT( monitor );
 
@@ -111,19 +111,27 @@ bool GN::gfx::NTRenderWindow::init( const DeviceSettings & ds )
                 w = 640;
                 h = 480;
             }
-            w = ds.width ? ds.width : w;
-            h = ds.height ? ds.height : h;
+            w = uo.width ? uo.width : w;
+            h = uo.height ? uo.height : h;
         }
         else
         {
-            w = ds.width;
-            h = ds.height;
+            w = uo.width;
+            h = uo.height;
         }
         GN_ASSERT( w > 0 && h > 0 );
-        if( !createWindow( (HWND)ds.parentWindow, w, h, ds.fullscreen ) ) return false;
+        if( !createWindow( (HWND)uo.parentWindow, w, h, uo.fullscreen ) ) return false;
     }
     GN_ASSERT( mWindow );
-    mUseExternalWindow = ds.useExternalWindow;
+    mUseExternalWindow = uo.useExternalWindow;
+
+    // update monitor handle
+    mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
+    if( 0 == mMonitor )
+    {
+        GNGFX_ERROR( "Fail to get monitor handle from window!" );
+        return false;
+    }
 
     // add window handle to instance map
     GN_ASSERT( msInstanceMap.end() == msInstanceMap.find(mWindow) );
@@ -275,24 +283,16 @@ GN::gfx::NTRenderWindow::createWindow(
     GN_UNGUARD;
 }
 
-
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT
-GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+void
+GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    // trigger the message signal
-    sigMessage( wnd, msg, wp, lp );
-
-    switch (msg)
+    switch(msg)
     {
-        case WM_CLOSE :
-            ::PostQuitMessage(0);
-            return 0;
-
         case WM_ENTERSIZEMOVE :
             mInsideSizeMove = true;
             break;
@@ -309,6 +309,52 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
                 if( !minimized && !mInsideSizeMove ) mSizeChanged = true;
             }
             break;
+        default: ; // do nothing
+    }
+
+    //
+    // Update monitor handle
+    //
+    if( mSizeChanged )
+    {
+        // Check monitor switch
+        HMONITOR newMonitor = ::MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
+        if( 0 != newMonitor )
+        {
+            if( newMonitor != mMonitor )
+            {
+                mMonitorSwitch = true;
+                mMonitor = newMonitor;
+            }
+        }
+        else
+        {
+            GNGFX_ERROR( "Fail to get monitor handle from window handle!" );
+        }
+    }
+
+    // trigger the message signal
+    sigMessage( wnd, msg, wp, lp );
+
+    GN_UNGUARD;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+LRESULT
+GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+{
+    GN_GUARD;
+
+    handleMessage( wnd, msg, wp, lp );
+
+    switch (msg)
+    {
+        case WM_CLOSE :
+            ::PostQuitMessage(0);
+            return 0;
 
         // 防止不必要的清除背景的操作
         case WM_ERASEBKGND :
@@ -368,7 +414,7 @@ GN::gfx::NTRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
         CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
         NTRenderWindow * wnd = iter->second;
         GN_ASSERT( cwp && wnd );
-        wnd->sigMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
+        wnd->handleMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
     }
 
     return ::CallNextHookEx( 0, code, wp, lp );

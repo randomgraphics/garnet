@@ -51,14 +51,14 @@ namespace GN { namespace gfx
         //!
         //! Change device configuration.
         //!
-        //! \param ds
+        //! \param uo
         //!     new device settings
         //! \param forceDeviceRecreation
         //!     force a full device recreation
         //! \note
         //!     This function may trigger sigDeviceRestore.
         //!
-        virtual bool changeDevice( const DeviceSettings & ds,
+        virtual bool changeDevice( const UserOptions & uo,
                                    bool forceDeviceRecreation = false ) = 0;
 
         //@}
@@ -574,18 +574,18 @@ namespace GN { namespace gfx
     //!
     //! Function prototype to create instance of renderer.
     //!
-    typedef Renderer * (*CreateRendererFunc)( const DeviceSettings & );
+    typedef Renderer * (*CreateRendererFunc)( const UserOptions & );
 
 #if GN_STATIC
     //!
     //! Create instance of D3D renderer.
     //!
-    Renderer * createD3DRenderer( const DeviceSettings & );
+    Renderer * createD3DRenderer( const UserOptions & );
 
     //!
     //! Create instance of OGL renderer.
     //!
-    Renderer * createOGLRenderer( const DeviceSettings & );
+    Renderer * createOGLRenderer( const UserOptions & );
 #endif
 }}
 

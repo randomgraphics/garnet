@@ -33,7 +33,12 @@ bool GN::gfx::D3DRenderer::drawBegin()
 
     GN_ASSERT( !mDrawBegan );
 
-    // TODO: handle monitor switch.
+    const DispDesc & dd = getDispDesc();
+
+    if( dd.autoBackbufferResizing && mWindow.getSizeChangeFlag() )
+    {
+        //TODO: changeDevice(...)
+    }
 
     // check for device lost
     if( !handleDeviceLost() ) return false;
