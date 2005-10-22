@@ -176,7 +176,7 @@ namespace GN
 #endif
 
     //!
-    //! Hard to explain in english, please see code by your self :)
+    //! Hard to explain in English, please see code by your self :)
     //!
     struct ScopeBool
     {
