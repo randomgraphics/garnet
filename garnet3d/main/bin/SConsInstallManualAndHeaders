@@ -1,0 +1,17 @@
+Import( 'env GN_targets' )
+
+import os, os.path
+
+# install SDK manual
+if 'GNman' in GN_targets and GN_targets['GNman']:
+    item = env.Install( os.path.join( 'sdk', 'manual' ), GN_targets['GNman'] )
+    GN_targets['GNman'] = item
+    env.Alias( 'sdk', item )
+
+# install SDK headers
+target = os.path.join( 'sdk', 'inc' )
+source = os.path.join('#src','priv','inc')
+for src in env.GN_glob('*.*', source, True):
+    dst = os.path.join( target, env.GN_relpath(src,source) )
+    env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
+    env.Alias( 'sdk', dst )
