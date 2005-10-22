@@ -17,12 +17,12 @@
 // *****************************************************************************
 
 namespace GN { namespace gfx {
-    Renderer * createD3DRenderer( const DeviceSettings & ds )
+    Renderer * createD3DRenderer( const UserOptions & uo )
     {
         GN_GUARD;
 
         GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
-        if( !p->init(ds) ) return 0;
+        if( !p->init(uo) ) return 0;
         return p.detatch();
 
         GN_UNGUARD;
@@ -31,9 +31,9 @@ namespace GN { namespace gfx {
 
 #if !GN_STATIC
 extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
+GNgfxCreateRenderer( const GN::gfx::UserOptions & uo )
 {
-    return GN::gfx::createD3DRenderer(ds);
+    return GN::gfx::createD3DRenderer(uo);
 }
 #endif
 
@@ -44,7 +44,7 @@ GNgfxCreateRenderer( const GN::gfx::DeviceSettings & ds )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::init(const DeviceSettings & ds )
+bool GN::gfx::D3DRenderer::init(const UserOptions & uo )
 {
     GN_GUARD;
 
@@ -62,7 +62,7 @@ bool GN::gfx::D3DRenderer::init(const DeviceSettings & ds )
     if( !drawInit()    ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !changeDevice( ds, true ) ) { quit(); return selfOK(); }
+    if( !changeDevice( uo, true ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -101,7 +101,7 @@ void GN::gfx::D3DRenderer::quit()
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3DRenderer::changeDevice(
-    const DeviceSettings & ds, bool forceRecreation )
+    const UserOptions & uo, bool forceRecreation )
 {
     GN_GUARD;
 
@@ -115,18 +115,14 @@ bool GN::gfx::D3DRenderer::changeDevice(
 
     // store old display descriptor
     const DispDesc oldDesc = getDispDesc();
-    HMONITOR oldMonitor = oldDesc.windowHandle
-        ? ::MonitorFromWindow( (HWND)oldDesc.windowHandle, MONITOR_DEFAULTTONEAREST )
-        : 0;
 
     // setup new display descriptor
-    if( !setupDispDesc( ds ) ) return false;
+    if( !setupDispDesc( uo ) ) return false;
     const DispDesc & newDesc = getDispDesc();
-    HMONITOR newMonitor = ::MonitorFromWindow( (HWND)newDesc.windowHandle, MONITOR_DEFAULTTONEAREST );
 
     if( forceRecreation ||
         oldDesc.windowHandle != newDesc.windowHandle ||
-        oldMonitor != newMonitor ||
+        oldDesc.monitorHandle != newDesc.monitorHandle ||
         oldDesc.reference != newDesc.reference ||
         oldDesc.software != newDesc.software )
     {

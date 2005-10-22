@@ -91,7 +91,7 @@ namespace GN { namespace gfx
         //! Called by sub-classes to initialize display descriptor
         //! based on device settings.
         //!
-        bool setupDispDesc( const DeviceSettings & );
+        bool setupDispDesc( const UserOptions & );
 
     protected:
 

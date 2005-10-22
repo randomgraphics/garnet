@@ -30,7 +30,7 @@ namespace GN { namespace gfx {
         //!
         //! initialize or reinitialize the render window based on current device setting.
         //!
-        bool init( const DeviceSettings & ds ) { mWidth = ds.width; mHeight = ds.height; return true; }
+        bool init( const UserOptions & uo ) { mWidth = uo.width; mHeight = uo.height; return true; }
 
         //!
         //! Delete render window

@@ -192,7 +192,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     UINT nAdapter = mD3D->GetAdapterCount();
     HWND window = (HWND)dd.windowHandle;
-    HMONITOR monitor = ::MonitorFromWindow( window, MONITOR_DEFAULTTONEAREST );
+    HMONITOR monitor = (HMONITOR)dd.monitorHandle;
     GN_ASSERT( nAdapter && window && monitor );
 
     std::vector<D3DDEVTYPE> devtypes;

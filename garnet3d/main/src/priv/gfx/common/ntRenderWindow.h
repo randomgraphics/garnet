@@ -20,7 +20,7 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        NTRenderWindow() : mWindow(0), mHook(0) { ++msInstanceID; }
+        NTRenderWindow() : mWindow(0), mHook(0), mMonitor(0) { ++msInstanceID; }
         ~NTRenderWindow() { quit(); }
         //@}
 
@@ -31,9 +31,9 @@ namespace GN { namespace gfx {
     public:
 
         //!
-        //! initialize or reinitialize the render window based on current device setting.
+        //! initialize or reinitialize the render window based on user options.
         //!
-        bool init( const DeviceSettings & );
+        bool init( const UserOptions & );
 
         //!
         //! Delete render window
@@ -43,12 +43,51 @@ namespace GN { namespace gfx {
         //!
         //! Get window handle
         //!
-        void * getWindow() const { return mWindow; }
+        HWND getWindow() const { return mWindow; }
+
+        //!
+        //! Get monitor handle
+        //!
+        HMONITOR getMonitor() const { return mMonitor; }
 
         //!
         //! Get client size
         //!
         bool getClientSize( uint32_t & width, uint32_t & height ) const;
+
+        //!
+        //! Get window size change flag.
+        //!
+        //! \param autoReset
+        //!     If true, automatically clear the flag.
+        //!
+        bool getSizeChangeFlag( bool autoReset = true )
+        {
+            if( autoReset )
+            {
+                bool b = mSizeChanged;
+                mSizeChanged = false;
+                return b;
+            }
+            else return mSizeChanged;
+        }
+
+        //!
+        //! Get monitor change flag.
+        //!
+        //! \param autoReset
+        //!     If true, automatically clear the flag.
+        //!
+        bool getMonitorSwitchFlag( bool autoReset = true )
+        {
+            if( autoReset )
+            {
+                bool b = mMonitorSwitch;
+                mMonitorSwitch = false;
+                return b;
+            }
+            else return mMonitorSwitch;
+        }
 
         //!
         //! This is hook functor.
@@ -60,19 +99,6 @@ namespace GN { namespace gfx {
         //!
         Signal4<void,HWND,UINT,WPARAM,LPARAM> sigMessage;
 
-/*
-        //!
-        //! Add message hook.
-        //!
-        //! Note that this function has no XWin conterpart, neither removeMsgHook().
-        //!
-        void addMsgHook( UINT msg, const MsgHook & hook );
-
-        //!
-        //! Remove message hook.
-        //!
-        void removeMsgHook( const MsgHook & hook );
-*/
         // ********************************
         // private variables
         // ********************************
@@ -87,6 +113,9 @@ namespace GN { namespace gfx {
         bool mInsideSizeMove;
         bool mSizeChanged;
 
+        HMONITOR mMonitor;
+        bool mMonitorSwitch;
+
         static unsigned int msInstanceID;
         static std::map<void*,NTRenderWindow*> msInstanceMap;
 
@@ -96,6 +125,7 @@ namespace GN { namespace gfx {
     private:
 
         bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen );
+        void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticHookProc( int code, WPARAM wp, LPARAM lp );

@@ -45,8 +45,8 @@ public:
         mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
         if( !mCreator ) return false;
 
-        GN::gfx::DeviceSettings ds;
-        mRenderer.reset( mCreator(ds) );
+        GN::gfx::UserOptions uo;
+        mRenderer.reset( mCreator(uo) );
         if( !mRenderer ) return false;
 
         mDone = false;
@@ -101,9 +101,12 @@ public:
         if( keyDown(VK_RETURN) && keyDown(VK_MENU) )
         {
             // toggle fullscreen mode
-            GN::gfx::DeviceSettings ds;
-            ds.fullscreen = !mRenderer->getDispDesc().fullscreen;
-            if( !mRenderer->changeDevice(ds) )
+            const GN::gfx::DispDesc & dd = mRenderer->getDispDesc();
+            GN::gfx::UserOptions uo;
+            uo.fullscreen = !dd.fullscreen;
+            uo.width = dd.width;
+            uo.height = dd.height;
+            if( !mRenderer->changeDevice(uo) )
                 mDone = true;
         }
 #endif

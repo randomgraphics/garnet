@@ -41,7 +41,7 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        bool init( const DeviceSettings & );
+        bool init( const UserOptions & );
         void quit();
         bool ok() const
         {
@@ -80,7 +80,7 @@ namespace GN { namespace gfx {
         //@{
 
     public:
-        virtual bool changeDevice( const DeviceSettings & ds,
+        virtual bool changeDevice( const UserOptions & uo,
                                    bool forceDeviceRecreation );
 
     protected :

@@ -94,9 +94,9 @@ protected:
 
         if( !mCreator) return;
         GN::AutoObjPtr<GN::gfx::Renderer> r;
-        GN::gfx::DeviceSettings ds;
-        ds.software = true;
-        r.reset( mCreator(ds) );
+        GN::gfx::UserOptions uo;
+        uo.software = true;
+        r.reset( mCreator(uo) );
         TS_ASSERT( r );
         if( !r ) return;
         clearRed(*r);
@@ -116,12 +116,12 @@ protected:
         if( !win.getWindow() ) return;
 
         GN::AutoObjPtr<GN::gfx::Renderer> r;
-        GN::gfx::DeviceSettings ds;
+        GN::gfx::UserOptions uo;
 
-        ds.useExternalWindow = true;
-        ds.renderWindow = win.getWindow();
-        ds.software = true;
-        r.reset( mCreator(ds) );
+        uo.useExternalWindow = true;
+        uo.renderWindow = win.getWindow();
+        uo.software = true;
+        r.reset( mCreator(uo) );
 
         clearBlue(*r);
 
@@ -140,12 +140,12 @@ protected:
 
         GN::AutoObjPtr<GN::gfx::Renderer> r;
 
-        GN::gfx::DeviceSettings ds;
+        GN::gfx::UserOptions uo;
 
-        ds.width = 320;
-        ds.height = 640;
-        ds.software = true;
-        r.reset( mCreator(ds) );
+        uo.width = 320;
+        uo.height = 640;
+        uo.software = true;
+        r.reset( mCreator(uo) );
         TS_ASSERT( r );
         if( !r ) return;
         const GN::gfx::DispDesc & dd = r->getDispDesc();
@@ -153,17 +153,17 @@ protected:
         clearRed(*r);
 
         // recreate the device
-        ds.software = false;
-        TS_ASSERT( r->changeDevice(ds) );
+        uo.software = false;
+        TS_ASSERT( r->changeDevice(uo) );
         TS_ASSERT_EQUALS( dd.software, false );
         TS_ASSERT_EQUALS( dd.width, 320 );
         TS_ASSERT_EQUALS( dd.height, 640 );
         clearBlue(*r);
 
         // reset the device
-        ds.width = 256;
-        ds.height = 128;
-        TS_ASSERT( r->changeDevice(ds) );
+        uo.width = 256;
+        uo.height = 128;
+        TS_ASSERT( r->changeDevice(uo) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
     }
@@ -172,13 +172,13 @@ protected:
     {
         GN::AutoObjPtr<GN::gfx::Renderer> r;
 
-        GN::gfx::DeviceSettings ds;
+        GN::gfx::UserOptions uo;
 
-        ds.fullscreen = true;
+        uo.fullscreen = true;
 
-        ds.width = 640;
-        ds.height = 480;
-        r.reset( mCreator(ds) );
+        uo.width = 640;
+        uo.height = 480;
+        r.reset( mCreator(uo) );
         TS_ASSERT(r);
         if( !r ) return;
         clearRed(*r);
@@ -186,9 +186,9 @@ protected:
         clearBlue(*r);
         //GN::sleep( 500 );
 
-        ds.width = 1024;
-        ds.height = 768;
-        TS_ASSERT( r->changeDevice( ds ) );
+        uo.width = 1024;
+        uo.height = 768;
+        TS_ASSERT( r->changeDevice( uo ) );
         clearRed(*r);
         //GN::sleep( 500 );
         clearBlue(*r);
@@ -201,12 +201,12 @@ protected:
 
         GN::AutoObjPtr<GN::gfx::Renderer> r;
 
-        GN::gfx::DeviceSettings ds;
-        ds.useExternalWindow = false;
-        ds.parentWindow = 0;
-        ds.width = ds.height = 0;
+        GN::gfx::UserOptions uo;
+        uo.useExternalWindow = false;
+        uo.parentWindow = 0;
+        uo.width = uo.height = 0;
 
-        r.reset( mCreator(ds) );
+        r.reset( mCreator(uo) );
         TS_ASSERT(r);
         if( !r ) return;
 
@@ -223,11 +223,11 @@ protected:
 
         GN::AutoObjPtr<GN::gfx::Renderer> r1, r2;
 
-        GN::gfx::DeviceSettings ds;
+        GN::gfx::UserOptions uo;
 
-        ds.width = 320;
-        ds.height = 640;
-        r1.reset( mCreator(ds) );
+        uo.width = 320;
+        uo.height = 640;
+        r1.reset( mCreator(uo) );
         TS_ASSERT( r1 );
 
         if( !r1.empty() )
@@ -238,9 +238,9 @@ protected:
             clearRed( *r1 );
         }
 
-        ds.width = 512;
-        ds.height = 256;
-        r2.reset( mCreator(ds) );
+        uo.width = 512;
+        uo.height = 256;
+        r2.reset( mCreator(uo) );
         TS_ASSERT( r2 );
 
         if( !r2.empty() )

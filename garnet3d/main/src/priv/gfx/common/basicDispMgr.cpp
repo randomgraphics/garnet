@@ -48,37 +48,38 @@ sGetCurrentDisplayDepth( void * window )
 //
 // ----------------------------------------------------------------------------
 bool
-GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
+GN::gfx::BasicRenderer::setupDispDesc( const UserOptions & uo )
 {
     GN_GUARD;
 
     DispDesc desc;
 
     // (re)initialize render window.
-    if( !mWindow.init(ds) ) return false;
+    if( !mWindow.init(uo) ) return false;
 
     desc.windowHandle = mWindow.getWindow();
-    GN_ASSERT( desc.windowHandle );
+    desc.monitorHandle = mWindow.getMonitor();
+    GN_ASSERT( desc.windowHandle && desc.monitorHandle );
 
     // get back buffer size
-    if( ds.width && ds.height )
+    if( uo.width && uo.height )
     {
-        desc.width = ds.width;
-        desc.height = ds.height;
+        desc.width = uo.width;
+        desc.height = uo.height;
     }
     else
     {
         uint32_t w, h;
         if( !mWindow.getClientSize( w, h ) ) return false;
-        desc.width = (0==ds.width) ? w : ds.width;
-        desc.height = (0==ds.height) ? h : ds.height;
+        desc.width = (0==uo.width) ? w : uo.width;
+        desc.height = (0==uo.height) ? h : uo.height;
     }
     GN_ASSERT( desc.width > 0 && desc.height > 0 );
 
     // setup screen depth
-    if( ds.depth && ds.fullscreen )
+    if( uo.depth && uo.fullscreen )
     {
-        desc.depth = ds.depth;
+        desc.depth = uo.depth;
     }
     else
     {
@@ -88,12 +89,13 @@ GN::gfx::BasicRenderer::setupDispDesc( const DeviceSettings & ds )
     GN_ASSERT( desc.depth > 0 );
 
     // setup misc. parameters
-    desc.fullscreen = ds.fullscreen;
-    desc.refrate = ds.fullscreen ? ds.refrate : 0;
-    desc.vsync = ds.vsync;
-    desc.reference = ds.reference;
-    desc.software = ds.software;
-    desc.autoRestore = ds.autoRestore;
+    desc.autoBackbufferResizing = uo.autoBackbufferResizing;
+    desc.fullscreen = uo.fullscreen;
+    desc.refrate = uo.fullscreen ? uo.refrate : 0;
+    desc.vsync = uo.vsync;
+    desc.reference = uo.reference;
+    desc.software = uo.software;
+    desc.autoRestore = uo.autoRestore;
 
     // success
     setDispDesc( desc );
