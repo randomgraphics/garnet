@@ -91,20 +91,23 @@ namespace GN { namespace gfx
         //! Called by sub-classes to initialize display descriptor
         //! based on device settings.
         //!
-        bool setupDispDesc( const UserOptions & );
+        bool processUserOptions( const UserOptions & );
+
+        //!
+        //! Handle render window size move
+        //!
+        bool handleRenderWindowSizeMove();
 
     protected:
 
         //!
-        //! Render window class (platform independent)
+        //! Render window instance (platform independent)
         //!
 #if GN_WINNT
-        typedef NTRenderWindow RenderWindow;
+        NTRenderWindow mWindow;
 #else
-        typedef XRenderWindow RenderWindow;
+        XRenderWindow mWindow;
 #endif
-
-        RenderWindow mWindow; //!< Render window instance
 
         //@}
 

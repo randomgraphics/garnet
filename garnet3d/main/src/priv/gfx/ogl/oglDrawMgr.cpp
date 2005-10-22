@@ -14,6 +14,9 @@ bool GN::gfx::OGLRenderer::drawBegin()
 
     GN_ASSERT( !mDrawBegan );
 
+    // handle render window size move
+    if( !handleRenderWindowSizeMove() ) return false;
+
     mDrawBegan = 1;
     mNumPrims = 0;
     mNumDraws = 0;

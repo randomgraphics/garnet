@@ -23,6 +23,17 @@ namespace GN { namespace gfx
 
         //@{
 
+    private:
+
+        UserOptions mUserOptions;
+
+    protected:
+
+        //!
+        //! Update private user option variable.
+        //!
+        void setUserOptions( const UserOptions & uo ) { mUserOptions = uo; }
+
     public:
 
         //!
@@ -61,6 +72,11 @@ namespace GN { namespace gfx
         virtual bool changeDevice( const UserOptions & uo,
                                    bool forceDeviceRecreation = false ) = 0;
 
+        //!
+        //! Get current user options
+        //!
+        const UserOptions & getUserOptions() const { return mUserOptions; }
+
         //@}
 
         // ********************************************************************
@@ -83,7 +99,7 @@ namespace GN { namespace gfx
     protected:
 
         //!
-        //! Update render window handle
+        //! Update private diplay decriptor
         //!
         void setDispDesc( const DispDesc & desc )
         {

@@ -219,8 +219,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     if( !activateDisplayMode() ) return false;
 
     // setup message hook
-    const DispDesc & dd = getDispDesc();
-    if( dd.autoRestore )
+    if( getUserOptions().autoRestore )
     {
         mWindow.sigMessage.connect( this, &OGLRenderer::msgHook );
     }
@@ -290,25 +289,19 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
     // check for redundent activation
     if( mDisplayModeActivated ) return true;
 
-    const DispDesc & dd = getDispDesc();
-
     // only change display mode if we are in fullscreen mode
-    if( !dd.fullscreen ) return true;
+    if( !getUserOptions().fullscreen ) return true;
+
+    const DispDesc & dd = getDispDesc();
 
     // ignore message hook during this function call
     ScopeBool ignoreHook(mIgnoreMsgHook);
 
-    // store current render window handle
     HWND hwnd = (HWND)dd.windowHandle;
-    GN_ASSERT( hwnd == mWindow.getWindow() );
+    HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
+    GN_ASSERT( hwnd && hmonitor );
 
     // get monitor information
-    HMONITOR hmonitor = ::MonitorFromWindow( hwnd, MONITOR_DEFAULTTOPRIMARY );
-    if( 0 == hmonitor )
-    {
-        GNOGL_ERROR( "fail to get monitor handle!" );
-        return false;
-    }
     MONITORINFOEXA mi;
     mi.cbSize = sizeof(mi);
     GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
@@ -341,14 +334,7 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
     GNOGL_INFO( "Fullscreen mode activated." );
 
     // update monitor information
-    mi.cbSize = sizeof(mi);
-    if( !::GetMonitorInfoA(
-        ::MonitorFromWindow( hwnd, MONITOR_DEFAULTTOPRIMARY ),
-        &mi ) )
-    {
-        GNOGL_ERROR( "fail to update monitor information!" );
-        return false;
-    }
+    GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
     // modify window style
     GN_WIN_CHECK( ::SetParent( hwnd, 0 ) );

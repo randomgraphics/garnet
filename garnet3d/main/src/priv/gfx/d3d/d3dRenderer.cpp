@@ -113,25 +113,30 @@ bool GN::gfx::D3DRenderer::changeDevice(
     }
     ScopeBool __dummy__(mDeviceChanging);
 
-    // store old display descriptor
+    // store old settings
+    const UserOptions oldOptions = getUserOptions();
     const DispDesc oldDesc = getDispDesc();
 
-    // setup new display descriptor
-    if( !setupDispDesc( uo ) ) return false;
+    // setup new settings
+    if( !processUserOptions( uo ) ) return false;
+
     const DispDesc & newDesc = getDispDesc();
 
     if( forceRecreation ||
         oldDesc.windowHandle != newDesc.windowHandle ||
         oldDesc.monitorHandle != newDesc.monitorHandle ||
-        oldDesc.reference != newDesc.reference ||
-        oldDesc.software != newDesc.software )
+        oldOptions.reference != uo.reference ||
+        oldOptions.software != uo.software )
     {
-        // we have to perform a full device recreation
+        // we have to recreate the whole device.
         deviceDispose();
         deviceDestroy();
         return deviceCreate() && deviceRestore();
     }
-    else if( oldDesc != newDesc )
+    else if(
+        oldDesc != newDesc ||
+        oldOptions.fullscreen != uo.fullscreen ||
+        oldOptions.vsync != uo.vsync )
     {
         // a device reset should be enough
         deviceDispose();

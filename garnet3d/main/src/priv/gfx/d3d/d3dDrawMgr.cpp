@@ -33,12 +33,8 @@ bool GN::gfx::D3DRenderer::drawBegin()
 
     GN_ASSERT( !mDrawBegan );
 
-    const DispDesc & dd = getDispDesc();
-
-    if( dd.autoBackbufferResizing && mWindow.getSizeChangeFlag() )
-    {
-        //TODO: changeDevice(...)
-    }
+    // handle render window size move
+    if( !handleRenderWindowSizeMove() ) return false;
 
     // check for device lost
     if( !handleDeviceLost() ) return false;
