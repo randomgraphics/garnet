@@ -117,7 +117,7 @@ import copy
 if 'all' == conf['variant'] or 'debug' == conf['variant'] or 'debug' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
     c['variant'] = 'debug'
-    env.SConscript(
+    SConscript(
         'SConscript',
         exports={
             'GN_conf'    : c,
@@ -129,7 +129,7 @@ if 'all' == conf['variant'] or 'debug' == conf['variant'] or 'debug' in COMMAND_
 if 'all' == conf['variant'] or 'release' == conf['variant'] or 'release' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
     c['variant'] = 'release'
-    env.SConscript(
+    SConscript(
         'SConscript',
         exports={
             'GN_conf'    : c,
@@ -141,7 +141,7 @@ if 'all' == conf['variant'] or 'release' == conf['variant'] or 'release' in COMM
 if 'all' == conf['variant'] or 'stdbg' == conf['variant'] or 'stdbg' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
     c['variant'] = 'stdbg'
-    env.SConscript(
+    SConscript(
         'SConscript',
         exports={
             'GN_conf'    : c,
@@ -153,7 +153,7 @@ if 'all' == conf['variant'] or 'stdbg' == conf['variant'] or 'stdbg' in COMMAND_
 if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
     c['variant'] = 'strel'
-    env.SConscript(
+    SConscript(
         'SConscript',
         exports={
             'GN_conf'    : c,
@@ -170,7 +170,6 @@ if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_
 
 manual = {}
 SConscript( 'src/priv/manual/SConscript',
-            build_dir = 'tmp/scons',
             exports={'GN_targets':manual} )
 SConscript( 'bin/SConsInstallManualAndHeaders',
             exports={'GN_targets':manual} )
