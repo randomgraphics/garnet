@@ -11,7 +11,7 @@ if 'GNman' in GN_targets and GN_targets['GNman']:
 # install SDK headers
 target = os.path.join( 'sdk', 'inc' )
 source = os.path.join('#src','priv','inc')
-for src in env.GN_glob('*.*', source, True):
+for src in env.GN_glob(source, True):
     dst = os.path.join( target, env.GN_relpath(src,source) )
     env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
     env.Alias( 'sdk', dst )
