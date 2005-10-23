@@ -107,10 +107,11 @@ bool GN::gfx::OGLRenderer::changeDevice(
     }
     ScopeBool __dummy__(mDeviceChanging);
 
-    // store old display descriptor
+    // store old display settings
+    const UserOptions oldOptions = getUserOptions();
     const DispDesc oldDesc = getDispDesc();
 
-    // setup new display descriptor
+    // setup new display settings
     if( !processUserOptions( uo ) ) return false;
 
     const DispDesc & newDesc = getDispDesc();
@@ -123,7 +124,10 @@ bool GN::gfx::OGLRenderer::changeDevice(
         deviceDestroy();
         return deviceCreate() && deviceRestore();
     }
-    else if( oldDesc != newDesc )
+    else if( oldDesc != newDesc ||
+        oldOptions.fullscreen != uo.fullscreen ||
+        oldOptions.vsync != uo.vsync ||
+        oldOptions.autoRestore != uo.autoRestore )
     {
         // a device reset should be enough
         deviceDispose();
