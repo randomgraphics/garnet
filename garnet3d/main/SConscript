@@ -84,28 +84,37 @@ def GN_relpath( env, target, base ):
     return os.path.join(*rel_list)
 
 # 查找指定目录下的文件
-def GN_glob( env,
-             patterns,
-             dirs = ['.'],
-             recursive = False ):
-    patterns = Flatten( [patterns] )
-    dirs = Flatten( [dirs] )
-    files = []
-    for dir in dirs:
+def GN_glob( env, patterns, recursive = False ):
+    def do_glob( env, pattern, dir, recursive ):
+        files = []
         root = Dir(dir).srcnode().abspath;
         try:
             for file in os.listdir( root ):
                 if os.path.isdir( os.path.join(root,file) ):
                     if recursive and ( not '.svn' == file ) : # ignore subversion directory
-                        files = files + GN_glob( env, patterns, os.path.join(dir,file), recursive )
+                        files = files + do_glob( env, pattern, os.path.join(dir,file), recursive )
                 else:
                     # Note: ignore precompiled header
                     if not ('pch.cpp' == file or 'stdafx.cpp' == file):
-                        for pattern in patterns:
-                            if fnmatch.fnmatch(file, pattern):
-                                files.append( os.path.join( dir, file ) )
+                        #print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
+                        if fnmatch.fnmatch(file, pattern):
+                            files.append( os.path.join( dir, file ) )
         except WindowsError:
             pass
+        return files
+    #GN_info( env, 'GN_glob %s'%patterns )
+    files = []
+    if not patterns is list: patterns = [patterns]
+    for p in Flatten(patterns):
+        if os.path.isdir( env.GetBuildPath(p) ):
+            #print '    do_glob(*.*,%s)'%p
+            files += do_glob( env, '*.*', p, recursive )
+        else:
+            (dir,pattern) = os.path.split(p);
+            if '' == pattern: pattern = '*.*';
+            if '' == dir: dir = '.';
+            #print '    do_glob(%s,%s)'%(pattern,dir)
+            files += do_glob( env, pattern, dir, recursive )
     return files
 
 # 编译器是否会生成manifest文件
