@@ -1,8 +1,18 @@
-Import( 'env GN_targets' )
+Import( 'GN_targets' )
 
-import sys
+env = Environment()
+
+buildDir = '#tmp/scons/manual'
+
+env.BuildDir( buildDir, '.' )
+
+import sys, os.path
 from string import Template
 
+# prefix file/dir name with buildDir
+def b(path): return os.path.join(buildDir,path)
+
+# generate Doxyfile
 def gen_doxyfile(target,source,env):
 
     fp = open( source[0].path )
@@ -33,19 +43,19 @@ else:
     genchm = 'NO'
 
 doxyfile = env.Command(
-    'Doxyfile',
-    Split('gendoxyfile.py Doxyfile.in'),
+    b('Doxyfile'),
+    ['gendoxyfile.py', b('Doxyfile.in')],
     '%s $SOURCES OUTPUT_DIRECTORY=%s GENERATE_HTMLHELP=%s CHM_FILE=%s HHC_LOCATION=%s > $TARGET'%(
         sys.executable,
-        env.Dir('.').path,
+        env.Dir(b('.')).abspath,
         genchm,
-        env.File('garnet3d.chm').abspath,
+        env.File(b('garnet3d.chm')).abspath,
         env.File('#src/extern/bin/win32/hhc.exe').abspath,
         ),
     )
 env.Depends( doxyfile, 'gendoxyfile.py' )
 
 if 'YES' == genchm :
-    manual = env.Command( 'garnet3d.chm', doxyfile, '%s $SOURCE'%doxygen )
+    manual = env.Command( b('garnet3d.chm'), doxyfile, '%s $SOURCE'%doxygen )
     env.Depends( manual, env.GN_glob( '#src/priv/*.[h|inl]', True ) )
     GN_targets['GNman'] = manual
