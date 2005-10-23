@@ -30,7 +30,20 @@ namespace GN { namespace gfx {
         //!
         //! initialize or reinitialize the render window based on current device setting.
         //!
-        bool init( const UserOptions & uo ) { mWidth = uo.width; mHeight = uo.height; return true; }
+        bool init( const UserOptions & uo )
+        {
+            if( uo.fullscreen )
+            {
+                mWidth = uo.displayMode.width;
+                mHeight = uo.displayMode.height;
+            }
+            else
+            {
+                mWidth = uo.windowedWidth;
+                mHeight = uo.windowedHeight;
+            }
+            return true;
+        }
 
         //!
         //! Delete render window
@@ -43,9 +56,22 @@ namespace GN { namespace gfx {
         void * getWindow() const { return (void*)1; }
 
         //!
+        //! Get monitor handle
+        //!
+        void * getMonitor() const { return (void*)1; }
+
+        //!
         //! Get client size
         //!
         bool getClientSize( uint32_t & width , uint32_t & height ) const { width = mWidth; height = mHeight; return true; }
+
+        //!
+        //! Get window size change flag.
+        //!
+        //! \param autoReset
+        //!     If true, automatically clear the flag.
+        //!
+        bool getSizeChangeFlag( bool autoReset = true ) { GN_UNUSED_PARAM(autoReset); return false; }
     };
 }}
 

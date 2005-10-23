@@ -94,7 +94,7 @@ namespace GN { namespace gfx
         bool processUserOptions( const UserOptions & );
 
         //!
-        //! Handle render window size move
+        //! Called by sub class to respond to er window resizing/moving
         //!
         bool handleRenderWindowSizeMove();
 
@@ -105,6 +105,7 @@ namespace GN { namespace gfx
         //!
 #if GN_WINNT
         NTRenderWindow mWindow;
+        WinProp        mWinProp;
 #else
         XRenderWindow mWindow;
 #endif

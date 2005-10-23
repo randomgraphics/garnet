@@ -171,7 +171,7 @@ if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_
 manual = {}
 SConscript( 'src/priv/manual/SConscript',
             exports={'GN_targets':manual} )
-SConscript( 'bin/SConsInstallManualAndHeaders',
+SConscript( 'SConsInstallManualAndHeaders',
             exports={'GN_targets':manual} )
 
 ################################################################################

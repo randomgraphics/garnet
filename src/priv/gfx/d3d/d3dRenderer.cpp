@@ -160,6 +160,8 @@ bool GN::gfx::D3DRenderer::deviceCreate()
 
     _GN_RENDER_DEVICE_TRACE();
 
+    GN_ASSERT( mDeviceChanging );
+
     if( !BasicRenderer::deviceCreate() ) return false;
     if( !dispDeviceCreate() ) return false;
     if( !capsDeviceCreate() ) return false;
@@ -185,6 +187,8 @@ bool GN::gfx::D3DRenderer::deviceRestore()
     GN_GUARD;
 
     _GN_RENDER_DEVICE_TRACE();
+
+    GN_ASSERT( mDeviceChanging );
 
     if( !BasicRenderer::deviceRestore() ) return false;
     if( !dispDeviceRestore() ) return false;

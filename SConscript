@@ -20,7 +20,7 @@ GN_conf['debug'] = ('debug' == GN_conf['variant'] or 'stdbg' == GN_conf['variant
 #
 ################################################################################
 
-root_dir = Dir( os.path.join('tmp', 'scons' ) ).abspath
+root_dir = Dir( os.path.join('bin', 'tmp' ) ).abspath
 variant_dir = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['variant'] )
 conf_dir = os.path.join( variant_dir, 'conf' )
 sig_file = os.path.join( root_dir, GN_conf['platform'], GN_conf['compiler'], '.sconsign.dbm' )
@@ -602,5 +602,5 @@ env.Export(
 ################################################################################
 
 SConscript( 'src/SConscript', build_dir=variant_dir, duplicate=0 )
-SConscript( 'bin/SConscript' )
+SConscript( 'SConsInstallBinaries' )
 if 'MSVSProject' in env['BUILDERS']: SConscript( 'msvc/SConscript', build_dir=os.path.join(variant_dir,'msvc') )

@@ -78,7 +78,6 @@ bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
     // clear all state flags
     mInsideSizeMove = false;
     mSizeChanged = false;
-    mMonitorSwitch = false;
 
     // success
     return true;
@@ -193,7 +192,7 @@ bool GN::gfx::NTRenderWindow::initInternalWindow( const UserOptions & uo )
     if( !determineInternalWindowSize( uo, w, h ) ) return false;
     GN_ASSERT( w > 0 && h > 0 );
 
-    if( !createWindow( (HWND)uo.parentWindow, w, h, uo.fullscreen ) ) return false;
+    if( !createWindow( (HWND)uo.parentWindow, w, h ) ) return false;
 
     // success
     return true;
@@ -304,8 +303,7 @@ bool GN::gfx::NTRenderWindow::determineInternalWindowSize(
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::NTRenderWindow::createWindow(
-    HWND parent, uint32_t width, uint32_t height, bool fullscreen )
+GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t height )
 {
     GN_GUARD;
 
@@ -344,8 +342,7 @@ GN::gfx::NTRenderWindow::createWindow(
     }
 
     // setup window style
-    DWORD style = WS_POPUP;
-    if( !fullscreen ) style |= WS_CAPTION | WS_BORDER | WS_SIZEBOX;
+    DWORD style = WS_POPUP | WS_CAPTION | WS_BORDER | WS_SIZEBOX;
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
 
     // calculate window size
@@ -414,17 +411,9 @@ GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp
     //
     if( mSizeChanged )
     {
-        // Check monitor switch
-        HMONITOR newMonitor = ::MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
-        if( 0 != newMonitor )
-        {
-            if( newMonitor != mMonitor )
-            {
-                mMonitorSwitch = true;
-                mMonitor = newMonitor;
-            }
-        }
-        else
+        // Update monitor handle
+        mMonitor = ::MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
+        if( 0 == mMonitor )
         {
             GNGFX_ERROR( "Fail to get monitor handle from window handle!" );
         }
@@ -530,6 +519,12 @@ bool GN::gfx::WinProp::save( HWND hwnd )
 {
     GN_GUARD;
 
+    if( !::IsWindow(hwnd) )
+    {
+        GN_ERROR( "Input window handle is invalid!" );
+        return false;
+    }
+
     mParent = ::GetParent( hwnd );
     mMenu = ::GetMenu( hwnd );
     GN_WIN_CHECK( ::GetWindowRect( hwnd, &mBoundsRect ) );
@@ -548,6 +543,7 @@ bool GN::gfx::WinProp::save( HWND hwnd )
     mZoomed  = ::IsZoomed( hwnd );
 
     // success
+    mWindow = hwnd;
     return true;
 
     GN_UNGUARD;
@@ -556,26 +552,30 @@ bool GN::gfx::WinProp::save( HWND hwnd )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::WinProp::restore( HWND hwnd )
+void GN::gfx::WinProp::restore()
 {
     GN_GUARD;
+
+    if( !::IsWindow(mWindow) ) return;
 
     if( !(WS_CHILD & mStyle) )
     {
         // NOTE: can't attach mMenu to child window
-        GN_WIN_CHECK( ::SetMenu( hwnd, mMenu ) );
+        GN_WIN_CHECK( ::SetMenu( mWindow, mMenu ) );
     }
-    ::SetWindowLong( hwnd, GWL_STYLE, mStyle );
-    ::SetWindowLong( hwnd, GWL_EXSTYLE, mExStyle );
-    GN_WIN_CHECK( ::SetParent( hwnd, mParent ) );
+    ::SetWindowLong( mWindow, GWL_STYLE, mStyle );
+    ::SetWindowLong( mWindow, GWL_EXSTYLE, mExStyle );
+    GN_WIN_CHECK( ::SetParent( mWindow, mParent ) );
     GN_WIN_CHECK( ::SetWindowPos(
-        hwnd,
+        mWindow,
         WS_EX_TOPMOST & mExStyle ? HWND_TOPMOST : HWND_NOTOPMOST,
         mBoundsRect.left, mBoundsRect.top,
         mBoundsRect.right-mBoundsRect.left,
         mBoundsRect.bottom-mBoundsRect.top,
         SWP_FRAMECHANGED | SWP_NOOWNERZORDER | SWP_SHOWWINDOW ) );
-    GN_WIN_CHECK( ::UpdateWindow( hwnd ) );
+    GN_WIN_CHECK( ::UpdateWindow( mWindow ) );
+
+    mWindow = 0;
 
     GN_UNGUARD;
 }

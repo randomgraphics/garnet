@@ -2,7 +2,7 @@ Import( 'GN_targets' )
 
 env = Environment()
 
-buildDir = '#tmp/scons/manual'
+buildDir = '#bin/tmp/manual'
 
 env.BuildDir( buildDir, '.' )
 

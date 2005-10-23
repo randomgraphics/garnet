@@ -63,10 +63,20 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
 {
     GN_GUARD;
 
+#if GN_WINNT
+    // Restore render window properties, if switching back from fullscreen mode
+    if( getUserOptions().fullscreen && !uo.fullscreen ) mWinProp.restore();
+#endif
+
     DispDesc desc;
 
     // (re)initialize render window.
     if( !mWindow.init(uo) ) return false;
+
+#if GN_WINNT
+    // Save new render window properties, for windowed mode only
+    if( !uo.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
+#endif
 
     desc.windowHandle = mWindow.getWindow();
     desc.monitorHandle = mWindow.getMonitor();
@@ -133,4 +143,3 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
 
     GN_UNGUARD;
 }
-

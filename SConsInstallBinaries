@@ -14,7 +14,7 @@ def doInstall( alias, dir, names ):
 # populate sample directory
 doInstall(
     'samples',
-    'samples',
+    os.path.join('bin','samples'),
     Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest GNgfxTest') )
 
 # make test executable depends on all shared libraries.
@@ -43,9 +43,9 @@ if GN_conf['run_unit_tests']:
 # populate SDK directory
 doInstall(
     'sdk',
-    os.path.join('sdk','bin'),
+    os.path.join('bin', 'sdk','bin'),
     Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin') )
 doInstall(
     'sdk',
-    os.path.join('sdk','lib'),
+    os.path.join('bin', 'sdk','lib'),
     Split('GNcoreLib GNgfxD3DLib GNgfxOGLLib GNbase GNextern GNd3d GNogl') )

@@ -188,7 +188,9 @@ namespace GN
             bool createOGL();
             bool setupDisplayMode();
             void restoreDisplayMode();
+#if GN_WINNT
             LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
+#endif
         };
 
         //! \name Util functions
