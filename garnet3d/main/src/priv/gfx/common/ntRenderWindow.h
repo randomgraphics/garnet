@@ -73,23 +73,6 @@ namespace GN { namespace gfx {
         }
 
         //!
-        //! Get monitor change flag.
-        //!
-        //! \param autoReset
-        //!     If true, automatically clear the flag.
-        //!
-        bool getMonitorSwitchFlag( bool autoReset = true )
-        {
-            if( autoReset )
-            {
-                bool b = mMonitorSwitch;
-                mMonitorSwitch = false;
-                return b;
-            }
-            else return mMonitorSwitch;
-        }
-
-        //!
         //! This is hook functor.
         //!
         typedef Functor4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
@@ -115,7 +98,6 @@ namespace GN { namespace gfx {
         bool mSizeChanged;
 
         HMONITOR mMonitor;
-        bool mMonitorSwitch;
 
         static unsigned int msInstanceID;
         static std::map<void*,NTRenderWindow*> msInstanceMap;
@@ -130,7 +112,7 @@ namespace GN { namespace gfx {
         bool resizeInternalWindow( const UserOptions & uo );
         bool determineInternalWindowSize( const UserOptions & uo, uint32_t & width, uint32_t & height );
 
-        bool createWindow( HWND parent, uint32_t width, uint32_t height, bool fullscreen );
+        bool createWindow( HWND parent, uint32_t width, uint32_t height );
         void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
@@ -143,6 +125,7 @@ namespace GN { namespace gfx {
     //!
     class WinProp
     {
+        HWND  mWindow;
         HWND  mParent;
         HMENU mMenu;
         RECT  mBoundsRect;
@@ -155,7 +138,12 @@ namespace GN { namespace gfx {
         //!
         //! Ctor
         //!
-        //WinProp() {}
+        WinProp() : mWindow(0) {}
+
+        //!
+        //! Dtor
+        //!
+        ~WinProp() { restore(); }
 
         //!
         //! save window properties
@@ -165,7 +153,7 @@ namespace GN { namespace gfx {
         //!
         //! Restore previously stored properites
         //!
-        void restore( HWND hwnd );
+        void restore();
     };
 }}
 

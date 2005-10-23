@@ -215,11 +215,47 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
 
     GN_ASSERT( !mDispOK && mRenderContext && mDeviceContext );
 
-    // activate displaymode
-    if( !activateDisplayMode() ) return false;
+    const UserOptions & uo = getUserOptions();
+
+    // modify fullscreen render window properties
+    if( uo.fullscreen )
+    {
+        // activate displaymode
+        if( !activateDisplayMode() ) return false;
+
+        const DispDesc & dd = getDispDesc();
+
+        HWND hwnd = (HWND)dd.windowHandle;
+        HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
+
+        // modify window style
+        GN_WIN_CHECK( ::SetParent( hwnd, 0 ) );
+        GN_WIN_CHECK( ::SetMenu( hwnd, 0 ) );
+        GN_WIN_CHECK( ::SetWindowLong( hwnd, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
+        if( ::IsIconic(hwnd) )
+        {
+            GN_WIN_CHECK( ::ShowWindow( hwnd, SW_SHOWNORMAL ) );
+        }
+
+        // get monitor information
+        MONITORINFOEXA mi;
+        mi.cbSize = sizeof(mi);
+        GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
+
+        // move window to left-top of the monitor, and set it as TOPMOST window.
+        GNOGL_INFO( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
+        GN_WIN_CHECK( ::SetWindowPos(
+            hwnd, HWND_TOPMOST,
+            0, 0,
+            dd.width, dd.height,
+            SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
+
+        // trigger a redraw operation
+        GN_WIN_CHECK( ::UpdateWindow( hwnd ) );
+    }
 
     // setup message hook
-    if( getUserOptions().autoRestore )
+    if( uo.autoRestore )
     {
         mWindow.sigMessage.connect( this, &OGLRenderer::msgHook );
     }
@@ -332,27 +368,6 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
     }
     mDisplayModeActivated = true;
     GNOGL_INFO( "Fullscreen mode activated." );
-
-    // update monitor information
-    GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
-
-    // modify window style
-    GN_WIN_CHECK( ::SetParent( hwnd, 0 ) );
-    GN_WIN_CHECK( ::SetMenu( hwnd, 0 ) );
-    GN_WIN_CHECK( ::SetWindowLong( hwnd, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
-    if( ::IsIconic(hwnd) )
-    {
-        GN_WIN_CHECK( ::ShowWindow( hwnd, SW_SHOWNORMAL ) );
-    }
-    GNOGL_INFO( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
-    GN_WIN_CHECK( ::SetWindowPos(
-        hwnd, HWND_TOPMOST,
-        mi.rcWork.left, mi.rcWork.top,
-        dd.width, dd.height,
-        SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
-
-    // trigger a redraw operation
-    GN_WIN_CHECK( ::UpdateWindow( hwnd ) );
 
     // success
     return true;
