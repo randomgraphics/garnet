@@ -45,6 +45,15 @@ supporting internal functions that are not used by other modules. */
 #include "pcre_internal.h"
 
 
+/* When DEBUG is defined, we need the pcre_printint() function, which is also
+used by pcretest. DEBUG is not defined when building a production library. */
+
+#ifdef DEBUG
+#include "pcre_printint.src"
+#endif
+
+
+
 /*************************************************
 *      Code parameters and static tables         *
 *************************************************/
@@ -698,7 +707,18 @@ read_repeat_counts(const uschar *p, int *minp, int *maxp, int *errorcodeptr)
 int min = 0;
 int max = -1;
 
+/* Read the minimum value and do a paranoid check: a negative value indicates
+an integer overflow. */
+
 while ((digitab[*p] & ctype_digit) != 0) min = min * 10 + *p++ - '0';
+if (min < 0 || min > 65535)
+  {
+  *errorcodeptr = ERR5;
+  return p;
+  }
+
+/* Read the maximum value if there is one, and again do a paranoid on its size.
+Also, max must not be less than min. */
 
 if (*p == '}') max = min; else
   {
@@ -706,6 +726,11 @@ if (*p == '}') max = min; else
     {
     max = 0;
     while((digitab[*p] & ctype_digit) != 0) max = max * 10 + *p++ - '0';
+    if (max < 0 || max > 65535)
+      {
+      *errorcodeptr = ERR5;
+      return p;
+      }
     if (max < min)
       {
       *errorcodeptr = ERR4;
@@ -714,16 +739,11 @@ if (*p == '}') max = min; else
     }
   }
 
-/* Do paranoid checks, then fill in the required variables, and pass back the
-pointer to the terminating '}'. */
+/* Fill in the required variables, and pass back the pointer to the terminating
+'}'. */
 
-if (min > 65535 || max > 65535)
-  *errorcodeptr = ERR5;
-else
-  {
-  *minp = min;
-  *maxp = max;
-  }
+*minp = min;
+*maxp = max;
 return p;
 }
 
@@ -3828,7 +3848,7 @@ Returns:        pointer to compiled data block, or NULL on error,
                 with errorptr and erroroffset set
 */
 
-EXPORT pcre *
+PCRE_EXPORT pcre *
 pcre_compile(const char *pattern, int options, const char **errorptr,
   int *erroroffset, const unsigned char *tables)
 {
@@ -3836,7 +3856,7 @@ return pcre_compile2(pattern, options, NULL, errorptr, erroroffset, tables);
 }
 
 
-EXPORT pcre *
+PCRE_EXPORT pcre *
 pcre_compile2(const char *pattern, int options, int *errorcodeptr,
   const char **errorptr, int *erroroffset, const unsigned char *tables)
 {
@@ -3856,6 +3876,7 @@ BOOL utf8;
 BOOL class_utf8;
 #endif
 BOOL inescq = FALSE;
+BOOL capturing;
 unsigned int brastackptr = 0;
 size_t size;
 uschar *code;
@@ -3943,7 +3964,7 @@ pattern. We can't be so clever for #-comments. */
 ptr = (const uschar *)(pattern - 1);
 while ((c = *(++ptr)) != 0)
   {
-  int min = 0, max = 0;
+  int min, max;
   int class_optcount;
   int bracket_length;
   int duplength;
@@ -4410,6 +4431,7 @@ while ((c = *(++ptr)) != 0)
     case '(':
     branch_newextra = 0;
     bracket_length = 1 + LINK_SIZE;
+    capturing = FALSE;
 
     /* Handle special forms of bracket, which all start (? */
 
@@ -4497,6 +4519,9 @@ while ((c = *(++ptr)) != 0)
 
         case 'P':
         ptr += 3;
+
+        /* Handle the definition of a named subpattern */
+
         if (*ptr == '<')
           {
           const uschar *p;    /* Don't amalgamate; some compilers */
@@ -4509,8 +4534,11 @@ while ((c = *(++ptr)) != 0)
             }
           name_count++;
           if (ptr - p > max_name_size) max_name_size = (ptr - p);
+          capturing = TRUE;   /* Named parentheses are always capturing */
           break;
           }
+
+        /* Handle back references and recursive calls to named subpatterns */
 
         if (*ptr == '=' || *ptr == '>')
           {
@@ -4695,18 +4723,24 @@ while ((c = *(++ptr)) != 0)
           continue;
           }
 
-        /* If options were terminated by ':' control comes here. Fall through
-        to handle the group below. */
+        /* If options were terminated by ':' control comes here. This is a
+        non-capturing group with an options change. There is nothing more that
+        needs to be done because "capturing" is already set FALSE by default;
+        we can just fall through. */
+
         }
       }
 
-    /* Extracting brackets must be counted so we can process escapes in a
-    Perlish way. If the number exceeds EXTRACT_BASIC_MAX we are going to
-    need an additional 3 bytes of store per extracting bracket. However, if
-    PCRE_NO_AUTO)CAPTURE is set, unadorned brackets become non-capturing, so we
-    must leave the count alone (it will aways be zero). */
+    /* Ordinary parentheses, not followed by '?', are capturing unless
+    PCRE_NO_AUTO_CAPTURE is set. */
 
-    else if ((options & PCRE_NO_AUTO_CAPTURE) == 0)
+    else capturing = (options & PCRE_NO_AUTO_CAPTURE) == 0;
+
+    /* Capturing brackets must be counted so we can process escapes in a
+    Perlish way. If the number exceeds EXTRACT_BASIC_MAX we are going to need
+    an additional 3 bytes of memory per capturing bracket. */
+
+    if (capturing)
       {
       bracount++;
       if (bracount > EXTRACT_BASIC_MAX) bracket_length += 3;
@@ -4975,7 +5009,8 @@ if (reqbyte >= 0 &&
   re->options |= PCRE_REQCHSET;
   }
 
-/* Print out the compiled data for debugging */
+/* Print out the compiled data if debugging is enabled. This is never the
+case when building a production library. */
 
 #ifdef DEBUG
 
@@ -5013,7 +5048,7 @@ if ((re->options & PCRE_REQCHSET) != 0)
     else printf("Req char = \\x%02x%s\n", ch, caseless);
   }
 
-_pcre_printint(re, stdout);
+pcre_printint(re, stdout);
 
 /* This check is done here in the debugging case so that the code that
 was compiled can be seen. */
