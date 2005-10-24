@@ -134,7 +134,7 @@ protected:
 #endif        
     }
 
-    void changeDevice()
+    void changeUserOptions()
     {
         if( !mCreator) return;
 
@@ -154,7 +154,7 @@ protected:
 
         // recreate the device
         uo.software = false;
-        TS_ASSERT( r->changeDevice(uo) );
+        TS_ASSERT( r->changeUserOptions(uo) );
         TS_ASSERT_EQUALS( r->getUserOptions().software, false );
         TS_ASSERT_EQUALS( dd.width, 320 );
         TS_ASSERT_EQUALS( dd.height, 640 );
@@ -163,7 +163,7 @@ protected:
         // reset the device
         uo.windowedWidth = 256;
         uo.windowedHeight = 128;
-        TS_ASSERT( r->changeDevice(uo) );
+        TS_ASSERT( r->changeUserOptions(uo) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
     }
@@ -188,7 +188,7 @@ protected:
 
         uo.displayMode.width = 1024;
         uo.displayMode.height = 768;
-        TS_ASSERT( r->changeDevice( uo ) );
+        TS_ASSERT( r->changeUserOptions( uo ) );
         clearRed(*r);
         //GN::sleep( 500 );
         clearBlue(*r);

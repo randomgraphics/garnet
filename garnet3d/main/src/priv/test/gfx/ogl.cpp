@@ -13,7 +13,7 @@ public:
 
     void testExternalWindow() { externalWindow(); }
 
-    void testChangeDevice() { changeDevice(); }
+    void testChangeUserOptions() { changeUserOptions(); }
 
     void testFullscreen() { fullscreen(); }
 
