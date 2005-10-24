@@ -1,0 +1,7 @@
+Import('env')
+'''
+env.GN_build_shared_library(
+    'GNinputNT',
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp',
+    'GNinputNT.pdb' )'''
