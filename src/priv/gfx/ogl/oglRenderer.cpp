@@ -56,7 +56,7 @@ bool GN::gfx::OGLRenderer::init(const UserOptions & uo )
     if( !drawInit()    ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !changeDevice( uo, true ) ) { quit(); return selfOK(); }
+    if( !changeUserOptions( uo, true ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -94,7 +94,7 @@ void GN::gfx::OGLRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::changeDevice(
+bool GN::gfx::OGLRenderer::changeUserOptions(
     const UserOptions & uo, bool forceRecreation )
 {
     GN_GUARD;
@@ -102,7 +102,7 @@ bool GN::gfx::OGLRenderer::changeDevice(
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GNOGL_WARN( "This call to changeDevice() is ignored to avoid function re-entance!" );
+        GNOGL_WARN( "This call to changeUserOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);

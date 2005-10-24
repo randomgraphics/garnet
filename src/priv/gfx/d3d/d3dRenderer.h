@@ -82,8 +82,8 @@ namespace GN { namespace gfx {
         //@{
 
     public:
-        virtual bool changeDevice( const UserOptions & uo,
-                                   bool forceDeviceRecreation );
+        virtual bool changeUserOptions( const UserOptions & uo,
+                                        bool forceDeviceRecreation );
 
     protected :
         bool deviceCreate();
@@ -100,7 +100,7 @@ namespace GN { namespace gfx {
     private:
 
         //!
-        //! if true, then we are inside function changeDevice().
+        //! if true, then we are inside function changeUserOptions().
         //!
         bool mDeviceChanging;
 
