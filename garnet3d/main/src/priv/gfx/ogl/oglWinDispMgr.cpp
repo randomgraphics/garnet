@@ -333,14 +333,10 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
     // ignore message hook during this function call
     ScopeBool ignoreHook(mIgnoreMsgHook);
 
-    HWND hwnd = (HWND)dd.windowHandle;
-    HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
-    GN_ASSERT( hwnd && hmonitor );
-
     // get monitor information
     MONITORINFOEXA mi;
     mi.cbSize = sizeof(mi);
-    GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
+    GN_WIN_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)dd.monitorHandle, &mi ), false );
 
     // change display mode
     DEVMODEA dm;
