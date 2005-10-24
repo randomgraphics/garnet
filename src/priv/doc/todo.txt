@@ -4,9 +4,6 @@ TODO
 - implement POSIX version of GN::path:glob()
 - UT for path functions: resolve, glob
 - implement GNogl using glut.
-- Refine GFX:
-  - move window property save/restore code to a centrol place,
-    such as in changeDevice().
 - Startup of GFXOGL module sometimes very slow:
   - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
 
@@ -14,6 +11,7 @@ DONE
 ====
 - Fix link problem of GFX module in static build.
 - Refine GFX:
+  - Window property save/restore
   - Refine ntWindow class:
     - support external window
     - getClientSize();
