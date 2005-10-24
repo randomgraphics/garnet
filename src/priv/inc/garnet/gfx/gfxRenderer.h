@@ -69,8 +69,8 @@ namespace GN { namespace gfx
         //! \note
         //!     This function may trigger sigDeviceRestore.
         //!
-        virtual bool changeDevice( const UserOptions & uo,
-                                   bool forceDeviceRecreation = false ) = 0;
+        virtual bool changeUserOptions( const UserOptions & uo,
+                                        bool forceDeviceRecreation = false ) = 0;
 
         //!
         //! Get current user options
