@@ -1,0 +1,6 @@
+Import( 'env' )
+
+dirs = Split('common')
+if 'win32' == env['PLATFORM']: dirs += ['di','nt']
+
+SConscript( dirs=dirs )
