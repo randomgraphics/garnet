@@ -1,11 +1,13 @@
 TODO
 ====
 
+- implement input module
 - implement POSIX version of GN::path:glob()
 - UT for path functions: resolve, glob
 - implement GNogl using glut.
 - Startup of GFXOGL module sometimes very slow:
   - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
+  - It seems caused by remote symbol loading
 
 DONE
 ====
