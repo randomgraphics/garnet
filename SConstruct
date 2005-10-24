@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import copy, os, os.path
+
 ################################################################################
 #
 # 定义编译选项
@@ -17,7 +19,6 @@ conf = {
 
 # 读取环境变量
 def getenv( name, defval ):
-    import os
     if name in os.environ: return os.environ[name]
     else: return defval
 
@@ -112,8 +113,6 @@ env = Environment( options = opts )
 
 if 'all' in COMMAND_LINE_TARGETS: conf['variant'] = 'all'
 
-import copy
-
 if 'all' == conf['variant'] or 'debug' == conf['variant'] or 'debug' in COMMAND_LINE_TARGETS:
     c = copy.copy(conf);
     c['variant'] = 'debug'
@@ -164,15 +163,29 @@ if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_
 
 ################################################################################
 #
-# Build headers and manual
+# Build and install manual headers and manual
 #
 ################################################################################
 
-manual = {}
-SConscript( 'src/priv/manual/SConscript',
-            exports={'GN_targets':manual} )
-SConscript( 'SConsInstallManualAndHeaders',
-            exports={'GN_targets':manual} )
+manual = SConscript( 'src/priv/manual/SConscript' )
+if manual:
+    manual = { 'GNman' : env.Install( os.path.join( 'bin', 'sdk', 'manual' ), manual ) }
+else:
+    manual = {}
+
+################################################################################
+#
+# Install public headers
+#
+################################################################################
+
+# install SDK headers
+target = os.path.join( 'bin','sdk', 'inc' )
+source = os.path.join( '#src','priv','inc' )
+for src in env.GN_glob(source, True):
+    dst = os.path.join( target, env.GN_relpath(src,source) )
+    env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
+    env.Alias( 'sdk', dst )
 
 ################################################################################
 #
