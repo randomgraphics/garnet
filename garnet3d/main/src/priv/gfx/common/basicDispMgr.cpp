@@ -131,7 +131,7 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
         UserOptions newOptions = uo;
         newOptions.monitorHandle = mWindow.getMonitor();
         mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
-        if( !changeDevice( newOptions, false ) )
+        if( !changeUserOptions( newOptions, false ) )
         {
             GNGFX_FATAL( "Fail to respond to render window size and position change!" );
             return false;

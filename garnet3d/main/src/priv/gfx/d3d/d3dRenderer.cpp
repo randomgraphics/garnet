@@ -62,7 +62,7 @@ bool GN::gfx::D3DRenderer::init(const UserOptions & uo )
     if( !drawInit()    ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !changeDevice( uo, true ) ) { quit(); return selfOK(); }
+    if( !changeUserOptions( uo, true ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -100,7 +100,7 @@ void GN::gfx::D3DRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::changeDevice(
+bool GN::gfx::D3DRenderer::changeUserOptions(
     const UserOptions & uo, bool forceRecreation )
 {
     GN_GUARD;
@@ -108,7 +108,7 @@ bool GN::gfx::D3DRenderer::changeDevice(
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GND3D_WARN( "This call to changeDevice() is ignored to avoid function re-entance!" );
+        GND3D_WARN( "This call to changeUserOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);

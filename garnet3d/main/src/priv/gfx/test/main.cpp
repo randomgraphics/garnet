@@ -103,7 +103,7 @@ public:
             // toggle fullscreen mode
             GN::gfx::UserOptions uo = mRenderer->getUserOptions();
             uo.fullscreen = !uo.fullscreen;
-            if( !mRenderer->changeDevice(uo) ) mDone = true;
+            if( !mRenderer->changeUserOptions(uo) ) mDone = true;
         }
 #endif
     }
