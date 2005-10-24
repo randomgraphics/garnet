@@ -1,1 +1,0 @@
-modified version of glew v1.3.1 (http://glew.sourceforge.net)

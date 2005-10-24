@@ -42,9 +42,9 @@ POSSIBILITY OF SUCH DAMAGE.
 /* The file pcre.h is build by "configure". Do not edit it; instead
 make changes to pcre.in. */
 
-#define PCRE_MAJOR          @PCRE_MAJOR@
-#define PCRE_MINOR          @PCRE_MINOR@
-#define PCRE_DATE           @PCRE_DATE@
+#define PCRE_MAJOR          6
+#define PCRE_MINOR          4
+#define PCRE_DATE           05-Sep-2005
 
 /* Win32 uses DLL by default; it needs special stuff for exported functions. */
 

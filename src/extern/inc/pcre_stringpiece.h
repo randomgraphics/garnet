@@ -42,6 +42,14 @@
 #include <string>
 #include <iosfwd>    // for ostream forward-declaration
 
+#if 0
+#define HAVE_TYPE_TRAITS
+#include <type_traits.h>
+#elif 0
+#define HAVE_TYPE_TRAITS
+#include <bits/type_traits.h>
+#endif
+
 using std::string;
 
 namespace pcrecpp {
