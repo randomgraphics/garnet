@@ -159,10 +159,7 @@ namespace GN
     //!
     //! Process window message.
     //!
-    //! \param quit
-    //!     Return true, if the application requests to quit.
-    //!
-    void processWindowMessages( bool * quit = NULL );
+    void processWindowMessages();
 
 #if GN_MSWIN && !GN_XENON
     //!

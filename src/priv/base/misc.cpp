@@ -35,13 +35,11 @@ void GN::sleep( uint32_t microSeconds )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::processWindowMessages( bool * quit )
+void GN::processWindowMessages()
 {
 #if GN_MSWIN && !GN_XENON
 
     GN_GUARD;
-
-    if( quit ) *quit = false;
 
     MSG msg;
     while( true )
@@ -50,7 +48,6 @@ void GN::processWindowMessages( bool * quit )
         {
             if( WM_QUIT == msg.message )
             {
-                if( quit ) *quit = true;
                 return;
             }
             ::TranslateMessage( &msg );
@@ -64,10 +61,6 @@ void GN::processWindowMessages( bool * quit )
     }
 
     GN_UNGUARD;
-
-#else
-
-    if( quit ) *quit = false;
 
 #endif
 }
