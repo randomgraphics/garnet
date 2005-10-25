@@ -16,26 +16,22 @@
 // Global functions
 // *****************************************************************************
 
-namespace GN { namespace gfx {
-    Renderer * createD3DRenderer( const UserOptions & uo )
-    {
-        GN_GUARD;
-
-        GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
-        if( !p->init(uo) ) return 0;
-        return p.detatch();
-
-        GN_UNGUARD;
-    }
-}}
-
-#if !GN_STATIC
+#if GN_STATIC
+GN::gfx::Renderer *
+GN::gfx::createD3DRenderer( const UserOptions & uo )
+#else
 extern "C" GN_EXPORT GN::gfx::Renderer *
 GNgfxCreateRenderer( const GN::gfx::UserOptions & uo )
-{
-    return GN::gfx::createD3DRenderer(uo);
-}
 #endif
+{
+    GN_GUARD;
+
+    GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
+    if( !p->init(uo) ) return 0;
+    return p.detatch();
+
+    GN_UNGUARD;
+}
 
 // *****************************************************************************
 // init/quit functions

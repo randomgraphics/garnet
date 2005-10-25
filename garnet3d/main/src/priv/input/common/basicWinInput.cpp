@@ -10,7 +10,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicWinInput::init()
+bool GN::input::BasicWinInput::init( const UserOptions & uo )
 {
     GN_GUARD;
 
@@ -22,6 +22,9 @@ bool GN::input::BasicWinInput::init()
 
     // get current mouse position
     ::GetCursorPos( &mMousePosition );
+
+    // call changeUserOptions()
+    if( !changeUserOptions(uo) ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -83,7 +86,7 @@ bool GN::input::BasicWinInput::changeUserOptions( const UserOptions & uo )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::getMousePos( int & x, int & y ) const
+void GN::input::BasicWinInput::getMousePosition( int & x, int & y ) const
 {
     GN_GUARD;
 

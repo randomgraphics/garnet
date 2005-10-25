@@ -246,6 +246,18 @@ namespace GN
         const char * kc2str( KeyCode );
 
         //@}
+
+        //!
+        //! Function prototype to create instance of input system.
+        //!
+        typedef Input * (*CreateInputFunc)( const UserOptions & );
+
+#if GN_STATIC
+        //!
+        //! Create instance of NT input system
+        //!
+        Input * createNTInput( const UserOptions & );
+#endif
     }
 }
 
