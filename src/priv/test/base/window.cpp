@@ -7,7 +7,7 @@ public:
 
     void testParentAndChild()
     {
-#if GN_WINNT
+#if GN_MSWIN
         GN::NTWindow parent, child;
         GN::NTWindow::CreateParam cp;
 
@@ -24,7 +24,7 @@ public:
 
     void testUserStyle()
     {
-#if GN_WINNT
+#if GN_MSWIN
         GN::NTWindow win;
         GN::NTWindow::CreateParam cp;
 
@@ -39,7 +39,7 @@ public:
 
     void testClientSize()
     {
-#if GN_WINNT
+#if GN_MSWIN
         GN::NTWindow win;
 
         GN::NTWindow::CreateParam cp;

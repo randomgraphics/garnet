@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNogl.h"
 
-#if !GN_WINNT
+#if !GN_MSWIN
 
 #include "../core/core.cpp"
 
@@ -62,4 +62,4 @@ bool GN::ogl::OGL::present()
     GN_UNGUARD_SLOW;
 }
 
-#endif // !GN_WINNT
+#endif // !GN_MSWIN

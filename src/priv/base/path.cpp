@@ -1,6 +1,6 @@
 #include "pch.h"
 #include <pcrecpp.h>
-#if GN_WINNT
+#if GN_MSWIN
 #if GN_PC
 #include <shlwapi.h>
 #if GN_MSVC
@@ -17,7 +17,7 @@
 // Local types, functions and variables
 // *****************************************************************************
 
-#if GN_WINNT
+#if GN_MSWIN
 #define MAX_PATH_LENGTH MAX_PATH
 #define PATH_SEPARATOR '\\'
 #else
@@ -49,7 +49,7 @@ static inline GN::StrA sGetAppDir()
 {
 #if GN_XENON
     return "game:";
-#elif GN_WINNT
+#elif GN_MSWIN
     char buf[MAX_PATH_LENGTH+1];
     GN_WIN_CHECK_RV( GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
     return GN::path::getParent( buf );
@@ -73,7 +73,7 @@ static inline GN::StrA sGetAppDir()
 // -----------------------------------------------------------------------------
 static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 {
-#if GN_WINNT
+#if GN_MSWIN
     char from = '/';
     char to = '\\';
 #else
@@ -159,7 +159,7 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
     // validate dirName
     GN_ASSERT( GN::path::exist(dirName) && GN::path::isDir(dirName) );
 
-#if GN_WINNT
+#if GN_MSWIN
 
     WIN32_FIND_DATAA wfd;
     HANDLE fh;
@@ -246,7 +246,7 @@ bool GN::path::exist( const StrA & path )
 {
     StrA native = toNative(path);
 
-#if GN_WINNT
+#if GN_MSWIN
 #if GN_PC
     return !!::PathFileExistsA( native.cstr() );
 #else
@@ -278,7 +278,7 @@ bool GN::path::isDir( const StrA & path )
 {
     StrA native = toNative(path);
     
-#if GN_WINNT
+#if GN_MSWIN
 #if GN_PC
     return !!::PathIsDirectoryA( native.cstr() );
 #else
@@ -372,7 +372,7 @@ bool GN::path::resolve( StrA & result, const StrA & path )
 
     StrA relPath = toNative(path);
 
-#if (GN_WINNT & GN_PC) || GN_POSIX
+#if (GN_MSWIN & GN_PC) || GN_POSIX
 
     char absPath[MAX_PATH_LENGTH+1];
 

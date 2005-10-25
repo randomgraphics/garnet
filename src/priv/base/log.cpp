@@ -72,7 +72,7 @@ static GN::StrA levelStr( GN::LogLevel l )
 
 class ConsoleColor
 {
-#if GN_WINNT & GN_PC
+#if GN_MSWIN & GN_PC
     HANDLE       mConsole;
     WORD         mAttrib;
 public:
@@ -150,7 +150,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 #endif
 
         // output to debugger
-#if GN_WINNT
+#if GN_MSWIN
         char buf[16384];
         _snprintf( buf, 16384,
             "%s(%d) : %s : %s : %s\n",

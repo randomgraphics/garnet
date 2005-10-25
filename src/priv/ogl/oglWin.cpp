@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNogl.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 
 #include "../core/core.cpp"
 
@@ -450,4 +450,4 @@ LRESULT GN::ogl::OGL::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
     GN_UNGUARD;
 }
 
-#endif // GN_WINNT
+#endif // GN_MSWIN

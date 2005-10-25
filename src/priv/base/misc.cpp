@@ -23,7 +23,7 @@ bool GN::getEnv( StrA & result, const char * name )
 // -----------------------------------------------------------------------------
 void GN::sleep( uint32_t microSeconds )
 {
-#if GN_WINNT
+#if GN_MSWIN
     ::Sleep( microSeconds );
 #elif GN_POSIX
     ::usleep( microSeconds );
@@ -37,7 +37,7 @@ void GN::sleep( uint32_t microSeconds )
 // -----------------------------------------------------------------------------
 void GN::processWindowMessages( bool * quit )
 {
-#if GN_WINNT && !GN_XENON
+#if GN_MSWIN && !GN_XENON
 
     GN_GUARD;
 
@@ -72,7 +72,7 @@ void GN::processWindowMessages( bool * quit )
 #endif
 }
 
-#if GN_WINNT && !GN_XENON
+#if GN_MSWIN && !GN_XENON
 //
 //
 // -----------------------------------------------------------------------------
@@ -314,4 +314,4 @@ const char * GN::winMsg2Str( uint32_t msg )
     }
     return "Unknown message";
 }
-#endif // GN_WINNT
+#endif // GN_MSWIN

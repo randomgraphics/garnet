@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ntRenderWindow.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 
 unsigned int GN::gfx::NTRenderWindow::msInstanceID = 0;
 std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
@@ -581,4 +581,4 @@ void GN::gfx::WinProp::restore()
 }
 
 
-#endif // GN_WINNT
+#endif // GN_MSWIN

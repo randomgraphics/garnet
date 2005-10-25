@@ -11,7 +11,7 @@ GN::assertFunc(
     bool *       ignore ) throw()
 {
 #if GN_PC
-#if GN_WINNT
+#if GN_MSWIN
     char buf[1024];
     ::_snprintf( buf, 1023,
         "%s(%d)\n"
@@ -90,7 +90,7 @@ void GN::debugBreak()
 //
 //
 // -----------------------------------------------------------------------------
-#if GN_WINNT
+#if GN_MSWIN
 const char *
 GN::getOSErrorInfo() throw()
 {

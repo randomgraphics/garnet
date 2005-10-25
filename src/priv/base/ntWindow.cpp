@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/base/ntWindow.h"
 
-#if GN_WINNT && !GN_XENON
+#if GN_MSWIN && !GN_XENON
 
 // *****************************************************************************
 // Public functions
@@ -228,4 +228,4 @@ LRESULT CALLBACK GN::NTWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM
     GN_UNGUARD;
 }
 
-#endif // GN_WINNT && !GN_XENON
+#endif // GN_MSWIN && !GN_XENON

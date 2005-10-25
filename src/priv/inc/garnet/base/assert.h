@@ -95,7 +95,7 @@
 
 //@{
 
-#ifdef GN_WINNT
+#ifdef GN_MSWIN
 
 //!
 //! check return value of Windows function (general version)
@@ -158,7 +158,7 @@ namespace GN
 	void debugBreak();
 #endif
 
-#ifdef GN_WINNT
+#ifdef GN_MSWIN
     //!
     //! get OS error info (Windows specific)
     //!

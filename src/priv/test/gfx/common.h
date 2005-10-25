@@ -12,7 +12,7 @@
 
 //! \cond
 
-#if GN_WINNT || GN_CYGWIN
+#if GN_MSWIN || GN_CYGWIN
 #define LIB_PREF ""
 #define LIB_SUFF ".dll"
 #else
@@ -84,7 +84,7 @@ protected:
     //
     void ntWindowAndNTRenderWindow()
     {
-#if GN_WINNT
+#if GN_MSWIN
         GN::NTWindow win;
         GN::NTWindow::CreateParam cp;
         cp.clientWidth = 236;
@@ -107,7 +107,7 @@ protected:
     {
         if( !mCreator) return;
 
-#if GN_WINNT
+#if GN_MSWIN
         GN::NTWindow win;
         GN::NTWindow::CreateParam cp;
         cp.clientWidth = 236;

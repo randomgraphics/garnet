@@ -10,13 +10,13 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 #define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
 #endif
 
 #include <glew.h>
-#if GN_WINNT
+#if GN_MSWIN
 #include <wglew.h>
 #else
 #include <glxew.h>

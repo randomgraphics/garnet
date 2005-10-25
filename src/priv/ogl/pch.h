@@ -14,7 +14,7 @@
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
-#if GN_WINNT
+#if GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #endif

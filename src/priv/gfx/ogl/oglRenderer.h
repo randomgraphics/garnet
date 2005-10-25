@@ -116,7 +116,7 @@ namespace GN { namespace gfx {
         virtual void * getD3DDevice() const { return 0; }
         virtual void * getOGLRC() const { return mRenderContext; }
 
-#if GN_WINNT
+#if GN_MSWIN
     private :
         bool dispInit() { return true; }
         void dispQuit() {}

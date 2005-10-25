@@ -9,7 +9,7 @@
 #include "garnet/GNbase.h"
 #include "cxxtest/TestSuite.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #endif
