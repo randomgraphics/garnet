@@ -10,7 +10,7 @@ GN::input::Input *
 GN::input::createNTInput( const UserOptions & uo )
 #else
 extern "C" GN_EXPORT GN::input::Input *
-GNgfxCreateInput( const GN::input::UserOptions & uo )
+GNinputCreateInput( const GN::input::UserOptions & uo )
 #endif
 {
     GN_GUARD;

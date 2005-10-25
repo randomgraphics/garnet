@@ -62,7 +62,11 @@ bool GN::input::BasicWinInput::changeUserOptions( const UserOptions & uo )
 
     // check window handle
     HWND hwnd = (HWND)uo.windowHandle;
-    if( !::IsWindow(hwnd) ) return false;
+    if( !::IsWindow(hwnd) )
+    {
+        GNINPUT_ERROR( "Window handle is not valid!" );
+        return false;
+    }
 
     // reset basic input class
     resetInputStates();
