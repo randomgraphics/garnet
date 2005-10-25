@@ -34,7 +34,7 @@ namespace GN { namespace input {
 
         //@{
     public:
-        bool init();
+        bool init( const UserOptions & uo );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -52,7 +52,7 @@ namespace GN { namespace input {
 
         virtual bool changeUserOptions( const UserOptions & uo );
 
-        virtual void getMousePos( int & x, int & y ) const;
+        virtual void getMousePosition( int & x, int & y ) const;
 
         // ********************************
         // protected functions

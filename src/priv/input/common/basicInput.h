@@ -39,7 +39,7 @@ namespace GN { namespace input {
             mHalfWideChar = false;
         }
 
-        //! \name signal trigger functions
+        //! \name signal triggers
         //!
         //! sub class should call these function when key/axis event occurs
         //@{

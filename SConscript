@@ -618,23 +618,29 @@ def doInstall( alias, dir, names ):
             GN_targets[name] = item
             env.Alias( alias, item )
 
+sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL GNinputNT' )
+sharedBins = ['%sBin'%x for x in sharedModules]
+sharedLibs = ['%sLib'%x for x in sharedModules]
+staticLibs = Split('GNbase GNextern GNd3d GNogl')
+programs = Split( 'GNtest GNgfxTest GNinputTest' )
+
 # populate sample directory
 doInstall(
     'samples',
     os.path.join('bin','samples'),
-    Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest GNgfxTest') )
+    sharedBins + programs )
 
 # make test executable depends on all shared libraries.
-for y in Split('GNtest GNgfxTest'):
+for y in programs:
     if y in GN_targets:
-        for x in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin'):
+        for x in sharedBins:
             if x in GN_targets: env.Depends( GN_targets[y], GN_targets[x] )
     else:
         env.GN_warn( "Target '%s' is not avaliable!"%y )
 
-# Make binaries depend on manifest and PDB files, to make sure those files are copied
-# to binary directory, before execution of the binaries.
-for target in Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin GNtest GNgfxTest'):
+# Make binaries depend on their by-products, such as manifest and PDB, to make sure
+# those files are copied to binary directory, before execution of the binaries.
+for target in (sharedBins+programs):
     if target in GN_targets:
         for x in GN_targets[target][1:]:
             env.Depends( GN_targets[target][0], x )
@@ -651,8 +657,8 @@ if GN_conf['run_unit_tests']:
 doInstall(
     'sdk',
     os.path.join('bin', 'sdk','bin'),
-    Split('GNcoreBin GNgfxD3DBin GNgfxOGLBin') )
+    sharedBins )
 doInstall(
     'sdk',
     os.path.join('bin', 'sdk','lib'),
-    Split('GNcoreLib GNgfxD3DLib GNgfxOGLLib GNbase GNextern GNd3d GNogl') )
+    sharedLibs + staticLibs )

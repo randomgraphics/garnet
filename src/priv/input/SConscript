@@ -1,6 +1,7 @@
 Import( 'env' )
 
-dirs = Split('common')
+dirs = ['common']
 if 'win32' == env['PLATFORM']: dirs += ['di','nt']
+dirs += ['test']
 
 SConscript( dirs=dirs )
