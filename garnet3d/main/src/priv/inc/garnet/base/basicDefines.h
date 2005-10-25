@@ -46,7 +46,7 @@
 // 辨识操作系统
 // *****************************************************************************
 
-#define GN_WINNT  0 //!< If 1, means current platform is Windows serias
+#define GN_MSWIN  0 //!< If 1, means current platform is Windows serias
 #define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
 #define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
 
@@ -55,9 +55,9 @@
 
 #if defined( _WIN32 )      // Windows
 // Windows platform
-#undef GN_WINNT
-#define GN_WINNT 1
-#define GN_OS "winnt"
+#undef GN_MSWIN
+#define GN_MSWIN 1
+#define GN_OS "mswin"
 #elif defined(__CYGWIN__)
 // Cygwin platform
 #undef GN_CYGWIN

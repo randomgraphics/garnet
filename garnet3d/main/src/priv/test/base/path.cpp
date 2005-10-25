@@ -1,6 +1,6 @@
 #include "../testCommon.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 #define PSC '\\'
 #define PSS "\\"
 #else
@@ -8,7 +8,7 @@
 #define PSS "/"
 #endif
 
-#if GN_WINNT || GN_CYGWIN
+#if GN_MSWIN || GN_CYGWIN
 #define APPEXT ".exe"
 #else
 #define APPEXT ""

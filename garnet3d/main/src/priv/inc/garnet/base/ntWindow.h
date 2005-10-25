@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.10.11)
 // *****************************************************************************
 
-#if GN_WINNT && !GN_XENON
+#if GN_MSWIN && !GN_XENON
 
 #include <windows.h>
 
@@ -108,7 +108,7 @@ namespace GN
     };
 }
 
-#endif // GN_WINNT && !GN_XENON
+#endif // GN_MSWIN && !GN_XENON
 
 // *****************************************************************************
 //                           End of ntWindow.h

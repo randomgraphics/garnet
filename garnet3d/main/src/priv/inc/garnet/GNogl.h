@@ -8,7 +8,7 @@
 
 #include "garnet/GNbase.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 #include <windows.h>
 #include "garnet/base/ntWindow.h"
 #endif
@@ -123,7 +123,7 @@ namespace GN
         private:
             void clear()
             {
-#if GN_WINNT
+#if GN_MSWIN
                 mDC = 0;
                 mRC = 0;
                 mFullscreenModeInitialized = false;
@@ -136,7 +136,7 @@ namespace GN
             // ********************************
         public:
 
-#if GN_WINNT
+#if GN_MSWIN
             //!
             //! Get render window handle
             //!
@@ -168,7 +168,7 @@ namespace GN
         private:
 
             OGLInitParams mInitParams;
-#if GN_WINNT
+#if GN_MSWIN
             NTWindow mWindow;
             HDC      mDC;
             HGLRC    mRC;
@@ -188,7 +188,7 @@ namespace GN
             bool createOGL();
             bool setupDisplayMode();
             void restoreDisplayMode();
-#if GN_WINNT
+#if GN_MSWIN
             LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
 #endif
         };

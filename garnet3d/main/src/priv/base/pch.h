@@ -10,7 +10,7 @@
 
 #if GN_XENON
 #include <xtl.h>
-#elif GN_WINNT
+#elif GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #elif GN_POSIX

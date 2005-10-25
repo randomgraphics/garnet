@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNbase.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 #define SHLIB_LOAD( libName )          static_cast<void*>(LoadLibraryA(libName))
 #define SHLIB_FREE( lib )              (!!FreeLibrary(HMODULE(lib)))
 #define SHLIB_LOAD_SYMBOL( lib, symb ) static_cast<void*>(GetProcAddress(HMODULE(lib), symb))

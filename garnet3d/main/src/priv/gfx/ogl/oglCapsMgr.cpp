@@ -66,7 +66,7 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
 //!
 //! initialize opengl extension
 // ------------------------------------------------------------------------
-#if GN_WINNT
+#if GN_MSWIN
 static bool sGetOGLExtensions( std::vector<GN::StrA> & result, HDC hdc )
 #else
 static bool sGetOGLExtensions( std::vector<GN::StrA> & result )
@@ -79,7 +79,7 @@ static bool sGetOGLExtensions( std::vector<GN::StrA> & result )
     // ∑÷ŒˆOpenGL-Extentions-String
     sGetTokens( result, (const char*)glGetString(GL_EXTENSIONS) );
 
-#if GN_WINNT
+#if GN_MSWIN
     // ∑÷ŒˆWGL Extensions
     PFNWGLGETEXTENSIONSSTRINGARBPROC proc;
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
@@ -255,7 +255,7 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 
     // output opengl implementation info.
     std::vector<StrA> glexts;
-#if GN_WINNT
+#if GN_MSWIN
     if( !sGetOGLExtensions(glexts, mDeviceContext) )
 #else
     if( !sGetOGLExtensions(glexts) )

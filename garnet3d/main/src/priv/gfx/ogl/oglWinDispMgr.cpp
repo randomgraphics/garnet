@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "oglRenderer.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 
 // ****************************************************************************
 // local functions
@@ -419,4 +419,4 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
     GN_UNGUARD;
 }
 
-#endif // GN_WINNT
+#endif // GN_MSWIN

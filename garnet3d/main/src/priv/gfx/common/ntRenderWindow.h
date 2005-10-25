@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.10.4)
 // *****************************************************************************
 
-#if GN_WINNT
+#if GN_MSWIN
 
 namespace GN { namespace gfx {
     //!

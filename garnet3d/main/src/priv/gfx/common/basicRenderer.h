@@ -103,7 +103,7 @@ namespace GN { namespace gfx
         //!
         //! Render window instance (platform independent)
         //!
-#if GN_WINNT
+#if GN_MSWIN
         NTRenderWindow mWindow;
         WinProp        mWinProp;
 #else

@@ -16,7 +16,7 @@ class GfxTest
     //!
     bool keyDown( int keycode )
     {
-#if GN_WINNT
+#if GN_MSWIN
         return !!( 0x8000 & ::GetKeyState(keycode) );
 #else
         return false;
@@ -95,7 +95,7 @@ public:
     //!
     void update()
     {
-#if GN_WINNT
+#if GN_MSWIN
         mDone = keyDown(VK_ESCAPE);
 
         if( keyDown(VK_RETURN) && keyDown(VK_MENU) )
@@ -117,7 +117,7 @@ public:
     }
 };
 
-#if GN_WINNT
+#if GN_MSWIN
 #define DEFAULT_MODULE "D3D"
 #else
 #define DEFAULT_MODULE "OGL"

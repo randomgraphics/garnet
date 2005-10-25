@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicWinInput.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 
 // *****************************************************************************
 //    init / quit functions
@@ -299,4 +299,4 @@ GN::input::BasicWinInput::sCwpHookProc( int nCode, WPARAM wParam, LPARAM lParam 
     GN_UNGUARD;
 }
 
-#endif // GN_WINNT
+#endif // GN_MSWIN

@@ -8,7 +8,7 @@
 
 #include "basicInput.h"
 
-#if GN_WINNT
+#if GN_MSWIN
 
 namespace GN { namespace input {
     //!
@@ -99,7 +99,7 @@ namespace GN { namespace input {
     };
 }}
 
-#endif // GN_WINNT
+#endif // GN_MSWIN
 
 // *****************************************************************************
 //                           End of basicWinInput.h
