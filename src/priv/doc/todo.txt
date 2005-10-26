@@ -1,7 +1,8 @@
 TODO
 ====
 
-- implement input module
+- hash map/table
+- import input module
 - implement POSIX version of GN::path:glob()
 - UT for path functions: resolve, glob
 - implement GNogl using glut.
