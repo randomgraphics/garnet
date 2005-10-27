@@ -8,6 +8,7 @@ namespace GN { namespace input {
 
         static const char * sTable[]=
         {
+            "KEY_NONE",
             #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode ) #name,
             #include "keyCodeMeta.h"
             #undef  GNINPUT_DEFINE_KEYCODE
@@ -28,6 +29,7 @@ namespace GN { namespace input {
     {
         static const char * sTable[]=
         {
+            "KEY_NONE",
             #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode ) #name,
             #include "keyCodeMeta.h"
             #undef  GNINPUT_DEFINE_KEYCODE

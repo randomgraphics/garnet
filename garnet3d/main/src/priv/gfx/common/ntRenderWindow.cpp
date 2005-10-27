@@ -69,6 +69,12 @@ bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
         return false;
     }
 
+    // Output monitor information
+    MONITORINFOEXA mi;
+    mi.cbSize = sizeof(mi);
+    GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+    GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
+
     // add window handle to instance map
     GN_ASSERT(
         msInstanceMap.end() == msInstanceMap.find(mWindow) ||
@@ -417,6 +423,12 @@ GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp
         {
             GNGFX_ERROR( "Fail to get monitor handle from window handle!" );
         }
+
+        // Output monitor information
+        MONITORINFOEXA mi;
+        mi.cbSize = sizeof(mi);
+        GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+        GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
     }
 
     // trigger the message signal

@@ -30,20 +30,10 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
 {
     GN_GUARD;
 
-    // 修正不对称的键
-    if( keydown == mKeyStates[code] )
-    {
-        if( keydown )
-        {
-            // insert addtional keyup, between consecutive keydown(s)
-            triggerKeyPress( code, false );
-        }
-        else
-        {
-            // ignore redundent keyup(s)
-            return;
-        }
-    }
+    // ignore redundant keyup(s)
+    if( keydown == mKeyStates[code] ) return;
+
+    //GNINPUT_TRACE( "Key press: %s %s", kc2str(code), keydown?"down":"up" );
 
     // 更新状态键的标志
     if     ( KEY_LCTRL  == code ) mKeyFlags.lctrl  = keydown;
@@ -81,9 +71,10 @@ void GN::input::BasicInput::triggerCharPress( char ch )
             mHalfBytes[1] = ch;
             wchar_t wch[2];
             ::mbstowcs( wch, mHalfBytes, 2 );
+            //GNINPUT_TRACE( "Char press: %s", StrA(mHalfBytes,2).cstr() );
             sigCharPress( wch[0] );
         }
-        else GN_WARN( "只插入了半个中文字符！" );
+        else GNINPUT_WARN( "只插入了半个中文字符！" );
 
         // 清除“半字符”标志
         mHalfWideChar = false;
@@ -93,7 +84,11 @@ void GN::input::BasicInput::triggerCharPress( char ch )
         mHalfWideChar = true;
         mHalfBytes[0] = ch;
     }
-    else sigCharPress( ch ); // 程序运行到这里，说明ch应该是一个英文字符
+    else
+    {
+        //GNINPUT_TRACE( "Char press: %s", StrA(&ch,1).cstr() );
+        sigCharPress( ch ); // 程序运行到这里，说明ch应该是一个英文字符
+    }
 
     GN_UNGUARD;
 }

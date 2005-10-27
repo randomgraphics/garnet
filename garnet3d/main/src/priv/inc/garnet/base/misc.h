@@ -191,6 +191,25 @@ namespace GN
     };
 
     //!
+    //! Hard to explain in English, please see code by your self :)
+    //!
+    template<typename T>
+    struct ScopeInteger
+    {
+        T & mValue; //!< Reference to the integer variable.
+
+        //!
+        //! Ctor
+        //!
+        ScopeInteger( T & v ) : mValue(v) { ++mValue; }
+
+        //!
+        //! Dtor
+        //!
+        ~ScopeInteger() { --mValue; }
+    };
+
+    //!
     //! Data type with automatic-initialization.
     //!
     template<typename T, T DEFAULT_VALUE>
