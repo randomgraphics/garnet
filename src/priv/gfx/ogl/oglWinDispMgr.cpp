@@ -220,7 +220,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     // modify fullscreen render window properties
     if( uo.fullscreen )
     {
-        // activate displaymode
+        // activate display mode
         if( !activateDisplayMode() ) return false;
 
         const DispDesc & dd = getDispDesc();
@@ -246,7 +246,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
         GNOGL_INFO( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
         GN_WIN_CHECK( ::SetWindowPos(
             hwnd, HWND_TOPMOST,
-            0, 0,
+            mi.rcWork.left, mi.rcWork.top,
             dd.width, dd.height,
             SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
 
@@ -322,7 +322,7 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
 {
     GN_GUARD;
 
-    // check for redundent activation
+    // check for redundant activation
     if( mDisplayModeActivated ) return true;
 
     // only change display mode if we are in fullscreen mode
@@ -359,11 +359,13 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
         CDS_FULLSCREEN,
         NULL ) )
     {
-        GNOGL_ERROR( "failed to change to specified fullscr mode!" );
+        GNOGL_ERROR( "Failed to change to specified full screen mode!" );
         return false;
     }
     mDisplayModeActivated = true;
-    GNOGL_INFO( "Fullscreen mode activated." );
+    GNOGL_INFO(
+        "Fullscreen mode activated: width(%d), height(%d), depth(%d), refrate(%d).",
+        dd.width, dd.height, dd.depth, dd.refrate );
 
     // success
     return true;
@@ -404,7 +406,9 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 {
     GN_GUARD;
 
-    if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook )
+    //GNOGL_TRACE( "Message(%s), wp(0x%X)", winMsg2Str(msg), wp );
+
+    if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mDeviceChanging )
     {
         if( wp )
         {
