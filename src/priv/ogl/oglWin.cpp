@@ -232,7 +232,7 @@ bool GN::ogl::OGL::present()
 
     GN_ASSERT( selfOK() );
 
-    win::processMessages();
+    win::processMessages( mWindow.getWindow() );
 
     // respond to window size-move
     GN_ASSERT( !mMinimized );

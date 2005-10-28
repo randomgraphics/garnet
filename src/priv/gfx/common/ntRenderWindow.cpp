@@ -330,7 +330,7 @@ GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t hei
     // register window class
     GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
     wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = 0;//CS_NOCLOSE;
+    wcex.style          = CS_NOCLOSE;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
@@ -348,7 +348,7 @@ GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t hei
     }
 
     // setup window style
-    DWORD style = WS_POPUP | WS_CAPTION | WS_BORDER | WS_SIZEBOX;
+    DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
 
     // calculate window size

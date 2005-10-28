@@ -78,7 +78,7 @@ public:
 
         while(!mDone)
         {
-            GN::win::processMessages();
+            GN::win::processMessages( mRenderer->getDispDesc().windowHandle );
             update();
             if( mRenderer->drawBegin() )
             {
