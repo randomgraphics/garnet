@@ -7,6 +7,10 @@ BUGS
   - After fullscreen application is minimized, seems that WaitOnMessage() has
     no effects.
 
+ISSUES
+======
+- convert input module to static library?
+
 TODO
 ====
 

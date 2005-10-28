@@ -30,7 +30,7 @@
 //! output trace message
 //!
 #if GN_DEBUG
-#define GN_TRACE  ::GN::detail::LogHelper( GN::LOGLEVEL_TRACE, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
+#define GN_TRACE  ::GN::detail::LogHelper( GN::LOGLEVEL_TRACE_0, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 #else
 #define GN_TRACE  ::GN::detail::LogHelper::fake
 #endif
@@ -53,8 +53,7 @@ namespace GN
         LOGLEVEL_ERROR,
         LOGLEVEL_WARN,
         LOGLEVEL_INFO,
-        LOGLEVEL_TRACE,
-        NUM_LOGLEVELS,
+        LOGLEVEL_TRACE_0,
     };
 
     //!
@@ -62,7 +61,7 @@ namespace GN
     //!
     struct LogDesc
     {
-        LogLevel     level; //!< Log level/severity (required)
+        int          level; //!< Log level/severity (required)
         const char * cate;  //!< Log category (optional). Set to NULL if you don't need it.
         const char * func;  //!< Log location: function name (optional). Set to NULL if you don't need it.
         const char * file;  //!< Log location: file name (optional). Set to NULL if you don't need it.
@@ -77,7 +76,7 @@ namespace GN
         //! Construct log descriptor
         //!
         LogDesc(
-            LogLevel     lvl_,
+            int          lvl_,
             const char * cate_,
             const char * func_,
             const char * file_,
@@ -118,7 +117,7 @@ namespace GN
             //! constructor
             //!
             LogHelper(
-                LogLevel     level,
+                int          level,
                 const char * cate,
                 const char * func,
                 const char * file,
@@ -144,7 +143,7 @@ namespace GN
             //!
             //! do log, with user-specified level and category
             //!
-            void loglc( LogLevel level, const char * cate, const char * fmt, ... );
+            void loglc( int level, const char * cate, const char * fmt, ... );
         };
 
         //!

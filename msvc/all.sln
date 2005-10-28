@@ -47,6 +47,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxTest", "GNgfxTest.vcpr
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputNT", "GNinputNT.vcproj", "{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputTest", "GNinputTest.vcproj", "{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputCommon", "GNinputCommon.vcproj", "{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -151,6 +163,30 @@ Global
 		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Stdbg.Build.0 = Stdbg|Win32
 		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Strel.ActiveCfg = Strel|Win32
 		{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}.Strel.Build.0 = Strel|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Debug.ActiveCfg = Debug|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Debug.Build.0 = Debug|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Release.ActiveCfg = Release|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Release.Build.0 = Release|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Stdbg.ActiveCfg = Stdbg|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Stdbg.Build.0 = Stdbg|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Strel.ActiveCfg = Strel|Win32
+		{37DC3AE3-3234-4CFE-8A4D-F06EF92F2CA6}.Strel.Build.0 = Strel|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Debug.ActiveCfg = Debug|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Debug.Build.0 = Debug|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Release.ActiveCfg = Release|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Release.Build.0 = Release|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Stdbg.ActiveCfg = Stdbg|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Stdbg.Build.0 = Stdbg|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Strel.ActiveCfg = Strel|Win32
+		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Strel.Build.0 = Strel|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Debug.ActiveCfg = Debug|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Debug.Build.0 = Debug|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Release.ActiveCfg = Release|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Release.Build.0 = Release|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Stdbg.ActiveCfg = Stdbg|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Stdbg.Build.0 = Stdbg|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Strel.ActiveCfg = Strel|Win32
+		{9FC6AF87-5691-4D24-8BFE-897DAF1A9AE0}.Strel.Build.0 = Strel|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

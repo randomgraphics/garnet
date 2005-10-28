@@ -597,12 +597,11 @@ env.Export(
 
 ################################################################################
 #
-# build sub-directories
+# build main source tree
 #
 ################################################################################
 
 SConscript( 'src/SConscript', build_dir=variant_dir, duplicate=0 )
-if 'MSVSProject' in env['BUILDERS']: SConscript( 'msvc/SConscript', build_dir=os.path.join(variant_dir,'msvc') )
 
 ################################################################################
 #
@@ -662,3 +661,11 @@ doInstall(
     'sdk',
     os.path.join('bin', 'sdk','lib'),
     sharedLibs + staticLibs )
+
+################################################################################
+#
+# build MSVC projects
+#
+################################################################################
+
+if 'MSVSProject' in env['BUILDERS']: SConscript( 'msvc/SConscript', build_dir=os.path.join(variant_dir,'msvc') )
