@@ -113,8 +113,8 @@ public:
 
 #else
 public:
-    ConsoleColor( GN::int ) {}
-    ~ConsoleColor()         {}
+    ConsoleColor( int ) {}
+    ~ConsoleColor()     {}
 #endif
 };
 

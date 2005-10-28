@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "garnet/base/NTWindow.h"
 
+#if GN_MSWIN
+
 //!
 //! input module test application
 //!
@@ -169,3 +171,7 @@ int main( int argc, const char * argv[] )
     if( !app.init( module ) ) return -1;
     return app.run();
 }
+
+#else // GN_MSWIN
+int main() { return 0; }
+#endif
