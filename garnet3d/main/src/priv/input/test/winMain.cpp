@@ -98,7 +98,7 @@ public:
 
         while(!mDone)
         {
-            GN::processWindowMessages();
+            GN::win::processMessages();
             update();
         }
 

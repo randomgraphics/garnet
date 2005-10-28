@@ -199,7 +199,7 @@ bool GN::gfx::D3DRenderer::handleDeviceLost()
     }
     else if( D3DERR_DEVICELOST == hr )
     {
-        GND3D_INFO( "\nDevice has lost and could NOT be restore right now. Wait for 500ms...\n" );
+        GND3D_INFO( "\nDevice has lost and could NOT be restored by now...\n" );
         ::Sleep( 500 );
         return false;
     }
