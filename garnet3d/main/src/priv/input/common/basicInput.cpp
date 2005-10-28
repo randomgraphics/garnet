@@ -1,23 +1,6 @@
 #include "pch.h"
 #include "basicInput.h"
 #include <algorithm>
-#include <mbstring.h>
-
-//
-// 是否是一个中文字符的头半个字节
-// -----------------------------------------------------------------------------
-static GN_INLINE bool sIsLeadingByte( char ch )
-{
-    return 0 != ::_ismbblead( ch );
-}
-
-//
-// 是否是一个中文字符的后半个字节
-// -----------------------------------------------------------------------------
-static GN_INLINE bool sIsTrailingByte( char ch )
-{
-    return 0 != ::_ismbbtrail( ch );
-}
 
 // *****************************************************************************
 //                  protected functions
@@ -62,32 +45,28 @@ void GN::input::BasicInput::triggerCharPress( char ch )
 {
     GN_GUARD;
 
-    if( mHalfWideChar )
+    if( (unsigned char)ch < 128 )
     {
-        // 先前已经插入了前半个中文字符，所以正常情况下ch应当是后半个中文字符
-        if( sIsTrailingByte(ch) )
-        {
-            // 将前后两个字符组合成完整的中文文字
-            mHalfBytes[1] = ch;
-            wchar_t wch[2];
-            ::mbstowcs( wch, mHalfBytes, 2 );
-            //GNINPUT_TRACE( "Char press: %s", StrA(mHalfBytes,2).cstr() );
-            sigCharPress( wch[0] );
-        }
-        else GNINPUT_WARN( "只插入了半个中文字符！" );
+        // ASCII character
+        //GNINPUT_TRACE( "Char press: %s", StrA(&ch,1).cstr() );
+        sigCharPress( ch );
+    }
+    else if( mHalfWideChar )
+    {
+        mHalfBytes[1] = ch;
+        wchar_t wch[2];
+        ::mbstowcs( wch, mHalfBytes, 2 );
+
+        //GNINPUT_TRACE( "Char press: %s", StrA(mHalfBytes,2).cstr() );
+        sigCharPress( wch[0] );
 
         // 清除“半字符”标志
         mHalfWideChar = false;
     }
-    else if( sIsLeadingByte(ch) )
+    else
     {
         mHalfWideChar = true;
         mHalfBytes[0] = ch;
-    }
-    else
-    {
-        //GNINPUT_TRACE( "Char press: %s", StrA(&ch,1).cstr() );
-        sigCharPress( ch ); // 程序运行到这里，说明ch应该是一个英文字符
     }
 
     GN_UNGUARD;
