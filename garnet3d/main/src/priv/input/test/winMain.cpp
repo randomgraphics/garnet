@@ -34,6 +34,11 @@ class InputTest
         mInput.reset( mCreator(uo) );
         if( !mInput ) return false;
 
+        // connect to input signals
+        mInput->sigKeyPress.connect( this, &InputTest::onKeyPress );
+        mInput->sigCharPress.connect( this, &InputTest::onCharPress );
+        mInput->sigAxisMove.connect( this, &InputTest::onAxisMove );
+
         return true;
     }
 
@@ -46,6 +51,22 @@ class InputTest
         }
         
         return ::DefWindowProc( hwnd, msg, wp, lp );
+    }
+
+    void onKeyPress( GN::input::KeyEvent ke )
+    {
+        if( !ke.down )
+        {
+            if( GN::input::KEY_ESCAPE == ke.code ) mDone = true;
+        }
+    }
+
+    void onCharPress( wchar_t )
+    {
+    }
+
+    void onAxisMove( GN::input::Axis, int )
+    {
     }
 
 public:

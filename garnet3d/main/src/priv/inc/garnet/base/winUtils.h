@@ -13,6 +13,9 @@ namespace GN
     //!
     namespace win
     {
+        //!
+        //! General window handle
+        //!
         typedef void * WindowHandle;
 
         //!

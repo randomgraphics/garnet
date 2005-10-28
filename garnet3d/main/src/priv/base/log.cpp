@@ -34,7 +34,7 @@ GN::detail::LogHelper::logc( const char * cate, const char * fmt, ... )
 // -----------------------------------------------------------------------------
 void
 GN::detail::LogHelper::loglc(
-    LogLevel level, const char * cate, const char * fmt, ... )
+    int level, const char * cate, const char * fmt, ... )
 {
     StrA s;
     va_list arglist;
@@ -49,25 +49,22 @@ GN::detail::LogHelper::loglc(
 //
 //
 // -----------------------------------------------------------------------------
-static GN::StrA levelStr( GN::LogLevel l )
+static inline GN::StrA levelStr( int l )
 {
-    const char * s;
-    if ( 0 <= l && l < GN::NUM_LOGLEVELS )
+    if( 0 <= l && l < GN::LOGLEVEL_TRACE_0 )
     {
         static const char * table[] = {
             "GN_FATAL",
             "GN_ERROR",
             "GN_WARN",
             "GN_INFO",
-            "GN_TRACE"
         };
-        s = table[l];
+        return table[l];
     }
-    else
+    else 
     {
-        s = "UNKNOWN_LOG_LEVEL";
+        return GN::strFormat( "GN_TRACE_%d", l );
     }
-    return GN::strFormat( "%s(%d)",s,l);
 }
 
 class ConsoleColor
@@ -76,7 +73,7 @@ class ConsoleColor
     HANDLE       mConsole;
     WORD         mAttrib;
 public:
-    ConsoleColor( GN::LogLevel level )
+    ConsoleColor( int level )
     {
         // store console attributes
         mConsole = GetStdHandle(
@@ -89,7 +86,6 @@ public:
         WORD attrib;
         switch( level )
         {
-            default:
             case GN::LOGLEVEL_FATAL:
             case GN::LOGLEVEL_ERROR:
                 attrib = FOREGROUND_RED;
@@ -100,7 +96,8 @@ public:
                 break;
 
             case GN::LOGLEVEL_INFO:
-            case GN::LOGLEVEL_TRACE:
+
+            default: // GN_TRACE_###
                 attrib = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
                 break;
         }
@@ -116,8 +113,8 @@ public:
 
 #else
 public:
-    ConsoleColor( GN::LogLevel ) {}
-    ~ConsoleColor()              {}
+    ConsoleColor( GN::int ) {}
+    ~ConsoleColor()         {}
 #endif
 };
 
