@@ -92,6 +92,9 @@ namespace GN
 // light-weight performance profiler
 #include "base/profiler.h"
 
+// window related utils
+#include "base/winUtils.h"
+
 // *****************************************************************************
 //                           END of GNbase.h
 // *****************************************************************************

@@ -296,7 +296,7 @@ bool GN::d3d::D3D::present()
 
 #else
 
-    processWindowMessages();
+    win::processMessages();
 
     // respond to window size-move
     GN_ASSERT( !mMinimized );

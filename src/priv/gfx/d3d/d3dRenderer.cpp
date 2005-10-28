@@ -184,8 +184,6 @@ bool GN::gfx::D3DRenderer::deviceRestore()
 
     _GN_RENDER_DEVICE_TRACE();
 
-    GN_ASSERT( mDeviceChanging );
-
     if( !BasicRenderer::deviceRestore() ) return false;
     if( !dispDeviceRestore() ) return false;
     if( !capsDeviceRestore() ) return false;

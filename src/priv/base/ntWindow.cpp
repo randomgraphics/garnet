@@ -204,7 +204,7 @@ LRESULT CALLBACK GN::NTWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM
 {
     GN_GUARD;
 
-    //GN_INFO( "GN::NTWindow procedure: wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+    //GN_INFO( "GN::NTWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     NTWindow * ptr;
 

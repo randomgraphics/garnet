@@ -236,7 +236,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
     // init d3d present parameters
     if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, uo.fullscreen, uo.vsync ) ) return false;
 
-    // Check device caps and termin device behavior flags.
+    // Check device caps and determine device behavior flags.
     HRESULT r = D3D_OK;
     for( size_t t = 0; t < devtypes.size(); ++ t )
     {

@@ -69,11 +69,11 @@ bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
         return false;
     }
 
-    // Output monitor information
-    MONITORINFOEXA mi;
-    mi.cbSize = sizeof(mi);
-    GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-    GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
+    //// Output monitor information
+    //MONITORINFOEXA mi;
+    //mi.cbSize = sizeof(mi);
+    //GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+    //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
 
     // add window handle to instance map
     GN_ASSERT(
@@ -424,11 +424,11 @@ GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp
             GNGFX_ERROR( "Fail to get monitor handle from window handle!" );
         }
 
-        // Output monitor information
-        MONITORINFOEXA mi;
-        mi.cbSize = sizeof(mi);
-        GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-        GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
+        //// Output monitor information
+        //MONITORINFOEXA mi;
+        //mi.cbSize = sizeof(mi);
+        //GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+        //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
     }
 
     // trigger the message signal
@@ -475,7 +475,7 @@ GN::gfx::NTRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM
 {
     GN_GUARD;
 
-    //GNGFX_INFO( "GN::gfx::NTRenderWindow procedure: wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+    //GNGFX_INFO( "GN::gfx::NTRenderWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,NTRenderWindow*>::const_iterator iter = msInstanceMap.find(wnd);
 
@@ -501,7 +501,7 @@ GN::gfx::NTRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, GN::winMsg2Str(msg) );
+    //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,NTRenderWindow*>::const_iterator iter =
         msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );

@@ -406,7 +406,7 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 {
     GN_GUARD;
 
-    //GNOGL_TRACE( "Message(%s), wp(0x%X)", winMsg2Str(msg), wp );
+    //GNOGL_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mDeviceChanging )
     {

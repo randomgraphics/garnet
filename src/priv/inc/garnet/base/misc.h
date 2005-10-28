@@ -157,22 +157,6 @@ namespace GN
     void sleep( uint32_t microSeconds );
 
     //!
-    //! Process window message.
-    //!
-    void processWindowMessages();
-
-#if GN_MSWIN && !GN_XENON
-    //!
-    //! Convert Windows message ID to string.
-    //!
-    //! \note
-    //!     This function is neither 100% correct, nor effecient.
-    //!     Please use it for debug only.
-    //!
-    const char * winMsg2Str( uint32_t msg );
-#endif
-
-    //!
     //! Hard to explain in English, please see code by your self :)
     //!
     struct ScopeBool
