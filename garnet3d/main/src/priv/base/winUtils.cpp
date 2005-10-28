@@ -3,7 +3,7 @@
 #if GN_XENON || GN_POSIX
 
 void GN::win::setTitle( WindowHandle, const char * ) {}
-void GN::win::processMessages() {}
+void GN::win::processMessages( WindowHandle, bool ) {}
 const char * GN::win::msg2str( uint32_t ) { return ""; }
 
 #elif GN_MSWIN
@@ -24,9 +24,11 @@ void GN::win::setTitle( WindowHandle win, const char * title )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::processMessages( bool waitOnIdle )
+void GN::win::processMessages( WindowHandle wnd, bool waitOnIdle )
 {
     GN_GUARD;
+
+    GN_ASSERT( ::IsWindow( (HWND)wnd ) );
 
     MSG msg;
     while( true )
@@ -40,11 +42,12 @@ void GN::win::processMessages( bool waitOnIdle )
             ::TranslateMessage( &msg );
             ::DispatchMessage(&msg);
         }
-        else if( ::IsIconic(msg.hwnd) ) // minimized
+        else if( IsIconic( (HWND)wnd ) && waitOnIdle )
         {
-            if( waitOnIdle ) ::WaitMessage();
+            GN_INFO( "Wait for window messages..." );
+            ::WaitMessage();
         }
-        else return; // Idle time!
+        else return; // Idle time
     }
 
     GN_UNGUARD;

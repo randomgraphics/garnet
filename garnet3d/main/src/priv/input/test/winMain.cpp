@@ -98,7 +98,7 @@ public:
 
         while(!mDone)
         {
-            GN::win::processMessages();
+            GN::win::processMessages( mWin.getWindow() );
             update();
         }
 

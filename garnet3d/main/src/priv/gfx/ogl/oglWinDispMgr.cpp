@@ -408,14 +408,18 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     //GNOGL_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
+    if( !getUserOptions().fullscreen ) return;
+
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mDeviceChanging )
     {
         if( wp )
         {
             activateDisplayMode();
+            ::ShowWindowAsync( (HWND)getDispDesc().windowHandle, SW_NORMAL );
         }
         else
         {
+            ::ShowWindowAsync( (HWND)getDispDesc().windowHandle, SW_MINIMIZE );
             restoreDisplayMode();
         }
     }

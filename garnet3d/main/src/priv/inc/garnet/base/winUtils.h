@@ -23,7 +23,7 @@ namespace GN
         //!
         //! Process window message.
         //!
-        void processMessages( bool waitOnIdle = true );
+        void processMessages( WindowHandle, bool waitOnIdle = true );
 
         //!
         //! Convert Windows message ID to string.
