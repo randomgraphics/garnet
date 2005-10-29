@@ -160,14 +160,6 @@ namespace GN
         };
 
         //!
-        //! User options to input system
-        //!
-        struct UserOptions
-        {
-            void * windowHandle; //!< Window handle that accepts user inputs.
-        };
-
-        //!
         //! main interface of input module
         //!
         struct Input : public NoCopy
@@ -177,9 +169,9 @@ namespace GN
             // ************************************************************************
 
             //!
-            //! Change user options.
+            //! Must call this function before you can retrieve input events from this interface.
             //!
-            virtual bool changeUserOptions( const UserOptions & ) = 0;
+            virtual bool attachToWindow( void * windowHandle ) = 0;
 
             //!
             //! 获取并处理最新的输入事件
@@ -227,8 +219,12 @@ namespace GN
             //@}
         };
 
-        //! \name Utils functions
-        //@{
+        //!
+        //! Create instance of input system.
+        //!
+        //! \param useDirectInput   Only valid on MS Windows system.
+        //!
+        Input * createInputSystem( bool useDirectInput = false );
 
         //!
         //! convert string to keycode
@@ -245,19 +241,6 @@ namespace GN
         //!
         const char * kc2str( KeyCode );
 
-        //@}
-
-        //!
-        //! Function prototype to create instance of input system.
-        //!
-        typedef Input * (*CreateInputFunc)( const UserOptions & );
-
-#if GN_STATIC
-        //!
-        //! Create instance of NT input system
-        //!
-        Input * createNTInput( const UserOptions & );
-#endif
     }
 }
 

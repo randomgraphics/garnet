@@ -1,7 +1,9 @@
 Import( 'env' )
 
-dirs = ['common']
-if 'win32' == env['PLATFORM']: dirs += ['di','nt']
-dirs += ['test']
+env.GN_build_static_library(
+    'GNinput',
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp',
+    'GNinput.pdb' )
 
-SConscript( dirs=dirs )
+SConscript( 'test/SConscript' )

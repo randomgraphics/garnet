@@ -12,11 +12,17 @@
 
 namespace GN { namespace input {
     //!
-    //! Baisc input system for WIN32. 实现windows系统下输入系统的基本功能.
-    //!    
-    class BasicWinInput : public BasicInput, public StdClass
+    //! Basic input system for MS windows. 实现windows系统下输入系统的基本功能.
+    //!
+    //! \note
+    //!     Due to limitation of window message dispatch system, this class
+    //!     currently has to be a singleton. We're working on the walk around.
+    //!
+    class BasicMswInput : public BasicInput,
+                          public StdClass,
+                          public LocalSingleton<BasicMswInput>
     {
-         GN_DECLARE_STDCLASS( BasicWinInput, StdClass );
+         GN_DECLARE_STDCLASS( BasicMswInput, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -24,8 +30,8 @@ namespace GN { namespace input {
 
         //@{
     public:
-        BasicWinInput()          { clear(); }
-        virtual ~BasicWinInput() { quit(); }
+        BasicMswInput()          { clear(); }
+        virtual ~BasicMswInput() { quit(); }
         //@}
 
         // ********************************
@@ -34,7 +40,7 @@ namespace GN { namespace input {
 
         //@{
     public:
-        bool init( const UserOptions & uo );
+        bool init();
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -46,13 +52,13 @@ namespace GN { namespace input {
         //@}
 
         // ********************************
-        // from Input
+        // public interface
         // ********************************
     public:
 
-        virtual bool changeUserOptions( const UserOptions & uo );
+        bool attachToWindow( void * );
 
-        virtual void getMousePosition( int & x, int & y ) const;
+        void getMousePosition( int & x, int & y ) const;
 
         // ********************************
         // protected functions
@@ -74,8 +80,7 @@ namespace GN { namespace input {
         // ********************************
     private:
 
-        UserOptions mUserOptions;
-
+        HWND mWindow;
         HHOOK mMsgHook, mCwpHook;
         POINT mMousePosition; // store current mouse position
         bool  mMouseCapture;

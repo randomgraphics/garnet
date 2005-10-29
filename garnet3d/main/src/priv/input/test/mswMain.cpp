@@ -9,8 +9,6 @@
 class InputTest
 {
     GN::NTWindow mWin;
-    GN::SharedLib mLib;
-    GN::input::CreateInputFunc mCreator;
     GN::AutoObjPtr<GN::input::Input> mInput;
 
     bool mDone;
@@ -26,15 +24,8 @@ class InputTest
 
     bool createInput( const char * api )
     {
-        GN::StrA libName = GN::StrA("GNinput") + api;
-        if( !mLib.load( libName.cstr() ) ) return false;
-        mCreator = (GN::input::CreateInputFunc)mLib.getSymbol( "GNinputCreateInput" );
-        if( !mCreator ) return false;
-
-        GN::input::UserOptions uo;
-        uo.windowHandle = mWin.getWindow();
-        mInput.reset( mCreator(uo) );
-        if( !mInput ) return false;
+        mInput.reset( GN::input::createInputSystem( 0 == GN::strCmp("DI",api) ) );
+        if( !mInput || !mInput->attachToWindow( mWin.getWindow() ) ) return false;
 
         // connect to input signals
         mInput->sigKeyPress.connect( this, &InputTest::onKeyPress );
@@ -103,8 +94,6 @@ public:
     void quit()
     {
         mInput.reset();
-        mCreator = 0;
-        mLib.free();
         mWin.destroy();
     }
 
@@ -144,7 +133,7 @@ void usage( const char * appName )
     printf(
         "Input module test application.\n"
         "\n"
-        "Usage: %s [NT|DI]\n"
+        "Usage: %s [MSW|DI]\n"
         "\n"
         "Note: default module is NT\n",
         appName );
@@ -160,7 +149,7 @@ int main( int argc, const char * argv[] )
     if( argc < 2 )
     {
         usage( argv[0] );
-        module = "NT";
+        module = "MSW";
     }
     else
     {

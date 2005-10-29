@@ -1,7 +1,0 @@
-Import('env')
-
-env.GN_build_static_library(
-    'GNinputCommon',
-    env.GN_glob('*.cpp'),
-    'pch.h', 'pch.cpp',
-    'GNinputCommon.pdb' )

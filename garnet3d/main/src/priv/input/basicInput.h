@@ -7,22 +7,29 @@
 // *****************************************************************************
 
 #include "garnet/GNinput.h"
-#include <map>
 
 namespace GN { namespace input {
     //!
     //! input模块的基类，实现了input模块的通用功能.
     //!
-    //! Note that input system is singleton. Only one instance is allowed at a time.
-    //!
-    class BasicInput : public Input, public LocalSingleton<BasicInput>
+    class BasicInput : public Input
     {
         // ********************************
-        // from Input
+        // public functions
         // ********************************
     public:
 
-        virtual const bool * getKeyStates() const { return mKeyStates; }
+        //!
+        //! Ctor
+        //!
+        BasicInput() {}
+
+        //!
+        //! Get keybord status
+        //!
+        //! \sa Input::getKeyStates()
+        //!
+        const bool * getKeyStates() const { return mKeyStates; }
 
         // ********************************
         //     custom protected functions

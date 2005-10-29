@@ -1,42 +1,42 @@
-#ifndef __GN_NTINPUT_NTINPUT_H__
-#define __GN_NTINPUT_NTINPUT_H__
+#ifndef __GN_INPUT_MSWINPUT_H__
+#define __GN_INPUT_MSWINPUT_H__
 // *****************************************************************************
-//! \file    ntInput.h
+//! \file    mswInput.h
 //! \brief   使用Windows的标准消息机制的输入模块
 //! \author  chenlee (2005.10.25)
 // *****************************************************************************
 
-#include "../common/basicWinInput.h"
+#include "basicMswInput.h"
+
+#if GN_MSWIN
 
 namespace GN { namespace input {
     //!
     //! 使用Windows的标准消息机制的输入模块
-    //!    
     //!
-    //! 
-    //!
-    class NTInput : public BasicWinInput
+    class MswInput : public BasicMswInput
     {
         KeyCode mKeyMap[0x200]; //!< windows vkcode to garnet keycode
 
     public:
 
         //!
-        //! Constructor
+        //! Ctor
         //!
-        NTInput();
+        MswInput();
 
-        // inherited from Input
-        virtual void processInputEvents() { /* do nothing */ }
+        void processInputEvents() { /* do nothing here*/ }
 
     protected:
 
-        // inherited from BasicWinInput
-        virtual void msgHandler( UINT, WPARAM, LPARAM );
+        // inherited from BasicMswInput
+        virtual void msgHandler( UINT msg, WPARAM wp, LPARAM lp );
     };
 }}
 
+#endif
+
 // *****************************************************************************
-//                           End of ntInput.h
+//                           End of mswInput.h
 // *****************************************************************************
-#endif // __GN_NTINPUT_NTINPUT_H__
+#endif // __GN_INPUT_MSWINPUT_H__

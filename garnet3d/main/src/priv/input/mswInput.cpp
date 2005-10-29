@@ -1,35 +1,12 @@
 #include "pch.h"
-#include "ntInput.h"
+#include "mswInput.h"
 
-// *****************************************************************************
-// Global functions
-// *****************************************************************************
-
-#if GN_STATIC
-GN::input::Input *
-GN::input::createNTInput( const UserOptions & uo )
-#else
-extern "C" GN_EXPORT GN::input::Input *
-GNinputCreateInput( const GN::input::UserOptions & uo )
-#endif
-{
-    GN_GUARD;
-
-    GN::AutoObjPtr<GN::input::NTInput> p( new GN::input::NTInput );
-    if( !p->init(uo) ) return 0;
-    return p.detatch();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// class NTInput
-// *****************************************************************************
+#if GN_MSWIN
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::input::NTInput::NTInput()
+GN::input::MswInput::MswInput()
 {
     // clear all fields to KEY_NONE
     memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
@@ -43,8 +20,8 @@ GN::input::NTInput::NTInput()
 
 //
 //
-// ----------------------------------------------------------------------------
-void GN::input::NTInput::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
+// -----------------------------------------------------------------------------
+void GN::input::MswInput::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
 {
     switch( msg )
     {
@@ -82,5 +59,7 @@ void GN::input::NTInput::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
     }
 
     // call parent's method
-    BasicWinInput::msgHandler( msg, wp, lp );
+    BasicMswInput::msgHandler( msg, wp, lp );
 }
+
+#endif // GN_MSWIN
