@@ -279,7 +279,7 @@ namespace GN
             bool empty() const { return 0 == mPtr; }
 
             //!
-            //! Get internel pointer
+            //! Get internal pointer
             //!
             T * get() const { return mPtr; }
 
@@ -298,7 +298,7 @@ namespace GN
             //!
             //! Release ownership of private pointer
             //!
-            T * detatch() throw()
+            T * detach() throw()
             {
                 T * tmp = mPtr;
                 mPtr = 0;

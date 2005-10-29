@@ -50,7 +50,7 @@ public:
         GN::AutoObjPtr<S1> p2( p1 );
         TS_ASSERT_EQUALS( 1, p2->a );
 
-        S1 * p3 = p2.detatch();
+        S1 * p3 = p2.detach();
         delete p3;
         TS_ASSERT_EQUALS( p1, p3 );
         TS_ASSERT( !p2.get() );
