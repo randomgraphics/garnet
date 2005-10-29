@@ -28,7 +28,7 @@ GNgfxCreateRenderer( const GN::gfx::UserOptions & uo )
 
     GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
     if( !p->init(uo) ) return 0;
-    return p.detatch();
+    return p.detach();
 
     GN_UNGUARD;
 }
