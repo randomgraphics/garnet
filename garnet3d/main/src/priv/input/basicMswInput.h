@@ -1,7 +1,7 @@
 #ifndef __GN_INPUT_BASICWININPUT_H__
 #define __GN_INPUT_BASICWININPUT_H__
 // *****************************************************************************
-//! \file    basicWinInput.h
+//! \file    basicMswInput.h
 //! \brief   Basic input system for NT platform
 //! \author  chenlee (2005.10.25)
 // *****************************************************************************
