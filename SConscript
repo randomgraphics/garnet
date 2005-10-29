@@ -237,7 +237,7 @@ def GN_build_program( env, target, sources=[],
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
         libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL')
-    libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
+    libs += Split('GNinput GNcoreLib GNbase GNcoreLib GNbase GNextern')
     extra = []
     for x in libs:
         if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
@@ -617,10 +617,10 @@ def doInstall( alias, dir, names ):
             GN_targets[name] = item
             env.Alias( alias, item )
 
-sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL GNinputNT' )
+sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
-staticLibs = Split('GNbase GNextern GNd3d GNogl')
+staticLibs = Split('GNinput GNd3d GNogl GNbase GNextern')
 programs = Split( 'GNtest GNgfxTest GNinputTest' )
 
 # populate sample directory

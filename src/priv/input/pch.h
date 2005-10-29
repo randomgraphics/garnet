@@ -1,5 +1,5 @@
-#ifndef __GN_NTINPUT_PCH_H__
-#define __GN_NTINPUT_PCH_H__
+#ifndef __GN_INPUT_PCH_H__
+#define __GN_INPUT_PCH_H__
 // *****************************************************************************
 // \file    pch.h
 // \brief   PCH header
@@ -10,9 +10,11 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
 
+#if GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #include <zmouse.h>  // for WM_MOUSEWHEEL
+#endif
 
 #include <exception>
 #include <malloc.h>
@@ -48,4 +50,4 @@
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************
-#endif // __GN_NTINPUT_PCH_H__
+#endif // __GN_INPUT_PCH_H__

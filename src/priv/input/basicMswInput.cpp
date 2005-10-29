@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "basicWinInput.h"
+#include "basicMswInput.h"
 
 #if GN_MSWIN
 
@@ -10,21 +10,18 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicWinInput::init( const UserOptions & uo )
+bool GN::input::BasicMswInput::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::input::BasicWinInput, () );
+    GN_STDCLASS_INIT( GN::input::BasicMswInput, () );
 
     // setup windows hooks
     if( !setupWindowHooks() ) { quit(); return selfOK(); }
 
     // get current mouse position
     ::GetCursorPos( &mMousePosition );
-
-    // call changeUserOptions()
-    if( !changeUserOptions(uo) ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -35,7 +32,7 @@ bool GN::input::BasicWinInput::init( const UserOptions & uo )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::quit()
+void GN::input::BasicMswInput::quit()
 {
     GN_GUARD;
 
@@ -56,19 +53,20 @@ void GN::input::BasicWinInput::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicWinInput::changeUserOptions( const UserOptions & uo )
+bool GN::input::BasicMswInput::attachToWindow( void * window )
 {
     GN_GUARD;
 
+    HWND hwnd = (HWND)window;
+
     // check window handle
-    HWND hwnd = (HWND)uo.windowHandle;
     if( !::IsWindow(hwnd) )
     {
         GNINPUT_ERROR( "Window handle is not valid!" );
         return false;
     }
 
-    // reset basic input class
+    // reset input states
     resetInputStates();
 
     // (re)capture mouse
@@ -78,10 +76,9 @@ bool GN::input::BasicWinInput::changeUserOptions( const UserOptions & uo )
         ::SetCapture( hwnd );
     }
 
-    // store user options
-    mUserOptions = uo;
-
     // success
+    mWindow = hwnd;
+    GNINPUT_TRACE( "Attach to window 0x%X", mWindow );
     return true;
 
     GN_UNGUARD;
@@ -90,14 +87,14 @@ bool GN::input::BasicWinInput::changeUserOptions( const UserOptions & uo )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::getMousePosition( int & x, int & y ) const
+void GN::input::BasicMswInput::getMousePosition( int & x, int & y ) const
 {
     GN_GUARD;
 
     RECT  rc;
     POINT pt = mMousePosition;
-    ::GetClientRect( (HWND)mUserOptions.windowHandle, &rc );
-    ::ScreenToClient( (HWND)mUserOptions.windowHandle, &pt );
+    ::GetClientRect( mWindow, &rc );
+    ::ScreenToClient( mWindow, &pt );
     x = pt.x - rc.left;
     y = pt.y - rc.top;
 
@@ -111,7 +108,7 @@ void GN::input::BasicWinInput::getMousePosition( int & x, int & y ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::processMouseMove()
+void GN::input::BasicMswInput::processMouseMove()
 {
     GN_GUARD;
 
@@ -128,7 +125,7 @@ void GN::input::BasicWinInput::processMouseMove()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::msgHandler( UINT message, WPARAM wParam, LPARAM /*lParam*/ )
+void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wParam, LPARAM /*lParam*/ )
 {
     GN_GUARD;
 
@@ -180,7 +177,7 @@ void GN::input::BasicWinInput::msgHandler( UINT message, WPARAM wParam, LPARAM /
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicWinInput::setupWindowHooks()
+bool GN::input::BasicMswInput::setupWindowHooks()
 {
     GN_GUARD;
 
@@ -190,11 +187,11 @@ bool GN::input::BasicWinInput::setupWindowHooks()
     // setup hooks
     mMsgHook = ::SetWindowsHookEx(
         WH_GETMESSAGE, sMsgHookProc,
-        ::GetModuleHandle(0),
+        0,
         ::GetCurrentThreadId() );
     mCwpHook = ::SetWindowsHookEx(
         WH_CALLWNDPROC, sCwpHookProc,
-        ::GetModuleHandle(0),
+        0,
         ::GetCurrentThreadId() );
     if( 0 == mMsgHook || 0 == mCwpHook )
     {
@@ -211,7 +208,7 @@ bool GN::input::BasicWinInput::setupWindowHooks()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::removeWindowHooks()
+void GN::input::BasicMswInput::removeWindowHooks()
 {
     GN_GUARD;
 
@@ -233,12 +230,12 @@ void GN::input::BasicWinInput::removeWindowHooks()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::captureMouse()
+void GN::input::BasicMswInput::captureMouse()
 {
     GN_GUARD;
 
     if( mMouseCapture ) return;
-    ::SetCapture( (HWND)mUserOptions.windowHandle );
+    ::SetCapture( mWindow );
     ::SetCursor( ::LoadCursor(NULL, IDC_ARROW) );
     mMouseCapture = true;
 
@@ -248,7 +245,7 @@ void GN::input::BasicWinInput::captureMouse()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicWinInput::releaesMouse()
+void GN::input::BasicMswInput::releaesMouse()
 {
     GN_GUARD;
 
@@ -263,15 +260,15 @@ void GN::input::BasicWinInput::releaesMouse()
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::input::BasicWinInput::sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam )
+GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicWinInput * inst = safeCast<BasicWinInput*>( BasicWinInput::getInstancePtr() );
+    BasicMswInput * inst = safeCast<BasicMswInput*>( BasicMswInput::getInstancePtr() );
     GN_ASSERT( inst );
 
     const MSG * p = (const MSG*)lParam;
-    if( nCode >= 0 && p->hwnd == inst->mUserOptions.windowHandle )
+    if( nCode >= 0 && p->hwnd == inst->mWindow )
     {
         inst->msgHandler( p->message, p->wParam, p->lParam );
     }
@@ -285,15 +282,16 @@ GN::input::BasicWinInput::sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam 
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::input::BasicWinInput::sCwpHookProc( int nCode, WPARAM wParam, LPARAM lParam )
+GN::input::BasicMswInput::sCwpHookProc( int nCode, WPARAM wParam, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicWinInput * inst = safeCast<BasicWinInput*>( BasicWinInput::getInstancePtr() );
+    BasicMswInput * inst = safeCast<BasicMswInput*>( BasicMswInput::getInstancePtr() );
     GN_ASSERT( inst );
 
     const CWPSTRUCT * p = (const CWPSTRUCT*)lParam;
-    if( nCode >= 0 && p->hwnd == inst->mUserOptions.windowHandle )
+    //GNINPUT_TRACE( "CWP hook: hwnd(0x%X), msg(%s)", p->hwnd, GN::win::msg2str(p->message) );
+    if( nCode >= 0 && p->hwnd == inst->mWindow )
     {
         inst->msgHandler( p->message, p->wParam, p->lParam );
     }
