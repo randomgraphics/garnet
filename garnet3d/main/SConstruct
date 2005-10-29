@@ -210,12 +210,12 @@ env.Default( Split('samples sdk') )
 ################################################################################
 
 targets_text = ''
-targets_text += '%25s : %s\n'%( 'all', 'Build all targets of all variants' )
-targets_text += '%25s : %s\n'%( 'samples', 'Build samples' )
-targets_text += '%25s : %s\n'%( 'sdk', 'Build garnet SDK' )
-targets_text += '%25s : %s\n'%( 'msvc', 'Build MSVC projects' )
+targets_text += '%16s : %s\n'%( 'all', 'Build all targets of all variants' )
+targets_text += '%16s : %s\n'%( 'samples', 'Build samples' )
+targets_text += '%16s : %s\n'%( 'sdk', 'Build garnet SDK' )
+targets_text += '%16s : %s\n'%( 'msvc', 'Build MSVC projects' )
 for x in all_targets:
-    targets_text += '%25s : %s\n'%( x[0], env.File(x[1]) )
+    targets_text += '%16s : %s\n'%( x[0], env.File(x[1]) )
 
 help_text = """
 Usage:
