@@ -67,7 +67,7 @@ namespace GN
         {
             GN_ASSERT( 0 == msInstancePtr );
             // This is code 64-bit compatible?
-            size_t offset = (size_t)(T*)1 - (size_t)(Singleton<T>*)(T*)1;
+            size_t offset = (size_t)(T*)1 - (size_t)(LocalSingleton<T>*)(T*)1;
             msInstancePtr = (T*)((size_t)this+offset);
         }
 
