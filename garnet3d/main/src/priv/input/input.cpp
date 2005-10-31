@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "mswInput.h"
-//#include "diInput.h"
+#include "diInput.h"
 //#include "xInput.h"
 
 //
@@ -13,8 +13,9 @@ GN::input::Input * GN::input::createInputSystem( bool useDirectInput )
 #if GN_MSWIN
     if( useDirectInput )
     {
-        GN_UNIMPL();
-        return 0;
+        AutoObjPtr<DIInput> p( new DIInput );
+        if( !p->init() ) return 0;
+        return p.detach();
     }
     else
     {

@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/GNinput.h"
 
 //!
 //! GFX module test application
@@ -8,6 +9,7 @@ class GfxTest
     GN::SharedLib mLib;
     GN::gfx::CreateRendererFunc mCreator;
     GN::AutoObjPtr<GN::gfx::Renderer> mRenderer;
+    GN::AutoObjPtr<GN::input::Input> mInput;
 
     bool mDone;
 
@@ -49,6 +51,9 @@ public:
         mRenderer.reset( mCreator(uo) );
         if( !mRenderer ) return false;
 
+        mInput.reset( GN::input::createInputSystem() );
+        if( !mInput || !mInput->attachToWindow(mRenderer->getDispDesc().windowHandle) ) return false;
+
         mDone = false;
 
         // success
@@ -60,6 +65,7 @@ public:
     //!
     void quit()
     {
+        mInput.reset();
         mRenderer.reset();
         mCreator = 0;
         mLib.free();
@@ -79,6 +85,7 @@ public:
         while(!mDone)
         {
             GN::win::processMessages( mRenderer->getDispDesc().windowHandle );
+            mInput->processInputEvents();
             update();
             if( mRenderer->drawBegin() )
             {
@@ -95,17 +102,17 @@ public:
     //!
     void update()
     {
-#if GN_MSWIN
-        mDone = keyDown(VK_ESCAPE);
+        const GN::input::KeyStatus * kb = mInput->getKeyboardStatus();
 
-        if( keyDown(VK_RETURN) && keyDown(VK_MENU) )
+        mDone = kb[GN::input::KEY_ESCAPE].down;
+
+        if( kb[GN::input::KEY_RETURN].down && kb[GN::input::KEY_RETURN].altDown() )
         {
             // toggle fullscreen mode
             GN::gfx::UserOptions uo = mRenderer->getUserOptions();
             uo.fullscreen = !uo.fullscreen;
             if( !mRenderer->changeUserOptions(uo) ) mDone = true;
         }
-#endif
     }
 
     //!

@@ -66,6 +66,11 @@ namespace GN { namespace input {
     protected:
 
         //!
+        //! Get window handle
+        //!
+        HWND getAttachedWindow() const { return mWindow; }
+
+        //!
         //! process mouse movement
         //!
         void processMouseMove();
