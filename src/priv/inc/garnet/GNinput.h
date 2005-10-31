@@ -77,6 +77,43 @@ namespace GN
         //@}
 
         //!
+        //! Key status structure
+        //!
+        union KeyStatus
+        {
+            uint8_t u8;  //!< Key status as unsigned integer
+            int8_t  i8;  //!< Key status as signed integer
+
+            struct
+            {
+                bool down   : 1; //!< key down
+                bool lctrl  : 1; //!< left ctrl down
+                bool rctrl  : 1; //!< right ctrl down
+                bool lalt   : 1; //!< left alt down
+                bool ralt   : 1; //!< right alt down
+                bool lshift : 1; //!< left shift down
+                bool rshift : 1; //!< right shift down
+            };
+
+            //!
+            //! Equality
+            //!
+            bool operator==( const KeyStatus & rhs ) const { return u8 == rhs.u8; }
+
+            //!
+            //! Equality
+            //!
+            bool operator!=( const KeyStatus & rhs ) const { return u8 != rhs.u8; }
+
+            //! \name Misc functions
+            //@{
+            bool ctrlDown() const { return lctrl && rctrl; }
+            bool altDown() const { return lalt && ralt; }
+            bool shiftDdown() const { return lshift && rshift; }
+            //@}
+        };
+
+        //!
         //! key event structure
         //!
         //! 一个keyevent_s实际上就是一个uint16_t类型的整数，
@@ -88,50 +125,35 @@ namespace GN
             uint16_t u16;
 
             //! key event as signed 16bit integer
-            int16_t  s16;
+            int16_t  i16;
 
             //! structured key states
             struct
             {
-                uint8_t          code;    //!< key code
-
-                //! key state union
-                union
-                {
-                    uint8_t      state;  //!< key state
-
-                    //! key state structure
-                    struct
-                    {
-                        bool     down   : 1; //!< key down
-                        bool     lctrl  : 1; //!< left ctrl down
-                        bool     rctrl  : 1; //!< right ctrl down
-                        bool     lalt   : 1; //!< left alt down
-                        bool     ralt   : 1; //!< right alt down
-                        bool     lshift : 1; //!< left shift down
-                        bool     rshift : 1; //!< right shift down
-                    };
-                };
+                uint8_t   code;   //!< Key code
+                KeyStatus status; //!< Key status
             };
 
             //! \name constructor(s)
             //@{
             KeyEvent() {}
-            KeyEvent( const KeyEvent & k )
-                : code(k.code), state(k.state)
-            {}
-            KeyEvent( KeyCode kc, uint8_t ks )
-                : code( static_cast<uint8_t>(kc) ), state(ks)
+            KeyEvent( const KeyEvent & k ) : u16(k.u16) {}
+            KeyEvent( KeyCode kc, KeyStatus ks )
+                : code( static_cast<uint8_t>(kc) ), status(ks)
             { GN_ASSERT( kc < KEY_NUM_OF_KEYS ); }
             //@}
 
-            //! \name operators
-            //@{
+            //!
+            //! Equality
+            //!
             bool operator == ( const KeyEvent & rhs ) const
             {
                 return u16 == rhs.u16;
             }
 
+            //!
+            //! Equality
+            //!
             bool operator != ( const KeyEvent & rhs ) const
             {
                 return u16 != rhs.u16;
@@ -139,24 +161,16 @@ namespace GN
 
             //@}
 
-            //! \name misc functions
-            //@{
-
             //!
             //! set key data
             //!
-            const KeyEvent & set( KeyCode kc, uint8_t ks = 0 )
+            const KeyEvent & set( KeyCode kc, KeyStatus ks )
             {
                 GN_ASSERT( kc < KEY_NUM_OF_KEYS );
-                code = static_cast<uint8_t>(kc); state = ks; return *this;
+                code = static_cast<uint8_t>(kc);
+                status = ks;
+                return *this;
             }
-
-            bool isCtrlDown()     const { return lctrl && rctrl; }
-
-            bool isAltDown()      const { return lalt && ralt; }
-
-            bool isShiftDdown()    const { return lshift && rshift; }
-            //@}
         };
 
         //!
@@ -179,12 +193,9 @@ namespace GN
             virtual void processInputEvents() = 0;
 
             //!
-            //! return all keys
+            //! Return keyboard status indexed by KeyCode.
             //!
-            //! \note Use KeyCode to index the array;
-            //!       true means that key is being pressed.
-            //!
-            virtual const bool * getKeyStates() const = 0;
+            virtual const KeyStatus * getKeyboardStatus() const = 0;
 
             //!
             //! 得到当前鼠标的位置（相对窗口的左上角）

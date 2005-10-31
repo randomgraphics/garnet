@@ -54,7 +54,7 @@
 #define DX_CHECK_DO( func, something )              \
     if( true ) {                                    \
         HRESULT rr = func;                          \
-        if (D3D_OK != rr)                           \
+        if( FAILED(rr) )                            \
         {                                           \
             GND3D_ERROR( DXGetErrorString9A(rr) );  \
             something                               \

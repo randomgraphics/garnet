@@ -48,7 +48,7 @@ class InputTest
 
     void onKeyPress( GN::input::KeyEvent ke )
     {
-        if( !ke.down )
+        if( !ke.status.down )
         {
             if( GN::input::KEY_ESCAPE == ke.code ) mDone = true;
         }
@@ -111,6 +111,7 @@ public:
         while(!mDone)
         {
             GN::win::processMessages( mWin.getWindow() );
+            mInput->processInputEvents();
             update();
         }
 

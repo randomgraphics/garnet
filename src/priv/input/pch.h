@@ -13,6 +13,8 @@
 #if GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
+#include <dinput.h>
+#include <dxerr9.h>
 #include <zmouse.h>  // for WM_MOUSEWHEEL
 #endif
 

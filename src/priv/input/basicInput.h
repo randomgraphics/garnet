@@ -22,14 +22,14 @@ namespace GN { namespace input {
         //!
         //! Ctor
         //!
-        BasicInput() {}
+        BasicInput() { resetInputStates(); }
 
         //!
         //! Get keybord status
         //!
         //! \sa Input::getKeyStates()
         //!
-        const bool * getKeyStates() const { return mKeyStates; }
+        const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
 
         // ********************************
         //     custom protected functions
@@ -41,8 +41,8 @@ namespace GN { namespace input {
         //!
         void resetInputStates()
         {
-            mKeyFlags.set( KEY_NONE );
-            memset( mKeyStates, 0, sizeof(mKeyStates) );
+            memset( mKeyboardStatus, 0, sizeof(mKeyboardStatus) );
+            mKeyFlags.u8 = 0;
             mHalfWideChar = false;
         }
 
@@ -63,12 +63,12 @@ namespace GN { namespace input {
         //!
         //! 记录键盘的状态，用来过滤/修正不匹配的按键操作
         //!
-        bool mKeyStates[KEY_NUM_OF_KEYS];
+        KeyStatus mKeyboardStatus[KEY_NUM_OF_KEYS];
 
         //!
         //! 记录了CTRL/ALT/SHIFT的状态
         //!
-        KeyEvent mKeyFlags;
+        KeyStatus mKeyFlags;
 
         //!
         //! True，表明已经插入了半个UNICODE字符，正在等待下半个字符。

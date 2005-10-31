@@ -14,11 +14,12 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     GN_GUARD;
 
     // ignore redundant keyup(s)
-    if( keydown == mKeyStates[code] ) return;
+    if( keydown == mKeyboardStatus[code].down ) return;
 
     //GNINPUT_TRACE( "Key press: %s %s", kc2str(code), keydown?"down":"up" );
 
     // 更新状态键的标志
+    mKeyFlags.down = keydown;
     if     ( KEY_LCTRL  == code ) mKeyFlags.lctrl  = keydown;
     else if( KEY_RCTRL  == code ) mKeyFlags.rctrl  = keydown;
     else if( KEY_LALT   == code ) mKeyFlags.lalt   = keydown;
@@ -26,14 +27,13 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     else if( KEY_LSHIFT == code ) mKeyFlags.lshift = keydown;
     else if( KEY_RSHIFT == code ) mKeyFlags.rshift = keydown;
 
-    // 触发按键信号
-    KeyEvent k( mKeyFlags );
-    k.code = static_cast<uint8_t>(code);
-    k.down = keydown;
-    sigKeyPress( k );
+    KeyEvent k( code, mKeyFlags );
 
     // 更新键盘状态数组
-    mKeyStates[code] = keydown;
+    mKeyboardStatus[code] = k.status;
+
+    // 触发按键信号
+    sigKeyPress( k );
 
     GN_UNGUARD;
 }

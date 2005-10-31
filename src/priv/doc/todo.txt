@@ -2,14 +2,13 @@ BUGS
 ====
 
 - GFX:
-  - GetDeviceCaps(...) in basicDispMgr.cpp always returns information of the 
+  - GetDeviceCaps(...) in basicDispMgr.cpp always returns information of the
     monitor where the render window was orginally created in.
   - After fullscreen application is minimized, seems that WaitOnMessage() has
     no effects.
 
 ISSUES
 ======
-- convert input module to static library?
 
 TODO
 ====
@@ -21,7 +20,6 @@ TODO
 - GN_TRACE( level, msg, .... )
 - runtime call-stack dump
 - hash map/table
-- import input module
 - implement POSIX version of GN::path:glob()
 - UT for path functions: resolve, glob
 - implement GNogl using glut.
@@ -31,6 +29,7 @@ TODO
 
 DONE
 ====
+- convert input module to static library
 - Fix link problem of GFX module in static build.
 - Refine GFX:
   - Window property save/restore
