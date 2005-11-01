@@ -8,7 +8,7 @@
 
 #include "../testCommon.h"
 #include "garnet/GNgfx.h"
-#include "garnet/base/ntWindow.h"
+#include "garnet/GNwin.h"
 
 //! \cond
 
@@ -85,8 +85,8 @@ protected:
     void ntWindowAndNTRenderWindow()
     {
 #if GN_MSWIN
-        GN::NTWindow win;
-        GN::NTWindow::CreateParam cp;
+        GN::win::MswWindow win;
+        GN::win::MswWindow::CreateParam cp;
         cp.clientWidth = 236;
         cp.clientHeight = 189;
         TS_ASSERT( win.create( cp ) );
@@ -108,8 +108,8 @@ protected:
         if( !mCreator) return;
 
 #if GN_MSWIN
-        GN::NTWindow win;
-        GN::NTWindow::CreateParam cp;
+        GN::win::MswWindow win;
+        GN::win::MswWindow::CreateParam cp;
         cp.clientWidth = 236;
         cp.clientHeight = 189;
         TS_ASSERT( win.create( cp ) );

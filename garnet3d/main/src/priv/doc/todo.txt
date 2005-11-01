@@ -9,10 +9,12 @@ BUGS
 
 ISSUES
 ======
+- create a custom meta-thread management system
 
 TODO
 ====
 
+- XWindow class
 - cross-platform window util functions:
   - set window title
   - change window size

@@ -262,7 +262,7 @@ bool GN::ogl::OGL::createWindow()
 {
     GN_GUARD;
 
-    NTWindow::CreateParam cp;
+    win::MswWindow::CreateParam cp;
 
     cp.clientWidth = mInitParams.width;
     cp.clientHeight = mInitParams.height;

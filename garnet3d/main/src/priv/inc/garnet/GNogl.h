@@ -7,10 +7,10 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
+#include "garnet/GNwin.h"
 
 #if GN_MSWIN
 #include <windows.h>
-#include "garnet/base/ntWindow.h"
 #endif
 
 #include <glew.h>
@@ -167,17 +167,17 @@ namespace GN
             // ********************************
         private:
 
-            OGLInitParams mInitParams;
+            OGLInitParams   mInitParams;
 #if GN_MSWIN
-            NTWindow mWindow;
-            HDC      mDC;
-            HGLRC    mRC;
-            bool     mFullscreenModeInitialized;
-            bool     mMinimized;
-            bool     mInsideSizeMove;
-            bool     mSizeChanged;
+            win::MswWindow  mWindow;
+            HDC             mDC;
+            HGLRC           mRC;
+            bool            mFullscreenModeInitialized;
+            bool            mMinimized;
+            bool            mInsideSizeMove;
+            bool            mSizeChanged;
 #endif
-            bool     mClosed;
+            bool            mClosed;
 
             // ********************************
             // private functions

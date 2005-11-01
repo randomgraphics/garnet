@@ -1,28 +1,38 @@
-#ifndef __GN_INPUTTEST_PCH_H__
-#define __GN_INPUTTEST_PCH_H__
+#ifndef __GN_BASE_PCH_H__
+#define __GN_BASE_PCH_H__
 // *****************************************************************************
 // \file    pch.h
-// \brief   PCH header
-// \author  chenlee (2005.10.1)
+// \brief   precompiled header
+// \author  chenlee (2005.4.18)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
 #include "garnet/GNwin.h"
-#include "garnet/GNcore.h"
-#include "garnet/GNinput.h"
 
-#if GN_MSWIN
+#if GN_XENON
+#include <xtl.h>
+#elif GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
+#elif GN_POSIX
+#include <unistd.h>
 #endif
 
-#include <exception>
-#include <malloc.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
+#include <wchar.h>
+#include <math.h>
+#include <cwchar>
+#include <string>
+#include <vector>
+#include <exception>
+#include <iostream>
 
 #include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************
-#endif // __GN_INPUTTEST_PCH_H__
+#endif // __GN_BASE_PCH_H__

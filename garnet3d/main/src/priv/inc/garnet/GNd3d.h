@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
+#include "garnet/GNwin.h"
 
 #if GN_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
@@ -24,8 +25,6 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>
-
-#include "garnet/base/ntWindow.h"
 
 // Check dx version
 #if DIRECT3D_VERSION < 0x0900
@@ -290,7 +289,7 @@ namespace GN
 
             D3DInitParams           mInitParams;
 #if !GN_XENON
-            NTWindow                mWindow;
+            win::MswWindow          mWindow;
             HMONITOR                mOldMonitor;
 #endif
             uint32_t                mAdapter;

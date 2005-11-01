@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "garnet/base/NTWindow.h"
+#include "garnet/GNwin.h"
 
 #if GN_MSWIN
 
@@ -8,14 +8,14 @@
 //!
 class InputTest
 {
-    GN::NTWindow mWin;
+    GN::win::MswWindow mWin;
     GN::AutoObjPtr<GN::input::Input> mInput;
 
     bool mDone;
 
     bool createWindow()
     {
-        GN::NTWindow::CreateParam cp;
+        GN::win::MswWindow::CreateParam cp;
         mWin.setWindowProcedure( GN::makeFunctor(this,&InputTest::winProc) );
         if( !mWin.create(cp) ) return false;
         mWin.showWindow();
