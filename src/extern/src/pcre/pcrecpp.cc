@@ -526,6 +526,7 @@ int RE::NumberOfCapturingGroups() {
                                   PCRE_INFO_CAPTURECOUNT,
                                   &result);
   assert(pcre_retval == 0);
+  ((void)pcre_retval); // Fix unused variable warning of release build.
   return result;
 }
 
