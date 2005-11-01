@@ -30,6 +30,31 @@
 #include <exception>
 #include <iostream>
 
+//!
+//! win module fatal error
+//!
+#define GNWIN_FATAL GN_FATAL
+
+//!
+//! win module error log macro
+//!
+#define GNWIN_ERROR GN_ERROR
+
+//!
+//! win module warning log macro
+//!
+#define GNWIN_WARN GN_WARN
+
+//!
+//! win module informational log macro
+//!
+#define GNWIN_INFO GN_INFO
+
+//!
+//! win module tracing macro
+//!
+#define GNWIN_TRACE GN_TRACE
+
 #include "garnet/base/pragma.h"
 
 // *****************************************************************************

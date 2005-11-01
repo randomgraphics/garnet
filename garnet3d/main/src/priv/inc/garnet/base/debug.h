@@ -1,8 +1,8 @@
-#ifndef __GN_BASE_ASSERT_H__
-#define __GN_BASE_ASSERT_H__
+#ifndef __GN_BASE_DEBUG_H__
+#define __GN_BASE_DEBUG_H__
 // *****************************************************************************
-//! \file    assert.h
-//! \brief   assert functions and macros
+//! \file    debug.h
+//! \brief   debug functions and macros
 //! \author  chenlee (2005.4.17)
 // *****************************************************************************
 
@@ -95,12 +95,12 @@
 
 //@{
 
-#ifdef GN_MSWIN
+#if GN_MSWIN
 
 //!
 //! check return value of Windows function (general version)
 //!
-#define GN_WIN_CHECK_DO( func, something )                  \
+#define GN_MSW_CHECK_DO( func, something )                  \
     if( true ) {                                            \
         intptr_t rr = (intptr_t)(func);                     \
         if( 0 == rr )                                       \
@@ -114,20 +114,54 @@
 //! check return value of Windows function
 //!
 #if GN_DEBUG
-#define GN_WIN_CHECK( func ) GN_WIN_CHECK_DO( func, void(0); )
+#define GN_MSW_CHECK( func ) GN_MSW_CHECK_DO( func, void(0); )
 #else
-#define GN_WIN_CHECK( func )      func
+#define GN_MSW_CHECK( func )      func
 #endif
 
 //!
 //! check return value of Windows function, return if failed
 //!
-#define GN_WIN_CHECK_R( func ) GN_WIN_CHECK_DO( func, return; )
+#define GN_MSW_CHECK_R( func ) GN_MSW_CHECK_DO( func, return; )
 
 //!
 //! check return value of Windows function, return if failed
 //!
-#define GN_WIN_CHECK_RV( func, rval ) GN_WIN_CHECK_DO( func, return rval; )
+#define GN_MSW_CHECK_RV( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
+
+#elif GN_POSIX
+
+//!
+//! check return value of XLib function (general version)
+//!
+#define GN_X_CHECK_DO( func, something )                    \
+    if( true ) {                                            \
+        Status rr = (func);                                 \
+        if( 0 == rr )                                       \
+        {                                                   \
+            GN_ERROR( "XLib function %s failed.", #func );  \
+            something                                       \
+        }                                                   \
+    } else void(0)
+
+//!
+//! check return value of XLib function
+//!
+#if GN_DEBUG
+#define GN_X_CHECK( func ) GN_X_CHECK_DO( func, void(0); )
+#else
+#define GN_X_CHECK( func ) func
+#endif
+
+//!
+//! check return value of XLib function, return if failed
+//!
+#define GN_X_CHECK_R( func ) GN_X_CHECK_DO( func, return; )
+
+//!
+//! check return value of XLib function, return if failed
+//!
+#define GN_X_CHECK_RV( func, rval ) GN_X_CHECK_DO( func, return rval; )
 
 #endif
 
@@ -169,6 +203,6 @@ namespace GN
 }
 
 // *****************************************************************************
-//                           End of assert.h
+//                           End of debug.h
 // *****************************************************************************
-#endif // __GN_BASE_ASSERT_H__
+#endif // __GN_BASE_DEBUG_H__

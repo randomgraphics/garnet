@@ -51,7 +51,7 @@ static inline GN::StrA sGetAppDir()
     return "game:";
 #elif GN_MSWIN
     char buf[MAX_PATH_LENGTH+1];
-    GN_WIN_CHECK_RV( GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
+    GN_MSW_CHECK_RV( GetModuleFileNameA(0,buf,MAX_PATH_LENGTH), GN::StrA::EMPTYSTR );
     return GN::path::getParent( buf );
 #elif GN_POSIX
     char linkName[MAX_PATH_LENGTH+1];

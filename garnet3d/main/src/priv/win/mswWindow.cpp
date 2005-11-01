@@ -107,7 +107,7 @@ void GN::win::MswWindow::destroy()
 
     if( ::IsWindow( mWindow ) )
     {
-        GN_WIN_CHECK( ::DestroyWindow( mWindow ) );
+        GN_MSW_CHECK( ::DestroyWindow( mWindow ) );
     }
     mWindow = 0;
 
@@ -115,7 +115,7 @@ void GN::win::MswWindow::destroy()
     {
         GN_INFO( "Unregister window class: %s (module handle: 0x%X)",
             mClassName.cstr(), mInstanceHandle );
-        GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), mInstanceHandle ) );
+        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cstr(), mInstanceHandle ) );
         mClassName.clear();
     }
 
@@ -169,7 +169,7 @@ bool GN::win::MswWindow::getClientSize( uint32_t & width, uint32_t & height ) co
     }
 
     RECT rc;
-    GN_WIN_CHECK_RV( ::GetClientRect( mWindow, &rc ), false );
+    GN_MSW_CHECK_RV( ::GetClientRect( mWindow, &rc ), false );
 
     width = (UINT)(rc.right - rc.left);
     height = (UINT)(rc.bottom - rc.top);

@@ -119,7 +119,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3dpp.SwapEffect                 = D3DSWAPEFFECT_FLIP;
 
         // modify render window style
-        GN_WIN_CHECK( SetMenu( (HWND)dd.windowHandle, 0 ) );
+        GN_MSW_CHECK( SetMenu( (HWND)dd.windowHandle, 0 ) );
         SetWindowLong( (HWND)dd.windowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE );
     }
     else // windowed mode

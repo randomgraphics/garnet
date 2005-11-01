@@ -1,10 +1,44 @@
 #include "pch.h"
 
-#if GN_XENON || GN_POSIX
+// *****************************************************************************
+// Xenon/Xbox360 implementation
+// *****************************************************************************
+
+#if GN_XENON
 
 void GN::win::setTitle( WindowHandle, const char * ) {}
 void GN::win::processMessages( WindowHandle, bool ) {}
 const char * GN::win::msg2str( uint32_t ) { return ""; }
+
+// *****************************************************************************
+// POSIX implementation
+// *****************************************************************************
+
+#elif GN_POSIX
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::win::setTitle( WindowHandle, const char * ) {}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::win::processMessages( WindowHandle, bool )
+{
+    GN_GUARD;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const char * GN::win::msg2str( uint32_t ) { return ""; }
+
+// *****************************************************************************
+// MS Windows ( on PC ) implementation
+// *****************************************************************************
 
 #elif GN_MSWIN
 
@@ -16,7 +50,7 @@ void GN::win::setTitle( WindowHandle win, const char * title )
     GN_GUARD;
 
     if( 0 == title ) title = "";
-    GN_WIN_CHECK( ::SetWindowTextA( (HWND)win, title ) );
+    GN_MSW_CHECK( ::SetWindowTextA( (HWND)win, title ) );
 
     GN_UNGUARD;
 }
@@ -24,7 +58,7 @@ void GN::win::setTitle( WindowHandle win, const char * title )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::processMessages( WindowHandle wnd, bool waitOnIdle )
+void GN::win::processMessages( WindowHandle wnd, bool blockOnMinimized )
 {
     GN_GUARD;
 
@@ -42,7 +76,7 @@ void GN::win::processMessages( WindowHandle wnd, bool waitOnIdle )
             ::TranslateMessage( &msg );
             ::DispatchMessage(&msg);
         }
-        else if( IsIconic( (HWND)wnd ) && waitOnIdle )
+        else if( IsIconic( (HWND)wnd ) && blockOnMinimized )
         {
             GN_INFO( "Wait for window messages..." );
             ::WaitMessage();

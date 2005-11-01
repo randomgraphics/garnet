@@ -19,9 +19,14 @@ namespace GN { namespace win
     void setTitle( WindowHandle, const char * );
 
     //!
-    //! Process window message.
+    //! Process Windows messages/events. This function will NOT return until
+    //! message/event queue is empty.
     //!
-    void processMessages( WindowHandle, bool waitOnIdle = true );
+    //! \param blockOnMinimized
+    //!     If set true, and target window is currently minimized, this function
+    //!     will block calling thread, till the window is restored.
+    //!
+    void processMessages( WindowHandle, bool blockOnMinimized = true );
 
     //!
     //! Convert Windows message ID to string.

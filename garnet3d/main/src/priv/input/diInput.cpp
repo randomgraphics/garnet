@@ -302,12 +302,12 @@ bool GN::input::DIInput::diInit()
     GN_GUARD;
 
     // Load dinput library
-    GN_WIN_CHECK( ( mLibrary = ::LoadLibraryA( "dinput8.dll" ) ) );
+    GN_MSW_CHECK( ( mLibrary = ::LoadLibraryA( "dinput8.dll" ) ) );
 
     // Load symbol
     typedef HRESULT (WINAPI*DICreator)(HINSTANCE hinst, DWORD dwVersion, REFIID riidltf, LPVOID *ppvOut, LPUNKNOWN punkOuter);
     DICreator dc;
-    GN_WIN_CHECK( ( dc = (DICreator)::GetProcAddress( mLibrary, "DirectInput8Create" ) ) );
+    GN_MSW_CHECK( ( dc = (DICreator)::GetProcAddress( mLibrary, "DirectInput8Create" ) ) );
 
     // create dinput
     DI_CHECK_RV(

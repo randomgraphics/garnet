@@ -92,7 +92,7 @@ namespace GN { namespace win
         typedef Functor4< LRESULT, HWND, UINT, WPARAM, LPARAM > WindowProcedure;
 
         //!
-        //! Set NT window procedure
+        //! Set window procedure
         //!
         void setWindowProcedure( const WindowProcedure & handler ) { mWinProc = handler; };
 

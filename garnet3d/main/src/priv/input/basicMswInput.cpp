@@ -214,13 +214,13 @@ void GN::input::BasicMswInput::removeWindowHooks()
 
     if( mMsgHook )
     {
-        GN_WIN_CHECK( ::UnhookWindowsHookEx( mMsgHook ) );
+        GN_MSW_CHECK( ::UnhookWindowsHookEx( mMsgHook ) );
         mMsgHook = 0;
     }
 
     if( mCwpHook )
     {
-        GN_WIN_CHECK( ::UnhookWindowsHookEx( mCwpHook ) );
+        GN_MSW_CHECK( ::UnhookWindowsHookEx( mCwpHook ) );
         mCwpHook = 0;
     }
 

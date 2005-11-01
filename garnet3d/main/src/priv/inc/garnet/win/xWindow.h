@@ -6,7 +6,9 @@
 //! \author  chenlee (2005.10.31)
 // *****************************************************************************
 
-#if 0//GN_POSIX
+#if GN_POSIX
+
+#include <X11/XLib.h>
 
 namespace GN { namespace win {
     //!
@@ -20,10 +22,9 @@ namespace GN { namespace win {
         //!
         struct CreateParam
         {
-            HWND         parent;        //!< Parent window handle. Platform specific.
-            HMENU        menu;          //!< Main menu handle. Platform specfic.
+            const char * display;       //!< Display name. Default is empty.
+            Window       parent;        //!< Parent window handle.
             const char * title;         //!< MswWindow title.
-            uint32_t     style;         //!< MswWindow style. Platform specific. 0 means using default style.
             int32_t      left;          //!< MswWindow position.
             int32_t      top;           //!< MswWindow position.
             uint32_t     clientWidth;   //!< Client width of the window.
@@ -33,12 +34,11 @@ namespace GN { namespace win {
             //! Setup default parameters
             //!
             CreateParam()
-                : parent(0)
-                , menu(0)
+                : display("")
+                , parent(0)
                 , title("")
-                , style(0)
-                , left( (int32_t)0x80000000 )
-                , top( (int32_t)0x80000000 )
+                , left(0)
+                , top(0)
                 , clientWidth(640)
                 , clientHeight(480)
             {}
@@ -89,6 +89,16 @@ namespace GN { namespace win {
         //!
         bool getClientSize( uint32_t & width, uint32_t & height ) const;
 
+        //!
+        //! Event handler
+        //!
+        typedef Functor1<void,const XEvent&> EventHandler;
+
+        //!
+        //! Set event handler
+        //!
+        void setEventHandler( const EventHandler & handler ) { mEventHandler = handler; };
+
         // ********************************
         // private variables
         // ********************************
@@ -96,6 +106,7 @@ namespace GN { namespace win {
 
         Display * mDisplay;
         Window    mWindow;
+        EventHandler mEventHandler;
 
         // ********************************
         // private functions
