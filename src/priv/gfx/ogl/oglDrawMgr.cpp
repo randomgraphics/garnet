@@ -35,7 +35,7 @@ void GN::gfx::OGLRenderer::drawEnd()
     GN_ASSERT( mDrawBegan );
     mDrawBegan = 0;
 #if GN_MSWIN
-    GN_WIN_CHECK( ::SwapBuffers( mDeviceContext ) );
+    GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
 #else
     // TODO: call glxSwapBuffers() or glutSwapBuffers().
 #endif

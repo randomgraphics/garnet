@@ -17,7 +17,7 @@ sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
     // get monitor information
     MONITORINFOEXA mi;
     mi.cbSize = sizeof(mi);
-    GN_WIN_CHECK_RV( GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
+    GN_MSW_CHECK_RV( GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
 
     // get display mode
     width = (uint32_t) ( mi.rcMonitor.right - mi.rcMonitor.left );
@@ -72,7 +72,7 @@ bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
     //// Output monitor information
     //MONITORINFOEXA mi;
     //mi.cbSize = sizeof(mi);
-    //GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+    //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
     //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
 
     // add window handle to instance map
@@ -117,7 +117,7 @@ void GN::gfx::NTRenderWindow::quit()
     {
         GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_WIN_CHECK( ::UnregisterClassA( mClassName.cstr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cstr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -136,7 +136,7 @@ bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height
     }
 
     RECT rc;
-    GN_WIN_CHECK_RV( ::GetClientRect( mWindow, &rc ), false );
+    GN_MSW_CHECK_RV( ::GetClientRect( mWindow, &rc ), false );
 
     width = (UINT)(rc.right - rc.left);
     height = (UINT)(rc.bottom - rc.top);
@@ -221,7 +221,7 @@ bool GN::gfx::NTRenderWindow::resizeInternalWindow( const UserOptions & uo )
 
     // calculate boundary size
     RECT rc = { 0, 0, w, h };
-    GN_WIN_CHECK_RV(
+    GN_MSW_CHECK_RV(
         ::AdjustWindowRectEx(
             &rc,
             ::GetWindowLongA( mWindow, GWL_STYLE ),
@@ -230,7 +230,7 @@ bool GN::gfx::NTRenderWindow::resizeInternalWindow( const UserOptions & uo )
         false );
 
     // resize the window
-    GN_WIN_CHECK_RV(
+    GN_MSW_CHECK_RV(
         ::SetWindowPos(
             mWindow, HWND_TOP,
             0, 0, // position, ignored.
@@ -427,7 +427,7 @@ GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp
         //// Output monitor information
         //MONITORINFOEXA mi;
         //mi.cbSize = sizeof(mi);
-        //GN_WIN_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+        //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
         //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
     }
 
@@ -539,7 +539,7 @@ bool GN::gfx::WinProp::save( HWND hwnd )
 
     mParent = ::GetParent( hwnd );
     mMenu = ::GetMenu( hwnd );
-    GN_WIN_CHECK( ::GetWindowRect( hwnd, &mBoundsRect ) );
+    GN_MSW_CHECK( ::GetWindowRect( hwnd, &mBoundsRect ) );
     if( mParent )
     {
         // transform mBoundsRect to mParent's space
@@ -573,19 +573,19 @@ void GN::gfx::WinProp::restore()
     if( !(WS_CHILD & mStyle) )
     {
         // NOTE: can't attach mMenu to child window
-        GN_WIN_CHECK( ::SetMenu( mWindow, mMenu ) );
+        GN_MSW_CHECK( ::SetMenu( mWindow, mMenu ) );
     }
     ::SetWindowLong( mWindow, GWL_STYLE, mStyle );
     ::SetWindowLong( mWindow, GWL_EXSTYLE, mExStyle );
-    GN_WIN_CHECK( ::SetParent( mWindow, mParent ) );
-    GN_WIN_CHECK( ::SetWindowPos(
+    GN_MSW_CHECK( ::SetParent( mWindow, mParent ) );
+    GN_MSW_CHECK( ::SetWindowPos(
         mWindow,
         WS_EX_TOPMOST & mExStyle ? HWND_TOPMOST : HWND_NOTOPMOST,
         mBoundsRect.left, mBoundsRect.top,
         mBoundsRect.right-mBoundsRect.left,
         mBoundsRect.bottom-mBoundsRect.top,
         SWP_FRAMECHANGED | SWP_NOOWNERZORDER | SWP_SHOWWINDOW ) );
-    GN_WIN_CHECK( ::UpdateWindow( mWindow ) );
+    GN_MSW_CHECK( ::UpdateWindow( mWindow ) );
 
     mWindow = 0;
 

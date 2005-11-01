@@ -188,15 +188,15 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
         return false;
     }
 
-    GN_WIN_CHECK_RV( mDeviceContext = ::GetDC(hwnd), false );
+    GN_MSW_CHECK_RV( mDeviceContext = ::GetDC(hwnd), false );
 
     if( !sSetupPixelFormat(mDeviceContext) ) return false;
 
-    GN_WIN_CHECK_RV(
+    GN_MSW_CHECK_RV(
         mRenderContext = ::wglCreateContext( mDeviceContext ),
         false );
 
-    GN_WIN_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
+    GN_MSW_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
     // success
     return true;
@@ -229,29 +229,29 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
         HMONITOR hmonitor = (HMONITOR)dd.monitorHandle;
 
         // modify window style
-        GN_WIN_CHECK( ::SetParent( hwnd, 0 ) );
-        GN_WIN_CHECK( ::SetMenu( hwnd, 0 ) );
-        GN_WIN_CHECK( ::SetWindowLong( hwnd, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
+        GN_MSW_CHECK( ::SetParent( hwnd, 0 ) );
+        GN_MSW_CHECK( ::SetMenu( hwnd, 0 ) );
+        GN_MSW_CHECK( ::SetWindowLong( hwnd, GWL_STYLE, WS_POPUP|WS_VISIBLE ) );
         if( ::IsIconic(hwnd) )
         {
-            GN_WIN_CHECK( ::ShowWindow( hwnd, SW_SHOWNORMAL ) );
+            GN_MSW_CHECK( ::ShowWindow( hwnd, SW_SHOWNORMAL ) );
         }
 
         // get monitor information
         MONITORINFOEXA mi;
         mi.cbSize = sizeof(mi);
-        GN_WIN_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
+        GN_MSW_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
         // move window to left-top of the monitor, and set it as TOPMOST window.
         GNOGL_INFO( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
-        GN_WIN_CHECK( ::SetWindowPos(
+        GN_MSW_CHECK( ::SetWindowPos(
             hwnd, HWND_TOPMOST,
             mi.rcWork.left, mi.rcWork.top,
             dd.width, dd.height,
             SWP_FRAMECHANGED | SWP_SHOWWINDOW ) );
 
         // trigger a redraw operation
-        GN_WIN_CHECK( ::UpdateWindow( hwnd ) );
+        GN_MSW_CHECK( ::UpdateWindow( hwnd ) );
     }
 
     // setup message hook
@@ -336,7 +336,7 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
     // get monitor information
     MONITORINFOEXA mi;
     mi.cbSize = sizeof(mi);
-    GN_WIN_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)dd.monitorHandle, &mi ), false );
+    GN_MSW_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)dd.monitorHandle, &mi ), false );
 
     // change display mode
     DEVMODEA dm;
