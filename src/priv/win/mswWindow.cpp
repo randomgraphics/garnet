@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/base/ntWindow.h"
 
 #if GN_MSWIN && !GN_XENON
 
@@ -10,7 +9,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::NTWindow::create( const CreateParam & cp )
+bool GN::win::MswWindow::create( const CreateParam & cp )
 {
     GN_GUARD;
 
@@ -102,7 +101,7 @@ bool GN::NTWindow::create( const CreateParam & cp )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::NTWindow::destroy()
+void GN::win::MswWindow::destroy()
 {
     GN_GUARD;
 
@@ -126,7 +125,7 @@ void GN::NTWindow::destroy()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::NTWindow::showWindow( bool show ) const
+void GN::win::MswWindow::showWindow( bool show ) const
 {
     GN_GUARD;
     if( !::IsWindow( mWindow ) )
@@ -142,7 +141,7 @@ void GN::NTWindow::showWindow( bool show ) const
 //
 //
 // -----------------------------------------------------------------------------
-HMONITOR GN::NTWindow::getMonitor() const
+HMONITOR GN::win::MswWindow::getMonitor() const
 {
     GN_GUARD;
 
@@ -159,7 +158,7 @@ HMONITOR GN::NTWindow::getMonitor() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::NTWindow::getClientSize( uint32_t & width, uint32_t & height ) const
+bool GN::win::MswWindow::getClientSize( uint32_t & width, uint32_t & height ) const
 {
     GN_GUARD;
 
@@ -187,7 +186,7 @@ bool GN::NTWindow::getClientSize( uint32_t & width, uint32_t & height ) const
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT GN::NTWindow::winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+LRESULT GN::win::MswWindow::winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
     if( mWinProc )
@@ -200,24 +199,24 @@ LRESULT GN::NTWindow::winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
 //
 //
 // -----------------------------------------------------------------------------
-LRESULT CALLBACK GN::NTWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+LRESULT CALLBACK GN::win::MswWindow::sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GN_INFO( "GN::NTWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_INFO( "GN::win::MswWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    NTWindow * ptr;
+    MswWindow * ptr;
 
     // handle WM_NCCREATE
     if( WM_NCCREATE == msg )
     {
         GN_ASSERT( lp );
-        ptr = (NTWindow*)((CREATESTRUCT*)lp)->lpCreateParams;
+        ptr = (MswWindow*)((CREATESTRUCT*)lp)->lpCreateParams;
         ::SetWindowLongPtrA( wnd, GWLP_USERDATA, (LONG_PTR)ptr );
     }
     else
     {
-        ptr = (NTWindow*)::GetWindowLongPtrA( wnd, GWLP_USERDATA );
+        ptr = (MswWindow*)::GetWindowLongPtrA( wnd, GWLP_USERDATA );
     }
 
     // call Window specific procedure

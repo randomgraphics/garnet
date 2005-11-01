@@ -7,6 +7,7 @@
 #define _GN_CORE
 
 #include "garnet/GNbase.h"
+#include "garnet/GNwin.h"
 
 #if GN_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"

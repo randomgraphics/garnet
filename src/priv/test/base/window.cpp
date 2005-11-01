@@ -1,5 +1,5 @@
 #include "../testCommon.h"
-#include "garnet/base/ntWindow.h"
+#include "garnet/GNwin.h"
 
 class WindowTest : public CxxTest::TestSuite
 {
@@ -8,8 +8,8 @@ public:
     void testParentAndChild()
     {
 #if GN_MSWIN
-        GN::NTWindow parent, child;
-        GN::NTWindow::CreateParam cp;
+        GN::win::MswWindow parent, child;
+        GN::win::MswWindow::CreateParam cp;
 
         TS_ASSERT( parent.create( cp ) );
         parent.showWindow( true );
@@ -25,8 +25,8 @@ public:
     void testUserStyle()
     {
 #if GN_MSWIN
-        GN::NTWindow win;
-        GN::NTWindow::CreateParam cp;
+        GN::win::MswWindow win;
+        GN::win::MswWindow::CreateParam cp;
 
         cp.style = WS_DLGFRAME;
 
@@ -40,9 +40,9 @@ public:
     void testClientSize()
     {
 #if GN_MSWIN
-        GN::NTWindow win;
+        GN::win::MswWindow win;
 
-        GN::NTWindow::CreateParam cp;
+        GN::win::MswWindow::CreateParam cp;
 
         cp.clientWidth = 236;
         cp.clientHeight = 189;

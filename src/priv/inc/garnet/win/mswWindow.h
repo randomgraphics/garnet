@@ -1,35 +1,38 @@
-#ifndef __GN_BASE_NTWINDOW_H__
-#define __GN_BASE_NTWINDOW_H__
+#ifndef __GN_WIN_MSWWINDOW_H__
+#define __GN_WIN_MSWWINDOW_H__
 // *****************************************************************************
-//! \file    ntWindow.h
+//! \file    mswWindow.h
 //! \brief   A simple window wrapper.
 //! \author  chenlee (2005.10.11)
 // *****************************************************************************
 
 #if GN_MSWIN && !GN_XENON
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
-namespace GN
+namespace GN { namespace win
 {
     //!
-    //! Window wrapper on NT platform.
+    //! Window wrapper on Microsoft Windows.
     //!
-    class NTWindow
+    class MswWindow
     {
     public:
 
         //!
-        //! NTWindow creation parameters
+        //! MswWindow creation parameters
         //!
         struct CreateParam
         {
             HWND         parent;        //!< Parent window handle. Platform specific.
             HMENU        menu;          //!< Main menu handle. Platform specfic.
-            const char * title;         //!< NTWindow title.
-            uint32_t     style;         //!< NTWindow style. Platform specific. 0 means using default style.
-            int32_t      left;          //!< NTWindow position.
-            int32_t      top;           //!< NTWindow position.
+            const char * title;         //!< MswWindow title.
+            uint32_t     style;         //!< MswWindow style. Platform specific. 0 means using default style.
+            int32_t      left;          //!< MswWindow position.
+            int32_t      top;           //!< MswWindow position.
             uint32_t     clientWidth;   //!< Client width of the window.
             uint32_t     clientHeight;  //!< Client height of the window.
 
@@ -49,8 +52,8 @@ namespace GN
         };
 
         //@{
-        NTWindow() : mWindow(0) {}
-        virtual ~NTWindow() { destroy(); }
+        MswWindow() : mWindow(0) {}
+        virtual ~MswWindow() { destroy(); }
         //@}
 
         //!
@@ -106,11 +109,11 @@ namespace GN
 
         static LRESULT CALLBACK sMsgRouter( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
     };
-}
+}}
 
 #endif // GN_MSWIN && !GN_XENON
 
 // *****************************************************************************
-//                           End of ntWindow.h
+//                           End of mswWindow.h
 // *****************************************************************************
-#endif // __GN_BASE_NTWINDOW_H__
+#endif // __GN_WIN_MSWWINDOW_H__

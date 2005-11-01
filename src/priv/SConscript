@@ -1,1 +1,1 @@
-SConscript( dirs=Split('base core input gfx d3d ogl test') )
+SConscript( dirs=Split('base win core input gfx d3d ogl test') )

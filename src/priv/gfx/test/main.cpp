@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "garnet/GNwin.h"
 #include "garnet/GNinput.h"
 
 //!
@@ -94,7 +95,7 @@ public:
             }
         }
 
-        return 0; 
+        return 0;
     }
 
     //!
@@ -151,7 +152,7 @@ void usage( const char * appName )
 int main( int argc, const char * argv[] )
 {
     const char * module;
-    
+
     if( argc < 2 )
     {
         usage( argv[0] );
