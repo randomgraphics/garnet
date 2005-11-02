@@ -27,13 +27,30 @@ void GN::input::MswInput::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
     {
         // keyboard messages
         case WM_KEYDOWN :
-        case WM_KEYUP :
         case WM_SYSKEYDOWN :
+        case WM_KEYUP :
         case WM_SYSKEYUP :
-            if( KEY_NONE != mKeyMap[wp] )
             {
-                // 最高位表示该键是否按下（0：按下，1：抬起）
-                triggerKeyPress( mKeyMap[wp], !(lp&0x80000000) );
+                bool down = !(lp&0x80000000); // 最高位表示该键是否按下（0：按下，1：抬起）
+                if( VK_MENU == wp )
+                {
+                    triggerKeyPress( KEY_LALT, down );
+                    triggerKeyPress( KEY_RALT, down );
+                }
+                else if( VK_CONTROL == wp )
+                {
+                    triggerKeyPress( KEY_LCTRL, down );
+                    triggerKeyPress( KEY_RCTRL, down );
+                }
+                else if( VK_SHIFT == wp )
+                {
+                    triggerKeyPress( KEY_LSHIFT, down );
+                    triggerKeyPress( KEY_RSHIFT, down );
+                }
+                else if( KEY_NONE != mKeyMap[wp] )
+                {
+                    triggerKeyPress( mKeyMap[wp], down );
+                }
             }
             break;
 
