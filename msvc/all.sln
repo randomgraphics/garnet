@@ -19,10 +19,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNogl", "GNogl.vcproj", "{5
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtest", "GNtest.vcproj", "{3A29A7DC-0722-420A-A213-E4CB990703C9}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNd3dTest", "GNd3dTest.vcproj", "{D72ECD80-C1C6-49BC-B546-AFC4D26498FA}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
@@ -52,6 +48,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputTest", "GNinputTest.
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinput", "GNinput.vcproj", "{813D9241-581A-44E0-840A-F2CB26D10EA0}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNut", "GNut.vcproj", "{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwinTest", "GNwinTest.vcproj", "{99C64004-2623-4D98-AB2F-D47B694B557B}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwin", "GNwin.vcproj", "{72B0E203-3E5A-401F-9EEF-255AC49084EF}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -103,14 +111,6 @@ Global
 		{5B4405BF-5F58-44EA-B55A-90D87968A6B6}.Stdbg.Build.0 = Stdbg|Win32
 		{5B4405BF-5F58-44EA-B55A-90D87968A6B6}.Strel.ActiveCfg = Strel|Win32
 		{5B4405BF-5F58-44EA-B55A-90D87968A6B6}.Strel.Build.0 = Strel|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Debug.ActiveCfg = Debug|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Debug.Build.0 = Debug|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Release.ActiveCfg = Release|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Release.Build.0 = Release|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Stdbg.ActiveCfg = Stdbg|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Stdbg.Build.0 = Stdbg|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Strel.ActiveCfg = Strel|Win32
-		{3A29A7DC-0722-420A-A213-E4CB990703C9}.Strel.Build.0 = Strel|Win32
 		{D72ECD80-C1C6-49BC-B546-AFC4D26498FA}.Debug.ActiveCfg = Debug|Win32
 		{D72ECD80-C1C6-49BC-B546-AFC4D26498FA}.Debug.Build.0 = Debug|Win32
 		{D72ECD80-C1C6-49BC-B546-AFC4D26498FA}.Release.ActiveCfg = Release|Win32
@@ -175,6 +175,30 @@ Global
 		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Stdbg.Build.0 = Stdbg|Win32
 		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Strel.ActiveCfg = Strel|Win32
 		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Strel.Build.0 = Strel|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Debug.ActiveCfg = Debug|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Debug.Build.0 = Debug|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Release.ActiveCfg = Release|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Release.Build.0 = Release|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Stdbg.ActiveCfg = Stdbg|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Stdbg.Build.0 = Stdbg|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Strel.ActiveCfg = Strel|Win32
+		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Strel.Build.0 = Strel|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Debug.ActiveCfg = Debug|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Debug.Build.0 = Debug|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Release.ActiveCfg = Release|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Release.Build.0 = Release|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Stdbg.ActiveCfg = Stdbg|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Stdbg.Build.0 = Stdbg|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Strel.ActiveCfg = Strel|Win32
+		{99C64004-2623-4D98-AB2F-D47B694B557B}.Strel.Build.0 = Strel|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Debug.ActiveCfg = Debug|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Debug.Build.0 = Debug|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Release.ActiveCfg = Release|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Release.Build.0 = Release|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Stdbg.ActiveCfg = Stdbg|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Stdbg.Build.0 = Stdbg|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Strel.ActiveCfg = Strel|Win32
+		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Strel.Build.0 = Strel|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
