@@ -621,7 +621,7 @@ sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase GNwin GNinput GNd3d GNogl')
-programs = Split( 'GNtest GNgfxTest GNinputTest' )
+programs = Split( 'GNut GNgfxTest GNinputTest' )
 
 # populate sample directory
 doInstall(
@@ -650,7 +650,7 @@ for target in (sharedBins+programs):
 if GN_conf['run_unit_tests']:
     def run_test( target, source, env ):
         return os.spawnl( os.P_WAIT, target[0].path )
-    AddPostAction( GN_targets['GNtest'][0], run_test )
+    AddPostAction( GN_targets['GNut'][0], run_test )
 
 # populate SDK directory
 doInstall(
