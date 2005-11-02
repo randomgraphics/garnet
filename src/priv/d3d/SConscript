@@ -6,4 +6,3 @@ if 'win32' == env['PLATFORM']:
         env.GN_glob('*.cpp'),
         'pch.h',
         'pch.cpp' )
-    SConscript( 'test/SConscript' )
