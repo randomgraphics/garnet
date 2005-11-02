@@ -1,4 +1,4 @@
-Import( 'env GN_targets GN_conf' )
+Import( 'env' )
 
 env = env.Copy()
 env.Append( CPPDEFINES = ['_GN_CORE'] )
