@@ -1,5 +1,5 @@
 /*
-** $Id: llex.h,v 1.3 2005/01/04 03:10:10 t-cheli Exp $
+** $Id: llex.h,v 1.55 2005/06/06 13:30:25 roberto Exp $
 ** Lexical Analyzer
 ** See Copyright Notice in lua.h
 */
@@ -37,7 +37,7 @@ enum RESERVED {
 
 
 /* array with token `names' */
-extern const char *const luaX_tokens [];
+LUAI_DATA const char *const luaX_tokens [];
 
 
 typedef union {
@@ -63,17 +63,17 @@ typedef struct LexState {
   ZIO *z;  /* input stream */
   Mbuffer *buff;  /* buffer for tokens */
   TString *source;  /* current source name */
-  int nestlevel;  /* level of nested non-terminals */
 } LexState;
 
 
-void luaX_init (lua_State *L);
-void luaX_setinput (lua_State *L, LexState *LS, ZIO *z, TString *source);
-TString *luaX_newstring (LexState *LS, const char *str, size_t l);
-int luaX_lex (LexState *LS, SemInfo *seminfo);
-void luaX_lexerror (LexState *ls, const char *msg, int token);
-void luaX_syntaxerror (LexState *ls, const char *s);
-const char *luaX_token2str (LexState *ls, int token);
+LUAI_FUNC void luaX_init (lua_State *L);
+LUAI_FUNC void luaX_setinput (lua_State *L, LexState *LS, ZIO *z,
+                              TString *source);
+LUAI_FUNC TString *luaX_newstring (LexState *LS, const char *str, size_t l);
+LUAI_FUNC int luaX_lex (LexState *LS, SemInfo *seminfo);
+LUAI_FUNC void luaX_lexerror (LexState *ls, const char *msg, int token);
+LUAI_FUNC void luaX_syntaxerror (LexState *ls, const char *s);
+LUAI_FUNC const char *luaX_token2str (LexState *ls, int token);
 
 
 #endif

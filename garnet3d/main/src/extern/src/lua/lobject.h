@@ -1,5 +1,5 @@
 /*
-** $Id: lobject.h,v 1.3 2005/01/04 03:10:10 t-cheli Exp $
+** $Id: lobject.h,v 2.18 2005/10/24 17:37:33 roberto Exp $
 ** Type definitions for Lua objects
 ** See Copyright Notice in lua.h
 */
@@ -17,15 +17,17 @@
 
 
 /* tags for values visible from Lua */
-#define NUM_TAGS	LUA_TTHREAD
+#define LAST_TAG	LUA_TTHREAD
+
+#define NUM_TAGS	(LAST_TAG+1)
 
 
 /*
 ** Extra tags for non-values
 */
-#define LUA_TPROTO	(NUM_TAGS+1)
-#define LUA_TUPVAL	(NUM_TAGS+2)
-#define LUA_TDEADKEY	(NUM_TAGS+3)
+#define LUA_TPROTO	(LAST_TAG+1)
+#define LUA_TUPVAL	(LAST_TAG+2)
+#define LUA_TDEADKEY	(LAST_TAG+3)
 
 
 /*
@@ -218,6 +220,7 @@ typedef union Udata {
   struct {
     CommonHeader;
     struct Table *metatable;
+    struct Table *env;
     size_t len;
   } uv;
 } Udata;
@@ -243,7 +246,8 @@ typedef struct Proto {
   int sizelineinfo;
   int sizep;  /* size of `p' */
   int sizelocvars;
-  int lineDefined;
+  int linedefined;
+  int lastlinedefined;
   GCObject *gclist;
   lu_byte nups;  /* number of upvalues */
   lu_byte numparams;
@@ -252,8 +256,10 @@ typedef struct Proto {
 } Proto;
 
 
-/* mask for new-style vararg */
-#define NEWSTYLEVARARG		2
+/* masks for new-style vararg */
+#define VARARG_HASARG		1
+#define VARARG_ISVARARG		2
+#define VARARG_NEEDSARG		4
 
 
 typedef struct LocVar {
@@ -271,7 +277,13 @@ typedef struct LocVar {
 typedef struct UpVal {
   CommonHeader;
   TValue *v;  /* points to stack or to its own value */
-  TValue value;  /* the value (when closed) */
+  union {
+    TValue value;  /* the value (when closed) */
+    struct {  /* double linked list (when open) */
+      struct UpVal *prev;
+      struct UpVal *next;
+    } l;
+  } u;
 } UpVal;
 
 
@@ -280,7 +292,8 @@ typedef struct UpVal {
 */
 
 #define ClosureHeader \
-	CommonHeader; lu_byte isC; lu_byte nupvalues; GCObject *gclist
+	CommonHeader; lu_byte isC; lu_byte nupvalues; GCObject *gclist; \
+	struct Table *env
 
 typedef struct CClosure {
   ClosureHeader;
@@ -292,7 +305,6 @@ typedef struct CClosure {
 typedef struct LClosure {
   ClosureHeader;
   struct Proto *p;
-  TValue g;  /* global table for this closure */
   UpVal *upvals[1];
 } LClosure;
 
@@ -330,7 +342,7 @@ typedef struct Table {
   struct Table *metatable;
   TValue *array;  /* array part */
   Node *node;
-  Node *firstfree;  /* this position is free; all positions after it are full */
+  Node *lastfree;  /* any free position is before this position */
   GCObject *gclist;
   int sizearray;  /* size of `array' array */
 } Table;
@@ -341,7 +353,7 @@ typedef struct Table {
 ** `module' operation for hashing (size is always a power of 2)
 */
 #define lmod(s,size) \
-	check_exp((size&(size-1))==0, (cast(int, (s) & ((size)-1))))
+	(check_exp((size&(size-1))==0, (cast(int, (s) & ((size)-1)))))
 
 
 #define twoto(x)	(1<<(x))
@@ -349,18 +361,20 @@ typedef struct Table {
 
 
 
-extern const TValue luaO_nilobject;
+LUAI_DATA const TValue luaO_nilobject;
 
-int luaO_log2 (unsigned int x);
-int luaO_int2fb (unsigned int x);
-int luaO_fb2int (int x);
+#define ceillog2(x)	(luaO_log2((x)-1) + 1)
 
-int luaO_rawequalObj (const TValue *t1, const TValue *t2);
-int luaO_str2d (const char *s, lua_Number *result);
-
-const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp);
-const char *luaO_pushfstring (lua_State *L, const char *fmt, ...);
-void luaO_chunkid (char *out, const char *source, int len);
+LUAI_FUNC int luaO_log2 (unsigned int x);
+LUAI_FUNC int luaO_int2fb (unsigned int x);
+LUAI_FUNC int luaO_fb2int (int x);
+LUAI_FUNC int luaO_rawequalObj (const TValue *t1, const TValue *t2);
+LUAI_FUNC int luaO_str2d (const char *s, lua_Number *result);
+LUAI_FUNC const char *luaO_pushvfstring (lua_State *L, const char *fmt,
+                                                       va_list argp);
+LUAI_FUNC const char *luaO_pushfstring (lua_State *L, const char *fmt, ...);
+LUAI_FUNC void luaO_chunkid (char *out, const char *source, size_t len);
 
 
 #endif
+

@@ -1,5 +1,5 @@
 /*
-** $Id: lbaselib.c,v 1.3 2005/01/04 03:10:10 t-cheli Exp $
+** $Id: lbaselib.c,v 1.186 2005/10/21 13:47:42 roberto Exp $
 ** Basic library
 ** See Copyright Notice in lua.h
 */
@@ -39,7 +39,8 @@ static int luaB_print (lua_State *L) {
     lua_call(L, 1, 1);
     s = lua_tostring(L, -1);  /* get result */
     if (s == NULL)
-      return luaL_error(L, "`tostring' must return a string to `print'");
+      return luaL_error(L, LUA_QL("tostring") " must return a string to "
+                           LUA_QL("print"));
     if (i>1) fputs("\t", stdout);
     fputs(s, stdout);
     lua_pop(L, 1);  /* pop result */
@@ -131,7 +132,10 @@ static void getfunc (lua_State *L) {
 
 static int luaB_getfenv (lua_State *L) {
   getfunc(L);
-  lua_getfenv(L, -1);
+  if (lua_iscfunction(L, -1))  /* is a C function? */
+    lua_pushvalue(L, LUA_GLOBALSINDEX);  /* return the thread's global env. */
+  else
+    lua_getfenv(L, -1);
   return 1;
 }
 
@@ -141,11 +145,15 @@ static int luaB_setfenv (lua_State *L) {
   getfunc(L);
   lua_pushvalue(L, 2);
   if (lua_isnumber(L, 1) && lua_tonumber(L, 1) == 0) {
-    lua_replace(L, LUA_GLOBALSINDEX);
+    /* change environment of current thread */
+    lua_pushthread(L);
+    lua_insert(L, -2);
+    lua_setfenv(L, -2);
     return 0;
   }
-  else if (lua_setfenv(L, -2) == 0)
-    luaL_error(L, "`setfenv' cannot change environment of given function");
+  else if (lua_iscfunction(L, -2) || lua_setfenv(L, -2) == 0)
+    luaL_error(L,
+          LUA_QL("setfenv") " cannot change environment of given object");
   return 1;
 }
 
@@ -161,6 +169,7 @@ static int luaB_rawequal (lua_State *L) {
 static int luaB_rawget (lua_State *L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   luaL_checkany(L, 2);
+  lua_settop(L, 2);
   lua_rawget(L, 1);
   return 1;
 }
@@ -169,6 +178,7 @@ static int luaB_rawset (lua_State *L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   luaL_checkany(L, 2);
   luaL_checkany(L, 3);
+  lua_settop(L, 3);
   lua_rawset(L, 1);
   return 1;
 }
@@ -182,14 +192,27 @@ static int luaB_gcinfo (lua_State *L) {
 
 static int luaB_collectgarbage (lua_State *L) {
   static const char *const opts[] = {"stop", "restart", "collect",
-    "count", "step", "setpace", "setincmode", NULL};
+    "count", "step", "setpause", "setstepmul", NULL};
   static const int optsnum[] = {LUA_GCSTOP, LUA_GCRESTART, LUA_GCCOLLECT,
-    LUA_GCCOUNT, LUA_GCSTEP, LUA_GCSETPACE, LUA_GCSETINCMODE};
-  int o = luaL_findstring(luaL_optstring(L, 1, "collect"), opts);
+    LUA_GCCOUNT, LUA_GCSTEP, LUA_GCSETPAUSE, LUA_GCSETSTEPMUL};
+  int o = luaL_checkoption(L, 1, "collect", opts);
   int ex = luaL_optint(L, 2, 0);
-  luaL_argcheck(L, o >= 0, 1, "invalid option");
-  lua_pushinteger(L, lua_gc(L, optsnum[o], ex));
-  return 1;
+  int res = lua_gc(L, optsnum[o], ex);
+  switch (optsnum[o]) {
+    case LUA_GCCOUNT: {
+      int b = lua_gc(L, LUA_GCCOUNTB, 0);
+      lua_pushnumber(L, ((lua_Number)res*1024 + b)/1000);
+      return 1;
+    }
+    case LUA_GCSTEP: {
+      lua_pushboolean(L, res);
+      return 1;
+    }
+    default: {
+      lua_pushnumber(L, res);
+      return 1;
+    }
+  }
 }
 
 
@@ -235,7 +258,7 @@ static int luaB_ipairs (lua_State *L) {
   luaL_checktype(L, 1, LUA_TTABLE);
   lua_pushvalue(L, lua_upvalueindex(1));  /* return generator, */
   lua_pushvalue(L, 1);  /* state, */
-  lua_pushinteger(L, LUA_FIRSTINDEX - 1);  /* and initial value */
+  lua_pushinteger(L, 0);  /* and initial value */
   return 3;
 }
 
@@ -261,15 +284,7 @@ static int luaB_loadstring (lua_State *L) {
 
 static int luaB_loadfile (lua_State *L) {
   const char *fname = luaL_optstring(L, 1, NULL);
-  const char *path = luaL_optstring(L, 2, NULL);
-  int status;
-  if (path == NULL)
-    status = luaL_loadfile(L, fname);
-  else {
-    fname = luaL_searchpath(L, fname, path);
-    status = (fname) ? luaL_loadfile(L, fname) : 1;
-  }
-  return load_aux(L, status);
+  return load_aux(L, luaL_loadfile(L, fname));
 }
 
 
@@ -280,6 +295,7 @@ static int luaB_loadfile (lua_State *L) {
 ** reserved slot inside the stack.
 */
 static const char *generic_reader (lua_State *L, void *ud, size_t *size) {
+  (void)ud;  /* to avoid warnings */
   luaL_checkstack(L, 2, "too many nested functions");
   lua_pushvalue(L, 1);  /* get function */
   lua_call(L, 0, 1);  /* call it */
@@ -288,11 +304,8 @@ static const char *generic_reader (lua_State *L, void *ud, size_t *size) {
     return NULL;
   }
   else if (lua_isstring(L, -1)) {
-    const char *res;
     lua_replace(L, 3);  /* save string in a reserved stack slot */
-    res = lua_tostring(L, 3);
-    *size = lua_strlen(L, 3);
-    return res;
+    return lua_tolstring(L, 3, size);
   }
   else luaL_error(L, "reader function must return a string");
   return NULL;  /* to avoid warnings */
@@ -327,12 +340,10 @@ static int luaB_assert (lua_State *L) {
 
 
 static int luaB_unpack (lua_State *L) {
-  int i = luaL_optint(L, 2, LUA_FIRSTINDEX);
-  int e = luaL_optint(L, 3, -1);
-  int n;
+  int i, e, n;
   luaL_checktype(L, 1, LUA_TTABLE);
-  if (e == -1)
-    e = luaL_getn(L, 1) + LUA_FIRSTINDEX - 1;
+  i = luaL_optint(L, 2, 1);
+  e = luaL_opt(L, luaL_checkint, 3, luaL_getn(L, 1));
   n = e - i + 1;  /* number of elements */
   if (n <= 0) return 0;  /* empty range */
   luaL_checkstack(L, n, "table too big to unpack");
@@ -350,8 +361,9 @@ static int luaB_select (lua_State *L) {
   }
   else {
     int i = luaL_checkint(L, 1);
-    if (i <= 0) i = 1;
-    else if (i >= n) i = n;
+    if (i < 0) i = n + i;
+    else if (i > n) i = n;
+    luaL_argcheck(L, 1 <= i, 1, "index out of range");
     return n - i;
   }
 }
@@ -430,31 +442,31 @@ static int luaB_newproxy (lua_State *L) {
 }
 
 
-static const luaL_reg base_funcs[] = {
-  {"error", luaB_error},
-  {"getmetatable", luaB_getmetatable},
-  {"setmetatable", luaB_setmetatable},
-  {"getfenv", luaB_getfenv},
-  {"setfenv", luaB_setfenv},
-  {"next", luaB_next},
-  {"print", luaB_print},
-  {"tonumber", luaB_tonumber},
-  {"tostring", luaB_tostring},
-  {"type", luaB_type},
+static const luaL_Reg base_funcs[] = {
   {"assert", luaB_assert},
-  {"unpack", luaB_unpack},
-  {"select", luaB_select},
+  {"collectgarbage", luaB_collectgarbage},
+  {"dofile", luaB_dofile},
+  {"error", luaB_error},
+  {"gcinfo", luaB_gcinfo},
+  {"getfenv", luaB_getfenv},
+  {"getmetatable", luaB_getmetatable},
+  {"loadfile", luaB_loadfile},
+  {"load", luaB_load},
+  {"loadstring", luaB_loadstring},
+  {"next", luaB_next},
+  {"pcall", luaB_pcall},
+  {"print", luaB_print},
   {"rawequal", luaB_rawequal},
   {"rawget", luaB_rawget},
   {"rawset", luaB_rawset},
-  {"pcall", luaB_pcall},
+  {"select", luaB_select},
+  {"setfenv", luaB_setfenv},
+  {"setmetatable", luaB_setmetatable},
+  {"tonumber", luaB_tonumber},
+  {"tostring", luaB_tostring},
+  {"type", luaB_type},
+  {"unpack", luaB_unpack},
   {"xpcall", luaB_xpcall},
-  {"collectgarbage", luaB_collectgarbage},
-  {"gcinfo", luaB_gcinfo},
-  {"loadfile", luaB_loadfile},
-  {"dofile", luaB_dofile},
-  {"loadstring", luaB_loadstring},
-  {"load", luaB_load},
   {NULL, NULL}
 };
 
@@ -469,7 +481,7 @@ static int auxresume (lua_State *L, lua_State *co, int narg) {
   int status;
   if (!lua_checkstack(co, narg))
     luaL_error(L, "too many arguments to resume");
-  if (lua_threadstatus(co) == 0 && lua_gettop(co) == 0) {
+  if (lua_status(co) == 0 && lua_gettop(co) == 0) {
     lua_pushliteral(L, "cannot resume dead coroutine");
     return -1;  /* error flag */
   }
@@ -549,7 +561,7 @@ static int luaB_costatus (lua_State *L) {
   luaL_argcheck(L, co, 1, "coroutine expected");
   if (L == co) lua_pushliteral(L, "running");
   else {
-    switch (lua_threadstatus(co)) {
+    switch (lua_status(co)) {
       case LUA_YIELD:
         lua_pushliteral(L, "suspended");
         break;
@@ -561,7 +573,7 @@ static int luaB_costatus (lua_State *L) {
             lua_pushliteral(L, "dead");
         else
           lua_pushliteral(L, "suspended");  /* initial state */
-        break;  
+        break;
       }
       default:  /* some error occured */
         lua_pushliteral(L, "dead");
@@ -572,7 +584,7 @@ static int luaB_costatus (lua_State *L) {
 }
 
 
-static int luaB_cocurrent (lua_State *L) {
+static int luaB_corunning (lua_State *L) {
   if (lua_pushthread(L))
     return 0;  /* main thread is not a coroutine */
   else
@@ -580,13 +592,13 @@ static int luaB_cocurrent (lua_State *L) {
 }
 
 
-static const luaL_reg co_funcs[] = {
+static const luaL_Reg co_funcs[] = {
   {"create", luaB_cocreate},
-  {"wrap", luaB_cowrap},
   {"resume", luaB_coresume},
-  {"yield", luaB_yield},
+  {"running", luaB_corunning},
   {"status", luaB_costatus},
-  {"current", luaB_cocurrent},
+  {"wrap", luaB_cowrap},
+  {"yield", luaB_yield},
   {NULL, NULL}
 };
 
@@ -602,8 +614,11 @@ static void auxopen (lua_State *L, const char *name,
 
 
 static void base_open (lua_State *L) {
+  /* set global _G */
   lua_pushvalue(L, LUA_GLOBALSINDEX);
-  luaL_openlib(L, NULL, base_funcs, 0);  /* open lib into global table */
+  lua_setglobal(L, "_G");
+  /* open lib into global table */
+  luaL_register(L, "_G", base_funcs);
   lua_pushliteral(L, LUA_VERSION);
   lua_setglobal(L, "_VERSION");  /* set global _VERSION */
   /* `ipairs' and `pairs' need auxliliary functions as upvalues */
@@ -617,21 +632,12 @@ static void base_open (lua_State *L) {
   lua_setfield(L, -2, "__mode");  /* metatable(w).__mode = "kv" */
   lua_pushcclosure(L, luaB_newproxy, 1);
   lua_setglobal(L, "newproxy");  /* set global `newproxy' */
-  /* create register._LOADED to track loaded modules */
-  lua_newtable(L);
-  lua_setfield(L, LUA_REGISTRYINDEX, "_LOADED");
-  /* create register._PRELOAD to allow pre-loaded modules */
-  lua_newtable(L);
-  lua_setfield(L, LUA_REGISTRYINDEX, "_PRELOAD");
-  /* set global _G */
-  lua_pushvalue(L, LUA_GLOBALSINDEX);
-  lua_setglobal(L, "_G");
 }
 
 
 LUALIB_API int luaopen_base (lua_State *L) {
   base_open(L);
-  luaL_openlib(L, LUA_COLIBNAME, co_funcs, 0);
+  luaL_register(L, LUA_COLIBNAME, co_funcs);
   return 2;
 }
 
