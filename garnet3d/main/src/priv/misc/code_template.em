@@ -1,9 +1,5 @@
 macro GN_HFileHeader()
 {
-	// let user input module name
-	module = ask("Module name?")
-	module = toupper(module)
-
 	// username is always chenlee
 	username = "chenlee"
 
@@ -49,13 +45,18 @@ macro GN_HFileHeader()
 	filebase_up = toupper(filebase)
 	fileext_up = toupper(fileext)
 
-	if ( strLen(module) > 0 )
+	if( "PCH" == filebase_up && "H" == fileext_up )
 	{
-		tag = "__GN_@module@_@filebase_up@_@fileext_up@__"
+		tag = "__GN_PCH_H__"
+		brief = "PCH header"
 	}
 	else
 	{
-		tag = "__GN_@filebase_up@_@fileext_up@__"
+		// let user input module name
+		module = ask("Module name?")
+		module = toupper(module)
+		tag = "__GN_@module@_@filebase_up@_@fileext_up@__"
+		brief = "?"
 	}
 
 	// insert header
@@ -63,7 +64,7 @@ macro GN_HFileHeader()
 	InsBufLine( hbuf,  1, "#define @tag@" )
 	InsBufLine( hbuf,  2, "// *****************************************************************************")
 	InsBufLine( hbuf,  3, "//! \\file    @filebase@.@fileext@" )
-	InsBufLine( hbuf,  4, "//! \\brief   ?" )
+	InsBufLine( hbuf,  4, "//! \\brief   @brief@" )
 	InsBufLine( hbuf,  5, "//! \\author  @username@ (@year@.@month@.@day@)" )
 	InsBufLine( hbuf,  6, "// *****************************************************************************" )
 	InsBufLine( hbuf,  7, "" )
