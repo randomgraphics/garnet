@@ -5,5 +5,3 @@ env.GN_build_static_library(
     env.GN_glob('*.cpp'),
     'pch.h', 'pch.cpp',
     'GNinput.pdb' )
-
-SConscript( 'test/SConscript' )
