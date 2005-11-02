@@ -1,5 +1,5 @@
 /*
-** $Id: lstate.h,v 1.3 2005/01/04 03:10:10 t-cheli Exp $
+** $Id: lstate.h,v 2.23 2005/07/09 13:22:34 roberto Exp $
 ** Global State
 ** See Copyright Notice in lua.h
 */
@@ -19,10 +19,10 @@ struct lua_longjmp;  /* defined in ldo.c */
 
 
 /* table of globals */
-#define gt(L)	(&L->_gt)
+#define gt(L)	(&L->l_gt)
 
 /* registry */
-#define registry(L)	(&G(L)->_registry)
+#define registry(L)	(&G(L)->l_registry)
 
 
 /* extra stack space to handle TM calls and some other extras */
@@ -67,30 +67,29 @@ typedef struct CallInfo {
 */
 typedef struct global_State {
   stringtable strt;  /* hash table for strings */
-  lua_Alloc realloc;  /* function to reallocate memory */
-  void *ud;         /* auxiliary data to `realloc' */
+  lua_Alloc frealloc;  /* function to reallocate memory */
+  void *ud;         /* auxiliary data to `frealloc' */
   lu_byte currentwhite;
   lu_byte gcstate;  /* state of garbage collector */
-  lu_byte gcgenerational;
   GCObject *rootgc;  /* list of all collectable objects */
-  GCObject *firstudata;   /* udata go to the end of `rootgc' */
   GCObject **sweepgc;  /* position of sweep in `rootgc' */
   int sweepstrgc;  /* position of sweep in `strt' */
   GCObject *gray;  /* list of gray objects */
   GCObject *grayagain;  /* list of objects to be traversed atomically */
   GCObject *weak;  /* list of weak tables (to be cleared) */
-  GCObject *tmudata;  /* list of userdata to be GC */
+  GCObject *tmudata;  /* last element of list of userdata to be GC */
   Mbuffer buff;  /* temporary buffer for string concatentation */
   lu_mem GCthreshold;
   lu_mem totalbytes;  /* number of bytes currently allocated */
   lu_mem estimate;  /* an estimate of number of bytes actually in use */
-  lu_mem prevestimate;  /* previous estimate */
-  int gcpace;  /* relative `speed' of the GC */
-  int incgc;  /* 0 if GC is done non-incrementally */
+  lu_mem gcdept;  /* how much GC is `behind schedule' */
+  int gcpause;  /* size of pause between successive GCs */
+  int gcstepmul;  /* GC `granularity' */
   lua_CFunction panic;  /* to be called in unprotected errors */
-  TValue _registry;
+  TValue l_registry;
   struct lua_State *mainthread;
-  Node dummynode[1];  /* common node array for all empty tables */
+  UpVal uvhead;  /* head of double-linked list of all open upvalues */
+  struct Table *mt[NUM_TAGS];  /* metatables for basic types */
   TString *tmname[TM_N];  /* array with tag-method names */
 } global_State;
 
@@ -104,12 +103,13 @@ struct lua_State {
   StkId base;  /* base of current function */
   global_State *l_G;
   CallInfo *ci;  /* call info for current function */
+  const Instruction *savedpc;  /* `savedpc' of current function */
   StkId stack_last;  /* last free slot in the stack */
   StkId stack;  /* stack base */
   int stacksize;
   CallInfo *end_ci;  /* points after end of ci array*/
   CallInfo *base_ci;  /* array of CallInfo's */
-  unsigned short size_ci;  /* size of array `base_ci' */
+  int size_ci;  /* size of array `base_ci' */
   unsigned short nCcalls;  /* number of nested C calls */
   lu_byte hookmask;
   lu_byte allowhook;
@@ -117,7 +117,8 @@ struct lua_State {
   int basehookcount;
   int hookcount;
   lua_Hook hook;
-  TValue _gt;  /* table of globals */
+  TValue l_gt;  /* table of globals */
+  TValue env;  /* temporary place for environments */
   GCObject *openupval;  /* list of open upvalues in this stack */
   GCObject *gclist;
   struct lua_longjmp *errorJmp;  /* current error recover point */
@@ -160,8 +161,8 @@ union GCObject {
 #define obj2gco(v)	(cast(GCObject *, (v)))
 
 
-lua_State *luaE_newthread (lua_State *L);
-void luaE_freethread (lua_State *L, lua_State *L1);
+LUAI_FUNC lua_State *luaE_newthread (lua_State *L);
+LUAI_FUNC void luaE_freethread (lua_State *L, lua_State *L1);
 
 #endif
 

@@ -1,5 +1,5 @@
 /*
-** $Id: loslib.c,v 1.4 2005/01/11 05:40:10 t-cheli Exp $
+** $Id: loslib.c,v 1.14 2005/10/21 13:47:42 roberto Exp $
 ** Standard Operating System library
 ** See Copyright Notice in lua.h
 */
@@ -57,16 +57,13 @@ static int io_rename (lua_State *L) {
 
 
 static int io_tmpname (lua_State *L) {
-#if !USE_TMPNAME
-  luaL_error(L, "`tmpname' not supported");
-  return 0;
-#else
-  char buff[L_tmpnam];
-  if (tmpnam(buff) != buff)
-    return luaL_error(L, "unable to generate a unique filename in `tmpname'");
+  char buff[LUA_TMPNAMBUFSIZE];
+  int err;
+  lua_tmpnam(buff, err);
+  if (err)
+    return luaL_error(L, "unable to generate a unique filename");
   lua_pushstring(L, buff);
   return 1;
-#endif
 }
 
 
@@ -91,15 +88,15 @@ static int io_clock (lua_State *L) {
 */
 
 static void setfield (lua_State *L, const char *key, int value) {
-  lua_pushstring(L, key);
   lua_pushinteger(L, value);
-  lua_rawset(L, -3);
+  lua_setfield(L, -2, key);
 }
 
 static void setboolfield (lua_State *L, const char *key, int value) {
-  lua_pushstring(L, key);
+  if (value < 0)  /* undefined? */
+    return;  /* does not set field */
   lua_pushboolean(L, value);
-  lua_rawset(L, -3);
+  lua_setfield(L, -2, key);
 }
 
 static int getboolfield (lua_State *L, const char *key) {
@@ -118,7 +115,7 @@ static int getfield (lua_State *L, const char *key, int d) {
     res = (int)lua_tointeger(L, -1);
   else {
     if (d < 0)
-      return luaL_error(L, "field `%s' missing in date table", key);
+      return luaL_error(L, "field " LUA_QS " missing in date table", key);
     res = d;
   }
   lua_pop(L, 1);
@@ -128,8 +125,8 @@ static int getfield (lua_State *L, const char *key, int d) {
 
 static int io_date (lua_State *L) {
   const char *s = luaL_optstring(L, 1, "%c");
-  lua_Number n = luaL_optnumber(L, 2, -1);
-  time_t t = (n == -1) ? time(NULL) : (time_t)n;
+  time_t t = lua_isnoneornil(L, 2) ? time(NULL) :
+                                     (time_t)luaL_checknumber(L, 2);
   struct tm *stm;
   if (*s == '!') {  /* UTC? */
     stm = gmtime(&t);
@@ -156,7 +153,7 @@ static int io_date (lua_State *L) {
     if (strftime(b, sizeof(b), s, stm))
       lua_pushstring(L, b);
     else
-      return luaL_error(L, "`date' format too long");
+      return luaL_error(L, LUA_QL("date") " format too long");
   }
   return 1;
 }
@@ -182,7 +179,7 @@ static int io_time (lua_State *L) {
   if (t == (time_t)(-1))
     lua_pushnil(L);
   else
-    lua_pushnumber(L, (lua_Number)t);
+    lua_pushnumber(L, t);
   return 1;
 }
 
@@ -202,9 +199,8 @@ static int io_setloc (lua_State *L) {
   static const char *const catnames[] = {"all", "collate", "ctype", "monetary",
      "numeric", "time", NULL};
   const char *l = lua_tostring(L, 1);
-  int op = luaL_findstring(luaL_optstring(L, 2, "all"), catnames);
+  int op = luaL_checkoption(L, 2, "all", catnames);
   luaL_argcheck(L, l || lua_isnoneornil(L, 1), 1, "string expected");
-  luaL_argcheck(L, op != -1, 2, "invalid option");
   lua_pushstring(L, setlocale(cat[op], l));
   return 1;
 }
@@ -215,7 +211,7 @@ static int io_exit (lua_State *L) {
   return 0;  /* to avoid warnings */
 }
 
-static const luaL_reg syslib[] = {
+static const luaL_Reg syslib[] = {
   {"clock",     io_clock},
   {"date",      io_date},
   {"difftime",  io_difftime},
@@ -235,7 +231,7 @@ static const luaL_reg syslib[] = {
 
 
 LUALIB_API int luaopen_os (lua_State *L) {
-  luaL_openlib(L, LUA_OSLIBNAME, syslib, 0);
+  luaL_register(L, LUA_OSLIBNAME, syslib);
   return 1;
 }
 

@@ -1,5 +1,5 @@
 /*
-** $Id: llimits.h,v 1.3 2005/01/04 03:10:10 t-cheli Exp $
+** $Id: llimits.h,v 1.67 2005/08/24 16:15:49 roberto Exp $
 ** Limits, basic types, and some other `installation-dependent' definitions
 ** See Copyright Notice in lua.h
 */
@@ -15,12 +15,14 @@
 #include "lua.h"
 
 
+#define api_check	luai_apicheck
 
-typedef LUA_UINT32 lu_int32;
 
-typedef LU_MEM lu_mem;
+typedef LUAI_UINT32 lu_int32;
 
-typedef L_MEM l_mem;
+typedef LUAI_UMEM lu_mem;
+
+typedef LUAI_MEM l_mem;
 
 
 
@@ -45,11 +47,11 @@ typedef unsigned char lu_byte;
 
 
 /* type to ensure maximum alignment */
-typedef LUSER_ALIGNMENT_T L_Umaxalign;
+typedef LUAI_USER_ALIGNMENT_T L_Umaxalign;
 
 
 /* result of a `usual argument conversion' over lua_Number */
-typedef LUA_UACNUMBER l_uacNumber;
+typedef LUAI_UACNUMBER l_uacNumber;
 
 
 #define check_exp(c,e)	(lua_assert(c), (e))
@@ -73,8 +75,6 @@ typedef LUA_UACNUMBER l_uacNumber;
 typedef lu_int32 Instruction;
 
 
-/* divisor for GC pace */
-#define GCDIV		8
 
 /* maximum stack for a Lua function */
 #define MAXSTACK	250
@@ -92,5 +92,24 @@ typedef lu_int32 Instruction;
 #define LUA_MINBUFFER	32
 #endif
 
+
+#ifndef lua_lock
+#define lua_lock(L)     ((void) 0) 
+#define lua_unlock(L)   ((void) 0)
+#endif
+
+#ifndef luai_threadyield
+#define luai_threadyield(L)     {lua_unlock(L); lua_lock(L);}
+#endif
+
+
+/*
+** macro to control inclusion of some hard tests on stack reallocation
+*/ 
+#ifndef HARDSTACKTESTS
+#define condhardstacktests(x)	((void)0)
+#else
+#define condhardstacktests(x)	x
+#endif
 
 #endif

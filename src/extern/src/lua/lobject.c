@@ -1,11 +1,12 @@
 /*
-** $Id: lobject.c,v 1.3 2005/01/04 03:10:10 t-cheli Exp $
+** $Id: lobject.c,v 2.19 2005/10/24 17:37:52 roberto Exp $
 ** Some generic functions over Lua objects
 ** See Copyright Notice in lua.h
 */
 
 #include <ctype.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -28,7 +29,8 @@ const TValue luaO_nilobject = {{NULL}, LUA_TNIL};
 
 /*
 ** converts an integer to a "floating point byte", represented as
-** (mmmmmxxx), where the real value is (xxx) * 2^(mmmmm)
+** (eeeeexxx), where the real value is (1xxx) * 2^(eeeee - 1) if
+** eeeee != 0 and (xxx) otherwise.
 */
 int luaO_int2fb (unsigned int x) {
   int e = 0;  /* expoent */
@@ -73,7 +75,7 @@ int luaO_rawequalObj (const TValue *t1, const TValue *t2) {
     case LUA_TNIL:
       return 1;
     case LUA_TNUMBER:
-      return nvalue(t1) == nvalue(t2);
+      return luai_numeq(nvalue(t1), nvalue(t2));
     case LUA_TBOOLEAN:
       return bvalue(t1) == bvalue(t2);  /* boolean true must be 1 !! */
     case LUA_TLIGHTUSERDATA:
@@ -87,11 +89,11 @@ int luaO_rawequalObj (const TValue *t1, const TValue *t2) {
 
 int luaO_str2d (const char *s, lua_Number *result) {
   char *endptr;
-  lua_Number res = lua_str2number(s, &endptr);
-  if (endptr == s) return 0;  /* no conversion */
+  *result = lua_str2number(s, &endptr);
+  if (endptr == s) return 0;  /* conversion failed */
+  if (*endptr == '\0') return 1;  /* most common case */
   while (isspace(cast(unsigned char, *endptr))) endptr++;
   if (*endptr != '\0') return 0;  /* invalid trailing characters? */
-  *result = res;
   return 1;
 }
 
@@ -114,7 +116,9 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
     incr_top(L);
     switch (*(e+1)) {
       case 's': {
-        pushstr(L, va_arg(argp, char *));
+        const char *s = va_arg(argp, char *);
+        if (s == NULL) s = "(null)";
+        pushstr(L, s);
         break;
       }
       case 'c': {
@@ -157,7 +161,7 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
     fmt = e+2;
   }
   pushstr(L, fmt);
-  luaV_concat(L, n+1, L->top - L->base - 1);
+  luaV_concat(L, n+1, cast(int, L->top - L->base) - 1);
   L->top -= n;
   return svalue(L->top - 1);
 }
@@ -173,26 +177,26 @@ const char *luaO_pushfstring (lua_State *L, const char *fmt, ...) {
 }
 
 
-void luaO_chunkid (char *out, const char *source, int bufflen) {
+void luaO_chunkid (char *out, const char *source, size_t bufflen) {
   if (*source == '=') {
     strncpy(out, source+1, bufflen);  /* remove first char */
     out[bufflen-1] = '\0';  /* ensures null termination */
   }
   else {  /* out = "source", or "...source" */
     if (*source == '@') {
-      int l;
+      size_t l;
       source++;  /* skip the `@' */
-      bufflen -= sizeof(" `...' ");
+      bufflen -= sizeof(" '...' ");
       l = strlen(source);
       strcpy(out, "");
-      if (l>bufflen) {
+      if (l > bufflen) {
         source += (l-bufflen);  /* get last part of file name */
         strcat(out, "...");
       }
       strcat(out, source);
     }
     else {  /* out = [string "string"] */
-      int len = strcspn(source, "\n\r");  /* stop at first newline */
+      size_t len = strcspn(source, "\n\r");  /* stop at first newline */
       bufflen -= sizeof(" [string \"...\"] ");
       if (len > bufflen) len = bufflen;
       strcpy(out, "[string \"");
