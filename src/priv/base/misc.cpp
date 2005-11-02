@@ -26,7 +26,10 @@ void GN::sleep( uint32_t microSeconds )
 #if GN_MSWIN
     ::Sleep( microSeconds );
 #elif GN_POSIX
-    ::usleep( microSeconds );
+    uint32_t s = microSeconds / 1000;
+    uint32_t us = microSeconds % 1000;
+    ::sleep( s );
+    ::usleep( us );
 #else
     GN_CASSERT_EX( 0, "Unimplmented" );
 #endif
