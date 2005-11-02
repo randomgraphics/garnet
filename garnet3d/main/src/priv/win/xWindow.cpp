@@ -3,6 +3,41 @@
 
 #if GN_POSIX
 
+// *****************************************************************************
+// local functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static int sXErrorHandler( Display * d, XErrorEvent * e )
+{
+    GN_GUARD;
+
+    static char buf[4096];
+    XGetErrorText( d, e->error_code, buf, 4095 );
+
+    GN_ERROR(
+        "X error : %s"
+        "   Major opcode of failed request:  %d\n"
+        "   Minor opcode of failed request:  %d\n"
+        "   Serial number of failed request:  %d\n"
+        "   Resource ID:  0x%X",
+        buf,
+        e->request_code,
+        e->minor_code,
+        e->serial,
+        e->resourceid );
+
+    return 0;
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// XWindow class
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -19,6 +54,14 @@ bool GN::win::XWindow::create( const CreateParam & cp )
         GNWIN_ERROR( "Fail to open display '%s'!", StrA(cp.display).cstr() );
         return false;
     }
+
+#if GN_DEBUG
+    // Trun on synchronous behavior for debug build.
+    XSynchronize( mDisplay, true );
+#endif
+
+    // update error handler
+    XSetErrorHandler( &sXErrorHandler );
 
     // Get some colors
     int blackColor = BlackPixel( mDisplay, DefaultScreen(mDisplay) );
@@ -37,7 +80,7 @@ bool GN::win::XWindow::create( const CreateParam & cp )
     }
 
     // Select inputs
-    long mask = 0xFFFFFFFF; // Receive all kinds of events.
+    long mask = (1L<<25)-1; // Receive all kinds of events.
     GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, mask ), false );
 
     // success
@@ -88,9 +131,8 @@ void GN::win::XWindow::showWindow( bool show ) const
     XEvent e;
     for(;;)
     {
-        XNextEvent( mDisplay, &e );
+        XWindowEvent( mDisplay, mWindow, StructureNotifyMask, &e );
         if( type == e.type ) break;
-        sleep(0);
     }
 
     GN_UNGUARD;

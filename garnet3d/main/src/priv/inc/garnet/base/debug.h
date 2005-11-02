@@ -139,7 +139,7 @@
         Status rr = (func);                                 \
         if( 0 == rr )                                       \
         {                                                   \
-            GN_ERROR( "XLib function %s failed.", #func );  \
+            GN_ERROR( "XLib function %s failed: return(0x%X).", #func, rr );  \
             something                                       \
         }                                                   \
     } else void(0)
