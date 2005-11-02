@@ -147,9 +147,30 @@ namespace GN
     }
 
     //!
-    //! get environment variable
+    //! Get environment variable.
     //!
-    bool getEnv( StrA & result, const char * name );
+    void getEnv( StrA & result, const char * name );
+
+    //!
+    //! Get environment variable.
+    //!
+    inline StrA getEnv( const char * name )
+    {
+        StrA result;
+        getEnv( result, name );
+        return result;
+    }
+
+    //!
+    //! Get environment variable as boolean varible. Return true only when the variable
+    //! exists and the value is "1" or "yes".
+    //!
+    inline bool getEnvBoolean( const char * name )
+    {
+        StrA result;
+        getEnv( result, name );
+        return "1" == result || "yes" == result; 
+    }
 
     //!
     //! Sleep calling thread
