@@ -13,6 +13,8 @@ class InputTest
 
     bool mDone;
 
+    GN::input::KeyEvent mLastKeyEvent;
+
     bool createWindow()
     {
         GN::win::MswWindow::CreateParam cp;
@@ -39,6 +41,25 @@ class InputTest
     {
         switch(msg)
         {
+            case WM_PAINT:
+                {
+                    PAINTSTRUCT ps;
+                    HDC dc = BeginPaint( hwnd, &ps );
+
+                    GN::StrA txt;
+                    txt.format(
+                        "%s%s%s%s %s",
+                        mLastKeyEvent.status.ctrlDown()?"CTRL-":"",
+                        mLastKeyEvent.status.shiftDown()?"SHIFT-":"",
+                        mLastKeyEvent.status.altDown()?"ALT-":"",
+                        GN::input::kc2str(mLastKeyEvent.code),
+                        mLastKeyEvent.status.down?"DOWN":"UP" );
+                    TextOutA( dc, 0, 0, txt.cstr(), txt.size() );
+
+                    EndPaint( hwnd, &ps );
+                }
+                break;
+
             case WM_CLOSE: mDone = true; break;
             default:; // do nothing
         }
@@ -48,6 +69,8 @@ class InputTest
 
     void onKeyPress( GN::input::KeyEvent ke )
     {
+        mLastKeyEvent = ke;
+        InvalidateRect( mWin.getWindow(), 0, true );
         if( !ke.status.down )
         {
             if( GN::input::KEY_ESCAPE == ke.code ) mDone = true;
@@ -58,7 +81,7 @@ class InputTest
     {
     }
 
-    void onAxisMove( GN::input::Axis, int )
+    void onAxisMove( GN::input::Axis, int  )
     {
     }
 

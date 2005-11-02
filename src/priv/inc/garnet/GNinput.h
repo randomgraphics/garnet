@@ -109,7 +109,7 @@ namespace GN
             //@{
             bool ctrlDown() const { return lctrl && rctrl; }
             bool altDown() const { return lalt && ralt; }
-            bool shiftDdown() const { return lshift && rshift; }
+            bool shiftDown() const { return lshift && rshift; }
             //@}
         };
 
@@ -250,7 +250,7 @@ namespace GN
         //! \return  失败时返回空字串（注意，是空字串""，不是NULL，
         //!          你可以用 GN::strEmpty() 来检测返回值
         //!
-        const char * kc2str( KeyCode );
+        const char * kc2str( int );
 
     }
 }

@@ -25,7 +25,7 @@ namespace GN { namespace input {
     //
     //
     // ----------------------------------------------------------------------------
-    inline const char * kc2str( const KeyCode code )
+    inline const char * kc2str( int code )
     {
         static const char * sTable[]=
         {
