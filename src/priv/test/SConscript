@@ -1,1 +1,1 @@
-SConscript( dirs=Split('ut gfx input d3d ogl') )
+SConscript( dirs=Split('ut win gfx input d3d ogl') )

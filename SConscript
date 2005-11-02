@@ -621,7 +621,7 @@ sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase GNwin GNinput GNd3d GNogl')
-programs = Split( 'GNut GNgfxTest GNinputTest' )
+programs = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNd3dTest GNoglTest' )
 
 # populate sample directory
 doInstall(
