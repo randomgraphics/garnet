@@ -125,6 +125,11 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 {
     if( 0 == msg || 0 == msg[0] ) return;
 
+    bool logDisabled = getEnvBoolean( "GN_LOG_DISABLED" );
+    if( logDisabled ) return;
+
+    StrA logFileName = getEnv( "GN_LOG_FILENAME" );
+
     const char * cate = desc.cate ? desc.cate : "";
     const char * file = desc.file ? desc.file : "UNKNOWN FILE";
 
@@ -133,9 +138,31 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
     if( LOGLEVEL_INFO == desc.level )
     {
         std::cout << msg << std::endl;
+        if( !logFileName.empty() )
+        {
+            AnsiFile fp;
+            if( fp.open( logFileName, "at" ) )
+            {
+                fprintf( fp, "%s\n", msg );
+            }
+        }
     }
     else
     {
+        if( !logFileName.empty() )
+        {
+            AnsiFile fp;
+            if( fp.open( logFileName, "at" ) )
+            {
+                ::fprintf(
+                    fp,
+                    "%s(%d) : %s : %s : %s\n",
+                    file, desc.line,
+                    cate, levelStr(desc.level).cstr(),
+                    msg );
+            }
+        }
+
 #if !GN_XENON // Xenon has no console output
         // output to console
         ::fprintf(
