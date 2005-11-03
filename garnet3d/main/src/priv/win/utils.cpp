@@ -7,7 +7,7 @@
 #if GN_XENON
 
 void GN::win::setTitle( WindowHandle, const char * ) {}
-void GN::win::processMessages( WindowHandle, bool ) {}
+void GN::win::processMswMessages( WindowHandle, bool ) {}
 const char * GN::win::msg2str( uint32_t ) { return ""; }
 
 // *****************************************************************************
@@ -20,16 +20,6 @@ const char * GN::win::msg2str( uint32_t ) { return ""; }
 //
 // -----------------------------------------------------------------------------
 void GN::win::setTitle( WindowHandle, const char * ) {}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::win::processMessages( WindowHandle, bool )
-{
-    GN_GUARD;
-
-    GN_UNGUARD;
-}
 
 //
 //
@@ -58,7 +48,7 @@ void GN::win::setTitle( WindowHandle win, const char * title )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::processMessages( WindowHandle wnd, bool blockOnMinimized )
+void GN::win::processMswMessages( WindowHandle wnd, bool blockOnMinimized )
 {
     GN_GUARD;
 

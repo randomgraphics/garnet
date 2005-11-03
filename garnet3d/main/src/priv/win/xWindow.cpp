@@ -7,6 +7,14 @@
 // local functions
 // *****************************************************************************
 
+enum
+{
+    //!
+    //! Mask for all possible X events.
+    //!
+    XEVENT_MASK_ALL = (1L<<25)-1
+};
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -80,8 +88,7 @@ bool GN::win::XWindow::create( const CreateParam & cp )
     }
 
     // Select inputs
-    long mask = (1L<<25)-1; // Receive all kinds of events.
-    GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, mask ), false );
+    GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, XEVENT_MASK_ALL ), false );
 
     // success
     return true;
@@ -136,6 +143,29 @@ void GN::win::XWindow::showWindow( bool show ) const
     }
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::win::XWindow::processXEvents( bool /*blockOnMinimized*/ ) const
+{
+    GN_GUARD_SLOW;
+
+    if( mEventHandler.empty() ) return;
+
+    XEvent e;
+    for(;;)
+    {
+        if( XCheckWindowEvent( mDisplay, mWindow, XEVENT_MASK_ALL, &e ) )
+        {
+            // call event handler
+            mEventHandler( e );
+        }
+        else return; // Idle time
+    }
+
+    GN_UNGUARD_SLOW;
 }
 
 //
