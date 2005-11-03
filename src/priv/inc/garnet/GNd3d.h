@@ -2,7 +2,8 @@
 #define __GN_D3DAPP_GND3D_H__
 // *****************************************************************************
 //! \file    GNd3d.h
-//! \brief   Public interface for d3d module
+//! \brief   Public interface for d3d module, to ease quick-prototype
+//!          of D3D application.
 //! \author  chenlee (2005.8.11)
 // *****************************************************************************
 
