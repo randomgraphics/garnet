@@ -2,7 +2,8 @@
 #define __GN_GNOGL_GNOGL_H__
 // *****************************************************************************
 //! \file    GNogl.h
-//! \brief   Public interface for opengl application.
+//! \brief   Public interface for opengl module, to ease quick-prototype
+//!          of OpenGL application.
 //! \author  chenlee (2005.8.26)
 // *****************************************************************************
 
