@@ -75,6 +75,20 @@ namespace GN { namespace win {
         void showWindow( bool show = true ) const;
 
         //!
+        //! Process X window events. This function will only watch X events that belong to
+        //! this window, and call the event handler (see below) once for each event. And
+        //! this function will NOT return until event queue is empty or the window is closed.
+        //!
+        //! \param blockOnMinimized
+        //!     This parameter currently has no effects.
+        //!
+        //! \note
+        //!     This function has no effect on platform other than X11.
+        //!     For MS Windows conterpart, see GN::win::processMswMessages().
+        //!
+        void processXEvents( bool blockOnMinimized = true ) const;
+
+        //!
         //! Get display
         //!
         Display * getDisplay() const { return mDisplay; }

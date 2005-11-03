@@ -18,15 +18,20 @@ namespace GN { namespace win
     //!
     void setTitle( WindowHandle, const char * );
 
+#if GN_MSWIN
     //!
-    //! Process Windows messages/events. This function will NOT return until
-    //! message/event queue is empty.
+    //! Process MS Windows messages. This function will NOT return until
+    //! message queue is empty. Also note that this function has no effects
+    //! on Xbox and Xenon.
     //!
     //! \param blockOnMinimized
     //!     If set true, and target window is currently minimized, this function
     //!     will block calling thread, till the window is restored.
     //!
-    void processMessages( WindowHandle, bool blockOnMinimized = true );
+    //! \note For X11 conterpart, see XWindow::processXEvents().
+    //!
+    void processMswMessages( WindowHandle, bool blockOnMinimized = true );
+#endif
 
     //!
     //! Convert Windows message ID to string.

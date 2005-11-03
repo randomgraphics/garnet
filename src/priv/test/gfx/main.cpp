@@ -85,7 +85,7 @@ public:
 
         while(!mDone)
         {
-            GN::win::processMessages( mRenderer->getDispDesc().windowHandle );
+            GN::win::processMswMessages( mRenderer->getDispDesc().windowHandle );
             mInput->processInputEvents();
             update();
             if( mRenderer->drawBegin() )

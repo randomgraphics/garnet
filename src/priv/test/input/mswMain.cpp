@@ -133,7 +133,7 @@ public:
 
         while(!mDone)
         {
-            GN::win::processMessages( mWin.getWindow() );
+            GN::win::processMswMessages( mWin.getWindow() );
             mInput->processInputEvents();
             update();
         }
