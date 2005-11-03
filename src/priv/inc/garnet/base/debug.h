@@ -105,7 +105,7 @@
         intptr_t rr = (intptr_t)(func);                     \
         if( 0 == rr )                                       \
         {                                                   \
-            GN_ERROR( GN::getOSErrorInfo() );               \
+            GN_ERROR( ::GN::getOSErrorInfo() );             \
             something                                       \
         }                                                   \
     } else void(0)
