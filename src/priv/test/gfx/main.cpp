@@ -11,20 +11,11 @@ class GfxTest
     GN::gfx::CreateRendererFunc mCreator;
     GN::AutoObjPtr<GN::gfx::Renderer> mRenderer;
     GN::AutoObjPtr<GN::input::Input> mInput;
+    GN::Clock mClock;
 
     bool mDone;
 
-    //!
-    //! Check if specific key is pressed
-    //!
-    bool keyDown( int keycode )
-    {
-#if GN_MSWIN
-        return !!( 0x8000 & ::GetKeyState(keycode) );
-#else
-        return false;
-#endif
-    }
+    GN::StrA mFPS;
 
 public:
 
@@ -121,7 +112,20 @@ public:
     //!
     void render()
     {
+        static size_t frames = 0;
+        static double lastTime = mClock.getTimeD();
+        double currentTime = mClock.getTimeD();
+        ++frames;
+        if( currentTime - lastTime >= 0.5 )
+        {
+            mFPS.format( "FPS: %.2f", frames/(currentTime - lastTime) );
+            lastTime = currentTime;
+            frames = 0;
+        }
+        
         mRenderer->clearScreen( GN::Vector4f(0,0,1,1) ); // clear to pure blue.
+
+        mRenderer->drawTextA( mFPS.cstr(), 0, 0 );
     }
 };
 

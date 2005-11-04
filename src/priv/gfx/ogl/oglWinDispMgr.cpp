@@ -177,7 +177,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK && !mRenderContext && !mDeviceContext );
 
@@ -211,7 +211,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK && mRenderContext && mDeviceContext );
 
@@ -272,7 +272,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::dispDeviceDispose()
 {
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
     mDispOK = false;
 
     // remove message hook
@@ -289,7 +289,7 @@ void GN::gfx::OGLRenderer::dispDeviceDestroy()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK );
 

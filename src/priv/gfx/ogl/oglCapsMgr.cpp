@@ -242,7 +242,7 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     // init glew
     GLenum glewErr = glewInit();
@@ -291,7 +291,7 @@ void GN::gfx::OGLRenderer::capsDeviceDestroy()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     // clear all caps
     resetAllCaps();

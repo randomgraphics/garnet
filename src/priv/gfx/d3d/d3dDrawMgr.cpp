@@ -21,8 +21,149 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 }
 
 // *****************************************************************************
+// device management
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::drawDeviceCreate()
+{
+    GN_GUARD;
+
+    if( !createFont() ) return false;
+
+    // check multiple render target support
+    if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
+    {
+        GND3D_ERROR( "Sorry, we currently do not support more then 4 simutaneous render targets." );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::drawDeviceRestore()
+{
+    GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
+
+    // restore font
+    if( mFont )
+    {
+        DX_CHECK_RV( mFont->OnResetDevice(), false );
+    }
+
+    // get default render target surface
+    GN_ASSERT( 0 == mDefaultRT0 && 0 == mDefaultDepth );
+    DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
+    DX_CHECK_RV( mDevice->GetDepthStencilSurface( &mDefaultDepth ), false );
+
+    // restore render target size to defualt value
+    mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
+    mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
+
+    // make sure MRT caps does not exceed maximum allowance value
+    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= 4 );
+
+    // (re)apply render targets
+    RenderTargetTextureDesc desc;
+    for( size_t i = 0; i < getCaps(CAPS_MAX_RENDER_TARGETS); ++i )
+    {
+        desc = mCurrentRTs[i];
+        setRenderTarget( i, 0, desc.face );
+        setRenderTarget( i, desc.tex, desc.face );
+    }
+    desc = mCurrentDepth;
+    setRenderDepth( 0, desc.face );
+    setRenderDepth( desc.tex, desc.face );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawDeviceDispose()
+{
+    GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
+
+    // release render target pointers
+    safeRelease( mDefaultRT0 );
+    safeRelease( mDefaultDepth );
+    safeRelease( mAutoDepth );
+
+    // dispose font
+    if( mFont )
+    {
+        DX_CHECK( mFont->OnLostDevice() );
+    }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawDeviceDestroy()
+{
+    GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
+
+    safeRelease( mFont );
+
+    GN_UNGUARD;
+}
+
+
+// *****************************************************************************
 // interface functions
 // *****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::setRenderTarget(
+    size_t index, const Texture * tex, TexFace face )
+{
+    GN_GUARD_SLOW;
+
+    GN_WARN( "Unimplemented" );
+
+    GN_UNUSED_PARAM( index );
+    GN_UNUSED_PARAM( tex );
+    GN_UNUSED_PARAM( face );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
+{
+    GN_GUARD_SLOW;
+
+    GN_WARN( "Unimplemented" );
+
+    GN_UNUSED_PARAM( tex );
+    GN_UNUSED_PARAM( face );
+
+    GN_UNGUARD_SLOW;
+}
 
 //
 //
@@ -43,7 +184,7 @@ bool GN::gfx::D3DRenderer::drawBegin()
     DX_CHECK_RV( mDevice->BeginScene(), 0 );
 
     // success
-    mDrawBegan = 1;
+    mDrawBegan = true;
     mNumPrims = 0;
     mNumDraws = 0;
     return true;
@@ -59,7 +200,7 @@ void GN::gfx::D3DRenderer::drawEnd()
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
-    mDrawBegan = 0;
+    mDrawBegan = false;
     DX_CHECK( mDevice->EndScene() );
     DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
 
@@ -168,9 +309,105 @@ void GN::gfx::D3DRenderer::draw(
     GN_UNGUARD_SLOW;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawTextW(
+    const wchar_t * text, int x, int y, const Vector4f & color )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mDrawBegan );
+
+    // skip empty string
+    if( strEmpty(text) ) return;
+
+    int r;
+    RECT rc;
+    D3DCOLOR cl = sRgba2D3DCOLOR(color);
+
+    // calculate drawing rect
+    rc.left = 0;
+    rc.top  = 0;
+    r = mFont->DrawTextW( 0, text, -1, &rc, DT_CALCRECT, cl );
+    if( 0 == r )
+    {
+        GND3D_ERROR( "fail to get text extent!" );
+        return;
+    }
+
+    // draw text
+    OffsetRect( &rc, x, y );
+    r = mFont->DrawTextW( 0, text, -1, &rc, DT_LEFT, cl );
+    if( 0 == r )
+    {
+        GND3D_ERROR( "fail to draw text!" );
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
 // *****************************************************************************
 // private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::createFont()
+{
+    GN_GUARD;
+
+    // Get font description
+    LOGFONTW lf;
+    ::GetObjectW( GetStockObject(SYSTEM_FIXED_FONT), sizeof(lf), &lf );
+
+    // create d3dx font
+    DX_CHECK_RV(
+        D3DXCreateFontW(
+            mDevice,
+            lf.lfHeight,
+            lf.lfWidth,
+            lf.lfWeight,
+            0,
+            lf.lfItalic,
+            lf.lfCharSet,
+            lf.lfOutPrecision,
+            lf.lfQuality,
+            lf.lfPitchAndFamily,
+            lf.lfFaceName,
+            &mFont ),
+        false );
+
+    HWND hwnd = (HWND)getDispDesc().windowHandle;
+
+    // get window DC
+    HDC dc;
+    GN_MSW_CHECK_RV( ( dc = ::GetDC( hwnd ) ), false );
+
+    // select default fixed font
+    HGDIOBJ oldfont = ::SelectObject( dc, ::GetStockObject(SYSTEM_FIXED_FONT) );
+
+    // get text height
+    SIZE sz;
+    if( !::GetTextExtentPoint32W(dc, L"Äã", 1, &sz) )
+    {
+        GND3D_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
+        ::SelectObject( dc, oldfont );
+        ::ReleaseDC( hwnd, dc );
+        return false;
+    }
+    mFontHeight = sz.cy;
+
+    // release local variables
+    ::SelectObject( dc, oldfont );
+    ::ReleaseDC( hwnd, dc );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
 
 //
 //

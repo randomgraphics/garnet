@@ -12,7 +12,7 @@
 //!
 //! trace the call sequence of device reset/recreate
 //!
-#define _GN_RENDER_DEVICE_TRACE()  //GNGFX_TRACE( GN_FUNCTION_NAME )
+#define _GNGFX_DEVICE_TRACE()  //GNGFX_TRACE( GN_FUNCTION_NAME )
 
 namespace GN { namespace gfx
 {
@@ -127,6 +127,31 @@ namespace GN { namespace gfx
         void drawQuit()     {}
         bool drawOk() const { return true; }
         void drawClear()    { mNumPrims = 0; mNumDraws = 0; }
+
+    protected:
+
+        //!
+        //! Render target texture descriptor
+        //!
+        struct RenderTargetTextureDesc
+        {
+            const Texture * tex;  //!< Render target texture.
+            TexFace         face; //!< Effective only when tex is cubemap.
+
+            //!
+            //! Ctor
+            //!
+            RenderTargetTextureDesc() : tex(0) {}
+
+            //!
+            //! Equality check
+            //!
+            bool equal( const Texture * t, TexFace f ) const
+            {
+                return tex == t && ( 0 == tex || face == f );
+            }
+        };
+
         //@}
 
     };

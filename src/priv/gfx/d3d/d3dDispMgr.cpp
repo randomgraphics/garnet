@@ -188,7 +188,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK && mD3D );
 
@@ -297,7 +297,7 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK && mD3D && mDevice );
 
@@ -324,7 +324,7 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::dispDeviceDispose()
 {
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
     mDispOK = false;
 }
 
@@ -335,7 +335,7 @@ void GN::gfx::D3DRenderer::dispDeviceDestroy()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK );
 

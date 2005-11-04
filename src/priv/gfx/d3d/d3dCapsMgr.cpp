@@ -94,7 +94,7 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     // get d3ddevcaps
     D3DCAPS9 d3dcaps;
@@ -123,7 +123,7 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     // get d3ddevcaps
     D3DCAPS9 d3dcaps;
@@ -242,7 +242,7 @@ void GN::gfx::D3DRenderer::capsDeviceDestroy()
 {
     GN_GUARD;
 
-    _GN_RENDER_DEVICE_TRACE();
+    _GNGFX_DEVICE_TRACE();
 
     // clear all caps
     resetAllCaps();
