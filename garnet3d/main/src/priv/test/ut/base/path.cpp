@@ -80,9 +80,9 @@ public:
         TS_ASSERT( GN::path::exist("startup:/SConstruct") );
         TS_ASSERT( GN::path::exist("startup:SConstruct") );
 
-        TS_ASSERT( GN::path::exist("app:GNtest"APPEXT) );
-        TS_ASSERT( GN::path::exist("app:/GNtest"APPEXT) );
-        TS_ASSERT( GN::path::exist("app:\\GNtest"APPEXT) );
+        TS_ASSERT( GN::path::exist("app:GNut"APPEXT) );
+        TS_ASSERT( GN::path::exist("app:/GNut"APPEXT) );
+        TS_ASSERT( GN::path::exist("app:\\GNut"APPEXT) );
 
         TS_ASSERT( GN::path::exist("pwd:") );
         TS_ASSERT( GN::path::exist("pwd:/") );
@@ -111,7 +111,7 @@ public:
     void testIsFile()
     {
         TS_ASSERT( GN::path::isFile("startup:\\SConstruct") );
-        TS_ASSERT( GN::path::isFile("app:GNtest"APPEXT) );
+        TS_ASSERT( GN::path::isFile("app:GNut"APPEXT) );
         TS_ASSERT( !GN::path::isFile("startup:") );
         TS_ASSERT( !GN::path::isFile("app:") );
         TS_ASSERT( !GN::path::isFile("pwd:") );
