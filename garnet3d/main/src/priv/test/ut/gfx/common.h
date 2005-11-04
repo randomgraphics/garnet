@@ -122,6 +122,8 @@ protected:
         uo.renderWindow = win.getWindow();
         uo.software = true;
         r.reset( mCreator(uo) );
+        TS_ASSERT( r );
+        if( !r ) return;
 
         clearBlue(*r);
 
