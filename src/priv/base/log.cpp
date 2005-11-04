@@ -129,6 +129,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
     if( logDisabled ) return;
 
     StrA logFileName = getEnv( "GN_LOG_FILENAME" );
+    bool logToScreen = !getEnvBoolean( "GN_LOG_QUIET" );
 
     const char * cate = desc.cate ? desc.cate : "";
     const char * file = desc.file ? desc.file : "UNKNOWN FILE";
@@ -137,7 +138,6 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 
     if( LOGLEVEL_INFO == desc.level )
     {
-        std::cout << msg << std::endl;
         if( !logFileName.empty() )
         {
             AnsiFile fp;
@@ -145,6 +145,11 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
             {
                 fprintf( fp, "%s\n", msg );
             }
+        }
+
+        if( logToScreen )
+        {
+            std::cout << msg << std::endl;
         }
     }
     else
@@ -164,13 +169,16 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
         }
 
 #if !GN_XENON // Xenon has no console output
-        // output to console
-        ::fprintf(
-            desc.level > GN::LOGLEVEL_INFO ? stdout : stderr,
-            "%s(%d) : %s : %s : %s\n",
-            file, desc.line,
-            cate, levelStr(desc.level).cstr(),
-            msg );
+        if( logToScreen )
+        {
+            // output to console
+            ::fprintf(
+                desc.level > GN::LOGLEVEL_INFO ? stdout : stderr,
+                "%s(%d) : %s : %s : %s\n",
+                file, desc.line,
+                cate, levelStr(desc.level).cstr(),
+                msg );
+        }
 #endif
 
         // output to debugger
