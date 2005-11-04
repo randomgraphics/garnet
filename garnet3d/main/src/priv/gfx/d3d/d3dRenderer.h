@@ -430,11 +430,8 @@ namespace GN { namespace gfx {
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index,
-                                      const Texture * texture,
-                                      TexFace face ) { GN_UNIMPL(); }
-        virtual void setRenderDepth( const Texture * texture,
-                                     TexFace face ) { GN_UNIMPL(); }
+        virtual void setRenderTarget( size_t index, const Texture * texture, TexFace face );
+        virtual void setRenderDepth( const Texture * texture, TexFace face );
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();
@@ -448,25 +445,54 @@ namespace GN { namespace gfx {
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx );
-        virtual void drawTextW( const wchar_t * text, int x, int y,
-                                const Vector4f & color ) {}
+        virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions
     private:
         bool drawInit() { return true; }
         void drawQuit() {}
         bool drawOK() const { return true; }
-        void drawClear() { mDrawBegan = false; }
+        void drawClear()
+        {
+            mDrawBegan = false;
+            mFont = 0;
+            mFontHeight = 0;
+            mDefaultRT0 = mDefaultDepth = mAutoDepth = 0;
+            mCurrentRTSize.set( 0, 0 );
+            mAutoDepthSize.set( 0, 0 );
+        }
 
-        bool drawDeviceCreate() { return true; }
-        bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose() {}
-        void drawDeviceDestroy() {}
+        bool drawDeviceCreate();
+        bool drawDeviceRestore();
+        void drawDeviceDispose();
+        void drawDeviceDestroy();
 
+        bool createFont();
         bool handleDeviceLost();
 
     private:
-        bool mDrawBegan;
+
+        bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
+
+        //
+        // Font stuff
+        //
+        LPD3DXFONT mFont;
+        int        mFontHeight;
+
+        //
+        // Render target stuff
+        //
+        LPDIRECT3DSURFACE9
+            mDefaultRT0,    // default color buffer
+            mDefaultDepth,  // default depth buffer
+            mAutoDepth;     // automatic depth buffer
+        RenderTargetTextureDesc
+            mCurrentRTs[4], // current color buffers.
+            mCurrentDepth;  // current depth buffer
+        Vector2<uint32_t>
+            mCurrentRTSize, // current render target size
+            mAutoDepthSize; // size of automatic depth buffer
 
         //@}
     };
