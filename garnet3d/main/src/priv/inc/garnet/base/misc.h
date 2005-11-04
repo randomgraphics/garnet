@@ -147,6 +147,12 @@ namespace GN
     }
 
     //!
+    //! Set environment variable. Set value to empty or NULL to delete
+    //! that environment variable.
+    //!
+    void putEnv( const char * name, const char * value );
+
+    //!
     //! Get environment variable.
     //!
     void getEnv( StrA & result, const char * name );

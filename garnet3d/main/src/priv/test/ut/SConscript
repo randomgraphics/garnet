@@ -20,6 +20,7 @@ cxxtest = env.Command(
         sys.executable,
         File('cxxtestgen.py').srcnode().path)
     )
+env.Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
 env.GN_build_program( 'GNut', ['testCommon.cpp',cxxtest] )

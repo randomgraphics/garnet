@@ -428,18 +428,16 @@ def writePreamble( output ):
 
 def writeMain( output ):
     '''Write the main() function for the test runner'''
+    output.write( 'extern int myInit( int argc, const char * argv[] );\n' )
+    output.write( 'int main( int argc, const char * argv[] ) {\n' )
+    output.write( ' if( 0 != myInit(argc,argv) ) return -1;\n' )
+    if noStaticInit:
+        output.write( ' CxxTest::initialize();\n' )
     if gui:
-        output.write( 'int main( int argc, char *argv[] ) {\n' )
-        if noStaticInit:
-            output.write( ' CxxTest::initialize();\n' )
         output.write( ' return CxxTest::GuiTuiRunner<CxxTest::%s, CxxTest::%s>( argc, argv ).run();\n' % (gui, runner) )
-        output.write( '}\n' )
     elif runner:
-        output.write( 'int main() {\n' )
-        if noStaticInit:
-            output.write( ' CxxTest::initialize();\n' )
-        output.write( ' return CxxTest::%s().run();\n' % runner )
-        output.write( '}\n' )
+        output.write( ' ((void)(argc)); ((void)(argv)); return CxxTest::%s().run();\n' % runner )
+    output.write( '}\n' )
 
 wroteWorld = 0
 def writeWorld( output ):
