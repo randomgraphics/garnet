@@ -11,6 +11,7 @@ BUGS
 TODO
 ====
 
+- continue implementing GFX module
 - create a custom meta-thread management system
 - XWindow class
 - cross-platform window util functions:
