@@ -1,4 +1,5 @@
-namespace GN { namespace input {
+namespace GN { namespace input
+{
     //
     //
     // ----------------------------------------------------------------------------

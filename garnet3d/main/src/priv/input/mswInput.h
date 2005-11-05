@@ -10,7 +10,8 @@
 
 #if GN_MSWIN
 
-namespace GN { namespace input {
+namespace GN { namespace input
+{
     //!
     //! 使用Windows的标准消息机制的输入模块
     //!

@@ -10,7 +10,8 @@
 
 #if GN_MSWIN
 
-namespace GN { namespace input {
+namespace GN { namespace input
+{
     //!
     //! Basic input system for MS windows. 实现windows系统下输入系统的基本功能.
     //!
