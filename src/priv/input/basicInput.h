@@ -8,7 +8,8 @@
 
 #include "garnet/GNinput.h"
 
-namespace GN { namespace input {
+namespace GN { namespace input
+{
     //!
     //! input模块的基类，实现了input模块的通用功能.
     //!

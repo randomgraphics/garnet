@@ -36,7 +36,8 @@
 
 //@}
 
-namespace GN { namespace input {
+namespace GN { namespace input
+{
     //!
     //! 使用DirectInput的输入系统
     //!    
