@@ -21,7 +21,7 @@ void GN::putEnv( const char * name, const char * value )
         s.format( "%s=%s", name, value );
     }
 
-    ::putenv( s.cstr() );
+    ::putenv( const_cast<char*>(s.cstr()) );
 }
 
 //

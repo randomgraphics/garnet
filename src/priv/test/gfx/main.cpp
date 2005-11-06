@@ -76,7 +76,9 @@ public:
 
         while(!mDone)
         {
+#if GN_MSWIN
             GN::win::processMswMessages( mRenderer->getDispDesc().windowHandle );
+#endif
             mInput->processInputEvents();
             update();
             if( mRenderer->drawBegin() )

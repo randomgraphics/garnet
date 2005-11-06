@@ -14,8 +14,8 @@
 #pragma warning(disable:4100) // unused parameters
 #endif
 
-namespace GN { namespace gfx {
-
+namespace GN { namespace gfx
+{
     struct OGLResource; // Forward declaration of OGLResource.
 
     //!
@@ -214,8 +214,8 @@ namespace GN { namespace gfx {
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual AutoRef<Shader> createVertexShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return AutoRef<Shader>(); }
-        virtual AutoRef<Shader> createPixelShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return AutoRef<Shader>(); }
+        virtual Shader * createVertexShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
+        virtual Shader * createPixelShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
         virtual void bindShaders( const Shader *, const Shader * ) { GN_UNIMPL(); }
 
     private :
@@ -240,8 +240,8 @@ namespace GN { namespace gfx {
         //@{
 
     public:
-        virtual AutoRef<RenderStateBlock> createRenderStateBlock( const RenderStateBlockDesc & )
-        { GN_UNIMPL(); return AutoRef<RenderStateBlock>(); }
+        virtual RenderStateBlock * createRenderStateBlock( const RenderStateBlockDesc & )
+        { GN_UNIMPL(); return 0; }
         virtual void bindRenderStateBlock( const RenderStateBlock & ) { GN_UNIMPL(); }
 
     private :
@@ -266,7 +266,7 @@ namespace GN { namespace gfx {
         //@{
 
     public :
-        virtual AutoRef<Texture>
+        virtual Texture *
         createTexture( TexType textype,
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels,
@@ -274,12 +274,12 @@ namespace GN { namespace gfx {
                        uint32_t usages )
         {
             GN_UNIMPL();
-            return AutoRef<Texture>();
+            return 0;
         }
-        virtual AutoRef<Texture> createTextureFromFile( File & )
+        virtual Texture * createTextureFromFile( File & )
         {
             GN_UNIMPL();
-            return AutoRef<Texture>();
+            return 0;
         }
         virtual void bindTextures( const Texture * const texlist[],
                                    uint32_t start, uint32_t numtex )
@@ -307,22 +307,22 @@ namespace GN { namespace gfx {
         //@{
 
     public :
-        virtual AutoRef<VtxBuf>
+        virtual VtxBuf *
         createVtxBuf( const VtxFmtDesc & format,
                       size_t             numVtx,
                       ResourceUsage      usage,
                       bool               sysCopy )
         {
             GN_UNIMPL();
-            return AutoRef<VtxBuf>();
+            return 0;
         }
-        virtual AutoRef<IdxBuf>
+        virtual IdxBuf *
         createIdxBuf( size_t        numIdx,
                       ResourceUsage usage,
                       bool          sysCopy )
         {
             GN_UNIMPL();
-            return AutoRef<IdxBuf>();
+            return 0;
         }
         virtual void
         bindVtxBufs( const VtxBuf * const buffers[],

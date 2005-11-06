@@ -25,8 +25,6 @@
 #pragma comment(lib, "d3d9.lib") // D3D for PC has no d3d9d.lib
 #endif
 
-#include "../core/core.cpp"
-
 // *****************************************************************************
 // local variables and functions
 // *****************************************************************************
@@ -292,7 +290,7 @@ bool GN::d3d::D3D::present()
 
 #if GN_XENON
 
-    DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+    GN_DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
 
 #else
 
@@ -326,7 +324,7 @@ bool GN::d3d::D3D::present()
     HRESULT r = mDevice->TestCooperativeLevel();
     if( D3D_OK == r )
     {
-        DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+        GN_DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
     }
     else if( D3DERR_DEVICENOTRESET == r )
     {
@@ -407,7 +405,7 @@ bool GN::d3d::D3D::createD3D()
     mDevType = D3DDEVTYPE_HAL;
     mBehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
-	DX_CHECK_RV( mD3D->CreateDevice(
+	GN_DX_CHECK_RV( mD3D->CreateDevice(
             mAdapter,
             mDevType,
             0,
@@ -431,7 +429,7 @@ bool GN::d3d::D3D::createD3D()
     for( uint32_t i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
-        DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
         if( 0 == strcmp(Identifier.Description,"NVIDIA NVPerfHUD") )
         {
             mAdapter = i;
@@ -500,7 +498,7 @@ bool GN::d3d::D3D::createD3D()
     }
 
     // create device
-	DX_CHECK_RV( mD3D->CreateDevice(
+	GN_DX_CHECK_RV( mD3D->CreateDevice(
             mAdapter,
             mDevType,
             mWindow.getWindow(),
@@ -512,7 +510,7 @@ bool GN::d3d::D3D::createD3D()
 #endif // GN_XENON
 
     // get device caps
-    DX_CHECK_RV( mDevice->GetDeviceCaps( &mDevCaps ), false );
+    GN_DX_CHECK_RV( mDevice->GetDeviceCaps( &mDevCaps ), false );
 
     // get device info
     StrA devTypeStr;
@@ -560,7 +558,7 @@ bool GN::d3d::D3D::createD3D()
     // get adapter and driver information
     D3DADAPTER_IDENTIFIER9 aid;
     memset( &aid, 0, sizeof(aid) );
-    DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
+    GN_DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
 
     // print out device information
     GN_INFO(
@@ -703,7 +701,7 @@ bool GN::d3d::D3D::restoreDevice()
 
     // reset device
     setupPresentParameters();
-    DX_CHECK_RV( mDevice->Reset( &mPresentParams ), false );
+    GN_DX_CHECK_RV( mDevice->Reset( &mPresentParams ), false );
 
     // trigger device restore signal
     if( !sigDeviceRestore.emit() ) return false;

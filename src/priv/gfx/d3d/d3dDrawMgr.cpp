@@ -36,7 +36,7 @@ bool GN::gfx::D3DRenderer::drawDeviceCreate()
     // check multiple render target support
     if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
     {
-        GND3D_ERROR( "Sorry, we currently do not support more then 4 simutaneous render targets." );
+        GNGFX_ERROR( "Sorry, we currently do not support more then 4 simutaneous render targets." );
         return false;
     }
 
@@ -58,13 +58,13 @@ bool GN::gfx::D3DRenderer::drawDeviceRestore()
     // restore font
     if( mFont )
     {
-        DX_CHECK_RV( mFont->OnResetDevice(), false );
+        GN_DX_CHECK_RV( mFont->OnResetDevice(), false );
     }
 
     // get default render target surface
     GN_ASSERT( 0 == mDefaultRT0 && 0 == mDefaultDepth );
-    DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
-    DX_CHECK_RV( mDevice->GetDepthStencilSurface( &mDefaultDepth ), false );
+    GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
+    GN_DX_CHECK_RV( mDevice->GetDepthStencilSurface( &mDefaultDepth ), false );
 
     // restore render target size to defualt value
     mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
@@ -108,7 +108,7 @@ void GN::gfx::D3DRenderer::drawDeviceDispose()
     // dispose font
     if( mFont )
     {
-        DX_CHECK( mFont->OnLostDevice() );
+        GN_DX_CHECK( mFont->OnLostDevice() );
     }
 
     GN_UNGUARD;
@@ -181,7 +181,7 @@ bool GN::gfx::D3DRenderer::drawBegin()
     if( !handleDeviceLost() ) return false;
 
     // begin scene
-    DX_CHECK_RV( mDevice->BeginScene(), 0 );
+    GN_DX_CHECK_RV( mDevice->BeginScene(), 0 );
 
     // success
     mDrawBegan = true;
@@ -201,8 +201,8 @@ void GN::gfx::D3DRenderer::drawEnd()
 
     GN_ASSERT( mDrawBegan );
     mDrawBegan = false;
-    DX_CHECK( mDevice->EndScene() );
-    DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+    GN_DX_CHECK( mDevice->EndScene() );
+    GN_DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -216,8 +216,8 @@ void GN::gfx::D3DRenderer::drawFinish()
 
     GN_ASSERT( mDrawBegan );
 
-    DX_CHECK_R( mDevice->EndScene() );
-    DX_CHECK( mDevice->BeginScene() );
+    GN_DX_CHECK_R( mDevice->EndScene() );
+    GN_DX_CHECK( mDevice->BeginScene() );
 
     GN_UNGUARD_SLOW;
 }
@@ -236,7 +236,7 @@ void GN::gfx::D3DRenderer::clearScreen(
         | (flags & S_BUFFER ? D3DCLEAR_STENCIL : 0);
 
     // do clear
-    DX_CHECK( mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s ) );
+    GN_DX_CHECK( mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -263,7 +263,7 @@ void GN::gfx::D3DRenderer::drawIndexed(
 
     // draw indexed primitives
     GN_ASSERT( prim < GN::NUM_PRIMITIVES );
-    DX_CHECK(
+    GN_DX_CHECK(
         mDevice->DrawIndexedPrimitive(
             sPrimMap[prim], // primitive type
             baseVtx ,       // start vertex
@@ -296,7 +296,7 @@ void GN::gfx::D3DRenderer::draw(
 
     // draw indexed primitives
     GN_ASSERT( prim < GN::NUM_PRIMITIVES );
-    DX_CHECK(
+    GN_DX_CHECK(
         mDevice->DrawPrimitive(
             sPrimMap[prim],  // primitive type
             baseVtx,         // start vertex
@@ -332,7 +332,7 @@ void GN::gfx::D3DRenderer::drawTextW(
     r = mFont->DrawTextW( 0, text, -1, &rc, DT_CALCRECT, cl );
     if( 0 == r )
     {
-        GND3D_ERROR( "fail to get text extent!" );
+        GNGFX_ERROR( "fail to get text extent!" );
         return;
     }
 
@@ -341,7 +341,7 @@ void GN::gfx::D3DRenderer::drawTextW(
     r = mFont->DrawTextW( 0, text, -1, &rc, DT_LEFT, cl );
     if( 0 == r )
     {
-        GND3D_ERROR( "fail to draw text!" );
+        GNGFX_ERROR( "fail to draw text!" );
     }
 
     GN_UNGUARD_SLOW;
@@ -363,7 +363,7 @@ bool GN::gfx::D3DRenderer::createFont()
     ::GetObjectW( GetStockObject(SYSTEM_FIXED_FONT), sizeof(lf), &lf );
 
     // create d3dx font
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         D3DXCreateFontW(
             mDevice,
             lf.lfHeight,
@@ -392,7 +392,7 @@ bool GN::gfx::D3DRenderer::createFont()
     SIZE sz;
     if( !::GetTextExtentPoint32W(dc, L"Äã", 1, &sz) )
     {
-        GND3D_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
+        GNGFX_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
         ::SelectObject( dc, oldfont );
         ::ReleaseDC( hwnd, dc );
         return false;
@@ -421,29 +421,29 @@ bool GN::gfx::D3DRenderer::handleDeviceLost()
     HRESULT hr = mDevice->TestCooperativeLevel();
     if( D3DERR_DEVICENOTRESET == hr )
     {
-        GND3D_INFO( "\n============ Restore lost device ===============" );
+        GNGFX_INFO( "\n============ Restore lost device ===============" );
 
         // dispose
         deviceDispose();
 
         // reset d3ddevice
-        DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+        GN_DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
 
         // try restore
         if( !deviceRestore() ) return false;
 
-        GND3D_INFO( "=================================================\n" );
+        GNGFX_INFO( "=================================================\n" );
     }
     else if( D3DERR_DEVICELOST == hr )
     {
-        GND3D_INFO( "\nDevice has lost and could NOT be restored by now...\n" );
+        GNGFX_INFO( "\nDevice has lost and could NOT be restored by now...\n" );
         ::Sleep( 500 );
         return false;
     }
     else if (D3D_OK != hr)
     {
         // fatal error
-        GND3D_ERROR( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
+        GNGFX_ERROR( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
         return false;
     }
 

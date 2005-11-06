@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-//! \def GNOGL_CAPS
+//! \def GNGFX_OGLCAPS
 //! Define OGL special caps.
 
 
@@ -19,9 +19,9 @@ namespace GN { namespace gfx
     //!
     enum OGLCaps
     {
-        #define GNOGL_CAPS(X) OGLCAPS_##X,
+        #define GNGFX_OGLCAPS(X) OGLCAPS_##X,
         #include "oglCapsMeta.h"
-        #undef GNOGL_CAPS
+        #undef GNGFX_OGLCAPS
         NUM_OGLCAPS,
         OGLCAPS_INVALID,
     };

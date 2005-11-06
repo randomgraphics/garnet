@@ -221,6 +221,33 @@ namespace GN
     };
 
     //!
+    //! Automatically execute a function at the end of life scope
+    //!
+    template<class FUNCTOR>
+    class AutoScope
+    {
+        FUNCTOR mFunc;
+        bool    mDismissed;
+
+    public:
+
+        //!
+        //! Ctor
+        //!
+        AutoScope( const FUNCTOR & func ) : mFunc(func), mDismissed(false) {}
+
+        //!
+        //! Dtor
+        //!
+        ~AutoScope() { if( !mDismissed ) mFunc(); }
+
+        //!
+        //! Tell AutoScope to _NOT_ run the function by the end of life scope.
+        //!
+        void dismiss() { mDismissed = true; }
+    };
+
+    //!
     //! Data type with automatic-initialization.
     //!
     template<typename T, T DEFAULT_VALUE>

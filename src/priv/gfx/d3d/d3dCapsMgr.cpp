@@ -98,17 +98,17 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
 
     // get d3ddevcaps
     D3DCAPS9 d3dcaps;
-    DX_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+    GN_DX_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
 
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
         setCaps(CAPS_##name, sCapsInit_##name( d3dcaps ) );
-    #define GND3D_CAPS( name ) \
+    #define GNGFX_D3DCAPS( name ) \
         mD3DCaps[D3DCAPS_##name].set( sD3DCapsInit_##name( d3dcaps ) );
     #include "garnet/gfx/gfxCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GND3D_CAPS
+    #undef GNGFX_D3DCAPS
 
     // successful
     return true;
@@ -127,27 +127,27 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
 
     // get d3ddevcaps
     D3DCAPS9 d3dcaps;
-    DX_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+    GN_DX_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
 
     // 逐一的检查每一个caps，保证它们都未被改变过
     #define GNGFX_CAPS( name ) \
         if( getCaps(CAPS_##name) != sCapsInit_##name( d3dcaps ) ) \
         { \
-            GND3D_ERROR( "CAPS_" #name \
+            GNGFX_ERROR( "CAPS_" #name \
                       " is modified by device reset" ); \
             return false; \
         }
-    #define GND3D_CAPS( name ) \
+    #define GNGFX_D3DCAPS( name ) \
         if( getD3DCaps(D3DCAPS_##name) != sD3DCapsInit_##name( d3dcaps ) ) \
         { \
-            GND3D_ERROR( "D3DCAPS_" #name \
+            GNGFX_ERROR( "D3DCAPS_" #name \
                       " is modified by device reset" ); \
             return false; \
         }
     #include "garnet/gfx/gfxCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GND3D_CAPS
+    #undef GNGFX_D3DCAPS
 
     // output device info
     StrA devtype;
@@ -191,10 +191,10 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
     // get adapter and driver information
     D3DADAPTER_IDENTIFIER9 aid;
     memset( &aid, 0, sizeof(aid) );
-    DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
+    GN_DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
 
     // output device information
-    GND3D_INFO(
+    GNGFX_INFO(
         "\n\n"
         "===================================================\n"
         "        DirectX Implementation Capabilities\n"

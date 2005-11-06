@@ -54,7 +54,7 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
     {
         if( GL_TRUE != sFindExtension( extensions, *p ) )
         {
-            GNOGL_ERROR( "Required extension '%s' was not supported!", *p );
+            GNGFX_ERROR( "Required extension '%s' was not supported!", *p );
             fail = true;
         }
         // next extension
@@ -120,9 +120,9 @@ static void sOutputOGLInfo( const std::vector<GN::StrA> & glexts )
 
     // caps. info.
     GLint ts, tu;
-    GNOGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &ts ) );
+    GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &ts ) );
     if( GLEW_ARB_multitexture )
-        GNOGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
+        GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &tu ) );
     else
         tu = 1;
     info += GN::strFormat(
@@ -143,7 +143,7 @@ static void sOutputOGLInfo( const std::vector<GN::StrA> & glexts )
         "===================================================\n"
         "\n\n";
 
-    GNOGL_INFO( info.cstr() );
+    GNGFX_INFO( info.cstr() );
 
     GN_UNGUARD;
 }
@@ -156,14 +156,14 @@ static void sOutputOGLInfo( const std::vector<GN::StrA> & glexts )
 static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE()
 {
     GLint result = 0;
-    GNOGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &result ) );
+    GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &result ) );
     return result;
 }
 //
 static uint32_t sCapsInit_MAX_CLIP_PLANES()
 {
     GLint result = 0;
-    GNOGL_CHECK( glGetIntegerv( GL_MAX_CLIP_PLANES, &result ) );
+    GN_OGL_CHECK( glGetIntegerv( GL_MAX_CLIP_PLANES, &result ) );
     return result;
 }
 //
@@ -183,7 +183,7 @@ static uint32_t sCapsInit_MAX_TEXTURE_STAGES()
     if( GLEW_ARB_multitexture )
     {
         GLint result;
-        GNOGL_CHECK_RV( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &result ), 1 );
+        GN_OGL_CHECK_RV( glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &result ), 1 );
         return result;
     }
     else
@@ -248,7 +248,7 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     GLenum glewErr = glewInit();
     if( GLEW_OK != glewErr )
     {
-        GNOGL_ERROR( "Fail to initialize glew library : %s",
+        GNGFX_ERROR( "Fail to initialize glew library : %s",
             (const char *)glewGetErrorString(glewErr) );
         return false;
     }
@@ -271,12 +271,12 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
         setCaps(CAPS_##name, sCapsInit_##name() );
-    #define GNOGL_CAPS( name ) mOGLCaps[OGLCAPS_##name].set( \
+    #define GNGFX_OGLCAPS( name ) mOGLCaps[OGLCAPS_##name].set( \
         sOGLCapsInit_##name() );
     #include "garnet/gfx/gfxCapsMeta.h"
     #include "oglCapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GNOGL_CAPS
+    #undef GNGFX_OGLCAPS
 
     // success;
     return true;

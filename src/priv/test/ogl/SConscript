@@ -3,4 +3,4 @@ Import( 'env' )
 env.GN_build_program(
         'GNoglTest',
         env.GN_glob('*.cpp'),
-        libs=Split('GNogl GNbase GNextern') )
+        libs=Split('GNogl') )

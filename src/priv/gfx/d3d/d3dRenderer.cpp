@@ -104,7 +104,7 @@ bool GN::gfx::D3DRenderer::changeUserOptions(
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GND3D_WARN( "This call to changeUserOptions() is ignored to avoid function re-entance!" );
+        GNGFX_WARN( "This call to changeUserOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
@@ -198,7 +198,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
     // trigger reset event
     if( !sigDeviceRestore() )
     {
-        GND3D_ERROR( "fail to process D3D device restore signal!" );
+        GNGFX_ERROR( "fail to process D3D device restore signal!" );
         return false;
     }
 

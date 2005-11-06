@@ -31,35 +31,6 @@
 //!
 #define GNOGL_INFO GN_INFO
 
-//! \name OGL error check macros
-//{@
-#define GNOGL_CHECK_DO_DESC( func, desc, something )                        \
-    if( true ) {                                                            \
-        func;                                                               \
-        GLenum err = glGetError();                                          \
-        if( GL_NO_ERROR != err )                                            \
-        {                                                                   \
-            GNOGL_ERROR( "%s%s!", desc, ::GN::ogl::getGLErrorInfo(err) );   \
-            something                                                       \
-        }                                                                   \
-    } else void(0)
-//
-#define GNOGL_CHECK_RV_DESC( func, desc, retval ) GNOGL_CHECK_DO_DESC( func, desc, return retval; )
-//
-#define GNOGL_CHECK_R_DESC( func, desc ) GNOGL_CHECK_DO_DESC( func, desc, return; )
-//
-#ifdef GN_DEBUG
-#define GNOGL_CHECK_DESC( func, desc ) GNOGL_CHECK_DO_DESC( func, desc, )
-#else
-#define GNOGL_CHECK_DESC( func, desc ) func
-#endif
-//
-#define GNOGL_CHECK_DO( X, S ) GNOGL_CHECK_DO_DESC( X, "", S )
-#define GNOGL_CHECK_RV( X, V ) GNOGL_CHECK_RV_DESC( X, "", V )
-#define GNOGL_CHECK_R( X )     GNOGL_CHECK_R_DESC( X, "" )
-#define GNOGL_CHECK( X )       GNOGL_CHECK_DESC( X, "" )
-//@}
-
 //!
 //! Global OGL object. Must instantiate and initialize it before using ogl module.
 //!

@@ -13,11 +13,11 @@
 #pragma warning(disable:4100) // unused parameters
 #endif
 
-//! \def GND3D_CAPS
+//! \def GNGFX_D3DCAPS
 //! Define D3D special caps.
 
-namespace GN { namespace gfx {
-
+namespace GN { namespace gfx
+{
     struct D3DResource; // Forward declaration of D3DResource.
 
     //!
@@ -171,9 +171,9 @@ namespace GN { namespace gfx {
         //!
         enum D3DCaps
         {
-            #define GND3D_CAPS(X) D3DCAPS_##X,
+            #define GNGFX_D3DCAPS(X) D3DCAPS_##X,
             #include "d3dCapsMeta.h"
-            #undef GND3D_CAPS
+            #undef GNGFX_D3DCAPS
             NUM_D3DCAPS,
             D3DCAPS_INVALID,
         };
@@ -215,8 +215,8 @@ namespace GN { namespace gfx {
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual AutoRef<Shader> createVertexShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return AutoRef<Shader>(); }
-        virtual AutoRef<Shader> createPixelShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return AutoRef<Shader>(); }
+        virtual Shader * createVertexShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
+        virtual Shader * createPixelShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
         virtual void bindShaders( const Shader *, const Shader * ) { GN_UNIMPL(); }
 
     private :
@@ -241,8 +241,8 @@ namespace GN { namespace gfx {
         //@{
 
     public:
-        virtual AutoRef<RenderStateBlock> createRenderStateBlock( const RenderStateBlockDesc & )
-        { GN_UNIMPL(); return AutoRef<RenderStateBlock>(); }
+        virtual RenderStateBlock * createRenderStateBlock( const RenderStateBlockDesc & )
+        { GN_UNIMPL(); return 0; }
         virtual void bindRenderStateBlock( const RenderStateBlock & ) { GN_UNIMPL(); }
 
     private :
@@ -267,24 +267,15 @@ namespace GN { namespace gfx {
         //@{
 
     public :
-        virtual AutoRef<Texture>
+        virtual Texture *
         createTexture( TexType textype,
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels,
                        ClrFmt format,
-                       uint32_t usages )
-        {
-            GN_UNIMPL();
-            return AutoRef<Texture>();
-        }
-        virtual AutoRef<Texture> createTextureFromFile( File & )
-        {
-            GN_UNIMPL();
-            return AutoRef<Texture>();
-        }
+                       uint32_t usages );
+        virtual Texture * createTextureFromFile( File & );
         virtual void bindTextures( const Texture * const texlist[],
-                                   uint32_t start, uint32_t numtex )
-        { GN_UNIMPL(); }
+                                   uint32_t start, uint32_t numtex );
 
     private :
         bool textureInit() { return true; }
@@ -293,9 +284,24 @@ namespace GN { namespace gfx {
         void textureClear() {}
 
         bool textureDeviceCreate() { return true; }
-        bool textureDeviceRestore() { return true; }
+        bool textureDeviceRestore();
         void textureDeviceDispose() {}
         void textureDeviceDestroy() {}
+
+    private:
+
+        struct TexParameters
+        {
+            D3DTEXTUREFILTERTYPE min, mag, mip;
+            D3DTEXTUREADDRESS s, q, r, t;
+        };
+
+        TexParameters mTexParameters[GN::RenderStateBlockDesc::MAX_STAGES];
+
+    private:
+
+        void updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters );
+        void updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq );
 
         //@}
 
@@ -308,22 +314,22 @@ namespace GN { namespace gfx {
         //@{
 
     public :
-        virtual AutoRef<VtxBuf>
+        virtual VtxBuf *
         createVtxBuf( const VtxFmtDesc & format,
                       size_t             numVtx,
                       ResourceUsage      usage,
                       bool               sysCopy )
         {
             GN_UNIMPL();
-            return AutoRef<VtxBuf>();
+            return 0;
         }
-        virtual AutoRef<IdxBuf>
+        virtual IdxBuf *
         createIdxBuf( size_t        numIdx,
                       ResourceUsage usage,
                       bool          sysCopy )
         {
             GN_UNIMPL();
-            return AutoRef<IdxBuf>();
+            return 0;
         }
         virtual void
         bindVtxBufs( const VtxBuf * const buffers[],
@@ -500,6 +506,10 @@ namespace GN { namespace gfx {
 
 #if GN_MSVC
 #pragma warning(pop)
+#endif
+
+#if GN_ENABLE_INLINE
+#include "d3dTextureMgr.inl"
 #endif
 
 // *****************************************************************************

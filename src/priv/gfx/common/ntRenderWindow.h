@@ -8,7 +8,8 @@
 
 #if GN_MSWIN
 
-namespace GN { namespace gfx {
+namespace GN { namespace gfx
+{
     //!
     //! Render window class on NT platform
     //!

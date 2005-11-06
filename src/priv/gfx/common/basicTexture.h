@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     //!
     //! 贴图类的基类
     //!
-    class basicTexture : public Texture
+    class BasicTexture : public Texture
     {
         // ********************************
         //! \name constructor
@@ -19,7 +19,7 @@ namespace GN { namespace gfx
 
         //@{
     protected :
-        basicTexture() : mLocked( false ) {}
+        BasicTexture() : mLocked( false ) {}
         //@}
 
         // ********************************
@@ -41,7 +41,7 @@ namespace GN { namespace gfx
         //! Basic lock operation. Each lock function must call this function first,
         //! to ensure the lock operation is valid.
         //!
-        bool baseLock()
+        bool basicLock()
         {
             if( !isLocked() )
             {
@@ -50,7 +50,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GND3D_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
+                GNGFX_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }
@@ -58,7 +58,7 @@ namespace GN { namespace gfx
         //!
         //! Basic unlock operation. Should be called in pair with baseLock().
         //!
-        bool baseUnlock()
+        bool basicUnlock()
         {
             if( isLocked() )
             {
@@ -67,7 +67,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GND3D_ERROR( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
+                GNGFX_ERROR( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }

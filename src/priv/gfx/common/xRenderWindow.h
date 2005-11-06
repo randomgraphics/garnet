@@ -8,7 +8,8 @@
 
 #if GN_POSIX
 
-namespace GN { namespace gfx {
+namespace GN { namespace gfx
+{
     //!
     //! Render window class on POSIX platform (Unimplemented)
     //!

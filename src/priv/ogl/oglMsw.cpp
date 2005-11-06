@@ -3,8 +3,6 @@
 
 #if GN_MSWIN
 
-#include "../core/core.cpp"
-
 #if GN_MSVC
 #pragma comment( lib, "opengl32.lib" )
 #pragma comment( lib, "glu32.lib" )
@@ -243,7 +241,7 @@ bool GN::ogl::OGL::present()
     }
 
     // swap buffer
-    GNOGL_CHECK( wglSwapLayerBuffers( mDC, WGL_SWAP_MAIN_PLANE ) );
+    GN_OGL_CHECK( wglSwapLayerBuffers( mDC, WGL_SWAP_MAIN_PLANE ) );
 
     // success
     return true;

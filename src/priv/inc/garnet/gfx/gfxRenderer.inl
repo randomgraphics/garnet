@@ -47,7 +47,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline AutoRef<Shader>
+    inline Shader *
     Renderer::createShader( ShaderType      type,
                             ShadingLanguage lang,
                             const StrA &    code )
@@ -59,7 +59,7 @@ namespace GN { namespace gfx
             case PIXEL_SHADER  : return createPixelShader( lang, code );
             default :
                 GN_ERROR( "invalid shader type!" );
-                return AutoRef<Shader>();
+                return 0;
         }
         GN_UNGUARD;
     }
