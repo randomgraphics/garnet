@@ -10,6 +10,8 @@
 #include "garnet/GNbase.h"
 #include "garnet/GNwin.h"
 
+#if GN_MSWIN
+
 #if GN_DEBUG
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
@@ -46,42 +48,6 @@
 //! d3d module informational log macro
 //!
 #define GND3D_INFO GN_INFO
-
-//!
-//! DX error check routine
-//!
-#if !defined(D3DCOMPILE_USEVOIDS)
-#define DX_CHECK_DO( func, something )              \
-    if( true ) {                                    \
-        HRESULT rr = func;                          \
-        if( FAILED(rr) )                            \
-        {                                           \
-            GND3D_ERROR( DXGetErrorString9A(rr) );  \
-            something                               \
-        }                                           \
-    } else void(0)
-#else
-#define DX_CHECK_DO( func, something ) func
-#endif
-
-//!
-//! DX error check routine
-//!
-#if GN_DEBUG
-#define DX_CHECK( func )         DX_CHECK_DO( func, )
-#else
-#define DX_CHECK( func )         func
-#endif
-
-//!
-//! DX error check routine
-//!
-#define DX_CHECK_R( func )        DX_CHECK_DO( func, return; )
-
-//!
-//! DX error check routine
-//!
-#define DX_CHECK_RV( func, rval ) DX_CHECK_DO( func, return rval; )
 
 //!
 //! Global D3D object. Must be instantiated and initialized before using d3d module.
@@ -368,7 +334,7 @@ namespace GN
                 if( D3D_OK == dev->BeginScene() )
                 {
                     if( mRenderFunc ) mRenderFunc();
-                    DX_CHECK( dev->EndScene() );
+                    GN_DX_CHECK( dev->EndScene() );
                 }
                 mD3D.present();
             }
@@ -520,8 +486,20 @@ namespace GN
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 );
 
         //@}
+
+        //! \name Convert D3D tags to string. 
+        //! \note
+        //!     These functions are neither 100% accurate, not effeciency.
+        //!     So please use them only for debugging.
+        //@{
+
+        const char * D3DFORMAT2Str( D3DFORMAT );
+
+        //@}
     }
 }
+
+#endif // GN_MSWIN
 
 // *****************************************************************************
 //                           End of GNd3d.h

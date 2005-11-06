@@ -49,7 +49,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( const char * code, size_t len, uint3
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -87,7 +87,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( const char * file, uint32_t 
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -122,7 +122,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( const char * code, size_t len, uint
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -157,7 +157,7 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( const char * file, uint32_t
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -195,7 +195,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( const char * code, size_t len, uint32
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -233,7 +233,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( const char * file, uint32_t f
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -268,7 +268,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( const char * code, size_t len, uint3
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -303,7 +303,7 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t 
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
-    DX_CHECK_RV(
+    GN_DX_CHECK_RV(
         gD3D.getDevice()->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
@@ -355,7 +355,7 @@ void GN::d3d::drawScreenAlignedQuad(
 
     // capture current render states
     AutoComPtr<IDirect3DStateBlock9> rsb;
-    DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
+    GN_DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
     rsb->Capture();
 
     dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
@@ -395,7 +395,7 @@ void GN::d3d::drawScreenAlignedQuad(
     {
         // get viewport
         D3DVIEWPORT9 vp;
-        DX_CHECK( dev->GetViewport( &vp ) );
+        GN_DX_CHECK( dev->GetViewport( &vp ) );
 
         l = (float)fLeft * vp.Width;
         t = (float)fTop * vp.Height;
@@ -421,18 +421,18 @@ void GN::d3d::drawScreenAlignedQuad(
 
     // capture current render states
     AutoComPtr<IDirect3DStateBlock9> rsb;
-    DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
-    DX_CHECK( rsb->Capture() );
+    GN_DX_CHECK_R( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
+    GN_DX_CHECK( rsb->Capture() );
 
-    DX_CHECK( dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE ) );
+    GN_DX_CHECK( dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE ) );
 
-    DX_CHECK( dev->SetFVF( fvf ) );
+    GN_DX_CHECK( dev->SetFVF( fvf ) );
 
     // draw the quad
-    DX_CHECK( dev->DrawPrimitiveUP( D3DPT_TRIANGLESTRIP, 2, v, sizeof(SCREEN_VERTEX) ) );
+    GN_DX_CHECK( dev->DrawPrimitiveUP( D3DPT_TRIANGLESTRIP, 2, v, sizeof(SCREEN_VERTEX) ) );
 
     // restore render states
-    DX_CHECK( rsb->Apply() );
+    GN_DX_CHECK( rsb->Apply() );
 #endif
 
     GN_UNGUARD;

@@ -25,7 +25,7 @@ def build_proj( target, srcdir=[], incdir=[], moduleName='' ):
 
     proj = env.MSVSProject(
         target      = target + env['MSVSPROJECTSUFFIX'],
-        buildtarget = GN_targets[target],
+        buildtarget = GN_targets[target][0],
         variant     = GN_conf['variant'],
         srcs        = to_relpath(sources),
         incs        = to_relpath(includes),

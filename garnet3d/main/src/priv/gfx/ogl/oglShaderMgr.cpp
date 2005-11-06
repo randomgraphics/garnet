@@ -15,12 +15,12 @@ bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang 
     // check parameter
     if( 0 > type || type >= NUM_SHADER_TYPES )
     {
-        GNOGL_ERROR( "invalid shader usage!" );
+        GNGFX_ERROR( "invalid shader usage!" );
         return false;
     }
     if( 0 > lang || lang >= NUM_SHADING_LANGUAGES )
     {
-        GNOGL_ERROR( "invalid shading language!" );
+        GNGFX_ERROR( "invalid shading language!" );
         return false;
     }
 

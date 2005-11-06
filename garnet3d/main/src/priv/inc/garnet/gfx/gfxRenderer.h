@@ -217,13 +217,13 @@ namespace GN { namespace gfx
         //!
         //! request a instance of vertex shader
         //!
-        virtual AutoRef<Shader>
+        virtual Shader *
         createVertexShader( ShadingLanguage lang, const StrA & code ) = 0;
 
         //!
         //! request a instance of pixel shader
         //!
-        virtual AutoRef<Shader>
+        virtual Shader *
         createPixelShader( ShadingLanguage lang, const StrA & code ) = 0;
 
         //!
@@ -236,7 +236,7 @@ namespace GN { namespace gfx
         //!
         //! \note              This is inline function implemented in gfxRenderer.inl
         //!
-        AutoRef<Shader>
+        Shader *
         createShader( ShaderType      type,
                       ShadingLanguage lang,
                       const StrA &    code );
@@ -262,7 +262,7 @@ namespace GN { namespace gfx
         //! request a rsblock object with specific rsblock structure.
         //! 对于相同的参数，该函数会返回同一个rsblock的实例
         //!
-        virtual AutoRef<RenderStateBlock>
+        virtual RenderStateBlock *
         createRenderStateBlock( const RenderStateBlockDesc & ) = 0;
 
         //!
@@ -295,7 +295,7 @@ namespace GN { namespace gfx
         //!    - sy/sz will be ignored for 1D/Cube texture,
         //!    - sz will be ignored for 2D texture.
         //!
-        virtual AutoRef<Texture>
+        virtual Texture *
         createTexture( TexType textype,
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels = 0,
@@ -305,7 +305,7 @@ namespace GN { namespace gfx
         //!
         //! Load texture from file
         //!
-        virtual AutoRef<Texture>
+        virtual Texture *
         createTextureFromFile( File & file ) = 0;
 
         //!
@@ -341,7 +341,7 @@ namespace GN { namespace gfx
         //! \param sysCopy
         //!     has system copy or not
         //!
-        virtual AutoRef<VtxBuf>
+        virtual VtxBuf *
         createVtxBuf( const VtxFmtDesc & format,
                       size_t             numVtx,
                       ResourceUsage      usage,
@@ -360,7 +360,7 @@ namespace GN { namespace gfx
         //! \note
         //!     每个索引固定占用16bit
         //!
-        virtual AutoRef<IdxBuf>
+        virtual IdxBuf *
         createIdxBuf( size_t        numIdx,
                       ResourceUsage usage,
                       bool          sysCopy ) = 0;

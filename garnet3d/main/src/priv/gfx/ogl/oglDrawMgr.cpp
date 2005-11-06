@@ -51,7 +51,7 @@ void GN::gfx::OGLRenderer::drawFinish()
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
-    GNOGL_CHECK( glFinish() );
+    GN_OGL_CHECK( glFinish() );
 
     GN_UNGUARD_SLOW;
 }
@@ -91,7 +91,7 @@ void GN::gfx::OGLRenderer::clearScreen(
     }
 
     // do clear
-    GNOGL_CHECK( glClear( glflag ) );
+    GN_OGL_CHECK( glClear( glflag ) );
 
     GN_UNGUARD_SLOW;
 }

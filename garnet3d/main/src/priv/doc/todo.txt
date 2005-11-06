@@ -11,6 +11,7 @@ BUGS
 TODO
 ====
 
+- Code coverage of UT of GFX module.
 - continue implementing GFX module
 - create a custom meta-thread management system
 - XWindow class

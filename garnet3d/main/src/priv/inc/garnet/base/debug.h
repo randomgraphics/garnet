@@ -90,10 +90,37 @@
 #define GN_CASSERT( exp ) GN_CASSERT_EX( exp, )
 
 // *****************************************************************************
-//! \name windows error check macros
+//! \name error check macros
 // *****************************************************************************
 
 //@{
+
+#define GN_OGL_CHECK_DO_DESC( func, errDesc, something )        \
+    if( true ) {                                                \
+        func;                                                   \
+        GLenum err = glGetError();                              \
+        if( GL_NO_ERROR != err )                                \
+        {                                                       \
+            GN_ERROR( "%s%s!", errDesc,                         \
+                (const char*)::gluErrorString(err) );           \
+            something                                           \
+        }                                                       \
+    } else void(0)
+//
+#define GN_OGL_CHECK_RV_DESC( func, errDesc, retVal ) GN_OGL_CHECK_DO_DESC( func, errDesc, return retVal; )
+//
+#define GN_OGL_CHECK_R_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, return; )
+//
+#if GN_DEBUG
+#define GN_OGL_CHECK_DESC( func, errDesc ) GN_OGL_CHECK_DO_DESC( func, errDesc, )
+#else
+#define GN_OGL_CHECK_DESC( func, errDesc ) func
+#endif
+//
+#define GN_OGL_CHECK_DO( X, S ) GN_OGL_CHECK_DO_DESC( X, "", S )
+#define GN_OGL_CHECK_RV( X, V ) GN_OGL_CHECK_RV_DESC( X, "", V )
+#define GN_OGL_CHECK_R( X )     GN_OGL_CHECK_R_DESC( X, "" )
+#define GN_OGL_CHECK( X )       GN_OGL_CHECK_DESC( X, "" )
 
 #if GN_MSWIN
 
@@ -128,6 +155,43 @@
 //! check return value of Windows function, return if failed
 //!
 #define GN_MSW_CHECK_RV( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
+
+//!
+//! DX error check routine
+//!
+#if !defined(D3DCOMPILE_USEVOIDS)
+#define GN_DX_CHECK_DO( func, something )           \
+    if( true ) {                                    \
+        HRESULT rr = func;                          \
+        if( FAILED(rr) )                            \
+        {                                           \
+            GN_ERROR( DXGetErrorString9A(rr) );     \
+            something                               \
+        }                                           \
+    } else void(0)
+#else
+#define GN_DX_CHECK_DO( func, something ) func
+#endif
+
+//!
+//! DX error check routine
+//!
+#if GN_DEBUG
+#define GN_DX_CHECK( func )         GN_DX_CHECK_DO( func, )
+#else
+#define GN_DX_CHECK( func )         func
+#endif
+
+//!
+//! DX error check routine
+//!
+#define GN_DX_CHECK_R( func )        GN_DX_CHECK_DO( func, return; )
+
+//!
+//! DX error check routine
+//!
+#define GN_DX_CHECK_RV( func, rval ) GN_DX_CHECK_DO( func, return rval; )
+
 
 #elif GN_POSIX
 

@@ -32,59 +32,27 @@
 //!
 //! d3d module fatal error
 //!
-#define GND3D_FATAL GN_FATAL
+#define GNGFX_FATAL GN_FATAL
 
 //!
 //! d3d module error log macro
 //!
-#define GND3D_ERROR GN_ERROR
+#define GNGFX_ERROR GN_ERROR
 
 //!
 //! d3d module warning log macro
 //!
-#define GND3D_WARN GN_WARN
+#define GNGFX_WARN GN_WARN
 
 //!
 //! d3d module informational log macro
 //!
-#define GND3D_INFO GN_INFO
+#define GNGFX_INFO GN_INFO
 
 //!
 //! d3d module tracing macro
 //!
-#define GND3D_TRACE GN_TRACE
-
-//!
-//! DX error check routine
-//!
-#define DX_CHECK_DO( func, something )              \
-    if( true ) {                                    \
-        HRESULT rr = func;                          \
-        if( FAILED(rr) )                            \
-        {                                           \
-            GND3D_ERROR( DXGetErrorString9A(rr) );  \
-            something                               \
-        }                                           \
-    } else void(0)
-
-//!
-//! DX error check routine
-//!
-#if GN_DEBUG
-#define DX_CHECK( func )         DX_CHECK_DO( func, )
-#else
-#define DX_CHECK( func )         func
-#endif
-
-//!
-//! DX error check routine
-//!
-#define DX_CHECK_R( func )        DX_CHECK_DO( func, return; )
-
-//!
-//! DX error check routine
-//!
-#define DX_CHECK_RV( func, rval ) DX_CHECK_DO( func, return rval; )
+#define GNGFX_TRACE GN_TRACE
 
 // *****************************************************************************
 //                           End of pch.h

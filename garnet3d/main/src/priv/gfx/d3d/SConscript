@@ -5,4 +5,4 @@ env.GN_build_shared_library(
     env.GN_glob('*.cpp'),
     'pch.h',
     'pch.cpp',
-    libs = ['GNgfxCommon'] )
+    libs = Split('GNd3d GNgfxCommon') )

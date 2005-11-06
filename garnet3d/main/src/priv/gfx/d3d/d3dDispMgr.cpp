@@ -18,7 +18,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
     // if window mode, then use current display mode
     if( !fullscreen )
     {
-        DX_CHECK_RV(
+        GN_DX_CHECK_RV(
             d3d.GetAdapterDisplayMode(adapter, &d3ddm),
             D3DFMT_UNKNOWN );
     }
@@ -35,21 +35,21 @@ sCheckD3DFormat( IDirect3D9 & d3d,
             //         因此此处不应强行指定为X8R8G8B8，而应该根据实际显
             //         卡的支持情况来选择合适的显示模式。
             case 32 : d3dfmt = D3DFMT_X8R8G8B8; break;
-            default : GND3D_ERROR( "unsupported depth!" );
+            default : GNGFX_ERROR( "unsupported depth!" );
                 return D3DFMT_UNKNOWN;
         }
 
         UINT dmcount = d3d.GetAdapterModeCount(adapter, d3dfmt );
         if (0 == dmcount)
         {
-            GND3D_ERROR( "fail to get number of display modes!" );
+            GNGFX_ERROR( "fail to get number of display modes!" );
             return D3DFMT_UNKNOWN;
         }
 
         UINT i;
         for ( i = 0; i < dmcount; i++ )
         {
-            DX_CHECK_RV(
+            GN_DX_CHECK_RV(
                 d3d.EnumAdapterModes(adapter, d3dfmt, i, &d3ddm),
                 D3DFMT_UNKNOWN );
 
@@ -63,7 +63,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
         // not found!
         if (i >= dmcount)
         {
-            GND3D_ERROR( "fail to found appropriate D3D format!" );
+            GNGFX_ERROR( "fail to found appropriate D3D format!" );
             return D3DFMT_UNKNOWN;
         }
     }
@@ -155,7 +155,7 @@ bool GN::gfx::D3DRenderer::dispInit()
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if( 0 == mD3D )
     {
-        GND3D_ERROR( "incorrect SDK version!" );
+        GNGFX_ERROR( "incorrect SDK version!" );
         return false;
     }
 
@@ -207,7 +207,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
     for( uint32_t i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
-        DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
         if( 0 == strcmp(Identifier.Description,"NVIDIA NVPerfHUD") )
         {
             mAdapter = i;
@@ -248,7 +248,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
         if( D3DERR_NOTAVAILABLE == r ) continue;
         if( D3D_OK != r )
         {
-            GND3D_WARN( ::DXGetErrorString9A(r) );
+            GNGFX_WARN( ::DXGetErrorString9A(r) );
             continue;
         }
 
@@ -269,7 +269,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
         }
 
         // device found, create it!
-        DX_CHECK_RV(
+        GN_DX_CHECK_RV(
             mD3D->CreateDevice(
                 mAdapter,
                 mDeviceType,
@@ -284,7 +284,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
     }
 
     // failed
-    GND3D_ERROR( "no suitable D3D device found!" );
+    GNGFX_ERROR( "no suitable D3D device found!" );
     return false;
 
     GN_UNGUARD;
@@ -310,7 +310,7 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
     // NOTE: Applications can expect messages to be sent to them during this
     //       call (for example, before this call is returned); applications
     //       should take precautions not to call into Direct3D at this time.
-    DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+    GN_DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
 
     // successful
     mDispOK = true;

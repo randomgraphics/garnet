@@ -344,8 +344,8 @@ namespace GN { namespace gfx
     //!
     struct LockedRect
     {
-        size_t  pitch; //!< bytes per line
-        void *  data;  //!< 指向被锁定图象的第一个字节
+        size_t rowBytes; //!< bytes per line
+        void * data;     //!< 指向被锁定图象的第一个字节
     };
 
     //!
@@ -353,9 +353,9 @@ namespace GN { namespace gfx
     //!
     struct LockedBox
     {
-        size_t rowBytes;    //!< bytes per line
-        size_t sliceBygtes; //!< bytes per slice
-        void * data;        //!< 指向被锁定图象的第一个字节
+        size_t rowBytes;   //!< bytes per line
+        size_t sliceBytes; //!< bytes per slice
+        void * data;       //!< 指向被锁定图象的第一个字节
     };
 
     //!

@@ -25,7 +25,7 @@ namespace GN { namespace gfx
         //! get texture size
         //!
         template<typename T1, typename T2, typename T3>
-        void getSize( T1 * sx, T2 * sy, T3 * sz ) const
+        void getSize( T1 * sx, T2 * sy = 0, T3 * sz = 0 ) const
         {
             if( sx ) *sx = mSize.x;
             if( sy ) *sy = mSize.y;

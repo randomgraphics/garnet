@@ -25,6 +25,11 @@ class GfxTest
     GN::SharedLib mLib;
     GN::gfx::CreateRendererFunc mCreator;
 
+    struct GfxResources
+    {
+        GN::AutoRef<GN::gfx::Texture> tex1d, tex2d, tex3d, texcube;
+    };
+
     void clear( GN::gfx::Renderer & r, const GN::Vector4f & color )
     {
         bool b = r.drawBegin();
@@ -34,6 +39,15 @@ class GfxTest
             r.clearScreen( color );
             r.drawEnd();
         }
+    }
+
+    void createResources( GN::gfx::Renderer & r, GfxResources & res )
+    {
+        // create textures
+        res.tex1d.attach( r.createTexture( GN::gfx::TEXTYPE_1D, 128, 128, 128 ) );
+        res.tex2d.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 128, 128 ) );
+        res.tex3d.attach( r.createTexture( GN::gfx::TEXTYPE_3D, 128, 128, 128 ) );
+        res.texcube.attach( r.createTexture( GN::gfx::TEXTYPE_CUBE, 128, 128, 128 ) );
     }
 
     void clearRed( GN::gfx::Renderer & r )
@@ -99,6 +113,9 @@ protected:
         r.reset( mCreator(uo) );
         TS_ASSERT( r );
         if( !r ) return;
+
+        GfxResources res;
+        createResources( *r, res );
         clearRed(*r);
 #endif
     }
@@ -125,6 +142,8 @@ protected:
         TS_ASSERT( r );
         if( !r ) return;
 
+        GfxResources res;
+        createResources( *r, res );
         clearBlue(*r);
 
         const GN::gfx::DispDesc & dd = r->getDispDesc();
@@ -142,6 +161,8 @@ protected:
 
         GN::AutoObjPtr<GN::gfx::Renderer> r;
 
+        GfxResources res;
+
         GN::gfx::UserOptions uo;
 
         uo.windowedWidth = 320;
@@ -152,6 +173,9 @@ protected:
         if( !r ) return;
         const GN::gfx::DispDesc & dd = r->getDispDesc();
         TS_ASSERT_EQUALS( r->getUserOptions().software, true );
+
+        createResources( *r, res );
+
         clearRed(*r);
 
         // recreate the device
@@ -183,6 +207,9 @@ protected:
         r.reset( mCreator(uo) );
         TS_ASSERT(r);
         if( !r ) return;
+
+        GfxResources res;
+        createResources( *r, res );
         clearRed(*r);
         //GN::sleep( 500 );
         clearBlue(*r);
@@ -223,6 +250,7 @@ protected:
         if( !mCreator ) return;
 
         GN::AutoObjPtr<GN::gfx::Renderer> r1, r2;
+        GfxResources res1, res2;
 
         GN::gfx::UserOptions uo;
 
@@ -236,6 +264,7 @@ protected:
             const GN::gfx::DispDesc & dd = r1->getDispDesc();
             TS_ASSERT_EQUALS( dd.width, 320 );
             TS_ASSERT_EQUALS( dd.height, 640 );
+            createResources( *r1, res1 );
             clearRed( *r1 );
         }
 
@@ -249,6 +278,7 @@ protected:
             const GN::gfx::DispDesc & dd = r2->getDispDesc();
             TS_ASSERT_EQUALS( dd.width, 512 );
             TS_ASSERT_EQUALS( dd.height, 256 );
+            createResources( *r2, res2 );
             clearBlue( *r2 );
         }
     }

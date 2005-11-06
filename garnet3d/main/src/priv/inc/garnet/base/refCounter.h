@@ -231,7 +231,7 @@ namespace GN
         //!
         //! this function will not modify pointer's refcount
         //!
-        void acquire( XPTR ptr )
+        void attach( XPTR ptr )
         {
             reset();
             mPtr = ptr;
@@ -242,7 +242,7 @@ namespace GN
         //!
         //! this function will not modify pointer's refcount
         //!
-        XPTR dismiss() throw()
+        XPTR detach() throw()
         {
             XPTR tmp = mPtr;
             mPtr = 0;
