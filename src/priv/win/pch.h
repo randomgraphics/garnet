@@ -14,6 +14,7 @@
 #define NOMINMAX
 #include <windows.h>
 #elif GN_POSIX
+#include <X11/Xlib.h>
 #include <unistd.h>
 #endif
 

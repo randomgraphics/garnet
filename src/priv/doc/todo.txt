@@ -3,7 +3,7 @@ BUGS
 
 - GFX:
   - GetDeviceCaps(...) in basicDispMgr.cpp always returns information of the
-    monitor where the render window was orginally created in.
+    monitor where the render window was orginally created in. (2005-11-09:might be fixed)
   - Startup of GFXOGL module sometimes very slow:
     - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
     - It seems caused by remote symbol loading
@@ -31,8 +31,6 @@ TODO
 ====
 
 - p1
-  - Code coverage of UT of BASE and GFX module.
-  - UT for getEnv() and setEnv().
   - continue implementing GFX module
   - XWindow class UT
   - implement GNogl on POSIX platform
@@ -51,6 +49,7 @@ TODO
 
 DONE
 ====
+- UT for getEnv() and setEnv().
 - convert input module to static library
 - Fix link problem of GFX module in static build.
 - Refine GFX:

@@ -32,6 +32,13 @@ namespace GN { namespace gfx
     struct UserOptions
     {
         //!
+        //! Display handle. No use on platform other than X Window. Default is zero.
+        //!
+        //! \note If zero, then default display will be used.
+        //!
+        void * displayHandle;
+
+        //!
         //! Use external render window or not.
         //! 缺省为false.
         //!
@@ -47,27 +54,24 @@ namespace GN { namespace gfx
             //!
             void * renderWindow;
 
-            struct
-            {
-                //!
-                //! Handle of parent window. Can be NULL.
-                //! 缺省为0.
-                //!
-                //! \note Effective only if useExternalWindow is false.
-                //!
-                void * parentWindow;
-
-                //!
-                //! Monitor handle. 0 means using the monitor where parent window stays in.
-                //! If monitorHandle and parent window are both zero, default(primary)
-                //! monitor will be chosen.
-                //! 缺省为0.
-                //!
-                //! \note Effective only if useExternalWindow is false.
-                //!
-                void * monitorHandle;
-            };
+            //!
+            //! Handle of parent window. Can be NULL.
+            //! 缺省为0.
+            //!
+            //! \note Effective only if useExternalWindow is false.
+            //!
+            void * parentWindow;
         };
+
+        //!
+        //! Monitor handle, effective only if useExternalWindow is false.
+        //!
+        //! - Should be HMONITOR on MS Window or (Screen*) on X Windows.
+        //! - 0 means using the monitor where parent window stays in. If monitorHandle
+        //!   and parent window are both zero, default(primary) monitor will be chosen.
+        //! - 缺省为0.
+        //!
+        void * monitorHandle;
 
         //!
         //! 是否监视渲染窗口的大小，并自动对渲染设备作相应的调整
@@ -133,7 +137,8 @@ namespace GN { namespace gfx
         //! Construct a default device settings
         //!
         UserOptions()
-            : useExternalWindow(false)
+            : displayHandle(0)
+            , useExternalWindow(false)
             , parentWindow(0)
             , monitorHandle(0)
             , autoBackbufferResizing(true)
@@ -154,6 +159,7 @@ namespace GN { namespace gfx
     //!
     struct DispDesc
     {
+        void * displayHandle;        //!< Display handle. For X Window only.
         void * windowHandle;         //!< Render window handle
         void * monitorHandle;        //!< Monitor handle.
         uint32_t width;              //!< Back buffer width
@@ -168,6 +174,7 @@ namespace GN { namespace gfx
         {
             if( this == &rhs ) return false;
             return
+                displayHandle != rhs.displayHandle ||
                 windowHandle != rhs.windowHandle ||
                 monitorHandle != rhs.monitorHandle ||
                 width != rhs.width ||

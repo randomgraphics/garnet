@@ -7,13 +7,9 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
+#include "garnet/GNwin.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
-
-#if GN_MSWIN
-#define NOMINMAX
-#include <windows.h>
-#endif
 
 #include <exception>
 #include <malloc.h>

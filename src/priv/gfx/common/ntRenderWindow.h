@@ -32,14 +32,24 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! initialize or reinitialize the render window based on user options.
+        //! (re)initialize render window to use external window
         //!
-        bool init( const UserOptions & );
+        bool initExternalRenderWindow( void * unused, void * externalWindow );
+
+        //!
+        //! (re)initialize render window to use internal widow.
+        //!
+        bool initInternalRenderWindow( void * unused, void * parentWindow, uint32_t width, uint32_t height );
 
         //!
         //! Delete render window
         //!
         void quit();
+
+        //!
+        //! Get display handle. For compability to X Window class, no use.
+        //!
+        void * getDisplay() const { return 0; }
 
         //!
         //! Get window handle
@@ -108,11 +118,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        bool initExternalWindow( const UserOptions & uo );
-        bool initInternalWindow( const UserOptions & uo );
-        bool resizeInternalWindow( const UserOptions & uo );
-        bool determineInternalWindowSize( const UserOptions & uo, uint32_t & width, uint32_t & height );
-
+        bool postInit();
         bool createWindow( HWND parent, uint32_t width, uint32_t height );
         void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "basicRenderer.h"
-#include <limits.h>
 #include "ntRenderWindow.h"
 #include "xRenderWindow.h"
+#include <limits.h>
 
 
 // ****************************************************************************
@@ -10,45 +10,140 @@
 // ****************************************************************************
 
 //!
-//! get current display mode. Return 0 if failed.
+//! Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
-static bool
-sGetCurrentDisplayMode( void * window, GN::gfx::DisplayMode & dm )
+static void *
+sDetermineMonitorHandle( const GN::gfx::UserOptions & uo )
 {
-#if GN_MSWIN
-
     GN_GUARD;
 
-    HDC hdc = ::GetDC( (HWND)window );
-    if ( 0 == hdc )
+    if( 0 == uo.monitorHandle )
     {
-        GN_ERROR( "fail to get window DC!" );
-        return false;
+#if GN_MSWIN
+        HMONITOR monitor;
+        if( !::IsWindow( (HWND)uo.parentWindow ) )
+        {
+            POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
+            monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
+            if( 0 == monitor )
+            {
+                GN_ERROR( "Fail to get primary monitor handle." );
+                return 0;
+            }
+        }
+        else
+        {
+            monitor = ::MonitorFromWindow( (HWND)uo.renderWindow, MONITOR_DEFAULTTONEAREST );
+        }
+        GN_ASSERT( monitor );
+        return monitor;
+#else
+        // TODO: not implemented, use hack value.
+        return (void*)1;
+#endif
+    }
+    else return uo.monitorHandle;
+
+    GN_UNGUARD;
+}
+
+//!
+//! get current display mode
+// ----------------------------------------------------------------------------
+static bool
+sGetCurrentDisplayMode( const GN::gfx::UserOptions & uo, GN::gfx::DisplayMode & dm )
+{
+    GN_GUARD;
+
+    // determine the monitor
+    void * monitor = sDetermineMonitorHandle( uo );
+    if( 0 == monitor ) return false;
+
+#if GN_MSWIN
+
+    MONITORINFOEXA mi;
+    DEVMODEA windm;
+
+    mi.cbSize = sizeof(mi);
+    windm.dmSize = sizeof(windm);
+    windm.dmDriverExtra = 0;
+
+    GN_MSW_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
+    GN_MSW_CHECK_RV( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
+
+    GN_ASSERT( (uint32_t) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
+    GN_ASSERT( (uint32_t) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
+
+    dm.width = windm.dmPelsWidth;
+    dm.height = windm.dmPelsHeight;
+    dm.depth = windm.dmBitsPerPel;
+    dm.refrate = windm.dmDisplayFrequency;
+
+#else
+
+    Screen * scr;
+    if( (void*)1 == monitor )
+    {
+        GN_WARN( "No implementation. Use hard-coded value: 640x480." );
+        dm.width = 640;
+        dm.height = 480;
+        dm.depth = 32;
+        dm.refrate = 0;
+    }
+    else
+    {
+        scr = (Screen*)monitor;
+        dm.width = scr->width;
+        dm.height = scr->height;
+        dm.depth = scr->root_depth;
+        dm.refrate = 0;
     }
 
-    dm.width = GetDeviceCaps( hdc, HORZRES );
-    dm.height = GetDeviceCaps( hdc, VERTRES );
-    dm.depth = GetDeviceCaps( hdc, BITSPIXEL );
-    dm.refrate = GetDeviceCaps( hdc, VREFRESH );
-
-    ::ReleaseDC( (HWND)window, hdc );
+#endif
 
     // success
     return true;
 
     GN_UNGUARD;
+}
 
-#else
+//!
+//! Determine render window size
+// ----------------------------------------------------------------------------
+static bool
+sDetermineWindowSize(
+    const GN::gfx::UserOptions & uo,
+    const GN::gfx::DisplayMode & currentDisplayMode,
+    uint32_t & width,
+    uint32_t & height )
+{
+    GN_GUARD;
 
-    GN_WARN( "unimplemented" );
-    GN_UNUSED_PARAM( window );
-    dm.width = 640;
-    dm.height = 480;
-    dm.depth = 32;
-    dm.refrate = 0;
-    return true;
+    if( uo.useExternalWindow )
+    {
+        return GN::win::getClientSize( uo.displayHandle, uo.renderWindow, &width, &height );
+    }
+    else
+    {
+        if( uo.fullscreen )
+        {
+            // In fullscreen mode, default window size is determined by current display mode.
+            const GN::gfx::DisplayMode & dm = uo.displayMode;
+            width = dm.width ? dm.width : currentDisplayMode.width;
+            height = dm.height ? dm.height : currentDisplayMode.height;
+        }
+        else
+        {
+            // In windowed mode, default window size is 640x480
+            width = uo.windowedWidth ? uo.windowedWidth : 640;
+            height = uo.windowedHeight ? uo.windowedHeight : 480;
+        }
 
-#endif
+        // success
+        return true;
+    }
+
+    GN_UNGUARD;
 }
 
 // ****************************************************************************
@@ -63,31 +158,11 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
 {
     GN_GUARD;
 
-#if GN_MSWIN
-    // Restore render window properties, if switching back from fullscreen mode
-    if( getUserOptions().fullscreen && !uo.fullscreen ) mWinProp.restore();
-#endif
-
     DispDesc desc;
 
-    // (re)initialize render window.
-    if( !mWindow.init(uo) ) return false;
-
-#if GN_MSWIN
-    // Save new render window properties, for windowed mode only
-    if( !uo.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
-#endif
-
-    desc.windowHandle = mWindow.getWindow();
-    desc.monitorHandle = mWindow.getMonitor();
-    GN_ASSERT( desc.windowHandle && desc.monitorHandle );
-
-    // get current display properties
-    DisplayMode dm;
-    if( !sGetCurrentDisplayMode( desc.windowHandle, dm ) ) return false;
-    GN_ASSERT( dm.width && dm.height && dm.depth );
-
     // setup display mode
+    DisplayMode dm;
+    if( !sGetCurrentDisplayMode( uo, dm ) ) return false;
     if( uo.fullscreen )
     {
         desc.width = (0==uo.displayMode.width) ? dm.width : uo.displayMode.width;
@@ -98,13 +173,36 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
     else
     {
         uint32_t w, h;
-        if( !mWindow.getClientSize( w, h ) ) return false;
-        desc.width = (0==uo.windowedWidth) ? w : uo.windowedWidth;
-        desc.height = (0==uo.windowedHeight) ? h : uo.windowedHeight;
+        if( !sDetermineWindowSize( uo, dm, w, h ) ) return false;
+        desc.width = (0==uo.displayMode.width) ? w : uo.displayMode.width;
+        desc.height = (0==uo.displayMode.height) ? h : uo.displayMode.height;
         desc.depth = dm.depth;
         desc.refrate = 0;
     }
     GN_ASSERT( desc.width && desc.height && desc.depth );
+
+    // (Re)Initialize render window
+#if GN_MSWIN
+    if( getUserOptions().fullscreen && !uo.fullscreen ) mWinProp.restore();
+#endif
+    if( uo.useExternalWindow )
+    {
+        if( !mWindow.initExternalRenderWindow( uo.displayHandle, uo.renderWindow ) ) return false;
+    }
+    else
+    {
+        if( !mWindow.initInternalRenderWindow( uo.displayHandle, uo.parentWindow, desc.width, desc.height ) ) return false;
+    }
+#if GN_MSWIN
+    if( !uo.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
+#endif
+    desc.displayHandle = mWindow.getDisplay();
+    desc.windowHandle = mWindow.getWindow();
+    desc.monitorHandle = mWindow.getMonitor();
+#if GN_POSIX
+    GN_ASSERT( desc.displayHandle );
+#endif
+    GN_ASSERT( desc.windowHandle && desc.monitorHandle );
 
     // success
     setUserOptions( uo );
