@@ -29,15 +29,10 @@ void GN::putEnv( const char * name, const char * value )
 // -----------------------------------------------------------------------------
 void GN::getEnv( StrA & result, const char * name )
 {
-    const char * var;
-    if( strEmpty(name) || NULL == (var=::getenv(name)) )
-    {
+    if( strEmpty(name) )
         result.clear();
-    }
     else
-    {
-        result.assign( var );
-    }
+        result.assign( ::getenv(name) );
 }
 
 //

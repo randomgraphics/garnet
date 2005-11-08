@@ -738,22 +738,19 @@ namespace GN
     //!
     //! convert wide char string to multi-byte string
     //!
-    StrA wcs2mbs( const wchar_t *, size_t );
+    void wcs2mbs( StrA &, const wchar_t *, size_t );
 
     //!
     //! convert wide char string to multi-byte string
     //!
-    void wcs2mbs( StrA &, const wchar_t *, size_t );
+    inline void
+    wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.cstr(), i.size() ); }
 
     //!
-    //! convert multi-byte string to wide char string
+    //! convert wide char string to multi-byte string
     //!
-    StrW mbs2wcs( const char *, size_t );
-
-    //!
-    //! convert multi-byte string to wide char string
-    //!
-    void mbs2wcs( StrW &, const char *, size_t );
+    inline StrA
+    wcs2mbs( const wchar_t * i, size_t l ) { StrA o; wcs2mbs( o, i, l ); return o; }
 
     //!
     //! convert wide char string to multi-byte string
@@ -762,22 +759,27 @@ namespace GN
     wcs2mbs( const StrW & i ) { return wcs2mbs( i.cstr(), i.size() ); }
 
     //!
-    //! convert wide char string to multi-byte string
-    //!
-    inline void
-    wcs2mbs( StrA & o, const StrW & i ) { wcs2mbs( o, i.cstr(), i.size() ); }
-
-    //!
     //! convert multi-byte string to wide char string
     //!
-    inline StrW
-    mbs2wcs( const StrA & i ) { return mbs2wcs( i.cstr(), i.size() ); }
+    void mbs2wcs( StrW &, const char *, size_t );
 
     //!
     //! convert multi-byte string to wide char string
     //!
     inline void
     mbs2wcs( StrW & o, const StrA & i ) { return mbs2wcs( o, i.cstr(), i.size() ); }
+
+    //!
+    //! convert multi-byte string to wide char string
+    //!
+    inline StrW
+    mbs2wcs( const char * i, size_t l ) { StrW o; mbs2wcs( o, i, l ); return o; }
+
+    //!
+    //! convert multi-byte string to wide char string
+    //!
+    inline StrW
+    mbs2wcs( const StrA & i ) { return mbs2wcs( i.cstr(), i.size() ); }
 }
 
 // *****************************************************************************

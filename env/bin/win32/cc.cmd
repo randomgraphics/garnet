@@ -16,8 +16,8 @@ REM
 REM determin sql server
 REM
 if ""=="%MAGELLAN_SQL_SERVER%" (
-	echo Environment "MAGELLAN_SQL_SERVER" not found, use default SQL server on msra-xe2m-amda
-	set MAGELLAN_SQL_SERVER=msra-xe2m-amda
+	echo Environment "MAGELLAN_SQL_SERVER" not found, use default SQL server on localhost
+	set MAGELLAN_SQL_SERVER=localhost
 ) else (
 	echo Use SQL server on %MAGELLAN_SQL_SERVER%
 )
