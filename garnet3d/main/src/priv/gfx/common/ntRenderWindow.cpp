@@ -6,29 +6,6 @@
 unsigned int GN::gfx::NTRenderWindow::msInstanceID = 0;
 std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
 
-//!
-//! get current display width and height
-// ----------------------------------------------------------------------------
-static bool
-sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
-{
-    GN_GUARD;
-
-    // get monitor information
-    MONITORINFOEXA mi;
-    mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RV( GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
-
-    // get display mode
-    width = (uint32_t) ( mi.rcMonitor.right - mi.rcMonitor.left );
-    height = (uint32_t) (mi.rcMonitor.bottom - mi.rcMonitor.top );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -36,57 +13,82 @@ sGetMonitorSize( void * monitor, uint32_t & width, uint32_t & height )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::init( const UserOptions & uo )
+bool GN::gfx::NTRenderWindow::initExternalRenderWindow( void *, void * externalWindow )
 {
     GN_GUARD;
 
-    // initialize render window
-    if( uo.useExternalWindow )
-    {
-        quit();
-        if( !initExternalWindow( uo ) ) return false;
-    }
-    else
-    {
-        if( !mUseExternalWindow && mWindow )
-        {
-            if( !resizeInternalWindow( uo ) ) return false;
-        }
-        else
-        {
-            quit();
-            if( !initInternalWindow( uo ) ) return false;
-        }
-    }
-    GN_ASSERT( mWindow );
-    mUseExternalWindow = uo.useExternalWindow;
+    quit();
 
-    // update monitor handle
-    mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
-    if( 0 == mMonitor )
+    if( !::IsWindow( (HWND)externalWindow ) )
     {
-        GNGFX_ERROR( "Fail to get monitor handle from window!" );
+        GNGFX_ERROR( "External render window handle must be valid." );
         return false;
     }
 
-    //// Output monitor information
-    //MONITORINFOEXA mi;
-    //mi.cbSize = sizeof(mi);
-    //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-    //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
+    if( msInstanceMap.end() != msInstanceMap.find( (HWND)externalWindow ) )
+    {
+        GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
+        return false;
+    }
 
-    // add window handle to instance map
-    GN_ASSERT(
-        msInstanceMap.end() == msInstanceMap.find(mWindow) ||
-        this == msInstanceMap.find(mWindow)->second );
-    msInstanceMap[mWindow] = this;
+    // register a message hook to render window.
+    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
+    if( 0 == mHook )
+    {
+        GNGFX_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
+        return false;
+    }
 
-    // clear all state flags
-    mInsideSizeMove = false;
-    mSizeChanged = false;
+    mWindow = (HWND)externalWindow;
+    mUseExternalWindow = true;
 
     // success
-    return true;
+    return postInit();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::NTRenderWindow::initInternalRenderWindow(
+    void *, void * parentWindow, uint32_t width, uint32_t height )
+{
+    GN_GUARD;
+
+    GN_ASSERT( width > 0 && height > 0 );
+
+    if( !mUseExternalWindow && mWindow && parentWindow == ::GetParent(mWindow) )
+    {
+        // calculate boundary size
+        RECT rc = { 0, 0, width, height };
+        GN_MSW_CHECK_RV(
+            ::AdjustWindowRectEx(
+                &rc,
+                ::GetWindowLongA( mWindow, GWL_STYLE ),
+                0,
+                ::GetWindowLongA( mWindow, GWL_EXSTYLE ) ),
+            false );
+
+        // resize the window
+        GN_MSW_CHECK_RV(
+            ::SetWindowPos(
+                mWindow, HWND_TOP,
+                0, 0, // position, ignored.
+                rc.right-rc.left, rc.bottom-rc.top, // size
+                SWP_NOMOVE ),
+            false );
+    }
+    else
+    {
+        quit();
+        if( !createWindow( (HWND)parentWindow, width, height ) ) return false;
+    }
+
+    mUseExternalWindow = false;
+
+    // success
+    return postInit();
 
     GN_UNGUARD;
 }
@@ -151,153 +153,35 @@ bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::initExternalWindow( const UserOptions & uo )
+bool GN::gfx::NTRenderWindow::postInit()
 {
     GN_GUARD;
 
-    GN_ASSERT( uo.useExternalWindow );
+    GN_ASSERT( ::IsWindow(mWindow) );
 
-    if( !::IsWindow((HWND)uo.renderWindow) )
+    // update monitor handle
+    mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
+    if( 0 == mMonitor )
     {
-        GNGFX_ERROR( "External render window handle must be valid." );
+        GNGFX_ERROR( "Fail to get monitor handle from window!" );
         return false;
     }
 
-    if( msInstanceMap.end() != msInstanceMap.find(uo.renderWindow) )
-    {
-        GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
-        return false;
-    }
+    //// Output monitor information
+    //MONITORINFOEXA mi;
+    //mi.cbSize = sizeof(mi);
+    //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
+    //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
 
-    mWindow = (HWND)uo.renderWindow;
+    // add window handle to instance map
+    GN_ASSERT(
+        msInstanceMap.end() == msInstanceMap.find(mWindow) ||
+        this == msInstanceMap.find(mWindow)->second );
+    msInstanceMap[mWindow] = this;
 
-    // register a message hook to render window.
-    mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
-    if( 0 == mHook )
-    {
-        GNGFX_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
-        return false;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::initInternalWindow( const UserOptions & uo )
-{
-    GN_GUARD;
-
-    GN_ASSERT( !uo.useExternalWindow );
-
-    uint32_t w, h;
-    if( !determineInternalWindowSize( uo, w, h ) ) return false;
-    GN_ASSERT( w > 0 && h > 0 );
-
-    if( !createWindow( (HWND)uo.parentWindow, w, h ) ) return false;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::resizeInternalWindow( const UserOptions & uo )
-{
-    GN_GUARD;
-
-    GN_ASSERT( !uo.useExternalWindow && !!::IsWindow(mWindow) );
-
-    uint32_t w, h;
-    if( !determineInternalWindowSize( uo, w, h ) ) return false;
-    GN_ASSERT( w > 0 && h > 0 );
-
-    // calculate boundary size
-    RECT rc = { 0, 0, w, h };
-    GN_MSW_CHECK_RV(
-        ::AdjustWindowRectEx(
-            &rc,
-            ::GetWindowLongA( mWindow, GWL_STYLE ),
-            0,
-            ::GetWindowLongA( mWindow, GWL_EXSTYLE ) ),
-        false );
-
-    // resize the window
-    GN_MSW_CHECK_RV(
-        ::SetWindowPos(
-            mWindow, HWND_TOP,
-            0, 0, // position, ignored.
-            rc.right-rc.left, rc.bottom-rc.top, // size
-            SWP_NOMOVE ),
-        false );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::determineInternalWindowSize(
-    const UserOptions & uo, uint32_t & width, uint32_t & height )
-{
-    GN_GUARD;
-
-    // Determine window size
-    if( uo.fullscreen )
-    {
-        const DisplayMode & dm = uo.displayMode;
-
-        if( 0 == dm.width || 0 == dm.height )
-        {
-            // In fullscreen mode, default window size is determined by display mode.
-
-            // Get user specified monitor size
-            HMONITOR monitor;
-            if( 0 == uo.monitorHandle )
-            {
-                if( !::IsWindow((HWND)uo.parentWindow) )
-                {
-                    POINT pt = { LONG_MIN, LONG_MIN }; // Make sure primary monitor are returned.
-                    monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
-                    if( 0 == monitor )
-                    {
-                        GN_ERROR( "Fail to get primary monitor handle." );
-                        return false;
-                    }
-                }
-                else
-                {
-                    monitor = ::MonitorFromWindow( (HWND)uo.renderWindow, MONITOR_DEFAULTTONEAREST );
-                }
-            }
-            else
-            {
-                monitor = (HMONITOR)uo.monitorHandle;
-            }
-            GN_ASSERT( monitor );
-
-            if( !::sGetMonitorSize( monitor, width, height ) ) return false;
-        }
-
-        if( dm.width ) width = dm.width;
-        if( dm.height ) height = dm.height;
-    }
-    else
-    {
-        // In windowed mode, default window size is 640x480
-        width = uo.windowedWidth ? uo.windowedWidth : 640;
-        height = uo.windowedHeight ? uo.windowedHeight : 480;
-    }
+    // clear all state flags
+    mInsideSizeMove = false;
+    mSizeChanged = false;
 
     // success
     return true;

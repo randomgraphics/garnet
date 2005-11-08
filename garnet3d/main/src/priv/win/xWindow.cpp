@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/win/xWindow.h"
 
 #if GN_POSIX
 

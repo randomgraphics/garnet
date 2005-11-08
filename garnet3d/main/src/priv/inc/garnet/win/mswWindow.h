@@ -8,11 +8,6 @@
 
 #if GN_MSWIN && !GN_XENON
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-
 namespace GN { namespace win
 {
     //!

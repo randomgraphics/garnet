@@ -24,6 +24,25 @@ void GN::win::setTitle( WindowHandle, const char * ) {}
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::win::getClientSize( DisplayHandle disp, WindowHandle win, uint32_t * width, uint32_t * height )
+{
+    GN_GUARD;
+
+    XWindowAttributes attr;
+    GN_X_CHECK_RV( XGetWindowAttributes( (Display*)disp, (Window)win, &attr ), false );
+
+    if( width ) *width = (uint32_t)attr.width;
+    if( height ) *height = (uint32_t)attr.height;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 const char * GN::win::msg2str( uint32_t ) { return ""; }
 
 // *****************************************************************************
@@ -41,6 +60,25 @@ void GN::win::setTitle( WindowHandle win, const char * title )
 
     if( 0 == title ) title = "";
     GN_MSW_CHECK( ::SetWindowTextA( (HWND)win, title ) );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::win::getClientSize( DisplayHandle, WindowHandle win, uint32_t * width, uint32_t * height )
+{
+    GN_GUARD;
+
+    RECT rc;
+    GN_MSW_CHECK_RV( ::GetClientRect( (HWND)win, &rc ), false );
+
+    if( width ) *width = (uint32_t)(rc.right - rc.left);
+    if( height ) *height = (uint32_t)(rc.bottom - rc.top);
+
+    // success
+    return true;
 
     GN_UNGUARD;
 }
@@ -66,7 +104,7 @@ void GN::win::processMswMessages( WindowHandle wnd, bool blockOnMinimized )
             ::TranslateMessage( &msg );
             ::DispatchMessage(&msg);
         }
-        else if( IsIconic( (HWND)wnd ) && blockOnMinimized )
+        else if( ::IsIconic( (HWND)wnd ) && blockOnMinimized )
         {
             GN_INFO( "Wait for window messages..." );
             ::WaitMessage();

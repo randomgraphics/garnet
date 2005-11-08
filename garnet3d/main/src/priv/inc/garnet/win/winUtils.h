@@ -1,22 +1,30 @@
-#ifndef __GN_WIN_UTILS_H__
-#define __GN_WIN_UTILS_H__
+#ifndef __GN_WIN_WINUTILS_H__
+#define __GN_WIN_WINUTILS_H__
 // *****************************************************************************
-//! \file    utils.h
-//! \brief   Window related util functions.
-//! \author  chenlee (2005.10.28)
+//! \file    winUtils.h
+//! \brief   Util function of WIN module
+//! \author  chenlee (2005.11.9)
 // *****************************************************************************
 
 namespace GN { namespace win
 {
     //!
-    //! General window handle
-    //!
-    typedef void * WindowHandle;
-
-    //!
     //! Set window title
     //!
     void setTitle( WindowHandle, const char * );
+
+    //!
+    //! Get window client size.
+    //! \param disp
+    //!     Display handle. No use on MS winows.
+    //! \param win
+    //!     Window hanlde.
+    //! \param width, height
+    //!     Can be NULl, if you don't care about it.
+    //! \return
+    //!     If failed, values in parameter width and height are undefined.
+    //!
+    bool getClientSize( DisplayHandle disp, WindowHandle win, uint32_t * width, uint32_t * height );
 
 #if GN_MSWIN
     //!
@@ -43,7 +51,8 @@ namespace GN { namespace win
     const char * msg2str( uint32_t msg );
 }}
 
+
 // *****************************************************************************
-//                           End of utils.h
+//                           End of winUtils.h
 // *****************************************************************************
-#endif // __GN_WIN_UTILS_H__
+#endif // __GN_WIN_WINUTILS_H__

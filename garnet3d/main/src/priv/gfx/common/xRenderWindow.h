@@ -11,11 +11,15 @@
 namespace GN { namespace gfx
 {
     //!
-    //! Render window class on POSIX platform (Unimplemented)
+    //! Render window class on POSIX platform
     //!
     class XRenderWindow
     {
-        uint32_t mWidth, mHeight;
+        bool mUseExternalDisplay;
+        bool mUseExternalWindow;
+        Display * mDisplay;
+        Window    mWindow;
+        Screen *  mScreen;
         
         //@{
     public:
@@ -29,42 +33,39 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! initialize or reinitialize the render window based on current device setting.
+        //! (re)initialize render window to use external window
         //!
-        bool init( const UserOptions & uo )
-        {
-            if( uo.fullscreen )
-            {
-                mWidth = uo.displayMode.width;
-                mHeight = uo.displayMode.height;
-            }
-            else
-            {
-                mWidth = uo.windowedWidth;
-                mHeight = uo.windowedHeight;
-            }
-            return true;
-        }
+        bool initExternalRenderWindow( void * display, void * externalWindow );
+
+        //!
+        //! (re)initialize render window to use internal widow.
+        //!
+        bool initInternalRenderWindow( void * display, void * parentWindow, uint32_t width, uint32_t height );
 
         //!
         //! Delete render window
         //!
-        void quit() {}
+        void quit();
+
+        //!
+        //! Get display handle
+        //!
+        void * getDisplay() const { return mDisplay; }
 
         //!
         //! Get window handle
         //!
-        void * getWindow() const { return (void*)1; }
+        void * getWindow() const { return (void*)mWindow; }
 
         //!
         //! Get monitor handle
         //!
-        void * getMonitor() const { return (void*)1; }
+        void * getMonitor() const { return mScreen; }
 
         //!
         //! Get client size
         //!
-        bool getClientSize( uint32_t & width , uint32_t & height ) const { width = mWidth; height = mHeight; return true; }
+        bool getClientSize( uint32_t & width , uint32_t & height ) const;
 
         //!
         //! Get window size change flag.
@@ -72,7 +73,15 @@ namespace GN { namespace gfx
         //! \param autoReset
         //!     If true, automatically clear the flag.
         //!
-        bool getSizeChangeFlag( bool autoReset = true ) { GN_UNUSED_PARAM(autoReset); return false; }
+        bool getSizeChangeFlag( bool autoReset = true )
+        { GN_UNUSED_PARAM(autoReset); return false; }
+
+        // ********************************
+        // private interface
+        // ********************************
+    private:
+
+        bool initDisplay( void * display );
     };
 }}
 

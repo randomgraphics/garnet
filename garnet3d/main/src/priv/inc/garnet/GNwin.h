@@ -8,6 +8,15 @@
 
 #include "GNbase.h"
 
+#if GN_MSWIN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#elif GN_POSIX
+#include <X11/Xlib.h>
+#endif
+
 namespace GN
 {
     //!
@@ -18,8 +27,10 @@ namespace GN
     }
 }
 
-#include "win/utils.h"
+#include "win/winTypes.h"
+#include "win/winUtils.h"
 #include "win/mswWindow.h"
+#include "win/xWindow.h"
 
 // *****************************************************************************
 //                           End of GNwin.h

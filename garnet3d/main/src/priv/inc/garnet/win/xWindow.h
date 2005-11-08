@@ -8,8 +8,6 @@
 
 #if GN_POSIX
 
-#include <X11/XLib.h>
-
 namespace GN { namespace win {
     //!
     //! X window wrapper class
