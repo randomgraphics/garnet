@@ -8,23 +8,46 @@ BUGS
     - pin down to the 1st DescribePixelFormat() in sChoosePixelFormat() in oglWinDisp.cpp
     - It seems caused by remote symbol loading
 
+ISSUES
+======
+
+- Use boost jam, or refine SCons?
+  - bjam
+    - pros
+      - fast script parsing speed
+      - build-in support to amd64
+    - cons
+      - can't generate VC project
+  - SCons
+    - pros
+      - can generate VC project
+      - much more readable then jam code.
+    - cons
+      - script parsing is a little bit slow
+      - no amd64 support
+      - can distinguish different version of same compiler
+
 TODO
 ====
 
-- Code coverage of UT of GFX module.
-- continue implementing GFX module
-- create a custom meta-thread management system
-- XWindow class
-- cross-platform window util functions:
-  - set window title
-  - change window size
-  - ...
-- GN_TRACE( level, msg, .... )
-- runtime call-stack dump
-- hash map/table
-- implement POSIX version of GN::path:glob()
-- UT for path functions: resolve, glob
-- implement GNogl on POSIX platform
+- p1
+  - Code coverage of UT of BASE and GFX module.
+  - UT for getEnv() and setEnv().
+  - continue implementing GFX module
+  - XWindow class UT
+  - implement GNogl on POSIX platform
+- p2
+  - Rewrite SCons script
+  - Custom sscanf(...)
+  - cross-platform window util functions:
+    - set window title
+    - change window size
+    - ...
+  - GN_TRACE( level, msg, .... )
+  - runtime call-stack dump
+  - hash map/table
+  - implement POSIX version of GN::path:glob()
+  - UT for path functions: resolve, glob
 
 DONE
 ====

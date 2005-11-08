@@ -1,9 +1,6 @@
 #include "pch.h"
 
-#if GN_MSVC
-#define vsnprintf  _vsnprintf
-#define vsnwprintf _vsnwprintf
-#endif
+#define VS8 (GN_MSVC&&_MSC_VER>=1400)
 
 //
 //
@@ -13,7 +10,13 @@ GN::strPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
 {
     if ( buf && bufSize )
     {
+#if VS8
+        _vsnprintf_s( buf, bufSize, _TRUNCATE, fmt, args );
+#elif GN_MSVC
+        _vsnprintf( buf, bufSize, fmt, args );
+#else
         vsnprintf( buf, bufSize, fmt, args );
+#endif
         buf[bufSize-1] = 0;
     }
 }
@@ -26,26 +29,17 @@ GN::strPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args 
 {
     if ( buf && bufSize )
     {
-    #if GN_CYGWIN
+#if VS8
+        _vsnwprintf_s( buf, bufSize, _TRUNCATE, fmt, args );
+#elif GN_MSVC
+        _vsnwprintf( buf, bufSize, fmt, args );
+#elif GN_CYGWIN
         buf[0] = 0; // no implementation on cygwin
-    #elif GN_POSIX
+#elif GN_POSIX
         vswprintf( buf, bufSize, fmt, args );
+#endif
         buf[bufSize-1] = 0;
-    #else
-        vsnwprintf( buf, bufSize, fmt, args );
-        buf[bufSize-1] = 0;
-    #endif
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::StrA GN::wcs2mbs( const wchar_t * i, size_t l )
-{
-    StrA o;
-    wcs2mbs( o, i, l );
-    return o;
 }
 
 //
@@ -57,7 +51,13 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
     if ( 0 == l ) l = strLen(i);
 
     o.setCaps( l + 1 );
+#if VS8
+    size_t ol;
+    ::wcstombs_s( &ol, o.mPtr, l+1, i, l );
+    l = ol;
+#else
     l = ::wcstombs( o.mPtr, i, l );
+#endif
     if( (size_t)-1 == l || 0 == l )
     {
         o.clear();
@@ -72,23 +72,19 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 //
 //
 // -----------------------------------------------------------------------------
-GN::StrW GN::mbs2wcs( const char * i, size_t l )
-{
-    StrW o;
-    mbs2wcs( o, i, l );
-    return o;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::mbs2wcs( StrW & o, const char * i, size_t l )
 {
     if ( 0 == i ) { o.clear(); return; }
     if ( 0 == l ) l = strLen(i);
 
     o.setCaps( l + 1 );
+#if VS8
+    size_t ol;
+    ::mbstowcs_s( &ol, o.mPtr, l+1, i, l );
+    l = ol;
+#else
     l = ::mbstowcs( o.mPtr, i, l );
+#endif
     if( (size_t)-1 == l || 0 == l )
     {
         o.clear();

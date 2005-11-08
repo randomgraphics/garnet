@@ -175,7 +175,9 @@ namespace GN
     {
         StrA result;
         getEnv( result, name );
-        return "1" == result || "yes" == result; 
+        return "1" == result ||
+               0 == strCmpI( "yes", result.cstr() ) ||
+               0 == strCmpI( "true", result.cstr() ); 
     }
 
     //!

@@ -273,7 +273,7 @@ namespace GN { namespace gfx
                        ClrFmt format,
                        uint32_t usages )
         {
-            GN_UNIMPL();
+            GN_WARN( "Unimplemented!" );
             return 0;
         }
         virtual Texture * createTextureFromFile( File & )

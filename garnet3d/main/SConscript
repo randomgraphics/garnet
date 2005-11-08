@@ -236,7 +236,7 @@ def GN_build_program( env, target, sources=[],
     if not pdb and target: pdb = target + '.pdb'
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
-        libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL')
+        libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL GNd3d GNogl')
     libs += Split('GNcoreLib GNinput GNwin GNbase GNcoreLib GNinput GNwin GNbase GNextern')
     extra = []
     for x in libs:
