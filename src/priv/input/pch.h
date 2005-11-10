@@ -16,6 +16,8 @@
 #include <dinput.h>
 #include <dxerr9.h>
 #include <zmouse.h>  // for WM_MOUSEWHEEL
+#elif GN_POSIX
+#include <X11/Xlib.h>
 #endif
 
 #include <exception>

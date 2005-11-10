@@ -43,8 +43,10 @@ public:
         mRenderer.reset( mCreator(uo) );
         if( !mRenderer ) return false;
 
+        const GN::gfx::DispDesc & dd = mRenderer->getDispDesc();
+
         mInput.reset( GN::input::createInputSystem() );
-        if( !mInput || !mInput->attachToWindow(mRenderer->getDispDesc().windowHandle) ) return false;
+        if( !mInput || !mInput->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
 
         mDone = false;
 

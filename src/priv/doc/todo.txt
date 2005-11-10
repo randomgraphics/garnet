@@ -34,6 +34,7 @@ TODO
   - continue implementing GFX module
   - XWindow class UT
   - implement GNogl on POSIX platform
+  - implement input module on POSIX platform
 - p2
   - Rewrite SCons script
   - Custom sscanf(...)

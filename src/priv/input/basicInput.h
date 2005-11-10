@@ -15,9 +15,6 @@ namespace GN { namespace input
     //!
     class BasicInput : public Input
     {
-        // ********************************
-        // public functions
-        // ********************************
     public:
 
         //!
@@ -25,10 +22,13 @@ namespace GN { namespace input
         //!
         BasicInput() { resetInputStates(); }
 
+        // ********************************
+        // from Input
+        // ********************************
+    public:
+
         //!
         //! Get keybord status
-        //!
-        //! \sa Input::getKeyStates()
         //!
         const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
 
