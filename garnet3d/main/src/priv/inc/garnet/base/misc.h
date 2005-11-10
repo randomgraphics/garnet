@@ -40,6 +40,11 @@
 namespace GN
 {
     //!
+    //! General handle type
+    //!
+    typedef const void * HandleType;
+    
+    //!
     //! type cast function
     //!
     //! perform dynamic cast in debug build, and static cast in release build.
@@ -377,6 +382,29 @@ namespace GN
             T * operator->() const { return mPtr; }
         };
     }
+
+#if GN_POSIX
+    //!
+    //! Automatic X resource pointer
+    //!
+    template<typename T>
+    class AutoXPtr : public detail::BaseAutoPtr< T, &safeDelete<T> >
+    {
+        typedef detail::BaseAutoPtr< T, &safeDelete<T> > ParentType;
+
+        static void doRelease( T * p )
+        {
+            if( p ) XFree(p);
+        }
+
+    public:
+
+        //!
+        //! Construct from C-style pointer
+        //!
+        explicit AutoXPtr( T * p = 0 ) throw() : ParentType(p) {}
+    };
+#endif
 
     //!
     //! Automatic object pointer
