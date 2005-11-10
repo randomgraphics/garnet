@@ -94,20 +94,18 @@ namespace GN { namespace gfx
         bool processUserOptions( const UserOptions & );
 
         //!
-        //! Called by sub class to respond to er window resizing/moving
+        //! Called by sub class to respond to render window resizing/moving
         //!
         bool handleRenderWindowSizeMove();
 
-    protected:
-
-        //!
-        //! Render window instance (platform independent)
-        //!
 #if GN_MSWIN
-        NTRenderWindow mWindow;
-        WinProp        mWinProp;
-#else
-        XRenderWindow mWindow;
+    protected:
+        NTRenderWindow mWindow;  //!< Render window instance.
+    private:
+        WinProp        mWinProp; //!< Render window properites.
+#elif GN_POSIX
+    private:
+        XRenderWindow mWindow;  //!< Render window instance
 #endif
 
         //@}

@@ -12,7 +12,7 @@
 //!
 //! Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
-static void *
+static GN::HandleType
 sDetermineMonitorHandle( const GN::gfx::UserOptions & uo )
 {
     GN_GUARD;
@@ -38,8 +38,7 @@ sDetermineMonitorHandle( const GN::gfx::UserOptions & uo )
         GN_ASSERT( monitor );
         return monitor;
 #else
-        // TODO: not implemented, use hack value.
-        return (void*)1;
+        return (GN::HandleType)1; // magic value, means invalid screen.
 #endif
     }
     else return uo.monitorHandle;
@@ -56,7 +55,7 @@ sGetCurrentDisplayMode( const GN::gfx::UserOptions & uo, GN::gfx::DisplayMode & 
     GN_GUARD;
 
     // determine the monitor
-    void * monitor = sDetermineMonitorHandle( uo );
+    GN::HandleType monitor = sDetermineMonitorHandle( uo );
     if( 0 == monitor ) return false;
 
 #if GN_MSWIN
@@ -81,10 +80,9 @@ sGetCurrentDisplayMode( const GN::gfx::UserOptions & uo, GN::gfx::DisplayMode & 
 
 #else
 
-    Screen * scr;
     if( (void*)1 == monitor )
     {
-        GN_WARN( "No implementation. Use hard-coded value: 640x480." );
+        GN_WARN( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
         dm.width = 640;
         dm.height = 480;
         dm.depth = 32;
@@ -92,10 +90,10 @@ sGetCurrentDisplayMode( const GN::gfx::UserOptions & uo, GN::gfx::DisplayMode & 
     }
     else
     {
-        scr = (Screen*)monitor;
-        dm.width = scr->width;
-        dm.height = scr->height;
-        dm.depth = scr->root_depth;
+        const Screen * scr = (Screen*)monitor;
+        dm.width = WidthOfScreen( scr );
+        dm.height = HeightOfScreen( scr );
+        dm.depth = DefaultDepthOfScreen( scr );
         dm.refrate = 0;
     }
 
@@ -202,7 +200,9 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
 #if GN_POSIX
     GN_ASSERT( desc.displayHandle );
 #endif
-    GN_ASSERT( desc.windowHandle && desc.monitorHandle );
+    GN_ASSERT_EX(
+        desc.windowHandle && desc.monitorHandle,
+        strFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cstr() );
 
     // success
     setUserOptions( uo );

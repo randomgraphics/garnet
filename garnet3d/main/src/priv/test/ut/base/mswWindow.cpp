@@ -1,14 +1,13 @@
 #include "../testCommon.h"
 #include "garnet/GNwin.h"
 
-#if GN_MSWIN
-
 class WindowTest : public CxxTest::TestSuite
 {
 public:
 
     void testParentAndChild()
     {
+#if GN_MSWIN
         GN::win::MswWindow parent, child;
         GN::win::MswWindow::CreateParam cp;
 
@@ -20,10 +19,12 @@ public:
         TS_ASSERT( child.create( cp ) );
         child.showWindow( true );
         TS_ASSERT( child.getWindow() );
+#endif
     }
 
     void testUserStyle()
     {
+#if GN_MSWIN
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
 
@@ -33,10 +34,12 @@ public:
         win.showWindow( true );
 
         TS_ASSERT( WS_DLGFRAME | ::GetWindowLong( (HWND)win.getWindow(), GWL_STYLE ) );
+#endif
     }
 
     void testClientSize()
     {
+#if GN_MSWIN
         GN::win::MswWindow win;
 
         GN::win::MswWindow::CreateParam cp;
@@ -52,7 +55,7 @@ public:
         win.getClientSize( w, h );
         TS_ASSERT_EQUALS( w, cp.clientWidth );
         TS_ASSERT_EQUALS( h, cp.clientHeight );
+#endif
     }
 };
 
-#endif

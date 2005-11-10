@@ -19,11 +19,10 @@ namespace GN { namespace gfx
         bool mUseExternalWindow;
         Display * mDisplay;
         Window    mWindow;
-        Screen *  mScreen;
         
         //@{
     public:
-        XRenderWindow()  {}
+        XRenderWindow() : mDisplay(0), mWindow(0) {}
         ~XRenderWindow() {}
         //@}
 
@@ -35,12 +34,12 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use external window
         //!
-        bool initExternalRenderWindow( void * display, void * externalWindow );
+        bool initExternalRenderWindow( HandleType display, HandleType externalWindow );
 
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( void * display, void * parentWindow, uint32_t width, uint32_t height );
+        bool initInternalRenderWindow( HandleType display, HandleType parentWindow, uint32_t width, uint32_t height );
 
         //!
         //! Delete render window
@@ -50,17 +49,17 @@ namespace GN { namespace gfx
         //!
         //! Get display handle
         //!
-        void * getDisplay() const { return mDisplay; }
+        HandleType getDisplay() const { return mDisplay; }
 
         //!
         //! Get window handle
         //!
-        void * getWindow() const { return (void*)mWindow; }
+        HandleType getWindow() const { return (void*)mWindow; }
 
         //!
-        //! Get monitor handle
+        //! Get monitor handle (pointer to screen structure).
         //!
-        void * getMonitor() const { return mScreen; }
+        HandleType getMonitor() const;
 
         //!
         //! Get client size
@@ -81,8 +80,13 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        bool initDisplay( void * display );
+        bool initDisplay( HandleType display );
     };
+
+    //!
+    //! Get screen number of a window. Return -1 if failed.
+    //!
+    int getScreenNumberOfWindow( Display * disp, Window win );
 }}
 
 #endif // GN_POSIX

@@ -34,12 +34,12 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use external window
         //!
-        bool initExternalRenderWindow( void * unused, void * externalWindow );
+        bool initExternalRenderWindow( HandleType unused, HandleType externalWindow );
 
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( void * unused, void * parentWindow, uint32_t width, uint32_t height );
+        bool initInternalRenderWindow( HandleType unused, HandleType parentWindow, uint32_t width, uint32_t height );
 
         //!
         //! Delete render window
@@ -49,7 +49,7 @@ namespace GN { namespace gfx
         //!
         //! Get display handle. For compability to X Window class, no use.
         //!
-        void * getDisplay() const { return 0; }
+        HandleType getDisplay() const { return 0; }
 
         //!
         //! Get window handle
