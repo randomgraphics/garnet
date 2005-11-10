@@ -13,7 +13,7 @@ std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::initExternalRenderWindow( void *, void * externalWindow )
+bool GN::gfx::NTRenderWindow::initExternalRenderWindow( HandleType, HandleType externalWindow )
 {
     GN_GUARD;
 
@@ -52,7 +52,7 @@ bool GN::gfx::NTRenderWindow::initExternalRenderWindow( void *, void * externalW
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::NTRenderWindow::initInternalRenderWindow(
-    void *, void * parentWindow, uint32_t width, uint32_t height )
+    HandleType, HandleType parentWindow, uint32_t width, uint32_t height )
 {
     GN_GUARD;
 

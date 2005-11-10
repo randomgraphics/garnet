@@ -156,13 +156,13 @@ namespace GN { namespace gfx
             mRenderContext = 0;
         }
 
-        bool dispDeviceCreate() { mRenderContext = (void*)1; return true; }
-        bool dispDeviceRestore() { return true; }
-        void dispDeviceDispose() {}
-        void dispDeviceDestroy() {}
+        bool dispDeviceCreate();
+        bool dispDeviceRestore();
+        void dispDeviceDispose();
+        void dispDeviceDestroy();
 
     private :
-        void * mRenderContext;
+        GLXContext mRenderContext;
 #endif
 
         //@}

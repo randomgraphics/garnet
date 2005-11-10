@@ -36,7 +36,7 @@ namespace GN { namespace gfx
         //!
         //! \note If zero, then default display will be used.
         //!
-        void * displayHandle;
+        HandleType displayHandle;
 
         //!
         //! Use external render window or not.
@@ -52,7 +52,7 @@ namespace GN { namespace gfx
             //!
             //! \note Effective only if useExternalWindow is true.
             //!
-            void * renderWindow;
+            HandleType renderWindow;
 
             //!
             //! Handle of parent window. Can be NULL.
@@ -66,12 +66,12 @@ namespace GN { namespace gfx
         //!
         //! Monitor handle, effective only if useExternalWindow is false.
         //!
-        //! - Should be HMONITOR on MS Window or (Screen*) on X Windows.
+        //! - Should be HMONITOR on MS Window or pointer to Screen structure on X Windows.
         //! - 0 means using the monitor where parent window stays in. If monitorHandle
-        //!   and parent window are both zero, default(primary) monitor will be chosen.
+        //!   and parent window are both zero, primary monitor will be used.
         //! - 缺省为0.
         //!
-        void * monitorHandle;
+        HandleType monitorHandle;
 
         //!
         //! 是否监视渲染窗口的大小，并自动对渲染设备作相应的调整
@@ -159,9 +159,9 @@ namespace GN { namespace gfx
     //!
     struct DispDesc
     {
-        void * displayHandle;        //!< Display handle. For X Window only.
-        void * windowHandle;         //!< Render window handle
-        void * monitorHandle;        //!< Monitor handle.
+        HandleType displayHandle;    //!< Display handle. For X Window only.
+        HandleType windowHandle;     //!< Render window handle
+        HandleType monitorHandle;    //!< Monitor handle.
         uint32_t width;              //!< Back buffer width
         uint32_t height;             //!< Back buffer height
         uint32_t depth;              //!< Back buffer depth
