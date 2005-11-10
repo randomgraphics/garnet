@@ -52,13 +52,13 @@
 //! Enable slow function guard. Default is false.
 //!
 //! We call function guards used in time-critical functions as slow function
-//! guard, or simplly "slow guard". By default, slow guards is enabled in
-//! debug build and disabled in release build.
+//! guard, or simplly "slow guard", because those guards may incur heavy
+//! performance penalty to application. By default, slow guards is only enabled
+//! in debug build, and disabled in release build.
 //!
-//! To enable slow guards in release build, define this flag.
+//! To enable slow guards in release build, define this flag to non-zero value.
 //!
-//! Note that you can disable slow guard in both debug and release build by
-//! defining GN_DISABLE_GUARD.
+//! Note that this flag has no effection when GN_DISABLE_GUARD is non-zero.
 //!
 #ifndef GN_ENABLE_SLOW_GUARD
 #define GN_ENABLE_SLOW_GUARD 0
