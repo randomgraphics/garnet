@@ -8,15 +8,6 @@
 
 namespace GN { namespace win
 {
-    //!
-    //! General display handle. No use on MS Windows.
-    //!
-    typedef void * DisplayHandle;
-
-    //!
-    //! General window handle
-    //!
-    typedef void * WindowHandle;
 }}
 
 // *****************************************************************************

@@ -11,7 +11,7 @@ namespace GN { namespace win
     //!
     //! Set window title
     //!
-    void setTitle( WindowHandle, const char * );
+    void setTitle( HandleType, const char * );
 
     //!
     //! Get window client size.
@@ -24,9 +24,10 @@ namespace GN { namespace win
     //! \return
     //!     If failed, values in parameter width and height are undefined.
     //!
-    bool getClientSize( DisplayHandle disp, WindowHandle win, uint32_t * width, uint32_t * height );
+    bool getClientSize( HandleType disp, HandleType win, uint32_t * width, uint32_t * height );
 
 #if GN_MSWIN
+
     //!
     //! Process MS Windows messages. This function will NOT return until
     //! message queue is empty. Also note that this function has no effects
@@ -38,7 +39,7 @@ namespace GN { namespace win
     //!
     //! \note For X11 conterpart, see XWindow::processXEvents().
     //!
-    void processMswMessages( WindowHandle, bool blockOnMinimized = true );
+    void processMswMessages( HandleType win, bool blockOnMinimized = true );
 #endif
 
     //!

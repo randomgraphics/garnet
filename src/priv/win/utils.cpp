@@ -6,8 +6,8 @@
 
 #if GN_XENON
 
-void GN::win::setTitle( WindowHandle, const char * ) {}
-void GN::win::processMswMessages( WindowHandle, bool ) {}
+void GN::win::setTitle( HandleType, const char * ) {}
+void GN::win::processMswMessages( HandleType, bool ) {}
 const char * GN::win::msg2str( uint32_t ) { return ""; }
 
 // *****************************************************************************
@@ -19,12 +19,12 @@ const char * GN::win::msg2str( uint32_t ) { return ""; }
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::setTitle( WindowHandle, const char * ) {}
+void GN::win::setTitle( HandleType, const char * ) {}
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::getClientSize( DisplayHandle disp, WindowHandle win, uint32_t * width, uint32_t * height )
+bool GN::win::getClientSize( HandleType disp, HandleType win, uint32_t * width, uint32_t * height )
 {
     GN_GUARD;
 
@@ -54,7 +54,7 @@ const char * GN::win::msg2str( uint32_t ) { return ""; }
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::setTitle( WindowHandle win, const char * title )
+void GN::win::setTitle( HandleType win, const char * title )
 {
     GN_GUARD;
 
@@ -67,7 +67,7 @@ void GN::win::setTitle( WindowHandle win, const char * title )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::win::getClientSize( DisplayHandle, WindowHandle win, uint32_t * width, uint32_t * height )
+bool GN::win::getClientSize( HandleType, HandleType win, uint32_t * width, uint32_t * height )
 {
     GN_GUARD;
 
@@ -86,7 +86,7 @@ bool GN::win::getClientSize( DisplayHandle, WindowHandle win, uint32_t * width, 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::win::processMswMessages( WindowHandle wnd, bool blockOnMinimized )
+void GN::win::processMswMessages( HandleType wnd, bool blockOnMinimized )
 {
     GN_GUARD;
 
