@@ -10,8 +10,7 @@ GN::assertFunc(
     int          line,
     bool *       ignore ) throw()
 {
-#if GN_PC
-#if GN_MSWIN
+#if GN_MSWIN && GN_PC
     char buf[1024];
     strFormat( buf, 1023,
         "%s(%d)\n"
@@ -44,30 +43,6 @@ GN::assertFunc(
         file?file:"",
         line,
         msg?msg:"" );
-    if( *ignore ) *ignore = false;
-    int  ch = 0;
-    for(;;)
-    {
-        ch = ::getc(stdin);
-        if( 'b' == ch || 'B' == ch )
-        {
-            return true;
-        }
-        if( 'c' == ch || 'C' == ch )
-        {
-            return false;
-        }
-        if( 'i' == ch || 'I' == ch )
-        {
-            if( *ignore ) *ignore = true;
-            return false;
-        }
-    }
-#endif
-#else
-    GN_UNUSED_PARAM( msg );
-    GN_UNUSED_PARAM( file );
-    GN_UNUSED_PARAM( line );
     if( *ignore ) *ignore = false;
     return true;
 #endif
