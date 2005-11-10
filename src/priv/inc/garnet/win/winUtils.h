@@ -33,6 +33,8 @@ namespace GN { namespace win
     //! message queue is empty. Also note that this function has no effects
     //! on Xbox and Xenon.
     //!
+    //! \param win
+    //!     Window handle
     //! \param blockOnMinimized
     //!     If set true, and target window is currently minimized, this function
     //!     will block calling thread, till the window is restored.
