@@ -53,7 +53,7 @@ void GN::input::BasicMswInput::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicMswInput::attachToWindow( void * window )
+bool GN::input::BasicMswInput::attachToWindow( HandleType window )
 {
     GN_GUARD;
 

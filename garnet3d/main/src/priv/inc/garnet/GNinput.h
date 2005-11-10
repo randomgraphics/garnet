@@ -185,7 +185,7 @@ namespace GN
             //!
             //! Must call this function before you can retrieve input events from this interface.
             //!
-            virtual bool attachToWindow( void * windowHandle ) = 0;
+            virtual bool attachToWindow( HandleType windowHandle ) = 0;
 
             //!
             //! 获取并处理最新的输入事件
