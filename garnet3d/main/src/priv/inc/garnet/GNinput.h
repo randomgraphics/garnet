@@ -185,7 +185,9 @@ namespace GN
             //!
             //! Must call this function before you can retrieve input events from this interface.
             //!
-            virtual bool attachToWindow( HandleType windowHandle ) = 0;
+            //! \Note parameters displayHandle is only used on X11 platform.
+            //!
+            virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) = 0;
 
             //!
             //! 获取并处理最新的输入事件

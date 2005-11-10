@@ -57,7 +57,7 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        bool attachToWindow( HandleType );
+        bool attachToWindow( HandleType, HandleType );
 
         void getMousePosition( int & x, int & y ) const;
 

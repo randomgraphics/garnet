@@ -57,13 +57,13 @@ void GN::input::DIInput::quit()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::input::DIInput::attachToWindow( void * window )
+bool GN::input::DIInput::attachToWindow( HandleType disp, HandleType window )
 {
     GN_GUARD;
 
     mAttached = false;
 
-    if( !MyParent::attachToWindow(window) ) return false;
+    if( !MyParent::attachToWindow(disp,window) ) return false;
 
     GN_ASSERT( ::IsWindow( (HWND)window ) );
 

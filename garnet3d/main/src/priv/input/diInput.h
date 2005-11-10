@@ -89,7 +89,7 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        bool attachToWindow( void * );
+        bool attachToWindow( HandleType, HandleType );
 
         void processInputEvents();
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "mswInput.h"
 #include "diInput.h"
-//#include "xInput.h"
+#include "x11Input.h"
 
 //
 //
@@ -24,9 +24,9 @@ GN::input::Input * GN::input::createInputSystem( bool useDirectInput )
         return p.detach();
     }
 #else
-    GN_UNUSED_PARAM( useDirectInput );
-    GN_UNIMPL();
-    return 0;
+    AutoObjPtr<X11Input> p( new X11Input );
+    if( !p->init() ) return 0;
+    return p.detach();
 #endif
 
     GN_UNGUARD;
