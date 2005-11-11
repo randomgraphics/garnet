@@ -1,6 +1,6 @@
 Import( 'env' )
 
-dirs = Split('common ogl')
+dirs = Split('lib common ogl')
 if 'win32' == env['PLATFORM']: dirs += ['d3d']
 
 SConscript( dirs=dirs )

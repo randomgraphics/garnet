@@ -92,79 +92,79 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 //
 //
 // -----------------------------------------------------------------------------
-static inline GN::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
+static inline GN::gfx::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
 {
     // determine texture format
     switch( d3dfmt )
     {
-        case D3DFMT_R8G8B8       : return GN::FMT_BGR_8_8_8;
-        case D3DFMT_A8R8G8B8     : return GN::FMT_BGRA_8_8_8_8;
-        case D3DFMT_X8R8G8B8     : return GN::FMT_BGRX_8_8_8_8;
-        case D3DFMT_R5G6B5       : return GN::FMT_BGR_5_6_5;
-        case D3DFMT_X1R5G5B5     : return GN::FMT_BGRX_5_5_5_1;
-        case D3DFMT_A1R5G5B5     : return GN::FMT_BGRA_5_5_5_1;
-        case D3DFMT_A4R4G4B4     : return GN::FMT_BGRA_4_4_4_4;
-        //case D3DFMT_R3G3B2       : return GN::FMT_BGR_2_3_3;
-        case D3DFMT_A8           : return GN::FMT_A_8;
-        //case D3DFMT_A8R3G3B2     : return GN::FMT_BGRA_2_3_3_8;
-        //case D3DFMT_X4R4G4B4     : return GN::FMT_BGRX_4_4_4_4;
-        //case D3DFMT_A2B10G10R10  : return GN::FMT_RGBA_10_10_10_2;
-        case D3DFMT_G16R16       : return GN::FMT_RG_16_16;
-        //case D3DFMT_A8P8         : return GN::FMT_PA_8_8;
-        //case D3DFMT_P8           : return GN::FMT_P_8;
-        case D3DFMT_L8           : return GN::FMT_L_8;
-        case D3DFMT_A8L8         : return GN::FMT_LA_8_8;
-        //case D3DFMT_A4L4         : return GN::FMT_LA_4_4;
-        case D3DFMT_V8U8         : return GN::FMT_UV_8_8;
-        //case D3DFMT_L6V5U5       : return GN::FMT_UVL_5_5_6;
-        //case D3DFMT_X8L8V8U8     : return GN::FMT_UVLX_8_8_8_8;
-        //case D3DFMT_Q8W8V8U8     : return GN::FMT_UVWQ_8_8_8_8;
-        case D3DFMT_V16U16       : return GN::FMT_UV_16_16;
-        //case D3DFMT_W11V11U10    : return GN::FMT_UVW_10_11_11;
-        //case D3DFMT_A2W10V10U10  : return GN::FMT_UVWA_10_10_10_2;
-        //case D3DFMT_UYVY         : return GN::FMT_;
-        //case D3DFMT_YUY2         : return GN::FMT_;
-        case D3DFMT_DXT1         : return GN::FMT_DXT1;
-        case D3DFMT_DXT2         : return GN::FMT_DXT2;
-        case D3DFMT_DXT3         : return GN::FMT_DXT3;
-        case D3DFMT_DXT4         : return GN::FMT_DXT4;
-        case D3DFMT_DXT5         : return GN::FMT_DXT5;
-        case D3DFMT_D16_LOCKABLE : return GN::FMT_D_16;
-        case D3DFMT_D32          : return GN::FMT_D_32;
-        //case D3DFMT_D15S1        : return GN::FMT_DS_15_1;
-        case D3DFMT_D24S8        : return GN::FMT_DS_24_8;
-        case D3DFMT_D16          : return GN::FMT_D_16;
-        case D3DFMT_D24X8        : return GN::FMT_DX_24_8;
-        //case D3DFMT_D24X4S4      : return GN::FMT_DXS_24_4_4;
+        case D3DFMT_R8G8B8       : return GN::gfx::FMT_BGR_8_8_8;
+        case D3DFMT_A8R8G8B8     : return GN::gfx::FMT_BGRA_8_8_8_8;
+        case D3DFMT_X8R8G8B8     : return GN::gfx::FMT_BGRX_8_8_8_8;
+        case D3DFMT_R5G6B5       : return GN::gfx::FMT_BGR_5_6_5;
+        case D3DFMT_X1R5G5B5     : return GN::gfx::FMT_BGRX_5_5_5_1;
+        case D3DFMT_A1R5G5B5     : return GN::gfx::FMT_BGRA_5_5_5_1;
+        case D3DFMT_A4R4G4B4     : return GN::gfx::FMT_BGRA_4_4_4_4;
+        //case D3DFMT_R3G3B2       : return GN::gfx::FMT_BGR_2_3_3;
+        case D3DFMT_A8           : return GN::gfx::FMT_A_8;
+        //case D3DFMT_A8R3G3B2     : return GN::gfx::FMT_BGRA_2_3_3_8;
+        //case D3DFMT_X4R4G4B4     : return GN::gfx::FMT_BGRX_4_4_4_4;
+        //case D3DFMT_A2B10G10R10  : return GN::gfx::FMT_RGBA_10_10_10_2;
+        case D3DFMT_G16R16       : return GN::gfx::FMT_RG_16_16;
+        //case D3DFMT_A8P8         : return GN::gfx::FMT_PA_8_8;
+        //case D3DFMT_P8           : return GN::gfx::FMT_P_8;
+        case D3DFMT_L8           : return GN::gfx::FMT_L_8;
+        case D3DFMT_A8L8         : return GN::gfx::FMT_LA_8_8;
+        //case D3DFMT_A4L4         : return GN::gfx::FMT_LA_4_4;
+        case D3DFMT_V8U8         : return GN::gfx::FMT_UV_8_8;
+        //case D3DFMT_L6V5U5       : return GN::gfx::FMT_UVL_5_5_6;
+        //case D3DFMT_X8L8V8U8     : return GN::gfx::FMT_UVLX_8_8_8_8;
+        //case D3DFMT_Q8W8V8U8     : return GN::gfx::FMT_UVWQ_8_8_8_8;
+        case D3DFMT_V16U16       : return GN::gfx::FMT_UV_16_16;
+        //case D3DFMT_W11V11U10    : return GN::gfx::FMT_UVW_10_11_11;
+        //case D3DFMT_A2W10V10U10  : return GN::gfx::FMT_UVWA_10_10_10_2;
+        //case D3DFMT_UYVY         : return GN::gfx::FMT_;
+        //case D3DFMT_YUY2         : return GN::gfx::FMT_;
+        case D3DFMT_DXT1         : return GN::gfx::FMT_DXT1;
+        case D3DFMT_DXT2         : return GN::gfx::FMT_DXT2;
+        case D3DFMT_DXT3         : return GN::gfx::FMT_DXT3;
+        case D3DFMT_DXT4         : return GN::gfx::FMT_DXT4;
+        case D3DFMT_DXT5         : return GN::gfx::FMT_DXT5;
+        case D3DFMT_D16_LOCKABLE : return GN::gfx::FMT_D_16;
+        case D3DFMT_D32          : return GN::gfx::FMT_D_32;
+        //case D3DFMT_D15S1        : return GN::gfx::FMT_DS_15_1;
+        case D3DFMT_D24S8        : return GN::gfx::FMT_DS_24_8;
+        case D3DFMT_D16          : return GN::gfx::FMT_D_16;
+        case D3DFMT_D24X8        : return GN::gfx::FMT_DX_24_8;
+        //case D3DFMT_D24X4S4      : return GN::gfx::FMT_DXS_24_4_4;
         default                  :
             // invalid format, failed
             GNGFX_ERROR( "Unsupported or invalid D3DFORMAT: '%s'!", GN::d3d::D3DFORMAT2Str(d3dfmt) );
-            return GN::FMT_INVALID;
+            return GN::gfx::FMT_INVALID;
     }
 }
 
-static inline D3DFORMAT sClrFmt2D3DFMT( GN::ClrFmt clrfmt )
+static inline D3DFORMAT sClrFmt2D3DFMT( GN::gfx::ClrFmt clrfmt )
 {
     // determine texture format
     switch( clrfmt )
     {
-        case GN::FMT_BGRA_8_8_8_8  : return D3DFMT_A8R8G8B8;
-        case GN::FMT_BGR_8_8_8     : return D3DFMT_R8G8B8;
-        case GN::FMT_BGRA_5_5_5_1  : return D3DFMT_A1R5G5B5;
-        case GN::FMT_BGR_5_6_5     : return D3DFMT_R5G6B5;
-        case GN::FMT_LA_8_8        : return D3DFMT_A8L8;
-        case GN::FMT_UV_8_8        : return D3DFMT_V8U8;
-        case GN::FMT_L_8           : return D3DFMT_L8;
-        case GN::FMT_A_8           : return D3DFMT_A8;
-        case GN::FMT_D_16          : return D3DFMT_D16;
-        case GN::FMT_DX_24_8       : return D3DFMT_D24X8;
-        case GN::FMT_DS_24_8       : return D3DFMT_D24S8;
-        case GN::FMT_D_32          : return D3DFMT_D32;
-        case GN::FMT_DXT1          : return D3DFMT_DXT1;
-        case GN::FMT_DXT2          : return D3DFMT_DXT2;
+        case GN::gfx::FMT_BGRA_8_8_8_8  : return D3DFMT_A8R8G8B8;
+        case GN::gfx::FMT_BGR_8_8_8     : return D3DFMT_R8G8B8;
+        case GN::gfx::FMT_BGRA_5_5_5_1  : return D3DFMT_A1R5G5B5;
+        case GN::gfx::FMT_BGR_5_6_5     : return D3DFMT_R5G6B5;
+        case GN::gfx::FMT_LA_8_8        : return D3DFMT_A8L8;
+        case GN::gfx::FMT_UV_8_8        : return D3DFMT_V8U8;
+        case GN::gfx::FMT_L_8           : return D3DFMT_L8;
+        case GN::gfx::FMT_A_8           : return D3DFMT_A8;
+        case GN::gfx::FMT_D_16          : return D3DFMT_D16;
+        case GN::gfx::FMT_DX_24_8       : return D3DFMT_D24X8;
+        case GN::gfx::FMT_DS_24_8       : return D3DFMT_D24S8;
+        case GN::gfx::FMT_D_32          : return D3DFMT_D32;
+        case GN::gfx::FMT_DXT1          : return D3DFMT_DXT1;
+        case GN::gfx::FMT_DXT2          : return D3DFMT_DXT2;
         default                       :
             // invalid format, failed
-            GNGFX_ERROR( "Unsupported or invalid color format: '%s'!", GN::getClrFmtDesc(clrfmt).name );
+            GNGFX_ERROR( "Unsupported or invalid color format: '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
             return D3DFMT_UNKNOWN;
     }
 }
@@ -237,7 +237,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
 
     // set initialize parameters
     mInitFormat = sD3DFMT2ClrFmt( info.Format );
-    if( (TexType)-1 == mInitType || GN::FMT_INVALID == mInitFormat )
+    if( (TexType)-1 == mInitType || FMT_INVALID == mInitFormat )
     { quit(); return selfOK(); }
     mInitSize[0] = info.Width;
     mInitSize[1] = info.Height;
@@ -317,14 +317,14 @@ bool GN::gfx::D3DTexture::deviceRestore()
     GN_GUARD;
 
     // determine default format
-    GN::ClrFmt format;
-    if( GN::FMT_DEFAULT == mInitFormat )
+    ClrFmt format;
+    if( FMT_DEFAULT == mInitFormat )
     {
         if( USAGE_DEPTH & mInitUsage )
         {
             format = sD3DFMT2ClrFmt(
                 mRenderer.getPresentParameters().AutoDepthStencilFormat );
-            if( GN::FMT_INVALID == format )
+            if( FMT_INVALID == format )
             {
                 GNGFX_ERROR( "unsupport depth-stencil format!" );
                 quit(); return selfOK();
@@ -332,7 +332,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
         }
         else
         {
-            format = GN::FMT_BGRA_8_8_8_8; // this is default format
+            format = FMT_BGRA_8_8_8_8; // this is default format
         }
     }
     else

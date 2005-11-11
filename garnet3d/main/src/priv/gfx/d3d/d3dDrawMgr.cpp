@@ -2,7 +2,7 @@
 #include "d3dRenderer.h"
 
 // static primitive map
-static D3DPRIMITIVETYPE sPrimMap[ GN::NUM_PRIMITIVES ] =
+static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
 {
     D3DPT_POINTLIST,
     D3DPT_LINELIST,
@@ -262,7 +262,7 @@ void GN::gfx::D3DRenderer::drawIndexed(
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // draw indexed primitives
-    GN_ASSERT( prim < GN::NUM_PRIMITIVES );
+    GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX_CHECK(
         mDevice->DrawIndexedPrimitive(
             sPrimMap[prim], // primitive type
@@ -295,7 +295,7 @@ void GN::gfx::D3DRenderer::draw(
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // draw indexed primitives
-    GN_ASSERT( prim < GN::NUM_PRIMITIVES );
+    GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX_CHECK(
         mDevice->DrawPrimitive(
             sPrimMap[prim],  // primitive type

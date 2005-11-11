@@ -296,7 +296,7 @@ namespace GN { namespace gfx
             D3DTEXTUREADDRESS s, q, r, t;
         };
 
-        TexParameters mTexParameters[GN::RenderStateBlockDesc::MAX_STAGES];
+        TexParameters mTexParameters[RenderStateBlockDesc::MAX_STAGES];
 
     private:
 

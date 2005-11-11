@@ -19,6 +19,14 @@ namespace GN
     }
 }
 
+//
+// public header of static graphics library
+//
+#include "gfx/gfxLib.h"
+
+//
+// Headers below are all for graphics renderer
+//
 #include "gfx/gfxTypes.h"
 #include "gfx/gfxShader.h"
 #include "gfx/gfxTexture.h"

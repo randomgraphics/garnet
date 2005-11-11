@@ -6,187 +6,187 @@ class Tag2StrTest : public CxxTest::TestSuite
 public:
     void testVertexSemantic()
     {
-        GN::VtxSem tag[] = {
-            #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) GN::VTXSEM_##tag,
-            #include "garnet/base/vertexSemanticMeta.h"
-            #undef GN_VTXSEM
+        GN::gfx::VtxSem tag[] = {
+            #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) GN::gfx::VTXSEM_##tag,
+            #include "garnet/gfx/vertexSemanticMeta.h"
+            #undef GNGFX_DEFINE_VTXSEM
         };
         const char * str[] = {
-            #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
-            #include "garnet/base/vertexSemanticMeta.h"
-            #undef GN_VTXSEM
+            #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
+            #include "garnet/gfx/vertexSemanticMeta.h"
+            #undef GNGFX_DEFINE_VTXSEM
         };
 
         GN::StrA s;
-        GN::VtxSem t = GN::VTXSEM_INVALID;
+        GN::gfx::VtxSem t = GN::gfx::VTXSEM_INVALID;
 
-        for( int i = 0; i < GN::NUM_VTXSEMS; ++i )
+        for( int i = 0; i < GN::gfx::NUM_VTXSEMS; ++i )
         {
-            TS_ASSERT( GN::vtxSem2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::vtxSem2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::vtxSem2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::vtxSem2Str(tag[i]) );
 
-            TS_ASSERT( GN::str2VtxSem( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2VtxSem( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
 
-            TS_ASSERT_EQUALS( tag[i], GN::str2VtxSem( str[i] ) );
+            TS_ASSERT_EQUALS( tag[i], GN::gfx::str2VtxSem( str[i] ) );
         }
 
-        TS_ASSERT( !GN::vtxSem2Str(s,GN::NUM_VTXSEMS) );
-        TS_ASSERT_EQUALS( "BAD_VTXSEM", GN::vtxSem2Str(GN::NUM_VTXSEMS) );
-        TS_ASSERT( !GN::str2VtxSem( t, "haha" ) );
-        TS_ASSERT( !GN::str2VtxSem( t, NULL ) );
-        TS_ASSERT_EQUALS( GN::VTXSEM_INVALID, GN::str2VtxSem( "haha" ) );
-        TS_ASSERT_EQUALS( GN::VTXSEM_INVALID, GN::str2VtxSem( NULL ) );
+        TS_ASSERT( !GN::gfx::vtxSem2Str(s,GN::gfx::NUM_VTXSEMS) );
+        TS_ASSERT_EQUALS( "BAD_VTXSEM", GN::gfx::vtxSem2Str(GN::gfx::NUM_VTXSEMS) );
+        TS_ASSERT( !GN::gfx::str2VtxSem( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2VtxSem( t, NULL ) );
+        TS_ASSERT_EQUALS( GN::gfx::VTXSEM_INVALID, GN::gfx::str2VtxSem( "haha" ) );
+        TS_ASSERT_EQUALS( GN::gfx::VTXSEM_INVALID, GN::gfx::str2VtxSem( NULL ) );
     }
 
     void testRenderState()
     {
-        GN::RenderState tag[] = {
-            #define GN_DEFINE_RS( tag, defval ) GN::RS_##tag,
-            #include "garnet/base/renderStateMeta.h"
-            #undef GN_DEFINE_RS
+        GN::gfx::RenderState tag[] = {
+            #define GNGFX_DEFINE_RS( tag, defval ) GN::gfx::RS_##tag,
+            #include "garnet/gfx/renderStateMeta.h"
+            #undef GNGFX_DEFINE_RS
         };
         const char * str[] = {
-            #define GN_DEFINE_RS( tag, defval ) #tag,
-            #include "garnet/base/renderStateMeta.h"
-            #undef GN_DEFINE_RS
+            #define GNGFX_DEFINE_RS( tag, defval ) #tag,
+            #include "garnet/gfx/renderStateMeta.h"
+            #undef GNGFX_DEFINE_RS
         };
 
         GN::StrA s;
-        GN::RenderState t = GN::RS_INVALID;
+        GN::gfx::RenderState t = GN::gfx::RS_INVALID;
 
-        for( int i = 0; i < GN::NUM_RENDER_STATES; ++i )
+        for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
         {
-            TS_ASSERT( GN::renderState2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::renderState2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::renderState2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::renderState2Str(tag[i]) );
 
-            TS_ASSERT( GN::str2RenderState( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2RenderState( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
 
-            TS_ASSERT_EQUALS( tag[i], GN::str2RenderState( str[i] ) );
+            TS_ASSERT_EQUALS( tag[i], GN::gfx::str2RenderState( str[i] ) );
         }
 
-        TS_ASSERT( !GN::renderState2Str(s,GN::NUM_RENDER_STATES) );
-        TS_ASSERT_EQUALS( "BAD_RS", GN::renderState2Str(GN::NUM_RENDER_STATES) );
-        TS_ASSERT( !GN::str2RenderState( t, "haha" ) );
-        TS_ASSERT( !GN::str2RenderState( t, NULL ) );
-        TS_ASSERT_EQUALS( GN::RS_INVALID, GN::str2RenderState( "haha" ) );
-        TS_ASSERT_EQUALS( GN::RS_INVALID, GN::str2RenderState( NULL ) );
+        TS_ASSERT( !GN::gfx::renderState2Str(s,GN::gfx::NUM_RENDER_STATES) );
+        TS_ASSERT_EQUALS( "BAD_RS", GN::gfx::renderState2Str(GN::gfx::NUM_RENDER_STATES) );
+        TS_ASSERT( !GN::gfx::str2RenderState( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2RenderState( t, NULL ) );
+        TS_ASSERT_EQUALS( GN::gfx::RS_INVALID, GN::gfx::str2RenderState( "haha" ) );
+        TS_ASSERT_EQUALS( GN::gfx::RS_INVALID, GN::gfx::str2RenderState( NULL ) );
     }
 
     void testRenderStateValue()
     {
-        GN::RenderStateValue tag[] = {
-            #define GN_DEFINE_RSV( tag, d3dval, oglval ) GN::RSV_##tag,
-            #include "garnet/base/renderStateValueMeta.h"
-            #undef GN_DEFINE_RSV
+        GN::gfx::RenderStateValue tag[] = {
+            #define GNGFX_DEFINE_RSV( tag, d3dval, oglval ) GN::gfx::RSV_##tag,
+            #include "garnet/gfx/renderStateValueMeta.h"
+            #undef GNGFX_DEFINE_RSV
         };
         const char * str[] = {
-            #define GN_DEFINE_RSV( tag, d3dval, oglval ) #tag,
-            #include "garnet/base/renderStateValueMeta.h"
-            #undef GN_DEFINE_RSV
+            #define GNGFX_DEFINE_RSV( tag, d3dval, oglval ) #tag,
+            #include "garnet/gfx/renderStateValueMeta.h"
+            #undef GNGFX_DEFINE_RSV
         };
 
         GN::StrA s;
-        GN::RenderStateValue t = GN::RSV_INVALID;
+        GN::gfx::RenderStateValue t = GN::gfx::RSV_INVALID;
 
-        for( int i = 0; i < GN::NUM_RENDER_STATE_VALUES; ++i )
+        for( int i = 0; i < GN::gfx::NUM_RENDER_STATE_VALUES; ++i )
         {
-            TS_ASSERT( GN::renderStateValue2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::renderStateValue2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::renderStateValue2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::renderStateValue2Str(tag[i]) );
 
-            TS_ASSERT( GN::str2RenderStateValue( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2RenderStateValue( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
 
-            TS_ASSERT_EQUALS( tag[i], GN::str2RenderStateValue( str[i] ) );
+            TS_ASSERT_EQUALS( tag[i], GN::gfx::str2RenderStateValue( str[i] ) );
         }
 
-        TS_ASSERT( !GN::renderStateValue2Str(s,GN::NUM_RENDER_STATE_VALUES) );
-        TS_ASSERT_EQUALS( "BAD_RSV", GN::renderStateValue2Str(GN::NUM_RENDER_STATE_VALUES) );
-        TS_ASSERT( !GN::str2RenderStateValue( t, "haha" ) );
-        TS_ASSERT( !GN::str2RenderStateValue( t, NULL ) );
-        TS_ASSERT_EQUALS( GN::RSV_INVALID, GN::str2RenderStateValue( "haha" ) );
-        TS_ASSERT_EQUALS( GN::RSV_INVALID, GN::str2RenderStateValue( NULL ) );
+        TS_ASSERT( !GN::gfx::renderStateValue2Str(s,GN::gfx::NUM_RENDER_STATE_VALUES) );
+        TS_ASSERT_EQUALS( "BAD_RSV", GN::gfx::renderStateValue2Str(GN::gfx::NUM_RENDER_STATE_VALUES) );
+        TS_ASSERT( !GN::gfx::str2RenderStateValue( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2RenderStateValue( t, NULL ) );
+        TS_ASSERT_EQUALS( GN::gfx::RSV_INVALID, GN::gfx::str2RenderStateValue( "haha" ) );
+        TS_ASSERT_EQUALS( GN::gfx::RSV_INVALID, GN::gfx::str2RenderStateValue( NULL ) );
     }
 
     void testTextureState()
     {
-        GN::TextureState tag[] = {
-            #define GN_DEFINE_TS( tag, def0, def1, d3d, ogl1, ogl2 ) GN::TS_##tag,
-            #include "garnet/base/textureStateMeta.h"
-            #undef GN_DEFINE_TS
+        GN::gfx::TextureState tag[] = {
+            #define GNGFX_DEFINE_TS( tag, def0, def1, d3d, ogl1, ogl2 ) GN::gfx::TS_##tag,
+            #include "garnet/gfx/textureStateMeta.h"
+            #undef GNGFX_DEFINE_TS
         };
         const char * str[] = {
-            #define GN_DEFINE_TS( tag, def0, def1, d3d, ogl1, ogl2 ) #tag,
-            #include "garnet/base/textureStateMeta.h"
-            #undef GN_DEFINE_TS
+            #define GNGFX_DEFINE_TS( tag, def0, def1, d3d, ogl1, ogl2 ) #tag,
+            #include "garnet/gfx/textureStateMeta.h"
+            #undef GNGFX_DEFINE_TS
         };
 
         GN::StrA s;
-        GN::TextureState t = GN::TS_INVALID;
+        GN::gfx::TextureState t = GN::gfx::TS_INVALID;
 
-        for( int i = 0; i < GN::NUM_TEXTURE_STATES; ++i )
+        for( int i = 0; i < GN::gfx::NUM_TEXTURE_STATES; ++i )
         {
-            TS_ASSERT( GN::textureState2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::textureState2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::textureState2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::textureState2Str(tag[i]) );
 
-            TS_ASSERT( GN::str2TextureState( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2TextureState( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
 
-            TS_ASSERT_EQUALS( tag[i], GN::str2TextureState( str[i] ) );
+            TS_ASSERT_EQUALS( tag[i], GN::gfx::str2TextureState( str[i] ) );
         }
 
-        TS_ASSERT( !GN::textureState2Str(s,GN::NUM_TEXTURE_STATES) );
-        TS_ASSERT_EQUALS( "BAD_TS", GN::textureState2Str(GN::NUM_TEXTURE_STATES) );
-        TS_ASSERT( !GN::str2TextureState( t, "haha" ) );
-        TS_ASSERT( !GN::str2TextureState( t, NULL ) );
-        TS_ASSERT_EQUALS( GN::TS_INVALID, GN::str2TextureState( "haha" ) );
-        TS_ASSERT_EQUALS( GN::TS_INVALID, GN::str2TextureState( NULL ) );
+        TS_ASSERT( !GN::gfx::textureState2Str(s,GN::gfx::NUM_TEXTURE_STATES) );
+        TS_ASSERT_EQUALS( "BAD_TS", GN::gfx::textureState2Str(GN::gfx::NUM_TEXTURE_STATES) );
+        TS_ASSERT( !GN::gfx::str2TextureState( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2TextureState( t, NULL ) );
+        TS_ASSERT_EQUALS( GN::gfx::TS_INVALID, GN::gfx::str2TextureState( "haha" ) );
+        TS_ASSERT_EQUALS( GN::gfx::TS_INVALID, GN::gfx::str2TextureState( NULL ) );
     }
 
     void testTextureStateValue()
     {
-        GN::TextureStateValue tag[] = {
-            #define GN_DEFINE_TSV( tag, d3d, ogl1, ogl2 ) GN::TSV_##tag,
-            #include "garnet/base/textureStateValueMeta.h"
-            #undef GN_DEFINE_TSV
+        GN::gfx::TextureStateValue tag[] = {
+            #define GNGFX_DEFINE_TSV( tag, d3d, ogl1, ogl2 ) GN::gfx::TSV_##tag,
+            #include "garnet/gfx/textureStateValueMeta.h"
+            #undef GNGFX_DEFINE_TSV
         };
         const char * str[] = {
-            #define GN_DEFINE_TSV( tag, d3d, ogl1, ogl2 ) #tag,
-            #include "garnet/base/textureStateValueMeta.h"
-            #undef GN_DEFINE_TSV
+            #define GNGFX_DEFINE_TSV( tag, d3d, ogl1, ogl2 ) #tag,
+            #include "garnet/gfx/textureStateValueMeta.h"
+            #undef GNGFX_DEFINE_TSV
         };
 
         GN::StrA s;
-        GN::TextureStateValue t = GN::TSV_INVALID;
+        GN::gfx::TextureStateValue t = GN::gfx::TSV_INVALID;
 
-        for( int i = 0; i < GN::NUM_TEXTURE_STATE_VALUES; ++i )
+        for( int i = 0; i < GN::gfx::NUM_TEXTURE_STATE_VALUES; ++i )
         {
-            TS_ASSERT( GN::textureStateValue2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::textureStateValue2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::textureStateValue2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::textureStateValue2Str(tag[i]) );
 
-            TS_ASSERT( GN::str2TextureStateValue( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2TextureStateValue( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
 
-            TS_ASSERT_EQUALS( tag[i], GN::str2TextureStateValue( str[i] ) );
+            TS_ASSERT_EQUALS( tag[i], GN::gfx::str2TextureStateValue( str[i] ) );
         }
 
-        TS_ASSERT( !GN::textureStateValue2Str(s,GN::NUM_TEXTURE_STATE_VALUES) );
-        TS_ASSERT_EQUALS( "BAD_TSV", GN::textureStateValue2Str(GN::NUM_TEXTURE_STATE_VALUES) );
-        TS_ASSERT( !GN::str2TextureStateValue( t, "haha" ) );
-        TS_ASSERT( !GN::str2TextureStateValue( t, NULL ) );
-        TS_ASSERT_EQUALS( GN::TSV_INVALID, GN::str2TextureStateValue( "haha" ) );
-        TS_ASSERT_EQUALS( GN::TSV_INVALID, GN::str2TextureStateValue( NULL ) );
+        TS_ASSERT( !GN::gfx::textureStateValue2Str(s,GN::gfx::NUM_TEXTURE_STATE_VALUES) );
+        TS_ASSERT_EQUALS( "BAD_TSV", GN::gfx::textureStateValue2Str(GN::gfx::NUM_TEXTURE_STATE_VALUES) );
+        TS_ASSERT( !GN::gfx::str2TextureStateValue( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2TextureStateValue( t, NULL ) );
+        TS_ASSERT_EQUALS( GN::gfx::TSV_INVALID, GN::gfx::str2TextureStateValue( "haha" ) );
+        TS_ASSERT_EQUALS( GN::gfx::TSV_INVALID, GN::gfx::str2TextureStateValue( NULL ) );
     }
 
     void testShaderType()

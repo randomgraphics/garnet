@@ -1,5 +1,5 @@
-#ifndef __GN_BASE_IMAGE_JPG_H__
-#define __GN_BASE_IMAGE_JPG_H__
+#ifndef __GN_GFX_IMAGE_JPG_H__
+#define __GN_GFX_IMAGE_JPG_H__
 // *****************************************************************************
 //! \file    image_jpg.h
 //! \brief   Jpeg image reader
@@ -137,7 +137,7 @@ public:
     //! read JPEG header
     //!
     bool readHeader(
-        GN::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
   
     //!
     //! read JPEG image
@@ -147,4 +147,4 @@ public:
 // *****************************************************************************
 //                           End of image_jpg.h
 // *****************************************************************************
-#endif // __GN_BASE_IMAGE_JPG_H__
+#endif // __GN_GFX_IMAGE_JPG_H__
