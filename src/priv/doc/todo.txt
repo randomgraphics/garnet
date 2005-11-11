@@ -32,17 +32,16 @@ TODO
 
 - p1
   - continue implementing GFX module
-  - XWindow class UT
-  - implement GNogl on POSIX platform
-  - implement input module on POSIX platform
 - p2
   - Rewrite SCons script
+  - runtime switchable GN_TRACE( level, msg, .... )
+- p3
+  - XWindow class UT
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
     - change window size
     - ...
-  - GN_TRACE( level, msg, .... )
   - runtime call-stack dump
   - hash map/table
   - implement POSIX version of GN::path:glob()
@@ -50,6 +49,11 @@ TODO
 
 DONE
 ====
+
+- POSIX implementation
+  - implement input module on POSIX platform
+  - implement GNogl on POSIX platform
+
 - UT for getEnv() and setEnv().
 - convert input module to static library
 - Fix link problem of GFX module in static build.
