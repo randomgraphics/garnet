@@ -1,5 +1,5 @@
-#ifndef __GN_BASE_IMAGE_DDS_H__
-#define __GN_BASE_IMAGE_DDS_H__
+#ifndef __GN_GFX_IMAGE_DDS_H__
+#define __GN_GFX_IMAGE_DDS_H__
 // *****************************************************************************
 //! \file    image_dds.h
 //! \brief   DDS image reader
@@ -49,8 +49,8 @@ struct DDSFileHeader
 //!
 class DDSReader
 {
-    DDSFileHeader   mHeader;
-    GN::ImageDesc   mImgDesc;
+    DDSFileHeader      mHeader;
+    GN::gfx::ImageDesc mImgDesc;
 
     const uint8_t * mSrc;
     size_t          mSize;
@@ -75,7 +75,7 @@ public:
     //! Read DDS header
     //!
     bool readHeader(
-        GN::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
+        GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
 
     //!
     //! Read DDS image
@@ -86,4 +86,4 @@ public:
 // *****************************************************************************
 //                           End of image_dds.h
 // *****************************************************************************
-#endif // __GN_BASE_IMAGE_DDS_H__
+#endif // __GN_GFX_IMAGE_DDS_H__

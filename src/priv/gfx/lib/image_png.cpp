@@ -9,7 +9,7 @@
 // local functions
 // *****************************************************************************
 
-static GN::ClrFmt
+static GN::gfx::ClrFmt
 s_get_png_clrfmt( png_struct * png, const png_info * info )
 {
     // switch to little endian
@@ -23,8 +23,8 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
                 case 1  :
                 case 2  :
                 case 4  : png_set_gray_1_2_4_to_8( png );
-                case 8  : return GN::FMT_L_8;
-                case 16 : return GN::FMT_L_16;
+                case 8  : return GN::gfx::FMT_L_8;
+                case 16 : return GN::gfx::FMT_L_16;
                 default :
                     GN_ERROR( "unsupport color depth %d", info->bit_depth );
             }
@@ -33,9 +33,9 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             switch( info->bit_depth )
             {
-                case 4  : return GN::FMT_LA_4_4;
-                case 8  : return GN::FMT_LA_8_8;
-                case 16 : return GN::FMT_LA_16_16;
+                case 4  : return GN::gfx::FMT_LA_4_4;
+                case 8  : return GN::gfx::FMT_LA_8_8;
+                case 16 : return GN::gfx::FMT_LA_16_16;
                 default :
                     GN_ERROR( "unsupport color depth %d", info->bit_depth );
             }
@@ -47,8 +47,8 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             switch( info->bit_depth )
             {
                 case 8  : png_set_bgr( png );
-                          return GN::FMT_BGRA_8_8_8_8;
-                case 16 : return GN::FMT_RGBA_16_16_16_16;
+                          return GN::gfx::FMT_BGRA_8_8_8_8;
+                case 16 : return GN::gfx::FMT_RGBA_16_16_16_16;
                 default :
                     GN_ERROR( "unsupport color depth %d", info->bit_depth );
             }
@@ -58,13 +58,13 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             png_set_palette_to_rgb( png );
             png_set_add_alpha( png, 0xFFFF, PNG_FILLER_AFTER );
             png_set_bgr( png );
-            return GN::FMT_BGRA_8_8_8_8;
+            return GN::gfx::FMT_BGRA_8_8_8_8;
 
         default:
             GN_ERROR( "unknown PNG format %d", info->color_type );
             break;
     }
-    return GN::FMT_UNKNOWN;
+    return GN::gfx::FMT_UNKNOWN;
 }
 
 // *****************************************************************************
@@ -75,7 +75,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
 //
 // -----------------------------------------------------------------------------
 bool PngReader::readHeader(
-    GN::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
 {
     GN_GUARD;
 
@@ -108,12 +108,12 @@ bool PngReader::readHeader(
 
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
-    if ( GN::FMT_UNKNOWN == o_desc.format ) return false;
-    uint32_t bpp = GN::getClrFmtDesc(o_desc.format).bits;
+    if ( GN::gfx::FMT_UNKNOWN == o_desc.format ) return false;
+    uint32_t bpp = GN::gfx::getClrFmtDesc(o_desc.format).bits;
 
     // update o_desc
-    GN::ImageDesc::MipDesc & m = o_desc.mips[0];
-    o_desc.type     = GN::ImageDesc::IMG_2D;
+    GN::gfx::ImageDesc::MipDesc & m = o_desc.mips[0];
+    o_desc.type     = GN::gfx::ImageDesc::IMG_2D;
     o_desc.numMips  = 1;
     m.width         = (uint16_t)mInfo->width;
     m.height        = (uint16_t)mInfo->height;

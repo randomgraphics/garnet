@@ -4,20 +4,20 @@
 //
 // -----------------------------------------------------------------------------
 GN_INLINE const char *
-GN::vtxSem2Str( VtxSem vsem )
+GN::gfx::vtxSem2Str( VtxSem vsem )
 {
     static const char * table[] =
     {
-    #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
+    #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
     #include "vertexSemanticMeta.h"
-    #undef GN_VTXSEM
+    #undef GNGFX_DEFINE_VTXSEM
     };
     if( 0 <= vsem && vsem < NUM_VTXSEMS ) return table[vsem];
     else return "BAD_VTXSEM";
 }
 //
 GN_INLINE bool
-GN::vtxSem2Str( StrA & result, VtxSem vsem )
+GN::gfx::vtxSem2Str( StrA & result, VtxSem vsem )
 {
     result = vtxSem2Str( vsem );
     return "BAD_VTXSEM" != result;
@@ -26,14 +26,14 @@ GN::vtxSem2Str( StrA & result, VtxSem vsem )
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::VtxSem
-GN::str2VtxSem( const char * str )
+GN_INLINE GN::gfx::VtxSem
+GN::gfx::str2VtxSem( const char * str )
 {
     static const char * table[] =
     {
-    #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
+    #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
     #include "vertexSemanticMeta.h"
-    #undef GN_VTXSEM
+    #undef GNGFX_DEFINE_VTXSEM
     };
     if ( str )
     {
@@ -47,7 +47,7 @@ GN::str2VtxSem( const char * str )
 }
 //
 GN_INLINE bool
-GN::str2VtxSem( VtxSem & result, const char * str )
+GN::gfx::str2VtxSem( VtxSem & result, const char * str )
 {
     result = str2VtxSem( str );
     return VTXSEM_INVALID != result;
@@ -60,7 +60,7 @@ GN::str2VtxSem( VtxSem & result, const char * str )
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::VtxFmtDesc::reset()
+GN_INLINE void GN::gfx::VtxFmtDesc::reset()
 {
     for( int i = 0; i < NUM_VTXSEMS; ++i )
     {
@@ -74,7 +74,7 @@ GN_INLINE void GN::VtxFmtDesc::reset()
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE bool GN::VtxFmtDesc::addAttrib(
+GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
     uint8_t         stream,
     uint8_t         offset,
     VtxSem  semantic,
@@ -140,7 +140,7 @@ GN_INLINE bool GN::VtxFmtDesc::addAttrib(
 //
 // -----------------------------------------------------------------------------
 GN_INLINE bool
-GN::VtxFmtDesc::operator == ( const VtxFmtDesc & rhs ) const
+GN::gfx::VtxFmtDesc::operator == ( const VtxFmtDesc & rhs ) const
 {
     // check streams
     if( numStreams != rhs.numStreams ) return false;

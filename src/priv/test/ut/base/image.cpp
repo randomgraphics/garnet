@@ -1,4 +1,5 @@
 #include "../testCommon.h"
+#include "garnet/GNgfx.h"
 #include <png.h>
 
 static uint8_t              gBuf[10000];
@@ -12,8 +13,8 @@ public:
         png_byte png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
         ::memcpy( gBuf, png_signature, 8 );
 
-        GN::ImageDesc id;
-        GN::ImageReader ir;
+        GN::gfx::ImageDesc id;
+        GN::gfx::ImageReader ir;
 
         TS_ASSERT( !ir.readHeader( id ) );
         TS_ASSERT( !ir.readImage( gBuf ) );
@@ -30,8 +31,8 @@ public:
         gBuf[8] = 'I';
         gBuf[9] = 'F';
 
-        GN::ImageDesc id;
-        GN::ImageReader ir;
+        GN::gfx::ImageDesc id;
+        GN::gfx::ImageReader ir;
 
         gFile.seek( 0, GN::FSEEK_SET );
 

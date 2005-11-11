@@ -11,7 +11,7 @@ uint8_t JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 //
 // -----------------------------------------------------------------------------
 bool JpegReader::readHeader(
-    GN::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
 {
     GN_GUARD;
 
@@ -35,8 +35,8 @@ bool JpegReader::readHeader(
 
     // read jpeg header
     jpeg_read_header( &mCInfo, JPEG_TRUE );
-    if( mCInfo.image_width > GN::ImageDesc::MAX_IMGSIZE ||
-        mCInfo.image_height > GN::ImageDesc::MAX_IMGSIZE )
+    if( mCInfo.image_width > GN::gfx::ImageDesc::MAX_IMGSIZE ||
+        mCInfo.image_height > GN::gfx::ImageDesc::MAX_IMGSIZE )
     {
         GN_ERROR( "image size is too large!" );
         return false;
@@ -47,18 +47,18 @@ bool JpegReader::readHeader(
     if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
     {
         // force RGB output, if not gray-scale image
-        o_desc.format = GN::FMT_RGB_8_8_8;
+        o_desc.format = GN::gfx::FMT_RGB_8_8_8;
         bpp = 3;
     }
     else
     {
-        o_desc.format = GN::FMT_L_8;
+        o_desc.format = GN::gfx::FMT_L_8;
         bpp = 1;
     }
 
     // fill image descriptor
-    GN::ImageDesc::MipDesc & m = o_desc.mips[0];
-    o_desc.type     = GN::ImageDesc::IMG_2D;
+    GN::gfx::ImageDesc::MipDesc & m = o_desc.mips[0];
+    o_desc.type     = GN::gfx::ImageDesc::IMG_2D;
     o_desc.numMips  = 1;
     m.width         = (uint16_t)mCInfo.image_width;
     m.height        = (uint16_t)mCInfo.image_height;

@@ -1,12 +1,12 @@
-#ifndef __GN_BASE_GRAPHICS_H__
-#define __GN_BASE_GRAPHICS_H__
+#ifndef __GN_GFX_GFXLIB_H__
+#define __GN_GFX_GFXLIB_H__
 // *****************************************************************************
-//! \file    graphics.h
-//! \brief   define common 3D graphics stuff
+//! \file    gfxLib.h
+//! \brief   public interface for static graphics library
 //! \author  chenlee (2005.5.31)
 // *****************************************************************************
 
-namespace GN
+namespace GN { namespace gfx
 {
     // *************************************************************************
     //! \name Color Format
@@ -413,7 +413,7 @@ namespace GN
 
     //@{
 
-    //! \def GN_DEFINE_RS
+    //! \def GNGFX_DEFINE_RS
     //! Define render states
 
     //!
@@ -421,9 +421,9 @@ namespace GN
     //!
     enum RenderState
     {
-        #define GN_DEFINE_RS( tag, defval ) RS_##tag,
+        #define GNGFX_DEFINE_RS( tag, defval ) RS_##tag,
         #include "renderStateMeta.h"
-        #undef GN_DEFINE_RS
+        #undef GNGFX_DEFINE_RS
 
         NUM_RENDER_STATES,   //!< number of available render states
         RS_INVALID           //!< indicate invalid render state type
@@ -461,7 +461,7 @@ namespace GN
     //!
     bool str2RenderState( RenderState & result, const char * str );
 
-    //! \def GN_DEFINE_RSV
+    //! \def GNGFX_DEFINE_RSV
     //! Define render state values
 
     //!
@@ -469,9 +469,9 @@ namespace GN
     //!
     enum RenderStateValue
     {
-        #define GN_DEFINE_RSV( tag, d3dval, glval ) RSV_##tag,
+        #define GNGFX_DEFINE_RSV( tag, d3dval, glval ) RSV_##tag,
         #include "renderStateValueMeta.h"
-        #undef GN_DEFINE_RSV
+        #undef GNGFX_DEFINE_RSV
 
         NUM_RENDER_STATE_VALUES,    //!< number of available render states
         RSV_INVALID                 //!< indicate a invalid value
@@ -509,7 +509,7 @@ namespace GN
     //!
     bool str2RenderStateValue( RenderStateValue & result, const char * str );
 
-    //! \def GN_DEFINE_TS
+    //! \def GNGFX_DEFINE_TS
     //! Define texture stage states
 
     //!
@@ -517,10 +517,10 @@ namespace GN
     //!
     enum TextureState
     {
-        #define GN_DEFINE_TS( tag, defval0, defval, \
+        #define GNGFX_DEFINE_TS( tag, defval0, defval, \
                               d3dname, glname1, glname2 ) TS_##tag,
         #include "textureStateMeta.h"
-        #undef GN_DEFINE_TS
+        #undef GNGFX_DEFINE_TS
 
         NUM_TEXTURE_STATES, //!< number of available texture stage states
         TS_INVALID,         //!< indicate an invalid TS type
@@ -548,7 +548,7 @@ namespace GN
     //!
     bool str2TextureState( TextureState & result, const char * str );
 
-    //! \def GN_DEFINE_TSV
+    //! \def GNGFX_DEFINE_TSV
     //! Define texture stage state values
 
     //!
@@ -556,9 +556,9 @@ namespace GN
     //!
     enum TextureStateValue
     {
-        #define GN_DEFINE_TSV( tag, d3dval, glval1, glval2 ) TSV_##tag,
+        #define GNGFX_DEFINE_TSV( tag, d3dval, glval1, glval2 ) TSV_##tag,
         #include "textureStateValueMeta.h"
-        #undef GN_DEFINE_TSV
+        #undef GNGFX_DEFINE_TSV
 
         NUM_TEXTURE_STATE_VALUES,   //!< number of available texture stage state values
         TSV_INVALID,                //!< indicate a invalid value
@@ -611,12 +611,12 @@ namespace GN
         //!
         //! render states
         //!
-        RenderStateValue  rs[GN::NUM_RENDER_STATES];
+        RenderStateValue  rs[NUM_RENDER_STATES];
 
         //!
         //! texture stage states
         //!
-        TextureStateValue ts[MAX_STAGES][GN::NUM_TEXTURE_STATES];
+        TextureStateValue ts[MAX_STAGES][NUM_TEXTURE_STATES];
 
         // ********************************
         //! \name constructors
@@ -702,7 +702,7 @@ namespace GN
 
     //@{
 
-    //! \def GN_VTXSEM
+    //! \def GNGFX_DEFINE_VTXSEM
     //! define vertex semantic tag
 
     //!
@@ -710,9 +710,9 @@ namespace GN
     //!
     enum VtxSem
     {
-        #define GN_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) VTXSEM_##tag,
+        #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) VTXSEM_##tag,
         #include "vertexSemanticMeta.h"
-        #undef GN_VTXSEM
+        #undef GNGFX_DEFINE_VTXSEM
 
         //!
         //! num of vertex semantic tags
@@ -817,7 +817,7 @@ namespace GN
     };
 
     //@}
-}
+}}
 
 #if GN_ENABLE_INLINE
 #include "image.inl"
@@ -826,6 +826,6 @@ namespace GN
 #endif
 
 // *****************************************************************************
-//                           End of graphics.h
+//                           End of gfxLib.h
 // *****************************************************************************
-#endif // __GN_BASE_GRAPHICS_H__
+#endif // __GN_GFX_GFXLIB_H__

@@ -196,7 +196,7 @@ def GN_build_shared_library( env, target, sources=[],
         if not pdb and target: pdb = target + '.pdb'
         GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
         if 'GNcore' == target: libs += Split('GNwin GNbase GNextern')
-        else: libs += Split('GNcoreLib GNwin GNbase GNcoreLib GNwin GNbase GNextern')
+        else: libs += Split('GNcoreLib GNwin GNgfxLib GNbase GNcoreLib GNwin GNbase GNextern')
         add_libs( env, libs )
         result = env.SharedLibrary( target, sources )
 
@@ -237,7 +237,7 @@ def GN_build_program( env, target, sources=[],
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
         libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL GNd3d GNogl')
-    libs += Split('GNcoreLib GNinput GNwin GNbase GNcoreLib GNinput GNwin GNbase GNextern')
+    libs += Split('GNcoreLib GNinput GNwin GNgfxLib GNbase GNcoreLib GNinput GNwin GNbase GNextern')
     extra = []
     for x in libs:
         if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
@@ -620,7 +620,7 @@ def doInstall( alias, dir, names ):
 sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
-staticLibs = Split('GNextern GNbase GNwin GNinput GNd3d GNogl')
+staticLibs = Split('GNextern GNbase GNgfxLib GNwin GNinput GNd3d GNogl')
 programs = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNd3dTest GNoglTest' )
 
 # populate sample directory
