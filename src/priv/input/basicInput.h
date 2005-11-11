@@ -47,6 +47,8 @@ namespace GN { namespace input
         //!
         //! Update internal mouse position.
         //!
+        //! \param x, y
+        //!     New mouse position
         //! \param notify
         //!     If true, the function will trigger axis move signal, while
         //!     new position differs from the old one.
