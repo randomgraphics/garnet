@@ -27,9 +27,6 @@ namespace GN { namespace input
         // ********************************
     public:
 
-        //!
-        //! Get keybord status
-        //!
         const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
 
         // ********************************
@@ -47,6 +44,15 @@ namespace GN { namespace input
             mHalfWideChar = false;
         }
 
+        //!
+        //! Update internal mouse position.
+        //!
+        //! \param notify
+        //!     If true, the function will trigger axis move signal, while
+        //!     new position differs from the old one.
+        //!
+        void updateMousePosition( int x, int y, bool notify = true );
+
         //! \name signal triggers
         //!
         //! sub class should call these function when key/axis event occurs
@@ -60,6 +66,8 @@ namespace GN { namespace input
         // private variables
         // ********************************
     private:
+
+        Vector2i mMousePosition; //! store current mouse position
 
         //!
         //! 记录键盘的状态，用来过滤/修正不匹配的按键操作
@@ -82,6 +90,10 @@ namespace GN { namespace input
         char mHalfBytes[2];
     };
 }}
+
+#if GN_ENABLE_INLINE
+#include "basicInput.inl"
+#endif
 
 // *****************************************************************************
 //                           End of basicInput.h

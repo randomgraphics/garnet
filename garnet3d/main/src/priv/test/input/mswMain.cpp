@@ -27,7 +27,7 @@ class InputTest
     bool createInput( const char * api )
     {
         mInput.reset( GN::input::createInputSystem( 0 == GN::strCmp("DI",api) ) );
-        if( !mInput || !mInput->attachToWindow( mWin.getWindow() ) ) return false;
+        if( !mInput || !mInput->attachToWindow( 0, mWin.getWindow() ) ) return false;
 
         // connect to input signals
         mInput->sigKeyPress.connect( this, &InputTest::onKeyPress );
@@ -56,6 +56,14 @@ class InputTest
                         mLastKeyEvent.status.down?"DOWN":"UP" );
                     TextOutA( dc, 0, 0, txt.cstr(), txt.size() );
 
+                    if( mInput )
+                    {
+                        int x, y;
+                        mInput->getMousePosition( x, y );
+                        txt.format( "Mouse: %d, %d", x, y );
+                        TextOutA( dc, 0, 20, txt.cstr(), txt.size() );
+                    }
+
                     EndPaint( hwnd, &ps );
                 }
                 break;
@@ -83,6 +91,7 @@ class InputTest
 
     void onAxisMove( GN::input::Axis, int  )
     {
+        InvalidateRect( mWin.getWindow(), 0, true );
     }
 
 public:

@@ -20,8 +20,10 @@ bool GN::input::BasicMswInput::init()
     // setup windows hooks
     if( !setupWindowHooks() ) { quit(); return selfOK(); }
 
-    // get current mouse position
-    ::GetCursorPos( &mMousePosition );
+    // initialize internal mouse position
+    POINT pos;
+    GN_MSW_CHECK_DO( ::GetCursorPos( &pos ), quit(); return selfOK(); );
+    updateMousePosition( pos.x, pos.y, false );
 
     // success
     return selfOK();
@@ -89,16 +91,17 @@ bool GN::input::BasicMswInput::attachToWindow( HandleType, HandleType window )
 // -----------------------------------------------------------------------------
 void GN::input::BasicMswInput::getMousePosition( int & x, int & y ) const
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
     RECT  rc;
-    POINT pt = mMousePosition;
+    POINT pt;
+    ::GetCursorPos( &pt );
     ::GetClientRect( mWindow, &rc );
     ::ScreenToClient( mWindow, &pt );
     x = pt.x - rc.left;
     y = pt.y - rc.top;
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************
@@ -108,24 +111,7 @@ void GN::input::BasicMswInput::getMousePosition( int & x, int & y ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::processMouseMove()
-{
-    GN_GUARD;
-
-    POINT oldpt = mMousePosition;
-    ::GetCursorPos( &mMousePosition );
-    if( mMousePosition.x != oldpt.x )
-        triggerAxisMove( AXIS_0, mMousePosition.x - oldpt.x );
-    if( mMousePosition.y != oldpt.y )
-        triggerAxisMove( AXIS_1, mMousePosition.y - oldpt.y );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wParam, LPARAM /*lParam*/ )
+void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wp, LPARAM )
 {
     GN_GUARD;
 
@@ -133,7 +119,7 @@ void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wParam, LPARAM /
     {
         // process WM_CHAR message
         case WM_CHAR :
-            triggerCharPress( static_cast<char>(wParam) );
+            triggerCharPress( static_cast<char>(wp) );
             break;
 
         // capture mouse when mouse-button pressed
@@ -158,12 +144,16 @@ void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wParam, LPARAM /
 
         // mouse move
         case WM_MOUSEMOVE :
-            processMouseMove();
+            {
+                POINT pos;
+                GN_MSW_CHECK( ::GetCursorPos( &pos ) );
+                updateMousePosition( pos.x, pos.y );
+            }
             break;
 
         // mouse wheel
         case WM_MOUSEWHEEL :
-            triggerAxisMove( AXIS_2, (short)HIWORD(wParam)/10 );
+            triggerAxisMove( AXIS_2, (short)HIWORD(wp)/10 );
             break;
     }
 
@@ -260,7 +250,7 @@ void GN::input::BasicMswInput::releaesMouse()
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam )
+GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
@@ -273,7 +263,7 @@ GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam 
         inst->msgHandler( p->message, p->wParam, p->lParam );
     }
 
-    return ::CallNextHookEx( inst->mMsgHook, nCode, wParam, lParam );
+    return ::CallNextHookEx( inst->mMsgHook, nCode, wp, lParam );
 
     GN_UNGUARD;
 }
@@ -282,7 +272,7 @@ GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wParam, LPARAM lParam 
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::input::BasicMswInput::sCwpHookProc( int nCode, WPARAM wParam, LPARAM lParam )
+GN::input::BasicMswInput::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
@@ -296,7 +286,7 @@ GN::input::BasicMswInput::sCwpHookProc( int nCode, WPARAM wParam, LPARAM lParam 
         inst->msgHandler( p->message, p->wParam, p->lParam );
     }
 
-    return ::CallNextHookEx( inst->mCwpHook, nCode, wParam, lParam );
+    return ::CallNextHookEx( inst->mCwpHook, nCode, wp, lParam );
 
     GN_UNGUARD;
 }

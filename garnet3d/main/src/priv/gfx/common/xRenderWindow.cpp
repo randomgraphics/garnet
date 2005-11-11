@@ -213,11 +213,8 @@ bool GN::gfx::XRenderWindow::initInternalRenderWindow(
             return false;
         }
 
-        // Select all inputs
-        int mask_all = (1L<<25)-1;
-        GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, mask_all ), false );
-
         // map window
+        GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, StructureNotifyMask ), false );
         XEvent e;
         XMapWindow( mDisplay, mWindow );
         for(;;)
