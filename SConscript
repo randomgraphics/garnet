@@ -118,7 +118,7 @@ def GN_glob( env, patterns, recursive = False ):
     return files
 
 # 编译器是否会生成manifest文件
-def GN_has_manifest(env): return 'vs8' == GN_conf['compiler'] and not GN_conf['static']
+def GN_has_manifest(env): return 'vc80' == GN_conf['compiler'] and not GN_conf['static']
 
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
@@ -285,7 +285,7 @@ def default_env( options = None ):
     msvs_version = '7.1'
     if 'icl' == GN_conf['compiler'] :
         tools += ['intelc']
-    elif 'vs8' == GN_conf['compiler'] :
+    elif 'vc80' == GN_conf['compiler'] :
         msvs_version = '8.0'
     env = Environment(
         tools = tools,
