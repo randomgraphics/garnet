@@ -81,6 +81,8 @@ bool GN::input::DIInput::attachToWindow( HandleType disp, HandleType window )
             DISCL_NONEXCLUSIVE | DISCL_FOREGROUND ),
         false );
 
+    if( !acquire() ) return false;
+
     // success
     mAttached = true;
     return true;
@@ -286,7 +288,7 @@ void GN::input::DIInput::buildKeyMap()
     memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
 
     // setup key map
-    #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode ) \
+    #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) \
         if( dikey > 0 ) mKeyMap[dikey] = name;
     #include "garnet/input/keyCodeMeta.h"
     #undef  GNINPUT_DEFINE_KEYCODE

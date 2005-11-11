@@ -26,7 +26,7 @@ namespace GN { namespace input
 
         //@{
     public:
-        X11Input()          { clear(); }
+        X11Input();
         virtual ~X11Input() { quit(); }
         //@}
 
@@ -68,6 +68,10 @@ namespace GN { namespace input
 
         Display * mDisplay;
         Window    mWindow;
+
+        enum { MAX_SCAN_CODE = 0x300 };
+
+        KeyCode mKeyMap[MAX_SCAN_CODE]; //!< scancode to garnet keycode
 
         // ********************************
         // private functions

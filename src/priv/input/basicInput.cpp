@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "basicInput.h"
+#if !GN_ENABLE_INLINE
+#include "basicInput.inl"
+#endif
 #include <algorithm>
 
 // *****************************************************************************

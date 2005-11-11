@@ -6,13 +6,13 @@
 // local functions
 // *****************************************************************************
 
-enum
-{
-    //!
-    //! Mask for all possible X events.
-    //!
-    XEVENT_MASK_ALL = (1L<<25)-1
-};
+static int INTERESTED_EVENTS = StructureNotifyMask
+                             | ExposureMask
+                             | VisibilityChangeMask
+                             | FocusChangeMask
+                             | PointerMotionMask | ButtonMotionMask
+                             | KeyPressMask | KeyReleaseMask
+                             | ButtonPressMask | ButtonReleaseMask;
 
 //
 //
@@ -87,7 +87,7 @@ bool GN::win::XWindow::create( const CreateParam & cp )
     }
 
     // Select inputs
-    GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, XEVENT_MASK_ALL ), false );
+    GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, INTERESTED_EVENTS ), false );
 
     // success
     return true;
@@ -156,7 +156,7 @@ void GN::win::XWindow::processXEvents( bool /*blockOnMinimized*/ ) const
     XEvent e;
     for(;;)
     {
-        if( XCheckWindowEvent( mDisplay, mWindow, XEVENT_MASK_ALL, &e ) )
+        if( XCheckWindowEvent( mDisplay, mWindow, INTERESTED_EVENTS, &e ) )
         {
             // call event handler
             mEventHandler( e );

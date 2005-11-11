@@ -126,10 +126,17 @@ public:
             lastTime = currentTime;
             frames = 0;
         }
-        
+
         mRenderer->clearScreen( GN::Vector4f(0,0,1,1) ); // clear to pure blue.
 
         mRenderer->drawTextA( mFPS.cstr(), 0, 0 );
+
+        // draw mouse position on screen
+        GN::StrA mousePos;
+        int x = 1, y = 1;
+        mInput->getMousePosition( x, y );
+        mousePos.format( "Mouse: %d, %d", x, y );
+        mRenderer->drawTextA( mousePos.cstr(), 0, 100 );
     }
 };
 

@@ -58,7 +58,6 @@ namespace GN { namespace input
     public:
 
         bool attachToWindow( HandleType, HandleType );
-
         void getMousePosition( int & x, int & y ) const;
 
         // ********************************
@@ -88,7 +87,6 @@ namespace GN { namespace input
 
         HWND mWindow;
         HHOOK mMsgHook, mCwpHook;
-        POINT mMousePosition; // store current mouse position
         bool  mMouseCapture;
 
         // ********************************

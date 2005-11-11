@@ -14,7 +14,7 @@ namespace GN
     namespace input
     {
         //! define keycode
-        #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode ) name,
+        #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) name,
 
         //!
         //! keycode type
@@ -32,6 +32,16 @@ namespace GN
             //! number of available keycodes
             //!
             KEY_NUM_OF_KEYS,
+
+            //!
+            //! first mouse button
+            //!
+            KEY_MOUSEBTN_FIRST = KEY_MOUSEBTN_0,
+
+            //!
+            //! last mouse button
+            //!
+            KEY_MOUSEBTN_LAST = KEY_MOUSEBTN_7,
         };
         #undef GNINPUT_DEFINE_KEYCODE
         //@}
