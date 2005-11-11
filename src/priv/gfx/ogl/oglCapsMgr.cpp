@@ -67,9 +67,9 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
 //! initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
-static bool sGetOGLExtensions( std::vector<GN::StrA> & result, HDC hdc )
+static bool sGetOGLExtensions( HDC hdc, std::vector<GN::StrA> & result )
 #else
-static bool sGetOGLExtensions( std::vector<GN::StrA> & result )
+static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
 #endif
 {
     GN_GUARD;
@@ -85,6 +85,10 @@ static bool sGetOGLExtensions( std::vector<GN::StrA> & result )
     proc = reinterpret_cast<PFNWGLGETEXTENSIONSSTRINGARBPROC>(
         ::wglGetProcAddress("wglGetExtensionsStringARB") );
     if( proc ) sGetTokens( result, (const char *)proc(hdc) );
+#elif GN_POSIX
+    // ∑÷ŒˆGLX Extensions
+    // TODO: query server extension string
+    sGetTokens( result, (const char*)glXGetClientString( disp, GLX_EXTENSIONS) );
 #endif
 
     std::sort( result.begin(), result.end() );
@@ -98,25 +102,33 @@ static bool sGetOGLExtensions( std::vector<GN::StrA> & result )
 //!
 //! output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo( const std::vector<GN::StrA> & glexts )
+static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & glexts )
 {
     GN_GUARD;
 
     GN::StrA info;
 
     // vendor info.
+
+#if GN_POSIX
+    const char * vendor   = (const char *)glXGetClientString( (Display*)disp, GLX_VENDOR );
+    const char * version  = (const char *)glXGetClientString( (Display*)disp, GLX_VERSION );
+#else
+    GN_UNUSED_PARAM( disp );
     const char * vendor   = (const char *)glGetString(GL_VENDOR);
-    const char * renderer = (const char *)glGetString(GL_RENDERER);
     const char * version  = (const char *)glGetString(GL_VERSION);
+#endif
+    const char * renderer = (const char *)glGetString(GL_RENDERER);
+
     info = GN::strFormat(
         "\n\n"
         "===================================================\n"
         "        OpenGL Implementation Informations\n"
         "---------------------------------------------------\n"
         "    OpenGL vendor      :    %s\n"
-        "    OpenGL renderer    :    %s\n"
-        "    OpenGL version     :    %s\n",
-        vendor, renderer, version );
+        "    OpenGL version     :    %s\n"
+        "    OpenGL renderer    :    %s\n",
+        vendor, version, renderer );
 
     // caps. info.
     GLint ts, tu;
@@ -256,14 +268,14 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     // output opengl implementation info.
     std::vector<StrA> glexts;
 #if GN_MSWIN
-    if( !sGetOGLExtensions(glexts, mDeviceContext) )
+    if( !sGetOGLExtensions( mDeviceContext, glexts ) )
 #else
-    if( !sGetOGLExtensions(glexts) )
+    if( !sGetOGLExtensions( (Display*)getDispDesc().displayHandle, glexts) )
 #endif
     {
         return false;
     }
-    sOutputOGLInfo( glexts );
+    sOutputOGLInfo( getDispDesc().displayHandle, glexts );
 
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;

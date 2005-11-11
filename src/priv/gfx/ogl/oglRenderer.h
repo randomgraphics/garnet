@@ -285,7 +285,13 @@ namespace GN { namespace gfx
                                    uint32_t start, uint32_t numtex )
         { GN_UNIMPL(); }
 
-    private :
+    public:
+
+        void chooseClientTextureStage( uint32_t ); //!< Choose one stage as client active texture stage.
+        void chooseTextureStage( uint32_t ); //!< Choose one texture stage as active stage
+        void disableTextureStage( uint32_t ); //!< Disable one texture stage
+
+    private:
         bool textureInit() { return true; }
         void textureQuit() {}
         bool textureOK() const { return true; }
@@ -447,25 +453,44 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx );
-        virtual void drawTextW( const wchar_t * text, int x, int y,
-                                const Vector4f & color ) {}
+        virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions
     private:
         bool drawInit() { return true; }
         void drawQuit() {}
         bool drawOK() const { return true; }
-        void drawClear() { mDrawBegan = false; }
+        void drawClear() { mDrawBegan = false; mFontMap.clear(); }
 
         bool drawDeviceCreate() { return true; }
-        bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose() {}
+        bool drawDeviceRestore();
+        void drawDeviceDispose();
         void drawDeviceDestroy() {}
-
-        bool handleDeviceLost();
 
     private:
         bool mDrawBegan;
+
+        // font parameters
+        struct CharDesc
+        {
+            GLuint displayList; // display list use to display the char
+            int    advanceX;    // Advance on X direction.
+        };
+        typedef std::map<wchar_t,CharDesc> FontMap;
+        FontMap mFontMap;
+        int     mFontHeight;
+
+    private:
+        bool fontInit();
+        void fontQuit();
+        bool charInit( wchar_t, CharDesc & );
+        int  drawChar( wchar_t ); //!< Return x-advance of the character
+
+#if GN_POSIX
+        int      getFontBitmapAdvance( char ch );
+        uint32_t getFontBitmapHeight();
+        void     drawFontBitmap( char ch );
+#endif
 
         //@}
     };
@@ -473,6 +498,10 @@ namespace GN { namespace gfx
 
 #if GN_MSVC
 #pragma warning(pop)
+#endif
+
+#if GN_ENABLE_INLINE
+#include "oglTextureMgr.inl"
 #endif
 
 // *****************************************************************************

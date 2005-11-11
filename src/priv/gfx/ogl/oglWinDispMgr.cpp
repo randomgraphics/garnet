@@ -39,7 +39,7 @@ static int sChoosePixelFormat( HDC hdc )
     {
         if (!DescribePixelFormat(hdc, i, sizeof(pfd), &pfd))
         {
-            GNGFX_ERROR( "can't get the describtion of the %dth pixelformat!", i );
+            GNGFX_ERROR( "can't get the description of the %dth pixelformat!", i );
             return 0;
         }
 
@@ -258,6 +258,15 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     if( uo.autoRestore )
     {
         mWindow.sigMessage.connect( this, &OGLRenderer::msgHook );
+    }
+
+    // set swap interval
+    if( WGLEW_EXT_swap_control )
+    {
+        if( !wglSwapIntervalEXT( uo.vsync ) )
+        {
+            GNGFX_WARN( "Fail to adjust SGI swap control" );
+        }
     }
 
     // successful

@@ -18,7 +18,7 @@
 #include <glew.h>
 #if GN_MSWIN
 #include <wglew.h>
-#else
+#elif GN_POSIX
 #include <glxew.h>
 #endif
 #include <GL/glu.h>
