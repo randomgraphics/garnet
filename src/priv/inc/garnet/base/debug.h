@@ -11,14 +11,14 @@
 //!
 #if GN_X86
 #if GN_GCC
-#define GN_DEBUG_BREAK asm("int $3")
+#define GN_DEBUG_BREAK() asm("int $3")
 #elif GN_MSVC
-#define GN_DEBUG_BREAK __asm { int 3 }
+#define GN_DEBUG_BREAK() __asm { int 3 }
 #else
 #error "Unsupport compiler!"
 #endif
 #else
-#define GN_DEBUG_BREAK ::GN::debugBreak()
+#define GN_DEBUG_BREAK() ::GN::debugBreak()
 #endif
 
 //!
@@ -29,7 +29,7 @@
         static bool sIgnoreAll = false;                         \
         if( !sIgnoreAll && GN::assertFunc( desc, __FILE__,      \
             __LINE__, &sIgnoreAll ) )                           \
-        { GN_DEBUG_BREAK; }                                     \
+        { GN_DEBUG_BREAK(); }                                     \
     }
 
 #if GN_DEBUG

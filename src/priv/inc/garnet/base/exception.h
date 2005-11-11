@@ -141,20 +141,20 @@ namespace GN
 #define GN_UNGUARD_ALWAYS_DO( something )                                   \
     } GN_CATCH( const GN::Exception & e ) {                                 \
         GN::exceptionHandler( e );                                          \
-        GN_DEBUG_BREAK;                                                     \
+        GN_DEBUG_BREAK();                                                   \
         something                                                           \
     } GN_CATCH( const std::exception & e ) {                                \
         GN::exceptionHandler( e.what(), GN_FUNCTION, __FILE__, __LINE__ );  \
-        GN_DEBUG_BREAK;                                                     \
+        GN_DEBUG_BREAK();                                                   \
         something                                                           \
     } GN_CATCH( const char * e ) {                                          \
         GN::exceptionHandler( e, GN_FUNCTION, __FILE__, __LINE__ );         \
-        GN_DEBUG_BREAK;                                                     \
+        GN_DEBUG_BREAK();                                                   \
         something                                                           \
     } GN_CATCH( ... ) {                                                     \
         GN::exceptionHandler( "unknown exception!",                         \
                               GN_FUNCTION, __FILE__, __LINE__ );            \
-        GN_DEBUG_BREAK;                                                     \
+        GN_DEBUG_BREAK();                                                   \
         something                                                           \
     }
 

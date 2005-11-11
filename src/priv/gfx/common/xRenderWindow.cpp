@@ -32,7 +32,7 @@ static int sXErrorHandler( Display * d, XErrorEvent * e )
         e->serial,
         e->resourceid );
 
-    GN_DEBUG_BREAK;
+    GN_DEBUG_BREAK();
 
     return 0;
 
