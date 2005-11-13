@@ -215,10 +215,10 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
 
     GN_ASSERT( !mDispOK && mRenderContext && mDeviceContext );
 
-    const UserOptions & uo = getUserOptions();
+    const RendererOptions & ro = getOptions();
 
     // modify fullscreen render window properties
-    if( uo.fullscreen )
+    if( ro.fullscreen )
     {
         // activate display mode
         if( !activateDisplayMode() ) return false;
@@ -255,7 +255,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     }
 
     // setup message hook
-    if( uo.autoRestore )
+    if( ro.autoRestore )
     {
         mWindow.sigMessage.connect( this, &OGLRenderer::msgHook );
     }
@@ -263,7 +263,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     // set swap interval
     if( WGLEW_EXT_swap_control )
     {
-        if( !wglSwapIntervalEXT( uo.vsync ) )
+        if( !wglSwapIntervalEXT( ro.vsync ) )
         {
             GNGFX_WARN( "Fail to adjust SGI swap control" );
         }
@@ -335,7 +335,7 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
     if( mDisplayModeActivated ) return true;
 
     // only change display mode if we are in fullscreen mode
-    if( !getUserOptions().fullscreen ) return true;
+    if( !getOptions().fullscreen ) return true;
 
     const DispDesc & dd = getDispDesc();
 
@@ -417,7 +417,7 @@ void GN::gfx::OGLRenderer::msgHook( HWND, UINT msg, WPARAM wp, LPARAM )
 
     //GNGFX_TRACE( "Message(%s), wp(0x%X)", win::msg2str(msg), wp );
 
-    if( !getUserOptions().fullscreen ) return;
+    if( !getOptions().fullscreen ) return;
 
     if( WM_ACTIVATEAPP == msg && !mIgnoreMsgHook && !mDeviceChanging )
     {

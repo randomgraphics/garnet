@@ -43,7 +43,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const UserOptions & );
+        bool init( const RendererOptions & );
         void quit();
         bool ok() const
         {
@@ -82,7 +82,7 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual bool changeUserOptions( const UserOptions & uo,
+        virtual bool changeOptions( const RendererOptions & ro,
                                         bool forceDeviceRecreation );
 
     protected :
@@ -100,7 +100,7 @@ namespace GN { namespace gfx
     private:
 
         //!
-        //! if true, then we are inside function changeUserOptions().
+        //! if true, then we are inside function changeOptions().
         //!
         bool mDeviceChanging;
 
@@ -241,9 +241,9 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual RenderStateBlock * createRenderStateBlock( const RenderStateBlockDesc & )
+        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & )
         { GN_UNIMPL(); return 0; }
-        virtual void bindRenderStateBlock( const RenderStateBlock & ) { GN_UNIMPL(); }
+        virtual void bindRenderStateBlock( uint32_t ) { GN_UNIMPL(); }
 
     private :
         bool rsbInit() { return true; }

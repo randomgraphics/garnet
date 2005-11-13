@@ -109,7 +109,7 @@ const GN::gfx::ClrFmtDesc & GN::gfx::getClrFmtDesc( ClrFmt fmt )
                 pdesc->name = "FMT_"#format_; \
                 pdesc->bits = bits_; \
                 channels_;
-            #include "garnet/gfx/formatMeta.h"
+            #include "garnet/gfx/colorFormatMeta.h"
             #undef GN_COLOR_FORMAT
 
             // special case for FMT_INVALID

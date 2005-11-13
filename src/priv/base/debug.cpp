@@ -12,7 +12,7 @@ GN::assertFunc(
 {
 #if GN_MSWIN && GN_PC
     char buf[1024];
-    strFormat( buf, 1023,
+    ::_snprintf( buf, 1023,
         "%s(%d)\n"
         "%s\n\n"
         "×ªÈëµ÷ÊÔÆ÷£¿\n"

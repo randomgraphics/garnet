@@ -1,9 +1,9 @@
 #ifndef __GN_PCH_H__
 #define __GN_PCH_H__
 // *****************************************************************************
-//! \file    pch.h
-//! \brief   PCH header
-//! \author  chenlee (2005.11.11)
+// \file    pch.h
+// \brief   PCH header
+// \author  chenlee (2005.11.11)
 // *****************************************************************************
 
 #include "garnet/GNbase.h"

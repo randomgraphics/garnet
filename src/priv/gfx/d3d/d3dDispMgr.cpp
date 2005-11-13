@@ -192,7 +192,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     GN_ASSERT( !mDispOK && mD3D );
 
-    const UserOptions & uo = getUserOptions();
+    const RendererOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
 
     UINT nAdapter = mD3D->GetAdapterCount();
@@ -228,13 +228,13 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             }
         }
         // prepare device type candidates
-        if( !uo.reference ) devtypes.push_back( D3DDEVTYPE_HAL );
+        if( !ro.reference ) devtypes.push_back( D3DDEVTYPE_HAL );
         devtypes.push_back( D3DDEVTYPE_REF );
         devtypes.push_back( D3DDEVTYPE_NULLREF );
     }
 
     // init d3d present parameters
-    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, uo.fullscreen, uo.vsync ) ) return false;
+    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
 
     // Check device caps and determine device behavior flags.
     HRESULT r = D3D_OK;
@@ -252,7 +252,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             continue;
         }
 
-        if( uo.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
+        if( ro.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
         {
             mBehavior = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
         }
@@ -301,11 +301,11 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
 
     GN_ASSERT( !mDispOK && mD3D && mDevice );
 
-    const UserOptions & uo = getUserOptions();
+    const RendererOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
 
     // rebuild d3dpp based on current device settings
-    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, uo.fullscreen, uo.vsync ) ) return false;
+    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
 
     // NOTE: Applications can expect messages to be sent to them during this
     //       call (for example, before this call is returned); applications

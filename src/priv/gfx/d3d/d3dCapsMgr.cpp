@@ -105,7 +105,7 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
         setCaps(CAPS_##name, sCapsInit_##name( d3dcaps ) );
     #define GNGFX_D3DCAPS( name ) \
         mD3DCaps[D3DCAPS_##name].set( sD3DCapsInit_##name( d3dcaps ) );
-    #include "garnet/gfx/gfxCapsMeta.h"
+    #include "garnet/gfx/rendererCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
     #undef GNGFX_D3DCAPS
@@ -144,7 +144,7 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
                       " is modified by device reset" ); \
             return false; \
         }
-    #include "garnet/gfx/gfxCapsMeta.h"
+    #include "garnet/gfx/rendererCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
     #undef GNGFX_D3DCAPS

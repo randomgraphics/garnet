@@ -108,9 +108,9 @@ protected:
 
         if( !mCreator) return;
         GN::AutoObjPtr<GN::gfx::Renderer> r;
-        GN::gfx::UserOptions uo;
-        uo.software = true;
-        r.reset( mCreator(uo) );
+        GN::gfx::RendererOptions ro;
+        ro.software = true;
+        r.reset( mCreator(ro) );
         TS_ASSERT( r );
         if( !r ) return;
 
@@ -133,12 +133,12 @@ protected:
         if( !win.getWindow() ) return;
 
         GN::AutoObjPtr<GN::gfx::Renderer> r;
-        GN::gfx::UserOptions uo;
+        GN::gfx::RendererOptions ro;
 
-        uo.useExternalWindow = true;
-        uo.renderWindow = win.getWindow();
-        uo.software = true;
-        r.reset( mCreator(uo) );
+        ro.useExternalWindow = true;
+        ro.renderWindow = win.getWindow();
+        ro.software = true;
+        r.reset( mCreator(ro) );
         TS_ASSERT( r );
         if( !r ) return;
 
@@ -155,7 +155,7 @@ protected:
 #endif        
     }
 
-    void changeUserOptions()
+    void changeOptions()
     {
         if( !mCreator) return;
 
@@ -163,33 +163,33 @@ protected:
 
         GfxResources res;
 
-        GN::gfx::UserOptions uo;
+        GN::gfx::RendererOptions ro;
 
-        uo.windowedWidth = 320;
-        uo.windowedHeight = 640;
-        uo.software = true;
-        r.reset( mCreator(uo) );
+        ro.windowedWidth = 320;
+        ro.windowedHeight = 640;
+        ro.software = true;
+        r.reset( mCreator(ro) );
         TS_ASSERT( r );
         if( !r ) return;
         const GN::gfx::DispDesc & dd = r->getDispDesc();
-        TS_ASSERT_EQUALS( r->getUserOptions().software, true );
+        TS_ASSERT_EQUALS( r->getOptions().software, true );
 
         createResources( *r, res );
 
         clearRed(*r);
 
         // recreate the device
-        uo.software = false;
-        TS_ASSERT( r->changeUserOptions(uo) );
-        TS_ASSERT_EQUALS( r->getUserOptions().software, false );
+        ro.software = false;
+        TS_ASSERT( r->changeOptions(ro) );
+        TS_ASSERT_EQUALS( r->getOptions().software, false );
         TS_ASSERT_EQUALS( dd.width, 320 );
         TS_ASSERT_EQUALS( dd.height, 640 );
         clearBlue(*r);
 
         // reset the device
-        uo.windowedWidth = 256;
-        uo.windowedHeight = 128;
-        TS_ASSERT( r->changeUserOptions(uo) );
+        ro.windowedWidth = 256;
+        ro.windowedHeight = 128;
+        TS_ASSERT( r->changeOptions(ro) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
     }
@@ -198,13 +198,13 @@ protected:
     {
         GN::AutoObjPtr<GN::gfx::Renderer> r;
 
-        GN::gfx::UserOptions uo;
+        GN::gfx::RendererOptions ro;
 
-        uo.fullscreen = true;
+        ro.fullscreen = true;
 
-        uo.displayMode.width = 640;
-        uo.displayMode.height = 480;
-        r.reset( mCreator(uo) );
+        ro.displayMode.width = 640;
+        ro.displayMode.height = 480;
+        r.reset( mCreator(ro) );
         TS_ASSERT(r);
         if( !r ) return;
 
@@ -215,9 +215,9 @@ protected:
         clearBlue(*r);
         //GN::sleep( 500 );
 
-        uo.displayMode.width = 1024;
-        uo.displayMode.height = 768;
-        TS_ASSERT( r->changeUserOptions( uo ) );
+        ro.displayMode.width = 1024;
+        ro.displayMode.height = 768;
+        TS_ASSERT( r->changeOptions( ro ) );
         clearRed(*r);
         //GN::sleep( 500 );
         clearBlue(*r);
@@ -230,11 +230,11 @@ protected:
 
         GN::AutoObjPtr<GN::gfx::Renderer> r;
 
-        GN::gfx::UserOptions uo;
-        uo.useExternalWindow = false;
-        uo.parentWindow = 0;
+        GN::gfx::RendererOptions ro;
+        ro.useExternalWindow = false;
+        ro.parentWindow = 0;
 
-        r.reset( mCreator(uo) );
+        r.reset( mCreator(ro) );
         TS_ASSERT(r);
         if( !r ) return;
 
@@ -252,11 +252,11 @@ protected:
         GN::AutoObjPtr<GN::gfx::Renderer> r1, r2;
         GfxResources res1, res2;
 
-        GN::gfx::UserOptions uo;
+        GN::gfx::RendererOptions ro;
 
-        uo.windowedWidth = 320;
-        uo.windowedHeight = 640;
-        r1.reset( mCreator(uo) );
+        ro.windowedWidth = 320;
+        ro.windowedHeight = 640;
+        r1.reset( mCreator(ro) );
         TS_ASSERT( r1 );
 
         if( !r1.empty() )
@@ -268,9 +268,9 @@ protected:
             clearRed( *r1 );
         }
 
-        uo.windowedWidth = 512;
-        uo.windowedHeight = 256;
-        r2.reset( mCreator(uo) );
+        ro.windowedWidth = 512;
+        ro.windowedHeight = 256;
+        r2.reset( mCreator(ro) );
         TS_ASSERT( r2 );
 
         if( !r2.empty() )

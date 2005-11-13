@@ -1,7 +1,7 @@
 #ifndef __GN_BASE_MISC_H__
 #define __GN_BASE_MISC_H__
 // *****************************************************************************
-//! \file    misc.h
+//! \file    base/misc.h
 //! \brief   misc functions and types
 //! \author  chenlee (2005.5.4)
 // *****************************************************************************

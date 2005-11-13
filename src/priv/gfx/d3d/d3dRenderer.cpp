@@ -18,16 +18,16 @@
 
 #if GN_STATIC
 GN::gfx::Renderer *
-GN::gfx::createD3DRenderer( const UserOptions & uo )
+GN::gfx::createD3DRenderer( const RendererOptions & ro )
 #else
 extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer( const GN::gfx::UserOptions & uo )
+GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )
 #endif
 {
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
-    if( !p->init(uo) ) return 0;
+    if( !p->init(ro) ) return 0;
     return p.detach();
 
     GN_UNGUARD;
@@ -40,7 +40,7 @@ GNgfxCreateRenderer( const GN::gfx::UserOptions & uo )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::init(const UserOptions & uo )
+bool GN::gfx::D3DRenderer::init(const RendererOptions & ro )
 {
     GN_GUARD;
 
@@ -58,7 +58,7 @@ bool GN::gfx::D3DRenderer::init(const UserOptions & uo )
     if( !drawInit()    ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !changeUserOptions( uo, true ) ) { quit(); return selfOK(); }
+    if( !changeOptions( ro, true ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -96,33 +96,33 @@ void GN::gfx::D3DRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::changeUserOptions(
-    const UserOptions & uo, bool forceRecreation )
+bool GN::gfx::D3DRenderer::changeOptions(
+    const RendererOptions & ro, bool forceRecreation )
 {
     GN_GUARD;
 
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GNGFX_WARN( "This call to changeUserOptions() is ignored to avoid function re-entance!" );
+        GNGFX_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
 
     // store old settings
-    const UserOptions oldOptions = getUserOptions();
+    const RendererOptions oldOptions = getOptions();
     const DispDesc oldDesc = getDispDesc();
 
     // setup new settings
-    if( !processUserOptions( uo ) ) return false;
+    if( !processUserOptions( ro ) ) return false;
 
     const DispDesc & newDesc = getDispDesc();
 
     if( forceRecreation ||
         oldDesc.windowHandle != newDesc.windowHandle ||
         oldDesc.monitorHandle != newDesc.monitorHandle ||
-        oldOptions.reference != uo.reference ||
-        oldOptions.software != uo.software )
+        oldOptions.reference != ro.reference ||
+        oldOptions.software != ro.software )
     {
         // we have to recreate the whole device.
         deviceDispose();
@@ -131,8 +131,8 @@ bool GN::gfx::D3DRenderer::changeUserOptions(
     }
     else if(
         oldDesc != newDesc ||
-        oldOptions.fullscreen != uo.fullscreen ||
-        oldOptions.vsync != uo.vsync )
+        oldOptions.fullscreen != ro.fullscreen ||
+        oldOptions.vsync != ro.vsync )
     {
         // a device reset should be enough
         deviceDispose();
