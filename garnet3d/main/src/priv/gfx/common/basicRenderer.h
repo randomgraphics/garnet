@@ -91,7 +91,7 @@ namespace GN { namespace gfx
         //! Called by sub-classes to initialize display descriptor
         //! based on device settings.
         //!
-        bool processUserOptions( const UserOptions & );
+        bool processUserOptions( const RendererOptions & );
 
         //!
         //! Called by sub class to respond to render window resizing/moving

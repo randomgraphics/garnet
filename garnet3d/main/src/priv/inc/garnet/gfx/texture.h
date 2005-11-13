@@ -1,13 +1,64 @@
-#ifndef __GN_GFX_GFXTEXTURE_H__
-#define __GN_GFX_GFXTEXTURE_H__
+#ifndef __GN_GFX_TEXTURE_H__
+#define __GN_GFX_TEXTURE_H__
 // *****************************************************************************
-//! \file    gfxTexture.h
+//! \file    texture.h
 //! \brief   Texture interface
 //! \author  chenlee (2005.9.30)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
+    //!
+    //! Ã˘Õº¿‡–Õ
+    //!
+    enum TexType
+    {
+        TEXTYPE_1D,    //!< 1D texture
+        TEXTYPE_2D,    //!< 2D texture
+        TEXTYPE_3D,    //!< 3D texture
+        TEXTYPE_CUBE,  //!< Cube texture
+        NUM_TEXTYPES   //!< Number of avaliable texture types.
+    };
+
+    //!
+    //! Ã˘Õºπ˝¬À∆˜
+    //!
+    enum TexFilter
+    {
+        TEXFILTER_NEAREST,      //!< nearest
+        TEXFILTER_LINEAR,       //!< linear
+        TEXFILTER_N_MIP_N,      //!< NEAREST_MIPMAP_NEAREST
+        TEXFILTER_N_MIP_L,      //!< NEAREST_MIPMAP_LINEAR
+        TEXFILTER_L_MIP_N,      //!< LINEAR_MIPMAP_NEAREST
+        TEXFILTER_L_MIP_L,      //!< LINEAR_MIPMAP_LINEAR
+        NUM_TEXFILTERS
+    };
+
+    //!
+    //! Ã˘ÕºWrap Mode
+    //!
+    enum TexWrap
+    {
+        TEXWRAP_REPEAT,
+        TEXWRAP_CLAMP,
+        TEXWRAP_CLAMP_TO_EDGE,
+        NUM_TEXWRAPS
+    };
+
+    //!
+    //! cube texture face
+    //!
+    enum TexFace
+    {
+        TEXFACE_PX, //!< positive X
+        TEXFACE_NX, //!< negative X
+        TEXFACE_PY, //!< positive Y
+        TEXFACE_NY, //!< negative Y
+        TEXFACE_PZ, //!< positive Z
+        TEXFACE_NZ, //!< negative Z
+        NUM_TEXFACES
+    };
+
     //!
     //! Ã˘Õº∂‘œÛ
     //!
@@ -222,9 +273,176 @@ namespace GN { namespace gfx
         ClrFmt              mFormat;  //!< pixel format
         uint32_t            mUsage;   //!< creation flags
     };
+
+    //! \name convert between texture tags and string
+    //@{
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline bool
+    texType2Str( StrA & str, TexType textype )
+    {
+        static const char * sTable [] =
+        { "1D", "2D", "3D", "CUBE" };
+
+        if( 0 <= textype && textype < NUM_TEXTYPES )
+        {
+            str = sTable[textype];
+            return true;
+        }
+        else return false;
+    }
+    //
+    inline const char *
+    texType2Str( TexType textype )
+    {
+        static const char * sTable [] =
+        { "1D", "2D", "3D", "CUBE" };
+
+        if( 0 <= textype && textype < NUM_TEXTYPES )
+        {
+            return sTable[textype];
+        }
+        else return "BAD_TEXTURE_TYPE";
+    }
+    //
+    inline bool
+    str2TexType( TexType & value, const char * name )
+    {
+        static const char * sTable [] =
+        { "1D", "2D", "3D", "CUBE" };
+
+        if( name )
+        {
+            for( int i = 0; i < 4; ++i )
+            {
+                if( 0 == ::strcmp(sTable[i],name) )
+                {
+                    value = static_cast<TexType>(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline bool
+    texFilter2Str( StrA & str, TexFilter filter )
+    {
+        static const char * sTable [] =
+        {
+            "NEAREST", "LINEAR",
+            "N_MIP_N", "N_MIP_L",
+            "L_MIP_N", "L_MIP_L",
+        };
+
+        if( 0 <= filter && filter < NUM_TEXFILTERS )
+        {
+            str = sTable[filter];
+            return true;
+        }
+        else return false;
+    }
+    //
+    inline const char *
+    texFilter2Str( TexFilter filter )
+    {
+        static const char * sTable [] =
+        {
+            "NEAREST", "LINEAR",
+            "N_MIP_N", "N_MIP_L",
+            "L_MIP_N", "L_MIP_L",
+        };
+
+        if( 0 <= filter && filter < NUM_TEXFILTERS )
+        {
+            return sTable[filter];
+        }
+        else return "BAD_TEXTURE_FILTER";
+    }
+    //
+    inline bool
+    str2TexFilter( TexFilter & value, const char * name )
+    {
+        static const char * sTable [] =
+        {
+            "NEAREST", "LINEAR",
+            "N_MIP_N", "N_MIP_L",
+            "L_MIP_N", "L_MIP_L",
+        };
+
+        if( name )
+        {
+            for( size_t i = 0; i < NUM_TEXFILTERS; ++i )
+            {
+                if( 0 ==::strcmp(sTable[i],name) )
+                {
+                    value = static_cast<TexFilter>(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline bool
+    texWrap2Str( StrA & str, TexWrap texwrap )
+    {
+        static const char * sTable [] =
+        { "REPEAT", "CLAMP", "CLAMP_TO_EDGE" };
+
+        if( 0 <= texwrap && texwrap < NUM_TEXWRAPS )
+        {
+            str = sTable[texwrap];
+            return true;
+        }
+        else return false;
+    }
+    //
+    inline const char *
+    texWrap2Str( TexWrap texwrap )
+    {
+        static const char * sTable [] =
+        { "REPEAT", "CLAMP", "CLAMP_TO_EDGE" };
+
+        if( 0 <= texwrap && texwrap < NUM_TEXWRAPS )
+        {
+            return sTable[texwrap];
+        }
+        else return "BAD_TEXTURE_WRAP";
+    }
+    //
+    inline bool
+    str2TexWrap( TexWrap & value, const char * name )
+    {
+        static const char * sTable [] =
+        { "REPEAT", "CLAMP", "CLAMP_TO_EDGE" };
+
+        if( name )
+        {
+            for( size_t i = 0; i < NUM_TEXWRAPS; ++i )
+            {
+                if( 0 ==::strcmp(sTable[i],name) )
+                {
+                    value = static_cast<TexWrap>(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    //@}
 }}
 
 // *****************************************************************************
-//                           End of gfxTexture.h
+//                           End of texture.h
 // *****************************************************************************
-#endif // __GN_GFX_GFXTEXTURE_H__
+#endif // __GN_GFX_TEXTURE_H__

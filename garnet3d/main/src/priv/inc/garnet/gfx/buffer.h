@@ -1,7 +1,7 @@
-#ifndef __GN_GFX_GFXBUFFER_H__
-#define __GN_GFX_GFXBUFFER_H__
+#ifndef __GN_GFX_BUFFER_H__
+#define __GN_GFX_BUFFER_H__
 // *****************************************************************************
-//! \file    gfxBuffer.h
+//! \file    buffer.h
 //! \brief   Vertex and index buffer interface
 //! \author  chenlee (2005.9.30)
 // *****************************************************************************
@@ -86,6 +86,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of gfxBuffer.h
+//                           End of buffer.h
 // *****************************************************************************
-#endif // __GN_GFX_GFXBUFFER_H__
+#endif // __GN_GFX_BUFFER_H__

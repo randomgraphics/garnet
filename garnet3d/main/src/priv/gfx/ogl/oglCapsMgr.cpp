@@ -285,7 +285,7 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
         setCaps(CAPS_##name, sCapsInit_##name() );
     #define GNGFX_OGLCAPS( name ) mOGLCaps[OGLCAPS_##name].set( \
         sOGLCapsInit_##name() );
-    #include "garnet/gfx/gfxCapsMeta.h"
+    #include "garnet/gfx/rendererCapsMeta.h"
     #include "oglCapsMeta.h"
     #undef GNGFX_CAPS
     #undef GNGFX_OGLCAPS

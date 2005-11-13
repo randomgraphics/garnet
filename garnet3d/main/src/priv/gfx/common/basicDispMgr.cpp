@@ -13,7 +13,7 @@
 //! Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
 static GN::HandleType
-sDetermineMonitorHandle( const GN::gfx::UserOptions & uo )
+sDetermineMonitorHandle( const GN::gfx::RendererOptions & uo )
 {
     GN_GUARD;
 
@@ -50,7 +50,7 @@ sDetermineMonitorHandle( const GN::gfx::UserOptions & uo )
 //! get current display mode
 // ----------------------------------------------------------------------------
 static bool
-sGetCurrentDisplayMode( const GN::gfx::UserOptions & uo, GN::gfx::DisplayMode & dm )
+sGetCurrentDisplayMode( const GN::gfx::RendererOptions & uo, GN::gfx::DisplayMode & dm )
 {
     GN_GUARD;
 
@@ -110,7 +110,7 @@ sGetCurrentDisplayMode( const GN::gfx::UserOptions & uo, GN::gfx::DisplayMode & 
 // ----------------------------------------------------------------------------
 static bool
 sDetermineWindowSize(
-    const GN::gfx::UserOptions & uo,
+    const GN::gfx::RendererOptions & uo,
     const GN::gfx::DisplayMode & currentDisplayMode,
     uint32_t & width,
     uint32_t & height )
@@ -152,7 +152,7 @@ sDetermineWindowSize(
 //
 // ----------------------------------------------------------------------------
 bool
-GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
+GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & uo )
 {
     GN_GUARD;
 
@@ -170,10 +170,7 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
     }
     else
     {
-        uint32_t w, h;
-        if( !sDetermineWindowSize( uo, dm, w, h ) ) return false;
-        desc.width = (0==uo.displayMode.width) ? w : uo.displayMode.width;
-        desc.height = (0==uo.displayMode.height) ? h : uo.displayMode.height;
+        if( !sDetermineWindowSize( uo, dm, desc.width, desc.height ) ) return false;
         desc.depth = dm.depth;
         desc.refrate = 0;
     }
@@ -181,7 +178,7 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
 
     // (Re)Initialize render window
 #if GN_MSWIN
-    if( getUserOptions().fullscreen && !uo.fullscreen ) mWinProp.restore();
+    if( getOptions().fullscreen && !uo.fullscreen ) mWinProp.restore();
 #endif
     if( uo.useExternalWindow )
     {
@@ -205,7 +202,7 @@ GN::gfx::BasicRenderer::processUserOptions( const UserOptions & uo )
         strFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cstr() );
 
     // success
-    setUserOptions( uo );
+    setOptions( uo );
     setDispDesc( desc );
     return true;
 
@@ -221,15 +218,15 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
     GN_GUARD;
 
     // handle render window size move
-    const UserOptions & uo = getUserOptions();
+    const RendererOptions & uo = getOptions();
     if( !uo.fullscreen && // only when we're in windowed mode
         uo.autoBackbufferResizing &&
         mWindow.getSizeChangeFlag() )
     {
-        UserOptions newOptions = uo;
+        RendererOptions newOptions = uo;
         newOptions.monitorHandle = mWindow.getMonitor();
         mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
-        if( !changeUserOptions( newOptions, false ) )
+        if( !changeOptions( newOptions, false ) )
         {
             GNGFX_FATAL( "Fail to respond to render window size and position change!" );
             return false;

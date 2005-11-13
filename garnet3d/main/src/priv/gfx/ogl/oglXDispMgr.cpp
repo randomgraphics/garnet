@@ -81,7 +81,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     // setup swap control
     if( GLX_SGI_swap_control )
     {
-        if( !glXSwapIntervalSGI( getUserOptions().vsync ) )
+        if( !glXSwapIntervalSGI( getOptions().vsync ) )
         {
             GNGFX_WARN( "Fail to adjust SGI swap control" );
         }

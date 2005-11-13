@@ -20,7 +20,7 @@ namespace GN { namespace gfx
 #endif
     }
     //
-    inline void Renderer::setCaps( Caps c, uint32_t v )
+    inline void Renderer::setCaps( RendererCaps c, uint32_t v )
     {
         GN_GUARD;
         if( 0 <= c && c < NUM_CAPS )

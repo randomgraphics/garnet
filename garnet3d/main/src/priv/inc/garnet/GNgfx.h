@@ -19,20 +19,16 @@ namespace GN
     }
 }
 
-//
-// public header of static graphics library
-//
-#include "gfx/gfxLib.h"
+#include "gfx/colorFormat.h"
+#include "gfx/image.h"
+#include "gfx/renderState.h"
+#include "gfx/vertexFormat.h"
+#include "gfx/misc.h"
 
-//
-// Headers below are all for graphics renderer
-//
-#include "gfx/gfxTypes.h"
-#include "gfx/gfxShader.h"
-#include "gfx/gfxTexture.h"
-#include "gfx/gfxBuffer.h"
-#include "gfx/gfxRenderer.h"
-#include "gfx/gfxUtils.h"
+#include "gfx/shader.h"
+#include "gfx/texture.h"
+#include "gfx/buffer.h"
+#include "gfx/renderer.h"
 
 // *****************************************************************************
 //                         END of GNgfx.h
