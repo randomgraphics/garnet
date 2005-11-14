@@ -135,10 +135,7 @@ namespace GN { namespace gfx
         //!
         //! \return         return false, if lock failed.
         //!
-        virtual void * lock( uint32_t level,
-                             uint32_t offset,
-                             uint32_t length,
-                             LockFlag flag ) = 0;
+        virtual void * lock1D( uint32_t level, uint32_t offset, uint32_t length, uint32_t flag ) = 0;
 
         //!
         //! lock a 2D texture, only can be called on 2D texture
@@ -150,10 +147,7 @@ namespace GN { namespace gfx
         //!
         //! \return         return false, if lock failed.
         //!
-        virtual bool lock( LockedRect &  result,
-                           uint32_t      level,
-                           const Recti * area,
-                           LockFlag      flag ) = 0;
+        virtual bool lock2D( LockedRect &  result, uint32_t level, const Recti * area, uint32_t flag ) = 0;
 
         //!
         //! lock a 3D texture, only can be called on 3D texture
@@ -165,10 +159,7 @@ namespace GN { namespace gfx
         //!
         //! \return         return false, if lock failed.
         //!
-        virtual bool lock( LockedBox &  result,
-                           uint32_t     level,
-                           const Boxi * box,
-                           LockFlag     flag ) = 0;
+        virtual bool lock3D( LockedBox &  result, uint32_t level, const Boxi * box, uint32_t flag ) = 0;
 
         //!
         //! lock a cube texture, only can be called on cube texture
@@ -181,11 +172,11 @@ namespace GN { namespace gfx
         //!
         //! \return         return false, if lock failed.
         //!
-        virtual bool lock( LockedRect &  result,
-                           TexFace       face,
-                           uint32_t      level,
-                           const Recti * area,
-                           LockFlag      flag ) = 0;
+        virtual bool lockCube( LockedRect &  result,
+                               TexFace       face,
+                               uint32_t      level,
+                               const Recti * area,
+                               uint32_t      flag ) = 0;
 
         //!
         //! unlock previous lock
@@ -200,7 +191,7 @@ namespace GN { namespace gfx
         //!
         //! update contents of sub-mipmap-levels based on level 0
         //!
-        virtual void updateMips() = 0;
+        virtual void updateMipmap() = 0;
 
         //!
         //! Get low-level device handle of the texture. LPDIRECT3DBASETEXTURE9 for

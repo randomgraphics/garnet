@@ -74,25 +74,25 @@ namespace GN { namespace gfx
 
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual void * lock( uint32_t level,
-                             uint32_t offset,
-                             uint32_t length,
-                             LockFlag flag );
-        virtual bool lock( LockedRect &  result,
-                           uint32_t      level,
-                           const Recti * area,
-                           LockFlag      flag );
-        virtual bool lock( LockedBox &  result,
-                           uint32_t     level,
-                           const Boxi * box,
-                           LockFlag     flag );
-        virtual bool lock( LockedRect &  result,
-                           TexFace       face,
-                           uint32_t      level,
-                           const Recti * area,
-                           LockFlag      flag );
+        virtual void * lock1D( uint32_t level,
+                               uint32_t offset,
+                               uint32_t length,
+                               uint32_t flag );
+        virtual bool lock2D( LockedRect &  result,
+                             uint32_t      level,
+                             const Recti * area,
+                             uint32_t      flag );
+        virtual bool lock3D( LockedBox &  result,
+                             uint32_t     level,
+                             const Boxi * box,
+                             uint32_t     flag );
+        virtual bool lockCube( LockedRect &  result,
+                               TexFace       face,
+                               uint32_t      level,
+                               const Recti * area,
+                               uint32_t      flag );
         virtual void unlock();
-        virtual void updateMips();
+        virtual void updateMipmap();
         virtual void * getAPIDependentData() const { return getD3DTexture(); }
 
         // ********************************

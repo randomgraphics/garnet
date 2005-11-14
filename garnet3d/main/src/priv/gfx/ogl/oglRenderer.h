@@ -266,24 +266,14 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        virtual Texture *
-        createTexture( TexType textype,
-                       uint32_t sx, uint32_t sy, uint32_t sz,
-                       uint32_t levels,
-                       ClrFmt format,
-                       uint32_t usages )
-        {
-            GN_WARN( "Unimplemented!" );
-            return 0;
-        }
-        virtual Texture * createTextureFromFile( File & )
-        {
-            GN_UNIMPL();
-            return 0;
-        }
+        virtual Texture * createTexture( TexType textype,
+                                         uint32_t sx, uint32_t sy, uint32_t sz,
+                                         uint32_t levels,
+                                         ClrFmt format,
+                                         uint32_t usages );
+        virtual Texture * createTextureFromFile( File & );
         virtual void bindTextures( const Texture * const texlist[],
-                                   uint32_t start, uint32_t numtex )
-        { GN_UNIMPL(); }
+                                   uint32_t start, uint32_t numtex );
 
     public:
 
