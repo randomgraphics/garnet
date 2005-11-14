@@ -54,14 +54,14 @@ class InputTest
                         mLastKeyEvent.status.altDown()?"ALT-":"",
                         GN::input::kc2str(mLastKeyEvent.code),
                         mLastKeyEvent.status.down?"DOWN":"UP" );
-                    TextOutA( dc, 0, 0, txt.cstr(), txt.size() );
+                    TextOutA( dc, 0, 0, txt.cstr(), (INT)txt.size() );
 
                     if( mInput )
                     {
                         int x, y;
                         mInput->getMousePosition( x, y );
                         txt.format( "Mouse: %d, %d", x, y );
-                        TextOutA( dc, 0, 20, txt.cstr(), txt.size() );
+                        TextOutA( dc, 0, 20, txt.cstr(), (INT)txt.size() );
                     }
 
                     EndPaint( hwnd, &ps );

@@ -265,12 +265,12 @@ void GN::gfx::D3DRenderer::drawIndexed(
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX_CHECK(
         mDevice->DrawIndexedPrimitive(
-            sPrimMap[prim], // primitive type
-            baseVtx ,       // start vertex
-            minVtxIdx,      // min vertex index
-            numVtx,         // num of vertices
-            startIdx,       // base index
-            numPrims ) );   // primitive count
+            sPrimMap[prim],     // primitive type
+            (UINT)baseVtx ,     // start vertex
+            (UINT)minVtxIdx,    // min vertex index
+            (UINT)numVtx,       // num of vertices
+            (UINT)startIdx,     // base index
+            (UINT)numPrims ) ); // primitive count
 
     // success
     mNumPrims += numPrims;
@@ -298,9 +298,9 @@ void GN::gfx::D3DRenderer::draw(
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX_CHECK(
         mDevice->DrawPrimitive(
-            sPrimMap[prim],  // primitive type
-            baseVtx,         // start vertex
-            numPrims ) );    // primitive count
+            sPrimMap[prim],     // primitive type
+            (UINT)baseVtx,      // start vertex
+            (UINT)numPrims ) ); // primitive count
 
     // success
     mNumPrims += numPrims;
