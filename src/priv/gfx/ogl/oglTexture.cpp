@@ -623,7 +623,7 @@ void GN::gfx::OGLBasicTexture::privateUnlock2D()
                 mLockedArea.x, mLockedArea.y,
                 mLockedArea.w, mLockedArea.h,
                 mOGLInternalFormat,
-                mLockedBytes, mLockedBuffer ) );
+                (GLsizei)mLockedBytes, mLockedBuffer ) );
         }
         else
         {

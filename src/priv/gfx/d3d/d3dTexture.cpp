@@ -232,7 +232,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     // get image info.
     D3DXIMAGE_INFO info;
     GN_DX_CHECK_DO(
-        D3DXGetImageInfoFromFileInMemory( &buf[0], sz, &info ),
+        D3DXGetImageInfoFromFileInMemory( &buf[0], (UINT)sz, &info ),
         quit(); return selfOK(); );
 
     // set initialize parameters
@@ -252,7 +252,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     {
         LPDIRECT3DTEXTURE9 tex;
         GN_DX_CHECK_DO(
-            D3DXCreateTextureFromFileInMemory( dev, &buf[0], sz, &tex ),
+            D3DXCreateTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
             quit(); return selfOK(); );
         mInitType = TEXTYPE_2D;
         mD3DTexture = tex;
@@ -261,7 +261,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     {
         LPDIRECT3DVOLUMETEXTURE9 tex;
         GN_DX_CHECK_DO(
-            D3DXCreateVolumeTextureFromFileInMemory( dev, &buf[0], sz, &tex ),
+            D3DXCreateVolumeTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
             quit(); return selfOK(); );
         mInitType = TEXTYPE_3D;
         mD3DTexture = tex;
@@ -270,7 +270,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     {
         LPDIRECT3DCUBETEXTURE9 tex;
         GN_DX_CHECK_DO(
-            D3DXCreateCubeTextureFromFileInMemory( dev, &buf[0], sz, &tex ),
+            D3DXCreateCubeTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
             quit(); return selfOK(); );
         mInitType = TEXTYPE_CUBE;
         mD3DTexture = tex;

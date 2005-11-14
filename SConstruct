@@ -43,8 +43,8 @@ conf['enable_cache']  = ARGUMENTS.get('cache', default_configs['enable_cache'] )
 
 # 定义编译器类型
 conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])
-if not conf['compiler'] in Split('%s vc80 icl'%default_compiler):
-    print 'Invalid compiler type! Must be one of (%s vc80 icl)'%default_compiler;
+if not conf['compiler'] in Split('%s vc80 vc80-x64 icl'%default_compiler):
+    print 'Invalid compiler type! Must be one of (%s vc80 vc80-x64 icl)'%default_compiler;
     Exit(-1)
 
 # 定义编译类型
@@ -84,7 +84,7 @@ opts.Add(
     default_configs['enable_cache'] )
 opts.Add(
     'compiler',
-    'Specify compiler. Could be : %s vc80 icl. (GN_BUILD_COMPILER)'%default_compiler,
+    'Specify compiler. Could be : %s vc80 vc80-x64 icl. (GN_BUILD_COMPILER)'%default_compiler,
     default_configs['compiler'] )
 opts.Add(
     'variant',

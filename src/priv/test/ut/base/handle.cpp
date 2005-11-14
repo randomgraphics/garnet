@@ -13,11 +13,11 @@ public:
         TS_ASSERT_EQUALS( hm.first(), 0 );
         TS_ASSERT_EQUALS( hm.next(0), 0 );
 
-        int h1 = hm.add( 1 );
-        int h2 = hm.add( 2 );
-        int h3 = hm.add( 3 );
-        int h4 = hm.add( 4 );
-        int h5 = hm.add( 5 );
+        size_t h1 = hm.add( 1 );
+        size_t h2 = hm.add( 2 );
+        size_t h3 = hm.add( 3 );
+        size_t h4 = hm.add( 4 );
+        size_t h5 = hm.add( 5 );
 
         TS_ASSERT( !hm.empty() );
         TS_ASSERT_EQUALS( hm.size(), 5 );
