@@ -443,10 +443,10 @@ void GN::gfx::D3DTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 //
 //
 // ----------------------------------------------------------------------------
-void * GN::gfx::D3DTexture::lock( uint32_t level,
-                                  uint32_t offset,
-                                  uint32_t length,
-                                  LockFlag flag )
+void * GN::gfx::D3DTexture::lock1D( uint32_t level,
+                                    uint32_t offset,
+                                    uint32_t length,
+                                    uint32_t flag )
 {
     GN_GUARD_SLOW;
 
@@ -464,7 +464,7 @@ void * GN::gfx::D3DTexture::lock( uint32_t level,
 
     LockedRect ret;
 
-    if ( !lock( ret, level, &rc, flag ) ) return false;
+    if ( !lock2D( ret, level, &rc, flag ) ) return false;
 
     // success
     return ret.data;
@@ -475,10 +475,10 @@ void * GN::gfx::D3DTexture::lock( uint32_t level,
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lock( LockedRect &  result,
-                                uint32_t      level,
-                                const Recti * area,
-                                LockFlag      flag )
+bool GN::gfx::D3DTexture::lock2D( LockedRect &  result,
+                                  uint32_t      level,
+                                  const Recti * area,
+                                  uint32_t      flag )
 {
     GN_GUARD_SLOW;
 
@@ -532,10 +532,10 @@ bool GN::gfx::D3DTexture::lock( LockedRect &  result,
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lock( LockedBox &  result,
-                                uint32_t     level,
-                                const Boxi * box,
-                                LockFlag     flag )
+bool GN::gfx::D3DTexture::lock3D( LockedBox &  result,
+                                  uint32_t     level,
+                                  const Boxi * box,
+                                  uint32_t     flag )
 {
     GN_GUARD_SLOW;
 
@@ -590,11 +590,11 @@ bool GN::gfx::D3DTexture::lock( LockedBox &  result,
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lock( LockedRect &  result,
-                                TexFace       face,
-                                uint32_t      level,
-                                const Recti * area,
-                                LockFlag      flag )
+bool GN::gfx::D3DTexture::lockCube( LockedRect &  result,
+                                    TexFace       face,
+                                    uint32_t      level,
+                                    const Recti * area,
+                                    uint32_t      flag )
 {
     GN_GUARD_SLOW;
 
@@ -672,7 +672,7 @@ void GN::gfx::D3DTexture::unlock()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::updateMips()
+void GN::gfx::D3DTexture::updateMipmap()
 {
     GN_GUARD;
 
