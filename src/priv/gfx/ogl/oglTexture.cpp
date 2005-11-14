@@ -8,14 +8,22 @@
 //!
 //! Automatically pop OGL attributes while out of scope.
 //!
-struct AutoAttribPopper
+struct AutoAttributeStack
 {
+    //!
+    //! Ctor
+    //!
+    AutoAttributeStack( GLuint bit )
+    {
+        GN_OGL_CHECK( glPushAttrib( bit ) );
+    }
+
     //!
     //! Dtor
     //!
-    ~AutoAttribPopper()
+    ~AutoAttributeStack()
     {
-        glPopAttrib();
+        GN_OGL_CHECK( glPopAttrib() );
     }
 };
 
@@ -690,8 +698,7 @@ GLuint GN::gfx::OGLTex1D::newOGLTexture(
     GN_GUARD;
 
     // declare an auto-opengl-property-stack
-    glPushAttrib( GL_CURRENT_BIT );
-    AutoAttribPopper attrPopper();
+    AutoAttributeStack aas( GL_CURRENT_BIT );
 
     // generate new texture
     GLuint result;
@@ -763,8 +770,7 @@ GLuint GN::gfx::OGLTex2D::newOGLTexture(
     GN_GUARD;
 
     // declare an auto-opengl-property-stack
-    glPushAttrib( GL_CURRENT_BIT );
-    AutoAttribPopper attribPopper();
+    AutoAttributeStack aas( GL_CURRENT_BIT );
 
     // generate new texture
     GLuint result;
@@ -896,8 +902,7 @@ GLuint GN::gfx::OGLTexCube::newOGLTexture(
     GN_GUARD;
 
     // declare an auto-opengl-property-stack
-    glPushAttrib( GL_CURRENT_BIT );
-    AutoAttribPopper attribPopper();
+    AutoAttributeStack aas( GL_CURRENT_BIT );
 
     // generate new texture
     GLuint result;
