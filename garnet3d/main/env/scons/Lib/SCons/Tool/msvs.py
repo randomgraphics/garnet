@@ -213,6 +213,11 @@ class _DSPGenerator:
             for v in variants:
                 outdir.append(s)
 
+        if not env.has_key('cmdargs'):
+            cmdargs = ''
+        else:
+            cmdargs = env['cmdargs']
+
         self.sconscript = env['MSVSSCONSCRIPT']
 
         self.env = env
@@ -255,10 +260,11 @@ class _DSPGenerator:
         for n in sourcenames:
             self.sources[n].sort(lambda a, b: cmp(a.lower(), b.lower()))
 
-        def AddConfig(variant, buildtarget, outdir):
+        def AddConfig(variant, buildtarget, outdir, cmdargs):
             config = Config()
             config.buildtarget = buildtarget
             config.outdir = outdir
+            config.cmdargs = cmdargs
 
             match = re.match('(.*)\|(.*)', variant)
             if match:
@@ -272,7 +278,7 @@ class _DSPGenerator:
             print "Adding '" + self.name + ' - ' + config.variant + '|' + config.platform + "' to '" + str(dspfile) + "'"
 
         for i in range(len(variants)):
-            AddConfig(variants[i], buildtarget[i], outdir[i])
+            AddConfig(variants[i], buildtarget[i], outdir[i],cmdargs)
 
         self.platforms = []
         for key in self.configs.keys():
@@ -560,15 +566,16 @@ class _GenerateV7DSP(_DSPGenerator):
             platform = self.configs[kind].platform
             outdir = self.configs[kind].outdir
             buildtarget = self.configs[kind].buildtarget
+            cmdargs = self.configs[kind].cmdargs
 
             env_has_buildtarget = self.env.has_key('MSVSBUILDTARGET')
             if not env_has_buildtarget:
                 self.env['MSVSBUILDTARGET'] = buildtarget
 
             starting = 'echo Starting SCons && '
-            buildcmd    = xmlify(starting + self.env.subst('$MSVSBUILDCOM', 1))
-            rebuildcmd  = xmlify(starting + self.env.subst('$MSVSREBUILDCOM', 1))
-            cleancmd    = xmlify(starting + self.env.subst('$MSVSCLEANCOM', 1))
+            buildcmd    = xmlify(starting + self.env.subst('$MSVSBUILDCOM', 1) + ' %s'%cmdargs)
+            rebuildcmd  = xmlify(starting + self.env.subst('$MSVSREBUILDCOM', 1) + ' %s'%cmdargs)
+            cleancmd    = xmlify(starting + self.env.subst('$MSVSCLEANCOM', 1) + ' %s'%cmdargs)
 
             if not env_has_buildtarget:
                 del self.env['MSVSBUILDTARGET']

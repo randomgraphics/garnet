@@ -1,69 +1,69 @@
 Microsoft Visual Studio Solution File, Format Version 8.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNbase", "GNbase.vcproj", "{28A1B915-7618-4A20-B9CA-CDF3D71BFF1F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNbase", "7.1\GNbase.vcproj", "{28A1B915-7618-4A20-B9CA-CDF3D71BFF1F}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNcore", "GNcore.vcproj", "{377D307A-4C54-48C0-A63F-EA2CE57A7454}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNcore", "7.1\GNcore.vcproj", "{377D307A-4C54-48C0-A63F-EA2CE57A7454}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNd3d", "GNd3d.vcproj", "{ACFFD3CF-6A95-44DA-83FF-AAF2FA796EA0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNd3d", "7.1\GNd3d.vcproj", "{ACFFD3CF-6A95-44DA-83FF-AAF2FA796EA0}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNextern", "GNextern.vcproj", "{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNextern", "7.1\GNextern.vcproj", "{F7F7A69C-0335-4F7E-8A89-0F02F2E151A7}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNogl", "GNogl.vcproj", "{5B4405BF-5F58-44EA-B55A-90D87968A6B6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNogl", "7.1\GNogl.vcproj", "{5B4405BF-5F58-44EA-B55A-90D87968A6B6}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNd3dTest", "GNd3dTest.vcproj", "{D72ECD80-C1C6-49BC-B546-AFC4D26498FA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNd3dTest", "7.1\GNd3dTest.vcproj", "{D72ECD80-C1C6-49BC-B546-AFC4D26498FA}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNoglTest", "GNoglTest.vcproj", "{61B121BF-6905-4BE1-B7AA-858712C58F2A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNoglTest", "7.1\GNoglTest.vcproj", "{61B121BF-6905-4BE1-B7AA-858712C58F2A}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxD3D", "GNgfxD3D.vcproj", "{F6477341-665B-4364-94CA-54A90D73DDF8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxD3D", "7.1\GNgfxD3D.vcproj", "{F6477341-665B-4364-94CA-54A90D73DDF8}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxOGL", "GNgfxOGL.vcproj", "{8610F200-C249-468C-9639-CD9C88CC95E3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxOGL", "7.1\GNgfxOGL.vcproj", "{8610F200-C249-468C-9639-CD9C88CC95E3}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxCommon", "GNgfxCommon.vcproj", "{351F298C-528A-47EC-99AC-8EFD4E35F309}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxCommon", "7.1\GNgfxCommon.vcproj", "{351F298C-528A-47EC-99AC-8EFD4E35F309}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxTest", "GNgfxTest.vcproj", "{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxTest", "7.1\GNgfxTest.vcproj", "{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputTest", "GNinputTest.vcproj", "{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputTest", "7.1\GNinputTest.vcproj", "{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinput", "GNinput.vcproj", "{813D9241-581A-44E0-840A-F2CB26D10EA0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinput", "7.1\GNinput.vcproj", "{813D9241-581A-44E0-840A-F2CB26D10EA0}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNut", "GNut.vcproj", "{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNut", "7.1\GNut.vcproj", "{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwinTest", "GNwinTest.vcproj", "{99C64004-2623-4D98-AB2F-D47B694B557B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwinTest", "7.1\GNwinTest.vcproj", "{99C64004-2623-4D98-AB2F-D47B694B557B}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwin", "GNwin.vcproj", "{72B0E203-3E5A-401F-9EEF-255AC49084EF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwin", "7.1\GNwin.vcproj", "{72B0E203-3E5A-401F-9EEF-255AC49084EF}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxLib", "GNgfxLib.vcproj", "{4C197C4E-59E9-48ED-95F8-A54434812D48}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxLib", "7.1\GNgfxLib.vcproj", "{4C197C4E-59E9-48ED-95F8-A54434812D48}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject

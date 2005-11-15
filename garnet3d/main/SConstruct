@@ -22,16 +22,18 @@ def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
+
 # 定义缺省的选项
 if 'win32' == conf['platform']:
-    default_compiler = 'vc80'
-    all_compilers = 'vc71 vc80 vc80-x64 icl'
-elif 'winx64' == conf['platform']:
-    default_compiler = 'vc80-x64'
+    if 'AMD64' == getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == getenv('PROCESSOR_ARCHITEW6432'):
+        default_compiler = 'vc80-x64'
+    else:
+        default_compiler = 'vc80'
     all_compilers = 'vc71 vc80 vc80-x64 icl'
 else:
     default_compiler = 'gcc'
     all_compilers = 'gcc icl'
+all_variants='debug release stdbg strel'
 default_configs = {
     'genconf'           : getenv('GN_BUILD_GENCONF', 0), # force (re)generation of build configuration
     'enable_cache'      : getenv('GN_BUILD_ENABLE_CACHE', 1), # enable build cache
@@ -42,6 +44,7 @@ default_configs = {
     'run_unit_tests'    : getenv('GN_BUILD_RUN_UNIT_TESTS', 0), # Do not run unit tests after build by default.
     }
 
+
 # 是否强制生成配置信息
 conf['genconf']  = ARGUMENTS.get('conf', default_configs['genconf'] )
 
@@ -50,16 +53,9 @@ conf['enable_cache']  = ARGUMENTS.get('cache', default_configs['enable_cache'] )
 
 # 定义编译器类型
 conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])
-if not conf['compiler'] in Split(all_compilers):
-    print 'Invalid compiler type! Must be one of (%s)'%all_compilers;
-    Exit(-1)
 
 # 定义编译类型
-# can be 'debug', 'release', 'stdbg', 'strel', 'static', 'all'
 conf['variant'] = ARGUMENTS.get('variant', default_configs['variant'] )
-if not conf['variant'] in Split('debug release stdbg strel all'):
-    print 'Invalid variant type! Must be one of (debug releae stdbg strel all)';
-    Exit(-1)
 
 # 是否支持Cg语言.
 conf['enable_cg']  = ARGUMENTS.get('cg', default_configs['enable_cg'] )
@@ -71,7 +67,11 @@ conf['enable_profile'] = ARGUMENTS.get('prof', default_configs['enable_profile']
 conf['run_unit_tests'] = ARGUMENTS.get('ut', default_configs['run_unit_tests'] )
 
 # 定义target dict
-targets = [{}, {}, {}, {}]
+targets = {}
+for v in Split(all_variants):
+    targets[v] = {}
+    for c in Split(all_compilers):
+        targets[v][c] = {}
 alias   = []
 
 ################################################################################
@@ -91,11 +91,11 @@ opts.Add(
     default_configs['enable_cache'] )
 opts.Add(
     'compiler',
-    'Specify compiler. Could be : %s. (GN_BUILD_COMPILER)'%all_compilers,
+    'Specify compiler. Could be : one of (%s) or "all". (GN_BUILD_COMPILER)'%all_compilers,
     default_configs['compiler'] )
 opts.Add(
     'variant',
-    'Specify variant. Could be : debug, release, stdbg, strel or all. (GN_BUILD_VARIANT)',
+    'Specify variant. Could be : one of (%s) or "all". (GN_BUILD_VARIANT)'%all_variants,
     default_configs['variant'] )
 opts.Add(
     'cg',
@@ -118,55 +118,47 @@ env = Environment( options = opts )
 #
 ################################################################################
 
-if 'all' in COMMAND_LINE_TARGETS: conf['variant'] = 'all'
+if 'all' in COMMAND_LINE_TARGETS:
+    variants = Split(all_variants)
+    compilers = Split(all_compilers)
+else:
+    if 'all' == conf['variant']:
+        variants = Split(all_variants)
+    else:
+        variants = Split(conf['variant'])
+    if 'all' == conf['compiler']:
+        compilers = Split(all_compilers)
+    else:
+        compilers = Split(conf['compiler'])
 
-if 'all' == conf['variant'] or 'debug' == conf['variant'] or 'debug' in COMMAND_LINE_TARGETS:
-    c = copy.copy(conf);
-    c['variant'] = 'debug'
-    SConscript(
-        'SConscript',
-        exports={
-            'GN_conf'    : c,
-            'GN_targets' : targets[0],
-            'GN_alias'   : alias,
-            },
-        )
+for v in variants:
+    if not v in all_variants:
+        print "ERROR: Ignore invalid variant '%s'"%v
+        continue
+    for c in compilers:
+        if not c in all_compilers:
+            print "ERROR: Ignore invalid compiler '%s'"%c
+            continue
+        cc = copy.copy(conf)
+        cc['variant'] = v
+        cc['compiler'] = c
+        SConscript(
+            'SConscript',
+            exports={
+                'GN_conf'    : cc,
+                'GN_targets' : targets[v][c],
+                'GN_alias'   : alias,
+                },
+            )
 
-if 'all' == conf['variant'] or 'release' == conf['variant'] or 'release' in COMMAND_LINE_TARGETS:
-    c = copy.copy(conf);
-    c['variant'] = 'release'
-    SConscript(
-        'SConscript',
-        exports={
-            'GN_conf'    : c,
-            'GN_targets' : targets[1],
-            'GN_alias'   : alias,
-            },
-        )
-
-if 'all' == conf['variant'] or 'stdbg' == conf['variant'] or 'stdbg' in COMMAND_LINE_TARGETS:
-    c = copy.copy(conf);
-    c['variant'] = 'stdbg'
-    SConscript(
-        'SConscript',
-        exports={
-            'GN_conf'    : c,
-            'GN_targets' : targets[2],
-            'GN_alias'   : alias,
-            },
-        )
-
-if 'all' == conf['variant'] or 'strel' == conf['variant'] or 'strel' in COMMAND_LINE_TARGETS:
-    c = copy.copy(conf);
-    c['variant'] = 'strel'
-    SConscript(
-        'SConscript',
-        exports={
-            'GN_conf'    : c,
-            'GN_targets' : targets[3],
-            'GN_alias'   : alias,
-            },
-        )
+# Collect all targets
+all_targets = []
+for x in targets:
+    for y in targets[x]:
+        all_targets += targets[x][y].items()
+all_targets.sort()
+if 0 == len(all_targets):
+    raise "No targets found!"
 
 ################################################################################
 #
@@ -202,8 +194,6 @@ for src in env.GN_glob(source, True):
 
 env.Alias( 'msvc', '#msvc' )
 
-all_targets = targets[0].items() + targets[1].items() + targets[2].items() + targets[3].items() + manual.items()
-all_targets.sort()
 for x in all_targets:
     env.Alias( x[0], x[1] )
     env.Alias( 'all', x[1] )
@@ -217,7 +207,7 @@ env.Default( Split('samples sdk') )
 ################################################################################
 
 targets_text = ''
-targets_text += '%16s : %s\n'%( 'all', 'Build all targets of all variants' )
+targets_text += '%16s : %s\n'%( 'all', 'Build all targets of all variants for all compilers' )
 targets_text += '%16s : %s\n'%( 'samples', 'Build samples' )
 targets_text += '%16s : %s\n'%( 'sdk', 'Build garnet SDK' )
 targets_text += '%16s : %s\n'%( 'msvc', 'Build MSVC projects' )
