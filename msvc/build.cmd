@@ -1,5 +1,5 @@
 @echo off
-del GN*.vcproj 2>nul
-del GN*.sln 2>nul
-call scons -U . variant=all --no-cache
-del GN*.sln 2>nul
+del /s GN*.vcproj 2>nul
+del /s GN*.sln 2>nul
+call scons -U . variant=all compiler="vc71 vc80 vc80-x64" -j1 --no-cache %*
+del /s GN*.sln 2>nul

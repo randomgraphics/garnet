@@ -2,6 +2,23 @@ Import('env GN_targets GN_conf')
 
 import os.path
 
+env = env.Copy()
+
+if 'vc80-x64' == GN_conf['compiler']:
+    variant = '%s|x64'%GN_conf['variant']
+    target_dir = '8.0'
+elif 'vc80' == GN_conf['compiler']:
+    variant = '%s|Win32'%GN_conf['variant']
+    target_dir = '8.0'
+else:
+    variant = '%s|Win32'%GN_conf['variant']
+    target_dir = '7.1'
+
+absdir = Dir(target_dir).srcnode().abspath
+if not os.path.exists( absdir ) : os.makedirs( absdir )
+
+cmdargs = 'variant=%s compiler=%s'%(GN_conf['variant'],GN_conf['compiler'])
+
 #
 #
 # -----------------------------------------------------------------------------
@@ -24,12 +41,13 @@ def build_proj( target, srcdir=[], incdir=[], moduleName='' ):
     localincs = env.GN_glob( ['%s/*.[hi]*'%x for x in srcdir], True )
 
     proj = env.MSVSProject(
-        target      = target + env['MSVSPROJECTSUFFIX'],
+        target      = os.path.join( target_dir, target ) + env['MSVSPROJECTSUFFIX'],
         buildtarget = GN_targets[target][0],
-        variant     = GN_conf['variant'],
-        srcs        = to_relpath(sources),
-        incs        = to_relpath(includes),
-        localincs   = to_relpath(localincs),
+        variant     = variant,
+        cmdargs     = cmdargs,
+        srcs        = to_relpath( sources ),
+        incs        = to_relpath( includes ),
+        localincs   = to_relpath( localincs ),
         resources   = [],
         misc        = [],
         )
