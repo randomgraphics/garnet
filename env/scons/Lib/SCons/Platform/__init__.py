@@ -81,7 +81,7 @@ def platform_default():
     elif osname == 'os2':
         return 'os2'
     elif osname == 'nt':
-        if 'AMD64' == os.environ['PROCESSOR_ARCHITECTURE']:
+        if 'AMD64' == os.environ['PROCESSOR_ARCHITECTURE'] or 'AMD64' == os.environ['PROCESSOR_ARCHITEW6432']:
             return 'winx64'
         else:
             return sys.platform
