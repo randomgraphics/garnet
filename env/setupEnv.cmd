@@ -19,9 +19,9 @@ set mypath=
 REM ===========
 REM setup scons
 REM ===========
-
-REM set PATH=%GARNET_ROOT%\env\scons\Scripts;%PATH%
-REM set PYTHONPATH=%GARNET_ROOT%\env\scons\Lib;%PYTHONPATH%
+echo SCons Directory : %GARNET_ROOT%\env\scons
+set PATH=%GARNET_ROOT%\env\scons\Scripts;%PATH%
+set PYTHONPATH=%GARNET_ROOT%\env\scons\Lib;%PYTHONPATH%
 
 REM ===========
 REM setup alias
