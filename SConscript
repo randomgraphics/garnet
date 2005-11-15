@@ -213,7 +213,7 @@ def GN_build_shared_library( env, target, sources=[],
         GN_targets[target] = result
         if GN_conf['static'] or 'posix' == env['PLATFORM']:
             GN_targets['%sLib'%target] = result
-        elif 'win32' == env['PLATFORM']:
+        elif 'win32' == env['PLATFORM'] or 'winx64' == env['PLATFORM']:
             if GN_has_manifest(env):
                 GN_targets['%sBin'%target] = [ result[0], result[1], result[4] ]
             else:

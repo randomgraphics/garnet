@@ -18,13 +18,20 @@ conf = {
 }
 
 # 读取环境变量
-def getenv( name, defval ):
+def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
 # 定义缺省的选项
-if 'win32' == conf['platform']: default_compiler = 'vc71'
-else: default_compiler = 'gcc'
+if 'win32' == conf['platform']:
+    default_compiler = 'vc80'
+    all_compilers = 'vc71 vc80 vc80-x64 icl'
+elif 'winx64' == conf['platform']:
+    default_compiler = 'vc80-x64'
+    all_compilers = 'vc71 vc80 vc80-x64 icl'
+else:
+    default_compiler = 'gcc'
+    all_compilers = 'gcc icl'
 default_configs = {
     'genconf'           : getenv('GN_BUILD_GENCONF', 0), # force (re)generation of build configuration
     'enable_cache'      : getenv('GN_BUILD_ENABLE_CACHE', 1), # enable build cache
@@ -43,8 +50,8 @@ conf['enable_cache']  = ARGUMENTS.get('cache', default_configs['enable_cache'] )
 
 # 定义编译器类型
 conf['compiler'] = ARGUMENTS.get('compiler', default_configs['compiler'])
-if not conf['compiler'] in Split('%s vc80 vc80-x64 icl'%default_compiler):
-    print 'Invalid compiler type! Must be one of (%s vc80 vc80-x64 icl)'%default_compiler;
+if not conf['compiler'] in Split(all_compilers):
+    print 'Invalid compiler type! Must be one of (%s)'%all_compilers;
     Exit(-1)
 
 # 定义编译类型
@@ -84,7 +91,7 @@ opts.Add(
     default_configs['enable_cache'] )
 opts.Add(
     'compiler',
-    'Specify compiler. Could be : %s vc80 vc80-x64 icl. (GN_BUILD_COMPILER)'%default_compiler,
+    'Specify compiler. Could be : %s. (GN_BUILD_COMPILER)'%all_compilers,
     default_configs['compiler'] )
 opts.Add(
     'variant',
