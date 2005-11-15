@@ -21,7 +21,7 @@ REM setup scons
 REM ===========
 echo SCons Directory : %GARNET_ROOT%\env\scons
 set PATH=%GARNET_ROOT%\env\scons\Scripts;%PATH%
-set PYTHONPATH=%GARNET_ROOT%\env\scons\Lib;%PYTHONPATH%
+set SCONS_LIB_DIR=%GARNET_ROOT%\env\scons\Lib
 
 REM ===========
 REM setup alias

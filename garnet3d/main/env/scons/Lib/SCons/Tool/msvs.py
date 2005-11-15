@@ -92,7 +92,9 @@ def _generateGUID(slnfile, name):
 # which works regardless of how we were invoked.
 def getExecScriptMain(env, xml=None):
     scons_home = env.get('SCONS_HOME')
-    if scons_home:        
+    if (not scons_home) and 'SCONS_LIB_DIR' in os.environ:
+        scons_home = os.environ['SCONS_LIB_DIR']
+    if scons_home:
         exec_script_main = "from os.path import join; import sys; sys.path = [ r'%s' ] + sys.path; import SCons.Script; SCons.Script.main()" % scons_home
     else:
         exec_script_main = "from os.path import join; import sys; sys.path = [ join(sys.prefix, 'Lib', 'site-packages', 'scons-0.96'), join(sys.prefix, 'scons-0.96'), join(sys.prefix, 'Lib', 'site-packages', 'scons'), join(sys.prefix, 'scons') ] + sys.path; import SCons.Script; SCons.Script.main()"
@@ -140,7 +142,7 @@ def makeHierarchy(sources):
             dict[path[-1]] = file
         #else:
         #    print 'Warning: failed to decompose path for '+str(file)
-    return hierarchy    
+    return hierarchy
 
 class _DSPGenerator:
     """ Base class for DSP generators """
@@ -291,16 +293,16 @@ V6DSPHeader = """\
 CFG=%(name)s - Win32 %(confkey)s
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "%(name)s.mak".
-!MESSAGE 
+!MESSAGE
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "%(name)s.mak" CFG="%(name)s - Win32 %(confkey)s"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 """
 
 class _GenerateV6DSP(_DSPGenerator):
@@ -355,7 +357,7 @@ class _GenerateV6DSP(_DSPGenerator):
                 self.file.write('# PROP %sOutput_Dir "%s"\n'
                                 '# PROP %sIntermediate_Dir "%s"\n' % (base,outdir,base,outdir))
                 cmd = 'echo Starting SCons && ' + self.env.subst('$MSVSBUILDCOM', 1)
-                self.file.write('# PROP %sCmd_Line "%s"\n' 
+                self.file.write('# PROP %sCmd_Line "%s"\n'
                                 '# PROP %sRebuild_Opt "-c && %s"\n'
                                 '# PROP %sTarget_File "%s"\n'
                                 '# PROP %sBsc_Name ""\n'
@@ -490,7 +492,7 @@ V7DSPHeader = """\
 
 V7DSPConfiguration = """\
 \t\t<Configuration
-\t\t\tName="%(variant)s|Win32"
+\t\t\tName="%(variant)s|%(platform)s"
 \t\t\tOutputDirectory="%(outdir)s"
 \t\t\tIntermediateDirectory="%(outdir)s"
 \t\t\tConfigurationType="0"
@@ -512,7 +514,9 @@ class _GenerateV7DSP(_DSPGenerator):
         _DSPGenerator.__init__(self, dspfile, source, env)
         self.version = float(env['MSVS_VERSION'])
         self.versionstr = '7.00'
-        if self.version >= 7.1:
+        if self.version >= 8.0:
+            self.versionstr = '8.00'
+        elif self.version >= 7.1:
             self.versionstr = '7.10'
         self.file = None
 
@@ -574,7 +578,7 @@ class _GenerateV7DSP(_DSPGenerator):
         self.file.write('\t</Configurations>\n')
 
         if self.version >= 7.1:
-            self.file.write('\t<References>\n' 
+            self.file.write('\t<References>\n'
                             '\t</References>\n')
 
         self.PrintSourceFiles()
@@ -752,6 +756,8 @@ class _GenerateV7DSW(_DSWGenerator):
         self.file = None
         self.version = float(self.env['MSVS_VERSION'])
         self.versionstr = '7.00'
+        if self.version >= 8.0:
+            self.versionstr = '9.00'
         if self.version >= 7.1:
             self.versionstr = '8.00'
 
@@ -850,7 +856,7 @@ class _GenerateV7DSW(_DSWGenerator):
             scc_local_path = env.get('MSVS_SCC_LOCAL_PATH', '')
             scc_project_base_path = env.get('MSVS_SCC_PROJECT_BASE_PATH', '')
             # project_guid = env.get('MSVS_PROJECT_GUID', '')
-            
+
             self.file.write('\tGlobalSection(SourceCodeControl) = preSolution\n'
                             '\t\tSccNumberOfProjects = 2\n'
                             '\t\tSccProjectUniqueName0 = %(dspfile_base)s\n'
@@ -864,7 +870,7 @@ class _GenerateV7DSW(_DSWGenerator):
                             '\t\tSccProjectFilePathRelativizedFromConnection1 = %(scc_project_base_path)s\n'
                             '\t\tSolutionUniqueID = %(slnguid)s\n'
                             '\tEndGlobalSection\n' % locals())
-                        
+
         self.file.write('\tGlobalSection(SolutionConfiguration) = preSolution\n')
         confkeys = self.configs.keys()
         confkeys.sort()
