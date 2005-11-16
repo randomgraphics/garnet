@@ -69,7 +69,7 @@ namespace GN
             bool refDevice;  //!< use reference device.
             bool fullScreen; //!< use fullscreen mode.
             bool hwvp;       //!< use hardware vertex processing
-            bool showWindow; //!< show render window auotmatically while starting up.
+            bool showWindow; //!< show render window automatically while starting up.
             uint32_t width;  //!< render window width.
             uint32_t height; //!< render window height.
             const char * winTitle; //!< render window title.
@@ -124,11 +124,11 @@ namespace GN
 
             // ********************************
             //! \name device management signals
-            //! - These signales provide standard way for device restoration and
+            //! - These signals provide standard way for device restoration and
             //!   and recreation.
             //! - During class initialization, sigDeviceCreate and sigDeviceRestore
-            //!   will be triggered; during class destory sigDeviceDispose
-            //!   and sigDeviceDestroyr will be triggerd.
+            //!   will be triggered; during class destroy sigDeviceDispose
+            //!   and sigDeviceDestroyr will be triggered.
             //! - signals may be triggered several times in life-time of application,
             //!   but must be in strict order:
             //!   <pre>
@@ -173,6 +173,17 @@ namespace GN
             //! resources here.
             //!
             Signal0<void> sigDeviceDestroy;
+
+            //!
+            //! Helper macro to quick-connect to a slot class.
+            //!
+            #define GND3D_CONNECTTO( slotPtr, slotClass ) \
+                if(true) { \
+                    gD3D.sigDeviceCreate.connect( slotPtr, &slotClass::onDeviceCreate ); \
+                    gD3D.sigDeviceRestore.connect( slotPtr, &slotClass::onDeviceRestore ); \
+                    gD3D.sigDeviceDispose.connect( slotPtr, &slotClass::onDeviceDispose ); \
+                    gD3D.sigDeviceDestroy.connect( slotPtr, &slotClass::onDeviceDestroy ); \
+                } else void(0)
 
             //@}
 

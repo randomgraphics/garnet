@@ -8,7 +8,9 @@
 
 #include "GNbase.h"
 
-#if GN_MSWIN
+#if GN_XENON
+#include <xtl.h>
+#elif GN_MSWIN
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
