@@ -17,7 +17,7 @@ namespace GN
     namespace detail {}
 }
 
-// user configable compile switches
+// user configurable compile switches
 #include "base/userConfig.h"
 
 // basic defines
