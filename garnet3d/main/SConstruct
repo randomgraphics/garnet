@@ -167,10 +167,7 @@ if 0 == len(all_targets):
 ################################################################################
 
 manual = SConscript( 'src/priv/manual/SConscript' )
-if manual:
-    manual = { 'GNman' : env.Install( os.path.join( 'bin', 'sdk', 'manual' ), manual ) }
-else:
-    manual = {}
+if manual: all_targets.append( [ 'GNman', env.Install( os.path.join( 'bin', 'sdk', 'manual' ), manual ) ] )
 
 ################################################################################
 #
