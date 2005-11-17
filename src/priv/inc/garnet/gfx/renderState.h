@@ -107,13 +107,20 @@ namespace GN { namespace gfx
     //! \def GNGFX_DEFINE_TS
     //! Define texture stage states
 
+    enum
+    {
+        //!
+        //! 最多16层贴图
+        //!
+        MAX_TEXTURE_STAGES = 16
+    };
+
     //!
     //! Texture Stage States
     //!
     enum TextureState
     {
-        #define GNGFX_DEFINE_TS( tag, defval0, defval, \
-                              d3dname, glname1, glname2 ) TS_##tag,
+        #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 ) TS_##tag,
         #include "textureStateMeta.h"
         #undef GNGFX_DEFINE_TS
 
@@ -190,11 +197,6 @@ namespace GN { namespace gfx
         static const RenderStateBlockDesc INVALID; //!< invalid rsblock
 
         //!
-        //! 最多8层贴图
-        enum { MAX_STAGES = 8 };
-        //!
-
-        //!
         //! reset flag
         //!
         enum ResetFlag
@@ -206,12 +208,12 @@ namespace GN { namespace gfx
         //!
         //! render states
         //!
-        RenderStateValue  rs[NUM_RENDER_STATES];
+        RenderStateValue rs[NUM_RENDER_STATES];
 
         //!
         //! texture stage states
         //!
-        TextureStateValue ts[MAX_STAGES][NUM_TEXTURE_STATES];
+        TextureStateValue ts[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES];
 
         // ********************************
         //! \name constructors

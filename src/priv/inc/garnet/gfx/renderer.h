@@ -526,6 +526,24 @@ namespace GN { namespace gfx
         //!
         virtual void bindRenderStateBlock( uint32_t ) = 0;
 
+        //!
+        //! Update individual render state.
+        //!
+        //! Note that this function is purely for coding convenience.
+        //! Please use render state block at performance critical section.
+        //!
+        virtual void setRenderState( RenderState state, RenderStateValue value ) = 0;
+
+        //!
+        //! Update individual texture state.
+        //!
+        //! Note that this function is purely for coding convenience.
+        //! Please use render state block at performance critical section.
+        //!
+        //! Also note that texture states are only used for fixed function pipeline.
+        //!
+        virtual void setTextureState( uint32_t stage, TextureState state, TextureStateValue value ) = 0;
+
         //@}
 
         // ********************************************************************

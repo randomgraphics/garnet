@@ -240,10 +240,11 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
-        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & )
-        { GN_UNIMPL(); return 0; }
-        virtual void bindRenderStateBlock( uint32_t ) { GN_UNIMPL(); }
+    public :
+
+        void setD3DRenderState( D3DRENDERSTATETYPE, DWORD );
+        void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
+        void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
 
     private :
         bool rsbInit() { return true; }
@@ -252,9 +253,13 @@ namespace GN { namespace gfx
         void rsbClear() {}
 
         bool rsbDeviceCreate() { return true; }
-        bool rsbDeviceRestore() { return true; }
+        bool rsbDeviceRestore();
         void rsbDeviceDispose() {}
         void rsbDeviceDestroy() {}
+
+        // from BasicRenderer
+        virtual DeviceRenderStateBlock *
+        createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to );
 
         //@}
 
@@ -296,7 +301,7 @@ namespace GN { namespace gfx
             D3DTEXTUREADDRESS s, q, r, t;
         };
 
-        TexParameters mTexParameters[RenderStateBlockDesc::MAX_STAGES];
+        TexParameters mTexParameters[MAX_TEXTURE_STAGES];
 
     private:
 
@@ -509,6 +514,7 @@ namespace GN { namespace gfx
 #endif
 
 #if GN_ENABLE_INLINE
+#include "d3dRenderStateBlockMgr.inl"
 #include "d3dTextureMgr.inl"
 #endif
 

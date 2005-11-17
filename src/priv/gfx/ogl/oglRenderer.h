@@ -239,11 +239,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
-        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & )
-        { GN_UNIMPL(); return 0; }
-        virtual void bindRenderStateBlock( uint32_t ) { GN_UNIMPL(); }
-
     private :
         bool rsbInit() { return true; }
         void rsbQuit() {}
@@ -254,6 +249,10 @@ namespace GN { namespace gfx
         bool rsbDeviceRestore() { return true; }
         void rsbDeviceDispose() {}
         void rsbDeviceDestroy() {}
+
+        // from BasicRenderer
+        virtual DeviceRenderStateBlock *
+        createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to );
 
         //@}
 
