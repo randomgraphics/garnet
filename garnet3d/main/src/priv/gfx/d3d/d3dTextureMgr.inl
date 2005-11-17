@@ -4,7 +4,7 @@
 GN_INLINE void
 GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters )
 {
-    GN_ASSERT( stage < RenderStateBlockDesc::MAX_STAGES );
+    GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
     // update texture filters
 
@@ -33,7 +33,7 @@ GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILT
 GN_INLINE void
 GN::gfx::D3DRenderer::updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq )
 {
-    GN_ASSERT( stage < RenderStateBlockDesc::MAX_STAGES );
+    GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
     if( *strq != mTexParameters[stage].s )
     {

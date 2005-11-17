@@ -24,7 +24,7 @@ void GN::gfx::RenderStateBlockDesc::reset( ResetFlag flag )
         #include "garnet/gfx/textureStateMeta.h"
         #undef GNGFX_DEFINE_TS
 
-        for ( int i = 1; i < MAX_STAGES; ++i )
+        for ( int i = 1; i < MAX_TEXTURE_STAGES; ++i )
         {
             #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 ) \
                 ts[i][TS_##tag] = TSV_##defval;
@@ -40,7 +40,7 @@ void GN::gfx::RenderStateBlockDesc::reset( ResetFlag flag )
         #undef GNGFX_DEFINE_RS
 
         // initiate all TSSs to default value
-        for ( int i = 0; i < MAX_STAGES; ++i )
+        for ( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
         {
             #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 ) \
                 ts[i][TS_##tag] = TSV_INVALID;

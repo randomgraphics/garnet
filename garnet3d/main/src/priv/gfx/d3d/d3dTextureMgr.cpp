@@ -93,7 +93,7 @@ bool GN::gfx::D3DRenderer::textureDeviceRestore()
     _GNGFX_DEVICE_TRACE();
 
     // reset texture parameters
-    for( uint32_t i = 0; i < RenderStateBlockDesc::MAX_STAGES; ++i )
+    for( uint32_t i = 0; i < MAX_TEXTURE_STAGES; ++i )
     {
         TexParameters & tp = mTexParameters[i];
         tp.min = tp.mag = tp.mip = D3DTEXF_FORCE_DWORD;

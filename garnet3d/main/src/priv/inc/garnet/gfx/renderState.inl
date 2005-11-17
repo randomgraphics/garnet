@@ -216,7 +216,7 @@ GN::gfx::RenderStateBlockDesc::operator += ( const RenderStateBlockDesc & rhs )
     }
 
     // evaluate TSSs
-    for( i = 0; i < MAX_STAGES; ++i )
+    for( i = 0; i < MAX_TEXTURE_STAGES; ++i )
     {
         TextureStateValue       * t1 = ts[i];
         const TextureStateValue * t2 = rhs.ts[i];
@@ -242,7 +242,7 @@ GN::gfx::RenderStateBlockDesc::operator -= ( const RenderStateBlockDesc & rhs )
     }
 
     // evaluate TSSs
-    for( i = 0; i < MAX_STAGES; ++i )
+    for( i = 0; i < MAX_TEXTURE_STAGES; ++i )
     {
         TextureStateValue       * t1 = ts[i];
         const TextureStateValue * t2 = rhs.ts[i];

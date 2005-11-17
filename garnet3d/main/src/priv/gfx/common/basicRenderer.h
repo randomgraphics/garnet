@@ -17,6 +17,17 @@
 namespace GN { namespace gfx
 {
     //!
+    //! Device-dependent render state block
+    //!
+    struct DeviceRenderStateBlock : public RefCounter
+    {
+        //!
+        //! Apply render states to render device
+        //!
+        virtual void apply() const = 0;
+    };
+
+    //!
     //! basic renderer class
     //!
     class BasicRenderer : public Renderer, public StdClass
@@ -45,12 +56,14 @@ namespace GN { namespace gfx
         {
             return MyParent::ok()
                 && dispOk()
+                && rsbOk()
                 && drawOk();
         }
     private :
         void clear()
         {
             drawClear();
+            rsbClear();
             dispClear();
         }
         //@}
@@ -64,10 +77,10 @@ namespace GN { namespace gfx
         //@{
 
     protected:
-        bool deviceCreate() { return true; }
-        bool deviceRestore() { return true; }
-        void deviceDispose() {}
-        void deviceDestroy() {}
+        bool deviceCreate();
+        bool deviceRestore();
+        void deviceDispose();
+        void deviceDestroy();
 
         //@}
 
@@ -108,6 +121,60 @@ namespace GN { namespace gfx
         XRenderWindow mWindow;  //!< Render window instance
 #endif
 
+        //@}
+
+        // *****************************************************************************
+        //
+        //! \name                   Render state manager
+        //
+        // *****************************************************************************
+
+        //@{
+
+        public :
+
+            virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & );
+            virtual void bindRenderStateBlock( uint32_t );
+            virtual void setRenderState( RenderState, RenderStateValue );
+            virtual void setTextureState( uint32_t, TextureState, TextureStateValue );
+
+        private :
+
+            bool rsbInit() { return true; }
+            void rsbQuit() {}
+            bool rsbOk() const { return true; }
+            void rsbClear() { mRsbHandles.clear(); mDevRsbMap.clear(); mCurrentRsb = 0; }
+
+            bool rsbDeviceCreate() { return true; }
+            bool rsbDeviceRestore();
+            void rsbDeviceDispose() { mDevRsbMap.clear(); }
+            void rsbDeviceDestroy() { mRsbHandles.clear(); mCurrentRsb = 0; }
+
+            //!
+            //! Create device render state block, that can switch device render state
+            //! from 'from' to 'to'.
+            //!
+            virtual DeviceRenderStateBlock *
+            createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to ) = 0;
+
+        private :
+
+            union DevRsbKey
+            {
+                uint64_t u64;
+                struct
+                {
+                    uint32_t from, to;
+                };
+                bool operator<( const DevRsbKey & rhs ) const { return u64 < rhs.u64; }
+            };
+            typedef HandleManager<RenderStateBlockDesc,uint32_t> RsbHandleManager;
+            typedef AutoRef<DeviceRenderStateBlock> DeviceRenderStateBlockRefPtr;
+            typedef std::map<DevRsbKey,DeviceRenderStateBlockRefPtr> DevRsbMap;
+
+            RsbHandleManager mRsbHandles;
+            DevRsbMap        mDevRsbMap;
+            uint32_t         mCurrentRsb;
         //@}
 
         // *****************************************************************************
