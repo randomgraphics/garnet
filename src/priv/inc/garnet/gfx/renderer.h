@@ -527,22 +527,46 @@ namespace GN { namespace gfx
         virtual void bindRenderStateBlock( uint32_t ) = 0;
 
         //!
+        //! Get current render state.
+        //!
+        //! \note Better not use this functio in performance critical code.
+        //!
+        virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const = 0;
+
+        //!
+        //! Another style of getting current render state.
+        //!
+        //! \note This is even slower because of extra data copy.
+        //!
+        RenderStateBlockDesc getCurrentRenderStateBlock() const
+        { RenderStateBlockDesc result; getCurrentRenderStateBlock(result); return result; }
+
+        //!
         //! Update individual render state.
         //!
-        //! Note that this function is purely for coding convenience.
-        //! Please use render state block at performance critical section.
+        //! \return
+        //!     Return the render state block handler that represents current render state.
+        //!     Return 0, if failed.
         //!
-        virtual void setRenderState( RenderState state, RenderStateValue value ) = 0;
+        //! \note
+        //!     This function is purely for coding convenience.
+        //!     Please use render state block at performance critical section.
+        //!
+        virtual uint32_t setRenderState( RenderState state, RenderStateValue value ) = 0;
 
         //!
         //! Update individual texture state.
         //!
-        //! Note that this function is purely for coding convenience.
-        //! Please use render state block at performance critical section.
+        //! \return
+        //!     Return the render state block handler that represents current render state.
+        //!     Return 0, if failed.
         //!
-        //! Also note that texture states are only used for fixed function pipeline.
+        //! \note
+        //!     - This function is purely for coding convenience.
+        //!       Please use render state block at performance critical section.
+        //!     - Also, Texture states are only used for fixed function pipeline.
         //!
-        virtual void setTextureState( uint32_t stage, TextureState state, TextureStateValue value ) = 0;
+        virtual uint32_t setTextureState( uint32_t stage, TextureState state, TextureStateValue value ) = 0;
 
         //@}
 
