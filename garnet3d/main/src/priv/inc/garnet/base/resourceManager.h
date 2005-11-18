@@ -363,11 +363,11 @@ namespace GN
         };
 
         typedef std::map<StrA,ResHandle>          StringMap;
-        typedef HandleManager<ResDesc*,ResHandle> ResHangleMgr;
+        typedef HandleManager<ResDesc*,ResHandle> ResHandleMgr;
 
         static MyType msInstance;
 
-        ResHangleMgr mResHandles;
+        ResHandleMgr mResHandles;
         StringMap    mResNames;
 
         // global resource manipulators
