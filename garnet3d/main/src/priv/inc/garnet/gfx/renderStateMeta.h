@@ -25,7 +25,7 @@ GNGFX_DEFINE_RS( ALPHA_FUNC      , CMP_ALWAYS  )
 //!
 //! alpha blending enable, default is false
 //!
-GNGFX_DEFINE_RS( BLENDING        , TRUE )
+GNGFX_DEFINE_RS( BLENDING        , FALSE )
 
 //!
 //! alpha blending source, default is BLEND_SA

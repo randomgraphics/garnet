@@ -135,8 +135,9 @@ namespace GN { namespace gfx
 
             virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & );
             virtual void bindRenderStateBlock( uint32_t );
-            virtual void setRenderState( RenderState, RenderStateValue );
-            virtual void setTextureState( uint32_t, TextureState, TextureStateValue );
+            virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const;
+            virtual uint32_t setRenderState( RenderState, RenderStateValue );
+            virtual uint32_t setTextureState( uint32_t, TextureState, TextureStateValue );
 
         private :
 

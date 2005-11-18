@@ -108,7 +108,7 @@ struct D3DRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
         GN_GUARD_SLOW;
 
 #if GN_DEBUG
-        if( 0 == d3dRsb )
+        if( d3dRsb.empty() )
         {
             // Note, this must be a non-pure device
             sApplyRenderStateBlock( renderer, desc );

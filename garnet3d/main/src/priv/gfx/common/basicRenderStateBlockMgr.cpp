@@ -27,8 +27,18 @@ bool GN::gfx::BasicRenderer::rsbDeviceRestore()
     mCurrentRsb = createRenderStateBlock( RenderStateBlockDesc::INVALID );
     if( 0 == mCurrentRsb ) return false;
 
-    // then rebind the original render state block to device
-    if( mRsbHandles.validHandle( oldCurrent ) ) bindRenderStateBlock( oldCurrent );
+    if( mRsbHandles.validHandle( oldCurrent ) )
+    {
+        // rebind the original render state block to device
+        bindRenderStateBlock( oldCurrent );
+    }
+    else
+    {
+        // bind default render state block to device
+        uint32_t defRsb = createRenderStateBlock( RenderStateBlockDesc::DEFAULT );
+        if( 0 == defRsb ) return false;
+        bindRenderStateBlock( defRsb );
+    }
 
     // success
     return true;
@@ -111,29 +121,13 @@ void GN::gfx::BasicRenderer::bindRenderStateBlock( uint32_t handle )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::setRenderState( RenderState state, RenderStateValue value )
+void GN::gfx::BasicRenderer::getCurrentRenderStateBlock( RenderStateBlockDesc & result ) const
 {
     GN_GUARD;
 
     GN_ASSERT( mRsbHandles.validHandle( mCurrentRsb ) );
 
-    // check for invalid parameters
-    if( state < 0 && state >= NUM_RENDER_STATES )
-    {
-        GNGFX_ERROR( "invalid render state %d!", state );
-        return;
-    }
-    if( value < 0 && value >= NUM_RENDER_STATE_VALUES )
-    {
-        GNGFX_ERROR( "invalid render state value %d!", value );
-        return;
-    }
-
-    RenderStateBlockDesc desc = mRsbHandles.get( mCurrentRsb );
-    desc.rs[state] = value;
-
-    // create and apply the updated render state block
-    bindRenderStateBlock( createRenderStateBlock( desc ) );
+    result = mRsbHandles[mCurrentRsb];
 
     GN_UNGUARD;
 }
@@ -141,7 +135,39 @@ void GN::gfx::BasicRenderer::setRenderState( RenderState state, RenderStateValue
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::setTextureState( uint32_t stage, TextureState state, TextureStateValue value )
+uint32_t GN::gfx::BasicRenderer::setRenderState( RenderState state, RenderStateValue value )
+{
+    GN_GUARD;
+
+    GN_ASSERT( mRsbHandles.validHandle( mCurrentRsb ) );
+
+    // check for invalid parameters
+    if( state < 0 || state >= NUM_RENDER_STATES )
+    {
+        GNGFX_ERROR( "invalid render state %d!", state );
+        return 0;
+    }
+    if( value < 0 || value >= NUM_RENDER_STATE_VALUES )
+    {
+        GNGFX_ERROR( "invalid render state value %d!", value );
+        return 0;
+    }
+
+    RenderStateBlockDesc desc = mRsbHandles.get( mCurrentRsb );
+    desc.rs[state] = value;
+
+    // create and apply the updated render state block
+    uint32_t handle = createRenderStateBlock( desc );
+    if( handle ) bindRenderStateBlock( handle );
+    return handle;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+uint32_t GN::gfx::BasicRenderer::setTextureState( uint32_t stage, TextureState state, TextureStateValue value )
 {
     GN_GUARD;
 
@@ -151,24 +177,26 @@ void GN::gfx::BasicRenderer::setTextureState( uint32_t stage, TextureState state
     if( stage >= MAX_TEXTURE_STAGES )
     {
         GNGFX_ERROR( "texture stage '%d' is too large. Maximum value is %d", stage, MAX_TEXTURE_STAGES-1 );
-        return;
+        return 0;
     }
-    if( state < 0 && state >= NUM_TEXTURE_STATES )
+    if( state < 0 || state >= NUM_TEXTURE_STATES )
     {
         GNGFX_ERROR( "invalid render state %d!", state );
-        return;
+        return 0;
     }
-    if( value < 0 && value >= NUM_TEXTURE_STATE_VALUES )
+    if( value < 0 || value >= NUM_TEXTURE_STATE_VALUES )
     {
         GNGFX_ERROR( "invalid texture state value %d!", value );
-        return;
+        return 0;
     }
 
     RenderStateBlockDesc desc = mRsbHandles.get( mCurrentRsb );
     desc.ts[stage][state] = value;
 
     // create and apply the updated render state block
-    bindRenderStateBlock( createRenderStateBlock( desc ) );
+    uint32_t handle = createRenderStateBlock( desc );
+    if( handle ) bindRenderStateBlock( handle );
+    return handle;
 
     GN_UNGUARD;
 }

@@ -23,7 +23,7 @@ cmdargs = 'variant=%s compiler=%s'%(GN_conf['variant'],GN_conf['compiler'])
 #
 # -----------------------------------------------------------------------------
 def to_relpath( files ):
-    return [ env.GN_relpath( File(x).path, Dir('.').srcnode().path ) for x in files ]
+    return [ env.GN_relpath( File(x).path, Dir(target_dir).srcnode().path ) for x in files ]
 
 #
 #
