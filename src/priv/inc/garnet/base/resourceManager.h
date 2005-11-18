@@ -50,7 +50,7 @@ namespace GN
 
         typedef Functor1<void,RES&> Deletor; //!< Resource deletion functor
 
-        typedef Functor1<bool,const StrA&> Searcher; //!< Resource searcher.
+        typedef Functor1<bool,const StrA&> NameChecker; //!< Resource name checker.
 
         //!
         //! Default constructor
@@ -59,11 +59,11 @@ namespace GN
             const Creator & creator = Creator(),
             const Deletor & deletor = Deletor(),
             const Creator & nullor = makeFunctor(&defaultNullor),
-            const Searcher & searcher = makeFunctor(&path::isFile) )
+            const NameChecker & checker = makeFunctor(&path::isFile) )
             : mCreator(creator)
             , mDeletor(deletor)
             , mNullor(nullor)
-            , mSearcher(searcher)
+            , mNameChecker(checker)
             , mNullInstance(0)
         {
         }
@@ -96,9 +96,9 @@ namespace GN
         const Creator & getNullor() const { return mNullor; }
 
         //!
-        //! Get resource searcher
+        //! Get resource name checker
         //!
-        const Searcher & getSearcher() const { return mSearcher; }
+        const NameChecker & getNameChecker() const { return mNameChecker; }
 
         //!
         //! Set default creator
@@ -120,9 +120,9 @@ namespace GN
         void setDeletor( const Deletor & d ) { mDeletor = d; }
 
         //!
-        //! Set resource searcher
+        //! Set resource name checker
         //!
-        void setSearcher( const Searcher & s ) { mSearcher = s; }
+        void setNameChecker( const NameChecker & s ) { mNameChecker = s; }
 
         //!
         //! Clear all resources.
@@ -255,7 +255,7 @@ namespace GN
             std::vector<StrA>::const_iterator i;
             for( i = names.begin(); i != names.end(); ++i )
             {
-                addResources( (*i), creator, nullor, overrideExistingResource );
+                addResource( (*i), creator, nullor, overrideExistingResource );
             }
             GN_UNGUARD;
         }
@@ -274,12 +274,19 @@ namespace GN
         //!
         //! Get resource handle
         //!
-        ResHandle getResourceHandle( const StrA & name )
+        //! \param name
+        //!     User specified resource name.
+        //! \param autoAddNewName
+        //!     - If true, when the resource name that is not in manager currently but pass name-checker,
+        //!       it'll be add to manager automatically, and a valid handle will be return.
+        //!     - If false, return 0 for non-exist resource name.
+        //!
+        ResHandle getResourceHandle( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
             StringMap::const_iterator iter = mResNames.find( name );
             if( mResNames.end() != iter ) return iter->second;
-            if( mSearcher && mSearcher(name) ) return addResource( name );
+            if( autoAddNewName && mNameChecker && mNameChecker(name) ) return addResource( name );
             return 0; // failed
             GN_UNGUARD_SLOW;
         }
@@ -326,11 +333,12 @@ namespace GN
         //!
         //! Get resource by name
         //!
-        bool getResource( RES & result, const StrA & name, bool addInvalidNameToManager = true )
+        //! \sa getResourceHandle()
+        //!
+        bool getResource( RES & result, const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
-            ResHandle h = getResourceHandle( name );
-            if( 0 == h && addInvalidNameToManager ) h = addResource( name );
+            ResHandle h = getResourceHandle( name, autoAddNewName );
             return getResourceByHandle( result, h, name.cstr() );
             GN_UNGUARD_SLOW;
         }
@@ -340,11 +348,13 @@ namespace GN
         //!
         //! If failed, return default constructed resource instance.
         //!
-        RES getResource( const StrA & name, bool addInvalidNameToManager = true )
+        //! \sa getResourceHandle()
+        //!
+        RES getResource( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
             RES res;
-            if( getResource( res, name, addInvalidNameToManager ) ) return res;
+            if( getResource( res, name, autoAddNewName ) ) return res;
             else return RES();
             GN_UNGUARD_SLOW;
         }
@@ -365,8 +375,6 @@ namespace GN
         typedef std::map<StrA,ResHandle>          StringMap;
         typedef HandleManager<ResDesc*,ResHandle> ResHandleMgr;
 
-        static MyType msInstance;
-
         ResHandleMgr mResHandles;
         StringMap    mResNames;
 
@@ -374,7 +382,7 @@ namespace GN
         Creator      mCreator;
         Deletor      mDeletor;
         Creator      mNullor; // Use to create default "NULL" instance.
-        Searcher     mSearcher;
+        NameChecker     mNameChecker;
 
         RES   * mNullInstance;
         Deletor mNullDeletor;
