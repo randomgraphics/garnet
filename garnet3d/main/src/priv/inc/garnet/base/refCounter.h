@@ -33,9 +33,7 @@ namespace GN
         void incref() const  throw() { ++m_ref; }
 
         //!
-        //! decrease reference counter,
-        //!
-        //! After decreation, if reference counter is "0", call "delete this"
+        //! decrease reference counter, delete the object, if reference count reaches zero.
         //!
         void decref() const
         {
