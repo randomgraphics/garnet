@@ -141,7 +141,7 @@ namespace GN { namespace gfx
 
         private :
 
-            bool rsbInit() { return true; }
+            bool rsbInit();
             void rsbQuit() {}
             bool rsbOk() const { return true; }
             void rsbClear() { mRsbHandles.clear(); mDevRsbMap.clear(); mCurrentRsb = 0; }
@@ -149,7 +149,7 @@ namespace GN { namespace gfx
             bool rsbDeviceCreate() { return true; }
             bool rsbDeviceRestore();
             void rsbDeviceDispose() { mDevRsbMap.clear(); }
-            void rsbDeviceDestroy() { mRsbHandles.clear(); mCurrentRsb = 0; }
+            void rsbDeviceDestroy() {}
 
             //!
             //! Create device render state block, that can switch device render state

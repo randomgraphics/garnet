@@ -303,7 +303,7 @@ protected:
         if( r.empty() ) return;
 
         // renderer should be initialized with default render state
-        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::RESET_TO_DEFAULT );
+        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
 
         GN::gfx::RenderStateBlockDesc
             rsbd1( GN::gfx::RenderStateBlockDesc::RESET_TO_DEFAULT ),
@@ -328,7 +328,7 @@ protected:
         TS_ASSERT( rsb4 );
         TS_ASSERT_DIFFERS( rsb3, rsb4 );
         TS_ASSERT_EQUALS( rsb4, rsb1 );
-        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::RESET_TO_DEFAULT );
+        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
 
         // try setRenderState with invalid value
         TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_INVALID, GN::gfx::RSV_TRUE ) );
@@ -342,7 +342,7 @@ protected:
         TS_ASSERT( rsb4 );
         TS_ASSERT_DIFFERS( rsb3, rsb4 );
         TS_ASSERT_EQUALS( rsb4, rsb1 );
-        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::RESET_TO_DEFAULT );
+        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
 
         // try setTextureState with invalid value
         TS_ASSERT_EQUALS( 0, r->setTextureState( 0, GN::gfx::TS_INVALID, GN::gfx::TSV_ARG0 ) );

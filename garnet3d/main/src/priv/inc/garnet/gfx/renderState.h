@@ -228,7 +228,7 @@ namespace GN { namespace gfx
         RenderStateBlockDesc() {}
 
         //!
-        //! construct & reset a rsblock description structure
+        //! construct & reset a render state block description structure
         //!
         RenderStateBlockDesc( ResetFlag flag )
         {
