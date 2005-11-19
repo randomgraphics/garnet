@@ -345,9 +345,14 @@ namespace GN
             T * get() const { return mPtr; }
 
             //!
+            //! clear internal pointer
+            //!
+            void clear() { attach(0); }
+
+            //!
             //! attach to new pointer (release the old one)
             //!
-            void reset( T * p = 0 )
+            void attach( T * p = 0 )
             {
                 if( p != mPtr )
                 {

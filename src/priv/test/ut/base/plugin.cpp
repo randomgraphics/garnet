@@ -118,19 +118,19 @@ public:
         // can't override existing plugin by default
         TS_ASSERT( !mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance ) );
 
-        p.reset( mgr.createInstance<MyPlugin>( "a", "p" ) );
+        p.attach( mgr.createInstance<MyPlugin>( "a", "p" ) );
         TS_ASSERT_EQUALS( whoAreYou( p.get() ), 1 );
 
         // force override existing plugin
         TS_ASSERT( mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance, true ) );
 
-        p.reset( mgr.createInstance<MyPlugin>( "a", "p" ) );
+        p.attach( mgr.createInstance<MyPlugin>( "a", "p" ) );
         TS_ASSERT_EQUALS( whoAreYou( p.get() ), 2 );
 
         // create instance of invalid plugin
-        p.reset( mgr.createInstance<MyPlugin>( "A", "p" ) );
+        p.attach( mgr.createInstance<MyPlugin>( "A", "p" ) );
         TS_ASSERT_EQUALS( whoAreYou( p.get() ), -1 );
-        p.reset( mgr.createInstance<MyPlugin>( "a", "P" ) );
+        p.attach( mgr.createInstance<MyPlugin>( "a", "P" ) );
         TS_ASSERT_EQUALS( whoAreYou( p.get() ), -1 );
     }
 };

@@ -79,8 +79,8 @@ struct TestScene
 
     void destroy()
     {
-        res.reset();
-        r.reset();
+        res.clear();
+        r.clear();
     }
 
     bool create( const GN::gfx::CreateRendererFunc & fn, const GN::gfx::RendererOptions & ro )
@@ -88,12 +88,12 @@ struct TestScene
         destroy();
 
         // create renderer
-        r.reset( fn(ro) );
+        r.attach( fn(ro) );
         TS_ASSERT( r );
         if( r.empty() ) return false;
 
         // create resource
-        res.reset( new GfxResources );
+        res.attach( new GfxResources );
         if( !res->create(*r) ) return false;
 
         // success
@@ -298,7 +298,7 @@ protected:
     {
         GN::AutoObjPtr<GN::gfx::Renderer> r;
         GN::gfx::RendererOptions ro;
-        r.reset( mCreator(ro) );
+        r.attach( mCreator(ro) );
         TS_ASSERT( r );
         if( r.empty() ) return;
 
