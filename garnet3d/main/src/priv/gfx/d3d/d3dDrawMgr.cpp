@@ -36,7 +36,7 @@ bool GN::gfx::D3DRenderer::drawDeviceCreate()
     // check multiple render target support
     if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
     {
-        GNGFX_ERROR( "Sorry, we currently do not support more then 4 simutaneous render targets." );
+        GNGFX_ERROR( "Sorry, we currently do not support more then 4 simultaneous render targets." );
         return false;
     }
 
@@ -66,7 +66,7 @@ bool GN::gfx::D3DRenderer::drawDeviceRestore()
     GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
     GN_DX_CHECK_RV( mDevice->GetDepthStencilSurface( &mDefaultDepth ), false );
 
-    // restore render target size to defualt value
+    // restore render target size to default value
     mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
     mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
 
