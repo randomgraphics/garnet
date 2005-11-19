@@ -648,10 +648,12 @@ class _GenerateV7DSP(_DSPGenerator):
             # First remove any common prefix
             commonprefix = None
             if len(sources) > 1:
-                commonprefix = os.path.commonprefix(sources)
-                prefixlen = len(commonprefix)
-                if prefixlen:
-                    sources = map(lambda s, p=prefixlen: s[p:], sources)
+                commonprefix = os.path.dirname(os.path.commonprefix(sources)) + "\\"
+            else:
+                commonprefix = os.path.dirname( sources[0] ) + "\\"
+            prefixlen = len(commonprefix)
+            if prefixlen:
+                sources = map(lambda s, p=prefixlen: s[p:], sources)
 
             hierarchy = makeHierarchy(sources)
             printSources(hierarchy)

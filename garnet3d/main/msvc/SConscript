@@ -50,6 +50,7 @@ def build_proj( target, srcdir=[], incdir=[], moduleName='' ):
         localincs   = to_relpath( localincs ),
         resources   = [],
         misc        = [],
+        auto_build_solution = 0,
         )
 
     env.AlwaysBuild( proj );
