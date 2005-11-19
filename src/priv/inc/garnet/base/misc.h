@@ -173,7 +173,7 @@ namespace GN
     }
 
     //!
-    //! Get environment variable as boolean varible. Return true only when the variable
+    //! Get environment variable as boolean variable. Return true only when the variable
     //! exists and the value is "1" or "yes".
     //!
     inline bool getEnvBoolean( const char * name )
@@ -345,7 +345,7 @@ namespace GN
             T * get() const { return mPtr; }
 
             //!
-            //! destroy old pointer and store new pointer
+            //! attach to new pointer (release the old one)
             //!
             void reset( T * p = 0 )
             {

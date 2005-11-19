@@ -103,6 +103,32 @@ struct D3DRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 
     D3DRenderStateBlock( GN::gfx::D3DRenderer & r ) : renderer(r) {}
 
+    bool init( const GN::gfx::RenderStateBlockDesc & from, const GN::gfx::RenderStateBlockDesc & to )
+    {
+        GN_GUARD;
+
+        desc = to - from;
+
+#if GN_DEBUG
+        if( !( D3DCREATE_PUREDEVICE & renderer.getBehavior() ) )
+        {
+            // do nothing, if in debug build and we're using non-pure device
+            return true;
+        }
+#endif
+
+        // compile state block
+        LPDIRECT3DDEVICE9 dev = renderer.getDevice();
+        GN_DX_CHECK_RV( dev->BeginStateBlock(), 0 );
+        sApplyRenderStateBlock( renderer, desc );
+        GN_DX_CHECK_RV( dev->EndStateBlock( &d3dRsb ), 0 );
+
+        // success
+        return true;
+
+        GN_UNGUARD;
+    }
+
     void apply() const
     {
         GN_GUARD_SLOW;
@@ -193,21 +219,7 @@ GN::gfx::D3DRenderer::createDeviceRenderStateBlock(
 
     AutoRef<D3DRenderStateBlock> rsb( new D3DRenderStateBlock(*this) );
 
-    rsb->desc = to - from;
-
-#if GN_DEBUG
-    if( !( D3DCREATE_PUREDEVICE & getBehavior() ) )
-    {
-        // do nothing, if in debug build and we're using non-pure device
-        return rsb.detach();
-    }
-#endif
-
-    // compile state block
-    LPDIRECT3DDEVICE9 dev = getDevice();
-    GN_DX_CHECK_RV( dev->BeginStateBlock(), 0 );
-    sApplyRenderStateBlock( *this, rsb->desc );
-    GN_DX_CHECK_RV( dev->EndStateBlock( &rsb->d3dRsb ), 0 );
+    if( !rsb->init( from, to ) ) return 0;
 
     // success
     return rsb.detach();

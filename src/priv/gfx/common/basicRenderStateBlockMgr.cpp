@@ -6,8 +6,25 @@
 // *****************************************************************************
 
 // *****************************************************************************
-// local functions
+// render state block management functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BasicRenderer::rsbInit()
+{
+    GN_GUARD;
+
+    // create an "invalid" render state block as current render state block
+    mCurrentRsb = createRenderStateBlock( RenderStateBlockDesc::DEFAULT );
+    if( 0 == mCurrentRsb ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
 
 //
 //
@@ -18,27 +35,15 @@ bool GN::gfx::BasicRenderer::rsbDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( mDevRsbMap.empty() );
+    GN_ASSERT( !mRsbHandles.empty() && mDevRsbMap.empty() );
 
-    // store current render state block handle
-    uint32_t oldCurrent = mCurrentRsb;
+    GN_ASSERT( mRsbHandles.validHandle(mCurrentRsb) );
 
-    // create an "invalid" render state block as current render state block
-    mCurrentRsb = createRenderStateBlock( RenderStateBlockDesc::INVALID );
-    if( 0 == mCurrentRsb ) return false;
-
-    if( mRsbHandles.validHandle( oldCurrent ) )
-    {
-        // rebind the original render state block to device
-        bindRenderStateBlock( oldCurrent );
-    }
-    else
-    {
-        // bind default render state block to device
-        uint32_t defRsb = createRenderStateBlock( RenderStateBlockDesc::DEFAULT );
-        if( 0 == defRsb ) return false;
-        bindRenderStateBlock( defRsb );
-    }
+    // rebind current render state block to rendering device
+    AutoRef<DeviceRenderStateBlock> newDevRsb(
+        createDeviceRenderStateBlock( RenderStateBlockDesc::INVALID, mRsbHandles[mCurrentRsb] ) );
+    if( newDevRsb.empty() ) return false;
+    newDevRsb->apply();
 
     // success
     return true;
@@ -102,10 +107,8 @@ void GN::gfx::BasicRenderer::bindRenderStateBlock( uint32_t handle )
     if( devRsb.empty() )
     {
         // create new device render state block
-        DeviceRenderStateBlock * newDevRsb = createDeviceRenderStateBlock(
-            mRsbHandles[mCurrentRsb], mRsbHandles[handle] );
-        if( 0 == newDevRsb ) return;
-        devRsb.attach( newDevRsb );
+        devRsb.attach( createDeviceRenderStateBlock( mRsbHandles[mCurrentRsb], mRsbHandles[handle] ) );
+        if( devRsb.empty() ) return;
     }
 
     // apply render state to device
@@ -181,7 +184,7 @@ uint32_t GN::gfx::BasicRenderer::setTextureState( uint32_t stage, TextureState s
     }
     if( state < 0 || state >= NUM_TEXTURE_STATES )
     {
-        GNGFX_ERROR( "invalid render state %d!", state );
+        GNGFX_ERROR( "invalid texture state %d!", state );
         return 0;
     }
     if( value < 0 || value >= NUM_TEXTURE_STATE_VALUES )

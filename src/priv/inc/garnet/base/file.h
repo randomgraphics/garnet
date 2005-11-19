@@ -45,7 +45,7 @@ namespace GN
     //! basic file interface used throughout of the garnet system
     //!
     //! 用户实现该文件类时，不一定要实现下面的所有操作。
-    struct File : public RefCounter
+    struct File
     {
         //!
         //! 读取size个字节到buffer中，返回实际读取的字节数,

@@ -20,6 +20,11 @@ namespace GN { namespace gfx
         virtual void deviceDispose() = 0; //!< Respond to D3D device dispose(lost).
         virtual void deviceDestroy() = 0; //!< Respond to D3D device deletion.
 
+        //!
+        //! Get the renderer that the resource belongs to.
+        //!
+        D3DRenderer & getRenderer() const { return mRenderer; }
+
     protected :
         //@{
         D3DResource( D3DRenderer & );

@@ -56,7 +56,7 @@ namespace GN
         //!
         //! Constructor
         //!
-        RefCounter() : m_ref(0) {}
+        RefCounter() : m_ref(1) {}
 
         //!
         //! Destructor
@@ -125,12 +125,10 @@ namespace GN
         //! Y should be a class that can be <b>implicitly</b> convert to
         //! X, such as a sub-class of X.
         //!
-        //! if p is not NULL, increase its reference counter
+        //! \note This function does not affect reference counter of the pointer
         //!
         template <class Y>
-        AutoRef<X>( Y * p ) throw()
-            : mPtr(p)
-        { if(mPtr) mPtr->incref(); }
+        explicit AutoRef<X>( Y * p ) throw() : mPtr(p) {}
 
         //!
         //! copy constructor

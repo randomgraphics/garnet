@@ -58,11 +58,10 @@ sLoadTexCube( GN::gfx::OGLRenderer & r, const GN::gfx::ImageDesc & desc, const u
     GN_ASSERT( GN::gfx::ImageDesc::IMG_CUBE == desc.type );
 
     // create texture
-    GN::AutoRef<GN::gfx::Texture> tex;
-    tex = r.createTexture(
+    GN::AutoRef<GN::gfx::Texture> tex( r.createTexture(
         GN::gfx::TEXTYPE_CUBE,
         desc[0].width, desc[0].height, 1, desc.numMips,
-        desc.format, 0 );
+        desc.format, 0 ) );
     if( tex.empty() ) return 0;
 
     uint8_t bw = GN::gfx::getClrFmtDesc(desc.format).blockWidth;
@@ -106,15 +105,14 @@ sLoadTex2D( GN::gfx::OGLRenderer & r, const GN::gfx::ImageDesc & desc, const uin
     GN_GUARD;
 
     // create new texture instance
-    GN::AutoRef<GN::gfx::Texture> tex;
-    tex = r.createTexture(
+    GN::AutoRef<GN::gfx::Texture> tex( r.createTexture(
         GN::gfx::TEXTYPE_2D,
         desc[0].width,
         desc[0].height,
         1,
         desc.numMips,
         desc.format,
-        0 );
+        0 ) );
     if( tex.empty() ) return 0;
 
     uint8_t bw = GN::gfx::getClrFmtDesc(desc.format).blockWidth;
