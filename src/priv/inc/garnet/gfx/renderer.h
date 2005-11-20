@@ -630,20 +630,20 @@ namespace GN { namespace gfx
         //!
         //! Create new vertex buffer
         //!
-        //! \param format
-        //!     vertex format
         //! \param numVtx
-        //!     max number of vertices this buffer could hold
+        //!     Max number of vertices this vertex buffer can hold.
+        //! \param stride
+        //!     Bytes of each vertex.
         //! \param usage
-        //!     buffer type
+        //!     buffer usage. Can be only USAGE_STATIC/USAGE_NORMAL or USAGE_DYNAMIC
         //! \param sysCopy
         //!     has system copy or not
         //!
         virtual VtxBuf *
-        createVtxBuf( const VtxFmtDesc & format,
-                      size_t             numVtx,
-                      ResourceUsage      usage,
-                      bool               sysCopy ) = 0;
+        createVtxBuf( size_t        numVtx,
+                      size_t        stride,
+                      ResourceUsage usage = USAGE_NORMAL,
+                      bool          sysCopy = true ) = 0;
 
         //!
         //! Create new index buffer
@@ -651,7 +651,7 @@ namespace GN { namespace gfx
         //! \param numIdx
         //!     number of indices
         //! \param usage
-        //!     buffer type ( see ResourceUsage )
+        //!     buffer usage. Can be only USAGE_STATIC/USAGE_NORMAL or USAGE_DYNAMIC
         //! \param sysCopy
         //!     has system copy or not
         //!
@@ -660,8 +660,8 @@ namespace GN { namespace gfx
         //!
         virtual IdxBuf *
         createIdxBuf( size_t        numIdx,
-                      ResourceUsage usage,
-                      bool          sysCopy ) = 0;
+                      ResourceUsage usage = USAGE_NORMAL,
+                      bool          sysCopy = true ) = 0;
 
         //!
         //! Bind a serias vertex buffers to rendering device.
