@@ -14,25 +14,36 @@ namespace GN { namespace gfx
     struct VtxBuf : public RefCounter
     {
         //!
-        //! Get buffer length in bytes
+        //! Get vertex count.
         //!
-        size_t getLength() const { return mLength; }
-        
+        size_t getNumVtx() const { return mVtxCount; }
+
+        //!
+        //! Get vertex stride
+        //!
+        size_t getStride() const { return mStride; }
+
+        //!
+        //! Get buffer usage
+        //!
+        ResourceUsage getUsage() const { return mUsage; }
+
         //!
         //! Lock specific stream
         //!
-        //! \param offset
-        //!     offset in bytes
-        //! \param bytes
-        //!     Total locked bytes
+        //! \param startVtx
+        //!     first vertex of this locking
+        //! \param numVtx
+        //!     vertex count of this locking, '0' means to the end of the buffer.
         //! \param flag
-        //!     Locking flags, see LockFlag
+        //!     Locking flags, see LockFlag.
+        //!     Note that LOCK_RO can be used for buffer that has system copy
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual void * lock( size_t   offset,
-                             size_t   bytes,
-                             LockFlag flag ) = 0;
+        virtual void * lock( size_t   startVtx,
+                             size_t   numVtx,
+                             uint32_t flag ) = 0;
 
         //!
         //! Unlock specific stream
@@ -42,18 +53,19 @@ namespace GN { namespace gfx
     protected:
 
         //!
-        //! Set buffer length
+        //! Set buffer properties
         //!
-        void setLength( size_t newValue ) { mLength = newValue; }
-
-        //!
-        //! Set buffer usage
-        //!
-        void setUsage( ResourceUsage newValue ) { mUsage = newValue; }
+        void setProperties( size_t vtxCount, size_t stride, ResourceUsage usage )
+        {
+            mVtxCount = vtxCount;
+            mStride = stride;
+            mUsage = usage;
+        }
 
     private:
 
-        size_t        mLength; //!< Length in bytes
+        size_t mVtxCount; //!< Vertex count.
+        size_t mStride; //!< Vertex stride.
         ResourceUsage mUsage;  //!< Buffer usage
     };
 
@@ -63,6 +75,16 @@ namespace GN { namespace gfx
     struct IdxBuf : public RefCounter
     {
         //!
+        //! Get index count of the buffer
+        //!
+        size_t getNumIdx() const { return mIdxCount; }
+
+        //!
+        //! Get buffer usage
+        //!
+        ResourceUsage getUsage() const { return mUsage; }
+
+        //!
         //! lock the buffer
         //!
         //! \param startIdx
@@ -70,18 +92,36 @@ namespace GN { namespace gfx
         //! \param numIdx
         //!     index count of this locking, '0' means to the end of the buffer.
         //! \param flag
-        //!     Locking flags, see LockFlag
+        //!     Locking flags, see LockFlag.
+        //!     Note that LOCK_RO can be used for buffer that has system copy
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
         virtual uint16_t * lock( size_t   startIdx,
                                  size_t   numIdx,
-                                 LockFlag flag ) = 0;
+                                 uint32_t flag ) = 0;
 
         //!
         //! unlock the buffer
         //!
         virtual void unlock() = 0;
+
+    protected:
+
+        //!
+        //! Set buffer length
+        //!
+        void setIdxCount( size_t newValue ) { mIdxCount = newValue; }
+
+        //!
+        //! Set buffer usage
+        //!
+        void setUsage( ResourceUsage newValue ) { mUsage = newValue; }
+
+    private:
+
+        size_t        mIdxCount; //!< index count
+        ResourceUsage mUsage;    //!< Buffer usage
     };
 }}
 
