@@ -101,7 +101,7 @@ void GN::gfx::D3DVtxBuf::quit()
 {
     GN_GUARD;
 
-    deviceRestore();
+    deviceDispose();
     deviceDestroy();
 
     // standard quit procedure

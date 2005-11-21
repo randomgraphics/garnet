@@ -17,24 +17,16 @@ namespace CxxTest
     class TestRunner
     {
     public:
-        static void runAllTests( TestListener &listener )
+        static void runAllTests( TestListener &listener, const char * pattern )
         {
             tracker().setListener( &listener );
-            _TS_TRY { TestRunner().runWorld(); }
+            _TS_TRY { TestRunner().runWorld(pattern); }
             _TS_LAST_CATCH( { tracker().failedTest( __FILE__, __LINE__, "Exception thrown from world" ); } );
             tracker().setListener( 0 );
         }
 
-        static void runAllTests( TestListener *listener )
-        {
-            if ( listener ) {
-                listener->warning( __FILE__, __LINE__, "Deprecated; Use runAllTests( TestListener & )" );
-                runAllTests( *listener );
-            }
-        }        
-    
     private:
-        void runWorld()
+        void runWorld( const char * pattern )
         {
             RealWorldDescription wd;
             WorldGuard sg;
@@ -43,14 +35,14 @@ namespace CxxTest
             if ( wd.setUp() ) {
                 for ( SuiteDescription *sd = wd.firstSuite(); sd; sd = sd->next() )
                     if ( sd->active() )
-                        runSuite( *sd );
+                        runSuite( *sd, pattern );
             
                 wd.tearDown();
             }
             tracker().leaveWorld( wd );
         }
     
-        void runSuite( SuiteDescription &sd )
+        void runSuite( SuiteDescription &sd, const char * pattern )
         {
             StateGuard sg;
             
@@ -58,14 +50,14 @@ namespace CxxTest
             if ( sd.setUp() ) {
                 for ( TestDescription *td = sd.firstTest(); td; td = td->next() )
                     if ( td->active() )
-                        runTest( *td );
+                        runTest( *td, pattern );
 
                 sd.tearDown();
             }
             tracker().leaveSuite( sd );
         }
 
-        void runTest( TestDescription &td )
+        void runTest( TestDescription &td, const char * /*pattern*/ )
         {
             StateGuard sg;
             
