@@ -421,3 +421,24 @@ bool GN::gfx::OGLRenderer::charInit( wchar_t c, CharDesc & cd )
 
     GN_UNGUARD;
 }
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::OGLRenderer::updateRendererStates()
+{
+    GN_GUARD_SLOW;
+
+    // shortcut for non-dirty
+    if( 0 == mCurrentStates.current().dirtyFlags.u32 ) return;
+
+    // check vertex buffer
+
+    // check index buffer
+
+    // check vertex shader
+
+    // check pixel shader
+
+    GN_UNGUARD_SLOW;
+}

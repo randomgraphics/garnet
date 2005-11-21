@@ -77,7 +77,7 @@ namespace GN { namespace gfx
         //!
         //! Get index count of the buffer
         //!
-        size_t getNumIdx() const { return mIdxCount; }
+        size_t getNumIdx() const { return mNumIdx; }
 
         //!
         //! Get buffer usage
@@ -109,18 +109,17 @@ namespace GN { namespace gfx
     protected:
 
         //!
-        //! Set buffer length
+        //! Set buffer properties
         //!
-        void setIdxCount( size_t newValue ) { mIdxCount = newValue; }
-
-        //!
-        //! Set buffer usage
-        //!
-        void setUsage( ResourceUsage newValue ) { mUsage = newValue; }
+        void setProperties( size_t numIdx, ResourceUsage usage )
+        {
+            mNumIdx = numIdx;
+            mUsage = usage;
+        }
 
     private:
 
-        size_t        mIdxCount; //!< index count
+        size_t        mNumIdx; //!< index count
         ResourceUsage mUsage;    //!< Buffer usage
     };
 }}

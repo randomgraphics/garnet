@@ -11,6 +11,14 @@ namespace GN { namespace gfx
     //! \def GNGFX_DEFINE_VTXSEM
     //! define vertex semantic tag
 
+    enum
+    {
+        //!
+        //! 最多可同时使用16个顶点流
+        //!
+        MAX_VERTEX_STREAMS = 16,
+    };
+
     //!
     //! vertex semantic tags
     //!

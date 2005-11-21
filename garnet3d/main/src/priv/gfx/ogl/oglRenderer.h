@@ -16,8 +16,6 @@
 
 namespace GN { namespace gfx
 {
-    struct OGLResource; // Forward declaration of OGLResource.
-
     //!
     //! OGL renderer class
     //!
@@ -302,24 +300,19 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        virtual VtxBuf * createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy )
-        {
-            GN_UNIMPL();
-            return 0;
-        }
-        virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy )
-        {
-            GN_UNIMPL();
-            return 0;
-        }
-        virtual void bindVtxBufs( const VtxBuf * const buffers[], uint32_t start, uint32_t count ) { GN_UNIMPL(); }
-        virtual void bindIdxBuf( const IdxBuf * ) { GN_UNIMPL(); }
+        virtual uint32_t createVtxBinding( const VtxFmtDesc & );
+        virtual VtxBuf * createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy );
+        virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy );
+        virtual void bindVtxBinding( uint32_t );
+        virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
+        virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+        virtual void bindIdxBuf( const IdxBuf * );
 
     private :
         bool bufferInit() { return true; }
         void bufferQuit() {}
         bool bufferOK() const { return true; }
-        void bufferClear() {}
+        void bufferClear();
 
         bool bufferDeviceCreate() { return true; }
         bool bufferDeviceRestore() { return true; }
@@ -327,6 +320,10 @@ namespace GN { namespace gfx
         void bufferDeviceDestroy() {}
 
     private :
+
+        typedef HandleManager<void*,uint32_t> VtxBindingManager;
+
+        VtxBindingManager mVtxBindings;
 
         //@}
 
@@ -407,6 +404,20 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
+    //! \name                     Current state manager
+    //
+    // ************************************************************************
+
+        //@{
+
+    private:
+
+        RendererStateBuffer mCurrentStates;
+
+        //@}
+
+    // ************************************************************************
+    //
     //! \name                     Drawing Manager
     //
     // ************************************************************************
@@ -464,6 +475,7 @@ namespace GN { namespace gfx
         void fontQuit();
         bool charInit( wchar_t, CharDesc & );
         int  drawChar( wchar_t ); //!< Return x-advance of the character
+        void updateRendererStates();
 
 #if GN_POSIX
         int      getFontBitmapAdvance( char ch );

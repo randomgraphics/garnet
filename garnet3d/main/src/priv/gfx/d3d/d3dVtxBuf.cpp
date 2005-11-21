@@ -78,7 +78,7 @@ bool GN::gfx::D3DVtxBuf::init( size_t vtxCount, size_t stride, ResourceUsage usa
     }
     if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
     {
-        GN_ERROR( "Vertex buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
+        GNGFX_ERROR( "Vertex buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
         quit(); return selfOK();
     }
 
@@ -166,7 +166,7 @@ void GN::gfx::D3DVtxBuf::deviceDispose()
     if( mLocked )
     {
         unlock();
-        GNGFX_ERROR( "call unlock() before u release the vstream!" );
+        GNGFX_ERROR( "call unlock() before u release the vertex buffer!" );
     }
 
     safeRelease( mD3DVb );
@@ -185,15 +185,20 @@ void * GN::gfx::D3DVtxBuf::lock( size_t startVtx, size_t numVtx, uint32_t flag )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() && !mLocked );
-    GN_ASSERT( (startVtx < getNumVtx()) && (startVtx + numVtx <= getNumVtx()) );
+    GN_ASSERT( selfOK() );
 
-    // adjust offset and bytes
+    if( mLocked )
+    {
+        GNGFX_ERROR( "Vertex buffer is already locked!" );
+        return 0;
+    }
     if( startVtx >= getNumVtx() )
     {
         GNGFX_ERROR( "offset is beyond the end of vertex buffer!" );
         return 0;
     }
+
+    // adjust offset and bytes
     if( 0 == numVtx ) numVtx = getNumVtx();
     if( startVtx + numVtx > getNumVtx() ) numVtx = getNumVtx() - startVtx;
 

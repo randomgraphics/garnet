@@ -319,23 +319,43 @@ namespace GN { namespace gfx
         //@{
 
     public :
+        virtual uint32_t createVtxBinding( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy );
         virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy );
-        virtual void bindVtxBufs( const VtxBuf * const buffers[], uint32_t start, uint32_t count );
+        virtual void bindVtxBinding( uint32_t );
+        virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
+        virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
         virtual void bindIdxBuf( const IdxBuf * );
 
     private :
         bool bufferInit() { return true; }
         void bufferQuit() {}
         bool bufferOK() const { return true; }
-        void bufferClear() {}
+        void bufferClear() { mVtxBindings.clear(); }
 
         bool bufferDeviceCreate() { return true; }
-        bool bufferDeviceRestore() { return true; }
-        void bufferDeviceDispose() {}
+        bool bufferDeviceRestore();
+        void bufferDeviceDispose();
         void bufferDeviceDestroy() {}
 
     private :
+
+        struct VtxBindingDesc
+        {
+            VtxFmtDesc format;
+            AutoComPtr<IDirect3DVertexDeclaration9> decl;
+        };
+
+        struct EqualFormat
+        {
+            const VtxFmtDesc & format;
+            EqualFormat( const VtxFmtDesc & f ) : format(f) {}
+            bool operator()( const VtxBindingDesc & vbd ) const { return format == vbd.format; }
+        };
+
+        typedef HandleManager<VtxBindingDesc,uint32_t> BindingManager;
+
+        BindingManager mVtxBindings;
 
         //@}
 
