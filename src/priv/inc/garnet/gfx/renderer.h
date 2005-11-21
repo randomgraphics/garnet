@@ -630,6 +630,11 @@ namespace GN { namespace gfx
         //@{
 
         //!
+        //! Create vertex bindings.
+        //!
+        virtual uint32_t createVtxBinding( const VtxFmtDesc & ) = 0;
+
+        //!
         //! Create new vertex buffer
         //!
         //! \param numVtx
@@ -666,6 +671,11 @@ namespace GN { namespace gfx
                       bool          sysCopy = true ) = 0;
 
         //!
+        //! Bind vertex bindings
+        //!
+        virtual void bindVtxBinding( uint32_t ) = 0;
+
+        //!
         //! Bind a serias vertex buffers to rendering device.
         //!
         //! \param buffers  Buffer list.
@@ -673,8 +683,16 @@ namespace GN { namespace gfx
         //! \param count    Stream count in buffer list.
         //!
         virtual void
-        bindVtxBufs( const VtxBuf * const buffers[],
-                     uint32_t start, uint32_t count ) = 0;
+        bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count ) = 0;
+
+        //!
+        //! Bind a vertex buffers to rendering device, with user-specified stride.
+        //!
+        //! \note Only use this function, when you want to specify a stride that
+        //!       is different with the buffer's default stride.
+        //!
+        virtual void
+        bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride ) = 0;
 
         //!
         //! Bind index buffer to rendering device
