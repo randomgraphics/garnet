@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3dRenderer.h"
 #include "d3dVtxBuf.h"
+#include "d3dIdxBuf.h"
 
 // *****************************************************************************
 // local functions
@@ -232,16 +233,15 @@ GN::gfx::VtxBuf * GN::gfx::D3DRenderer::createVtxBuf(
 GN::gfx::IdxBuf * GN::gfx::D3DRenderer::createIdxBuf(
     size_t numIdx, ResourceUsage usage, bool sysCopy )
 {
-    //GN_GUARD;
+    GN_GUARD;
 
-    GN_UNUSED_PARAM(numIdx);
-    GN_UNUSED_PARAM(usage);
-    GN_UNUSED_PARAM(sysCopy);
+    AutoRef<D3DIdxBuf> buf( new D3DIdxBuf(*this) );
 
-    GN_UNIMPL();
-    return 0;
+    if( !buf->init( numIdx, usage, sysCopy ) ) return 0;
 
-    //GN_UNGUARD;
+    return buf.detach();
+
+    GN_UNGUARD;
 }
 
 //

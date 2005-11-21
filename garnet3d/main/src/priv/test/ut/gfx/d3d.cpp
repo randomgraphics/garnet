@@ -20,4 +20,6 @@ public:
     void testMultiRenderer() { multiRenderer(); }
 
     void testRenderStateBlock() { renderStateBlock(); }
+
+    void testVtxBuf() { vtxBuf(); }
 };

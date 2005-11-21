@@ -23,7 +23,9 @@
 struct GfxResources
 {
     GN::AutoRef<GN::gfx::Texture> tex1d, tex2d, tex3d, texcube;
-    uint32_t rsb1, rsb2;
+    GN::AutoRef<GN::gfx::VtxBuf> vb1, vb2;
+    GN::AutoRef<GN::gfx::IdxBuf> ib1, ib2;
+    uint32_t rsb1, rsb2, vtxbinding1, vtxbinding2;
 
     bool create( GN::gfx::Renderer & r )
     {
@@ -42,6 +44,30 @@ struct GfxResources
         TS_ASSERT( rsb1 );
         TS_ASSERT( rsb2 );
         if( 0 == rsb1 && 0 == rsb2 ) return false;
+
+        // create vertex buffers
+        vb1.attach( r.createVtxBuf( 100, 32 ) );
+        vb2.attach( r.createVtxBuf( 100, 32 ) );
+        TS_ASSERT( vb1 );
+        TS_ASSERT( vb2 );
+        if( !vb1 & !vb2 ) return false;
+
+        // create index buffers
+        ib1.attach( r.createIdxBuf( 100 ) );
+        ib2.attach( r.createIdxBuf( 100 ) );
+        TS_ASSERT( ib1 );
+        TS_ASSERT( ib2 );
+        if( !ib1 & !ib2 ) return false;
+
+        // create vertex bindings
+        GN::gfx::VtxFmtDesc fmt1, fmt2;
+        fmt1.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT4 );
+        fmt2.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT2 );
+        vtxbinding1 = r.createVtxBinding( fmt1 );
+        vtxbinding2 = r.createVtxBinding( fmt2 );
+        TS_ASSERT( vtxbinding1 );
+        TS_ASSERT( vtxbinding2 );
+        if( !vtxbinding1 & !vtxbinding2 ) return false;
 
         // success
         return true;
@@ -349,6 +375,15 @@ protected:
         TS_ASSERT_EQUALS( 0, r->setTextureState( 0, GN::gfx::TS_COLOROP, GN::gfx::TSV_INVALID ) );
         TS_ASSERT_EQUALS( 0, r->setTextureState( 0, GN::gfx::TS_INVALID, GN::gfx::TSV_INVALID ) );
         TS_ASSERT_EQUALS( 0, r->setTextureState( GN::gfx::MAX_TEXTURE_STAGES, GN::gfx::TS_COLOROP, GN::gfx::TSV_ARG0 ) );
+    }
+
+    void vtxBuf()
+    {
+        GN::AutoObjPtr<GN::gfx::Renderer> r;
+        GN::gfx::RendererOptions ro;
+        r.attach( mCreator(ro) );
+        TS_ASSERT( r );
+        if( r.empty() ) return;
     }
 };
 

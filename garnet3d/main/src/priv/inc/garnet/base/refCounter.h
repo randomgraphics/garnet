@@ -186,6 +186,11 @@ namespace GN
         }
 
         //!
+        //! NOT operator
+        //!
+        bool operator ! () const throw() { return !mPtr; }
+
+        //!
         //! dereference operator
         //!
         XREF operator *() const throw()  { GN_ASSERT(mPtr); return *mPtr; }

@@ -288,7 +288,7 @@ def addLineToBlock( suite, lineNo, line ):
     '''Append the line to the current CXXTEST_CODE() block'''
     line = fixBlockLine( suite, lineNo, line )
     line = re.sub( r'^.*\{\{', '', line )
-    
+
     e = re.search( r'\}\}', line )
     if e:
         line = line[:e.start()]
@@ -436,7 +436,7 @@ def writeMain( output ):
     if gui:
         output.write( ' return CxxTest::GuiTuiRunner<CxxTest::%s, CxxTest::%s>( argc, argv ).run();\n' % (gui, runner) )
     elif runner:
-        output.write( ' ((void)(argc)); ((void)(argv)); return CxxTest::%s().run();\n' % runner )
+        output.write( ' return CxxTest::%s().run(argc,argv);\n' % runner )
     output.write( '}\n' )
 
 wroteWorld = 0
@@ -531,11 +531,11 @@ def runBody( suite, test ):
 def dynamicRun( suite, test ):
     '''Body of TestDescription::run() for test in a dynamic suite'''
     return 'if ( ' + suite['object'] + ' ) ' + suite['object'] + '->' + test['name'] + '();'
-    
+
 def staticRun( suite, test ):
     '''Body of TestDescription::run() for test in a non-dynamic suite'''
     return suite['object'] + '.' + test['name'] + '();'
-    
+
 def writeSuiteDescription( output, suite ):
     '''Write SuiteDescription object'''
     if isDynamic( suite ):

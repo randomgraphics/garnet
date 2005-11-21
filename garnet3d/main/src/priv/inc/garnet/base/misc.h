@@ -308,7 +308,7 @@ namespace GN
     namespace detail
     {
         //!
-        //! Basic auto pointer class
+        //! Basic auto pointer class. Can NOT be used in STL containers.
         //!
         template<typename T, void(*RELEASE)(T*&)>
         class BaseAutoPtr : public NoCopy
@@ -413,7 +413,7 @@ namespace GN
 #endif
 
     //!
-    //! Automatic object pointer
+    //! Automatic object pointer. Can NOT be used in STL containers.
     //!
     template<typename T>
     class AutoObjPtr : public detail::BaseAutoPtr< T, &safeDelete<T> >
@@ -434,7 +434,7 @@ namespace GN
     };
 
     //!
-    //! Automatic object array
+    //! Automatic object array. Can NOT be used in STL containers.
     //!
     template<typename T>
     class AutoObjArray : public detail::BaseAutoPtr< T, &safeDeleteArray<T> >
@@ -455,7 +455,7 @@ namespace GN
     };
 
     //!
-    //! Automatic C-style array created by memAlloc
+    //! Automatic C-style array created by memAlloc. Can NOT be used in STL containers.
     //!
     template<typename T>
     class AutoTypePtr : public detail::BaseAutoPtr< T, &safeMemFree >
@@ -476,7 +476,7 @@ namespace GN
     };
 
     //!
-    //! Automatic COM pointer class
+    //! Automatic COM pointer class. CAN be used in STL containers.
     //!
     template <class T>
     class AutoComPtr
@@ -490,11 +490,28 @@ namespace GN
         AutoComPtr() throw() : mPtr(0) {}
 
         //!
+        //! Copy constructor
+        //!
+        AutoComPtr( const AutoComPtr & other ) throw() : mPtr(other.mPtr)
+        {
+            if( mPtr ) mPtr->AddRef();
+        }
+
+        //!
         //! Destructor
         //!
         ~AutoComPtr() throw()
         {
             if (mPtr) mPtr->Release();
+        }
+
+        //!
+        //! Assignment operator
+        //!
+        AutoComPtr & operator==( const AutoComPtr & rhs )
+        {
+            reset( rhs.mPtr );
+            return *this;
         }
 
         //!

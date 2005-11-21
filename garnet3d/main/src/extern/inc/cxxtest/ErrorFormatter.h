@@ -46,7 +46,7 @@ namespace CxxTest
         {
         }
 
-        int run()
+        int run( int argc, const char * argv[] )
         {
             //
             // 如果是MSVC，则启用CRT的内存泄漏检测功能
@@ -57,7 +57,19 @@ namespace CxxTest
             tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
             _CrtSetDbgFlag(tmpDbgFlag);
 #endif
-            TestRunner::runAllTests( *this );
+
+            if( argc < 2 )
+            {
+                TestRunner::runAllTests( *this, 0 );
+            }
+            else
+            {
+                for( int i = 1; i < argc; ++i )
+                {
+                    TestRunner::runAllTests( *this, argv[i] );
+                }
+            }
+
             return tracker().failedTests();
         }
 
