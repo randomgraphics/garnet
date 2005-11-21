@@ -302,28 +302,18 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        virtual VtxBuf *
-        createVtxBuf( const VtxFmtDesc & format,
-                      size_t             numVtx,
-                      ResourceUsage      usage,
-                      bool               sysCopy )
+        virtual VtxBuf * createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy )
         {
             GN_UNIMPL();
             return 0;
         }
-        virtual IdxBuf *
-        createIdxBuf( size_t        numIdx,
-                      ResourceUsage usage,
-                      bool          sysCopy )
+        virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy )
         {
             GN_UNIMPL();
             return 0;
         }
-        virtual void
-        bindVtxBufs( const VtxBuf * const buffers[],
-                     uint32_t start, uint32_t count ) { GN_UNIMPL(); }
-        virtual void
-        bindIdxBuf( const IdxBuf * ) { GN_UNIMPL(); }
+        virtual void bindVtxBufs( const VtxBuf * const buffers[], uint32_t start, uint32_t count ) { GN_UNIMPL(); }
+        virtual void bindIdxBuf( const IdxBuf * ) { GN_UNIMPL(); }
 
     private :
         bool bufferInit() { return true; }

@@ -66,6 +66,8 @@ namespace GN { namespace gfx
         //!
         //! Display mode for fullscreen mode. Ignored in windowed mode.
         //!
+        //! \note For field equals zero, current display setting will be used.
+        //!
         DisplayMode displayMode;
 
         //!
@@ -134,7 +136,7 @@ namespace GN { namespace gfx
             , reference(false)
             , autoRestore(true)
         {
-            displayMode.set(640,480,32,0);
+            displayMode.set(0,0,0,0);
         }
     };
 

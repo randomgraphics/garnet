@@ -166,7 +166,7 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & uo )
         desc.width = (0==uo.displayMode.width) ? dm.width : uo.displayMode.width;
         desc.height = (0==uo.displayMode.height) ? dm.height : uo.displayMode.height;
         desc.depth = (0==uo.displayMode.depth) ? dm.depth : uo.displayMode.depth;
-        desc.refrate = (0==uo.displayMode.refrate) ? dm.refrate : uo.displayMode.refrate;
+        desc.refrate = (0==uo.displayMode.refrate) ? 0 : uo.displayMode.refrate;
     }
     else
     {

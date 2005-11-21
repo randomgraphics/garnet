@@ -40,13 +40,15 @@ public:
         if( !mCreator ) return false;
 
         GN::gfx::RendererOptions ro;
-        mRenderer.reset( mCreator(ro) );
+        mRenderer.attach( mCreator(ro) );
         if( !mRenderer ) return false;
 
         const GN::gfx::DispDesc & dd = mRenderer->getDispDesc();
 
-        mInput.reset( GN::input::createInputSystem() );
+        mInput.attach( GN::input::createInputSystem() );
         if( !mInput || !mInput->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
+
+        mInput->sigKeyPress.connect( this, &GfxTest::onKeyPress );
 
         mDone = false;
 
@@ -59,8 +61,9 @@ public:
     //!
     void quit()
     {
-        mInput.reset();
-        mRenderer.reset();
+        if( mInput ) mInput->sigKeyPress.disconnect(this);
+        mInput.clear();
+        mRenderer.clear();
         mCreator = 0;
         mLib.free();
     }
@@ -93,22 +96,28 @@ public:
         return 0;
     }
 
+
     //!
-    //! Frame update
+    //! Key event handler
     //!
-    void update()
+    void onKeyPress( GN::input::KeyEvent ke )
     {
-        const GN::input::KeyStatus * kb = mInput->getKeyboardStatus();
-
-        mDone = kb[GN::input::KEY_ESCAPE].down;
-
-        if( kb[GN::input::KEY_RETURN].down && kb[GN::input::KEY_RETURN].altDown() )
+        if( GN::input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
         {
             // toggle fullscreen mode
             GN::gfx::RendererOptions ro = mRenderer->getOptions();
             ro.fullscreen = !ro.fullscreen;
             if( !mRenderer->changeOptions(ro) ) mDone = true;
         }
+    }
+
+    //!
+    //! Frame update
+    //!
+    void update()
+    {
+        const GN::input::KeyStatus * kb = mInput->getKeyboardStatus();
+        mDone = kb[GN::input::KEY_ESCAPE].down;
     }
 
     //!
@@ -127,7 +136,7 @@ public:
             frames = 0;
         }
 
-        mRenderer->clearScreen( GN::Vector4f(0,0,1,1) ); // clear to pure blue.
+        mRenderer->clearScreen( GN::Vector4f(0,0,0,1) ); // clear to pure blue.
 
         mRenderer->drawTextA( mFPS.cstr(), 0, 0 );
 

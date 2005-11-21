@@ -352,7 +352,7 @@ namespace GN
             //!
             //! attach to new pointer (release the old one)
             //!
-            void attach( T * p = 0 )
+            void attach( T * p )
             {
                 if( p != mPtr )
                 {
