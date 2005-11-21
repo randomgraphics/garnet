@@ -72,7 +72,7 @@ namespace GN
         //!
         HANDLE_TYPE first() const
         {
-            if ( empty() ) return (HANDLE_TYPE)0;
+            if( empty() ) return (HANDLE_TYPE)0;
             size_t idx = 0;
             while( !mItems[idx].occupied )
             {
@@ -87,7 +87,7 @@ namespace GN
         //!
         HANDLE_TYPE next( HANDLE_TYPE h ) const
         {
-            if ( !validHandle(h) ) return (HANDLE_TYPE)0;
+            if( !validHandle(h) ) return (HANDLE_TYPE)0;
             size_t idx = h; // That is: (h-1)+1
             while( idx < mItems.size() && !mItems[idx].occupied )
             {
@@ -102,7 +102,7 @@ namespace GN
         //!
         HANDLE_TYPE add( const T & val )
         {
-            if ( mFreeList.empty() )
+            if( mFreeList.empty() )
             {
                 mItems.push_back( Item(val) );
                 return (HANDLE_TYPE)mItems.size();
@@ -123,7 +123,7 @@ namespace GN
         //!
         void remove( HANDLE_TYPE h )
         {
-            if ( !validHandle(h) )
+            if( !validHandle(h) )
             {
                 GN_ERROR( "Invalid handle!" );
             }
@@ -141,8 +141,8 @@ namespace GN
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
-                if ( !mItems[i].occupied ) continue;
-                if ( mItems[i].value == val ) return (HANDLE_TYPE)(i+1); // found!
+                if( !mItems[i].occupied ) continue;
+                if( mItems[i].value == val ) return (HANDLE_TYPE)(i+1); // found!
             }
             return (HANDLE_TYPE)0; // not found
         }
@@ -155,8 +155,8 @@ namespace GN
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
-                if ( !mItems[i].occupied ) continue;
-                if ( fp(mItems[i].value) ) return (HANDLE_TYPE)(i+1); // found!
+                if( !mItems[i].occupied ) continue;
+                if( fp( mItems[i].value ) ) return (HANDLE_TYPE)(i+1); // found!
             }
             return (HANDLE_TYPE)0; // not found
         }
