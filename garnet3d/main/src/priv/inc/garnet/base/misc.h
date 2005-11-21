@@ -103,7 +103,8 @@ namespace GN
     //!
     //! free a C-style pointer
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE void safeMemFree( void * & ptr )
+    template < typename T >
+    GN_FORCE_INLINE void safeMemFree( T * & ptr )
     {
         if( ptr )
         {
