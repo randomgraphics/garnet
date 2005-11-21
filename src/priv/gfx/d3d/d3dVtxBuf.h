@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t, size_t, uint32_t );
+        virtual void * lock( size_t startVtx, size_t numVtx, uint32_t flag );
         virtual void unlock();
 
         // ********************************

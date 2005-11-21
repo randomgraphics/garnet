@@ -133,7 +133,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
     //
     GN_DX_CHECK_RV(
         dev->CreateVertexBuffer(
-            getNumVtx() * getStride(),
+            (UINT)( getNumVtx() * getStride() ),
             sBufUsage2D3D( getUsage() ),
             0,  // non-FVF vstream
             D3DPOOL_DEFAULT,

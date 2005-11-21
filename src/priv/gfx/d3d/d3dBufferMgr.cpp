@@ -58,7 +58,7 @@ void GN::gfx::D3DRenderer::bindVtxBufs( const VtxBuf * const buffers[], uint32_t
                 stage,
                 safeCast<const D3DVtxBuf*>(buffers[i])->getD3DVb(),
                 0,
-                buffers[i]->getStride() ) );
+                (UINT)buffers[i]->getStride() ) );
         }
         else
         {
