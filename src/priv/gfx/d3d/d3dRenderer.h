@@ -21,6 +21,15 @@ namespace GN { namespace gfx
     struct D3DResource; // Forward declaration of D3DResource.
 
     //!
+    //! D3D vertex buffer binding descriptor
+    //!
+    struct D3DVtxBindingDesc
+    {
+        VtxFmtDesc                              format; //!< vertex format
+        AutoComPtr<IDirect3DVertexDeclaration9> decl;   //!< D3D decl
+    };
+
+    //!
     //! D3D renderer class
     //!
     class D3DRenderer : public BasicRenderer
@@ -340,20 +349,7 @@ namespace GN { namespace gfx
 
     private :
 
-        struct VtxBindingDesc
-        {
-            VtxFmtDesc format;
-            AutoComPtr<IDirect3DVertexDeclaration9> decl;
-        };
-
-        struct EqualFormat
-        {
-            const VtxFmtDesc & format;
-            EqualFormat( const VtxFmtDesc & f ) : format(f) {}
-            bool operator()( const VtxBindingDesc & vbd ) const { return format == vbd.format; }
-        };
-
-        typedef HandleManager<VtxBindingDesc,uint32_t> BindingManager;
+        typedef HandleManager<D3DVtxBindingDesc,uint32_t> BindingManager;
 
         BindingManager mVtxBindings;
 
