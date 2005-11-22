@@ -130,6 +130,13 @@ sCreateD3DVertexDecl( LPDIRECT3DDEVICE9 dev, const GN::gfx::VtxFmtDesc & format 
     GN_UNGUARD;
 }
 
+struct EqualFormat
+{
+    const GN::gfx::VtxFmtDesc & format;
+    EqualFormat( const GN::gfx::VtxFmtDesc & f ) : format(f) {}
+    bool operator()( const GN::gfx::D3DVtxBindingDesc & vbd ) const { return format == vbd.format; }
+};
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -195,7 +202,7 @@ uint32_t GN::gfx::D3DRenderer::createVtxBinding( const VtxFmtDesc & format )
     if( 0 == h )
     {
         // create new vertex decl
-        VtxBindingDesc vbd;
+        D3DVtxBindingDesc vbd;
         vbd.format = format;
         vbd.decl.attach( sCreateD3DVertexDecl( mDevice, format ) );
         if( !vbd.decl ) return 0;
@@ -304,15 +311,17 @@ void GN::gfx::D3DRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
         0,
         (UINT)stride ) );
 
-    GN_UNGUARD_SLOW;
+     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::bindIdxBuf( const IdxBuf * )
+void GN::gfx::D3DRenderer::bindIdxBuf( const IdxBuf * buf )
 {
-    //GN_GUARD_SLOW;
+    GN_GUARD_SLOW;
 
-    //GN_UNGUARD_SLOW;
+    GN_DX_CHECK( mDevice->SetIndices( buf ? safeCast<const D3DIdxBuf*>(buf)->getD3DIb() : 0 ) );
+
+    GN_UNGUARD_SLOW;
 }
