@@ -1,5 +1,9 @@
 #include "pch.h"
 #include "oglTexture.h"
+#include "oglRenderer.h"
+
+// for GLEW multi-context support
+#define glewGetContext() r.getGLEWContext()
 
 // *****************************************************************************
 // local var/types/functions
@@ -77,6 +81,7 @@ static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 //! convert garnet color format to OpenGL format
 //!
 static GN_INLINE bool sColorFormat2OGL(
+    const GN::gfx::OGLRenderer & r,
     GLint & gl_internalformat,
     GLuint & gl_format,
     GLuint & gl_type,
@@ -304,6 +309,8 @@ static bool sGen2DMipmap( GLenum target,
     GN_UNGUARD;
 }
 
+#undef glewGetContext
+
 // *****************************************************************************
 // OGLBasicTexture implementation
 // *****************************************************************************
@@ -371,7 +378,8 @@ bool GN::gfx::OGLBasicTexture::init(
     }
 
     // convert format to opengl paramaters
-    if( !sColorFormat2OGL( mOGLInternalFormat,
+    if( !sColorFormat2OGL( getRenderer(),
+                           mOGLInternalFormat,
                            mOGLFormat,
                            mOGLType,
                            mOGLCompressed,

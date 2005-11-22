@@ -155,6 +155,9 @@ typedef _W64 int ptrdiff_t;
 /* chenlee@2004.3.25: Force static buil */
 #define GLEW_STATIC
 
+/* chenlee@2005.11.22: Enable multi-context support */
+#define GLEW_MX
+
 /*
  * GLEW_STATIC needs to be set when using the static version.
  * GLEW_BUILD is set when building the DLL version.

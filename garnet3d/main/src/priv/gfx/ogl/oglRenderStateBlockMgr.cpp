@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "oglRenderer.h"
 
+// for GLEW multi-context support
+#define glewGetContext() r.getGLEWContext()
+
 // ****************************************************************************
 // local types/variables/functions
 // ****************************************************************************
