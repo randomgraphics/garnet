@@ -30,21 +30,21 @@ namespace GN
         //!
         //! increase reference counter
         //!
-        void incref() const  throw() { ++m_ref; }
+        void incref() const  throw() { ++mRef; }
 
         //!
         //! decrease reference counter, delete the object, if reference count reaches zero.
         //!
         void decref() const
         {
-            GN_ASSERT( m_ref>0 );
-            if( 0 == --m_ref ) delete this;
+            GN_ASSERT( mRef>0 );
+            if( 0 == --mRef ) delete this;
         }
 
         //!
         //! get current reference counter value
         //!
-        int  getref() const throw() { return m_ref; }
+        int  getref() const throw() { return mRef; }
 
         // ********************************
         //! \name protective ctor/dtor
@@ -56,14 +56,14 @@ namespace GN
         //!
         //! Constructor
         //!
-        RefCounter() : m_ref(1) {}
+        RefCounter() : mRef(1) {}
 
         //!
         //! Destructor
         //!
         virtual ~RefCounter()
         {
-            if( m_ref > 0 )
+            if( mRef > 0 )
             {
                 GN_ERROR(
                     "destructing a refcounter with its reference counter "
@@ -85,7 +85,7 @@ namespace GN
         //!
         //! reference counter
         //!
-        mutable int m_ref;
+        mutable int mRef;
     };
 
     //!
@@ -115,31 +115,26 @@ namespace GN
         static AutoRef<X> EMPTYPTR;
 
         //!
-        //! default constructor
-        //!
-        AutoRef() throw() : mPtr(0) {}
-
-        //!
         //! construct from a normal pointer
         //!
-        //! Y should be a class that can be <b>implicitly</b> convert to
-        //! X, such as a sub-class of X.
-        //!
-        //! \note This function does not affect reference counter of the pointer
-        //!
-        template <class Y>
-        explicit AutoRef<X>( Y * p ) throw() : mPtr(p) {}
+        AutoRef( XPTR p = 0 ) throw() : mPtr(p) {}
 
         //!
         //! copy constructor
         //!
-        //! Y should be a class that can be <b>implicitly</b> convert to
-        //! X, such as a sub-class of X.
+        AutoRef( const AutoRef & p ) throw() : mPtr( p.get() )
+        {
+            if(mPtr) mPtr->incref();
+        }
+
+        //!
+        //! copy constructor
         //!
         template <class Y>
-        AutoRef<X>( const AutoRef<Y> & p ) throw()
-            : mPtr( p.get() )
-        { if(mPtr) mPtr->incref(); }
+        AutoRef( const AutoRef<Y> & p ) throw() : mPtr( p.get() )
+        {
+            if(mPtr) mPtr->incref();
+        }
 
         //!
         //! destructor
@@ -152,14 +147,26 @@ namespace GN
         //!
         //! 赋值语句
         //!
-        //! Y should be a class that can be <b>implicitly</b> convert to
-        //! X, such as a sub-class of X.
-        //!
-        template <class Y> AutoRef<X> & operator = ( const AutoRef<Y> & rhs )
+        AutoRef & operator = ( const AutoRef & rhs )
         {
             reset( rhs.get() );
             return *this;
         }
+
+        //!
+        //! 赋值语句
+        //!
+        template <class Y>
+        AutoRef & operator = ( const AutoRef<Y> & rhs )
+        {
+            reset( rhs.get() );
+            return *this;
+        }
+
+        //!
+        //! Convert to XPTR
+        //!
+        operator XPTR () const { return mPtr; }
 
         //!
         //! 比较操作
@@ -188,7 +195,7 @@ namespace GN
         //!
         //! NOT operator
         //!
-        bool operator ! () const throw() { return !mPtr; }
+        bool operator !() const throw() { return !mPtr; }
 
         //!
         //! dereference operator

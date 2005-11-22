@@ -103,6 +103,7 @@
         {                                                       \
             GN_ERROR( "%s%s!", errDesc,                         \
                 (const char*)::gluErrorString(err) );           \
+            GN_UNEXPECTED();                                    \
             something                                           \
         }                                                       \
     } else void(0)
@@ -133,6 +134,7 @@
         if( 0 == rr )                                       \
         {                                                   \
             GN_ERROR( ::GN::getOSErrorInfo() );             \
+            GN_UNEXPECTED();                                \
             something                                       \
         }                                                   \
     } else void(0)
@@ -166,6 +168,7 @@
         if( FAILED(rr) )                            \
         {                                           \
             GN_ERROR( DXGetErrorString9A(rr) );     \
+            GN_UNEXPECTED();                        \
             something                               \
         }                                           \
     } else void(0)

@@ -402,6 +402,11 @@ void GN::gfx::OGLBasicTexture::quit()
 {
     GN_GUARD;
 
+    if( getRenderer().getOGLRC() )
+    {
+        getRenderer().makeCurrent();
+    }
+
     deviceDispose();
     deviceDestroy();
 
