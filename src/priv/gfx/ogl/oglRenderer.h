@@ -137,6 +137,12 @@ namespace GN { namespace gfx
         void restoreDisplayMode();
         void msgHook( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
 
+        void makeCurrent()
+        {
+            GN_ASSERT( mRenderContext && mDeviceContext );
+            GN_MSW_CHECK( ::wglMakeCurrent(mDeviceContext, mRenderContext) );
+        }
+
     private :
 
         bool    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
@@ -195,7 +201,11 @@ namespace GN { namespace gfx
         void capsDeviceDispose() {}
         void capsDeviceDestroy();
 
+        //GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
+
     private :
+
+        //GLEWContext * mGLEWContext;
 
         CapsDesc mOGLCaps[NUM_OGLCAPS];
 
@@ -226,6 +236,8 @@ namespace GN { namespace gfx
         bool shaderDeviceRestore() { return true; }
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy() {}
+
+        void updateShaderState() { GNGFX_WARN( "no impl" ); }
 
         //@}
 
@@ -301,12 +313,12 @@ namespace GN { namespace gfx
 
     public :
         virtual uint32_t createVtxBinding( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy );
+        virtual VtxBuf * createVtxBuf( size_t bytes, ResourceUsage usage, bool sysCopy );
         virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy );
         virtual void bindVtxBinding( uint32_t );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
         virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
-        virtual void bindIdxBuf( const IdxBuf * );
+        virtual void bindIdxBuf( const IdxBuf * buf ) { mCurrentIdxBuf.reset( buf ); }
 
     private :
         bool bufferInit() { return true; }
@@ -319,11 +331,15 @@ namespace GN { namespace gfx
         void bufferDeviceDispose() {}
         void bufferDeviceDestroy() {}
 
+        void updateVtxBufState( size_t baseVtx );
+
     private :
 
         typedef HandleManager<void*,uint32_t> VtxBindingManager;
 
         VtxBindingManager mVtxBindings;
+
+        AutoRef<const IdxBuf> mCurrentIdxBuf;
 
         //@}
 
@@ -404,20 +420,6 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Current state manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    private:
-
-        RendererStateBuffer mCurrentStates;
-
-        //@}
-
-    // ************************************************************************
-    //
     //! \name                     Drawing Manager
     //
     // ************************************************************************
@@ -470,12 +472,15 @@ namespace GN { namespace gfx
         FontMap mFontMap;
         int     mFontHeight;
 
+        OGLDrawState mCurrentDrawState;
+        OGLDrawState mLastDrawState;
+
     private:
         bool fontInit();
         void fontQuit();
         bool charInit( wchar_t, CharDesc & );
         int  drawChar( wchar_t ); //!< Return x-advance of the character
-        void updateRendererStates();
+        void updateDrawState( size_t baseVtx );
 
 #if GN_POSIX
         int      getFontBitmapAdvance( char ch );
@@ -493,6 +498,7 @@ namespace GN { namespace gfx
 
 #if GN_ENABLE_INLINE
 #include "oglTextureMgr.inl"
+#include "oglDrawMgr.inl"
 #endif
 
 // *****************************************************************************

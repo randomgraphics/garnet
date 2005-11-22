@@ -64,16 +64,16 @@ DWORD sLockFlags2D3D( GN::gfx::ResourceUsage usage, uint32_t lock )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxBuf::init( size_t vtxCount, size_t stride, ResourceUsage usage, bool hasSysCopy )
+bool GN::gfx::D3DVtxBuf::init( size_t bytes, ResourceUsage usage, bool sysCopy )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( D3DVtxBuf, () );
 
-    if( 0 == vtxCount || 0 == stride )
+    if( 0 == bytes )
     {
-        GNGFX_ERROR( "Vertex count and stride can be zero!" );
+        GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
     if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
@@ -82,9 +82,9 @@ bool GN::gfx::D3DVtxBuf::init( size_t vtxCount, size_t stride, ResourceUsage usa
         quit(); return selfOK();
     }
 
-    setProperties( vtxCount, stride, usage );
+    setProperties( bytes, usage );
 
-    if( hasSysCopy ) mSysCopy.resize( vtxCount * stride );
+    if( sysCopy ) mSysCopy.resize( bytes );
 
     if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
 
@@ -133,7 +133,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
     //
     GN_DX_CHECK_RV(
         dev->CreateVertexBuffer(
-            (UINT)( getNumVtx() * getStride() ),
+            (UINT)getSizeInBytes(),
             sBufUsage2D3D( getUsage() ),
             0,  // non-FVF vstream
             D3DPOOL_DEFAULT,
@@ -181,7 +181,7 @@ void GN::gfx::D3DVtxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::D3DVtxBuf::lock( size_t startVtx, size_t numVtx, uint32_t flag )
+void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, uint32_t flag )
 {
     GN_GUARD_SLOW;
 
@@ -192,23 +192,23 @@ void * GN::gfx::D3DVtxBuf::lock( size_t startVtx, size_t numVtx, uint32_t flag )
         GNGFX_ERROR( "Vertex buffer is already locked!" );
         return 0;
     }
-    if( startVtx >= getNumVtx() )
+    if( offset >= getSizeInBytes() )
     {
         GNGFX_ERROR( "offset is beyond the end of vertex buffer!" );
         return 0;
     }
 
     // adjust offset and bytes
-    if( 0 == numVtx ) numVtx = getNumVtx();
-    if( startVtx + numVtx > getNumVtx() ) numVtx = getNumVtx() - startVtx;
+    if( 0 == bytes ) bytes = getSizeInBytes();
+    if( offset + bytes > getSizeInBytes() ) bytes = getSizeInBytes() - offset;
 
     if ( mSysCopy.empty() )
     {
         void * buf;
         GN_DX_CHECK_RV(
             mD3DVb->Lock(
-                (UINT)( startVtx * getStride() ),
-                (UINT)( numVtx * getStride() ),
+                (UINT)offset,
+                (UINT)bytes,
                 &buf,
                 sLockFlags2D3D(getUsage(),flag) ),
             0 );
@@ -217,11 +217,11 @@ void * GN::gfx::D3DVtxBuf::lock( size_t startVtx, size_t numVtx, uint32_t flag )
     }
     else
     {
-        mLocked       = true;
-        mLockStartVtx = startVtx;
-        mLockNumVtx   = numVtx;
-        mLockFlag     = flag;
-        return &mSysCopy[startVtx * getStride()];
+        mLocked     = true;
+        mLockOffset = offset;
+        mLockBytes  = bytes;
+        mLockFlag   = flag;
+        return &mSysCopy[offset];
     }
 
     GN_UNGUARD_SLOW;
@@ -251,20 +251,18 @@ void GN::gfx::D3DVtxBuf::unlock()
     else if ( LOCK_RO != mLockFlag )
     {
         GN_ASSERT(
-            mLockStartVtx < getNumVtx() &&
-            0 < mLockNumVtx &&
-            (mLockStartVtx + mLockNumVtx) <= getNumVtx() );
+            mLockOffset < getSizeInBytes() &&
+            0 < mLockBytes &&
+            (mLockOffset + mLockBytes) <= getSizeInBytes() );
 
         // update d3d buffer
-        UINT offset = (UINT)( mLockStartVtx * getStride() );
-        UINT bytes = (UINT)( mLockNumVtx * getStride() );
         void * dst;
         GN_DX_CHECK_R( mD3DVb->Lock(
-            offset,
-            bytes,
+            (UINT)mLockOffset,
+            (UINT)mLockBytes,
             &dst,
             sLockFlags2D3D(getUsage(),mLockFlag) ) );
-        ::memcpy( dst, &mSysCopy[offset], bytes );
+        ::memcpy( dst, &mSysCopy[mLockOffset], mLockBytes );
         mD3DVb->Unlock();
     }
 

@@ -30,6 +30,61 @@ namespace GN { namespace gfx
     };
 
     //!
+    //! D3D vertex buffer state
+    //!
+    struct D3DVtxBufState
+    {
+        //!
+        //! Renderer state dirty flags
+        //!
+        union DirtyFlags
+        {
+            uint32_t u32; //!< Dirty flags as unsigned integer
+            int32_t  i32; //!< Dirty flags as signed integer
+
+            struct
+            {
+                int  vtxBufs    : 16; //!< Vertex buffer dirty flags
+                bool vtxBinding : 1;  //!< Vertex binding dirty flag
+                int  reserved   : 15; //!< Reserved for future use.
+            };
+        };
+
+        //!
+        //! Vertex buffer state
+        //!
+        struct VtxBufDesc
+        {
+            AutoRef<const VtxBuf> buf;    //!< the buffer pointer
+            size_t                stride; //!< vertex stride
+        };
+
+        VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< front vertex buffers
+        uint32_t              vtxBinding;                  //!< front vertex binding handle
+        DirtyFlags            dirtyFlags;                  //!< dirty flags
+
+        //!
+        //! bind vertex buffer
+        //!
+        void bindVtxBuf( size_t index, const VtxBuf * buf, size_t stride )
+        {
+            GN_ASSERT( index < MAX_VERTEX_STREAMS );
+            dirtyFlags.vtxBufs |= 1 << index;
+            vtxBufs[index].buf.reset( buf );
+            vtxBufs[index].stride = stride;
+        }
+
+        //!
+        //! bind vertex binding
+        //!
+        void bindVtxBinding( uint32_t handle )
+        {
+            dirtyFlags.vtxBinding = true;
+            vtxBinding = handle;
+        }
+    };
+
+    //!
     //! D3D renderer class
     //!
     class D3DRenderer : public BasicRenderer
@@ -329,7 +384,7 @@ namespace GN { namespace gfx
 
     public :
         virtual uint32_t createVtxBinding( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy );
+        virtual VtxBuf * createVtxBuf( size_t bytes, ResourceUsage usage, bool sysCopy );
         virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy );
         virtual void bindVtxBinding( uint32_t );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
@@ -347,11 +402,14 @@ namespace GN { namespace gfx
         void bufferDeviceDispose();
         void bufferDeviceDestroy() {}
 
+        void updateVtxBufState();
+        void updateVtxBufs(); // this is only called by updateVtxBufState().
+
     private :
 
-        typedef HandleManager<D3DVtxBindingDesc,uint32_t> BindingManager;
+        HandleManager<D3DVtxBindingDesc,uint32_t> mVtxBindings;
 
-        BindingManager mVtxBindings;
+        D3DVtxBufState mVtxBufState;
 
         //@}
 
@@ -514,6 +572,7 @@ namespace GN { namespace gfx
 #if GN_ENABLE_INLINE
 #include "d3dRenderStateBlockMgr.inl"
 #include "d3dTextureMgr.inl"
+#include "d3dBufferMgr.inl"
 #endif
 
 // *****************************************************************************

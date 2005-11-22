@@ -58,7 +58,7 @@ namespace GN { namespace gfx
         //!
         //! Get index data pointer
         //!
-        const uint16_t * getIndexData( size_t startIdx ) const { return mBuffer + startIdx; }
+        const uint16_t * getIdxData( size_t startIdx ) const { return mBuffer + startIdx; }
 
         // ********************************
         // private variables

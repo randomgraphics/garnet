@@ -33,7 +33,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t vtxCount, size_t stride, ResourceUsage usage, bool hasSysCopy );
+        bool init( size_t bytes, ResourceUsage usage, bool hasSysCopy );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t startVtx, size_t numVtx, uint32_t flag );
+        virtual void * lock( size_t offset, size_t bytes, uint32_t flag );
         virtual void unlock();
 
         // ********************************
@@ -85,8 +85,8 @@ namespace GN { namespace gfx
         std::vector<uint8_t>    mSysCopy;
         LPDIRECT3DVERTEXBUFFER9 mD3DVb;
         bool                    mLocked;
-        size_t                  mLockStartVtx;
-        size_t                  mLockNumVtx;
+        size_t                  mLockOffset;
+        size_t                  mLockBytes;
         uint32_t                mLockFlag;
     };
 }}

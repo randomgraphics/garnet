@@ -12,6 +12,8 @@ bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 {
     GN_GUARD;
 
+    makeCurrent();
+
     // check parameter
     if( 0 > type || type >= NUM_SHADER_TYPES )
     {

@@ -44,7 +44,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t vtxCount, size_t stride, ResourceUsage usage );
+        bool init( size_t bytes, ResourceUsage usage );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -56,7 +56,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t startVtx, size_t numVtx, uint32_t flag );
+        virtual void * lock( size_t offset, size_t bytes, uint32_t flag );
         virtual void unlock();
 
         // ********************************
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t vtxCount, size_t stride, ResourceUsage usage, bool sysCopy );
+        bool init( size_t bytes, ResourceUsage usage, bool sysCopy );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t startVtx, size_t numVtx, uint32_t flag );
+        virtual void * lock( size_t offset, size_t bytes, uint32_t flag );
         virtual void unlock();
 
         // ********************************

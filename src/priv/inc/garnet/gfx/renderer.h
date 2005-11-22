@@ -637,18 +637,15 @@ namespace GN { namespace gfx
         //!
         //! Create new vertex buffer
         //!
-        //! \param numVtx
-        //!     Max number of vertices this vertex buffer can hold.
-        //! \param stride
-        //!     Bytes of each vertex.
+        //! \param bytes
+        //!     Size of vertex buffer in bytes.
         //! \param usage
         //!     buffer usage. Can be only USAGE_STATIC/USAGE_NORMAL or USAGE_DYNAMIC
         //! \param sysCopy
         //!     has system copy or not
         //!
         virtual VtxBuf *
-        createVtxBuf( size_t        numVtx,
-                      size_t        stride,
+        createVtxBuf( size_t        bytes,
                       ResourceUsage usage = USAGE_NORMAL,
                       bool          sysCopy = true ) = 0;
 

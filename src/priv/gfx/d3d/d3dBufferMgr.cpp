@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "d3dRenderer.h"
+#if !GN_ENABLE_INLINE
+#include "d3dBufferMgr.inl"
+#endif
 #include "d3dVtxBuf.h"
 #include "d3dIdxBuf.h"
 
@@ -160,6 +163,9 @@ bool GN::gfx::D3DRenderer::bufferDeviceRestore()
         h = mVtxBindings.next( h );
     }
 
+    // TODO: restore vertx buffer states
+    GNGFX_WARN( "restore vertx buffer states" );
+
     // success
     return true;
 
@@ -221,13 +227,13 @@ uint32_t GN::gfx::D3DRenderer::createVtxBinding( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::D3DRenderer::createVtxBuf(
-    size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy )
+    size_t bytes, ResourceUsage usage, bool sysCopy )
 {
     GN_GUARD;
 
     AutoRef<D3DVtxBuf> buf( new D3DVtxBuf(*this) );
 
-    if( !buf->init( numVtx, stride, usage, sysCopy ) ) return 0;
+    if( !buf->init( bytes, usage, sysCopy ) ) return 0;
 
     return buf.detach();
 
@@ -264,8 +270,7 @@ void GN::gfx::D3DRenderer::bindVtxBinding( uint32_t handle )
         return;
     }
 
-    GN_ASSERT( mVtxBindings[handle].decl );
-    GN_DX_CHECK( mDevice->SetVertexDeclaration( mVtxBindings[handle].decl ) );
+    mVtxBufState.bindVtxBinding( handle );
 
     GN_UNGUARD;
 }
@@ -281,18 +286,7 @@ void GN::gfx::D3DRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t s
 
     for( size_t i = 0; i < count; ++i, ++stage )
     {
-        if( buffers[i] )
-        {
-            GN_DX_CHECK( mDevice->SetStreamSource(
-                (UINT)stage,
-                safeCast<const D3DVtxBuf*>(buffers[i])->getD3DVb(),
-                0,
-                (UINT)buffers[i]->getStride() ) );
-        }
-        else
-        {
-            GN_DX_CHECK( mDevice->SetStreamSource( (UINT)stage, 0, 0, 0 ) );
-        }
+        mVtxBufState.bindVtxBuf( stage, buffers[i], 0 );
     }
 
     GN_UNGUARD_SLOW;
@@ -305,13 +299,9 @@ void GN::gfx::D3DRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 {
     GN_GUARD_SLOW;
 
-    GN_DX_CHECK( mDevice->SetStreamSource(
-        (UINT)index,
-        buffer ? safeCast<const D3DVtxBuf*>(buffer)->getD3DVb() : 0,
-        0,
-        (UINT)stride ) );
+    mVtxBufState.bindVtxBuf( index, buffer, stride );
 
-     GN_UNGUARD_SLOW;
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -322,6 +312,48 @@ void GN::gfx::D3DRenderer::bindIdxBuf( const IdxBuf * buf )
     GN_GUARD_SLOW;
 
     GN_DX_CHECK( mDevice->SetIndices( buf ? safeCast<const D3DIdxBuf*>(buf)->getD3DIb() : 0 ) );
+
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::updateVtxBufs()
+{
+    GN_GUARD_SLOW;
+
+    const VtxFmtDesc & vtxFmt = mVtxBindings[mVtxBufState.vtxBinding].format;
+    uint16_t flag = mVtxBufState.dirtyFlags.vtxBufs;
+    UINT i = 0;
+    while( flag && i < vtxFmt.numStreams )
+    {
+        if( flag & 1 )
+        {
+            // vertex buffer i is dirty, we need to rebind it to device
+
+            const D3DVtxBufState::VtxBufDesc & vbd = mVtxBufState.vtxBufs[i];
+
+            if( !vbd.buf )
+            {
+                GN_DX_CHECK( mDevice->SetStreamSource( i, 0, 0, 0 ) );
+            }
+            else
+            {
+                GN_DX_CHECK( mDevice->SetStreamSource(
+                    i,
+                    safeCast<const D3DVtxBuf*>( vbd.buf.get() )->getD3DVb(),
+                    0,
+                    (UINT)( vbd.stride ? vbd.stride : vtxFmt.streams[i].stride ) ) );
+            }
+        }
+        flag >>= 1;
+        ++i;
+    }
 
     GN_UNGUARD_SLOW;
 }
