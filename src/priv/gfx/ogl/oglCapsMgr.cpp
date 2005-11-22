@@ -2,6 +2,9 @@
 #include "oglRenderer.h"
 #include <algorithm>
 
+// for GLEW multi-context support
+#define glewGetContext() r.getGLEWContext()
+
 // ****************************************************************************
 // local types/variables/functions
 // ****************************************************************************
@@ -102,7 +105,7 @@ static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
 //!
 //! output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & glexts )
+static void sOutputOGLInfo( GN::gfx::OGLRenderer & r, GN::HandleType disp, const std::vector<GN::StrA> & glexts )
 {
     GN_GUARD;
 
@@ -165,33 +168,38 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
 // ****************************************************************************
 
 //
-static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE()
+static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     GLint result = 0;
     GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &result ) );
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_CLIP_PLANES()
+static uint32_t sCapsInit_MAX_CLIP_PLANES( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     GLint result = 0;
     GN_OGL_CHECK( glGetIntegerv( GL_MAX_CLIP_PLANES, &result ) );
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_RENDER_TARGETS()
+static uint32_t sCapsInit_MAX_RENDER_TARGETS( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     // FIXME: this is only suit for glCopyTexImage, not real PBuffer texture
     return 4;
 }
 //
-static uint32_t sCapsInit_MAX_PRIMITIVES()
+static uint32_t sCapsInit_MAX_PRIMITIVES( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     return 0x10000; // no more than 65536 elements in one DIP
 }
 //
-static uint32_t sCapsInit_MAX_TEXTURE_STAGES()
+static uint32_t sCapsInit_MAX_TEXTURE_STAGES( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     if( GLEW_ARB_multitexture )
     {
         GLint result;
@@ -204,14 +212,16 @@ static uint32_t sCapsInit_MAX_TEXTURE_STAGES()
     }
 }
 //
-static uint32_t sCapsInit_PER_STAGE_CONSTANT()
+static uint32_t sCapsInit_PER_STAGE_CONSTANT( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     // OpenGL always supports this.
     return true;
 }
 //
-static uint32_t sCapsInit_PSCAPS()
+static uint32_t sCapsInit_PSCAPS( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     uint32_t result = 0;
     if( GLEW_ARB_fragment_program ) result |= GN::gfx::PSCAPS_OGL_ARB1;
     if( GLEW_ARB_shader_objects &&
@@ -220,8 +230,9 @@ static uint32_t sCapsInit_PSCAPS()
     return result;
 }
 //
-static uint32_t sCapsInit_VSCAPS()
+static uint32_t sCapsInit_VSCAPS( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     uint32_t result = 0;
     if( GLEW_ARB_vertex_program ) result |= GN::gfx::VSCAPS_OGL_ARB1;
     if( GLEW_ARB_shader_objects &&
@@ -230,13 +241,15 @@ static uint32_t sCapsInit_VSCAPS()
     return result;
 }
 //
-static uint32_t sOGLCapsInit_MULTI_TEXTURE()
+static uint32_t sOGLCapsInit_MULTI_TEXTURE( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     return GLEW_ARB_multitexture;
 }
 //
-static uint32_t sOGLCapsInit_VBO()
+static uint32_t sOGLCapsInit_VBO( GN::gfx::OGLRenderer & r )
 {
+    GN_UNUSED_PARAM( r );
     // Note: Mesa 6.0.1 has a bug when dealing with VBO
     const char * version  = (const char *)glGetString(GL_VERSION);
     if( ::strstr( version, "Mesa 6.0.1" ) ) return 0;
@@ -256,14 +269,33 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    // init glew
-    GLenum glewErr = glewInit();
+    // create and initialize GLEW context
+    GN_ASSERT( !mGLEWContext );
+    mGLEWContext = new GLEWContext;
+    memset( mGLEWContext, 0, sizeof(GLEWContext) );
+    GLenum glewErr = glewContextInit( mGLEWContext );
     if( GLEW_OK != glewErr )
     {
         GNGFX_ERROR( "Fail to initialize glew library : %s",
             (const char *)glewGetErrorString(glewErr) );
         return false;
     }
+
+    // create and initialize WGLEW context
+#if GN_MSWIN
+    GN_ASSERT( !mWGLEWContext );
+    mWGLEWContext = new WGLEWContext;
+    memset( mWGLEWContext, 0, sizeof(WGLEWContext) );
+    GLenum wglewErr = wglewContextInit( mWGLEWContext );
+    if( GLEW_OK != wglewErr )
+    {
+        GNGFX_ERROR( "Fail to initialize wglew library : %s",
+            (const char *)glewGetErrorString(glewErr) );
+        return false;
+    }
+#endif
+
+    // init glew
 
     // output opengl implementation info.
     std::vector<StrA> glexts;
@@ -275,16 +307,16 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     {
         return false;
     }
-    sOutputOGLInfo( getDispDesc().displayHandle, glexts );
+    sOutputOGLInfo( *this, getDispDesc().displayHandle, glexts );
 
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
 
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
-        setCaps(CAPS_##name, sCapsInit_##name() );
+        setCaps( CAPS_##name, sCapsInit_##name( *this ) );
     #define GNGFX_OGLCAPS( name ) mOGLCaps[OGLCAPS_##name].set( \
-        sOGLCapsInit_##name() );
+        sOGLCapsInit_##name( *this ) );
     #include "garnet/gfx/rendererCapsMeta.h"
     #include "oglCapsMeta.h"
     #undef GNGFX_CAPS
@@ -304,6 +336,12 @@ void GN::gfx::OGLRenderer::capsDeviceDestroy()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
+
+    // destroy GLEW context
+#if GN_MSWIN
+    safeDelete( mWGLEWContext );
+#endif
+    safeDelete( mGLEWContext );
 
     // clear all caps
     resetAllCaps();

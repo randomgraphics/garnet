@@ -190,22 +190,31 @@ namespace GN { namespace gfx
             return mOGLCaps[c].get();
         }
 
+        //!
+        //! Get pointer to GLEW context
+        //!
+        GLEWContext * getGLEWContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
+
     private :
         bool capsInit() { return true; }
         void capsQuit() {}
         bool capsOK() const { return true; }
-        void capsClear() {}
+        void capsClear() { mGLEWContext = 0; mWGLEWContext = 0; }
 
         bool capsDeviceCreate();
         bool capsDeviceRestore() { return true; }
         void capsDeviceDispose() {}
         void capsDeviceDestroy();
 
-        //GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
-
     private :
 
-        //GLEWContext * mGLEWContext;
+        // for GLEW multi-context support
+        GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
+        GLEWContext * mGLEWContext;
+#if GN_MSWIN
+        WGLEWContext * mWGLEWContext;
+        WGLEWContext * wglewGetContext() const { GN_ASSERT( mWGLEWContext ); return mWGLEWContext; }
+#endif
 
         CapsDesc mOGLCaps[NUM_OGLCAPS];
 

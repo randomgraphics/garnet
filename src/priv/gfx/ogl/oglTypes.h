@@ -37,10 +37,21 @@ namespace GN { namespace gfx
         virtual void deviceDestroy() = 0; //!< Respond to OGL device deletion.
 
     protected :
+
         //@{
         OGLResource( OGLRenderer & );
         virtual ~OGLResource();
         //@}
+
+        //!
+        //! Get renderer that the resource belongs to
+        //!
+        OGLRenderer & getRenderer() const { return mRenderer; }
+
+        //!
+        //! For GLEW multi-context support
+        //!
+        GLEWContext * glewGetContext() const { return 0; }
 
     private:
         OGLRenderer & mRenderer;

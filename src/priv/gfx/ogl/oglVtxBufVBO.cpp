@@ -76,18 +76,19 @@ bool GN::gfx::OGLVtxBufVBO::deviceCreate()
 
     struct AutoDel
     {
+        PFNGLDELETEBUFFERSARBPROC func;
         GLuint & vbo;
 
-        AutoDel( GLuint & v ) : vbo(v) {}
+        AutoDel( PFNGLDELETEBUFFERSARBPROC f, GLuint & v ) : func(f), vbo(v) {}
 
-        ~AutoDel() { if(vbo) glDeleteBuffersARB( 1, &vbo ); }
+        ~AutoDel() { if(vbo) func( 1, &vbo ); }
 
         void dismiss() { vbo = 0; }
     };
 
     // create VBO
     GN_OGL_CHECK_RV( glGenBuffersARB( 1, &mOGLVertexBufferObject ), false );
-    AutoDel ad(mOGLVertexBufferObject);
+    AutoDel ad( glDeleteBuffersARB, mOGLVertexBufferObject );
 
     // initialize VBO memory store
     GN_OGL_CHECK_RV(

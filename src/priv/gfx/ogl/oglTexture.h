@@ -303,7 +303,7 @@ namespace GN { namespace gfx
         //!
         //! map wrap mode to opengl constant
         //!
-        static GLenum sTexWrap2OGL( TexWrap w )
+        GLenum sTexWrap2OGL( TexWrap w ) const
         {
             if( TEXWRAP_REPEAT == w ) return GL_REPEAT;
             else if( TEXWRAP_CLAMP == w ) return GL_CLAMP;
