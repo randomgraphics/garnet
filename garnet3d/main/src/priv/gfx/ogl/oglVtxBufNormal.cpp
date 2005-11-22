@@ -8,16 +8,16 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufNormal::init( size_t vtxCount, size_t stride, ResourceUsage usage )
+bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, ResourceUsage usage )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( OGLVtxBufNormal, () );
 
-    if( 0 == vtxCount || 0 == stride )
+    if( 0 == bytes )
     {
-        GNGFX_ERROR( "Vertex count and stride can be zero!" );
+        GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
     if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
@@ -27,9 +27,9 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t vtxCount, size_t stride, ResourceUsa
     }
 
     // store properties
-    setProperties( vtxCount, stride, usage );
+    setProperties( bytes, usage );
 
-    mBuffer = (uint8_t*)memAlloc( vtxCount * stride );
+    mBuffer = (uint8_t*)memAlloc( bytes );
 
     // success
     return selfOK();
@@ -59,7 +59,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufNormal::lock( size_t startVtx, size_t /*numVtx*/, uint32_t /*flag*/ )
+void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t /*numVtx*/, uint32_t /*flag*/ )
 {
     GN_GUARD_SLOW;
 
@@ -70,7 +70,7 @@ void * GN::gfx::OGLVtxBufNormal::lock( size_t startVtx, size_t /*numVtx*/, uint3
         GNGFX_ERROR( "Vertex buffer is already locked!" );
         return 0;
     }
-    if( startVtx >= getNumVtx() )
+    if( offset >= getSizeInBytes() )
     {
         GNGFX_ERROR( "offset is beyond the end of vertex buffer!" );
         return 0;
@@ -78,7 +78,7 @@ void * GN::gfx::OGLVtxBufNormal::lock( size_t startVtx, size_t /*numVtx*/, uint3
 
     // success
     mLocked = true;
-    return &mBuffer[startVtx * getStride()];
+    return &mBuffer[offset];
 
     GN_UNGUARD_SLOW;
 }

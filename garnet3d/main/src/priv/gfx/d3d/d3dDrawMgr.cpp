@@ -261,6 +261,9 @@ void GN::gfx::D3DRenderer::drawIndexed(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
+    // update vertex buffer state
+    updateVtxBufState();
+
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX_CHECK(
@@ -293,6 +296,9 @@ void GN::gfx::D3DRenderer::draw(
     // make sure numPrims is not too large
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+
+    // update vertex buffer state
+    updateVtxBufState();
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );

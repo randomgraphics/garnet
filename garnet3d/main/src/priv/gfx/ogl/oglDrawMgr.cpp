@@ -1,5 +1,59 @@
 #include "pch.h"
 #include "oglRenderer.h"
+#if !GN_ENABLE_INLINE
+#include "oglDrawMgr.inl"
+#endif
+#include "oglIdxBuf.h"
+
+// *****************************************************************************
+// local functions
+// *****************************************************************************
+
+//
+//! \brief translate garnet primitive to OpenGL primitive
+// ------------------------------------------------------------------------
+static GN_INLINE
+bool sPrimitiveType2OGL( GLenum                 & oglPrim,
+                        size_t                 & numIdx,
+                        GN::gfx::PrimitiveType   prim,
+                        size_t                   numPrim )
+{
+    switch(prim)
+    {
+        case GN::gfx::POINT_LIST :
+            oglPrim = GL_POINTS;
+            numIdx = numPrim;
+            break;
+
+        case GN::gfx::LINE_LIST :
+            oglPrim = GL_LINES;
+            numIdx = numPrim * 2;
+            break;
+
+        case GN::gfx::LINE_STRIP :
+            oglPrim = GL_LINE_STRIP;
+            numIdx = numPrim > 0 ? numPrim + 1 : 0;
+            break;
+
+        case GN::gfx::TRIANGLE_LIST :
+            oglPrim = GL_TRIANGLES;
+            numIdx = numPrim * 3;
+            break;
+
+        case GN::gfx::TRIANGLE_STRIP :
+            oglPrim = GL_TRIANGLE_STRIP;
+            numIdx = numPrim > 0 ? numPrim + 2 : 0;
+            break;
+
+        default :
+            oglPrim = GL_TRIANGLES;
+            numIdx = numPrim * 3;
+            GNGFX_ERROR( "invalid primitve type!" );
+            return false;
+    }
+
+    return true;
+}
 
 // *****************************************************************************
 // device management
@@ -138,7 +192,7 @@ void GN::gfx::OGLRenderer::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawIndexed(
     PrimitiveType prim,
-    size_t        numPrims,
+    size_t        numPrim,
     size_t        baseVtx,
     size_t        minVtxIdx,
     size_t        numVtx,
@@ -148,14 +202,62 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     GN_ASSERT( mDrawBegan );
 
-    GN_UNUSED_PARAM(prim);
-    GN_UNUSED_PARAM(baseVtx);
-    GN_UNUSED_PARAM(minVtxIdx);
-    GN_UNUSED_PARAM(numVtx);
-    GN_UNUSED_PARAM(startIdx);
+    updateDrawState( baseVtx );
+
+    // map custom primitive to opengl primitive
+    GLenum  oglPrim;
+    size_t  numIdx;
+    GN_VERIFY_EX(
+        sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrim ),
+        "Fail to map primitive!" );
+
+    // get current index buffer
+    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mCurrentIdxBuf.get() );
+
+    if( 0 == ib )
+    {
+        GNGFX_ERROR( "There's no index buffer!" );
+        return;
+    }
+
+#if GN_DEBUG
+    // Verify index buffer
+    {
+        OGLIdxBuf * testIb = const_cast<OGLIdxBuf*>(ib);
+        const uint16_t * idxData = testIb->lock( startIdx, numIdx, LOCK_RO );
+        for( size_t i = 0; i < numIdx; ++i, ++idxData )
+        {
+            GN_ASSERT( minVtxIdx <= *idxData && *idxData < (minVtxIdx+numVtx) );
+        }
+        testIb->unlock();
+    }
+#endif
+
+    if( GLEW_EXT_compiled_vertex_array && GLEW_EXT_draw_range_elements )
+    {
+        GN_OGL_CHECK( glLockArraysEXT( (GLint)minVtxIdx, (GLsizei)numVtx ) );
+
+        // draw indexed primitives
+        GN_OGL_CHECK( glDrawRangeElements(
+            oglPrim,
+            (GLuint)minVtxIdx,
+            (GLuint)( minVtxIdx + numVtx ),
+            (GLsizei)numIdx,
+            GL_UNSIGNED_SHORT,
+            ib->getIdxData( startIdx ) ) );
+        //GN_OGL_CHECK( glDrawElements( oglPrim, numIdx,
+        //    GL_UNSIGNED_SHORT, pib->get_dev_buffer( startIdx ) ) );
+
+        GN_OGL_CHECK( glUnlockArraysEXT() );
+    }
+    else
+    {
+        GN_OGL_CHECK( glDrawElements(
+            oglPrim, (GLsizei)numIdx, GL_UNSIGNED_SHORT, ib->getIdxData( startIdx ) ) );
+    }
 
     // success
-    mNumPrims += numPrims;
+    mNumPrims += numPrim;
     ++mNumDraws;
 
     GN_UNGUARD_SLOW;
@@ -164,18 +266,41 @@ void GN::gfx::OGLRenderer::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::draw(
-    PrimitiveType prim, size_t numPrims, size_t baseVtx )
+void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t baseVtx )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
 
-    GN_UNUSED_PARAM(prim);
-    GN_UNUSED_PARAM(baseVtx);
+    // update draw state
+    updateDrawState( baseVtx );
+
+    // map custom primitive to opengl primitive
+    GLenum  oglPrim;
+    size_t  numIdx;
+    GN_VERIFY_EX(
+        sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrim ),
+        "Fail to map primitive!" );
+
+    if( GLEW_EXT_compiled_vertex_array )
+    {
+        // lock array if GL_EXT_compiled_vertex_array is supported
+        GN_OGL_CHECK( glLockArraysEXT( 0, (GLsizei)numIdx ) );
+
+        // draw primitives
+        GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numIdx ) );
+
+        // NOTE : 此处不使用GN_AUTOSCOPEH宏是为了简化代码，提高速度
+        GN_OGL_CHECK( glUnlockArraysEXT() );
+    }
+    else
+    {
+        // draw primitives
+        GN_OGL_CHECK( glDrawArrays( oglPrim, 0, (GLsizei)numIdx ) );
+    }
 
     // success
-    mNumPrims += numPrims;
+    mNumPrims += numPrim;
     ++mNumDraws;
 
     GN_UNGUARD_SLOW;
@@ -420,25 +545,4 @@ bool GN::gfx::OGLRenderer::charInit( wchar_t c, CharDesc & cd )
 #endif
 
     GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::updateRendererStates()
-{
-    GN_GUARD_SLOW;
-
-    // shortcut for non-dirty
-    if( 0 == mCurrentStates.current().dirtyFlags.u32 ) return;
-
-    // check vertex buffer
-
-    // check index buffer
-
-    // check vertex shader
-
-    // check pixel shader
-
-    GN_UNGUARD_SLOW;
 }

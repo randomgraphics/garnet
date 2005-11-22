@@ -8,16 +8,16 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufVBO::init( size_t numVtx, size_t stride, ResourceUsage usage, bool /*sysCopy*/ )
+bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, ResourceUsage usage, bool /*sysCopy*/ )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLVtxBufVBO, () );
 
-    if( 0 == numVtx || 0 == stride )
+    if( 0 == bytes )
     {
-        GNGFX_ERROR( "Vertex count and stride can be zero!" );
+        GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
     if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
@@ -27,10 +27,10 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t numVtx, size_t stride, ResourceUsage us
     }
 
     // store properties
-    setProperties( numVtx, stride, usage );
+    setProperties( bytes, usage );
 
     // initialize system copy
-    mSysCopy = (uint8_t*)memAlloc( numVtx * stride );
+    mSysCopy = (uint8_t*)memAlloc( bytes );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
@@ -96,7 +96,7 @@ bool GN::gfx::OGLVtxBufVBO::deviceCreate()
     GN_OGL_CHECK_RV(
         glBufferDataARB(
             GL_ARRAY_BUFFER_ARB,
-            getNumVtx() * getStride(),
+            getSizeInBytes(),
             mSysCopy,
             mOGLUsage ),
         false );
@@ -138,7 +138,7 @@ void GN::gfx::OGLVtxBufVBO::deviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufVBO::lock( size_t startVtx, size_t numVtx, uint32_t flag )
+void * GN::gfx::OGLVtxBufVBO::lock( size_t offset, size_t bytes, uint32_t flag )
 {
     GN_GUARD_SLOW;
 
@@ -149,22 +149,22 @@ void * GN::gfx::OGLVtxBufVBO::lock( size_t startVtx, size_t numVtx, uint32_t fla
         GNGFX_ERROR( "Vertex buffer is already locked!" );
         return 0;
     }
-    if( startVtx >= getNumVtx() )
+    if( offset >= getSizeInBytes() )
     {
         GNGFX_ERROR( "offset is beyond the end of vertex buffer!" );
         return 0;
     }
 
-    // adjust startVtx and numVtx
-    if( 0 == numVtx ) numVtx = getNumVtx();
-    if( startVtx + numVtx > getNumVtx() ) numVtx = getNumVtx() - startVtx;
+    // adjust offset and bytes
+    if( 0 == bytes ) bytes = getSizeInBytes();
+    if( offset + bytes > getSizeInBytes() ) bytes = getSizeInBytes() - offset;
 
     // store locking parameters
     mLocked     = true;
-    mLockOffset = startVtx * getStride();
-    mLockBytes  = numVtx * getStride();
+    mLockOffset = offset;
+    mLockBytes  = bytes;
     mLockFlag   = flag;
-    return &mSysCopy[mLockOffset];
+    return &mSysCopy[offset];
 
     GN_UNGUARD_SLOW;
 }
@@ -189,9 +189,9 @@ void GN::gfx::OGLVtxBufVBO::unlock()
     if ( LOCK_RO != mLockFlag )
     {
         GN_ASSERT(
-            mLockOffset < getNumVtx()*getStride() &&
+            mLockOffset < getSizeInBytes() &&
             0 < mLockBytes &&
-            (mLockOffset + mLockBytes) <= getNumVtx()*getStride() );
+            (mLockOffset + mLockBytes) <= getSizeInBytes() );
 
         // bind as active buffer
         GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
@@ -201,7 +201,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
         {
             GN_OGL_CHECK( glBufferDataARB(
                 GL_ARRAY_BUFFER_ARB,
-                getNumVtx() * getStride(),
+                getSizeInBytes(),
                 0,
                 mOGLUsage ) );
         }

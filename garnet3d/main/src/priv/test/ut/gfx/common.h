@@ -46,8 +46,8 @@ struct GfxResources
         if( 0 == rsb1 && 0 == rsb2 ) return false;
 
         // create vertex buffers
-        vb1.attach( r.createVtxBuf( 100, 32 ) );
-        vb2.attach( r.createVtxBuf( 100, 32 ) );
+        vb1.attach( r.createVtxBuf( 100 ) );
+        vb2.attach( r.createVtxBuf( 100 ) );
         TS_ASSERT( vb1 );
         TS_ASSERT( vb2 );
         if( !vb1 & !vb2 ) return false;

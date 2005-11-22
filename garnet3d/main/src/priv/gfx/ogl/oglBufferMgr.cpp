@@ -43,6 +43,8 @@ void GN::gfx::OGLRenderer::bufferClear()
     }
     mVtxBindings.clear();
 
+    mCurrentIdxBuf.reset();
+
     GN_UNGUARD;
 }
 
@@ -78,20 +80,20 @@ uint32_t GN::gfx::OGLRenderer::createVtxBinding( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf *
-GN::gfx::OGLRenderer::createVtxBuf( size_t numVtx, size_t stride, ResourceUsage usage, bool sysCopy )
+GN::gfx::OGLRenderer::createVtxBuf( size_t bytes, ResourceUsage usage, bool sysCopy )
 {
     GN_GUARD;
 
     if( GLEW_ARB_vertex_buffer_object )
     {
         AutoRef<OGLVtxBufVBO> p( new OGLVtxBufVBO(*this) );
-        if( !p->init( numVtx, stride, usage, sysCopy ) ) return 0;
+        if( !p->init( bytes, usage, sysCopy ) ) return 0;
         return p.detach();
     }
     else
     {
         AutoRef<OGLVtxBufNormal> p( new OGLVtxBufNormal );
-        if( !p->init( numVtx, stride, usage ) ) return 0;
+        if( !p->init( bytes, usage ) ) return 0;
         return p.detach();
     }
 
@@ -118,11 +120,17 @@ GN::gfx::OGLRenderer::createIdxBuf( size_t numIdx, ResourceUsage usage, bool /*s
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t )
+void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 {
     GN_GUARD;
 
-    GNGFX_WARN( "unimplemented!" );
+    if( !mVtxBindings.validHandle(handle) )
+    {
+        GNGFX_ERROR( "invalid vertex binding handle : %d", handle );
+        return;
+    }
+
+    mCurrentDrawState.bindVtxBinding( handle );
 
     GN_UNGUARD;
 }
@@ -147,7 +155,7 @@ void GN::gfx::OGLRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t s
 
     for( size_t i = start; i < (start+count); ++i )
     {
-        mCurrentStates.current().bindVtxBuf( i, buffers[i], buffers[i]->getStride() );
+        mCurrentDrawState.bindVtxBuf( i, buffers[i], 0 );
     }
 
     GN_UNGUARD_SLOW;
@@ -166,15 +174,24 @@ void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
         return;
     }
 
-    mCurrentStates.current().bindVtxBuf( index, buffer, stride );
+    mCurrentDrawState.bindVtxBuf( index, buffer, stride );
 
     GN_UNGUARD_SLOW;
 }
 
+// *****************************************************************************
+// from Renderer
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::bindIdxBuf( const IdxBuf * buf )
+void GN::gfx::OGLRenderer::updateVtxBufState( size_t baseVtx )
 {
-    mCurrentStates.current().bindIdxBuf( buf );
+    GN_GUARD_SLOW;
+
+    GN_UNUSED_PARAM(baseVtx);
+    GN_WARN( "no impl" );
+
+    GN_UNGUARD_SLOW;
 }

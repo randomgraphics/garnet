@@ -32,6 +32,8 @@ TODO
 
 - p1
   - continue implementing GFX module
+    - enable multiple context support of GLEW
+    - buffer manager of GFXOGL
 - p2
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )

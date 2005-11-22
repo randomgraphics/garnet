@@ -14,14 +14,9 @@ namespace GN { namespace gfx
     struct VtxBuf : public RefCounter
     {
         //!
-        //! Get vertex count.
+        //! Get buffer size in bytes
         //!
-        size_t getNumVtx() const { return mVtxCount; }
-
-        //!
-        //! Get vertex stride
-        //!
-        size_t getStride() const { return mStride; }
+        size_t getSizeInBytes() const { return mSize; }
 
         //!
         //! Get buffer usage
@@ -31,18 +26,18 @@ namespace GN { namespace gfx
         //!
         //! Lock specific stream
         //!
-        //! \param startVtx
-        //!     first vertex of this locking
-        //! \param numVtx
-        //!     vertex count of this locking, '0' means to the end of the buffer.
+        //! \param offset
+        //!     offset in bytes of lock range.
+        //! \param bytes
+        //!     bytes of lock range. '0' means to the end of the buffer.
         //! \param flag
         //!     Locking flags, see LockFlag.
         //!     Note that LOCK_RO can be used for buffer that has system copy
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual void * lock( size_t   startVtx,
-                             size_t   numVtx,
+        virtual void * lock( size_t   offset,
+                             size_t   bytes,
                              uint32_t flag ) = 0;
 
         //!
@@ -55,18 +50,16 @@ namespace GN { namespace gfx
         //!
         //! Set buffer properties
         //!
-        void setProperties( size_t vtxCount, size_t stride, ResourceUsage usage )
+        void setProperties( size_t bytes, ResourceUsage usage )
         {
-            mVtxCount = vtxCount;
-            mStride = stride;
+            mSize = bytes;
             mUsage = usage;
         }
 
     private:
 
-        size_t mVtxCount; //!< Vertex count.
-        size_t mStride; //!< Vertex stride.
-        ResourceUsage mUsage;  //!< Buffer usage
+        size_t        mSize;  //!< Buffer size in bytes
+        ResourceUsage mUsage; //!< Buffer usage
     };
 
     //!
@@ -120,7 +113,7 @@ namespace GN { namespace gfx
     private:
 
         size_t        mNumIdx; //!< index count
-        ResourceUsage mUsage;    //!< Buffer usage
+        ResourceUsage mUsage;  //!< Buffer usage
     };
 }}
 
