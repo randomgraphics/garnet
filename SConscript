@@ -127,8 +127,15 @@ def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
     if pdb:
         env['PDB'] = pdb
     if 'PCH' in env['BUILDERS'] and pchcpp:
-        env['PCH'] = env.PCH(pchcpp)[0]
+        pch = env.PCH(pchcpp)
+        env['PCH'] = pch[0]
         env['PCHSTOP'] = pchstop
+        if( len(pch) > 1 ):
+            return [pch[1]]
+        else:
+            return []
+    else:
+        return []
 
 # Брвы static object
 def GN_build_static_object( env, source=[], pchstop=0, pchcpp=0, pdb=0 ):
@@ -169,8 +176,8 @@ def GN_build_static_library( env, target, sources=[],
     env = env.Copy()
     env.Append( CPPDEFINES=['_GN_LIB'] )
     if not pdb and target: pdb = target + '.pdb'
-    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    result = env.Library(target,sources)
+    pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    result = env.Library(target,sources + pchobj )
     if addToTargetList: GN_targets[target] = result
     return result
 
@@ -196,11 +203,11 @@ def GN_build_shared_library( env, target, sources=[],
 
         env = env.Copy()
         if not pdb and target: pdb = target + '.pdb'
-        GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+        pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
         if 'GNcore' == target: libs += Split('GNwin GNbase GNextern')
         else: libs += Split('GNcoreLib GNwin GNgfxLib GNbase GNcoreLib GNwin GNbase GNextern')
         add_libs( env, libs )
-        result = env.SharedLibrary( target, sources )
+        result = env.SharedLibrary( target, sources + pchobj )
 
         # handle manifest file
         if GN_has_manifest(env):
@@ -236,14 +243,14 @@ def GN_build_program( env, target, sources=[],
                       addToTargetList=1 ):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
-    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
-        libs += Split('GNgfxCommon GNgfxD3D GNgfxOGL GNd3d GNogl')
+        libs += Split('GNgfxD3D GNgfxOGL GNgfxCommon GNd3d GNogl')
     libs += Split('GNcoreLib GNinput GNwin GNgfxLib GNbase GNcoreLib GNinput GNwin GNbase GNextern')
     extra = []
     for x in libs:
         if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
-    result = env.Program( target, sources + extra )
+    result = env.Program( target, sources + extra + pchobj )
 
     # handle manifest file
     if GN_has_manifest(env):

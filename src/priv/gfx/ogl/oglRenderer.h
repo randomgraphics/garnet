@@ -191,15 +191,6 @@ namespace GN { namespace gfx
     public :
 
         //!
-        //! get OGL special caps
-        //!
-        uint32_t getOGLCaps( OGLCaps c ) const
-        {
-            GN_ASSERT( 0 <= c && c < NUM_OGLCAPS );
-            return mOGLCaps[c].get();
-        }
-
-        //!
         //! Get pointer to GLEW context
         //!
         GLEWContext * getGLEWContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
@@ -235,8 +226,6 @@ namespace GN { namespace gfx
         GLXEWContext * glxewGetContext() const { GN_ASSERT( mGLXEWContext ); return mGLXEWContext; }
         GLXEWContext * mGLXEWContext;
 #endif
-
-        CapsDesc mOGLCaps[NUM_OGLCAPS];
 
         //@}
 
@@ -482,7 +471,7 @@ namespace GN { namespace gfx
         bool drawInit() { return true; }
         void drawQuit() {}
         bool drawOK() const { return true; }
-        void drawClear() { mDrawBegan = false; mFontMap.clear(); }
+        void drawClear() { mDrawBegan = false; mFontMap.clear(); mCurrentDrawState.clear(); mLastDrawState.clear(); }
 
         bool drawDeviceCreate() { return true; }
         bool drawDeviceRestore();

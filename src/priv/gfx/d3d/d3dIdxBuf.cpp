@@ -214,11 +214,11 @@ void GN::gfx::D3DIdxBuf::unlock()
         void * dst;
         GN_DX_CHECK_R( mD3DIb->Lock(
             (UINT)( mLockStartIdx<<1 ),
-            (UINT)( mLockNumIdx<<1 ),
+            (UINT)( mLockNumIdx ),
             &dst,
             sLockFlags2D3D(getUsage(),
-            mLockFlag) ) );
-        ::memcpy( dst, &mSysCopy[mLockStartIdx], mLockNumIdx<<1 );
+            mLockFlag ) ) );
+        ::memcpy( dst, &mSysCopy[mLockStartIdx], mLockNumIdx );
         mD3DIb->Unlock();
     }
 

@@ -240,21 +240,6 @@ static uint32_t sCapsInit_VSCAPS( GN::gfx::OGLRenderer & r )
          GLEW_ARB_shading_language_100 ) result |= GN::gfx::VSCAPS_OGL_GLSL;
     return result;
 }
-//
-static uint32_t sOGLCapsInit_MULTI_TEXTURE( GN::gfx::OGLRenderer & r )
-{
-    GN_UNUSED_PARAM( r );
-    return GLEW_ARB_multitexture;
-}
-//
-static uint32_t sOGLCapsInit_VBO( GN::gfx::OGLRenderer & r )
-{
-    GN_UNUSED_PARAM( r );
-    // Note: Mesa 6.0.1 has a bug when dealing with VBO
-    const char * version  = (const char *)glGetString(GL_VERSION);
-    if( ::strstr( version, "Mesa 6.0.1" ) ) return 0;
-    else return GLEW_ARB_vertex_buffer_object;
-}
 
 // *****************************************************************************
 // device management
@@ -326,12 +311,8 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
         setCaps( CAPS_##name, sCapsInit_##name( *this ) );
-    #define GNGFX_OGLCAPS( name ) mOGLCaps[OGLCAPS_##name].set( \
-        sOGLCapsInit_##name( *this ) );
     #include "garnet/gfx/rendererCapsMeta.h"
-    #include "oglCapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GNGFX_OGLCAPS
 
     // success;
     return true;
@@ -358,7 +339,6 @@ void GN::gfx::OGLRenderer::capsDeviceDestroy()
 
     // clear all caps
     resetAllCaps();
-    for( size_t i = 0; i < NUM_OGLCAPS; ++i ) mOGLCaps[i].reset();
 
     GN_UNGUARD;
 }

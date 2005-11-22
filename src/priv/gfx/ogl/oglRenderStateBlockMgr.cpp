@@ -111,7 +111,7 @@ static void sApplyRenderStateBlock(
                 {
                     if( GN::gfx::TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
                     {
-                        GN_DO_ONCE( GN_ERROR( "do not support GLEW_ARB_texture_env_dot3!" ) );
+                        GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_dot3!" ) );
                         tsv = GN::gfx::TSV_ARG0;
                     }
                     GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op1, sTsv2OGL[tsv].val1 ) );

@@ -64,6 +64,20 @@ namespace GN { namespace gfx
         DirtyFlags            dirtyFlags;                  //!< dirty flags
 
         //!
+        //! clear buffer states
+        //!
+        void clear()
+        {
+            for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i )
+            {
+                vtxBufs[i].buf.reset();
+                vtxBufs[i].stride = 0;
+            }
+            vtxBinding = 0;
+            dirtyFlags.u32 = 0;
+        }
+
+        //!
         //! bind vertex buffer
         //!
         void bindVtxBuf( size_t index, const VtxBuf * buf, size_t stride )
@@ -395,7 +409,7 @@ namespace GN { namespace gfx
         bool bufferInit() { return true; }
         void bufferQuit() {}
         bool bufferOK() const { return true; }
-        void bufferClear() { mVtxBindings.clear(); }
+        void bufferClear() { mVtxBindings.clear(); mVtxBufState.clear(); }
 
         bool bufferDeviceCreate() { return true; }
         bool bufferDeviceRestore();

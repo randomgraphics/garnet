@@ -6,25 +6,9 @@
 //! \author  chenlee (2005.10.2)
 // *****************************************************************************
 
-//! \def GNGFX_OGLCAPS
-//! Define OGL special caps.
-
 namespace GN { namespace gfx
 {
     class OGLRenderer; // forware declaration of OGL renderer.
-
-    //!
-    //! define API dependent caps
-    //!
-    enum OGLCaps
-    {
-        #define GNGFX_OGLCAPS(X) OGLCAPS_##X,
-        #include "oglCapsMeta.h"
-        #undef GNGFX_OGLCAPS
-        NUM_OGLCAPS,
-        OGLCAPS_INVALID,
-    };
-
 
     //!
     //! General OGL resource class
@@ -93,6 +77,22 @@ namespace GN { namespace gfx
         AutoRef<const Shader> vtxShader;                   //!< current vertex shader
         AutoRef<const Shader> pxlShader;                   //!< current pixel shader
         DirtyFlags            dirtyFlags;                  //!< dirty flags
+
+        //!
+        //! clear the state structure
+        //!
+        void clear()
+        {
+            for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i )
+            {
+                vtxBufs[i].buf.reset();
+                vtxBufs[i].stride = 0;
+            }
+            vtxBinding = 0;
+            vtxShader.reset();
+            pxlShader.reset();
+            dirtyFlags.u32 = 0;
+        }
 
         //!
         //! bind vertex binding

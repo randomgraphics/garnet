@@ -11,6 +11,14 @@ void GN::putEnv( const char * name, const char * value )
         return;
     }
 
+    if( 0 == value ) value = "";
+
+#if GN_POSIX
+    if( 0 != ::setenv( name, value, 1 ) )
+    {
+        GN_ERROR( "fail to set environment '%s=%s'.", name, value );
+    }
+#else
     StrA s;
     if( strEmpty(value) )
     {
@@ -21,7 +29,11 @@ void GN::putEnv( const char * name, const char * value )
         s.format( "%s=%s", name, value );
     }
 
-    ::putenv( const_cast<char*>(s.cstr()) );
+    if( 0 != ::putenv( const_cast<char*>(s.cstr()) ) )
+    {
+        GN_ERROR( "fail to set environment '%s'.", s.cstr() );
+    }
+#endif
 }
 
 //

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "oglVtxBuf.h"
+#include "oglRenderer.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -20,7 +21,7 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, ResourceUsage usage, bool /*sysC
         GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
-    if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
+    if( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
     {
         GNGFX_ERROR( "Vertex buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
         quit(); return selfOK();
@@ -52,6 +53,11 @@ void GN::gfx::OGLVtxBufVBO::quit()
 {
     GN_GUARD;
 
+    if( getRenderer().getOGLRC() )
+    {
+        getRenderer().makeCurrent();
+    }
+
     deviceDispose();
     deviceDestroy();
 
@@ -77,9 +83,9 @@ bool GN::gfx::OGLVtxBufVBO::deviceCreate()
     struct AutoDel
     {
         PFNGLDELETEBUFFERSARBPROC func;
-        GLuint & vbo;
+        GLuint vbo;
 
-        AutoDel( PFNGLDELETEBUFFERSARBPROC f, GLuint & v ) : func(f), vbo(v) {}
+        AutoDel( PFNGLDELETEBUFFERSARBPROC f, GLuint v ) : func(f), vbo(v) {}
 
         ~AutoDel() { if(vbo) func( 1, &vbo ); }
 
@@ -123,9 +129,10 @@ void GN::gfx::OGLVtxBufVBO::deviceDestroy()
     }
 
     // release opengl vertex array
-    if( glIsBufferARB( mOGLVertexBufferObject ) )
+    if( mOGLVertexBufferObject )
     {
-        glDeleteBuffersARB( 1, &mOGLVertexBufferObject );
+        GN_ASSERT( glIsBufferARB( mOGLVertexBufferObject ) );
+        GN_OGL_CHECK( glDeleteBuffersARB( 1, &mOGLVertexBufferObject ) );
         mOGLVertexBufferObject = 0;
     }
 
@@ -187,7 +194,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
 
     mLocked = false;
 
-    if ( LOCK_RO != mLockFlag )
+    if( LOCK_RO != mLockFlag )
     {
         GN_ASSERT(
             mLockOffset < getSizeInBytes() &&
@@ -198,7 +205,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
         GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
 
         // invalidate previous buffer for "discard" lock
-        if ( LOCK_DISCARD == mLockFlag )
+        if( LOCK_DISCARD == mLockFlag )
         {
             GN_OGL_CHECK( glBufferDataARB(
                 GL_ARRAY_BUFFER_ARB,
