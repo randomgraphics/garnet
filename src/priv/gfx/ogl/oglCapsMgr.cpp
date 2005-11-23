@@ -293,6 +293,17 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
             (const char *)glewGetErrorString(glewErr) );
         return false;
     }
+#elif GN_POSIX
+    GN_ASSERT( !mGLXEWContext );
+    mGLXEWContext = new GLXEWContext;
+    memset( mGLXEWContext, 0, sizeof(GLXEWContext) );
+    GLenum glxewErr = glxewContextInit( mGLXEWContext );
+    if( GLEW_OK != glxewErr )
+    {
+        GNGFX_ERROR( "Fail to initialize glxew library : %s",
+            (const char *)glewGetErrorString(glewErr) );
+        return false;
+    }
 #endif
 
     // init glew
@@ -340,6 +351,8 @@ void GN::gfx::OGLRenderer::capsDeviceDestroy()
     // destroy GLEW context
 #if GN_MSWIN
     safeDelete( mWGLEWContext );
+#elif GN_POSIX
+    safeDelete( mGLXEWContext );
 #endif
     safeDelete( mGLEWContext );
 

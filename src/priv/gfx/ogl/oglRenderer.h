@@ -114,6 +114,21 @@ namespace GN { namespace gfx
         virtual void * getD3DDevice() const { return 0; }
         virtual void * getOGLRC() const { return mRenderContext; }
 
+    public:
+        void makeCurrent()
+        {
+#if GN_MSWIN
+            GN_ASSERT( mRenderContext && mDeviceContext );
+            GN_MSW_CHECK( ::wglMakeCurrent(mDeviceContext, mRenderContext) );
+#elif GN_POSIX
+            Display * disp = (Display*)getDispDesc().displayHandle;
+            Window win = (Window)getDispDesc().windowHandle;
+            GN_ASSERT( disp && win && mRenderContext );
+            glXMakeCurrent( disp, win, mRenderContext );
+#endif
+        }
+
+
 #if GN_MSWIN
     private :
         bool dispInit() { return true; }
@@ -137,12 +152,6 @@ namespace GN { namespace gfx
         void restoreDisplayMode();
         void msgHook( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
 
-        void makeCurrent()
-        {
-            GN_ASSERT( mRenderContext && mDeviceContext );
-            GN_MSW_CHECK( ::wglMakeCurrent(mDeviceContext, mRenderContext) );
-        }
-
     private :
 
         bool    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
@@ -150,7 +159,7 @@ namespace GN { namespace gfx
         HGLRC   mRenderContext;
         bool    mDisplayModeActivated;
         bool    mIgnoreMsgHook;
-#else
+#elif GN_POSIX
     private :
         bool dispInit() { return true; }
         void dispQuit() {}
@@ -199,7 +208,15 @@ namespace GN { namespace gfx
         bool capsInit() { return true; }
         void capsQuit() {}
         bool capsOK() const { return true; }
-        void capsClear() { mGLEWContext = 0; mWGLEWContext = 0; }
+        void capsClear()
+        {
+            mGLEWContext = 0;
+#if GN_MSWIN
+            mWGLEWContext = 0;
+#elif GN_POSIX
+            mGLXEWContext = 0;
+#endif
+        }
 
         bool capsDeviceCreate();
         bool capsDeviceRestore() { return true; }
@@ -212,8 +229,11 @@ namespace GN { namespace gfx
         GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
         GLEWContext * mGLEWContext;
 #if GN_MSWIN
-        WGLEWContext * mWGLEWContext;
         WGLEWContext * wglewGetContext() const { GN_ASSERT( mWGLEWContext ); return mWGLEWContext; }
+        WGLEWContext * mWGLEWContext;
+#elif GN_POSIX
+        GLXEWContext * glxewGetContext() const { GN_ASSERT( mGLXEWContext ); return mGLXEWContext; }
+        GLXEWContext * mGLXEWContext;
 #endif
 
         CapsDesc mOGLCaps[NUM_OGLCAPS];
@@ -340,6 +360,7 @@ namespace GN { namespace gfx
         void bufferDeviceDispose() {}
         void bufferDeviceDestroy() {}
 
+        void updateVtxBinding();
         void updateVtxBufState( size_t baseVtx );
 
     private :

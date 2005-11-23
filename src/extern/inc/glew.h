@@ -78,6 +78,12 @@
 #define __GLEXT_H_
 #define __gl_ATI_h_
 
+/* chenlee@2004.3.25: Force static buil */
+#define GLEW_STATIC
+
+/* chenlee@2005.11.22: Enable multi-context support */
+#define GLEW_MX
+
 #if defined(_WIN32)
 
 /*
@@ -151,12 +157,6 @@ typedef _W64 int ptrdiff_t;
 #ifndef GLAPIENTRY
 #define GLAPIENTRY APIENTRY
 #endif
-
-/* chenlee@2004.3.25: Force static buil */
-#define GLEW_STATIC
-
-/* chenlee@2005.11.22: Enable multi-context support */
-#define GLEW_MX
 
 /*
  * GLEW_STATIC needs to be set when using the static version.

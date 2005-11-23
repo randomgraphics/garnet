@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         //!
         //! For GLEW multi-context support
         //!
-        GLEWContext * glewGetContext() const { return 0; }
+        GLEWContext * glewGetContext() const;
 
     private:
         OGLRenderer & mRenderer;
@@ -72,7 +72,8 @@ namespace GN { namespace gfx
 
             struct
             {
-                int  vtxBuf     : 17; //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
+                int  vtxBuf     : 16; //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
+                bool vtxBinding : 1;  //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
                 bool shader     : 1;  //!< vertex shader dirty flag
                 int  reserved   : 14; //!< Reserved for future use.
             };
@@ -98,7 +99,7 @@ namespace GN { namespace gfx
         //!
         void bindVtxBinding( uint32_t handle )
         {
-            dirtyFlags.vtxBuf |= 1 << 16;
+            dirtyFlags.vtxBinding = true;
             vtxBinding = handle;
         }
 

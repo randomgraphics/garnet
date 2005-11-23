@@ -32,8 +32,6 @@ TODO
 
 - p1
   - continue implementing GFX module
-    - enable multiple context support of GLEW
-    - buffer manager of GFXOGL
 - p2
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
@@ -60,6 +58,9 @@ DONE
 - convert input module to static library
 - Fix link problem of GFX module in static build.
 - Refine GFX:
+  - buffer manager of GFXOGL
+  - vertex binding of GFXOGL
+  - enable multiple context support of GLEW
   - Window property save/restore
   - Refine ntWindow class:
     - support external window

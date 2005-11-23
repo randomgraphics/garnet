@@ -159,6 +159,8 @@ GN::gfx::OGLRenderer::createTexture( TexType  type,
 {
     GN_GUARD;
 
+    makeCurrent();
+
     if( TEXTYPE_1D == type )
     {
         AutoRef<OGLTex1D> p( new OGLTex1D(*this) );
@@ -197,6 +199,8 @@ GN::gfx::Texture *
 GN::gfx::OGLRenderer::createTextureFromFile( File & file )
 {
     GN_GUARD;
+
+    makeCurrent();
 
     // read image data
     ImageReader reader;
@@ -241,6 +245,8 @@ void GN::gfx::OGLRenderer::bindTextures( const Texture * const texlist[],
                                          uint32_t start, uint32_t numtex )
 {
     GN_GUARD_SLOW;
+
+    makeCurrent();
 
     GN_ASSERT( texlist || (0 == numtex) );
 

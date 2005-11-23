@@ -20,7 +20,7 @@ namespace GN { namespace gfx
         //!
         virtual const uint8_t * getVtxData() const = 0;
     };
-    
+
     //!
     //! Normal OGL vertex buffer class
     //!

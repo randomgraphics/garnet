@@ -483,7 +483,6 @@ void GN::gfx::OGLBasicTexture::setFilter( TexFilter min, TexFilter mag ) const
 {
     GN_ASSERT( selfOK() );
 
-    // bind myself as current texture
     bind();
 
     if( mFilters[0] != min )
@@ -664,7 +663,7 @@ void GN::gfx::OGLTex1D::setWrap( TexWrap s, TexWrap, TexWrap ) const
 {
     GN_GUARD_SLOW;
 
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, getOGLTexture() ) );
+    bind();
 
     setWrapS( s );
 
@@ -736,7 +735,7 @@ GLuint GN::gfx::OGLTex1D::newOGLTexture(
 void GN::gfx::OGLTex2D::setWrap( TexWrap s, TexWrap t, TexWrap ) const
 {
     GN_GUARD_SLOW;
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, getOGLTexture() ) );
+    bind();
     setWrapS( s );
     setWrapT( t );
     GN_UNGUARD_SLOW;
@@ -808,7 +807,7 @@ GLuint GN::gfx::OGLTex2D::newOGLTexture(
 void GN::gfx::OGLTex3D::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 {
     GN_GUARD_SLOW;
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_3D_EXT, getOGLTexture() ) );
+    bind();
     setWrapS( s );
     setWrapT( t );
     setWrapR( r );
@@ -865,7 +864,7 @@ GLuint GN::gfx::OGLTex3D::newOGLTexture(
 void GN::gfx::OGLTexCube::setWrap( TexWrap s, TexWrap t, TexWrap ) const
 {
     GN_GUARD_SLOW;
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, getOGLTexture() ) );
+    bind();
     setWrapS( s );
     setWrapT( t );
     GN_UNGUARD_SLOW;

@@ -7,6 +7,11 @@ GN_INLINE void GN::gfx::OGLRenderer::updateDrawState( size_t baseVtx )
 
     if( 0 == mCurrentDrawState.dirtyFlags.u32 ) return;
 
+    if( mCurrentDrawState.dirtyFlags.vtxBinding )
+    {
+        updateVtxBinding();
+    }
+
     if( mCurrentDrawState.dirtyFlags.vtxBuf )
     {
         updateVtxBufState( baseVtx );
