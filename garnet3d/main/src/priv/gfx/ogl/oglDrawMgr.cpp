@@ -101,6 +101,8 @@ bool GN::gfx::OGLRenderer::drawBegin()
 {
     GN_GUARD_SLOW;
 
+    makeCurrent();
+
     GN_ASSERT( !mDrawBegan );
 
     // handle render window size move
@@ -120,6 +122,8 @@ bool GN::gfx::OGLRenderer::drawBegin()
 void GN::gfx::OGLRenderer::drawEnd()
 {
     GN_GUARD_SLOW;
+
+    makeCurrent();
 
     GN_ASSERT( mDrawBegan );
     mDrawBegan = 0;
@@ -141,6 +145,8 @@ void GN::gfx::OGLRenderer::drawFinish()
 {
     GN_GUARD_SLOW;
 
+    makeCurrent();
+
     GN_ASSERT( mDrawBegan );
     GN_OGL_CHECK( glFinish() );
 
@@ -154,6 +160,8 @@ void GN::gfx::OGLRenderer::clearScreen(
     const GN::Vector4f & c, float z, uint32_t s, uint32_t flags )
 {
     GN_GUARD_SLOW;
+
+    makeCurrent();
 
     GLbitfield glflag = 0;
 
@@ -199,6 +207,8 @@ void GN::gfx::OGLRenderer::drawIndexed(
     size_t        startIdx )
 {
     GN_GUARD_SLOW;
+
+    makeCurrent();
 
     GN_ASSERT( mDrawBegan );
 
@@ -270,6 +280,8 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t base
 {
     GN_GUARD_SLOW;
 
+    makeCurrent();
+
     GN_ASSERT( mDrawBegan );
 
     // update draw state
@@ -313,6 +325,8 @@ void GN::gfx::OGLRenderer::drawTextW(
     const wchar_t * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
+
+    makeCurrent();
 
     GN_ASSERT( mDrawBegan );
 

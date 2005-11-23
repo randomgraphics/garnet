@@ -196,7 +196,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
         mRenderContext = ::wglCreateContext( mDeviceContext ),
         false );
 
-    makeCurrent();
+    GN_MSW_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
     // success
     return true;
@@ -215,7 +215,9 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
 
     GN_ASSERT( !mDispOK && mRenderContext && mDeviceContext );
 
-    makeCurrent();
+    GN_ASSERT( mRenderContext && mDeviceContext );
+
+    GN_MSW_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
     const RendererOptions & ro = getOptions();
 

@@ -169,8 +169,14 @@ static void sApplyRenderStateBlock(
 //!
 struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 {
+    GN::gfx::OGLRenderer        & mRenderer;
     GLuint                        mDisplayList;
     GN::gfx::RenderStateBlockDesc mFrom, mTo, mDiff;
+
+    //!
+    //! Ctor
+    //!
+    OGLRenderStateBlock( GN::gfx::OGLRenderer & r ) : mRenderer(r) {}
 
     //!
     //! Dtor
@@ -242,6 +248,8 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
     {
         GN_GUARD_SLOW;
 
+        mRenderer.makeCurrent();
+
         /*
         // disabled unused texture stages (for performance reason)
         uint32_t numstages = std::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
@@ -275,7 +283,9 @@ GN::gfx::OGLRenderer::createDeviceRenderStateBlock(
 {
     GN_GUARD;
 
-    AutoRef<OGLRenderStateBlock> rsb( new OGLRenderStateBlock );
+    makeCurrent();
+
+    AutoRef<OGLRenderStateBlock> rsb( new OGLRenderStateBlock(*this) );
 
     if( !rsb->init( *this, from, to ) ) return 0;
 

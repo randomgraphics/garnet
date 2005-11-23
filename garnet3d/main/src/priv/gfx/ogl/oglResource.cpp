@@ -12,3 +12,9 @@ GN::gfx::OGLResource::~OGLResource()
 {
     mRenderer.removeResource( this );
 }
+
+// FIXME: inline this function
+GLEWContext * GN::gfx::OGLResource::glewGetContext() const
+{
+    return mRenderer.getGLEWContext();
+}

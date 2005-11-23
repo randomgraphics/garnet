@@ -59,6 +59,8 @@ uint32_t GN::gfx::OGLRenderer::createVtxBinding( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
+    makeCurrent();
+
     uint32_t h = mVtxBindings.findIf( EqualFormat(format) );
 
     if( 0 == h )
@@ -84,6 +86,8 @@ GN::gfx::OGLRenderer::createVtxBuf( size_t bytes, ResourceUsage usage, bool sysC
 {
     GN_GUARD;
 
+    makeCurrent();
+
     if( GLEW_ARB_vertex_buffer_object )
     {
         AutoRef<OGLVtxBufVBO> p( new OGLVtxBufVBO(*this) );
@@ -108,6 +112,8 @@ GN::gfx::OGLRenderer::createIdxBuf( size_t numIdx, ResourceUsage usage, bool /*s
 {
     GN_GUARD;
 
+    makeCurrent();
+
     AutoRef<OGLIdxBuf> p( new OGLIdxBuf );
 
     if( !p->init( numIdx, usage ) ) return 0;
@@ -123,6 +129,8 @@ GN::gfx::OGLRenderer::createIdxBuf( size_t numIdx, ResourceUsage usage, bool /*s
 void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 {
     GN_GUARD;
+
+    makeCurrent();
 
     if( !mVtxBindings.validHandle(handle) )
     {
@@ -141,6 +149,8 @@ void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 void GN::gfx::OGLRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count )
 {
     GN_GUARD_SLOW;
+
+    makeCurrent();
 
     if( start >= MAX_VERTEX_STREAMS )
     {
@@ -168,6 +178,8 @@ void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 {
     GN_GUARD_SLOW;
 
+    makeCurrent();
+
     if( index >= MAX_VERTEX_STREAMS )
     {
         GNGFX_ERROR( "Stream index is too large!" );
@@ -180,8 +192,26 @@ void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 }
 
 // *****************************************************************************
-// from Renderer
+// private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLRenderer::updateVtxBinding()
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) );
+
+    OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+
+    GN_ASSERT( p );
+
+    p->bind();
+
+    GN_UNGUARD_SLOW;
+}
 
 //
 //
@@ -190,8 +220,24 @@ void GN::gfx::OGLRenderer::updateVtxBufState( size_t baseVtx )
 {
     GN_GUARD_SLOW;
 
-    GN_UNUSED_PARAM(baseVtx);
-    GN_WARN( "no impl" );
+    GN_ASSERT( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) );
+
+    OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+
+    GN_ASSERT( p );
+
+    const VtxFmtDesc & vtxFmt = p->getFormat();
+
+    for( size_t i = 0; i < vtxFmt.numStreams; ++i )
+    {
+        const OGLDrawState::VtxBufDesc & vbd = mCurrentDrawState.vtxBufs[i];
+
+        p->bindBuffer(
+            i,
+            vbd.buf.empty() ? 0 : safeCast<const OGLBasicVtxBuf*>( vbd.buf.get() )->getVtxData(),
+            baseVtx,
+            vbd.stride ? vbd.stride : vtxFmt.streams[i].stride );
+    }
 
     GN_UNGUARD_SLOW;
 }

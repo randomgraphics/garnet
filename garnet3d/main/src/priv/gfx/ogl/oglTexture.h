@@ -8,6 +8,7 @@
 
 #include "../common/basicTexture.h"
 #include "oglTypes.h"
+#include "oglRenderer.h"
 
 namespace GN { namespace gfx
 {    
@@ -131,6 +132,10 @@ namespace GN { namespace gfx
         //!
         void bind() const
         {
+            GN_GUARD_SLOW;
+
+            getRenderer().makeCurrent();
+            
             switch( getType() )
             {
                 case TEXTYPE_1D   :
@@ -148,6 +153,8 @@ namespace GN { namespace gfx
             }
             GN_OGL_CHECK( glEnable(mOGLTarget) );
             GN_OGL_CHECK( glBindTexture(mOGLTarget, mOGLTexture) );
+
+            GN_UNGUARD_SLOW;
         }
 
         //!

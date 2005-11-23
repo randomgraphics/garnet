@@ -60,6 +60,16 @@ namespace GN { namespace gfx
         //!
         const VtxFmtDesc & getFormat() const { return mFormat; }
 
+        //!
+        //! Bind the binding to device
+        //!
+        void bind() const;
+
+        //!
+        //! Bind the binding to device
+        //!
+        void bindBuffer( size_t index, const uint8_t * buf, size_t baseVtx, size_t stride ) const;
+
         // ********************************
         // private variables
         // ********************************
