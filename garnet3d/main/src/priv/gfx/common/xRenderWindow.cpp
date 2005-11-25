@@ -77,8 +77,9 @@ static Window sGetParentWindow( Display * disp, Window win )
     GN_GUARD;
 
     GN_ASSERT( disp && win );
-    Window p;
-    GN_X_CHECK_RV( XQueryTree( disp, win, 0, &p, 0, 0 ), 0 );
+    Window r, p, *c;
+    unsigned int n;
+    GN_X_CHECK_RV( XQueryTree( disp, win, &r, &p, &c, &n ), 0 );
     GN_ASSERT( p );
     return p;
 
@@ -212,6 +213,8 @@ bool GN::gfx::XRenderWindow::initInternalRenderWindow(
             GN_ERROR( "XCreateSimpleWindow() failed." );
             return false;
         }
+
+        GN_ASSERT( (Window)parentWindow == sGetParentWindow( mDisplay, mWindow ) );
 
         // map window
         GN_X_CHECK_RV( XSelectInput( mDisplay, mWindow, StructureNotifyMask ), false );

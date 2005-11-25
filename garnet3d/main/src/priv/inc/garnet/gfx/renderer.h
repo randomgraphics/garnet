@@ -908,10 +908,16 @@ namespace GN { namespace gfx
     typedef Renderer * (*CreateRendererFunc)( const RendererOptions & );
 
 #if GN_STATIC
+
     //!
     //! Create instance of D3D renderer.
     //!
+#if GN_MSWIN
     Renderer * createD3DRenderer( const RendererOptions & );
+#else
+    inline Renderer * createD3DRenderer( const RendererOptions & )
+    { GN_ERROR( "No D3D support on platform other then MS Windows." ); return 0; }
+#endif
 
     //!
     //! Create instance of OGL renderer.
