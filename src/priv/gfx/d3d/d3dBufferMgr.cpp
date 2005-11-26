@@ -270,7 +270,7 @@ void GN::gfx::D3DRenderer::bindVtxBinding( uint32_t handle )
         return;
     }
 
-    mVtxBufState.bindVtxBinding( handle );
+    mDrawState.bindVtxBinding( handle );
 
     GN_UNGUARD;
 }
@@ -286,7 +286,7 @@ void GN::gfx::D3DRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t s
 
     for( size_t i = 0; i < count; ++i, ++stage )
     {
-        mVtxBufState.bindVtxBuf( stage, buffers[i], 0 );
+        mDrawState.bindVtxBuf( stage, buffers[i], 0 );
     }
 
     GN_UNGUARD_SLOW;
@@ -299,7 +299,7 @@ void GN::gfx::D3DRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 {
     GN_GUARD_SLOW;
 
-    mVtxBufState.bindVtxBuf( index, buffer, stride );
+    mDrawState.bindVtxBuf( index, buffer, stride );
 
     GN_UNGUARD_SLOW;
 }
@@ -323,12 +323,12 @@ void GN::gfx::D3DRenderer::bindIdxBuf( const IdxBuf * buf )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::updateVtxBufs()
+void GN::gfx::D3DRenderer::applyVtxBuffers()
 {
     GN_GUARD_SLOW;
 
-    const VtxFmtDesc & vtxFmt = mVtxBindings[mVtxBufState.vtxBinding].format;
-    uint16_t flag = mVtxBufState.dirtyFlags.vtxBufs;
+    const VtxFmtDesc & vtxFmt = mVtxBindings[mDrawState.vtxBinding].format;
+    uint16_t flag = mDrawState.dirtyFlags.vtxBufs;
     UINT i = 0;
     while( flag && i < vtxFmt.numStreams )
     {
@@ -336,7 +336,7 @@ void GN::gfx::D3DRenderer::updateVtxBufs()
         {
             // vertex buffer i is dirty, we need to rebind it to device
 
-            const D3DVtxBufState::VtxBufDesc & vbd = mVtxBufState.vtxBufs[i];
+            const D3DDrawState::VtxBufDesc & vbd = mDrawState.vtxBufs[i];
 
             if( !vbd.buf )
             {
