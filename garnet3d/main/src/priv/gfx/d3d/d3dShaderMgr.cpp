@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3dRenderer.h"
+#include "d3dShader.h"
 
 // *****************************************************************************
 // interface functions
@@ -47,4 +48,119 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
     }
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Shader *
+GN::gfx::D3DRenderer::createVertexShader( ShadingLanguage lang, const StrA & code )
+{
+    GN_GUARD;
+
+    switch( lang )
+    {
+        case LANG_D3D_ASM :
+            {
+                AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
+                if( !p->init( code ) ) return 0;
+                return p;
+            }
+
+        case LANG_CG:
+        case LANG_D3D_HLSL:
+        case LANG_OGL_ARB:
+        case LANG_OGL_GLSL:
+            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+            return 0;
+
+        default:
+            GNGFX_ERROR( "invalid shading language : %d", lang );
+            return 0;
+    }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::Shader *
+GN::gfx::D3DRenderer::createPixelShader( ShadingLanguage lang, const StrA & code )
+{
+    GN_GUARD;
+
+    switch( lang )
+    {
+        case LANG_D3D_ASM :
+            {
+                AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
+                if( !p->init( code ) ) return 0;
+                return p;
+            }
+
+        case LANG_CG:
+        case LANG_D3D_HLSL:
+        case LANG_OGL_ARB:
+        case LANG_OGL_GLSL:
+            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+            return 0;
+
+        default:
+            GNGFX_ERROR( "invalid shading language : %d", lang );
+            return 0;
+    }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::bindShaders( const Shader * vtx, const Shader * pxl )
+{
+    GN_GUARD_SLOW;
+
+    mDrawState.bindVtxShader( vtx );
+    mDrawState.bindPxlShader( pxl );
+
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::applyVtxShader( const Shader * shader )
+{
+    GN_GUARD_SLOW;
+
+    if( 0 == shader )
+    {
+        GN_DX_CHECK( mDevice->SetVertexShader( 0 ) );
+        return;
+    }
+    else safeCast<const D3DBasicShader*>(shader)->apply();
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::applyPxlShader( const Shader * shader )
+{
+    GN_GUARD_SLOW;
+
+    if( 0 == shader )
+    {
+        GN_DX_CHECK( mDevice->SetPixelShader( 0 ) );
+        return;
+    }
+    else safeCast<const D3DBasicShader*>(shader)->apply();
+
+    GN_UNGUARD_SLOW;
 }

@@ -421,8 +421,8 @@ namespace GN { namespace gfx
         virtual void setParameter( RenderParameter, const Matrix44f * ) { GN_UNIMPL(); }
         virtual void pushParameter( RenderParameter ) { GN_UNIMPL(); }
         virtual void popParameter( RenderParameter ) { GN_UNIMPL(); }
-        virtual Matrix44f & computePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
-        virtual Matrix44f & computeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
+        virtual Matrix44f & composePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
+        virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
 
     private :
         bool paramInit() { return true; }

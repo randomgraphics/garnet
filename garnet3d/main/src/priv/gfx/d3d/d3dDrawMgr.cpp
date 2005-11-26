@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "d3dRenderer.h"
+#if !GN_ENABLE_INLINE
+#include "d3dDrawMgr.inl"
+#endif
 
 // static primitive map
 static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
@@ -262,7 +265,7 @@ void GN::gfx::D3DRenderer::drawIndexed(
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // update vertex buffer state
-    updateVtxBufState();
+    applyDrawState();
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
@@ -298,7 +301,7 @@ void GN::gfx::D3DRenderer::draw(
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // update vertex buffer state
-    updateVtxBufState();
+    applyDrawState();
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );

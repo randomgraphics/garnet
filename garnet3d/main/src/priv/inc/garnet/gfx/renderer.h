@@ -240,10 +240,6 @@ namespace GN { namespace gfx
     //!
     enum RenderParameter
     {
-        RP_PER_STAGE_CONSTANT,  //!< Per-texture-stage constant (4 floats). Default is (1,1,1,1)
-                                //! \note
-                                //!     If current device does not support per-stage constant,
-                                //!     this parameter will be ignored.
         RP_LIGHT0_POSITION,     //!< Light 0 position
         RP_LIGHT0_DIFFUSE,      //!< Light 0 diffuse color
         RP_MATERIAL_DIFFUSE,    //!< Material diffuse color
@@ -718,14 +714,22 @@ namespace GN { namespace gfx
         virtual void pushParameter( RenderParameter ) = 0;
         virtual void popParameter( RenderParameter ) = 0;
 
+        //!
+        //! This function is provided because different API has different ways
+        //! to compose projection matrix.
+        //!
         virtual Matrix44f &
-        computePerspectiveMatrix( Matrix44f & result,
+        composePerspectiveMatrix( Matrix44f & result,
                                   float fovy,
                                   float ratio,
                                   float znear,
                                   float zfar ) const = 0;
+        //!
+        //! This function is provided because different API has different ways
+        //! to compose projection matrix.
+        //!
         virtual Matrix44f &
-        computeOrthoMatrix( Matrix44f & result,
+        composeOrthoMatrix( Matrix44f & result,
                             float left,
                             float bottom,
                             float width,

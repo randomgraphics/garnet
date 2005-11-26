@@ -30,9 +30,9 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! D3D vertex buffer state
+    //! D3D draw state
     //!
-    struct D3DVtxBufState
+    struct D3DDrawState
     {
         //!
         //! Renderer state dirty flags
@@ -46,6 +46,8 @@ namespace GN { namespace gfx
             {
                 int  vtxBufs    : 16; //!< Vertex buffer dirty flags
                 bool vtxBinding : 1;  //!< Vertex binding dirty flag
+                bool vtxShader  : 1;  //!< Vertex shader
+                bool pxlShader  : 1;  //!< Pixel shader
                 int  reserved   : 15; //!< Reserved for future use.
             };
         };
@@ -59,8 +61,10 @@ namespace GN { namespace gfx
             size_t                stride; //!< vertex stride
         };
 
-        VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< front vertex buffers
-        uint32_t              vtxBinding;                  //!< front vertex binding handle
+        VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers
+        uint32_t              vtxBinding;                  //!< vertex binding handle
+        AutoRef<const Shader> vtxShader;                   //!< vertex shader
+        AutoRef<const Shader> pxlShader;                   //!< pixel shader
         DirtyFlags            dirtyFlags;                  //!< dirty flags
 
         //!
@@ -95,6 +99,26 @@ namespace GN { namespace gfx
         {
             dirtyFlags.vtxBinding = true;
             vtxBinding = handle;
+        }
+
+        //!
+        //! bind vertex shader
+        //!
+        void bindVtxShader( const Shader * shader )
+        {
+            if( shader == vtxShader.get() ) return;
+            dirtyFlags.vtxShader |= true;
+            vtxShader.reset( shader );
+        }
+
+        //!
+        //! bind pixel shader
+        //!
+        void bindPxlShader( const Shader * shader )
+        {
+            if( shader == pxlShader.get() ) return;
+            dirtyFlags.pxlShader |= true;
+            pxlShader.reset( shader );
         }
     };
 
@@ -293,20 +317,23 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVertexShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
-        virtual Shader * createPixelShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
-        virtual void bindShaders( const Shader *, const Shader * ) { GN_UNIMPL(); }
+        virtual Shader * createVertexShader( ShadingLanguage, const StrA & );
+        virtual Shader * createPixelShader( ShadingLanguage, const StrA & );
+        virtual void bindShaders( const Shader *, const Shader * );
 
     private :
         bool shaderInit() { return true; }
         void shaderQuit() {}
         bool shaderOK() const { return true; }
-        void shaderClear() {}
+        void shaderClear() { mCurrentVtxShader.reset(); mCurrentPxlShader.reset(); }
 
         bool shaderDeviceCreate() { return true; }
         bool shaderDeviceRestore() { return true; }
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy() {}
+
+        void applyVtxShader( const Shader * );
+        void applyPxlShader( const Shader * );
 
         //@}
 
@@ -409,21 +436,19 @@ namespace GN { namespace gfx
         bool bufferInit() { return true; }
         void bufferQuit() {}
         bool bufferOK() const { return true; }
-        void bufferClear() { mVtxBindings.clear(); mVtxBufState.clear(); }
+        void bufferClear() { mVtxBindings.clear(); }
 
         bool bufferDeviceCreate() { return true; }
         bool bufferDeviceRestore();
         void bufferDeviceDispose();
         void bufferDeviceDestroy() {}
 
-        void updateVtxBufState();
-        void updateVtxBufs(); // this is only called by updateVtxBufState().
+        void applyVtxBinding( uint32_t );
+        void applyVtxBuffers();
 
     private :
 
         HandleManager<D3DVtxBindingDesc,uint32_t> mVtxBindings;
-
-        D3DVtxBufState mVtxBufState;
 
         //@}
 
@@ -486,8 +511,8 @@ namespace GN { namespace gfx
         virtual void setParameter( RenderParameter, const Matrix44f * ) { GN_UNIMPL(); }
         virtual void pushParameter( RenderParameter ) { GN_UNIMPL(); }
         virtual void popParameter( RenderParameter ) { GN_UNIMPL(); }
-        virtual Matrix44f & computePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
-        virtual Matrix44f & computeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
+        virtual Matrix44f & composePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
+        virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
 
     private :
         bool paramInit() { return true; }
@@ -541,6 +566,7 @@ namespace GN { namespace gfx
             mDefaultRT0 = mDefaultDepth = mAutoDepth = 0;
             mCurrentRTSize.set( 0, 0 );
             mAutoDepthSize.set( 0, 0 );
+            mDrawState.clear();
         }
 
         bool drawDeviceCreate();
@@ -550,6 +576,8 @@ namespace GN { namespace gfx
 
         bool createFont();
         bool handleDeviceLost();
+
+        void applyDrawState();
 
     private:
 
@@ -575,6 +603,8 @@ namespace GN { namespace gfx
             mCurrentRTSize, // current render target size
             mAutoDepthSize; // size of automatic depth buffer
 
+        D3DDrawState mDrawState;
+
         //@}
     };
 }}
@@ -587,6 +617,7 @@ namespace GN { namespace gfx
 #include "d3dRenderStateBlockMgr.inl"
 #include "d3dTextureMgr.inl"
 #include "d3dBufferMgr.inl"
+#include "d3dDrawMgr.inl"
 #endif
 
 // *****************************************************************************

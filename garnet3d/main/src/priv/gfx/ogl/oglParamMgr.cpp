@@ -5,7 +5,7 @@
 // matrix computation
 // -----------------------------------------------------------------------------
 GN::Matrix44f &
-GN::gfx::OGLRenderer::computePerspectiveMatrix(
+GN::gfx::OGLRenderer::composePerspectiveMatrix(
     Matrix44f & result,
     float fovy,
     float ratio,
@@ -16,7 +16,7 @@ GN::gfx::OGLRenderer::computePerspectiveMatrix(
 }
 //
 GN::Matrix44f &
-GN::gfx::OGLRenderer::computeOrthoMatrix(
+GN::gfx::OGLRenderer::composeOrthoMatrix(
     Matrix44f & result,
     float left,
     float bottom,
