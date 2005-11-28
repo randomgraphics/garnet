@@ -325,7 +325,7 @@ namespace GN { namespace gfx
         bool shaderInit() { return true; }
         void shaderQuit() {}
         bool shaderOK() const { return true; }
-        void shaderClear() { mCurrentVtxShader.reset(); mCurrentPxlShader.reset(); }
+        void shaderClear() {}
 
         bool shaderDeviceCreate() { return true; }
         bool shaderDeviceRestore() { return true; }

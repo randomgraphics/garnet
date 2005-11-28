@@ -28,7 +28,7 @@ bool GN::gfx::D3DVtxShaderAsm::init( const StrA & code )
     AutoComPtr<ID3DXBuffer> err;
 
     if( FAILED( D3DXAssembleShader(
-        mCode.cstr(), mCode.size(),
+        mCode.cstr(), (UINT)mCode.size(),
         0, 0, // no defines, no includes
         flag,
         &mMachineCode, &err ) ) )

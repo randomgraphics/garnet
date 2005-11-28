@@ -28,16 +28,6 @@ bool GN::d3d::App::init()
 {
     GN_GUARD;
 
-    //
-    // 如果是Debug版本，则启用CRT的内存泄漏检测功能
-    //
-#if GN_DEBUG
-    int tmpDbgFlag;
-    tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-    tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
-    _CrtSetDbgFlag(tmpDbgFlag);
-#endif
-
     if( !mD3D.init(mInitParams) ) return false;
 
     // TODO: connect to D3D signals
