@@ -279,14 +279,14 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                 GN_OGL_CHECK( glVertexPointer(
                     sClrFmt2OGL[ad.format].components,
                     sClrFmt2OGL[ad.format].format,
-                    stride,
+                    (GLsizei)stride,
                     buf + ad.offset ) );
                 break;
 
             case VTXSEM_NORMAL:
                 GN_OGL_CHECK( glNormalPointer(
                     sClrFmt2OGL[ad.format].format,
-                    stride,
+                    (GLsizei)stride,
                     buf + ad.offset ) );
                 break;
 
@@ -294,7 +294,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                 GN_OGL_CHECK( glColorPointer(
                     sClrFmt2OGL[ad.format].components,
                     sClrFmt2OGL[ad.format].format,
-                    stride,
+                    (GLsizei)stride,
                     buf+ad.offset ) );
                 break;
 
@@ -304,7 +304,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                     GN_OGL_CHECK( glSecondaryColorPointerEXT(
                         sClrFmt2OGL[ad.format].components,
                         sClrFmt2OGL[ad.format].format,
-                        stride,
+                        (GLsizei)stride,
                         const_cast<uint8_t*>(buf+ad.offset) ) );
                 }
                 else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
@@ -314,7 +314,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                         sClrFmt2OGL[ad.format].components,
                         sClrFmt2OGL[ad.format].format,
                         sClrFmt2OGL[ad.format].normalization,
-                        stride,
+                        (GLsizei)stride,
                         buf+ad.offset ) );
                 }
                 break;
@@ -324,7 +324,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                 {
                     GN_OGL_CHECK( glFogCoordPointerEXT(
                         sClrFmt2OGL[ad.format].format,
-                        stride,
+                        (GLsizei)stride,
                         const_cast<uint8_t*>(buf+ad.offset) ) );
                 }
                 else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
@@ -334,7 +334,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                         sClrFmt2OGL[ad.format].components,
                         sClrFmt2OGL[ad.format].format,
                         sClrFmt2OGL[ad.format].normalization,
-                        stride,
+                        (GLsizei)stride,
                         buf+ad.offset ) );
                 }
                 break;
@@ -349,7 +349,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                         sClrFmt2OGL[ad.format].components,
                         sClrFmt2OGL[ad.format].format,
                         sClrFmt2OGL[ad.format].normalization,
-                        stride,
+                        (GLsizei)stride,
                         buf + ad.offset ) );
                 }
                 else
@@ -373,7 +373,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                     GN_OGL_CHECK( glTexCoordPointer(
                         sClrFmt2OGL[ad.format].components,
                         sClrFmt2OGL[ad.format].format,
-                        stride,
+                        (GLsizei)stride,
                         buf + ad.offset ) );
                 }
                 else
