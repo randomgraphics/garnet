@@ -17,15 +17,9 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
         applyVtxBuffers();
     }
 
-    if( mDrawState.dirtyFlags.vtxShader )
-    {
-        applyVtxShader( mDrawState.vtxShader.get() );
-    }
-
-    if( mDrawState.dirtyFlags.pxlShader )
-    {
-        applyPxlShader( mDrawState.pxlShader.get() );
-    }
+    applyShader(
+        mDrawState.vtxShader.get(), !!mDrawState.dirtyFlags.vtxShader,
+        mDrawState.pxlShader.get(), !!mDrawState.dirtyFlags.pxlShader );
 
     // switch state buffer, and clear dirty flags
     mDrawState.dirtyFlags.u32 = 0;
