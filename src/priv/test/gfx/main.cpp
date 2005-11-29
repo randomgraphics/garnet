@@ -8,6 +8,7 @@ class Scene
     GN::AutoRef<GN::gfx::IdxBuf> ibuf1;
     uint32_t                     vbind;
 
+    GN::AutoRef<GN::gfx::Shader> ps1;
 
 public:
 
@@ -23,14 +24,6 @@ public:
         vbind = r.createVtxBinding( fmt );
         if( 0 == vbind ) return false;
 
-        // create index buffer
-        ibuf1.attach( r.createIdxBuf( 4 ) );
-        if( ibuf1.empty() ) return false;
-        uint16_t * ibData = ibuf1->lock( 0, 0, 0 );
-        if( 0 == ibData ) return false;
-        ibData[0] = 0; ibData[1] = 1; ibData[2] = 2; ibData[3] = 3;
-        ibuf1->unlock();
-
         // create vertex buffer
         vbuf1.attach( r.createVtxBuf( fmt.streams[0].stride * 4 ) );
         if( vbuf1.empty() ) return false;
@@ -39,8 +32,27 @@ public:
         p[0].set( 0, 0, 0 );
         p[1].set( 0, 1, 0 );
         p[2].set( 1, 0, 0 );
-        p[2].set( 1, 1, 0 );
+        p[3].set( 1, 1, 0 );
         vbuf1->unlock();
+
+        // create index buffer
+        ibuf1.attach( r.createIdxBuf( 4 ) );
+        if( ibuf1.empty() ) return false;
+        uint16_t * ibData = ibuf1->lock( 0, 0, 0 );
+        if( 0 == ibData ) return false;
+        ibData[0] = 0; ibData[1] = 1; ibData[2] = 2; ibData[3] = 3;
+        ibuf1->unlock();
+
+        // create pixel shader
+        if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_D3D_ASM ) )
+        {
+            static const char * ps1Code =
+                "ps_1_1\n"
+                "mov r0, c0";
+            ps1.attach( r.createPixelShader( GN::gfx::LANG_D3D_ASM, ps1Code ) );
+            if( !ps1 ) return false;
+            ps1->setUniformByName( "c0", GN::Vector4f(1,1,1,1) );
+        }
 
         // success
         return true;
@@ -51,15 +63,17 @@ public:
         vbuf1.reset();
         ibuf1.reset();
         vbind = 0;
+        ps1.reset();
     }
 
     void draw( GN::gfx::Renderer & r )
     {
+        r.setRenderState( GN::gfx::RS_CULL_MODE, GN::gfx::RSV_CULL_NONE );
+        r.bindShaders( 0, ps1 );
         r.bindVtxBinding( vbind );
         r.bindVtxBufs( (const GN::gfx::VtxBuf**)&vbuf1, 0, 1 );
-        //r.bindIdxBuf( ibuf1 );
-        //r.drawIndexed( GN::gfx::TRIANGLE_STRIP, 2, 0, 0, 4, 0 );
-        r.draw( GN::gfx::TRIANGLE_LIST, 1, 0 );
+        r.bindIdxBuf( ibuf1 );
+        r.drawIndexed( GN::gfx::TRIANGLE_STRIP, 2, 0, 0, 4, 0 );
     }
 };
 

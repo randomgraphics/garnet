@@ -19,12 +19,47 @@ namespace GN { namespace gfx
         //! Apply shader as well as shader constants to D3D device
         //!
         virtual void apply() const = 0;
+
+        //!
+        //! Apply only dirty uniforms to D3D device
+        //!
+        virtual void applyDirtyUniforms() const = 0;
     };
-    
+
+    //!
+    //! Basic D3D asm shader class
+    //!
+    struct D3DShaderAsm : public D3DBasicShader
+    {
+        enum
+        {
+            CONST_F = 1, //!< float const
+            CONST_I = 2, //!< integer const
+            CONST_B = 3, //!< bool const
+        };
+
+        //!
+        //! Asm shader constant descriptor
+        //!
+        union D3DAsmShaderDesc
+        {
+            //!
+            //! shader constant descriptor as uint32
+            //!
+            uint32_t u32;
+
+            struct
+            {
+                uint16_t type; //!< should be one of CONST_F, CONST_I, CONST_B
+                uint16_t index; //!< const index.
+            };
+        };
+    };
+
     //!
     //! D3D asm vertex shader class
     //!
-    class D3DVtxShaderAsm : public Shader, public D3DBasicShader, public D3DResource, public StdClass
+    class D3DVtxShaderAsm : public Shader, public D3DShaderAsm, public D3DResource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3DVtxShaderAsm, StdClass );
 
@@ -74,6 +109,7 @@ namespace GN { namespace gfx
     public:
 
         void apply() const;
+        void applyDirtyUniforms() const {}
 
         // ********************************
         // private variables
@@ -87,12 +123,13 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+        bool queryDeviceUniform( const char *, HandleType * ) const { return false; }
     };
 
     //!
     //! D3D asm pixel shader class
     //!
-    class D3DPxlShaderAsm : public Shader, public D3DBasicShader, public D3DResource, public StdClass
+    class D3DPxlShaderAsm : public Shader, public D3DShaderAsm, public D3DResource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3DPxlShaderAsm, StdClass );
 
@@ -142,6 +179,7 @@ namespace GN { namespace gfx
     public:
 
         void apply() const;
+        void applyDirtyUniforms() const;
 
         // ********************************
         // private variables
@@ -151,12 +189,22 @@ namespace GN { namespace gfx
         LPD3DXBUFFER           mMachineCode;
         LPDIRECT3DPIXELSHADER9 mD3DShader;
 
+        size_t mMaxConstF, mMaxConstI, mMaxConstB;
+
         // ********************************
         // private functions
         // ********************************
     private:
+        bool compileShader();
+        bool analyzeUniforms();
+        void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
+        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
     };
 }}
+
+#if GN_ENABLE_INLINE
+#include "d3dPxlShaderAsm.inl"
+#endif
 
 // *****************************************************************************
 //                           End of d3dShader.h

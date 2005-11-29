@@ -44,11 +44,11 @@ namespace GN { namespace gfx
 
             struct
             {
-                int  vtxBufs    : 16; //!< Vertex buffer dirty flags
-                bool vtxBinding : 1;  //!< Vertex binding dirty flag
-                bool vtxShader  : 1;  //!< Vertex shader
-                bool pxlShader  : 1;  //!< Pixel shader
-                int  reserved   : 15; //!< Reserved for future use.
+                int vtxBufs    : 16; //!< Vertex buffer dirty flags
+                int vtxBinding : 1;  //!< Vertex binding dirty flag
+                int vtxShader  : 1;  //!< Vertex shader
+                int pxlShader  : 1;  //!< Pixel shader
+                int reserved   : 13; //!< Reserved for future use.
             };
         };
 
@@ -72,6 +72,7 @@ namespace GN { namespace gfx
         //!
         void clear()
         {
+            GN_CASSERT( sizeof(DirtyFlags) == 4 );
             for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i )
             {
                 vtxBufs[i].buf.reset();
@@ -332,8 +333,9 @@ namespace GN { namespace gfx
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy() {}
 
-        void applyVtxShader( const Shader * );
-        void applyPxlShader( const Shader * );
+        void applyShader(
+                const Shader * vtxShader, bool vtxShaderDirty,
+                const Shader * pxlShader, bool pxlShaderDirty ) const;
 
         //@}
 

@@ -134,44 +134,31 @@ namespace GN { namespace gfx
         };
 
         //!
-        //! Add a new uniform to uniform list. Return handle of the uniform.
+        //! Get first unform handle. Use to iterate all uniforms.
         //!
-        uint32_t addUniform( const char * name )
+        uint32_t getFirstUniform() const { return mUniforms.first(); }
+
+        //!
+        //! Get next unform handle. Use to iterate all uniforms.
+        //!
+        uint32_t getNextUniform( uint32_t handle ) const { return mUniforms.next(handle); }
+
+        //!
+        //! Get the uniform data structure
+        //!
+        Uniform & getUniform( uint32_t handle )
         {
-            GN_GUARD;
-
-            if( strEmpty(name) )
-            {
-                GN_ERROR( "uniform name can't be empty!" );
-                return 0;
-            }
-
-            if( mUniformNames.end() != mUniformNames.find(name) )
-            {
-                GN_ERROR( "uniform named '%s' already exists.", name );
-                return 0;
-            }
-
-            Uniform u;
-            u.name = name;
-
-            uint32_t h = mUniforms.add( u );
-            mUniformNames[name] = h;
-
-            // success
-            return true;
-
-            GN_UNGUARD;
+            GN_ASSERT( mUniforms.validHandle(handle) );
+            return mUniforms[handle];
         }
 
         //!
-        //! remove all uniforms
+        //! Get the uniform data structure
         //!
-        void removeAllUniforms()
+        const Uniform & getUniform( uint32_t handle ) const
         {
-            mUniforms.clear();
-            mUniformNames.clear();
-            mDirtySet.clear();
+            GN_ASSERT( mUniforms.validHandle(handle) );
+            return mUniforms[handle];
         }
 
         //!
@@ -182,13 +169,55 @@ namespace GN { namespace gfx
         //!
         //! clear dirty set
         //!
-        void clearDirtySet() { mDirtySet.clear(); }
+        void clearDirtySet() const { mDirtySet.clear(); }
 
     private:
 
+        //!
+        //! Query device-dependent uniform data
+        //!
+        //! \param name
+        //!     uniform name
+        //! \param userData
+        //!     Return user-defined uniform data that will be stored in Uniform::userData.
+        //!     Ignored if set to NULL.
+        //!
+        virtual bool queryDeviceUniform( const char * name, HandleType * userData ) const = 0;
+
+        //!
+        //! Add a new uniform to uniform list. Return handle of the uniform.
+        //!
+        uint32_t addUniform( const StrA & name )
+        {
+            GN_GUARD;
+
+            if( name.empty() )
+            {
+                GN_ERROR( "uniform name can't be empty!" );
+                return 0;
+            }
+
+            if( mUniformNames.end() != mUniformNames.find(name) )
+            {
+                GN_ERROR( "uniform named '%s' already exists.", name.cstr() );
+                return 0;
+            }
+
+            Uniform u;
+            u.name = name;
+
+            uint32_t h = mUniforms.add( u );
+            mUniformNames[name] = h;
+
+            // success
+            return h;
+
+            GN_UNGUARD;
+        }
+
         bool validateUniformValue( uint32_t handle, const void * values, size_t count )
         {
-            if( mUniforms.validHandle( handle ) )
+            if( !mUniforms.validHandle( handle ) )
             {
                 GN_ERROR( "invalid uniform handle '%d'", handle );
                 return false;
@@ -206,7 +235,7 @@ namespace GN { namespace gfx
 
         HandleManager<Uniform,uint32_t> mUniforms;     //!< uniform handle manager
         std::map<StrA,uint32_t>         mUniformNames; //!< uniform name -> uniform handle
-        std::set<uint32_t>              mDirtySet;     //!< Store handle of dirty uniforms.
+        mutable std::set<uint32_t>      mDirtySet;     //!< Store handle of dirty uniforms.
     };
 
     // *************************************************************************
@@ -217,14 +246,35 @@ namespace GN { namespace gfx
     inline uint32_t Shader::getUniformHandle( const char * name )
     {
         GN_GUARD_SLOW;
-        if( strEmpty(name) ) { GN_ERROR( "Uniform name can't be empty!" ); }
+
+        // check parameter(s)
+        if( strEmpty(name) ) { GN_ERROR( "Uniform name can't be empty!" ); return 0; }
+
+        // check for existing uniform
         if( mUniformNames.end() != mUniformNames.find(name) )
         {
             GN_ASSERT( mUniforms.validHandle( mUniformNames[name] ) );
             return mUniformNames[name];
         }
-        GN_ERROR( "invalid uniform name: %s.", name );
-        return 0;   
+
+        // query for device-dependent uniform
+        HandleType userData;
+        if( !queryDeviceUniform( name, &userData ) )
+        {
+            GN_ERROR( "invalid uniform name: %s.", name );
+            return 0;
+        }
+
+        // add new uniform
+        uint32_t handle = addUniform( name );
+        if( 0 == handle ) return 0;
+        Uniform & u = getUniform(handle);
+        GN_ASSERT( u.name == name );
+        u.userData = userData;
+
+        // success
+        return handle;
+
         GN_UNGUARD_SLOW;
     }
 

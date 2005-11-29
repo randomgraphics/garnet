@@ -168,7 +168,12 @@
         if( FAILED(rr) )                            \
         {                                           \
             GN_ERROR( DXGetErrorString9A(rr) );     \
-            GN_UNEXPECTED();                        \
+            /* note: some errors are expected */    \
+            if( D3DERR_DEVICELOST != rr &&          \
+                D3DERR_OUTOFVIDEOMEMORY != rr )     \
+            {                                       \
+                GN_UNEXPECTED();                    \
+            }                                       \
             something                               \
         }                                           \
     } else void(0)

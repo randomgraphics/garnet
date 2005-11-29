@@ -164,7 +164,7 @@ bool GN::gfx::D3DRenderer::bufferDeviceRestore()
     }
 
     // TODO: restore vertx buffer states
-    GNGFX_WARN( "restore vertx buffer states" );
+    GNGFX_WARN( "TODO: restore vertx buffer states" );
 
     // success
     return true;

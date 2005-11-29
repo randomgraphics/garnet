@@ -64,7 +64,7 @@ GN::gfx::D3DRenderer::createVertexShader( ShadingLanguage lang, const StrA & cod
             {
                 AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
                 if( !p->init( code ) ) return 0;
-                return p;
+                return p.detach();
             }
 
         case LANG_CG:
@@ -96,7 +96,7 @@ GN::gfx::D3DRenderer::createPixelShader( ShadingLanguage lang, const StrA & code
             {
                 AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
                 if( !p->init( code ) ) return 0;
-                return p;
+                return p.detach();
             }
 
         case LANG_CG:
@@ -134,33 +134,35 @@ void GN::gfx::D3DRenderer::bindShaders( const Shader * vtx, const Shader * pxl )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::applyVtxShader( const Shader * shader )
+void GN::gfx::D3DRenderer::applyShader(
+    const Shader * vtxShader, bool vtxShaderDirty,
+    const Shader * pxlShader, bool pxlShaderDirty ) const
 {
     GN_GUARD_SLOW;
 
-    if( 0 == shader )
+    if( vtxShader )
+    {
+        if( vtxShaderDirty )
+            safeCast<const D3DBasicShader*>(vtxShader)->apply();
+        else
+            safeCast<const D3DBasicShader*>(vtxShader)->applyDirtyUniforms();
+    }
+    else
     {
         GN_DX_CHECK( mDevice->SetVertexShader( 0 ) );
-        return;
     }
-    else safeCast<const D3DBasicShader*>(shader)->apply();
 
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::applyPxlShader( const Shader * shader )
-{
-    GN_GUARD_SLOW;
-
-    if( 0 == shader )
+    if( pxlShader )
     {
-        GN_DX_CHECK( mDevice->SetPixelShader( 0 ) );
-        return;
+        if( pxlShaderDirty )
+            safeCast<const D3DBasicShader*>(pxlShader)->apply();
+        else
+            safeCast<const D3DBasicShader*>(pxlShader)->applyDirtyUniforms();
     }
-    else safeCast<const D3DBasicShader*>(shader)->apply();
+    else
+    {
+        GN_DX_CHECK( mDevice->SetVertexShader( 0 ) );
+    }
 
     GN_UNGUARD_SLOW;
 }
