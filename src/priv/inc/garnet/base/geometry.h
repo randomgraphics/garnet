@@ -67,11 +67,11 @@ namespace GN
 
     public:
         //!
-        //! Convert to float *
+        //! Convert to T *
         //!
         operator T *() { return &x; }
         //!
-        //! Convert to const float *
+        //! Convert to const T *
         //!
         operator const T *() const { return &x; }
         //!
@@ -380,11 +380,11 @@ namespace GN
     public:
 
         //!
-        //! Convert to float *
+        //! Convert to T *
         //!
         operator T *() { return &x; }
         //!
-        //! Convert to const float *
+        //! Convert to const T *
         //!
         operator const T *() const { return &x; }
         //!
@@ -738,11 +738,11 @@ namespace GN
     public:
 
         //!
-        //! Convert to float *
+        //! Convert to T *
         //!
         operator T *() { return &x; }
         //!
-        //! Convert to const float *
+        //! Convert to const T *
         //!
         operator const T *() const { return &x; }
         //!
