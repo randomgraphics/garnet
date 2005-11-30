@@ -41,10 +41,15 @@ void GN::putEnv( const char * name, const char * value )
 // -----------------------------------------------------------------------------
 void GN::getEnv( StrA & result, const char * name )
 {
+#if GN_XENON
+    // Xenon does not support getenv()
+    result.clear();
+#else
     if( strEmpty(name) )
         result.clear();
     else
         result.assign( ::getenv(name) );
+#endif
 }
 
 //
