@@ -238,7 +238,10 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     // set initialize parameters
     mInitFormat = sD3DFMT2ClrFmt( info.Format );
     if( (TexType)-1 == mInitType || FMT_INVALID == mInitFormat )
-    { quit(); return selfOK(); }
+    {
+        quit();
+        return selfOK();
+    }
     mInitSize[0] = info.Width;
     mInitSize[1] = info.Height;
     mInitSize[2] = info.Depth;
@@ -327,7 +330,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
             if( FMT_INVALID == format )
             {
                 GNGFX_ERROR( "unsupport depth-stencil format!" );
-                quit(); return selfOK();
+                return false;
             }
         }
         else
