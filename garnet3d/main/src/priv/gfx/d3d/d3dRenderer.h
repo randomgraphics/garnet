@@ -565,7 +565,7 @@ namespace GN { namespace gfx
             mDrawBegan = false;
             mFont = 0;
             mFontHeight = 0;
-            mDefaultRT0 = mDefaultDepth = mAutoDepth = 0;
+            mDefaultRT0 = mAutoDepth = 0;
             mCurrentRTSize.set( 0, 0 );
             mAutoDepthSize.set( 0, 0 );
             mDrawState.clear();
@@ -580,6 +580,8 @@ namespace GN { namespace gfx
         bool handleDeviceLost();
 
         void applyDrawState();
+
+        void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
 
     private:
 
@@ -596,11 +598,10 @@ namespace GN { namespace gfx
         //
         LPDIRECT3DSURFACE9
             mDefaultRT0,    // default color buffer
-            mDefaultDepth,  // default depth buffer
             mAutoDepth;     // automatic depth buffer
         RenderTargetTextureDesc
-            mCurrentRTs[4], // current color buffers.
-            mCurrentDepth;  // current depth buffer
+            mCurrentRTs[4], // current color textures.
+            mCurrentDepth;  // current depth texture
         Vector2<uint32_t>
             mCurrentRTSize, // current render target size
             mAutoDepthSize; // size of automatic depth buffer

@@ -99,7 +99,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     //
     // FIXME : 应当首先枚举有效的depth-buffer-format
     //
-    d3dpp.EnableAutoDepthStencil = 1;
+    d3dpp.EnableAutoDepthStencil = 0; // note: we'll create depth surface in draw manager.
     d3dpp.AutoDepthStencilFormat = D3DFMT_D24X8;
 
     // set display mode parameters

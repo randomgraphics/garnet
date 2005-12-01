@@ -163,9 +163,6 @@ bool GN::gfx::D3DRenderer::bufferDeviceRestore()
         h = mVtxBindings.next( h );
     }
 
-    // TODO: restore vertx buffer states
-    GNGFX_WARN( "TODO: restore vertx buffer states" );
-
     // success
     return true;
 
