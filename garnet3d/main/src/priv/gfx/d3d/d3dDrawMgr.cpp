@@ -177,7 +177,6 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 
         // get surface pointer
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(tex);
-        AutoComPtr<IDirect3DSurface9> surf;
         surf.attach( d3dTex->getSurface( face, 0 ) );
         if( !surf ) return;
 
@@ -190,9 +189,11 @@ void GN::gfx::D3DRenderer::setRenderTarget(
         surf.reset( mDefaultRT0 );
         surfSize.x = getDispDesc().width;
         surfSize.y = getDispDesc().height;
+        GN_ASSERT( surf );
     }
 
     // update D3D render target
+    GN_ASSERT( 0 != index || surf );
     GN_DX_CHECK( mDevice->SetRenderTarget( (DWORD)index, surf ) );
     rttd.tex  = tex;
     rttd.face = face;

@@ -483,17 +483,10 @@ namespace GN { namespace gfx
         //!
         //! request a instance of shader
         //!
-        //! \param type        shader type
-        //! \param lang        shading language
-        //! \param code        shader code string
-        //! \return            instance of shader
-        //!
-        //! \note              This is inline function implemented in renderer.inl
+        //! \note Inlined function implemented in renderer.inl
         //!
         Shader *
-        createShader( ShaderType      type,
-                      ShadingLanguage lang,
-                      const StrA &    code );
+        createShader( ShaderType type, ShadingLanguage lang, const StrA & code );
 
         //!
         //! Bind programmable shader to rendering device. Set to NULL to use
@@ -537,7 +530,11 @@ namespace GN { namespace gfx
         //! \note This is even slower because of extra data copy.
         //!
         RenderStateBlockDesc getCurrentRenderStateBlock() const
-        { RenderStateBlockDesc result; getCurrentRenderStateBlock(result); return result; }
+        {
+            RenderStateBlockDesc result;
+            getCurrentRenderStateBlock(result);
+            return result;
+        }
 
         //!
         //! Update individual render state.
@@ -586,7 +583,7 @@ namespace GN { namespace gfx
         //! \param format      texture format, FMT_DEFAULT means
         //!                    using default/appropriating format of current
         //!                    rendering hardware.
-        //! \param usages      texture usages, one or combination of TexUsage
+        //! \param usage       texture usage, one or combination of TexUsage
         //! \note
         //!    - sy/sz will be ignored for 1D/Cube texture,
         //!    - sz will be ignored for 2D texture.
@@ -596,7 +593,55 @@ namespace GN { namespace gfx
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels = 0,
                        ClrFmt format = FMT_DEFAULT,
-                       uint32_t usages = USAGE_NORMAL ) = 0;
+                       uint32_t usage = USAGE_NORMAL ) = 0;
+
+        //!
+        //! Create 1D texture
+        //!
+        Texture *
+        create1DTexture( uint32_t sx,
+                         uint32_t levels = 0,
+                         ClrFmt format = FMT_DEFAULT,
+                         uint32_t usage = USAGE_NORMAL )
+        {
+            return createTexture( TEXTYPE_1D, sx, 0, 0, levels, format, usage );
+        }
+
+        //!
+        //! Create 2D texture
+        //!
+        Texture *
+        create2DTexture( uint32_t sx, uint32_t sy,
+                         uint32_t levels = 0,
+                         ClrFmt format = FMT_DEFAULT,
+                         uint32_t usage = USAGE_NORMAL )
+        {
+            return createTexture( TEXTYPE_2D, sx, sy, 0, levels, format, usage );
+        }
+
+        //!
+        //! Create 3D texture
+        //!
+        Texture *
+        create3DTexture( uint32_t sx, uint32_t sy, uint32_t sz,
+                         uint32_t levels = 0,
+                         ClrFmt format = FMT_DEFAULT,
+                         uint32_t usage = USAGE_NORMAL )
+        {
+            return createTexture( TEXTYPE_3D, sx, sy, sz, levels, format, usage );
+        }
+
+        //!
+        //! Create CUBE texture
+        //!
+        Texture *
+        createCubeTexture( uint32_t sx,
+                           uint32_t levels = 0,
+                           ClrFmt format = FMT_DEFAULT,
+                           uint32_t usage = USAGE_NORMAL )
+        {
+            return createTexture( TEXTYPE_CUBE, sx, 0, 0, levels, format, usage );
+        }
 
         //!
         //! Load texture from file
@@ -614,6 +659,15 @@ namespace GN { namespace gfx
         virtual void
         bindTextures( const Texture * const texlist[],
                       uint32_t start, uint32_t numtex ) = 0;
+
+
+        //!
+        //! bind one texture.
+        //!
+        void bindTexture( const Texture * tex, uint32_t stage )
+        {
+            bindTextures( &tex, stage, 1 );
+        }
 
         //@}
 

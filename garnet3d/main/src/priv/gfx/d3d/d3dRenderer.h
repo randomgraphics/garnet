@@ -384,7 +384,7 @@ namespace GN { namespace gfx
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels,
                        ClrFmt format,
-                       uint32_t usages );
+                       uint32_t usage );
         virtual Texture * createTextureFromFile( File & );
         virtual void bindTextures( const Texture * const texlist[],
                                    uint32_t start, uint32_t numtex );
