@@ -553,6 +553,7 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx );
+        virtual void drawScreenAlignedQuad( const Vector2f * positions, const Vector2f * texCoords, uint32_t options ) {}
         virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions
