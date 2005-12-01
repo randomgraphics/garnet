@@ -115,19 +115,29 @@ namespace GN { namespace gfx
         virtual void * getOGLRC() const { return mRenderContext; }
 
     public:
-        void makeCurrent()
+        bool makeCurrent() const
         {
 #if GN_MSWIN
             GN_ASSERT( mRenderContext && mDeviceContext );
-            GN_MSW_CHECK( ::wglMakeCurrent(mDeviceContext, mRenderContext) );
+            HGLRC hrc = wglGetCurrentContext();
+            HDC   hdc = wglGetCurrentDC();
+            if( hdc != mDeviceContext || hrc != mRenderContext )
+            {
+                if( !::wglMakeCurrent(mDeviceContext, mRenderContext) )
+                {
+                    GNGFX_ERROR( "wglMakeCurrent() failed : %s", getOSErrorInfo() );
+                    return false;
+                }
+            }
+            return true;
 #elif GN_POSIX
             Display * disp = (Display*)getDispDesc().displayHandle;
             Window win = (Window)getDispDesc().windowHandle;
             GN_ASSERT( disp && win && mRenderContext );
             glXMakeCurrent( disp, win, mRenderContext );
+            return true;
 #endif
         }
-
 
 #if GN_MSWIN
     private :
@@ -240,9 +250,9 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVertexShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
-        virtual Shader * createPixelShader( ShadingLanguage, const StrA & ) { GN_UNIMPL(); return 0; }
-        virtual void bindShaders( const Shader *, const Shader * ) { GN_UNIMPL(); }
+        virtual Shader * createVertexShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
+        virtual Shader * createPixelShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
+        virtual void bindShaders( const Shader *, const Shader * ) {}
 
     private :
         bool shaderInit() { return true; }
@@ -297,7 +307,7 @@ namespace GN { namespace gfx
                                          uint32_t sx, uint32_t sy, uint32_t sz,
                                          uint32_t levels,
                                          ClrFmt format,
-                                         uint32_t usages );
+                                         uint32_t usage );
         virtual Texture * createTextureFromFile( File & );
         virtual void bindTextures( const Texture * const texlist[],
                                    uint32_t start, uint32_t numtex );
@@ -448,9 +458,9 @@ namespace GN { namespace gfx
     public:
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
-                                      TexFace face ) { GN_UNIMPL(); }
+                                      TexFace face ) { GN_WARN( "no impl" ); }
         virtual void setRenderDepth( const Texture * texture,
-                                     TexFace face ) { GN_UNIMPL(); }
+                                     TexFace face ) { GN_WARN( "no impl" ); }
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();

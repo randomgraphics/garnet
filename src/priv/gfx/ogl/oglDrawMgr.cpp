@@ -101,7 +101,12 @@ bool GN::gfx::OGLRenderer::drawBegin()
 {
     GN_GUARD_SLOW;
 
-    makeCurrent();
+    if( !makeCurrent() )
+    {
+        GNGFX_INFO( "\nCan't set current OGL render context, wait 500 ms ...\n" );
+        ::Sleep( 500 );
+        return false;
+    }
 
     GN_ASSERT( !mDrawBegan );
 

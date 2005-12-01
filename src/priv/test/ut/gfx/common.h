@@ -22,7 +22,7 @@
 
 struct GfxResources
 {
-    GN::AutoRef<GN::gfx::Texture> tex1d, tex2d, tex3d, texcube;
+    GN::AutoRef<GN::gfx::Texture> tex1d, tex2d, tex3d, texcube, rt1, rt2, rt3;
     GN::AutoRef<GN::gfx::VtxBuf> vb1, vb2;
     GN::AutoRef<GN::gfx::IdxBuf> ib1, ib2;
     uint32_t rsb1, rsb2, vtxbinding1, vtxbinding2;
@@ -34,6 +34,14 @@ struct GfxResources
         tex2d.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 128, 128 ) );
         tex3d.attach( r.createTexture( GN::gfx::TEXTYPE_3D, 128, 128, 128 ) );
         texcube.attach( r.createTexture( GN::gfx::TEXTYPE_CUBE, 128, 128, 128 ) );
+
+        // create render targets
+        rt1.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        rt2.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        rt3.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        TS_ASSERT( rt1 );
+        TS_ASSERT( rt2 );
+        TS_ASSERT( rt3 );
 
         // create render state blocks
         GN::gfx::RenderStateBlockDesc rsbd(GN::gfx::RenderStateBlockDesc::DEFAULT);
@@ -73,25 +81,32 @@ struct GfxResources
         return true;
     }
 
-    void clear( GN::gfx::Renderer & r, const GN::Vector4f & color )
-    {
-        bool b = r.drawBegin();
-        TS_ASSERT( b );
-        if( b )
-        {
-            r.clearScreen( color );
-            r.drawEnd();
-        }
-    }
-
     void draw( GN::gfx::Renderer & r )
     {
-        clear( r, GN::Vector4f(1,0,0,1) ); // clear to red
-        clear( r, GN::Vector4f(0,0,1,1) ); // clear to blue
         if( r.drawBegin() )
         {
+            // draw to rt1
+            r.setRenderTarget( 0, rt1 );
+            r.clearScreen( GN::Vector4f(1,0,0,1) ); // clear to red
+
+            // draw to rt2
+            r.setRenderTarget( 0, rt2 );
+            r.clearScreen( GN::Vector4f(0,0,1,1) ); // clear to blue
+
+            // draw to rt3
+            r.setRenderTarget( 0, rt3 );
+            r.bindTexture( rt1, 0 );
+            r.bindTexture( rt2, 1 );
+            //r.drawScreenQuad(...);
+
+            // draw to screen
+            r.setRenderTarget( 0, 0 );
+            r.clearScreen( GN::Vector4f(0,1,0,1) ); // clear to green
+            r.bindTexture( rt3, 0 );
             r.bindRenderStateBlock( rsb1 );
             r.bindRenderStateBlock( rsb2 );
+
+            // draw end
             r.drawEnd();
         }
     }
@@ -384,6 +399,29 @@ protected:
         r.attach( mCreator(ro) );
         TS_ASSERT( r );
         if( r.empty() ) return;
+
+        GN_WARN( "TODO: vertex buffer UT!" );
+    }
+
+    void renderTarget()
+    {
+        GN::AutoObjPtr<GN::gfx::Renderer> r;
+        GN::gfx::RendererOptions ro;
+        r.attach( mCreator(ro) );
+        TS_ASSERT( r );
+        if( r.empty() ) return;
+
+        GN::AutoRef<GN::gfx::Texture> rt1, rt2, rt3, rt4;
+
+        // create render targets
+        rt1.attach( r->create1DTexture( 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        rt2.attach( r->create2DTexture( 256, 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        rt3.attach( r->create3DTexture( 128, 128, 4, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        rt4.attach( r->createCubeTexture( 128, 0, GN::gfx::FMT_DEFAULT, GN::gfx::USAGE_RENDERTARGET ) );
+        TS_ASSERT( rt1 );
+        TS_ASSERT( rt2 );
+        TS_ASSERT( !rt3 );
+        TS_ASSERT( rt4 );
     }
 };
 
