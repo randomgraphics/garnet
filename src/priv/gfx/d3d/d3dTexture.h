@@ -106,6 +106,50 @@ namespace GN { namespace gfx
         LPDIRECT3DBASETEXTURE9 getD3DTexture() const { return mD3DTexture; }
 
         //!
+        //! get D3D surface. Can _NOT_ be used on 3D texture.
+        //!
+        //! \note Do not foget to release the returned surface after using it.
+        //!
+        LPDIRECT3DSURFACE9 getSurface( TexFace face, uint32_t level ) const
+        {
+            GN_GUARD_SLOW;
+
+            GN_ASSERT( mD3DTexture );
+
+            LPDIRECT3DSURFACE9 surf;
+
+            switch( getType() )
+            {
+                case TEXTYPE_1D:
+                case TEXTYPE_2D:
+                    {
+                        LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
+                        GN_DX_CHECK_RV( tex2D->GetSurfaceLevel( level, &surf ), 0 );
+                    }
+                    return surf;
+
+                case TEXTYPE_CUBE:
+                    {
+                        LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
+                        GN_DX_CHECK_RV( texCube->GetCubeMapSurface( sTexFace2D3D(face), level, &surf ), 0 );
+                    }
+                    return surf;
+
+                case TEXTYPE_3D:
+                    GNGFX_ERROR( "Can't get surface from 3D texture." );
+                    return 0;
+
+                default:
+                    // program should not reach here.
+                    GNGFX_ERROR( "Invalid texture type!" );
+                    GN_UNEXPECTED();
+                    return 0;
+            }
+
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
         //! get filters
         //!
         const D3DTEXTUREFILTERTYPE * getD3DFilters() const
@@ -116,24 +160,6 @@ namespace GN { namespace gfx
         //!
         const D3DTEXTUREADDRESS * getD3DWraps() const
         { return mD3DWraps; }
-
-        //!
-        //! convert garnet cube face to D3D tag
-        //!
-        static D3DCUBEMAP_FACES sTexFace2D3D( TexFace face )
-        {
-            static D3DCUBEMAP_FACES sTable[ NUM_TEXFACES ] =
-            {
-                D3DCUBEMAP_FACE_POSITIVE_X,
-                D3DCUBEMAP_FACE_NEGATIVE_X,
-                D3DCUBEMAP_FACE_POSITIVE_Y,
-                D3DCUBEMAP_FACE_NEGATIVE_Y,
-                D3DCUBEMAP_FACE_POSITIVE_Z,
-                D3DCUBEMAP_FACE_NEGATIVE_Z,
-            };
-            GN_ASSERT( 0 <= face && face < 6 );
-            return sTable[face];
-        }
 
         // ********************************
         // private variables
@@ -185,6 +211,24 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+
+        //!
+        //! convert garnet cube face to D3D tag
+        //!
+        static D3DCUBEMAP_FACES sTexFace2D3D( TexFace face )
+        {
+            static D3DCUBEMAP_FACES sTable[ NUM_TEXFACES ] =
+            {
+                D3DCUBEMAP_FACE_POSITIVE_X,
+                D3DCUBEMAP_FACE_NEGATIVE_X,
+                D3DCUBEMAP_FACE_POSITIVE_Y,
+                D3DCUBEMAP_FACE_NEGATIVE_Y,
+                D3DCUBEMAP_FACE_POSITIVE_Z,
+                D3DCUBEMAP_FACE_NEGATIVE_Z,
+            };
+            GN_ASSERT( 0 <= face && face < 6 );
+            return sTable[face];
+        }
 
         //!
         //! create instance of D3D texture
