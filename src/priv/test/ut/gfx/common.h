@@ -96,8 +96,9 @@ struct GfxResources
             // draw to rt3
             r.setRenderTarget( 0, rt3 );
             r.bindTexture( rt1, 0 );
-            r.bindTexture( rt2, 1 );
-            //r.drawScreenQuad(...);
+            r.drawScreenAlignedQuad( 0, 0, 1, 0.5 );
+            r.bindTexture( rt2, 0 );
+            r.drawScreenAlignedQuad( 0, 0.5, 1, 1 );
 
             // draw to screen
             r.setRenderTarget( 0, 0 );

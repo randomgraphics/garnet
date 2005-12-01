@@ -263,6 +263,27 @@ namespace GN { namespace gfx
     };
 
     //!
+    //! Options for Renderer::drawScreenAlignedQuad
+    //!
+    enum DsaqOptions
+    {
+        //!
+        //! Use vertex shader currently binded to renderer.
+        //!
+        DSAQ_USE_CURRENT_VS   = 1<<0,
+
+        //!
+        //! Use pixel shader currently binded to renderer.
+        //!
+        DSAQ_USE_CURRENT_PS   = 1<<1,
+
+        //!
+        //! Use vertex and pixel shader currently binded to renderer.
+        //!
+        DSAQ_USE_CURRENT_SHADER = DSAQ_USE_CURRENT_VS | DSAQ_USE_CURRENT_PS
+    };
+
+    //!
     //! gfx模块的主接口类
     //!
     //! \nosubgrouping
@@ -910,6 +931,58 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx ) = 0;
+
+
+        //!
+        //! Draw screen aligned quad on screen.
+        //!
+        //! \param positions
+        //!     Four 2-D vectors that represent positions of each quad corner.
+        //!     (0,0) means left-up of the screen, (1,1) means right-bottom of the screen.
+        //! \param texCoords
+        //!     Four 2-D vectors that represent texture coordinate of each quad corner.
+        //! \param options
+        //!     Draw option.
+        //!     - One or combinations of DsaqOptions.
+        //!     - This function will by default use special vertex and pixel shader to draw the quad,
+        //!       unless you specify DSAQ_USE_CURRENT_VS and/or DSAQ_USE_CURRENT_PS.
+        //!
+        //! \sa DsaqOptions
+        //!
+        virtual void drawScreenAlignedQuad( const Vector2f * positions, const Vector2f * texCoords, uint32_t options = 0 ) = 0;
+
+        //!
+        //! Draw screen aligned quad on screen.
+        //!
+        void drawScreenAlignedQuad(
+            double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
+            double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0,
+            uint32_t options = 0 )
+        {
+            float x1 = (float)left;
+            float y1 = (float)top;
+            float x2 = (float)right;
+            float y2 = (float)bottom;
+            float u1 = (float)leftU;
+            float v1 = (float)topV;
+            float u2 = (float)rightU;
+            float v2 = (float)bottomV;
+
+            Vector2f pos[4];
+            Vector2f tex[4];
+
+            pos[0].set( x1, y1 );
+            pos[1].set( x2, y1 );
+            pos[2].set( x2, y2 );
+            pos[3].set( x1, y2 );
+
+            tex[0].set( u1, v1 );
+            tex[1].set( u2, v1 );
+            tex[2].set( u2, v2 );
+            tex[3].set( u1, v2 );
+
+            drawScreenAlignedQuad( pos, tex, options );
+        }
 
         //!
         //! 在屏幕上指定的位置绘制2D字符串.
