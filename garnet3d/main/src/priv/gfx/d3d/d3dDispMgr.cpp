@@ -18,7 +18,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
     // if window mode, then use current display mode
     if( !fullscreen )
     {
-#ifdef GN_XENON
+#if GN_XENON
         GNGFX_ERROR( "Xenon does not support windowed mode." );
         return D3DFMT_UNKNOWN;
 #else
@@ -302,6 +302,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             false );
 
         // success
+        mDeviceRecreation = true;
         return true;
     }
 
@@ -323,16 +324,25 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
 
     GN_ASSERT( !mDispOK && mD3D && mDevice );
 
-    const RendererOptions & ro = getOptions();
-    const DispDesc & dd = getDispDesc();
+    if( !mDeviceRecreation )
+    {
+        const RendererOptions & ro = getOptions();
+        const DispDesc & dd = getDispDesc();
 
-    // rebuild d3dpp based on current device settings
-    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
+        // rebuild d3dpp based on current device settings
+        if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
 
-    // NOTE: Applications can expect messages to be sent to them during this
-    //       call (for example, before this call is returned); applications
-    //       should take precautions not to call into Direct3D at this time.
-    GN_DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+        // NOTE: Applications can expect messages to be sent to them during this
+        //       call (for example, before this call is returned); applications
+        //       should take precautions not to call into Direct3D at this time.
+        GN_DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+    }
+    else
+    {
+        // If program reaches here, it only means we're inside a device full recreation.
+        // So there's no need to call mDevice->Reset().
+        mDeviceRecreation = false;
+    }
 
     // successful
     mDispOK = true;

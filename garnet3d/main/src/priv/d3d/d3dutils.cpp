@@ -13,22 +13,36 @@ static uint32_t sRefineFlags( uint32_t flags, bool forCompile )
     GN_UNUSED_PARAM(forCompile);
 #endif
 
-#if GN_XENON && defined(D3DXSHADER_MICROCODE_TARGET_FINAL) && defined(D3DXSHADER_MICROCODE_TARGET_ALPHA2)
-    if( forCompile ) 
-    {
-        flags |= D3DXSHADER_MICROCODE_TARGET_FINAL | D3DXSHADER_MICROCODE_TARGET_ALPHA2;
-    }
-#endif
-
     return flags;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( const char * code, size_t len, uint32_t flags, const char * entryFunc )
+static void sPrintShaderCompileError( const char * code, LPD3DXBUFFER err )
 {
     GN_GUARD;
+
+    GND3D_ERROR(
+        "\n================== Shader compile failure ===============\n"
+        "%s\n"
+        "\n---------------------------------------------------------\n"
+        "%s\n"
+        "\n=========================================================\n",
+        code ? code : "Shader code: <EMPTY>",
+        err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entryFunc )
+{
+    GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Compile shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -37,20 +51,20 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( const char * code, size_t len, uint3
             code, (UINT)( len ? len : strLen(code) ),
             NULL, NULL, // no macros, no includes,
             entryFunc,
-            D3DXGetVertexShaderProfile( gD3D.getDevice() ), // the highest possible version
+            D3DXGetVertexShaderProfile( dev ), // the highest possible version
             sRefineFlags(flags,true),
             &bin,
             &err,
             NULL )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( code, err );
         return 0;
     }
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreateVertexShader(
+        dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -64,9 +78,11 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVS( const char * code, size_t len, uint3
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( const char * file, uint32_t flags, const char * entryFunc )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Compile shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -75,20 +91,20 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( const char * file, uint32_t 
             GN::path::toNative(file).cstr(),
             NULL, NULL, // no macros, no includes,
             entryFunc,
-            D3DXGetVertexShaderProfile( gD3D.getDevice() ), // the highest possible version
+            D3DXGetVertexShaderProfile( dev ), // the highest possible version
             sRefineFlags(flags,true),
             &bin,
             &err,
             NULL )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( file, err );
         return 0;
     }
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreateVertexShader(
+        dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -102,9 +118,11 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::compileVSFromFile( const char * file, uint32_t 
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( const char * code, size_t len, uint32_t flags )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Assemble shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -116,14 +134,14 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( const char * code, size_t len, uint
             &bin,
             &err )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( code, err );
         return 0;
     }
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreateVertexShader(
+        dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -137,9 +155,11 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVS( const char * code, size_t len, uint
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( const char * file, uint32_t flags )
+LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Assemble shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -151,14 +171,14 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( const char * file, uint32_t
             &bin,
             &err )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( file, err );
         return 0;
     }
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreateVertexShader(
+        dev->CreateVertexShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -172,9 +192,11 @@ LPDIRECT3DVERTEXSHADER9 GN::d3d::assembleVSFromFile( const char * file, uint32_t
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( const char * code, size_t len, uint32_t flags, const char * entryFunc )
+LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Compile shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -183,20 +205,20 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( const char * code, size_t len, uint32
             code, (UINT)( len ? len : strLen(code) ),
             NULL, NULL, // no macros, no includes,
             entryFunc,
-            D3DXGetPixelShaderProfile( gD3D.getDevice() ), // the hightest possible version
+            D3DXGetPixelShaderProfile( dev ), // the hightest possible version
             sRefineFlags(flags,true),
             &bin,
             &err,
             NULL )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( code, err );
         return 0;
     };
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreatePixelShader(
+        dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -210,9 +232,11 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePS( const char * code, size_t len, uint32
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( const char * file, uint32_t flags, const char * entryFunc )
+LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags, const char * entryFunc )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Compile shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -221,20 +245,20 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( const char * file, uint32_t f
             GN::path::toNative(file).cstr(),
             NULL, NULL, // no macros, no includes,
             entryFunc,
-            D3DXGetPixelShaderProfile( gD3D.getDevice() ), // the hightest possible version
+            D3DXGetPixelShaderProfile( dev ), // the hightest possible version
             sRefineFlags(flags,true),
             &bin,
             &err,
             NULL )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( file, err );
         return 0;
     };
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreatePixelShader(
+        dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -248,9 +272,11 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::compilePSFromFile( const char * file, uint32_t f
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( const char * code, size_t len, uint32_t flags )
+LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Assemble shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -262,14 +288,14 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( const char * code, size_t len, uint3
             &bin,
             &err )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( code, err );
         return 0;
     };
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreatePixelShader(
+        dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -283,9 +309,11 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePS( const char * code, size_t len, uint3
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t flags )
+LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags )
 {
     GN_GUARD;
+
+    GN_ASSERT( dev );
 
     // Assemble shader.
     AutoComPtr<ID3DXBuffer> bin;
@@ -297,14 +325,14 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t 
             &bin,
             &err )) )
     {
-        if( err ) GN_ERROR( (const char*)err->GetBufferPointer() );
+        sPrintShaderCompileError( file, err );
         return 0;
     };
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
     GN_DX_CHECK_RV(
-        gD3D.getDevice()->CreatePixelShader(
+        dev->CreatePixelShader(
             (const DWORD*)bin->GetBufferPointer(),
             &result ),
         NULL );
@@ -319,12 +347,13 @@ LPDIRECT3DPIXELSHADER9 GN::d3d::assemblePSFromFile( const char * file, uint32_t 
 //
 // -----------------------------------------------------------------------------
 void GN::d3d::drawScreenAlignedQuad(
+    LPDIRECT3DDEVICE9 dev,
     double fLeft, double fTop, double fRight, double fBottom,
     double fLeftU, double fTopV, double fRightU, double fBottomV )
 {
     GN_GUARD;
 
-    LPDIRECT3DDEVICE9 dev = gD3D.getDevice();
+    GN_ASSERT( dev );
 
 #if GN_XENON
 

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3dShader.h"
 #include "d3dRenderer.h"
+#include "d3dUtils.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -33,7 +34,7 @@ bool GN::gfx::D3DVtxShaderAsm::init( const StrA & code )
         flag,
         &mMachineCode, &err ) ) )
     {
-        GNGFX_ERROR( (const char*)err->GetBufferPointer() );
+        printShaderCompileError( mCode.cstr(), err );
         quit(); return selfOK();
     }
 

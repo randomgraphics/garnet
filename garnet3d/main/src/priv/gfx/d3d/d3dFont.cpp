@@ -27,7 +27,7 @@ bool GN::gfx::D3DFont::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3DFont, () );
 
-    if( !createFont() || !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
+    // do nothing here.
 
     // success
     return selfOK();

@@ -5,6 +5,7 @@
 #endif
 #include "d3dTexture.h"
 #include "d3dFont.h"
+#include "d3dQuad.h"
 
 // static primitive map
 static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
@@ -32,12 +33,45 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::drawDeviceCreate()
+bool GN::gfx::D3DRenderer::drawInit()
 {
     GN_GUARD;
 
     mFont = new D3DFont(*this);
     if( !mFont->init() ) return false;
+
+    mQuad = new D3DQuad(*this);
+    if( !mQuad->init() ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawQuit()
+{
+    GN_GUARD;
+
+    safeDelete( mFont );
+    safeDelete( mQuad );
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// device management
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::drawDeviceCreate()
+{
+    GN_GUARD;
 
     // check multiple render target support
     if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
@@ -123,8 +157,6 @@ void GN::gfx::D3DRenderer::drawDeviceDestroy()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
-
-    safeDelete( mFont );
 
     GN_UNGUARD;
 }
@@ -398,13 +430,28 @@ void GN::gfx::D3DRenderer::draw(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawQuads(
+    const void * positions, size_t posStride,
+    const void * texcoords, size_t texStride,
+    size_t count, uint32_t options )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mDrawBegan && mQuad );
+    mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count, options );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawTextW(
     const wchar_t * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan && mFont );
-
     mFont->drawTextW( text, x, y, color );
 
     GN_UNGUARD_SLOW;

@@ -4,10 +4,6 @@
 
 class Scene
 {
-    GN::AutoRef<GN::gfx::VtxBuf> vbuf1;
-    GN::AutoRef<GN::gfx::IdxBuf> ibuf1;
-    uint32_t                     vbind;
-
     GN::AutoRef<GN::gfx::Shader> ps1;
 
 public:
@@ -18,31 +14,6 @@ public:
 
     bool init( GN::gfx::Renderer & r )
     {
-        // create vertex binding
-        GN::gfx::VtxFmtDesc fmt;
-        fmt.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT3 );
-        vbind = r.createVtxBinding( fmt );
-        if( 0 == vbind ) return false;
-
-        // create vertex buffer
-        vbuf1.attach( r.createVtxBuf( fmt.streams[0].stride * 4 ) );
-        if( vbuf1.empty() ) return false;
-        GN::Vector3f * p = (GN::Vector3f*)vbuf1->lock( 0, 0, 0 );
-        if( 0 == p ) return false;
-        p[0].set( 0, 0, 0 );
-        p[1].set( 0, 1, 0 );
-        p[2].set( 1, 0, 0 );
-        p[3].set( 1, 1, 0 );
-        vbuf1->unlock();
-
-        // create index buffer
-        ibuf1.attach( r.createIdxBuf( 4 ) );
-        if( ibuf1.empty() ) return false;
-        uint16_t * ibData = ibuf1->lock( 0, 0, 0 );
-        if( 0 == ibData ) return false;
-        ibData[0] = 0; ibData[1] = 1; ibData[2] = 2; ibData[3] = 3;
-        ibuf1->unlock();
-
         // create pixel shader
         if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_D3D_ASM ) )
         {
@@ -60,20 +31,14 @@ public:
 
     void quit()
     {
-        vbuf1.reset();
-        ibuf1.reset();
-        vbind = 0;
         ps1.reset();
     }
 
     void draw( GN::gfx::Renderer & r )
     {
-        r.setRenderState( GN::gfx::RS_CULL_MODE, GN::gfx::RSV_CULL_NONE );
+        //r.setRenderState( GN::gfx::RS_CULL_MODE, GN::gfx::RSV_CULL_NONE );
         r.bindShaders( 0, ps1 );
-        r.bindVtxBinding( vbind );
-        r.bindVtxBufs( (const GN::gfx::VtxBuf**)&vbuf1, 0, 1 );
-        r.bindIdxBuf( ibuf1 );
-        r.drawIndexed( GN::gfx::TRIANGLE_STRIP, 2, 0, 0, 4, 0 );
+        r.drawQuad( 0, 0, 0.5, 0.5, 0, 0, 0, 1, GN::gfx::DQ_USE_CURRENT_PS );
     }
 };
 
