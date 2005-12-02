@@ -324,12 +324,12 @@ def tool_list(platform, env):
     # change these search orders, update the man page as well.
     if str(platform) == 'win32':
         "prefer Microsoft tools on Windows"
-        linkers = ['mslink', 'gnulink', 'ilink', 'linkloc', 'ilink32' ]
-        c_compilers = ['msvc', 'mingw', 'gcc', 'intelc', 'icl', 'icc', 'cc', 'bcc32' ]
-        cxx_compilers = ['msvc', 'intelc', 'icc', 'g++', 'c++', 'bcc32' ]
+        linkers = ['mslink', 'gnulink', 'ilink', 'linkloc', 'ilink32', 'xenonlink' ]
+        c_compilers = ['msvc', 'mingw', 'gcc', 'intelc', 'icl', 'icc', 'cc', 'bcc32', 'xenon' ]
+        cxx_compilers = ['msvc', 'intelc', 'icc', 'g++', 'c++', 'bcc32', 'xenon' ]
         assemblers = ['masm', 'nasm', 'gas', '386asm' ]
         fortran_compilers = ['g77', 'ifl', 'cvf', 'f95', 'f90', 'fortran']
-        ars = ['mslib', 'ar', 'tlib']
+        ars = ['mslib', 'ar', 'tlib', 'xenonlib']
     elif str(platform) == 'os2':
         "prefer IBM tools on OS/2"
         linkers = ['ilink', 'gnulink', 'mslink']
@@ -401,7 +401,7 @@ def tool_list(platform, env):
         ar = None
     else:
         # Don't use g++ if the C compiler has built-in C++ support:
-        if c_compiler in ('msvc', 'intelc', 'icc'):
+        if c_compiler in ('msvc', 'intelc', 'icc', 'xenon'):
             cxx_compiler = None
         else:
             cxx_compiler = FindTool(cxx_compilers, env) or cxx_compilers[0]
