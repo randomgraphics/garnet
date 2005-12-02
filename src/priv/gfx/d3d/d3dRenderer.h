@@ -22,6 +22,8 @@ namespace GN { namespace gfx
 
     class D3DFont;
 
+    class D3DQuad;
+
     //!
     //! D3D vertex buffer binding descriptor
     //!
@@ -240,6 +242,7 @@ namespace GN { namespace gfx
         void dispClear()
         {
             mDispOK = false;
+            mDeviceRecreation = false;
             mD3D = 0;
             mDevice = 0;
         }
@@ -251,6 +254,7 @@ namespace GN { namespace gfx
 
     private :
         bool                    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
+        bool                    mDeviceRecreation; //!< only true between dispDeviceCreate() and dispDeviceRestore()
         UINT                    mAdapter;
         D3DDEVTYPE              mDeviceType;
         UINT                    mBehavior;
@@ -554,18 +558,21 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx );
-        virtual void drawScreenAlignedQuad( const Vector2f * positions, const Vector2f * texCoords, uint32_t options ) {}
+        virtual void drawQuads( const void * positions, size_t posStride,
+                                const void * texcoords, size_t texStride,
+                                size_t count, uint32_t options );
         virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions
     private:
-        bool drawInit() { return true; }
-        void drawQuit() {}
+        bool drawInit();
+        void drawQuit();
         bool drawOK() const { return true; }
         void drawClear()
         {
             mDrawBegan = false;
             mFont = 0;
+            mQuad = 0;
             mDefaultRT0 = mAutoDepth = 0;
             mCurrentRTSize.set( 0, 0 );
             mAutoDepthSize.set( 0, 0 );
@@ -587,8 +594,9 @@ namespace GN { namespace gfx
 
         bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
 
-        // Font class
-        D3DFont * mFont;
+        D3DFont * mFont; // Font class
+
+        D3DQuad * mQuad; // Quad renderer class
 
         //
         // Render target stuff

@@ -56,7 +56,7 @@ namespace GN { namespace gfx {
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() {}
+        void clear() { mFont = 0; }
         //@}
 
         // ********************************
@@ -64,10 +64,10 @@ namespace GN { namespace gfx {
         // ********************************
     public:
 
-        bool deviceCreate() { return true; }
+        bool deviceCreate() { return createFont(); }
         bool deviceRestore() { GN_DX_CHECK_RV( mFont->OnResetDevice(), false ); return true; }
         void deviceDispose() { if( mFont ) GN_DX_CHECK( mFont->OnLostDevice() ); }
-        void deviceDestroy() {}
+        void deviceDestroy() { safeRelease( mFont ); }
 
         // ********************************
         // public functions

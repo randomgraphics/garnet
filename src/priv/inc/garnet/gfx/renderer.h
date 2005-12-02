@@ -265,24 +265,29 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Options for Renderer::drawScreenAlignedQuad
+    //! Options for Renderer::drawQuads
     //!
-    enum DsaqOptions
+    enum DrawQuadOptions
     {
+        //!
+        //! position in window space. Mutually exclusive with DQ_WORLD_SPACE.
+        //!
+        DQ_WINDOW_SPACE = 1<<0,
+
         //!
         //! Use vertex shader currently binded to renderer.
         //!
-        DSAQ_USE_CURRENT_VS   = 1<<0,
+        DQ_USE_CURRENT_VS   = 1<<1,
 
         //!
         //! Use pixel shader currently binded to renderer.
         //!
-        DSAQ_USE_CURRENT_PS   = 1<<1,
+        DQ_USE_CURRENT_PS   = 1<<2,
 
         //!
         //! Use vertex and pixel shader currently binded to renderer.
         //!
-        DSAQ_USE_CURRENT_SHADER = DSAQ_USE_CURRENT_VS | DSAQ_USE_CURRENT_PS
+        DQ_USE_CURRENT_SHADER = DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS
     };
 
     //!
@@ -937,25 +942,45 @@ namespace GN { namespace gfx
         //!
         //! Draw screen aligned quad on screen.
         //!
-        //! \param positions
-        //!     Four 2-D vectors that represent positions of each quad corner.
-        //!     (0,0) means left-up of the screen, (1,1) means right-bottom of the screen.
-        //! \param texCoords
-        //!     Four 2-D vectors that represent texture coordinate of each quad corner.
+        //! \param positions, posStride
+        //!     Quad position array.
+        //!     - 2-D float vector array. 4 vectors for 1 quad.
+        //!     - By default, positions are in screen space (that is
+        //!       (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
+        //!       unless you specify DQ_WINDOW_SPACE.
+        //! \param texcoords, texStride
+        //!     Quad texture coordinate array.
+        //!     - 2-D float vector array. 4 vectors for 1 quad.
+        //!     
         //! \param options
         //!     Draw option.
-        //!     - One or combinations of DsaqOptions.
+        //!     - One or combinations of DrawQuadOptions.
         //!     - This function will by default use special vertex and pixel shader to draw the quad,
-        //!       unless you specify DSAQ_USE_CURRENT_VS and/or DSAQ_USE_CURRENT_PS.
+        //!       unless you specify DQ_USE_CURRENT_VS and/or DQ_USE_CURRENT_PS.
         //!
         //! \sa DsaqOptions
         //!
-        virtual void drawScreenAlignedQuad( const Vector2f * positions, const Vector2f * texCoords, uint32_t options = 0 ) = 0;
+        virtual void drawQuads(
+            const void * positions, size_t posStride,
+            const void * texcoords, size_t texStride,
+            size_t count, uint32_t options = 0 ) = 0;
+
+        //!
+        //! Draw screen aligned quad on screen, with same position and texture stride.
+        //!
+        void drawQuads(
+            const void * positions, const void * texcoords, size_t stride,
+            size_t count, uint32_t options = 0 )
+        {
+            drawQuads( positions, stride, texcoords, stride, count, options );
+        }
 
         //!
         //! Draw screen aligned quad on screen.
         //!
-        void drawScreenAlignedQuad(
+        //! \note This function may not very effecient.
+        //!
+        void drawQuad(
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0,
             uint32_t options = 0 )
@@ -982,7 +1007,7 @@ namespace GN { namespace gfx
             tex[2].set( u2, v2 );
             tex[3].set( u1, v2 );
 
-            drawScreenAlignedQuad( pos, tex, options );
+            drawQuads( pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1, options );
         }
 
         //!

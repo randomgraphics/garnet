@@ -4,6 +4,7 @@
 #include "d3dPxlShaderAsm.inl"
 #endif
 #include "d3dRenderer.h"
+#include "d3dUtils.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -171,7 +172,7 @@ bool GN::gfx::D3DPxlShaderAsm::compileShader()
     if( FAILED( hr ) )
     {
         GNGFX_ERROR( DXGetErrorDescription9A(hr) );
-        if( err ) GNGFX_ERROR( (const char*)err->GetBufferPointer() );
+        printShaderCompileError( mCode.cstr(), err );
         return false;
     }
 

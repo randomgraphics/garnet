@@ -393,89 +393,42 @@ namespace GN
         //!
         //! Compile vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVS( const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DVERTEXSHADER9 compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
         //! Compile vertex shader from file
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
         //! Assemble vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 assembleVS( const char * code, size_t len = 0, uint32_t flags = 0 );
+        LPDIRECT3DVERTEXSHADER9 assembleVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0 );
 
         //!
         //! Assemble vertex shader from file
         //!
-        LPDIRECT3DVERTEXSHADER9 assembleVSFromFile( const char * file, uint32_t flags = 0 );
+        LPDIRECT3DVERTEXSHADER9 assembleVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0 );
 
         //!
         //! Compile pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 compilePS( const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DPIXELSHADER9 compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
         //! Compile pixel shader from file
         //!
-        LPDIRECT3DPIXELSHADER9 compilePSFromFile( const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DPIXELSHADER9 compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
 
         //!
         //! Assemble pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 assemblePS( const char * code, size_t len = 0, uint32_t flags = 0 );
+        LPDIRECT3DPIXELSHADER9 assemblePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0 );
 
         //!
         //! Assemble pixel shader from file
         //!
-        LPDIRECT3DPIXELSHADER9 assemblePSFromFile( const char * file, uint32_t flags = 0 );
-
-#if GN_XENON
-
-#ifndef D3DXSHADER_MICROCODE_TARGET_FINAL
-#define D3DXSHADER_MICROCODE_TARGET_FINAL 0
-#endif
-
-        //!
-        //! Assemble XVS shader from string
-        //!
-        inline LPDIRECT3DVERTEXSHADER9 assembleXVS( const char * code, size_t len = 0, uint32_t flags = 0 )
-        {
-	        GN_GUARD;
-	        return assembleVS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
-	        GN_UNGUARD;
-        }
-
-        //!
-        //! Assemble XVS shader from file
-        //!
-        inline LPDIRECT3DVERTEXSHADER9 assembleXVSFromFile( const char * file, uint32_t flags = 0 )
-        {
-	        GN_GUARD;
-	        return assembleVSFromFile( file, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
-	        GN_UNGUARD;
-        }
-
-        //!
-        //! Assemble XPS shader from string
-        //!
-        inline LPDIRECT3DPIXELSHADER9 assembleXPS( const char * code, size_t len = 0, uint32_t flags = 0 )
-        {
-	        GN_GUARD;
-	        return assemblePS( code, len, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
-	        GN_UNGUARD;
-        }
-
-        //!
-        //! Assemble XPS shader from file
-        //!
-        inline LPDIRECT3DPIXELSHADER9 assembleXPSFromFile( const char * file, uint32_t flags = 0 )
-        {
-	        GN_GUARD;
-	        return assemblePSFromFile( file, flags | D3DXSHADER_MICROCODE_TARGET_FINAL );
-	        GN_UNGUARD;
-        }
-#endif
+        LPDIRECT3DPIXELSHADER9 assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0 );
 
         //!
         //! Draw screen aligned quad on screen.
@@ -493,6 +446,7 @@ namespace GN
         //!     Texture coordinates of quad corners.
         //!
         void drawScreenAlignedQuad(
+            LPDIRECT3DDEVICE9 dev,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 );
 

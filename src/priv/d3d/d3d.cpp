@@ -103,20 +103,15 @@ static bool sLoadVShader( LPDIRECT3DVERTEXSHADER9 & result, const GN::StrA & nam
     GN::StrA ext = GN::path::getExt(name);
 
     if( 0 == GN::strCmpI( ".asm", ext.cstr() ) ||
-        0 == GN::strCmpI( ".vsa", ext.cstr() ))
-    {
-        result = GN::d3d::assembleVSFromFile( name.cstr() );
-    }
-#if GN_XENON
-    if( 0 == GN::strCmpI( ".xvs", ext.cstr() ) ||
+        0 == GN::strCmpI( ".vsa", ext.cstr() ) ||
+        0 == GN::strCmpI( ".xvs", ext.cstr() ) ||
         0 == GN::strCmpI( ".vsx", ext.cstr() ) )
     {
-        result = GN::d3d::assembleXVSFromFile( name.cstr() );
+        result = GN::d3d::assembleVSFromFile( gD3D.getDevice(), name.cstr() );
     }
-#endif
     else
     {
-    	result = GN::d3d::compileVSFromFile( name.cstr() );
+    	result = GN::d3d::compileVSFromFile( gD3D.getDevice(), name.cstr() );
     }
 
 	return 0 != result;
@@ -134,20 +129,15 @@ static bool sLoadPShader( LPDIRECT3DPIXELSHADER9 & result, const GN::StrA & name
     GN::StrA ext = GN::path::getExt(name);
 
     if( 0 == GN::strCmpI( ".asm", ext.cstr() ) ||
-        0 == GN::strCmpI( ".vsa", ext.cstr() ))
-    {
-        result = GN::d3d::assemblePSFromFile( name.cstr() );
-    }
-#if GN_XENON
-    if( 0 == GN::strCmpI( ".xvs", ext.cstr() ) ||
+        0 == GN::strCmpI( ".vsa", ext.cstr() ) ||
+        0 == GN::strCmpI( ".xvs", ext.cstr() ) ||
         0 == GN::strCmpI( ".vsx", ext.cstr() ) )
     {
-        result = GN::d3d::assembleXPSFromFile( name.cstr() );
+        result = GN::d3d::assemblePSFromFile( gD3D.getDevice(), name.cstr() );
     }
-#endif
     else
     {
-    	result = GN::d3d::compilePSFromFile( name.cstr() );
+    	result = GN::d3d::compilePSFromFile( gD3D.getDevice(), name.cstr() );
     }
 
 	return 0 != result;
