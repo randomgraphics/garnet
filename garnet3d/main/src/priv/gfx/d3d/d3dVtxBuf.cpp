@@ -125,8 +125,10 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
+#if !GN_XENON
     // evict managed resources
     GN_DX_CHECK_RV( dev->EvictManagedResources(), false );
+#endif
 
     //
     // create d3d vertex buffer

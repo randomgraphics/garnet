@@ -78,8 +78,7 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual bool changeOptions( const RendererOptions & ro,
-                                    bool forceDeviceRecreation );
+        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation );
 
     protected :
         bool deviceCreate();

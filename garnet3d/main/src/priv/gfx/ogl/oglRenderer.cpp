@@ -90,8 +90,7 @@ void GN::gfx::OGLRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::changeOptions(
-    const RendererOptions & ro, bool forceRecreation )
+bool GN::gfx::OGLRenderer::changeOptions( RendererOptions ro, bool forceRecreation )
 {
     GN_GUARD;
 

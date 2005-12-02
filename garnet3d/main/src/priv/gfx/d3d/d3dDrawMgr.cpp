@@ -4,6 +4,7 @@
 #include "d3dDrawMgr.inl"
 #endif
 #include "d3dTexture.h"
+#include "d3dFont.h"
 
 // static primitive map
 static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
@@ -35,7 +36,8 @@ bool GN::gfx::D3DRenderer::drawDeviceCreate()
 {
     GN_GUARD;
 
-    if( !createFont() ) return false;
+    mFont = new D3DFont(*this);
+    if( !mFont->init() ) return false;
 
     // check multiple render target support
     if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
@@ -58,12 +60,6 @@ bool GN::gfx::D3DRenderer::drawDeviceRestore()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
-
-    // restore font
-    if( mFont )
-    {
-        GN_DX_CHECK_RV( mFont->OnResetDevice(), false );
-    }
 
     // get default render target surface
     GN_ASSERT( 0 == mDefaultRT0 );
@@ -116,12 +112,6 @@ void GN::gfx::D3DRenderer::drawDeviceDispose()
     safeRelease( mDefaultRT0 );
     safeRelease( mAutoDepth );
 
-    // dispose font
-    if( mFont )
-    {
-        GN_DX_CHECK( mFont->OnLostDevice() );
-    }
-
     GN_UNGUARD;
 }
 
@@ -134,7 +124,7 @@ void GN::gfx::D3DRenderer::drawDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    safeRelease( mFont );
+    safeDelete( mFont );
 
     GN_UNGUARD;
 }
@@ -413,32 +403,9 @@ void GN::gfx::D3DRenderer::drawTextW(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan );
+    GN_ASSERT( mDrawBegan && mFont );
 
-    // skip empty string
-    if( strEmpty(text) ) return;
-
-    int r;
-    RECT rc;
-    D3DCOLOR cl = sRgba2D3DCOLOR(color);
-
-    // calculate drawing rect
-    rc.left = 0;
-    rc.top  = 0;
-    r = mFont->DrawTextW( 0, text, -1, &rc, DT_CALCRECT, cl );
-    if( 0 == r )
-    {
-        GNGFX_ERROR( "fail to get text extent!" );
-        return;
-    }
-
-    // draw text
-    OffsetRect( &rc, x, y );
-    r = mFont->DrawTextW( 0, text, -1, &rc, DT_LEFT, cl );
-    if( 0 == r )
-    {
-        GNGFX_ERROR( "fail to draw text!" );
-    }
+    mFont->drawTextW( text, x, y, color );
 
     GN_UNGUARD_SLOW;
 }
@@ -450,66 +417,12 @@ void GN::gfx::D3DRenderer::drawTextW(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::createFont()
-{
-    GN_GUARD;
-
-    // Get font description
-    LOGFONTW lf;
-    ::GetObjectW( GetStockObject(SYSTEM_FIXED_FONT), sizeof(lf), &lf );
-
-    // create d3dx font
-    GN_DX_CHECK_RV(
-        D3DXCreateFontW(
-            mDevice,
-            lf.lfHeight,
-            lf.lfWidth,
-            lf.lfWeight,
-            0,
-            lf.lfItalic,
-            lf.lfCharSet,
-            lf.lfOutPrecision,
-            lf.lfQuality,
-            lf.lfPitchAndFamily,
-            lf.lfFaceName,
-            &mFont ),
-        false );
-
-    HWND hwnd = (HWND)getDispDesc().windowHandle;
-
-    // get window DC
-    HDC dc;
-    GN_MSW_CHECK_RV( ( dc = ::GetDC( hwnd ) ), false );
-
-    // select default fixed font
-    HGDIOBJ oldfont = ::SelectObject( dc, ::GetStockObject(SYSTEM_FIXED_FONT) );
-
-    // get text height
-    SIZE sz;
-    if( !::GetTextExtentPoint32W(dc, L"Äã", 1, &sz) )
-    {
-        GNGFX_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
-        ::SelectObject( dc, oldfont );
-        ::ReleaseDC( hwnd, dc );
-        return false;
-    }
-    mFontHeight = sz.cy;
-
-    // release local variables
-    ::SelectObject( dc, oldfont );
-    ::ReleaseDC( hwnd, dc );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::gfx::D3DRenderer::handleDeviceLost()
 {
+#if GN_XENON
+    // There's no device lost on Xenon.
+    return true;
+#else
     GN_GUARD;
 
     GN_ASSERT( mDevice );
@@ -547,4 +460,5 @@ bool GN::gfx::D3DRenderer::handleDeviceLost()
     return true;
 
     GN_UNGUARD;
+#endif
 }

@@ -1,19 +1,19 @@
-#ifndef __GN_GFX_NTRENDERWINDOW_H__
-#define __GN_GFX_NTRENDERWINDOW_H__
+#ifndef __GN_GFX_MSWRENDERWINDOW_H__
+#define __GN_GFX_MSWRENDERWINDOW_H__
 // *****************************************************************************
-//! \file    ntRenderWindow.h
+//! \file    mswRenderWindow.h
 //! \brief   Render window class on NT platform
 //! \author  chenlee (2005.10.4)
 // *****************************************************************************
 
-#if GN_MSWIN
-
 namespace GN { namespace gfx
 {
+#if GN_XENON
+
     //!
-    //! Render window class on NT platform
+    //! Render window class on Xenon platform
     //!
-    class NTRenderWindow
+    class MSWRenderWindow
     {
         // ********************************
         // ctor/dtor
@@ -21,8 +21,110 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        NTRenderWindow() : mWindow(0), mHook(0), mMonitor(0) { ++msInstanceID; }
-        ~NTRenderWindow() { quit(); }
+        MSWRenderWindow() : mWidth(0), mHeight(0) {}
+        ~MSWRenderWindow() { quit(); }
+        //@}
+
+        // ********************************
+        // public interface
+        // ********************************
+
+    public:
+
+        //!
+        //! (re)initialize render window to use external window
+        //!
+        bool initExternalRenderWindow( HandleType, HandleType ) { return true; }
+
+        //!
+        //! (re)initialize render window to use internal widow.
+        //!
+        bool initInternalRenderWindow( HandleType, HandleType, uint32_t width, uint32_t height )
+        {
+            mWidth = width;
+            mHeight = height;
+            return true;
+        }
+
+        //!
+        //! Delete render window
+        //!
+        void quit() { mWidth = 0; mHeight = 0; }
+
+        //!
+        //! Get display handle. For compability to X Window class, no use.
+        //!
+        HandleType getDisplay() const { return 0; }
+
+        //!
+        //! Get window handle
+        //!
+        HWND getWindow() const { return 0; }
+
+        //!
+        //! Get monitor handle
+        //!
+        HMONITOR getMonitor() const { return 0; }
+
+        //!
+        //! Get client size
+        //!
+        bool getClientSize( uint32_t & width, uint32_t & height ) const
+        { width = mWidth; height = mHeight; return true; }
+
+        //!
+        //! Get window size change flag.
+        //!
+        bool getSizeChangeFlag( bool = true ) { return false; }
+
+        //!
+        //! This is hook functor.
+        //!
+        typedef Functor4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
+
+        //!
+        //! This signal will be triggered, whenever the windows receive a message.
+        //!
+        Signal4<void,HWND,UINT,WPARAM,LPARAM> sigMessage;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+        uint32_t mWidth, mHeight;
+    };
+
+    //!
+    //! Window properties containor (for compability to PC, no use at all)
+    //!
+    struct WinProp
+    {
+        //!
+        //! save window properties
+        //!
+        bool save( HWND ) { return true; }
+
+        //!
+        //! Restore previously stored properites
+        //!
+        void restore() {}
+    };
+
+#elif GN_MSWIN
+
+    //!
+    //! Render window class on Windows (PC) platform
+    //!
+    class MSWRenderWindow
+    {
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        MSWRenderWindow() : mWindow(0), mHook(0), mMonitor(0) { ++msInstanceID; }
+        ~MSWRenderWindow() { quit(); }
         //@}
 
         // ********************************
@@ -111,7 +213,7 @@ namespace GN { namespace gfx
         HMONITOR mMonitor;
 
         static unsigned int msInstanceID;
-        static std::map<void*,NTRenderWindow*> msInstanceMap;
+        static std::map<void*,MSWRenderWindow*> msInstanceMap;
 
         // ********************************
         // private functions
@@ -162,11 +264,10 @@ namespace GN { namespace gfx
         //!
         void restore();
     };
+#endif
 }}
 
-#endif
-
 // *****************************************************************************
-//                           End of ntRenderWindow.h
+//                           End of mswRenderWindow.h
 // *****************************************************************************
-#endif // __GN_GFX_NTRENDERWINDOW_H__
+#endif // __GN_GFX_MSWRENDERWINDOW_H__

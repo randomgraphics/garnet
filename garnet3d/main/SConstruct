@@ -29,7 +29,7 @@ if 'win32' == conf['platform']:
         default_compiler = 'vc80-x64'
     else:
         default_compiler = 'vc80'
-    all_compilers = 'vc71 vc80 vc80-x64 icl'
+    all_compilers = 'vc71 vc80 vc80-x64 icl xenon'
 else:
     default_compiler = 'gcc'
     all_compilers = 'gcc icl'

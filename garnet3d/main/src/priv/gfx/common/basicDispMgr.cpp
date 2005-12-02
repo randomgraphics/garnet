@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "basicRenderer.h"
-#include "ntRenderWindow.h"
+#include "mswRenderWindow.h"
 #include "xRenderWindow.h"
 #include <limits.h>
 
@@ -19,7 +19,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & uo )
 
     if( 0 == uo.monitorHandle )
     {
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
         HMONITOR monitor;
         if( !::IsWindow( (HWND)uo.parentWindow ) )
         {
@@ -27,7 +27,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & uo )
             monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
             if( 0 == monitor )
             {
-                GN_ERROR( "Fail to get primary monitor handle." );
+                GNGFX_ERROR( "Fail to get primary monitor handle." );
                 return 0;
             }
         }
@@ -38,6 +38,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & uo )
         GN_ASSERT( monitor );
         return monitor;
 #else
+        GNGFX_INFO( "Xenon platform does not support multi-monitors." );
         return (GN::HandleType)1; // magic value, means invalid screen.
 #endif
     }
@@ -58,7 +59,23 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & uo, GN::gfx::DisplayMod
     GN::HandleType monitor = sDetermineMonitorHandle( uo );
     if( 0 == monitor ) return false;
 
-#if GN_MSWIN
+#if GN_XENON
+
+    if( (void*)1 == monitor )
+    {
+        GNGFX_WARN( "Use hard-coded display mode: 640x480 32bits" );
+        dm.width = 640;
+        dm.height = 480;
+        dm.depth = 32;
+        dm.refrate = 0;
+    }
+    else
+    {
+        GNGFX_ERROR( "Can't specify monitor handle on Xenon platform." );
+        return false;
+    }
+
+#elif GN_MSWIN
 
     MONITORINFOEXA mi;
     DEVMODEA windm;
@@ -78,11 +95,11 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & uo, GN::gfx::DisplayMod
     dm.depth = windm.dmBitsPerPel;
     dm.refrate = windm.dmDisplayFrequency;
 
-#else
+#elif GN_POSIX
 
     if( (void*)1 == monitor )
     {
-        GN_WARN( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
+        GNGFX_WARN( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
         dm.width = 640;
         dm.height = 480;
         dm.depth = 32;

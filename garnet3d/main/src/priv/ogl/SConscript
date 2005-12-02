@@ -1,7 +1,8 @@
-Import( 'env' )
+Import( 'env GN_conf' )
 
-env.GN_build_static_library(
-    'GNogl',
-    env.GN_glob('*.cpp'),
-    'pch.h',
-    'pch.cpp' )
+if 'xenon' != GN_conf['compiler']:
+    env.GN_build_static_library(
+        'GNogl',
+        env.GN_glob('*.cpp'),
+        'pch.h',
+        'pch.cpp' )

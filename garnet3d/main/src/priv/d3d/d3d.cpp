@@ -369,15 +369,15 @@ bool GN::d3d::D3D::present()
 // -----------------------------------------------------------------------------
 bool GN::d3d::D3D::createWindow()
 {
-    GN_GUARD;
-
 #if !GN_XENON
+    GN_GUARD;
     win::MswWindow::CreateParam cp;
     cp.clientWidth = mInitParams.width;
     cp.clientHeight = mInitParams.height;
     mWindow.setWindowProcedure( makeFunctor(this,&D3D::winProc) );
     if( !mWindow.create(cp) ) return false;
     mWindow.showWindow( mInitParams.showWindow );
+    GN_UNGUARD;
 #endif
 
     mMinimized = false;
@@ -387,8 +387,6 @@ bool GN::d3d::D3D::createWindow()
 
     // success
     return true;
-
-    GN_UNGUARD;
 }
 
 //

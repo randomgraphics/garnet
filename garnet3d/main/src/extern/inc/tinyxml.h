@@ -43,7 +43,11 @@ distribution.
 #endif
 
 #if defined( DEBUG ) && defined( _MSC_VER )
+#ifdef _XBOX
+#include <xtl.h>
+#else
 #include <windows.h>
+#endif
 #define TIXML_LOG OutputDebugString
 #else
 #define TIXML_LOG printf

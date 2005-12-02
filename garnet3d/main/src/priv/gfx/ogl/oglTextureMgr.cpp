@@ -257,7 +257,7 @@ void GN::gfx::OGLRenderer::bindTextures( const Texture * const texlist[],
 
     uint32_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
 
-    numtex = std::min<uint32_t>( maxStages, numtex );
+    numtex = min<uint32_t>( maxStages, numtex );
 
     // apply texture list
     uint32_t i;

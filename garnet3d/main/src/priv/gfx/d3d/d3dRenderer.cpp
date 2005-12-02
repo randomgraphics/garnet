@@ -96,8 +96,7 @@ void GN::gfx::D3DRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::changeOptions(
-    const RendererOptions & ro, bool forceRecreation )
+bool GN::gfx::D3DRenderer::changeOptions( RendererOptions ro, bool forceRecreation )
 {
     GN_GUARD;
 
@@ -108,6 +107,20 @@ bool GN::gfx::D3DRenderer::changeOptions(
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
+
+#if GN_XENON
+    if( !ro.fullscreen )
+    {
+        GNGFX_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
+        ro.fullscreen = true;
+        ro.displayMode.set(0,0,0,0);
+    }
+    if( ro.useExternalWindow )
+    {
+        GNGFX_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
+        ro.useExternalWindow = false;
+    }
+#endif
 
     // store old settings
     const RendererOptions oldOptions = getOptions();
