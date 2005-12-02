@@ -1,6 +1,6 @@
 """SCons.Tool.xenonlink
 
-Tool-specific initialization for the Microsoft Xbox 360 SDK.
+Tool-specific initialization for the Microsoft Xbox 360 linker
 
 There normally shouldn't be any need to import this module directly.
 It will usually be imported through the generic SCons.Tool.Tool()
@@ -15,7 +15,7 @@ import SCons.Defaults
 import SCons.Errors
 import SCons.Platform.win32
 import SCons.Tool
-import SCons.Tool.xenon
+import SCons.Tool.xenoncl
 import SCons.Util
 
 def pdbGenerator(env, target, source, for_signature):
@@ -48,7 +48,7 @@ def win32ShlinkSources(target, source, env, for_signature):
     return listCmd
 
 def win32LibEmitter(target, source, env):
-    SCons.Tool.xenon.validate_vars(env)
+    SCons.Tool.xenoncl.validate_vars(env)
 
     dll = env.FindIxes(target, "SHLIBPREFIX", "SHLIBSUFFIX")
     no_import_lib = env.get('no_import_lib', 0)
@@ -81,7 +81,10 @@ def win32LibEmitter(target, source, env):
     return (target, source)
 
 def prog_emitter(target, source, env):
-    SCons.Tool.xenon.validate_vars(env)
+    SCons.Tool.xenoncl.validate_vars(env)
+
+    prog = env.FindIxes( target, "PROGPREFIX", "PROGSUFFIX" );
+    target.append( env.ReplaceIxes( prog, "PROGPRFIX", "PROGSUFFIX", "PROGPRFIX", "XENON_PE_SUFFIX" ) );
 
     if env.has_key('PDB') and env['PDB']:
         target.append(env['PDB'])
@@ -126,6 +129,8 @@ def generate(env):
 
     env['PROGSUFFIX']     = '.xex'
 
+    env['XENON_PE_SUFFIX'] = '.pe'
+
     env['WIN32DEFPREFIX']        = ''
     env['WIN32DEFSUFFIX']        = '.def'
     env['WIN32_INSERT_DEF']      = 0
@@ -138,7 +143,7 @@ def generate(env):
     env['REGSVRFLAGS'] = '/s '
     env['REGSVRCOM'] = '$REGSVR $REGSVRFLAGS ${TARGET.win32}'
 
-    include_path, lib_path, exe_path = SCons.Tool.xenon.get_xenon_paths(env)
+    include_path, lib_path, exe_path = SCons.Tool.xenoncl.get_xenon_paths(env)
 
     # since other tools can set these, we just make sure that the
     # relevant stuff from MSVS is in there somewhere.
@@ -159,6 +164,3 @@ def generate(env):
     # strings, with the upshot that it would try to execute RegServerFunc
     # as a command.
     env['LDMODULECOM'] = compositeLinkAction
-
-def exists(env):
-    return SCons.Tool.xenon.exists()

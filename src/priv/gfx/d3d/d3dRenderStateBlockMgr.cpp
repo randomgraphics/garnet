@@ -95,10 +95,85 @@ static void sApplyRenderStateBlock(
 // class D3DRenderStateBlock
 // *****************************************************************************
 
-struct D3DRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
+#if GN_XENON
+
+//!
+//! Render state block for Xenon platform
+//!
+struct D3DDebugRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
+{
+    GN::gfx::D3DRenderer        & renderer;
+    GN::gfx::RenderStateBlockDesc desc;
+
+    D3DDebugRenderStateBlock( GN::gfx::D3DRenderer & r ) : renderer(r) {}
+
+    bool init( const GN::gfx::RenderStateBlockDesc & from, const GN::gfx::RenderStateBlockDesc & to )
+    {
+        GN_GUARD;
+        desc = to - from;
+        return true;
+        GN_UNGUARD;
+    }
+
+    void apply() const
+    {
+        GN_GUARD_SLOW;
+        sApplyRenderStateBlock( renderer, desc );
+        GN_UNGUARD_SLOW;
+    }
+};
+
+typedef D3DDebugRenderStateBlock D3DRenderStateBlock;
+
+#else // GN_XENON
+
+//!
+//! Render state block for debug build
+//!
+struct D3DDebugRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 {
     GN::gfx::D3DRenderer               & renderer;
     GN::gfx::RenderStateBlockDesc        desc;
+    GN::AutoComPtr<IDirect3DStateBlock9> d3dRsb;
+
+    D3DDebugRenderStateBlock( GN::gfx::D3DRenderer & r ) : renderer(r) {}
+
+    bool init( const GN::gfx::RenderStateBlockDesc & from, const GN::gfx::RenderStateBlockDesc & to )
+    {
+        GN_GUARD;
+
+        desc = to - from;
+
+        // compile state block only for pure device
+        if( D3DCREATE_PUREDEVICE & renderer.getBehavior() )
+        {
+            LPDIRECT3DDEVICE9 dev = renderer.getDevice();
+            GN_DX_CHECK_RV( dev->BeginStateBlock(), 0 );
+            sApplyRenderStateBlock( renderer, desc );
+            GN_DX_CHECK_RV( dev->EndStateBlock( &d3dRsb ), 0 );
+        }
+
+        // success
+        return true;
+
+        GN_UNGUARD;
+    }
+
+    void apply() const
+    {
+        GN_GUARD_SLOW;
+        if( d3dRsb.empty() ) sApplyRenderStateBlock( renderer, desc );
+        else GN_DX_CHECK( d3dRsb->Apply() );
+        GN_UNGUARD_SLOW;
+    }
+};
+
+//!
+//! Render state block for release build
+//!
+struct D3DRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
+{
+    GN::gfx::D3DRenderer               & renderer;
     GN::AutoComPtr<IDirect3DStateBlock9> d3dRsb;
 
     D3DRenderStateBlock( GN::gfx::D3DRenderer & r ) : renderer(r) {}
@@ -107,15 +182,7 @@ struct D3DRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
     {
         GN_GUARD;
 
-        desc = to - from;
-
-#if GN_DEBUG
-        if( !( D3DCREATE_PUREDEVICE & renderer.getBehavior() ) )
-        {
-            // do nothing, if in debug build and we're using non-pure device
-            return true;
-        }
-#endif
+        GN::gfx::RenderStateBlockDesc desc = to - from;
 
         // compile state block
         LPDIRECT3DDEVICE9 dev = renderer.getDevice();
@@ -132,22 +199,13 @@ struct D3DRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
     void apply() const
     {
         GN_GUARD_SLOW;
-
-#if GN_DEBUG
-        if( d3dRsb.empty() )
-        {
-            // Note, this must be a non-pure device
-            sApplyRenderStateBlock( renderer, desc );
-            return;
-        }
-#endif
-
         GN_ASSERT( d3dRsb );
         GN_DX_CHECK( d3dRsb->Apply() );
-
         GN_UNGUARD_SLOW;
     }
 };
+
+#endif // GN_XENON
 
 // *****************************************************************************
 // private functions
@@ -170,8 +228,10 @@ bool GN::gfx::D3DRenderer::rsbDeviceRestore()
         }
     };
 
+#if !GN_XENON
     // always enable color vertex
     setD3DRenderState( D3DRS_COLORVERTEX, 1 );
+#endif
 
     // always enable scissor test
     setD3DRenderState( D3DRS_SCISSORTESTENABLE, 1 );
@@ -189,6 +249,7 @@ bool GN::gfx::D3DRenderer::rsbDeviceRestore()
         setD3DTextureState( i, D3DTSS_BUMPENVLOFFSET, Local::sFloat2DWORD(.0f) );
     }
 
+#if !GN_XENON
     // setup default per-stage constants
     if( getCaps(CAPS_PER_STAGE_CONSTANT) )
     {
@@ -201,6 +262,7 @@ bool GN::gfx::D3DRenderer::rsbDeviceRestore()
     {
         setD3DRenderState( D3DRS_TEXTUREFACTOR, 0xFFFFFFFF );
     }
+#endif
 
     // success
     return true;
@@ -217,7 +279,11 @@ GN::gfx::D3DRenderer::createDeviceRenderStateBlock(
 {
     GN_GUARD;
 
+#if GN_DEBUG
+    AutoRef<D3DDebugRenderStateBlock> rsb( new D3DDebugRenderStateBlock(*this) );
+#else
     AutoRef<D3DRenderStateBlock> rsb( new D3DRenderStateBlock(*this) );
+#endif
 
     if( !rsb->init( from, to ) ) return 0;
 

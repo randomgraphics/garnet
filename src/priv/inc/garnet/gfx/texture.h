@@ -249,9 +249,9 @@ namespace GN { namespace gfx
             k = mSize.z;
             while( k > 0 ) { k >>= 1; ++nz; }
 
-            k = std::max( std::max(nx, ny), nz );
+            k = max( max(nx, ny), nz );
 
-            mLevels = 0 == levels ? k : std::min( k, levels );
+            mLevels = 0 == levels ? k : min( k, levels );
 
             // success
             return true;

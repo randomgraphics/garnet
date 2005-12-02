@@ -97,7 +97,6 @@ static inline GN::gfx::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
     // determine texture format
     switch( d3dfmt )
     {
-        case D3DFMT_R8G8B8       : return GN::gfx::FMT_BGR_8_8_8;
         case D3DFMT_A8R8G8B8     : return GN::gfx::FMT_BGRA_8_8_8_8;
         case D3DFMT_X8R8G8B8     : return GN::gfx::FMT_BGRX_8_8_8_8;
         case D3DFMT_R5G6B5       : return GN::gfx::FMT_BGR_5_6_5;
@@ -126,10 +125,12 @@ static inline GN::gfx::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
         //case D3DFMT_YUY2         : return GN::gfx::FMT_;
         case D3DFMT_DXT1         : return GN::gfx::FMT_DXT1;
         case D3DFMT_DXT2         : return GN::gfx::FMT_DXT2;
-        case D3DFMT_DXT3         : return GN::gfx::FMT_DXT3;
         case D3DFMT_DXT4         : return GN::gfx::FMT_DXT4;
+#if !GN_XENON
+        case D3DFMT_DXT3         : return GN::gfx::FMT_DXT3;
         case D3DFMT_DXT5         : return GN::gfx::FMT_DXT5;
         case D3DFMT_D16_LOCKABLE : return GN::gfx::FMT_D_16;
+#endif
         case D3DFMT_D32          : return GN::gfx::FMT_D_32;
         //case D3DFMT_D15S1        : return GN::gfx::FMT_DS_15_1;
         case D3DFMT_D24S8        : return GN::gfx::FMT_DS_24_8;
@@ -149,7 +150,6 @@ static inline D3DFORMAT sClrFmt2D3DFMT( GN::gfx::ClrFmt clrfmt )
     switch( clrfmt )
     {
         case GN::gfx::FMT_BGRA_8_8_8_8  : return D3DFMT_A8R8G8B8;
-        case GN::gfx::FMT_BGR_8_8_8     : return D3DFMT_R8G8B8;
         case GN::gfx::FMT_BGRA_5_5_5_1  : return D3DFMT_A1R5G5B5;
         case GN::gfx::FMT_BGR_5_6_5     : return D3DFMT_R5G6B5;
         case GN::gfx::FMT_LA_8_8        : return D3DFMT_A8L8;
@@ -356,7 +356,14 @@ bool GN::gfx::D3DTexture::deviceRestore()
     // determine D3D usage & pool
     mD3DUsage = 0;
     mD3DUsage |= USAGE_RENDERTARGET & getUsage() ? D3DUSAGE_RENDERTARGET : 0;
+#if GN_XENON
+    if( USAGE_AUTOGEN_MIPMAP & getUsage() )
+    {
+        GNGFX_WARN( "Xenon does not support mipmap auto-generation!" );
+    }
+#else
     mD3DUsage |= USAGE_AUTOGEN_MIPMAP & getUsage() ? D3DUSAGE_AUTOGENMIPMAP : 0;
+#endif
     mD3DUsage |= USAGE_DEPTH & getUsage() ? D3DUSAGE_DEPTHSTENCIL : 0;
     D3DPOOL d3dpool =
         ( USAGE_RENDERTARGET & getUsage() || USAGE_DEPTH & getUsage() )
@@ -368,19 +375,26 @@ bool GN::gfx::D3DTexture::deviceRestore()
         mRenderer.getDeviceType(),
         mRenderer.getPresentParameters().BackBufferFormat,
         mD3DUsage, D3DRTYPE_TEXTURE, d3dfmt );
+#if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
         GNGFX_WARN( "can't generate mipmap automatically!" );
         GN_ASSERT( D3DUSAGE_AUTOGENMIPMAP & mD3DUsage );
-        mD3DUsage -= D3DUSAGE_AUTOGENMIPMAP;
+        mD3DUsage &= !D3DUSAGE_AUTOGENMIPMAP;
     }
-    else GN_DX_CHECK_RV(hr, false );
+    else
+#endif
+    {
+        GN_DX_CHECK_RV(hr, false );
+    }
 
+#if !GN_XENON
     // evict managed resources first, if creating texture in default pool.
     if( D3DPOOL_DEFAULT == d3dpool )
     {
         GN_DX_CHECK_RV( mRenderer.getDevice()->EvictManagedResources(), 0 );
     }
+#endif
 
     // create texture instance in default pool
     uint32_t sx, sy, sz;
@@ -679,7 +693,9 @@ void GN::gfx::D3DTexture::updateMipmap()
 {
     GN_GUARD;
 
+#if !GN_XENON
     if( D3DUSAGE_AUTOGENMIPMAP & mD3DUsage ) return;
+#endif
 
     GN_ASSERT( mD3DTexture );
 

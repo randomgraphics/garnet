@@ -18,10 +18,15 @@ sCheckD3DFormat( IDirect3D9 & d3d,
     // if window mode, then use current display mode
     if( !fullscreen )
     {
+#ifdef GN_XENON
+        GNGFX_ERROR( "Xenon does not support windowed mode." );
+        return D3DFMT_UNKNOWN;
+#else
         GN_DX_CHECK_RV(
             d3d.GetAdapterDisplayMode(adapter, &d3ddm),
             D3DFMT_UNKNOWN );
-    }
+#endif
+        }
 
     // fullscreen mode
     else
@@ -30,7 +35,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
         switch( dd.depth )
         {
             case 16 : d3dfmt = D3DFMT_R5G6B5;   break;
-            case 24 : d3dfmt = D3DFMT_R8G8B8;   break;
+            case 24 :
             // FIXME : 有的显卡支持A8R8G8B8模式，而有的支持X8R8G8B8模式。
             //         因此此处不应强行指定为X8R8G8B8，而应该根据实际显
             //         卡的支持情况来选择合适的显示模式。
@@ -39,6 +44,13 @@ sCheckD3DFormat( IDirect3D9 & d3d,
                 return D3DFMT_UNKNOWN;
         }
 
+#if GN_XENON
+        // TODO: enumerate TV modes.
+        d3ddm.Width = dd.width;
+        d3ddm.Height = dd.height;
+        d3ddm.Format = d3dfmt;
+        d3ddm.RefreshRate = 0;
+#else
         UINT dmcount = d3d.GetAdapterModeCount(adapter, d3dfmt );
         if (0 == dmcount)
         {
@@ -66,6 +78,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
             GNGFX_ERROR( "fail to found appropriate D3D format!" );
             return D3DFMT_UNKNOWN;
         }
+#endif
     }
 
     // success
@@ -118,9 +131,11 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3dpp.BackBufferHeight           = dd.height;
         d3dpp.SwapEffect                 = D3DSWAPEFFECT_FLIP;
 
+#if !GN_XENON
         // modify render window style
         GN_MSW_CHECK( SetMenu( (HWND)dd.windowHandle, 0 ) );
         SetWindowLong( (HWND)dd.windowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE );
+#endif
     }
     else // windowed mode
     {
@@ -202,8 +217,10 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     std::vector<D3DDEVTYPE> devtypes;
 
-    // Look for nvidia adapter
+    // Initiate adapter ID
     mAdapter = 0;
+#if !GN_XENON
+    // Look for nvidia adapter
     for( uint32_t i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
@@ -232,6 +249,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
         devtypes.push_back( D3DDEVTYPE_REF );
         devtypes.push_back( D3DDEVTYPE_NULLREF );
     }
+#endif
 
     // init d3d present parameters
     if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
@@ -252,6 +270,9 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             continue;
         }
 
+#if GN_XENON
+        mBehavior = 0;
+#else
         if( ro.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
         {
             mBehavior = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
@@ -267,6 +288,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
         {
             mBehavior = D3DCREATE_MIXED_VERTEXPROCESSING;
         }
+#endif
 
         // device found, create it!
         GN_DX_CHECK_RV(

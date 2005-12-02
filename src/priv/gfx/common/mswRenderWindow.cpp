@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "ntRenderWindow.h"
+#include "mswRenderWindow.h"
 
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
 
-unsigned int GN::gfx::NTRenderWindow::msInstanceID = 0;
-std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
+unsigned int GN::gfx::MSWRenderWindow::msInstanceID = 0;
+std::map<void*,GN::gfx::MSWRenderWindow*> GN::gfx::MSWRenderWindow::msInstanceMap;
 
 // *****************************************************************************
 // public functions
@@ -13,7 +13,7 @@ std::map<void*,GN::gfx::NTRenderWindow*> GN::gfx::NTRenderWindow::msInstanceMap;
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::initExternalRenderWindow( HandleType, HandleType externalWindow )
+bool GN::gfx::MSWRenderWindow::initExternalRenderWindow( HandleType, HandleType externalWindow )
 {
     GN_GUARD;
 
@@ -51,7 +51,7 @@ bool GN::gfx::NTRenderWindow::initExternalRenderWindow( HandleType, HandleType e
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::initInternalRenderWindow(
+bool GN::gfx::MSWRenderWindow::initInternalRenderWindow(
     HandleType, HandleType parentWindow, uint32_t width, uint32_t height )
 {
     GN_GUARD;
@@ -96,7 +96,7 @@ bool GN::gfx::NTRenderWindow::initInternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::NTRenderWindow::quit()
+void GN::gfx::MSWRenderWindow::quit()
 {
     GN_GUARD;
 
@@ -129,11 +129,11 @@ void GN::gfx::NTRenderWindow::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height ) const
+bool GN::gfx::MSWRenderWindow::getClientSize( uint32_t & width, uint32_t & height ) const
 {
     if( !::IsWindow(mWindow) )
     {
-        GNGFX_ERROR( "NTRenderWindow class is yet to initialized!" );
+        GNGFX_ERROR( "MSWRenderWindow class is yet to initialized!" );
         return false;
     }
 
@@ -153,7 +153,7 @@ bool GN::gfx::NTRenderWindow::getClientSize( uint32_t & width, uint32_t & height
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::NTRenderWindow::postInit()
+bool GN::gfx::MSWRenderWindow::postInit()
 {
     GN_GUARD;
 
@@ -193,7 +193,7 @@ bool GN::gfx::NTRenderWindow::postInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t height )
+GN::gfx::MSWRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t height )
 {
     GN_GUARD;
 
@@ -271,7 +271,7 @@ GN::gfx::NTRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t hei
 //
 // -----------------------------------------------------------------------------
 void
-GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+GN::gfx::MSWRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
@@ -326,7 +326,7 @@ GN::gfx::NTRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp
 //
 // -----------------------------------------------------------------------------
 LRESULT
-GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+GN::gfx::MSWRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
@@ -355,13 +355,13 @@ GN::gfx::NTRenderWindow::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::gfx::NTRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
+GN::gfx::MSWRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GNGFX_INFO( "GN::gfx::NTRenderWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GNGFX_INFO( "GN::gfx::MSWRenderWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    std::map<void*,NTRenderWindow*>::const_iterator iter = msInstanceMap.find(wnd);
+    std::map<void*,MSWRenderWindow*>::const_iterator iter = msInstanceMap.find(wnd);
 
     // call class specific window procedure
     if( msInstanceMap.end() == iter )
@@ -381,20 +381,20 @@ GN::gfx::NTRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::gfx::NTRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
+GN::gfx::MSWRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
     //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
-    std::map<void*,NTRenderWindow*>::const_iterator iter =
+    std::map<void*,MSWRenderWindow*>::const_iterator iter =
         msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );
 
     if( msInstanceMap.end() != iter )
     {
         // trigger render window message signal.
         CWPSTRUCT * cwp = (CWPSTRUCT*)lp;
-        NTRenderWindow * wnd = iter->second;
+        MSWRenderWindow * wnd = iter->second;
         GN_ASSERT( cwp && wnd );
         wnd->handleMessage( cwp->hwnd, cwp->message, cwp->wParam, cwp->lParam );
     }

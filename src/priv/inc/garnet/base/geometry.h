@@ -6,10 +6,23 @@
 //! \author  chenlee (2005.4.17)
 // *****************************************************************************
 
-#include <algorithm> // for std::min(), std::max() and std::swap
-
 namespace GN
 {
+    namespace detail
+    {
+        //!
+        //! Swap to elements
+        //!
+        template<typename T>
+        inline void swap( T & a, T & b )
+        {
+            T tmp;
+            tmp = a;
+            a = b;
+            b = tmp;
+        }
+    }
+
     //!
     //! 表示一个二维矢量（比如贴图坐标）。
     //!
@@ -1251,9 +1264,9 @@ namespace GN
         //!
         Matrix33 & transpose()
         {
-            std::swap( rows[0][1], rows[1][0] );
-            std::swap( rows[0][2], rows[2][0] );
-            std::swap( rows[1][2], rows[2][1] );
+            detail::swap( rows[0][1], rows[1][0] );
+            detail::swap( rows[0][2], rows[2][0] );
+            detail::swap( rows[1][2], rows[2][1] );
             return *this;
         }
         //!
@@ -1646,12 +1659,12 @@ namespace GN
         //!
         Matrix44 & transpose()
         {
-            std::swap( rows[0][1], rows[1][0] );
-            std::swap( rows[0][2], rows[2][0] );
-            std::swap( rows[0][3], rows[3][0] );
-            std::swap( rows[1][2], rows[2][1] );
-            std::swap( rows[1][3], rows[3][1] );
-            std::swap( rows[2][3], rows[3][2] );
+            detail::swap( rows[0][1], rows[1][0] );
+            detail::swap( rows[0][2], rows[2][0] );
+            detail::swap( rows[0][3], rows[3][0] );
+            detail::swap( rows[1][2], rows[2][1] );
+            detail::swap( rows[1][3], rows[3][1] );
+            detail::swap( rows[2][3], rows[3][2] );
             return *this;
         }
         //!
@@ -2694,9 +2707,9 @@ namespace GN
         Box & operator += ( const Box & b )
         {
             ElementType x1, x2, y1, y2, z1, z2;
-            x1 = std::min( std::min( std::min( vmin.x, vmax.x ), b.vmin.x ), b.vmax.x );
-            y1 = std::min( std::min( std::min( vmin.y, vmax.y ), b.vmin.y ), b.vmax.y );
-            z1 = std::min( std::min( std::min( vmin.z, vmax.z ), b.vmin.z ), b.vmax.z );
+            x1 = min( min( min( vmin.x, vmax.x ), b.vmin.x ), b.vmax.x );
+            y1 = min( min( min( vmin.y, vmax.y ), b.vmin.y ), b.vmax.y );
+            z1 = min( min( min( vmin.z, vmax.z ), b.vmin.z ), b.vmax.z );
             x2 = std::max( std::max( std::max( vmin.x, vmax.x ), b.vmin.x ), b.vmax.x );
             y2 = std::max( std::max( std::max( vmin.y, vmax.y ), b.vmin.y ), b.vmax.y );
             z2 = std::max( std::max( std::max( vmin.z, vmax.z ), b.vmin.z ), b.vmax.z );
@@ -2713,9 +2726,9 @@ namespace GN
         {
             Box r;
             r.vmin.set(
-                std::min( std::min( std::min( a.vmin.x, a.vmax.x ), b.vmin.x ), b.vmax.x ),
-                std::min( std::min( std::min( a.vmin.y, a.vmax.y ), b.vmin.y ), b.vmax.y ),
-                std::min( std::min( std::min( a.vmin.z, a.vmax.z ), b.vmin.z ), b.vmax.z ) );
+                min( min( min( a.vmin.x, a.vmax.x ), b.vmin.x ), b.vmax.x ),
+                min( min( min( a.vmin.y, a.vmax.y ), b.vmin.y ), b.vmax.y ),
+                min( min( min( a.vmin.z, a.vmax.z ), b.vmin.z ), b.vmax.z ) );
             r.vmax.set(
                 std::max( std::max( std::max( a.vmin.x, a.vmax.x ), b.vmin.x ), b.vmax.x ),
                 std::max( std::max( std::max( a.vmin.y, a.vmax.y ), b.vmin.y ), b.vmax.y ),
@@ -2756,9 +2769,9 @@ namespace GN
         //!
         Box & normalize()
         {
-            if( vmin.x > vmax.x ) std::swap(vmin.x, vmax.x);
-            if( vmin.y > vmax.y ) std::swap(vmin.y, vmax.y);
-            if( vmin.z > vmax.z ) std::swap(vmin.z, vmax.z);
+            if( vmin.x > vmax.x ) detail::swap(vmin.x, vmax.x);
+            if( vmin.y > vmax.y ) detail::swap(vmin.y, vmax.y);
+            if( vmin.z > vmax.z ) detail::swap(vmin.z, vmax.z);
 			return *this;
         }
         //!

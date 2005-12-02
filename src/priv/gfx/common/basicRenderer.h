@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "ntRenderWindow.h"
+#include "mswRenderWindow.h"
 #include "xRenderWindow.h"
 
 //!
@@ -113,7 +113,7 @@ namespace GN { namespace gfx
 
 #if GN_MSWIN
     protected:
-        NTRenderWindow mWindow;  //!< Render window instance.
+        MSWRenderWindow mWindow;  //!< Render window instance.
     private:
         WinProp        mWinProp; //!< Render window properites.
 #elif GN_POSIX

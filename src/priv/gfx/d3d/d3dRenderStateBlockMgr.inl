@@ -21,6 +21,12 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DRenderState(
 //
 //
 // ----------------------------------------------------------------------------
+#if GN_XENON
+GN_INLINE void GN::gfx::D3DRenderer::setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD )
+{
+    // NOTE: there's no texture stage state on xenon.
+}
+#else
 GN_INLINE void GN::gfx::D3DRenderer::setD3DTextureState(
     UINT stage, D3DTEXTURESTAGESTATETYPE type, DWORD newval )
 {
@@ -37,6 +43,7 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DTextureState(
 
     GN_DX_CHECK( getDevice()->SetTextureStageState( stage, type, newval ) );
 }
+#endif
 
 //
 //

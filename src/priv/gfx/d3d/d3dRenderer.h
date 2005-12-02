@@ -18,7 +18,9 @@
 
 namespace GN { namespace gfx
 {
-    struct D3DResource; // Forward declaration of D3DResource.
+    class D3DResource; // Forward declaration of D3DResource.
+
+    class D3DFont;
 
     //!
     //! D3D vertex buffer binding descriptor
@@ -185,8 +187,7 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual bool changeOptions( const RendererOptions & ro,
-                                        bool forceDeviceRecreation );
+        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation );
 
     protected :
         bool deviceCreate();
@@ -565,7 +566,6 @@ namespace GN { namespace gfx
         {
             mDrawBegan = false;
             mFont = 0;
-            mFontHeight = 0;
             mDefaultRT0 = mAutoDepth = 0;
             mCurrentRTSize.set( 0, 0 );
             mAutoDepthSize.set( 0, 0 );
@@ -577,7 +577,6 @@ namespace GN { namespace gfx
         void drawDeviceDispose();
         void drawDeviceDestroy();
 
-        bool createFont();
         bool handleDeviceLost();
 
         void applyDrawState();
@@ -588,11 +587,8 @@ namespace GN { namespace gfx
 
         bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
 
-        //
-        // Font stuff
-        //
-        LPD3DXFONT mFont;
-        int        mFontHeight;
+        // Font class
+        D3DFont * mFont;
 
         //
         // Render target stuff

@@ -196,8 +196,9 @@ namespace GN { namespace gfx
         VSCAPS_D3D_2_0   = 1<<1, //!< DirectX vs.2.0
         VSCAPS_D3D_2_X   = 1<<2, //!< DirectX vs.2.x
         VSCAPS_D3D_3_0   = 1<<3, //!< DirectX vs.3.0
-        VSCAPS_OGL_ARB1  = 1<<4, //!< OpenGL ARB vertex program 1.0
-        VSCAPS_OGL_GLSL  = 1<<5, //!< OpenGL shading language
+        VSCAPS_D3D_XVS   = 1<<4, //!< D3D xvs 3.0 (Xenon only)
+        VSCAPS_OGL_ARB1  = 1<<5, //!< OpenGL ARB vertex program 1.0
+        VSCAPS_OGL_GLSL  = 1<<6, //!< OpenGL shading language
 
         //!
         //! alias for all D3D vertex shader caps
@@ -220,6 +221,7 @@ namespace GN { namespace gfx
         PSCAPS_D3D_2_0   = 1<<4, //!< DirectX ps.2.0
         PSCAPS_D3D_2_X   = 1<<5, //!< DirectX ps.2.x
         PSCAPS_D3D_3_0   = 1<<6, //!< DirectX ps.3.0
+        PSCAPS_D3D_XVS   = 1<<7, //!< D3D XPS 3.0 (Xenon only)
         PSCAPS_OGL_ARB1  = 1<<8, //!< OpenGL ARB pixel program 1.0
         PSCAPS_OGL_GLSL  = 1<<9, //!< OpenGL shading language
 
@@ -335,17 +337,16 @@ namespace GN { namespace gfx
         Signal0<void> sigDeviceDispose;
 
         //!
-        //! Change device configuration.
+        //! Change renderer options.
         //!
         //! \param ro
-        //!     new device settings
+        //!     new rendeer options
         //! \param forceDeviceRecreation
         //!     force a full device recreation
         //! \note
         //!     This function may trigger sigDeviceRestore.
         //!
-        virtual bool changeOptions( const RendererOptions & ro,
-                                    bool forceDeviceRecreation = false ) = 0;
+        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation = false ) = 0;
 
         //!
         //! Get current renderer options

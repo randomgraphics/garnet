@@ -293,7 +293,9 @@ def default_env( options = None ):
     tools = ['default']
     msvs_version = '7.1'
     msvs_platform = 'x86'
-    if 'icl' == GN_conf['compiler'] :
+    if 'xenon' == GN_conf['compiler']:
+        tools = ['xenon']
+    elif 'icl' == GN_conf['compiler'] :
         tools += ['intelc']
     elif 'vc80' == GN_conf['compiler'] :
         msvs_version = '8.0'
@@ -352,7 +354,13 @@ def default_env( options = None ):
         cppdefines['common'] = ['GN_ENABLE_PROFILE=1']
 
     # 定制不同平台的编译选项
-    if 'win32' == env['PLATFORM']:
+    if 'xenon' == GN_conf['compiler']:
+        libs['common'] += Split('xboxkrnl xbdm')
+        libs['debug'] += Split('xnetd d3d9d d3dx9d xgraphicsd')
+        libs['release'] += Split('xnet d3d9 d3dx9 xgraphics')
+        libs['stdbg'] += Split('xnetd d3d9d d3dx9d xgraphicsd')
+        libs['strel'] += Split('xnet d3d9 d3dx9 xgraphics')
+    elif 'win32' == env['PLATFORM']:
         libs['common'] += Split('kernel32 user32 gdi32 shlwapi')
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
@@ -505,7 +513,7 @@ def check_config( conf, conf_dir ):
     # ===========
     # 是否支持D3D
     # ===========
-    conf['has_d3d'] = c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
+    conf['has_d3d'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
 
     # ============
     # 是否支持GLUT

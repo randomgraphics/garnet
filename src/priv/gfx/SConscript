@@ -1,6 +1,7 @@
-Import( 'env' )
+Import( 'env GN_conf' )
 
-dirs = Split('lib common ogl')
+dirs = Split('lib common')
+if 'xenon' != GN_conf['compiler']: dirs += ['ogl']
 if 'win32' == env['PLATFORM']: dirs += ['d3d']
 
 SConscript( dirs=dirs )

@@ -13,8 +13,10 @@ namespace GN { namespace gfx
     //!
     //! General D3D resource class
     //!
-    struct D3DResource
+    class D3DResource
     {
+    public:
+
         virtual bool deviceCreate() = 0;  //!< Respond to D3D device creation.
         virtual bool deviceRestore() = 0; //!< Respond to D3D device restoration.
         virtual void deviceDispose() = 0; //!< Respond to D3D device dispose(lost).

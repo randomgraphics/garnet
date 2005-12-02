@@ -80,8 +80,10 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
+#if !GN_XENON
     // evict managed resources
     GN_DX_CHECK_RV( dev->EvictManagedResources(), 0 );
+#endif
 
     // create d3d ibuffer
     GN_DX_CHECK_RV(

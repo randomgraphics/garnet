@@ -324,12 +324,12 @@ def tool_list(platform, env):
     # change these search orders, update the man page as well.
     if str(platform) == 'win32':
         "prefer Microsoft tools on Windows"
-        linkers = ['mslink', 'gnulink', 'ilink', 'linkloc', 'ilink32', 'xenonlink' ]
+        linkers = ['mslink', 'gnulink', 'ilink', 'linkloc', 'ilink32' ]
         c_compilers = ['msvc', 'mingw', 'gcc', 'intelc', 'icl', 'icc', 'cc', 'bcc32', 'xenon' ]
         cxx_compilers = ['msvc', 'intelc', 'icc', 'g++', 'c++', 'bcc32', 'xenon' ]
         assemblers = ['masm', 'nasm', 'gas', '386asm' ]
         fortran_compilers = ['g77', 'ifl', 'cvf', 'f95', 'f90', 'fortran']
-        ars = ['mslib', 'ar', 'tlib', 'xenonlib']
+        ars = ['mslib', 'ar', 'tlib']
     elif str(platform) == 'os2':
         "prefer IBM tools on OS/2"
         linkers = ['ilink', 'gnulink', 'mslink']
@@ -381,8 +381,8 @@ def tool_list(platform, env):
     else:
         "prefer GNU tools on all other platforms"
         linkers = ['gnulink', 'mslink', 'ilink']
-        c_compilers = ['gcc', 'msvc', 'intelc', 'icc', 'cc']
-        cxx_compilers = ['g++', 'msvc', 'intelc', 'icc', 'c++']
+        c_compilers = ['gcc', 'msvc', 'intelc', 'icc', 'cc', 'xenon']
+        cxx_compilers = ['g++', 'msvc', 'intelc', 'icc', 'c++', 'xenon']
         assemblers = ['gas', 'nasm', 'masm']
         fortran_compilers = ['f95', 'f90', 'g77', 'ifort', 'ifl', 'fortran']
         ars = ['ar', 'mslib']

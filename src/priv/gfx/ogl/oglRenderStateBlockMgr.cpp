@@ -97,7 +97,7 @@ static void sApplyRenderStateBlock(
 
     // apply all TSSs to API
     GN::gfx::TextureStateValue tsv;
-    uint32_t numstages = std::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
+    uint32_t numstages = GN::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
     for ( uint32_t i = 0; i < numstages; ++i )
     {
         r.chooseTextureStage( i );
@@ -252,7 +252,7 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 
         /*
         // disabled unused texture stages (for performance reason)
-        uint32_t numstages = std::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
+        uint32_t numstages = min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
         for ( uint32_t i = 0; i < numstages; ++i )
         {
             if( GN::gfx::TSV_DISABLE == mDiff.ts( i, GN::gfx::TS_COLOROP ) )

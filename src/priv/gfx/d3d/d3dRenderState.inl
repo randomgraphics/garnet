@@ -63,7 +63,12 @@ void sSet_CULL_MODE( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
 static GN_INLINE
 void sSet_FOG( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
 {
+#if GN_XENON
+    GN_UNUSED_PARAM(r);
+    GN_UNUSED_PARAM(val);
+#else
     r.setD3DRenderState( D3DRS_FOGENABLE, sRenderStateValue2D3D[val] );
+#endif
 }
 
 //
@@ -72,6 +77,10 @@ void sSet_FOG( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
 static GN_INLINE void
 sSet_LIGHTING( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
 {
+#if GN_XENON
+    GN_UNUSED_PARAM(r);
+    GN_UNUSED_PARAM(val);
+#else
     if( GN::gfx::RSV_TRUE == val )
     {
         r.setD3DRenderState( D3DRS_LIGHTING, 1 );
@@ -82,6 +91,7 @@ sSet_LIGHTING( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
         r.setD3DRenderState( D3DRS_LIGHTING, 0 );
         r.setD3DRenderState( D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1 );
     }
+#endif
 }
 
 //
