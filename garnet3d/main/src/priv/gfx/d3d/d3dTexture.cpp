@@ -476,18 +476,34 @@ void * GN::gfx::D3DTexture::lock1D( uint32_t level,
         return false;
     }
 
-    Recti rc;
-    rc.x = offset;
-    rc.y = 0;
-    rc.w = length;
-    rc.h = 1;
+    // call basic lock
+    if( !basicLock() ) return false;
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
-    LockedRect ret;
+    // adjust offset and length
+    if( offset > getSize().x )
+    {
+        GNGFX_ERROR( "lock offset is beyond the end of texture." );
+        return 0;
+    }
+    if( 0 == length ) length = getSize().x;
+    if( offset + length > getSize().x ) length = getSize().x - offset;
 
-    if ( !lock2D( ret, level, &rc, flag ) ) return false;
+    RECT d3drc;
+    d3drc.left = offset;
+    d3drc.top = 0;
+    d3drc.right = offset + length;
+    d3drc.bottom = 1;
+
+    // lock texture
+    D3DLOCKED_RECT d3dlr;
+    LPDIRECT3DTEXTURE9 p = static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture);
+    GN_DX_CHECK_RV( p->LockRect( level, &d3dlr, &d3drc, sLockFlag2D3D(flag) ), 0 );
 
     // success
-    return ret.data;
+    mLockedLevel = level;
+    basicUnlocker.dismiss();
+    return d3dlr.pBits;
 
     GN_UNGUARD_SLOW;
 }
@@ -544,7 +560,7 @@ bool GN::gfx::D3DTexture::lock2D( LockedRect &  result,
     result.rowBytes = d3dlr.Pitch;
     result.data = d3dlr.pBits;
     basicUnlocker.dismiss();
-    return 1;
+    return true;
 
     GN_UNGUARD_SLOW;
 }

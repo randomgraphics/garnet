@@ -344,11 +344,10 @@ namespace GN { namespace gfx
         //! Triggered after rendering device is restored to normal stage.
         //!
         //! \note
-        //! - Resources that may lost their contents after device reset are:
-        //!   - Textures, and
-        //!   - Vertex buffers that are NOT type of BUFUSAGE_READBACK.
-        //!   - Note that only contents are lost, not resources themselves.
-        //! - Index buffers, shaders and rsblocks survive device reset.
+        //! - Texture, vertex buffers and index buffer without system copy will
+        //!   lost their contents after device reset.
+        //! - Shaders and render-state-sblocks will survive device reset/lost.
+        //! - Note that only contents are lost, not resources themselves.
         //!
         Signal0<bool> sigDeviceRestore;
 
@@ -723,9 +722,9 @@ namespace GN { namespace gfx
 
 
         //!
-        //! bind one texture.
+        //! bind one texture
         //!
-        void bindTexture( const Texture * tex, uint32_t stage )
+        void bindTexture( uint32_t stage, const Texture * tex )
         {
             bindTextures( &tex, stage, 1 );
         }
