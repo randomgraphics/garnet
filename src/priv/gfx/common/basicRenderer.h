@@ -70,22 +70,6 @@ namespace GN { namespace gfx
 
         // *****************************************************************************
         //
-        //! \name                   Device manager
-        //
-        // *****************************************************************************
-
-        //@{
-
-    protected:
-        bool deviceCreate();
-        bool deviceRestore();
-        void deviceDispose();
-        void deviceDestroy();
-
-        //@}
-
-        // *****************************************************************************
-        //
         //! \name                   Display Manager
         //
         // *****************************************************************************
@@ -139,17 +123,17 @@ namespace GN { namespace gfx
             virtual uint32_t setRenderState( RenderState, RenderStateValue );
             virtual uint32_t setTextureState( uint32_t, TextureState, TextureStateValue );
 
+        protected:
+
+            bool rebindCurrentRsb();
+            void disposeDeviceData() { mDevRsbMap.clear(); }
+
         private :
 
             bool rsbInit();
             void rsbQuit() {}
             bool rsbOk() const { return true; }
             void rsbClear() { mRsbHandles.clear(); mDevRsbMap.clear(); mCurrentRsb = 0; }
-
-            bool rsbDeviceCreate() { return true; }
-            bool rsbDeviceRestore();
-            void rsbDeviceDispose() { mDevRsbMap.clear(); }
-            void rsbDeviceDestroy() {}
 
             //!
             //! Create device render state block, that can switch device render state

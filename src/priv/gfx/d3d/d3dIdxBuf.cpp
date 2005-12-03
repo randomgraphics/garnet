@@ -76,7 +76,7 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mLocked );
+    GN_ASSERT( !mLocked && !mD3DIb );
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 

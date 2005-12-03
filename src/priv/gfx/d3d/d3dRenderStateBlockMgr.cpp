@@ -228,6 +228,9 @@ bool GN::gfx::D3DRenderer::rsbDeviceRestore()
         }
     };
 
+    // rebind current rsb
+    if( !rebindCurrentRsb() ) return false;
+
 #if !GN_XENON
     // always enable color vertex
     setD3DRenderState( D3DRS_COLORVERTEX, 1 );

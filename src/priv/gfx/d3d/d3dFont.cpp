@@ -101,6 +101,8 @@ bool GN::gfx::D3DFont::createFont()
 {
     GN_GUARD;
 
+    GN_ASSERT( !mFont );
+
     // Get font description
     LOGFONTW lf;
     ::GetObjectW( GetStockObject(SYSTEM_FIXED_FONT), sizeof(lf), &lf );

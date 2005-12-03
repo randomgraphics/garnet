@@ -64,16 +64,13 @@ bool GN::gfx::D3DPxlShaderAsm::deviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( mMachineCode );
+    GN_ASSERT( mMachineCode && !mD3DShader );
 
-    if( 0 == mD3DShader )
-    {
-        GN_DX_CHECK_RV(
-            getRenderer().getDevice()->CreatePixelShader(
-                static_cast<const DWORD*>(mMachineCode->GetBufferPointer()),
-                &mD3DShader ),
-            false );
-    }
+    GN_DX_CHECK_RV(
+        getRenderer().getDevice()->CreatePixelShader(
+            static_cast<const DWORD*>(mMachineCode->GetBufferPointer()),
+            &mD3DShader ),
+        false );
 
     // success
     return true;

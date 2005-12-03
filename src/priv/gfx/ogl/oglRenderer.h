@@ -114,6 +114,15 @@ namespace GN { namespace gfx
         virtual void * getOGLRC() const { return mRenderContext; }
 
     public:
+
+        //!
+        //! Get pointer to GLEW context
+        //!
+        GLEWContext * getGLEWContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
+
+        //!
+        //! Make the renderer as current context (for multi-renderer support)
+        //!
         bool makeCurrent() const
         {
 #if GN_MSWIN
@@ -150,6 +159,8 @@ namespace GN { namespace gfx
             mRenderContext = 0;
             mDisplayModeActivated = false;
             mIgnoreMsgHook = false;
+            mGLEWContext = 0;
+            mWGLEWContext = 0;
         }
 
         bool dispDeviceCreate();
@@ -161,6 +172,10 @@ namespace GN { namespace gfx
         void restoreDisplayMode();
         void msgHook( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
 
+        // for GLEW multi-context support
+        GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
+        WGLEWContext * wglewGetContext() const { GN_ASSERT( mWGLEWContext ); return mWGLEWContext; }
+
     private :
 
         bool    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
@@ -168,6 +183,9 @@ namespace GN { namespace gfx
         HGLRC   mRenderContext;
         bool    mDisplayModeActivated;
         bool    mIgnoreMsgHook;
+        GLEWContext * mGLEWContext;
+        WGLEWContext * mWGLEWContext;
+
 #elif GN_POSIX
     private :
         bool dispInit() { return true; }
@@ -176,6 +194,8 @@ namespace GN { namespace gfx
         void dispClear()
         {
             mRenderContext = 0;
+            mGLEWContext = 0;
+            mGLXEWContext = 0;
         }
 
         bool dispDeviceCreate();
@@ -183,8 +203,14 @@ namespace GN { namespace gfx
         void dispDeviceDispose();
         void dispDeviceDestroy();
 
+        // for GLEW multi-context support
+        GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
+        GLXEWContext * glxewGetContext() const { GN_ASSERT( mGLXEWContext ); return mGLXEWContext; }
+
     private :
         GLXContext mRenderContext;
+        GLEWContext * mGLEWContext;
+        GLXEWContext * mGLXEWContext;
 #endif
 
         //@}
@@ -197,44 +223,16 @@ namespace GN { namespace gfx
 
         //@{
 
-    public :
-
-        //!
-        //! Get pointer to GLEW context
-        //!
-        GLEWContext * getGLEWContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
-
     private :
         bool capsInit() { return true; }
         void capsQuit() {}
         bool capsOK() const { return true; }
-        void capsClear()
-        {
-            mGLEWContext = 0;
-#if GN_MSWIN
-            mWGLEWContext = 0;
-#elif GN_POSIX
-            mGLXEWContext = 0;
-#endif
-        }
+        void capsClear() {}
 
         bool capsDeviceCreate();
         bool capsDeviceRestore() { return true; }
         void capsDeviceDispose() {}
         void capsDeviceDestroy();
-
-    private :
-
-        // for GLEW multi-context support
-        GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
-        GLEWContext * mGLEWContext;
-#if GN_MSWIN
-        WGLEWContext * wglewGetContext() const { GN_ASSERT( mWGLEWContext ); return mWGLEWContext; }
-        WGLEWContext * mWGLEWContext;
-#elif GN_POSIX
-        GLXEWContext * glxewGetContext() const { GN_ASSERT( mGLXEWContext ); return mGLXEWContext; }
-        GLXEWContext * mGLXEWContext;
-#endif
 
         //@}
 
@@ -272,7 +270,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                      RSBlock Manager
+    //! \name             Render State Block Manager
     //
     // ************************************************************************
 
@@ -285,8 +283,8 @@ namespace GN { namespace gfx
         void rsbClear() {}
 
         bool rsbDeviceCreate() { return true; }
-        bool rsbDeviceRestore() { return true; }
-        void rsbDeviceDispose() {}
+        bool rsbDeviceRestore() { return rebindCurrentRsb(); }
+        void rsbDeviceDispose() { disposeDeviceData(); }
         void rsbDeviceDestroy() {}
 
         // from BasicRenderer
