@@ -3,12 +3,28 @@
 #include "d3dRenderer.h"
 #include "garnet/GNd3d.h"
 
-struct D3DQuadStruct
+struct D3DQuadStructVS
 {
     GN::Vector2f p0, t0, p1, t1, p2, t2, p3, t3;
     enum
     {
         FVF = D3DFVF_XYZW
+    };
+};
+
+struct D3DQuadStructFFP
+{
+    GN::Vector4f p0;
+    GN::Vector2f t0;
+    GN::Vector4f p1;
+    GN::Vector2f t1;
+    GN::Vector4f p2;
+    GN::Vector2f t2;
+    GN::Vector4f p3;
+    GN::Vector2f t3;
+    enum
+    {
+        FVF = D3DFVF_XYZRHW | D3DFVF_TEX1
     };
 };
 
@@ -26,14 +42,7 @@ bool GN::gfx::D3DQuad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3DQuad, () );
 
-    D3DRenderer & r = getRenderer();
-
-    // create render state block
-    RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
-    rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
-    rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
-    mRsb = r.createRenderStateBlock( rsbd );
-    if( 0 == mRsb ) { quit(); return selfOK(); }
+    // do nothing
 
     // success
     return selfOK();
@@ -79,19 +88,21 @@ bool GN::gfx::D3DQuad::deviceCreate()
         static const char * code =
             "vs.1.1 \n"
             "dcl_position0 v0 \n"
-            "def c0, 0, 0, 0, 1 \n"
-            "mov oPos.xy, v0.xy \n"
+            "def c0, 2, -2, 0, 1 \n"
+            "def c1,-1,  1, 0, 0 \n"
+            "mul r0.xy, v0.xy, c0.xy \n"
+            "add oPos.xy, r0.xy, c1.xy \n"
             "mov oT0.xy, v0.zw \n"
             "mov oPos.zw, c0.zw \n";
-            //"void main( in float4 i : POSITION,"
-            //"           out float4 oPos: POSITION,"
-            //"           out float2 uv : TEXCOORD0 )"
-            //"{"
-            //"   oPos = float4( i.xy, 0, 1 );"
-            //"   uv = i.zw;"
-            //"}";
         mVtxShader = d3d::assembleVS( dev, code );
         if( 0 == mVtxShader ) return false;
+        mQuadStride = sizeof(D3DQuadStructVS);
+        mFVF = D3DQuadStructVS::FVF;
+    }
+    else
+    {
+        mQuadStride = sizeof(D3DQuadStructFFP);
+        mFVF = D3DQuadStructFFP::FVF;
     }
 
     // create pixel shader
@@ -132,6 +143,27 @@ bool GN::gfx::D3DQuad::deviceCreate()
     }
     GN_DX_CHECK( mIdxBuf->Unlock() );
 
+    // create render state block
+    if( mPxlShader )
+    {
+        RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
+        rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
+        rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
+        rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;
+        mRsb = r.createRenderStateBlock( rsbd );
+        if( 0 == mRsb ) { quit(); return selfOK(); }
+    }
+    else
+    {
+        RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
+        rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
+        rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
+        rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;
+        GN_WARN( "TODO: set ts" );
+        mRsb = r.createRenderStateBlock( rsbd );
+        if( 0 == mRsb ) { quit(); return selfOK(); }
+    }
+
     // success
     return true;
 
@@ -145,24 +177,23 @@ bool GN::gfx::D3DQuad::deviceRestore()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mVtxBuf && !mStateBlock );
+    GN_ASSERT( !mVtxBuf );
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
     // create vertex buffer
+    GN_ASSERT( mQuadStride );
     GN_DX_CHECK_RV(
         dev->CreateVertexBuffer(
-            (UINT)( sizeof(D3DQuadStruct) * MAX_QUADS ),
-            D3DUSAGE_DYNAMIC,
-            D3DQuadStruct::FVF,
+            (UINT)( mQuadStride * MAX_QUADS ),
+            D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+            0, // non-FVF
             D3DPOOL_DEFAULT,
             &mVtxBuf, 0 ),
         false );
 
-    // create render state block
-    GN_DX_CHECK_RV( dev->CreateStateBlock( D3DSBT_ALL, &mStateBlock ), false );
-
-    //mNextQuad = 0;
+    // reset next quad indicator
+    mNextQuad = 0;
 
     // success
     return true;
@@ -178,7 +209,6 @@ void GN::gfx::D3DQuad::deviceDispose()
     GN_GUARD;
 
     safeRelease( mVtxBuf );
-    safeRelease( mStateBlock );
 
     GN_UNGUARD;
 }
@@ -223,12 +253,6 @@ void GN::gfx::D3DQuad::drawQuads(
         return;
     }
 
-    if( 0 == mVtxShader || 0 == mPxlShader )
-    {
-        GN_WARN( "no impl" );
-        return;
-    }
-
     GN_ASSERT( mNextQuad < MAX_QUADS );
 
     // handle large amount of array
@@ -242,41 +266,63 @@ void GN::gfx::D3DQuad::drawQuads(
         count -= n;
     }
 
-    GN_ASSERT( mVtxBuf && mIdxBuf );
+    D3DRenderer & r = getRenderer();
+    LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // lock vertex buffer
-    D3DQuadStruct * vbData;
+    void * vbData;
     if( 0 == mNextQuad )
     {
-        GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
+        GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, &vbData, D3DLOCK_DISCARD ) );
     }
     else
     {
         GN_DX_CHECK_R( mVtxBuf->Lock(
-            (UINT)( sizeof(D3DQuadStruct)*mNextQuad ),
-            (UINT)( sizeof(D3DQuadStruct)*count ),
-            (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
+            (UINT)( mQuadStride*mNextQuad ),
+            (UINT)( mQuadStride*count ),
+            &vbData, D3DLOCK_NOOVERWRITE ) );
     }
 
     // fill vertex buffer
-    for( size_t i = 0; i < count; ++i )
+    if( mVtxShader )
     {
-        D3DQuadStruct & v = vbData[i];
-        v.p0 = positions[0];
-        v.p1 = positions[1];
-        v.p2 = positions[2];
-        v.p3 = positions[3];
-        v.t0 = texCoords[0];
-        v.t1 = texCoords[1];
-        v.t2 = texCoords[2];
-        v.t3 = texCoords[3];
+        for( size_t i = 0; i < count; ++i )
+        {
+            D3DQuadStructVS & v = ((D3DQuadStructVS*)vbData)[i];
+            v.p0 = positions[0];
+            v.p1 = positions[1];
+            v.p2 = positions[2];
+            v.p3 = positions[3];
+            v.t0 = texCoords[0];
+            v.t1 = texCoords[1];
+            v.t2 = texCoords[2];
+            v.t3 = texCoords[3];
+        }
+    }
+    else
+    {
+        // get viewport
+        D3DVIEWPORT9 vp;
+        GN_DX_CHECK( dev->GetViewport( &vp ) );
+
+        Vector2f rtSize( (float)vp.Width, (float)vp.Height );
+        
+        for( size_t i = 0; i < count; ++i )
+        {
+            D3DQuadStructFFP & v = ((D3DQuadStructFFP*)vbData)[i];
+            v.p0.set( positions[0] * rtSize, 0, 1 );
+            v.p1.set( positions[1] * rtSize, 0, 1 );
+            v.p2.set( positions[2] * rtSize, 0, 1 );
+            v.p3.set( positions[3] * rtSize, 0, 1 );
+            v.t0 = texCoords[0];
+            v.t1 = texCoords[1];
+            v.t2 = texCoords[2];
+            v.t3 = texCoords[3];
+        }
     }
 
     // unlock the buffer
     GN_DX_CHECK( mVtxBuf->Unlock() );
-
-    D3DRenderer & r = getRenderer();
-    LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // bind render state block
     GN_ASSERT( mRsb );
@@ -286,16 +332,17 @@ void GN::gfx::D3DQuad::drawQuads(
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
-        static const float c[] = { 0, 0, 0, 1 };
-        GN_DX_CHECK( dev->SetVertexShaderConstantF( 0, c, 1 ) );
     }
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
     }
-    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3DQuadStruct)/4 ) );
+    GN_ASSERT( mVtxBuf );
+    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, mQuadStride/4 ) );
+    GN_ASSERT( mIdxBuf );
     GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
-    GN_DX_CHECK( dev->SetFVF( D3DQuadStruct::FVF ) );
+    GN_ASSERT( mFVF );
+    GN_DX_CHECK( dev->SetFVF( mFVF ) );
 
     // draw
     GN_DX_CHECK( dev->DrawIndexedPrimitive(
