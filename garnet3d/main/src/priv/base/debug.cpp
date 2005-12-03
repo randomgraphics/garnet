@@ -10,6 +10,18 @@ GN::assertFunc(
     int          line,
     bool *       ignore ) throw()
 {
+    ::fprintf(
+        stderr,
+        "\n"
+        "======================== ASSERT FAILURE ========================\n"
+        "%s(%d)\n"
+        "----------------------------------------------------------------\n"
+        "%s\n"
+        "================================================================\n",
+        file?file:"",
+        line,
+        msg?msg:"" );
+
 #if GN_MSWIN && GN_PC
     char buf[1024];
     ::_snprintf( buf, 1023,
@@ -29,20 +41,6 @@ GN::assertFunc(
     if(ignore) *ignore = ( IDCANCEL == ret );
     return IDYES == ret;
 #else
-    ::fprintf(
-        stderr,
-        "\n"
-        "======================== ASSERT FAILURE ========================\n"
-        "%s(%d)\n"
-        "----------------------------------------------------------------\n"
-        "%s\n"
-        "----------------------------------------------------------------\n"
-        "              Break(B), Continue(C), Ignore(I)\n"
-        "      (Choose Ignore to suppress further assert warnings)\n"
-        "================================================================\n",
-        file?file:"",
-        line,
-        msg?msg:"" );
     if( *ignore ) *ignore = false;
     return true;
 #endif

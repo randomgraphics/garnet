@@ -270,24 +270,45 @@ namespace GN { namespace gfx
     enum DrawQuadOptions
     {
         //!
-        //! position in window space. Mutually exclusive with DQ_WORLD_SPACE.
+        //! position in window space: (0,0) for left-up corner, (width,height) for right-bottom corner.
+        //!
+        //! By default, quad positios are in screen space. That is:
+        //! (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
         //!
         DQ_WINDOW_SPACE = 1<<0,
 
         //!
-        //! Use vertex shader currently binded to renderer.
+        //! 使用当前的渲染状态。
         //!
-        DQ_USE_CURRENT_VS   = 1<<1,
+        //! By default, Renderer::drawQuad() will use a special render state block that
+        //! suites for transparent quads:
+        //!   - enable blending
+        //!   - enable depth testing
+        //!   - disable depth writing
+        //!
+        DQ_USE_CURRENT_RS = 1<<1,
 
         //!
-        //! Use pixel shader currently binded to renderer.
+        //! 使用当前的Vertex Shader。
         //!
-        DQ_USE_CURRENT_PS   = 1<<2,
+        //! 缺省情况下，Renderer::drawQuad() 会使用一个“直通” 的Vertex Shader，直接把
+        //! 顶点坐标送下去，不做任何变换；或者使用一个内置的Vertex Shader把窗口坐标转换
+        //! 成屏幕坐标（仅当用户设置了 DQ_WINDOW_SPACE 标记时）。
+        //!
+        DQ_USE_CURRENT_VS   = 1<<2,
 
         //!
-        //! Use vertex and pixel shader currently binded to renderer.
+        //! 使用当前的Pixel Shader。
         //!
-        DQ_USE_CURRENT_SHADER = DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS
+        //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Pixel Shader，直接直接输出
+        //! 第0层贴图的颜色。
+        //!
+        DQ_USE_CURRENT_PS   = 1<<3,
+
+        //!
+        //! 上述 DQ_USE_CURRENT_XX 的集合
+        //!
+        DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS
     };
 
     //!
@@ -499,13 +520,13 @@ namespace GN { namespace gfx
         //! request a instance of vertex shader
         //!
         virtual Shader *
-        createVertexShader( ShadingLanguage lang, const StrA & code ) = 0;
+        createVtxShader( ShadingLanguage lang, const StrA & code ) = 0;
 
         //!
         //! request a instance of pixel shader
         //!
         virtual Shader *
-        createPixelShader( ShadingLanguage lang, const StrA & code ) = 0;
+        createPxlShader( ShadingLanguage lang, const StrA & code ) = 0;
 
         //!
         //! request a instance of shader
@@ -514,6 +535,18 @@ namespace GN { namespace gfx
         //!
         Shader *
         createShader( ShaderType type, ShadingLanguage lang, const StrA & code );
+
+        //!
+        //! Bind programmable vertex shader to rendering device. Set to NULL to use
+        //! fixed pipeline.
+        //!
+        virtual void bindVtxShader( const Shader * ) = 0;
+
+        //!
+        //! Bind programmable pixel to rendering device. Set to NULL to use
+        //! fixed pipeline.
+        //!
+        virtual void bindPxlShader( const Shader * ) = 0;
 
         //!
         //! Bind programmable shader to rendering device. Set to NULL to use
@@ -940,25 +973,16 @@ namespace GN { namespace gfx
 
 
         //!
-        //! Draw screen aligned quad on screen.
+        //! Draw quads
         //!
         //! \param positions, posStride
-        //!     Quad position array.
-        //!     - 2-D float vector array. 4 vectors for 1 quad.
-        //!     - By default, positions are in screen space (that is
-        //!       (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
-        //!       unless you specify DQ_WINDOW_SPACE.
+        //!     顶点坐标数据，由一系列的2D顶点组成。4个顶点表示一个矩形。
+        //!     选项 DQ_WINDOW_SPACE 会影响坐标的含义。
         //! \param texcoords, texStride
-        //!     Quad texture coordinate array.
-        //!     - 2-D float vector array. 4 vectors for 1 quad.
+        //!     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
         //!     
         //! \param options
-        //!     Draw option.
-        //!     - One or combinations of DrawQuadOptions.
-        //!     - This function will by default use special vertex and pixel shader to draw the quad,
-        //!       unless you specify DQ_USE_CURRENT_VS and/or DQ_USE_CURRENT_PS.
-        //!
-        //! \sa DsaqOptions
+        //!     渲染选项，详见 DrawQuadOptions。
         //!
         virtual void drawQuads(
             const void * positions, size_t posStride,
@@ -966,7 +990,7 @@ namespace GN { namespace gfx
             size_t count, uint32_t options = 0 ) = 0;
 
         //!
-        //! Draw screen aligned quad on screen, with same position and texture stride.
+        //! Draw quads, with same position and texture stride.
         //!
         void drawQuads(
             const void * positions, const void * texcoords, size_t stride,
@@ -976,7 +1000,7 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! Draw screen aligned quad on screen.
+        //! Draw single quad.
         //!
         //! \note This function may not very effecient.
         //!
@@ -1013,14 +1037,14 @@ namespace GN { namespace gfx
         //!
         //! 在屏幕上指定的位置绘制2D字符串.
         //!
-        //! - 屏幕左上角为坐标原点，X轴向左、Y轴向下。
-        //!   被绘制的字符串的坐标位置以第一个字符的左上角为准。
         //! - 函数可以处理中英文的混合字符串，但运行速度较慢，主要为测试而用。
         //!   文字的高度固定为16个象素，宽度为8(English)/16(Chinese)个象素。
         //! - 必须在 drawBegin() 和 drawEnd() 之间调用
         //!
         //! \param text  待绘制度字符串
-        //! \param x, y  第一个字符左上角的屏幕坐标
+        //! \param x, y  第一个字符左上角的窗口坐标
+        //!              - 屏幕左上角为(0,0)，右下角为(width,height)
+        //!              - 被绘制的字符串的坐标位置以第一个字符的左上角为准。
         //! \param color 文字颜色
         //!
         virtual void
@@ -1030,7 +1054,7 @@ namespace GN { namespace gfx
         //!
         //!  绘制unicode文字
         //!
-        //! \sa draw_texta()
+        //! \sa drawTextA()
         //!
         //! \note 必须在 drawBegin() 和 drawEnd() 之间调用
         //!
@@ -1055,6 +1079,21 @@ namespace GN { namespace gfx
         {
             return 0 == mNumDraws ? 0 : mNumPrims / mNumDraws;
         }
+
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Misc. utilities
+        //
+        // ********************************************************************
+
+        //@{
+
+        //!
+        //! Dump current renderer state to string. For debug purpose only.
+        //!
+        void dumpCurrentState( StrA & );
 
         //@}
     };

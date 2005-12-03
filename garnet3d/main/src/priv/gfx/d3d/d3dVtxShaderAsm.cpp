@@ -23,18 +23,19 @@ bool GN::gfx::D3DVtxShaderAsm::init( const StrA & code )
     DWORD flag = 0;
 
 #if GN_DEBUG
-    flag |= D3DXSHADER_DEBUG | D3DXSHADER_SKIPOPTIMIZATION;
+    flag |= D3DXSHADER_DEBUG;
 #endif
 
     AutoComPtr<ID3DXBuffer> err;
 
-    if( FAILED( D3DXAssembleShader(
+    HRESULT hr = D3DXAssembleShader(
         mCode.cstr(), (UINT)mCode.size(),
         0, 0, // no defines, no includes
         flag,
-        &mMachineCode, &err ) ) )
+        &mMachineCode, &err );
+    if( FAILED( hr ) )
     {
-        printShaderCompileError( mCode.cstr(), err );
+        printShaderCompileError( hr, mCode.cstr(), err );
         quit(); return selfOK();
     }
 
@@ -82,13 +83,16 @@ bool GN::gfx::D3DVtxShaderAsm::deviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( !mD3DShader && mMachineCode );
+    GN_ASSERT( mMachineCode );
 
-    GN_DX_CHECK_RV(
-        getRenderer().getDevice()->CreateVertexShader(
-            static_cast<const DWORD*>(mMachineCode->GetBufferPointer()),
-            &mD3DShader ),
-        false );
+    if( 0 == mD3DShader )
+    {
+        GN_DX_CHECK_RV(
+            getRenderer().getDevice()->CreateVertexShader(
+                static_cast<const DWORD*>(mMachineCode->GetBufferPointer()),
+                &mD3DShader ),
+            false );
+    }
 
     // success
     return true;

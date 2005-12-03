@@ -121,35 +121,38 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mLocked && 0 == mD3DVb );
+    GN_ASSERT( !mLocked );
 
-    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
+    if( 0 == mD3DVb )
+    {
+        LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
 #if !GN_XENON
-    // evict managed resources
-    GN_DX_CHECK_RV( dev->EvictManagedResources(), false );
+        // evict managed resources
+        GN_DX_CHECK_RV( dev->EvictManagedResources(), false );
 #endif
 
-    //
-    // create d3d vertex buffer
-    //
-    GN_DX_CHECK_RV(
-        dev->CreateVertexBuffer(
-            (UINT)getSizeInBytes(),
-            sBufUsage2D3D( getUsage() ),
-            0,  // non-FVF vstream
-            D3DPOOL_DEFAULT,
-            &mD3DVb,
-            0 ),
-        false );
+        //
+        // create d3d vertex buffer
+        //
+        GN_DX_CHECK_RV(
+            dev->CreateVertexBuffer(
+                (UINT)getSizeInBytes(),
+                sBufUsage2D3D( getUsage() ),
+                0,  // non-FVF vstream
+                D3DPOOL_DEFAULT,
+                &mD3DVb,
+                0 ),
+            false );
 
-    // copy data from system copy
-    if( !mSysCopy.empty() )
-    {
-        void * dst;
-        GN_DX_CHECK_RV( mD3DVb->Lock( 0, 0, &dst, 0 ), false );
-        ::memcpy( dst, GN::vec2ptr(mSysCopy), mSysCopy.size() );
-        mD3DVb->Unlock();
+        // copy data from system copy
+        if( !mSysCopy.empty() )
+        {
+            void * dst;
+            GN_DX_CHECK_RV( mD3DVb->Lock( 0, 0, &dst, 0 ), false );
+            ::memcpy( dst, GN::vec2ptr(mSysCopy), mSysCopy.size() );
+            mD3DVb->Unlock();
+        }
     }
 
     // success

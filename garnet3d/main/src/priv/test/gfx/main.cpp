@@ -20,7 +20,7 @@ public:
             static const char * ps1Code =
                 "ps_1_1\n"
                 "mov r0, c0";
-            ps1.attach( r.createPixelShader( GN::gfx::LANG_D3D_ASM, ps1Code ) );
+            ps1.attach( r.createPxlShader( GN::gfx::LANG_D3D_ASM, ps1Code ) );
             if( !ps1 ) return false;
             ps1->setUniformByName( "c0", GN::Vector4f(1,1,1,1) );
         }

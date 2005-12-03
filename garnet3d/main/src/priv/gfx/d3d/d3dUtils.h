@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     //!
     //! print shader compile error in meaning full way.
     //!
-    void printShaderCompileError( const char * code, LPD3DXBUFFER err );
+    void printShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFER err );
 }}
 
 // *****************************************************************************

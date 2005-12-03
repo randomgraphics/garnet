@@ -249,8 +249,10 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVertexShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
-        virtual Shader * createPixelShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
+        virtual Shader * createVtxShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
+        virtual Shader * createPxlShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
+        virtual void bindVtxShader( const Shader * ) {}
+        virtual void bindPxlShader( const Shader * ) {}
         virtual void bindShaders( const Shader *, const Shader * ) {}
 
     private :
@@ -518,6 +520,20 @@ namespace GN { namespace gfx
         uint32_t getFontBitmapHeight();
         void     drawFontBitmap( char ch );
 #endif
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Misc. utilities
+        //
+        // ********************************************************************
+
+        //@{
+
+        //!
+        //! Dump current renderer state to string. For debug purpose only.
+        //!
+        void dumpCurrentState( StrA & ) {}
 
         //@}
     };

@@ -33,7 +33,7 @@ TODO
 - p1
   - continue implementing GFX module
     - fix device-lost bug in GNgfxTest
-    - drawScreenQuad(...)
+    - drawQuad(...)
 - p2
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
