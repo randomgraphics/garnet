@@ -6,6 +6,8 @@ class Scene
 {
     GN::AutoRef<GN::gfx::Shader> ps1;
 
+    GN::AutoRef<GN::gfx::Texture> tex0;
+
 public:
 
     Scene() {}
@@ -25,6 +27,14 @@ public:
             ps1->setUniformByName( "c0", GN::Vector4f(1,1,1,1) );
         }
 
+        // create a pure white texture
+        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32 );
+        if( !tex0 ) return false;
+        uint32_t * texData = (uint32_t*)tex0->lock1D( 0, 0, 0, 0 );
+        if( !texData ) return false;
+        *texData = 0xFFFFFFFF;
+        tex0->unlock();
+
         // success
         return true;
     }
@@ -32,13 +42,15 @@ public:
     void quit()
     {
         ps1.reset();
+        tex0.reset();
     }
 
     void draw( GN::gfx::Renderer & r )
     {
-        //r.setRenderState( GN::gfx::RS_CULL_MODE, GN::gfx::RSV_CULL_NONE );
+        r.bindTexture( 0, tex0 );
         r.bindShaders( 0, ps1 );
-        r.drawQuad( GN::gfx::DQ_USE_CURRENT_PS, 0, 0, 0.5, 0.5 );
+        //r.drawQuad( GN::gfx::DQ_USE_CURRENT_PS, 0, 0, 0.5, 0.5 );
+        r.drawQuad( 0, 0, 0, 0.5, 0.5 );
     }
 };
 
