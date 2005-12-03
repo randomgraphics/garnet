@@ -163,6 +163,16 @@ bool GN::gfx::D3DRenderer::bufferDeviceRestore()
         h = mVtxBindings.next( h );
     }
 
+    // create a default binding, if there's no one
+    if( mVtxBindings.empty() )
+    {
+        VtxFmtDesc fmt;
+        fmt.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT3 );
+        h = createVtxBinding( fmt );
+        if( 0 == h ) return false;
+        bindVtxBinding( h );
+    }
+
     // success
     return true;
 

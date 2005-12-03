@@ -70,15 +70,12 @@ bool GN::gfx::D3DQuad::deviceCreate()
     if( r.supportShader( VERTEX_SHADER, LANG_D3D_HLSL ) )
     {
         static const char * code =
-            "float4 c0 : register(c0);"
             "void main( in float4 i : POSITION,"
             "           out float4 oPos: POSITION,"
-            "           out float2 uv : TEXCOORD0,"
-            "           out float4 clr: COLOR0 )"
+            "           out float2 uv : TEXCOORD0 )"
             "{"
             "   oPos = float4( i.xy, 0, 1 );"
             "   uv = i.zw;"
-            "   clr = c0;"
             "}";
         mVtxShader = d3d::compileVS( dev, code );
         if( 0 == mVtxShader ) return false;
@@ -94,8 +91,8 @@ bool GN::gfx::D3DQuad::deviceCreate()
     {
         static const char * code =
             "sampler s0 : register(s0);"
-            "float4 main( float2 uv : TEXCOORD0, float4 clr : COLOR0 ) : COLOR"
-            "{ return clr * tex2D( s0, uv ); }";
+            "float4 main( float2 uv : TEXCOORD0 ) : COLOR"
+            "{ return tex2D( s0, uv ); }";
         mPxlShader = d3d::compilePS( dev, code );
         if( 0 == mPxlShader ) return false;
     }
@@ -280,7 +277,7 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
     }
-    if( !( DQ_USE_CURRENT_VS & options ) )
+    if( !( DQ_USE_CURRENT_PS & options ) )
     {
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
     }

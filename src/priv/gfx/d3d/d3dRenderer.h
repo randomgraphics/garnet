@@ -323,8 +323,10 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVertexShader( ShadingLanguage, const StrA & );
-        virtual Shader * createPixelShader( ShadingLanguage, const StrA & );
+        virtual Shader * createVtxShader( ShadingLanguage, const StrA & );
+        virtual Shader * createPxlShader( ShadingLanguage, const StrA & );
+        virtual void bindVtxShader( const Shader * s ) { mDrawState.bindVtxShader(s); }
+        virtual void bindPxlShader( const Shader * s ) { mDrawState.bindPxlShader(s); }
         virtual void bindShaders( const Shader *, const Shader * );
 
     private :
@@ -542,7 +544,7 @@ namespace GN { namespace gfx
 
         //@{
 
-    public:
+    public: // from Renderer
         virtual void setRenderTarget( size_t index, const Texture * texture, TexFace face );
         virtual void setRenderDepth( const Texture * texture, TexFace face );
         virtual bool drawBegin();
@@ -582,7 +584,7 @@ namespace GN { namespace gfx
         bool drawDeviceCreate();
         bool drawDeviceRestore();
         void drawDeviceDispose();
-        void drawDeviceDestroy();
+        void drawDeviceDestroy() {}
 
         bool handleDeviceLost();
 
@@ -612,6 +614,21 @@ namespace GN { namespace gfx
             mAutoDepthSize; // size of automatic depth buffer
 
         D3DDrawState mDrawState;
+
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Misc. utilities
+        //
+        // ********************************************************************
+
+        //@{
+
+        //!
+        //! Dump current renderer state to string. For debug purpose only.
+        //!
+        void dumpCurrentState( StrA & );
 
         //@}
     };

@@ -54,7 +54,7 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
-GN::gfx::D3DRenderer::createVertexShader( ShadingLanguage lang, const StrA & code )
+GN::gfx::D3DRenderer::createVtxShader( ShadingLanguage lang, const StrA & code )
 {
     GN_GUARD;
 
@@ -86,7 +86,7 @@ GN::gfx::D3DRenderer::createVertexShader( ShadingLanguage lang, const StrA & cod
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
-GN::gfx::D3DRenderer::createPixelShader( ShadingLanguage lang, const StrA & code )
+GN::gfx::D3DRenderer::createPxlShader( ShadingLanguage lang, const StrA & code )
 {
     GN_GUARD;
 

@@ -17,24 +17,42 @@ namespace GN { namespace gfx
     {
     public:
 
-        virtual bool deviceCreate() = 0;  //!< Respond to D3D device creation.
-        virtual bool deviceRestore() = 0; //!< Respond to D3D device restoration.
-        virtual void deviceDispose() = 0; //!< Respond to D3D device dispose(lost).
-        virtual void deviceDestroy() = 0; //!< Respond to D3D device deletion.
+        enum ResourceState
+        {
+            UNINITIALIZED,
+            CREATED,
+            READY,
+        };
 
         //!
         //! Get the renderer that the resource belongs to.
         //!
         D3DRenderer & getRenderer() const { return mRenderer; }
 
+        //!
+        //! Switch resouce to specific state
+        //!
+        bool switchState( ResourceState );
+
+        //!
+        //! Is resource ready to use?
+        //!
+        bool readyToUse() const { return READY == mState; }
+
+        virtual bool deviceCreate();  //!< Respond to D3D device creation.
+        virtual bool deviceRestore(); //!< Respond to D3D device restoration.
+        virtual void deviceDispose(); //!< Respond to D3D device dispose(lost).
+        virtual void deviceDestroy(); //!< Respond to D3D device deletion.
+
     protected :
-        //@{
-        D3DResource( D3DRenderer & );
-        virtual ~D3DResource();
-        //@}
+
+        D3DResource( D3DRenderer & ); //!< ctor
+        virtual ~D3DResource();       //!< dtor
 
     private:
+
         D3DRenderer & mRenderer;
+        ResourceState mState; 
     };
 }}
 

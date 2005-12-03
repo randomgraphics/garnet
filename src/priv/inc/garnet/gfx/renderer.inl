@@ -55,8 +55,8 @@ namespace GN { namespace gfx
         GN_GUARD;
         switch( type )
         {
-            case VERTEX_SHADER : return createVertexShader( lang, code );
-            case PIXEL_SHADER  : return createPixelShader( lang, code );
+            case VERTEX_SHADER : return createVtxShader( lang, code );
+            case PIXEL_SHADER  : return createPxlShader( lang, code );
             default :
                 GN_ERROR( "invalid shader type!" );
                 return 0;

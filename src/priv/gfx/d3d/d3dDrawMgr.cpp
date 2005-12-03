@@ -149,19 +149,6 @@ void GN::gfx::D3DRenderer::drawDeviceDispose()
     GN_UNGUARD;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawDeviceDestroy()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    GN_UNGUARD;
-}
-
-
 // *****************************************************************************
 // interface functions
 // *****************************************************************************
@@ -373,7 +360,7 @@ void GN::gfx::D3DRenderer::drawIndexed(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
-    // update vertex buffer state
+    // update draw state
     applyDrawState();
 
     // draw indexed primitives
@@ -409,7 +396,7 @@ void GN::gfx::D3DRenderer::draw(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
-    // update vertex buffer state
+    // update draw state
     applyDrawState();
 
     // draw indexed primitives
@@ -438,7 +425,15 @@ void GN::gfx::D3DRenderer::drawQuads(
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan && mQuad );
+
+    applyDrawState();
+
     mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count, options );
+
+    mDrawState.dirtyFlags.vtxShader = 1;
+    mDrawState.dirtyFlags.pxlShader = 1;
+    mDrawState.dirtyFlags.vtxBufs |= 1;
+    mDrawState.dirtyFlags.vtxBinding = 1;
 
     GN_UNGUARD_SLOW;
 }

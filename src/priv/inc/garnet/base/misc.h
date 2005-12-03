@@ -163,6 +163,19 @@ namespace GN
     }
 
     //!
+    //! Safe release RefCounter class
+    //!
+    template < typename T >
+    GN_FORCE_INLINE void safeDecref( T * & ptr )
+    {
+        if( ptr )
+        {
+            ptr->decref();
+            ptr = 0;
+        }
+    }
+
+    //!
     //! Set environment variable. Set value to empty or NULL to delete
     //! that environment variable.
     //!
