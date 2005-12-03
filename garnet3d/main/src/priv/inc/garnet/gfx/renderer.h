@@ -293,11 +293,10 @@ namespace GN { namespace gfx
         //!
         //! 使用当前的Vertex Shader。
         //!
-        //! 缺省情况下，Renderer::drawQuad() 会使用一个“直通” 的Vertex Shader，直接把
-        //! 顶点坐标送下去，不做任何变换；或者使用一个内置的Vertex Shader把窗口坐标转换
-        //! 成屏幕坐标（仅当用户设置了 DQ_WINDOW_SPACE 标记时）。
+        //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Vertex Shader，输出
+        //! 顶点坐标和一组贴图坐标。
         //!
-        DQ_USE_CURRENT_VS   = 1<<2,
+        DQ_USE_CURRENT_VS = 1<<2,
 
         //!
         //! 使用当前的Pixel Shader。
@@ -305,7 +304,7 @@ namespace GN { namespace gfx
         //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Pixel Shader，直接直接输出
         //! 第0层贴图的颜色。
         //!
-        DQ_USE_CURRENT_PS   = 1<<3,
+        DQ_USE_CURRENT_PS = 1<<3,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合

@@ -38,12 +38,13 @@ namespace GN { namespace gfx {
     private:
         void clear()
         {
-            mRsb = 0;
             mVtxBuf = 0;
             mIdxBuf = 0;
             mVtxShader = 0;
             mPxlShader = 0;
-            mStateBlock = 0;
+            mRsb = 0;
+            mQuadStride = 0;
+            mFVF = 0;
             mNextQuad = 0;
         }
         //@}
@@ -78,15 +79,16 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
-        uint32_t mRsb;
-
         LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
         LPDIRECT3DINDEXBUFFER9  mIdxBuf;
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
         LPDIRECT3DPIXELSHADER9  mPxlShader;
-        LPDIRECT3DSTATEBLOCK9   mStateBlock;
+        uint32_t mRsb;
 
-        size_t mNextQuad; //!< cursor that indicates next avaiable quad in vertex buffer.
+        size_t mQuadStride; // bytes of one quad
+        DWORD  mFVF;
+
+        size_t mNextQuad; // cursor that indicates next avaiable quad in vertex buffer.
 
         enum
         {
