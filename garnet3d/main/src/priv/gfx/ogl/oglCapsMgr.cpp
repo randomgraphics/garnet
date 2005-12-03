@@ -254,45 +254,6 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    // create and initialize GLEW context
-    GN_ASSERT( !mGLEWContext );
-    mGLEWContext = new GLEWContext;
-    memset( mGLEWContext, 0, sizeof(GLEWContext) );
-    GLenum glewErr = glewContextInit( mGLEWContext );
-    if( GLEW_OK != glewErr )
-    {
-        GNGFX_ERROR( "Fail to initialize glew library : %s",
-            (const char *)glewGetErrorString(glewErr) );
-        return false;
-    }
-
-    // create and initialize WGLEW context
-#if GN_MSWIN
-    GN_ASSERT( !mWGLEWContext );
-    mWGLEWContext = new WGLEWContext;
-    memset( mWGLEWContext, 0, sizeof(WGLEWContext) );
-    GLenum wglewErr = wglewContextInit( mWGLEWContext );
-    if( GLEW_OK != wglewErr )
-    {
-        GNGFX_ERROR( "Fail to initialize wglew library : %s",
-            (const char *)glewGetErrorString(glewErr) );
-        return false;
-    }
-#elif GN_POSIX
-    GN_ASSERT( !mGLXEWContext );
-    mGLXEWContext = new GLXEWContext;
-    memset( mGLXEWContext, 0, sizeof(GLXEWContext) );
-    GLenum glxewErr = glxewContextInit( mGLXEWContext );
-    if( GLEW_OK != glxewErr )
-    {
-        GNGFX_ERROR( "Fail to initialize glxew library : %s",
-            (const char *)glewGetErrorString(glewErr) );
-        return false;
-    }
-#endif
-
-    // init glew
-
     // output opengl implementation info.
     std::vector<StrA> glexts;
 #if GN_MSWIN
@@ -328,14 +289,6 @@ void GN::gfx::OGLRenderer::capsDeviceDestroy()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
-
-    // destroy GLEW context
-#if GN_MSWIN
-    safeDelete( mWGLEWContext );
-#elif GN_POSIX
-    safeDelete( mGLXEWContext );
-#endif
-    safeDelete( mGLEWContext );
 
     // clear all caps
     resetAllCaps();

@@ -121,7 +121,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mLocked );
+    GN_ASSERT( !mLocked && !mD3DVb );
 
     if( 0 == mD3DVb )
     {

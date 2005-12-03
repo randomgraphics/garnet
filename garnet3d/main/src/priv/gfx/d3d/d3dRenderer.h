@@ -191,17 +191,17 @@ namespace GN { namespace gfx
     public:
         virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation );
 
-    protected :
-        bool deviceCreate();
-        bool deviceRestore();
-        void deviceDispose();
-        void deviceDestroy();
-
     private :
+
         void deviceClear()
         {
             mDeviceChanging = false;
         }
+
+        bool deviceCreate();
+        bool deviceRestore();
+        void deviceDispose();
+        void deviceDestroy();
 
     private:
 
@@ -368,7 +368,7 @@ namespace GN { namespace gfx
 
         bool rsbDeviceCreate() { return true; }
         bool rsbDeviceRestore();
-        void rsbDeviceDispose() {}
+        void rsbDeviceDispose() { disposeDeviceData(); }
         void rsbDeviceDestroy() {}
 
         // from BasicRenderer

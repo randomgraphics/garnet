@@ -67,7 +67,6 @@ void GN::gfx::OGLRenderer::quit()
 {
     GN_GUARD;
 
-    deviceDispose();
     deviceDestroy();
 
     drawQuit();
@@ -115,9 +114,8 @@ bool GN::gfx::OGLRenderer::changeOptions( RendererOptions ro, bool forceRecreati
         oldDesc.windowHandle != newDesc.windowHandle )
     {
         // we have to perform a full device recreation
-        deviceDispose();
         deviceDestroy();
-        return deviceCreate() && deviceRestore();
+        return deviceCreate();
     }
     else if( oldDesc != newDesc ||
         oldOptions.fullscreen != ro.fullscreen ||
@@ -146,16 +144,26 @@ bool GN::gfx::OGLRenderer::deviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    if( !BasicRenderer::deviceCreate() ) return false;
-    if( !dispDeviceCreate() ) return false;
-    if( !capsDeviceCreate() ) return false;
-    if( !shaderDeviceCreate() ) return false;
-    if( !rsbDeviceCreate() ) return false;
-    if( !textureDeviceCreate() ) return false;
-    if( !bufferDeviceCreate() ) return false;
-    if( !resourceDeviceCreate() ) return false;
-    if( !paramDeviceCreate() ) return false;
-    if( !drawDeviceCreate() ) return false;
+    #define COMPONENT_RECREATE(X) if( !X##DeviceCreate() || !X##DeviceRestore() ) return false;
+
+    COMPONENT_RECREATE( disp );
+    COMPONENT_RECREATE( caps );
+    COMPONENT_RECREATE( shader );
+    COMPONENT_RECREATE( rsb );
+    COMPONENT_RECREATE( texture );
+    COMPONENT_RECREATE( buffer );
+    COMPONENT_RECREATE( resource );
+    COMPONENT_RECREATE( param );
+    COMPONENT_RECREATE( draw );
+
+    #undef COMPONENT_RECREATE
+
+    // trigger reset event
+    if( !sigDeviceRestore() )
+    {
+        GNGFX_ERROR( "fail to process OGL device restore signal!" );
+        return false;
+    }
 
     // success
     return true;
@@ -172,7 +180,6 @@ bool GN::gfx::OGLRenderer::deviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    if( !BasicRenderer::deviceRestore() ) return false;
     if( !dispDeviceRestore() ) return false;
     if( !capsDeviceRestore() ) return false;
     if( !shaderDeviceRestore() ) return false;
@@ -217,7 +224,6 @@ void GN::gfx::OGLRenderer::deviceDispose()
     shaderDeviceDispose();
     capsDeviceDispose();
     dispDeviceDispose();
-    BasicRenderer::deviceDispose();
 
     GN_UNGUARD;
 }
@@ -231,16 +237,22 @@ void GN::gfx::OGLRenderer::deviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    drawDeviceDestroy();
-    paramDeviceDestroy();
-    resourceDeviceDestroy();
-    bufferDeviceDestroy();
-    textureDeviceDestroy();
-    rsbDeviceDestroy();
-    shaderDeviceDestroy();
-    capsDeviceDestroy();
-    dispDeviceDestroy();
-    BasicRenderer::deviceDestroy();
+    // trigger dispose event
+    sigDeviceDispose();
+
+    #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
+
+    COMPONENT_DESTROY( draw );
+    COMPONENT_DESTROY( param );
+    COMPONENT_DESTROY( resource );
+    COMPONENT_DESTROY( buffer );
+    COMPONENT_DESTROY( texture );
+    COMPONENT_DESTROY( rsb );
+    COMPONENT_DESTROY( shader );
+    COMPONENT_DESTROY( caps );
+    COMPONENT_DESTROY( disp );
+
+    #undef COMPONENT_DESTROY
 
     GN_UNGUARD;
 }

@@ -196,8 +196,7 @@ bool GN::gfx::D3DTexture::init( TexType type,
     mInitUsage = usage;
 
     // create device data
-    if( !deviceCreate() ) { quit(); return selfOK(); }
-    if( !deviceRestore()  ) { quit(); return selfOK(); }
+    if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -214,6 +213,8 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3DTexture, () );
+
+    GN_ASSERT( !mD3DTexture );
 
     // check for empty file
     if( 0 == file.size() )
@@ -318,6 +319,8 @@ void GN::gfx::D3DTexture::quit()
 bool GN::gfx::D3DTexture::deviceRestore()
 {
     GN_GUARD;
+
+    GN_ASSERT( !mD3DTexture );
 
     // determine default format
     ClrFmt format;

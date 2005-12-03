@@ -26,7 +26,14 @@ bool GN::gfx::D3DQuad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3DQuad, () );
 
-    // do nothing here.
+    D3DRenderer & r = getRenderer();
+
+    // create render state block
+    RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
+    rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
+    rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
+    mRsb = r.createRenderStateBlock( rsbd );
+    if( 0 == mRsb ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -271,10 +278,9 @@ void GN::gfx::D3DQuad::drawQuads(
     D3DRenderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
-    // capture current render states
-    // TODO: using render state block is not effecient
-    //GN_ASSERT( mStateBlock );
-    //GN_DX_CHECK( mStateBlock->Capture() );
+    // bind render state block
+    GN_ASSERT( mRsb );
+    r.bindRenderStateBlock( mRsb );
 
     // bind shaders, buffers and and FVF
     if( !( DQ_USE_CURRENT_VS & options ) )
@@ -299,9 +305,6 @@ void GN::gfx::D3DQuad::drawQuads(
         (UINT)( count * 4 ),     // NumVertices
         0,                       // StartIndex
         (UINT)( count * 2 ) ) ); // PrimitiveCount
-
-    // restore render states
-    //GN_DX_CHECK( mStateBlock->Apply() );
 
     // update mNextQuad
     mNextQuad += count;

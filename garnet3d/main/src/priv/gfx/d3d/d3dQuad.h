@@ -38,6 +38,7 @@ namespace GN { namespace gfx {
     private:
         void clear()
         {
+            mRsb = 0;
             mVtxBuf = 0;
             mIdxBuf = 0;
             mVtxShader = 0;
@@ -76,6 +77,8 @@ namespace GN { namespace gfx {
         // private variables
         // ********************************
     private:
+
+        uint32_t mRsb;
 
         LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
         LPDIRECT3DINDEXBUFFER9  mIdxBuf;
