@@ -433,6 +433,8 @@ namespace GN
         //!
         //! Draw screen aligned quad on screen.
         //!
+        //! \param dev
+        //!     D3D device pointer
         //! \param left, top, right, bottom
         //!     Quad position.
         //!     - On PC platform, position (0,0,1,1) will draw quad that fulfill current viewport,

@@ -971,32 +971,34 @@ namespace GN { namespace gfx
                            size_t        numPrim,
                            size_t        startVtx ) = 0;
 
-
         //!
         //! Draw quads
         //!
+        //! \param options
+        //!     渲染选项，详见 DrawQuadOptions。Set to 0 to use default options
         //! \param positions, posStride
         //!     顶点坐标数据，由一系列的2D顶点组成。4个顶点表示一个矩形。
         //!     选项 DQ_WINDOW_SPACE 会影响坐标的含义。
         //! \param texcoords, texStride
         //!     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
-        //!     
-        //! \param options
-        //!     渲染选项，详见 DrawQuadOptions。
+        //! \param count
+        //!     Number of quads.
         //!
         virtual void drawQuads(
+            uint32_t options,
             const void * positions, size_t posStride,
             const void * texcoords, size_t texStride,
-            size_t count, uint32_t options = 0 ) = 0;
+            size_t count ) = 0;
 
         //!
         //! Draw quads, with same position and texture stride.
         //!
         void drawQuads(
+            uint32_t options,
             const void * positions, const void * texcoords, size_t stride,
-            size_t count, uint32_t options = 0 )
+            size_t count )
         {
-            drawQuads( positions, stride, texcoords, stride, count, options );
+            drawQuads( options, positions, stride, texcoords, stride, count );
         }
 
         //!
@@ -1005,9 +1007,9 @@ namespace GN { namespace gfx
         //! \note This function may not very effecient.
         //!
         void drawQuad(
+            uint32_t options = 0,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
-            double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0,
-            uint32_t options = 0 )
+            double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
         {
             float x1 = (float)left;
             float y1 = (float)top;
@@ -1031,7 +1033,7 @@ namespace GN { namespace gfx
             tex[2].set( u2, v2 );
             tex[3].set( u1, v2 );
 
-            drawQuads( pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1, options );
+            drawQuads( options, pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1 );
         }
 
         //!

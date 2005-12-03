@@ -418,9 +418,10 @@ void GN::gfx::D3DRenderer::draw(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawQuads(
+    uint32_t options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
-    size_t count, uint32_t options )
+    size_t count )
 {
     GN_GUARD_SLOW;
 
