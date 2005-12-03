@@ -17,11 +17,14 @@ namespace GN { namespace gfx
     {
     public:
 
+        //!
+        //! Resource state
+        //!
         enum ResourceState
         {
-            UNINITIALIZED,
-            CREATED,
-            READY,
+            UNINITIALIZED, //!< Resource is uninitialized.
+            CREATED,       //!< Resource is created, but not restored.
+            READY,         //!< Resource is ready to use (created and restored).
         };
 
         //!

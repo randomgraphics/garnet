@@ -70,14 +70,20 @@ bool GN::gfx::D3DQuad::deviceCreate()
     if( r.supportShader( VERTEX_SHADER, LANG_D3D_HLSL ) )
     {
         static const char * code =
-            "void main( in float4 i : POSITION,"
-            "           out float4 oPos: POSITION,"
-            "           out float2 uv : TEXCOORD0 )"
-            "{"
-            "   oPos = float4( i.xy, 0, 1 );"
-            "   uv = i.zw;"
-            "}";
-        mVtxShader = d3d::compileVS( dev, code );
+            "vs.1.1 \n"
+            "dcl_position0 v0 \n"
+            "def c0, 0, 0, 0, 1 \n"
+            "mov oPos.xy, v0.xy \n"
+            "mov oT0.xy, v0.zw \n"
+            "mov oPos.zw, c0.zw \n";
+            //"void main( in float4 i : POSITION,"
+            //"           out float4 oPos: POSITION,"
+            //"           out float2 uv : TEXCOORD0 )"
+            //"{"
+            //"   oPos = float4( i.xy, 0, 1 );"
+            //"   uv = i.zw;"
+            //"}";
+        mVtxShader = d3d::assembleVS( dev, code );
         if( 0 == mVtxShader ) return false;
     }
     else
@@ -90,10 +96,13 @@ bool GN::gfx::D3DQuad::deviceCreate()
     if( r.supportShader( PIXEL_SHADER, LANG_D3D_HLSL ) )
     {
         static const char * code =
-            "sampler s0 : register(s0);"
-            "float4 main( float2 uv : TEXCOORD0 ) : COLOR"
-            "{ return tex2D( s0, uv ); }";
-        mPxlShader = d3d::compilePS( dev, code );
+            "ps.1.1 \n"
+            "tex t0 \n"
+            "mov r0, t0 \n";
+            //"sampler s0 : register(s0);"
+            //"float4 main( float2 uv : TEXCOORD0 ) : COLOR"
+            //"{ return tex2D( s0, uv ); }";
+        mPxlShader = d3d::assemblePS( dev, code );
         if( 0 == mPxlShader ) return false;
     }
 
@@ -276,6 +285,8 @@ void GN::gfx::D3DQuad::drawQuads(
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
+        static const float c[] = { 0, 0, 0, 1 };
+        GN_DX_CHECK( dev->SetVertexShaderConstantF( 0, c, 1 ) );
     }
     if( !( DQ_USE_CURRENT_PS & options ) )
     {

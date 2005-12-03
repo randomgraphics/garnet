@@ -38,7 +38,7 @@ public:
     {
         //r.setRenderState( GN::gfx::RS_CULL_MODE, GN::gfx::RSV_CULL_NONE );
         r.bindShaders( 0, ps1 );
-        r.drawQuad( 0, 0, 0.5, 0.5, 0, 0, 0, 1, GN::gfx::DQ_USE_CURRENT_PS );
+        r.drawQuad( GN::gfx::DQ_USE_CURRENT_PS, 0, 0, 0.5, 0.5 );
     }
 };
 
@@ -178,7 +178,10 @@ public:
     {
         mRenderer->clearScreen( GN::Vector4f(0,0,0,1) ); // clear to pure blue.
 
-        // draw FPS
+        // draw scene
+        mScene.draw( *mRenderer );
+
+        /* draw FPS
         static size_t frames = 0;
         static double lastTime = mClock.getTimeD();
         double currentTime = mClock.getTimeD();
@@ -196,10 +199,7 @@ public:
         int x = 1, y = 1;
         mInput->getMousePosition( x, y );
         mousePos.format( "Mouse: %d, %d", x, y );
-        mRenderer->drawTextA( mousePos.cstr(), 0, 100 );
-
-        // draw scene
-        mScene.draw( *mRenderer );
+        mRenderer->drawTextA( mousePos.cstr(), 0, 100 );//*/
     }
 };
 
