@@ -33,7 +33,9 @@ TODO
 - p1
   - continue implementing GFX module
     - fix device-lost bug in GNgfxTest
+    - refine device management
     - drawQuad(...)
+      - D3DQuad(): support to FFP
 - p2
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )

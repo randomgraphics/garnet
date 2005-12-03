@@ -86,11 +86,6 @@ bool GN::gfx::D3DQuad::deviceCreate()
         mVtxShader = d3d::assembleVS( dev, code );
         if( 0 == mVtxShader ) return false;
     }
-    else
-    {
-        GNGFX_WARN( "D3DQuad class requires vertex shader" );
-        return true;
-    }
 
     // create pixel shader
     if( r.supportShader( PIXEL_SHADER, LANG_D3D_HLSL ) )

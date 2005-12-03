@@ -36,7 +36,15 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
         // TODO: need more precise detection
         case LANG_D3D_ASM :
         case LANG_D3D_HLSL :
-            return true;
+            if( VERTEX_SHADER == type )
+            {
+                return 0 != ( getCaps( CAPS_VSCAPS ) & VSCAPS_D3D_ALL );
+            }
+            else
+            {
+                GN_ASSERT( PIXEL_SHADER == type );
+                return 0 != ( getCaps( CAPS_PSCAPS ) & VSCAPS_D3D_ALL );
+            }
 
         // Check Cg shader caps
         case LANG_CG :

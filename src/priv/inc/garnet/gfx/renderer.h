@@ -206,7 +206,8 @@ namespace GN { namespace gfx
         VSCAPS_D3D_ALL = VSCAPS_D3D_1_1 |
                          VSCAPS_D3D_2_0 |
                          VSCAPS_D3D_2_X |
-                         VSCAPS_D3D_3_0
+                         VSCAPS_D3D_3_0 |
+                         VSCAPS_D3D_XVS
     };
 
     //!
@@ -234,7 +235,8 @@ namespace GN { namespace gfx
                          PSCAPS_D3D_1_4 |
                          PSCAPS_D3D_2_0 |
                          PSCAPS_D3D_2_X |
-                         PSCAPS_D3D_3_0
+                         PSCAPS_D3D_3_0 |
+                         PSCAPS_D3D_XVS
     };
 
     //!
