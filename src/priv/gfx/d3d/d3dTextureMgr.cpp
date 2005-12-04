@@ -17,11 +17,13 @@ GN::gfx::D3DRenderer::createTexture( TexType textype,
                                      uint32_t sx, uint32_t sy, uint32_t sz,
                                      uint32_t levels,
                                      ClrFmt format,
-                                     uint32_t usages )
+                                     uint32_t usages,
+                                     const TextureLoader & loader )
 {
     GN_GUARD;
 
     AutoRef<D3DTexture> p( new D3DTexture(*this) );
+    p->setLoader( loader );
     if( p->init(textype,sx,sy,sz,levels,format,usages) ) return p.detach();
     return 0;
 

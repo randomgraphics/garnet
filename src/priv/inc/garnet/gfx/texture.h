@@ -70,6 +70,13 @@ namespace GN { namespace gfx
         NUM_TEXFACES
     };
 
+    struct Texture;
+
+    //!
+    //! Texture content loader
+    //!
+    typedef Functor1<bool,Texture&> TextureLoader;
+
     //!
     //! Ã˘Õº∂‘œÛ
     //!
@@ -131,6 +138,11 @@ namespace GN { namespace gfx
                               TexWrap r = TEXWRAP_REPEAT ) const = 0;
 
         //@}
+
+        //!
+        //! Set content loader
+        //!
+        void setLoader( const TextureLoader & loader ) { mLoader = loader; }
 
         //! \name lock/unlock functions
         //@{
@@ -268,12 +280,19 @@ namespace GN { namespace gfx
             return true;
         }
 
+        //!
+        //! Get content loader
+        //!
+        const TextureLoader & getLoader() const { return mLoader; }
+
     private :
+
         TexType             mType;    //!< texture type
         Vector3<uint32_t>   mSize;    //!< texture size
         uint32_t            mLevels;  //!< number of mipmap levels
         ClrFmt              mFormat;  //!< pixel format
         uint32_t            mUsage;   //!< creation flags
+        TextureLoader       mLoader;  //!< content loader
     };
 
     //! \name convert between texture tags and string

@@ -51,7 +51,7 @@ sLoad2DSlice(
 //! load cubemap from memory buffer
 // -----------------------------------------------------------------------------
 static GN::gfx::Texture *
-sLoadTexCube( GN::gfx::OGLRenderer & r, const GN::gfx::ImageDesc & desc, const uint8_t * data )
+sLoadTexCube( GN::gfx::Renderer & r, const GN::gfx::ImageDesc & desc, const uint8_t * data )
 {
     GN_GUARD;
 
@@ -100,7 +100,7 @@ sLoadTexCube( GN::gfx::OGLRenderer & r, const GN::gfx::ImageDesc & desc, const u
 //! load 2D texture from memory buffer
 // -----------------------------------------------------------------------------
 static GN::gfx::Texture *
-sLoadTex2D( GN::gfx::OGLRenderer & r, const GN::gfx::ImageDesc & desc, const uint8_t * data )
+sLoadTex2D( GN::gfx::Renderer & r, const GN::gfx::ImageDesc & desc, const uint8_t * data )
 {
     GN_GUARD;
 
@@ -155,7 +155,8 @@ GN::gfx::OGLRenderer::createTexture( TexType  type,
                                      uint32_t sx, uint32_t sy, uint32_t sz,
                                      uint32_t levels,
                                      ClrFmt   format,
-                                     uint32_t usage )
+                                     uint32_t usage,
+                                     const TextureLoader & loader )
 {
     GN_GUARD;
 
@@ -164,21 +165,25 @@ GN::gfx::OGLRenderer::createTexture( TexType  type,
     if( TEXTYPE_1D == type )
     {
         AutoRef<OGLTex1D> p( new OGLTex1D(*this) );
+        p->setLoader( loader );
         if( p->init(type,sx,sy,sz,levels,format,usage) ) return p.detach();
     }
     else if( TEXTYPE_2D == type )
     {
         AutoRef<OGLTex2D> p( new OGLTex2D(*this) );
+        p->setLoader( loader );
         if( p->init(type,sx,sy,sz,levels,format,usage) ) return p.detach();
     }
     else if( TEXTYPE_3D == type )
     {
         AutoRef<OGLTex3D> p( new OGLTex3D(*this) );
+        p->setLoader( loader );
         if( p->init(type,sx,sy,sz,levels,format,usage) ) return p.detach();
     }
     else if ( TEXTYPE_CUBE == type )
     {
         AutoRef<OGLTexCube> p( new OGLTexCube(*this) );
+        p->setLoader( loader );
         if( p->init(type,sx,sy,sz,levels,format,usage) ) return p.detach();
     }
     else

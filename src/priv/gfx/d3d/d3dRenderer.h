@@ -391,7 +391,8 @@ namespace GN { namespace gfx
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels,
                        ClrFmt format,
-                       uint32_t usage );
+                       uint32_t usage,
+                       const TextureLoader & loader );
         virtual Texture * createTextureFromFile( File & );
         virtual void bindTextures( const Texture * const texlist[],
                                    uint32_t start, uint32_t numtex );
@@ -434,8 +435,8 @@ namespace GN { namespace gfx
 
     public :
         virtual uint32_t createVtxBinding( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy );
-        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy );
+        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
+        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
         virtual void bindVtxBinding( uint32_t );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
         virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );

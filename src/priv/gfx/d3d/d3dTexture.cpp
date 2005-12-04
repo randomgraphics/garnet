@@ -411,6 +411,12 @@ bool GN::gfx::D3DTexture::deviceRestore()
         d3dpool );
     if( 0 == mD3DTexture ) return false;
 
+    // call user-defined content loader
+    if( !getLoader().empty() )
+    {
+        if( !getLoader()( *this ) ) return false;
+    }
+
     // success
     return true;
 

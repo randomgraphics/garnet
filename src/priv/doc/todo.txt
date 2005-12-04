@@ -32,7 +32,8 @@ TODO
 
 - p1
   - continue implementing GFX module
-  - add resource loader
+    - refine device management
+    - quad renderer for GFXOGL module
 - p2
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
