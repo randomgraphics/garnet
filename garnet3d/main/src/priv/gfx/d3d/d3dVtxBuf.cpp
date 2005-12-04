@@ -9,11 +9,11 @@
 //!
 //! convert garnet buffer usage flags to D3D flags
 // ----------------------------------------------------------------------------
-DWORD sBufUsage2D3D( GN::gfx::ResourceUsage usage )
+DWORD sBufUsage2D3D( bool dynamic )
 {
     DWORD d3dUsage = D3DUSAGE_WRITEONLY;
 
-    if( GN::gfx::USAGE_DYNAMIC == usage ) d3dUsage |= D3DUSAGE_DYNAMIC;
+    if( dynamic ) d3dUsage |= D3DUSAGE_DYNAMIC;
 
     return d3dUsage;
 }
@@ -21,18 +21,11 @@ DWORD sBufUsage2D3D( GN::gfx::ResourceUsage usage )
 //!
 //! convert garnet buffer lock flags to D3D flags
 // ----------------------------------------------------------------------------
-DWORD sLockFlags2D3D( GN::gfx::ResourceUsage usage, uint32_t lock )
+DWORD sLockFlags2D3D( bool dynamic, uint32_t lock )
 {
     DWORD d3dFlag;
 
-    if( GN::gfx::USAGE_STATIC == usage )
-    {
-        if( GN::gfx::LOCK_RO == lock )
-            d3dFlag = D3DLOCK_READONLY;
-        else
-            d3dFlag = 0;
-    }
-    else if( GN::gfx::USAGE_DYNAMIC == usage )
+    if( dynamic )
     {
         if( GN::gfx::LOCK_RO == lock )
             d3dFlag = D3DLOCK_READONLY;
@@ -45,9 +38,10 @@ DWORD sLockFlags2D3D( GN::gfx::ResourceUsage usage, uint32_t lock )
     }
     else
     {
-        // Program should not reach here.
-        GN_UNEXPECTED();
-        return 0;
+        if( GN::gfx::LOCK_RO == lock )
+            d3dFlag = D3DLOCK_READONLY;
+        else
+            d3dFlag = 0;
     }
 
 #if GN_DEBUG
@@ -64,7 +58,7 @@ DWORD sLockFlags2D3D( GN::gfx::ResourceUsage usage, uint32_t lock )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxBuf::init( size_t bytes, ResourceUsage usage, bool sysCopy )
+bool GN::gfx::D3DVtxBuf::init( size_t bytes, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
@@ -76,13 +70,8 @@ bool GN::gfx::D3DVtxBuf::init( size_t bytes, ResourceUsage usage, bool sysCopy )
         GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
-    if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
-    {
-        GNGFX_ERROR( "Vertex buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
-        quit(); return selfOK();
-    }
 
-    setProperties( bytes, usage );
+    setProperties( bytes, dynamic );
 
     if( sysCopy ) mSysCopy.resize( bytes );
 
@@ -138,7 +127,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
         GN_DX_CHECK_RV(
             dev->CreateVertexBuffer(
                 (UINT)getSizeInBytes(),
-                sBufUsage2D3D( getUsage() ),
+                sBufUsage2D3D( isDynamic() ),
                 0,  // non-FVF vstream
                 D3DPOOL_DEFAULT,
                 &mD3DVb,
@@ -215,7 +204,7 @@ void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, uint32_t flag )
                 (UINT)offset,
                 (UINT)bytes,
                 &buf,
-                sLockFlags2D3D(getUsage(),flag) ),
+                sLockFlags2D3D(isDynamic(),flag) ),
             0 );
         mLocked = true;
         return buf;
@@ -266,7 +255,7 @@ void GN::gfx::D3DVtxBuf::unlock()
             (UINT)mLockOffset,
             (UINT)mLockBytes,
             &dst,
-            sLockFlags2D3D(getUsage(),mLockFlag) ) );
+            sLockFlags2D3D(isDynamic(),mLockFlag) ) );
         ::memcpy( dst, &mSysCopy[mLockOffset], mLockBytes );
         mD3DVb->Unlock();
     }

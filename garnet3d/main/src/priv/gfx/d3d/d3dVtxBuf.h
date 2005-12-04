@@ -33,7 +33,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, ResourceUsage usage, bool hasSysCopy );
+        bool init( size_t bytes, bool dynamic, bool hasSysCopy );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:

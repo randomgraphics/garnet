@@ -9,7 +9,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, ResourceUsage usage, bool /*sysCopy*/ )
+bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
 {
     GN_GUARD;
 
@@ -21,21 +21,16 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, ResourceUsage usage, bool /*sysC
         GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
-    if( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
-    {
-        GNGFX_ERROR( "Vertex buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
-        quit(); return selfOK();
-    }
 
     // store properties
-    setProperties( bytes, usage );
+    setProperties( bytes, dynamic );
 
     // initialize system copy
     mSysCopy = (uint8_t*)memAlloc( bytes );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
-    mOGLUsage = USAGE_DYNAMIC == usage ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
+    mOGLUsage = dynamic ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
     if( !deviceCreate() && !deviceRestore() ) { quit(); return selfOK(); }

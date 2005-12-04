@@ -178,9 +178,9 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     if( tex )
     {
         // check texture's creation flag
-        if( !(USAGE_RENDERTARGET & tex->getUsage() ) )
+        if( !(TEXUSAGE_RENDERTARGET & tex->getUsage() ) )
         {
-            GNGFX_ERROR( "Texture must have usage of USAGE_RENDERTARGET!" );
+            GNGFX_ERROR( "Texture must have usage of TEXUSAGE_RENDERTARGET!" );
             return;
         }
 
@@ -236,7 +236,7 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
     if( tex )
     {
         // check texture's creation flag
-        if( !(USAGE_DEPTH & tex->getUsage()) )
+        if( !(TEXUSAGE_DEPTH & tex->getUsage()) )
         {
             GNGFX_ERROR( "can't set non-depth-texture as depth buffer!" );
             return;

@@ -333,7 +333,7 @@ bool GN::gfx::OGLBasicTexture::init(
     // determine pixelformat
     if( FMT_DEFAULT == format )
     {
-        if( USAGE_DEPTH == usage )
+        if( TEXUSAGE_DEPTH == usage )
         {
             format = FMT_D_32; // default depth format
         }
@@ -435,7 +435,7 @@ bool GN::gfx::OGLBasicTexture::deviceCreate()
     // enable/disable mipmap autogeneration
     if( TEXTYPE_CUBE != getType() && GLEW_SGIS_generate_mipmap )
     {
-        if( USAGE_AUTOGEN_MIPMAP & getUsage() )
+        if( TEXUSAGE_AUTOGEN_MIPMAP & getUsage() )
         {
             GN_OGL_CHECK( glTexParameteri( mOGLTarget,GL_GENERATE_MIPMAP_SGIS, GL_TRUE) );
         }

@@ -7,8 +7,8 @@
 // *****************************************************************************
 
 // Note: these two functions are implemented in d3dVtxBuf.cpp
-extern DWORD sBufUsage2D3D( GN::gfx::ResourceUsage usage );
-extern DWORD sLockFlags2D3D( GN::gfx::ResourceUsage usage, uint32_t lock );
+extern DWORD sBufUsage2D3D( bool dynamic );
+extern DWORD sLockFlags2D3D( bool dynamic, uint32_t lock );
 
 // *****************************************************************************
 // init / quit functions
@@ -17,7 +17,7 @@ extern DWORD sLockFlags2D3D( GN::gfx::ResourceUsage usage, uint32_t lock );
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DIdxBuf::init( size_t numIdx, ResourceUsage usage, bool sysCopy )
+bool GN::gfx::D3DIdxBuf::init( size_t numIdx, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
@@ -30,13 +30,8 @@ bool GN::gfx::D3DIdxBuf::init( size_t numIdx, ResourceUsage usage, bool sysCopy 
         GNGFX_ERROR( "invalid buffer length!" );
         quit(); return selfOK();
     }
-    if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
-    {
-        GNGFX_ERROR( "Index buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
-        quit(); return selfOK();
-    }
 
-    setProperties( numIdx, usage );
+    setProperties( numIdx, dynamic );
 
     // store buffer parameters
     if ( sysCopy ) mSysCopy.resize( numIdx );
@@ -89,7 +84,7 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
     GN_DX_CHECK_RV(
         dev->CreateIndexBuffer(
             (UINT)( getNumIdx() * 2 ),
-            sBufUsage2D3D( getUsage() ),
+            sBufUsage2D3D( isDynamic() ),
             D3DFMT_INDEX16,
             D3DPOOL_DEFAULT,
             &mD3DIb,
@@ -165,7 +160,7 @@ uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, uint32_t fl
                 (UINT)( startIdx<<1 ),
                 (UINT)( numIdx<<1 ),
                 &buf,
-                sLockFlags2D3D( getUsage(), flag ) ),
+                sLockFlags2D3D( isDynamic(), flag ) ),
             0 );
         mLocked = true;
         return (uint16_t*)buf;
@@ -218,8 +213,7 @@ void GN::gfx::D3DIdxBuf::unlock()
             (UINT)( mLockStartIdx<<1 ),
             (UINT)( mLockNumIdx ),
             &dst,
-            sLockFlags2D3D(getUsage(),
-            mLockFlag ) ) );
+            sLockFlags2D3D( isDynamic(), mLockFlag ) ) );
         ::memcpy( dst, &mSysCopy[mLockStartIdx], mLockNumIdx );
         mD3DIb->Unlock();
     }

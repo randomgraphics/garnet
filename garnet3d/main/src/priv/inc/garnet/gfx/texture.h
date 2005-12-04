@@ -21,6 +21,17 @@ namespace GN { namespace gfx
     };
 
     //!
+    //! Texture usage.
+    //!
+    enum TextureUsage
+    {
+        TEXUSAGE_DYNAMIC        = 1<<0, //!< dynamic texture
+        TEXUSAGE_AUTOGEN_MIPMAP = 1<<1, //!< texture that can auto-generate mipmaps
+        TEXUSAGE_RENDERTARGET   = 1<<2, //!< render target texture
+        TEXUSAGE_DEPTH          = 1<<3, //!< depth texture
+    };
+
+    //!
     //! ÌùÍ¼¹ýÂËÆ÷
     //!
     enum TexFilter

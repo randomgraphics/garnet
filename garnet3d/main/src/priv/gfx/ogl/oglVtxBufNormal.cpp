@@ -8,7 +8,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, ResourceUsage usage )
+bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
 {
     GN_GUARD;
 
@@ -20,14 +20,9 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, ResourceUsage usage )
         GNGFX_ERROR( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
-    if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
-    {
-        GNGFX_ERROR( "Vertex buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
-        quit(); return selfOK();
-    }
 
     // store properties
-    setProperties( bytes, usage );
+    setProperties( bytes, dynamic );
 
     mBuffer = (uint8_t*)memAlloc( bytes );
 

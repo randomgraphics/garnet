@@ -21,7 +21,7 @@ namespace GN { namespace gfx
         //!
         //! Get buffer usage
         //!
-        ResourceUsage getUsage() const { return mUsage; }
+        bool isDynamic() const { return mDynamic; }
 
         //!
         //! Lock specific stream
@@ -36,9 +36,7 @@ namespace GN { namespace gfx
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual void * lock( size_t   offset,
-                             size_t   bytes,
-                             uint32_t flag ) = 0;
+        virtual void * lock( size_t offset, size_t bytes, uint32_t flag ) = 0;
 
         //!
         //! Unlock specific stream
@@ -50,16 +48,16 @@ namespace GN { namespace gfx
         //!
         //! Set buffer properties
         //!
-        void setProperties( size_t bytes, ResourceUsage usage )
+        void setProperties( size_t bytes, bool dynamic )
         {
             mSize = bytes;
-            mUsage = usage;
+            mDynamic = dynamic;
         }
 
     private:
 
-        size_t        mSize;  //!< Buffer size in bytes
-        ResourceUsage mUsage; //!< Buffer usage
+        size_t mSize;    //!< Buffer size in bytes
+        bool   mDynamic; //!< Buffer usage
     };
 
     //!
@@ -75,7 +73,7 @@ namespace GN { namespace gfx
         //!
         //! Get buffer usage
         //!
-        ResourceUsage getUsage() const { return mUsage; }
+        bool isDynamic() const { return mDynamic; }
 
         //!
         //! lock the buffer
@@ -90,9 +88,7 @@ namespace GN { namespace gfx
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual uint16_t * lock( size_t   startIdx,
-                                 size_t   numIdx,
-                                 uint32_t flag ) = 0;
+        virtual uint16_t * lock( size_t startIdx, size_t numIdx, uint32_t flag ) = 0;
 
         //!
         //! unlock the buffer
@@ -104,16 +100,16 @@ namespace GN { namespace gfx
         //!
         //! Set buffer properties
         //!
-        void setProperties( size_t numIdx, ResourceUsage usage )
+        void setProperties( size_t numIdx, bool dynamic )
         {
             mNumIdx = numIdx;
-            mUsage = usage;
+            mDynamic = dynamic;
         }
 
     private:
 
-        size_t        mNumIdx; //!< index count
-        ResourceUsage mUsage;  //!< Buffer usage
+        size_t mNumIdx;  //!< Index count
+        bool   mDynamic; //!< Buffer usage
     };
 }}
 
