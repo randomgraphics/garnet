@@ -8,7 +8,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLIdxBuf::init( size_t numIdx, ResourceUsage usage )
+bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
 {
     GN_GUARD;
 
@@ -21,13 +21,8 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, ResourceUsage usage )
         GNGFX_ERROR( "invalid buffer length!" );
         quit(); return selfOK();
     }
-    if ( USAGE_STATIC != usage && USAGE_DYNAMIC != usage )
-    {
-        GNGFX_ERROR( "Index buffer usage can be only USAGE_STATIC or USAGE_DYNAMIC!" );
-        quit(); return selfOK();
-    }
 
-    setProperties( numIdx, usage );
+    setProperties( numIdx, dynamic );
 
     mBuffer = (uint16_t*) memAlloc( numIdx * 2 );
 

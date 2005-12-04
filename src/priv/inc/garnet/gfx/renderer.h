@@ -653,7 +653,7 @@ namespace GN { namespace gfx
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels = 0,
                        ClrFmt format = FMT_DEFAULT,
-                       uint32_t usage = USAGE_NORMAL ) = 0;
+                       uint32_t usage = 0 ) = 0;
 
         //!
         //! Create 1D texture
@@ -662,7 +662,7 @@ namespace GN { namespace gfx
         create1DTexture( uint32_t sx,
                          uint32_t levels = 0,
                          ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = USAGE_NORMAL )
+                         uint32_t usage = 0 )
         {
             return createTexture( TEXTYPE_1D, sx, 0, 0, levels, format, usage );
         }
@@ -674,7 +674,7 @@ namespace GN { namespace gfx
         create2DTexture( uint32_t sx, uint32_t sy,
                          uint32_t levels = 0,
                          ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = USAGE_NORMAL )
+                         uint32_t usage = 0 )
         {
             return createTexture( TEXTYPE_2D, sx, sy, 0, levels, format, usage );
         }
@@ -686,7 +686,7 @@ namespace GN { namespace gfx
         create3DTexture( uint32_t sx, uint32_t sy, uint32_t sz,
                          uint32_t levels = 0,
                          ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = USAGE_NORMAL )
+                         uint32_t usage = 0 )
         {
             return createTexture( TEXTYPE_3D, sx, sy, sz, levels, format, usage );
         }
@@ -698,7 +698,7 @@ namespace GN { namespace gfx
         createCubeTexture( uint32_t sx,
                            uint32_t levels = 0,
                            ClrFmt format = FMT_DEFAULT,
-                           uint32_t usage = USAGE_NORMAL )
+                           uint32_t usage = 0 )
         {
             return createTexture( TEXTYPE_CUBE, sx, 0, 0, levels, format, usage );
         }
@@ -749,23 +749,23 @@ namespace GN { namespace gfx
         //!
         //! \param bytes
         //!     Size of vertex buffer in bytes.
-        //! \param usage
-        //!     buffer usage. Can be only USAGE_STATIC/USAGE_NORMAL or USAGE_DYNAMIC
+        //! \param dynamic
+        //!     Dynamic or static vertex buffer.
         //! \param sysCopy
         //!     has system copy or not
         //!
         virtual VtxBuf *
-        createVtxBuf( size_t        bytes,
-                      ResourceUsage usage = USAGE_NORMAL,
-                      bool          sysCopy = true ) = 0;
+        createVtxBuf( size_t bytes,
+                      bool   dynamic = false,
+                      bool   sysCopy = true ) = 0;
 
         //!
         //! Create new index buffer
         //!
         //! \param numIdx
         //!     number of indices
-        //! \param usage
-        //!     buffer usage. Can be only USAGE_STATIC/USAGE_NORMAL or USAGE_DYNAMIC
+        //! \param dynamic
+        //!     Dynamic or static vertex buffer.
         //! \param sysCopy
         //!     has system copy or not
         //!
@@ -773,9 +773,9 @@ namespace GN { namespace gfx
         //!     每个索引固定占用16bit
         //!
         virtual IdxBuf *
-        createIdxBuf( size_t        numIdx,
-                      ResourceUsage usage = USAGE_NORMAL,
-                      bool          sysCopy = true ) = 0;
+        createIdxBuf( size_t numIdx,
+                      bool   dynamic = false,
+                      bool   sysCopy = true ) = 0;
 
         //!
         //! Bind vertex bindings

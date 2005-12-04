@@ -326,7 +326,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
     ClrFmt format;
     if( FMT_DEFAULT == mInitFormat )
     {
-        if( USAGE_DEPTH & mInitUsage )
+        if( TEXUSAGE_DEPTH & mInitUsage )
         {
             format = sD3DFMT2ClrFmt(
                 mRenderer.getPresentParameters().AutoDepthStencilFormat );
@@ -358,18 +358,18 @@ bool GN::gfx::D3DTexture::deviceRestore()
 
     // determine D3D usage & pool
     mD3DUsage = 0;
-    mD3DUsage |= USAGE_RENDERTARGET & getUsage() ? D3DUSAGE_RENDERTARGET : 0;
+    mD3DUsage |= TEXUSAGE_RENDERTARGET & getUsage() ? D3DUSAGE_RENDERTARGET : 0;
 #if GN_XENON
-    if( USAGE_AUTOGEN_MIPMAP & getUsage() )
+    if( TEXUSAGE_AUTOGEN_MIPMAP & getUsage() )
     {
         GNGFX_WARN( "Xenon does not support mipmap auto-generation!" );
     }
 #else
-    mD3DUsage |= USAGE_AUTOGEN_MIPMAP & getUsage() ? D3DUSAGE_AUTOGENMIPMAP : 0;
+    mD3DUsage |= TEXUSAGE_AUTOGEN_MIPMAP & getUsage() ? D3DUSAGE_AUTOGENMIPMAP : 0;
 #endif
-    mD3DUsage |= USAGE_DEPTH & getUsage() ? D3DUSAGE_DEPTHSTENCIL : 0;
+    mD3DUsage |= TEXUSAGE_DEPTH & getUsage() ? D3DUSAGE_DEPTHSTENCIL : 0;
     D3DPOOL d3dpool =
-        ( USAGE_RENDERTARGET & getUsage() || USAGE_DEPTH & getUsage() )
+        ( TEXUSAGE_RENDERTARGET & getUsage() || TEXUSAGE_DEPTH & getUsage() )
         ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED;
 
     // check texture format compatibility

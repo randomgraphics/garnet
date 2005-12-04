@@ -31,7 +31,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t numIdx, ResourceUsage usage );
+        bool init( size_t numIdx, bool dynamic );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:

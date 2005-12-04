@@ -340,8 +340,8 @@ namespace GN { namespace gfx
 
     public :
         virtual uint32_t createVtxBinding( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( size_t bytes, ResourceUsage usage, bool sysCopy );
-        virtual IdxBuf * createIdxBuf( size_t numIdx, ResourceUsage usage, bool sysCopy );
+        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy );
+        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy );
         virtual void bindVtxBinding( uint32_t );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
         virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );

@@ -44,7 +44,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, ResourceUsage usage );
+        bool init( size_t bytes, bool dynamic );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, ResourceUsage usage, bool sysCopy );
+        bool init( size_t bytes, bool dynamic, bool sysCopy );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:

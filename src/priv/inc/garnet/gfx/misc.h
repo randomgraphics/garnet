@@ -28,19 +28,6 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Resource usage.
-    //!
-    enum ResourceUsage
-    {
-        USAGE_STATIC           = 0,    //!< normal static resource
-        USAGE_DYNAMIC          = 1<<0, //!< dynamic resource
-        USAGE_AUTOGEN_MIPMAP   = 1<<1, //!< texture that can auto-generate mipmaps
-        USAGE_RENDERTARGET     = 1<<2, //!< render target texture
-        USAGE_DEPTH            = 1<<3, //!< depth texture
-        USAGE_NORMAL           = USAGE_STATIC
-    };
-
-    //!
     //! Ëø¶¨±êÖ¾
     //!
     enum LockFlag

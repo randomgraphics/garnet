@@ -32,10 +32,7 @@ TODO
 
 - p1
   - continue implementing GFX module
-    - fix device-lost bug in GNgfxTest
-    - refine device management
-    - drawQuad(...)
-      - D3DQuad(): support to FFP
+  - add resource loader
 - p2
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
@@ -62,6 +59,10 @@ DONE
 - convert input module to static library
 - Fix link problem of GFX module in static build.
 - Refine GFX:
+  - fix device-lost bug in GNgfxTest
+  - refine device management
+  - drawQuad(...)
+    - D3DQuad(): support to FFP
   - buffer manager of GFXOGL
   - vertex binding of GFXOGL
   - enable multiple context support of GLEW
