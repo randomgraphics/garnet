@@ -17,7 +17,8 @@ extern DWORD sLockFlags2D3D( bool dynamic, uint32_t lock );
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DIdxBuf::init( size_t numIdx, bool dynamic, bool sysCopy )
+bool GN::gfx::D3DIdxBuf::init(
+    size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
 {
     GN_GUARD;
 
@@ -31,10 +32,10 @@ bool GN::gfx::D3DIdxBuf::init( size_t numIdx, bool dynamic, bool sysCopy )
         quit(); return selfOK();
     }
 
-    setProperties( numIdx, dynamic );
-
     // store buffer parameters
-    if ( sysCopy ) mSysCopy.resize( numIdx );
+    setProperties( numIdx, dynamic );
+    setLoader( loader );
+    if( sysCopy ) mSysCopy.resize( numIdx );
 
     if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
 
@@ -91,9 +92,14 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
             0 ),
         false );
 
-    // copy data from system copy to D3D buffer
-    if ( !mSysCopy.empty() )
+    if( !getLoader().empty() )
     {
+        // call user-defined loader
+        if( !getLoader()( *this ) ) return false;
+    }
+    else if( !mSysCopy.empty() )
+    {
+        // copy data from system copy to D3D buffer
         void * dst;
         GN_DX_CHECK_RV( mD3DIb->Lock( 0, 0, &dst, 0 ), false );
         ::memcpy( dst, &mSysCopy[0], mSysCopy.size()*2 );
@@ -152,7 +158,7 @@ uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, uint32_t fl
     if( 0 == numIdx ) numIdx = getNumIdx();
     if( startIdx + numIdx > getNumIdx() ) numIdx = getNumIdx() - startIdx;
 
-    if ( mSysCopy.empty() )
+    if( mSysCopy.empty() )
     {
         void * buf;
         GN_DX_CHECK_RV(
@@ -194,11 +200,11 @@ void GN::gfx::D3DIdxBuf::unlock()
 
     mLocked = false;
 
-    if ( mSysCopy.empty() )
+    if( mSysCopy.empty() )
     {
         GN_DX_CHECK( mD3DIb->Unlock() );
     }
-    else if ( LOCK_RO != mLockFlag )
+    else if( LOCK_RO != mLockFlag )
     {
         GN_ASSERT(
             mLockStartIdx < getNumIdx() &&

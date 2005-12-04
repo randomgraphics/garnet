@@ -234,13 +234,13 @@ uint32_t GN::gfx::D3DRenderer::createVtxBinding( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::D3DRenderer::createVtxBuf(
-    size_t bytes, bool dynamic, bool sysCopy )
+    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
 {
     GN_GUARD;
 
     AutoRef<D3DVtxBuf> buf( new D3DVtxBuf(*this) );
 
-    if( !buf->init( bytes, dynamic, sysCopy ) ) return 0;
+    if( !buf->init( bytes, dynamic, sysCopy, loader ) ) return 0;
 
     return buf.detach();
 
@@ -251,13 +251,13 @@ GN::gfx::VtxBuf * GN::gfx::D3DRenderer::createVtxBuf(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf * GN::gfx::D3DRenderer::createIdxBuf(
-    size_t numIdx, bool dynamic, bool sysCopy )
+    size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
 {
     GN_GUARD;
 
     AutoRef<D3DIdxBuf> buf( new D3DIdxBuf(*this) );
 
-    if( !buf->init( numIdx, dynamic, sysCopy ) ) return 0;
+    if( !buf->init( numIdx, dynamic, sysCopy, loader ) ) return 0;
 
     return buf.detach();
 

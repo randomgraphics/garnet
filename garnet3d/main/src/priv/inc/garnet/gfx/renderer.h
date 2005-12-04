@@ -343,11 +343,10 @@ namespace GN { namespace gfx
         //!
         //! Triggered after rendering device is restored to normal stage.
         //!
-        //! \note
-        //! - Texture, vertex buffers and index buffer without system copy will
-        //!   lost their contents after device reset.
-        //! - Shaders and render-state-sblocks will survive device reset/lost.
-        //! - Note that only contents are lost, not resources themselves.
+        //! - Resources that has neither system-copy nor content loader will lost
+        //!   contents after device reset/lost. You have to reload them manually.
+        //!   Note that only contents are lost, not resources themselves.
+        //! - Shaders and render-state-blocks will survive device reset/lost.
         //!
         Signal0<bool> sigDeviceRestore;
 
@@ -644,6 +643,7 @@ namespace GN { namespace gfx
         //!                    using default/appropriating format of current
         //!                    rendering hardware.
         //! \param usage       texture usage, one or combination of TexUsage
+        //! \param loader      Optional content loader
         //! \note
         //!    - sy/sz will be ignored for 1D/Cube texture,
         //!    - sz will be ignored for 2D texture.
@@ -653,7 +653,8 @@ namespace GN { namespace gfx
                        uint32_t sx, uint32_t sy, uint32_t sz,
                        uint32_t levels = 0,
                        ClrFmt format = FMT_DEFAULT,
-                       uint32_t usage = 0 ) = 0;
+                       uint32_t usage = 0,
+                       const TextureLoader & loader = TextureLoader() ) = 0;
 
         //!
         //! Create 1D texture
@@ -662,9 +663,10 @@ namespace GN { namespace gfx
         create1DTexture( uint32_t sx,
                          uint32_t levels = 0,
                          ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = 0 )
+                         uint32_t usage = 0,
+                         const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_1D, sx, 0, 0, levels, format, usage );
+            return createTexture( TEXTYPE_1D, sx, 0, 0, levels, format, usage, loader );
         }
 
         //!
@@ -674,9 +676,10 @@ namespace GN { namespace gfx
         create2DTexture( uint32_t sx, uint32_t sy,
                          uint32_t levels = 0,
                          ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = 0 )
+                         uint32_t usage = 0,
+                         const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_2D, sx, sy, 0, levels, format, usage );
+            return createTexture( TEXTYPE_2D, sx, sy, 0, levels, format, usage, loader );
         }
 
         //!
@@ -686,9 +689,10 @@ namespace GN { namespace gfx
         create3DTexture( uint32_t sx, uint32_t sy, uint32_t sz,
                          uint32_t levels = 0,
                          ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = 0 )
+                         uint32_t usage = 0,
+                         const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_3D, sx, sy, sz, levels, format, usage );
+            return createTexture( TEXTYPE_3D, sx, sy, sz, levels, format, usage, loader );
         }
 
         //!
@@ -698,9 +702,10 @@ namespace GN { namespace gfx
         createCubeTexture( uint32_t sx,
                            uint32_t levels = 0,
                            ClrFmt format = FMT_DEFAULT,
-                           uint32_t usage = 0 )
+                           uint32_t usage = 0,
+                           const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_CUBE, sx, 0, 0, levels, format, usage );
+            return createTexture( TEXTYPE_CUBE, sx, 0, 0, levels, format, usage, loader );
         }
 
         //!
@@ -753,11 +758,14 @@ namespace GN { namespace gfx
         //!     Dynamic or static vertex buffer.
         //! \param sysCopy
         //!     has system copy or not
+        //! \param loader
+        //!     Optional content loader.
         //!
         virtual VtxBuf *
         createVtxBuf( size_t bytes,
                       bool   dynamic = false,
-                      bool   sysCopy = true ) = 0;
+                      bool   sysCopy = true,
+                      const  VtxBufLoader & loader = VtxBufLoader() ) = 0;
 
         //!
         //! Create new index buffer
@@ -768,6 +776,8 @@ namespace GN { namespace gfx
         //!     Dynamic or static vertex buffer.
         //! \param sysCopy
         //!     has system copy or not
+        //! \param loader
+        //!     Optional content loader.
         //!
         //! \note
         //!     每个索引固定占用16bit
@@ -775,7 +785,8 @@ namespace GN { namespace gfx
         virtual IdxBuf *
         createIdxBuf( size_t numIdx,
                       bool   dynamic = false,
-                      bool   sysCopy = true ) = 0;
+                      bool   sysCopy = true,
+                      const  IdxBufLoader & loader = IdxBufLoader() ) = 0;
 
         //!
         //! Bind vertex bindings

@@ -8,6 +8,18 @@ class Scene
 
     GN::AutoRef<GN::gfx::Texture> tex0;
 
+    bool loadTex0( GN::gfx::Texture & tex )
+    {
+        GN_GUARD;
+        uint32_t * texData = (uint32_t*)tex.lock1D( 0, 0, 0, 0 );
+        if( !texData ) return false;
+        //           B G R A
+        *texData = 0xFF0000FF;
+        tex.unlock();
+        return true;
+        GN_UNGUARD;
+    }
+
 public:
 
     Scene() {}
@@ -28,12 +40,7 @@ public:
         }
 
         // create a pure white texture
-        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32 );
-        if( !tex0 ) return false;
-        uint32_t * texData = (uint32_t*)tex0->lock1D( 0, 0, 0, 0 );
-        if( !texData ) return false;
-        *texData = 0xFFFFFFFF;
-        tex0->unlock();
+        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, makeFunctor(this,&Scene::loadTex0) );
 
         // success
         return true;
@@ -193,7 +200,7 @@ public:
         // draw scene
         mScene.draw( *mRenderer );
 
-        /* draw FPS
+        // draw FPS
         static size_t frames = 0;
         static double lastTime = mClock.getTimeD();
         double currentTime = mClock.getTimeD();

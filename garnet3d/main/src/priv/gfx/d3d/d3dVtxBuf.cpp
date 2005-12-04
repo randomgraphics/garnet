@@ -58,7 +58,8 @@ DWORD sLockFlags2D3D( bool dynamic, uint32_t lock )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxBuf::init( size_t bytes, bool dynamic, bool sysCopy )
+bool GN::gfx::D3DVtxBuf::init(
+    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
 {
     GN_GUARD;
 
@@ -72,7 +73,7 @@ bool GN::gfx::D3DVtxBuf::init( size_t bytes, bool dynamic, bool sysCopy )
     }
 
     setProperties( bytes, dynamic );
-
+    setLoader( loader );
     if( sysCopy ) mSysCopy.resize( bytes );
 
     if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
@@ -112,36 +113,38 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
 
     GN_ASSERT( !mLocked && !mD3DVb );
 
-    if( 0 == mD3DVb )
-    {
-        LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
+    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
 #if !GN_XENON
-        // evict managed resources
-        GN_DX_CHECK_RV( dev->EvictManagedResources(), false );
+    // evict managed resources
+    GN_DX_CHECK_RV( dev->EvictManagedResources(), false );
 #endif
 
-        //
-        // create d3d vertex buffer
-        //
-        GN_DX_CHECK_RV(
-            dev->CreateVertexBuffer(
-                (UINT)getSizeInBytes(),
-                sBufUsage2D3D( isDynamic() ),
-                0,  // non-FVF vstream
-                D3DPOOL_DEFAULT,
-                &mD3DVb,
-                0 ),
-            false );
+    //
+    // create d3d vertex buffer
+    //
+    GN_DX_CHECK_RV(
+        dev->CreateVertexBuffer(
+            (UINT)getSizeInBytes(),
+            sBufUsage2D3D( isDynamic() ),
+            0,  // non-FVF vstream
+            D3DPOOL_DEFAULT,
+            &mD3DVb,
+            0 ),
+        false );
 
+    if( !getLoader().empty() )
+    {
+        // call user-defined loader
+        if( !getLoader()( *this ) ) return false;
+    }
+    else if( !mSysCopy.empty() )
+    {
         // copy data from system copy
-        if( !mSysCopy.empty() )
-        {
-            void * dst;
-            GN_DX_CHECK_RV( mD3DVb->Lock( 0, 0, &dst, 0 ), false );
-            ::memcpy( dst, GN::vec2ptr(mSysCopy), mSysCopy.size() );
-            mD3DVb->Unlock();
-        }
+        void * dst;
+        GN_DX_CHECK_RV( mD3DVb->Lock( 0, 0, &dst, 0 ), false );
+        ::memcpy( dst, GN::vec2ptr(mSysCopy), mSysCopy.size() );
+        mD3DVb->Unlock();
     }
 
     // success

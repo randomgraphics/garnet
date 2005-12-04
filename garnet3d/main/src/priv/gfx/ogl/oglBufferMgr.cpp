@@ -82,7 +82,8 @@ uint32_t GN::gfx::OGLRenderer::createVtxBinding( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf *
-GN::gfx::OGLRenderer::createVtxBuf( size_t bytes, bool dynamic, bool sysCopy )
+GN::gfx::OGLRenderer::createVtxBuf(
+    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
 {
     GN_GUARD;
 
@@ -91,12 +92,14 @@ GN::gfx::OGLRenderer::createVtxBuf( size_t bytes, bool dynamic, bool sysCopy )
     if( GLEW_ARB_vertex_buffer_object )
     {
         AutoRef<OGLVtxBufVBO> p( new OGLVtxBufVBO(*this) );
+        p->setLoader( loader );
         if( !p->init( bytes, dynamic, sysCopy ) ) return 0;
         return p.detach();
     }
     else
     {
         AutoRef<OGLVtxBufNormal> p( new OGLVtxBufNormal );
+        p->setLoader( loader );
         if( !p->init( bytes, dynamic ) ) return 0;
         return p.detach();
     }
@@ -108,14 +111,15 @@ GN::gfx::OGLRenderer::createVtxBuf( size_t bytes, bool dynamic, bool sysCopy )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf *
-GN::gfx::OGLRenderer::createIdxBuf( size_t numIdx, bool dynamic, bool /*sysCopy*/ )
+GN::gfx::OGLRenderer::createIdxBuf(
+    size_t numIdx, bool dynamic, bool /*sysCopy*/, const IdxBufLoader & loader )
 {
     GN_GUARD;
 
     makeCurrent();
 
     AutoRef<OGLIdxBuf> p( new OGLIdxBuf );
-
+    p->setLoader( loader );
     if( !p->init( numIdx, dynamic ) ) return 0;
 
     return p.detach();
