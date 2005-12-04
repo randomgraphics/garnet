@@ -119,41 +119,47 @@ namespace GN
             }
         };
 
-        template<class RetType,class IterType>
+        template<class RetType,class ContainerType>
         struct Emitter
         {
-            RetType emit( IterType begin, const IterType & end PARAM_COMMA PARAM_LIST )
+            RetType emit( const ContainerType & slots PARAM_COMMA PARAM_LIST )
             {
                 RetType last;
-                for( ; begin != end; ++begin )
+                ContainerType::const_iterator i = slots.begin();
+                while( i != slots.end() )
                 {
-                    last = (*begin).func(PARAM_VALUES);
+                    last = (*i).func(PARAM_VALUES);
+                    ++i;
                 }
                 return last;
             }
         };
 
-        template<class IterType>
-        struct Emitter<bool,IterType>
+        template<class ContainerType>
+        struct Emitter<bool,ContainerType>
         {
-            bool emit( IterType begin, const IterType & end PARAM_COMMA PARAM_LIST )
+            bool emit( const ContainerType & slots PARAM_COMMA PARAM_LIST )
             {
-                for( ; begin != end; ++begin )
+                ContainerType::const_iterator i = slots.begin();
+                while( i != slots.end() )
                 {
-                    if( !(*begin).func(PARAM_VALUES) ) return false;
+                    if( !(*i).func(PARAM_VALUES) ) return false;
+                    ++i;
                 }
                 return true;
             }
         };
 
-        template<class IterType>
-        struct Emitter<void,IterType>
+        template<class ContainerType>
+        struct Emitter<void,ContainerType>
         {
-            void emit( IterType begin, const IterType & end PARAM_COMMA PARAM_LIST )
+            void emit( const ContainerType & slots PARAM_COMMA PARAM_LIST )
             {
-                for( ; begin != end; ++begin )
+                ContainerType::const_iterator i = slots.begin();
+                while( i != slots.end() )
                 {
-                    (*begin).func(PARAM_VALUES);
+                    (*i).func(PARAM_VALUES);
+                    ++i;
                 }
             }
         };
@@ -233,8 +239,8 @@ namespace GN
 
         R emit( PARAM_LIST ) const
         {
-            Emitter<R,ConstSlotIter> e;
-            return e.emit( mSlots.begin(), mSlots.end() PARAM_COMMA PARAM_VALUES );
+            Emitter<R,SlotContainer> e;
+            return e.emit( mSlots PARAM_COMMA PARAM_VALUES );
         }
 
         size_t getNumSlots() const { return mSlots.size(); }

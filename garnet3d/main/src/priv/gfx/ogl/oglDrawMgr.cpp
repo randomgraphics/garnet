@@ -342,7 +342,8 @@ void GN::gfx::OGLRenderer::drawTextW(
     // push attributes
     glPushAttrib(
         GL_TRANSFORM_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT |
-        GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_FOG_BIT | GL_TEXTURE_BIT );
+        GL_ENABLE_BIT | GL_LIGHTING_BIT | GL_FOG_BIT | GL_TEXTURE_BIT |
+        GL_VIEWPORT_BIT );
 
     // set render attributes
     glDisable(GL_DEPTH_TEST);
@@ -355,6 +356,7 @@ void GN::gfx::OGLRenderer::drawTextW(
 
     // set transform
     const DispDesc & dd = getDispDesc();
+    glViewport( 0, 0, dd.width, dd.height );
     glMatrixMode( GL_PROJECTION );
     glPushMatrix();
     glLoadIdentity();

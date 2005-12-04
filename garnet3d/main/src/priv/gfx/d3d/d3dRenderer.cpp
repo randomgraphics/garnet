@@ -295,10 +295,11 @@ bool GN::gfx::D3DRenderer::resourceDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3DResource*>::iterator i, e = mResourceList.end();
-    for( i = mResourceList.begin(); i != e; ++i )
+    std::list<D3DResource*>::iterator i = mResourceList.begin();
+    while( i != mResourceList.end() )
     {
         if( !(*i)->deviceCreate() ) return false;
+        ++i;
     }
 
     // success
@@ -316,10 +317,11 @@ bool GN::gfx::D3DRenderer::resourceDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3DResource*>::iterator i, e = mResourceList.end();
-    for( i = mResourceList.begin(); i != e; ++i )
+    std::list<D3DResource*>::iterator i = mResourceList.begin();
+    while( i != mResourceList.end() )
     {
         if( !(*i)->deviceRestore() ) return false;
+        ++i;
     }
 
     // success
@@ -337,8 +339,12 @@ void GN::gfx::D3DRenderer::resourceDeviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::for_each( mResourceList.rbegin(), mResourceList.rend(),
-        std::mem_fun(&D3DResource::deviceDispose) );
+    std::list<D3DResource*>::reverse_iterator i = mResourceList.rbegin();
+    while( i != mResourceList.rend() )
+    {
+        (*i)->deviceDispose();
+        ++i;
+    }
 
     GN_UNGUARD;
 }
@@ -352,8 +358,12 @@ void GN::gfx::D3DRenderer::resourceDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::for_each( mResourceList.rbegin(), mResourceList.rend(),
-        std::mem_fun(&D3DResource::deviceDestroy) );
+    std::list<D3DResource*>::reverse_iterator i = mResourceList.rbegin();
+    while( i != mResourceList.rend() )
+    {
+        (*i)->deviceDestroy();
+        ++i;
+    }
 
     GN_UNGUARD;
 }
