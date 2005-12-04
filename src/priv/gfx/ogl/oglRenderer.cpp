@@ -270,10 +270,11 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<OGLResource*>::iterator i, e = mResourceList.end();
-    for( i = mResourceList.begin(); i != e; ++i )
+    std::list<OGLResource*>::iterator i = mResourceList.begin();
+    while( i != mResourceList.end() )
     {
         if( !(*i)->deviceCreate() ) return false;
+        ++i;
     }
 
     // success
@@ -291,10 +292,11 @@ bool GN::gfx::OGLRenderer::resourceDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<OGLResource*>::iterator i, e = mResourceList.end();
-    for( i = mResourceList.begin(); i != e; ++i )
+    std::list<OGLResource*>::iterator i = mResourceList.begin();
+    while( i != mResourceList.end() )
     {
         if( !(*i)->deviceRestore() ) return false;
+        ++i;
     }
 
     // success
@@ -312,8 +314,12 @@ void GN::gfx::OGLRenderer::resourceDeviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::for_each( mResourceList.rbegin(), mResourceList.rend(),
-        std::mem_fun(&OGLResource::deviceDispose) );
+    std::list<OGLResource*>::reverse_iterator i = mResourceList.rbegin();
+    while( i != mResourceList.rend() )
+    {
+        (*i)->deviceDispose();
+        ++i;
+    }
 
     GN_UNGUARD;
 }
@@ -327,8 +333,12 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::for_each( mResourceList.rbegin(), mResourceList.rend(),
-        std::mem_fun(&OGLResource::deviceDestroy) );
+    std::list<OGLResource*>::reverse_iterator i = mResourceList.rbegin();
+    while( i != mResourceList.rend() )
+    {
+        (*i)->deviceDestroy();
+        ++i;
+    }
 
     GN_UNGUARD;
 }
