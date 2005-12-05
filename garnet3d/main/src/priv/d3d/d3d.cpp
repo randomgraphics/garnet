@@ -222,7 +222,7 @@ GN::d3d::MeshManager GN::d3d::gMeshMgr(
 // Initialize and shutdown
 // *****************************************************************************
 
-GN_IMPLEMENT_SINGLETON( GN::d3d::D3D );
+GN_IMPLEMENT_SINGLETON( GN::d3d::D3D )
 
 //
 //

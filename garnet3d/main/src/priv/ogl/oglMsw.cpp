@@ -159,7 +159,7 @@ static bool sSetupPixelFormat( HDC hdc )
     GN_UNGUARD;
 }
 
-GN_IMPLEMENT_SINGLETON( GN::ogl::OGL );
+GN_IMPLEMENT_SINGLETON( GN::ogl::OGL )
 
 // *****************************************************************************
 // Initialize and shutdown

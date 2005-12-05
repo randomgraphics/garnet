@@ -1002,11 +1002,7 @@ namespace GN { namespace gfx
         //!
         //! setup viewport
         //!
-        void setViewport( float left, float top, float width, float height )
-        {
-            float vp[] = { left, top, width, height };
-            setRenderParameter( RPT_TRANSFORM_VIEWPORT, vp, 4 );
-        }
+        void setViewport( float left, float top, float width, float height );
 
         //!
         //! This function is provided because different API has different ways
