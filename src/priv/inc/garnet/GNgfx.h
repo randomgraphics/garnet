@@ -24,6 +24,7 @@ namespace GN
 #include "gfx/renderState.h"
 #include "gfx/vertexFormat.h"
 #include "gfx/misc.h"
+#include "gfx/d3dToString.h"
 
 #include "gfx/shader.h"
 #include "gfx/texture.h"

@@ -6,25 +6,6 @@ BUGS
     - pin down to the 1st call to opengl function in oglWinDisp.cpp
     - It seems caused by remote symbol loading
 
-ISSUES
-======
-
-- Use boost jam, or refine SCons?
-  - bjam
-    - pros
-      - fast script parsing speed
-      - build-in support to amd64
-    - cons
-      - can't generate VC project
-  - SCons
-    - pros
-      - can generate VC project
-      - much more readable then jam code.
-    - cons
-      - script parsing is a little bit slow
-      - no amd64 support
-      - can distinguish different version of same compiler
-
 TODO
 ====
 
@@ -33,6 +14,8 @@ TODO
 - p1
   - continue implementing GFX module
     - refine device management
+    - d3d hlsl shader
+    - ogl shader
     - quad renderer for GFXOGL module
 - p2
   - Rewrite SCons script
@@ -60,6 +43,8 @@ DONE
 - convert input module to static library
 - Fix link problem of GFX module in static build.
 - Refine GFX:
+  - remove dependencies to GNd3d
+    - move d3dformat to string to gfx d3d module
   - fix device-lost bug in GNgfxTest
   - refine device management
   - drawQuad(...)
@@ -75,3 +60,23 @@ DONE
   - UT for GFX module: using external render window
 - Run UT for both GFXD3D and GFXOGL will throw exception.
   - FIXED: should use different render window class for each instance of NTRenderWindow.
+
+ISSUES
+======
+
+- QUESTION: Use boost jam, or refine SCons?
+  - bjam
+    - pros
+      - fast script parsing speed
+      - build-in support to amd64
+    - cons
+      - can't generate VC project
+  - SCons
+    - pros
+      - can generate VC project
+      - much more readable then jam code.
+    - cons
+      - script parsing is a little bit slow
+      - no amd64 support
+      - can distinguish different version of same compiler
+  - ANSWER: SCons

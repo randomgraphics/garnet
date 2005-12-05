@@ -36,6 +36,19 @@ namespace GN { namespace gfx
     };
 
     //!
+    //! Uniform value type
+    //!
+    enum UniformValueType
+    {
+        UVT_BOOL,     //!< boolean
+        UVT_INT,      //!< signed integer (32-bit)
+        UVT_FLOAT,    //!< single precision floating point
+        UVT_FLOAT4,   //!< 4 floats
+        UVT_MATRIX44, //!< 4x4 row major matrix
+        NUM_UNIFORM_VALUE_TYPES, //!< number of avaliable types.
+    };
+
+    //!
     //! General shader interface
     //!
     struct Shader : public RefCounter
@@ -106,19 +119,6 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! Uniform value type
-        //!
-        enum UniformValueType
-        {
-            UVT_BOOL,     //!< boolean
-            UVT_INT32,    //!< 32bit signed integer
-            UVT_FLOAT,    //!< single precision floating point
-            UVT_VECTOR4,  //!< 4 floats
-            UVT_MATRIX44, //!< 4x4 row major matrix
-            NUM_UNIFORM_VALUE_TYPES, //!< number of avaliable types.
-        };
-
-        //!
         //! Uniform structure
         //!
         struct Uniform
@@ -126,7 +126,7 @@ namespace GN { namespace gfx
             StrA                   name;          //!< uniform name
             UniformValueType       type;          //!< uniform type
             std::vector<uint8_t>   valueBool;     //!< Boolean value
-            std::vector<int32_t>   valueInt32;    //!< integer value
+            std::vector<int32_t>   valueInt;      //!< integer value
             std::vector<float>     valueFloat;    //!< float value
             std::vector<Vector4f>  valueVector4;  //!< vector value
             std::vector<Matrix44f> valueMatrix44; //!< matrix value
@@ -296,9 +296,9 @@ namespace GN { namespace gfx
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
         Uniform & u = mUniforms[handle];
-        u.type = UVT_INT32;
-        u.valueInt32.resize( count );
-        if( count > 0 ) ::memcpy( &u.valueInt32[0], values, count*sizeof(int32_t) );
+        u.type = UVT_INT;
+        u.valueInt.resize( count );
+        if( count > 0 ) ::memcpy( &u.valueInt[0], values, count*sizeof(int32_t) );
         mDirtySet.insert( handle );
         GN_UNGUARD_SLOW;
     }
@@ -320,7 +320,7 @@ namespace GN { namespace gfx
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
         Uniform & u = mUniforms[handle];
-        u.type = UVT_VECTOR4;
+        u.type = UVT_FLOAT4;
         u.valueVector4.resize( count );
         if( count > 0 ) ::memcpy( &u.valueVector4[0], values, count*sizeof(Vector4f) );
         mDirtySet.insert( handle );

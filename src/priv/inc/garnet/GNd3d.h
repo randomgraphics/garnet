@@ -453,16 +453,6 @@ namespace GN
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 );
 
         //@}
-
-        //! \name Convert D3D tags to string. 
-        //! \note
-        //!     These functions are neither 100% accurate, not effeciency.
-        //!     So please use them only for debugging.
-        //@{
-
-        const char * D3DFORMAT2Str( D3DFORMAT );
-
-        //@}
     }
 }
 

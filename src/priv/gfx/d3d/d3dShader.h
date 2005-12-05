@@ -109,7 +109,7 @@ namespace GN { namespace gfx
     public:
 
         void apply() const;
-        void applyDirtyUniforms() const {}
+        void applyDirtyUniforms() const;
 
         // ********************************
         // private variables
@@ -119,11 +119,16 @@ namespace GN { namespace gfx
         LPD3DXBUFFER            mMachineCode;
         LPDIRECT3DVERTEXSHADER9 mD3DShader;
 
+        size_t mMaxConstF, mMaxConstI, mMaxConstB;
+
         // ********************************
         // private functions
         // ********************************
     private:
-        bool queryDeviceUniform( const char *, HandleType * ) const { return false; }
+        bool compileShader();
+        bool analyzeUniforms();
+        void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
+        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
     };
 
     //!
@@ -203,6 +208,7 @@ namespace GN { namespace gfx
 }}
 
 #if GN_ENABLE_INLINE
+#include "d3dVtxShaderAsm.inl"
 #include "d3dPxlShaderAsm.inl"
 #endif
 

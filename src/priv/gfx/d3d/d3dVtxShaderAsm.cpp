@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "d3dShader.h"
+#if !GN_ENABLE_INLINE
+#include "d3dVtxShaderAsm.inl"
+#endif
 #include "d3dRenderer.h"
 #include "d3dUtils.h"
 
@@ -19,29 +22,7 @@ bool GN::gfx::D3DVtxShaderAsm::init( const StrA & code )
 
     mCode = code;
 
-    // compile shader
-    DWORD flag = 0;
-
-#if GN_DEBUG
-    flag |= D3DXSHADER_DEBUG;
-#endif
-
-    AutoComPtr<ID3DXBuffer> err;
-
-    HRESULT hr = D3DXAssembleShader(
-        mCode.cstr(), (UINT)mCode.size(),
-        0, 0, // no defines, no includes
-        flag,
-        &mMachineCode, &err );
-    if( FAILED( hr ) )
-    {
-        printShaderCompileError( hr, mCode.cstr(), err );
-        quit(); return selfOK();
-    }
-
-    GNGFX_WARN( "TODO: analyze shader uniforms." );
-
-    if( !deviceCreate() || !deviceRestore() )
+    if( !compileShader() || !analyzeUniforms() || !deviceCreate() || !deviceRestore() )
     {
         quit(); return selfOK();
     }
@@ -111,6 +92,7 @@ void GN::gfx::D3DVtxShaderAsm::deviceDestroy()
     GN_UNGUARD;
 }
 
+
 // *****************************************************************************
 // from D3DBasicShader
 // *****************************************************************************
@@ -128,7 +110,187 @@ void GN::gfx::D3DVtxShaderAsm::apply() const
 
     GN_DX_CHECK( dev->SetVertexShader( mD3DShader ) );
 
-    GNGFX_WARN( "TODO: apply shader uniforms" );
+    // apply ALL uniforms to D3D device
+    uint32_t handle = getFirstUniform();
+    while( handle )
+    {
+        applyUniform( dev, getUniform( handle ) );
+        handle = getNextUniform( handle );
+    }
+    clearDirtySet();
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DVtxShaderAsm::applyDirtyUniforms() const
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mD3DShader );
+
+    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
+
+    const std::set<uint32_t> dirtySet = getDirtyUniforms();
+    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    for( i = dirtySet.begin(); i != e; ++i )
+    {
+        applyUniform( dev, getUniform( *i ) );
+    }
+    clearDirtySet();
+
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// from D3DBasicShader
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DVtxShaderAsm::compileShader()
+{
+    GN_GUARD;
+
+    // compile shader
+    DWORD flag = 0;
+
+#if GN_DEBUG
+    flag |= D3DXSHADER_DEBUG;
+#endif
+
+    AutoComPtr<ID3DXBuffer> err;
+
+    HRESULT hr = D3DXAssembleShader(
+        mCode.cstr(), (UINT)mCode.size(),
+        0, 0, // no defines, no includes
+        flag,
+        &mMachineCode, &err ); 
+    if( FAILED( hr ) )
+    {
+        printShaderCompileError( hr, mCode.cstr(), err );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DVtxShaderAsm::analyzeUniforms()
+{
+    GN_GUARD;
+
+    GN_ASSERT( mMachineCode );
+
+    DWORD version = D3DXGetShaderVersion( (const DWORD*)mMachineCode->GetBufferPointer() );
+
+    if( 0 == version )
+    {
+        GNGFX_ERROR( "Fail to get shader version!" );
+        return false;
+    }
+
+    D3DCAPS9 caps;
+    GN_DX_CHECK_RV( getRenderer().getDevice()->GetDeviceCaps( &caps ), false );
+
+    if( HIWORD(version) >= 3 ) // vs_3_x
+    {
+        mMaxConstF = caps.MaxVertexShaderConst;
+        mMaxConstI = 16;
+        mMaxConstB = 16;
+    }
+    else if( HIWORD(version) >= 2 ) // vs_2_x
+    {
+        mMaxConstF = caps.MaxVertexShaderConst;
+        mMaxConstI = 16;
+        mMaxConstB = 16;
+    }
+    else // vs_1_x
+    {
+        mMaxConstF = caps.MaxVertexShaderConst;
+        mMaxConstI = 0;
+        mMaxConstB = 0;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType * userData ) const
+{
+    GN_GUARD;
+
+    GN_ASSERT( !strEmpty(name) );
+
+    unsigned int index;
+
+    if( 1 != sscanf( name+1, "%u", &index ) )
+    {
+        GNGFX_ERROR( "invalid register name: %s", name );
+        return false;
+    }
+
+    D3DAsmShaderDesc desc;
+
+    switch( name[0] )
+    {
+        case 'c':
+        case 'C':
+            if( index >= mMaxConstF )
+            {
+                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
+                return false;
+            }
+            desc.type = CONST_F;
+            break;
+
+        case 'i':
+        case 'I':
+            if( index >= mMaxConstI )
+            {
+                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
+                return false;
+            }
+            desc.type = CONST_I;
+            break;
+
+        case 'b':
+        case 'B':
+            if( index >= mMaxConstB )
+            {
+                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
+                return false;
+            }
+            desc.type = CONST_B;
+            break;
+
+        default:
+            GNGFX_ERROR( "invalid register name: %s", name );
+            return false;
+    }
+
+    // set user data
+    if( userData )
+    {
+        desc.index = (uint16_t)index;
+        *userData = (HandleType)desc.u32;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
 }

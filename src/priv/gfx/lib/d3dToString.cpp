@@ -4,7 +4,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::d3d::D3DFORMAT2Str( D3DFORMAT d3dfmt )
+const char * GN::gfx::D3DFORMAT2Str( int d3dfmt )
 {
     struct Item { int fmt; const char * str; };
     static const Item sTable[] =

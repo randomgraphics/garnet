@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3dTexture.h"
 #include "d3dRenderer.h"
-#include "garnet/GNd3d.h"
 
 // *****************************************************************************
 // local functions
@@ -139,7 +138,7 @@ static inline GN::gfx::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
         //case D3DFMT_D24X4S4      : return GN::gfx::FMT_DXS_24_4_4;
         default                  :
             // invalid format, failed
-            GNGFX_ERROR( "Unsupported or invalid D3DFORMAT: '%s'!", GN::d3d::D3DFORMAT2Str(d3dfmt) );
+            GNGFX_ERROR( "Unsupported or invalid D3DFORMAT: '%s'!", GN::gfx::D3DFORMAT2Str(d3dfmt) );
             return GN::gfx::FMT_INVALID;
     }
 }
