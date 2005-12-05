@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     //!
     //! Basic D3D shader class
     //!
-    struct D3DBasicShader
+    struct D3DBasicShader : public Shader
     {
         //!
         //! Apply shader as well as shader constants to D3D device
@@ -24,6 +24,13 @@ namespace GN { namespace gfx
         //! Apply only dirty uniforms to D3D device
         //!
         virtual void applyDirtyUniforms() const = 0;
+
+    protected:
+
+        //!
+        //! protected ctor
+        //!
+        D3DBasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
     };
 
     //!
@@ -54,12 +61,19 @@ namespace GN { namespace gfx
                 uint16_t index; //!< const index.
             };
         };
+
+    protected:
+
+        //!
+        //! protected ctor
+        //!
+        D3DShaderAsm( ShaderType type) : D3DBasicShader(type,LANG_D3D_ASM) {}
     };
 
     //!
     //! D3D asm vertex shader class
     //!
-    class D3DVtxShaderAsm : public Shader, public D3DShaderAsm, public D3DResource, public StdClass
+    class D3DVtxShaderAsm : public D3DShaderAsm, public D3DResource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3DVtxShaderAsm, StdClass );
 
@@ -70,7 +84,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3DVtxShaderAsm( D3DRenderer & r )
-            : Shader(VERTEX_SHADER,LANG_D3D_ASM)
+            : D3DShaderAsm(VERTEX_SHADER)
             , D3DResource(r)
         { clear(); }
         virtual ~D3DVtxShaderAsm() { quit(); }
@@ -134,7 +148,7 @@ namespace GN { namespace gfx
     //!
     //! D3D asm pixel shader class
     //!
-    class D3DPxlShaderAsm : public Shader, public D3DShaderAsm, public D3DResource, public StdClass
+    class D3DPxlShaderAsm : public D3DShaderAsm, public D3DResource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3DPxlShaderAsm, StdClass );
 
@@ -145,7 +159,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3DPxlShaderAsm( D3DRenderer & r )
-            : Shader(PIXEL_SHADER,LANG_D3D_ASM)
+            : D3DShaderAsm(PIXEL_SHADER)
             , D3DResource(r)
         { clear(); }
         virtual ~D3DPxlShaderAsm() { quit(); }

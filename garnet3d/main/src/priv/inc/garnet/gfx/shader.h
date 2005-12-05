@@ -36,19 +36,6 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Uniform value type
-    //!
-    enum UniformValueType
-    {
-        UVT_BOOL,     //!< boolean
-        UVT_INT,      //!< signed integer (32-bit)
-        UVT_FLOAT,    //!< single precision floating point
-        UVT_FLOAT4,   //!< 4 floats
-        UVT_MATRIX44, //!< 4x4 row major matrix
-        NUM_UNIFORM_VALUE_TYPES, //!< number of avaliable types.
-    };
-
-    //!
     //! General shader interface
     //!
     struct Shader : public RefCounter
@@ -117,6 +104,19 @@ namespace GN { namespace gfx
             GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES );
             GN_ASSERT( 0 <= lang && lang < NUM_SHADING_LANGUAGES );
         }
+
+        //!
+        //! Uniform value type
+        //!
+        enum UniformValueType
+        {
+            UVT_BOOL,     //!< boolean
+            UVT_INT,      //!< signed integer (32-bit)
+            UVT_FLOAT,    //!< single precision floating point
+            UVT_FLOAT4,   //!< 4 floats
+            UVT_MATRIX44, //!< 4x4 row major matrix
+            NUM_UNIFORM_VALUE_TYPES, //!< number of avaliable types.
+        };
 
         //!
         //! Uniform structure
