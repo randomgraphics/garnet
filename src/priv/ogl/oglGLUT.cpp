@@ -5,7 +5,7 @@
 
 #include "../core/core.cpp"
 
-GN_IMPLEMENT_SINGLETON( GN::ogl::OGL );
+GN_IMPLEMENT_SINGLETON( GN::ogl::OGL )
 
 // *****************************************************************************
 // Initialize and shutdown

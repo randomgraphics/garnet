@@ -78,8 +78,7 @@ namespace CxxTest
         /** convert to string */
         const char *asString() const { return s.cstr(); }
     };
-};
-
+}
 
 // *****************************************************************************
 //                           End of testCommon.h

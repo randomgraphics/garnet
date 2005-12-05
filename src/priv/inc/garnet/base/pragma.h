@@ -46,7 +46,6 @@
 #pragma warning(disable:279)      // controlling expression is constant
 #pragma warning(disable:373)      // xxx is inaccessible
 #pragma warning(disable:383)      // reference to temporary
-#pragma warning(disable:424)      // extra ";" ignored
 #pragma warning(disable:444)      // destructor for xxx is not virtual
 //#pragma warning(disable:858)      // type qualifier on return type is meaningless
 #pragma warning(disable:981)      // operands are evaluated in unspecified order
@@ -54,6 +53,8 @@
 #pragma warning(disable:1418)     // external definition with no prior declaration overridden
 #pragma warning(disable:1419)     // external declaration in primary source file
 #pragma warning(disable:1572)     // floating-point comparison
+#pragma warning(disable:1599)     // declaration hides parameter "xxx"
+#pragma warning(disable:1684)     // conversion from pointer to same-sized integral type
 #endif
 
 // *****************************************************************************

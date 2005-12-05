@@ -200,7 +200,7 @@ namespace GN { namespace gfx
 
         if( isParameterCheckEnabled() )
         {
-            if( ( type < 0 || type >= NUM_RENDER_PARAMETER_TYPES ) && !(type&_RPM_MASK) )
+            if( ( type < 0 || type >= NUM_RENDER_PARAMETER_TYPES ) && !(type&(int)_RPM_MASK) )
             {
                 GN_ERROR( "invalid render parameter type : %d", type );
                 return;
@@ -211,7 +211,7 @@ namespace GN { namespace gfx
     GN_ASSERT( 0 <= t && t < NUM_RENDER_PARAMETER_TYPES ); \
     mRenderParameters[t].value.push();
 #define _GNGFX_PUSH_RP_MASK( mask, t ) \
-        if( RPM_##mask & t ) \
+        if( t & (int)RPM_##mask ) \
         { \
             for( int i = RPT_##mask##_FIRST; i <= RPT_##mask##_LAST; ++i ) \
             { \
@@ -219,7 +219,7 @@ namespace GN { namespace gfx
             } \
         }
 
-        if( type & _RPM_MASK )
+        if( type & (int)_RPM_MASK )
         {
             _GNGFX_PUSH_RP_MASK( LIGHT, type );
             _GNGFX_PUSH_RP_MASK( MATERIAL, type );
@@ -244,7 +244,7 @@ namespace GN { namespace gfx
 
         if( isParameterCheckEnabled() )
         {
-            if( ( type < 0 || type >= NUM_RENDER_PARAMETER_TYPES ) && !(type&_RPM_MASK) )
+            if( ( type < 0 || type >= NUM_RENDER_PARAMETER_TYPES ) && !(type&(int)_RPM_MASK) )
             {
                 GN_ERROR( "invalid render parameter type : %d", type );
                 return;
@@ -257,7 +257,7 @@ namespace GN { namespace gfx
     mRenderParameters[t].dirty = true;
 
 #define _GNGFX_POP_RP_MASK( mask, t ) \
-        if( RPM_##mask & t ) \
+        if( t & (int)RPM_##mask ) \
         { \
             for( int i = RPT_##mask##_FIRST; i <= RPT_##mask##_LAST; ++i ) \
             { \
@@ -265,7 +265,7 @@ namespace GN { namespace gfx
             } \
         }
 
-        if( type & _RPM_MASK )
+        if( type & (int)_RPM_MASK )
         {
             _GNGFX_POP_RP_MASK( LIGHT, type );
             _GNGFX_POP_RP_MASK( MATERIAL, type );
@@ -278,5 +278,14 @@ namespace GN { namespace gfx
 #undef _GNGFX_POP_SINGLE_RP
 #undef _GNGFX_POP_RP_MASK
         GN_UNGUARD_SLOW;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setViewport( float left, float top, float width, float height )
+    {
+        float vp[] = { left, top, width, height };
+        setRenderParameter( RPT_TRANSFORM_VIEWPORT, vp, 4 );
     }
 }}

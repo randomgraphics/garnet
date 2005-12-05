@@ -47,7 +47,7 @@ static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
             GNGFX_ERROR( "Invalid color format: %d!", fmt );
             return D3DDECLTYPE(MAXD3DDECLTYPE+1);
     }
-};
+}
 
 //!
 //! element sorting function
