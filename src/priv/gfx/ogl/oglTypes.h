@@ -56,10 +56,11 @@ namespace GN { namespace gfx
 
             struct
             {
-                int  vtxBuf     : 16; //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
-                bool vtxBinding : 1;  //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
-                bool shader     : 1;  //!< vertex shader dirty flag
-                int  reserved   : 14; //!< Reserved for future use.
+                int vtxBuf     : 16; //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
+                int vtxBinding : 1;  //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
+                int vtxShader  : 1;  //!< Vertex shader dirty flag
+                int pxlShader  : 1;  //!< Pixel shader dirty flag
+                int reserved   : 13; //!< Reserved for future use.
             };
         };
 
@@ -119,7 +120,7 @@ namespace GN { namespace gfx
         //!
         void bindVtxShader( const Shader * shader )
         {
-            dirtyFlags.shader = true;
+            dirtyFlags.vtxShader = true;
             vtxShader.reset( shader );
         }
 
@@ -128,7 +129,7 @@ namespace GN { namespace gfx
         //!
         void bindPxlShader( const Shader * shader )
         {
-            dirtyFlags.shader = true;
+            dirtyFlags.pxlShader = true;
             pxlShader.reset( shader );
         }
     };

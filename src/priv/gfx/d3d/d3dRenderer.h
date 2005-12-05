@@ -8,11 +8,6 @@
 
 #include "../common/basicRenderer.h"
 
-#if GN_MSVC
-#pragma warning(push)
-#pragma warning(disable:4100) // unused parameters
-#endif
-
 //! \def GNGFX_D3DCAPS
 //! Define D3D special caps.
 
@@ -512,15 +507,6 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setParameter( RenderParameter, uint32_t ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, float ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const double & ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Vector4f & ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Matrix44f & ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Vector4f * ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Matrix44f * ) { GN_UNIMPL(); }
-        virtual void pushParameter( RenderParameter ) { GN_UNIMPL(); }
-        virtual void popParameter( RenderParameter ) { GN_UNIMPL(); }
         virtual Matrix44f & composePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
         virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
 
@@ -531,9 +517,11 @@ namespace GN { namespace gfx
         void paramClear() {}
 
         bool paramDeviceCreate() { return true; }
-        bool paramDeviceRestore() { return true; }
+        bool paramDeviceRestore();
         void paramDeviceDispose() {}
         void paramDeviceDestroy() {}
+
+        void applyRenderParameters();
 
         //@}
 
@@ -635,10 +623,6 @@ namespace GN { namespace gfx
         //@}
     };
 }}
-
-#if GN_MSVC
-#pragma warning(pop)
-#endif
 
 #if GN_ENABLE_INLINE
 #include "d3dRenderStateBlockMgr.inl"

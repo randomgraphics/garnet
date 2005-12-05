@@ -31,6 +31,11 @@
 //!
 #define GN_UNUSED_PARAM(X) ((void)(X))
 
+//!
+//! Get element count of C-style array
+//!
+#define GN_ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
+
 // *************************************************************************
 //! \name StdCalss
 // *************************************************************************
