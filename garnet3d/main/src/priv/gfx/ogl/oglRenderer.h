@@ -247,8 +247,8 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVtxShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
-        virtual Shader * createPxlShader( ShadingLanguage, const StrA & ) { GN_WARN("no impl"); return 0; }
+        virtual Shader * createVtxShader( ShadingLanguage, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
+        virtual Shader * createPxlShader( ShadingLanguage, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
         virtual void bindVtxShader( const Shader * ) {}
         virtual void bindPxlShader( const Shader * ) {}
         virtual void bindShaders( const Shader *, const Shader * ) {}
@@ -264,7 +264,7 @@ namespace GN { namespace gfx
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy() {}
 
-        void updateShaderState() { GNGFX_WARN( "no impl" ); }
+        void updateShaderState() { GN_UNIMPL_WARNING(); }
 
         //@}
 
@@ -422,15 +422,6 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setParameter( RenderParameter, uint32_t ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, float ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const double & ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Vector4f & ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Matrix44f & ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Vector4f * ) { GN_UNIMPL(); }
-        virtual void setParameter( RenderParameter, const Matrix44f * ) { GN_UNIMPL(); }
-        virtual void pushParameter( RenderParameter ) { GN_UNIMPL(); }
-        virtual void popParameter( RenderParameter ) { GN_UNIMPL(); }
         virtual Matrix44f & composePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
         virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
 
@@ -458,9 +449,9 @@ namespace GN { namespace gfx
     public:
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
-                                      TexFace face ) { GN_WARN( "no impl" ); }
+                                      TexFace face ) { GN_UNIMPL_WARNING(); }
         virtual void setRenderDepth( const Texture * texture,
-                                     TexFace face ) { GN_WARN( "no impl" ); }
+                                     TexFace face ) { GN_UNIMPL_WARNING(); }
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();

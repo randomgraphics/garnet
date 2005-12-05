@@ -240,20 +240,51 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Render parameter
+    //! Render parameter type
     //!
-    enum RenderParameter
+    enum RenderParameterType
     {
-        RP_LIGHT0_POSITION,     //!< Light 0 position
-        RP_LIGHT0_DIFFUSE,      //!< Light 0 diffuse color
-        RP_MATERIAL_DIFFUSE,    //!< Material diffuse color
-        RP_TRANSFORM_WORLD,     //!< World transformation
-        RP_TRANSFORM_VIEW,      //!< Camera transformation
-        RP_TRANSFORM_PROJ,      //!< Projection transformation
-        RP_TRANSFORM_VIEWPORT,  //!< 4 floats: left, top, width, height; ranging from 0.0 to 1.0.
-        NUM_RENDER_PARAMETERS,  //!< Number of avaiable 
-        RP_INVALID              //!< Indicates invalid state.
+        RPT_LIGHT0_POSITION,     //!< Light 0 position
+        RPT_LIGHT0_DIFFUSE,      //!< Light 0 diffuse color
+        RPT_LIGHT_FIRST = RPT_LIGHT0_POSITION, //!< first light property
+        RPT_LIGHT_LAST = RPT_LIGHT0_DIFFUSE,   //!< last light property
+
+        RPT_MATERIAL_DIFFUSE,    //!< Diffuse material color
+        RPT_MATERIAL_SPECULAR,   //!< Specular material color 
+        RPT_MATERIAL_FIRST = RPT_MATERIAL_DIFFUSE, //!< first material property
+        RPT_MATERIAL_LAST = RPT_MATERIAL_SPECULAR, //!< last material property
+
+        RPT_TRANSFORM_WORLD,     //!< World transformation
+        RPT_TRANSFORM_VIEW,      //!< Camera transformation
+        RPT_TRANSFORM_PROJ,      //!< Projection transformation
+        RPT_TRANSFORM_VIEWPORT,  //!< 4 floats: left, top, width, height; ranging from 0.0 to 1.0.
+        RPT_TRANSFORM_FIRST = RPT_TRANSFORM_WORLD,   //!< first transform property
+        RPT_TRANSFORM_LAST = RPT_TRANSFORM_VIEWPORT, //!< last transform property
+
+        NUM_RENDER_PARAMETER_TYPES,   //!< Number of avaiable parameters
+
+        RPT_INVALID,             //!< Indicates invalid state.
+
+        // Below are parameter masks that are purely for push/popRenderParameter()
+
+        _RPM_MASK      = 0x80000000,         //!< Mask bit
+
+        RPM_LIGHT     = (1<<0) | _RPM_MASK, //!< all light parameters
+        RPM_MATERIAL  = (1<<1) | _RPM_MASK, //!< all material parameters
+        RPM_TRANSFORM = (1<<2) | _RPM_MASK, //!< all transform parameters
+        RPM_ALL       = 0xFFFFFFFF,         //!< all parameters
     };
+
+    //!
+    //! Convert render parameter type to string.
+    //! If failed, return "BAD_RENDER_PARAMETER_TYPE".
+    //!
+    const char * rpt2Str( RenderParameterType );
+
+    //!
+    //! Convert render parameter type to string. Return false, if failed.
+    //!
+    bool rpt2Str( StrA & result, RenderParameterType type );
 
     //!
     //! ÇåÆÁ±êÖ¾
@@ -821,23 +852,161 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Render Parameter Manager
+        //! \name Misc. Render Parameter Manager.
         //
         // ********************************************************************
 
         //@{
 
-        // TODO: comment these functions.
+    protected:
 
-        virtual void setParameter( RenderParameter, uint32_t ) = 0;
-        virtual void setParameter( RenderParameter, float ) = 0;
-        virtual void setParameter( RenderParameter, const double & ) = 0;
-        virtual void setParameter( RenderParameter, const Vector4f & ) = 0;
-        virtual void setParameter( RenderParameter, const Matrix44f & ) = 0;
-        virtual void setParameter( RenderParameter, const Vector4f * ) = 0;
-        virtual void setParameter( RenderParameter, const Matrix44f * ) = 0;
-        virtual void pushParameter( RenderParameter ) = 0;
-        virtual void popParameter( RenderParameter ) = 0;
+        //!
+        //! Render parameter value type
+        //!
+        enum RenderParameterValueType
+        {
+            RPVT_FLOAT, //!< float array
+            NUM_OF_RENDER_PARAMETER_VALUE_TYPES, //!< number of avaliable types.
+            RPVT_INVALID, //!< invalid type
+        };
+
+        //!
+        //! Render parameter value
+        //!
+        struct RenderParameterValue
+        {
+            RenderParameterValueType type;            //!< value type
+            float                    valueFloats[16]; //!< float values
+            size_t                   count;           //!< float count
+
+#if GN_DEBUG
+            //!
+            //! ctor
+            //!
+            RenderParameterValue() : type(RPVT_INVALID), count(0) {}
+#endif
+        };
+
+    protected:
+
+        //!
+        //! Get render parameter value
+        //!
+        const RenderParameterValue & getRenderParameter( RenderParameterType type ) const 
+        {
+            GN_ASSERT( 0 <= type && type < NUM_RENDER_PARAMETER_TYPES );
+            return mRenderParameters[type].value.top();
+        }
+
+        //!
+        //! Get render parameter dirty set
+        //!
+        const std::set<RenderParameterType> & getRpDirtySet() const { return mRenderParameterDirtySet; }
+
+        //!
+        //! Clear render parameter dirty set
+        //!
+        void clearRpDirtySet() const { mRenderParameterDirtySet.clear(); }
+
+    private:
+
+        //!
+        //! Fixed-size stack container that do not perform any runtime
+        //! memory allocation/deallocation.
+        //!
+        template< class T, size_t MAX_DEPTH = 256 >
+        class FixStack
+        {
+            T      mTop;              //!< top element
+            T      mStack[MAX_DEPTH]; //!< element stack
+            size_t mDepth;            //!< current depth
+        public :
+
+            //!
+            //! default constructor
+            //!
+            FixStack() : mDepth(0) {}
+
+            //!
+            //! get current depth
+            //!
+            size_t depth() const { return mDepth; }
+
+            //!
+            //! push the top element into stack
+            //!
+            void push()
+            {
+                GN_ASSERT( mDepth < MAX_DEPTH );
+                mStack[mDepth] = mTop;
+                ++mDepth;
+            }
+
+            //!
+            //! pop out the stack to top element
+            //!
+            T & pop()
+            {
+                GN_ASSERT( mDepth > 0 );
+                mTop = mStack[--mDepth];
+                return mTop;
+            }
+
+            //!
+            //! return top element
+            //!
+            T & top() { return mTop; }
+
+            //!
+            //! return constant top element
+            //!
+            const T & top() const { return mTop; }
+        };
+
+        //!
+        //! Render parameter structure
+        //!
+        struct RenderParameter
+        {
+            FixStack<RenderParameterValue> value; //!< value
+            bool                           dirty; //!< dirty flag
+
+            //!
+            //! ctor
+            //!
+            RenderParameter() : dirty(false) {}
+        };
+
+        RenderParameter mRenderParameters[NUM_RENDER_PARAMETER_TYPES];
+
+        // Render parameter dirty set
+        mutable std::set<RenderParameterType> mRenderParameterDirtySet;
+
+    public:
+
+        //!
+        //! Set parameter value. Can't use RPM_XXX here.
+        //!
+        void setRenderParameter( RenderParameterType, const float *, size_t );
+
+        //!
+        //! Push parameter value. Can use any value of RPT_XXX and RPM_XXX.
+        //!
+        void pushRenderParameter( RenderParameterType );
+
+        //!
+        //! Pop parameter value. Can use any value of RPT_XXX and RPM_XXX.
+        //!
+        void popRenderParameter( RenderParameterType );
+
+        //!
+        //! setup viewport
+        //!
+        void setViewport( float left, float top, float width, float height )
+        {
+            float vp[] = { left, top, width, height };
+            setRenderParameter( RPT_TRANSFORM_VIEWPORT, vp, 4 );
+        }
 
         //!
         //! This function is provided because different API has different ways
@@ -1102,6 +1271,28 @@ namespace GN { namespace gfx
         // ********************************************************************
 
         //@{
+
+    private:
+
+#if GN_DEBUG
+        AutoInit<bool,true> mEnableParameterCheck;
+#else
+        AutoInit<bool,false> mEnableParameterCheck;
+#endif
+
+    public:
+
+        //!
+        //! Enable/Disable parameter check for performance critical functions.
+        //!
+        //! Enabled by default for debug build; disabled by default for release build.
+        //!
+        void enableParameterCheck( bool enable ) { mEnableParameterCheck = enable; }
+
+        //!
+        //! Get parameter check flag.
+        //!
+        bool isParameterCheckEnabled() const { return mEnableParameterCheck; }
 
         //!
         //! Dump current renderer state to string. For debug purpose only.

@@ -24,6 +24,9 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
     // switch state buffer, and clear dirty flags
     mDrawState.dirtyFlags.u32 = 0;
 
+    // apply render parameters
+    if( !getRpDirtySet().empty() ) applyRenderParameters();
+
     GN_UNGUARD_SLOW;
 }
 

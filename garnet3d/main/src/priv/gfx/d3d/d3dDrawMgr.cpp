@@ -218,7 +218,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 
         // Because viewport is using relative coordinates based on render target size,
         // so here we have to re-apply the viewport.
-        GN_WARN( "TODO: reapply viewport!" );
+        setRenderParameter( RPT_TRANSFORM_VIEWPORT, getRenderParameter( RPT_TRANSFORM_VIEWPORT ).valueFloats, 4 );
     }
 
     GN_UNGUARD_SLOW;
@@ -488,8 +488,8 @@ bool GN::gfx::D3DRenderer::handleDeviceLost()
     }
     else if( D3DERR_DEVICELOST == hr )
     {
-        GNGFX_INFO( "\nDevice has lost and could NOT be restored by now...\n" );
-        ::Sleep( 500 );
+        GNGFX_INFO( "\nDevice has lost and could NOT be restored by now.\nWait for 2 seconds to try again...\n" );
+        ::Sleep( 2000 );
         return false;
     }
     else if (D3D_OK != hr)

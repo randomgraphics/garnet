@@ -17,7 +17,7 @@ GN_INLINE void GN::gfx::OGLRenderer::updateDrawState( size_t baseVtx )
         updateVtxBufState( baseVtx );
     }
 
-    if( mCurrentDrawState.dirtyFlags.shader )
+    if( mCurrentDrawState.dirtyFlags.vtxShader || mCurrentDrawState.dirtyFlags.pxlShader )
     {
         updateShaderState();
     }

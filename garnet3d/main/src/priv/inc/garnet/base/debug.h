@@ -75,9 +75,14 @@
 #define GN_UNEXPECTED() GN_ASSERT_FAILURE( "Unexpected value or behaviour" )
 
 //!
-//! Unimplemented functionality
+//! Assert for unimplemented functionality
 //!
 #define GN_UNIMPL() GN_ASSERT_FAILURE( "Unimplemented!" )
+
+//!
+//! Output a warning message for unimplemented functionality
+//!
+#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN( "Function %s is not implmented yet.", GN_FUNCTION ) );
 
 //!
 //! Compile-time assert

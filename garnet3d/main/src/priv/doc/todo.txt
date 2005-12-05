@@ -13,11 +13,13 @@ TODO
 
 - p1
   - continue implementing GFX module
-    - refine device management
     - d3d hlsl shader
     - ogl shader
     - quad renderer for GFXOGL module
+    - parameter manager and UT
+    - refine device management
 - p2
+  - check doxygen errors and warnings.
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
 - p3
