@@ -198,15 +198,21 @@ bool GN::gfx::D3DPxlShaderAsm::analyzeUniforms()
         return false;
     }
 
-    if( HIWORD(version) >= 3 )
+    if( HIWORD(version) >= 3 ) // ps_3_x
     {
         mMaxConstF = 224;
         mMaxConstI = 16;
         mMaxConstB = 16;
     }
-    else
+    else if( HIWORD(version) >= 2 ) // ps_2_x
     {
-        mMaxConstF = 0;
+        mMaxConstF = 32;
+        mMaxConstI = 16;
+        mMaxConstB = 16;
+    }
+    else // ps_1_x
+    {
+        mMaxConstF = 8;
         mMaxConstI = 0;
         mMaxConstB = 0;
     }

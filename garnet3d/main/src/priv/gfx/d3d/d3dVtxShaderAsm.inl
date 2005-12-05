@@ -2,7 +2,7 @@
 //
 // --------------------------------------------------------------------------------------
 GN_INLINE void
-GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u ) const
+GN::gfx::D3DVtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u ) const
 {
     GN_GUARD_SLOW;
 
@@ -18,17 +18,17 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
                 case UVT_FLOAT:
                     if( u.valueFloat.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, &u.valueFloat[0], (UINT)( u.valueFloat.size() + 3 ) / 4 ) );
+                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, &u.valueFloat[0], (UINT)( u.valueFloat.size() + 3 ) / 4 ) );
                     break;
 
                 case UVT_FLOAT4:
                     if( u.valueVector4.empty() ) return;
-                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, u.valueVector4[0], (UINT)u.valueVector4.size() ) );
+                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, u.valueVector4[0], (UINT)u.valueVector4.size() ) );
                     break;
 
                 case UVT_MATRIX44:
                     if( u.valueMatrix44.empty() ) return;
-                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, u.valueMatrix44[0][0], (UINT)(u.valueMatrix44.size()*4) ) );
+                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, u.valueMatrix44[0][0], (UINT)(u.valueMatrix44.size()*4) ) );
                     break;
 
                 case UVT_BOOL:
@@ -44,7 +44,7 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
                 case UVT_INT:
                     if( u.valueFloat.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetPixelShaderConstantI( desc.index, (const int*)&u.valueInt[0], (UINT)( u.valueInt.size() + 3 ) / 4 ) );
+                    GN_DX_CHECK( dev->SetVertexShaderConstantI( desc.index, (const int*)&u.valueInt[0], (UINT)( u.valueInt.size() + 3 ) / 4 ) );
                     break;
 
                 case UVT_FLOAT:
@@ -62,7 +62,7 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
                 case UVT_BOOL:
                     if( u.valueFloat.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetPixelShaderConstantB( desc.index, (const BOOL*)&u.valueBool[0], (UINT)u.valueBool.size() ) );
+                    GN_DX_CHECK( dev->SetVertexShaderConstantB( desc.index, (const BOOL*)&u.valueBool[0], (UINT)u.valueBool.size() ) );
                     break;
 
                 case UVT_FLOAT:
