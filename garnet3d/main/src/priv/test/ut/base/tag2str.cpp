@@ -377,7 +377,7 @@ public:
         };
 
         TS_ASSERT_EQUALS( GN_ARRAY_COUNT(tag), GN_ARRAY_COUNT(str) );
-        TS_ASSERT_EQUALS( GN_ARRAY_COUNT(tag), GN::gfx::NUM_RENDER_PARAMETER_TYPES );
+        TS_ASSERT_EQUALS( GN_ARRAY_COUNT(tag), (size_t)GN::gfx::NUM_RENDER_PARAMETER_TYPES );
 
         GN::StrA                     s;
         //GN::gfx::RenderParameterType t = GN::gfx::RPT_INVALID;
