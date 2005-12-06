@@ -94,31 +94,6 @@ namespace GN
         typedef typename SlotContainer::iterator       SlotIter;
         typedef typename SlotContainer::const_iterator ConstSlotIter;
 
-        struct EqualClassPtr
-        {
-            const void * mPtr;
-
-            EqualClassPtr( const void * ptr ) : mPtr(ptr) {}
-
-            bool operator() ( const SlotDesc & desc ) const
-            {
-                const void * p = desc.classPtr;
-                return mPtr == p;
-            }
-        };
-
-        struct EqualBaseSlotPtr
-        {
-            const SlotBase * mPtr;
-
-            EqualBaseSlotPtr( const SlotBase * ptr ) : mPtr(ptr) {}
-
-            bool operator() ( const SlotDesc & desc ) const
-            {
-                return mPtr == desc.basePtr;
-            }
-        };
-
         template<class RetType,class ContainerType>
         struct Emitter
         {
@@ -227,8 +202,14 @@ namespace GN
         {
             if( !slotPtr ) return;
 
-            // remove the class from private slot list
-            mSlots.remove_if( EqualClassPtr(slotPtr) );
+            // remove the class from private slot list that has same class ptr
+            SlotContainer::iterator i, t, e = mSlots.end();
+            for( i = mSlots.begin(); i != e; )
+            {
+                t = i; ++i;
+                if( slotPtr == t->classPtr )
+                    mSlots.erase(t);
+            }
 
             if( IsBaseAndDerived<SlotBase,X>::value )
             {
@@ -251,7 +232,14 @@ namespace GN
 
         virtual void removeBaseSlotClass( const SlotBase & base ) const
         {
-            mSlots.remove_if( EqualBaseSlotPtr(&base) );
+            // Remove slots that has same special base class
+            SlotContainer::iterator i, t, e = mSlots.end();
+            for( i = mSlots.begin(); i != e; )
+            {
+                t = i; ++i;
+                if( &base == t->basePtr )
+                    mSlots.erase(t);
+            }
         }
 
         void addSlotItem( const SlotDesc & desc ) const

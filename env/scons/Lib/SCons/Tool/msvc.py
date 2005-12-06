@@ -186,7 +186,7 @@ def get_msvc_path(env, path, version):
 
     if float(version) >= 7.0:
         if float(version) >= 8.0:
-            platform = env.get('MSVS8_PLATFORM', 'x86')
+            platform = env.get('MSVS_PLATFORM', 'x86')
         else:
             platform = 'x86'
         return _get_msvc7_path(path, version, platform)

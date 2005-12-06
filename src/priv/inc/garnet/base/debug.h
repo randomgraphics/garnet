@@ -29,7 +29,7 @@
         static bool sIgnoreAll = false;                         \
         if( !sIgnoreAll && GN::assertFunc( desc, __FILE__,      \
             __LINE__, &sIgnoreAll ) )                           \
-        { GN_DEBUG_BREAK(); }                                     \
+        { GN_DEBUG_BREAK(); }                                   \
     }
 
 #if GN_DEBUG
@@ -92,7 +92,7 @@
 //!
 //! Compile-time assert
 //!
-#define GN_CASSERT( exp ) GN_CASSERT_EX( exp, )
+#define GN_CASSERT( exp ) GN_CASSERT_EX( exp, _ )
 
 // *****************************************************************************
 //! \name error check macros

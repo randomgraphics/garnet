@@ -119,7 +119,7 @@ void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wp, LPARAM )
     {
         // process WM_CHAR message
         case WM_CHAR :
-            triggerCharPress( static_cast<char>(wp) );
+            triggerCharPress( (char)wp );
             break;
 
         // capture mouse when mouse-button pressed

@@ -168,8 +168,8 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
     fh = ::FindFirstFileA( findPattern.cstr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh ) return;
 
-    std::auto_ptr<pcrecpp::RE> re;
-    if( useRegex ) re.reset( new pcrecpp::RE( pattern.cstr() ) );
+    GN::AutoObjPtr<pcrecpp::RE> re;
+    if( useRegex ) re.attach( new pcrecpp::RE( pattern.cstr() ) );
 
     do
     {

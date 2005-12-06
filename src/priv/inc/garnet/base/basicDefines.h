@@ -22,25 +22,34 @@
 #undef GN_MSVC
 #define GN_MSVC 1
 #define GN_COMPILER "msvc"
+
 #elif defined(__ICL)
 #undef GN_MSVC
 #undef GN_ICL
 #define GN_MSVC 1                  // treat intel compiler as VC compiler
 #define GN_ICL  1
 #define GN_COMPILER "icl"
+
 #elif defined(__BORLANDC__)
 #undef GN_BCB
 #define GN_BCB 1
 #define GN_COMPILER "bcb"
+
 #elif defined(__GNUC__)
 #undef GN_GCC
 #define GN_GCC 1
 #define GN_COMPILER "gcc"
+
 #else
 #error "Unknown compiler!"
 #define GN_COMPILER "unknown"
 #endif
 
+// disable vc8.0 CRT warnings
+#if _MSC_VER >= 1400
+#define _CRT_SECURE_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#endif
 
 // *****************************************************************************
 // 辨识操作系统
