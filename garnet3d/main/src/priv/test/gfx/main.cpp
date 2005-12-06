@@ -40,7 +40,7 @@ public:
         }
 
         // create a pure white texture
-        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, makeFunctor(this,&Scene::loadTex0) );
+        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
 
         // success
         return true;

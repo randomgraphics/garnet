@@ -351,7 +351,7 @@ int RE::GlobalReplace(const StringPiece& rewrite,
       // advance one character if we matched an empty string at the same
       // place as the last match occurred
       if (start < static_cast<int>(str->length()))
-        out.push_back((*str)[start]);
+        out += (*str)[start];
       start++;
     } else {
       out.append(*str, start, matchstart - start);
@@ -367,7 +367,7 @@ int RE::GlobalReplace(const StringPiece& rewrite,
 
   if (start < static_cast<int>(str->length()))
     out.append(*str, start, str->length() - start);
-  swap(out, *str);
+  std::swap(out, *str);
   return count;
 }
 
@@ -502,14 +502,14 @@ bool RE::Rewrite(string *out, const StringPiece &rewrite,
         if (start >= 0)
           out->append(text.data() + start, vec[2 * n + 1] - start);
       } else if (c == '\\') {
-        out->push_back('\\');
+        (*out) += '\\';
       } else {
         //fprintf(stderr, "invalid rewrite pattern: %.*s\n",
         //        rewrite.size(), rewrite.data());
         return false;
       }
     } else {
-      out->push_back(c);
+      (*out) += c;
     }
   }
   return true;

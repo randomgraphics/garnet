@@ -119,8 +119,7 @@ def GN_glob( env, patterns, recursive = False ):
 
 # 编译器是否会生成manifest文件
 def GN_has_manifest(env):
-    cc = GN_conf['compiler']
-    return ( 'vc80' == cc or 'vc80-x64' == cc ) and not GN_conf['static']
+    return float(env.get('MSVS_VERSION',0)) >= 8.0
 
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
@@ -293,10 +292,17 @@ def default_env( options = None ):
     tools = ['default']
     msvs_version = '7.1'
     msvs_platform = 'x86'
+    icl_version = None
+    icl_abi = 'x86'
     if 'xenon' == GN_conf['compiler']:
         tools = ['xenon']
     elif 'icl' == GN_conf['compiler'] :
         tools += ['intelc']
+    elif 'icl-em64t' == GN_conf['compiler'] :
+        tools += ['intelc']
+        icl_abi = 'em64t'
+        msvs_version = '8.0'
+        msvs_platform = 'x64'
     elif 'vc80' == GN_conf['compiler'] :
         msvs_version = '8.0'
     elif 'vc80-x64' == GN_conf['compiler'] :
@@ -305,7 +311,9 @@ def default_env( options = None ):
     env = Environment(
         tools = tools,
         MSVS_VERSION = msvs_version,
-        MSVS8_PLATFORM = msvs_platform,
+        MSVS_PLATFORM = msvs_platform,
+        ICL_VERSION = icl_version,
+        ICL_ABI = icl_abi,
         options = options,
         )
 
@@ -388,14 +396,12 @@ def default_env( options = None ):
         cppdefines['stdbg']   += Split('_DEBUG')
 
         if float(env['MSVS_VERSION']) >= 8.0:
-            # Note: disable CRT deprecate warnings by now.
-            ccflags['common']   += Split('/W4 /WX /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE')
             cxxflags['common']  += ['/EHa']
             linkflags['common'] += Split( '/NODEFAULTLIB:libcp.lib' )
         else:
-            ccflags['common']   += Split('/W4 /WX')
             cxxflags['common']  += ['/EHs']
 
+        ccflags['common']   += Split('/W4 /WX')
         ccflags['debug']   += Split('/MDd /GR')
         ccflags['release'] += Split('/O2 /MD')
         ccflags['stdbg']   += Split('/MTd /GR')
@@ -415,8 +421,6 @@ def default_env( options = None ):
         ccflags['strel']   += Split('/O2 /MT')
 
         cxxflags['common'] += ['/EHs']
-
-        linkflags['common'] += ['/FORCE']
 
         cppdefines['debug']   += Split('_DEBUG')
         cppdefines['stdbg']   += Split('_DEBUG')

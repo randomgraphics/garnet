@@ -65,6 +65,6 @@ void GN::sleep( uint32_t microSeconds )
     ::sleep( s );
     ::usleep( us );
 #else
-    GN_CASSERT_EX( 0, "Unimplmented" );
+    GN_CASSERT_EX( 0, unimplemented );
 #endif
 }

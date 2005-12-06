@@ -40,11 +40,12 @@ DONE
 - POSIX implementation
   - implement input module on POSIX platform
   - implement GNogl on POSIX platform
-
 - UT for getEnv() and setEnv().
 - convert input module to static library
-- Fix link problem of GFX module in static build.
+- SCons
+  - EMT64 icl support
 - Refine GFX:
+  - Fix link problem of GFX module in static build.
   - remove dependencies to GNd3d
     - move d3dformat to string to gfx d3d module
   - fix device-lost bug in GNgfxTest

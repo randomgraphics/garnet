@@ -55,7 +55,7 @@ static void sApplyRenderStateBlock(
     uint32_t i;
     GN::gfx::TextureStateValue tsv;
     DWORD d3dtsv;
-    uint32_t numStages = std::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps( GN::gfx::CAPS_MAX_TEXTURE_STAGES ) );
+    uint32_t numStages = GN::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps( GN::gfx::CAPS_MAX_TEXTURE_STAGES ) );
     for ( i = 0; i < numStages; ++i )
     {
         for ( uint32_t j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
