@@ -16,6 +16,8 @@
 
 namespace GN { namespace gfx
 {
+    class OGLQuad;
+
     //!
     //! OGL renderer class
     //!
@@ -282,10 +284,10 @@ namespace GN { namespace gfx
         bool rsbOK() const { return true; }
         void rsbClear() {}
 
-        bool rsbDeviceCreate() { return true; }
-        bool rsbDeviceRestore() { return rebindCurrentRsb(); }
-        void rsbDeviceDispose() { disposeDeviceData(); }
-        void rsbDeviceDestroy() {}
+        bool rsbDeviceCreate() { return rebindCurrentRsb(); }
+        bool rsbDeviceRestore() { return true; }
+        void rsbDeviceDispose() {}
+        void rsbDeviceDestroy() { disposeDeviceData(); }
 
         // from BasicRenderer
         virtual DeviceRenderStateBlock *
@@ -476,12 +478,19 @@ namespace GN { namespace gfx
         bool drawInit() { return true; }
         void drawQuit() {}
         bool drawOK() const { return true; }
-        void drawClear() { mDrawBegan = false; mFontMap.clear(); mCurrentDrawState.clear(); mLastDrawState.clear(); }
+        void drawClear()
+        {
+            mDrawBegan = false;
+            mFontMap.clear();
+            mCurrentDrawState.clear();
+            mLastDrawState.clear();
+            mQuad = 0;
+        }
 
-        bool drawDeviceCreate() { return true; }
-        bool drawDeviceRestore();
-        void drawDeviceDispose();
-        void drawDeviceDestroy() {}
+        bool drawDeviceCreate();
+        bool drawDeviceRestore() { return true; }
+        void drawDeviceDispose() {}
+        void drawDeviceDestroy();
 
     private:
         bool mDrawBegan;
@@ -498,6 +507,8 @@ namespace GN { namespace gfx
 
         OGLDrawState mCurrentDrawState;
         OGLDrawState mLastDrawState;
+
+        OGLQuad * mQuad;
 
     private:
         bool fontInit();

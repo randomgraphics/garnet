@@ -13,7 +13,6 @@ TODO
 
 - p1
   - continue implementing GFX module
-    - d3d hlsl shader
     - ogl shader
     - quad renderer for GFXOGL module
     - parameter manager and UT
@@ -45,6 +44,7 @@ DONE
 - SCons
   - EMT64 icl support
 - Refine GFX:
+  - d3d hlsl shader
   - Fix link problem of GFX module in static build.
   - remove dependencies to GNd3d
     - move d3dformat to string to gfx d3d module
