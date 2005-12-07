@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "oglRenderer.h"
+#include "oglQuad.h"
 #include "oglIdxBuf.h"
 
 // *****************************************************************************
@@ -59,13 +60,18 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::drawDeviceRestore()
+bool GN::gfx::OGLRenderer::drawDeviceCreate()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
     if( !fontInit() ) return false;
+
+    // create quad class
+    GN_ASSERT( !mQuad );
+    mQuad = new OGLQuad(*this);
+    if( !mQuad->init() ) return false;
 
     // success
     return true;
@@ -76,13 +82,14 @@ bool GN::gfx::OGLRenderer::drawDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawDeviceDispose()
+void GN::gfx::OGLRenderer::drawDeviceDestroy()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
     fontQuit();
+    safeDelete( mQuad );
 
     GN_UNGUARD
 }
