@@ -293,7 +293,7 @@ def default_env( options = None ):
     msvs_version = '7.1'
     msvs_platform = 'x86'
     icl_version = None
-    icl_abi = 'x86'
+    icl_abi = 'ia32'
     if 'xenon' == GN_conf['compiler']:
         tools = ['xenon']
     elif 'icl' == GN_conf['compiler'] :

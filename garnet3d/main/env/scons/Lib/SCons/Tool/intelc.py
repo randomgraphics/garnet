@@ -232,7 +232,7 @@ def generate(env):
         if not version:
             raise SCons.Errors.UserError, 'Fail to find default Intel C++ compiler for ABI=%s'%(abi)
 
-    # deterimin compiler roor
+    # deterimin compiler root
     topdir = get_intel_compiler_top(version, abi)
 
     if not topdir:
@@ -265,8 +265,8 @@ def generate(env):
         #    # Show the actual compiler version by running the compiler.
         #    os.system('%s/bin/icc --version'%topdir)
 
-        # setup native compilers used by intel compiler
         if is_win32:
+            # setup Platform SDK
             if 'ia32' == abi:
                 SCons.Tool.msvc.generate(env)
             if 'em64t' == abi:
@@ -278,7 +278,11 @@ def generate(env):
                 psroot = env.get( 'MSVS_PLATFORMSDK', None )
                 if not psroot:
                     # TODO: try parse platform sdk directroy from icl enviroment batch file.
-                    psroot = "c:\\Program Files\\Microsoft Platform SDK"
+                    psroot = "C:\\Program Files\\Microsoft Platform SDK"
+                    class DefaultPlatformSDKWarning(SCons.Warnings.Warning):
+                        pass
+                    SCons.Warnings.enableWarningClass( DefaultPlatformSDKWarning )
+                    SCons.Warnings.warn( DefaultPlatformSDKWarning, "Fail to detect Microsoft Platform SDK path (set env['MSVS_PLATFORMSDK'] please). Use default one: %s"%psroot )
                 paths = (
                     ('INCLUDE', 'include'),
                     ('INCLUDE', 'include\\crt'),
@@ -289,7 +293,12 @@ def generate(env):
                     ('LIB', 'Lib\\AMD64\\atlmfc'), # TODO: IA64
                     ('PATH', 'Bin\\Win64\\x86\\AMD64') ) # TODO: IA64
                 for p in paths:
-                    env.PrependENVPath( p[0], os.path.join( psroot, p[1] ) )
+                    p = os.path.join( psroot, p[1] )
+                    if not os.path.exists( p ):
+                        raise SCons.Errors.UserError, \
+                            'Microsoft Platform SDK directory "%s" not found,' \
+                            'which is required by Intel compiler (version=%s, abi=%s)'%(p,version,abi)
+                    env.PrependENVPath( p[0], p )
             elif 'ia64' == abi:
                 raise SCons.Errors.UserError, "Unsupport icl ABI : %s"%abi
         elif is_linux:
