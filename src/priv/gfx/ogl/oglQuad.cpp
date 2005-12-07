@@ -35,7 +35,29 @@ bool GN::gfx::OGLQuad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLQuad, () );
 
-    // Do custom init here
+    GN_ASSERT( !mVtxBuf && !mIdxBuf );
+
+    // create vertex buffer
+    mVtxBuf = mRenderer.createVtxBuf( sizeof(OGLQuadStruct) * MAX_QUADS, true );
+    if( 0 == mVtxBuf ) { quit(); return selfOK(); }
+
+    // create index buffer
+    mIdxBuf = mRenderer.createIdxBuf( MAX_QUADS * 6 );
+    if( 0 == mIdxBuf ) { quit(); return selfOK(); }
+
+    // fill index buffer
+    uint16_t * ibData = (uint16_t*)mIdxBuf->lock( 0, 0, 0 );
+    if( 0 == ibData ) { quit(); return selfOK(); }
+    for( uint16_t i = 0; i < MAX_QUADS; ++i )
+    {
+        ibData[i*6+0] = i*4+0;
+        ibData[i*6+1] = i*4+1;
+        ibData[i*6+2] = i*4+2;
+        ibData[i*6+3] = i*4+0;
+        ibData[i*6+4] = i*4+2;
+        ibData[i*6+5] = i*4+3;
+    }
+    mIdxBuf->unlock();
 
     // success
     return selfOK();
@@ -50,64 +72,11 @@ void GN::gfx::OGLQuad::quit()
 {
     GN_GUARD;
 
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// from OGLResource
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLQuad::deviceCreate()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mVtxBuf && !mIdxBuf );
-
-    Renderer & r = getRenderer();
-
-    // create vertex buffer
-    mVtxBuf = r.createVtxBuf( sizeof(OGLQuadStruct) * MAX_QUADS, true );
-    if( 0 == mVtxBuf ) return false;
-
-    // create index buffer
-    mIdxBuf = r.createIdxBuf( MAX_QUADS * 6 );
-    if( 0 == mIdxBuf ) return false;
-
-    // fill index buffer
-    uint16_t * ibData = (uint16_t*)mIdxBuf->lock( 0, 0, 0 );
-    if( 0 == ibData ) return false;
-    for( uint16_t i = 0; i < MAX_QUADS; ++i )
-    {
-        ibData[i*6+0] = i*4+0;
-        ibData[i*6+1] = i*4+1;
-        ibData[i*6+2] = i*4+2;
-        ibData[i*6+3] = i*4+0;
-        ibData[i*6+4] = i*4+2;
-        ibData[i*6+5] = i*4+3;
-    }
-    mIdxBuf->unlock();
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLQuad::deviceDestroy()
-{
-    GN_GUARD;
-
     safeDecref( mVtxBuf );
     safeDecref( mIdxBuf );
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
