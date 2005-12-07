@@ -504,7 +504,7 @@ namespace GN { namespace gfx
         void fontQuit();
         bool charInit( wchar_t, CharDesc & );
         int  drawChar( wchar_t ); //!< Return x-advance of the character
-        void updateDrawState( size_t baseVtx );
+        GN_INLINE void updateDrawState( size_t baseVtx );
 
 #if GN_POSIX
         int      getFontBitmapAdvance( char ch );
@@ -536,7 +536,6 @@ namespace GN { namespace gfx
 
 #if GN_ENABLE_INLINE
 #include "oglTextureMgr.inl"
-#include "oglDrawMgr.inl"
 #endif
 
 // *****************************************************************************
