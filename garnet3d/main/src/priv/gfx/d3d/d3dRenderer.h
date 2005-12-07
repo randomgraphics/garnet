@@ -415,8 +415,8 @@ namespace GN { namespace gfx
 
     private:
 
-        void updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters );
-        void updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq );
+        GN_INLINE void updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters );
+        GN_INLINE void updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq );
 
         //@}
 
@@ -578,9 +578,9 @@ namespace GN { namespace gfx
 
         bool handleDeviceLost();
 
-        void applyDrawState();
+        GN_INLINE void applyDrawState();
 
-        void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
+        GN_INLINE void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
 
     private:
 
@@ -626,9 +626,7 @@ namespace GN { namespace gfx
 
 #if GN_ENABLE_INLINE
 #include "d3dRenderStateBlockMgr.inl"
-#include "d3dTextureMgr.inl"
 #include "d3dBufferMgr.inl"
-#include "d3dDrawMgr.inl"
 #endif
 
 // *****************************************************************************
