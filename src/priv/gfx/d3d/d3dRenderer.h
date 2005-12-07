@@ -318,8 +318,8 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVtxShader( ShadingLanguage, const StrA & );
-        virtual Shader * createPxlShader( ShadingLanguage, const StrA & );
+        virtual Shader * createVtxShader( ShadingLanguage, const StrA &, const StrA & );
+        virtual Shader * createPxlShader( ShadingLanguage, const StrA &, const StrA & );
         virtual void bindVtxShader( const Shader * s ) { mDrawState.bindVtxShader(s); }
         virtual void bindPxlShader( const Shader * s ) { mDrawState.bindPxlShader(s); }
         virtual void bindShaders( const Shader *, const Shader * );

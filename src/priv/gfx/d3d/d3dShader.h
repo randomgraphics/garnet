@@ -33,6 +33,10 @@ namespace GN { namespace gfx
         D3DBasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
     };
 
+    // *************************************************************************
+    // ASM shaders
+    // *************************************************************************
+
     //!
     //! Basic D3D asm shader class
     //!
@@ -48,7 +52,7 @@ namespace GN { namespace gfx
         //!
         //! Asm shader constant descriptor
         //!
-        union D3DAsmShaderDesc
+        union D3DAsmConstDesc
         {
             //!
             //! shader constant descriptor as uint32
@@ -57,7 +61,7 @@ namespace GN { namespace gfx
 
             struct
             {
-                uint16_t type; //!< should be one of CONST_F, CONST_I, CONST_B
+                uint16_t type;  //!< should be one of CONST_F, CONST_I, CONST_B
                 uint16_t index; //!< const index.
             };
         };
@@ -217,6 +221,212 @@ namespace GN { namespace gfx
         bool compileShader();
         bool analyzeUniforms();
         void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
+        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
+    };
+
+    // *************************************************************************
+    // HLSL shaders
+    // *************************************************************************
+
+    //!
+    //! Basic D3D HLSL shader class
+    //!
+    struct D3DShaderHlsl : public D3DBasicShader
+    {
+
+    protected:
+
+        //!
+        //! protected ctor
+        //!
+        D3DShaderHlsl( ShaderType type) : D3DBasicShader(type,LANG_D3D_ASM) {}
+
+        //!
+        //! apply uniform to D3D device
+        void applyUniform( LPDIRECT3DDEVICE9 dev, LPD3DXCONSTANTTABLE table, const Uniform & u ) const
+        {
+            GN_GUARD_SLOW;
+
+            GN_ASSERT( dev && table );
+
+            D3DXHANDLE h = (D3DXHANDLE)u.userData;
+            GN_ASSERT( h );
+
+            switch( u.type )
+            {
+                case UVT_BOOL:
+                    if( !u.valueBool.empty() )
+                        GN_DX_CHECK( table->SetBoolArray( dev, h, (const BOOL*)&u.valueBool[0], (UINT)u.valueBool.size() ) );
+                    break;
+
+                case UVT_INT:
+                    if( !u.valueInt.empty() )
+                        GN_DX_CHECK( table->SetIntArray( dev, h, (const INT*)&u.valueInt[0], (UINT)u.valueInt.size() ) );
+                    break;
+
+                case UVT_FLOAT:
+                    if( !u.valueFloat.empty() )
+                        GN_DX_CHECK( table->SetFloatArray( dev, h, &u.valueFloat[0], (UINT)u.valueFloat.size() ) );
+                    break;
+
+                case UVT_FLOAT4:
+                    if( !u.valueVector4.empty() )
+                        GN_DX_CHECK( table->SetVectorArray( dev, h, (const D3DXVECTOR4*)&u.valueVector4[0], (UINT)u.valueVector4.size() ) );
+                    break;
+
+                case UVT_MATRIX44:
+                    if( !u.valueMatrix44.empty() )
+                        GN_DX_CHECK( table->SetMatrixTransposeArray( dev, h, (const D3DXMATRIX*)&u.valueMatrix44[0], (UINT)u.valueMatrix44.size() ) );
+                    break;
+
+                default:
+                    // Program should not reach here.
+                    GN_ERROR( "invalid uniform type!" );
+                    GN_UNEXPECTED();
+            }
+            GN_UNGUARD_SLOW;
+        }
+    };
+
+    //!
+    //! D3D HLSL vertex shader class
+    //!
+    class D3DVtxShaderHlsl : public D3DShaderHlsl, public D3DResource, public StdClass
+    {
+         GN_DECLARE_STDCLASS( D3DVtxShaderHlsl, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3DVtxShaderHlsl( D3DRenderer & r )
+            : D3DShaderHlsl(VERTEX_SHADER)
+            , D3DResource(r)
+        { clear(); }
+        virtual ~D3DVtxShaderHlsl() { quit(); }
+        //@}
+
+        // ********************************
+        // standard init/quit
+        // ********************************
+
+        //@{
+    public:
+        bool init( const StrA & code, const StrA & entry );
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() { mCode.clear(); mConstTable = 0; mD3DShader = 0; }
+        //@}
+
+        // ********************************
+        // from Shader
+        // ********************************
+    public:
+
+        // ********************************
+        // from D3DResource
+        // ********************************
+    public:
+        bool deviceCreate();
+        bool deviceRestore() { return true; }
+        void deviceDispose() {}
+        void deviceDestroy();
+
+        // ********************************
+        // from D3DBasicShader
+        // ********************************
+    public:
+
+        void apply() const;
+        void applyDirtyUniforms() const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+        StrA                    mCode;
+        StrA                    mEntry;
+        LPD3DXCONSTANTTABLE     mConstTable;
+        LPDIRECT3DVERTEXSHADER9 mD3DShader;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
+    };
+
+    //!
+    //! D3D HLSL pixel shader class
+    //!
+    class D3DPxlShaderHlsl : public D3DShaderHlsl, public D3DResource, public StdClass
+    {
+         GN_DECLARE_STDCLASS( D3DPxlShaderHlsl, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3DPxlShaderHlsl( D3DRenderer & r )
+            : D3DShaderHlsl(PIXEL_SHADER)
+            , D3DResource(r)
+        { clear(); }
+        virtual ~D3DPxlShaderHlsl() { quit(); }
+        //@}
+
+        // ********************************
+        // standard init/quit
+        // ********************************
+
+        //@{
+    public:
+        bool init( const StrA & code, const StrA & entry );
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() { mCode.clear(); mConstTable = 0; mD3DShader = 0; }
+        //@}
+
+        // ********************************
+        // from Shader
+        // ********************************
+    public:
+
+        // ********************************
+        // from D3DResource
+        // ********************************
+    public:
+        bool deviceCreate();
+        bool deviceRestore() { return true; }
+        void deviceDispose() {}
+        void deviceDestroy();
+
+        // ********************************
+        // from D3DBasicShader
+        // ********************************
+    public:
+
+        void apply() const;
+        void applyDirtyUniforms() const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+        StrA                   mCode;
+        StrA                   mEntry;
+        LPD3DXCONSTANTTABLE    mConstTable;
+        LPDIRECT3DPIXELSHADER9 mD3DShader;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
         bool queryDeviceUniform( const char * name, HandleType * userData ) const;
     };
 }}

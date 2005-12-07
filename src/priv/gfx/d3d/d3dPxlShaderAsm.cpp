@@ -240,7 +240,7 @@ bool GN::gfx::D3DPxlShaderAsm::queryDeviceUniform( const char * name, HandleType
         return false;
     }
 
-    D3DAsmShaderDesc desc;
+    D3DAsmConstDesc desc;
 
     switch( name[0] )
     {

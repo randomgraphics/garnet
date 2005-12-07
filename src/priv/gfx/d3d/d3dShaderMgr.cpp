@@ -62,7 +62,8 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
-GN::gfx::D3DRenderer::createVtxShader( ShadingLanguage lang, const StrA & code )
+GN::gfx::D3DRenderer::createVtxShader(
+    ShadingLanguage lang, const StrA & code, const StrA & entry )
 {
     GN_GUARD;
 
@@ -75,8 +76,14 @@ GN::gfx::D3DRenderer::createVtxShader( ShadingLanguage lang, const StrA & code )
                 return p.detach();
             }
 
-        case LANG_CG:
         case LANG_D3D_HLSL:
+            {
+                AutoRef<D3DVtxShaderHlsl> p( new D3DVtxShaderHlsl(*this) );
+                if( !p->init( code, entry ) ) return 0;
+                return p.detach();
+            }
+
+        case LANG_CG:
         case LANG_OGL_ARB:
         case LANG_OGL_GLSL:
             GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
@@ -94,7 +101,8 @@ GN::gfx::D3DRenderer::createVtxShader( ShadingLanguage lang, const StrA & code )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
-GN::gfx::D3DRenderer::createPxlShader( ShadingLanguage lang, const StrA & code )
+GN::gfx::D3DRenderer::createPxlShader(
+    ShadingLanguage lang, const StrA & code, const StrA & entry )
 {
     GN_GUARD;
 
@@ -107,8 +115,14 @@ GN::gfx::D3DRenderer::createPxlShader( ShadingLanguage lang, const StrA & code )
                 return p.detach();
             }
 
-        case LANG_CG:
         case LANG_D3D_HLSL:
+            {
+                AutoRef<D3DPxlShaderHlsl> p( new D3DPxlShaderHlsl(*this) );
+                if( !p->init( code, entry ) ) return 0;
+                return p.detach();
+            }
+
+        case LANG_CG:
         case LANG_OGL_ARB:
         case LANG_OGL_GLSL:
             GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );

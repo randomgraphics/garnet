@@ -547,24 +547,24 @@ namespace GN { namespace gfx
         virtual bool supportShader( ShaderType, ShadingLanguage ) = 0;
 
         //!
-        //! request a instance of vertex shader
+        //! Create vetex shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         virtual Shader *
-        createVtxShader( ShadingLanguage lang, const StrA & code ) = 0;
+        createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" ) = 0;
 
         //!
-        //! request a instance of pixel shader
+        //! Create pixel shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         virtual Shader *
-        createPxlShader( ShadingLanguage lang, const StrA & code ) = 0;
+        createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" ) = 0;
 
         //!
-        //! request a instance of shader
+        //! Create shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         //! \note Inlined function implemented in renderer.inl
         //!
         Shader *
-        createShader( ShaderType type, ShadingLanguage lang, const StrA & code );
+        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
         //! Bind programmable vertex shader to rendering device. Set to NULL to use

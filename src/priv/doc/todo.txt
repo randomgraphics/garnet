@@ -19,10 +19,10 @@ TODO
     - parameter manager and UT
     - refine device management
 - p2
-  - check doxygen errors and warnings.
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
 - p3
+  - check doxygen errors and warnings.
   - XWindow class UT
   - Custom sscanf(...)
   - cross-platform window util functions:

@@ -6,7 +6,7 @@ GN::gfx::D3DVtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
 {
     GN_GUARD_SLOW;
 
-    D3DAsmShaderDesc desc;
+    D3DAsmConstDesc desc;
     
     desc.u32 = (uint32_t)u.userData;
 
