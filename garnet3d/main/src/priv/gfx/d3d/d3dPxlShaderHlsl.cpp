@@ -170,11 +170,11 @@ void GN::gfx::D3DPxlShaderHlsl::applyDirtyUniforms() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DPxlShaderHlsl::queryDeviceUniform( const char * name, HandleType * userData ) const
+bool GN::gfx::D3DPxlShaderHlsl::queryDeviceUniform( const char * name, HandleType & userData ) const
 {
     GN_GUARD;
 
-    GN_ASSERT( !strEmpty(name) && userData );
+    GN_ASSERT( !strEmpty(name) );
 
     GN_ASSERT( mConstTable );
 
@@ -186,7 +186,7 @@ bool GN::gfx::D3DPxlShaderHlsl::queryDeviceUniform( const char * name, HandleTyp
     }
 
     // success
-    *userData = (HandleType)h;
+    userData = (HandleType)h;
     return true;
 
     GN_UNGUARD;

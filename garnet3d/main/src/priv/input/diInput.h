@@ -56,7 +56,7 @@ namespace GN { namespace input
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
