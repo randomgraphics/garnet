@@ -6,14 +6,12 @@
 //! \author  chenlee (2005.12.7)
 // *****************************************************************************
 
-#include "oglTypes.h"
-
 namespace GN { namespace gfx
 {
     //!
     //! OGL quad renderer
     //!
-    class OGLQuad : public OGLResource, public StdClass
+    class OGLQuad : public StdClass
     {
          GN_DECLARE_STDCLASS( OGLQuad, StdClass );
 
@@ -23,7 +21,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLQuad( OGLRenderer & r ) : OGLResource(r) { clear(); }
+        OGLQuad( Renderer & r ) : mRenderer(r) { clear(); }
         virtual ~OGLQuad() { quit(); }
         //@}
 
@@ -46,16 +44,6 @@ namespace GN { namespace gfx
             mNextQuad = 0;
         }
         //@}
-
-        // ********************************
-        // from OGLResource
-        // ********************************
-    public:
-
-        bool deviceCreate();
-        bool deviceRestore() { return true; }
-        void deviceDispose() {}
-        void deviceDestroy();
 
         // ********************************
         // public functions
@@ -83,6 +71,8 @@ namespace GN { namespace gfx
     private:
 
         enum { MAX_QUADS = 4096 };
+
+        Renderer & mRenderer;
 
         uint32_t mRsb;
         uint32_t mVtxBinding;

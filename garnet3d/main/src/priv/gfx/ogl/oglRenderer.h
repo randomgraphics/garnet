@@ -16,6 +16,7 @@
 
 namespace GN { namespace gfx
 {
+    class OGLFont;
     class OGLQuad;
 
     //!
@@ -481,9 +482,9 @@ namespace GN { namespace gfx
         void drawClear()
         {
             mDrawBegan = false;
-            mFontMap.clear();
             mCurrentDrawState.clear();
             mLastDrawState.clear();
+            mFont = 0;
             mQuad = 0;
         }
 
@@ -495,33 +496,15 @@ namespace GN { namespace gfx
     private:
         bool mDrawBegan;
 
-        // font parameters
-        struct CharDesc
-        {
-            GLuint displayList; // display list use to display the char
-            int    advanceX;    // Advance on X direction.
-        };
-        typedef std::map<wchar_t,CharDesc> FontMap;
-        FontMap mFontMap;
-        int     mFontHeight;
-
         OGLDrawState mCurrentDrawState;
         OGLDrawState mLastDrawState;
 
+        OGLFont * mFont;
         OGLQuad * mQuad;
 
     private:
-        bool fontInit();
-        void fontQuit();
-        bool charInit( wchar_t, CharDesc & );
-        int  drawChar( wchar_t ); //!< Return x-advance of the character
         GN_INLINE void updateDrawState( size_t baseVtx );
 
-#if GN_POSIX
-        int      getFontBitmapAdvance( char ch );
-        uint32_t getFontBitmapHeight();
-        void     drawFontBitmap( char ch );
-#endif
         //@}
 
         // ********************************************************************
