@@ -1,8 +1,5 @@
 #include "pch.h"
 #include "oglRenderer.h"
-#if !GN_ENABLE_INLINE
-#include "oglDrawMgr.inl"
-#endif
 #include "oglIdxBuf.h"
 
 // *****************************************************************************
@@ -465,46 +462,6 @@ void GN::gfx::OGLRenderer::fontQuit()
 //
 //
 // ----------------------------------------------------------------------------
-int GN::gfx::OGLRenderer::drawChar( wchar_t c )
-{
-    GN_GUARD_SLOW;
-
-    // 在fontmap中查找当前字符
-    FontMap::iterator i = mFontMap.find(c);
-    if( i == mFontMap.end() )
-    {
-        // 没找到，创建新的字符项
-        CharDesc cd;
-        if( !charInit( c, cd ) ) return 0;
-
-        // 如果fontmap已满，则删除一个已存在的字符项
-        // FIXME : 简单的删除begin()可能会引起抖动，理想的办法是随机删除
-        //         fontmap中的一项。
-        if( mFontMap.size() >= 128 )
-        {
-            glDeleteLists(mFontMap.begin()->second.displayList, 1);
-            mFontMap.erase( mFontMap.begin() );
-        }
-        // 将新的字符项插入fontmap
-        mFontMap[c] = cd;
-
-        // draw this character
-        glCallList( cd.displayList );
-        return cd.advanceX;
-    }
-    else
-    {
-        // 找到
-        glCallList( i->second.displayList );
-        return i->second.advanceX;
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
 bool GN::gfx::OGLRenderer::charInit( wchar_t c, CharDesc & cd )
 {
     GN_GUARD;
@@ -566,4 +523,77 @@ bool GN::gfx::OGLRenderer::charInit( wchar_t c, CharDesc & cd )
 #endif
 
     GN_UNGUARD;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+int GN::gfx::OGLRenderer::drawChar( wchar_t c )
+{
+    GN_GUARD_SLOW;
+
+    // 在fontmap中查找当前字符
+    FontMap::iterator i = mFontMap.find(c);
+    if( i == mFontMap.end() )
+    {
+        // 没找到，创建新的字符项
+        CharDesc cd;
+        if( !charInit( c, cd ) ) return 0;
+
+        // 如果fontmap已满，则删除一个已存在的字符项
+        // FIXME : 简单的删除begin()可能会引起抖动，理想的办法是随机删除
+        //         fontmap中的一项。
+        if( mFontMap.size() >= 128 )
+        {
+            glDeleteLists(mFontMap.begin()->second.displayList, 1);
+            mFontMap.erase( mFontMap.begin() );
+        }
+        // 将新的字符项插入fontmap
+        mFontMap[c] = cd;
+
+        // draw this character
+        glCallList( cd.displayList );
+        return cd.advanceX;
+    }
+    else
+    {
+        // 找到
+        glCallList( i->second.displayList );
+        return i->second.advanceX;
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::OGLRenderer::updateDrawState( size_t baseVtx )
+{
+    GN_GUARD_SLOW;
+
+    if( 0 == mCurrentDrawState.dirtyFlags.u32 ) return;
+
+    if( mCurrentDrawState.dirtyFlags.vtxBinding )
+    {
+        updateVtxBinding();
+    }
+
+    if( mCurrentDrawState.dirtyFlags.vtxBuf )
+    {
+        updateVtxBufState( baseVtx );
+    }
+
+    if( mCurrentDrawState.dirtyFlags.vtxShader || mCurrentDrawState.dirtyFlags.pxlShader )
+    {
+        updateShaderState();
+    }
+
+    // clear dirty flags
+    mCurrentDrawState.dirtyFlags.u32 = 0;
+
+    // replicate to last state
+    mLastDrawState = mCurrentDrawState;
+
+    GN_UNGUARD_SLOW;
 }
