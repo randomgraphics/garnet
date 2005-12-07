@@ -247,8 +247,8 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVtxShader( ShadingLanguage, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
-        virtual Shader * createPxlShader( ShadingLanguage, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
+        virtual Shader * createVtxShader( ShadingLanguage, const StrA &, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
+        virtual Shader * createPxlShader( ShadingLanguage, const StrA &, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
         virtual void bindVtxShader( const Shader * ) {}
         virtual void bindPxlShader( const Shader * ) {}
         virtual void bindShaders( const Shader *, const Shader * ) {}

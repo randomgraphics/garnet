@@ -4,7 +4,7 @@
 
 class Scene
 {
-    GN::AutoRef<GN::gfx::Shader> ps1;
+    GN::AutoRef<GN::gfx::Shader> ps1, ps2;
 
     GN::AutoRef<GN::gfx::Texture> tex0;
 
@@ -28,15 +28,27 @@ public:
 
     bool init( GN::gfx::Renderer & r )
     {
-        // create pixel shader
+        // create pixel shaders
         if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_D3D_ASM ) )
         {
-            static const char * ps1Code =
+            static const char * code =
                 "ps_1_1\n"
                 "mov r0, c0";
-            ps1.attach( r.createPxlShader( GN::gfx::LANG_D3D_ASM, ps1Code ) );
+            ps1.attach( r.createPxlShader( GN::gfx::LANG_D3D_ASM, code ) );
             if( !ps1 ) return false;
-            ps1->setUniformByName( "c0", GN::Vector4f(1,1,1,1) );
+            ps1->setUniformByName( "c0", GN::Vector4f(0,1,0,1) );
+        }
+        if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_D3D_HLSL ) )
+        {
+            static const char * code =
+                "float4 diffuse; \n"
+                "float4 psMain() : COLOR0 \n"
+                "{ \n"
+                "   return diffuse; \n"
+                "} \n";
+            ps2.attach( r.createPxlShader( GN::gfx::LANG_D3D_HLSL, code, "psMain" ) );
+            if( !ps2 ) return false;
+            ps2->setUniformByName( "diffuse", GN::Vector4f(1,0,0,1) );
         }
 
         // create a pure white texture
@@ -49,15 +61,24 @@ public:
     void quit()
     {
         ps1.reset();
+		ps2.reset();
         tex0.reset();
     }
 
     void draw( GN::gfx::Renderer & r )
     {
         r.bindTexture( 0, tex0 );
-        r.bindShaders( 0, ps1 );
-        //r.drawQuad( GN::gfx::DQ_USE_CURRENT_PS, 0, 0, 0.5, 0.5 );
         r.drawQuad( 0, 0, 0, 0.5, 0.5 );
+        if( ps1 )
+        {
+            r.bindShaders( 0, ps1 );
+            r.drawQuad( GN::gfx::DQ_USE_CURRENT_PS, 0.5, 0.0, 1.0, 0.5 );
+        }
+        if( ps2 )
+        {
+            r.bindShaders( 0, ps2 );
+            r.drawQuad( GN::gfx::DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
+        }
     }
 };
 
@@ -76,7 +97,7 @@ class GfxTest
 
     GN::StrA mFPS;
 
-    Scene mScene;
+    Scene * mScene;
 
 public:
 
@@ -119,7 +140,8 @@ public:
 
         mDone = false;
 
-        if( !mScene.init( *mRenderer ) ) return false;
+        mScene = new Scene;
+        if( !mScene->init( *mRenderer ) ) return false;
 
         // success
         return true;
@@ -130,7 +152,7 @@ public:
     //!
     void quit()
     {
-        mScene.quit();
+        GN::safeDelete(mScene);
         if( mInput ) mInput->sigKeyPress.disconnect(this);
         mInput.clear();
         mRenderer.clear();
@@ -198,7 +220,8 @@ public:
         mRenderer->clearScreen( GN::Vector4f(0,0,0,1) ); // clear to pure blue.
 
         // draw scene
-        mScene.draw( *mRenderer );
+        GN_ASSERT( mScene );
+        mScene->draw( *mRenderer );
 
         // draw FPS
         static size_t frames = 0;

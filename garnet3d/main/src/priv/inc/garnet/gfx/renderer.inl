@@ -58,13 +58,14 @@ namespace GN { namespace gfx
     inline Shader *
     Renderer::createShader( ShaderType      type,
                             ShadingLanguage lang,
-                            const StrA &    code )
+                            const StrA &    code,
+                            const StrA &    entry )
     {
         GN_GUARD;
         switch( type )
         {
-            case VERTEX_SHADER : return createVtxShader( lang, code );
-            case PIXEL_SHADER  : return createPxlShader( lang, code );
+            case VERTEX_SHADER : return createVtxShader( lang, code, entry );
+            case PIXEL_SHADER  : return createPxlShader( lang, code, entry );
             default :
                 GN_ERROR( "invalid shader type!" );
                 return 0;
