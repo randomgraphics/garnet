@@ -95,7 +95,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
@@ -146,7 +146,7 @@ namespace GN { namespace gfx
         bool compileShader();
         bool analyzeUniforms();
         void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
-        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
     };
 
     //!
@@ -170,7 +170,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
@@ -221,7 +221,7 @@ namespace GN { namespace gfx
         bool compileShader();
         bool analyzeUniforms();
         void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
-        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
     };
 
     // *************************************************************************
@@ -309,7 +309,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
@@ -356,7 +356,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
     };
 
     //!
@@ -380,7 +380,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
@@ -427,7 +427,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool queryDeviceUniform( const char * name, HandleType * userData ) const;
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
     };
 }}
 

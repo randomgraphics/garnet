@@ -229,7 +229,7 @@ bool GN::gfx::D3DVtxShaderAsm::analyzeUniforms()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType * userData ) const
+bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType & userData ) const
 {
     GN_GUARD;
 
@@ -283,11 +283,8 @@ bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType
     }
 
     // set user data
-    if( userData )
-    {
-        desc.index = (uint16_t)index;
-        *userData = (HandleType)desc.u32;
-    }
+    desc.index = (uint16_t)index;
+    userData = (HandleType)desc.u32;
 
     // success
     return true;

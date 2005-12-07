@@ -39,7 +39,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
@@ -93,7 +93,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{

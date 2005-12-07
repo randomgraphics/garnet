@@ -182,7 +182,7 @@ namespace GN { namespace gfx
         //!     Return user-defined uniform data that will be stored in Uniform::userData.
         //!     Ignored if set to NULL.
         //!
-        virtual bool queryDeviceUniform( const char * name, HandleType * userData ) const = 0;
+        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const = 0;
 
         //!
         //! Add a new uniform to uniform list. Return handle of the uniform.
@@ -259,7 +259,7 @@ namespace GN { namespace gfx
 
         // query for device-dependent uniform
         HandleType userData;
-        if( !queryDeviceUniform( name, &userData ) )
+        if( !queryDeviceUniform( name, userData ) )
         {
             GN_ERROR( "invalid uniform name: %s.", name );
             return 0;

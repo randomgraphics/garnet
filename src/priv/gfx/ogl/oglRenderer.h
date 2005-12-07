@@ -34,7 +34,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
@@ -247,11 +247,11 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVtxShader( ShadingLanguage, const StrA &, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
-        virtual Shader * createPxlShader( ShadingLanguage, const StrA &, const StrA & ) { GN_UNIMPL_WARNING(); return 0; }
-        virtual void bindVtxShader( const Shader * ) {}
-        virtual void bindPxlShader( const Shader * ) {}
-        virtual void bindShaders( const Shader *, const Shader * ) {}
+        virtual Shader * createVtxShader( ShadingLanguage, const StrA &, const StrA & );
+        virtual Shader * createPxlShader( ShadingLanguage, const StrA &, const StrA & );
+        virtual void bindVtxShader( const Shader * );
+        virtual void bindPxlShader( const Shader * );
+        virtual void bindShaders( const Shader *, const Shader * );
 
     private :
         bool shaderInit() { return true; }
@@ -264,7 +264,7 @@ namespace GN { namespace gfx
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy() {}
 
-        void updateShaderState() { GN_UNIMPL_WARNING(); }
+        void updateShaderState();
 
         //@}
 

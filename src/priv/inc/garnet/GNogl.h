@@ -84,7 +84,7 @@ namespace GN
             //@}
 
             // ********************************
-            //! \name standard init/quit
+            // from StdClass
             // ********************************
 
             //@{

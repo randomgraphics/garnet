@@ -27,7 +27,7 @@ namespace GN { namespace gfx {
         //@}
 
         // ********************************
-        // standard init/quit
+        // from StdClass
         // ********************************
 
         //@{
