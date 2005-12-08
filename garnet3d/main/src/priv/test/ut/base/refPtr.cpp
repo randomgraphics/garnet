@@ -5,16 +5,16 @@ class RefPtrTest : public CxxTest::TestSuite
     struct MyRefObj : public GN::RefCounter
     {
     };
-    typedef GN::AutoRef<MyRefObj> MyRefObjPtr; 
+    typedef GN::AutoRef<MyRefObj> MyRefObjPtr;
 
     struct MyRefObj2 : public MyRefObj
     {
     };
-    typedef GN::AutoRef<MyRefObj2> MyRefObj2Ptr; 
+    typedef GN::AutoRef<MyRefObj2> MyRefObj2Ptr;
 
     struct MyStruct
     {
-        MyRefObjPtr p;    
+        MyRefObjPtr p;
     };
 
 public:

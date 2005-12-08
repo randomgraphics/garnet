@@ -191,7 +191,7 @@ void GN::gfx::OGLQuad::drawQuads(
         {
             GLdouble vp[4];
             GN_OGL_CHECK( glGetDoublev( GL_VIEWPORT, vp ) );
-            
+
             // position is in screen space (0,0)->(width,height)
             GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
             GN_OGL_CHECK( glPushMatrix() );

@@ -76,7 +76,7 @@ bool GN::gfx::D3DVtxShaderHlsl::deviceCreate()
         mEntry.cstr(),
         D3DXGetVertexShaderProfile( dev ),
         flag,
-        &bin, &err, &mConstTable ); 
+        &bin, &err, &mConstTable );
     if( FAILED( hr ) )
     {
         printShaderCompileError( hr, mCode.cstr(), err );

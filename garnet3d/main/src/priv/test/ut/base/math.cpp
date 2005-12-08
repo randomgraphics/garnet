@@ -35,7 +35,7 @@ void vector_tests( T a , T b )
     // add/dec
     TS_ASSERT( equal(a+b,b+a) );
     c = a+b;
-    TS_ASSERT( equal(c-a,b) );    
+    TS_ASSERT( equal(c-a,b) );
 
     c = a;
     c += b;

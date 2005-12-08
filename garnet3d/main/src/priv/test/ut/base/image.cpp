@@ -7,7 +7,7 @@ static GN::MemFile<uint8_t> gFile(gBuf,10000,"a.png");
 
 class ImageTest : public CxxTest::TestSuite
 {
-public:    
+public:
     void testInvalidPNG()
     {
         png_byte png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};

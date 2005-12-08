@@ -203,7 +203,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     GN_DX_CHECK( mDevice->SetRenderTarget( (DWORD)index, surf ) );
     rttd.tex  = tex;
     rttd.face = face;
- 
+
     // handle RT size change
     if( 0 == index )
     {

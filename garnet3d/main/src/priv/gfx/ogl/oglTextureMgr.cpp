@@ -123,7 +123,7 @@ sLoadTex2D( GN::gfx::Renderer & r, const GN::gfx::ImageDesc & desc, const uint8_
     for( uint8_t l = 0; l < desc.numMips; ++l )
     {
         const GN::gfx::ImageDesc::MipDesc & m = desc[l];
-        
+
         // lock texture
         GN::gfx::LockedRect rc;
         if( !tex->lock2D(rc,l,0,GN::gfx::LOCK_WO) ) return 0;

@@ -10,7 +10,7 @@ namespace GN { namespace gfx
 {
     struct VtxBuf;
     struct IdxBuf;
-    
+
     //!
     //! Vertex buffer content loader
     //!

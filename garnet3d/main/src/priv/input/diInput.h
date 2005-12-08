@@ -40,7 +40,7 @@ namespace GN { namespace input
 {
     //!
     //! 使用DirectInput的输入系统
-    //!    
+    //!
     class DIInput : public BasicMswInput
     {
          GN_DECLARE_STDCLASS( DIInput, BasicMswInput );

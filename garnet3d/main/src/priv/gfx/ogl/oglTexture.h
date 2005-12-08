@@ -11,7 +11,7 @@
 #include "oglRenderer.h"
 
 namespace GN { namespace gfx
-{    
+{
     //!
     //! Basic OGL texture class
     //!
@@ -135,7 +135,7 @@ namespace GN { namespace gfx
             GN_GUARD_SLOW;
 
             getRenderer().makeCurrent();
-            
+
             switch( getType() )
             {
                 case TEXTYPE_1D   :
@@ -236,7 +236,7 @@ namespace GN { namespace gfx
             if( mWraps[0] != mode )
             {
                 mWraps[0] = mode;
-                
+
                 GN_OGL_CHECK( glTexParameteri(
                     mOGLTarget,
                     GL_TEXTURE_WRAP_S,
@@ -252,7 +252,7 @@ namespace GN { namespace gfx
             if( mWraps[1] != mode )
             {
                 mWraps[1] = mode;
-                
+
                 GN_OGL_CHECK( glTexParameteri(
                     mOGLTarget,
                     GL_TEXTURE_WRAP_T,
@@ -269,7 +269,7 @@ namespace GN { namespace gfx
             if( mWraps[2] != mode )
             {
                 mWraps[2] = mode;
-                
+
                 GN_OGL_CHECK( glTexParameteri(
                     mOGLTarget,
                     GL_TEXTURE_WRAP_R,

@@ -19,7 +19,7 @@ namespace GN { namespace gfx
         bool mUseExternalWindow;
         Display * mDisplay;
         Window    mWindow;
-        
+
         //@{
     public:
         XRenderWindow() : mDisplay(0), mWindow(0) {}

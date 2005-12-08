@@ -41,7 +41,7 @@ namespace CxxTest
     //! Type traits of multi-byte string class
     //!
     CXXTEST_TEMPLATE_INSTANTIATION
-    class ValueTraits< GN::StrA > 
+    class ValueTraits< GN::StrA >
     {
         GN::StrA s;
     public:
@@ -55,7 +55,7 @@ namespace CxxTest
     //! Type traits of wide char string class
     //!
     CXXTEST_TEMPLATE_INSTANTIATION
-    class ValueTraits< GN::StrW > 
+    class ValueTraits< GN::StrW >
     {
         GN::StrA s;
     public:
@@ -69,7 +69,7 @@ namespace CxxTest
     //! Type traits of multi-byte c-style string
     //!
     CXXTEST_TEMPLATE_INSTANTIATION
-    class ValueTraits< const wchar_t * > 
+    class ValueTraits< const wchar_t * >
     {
         GN::StrA s;
     public:

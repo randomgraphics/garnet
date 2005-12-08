@@ -76,8 +76,8 @@ namespace GN
         {
             a = (int)*s1;
             b = (int)*s2;
-            if ( 'a' <= a && a <= 'z' ) a += 'A'-'a'; 
-            if ( 'a' <= b && b <= 'z' ) b += 'A'-'a'; 
+            if ( 'a' <= a && a <= 'z' ) a += 'A'-'a';
+            if ( 'a' <= b && b <= 'z' ) b += 'A'-'a';
             if ( a < b ) return -1;
             if ( a > b ) return 1;
             ++s1;
@@ -552,7 +552,7 @@ namespace GN
         //!
         friend bool operator == ( const Str & s1, const Str & s2 )
         {
-            return 0 == strCmp( s1.mPtr, s2.mPtr ); 
+            return 0 == strCmp( s1.mPtr, s2.mPtr );
         }
 
         //!
@@ -560,7 +560,7 @@ namespace GN
         //!
         friend bool operator != ( const CHAR * s1, const Str & s2 )
         {
-            return 0 != strCmp( s1, s2.mPtr ); 
+            return 0 != strCmp( s1, s2.mPtr );
         }
 
         //!
@@ -568,7 +568,7 @@ namespace GN
         //!
         friend bool operator != ( const Str & s1, const CHAR * s2 )
         {
-            return 0 != strCmp( s1.mPtr, s2 ); 
+            return 0 != strCmp( s1.mPtr, s2 );
         }
 
         //!
@@ -576,7 +576,7 @@ namespace GN
         //!
         friend bool operator != ( const Str & s1, const Str & s2 )
         {
-            return 0 != strCmp( s1.mPtr, s2.mPtr ); 
+            return 0 != strCmp( s1.mPtr, s2.mPtr );
         }
 
         //!
@@ -584,7 +584,7 @@ namespace GN
         //!
         friend bool operator < ( const CHAR * s1, const Str & s2 )
         {
-            return -1 == strCmp( s1, s2.mPtr ); 
+            return -1 == strCmp( s1, s2.mPtr );
         }
 
         //!
@@ -592,7 +592,7 @@ namespace GN
         //!
         friend bool operator < ( const Str & s1, const CHAR * s2 )
         {
-            return -1 == strCmp( s1.mPtr, s2 ); 
+            return -1 == strCmp( s1.mPtr, s2 );
         }
 
         //!
@@ -600,7 +600,7 @@ namespace GN
         //!
         friend bool operator < ( const Str & s1, const Str & s2 )
         {
-            return -1 == strCmp( s1.mPtr, s2.mPtr ); 
+            return -1 == strCmp( s1.mPtr, s2.mPtr );
         }
 
 

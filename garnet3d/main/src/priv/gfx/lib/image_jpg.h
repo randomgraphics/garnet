@@ -138,7 +138,7 @@ public:
     //!
     bool readHeader(
         GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size );
-  
+
     //!
     //! read JPEG image
     //!

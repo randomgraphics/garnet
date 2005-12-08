@@ -13,7 +13,7 @@ namespace GN
     //!
     //! Handle Manager
     //!
-    template<typename T, typename HANDLE_TYPE = size_t >    
+    template<typename T, typename HANDLE_TYPE = size_t >
     class HandleManager
     {
         //!

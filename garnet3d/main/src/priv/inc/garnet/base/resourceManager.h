@@ -396,7 +396,7 @@ namespace GN
                 GN_ERROR( "Resource '%s' is invalid. Fall back to null instance...", nullName );
                 if( 0 == mNullInstance )
                 {
-                    RES * tmp = new RES;   
+                    RES * tmp = new RES;
                     if( !mNullor ||
                         !mNullor(*tmp,nullName) )
                     {

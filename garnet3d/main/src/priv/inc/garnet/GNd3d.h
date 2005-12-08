@@ -87,7 +87,7 @@ namespace GN
                 , winTitle("D3DApp")
             {}
         };
-        
+
         //!
         //! Main d3d class
         //!
@@ -322,7 +322,7 @@ namespace GN
             void setAppQuitFunc( const Functor0<void> & fp ) { mAppQuitFunc = fp; }
             void setUpdateFunc( const Functor0<void> & fp ) { mUpdateFunc = fp; }
             void setRenderFunc( const Functor0<void> & fp ) { mRenderFunc = fp; }
-            
+
             int run();
             //@}
 
