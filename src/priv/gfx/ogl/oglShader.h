@@ -39,7 +39,7 @@ namespace GN { namespace gfx
     //!
     //! OGL Basic ARB shader
     //!
-    class OGLBasicShaderARB : public Shader, OGLBasicShader, public OGLResource, public StdClass
+    class OGLBasicShaderARB : public Shader, public OGLBasicShader, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLBasicShaderARB, StdClass );
 

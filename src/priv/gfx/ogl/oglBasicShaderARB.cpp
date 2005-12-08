@@ -305,7 +305,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
     GN_ASSERT( !strEmpty(name) );
 
     // get uniform index
-    uint32_t index;
+    unsigned int index;
     if( 1 != sscanf( name+1, "%u", &index ) )
     {
         GNGFX_ERROR(
