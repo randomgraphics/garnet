@@ -146,6 +146,27 @@ namespace GN { namespace gfx
         bool         mDynamic; //!< Buffer usage
         IdxBufLoader mLoader;  //!< Content loader
     };
+
+    //!
+    //! Unlock the buffer automatically, before going out of life scope.
+    //!
+    template<class BUFFER>
+    class AutoBufferUnlocker
+    {
+        BUFFER * mBuf;
+
+    public:
+
+        //!
+        //! Ctor
+        //!
+        AutoBufferUnlocker( BUFFER * buf ) : mBuf(buf) {}
+
+        //!
+        //! Dtor
+        //!
+        ~AutoBufferUnlocker() { if(mBuf) mBuf->unlock(); }
+    };
 }}
 
 // *****************************************************************************

@@ -322,12 +322,12 @@ void GN::gfx::D3DQuad::deviceDestroy()
 // ----------------------------------------------------------------------------
 void GN::gfx::D3DQuad::drawQuads(
     const Vector2f * positions, size_t posStride,
-    const Vector2f * texCoords, size_t texStride,
+    const Vector2f * texcoords, size_t texStride,
     size_t count, uint32_t options )
 {
     GN_GUARD_SLOW;
 
-    if( 0 == positions || 0 == texCoords )
+    if( 0 == positions || 0 == texcoords )
     {
         GNGFX_ERROR( "NULL parameter(s)!" );
         return;
@@ -339,6 +339,12 @@ void GN::gfx::D3DQuad::drawQuads(
         return;
     }
 
+    if( DQ_WINDOW_SPACE & options )
+    {
+        GN_DO_ONCE( GN_ERROR( "do not support DQ_WINDOW_SPACE currenly" ) );
+        return;
+    }
+
     GN_ASSERT( mNextQuad < MAX_QUADS );
 
     // handle large amount of array
@@ -346,9 +352,9 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
-        drawQuads( positions, posStride, texCoords, texStride, n, options );
+        drawQuads( positions, posStride, texcoords, texStride, n, options );
         positions = (const Vector2f*)( ((const uint8_t*)positions) + n * posStride );
-        texCoords = (const Vector2f*)( ((const uint8_t*)texCoords) + n * texStride );
+        texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + n * texStride );
         count -= n;
     }
 
@@ -375,14 +381,18 @@ void GN::gfx::D3DQuad::drawQuads(
         for( size_t i = 0; i < count; ++i )
         {
             D3DQuadStructVS & v = ((D3DQuadStructVS*)vbData)[i];
+
             v.p0 = positions[0];
             v.p1 = positions[1];
             v.p2 = positions[2];
             v.p3 = positions[3];
-            v.t0 = texCoords[0];
-            v.t1 = texCoords[1];
-            v.t2 = texCoords[2];
-            v.t3 = texCoords[3];
+            v.t0 = texcoords[0];
+            v.t1 = texcoords[1];
+            v.t2 = texcoords[2];
+            v.t3 = texcoords[3];
+
+            positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
+            texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
         }
     }
     else
@@ -392,18 +402,22 @@ void GN::gfx::D3DQuad::drawQuads(
         GN_DX_CHECK( dev->GetViewport( &vp ) );
 
         Vector2f rtSize( (float)vp.Width, (float)vp.Height );
-        
+
         for( size_t i = 0; i < count; ++i )
         {
             D3DQuadStructFFP & v = ((D3DQuadStructFFP*)vbData)[i];
+
             v.p0.set( positions[0] * rtSize, 0, 1 );
             v.p1.set( positions[1] * rtSize, 0, 1 );
             v.p2.set( positions[2] * rtSize, 0, 1 );
             v.p3.set( positions[3] * rtSize, 0, 1 );
-            v.t0 = texCoords[0];
-            v.t1 = texCoords[1];
-            v.t2 = texCoords[2];
-            v.t3 = texCoords[3];
+            v.t0 = texcoords[0];
+            v.t1 = texcoords[1];
+            v.t2 = texcoords[2];
+            v.t3 = texcoords[3];
+
+            positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
+            texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
         }
     }
 

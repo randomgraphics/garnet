@@ -33,7 +33,14 @@ namespace GN { namespace gfx
     public:
         bool init();
         void quit();
-        bool ok() const { return MyParent::ok(); }
+        bool ok() const
+        {
+            return MyParent::ok()
+                && 0 != mRsb
+                && 0 != mVtxBinding
+                && 0 != mVtxBuf
+                && 0 != mIdxBuf;
+        }
     private:
         void clear()
         {
@@ -53,7 +60,27 @@ namespace GN { namespace gfx
         //!
         //! apply quad renderer states
         //!
-        void applyStates() {}
+        void applyStates( uint32_t options )
+        {
+            GN_GUARD_SLOW;
+
+            GN_ASSERT( selfOK() );
+
+            mRenderer.bindVtxBinding( mVtxBinding );
+            mRenderer.bindVtxBufs( &mVtxBuf, 0, 1 );
+            mRenderer.bindIdxBuf( mIdxBuf );
+
+            if( !( DQ_USE_CURRENT_RS & options ) )
+                mRenderer.bindRenderStateBlock( mRsb );
+            if( !( DQ_USE_CURRENT_VS & options ) )
+                mRenderer.bindVtxShader( 0 );
+            if( !( DQ_USE_CURRENT_PS & options ) )
+                mRenderer.bindPxlShader( 0 );
+
+            mDrawOptions = options;
+
+            GN_UNGUARD_SLOW;
+        }
 
         //!
         //! Draw quads on screen
@@ -63,7 +90,7 @@ namespace GN { namespace gfx
         void drawQuads(
             const Vector2f * positions, size_t posStride,
             const Vector2f * texCoords, size_t texStride,
-            size_t count, uint32_t options );
+            size_t count );
 
         // ********************************
         // private variables
@@ -79,7 +106,8 @@ namespace GN { namespace gfx
         VtxBuf * mVtxBuf;
         IdxBuf * mIdxBuf;
 
-        size_t mNextQuad;
+        size_t   mNextQuad;
+        uint32_t mDrawOptions;
 
         // ********************************
         // private functions

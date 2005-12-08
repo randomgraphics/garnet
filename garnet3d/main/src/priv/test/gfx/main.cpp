@@ -42,10 +42,10 @@ public:
         {
             static const char * code =
                 "!!ARBfp1.0 \n"
-                "param white = program.local[0]; \n"
-                "output oClr = result.color; \n"
-                "mov oPos, white; \n"
-                "end";
+                "PARAM white = program.local[0]; \n"
+                "OUTPUT oClr = result.color; \n"
+                "MOV oClr, white; \n"
+                "END";
             ps1.attach( r.createPxlShader( GN::gfx::LANG_OGL_ARB, code ) );
             if( !ps1 ) return false;
             ps1->setUniformByName( "l0", GN::Vector4f(0,1,0,1) );
