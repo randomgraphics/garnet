@@ -293,12 +293,12 @@ def generate(env):
                     ('LIB', 'Lib\\AMD64\\atlmfc'), # TODO: IA64
                     ('PATH', 'Bin\\Win64\\x86\\AMD64') ) # TODO: IA64
                 for p in paths:
-                    p = os.path.join( psroot, p[1] )
-                    if not os.path.exists( p ):
+                    dir = os.path.join( psroot, p[1] )
+                    if not os.path.exists( dir ):
                         raise SCons.Errors.UserError, \
                             'Microsoft Platform SDK directory "%s" not found,' \
-                            'which is required by Intel compiler (version=%s, abi=%s)'%(p,version,abi)
-                    env.PrependENVPath( p[0], p )
+                            'which is required by Intel compiler (version=%s, abi=%s)'%(dir,version,abi)
+                    env.PrependENVPath( p[0], dir )
             elif 'ia64' == abi:
                 raise SCons.Errors.UserError, "Unsupport icl ABI : %s"%abi
         elif is_linux:
@@ -339,6 +339,7 @@ def generate(env):
         env['LINK']      = 'xilink'
         if float(env.get('MSVS_VERSION',0)) >= 8.0:
             env.Append( LINKFLAGS = ['/MANIFEST', '/MANIFESTDEPENDENCY:dependency'] )
+        #env.Append( CCFLAGS = ['/QH'] )
         #env.Append( LINKFLAGS = ['/VERBOSE:LIB'] )
     else:
         env['CC']        = 'icc'
