@@ -71,7 +71,7 @@ class InputTest
             case WM_CLOSE: mDone = true; break;
             default:; // do nothing
         }
-        
+
         return ::DefWindowProc( hwnd, msg, wp, lp );
     }
 
@@ -147,7 +147,7 @@ public:
             update();
         }
 
-        return 0; 
+        return 0;
     }
 
     //!
@@ -178,7 +178,7 @@ void usage( const char * appName )
 int main( int argc, const char * argv[] )
 {
     const char * module;
-    
+
     if( argc < 2 )
     {
         usage( argv[0] );

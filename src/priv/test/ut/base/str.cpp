@@ -66,7 +66,7 @@ public:
             static bool stop1( wchar_t ch ) { return L'1' == ch; }
             static bool stop3( wchar_t ch ) { return L'3' == ch; }
         };
-        
+
         GN::StrW s1( L"12345" );
         s1.trimRightUntil( &Local::stop3 );
         TS_ASSERT_EQUALS( s1, L"123" );

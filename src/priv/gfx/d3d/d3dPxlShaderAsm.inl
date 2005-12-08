@@ -7,7 +7,7 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
     GN_GUARD_SLOW;
 
     D3DAsmConstDesc desc;
-    
+
     desc.u32 = (uint32_t)u.userData;
 
     switch( desc.type )

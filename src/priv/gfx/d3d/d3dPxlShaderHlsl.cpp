@@ -76,7 +76,7 @@ bool GN::gfx::D3DPxlShaderHlsl::deviceCreate()
         mEntry.cstr(),
         D3DXGetPixelShaderProfile( dev ),
         flag,
-        &bin, &err, &mConstTable ); 
+        &bin, &err, &mConstTable );
     if( FAILED( hr ) )
     {
         printShaderCompileError( hr, mCode.cstr(), err );

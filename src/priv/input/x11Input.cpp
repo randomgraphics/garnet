@@ -19,7 +19,7 @@ static const int UNINTERESTED_EVENTS = PointerMotionHintMask;
 GN::input::X11Input::X11Input()
 {
     clear();
-    
+
     // clear all fields to KEY_NONE
     memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
 
@@ -128,7 +128,7 @@ void GN::input::X11Input::processInputEvents()
         if( XCheckWindowEvent( mDisplay, mWindow, INTERESTED_EVENTS, &e ) )
         {
             KeyCode kc;
-            
+
             switch( e.type )
             {
                 case MotionNotify:

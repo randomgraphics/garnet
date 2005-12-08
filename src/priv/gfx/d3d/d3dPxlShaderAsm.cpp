@@ -168,7 +168,7 @@ bool GN::gfx::D3DPxlShaderAsm::compileShader()
         mCode.cstr(), (UINT)mCode.size(),
         0, 0, // no defines, no includes
         flag,
-        &mMachineCode, &err ); 
+        &mMachineCode, &err );
     if( FAILED( hr ) )
     {
         printShaderCompileError( hr, mCode.cstr(), err );

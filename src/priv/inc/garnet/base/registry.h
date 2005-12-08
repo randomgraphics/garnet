@@ -94,14 +94,14 @@ namespace GN
         Variant & operator = ( const StrA & newVal )    { mValid = true; mStr = newVal; updateNumber(); return *this; }
         //@}
     };
-    
+
     //!
     //! ◊¢≤·±Ì¿‡–Õ.
     //!
     class Registry
     {
         std::map<StrA,Variant> mKeys;
-        
+
     public:
 
         //!

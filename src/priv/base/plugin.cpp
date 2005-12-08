@@ -34,7 +34,7 @@ GN::PluginManager::getPluginID( PluginTypeID type, const StrA & name ) const
         GN_ERROR( "invalid type ID" );
         return PluginID::INVALID;
     }
-    
+
     PluginID id( type, mNames.findIf( NameEqual(name) ) );
 
     if ( validID(id) )
@@ -138,7 +138,7 @@ GN::PluginID GN::PluginManager::registerPlugin(
     if ( validID(id) )
     {
         // This is a existing plugin
-        
+
         if ( !overrideExistingPlugin )
         {
             GN_ERROR( "Plugin '%s::%s' already exist",
@@ -152,7 +152,7 @@ GN::PluginID GN::PluginManager::registerPlugin(
     else
     {
         // This is a new plugin
-        
+
         if ( 0 == id.name )
         {
             id.name = mNames.add( NameItem(name) );

@@ -16,7 +16,7 @@ namespace GN
     //!
     //! Re-allocate memory from heap. Can cross DLL boundary.
     //!
-    void * memReAlloc( void *, size_t ); 
+    void * memReAlloc( void *, size_t );
 
     //!
     //! Free heap-allocated memory. Can cross DLL boundary.

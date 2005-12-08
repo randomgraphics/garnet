@@ -926,7 +926,7 @@ GLuint GN::gfx::OGLTexCube::newOGLTexture(
         GNGFX_ERROR( "do not support cube map!" );
         return 0;
     }
-    
+
     GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, result ) );
     for( GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB;
          face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB;

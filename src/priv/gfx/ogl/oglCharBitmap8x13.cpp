@@ -2076,7 +2076,7 @@ uint32_t GN::gfx::OGLRenderer::getFontBitmapHeight()
 void GN::gfx::OGLRenderer::drawFontBitmap( char ch )
 {
     GN_GUARD;
-    
+
     GLint swapbytes, lsbfirst, rowlength;
     GLint skiprows, skippixels, alignment;
 

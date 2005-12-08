@@ -12,7 +12,7 @@
 #include <X11/Xlib.h>
 
 namespace GN { namespace input
-{    
+{
     //!
     //! Input system on X11 platform
     //!

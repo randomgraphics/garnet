@@ -105,7 +105,7 @@ namespace GN
         //!
         //! Log helper class
         //!
-        //! This class will finally call doLog() to do the actual logging. 
+        //! This class will finally call doLog() to do the actual logging.
         //!
         class LogHelper
         {

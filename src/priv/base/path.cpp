@@ -277,7 +277,7 @@ bool GN::path::exist( const StrA & path )
 bool GN::path::isDir( const StrA & path )
 {
     StrA native = toNative(path);
-    
+
 #if GN_MSWIN
 #if GN_PC
     return !!::PathIsDirectoryA( native.cstr() );
