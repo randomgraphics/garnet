@@ -52,8 +52,6 @@ void GN::gfx::OGLFont::drawTextW( const wchar_t * s, int x, int y, const Vector4
 
     if( strEmpty(s) ) return;
 
-    // TODO: disable programmable shader
-
     // push attributes
     glPushAttrib(
         GL_TRANSFORM_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT |

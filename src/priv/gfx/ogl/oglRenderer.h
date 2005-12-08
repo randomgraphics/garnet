@@ -471,7 +471,7 @@ namespace GN { namespace gfx
         virtual void drawQuads( uint32_t options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
-                                size_t count ) {}
+                                size_t count );
         virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions

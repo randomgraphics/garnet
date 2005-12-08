@@ -334,18 +334,40 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t base
 //
 //
 // ----------------------------------------------------------------------------
+void GN::gfx::OGLRenderer::drawQuads(
+    uint32_t options,
+    const void * positions, size_t posStride,
+    const void * texcoords, size_t texStride,
+    size_t count )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mDrawBegan && mQuad );
+
+    makeCurrent();
+
+    mQuad->applyStates( options );
+    mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( mDrawBegan && mFont );
+
     makeCurrent();
 
-    GN_ASSERT( mDrawBegan );
+    // disable programmable pipeline
+    bindShaders( 0, 0 );
+    updateDrawState( 0 );
 
-    GN_ASSERT( mFont );
     mFont->drawTextW( s, x, y, c );
-
-    // TODO: dirty draw state flags
 
     GN_UNGUARD_SLOW;
 }

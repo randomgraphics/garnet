@@ -46,7 +46,7 @@ static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN:
 
     // load program
     glBindProgramARB( target, program );
-    glProgramStringARB( target, GL_PROGRAM_FORMAT_ASCII_ARB, code.size(), code.cstr() );
+    glProgramStringARB( target, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)code.size(), code.cstr() );
     if( GL_NO_ERROR != glGetError() )
     {
         GLint        errPos;

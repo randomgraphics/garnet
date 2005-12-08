@@ -308,6 +308,8 @@ namespace GN { namespace gfx
         //! By default, quad positios are in screen space. That is:
         //! (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
         //!
+        //! \note This option is meaningful only when DQ_USE_CURRENT_VS is _NOT_ set.
+        //!
         DQ_WINDOW_SPACE = 1<<0,
 
         //!
@@ -324,8 +326,8 @@ namespace GN { namespace gfx
         //!
         //! 使用当前的Vertex Shader。
         //!
-        //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Vertex Shader，输出
-        //! 顶点坐标和一组贴图坐标。
+        //! - 缺省情况下，Renderer::drawQuad() 会使用一个内置的vertex shader
+        //! - 自定义的vertex shader应接受一组2D空间坐标和一组2D贴图坐标。
         //!
         DQ_USE_CURRENT_VS = 1<<2,
 
@@ -837,8 +839,11 @@ namespace GN { namespace gfx
         //!
         //! Bind a vertex buffers to rendering device, with user-specified stride.
         //!
-        //! \note Only use this function, when you want to specify a stride that
-        //!       is different with the buffer's default stride.
+        //! \note
+        //! - By default, vertex buffer stride will be determined by current vertex binding.
+        //!   Use this function only when your want to use custom stride for your vertex buffer.
+        //! - To bind a single vertex buffer with default stride, please use
+        //!   bindVtxBufs( &yourBuffer, yourIndex, 1 ) instead.
         //!
         virtual void
         bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride ) = 0;
