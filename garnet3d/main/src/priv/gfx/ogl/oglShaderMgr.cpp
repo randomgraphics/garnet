@@ -202,7 +202,14 @@ void GN::gfx::OGLRenderer::updateShaderState()
 {
     GN_GUARD_SLOW;
 
-    GN_UNIMPL_WARNING();
+    if( mCurrentDrawState.dirtyFlags.vtxShader )
+    {
+        
+    }
+
+    if( mCurrentDrawState.dirtyFlags.pxlShader )
+    {
+    }
 
     GN_UNGUARD_SLOW;
 }

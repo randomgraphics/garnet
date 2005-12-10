@@ -136,10 +136,10 @@ void GN::gfx::OGLRenderer::drawEnd()
 {
     GN_GUARD_SLOW;
 
-    makeCurrent();
+    GN_ASSERT( mDrawBegan && isCurrent() );
 
-    GN_ASSERT( mDrawBegan );
     mDrawBegan = 0;
+
 #if GN_MSWIN
     GN_MSW_CHECK( ::SwapBuffers( mDeviceContext ) );
 #else
@@ -158,9 +158,8 @@ void GN::gfx::OGLRenderer::drawFinish()
 {
     GN_GUARD_SLOW;
 
-    makeCurrent();
+    GN_ASSERT( mDrawBegan && isCurrent() );
 
-    GN_ASSERT( mDrawBegan );
     GN_OGL_CHECK( glFinish() );
 
     GN_UNGUARD_SLOW;
@@ -221,9 +220,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 {
     GN_GUARD_SLOW;
 
-    makeCurrent();
-
-    GN_ASSERT( mDrawBegan );
+    GN_ASSERT( mDrawBegan && isCurrent() );
 
     updateDrawState( baseVtx );
 
@@ -293,7 +290,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t base
 {
     GN_GUARD_SLOW;
 
-    makeCurrent();
+    GN_ASSERT( mDrawBegan && isCurrent() );
 
     GN_ASSERT( mDrawBegan );
 
@@ -342,7 +339,7 @@ void GN::gfx::OGLRenderer::drawQuads(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && mQuad );
+    GN_ASSERT( mDrawBegan && isCurrent() && mQuad );
 
     makeCurrent();
 
@@ -359,9 +356,7 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && mFont );
-
-    makeCurrent();
+    GN_ASSERT( mDrawBegan && isCurrent() && mFont );
 
     // disable programmable pipeline
     bindShaders( 0, 0 );
@@ -372,16 +367,14 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
     GN_UNGUARD_SLOW;
 }
 
-// ****************************************************************************
-// private functions
-// ****************************************************************************
-
 //
 //
 // -----------------------------------------------------------------------------
 GN_INLINE void GN::gfx::OGLRenderer::updateDrawState( size_t baseVtx )
 {
     GN_GUARD_SLOW;
+
+    GN_ASSERT( mDrawBegan && isCurrent() );
 
     if( 0 == mCurrentDrawState.dirtyFlags.u32 ) return;
 

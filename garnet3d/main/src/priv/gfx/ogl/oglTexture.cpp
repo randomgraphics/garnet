@@ -455,6 +455,12 @@ bool GN::gfx::OGLBasicTexture::deviceCreate()
         GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, GL_REPEAT ) );
     }
 
+    // call user-defined content loader
+    if( !getLoader().empty() )
+    {
+        if( !getLoader()( *this ) ) return false;
+    }
+
     // successful
     return true;
 
@@ -683,8 +689,13 @@ void * GN::gfx::OGLTex1D::lock1D( uint32_t /*level*/,
                                   uint32_t /*length*/,
                                   uint32_t /*flag*/ )
 {
-    GNGFX_ERROR( "no implementation" );
+    GN_GUARD_SLOW;
+
+    GN_UNIMPL_WARNING();
+
     return 0;
+
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -692,7 +703,11 @@ void * GN::gfx::OGLTex1D::lock1D( uint32_t /*level*/,
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLTex1D::unlock()
 {
-    GNGFX_ERROR( "no implementation" );
+    GN_GUARD_SLOW;
+
+    GN_UNIMPL_WARNING();
+
+    GN_UNGUARD_SLOW;
 }
 
 //

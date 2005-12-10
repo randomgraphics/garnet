@@ -150,6 +150,22 @@ namespace GN { namespace gfx
 #endif
         }
 
+        //!
+        //! Return true if the renderer is binding as current opengl context.
+        //!
+        bool isCurrent() const
+        {
+#if GN_MSWIN
+            GN_ASSERT( mRenderContext && mDeviceContext );
+            HGLRC hrc = wglGetCurrentContext();
+            HDC   hdc = wglGetCurrentDC();
+            return hdc == mDeviceContext && hrc == mRenderContext;
+#elif GN_POSIX
+            GN_UNIMPL_WARNING();
+            return true;
+#endif
+        }
+
 #if GN_MSWIN
     private :
         bool dispInit() { return true; }
@@ -474,7 +490,6 @@ namespace GN { namespace gfx
                                 size_t count );
         virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
-        // private functions
     private:
         bool drawInit() { return true; }
         void drawQuit() {}
@@ -514,6 +529,8 @@ namespace GN { namespace gfx
         // ********************************************************************
 
         //@{
+
+    public:
 
         //!
         //! Dump current renderer state to string. For debug purpose only.
