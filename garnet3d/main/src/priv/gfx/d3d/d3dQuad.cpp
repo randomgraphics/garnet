@@ -3,25 +3,29 @@
 #include "d3dRenderer.h"
 #include "d3dUtils.h"
 
+struct D3DQuadVertexVS
+{
+    GN::Vector2f p, t;
+};
+
 struct D3DQuadStructVS
 {
-    GN::Vector2f p0, t0, p1, t1, p2, t2, p3, t3;
+    D3DQuadVertexVS v[4];
     enum
     {
         FVF = D3DFVF_XYZW
     };
 };
 
+struct D3DQuadVertexFFP
+{
+    GN::Vector4f p;
+    GN::Vector2f t;
+};
+
 struct D3DQuadStructFFP
 {
-    GN::Vector4f p0;
-    GN::Vector2f t0;
-    GN::Vector4f p1;
-    GN::Vector2f t1;
-    GN::Vector4f p2;
-    GN::Vector2f t2;
-    GN::Vector4f p3;
-    GN::Vector2f t3;
+    D3DQuadVertexFFP v[4];
     enum
     {
         FVF = D3DFVF_XYZRHW | D3DFVF_TEX1
@@ -380,19 +384,14 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         for( size_t i = 0; i < count; ++i )
         {
-            D3DQuadStructVS & v = ((D3DQuadStructVS*)vbData)[i];
-
-            v.p0 = positions[0];
-            v.p1 = positions[1];
-            v.p2 = positions[2];
-            v.p3 = positions[3];
-            v.t0 = texcoords[0];
-            v.t1 = texcoords[1];
-            v.t2 = texcoords[2];
-            v.t3 = texcoords[3];
-
-            positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
+            D3DQuadStructVS & q = ((D3DQuadStructVS*)vbData)[i];
+            for( size_t j = 0; j < 4; ++j )
+            {
+                q.v[j].p = *positions;
+                q.v[j].t = *texcoords;
+                positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
+                texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
+            }
         }
     }
     else
@@ -405,19 +404,14 @@ void GN::gfx::D3DQuad::drawQuads(
 
         for( size_t i = 0; i < count; ++i )
         {
-            D3DQuadStructFFP & v = ((D3DQuadStructFFP*)vbData)[i];
-
-            v.p0.set( positions[0] * rtSize, 0, 1 );
-            v.p1.set( positions[1] * rtSize, 0, 1 );
-            v.p2.set( positions[2] * rtSize, 0, 1 );
-            v.p3.set( positions[3] * rtSize, 0, 1 );
-            v.t0 = texcoords[0];
-            v.t1 = texcoords[1];
-            v.t2 = texcoords[2];
-            v.t3 = texcoords[3];
-
-            positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
+            D3DQuadStructFFP & q = ((D3DQuadStructFFP*)vbData)[i];
+            for( size_t j = 0; j < 4; ++j )
+            {
+                q.v[j].p.set( *positions, 0, 1 );
+                q.v[j].t = *texcoords;
+                positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
+                texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
+            }
         }
     }
 
