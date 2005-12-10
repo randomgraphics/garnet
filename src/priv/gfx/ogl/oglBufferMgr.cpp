@@ -134,7 +134,7 @@ void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 {
     GN_GUARD;
 
-    makeCurrent();
+    GN_ASSERT( isCurrent() );
 
     if( !mVtxBindings.validHandle(handle) )
     {
@@ -153,8 +153,6 @@ void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 void GN::gfx::OGLRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count )
 {
     GN_GUARD_SLOW;
-
-    makeCurrent();
 
     if( start >= MAX_VERTEX_STREAMS )
     {
@@ -181,8 +179,6 @@ void GN::gfx::OGLRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t s
 void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride )
 {
     GN_GUARD_SLOW;
-
-    makeCurrent();
 
     if( index >= MAX_VERTEX_STREAMS )
     {

@@ -134,7 +134,7 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
 
-            getRenderer().makeCurrent();
+            GN_ASSERT( getRenderer().isCurrent() );
 
             switch( getType() )
             {
