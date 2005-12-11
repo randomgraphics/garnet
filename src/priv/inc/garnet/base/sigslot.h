@@ -100,7 +100,7 @@ namespace GN
             RetType emit( const ContainerType & slots PARAM_COMMA PARAM_LIST )
             {
                 RetType last;
-                ContainerType::const_iterator i = slots.begin();
+                typename ContainerType::const_iterator i = slots.begin();
                 while( i != slots.end() )
                 {
                     last = (*i).func(PARAM_VALUES);
@@ -115,7 +115,7 @@ namespace GN
         {
             bool emit( const ContainerType & slots PARAM_COMMA PARAM_LIST )
             {
-                ContainerType::const_iterator i = slots.begin();
+                typename ContainerType::const_iterator i = slots.begin();
                 while( i != slots.end() )
                 {
                     if( !(*i).func(PARAM_VALUES) ) return false;
@@ -130,7 +130,7 @@ namespace GN
         {
             void emit( const ContainerType & slots PARAM_COMMA PARAM_LIST )
             {
-                ContainerType::const_iterator i = slots.begin();
+                typename ContainerType::const_iterator i = slots.begin();
                 while( i != slots.end() )
                 {
                     (*i).func(PARAM_VALUES);
@@ -203,7 +203,7 @@ namespace GN
             if( !slotPtr ) return;
 
             // remove the class from private slot list that has same class ptr
-            SlotContainer::iterator i, t, e = mSlots.end();
+            typename SlotContainer::iterator i, t, e = mSlots.end();
             for( i = mSlots.begin(); i != e; )
             {
                 t = i; ++i;
@@ -233,7 +233,7 @@ namespace GN
         virtual void removeBaseSlotClass( const SlotBase & base ) const
         {
             // Remove slots that has same special base class
-            SlotContainer::iterator i, t, e = mSlots.end();
+            typename SlotContainer::iterator i, t, e = mSlots.end();
             for( i = mSlots.begin(); i != e; )
             {
                 t = i; ++i;

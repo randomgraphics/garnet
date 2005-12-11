@@ -211,14 +211,14 @@ namespace GN { namespace gfx
         }
 
 #define _GNGFX_PUSH_SINGLE_RP( t ) \
-    GN_ASSERT( 0 <= t && t < NUM_RENDER_PARAMETER_TYPES ); \
+    GN_ASSERT( 0 <= (int)(t) && (t) < NUM_RENDER_PARAMETER_TYPES ); \
     mRenderParameters[t].push();
 #define _GNGFX_PUSH_RP_MASK( mask, t ) \
         if( t & (int)RPM_##mask ) \
         { \
-            for( int i = RPT_##mask##_FIRST; i <= RPT_##mask##_LAST; ++i ) \
+            for( int i = RPT_##mask##_FIRST; i <= (int)RPT_##mask##_LAST; ++i ) \
             { \
-                _GNGFX_PUSH_SINGLE_RP( i ); \
+                _GNGFX_PUSH_SINGLE_RP( (RenderParameterType)i ); \
             } \
         }
 
@@ -257,14 +257,14 @@ namespace GN { namespace gfx
 #define _GNGFX_POP_SINGLE_RP( t ) \
     GN_ASSERT( 0 <= (t) && (t) < NUM_RENDER_PARAMETER_TYPES ); \
     mRenderParameters[t].pop(); \
-    mRenderParameterDirtySet.insert( (RenderParameterType)(t) );
+    mRenderParameterDirtySet.insert( t );
 
 #define _GNGFX_POP_RP_MASK( mask, t ) \
         if( t & (int)RPM_##mask ) \
         { \
-            for( int i = RPT_##mask##_FIRST; i <= RPT_##mask##_LAST; ++i ) \
+            for( int i = RPT_##mask##_FIRST; i <= (int)RPT_##mask##_LAST; ++i ) \
             { \
-                _GNGFX_POP_SINGLE_RP( i ); \
+                _GNGFX_POP_SINGLE_RP( (RenderParameterType)i ); \
             } \
         }
 

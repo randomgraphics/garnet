@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglRenderer.h"
+#include "oglFont.h"
 
 #if GN_POSIX
 
@@ -2055,7 +2055,7 @@ static const BitmapCharDesc * const chars8x13[] = {
 //
 //
 // -----------------------------------------------------------------------------
-int GN::gfx::OGLRenderer::getFontBitmapAdvance( char ch )
+int GN::gfx::OGLFont::getFontBitmapAdvance( char ch )
 {
     const BitmapCharDesc * desc = chars8x13[(uint8_t)ch];
     return desc ? (uint32_t)desc->advance : 0;
@@ -2064,7 +2064,7 @@ int GN::gfx::OGLRenderer::getFontBitmapAdvance( char ch )
 //
 //
 // -----------------------------------------------------------------------------
-uint32_t GN::gfx::OGLRenderer::getFontBitmapHeight()
+uint32_t GN::gfx::OGLFont::getFontBitmapHeight()
 {
     // Fixed height
     return 14;
@@ -2073,7 +2073,7 @@ uint32_t GN::gfx::OGLRenderer::getFontBitmapHeight()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawFontBitmap( char ch )
+void GN::gfx::OGLFont::drawFontBitmap( char ch )
 {
     GN_GUARD;
 

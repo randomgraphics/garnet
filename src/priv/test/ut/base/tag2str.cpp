@@ -382,7 +382,7 @@ public:
         GN::StrA                     s;
         //GN::gfx::RenderParameterType t = GN::gfx::RPT_INVALID;
 
-        for( int i = 0; i < GN::gfx::NUM_RENDER_PARAMETER_TYPES; ++i )
+        for( int i = 0; i < (int)GN::gfx::NUM_RENDER_PARAMETER_TYPES; ++i )
         {
             TS_ASSERT( GN::gfx::rpt2Str( s, tag[i] ) );
             TS_ASSERT_EQUALS( str[i], s );
