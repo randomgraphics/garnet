@@ -20,7 +20,7 @@
 //!
 //! color operation
 //!
-GNGFX_DEFINE_TS( COLOROP      , MODULATE        , DISABLE         , D3DTSS_COLOROP   , GL_COMBINE_RGB_ARB   , GL_RGB_SCALE_ARB      )
+GNGFX_DEFINE_TS( COLOROP      , MODULATE       , DISABLE        , D3DTSS_COLOROP   , GL_COMBINE_RGB_ARB   , GL_RGB_SCALE_ARB      )
 
 //!
 //! color argument 0
@@ -35,7 +35,7 @@ GNGFX_DEFINE_TS( COLORARG1    , CURRENT_COLOR  , CURRENT_COLOR  , D3DTSS_COLORAR
 //!
 //! alpha operation
 //!
-GNGFX_DEFINE_TS( ALPHAOP      , ARG0            , DISABLE         , D3DTSS_ALPHAOP   , GL_COMBINE_ALPHA_ARB , GL_ALPHA_SCALE        )
+GNGFX_DEFINE_TS( ALPHAOP      , ARG0           , DISABLE        , D3DTSS_ALPHAOP   , GL_COMBINE_ALPHA_ARB , GL_ALPHA_SCALE        )
 
 //!
 //! alpha argument 0
