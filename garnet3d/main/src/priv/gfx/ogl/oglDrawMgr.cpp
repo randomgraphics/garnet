@@ -222,7 +222,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     GN_ASSERT( mDrawBegan && isCurrent() );
 
-    updateDrawState( baseVtx );
+    applyDrawState( baseVtx );
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -295,7 +295,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t base
     GN_ASSERT( mDrawBegan );
 
     // update draw state
-    updateDrawState( baseVtx );
+    applyDrawState( baseVtx );
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -360,7 +360,7 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
 
     // disable programmable pipeline
     bindShaders( 0, 0 );
-    updateDrawState( 0 );
+    applyDrawState( 0 );
 
     mFont->drawTextW( s, x, y, c );
 
@@ -370,7 +370,7 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::updateDrawState( size_t baseVtx )
+GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t baseVtx )
 {
     GN_GUARD_SLOW;
 
@@ -380,17 +380,22 @@ GN_INLINE void GN::gfx::OGLRenderer::updateDrawState( size_t baseVtx )
 
     if( mCurrentDrawState.dirtyFlags.vtxBinding )
     {
-        updateVtxBinding();
+        applyVtxBinding();
     }
 
     if( mCurrentDrawState.dirtyFlags.vtxBuf )
     {
-        updateVtxBufState( baseVtx );
+        applyVtxBufState( baseVtx );
     }
 
     if( mCurrentDrawState.dirtyFlags.vtxShader || mCurrentDrawState.dirtyFlags.pxlShader )
     {
-        updateShaderState();
+        applyShaderState();
+    }
+
+    if( !getRpDirtySet().empty() )
+    {
+        applyRenderParameters();
     }
 
     // clear dirty flags

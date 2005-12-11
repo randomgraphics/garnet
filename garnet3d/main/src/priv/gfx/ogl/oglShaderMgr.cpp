@@ -198,7 +198,7 @@ void GN::gfx::OGLRenderer::bindShaders( const Shader * vtx, const Shader * pxl )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::updateShaderState()
+void GN::gfx::OGLRenderer::applyShaderState()
 {
     GN_GUARD_SLOW;
 
