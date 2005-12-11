@@ -160,8 +160,9 @@ namespace GN { namespace gfx
                     if( 4 != count )
                     {
                         GN_ERROR( "parameter %s requires 4 floats.", rpt2Str(type), type );
+                        return;
                     }
-                    return;
+                    break;
 
                 case RPT_TRANSFORM_WORLD :
                 case RPT_TRANSFORM_VIEW :
@@ -169,8 +170,9 @@ namespace GN { namespace gfx
                     if( 16 != count )
                     {
                         GN_ERROR( "parameter %d requires 16 floats.", rpt2Str(type), type );
+                        return;
                     }
-                    return;
+                    break;
 
                 default:
                     GN_ERROR( "invalid render parameter type : %d", type );
@@ -181,13 +183,13 @@ namespace GN { namespace gfx
         GN_ASSERT( 0 <= type && type < NUM_RENDER_PARAMETER_TYPES );
         GN_ASSERT( count <= 16 );
 
-        RenderParameter & rp = mRenderParameters[type];
-        RenderParameterValue & rpv = rp.value.top();
-
-        rp.dirty = true;
+        RenderParameterValue & rpv = mRenderParameters[type].top();
         rpv.type = RPVT_FLOAT;
         rpv.count = count;
         ::memcpy( rpv.valueFloats, value, sizeof(float)*count );
+
+        // update dirty set
+        mRenderParameterDirtySet.insert( type );
 
         GN_UNGUARD_SLOW;
     }
@@ -210,7 +212,7 @@ namespace GN { namespace gfx
 
 #define _GNGFX_PUSH_SINGLE_RP( t ) \
     GN_ASSERT( 0 <= t && t < NUM_RENDER_PARAMETER_TYPES ); \
-    mRenderParameters[t].value.push();
+    mRenderParameters[t].push();
 #define _GNGFX_PUSH_RP_MASK( mask, t ) \
         if( t & (int)RPM_##mask ) \
         { \
@@ -253,9 +255,9 @@ namespace GN { namespace gfx
         }
 
 #define _GNGFX_POP_SINGLE_RP( t ) \
-    GN_ASSERT( 0 <= t && t < NUM_RENDER_PARAMETER_TYPES ); \
-    mRenderParameters[t].value.pop(); \
-    mRenderParameters[t].dirty = true;
+    GN_ASSERT( 0 <= (t) && (t) < NUM_RENDER_PARAMETER_TYPES ); \
+    mRenderParameters[t].pop(); \
+    mRenderParameterDirtySet.insert( (RenderParameterType)(t) );
 
 #define _GNGFX_POP_RP_MASK( mask, t ) \
         if( t & (int)RPM_##mask ) \

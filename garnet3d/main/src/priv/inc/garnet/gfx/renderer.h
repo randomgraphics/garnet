@@ -900,7 +900,7 @@ namespace GN { namespace gfx
         const RenderParameterValue & getRenderParameter( RenderParameterType type ) const 
         {
             GN_ASSERT( 0 <= type && type < NUM_RENDER_PARAMETER_TYPES );
-            return mRenderParameters[type].value.top();
+            return mRenderParameters[type].top();
         }
 
         //!
@@ -971,16 +971,7 @@ namespace GN { namespace gfx
         //!
         //! Render parameter structure
         //!
-        struct RenderParameter
-        {
-            FixStack<RenderParameterValue> value; //!< value
-            bool                           dirty; //!< dirty flag
-
-            //!
-            //! ctor
-            //!
-            RenderParameter() : dirty(false) {}
-        };
+        typedef FixStack<RenderParameterValue> RenderParameter;
 
         RenderParameter mRenderParameters[NUM_RENDER_PARAMETER_TYPES];
 

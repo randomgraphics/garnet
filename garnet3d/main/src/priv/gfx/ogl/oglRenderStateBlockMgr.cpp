@@ -262,10 +262,12 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
         } //*/
 
         // apply state block
+#if GN_DEBUG
+        sApplyRenderStateBlock( mRenderer, mFrom, mTo, mDiff );
+#else
         GN_ASSERT( glIsList(mDisplayList) );
         GN_OGL_CHECK( glCallList(mDisplayList) );
-        //sApplyRenderStateBlock( mDiff );
-
+#endif
         GN_UNGUARD_SLOW;
     }
 };

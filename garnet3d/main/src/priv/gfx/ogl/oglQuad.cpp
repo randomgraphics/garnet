@@ -222,7 +222,8 @@ void GN::gfx::OGLQuad::drawQuads(
         mRenderer.bindPxlShader( 0 );
 
         // setup material color
-        mRenderer.setRenderParameter( RPT_MATERIAL_DIFFUSE, Vector4f(1,1,1,1), 4 );
+        static Vector4f white(1,1,1,1);
+        mRenderer.setRenderParameter( RPT_MATERIAL_DIFFUSE, white, 4 );
     }
 
     // draw
