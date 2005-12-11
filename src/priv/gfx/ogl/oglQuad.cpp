@@ -102,7 +102,7 @@ void GN::gfx::OGLQuad::quit()
 void GN::gfx::OGLQuad::drawQuads(
     const Vector2f * positions, size_t posStride,
     const Vector2f * texcoords, size_t texStride,
-    size_t count )
+    size_t count, uint32_t options )
 {
     GN_GUARD_SLOW;
 
@@ -127,7 +127,7 @@ void GN::gfx::OGLQuad::drawQuads(
     {
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
-        drawQuads( positions, posStride, texcoords, texStride, n );
+        drawQuads( positions, posStride, texcoords, texStride, n, options );
         positions = (const Vector2f*)( ((const uint8_t*)positions) + n * posStride );
         texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + n * texStride );
         count -= n;
@@ -169,13 +169,41 @@ void GN::gfx::OGLQuad::drawQuads(
     // unlock the buffer
     mVtxBuf->unlock();
 
-    if( !( DQ_USE_CURRENT_VS & mDrawOptions ) )
+    // apply render states
+    mRenderer.bindVtxBinding( mVtxBinding );
+    mRenderer.bindVtxBufs( &mVtxBuf, 0, 1 );
+    mRenderer.bindIdxBuf( mIdxBuf );
+
+    if( !( DQ_USE_CURRENT_RS & options ) )
     {
+        mRenderer.bindRenderStateBlock( mRsb );
+    }
+
+    // apply vertex shader 
+    if( !( DQ_USE_CURRENT_VS & options ) )
+    {
+        mRenderer.bindVtxShader( 0 );
+
         // push OGL attributes
         GN_OGL_CHECK( glPushAttrib( GL_TRANSFORM_BIT ) );
 
-        // TODO: setup OGL matrices
-        if( DQ_WINDOW_SPACE & mDrawOptions )
+        // setup OGL matrices
+        if( DQ_WINDOW_SPACE & options )
+        {
+            GLdouble vp[4];
+            GN_OGL_CHECK( glGetDoublev( GL_VIEWPORT, vp ) );
+
+            // position is in screen space (0,0)->(width,height)
+            GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
+            GN_OGL_CHECK( glPushMatrix() );
+            GN_OGL_CHECK( glLoadIdentity() );
+            GN_OGL_CHECK( glOrtho( 0, vp[2], 0, vp[3], 0, 1 ) );
+
+            GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
+            GN_OGL_CHECK( glPushMatrix() );
+            GN_OGL_CHECK( glLoadIdentity() );
+        }
+        else
         {
             // position is in screen space (0,0)->(1,1)
             GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
@@ -187,21 +215,14 @@ void GN::gfx::OGLQuad::drawQuads(
             GN_OGL_CHECK( glPushMatrix() );
             GN_OGL_CHECK( glLoadIdentity() );
         }
-        else
-        {
-            GLdouble vp[4];
-            GN_OGL_CHECK( glGetDoublev( GL_VIEWPORT, vp ) );
+    }
 
-            // position is in screen space (0,0)->(width,height)
-            GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
-            GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadIdentity() );
-            GN_OGL_CHECK( glOrtho( 0, vp[2], vp[3], 0, 0, 1 ) );
+    if( !( DQ_USE_CURRENT_PS & options ) )
+    {
+        mRenderer.bindPxlShader( 0 );
 
-            GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
-            GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadIdentity() );
-        }
+        // setup material color
+        mRenderer.setRenderParameter( RPT_MATERIAL_DIFFUSE, Vector4f(1,1,1,1), 4 );
     }
 
     // draw
@@ -213,7 +234,7 @@ void GN::gfx::OGLQuad::drawQuads(
         count * 4,     // numVtx
         0 );           // startIdx
 
-    if( !( DQ_USE_CURRENT_VS & mDrawOptions ) )
+    if( !( DQ_USE_CURRENT_VS & options ) )
     {
         // restore OGL matrices
         GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );

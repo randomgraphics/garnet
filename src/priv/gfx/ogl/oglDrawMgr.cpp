@@ -341,10 +341,7 @@ void GN::gfx::OGLRenderer::drawQuads(
 
     GN_ASSERT( mDrawBegan && isCurrent() && mQuad );
 
-    makeCurrent();
-
-    mQuad->applyStates( options );
-    mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count );
+    mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count, options );
 
     GN_UNGUARD_SLOW;
 }
@@ -361,7 +358,6 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
     // disable programmable pipeline
     bindShaders( 0, 0 );
     applyDrawState( 0 );
-
     mFont->drawTextW( s, x, y, c );
 
     GN_UNGUARD_SLOW;
