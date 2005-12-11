@@ -198,7 +198,7 @@ void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::updateVtxBinding()
+void GN::gfx::OGLRenderer::applyVtxBinding()
 {
     GN_GUARD_SLOW;
 
@@ -216,7 +216,7 @@ void GN::gfx::OGLRenderer::updateVtxBinding()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::updateVtxBufState( size_t baseVtx )
+void GN::gfx::OGLRenderer::applyVtxBufState( size_t baseVtx )
 {
     GN_GUARD_SLOW;
 

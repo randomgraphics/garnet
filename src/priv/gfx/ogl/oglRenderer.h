@@ -283,7 +283,7 @@ namespace GN { namespace gfx
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy() {}
 
-        void updateShaderState();
+        void applyShaderState();
 
         //@}
 
@@ -378,8 +378,8 @@ namespace GN { namespace gfx
         void bufferDeviceDispose() {}
         void bufferDeviceDestroy() {}
 
-        void updateVtxBinding();
-        void updateVtxBufState( size_t baseVtx );
+        void applyVtxBinding();
+        void applyVtxBufState( size_t baseVtx );
 
     private :
 
@@ -455,6 +455,8 @@ namespace GN { namespace gfx
         void paramDeviceDispose() {}
         void paramDeviceDestroy() {}
 
+        void applyRenderParameters();
+
         //@}
 
     // ************************************************************************
@@ -518,7 +520,7 @@ namespace GN { namespace gfx
         OGLQuad * mQuad;
 
     private:
-        GN_INLINE void updateDrawState( size_t baseVtx );
+        GN_INLINE void applyDrawState( size_t baseVtx );
 
         //@}
 
