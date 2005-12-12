@@ -244,22 +244,22 @@ namespace GN { namespace gfx
     //!
     enum RenderParameterType
     {
-        RPT_LIGHT0_POSITION,     //!< Light 0 position
-        RPT_LIGHT0_DIFFUSE,      //!< Light 0 diffuse color
+        RPT_TRANSFORM_WORLD,     //!< World transformation. Default is identity.
+        RPT_TRANSFORM_VIEW,      //!< Camera transformation. Default is identity.
+        RPT_TRANSFORM_PROJ,      //!< Projection transformation. Default is identity.
+        RPT_TRANSFORM_VIEWPORT,  //!< 4 floats: left, top, width, height; ranging from 0.0 to 1.0 . Default is (0,0,1,1)
+        RPT_TRANSFORM_FIRST = RPT_TRANSFORM_WORLD,   //!< first transform property
+        RPT_TRANSFORM_LAST = RPT_TRANSFORM_VIEWPORT, //!< last transform property
+
+        RPT_LIGHT0_POSITION,     //!< Light 0 position in homogeneous world space. Default is (0,0,0,1)
+        RPT_LIGHT0_DIFFUSE,      //!< Light 0 diffuse color. Default is (1,1,1,1)
         RPT_LIGHT_FIRST = RPT_LIGHT0_POSITION, //!< first light property
         RPT_LIGHT_LAST = RPT_LIGHT0_DIFFUSE,   //!< last light property
 
-        RPT_MATERIAL_DIFFUSE,    //!< Diffuse material color
-        RPT_MATERIAL_SPECULAR,   //!< Specular material color 
+        RPT_MATERIAL_DIFFUSE,    //!< Diffuse material color. Default is (1,1,1,1)
+        RPT_MATERIAL_SPECULAR,   //!< Specular material color. Default is (0,0,0,0)
         RPT_MATERIAL_FIRST = RPT_MATERIAL_DIFFUSE, //!< first material property
         RPT_MATERIAL_LAST = RPT_MATERIAL_SPECULAR, //!< last material property
-
-        RPT_TRANSFORM_WORLD,     //!< World transformation
-        RPT_TRANSFORM_VIEW,      //!< Camera transformation
-        RPT_TRANSFORM_PROJ,      //!< Projection transformation
-        RPT_TRANSFORM_VIEWPORT,  //!< 4 floats: left, top, width, height; ranging from 0.0 to 1.0.
-        RPT_TRANSFORM_FIRST = RPT_TRANSFORM_WORLD,   //!< first transform property
-        RPT_TRANSFORM_LAST = RPT_TRANSFORM_VIEWPORT, //!< last transform property
 
         NUM_RENDER_PARAMETER_TYPES,   //!< Number of avaiable parameters
 
@@ -978,12 +978,48 @@ namespace GN { namespace gfx
         // Render parameter dirty set
         mutable std::set<RenderParameterType> mRenderParameterDirtySet;
 
+        //!
+        //! construct function for render parameters
+        //!
+        void renderParameterCtor()
+        {
+            Vector4f v;
+
+            setRenderParameter( RPT_TRANSFORM_WORLD, Matrix44f::IDENTITY );
+            setRenderParameter( RPT_TRANSFORM_VIEW, Matrix44f::IDENTITY );
+            setRenderParameter( RPT_TRANSFORM_PROJ, Matrix44f::IDENTITY );
+            setRenderParameter( RPT_TRANSFORM_VIEWPORT, v.set(0,0,1,1) );
+            setRenderParameter( RPT_LIGHT0_POSITION, v.set(0,0,0,1) );
+            setRenderParameter( RPT_LIGHT0_DIFFUSE, v.set(1,1,1,1) );
+            setRenderParameter( RPT_MATERIAL_DIFFUSE, v.set(1,1,1,1) );
+            setRenderParameter( RPT_MATERIAL_SPECULAR, v.set(0,0,0,0) );
+
+            // make sure all parameters are set to defualt value.
+            GN_ASSERT( getRpDirtySet().size() == NUM_RENDER_PARAMETER_TYPES );
+        }
+
     public:
 
         //!
         //! Set parameter value. Can't use RPM_XXX here.
         //!
         void setRenderParameter( RenderParameterType, const float *, size_t );
+
+        //!
+        //! Set vector parameter.
+        //!
+        void setRenderParameter( RenderParameterType type , const Vector4f & v )
+        {
+            setRenderParameter( type, v, 4 );
+        }
+
+        //!
+        //! Set matrix parameter.
+        //!
+        void setRenderParameter( RenderParameterType type , const Matrix44f & m )
+        {
+            setRenderParameter( type, &m[0][0], 16 );
+        }
 
         //!
         //! Push parameter value. Can use any value of RPT_XXX and RPM_XXX.
@@ -1290,6 +1326,26 @@ namespace GN { namespace gfx
         //! Dump current renderer state to string. For debug purpose only.
         //!
         void dumpCurrentState( StrA & );
+
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Ctor / dtor
+        //
+        // ********************************************************************
+
+        //@{
+
+    protected:
+
+        //!
+        //! ctor
+        //!
+        Renderer()
+        {
+            renderParameterCtor();
+        }
 
         //@}
     };

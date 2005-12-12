@@ -526,7 +526,7 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
         mDrawState.vtxShader.get(), !!mDrawState.dirtyFlags.vtxShader,
         mDrawState.pxlShader.get(), !!mDrawState.dirtyFlags.pxlShader );
 
-    // switch state buffer, and clear dirty flags
+    // clear dirty flags
     mDrawState.dirtyFlags.u32 = 0;
 
     // apply render parameters

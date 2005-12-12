@@ -57,8 +57,34 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
 
         switch( *i )
         {
-            case RPT_LIGHT0_POSITION :
+            case RPT_TRANSFORM_WORLD :
+            case RPT_TRANSFORM_VIEW :
+                {
+                    GN_ASSERT( 16 == rpv.count );
+                    const Matrix44f * world = (const Matrix44f * )getRenderParameter( RPT_TRANSFORM_WORLD ).valueFloats;
+                    const Matrix44f * view = (const Matrix44f * )getRenderParameter( RPT_TRANSFORM_VIEW ).valueFloats;
+                    glMatrixMode( GL_MODELVIEW );
+                    glLoadMatrixf( Matrix44f::transpose(*view**world)[0] );
+                }
+                break;
+
+            case RPT_TRANSFORM_PROJ :
+                {
+                    GN_ASSERT( 16 == rpv.count );
+                    const Matrix44f * proj = (const Matrix44f * )getRenderParameter( RPT_TRANSFORM_PROJ ).valueFloats;
+                    glMatrixMode( GL_PROJECTION );
+                    glLoadMatrixf( Matrix44f::transpose(*proj)[0] );
+                }
+                break;
+
+            case RPT_TRANSFORM_VIEWPORT :
                 GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
+                break;
+
+            case RPT_LIGHT0_POSITION :
+                GN_ASSERT( 4 == rpv.count );
+                //GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
+                glLightfv( GL_LIGHT0, GL_POSITION, rpv.valueFloats );
                 break;
 
             case RPT_LIGHT0_DIFFUSE :
@@ -67,34 +93,11 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
 
             case RPT_MATERIAL_DIFFUSE :
                 GN_ASSERT( rpv.count == 4 );
-                if( isParameterCheckEnabled() )
-                {
-                    if( rpv.count != 4 )
-                    {
-                        GNGFX_ERROR( "diffuse color must be 4-D float vector." );
-                    }
-                }
                 GN_OGL_CHECK( glColor4fv( rpv.valueFloats ) );
                 GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, rpv.valueFloats ) );
                 break;
 
             case RPT_MATERIAL_SPECULAR :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
-                break;
-
-            case RPT_TRANSFORM_WORLD :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
-                break;
-
-            case RPT_TRANSFORM_VIEW :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
-                break;
-
-            case RPT_TRANSFORM_PROJ :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
-                break;
-
-            case RPT_TRANSFORM_VIEWPORT :
                 GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
                 break;
 

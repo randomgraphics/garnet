@@ -84,14 +84,14 @@ namespace GN { namespace gfx
     {
         static const char * sTable[] =
         {
-            "RPT_LIGHT0_POSITION",
-            "RPT_LIGHT0_DIFFUSE",
-            "RPT_MATERIAL_DIFFUSE",
-            "RPT_MATERIAL_SPECULAR",
             "RPT_TRANSFORM_WORLD",
             "RPT_TRANSFORM_VIEW",
             "RPT_TRANSFORM_PROJ",
             "RPT_TRANSFORM_VIEWPORT",
+            "RPT_LIGHT0_POSITION",
+            "RPT_LIGHT0_DIFFUSE",
+            "RPT_MATERIAL_DIFFUSE",
+            "RPT_MATERIAL_SPECULAR",
         };
 
         if( type < 0 || type >= NUM_RENDER_PARAMETER_TYPES ) return false;
@@ -110,14 +110,14 @@ namespace GN { namespace gfx
     {
         static const char * sTable[] =
         {
-            "RPT_LIGHT0_POSITION",
-            "RPT_LIGHT0_DIFFUSE",
-            "RPT_MATERIAL_DIFFUSE",
-            "RPT_MATERIAL_SPECULAR",
             "RPT_TRANSFORM_WORLD",
             "RPT_TRANSFORM_VIEW",
             "RPT_TRANSFORM_PROJ",
             "RPT_TRANSFORM_VIEWPORT",
+            "RPT_LIGHT0_POSITION",
+            "RPT_LIGHT0_DIFFUSE",
+            "RPT_MATERIAL_DIFFUSE",
+            "RPT_MATERIAL_SPECULAR",
         };
 
         if( type < 0 || type >= NUM_RENDER_PARAMETER_TYPES )

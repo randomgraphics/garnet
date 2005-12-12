@@ -1,6 +1,38 @@
 #include "pch.h"
 #include "d3dRenderer.h"
 
+static inline void sSetColorValue( D3DCOLORVALUE & c, float r, float g, float b, float a )
+{
+    c.r = r;
+    c.g = g;
+    c.b = b;
+    c.a = a;
+}
+
+static inline void sSetColorValue( D3DCOLORVALUE & c, const float * v )
+{
+    c.r = v[0];
+    c.g = v[1];
+    c.b = v[2];
+    c.a = v[3];
+}
+
+static inline void sSetD3DVector( D3DVECTOR & v, float x, float y, float z, float w )
+{
+    float k = 1 / w;
+    v.x = x * k;
+    v.y = y * k;
+    v.z = z * k;
+}
+
+static inline void sSetD3DVector( D3DVECTOR & dst, const float * src )
+{
+    float k = 1.0f / src[3];
+    dst.x = src[0] * k;
+    dst.y = src[1] * k;
+    dst.z = src[2] * k;
+}
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -38,26 +70,35 @@ void GN::gfx::D3DRenderer::applyRenderParameters()
 
     GN_ASSERT( !dirtySet.empty() );
 
-    std::set<RenderParameterType>::const_iterator i = dirtySet.begin();
+    std::set<RenderParameterType>::const_iterator i, e = dirtySet.end();
 
-    while( i != dirtySet.end() )
+    for( i = dirtySet.begin(); i != e; ++i )
     {
         const RenderParameterValue & value = getRenderParameter( *i );
         switch( *i )
         {
-            case RPT_LIGHT0_POSITION :
-            case RPT_LIGHT0_DIFFUSE :
-            case RPT_MATERIAL_DIFFUSE :
-            case RPT_MATERIAL_SPECULAR :
-                GN_ASSERT( RPVT_FLOAT == value.type && 4 == value.count );
-                GN_WARN( "not support %s yet.", rpt2Str(*i) );
+            case RPT_TRANSFORM_WORLD :
+                {
+                    GN_ASSERT( RPVT_FLOAT == value.type && 16 == value.count );
+                    Matrix44f mat = Matrix44f::transpose( *(const Matrix44f*)value.valueFloats );
+                    GN_DX_CHECK( mDevice->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
+                }
                 break;
 
-            case RPT_TRANSFORM_WORLD :
             case RPT_TRANSFORM_VIEW :
+                {
+                    GN_ASSERT( RPVT_FLOAT == value.type && 16 == value.count );
+                    Matrix44f mat = Matrix44f::transpose( *(const Matrix44f*)value.valueFloats );
+                    GN_DX_CHECK( mDevice->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
+                }
+                break;
+
             case RPT_TRANSFORM_PROJ :
-                GN_ASSERT( RPVT_FLOAT == value.type && 16 == value.count );
-                GN_WARN( "not support %s yet.", rpt2Str(*i) );
+                {
+                    GN_ASSERT( RPVT_FLOAT == value.type && 16 == value.count );
+                    Matrix44f mat = Matrix44f::transpose( *(const Matrix44f*)value.valueFloats );
+                    GN_DX_CHECK( mDevice->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
+                }
                 break;
 
             case RPT_TRANSFORM_VIEWPORT :
@@ -96,6 +137,42 @@ void GN::gfx::D3DRenderer::applyRenderParameters()
                         int( d3dvp.Y+d3dvp.Height ),
                     };
                     GN_DX_CHECK( mDevice->SetScissorRect( &rc ) );
+                }
+                break;
+
+            case RPT_LIGHT0_POSITION :
+            case RPT_LIGHT0_DIFFUSE :
+                {
+                    GN_ASSERT( RPVT_FLOAT == value.type && 4 == value.count );
+                    D3DLIGHT9 d3dlight;
+                    d3dlight.Type = D3DLIGHT_POINT;
+                    sSetColorValue( d3dlight.Diffuse, getRenderParameter( RPT_LIGHT0_DIFFUSE ).valueFloats );
+                    sSetColorValue( d3dlight.Specular, 0, 0, 0, 0 );
+                    sSetColorValue( d3dlight.Ambient, 0, 0, 0, 0 );
+                    sSetD3DVector( d3dlight.Position, getRenderParameter( RPT_LIGHT0_POSITION ).valueFloats );
+                    sSetD3DVector( d3dlight.Direction, 0, 0, 0, 0 );
+                    d3dlight.Range = sqrt(FLT_MAX);
+                    d3dlight.Falloff = 1.0f;
+                    d3dlight.Attenuation0 = 1.0f;
+                    d3dlight.Attenuation1 = 0.0f;
+                    d3dlight.Attenuation2 = 0.0f;
+                    d3dlight.Theta = D3DX_PI;
+                    d3dlight.Phi = D3DX_PI;
+                    GN_DX_CHECK( mDevice->SetLight( 0, &d3dlight ) );
+                }
+                break;
+
+            case RPT_MATERIAL_DIFFUSE :
+            case RPT_MATERIAL_SPECULAR :
+                {
+                    GN_ASSERT( RPVT_FLOAT == value.type && 4 == value.count );
+                    D3DMATERIAL9 mat;
+                    sSetColorValue( mat.Diffuse, getRenderParameter( RPT_MATERIAL_DIFFUSE ).valueFloats );
+                    sSetColorValue( mat.Specular, getRenderParameter( RPT_MATERIAL_SPECULAR ).valueFloats );
+                    sSetColorValue( mat.Ambient, 0, 0, 0, 0 );
+                    sSetColorValue( mat.Emissive, 0, 0, 0, 0 );
+                    mat.Power = 1.0f;
+                    GN_DX_CHECK( mDevice->SetMaterial( &mat ) );
                 }
                 break;
 
