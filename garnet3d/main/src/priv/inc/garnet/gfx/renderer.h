@@ -1063,18 +1063,13 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Drawing Manager
+        //! \name Render Target Manager
         //
         // ********************************************************************
 
         //@{
 
-    protected:
-
-        AutoInit<size_t,0> mNumPrims; //!< Number of primitives per frame.
-        AutoInit<size_t,0> mNumDraws; //!< Number of draws per frame.
-
-    public :
+    public:
 
         //!
         //! set render target texture
@@ -1103,6 +1098,23 @@ namespace GN { namespace gfx
         //!
         virtual void setRenderDepth( const Texture * texture,
                                      TexFace face = TEXFACE_PX ) = 0;
+
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Drawing Manager
+        //
+        // ********************************************************************
+
+        //@{
+
+    protected:
+
+        AutoInit<size_t,0> mNumPrims; //!< Number of primitives per frame.
+        AutoInit<size_t,0> mNumDraws; //!< Number of draws per frame.
+
+    public :
 
         //!
         //! ¿ªÊ¼»æÍ¼²Ù×÷.

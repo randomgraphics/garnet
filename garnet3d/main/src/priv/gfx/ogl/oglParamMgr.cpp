@@ -78,7 +78,7 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 break;
 
             case RPT_TRANSFORM_VIEWPORT :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
+                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %s", rpt2Str(*i) ) );
                 break;
 
             case RPT_LIGHT0_POSITION :
@@ -88,7 +88,7 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 break;
 
             case RPT_LIGHT0_DIFFUSE :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
+                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %s", rpt2Str(*i) ) );
                 break;
 
             case RPT_MATERIAL_DIFFUSE :
@@ -98,7 +98,7 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 break;
 
             case RPT_MATERIAL_SPECULAR :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
+                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %s", rpt2Str(*i) ) );
                 break;
 
             default:

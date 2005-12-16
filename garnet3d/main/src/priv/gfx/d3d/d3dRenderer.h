@@ -157,6 +157,7 @@ namespace GN { namespace gfx
                 && textureOK()
                 && bufferOK()
                 && paramOK()
+                && renderTargetOK()
                 && drawOK();
         }
 
@@ -171,6 +172,7 @@ namespace GN { namespace gfx
             textureClear();
             bufferClear();
             paramClear();
+            renderTargetClear();
             drawClear();
         }
         //@}
@@ -527,6 +529,49 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
+    //! \name                  Render Target Manager
+    //
+    // ************************************************************************
+
+        //@{
+
+    public:
+        virtual void setRenderTarget( size_t index, const Texture * texture, TexFace face );
+        virtual void setRenderDepth( const Texture * texture, TexFace face );
+
+    private:
+        bool renderTargetInit() { return true; }
+        void renderTargetQuit() {}
+        bool renderTargetOK() const { return true; }
+        void renderTargetClear()
+        {
+            mDefaultRT0 = mAutoDepth = 0;
+            mCurrentRTSize.set( 0, 0 );
+            mAutoDepthSize.set( 0, 0 );
+        }
+
+        bool renderTargetDeviceCreate();
+        bool renderTargetDeviceRestore();
+        void renderTargetDeviceDispose();
+        void renderTargetDeviceDestroy() {}
+
+        GN_INLINE void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
+
+    private:
+        LPDIRECT3DSURFACE9
+            mDefaultRT0,    // default color buffer
+            mAutoDepth;     // automatic depth buffer
+        RenderTargetTextureDesc
+            mCurrentRTs[4], // current color textures.
+            mCurrentDepth;  // current depth texture
+        Vector2<uint32_t>
+            mCurrentRTSize, // current render target size
+            mAutoDepthSize; // size of automatic depth buffer
+
+        //@}
+
+    // ************************************************************************
+    //
     //! \name                     Drawing Manager
     //
     // ************************************************************************
@@ -534,8 +579,6 @@ namespace GN { namespace gfx
         //@{
 
     public: // from Renderer
-        virtual void setRenderTarget( size_t index, const Texture * texture, TexFace face );
-        virtual void setRenderDepth( const Texture * texture, TexFace face );
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();
@@ -565,22 +608,17 @@ namespace GN { namespace gfx
             mDrawBegan = false;
             mFont = 0;
             mQuad = 0;
-            mDefaultRT0 = mAutoDepth = 0;
-            mCurrentRTSize.set( 0, 0 );
-            mAutoDepthSize.set( 0, 0 );
             mDrawState.clear();
         }
 
-        bool drawDeviceCreate();
-        bool drawDeviceRestore();
+        bool drawDeviceCreate() { return true; }
+        bool drawDeviceRestore() { return true; }
         void drawDeviceDispose();
         void drawDeviceDestroy() {}
 
         bool handleDeviceLost();
 
         GN_INLINE void applyDrawState();
-
-        GN_INLINE void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
 
     private:
 
@@ -589,19 +627,6 @@ namespace GN { namespace gfx
         D3DFont * mFont; // Font class
 
         D3DQuad * mQuad; // Quad renderer class
-
-        //
-        // Render target stuff
-        //
-        LPDIRECT3DSURFACE9
-            mDefaultRT0,    // default color buffer
-            mAutoDepth;     // automatic depth buffer
-        RenderTargetTextureDesc
-            mCurrentRTs[4], // current color textures.
-            mCurrentDepth;  // current depth texture
-        Vector2<uint32_t>
-            mCurrentRTSize, // current render target size
-            mAutoDepthSize; // size of automatic depth buffer
 
         D3DDrawState mDrawState;
 

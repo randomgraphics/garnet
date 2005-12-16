@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "d3dRenderer.h"
-#include "d3dTexture.h"
 #include "d3dFont.h"
 #include "d3dQuad.h"
 
@@ -66,200 +65,21 @@ void GN::gfx::D3DRenderer::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::drawDeviceCreate()
-{
-    GN_GUARD;
-
-    // check multiple render target support
-    if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
-    {
-        GNGFX_ERROR( "Sorry, we currently do not support more then 4 simultaneous render targets." );
-        return false;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::drawDeviceRestore()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    // get default render target surface
-    GN_ASSERT( 0 == mDefaultRT0 );
-    GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
-
-    // restore render target size to default value
-    mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
-    mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
-
-    // make sure MRT caps does not exceed maximum allowance value
-    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= 4 );
-
-    // (re)apply render targets
-    RenderTargetTextureDesc desc;
-    for( size_t i = 0; i < getCaps(CAPS_MAX_RENDER_TARGETS); ++i )
-    {
-        desc = mCurrentRTs[i];
-
-        // 将mCurrentRts修改为无效值，以便绕过SetRenderTarget()的重复调用检测。
-        // mCurrentDepth同理。
-        mCurrentRTs[i].tex = (const Texture*)0xdeadbeef; mCurrentRTs[i].face = NUM_TEXFACES;
-
-        setRenderTarget( i, desc.tex, desc.face );
-    }
-
-    // (re)apply depth texture
-    desc = mCurrentDepth;
-    mCurrentDepth.tex = (const Texture*)0xdeadbeef; mCurrentDepth.face = NUM_TEXFACES;
-    setRenderDepth( desc.tex, desc.face );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawDeviceDispose()
 {
-    GN_GUARD;
+    //GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
     // make all draw state dirty
     mDrawState.dirtyFlags.u32 = 0xFFFFFFFF;
 
-    // release render target pointers
-    safeRelease( mDefaultRT0 );
-    safeRelease( mAutoDepth );
-
-    GN_UNGUARD;
+    //GN_UNGUARD;
 }
 
 // *****************************************************************************
 // interface functions
 // *****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setRenderTarget(
-    size_t index, const Texture * tex, TexFace face )
-{
-    GN_GUARD_SLOW;
-
-    if( index >= getCaps(CAPS_MAX_RENDER_TARGETS) )
-    {
-        GN_ERROR( "render target index (%d) is too large!", index );
-        return;
-    }
-
-    RenderTargetTextureDesc & rttd = mCurrentRTs[index];
-
-    // skip redundant call
-    if( rttd.equal( tex, face ) ) return;
-
-    // get texture surface
-    AutoComPtr<IDirect3DSurface9> surf;
-    Vector2<uint32_t> surfSize;
-    if( tex )
-    {
-        // check texture's creation flag
-        if( !(TEXUSAGE_RENDERTARGET & tex->getUsage() ) )
-        {
-            GNGFX_ERROR( "Texture must have usage of TEXUSAGE_RENDERTARGET!" );
-            return;
-        }
-
-        // get surface pointer
-        const D3DTexture * d3dTex = safeCast<const D3DTexture*>(tex);
-        surf.attach( d3dTex->getSurface( face, 0 ) );
-        if( !surf ) return;
-
-        // get surface size
-        tex->getSize<uint32_t>( &surfSize.x, &surfSize.y, NULL );
-    }
-    else if( 0 == index )
-    {
-        GN_ASSERT( mDefaultRT0 );
-        surf.reset( mDefaultRT0 );
-        surfSize.x = getDispDesc().width;
-        surfSize.y = getDispDesc().height;
-        GN_ASSERT( surf );
-    }
-
-    // update D3D render target
-    GN_ASSERT( 0 != index || surf );
-    GN_DX_CHECK( mDevice->SetRenderTarget( (DWORD)index, surf ) );
-    rttd.tex  = tex;
-    rttd.face = face;
-
-    // handle RT size change
-    if( 0 == index )
-    {
-        // update render target size
-        mCurrentRTSize = surfSize;
-
-        // update automatic depth surface
-        if( 0 == mCurrentDepth.tex ) resizeAutoDepthBuffer( surfSize );
-
-        // Because viewport is using relative coordinates based on render target size,
-        // so here we have to re-apply the viewport.
-        setRenderParameter( RPT_TRANSFORM_VIEWPORT, getRenderParameter( RPT_TRANSFORM_VIEWPORT ).valueFloats, 4 );
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
-{
-    GN_GUARD_SLOW;
-
-    if( mCurrentDepth.equal( tex, face ) ) return;
-
-    if( tex )
-    {
-        // check texture's creation flag
-        if( !(TEXUSAGE_DEPTH & tex->getUsage()) )
-        {
-            GNGFX_ERROR( "can't set non-depth-texture as depth buffer!" );
-            return;
-        }
-
-        // get surface pointer
-        const D3DTexture * d3dTex = safeCast<const D3DTexture*>(tex);
-        AutoComPtr<IDirect3DSurface9> surf;
-        surf.attach( d3dTex->getSurface( face, 0 ) );
-        if( !surf ) return;
-
-        // change D3D depth buffer
-        GN_DX_CHECK( mDevice->SetDepthStencilSurface( surf ) );
-    }
-    else
-    {
-        // fall back to automatic depth surface
-        resizeAutoDepthBuffer( mCurrentRTSize );
-    }
-
-    // success
-    mCurrentDepth.tex  = tex;
-    mCurrentDepth.face = face;
-
-    GN_UNGUARD_SLOW;
-}
 
 //
 //
