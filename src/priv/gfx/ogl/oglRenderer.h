@@ -9,11 +9,6 @@
 #include "../common/basicRenderer.h"
 #include "oglTypes.h"
 
-#if GN_MSVC
-#pragma warning(push)
-#pragma warning(disable:4100) // unused parameters
-#endif
-
 namespace GN { namespace gfx
 {
     class OGLFont;
@@ -54,6 +49,7 @@ namespace GN { namespace gfx
                 && textureOK()
                 && bufferOK()
                 && paramOK()
+                && renderTargetOK()
                 && drawOK();
         }
 
@@ -68,6 +64,7 @@ namespace GN { namespace gfx
             textureClear();
             bufferClear();
             paramClear();
+            renderTargetClear();
             drawClear();
         }
         //@}
@@ -468,11 +465,32 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index,
-                                      const Texture * texture,
-                                      TexFace face ) { GN_UNIMPL_WARNING(); }
-        virtual void setRenderDepth( const Texture * texture,
-                                     TexFace face ) { GN_UNIMPL_WARNING(); }
+        virtual void setRenderTarget( size_t index, const Texture * texture, TexFace face );
+        virtual void setRenderDepth( const Texture * texture, TexFace face );
+
+    private:
+
+        bool renderTargetInit() { return true; }
+        void renderTargetQuit() {}
+        bool renderTargetOK() const { return true; }
+        void renderTargetClear() {}
+
+        bool renderTargetDeviceCreate() { return true; }
+        bool renderTargetDeviceRestore() { return true; }
+        void renderTargetDeviceDispose() {}
+        void renderTargetDeviceDestroy() {}
+
+        //@}
+
+    // ************************************************************************
+    //
+    //! \name                     Drawing Manager
+    //
+    // ************************************************************************
+
+        //@{
+
+    public:
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();
@@ -542,10 +560,6 @@ namespace GN { namespace gfx
         //@}
     };
 }}
-
-#if GN_MSVC
-#pragma warning(pop)
-#endif
 
 #if GN_ENABLE_INLINE
 #include "oglTextureMgr.inl"

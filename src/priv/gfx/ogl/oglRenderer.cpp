@@ -42,14 +42,15 @@ bool GN::gfx::OGLRenderer::init(const RendererOptions & ro )
     GN_STDCLASS_INIT( GN::gfx::OGLRenderer, () );
 
     // init sub-components
-    if( !dispInit()    ) { quit(); return selfOK(); }
-    if( !capsInit()    ) { quit(); return selfOK(); }
-    if( !shaderInit()  ) { quit(); return selfOK(); }
-    if( !rsbInit()     ) { quit(); return selfOK(); }
-    if( !textureInit() ) { quit(); return selfOK(); }
-    if( !bufferInit()  ) { quit(); return selfOK(); }
-    if( !paramInit()   ) { quit(); return selfOK(); }
-    if( !drawInit()    ) { quit(); return selfOK(); }
+    if( !dispInit()         ) { quit(); return selfOK(); }
+    if( !capsInit()         ) { quit(); return selfOK(); }
+    if( !shaderInit()       ) { quit(); return selfOK(); }
+    if( !rsbInit()          ) { quit(); return selfOK(); }
+    if( !textureInit()      ) { quit(); return selfOK(); }
+    if( !bufferInit()       ) { quit(); return selfOK(); }
+    if( !paramInit()        ) { quit(); return selfOK(); }
+    if( !renderTargetInit() ) { quit(); return selfOK(); }
+    if( !drawInit()         ) { quit(); return selfOK(); }
 
     // create & reset device data
     if( !changeOptions( ro, true ) ) { quit(); return selfOK(); }
@@ -70,6 +71,7 @@ void GN::gfx::OGLRenderer::quit()
     deviceDestroy();
 
     drawQuit();
+    renderTargetQuit();
     paramQuit();
     bufferQuit();
     textureQuit();
@@ -154,6 +156,7 @@ bool GN::gfx::OGLRenderer::deviceCreate()
     COMPONENT_RECREATE( buffer );
     COMPONENT_RECREATE( resource );
     COMPONENT_RECREATE( param );
+    COMPONENT_RECREATE( renderTarget );
     COMPONENT_RECREATE( draw );
 
     #undef COMPONENT_RECREATE
@@ -188,6 +191,7 @@ bool GN::gfx::OGLRenderer::deviceRestore()
     if( !bufferDeviceRestore() ) return false;
     if( !resourceDeviceRestore() ) return false;
     if( !paramDeviceRestore() ) return false;
+    if( !renderTargetDeviceRestore() ) return false;
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
@@ -216,6 +220,7 @@ void GN::gfx::OGLRenderer::deviceDispose()
     sigDeviceDispose();
 
     drawDeviceDispose();
+    renderTargetDeviceDispose();
     paramDeviceDispose();
     resourceDeviceDispose();
     bufferDeviceDispose();
@@ -243,6 +248,7 @@ void GN::gfx::OGLRenderer::deviceDestroy()
     #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
 
     COMPONENT_DESTROY( draw );
+    COMPONENT_DESTROY( renderTarget );
     COMPONENT_DESTROY( param );
     COMPONENT_DESTROY( resource );
     COMPONENT_DESTROY( buffer );
