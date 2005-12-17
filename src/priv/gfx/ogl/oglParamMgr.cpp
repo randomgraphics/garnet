@@ -71,7 +71,7 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
             case RPT_TRANSFORM_PROJ :
                 {
                     GN_ASSERT( 16 == rpv.count );
-                    const Matrix44f * proj = (const Matrix44f * )getRenderParameter( RPT_TRANSFORM_PROJ ).valueFloats;
+                    const Matrix44f * proj = (const Matrix44f * )rpv.valueFloats;
                     glMatrixMode( GL_PROJECTION );
                     glLoadMatrixf( Matrix44f::transpose(*proj)[0] );
                 }
@@ -82,13 +82,15 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 break;
 
             case RPT_LIGHT0_POSITION :
+                // FIXME:  transform light position from world space to object space before
+                //         sending into OpenGL pipeline.
                 GN_ASSERT( 4 == rpv.count );
-                //GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %d", *i ) );
                 glLightfv( GL_LIGHT0, GL_POSITION, rpv.valueFloats );
                 break;
 
             case RPT_LIGHT0_DIFFUSE :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %s", rpt2Str(*i) ) );
+                GN_ASSERT( 4 == rpv.count );
+                glLightfv( GL_LIGHT0, GL_DIFFUSE, rpv.valueFloats );
                 break;
 
             case RPT_MATERIAL_DIFFUSE :
@@ -98,7 +100,8 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 break;
 
             case RPT_MATERIAL_SPECULAR :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %s", rpt2Str(*i) ) );
+                GN_ASSERT( rpv.count == 4 );
+                GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, rpv.valueFloats ) );
                 break;
 
             default:
@@ -106,6 +109,8 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 GN_UNEXPECTED();
         }
     }
+
+    GN_OGL_CHECK(;);
 
     // clear dirty set
     clearRpDirtySet();
