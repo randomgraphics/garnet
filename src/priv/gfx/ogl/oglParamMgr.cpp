@@ -35,6 +35,28 @@ GN::gfx::OGLRenderer::composeOrthoMatrix(
 }
 
 // *****************************************************************************
+// device management
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLRenderer::paramDeviceRestore()
+{
+    GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
+
+    setAllRpDirty();
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+
+// *****************************************************************************
 // private function
 // *****************************************************************************
 
@@ -78,7 +100,15 @@ void GN::gfx::OGLRenderer::applyRenderParameters()
                 break;
 
             case RPT_TRANSFORM_VIEWPORT :
-                GN_DO_ONCE( GNGFX_ERROR( "do not support render parameter %s", rpt2Str(*i) ) );
+                {
+                    GN_ASSERT( 4 == rpv.count );
+                    GLint x = (GLint)( rpv.valueFloats[0] * mCurrentRTSize.x );
+                    GLint y = (GLint)( rpv.valueFloats[1] * mCurrentRTSize.y );
+                    GLsizei w = (GLsizei)( rpv.valueFloats[2] * mCurrentRTSize.x );
+                    GLsizei h = (GLsizei)( rpv.valueFloats[3] * mCurrentRTSize.y );
+                    glViewport( x, y, w, h );
+                    GNGFX_INFO( "Update viewport to: x(%d), y(%d), w(%d), h(%d)", x, y, w, h );
+                }
                 break;
 
             case RPT_LIGHT0_POSITION :

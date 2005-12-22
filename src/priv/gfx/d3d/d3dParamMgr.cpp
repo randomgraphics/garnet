@@ -46,7 +46,7 @@ bool GN::gfx::D3DRenderer::paramDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_WARN( "TODO: setup default parameters!" );
+    setAllRpDirty();
 
     // success
     return true;

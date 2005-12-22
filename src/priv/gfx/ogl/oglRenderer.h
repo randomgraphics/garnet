@@ -448,7 +448,7 @@ namespace GN { namespace gfx
         void paramClear() {}
 
         bool paramDeviceCreate() { return true; }
-        bool paramDeviceRestore() { return true; }
+        bool paramDeviceRestore();
         void paramDeviceDispose() {}
         void paramDeviceDestroy() {}
 
@@ -473,12 +473,22 @@ namespace GN { namespace gfx
         bool renderTargetInit() { return true; }
         void renderTargetQuit() {}
         bool renderTargetOK() const { return true; }
-        void renderTargetClear() {}
+        void renderTargetClear()
+        {
+            mCurrentRTSize.set( 0, 0 );
+        }
 
-        bool renderTargetDeviceCreate() { return true; }
-        bool renderTargetDeviceRestore() { return true; }
+        bool renderTargetDeviceCreate();
+        bool renderTargetDeviceRestore();
         void renderTargetDeviceDispose() {}
         void renderTargetDeviceDestroy() {}
+
+    private:
+        RenderTargetTextureDesc
+            mCurrentRTs[4], // current color textures.
+            mCurrentDepth;  // current depth texture
+        Vector2<uint32_t>
+            mCurrentRTSize; // current render target size
 
         //@}
 
@@ -525,7 +535,7 @@ namespace GN { namespace gfx
 
         bool drawDeviceCreate();
         bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose() {}
+        void drawDeviceDispose() { mCurrentDrawState.dirtyFlags.i32 = -1; }
         void drawDeviceDestroy();
 
     private:

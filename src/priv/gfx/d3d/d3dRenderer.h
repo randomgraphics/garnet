@@ -613,7 +613,7 @@ namespace GN { namespace gfx
 
         bool drawDeviceCreate() { return true; }
         bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose();
+        void drawDeviceDispose() { mDrawState.dirtyFlags.i32 = -1; }
         void drawDeviceDestroy() {}
 
         bool handleDeviceLost();
