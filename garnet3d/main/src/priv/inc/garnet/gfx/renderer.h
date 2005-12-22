@@ -913,6 +913,18 @@ namespace GN { namespace gfx
         //!
         void clearRpDirtySet() const { mRenderParameterDirtySet.clear(); }
 
+        //!
+        //! Dirtify all render parameters
+        //!
+        void setAllRpDirty()
+        {
+            mRenderParameterDirtySet.clear();
+            for( int i = 0; i < (int)NUM_RENDER_PARAMETER_TYPES; ++i )
+            {
+                mRenderParameterDirtySet.insert( (RenderParameterType)i );
+            }
+        }
+
     private:
 
         //!

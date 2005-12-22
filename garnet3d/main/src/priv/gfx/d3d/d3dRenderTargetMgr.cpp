@@ -99,10 +99,13 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 {
     GN_GUARD_SLOW;
 
-    if( index >= getCaps(CAPS_MAX_RENDER_TARGETS) )
+    if( isParameterCheckEnabled() )
     {
-        GN_ERROR( "render target index (%d) is too large!", index );
-        return;
+        if( index >= getCaps(CAPS_MAX_RENDER_TARGETS) )
+        {
+            GN_ERROR( "render target index (%d) is too large!", index );
+            return;
+        }
     }
 
     RenderTargetTextureDesc & rttd = mCurrentRTs[index];
@@ -169,17 +172,20 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
 {
     GN_GUARD_SLOW;
 
-    if( mCurrentDepth.equal( tex, face ) ) return;
-
-    if( tex )
+    // check texture's creation flag
+    if( isParameterCheckEnabled() )
     {
-        // check texture's creation flag
-        if( !(TEXUSAGE_DEPTH & tex->getUsage()) )
+        if( tex && !(TEXUSAGE_DEPTH & tex->getUsage()) )
         {
             GNGFX_ERROR( "can't set non-depth-texture as depth buffer!" );
             return;
         }
+    }
 
+    if( mCurrentDepth.equal( tex, face ) ) return;
+
+    if( tex )
+    {
         // get surface pointer
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(tex);
         AutoComPtr<IDirect3DSurface9> surf;
