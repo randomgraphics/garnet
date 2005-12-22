@@ -189,7 +189,7 @@ void GN::gfx::D3DRenderer::applyRenderParameters()
                     sSetColorValue( d3dlight.Specular, 0, 0, 0, 0 );
                     sSetColorValue( d3dlight.Ambient, 0, 0, 0, 0 );
                     sSetD3DVector( d3dlight.Position, getRenderParameter( RPT_LIGHT0_POSITION ).valueFloats );
-                    sSetD3DVector( d3dlight.Direction, 0, 0, 0, 0 );
+                    sSetD3DVector( d3dlight.Direction, 0, 0, 1, 1 );
                     d3dlight.Range = sqrt(FLT_MAX);
                     d3dlight.Falloff = 1.0f;
                     d3dlight.Attenuation0 = 1.0f;

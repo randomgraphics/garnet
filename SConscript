@@ -119,7 +119,7 @@ def GN_glob( env, patterns, recursive = False ):
 
 # 编译器是否会生成manifest文件
 def GN_has_manifest(env):
-    return float(env.get('MSVS_VERSION',0)) >= 8.0
+    return float(env.get('MSVS_VERSION',0)) >= 8.0 and not GN_conf['static']
 
 # setup environment for producing PCH and PDB
 def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
