@@ -72,6 +72,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual void * lock1D( uint32_t level,

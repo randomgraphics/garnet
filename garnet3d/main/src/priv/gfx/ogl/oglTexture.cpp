@@ -61,7 +61,7 @@ public:
 
 //!
 //! map filter type to opengl constant
-//!
+// -----------------------------------------------------------------------------
 static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 {
     switch(f)
@@ -79,7 +79,7 @@ static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 
 //!
 //! convert garnet color format to OpenGL format
-//!
+// -----------------------------------------------------------------------------
 static GN_INLINE bool sColorFormat2OGL(
     const GN::gfx::OGLRenderer & r,
     GLint & gl_internalformat,
@@ -282,6 +282,22 @@ static bool sGen2DMipmap( GLenum target,
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+template<typename T>
+static inline bool sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
+{
+    if( offset >= maxLength )
+    {
+        GNGFX_ERROR( "offset is beyond the end of valid range." );
+        return false;
+    }
+    if( 0 == length ) length = maxLength;
+    if( offset + length > maxLength ) length = maxLength - offset;
+    return true;
+}
+
 #undef glewGetContext
 
 // *****************************************************************************
@@ -396,7 +412,7 @@ bool GN::gfx::OGLBasicTexture::deviceCreate()
 
     // create new opengl texture object
     uint32_t sx, sy, sz;
-    getSize( &sx, &sy, &sz );
+    getBaseMapSize( &sx, &sy, &sz );
     GLint levels = (GLint)getLevels();
     mOGLTexture = newOGLTexture(
         mOGLInternalFormat, sx, sy, sz, levels,
@@ -497,35 +513,24 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
     if( !basicLock() ) return 0;
     AutoScope< Functor0<bool> > baiscUnlocker( makeFunctor( this,&OGLBasicTexture::basicUnlock ) );
 
-    // bind self as current texture
-    bind();
+    // get texture size( as well as binding self as current texture )
+    int sx, sy;
+    getMipMapSize( level, (uint32_t*)&sx, (uint32_t*)&sy, 0 );
 
-    // calculate locked area
+    // determine locked area
     if( area )
     {
-#if GN_DEBUG
-        // make sure target area is totaly inside the texture
-        {
-            GLint texw, texh;
-            GN_OGL_CHECK( glGetTexLevelParameteriv(
-                    target, level, GL_TEXTURE_WIDTH,  &texw ) );
-            GN_OGL_CHECK( glGetTexLevelParameteriv(
-                    target, level, GL_TEXTURE_HEIGHT, &texh ) );
-            GN_ASSERT( 0 <= area->x && area->x < texw &&
-                       0 <= area->y && area->y < texh &&
-                       0 <  area->w && (area->x+area->w) <= texw &&
-                       0 <  area->h && (area->y+area->h) <= texh );
-        }
-#endif
         mLockedArea = *area;
+        if( !sAdjustOffsetAndRange( mLockedArea.x, mLockedArea.w, sx ) ||
+            !sAdjustOffsetAndRange( mLockedArea.y, mLockedArea.h, sy ) )
+            return 0;
     }
     else
     {
-        mLockedArea.x = mLockedArea.y = 0;
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-                target, level, GL_TEXTURE_WIDTH,  &mLockedArea.w ) );
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-                target, level, GL_TEXTURE_HEIGHT, &mLockedArea.h ) );
+        mLockedArea.x = 0;
+        mLockedArea.y = 0;
+        mLockedArea.w = sx;
+        mLockedArea.h = sy;
     }
 
     // ¼ÆËãpitch
@@ -641,6 +646,27 @@ void GN::gfx::OGLBasicTexture::privateUnlock2D()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::OGLTex1D::getMipMapSize(
+    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
+{
+    GN_GUARD_SLOW;
+
+    bind();
+
+    if( sx )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
+    }
+    if( sy ) *sy = 1;
+    if( sz ) *sz = 1;
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::OGLTex1D::setWrap( TexWrap s, TexWrap, TexWrap ) const
 {
     GN_GUARD_SLOW;
@@ -724,6 +750,31 @@ GLuint GN::gfx::OGLTex1D::newOGLTexture(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::OGLTex2D::getMipMapSize(
+    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
+{
+    GN_GUARD_SLOW;
+
+    bind();
+
+    if( sx )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
+    }
+    if( sy )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
+    }
+    if( sz ) *sz = 1;
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::OGLTex2D::setWrap( TexWrap s, TexWrap t, TexWrap ) const
 {
     GN_GUARD_SLOW;
@@ -796,6 +847,35 @@ GLuint GN::gfx::OGLTex2D::newOGLTexture(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::OGLTex3D::getMipMapSize(
+    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
+{
+    GN_GUARD_SLOW;
+
+    bind();
+
+    if( sx )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_3D_EXT, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
+    }
+    if( sy )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_3D_EXT, level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
+    }
+    if( sz )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_3D_EXT, level, GL_TEXTURE_DEPTH_EXT, (GLint*)sz ) );
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::OGLTex3D::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 {
     GN_GUARD_SLOW;
@@ -849,6 +929,31 @@ GLuint GN::gfx::OGLTex3D::newOGLTexture(
 // *****************************************************************************
 // GN::gfx::OGLTexCube implementation
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLTexCube::getMipMapSize(
+    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
+{
+    GN_GUARD_SLOW;
+
+    bind();
+
+    if( sx )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_CUBE_MAP, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
+    }
+    if( sy )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_CUBE_MAP, level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
+    }
+    if( sz ) *sz = 1;
+
+    GN_UNGUARD_SLOW;
+}
 
 //
 //
