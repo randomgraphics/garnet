@@ -1092,11 +1092,14 @@ namespace GN { namespace gfx
         //!     target texture, must be created with flag TEXUSAGE_RENDERTARGET. Set
         //!     this parameter to NULL will reset to default target (back buffer
         //!     for RT0 and null for others.
+        //! \param level
+        //!     Mipmap level.
         //! \param face
         //!     Ignored if target_texture is not cubemap.
         //!
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
+                                      uint32_t level = 0,
                                       TexFace face = TEXFACE_PX ) = 0;
 
         //!
@@ -1105,10 +1108,13 @@ namespace GN { namespace gfx
         //! \param texture
         //!     Target texture, must be created with flag TEXUSAGE_DEPTH. Set this
         //!     parameter to NULL will reset to default depth buffer.
+        //! \param level
+        //!     Mipmap level.
         //! \param face
         //!     Ignored if target_texture is not cubemap.
         //!
         virtual void setRenderDepth( const Texture * texture,
+                                     uint32_t level = 0,
                                      TexFace face = TEXFACE_PX ) = 0;
 
         //@}

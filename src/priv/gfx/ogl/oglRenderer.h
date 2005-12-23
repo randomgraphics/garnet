@@ -458,15 +458,15 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Drawing Manager
+    //! \name              Render Target Manager
     //
     // ************************************************************************
 
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, TexFace face );
-        virtual void setRenderDepth( const Texture * texture, TexFace face );
+        virtual void setRenderTarget( size_t index, const Texture * texture, uint32_t level, TexFace face );
+        virtual void setRenderDepth( const Texture * texture, uint32_t level, TexFace face );
 
     private:
 

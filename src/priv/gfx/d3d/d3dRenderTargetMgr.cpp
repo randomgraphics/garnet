@@ -55,15 +55,16 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceRestore()
 
         // 将mCurrentRts修改为无效值，以便绕过SetRenderTarget()的重复调用检测。
         // mCurrentDepth同理。
-        mCurrentRTs[i].tex = (const Texture*)0xdeadbeef; mCurrentRTs[i].face = NUM_TEXFACES;
-
-        setRenderTarget( i, desc.tex, desc.face );
+        mCurrentRTs[i].tex = (const Texture*)0xdeadbeef;
+        mCurrentRTs[i].face = NUM_TEXFACES;
+        setRenderTarget( i, desc.tex, desc.level, desc.face );
     }
 
     // (re)apply depth texture
     desc = mCurrentDepth;
-    mCurrentDepth.tex = (const Texture*)0xdeadbeef; mCurrentDepth.face = NUM_TEXFACES;
-    setRenderDepth( desc.tex, desc.face );
+    mCurrentDepth.tex = (const Texture*)0xdeadbeef;
+    mCurrentDepth.face = NUM_TEXFACES;
+    setRenderDepth( desc.tex, desc.level, desc.face );
 
     // success
     return true;
@@ -95,7 +96,7 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::setRenderTarget(
-    size_t index, const Texture * tex, TexFace face )
+    size_t index, const Texture * tex, uint32_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -111,7 +112,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     RenderTargetTextureDesc & rttd = mCurrentRTs[index];
 
     // skip redundant call
-    if( rttd.equal( tex, face ) ) return;
+    if( rttd.equal( tex, level, face ) ) return;
 
     // get texture surface
     AutoComPtr<IDirect3DSurface9> surf;
@@ -127,11 +128,14 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 
         // get surface pointer
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(tex);
-        surf.attach( d3dTex->getSurface( face, 0 ) );
+        surf.attach( d3dTex->getSurface( face, level ) );
         if( !surf ) return;
 
         // get surface size
-        tex->getSize<uint32_t>( &surfSize.x, &surfSize.y, NULL );
+        D3DSURFACE_DESC desc;
+        GN_DX_CHECK_R( surf->GetDesc( &desc ) );
+        surfSize.x = desc.Width;
+        surfSize.y = desc.Height;
     }
     else if( 0 == index )
     {
@@ -146,6 +150,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     GN_ASSERT( 0 != index || surf );
     GN_DX_CHECK( mDevice->SetRenderTarget( (DWORD)index, surf ) );
     rttd.tex  = tex;
+    rttd.level = level;
     rttd.face = face;
 
     // handle RT size change
@@ -168,7 +173,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
+void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, uint32_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -182,14 +187,14 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
         }
     }
 
-    if( mCurrentDepth.equal( tex, face ) ) return;
+    if( mCurrentDepth.equal( tex, level, face ) ) return;
 
     if( tex )
     {
         // get surface pointer
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(tex);
         AutoComPtr<IDirect3DSurface9> surf;
-        surf.attach( d3dTex->getSurface( face, 0 ) );
+        surf.attach( d3dTex->getSurface( face, level ) );
         if( !surf ) return;
 
         // change D3D depth buffer
@@ -202,7 +207,8 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, TexFace face )
     }
 
     // success
-    mCurrentDepth.tex  = tex;
+    mCurrentDepth.tex = tex;
+    mCurrentDepth.level = level;
     mCurrentDepth.face = face;
 
     GN_UNGUARD_SLOW;

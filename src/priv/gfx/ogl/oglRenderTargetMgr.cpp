@@ -65,9 +65,9 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceRestore()
     // (re)apply render targets
     for( size_t i = 0; i < getCaps(CAPS_MAX_RENDER_TARGETS); ++i )
     {
-        setRenderTarget( i, oldRT[i].tex, oldRT[i].face );
+        setRenderTarget( i, oldRT[i].tex, oldRT[i].level, oldRT[i].face );
     }
-    setRenderDepth( oldDepth.tex, oldDepth.face );
+    setRenderDepth( oldDepth.tex, oldDepth.level, oldDepth.face );
 
     // success
     return true;
@@ -83,7 +83,7 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceRestore()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::setRenderTarget(
-    size_t index, const Texture * tex, TexFace face )
+    size_t index, const Texture * tex, uint32_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -107,7 +107,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     RenderTargetTextureDesc & rttd = mCurrentRTs[index];
 
     // skip redundant call
-    if( rttd.equal( tex, face ) ) return;
+    if( rttd.equal( tex, level, face ) ) return;
 
     // set current context
     if( !makeCurrent() ) return;
@@ -119,8 +119,11 @@ void GN::gfx::OGLRenderer::setRenderTarget(
         GLint oldtex;
 
         // get texture size
-        uint32_t sx, sy;
-        gltex->getSize( &sx, &sy );
+        GLsizei sx, sy;
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+                gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, (GLint*)&sx ) );
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+                gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, (GLint*)&sy ) );
 
         // copy framebuffer to current render target texture
         TexType tt = rttd.tex->getType();
@@ -130,7 +133,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                OGLBasicTexture::cubeface2GL(face), 0,
+                OGLBasicTexture::cubeface2GL(face), level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, oldtex ) );
         }
@@ -139,7 +142,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_2D, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                GL_TEXTURE_2D, 0,
+                GL_TEXTURE_2D, level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, oldtex ) );
         }
@@ -149,7 +152,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_1D, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage1D(
-                GL_TEXTURE_1D, 0,
+                GL_TEXTURE_1D, level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, oldtex ) );
         }
@@ -164,6 +167,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     if( tex ) tex->incref();
     if( rttd.tex ) rttd.tex->decref();
     rttd.tex = tex;
+    rttd.level = level;
     rttd.face = face;
 
     // update render target size
@@ -171,7 +175,11 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     {
         if( tex )
         {
-            tex->getSize( &mCurrentRTSize.x, &mCurrentRTSize.y );
+            const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(tex);
+            GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, (GLint*)&mCurrentRTSize.x ) );
+            GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, (GLint*)&mCurrentRTSize.y ) );
         }
         else
         {
@@ -194,7 +202,8 @@ void GN::gfx::OGLRenderer::setRenderTarget(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::setRenderDepth( const Texture * tex, TexFace face )
+void GN::gfx::OGLRenderer::setRenderDepth(
+    const Texture * tex, uint32_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -210,7 +219,7 @@ void GN::gfx::OGLRenderer::setRenderDepth( const Texture * tex, TexFace face )
     GN_ASSERT( !tex || (TEXUSAGE_DEPTH & tex->getUsage()) );
 
     // skip redundant call
-    if( mCurrentDepth.equal( tex, face ) ) return;
+    if( mCurrentDepth.equal( tex, level, face ) ) return;
 
     // set current context
     if( !makeCurrent() ) return;
@@ -220,8 +229,11 @@ void GN::gfx::OGLRenderer::setRenderDepth( const Texture * tex, TexFace face )
         const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(mCurrentDepth.tex);
 
         // get texture size
-        uint32_t sx, sy;
-        gltex->getSize( &sx, &sy );
+        GLsizei sx, sy;
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+                gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, (GLint*)&sx ) );
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+                gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, (GLint*)&sy ) );
 
         // copy framebuffer to current render target texture
         TexType tt = mCurrentDepth.tex->getType();
@@ -230,14 +242,14 @@ void GN::gfx::OGLRenderer::setRenderDepth( const Texture * tex, TexFace face )
             GN_ASSERT( sx == sy );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                OGLBasicTexture::cubeface2GL(face), 0,
+                OGLBasicTexture::cubeface2GL(face), level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
         }
         else if( TEXTYPE_2D == tt )
         {
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                GL_TEXTURE_2D, 0,
+                GL_TEXTURE_2D, level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
         }
         else if( TEXTYPE_1D == tt )
@@ -245,7 +257,7 @@ void GN::gfx::OGLRenderer::setRenderDepth( const Texture * tex, TexFace face )
             GN_ASSERT( 1 == sy );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage1D(
-                GL_TEXTURE_1D, 0,
+                GL_TEXTURE_1D, level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
         }
         else
@@ -259,6 +271,7 @@ void GN::gfx::OGLRenderer::setRenderDepth( const Texture * tex, TexFace face )
     if( tex ) tex->incref();
     if( mCurrentDepth.tex ) mCurrentDepth.tex->decref();
     mCurrentDepth.tex = tex;
+    mCurrentDepth.level = level;
     mCurrentDepth.face = face;
 
     GN_UNGUARD_SLOW;
