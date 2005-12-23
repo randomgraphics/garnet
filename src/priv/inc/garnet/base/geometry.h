@@ -2643,15 +2643,18 @@ namespace GN
         //!
         //! element type
         //!
-        typedef T          ElementType;
+        typedef T ElementType;
 
         //!
-        //! vertex type
+        //! point type
         //!
-        typedef Vector3<T> VertexType;
+        typedef Vector3<T> PointType;
 
-        VertexType vmin, //!< box corner 1
-                   vmax; //!< box corner 2
+        //!
+        //! Box position and size
+        //@{
+        T x, y, z, w, h, d;
+        //@}
 
         // ********************************
         // constructors
@@ -2663,14 +2666,15 @@ namespace GN
         //!
         Box() {}
         //!
-        //! construct from 2 vertices
+        //! construct from 2 points
         //!
-        Box( const VertexType & v1, const VertexType & v2 ) : vmin(v1), vmax(v2)
+        Box( const PointType & v1, const PointType & v2 )
+            : x(v1.x), y(v1.y), z(v1.z) , w(v2.x-v1.x), h(v2.y-v1.y), d(v2.z-v1.z)
         {}
         //!
         //! copy constructor
         //!
-        Box( const Box & b ) : vmin(b.vmin), vmax(b.vmax) {}
+        Box( const Box & b ) : x(b.x), y(b.y), z(b.z), w(b.w), h(b.h), d(b.d) {}
 
         // ********************************
         // public operators
@@ -2682,7 +2686,12 @@ namespace GN
         //!
         Box & operator = ( const Box & b )
         {
-            vmin = b.vmin; vmax = b.vmax;
+            x = b.x;
+            y = b.y;
+            z = b.z;
+            w = b.w;
+            h = b.h;
+            d = b.d;
             return *this;
         }
         //!
@@ -2690,50 +2699,24 @@ namespace GN
         //!
         bool operator == ( const Box & b ) const
         {
-            return vmin == b.vmin && vmax == b.vmax;
+            return x == b.x
+                && y == b.y
+                && z == b.z
+                && w == b.w
+                && h == b.h
+                && d == b.d;
         }
         //!
         //! non-equal operator
         //!
         bool operator != ( const Box & b ) const
         {
-            return vmin != b.vmin || vmax != b.vmax;
-        }
-        //!
-        //! combine two boxes
-        //!
-        //! \note can be greatly optimized if both boxes are pre-normalized
-        //!
-        Box & operator += ( const Box & b )
-        {
-            ElementType x1, x2, y1, y2, z1, z2;
-            x1 = min( min( min( vmin.x, vmax.x ), b.vmin.x ), b.vmax.x );
-            y1 = min( min( min( vmin.y, vmax.y ), b.vmin.y ), b.vmax.y );
-            z1 = min( min( min( vmin.z, vmax.z ), b.vmin.z ), b.vmax.z );
-            x2 = std::max( std::max( std::max( vmin.x, vmax.x ), b.vmin.x ), b.vmax.x );
-            y2 = std::max( std::max( std::max( vmin.y, vmax.y ), b.vmin.y ), b.vmax.y );
-            z2 = std::max( std::max( std::max( vmin.z, vmax.z ), b.vmin.z ), b.vmax.z );
-            vmin.set( x1, y1, z1 );
-            vmax.set( x2, y2, z2 );
-            return *this;
-        }
-        //!
-        //! combine two boxes
-        //!
-        //! \note can be greatly optimized if both boxes are pre-normalized
-        //!
-        friend Box operator + ( const Box & a, const Box & b )
-        {
-            Box r;
-            r.vmin.set(
-                min( min( min( a.vmin.x, a.vmax.x ), b.vmin.x ), b.vmax.x ),
-                min( min( min( a.vmin.y, a.vmax.y ), b.vmin.y ), b.vmax.y ),
-                min( min( min( a.vmin.z, a.vmax.z ), b.vmin.z ), b.vmax.z ) );
-            r.vmax.set(
-                std::max( std::max( std::max( a.vmin.x, a.vmax.x ), b.vmin.x ), b.vmax.x ),
-                std::max( std::max( std::max( a.vmin.y, a.vmax.y ), b.vmin.y ), b.vmax.y ),
-                std::max( std::max( std::max( a.vmin.z, a.vmax.z ), b.vmin.z ), b.vmax.z ) );
-            return r;
+            return x != b.x
+                || y != b.y
+                || z != b.z
+                || w != b.w
+                || h != b.h
+                || d != b.d;
         }
 
         // ********************************
@@ -2741,37 +2724,52 @@ namespace GN
         // ********************************
     public :
 
-        //! \name return box size
-        //@{
-        T size_x() const { return vmax.x - vmin.x; }
-        T size_y() const { return vmax.y - vmin.y; }
-        T size_z() const { return vmax.z - vmin.z; }
-        VertexType size() const { return vmax - vmin; }
-        //@}
+        //!
+        //! return box position
+        //!
+        const PointType & pos() const { return *(const PointType*)this; }
+
+        //!
+        //! return box position
+        //!
+        PointType & pos() { return *(PointType*)this; }
+
+        //!
+        //! return box size
+        //!
+        const PointType & size() const { return *(const PointType*)&w; }
+
+        //!
+        //! return box size
+        //!
+        PointType & size() { return *(PointType*)&w; }
 
         //!
         //! return box center
         //!
-        VertexType center() const { return ( vmin + vmax ) / 2.0f; }
+        PointType center() const { return pos() + size() / 2.0f; }
+
         //!
         //! return box center
         //!
-        void center( VertexType & out ) const { out = ( vmin + vmax ) / 2.0f; }
+        void center( PointType & out ) const { out = pos() + size() / 2.0f; }
+
         //!
-        //! value set
+        //! from two points
         //!
-        void set( const VertexType & v1, const VertexType & v2 )
+        void fromPoints( const PointType & v1, const PointType & v2 )
         {
-            vmin = v1; vmax = v2;
+            pos() = v1;
+            size() = v2 - v1;
         }
         //!
-        //! normalization
+        //! Normalization (that is, positive size)
         //!
         Box & normalize()
         {
-            if( vmin.x > vmax.x ) detail::swap(vmin.x, vmax.x);
-            if( vmin.y > vmax.y ) detail::swap(vmin.y, vmax.y);
-            if( vmin.z > vmax.z ) detail::swap(vmin.z, vmax.z);
+            if( w < 0 ) { x += w; w = -w; }
+            if( h < 0 ) { y += h; h = -h; }
+            if( d < 0 ) { z += d; d = -d; }
 			return *this;
         }
         //!
@@ -2792,13 +2790,28 @@ namespace GN
             return dst;
         }
         //!
-        //! intersection test with point
+        //! Return true if point is inside the box.
         //!
-        bool intersect( const VertexType & v )
+        bool checkPoint( const PointType & v )
         {
-            return vmin.x <= v.x && v.x < vmax.x
-                && vmin.y <= v.y && v.y < vmax.y
-                && vmin.z <= v.z && v.z < vmax.z;
+            Box b;
+
+            normalize( b, *this );
+
+            return b.x <= v.x && v.x < (b.x+b.w)
+                && b.y <= v.y && v.y < (b.y+b.h)
+                && b.z <= v.z && v.z < (b.z+b.d);
+        }
+        //!
+        //! get union of two boxes
+        //!
+        static void getUnion( Box & result, const Box & b1, const Box & b2 )
+        {
+            Box a(b1), b(b2);
+            a.normalize();
+            b.normalize();
+            result.pos() = min( b1.pos(), b2.pos() );
+            result.size() = max( b1.pos+b1.size(), b2.pos+b2.size() ) - result.pos();
         }
     };
 

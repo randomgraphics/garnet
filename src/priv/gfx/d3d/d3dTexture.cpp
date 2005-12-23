@@ -9,6 +9,22 @@
 //
 //
 // -----------------------------------------------------------------------------
+template<typename T>
+static inline bool sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
+{
+    if( offset >= maxLength )
+    {
+        GNGFX_ERROR( "offset is beyond the end of valid range." );
+        return false;
+    }
+    if( 0 == length ) length = maxLength;
+    if( offset + length > maxLength ) length = maxLength - offset;
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static inline uint32_t sLockFlag2D3D( uint32_t flag )
 {
     uint32_t d3dflag = 0;
@@ -400,7 +416,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 
     // create texture instance in default pool
     uint32_t sx, sy, sz;
-    getSize( &sx, &sy, &sz );
+    getBaseMapSize( &sx, &sy, &sz );
     mD3DTexture = newD3DTexture(
         getType(),
         sx, sy, sz,
@@ -448,6 +464,50 @@ void GN::gfx::D3DTexture::deviceDispose()
 //
 //
 // ----------------------------------------------------------------------------
+void GN::gfx::D3DTexture::getMipMapSize(
+    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( level < getLevels() );
+
+    if( TEXTYPE_3D == getType() )
+    {
+        LPDIRECT3DVOLUMETEXTURE9 tex3D = static_cast<LPDIRECT3DVOLUMETEXTURE9>( mD3DTexture );
+
+        D3DVOLUME_DESC desc;
+        GN_DX_CHECK( tex3D->GetLevelDesc( level, &desc ) );
+
+        if( sx ) *sx = desc.Width;
+        if( sy ) *sy = desc.Height;
+        if( sz ) *sz = desc.Depth;
+    }
+    else
+    {
+        D3DSURFACE_DESC desc;
+
+        if( TEXTYPE_CUBE == getType() )
+        {
+            LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
+            GN_DX_CHECK( texCube->GetLevelDesc( level, &desc ) );
+        }
+        else
+        {
+            LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
+            GN_DX_CHECK( tex2D->GetLevelDesc( level, &desc ) );
+        }
+
+        if( sx ) *sx = desc.Width;
+        if( sy ) *sy = desc.Height;
+        if( sz ) *sz = 1;
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
 void GN::gfx::D3DTexture::setFilter( TexFilter min, TexFilter mag ) const
 {
     GN_ASSERT( selfOK() );
@@ -486,13 +546,9 @@ void * GN::gfx::D3DTexture::lock1D( uint32_t level,
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
     // adjust offset and length
-    if( offset > getSize().x )
-    {
-        GNGFX_ERROR( "lock offset is beyond the end of texture." );
-        return 0;
-    }
-    if( 0 == length ) length = getSize().x;
-    if( offset + length > getSize().x ) length = getSize().x - offset;
+    uint32_t sx;
+    getMipMapSize( level, &sx, 0, 0 );
+    if( !sAdjustOffsetAndRange( offset, length, sx ) ) return 0;
 
     RECT d3drc;
     d3drc.left = offset;
@@ -533,26 +589,29 @@ bool GN::gfx::D3DTexture::lock2D( LockedRect &  result,
     if( !basicLock() ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
+    // get surface size
+    uint32_t sx, sy;
+    getMipMapSize( level, &sx, &sy, 0 );
+
     RECT d3drc;
     if( area )
     {
-        // make sure area is valid
-        GN_ASSERT(
-            area->x >= 0 && area->y >= 0 &&
-            area->w > 0 && area->h > 0 &&
-            (area->x+area->w) <= static_cast<int>(getSize().x) &&
-            (area->y+area->h) <= static_cast<int>(getSize().y) );
+        Recti rc( *area );
+        
+        if( !sAdjustOffsetAndRange( rc.x, rc.w, (int)sx ) ||
+            !sAdjustOffsetAndRange( rc.y, rc.h, (int)sy ) )
+            return 0;
 
-        d3drc.left   = area->x;
-        d3drc.top    = area->y;
-        d3drc.right  = d3drc.left + area->w;
-        d3drc.bottom = d3drc.top + area->h;
+        d3drc.left   = rc.x;
+        d3drc.top    = rc.y;
+        d3drc.right  = d3drc.left + rc.w;
+        d3drc.bottom = d3drc.top + rc.h;
     }
     else
     {
         d3drc.left = d3drc.top = 0;
-        d3drc.right = getSize().x;
-        d3drc.bottom = getSize().y;
+        d3drc.right = sx;
+        d3drc.bottom = sy;
     }
 
     // lock texture
@@ -590,26 +649,36 @@ bool GN::gfx::D3DTexture::lock3D( LockedBox &  result,
     if( !basicLock() ) return 0;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
+    // get surface size
+    uint32_t sx, sy, sz;
+    getMipMapSize( level, &sx, &sy, &sz );
+
     // construct D3DBOX
     D3DBOX d3dbox;
     if ( box )
     {
-        // TODO: make sure box is valid
-        d3dbox.Left   = (uint32_t)box->vmin.x;
-        d3dbox.Top    = (uint32_t)box->vmin.y;
-        d3dbox.Front  = (uint32_t)box->vmin.z;
-        d3dbox.Right  = (uint32_t)box->vmax.x;
-        d3dbox.Bottom = (uint32_t)box->vmax.y;
-        d3dbox.Back   = (uint32_t)box->vmax.z;
+        Boxi b( *box );
+
+        if( !sAdjustOffsetAndRange( b.x, b.w, (int)sx ) ||
+            !sAdjustOffsetAndRange( b.y, b.h, (int)sy ) ||
+            !sAdjustOffsetAndRange( b.z, b.d, (int)sz ) )
+            return 0;
+        
+        d3dbox.Left   = (uint32_t)b.x;
+        d3dbox.Top    = (uint32_t)b.y;
+        d3dbox.Front  = (uint32_t)b.z;
+        d3dbox.Right  = (uint32_t)( b.x + b.w );
+        d3dbox.Bottom = (uint32_t)( b.y + b.h );
+        d3dbox.Back   = (uint32_t)( b.z + b.d );
     }
     else
     {
         d3dbox.Left   = 0;
         d3dbox.Top    = 0;
         d3dbox.Front  = 0;
-        d3dbox.Right  = getSize().x;
-        d3dbox.Bottom = getSize().y;
-        d3dbox.Back   = getSize().z;
+        d3dbox.Right  = sx;
+        d3dbox.Bottom = sy;
+        d3dbox.Back   = sz;
     }
 
     // lock texture
@@ -648,22 +717,32 @@ bool GN::gfx::D3DTexture::lockCube( LockedRect &  result,
     if( !basicLock() ) return 0;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
+    // get surface size
+    uint32_t sx;
+    getMipMapSize( level, &sx, 0, 0 );
+
     // convert aera to RECT
     RECT d3drc;
     if( area )
     {
-        // TODO: make sure area is valid
-        d3drc.left = area->x;
-        d3drc.top  = area->y;
-        d3drc.right = d3drc.left + area->w;
+        Recti rc( *area );
+        
+        if( !sAdjustOffsetAndRange( rc.x, rc.w, (int)sx ) ||
+            !sAdjustOffsetAndRange( rc.y, rc.h, (int)sx  ) )
+            return 0;
+
+        d3drc.left   = rc.x;
+        d3drc.top    = rc.y;
+        d3drc.right  = d3drc.left + rc.w;
+        d3drc.bottom = d3drc.top + rc.h;
         d3drc.bottom = d3drc.top + area->h;
     }
     else
     {
         d3drc.left = 0;
         d3drc.top = 0;
-        d3drc.right = getSize().x;
-        d3drc.bottom = getSize().y;
+        d3drc.right = sx;
+        d3drc.bottom = sx;
     }
 
     // lock texture

@@ -355,6 +355,7 @@ namespace GN { namespace gfx
 
         //@{
 
+        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual void * lock1D( uint32_t level, uint32_t offset, uint32_t length, uint32_t flag );
         virtual void unlock();
@@ -397,6 +398,7 @@ namespace GN { namespace gfx
 
         //@{
 
+        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock2D( LockedRect & result, uint32_t level, const Recti * area, uint32_t flag );
         virtual void unlock();
@@ -439,6 +441,7 @@ namespace GN { namespace gfx
 
         //@{
 
+        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock3D( LockedBox &  result, uint32_t level, const Boxi * box, uint32_t flag );
         virtual void unlock();
@@ -481,6 +484,7 @@ namespace GN { namespace gfx
 
         //@{
 
+        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
         virtual void setWrap( TexWrap, TexWrap, TexWrap ) const;
         virtual bool lockCube( LockedRect & result, TexFace face, uint32_t level, const Recti * area, uint32_t flag );
         virtual void unlock();

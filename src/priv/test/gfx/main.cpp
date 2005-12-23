@@ -11,10 +11,8 @@ class Scene
     bool loadTex0( GN::gfx::Texture & tex )
     {
         GN_GUARD;
-        GN::gfx::LockedRect lrc;
-        if( !tex.lock2D( lrc, 0, 0, GN::gfx::LOCK_WO ) ) return false;
-        GN_ASSERT( lrc.data );
-        uint32_t * texData = (uint32_t*)lrc.data;
+        uint32_t * texData = (uint32_t*)tex.lock1D( 0, 0, 0, GN::gfx::LOCK_WO );
+        if( 0 == texData ) return false;
         //           A R G B
         *texData = 0xFF0000FF;
         tex.unlock();
@@ -66,7 +64,7 @@ public:
         }
 
         // create a pure white texture
-        tex0 = r.create2DTexture( 1, 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
+        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
 
         // success
         return true;

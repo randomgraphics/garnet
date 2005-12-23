@@ -91,10 +91,10 @@ namespace GN { namespace gfx
         TexType getType() const { return mType; }
 
         //!
-        //! get texture size
+        //! get size of base map
         //!
         template<typename T>
-        void getSize( T * sx, T * sy = 0, T * sz = 0 ) const
+        void getBaseMapSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
             if( sx ) *sx = mSize.x;
             if( sy ) *sy = mSize.y;
@@ -102,9 +102,14 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! get texture size
+        //! get size of base map
         //!
-        const Vector3<uint32_t> & getSize() const { return mSize; }
+        const Vector3<uint32_t> & getBaseMapSize() const { return mSize; }
+
+        //!
+        //! get size of specific mip level
+        //!
+        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy = 0, uint32_t * sz = 0 ) const = 0;
 
         //!
         //! get number of mipmap levels
