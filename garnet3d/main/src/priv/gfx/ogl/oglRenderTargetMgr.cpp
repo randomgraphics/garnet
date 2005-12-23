@@ -137,7 +137,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
                 gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, oldtex ) );
         }
-        else if( TEXTYPE_2D == tt )
+        else if( TEXTYPE_2D == tt || TEXTYPE_1D == tt )
         {
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_2D, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
@@ -145,16 +145,6 @@ void GN::gfx::OGLRenderer::setRenderTarget(
                 GL_TEXTURE_2D, level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, oldtex ) );
-        }
-        else if( TEXTYPE_1D == tt )
-        {
-            GN_ASSERT( 1 == sy );
-            GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_1D, &oldtex ) );
-            GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, gltex->getOGLTexture() ) );
-            GN_OGL_CHECK( glCopyTexImage1D(
-                GL_TEXTURE_1D, level,
-                gltex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
-            GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, oldtex ) );
         }
         else
         {
@@ -245,20 +235,12 @@ void GN::gfx::OGLRenderer::setRenderDepth(
                 OGLBasicTexture::cubeface2GL(face), level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
         }
-        else if( TEXTYPE_2D == tt )
+        else if( TEXTYPE_2D == tt || TEXTYPE_1D == tt )
         {
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
                 GL_TEXTURE_2D, level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
-        }
-        else if( TEXTYPE_1D == tt )
-        {
-            GN_ASSERT( 1 == sy );
-            GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, gltex->getOGLTexture() ) );
-            GN_OGL_CHECK( glCopyTexImage1D(
-                GL_TEXTURE_1D, level,
-                gltex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
         }
         else
         {
