@@ -13,7 +13,7 @@ TODO
 
 - p1
   - continue implementing GFX module
-    - avoid using GL_TEXTURE_1D
+    - check/adjust texture lock parameter
     - ogl shader
     - quad renderer for GFXOGL module
     - parameter manager and UT

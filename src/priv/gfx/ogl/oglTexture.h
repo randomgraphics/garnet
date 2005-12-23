@@ -139,7 +139,6 @@ namespace GN { namespace gfx
             switch( getType() )
             {
                 case TEXTYPE_1D   :
-                    glDisable( GL_TEXTURE_2D );
                 case TEXTYPE_2D   :
                     if( GLEW_EXT_texture3D )
                         glDisable( GL_TEXTURE_3D_EXT );

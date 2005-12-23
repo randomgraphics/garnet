@@ -255,33 +255,6 @@ static GN_INLINE bool sColorFormat2OGL(
 }
 
 //!
-//! generate 1D mipmaps
-// ------------------------------------------------------------------------
-static bool sGen1DMipmap( GLenum target,
-                          GLsizei width,
-                          GLint levels,
-                          GLint internalformat,
-                          GLenum format,
-                          GLenum type )
-{
-    GN_GUARD;
-
-    for( GLint i = 0; i < levels; ++i )
-    {
-        GN_ASSERT( width >= 1 );
-        GN_OGL_CHECK_RV(
-            glTexImage1D( target, i, internalformat, width, 0, format, type, 0 ),
-            false );
-        width >>= 1;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//!
 //! generate 2D mipmaps
 // ------------------------------------------------------------------------
 static bool sGen2DMipmap( GLenum target,
@@ -351,8 +324,6 @@ bool GN::gfx::OGLBasicTexture::init(
     switch( getType() )
     {
         case TEXTYPE_1D   :
-            mOGLTarget = GL_TEXTURE_1D;
-            break;
         case TEXTYPE_2D   :
             mOGLTarget = GL_TEXTURE_2D;
             break;
@@ -684,16 +655,19 @@ void GN::gfx::OGLTex1D::setWrap( TexWrap s, TexWrap, TexWrap ) const
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLTex1D::lock1D( uint32_t /*level*/,
-                                  uint32_t /*offset*/,
-                                  uint32_t /*length*/,
-                                  uint32_t /*flag*/ )
+void * GN::gfx::OGLTex1D::lock1D( uint32_t level,
+                                  uint32_t offset,
+                                  uint32_t length,
+                                  uint32_t flag )
 {
     GN_GUARD_SLOW;
 
-    GN_UNIMPL_WARNING();
-
-    return 0;
+    Recti area( offset, 0, length, 1 );
+    LockedRect lr;
+    if( privateLock2D( lr, GL_TEXTURE_2D, level, &area, flag ) )
+        return lr.data;
+    else
+        return 0;
 
     GN_UNGUARD_SLOW;
 }
@@ -704,9 +678,7 @@ void * GN::gfx::OGLTex1D::lock1D( uint32_t /*level*/,
 void GN::gfx::OGLTex1D::unlock()
 {
     GN_GUARD_SLOW;
-
-    GN_UNIMPL_WARNING();
-
+    privateUnlock2D();
     GN_UNGUARD_SLOW;
 }
 
@@ -732,9 +704,9 @@ GLuint GN::gfx::OGLTex1D::newOGLTexture(
     GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
     AutoDeleteTexture autoDel( result );
 
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_1D, result ) );
-    if( !sGen1DMipmap(
-            GL_TEXTURE_1D, size_x, levels,
+    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, result ) );
+    if( !sGen2DMipmap(
+            GL_TEXTURE_2D, size_x, 1, levels,
             internalformat, format, type ) )
         return 0;
 
