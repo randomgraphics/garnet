@@ -185,8 +185,9 @@ namespace GN { namespace gfx
         //!
         struct RenderTargetTextureDesc
         {
-            const Texture * tex;  //!< Render target texture.
-            TexFace         face; //!< Effective only when tex is cubemap.
+            const Texture * tex;   //!< Render target texture.
+            uint32_t        level; //!< Mipmap level.
+            TexFace         face;  //!< Effective only when tex is cubemap.
 
             //!
             //! Ctor
@@ -196,9 +197,9 @@ namespace GN { namespace gfx
             //!
             //! Equality check
             //!
-            bool equal( const Texture * t, TexFace f ) const
+            bool equal( const Texture * t, uint32_t l, TexFace f ) const
             {
-                return tex == t && ( 0 == tex || face == f );
+                return tex == t && ( 0 == tex || ( level == l && face == f ) );
             }
         };
 
