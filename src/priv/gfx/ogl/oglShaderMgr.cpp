@@ -202,15 +202,44 @@ void GN::gfx::OGLRenderer::applyShaderState()
 {
     GN_GUARD_SLOW;
 
-    GN_UNIMPL_WARNING();
-
     if( mCurrentDrawState.dirtyFlags.vtxShader )
     {
-        
+        if( mLastDrawState.vtxShader )
+        {
+            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(mLastDrawState.vtxShader.get());
+            sh->disable();
+        }
+        if( mCurrentDrawState.vtxShader )
+        {
+            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(mCurrentDrawState.vtxShader.get());
+            sh->enable();
+            sh->apply();
+        }
+    }
+    else if( mCurrentDrawState.vtxShader )
+    {
+        const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(mCurrentDrawState.vtxShader.get());
+        sh->applyDirtyUniforms();
     }
 
     if( mCurrentDrawState.dirtyFlags.pxlShader )
     {
+        if( mLastDrawState.pxlShader )
+        {
+            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(mLastDrawState.pxlShader.get());
+            sh->disable();
+        }
+        if( mCurrentDrawState.pxlShader )
+        {
+            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(mCurrentDrawState.pxlShader.get());
+            sh->enable();
+            sh->apply();
+        }
+    }
+    else if( mCurrentDrawState.pxlShader )
+    {
+        const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(mCurrentDrawState.pxlShader.get());
+        sh->applyDirtyUniforms();
     }
 
     GN_UNGUARD_SLOW;

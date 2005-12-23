@@ -13,8 +13,7 @@ TODO
 
 - p1
   - continue implementing GFX module
-    - check/adjust texture lock parameter
-    - ogl shader
+    - OGL GLSL shader
     - quad renderer for GFXOGL module
     - parameter manager and UT
     - refine device management
@@ -46,6 +45,7 @@ DONE
   - EMT64 icl support
 - Refine GFX:
   - d3d hlsl shader
+  - ogl ARB shader
   - Fix link problem of GFX module in static build.
   - remove dependencies to GNd3d
     - move d3dformat to string to gfx d3d module
