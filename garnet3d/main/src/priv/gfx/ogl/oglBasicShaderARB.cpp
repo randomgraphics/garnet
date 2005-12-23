@@ -179,7 +179,7 @@ void GN::gfx::OGLBasicShaderARB::enable() const
 {
     GN_GUARD_SLOW;
 
-    GN_OGL_CHECK( glEnable( GL_VERTEX_PROGRAM_ARB ) );
+    GN_OGL_CHECK( glEnable( mTarget ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -191,7 +191,7 @@ void GN::gfx::OGLBasicShaderARB::disable() const
 {
     GN_GUARD_SLOW;
 
-    GN_OGL_CHECK( glDisable( GL_VERTEX_PROGRAM_ARB ) );
+    GN_OGL_CHECK( glDisable( mTarget ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -250,8 +250,6 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
     UniformDesc desc;
 
     desc.u32 = (uint32_t)u.userData;
-
-    GN_ASSERT( desc.type );
 
     PFNGLPROGRAMLOCALPARAMETER4FVARBPROC fp;
     if( LOCAL_PARAMETER == desc.type )
@@ -326,7 +324,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
                 GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
                 return false;
             }
-            desc.type = LOCAL_PARAMETER;
+            desc.type = ENV_PARAMETER;
             break;
 
         case 'l':
@@ -336,7 +334,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
                 GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
                 return false;
             }
-            desc.type = ENV_PARAMETER;
+            desc.type = LOCAL_PARAMETER;
             break;
 
         default:
