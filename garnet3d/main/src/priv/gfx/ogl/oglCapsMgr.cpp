@@ -47,7 +47,7 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
     static const char * sRequiredExtensions[] =
     {
         "GL_EXT_bgra",                    // 1.1
-        "GL_ARB_multitexture",            // 1.3
+        //"GL_ARB_multitexture",            // 1.3
         //"GL_ARB_texture_env_combine",     // 1.3
         0,
     };
@@ -163,6 +163,12 @@ static void sOutputOGLInfo( GN::gfx::OGLRenderer & r, GN::HandleType disp, const
     GN_UNGUARD;
 }
 
+#ifndef GLAPIENTRY
+#define GLAPIENTRY
+#endif
+static void GLAPIENTRY sFake_glActiveTexture(GLenum) {}
+static void GLAPIENTRY sFake_glClientActiveTexture(GLenum) {}
+
 // ****************************************************************************
 // local functions that initialize individual capability
 // ****************************************************************************
@@ -241,6 +247,9 @@ static uint32_t sCapsInit_VSCAPS( GN::gfx::OGLRenderer & r )
     return result;
 }
 
+// for GLEW multi-context support
+#undef glewGetContext
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -274,6 +283,13 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
         setCaps( CAPS_##name, sCapsInit_##name( *this ) );
     #include "garnet/gfx/rendererCapsMeta.h"
     #undef GNGFX_CAPS
+
+    // special case for multi-texture
+    if( !GLEW_ARB_multitexture )
+    {
+        glActiveTextureARB = sFake_glActiveTexture;
+        glClientActiveTextureARB = sFake_glClientActiveTexture;
+    }
 
     // success;
     return true;
