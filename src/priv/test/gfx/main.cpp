@@ -116,7 +116,7 @@ public:
     //!
     //! Default constructor
     //!
-    GfxTest() {}
+    GfxTest() : mScene(0) {}
 
     //!
     //! Destructor
