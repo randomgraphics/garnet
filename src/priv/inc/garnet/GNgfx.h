@@ -19,6 +19,8 @@ namespace GN
     }
 }
 
+// Common graphics definition and utilities.
+// Link to GNgfxLib.lib (or libGNgfxLib.o) to use it. 
 #include "gfx/colorFormat.h"
 #include "gfx/image.h"
 #include "gfx/renderState.h"
@@ -26,6 +28,8 @@ namespace GN
 #include "gfx/misc.h"
 #include "gfx/d3dToString.h"
 
+// Platform-independent renderer.
+// Load GNgfxD3D.dll and GNgfxOGL.dll (or libGNgfxOGL.so) to use it.
 #include "gfx/shader.h"
 #include "gfx/texture.h"
 #include "gfx/buffer.h"

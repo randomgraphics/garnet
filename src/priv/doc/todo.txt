@@ -12,12 +12,14 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - sample application
+    - render to texture
   - continue implementing GFX module
     - OGL GLSL shader
-    - quad renderer for GFXOGL module
-    - parameter manager and UT
-    - refine device management
 - p2
+  - refine GFX module:
+    - UT for parameter manager
+    - refine device management
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
 - p3
@@ -44,6 +46,8 @@ DONE
 - SCons
   - EMT64 icl support
 - Refine GFX:
+  - parameter manager
+  - quad renderer for GFXOGL module
   - d3d hlsl shader
   - ogl ARB shader
   - Fix link problem of GFX module in static build.
