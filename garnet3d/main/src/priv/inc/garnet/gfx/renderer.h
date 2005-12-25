@@ -1394,7 +1394,7 @@ namespace GN { namespace gfx
     Renderer * createD3DRenderer( const RendererOptions & );
 #else
     inline Renderer * createD3DRenderer( const RendererOptions & )
-    { GN_ERROR( "No D3D support on platform other then MS Windows." ); return 0; }
+    { GN_ERROR( "No D3D support on platform other than MS Windows." ); return 0; }
 #endif
 
     //!
