@@ -249,6 +249,7 @@ namespace GN { namespace gfx
     public:
 
         GLhandleARB getHandleARB() const { return mHandle; }
+        void applyDirtyUniforms( GLhandleARB program ) const;
 
         // ********************************
         // private variables
@@ -340,7 +341,20 @@ namespace GN { namespace gfx
         //!
         //! apply GLSL program, as well as dirty uniforms, to rendering context.
         //!
-        void apply();
+        void apply()
+        {
+            GN_GUARD_SLOW;
+
+            GN_OGL_CHECK( glUseProgramObjectARB( mProgram ) );
+
+            for( size_t i = 0; i < mShaders.size(); ++i )
+            {
+                GN_ASSERT( mShaders[i] );
+                mShaders[i]->applyDirtyUniforms( mProgram );
+            }
+
+            GN_UNGUARD_SLOW;
+        }
 
         // ********************************
         // private variables

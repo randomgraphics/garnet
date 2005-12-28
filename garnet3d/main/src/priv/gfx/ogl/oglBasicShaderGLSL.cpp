@@ -163,20 +163,87 @@ void GN::gfx::OGLBasicShaderGLSL::disable() const
 bool GN::gfx::OGLBasicShaderGLSL::queryDeviceUniform(
     const char * name, HandleType & userData ) const
 {
-    GN_GUARD;
-
     GN_UNUSED_PARAM(name);
     GN_UNUSED_PARAM(userData);
-    GN_UNIMPL_WARNING();
-    return false;
-
-    GN_UNGUARD;
+    return true; // always return true
 }
+
+// *****************************************************************************
+// public functions
+// *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) const
+{
+    GN_GUARD_SLOW;
 
-// *****************************************************************************
-// private functions
-// *****************************************************************************
+    const std::set<uint32_t> dirtySet = getDirtyUniforms();
+    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    for( i = dirtySet.begin(); i != e; ++i )
+    {
+        const Uniform & u = getUniform( *i );
+
+        GLint location;
+        
+        GN_OGL_CHECK_DO(
+            location = glGetUniformLocationARB( program, u.name.cstr() ),
+            continue; );
+
+        if( location >= 0 )
+        {
+            // update uniform value
+            switch( u.type )
+            {
+                case UVT_FLOAT4 :
+                    GN_OGL_CHECK( glUniform4fvARB(
+                        location,
+                        u.valueVector4.size(),
+                        (const float * )&u.valueVector4[0] ) );
+                    break;
+
+                case UVT_MATRIX44 :
+                    GN_OGL_CHECK( glUniformMatrix4fvARB(
+                        location,
+                        u.valueMatrix44.size(),
+                        GL_TRUE, // row major
+                        (const float * )&u.valueMatrix44[0] ) );
+                    break;
+
+                case UVT_FLOAT :
+                    GN_OGL_CHECK( glUniform1fvARB(
+                        location,
+                        u.valueFloat.size(),
+                        &u.valueFloat[0] ) );
+                    break;
+
+                case UVT_BOOL :
+                    GN_OGL_CHECK( glUniform1ivARB(
+                        location,
+                        u.valueBool.size(),
+                        (const GLint*)&u.valueBool[0] ) );
+                    break;
+
+                case UVT_INT :
+                    GN_OGL_CHECK( glUniform1ivARB(
+                        location,
+                        u.valueInt.size(),
+                        (const GLint*)&u.valueInt[0] ) );
+                    break;
+
+                default:
+                   // program should not reach here.
+                   GN_UNEXPECTED();
+            }
+        }
+        else
+        {
+            GNGFX_ERROR( "'%s' is not a valid GLSL uniform.", u.name.cstr() );
+        }
+    }
+    clearDirtySet();
+
+
+    GN_UNGUARD_SLOW;
+}

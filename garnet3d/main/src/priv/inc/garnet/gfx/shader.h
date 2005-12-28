@@ -125,7 +125,7 @@ namespace GN { namespace gfx
         {
             StrA                   name;          //!< uniform name
             UniformValueType       type;          //!< uniform type
-            std::vector<uint8_t>   valueBool;     //!< Boolean value
+            std::vector<int>       valueBool;     //!< Boolean value
             std::vector<int32_t>   valueInt;      //!< integer value
             std::vector<float>     valueFloat;    //!< float value
             std::vector<Vector4f>  valueVector4;  //!< vector value
@@ -286,7 +286,7 @@ namespace GN { namespace gfx
         Uniform & u = mUniforms[handle];
         u.type = UVT_BOOL;
         u.valueBool.resize( count );
-        if( count > 0 ) ::memcpy( &u.valueBool[0], values, count*sizeof(bool) );
+        if( count > 0 ) ::memcpy( &u.valueBool[0], values, count*sizeof(int) );
         mDirtySet.insert( handle );
         GN_UNGUARD_SLOW;
     }

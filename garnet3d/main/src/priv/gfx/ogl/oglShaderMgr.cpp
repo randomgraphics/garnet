@@ -242,10 +242,27 @@ void GN::gfx::OGLRenderer::removeGLSLShader( ShaderType st, Shader * sh )
 {
     GN_GUARD;
 
-    GN_UNUSED_PARAM( st );
-    GN_UNUSED_PARAM( sh );
+    GN_ASSERT( 0 <= st && st < NUM_SHADER_TYPES );
 
-    GN_UNIMPL_WARNING();
+    GLSLProgramMap::iterator i,t;
+    for( i = mGLSLProgramMap.begin(); i != mGLSLProgramMap.end(); )
+    {
+        if( i->first.shaders[st] == sh )
+        {
+            t = i;
+            ++i;
+
+            // remove the program from program map
+            GN_ASSERT( t->second );
+            OGLProgramGLSL * prog = (OGLProgramGLSL*)t->second;
+            delete prog;
+            mGLSLProgramMap.erase( t );
+        }
+        else
+        {
+            ++i;
+        }
+    }
 
     GN_UNGUARD;
 }
