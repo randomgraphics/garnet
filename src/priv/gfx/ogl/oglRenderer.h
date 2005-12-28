@@ -293,10 +293,14 @@ namespace GN { namespace gfx
 
     private:
 
-        struct GLSLShaders
+        union GLSLShaders
         {
-            const Shader * vs;
-            const Shader * ps;
+            const Shader * shaders[NUM_SHADER_TYPES];
+            struct
+            {
+                const Shader * vs;
+                const Shader * ps;
+            };
 
             bool operator < ( const GLSLShaders & rhs ) const
             {
