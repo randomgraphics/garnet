@@ -384,10 +384,7 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t baseVtx )
         applyVtxBufState( baseVtx );
     }
 
-    if( mCurrentDrawState.dirtyFlags.vtxShader || mCurrentDrawState.dirtyFlags.pxlShader )
-    {
-        applyShaderState();
-    }
+    applyShaderState();
 
     if( !getRpDirtySet().empty() )
     {

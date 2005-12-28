@@ -269,6 +269,14 @@ namespace GN { namespace gfx
         virtual void bindPxlShader( const Shader * );
         virtual void bindShaders( const Shader *, const Shader * );
 
+    public:
+
+        //!
+        //! Inform OGL renderer that GLSL shader is deleted, to give OGL renderer a chance
+        //! to adjust GLSL program map. Only called by GLSL shader class.
+        //!
+        void removeGLSLShader( ShaderType, Shader * );
+
     private :
         bool shaderInit() { return true; }
         void shaderQuit() {}
@@ -278,9 +286,28 @@ namespace GN { namespace gfx
         bool shaderDeviceCreate() { return true; }
         bool shaderDeviceRestore() { return true; }
         void shaderDeviceDispose() {}
-        void shaderDeviceDestroy() {}
+        void shaderDeviceDestroy();
 
+        void * getGLSLProgram( const Shader * vs, const Shader * ps );
         void applyShaderState();
+
+    private:
+
+        struct GLSLShaders
+        {
+            const Shader * vs;
+            const Shader * ps;
+
+            bool operator < ( const GLSLShaders & rhs ) const
+            {
+                if( vs != rhs.vs ) return vs < rhs.vs;
+                else return ps < rhs.ps;
+            }
+        };
+
+        typedef std::map<GLSLShaders,void*> GLSLProgramMap;
+
+        GLSLProgramMap mGLSLProgramMap;
 
         //@}
 

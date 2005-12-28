@@ -36,6 +36,10 @@ namespace GN { namespace gfx
         virtual void applyDirtyUniforms() const = 0;
     };
 
+    // *************************************************************************
+    // ARB shader
+    // *************************************************************************
+
     //!
     //! OGL Basic ARB shader
     //!
@@ -169,6 +173,194 @@ namespace GN { namespace gfx
         //! ctor
         //!
         OGLPxlShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, PIXEL_SHADER ) {}
+    };
+
+    // *************************************************************************
+    // GLSL shader
+    // *************************************************************************
+
+    //!
+    //! Basic OGL GLSL shader class
+    //!
+    class OGLBasicShaderGLSL : public Shader, public OGLBasicShader, public OGLResource, public StdClass
+    {
+         GN_DECLARE_STDCLASS( OGLBasicShaderGLSL, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        OGLBasicShaderGLSL( OGLRenderer & r, ShaderType t )
+            : Shader( t, LANG_OGL_GLSL )
+            , OGLResource( r )
+            , mUsage( sSelectUsage(t) ) { clear(); }
+        virtual ~OGLBasicShaderGLSL() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const StrA & code );
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear()
+        {
+            mHandle = 0;
+            mCode.clear();
+        }
+        //@}
+
+        // ********************************
+        // from OGLResource
+        // ********************************
+    public:
+
+        bool deviceCreate();
+        bool deviceRestore() { return true; }
+        void deviceDispose() {}
+        void deviceDestroy();
+
+        // ********************************
+        // from OGLBasicShader
+        // ********************************
+    public:
+
+        virtual void enable() const { GN_WARN( "this function should not be called!" ); }
+        virtual void disable() const;
+        virtual void apply() const { GN_WARN( "this function should not be called!" ); }
+        virtual void applyDirtyUniforms() const { GN_WARN( "this function should not be called!" ); }
+
+        // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        GLhandleARB getHandleARB() const { return mHandle; }
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        const GLenum mUsage;
+        GLhandleARB  mHandle;
+        StrA         mCode;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        static GLenum sSelectUsage( ShaderType type )
+        {
+            switch( type )
+            {
+                case VERTEX_SHADER : return GL_VERTEX_SHADER_ARB;
+                case PIXEL_SHADER : return GL_FRAGMENT_SHADER_ARB;
+                default:
+                    GN_UNEXPECTED();
+                    return 0;
+            }
+        }
+
+    };
+
+    //!
+    //! OGL GLSL vertex shader.
+    //!
+    class OGLVtxShaderGLSL : public OGLBasicShaderGLSL
+    {
+    public:
+        //!
+        //! ctor
+        //!
+        OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, VERTEX_SHADER ) {}
+    };
+
+    //!
+    //! OGL GLSL pixel shader.
+    //!
+    class OGLPxlShaderGLSL : public OGLBasicShaderGLSL
+    {
+    public:
+        //!
+        //! ctor
+        //!
+        OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, PIXEL_SHADER ) {}
+    };
+
+    //!
+    //! GLSL program class
+    //!
+    class OGLProgramGLSL : public StdClass
+    {
+         GN_DECLARE_STDCLASS( OGLProgramGLSL, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        OGLProgramGLSL( GLEWContext * c ) : mContext(c) { GN_ASSERT(c); clear(); }
+        virtual ~OGLProgramGLSL() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const OGLBasicShaderGLSL * vs, const OGLBasicShaderGLSL * ps );
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() { mProgram = 0; mShaders.clear(); }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        //!
+        //! apply GLSL program, as well as dirty uniforms, to rendering context.
+        //!
+        void apply();
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        GLEWContext * mContext;
+        GLhandleARB mProgram;
+        std::vector<const OGLBasicShaderGLSL*> mShaders;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        bool createProgram();
+        StrA getProgramInfoLog( GLhandleARB program );
+
+        // for GLEW multi-context support
+        GLEWContext * glewGetContext() const { return mContext; }
     };
 }}
 
