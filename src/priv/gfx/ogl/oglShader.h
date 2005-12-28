@@ -248,7 +248,14 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        //!
+        //! Get OGL shader handle
+        //!
         GLhandleARB getHandleARB() const { return mHandle; }
+
+        //!
+        //! Apply dirty uniforms to render context
+        //!
         void applyDirtyUniforms( GLhandleARB program ) const;
 
         // ********************************
