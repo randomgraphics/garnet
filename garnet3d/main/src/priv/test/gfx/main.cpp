@@ -62,6 +62,18 @@ public:
             if( !ps2 ) return false;
             ps2->setUniformByName( "diffuse", GN::Vector4f(1,0,0,1) );
         }
+        else if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_OGL_GLSL ) )
+        {
+            static const char * code =
+                "uniform vec4 diffuse; \n"
+                "void main() \n"
+                "{ \n"
+                "   gl_FragColor = diffuse; \n"
+                "} \n";
+            ps2.attach( r.createPxlShader( GN::gfx::LANG_OGL_GLSL, code ) );
+            if( !ps2 ) return false;
+            ps2->setUniformByName( "diffuse", GN::Vector4f(1,0,0,1) );
+        }
 
         // create a pure white texture
         tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
