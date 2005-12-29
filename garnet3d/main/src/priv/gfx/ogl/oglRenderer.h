@@ -288,7 +288,6 @@ namespace GN { namespace gfx
         void shaderDeviceDispose() {}
         void shaderDeviceDestroy();
 
-        void * getGLSLProgram( const Shader * vs, const Shader * ps );
         void applyShaderState();
 
     private:

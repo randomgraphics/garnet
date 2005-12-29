@@ -348,7 +348,7 @@ namespace GN { namespace gfx
         //!
         //! apply GLSL program, as well as dirty uniforms, to rendering context.
         //!
-        void apply()
+        void apply() const
         {
             GN_GUARD_SLOW;
 
