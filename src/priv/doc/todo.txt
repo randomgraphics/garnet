@@ -14,9 +14,10 @@ TODO
 - p1
   - sample application
     - render to texture
-  - continue implementing GFX module
-    - OGL GLSL shader
+    - GLSL test application
+  - font manager
 - p2
+  - continue implementing GFX module
   - refine GFX module:
     - UT for parameter manager
     - refine device management
@@ -46,6 +47,7 @@ DONE
 - SCons
   - EMT64 icl support
 - Refine GFX:
+  - OGL GLSL shader
   - parameter manager
   - quad renderer for GFXOGL module
   - d3d hlsl shader

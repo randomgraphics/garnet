@@ -67,7 +67,7 @@ bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 
         // GLSL shaders
         case LANG_OGL_GLSL :
-            if( !GLEW_ARB_shader_objects ) return false;
+            if( !GLEW_ARB_shader_objects || !GLEW_ARB_shading_language_100 ) return false;
             if( VERTEX_SHADER == type )
             {
                 return 0 != GLEW_ARB_vertex_shader;
@@ -274,34 +274,6 @@ void GN::gfx::OGLRenderer::removeGLSLShader( ShaderType st, Shader * sh )
 //
 //
 // -----------------------------------------------------------------------------
-inline void * GN::gfx::OGLRenderer::getGLSLProgram( const Shader * vs, const Shader * ps )
-{
-    GN_GUARD_SLOW;
-
-    GLSLShaders key = { vs, ps };
-
-    GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
-    if( mGLSLProgramMap.end() != i )
-    {
-        // found!
-        GN_ASSERT( i->second );
-        return i->second;
-    }
-
-    // not found. we have to create a new GLSL program object
-    AutoObjPtr<OGLProgramGLSL> prog( new OGLProgramGLSL(getGLEWContext()) );
-    if( !prog->init(
-        safeCast<const OGLBasicShaderGLSL*>(vs),
-        safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return 0;
-    mGLSLProgramMap[key] = prog.get();
-    return prog.detach();
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::applyShaderState()
 {
     GN_GUARD_SLOW;
@@ -373,8 +345,26 @@ void GN::gfx::OGLRenderer::applyShaderState()
     if( !vsGLSL && !psGLSL ) return;
     const Shader * vs = vsGLSL ? mCurrentDrawState.vtxShader.get() : 0;
     const Shader * ps = psGLSL ? mCurrentDrawState.pxlShader.get() : 0;
-    OGLProgramGLSL * prog = (OGLProgramGLSL *)getGLSLProgram( vs, ps );
-    if( prog ) prog->apply();
+    const OGLProgramGLSL * prog;
+    GLSLShaders key = { vs, ps };
+    GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
+    if( mGLSLProgramMap.end() != i )
+    {
+        // found!
+        GN_ASSERT( i->second );
+        prog = (const OGLProgramGLSL*)i->second;
+    }
+    else
+    {
+        // not found. we have to create a new GLSL program object
+        AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL(getGLEWContext()) );
+        if( !newProg->init(
+            safeCast<const OGLBasicShaderGLSL*>(vs),
+            safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return                          ;
+        mGLSLProgramMap[key] = newProg.get();
+        prog = newProg.detach();
+    }
+    prog->apply();
 
     GN_UNGUARD_SLOW;
 }
