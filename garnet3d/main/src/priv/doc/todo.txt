@@ -16,6 +16,10 @@ TODO
     - render to texture
     - GLSL test application
   - font manager
+    - code page convertor
+  - mesh class
+  - effect class
+  - blender exporter/importer
 - p2
   - continue implementing GFX module
   - refine GFX module:
@@ -24,6 +28,7 @@ TODO
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
 - p3
+  - try implementing a ray tracer
   - check doxygen errors and warnings.
   - XWindow class UT
   - Custom sscanf(...)

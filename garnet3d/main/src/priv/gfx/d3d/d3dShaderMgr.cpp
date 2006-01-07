@@ -33,7 +33,6 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
             return false;
 
         // DX shaders are always supported
-        // TODO: need more precise detection
         case LANG_D3D_ASM :
         case LANG_D3D_HLSL :
             if( VERTEX_SHADER == type )
