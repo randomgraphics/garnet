@@ -647,15 +647,23 @@ sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase GNgfxLib GNwin GNinput GNd3d GNogl')
-programs = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNd3dTest GNoglTest' )
+tests = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNd3dTest GNoglTest' )
+samples = Split( 'GNrenderToTexture' )
+programs = tests + samples
 
 # populate sample directory
 doInstall(
     'samples',
-    os.path.join('bin','samples'),
-    sharedBins + programs )
+    os.path.join('bin','sample'),
+    sharedBins + samples )
 
-# make test executable depends on all shared libraries.
+# populate test directory
+doInstall(
+    'tests',
+    os.path.join('bin','test'),
+    sharedBins + tests )
+
+# make executable depends on all shared libraries.
 for y in programs:
     if y in GN_targets:
         for x in sharedBins:

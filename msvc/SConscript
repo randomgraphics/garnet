@@ -62,7 +62,7 @@ def build_proj( target, srcdir=[], incdir=[], moduleName='' ):
 ###############################################################################
 
 build_proj( 'GNextern', ['#src/extern/src'], ['#src/extern/inc'] )
-build_proj( 'GNbase', ['#src/priv/base'], ['#src/priv/inc'] )
+build_proj( 'GNbase', ['#src/priv/base'] )
 build_proj( 'GNcore', ['#src/priv/core'] )
 build_proj( 'GNgfxLib', ['#src/priv/gfx/lib'], [], 'GNgfx' )
 build_proj( 'GNgfxCommon', ['#src/priv/gfx/common'], [], 'GNgfx' )
@@ -76,5 +76,7 @@ build_proj( 'GNut', ['#src/priv/test/ut'] )
 build_proj( 'GNgfxTest', ['#src/priv/test/gfx'] )
 build_proj( 'GNinputTest', ['#src/priv/test/input'] )
 build_proj( 'GNd3dTest', ['#src/priv/test/d3d'] )
-build_proj( 'GNoglTest', ['#src/priv/tesg/ogl'] )
-build_proj( 'GNwinTest', ['#src/priv/tesg/win'] )
+build_proj( 'GNoglTest', ['#src/priv/test/ogl'] )
+build_proj( 'GNwinTest', ['#src/priv/test/win'] )
+build_proj( 'GNsampleCommon', ['#src/priv/sample/common'] )
+build_proj( 'GNrenderToTexture', ['#src/priv/sample/renderToTexture'] )

@@ -1,0 +1,6 @@
+Import('env')
+env.GN_build_program(
+    'GNrenderToTexture',
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp',
+    libs = ['GNsampleCommon'] )

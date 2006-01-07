@@ -67,6 +67,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxLib", "7.1\GNgfxLib.vc
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNsampleCommon", "7.1\GNsampleCommon.vcproj", "{E335E055-BF9F-48E3-9303-AB0A704A315F}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNrenderToTexture", "7.1\GNrenderToTexture.vcproj", "{E2602755-C7BC-49D2-9DFD-8408162F5305}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -99,14 +107,10 @@ Global
 		{ACFFD3CF-6A95-44DA-83FF-AAF2FA796EA0}.Stdbg.Build.0 = stdbg|Win32
 		{ACFFD3CF-6A95-44DA-83FF-AAF2FA796EA0}.Strel.ActiveCfg = strel|Win32
 		{ACFFD3CF-6A95-44DA-83FF-AAF2FA796EA0}.Strel.Build.0 = strel|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Debug.ActiveCfg = debug|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Debug.Build.0 = debug|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Release.ActiveCfg = release|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Release.Build.0 = release|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Stdbg.ActiveCfg = stdbg|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Stdbg.Build.0 = stdbg|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Strel.ActiveCfg = strel|Win32
-		{73FAB416-7CC6-4C10-9796-D31EFB1ECF93}.Strel.Build.0 = strel|Win32
+		{F7F7A69C-0335-4F7E-8A89-0F02F2E151A7}.Debug.ActiveCfg = debug|Win32
+		{F7F7A69C-0335-4F7E-8A89-0F02F2E151A7}.Release.ActiveCfg = release|Win32
+		{F7F7A69C-0335-4F7E-8A89-0F02F2E151A7}.Stdbg.ActiveCfg = stdbg|Win32
+		{F7F7A69C-0335-4F7E-8A89-0F02F2E151A7}.Strel.ActiveCfg = strel|Win32
 		{5B4405BF-5F58-44EA-B55A-90D87968A6B6}.Debug.ActiveCfg = debug|Win32
 		{5B4405BF-5F58-44EA-B55A-90D87968A6B6}.Debug.Build.0 = debug|Win32
 		{5B4405BF-5F58-44EA-B55A-90D87968A6B6}.Release.ActiveCfg = release|Win32
@@ -211,6 +215,22 @@ Global
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Stdbg.Build.0 = stdbg|Win32
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel.ActiveCfg = strel|Win32
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel.Build.0 = strel|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Debug.ActiveCfg = debug|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Debug.Build.0 = debug|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Release.ActiveCfg = release|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Release.Build.0 = release|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Stdbg.ActiveCfg = stdbg|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Stdbg.Build.0 = stdbg|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Strel.ActiveCfg = strel|Win32
+		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Strel.Build.0 = strel|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Debug.ActiveCfg = debug|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Debug.Build.0 = debug|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Release.ActiveCfg = release|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Release.Build.0 = release|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Stdbg.ActiveCfg = stdbg|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Stdbg.Build.0 = stdbg|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Strel.ActiveCfg = strel|Win32
+		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Strel.Build.0 = strel|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
