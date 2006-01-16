@@ -1,5 +1,9 @@
 //! \cond NEVER
 
+// *****************************************************************************
+// tag <-> string conversion
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -186,44 +190,31 @@ GN_INLINE bool GN::gfx::str2TextureStateValue( TextureStateValue & result, const
     return TSV_INVALID != result;
 }
 
+// *****************************************************************************
+// RenderStateBlockDesc
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
 GN_INLINE bool
 GN::gfx::RenderStateBlockDesc::operator == ( const RenderStateBlockDesc & rhs ) const
 {
-    return
-        this == &rhs || // shortcut for comparing with self
-        0 == ::memcmp( rs, rhs.rs, sizeof(rs) ) &&
-        0 == ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
+    return this == &rhs || 0 == ::memcmp( rs, rhs.rs, sizeof(rs) );
 }
 //
 GN_INLINE bool
 GN::gfx::RenderStateBlockDesc::operator != ( const RenderStateBlockDesc & rhs ) const
 {
-    return !( *this == rhs );
+    return this != &rhs && 0 != ::memcmp( rs, rhs.rs, sizeof(rs) );
 }
 //
 GN_INLINE GN::gfx::RenderStateBlockDesc &
 GN::gfx::RenderStateBlockDesc::operator += ( const RenderStateBlockDesc & rhs )
 {
-    int i, j;
-
-    // evaluate RSs
-    for( i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
+    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
     {
         if( RSV_INVALID != rhs.rs[i] ) rs[i] = rhs.rs[i];
-    }
-
-    // evaluate TSSs
-    for( i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * t1 = ts[i];
-        const TextureStateValue * t2 = rhs.ts[i];
-        for( j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            if( TSV_INVALID != t2[j] ) t1[j] = t2[j];
-        }
     }
 
     // success
@@ -233,23 +224,9 @@ GN::gfx::RenderStateBlockDesc::operator += ( const RenderStateBlockDesc & rhs )
 GN_INLINE GN::gfx::RenderStateBlockDesc &
 GN::gfx::RenderStateBlockDesc::operator -= ( const RenderStateBlockDesc & rhs )
 {
-    int i, j;
-
-    // evaluate RSs
-    for( i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
+    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
     {
         if(  rs[i] == rhs.rs[i]  ) rs[i] = RSV_INVALID;
-    }
-
-    // evaluate TSSs
-    for( i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * t1 = ts[i];
-        const TextureStateValue * t2 = rhs.ts[i];
-        for( j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            if( t1[j] == t2[j] ) t1[j] = TSV_INVALID;
-        }
     }
 
     // success
@@ -268,6 +245,75 @@ GN_INLINE GN::gfx::RenderStateBlockDesc
 GN::gfx::RenderStateBlockDesc::operator - ( const RenderStateBlockDesc & rhs ) const
 {
     RenderStateBlockDesc result( *this );
+    result -= rhs;
+    return result;
+}
+
+// *****************************************************************************
+// TextureStateBlockDesc
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE bool
+GN::gfx::TextureStateBlockDesc::operator == ( const TextureStateBlockDesc & rhs ) const
+{
+    return this == &rhs || 0 == ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
+}
+//
+GN_INLINE bool
+GN::gfx::TextureStateBlockDesc::operator != ( const TextureStateBlockDesc & rhs ) const
+{
+    return this != &rhs && 0 != ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
+}
+//
+GN_INLINE GN::gfx::TextureStateBlockDesc &
+GN::gfx::TextureStateBlockDesc::operator += ( const TextureStateBlockDesc & rhs )
+{
+    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    {
+        TextureStateValue       * t1 = ts[i];
+        const TextureStateValue * t2 = rhs.ts[i];
+        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
+        {
+            if( TSV_INVALID != t2[j] ) t1[j] = t2[j];
+        }
+    }
+
+    // success
+    return *this;
+}
+//
+GN_INLINE GN::gfx::TextureStateBlockDesc &
+GN::gfx::TextureStateBlockDesc::operator -= ( const TextureStateBlockDesc & rhs )
+{
+    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    {
+        TextureStateValue       * t1 = ts[i];
+        const TextureStateValue * t2 = rhs.ts[i];
+        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
+        {
+            if( t1[j] == t2[j] ) t1[j] = TSV_INVALID;
+        }
+    }
+
+    // success
+    return *this;
+}
+//
+GN_INLINE GN::gfx::TextureStateBlockDesc
+GN::gfx::TextureStateBlockDesc::operator + ( const TextureStateBlockDesc & rhs ) const
+{
+    TextureStateBlockDesc result( *this );
+    result += rhs;
+    return result;
+}
+//
+GN_INLINE GN::gfx::TextureStateBlockDesc
+GN::gfx::TextureStateBlockDesc::operator - ( const TextureStateBlockDesc & rhs ) const
+{
+    TextureStateBlockDesc result( *this );
     result -= rhs;
     return result;
 }

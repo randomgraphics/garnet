@@ -327,11 +327,11 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
         mDrawState.vtxShader.get(), !!mDrawState.dirtyFlags.vtxShader,
         mDrawState.pxlShader.get(), !!mDrawState.dirtyFlags.pxlShader );
 
+    // apply FFP states
+    if( 0 != mFfpDirtyFlags.u32 ) applyFfpState();
+
     // clear dirty flags
     mDrawState.dirtyFlags.u32 = 0;
-
-    // apply render parameters
-    if( !getRpDirtySet().empty() ) applyRenderParameters();
 
     GN_UNGUARD_SLOW;
 }

@@ -57,10 +57,7 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceRestore()
     mCurrentRTs[2].tex = 0;
     mCurrentRTs[3].tex = 0;
     mCurrentDepth.tex = 0;
-    setRenderParameter(
-        RPT_TRANSFORM_VIEWPORT,
-        getRenderParameter( RPT_TRANSFORM_VIEWPORT ).valueFloats,
-        4 );
+    setViewport( getViewport() );
 
     // (re)apply render targets
     for( size_t i = 0; i < getCaps(CAPS_MAX_RENDER_TARGETS); ++i )
@@ -180,10 +177,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
 
         // Because viewport is using relative coordinates based on render target size,
         // so here we have to re-apply the viewport.
-        setRenderParameter(
-            RPT_TRANSFORM_VIEWPORT,
-            getRenderParameter( RPT_TRANSFORM_VIEWPORT ).valueFloats,
-            4 );
+        setViewport( getViewport() );
     }
 
     GN_UNGUARD_SLOW;

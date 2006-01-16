@@ -54,7 +54,7 @@ bool GN::gfx::D3DRenderer::init(const RendererOptions & ro )
     if( !rsbInit()          ) { quit(); return selfOK(); }
     if( !textureInit()      ) { quit(); return selfOK(); }
     if( !bufferInit()       ) { quit(); return selfOK(); }
-    if( !paramInit()        ) { quit(); return selfOK(); }
+    if( !ffpInit()        ) { quit(); return selfOK(); }
     if( !renderTargetInit() ) { quit(); return selfOK(); }
     if( !drawInit()         ) { quit(); return selfOK(); }
 
@@ -78,7 +78,7 @@ void GN::gfx::D3DRenderer::quit()
 
     drawQuit();
     renderTargetQuit();
-    paramQuit();
+    ffpQuit();
     bufferQuit();
     textureQuit();
     rsbQuit();
@@ -180,7 +180,7 @@ bool GN::gfx::D3DRenderer::deviceCreate()
     COMPONENT_RECREATE( texture );
     COMPONENT_RECREATE( buffer );
     COMPONENT_RECREATE( resource );
-    COMPONENT_RECREATE( param );
+    COMPONENT_RECREATE( ffp );
     COMPONENT_RECREATE( renderTarget );
     COMPONENT_RECREATE( draw );
 
@@ -215,7 +215,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
     if( !textureDeviceRestore() ) return false;
     if( !bufferDeviceRestore() ) return false;
     if( !resourceDeviceRestore() ) return false;
-    if( !paramDeviceRestore() ) return false;
+    if( !ffpDeviceRestore() ) return false;
     if( !renderTargetDeviceRestore() ) return false;
     if( !drawDeviceRestore() ) return false;
 
@@ -246,7 +246,7 @@ void GN::gfx::D3DRenderer::deviceDispose()
 
     drawDeviceDispose();
     renderTargetDeviceDispose();
-    paramDeviceDispose();
+    ffpDeviceDispose();
     resourceDeviceDispose();
     bufferDeviceDispose();
     textureDeviceDispose();
@@ -274,7 +274,7 @@ void GN::gfx::D3DRenderer::deviceDestroy()
 
     COMPONENT_DESTROY( draw );
     COMPONENT_DESTROY( renderTarget );
-    COMPONENT_DESTROY( param );
+    COMPONENT_DESTROY( ffp );
     COMPONENT_DESTROY( resource );
     COMPONENT_DESTROY( buffer );
     COMPONENT_DESTROY( texture );

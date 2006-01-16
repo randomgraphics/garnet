@@ -1,29 +1,9 @@
 #include "pch.h"
 #include "oglRenderer.h"
 
-// for GLEW multi-context support
-#define glewGetContext() r.getGLEWContext()
-
 // ****************************************************************************
 // local types/variables/functions
 // ****************************************************************************
-
-//!
-//! opengl texture operation structure
-//!
-struct OGLTextureState
-{
-    GLenum op1; //!< OpenGL texture opcode 1
-    GLenum op2; //!< OpenGL texture opcode 2
-};
-
-//!
-//! opengl texture stage state value structure
-struct OGLTextureStateValue
-{
-    GLuint val1; //!< OpenGL texture opvalue 1
-    GLuint val2; //!< OpenGL texture opvalue 2
-};
 
 //!
 //! render state value map
@@ -35,26 +15,6 @@ static GLenum sRsv2OGL[GN::gfx::NUM_RENDER_STATE_VALUES] =
     #undef GNGFX_DEFINE_RSV
 };
 
-//!
-//! opengl texture stage state operation map
-//!
-static OGLTextureState sTs2OGL[GN::gfx::NUM_TEXTURE_STATES] =
-{
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dval, glname1, glname2 ) { glname1, glname2 },
-    #include "garnet/gfx/textureStateMeta.h"
-    #undef GNGFX_DEFINE_TS
-};
-
-//!
-//! opengl texture stage state value map
-//!
-static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
-{
-    #define GNGFX_DEFINE_TSV( tag, d3dval, glval1, glval2 ) { glval1, glval2 },
-    #include "garnet/gfx/textureStateValueMeta.h"
-    #undef GNGFX_DEFINE_TSV
-};
-
 // Individual RS/TSS functions
 #include "oglRenderState.inl"
 
@@ -62,7 +22,6 @@ static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
 //! apply render state block to OpenGL
 // ------------------------------------------------------------------------
 static void sApplyRenderStateBlock(
-    GN::gfx::OGLRenderer                & r,
     const GN::gfx::RenderStateBlockDesc & /*from*/,
     const GN::gfx::RenderStateBlockDesc & to,
     const GN::gfx::RenderStateBlockDesc & diff )
@@ -93,51 +52,6 @@ static void sApplyRenderStateBlock(
         GN_OGL_CHECK( glBlendFunc(
             sRsv2OGL[to.rs[GN::gfx::RS_BLEND_SRC]],
             sRsv2OGL[to.rs[GN::gfx::RS_BLEND_DST]] ) );
-    }
-
-    // apply all TSSs to API
-    GN::gfx::TextureStateValue tsv;
-    uint32_t numstages = GN::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
-    for ( uint32_t i = 0; i < numstages; ++i )
-    {
-        r.chooseTextureStage( i );
-
-        if( GLEW_ARB_texture_env_combine )
-        {
-            for ( uint32_t j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-            {
-                tsv = diff.ts[i][j];
-                if( GN::gfx::TSV_INVALID != tsv )
-                {
-                    if( GN::gfx::TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
-                    {
-                        GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_dot3!" ) );
-                        tsv = GN::gfx::TSV_ARG0;
-                    }
-                    GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op1, sTsv2OGL[tsv].val1 ) );
-                    GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op2, sTsv2OGL[tsv].val2 ) );
-                }
-            }
-        }
-        else
-        {
-            tsv = diff.ts[i][GN::gfx::TS_COLOROP];
-            if( GN::gfx::TSV_INVALID != tsv )
-            {
-                GLint glop = sTs2OGL[GN::gfx::TS_COLOROP].op1;
-                switch( glop )
-                {
-                    case GL_REPLACE:
-                    case GL_MODULATE:
-                        GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, glop ) );
-                        break;
-                    default:
-                        GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_combine" ) );
-                        GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE ) );
-                        break;
-                }
-            }
-        }
     }
 
     // NOTE : 当启用OpenGL的ColorMaterial属性时，材质信息会随着顶点的颜色
@@ -190,7 +104,6 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
     }
 
     bool init(
-        GN::gfx::OGLRenderer                & r,
         const GN::gfx::RenderStateBlockDesc & from,
         const GN::gfx::RenderStateBlockDesc & to )
     {
@@ -198,24 +111,6 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 
         mFrom = from;
         mTo   = to;
-
-        // Note: OpenGL has no way to "disable" texture stage. We simulate it
-        //       by replicating previous stage.
-        for( uint32_t i = 0; i < GN::gfx::MAX_TEXTURE_STAGES; ++i )
-        {
-            if( GN::gfx::TSV_DISABLE == mFrom.ts[i][GN::gfx::TS_COLOROP] )
-            {
-                mFrom.ts[i][GN::gfx::TS_ALPHAOP] = GN::gfx::TSV_ARG0;
-                mFrom.ts[i][GN::gfx::TS_COLORARG0] = GN::gfx::TSV_CURRENT_COLOR;
-                mFrom.ts[i][GN::gfx::TS_ALPHAARG0] = GN::gfx::TSV_CURRENT_ALPHA;
-            }
-            if( GN::gfx::TSV_DISABLE == mTo.ts[i][GN::gfx::TS_COLOROP] )
-            {
-                mTo.ts[i][GN::gfx::TS_ALPHAOP] = GN::gfx::TSV_ARG0;
-                mTo.ts[i][GN::gfx::TS_COLORARG0] = GN::gfx::TSV_CURRENT_COLOR;
-                mTo.ts[i][GN::gfx::TS_ALPHAARG0] = GN::gfx::TSV_CURRENT_ALPHA;
-            }
-        }
         mDiff = mTo - mFrom;
 
         // generate new display list
@@ -228,7 +123,7 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 
         // compile display list
         glNewList( mDisplayList, GL_COMPILE );
-        sApplyRenderStateBlock( r, mFrom, mTo, mDiff );
+        sApplyRenderStateBlock( mFrom, mTo, mDiff );
         glEndList();
 
         // check opengl error
@@ -250,20 +145,9 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
 
         mRenderer.makeCurrent();
 
-        /*
-        // disabled unused texture stages (for performance reason)
-        uint32_t numstages = min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps(GN::gfx::CAPS_MAX_TEXTURE_STAGES) );
-        for ( uint32_t i = 0; i < numstages; ++i )
-        {
-            if( GN::gfx::TSV_DISABLE == mDiff.ts( i, GN::gfx::TS_COLOROP ) )
-            {
-                r.disableTextureStage( i );
-            }
-        } //*/
-
         // apply state block
 #if GN_DEBUG
-        sApplyRenderStateBlock( mRenderer, mFrom, mTo, mDiff );
+        sApplyRenderStateBlock( mFrom, mTo, mDiff );
 #else
         GN_ASSERT( glIsList(mDisplayList) );
         GN_OGL_CHECK( glCallList(mDisplayList) );
@@ -289,7 +173,7 @@ GN::gfx::OGLRenderer::createDeviceRenderStateBlock(
 
     AutoRef<OGLRenderStateBlock> rsb( new OGLRenderStateBlock(*this) );
 
-    if( !rsb->init( *this, from, to ) ) return 0;
+    if( !rsb->init( from, to ) ) return 0;
 
     // success
     return rsb.detach();

@@ -210,11 +210,6 @@ namespace GN { namespace gfx
         //!
         RenderStateValue rs[NUM_RENDER_STATES];
 
-        //!
-        //! texture stage states
-        //!
-        TextureStateValue ts[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES];
-
         // ********************************
         //! \name constructors
         // ********************************
@@ -289,6 +284,106 @@ namespace GN { namespace gfx
         //!
         RenderStateBlockDesc   operator  - ( const RenderStateBlockDesc & ) const;
     };
+
+    //!
+    //! Texture State Block Description Structure.
+    //!
+    //! \note Texture states are used ONLY for fixed function pipeline.
+    //!
+    struct TextureStateBlockDesc
+    {
+        static const TextureStateBlockDesc DEFAULT; //!< default rsblock
+        static const TextureStateBlockDesc INVALID; //!< invalid rsblock
+
+        //!
+        //! reset flag
+        //!
+        enum ResetFlag
+        {
+            RESET_TO_INVALID, //!< reset all fields to "TSV_INVALID"
+            RESET_TO_DEFAULT, //!< reset all fields to default value
+        };
+
+        //!
+        //! texture stage states
+        //!
+        TextureStateValue ts[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES];
+
+        // ********************************
+        //! \name constructors
+        // ********************************
+    public :
+
+        //@{
+
+        //!
+        //! default constructor
+        //!
+        TextureStateBlockDesc() {}
+
+        //!
+        //! construct & reset a render state block description structure
+        //!
+        TextureStateBlockDesc( ResetFlag flag )
+        {
+            reset( flag );
+        }
+
+        //@}
+
+        // ********************************
+        //! \name  public operations
+        // ********************************
+    public :
+
+        //@{
+
+        //!
+        //! reset all fields to default/invalid value
+        //!
+        void reset( ResetFlag flag );
+
+        //@}
+
+        // ********************************
+        //! \name   public operators
+        // ********************************
+    public :
+
+        //@{
+
+        //!
+        //! 等值判定
+        //!
+        bool operator == ( const TextureStateBlockDesc & ) const;
+
+        //!
+        //! 等值判定
+        //!
+        bool operator != ( const TextureStateBlockDesc & ) const;
+
+        //!
+        //! 求和（将参数中所有的非invalid项复写到this中）.
+        //! <b>注意，此加法运算不符合交换率，(A+B) != (B+A)</b>
+        //!
+        TextureStateBlockDesc & operator += ( const TextureStateBlockDesc & );
+
+        //!
+        //! 求和
+        //!
+        TextureStateBlockDesc   operator +  ( const TextureStateBlockDesc & ) const;
+
+        //!
+        //! 求差（相同的项相减结果为 RSV_INVALID 或者 TSV_INVALID）
+        //!
+        TextureStateBlockDesc & operator -= ( const TextureStateBlockDesc & );
+
+        //!
+        //! 求差
+        //!
+        TextureStateBlockDesc   operator  - ( const TextureStateBlockDesc & ) const;
+    };
+    
 }}
 
 #if GN_ENABLE_INLINE

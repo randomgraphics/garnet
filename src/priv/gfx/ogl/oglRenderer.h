@@ -48,7 +48,7 @@ namespace GN { namespace gfx
                 && rsbOK()
                 && textureOK()
                 && bufferOK()
-                && paramOK()
+                && ffpOK()
                 && renderTargetOK()
                 && drawOK();
         }
@@ -63,7 +63,7 @@ namespace GN { namespace gfx
             rsbClear();
             textureClear();
             bufferClear();
-            paramClear();
+            ffpClear();
             renderTargetClear();
             drawClear();
         }
@@ -472,17 +472,17 @@ namespace GN { namespace gfx
         virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
 
     private :
-        bool paramInit() { return true; }
-        void paramQuit() {}
-        bool paramOK() const { return true; }
-        void paramClear() {}
+        bool ffpInit() { return true; }
+        void ffpQuit() {}
+        bool ffpOK() const { return true; }
+        void ffpClear() {}
 
-        bool paramDeviceCreate() { return true; }
-        bool paramDeviceRestore();
-        void paramDeviceDispose() {}
-        void paramDeviceDestroy() {}
+        bool ffpDeviceCreate() { return true; }
+        bool ffpDeviceRestore() { reapplyAllFfpStates(); return true; }
+        void ffpDeviceDispose() {}
+        void ffpDeviceDestroy() {}
 
-        void applyRenderParameters();
+        void applyFfpState();
 
         //@}
 
