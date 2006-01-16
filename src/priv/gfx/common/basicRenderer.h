@@ -115,50 +115,51 @@ namespace GN { namespace gfx
 
         //@{
 
-        public :
+    public :
 
-            virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & );
-            virtual void bindRenderStateBlock( uint32_t );
-            virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const;
-            virtual uint32_t setRenderState( RenderState, RenderStateValue );
+        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & );
+        virtual void bindRenderStateBlock( uint32_t );
+        virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const;
+        virtual uint32_t setRenderState( RenderState, RenderStateValue );
 
-        protected:
+    protected:
 
-            bool rebindCurrentRsb();
-            void disposeDeviceData() { mDevRsbMap.clear(); }
+        bool rebindCurrentRsb();
+        void disposeDeviceData() { mDevRsbMap.clear(); }
 
-        private :
+    private :
 
-            bool rsbInit();
-            void rsbQuit() {}
-            bool rsbOk() const { return true; }
-            void rsbClear() { mRsbHandles.clear(); mDevRsbMap.clear(); mCurrentRsb = 0; }
+        bool rsbInit();
+        void rsbQuit() {}
+        bool rsbOk() const { return true; }
+        void rsbClear() { mRsbHandles.clear(); mDevRsbMap.clear(); mCurrentRsb = 0; }
 
-            //!
-            //! Create device render state block, that can switch device render state
-            //! from 'from' to 'to'.
-            //!
-            virtual DeviceRenderStateBlock *
-            createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to ) = 0;
+        //!
+        //! Create device render state block, that can switch device render state
+        //! from 'from' to 'to'.
+        //!
+        virtual DeviceRenderStateBlock *
+        createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to ) = 0;
 
-        private :
+    private :
 
-            union DevRsbKey
+        union DevRsbKey
+        {
+            uint64_t u64;
+            struct
             {
-                uint64_t u64;
-                struct
-                {
-                    uint32_t from, to;
-                };
-                bool operator<( const DevRsbKey & rhs ) const { return u64 < rhs.u64; }
+                uint32_t from, to;
             };
-            typedef HandleManager<RenderStateBlockDesc,uint32_t> RsbHandleManager;
-            typedef AutoRef<DeviceRenderStateBlock> DeviceRenderStateBlockRefPtr;
-            typedef std::map<DevRsbKey,DeviceRenderStateBlockRefPtr> DevRsbMap;
+            bool operator<( const DevRsbKey & rhs ) const { return u64 < rhs.u64; }
+        };
+        typedef HandleManager<RenderStateBlockDesc,uint32_t> RsbHandleManager;
+        typedef AutoRef<DeviceRenderStateBlock> DeviceRenderStateBlockRefPtr;
+        typedef std::map<DevRsbKey,DeviceRenderStateBlockRefPtr> DevRsbMap;
 
-            RsbHandleManager mRsbHandles;
-            DevRsbMap        mDevRsbMap;
-            uint32_t         mCurrentRsb;
+        RsbHandleManager mRsbHandles;
+        DevRsbMap        mDevRsbMap;
+        uint32_t         mCurrentRsb;
+
         //@}
 
         // *****************************************************************************
