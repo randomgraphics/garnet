@@ -386,9 +386,9 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t baseVtx )
 
     applyShaderState();
 
-    if( !getRpDirtySet().empty() )
+    if( 0 != mFfpDirtyFlags.u32 )
     {
-        applyRenderParameters();
+        applyFfpState();
     }
 
     // clear dirty flags

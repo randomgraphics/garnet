@@ -164,7 +164,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 
         // Because viewport is using relative coordinates based on render target size,
         // so here we have to re-apply the viewport.
-        setRenderParameter( RPT_TRANSFORM_VIEWPORT, getRenderParameter( RPT_TRANSFORM_VIEWPORT ).valueFloats, 4 );
+        setViewport( getViewport() );
     }
 
     GN_UNGUARD_SLOW;

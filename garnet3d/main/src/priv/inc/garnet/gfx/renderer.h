@@ -240,53 +240,6 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Render parameter type
-    //!
-    enum RenderParameterType
-    {
-        RPT_TRANSFORM_WORLD,     //!< World transformation. Default is identity.
-        RPT_TRANSFORM_VIEW,      //!< Camera transformation. Default is identity.
-        RPT_TRANSFORM_PROJ,      //!< Projection transformation. Default is identity.
-        RPT_TRANSFORM_VIEWPORT,  //!< 4 floats: left, top, width, height; ranging from 0.0 to 1.0 . Default is (0,0,1,1)
-        RPT_TRANSFORM_FIRST = RPT_TRANSFORM_WORLD,   //!< first transform property
-        RPT_TRANSFORM_LAST = RPT_TRANSFORM_VIEWPORT, //!< last transform property
-
-        RPT_LIGHT0_POSITION,     //!< Light 0 position in homogeneous world space. Default is (0,0,0,1)
-        RPT_LIGHT0_DIFFUSE,      //!< Light 0 diffuse color. Default is (1,1,1,1)
-        RPT_LIGHT_FIRST = RPT_LIGHT0_POSITION, //!< first light property
-        RPT_LIGHT_LAST = RPT_LIGHT0_DIFFUSE,   //!< last light property
-
-        RPT_MATERIAL_DIFFUSE,    //!< Diffuse material color. Default is (1,1,1,1)
-        RPT_MATERIAL_SPECULAR,   //!< Specular material color. Default is (0,0,0,0)
-        RPT_MATERIAL_FIRST = RPT_MATERIAL_DIFFUSE, //!< first material property
-        RPT_MATERIAL_LAST = RPT_MATERIAL_SPECULAR, //!< last material property
-
-        NUM_RENDER_PARAMETER_TYPES,   //!< Number of avaiable parameters
-
-        RPT_INVALID,             //!< Indicates invalid state.
-
-        // Below are parameter masks that are purely for push/popRenderParameter()
-
-        _RPM_MASK      = 0x80000000,         //!< Mask bit
-
-        RPM_LIGHT     = (1<<0) | _RPM_MASK, //!< all light parameters
-        RPM_MATERIAL  = (1<<1) | _RPM_MASK, //!< all material parameters
-        RPM_TRANSFORM = (1<<2) | _RPM_MASK, //!< all transform parameters
-        RPM_ALL       = 0xFFFFFFFF,         //!< all parameters
-    };
-
-    //!
-    //! Convert render parameter type to string.
-    //! If failed, return "BAD_RENDER_PARAMETER_TYPE".
-    //!
-    const char * rpt2Str( RenderParameterType );
-
-    //!
-    //! Convert render parameter type to string. Return false, if failed.
-    //!
-    bool rpt2Str( StrA & result, RenderParameterType type );
-
-    //!
     //! ÇåÆÁ±êÖ¾
     //!
     enum ClearFlag
@@ -641,20 +594,6 @@ namespace GN { namespace gfx
         //!
         virtual uint32_t setRenderState( RenderState state, RenderStateValue value ) = 0;
 
-        //!
-        //! Update individual texture state.
-        //!
-        //! \return
-        //!     Return the render state block handler that represents current render state.
-        //!     Return 0, if failed.
-        //!
-        //! \note
-        //!     - This function is purely for coding convenience.
-        //!       Please use render state block at performance critical section.
-        //!     - Also, Texture states are only used for fixed function pipeline.
-        //!
-        virtual uint32_t setTextureState( uint32_t stage, TextureState state, TextureStateValue value ) = 0;
-
         //@}
 
         // ********************************************************************
@@ -857,7 +796,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Misc. Render Parameter Manager.
+        //! \name Fixed Function Pipeline Manager.
         //
         // ********************************************************************
 
@@ -866,83 +805,22 @@ namespace GN { namespace gfx
     protected:
 
         //!
-        //! Render parameter value type
-        //!
-        enum RenderParameterValueType
-        {
-            RPVT_FLOAT, //!< float array
-            NUM_OF_RENDER_PARAMETER_VALUE_TYPES, //!< number of avaliable types.
-            RPVT_INVALID, //!< invalid type
-        };
-
-        //!
-        //! Render parameter value
-        //!
-        struct RenderParameterValue
-        {
-            RenderParameterValueType type;            //!< value type
-            float                    valueFloats[16]; //!< float values
-            size_t                   count;           //!< float count
-
-#if GN_DEBUG
-            //!
-            //! ctor
-            //!
-            RenderParameterValue() : type(RPVT_INVALID), count(0) {}
-#endif
-        };
-
-    protected:
-
-        //!
-        //! Get render parameter value
-        //!
-        const RenderParameterValue & getRenderParameter( RenderParameterType type ) const 
-        {
-            GN_ASSERT( 0 <= type && type < NUM_RENDER_PARAMETER_TYPES );
-            return mRenderParameters[type].top();
-        }
-
-        //!
-        //! Get render parameter dirty set
-        //!
-        const std::set<RenderParameterType> & getRpDirtySet() const { return mRenderParameterDirtySet; }
-
-        //!
-        //! Clear render parameter dirty set
-        //!
-        void clearRpDirtySet() const { mRenderParameterDirtySet.clear(); }
-
-        //!
-        //! Dirtify all render parameters
-        //!
-        void setAllRpDirty()
-        {
-            mRenderParameterDirtySet.clear();
-            for( int i = 0; i < (int)NUM_RENDER_PARAMETER_TYPES; ++i )
-            {
-                mRenderParameterDirtySet.insert( (RenderParameterType)i );
-            }
-        }
-
-    private:
-
-        //!
         //! Fixed-size stack container that do not perform any runtime
         //! memory allocation/deallocation.
         //!
         template< class T, size_t MAX_DEPTH = 256 >
-        class FixStack
+        class FixedStack
         {
             T      mTop;              //!< top element
             T      mStack[MAX_DEPTH]; //!< element stack
             size_t mDepth;            //!< current depth
+
         public :
 
             //!
             //! default constructor
             //!
-            FixStack() : mDepth(0) {}
+            FixedStack() : mDepth(0) {}
 
             //!
             //! get current depth
@@ -970,83 +848,136 @@ namespace GN { namespace gfx
             }
 
             //!
-            //! return top element
-            //!
-            T & top() { return mTop; }
-
-            //!
-            //! return constant top element
+            //! Get top element
             //!
             const T & top() const { return mTop; }
+
+            //!
+            //! Get top element
+            //!
+            T & top() { return mTop; }
         };
 
         //!
-        //! Render parameter structure
+        //! Fixed function pipeline dirty flags
         //!
-        typedef FixStack<RenderParameterValue> RenderParameter;
+        union FfpDirtyFlags
+        {
+            uint16_t u32; //!< dirty flags as unsigned 32-bit integer
+            int16_t  i32; //!< dirty flags as signed 32-bit integer
+            struct
+            {
+                int TransformWorld   : 1; //!< world matrix dirty flag
+                int TransformView    : 1; //!< view matrix dirty flag
+                int TransformProj    : 1; //!< projection matrix dirty flag
+                int Viewport         : 1; //!< viewport dirty flag
+                int Light0Pos        : 1; //!< light 0 position dirty flag
+                int Light0Diffuse    : 1; //!< light 0 color dirty flag
+                int MaterialDiffuse  : 1; //!< material diffuse dirty flag
+                int MaterialSpecular : 1; //!< material specular dirty flag
+                int TextureStates    : 1; //!< texture states dirty flag
+            };
+        };
 
-        RenderParameter mRenderParameters[NUM_RENDER_PARAMETER_TYPES];
+        FfpDirtyFlags mFfpDirtyFlags; //!< Fixed function pipeline dirty flags.
 
-        // Render parameter dirty set
-        mutable std::set<RenderParameterType> mRenderParameterDirtySet;
+        FixedStack<Matrix44f>
+            mTransformWorld, //!< World transformation
+            mTransformView,  //!< Camera transformation
+            mTransformProj;  //!< Projection transformation
+
+        FixedStack<Rectf>
+            mViewport; //!< Resolution-independent viewport: (0,0,1,1) means whole screen.
+
+        FixedStack<Vector4f>
+            mLight0Pos,        //!< Light0 position
+            mLight0Diffuse,    //!< Light0 diffuse color
+            mMaterialDiffuse,  //!< Material diffuse color
+            mMaterialSpecular; //!< Material specular color
+
+        FixedStack<TextureStateBlockDesc>
+            mTextureStates; //!< Texture stage states
 
         //!
-        //! construct function for render parameters
+        //! re-apply all fixed function pipeline states
         //!
-        void renderParameterCtor()
+        void reapplyAllFfpStates()
+        {
+            setTransformWorld( getTransformWorld() );
+            setTransformView( getTransformView() );
+            setTransformProj( getTransformProj() );
+            setViewport( getViewport() );
+            setLight0Pos( getLight0Pos() );
+            setLight0Diffuse( getLight0Diffuse() );
+            setMaterialDiffuse( getMaterialDiffuse() );
+            setMaterialSpecular( getMaterialSpecular() );
+            setTextureStates( getTextureStates() );
+        }
+
+    private:
+
+        //!
+        //! construct default value
+        //!
+        void ffpCtor()
         {
             Vector4f v;
 
-            setRenderParameter( RPT_TRANSFORM_WORLD, Matrix44f::IDENTITY );
-            setRenderParameter( RPT_TRANSFORM_VIEW, Matrix44f::IDENTITY );
-            setRenderParameter( RPT_TRANSFORM_PROJ, Matrix44f::IDENTITY );
-            setRenderParameter( RPT_TRANSFORM_VIEWPORT, v.set(0,0,1,1) );
-            setRenderParameter( RPT_LIGHT0_POSITION, v.set(0,0,0,1) );
-            setRenderParameter( RPT_LIGHT0_DIFFUSE, v.set(1,1,1,1) );
-            setRenderParameter( RPT_MATERIAL_DIFFUSE, v.set(1,1,1,1) );
-            setRenderParameter( RPT_MATERIAL_SPECULAR, v.set(0,0,0,0) );
+            GN_CASSERT( 4 == sizeof(FfpDirtyFlags) );
+            mFfpDirtyFlags.u32 = 0;
 
-            // make sure all parameters are set to defualt value.
-            GN_ASSERT( getRpDirtySet().size() == NUM_RENDER_PARAMETER_TYPES );
+            setTransformWorld( Matrix44f::IDENTITY );
+            setTransformView( Matrix44f::IDENTITY );
+            setTransformProj( Matrix44f::IDENTITY );
+            setViewport( 0, 0, 1, 1 );
+            setLight0Pos( v.set(0,0,0,1) );
+            setLight0Diffuse( v.set(1,1,1,1) );
+            setMaterialDiffuse( v.set(1,1,1,1) );
+            setMaterialSpecular( v.set(0,0,0,0) );
+            setTextureStates( TextureStateBlockDesc::DEFAULT );
         }
 
     public:
 
-        //!
-        //! Set parameter value. Can't use RPM_XXX here.
-        //!
-        void setRenderParameter( RenderParameterType, const float *, size_t );
+#define GN_RENDERER_FFP_METHODS( name, type ) \
+    void set##name(const type & newValue ) { m##name.top() = newValue; mFfpDirtyFlags.##name = true; } \
+    const type & get##name() const { return m##name.top(); } \
+    void push##name() { m##name.push(); } \
+    void pop##name() { m##name.pop(); mFfpDirtyFlags.##name = true; }
+
+        GN_RENDERER_FFP_METHODS( TransformWorld, Matrix44f );
+        GN_RENDERER_FFP_METHODS( TransformView, Matrix44f );
+        GN_RENDERER_FFP_METHODS( TransformProj, Matrix44f );
+        GN_RENDERER_FFP_METHODS( Viewport, Rectf );
+        GN_RENDERER_FFP_METHODS( Light0Pos, Vector4f );
+        GN_RENDERER_FFP_METHODS( Light0Diffuse, Vector4f );
+        GN_RENDERER_FFP_METHODS( MaterialDiffuse, Vector4f );
+        GN_RENDERER_FFP_METHODS( MaterialSpecular, Vector4f );
+        GN_RENDERER_FFP_METHODS( TextureStates, TextureStateBlockDesc );
+
+#undef GN_RENDERER_FFP_METHODS
 
         //!
-        //! Set vector parameter.
+        //! Set viewport with 4 individual parameters
         //!
-        void setRenderParameter( RenderParameterType type , const Vector4f & v )
+        void setViewport( float left, float top, float width, float height )
         {
-            setRenderParameter( type, v, 4 );
+            Rectf rc( left, top, width, height );
+            setViewport( rc );
         }
 
         //!
-        //! Set matrix parameter.
+        //! Set single texture state
         //!
-        void setRenderParameter( RenderParameterType type , const Matrix44f & m )
+        void setTextureState( uint32_t stage, TextureState state, TextureStateValue value )
         {
-            setRenderParameter( type, &m[0][0], 16 );
+            GN_ASSERT( 0 <= stage && stage < MAX_TEXTURE_STAGES );
+            GN_ASSERT( 0 <= state && state < NUM_TEXTURE_STATES );
+            GN_ASSERT( 0 <= value && value < NUM_TEXTURE_STATE_VALUES );
+            TextureStateBlockDesc & desc = mTextureStates.top();
+            desc.ts[stage][state] = value;
+            mFfpDirtyFlags.TextureStates = true;
         }
-
-        //!
-        //! Push parameter value. Can use any value of RPT_XXX and RPM_XXX.
-        //!
-        void pushRenderParameter( RenderParameterType );
-
-        //!
-        //! Pop parameter value. Can use any value of RPT_XXX and RPM_XXX.
-        //!
-        void popRenderParameter( RenderParameterType );
-
-        //!
-        //! setup viewport
-        //!
-        void setViewport( float left, float top, float width, float height );
 
         //!
         //! This function is provided because different API has different ways
@@ -1374,7 +1305,7 @@ namespace GN { namespace gfx
         //!
         Renderer()
         {
-            renderParameterCtor();
+            ffpCtor();
         }
 
         //@}

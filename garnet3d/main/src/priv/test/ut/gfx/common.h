@@ -376,21 +376,6 @@ protected:
         TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_INVALID, GN::gfx::RSV_TRUE ) );
         TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_BLENDING, GN::gfx::RSV_INVALID ) );
         TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_INVALID, GN::gfx::RSV_INVALID ) );
-
-        // try setTextureState
-        rsb3 = r->setTextureState( 0, GN::gfx::TS_COLOROP, GN::gfx::TSV_ARG0 );
-        rsb4 = r->setTextureState( 0, GN::gfx::TS_COLOROP, GN::gfx::TSV_MODULATE );
-        TS_ASSERT( rsb3 );
-        TS_ASSERT( rsb4 );
-        TS_ASSERT_DIFFERS( rsb3, rsb4 );
-        TS_ASSERT_EQUALS( rsb4, rsb1 );
-        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
-
-        // try setTextureState with invalid value
-        TS_ASSERT_EQUALS( 0, r->setTextureState( 0, GN::gfx::TS_INVALID, GN::gfx::TSV_ARG0 ) );
-        TS_ASSERT_EQUALS( 0, r->setTextureState( 0, GN::gfx::TS_COLOROP, GN::gfx::TSV_INVALID ) );
-        TS_ASSERT_EQUALS( 0, r->setTextureState( 0, GN::gfx::TS_INVALID, GN::gfx::TSV_INVALID ) );
-        TS_ASSERT_EQUALS( 0, r->setTextureState( GN::gfx::MAX_TEXTURE_STAGES, GN::gfx::TS_COLOROP, GN::gfx::TSV_ARG0 ) );
     }
 
     void vtxBuf()

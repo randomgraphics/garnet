@@ -223,7 +223,7 @@ void GN::gfx::OGLQuad::drawQuads(
 
         // setup material color
         static Vector4f white(1,1,1,1);
-        mRenderer.setRenderParameter( RPT_MATERIAL_DIFFUSE, white, 4 );
+        mRenderer.setMaterialDiffuse( white );
     }
 
     // draw

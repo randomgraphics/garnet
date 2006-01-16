@@ -14,20 +14,6 @@ static DWORD sRenderStateValue2D3D[GN::gfx::NUM_RENDER_STATE_VALUES] =
     #include "garnet/gfx/renderStateValueMeta.h"
     #undef GNGFX_DEFINE_RSV
 };
-//
-static D3DTEXTURESTAGESTATETYPE sTextureState2D3D[GN::gfx::NUM_TEXTURE_STATES] =
-{
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 )  d3dname,
-    #include "garnet/gfx/textureStateMeta.h"
-    #undef GNGFX_DEFINE_TS
-};
-//
-static DWORD sTextureStateValue2D3D[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
-{
-    #define GNGFX_DEFINE_TSV( tag, d3dval, glval1, glval2 ) d3dval,
-    #include "garnet/gfx/textureStateValueMeta.h"
-    #undef GNGFX_DEFINE_TSV
-};
 
 #include "d3dRenderState.inl"
 
@@ -50,43 +36,6 @@ static void sApplyRenderStateBlock(
         }
     #include "garnet/gfx/renderStateMeta.h"
     #undef GNGFX_DEFINE_RS
-
-    // apply all TSSs to API
-    uint32_t i;
-    GN::gfx::TextureStateValue tsv;
-    DWORD d3dtsv;
-    uint32_t numStages = GN::min<uint32_t>( GN::gfx::MAX_TEXTURE_STAGES, r.getCaps( GN::gfx::CAPS_MAX_TEXTURE_STAGES ) );
-    for ( i = 0; i < numStages; ++i )
-    {
-        for ( uint32_t j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            tsv = desc.ts[i][j];
-            if( GN::gfx::TSV_INVALID != tsv )
-            {
-                d3dtsv = sTextureStateValue2D3D[tsv];
-
-                if( D3DTOP_DOTPRODUCT3 == d3dtsv &&
-                    !r.getD3DCaps( GN::gfx::D3DRenderer::D3DCAPS_DOT3 ) )
-                {
-                    GN_DO_ONCE( GNGFX_WARN(
-                        "Current D3D device does not support "
-                        "dot3 operation! "
-                        "Fallback to D3DTOP_SELECTARG1." ) );
-                    d3dtsv = D3DTOP_SELECTARG1;
-                }
-                else if( D3DTA_CONSTANT == (d3dtsv&D3DTA_SELECTMASK) &&
-                    !r.getCaps( GN::gfx::CAPS_PER_STAGE_CONSTANT ) )
-                {
-                    GN_DO_ONCE( GNGFX_WARN(
-                            "Current D3D device does not support "
-                            "per-stage constant! "
-                            "Fallback to D3DTA_TFACTOR." ) );
-                    d3dtsv = D3DTA_TFACTOR;
-                }
-                r.setD3DTextureState( i, sTextureState2D3D[j], d3dtsv );
-            }
-        }
-    }
 
     GN_UNGUARD_SLOW;
 }
