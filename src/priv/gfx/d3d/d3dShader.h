@@ -247,6 +247,7 @@ namespace GN { namespace gfx
 
         //!
         //! apply uniform to D3D device
+        //!
         void applyUniform( LPDIRECT3DDEVICE9 dev, LPD3DXCONSTANTTABLE table, const Uniform & u ) const
         {
             GN_GUARD_SLOW;

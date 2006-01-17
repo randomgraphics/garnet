@@ -45,7 +45,7 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
                 return 0 != ( getCaps( CAPS_PSCAPS ) & VSCAPS_D3D_ALL );
             }
 
-        // Check Cg shader caps
+        // TODO: Check Cg shader caps
         case LANG_CG :
             return false;
 
@@ -66,30 +66,31 @@ GN::gfx::D3DRenderer::createVtxShader(
 {
     GN_GUARD;
 
+    if( !supportShader( VERTEX_SHADER, lang ) )
+    {
+        GNGFX_ERROR( "Current renderer do not support vertex shading language '%s'.",
+            shadingLanguage2Str(lang) );
+        return 0;
+    }
+
     switch( lang )
     {
         case LANG_D3D_ASM :
-            {
-                AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
-                if( !p->init( code ) ) return 0;
-                return p.detach();
-            }
+        {
+            AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
+            if( !p->init( code ) ) return 0;
+            return p.detach();
+        }
 
         case LANG_D3D_HLSL:
-            {
-                AutoRef<D3DVtxShaderHlsl> p( new D3DVtxShaderHlsl(*this) );
-                if( !p->init( code, entry ) ) return 0;
-                return p.detach();
-            }
-
-        case LANG_CG:
-        case LANG_OGL_ARB:
-        case LANG_OGL_GLSL:
-            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
-            return 0;
+        {
+            AutoRef<D3DVtxShaderHlsl> p( new D3DVtxShaderHlsl(*this) );
+            if( !p->init( code, entry ) ) return 0;
+            return p.detach();
+        }
 
         default:
-            GNGFX_ERROR( "invalid shading language : %d", lang );
+            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
             return 0;
     }
 
@@ -105,30 +106,31 @@ GN::gfx::D3DRenderer::createPxlShader(
 {
     GN_GUARD;
 
+    if( !supportShader( PIXEL_SHADER, lang ) )
+    {
+        GNGFX_ERROR( "Current renderer do not support pixel shading language '%s'.",
+            shadingLanguage2Str(lang) );
+        return 0;
+    }
+
     switch( lang )
     {
         case LANG_D3D_ASM :
-            {
-                AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
-                if( !p->init( code ) ) return 0;
-                return p.detach();
-            }
+        {
+            AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
+            if( !p->init( code ) ) return 0;
+            return p.detach();
+        }
 
         case LANG_D3D_HLSL:
-            {
-                AutoRef<D3DPxlShaderHlsl> p( new D3DPxlShaderHlsl(*this) );
-                if( !p->init( code, entry ) ) return 0;
-                return p.detach();
-            }
-
-        case LANG_CG:
-        case LANG_OGL_ARB:
-        case LANG_OGL_GLSL:
-            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
-            return 0;
+        {
+            AutoRef<D3DPxlShaderHlsl> p( new D3DPxlShaderHlsl(*this) );
+            if( !p->init( code, entry ) ) return 0;
+            return p.detach();
+        }
 
         default:
-            GNGFX_ERROR( "invalid shading language : %d", lang );
+            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
             return 0;
     }
 

@@ -78,12 +78,12 @@ bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang 
                 return 0 != GLEW_ARB_fragment_shader;
             }
 
-        // DX shaders are always supported
+        // DX shaders are always unsupported
         case LANG_D3D_ASM :
         case LANG_D3D_HLSL :
             return false;
 
-        // Check Cg shader caps
+        // TODO: Check Cg shader caps
         case LANG_CG : return false;
 
         default:
@@ -102,42 +102,31 @@ GN::gfx::OGLRenderer::createVtxShader( ShadingLanguage lang, const StrA & code, 
 {
     GN_GUARD;
 
+    if( !supportShader( VERTEX_SHADER, lang ) )
+    {
+        GNGFX_ERROR( "Current renderer do not support vertex shading language '%s'.",
+            shadingLanguage2Str(lang) );
+        return 0;
+    }
+
     switch( lang )
     {
         case LANG_OGL_ARB:
-            if( supportShader( VERTEX_SHADER, LANG_OGL_ARB ) )
-            {
-                AutoRef<OGLVtxShaderARB> p( new OGLVtxShaderARB(*this) );
-                if( !p->init( code ) ) return 0;
-                return p.detach();
-            }
-            else
-            {
-                GNGFX_ERROR( "Current renderer do not support ARB vertex shader." );
-                return 0;
-            }
+        {
+            AutoRef<OGLVtxShaderARB> p( new OGLVtxShaderARB(*this) );
+            if( !p->init( code ) ) return 0;
+            return p.detach();
+        }
 
         case LANG_OGL_GLSL:
-            if( supportShader( VERTEX_SHADER, LANG_OGL_GLSL ) )
-            {
-                AutoRef<OGLVtxShaderGLSL> p( new OGLVtxShaderGLSL(*this) );
-                if( !p->init( code ) ) return 0;
-                return p.detach();
-            }
-            else
-            {
-                GNGFX_ERROR( "Current renderer do not support GLSL vertex shader." );
-                return 0;
-            }
-
-        case LANG_D3D_ASM :
-        case LANG_D3D_HLSL:
-        case LANG_CG:
-            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
-            return 0;
+        {
+            AutoRef<OGLVtxShaderGLSL> p( new OGLVtxShaderGLSL(*this) );
+            if( !p->init( code ) ) return 0;
+            return p.detach();
+        }
 
         default:
-            GNGFX_ERROR( "invalid shading language : %d", lang );
+            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
             return 0;
     }
 
@@ -152,42 +141,31 @@ GN::gfx::OGLRenderer::createPxlShader( ShadingLanguage lang, const StrA & code, 
 {
     GN_GUARD;
 
+    if( !supportShader( PIXEL_SHADER, lang ) )
+    {
+        GNGFX_ERROR( "Current renderer do not support pixel shading language '%s'.",
+            shadingLanguage2Str(lang) );
+        return 0;
+    }
+
     switch( lang )
     {
         case LANG_OGL_ARB:
-            if( supportShader( PIXEL_SHADER, LANG_OGL_ARB ) )
-            {
-                AutoRef<OGLPxlShaderARB> p( new OGLPxlShaderARB(*this) );
-                if( !p->init( code ) ) return 0;
-                return p.detach();
-            }
-            else
-            {
-                GNGFX_ERROR( "Current renderer do not support ARB pixel shader." );
-                return 0;
-            }
+        {
+            AutoRef<OGLPxlShaderARB> p( new OGLPxlShaderARB(*this) );
+            if( !p->init( code ) ) return 0;
+            return p.detach();
+        }
 
         case LANG_OGL_GLSL:
-            if( supportShader( PIXEL_SHADER, LANG_OGL_GLSL ) )
-            {
-                AutoRef<OGLPxlShaderGLSL> p( new OGLPxlShaderGLSL(*this) );
-                if( !p->init( code ) ) return 0;
-                return p.detach();
-            }
-            else
-            {
-                GNGFX_ERROR( "Current renderer do not support GLSL pixel shader." );
-                return 0;
-            }
-
-        case LANG_D3D_ASM :
-        case LANG_D3D_HLSL:
-        case LANG_CG:
-            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
-            return 0;
+        {
+            AutoRef<OGLPxlShaderGLSL> p( new OGLPxlShaderGLSL(*this) );
+            if( !p->init( code ) ) return 0;
+            return p.detach();
+        }
 
         default:
-            GNGFX_ERROR( "invalid shading language : %d", lang );
+            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
             return 0;
     }
 

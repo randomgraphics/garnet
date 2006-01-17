@@ -111,7 +111,7 @@ namespace GN { namespace gfx
         //!
         //! Note that this is a OGL only parameter. For D3D, you may use
         //! "Enable Multi-mon Debugging" option in DirectX control panel,
-        //! and startup your application through an debugger to make that
+        //! and startup your application through a debugger to make that
         //! option effective.
         //! ȱʡΪtrue.
         //!
@@ -120,7 +120,7 @@ namespace GN { namespace gfx
         //@}
 
         //!
-        //! Construct a default device settings
+        //! Construct default render options
         //!
         RendererOptions()
             : displayHandle(0)
