@@ -14,6 +14,9 @@
 
 namespace GN
 {
+    //!
+    //! Namespace for sample applications
+    //!
     namespace sample
     {
         //!
