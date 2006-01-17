@@ -191,4 +191,3 @@ bool GN::gfx::D3DPxlShaderHlsl::queryDeviceUniform( const char * name, HandleTyp
 
     GN_UNGUARD;
 }
-

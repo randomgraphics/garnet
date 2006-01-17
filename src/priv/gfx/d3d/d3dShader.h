@@ -108,14 +108,10 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from Shader
-        // ********************************
-    public:
-
-        // ********************************
         // from D3DResource
         // ********************************
     public:
+
         bool deviceCreate();
         bool deviceRestore() { return true; }
         void deviceDispose() {}
@@ -128,6 +124,13 @@ namespace GN { namespace gfx
 
         void apply() const;
         void applyDirtyUniforms() const;
+
+        // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
 
         // ********************************
         // private variables
@@ -145,8 +148,7 @@ namespace GN { namespace gfx
     private:
         bool compileShader();
         bool analyzeUniforms();
-        void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
-        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+        GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 
     //!
@@ -183,14 +185,10 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from Shader
-        // ********************************
-    public:
-
-        // ********************************
         // from D3DResource
         // ********************************
     public:
+
         bool deviceCreate();
         bool deviceRestore() { return true; }
         void deviceDispose() {}
@@ -203,6 +201,13 @@ namespace GN { namespace gfx
 
         void apply() const;
         void applyDirtyUniforms() const;
+
+        // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
 
         // ********************************
         // private variables
@@ -220,8 +225,7 @@ namespace GN { namespace gfx
     private:
         bool compileShader();
         bool analyzeUniforms();
-        void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
-        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+        GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 
     // *************************************************************************
@@ -322,11 +326,6 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from Shader
-        // ********************************
-    public:
-
-        // ********************************
         // from D3DResource
         // ********************************
     public:
@@ -344,6 +343,13 @@ namespace GN { namespace gfx
         void applyDirtyUniforms() const;
 
         // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+
+        // ********************************
         // private variables
         // ********************************
     private:
@@ -356,7 +362,6 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
     };
 
     //!
@@ -393,11 +398,6 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from Shader
-        // ********************************
-    public:
-
-        // ********************************
         // from D3DResource
         // ********************************
     public:
@@ -415,6 +415,13 @@ namespace GN { namespace gfx
         void applyDirtyUniforms() const;
 
         // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+
+        // ********************************
         // private variables
         // ********************************
     private:
@@ -427,14 +434,8 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool queryDeviceUniform( const char * name, HandleType & userData ) const;
     };
 }}
-
-#if GN_ENABLE_INLINE
-#include "d3dVtxShaderAsm.inl"
-#include "d3dPxlShaderAsm.inl"
-#endif
 
 // *****************************************************************************
 //                           End of d3dShader.h

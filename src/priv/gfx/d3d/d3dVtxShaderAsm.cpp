@@ -1,8 +1,5 @@
 #include "pch.h"
 #include "d3dShader.h"
-#if !GN_ENABLE_INLINE
-#include "d3dVtxShaderAsm.inl"
-#endif
 #include "d3dRenderer.h"
 #include "d3dUtils.h"
 
@@ -145,7 +142,78 @@ void GN::gfx::D3DVtxShaderAsm::applyDirtyUniforms() const
 }
 
 // *****************************************************************************
-// from D3DBasicShader
+// from Shader
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType & userData ) const
+{
+    GN_GUARD;
+
+    GN_ASSERT( !strEmpty(name) );
+
+    unsigned int index;
+
+    if( 1 != sscanf( name+1, "%u", &index ) )
+    {
+        GNGFX_ERROR( "invalid register name: %s", name );
+        return false;
+    }
+
+    D3DAsmConstDesc desc;
+
+    switch( name[0] )
+    {
+        case 'c':
+        case 'C':
+            if( index >= mMaxConstF )
+            {
+                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
+                return false;
+            }
+            desc.type = CONST_F;
+            break;
+
+        case 'i':
+        case 'I':
+            if( index >= mMaxConstI )
+            {
+                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
+                return false;
+            }
+            desc.type = CONST_I;
+            break;
+
+        case 'b':
+        case 'B':
+            if( index >= mMaxConstB )
+            {
+                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
+                return false;
+            }
+            desc.type = CONST_B;
+            break;
+
+        default:
+            GNGFX_ERROR( "invalid register name: %s", name );
+            return false;
+    }
+
+    // set user data
+    desc.index = (uint16_t)index;
+    userData = (HandleType)desc.u32;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+
+// *****************************************************************************
+// private functions
 // *****************************************************************************
 
 //
@@ -228,66 +296,85 @@ bool GN::gfx::D3DVtxShaderAsm::analyzeUniforms()
 
 //
 //
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType & userData ) const
+// --------------------------------------------------------------------------------------
+GN_INLINE void
+GN::gfx::D3DVtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u ) const
 {
-    GN_GUARD;
-
-    GN_ASSERT( !strEmpty(name) );
-
-    unsigned int index;
-
-    if( 1 != sscanf( name+1, "%u", &index ) )
-    {
-        GNGFX_ERROR( "invalid register name: %s", name );
-        return false;
-    }
+    GN_GUARD_SLOW;
 
     D3DAsmConstDesc desc;
 
-    switch( name[0] )
+    desc.u32 = (uint32_t)u.userData;
+
+    switch( desc.type )
     {
-        case 'c':
-        case 'C':
-            if( index >= mMaxConstF )
+        case CONST_F :
+            switch( u.type )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
-                return false;
+                case UVT_FLOAT:
+                    if( u.valueFloat.empty() ) return;
+                    // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
+                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, &u.valueFloat[0], (UINT)( u.valueFloat.size() + 3 ) / 4 ) );
+                    break;
+
+                case UVT_FLOAT4:
+                    if( u.valueVector4.empty() ) return;
+                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, u.valueVector4[0], (UINT)u.valueVector4.size() ) );
+                    break;
+
+                case UVT_MATRIX44:
+                    if( u.valueMatrix44.empty() ) return;
+                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, u.valueMatrix44[0][0], (UINT)(u.valueMatrix44.size()*4) ) );
+                    break;
+
+                case UVT_BOOL:
+                case UVT_INT:
+                    GN_ERROR( "Setting integer or boolean value to float shader register does not work." );
+                    break;
             }
-            desc.type = CONST_F;
             break;
 
-        case 'i':
-        case 'I':
-            if( index >= mMaxConstI )
+        case CONST_I :
+            switch( u.type )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
-                return false;
+                case UVT_INT:
+                    if( u.valueFloat.empty() ) return;
+                    // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
+                    GN_DX_CHECK( dev->SetVertexShaderConstantI( desc.index, (const int*)&u.valueInt[0], (UINT)( u.valueInt.size() + 3 ) / 4 ) );
+                    break;
+
+                case UVT_FLOAT:
+                case UVT_FLOAT4:
+                case UVT_MATRIX44:
+                case UVT_BOOL:
+                    GN_ERROR( "integer register accepts only integer value." );
+                    break;
             }
-            desc.type = CONST_I;
             break;
 
-        case 'b':
-        case 'B':
-            if( index >= mMaxConstB )
+        case CONST_B :
+            switch( u.type )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
-                return false;
+                case UVT_BOOL:
+                    if( u.valueFloat.empty() ) return;
+                    // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
+                    GN_DX_CHECK( dev->SetVertexShaderConstantB( desc.index, (const BOOL*)&u.valueBool[0], (UINT)u.valueBool.size() ) );
+                    break;
+
+                case UVT_FLOAT:
+                case UVT_FLOAT4:
+                case UVT_MATRIX44:
+                case UVT_INT:
+                    GN_ERROR( "Bool register accepts only boolean value." );
+                    break;
             }
-            desc.type = CONST_B;
             break;
 
         default:
-            GNGFX_ERROR( "invalid register name: %s", name );
-            return false;
+            // Program should not reach here.
+            GN_ERROR( "invalid register type!" );
+            GN_UNEXPECTED();
     }
 
-    // set user data
-    desc.index = (uint16_t)index;
-    userData = (HandleType)desc.u32;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
