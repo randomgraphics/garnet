@@ -562,7 +562,7 @@ namespace GN { namespace gfx
             mDefaultRT0,    // default color buffer
             mAutoDepth;     // automatic depth buffer
         RenderTargetTextureDesc
-            mCurrentRTs[4], // current color textures.
+            mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
             mCurrentDepth;  // current depth texture
         Vector2<uint32_t>
             mCurrentRTSize, // current render target size
@@ -585,7 +585,7 @@ namespace GN { namespace gfx
         virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrim,
-                                  size_t        baseVtx,
+                                  size_t        startVtx,
                                   size_t        minVtxIdx,
                                   size_t        numVtx,
                                   size_t        startIdx );

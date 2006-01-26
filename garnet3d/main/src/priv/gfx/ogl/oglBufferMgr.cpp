@@ -216,7 +216,7 @@ void GN::gfx::OGLRenderer::applyVtxBinding()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::applyVtxBufState( size_t baseVtx )
+void GN::gfx::OGLRenderer::applyVtxBufState( size_t startVtx )
 {
     GN_GUARD_SLOW;
 
@@ -235,7 +235,7 @@ void GN::gfx::OGLRenderer::applyVtxBufState( size_t baseVtx )
         p->bindBuffer(
             i,
             vbd.buf.empty() ? 0 : safeCast<const OGLBasicVtxBuf*>( vbd.buf.get() )->getVtxData(),
-            baseVtx,
+            startVtx,
             vbd.stride ? vbd.stride : vtxFmt.streams[i].stride );
     }
 

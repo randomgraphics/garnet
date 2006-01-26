@@ -27,7 +27,7 @@ namespace GN { namespace gfx
     {
         TEXUSAGE_DYNAMIC        = 1<<0, //!< dynamic texture
         TEXUSAGE_AUTOGEN_MIPMAP = 1<<1, //!< texture that can auto-generate mipmaps
-        TEXUSAGE_RENDERTARGET   = 1<<2, //!< render target texture
+        TEXUSAGE_RENDER_TARGET  = 1<<2, //!< render target texture
         TEXUSAGE_DEPTH          = 1<<3, //!< depth texture
     };
 

@@ -230,7 +230,7 @@ void GN::gfx::OGLQuad::drawQuads(
     mRenderer.drawIndexed(
         TRIANGLE_LIST,
         count * 2,     // numPrim
-        mNextQuad * 4, // baseVtx
+        mNextQuad * 4, // startVtx
         0,             // minVtxIdx
         count * 4,     // numVtx
         0 );           // startIdx

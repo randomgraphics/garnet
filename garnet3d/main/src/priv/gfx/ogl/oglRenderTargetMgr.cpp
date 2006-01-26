@@ -18,9 +18,9 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceCreate()
     GN_GUARD;
 
     // check multiple render target support
-    if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
+    if( getCaps(CAPS_MAX_RENDER_TARGETS) > MAX_RENDER_TARGETS )
     {
-        GNGFX_ERROR( "Sorry, we currently do not support more then 4 simultaneous render targets." );
+        GNGFX_ERROR( "Sorry, we currently do not support more then %d simultaneous render targets.", MAX_RENDER_TARGETS );
         return false;
     }
 
@@ -40,23 +40,22 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceRestore()
     _GNGFX_DEVICE_TRACE();
 
     // make sure MRT caps does not exceed maximum allowance value
-    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= 4 );
+    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= MAX_RENDER_TARGETS );
 
     // store old RT data
-    RenderTargetTextureDesc oldRT[4], oldDepth;
-    oldRT[0] = mCurrentRTs[0];
-    oldRT[1] = mCurrentRTs[1];
-    oldRT[2] = mCurrentRTs[2];
-    oldRT[3] = mCurrentRTs[3];
+    RenderTargetTextureDesc oldRT[MAX_RENDER_TARGETS], oldDepth;
+    for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
+    {
+        oldRT[i] = mCurrentRTs[i];
+    }
     oldDepth = mCurrentDepth;
 
     //set default render target
     mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
-    mCurrentRTs[0].tex = 0;
-    mCurrentRTs[1].tex = 0;
-    mCurrentRTs[2].tex = 0;
-    mCurrentRTs[3].tex = 0;
-    mCurrentDepth.tex = 0;
+    for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
+    {
+        mCurrentRTs[i].tex = 0;
+    }
     setViewport( getViewport() );
 
     // (re)apply render targets
@@ -92,14 +91,14 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             return;
         }
         // make sure target texture is a RTT
-        if( tex && !(TEXUSAGE_RENDERTARGET & tex->getUsage()) )
+        if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getUsage()) )
         {
-            GNGFX_ERROR( "Only texture with TEXUSAGE_RENDERTARGET usage can be used as render target." );
+            GNGFX_ERROR( "Only texture with TEXUSAGE_RENDER_TARGET usage can be used as render target." );
             return;
         }
     }
     GN_ASSERT( index < getCaps(CAPS_MAX_RENDER_TARGETS) );
-    GN_ASSERT( !tex || (TEXUSAGE_RENDERTARGET & tex->getUsage()) );
+    GN_ASSERT( !tex || (TEXUSAGE_RENDER_TARGET & tex->getUsage()) );
 
     RenderTargetTextureDesc & rttd = mCurrentRTs[index];
 

@@ -15,9 +15,9 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceCreate()
     GN_GUARD;
 
     // check multiple render target support
-    if( getCaps(CAPS_MAX_RENDER_TARGETS) > 4 )
+    if( getCaps(CAPS_MAX_RENDER_TARGETS) > MAX_RENDER_TARGETS )
     {
-        GNGFX_ERROR( "Sorry, we currently do not support more then 4 simultaneous render targets." );
+        GNGFX_ERROR( "Sorry, we currently do not support more then %d simultaneous render targets.", MAX_RENDER_TARGETS );
         return false;
     }
 
@@ -45,7 +45,7 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceRestore()
     mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
 
     // make sure MRT caps does not exceed maximum allowance value
-    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= 4 );
+    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= MAX_RENDER_TARGETS );
 
     // (re)apply render targets
     RenderTargetTextureDesc desc;
@@ -120,9 +120,9 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     if( tex )
     {
         // check texture's creation flag
-        if( !(TEXUSAGE_RENDERTARGET & tex->getUsage() ) )
+        if( !(TEXUSAGE_RENDER_TARGET & tex->getUsage() ) )
         {
-            GNGFX_ERROR( "Texture must have usage of TEXUSAGE_RENDERTARGET!" );
+            GNGFX_ERROR( "Texture must have usage of TEXUSAGE_RENDER_TARGET!" );
             return;
         }
 

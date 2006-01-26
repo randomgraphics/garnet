@@ -253,7 +253,7 @@ void GN::gfx::OGLVtxBinding::bind() const
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxBinding::bindBuffer(
-    size_t index, const uint8_t * buf, size_t baseVtx, size_t stride ) const
+    size_t index, const uint8_t * buf, size_t startVtx, size_t stride ) const
 {
     GN_GUARD_SLOW;
 
@@ -261,7 +261,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
 
     const VtxFmtDesc::StreamDesc & sd = mFormat.streams[index];
 
-    buf += stride * baseVtx;
+    buf += stride * startVtx;
 
     VtxSem sem;
 
