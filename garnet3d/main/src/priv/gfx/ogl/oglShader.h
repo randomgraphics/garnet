@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     //!
     //! OGL basic shader class
     //!
-    struct OGLBasicShader
+    struct OGLBasicShader : public Shader
     {
         //!
         //! Enable shader profile
@@ -34,6 +34,13 @@ namespace GN { namespace gfx
         //! Apply only dirty uniforms to OpenGL
         //!
         virtual void applyDirtyUniforms() const = 0;
+
+    protected:
+
+        //!
+        //! protected ctor
+        //!
+        OGLBasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
     };
 
     // *************************************************************************
@@ -43,7 +50,7 @@ namespace GN { namespace gfx
     //!
     //! OGL Basic ARB shader
     //!
-    class OGLBasicShaderARB : public Shader, public OGLBasicShader, public OGLResource, public StdClass
+    class OGLBasicShaderARB : public OGLBasicShader, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLBasicShaderARB, StdClass );
 
@@ -54,7 +61,7 @@ namespace GN { namespace gfx
         //@{
     public:
         OGLBasicShaderARB( OGLRenderer & r, ShaderType type )
-            : Shader( type, LANG_OGL_ARB )
+            : OGLBasicShader( type, LANG_OGL_ARB )
             , OGLResource( r )
             , mTarget( sSelectTarget( type ) )
         { clear(); }
@@ -182,7 +189,7 @@ namespace GN { namespace gfx
     //!
     //! Basic OGL GLSL shader class
     //!
-    class OGLBasicShaderGLSL : public Shader, public OGLBasicShader, public OGLResource, public StdClass
+    class OGLBasicShaderGLSL : public OGLBasicShader, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLBasicShaderGLSL, StdClass );
 
@@ -193,7 +200,7 @@ namespace GN { namespace gfx
         //@{
     public:
         OGLBasicShaderGLSL( OGLRenderer & r, ShaderType t )
-            : Shader( t, LANG_OGL_GLSL )
+            : OGLBasicShader( t, LANG_OGL_GLSL )
             , OGLResource( r )
             , mUsage( sSelectUsage(t) ) { clear(); }
         virtual ~OGLBasicShaderGLSL() { quit(); }
