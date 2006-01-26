@@ -36,9 +36,9 @@ struct GfxResources
         texcube.attach( r.createTexture( GN::gfx::TEXTYPE_CUBE, 128, 128, 128 ) );
 
         // create render targets
-        rt1.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
-        rt2.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
-        rt3.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
+        rt1.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt2.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt3.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
         TS_ASSERT( rt1 );
         TS_ASSERT( rt2 );
         TS_ASSERT( rt3 );
@@ -400,10 +400,10 @@ protected:
         GN::AutoRef<GN::gfx::Texture> rt1, rt2, rt3, rt4;
 
         // create render targets
-        rt1.attach( r->create1DTexture( 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
-        rt2.attach( r->create2DTexture( 256, 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
-        rt3.attach( r->create3DTexture( 128, 128, 4, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
-        rt4.attach( r->createCubeTexture( 128, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDERTARGET ) );
+        rt1.attach( r->create1DTexture( 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt2.attach( r->create2DTexture( 256, 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt3.attach( r->create3DTexture( 128, 128, 4, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt4.attach( r->createCubeTexture( 128, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
         TS_ASSERT( rt1 );
         TS_ASSERT( rt2 );
         TS_ASSERT( !rt3 );

@@ -239,6 +239,11 @@ namespace GN { namespace gfx
                          PSCAPS_D3D_XVS
     };
 
+    enum
+    {
+        MAX_RENDER_TARGETS = 4 //!< We support 4 render targets at most.
+    };
+
     //!
     //! 清屏标志
     //!
@@ -296,6 +301,86 @@ namespace GN { namespace gfx
         //! 上述 DQ_USE_CURRENT_XX 的集合
         //!
         DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS
+    };
+
+    //!
+    //! Rendering parmaqeter structure. Completly define how rendering would be done.
+    //!
+    struct RenderingParameters
+    {
+        //!
+        //! template of one parameter
+        //!
+        template<typename T>
+        struct Parameter
+        {
+            T value;   //!< parameter value
+            bool used; //!< parameter is being used or not.
+
+            //!
+            //! default constructor.
+            //!
+            Parameter() : used(false) {}
+        };
+
+        //!
+        //! render target descriptor
+        //!
+        struct RenderTargetDesc
+        {
+            AutoRef<Texture> texture; //!< render target 
+            uint32_t         level;   //!< mipmap level
+            TexFace          face;    //!< cubemap face
+        };
+
+        Parameter<AutoRef<Shader> > vtxShader; //!< vertex shader
+        Parameter<AutoRef<Shader> > pxlShader; //!< pixle shader
+
+        Parameter<uint32_t> renderStateBlock; //!< render states
+
+        Parameter<AutoRef<Texture> > textures[MAX_TEXTURE_STAGES]; //!< texture list
+
+        Parameter<RenderTargetDesc> renderTargets[MAX_RENDER_TARGETS]; //!< render target list
+        Parameter<RenderTargetDesc> renderDepth; //!< depth texture
+
+        //!
+        //! \name Fixed pipeline parameters
+        //!
+        //@{
+        Parameter<Matrix44f>
+            TransformWorld, //!< world transformation
+            TransformView, //!< view transformation
+            TransformProj; //!< projection transformation
+        Parameter<Rectf>
+            Viewport; //!< Viewport
+        Parameter<Vector4f>
+            Light0Pos, //!< light0 position
+            Light0Diffuse, //!< light0 diffuse color
+            MaterialDiffuse, //!< diffuse material color
+            MaterialSpecular; //!< specular material color
+        Parameter<TextureStateBlockDesc>
+            TextureStates; //!< texture stage states
+        //@}
+    };
+
+    //!
+    //! Define geomety data
+    //!
+    //! \todo Customizable vertex buffer stride.
+    //!
+    struct RenderingGeometry
+    {
+        uint32_t vtxBinding; //!< vertex binding ID.
+        AutoRef<VtxBuf> vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list
+        uint32_t numVtxBufs; //!< vertex buffer count
+        AutoRef<IdxBuf> idxBuf; //!< index buffer
+
+        PrimitiveType prim;      //!< primitive type
+        size_t        numPrim;   //!< primitive count
+        size_t        startVtx;  //!< base vertex index
+        size_t        minVtxIdx; //!< ignored if index buffer is NULL.
+        size_t        numVtx;    //!< ignored if index buffer is NULL.
+        size_t        startIdx;  //!< ignored if index buffer is NULL.
     };
 
     //!
@@ -1020,7 +1105,7 @@ namespace GN { namespace gfx
         //! \param index
         //!     render target index, starting from 0
         //! \param texture
-        //!     target texture, must be created with flag TEXUSAGE_RENDERTARGET. Set
+        //!     target texture, must be created with flag TEXUSAGE_RENDER_TARGET. Set
         //!     this parameter to NULL will reset to default target (back buffer
         //!     for RT0 and null for others.
         //! \param level
@@ -1108,10 +1193,10 @@ namespace GN { namespace gfx
         //!     primititive type
         //! \param numPrim
         //!     number of primitives
-        //! \param baseVtx
+        //! \param startVtx
         //!     vertex index into vertex buffer that index "0" will be refering to.
         //! \param minVtxIdx, numVtx
-        //!     define effective range in vertex buffer, starting from baseVtx.
+        //!     define effective range in vertex buffer, starting from startVtx.
         //! \param startIdx
         //!     index into index buffer of the first index
         //!
@@ -1119,7 +1204,7 @@ namespace GN { namespace gfx
         //!
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrim,
-                                  size_t        baseVtx,
+                                  size_t        startVtx,
                                   size_t        minVtxIdx,
                                   size_t        numVtx,
                                   size_t        startIdx ) = 0;
@@ -1139,6 +1224,11 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx ) = 0;
+
+        //!
+        //! draw geometry
+        //!
+        virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t ) = 0;
 
         //!
         //! Draw quads

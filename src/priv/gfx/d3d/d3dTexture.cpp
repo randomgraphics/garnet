@@ -373,7 +373,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 
     // determine D3D usage & pool
     mD3DUsage = 0;
-    mD3DUsage |= TEXUSAGE_RENDERTARGET & getUsage() ? D3DUSAGE_RENDERTARGET : 0;
+    mD3DUsage |= TEXUSAGE_RENDER_TARGET & getUsage() ? D3DUSAGE_RENDERTARGET : 0;
 #if GN_XENON
     if( TEXUSAGE_AUTOGEN_MIPMAP & getUsage() )
     {
@@ -384,7 +384,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 #endif
     mD3DUsage |= TEXUSAGE_DEPTH & getUsage() ? D3DUSAGE_DEPTHSTENCIL : 0;
     D3DPOOL d3dpool =
-        ( TEXUSAGE_RENDERTARGET & getUsage() || TEXUSAGE_DEPTH & getUsage() )
+        ( TEXUSAGE_RENDER_TARGET & getUsage() || TEXUSAGE_DEPTH & getUsage() )
         ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED;
 
     // check texture format compatibility

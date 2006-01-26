@@ -406,7 +406,7 @@ namespace GN { namespace gfx
         void bufferDeviceDestroy() {}
 
         void applyVtxBinding();
-        void applyVtxBufState( size_t baseVtx );
+        void applyVtxBufState( size_t startVtx );
 
     private :
 
@@ -515,7 +515,7 @@ namespace GN { namespace gfx
 
     private:
         RenderTargetTextureDesc
-            mCurrentRTs[4], // current color textures.
+            mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
             mCurrentDepth;  // current depth texture
         Vector2<uint32_t>
             mCurrentRTSize; // current render target size
@@ -537,7 +537,7 @@ namespace GN { namespace gfx
         virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrim,
-                                  size_t        baseVtx,
+                                  size_t        startVtx,
                                   size_t        minVtxIdx,
                                   size_t        numVtx,
                                   size_t        startIdx );
@@ -578,7 +578,7 @@ namespace GN { namespace gfx
         OGLQuad * mQuad;
 
     private:
-        GN_INLINE void applyDrawState( size_t baseVtx );
+        GN_INLINE void applyDrawState( size_t startVtx );
 
         //@}
 

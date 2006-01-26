@@ -213,7 +213,7 @@ void GN::gfx::OGLRenderer::clearScreen(
 void GN::gfx::OGLRenderer::drawIndexed(
     PrimitiveType prim,
     size_t        numPrim,
-    size_t        baseVtx,
+    size_t        startVtx,
     size_t        minVtxIdx,
     size_t        numVtx,
     size_t        startIdx )
@@ -222,7 +222,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     GN_ASSERT( mDrawBegan && isCurrent() );
 
-    applyDrawState( baseVtx );
+    applyDrawState( startVtx );
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -286,7 +286,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t baseVtx )
+void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t startVtx )
 {
     GN_GUARD_SLOW;
 
@@ -295,7 +295,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t base
     GN_ASSERT( mDrawBegan );
 
     // update draw state
-    applyDrawState( baseVtx );
+    applyDrawState( startVtx );
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -366,7 +366,7 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t baseVtx )
+GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t startVtx )
 {
     GN_GUARD_SLOW;
 
@@ -381,7 +381,7 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t baseVtx )
 
     if( mCurrentDrawState.dirtyFlags.vtxBuf )
     {
-        applyVtxBufState( baseVtx );
+        applyVtxBufState( startVtx );
     }
 
     applyShaderState();
