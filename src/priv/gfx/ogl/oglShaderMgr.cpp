@@ -323,14 +323,13 @@ void GN::gfx::OGLRenderer::applyShaderState()
     if( !vsGLSL && !psGLSL ) return;
     const Shader * vs = vsGLSL ? mCurrentDrawState.vtxShader.get() : 0;
     const Shader * ps = psGLSL ? mCurrentDrawState.pxlShader.get() : 0;
-    const OGLProgramGLSL * prog;
     GLSLShaders key = { vs, ps };
     GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
     if( mGLSLProgramMap.end() != i )
     {
         // found!
         GN_ASSERT( i->second );
-        prog = (const OGLProgramGLSL*)i->second;
+        ((const OGLProgramGLSL*)i->second)->apply();
     }
     else
     {
@@ -338,11 +337,10 @@ void GN::gfx::OGLRenderer::applyShaderState()
         AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL(getGLEWContext()) );
         if( !newProg->init(
             safeCast<const OGLBasicShaderGLSL*>(vs),
-            safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return                          ;
+            safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return ;
         mGLSLProgramMap[key] = newProg.get();
-        prog = newProg.detach();
+        newProg->apply();
     }
-    prog->apply();
 
     GN_UNGUARD_SLOW;
 }

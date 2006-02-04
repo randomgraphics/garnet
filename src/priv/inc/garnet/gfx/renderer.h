@@ -1025,10 +1025,10 @@ namespace GN { namespace gfx
     public:
 
 #define GN_RENDERER_FFP_METHODS( name, type ) \
-    void set##name(const type & newValue ) { m##name.top() = newValue; mFfpDirtyFlags.##name = true; } \
+    void set##name(const type & newValue ) { m##name.top() = newValue; mFfpDirtyFlags.name = true; } \
     const type & get##name() const { return m##name.top(); } \
     void push##name() { m##name.push(); } \
-    void pop##name() { m##name.pop(); mFfpDirtyFlags.##name = true; }
+    void pop##name() { m##name.pop(); mFfpDirtyFlags.name = true; }
 
         GN_RENDERER_FFP_METHODS( TransformWorld, Matrix44f );
         GN_RENDERER_FFP_METHODS( TransformView, Matrix44f );
@@ -1056,7 +1056,7 @@ namespace GN { namespace gfx
         //!
         void setTextureState( uint32_t stage, TextureState state, TextureStateValue value )
         {
-            GN_ASSERT( 0 <= stage && stage < MAX_TEXTURE_STAGES );
+            GN_ASSERT( stage < MAX_TEXTURE_STAGES );
             GN_ASSERT( 0 <= state && state < NUM_TEXTURE_STATES );
             GN_ASSERT( 0 <= value && value < NUM_TEXTURE_STATE_VALUES );
             TextureStateBlockDesc & desc = mTextureStates.top();
