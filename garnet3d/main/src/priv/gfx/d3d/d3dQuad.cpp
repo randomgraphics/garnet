@@ -419,10 +419,13 @@ void GN::gfx::D3DQuad::drawQuads(
     GN_DX_CHECK( mVtxBuf->Unlock() );
 
     // bind render state block
-    GN_ASSERT( mRsb );
-    r.bindRenderStateBlock( mRsb );
+    if( !( DQ_USE_CURRENT_RS & options ) )
+    {
+        GN_ASSERT( mRsb );
+        r.bindRenderStateBlock( mRsb );
+    }
 
-    // bind shaders, buffers and and FVF
+    // bind shaders
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
@@ -431,6 +434,8 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
     }
+
+    // bind buffers
     GN_ASSERT( mVtxBuf );
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)(mQuadStride/4) ) );
     GN_ASSERT( mIdxBuf );
