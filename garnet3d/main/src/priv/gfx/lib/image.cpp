@@ -2,9 +2,9 @@
 #if !GN_ENABLE_INLINE
 #include "garnet/gfx/image.inl"
 #endif
-#include "image_png.h"
-#include "image_jpg.h"
-#include "image_dds.h"
+#include "imagePNG.h"
+#include "imageJPG.h"
+#include "imageDDS.h"
 
 // *****************************************************************************
 // ImageDesc

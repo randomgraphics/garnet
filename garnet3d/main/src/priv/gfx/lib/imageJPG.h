@@ -1,7 +1,7 @@
-#ifndef __GN_GFX_IMAGE_JPG_H__
-#define __GN_GFX_IMAGE_JPG_H__
+#ifndef __GN_GFX_IMAGEJPG_H__
+#define __GN_GFX_IMAGEJPG_H__
 // *****************************************************************************
-//! \file    image_jpg.h
+//! \file    imageJPG.h
 //! \brief   Jpeg image reader
 //! \author  chenlee (2005.6.2)
 // *****************************************************************************
@@ -145,6 +145,6 @@ public:
     bool readImage( void * o_data );
 };
 // *****************************************************************************
-//                           End of image_jpg.h
+//                           End of imageJPG.h
 // *****************************************************************************
-#endif // __GN_GFX_IMAGE_JPG_H__
+#endif // __GN_GFX_IMAGEJPG_H__

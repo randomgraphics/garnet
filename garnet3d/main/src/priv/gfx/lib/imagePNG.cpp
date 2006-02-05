@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "image_png.h"
+#include "imagePNG.h"
 
 #if GN_MSVC
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable

@@ -1,7 +1,7 @@
-#ifndef __GN_GFX_IMAGE_DDS_H__
-#define __GN_GFX_IMAGE_DDS_H__
+#ifndef __GN_GFX_IMAGEDDS_H__
+#define __GN_GFX_IMAGEDDS_H__
 // *****************************************************************************
-//! \file    image_dds.h
+//! \file    imageDDS.h
 //! \brief   DDS image reader
 //! \author  chenlee (2005.6.2)
 // *****************************************************************************
@@ -84,6 +84,6 @@ public:
 };
 
 // *****************************************************************************
-//                           End of image_dds.h
+//                           End of imageDDS.h
 // *****************************************************************************
-#endif // __GN_GFX_IMAGE_DDS_H__
+#endif // __GN_GFX_IMAGEDDS_H__
