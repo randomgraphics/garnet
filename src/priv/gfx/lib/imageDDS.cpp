@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "image_dds.h"
+#include "imageDDS.h"
 
 // *****************************************************************************
 // local types

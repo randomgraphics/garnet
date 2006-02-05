@@ -1,7 +1,7 @@
-#ifndef __GN_GFX_IMAGE_PNG_H__
-#define __GN_GFX_IMAGE_PNG_H__
+#ifndef __GN_GFX_IMAGEPNG_H__
+#define __GN_GFX_IMAGEPNG_H__
 // *****************************************************************************
-//! \file    image_png.h
+//! \file    imagePNG.h
 //! \brief   PNG image reader
 //! \author  chenlee (2005.6.2)
 // *****************************************************************************
@@ -72,6 +72,6 @@ public:
 };
 
 // *****************************************************************************
-//                           End of image_png.h
+//                           End of imagePNG.h
 // *****************************************************************************
-#endif // __GN_GFX_IMAGE_PNG_H__
+#endif // __GN_GFX_IMAGEPNG_H__
