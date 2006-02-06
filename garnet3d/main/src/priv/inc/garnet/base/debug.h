@@ -85,6 +85,11 @@
 #define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN( "Function %s is not implmented yet.", GN_FUNCTION ) );
 
 //!
+//! Output a todo message.
+//!
+#define GN_TODO(msg) GN_DO_ONCE( GN_WARN( "TODO: %s", msg ) );
+
+//!
 //! Compile-time assert
 //!
 #define GN_CASSERT_EX( exp, msg ) struct GN_JOIN(__GN_cassert_, GN_JOIN( msg,__LINE__)){ int data[(exp)?1:-1]; };

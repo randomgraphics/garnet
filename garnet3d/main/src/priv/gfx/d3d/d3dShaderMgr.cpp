@@ -61,93 +61,73 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
-GN::gfx::D3DRenderer::createVtxShader(
-    ShadingLanguage lang, const StrA & code, const StrA & entry )
+GN::gfx::D3DRenderer::createShader(
+    ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
 {
     GN_GUARD;
 
-    if( !supportShader( VERTEX_SHADER, lang ) )
+    if( !supportShader( type, lang ) )
     {
-        GNGFX_ERROR( "Current renderer do not support vertex shading language '%s'.",
-            shadingLanguage2Str(lang) );
+        GNGFX_ERROR( "Current renderer do not support shading language '%s' for shader type '%s'.",
+            shadingLanguage2Str(lang), shaderType2Str(type) );
         return 0;
     }
 
-    switch( lang )
+    switch( type )
     {
-        case LANG_D3D_ASM :
-        {
-            AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
-            if( !p->init( code ) ) return 0;
-            return p.detach();
-        }
+        case VERTEX_SHADER :
+            switch( lang )
+            {
+                case LANG_D3D_ASM :
+                {
+                    AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
+                    if( !p->init( code ) ) return 0;
+                    return p.detach();
+                }
 
-        case LANG_D3D_HLSL:
-        {
-            AutoRef<D3DVtxShaderHlsl> p( new D3DVtxShaderHlsl(*this) );
-            if( !p->init( code, entry ) ) return 0;
-            return p.detach();
-        }
+                case LANG_D3D_HLSL:
+                {
+                    AutoRef<D3DVtxShaderHlsl> p( new D3DVtxShaderHlsl(*this) );
+                    if( !p->init( code, entry ) ) return 0;
+                    return p.detach();
+                }
+
+                default:
+                    GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    return 0;
+            }
+            break;
+
+        case PIXEL_SHADER :
+            switch( lang )
+            {
+                case LANG_D3D_ASM :
+                {
+                    AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
+                    if( !p->init( code ) ) return 0;
+                    return p.detach();
+                }
+
+                case LANG_D3D_HLSL:
+                {
+                    AutoRef<D3DPxlShaderHlsl> p( new D3DPxlShaderHlsl(*this) );
+                    if( !p->init( code, entry ) ) return 0;
+                    return p.detach();
+                }
+
+                default:
+                    GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    return 0;
+            }
+            break;
 
         default:
-            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+            GN_UNEXPECTED(); // program should not reach here
+            GNGFX_ERROR( "invalid shader type: %d", type );
             return 0;
     }
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::gfx::Shader *
-GN::gfx::D3DRenderer::createPxlShader(
-    ShadingLanguage lang, const StrA & code, const StrA & entry )
-{
-    GN_GUARD;
-
-    if( !supportShader( PIXEL_SHADER, lang ) )
-    {
-        GNGFX_ERROR( "Current renderer do not support pixel shading language '%s'.",
-            shadingLanguage2Str(lang) );
-        return 0;
-    }
-
-    switch( lang )
-    {
-        case LANG_D3D_ASM :
-        {
-            AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
-            if( !p->init( code ) ) return 0;
-            return p.detach();
-        }
-
-        case LANG_D3D_HLSL:
-        {
-            AutoRef<D3DPxlShaderHlsl> p( new D3DPxlShaderHlsl(*this) );
-            if( !p->init( code, entry ) ) return 0;
-            return p.detach();
-        }
-
-        default:
-            GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
-            return 0;
-    }
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::bindShaders( const Shader * vtx, const Shader * pxl )
-{
-    GN_GUARD_SLOW;
-
-    mDrawState.bindVtxShader( vtx );
-    mDrawState.bindPxlShader( pxl );
-
-    GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************

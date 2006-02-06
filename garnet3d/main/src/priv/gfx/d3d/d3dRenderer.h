@@ -102,13 +102,48 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! bind vertex shader
+        //! bind shader
         //!
-        void bindVtxShader( const Shader * shader )
+        void bindShader( ShaderType type, const Shader * shader )
         {
-            if( shader == vtxShader.get() ) return;
-            dirtyFlags.vtxShader |= true;
-            vtxShader.reset( shader );
+            if( VERTEX_SHADER == type )
+            {
+                if( shader == vtxShader.get() ) return;
+                dirtyFlags.vtxShader |= true;
+                vtxShader.reset( shader );
+            }
+            else if( PIXEL_SHADER == type )
+            {
+                if( shader == pxlShader.get() ) return;
+                dirtyFlags.pxlShader |= true;
+                pxlShader.reset( shader );
+            }
+            else
+            {
+                GNGFX_ERROR( "invalid shader type: %d", type );
+            }
+        }
+
+        //!
+        //! bind shader list
+        //!
+        void bindShaders( const Shader * const shaders[] )
+        {
+            if( 0 == shaders )
+            {
+                GNGFX_ERROR( "shader list can't be NULL." );
+                return;
+            }
+            if( shaders[VERTEX_SHADER] != vtxShader.get() )
+            {
+                dirtyFlags.vtxShader |= true;
+                vtxShader.reset( shaders[VERTEX_SHADER] );
+            }
+            if( shaders[PIXEL_SHADER] == pxlShader.get() )
+            {
+                dirtyFlags.pxlShader |= true;
+                pxlShader.reset( shaders[PIXEL_SHADER] );
+            }
         }
 
         //!
@@ -320,11 +355,9 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createVtxShader( ShadingLanguage, const StrA &, const StrA & );
-        virtual Shader * createPxlShader( ShadingLanguage, const StrA &, const StrA & );
-        virtual void bindVtxShader( const Shader * s ) { mDrawState.bindVtxShader(s); }
-        virtual void bindPxlShader( const Shader * s ) { mDrawState.bindPxlShader(s); }
-        virtual void bindShaders( const Shader *, const Shader * );
+        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry );
+        virtual void bindShader( ShaderType type, const Shader * shader ) { mDrawState.bindShader( type, shader ); }
+        virtual void bindShaders( const Shader * const shaders[] ) { mDrawState.bindShaders(shaders); }
 
     private :
         bool shaderInit() { return true; }

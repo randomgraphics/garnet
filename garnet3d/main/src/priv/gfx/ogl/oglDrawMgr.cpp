@@ -356,7 +356,7 @@ void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vec
     GN_ASSERT( mDrawBegan && isCurrent() && mFont );
 
     // disable programmable pipeline
-    bindShaders( 0, 0 );
+    Renderer::bindShaders( 0, 0 );
     applyDrawState( 0 );
     mFont->drawTextW( s, x, y, c );
 

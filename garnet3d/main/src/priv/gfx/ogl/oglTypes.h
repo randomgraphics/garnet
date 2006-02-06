@@ -116,21 +116,52 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! bind vertex shader
+        //! bind single shader
         //!
-        void bindVtxShader( const Shader * shader )
+        void bindShader( ShaderType type, const Shader * shader )
         {
-            dirtyFlags.vtxShader = true;
-            vtxShader.reset( shader );
+            if( VERTEX_SHADER == type )
+            {
+                if( shader != vtxShader.get() )
+                {
+                    dirtyFlags.vtxShader = true;
+                    vtxShader.reset( shader );
+                }
+            }
+            else if( PIXEL_SHADER == type )
+            {
+                if( shader != pxlShader.get() )
+                {
+                    dirtyFlags.pxlShader = true;
+                    pxlShader.reset( shader );
+                }
+            }
+            else
+            {
+                GNGFX_ERROR( "invalid shader type: %d", type );
+            }
         }
 
         //!
-        //! bind pixel shader
+        //! bind shader list
         //!
-        void bindPxlShader( const Shader * shader )
+        void bindShaders( const Shader * const shaders[] )
         {
-            dirtyFlags.pxlShader = true;
-            pxlShader.reset( shader );
+            if( 0 == shaders )
+            {
+                GNGFX_ERROR( "shader list can't be NULL." );
+                return;
+            }
+            if( shaders[VERTEX_SHADER] != vtxShader.get() )
+            {
+                dirtyFlags.vtxShader = true;
+                vtxShader.reset( shaders[VERTEX_SHADER] );
+            }
+            if( shaders[PIXEL_SHADER] == pxlShader.get() )
+            {
+                dirtyFlags.pxlShader = true;
+                pxlShader.reset( shaders[PIXEL_SHADER] );
+            }
         }
     };
 }}

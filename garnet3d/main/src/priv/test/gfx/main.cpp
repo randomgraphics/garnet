@@ -36,7 +36,7 @@ public:
                 "mov r0, c0";
             ps1.attach( r.createPxlShader( GN::gfx::LANG_D3D_ASM, code ) );
             if( !ps1 ) return false;
-            ps1->setUniformByName( "c0", GN::Vector4f(0,1,0,1) );
+            ps1->setUniformByNameV( "c0", GN::Vector4f(0,1,0,1) );
         }
         else if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_OGL_ARB ) )
         {
@@ -48,7 +48,7 @@ public:
                 "END";
             ps1.attach( r.createPxlShader( GN::gfx::LANG_OGL_ARB, code ) );
             if( !ps1 ) return false;
-            ps1->setUniformByName( "l0", GN::Vector4f(0,1,0,1) );
+            ps1->setUniformByNameV( "l0", GN::Vector4f(0,1,0,1) );
         }
         if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_D3D_HLSL ) )
         {
@@ -60,7 +60,7 @@ public:
                 "} \n";
             ps2.attach( r.createPxlShader( GN::gfx::LANG_D3D_HLSL, code, "psMain" ) );
             if( !ps2 ) return false;
-            ps2->setUniformByName( "diffuse", GN::Vector4f(1,0,0,1) );
+            ps2->setUniformByNameV( "diffuse", GN::Vector4f(1,0,0,1) );
         }
         else if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_OGL_GLSL ) )
         {
@@ -72,7 +72,7 @@ public:
                 "} \n";
             ps2.attach( r.createPxlShader( GN::gfx::LANG_OGL_GLSL, code ) );
             if( !ps2 ) return false;
-            ps2->setUniformByName( "diffuse", GN::Vector4f(1,0,0,1) );
+            ps2->setUniformByNameV( "diffuse", GN::Vector4f(1,0,0,1) );
         }
 
         // create a pure white texture

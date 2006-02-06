@@ -59,34 +59,34 @@ namespace GN { namespace gfx
         //! \name Set value of uniform variable.
         //!
         //@{
-        void setUniform( uint32_t, const bool *, size_t );
-        void setUniform( uint32_t, const int32_t *, size_t );
-        void setUniform( uint32_t, const float *, size_t );
-        void setUniform( uint32_t, const Vector4f *, size_t );
-        void setUniform( uint32_t, const Matrix44f *, size_t ); //!< \note Matrix should be row major
+        void setUniformB( uint32_t, const int32_t *, size_t );
+        void setUniformI( uint32_t, const int32_t *, size_t );
+        void setUniformF( uint32_t, const float *, size_t );
+        void setUniformV( uint32_t, const Vector4f *, size_t );
+        void setUniformM( uint32_t, const Matrix44f *, size_t ); //!< \note Matrix should be row major
 
-        void setUniform( uint32_t, bool );
-        void setUniform( uint32_t, int32_t );
-        void setUniform( uint32_t, float );
-        void setUniform( uint32_t, const Vector4f & );
-        void setUniform( uint32_t, const Matrix44f & ); //!< \note Matrix should be row major
+        void setUniformB( uint32_t, bool );
+        void setUniformI( uint32_t, int32_t );
+        void setUniformF( uint32_t, float );
+        void setUniformV( uint32_t, const Vector4f & );
+        void setUniformM( uint32_t, const Matrix44f & ); //!< \note Matrix should be row major
         //@}
 
         //!
         //! \name Set uniform variable by name
         //!
         //@{
-        void setUniformByName( const char *, const bool *, size_t );
-        void setUniformByName( const char *, const int32_t *, size_t );
-        void setUniformByName( const char *, const float *, size_t );
-        void setUniformByName( const char *, const Vector4f *, size_t );
-        void setUniformByName( const char *, const Matrix44f *, size_t );
+        void setUniformByNameB( const char *, const int32_t *, size_t );
+        void setUniformByNameI( const char *, const int32_t *, size_t );
+        void setUniformByNameF( const char *, const float *, size_t );
+        void setUniformByNameV( const char *, const Vector4f *, size_t );
+        void setUniformByNameM( const char *, const Matrix44f *, size_t );
 
-        void setUniformByName( const char *, bool );
-        void setUniformByName( const char *, int32_t );
-        void setUniformByName( const char *, float );
-        void setUniformByName( const char *, const Vector4f & );
-        void setUniformByName( const char *, const Matrix44f & );
+        void setUniformByNameB( const char *, bool );
+        void setUniformByNameI( const char *, int32_t );
+        void setUniformByNameF( const char *, float );
+        void setUniformByNameV( const char *, const Vector4f & );
+        void setUniformByNameM( const char *, const Matrix44f & );
         //@}
 
     protected :
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
         {
             StrA                   name;          //!< uniform name
             UniformValueType       type;          //!< uniform type
-            std::vector<int>       valueBool;     //!< Boolean value
+            std::vector<int32_t>   valueBool;     //!< Boolean value
             std::vector<int32_t>   valueInt;      //!< integer value
             std::vector<float>     valueFloat;    //!< float value
             std::vector<Vector4f>  valueVector4;  //!< vector value
@@ -279,19 +279,19 @@ namespace GN { namespace gfx
     }
 
     // -------------------------------------------------------------------------
-    inline void Shader::setUniform( uint32_t handle, const bool * values, size_t count )
+    inline void Shader::setUniformB( uint32_t handle, const int32_t * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
         Uniform & u = mUniforms[handle];
         u.type = UVT_BOOL;
         u.valueBool.resize( count );
-        if( count > 0 ) ::memcpy( &u.valueBool[0], values, count*sizeof(int) );
+        if( count > 0 ) ::memcpy( &u.valueBool[0], values, count*sizeof(int32_t) );
         mDirtySet.insert( handle );
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, const int32_t * values, size_t count )
+    inline void Shader::setUniformI( uint32_t handle, const int32_t * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
@@ -303,7 +303,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, const float * values, size_t count )
+    inline void Shader::setUniformF( uint32_t handle, const float * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
@@ -315,7 +315,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, const Vector4f * values, size_t count )
+    inline void Shader::setUniformV( uint32_t handle, const Vector4f * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
@@ -327,7 +327,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, const Matrix44f * values, size_t count )
+    inline void Shader::setUniformM( uint32_t handle, const Matrix44f * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !validateUniformValue( handle, values, count ) ) return;
@@ -340,101 +340,102 @@ namespace GN { namespace gfx
     }
 
     // -------------------------------------------------------------------------
-    inline void Shader::setUniform( uint32_t handle, bool value )
+    inline void Shader::setUniformB( uint32_t handle, bool value )
     {
-        setUniform( handle, &value, 1 );
+        int32_t i = value;
+        setUniformB( handle, &i, 1 );
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, int32_t value )
+    inline void Shader::setUniformI( uint32_t handle, int32_t value )
     {
-        setUniform( handle, &value, 1 );
+        setUniformI( handle, &value, 1 );
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, float value )
+    inline void Shader::setUniformF( uint32_t handle, float value )
     {
-        setUniform( handle, &value, 1 );
+        setUniformF( handle, &value, 1 );
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, const Vector4f & value )
+    inline void Shader::setUniformV( uint32_t handle, const Vector4f & value )
     {
-        setUniform( handle, &value, 1 );
+        setUniformV( handle, &value, 1 );
     }
     // --
-    inline void Shader::setUniform( uint32_t handle, const Matrix44f & value )
+    inline void Shader::setUniformM( uint32_t handle, const Matrix44f & value )
     {
-        setUniform( handle, &value, 1 );
+        setUniformM( handle, &value, 1 );
     }
 
     // -------------------------------------------------------------------------
-    inline void  Shader::setUniformByName( const char * name, bool value )
+    inline void  Shader::setUniformByNameB( const char * name, bool value )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, value );
+        setUniformB( handle, value );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, int32_t value )
+    inline void  Shader::setUniformByNameI( const char * name, int32_t value )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, value );
+        setUniformI( handle, value );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, float value )
+    inline void  Shader::setUniformByNameF( const char * name, float value )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, value );
+        setUniformF( handle, value );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, const Vector4f & value )
+    inline void  Shader::setUniformByNameV( const char * name, const Vector4f & value )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, value );
+        setUniformV( handle, value );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, const Matrix44f & value )
+    inline void  Shader::setUniformByNameM( const char * name, const Matrix44f & value )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, value );
+        setUniformM( handle, value );
     }
 
     // -------------------------------------------------------------------------
-    inline void  Shader::setUniformByName( const char * name, const bool * values, size_t count )
+    inline void  Shader::setUniformByNameB( const char * name, const int32_t * values, size_t count )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, values, count );
+        setUniformB( handle, values, count );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, const int32_t * values, size_t count )
+    inline void  Shader::setUniformByNameI( const char * name, const int32_t * values, size_t count )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, values, count );
+        setUniformI( handle, values, count );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, const float * values, size_t count )
+    inline void  Shader::setUniformByNameF( const char * name, const float * values, size_t count )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, values, count );
+        setUniformF( handle, values, count );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, const Vector4f * values, size_t count )
+    inline void  Shader::setUniformByNameV( const char * name, const Vector4f * values, size_t count )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, values, count );
+        setUniformV( handle, values, count );
     }
     // --
-    inline void  Shader::setUniformByName( const char * name, const Matrix44f * values, size_t count )
+    inline void  Shader::setUniformByNameM( const char * name, const Matrix44f * values, size_t count )
     {
         uint32_t handle = getUniformHandle(name);
         if( 0 == handle ) return;
-        setUniform( handle, values, count );
+        setUniformM( handle, values, count );
     }
 
     // *************************************************************************
