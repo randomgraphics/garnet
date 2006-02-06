@@ -587,43 +587,51 @@ namespace GN { namespace gfx
         virtual bool supportShader( ShaderType, ShadingLanguage ) = 0;
 
         //!
+        //! Create shader. Parameter 'entry' will be ignored for low-level shading language.
+        //!
+        virtual Shader *
+        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry = "main" ) = 0;
+
+        //!
         //! Create vetex shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         virtual Shader *
-        createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" ) = 0;
+        createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
         //! Create pixel shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         virtual Shader *
-        createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" ) = 0;
+        createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
-        //! Create shader. Parameter 'entry' will be ignored for low-level shading language.
+        //! Bind a shaders to rendering device. Set NULL to use fixed pipeline.
         //!
-        //! \note Inlined function implemented in renderer.inl
+        virtual void bindShader( ShaderType type, const Shader * shader ) = 0;
+
         //!
-        Shader *
-        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
+        //! Bind a list of shaders to rendering device. The list must have
+        //! NUM_SHADER_TYPES elements.
+        //!
+        virtual void bindShaders( const Shader * const shaders[] ) = 0;
 
         //!
         //! Bind programmable vertex shader to rendering device. Set to NULL to use
         //! fixed pipeline.
         //!
-        virtual void bindVtxShader( const Shader * ) = 0;
+        void bindVtxShader( const Shader * s ) { bindShader( VERTEX_SHADER, s ); }
 
         //!
         //! Bind programmable pixel to rendering device. Set to NULL to use
         //! fixed pipeline.
         //!
-        virtual void bindPxlShader( const Shader * ) = 0;
+        void bindPxlShader( const Shader * s ) { bindShader( PIXEL_SHADER, s ); }
 
         //!
-        //! Bind programmable shader to rendering device. Set to NULL to use
+        //! Bind programmable shaders to rendering device. Set to NULL to use
         //! fixed pipeline.
         //!
-        virtual void
-        bindShaders( const Shader * vtxShader, const Shader * pxlShader ) = 0;
+        void bindShaders( const Shader * vtxShader, const Shader * pxlShader );
 
         //@}
 

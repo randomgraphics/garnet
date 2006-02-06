@@ -15,11 +15,12 @@ TODO
   - sample application
     - render to texture
     - GLSL test application
-  - font manager
-    - code page convertor
   - mesh class
   - effect class
   - blender exporter/importer
+  - gui system
+    - font class
+      - code page convertor
 - p2
   - continue implementing GFX module
   - refine GFX module:

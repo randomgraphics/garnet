@@ -56,20 +56,37 @@ namespace GN { namespace gfx
     //
     // -------------------------------------------------------------------------
     inline Shader *
-    Renderer::createShader( ShaderType      type,
-                            ShadingLanguage lang,
-                            const StrA &    code,
-                            const StrA &    entry )
+    Renderer::createVtxShader( ShadingLanguage lang,
+                               const StrA &    code,
+                               const StrA &    entry )
     {
         GN_GUARD;
-        switch( type )
-        {
-            case VERTEX_SHADER : return createVtxShader( lang, code, entry );
-            case PIXEL_SHADER  : return createPxlShader( lang, code, entry );
-            default :
-                GN_ERROR( "invalid shader type!" );
-                return 0;
-        }
+        return createShader( VERTEX_SHADER, lang, code, entry );
         GN_UNGUARD;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline Shader *
+    Renderer::createPxlShader( ShadingLanguage lang,
+                               const StrA &    code,
+                               const StrA &    entry )
+    {
+        GN_GUARD;
+        return createShader( PIXEL_SHADER, lang, code, entry );
+        GN_UNGUARD;
+    }
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::bindShaders( const Shader * vtxShader, const Shader * pxlShader )
+    {
+        GN_GUARD_SLOW;
+        const Shader * shaders[NUM_SHADER_TYPES];
+        shaders[VERTEX_SHADER] = vtxShader;
+        shaders[PIXEL_SHADER] = pxlShader;
+        bindShaders( shaders );
+        GN_UNGUARD_SLOW;
     }
 }}
