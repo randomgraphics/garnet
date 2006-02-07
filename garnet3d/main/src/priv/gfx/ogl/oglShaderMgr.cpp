@@ -295,8 +295,7 @@ void GN::gfx::OGLRenderer::applyShaderState()
             safeCast<const OGLBasicShaderGLSL*>(vs),
             safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return ;
         mGLSLProgramMap[key] = newProg.get();
-        newProg->apply();
-        newProg.detach();
+        newProg.detach()->apply();
     }
 
     GN_UNGUARD_SLOW;
