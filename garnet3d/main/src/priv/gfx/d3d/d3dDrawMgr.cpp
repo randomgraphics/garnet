@@ -240,7 +240,7 @@ void GN::gfx::D3DRenderer::drawQuads(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawTextW(
+void GN::gfx::D3DRenderer::drawDebugTextW(
     const wchar_t * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;

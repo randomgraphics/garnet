@@ -629,7 +629,7 @@ namespace GN { namespace gfx
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count );
-        virtual void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
+        virtual void drawDebugTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions
     private:

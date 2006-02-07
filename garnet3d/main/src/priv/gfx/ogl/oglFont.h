@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         //!
         //! Draw unicode string
         //!
-        //! \sa Renderer::drawTextW()
+        //! \sa Renderer::drawDebugTextW()
         //!
         void drawTextW( const wchar_t * s, int x, int y, const Vector4f & c );
 

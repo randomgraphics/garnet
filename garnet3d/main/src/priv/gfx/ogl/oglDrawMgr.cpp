@@ -349,7 +349,7 @@ void GN::gfx::OGLRenderer::drawQuads(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawTextW( const wchar_t * s, int x, int y, const Vector4f & c )
+void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
 

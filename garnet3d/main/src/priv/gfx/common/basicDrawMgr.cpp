@@ -68,7 +68,7 @@ void GN::gfx::BasicRenderer::drawGeometry(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::drawTextA(
+void GN::gfx::BasicRenderer::drawDebugTextA(
     const char * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
@@ -91,7 +91,7 @@ void GN::gfx::BasicRenderer::drawTextA(
     ws[wlen] = 0;
 
     // call UNICODE version of drawText()
-    drawTextW( ws, x, y, c );
+    drawDebugTextW( ws, x, y, c );
 
     GN_UNGUARD_SLOW;
 }
