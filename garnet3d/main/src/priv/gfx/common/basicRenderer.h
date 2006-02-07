@@ -171,7 +171,7 @@ namespace GN { namespace gfx
         //@{
     public:
         virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t );
-        virtual void drawTextA( const char * text, int x, int y, const Vector4f & color );
+        virtual void drawDebugTextA( const char * text, int x, int y, const Vector4f & color );
 
     private:
         bool drawInit()     { return true; }
