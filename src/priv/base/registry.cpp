@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/base/registry.h"
 
 //
 //
