@@ -74,6 +74,9 @@ namespace GN
 #include "base/functor.h"
 #include "base/sigslot.h"
 
+// variant class
+#include "base/variant.h"
+
 // registry class
 #include "base/registry.h"
 
