@@ -258,14 +258,14 @@ public:
             lastTime = currentTime;
             frames = 0;
         }
-        mRenderer->drawTextA( mFPS.cstr(), 0, 0 );
+        mRenderer->drawDebugTextA( mFPS.cstr(), 0, 0 );
 
         // draw mouse position on screen
         GN::StrA mousePos;
         int x = 1, y = 1;
         mInput->getMousePosition( x, y );
         mousePos.format( "Mouse: %d, %d", x, y );
-        mRenderer->drawTextA( mousePos.cstr(), 0, 100 );//*/
+        mRenderer->drawDebugTextA( mousePos.cstr(), 0, 100 );//*/
     }
 };
 

@@ -1317,19 +1317,19 @@ namespace GN { namespace gfx
         //! \param color 文字颜色
         //!
         virtual void
-        drawTextA( const char * text, int x, int y,
-                   const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
+        drawDebugTextA( const char * text, int x, int y,
+                        const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
 
         //!
         //!  绘制unicode文字
         //!
-        //! \sa drawTextA()
+        //! \sa drawDebugTextA()
         //!
         //! \note 必须在 drawBegin() 和 drawEnd() 之间调用
         //!
         virtual void
-        drawTextW( const wchar_t * text, int x, int y,
-                   const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
+        drawDebugTextW( const wchar_t * text, int x, int y,
+                        const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
 
         //!
         //! 返回上一次 drawEnd() 到现在所绘制的原语的个数
