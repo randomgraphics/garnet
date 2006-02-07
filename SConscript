@@ -373,10 +373,7 @@ def default_env( options = None ):
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
-        if ('has_glut' in GN_conf) and GN_conf['has_glut']:
-            libs['common'] += Split('X11 glut GL GLU')
-        else:
-            libs['common'] += Split('X11 GL GLU')
+        libs['common'] += Split('X11 GL GLU')
 
     # 定制不同编译模式的编译选项
     cppdefines['debug']   += ['GN_DEBUG=1']
@@ -519,48 +516,10 @@ def check_config( conf, conf_dir ):
     # ===========
     conf['has_d3d'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
 
-    # ============
-    # 是否支持GLUT
-    # ============
-    conf['has_glut'] = c.CheckCHeader( 'GL/glut.h' )
-
     # =========================
     # 检查是否存在boost library
     # =========================
     conf['has_boost'] = c.CheckCXXHeader( 'boost/any.hpp' )
-
-    # =================
-    # 是否支持freetype2
-    # =================
-    has_ft2 = 0
-    ft2_inc_path = ''
-    ft2_libs = ''
-    if 'win32' == env['PLATFORM']:
-        if c.CheckCHeader( Split('ft2build.h freetype/freetype.h') ):
-            if 'debug' == GN_conf['variant']:
-                if c.CheckLib('ft2MDd','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MDd'
-            elif 'release' == GN_conf['variant']:
-                if c.CheckLib('ft2MD','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MD'
-            elif 'stdbg' == GN_conf['variant']:
-                if c.CheckLib('ft2MTd','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MTd'
-            elif 'strel' == GN_conf['variant']:
-                if c.CheckLib('ft2MT','FT_Init_FreeType', autoadd=0): ft2_libs = 'ft2MT'
-            if ft2_libs: has_ft2 = True
-    else:
-        # config freetype is easy for linux-like system
-        e = env.Copy( CPPPATH = [], LIBS = [] )
-        e.ParseConfig( 'freetype-config --cflags' )
-        e.ParseConfig( 'freetype-config --libs' )
-        def list2str( l ):
-            s = ''
-            for x in l : s += '%s '%str(x)
-            return s
-        ft2_inc_path = list2str( e['CPPPATH'] )
-        ft2_libs = list2str( e['LIBS'] )
-        has_ft2 = ( None == os.popen( 'freetype-config --cflags' ).close() )
-    conf['has_ft2'] = has_ft2
-    conf['ft2_inc_path'] = ft2_inc_path
-    conf['ft2_libs'] = ft2_libs
 
     # =====================
     # 检查 RenderMonkey SDK

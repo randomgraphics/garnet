@@ -157,7 +157,7 @@ namespace GN { namespace gfx
                 dirtyFlags.vtxShader = true;
                 vtxShader.reset( shaders[VERTEX_SHADER] );
             }
-            if( shaders[PIXEL_SHADER] == pxlShader.get() )
+            if( shaders[PIXEL_SHADER] != pxlShader.get() )
             {
                 dirtyFlags.pxlShader = true;
                 pxlShader.reset( shaders[PIXEL_SHADER] );
