@@ -305,22 +305,22 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
     switch( desc.type )
     {
         case CONST_F :
-            switch( u.type )
+            switch( u.value.type )
             {
                 case UVT_FLOAT:
-                    if( u.valueFloat.empty() ) return;
+                    if( u.value.floats.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, &u.valueFloat[0], (UINT)( u.valueFloat.size() + 3 ) / 4 ) );
+                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, &u.value.floats[0], (UINT)( u.value.floats.size() + 3 ) / 4 ) );
                     break;
 
-                case UVT_FLOAT4:
-                    if( u.valueVector4.empty() ) return;
-                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, u.valueVector4[0], (UINT)u.valueVector4.size() ) );
+                case UVT_VECTOR4:
+                    if( u.value.vector4s.empty() ) return;
+                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, u.value.vector4s[0], (UINT)u.value.vector4s.size() ) );
                     break;
 
                 case UVT_MATRIX44:
-                    if( u.valueMatrix44.empty() ) return;
-                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, u.valueMatrix44[0][0], (UINT)(u.valueMatrix44.size()*4) ) );
+                    if( u.value.matrix44s.empty() ) return;
+                    GN_DX_CHECK( dev->SetPixelShaderConstantF( desc.index, u.value.matrix44s[0][0], (UINT)(u.value.matrix44s.size()*4) ) );
                     break;
 
                 case UVT_BOOL:
@@ -331,16 +331,16 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
             break;
 
         case CONST_I :
-            switch( u.type )
+            switch( u.value.type )
             {
                 case UVT_INT:
-                    if( u.valueFloat.empty() ) return;
+                    if( u.value.ints.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetPixelShaderConstantI( desc.index, (const int*)&u.valueInt[0], (UINT)( u.valueInt.size() + 3 ) / 4 ) );
+                    GN_DX_CHECK( dev->SetPixelShaderConstantI( desc.index, (const int*)&u.value.ints[0], (UINT)( u.value.ints.size() + 3 ) / 4 ) );
                     break;
 
                 case UVT_FLOAT:
-                case UVT_FLOAT4:
+                case UVT_VECTOR4:
                 case UVT_MATRIX44:
                 case UVT_BOOL:
                     GN_ERROR( "integer register accepts only integer value." );
@@ -349,16 +349,16 @@ GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u
             break;
 
         case CONST_B :
-            switch( u.type )
+            switch( u.value.type )
             {
                 case UVT_BOOL:
-                    if( u.valueFloat.empty() ) return;
+                    if( u.value.bools.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetPixelShaderConstantB( desc.index, (const BOOL*)&u.valueBool[0], (UINT)u.valueBool.size() ) );
+                    GN_DX_CHECK( dev->SetPixelShaderConstantB( desc.index, (const BOOL*)&u.value.bools[0], (UINT)u.value.bools.size() ) );
                     break;
 
                 case UVT_FLOAT:
-                case UVT_FLOAT4:
+                case UVT_VECTOR4:
                 case UVT_MATRIX44:
                 case UVT_INT:
                     GN_ERROR( "Bool register accepts only boolean value." );

@@ -194,42 +194,42 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
         if( location >= 0 )
         {
             // update uniform value
-            switch( u.type )
+            switch( u.value.type )
             {
-                case UVT_FLOAT4 :
+                case UVT_VECTOR4 :
                     GN_OGL_CHECK( glUniform4fvARB(
                         location,
-                        u.valueVector4.size(),
-                        (const float * )&u.valueVector4[0] ) );
+                        u.value.vector4s.size(),
+                        (const float * )&u.value.vector4s[0] ) );
                     break;
 
                 case UVT_MATRIX44 :
                     GN_OGL_CHECK( glUniformMatrix4fvARB(
                         location,
-                        u.valueMatrix44.size(),
+                        u.value.matrix44s.size(),
                         GL_TRUE, // row major
-                        (const float * )&u.valueMatrix44[0] ) );
+                        (const float * )&u.value.matrix44s[0] ) );
                     break;
 
                 case UVT_FLOAT :
                     GN_OGL_CHECK( glUniform1fvARB(
                         location,
-                        u.valueFloat.size(),
-                        &u.valueFloat[0] ) );
+                        u.value.floats.size(),
+                        &u.value.floats[0] ) );
                     break;
 
                 case UVT_BOOL :
                     GN_OGL_CHECK( glUniform1ivARB(
                         location,
-                        u.valueBool.size(),
-                        (const GLint*)&u.valueBool[0] ) );
+                        u.value.bools.size(),
+                        (const GLint*)&u.value.bools[0] ) );
                     break;
 
                 case UVT_INT :
                     GN_OGL_CHECK( glUniform1ivARB(
                         location,
-                        u.valueInt.size(),
-                        (const GLint*)&u.valueInt[0] ) );
+                        u.value.ints.size(),
+                        (const GLint*)&u.value.ints[0] ) );
                     break;
 
                 default:
