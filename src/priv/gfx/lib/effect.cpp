@@ -503,9 +503,8 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
                         GN_ERROR( "FFP shader '%s' can't have non-FFP uniform.", sd.name.cstr() );
                         return false;
                     }
-                    const UniformData & ud = mUniforms.items[ur.handle];
                     const UniformRefDesc & u = s.uniforms[i];
-                    GN_ASSERT( u.name == ud.name );
+                    GN_ASSERT( u.name == mUniforms.items[ur.handle].name );
                     ur.shaderUniformHandle = sd.value->getUniformHandle( u.binding );
                     if( 0 == ur.shaderUniformHandle )
                     {
