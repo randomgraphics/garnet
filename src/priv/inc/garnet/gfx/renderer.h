@@ -595,13 +595,13 @@ namespace GN { namespace gfx
         //!
         //! Create vetex shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
-        virtual Shader *
+        Shader *
         createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
         //! Create pixel shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
-        virtual Shader *
+        Shader *
         createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
@@ -1384,7 +1384,7 @@ namespace GN { namespace gfx
         //!
         //! Dump current renderer state to string. For debug purpose only.
         //!
-        void dumpCurrentState( StrA & );
+        virtual void dumpCurrentState( StrA & ) const = 0;
 
         //@}
 
@@ -1413,6 +1413,11 @@ namespace GN { namespace gfx
     //! Function prototype to create instance of renderer.
     //!
     typedef Renderer * (*CreateRendererFunc)( const RendererOptions & );
+
+    //!
+    //! Create fake renderer, for debugging or as fallback.
+    //!
+    Renderer * createFakeRenderer( const RendererOptions & );
 
 #if GN_STATIC
 

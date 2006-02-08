@@ -590,10 +590,7 @@ namespace GN { namespace gfx
 
     public:
 
-        //!
-        //! Dump current renderer state to string. For debug purpose only.
-        //!
-        void dumpCurrentState( StrA & ) {}
+        void dumpCurrentState( StrA & ) const {}
 
         //@}
     };
