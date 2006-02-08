@@ -14,7 +14,7 @@ static inline bool sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
 {
     if( offset >= maxLength )
     {
-        GNGFX_ERROR( "offset is beyond the end of valid range." );
+        GN_ERROR( "offset is beyond the end of valid range." );
         return false;
     }
     if( 0 == length ) length = maxLength;
@@ -154,7 +154,7 @@ static inline GN::gfx::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
         //case D3DFMT_D24X4S4      : return GN::gfx::FMT_DXS_24_4_4;
         default                  :
             // invalid format, failed
-            GNGFX_ERROR( "Unsupported or invalid D3DFORMAT: '%s'!", GN::gfx::D3DFORMAT2Str(d3dfmt) );
+            GN_ERROR( "Unsupported or invalid D3DFORMAT: '%s'!", GN::gfx::D3DFORMAT2Str(d3dfmt) );
             return GN::gfx::FMT_INVALID;
     }
 }
@@ -179,7 +179,7 @@ static inline D3DFORMAT sClrFmt2D3DFMT( GN::gfx::ClrFmt clrfmt )
         case GN::gfx::FMT_DXT2          : return D3DFMT_DXT2;
         default                       :
             // invalid format, failed
-            GNGFX_ERROR( "Unsupported or invalid color format: '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
+            GN_ERROR( "Unsupported or invalid color format: '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
             return D3DFMT_UNKNOWN;
     }
 }
@@ -234,7 +234,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     // check for empty file
     if( 0 == file.size() )
     {
-        GNGFX_ERROR( "empty file!" );
+        GN_ERROR( "empty file!" );
         quit(); return selfOK();
     }
 
@@ -296,7 +296,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     }
     else
     {
-        GNGFX_ERROR( "unknown resource type!" );
+        GN_ERROR( "unknown resource type!" );
         quit(); return selfOK();
     }
 
@@ -347,7 +347,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
                 mRenderer.getPresentParameters().AutoDepthStencilFormat );
             if( FMT_INVALID == format )
             {
-                GNGFX_ERROR( "unsupport depth-stencil format!" );
+                GN_ERROR( "unsupport depth-stencil format!" );
                 return false;
             }
         }
@@ -377,7 +377,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 #if GN_XENON
     if( TEXUSAGE_AUTOGEN_MIPMAP & getUsage() )
     {
-        GNGFX_WARN( "Xenon does not support mipmap auto-generation!" );
+        GN_WARN( "Xenon does not support mipmap auto-generation!" );
     }
 #else
     mD3DUsage |= TEXUSAGE_AUTOGEN_MIPMAP & getUsage() ? D3DUSAGE_AUTOGENMIPMAP : 0;
@@ -396,7 +396,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
-        GNGFX_WARN( "can't generate mipmap automatically!" );
+        GN_WARN( "can't generate mipmap automatically!" );
         GN_ASSERT( D3DUSAGE_AUTOGENMIPMAP & mD3DUsage );
         mD3DUsage &= !D3DUSAGE_AUTOGENMIPMAP;
     }
@@ -448,7 +448,7 @@ void GN::gfx::D3DTexture::deviceDispose()
     // check if locked
     if( isLocked() )
     {
-        GNGFX_WARN( "You are destroying a locked texture!" );
+        GN_WARN( "You are destroying a locked texture!" );
         unlock();
     }
 
@@ -537,7 +537,7 @@ void * GN::gfx::D3DTexture::lock1D( uint32_t level,
 
     if ( TEXTYPE_1D != getType() )
     {
-        GNGFX_ERROR( "can't do 1D lock on an non-1D texture!" );
+        GN_ERROR( "can't do 1D lock on an non-1D texture!" );
         return false;
     }
 
@@ -581,7 +581,7 @@ bool GN::gfx::D3DTexture::lock2D( LockedRect &  result,
 
     if ( TEXTYPE_2D != getType() )
     {
-        GNGFX_ERROR( "can't do 2D lock on an non-2D texture!" );
+        GN_ERROR( "can't do 2D lock on an non-2D texture!" );
         return false;
     }
 
@@ -641,7 +641,7 @@ bool GN::gfx::D3DTexture::lock3D( LockedBox &  result,
 
     if ( TEXTYPE_3D != getType() )
     {
-        GNGFX_ERROR( "can't do 3D lock on an non-3D texture!" );
+        GN_ERROR( "can't do 3D lock on an non-3D texture!" );
         return false;
     }
 
@@ -710,7 +710,7 @@ bool GN::gfx::D3DTexture::lockCube( LockedRect &  result,
 
     if ( TEXTYPE_CUBE != getType() )
     {
-        GNGFX_ERROR( "can't do CUBE lock on an non-CUBE texture!" );
+        GN_ERROR( "can't do CUBE lock on an non-CUBE texture!" );
         return false;
     }
     // call basic lock
@@ -839,7 +839,7 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
             D3DRTYPE_TEXTURE,
             d3dformat ) )
         {
-            GNGFX_ERROR( "unsupported texture format!" );
+            GN_ERROR( "unsupported texture format!" );
             return 0;
         }
 
@@ -861,7 +861,7 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
             D3DRTYPE_VOLUMETEXTURE,
             d3dformat ) )
         {
-            GNGFX_ERROR( "unsupported texture format!" );
+            GN_ERROR( "unsupported texture format!" );
             return 0;
         }
 
@@ -883,7 +883,7 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
             D3DRTYPE_CUBETEXTURE,
             d3dformat ) )
         {
-            GNGFX_ERROR( "unsupported texture format!" );
+            GN_ERROR( "unsupported texture format!" );
             return 0;
         }
 

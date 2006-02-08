@@ -12,7 +12,7 @@
 //!
 //! trace the call sequence of device reset/recreate
 //!
-#define _GNGFX_DEVICE_TRACE()  //GNGFX_TRACE( GN_FUNCTION_NAME )
+#define _GNGFX_DEVICE_TRACE()  //GN_TRACE( GN_FUNCTION_NAME )
 
 namespace GN { namespace gfx
 {

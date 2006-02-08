@@ -57,7 +57,7 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
     {
         if( GL_TRUE != sFindExtension( extensions, *p ) )
         {
-            GNGFX_ERROR( "Required extension '%s' was not supported!", *p );
+            GN_ERROR( "Required extension '%s' was not supported!", *p );
             fail = true;
         }
         // next extension
@@ -158,7 +158,7 @@ static void sOutputOGLInfo( GN::gfx::OGLRenderer & r, GN::HandleType disp, const
         "===================================================\n"
         "\n\n";
 
-    GNGFX_INFO( info.cstr() );
+    GN_INFO( info.cstr() );
 
     GN_UNGUARD;
 }

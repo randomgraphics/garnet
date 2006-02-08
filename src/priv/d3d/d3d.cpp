@@ -40,7 +40,7 @@ static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name
     D3DXIMAGE_INFO info;
     if( FAILED(D3DXGetImageInfoFromFileA( name.cstr(), &info )) )
     {
-        GND3D_ERROR( "can't get image information of texture '%s'.", name.cstr() );
+        GN_ERROR( "can't get image information of texture '%s'.", name.cstr() );
         return false;
     }
 
@@ -74,7 +74,7 @@ static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name
         }
         default:
         {
-            GND3D_ERROR( "unknown resource type!" );
+            GN_ERROR( "unknown resource type!" );
             GN_UNEXPECTED();
             break;
         }
@@ -82,7 +82,7 @@ static bool sLoadTexture( LPDIRECT3DBASETEXTURE9 & result, const GN::StrA & name
 
     if( 0 == result )
     {
-        GND3D_ERROR( "Fail to load texture '%s'.", name.cstr() );
+        GN_ERROR( "Fail to load texture '%s'.", name.cstr() );
         return false;
     }
     else
@@ -162,8 +162,8 @@ static bool sLoadEffect( LPD3DXEFFECT & result, const GN::StrA & name )
         0, // no pool
         &result, &err)) )
     {
-        GND3D_ERROR( "Fail to load effect '%s'.", name.cstr() );
-        if( err ) GND3D_ERROR( "Effect compile error:\n%s", (const char*)err->GetBufferPointer() );
+        GN_ERROR( "Fail to load effect '%s'.", name.cstr() );
+        if( err ) GN_ERROR( "Effect compile error:\n%s", (const char*)err->GetBufferPointer() );
         return false;
     }
 
@@ -187,7 +187,7 @@ static bool sLoadMesh( LPD3DXMESH & result, const GN::StrA & name )
         0, 0, 0, 0,
         &result )) )
     {
-        GND3D_ERROR( "Fail to load mesh '%s'.", name.cstr() );
+        GN_ERROR( "Fail to load mesh '%s'.", name.cstr() );
         return false;
     }
 
@@ -339,7 +339,7 @@ bool GN::d3d::D3D::present()
     else
     {
         // fatal error
-        GND3D_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9A(r) );
+        GN_ERROR( "TestCooperativeLevel() failed : %s!", DXGetErrorString9A(r) );
         return false;
     }
 #endif
@@ -390,7 +390,7 @@ bool GN::d3d::D3D::createD3D()
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if( !mD3D )
     {
-        GND3D_ERROR( "incorrect SDK version!" );
+        GN_ERROR( "incorrect SDK version!" );
         return false;
     }
 
@@ -465,7 +465,7 @@ bool GN::d3d::D3D::createD3D()
         if( D3DERR_NOTAVAILABLE == r ) continue;
         if( D3D_OK != r )
         {
-            GND3D_WARN( DXGetErrorString9A(r) );
+            GN_WARN( DXGetErrorString9A(r) );
             continue;
         }
 
@@ -491,7 +491,7 @@ bool GN::d3d::D3D::createD3D()
     }
     if( !found )
     {
-        GND3D_ERROR( "No suitable D3D device found!" );
+        GN_ERROR( "No suitable D3D device found!" );
         return false;
     }
 
@@ -675,7 +675,7 @@ void GN::d3d::D3D::setupPresentParameters()
     mPresentParams.Flags                      = 0;
 #endif
 
-    GND3D_INFO( "Back buffer size: %dx%d.",
+    GN_INFO( "Back buffer size: %dx%d.",
         mPresentParams.BackBufferWidth,
         mPresentParams.BackBufferHeight );
 }
@@ -687,7 +687,7 @@ bool GN::d3d::D3D::restoreDevice()
 {
     GN_GUARD;
 
-    GND3D_INFO( "Restore D3D device" );
+    GN_INFO( "Restore D3D device" );
 
     // release all D3D resources
     gTexMgr.dispose();
@@ -717,7 +717,7 @@ bool GN::d3d::D3D::recreateDevice()
 {
     GN_GUARD;
 
-    GND3D_INFO( "Recreate D3D device" );
+    GN_INFO( "Recreate D3D device" );
 
     // recreate devices
     destroyD3D();
@@ -753,7 +753,7 @@ LRESULT GN::d3d::D3D::winProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
             break;
 
         case WM_SIZE :
-            //GND3D_INFO( "window resize to %dx%d", LOWORD(lParam), HIWORD(lParam) ) );
+            //GN_INFO( "window resize to %dx%d", LOWORD(lParam), HIWORD(lParam) ) );
             mMinimized = ( SIZE_MINIMIZED == wp );
             if( !mMinimized && !mInsideSizeMove ) mSizeChanged = true;
             break;

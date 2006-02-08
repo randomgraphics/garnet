@@ -64,7 +64,7 @@ bool GN::input::BasicMswInput::attachToWindow( HandleType, HandleType window )
     // check window handle
     if( !::IsWindow(hwnd) )
     {
-        GNINPUT_ERROR( "Window handle is not valid!" );
+        GN_ERROR( "Window handle is not valid!" );
         return false;
     }
 
@@ -80,7 +80,7 @@ bool GN::input::BasicMswInput::attachToWindow( HandleType, HandleType window )
 
     // success
     mWindow = hwnd;
-    GNINPUT_TRACE( "Attach to window 0x%X", mWindow );
+    GN_TRACE( "Attach to window 0x%X", mWindow );
     return true;
 
     GN_UNGUARD;
@@ -280,7 +280,7 @@ GN::input::BasicMswInput::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
     GN_ASSERT( inst );
 
     const CWPSTRUCT * p = (const CWPSTRUCT*)lParam;
-    //GNINPUT_TRACE( "CWP hook: hwnd(0x%X), msg(%s)", p->hwnd, GN::win::msg2str(p->message) );
+    //GN_TRACE( "CWP hook: hwnd(0x%X), msg(%s)", p->hwnd, GN::win::msg2str(p->message) );
     if( nCode >= 0 && p->hwnd == inst->mWindow )
     {
         inst->msgHandler( p->message, p->wParam, p->lParam );

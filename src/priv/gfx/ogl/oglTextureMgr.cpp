@@ -257,7 +257,7 @@ void GN::gfx::OGLRenderer::bindTextures( const Texture * const texlist[],
 
 #if GN_DEBUG
     if( numtex > getCaps( CAPS_MAX_TEXTURE_STAGES ) )
-        GNGFX_WARN( "texlist is loo long!" );
+        GN_WARN( "texlist is loo long!" );
 #endif
 
     uint32_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);

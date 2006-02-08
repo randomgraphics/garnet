@@ -29,31 +29,6 @@
 
 #include "garnet/base/pragma.h"
 
-//!
-//! d3d module fatal error
-//!
-#define GNGFX_FATAL GN_FATAL
-
-//!
-//! d3d module error log macro
-//!
-#define GNGFX_ERROR GN_ERROR
-
-//!
-//! d3d module warning log macro
-//!
-#define GNGFX_WARN GN_WARN
-
-//!
-//! d3d module informational log macro
-//!
-#define GNGFX_INFO GN_INFO
-
-//!
-//! d3d module tracing macro
-//!
-#define GNGFX_TRACE GN_TRACE
-
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************

@@ -82,7 +82,7 @@ namespace GN { namespace gfx
             GN_UNUSED_PARAM( offset );
             GN_UNUSED_PARAM( length );
             GN_UNUSED_PARAM( flag );
-            GNGFX_ERROR( "can't do 1D lock on %s texture", texType2Str( getType() ) );
+            GN_ERROR( "can't do 1D lock on %s texture", texType2Str( getType() ) );
             return 0;
         }
         virtual bool lock2D( LockedRect & result, uint32_t level, const Recti * area, uint32_t flag )
@@ -91,7 +91,7 @@ namespace GN { namespace gfx
             GN_UNUSED_PARAM( level );
             GN_UNUSED_PARAM( area );
             GN_UNUSED_PARAM( flag );
-            GNGFX_ERROR( "can't do 2D lock on %s texture", texType2Str( getType() ) );
+            GN_ERROR( "can't do 2D lock on %s texture", texType2Str( getType() ) );
             return false;
         }
         virtual bool lock3D( LockedBox & result, uint32_t level, const Boxi * box, uint32_t flag )
@@ -100,7 +100,7 @@ namespace GN { namespace gfx
             GN_UNUSED_PARAM( level );
             GN_UNUSED_PARAM( box );
             GN_UNUSED_PARAM( flag );
-            GNGFX_ERROR( "can't do 3D lock on %s texture", texType2Str( getType() ) );
+            GN_ERROR( "can't do 3D lock on %s texture", texType2Str( getType() ) );
             return false;
         }
         virtual bool lockCube( LockedRect & result, TexFace face, uint32_t level, const Recti * area, uint32_t flag )
@@ -110,13 +110,13 @@ namespace GN { namespace gfx
             GN_UNUSED_PARAM( level );
             GN_UNUSED_PARAM( area );
             GN_UNUSED_PARAM( flag );
-            GNGFX_ERROR( "can't do CUBE lock on %s texture", texType2Str( getType() ) );
+            GN_ERROR( "can't do CUBE lock on %s texture", texType2Str( getType() ) );
             return false;
         }
 
         virtual void setFilter( TexFilter, TexFilter ) const;
 
-        virtual void updateMipmap() { GNGFX_ERROR( "no implementation" ); }
+        virtual void updateMipmap() { GN_ERROR( "no implementation" ); }
 
         virtual void * getAPIDependentData() const { return (void*)getOGLTexture(); }
 
@@ -321,7 +321,7 @@ namespace GN { namespace gfx
                     return GL_CLAMP_TO_EDGE_SGIS;
                 else
                 {
-                    GNGFX_ERROR( "do not support clamp to edge!" );
+                    GN_ERROR( "do not support clamp to edge!" );
                     return GL_CLAMP;
                 }
             }

@@ -30,7 +30,7 @@ static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN:
 
     if( code.empty() )
     {
-        GNGFX_ERROR( "shader code can't be empty!" );
+        GN_ERROR( "shader code can't be empty!" );
         return false;
     }
 
@@ -39,7 +39,7 @@ static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN:
     glGenProgramsARB( 1, &program );
     if( 0 == program )
     {
-        GNGFX_ERROR( "Fail to generate new program object!" );
+        GN_ERROR( "Fail to generate new program object!" );
         return 0;
     }
     ARBAutoDel autodel( r, program );
@@ -53,7 +53,7 @@ static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN:
         const char * errStr;
         glGetIntegerv( GL_PROGRAM_ERROR_POSITION_ARB, &errPos );
         errStr = (const char*)glGetString( GL_PROGRAM_ERROR_STRING_ARB );
-        GNGFX_INFO(
+        GN_INFO(
             "\n"
             "============= ARB Shader Program Compile Error ==========\n"
             "%s\n"
@@ -278,7 +278,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         case UVT_FLOAT :
         case UVT_BOOL :
         case UVT_INT :
-            GNGFX_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
+            GN_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
             break;
 
         default:
@@ -306,7 +306,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
     unsigned int index;
     if( 1 != sscanf( name+1, "%u", &index ) )
     {
-        GNGFX_ERROR(
+        GN_ERROR(
             "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"
             "E means ENV parameter; L means LOCAL parameter. xxx is the register index.",
             name );
@@ -321,7 +321,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'E':
             if( index >= mMaxEnvUniforms )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
+                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
                 return false;
             }
             desc.type = ENV_PARAMETER;
@@ -331,14 +331,14 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'L':
             if( index >= mMaxLocalUniforms )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
+                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
                 return false;
             }
             desc.type = LOCAL_PARAMETER;
             break;
 
         default:
-            GNGFX_ERROR(
+            GN_ERROR(
                 "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"
                 "E means ENV parameter; L means LOCAL parameter. xxx is the register index.",
                 name );

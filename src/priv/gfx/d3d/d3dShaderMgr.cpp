@@ -16,12 +16,12 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
     // check parameter
     if( 0 > type || type >= NUM_SHADER_TYPES )
     {
-        GNGFX_ERROR( "invalid shader usage!" );
+        GN_ERROR( "invalid shader usage!" );
         return false;
     }
     if( 0 > lang || lang >= NUM_SHADING_LANGUAGES )
     {
-        GNGFX_ERROR( "invalid shading language!" );
+        GN_ERROR( "invalid shading language!" );
         return false;
     }
 
@@ -68,7 +68,7 @@ GN::gfx::D3DRenderer::createShader(
 
     if( !supportShader( type, lang ) )
     {
-        GNGFX_ERROR( "Current renderer do not support shading language '%s' for shader type '%s'.",
+        GN_ERROR( "Current renderer do not support shading language '%s' for shader type '%s'.",
             shadingLanguage2Str(lang), shaderType2Str(type) );
         return 0;
     }
@@ -93,7 +93,7 @@ GN::gfx::D3DRenderer::createShader(
                 }
 
                 default:
-                    GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
             break;
@@ -116,14 +116,14 @@ GN::gfx::D3DRenderer::createShader(
                 }
 
                 default:
-                    GNGFX_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
             break;
 
         default:
             GN_UNEXPECTED(); // program should not reach here
-            GNGFX_ERROR( "invalid shader type: %d", type );
+            GN_ERROR( "invalid shader type: %d", type );
             return 0;
     }
 

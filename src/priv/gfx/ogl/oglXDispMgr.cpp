@@ -50,14 +50,14 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
     mRenderContext = glXCreateContext( disp, &vi, 0, GL_FALSE );
     if( 0 == mRenderContext )
     {
-        GNGFX_ERROR( "Fail to create GLX context." );
+        GN_ERROR( "Fail to create GLX context." );
         return false;
     }
 
     // make the context as current render context.
     if( !glXMakeCurrent( disp, win, mRenderContext ) )
     {
-        GNGFX_ERROR( "glXMakeCurrent() failed." );
+        GN_ERROR( "glXMakeCurrent() failed." );
         return false;
     }
 
@@ -68,7 +68,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
     GLenum glewErr = glewContextInit( mGLEWContext );
     if( GLEW_OK != glewErr )
     {
-        GNGFX_ERROR( "Fail to initialize glew library : %s",
+        GN_ERROR( "Fail to initialize glew library : %s",
             (const char *)glewGetErrorString(glewErr) );
         return false;
     }
@@ -80,7 +80,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
     GLenum glxewErr = glxewContextInit( mGLXEWContext );
     if( GLEW_OK != glxewErr )
     {
-        GNGFX_ERROR( "Fail to initialize glxew library : %s",
+        GN_ERROR( "Fail to initialize glxew library : %s",
             (const char *)glewGetErrorString(glewErr) );
         return false;
     }
@@ -107,7 +107,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     {
         if( !glXSwapIntervalSGI( getOptions().vsync ) )
         {
-            GNGFX_WARN( "Fail to adjust SGI swap control" );
+            GN_WARN( "Fail to adjust SGI swap control" );
         }
     }
 

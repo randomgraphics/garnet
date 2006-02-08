@@ -85,7 +85,7 @@ void GN::gfx::BasicRenderer::drawDebugTextA(
     size_t wlen = mbstowcs( ws, s, len );
     if( static_cast<size_t>(-1L) == wlen )
     {
-        GNGFX_ERROR( "fail to convert multi-byte string to unicode string!" );
+        GN_ERROR( "fail to convert multi-byte string to unicode string!" );
         return;
     }
     ws[wlen] = 0;

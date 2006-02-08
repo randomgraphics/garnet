@@ -44,7 +44,7 @@ static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
         case GN::gfx::FMT_FLOAT4   : return D3DDECLTYPE_FLOAT4;
         case GN::gfx::FMT_D3DCOLOR : return D3DDECLTYPE_D3DCOLOR;
         default:
-            GNGFX_ERROR( "Invalid color format: %d!", fmt );
+            GN_ERROR( "Invalid color format: %d!", fmt );
             return D3DDECLTYPE(MAXD3DDECLTYPE+1);
     }
 }
@@ -273,7 +273,7 @@ void GN::gfx::D3DRenderer::bindVtxBinding( uint32_t handle )
 
     if( !mVtxBindings.validHandle(handle) )
     {
-        GNGFX_ERROR( "invalid vertex binding handle : %d", handle );
+        GN_ERROR( "invalid vertex binding handle : %d", handle );
         return;
     }
 

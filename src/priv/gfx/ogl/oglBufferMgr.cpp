@@ -138,7 +138,7 @@ void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 
     if( !mVtxBindings.validHandle(handle) )
     {
-        GNGFX_ERROR( "invalid vertex binding handle : %d", handle );
+        GN_ERROR( "invalid vertex binding handle : %d", handle );
         return;
     }
 
@@ -156,12 +156,12 @@ void GN::gfx::OGLRenderer::bindVtxBufs( const VtxBuf * const buffers[], size_t s
 
     if( start >= MAX_VERTEX_STREAMS )
     {
-        GNGFX_ERROR( "Starting stream index is too large!" );
+        GN_ERROR( "Starting stream index is too large!" );
         return;
     }
     if( start + count > MAX_VERTEX_STREAMS )
     {
-        GNGFX_ERROR( "start+count can't exceed MAX_VERTEX_STREAMS!" );
+        GN_ERROR( "start+count can't exceed MAX_VERTEX_STREAMS!" );
         return;
     }
 
@@ -182,7 +182,7 @@ void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 
     if( index >= MAX_VERTEX_STREAMS )
     {
-        GNGFX_ERROR( "Stream index is too large!" );
+        GN_ERROR( "Stream index is too large!" );
         return;
     }
 

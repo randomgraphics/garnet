@@ -98,7 +98,7 @@ bool GN::gfx::OGLRenderer::changeOptions( RendererOptions ro, bool forceRecreati
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GNGFX_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
+        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
@@ -164,7 +164,7 @@ bool GN::gfx::OGLRenderer::deviceCreate()
     // trigger reset event
     if( !sigDeviceRestore() )
     {
-        GNGFX_ERROR( "fail to process OGL device restore signal!" );
+        GN_ERROR( "fail to process OGL device restore signal!" );
         return false;
     }
 
@@ -197,7 +197,7 @@ bool GN::gfx::OGLRenderer::deviceRestore()
     // trigger reset event
     if( !sigDeviceRestore() )
     {
-        GNGFX_ERROR( "fail to process OGL device restore signal!" );
+        GN_ERROR( "fail to process OGL device restore signal!" );
         return false;
     }
 

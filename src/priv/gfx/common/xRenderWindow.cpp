@@ -57,7 +57,7 @@ Screen * sGetScreenStructureOfWindow( Display * disp, Window win )
 
     if( !disp || !win )
     {
-        GNGFX_ERROR( "invalid display or invalid window!" );
+        GN_ERROR( "invalid display or invalid window!" );
         return NULL;
     }
 
@@ -123,7 +123,7 @@ bool GN::gfx::XRenderWindow::initExternalRenderWindow(
 
     if( !sIsWindow( display, externalWindow ) )
     {
-        GNGFX_ERROR( "External render window is invalid!" );
+        GN_ERROR( "External render window is invalid!" );
         return false;
     }
 
@@ -179,7 +179,7 @@ bool GN::gfx::XRenderWindow::initInternalRenderWindow(
         AutoXPtr<XVisualInfo> vi( glXChooseVisual( mDisplay, scr, attributeList ) );
         if( 0 == vi )
         {
-            GNGFX_ERROR( "Cannot find visual with desired attributes." );
+            GN_ERROR( "Cannot find visual with desired attributes." );
             return false;
         }
 
@@ -187,7 +187,7 @@ bool GN::gfx::XRenderWindow::initInternalRenderWindow(
         Colormap cmap = XCreateColormap( mDisplay, (Window)parentWindow, vi->visual, AllocNone );
         if( 0 == cmap )
         {
-            GNGFX_ERROR( "Cannot allocate colormap." );
+            GN_ERROR( "Cannot allocate colormap." );
             return false;
         }
 
@@ -282,7 +282,7 @@ bool GN::gfx::XRenderWindow::getClientSize( uint32_t & width, uint32_t & height 
 
     if( !sIsWindow( mDisplay, (void*)mWindow ) )
     {
-        GNGFX_ERROR( "XRenderWindow is not initialized!" );
+        GN_ERROR( "XRenderWindow is not initialized!" );
         return false;
     }
 
@@ -337,7 +337,7 @@ bool GN::gfx::XRenderWindow::initDisplay( HandleType display )
         mDisplay = XOpenDisplay( dispStr.cstr() );
         if( 0 == mDisplay )
         {
-            GNGFX_ERROR( "Fail to open display '%s'.", dispStr.cstr() );
+            GN_ERROR( "Fail to open display '%s'.", dispStr.cstr() );
             return false;
         }
 

@@ -75,7 +75,7 @@ void GN::gfx::D3DFont::drawTextW( const wchar_t * text, int x, int y, const Vect
     r = mFont->DrawTextW( 0, text, -1, &rc, DT_CALCRECT, cl );
     if( 0 == r )
     {
-        GNGFX_ERROR( "fail to get text extent!" );
+        GN_ERROR( "fail to get text extent!" );
         return;
     }
 
@@ -84,7 +84,7 @@ void GN::gfx::D3DFont::drawTextW( const wchar_t * text, int x, int y, const Vect
     r = mFont->DrawTextW( 0, text, -1, &rc, DT_LEFT, cl );
     if( 0 == r )
     {
-        GNGFX_ERROR( "fail to draw text!" );
+        GN_ERROR( "fail to draw text!" );
     }
 
     GN_UNGUARD_SLOW;
@@ -137,7 +137,7 @@ bool GN::gfx::D3DFont::createFont()
     SIZE sz;
     if( !::GetTextExtentPoint32W(dc, L"Äã", 1, &sz) )
     {
-        GNGFX_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
+        GN_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
         ::SelectObject( dc, oldfont );
         ::ReleaseDC( hwnd, dc );
         return false;

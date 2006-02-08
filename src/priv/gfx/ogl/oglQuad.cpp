@@ -110,13 +110,13 @@ void GN::gfx::OGLQuad::drawQuads(
 
     if( 0 == positions || 0 == texcoords )
     {
-        GNGFX_ERROR( "NULL parameter(s)!" );
+        GN_ERROR( "NULL parameter(s)!" );
         return;
     }
 
     if( 0 == posStride || 0 == texStride )
     {
-        GNGFX_ERROR( "stride can't be zero!" );
+        GN_ERROR( "stride can't be zero!" );
         return;
     }
 

@@ -69,7 +69,7 @@ uint32_t GN::gfx::BasicRenderer::createRenderStateBlock( const RenderStateBlockD
         handle = mRsbHandles.add( desc );
         if( 0 == handle )
         {
-            GNGFX_ERROR( "Fail to create new render state block!" );
+            GN_ERROR( "Fail to create new render state block!" );
         }
     }
 
@@ -91,7 +91,7 @@ void GN::gfx::BasicRenderer::bindRenderStateBlock( uint32_t handle )
     // check handle
     if( !mRsbHandles.validHandle( handle ) )
     {
-        GNGFX_ERROR( "Invalid render state handle!" );
+        GN_ERROR( "Invalid render state handle!" );
         return;
     }
 
@@ -145,12 +145,12 @@ uint32_t GN::gfx::BasicRenderer::setRenderState( RenderState state, RenderStateV
     // check for invalid parameters
     if( state < 0 || state >= NUM_RENDER_STATES )
     {
-        GNGFX_ERROR( "invalid render state %d!", state );
+        GN_ERROR( "invalid render state %d!", state );
         return 0;
     }
     if( value < 0 || value >= NUM_RENDER_STATE_VALUES )
     {
-        GNGFX_ERROR( "invalid render state value %d!", value );
+        GN_ERROR( "invalid render state value %d!", value );
         return 0;
     }
 

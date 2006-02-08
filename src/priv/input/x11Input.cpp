@@ -76,7 +76,7 @@ bool GN::input::X11Input::attachToWindow( HandleType disp, HandleType win )
 
     if( !disp || !win )
     {
-        GNINPUT_ERROR( "Invalid display or window handle!" );
+        GN_ERROR( "Invalid display or window handle!" );
         return false;
     }
 
@@ -118,7 +118,7 @@ void GN::input::X11Input::processInputEvents()
 
     if( !mDisplay || !mWindow )
     {
-        GNINPUT_ERROR( "X11Input is not initialized" );
+        GN_ERROR( "X11Input is not initialized" );
         return;
     }
 
@@ -132,31 +132,31 @@ void GN::input::X11Input::processInputEvents()
             switch( e.type )
             {
                 case MotionNotify:
-                    //GNINPUT_TRACE( "MotionNotify: x(%d), y(%d)", e.xmotion.x, e.xmotion.y );
+                    //GN_TRACE( "MotionNotify: x(%d), y(%d)", e.xmotion.x, e.xmotion.y );
                     updateMousePosition( e.xmotion.x, e.xmotion.y );
                     break;
 
                 case KeyPress:
-                    //GNINPUT_TRACE( "KeyPress: keycode(%d)", e.xkey.keycode );
+                    //GN_TRACE( "KeyPress: keycode(%d)", e.xkey.keycode );
                     kc = mKeyMap[e.xkey.keycode];
                     if( KEY_NONE != kc ) triggerKeyPress( kc, true );
                     break;
 
                 case KeyRelease:
-                    //GNINPUT_TRACE( "KeyRelease: keycode(%d)", e.xkey.keycode );
+                    //GN_TRACE( "KeyRelease: keycode(%d)", e.xkey.keycode );
                     kc = mKeyMap[e.xkey.keycode];
                     if( KEY_NONE != kc ) triggerKeyPress( kc, false );
                     break;
 
                 case ButtonPress:
-                    //GNINPUT_TRACE( "ButtonPress: button(%d)", e.xbutton.button );
+                    //GN_TRACE( "ButtonPress: button(%d)", e.xbutton.button );
                     kc = (KeyCode)( KEY_MOUSEBTN_0 + e.xbutton.button );
                     if( KEY_MOUSEBTN_FIRST <= kc && kc <= KEY_MOUSEBTN_LAST )
                     triggerKeyPress( kc, true );
                     break;
 
                 case ButtonRelease:
-                    //GNINPUT_TRACE( "ButtonRelease: button(%d)", e.xbutton.button );
+                    //GN_TRACE( "ButtonRelease: button(%d)", e.xbutton.button );
                     kc = (KeyCode)( KEY_MOUSEBTN_0 + e.xbutton.button );
                     if( KEY_MOUSEBTN_FIRST <= kc && kc <= KEY_MOUSEBTN_LAST )
                     triggerKeyPress( kc, false );
@@ -180,7 +180,7 @@ void GN::input::X11Input::getMousePosition( int & x, int & y ) const
 
     if( !mDisplay || !mWindow )
     {
-        GNINPUT_ERROR( "input system is not attached to a window!" );
+        GN_ERROR( "input system is not attached to a window!" );
         return;
     }
 

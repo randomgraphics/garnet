@@ -20,7 +20,7 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceCreate()
     // check multiple render target support
     if( getCaps(CAPS_MAX_RENDER_TARGETS) > MAX_RENDER_TARGETS )
     {
-        GNGFX_ERROR( "Sorry, we currently do not support more then %d simultaneous render targets.", MAX_RENDER_TARGETS );
+        GN_ERROR( "Sorry, we currently do not support more then %d simultaneous render targets.", MAX_RENDER_TARGETS );
         return false;
     }
 
@@ -93,7 +93,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
         // make sure target texture is a RTT
         if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getUsage()) )
         {
-            GNGFX_ERROR( "Only texture with TEXUSAGE_RENDER_TARGET usage can be used as render target." );
+            GN_ERROR( "Only texture with TEXUSAGE_RENDER_TARGET usage can be used as render target." );
             return;
         }
     }
@@ -195,7 +195,7 @@ void GN::gfx::OGLRenderer::setRenderDepth(
     {
         if( tex && !(TEXUSAGE_DEPTH & tex->getUsage()) )
         {
-            GNGFX_ERROR( "Only texture with TEXUSAGE_DEPTH usage can be used as depth texture." );
+            GN_ERROR( "Only texture with TEXUSAGE_DEPTH usage can be used as depth texture." );
             return;
         }
     }

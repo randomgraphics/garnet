@@ -26,31 +26,6 @@
 
 #include "garnet/base/pragma.h"
 
-//!
-//! gfx module fatal error
-//!
-#define GNINPUT_FATAL GN_FATAL
-
-//!
-//! gfx module error log macro
-//!
-#define GNINPUT_ERROR GN_ERROR
-
-//!
-//! gfx module warning log macro
-//!
-#define GNINPUT_WARN GN_WARN
-
-//!
-//! gfx module informational log macro
-//!
-#define GNINPUT_INFO GN_INFO
-
-//!
-//! gfx module tracing macro
-//!
-#define GNINPUT_TRACE GN_TRACE
-
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************

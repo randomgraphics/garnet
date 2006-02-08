@@ -47,7 +47,7 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
         default :
             oglPrim = GL_TRIANGLES;
             numIdx = numPrim * 3;
-            GNGFX_ERROR( "invalid primitve type!" );
+            GN_ERROR( "invalid primitve type!" );
             return false;
     }
 
@@ -111,7 +111,7 @@ bool GN::gfx::OGLRenderer::drawBegin()
 
     if( !makeCurrent() )
     {
-        GNGFX_INFO( "\nCan't set current OGL render context, wait 500 ms ...\n" );
+        GN_INFO( "\nCan't set current OGL render context, wait 500 ms ...\n" );
         sleep( 500 );
         return false;
     }
@@ -236,7 +236,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     if( 0 == ib )
     {
-        GNGFX_ERROR( "There's no index buffer!" );
+        GN_ERROR( "There's no index buffer!" );
         return;
     }
 

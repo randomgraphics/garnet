@@ -81,7 +81,7 @@ bool GN::gfx::OGLBasicShaderGLSL::deviceCreate()
     mHandle = glCreateShaderObjectARB( mUsage );
     if( 0 == mHandle )
     {
-        GNGFX_ERROR( "Fail to generate new program object!" );
+        GN_ERROR( "Fail to generate new program object!" );
         return 0;
     }
     AutoShaderDel autodel( glDeleteObjectARB, mHandle );
@@ -102,7 +102,7 @@ bool GN::gfx::OGLBasicShaderGLSL::deviceCreate()
     {
         char buf[4096];
         GN_OGL_CHECK( glGetInfoLogARB( mHandle, 4095, NULL, buf ) );
-        GNGFX_INFO(
+        GN_INFO(
             "\n========== GLSL shader =========\n"
             "%s\n"
             "\n========= compile error ========\n"
@@ -239,7 +239,7 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
         }
         else
         {
-            GNGFX_ERROR( "'%s' is not a valid GLSL uniform.", u.name.cstr() );
+            GN_ERROR( "'%s' is not a valid GLSL uniform.", u.name.cstr() );
         }
     }
     clearDirtySet();

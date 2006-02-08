@@ -19,7 +19,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     // ignore redundant keyup(s)
     if( keydown == mKeyboardStatus[code].down ) return;
 
-    //GNINPUT_TRACE( "Key press: %s %s", kc2str(code), keydown?"down":"up" );
+    //GN_TRACE( "Key press: %s %s", kc2str(code), keydown?"down":"up" );
 
     // 更新状态键的标志
     mKeyFlags.down = keydown;
@@ -51,7 +51,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
     if( (unsigned char)ch < 128 )
     {
         // ASCII character
-        //GNINPUT_TRACE( "Char press: %s", StrA(&ch,1).cstr() );
+        //GN_TRACE( "Char press: %s", StrA(&ch,1).cstr() );
         sigCharPress( ch );
     }
     else if( mHalfWideChar )
@@ -60,7 +60,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
         wchar_t wch[2];
         ::mbstowcs( wch, mHalfBytes, 2 );
 
-        //GNINPUT_TRACE( "Char press: %s", StrA(mHalfBytes,2).cstr() );
+        //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).cstr() );
         sigCharPress( wch[0] );
 
         // 清除“半字符”标志
