@@ -46,10 +46,10 @@ namespace GN
         //!
         union
         {
-            ElementType x;
-            ElementType u;
-            ElementType s;
-            ElementType width;
+            T x;
+            T u;
+            T s;
+            T width;
         };
 
         //!
@@ -57,10 +57,10 @@ namespace GN
         //!
         union
         {
-            ElementType y;
-            ElementType v;
-            ElementType t;
-            ElementType height;
+            T y;
+            T v;
+            T t;
+            T height;
         };
 
         // ********************************
@@ -71,7 +71,7 @@ namespace GN
         //@{
         Vector2()                                      {}
         Vector2(const Vector2 & v) : x(v.x), y(v.y)    {}
-        Vector2(ElementType ix, ElementType iy) : x(ix), y(iy) {}
+        Vector2(T ix, T iy) : x(ix), y(iy) {}
         //@}
 
         // ********************************
@@ -127,9 +127,9 @@ namespace GN
             return *this;
         }
         //!
-        //! Multiply the Vector2 by a ElementType
+        //! Multiply the Vector2 by a scalar
         //!
-        Vector2 & operator *= ( ElementType f )
+        Vector2 & operator *= ( T f )
         {
             x *= f;
             y *= f;
@@ -145,11 +145,11 @@ namespace GN
             return *this;
         }
         //!
-        //! Divide the Vector2 by a ElementType
+        //! Divide the Vector2 by a scalar
         //!
-        Vector2 & operator /= ( ElementType f )
+        Vector2 & operator /= ( T f )
         {
-            GN_ASSERT( 0.0f != f );
+            GN_ASSERT( ((T)0.0) != f );
             x /= f;
             y /= f;
             return *this;
@@ -159,7 +159,7 @@ namespace GN
         //!
         Vector2 & operator /= ( const Vector2 & v )
         {
-            GN_ASSERT( v.x != 0.0f && v.y != 0.0f );
+            GN_ASSERT( v.x != ((T)0.0) && v.y != ((T)0.0) );
             x /= v.x;
             y /= v.y;
             return *this;
@@ -197,23 +197,23 @@ namespace GN
             return Vector2( a.x * b.x, a.y * b.y );
         }
         //!
-        //! Multiply Vector2 by a ElementType
+        //! Multiply Vector2 by a scalar
         //!
-        friend Vector2 operator * ( const Vector2 & v, ElementType f )
+        friend Vector2 operator * ( const Vector2 & v, T f )
         {
             return Vector2(f * v.x, f * v.y);
         }
         //!
-        //! Multiply Vector2 by a ElementType
+        //! Multiply Vector2 by a scalar
         //!
-        friend Vector2 operator * ( ElementType f, const Vector2 & v )
+        friend Vector2 operator * ( T f, const Vector2 & v )
         {
             return Vector2(f * v.x, f * v.y);
         }
         //!
-        //! Divide Vector2 by a ElementType
+        //! Divide Vector2 by a scalar
         //!
-        friend Vector2 operator / ( const Vector2 & v, ElementType f )
+        friend Vector2 operator / ( const Vector2 & v, T f )
         {
             return Vector2( v.x / f, v.y / f );
         }
@@ -247,7 +247,7 @@ namespace GN
         //!
         //! Set Values
         //!
-        Vector2 & set( ElementType ix, ElementType iy )
+        Vector2 & set( T ix, T iy )
         {
             x = ix;
             y = iy;
@@ -256,14 +256,14 @@ namespace GN
         //!
         //! Get length of a Vector2
         //!
-        ElementType length() const
+        T length() const
         {
-            return(ElementType) sqrt(x*x + y*y);
+            return(T) sqrt(x*x + y*y);
         }
         //!
         //! Get squared length of a Vector2
         //!
-        ElementType lengthSqr() const
+        T lengthSqr() const
         {
             return(x*x + y*y);
         }
@@ -286,7 +286,7 @@ namespace GN
         //!
         //! Normalize a Vector2
         //!
-        static Vector2 normalize( const Vector2 & v )
+        static Vector2 sNormalize( const Vector2 & v )
         {
             Vector2 r;
             normalize( r, v );
@@ -296,9 +296,9 @@ namespace GN
         //!
         //! Normalize a Vector2
         //!
-        static void normalize( Vector2 & o, const Vector2 & i )
+        static void sNormalize( Vector2 & o, const Vector2 & i )
         {
-            ElementType m = i.length();
+            T m = i.length();
 
             if( m > 0.0F )
             {
@@ -308,15 +308,15 @@ namespace GN
             }
 			else
 			{
-				o.x = 0.0f;
-				o.y = 0.0f;
+				o.x = ((T)0.0);
+				o.y = ((T)0.0);
 			}
         }
 
         //!
         //! dot production
         //!
-        static ElementType dot( const Vector2 & v1, const Vector2 & v2 )
+        static T sDot( const Vector2 & v1, const Vector2 & v2 )
         {
             return v1.x * v2.x + v1.y * v2.y;
         }
@@ -343,9 +343,9 @@ namespace GN
         //!
         union
         {
-            ElementType x;
-            ElementType r;
-            ElementType pitch;
+            T x;
+            T r;
+            T pitch;
         };
 
         //!
@@ -353,9 +353,9 @@ namespace GN
         //!
         union
         {
-            ElementType y;
-            ElementType g;
-            ElementType yaw;
+            T y;
+            T g;
+            T yaw;
         };
 
         //!
@@ -363,9 +363,9 @@ namespace GN
         //!
         union
         {
-            ElementType z;
-            ElementType b;
-            ElementType roll;
+            T z;
+            T b;
+            T roll;
         };
 
         // ********************************
@@ -376,13 +376,13 @@ namespace GN
         //@{
         Vector3()
         {}
-        Vector3( ElementType ix, ElementType iy, ElementType iz )
+        Vector3( T ix, T iy, T iz )
             : x(ix), y(iy), z(iz)
         {}
         Vector3( const Vector3 & v )
             : x(v.x), y(v.y), z(v.z)
         {}
-        Vector3( const Vector2<ElementType> & v, ElementType iz )
+        Vector3( const Vector2<T> & v, T iz )
             : x(v.x), y(v.y), z(iz)
         {}
         //@}
@@ -428,9 +428,9 @@ namespace GN
             return *this;
         }
         //!
-        //! Multiply the Vector3 by a ElementType
+        //! Multiply the Vector3 by a scalar
         //!
-        Vector3 &operator *= ( ElementType f )
+        Vector3 &operator *= ( T f )
         {
             x *= f;
             y *= f;
@@ -448,11 +448,11 @@ namespace GN
             return *this;
         }
         //!
-        //! Divide the Vector3 by a ElementType
+        //! Divide the Vector3 by a scalar
         //!
-        Vector3 & operator /= ( ElementType f )
+        Vector3 & operator /= ( T f )
         {
-            GN_ASSERT( 0.0f != f );
+            GN_ASSERT( ((T)0.0) != f );
             x /= f;
             y /= f;
             z /= f;
@@ -463,7 +463,7 @@ namespace GN
         //!
         Vector3 & operator /= ( const Vector3 & v )
         {
-            GN_ASSERT( v.x != 0.0f && v.y != 0.0f && v.z != 0.0f );
+            GN_ASSERT( v.x != ((T)0.0) && v.y != ((T)0.0) && v.z != ((T)0.0) );
             x /= v.x;
             y /= v.y;
             z /= v.z;
@@ -516,23 +516,23 @@ namespace GN
             return Vector3( a.x * b.x, a.y * b.y, a.z*b.z );
         }
         //!
-        //! Multiply Vector3 by a ElementType
+        //! Multiply Vector3 by a scalar
         //!
-        friend Vector3 operator * ( const Vector3 & v, ElementType f )
+        friend Vector3 operator * ( const Vector3 & v, T f )
         {
             return Vector3(f * v.x, f * v.y, f * v.z);
         }
         //!
-        //! Multiply Vector3 by a ElementType
+        //! Multiply Vector3 by a scalar
         //!
-        friend Vector3 operator * ( ElementType f, const Vector3 & v )
+        friend Vector3 operator * ( T f, const Vector3 & v )
         {
             return Vector3(f * v.x, f * v.y, f * v.z);
         }
         //!
-        //! Divide Vector3 by a ElementType
+        //! Divide Vector3 by a scalar
         //!
-        friend Vector3 operator / ( const Vector3 & v, ElementType f )
+        friend Vector3 operator / ( const Vector3 & v, T f )
         {
             return Vector3(v.x / f, v.y / f, v.z / f);
         }
@@ -566,7 +566,7 @@ namespace GN
         //!
         //! Set Values
         //!
-        Vector3 & set( ElementType ix, ElementType iy, ElementType iz )
+        Vector3 & set( T ix, T iy, T iz )
         {
             x = ix;
             y = iy;
@@ -576,7 +576,7 @@ namespace GN
         //!
         //! Set Values
         //!
-        Vector3 & set( const Vector2<T> & ixy, ElementType iz )
+        Vector3 & set( const Vector2<T> & ixy, T iz )
         {
             x = ixy.x;
             y = ixy.y;
@@ -586,16 +586,16 @@ namespace GN
         //!
         //! Get length of a Vector3
         //!
-        ElementType length() const
+        T length() const
         {
-            return(ElementType) sqrt(x*x + y*y + z*z);
+            return (T)sqrt(x*x + y*y + z*z);
         }
         //!
         //! Get squared length of a Vector3
         //!
-        ElementType lengthSqr() const
+        T lengthSqr() const
         {
-            return(x*x + y*y + z*z);
+            return (x*x + y*y + z*z);
         }
         //!
         //! Does Vector3 equal (0, 0, 0)?
@@ -615,7 +615,7 @@ namespace GN
         //!
         //! Normalize a Vector3
         //!
-        static Vector3 normalize( const Vector3 & v )
+        static Vector3 sNormalize( const Vector3 & v )
         {
             Vector3 r;
             normalize( r, v );
@@ -624,9 +624,9 @@ namespace GN
         //!
         //! Normalize a Vector3
         //!
-        static void normalize( Vector3 & o, const Vector3 & i )
+        static void sNormalize( Vector3 & o, const Vector3 & i )
         {
-            ElementType m = i.length();
+            T m = i.length();
 
             if( m > 0.0F )
             {
@@ -637,22 +637,22 @@ namespace GN
             }
 			else
 			{
-				o.x = 0.0f;
-				o.y = 0.0f;
-				o.z = 0.0f;
+				o.x = ((T)0.0);
+				o.y = ((T)0.0);
+				o.z = ((T)0.0);
 			}
         }
         //!
         //! dot production
         //!
-        static ElementType dot( const Vector3 & v1, const Vector3 & v2 )
+        static T sDot( const Vector3 & v1, const Vector3 & v2 )
         {
             return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
         }
         //!
         //! get cross product of v1 and v2, and store the result into this one
         //!
-        static Vector3 cross( const Vector3 & v1, const Vector3 & v2 )
+        static Vector3 sCross( const Vector3 & v1, const Vector3 & v2 )
         {
             return Vector3 ( v1.y * v2.z - v1.z * v2.y,
                              v1.z * v2.x - v1.x * v2.z,
@@ -661,11 +661,31 @@ namespace GN
         //!
         //! get cross product of v1 and v2, and store the result into o
         //!
-        static void cross( Vector3 & o, const Vector3 & v1, const Vector3 & v2 )
+        static void sCross( Vector3 & o, const Vector3 & v1, const Vector3 & v2 )
         {
             o.set( v1.y * v2.z - v1.z * v2.y,
                    v1.z * v2.x - v1.x * v2.z,
                    v1.x * v2.y - v1.y * v2.x);
+        }
+        //!
+        //! Get distance between two vectors
+        //!
+        static T sDistance( const Vector3 & a, const Vector3 & b )
+        {
+            T x = a.x - b.x;
+            T y = a.y - b.y;
+            T z = a.z - b.z;
+            return (T)sqrt( x*x + y*y + z*z );
+        }
+        //!
+        //! Get distance square between two vectors
+        //!
+        static T sDistanceSqr( const Vector3 & a, const Vector3 & b )
+        {
+            T x = a.x - b.x;
+            T y = a.y - b.y;
+            T z = a.z - b.z;
+            return x*x + y*y + z*z;
         }
     };
 
@@ -690,8 +710,8 @@ namespace GN
         //!
         union
         {
-            ElementType x;
-            ElementType r;
+            T x;
+            T r;
         };
 
         //!
@@ -699,8 +719,8 @@ namespace GN
         //!
         union
         {
-            ElementType y;
-            ElementType g;
+            T y;
+            T g;
         };
 
         //!
@@ -708,8 +728,8 @@ namespace GN
         //!
         union
         {
-            ElementType z;
-            ElementType b;
+            T z;
+            T b;
         };
 
         //!
@@ -717,8 +737,8 @@ namespace GN
         //!
         union
         {
-            ElementType w;
-            ElementType a;
+            T w;
+            T a;
         };
 
         // ********************************
@@ -728,7 +748,7 @@ namespace GN
         //@{
         Vector4() {}
         //
-        Vector4( ElementType ix, ElementType iy, ElementType iz, ElementType iw )
+        Vector4( T ix, T iy, T iz, T iw )
             : x(ix), y(iy), z(iz), w(iw)
         {}
         //
@@ -736,11 +756,11 @@ namespace GN
             : x(v.x), y(v.y), z(v.z), w(v.w)
         {}
         //
-        Vector4( const Vector2<ElementType> & v, ElementType iz, ElementType iw )
+        Vector4( const Vector2<T> & v, T iz, T iw )
             : x(v.x), y(v.y), z(iz), w(iw)
         {}
         //
-        Vector4( const Vector3<ElementType> & v, ElementType iw )
+        Vector4( const Vector3<T> & v, T iw )
             : x(v.x), y(v.y), z(v.z), w(iw)
         {}
         //@}
@@ -788,9 +808,9 @@ namespace GN
             return *this;
         }
         //!
-        //! Multiply the Vector4 by a ElementType
+        //! Multiply the Vector4 by a scalar
         //!
-        Vector4 & operator *= ( ElementType f )
+        Vector4 & operator *= ( T f )
         {
             x *= f;
             y *= f;
@@ -810,11 +830,11 @@ namespace GN
             return *this;
         }
         //!
-        //! Divide the Vector4 by a ElementType
+        //! Divide the Vector4 by a scalar
         //!
-        Vector4 & operator /= ( ElementType f )
+        Vector4 & operator /= ( T f )
         {
-            GN_ASSERT( 0.0f != f );
+            GN_ASSERT( ((T)0.0) != f );
             x /= f;
             y /= f;
             z /= f;
@@ -826,7 +846,7 @@ namespace GN
         //!
         Vector4 & operator /= ( const Vector4 & v )
         {
-            GN_ASSERT( v.x != 0.0f && v.y != 0.0f && v.z != 0.0f && v.w != 0.0f );
+            GN_ASSERT( v.x != ((T)0.0) && v.y != ((T)0.0) && v.z != ((T)0.0) && v.w != ((T)0.0) );
             x /= v.x;
             y /= v.y;
             z /= v.z;
@@ -882,23 +902,23 @@ namespace GN
             return Vector4( a.x * b.x, a.y * b.y, a.z*b.z, a.w*b.w );
         }
         //!
-        //! Multiply Vector4 by a ElementType
+        //! Multiply Vector4 by a scalar
         //!
-        friend Vector4 operator * ( const Vector4 & v, ElementType f )
+        friend Vector4 operator * ( const Vector4 & v, T f )
         {
             return Vector4(f * v.x, f * v.y, f * v.z, f * v.w);
         }
         //!
-        //! Multiply Vector4 by a ElementType
+        //! Multiply Vector4 by a scalar
         //!
-        friend Vector4 operator * ( ElementType f, const Vector4 & v )
+        friend Vector4 operator * ( T f, const Vector4 & v )
         {
             return Vector4(f * v.x, f * v.y, f * v.z, f * v.w);
         }
         //!
-        //! Divide Vector4 by a ElementType
+        //! Divide Vector4 by a scalar
         //!
-        friend Vector4 operator / ( const Vector4 & v, ElementType f )
+        friend Vector4 operator / ( const Vector4 & v, T f )
         {
             return Vector4(v.x / f, v.y / f, v.z / f, v.w / f);
         }
@@ -932,7 +952,7 @@ namespace GN
         //!
         //! Set Values
         //!
-        Vector4 & set( ElementType ix, ElementType iy, ElementType iz, ElementType iw )
+        Vector4 & set( T ix, T iy, T iz, T iw )
         {
             x = ix;
             y = iy;
@@ -943,7 +963,7 @@ namespace GN
         //!
         //! Set Values
         //!
-        Vector4 & set( const Vector2<ElementType> & ixy, ElementType iz, ElementType iw )
+        Vector4 & set( const Vector2<T> & ixy, T iz, T iw )
         {
             x = ixy.x;
             y = ixy.y;
@@ -954,7 +974,7 @@ namespace GN
         //!
         //! Set Values
         //!
-        Vector4 & set( const Vector3<ElementType> & ixyz, ElementType iw )
+        Vector4 & set( const Vector3<T> & ixyz, T iw )
         {
             x = ixyz.x;
             y = ixyz.y;
@@ -965,14 +985,14 @@ namespace GN
         //!
         //! Get length of a Vector4
         //!
-        ElementType length() const
+        T length() const
         {
-            return(ElementType) sqrt(x*x + y*y + z*z + w*w);
+            return(T) sqrt(x*x + y*y + z*z + w*w);
         }
         //!
         //! Get squared length of a Vector4
         //!
-        ElementType lengthSqr() const
+        T lengthSqr() const
         {
             return(x*x + y*y + z*z + w*w);
         }
@@ -987,7 +1007,7 @@ namespace GN
         //!
         //! Normalize a Vector4
         //!
-        static Vector4 normalize( const Vector4 & v )
+        static Vector4 sNormalize( const Vector4 & v )
         {
             Vector4 r;
             normalize( r, v );
@@ -996,9 +1016,9 @@ namespace GN
         //!
         //! Normalize a Vector4
         //!
-        static void normalize( Vector4 & o, const Vector4 & i )
+        static void sNormalize( Vector4 & o, const Vector4 & i )
         {
-            ElementType m = i.length();
+            T m = i.length();
 
             if( m > 0.0F )
             {
@@ -1010,24 +1030,24 @@ namespace GN
             }
 			else
 			{
-				o.x = 0.0f;
-				o.y = 0.0f;
-				o.z = 0.0f;
-				o.w = 0.0f;
+				o.x = ((T)0.0);
+				o.y = ((T)0.0);
+				o.z = ((T)0.0);
+				o.w = ((T)0.0);
 			}
         }
         //!
         //! Convert to a 3D vector (divide by w)
         //!
-        Vector3<ElementType> toVec3() const
+        Vector3<T> toVec3() const
         {
-            Vector3<ElementType> ret( x / w, y / w, z / w );
+            Vector3<T> ret( x / w, y / w, z / w );
             return ret;
         }
         //!
         //! Convert to a 3D vector (divide by w)
         //!
-        Vector3<ElementType> & toVec3( Vector3<ElementType> & o ) const
+        Vector3<T> & toVec3( Vector3<T> & o ) const
         {
             o.set( x / w, y / w, z / w );
             return o;
@@ -1035,7 +1055,7 @@ namespace GN
         //!
         //! dot production
         //!
-        static ElementType dot( const Vector4 & v1, const Vector4 & v2 )
+        static T sDot( const Vector4 & v1, const Vector4 & v2 )
         {
             return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
         }
@@ -1080,9 +1100,9 @@ namespace GN
         Matrix33() {}
         //
         Matrix33(
-            ElementType _00, ElementType _01, ElementType _02,
-            ElementType _10, ElementType _11, ElementType _12,
-            ElementType _20, ElementType _21, ElementType _22 )
+            T _00, T _01, T _02,
+            T _10, T _11, T _12,
+            T _20, T _21, T _22 )
         {
             rows[0].set(_00,_01,_02);
             rows[1].set(_10,_11,_12);
@@ -1153,9 +1173,9 @@ namespace GN
         //!
         Matrix33<T> & operator *= ( const Matrix33<T> & m );
         //!
-        //! Multiply the Matrix33 by a ElementType
+        //! Multiply the Matrix33 by a scalar
         //!
-        Matrix33 & operator *= ( ElementType f )
+        Matrix33 & operator *= ( T f )
         {
             rows[0] *= f;
             rows[1] *= f;
@@ -1226,18 +1246,18 @@ namespace GN
             return ret;
         }
         //!
-        //! Multiply Matrix33 by a ElementType
+        //! Multiply Matrix33 by a scalar
         //!
-        friend Matrix33 operator * ( const Matrix33 & m, ElementType f )
+        friend Matrix33 operator * ( const Matrix33 & m, T f )
         {
             Matrix33 ret(m);
             ret *= f;
             return ret;
         }
         //!
-        //! Multiply Matrix33 by a ElementType
+        //! Multiply Matrix33 by a scalar
         //!
-        friend Matrix33 operator * ( ElementType f, const Matrix33 & m )
+        friend Matrix33 operator * ( T f, const Matrix33 & m )
         {
             Matrix33 ret(m);
             ret *= f;
@@ -1272,7 +1292,7 @@ namespace GN
         //!
         //! 求转置矩阵
         //!
-        static void transpose( Matrix33 & dst, const Matrix33 & src )
+        static void sTranspose( Matrix33 & dst, const Matrix33 & src )
         {
             dst = src;
             dst.transpose();
@@ -1280,7 +1300,7 @@ namespace GN
         //!
         //! 求转置矩阵
         //!
-        static Matrix33 transpose( const Matrix33 & src )
+        static Matrix33 sTranspose( const Matrix33 & src )
         {
             Matrix33 r(src);
             r.transpose();
@@ -1293,7 +1313,7 @@ namespace GN
         //!
         //! 求逆矩阵
         //!
-        static void invert( Matrix33 & dst, const Matrix33 & src )
+        static void sInvert( Matrix33 & dst, const Matrix33 & src )
         {
             dst = src;
             dst.invert();
@@ -1301,7 +1321,7 @@ namespace GN
         //!
         //! 求逆矩阵
         //!
-        static Matrix33 invert( const Matrix33 & src )
+        static Matrix33 sInvert( const Matrix33 & src )
         {
             Matrix33 r(src);
             r.invert();
@@ -1323,26 +1343,26 @@ namespace GN
         //!
         //! \param angle Angle of rotation in radians
         //!
-        Matrix33 & rotateX( ElementType angle );
+        Matrix33 & rotateX( T angle );
         //!
         //! 求旋转矩阵
         //!
         //! \param angle Angle of rotation in radians
         //!
-        Matrix33 & rotateY( ElementType angle );
+        Matrix33 & rotateY( T angle );
         //!
         //! 求旋转矩阵
         //!
         //! \param angle Angle of rotation in radians
         //!
-        Matrix33 & rotateZ( ElementType angle );
+        Matrix33 & rotateZ( T angle );
         //!
         //! 求旋转矩阵
         //!
         //! \param v     Axis of rotation
         //! \param angle Angle of rotation in radians
         //!
-        Matrix33 & rotate( const Vector3<T> & v, ElementType angle );
+        Matrix33 & rotate( const Vector3<T> & v, T angle );
         //!
         //! 求左手lookat矩阵
         //!
@@ -1422,10 +1442,10 @@ namespace GN
         Matrix44() {};
         //
         Matrix44(
-            ElementType _00, ElementType _01, ElementType _02, ElementType _03,
-            ElementType _10, ElementType _11, ElementType _12, ElementType _13,
-            ElementType _20, ElementType _21, ElementType _22, ElementType _23,
-            ElementType _30, ElementType _31, ElementType _32, ElementType _33 )
+            T _00, T _01, T _02, T _03,
+            T _10, T _11, T _12, T _13,
+            T _20, T _21, T _22, T _23,
+            T _30, T _31, T _32, T _33 )
         {
             rows[0].set(_00,_01,_02,_03);
             rows[1].set(_10,_11,_12,_13);
@@ -1445,7 +1465,7 @@ namespace GN
             const Matrix33<T> & m33,
             const Vector3<T>  & col3 = Vector3<T>(0,0,0),
             const Vector3<T>  & row3 = Vector3<T>(0,0,0),
-            ElementType        _33   = 1.0f )
+            T        _33   = ((T)1.0) )
         {
             rows[0].set( m33[0], col3.x );
             rows[1].set( m33[1], col3.y );
@@ -1490,10 +1510,10 @@ namespace GN
         //!
         Matrix44 & operator = ( const Matrix33<T> & m )
         {
-            rows[0].set( m[0], 0.0f );
-            rows[1].set( m[1], 0.0f );
-            rows[2].set( m[2], 0.0f );
-            rows[3].set( 0.0f, 0.0f, 0.0f, 1.0f );
+            rows[0].set( m[0], ((T)0.0) );
+            rows[1].set( m[1], ((T)0.0) );
+            rows[2].set( m[2], ((T)0.0) );
+            rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
         //!
@@ -1523,9 +1543,9 @@ namespace GN
         //!
         Matrix44<T> & operator *= ( const Matrix44<T> & m );
         //!
-        //! Multiply the Matrix44 by a ElementType
+        //! Multiply the Matrix44 by a scalar
         //!
-        Matrix44 & operator *= ( ElementType f )
+        Matrix44 & operator *= ( T f )
         {
             rows[0] *= f;
             rows[1] *= f;
@@ -1606,18 +1626,18 @@ namespace GN
             return ret;
         }
         //!
-        //! Multiply Matrix44 by a ElementType
+        //! Multiply Matrix44 by a scalar
         //!
-        friend Matrix44 operator * ( const Matrix44 & m, ElementType f )
+        friend Matrix44 operator * ( const Matrix44 & m, T f )
         {
             Matrix44 ret(m);
             ret *= f;
             return ret;
         }
         //!
-        //! Multiply Matrix44 by a ElementType
+        //! Multiply Matrix44 by a scalar
         //!
-        friend Matrix44 operator * ( ElementType f, const Matrix44 & m )
+        friend Matrix44 operator * ( T f, const Matrix44 & m )
         {
             Matrix44 ret(m);
             ret *= f;
@@ -1635,7 +1655,7 @@ namespace GN
         Matrix44 & set( const Matrix33<T> & m33,
                         const Vector3<T> & col3 = Vector3<T>(0,0,0),
                         const Vector3<T> & row3 = Vector3<T>(0,0,0),
-                        ElementType         _33 = 1.0f )
+                        T         _33 = ((T)1.0) )
         {
             rows[0].set( m33[0], col3.x );
             rows[1].set( m33[1], col3.y );
@@ -1648,10 +1668,10 @@ namespace GN
         //!
         Matrix44 & identify()
         {
-            rows[0].set( 1.0f, 0.0f, 0.0f, 0.0f );
-            rows[1].set( 0.0f, 1.0f, 0.0f, 0.0f );
-            rows[2].set( 0.0f, 0.0f, 1.0f, 0.0f );
-            rows[3].set( 0.0f, 0.0f, 0.0f, 1.0f );
+            rows[0].set( ((T)1.0), ((T)0.0), ((T)0.0), ((T)0.0) );
+            rows[1].set( ((T)0.0), ((T)1.0), ((T)0.0), ((T)0.0) );
+            rows[2].set( ((T)0.0), ((T)0.0), ((T)1.0), ((T)0.0) );
+            rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
         //!
@@ -1670,7 +1690,7 @@ namespace GN
         //!
         //! 求转置矩阵
         //!
-        static void transpose( Matrix44 & dst, const Matrix44 & src )
+        static void sTranspose( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
             dst.transpose();
@@ -1678,7 +1698,7 @@ namespace GN
         //!
         //! 求转置矩阵
         //!
-        static Matrix44 transpose( const Matrix44 & src )
+        static Matrix44 sTranspose( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.transpose();
@@ -1691,7 +1711,7 @@ namespace GN
         //!
         //! 求逆矩阵
         //!
-        static void invert( Matrix44 & dst, const Matrix44 & src )
+        static void sInvert( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
             dst.invert();
@@ -1699,7 +1719,7 @@ namespace GN
         //!
         //! 求逆矩阵
         //!
-        static Matrix44 invert( const Matrix44 & src )
+        static Matrix44 sInvert( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.invert();
@@ -1716,7 +1736,7 @@ namespace GN
         //!
         //! inverse and tranpose
         //!
-        static void invtrans( Matrix44 & dst, const Matrix44 & src )
+        static void sInvtrans( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
             dst.invtrans();
@@ -1724,7 +1744,7 @@ namespace GN
         //!
         //! inverse and tranpose
         //!
-        static Matrix44 invtrans( const Matrix44 & src )
+        static Matrix44 sInvtrans( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.invtrans();
@@ -1735,24 +1755,24 @@ namespace GN
         //!
         //! \param angle Angle of rotation in radians
         //!
-        Matrix44 & rotateX( ElementType angle );
+        Matrix44 & rotateX( T angle );
         //!
         //! 求旋转矩阵
         //!
         //! \param angle Angle of rotation in radians
         //!
-        Matrix44 & rotateY( ElementType angle );
+        Matrix44 & rotateY( T angle );
         //!
         //! 求旋转矩阵
         //!
         //! \param angle Angle of rotation in radians
-        Matrix44 & rotateZ( ElementType angle );
+        Matrix44 & rotateZ( T angle );
         //!
         //! 求旋转矩阵
         //!
         //! \param v     Axis of rotation
         //! \param angle Angle of rotation in radians
-        Matrix44 & rotate( const Vector3<T> & v, ElementType angle );
+        Matrix44 & rotate( const Vector3<T> & v, T angle );
         //!
         //! 求平移矩阵
         //!
@@ -1763,7 +1783,7 @@ namespace GN
         //! 0, 0, 1, z   \n
         //! 0, 0, 0, 1
         //!
-        Matrix44 & translate( ElementType x, ElementType y = .0f, ElementType z = .0f )
+        Matrix44 & translate( T x, T y = (T)0, T z = (T)0 )
         {
             identify();
             rows[0][3] = x;
@@ -1783,7 +1803,7 @@ namespace GN
         //!
         Matrix44 & translate( const Vector2<T> & v )
         {
-            return translate( v.x, v.y, .0f );
+            return translate( v.x, v.y, (T)0 );
         }
         //!
         //! 求Lookat矩阵
@@ -1838,27 +1858,27 @@ namespace GN
         //!     同的变换矩阵。 因此特别设置了两套分别适用于opengl和directx的计算
         //!     投影矩阵的函数。
         //!
-        Matrix44 & orthoOGLLh( ElementType left, ElementType right,
-                               ElementType bottom, ElementType top,
-                               ElementType znear, ElementType zfar );
+        Matrix44 & orthoOGLLh( T left, T right,
+                               T bottom, T top,
+                               T znear, T zfar );
 
         //!
         //! 求右手正交投影矩阵
         //!
         //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoOGLRh( ElementType left, ElementType right,
-                               ElementType bottom, ElementType top,
-                               ElementType znear, ElementType zfar );
+        Matrix44 & orthoOGLRh( T left, T right,
+                               T bottom, T top,
+                               T znear, T zfar );
 
         //!
         //! 求正交投影矩阵
         //!
         //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoOGL( ElementType left, ElementType right,
-                             ElementType bottom, ElementType top,
-                             ElementType znear, ElementType zfar )
+        Matrix44 & orthoOGL( T left, T right,
+                             T bottom, T top,
+                             T znear, T zfar )
         {
 #if GN_LEFT_HAND
             return orthoOGLLh( left, right, bottom, top, znear, zfar );
@@ -1871,25 +1891,25 @@ namespace GN
         //!
         //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoD3DLh( ElementType left, ElementType right,
-                               ElementType bottom, ElementType top,
-                               ElementType znear, ElementType zfar );
+        Matrix44 & orthoD3DLh( T left, T right,
+                               T bottom, T top,
+                               T znear, T zfar );
         //!
         //! 求右手正交投影矩阵
         //!
         //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoD3DRh( ElementType left, ElementType right,
-                               ElementType bottom, ElementType top,
-                               ElementType znear, ElementType zfar );
+        Matrix44 & orthoD3DRh( T left, T right,
+                               T bottom, T top,
+                               T znear, T zfar );
         //!
         //! 求正交投影矩阵
         //!
         //! \sa orthoOGLLh
         //!
-        Matrix44 & orthoD3D( ElementType left, ElementType right,
-                             ElementType bottom, ElementType top,
-                             ElementType znear, ElementType zfar )
+        Matrix44 & orthoD3D( T left, T right,
+                             T bottom, T top,
+                             T znear, T zfar )
         {
 #if GN_LEFT_HAND
             return orthoD3DLh( left, right, bottom, top, znear, zfar );
@@ -1906,22 +1926,22 @@ namespace GN
         //!
         //! \note fovy和ratio不能为0，znear不能等于zfar，否则会引起除0错误。
         //!
-        Matrix44 & perspectiveOGLLh( ElementType fovy, ElementType ratio,
-                                     ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveOGLLh( T fovy, T ratio,
+                                     T znear, T zfar );
         //!
         //! 求右手透视投影矩阵
         //!
         //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveOGLRh( ElementType fovy, ElementType ratio,
-                                     ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveOGLRh( T fovy, T ratio,
+                                     T znear, T zfar );
         //!
         //! 求透视投影矩阵
         //!
         //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveOGL( ElementType fovy, ElementType ratio,
-                                   ElementType znear, ElementType zfar )
+        Matrix44 & perspectiveOGL( T fovy, T ratio,
+                                   T znear, T zfar )
         {
 #if GN_LEFT_HAND
             return perspectiveOGLLh( fovy, ratio, znear, zfar );
@@ -1934,22 +1954,22 @@ namespace GN
         //!
         //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveD3DLh( ElementType fovy, ElementType ratio,
-                                     ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveD3DLh( T fovy, T ratio,
+                                     T znear, T zfar );
         //!
         //! 求右手透视投影矩阵
         //!
         //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveD3DRh( ElementType fovy, ElementType ratio,
-                                     ElementType znear, ElementType zfar );
+        Matrix44 & perspectiveD3DRh( T fovy, T ratio,
+                                     T znear, T zfar );
         //!
         //! 求透视投影矩阵
         //!
         //! \sa perspectiveOGLLh
         //!
-        Matrix44 & perspectiveD3D( ElementType fovy, ElementType ratio,
-                                   ElementType znear, ElementType zfar )
+        Matrix44 & perspectiveD3D( T fovy, T ratio,
+                                   T znear, T zfar )
         {
 #if GN_LEFT_HAND
             return perspectiveD3DLh( fovy, ratio, znear, zfar );
@@ -1966,9 +1986,9 @@ namespace GN
             dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z + rows[1].w;
             dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z + rows[2].w;
 
-            float k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
+            T k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
 
-            if( .0f != k ) dst /= k;
+            if( ((T)0) != k ) dst /= k;
             else GN_WARN( "the vertex is transformed to infinite place" );
         }
         //!
@@ -2043,7 +2063,7 @@ namespace GN
         typedef T ElementType;
 
         Vector3<T>  v; //!< axis
-        ElementType w; //!< W-value
+        T w; //!< W-value
 
         static Quaternion IDENTITY; //!< identity quaternion
 
@@ -2057,7 +2077,7 @@ namespace GN
         //
         Quaternion( const Quaternion & q ) : v(q.v), w(q.w) {}
         //
-        Quaternion( ElementType x_, ElementType y_, ElementType z_, ElementType w_ )
+        Quaternion( T x_, T y_, T z_, T w_ )
             :v(x_,y_,z_), w(w_)
         {}
         //@}
@@ -2079,7 +2099,7 @@ namespace GN
         //!
         //! Array indexing
         //!
-        ElementType operator [] ( size_t i ) const
+        T operator [] ( size_t i ) const
         {
             GN_ASSERT( i < 4 );
             return *(&v.x + i);
@@ -2116,7 +2136,7 @@ namespace GN
         //!
         //! index operator
         //!
-        ElementType & operator [] ( unsigned int i )
+        T & operator [] ( unsigned int i )
         {
             GN_ASSERT( i < 4 );
             return *(&v.x + i);
@@ -2132,12 +2152,12 @@ namespace GN
         //!
         Quaternion & identify()
         {
-            w = 1.0f; v.set(0, 0, 0); return *this;
+            w = ((T)1.0); v.set(0, 0, 0); return *this;
         }
         //!
         //! get norm
         //!
-        ElementType getNormal() const
+        T getNormal() const
         {
             return w * w + Vector3<T>::dot( v, v );
         }
@@ -2146,9 +2166,9 @@ namespace GN
         //!
         Quaternion & normalize()
         {
-            ElementType n = (ElementType)sqrt( getNormal() );
-            if (n > 0.0f) n = 1/n;
-            else n = 0.0f;
+            T n = (T)sqrt( getNormal() );
+            if (n > ((T)0.0)) n = 1/n;
+            else n = ((T)0.0);
 
             v *= n;
             w *= n;
@@ -2157,7 +2177,7 @@ namespace GN
         //!
         //! normalize a quaternion
         //!
-        static void normalize( Quaternion & dst, const Quaternion & src )
+        static void sNormalize( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
             dst.normalize();
@@ -2165,7 +2185,7 @@ namespace GN
         //!
         //! normalize a quaternion
         //!
-        static Quaternion normalize( const Quaternion & src )
+        static Quaternion sNormalize( const Quaternion & src )
         {
             Quaternion r(src);
             r.normalize();
@@ -2181,7 +2201,7 @@ namespace GN
         //!
         //! conjugate
         //!
-        static void conjugate( Quaternion & dst, const Quaternion & src )
+        static void sConjugate( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
             dst.conjugate();
@@ -2189,7 +2209,7 @@ namespace GN
         //!
         //! conjugate
         //!
-        static Quaternion conjugate( const Quaternion & src )
+        static Quaternion sConjugate( const Quaternion & src )
         {
             Quaternion r(src);
             r.conjugate();
@@ -2200,19 +2220,19 @@ namespace GN
         //!
         Quaternion & invert()
         {
-            ElementType l = getNormal();
+            T l = getNormal();
 
-            if (l > 0.0f)
+            if (l > ((T)0.0))
             { this->conjugate(); v /= l; w /= l; }
             else
-            { w = 0.0f; v.set(0, 0, 0); }
+            { w = ((T)0.0); v.set(0, 0, 0); }
 
             return *this;
         }
         //!
         //! invert
         //!
-        static void invert( Quaternion & dst, const Quaternion & src )
+        static void sinvert( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
             dst.invert();
@@ -2220,7 +2240,7 @@ namespace GN
         //!
         //! invert
         //!
-        static Quaternion invert( const Quaternion & src )
+        static Quaternion sInvert( const Quaternion & src )
         {
             Quaternion r(src);
             r.invert();
@@ -2233,9 +2253,9 @@ namespace GN
         //! \param angle Angle of rotation, in radians
         //!
         Quaternion &
-        fromRotation( const Vector3<T> & axis, const ElementType angle )
+        fromRotation( const Vector3<T> & axis, const T angle )
         {
-            ElementType r = angle / 2.0f;
+            T r = angle / (T)2.0;
             v = axis * sin(r);
             w = cos(r);
 
@@ -2249,17 +2269,17 @@ namespace GN
         Quaternion & fromArc( const Vector3<T> & v1, const Vector3<T> & v2 )
         {
             // make sure v1 and v2 are unit vector
-            GN_ASSERT( abs( 1.0f - v1.length() ) < 0.0001f &&
-                       abs( 1.0f - v2.length() ) < 0.0001f );
+            GN_ASSERT( abs( ((T)1.0) - v1.length() ) < (T)0.0001 &&
+                       abs( ((T)1.0) - v2.length() ) < (T)0.0001 );
 
-            ElementType  d = dot( v1, v2 );
-            ElementType  s = (ElementType)sqrt( ( 1 + d ) * 2 );
+            T  d = dot( v1, v2 );
+            T  s = (T)sqrt( ( 1 + d ) * 2 );
             Vector3<T> c = cross( v1, v2 );
 
             v.x = c.x / s;
             v.y = c.y / s;
             v.z = c.z / s;
-            w   = s / 2.0f;
+            w   = s / (T)2.0;
 
             return *this;
         }
@@ -2268,16 +2288,16 @@ namespace GN
         //!
         //! \param pitch, yaw, roll   Euler angles in radians
         //!
-        Quaternion & fromEuler( ElementType pitch,
-                                ElementType yaw,
-                                ElementType roll )
+        Quaternion & fromEuler( T pitch,
+                                T yaw,
+                                T roll )
         {
-            float cy = cos( yaw / 2.0f );
-            float sy = sin( yaw / 2.0f );
-            float cp = cos( pitch / 2.0f );
-            float sp = sin( pitch / 2.0f );
-            float cr = cos( roll / 2.0f );
-            float sr = sin( roll / 2.0f );
+            float cy = cos( yaw / (T)2.0 );
+            float sy = sin( yaw / (T)2.0 );
+            float cp = cos( pitch / (T)2.0 );
+            float sp = sin( pitch / (T)2.0 );
+            float cr = cos( roll / (T)2.0 );
+            float sr = sin( roll / (T)2.0 );
             v.set( cr * sp * cy + sr * cp * sy,
                    cr * cp * sy - sr * sp * cy,
                    sr * cp * cy - cr * sp * sy );
@@ -2331,24 +2351,24 @@ namespace GN
         typedef T ElementType;
 
         Vector3<T>  n; //!< normal (X:a, Y:b, Z:c)
-        ElementType d; //!< constant factor
+        T d; //!< constant factor
 
     public :
         //! \name constructors
         //@{
         Plane3() {}
-        Plane3( ElementType a_, ElementType b_, ElementType c_, ElementType d_ )
+        Plane3( T a_, T b_, T c_, T d_ )
             : n(a_,b_,c_), d(d_) {}
         Plane3( const Plane3 & p ) : n(p.n), d(p.d) {}
         Plane3( const Vector3<T> & point, const Vector3<T> & normal )
         {
-            from_pointnormal( point, normal );
+            fromPointNormal( point, normal );
         }
         Plane3( const Vector3<T> & v1,
                    const Vector3<T> & v2,
                    const Vector3<T> & v3 )
         {
-            from_3points( v1, v2, v3 );
+            fromPoints( v1, v2, v3 );
         }
         //@}
 
@@ -2358,14 +2378,14 @@ namespace GN
         //!
         //! type conversion
         //!
-        operator const ElementType * () const
+        operator const T * () const
         {
             return n;
         }
         //!
         //! type conversion
         //!
-        operator ElementType * ()
+        operator T * ()
         {
             return n;
         }
@@ -2393,28 +2413,28 @@ namespace GN
         //!
         //! dot production with vector3 ( ax + by + cz + d )
         //!
-        friend ElementType operator * ( const Plane3 & p, const Vector3<T> & v )
+        friend T operator * ( const Plane3 & p, const Vector3<T> & v )
         {
             return Vector3<T>::dot( p.n, v ) + p.d;
         }
         //!
         //! dot production with 3D vector
         //!
-        friend ElementType operator * ( const Vector3<T> & v, const Plane3 & p )
+        friend T operator * ( const Vector3<T> & v, const Plane3 & p )
         {
             return p * v;
         }
         //!
         //! dot production with vector4 ( ax + by + cz + dw )
         //!
-        friend ElementType operator * ( const Plane3 & p, const Vector4<T> & v )
+        friend T operator * ( const Plane3 & p, const Vector4<T> & v )
         {
             return p.n.x * v.x + p.n.y * v.y + p.n.z * v.z + p.d * v.w;
         }
         //!
         //! dot production with 4D vector
         //!
-        friend ElementType operator * ( const Vector4<T> & v, const Plane3 & p )
+        friend T operator * ( const Vector4<T> & v, const Plane3 & p )
         {
             return p * v;
         }
@@ -2446,14 +2466,14 @@ namespace GN
         //!
         Plane3 & normalize()
         {
-            ElementType f = n.length();
+            T f = n.length();
             if( f ) { n /= f; d /= f; }
             return *this;
         }
         //!
         //! Normalize the plane (so that |a,b,c| == 1)
         //!
-        static void normalize( Plane3 & dst, const Plane3 & src )
+        static void sNormalize( Plane3 & dst, const Plane3 & src )
         {
             dst = src;
             dst.normalize();
@@ -2462,7 +2482,7 @@ namespace GN
         //!
         //! Normalize the plane (so that |a,b,c| == 1)
         //!
-        static Plane3 normalize( const Plane3 & src )
+        static Plane3 sNormalize( const Plane3 & src )
         {
             Plane3 r(src);
             r.normalize();
@@ -2471,7 +2491,7 @@ namespace GN
         //!
         //! construct a plane from a point and a normal
         //!
-        Plane3 & fromPointnormal( const Vector3<T> & point,
+        Plane3 & fromPointNormal( const Vector3<T> & point,
                                   const Vector3<T> & normal )
         {
             n = normal;
@@ -2613,7 +2633,7 @@ namespace GN
         //!
         //! Get normalize rectangle
         //!
-        static void normalize( Rect<T> & dst, const Rect<T> & src )
+        static void sNormalize( Rect<T> & dst, const Rect<T> & src )
         {
 			dst = src;
             dst.normalize();
@@ -2621,7 +2641,7 @@ namespace GN
         //!
         //! Get normalize rectangle
         //!
-        static Rect<T> normalize( const Rect<T> & src )
+        static Rect<T> sNormalize( const Rect<T> & src )
         {
             Rect<T> dst(src);
             dst.normalize();
@@ -2747,12 +2767,12 @@ namespace GN
         //!
         //! return box center
         //!
-        PointType center() const { return pos() + size() / 2.0f; }
+        PointType center() const { return pos() + size() / (T)2.0; }
 
         //!
         //! return box center
         //!
-        void center( PointType & out ) const { out = pos() + size() / 2.0f; }
+        void center( PointType & out ) const { out = pos() + size() / (T)2.0; }
 
         //!
         //! from two points
@@ -2775,7 +2795,7 @@ namespace GN
         //!
         //! normalization (store result into another variable)
         //!
-        static void normalize( Box & dst, const Box & src )
+        static void sNormalize( Box & dst, const Box & src )
         {
 			dst = src;
             dst.normalize();
@@ -2783,7 +2803,7 @@ namespace GN
         //!
         //! normalization (store result into another variable)
         //!
-        static Box normalize( const Box & src )
+        static Box sNormalize( const Box & src )
         {
             Box dst(src);
             dst.normalize();
@@ -2805,7 +2825,7 @@ namespace GN
         //!
         //! get union of two boxes
         //!
-        static void getUnion( Box & result, const Box & b1, const Box & b2 )
+        static void sGetUnion( Box & result, const Box & b1, const Box & b2 )
         {
             Box a(b1), b(b2);
             a.normalize();
@@ -2844,14 +2864,14 @@ namespace GN
     public :
         //@{
         Sphere() {}
-        Sphere( const Vector3<T> & c, ElementType r ) : center(c), radius(r) {}
+        Sphere( const Vector3<T> & c, T r ) : center(c), radius(r) {}
         Sphere( const Sphere & s ) : center(s.center), radius(s.radius) {}
         //!
         //! construct from a box
         //!
         explicit Sphere( const Box<T> & b )
             : center( b.center() )
-            , radius( (b.vmax-b.vmin).length() / 2.0f )
+            , radius( (b.vmax-b.vmin).length() / (T)2.0 )
         {}
         //@}
 
@@ -2878,7 +2898,7 @@ namespace GN
         //!
         //! value set
         //!
-        Sphere & set( const Vector3<T> & c, ElementType r )
+        Sphere & set( const Vector3<T> & c, T r )
         {
             center = c; radius = r;
             return *this;
@@ -2929,6 +2949,16 @@ namespace GN
     typedef Sphere<double>      Sphered;
     typedef Sphere<int>         Spherei;
     //@}
+
+    //!
+    //! Calculate bounding sphere.
+    //!
+    void calcBoundingSphere( Spheref & result, const Vector3f * positions, size_t count, size_t strideInBytes );
+
+    //!
+    //! Calculate bounding box.
+    //!
+    void calcBoundingBox( Boxf & result, const Vector3f * positions, size_t count, size_t strideInBytes );
 }
 
 // *****************************************************************************

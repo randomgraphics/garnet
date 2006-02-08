@@ -103,19 +103,19 @@ void GN::gfx::D3DRenderer::applyFfpState()
 
     if( mFfpDirtyFlags.TransformWorld )
     {
-        Matrix44f mat = Matrix44f::transpose( mTransformWorld.top() );
+        Matrix44f mat = Matrix44f::sTranspose( mTransformWorld.top() );
         GN_DX_CHECK( mDevice->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
     }
 
     if( mFfpDirtyFlags.TransformView )
     {
-        Matrix44f mat = Matrix44f::transpose( mTransformView.top() );
+        Matrix44f mat = Matrix44f::sTranspose( mTransformView.top() );
         GN_DX_CHECK( mDevice->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
     }
 
     if( mFfpDirtyFlags.TransformProj )
     {
-        Matrix44f mat = Matrix44f::transpose( mTransformProj.top() );
+        Matrix44f mat = Matrix44f::sTranspose( mTransformProj.top() );
         GN_DX_CHECK( mDevice->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
     }
 

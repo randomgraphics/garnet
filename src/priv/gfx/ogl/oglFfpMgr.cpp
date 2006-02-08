@@ -98,13 +98,13 @@ void GN::gfx::OGLRenderer::applyFfpState()
         const Matrix44f & world = mTransformWorld.top();
         const Matrix44f & view = mTransformView.top();
         glMatrixMode( GL_MODELVIEW );
-        glLoadMatrixf( Matrix44f::transpose(view*world)[0] );
+        glLoadMatrixf( Matrix44f::sTranspose(view*world)[0] );
     }
 
     if( mFfpDirtyFlags.TransformProj )
     {
         glMatrixMode( GL_PROJECTION );
-        glLoadMatrixf( Matrix44f::transpose(mTransformProj.top())[0] );
+        glLoadMatrixf( Matrix44f::sTranspose(mTransformProj.top())[0] );
     }
 
     if( mFfpDirtyFlags.Viewport )

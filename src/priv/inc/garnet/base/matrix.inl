@@ -57,7 +57,7 @@ namespace GN
         result[2][1] = src[0][1]*src[2][0] - src[0][0]*src[2][1];
         result[2][2] = src[0][0]*src[1][1] - src[0][1]*src[1][0];
 
-        ElementType fDet =
+        T fDet =
             src[0][0]*result[0][0]+
             src[0][1]*result[1][0]+
             src[0][2]*result[2][0];
@@ -70,7 +70,7 @@ namespace GN
             return identify();
         }
 
-        ElementType fInvDet = 1.0f/fDet;
+        T fInvDet = 1.0f/fDet;
         for (int iRow = 0; iRow < 3; iRow++)
         {
             for (int iCol = 0; iCol < 3; iCol++)
@@ -85,14 +85,14 @@ namespace GN
     // generate a X-rotate matrix by 'angle' is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::rotateX( ElementType angle )
+    Matrix33<T> & Matrix33<T>::rotateX( T angle )
     {
         // 1    0    0
         // 0  cos -sin
         // 0  sin  cos
 
-        ElementType s = (ElementType)::sin( angle );
-        ElementType c = (ElementType)::cos( angle );
+        T s = (T)::sin( angle );
+        T c = (T)::cos( angle );
 
         identify();
 
@@ -108,14 +108,14 @@ namespace GN
     // generate a Y-rotate matrix by 'angle' is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::rotateY( ElementType angle )
+    Matrix33<T> & Matrix33<T>::rotateY( T angle )
     {
         //  cos  0  sin
         //  0    1    0
         // -sin  0  cos
 
-        ElementType s = ::sin( angle );
-        ElementType c = ::cos( angle );
+        T s = ::sin( angle );
+        T c = ::cos( angle );
 
         identify();
 
@@ -131,14 +131,14 @@ namespace GN
     // generate a Z-rotate matrix by 'angle' is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::rotateZ( ElementType angle )
+    Matrix33<T> & Matrix33<T>::rotateZ( T angle )
     {
         // cos -sin  0
         // sin  cos  0
         //   0    0  1
 
-        ElementType s = ::sin( angle );
-        ElementType c = ::cos( angle );
+        T s = ::sin( angle );
+        T c = ::cos( angle );
 
         identify();
 
@@ -154,13 +154,13 @@ namespace GN
     // generate a arbitrary rotation matrix, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::rotate( const Vector3<T> & v, ElementType angle )
+    Matrix33<T> & Matrix33<T>::rotate( const Vector3<T> & v, T angle )
     {
-        ElementType sinA, cosA;
-        ElementType invCosA;
+        T sinA, cosA;
+        T invCosA;
         Vector3<T> nrm = v;
-        ElementType x, y, z;
-        ElementType xSq, ySq, zSq;
+        T x, y, z;
+        T xSq, ySq, zSq;
 
         nrm.normalize();
         sinA = ::sin( angle );
@@ -327,7 +327,7 @@ namespace GN
         int cc;
         int rowMax; // Points to max abs value row in this column
         int row;
-        ElementType tmp;
+        T tmp;
 
         // Go through columns
         for (c=0; c<4; c++)
@@ -397,15 +397,15 @@ namespace GN
     // generate a rotate matrix by X-axis, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::rotateX( ElementType angle )
+    Matrix44<T> & Matrix44<T>::rotateX( T angle )
     {
         // cos -sin  0   0
         // sin  cos  0   0
         //   0    0  1   0
         //   0    0  0   1
 
-        ElementType s = ::sin( angle );
-        ElementType c = ::cos( angle );
+        T s = ::sin( angle );
+        T c = ::cos( angle );
 
         identify();
 
@@ -421,15 +421,15 @@ namespace GN
     // generate a rotate matrix by Y-axis, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::rotateY( ElementType angle )
+    Matrix44<T> & Matrix44<T>::rotateY( T angle )
     {
         //  cos  0  sin   0
         //  0    1    0   0
         // -sin  0  cos   0
         //  0    0    0   1
 
-        ElementType s = ::sin( angle );
-        ElementType c = ::cos( angle );
+        T s = ::sin( angle );
+        T c = ::cos( angle );
 
         identify();
 
@@ -445,15 +445,15 @@ namespace GN
     // generate a rotate matrix by X-axis, angle is in radians
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::rotateZ( ElementType angle )
+    Matrix44<T> & Matrix44<T>::rotateZ( T angle )
     {
         // cos -sin   0    0
         // sin  cos   0    0
         //  0    0    1    0
         //  0    0    0    1
 
-        ElementType s = ::sin( angle );
-        ElementType c = ::cos( angle );
+        T s = ::sin( angle );
+        T c = ::cos( angle );
 
         identify();
 
@@ -470,14 +470,14 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::rotate( const Vector3<T> & v, ElementType angle )
+    Matrix44<T>::rotate( const Vector3<T> & v, T angle )
     {
         Vector3<T> nrm = v;
         nrm.normalize();
 
-        ElementType sinA, cosA, invCosA;
-        ElementType x, y, z;
-        ElementType xSq, ySq, zSq;
+        T sinA, cosA, invCosA;
+        T x, y, z;
+        T xSq, ySq, zSq;
 
         sinA = ::sin( angle );
         cosA = ::cos( angle );
@@ -609,13 +609,13 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoOGLLh( ElementType left, ElementType right,
-                             ElementType bottom, ElementType top,
-                             ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoOGLLh( T left, T right,
+                             T bottom, T top,
+                             T znear, T zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
-        ElementType w = right - left,
+        T w = right - left,
                   h = top - bottom,
                   d = zfar - znear;
 
@@ -636,13 +636,13 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoOGLRh( ElementType left, ElementType right,
-                             ElementType bottom, ElementType top,
-                             ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoOGLRh( T left, T right,
+                             T bottom, T top,
+                             T znear, T zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
-        ElementType w = right - left,
+        T w = right - left,
                   h = top - bottom,
                   d = zfar - znear;
 
@@ -663,13 +663,13 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoD3DLh( ElementType left, ElementType right,
-                             ElementType bottom, ElementType top,
-                             ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoD3DLh( T left, T right,
+                             T bottom, T top,
+                             T znear, T zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
-        ElementType w = right - left,
+        T w = right - left,
                   h = top - bottom,
                   d = zfar - znear;
 
@@ -690,13 +690,13 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::orthoD3DRh( ElementType left, ElementType right,
-                             ElementType bottom, ElementType top,
-                             ElementType znear, ElementType zfar )
+    Matrix44<T>::orthoD3DRh( T left, T right,
+                             T bottom, T top,
+                             T znear, T zfar )
     {
         GN_ASSERT( left != right && bottom != top && znear != zfar );
 
-        ElementType w = right - left,
+        T w = right - left,
                   h = top - bottom,
                   d = zfar - znear;
 
@@ -717,12 +717,12 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveOGLLh( ElementType fovy, ElementType ratio,
-                                   ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveOGLLh( T fovy, T ratio,
+                                   T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
-        ElementType h = tan( fovy / 2.0f ) * znear * 2.0f,
+        T h = tan( fovy / 2.0f ) * znear * 2.0f,
                   w = h * ratio,
                   d = zfar - znear;
 
@@ -742,12 +742,12 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveOGLRh( ElementType fovy, ElementType ratio,
-                                   ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveOGLRh( T fovy, T ratio,
+                                   T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
-        ElementType h = tan( fovy / 2.0f ) * znear * 2.0f,
+        T h = tan( fovy / 2.0f ) * znear * 2.0f,
                   w = h * ratio,
                   d = zfar - znear;
 
@@ -767,12 +767,12 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveD3DLh( ElementType fovy, ElementType ratio,
-                                   ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveD3DLh( T fovy, T ratio,
+                                   T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
-        ElementType h = tan( fovy/2.0f ) * znear * 2.0f,
+        T h = tan( fovy/2.0f ) * znear * 2.0f,
                   w = h * ratio,
                   d = zfar - znear;
 
@@ -792,12 +792,12 @@ namespace GN
     // -------------------------------------------------------------------------
     template < typename T >
     Matrix44<T> &
-    Matrix44<T>::perspectiveD3DRh( ElementType fovy, ElementType ratio,
-                                   ElementType znear, ElementType zfar )
+    Matrix44<T>::perspectiveD3DRh( T fovy, T ratio,
+                                   T znear, T zfar )
     {
         GN_ASSERT( 0.0f != fovy && 0.0f != ratio && znear != zfar );
 
-        ElementType h = tan( fovy/2.0f ) * znear * 2.0f,
+        T h = tan( fovy/2.0f ) * znear * 2.0f,
                   w = h * ratio,
                   d = zfar - znear;
 

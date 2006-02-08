@@ -60,11 +60,14 @@ namespace GN { namespace gfx
         std::vector<Vector4f>  vector4s;  //!< vector value
         std::vector<Matrix44f> matrix44s; //!< matrix value
 
+        //! \name set uniform value
+        //@{
         void setB( const int32_t *, size_t );
         void setI( const int32_t *, size_t );
         void setF( const float *, size_t );
         void setV( const Vector4f *, size_t );
         void setM( const Matrix44f *, size_t ); //!< \note Matrix should be row major
+        //@}
     };
 
     //!
