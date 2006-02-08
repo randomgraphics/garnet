@@ -1,12 +1,15 @@
 #include "pch.h"
 #include "garnet/GNwin.h"
 #include "garnet/GNinput.h"
+#include "garnet/gfx/effect.h"
 
 class Scene
 {
     GN::AutoRef<GN::gfx::Shader> ps1, ps2;
 
     GN::AutoRef<GN::gfx::Texture> tex0;
+
+    GN::gfx::effect::Effect eff0;
 
     bool loadTex0( GN::gfx::Texture & tex )
     {
@@ -17,6 +20,31 @@ class Scene
         *texData = 0xFF0000FF;
         tex.unlock();
         return true;
+        GN_UNGUARD;
+    }
+
+    bool loadEffect( GN::gfx::Renderer & r )
+    {
+        GN_GUARD;
+
+        // create effect 0
+        {
+            GN::gfx::effect::EffectDesc desc;
+            GN::gfx::effect::ShaderDesc & vs = desc.shaders["vs"];
+            GN::gfx::effect::ShaderDesc & ps = desc.shaders["ps"];
+            vs.type = GN::gfx::VERTEX_SHADER;
+            ps.type = GN::gfx::PIXEL_SHADER;
+            GN::gfx::effect::TechniqueDesc & tech = desc.techniques["ffp"];
+            tech.passes.resize(1);
+            GN::gfx::effect::PassDesc & pass0 = tech.passes[0];
+            pass0.shaders[GN::gfx::VERTEX_SHADER] = "vs";
+            pass0.shaders[GN::gfx::PIXEL_SHADER] = "ps";
+            if( !eff0.init( r, desc ) ) return false;
+        }
+
+        // success
+        return true;
+
         GN_UNGUARD;
     }
 
@@ -78,12 +106,16 @@ public:
         // create a pure white texture
         tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
 
+        // create the effect
+        if( !loadEffect(r) ) return false;
+
         // success
         return true;
     }
 
     void quit()
     {
+        eff0.quit();
         ps1.reset();
 		ps2.reset();
         tex0.reset();

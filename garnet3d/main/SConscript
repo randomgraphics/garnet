@@ -605,7 +605,7 @@ def doInstall( alias, dir, names ):
 sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
-staticLibs = Split('GNextern GNbase GNgfxLib GNwin GNinput GNd3d GNogl')
+staticLibs = Split('GNextern GNbase GNgfxLib GNwin GNinput GNd3d GNogl GNgui')
 tests = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNd3dTest GNoglTest' )
 samples = Split( 'GNrenderToTexture' )
 programs = tests + samples

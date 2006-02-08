@@ -63,7 +63,7 @@ static inline GN::StrA levelStr( int l )
     }
     else 
     {
-        return GN::strFormat( "GN_TRACE_%d", l );
+        return GN::strFormat( "GN_TRACE_%d", l - GN::LOGLEVEL_TRACE_0 );
     }
 }
 

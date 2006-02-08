@@ -123,6 +123,9 @@ namespace GN
     template<typename CHAR>
     class Str
     {
+        CHAR * mPtr;   //!< string buffer pointer.
+        size_t mLen;   //!< How many charecters in the string, not including pending zero.
+        size_t mCaps;  //!< How many characters can we hold?
     public:
 
         //!
@@ -685,10 +688,6 @@ namespace GN
         {
             if ( ptr ) memFree( ptr );
         }
-
-        size_t mLen;   //!< How many charecters in the string, not including pending zero.
-        size_t mCaps;  //!< How many characters can we hold?
-        CHAR * mPtr;   //!< string buffer pointer.
 
         friend Str<char> wcs2mbs( const wchar_t *, size_t );
         friend void wcs2mbs( Str<char> &, const wchar_t *, size_t );
