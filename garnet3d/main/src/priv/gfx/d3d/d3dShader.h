@@ -257,31 +257,31 @@ namespace GN { namespace gfx
             D3DXHANDLE h = (D3DXHANDLE)u.userData;
             GN_ASSERT( h );
 
-            switch( u.type )
+            switch( u.value.type )
             {
                 case UVT_BOOL:
-                    if( !u.valueBool.empty() )
-                        GN_DX_CHECK( table->SetBoolArray( dev, h, (const BOOL*)&u.valueBool[0], (UINT)u.valueBool.size() ) );
+                    if( !u.value.bools.empty() )
+                        GN_DX_CHECK( table->SetBoolArray( dev, h, (const BOOL*)&u.value.bools[0], (UINT)u.value.bools.size() ) );
                     break;
 
                 case UVT_INT:
-                    if( !u.valueInt.empty() )
-                        GN_DX_CHECK( table->SetIntArray( dev, h, (const INT*)&u.valueInt[0], (UINT)u.valueInt.size() ) );
+                    if( !u.value.ints.empty() )
+                        GN_DX_CHECK( table->SetIntArray( dev, h, (const INT*)&u.value.ints[0], (UINT)u.value.ints.size() ) );
                     break;
 
                 case UVT_FLOAT:
-                    if( !u.valueFloat.empty() )
-                        GN_DX_CHECK( table->SetFloatArray( dev, h, &u.valueFloat[0], (UINT)u.valueFloat.size() ) );
+                    if( !u.value.floats.empty() )
+                        GN_DX_CHECK( table->SetFloatArray( dev, h, &u.value.floats[0], (UINT)u.value.floats.size() ) );
                     break;
 
-                case UVT_FLOAT4:
-                    if( !u.valueVector4.empty() )
-                        GN_DX_CHECK( table->SetVectorArray( dev, h, (const D3DXVECTOR4*)&u.valueVector4[0], (UINT)u.valueVector4.size() ) );
+                case UVT_VECTOR4:
+                    if( !u.value.vector4s.empty() )
+                        GN_DX_CHECK( table->SetVectorArray( dev, h, (const D3DXVECTOR4*)&u.value.vector4s[0], (UINT)u.value.vector4s.size() ) );
                     break;
 
                 case UVT_MATRIX44:
-                    if( !u.valueMatrix44.empty() )
-                        GN_DX_CHECK( table->SetMatrixTransposeArray( dev, h, (const D3DXMATRIX*)&u.valueMatrix44[0], (UINT)u.valueMatrix44.size() ) );
+                    if( !u.value.matrix44s.empty() )
+                        GN_DX_CHECK( table->SetMatrixTransposeArray( dev, h, (const D3DXMATRIX*)&u.value.matrix44s[0], (UINT)u.value.matrix44s.size() ) );
                     break;
 
                 default:

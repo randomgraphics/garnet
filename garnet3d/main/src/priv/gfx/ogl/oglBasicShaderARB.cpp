@@ -262,15 +262,15 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         fp = glProgramEnvParameter4fvARB;
     }
 
-    switch( u.type )
+    switch( u.value.type )
     {
-        case UVT_FLOAT4 :
-            for( size_t i = 0; i < u.valueVector4.size(); ++i )
+        case UVT_VECTOR4 :
+            for( size_t i = 0; i < u.value.vector4s.size(); ++i )
             {
                 GN_OGL_CHECK( fp(
                     mTarget,
                     (GLuint)(desc.index+i),
-                    (const float * )&u.valueVector4[0] ) );
+                    (const float * )&u.value.vector4s[0] ) );
             }
             break;
 
