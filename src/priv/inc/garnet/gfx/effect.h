@@ -26,6 +26,8 @@ namespace GN { namespace gfx {
         {
             bool hasDefaultValue;      //!< Indicates that the uniform has a default value.
             UniformValue defaultValue; //!< Default value of the uniform. Ignored if hasDefaultValue is false.
+
+            UniformDesc() : hasDefaultValue(false) {}
         };
 
         //!
@@ -58,6 +60,7 @@ namespace GN { namespace gfx {
             ShadingLanguage lang; //!< Shading language. Ignored if code is empty.
             StrA code; //!< Shader code. Empty means fixed functional pipeline.
             StrA entry; //!< Entry function of the code. Ignored, if code is empty.
+            // TODO: use map instead of vector.
             std::vector<TextureRefDesc> textures; //!< textures used by the shader.
             std::vector<UniformRefDesc> uniforms; //!< uniforms used by the shader.
         };
@@ -192,7 +195,7 @@ namespace GN { namespace gfx {
 
             //!
             //! Set active technique.
-            //! \param name Technique name. NULL means default technique.
+            //! \param name Technique name. NULL means the first technique.
             //!
             void setActiveTechnique( const char * name );
 

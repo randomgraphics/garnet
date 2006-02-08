@@ -6,7 +6,7 @@
 // \author  chenlee (2005.10.7)
 // *****************************************************************************
 
-#include "../testCommon.h"
+#include "../../testCommon.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNwin.h"
 
