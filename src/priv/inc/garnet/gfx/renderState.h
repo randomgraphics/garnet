@@ -244,6 +244,11 @@ namespace GN { namespace gfx
         //!
         void reset( ResetFlag flag );
 
+        //!
+        //! make sure a valid render state block
+        //!
+        bool valid() const;
+
         //@}
 
         // ********************************

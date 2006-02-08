@@ -13,6 +13,29 @@ const GN::gfx::RenderStateBlockDesc GN::gfx::RenderStateBlockDesc::INVALID( Rend
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::gfx::RenderStateBlockDesc::valid() const
+{
+    GN_GUARD;
+
+    for( size_t i = 0; i < NUM_RENDER_STATES; ++i )
+    {
+        if( RSV_INVALID == rs[i] ) continue;
+        if( 0 <= rs[i] && rs[i] < NUM_RENDER_STATE_VALUES ) continue;
+        GN_ERROR( "invalid render state value(%d) for render state %s.",
+            i,
+            renderState2Str( (RenderState)i ) );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::RenderStateBlockDesc::reset( ResetFlag flag )
 {
     if( RESET_TO_DEFAULT == flag )
