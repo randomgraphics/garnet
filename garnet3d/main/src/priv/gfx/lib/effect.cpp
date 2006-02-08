@@ -226,7 +226,7 @@ void GN::gfx::effect::Effect::setActiveTechnique( const char * name )
 
     if( 0 == name )
     {
-        // use default (the first one) technique.
+        // use the first technique.
         mActiveTechnique = mTechniques.items.first();
     }
     else
@@ -515,7 +515,6 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
             }
         }
     }
-
 
     // success
     return true;

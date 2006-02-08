@@ -10,8 +10,9 @@ if GN_conf['has_boost']: env.Append( CPPDEFINES = ['HAS_BOOST'] )
 # build case list
 cases = []
 cases += env.GN_glob( 'base/*.cpp' )
-if 'win32' == env['PLATFORM']: cases += ['gfx/ogl.cpp']
-if 'win32' == env['PLATFORM']: cases += ['gfx/d3d.cpp']
+cases += env.GN_glob( 'gfx/lib/*.cpp' )
+if 'win32' == env['PLATFORM']: cases += ['gfx/renderer/ogl.cpp']
+if 'win32' == env['PLATFORM']: cases += ['gfx/renderer/d3d.cpp']
 
 # generate cxxtest glue file.
 cxxtest = env.Command(
