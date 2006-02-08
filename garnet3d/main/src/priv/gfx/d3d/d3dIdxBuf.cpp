@@ -28,7 +28,7 @@ bool GN::gfx::D3DIdxBuf::init(
     // check parameter
     if( 0 == numIdx )
     {
-        GNGFX_ERROR( "invalid buffer length!" );
+        GN_ERROR( "invalid buffer length!" );
         quit(); return selfOK();
     }
 
@@ -122,7 +122,7 @@ void GN::gfx::D3DIdxBuf::deviceDispose()
     if( mLocked )
     {
         unlock();
-        GNGFX_ERROR( "call unlock() before u dispose the index buffer!" );
+        GN_ERROR( "call unlock() before u dispose the index buffer!" );
     }
 
     safeRelease( mD3DIb );
@@ -145,12 +145,12 @@ uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, uint32_t fl
 
     if( mLocked )
     {
-        GNGFX_ERROR( "This buffer is already locked!" );
+        GN_ERROR( "This buffer is already locked!" );
         return 0;
     }
     if( startIdx >= getNumIdx() )
     {
-        GNGFX_ERROR( "startIdx is beyond the end of index buffer!" );
+        GN_ERROR( "startIdx is beyond the end of index buffer!" );
         return 0;
     }
 
@@ -194,7 +194,7 @@ void GN::gfx::D3DIdxBuf::unlock()
 
     if( !mLocked )
     {
-        GNGFX_ERROR( "Can't unlock a index buffer that is not locked at all!" );
+        GN_ERROR( "Can't unlock a index buffer that is not locked at all!" );
         return;
     }
 

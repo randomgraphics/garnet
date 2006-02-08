@@ -154,7 +154,7 @@ static GN_INLINE bool sColorFormat2OGL(
             }
             else
             {
-                GNGFX_WARN( "current hardware do not support "
+                GN_WARN( "current hardware do not support "
                          "UV texture format!" );
                 gl_internalformat  = 2;
                 gl_format          = GL_RGBA;
@@ -250,7 +250,7 @@ static GN_INLINE bool sColorFormat2OGL(
     }
 
     // failed
-    GNGFX_ERROR( "invalid or unsupported format '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
+    GN_ERROR( "invalid or unsupported format '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
     return false;
 }
 
@@ -290,7 +290,7 @@ static inline bool sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
 {
     if( offset >= maxLength )
     {
-        GNGFX_ERROR( "offset is beyond the end of valid range." );
+        GN_ERROR( "offset is beyond the end of valid range." );
         return false;
     }
     if( 0 == length ) length = maxLength;
@@ -346,7 +346,7 @@ bool GN::gfx::OGLBasicTexture::init(
         case TEXTYPE_3D   :
             if ( !GLEW_EXT_texture3D )
             {
-                GNGFX_ERROR( "do not support 3D texture!" );
+                GN_ERROR( "do not support 3D texture!" );
                 quit(); return selfOK();
             }
             mOGLTarget = GL_TEXTURE_3D;
@@ -354,13 +354,13 @@ bool GN::gfx::OGLBasicTexture::init(
         case TEXTYPE_CUBE :
             if ( !GLEW_ARB_texture_cube_map )
             {
-                GNGFX_ERROR( "do not support CUBE texture!" );
+                GN_ERROR( "do not support CUBE texture!" );
                 quit(); return selfOK();
             }
             mOGLTarget = GL_TEXTURE_CUBE_MAP_ARB;
             break;
         default :
-            GNGFX_ERROR( "invalid texture type!" );
+            GN_ERROR( "invalid texture type!" );
             quit(); return selfOK();
     }
 
@@ -464,7 +464,7 @@ void GN::gfx::OGLBasicTexture::deviceDestroy()
     // check if locked
     if( isLocked() )
     {
-        GNGFX_WARN( "call You are destroying a locked texture!" );
+        GN_WARN( "call You are destroying a locked texture!" );
         unlock();
     }
 
@@ -550,7 +550,7 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
                 break;
 
             default:
-                GNGFX_ERROR( "unsupport compress format '%s'!", getClrFmtDesc(getFormat()).name );
+                GN_ERROR( "unsupport compress format '%s'!", getClrFmtDesc(getFormat()).name );
                 return false;
         }
     }
@@ -621,7 +621,7 @@ void GN::gfx::OGLBasicTexture::privateUnlock2D()
         }
         else
         {
-            GNGFX_WARN( "do not support texture compression!" );
+            GN_WARN( "do not support texture compression!" );
         }
     }
     else
@@ -894,7 +894,7 @@ bool GN::gfx::OGLTex3D::lock3D( LockedBox &  /*result*/,
                                 const Boxi * /*box*/,
                                 uint32_t     /*flag*/ )
 {
-    GNGFX_ERROR( "no implementation" );
+    GN_ERROR( "no implementation" );
     return 0;
 }
 
@@ -903,7 +903,7 @@ bool GN::gfx::OGLTex3D::lock3D( LockedBox &  /*result*/,
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLTex3D::unlock()
 {
-    GNGFX_ERROR( "no implementation" );
+    GN_ERROR( "no implementation" );
 }
 
 //
@@ -920,7 +920,7 @@ GLuint GN::gfx::OGLTex3D::newOGLTexture(
 {
     GN_GUARD;
 
-    GNGFX_ERROR( "no implementation" );
+    GN_ERROR( "no implementation" );
     return 0;
 
     GN_UNGUARD;
@@ -1015,7 +1015,7 @@ GLuint GN::gfx::OGLTexCube::newOGLTexture(
 
     if( !GLEW_ARB_texture_cube_map )
     {
-        GNGFX_ERROR( "do not support cube map!" );
+        GN_ERROR( "do not support cube map!" );
         return 0;
     }
 

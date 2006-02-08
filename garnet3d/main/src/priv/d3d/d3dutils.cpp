@@ -23,7 +23,7 @@ static void sPrintShaderCompileError( const char * code, LPD3DXBUFFER err )
 {
     GN_GUARD;
 
-    GND3D_ERROR(
+    GN_ERROR(
         "\n================== Shader compile failure ===============\n"
         "%s\n"
         "\n---------------------------------------------------------\n"

@@ -205,7 +205,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
                     if( D3DTOP_DOTPRODUCT3 == d3dtsv &&
                         !getD3DCaps( D3DCAPS_DOT3 ) )
                     {
-                        GN_DO_ONCE( GNGFX_WARN(
+                        GN_DO_ONCE( GN_WARN(
                             "Current D3D device does not support "
                             "dot3 operation! "
                             "Fallback to D3DTOP_SELECTARG1." ) );
@@ -214,7 +214,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
                     else if( D3DTA_CONSTANT == (d3dtsv&D3DTA_SELECTMASK) &&
                         !getCaps( CAPS_PER_STAGE_CONSTANT ) )
                     {
-                        GN_DO_ONCE( GNGFX_WARN(
+                        GN_DO_ONCE( GN_WARN(
                                 "Current D3D device does not support "
                                 "per-stage constant! "
                                 "Fallback to D3DTA_TFACTOR." ) );

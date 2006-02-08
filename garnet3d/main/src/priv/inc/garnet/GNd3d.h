@@ -35,21 +35,6 @@
 #endif
 
 //!
-//! d3d module error log macro
-//!
-#define GND3D_ERROR GN_ERROR
-
-//!
-//! d3d module warning log macro
-//!
-#define GND3D_WARN GN_WARN
-
-//!
-//! d3d module informational log macro
-//!
-#define GND3D_INFO GN_INFO
-
-//!
 //! Global D3D object. Must be instantiated and initialized before using d3d module.
 //!
 #define gD3D (::GN::d3d::D3D::getInstance())

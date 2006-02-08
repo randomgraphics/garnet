@@ -18,21 +18,21 @@ bool GN::gfx::ImageDesc::validate() const
     // check type
     if( type < 0 || type >= NUM_IMAGE_TYPES )
     {
-        GNGFX_ERROR( "invalid image type!" );
+        GN_ERROR( "invalid image type!" );
         return false;
     }
 
     // check format
     if( format < 0 || format >= NUM_CLRFMTS )
     {
-        GNGFX_ERROR( "invalid image format!" );
+        GN_ERROR( "invalid image format!" );
         return false;
     }
 
     // check numMips
     if( numMips > MAX_MIPLEVELS )
     {
-        GNGFX_ERROR( "numMips is out of range!" );
+        GN_ERROR( "numMips is out of range!" );
         return false;
     }
 
@@ -46,27 +46,27 @@ bool GN::gfx::ImageDesc::validate() const
         // check image size
         if( 0 == m.width || 0 == m.height || 0 == m.depth )
         {
-            GNGFX_ERROR( "mipmaps[%d] size is zero!", i );
+            GN_ERROR( "mipmaps[%d] size is zero!", i );
             return false;
         }
         if( IMG_1D == type && ( 1 != m.height || 1 != m.depth ) )
         {
-            GNGFX_ERROR( "height and depth must be 1 for 1D image!" );
+            GN_ERROR( "height and depth must be 1 for 1D image!" );
             return false;
         }
         if( IMG_2D == type && 1 != m.depth )
         {
-            GNGFX_ERROR( "depth must be 1 for 2D image!" );
+            GN_ERROR( "depth must be 1 for 2D image!" );
             return false;
         }
         if( IMG_CUBE == type && 6 != m.depth )
         {
-            GNGFX_ERROR( "depth must be 6 for cubemap!" );
+            GN_ERROR( "depth must be 6 for cubemap!" );
             return false;
         }
         if( IMG_CUBE == type && (m.width != m.height) )
         {
-            GNGFX_ERROR( "width and height must be equal for cubemap!" );
+            GN_ERROR( "width and height must be equal for cubemap!" );
             return false;
         }
 
@@ -77,12 +77,12 @@ bool GN::gfx::ImageDesc::validate() const
         if( 0 == h ) h = 1;
         if( m.rowPitch != (uint32_t)w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
         {
-            GNGFX_ERROR( "rowPitch of mipmaps[%d] is incorrect!", i );
+            GN_ERROR( "rowPitch of mipmaps[%d] is incorrect!", i );
             return false;
         }
         if( m.slicePitch != m.rowPitch * h )
         {
-            GNGFX_ERROR( "slicePitch of mipmaps[%d] is incorrect!", i );
+            GN_ERROR( "slicePitch of mipmaps[%d] is incorrect!", i );
             return false;
         }
     }
@@ -156,7 +156,7 @@ public:
         size_t sz = i_file.size();
         if( sz <= HEADER_BYTES )
         {
-            GNGFX_ERROR( "image file size is too small!" );
+            GN_ERROR( "image file size is too small!" );
             return false;
         }
         mSrc.resize( sz );
@@ -165,7 +165,7 @@ public:
         sz = i_file.read( &mSrc[0], HEADER_BYTES );
         if( size_t(-1) == sz || sz < HEADER_BYTES )
         {
-            GNGFX_ERROR( "fail to read image header!" );
+            GN_ERROR( "fail to read image header!" );
             return false;
         }
 
@@ -194,7 +194,7 @@ public:
         }
         else
         {
-            GNGFX_ERROR( "unknown image file format!" );
+            GN_ERROR( "unknown image file format!" );
             return false;
         }
 
@@ -218,7 +218,7 @@ public:
 
         if( INITIALIZED != mState )
         {
-            GNGFX_ERROR( "image reader is not ready for header reading!" );
+            GN_ERROR( "image reader is not ready for header reading!" );
             return false;
         }
 
@@ -235,7 +235,7 @@ public:
             case PNG  : READ_HEADER( mPng ); break;
             case DDS  : READ_HEADER( mDds ); break;
             default   :
-                GNGFX_ERROR( "unknown or unsupport file format!" );
+                GN_ERROR( "unknown or unsupport file format!" );
                 mState = INVALID;
                 return false;
         }
@@ -258,13 +258,13 @@ public:
 
         if( 0 == o_data )
         {
-            GNGFX_ERROR( "null output buffer!" );
+            GN_ERROR( "null output buffer!" );
             return false;
         }
 
         if( HEADER_READEN != mState )
         {
-            GNGFX_ERROR( "image reader is not ready for image reading!" );
+            GN_ERROR( "image reader is not ready for image reading!" );
             return false;
         }
 
@@ -279,7 +279,7 @@ public:
             case PNG  : READ_IMAGE( mPng ); break;
             case DDS  : READ_IMAGE( mDds ); break;
             default   :
-                GNGFX_ERROR( "unknown or unsupport file format!" );
+                GN_ERROR( "unknown or unsupport file format!" );
                 mState = INVALID;
                 return false;
         }

@@ -186,7 +186,7 @@ bool GN::gfx::OGLFont::charInit( wchar_t c, CharDesc & cd )
     GLuint l = glGenLists(1);
     if( 0 == l )
     {
-        GNGFX_ERROR( "Fail to generate opengl display list for wchar %s!",
+        GN_ERROR( "Fail to generate opengl display list for wchar %s!",
             wcs2mbs(&c,1).cstr() );
         return false;
     }

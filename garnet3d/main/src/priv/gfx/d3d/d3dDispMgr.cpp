@@ -19,7 +19,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
     if( !fullscreen )
     {
 #if GN_XENON
-        GNGFX_ERROR( "Xenon does not support windowed mode." );
+        GN_ERROR( "Xenon does not support windowed mode." );
         return D3DFMT_UNKNOWN;
 #else
         GN_DX_CHECK_RV(
@@ -40,7 +40,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
             //         因此此处不应强行指定为X8R8G8B8，而应该根据实际显
             //         卡的支持情况来选择合适的显示模式。
             case 32 : d3dfmt = D3DFMT_X8R8G8B8; break;
-            default : GNGFX_ERROR( "unsupported depth!" );
+            default : GN_ERROR( "unsupported depth!" );
                 return D3DFMT_UNKNOWN;
         }
 
@@ -54,7 +54,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
         UINT dmcount = d3d.GetAdapterModeCount(adapter, d3dfmt );
         if (0 == dmcount)
         {
-            GNGFX_ERROR( "fail to get number of display modes!" );
+            GN_ERROR( "fail to get number of display modes!" );
             return D3DFMT_UNKNOWN;
         }
 
@@ -75,7 +75,7 @@ sCheckD3DFormat( IDirect3D9 & d3d,
         // not found!
         if (i >= dmcount)
         {
-            GNGFX_ERROR( "fail to found appropriate D3D format!" );
+            GN_ERROR( "fail to found appropriate D3D format!" );
             return D3DFMT_UNKNOWN;
         }
 #endif
@@ -170,7 +170,7 @@ bool GN::gfx::D3DRenderer::dispInit()
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if( 0 == mD3D )
     {
-        GNGFX_ERROR( "incorrect SDK version!" );
+        GN_ERROR( "incorrect SDK version!" );
         return false;
     }
 
@@ -266,7 +266,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
         if( D3DERR_NOTAVAILABLE == r ) continue;
         if( D3D_OK != r )
         {
-            GNGFX_WARN( ::DXGetErrorString9A(r) );
+            GN_WARN( ::DXGetErrorString9A(r) );
             continue;
         }
 
@@ -307,7 +307,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
     }
 
     // failed
-    GNGFX_ERROR( "no suitable D3D device found!" );
+    GN_ERROR( "no suitable D3D device found!" );
     return false;
 
     GN_UNGUARD;

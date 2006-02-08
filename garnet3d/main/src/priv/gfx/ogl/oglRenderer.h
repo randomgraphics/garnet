@@ -133,7 +133,7 @@ namespace GN { namespace gfx
             {
                 if( !::wglMakeCurrent(mDeviceContext, mRenderContext) )
                 {
-                    GNGFX_ERROR( "wglMakeCurrent() failed : %s", getOSErrorInfo() );
+                    GN_ERROR( "wglMakeCurrent() failed : %s", getOSErrorInfo() );
                     return false;
                 }
             }

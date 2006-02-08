@@ -25,31 +25,6 @@
 
 #include "garnet/base/pragma.h"
 
-//!
-//! ogl module fatal error
-//!
-#define GNGFX_FATAL GN_FATAL
-
-//!
-//! ogl module error log macro
-//!
-#define GNGFX_ERROR GN_ERROR
-
-//!
-//! ogl module warning log macro
-//!
-#define GNGFX_WARN GN_WARN
-
-//!
-//! ogl module informational log macro
-//!
-#define GNGFX_INFO GN_INFO
-
-//!
-//! ogl module tracing macro
-//!
-#define GNGFX_TRACE GN_TRACE
-
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************

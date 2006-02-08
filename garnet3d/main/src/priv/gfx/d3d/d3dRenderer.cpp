@@ -104,7 +104,7 @@ bool GN::gfx::D3DRenderer::changeOptions( RendererOptions ro, bool forceRecreati
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GNGFX_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
+        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
@@ -112,13 +112,13 @@ bool GN::gfx::D3DRenderer::changeOptions( RendererOptions ro, bool forceRecreati
 #if GN_XENON
     if( !ro.fullscreen )
     {
-        GNGFX_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
+        GN_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
         ro.fullscreen = true;
         ro.displayMode.set(0,0,0,0);
     }
     if( ro.useExternalWindow )
     {
-        GNGFX_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
+        GN_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
         ro.useExternalWindow = false;
     }
 #endif
@@ -189,7 +189,7 @@ bool GN::gfx::D3DRenderer::deviceCreate()
     // trigger restore events
     if( !sigDeviceRestore() )
     {
-        GNGFX_ERROR( "fail to process D3D device restore signal!" );
+        GN_ERROR( "fail to process D3D device restore signal!" );
         return false;
     }
 
@@ -222,7 +222,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
     // trigger reset event
     if( !sigDeviceRestore() )
     {
-        GNGFX_ERROR( "fail to process D3D device restore signal!" );
+        GN_ERROR( "fail to process D3D device restore signal!" );
         return false;
     }
 

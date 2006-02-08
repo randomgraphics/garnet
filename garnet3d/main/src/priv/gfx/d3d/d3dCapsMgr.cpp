@@ -133,14 +133,14 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
     #define GNGFX_CAPS( name ) \
         if( getCaps(CAPS_##name) != sCapsInit_##name( d3dcaps ) ) \
         { \
-            GNGFX_ERROR( "CAPS_" #name \
+            GN_ERROR( "CAPS_" #name \
                       " is modified by device reset" ); \
             return false; \
         }
     #define GNGFX_D3DCAPS( name ) \
         if( getD3DCaps(D3DCAPS_##name) != sD3DCapsInit_##name( d3dcaps ) ) \
         { \
-            GNGFX_ERROR( "D3DCAPS_" #name \
+            GN_ERROR( "D3DCAPS_" #name \
                       " is modified by device reset" ); \
             return false; \
         }
@@ -198,7 +198,7 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
     GN_DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
 
     // output device information
-    GNGFX_INFO(
+    GN_INFO(
         "\n\n"
         "===================================================\n"
         "        DirectX Implementation Capabilities\n"

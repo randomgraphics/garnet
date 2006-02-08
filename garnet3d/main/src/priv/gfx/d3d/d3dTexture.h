@@ -137,12 +137,12 @@ namespace GN { namespace gfx
                     return surf;
 
                 case TEXTYPE_3D:
-                    GNGFX_ERROR( "Can't get surface from 3D texture." );
+                    GN_ERROR( "Can't get surface from 3D texture." );
                     return 0;
 
                 default:
                     // program should not reach here.
-                    GNGFX_ERROR( "Invalid texture type!" );
+                    GN_ERROR( "Invalid texture type!" );
                     GN_UNEXPECTED();
                     return 0;
             }

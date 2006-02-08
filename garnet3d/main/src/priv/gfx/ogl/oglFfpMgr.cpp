@@ -114,7 +114,7 @@ void GN::gfx::OGLRenderer::applyFfpState()
         GLsizei w = (GLsizei)( mViewport.top().w * mCurrentRTSize.x );
         GLsizei h = (GLsizei)( mViewport.top().h * mCurrentRTSize.y );
         glViewport( x, y, w, h );
-        GNGFX_INFO( "Update viewport to: x(%d), y(%d), w(%d), h(%d)", x, y, w, h );
+        GN_INFO( "Update viewport to: x(%d), y(%d), w(%d), h(%d)", x, y, w, h );
     }
 
     if( mFfpDirtyFlags.Light0Pos )

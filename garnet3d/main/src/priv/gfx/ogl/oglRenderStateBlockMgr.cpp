@@ -117,7 +117,7 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
         mDisplayList = glGenLists( 1 );
         if( 0 == mDisplayList )
         {
-            GNGFX_ERROR( "fail to generate displaylist : " );
+            GN_ERROR( "fail to generate displaylist : " );
             return false;
         }
 
@@ -129,7 +129,7 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
         // check opengl error
         if( GL_NO_ERROR != glGetError() )
         {
-            GNGFX_ERROR( "fail to compile displaylist! " );
+            GN_ERROR( "fail to compile displaylist! " );
             return false;
         }
 

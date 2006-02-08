@@ -27,7 +27,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & uo )
             monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
             if( 0 == monitor )
             {
-                GNGFX_ERROR( "Fail to get primary monitor handle." );
+                GN_ERROR( "Fail to get primary monitor handle." );
                 return 0;
             }
         }
@@ -38,7 +38,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & uo )
         GN_ASSERT( monitor );
         return monitor;
 #else
-        GNGFX_INFO( "Xenon platform does not support multi-monitors." );
+        GN_INFO( "Xenon platform does not support multi-monitors." );
         return (GN::HandleType)1; // magic value, means invalid screen.
 #endif
     }
@@ -63,7 +63,7 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & uo, GN::gfx::DisplayMod
 
     if( (void*)1 == monitor )
     {
-        GNGFX_WARN( "Use hard-coded display mode: 640x480 32bits" );
+        GN_WARN( "Use hard-coded display mode: 640x480 32bits" );
         dm.width = 640;
         dm.height = 480;
         dm.depth = 32;
@@ -71,7 +71,7 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & uo, GN::gfx::DisplayMod
     }
     else
     {
-        GNGFX_ERROR( "Can't specify monitor handle on Xenon platform." );
+        GN_ERROR( "Can't specify monitor handle on Xenon platform." );
         return false;
     }
 
@@ -99,7 +99,7 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & uo, GN::gfx::DisplayMod
 
     if( (void*)1 == monitor )
     {
-        GNGFX_WARN( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
+        GN_WARN( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
         dm.width = 640;
         dm.height = 480;
         dm.depth = 32;
@@ -245,7 +245,7 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
         mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
         if( !changeOptions( newOptions, false ) )
         {
-            GNGFX_FATAL( "Fail to respond to render window size and position change!" );
+            GN_FATAL( "Fail to respond to render window size and position change!" );
             return false;
         }
     }

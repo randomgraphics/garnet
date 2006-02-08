@@ -120,7 +120,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GNGFX_ERROR( "invalid shader type: %d", type );
+                GN_ERROR( "invalid shader type: %d", type );
             }
         }
 
@@ -131,7 +131,7 @@ namespace GN { namespace gfx
         {
             if( 0 == shaders )
             {
-                GNGFX_ERROR( "shader list can't be NULL." );
+                GN_ERROR( "shader list can't be NULL." );
                 return;
             }
             if( shaders[VERTEX_SHADER] != vtxShader.get() )

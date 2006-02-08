@@ -18,7 +18,7 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
     // check parameter
     if( 0 == numIdx )
     {
-        GNGFX_ERROR( "invalid buffer length!" );
+        GN_ERROR( "invalid buffer length!" );
         quit(); return selfOK();
     }
 
@@ -68,12 +68,12 @@ uint16_t * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t /*numIdx*/, uint32_
 
     if( mLocked )
     {
-        GNGFX_ERROR( "This buffer is already locked!" );
+        GN_ERROR( "This buffer is already locked!" );
         return 0;
     }
     if( startIdx >= getNumIdx() )
     {
-        GNGFX_ERROR( "startIdx is beyond the end of index buffer!" );
+        GN_ERROR( "startIdx is beyond the end of index buffer!" );
         return 0;
     }
 

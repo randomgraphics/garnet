@@ -8,7 +8,7 @@ void GN::gfx::printShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFF
 {
     GN_GUARD;
 
-    GNGFX_ERROR(
+    GN_ERROR(
         "\n"
         "================== Shader compile failure ===============\n"
         "%s\n"

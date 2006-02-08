@@ -158,7 +158,7 @@ bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType
 
     if( 1 != sscanf( name+1, "%u", &index ) )
     {
-        GNGFX_ERROR( "invalid register name: %s", name );
+        GN_ERROR( "invalid register name: %s", name );
         return false;
     }
 
@@ -170,7 +170,7 @@ bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType
         case 'C':
             if( index >= mMaxConstF )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
+                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
                 return false;
             }
             desc.type = CONST_F;
@@ -180,7 +180,7 @@ bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType
         case 'I':
             if( index >= mMaxConstI )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
+                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
                 return false;
             }
             desc.type = CONST_I;
@@ -190,14 +190,14 @@ bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType
         case 'B':
             if( index >= mMaxConstB )
             {
-                GNGFX_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
+                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
                 return false;
             }
             desc.type = CONST_B;
             break;
 
         default:
-            GNGFX_ERROR( "invalid register name: %s", name );
+            GN_ERROR( "invalid register name: %s", name );
             return false;
     }
 
@@ -262,7 +262,7 @@ bool GN::gfx::D3DVtxShaderAsm::analyzeUniforms()
 
     if( 0 == version )
     {
-        GNGFX_ERROR( "Fail to get shader version!" );
+        GN_ERROR( "Fail to get shader version!" );
         return false;
     }
 

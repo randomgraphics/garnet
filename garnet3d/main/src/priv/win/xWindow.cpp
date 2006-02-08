@@ -58,7 +58,7 @@ bool GN::win::XWindow::create( const CreateParam & cp )
     mDisplay = XOpenDisplay( cp.display );
     if( 0 == mDisplay )
     {
-        GNWIN_ERROR( "Fail to open display '%s'!", StrA(cp.display).cstr() );
+        GN_ERROR( "Fail to open display '%s'!", StrA(cp.display).cstr() );
         return false;
     }
 
@@ -82,7 +82,7 @@ bool GN::win::XWindow::create( const CreateParam & cp )
         blackColor, blackColor );
     if( 0 == mWindow )
     {
-        GNWIN_ERROR( "XCreateSimpleWindow() failed!" );
+        GN_ERROR( "XCreateSimpleWindow() failed!" );
         return false;
     }
 
@@ -117,7 +117,7 @@ void GN::win::XWindow::showWindow( bool show ) const
 
     if( !mDisplay || !mWindow )
     {
-        GNWIN_ERROR( "Not initialized!" );
+        GN_ERROR( "Not initialized!" );
         return;
     }
 

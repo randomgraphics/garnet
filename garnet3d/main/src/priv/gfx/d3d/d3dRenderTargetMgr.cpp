@@ -17,7 +17,7 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceCreate()
     // check multiple render target support
     if( getCaps(CAPS_MAX_RENDER_TARGETS) > MAX_RENDER_TARGETS )
     {
-        GNGFX_ERROR( "Sorry, we currently do not support more then %d simultaneous render targets.", MAX_RENDER_TARGETS );
+        GN_ERROR( "Sorry, we currently do not support more then %d simultaneous render targets.", MAX_RENDER_TARGETS );
         return false;
     }
 
@@ -122,7 +122,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
         // check texture's creation flag
         if( !(TEXUSAGE_RENDER_TARGET & tex->getUsage() ) )
         {
-            GNGFX_ERROR( "Texture must have usage of TEXUSAGE_RENDER_TARGET!" );
+            GN_ERROR( "Texture must have usage of TEXUSAGE_RENDER_TARGET!" );
             return;
         }
 
@@ -182,7 +182,7 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, uint32_t level, 
     {
         if( tex && !(TEXUSAGE_DEPTH & tex->getUsage()) )
         {
-            GNGFX_ERROR( "can't set non-depth-texture as depth buffer!" );
+            GN_ERROR( "can't set non-depth-texture as depth buffer!" );
             return;
         }
     }

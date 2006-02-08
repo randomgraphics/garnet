@@ -119,7 +119,7 @@ public:
                 }
                 else
                 {
-                    GNGFX_ERROR( "unsupport semantic %d!", sem );
+                    GN_ERROR( "unsupport semantic %d!", sem );
                     return;
                 }
                 item.enabled = true;
@@ -137,7 +137,7 @@ public:
             }
             else
             {
-                GNGFX_ERROR( "unsupport semantic %d!", sem );
+                GN_ERROR( "unsupport semantic %d!", sem );
                 return;
             }
             item.enabled = false;
@@ -354,7 +354,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                 }
                 else
                 {
-                    GNGFX_WARN( "unsupported vertex semantic!" );
+                    GN_WARN( "unsupported vertex semantic!" );
                 }
                 break;
 
@@ -378,7 +378,7 @@ void GN::gfx::OGLVtxBinding::bindBuffer(
                 }
                 else
                 {
-                    GNGFX_WARN( "unsupported vertex semantic!" );
+                    GN_WARN( "unsupported vertex semantic!" );
                 }
                 break;
 

@@ -181,7 +181,7 @@ bool GN::gfx::D3DPxlShaderHlsl::queryDeviceUniform( const char * name, HandleTyp
     D3DXHANDLE h = mConstTable->GetConstantByName( NULL, name );
     if( 0 == h )
     {
-        GNGFX_ERROR( "%s is not a valid shader uniform!", name );
+        GN_ERROR( "%s is not a valid shader uniform!", name );
         return false;
     }
 

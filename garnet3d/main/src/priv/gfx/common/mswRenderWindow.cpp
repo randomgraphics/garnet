@@ -21,13 +21,13 @@ bool GN::gfx::MSWRenderWindow::initExternalRenderWindow( HandleType, HandleType 
 
     if( !::IsWindow( (HWND)externalWindow ) )
     {
-        GNGFX_ERROR( "External render window handle must be valid." );
+        GN_ERROR( "External render window handle must be valid." );
         return false;
     }
 
     if( msInstanceMap.end() != msInstanceMap.find( (HWND)externalWindow ) )
     {
-        GNGFX_ERROR( "You can't create multiple render window instance for single window handle." );
+        GN_ERROR( "You can't create multiple render window instance for single window handle." );
         return false;
     }
 
@@ -35,7 +35,7 @@ bool GN::gfx::MSWRenderWindow::initExternalRenderWindow( HandleType, HandleType 
     mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
     if( 0 == mHook )
     {
-        GNGFX_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
+        GN_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
         return false;
     }
 
@@ -133,7 +133,7 @@ bool GN::gfx::MSWRenderWindow::getClientSize( uint32_t & width, uint32_t & heigh
 {
     if( !::IsWindow(mWindow) )
     {
-        GNGFX_ERROR( "MSWRenderWindow class is yet to initialized!" );
+        GN_ERROR( "MSWRenderWindow class is yet to initialized!" );
         return false;
     }
 
@@ -163,7 +163,7 @@ bool GN::gfx::MSWRenderWindow::postInit()
     mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
     if( 0 == mMonitor )
     {
-        GNGFX_ERROR( "Fail to get monitor handle from window!" );
+        GN_ERROR( "Fail to get monitor handle from window!" );
         return false;
     }
 
@@ -171,7 +171,7 @@ bool GN::gfx::MSWRenderWindow::postInit()
     //MONITORINFOEXA mi;
     //mi.cbSize = sizeof(mi);
     //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-    //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
+    //GN_INFO( "窗口所在的设备名：%s", mi.szDevice );
 
     // add window handle to instance map
     GN_ASSERT(
@@ -227,7 +227,7 @@ GN::gfx::MSWRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t he
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExA(&wcex) )
     {
-        GNGFX_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
+        GN_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
     }
 
@@ -253,7 +253,7 @@ GN::gfx::MSWRenderWindow::createWindow( HWND parent, uint32_t width, uint32_t he
         0 );
     if( 0 == mWindow )
     {
-        GNGFX_ERROR( "fail to create window, %s!", getOSErrorInfo() );
+        GN_ERROR( "fail to create window, %s!", getOSErrorInfo() );
         return false;
     }
 
@@ -288,7 +288,7 @@ GN::gfx::MSWRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
 
         case WM_SIZE :
             {
-                //GNGFX_INFO( "window resize to %dx%d", LOWORD(lp), HIWORD(lp) ) );
+                //GN_INFO( "window resize to %dx%d", LOWORD(lp), HIWORD(lp) ) );
                 bool minimized = ( SIZE_MINIMIZED == wp );
                 if( !minimized && !mInsideSizeMove ) mSizeChanged = true;
             }
@@ -305,14 +305,14 @@ GN::gfx::MSWRenderWindow::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
         mMonitor = ::MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
         if( 0 == mMonitor )
         {
-            GNGFX_ERROR( "Fail to get monitor handle from window handle!" );
+            GN_ERROR( "Fail to get monitor handle from window handle!" );
         }
 
         //// Output monitor information
         //MONITORINFOEXA mi;
         //mi.cbSize = sizeof(mi);
         //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-        //GNGFX_INFO( "窗口所在的设备名：%s", mi.szDevice );
+        //GN_INFO( "窗口所在的设备名：%s", mi.szDevice );
     }
 
     // trigger the message signal
@@ -359,7 +359,7 @@ GN::gfx::MSWRenderWindow::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARA
 {
     GN_GUARD;
 
-    //GNGFX_INFO( "GN::gfx::MSWRenderWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_INFO( "GN::gfx::MSWRenderWindow procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,MSWRenderWindow*>::const_iterator iter = msInstanceMap.find(wnd);
 
@@ -385,7 +385,7 @@ GN::gfx::MSWRenderWindow::staticHookProc( int code, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GNGFX_INFO( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_INFO( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,MSWRenderWindow*>::const_iterator iter =
         msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );

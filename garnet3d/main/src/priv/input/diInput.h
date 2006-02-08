@@ -21,7 +21,7 @@
         HRESULT rr = func;                                   \
         if( FAILED(rr) )                                     \
         {                                                    \
-            GNINPUT_ERROR( "%s", DXGetErrorString9A(rr) );   \
+            GN_ERROR( "%s", DXGetErrorString9A(rr) );   \
             something                                        \
         }                                                    \
     }

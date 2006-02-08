@@ -57,7 +57,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
     // check GL extensions
     if( !GLEW_ARB_shader_objects )
     {
-        GNGFX_ERROR( "no GLSL shader support!" );
+        GN_ERROR( "no GLSL shader support!" );
         return false;
     }
     
@@ -65,7 +65,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
     GN_OGL_CHECK( mProgram = glCreateProgramObjectARB() );
     if( 0 == mProgram )
     {
-        GNGFX_ERROR( "fail to create OpenGL shading language program object!" );
+        GN_ERROR( "fail to create OpenGL shading language program object!" );
         return false;
     }
 
@@ -85,7 +85,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
         false );
     if( !linkOk )
     {
-        GNGFX_ERROR(
+        GN_ERROR(
             "\n========== GLSL program link error =========\n"
             "%s\n"
             "==============================================\n",
