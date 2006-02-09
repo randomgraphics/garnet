@@ -239,7 +239,7 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
             {
                 setUniformByName( i->first, i->second );
             }
-            for( std::map<StrA,Texture*>::const_iterator i = g.textures.begin(); i != g.textures.end(); ++i )
+            for( std::map<StrA,uint32_t>::const_iterator i = g.textures.begin(); i != g.textures.end(); ++i )
             {
                 setTextureByName( i->first, i->second );
             }

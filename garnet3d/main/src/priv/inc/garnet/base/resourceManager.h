@@ -37,6 +37,32 @@ namespace GN
     //!
     //! RES must support default constructor and assignment operation.
     //!
+    //! 资源管理器使用4个回调函数来管理资源的创建和删除: 
+    //! - Creator: 创建函数
+    //!   - 用来创建资源实例. 管理器有一个全局的创建函数, 供所有的资源使用. 同时, 每个资源
+    //!     也可以拥有自己特定的创建函数.
+    //! - Deletor: 删除函数
+    //!   - 用来删除资源实例. 管理器有且仅有一个全局的删除函数, 供所有资源使用.
+    //! - Nullor: 空函数
+    //!   - 当资源创建失败(Creator返回null)时, 管理器会调用Nullor来创建一个所谓的"空"对象,
+    //!     用来替代那个失败的资源.
+    //!   - 和Creator类似, 管理器有一个全局的空函数, 供所有资源使用. 同时, 每个资源也可以有
+    //!     自己特定的空函数.
+    //!   - 使用空对象的目的就是: 保证资源管理器总是会返回有效的资源实例. 这样在使用者的代码中
+    //!     就可以避免如下的代码:
+    //!         MyResource * ptr = myResourceMgr.getResource( theHandle );
+    //!         if( ptr )
+    //!             do_something_normal();
+    //!         else
+    //!             report_error();
+    //!   - 空对象应尽量容易引起使用者的注意, 且不会引起程序崩溃.
+    //!     - 比如可以用纯红色的1x1贴图作为空贴图, 用一个大方块作为空mesh.
+    //! - NameChecker: 名字检查函数
+    //!   - 当用户试图用名字引用一个不存在的资源时, 管理器会调用NameCheker来检查这个名字的有效性,
+    //!     并把有效的名字自动加入资源管理器中(参见getResourceHandle()的代码).
+    //!   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
+    //!     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
+    //!
     template<typename RES, bool SINGLETON=false>
     class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,SINGLETON>,SINGLETON>::type
     {
@@ -74,12 +100,12 @@ namespace GN
         ~ResourceManager() { clear(); }
 
         //!
-        //! Get default creator
+        //! Get global creator.
         //!
         const Creator & getCreator() const { return mCreator; }
 
         //!
-        //! Get deletor
+        //! Get global resource deletor.
         //!
         const Deletor & getDeletor() const
         {
@@ -91,22 +117,22 @@ namespace GN
         }
 
         //!
-        //! Get defaut NULL instance creator
+        //! Get global NULL instance creator
         //!
         const Creator & getNullor() const { return mNullor; }
 
         //!
-        //! Get resource name checker
+        //! Get global resource name checker
         //!
         const NameChecker & getNameChecker() const { return mNameChecker; }
 
         //!
-        //! Set default creator
+        //! Set global creator
         //!
         void setCreator( const Creator & c ) { mCreator = c; }
 
         //!
-        //! Set default NULL instance creator
+        //! Set global NULL instance creator
         //!
         void setNullor( const Creator & n )
         {
@@ -115,12 +141,12 @@ namespace GN
         }
 
         //!
-        //! Set deletor
+        //! Set global deletor
         //!
         void setDeletor( const Deletor & d ) { mDeletor = d; }
 
         //!
-        //! Set resource name checker
+        //! Set global resource name checker
         //!
         void setNameChecker( const NameChecker & s ) { mNameChecker = s; }
 
@@ -160,7 +186,7 @@ namespace GN
         }
 
         //!
-        //! Invalidate all resources. But keep all resources items.
+        //! Release all resource instances. But keep resource manager itself unchanged.
         //!
         void dispose()
         {
@@ -261,15 +287,14 @@ namespace GN
         }
 
         //!
-        //! Remove resource from manager
+        //! Remove resource from manager (unimplemented)
         //!
         void removeResource( ResHandle handle );
 
         //!
-        //! Remove resource from manager
+        //! Remove resource from manager (unimplemented)
         //!
         void removeResource( const StrA & name );
-
 
         //!
         //! Get resource handle
@@ -382,7 +407,7 @@ namespace GN
         Creator      mCreator;
         Deletor      mDeletor;
         Creator      mNullor; // Use to create default "NULL" instance.
-        NameChecker     mNameChecker;
+        NameChecker  mNameChecker;
 
         RES   * mNullInstance;
         Deletor mNullDeletor;

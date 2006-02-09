@@ -19,7 +19,7 @@ GN_INLINE size_t GN::gfx::effect::Effect::drawBegin() const
     // success
     return t.passes.size();
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -101,7 +101,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
             const TextureRefData & tr = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(tr.handle) );
             const TextureData & td = mTextures.items[tr.handle];
-            mRenderer->bindTexture( tr.stage, td.value.get() );
+            mRenderer->bindTexture( tr.stage, gTexDict.getResource(td.value) );
         }
     }
 
@@ -242,7 +242,7 @@ GN_INLINE uint32_t GN::gfx::effect::Effect::getTextureHandle( const StrA & name 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::setTexture( uint32_t handle, const Texture * value ) const
+GN_INLINE void GN::gfx::effect::Effect::setTexture( uint32_t handle, uint32_t id ) const
 {
     GN_GUARD_SLOW;
 
@@ -253,7 +253,7 @@ GN_INLINE void GN::gfx::effect::Effect::setTexture( uint32_t handle, const Textu
     }
 
     TextureData & u = mTextures.items[handle];
-    u.value.reset(value);
+    u.value = id;
 
     GN_UNGUARD_SLOW;
 }
@@ -261,11 +261,11 @@ GN_INLINE void GN::gfx::effect::Effect::setTexture( uint32_t handle, const Textu
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::setTextureByName( const StrA & name, const Texture * value ) const
+GN_INLINE void GN::gfx::effect::Effect::setTextureByName( const StrA & name, uint32_t id ) const
 {
     GN_GUARD_SLOW;
     uint32_t handle = getTextureHandle( name );
     if( 0 == handle ) return;
-    setTexture( handle, value );
+    setTexture( handle, id );
     GN_UNGUARD_SLOW;
 }
