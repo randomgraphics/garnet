@@ -7,7 +7,16 @@ REM code coverage automation
 REM ************************
 
 IF ""=="%1" (
-	echo Code coverage automation.
+    echo.
+    echo *************************************
+    echo *                                   *
+	echo *  Code coverage automation script  *
+	echo *                                   *
+	echo *************************************
+	echo.
+	echo Use environment variable MAGELLAN_SQL_SERVER to specify SQL server.
+	echo Default is localhost.
+	echo.
 	echo Usage: cc program [parameters]
 	exit /b
 )
