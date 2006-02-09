@@ -6,6 +6,16 @@
 //! \author  chenlee (2005.9.30)
 // *****************************************************************************
 
+//!
+//! global texture dictionary
+//!
+#define gTexDict (GN::gfx::TextureDictionary::getInstance())
+
+//!
+//! pointer to global texture dictionary
+//!
+#define gTexDictPtr (GN::gfx::TextureDictionary::getInstancePtr())
+
 namespace GN { namespace gfx
 {
     //!
@@ -299,6 +309,11 @@ namespace GN { namespace gfx
         uint32_t            mUsage;   //!< creation flags
         TextureLoader       mLoader;  //!< content loader
     };
+
+    //!
+    //! Texture manager class (singleton)
+    //!
+    typedef ResourceManager<Texture*,true> TextureDictionary;
 
     //! \name convert between texture tags and string
     //@{

@@ -6,6 +6,16 @@
 //! \author  chenlee (2006.1.7)
 // *****************************************************************************
 
+//!
+//! global effect dictionary
+//!
+#define gEffectDict (GN::gfx::EffectDictionary::getInstance())
+
+//!
+//! pointer to global effect dictionary
+//!
+#define gEffectDictPtr (GN::gfx::EffectDictionary::getInstancePtr())
+
 namespace GN { namespace gfx {
     //!
     //! namespace for graphics effect classes
@@ -156,7 +166,7 @@ namespace GN { namespace gfx {
         struct GeometryData
         {
             std::map<StrA,UniformValue> uniforms; //!< geometry specific uniforms. Key is uniform name.
-            std::map<StrA,Texture*>     textures; //!< geometry specific textures. Key is texture name.
+            std::map<StrA,uint32_t>     textures; //!< geometry specific textures. Key is texture name; value is texture resource ID.
             
             
             uint32_t        vtxBinding;
@@ -319,14 +329,14 @@ namespace GN { namespace gfx {
             uint32_t getTextureHandle( const StrA & ) const;
 
             //!
-            //! set texture value
+            //! set texture
             //!
-            void setTexture( uint32_t, const Texture * ) const;
+            void setTexture( uint32_t key, uint32_t id ) const;
 
             //!
-            //! set texture value by name
+            //! set texture by name
             //!
-            void setTextureByName( const StrA &, const Texture * ) const;
+            void setTextureByName( const StrA & name, uint32_t id ) const;
 
             //@}
 
@@ -349,8 +359,8 @@ namespace GN { namespace gfx {
 
             struct TextureData
             {
-                StrA                   name;
-                AutoRef<const Texture> value;
+                StrA     name;
+                uint32_t value;
             };
 
             struct TextureRefData
@@ -456,6 +466,11 @@ namespace GN { namespace gfx {
             static bool sCheckFfpParameterType( const StrA & name, FfpParameterType & type );
             static void sSetFfpParameter( Renderer &, FfpParameterType, const UniformData & );
         };
+
+        //!
+        //! Effect manager class (singleton)
+        //!
+        typedef ResourceManager<Effect*,true> EffectDictionary;
     }
 }}
 

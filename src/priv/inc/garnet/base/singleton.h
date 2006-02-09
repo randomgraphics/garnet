@@ -6,6 +6,11 @@
 //! \author  chenlee (2005.8.13)
 // *****************************************************************************
 
+//!
+//! 实现单件类中的静态变量
+//!
+#define GN_IMPLEMENT_SINGLETON(T) template<> T * ::GN::Singleton< T >::msInstancePtr = 0;
+
 namespace GN
 {
     //!
@@ -44,11 +49,6 @@ namespace GN
         //!
         static T * getInstancePtr() { return msInstancePtr; }
     };
-
-    //!
-    //! 实现单件类中的静态变量
-    //!
-    #define GN_IMPLEMENT_SINGLETON(T) template<> T * ::GN::Singleton< T >::msInstancePtr = 0;
 
     //!
     //! 用于局部使用的单件类，无法跨DLL使用。

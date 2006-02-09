@@ -145,7 +145,6 @@ def GN_build_static_object( env, source=[], pchstop=0, pchcpp=0, pdb=0 ):
 # Брвы static object list
 def GN_build_static_objects( env, sources=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
-    env.Append( CPPDEFINES=['_GN_LIB'] )
     GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     return [env.Object(x) for x in sources]
 
@@ -173,7 +172,6 @@ def GN_build_static_library( env, target, sources=[],
                              pdb=0,
                              addToTargetList=1 ):
     env = env.Copy()
-    env.Append( CPPDEFINES=['_GN_LIB'] )
     if not pdb and target: pdb = target + '.pdb'
     pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     result = env.Library(target,sources + pchobj )
@@ -239,13 +237,15 @@ def GN_build_program( env, target, sources=[],
                       pchstop=0, pchcpp=0,
                       pdb=0,
                       libs=[],
-                      addToTargetList=1 ):
+                      addToTargetList=1,
+                      ignoreDefaultLibs=0 ):
     env = env.Copy()
     if not pdb and target: pdb = target + '.pdb'
     pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    if GN_conf['static']:
-        libs += Split('GNgfxD3D GNgfxOGL GNgfxCommon GNd3d GNogl')
-    libs += Split('GNcoreLib GNinput GNwin GNgfxLib GNbase GNcoreLib GNinput GNwin GNbase GNextern')
+    if not ignoreDefaultLibs:
+        if GN_conf['static']:
+            libs += Split('GNgfxD3D GNgfxOGL GNgfxCommon GNd3d GNogl')
+        libs += Split('GNcoreLib GNinput GNwin GNgfxLib GNbase GNcoreLib GNinput GNwin GNbase GNextern')
     extra = []
     for x in libs:
         if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
