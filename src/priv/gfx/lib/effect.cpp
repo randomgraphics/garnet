@@ -212,42 +212,7 @@ void GN::gfx::effect::Effect::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::setActiveTechnique( const char * name )
-{
-    GN_GUARD;
-
-    if( !ok() )
-    {
-        GN_ERROR( "Uninitialized effect class." );
-        return;
-    }
-
-    GN_ASSERT( !mTechniques.empty() );
-
-    if( 0 == name )
-    {
-        // use the first technique.
-        mActiveTechnique = mTechniques.items.first();
-    }
-    else
-    {
-        uint32_t handle = mTechniques.find( name );
-        if( 0 == handle )
-        {
-            GN_ERROR( "Technique named '%s' not found.", name );
-            return;
-        }
-        mActiveTechnique = handle;
-    }
-    GN_ASSERT( mTechniques.items.validHandle( mActiveTechnique ) );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::render( const GeometryData * geometryDataArray, size_t count ) const
+void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size_t count ) const
 {
     GN_GUARD_SLOW;
 
@@ -260,59 +225,44 @@ void GN::gfx::effect::Effect::render( const GeometryData * geometryDataArray, si
         return;
     }
 
-    // prepare technique
-    GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
-    TechniqueData & t = mTechniques.items[mActiveTechnique];
-    if( !t.ready && !initTechnique(mActiveTechnique) ) return;
-    GN_ASSERT( t.ready );
-
-    // do the rendering
-    Shader * shaders[NUM_SHADER_TYPES];
-    for( size_t iPass = 0; iPass < t.passes.size(); ++iPass )
+    size_t numPasses = drawBegin();
+    for( size_t i = 0; i < numPasses; ++i )
     {
-        const PassData & p = t.passes[iPass];
+        passBegin( i );
 
-        // apply render states
-        GN_ASSERT( p.rsb );
-        mRenderer->bindRenderStateBlock( p.rsb );
-
-        // apply shaders
-        for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
+        // render the geometries
+        for( size_t i = 0; i < count; ++i )
         {
-            GN_ASSERT( mShaders.items.validHandle(p.shaders[iShader]) );
-            const ShaderData & sd = mShaders.items[p.shaders[iShader]];
+            const GeometryData & g = geometryDataArray[i];
 
-            shaders[iShader] = sd.value.get();
-
-            // apply dirty uniforms
-            for( size_t iUniform = 0; iUniform < sd.dirtyUniforms.size(); ++iUniform )
+            for( std::map<StrA,UniformValue>::const_iterator i = g.uniforms.begin(); i != g.uniforms.end(); ++i )
             {
-                const UniformRefData & ur = sd.uniforms[iUniform];
-                const UniformData & ud = mUniforms.items[ur.handle];
-                if( ur.ffp )
-                {
-                    sSetFfpParameter( *mRenderer, ur.ffpParameterType, ud );
-                }
-                else
-                {
-                    GN_ASSERT( !ud.isTextureStates && ur.shaderUniformHandle );
-                    shaders[iShader]->setUniform( ur.shaderUniformHandle, ud.value );
-                }
+                setUniformByName( i->first, i->second );
+            }
+            for( std::map<StrA,Texture*>::const_iterator i = g.textures.begin(); i != g.textures.end(); ++i )
+            {
+                setTextureByName( i->first, i->second );
             }
 
-            // apply textures
-            for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
+            commitChanges();
+
+            mRenderer->bindVtxBinding( g.vtxBinding );
+            mRenderer->bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
+            mRenderer->bindIdxBuf( g.idxBuf.get() );
+
+            if( g.idxBuf.empty() )
             {
-                const TextureRefData & tr = sd.textures[iTexture];
-                GN_ASSERT( mTextures.items.validHandle(tr.handle) );
-                const TextureData & td = mTextures.items[tr.handle];
-                mRenderer->bindTexture( tr.stage, td.value.get() );
+                mRenderer->draw( g.prim, g.numPrim, g.startVtx );
+            }
+            else
+            {
+                mRenderer->drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
             }
         }
-        mRenderer->bindShaders( shaders );
 
-        // do rendering
+        passEnd();
     }
+    drawEnd();
 
     GN_UNGUARD_SLOW;
 }

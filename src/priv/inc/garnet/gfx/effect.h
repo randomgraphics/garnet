@@ -60,7 +60,6 @@ namespace GN { namespace gfx {
             ShadingLanguage lang; //!< Shading language. Ignored if code is empty.
             StrA code; //!< Shader code. Empty means fixed functional pipeline.
             StrA entry; //!< Entry function of the code. Ignored, if code is empty.
-            // TODO: use map instead of vector.
             std::vector<TextureRefDesc> textures; //!< textures used by the shader.
             std::vector<UniformRefDesc> uniforms; //!< uniforms used by the shader.
         };
@@ -127,7 +126,9 @@ namespace GN { namespace gfx {
             }
 
             //!
-            //! Get uniform by name. Name must be a valid uniform name.
+            //! Get uniform by name.
+            //! \param name
+            //!     MUST be a valid uniform name.
             //!
             const UniformDesc & getUniform( const StrA & name ) const
             {
@@ -137,7 +138,9 @@ namespace GN { namespace gfx {
             }
 
             //!
-            //! Get shader by name. Name must be a valid shader name.
+            //! Get shader by name.
+            //! \param name
+            //!     MUST be a valid shader name.
             //!
             const ShaderDesc & getShader( const StrA & name ) const
             {
@@ -152,9 +155,21 @@ namespace GN { namespace gfx {
         //!
         struct GeometryData
         {
+            std::map<StrA,UniformValue> uniforms; //!< geometry specific uniforms. Key is uniform name.
+            std::map<StrA,Texture*>     textures; //!< geometry specific textures. Key is texture name.
+            
+            
+            uint32_t        vtxBinding;
             AutoRef<VtxBuf> vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list.
             uint32_t        numVtxBufs; //!< vertex buffer count
             AutoRef<IdxBuf> idxBuf; //!< index buffer
+
+            PrimitiveType prim;      //!< primitive type
+            size_t        numPrim;   //!< primitive count
+            size_t        startVtx;  //!< base vertex index
+            size_t        minVtxIdx; //!< ignored if index buffer is NULL.
+            size_t        numVtx;    //!< ignored if index buffer is NULL.
+            size_t        startIdx;  //!< ignored if index buffer is NULL.
         };
 
         //!
@@ -185,71 +200,114 @@ namespace GN { namespace gfx {
             void quit();
             bool ok() const { return MyParent::ok(); }
         private:
-            void clear() { mRenderer = 0; }
+            void clear() { mRenderer = 0; mDrawBegun = false; mPassBegun = false; }
             //@}
 
             // ********************************
-            // public functions
+            //! \name rendering functions
+            //!
+            //! Standard call sequence:
+            //! <pre>
+            //!     set_common_uniforms_and_textures();
+            //!     size_t numPasses = myEffect->drawBegin();
+            //!     for( size_t i = 0; i < numPasses; ++i )
+            //!     {
+            //!         myEffect->passBegin( i );
+            //!         for_each_mesh
+            //!         {
+            //!             set_mesh_specific_uniforms_and_textures();
+            //!             myEffect->commitChanges();
+            //!             draw_the_mesh();
+            //!         }
+            //!         myEffect->passEnd();
+            //!     }
+            //!     myEffect->drawEnd();
+            //! </pre>
             // ********************************
         public:
+
+            //@{
+
+            //!
+            //! Draw a list of geometries in one call (recommened).
+            //!
+            void draw( const GeometryData * geometryDataArray, size_t count ) const;
+
+            //!
+            //! Begin rendering. Return number of pass.
+            //!
+            size_t drawBegin() const;
+
+            //!
+            //! End rendering.
+            //!
+            void drawEnd() const { GN_ASSERT(mDrawBegun); mDrawBegun = false; }
+
+            //!
+            //! apply render state of specific pass
+            //! Must be called between drawBegin() and drawEnd().
+            //!
+            void passBegin( size_t ) const;
+
+            //!
+            //! end the rendering pass.
+            //! Must be called between drawBegin() and drawEnd(), and after passBegin().
+            //!
+            void passEnd() const { GN_ASSERT(mPassBegun); mPassBegun = false; }
+
+            //!
+            //! Commit modified uniforms and textures to renderer.
+            //! Must be called between passBegin() and passEnd().
+            //!
+            void commitChanges() const;
+
+            //@}
+
+            // ********************************
+            //! \name technique management
+            // ********************************
+        public:
+
+            //@{
+
+            //!
+            //! get technique handle
+            //!
+            uint32_t getTechniqueHandle( const StrA & name ) const;
+
+            //!
+            //! set active technique. 0 means the first technique.
+            //!
+            void setActiveTechnique( uint32_t ) const;
 
             //!
             //! Set active technique.
-            //! \param name Technique name. NULL means the first technique.
+            //! \param name Technique name. Empty string means the first technique.
             //!
-            void setActiveTechnique( const char * name );
+            void setActiveTechniqueByName( const StrA & name ) const;
 
-            //!
-            //! Do the rendering.
-            //!
-            void render( const GeometryData * geometryDataArray, size_t count ) const;
+            //@}
 
             // ********************************
-            // uniform management
+            //! \name uniform management
             // ********************************
         public:
+
+            //@{
 
             //!
             //! Get handle of uniform variable
             //!
-            uint32_t getUniformHandle( const char * ) const;
+            uint32_t getUniformHandle( const StrA & ) const;
 
-            //!
-            //! \name Set value of uniform variable.
-            //!
-            //@{
-            void setUniformB( uint32_t, const int32_t *, size_t );
-            void setUniformI( uint32_t, const int32_t *, size_t );
-            void setUniformF( uint32_t, const float *, size_t );
-            void setUniformV( uint32_t, const Vector4f *, size_t );
-            void setUniformM( uint32_t, const Matrix44f *, size_t ); //!< \note Matrix should be row major
+            void setUniform( uint32_t, const UniformValue & ) const;
 
-            void setUniformB( uint32_t, bool );
-            void setUniformI( uint32_t, int32_t );
-            void setUniformF( uint32_t, float );
-            void setUniformV( uint32_t, const Vector4f & );
-            void setUniformM( uint32_t, const Matrix44f & ); //!< \note Matrix should be row major
-            //@}
+            void setUniformByName( const StrA &, const UniformValue & ) const;
 
-            //!
-            //! \name Set uniform variable by name
-            //!
-            //@{
-            void setUniformByNameB( const char *, const int32_t *, size_t );
-            void setUniformByNameI( const char *, const int32_t *, size_t );
-            void setUniformByNameF( const char *, const float *, size_t );
-            void setUniformByNameV( const char *, const Vector4f *, size_t );
-            void setUniformByNameM( const char *, const Matrix44f *, size_t );
-
-            void setUniformByNameB( const char *, bool );
-            void setUniformByNameI( const char *, int32_t );
-            void setUniformByNameF( const char *, float );
-            void setUniformByNameV( const char *, const Vector4f & );
-            void setUniformByNameM( const char *, const Matrix44f & );
             //@}
 
             // ********************************
-            // texture management
+            //! \name texture management
             // ********************************
         public:
 
@@ -258,17 +316,17 @@ namespace GN { namespace gfx {
             //!
             //! get texture handle
             //!
-            uint32_t getTextureHandle( const char * ) const;
+            uint32_t getTextureHandle( const StrA & ) const;
 
             //!
             //! set texture value
             //!
-            void setTexture( uint32_t, const Texture * );
+            void setTexture( uint32_t, const Texture * ) const;
 
             //!
             //! set texture value by name
             //!
-            void setTextureByName( const char *, const Texture * );
+            void setTextureByName( const StrA &, const Texture * ) const;
 
             //@}
 
@@ -291,8 +349,8 @@ namespace GN { namespace gfx {
 
             struct TextureData
             {
-                StrA             name;
-                AutoRef<Texture> value;
+                StrA                   name;
+                AutoRef<const Texture> value;
             };
 
             struct TextureRefData
@@ -381,7 +439,11 @@ namespace GN { namespace gfx {
             NamedItemManager<UniformData>   mUniforms;
             NamedItemManager<ShaderData>    mShaders;
             NamedItemManager<TechniqueData> mTechniques;
-            uint32_t                        mActiveTechnique;
+            
+            mutable uint32_t mActiveTechnique;
+            mutable bool     mDrawBegun;
+            mutable bool     mPassBegun;
+            mutable size_t   mActivePass;
 
             // ********************************
             // private functions
@@ -398,7 +460,7 @@ namespace GN { namespace gfx {
 }}
 
 #if GN_ENABLE_INLINE
-#include "effect.h"
+#include "effect.inl"
 #endif
 
 // *****************************************************************************
