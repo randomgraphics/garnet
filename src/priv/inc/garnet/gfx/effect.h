@@ -42,27 +42,6 @@ namespace GN { namespace gfx {
         };
 
         //!
-        //! Texture reference descriptor
-        //!
-        struct TextureRefDesc
-        {
-            StrA     name;  //!< Texture name
-            uint32_t stage; //!< Texture/Sampler Stage index
-        };
-
-        //!
-        //! Uniform reference descriptor
-        //!
-        struct UniformRefDesc
-        {
-            StrA name;    //!< Uniform name
-            StrA binding; //!< binding parameter of the uniform. Could be:
-                          //!< - register name (for asm shader),
-                          //!< - variable name (for high-level shader), or
-                          //!< - fixed pipleine parameter name (such as "TransformWorld").
-        };
-
-        //!
         //! Shader descriptor
         //!
         struct ShaderDesc
@@ -71,8 +50,8 @@ namespace GN { namespace gfx {
             ShadingLanguage lang; //!< Shading language. Ignored if code is empty.
             StrA code; //!< Shader code. Empty means fixed functional pipeline.
             StrA entry; //!< Entry function of the code. Ignored, if code is empty.
-            std::vector<TextureRefDesc> textures; //!< textures used by the shader.
-            std::vector<UniformRefDesc> uniforms; //!< uniforms used by the shader.
+            std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage.
+            std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding.
         };
 
         //!
@@ -402,7 +381,7 @@ namespace GN { namespace gfx {
                 AutoRef<Shader>             value;
                 std::vector<TextureRefData> textures;      // texture referencing list.
                 std::vector<UniformRefData> uniforms;      // uniform referencing list.
-                std::vector<uint32_t>       dirtyUniforms; // dirty uniform list. Each item is a index into the shader's uniform list.
+                std::set<uint32_t>          dirtyUniforms; // dirty uniform list. Each item is a index into the shader's uniform list.
             };
 
             struct PassData
@@ -464,7 +443,6 @@ namespace GN { namespace gfx {
             bool createEffect(); // called by init()
             bool initTechnique( uint32_t handle ) const; // initialize specific technique.
 
-            static bool sCheckFfpParameterType( const StrA & name, FfpParameterType & type );
             static void sSetFfpParameter( Renderer &, FfpParameterType, const UniformData & );
         };
 
