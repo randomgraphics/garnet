@@ -21,9 +21,7 @@ bool GN::gfx::RenderStateBlockDesc::valid() const
     {
         if( RSV_INVALID == rs[i] ) continue;
         if( 0 <= rs[i] && rs[i] < NUM_RENDER_STATE_VALUES ) continue;
-        GN_ERROR( "invalid render state value(%d) for render state %s.",
-            i,
-            renderState2Str( (RenderState)i ) );
+        GN_ERROR( "RenderState(%s)含有无效值：%d.", renderState2Str( (RenderState)i ), i );
         return false;
     }
 

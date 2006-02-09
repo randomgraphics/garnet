@@ -79,9 +79,10 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
         shaders[iShader] = sd.value.get();
 
         // apply dirty uniforms
-        for( size_t iUniform = 0; iUniform < sd.dirtyUniforms.size(); ++iUniform )
+        for( std::set<uint32_t>::const_iterator iUniform = sd.dirtyUniforms.begin(); iUniform != sd.dirtyUniforms.end(); ++iUniform )
         {
-            const UniformRefData & ur = sd.uniforms[iUniform];
+            GN_ASSERT( 0 <= (*iUniform) && (*iUniform) < sd.uniforms.size() );
+            const UniformRefData & ur = sd.uniforms[*iUniform];
             const UniformData & ud = mUniforms.items[ur.handle];
             if( ur.ffp )
             {
@@ -205,7 +206,7 @@ GN_INLINE void GN::gfx::effect::Effect::setUniform( uint32_t handle, const Unifo
     {
         ShaderRefData & sr = u.shaders[i];
         ShaderData & sd = mShaders.items[sr.shader];
-        sd.dirtyUniforms.push_back( sr.index );
+        sd.dirtyUniforms.insert( sr.index );
     }
 
     GN_UNGUARD_SLOW;

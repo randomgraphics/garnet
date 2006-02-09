@@ -148,7 +148,7 @@ namespace GN { namespace gfx
 
         public:
 
-            FakeTexture();
+            FakeTexture() {}
 
             bool init( TexType type,
                        uint32_t sx, uint32_t sy, uint32_t sz,
