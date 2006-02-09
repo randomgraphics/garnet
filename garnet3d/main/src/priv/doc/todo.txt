@@ -12,6 +12,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - resource managers (textures, meshes, materials/effects)
   - sample application
     - render to texture
     - GLSL test application
