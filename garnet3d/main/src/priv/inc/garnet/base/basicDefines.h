@@ -181,6 +181,7 @@
 #define GN_PUBLIC   GN_EXPORT // Only core module exports symbols
 #else
 #define GN_PUBLIC   GN_IMPORT // All other modules only imports symbols
+#endif
 
 // *****************************************************************************
 // Misc.
