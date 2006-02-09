@@ -62,3 +62,10 @@ REM ============
 
 echo Garnet root : %GARNET_ROOT%
 cd /d %GARNET_ROOT%
+
+REM =========================
+REM Call user specific script
+REM =========================
+
+echo User name: %USERNAME%
+if exist env\user\%USERNAME%.cmd call env\user\%USERNAME%.cmd
