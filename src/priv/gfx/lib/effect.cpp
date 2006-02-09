@@ -287,6 +287,21 @@ bool GN::gfx::effect::Effect::createEffect()
         TextureData td;
         td.name = i->first;
         mTextures.add( i->first, td );
+
+        // set default texture value
+        if( !i->second.defaultValue.empty() )
+        {
+            uint32_t id = gTexDict.getResourceHandle( i->second.defaultValue );
+            if( 0 == id )
+            {
+                GN_WARN( "Default texture value '%s' of texture '%s' is not a valid texture resource.",
+                    i->second.defaultValue.cstr(), td.name.cstr() );
+            }
+            else
+            {
+                setTextureByName( td.name, id );
+            }
+        }
     }
 
     // create uniform list
@@ -342,25 +357,28 @@ bool GN::gfx::effect::Effect::createEffect()
     }
 
     // build shader referencing list for all uniforms
-    for( uint32_t h = mUniforms.items.first(); h != 0; h = mUniforms.items.next(h) )
+    for( uint32_t hUniform = mUniforms.items.first(); hUniform != 0; hUniform = mUniforms.items.next(hUniform) )
     {
-        UniformData & ud = mUniforms.items[h];
-        for( uint32_t h = mShaders.items.first(); h != 0; h = mShaders.items.next(h) )
+        UniformData & ud = mUniforms.items[hUniform];
+
+        for( uint32_t hShader = mShaders.items.first(); hShader != 0; hShader = mShaders.items.next(hShader) )
         {
-            const ShaderData & sd = mShaders.items[h];
+            const ShaderData & sd = mShaders.items[hShader];
             const ShaderDesc & s = mDesc.getShader(sd.name);
             for( size_t i = 0; i < s.uniforms.size(); ++i )
             {
                 if( s.uniforms[i].name == ud.name )
                 {
-                    ShaderRefData urd = { h, i };
+                    ShaderRefData urd = { hShader, i };
                     ud.shaders.push_back( urd );
                 }
             }
         }
-    }
 
-    GN_TODO( "setup default value for all uniforms." );
+        // set default uniform value.
+        const UniformDesc & u = mDesc.getUniform(ud.name);
+        if( u.hasDefaultValue ) setUniform( hUniform, u.defaultValue );
+    }
 
     // create technique list
     GN_ASSERT( !mDesc.techniques.empty() );

@@ -27,6 +27,7 @@ namespace GN { namespace gfx {
         //!
         struct TextureDesc
         {
+            StrA defaultValue; //!< Default texture resource name. Empty means no default value.
         };
 
         //!

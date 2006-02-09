@@ -17,9 +17,7 @@ TODO
     - render to texture
     - GLSL test application
   - mesh class
-  - effect class
-    - ut
-    - default uniform value
+  - effect class: ut
   - blender exporter/importer
   - gui system
     - font class
