@@ -185,12 +185,12 @@ namespace GN { namespace gfx {
 
             //@{
         public:
-            bool init( Renderer &, const EffectDesc & ); //!< initialize from descriptor
+            bool init( const EffectDesc & ); //!< initialize from descriptor
             bool init( const Effect & ); //!< Make effect clone
             void quit();
             bool ok() const { return MyParent::ok(); }
         private:
-            void clear() { mRenderer = 0; mDrawBegun = false; mPassBegun = false; }
+            void clear() { mDrawBegun = false; mPassBegun = false; }
             //@}
 
             // ********************************
@@ -422,7 +422,6 @@ namespace GN { namespace gfx {
                 }
             };
 
-            Renderer * mRenderer;
             EffectDesc mDesc;
 
             NamedItemManager<TextureData>   mTextures;
@@ -443,7 +442,7 @@ namespace GN { namespace gfx {
             bool createEffect(); // called by init()
             bool initTechnique( uint32_t handle ) const; // initialize specific technique.
 
-            static void sSetFfpParameter( Renderer &, FfpParameterType, const UniformData & );
+            static void sSetFfpParameter( FfpParameterType, const UniformData & );
         };
 
         //!

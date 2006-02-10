@@ -199,7 +199,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::init( Renderer & r, const EffectDesc & d )
+bool GN::gfx::effect::Effect::init( const EffectDesc & d )
 {
     GN_GUARD;
 
@@ -212,7 +212,6 @@ bool GN::gfx::effect::Effect::init( Renderer & r, const EffectDesc & d )
         quit(); return selfOK();
     }
 
-    mRenderer = &r;
     mDesc = d;
 
     if( !createEffect() ) { quit(); return selfOK(); }
@@ -230,8 +229,8 @@ bool GN::gfx::effect::Effect::init( const Effect & e )
 {
     GN_GUARD;
 
-    GN_ASSERT( e.mRenderer && e.mDesc.valid() );
-    return init( *e.mRenderer, e.mDesc );
+    GN_ASSERT( e.mDesc.valid() );
+    return init( e.mDesc );
 
     GN_UNGUARD;
 }
@@ -269,6 +268,8 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
         return;
     }
 
+    Renderer & r = gRenderer;
+
     size_t numPasses = drawBegin();
     for( size_t i = 0; i < numPasses; ++i )
     {
@@ -290,17 +291,17 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
 
             commitChanges();
 
-            mRenderer->bindVtxBinding( g.vtxBinding );
-            mRenderer->bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
-            mRenderer->bindIdxBuf( g.idxBuf.get() );
+            r.bindVtxBinding( g.vtxBinding );
+            r.bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
+            r.bindIdxBuf( g.idxBuf.get() );
 
             if( g.idxBuf.empty() )
             {
-                mRenderer->draw( g.prim, g.numPrim, g.startVtx );
+                r.draw( g.prim, g.numPrim, g.startVtx );
             }
             else
             {
-                mRenderer->drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
+                r.drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
             }
         }
 
@@ -322,7 +323,7 @@ bool GN::gfx::effect::Effect::createEffect()
 {
     GN_GUARD;
 
-    GN_ASSERT( mRenderer && mDesc.valid() && mUniforms.empty() && mTextures.empty() );
+    GN_ASSERT( mDesc.valid() && mUniforms.empty() && mTextures.empty() );
 
     // create texture list
     for( std::map<StrA,TextureDesc>::const_iterator i = mDesc.textures.begin();
@@ -434,7 +435,7 @@ bool GN::gfx::effect::Effect::createEffect()
             const PassDesc & p = t.passes[iPass];
             PassData & pd = td.passes[iPass];
 
-            pd.rsb = mRenderer->createRenderStateBlock( mDesc.rsb + t.rsb + p.rsb );
+            pd.rsb = gRenderer.createRenderStateBlock( mDesc.rsb + t.rsb + p.rsb );
             if( 0 == pd.rsb )
             {
                 GN_ERROR( "Fail to create render state block for pass(%d) of technique named '%s'.",
@@ -485,7 +486,7 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
             // create shaders instance
             if( !sd.value.empty() && !s.code.empty() )
             {
-                sd.value.attach( mRenderer->createShader( s.type, s.lang, s.code, s.entry ) );
+                sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.entry ) );
                 if( sd.value.empty() )
                 {
                     GN_ERROR( "Fail to create shader '%s' for technique '%s'.", sd.name.cstr(), td.name.cstr() );
@@ -532,8 +533,7 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::sSetFfpParameter(
-    Renderer &, FfpParameterType, const UniformData & )
+void GN::gfx::effect::Effect::sSetFfpParameter( FfpParameterType, const UniformData & )
 {
     GN_GUARD;
 

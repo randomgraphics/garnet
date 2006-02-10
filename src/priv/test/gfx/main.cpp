@@ -23,7 +23,7 @@ class Scene
         GN_UNGUARD;
     }
 
-    bool loadEffect( GN::gfx::Renderer & r )
+    bool loadEffect()
     {
         GN_GUARD;
 
@@ -39,7 +39,7 @@ class Scene
             GN::gfx::effect::PassDesc & pass0 = tech.passes[0];
             pass0.shaders[GN::gfx::VERTEX_SHADER] = "vs";
             pass0.shaders[GN::gfx::PIXEL_SHADER] = "ps";
-            if( !eff0.init( r, desc ) ) return false;
+            if( !eff0.init( desc ) ) return false;
         }
 
         // success
@@ -54,8 +54,10 @@ public:
 
     ~Scene() { quit(); }
 
-    bool init( GN::gfx::Renderer & r )
+    bool init()
     {
+        GN::gfx::Renderer & r = gRenderer;
+
         // create pixel shaders
         if( r.supportShader( GN::gfx::PIXEL_SHADER, GN::gfx::LANG_D3D_ASM ) )
         {
@@ -107,7 +109,7 @@ public:
         tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
 
         // create the effect
-        if( !loadEffect(r) ) return false;
+        if( !loadEffect() ) return false;
 
         // success
         return true;
@@ -121,8 +123,10 @@ public:
         tex0.reset();
     }
 
-    void draw( GN::gfx::Renderer & r )
+    void draw()
     {
+        GN::gfx::Renderer & r = gRenderer;
+
         r.bindTexture( 0, tex0 );
         r.drawQuad( 0, 0, 0, 0.5, 0.5 );
         if( ps1 )
@@ -197,7 +201,7 @@ public:
         mDone = false;
 
         mScene = new Scene;
-        if( !mScene->init( *mRenderer ) ) return false;
+        if( !mScene->init() ) return false;
 
         // success
         return true;
@@ -277,7 +281,7 @@ public:
 
         // draw scene
         GN_ASSERT( mScene );
-        mScene->draw( *mRenderer );
+        mScene->draw();
 
         // draw FPS
         static size_t frames = 0;

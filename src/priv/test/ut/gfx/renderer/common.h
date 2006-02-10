@@ -27,8 +27,10 @@ struct GfxResources
     GN::AutoRef<GN::gfx::IdxBuf> ib1, ib2;
     uint32_t rsb1, rsb2, vtxbinding1, vtxbinding2;
 
-    bool create( GN::gfx::Renderer & r )
+    bool create()
     {
+        GN::gfx::Renderer & r = gRenderer;
+
         // create textures
         tex1d.attach( r.createTexture( GN::gfx::TEXTYPE_1D, 128, 128, 128 ) );
         tex2d.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 128, 128 ) );
@@ -81,8 +83,10 @@ struct GfxResources
         return true;
     }
 
-    void draw( GN::gfx::Renderer & r )
+    void draw()
     {
+        GN::gfx::Renderer & r = gRenderer;
+
         if( r.drawBegin() )
         {
             // draw to rt1
@@ -136,7 +140,7 @@ struct TestScene
 
         // create resource
         res.attach( new GfxResources );
-        if( !res->create(*r) ) return false;
+        if( !res->create() ) return false;
 
         // success
         return true;
@@ -145,7 +149,7 @@ struct TestScene
     void draw()
     {
         TS_ASSERT( r && res );
-        if( r && res ) res->draw(*r);
+        if( r && res ) res->draw();
     }
 };
 
