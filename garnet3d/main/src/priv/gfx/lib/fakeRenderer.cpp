@@ -26,6 +26,15 @@ namespace GN { namespace gfx
             capsCtor();
         }
 
+        //!
+        //! dtor
+        //!
+        ~FakeRenderer()
+        {
+            sSigDeviceDispose();
+            sSigDeviceDestroy();
+        }
+
         //@}
         
         // ********************************************************************
@@ -37,6 +46,12 @@ namespace GN { namespace gfx
         //@{
 
     public:
+
+        bool init( const RendererOptions & ro )
+        {
+            changeOptions( ro, false );
+            return sSigDeviceCreate() &&  sSigDeviceRestore();
+        }
 
         virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation ) { setOptions( ro ); return true; }
 
@@ -374,7 +389,7 @@ GN::gfx::Renderer * GN::gfx::createFakeRenderer( const RendererOptions & ro )
     GN_GUARD;
 
     FakeRenderer * p = new FakeRenderer;
-    p->changeOptions( ro, false );
+    p->init( ro );
     return p;
 
     GN_UNGUARD;

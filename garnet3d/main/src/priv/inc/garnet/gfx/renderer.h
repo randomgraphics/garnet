@@ -16,6 +16,15 @@
 //!
 #define gRendererPtr (::GN::gfx::Renderer::getInstancePtr())
 
+//!
+//! Implement static renderer signals
+//!
+#define GN_IMPLEMENT_RENDERER_SIGNALS() \
+    ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceCreate; \
+    ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceRestore; \
+    ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDispose; \
+    ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDestroy;
+
 namespace GN { namespace gfx
 {
     //!
@@ -401,6 +410,69 @@ namespace GN { namespace gfx
     struct Renderer : public Singleton<Renderer>, public NoCopy
     {
         // ********************************************************************
+        //!
+        //! \name Renderer Signals
+        //!
+        //! - 信号可以被多次触发，且一定是严格按照如下的顺序：
+        //!   <pre>
+        //!                           +--------------+
+        //!                           |              |
+        //!                          \|/             |
+        //!                           '              |
+        //!   (start)-->create----->restore------->dispose------>destroy-->(end)
+        //!               .                                          |
+        //!              /|\                                         |
+        //!               |                                          |
+        //!               +------------------------------------------+
+        //!   </pre>
+        //! - create信号后面必定会跟随一个restore信号.
+        //! - 收到create或者restore信号说明渲染器ready to use。
+        //! - 这些信号的标准使用方法如下：
+        //!   - 收到create信号后, 创建所有图形资源。
+        //!   - 收到restore信号后，填充图形资源的内容，如从磁盘读取贴图和模型。
+        //!   - 忽略dispose信号
+        //!   - 收到destroy信号后，删除所有的图形资源
+        // ********************************************************************
+
+        //@{
+
+        //!
+        //! Triggered right after render device is created.
+        //!
+        GN_PUBLIC static Signal0<bool> sSigDeviceCreate;
+
+        //!
+        //! Triggered after rendering device is created or restored from
+        //! disposed state.
+        //!
+        GN_PUBLIC static Signal0<bool> sSigDeviceRestore;
+
+        //!
+        //! Triggered right before invalidating of rendering device.
+        //!
+        //! - Only lockable resources (such as texture and vertex buffer) that have
+        //!   neither system-copy no content loader will lost their contents after
+        //!   device dispose.
+        //! - Note that only contents are lost, not resources themselves.
+        //! - Non-lockable resources (such as shaders and render-state-blocks )
+        //!   will survive device dispose.
+        //! - After receiving this signal, no rendering function should be called,
+        //!   until you receive sSigDeviceRestore.
+        //!
+        GN_PUBLIC static Signal0<void> sSigDeviceDispose;
+
+        //!
+        //! Triggered right before render device is deleted.
+        //!
+        //! \note
+        //! - You must release all graphics resources (such as textures, shaders...),
+        //!   after received this signal.
+        //!
+        GN_PUBLIC static Signal0<void> sSigDeviceDestroy;
+
+        //@}
+
+        // ********************************************************************
         //
         //! \name Device Manager
         //
@@ -422,27 +494,6 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! Triggered after rendering device is restored to normal stage.
-        //!
-        //! - Resources that has neither system-copy nor content loader will lost
-        //!   contents after device reset/lost. You have to reload them manually.
-        //!   Note that only contents are lost, not resources themselves.
-        //! - Shaders and render-state-blocks will survive device reset/lost.
-        //!
-        Signal0<bool> sigDeviceRestore;
-
-        //!
-        //! Triggered right before invalidating of rendering device.
-        //!
-        //! \note
-        //! - After receiving this signal, no rendering function should be called,
-        //!   before you receive sigDeviceRestore.
-        //! - This signal will also be triggered, before rendering device is
-        //!   destroyed.
-        //!
-        Signal0<void> sigDeviceDispose;
-
-        //!
         //! Change renderer options.
         //!
         //! \param ro
@@ -450,7 +501,7 @@ namespace GN { namespace gfx
         //! \param forceDeviceRecreation
         //!     force a full device recreation
         //! \note
-        //!     This function may trigger sigDeviceRestore.
+        //!     This function may trigger sSigDeviceRestore and/or sSigDeviceDispose.
         //!
         virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation = false ) = 0;
 

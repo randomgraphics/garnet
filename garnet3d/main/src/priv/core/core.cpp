@@ -12,6 +12,9 @@ GN_IMPLEMENT_SINGLETON( GN::gfx::Renderer )
 GN_IMPLEMENT_SINGLETON( GN::gfx::TextureDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
 
+// implement static renderer signals
+GN_IMPLEMENT_RENDERER_SIGNALS()
+
 // Some of singletons can be safely defined as global variable
 static GN::PluginManager sPluginManager;
 static GN::ProfilerManager sProfilerMgr;

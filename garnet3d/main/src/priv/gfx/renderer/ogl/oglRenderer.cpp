@@ -161,8 +161,8 @@ bool GN::gfx::OGLRenderer::deviceCreate()
 
     #undef COMPONENT_RECREATE
 
-    // trigger reset event
-    if( !sigDeviceRestore() )
+    // trigger renderer signals
+    if( !sSigDeviceCreate() || !sSigDeviceRestore() )
     {
         GN_ERROR( "fail to process OGL device restore signal!" );
         return false;
@@ -195,7 +195,7 @@ bool GN::gfx::OGLRenderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    if( !sigDeviceRestore() )
+    if( !sSigDeviceRestore() )
     {
         GN_ERROR( "fail to process OGL device restore signal!" );
         return false;
@@ -216,8 +216,8 @@ void GN::gfx::OGLRenderer::deviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    // trigger dispose event
-    sigDeviceDispose();
+    // trigger signals
+    sSigDeviceDispose();
 
     drawDeviceDispose();
     renderTargetDeviceDispose();
@@ -242,8 +242,9 @@ void GN::gfx::OGLRenderer::deviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    // trigger dispose event
-    sigDeviceDispose();
+    // trigger signals
+    sSigDeviceDispose();
+    sSigDeviceDestroy();
 
     #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
 

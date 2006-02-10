@@ -186,10 +186,10 @@ bool GN::gfx::D3DRenderer::deviceCreate()
 
     #undef COMPONENT_RECREATE
 
-    // trigger restore events
-    if( !sigDeviceRestore() )
+    // trigger signals
+    if( !sSigDeviceCreate() || !sSigDeviceRestore() )
     {
-        GN_ERROR( "fail to process D3D device restore signal!" );
+        GN_ERROR( "fail to process D3D device signal!" );
         return false;
     }
 
@@ -220,7 +220,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    if( !sigDeviceRestore() )
+    if( !sSigDeviceRestore() )
     {
         GN_ERROR( "fail to process D3D device restore signal!" );
         return false;
@@ -242,7 +242,7 @@ void GN::gfx::D3DRenderer::deviceDispose()
     _GNGFX_DEVICE_TRACE();
 
     // trigger dispose event
-    sigDeviceDispose();
+    sSigDeviceDispose();
 
     drawDeviceDispose();
     renderTargetDeviceDispose();
@@ -267,8 +267,9 @@ void GN::gfx::D3DRenderer::deviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    // trigger dispose event
-    sigDeviceDispose();
+    // trigger signals
+    sSigDeviceDispose();
+    sSigDeviceDestroy();
 
     #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
 
