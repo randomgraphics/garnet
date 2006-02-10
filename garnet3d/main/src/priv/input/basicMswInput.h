@@ -15,13 +15,7 @@ namespace GN { namespace input
     //!
     //! Basic input system for MS windows. 实现windows系统下输入系统的基本功能.
     //!
-    //! \note
-    //!     Due to limitation of window message dispatch system, this class
-    //!     currently has to be a singleton. We're working on the walk around.
-    //!
-    class BasicMswInput : public BasicInput,
-                          public StdClass,
-                          public LocalSingleton<BasicMswInput>
+    class BasicMswInput : public BasicInput, public StdClass
     {
          GN_DECLARE_STDCLASS( BasicMswInput, StdClass );
 

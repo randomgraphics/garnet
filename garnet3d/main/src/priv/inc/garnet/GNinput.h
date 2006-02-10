@@ -6,6 +6,8 @@
 //! \author  chenlee (2005.10.24)
 // *****************************************************************************
 
+#include "GNbase.h"
+
 namespace GN
 {
     //!
@@ -184,9 +186,9 @@ namespace GN
         };
 
         //!
-        //! main interface of input module
+        //! main interface of input module (singleton)
         //!
-        struct Input : public NoCopy
+        struct Input : public Singleton<Input>, public NoCopy
         {
             // ************************************************************************
             //      main interface functions
