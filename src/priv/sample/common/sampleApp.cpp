@@ -15,6 +15,12 @@ bool GN::sample::SampleApp::init( int argc, const char * argv[] )
     // standard init procedure
     GN_STDCLASS_INIT( GN::sample::SampleApp, () );
 
+    // connect to renderer signals
+    GN::gfx::Renderer::sSigDeviceCreate.connect( this, &SampleApp::onRendererCreate );
+    GN::gfx::Renderer::sSigDeviceRestore.connect( this, &SampleApp::onRendererRestore );
+    GN::gfx::Renderer::sSigDeviceDispose.connect( this, &SampleApp::onRendererDispose );
+    GN::gfx::Renderer::sSigDeviceDestroy.connect( this, &SampleApp::onRendererDestroy );
+
     if( !checkCmdLine(argc,argv) ) { quit(); return selfOK(); }
     if( !onAppInit() ) { quit(); return selfOK(); }
     if( !initRenderer() ) { quit(); return selfOK(); }
@@ -36,6 +42,12 @@ void GN::sample::SampleApp::quit()
     quitRenderer();
     quitInput();
     onAppQuit();
+
+    // disconnect to renderer signals
+    GN::gfx::Renderer::sSigDeviceDestroy.disconnect( this );
+    GN::gfx::Renderer::sSigDeviceDispose.disconnect( this );
+    GN::gfx::Renderer::sSigDeviceRestore.disconnect( this );
+    GN::gfx::Renderer::sSigDeviceCreate.disconnect( this );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -151,10 +163,6 @@ bool GN::sample::SampleApp::initRenderer()
     mGfxRenderer.attach( mGfxCreator( mInitParam.ro ) );
     if( !mGfxRenderer ) return false;
 
-    // connect to renderer signals
-    mGfxRenderer->sigDeviceRestore.connect( this, &SampleApp::onRendererRestore );
-    mGfxRenderer->sigDeviceDispose.connect( this, &SampleApp::onRendererDispose );
-
     // reattach input window
     const GN::gfx::DispDesc & dd = mGfxRenderer->getDispDesc();
     if( mInput && !mInput->attachToWindow( dd.displayHandle,dd.windowHandle ) )
@@ -163,7 +171,7 @@ bool GN::sample::SampleApp::initRenderer()
     }
 
     // success
-    return onRendererCreate() && onRendererRestore();
+    return true;
 
     GN_UNGUARD;
 }
@@ -175,13 +183,6 @@ void GN::sample::SampleApp::quitRenderer()
 {
     GN_GUARD;
 
-    if( mGfxRenderer )
-    {
-        mGfxRenderer->sigDeviceRestore.disconnect( this );
-        mGfxRenderer->sigDeviceDispose.disconnect( this );
-        onRendererDispose();
-        onRendererDestroy();
-    }
     mGfxRenderer.clear();
     mGfxCreator = 0;
     mGfxLib.free();
