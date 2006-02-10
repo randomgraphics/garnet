@@ -149,7 +149,7 @@ namespace GN { namespace gfx {
             std::map<StrA,uint32_t>     textures; //!< geometry specific textures. Key is texture name; value is texture resource ID.
             
             
-            uint32_t        vtxBinding;
+            uint32_t        vtxBinding; //!< vertex binding ID.
             AutoRef<VtxBuf> vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list.
             uint32_t        numVtxBufs; //!< vertex buffer count
             AutoRef<IdxBuf> idxBuf; //!< index buffer
@@ -381,7 +381,7 @@ namespace GN { namespace gfx {
                 AutoRef<Shader>             value;
                 std::vector<TextureRefData> textures;      // texture referencing list.
                 std::vector<UniformRefData> uniforms;      // uniform referencing list.
-                std::set<uint32_t>          dirtyUniforms; // dirty uniform list. Each item is a index into the shader's uniform list.
+                std::set<size_t>            dirtyUniforms; // dirty uniform list. Each item is a index into the shader's uniform list.
             };
 
             struct PassData

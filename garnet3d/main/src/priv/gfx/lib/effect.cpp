@@ -438,7 +438,7 @@ bool GN::gfx::effect::Effect::createEffect()
             if( 0 == pd.rsb )
             {
                 GN_ERROR( "Fail to create render state block for pass(%d) of technique named '%s'.",
-                    i, iTech->first.cstr() );
+                    iPass, iTech->first.cstr() );
                 return false;
             }
             for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
