@@ -7,8 +7,8 @@
 //! \author  chenlee (2005.8.26)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
-#include "garnet/GNwin.h"
+#include "GNbase.h"
+#include "GNwin.h"
 
 #if GN_MSWIN
 #include <windows.h>

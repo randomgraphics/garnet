@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "garnet/GNcore.h"
+#include "garnet/GNinput.h"
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
 
@@ -10,6 +11,8 @@ GN_IMPLEMENT_SINGLETON( GN::PluginManager )
 // instance of profile manager
 static GN::ProfilerManager sProfilerMgr;
 GN_IMPLEMENT_SINGLETON( GN::ProfilerManager )
+
+GN_IMPLEMENT_SINGLETON( GN::input::Input )
 
 // instance of texture manager
 static GN::gfx::TextureDictionary sTextureDict;

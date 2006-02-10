@@ -171,6 +171,15 @@ if manual: all_targets.append( [ 'GNman', env.Install( os.path.join( 'bin', 'sdk
 
 ################################################################################
 #
+# Build and install media files
+#
+################################################################################
+
+media = SConscript( 'src/media/SConscript' )
+if media: all_targets.append( [ 'GNmedia', env.Install( os.path.join( 'bin', 'media' ), media ) ] )
+
+################################################################################
+#
 # Install public headers
 #
 ################################################################################
