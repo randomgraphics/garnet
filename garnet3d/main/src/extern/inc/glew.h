@@ -81,9 +81,6 @@
 /* chenlee@2004.3.25: Force static buil */
 #define GLEW_STATIC
 
-/* chenlee@2005.11.22: Enable multi-context support */
-#define GLEW_MX
-
 #if defined(_WIN32)
 
 /*

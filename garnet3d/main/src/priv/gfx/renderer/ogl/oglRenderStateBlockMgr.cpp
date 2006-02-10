@@ -143,8 +143,6 @@ struct OGLRenderStateBlock : public GN::gfx::DeviceRenderStateBlock
     {
         GN_GUARD_SLOW;
 
-        mRenderer.makeCurrent();
-
         // apply state block
 #if GN_DEBUG
         sApplyRenderStateBlock( mFrom, mTo, mDiff );
@@ -168,8 +166,6 @@ GN::gfx::OGLRenderer::createDeviceRenderStateBlock(
     const RenderStateBlockDesc & from, const RenderStateBlockDesc & to )
 {
     GN_GUARD;
-
-    makeCurrent();
 
     AutoRef<OGLRenderStateBlock> rsb( new OGLRenderStateBlock(*this) );
 

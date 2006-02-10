@@ -105,9 +105,6 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     // skip redundant call
     if( rttd.equal( tex, level, face ) ) return;
 
-    // set current context
-    if( !makeCurrent() ) return;
-
     if( rttd.tex )
     {
         const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(rttd.tex);
@@ -203,9 +200,6 @@ void GN::gfx::OGLRenderer::setRenderDepth(
 
     // skip redundant call
     if( mCurrentDepth.equal( tex, level, face ) ) return;
-
-    // set current context
-    if( !makeCurrent() ) return;
 
     if( mCurrentDepth.tex )
     {

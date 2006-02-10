@@ -59,8 +59,6 @@ uint32_t GN::gfx::OGLRenderer::createVtxBinding( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
-    makeCurrent();
-
     uint32_t h = mVtxBindings.findIf( EqualFormat(format) );
 
     if( 0 == h )
@@ -86,8 +84,6 @@ GN::gfx::OGLRenderer::createVtxBuf(
     size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
 {
     GN_GUARD;
-
-    makeCurrent();
 
     if( GLEW_ARB_vertex_buffer_object )
     {
@@ -116,8 +112,6 @@ GN::gfx::OGLRenderer::createIdxBuf(
 {
     GN_GUARD;
 
-    makeCurrent();
-
     AutoRef<OGLIdxBuf> p( new OGLIdxBuf );
     p->setLoader( loader );
     if( !p->init( numIdx, dynamic ) ) return 0;
@@ -133,8 +127,6 @@ GN::gfx::OGLRenderer::createIdxBuf(
 void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
 {
     GN_GUARD;
-
-    GN_ASSERT( isCurrent() );
 
     if( !mVtxBindings.validHandle(handle) )
     {

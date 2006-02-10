@@ -2,9 +2,6 @@
 #include "oglRenderer.h"
 #include <algorithm>
 
-// for GLEW multi-context support
-#define glewGetContext() r.getGLEWContext()
-
 // ****************************************************************************
 // local types/variables/functions
 // ****************************************************************************
@@ -105,7 +102,7 @@ static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
 //!
 //! output GL implementation info.
 // ------------------------------------------------------------------------
-static void sOutputOGLInfo( GN::gfx::OGLRenderer & r, GN::HandleType disp, const std::vector<GN::StrA> & glexts )
+static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & glexts )
 {
     GN_GUARD;
 
@@ -174,38 +171,33 @@ static void GLAPIENTRY sFake_glClientActiveTexture(GLenum) {}
 // ****************************************************************************
 
 //
-static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE()
 {
-    GN_UNUSED_PARAM( r );
     GLint result = 0;
     GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &result ) );
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_CLIP_PLANES( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_MAX_CLIP_PLANES()
 {
-    GN_UNUSED_PARAM( r );
     GLint result = 0;
     GN_OGL_CHECK( glGetIntegerv( GL_MAX_CLIP_PLANES, &result ) );
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_RENDER_TARGETS( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_MAX_RENDER_TARGETS()
 {
-    GN_UNUSED_PARAM( r );
     // FIXME: this is only suit for glCopyTexImage, not real PBuffer texture
     return 4;
 }
 //
-static uint32_t sCapsInit_MAX_PRIMITIVES( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_MAX_PRIMITIVES()
 {
-    GN_UNUSED_PARAM( r );
     return 0x10000; // no more than 65536 elements in one DIP
 }
 //
-static uint32_t sCapsInit_MAX_TEXTURE_STAGES( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_MAX_TEXTURE_STAGES()
 {
-    GN_UNUSED_PARAM( r );
     if( GLEW_ARB_multitexture )
     {
         GLint result;
@@ -218,16 +210,14 @@ static uint32_t sCapsInit_MAX_TEXTURE_STAGES( GN::gfx::OGLRenderer & r )
     }
 }
 //
-static uint32_t sCapsInit_PER_STAGE_CONSTANT( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_PER_STAGE_CONSTANT()
 {
-    GN_UNUSED_PARAM( r );
     // OpenGL always supports this.
     return true;
 }
 //
-static uint32_t sCapsInit_PSCAPS( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_PSCAPS()
 {
-    GN_UNUSED_PARAM( r );
     uint32_t result = 0;
     if( GLEW_ARB_fragment_program ) result |= GN::gfx::PSCAPS_OGL_ARB1;
     if( GLEW_ARB_shader_objects &&
@@ -236,9 +226,8 @@ static uint32_t sCapsInit_PSCAPS( GN::gfx::OGLRenderer & r )
     return result;
 }
 //
-static uint32_t sCapsInit_VSCAPS( GN::gfx::OGLRenderer & r )
+static uint32_t sCapsInit_VSCAPS()
 {
-    GN_UNUSED_PARAM( r );
     uint32_t result = 0;
     if( GLEW_ARB_vertex_program ) result |= GN::gfx::VSCAPS_OGL_ARB1;
     if( GLEW_ARB_shader_objects &&
@@ -246,9 +235,6 @@ static uint32_t sCapsInit_VSCAPS( GN::gfx::OGLRenderer & r )
          GLEW_ARB_shading_language_100 ) result |= GN::gfx::VSCAPS_OGL_GLSL;
     return result;
 }
-
-// for GLEW multi-context support
-#undef glewGetContext
 
 // *****************************************************************************
 // device management
@@ -273,14 +259,14 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     {
         return false;
     }
-    sOutputOGLInfo( *this, getDispDesc().displayHandle, glexts );
+    sOutputOGLInfo( getDispDesc().displayHandle, glexts );
 
     // check required extension
     if( !sCheckRequiredExtensions( glexts ) ) return false;
 
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
-        setCaps( CAPS_##name, sCapsInit_##name( *this ) );
+        setCaps( CAPS_##name, sCapsInit_##name() );
     #include "garnet/gfx/rendererCapsMeta.h"
     #undef GNGFX_CAPS
 
@@ -311,4 +297,3 @@ void GN::gfx::OGLRenderer::capsDeviceDestroy()
 
     GN_UNGUARD;
 }
-

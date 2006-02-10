@@ -330,7 +330,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLProgramGLSL( GLEWContext * c ) : mContext(c) { GN_ASSERT(c); clear(); }
+        OGLProgramGLSL() { clear(); }
         virtual ~OGLProgramGLSL() { quit(); }
         //@}
 
@@ -375,7 +375,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        GLEWContext * mContext;
         GLhandleARB mProgram;
         std::vector<const OGLBasicShaderGLSL*> mShaders;
 
@@ -386,9 +385,6 @@ namespace GN { namespace gfx
 
         bool createProgram();
         StrA getProgramInfoLog( GLhandleARB program );
-
-        // for GLEW multi-context support
-        GLEWContext * glewGetContext() const { return mContext; }
     };
 }}
 

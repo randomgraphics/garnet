@@ -92,14 +92,11 @@ public:
         memset( mItems, 0, sizeof(mItems) );
     }
 
-    void apply( GN::gfx::OGLRenderer & r,
-                const GN::gfx::VtxFmtDesc & format,
+    void apply( const GN::gfx::VtxFmtDesc & format,
                 GN::gfx::VtxSem sem,
                 bool useConventionalVertexArray )
     {
         GN_GUARD_SLOW;
-
-#define glewGetContext() r.getGLEWContext()
 
         GN_ASSERT( 0 <= sem && sem < GN::gfx::NUM_VTXSEMS );
 
@@ -142,8 +139,6 @@ public:
             }
             item.enabled = false;
         }
-
-#undef glewGetContext
 
         GN_UNGUARD_SLOW;
     }
@@ -210,7 +205,7 @@ void GN::gfx::OGLVtxBinding::bind() const
         GN_OGL_CHECK( glDisableClientState( GL_VERTEX_ARRAY ) );
 
     // VTXSEM_WEIGHT
-    sVtxSemStatus.apply( r, mFormat, VTXSEM_WEIGHT, false );
+    sVtxSemStatus.apply( mFormat, VTXSEM_WEIGHT, false );
 
     // VTXSEM_NORMAL
     if( mFormat.attribs[VTXSEM_NORMAL].used )
@@ -225,16 +220,16 @@ void GN::gfx::OGLVtxBinding::bind() const
         GN_OGL_CHECK( glDisableClientState( GL_COLOR_ARRAY ) );
 
     // VTXSEM_COLOR1
-    sVtxSemStatus.apply( r, mFormat, VTXSEM_COLOR1, !!GLEW_EXT_secondary_color );
+    sVtxSemStatus.apply( mFormat, VTXSEM_COLOR1, !!GLEW_EXT_secondary_color );
 
     // VTXSEM_FOGCOORD
-    sVtxSemStatus.apply( r, mFormat, VTXSEM_FOGCOORD, !!GLEW_EXT_fog_coord );
+    sVtxSemStatus.apply( mFormat, VTXSEM_FOGCOORD, !!GLEW_EXT_fog_coord );
 
     // VTXSEM_TANGENT
-    sVtxSemStatus.apply( r, mFormat, VTXSEM_TANGENT, false );
+    sVtxSemStatus.apply( mFormat, VTXSEM_TANGENT, false );
 
     // VTXSEM_BINORMAL
-    sVtxSemStatus.apply( r, mFormat, VTXSEM_BINORMAL, false );
+    sVtxSemStatus.apply( mFormat, VTXSEM_BINORMAL, false );
 
     // VTXSEM_TEXn
     for( uint32_t i = 0; i < r.getCaps( CAPS_MAX_TEXTURE_STAGES ); ++i )

@@ -134,8 +134,6 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
 
-            GN_ASSERT( getRenderer().isCurrent() );
-
             switch( getType() )
             {
                 case TEXTYPE_1D   :
