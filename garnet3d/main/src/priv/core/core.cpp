@@ -4,7 +4,7 @@
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
 
-// define static data member of singletons
+// implement global singletons
 GN_IMPLEMENT_SINGLETON( GN::PluginManager )
 GN_IMPLEMENT_SINGLETON( GN::ProfilerManager )
 GN_IMPLEMENT_SINGLETON( GN::input::Input )
@@ -15,6 +15,8 @@ GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
 // Some of singletons can be safely defined as global variable
 static GN::PluginManager sPluginManager;
 static GN::ProfilerManager sProfilerMgr;
+static GN::gfx::TextureDictionary sTextureDict;
+static GN::gfx::effect::EffectDictionary sEffectDict;
 
 //
 // Implement global log function.
