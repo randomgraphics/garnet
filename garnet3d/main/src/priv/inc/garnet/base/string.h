@@ -455,7 +455,7 @@ namespace GN
         }
 
         //!
-        //! Trim right characters until meet a character that match specific condition.
+        //! Trim right characters until meet the predication condition.
         //!
         template<typename PRED>
         void trimRightUntil( const PRED & pred )

@@ -255,6 +255,16 @@ namespace GN
         }
 
         //!
+        //! Return true for path like: "/....", "aaa:..."
+        //!
+        bool isAbsPath( const StrA & path );
+
+        //!
+        //! Return true for relative (root-less) path
+        //!
+        inline bool isRelPath( const StrA & path ) { return !isAbsPath(path); }
+
+        //!
         //! Get the parent path (directory) of the path.
         //! Samples:
         //!     - "a/b" -> "a"
