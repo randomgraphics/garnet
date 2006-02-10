@@ -126,7 +126,7 @@ static void sNormalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 
 //
 // Return true for path like: "/", "aaa:/", but return false for path like "aaa/bbb:/".
-//
+// -----------------------------------------------------------------------------
 static inline bool sIsRoot( const GN::StrA & path )
 {
     if( path.last() != PATH_SEPARATOR ) return false;
@@ -305,18 +305,40 @@ bool GN::path::isDir( const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::path::isAbsPath( const StrA & path )
+{
+    if( path.empty() ) return false;
+
+    StrA tmp;
+
+    sNormalizePathSeparator( tmp, path );
+
+    if( PATH_SEPARATOR == tmp[0] ) return true;
+
+    for( size_t i = 1; i < tmp.size(); ++i )
+    {
+        if( PATH_SEPARATOR == tmp[i] ) return false;
+        if( ':' == tmp[i] ) return true;
+    }
+
+    return false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::path::getParent( StrA & result, const StrA & path )
 {
     struct Local
     {
-        static inline bool isPathSeperator( char ch )
+        static inline bool sIsPathSeparator( char ch )
         {
             return ch == PATH_SEPARATOR;
         }
     };
 
     sNormalizePathSeparator( result, path );
-    result.trimRightUntil( &Local::isPathSeperator );
+    result.trimRightUntil( &Local::sIsPathSeparator );
     if( !sIsRoot(result) ) result.trimRight( PATH_SEPARATOR );
 }
 

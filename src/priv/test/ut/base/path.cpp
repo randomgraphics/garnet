@@ -118,6 +118,19 @@ public:
         TS_ASSERT( !GN::path::isFile("haha,heihei,hoho,huhu,mama,papa") );
     }
 
+    void testIsAbsPath()
+    {
+        using namespace GN;
+        using namespace GN::path;
+        TS_ASSERT( isRelPath("") );
+        TS_ASSERT( isRelPath("a/a") );
+        TS_ASSERT( isRelPath("a/a:") );
+        TS_ASSERT( isAbsPath("/") );
+        TS_ASSERT( isAbsPath("/a") );
+        TS_ASSERT( isAbsPath("c:a") );
+        TS_ASSERT( isAbsPath("c:/a") );
+    }
+
     void testGetParent()
     {
         TS_ASSERT_EQUALS( "a", GN::path::getParent("a/b") );
