@@ -6,6 +6,16 @@
 //! \author  chenlee (2005.9.30)
 // *****************************************************************************
 
+//!
+//! Global renderer instance
+//!
+#define gRenderer (::GN::gfx::Renderer::getInstance())
+
+//!
+//! Pointer of global renderer instance
+//!
+#define gRendererPtr (::GN::gfx::Renderer::getInstancePtr())
+
 namespace GN { namespace gfx
 {
     //!

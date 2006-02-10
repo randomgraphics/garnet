@@ -8,6 +8,16 @@
 
 #include "GNbase.h"
 
+//!
+//! Global input instance
+//!
+#define gInput (::GN::input::Input::getInstance())
+
+//!
+//! Pointer of global input instance
+//!
+#define gInputPtr (::GN::input::Input::getInstancePtr())
+
 namespace GN
 {
     //!

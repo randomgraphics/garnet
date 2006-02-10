@@ -4,8 +4,6 @@
 
 class EffectTest : public CxxTest::TestSuite
 {
-    GN::AutoObjPtr<GN::gfx::Renderer> mRenderer;
-
 public:
 
     void setUp()
@@ -15,8 +13,7 @@ public:
 
         // create fake renderer
         RendererOptions ro;
-        mRenderer.attach( createFakeRenderer(ro) );
-        TS_ASSERT( mRenderer.get() );
+        TS_ASSERT( createFakeRenderer(ro) );
 
         // initialize texture dictionary
         gTexDict.addResource( "tex0" );
@@ -25,7 +22,7 @@ public:
     void tearDown()
     {
         gTexDict.clear();
-        mRenderer.clear();
+        if( gRendererPtr ) delete gRendererPtr;
     }
 
     void initDesc1( GN::gfx::effect::EffectDesc & desc )
@@ -95,7 +92,7 @@ public:
         desc.techniques.clear();
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidShaderType()
@@ -110,7 +107,7 @@ public:
         desc.shaders["vs0"].type = NUM_SHADER_TYPES;
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidShadingLang()
@@ -125,7 +122,7 @@ public:
         desc.shaders["vs0"].lang = NUM_SHADING_LANGUAGES;
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidTextureReference()
@@ -140,7 +137,7 @@ public:
         desc.shaders["ps0"].textures[0] = "haha";
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidTextureStage()
@@ -155,7 +152,7 @@ public:
         desc.shaders["ps0"].textures[MAX_TEXTURE_STAGES] = "t0";
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidUniformReference()
@@ -170,7 +167,7 @@ public:
         desc.shaders["vs0"].uniforms["c0"] = "haha";
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidUniformBinding()
@@ -185,7 +182,7 @@ public:
         desc.shaders["vs1"].uniforms["c0"] = "u0";
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidPassRsb()
@@ -201,7 +198,7 @@ public:
         p0.rsb.rs[RS_ALPHA_TEST] = NUM_RENDER_STATE_VALUES;
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidShaderReference()
@@ -217,7 +214,7 @@ public:
         p0.shaders[VERTEX_SHADER] = "haha";
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidShaderReference2()
@@ -233,7 +230,7 @@ public:
         p0.shaders[VERTEX_SHADER] = "ps0";
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidTechniqueRsb()
@@ -248,7 +245,7 @@ public:
         desc.techniques["t0"].rsb.rs[RS_ALPHA_TEST] = NUM_RENDER_STATE_VALUES;
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testInvalidGlobalRsb()
@@ -263,7 +260,7 @@ public:
         desc.rsb.rs[RS_ALPHA_TEST] = NUM_RENDER_STATE_VALUES;
 
         Effect e;
-        TS_ASSERT( !e.init( *mRenderer, desc ) );
+        TS_ASSERT( !e.init( desc ) );
     }
 
     void testValidDesc()
@@ -276,6 +273,6 @@ public:
         initDesc1( desc );
 
         Effect e;
-        TS_ASSERT( e.init( *mRenderer, desc ) );
+        TS_ASSERT( e.init( desc ) );
     }
 };

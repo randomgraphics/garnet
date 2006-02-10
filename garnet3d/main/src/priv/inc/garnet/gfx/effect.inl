@@ -40,7 +40,7 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t mActivePass ) const
 
     // apply render states
     GN_ASSERT( p.rsb );
-    mRenderer->bindRenderStateBlock( p.rsb );
+    gRenderer.bindRenderStateBlock( p.rsb );
 
     // bind shaders
     Shader * shaders[NUM_SHADER_TYPES];
@@ -50,7 +50,7 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t mActivePass ) const
         const ShaderData & sd = mShaders.items[p.shaders[iShader]];
         shaders[iShader] = sd.value.get();
     }
-    mRenderer->bindShaders( shaders );
+    gRenderer.bindShaders( shaders );
 
     GN_UNGUARD_SLOW;
 }
@@ -86,7 +86,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
             const UniformData & ud = mUniforms.items[ur.handle];
             if( ur.ffp )
             {
-                sSetFfpParameter( *mRenderer, ur.ffpParameterType, ud );
+                sSetFfpParameter( ur.ffpParameterType, ud );
             }
             else
             {
@@ -102,7 +102,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
             const TextureRefData & tr = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(tr.handle) );
             const TextureData & td = mTextures.items[tr.handle];
-            mRenderer->bindTexture( tr.stage, gTexDict.getResource(td.value) );
+            gRenderer.bindTexture( tr.stage, gTexDict.getResource(td.value) );
         }
     }
 
