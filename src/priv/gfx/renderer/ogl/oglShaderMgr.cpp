@@ -37,8 +37,6 @@ bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 {
     GN_GUARD;
 
-    makeCurrent();
-
     // check parameter
     if( 0 > type || type >= NUM_SHADER_TYPES )
     {
@@ -288,7 +286,7 @@ void GN::gfx::OGLRenderer::applyShaderState()
     else
     {
         // not found. we have to create a new GLSL program object
-        AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL(getGLEWContext()) );
+        AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
         if( !newProg->init(
             safeCast<const OGLBasicShaderGLSL*>(vs),
             safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return ;

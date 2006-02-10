@@ -17,8 +17,6 @@ public:
 
     void testDefaultBackbufferSize() { defaultBackbufferSize(); }
 
-    void testMultiRenderer() { multiRenderer(); }
-
     void testRenderStateBlock() { renderStateBlock(); }
 
     void testVtxBuf() { vtxBuf(); }

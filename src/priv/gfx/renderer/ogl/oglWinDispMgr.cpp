@@ -198,29 +198,8 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
 
     GN_MSW_CHECK_RV( ::wglMakeCurrent(mDeviceContext, mRenderContext), false );
 
-    // create and initialize GLEW context
-    GN_ASSERT( !mGLEWContext );
-    mGLEWContext = new GLEWContext;
-    memset( mGLEWContext, 0, sizeof(GLEWContext) );
-    GLenum glewErr = glewContextInit( mGLEWContext );
-    if( GLEW_OK != glewErr )
-    {
-        GN_ERROR( "Fail to initialize glew library : %s",
-            (const char *)glewGetErrorString(glewErr) );
-        return false;
-    }
-
-    // create and initialize WGLEW context
-    GN_ASSERT( !mWGLEWContext );
-    mWGLEWContext = new WGLEWContext;
-    memset( mWGLEWContext, 0, sizeof(WGLEWContext) );
-    GLenum wglewErr = wglewContextInit( mWGLEWContext );
-    if( GLEW_OK != wglewErr )
-    {
-        GN_ERROR( "Fail to initialize wglew library : %s",
-            (const char *)glewGetErrorString(glewErr) );
-        return false;
-    }
+    // init GLEW
+    glewInit();
 
     // success
     return true;
@@ -329,10 +308,6 @@ void GN::gfx::OGLRenderer::dispDeviceDestroy()
     _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK );
-
-    // destroy GLEW context
-    safeDelete( mWGLEWContext );
-    safeDelete( mGLEWContext );
 
     if( mRenderContext )
     {

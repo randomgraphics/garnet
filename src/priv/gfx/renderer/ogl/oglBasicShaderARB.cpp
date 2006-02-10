@@ -6,15 +6,11 @@
 // Local function
 // *****************************************************************************
 
-// for GLEW multi-context support
-#define glewGetContext() r.getGLEWContext()
-
 struct ARBAutoDel
 {
-    GN::gfx::OGLRenderer & r;
     GLuint mProgram;
 
-    ARBAutoDel( GN::gfx::OGLRenderer & r_, GLuint p ) : r(r_), mProgram(p) {}
+    ARBAutoDel( GLuint p ) : mProgram(p) {}
 
     ~ARBAutoDel() { if(mProgram) glDeleteProgramsARB( 1, &mProgram ); }
 
@@ -24,7 +20,7 @@ struct ARBAutoDel
 //
 //
 // ----------------------------------------------------------------------------
-static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN::StrA & code )
+static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 {
     GN_GUARD;
 
@@ -42,7 +38,7 @@ static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN:
         GN_ERROR( "Fail to generate new program object!" );
         return 0;
     }
-    ARBAutoDel autodel( r, program );
+    ARBAutoDel autodel( program );
 
     // load program
     glBindProgramARB( target, program );
@@ -71,9 +67,6 @@ static GLuint sCompileShader( GN::gfx::OGLRenderer & r, GLenum target, const GN:
 
     GN_UNGUARD;
 }
-
-// for GLEW multi-context support
-#undef glewGetContext
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -106,11 +99,6 @@ void GN::gfx::OGLBasicShaderARB::quit()
 {
     GN_GUARD;
 
-    if( getRenderer().getOGLRC() )
-    {
-        getRenderer().makeCurrent();
-    }
-
     deviceDispose();
     deviceDestroy();
 
@@ -134,7 +122,7 @@ bool GN::gfx::OGLBasicShaderARB::deviceCreate()
     GN_ASSERT( !mProgram );
 
     // compile shader
-    mProgram = sCompileShader( getRenderer(), mTarget, mCode );
+    mProgram = sCompileShader( mTarget, mCode );
     if( 0 == mProgram )  return false;
 
     // get maximum uniform count

@@ -48,11 +48,6 @@ void GN::gfx::OGLVtxBufVBO::quit()
 {
     GN_GUARD;
 
-    if( getRenderer().getOGLRC() )
-    {
-        getRenderer().makeCurrent();
-    }
-
     deviceDispose();
     deviceDestroy();
 

@@ -109,13 +109,6 @@ bool GN::gfx::OGLRenderer::drawBegin()
 {
     GN_GUARD_SLOW;
 
-    if( !makeCurrent() )
-    {
-        GN_INFO( "\nCan't set current OGL render context, wait 500 ms ...\n" );
-        sleep( 500 );
-        return false;
-    }
-
     GN_ASSERT( !mDrawBegan );
 
     // handle render window size move
@@ -136,7 +129,7 @@ void GN::gfx::OGLRenderer::drawEnd()
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() );
+    GN_ASSERT( mDrawBegan );
 
     mDrawBegan = 0;
 
@@ -158,7 +151,7 @@ void GN::gfx::OGLRenderer::drawFinish()
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() );
+    GN_ASSERT( mDrawBegan );
 
     GN_OGL_CHECK( glFinish() );
 
@@ -172,8 +165,6 @@ void GN::gfx::OGLRenderer::clearScreen(
     const GN::Vector4f & c, float z, uint32_t s, uint32_t flags )
 {
     GN_GUARD_SLOW;
-
-    makeCurrent();
 
     GLbitfield glflag = 0;
 
@@ -220,7 +211,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() );
+    GN_ASSERT( mDrawBegan );
 
     applyDrawState( startVtx );
 
@@ -290,8 +281,6 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrim, size_t star
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() );
-
     GN_ASSERT( mDrawBegan );
 
     // update draw state
@@ -339,7 +328,7 @@ void GN::gfx::OGLRenderer::drawQuads(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() && mQuad );
+    GN_ASSERT( mDrawBegan && mQuad );
 
     mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count, options );
 
@@ -353,7 +342,7 @@ void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, cons
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() && mFont );
+    GN_ASSERT( mDrawBegan && mFont );
 
     // disable programmable pipeline
     Renderer::bindShaders( 0, 0 );
@@ -370,7 +359,7 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t startVtx )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegan && isCurrent() );
+    GN_ASSERT( mDrawBegan );
 
     if( 0 == mCurrentDrawState.dirtyFlags.u32 ) return;
 

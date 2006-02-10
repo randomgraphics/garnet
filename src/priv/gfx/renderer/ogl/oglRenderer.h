@@ -113,56 +113,6 @@ namespace GN { namespace gfx
         virtual void * getD3DDevice() const { return 0; }
         virtual void * getOGLRC() const { return mRenderContext; }
 
-    public:
-
-        //!
-        //! Get pointer to GLEW context
-        //!
-        GLEWContext * getGLEWContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
-
-        //!
-        //! Make the renderer as current context (for multi-renderer support)
-        //!
-        bool makeCurrent() const
-        {
-#if GN_MSWIN
-            GN_ASSERT( mRenderContext && mDeviceContext );
-            HGLRC hrc = wglGetCurrentContext();
-            HDC   hdc = wglGetCurrentDC();
-            if( hdc != mDeviceContext || hrc != mRenderContext )
-            {
-                if( !::wglMakeCurrent(mDeviceContext, mRenderContext) )
-                {
-                    GN_ERROR( "wglMakeCurrent() failed : %s", getOSErrorInfo() );
-                    return false;
-                }
-            }
-            return true;
-#elif GN_POSIX
-            Display * disp = (Display*)getDispDesc().displayHandle;
-            Window win = (Window)getDispDesc().windowHandle;
-            GN_ASSERT( disp && win && mRenderContext );
-            glXMakeCurrent( disp, win, mRenderContext );
-            return true;
-#endif
-        }
-
-        //!
-        //! Return true if the renderer is binding as current opengl context.
-        //!
-        bool isCurrent() const
-        {
-#if GN_MSWIN
-            GN_ASSERT( mRenderContext && mDeviceContext );
-            HGLRC hrc = wglGetCurrentContext();
-            HDC   hdc = wglGetCurrentDC();
-            return hdc == mDeviceContext && hrc == mRenderContext;
-#elif GN_POSIX
-            GN_UNIMPL_WARNING();
-            return true;
-#endif
-        }
-
 #if GN_MSWIN
     private :
         bool dispInit() { return true; }
@@ -175,8 +125,6 @@ namespace GN { namespace gfx
             mRenderContext = 0;
             mDisplayModeActivated = false;
             mIgnoreMsgHook = false;
-            mGLEWContext = 0;
-            mWGLEWContext = 0;
         }
 
         bool dispDeviceCreate();
@@ -188,10 +136,6 @@ namespace GN { namespace gfx
         void restoreDisplayMode();
         void msgHook( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp );
 
-        // for GLEW multi-context support
-        GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
-        WGLEWContext * wglewGetContext() const { GN_ASSERT( mWGLEWContext ); return mWGLEWContext; }
-
     private :
 
         bool    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
@@ -199,8 +143,6 @@ namespace GN { namespace gfx
         HGLRC   mRenderContext;
         bool    mDisplayModeActivated;
         bool    mIgnoreMsgHook;
-        GLEWContext * mGLEWContext;
-        WGLEWContext * mWGLEWContext;
 
 #elif GN_POSIX
     private :
@@ -210,8 +152,6 @@ namespace GN { namespace gfx
         void dispClear()
         {
             mRenderContext = 0;
-            mGLEWContext = 0;
-            mGLXEWContext = 0;
         }
 
         bool dispDeviceCreate();
@@ -219,14 +159,8 @@ namespace GN { namespace gfx
         void dispDeviceDispose();
         void dispDeviceDestroy();
 
-        // for GLEW multi-context support
-        GLEWContext * glewGetContext() const { GN_ASSERT( mGLEWContext ); return mGLEWContext; }
-        GLXEWContext * glxewGetContext() const { GN_ASSERT( mGLXEWContext ); return mGLXEWContext; }
-
     private :
         GLXContext mRenderContext;
-        GLEWContext * mGLEWContext;
-        GLXEWContext * mGLXEWContext;
 #endif
 
         //@}

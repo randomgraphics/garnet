@@ -307,35 +307,6 @@ protected:
         scene.draw();
     }
 
-    void multiRenderer()
-    {
-        if( !mCreator ) return;
-
-        TestScene s1, s2;
-
-        GN::gfx::RendererOptions ro;
-
-        ro.windowedWidth = 320;
-        ro.windowedHeight = 640;
-        if( s1.create(mCreator,ro) )
-        {
-            const GN::gfx::DispDesc & dd = s1.r->getDispDesc();
-            TS_ASSERT_EQUALS( dd.width, 320 );
-            TS_ASSERT_EQUALS( dd.height, 640 );
-            s1.draw();
-        }
-
-        ro.windowedWidth = 512;
-        ro.windowedHeight = 256;
-        if( s2.create(mCreator,ro) )
-        {
-            const GN::gfx::DispDesc & dd = s2.r->getDispDesc();
-            TS_ASSERT_EQUALS( dd.width, 512 );
-            TS_ASSERT_EQUALS( dd.height, 256 );
-            s2.draw();
-        }
-    }
-
     void renderStateBlock()
     {
         GN::AutoObjPtr<GN::gfx::Renderer> r;

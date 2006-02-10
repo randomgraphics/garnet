@@ -32,11 +32,6 @@ namespace GN { namespace gfx
         //!
         OGLRenderer & getRenderer() const { return mRenderer; }
 
-        //!
-        //! For GLEW multi-context support
-        //!
-        GLEWContext * glewGetContext() const;
-
     private:
         OGLRenderer & mRenderer;
     };

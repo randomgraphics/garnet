@@ -388,7 +388,7 @@ namespace GN { namespace gfx
     //!
     //! \nosubgrouping
     //!
-    struct Renderer : public NoCopy
+    struct Renderer : public Singleton<Renderer>, public NoCopy
     {
         // ********************************************************************
         //
