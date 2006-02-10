@@ -132,7 +132,6 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                     GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
-            break;
 
         case PIXEL_SHADER :
             switch( lang )
@@ -155,7 +154,6 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                     GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
-            break;
 
         default:
             GN_UNEXPECTED(); // program should not reach here

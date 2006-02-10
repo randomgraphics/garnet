@@ -126,7 +126,7 @@ namespace GN
         };
 
         template<typename T>
-        struct TheValue : BaseValue
+        struct TheValue : public BaseValue
         {
             T value;     //!< current value
 

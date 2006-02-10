@@ -380,9 +380,9 @@ public:
             "VARIANT_INVALID",
         };
 
-        for( int i = 0; i < sizeof(tag)/sizeof(tag[0]); ++i )
+        for( size_t i = 0; i < sizeof(tag)/sizeof(tag[0]); ++i )
         {
-            TS_ASSERT_EQUALS( str[i], GN::variantType2Str( (GN::VariantType)i ) );
+            TS_ASSERT_EQUALS( str[i], GN::variantType2Str( tag[i] ) );
         }
     }
 };

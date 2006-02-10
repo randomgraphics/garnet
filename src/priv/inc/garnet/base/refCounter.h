@@ -215,7 +215,7 @@ namespace GN
         //!
         //! get address of internal pointer.
         //!
-        //! 这个函数主要用于将指向AutoRef<T>的指针变成指向XPTR的指针（他们在内存中的映像其实是一样的）。
+        //! 这个函数主要用于将指向AutoRef的指针变成指向XPTR的指针（他们在内存中的映像其实是一样的）。
         //! 你可以用强制类型转换达同样的目的，不过用这个函数会更简洁一些。
         //!
         XPTR const * addr() const throw() { return &mPtr; }

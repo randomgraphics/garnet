@@ -199,14 +199,14 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
                 case UVT_VECTOR4 :
                     GN_OGL_CHECK( glUniform4fvARB(
                         location,
-                        u.value.vector4s.size(),
+                        (GLsizei)u.value.vector4s.size(),
                         (const float * )&u.value.vector4s[0] ) );
                     break;
 
                 case UVT_MATRIX44 :
                     GN_OGL_CHECK( glUniformMatrix4fvARB(
                         location,
-                        u.value.matrix44s.size(),
+                        (GLsizei)u.value.matrix44s.size(),
                         GL_TRUE, // row major
                         (const float * )&u.value.matrix44s[0] ) );
                     break;
@@ -214,21 +214,21 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
                 case UVT_FLOAT :
                     GN_OGL_CHECK( glUniform1fvARB(
                         location,
-                        u.value.floats.size(),
+                        (GLsizei)u.value.floats.size(),
                         &u.value.floats[0] ) );
                     break;
 
                 case UVT_BOOL :
                     GN_OGL_CHECK( glUniform1ivARB(
                         location,
-                        u.value.bools.size(),
+                        (GLsizei)u.value.bools.size(),
                         (const GLint*)&u.value.bools[0] ) );
                     break;
 
                 case UVT_INT :
                     GN_OGL_CHECK( glUniform1ivARB(
                         location,
-                        u.value.ints.size(),
+                        (GLsizei)u.value.ints.size(),
                         (const GLint*)&u.value.ints[0] ) );
                     break;
 
