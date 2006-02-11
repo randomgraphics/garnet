@@ -42,12 +42,12 @@ namespace GN
         //!
         //! Get the instance
         //!
-        static T & getInstance() { GN_ASSERT(msInstancePtr); return *msInstancePtr; }
+        static T & sGetInstance() { GN_ASSERT(msInstancePtr); return *msInstancePtr; }
 
         //!
         //! Get the instance pointer (might be NULL)
         //!
-        static T * getInstancePtr() { return msInstancePtr; }
+        static T * sGetInstancePtr() { return msInstancePtr; }
     };
 
     //!
@@ -79,12 +79,12 @@ namespace GN
         //!
         //! Get the instance
         //!
-        static T & getInstance() { GN_ASSERT(msInstancePtr); return *msInstancePtr; }
+        static T & sGetInstance() { GN_ASSERT(msInstancePtr); return *msInstancePtr; }
 
         //!
         //! Get the instance pointer (might be NULL)
         //!
-        static T * getInstancePtr() { return msInstancePtr; }
+        static T * sGetInstancePtr() { return msInstancePtr; }
     };
 
     template<typename T> T * LocalSingleton<T>::msInstancePtr = 0;

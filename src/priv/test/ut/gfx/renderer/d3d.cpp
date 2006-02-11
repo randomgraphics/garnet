@@ -7,7 +7,7 @@ public:
 
     void setUp() { d3dInit(); }
 
-    void tearDown() { libFree(); }
+    void tearDown() { GN::gfx::deleteRenderer(); }
 
     void testExternalWindow() { externalWindow(); }
 

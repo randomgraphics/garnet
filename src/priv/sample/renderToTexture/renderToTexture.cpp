@@ -7,10 +7,7 @@ public:
 
     void onRender()
     {
-        GN::gfx::Renderer * r = getRenderer();
-        GN_ASSERT( r );
-
-        r->clearScreen();
+        gRenderer.clearScreen();
     }
 };
 

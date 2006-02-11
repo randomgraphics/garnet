@@ -34,7 +34,7 @@
 //!
 //! Global OGL object. Must instantiate and initialize it before using ogl module.
 //!
-#define gOGL (::GN::ogl::OGL::getInstance())
+#define gOGL (::GN::ogl::OGL::sGetInstance())
 
 namespace GN
 {

@@ -9,12 +9,12 @@
 //!
 //! global texture dictionary
 //!
-#define gTexDict (GN::gfx::TextureDictionary::getInstance())
+#define gTexDict (GN::gfx::TextureDictionary::sGetInstance())
 
 //!
 //! pointer to global texture dictionary
 //!
-#define gTexDictPtr (GN::gfx::TextureDictionary::getInstancePtr())
+#define gTexDictPtr (GN::gfx::TextureDictionary::sGetInstancePtr())
 
 namespace GN { namespace gfx
 {

@@ -12,7 +12,7 @@
 
 #if GN_STATIC
 GN::gfx::Renderer *
-GN::gfx::createOGLRenderer( const RendererOptions & ro )
+createOGLRenderer( const GN::gfx::RendererOptions & ro )
 #else
 extern "C" GN_EXPORT GN::gfx::Renderer *
 GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )

@@ -384,11 +384,11 @@ namespace GN { namespace gfx
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Renderer * GN::gfx::createFakeRenderer( const RendererOptions & ro )
+GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & ro )
 {
     GN_GUARD;
 
-    FakeRenderer * p = new FakeRenderer;
+    GN::gfx::FakeRenderer * p = new GN::gfx::FakeRenderer;
     p->init( ro );
     return p;
 

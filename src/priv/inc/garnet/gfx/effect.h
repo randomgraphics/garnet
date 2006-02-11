@@ -9,12 +9,12 @@
 //!
 //! global effect dictionary
 //!
-#define gEffectDict (GN::gfx::EffectDictionary::getInstance())
+#define gEffectDict (GN::gfx::EffectDictionary::sGetInstance())
 
 //!
 //! pointer to global effect dictionary
 //!
-#define gEffectDictPtr (GN::gfx::EffectDictionary::getInstancePtr())
+#define gEffectDictPtr (GN::gfx::EffectDictionary::sGetInstancePtr())
 
 namespace GN { namespace gfx {
     //!

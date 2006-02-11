@@ -37,7 +37,7 @@
 //!
 //! Global D3D object. Must be instantiated and initialized before using d3d module.
 //!
-#define gD3D (::GN::d3d::D3D::getInstance())
+#define gD3D (::GN::d3d::D3D::sGetInstance())
 
 namespace GN
 {

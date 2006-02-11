@@ -11,12 +11,12 @@
 //!
 //! Global input instance
 //!
-#define gInput (::GN::input::Input::getInstance())
+#define gInput (::GN::input::Input::sGetInstance())
 
 //!
 //! Pointer of global input instance
 //!
-#define gInputPtr (::GN::input::Input::getInstancePtr())
+#define gInputPtr (::GN::input::Input::sGetInstancePtr())
 
 namespace GN
 {

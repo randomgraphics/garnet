@@ -7,7 +7,7 @@ public:
 
     void setUp() { oglInit(); }
 
-    void tearDown() { libFree(); }
+    void tearDown() { GN::gfx::deleteRenderer(); }
 
     void testntWindowAndNTRenderWindow() { ntWindowAndNTRenderWindow(); }
 

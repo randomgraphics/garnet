@@ -9,21 +9,22 @@
 //!
 //! Global renderer instance
 //!
-#define gRenderer (::GN::gfx::Renderer::getInstance())
+#define gRenderer (::GN::gfx::Renderer::sGetInstance())
 
 //!
 //! Pointer of global renderer instance
 //!
-#define gRendererPtr (::GN::gfx::Renderer::getInstancePtr())
+#define gRendererPtr (::GN::gfx::Renderer::sGetInstancePtr())
 
 //!
-//! Implement static renderer signals
+//! Implement static renderer data members
 //!
-#define GN_IMPLEMENT_RENDERER_SIGNALS() \
+#define GN_IMPLEMENT_RENDERER_STATIC_MEMBERS() \
     ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceCreate; \
     ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceRestore; \
     ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDispose; \
-    ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDestroy;
+    ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDestroy; \
+    ::GN::SharedLib     GN::gfx::Renderer::msSharedLib;
 
 namespace GN { namespace gfx
 {
@@ -400,6 +401,17 @@ namespace GN { namespace gfx
         size_t        minVtxIdx; //!< ignored if index buffer is NULL.
         size_t        numVtx;    //!< ignored if index buffer is NULL.
         size_t        startIdx;  //!< ignored if index buffer is NULL.
+    };
+
+    //!
+    //! Define rendering API
+    //!
+    enum RendererAPI
+    {
+        API_OGL,  //!< OpenGL
+        API_D3D,  //!< Direct3D
+        API_FAKE, //!< Fake API
+        NUM_RENDERER_API, //!< Number of avaliable API.
     };
 
     //!
@@ -1467,36 +1479,43 @@ namespace GN { namespace gfx
             ffpCtor();
         }
 
+        //!
+        //! Dtor
+        //!
+        virtual ~Renderer() {}
+
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Instance Manager
+        //
+        // ********************************************************************
+
+        //@{
+
+    private:
+
+        static GN_PUBLIC SharedLib msSharedLib;
+        friend Renderer * createRenderer( RendererAPI, const RendererOptions & );
+        friend void deleteRenderer();
+
         //@}
     };
 
     //!
-    //! Function prototype to create instance of renderer.
+    //! (Re)Create a renderer.
     //!
-    typedef Renderer * (*CreateRendererFunc)( const RendererOptions & );
+    //! This function will release old renderer, then create a new one with new settings.
+    //!
+    //! \note This function is implemented in core module.
+    //!
+    Renderer * createRenderer( RendererAPI, const RendererOptions & );
 
     //!
-    //! Create fake renderer, for debugging or as fallback.
+    //! Delete renderer
     //!
-    Renderer * createFakeRenderer( const RendererOptions & );
-
-#if GN_STATIC
-
-    //!
-    //! Create instance of D3D renderer.
-    //!
-#if GN_MSWIN
-    Renderer * createD3DRenderer( const RendererOptions & );
-#else
-    inline Renderer * createD3DRenderer( const RendererOptions & )
-    { GN_ERROR( "No D3D support on platform other than MS Windows." ); return 0; }
-#endif
-
-    //!
-    //! Create instance of OGL renderer.
-    //!
-    Renderer * createOGLRenderer( const RendererOptions & );
-#endif
+    void deleteRenderer();
 }}
 
 #include "renderer.inl"
