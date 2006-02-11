@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
-#include "garnet/GNgfx.h"
-#include "garnet/gfx/effect.h"
+#include "coreResourceDict.h"
 
 // implement global singletons
 GN_IMPLEMENT_SINGLETON( GN::PluginManager )
@@ -14,12 +13,6 @@ GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
 
 // implement static renderer signals
 GN_IMPLEMENT_RENDERER_SIGNALS()
-
-// Some of singletons can be safely defined as global variable
-static GN::PluginManager sPluginManager;
-static GN::ProfilerManager sProfilerMgr;
-static GN::gfx::TextureDictionary sTextureDict;
-static GN::gfx::effect::EffectDictionary sEffectDict;
 
 //
 // Implement global log function.
@@ -34,3 +27,71 @@ GN::doLog( const LogDesc & desc, const char * msg )
     // do default log
     detail::defaultLogImpl(desc,msg);
 }
+
+// *****************************************************************************
+// Garnet core
+// *****************************************************************************
+
+namespace GN { namespace core
+{
+    class GarnetCore
+    {
+        PluginManager mPluginManager;
+        ProfilerManager mProfilerManager;
+        CoreTextureDict mTextureDict;
+        CoreEffectDict mEffectDict;
+
+    public:
+
+        GarnetCore() {}
+
+        ~GarnetCore() { shutdown(); }
+
+        bool initialize()
+        {
+            GN_GUARD_ALWAYS;
+
+            GN_INFO( "Initialize garnet core ..." );
+
+            if( !mTextureDict.init() ) return false;
+            if( !mEffectDict.init() ) return false;
+
+            // success
+            return true;
+
+            // failed
+            GN_UNGUARD_ALWAYS_NO_THROW;
+            return false;
+        }
+
+        void shutdown()
+        {
+            GN_GUARD_ALWAYS;
+
+            GN_INFO( "Shutdown garnet core ..." );
+
+            mEffectDict.quit();
+            mTextureDict.quit();
+
+            GN_UNGUARD_ALWAYS_NO_THROW;
+        }
+    };
+}}
+
+// *****************************************************************************
+// Garnet core initializer
+// *****************************************************************************
+
+struct CoreInitializer
+{
+    GN::AutoObjPtr<GN::core::GarnetCore> mCore;
+
+    CoreInitializer()
+    {
+        GN_GUARD_ALWAYS;
+        mCore.attach( new GN::core::GarnetCore );
+        if( !mCore->initialize() ) GN_THROW( "Garnet core initialization failed!" );
+        GN_UNGUARD_ALWAYS_DO( mCore.clear(); );
+    };
+};
+static CoreInitializer sCoreInitializor;

@@ -439,13 +439,13 @@ namespace GN { namespace gfx
         //!
         //! Triggered right after render device is created.
         //!
-        GN_PUBLIC static Signal0<bool> sSigDeviceCreate;
+        static GN_PUBLIC Signal0<bool> sSigDeviceCreate;
 
         //!
         //! Triggered after rendering device is created or restored from
         //! disposed state.
         //!
-        GN_PUBLIC static Signal0<bool> sSigDeviceRestore;
+        static GN_PUBLIC Signal0<bool> sSigDeviceRestore;
 
         //!
         //! Triggered right before invalidating of rendering device.
@@ -459,7 +459,7 @@ namespace GN { namespace gfx
         //! - After receiving this signal, no rendering function should be called,
         //!   until you receive sSigDeviceRestore.
         //!
-        GN_PUBLIC static Signal0<void> sSigDeviceDispose;
+        static GN_PUBLIC Signal0<void> sSigDeviceDispose;
 
         //!
         //! Triggered right before render device is deleted.
@@ -468,7 +468,7 @@ namespace GN { namespace gfx
         //! - You must release all graphics resources (such as textures, shaders...),
         //!   after received this signal.
         //!
-        GN_PUBLIC static Signal0<void> sSigDeviceDestroy;
+        static GN_PUBLIC Signal0<void> sSigDeviceDestroy;
 
         //@}
 

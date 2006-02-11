@@ -33,6 +33,7 @@ bool GN::gfx::OGLQuad::init()
 
     // create render state block
     RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
+    rsbd.rs[RS_BLENDING] = RSV_TRUE;
     rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
     rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
     rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;

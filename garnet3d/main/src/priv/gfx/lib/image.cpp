@@ -85,6 +85,11 @@ bool GN::gfx::ImageDesc::validate() const
             GN_ERROR( "slicePitch of mipmaps[%d] is incorrect!", i );
             return false;
         }
+        if( m.levelPitch != m.slicePitch * m.depth )
+        {
+            GN_ERROR( "levelPitch of mipmaps[%d] is incorrect!", i );
+            return false;
+        }
     }
 
     // success

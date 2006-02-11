@@ -84,8 +84,8 @@ namespace GN
         ResourceManager(
             const Creator & creator = Creator(),
             const Deletor & deletor = Deletor(),
-            const Creator & nullor = makeFunctor(&defaultNullor),
-            const NameChecker & checker = makeFunctor(&path::isFile) )
+            const Creator & nullor = Creator(),
+            const NameChecker & checker = NameChecker() )
             : mCreator(creator)
             , mDeletor(deletor)
             , mNullor(nullor)
@@ -311,7 +311,7 @@ namespace GN
             GN_GUARD_SLOW;
             StringMap::const_iterator iter = mResNames.find( name );
             if( mResNames.end() != iter ) return iter->second;
-            if( autoAddNewName && mNameChecker && mNameChecker(name) ) return addResource( name );
+            if( autoAddNewName && ( !mNameChecker || mNameChecker(name) ) ) return addResource( name );
             return 0; // failed
             GN_UNGUARD_SLOW;
         }
@@ -337,7 +337,7 @@ namespace GN
         bool getResource( RES & result, ResHandle handle )
         {
             GN_GUARD_SLOW;
-            return getResourceByHandle( result, handle, "UnknownName" );
+            return getResourceByHandle( result, handle, 0 );
             GN_UNGUARD_SLOW;
         }
 
@@ -384,6 +384,10 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
+        // *****************************
+        // private variables
+        // *****************************
+
     private:
 
         typedef ResourceManager<RES,SINGLETON> MyType;
@@ -412,26 +416,39 @@ namespace GN
         RES   * mNullInstance;
         Deletor mNullDeletor;
 
-        bool getResourceByHandle( RES & res, ResHandle handle, const char * nullName )
+        // *****************************
+        // private methods
+        // *****************************
+
+    private:
+
+        bool getResourceByHandle( RES & res, ResHandle handle, const char * name )
         {
             GN_GUARD_SLOW;
 
             if( !mResHandles.validHandle(handle) )
             {
-                GN_ERROR( "Resource '%s' is invalid. Fall back to null instance...", nullName );
+                if( name )
+                    GN_ERROR( "Resource '%s' is invalid. Fall back to null instance...", name );
+                else
+                    GN_ERROR( "Resource handle '%d' is invalid. Fall back to null instance...", handle );
+
                 if( 0 == mNullInstance )
                 {
                     RES * tmp = new RES;
-                    if( !mNullor ||
-                        !mNullor(*tmp,nullName) )
+                    if( !mNullor || !mNullor( *tmp, name ) )
                     {
-                        GN_ERROR( "Fail to create null resource '%s'.", nullName );
+                        if( name )
+                            GN_ERROR( "Fail to create null instance for resource '%s'.", name );
+                        else
+                            GN_ERROR( "Fail to create null instance for resource handle '%d'.", handle );
                         delete tmp;
                         return false;
                     }
                     mNullInstance = tmp;
                     mNullDeletor = mDeletor;
                 }
+                GN_ASSERT( mNullInstance );
                 res = *mNullInstance;
                 return true;
             }
@@ -505,12 +522,6 @@ namespace GN
                 mNullInstance = 0;
             }
             GN_ASSERT( !mNullDeletor && !mNullInstance );
-        }
-
-        static inline bool defaultNullor( RES & result, const StrA & )
-        {
-            result = RES();
-            return true;
         }
     };
 }

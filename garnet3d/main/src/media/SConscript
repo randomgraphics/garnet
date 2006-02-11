@@ -1,0 +1,6 @@
+Import( 'env' )
+
+files = []
+files += env.GN_glob( "*.*", True )
+
+Return( 'files' )
