@@ -121,7 +121,11 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
     GN_GUARD;
 
     // setup defualt parameters
+#if GN_MSWIN
     mInitParam.rapi = gfx::API_D3D;
+#else
+    mInitParam.rapi = gfx::API_OGL;
+#endif
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.useDInput = false;
 
