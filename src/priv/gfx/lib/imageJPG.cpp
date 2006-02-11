@@ -65,6 +65,7 @@ bool JpegReader::readHeader(
     m.depth         = 1;
     m.rowPitch      = (uint32_t)(sizeof(JOCTET) * bpp * mCInfo.image_width);
     m.slicePitch    = m.rowPitch * m.height;
+    m.levelPitch    = m.slicePitch;
 
     // success
     GN_ASSERT( o_desc.validate() );

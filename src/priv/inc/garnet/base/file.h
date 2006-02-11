@@ -237,10 +237,17 @@ namespace GN
 
         //!
         //! Conver path to platform native format. This function will do:
-        //!   - Normalize path separators to platform specific format.
-        //!   - Remove redundant path separators, such as "c:\\path\" will be
-        //!     convert to "c:\path".
-        //!   - Resolve special path prefixes
+        //!   - Normalize path separators
+        //!     - Convert all path separators to platform specific format.
+        //!     - Remove redundant path separators, such as "c:\\path\" will be
+        //!       convert to "c:\path".
+        //!   - Resolve special path prefixes. Currently, 3 prefixes are supported:
+        //!     - "app:"      : executable directory
+        //!     - "startup:"  : startup directory
+        //!     - "pwd:"      : current working directory
+        //!   - Resolve embbed environment variable, like this:
+        //!         "${windir}/system32" -> "c:\\windows\\system32"
+        //!     - Note this feature is unimplemented yet.
         //!
         void toNative( StrA & result, const StrA & path );
 
@@ -305,12 +312,13 @@ namespace GN
         //!
         //! Join path
         //!
-        void join(
+        void joinTo(
             StrA & result,
             const StrA & path1 = StrA::EMPTYSTR,
             const StrA & path2 = StrA::EMPTYSTR,
             const StrA & path3 = StrA::EMPTYSTR,
-            const StrA & path4 = StrA::EMPTYSTR );
+            const StrA & path4 = StrA::EMPTYSTR,
+            const StrA & path5 = StrA::EMPTYSTR );
 
         //!
         //! Join path
@@ -319,10 +327,11 @@ namespace GN
             const StrA & path1 = StrA::EMPTYSTR,
             const StrA & path2 = StrA::EMPTYSTR,
             const StrA & path3 = StrA::EMPTYSTR,
-            const StrA & path4 = StrA::EMPTYSTR )
+            const StrA & path4 = StrA::EMPTYSTR,
+            const StrA & path5 = StrA::EMPTYSTR )
         {
             StrA ret;
-            join( ret, path1, path2, path3, path4 );
+            joinTo( ret, path1, path2, path3, path4, path5 );
             return ret;
         }
 

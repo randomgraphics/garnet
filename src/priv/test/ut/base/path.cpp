@@ -40,6 +40,12 @@ public:
 
     void testJoin()
     {
+        TS_ASSERT_EQUALS( "", GN::path::join( "", "" ) );
+        TS_ASSERT_EQUALS( "a", GN::path::join( "", "a" ) );
+        TS_ASSERT_EQUALS( "a", GN::path::join( "a", "" ) );
+        TS_ASSERT_EQUALS( "a", GN::path::join( "", "a", "" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b", GN::path::join( "a", "b" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b", GN::path::join( "", "a", "", "b", "" ) );
         TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", GN::path::join( "\\a\\", "\\b\\", "\\c\\" ) );
         TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", GN::path::join( "/a/", "/b/", "/c/" ) );
     }

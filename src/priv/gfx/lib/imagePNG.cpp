@@ -120,6 +120,7 @@ bool PngReader::readHeader(
     m.depth         = 1;
     m.rowPitch      = mInfo->width * bpp / 8;
     m.slicePitch    = m.rowPitch * mInfo->height;
+    m.levelPitch    = m.slicePitch;
     GN_ASSERT( o_desc.validate() );
 
     // store image pitch

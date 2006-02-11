@@ -237,6 +237,8 @@ void GN::path::toNative( StrA & result, const StrA & path )
 
     // normalize it
     sNormalizePathSeparator( result, tmp );
+
+    // TODO: resolve embbed environment variables
 }
 
 //
@@ -366,19 +368,31 @@ void GN::path::getExt( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::path::join(
+void GN::path::joinTo(
     StrA & result,
     const StrA & path1,
     const StrA & path2,
     const StrA & path3,
-    const StrA & path4 )
+    const StrA & path4,
+    const StrA & path5 )
 {
     StrA tmp;
-    const StrA * parts[] = { &path1, &path2, &path3, &path4 };
-    for( size_t i = 0; i < sizeof(parts)/sizeof(parts[0]); ++i )
+
+    const StrA * parts[] = { &path1, &path2, &path3, &path4, &path5 };
+
+    size_t n = sizeof(parts)/sizeof(parts[0]);
+
+    size_t i = 0;
+
+    // ignore leading empty parts
+    while( parts[i]->empty() && i < n ) ++i;
+
+    if( i < n ) tmp = *parts[i], ++i;
+
+    for( ; i < n; ++i )
     {
         const StrA & p = *parts[i];
-        if( p.empty() ) continue;
+        if( p.empty() ) continue; // ignore empty parts
         tmp.append( PATH_SEPARATOR );
         tmp.append( p );
     }

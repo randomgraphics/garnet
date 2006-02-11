@@ -322,7 +322,7 @@ bool GN::gfx::OGLBasicTexture::init(
         }
         else
         {
-            format = FMT_RGBA_8_8_8_8; // default color format
+            format = FMT_BGRA_8_8_8_8; // default color format
         }
     }
 

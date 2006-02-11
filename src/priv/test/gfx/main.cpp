@@ -7,21 +7,9 @@ class Scene
 {
     GN::AutoRef<GN::gfx::Shader> ps1, ps2;
 
-    GN::AutoRef<GN::gfx::Texture> tex0;
+    uint32_t tex0;
 
     GN::gfx::effect::Effect eff0;
-
-    bool loadTex0( GN::gfx::Texture & tex )
-    {
-        GN_GUARD;
-        uint32_t * texData = (uint32_t*)tex.lock1D( 0, 0, 0, GN::gfx::LOCK_WO );
-        if( 0 == texData ) return false;
-        //           A R G B
-        *texData = 0xFF0000FF;
-        tex.unlock();
-        return true;
-        GN_UNGUARD;
-    }
 
     bool loadEffect()
     {
@@ -105,8 +93,8 @@ public:
             ps2->setUniformByNameV( "diffuse", GN::Vector4f(1,0,0,1) );
         }
 
-        // create a pure white texture
-        tex0 = r.create1DTexture( 1, 1, GN::gfx::FMT_BGRA32, 0, GN::makeFunctor(this,&Scene::loadTex0) );
+        // get texture handle
+        tex0 = gTexDict.getResourceHandle( "texture/rabit.png" );
 
         // create the effect
         if( !loadEffect() ) return false;
@@ -120,14 +108,13 @@ public:
         eff0.quit();
         ps1.reset();
 		ps2.reset();
-        tex0.reset();
     }
 
     void draw()
     {
         GN::gfx::Renderer & r = gRenderer;
 
-        r.bindTexture( 0, tex0 );
+        r.bindTexture( 0, gTexDict.getResource(tex0) );
         r.drawQuad( 0, 0, 0, 0.5, 0.5 );
         if( ps1 )
         {

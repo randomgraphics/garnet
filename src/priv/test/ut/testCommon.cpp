@@ -7,7 +7,7 @@
 //
 int myInit( int /*argc*/, const char * /*argv*/[] )
 {
-    // setup environment variables to contro log behavior.
+    // setup environment variables to control log behavior.
     GN::putEnv( "GN_LOG_FILENAME", "GNut.log.txt" );
     GN::putEnv( "GN_LOG_QUIET", "1" );
 

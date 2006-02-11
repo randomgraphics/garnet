@@ -162,7 +162,7 @@ if 0 == len(all_targets):
 
 ################################################################################
 #
-# Build and install manual headers and manual
+# Build and install manual
 #
 ################################################################################
 
@@ -175,8 +175,13 @@ if manual: all_targets.append( [ 'GNman', env.Install( os.path.join( 'bin', 'sdk
 #
 ################################################################################
 
-media = SConscript( 'src/media/SConscript' )
-if media: all_targets.append( [ 'GNmedia', env.Install( os.path.join( 'bin', 'media' ), media ) ] )
+mediaSourceDir = os.path.join( '#src', 'media' )
+mediaTargetDir = os.path.join( 'bin', 'media' )
+for x in SConscript( 'src/media/SConscript' ):
+    src = os.path.join( mediaSourceDir, x )
+    dst = os.path.join( mediaTargetDir, x )
+    env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
+    env.Alias( "media", dst )
 
 ################################################################################
 #
@@ -185,10 +190,10 @@ if media: all_targets.append( [ 'GNmedia', env.Install( os.path.join( 'bin', 'me
 ################################################################################
 
 # install SDK headers
-target = os.path.join( 'bin','sdk', 'inc' )
-source = os.path.join( '#src','priv','inc' )
-for src in env.GN_glob(source, True):
-    dst = os.path.join( target, env.GN_relpath(src,source) )
+sdkTargetDir = os.path.join( 'bin','sdk', 'inc' )
+sdkSourceDir = os.path.join( '#src','priv','inc' )
+for src in env.GN_glob(sdkSourceDir, True):
+    dst = os.path.join( sdkTargetDir, env.GN_relpath(src,sdkSourceDir) )
     env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
     env.Alias( 'sdk', dst )
 
@@ -204,7 +209,8 @@ for x in all_targets:
     env.Alias( x[0], x[1] )
     env.Alias( 'all', x[1] )
     env.Default( x[1] )
-env.Default( Split('samples sdk') )
+
+env.Default( Split('samples sdk media') )
 
 ################################################################################
 #
@@ -213,9 +219,10 @@ env.Default( Split('samples sdk') )
 ################################################################################
 
 targets_text = ''
-targets_text += '%16s : %s\n'%( 'all', 'Build all targets of all variants for all compilers' )
-targets_text += '%16s : %s\n'%( 'samples', 'Build samples' )
-targets_text += '%16s : %s\n'%( 'sdk', 'Build garnet SDK' )
+targets_text += '%16s : %s\n'%( 'all', 'Build and install all targets of all variants for all compilers' )
+targets_text += '%16s : %s\n'%( 'samples', 'Build and install samples' )
+targets_text += '%16s : %s\n'%( 'sdk', 'Build and install SDK' )
+targets_text += '%16s : %s\n'%( 'media', 'Build and install media files' )
 targets_text += '%16s : %s\n'%( 'msvc', 'Build MSVC projects' )
 for x in all_targets:
     targets_text += '%16s : %s\n'%( x[0], env.File(x[1]) )
