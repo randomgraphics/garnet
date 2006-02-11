@@ -18,7 +18,7 @@
 
 #if GN_STATIC
 GN::gfx::Renderer *
-GN::gfx::createD3DRenderer( const RendererOptions & ro )
+createD3DRenderer( const GN::gfx::RendererOptions & ro )
 #else
 extern "C" GN_EXPORT GN::gfx::Renderer *
 GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )

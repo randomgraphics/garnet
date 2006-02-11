@@ -148,7 +148,7 @@ namespace GN
         ScopeTimer( const char * name ) : mName(name)
         {
             GN_ASSERT( name );
-            ProfilerManager::getInstance().startTimer(name);
+            ProfilerManager::sGetInstance().startTimer(name);
         }
 
         //!
@@ -166,7 +166,7 @@ namespace GN
         {
             if( mName )
             {
-                ProfilerManager::getInstance().stopTimer(mName);
+                ProfilerManager::sGetInstance().stopTimer(mName);
                 mName = 0;
             }
         }

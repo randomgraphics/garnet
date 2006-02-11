@@ -13,7 +13,7 @@ public:
 
         // create fake renderer
         RendererOptions ro;
-        TS_ASSERT( createFakeRenderer(ro) );
+        TS_ASSERT( createRenderer( API_FAKE, ro) );
 
         // initialize texture dictionary
         gTexDict.addResource( "tex0" );
@@ -22,7 +22,7 @@ public:
     void tearDown()
     {
         gTexDict.clear();
-        if( gRendererPtr ) delete gRendererPtr;
+        GN::gfx::deleteRenderer();
     }
 
     void initDesc1( GN::gfx::effect::EffectDesc & desc )

@@ -120,23 +120,24 @@ struct GfxResources
 
 struct TestScene
 {
-    GN::AutoObjPtr<GN::gfx::Renderer> r;
     GN::AutoObjPtr<GfxResources> res;
+
+    ~TestScene() { destroy(); }
 
     void destroy()
     {
         res.clear();
-        r.clear();
+        GN::gfx::deleteRenderer();
     }
 
-    bool create( const GN::gfx::CreateRendererFunc & fn, const GN::gfx::RendererOptions & ro )
+    bool create( GN::gfx::RendererAPI api, const GN::gfx::RendererOptions & ro )
     {
         destroy();
 
         // create renderer
-        r.attach( fn(ro) );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( api, ro );
         TS_ASSERT( r );
-        if( r.empty() ) return false;
+        if( !r ) return false;
 
         // create resource
         res.attach( new GfxResources );
@@ -148,47 +149,25 @@ struct TestScene
 
     void draw()
     {
-        TS_ASSERT( r && res );
-        if( r && res ) res->draw();
+        TS_ASSERT( gRendererPtr && res );
+        if( gRendererPtr && res ) res->draw();
     }
 };
 
 class GfxTest
 {
-    GN::SharedLib mLib;
-    GN::gfx::CreateRendererFunc mCreator;
+    GN::gfx::RendererAPI mApi;
 
 protected:
 
     void d3dInit()
     {
-#if GN_STATIC
-        mCreator = &GN::gfx::createD3DRenderer;
-#else
-        GN::StrA libName = GN::StrA("GNgfxD3D");
-        TS_ASSERT( mLib.load( (LIB_PREF+libName+LIB_SUFF).cstr() ) );
-        TS_ASSERT( mLib.load( libName.cstr() ) );
-        mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
-        TS_ASSERT( mCreator );
-#endif
+        mApi = GN::gfx::API_D3D;
     }
 
     void oglInit()
     {
-#if GN_STATIC
-        mCreator = &GN::gfx::createOGLRenderer;
-#else
-        GN::StrA libName = GN::StrA("GNgfxOGL");
-        TS_ASSERT( mLib.load( (LIB_PREF+libName+LIB_SUFF).cstr() ) );
-        TS_ASSERT( mLib.load( libName.cstr() ) );
-        mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
-        TS_ASSERT( mCreator );
-#endif
-    }
-
-    void libFree()
-    {
-        mLib.free();
+        mApi = GN::gfx::API_OGL;
     }
 
     //
@@ -207,7 +186,7 @@ protected:
         TestScene scene;
         GN::gfx::RendererOptions ro;
         ro.software = true;
-        if( !scene.create(mCreator,ro) ) return;
+        if( !scene.create(mApi,ro) ) return;
 
         scene.draw();
 #endif
@@ -215,8 +194,6 @@ protected:
 
     void externalWindow()
     {
-        if( !mCreator) return;
-
 #if GN_MSWIN
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
@@ -231,11 +208,11 @@ protected:
         ro.useExternalWindow = true;
         ro.renderWindow = win.getWindow();
         ro.software = true;
-        if( !scene.create(mCreator,ro) ) return;
+        if( !scene.create(mApi,ro) ) return;
 
         scene.draw();
 
-        const GN::gfx::DispDesc & dd = scene.r->getDispDesc();
+        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
 
         TS_ASSERT_EQUALS( dd.windowHandle, win.getWindow() );
         //TS_ASSERT_EQUALS( dd.monitorHandle, win.getMonitor() );
@@ -252,17 +229,17 @@ protected:
         ro.windowedWidth = 320;
         ro.windowedHeight = 640;
         ro.software = true;
-        if( !scene.create(mCreator,ro) ) return;
+        if( !scene.create(mApi,ro) ) return;
 
-        const GN::gfx::DispDesc & dd = scene.r->getDispDesc();
-        TS_ASSERT_EQUALS( scene.r->getOptions().software, true );
+        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+        TS_ASSERT_EQUALS( gRenderer.getOptions().software, true );
 
         scene.draw();
 
         // recreate the device
         ro.software = false;
-        TS_ASSERT( scene.r->changeOptions(ro) );
-        TS_ASSERT_EQUALS( scene.r->getOptions().software, false );
+        TS_ASSERT( gRenderer.changeOptions(ro) );
+        TS_ASSERT_EQUALS( gRenderer.getOptions().software, false );
         TS_ASSERT_EQUALS( dd.width, 320 );
         TS_ASSERT_EQUALS( dd.height, 640 );
         scene.draw();
@@ -270,7 +247,7 @@ protected:
         // reset the device
         ro.windowedWidth = 256;
         ro.windowedHeight = 128;
-        TS_ASSERT( scene.r->changeOptions(ro) );
+        TS_ASSERT( gRenderer.changeOptions(ro) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
         scene.draw();
@@ -284,13 +261,13 @@ protected:
         ro.fullscreen = true;
         ro.displayMode.width = 640;
         ro.displayMode.height = 480;
-        if( !scene.create(mCreator,ro) ) return;
+        if( !scene.create(mApi,ro) ) return;
 
         scene.draw();
 
         ro.displayMode.width = 1024;
         ro.displayMode.height = 768;
-        TS_ASSERT( scene.r->changeOptions( ro ) );
+        TS_ASSERT( gRenderer.changeOptions( ro ) );
 
         scene.draw();
     }
@@ -302,9 +279,9 @@ protected:
         GN::gfx::RendererOptions ro;
         ro.useExternalWindow = false;
         ro.parentWindow = 0;
-        if( !scene.create(mCreator,ro) ) return;
+        if( !scene.create(mApi,ro) ) return;
 
-        const GN::gfx::DispDesc & dd = scene.r->getDispDesc();
+        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
         TS_ASSERT_EQUALS( dd.width, 640 );
         TS_ASSERT_EQUALS( dd.height, 480 );
 
@@ -313,11 +290,10 @@ protected:
 
     void renderStateBlock()
     {
-        GN::AutoObjPtr<GN::gfx::Renderer> r;
         GN::gfx::RendererOptions ro;
-        r.attach( mCreator(ro) );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( mApi, ro );
         TS_ASSERT( r );
-        if( r.empty() ) return;
+        if( 0 == r ) return;
 
         // renderer should be initialized with default render state
         TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
@@ -355,22 +331,20 @@ protected:
 
     void vtxBuf()
     {
-        GN::AutoObjPtr<GN::gfx::Renderer> r;
         GN::gfx::RendererOptions ro;
-        r.attach( mCreator(ro) );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( mApi, ro );
         TS_ASSERT( r );
-        if( r.empty() ) return;
+        if( 0 == r ) return;
 
         GN_WARN( "TODO: vertex buffer UT!" );
     }
 
     void renderTarget()
     {
-        GN::AutoObjPtr<GN::gfx::Renderer> r;
         GN::gfx::RendererOptions ro;
-        r.attach( mCreator(ro) );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( mApi, ro );
         TS_ASSERT( r );
-        if( r.empty() ) return;
+        if( 0 == r ) return;
 
         GN::AutoRef<GN::gfx::Texture> rt1, rt2, rt3, rt4;
 

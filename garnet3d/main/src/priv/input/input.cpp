@@ -10,6 +10,10 @@ GN::input::Input * GN::input::createInputSystem( bool useDirectInput )
 {
     GN_GUARD;
 
+    // release old input system
+    if( gInputPtr ) delete gInputPtr;
+
+    // then create new one.
 #if GN_MSWIN
     if( useDirectInput )
     {

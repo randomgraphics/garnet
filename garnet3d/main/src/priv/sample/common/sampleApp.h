@@ -74,8 +74,6 @@ namespace GN
 
             bool switchRenderer();
 
-            gfx::Renderer * getRenderer() { return mGfxRenderer.get(); }
-
             //@}
 
             // ********************************
@@ -85,18 +83,12 @@ namespace GN
 
             struct InitParam
             {
-                bool useD3D;
-                bool useDInput;
+                gfx::RendererAPI rapi;
                 gfx::RendererOptions ro;
+                bool useDInput;
             };
 
             InitParam mInitParam;
-
-            GN::SharedLib mGfxLib;
-            GN::gfx::CreateRendererFunc mGfxCreator;
-            GN::AutoObjPtr<GN::gfx::Renderer> mGfxRenderer;
-
-            GN::AutoObjPtr<GN::input::Input> mInput;
 
             GN::Clock mClock;
 

@@ -71,14 +71,14 @@ int GN::sample::SampleApp::run()
     while( !mDone )
     {
 #if GN_MSWIN
-        win::processMswMessages( mGfxRenderer->getDispDesc().windowHandle );
+        win::processMswMessages( gRenderer.getDispDesc().windowHandle );
 #endif
-        mInput->processInputEvents();
+        gInput.processInputEvents();
         onUpdate();
-        if( mGfxRenderer->drawBegin() )
+        if( gRenderer.drawBegin() )
         {
             onRender();
-            mGfxRenderer->drawEnd();
+            gRenderer.drawEnd();
         }
     }
 
@@ -103,7 +103,7 @@ bool GN::sample::SampleApp::switchRenderer()
 {
     GN_GUARD;
 
-    mInitParam.useD3D = !mInitParam.useD3D;
+    mInitParam.rapi = (gfx::RendererAPI)((mInitParam.rapi+1)%gfx::NUM_RENDERER_API);
     return initRenderer();
 
     GN_UNGUARD;
@@ -121,9 +121,9 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
     GN_GUARD;
 
     // setup defualt parameters
-    mInitParam.useD3D = GN_MSWIN;
-    mInitParam.useDInput = false;
+    mInitParam.rapi = gfx::API_D3D;
     mInitParam.ro = gfx::RendererOptions();
+    mInitParam.useDInput = false;
 
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
@@ -141,31 +141,13 @@ bool GN::sample::SampleApp::initRenderer()
 {
     GN_GUARD;
 
-    // release old renderer
-    quitRenderer();
-
-    // create GFX renderer
-#if GN_STATIC
-    if( mInitParam.useD3D )
-        mGfxCreator = &GN::gfx::createD3DRenderer;
-    else
-        mGfxCreator = &GN::gfx::createOGLRenderer;
-#else
-    const char * libName;
-    if( mInitParam.useD3D )
-        libName = "GNgfxD3D";
-    else
-        libName = "GNgfxOGL";
-    if( !mGfxLib.load( libName ) ) return false;
-    mGfxCreator = (GN::gfx::CreateRendererFunc)mGfxLib.getSymbol( "GNgfxCreateRenderer" );
-    if( !mGfxCreator ) return false;
-#endif
-    mGfxRenderer.attach( mGfxCreator( mInitParam.ro ) );
-    if( !mGfxRenderer ) return false;
+    // (re)create renderer
+    GN::gfx::Renderer * r = gfx::createRenderer( mInitParam.rapi, mInitParam.ro );
+    if( NULL == r ) return false;
 
     // reattach input window
-    const GN::gfx::DispDesc & dd = mGfxRenderer->getDispDesc();
-    if( mInput && !mInput->attachToWindow( dd.displayHandle,dd.windowHandle ) )
+    const GN::gfx::DispDesc & dd = r->getDispDesc();
+    if( gInputPtr && !gInput.attachToWindow( dd.displayHandle,dd.windowHandle ) )
     {
         return false;
     }
@@ -183,9 +165,7 @@ void GN::sample::SampleApp::quitRenderer()
 {
     GN_GUARD;
 
-    mGfxRenderer.clear();
-    mGfxCreator = 0;
-    mGfxLib.free();
+    GN::gfx::deleteRenderer();
 
     GN_UNGUARD;
 }
@@ -201,19 +181,19 @@ bool GN::sample::SampleApp::initInput()
     quitInput();
 
     // create INPUT system
-    mInput.attach( GN::input::createInputSystem() );
-    if( !mInput ) return false;
+    GN::input::Input * input = GN::input::createInputSystem();
+    if( 0 == input ) return false;
 
-    if( mGfxRenderer )
+    if( gRendererPtr )
     {
-        const GN::gfx::DispDesc & dd = mGfxRenderer->getDispDesc();
-        if( !mInput->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
+        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+        if( !input->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
     }
 
     // connect to input signals
-    mInput->sigKeyPress.connect( this, &SampleApp::onKeyPress );
-    mInput->sigCharPress.connect( this, &SampleApp::onCharPress );
-    mInput->sigAxisMove.connect( this, &SampleApp::onAxisMove );
+    input->sigKeyPress.connect( this, &SampleApp::onKeyPress );
+    input->sigCharPress.connect( this, &SampleApp::onCharPress );
+    input->sigAxisMove.connect( this, &SampleApp::onAxisMove );
 
     // success
     return true;
@@ -228,7 +208,7 @@ void GN::sample::SampleApp::quitInput()
 {
     GN_GUARD;
 
-    mInput.clear();
+    if( gInputPtr ) delete gInputPtr;
 
     GN_UNGUARD;
 }

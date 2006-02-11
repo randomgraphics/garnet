@@ -11,8 +11,8 @@ GN_IMPLEMENT_SINGLETON( GN::gfx::Renderer )
 GN_IMPLEMENT_SINGLETON( GN::gfx::TextureDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
 
-// implement static renderer signals
-GN_IMPLEMENT_RENDERER_SIGNALS()
+// implement static renderer data members
+GN_IMPLEMENT_RENDERER_STATIC_MEMBERS()
 
 //
 // Implement global log function.

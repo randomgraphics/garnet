@@ -134,10 +134,6 @@ public:
 //!
 class GfxTest
 {
-    GN::SharedLib mLib;
-    GN::gfx::CreateRendererFunc mCreator;
-    GN::AutoObjPtr<GN::gfx::Renderer> mRenderer;
-    GN::AutoObjPtr<GN::input::Input> mInput;
     GN::Clock mClock;
 
     bool mDone;
@@ -161,36 +157,37 @@ public:
     //!
     //! Initialize test application
     //!
-    bool init( const char * api )
+    bool init( const char * apiName )
     {
-#if GN_STATIC
-        if( 0 == GN::strCmp( api, "OGL" ) )
-            mCreator = &GN::gfx::createOGLRenderer;
+        // create renderer
+        GN::gfx::RendererAPI api;
+        if( 0 == GN::strCmpI( apiName, "OGL" ) )
+            api = GN::gfx::API_OGL;
+        else if( 0 == GN::strCmpI( apiName, "D3D" ) )
+            api = GN::gfx::API_D3D;
+        else if( 0 == GN::strCmpI( apiName, "FAKE" ) )
+            api = GN::gfx::API_FAKE;
         else
-            mCreator = &GN::gfx::createD3DRenderer;
-#else
-        GN::StrA libName = GN::StrA("GNgfx") + api;
-        if( !mLib.load( libName.cstr() ) ) return false;
-        mCreator = (GN::gfx::CreateRendererFunc)mLib.getSymbol( "GNgfxCreateRenderer" );
-        if( !mCreator ) return false;
-#endif
+        {
+            GN_ERROR( "invalid renderer API. Must be [OGL|D3D|FAKE]." );
+            return false;
+        }
         GN::gfx::RendererOptions ro;
-        mRenderer.attach( mCreator(ro) );
-        if( !mRenderer ) return false;
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( api, ro );
+        if( 0 == r ) return false;
 
-        const GN::gfx::DispDesc & dd = mRenderer->getDispDesc();
+        // create input
+        const GN::gfx::DispDesc & dd = r->getDispDesc();
+        GN::input::Input * i = GN::input::createInputSystem();
+        if( !i || !i->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
+        i->sigKeyPress.connect( this, &GfxTest::onKeyPress );
 
-        mInput.attach( GN::input::createInputSystem() );
-        if( !mInput || !mInput->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
-
-        mInput->sigKeyPress.connect( this, &GfxTest::onKeyPress );
-
-        mDone = false;
-
+        // create scene
         mScene = new Scene;
         if( !mScene->init() ) return false;
 
         // success
+        mDone = false;
         return true;
     }
 
@@ -200,11 +197,8 @@ public:
     void quit()
     {
         GN::safeDelete(mScene);
-        if( mInput ) mInput->sigKeyPress.disconnect(this);
-        mInput.clear();
-        mRenderer.clear();
-        mCreator = 0;
-        mLib.free();
+        delete gInputPtr;
+        GN::gfx::deleteRenderer();
     }
 
     //!
@@ -212,23 +206,17 @@ public:
     //!
     int run()
     {
-        if( !mRenderer )
-        {
-            GN_ERROR( "GfxTest is not initialized!" );
-            return -1;
-        }
-
         while(!mDone)
         {
 #if GN_MSWIN
-            GN::win::processMswMessages( mRenderer->getDispDesc().windowHandle );
+            GN::win::processMswMessages( gRenderer.getDispDesc().windowHandle );
 #endif
-            mInput->processInputEvents();
+            gInput.processInputEvents();
             update();
-            if( mRenderer->drawBegin() )
+            if( gRendererPtr && gRenderer.drawBegin() )
             {
                 render();
-                mRenderer->drawEnd();
+                gRenderer.drawEnd();
             }
         }
 
@@ -244,9 +232,9 @@ public:
         if( GN::input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
         {
             // toggle fullscreen mode
-            GN::gfx::RendererOptions ro = mRenderer->getOptions();
+            GN::gfx::RendererOptions ro = gRenderer.getOptions();
             ro.fullscreen = !ro.fullscreen;
-            if( !mRenderer->changeOptions(ro) ) mDone = true;
+            if( !gRenderer.changeOptions(ro) ) mDone = true;
         }
     }
 
@@ -255,7 +243,7 @@ public:
     //!
     void update()
     {
-        const GN::input::KeyStatus * kb = mInput->getKeyboardStatus();
+        const GN::input::KeyStatus * kb = gInput.getKeyboardStatus();
         mDone = kb[GN::input::KEY_ESCAPE].down;
     }
 
@@ -264,7 +252,9 @@ public:
     //!
     void render()
     {
-        mRenderer->clearScreen( GN::Vector4f(0,0,0,1) ); // clear to pure blue.
+        GN::gfx::Renderer & r = gRenderer;
+        
+        r.clearScreen( GN::Vector4f(0,0,0,1) ); // clear to pure blue.
 
         // draw scene
         GN_ASSERT( mScene );
@@ -281,14 +271,14 @@ public:
             lastTime = currentTime;
             frames = 0;
         }
-        mRenderer->drawDebugTextA( mFPS.cstr(), 0, 0 );
+        r.drawDebugTextA( mFPS.cstr(), 0, 0 );
 
         // draw mouse position on screen
         GN::StrA mousePos;
         int x = 1, y = 1;
-        mInput->getMousePosition( x, y );
+        gInput.getMousePosition( x, y );
         mousePos.format( "Mouse: %d, %d", x, y );
-        mRenderer->drawDebugTextA( mousePos.cstr(), 0, 100 );//*/
+        r.drawDebugTextA( mousePos.cstr(), 0, 100 );//*/
     }
 };
 
@@ -318,6 +308,8 @@ void usage( const char * appName )
 //!
 int main( int argc, const char * argv[] )
 {
+    GN_GUARD_ALWAYS;
+
     const char * module;
 
     if( argc < 2 )
@@ -333,4 +325,7 @@ int main( int argc, const char * argv[] )
     GfxTest app;
     if( !app.init( module ) ) return -1;
     return app.run();
+
+    GN_UNGUARD_ALWAYS_NO_THROW;
+    return -1;
 }
