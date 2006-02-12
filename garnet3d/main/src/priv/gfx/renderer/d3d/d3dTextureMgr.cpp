@@ -42,42 +42,6 @@ GN::gfx::D3DRenderer::createTextureFromFile( File & file )
     GN_UNGUARD;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::bindTextures( const Texture * const texlist[],
-                                         uint32_t start, uint32_t numtex )
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( texlist || (0==numtex) );
-
-    // apply texture list
-    uint32_t end = start + numtex;
-    GN_ASSERT( end < getCaps(CAPS_MAX_TEXTURE_STAGES) );
-    for ( uint32_t i = start; i < end; ++i )
-    {
-        const Texture * tex = texlist[i-start];
-
-        if( 0 == tex )
-        {
-            mDevice->SetTexture( i, NULL );
-        }
-        else
-        {
-            const D3DTexture * p = safeCast<const D3DTexture*>(tex);
-
-            mDevice->SetTexture( i, p->getD3DTexture() );
-
-            // update texture parameters
-            updateTextureFilters( i, p->getD3DFilters() );
-            updateTextureWraps( i, p->getD3DWraps() );
-        }
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -111,9 +75,49 @@ bool GN::gfx::D3DRenderer::textureDeviceRestore()
 
 //
 //
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::applyTexture() const
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( getDirtyTextureStages() > 0 );
+
+    const Texture * const * texlist = getCurrentTextures();
+
+    uint32_t n = min( getDirtyTextureStages(), getCaps(CAPS_MAX_TEXTURE_STAGES) );
+
+    // apply texture list
+    for( uint32_t i = 0; i < n; ++i )
+    {
+        const Texture * tex = texlist[i];
+
+        if( 0 == tex )
+        {
+            mDevice->SetTexture( i, NULL );
+        }
+        else
+        {
+            const D3DTexture * p = safeCast<const D3DTexture*>(tex);
+
+            mDevice->SetTexture( i, p->getD3DTexture() );
+
+            // update texture parameters
+            updateTextureFilters( i, p->getD3DFilters() );
+            updateTextureWraps( i, p->getD3DWraps() );
+        }
+    }
+
+    clearDirtyTextureStages();
+
+    GN_UNGUARD_SLOW;
+}
+
+
+//
+//
 // ------------------------------------------------------------------------
 GN_INLINE void
-GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters )
+GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters ) const
 {
     GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
@@ -142,7 +146,7 @@ GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILT
 //
 // ------------------------------------------------------------------------
 GN_INLINE void
-GN::gfx::D3DRenderer::updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq )
+GN::gfx::D3DRenderer::updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq ) const
 {
     GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 

@@ -287,25 +287,25 @@ namespace GN { namespace gfx
                                          uint32_t usage,
                                          const TextureLoader & loader );
         virtual Texture * createTextureFromFile( File & );
-        virtual void bindTextures( const Texture * const texlist[],
-                                   uint32_t start, uint32_t numtex );
 
     public:
 
-        void chooseClientTextureStage( uint32_t ); //!< Choose one stage as client active texture stage.
-        void chooseTextureStage( uint32_t ); //!< Choose one texture stage as active stage
-        void disableTextureStage( uint32_t ); //!< Disable one texture stage
+        void chooseClientTextureStage( uint32_t ) const; //!< Choose one stage as client active texture stage.
+        void chooseTextureStage( uint32_t ) const; //!< Choose one texture stage as active stage
+        void disableTextureStage( uint32_t ) const; //!< Disable one texture stage
 
     private:
         bool textureInit() { return true; }
-        void textureQuit() {}
+        void textureQuit() { clearCurrentTextures(); }
         bool textureOK() const { return true; }
         void textureClear() {}
 
         bool textureDeviceCreate() { return true; }
         bool textureDeviceRestore() { return true; }
-        void textureDeviceDispose() {}
+        void textureDeviceDispose() { setAllTextureStagesDirty(); }
         void textureDeviceDestroy() {}
+
+        void applyTexture() const;
 
         //@}
 

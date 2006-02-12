@@ -424,18 +424,16 @@ namespace GN { namespace gfx
                        uint32_t usage,
                        const TextureLoader & loader );
         virtual Texture * createTextureFromFile( File & );
-        virtual void bindTextures( const Texture * const texlist[],
-                                   uint32_t start, uint32_t numtex );
 
     private :
         bool textureInit() { return true; }
-        void textureQuit() {}
+        void textureQuit() { clearCurrentTextures(); }
         bool textureOK() const { return true; }
         void textureClear() {}
 
         bool textureDeviceCreate() { return true; }
         bool textureDeviceRestore();
-        void textureDeviceDispose() {}
+        void textureDeviceDispose() { setAllTextureStagesDirty(); }
         void textureDeviceDestroy() {}
 
     private:
@@ -446,12 +444,13 @@ namespace GN { namespace gfx
             D3DTEXTUREADDRESS s, q, r, t;
         };
 
-        TexParameters mTexParameters[MAX_TEXTURE_STAGES];
+        mutable TexParameters mTexParameters[MAX_TEXTURE_STAGES];
 
     private:
 
-        GN_INLINE void updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters );
-        GN_INLINE void updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq );
+        void applyTexture() const;
+        GN_INLINE void updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters ) const;
+        GN_INLINE void updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq ) const;
 
         //@}
 

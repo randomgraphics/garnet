@@ -361,6 +361,8 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t startVtx )
 
     GN_ASSERT( mDrawBegan );
 
+    if( getDirtyTextureStages() > 0 ) applyTexture();
+
     if( 0 == mCurrentDrawState.dirtyFlags.u32 ) return;
 
     if( mCurrentDrawState.dirtyFlags.vtxBinding )

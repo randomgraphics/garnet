@@ -304,6 +304,16 @@ namespace GN
         AutoInit( const T & value ) : mValue(value) {}
 
         //!
+        //! get internal value
+        //!
+        T & value() { return mValue; }
+
+        //!
+        //! get internal value
+        //!
+        const T & value() const { return mValue; }
+
+        //!
         //! Convert to T
         //!
         operator T & () { return mValue; }
