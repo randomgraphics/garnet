@@ -27,8 +27,7 @@ TODO
 - p2
   - continue implementing GFX module
   - refine GFX module:
-    - UT for parameter manager
-    - refine device management
+    - shared uniform
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
 - p3
