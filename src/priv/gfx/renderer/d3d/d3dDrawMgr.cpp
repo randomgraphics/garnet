@@ -311,6 +311,8 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
 {
     GN_GUARD_SLOW;
 
+    if( getDirtyTextureStages() > 0 ) applyTexture();
+
     if( 0 == mDrawState.dirtyFlags.u32 ) return;
 
     if( mDrawState.dirtyFlags.vtxBinding )

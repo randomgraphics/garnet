@@ -143,6 +143,7 @@ sLoadTex2D( GN::gfx::Renderer & r, const GN::gfx::ImageDesc & desc, const uint8_
 
     GN_UNGUARD;
 }
+
 // *****************************************************************************
 // interface functions
 // *****************************************************************************
@@ -239,28 +240,28 @@ GN::gfx::OGLRenderer::createTextureFromFile( File & file )
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+// private function
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::bindTextures( const Texture * const texlist[],
-                                         uint32_t start, uint32_t numtex )
+void GN::gfx::OGLRenderer::applyTexture() const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( texlist || (0 == numtex) );
-
-#if GN_DEBUG
-    if( numtex > getCaps( CAPS_MAX_TEXTURE_STAGES ) )
-        GN_WARN( "texlist is loo long!" );
-#endif
+    GN_ASSERT( getDirtyTextureStages() > 0 );
 
     uint32_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
 
-    numtex = min<uint32_t>( maxStages, numtex );
+    uint32_t numtex = min<uint32_t>( maxStages, getDirtyTextureStages() );
+
+    const Texture * const * texlist = getCurrentTextures();
 
     // apply texture list
     uint32_t i;
-    for ( i = start; i < numtex; ++i )
+    for ( i = 0; i < numtex; ++i )
     {
         // if null handle, then disable this texture stage
         if( texlist[i] )
@@ -279,6 +280,8 @@ void GN::gfx::OGLRenderer::bindTextures( const Texture * const texlist[],
     {
         disableTextureStage( i );
     }
+
+    clearDirtyTextureStages();
 
     GN_UNGUARD_SLOW;
 }

@@ -238,8 +238,6 @@ namespace GN { namespace gfx
             return tex.detach();
         }
 
-        virtual void bindTextures( const Texture * const texlist[], uint32_t start, uint32_t numtex ) {}
-
         //@}
 
         // ********************************************************************

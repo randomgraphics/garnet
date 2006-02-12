@@ -770,6 +770,43 @@ namespace GN { namespace gfx
 
         //@{
 
+    private:
+
+        AutoRef<const Texture> mCurrentTextures[MAX_TEXTURE_STAGES]; // current texture list
+        mutable AutoInit<uint32_t,0> mDirtyTextureStages;
+
+    protected:
+
+        //!
+        //! Get current texture list
+        //!
+        const Texture * const * getCurrentTextures() const { return mCurrentTextures[0].addr(); }
+
+        //!
+        //! Clear current textures
+        //!
+        void clearCurrentTextures()
+        {
+            for( size_t i = 0; i < MAX_TEXTURE_STAGES; ++i ) mCurrentTextures[i].reset();
+        }
+
+        //!
+        //! Get dirty texture stage
+        //!
+        uint32_t getDirtyTextureStages() const { return mDirtyTextureStages; }
+
+        //!
+        //! Clear dirty texture stage
+        //!
+        void clearDirtyTextureStages() const { mDirtyTextureStages = 0; }
+
+        //!
+        //! Set all stages dirty
+        //!
+        void setAllTextureStagesDirty() { mDirtyTextureStages = MAX_TEXTURE_STAGES; }
+
+    public:
+
         //!
         //! Create new texture.
         //!
@@ -853,23 +890,42 @@ namespace GN { namespace gfx
         createTextureFromFile( File & file ) = 0;
 
         //!
+        //! bind one texture
+        //!
+        inline void bindTexture( uint32_t stage, const Texture * tex )
+        {
+            GN_GUARD_SLOW;
+            GN_ASSERT( stage < MAX_TEXTURE_STAGES );
+            if( mCurrentTextures[stage].get() != tex )
+            {
+                mCurrentTextures[stage].reset( tex );
+                ++stage;
+                if( stage > mDirtyTextureStages ) mDirtyTextureStages = stage;
+            }
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
         //! bind textures ( from stage[start] to stage[start+numtex-1] )
         //!
         //! \param texlist texture list
         //! \param start   start stage
-        //! \param numtex  number of textures
+        //! \param count   number of textures
         //!
-        virtual void
-        bindTextures( const Texture * const texlist[],
-                      uint32_t start, uint32_t numtex ) = 0;
-
-
-        //!
-        //! bind one texture
-        //!
-        void bindTexture( uint32_t stage, const Texture * tex )
+        void bindTextures( const Texture * const texlist[], uint32_t start, uint32_t count )
         {
-            bindTextures( &tex, stage, 1 );
+            GN_GUARD_SLOW;
+            GN_ASSERT( (start + count) <= MAX_TEXTURE_STAGES );
+            const Texture * const * tex = texlist;
+            for( uint32_t i = 0; i < count; ++i, ++start, ++tex )
+            {
+                if( mCurrentTextures[start].get() != *tex )
+                {
+                    mCurrentTextures[start].reset( *tex );
+                }
+            }
+            if( start > mDirtyTextureStages ) mDirtyTextureStages = start;
+            GN_UNGUARD_SLOW;
         }
 
         //@}
