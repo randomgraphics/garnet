@@ -234,6 +234,8 @@ void GN::gfx::D3DRenderer::drawQuads(
     mDrawState.dirtyFlags.vtxBufs |= 1;
     mDrawState.dirtyFlags.vtxBinding = 1;
 
+    mFfpDirtyFlags.TextureStates = 1;
+
     GN_UNGUARD_SLOW;
 }
 
@@ -311,29 +313,32 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
 {
     GN_GUARD_SLOW;
 
+    // apply textures
     if( getDirtyTextureStages() > 0 ) applyTexture();
-
-    if( 0 == mDrawState.dirtyFlags.u32 ) return;
-
-    if( mDrawState.dirtyFlags.vtxBinding )
-    {
-        applyVtxBinding( mDrawState.vtxBinding );
-    }
-
-    if( mDrawState.dirtyFlags.vtxBufs )
-    {
-        applyVtxBuffers();
-    }
-
-    applyShader(
-        mDrawState.vtxShader.get(), !!mDrawState.dirtyFlags.vtxShader,
-        mDrawState.pxlShader.get(), !!mDrawState.dirtyFlags.pxlShader );
 
     // apply FFP states
     if( 0 != mFfpDirtyFlags.u32 ) applyFfpState();
 
-    // clear dirty flags
-    mDrawState.dirtyFlags.u32 = 0;
+    // apply other draw states
+    if( mDrawState.dirtyFlags.u32 )
+    {
+        if( mDrawState.dirtyFlags.vtxBinding )
+        {
+            applyVtxBinding( mDrawState.vtxBinding );
+        }
+
+        if( mDrawState.dirtyFlags.vtxBufs )
+        {
+            applyVtxBuffers();
+        }
+
+        applyShader(
+            mDrawState.vtxShader.get(), !!mDrawState.dirtyFlags.vtxShader,
+            mDrawState.pxlShader.get(), !!mDrawState.dirtyFlags.pxlShader );
+
+        // clear dirty flags
+        mDrawState.dirtyFlags.u32 = 0;
+    }
 
     GN_UNGUARD_SLOW;
 }

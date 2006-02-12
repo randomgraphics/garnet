@@ -361,32 +361,36 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t startVtx )
 
     GN_ASSERT( mDrawBegan );
 
+    // apply textures
     if( getDirtyTextureStages() > 0 ) applyTexture();
 
-    if( 0 == mCurrentDrawState.dirtyFlags.u32 ) return;
-
-    if( mCurrentDrawState.dirtyFlags.vtxBinding )
-    {
-        applyVtxBinding();
-    }
-
-    if( mCurrentDrawState.dirtyFlags.vtxBuf )
-    {
-        applyVtxBufState( startVtx );
-    }
-
-    applyShaderState();
-
+    // apply FFP states
     if( 0 != mFfpDirtyFlags.u32 )
     {
         applyFfpState();
     }
 
-    // clear dirty flags
-    mCurrentDrawState.dirtyFlags.u32 = 0;
+    // apply other states
+    if( mCurrentDrawState.dirtyFlags.u32 )
+    {
+        if( mCurrentDrawState.dirtyFlags.vtxBinding )
+        {
+            applyVtxBinding();
+        }
 
-    // replicate to last state
-    mLastDrawState = mCurrentDrawState;
+        if( mCurrentDrawState.dirtyFlags.vtxBuf )
+        {
+            applyVtxBufState( startVtx );
+        }
+
+        applyShaderState();
+
+        // clear dirty flags
+        mCurrentDrawState.dirtyFlags.u32 = 0;
+
+        // replicate to last state
+        mLastDrawState = mCurrentDrawState;
+    }
 
     GN_UNGUARD_SLOW;
 }

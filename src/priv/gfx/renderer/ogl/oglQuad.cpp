@@ -170,11 +170,12 @@ void GN::gfx::OGLQuad::drawQuads(
     // unlock the buffer
     mVtxBuf->unlock();
 
-    // apply render states
+    // apply buffer states
     mRenderer.bindVtxBinding( mVtxBinding );
     mRenderer.bindVtxBufs( &mVtxBuf, 0, 1 );
     mRenderer.bindIdxBuf( mIdxBuf );
 
+    // apply render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
         mRenderer.bindRenderStateBlock( mRsb );
@@ -226,6 +227,15 @@ void GN::gfx::OGLQuad::drawQuads(
         static Vector4f white(1,1,1,1);
         mRenderer.setMaterialDiffuse( white );
     }
+
+    // apply texture states
+    // TODO: texture states is meaningless for programmable pipeline.
+    mRenderer.setTextureState( 0, TS_COLOROP, TSV_ARG0 );
+    mRenderer.setTextureState( 0, TS_COLORARG0, TSV_TEXTURE_COLOR );
+    mRenderer.setTextureState( 0, TS_ALPHAOP, TSV_ARG0 );
+    mRenderer.setTextureState( 0, TS_ALPHAARG0, TSV_TEXTURE_ALPHA );
+    mRenderer.setTextureState( 1, TS_COLOROP, TSV_DISABLE );
+    mRenderer.setTextureState( 1, TS_ALPHAOP, TSV_DISABLE );
 
     // draw
     mRenderer.drawIndexed(

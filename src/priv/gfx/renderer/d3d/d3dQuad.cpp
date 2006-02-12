@@ -196,15 +196,12 @@ bool GN::gfx::D3DQuad::deviceCreate()
     }
 
     // create pixel shader
-    if( r.supportShader( PIXEL_SHADER, LANG_D3D_HLSL ) )
+    if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
     {
         static const char * code =
             "ps.1.1 \n"
             "tex t0 \n"
             "mov r0, t0 \n";
-            //"sampler s0 : register(s0);"
-            //"float4 main( float2 uv : TEXCOORD0 ) : COLOR"
-            //"{ return tex2D( s0, uv ); }";
         mPxlShader = sAssemblePS( dev, code );
         if( 0 == mPxlShader ) return false;
     }
@@ -234,26 +231,13 @@ bool GN::gfx::D3DQuad::deviceCreate()
     GN_DX_CHECK( mIdxBuf->Unlock() );
 
     // create render state block
-    if( mPxlShader )
-    {
-        RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
-        rsbd.rs[RS_BLENDING] = RSV_TRUE;
-        rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
-        rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
-        rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;
-        mRsb = r.createRenderStateBlock( rsbd );
-        if( 0 == mRsb ) { quit(); return selfOK(); }
-    }
-    else
-    {
-        RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
-        rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
-        rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
-        rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;
-        GN_WARN( "TODO: set ts" );
-        mRsb = r.createRenderStateBlock( rsbd );
-        if( 0 == mRsb ) { quit(); return selfOK(); }
-    }
+    RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
+    rsbd.rs[RS_BLENDING] = RSV_TRUE;
+    rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
+    rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
+    rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;
+    mRsb = r.createRenderStateBlock( rsbd );
+    if( 0 == mRsb ) { quit(); return selfOK(); }
 
     // success
     return true;
@@ -434,6 +418,19 @@ void GN::gfx::D3DQuad::drawQuads(
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
+    }
+
+    // setup texture states, for fixed-functional pipeline only
+    AutoComPtr<IDirect3DPixelShader9> currentPs;
+    dev->GetPixelShader( &currentPs );
+    if( currentPs )
+    {
+        r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
+        r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+        r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
+        r.setD3DTextureState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
+        r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
+        r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
     }
 
     // bind buffers

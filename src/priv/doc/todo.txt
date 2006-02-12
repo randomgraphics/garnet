@@ -5,7 +5,6 @@ BUGS
   - Startup of GFXOGL module sometimes very slow:
     - pin down to the 1st call to opengl function in oglWinDisp.cpp
     - It seems caused by remote symbol loading
-  - D3D quad renderer: no transparancy on no-pixelshader-hardware.
 
 TODO
 ====
