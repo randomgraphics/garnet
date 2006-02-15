@@ -303,7 +303,7 @@ void GN::gfx::D3DRenderer::drawQuads(
 
     applyDrawState();
 
-    mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count, options );
+    mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
 
     mDrawState.dirtyFlags.vtxShader = 1;
     mDrawState.dirtyFlags.pxlShader = 1;

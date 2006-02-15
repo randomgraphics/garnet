@@ -454,7 +454,7 @@ void GN::gfx::OGLRenderer::drawQuads(
 
     GN_ASSERT( mDrawBegan && mQuad );
 
-    mQuad->drawQuads( (const Vector2f*)positions, posStride, (const Vector2f*)texcoords, texStride, count, options );
+    mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
 
     GN_UNGUARD_SLOW;
 }

@@ -42,8 +42,6 @@ namespace GN { namespace gfx {
             mIdxBuf = 0;
             mVtxShader = 0;
             mPxlShader = 0;
-            mRsb = 0;
-            mQuadStride = 0;
             mFVF = 0;
             mNextQuad = 0;
         }
@@ -70,8 +68,8 @@ namespace GN { namespace gfx {
         //! \sa Renderer::drawQuads
         //!
         void drawQuads(
-            const Vector2f * positions, size_t posStride,
-            const Vector2f * texCoords, size_t texStride,
+            const float * positions, size_t posStride,
+            const float * texCoords, size_t texStride,
             size_t count, uint32_t options );
 
         // ********************************
@@ -83,9 +81,7 @@ namespace GN { namespace gfx {
         LPDIRECT3DINDEXBUFFER9  mIdxBuf;
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
         LPDIRECT3DPIXELSHADER9  mPxlShader;
-        uint32_t mRsb;
 
-        size_t mQuadStride; // bytes of one quad
         DWORD  mFVF;
 
         size_t mNextQuad; // cursor that indicates next avaiable quad in vertex buffer.

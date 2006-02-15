@@ -146,6 +146,7 @@ namespace GN { namespace gfx
         virtual void bindRenderStateBlock( uint32_t )  {}
         virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const {}
         virtual uint32_t setRenderState( RenderState state, RenderStateValue value ) { return 1; }
+        virtual uint32_t setRenderStates( const int * statePairs, size_t count ) { return 1; }
 
         //@}
 

@@ -322,7 +322,12 @@ namespace GN
         //!
         //! get dirname of a path ( alias of getParent() )
         //!
-        StrA dirName( const StrA & path ) { return getParent( path ); }
+        inline void dirName( StrA & result, const StrA & path ) { getParent( result, path ); }
+
+        //!
+        //! get dirname of a path ( alias of getParent() )
+        //!
+        inline StrA dirName( const StrA & path ) { return getParent( path ); }
 
         //!
         //! Join path
