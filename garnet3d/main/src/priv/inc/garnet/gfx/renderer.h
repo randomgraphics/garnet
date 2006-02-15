@@ -1445,12 +1445,12 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! Draw single quad.
+        //! Draw single 2D quad.
         //!
         //! \note This function may not very effecient.
         //!
-        void drawQuad(
-            uint32_t options = 0,
+        void draw2DQuad(
+            uint32_t options,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
         {
@@ -1476,7 +1476,7 @@ namespace GN { namespace gfx
             tex[2].set( u2, v2 );
             tex[3].set( u1, v2 );
 
-            drawQuads( options, pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1 );
+            drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1 );
         }
 
         //!
