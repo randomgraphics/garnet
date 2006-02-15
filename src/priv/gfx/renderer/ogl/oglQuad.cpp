@@ -2,19 +2,16 @@
 #include "oglQuad.h"
 #include "oglRenderer.h"
 
+struct OGLQuadVertex
+{
+    GN::Vector4f p;
+    GN::Vector2f t;
+    GN::Vector2f _; // padding to 32 bytes.
+};
+
 struct OGLQuadStruct
 {
-    GN::Vector2f p0;
-    GN::Vector2f t0;
-
-    GN::Vector2f p1;
-    GN::Vector2f t1;
-
-    GN::Vector2f p2;
-    GN::Vector2f t2;
-
-    GN::Vector2f p3;
-    GN::Vector2f t3;
+    OGLQuadVertex v[4];
 };
 
 // *****************************************************************************
@@ -31,19 +28,12 @@ bool GN::gfx::OGLQuad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLQuad, () );
 
-    // create render state block
-    RenderStateBlockDesc rsbd( RenderStateBlockDesc::RESET_TO_DEFAULT );
-    rsbd.rs[RS_BLENDING] = RSV_TRUE;
-    rsbd.rs[RS_DEPTH_TEST] = RSV_TRUE;
-    rsbd.rs[RS_DEPTH_WRITE] = RSV_FALSE;
-    rsbd.rs[RS_CULL_MODE] = RSV_CULL_NONE;
-    mRsb = mRenderer.createRenderStateBlock( rsbd );
-    if( 0 == mRsb ) { quit(); return selfOK(); }
-
     // create vertex binding
+    GN_CASSERT( sizeof(OGLQuadVertex) == 32 );
     VtxFmtDesc vfd;
-    vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT2 );
-    vfd.addAttrib( 0, 8, VTXSEM_TEX0, FMT_FLOAT2 );
+    vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT4 );
+    vfd.addAttrib( 0, 16, VTXSEM_TEX0, FMT_FLOAT2 );
+    vfd.streams[0].stride = 32;
     mVtxBinding = mRenderer.createVtxBinding( vfd );
     if( 0 == mVtxBinding ) { quit(); return selfOK(); }
 
@@ -101,8 +91,8 @@ void GN::gfx::OGLQuad::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLQuad::drawQuads(
-    const Vector2f * positions, size_t posStride,
-    const Vector2f * texcoords, size_t texStride,
+    const float * positions, size_t posStride,
+    const float * texcoords, size_t texStride,
     size_t count, uint32_t options )
 {
     GN_GUARD_SLOW;
@@ -129,8 +119,8 @@ void GN::gfx::OGLQuad::drawQuads(
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
         drawQuads( positions, posStride, texcoords, texStride, n, options );
-        positions = (const Vector2f*)( ((const uint8_t*)positions) + n * posStride );
-        texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + n * texStride );
+        positions = (const float*)( ((const uint8_t*)positions) + n * posStride );
+        texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride );
         count -= n;
     }
 
@@ -150,21 +140,35 @@ void GN::gfx::OGLQuad::drawQuads(
     if( 0 == vbData ) return;
 
     // fill vertex data
-    for( size_t i = 0; i < count; ++i )
+    if( DQ_3D_POSITION & options )
     {
-        OGLQuadStruct & v = vbData[i];
-
-        v.p0 = positions[0];
-        v.p1 = positions[1];
-        v.p2 = positions[2];
-        v.p3 = positions[3];
-        v.t0 = texcoords[0];
-        v.t1 = texcoords[1];
-        v.t2 = texcoords[2];
-        v.t3 = texcoords[3];
-
-        positions = (const Vector2f*)( ((const uint8_t*)positions) + posStride );
-        texcoords = (const Vector2f*)( ((const uint8_t*)texcoords) + texStride );
+        for( size_t i = 0; i < count; ++i )
+        {
+            OGLQuadStruct & q = vbData[i];
+            for( size_t i = 0; i < 4; ++i )
+            {
+                OGLQuadVertex & v = q.v[i];
+                v.p.set( positions[0], positions[1], positions[2], 1 );
+                v.t.set( texcoords[0], texcoords[1] );
+                positions = (const float*)( ((const uint8_t*)positions) + posStride );
+                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            }
+        }
+    }
+    else
+    {
+        for( size_t i = 0; i < count; ++i )
+        {
+            OGLQuadStruct & q = vbData[i];
+            for( size_t i = 0; i < 4; ++i )
+            {
+                OGLQuadVertex & v = q.v[i];
+                v.p.set( positions[0], positions[1], 0, 1 );
+                v.t.set( texcoords[0], texcoords[1] );
+                positions = (const float*)( ((const uint8_t*)positions) + posStride );
+                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            }
+        }
     }
 
     // unlock the buffer
@@ -178,7 +182,14 @@ void GN::gfx::OGLQuad::drawQuads(
     // apply render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
-        mRenderer.bindRenderStateBlock( mRsb );
+        const int statePairs[] =
+        {
+            RS_BLENDING     , ( DQ_OPAQUE & options ) ? RSV_FALSE : RSV_TRUE,
+            RS_DEPTH_TEST   , RSV_TRUE,
+            RS_DEPTH_WRITE  , RSV_FALSE,
+            RS_CULL_MODE    , RSV_CULL_NONE,
+        };
+        mRenderer.setRenderStates( statePairs, sizeof(statePairs)/sizeof(statePairs[0])/2 );
     }
 
     // apply vertex shader 
@@ -207,7 +218,7 @@ void GN::gfx::OGLQuad::drawQuads(
         }
         else
         {
-            // position is in screen space (0,0)->(1,1)
+            // position is in unit space (0,0)->(1,1)
             GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
             GN_OGL_CHECK( glPushMatrix() );
             GN_OGL_CHECK( glLoadIdentity() );

@@ -83,7 +83,7 @@ uint32_t GN::gfx::BasicRenderer::createRenderStateBlock( const RenderStateBlockD
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::bindRenderStateBlock( uint32_t handle )
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
     // ignore redundant binding
     if( handle == mCurrentRsb ) return;
@@ -116,7 +116,7 @@ void GN::gfx::BasicRenderer::bindRenderStateBlock( uint32_t handle )
     // update current render state handle
     mCurrentRsb = handle;
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -124,13 +124,13 @@ void GN::gfx::BasicRenderer::bindRenderStateBlock( uint32_t handle )
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::getCurrentRenderStateBlock( RenderStateBlockDesc & result ) const
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
     GN_ASSERT( mRsbHandles.validHandle( mCurrentRsb ) );
 
     result = mRsbHandles[mCurrentRsb];
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -138,7 +138,7 @@ void GN::gfx::BasicRenderer::getCurrentRenderStateBlock( RenderStateBlockDesc & 
 // -----------------------------------------------------------------------------
 uint32_t GN::gfx::BasicRenderer::setRenderState( RenderState state, RenderStateValue value )
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
     GN_ASSERT( mRsbHandles.validHandle( mCurrentRsb ) );
 
@@ -162,5 +162,46 @@ uint32_t GN::gfx::BasicRenderer::setRenderState( RenderState state, RenderStateV
     if( handle ) bindRenderStateBlock( handle );
     return handle;
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+uint32_t GN::gfx::BasicRenderer::setRenderStates( const int * statePairs, size_t count )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mRsbHandles.validHandle( mCurrentRsb ) );
+
+    int state;
+    int value;
+
+    RenderStateBlockDesc desc = mRsbHandles.get( mCurrentRsb );
+
+    for( size_t i = 0; i < count; ++i )
+    {
+        state = *statePairs; ++statePairs;
+        value = *statePairs; ++statePairs;
+
+        if( state < 0 || state >= NUM_RENDER_STATES )
+        {
+            GN_ERROR( "invalid render state %d!", state );
+            continue;
+        }
+        if( statePairs < 0 || value >= NUM_RENDER_STATE_VALUES )
+        {
+            GN_ERROR( "invalid render state value %d!", value );
+            continue;
+        }
+
+        desc.rs[state] = (RenderStateValue)value;
+    }
+
+    // create and apply the updated render state block
+    uint32_t handle = createRenderStateBlock( desc );
+    if( handle ) bindRenderStateBlock( handle );
+    return handle;
+
+    GN_UNGUARD_SLOW;
 }

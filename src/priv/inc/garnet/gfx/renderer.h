@@ -281,21 +281,6 @@ namespace GN { namespace gfx
     enum DrawQuadOptions
     {
         //!
-        //! position in window space: (0,0) for left-up corner, (width,height) for right-bottom corner.
-        //!
-        //! By default, quad positios are in screen space. That is:
-        //! (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
-        //!
-        //! \note This option is meaningful only when DQ_USE_CURRENT_VS is _NOT_ set.
-        //!
-        DQ_WINDOW_SPACE = 1<<0,
-
-        //!
-        //! Use 3-D position. Default is 2-D position
-        //!
-        DQ_3D_POSITION = 1<<1,
-
-        //!
         //! 使用当前的渲染状态。
         //!
         //! By default, Renderer::drawQuad() will use a special render state block that
@@ -304,7 +289,7 @@ namespace GN { namespace gfx
         //!   - enable depth testing
         //!   - disable depth writing
         //!
-        DQ_USE_CURRENT_RS = 1<<2,
+        DQ_USE_CURRENT_RS = 1<<0,
 
         //!
         //! 使用当前的Vertex Shader。
@@ -312,7 +297,7 @@ namespace GN { namespace gfx
         //! - 缺省情况下，Renderer::drawQuad() 会使用一个内置的vertex shader
         //! - 自定义的vertex shader应接受一组2D空间坐标和一组2D贴图坐标。
         //!
-        DQ_USE_CURRENT_VS = 1<<3,
+        DQ_USE_CURRENT_VS = 1<<1,
 
         //!
         //! 使用当前的Pixel Shader。
@@ -320,7 +305,27 @@ namespace GN { namespace gfx
         //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Pixel Shader，直接直接输出
         //! 第0层贴图的颜色。
         //!
-        DQ_USE_CURRENT_PS = 1<<4,
+        DQ_USE_CURRENT_PS = 1<<2,
+
+        //!
+        //! position in window space: (0,0) for left-up corner, (width,height) for right-bottom corner.
+        //!
+        //! By default, quad positios are in screen space. That is:
+        //! (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
+        //!
+        //! \note This option is meaningful only when DQ_USE_CURRENT_VS is _NOT_ set.
+        //!
+        DQ_WINDOW_SPACE = 1<<3,
+
+        //!
+        //! Use 3-D position. Default is 2-D position
+        //!
+        DQ_3D_POSITION = 1<<4,
+
+        //!
+        //! Draw quad without alpha-blending.
+        //!
+        DQ_OPAQUE = 1<<5,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合
@@ -764,6 +769,24 @@ namespace GN { namespace gfx
         //!     Please use render state block at performance critical section.
         //!
         virtual uint32_t setRenderState( RenderState state, RenderStateValue value ) = 0;
+
+        //!
+        //! Update a bunch of render states.
+        //!
+        //! \param statePairs
+        //!     Render state and values like this : ( state1, value1, state2, value2, .... )
+        //! \param count
+        //!     Number of render state and value pairs.
+        //!
+        //! \return
+        //!     Return the render state block handler that represents current render state.
+        //!     Return 0, if failed.
+        //!
+        //! \note
+        //!     This function is faster then multiple calls to setRenderState(), but slower
+        //!     then using render state block handle.
+        //!
+        virtual uint32_t setRenderStates( const int * statePairs, size_t count ) = 0;
 
         //@}
 

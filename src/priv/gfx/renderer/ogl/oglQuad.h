@@ -36,7 +36,6 @@ namespace GN { namespace gfx
         bool ok() const
         {
             return MyParent::ok()
-                && 0 != mRsb
                 && 0 != mVtxBinding
                 && 0 != mVtxBuf
                 && 0 != mIdxBuf;
@@ -44,7 +43,6 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mRsb = 0;
             mVtxBinding = 0;
             mVtxBuf = 0;
             mIdxBuf = 0;
@@ -63,8 +61,8 @@ namespace GN { namespace gfx
         //! \sa Renderer::drawQuads
         //!
         void drawQuads(
-            const Vector2f * positions, size_t posStride,
-            const Vector2f * texCoords, size_t texStride,
+            const float * positions, size_t posStride,
+            const float * texCoords, size_t texStride,
             size_t count, uint32_t options );
 
         // ********************************
@@ -76,7 +74,6 @@ namespace GN { namespace gfx
 
         Renderer & mRenderer;
 
-        uint32_t mRsb;
         uint32_t mVtxBinding;
         VtxBuf * mVtxBuf;
         IdxBuf * mIdxBuf;
