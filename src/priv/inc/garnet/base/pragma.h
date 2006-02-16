@@ -54,6 +54,7 @@
 #pragma warning(disable:1419)     // external declaration in primary source file
 #pragma warning(disable:1572)     // floating-point comparison
 #pragma warning(disable:1599)     // declaration hides parameter "xxx"
+#pragma warning(disable:1682)     // implicit conversion of a 64-bit integral type to a smalle integer type
 #pragma warning(disable:1683)     // explicit conversion of a 64-bit integral type to a smaller integral type
 #pragma warning(disable:1684)     // conversion from pointer to same-sized integral type
 #endif
