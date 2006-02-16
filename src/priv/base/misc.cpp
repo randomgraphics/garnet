@@ -5,6 +5,11 @@
 // -----------------------------------------------------------------------------
 void GN::putEnv( const char * name, const char * value )
 {
+#if GN_XENON
+    // Xenon does not support putenv()
+    GN_UNUSED_PARAM( name );
+    GN_UNUSED_PARAM( value );
+#else
     if( strEmpty(name) )
     {
         GN_ERROR( "Environment variable name can't be empty!" );
@@ -33,6 +38,7 @@ void GN::putEnv( const char * name, const char * value )
     {
         GN_ERROR( "fail to set environment '%s'.", s.cstr() );
     }
+#endif
 #endif
 }
 
