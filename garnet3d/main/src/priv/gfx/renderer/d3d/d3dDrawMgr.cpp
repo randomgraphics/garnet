@@ -2,6 +2,7 @@
 #include "d3dRenderer.h"
 #include "d3dFont.h"
 #include "d3dQuad.h"
+#include "d3dIdxBuf.h"
 
 // static primitive map
 static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
@@ -215,6 +216,81 @@ void GN::gfx::D3DRenderer::draw(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawIndexedUp(
+    PrimitiveType    prim,
+    size_t           numPrims,
+    size_t           numVertices,
+    const void *     vertexData,
+    size_t           strideInBytes,
+    const uint16_t * indexData )
+{
+    GN_GUARD_SLOW;
+
+    //
+    // make sure numPrims is not too large
+    //
+    GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+
+    // update draw state
+    applyDrawState();
+
+    GN_DX_CHECK(
+        mDevice->DrawIndexedPrimitiveUP(
+            sPrimMap[prim],
+            0, // MinVertexIndex
+            numVertices,
+            numPrims,
+            indexData,
+            D3DFMT_INDEX16,
+            vertexData,
+            strideInBytes ) );
+
+    // dirty draw state of stream 0
+    mDrawState.dirtyFlags.vtxBufs |= 1;
+    mDrawState.dirtyFlags.idxBuf |= 1;
+
+    // success
+    mNumPrims += numPrims;
+    ++mNumDraws;
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawUp(
+    PrimitiveType prim,
+    size_t        numPrims,
+    const void *  vertexData,
+    size_t        strideInBytes )
+{
+    GN_GUARD_SLOW;
+
+    //
+    // make sure numPrims is not too large
+    //
+    GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+
+    // update draw state
+    applyDrawState();
+
+    // do draw
+    GN_DX_CHECK( mDevice->DrawPrimitiveUP( sPrimMap[prim], numPrims, vertexData, strideInBytes ) );
+
+    // dirty draw state of stream 0
+    mDrawState.dirtyFlags.vtxBufs |= 1;
+
+    // success
+    mNumPrims += numPrims;
+    ++mNumDraws;
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawQuads(
     uint32_t options,
     const void * positions, size_t posStride,
@@ -330,6 +406,12 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
         if( mDrawState.dirtyFlags.vtxBufs )
         {
             applyVtxBuffers();
+        }
+
+        if( mDrawState.dirtyFlags.idxBuf )
+        {
+            const IdxBuf * buf = mDrawState.idxBuf.get();
+            GN_DX_CHECK( mDevice->SetIndices( buf ? safeCast<const D3DIdxBuf*>(buf)->getD3DIb() : 0 ) );
         }
 
         applyShader(

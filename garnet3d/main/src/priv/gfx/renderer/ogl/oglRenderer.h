@@ -340,6 +340,8 @@ namespace GN { namespace gfx
         void applyVtxBinding();
         void applyVtxBufState( size_t startVtx );
 
+        void setVtxBufUp( const void * data, size_t stride ); // apply user-supplied vertex buffer, used by DIPUP()/DPUP()
+
     private :
 
         typedef HandleManager<void*,uint32_t> VtxBindingManager;
@@ -476,6 +478,17 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx );
+        virtual void drawIndexedUp(
+                             PrimitiveType    prim,
+                             size_t           numPrims,
+                             size_t           numVertices,
+                             const void *     vertexData,
+                             size_t           strideInBytes,
+                             const uint16_t * indexData );
+        virtual void drawUp( PrimitiveType prim,
+                             size_t        numPrims,
+                             const void *  vertexData,
+                             size_t        strideInBytes );
         virtual void drawQuads( uint32_t options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,

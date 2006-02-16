@@ -445,7 +445,7 @@ namespace GN
             GN_GUARD_SLOW;
             GN_ASSERT( dev );
             AutoComPtr<IDirect3DSurface9> surf;
-            GN_DX_CHECK_RV( dev->GetBackBuffer( 0, 0, 0, &surf ), false );
+            GN_DX_CHECK_RV( dev->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &surf ), false );
             GN_DX_CHECK_RV( surf->GetDesc( &desc ), false );
 			return true;
             GN_UNGUARD_SLOW;

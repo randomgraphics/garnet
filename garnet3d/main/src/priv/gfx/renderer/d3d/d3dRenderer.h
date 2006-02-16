@@ -45,9 +45,10 @@ namespace GN { namespace gfx
             {
                 int vtxBufs    : 16; //!< Vertex buffer dirty flags
                 int vtxBinding : 1;  //!< Vertex binding dirty flag
+                int idxBuf     : 1;  //!< Index buffer dirty flag
                 int vtxShader  : 1;  //!< Vertex shader
                 int pxlShader  : 1;  //!< Pixel shader
-                int reserved   : 13; //!< Reserved for future use.
+                int reserved   : 12; //!< Reserved for future use.
             };
         };
 
@@ -62,6 +63,7 @@ namespace GN { namespace gfx
 
         VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers
         uint32_t              vtxBinding;                  //!< vertex binding handle
+        AutoRef<const IdxBuf> idxBuf;                      //!< index buffer
         AutoRef<const Shader> vtxShader;                   //!< vertex shader
         AutoRef<const Shader> pxlShader;                   //!< pixel shader
         DirtyFlags            dirtyFlags;                  //!< dirty flags
@@ -78,6 +80,9 @@ namespace GN { namespace gfx
                 vtxBufs[i].stride = 0;
             }
             vtxBinding = 0;
+            idxBuf.reset();
+            vtxShader.reset();
+            pxlShader.reset();
             dirtyFlags.u32 = 0;
         }
 
@@ -99,6 +104,16 @@ namespace GN { namespace gfx
         {
             dirtyFlags.vtxBinding = true;
             vtxBinding = handle;
+        }
+
+        //!
+        //! bind index buffer
+        //!
+        void bindIdxBuf( const IdxBuf * buf )
+        {
+            if( buf == idxBuf.get() ) return;
+            dirtyFlags.idxBuf = true;
+            idxBuf.reset( buf );
         }
 
         //!
@@ -266,6 +281,15 @@ namespace GN { namespace gfx
         D3DDEVTYPE                    getDeviceType() const { return mDeviceType; }
         UINT                          getBehavior() const { return mBehavior; }
         const D3DPRESENT_PARAMETERS & getPresentParameters() const { return mPresentParameters; }
+
+        HRESULT checkD3DDeviceFormat( uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const
+        {
+            return mD3D->CheckDeviceFormat(
+                mAdapter,
+                mDeviceType,
+                mPresentParameters.BackBufferFormat,
+                usage, rtype, format );
+        }
 
     private :
         bool dispInit();
@@ -616,14 +640,25 @@ namespace GN { namespace gfx
         virtual void drawFinish();
         virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numPrim,
+                                  size_t        numPrims,
                                   size_t        startVtx,
                                   size_t        minVtxIdx,
                                   size_t        numVtx,
                                   size_t        startIdx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numPrim,
+                           size_t        numPrims,
                            size_t        startVtx );
+        virtual void drawIndexedUp(
+                             PrimitiveType    prim,
+                             size_t           numPrims,
+                             size_t           numVertices,
+                             const void *     vertexData,
+                             size_t           strideInBytes,
+                             const uint16_t * indexData );
+        virtual void drawUp( PrimitiveType prim,
+                             size_t        numPrims,
+                             const void *  vertexData,
+                             size_t        strideInBytes );
         virtual void drawQuads( uint32_t options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,

@@ -184,6 +184,31 @@ static inline D3DFORMAT sClrFmt2D3DFMT( GN::gfx::ClrFmt clrfmt )
     }
 }
 
+//
+//
+// ----------------------------------------------------------------------------
+static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3DRenderer & r )
+{
+    GN_GUARD;
+
+    static D3DFORMAT candidates[] = { D3DFMT_D32, D3DFMT_D24S8, D3DFMT_D24X8, D3DFMT_D16 };
+    for( size_t i = 0; i < sizeof(candidates)/sizeof(candidates[0]); ++i )
+    {
+        if( D3D_OK == r.checkD3DDeviceFormat( D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, candidates[i] ) )
+        {
+            // success
+            GN_ASSERT( GN::gfx::FMT_INVALID != sD3DFMT2ClrFmt( candidates[i] ) );
+            return sD3DFMT2ClrFmt( candidates[i] );
+        }
+    }
+
+    // failed
+    GN_ERROR( "Current renderer does not support depth texture." );
+    return GN::gfx::FMT_INVALID;
+
+    GN_UNGUARD;
+}
+
 // ****************************************************************************
 //  init / quit functions
 // ****************************************************************************
@@ -343,13 +368,10 @@ bool GN::gfx::D3DTexture::deviceRestore()
     {
         if( TEXUSAGE_DEPTH & mInitUsage )
         {
-            format = sD3DFMT2ClrFmt(
-                mRenderer.getPresentParameters().AutoDepthStencilFormat );
-            if( FMT_INVALID == format )
-            {
-                GN_ERROR( "unsupport depth-stencil format!" );
-                return false;
-            }
+            // find default depth texture format
+            format = sGetDefaultDepthTextureFormat( mRenderer );
+            if( FMT_INVALID == format ) return false;
+            GN_TRACE( "Use default depth texture format: %s", getClrFmtDesc(format).name );
         }
         else
         {
@@ -388,11 +410,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
         ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED;
 
     // check texture format compatibility
-    HRESULT hr = mRenderer.getD3D()->CheckDeviceFormat(
-        mRenderer.getAdapter(),
-        mRenderer.getDeviceType(),
-        mRenderer.getPresentParameters().BackBufferFormat,
-        mD3DUsage, D3DRTYPE_TEXTURE, d3dfmt );
+    HRESULT hr = mRenderer.checkD3DDeviceFormat( mD3DUsage, D3DRTYPE_TEXTURE, d3dfmt );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
@@ -831,13 +849,8 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     // create new texture
     if( TEXTYPE_1D == type || TEXTYPE_2D == type )
     {
-        if( D3DERR_NOTAVAILABLE == mRenderer.getD3D()->CheckDeviceFormat(
-            mRenderer.getAdapter(),
-            mRenderer.getDeviceType(),
-            mRenderer.getPresentParameters().BackBufferFormat,
-            d3dusage,
-            D3DRTYPE_TEXTURE,
-            d3dformat ) )
+        if( D3DERR_NOTAVAILABLE == mRenderer.checkD3DDeviceFormat(
+            d3dusage, D3DRTYPE_TEXTURE, d3dformat ) )
         {
             GN_ERROR( "unsupported texture format!" );
             return 0;
@@ -853,13 +866,8 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     }
     else if( TEXTYPE_3D == type )
     {
-        if( D3DERR_NOTAVAILABLE == mRenderer.getD3D()->CheckDeviceFormat(
-            mRenderer.getAdapter(),
-            mRenderer.getDeviceType(),
-            mRenderer.getPresentParameters().BackBufferFormat,
-            d3dusage,
-            D3DRTYPE_VOLUMETEXTURE,
-            d3dformat ) )
+        if( D3DERR_NOTAVAILABLE == mRenderer.checkD3DDeviceFormat(
+            d3dusage, D3DRTYPE_VOLUMETEXTURE, d3dformat ) )
         {
             GN_ERROR( "unsupported texture format!" );
             return 0;
@@ -875,13 +883,8 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     }
     else if( TEXTYPE_CUBE == type )
     {
-        if( D3DERR_NOTAVAILABLE == mRenderer.getD3D()->CheckDeviceFormat(
-            mRenderer.getAdapter(),
-            mRenderer.getDeviceType(),
-            mRenderer.getPresentParameters().BackBufferFormat,
-            d3dusage,
-            D3DRTYPE_CUBETEXTURE,
-            d3dformat ) )
+        if( D3DERR_NOTAVAILABLE == mRenderer.checkD3DDeviceFormat(
+            d3dusage, D3DRTYPE_CUBETEXTURE, d3dformat ) )
         {
             GN_ERROR( "unsupported texture format!" );
             return 0;

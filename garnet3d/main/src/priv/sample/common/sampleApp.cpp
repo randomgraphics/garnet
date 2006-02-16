@@ -129,8 +129,23 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.useDInput = false;
 
-    GN_UNUSED_PARAM( argc );
-    GN_UNUSED_PARAM( argv );
+    for( int i = 1; i < argc; ++i )
+    {
+        const char * a = argv[i];
+        if( 0 == strCmpI( a, "-?" ) || 0 == strCmpI( a, "-h" ) )
+        {
+            GN_INFO( "\n"
+                "Usage : %s [options]\n\n"
+                "Options : (options are case-insensitive)\n"
+                "    -h, -?     : Show help screen.\n"
+                "    -ref       : Use reference device.\n"
+                "    -ogl       : Use OpenGL renderer.\n",
+                GN::path::baseName(argv[0]).cstr() );
+            return false;
+        }
+        if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
+        if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+    }
 
     // success
     return true;
