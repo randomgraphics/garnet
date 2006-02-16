@@ -291,6 +291,11 @@ namespace GN { namespace gfx
         DQ_WINDOW_SPACE = 1<<0,
 
         //!
+        //! Use 3-D position. Default is 2-D position
+        //!
+        DQ_3D_POSITION = 1<<1,
+
+        //!
         //! 使用当前的渲染状态。
         //!
         //! By default, Renderer::drawQuad() will use a special render state block that
@@ -299,7 +304,7 @@ namespace GN { namespace gfx
         //!   - enable depth testing
         //!   - disable depth writing
         //!
-        DQ_USE_CURRENT_RS = 1<<1,
+        DQ_USE_CURRENT_RS = 1<<2,
 
         //!
         //! 使用当前的Vertex Shader。
@@ -307,7 +312,7 @@ namespace GN { namespace gfx
         //! - 缺省情况下，Renderer::drawQuad() 会使用一个内置的vertex shader
         //! - 自定义的vertex shader应接受一组2D空间坐标和一组2D贴图坐标。
         //!
-        DQ_USE_CURRENT_VS = 1<<2,
+        DQ_USE_CURRENT_VS = 1<<3,
 
         //!
         //! 使用当前的Pixel Shader。
@@ -315,7 +320,7 @@ namespace GN { namespace gfx
         //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Pixel Shader，直接直接输出
         //! 第0层贴图的颜色。
         //!
-        DQ_USE_CURRENT_PS = 1<<3,
+        DQ_USE_CURRENT_PS = 1<<4,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合
@@ -396,7 +401,7 @@ namespace GN { namespace gfx
         AutoRef<IdxBuf> idxBuf; //!< index buffer
 
         PrimitiveType prim;      //!< primitive type
-        size_t        numPrim;   //!< primitive count
+        size_t        numPrims;   //!< primitive count
         size_t        startVtx;  //!< base vertex index
         size_t        minVtxIdx; //!< ignored if index buffer is NULL.
         size_t        numVtx;    //!< ignored if index buffer is NULL.
@@ -1328,7 +1333,7 @@ namespace GN { namespace gfx
         //!
         //! \param prim
         //!     primititive type
-        //! \param numPrim
+        //! \param numPrims
         //!     number of primitives
         //! \param startVtx
         //!     vertex index into vertex buffer that index "0" will be refering to.
@@ -1340,7 +1345,7 @@ namespace GN { namespace gfx
         //! \note 必须在 drawBegin() 和 drawEnd() 之间调用
         //!
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numPrim,
+                                  size_t        numPrims,
                                   size_t        startVtx,
                                   size_t        minVtxIdx,
                                   size_t        numVtx,
@@ -1351,7 +1356,7 @@ namespace GN { namespace gfx
         //!
         //! \param prim
         //!     primititive type
-        //! \param numPrim
+        //! \param numPrims
         //!     number of primitives
         //! \param startVtx
         //!     index into vertex buffer of the first vertex.
@@ -1359,8 +1364,27 @@ namespace GN { namespace gfx
         //! \note 必须在 drawBegin() 和 drawEnd() 之间调用
         //!
         virtual void draw( PrimitiveType prim,
-                           size_t        numPrim,
+                           size_t        numPrims,
                            size_t        startVtx ) = 0;
+
+        //!
+        //! draw on-indexed primitives with user-defined data array
+        //!
+        virtual void drawIndexedUp(
+                             PrimitiveType    prim,
+                             size_t           numPrims,
+                             size_t           numVertices,
+                             const void *     vertexData,
+                             size_t           strideInBytes,
+                             const uint16_t * indexData ) = 0;
+
+        //!
+        //! draw on-indexed primitives with user-defined data array
+        //!
+        virtual void drawUp( PrimitiveType prim,
+                             size_t        numPrims,
+                             const void *  vertexData,
+                             size_t        strideInBytes ) = 0;
 
         //!
         //! draw geometry
@@ -1373,8 +1397,8 @@ namespace GN { namespace gfx
         //! \param options
         //!     渲染选项，详见 DrawQuadOptions。Set to 0 to use default options
         //! \param positions, posStride
-        //!     顶点坐标数据，由一系列的2D顶点组成。4个顶点表示一个矩形。
-        //!     选项 DQ_WINDOW_SPACE 会影响坐标的含义。
+        //!     顶点坐标数据，由一系列的顶点组成。4个顶点表示一个矩形。
+        //!     选项 DQ_WINDOW_SPACE 和 DQ_3D_POSITION 会影响坐标的含义。
         //! \param texcoords, texStride
         //!     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
         //! \param count

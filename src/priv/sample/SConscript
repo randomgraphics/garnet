@@ -1,1 +1,1 @@
-SConscript( dirs=Split('common renderToTexture') )
+SConscript( dirs=Split('common depthTexture renderToTexture') )

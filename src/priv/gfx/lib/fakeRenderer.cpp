@@ -352,6 +352,17 @@ namespace GN { namespace gfx
         virtual void draw( PrimitiveType prim,
                            size_t        numPrim,
                            size_t        startVtx ) {}
+        virtual void drawIndexedUp(
+                             PrimitiveType    prim,
+                             size_t           numPrims,
+                             size_t           numVertices,
+                             const void *     vertexData,
+                             size_t           strideInBytes,
+                             const uint16_t * indexData ) {}
+        virtual void drawUp( PrimitiveType prim,
+                             size_t        numPrims,
+                             const void *  vertexData,
+                             size_t        strideInBytes ) {}
         virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t ) {}
         virtual void drawQuads( uint32_t options,
                                 const void * positions, size_t posStride,

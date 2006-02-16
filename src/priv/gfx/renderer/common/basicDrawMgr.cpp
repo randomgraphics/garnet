@@ -54,11 +54,11 @@ void GN::gfx::BasicRenderer::drawGeometry(
 
         if( g.idxBuf )
         {
-            drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
+            drawIndexed( g.prim, g.numPrims, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
         }
         else
         {
-            draw( g.prim, g.numPrim, g.startVtx );
+            draw( g.prim, g.numPrims, g.startVtx );
         }
     }
 

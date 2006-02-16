@@ -318,7 +318,7 @@ void GN::gfx::D3DRenderer::bindIdxBuf( const IdxBuf * buf )
 {
     GN_GUARD_SLOW;
 
-    GN_DX_CHECK( mDevice->SetIndices( buf ? safeCast<const D3DIdxBuf*>(buf)->getD3DIb() : 0 ) );
+    mDrawState.bindIdxBuf( buf );
 
     GN_UNGUARD_SLOW;
 }

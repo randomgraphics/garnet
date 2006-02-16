@@ -368,6 +368,15 @@ void GN::path::getExt( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::path::baseName( StrA & result, const StrA & path )
+{
+    GN_UNIMPL_WARNING();
+    result = path;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::path::joinTo(
     StrA & result,
     const StrA & path1,

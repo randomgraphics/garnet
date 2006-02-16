@@ -310,6 +310,21 @@ namespace GN
         inline StrA getExt( const StrA & path ) { StrA ret; getExt(ret,path); return ret; }
 
         //!
+        //! get basename of a path
+        //!
+        void baseName( StrA & result, const StrA & path );
+
+        //!
+        //! get basename of a path
+        //!
+        inline StrA baseName( const StrA & path ) { StrA result; baseName( result, path ); return result; }
+
+        //!
+        //! get dirname of a path ( alias of getParent() )
+        //!
+        StrA dirName( const StrA & path ) { return getParent( path ); }
+
+        //!
         //! Join path
         //!
         void joinTo(

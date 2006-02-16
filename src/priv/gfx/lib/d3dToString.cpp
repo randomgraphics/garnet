@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNd3d.h"
 
 #ifndef MAKEFOURCC
 #define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \

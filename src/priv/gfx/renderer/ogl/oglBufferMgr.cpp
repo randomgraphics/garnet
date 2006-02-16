@@ -233,3 +233,30 @@ void GN::gfx::OGLRenderer::applyVtxBufState( size_t startVtx )
 
     GN_UNGUARD_SLOW;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLRenderer::setVtxBufUp( const void * data, size_t stride )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) );
+
+    OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+
+    GN_ASSERT( p );
+
+    const VtxFmtDesc & vtxFmt = p->getFormat();
+
+    GN_ASSERT( 1 == vtxFmt.numStreams );
+
+    p->bindBuffer(
+        0, // stream index
+        (const uint8_t* )data,
+        0, // startVtx,
+        stride );
+
+    GN_UNGUARD_SLOW;
+}
+
