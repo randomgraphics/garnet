@@ -437,6 +437,59 @@ namespace GN
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 );
 
+        //!
+        //! Get backbuffer descriptor
+        //!
+        inline bool getBackBufferDesc( LPDIRECT3DDEVICE9 dev, D3DSURFACE_DESC & desc )
+        {
+            GN_GUARD_SLOW;
+            GN_ASSERT( dev );
+            AutoComPtr<IDirect3DSurface9> surf;
+            GN_DX_CHECK_RV( dev->GetBackBuffer( 0, 0, 0, &surf ), false );
+            GN_DX_CHECK_RV( surf->GetDesc( &desc ), false );
+			return true;
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get backbuffer size
+        //!
+        inline Vector2<uint32_t> getBackBufferSize( LPDIRECT3DDEVICE9 dev )
+        {
+            GN_GUARD_SLOW;
+            D3DSURFACE_DESC desc;
+            return getBackBufferDesc( dev, desc )
+                ? Vector2<uint32_t>( desc.Width, desc.Height )
+                : Vector2<uint32_t>( 0, 0 );
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get depth buffer descriptor
+        //!
+        inline bool getDepthStencilDesc( LPDIRECT3DDEVICE9 dev, D3DSURFACE_DESC & desc )
+        {
+            GN_GUARD_SLOW;
+            GN_ASSERT( dev );
+            AutoComPtr<IDirect3DSurface9> surf;
+            GN_DX_CHECK_RV( dev->GetDepthStencilSurface( &surf ), false );
+            GN_DX_CHECK_RV( surf->GetDesc( &desc ), false );
+			return true;
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get depth buffer size
+        //!
+        inline Vector2<uint32_t> getDepthStencilSize( LPDIRECT3DDEVICE9 dev )
+        {
+            GN_GUARD_SLOW;
+            D3DSURFACE_DESC desc;
+            return getDepthStencilDesc( dev, desc )
+                ? Vector2<uint32_t>( desc.Width, desc.Height )
+                : Vector2<uint32_t>( 0, 0 );
+            GN_UNGUARD_SLOW;
+        }
         //@}
     }
 }

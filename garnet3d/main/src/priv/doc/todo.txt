@@ -12,6 +12,8 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - code page convertor
+  - import a GUI toolkit
   - implement core module
   - resource managers (textures, meshes, materials/effects)
   - sample application
@@ -22,7 +24,7 @@ TODO
   - blender exporter/importer
   - gui system
     - font class
-      - code page convertor
+
 - p2
   - continue implementing GFX module
   - refine GFX module:
