@@ -14,7 +14,11 @@ GN::input::Input * GN::input::createInputSystem( bool useDirectInput )
     if( gInputPtr ) delete gInputPtr;
 
     // then create new one.
-#if GN_MSWIN
+#if GN_XENON
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( useDirectInput );
+    return 0;
+#elif GN_MSWIN
     if( useDirectInput )
     {
         AutoObjPtr<DIInput> p( new DIInput );

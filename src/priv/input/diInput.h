@@ -8,7 +8,7 @@
 
 #include "basicMswInput.h"
 
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
 
 // ****************************************************************************
 //! \name                IDX单元中的一些常用的宏定义

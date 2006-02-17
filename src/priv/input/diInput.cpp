@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "diInput.h"
 
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
 
 #if GN_MSVC
 #pragma comment(lib, "dxguid.lib")

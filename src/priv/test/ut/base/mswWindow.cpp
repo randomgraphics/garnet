@@ -7,7 +7,7 @@ public:
 
     void testParentAndChild()
     {
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
         GN::win::MswWindow parent, child;
         GN::win::MswWindow::CreateParam cp;
 
@@ -24,7 +24,7 @@ public:
 
     void testUserStyle()
     {
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
 
@@ -39,7 +39,7 @@ public:
 
     void testClientSize()
     {
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
         GN::win::MswWindow win;
 
         GN::win::MswWindow::CreateParam cp;

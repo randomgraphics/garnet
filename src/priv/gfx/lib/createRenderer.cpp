@@ -14,7 +14,12 @@ inline GN::gfx::Renderer * createD3DRenderer( const GN::gfx::RendererOptions & )
 #endif
 
 // create OGL renderer
+#if GN_XENON
+inline GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & )
+{ GN_ERROR( "No OGL support on Xenon." ); return 0; }
+#else
 extern GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & );
+#endif
 
 #endif
 

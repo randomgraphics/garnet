@@ -363,11 +363,9 @@ def default_env( options = None ):
 
     # 定制不同平台的编译选项
     if 'xenon' == GN_conf['compiler']:
-        libs['common'] += Split('xboxkrnl xbdm')
-        libs['debug'] += Split('xnetd d3d9d d3dx9d xgraphicsd')
-        libs['release'] += Split('xnet d3d9 d3dx9 xgraphics')
-        libs['stdbg'] += Split('xnetd d3d9d d3dx9d xgraphicsd')
-        libs['strel'] += Split('xnet d3d9 d3dx9 xgraphics')
+        libs['common'] += Split('xboxkrnl xbdm dxerr9')
+        libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
+        libs['strel'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
     elif 'win32' == env['PLATFORM']:
         libs['common'] += Split('kernel32 user32 gdi32 shlwapi')
     else:
@@ -398,11 +396,11 @@ def default_env( options = None ):
         else:
             cxxflags['common']  += ['/EHs']
 
-        ccflags['common']   += Split('/W4 /WX')
+        ccflags['common']  += Split('/W4 /WX')
         ccflags['debug']   += Split('/MDd /GR')
-        ccflags['release'] += Split('/O2 /MD')
+        ccflags['release'] += Split('/MD /O2')
         ccflags['stdbg']   += Split('/MTd /GR')
-        ccflags['strel']   += Split('/O2 /MT')
+        ccflags['strel']   += Split('/MT /O2')
 
         # this is for vtune and magellan to do instrumentation
         linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP']

@@ -131,14 +131,15 @@ else:
     else:
         compilers = Split(conf['compiler'])
 
-for v in variants:
-    if not v in all_variants:
-        print "ERROR: Ignore invalid variant '%s'"%v
+for c in compilers:
+    if not c in all_compilers:
+        print "ERROR: Ignore invalid compiler '%s'"%c
         continue
-    for c in compilers:
-        if not c in all_compilers:
-            print "ERROR: Ignore invalid compiler '%s'"%c
+    for v in variants:
+        if not v in all_variants:
+            print "ERROR: Ignore invalid variant '%s'"%v
             continue
+        if 'xenon' == c and ('debug'==v or 'release'==v) : continue; # ignore non-static build for xenon
         cc = copy.copy(conf)
         cc['variant'] = v
         cc['compiler'] = c
