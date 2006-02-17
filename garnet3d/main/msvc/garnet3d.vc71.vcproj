@@ -14,14 +14,14 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="src\extern\inc;src\priv\inc"
+				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;GN_DEBUG=1;GN_STATIC=1"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -55,14 +55,14 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Xenon"
-			OutputDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="src\extern\inc;src\priv\inc"
+				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
 				PreprocessorDefinitions="_XBOX;_DEBUG;_LIB;GN_DEBUG=1;GN_STATIC=1"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -84,13 +84,13 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src\extern\inc;src\priv\inc"
+				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;GN_DEBUG=0;GN_STATIC=1"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -122,13 +122,13 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Xenon"
-			OutputDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="..\bin\tmp\vc71\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="src\extern\inc;src\priv\inc"
+				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
 				PreprocessorDefinitions="_XBOX;NDEBUG;_LIB;GN_DEBUG=0;GN_STATIC=1"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -157,64 +157,64 @@
 				Name="inc"
 				Filter="">
 				<File
-					RelativePath="src\extern\inc\glew.h">
+					RelativePath="..\src\extern\inc\glew.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\glxew.h">
+					RelativePath="..\src\extern\inc\glxew.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\jconfig.h">
+					RelativePath="..\src\extern\inc\jconfig.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\jerror.h">
+					RelativePath="..\src\extern\inc\jerror.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\jmorecfg.h">
+					RelativePath="..\src\extern\inc\jmorecfg.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\jpeglib.h">
+					RelativePath="..\src\extern\inc\jpeglib.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\lauxlib.h">
+					RelativePath="..\src\extern\inc\lauxlib.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\lua.h">
+					RelativePath="..\src\extern\inc\lua.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\luaconf.h">
+					RelativePath="..\src\extern\inc\luaconf.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\lualib.h">
+					RelativePath="..\src\extern\inc\lualib.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\pcre.h">
+					RelativePath="..\src\extern\inc\pcre.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\pcre_stringpiece.h">
+					RelativePath="..\src\extern\inc\pcre_stringpiece.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\pcrecpp.h">
+					RelativePath="..\src\extern\inc\pcrecpp.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\png.h">
+					RelativePath="..\src\extern\inc\png.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\pngconf.h">
+					RelativePath="..\src\extern\inc\pngconf.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\tinystr.h">
+					RelativePath="..\src\extern\inc\tinystr.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\tinyxml.h">
+					RelativePath="..\src\extern\inc\tinyxml.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\wglew.h">
+					RelativePath="..\src\extern\inc\wglew.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\zconf.h">
+					RelativePath="..\src\extern\inc\zconf.h">
 				</File>
 				<File
-					RelativePath="src\extern\inc\zlib.h">
+					RelativePath="..\src\extern\inc\zlib.h">
 				</File>
 			</Filter>
 			<Filter
@@ -224,389 +224,389 @@
 					Name="jpg"
 					Filter="">
 					<File
-						RelativePath="src\extern\src\jpeg\jcapimin.c">
+						RelativePath="..\src\extern\src\jpeg\jcapimin.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcapistd.c">
+						RelativePath="..\src\extern\src\jpeg\jcapistd.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jccoefct.c">
+						RelativePath="..\src\extern\src\jpeg\jccoefct.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jccolor.c">
+						RelativePath="..\src\extern\src\jpeg\jccolor.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcdctmgr.c">
+						RelativePath="..\src\extern\src\jpeg\jcdctmgr.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jchuff.c">
+						RelativePath="..\src\extern\src\jpeg\jchuff.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jchuff.h">
+						RelativePath="..\src\extern\src\jpeg\jchuff.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcinit.c">
+						RelativePath="..\src\extern\src\jpeg\jcinit.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcmainct.c">
+						RelativePath="..\src\extern\src\jpeg\jcmainct.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcmarker.c">
+						RelativePath="..\src\extern\src\jpeg\jcmarker.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcmaster.c">
+						RelativePath="..\src\extern\src\jpeg\jcmaster.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcomapi.c">
+						RelativePath="..\src\extern\src\jpeg\jcomapi.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcparam.c">
+						RelativePath="..\src\extern\src\jpeg\jcparam.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcphuff.c">
+						RelativePath="..\src\extern\src\jpeg\jcphuff.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcprepct.c">
+						RelativePath="..\src\extern\src\jpeg\jcprepct.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jcsample.c">
+						RelativePath="..\src\extern\src\jpeg\jcsample.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jctrans.c">
+						RelativePath="..\src\extern\src\jpeg\jctrans.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdapimin.c">
+						RelativePath="..\src\extern\src\jpeg\jdapimin.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdapistd.c">
+						RelativePath="..\src\extern\src\jpeg\jdapistd.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdatadst.c">
+						RelativePath="..\src\extern\src\jpeg\jdatadst.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdatasrc.c">
+						RelativePath="..\src\extern\src\jpeg\jdatasrc.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdcoefct.c">
+						RelativePath="..\src\extern\src\jpeg\jdcoefct.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdcolor.c">
+						RelativePath="..\src\extern\src\jpeg\jdcolor.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdct.h">
+						RelativePath="..\src\extern\src\jpeg\jdct.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jddctmgr.c">
+						RelativePath="..\src\extern\src\jpeg\jddctmgr.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdhuff.c">
+						RelativePath="..\src\extern\src\jpeg\jdhuff.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdhuff.h">
+						RelativePath="..\src\extern\src\jpeg\jdhuff.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdinput.c">
+						RelativePath="..\src\extern\src\jpeg\jdinput.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdmainct.c">
+						RelativePath="..\src\extern\src\jpeg\jdmainct.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdmarker.c">
+						RelativePath="..\src\extern\src\jpeg\jdmarker.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdmaster.c">
+						RelativePath="..\src\extern\src\jpeg\jdmaster.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdmerge.c">
+						RelativePath="..\src\extern\src\jpeg\jdmerge.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdphuff.c">
+						RelativePath="..\src\extern\src\jpeg\jdphuff.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdpostct.c">
+						RelativePath="..\src\extern\src\jpeg\jdpostct.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdsample.c">
+						RelativePath="..\src\extern\src\jpeg\jdsample.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jdtrans.c">
+						RelativePath="..\src\extern\src\jpeg\jdtrans.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jerror.c">
+						RelativePath="..\src\extern\src\jpeg\jerror.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jfdctflt.c">
+						RelativePath="..\src\extern\src\jpeg\jfdctflt.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jfdctfst.c">
+						RelativePath="..\src\extern\src\jpeg\jfdctfst.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jfdctint.c">
+						RelativePath="..\src\extern\src\jpeg\jfdctint.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jidctflt.c">
+						RelativePath="..\src\extern\src\jpeg\jidctflt.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jidctfst.c">
+						RelativePath="..\src\extern\src\jpeg\jidctfst.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jidctint.c">
+						RelativePath="..\src\extern\src\jpeg\jidctint.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jidctred.c">
+						RelativePath="..\src\extern\src\jpeg\jidctred.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jinclude.h">
+						RelativePath="..\src\extern\src\jpeg\jinclude.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jmemmgr.c">
+						RelativePath="..\src\extern\src\jpeg\jmemmgr.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jmemnobs.c">
+						RelativePath="..\src\extern\src\jpeg\jmemnobs.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jmemsys.h">
+						RelativePath="..\src\extern\src\jpeg\jmemsys.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jpegint.h">
+						RelativePath="..\src\extern\src\jpeg\jpegint.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jquant1.c">
+						RelativePath="..\src\extern\src\jpeg\jquant1.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jquant2.c">
+						RelativePath="..\src\extern\src\jpeg\jquant2.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jutils.c">
+						RelativePath="..\src\extern\src\jpeg\jutils.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\jversion.h">
+						RelativePath="..\src\extern\src\jpeg\jversion.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\jpeg\transupp.h">
+						RelativePath="..\src\extern\src\jpeg\transupp.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="zlib"
 					Filter="">
 					<File
-						RelativePath="src\extern\src\zlib\adler32.c">
+						RelativePath="..\src\extern\src\zlib\adler32.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\compress.c">
+						RelativePath="..\src\extern\src\zlib\compress.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\crc32.c">
+						RelativePath="..\src\extern\src\zlib\crc32.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\crc32.h">
+						RelativePath="..\src\extern\src\zlib\crc32.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\deflate.c">
+						RelativePath="..\src\extern\src\zlib\deflate.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\deflate.h">
+						RelativePath="..\src\extern\src\zlib\deflate.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\gzio.c">
+						RelativePath="..\src\extern\src\zlib\gzio.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\infback.c">
+						RelativePath="..\src\extern\src\zlib\infback.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inffast.c">
+						RelativePath="..\src\extern\src\zlib\inffast.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inffast.h">
+						RelativePath="..\src\extern\src\zlib\inffast.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inffixed.h">
+						RelativePath="..\src\extern\src\zlib\inffixed.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inflate.c">
+						RelativePath="..\src\extern\src\zlib\inflate.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inflate.h">
+						RelativePath="..\src\extern\src\zlib\inflate.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inftrees.c">
+						RelativePath="..\src\extern\src\zlib\inftrees.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\inftrees.h">
+						RelativePath="..\src\extern\src\zlib\inftrees.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\trees.c">
+						RelativePath="..\src\extern\src\zlib\trees.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\trees.h">
+						RelativePath="..\src\extern\src\zlib\trees.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\uncompr.c">
+						RelativePath="..\src\extern\src\zlib\uncompr.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\zutil.c">
+						RelativePath="..\src\extern\src\zlib\zutil.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\zlib\zutil.h">
+						RelativePath="..\src\extern\src\zlib\zutil.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="png"
 					Filter="">
 					<File
-						RelativePath="src\extern\src\png\png.c">
+						RelativePath="..\src\extern\src\png\png.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngerror.c">
+						RelativePath="..\src\extern\src\png\pngerror.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pnggccrd.c">
+						RelativePath="..\src\extern\src\png\pnggccrd.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngget.c">
+						RelativePath="..\src\extern\src\png\pngget.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngmem.c">
+						RelativePath="..\src\extern\src\png\pngmem.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngpread.c">
+						RelativePath="..\src\extern\src\png\pngpread.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngread.c">
+						RelativePath="..\src\extern\src\png\pngread.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngrio.c">
+						RelativePath="..\src\extern\src\png\pngrio.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngrtran.c">
+						RelativePath="..\src\extern\src\png\pngrtran.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngrutil.c">
+						RelativePath="..\src\extern\src\png\pngrutil.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngset.c">
+						RelativePath="..\src\extern\src\png\pngset.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngtrans.c">
+						RelativePath="..\src\extern\src\png\pngtrans.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngvcrd.c">
+						RelativePath="..\src\extern\src\png\pngvcrd.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngwio.c">
+						RelativePath="..\src\extern\src\png\pngwio.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngwrite.c">
+						RelativePath="..\src\extern\src\png\pngwrite.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngwtran.c">
+						RelativePath="..\src\extern\src\png\pngwtran.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\png\pngwutil.c">
+						RelativePath="..\src\extern\src\png\pngwutil.c">
 					</File>
 				</Filter>
 				<Filter
 					Name="pcre"
 					Filter="">
 					<File
-						RelativePath="src\extern\src\pcre\config.h">
+						RelativePath="..\src\extern\src\pcre\config.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_chartables.c">
+						RelativePath="..\src\extern\src\pcre\pcre_chartables.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_compile.c">
+						RelativePath="..\src\extern\src\pcre\pcre_compile.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_config.c">
+						RelativePath="..\src\extern\src\pcre\pcre_config.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_dfa_exec.c">
+						RelativePath="..\src\extern\src\pcre\pcre_dfa_exec.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_exec.c">
+						RelativePath="..\src\extern\src\pcre\pcre_exec.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_fullinfo.c">
+						RelativePath="..\src\extern\src\pcre\pcre_fullinfo.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_get.c">
+						RelativePath="..\src\extern\src\pcre\pcre_get.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_globals.c">
+						RelativePath="..\src\extern\src\pcre\pcre_globals.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_info.c">
+						RelativePath="..\src\extern\src\pcre\pcre_info.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_internal.h">
+						RelativePath="..\src\extern\src\pcre\pcre_internal.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_maketables.c">
+						RelativePath="..\src\extern\src\pcre\pcre_maketables.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_ord2utf8.c">
+						RelativePath="..\src\extern\src\pcre\pcre_ord2utf8.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_refcount.c">
+						RelativePath="..\src\extern\src\pcre\pcre_refcount.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_scanner.cc">
+						RelativePath="..\src\extern\src\pcre\pcre_scanner.cc">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_scanner.h">
+						RelativePath="..\src\extern\src\pcre\pcre_scanner.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_stringpiece.cc">
+						RelativePath="..\src\extern\src\pcre\pcre_stringpiece.cc">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_study.c">
+						RelativePath="..\src\extern\src\pcre\pcre_study.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_tables.c">
+						RelativePath="..\src\extern\src\pcre\pcre_tables.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_try_flipped.c">
+						RelativePath="..\src\extern\src\pcre\pcre_try_flipped.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_ucp_findchar.c">
+						RelativePath="..\src\extern\src\pcre\pcre_ucp_findchar.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_valid_utf8.c">
+						RelativePath="..\src\extern\src\pcre\pcre_valid_utf8.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_version.c">
+						RelativePath="..\src\extern\src\pcre\pcre_version.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcre_xclass.c">
+						RelativePath="..\src\extern\src\pcre\pcre_xclass.c">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\pcrecpp.cc">
+						RelativePath="..\src\extern\src\pcre\pcrecpp.cc">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\ucp.h">
+						RelativePath="..\src\extern\src\pcre\ucp.h">
 					</File>
 					<File
-						RelativePath="src\extern\src\pcre\ucpinternal.h">
+						RelativePath="..\src\extern\src\pcre\ucpinternal.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="tinyxml"
 					Filter="">
 					<File
-						RelativePath="src\extern\src\tinyxml\tinystr.cpp">
+						RelativePath="..\src\extern\src\tinyxml\tinystr.cpp">
 					</File>
 					<File
-						RelativePath="src\extern\src\tinyxml\tinyxml.cpp">
+						RelativePath="..\src\extern\src\tinyxml\tinyxml.cpp">
 					</File>
 					<File
-						RelativePath="src\extern\src\tinyxml\tinyxmlerror.cpp">
+						RelativePath="..\src\extern\src\tinyxml\tinyxmlerror.cpp">
 					</File>
 					<File
-						RelativePath="src\extern\src\tinyxml\tinyxmlparser.cpp">
+						RelativePath="..\src\extern\src\tinyxml\tinyxmlparser.cpp">
 					</File>
 					<File
-						RelativePath="src\extern\src\tinyxml\tinyxmltostr.cpp">
+						RelativePath="..\src\extern\src\tinyxml\tinyxmltostr.cpp">
 					</File>
 				</Filter>
 			</Filter>
@@ -618,223 +618,223 @@
 				Name="inc"
 				Filter="">
 				<File
-					RelativePath="src\priv\inc\garnet\GNbase.h">
+					RelativePath="..\src\priv\inc\garnet\GNbase.h">
 				</File>
 				<File
-					RelativePath="src\priv\inc\garnet\GNcore.h">
+					RelativePath="..\src\priv\inc\garnet\GNcore.h">
 				</File>
 				<File
-					RelativePath="src\priv\inc\garnet\GNd3d.h">
+					RelativePath="..\src\priv\inc\garnet\GNd3d.h">
 				</File>
 				<File
-					RelativePath="src\priv\inc\garnet\GNgfx.h">
+					RelativePath="..\src\priv\inc\garnet\GNgfx.h">
 				</File>
 				<File
-					RelativePath="src\priv\inc\garnet\GNinput.h">
+					RelativePath="..\src\priv\inc\garnet\GNinput.h">
 				</File>
 				<File
-					RelativePath="src\priv\inc\garnet\GNogl.h">
+					RelativePath="..\src\priv\inc\garnet\GNogl.h">
 				</File>
 				<File
-					RelativePath="src\priv\inc\garnet\GNwin.h">
+					RelativePath="..\src\priv\inc\garnet\GNwin.h">
 				</File>
 				<Filter
 					Name="base"
 					Filter="">
 					<File
-						RelativePath="src\priv\inc\garnet\base\basicDefines.h">
+						RelativePath="..\src\priv\inc\garnet\base\basicDefines.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\clock.h">
+						RelativePath="..\src\priv\inc\garnet\base\clock.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\debug.h">
+						RelativePath="..\src\priv\inc\garnet\base\debug.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\exception.h">
+						RelativePath="..\src\priv\inc\garnet\base\exception.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\file.h">
+						RelativePath="..\src\priv\inc\garnet\base\file.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\file.inl">
+						RelativePath="..\src\priv\inc\garnet\base\file.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\functor.h">
+						RelativePath="..\src\priv\inc\garnet\base\functor.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\geometry.h">
+						RelativePath="..\src\priv\inc\garnet\base\geometry.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\handle.h">
+						RelativePath="..\src\priv\inc\garnet\base\handle.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\log.h">
+						RelativePath="..\src\priv\inc\garnet\base\log.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\math.h">
+						RelativePath="..\src\priv\inc\garnet\base\math.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\matrix.inl">
+						RelativePath="..\src\priv\inc\garnet\base\matrix.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\memory.h">
+						RelativePath="..\src\priv\inc\garnet\base\memory.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\misc.h">
+						RelativePath="..\src\priv\inc\garnet\base\misc.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\plugin.h">
+						RelativePath="..\src\priv\inc\garnet\base\plugin.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\plugin.inl">
+						RelativePath="..\src\priv\inc\garnet\base\plugin.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\pragma.h">
+						RelativePath="..\src\priv\inc\garnet\base\pragma.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\profiler.h">
+						RelativePath="..\src\priv\inc\garnet\base\profiler.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\quaternion.inl">
+						RelativePath="..\src\priv\inc\garnet\base\quaternion.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\refCounter.h">
+						RelativePath="..\src\priv\inc\garnet\base\refCounter.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\registry.h">
+						RelativePath="..\src\priv\inc\garnet\base\registry.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\resourceManager.h">
+						RelativePath="..\src\priv\inc\garnet\base\resourceManager.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\sharedLib.h">
+						RelativePath="..\src\priv\inc\garnet\base\sharedLib.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\sigslot.h">
+						RelativePath="..\src\priv\inc\garnet\base\sigslot.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\singleton.h">
+						RelativePath="..\src\priv\inc\garnet\base\singleton.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\stdClass.h">
+						RelativePath="..\src\priv\inc\garnet\base\stdClass.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\stdint.h">
+						RelativePath="..\src\priv\inc\garnet\base\stdint.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\string.h">
+						RelativePath="..\src\priv\inc\garnet\base\string.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\typeTraits.h">
+						RelativePath="..\src\priv\inc\garnet\base\typeTraits.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\userConfig.h">
+						RelativePath="..\src\priv\inc\garnet\base\userConfig.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\base\variant.h">
+						RelativePath="..\src\priv\inc\garnet\base\variant.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="gfx"
 					Filter="">
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\buffer.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\buffer.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\colorFormat.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\colorFormat.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\colorFormatMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\colorFormatMeta.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\d3dToString.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\d3dToString.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\effect.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\effect.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\effect.inl">
+						RelativePath="..\src\priv\inc\garnet\gfx\effect.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\image.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\image.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\image.inl">
+						RelativePath="..\src\priv\inc\garnet\gfx\image.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\misc.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\misc.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\renderer.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\renderer.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\renderer.inl">
+						RelativePath="..\src\priv\inc\garnet\gfx\renderer.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\rendererCapsMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\rendererCapsMeta.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\renderState.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\renderState.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\renderState.inl">
+						RelativePath="..\src\priv\inc\garnet\gfx\renderState.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\renderStateMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\renderStateMeta.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\renderStateValueMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\renderStateValueMeta.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\shader.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\shader.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\shape.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\shape.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\texture.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\texture.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\textureStateMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\textureStateMeta.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\textureStateValueMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\textureStateValueMeta.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\vertexFormat.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\vertexFormat.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\vertexFormat.inl">
+						RelativePath="..\src\priv\inc\garnet\gfx\vertexFormat.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\gfx\vertexSemanticMeta.h">
+						RelativePath="..\src\priv\inc\garnet\gfx\vertexSemanticMeta.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="input"
 					Filter="">
 					<File
-						RelativePath="src\priv\inc\garnet\input\inputUtils.inl">
+						RelativePath="..\src\priv\inc\garnet\input\inputUtils.inl">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\input\keyCodeMeta.h">
+						RelativePath="..\src\priv\inc\garnet\input\keyCodeMeta.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="win"
 					Filter="">
 					<File
-						RelativePath="src\priv\inc\garnet\win\mswWindow.h">
+						RelativePath="..\src\priv\inc\garnet\win\mswWindow.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\win\winTypes.h">
+						RelativePath="..\src\priv\inc\garnet\win\winTypes.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\win\winUtils.h">
+						RelativePath="..\src\priv\inc\garnet\win\winUtils.h">
 					</File>
 					<File
-						RelativePath="src\priv\inc\garnet\win\xWindow.h">
+						RelativePath="..\src\priv\inc\garnet\win\xWindow.h">
 					</File>
 				</Filter>
 			</Filter>
@@ -845,7 +845,7 @@
 					Name="base"
 					Filter="">
 					<File
-						RelativePath="src\priv\base\boundingVolume.cpp">
+						RelativePath="..\src\priv\base\boundingVolume.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -880,7 +880,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\clock.cpp">
+						RelativePath="..\src\priv\base\clock.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -915,7 +915,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\debug.cpp">
+						RelativePath="..\src\priv\base\debug.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -950,7 +950,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\file.cpp">
+						RelativePath="..\src\priv\base\file.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -985,7 +985,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\log.cpp">
+						RelativePath="..\src\priv\base\log.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1020,7 +1020,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\memory.cpp">
+						RelativePath="..\src\priv\base\memory.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1055,7 +1055,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\misc.cpp">
+						RelativePath="..\src\priv\base\misc.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1090,7 +1090,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\path.cpp">
+						RelativePath="..\src\priv\base\path.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1125,7 +1125,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\pch.cpp">
+						RelativePath="..\src\priv\base\pch.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1160,10 +1160,10 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\pch.h">
+						RelativePath="..\src\priv\base\pch.h">
 					</File>
 					<File
-						RelativePath="src\priv\base\plugin.cpp">
+						RelativePath="..\src\priv\base\plugin.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1198,7 +1198,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\profiler.cpp">
+						RelativePath="..\src\priv\base\profiler.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1233,7 +1233,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\registry.cpp">
+						RelativePath="..\src\priv\base\registry.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1268,7 +1268,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\sharedLib.cpp">
+						RelativePath="..\src\priv\base\sharedLib.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1303,7 +1303,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\string.cpp">
+						RelativePath="..\src\priv\base\string.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1338,7 +1338,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\base\variant.cpp">
+						RelativePath="..\src\priv\base\variant.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1377,7 +1377,7 @@
 					Name="core"
 					Filter="">
 					<File
-						RelativePath="src\priv\core\core.cpp">
+						RelativePath="..\src\priv\core\core.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1412,7 +1412,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\core\coreEffectDict.cpp">
+						RelativePath="..\src\priv\core\coreEffectDict.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1447,10 +1447,10 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\core\coreResourceDict.h">
+						RelativePath="..\src\priv\core\coreResourceDict.h">
 					</File>
 					<File
-						RelativePath="src\priv\core\coreSearchResource.cpp">
+						RelativePath="..\src\priv\core\coreSearchResource.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1485,10 +1485,10 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\core\coreShaderDict.cpp">
+						RelativePath="..\src\priv\core\coreShaderDict.cpp">
 					</File>
 					<File
-						RelativePath="src\priv\core\coreTextureDict.cpp">
+						RelativePath="..\src\priv\core\coreTextureDict.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1523,7 +1523,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\core\pch.cpp">
+						RelativePath="..\src\priv\core\pch.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1562,14 +1562,14 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\core\pch.h">
+						RelativePath="..\src\priv\core\pch.h">
 					</File>
 				</Filter>
 				<Filter
 					Name="win"
 					Filter="">
 					<File
-						RelativePath="src\priv\win\mswWindow.cpp">
+						RelativePath="..\src\priv\win\mswWindow.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1604,7 +1604,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\win\pch.cpp">
+						RelativePath="..\src\priv\win\pch.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1643,10 +1643,10 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\win\pch.h">
+						RelativePath="..\src\priv\win\pch.h">
 					</File>
 					<File
-						RelativePath="src\priv\win\utils.cpp">
+						RelativePath="..\src\priv\win\utils.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1681,7 +1681,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\win\xWindow.cpp">
+						RelativePath="..\src\priv\win\xWindow.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1720,7 +1720,7 @@
 					Name="d3d"
 					Filter="">
 					<File
-						RelativePath="src\priv\d3d\app.cpp">
+						RelativePath="..\src\priv\d3d\app.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1755,7 +1755,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\d3d\d3d.cpp">
+						RelativePath="..\src\priv\d3d\d3d.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1790,7 +1790,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\d3d\d3dutils.cpp">
+						RelativePath="..\src\priv\d3d\d3dutils.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1825,7 +1825,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\d3d\pch.cpp">
+						RelativePath="..\src\priv\d3d\pch.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool
@@ -1864,7 +1864,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="src\priv\d3d\pch.h">
+						RelativePath="..\src\priv\d3d\pch.h">
 					</File>
 				</Filter>
 				<Filter
@@ -1874,7 +1874,7 @@
 						Name="lib"
 						Filter="">
 						<File
-							RelativePath="src\priv\gfx\lib\colorFormat.cpp">
+							RelativePath="..\src\priv\gfx\lib\colorFormat.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -1909,7 +1909,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\createRenderer.cpp">
+							RelativePath="..\src\priv\gfx\lib\createRenderer.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -1944,7 +1944,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\d3dToString.cpp">
+							RelativePath="..\src\priv\gfx\lib\d3dToString.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -1979,7 +1979,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\effect.cpp">
+							RelativePath="..\src\priv\gfx\lib\effect.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2014,7 +2014,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\fakeRenderer.cpp">
+							RelativePath="..\src\priv\gfx\lib\fakeRenderer.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2049,7 +2049,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\image.cpp">
+							RelativePath="..\src\priv\gfx\lib\image.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2084,7 +2084,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\imageDDS.cpp">
+							RelativePath="..\src\priv\gfx\lib\imageDDS.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2119,10 +2119,10 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\imageDDS.h">
+							RelativePath="..\src\priv\gfx\lib\imageDDS.h">
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\imageJPG.cpp">
+							RelativePath="..\src\priv\gfx\lib\imageJPG.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2157,10 +2157,10 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\imageJPG.h">
+							RelativePath="..\src\priv\gfx\lib\imageJPG.h">
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\imagePNG.cpp">
+							RelativePath="..\src\priv\gfx\lib\imagePNG.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2195,10 +2195,10 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\imagePNG.h">
+							RelativePath="..\src\priv\gfx\lib\imagePNG.h">
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\pch.cpp">
+							RelativePath="..\src\priv\gfx\lib\pch.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2237,10 +2237,10 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\pch.h">
+							RelativePath="..\src\priv\gfx\lib\pch.h">
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\renderState.cpp">
+							RelativePath="..\src\priv\gfx\lib\renderState.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2275,7 +2275,7 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="src\priv\gfx\lib\vertex.cpp">
+							RelativePath="..\src\priv\gfx\lib\vertex.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2317,7 +2317,7 @@
 							Name="common"
 							Filter="">
 							<File
-								RelativePath="src\priv\gfx\renderer\common\basicDispMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\basicDispMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2352,7 +2352,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\basicDrawMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\basicDrawMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2387,7 +2387,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\basicRenderer.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\basicRenderer.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2422,10 +2422,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\basicRenderer.h">
+								RelativePath="..\src\priv\gfx\renderer\common\basicRenderer.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\basicRenderStateBlockMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\basicRenderStateBlockMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2460,10 +2460,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\basicTexture.h">
+								RelativePath="..\src\priv\gfx\renderer\common\basicTexture.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\mswRenderWindow.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\mswRenderWindow.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2498,10 +2498,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\mswRenderWindow.h">
+								RelativePath="..\src\priv\gfx\renderer\common\mswRenderWindow.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\pch.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\pch.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2540,10 +2540,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\pch.h">
+								RelativePath="..\src\priv\gfx\renderer\common\pch.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\xRenderWindow.cpp">
+								RelativePath="..\src\priv\gfx\renderer\common\xRenderWindow.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2578,14 +2578,14 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\common\xRenderWindow.h">
+								RelativePath="..\src\priv\gfx\renderer\common\xRenderWindow.h">
 							</File>
 						</Filter>
 						<Filter
 							Name="d3d"
 							Filter="">
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dBufferMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dBufferMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2620,13 +2620,13 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dBufferMgr.inl">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dBufferMgr.inl">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dCapsMeta.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dCapsMeta.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dCapsMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dCapsMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2661,7 +2661,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dDispMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dDispMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2696,7 +2696,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dDrawMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dDrawMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2731,7 +2731,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dFfpMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dFfpMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2766,7 +2766,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dFont.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dFont.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2801,10 +2801,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dFont.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dFont.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dIdxBuf.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dIdxBuf.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2839,10 +2839,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dIdxBuf.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dIdxBuf.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dPxlShaderAsm.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dPxlShaderAsm.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2877,7 +2877,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dPxlShaderHlsl.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dPxlShaderHlsl.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2912,7 +2912,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dQuad.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dQuad.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2947,10 +2947,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dQuad.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dQuad.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dRenderer.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dRenderer.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -2985,13 +2985,13 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dRenderer.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dRenderer.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dRenderState.inl">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dRenderState.inl">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dRenderStateBlockMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dRenderStateBlockMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3026,10 +3026,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dRenderStateBlockMgr.inl">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dRenderStateBlockMgr.inl">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dRenderTargetMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dRenderTargetMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3064,7 +3064,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dResource.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dResource.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3099,13 +3099,13 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dResource.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dResource.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dShader.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dShader.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dShaderMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dShaderMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3140,7 +3140,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dTexture.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dTexture.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3175,10 +3175,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dTexture.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dTexture.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dTextureMgr.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dTextureMgr.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3213,7 +3213,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dUtils.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dUtils.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3250,10 +3250,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dUtils.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dUtils.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dVtxBuf.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dVtxBuf.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3288,10 +3288,10 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dVtxBuf.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dVtxBuf.h">
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dVtxShaderAsm.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dVtxShaderAsm.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3326,7 +3326,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\d3dVtxShaderHlsl.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\d3dVtxShaderHlsl.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3361,7 +3361,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\pch.cpp">
+								RelativePath="..\src\priv\gfx\renderer\d3d\pch.cpp">
 								<FileConfiguration
 									Name="Debug|Win32">
 									<Tool
@@ -3400,7 +3400,7 @@
 								</FileConfiguration>
 							</File>
 							<File
-								RelativePath="src\priv\gfx\renderer\d3d\pch.h">
+								RelativePath="..\src\priv\gfx\renderer\d3d\pch.h">
 							</File>
 						</Filter>
 					</Filter>
