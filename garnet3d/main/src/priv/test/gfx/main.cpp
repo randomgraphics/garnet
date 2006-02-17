@@ -161,15 +161,15 @@ public:
     {
         // create renderer
         GN::gfx::RendererAPI api;
-        if( 0 == GN::strCmpI( apiName, "OGL" ) )
+        if( 0 == GN::strCmpI( apiName, "-ogl" ) )
             api = GN::gfx::API_OGL;
-        else if( 0 == GN::strCmpI( apiName, "D3D" ) )
+        else if( 0 == GN::strCmpI( apiName, "-d3d" ) )
             api = GN::gfx::API_D3D;
-        else if( 0 == GN::strCmpI( apiName, "FAKE" ) )
+        else if( 0 == GN::strCmpI( apiName, "-fake" ) )
             api = GN::gfx::API_FAKE;
         else
         {
-            GN_ERROR( "invalid renderer API. Must be [OGL|D3D|FAKE]." );
+            GN_ERROR( "invalid rendering API. Must be [-ogl|-d3d|-fake]." );
             return false;
         }
         GN::gfx::RendererOptions ro;
@@ -296,7 +296,7 @@ void usage( const char * appName )
     printf(
         "GFX module test application.\n"
         "\n"
-        "Usage: %s [D3D|OGL]\n"
+        "Usage: %s [-d3d|-ogl|-fake]\n"
         "\n"
         "Note: default module is %s\n",
         appName,
