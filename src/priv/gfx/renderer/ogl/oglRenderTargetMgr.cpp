@@ -109,14 +109,11 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     {
         const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(rttd.tex);
 
-        GLint oldtex;
-
         // get texture size
-        GLsizei sx, sy;
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-                gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, (GLint*)&sx ) );
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-                gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, (GLint*)&sy ) );
+        uint32_t sx, sy;
+        gltex->getMipMapSize( level, &sx, &sy );
+
+        GLint oldtex;
 
         // copy framebuffer to current render target texture
         TexType tt = rttd.tex->getType();
@@ -158,11 +155,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     {
         if( tex )
         {
-            const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(tex);
-            GN_OGL_CHECK( glGetTexLevelParameteriv(
-                    gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, (GLint*)&mCurrentRTSize.x ) );
-            GN_OGL_CHECK( glGetTexLevelParameteriv(
-                    gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, (GLint*)&mCurrentRTSize.y ) );
+            tex->getMipMapSize( level, &mCurrentRTSize.x, &mCurrentRTSize.y );
         }
         else
         {

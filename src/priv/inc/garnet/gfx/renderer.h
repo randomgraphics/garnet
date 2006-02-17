@@ -716,6 +716,12 @@ namespace GN { namespace gfx
         //!
         void bindShaders( const Shader * vtxShader, const Shader * pxlShader );
 
+        //!
+        //! Bind programmable shader handles to rendering device. Set to 0 to use
+        //! fixed pipeline.
+        //!
+        void bindShaderHandles( uint32_t vtxShader, uint32_t pxlShader );
+
         //@}
 
         // ********************************************************************

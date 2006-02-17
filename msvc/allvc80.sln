@@ -34,6 +34,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwin", "8.0\GNwin.vcproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxLib", "8.0\GNgfxLib.vcproj", "{4C197C4E-59E9-48ED-95F8-A54434812D48}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNdepthTexture", "8.0\GNdepthTexture.vcproj", "{CA9338CE-DC53-4203-811D-E95AAB5A1E86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -318,6 +320,22 @@ Global
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel|Win32.Build.0 = strel|Win32
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel|x64.ActiveCfg = strel|x64
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel|x64.Build.0 = strel|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Debug|Win32.ActiveCfg = debug|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Debug|Win32.Build.0 = debug|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Debug|x64.ActiveCfg = debug|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Debug|x64.Build.0 = debug|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Release|Win32.ActiveCfg = release|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Release|Win32.Build.0 = release|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Release|x64.ActiveCfg = release|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Release|x64.Build.0 = release|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Stdbg|Win32.ActiveCfg = stdbg|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Stdbg|Win32.Build.0 = stdbg|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Stdbg|x64.ActiveCfg = stdbg|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Stdbg|x64.Build.0 = stdbg|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Strel|Win32.ActiveCfg = strel|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Strel|Win32.Build.0 = strel|Win32
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Strel|x64.ActiveCfg = strel|x64
+		{CA9338CE-DC53-4203-811D-E95AAB5A1E86}.Strel|x64.Build.0 = strel|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

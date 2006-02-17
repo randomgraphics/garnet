@@ -89,4 +89,16 @@ namespace GN { namespace gfx
         bindShaders( shaders );
         GN_UNGUARD_SLOW;
     }
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::bindShaderHandles( uint32_t vtxShader, uint32_t pxlShader )
+    {
+        GN_GUARD_SLOW;
+        const Shader * shaders[NUM_SHADER_TYPES];
+        shaders[VERTEX_SHADER] = 0 == vtxShader ? 0 : gShaderDict.getResource( vtxShader );
+        shaders[PIXEL_SHADER]  = 0 == pxlShader ? 0 : gShaderDict.getResource( pxlShader );;
+        bindShaders( shaders );
+        GN_UNGUARD_SLOW;
+    }
 }}

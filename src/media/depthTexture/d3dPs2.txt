@@ -1,0 +1,9 @@
+// TYPE=PIXEL LANG=D3D_HLSL ENTRY=main
+
+sampler s0 : register(s0);
+sampler s1 : register(s1);
+float4 main( in float4 uv0 : TEXCOORD0 ) : COLOR
+{
+    float4 shadow = tex2D( s0, uv0 );
+    return shadow;
+}
