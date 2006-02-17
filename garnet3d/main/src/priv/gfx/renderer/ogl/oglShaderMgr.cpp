@@ -211,6 +211,14 @@ void GN::gfx::OGLRenderer::applyShaderState()
     bool vsGLSL = false;
     bool psGLSL = false;
 
+    // check shader type
+    GN_ASSERT(
+        mCurrentDrawState.vtxShader.empty() ||
+        VERTEX_SHADER == mCurrentDrawState.vtxShader->getType() );
+    GN_ASSERT(
+        mCurrentDrawState.pxlShader.empty() ||
+        PIXEL_SHADER == mCurrentDrawState.pxlShader->getType() );
+
     if( mCurrentDrawState.dirtyFlags.vtxShader )
     {
         if( mLastDrawState.vtxShader )

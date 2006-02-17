@@ -19,6 +19,54 @@ namespace GN { namespace core
     StrA searchResource( const StrA & name );
 
     //!
+    //! Shader dictionary class of core module
+    //!
+    class CoreShaderDict : public StdClass
+    {
+         GN_DECLARE_STDCLASS( CoreShaderDict, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        CoreShaderDict()          { clear(); }
+        virtual ~CoreShaderDict() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() { mDict = 0; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        gfx::ShaderDictionary * mDict;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
+
+    //!
     //! Texture dictionary class of core module
     //!
     class CoreTextureDict : public StdClass
@@ -65,7 +113,7 @@ namespace GN { namespace core
         // ********************************
     private:
     };
-    
+
     //!
     //! Core effect dictionary.
     //!

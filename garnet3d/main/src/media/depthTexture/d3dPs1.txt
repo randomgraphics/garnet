@@ -1,0 +1,12 @@
+// TYPE=PIXEL LANG=D3D_HLSL ENTRY=main
+
+void main(
+      in float tex0 : TEXCOORD0
+    , out float4 color : COLOR
+    , out float depth : DEPTH
+    )
+{
+    color.x = tex0;
+    color.yz = 0; color.w = 1;
+    depth = tex0;
+}

@@ -8,6 +8,7 @@ GN_IMPLEMENT_SINGLETON( GN::PluginManager )
 GN_IMPLEMENT_SINGLETON( GN::ProfilerManager )
 GN_IMPLEMENT_SINGLETON( GN::input::Input )
 GN_IMPLEMENT_SINGLETON( GN::gfx::Renderer )
+GN_IMPLEMENT_SINGLETON( GN::gfx::ShaderDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::TextureDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
 
@@ -38,6 +39,7 @@ namespace GN { namespace core
     {
         PluginManager mPluginManager;
         ProfilerManager mProfilerManager;
+        CoreShaderDict mShaderDict;
         CoreTextureDict mTextureDict;
         CoreEffectDict mEffectDict;
 
@@ -53,6 +55,7 @@ namespace GN { namespace core
 
             GN_INFO( "Initialize garnet core ..." );
 
+            if( !mShaderDict.init() ) return false;
             if( !mTextureDict.init() ) return false;
             if( !mEffectDict.init() ) return false;
 
@@ -72,6 +75,7 @@ namespace GN { namespace core
 
             mEffectDict.quit();
             mTextureDict.quit();
+            mShaderDict.quit();
 
             GN_UNGUARD_ALWAYS_NO_THROW;
         }

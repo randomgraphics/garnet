@@ -50,8 +50,8 @@ public:
         {
             { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f },
             { -1.0f,  1.0f, 0.0f, 0.0f, 1.0f },
-            {  1.0f, -1.0f, 1.0f, 1.0f, 0.0f },
             {  1.0f,  1.0f, 1.0f, 1.0f, 1.0f },
+            {  1.0f, -1.0f, 1.0f, 1.0f, 0.0f },
         };
         r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
         r.bindTexture( 0, 0 );
@@ -69,91 +69,25 @@ public:
 
 class SceneWithPs : public Scene
 {
-    AutoRef<Shader> mVs1, mVs2, mPs1, mPs2;
+    uint32_t mVs1, mVs2, mPs1, mPs2;
     AutoRef<Texture> mTarget, mDepth;
 
     bool createD3DShaders()
     {
-        Renderer & r = gRenderer;
-
-        const char * code;
-
-        code =
-            "void main( in float4 iPos : POSITION, \n"
-            "           out float4 oPos : POSITION, \n"
-            "           out float3 oDepth : TEXCOORD0 ) \n"
-            "{ \n"
-            "   oPos.x = iPos.x *  2 - 1; \n"
-            "   oPos.y = iPos.y * -2 + 1; \n"
-            "   oPos.zw = iPos.zw; \n"
-            "   oDepth = iPos.z/iPos.w; \n"
-            "}";
-        mVs1.attach( r.createVtxShader( LANG_D3D_HLSL, code ) );
-        if( mVs1.empty() ) return false;
-        // --
-        code =
-            "float4 main( in float depth : TEXCOORD0 ) : COLOR \n"
-            "{ \n"
-            "   return float4( depth, 0, 0, 1 ); \n"
-            "}";
-        mPs1.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
-        if( mPs1.empty() ) return false;
-
-        // -----------------------------------------------
-
-        code =
-            "void main( in float4 iPos : POSITION, \n"
-            "           in float2 iTex : TEXCOORD0, \n"
-            "           out float4 oPos : POSITION, \n"
-            "           out float2 oTex : TEXCOORD0 ) \n"
-            "{ \n"
-            "   oPos.x = iPos.x *  2 - 1; \n"
-            "   oPos.y = iPos.y * -2 + 1; \n"
-            "   oPos.zw = iPos.zw; \n"
-            "   oTex = iTex; \n"
-            "}";
-        mVs2.attach( r.createVtxShader( LANG_D3D_HLSL, code ) );
-        if( mVs2.empty() ) return false;
-        // --
-        //*
-        code =
-            "sampler s0 : register(s0); \n"
-            "sampler s1 : register(s1); \n"
-            "float4 main( in float2 uv : TEXCOORD0 ) : COLOR \n"
-            "{ return float4( tex2D(s0,uv).xyz, 1); } \n";
-        mPs2.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );/*/
-        code =
-            "ps.1.1\n"
-            "def c0, 0, 0, 1, 1\n"
-            "tex t0\n"
-            "mov r1, c0\n"
-            "mul r0, r1, t0";
-            //"mov r0, r1";
-        mPs2.attach( r.createPxlShader( LANG_D3D_ASM, code ) );
-        //*/
-        if( mPs2.empty() ) return false;
-
-        // success
-        return true;
+        mVs1 = gShaderDict.getResourceHandle( "depthTexture/d3dVs1.txt" );
+        mPs1 = gShaderDict.getResourceHandle( "depthTexture/d3dPs1.txt" );
+        mVs2 = gShaderDict.getResourceHandle( "depthTexture/d3dVs2.txt" );
+        mPs2 = gShaderDict.getResourceHandle( "depthTexture/d3dPs2.txt" );
+        return mVs1 && mPs1 && mVs2 && mPs2;
     }
 
     bool createOGLShaders()
     {
-        Renderer & r = gRenderer;
-
-        const char * code;
-
-        code =
-            "!!ARBvp1.0 \n"
-            "ATTRIB iPos = vertex.position; \n"
-            "OUTPUT oPos = result.position; \n"
-            "MOV oPos, iPos; \n"
-            "END";
-        mVs1.attach( r.createVtxShader( LANG_OGL_ARB, code ) );
-        if( mVs1.empty() ) return false;
-
-        // success
-        return true;
+        mVs1 = gShaderDict.getResourceHandle( "depthTexture/oglVs1.txt" );
+        mPs1 = gShaderDict.getResourceHandle( "depthTexture/oglPs1.txt" );
+        mVs2 = gShaderDict.getResourceHandle( "depthTexture/oglVs2.txt" );
+        mPs2 = gShaderDict.getResourceHandle( "depthTexture/oglPs2.txt" );
+        return mVs1 && mPs1 && mVs2 && mPs2;
     }
 
 public:
@@ -179,11 +113,8 @@ public:
 
     void destroy()
     {
+		mTarget.reset();
         mDepth.reset();
-        mVs1.reset();
-        mVs2.reset();
-        mPs1.reset();
-        mPs2.reset();
     }
 
     void render()
@@ -197,14 +128,15 @@ public:
             float u, v;
         } vb[] = 
         {
-            { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f },
-            { -1.0f,  1.0f, 0.0f, 0.0f, 1.0f },
-            {  1.0f, -1.0f, 1.0f, 1.0f, 0.0f },
-            {  1.0f,  1.0f, 1.0f, 1.0f, 1.0f },
+            // x     y     z     u     v
+            { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f },
+            { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f },
+            { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
+            { 1.0f, 0.0f, 1.0f, 1.0f, 0.0f },
         };
         r.bindTexture( 0, 0 );
         r.bindTexture( 1, 0 );
-        r.bindShaders( mVs1.get(), mPs1.get() );
+        r.bindShaderHandles( mVs1, mPs1 );
         r.setRenderTarget( 0, mTarget.get() );
         r.setRenderDepth( mDepth.get() );
         r.clearScreen();
@@ -215,11 +147,12 @@ public:
         // draw depth texture to screen
         r.setRenderTarget( 0, 0 );
         r.setRenderDepth( 0 );
-        r.bindTexture( 0, mTarget.get() );
-        r.bindTexture( 1, mDepth.get() );
-        r.bindShaders( mVs2.get(), mPs2.get() );
+        r.bindTexture( 0, mDepth.get() );
+        r.bindTexture( 1, mTarget.get() );
+        r.bindShaderHandles( mVs2, mPs2 );
         r.clearScreen();
         r.draw2DQuad( DQ_OPAQUE | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS );
+        //*/
     }
 };
 
@@ -235,11 +168,7 @@ public:
 
     bool onRendererCreate()
     {
-        Renderer & r = gRenderer;
-
-        if(0 != r.getCaps( CAPS_PSCAPS )) mScene = &mSceneWithPs; else mScene = &mSceneNoPs;
-        //mScene = ( 0 != r.getCaps( CAPS_PSCAPS ) ) ? &mSceneWithPs : &mSceneNoPs;
-
+        mScene = ( 0 != gRenderer.getCaps( CAPS_PSCAPS ) ) ? (Scene*)&mSceneWithPs : (Scene*)&mSceneNoPs;
         return mScene->create();
     }
 
