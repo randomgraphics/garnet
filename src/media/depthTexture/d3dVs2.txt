@@ -3,12 +3,14 @@
 void main( in float4  iPos : POSITION,
            in float2  iTex : TEXCOORD0,
            out float4 oPos : POSITION,
-           out float4 oTex : TEXCOORD0 )
+           out float4 oTex0 : TEXCOORD0,
+           out float2 oTex1 : TEXCOORD1)
 {
    oPos.x = iPos.x *  2 - 1;
    oPos.y = iPos.y * -2 + 1;
    oPos.zw = iPos.zw;
-   oTex.xy = iTex;
-   oTex.z = 0.3;
-   oTex.w = 1.0;
+   oTex0.xy = iTex;
+   oTex0.z = 0.3;
+   oTex0.w = 1.0;
+   oTex1 = iTex;
 }
