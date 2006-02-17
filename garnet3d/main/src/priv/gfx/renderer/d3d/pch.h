@@ -27,6 +27,11 @@
 #include <d3dx9.h>
 #include <dxerr9.h>
 
+#if GN_XENON
+#define D3DUSAGE_DYNAMIC D3DUSAGE_CPU_CACHED_MEMORY
+#define D3DLOCK_DISCARD 0
+#endif
+
 #include "garnet/base/pragma.h"
 
 // *****************************************************************************

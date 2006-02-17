@@ -1,6 +1,7 @@
-Import( 'env' )
+Import( 'env GN_conf' )
 
-env.GN_build_program(
-        'GNoglTest',
-        env.GN_glob('*.cpp'),
-        libs=Split('GNogl') )
+if 'xenon' != GN_conf['compiler']:
+    env.GN_build_program(
+            'GNoglTest',
+            env.GN_glob('*.cpp'),
+            libs=Split('GNogl') )

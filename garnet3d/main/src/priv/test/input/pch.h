@@ -11,7 +11,9 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
 
-#if GN_MSWIN
+#if GN_XENON
+#include <xtl.h>
+#elif GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #endif

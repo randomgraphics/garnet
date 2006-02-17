@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicMswInput.h"
 
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
 
 // *****************************************************************************
 //    init / quit functions

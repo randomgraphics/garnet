@@ -470,13 +470,13 @@ namespace GN { namespace gfx
         virtual void drawFinish();
         virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numPrim,
+                                  size_t        numPrims,
                                   size_t        startVtx,
                                   size_t        minVtxIdx,
                                   size_t        numVtx,
                                   size_t        startIdx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numPrim,
+                           size_t        numPrims,
                            size_t        startVtx );
         virtual void drawIndexedUp(
                              PrimitiveType    prim,

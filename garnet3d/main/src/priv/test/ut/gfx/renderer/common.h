@@ -100,9 +100,9 @@ struct GfxResources
             // draw to rt3
             r.setRenderTarget( 0, rt3 );
             r.bindTexture( 0, rt1 );
-            r.drawQuad( 0, 0, 1, 0.5 );
+            r.draw2DQuad( 0, 0, 1, 0.5 );
             r.bindTexture( 0, rt2 );
-            r.drawQuad( 0, 0.5, 1, 1 );
+            r.draw2DQuad( 0, 0.5, 1, 1 );
 
             // draw to screen
             r.setRenderTarget( 0, 0 );
@@ -175,7 +175,7 @@ protected:
     //
     void ntWindowAndNTRenderWindow()
     {
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
         cp.clientWidth = 236;
@@ -194,7 +194,7 @@ protected:
 
     void externalWindow()
     {
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
         cp.clientWidth = 236;

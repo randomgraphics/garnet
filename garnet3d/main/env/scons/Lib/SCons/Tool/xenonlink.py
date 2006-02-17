@@ -118,7 +118,7 @@ def generate(env):
     env['SHLINKCOM']   =  compositeLinkAction
     env.Append(SHLIBEMITTER = [win32LibEmitter])
     env['LINK']        = 'link'
-    env['LINKFLAGS']   = SCons.Util.CLVar('/nologo')
+    env['LINKFLAGS']   = SCons.Util.CLVar('/nologo /subsystem:xbox /MACHINE:PPCBE')
     env['_PDB'] = pdbGenerator
     env['LINKCOM'] = '${TEMPFILE("$LINK $LINKFLAGS /OUT:$TARGET.win32 $( $_LIBDIRFLAGS $) $_LIBFLAGS $_PDB $SOURCES.win32")}'
     env.Append(PROGEMITTER = [prog_emitter])

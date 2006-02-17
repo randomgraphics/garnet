@@ -2,7 +2,7 @@
 #include "d3dRenderer.h"
 #include "d3dResource.h"
 
-#if GN_MSVC
+#if GN_MSVC && !GN_XENON
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "dxerr9.lib" )
 #if GN_DEBUG

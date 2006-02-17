@@ -101,6 +101,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
     // make sure at least one state is dirty
     GN_ASSERT( mFfpDirtyFlags.u32 );
 
+#if !GN_XENON
     if( mFfpDirtyFlags.TransformWorld )
     {
         Matrix44f mat = Matrix44f::sTranspose( mTransformWorld.top() );
@@ -118,6 +119,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
         Matrix44f mat = Matrix44f::sTranspose( mTransformProj.top() );
         GN_DX_CHECK( mDevice->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
     }
+#endif
 
     if( mFfpDirtyFlags.Viewport )
     {
@@ -155,6 +157,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
         GN_DX_CHECK( mDevice->SetScissorRect( &rc ) );
     }
 
+#if !GN_XENON
     if( mFfpDirtyFlags.Light0Diffuse || mFfpDirtyFlags.Light0Pos )
     {
         D3DLIGHT9 d3dlight;
@@ -225,6 +228,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
             }
         }
     }
+#endif
 
     // clear dirty flags
     mFfpDirtyFlags.u32 = 0;

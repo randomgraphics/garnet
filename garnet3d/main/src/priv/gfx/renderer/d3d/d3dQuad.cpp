@@ -11,7 +11,9 @@ struct D3DQuadVertex
     enum
     {
         FVF_VS = D3DFVF_XYZW | D3DFVF_TEX1,
+#if !GN_XENON
         FVF_FFP = D3DFVF_XYZRHW | D3DFVF_TEX1,
+#endif
     };
 };
 
@@ -175,7 +177,11 @@ bool GN::gfx::D3DQuad::deviceCreate()
     }
     else
     {
+#if !GN_XENON
         mFVF = D3DQuadVertex::FVF_FFP;
+#else
+        GN_UNEXPECTED(); // Program should not reach here on Xenon.
+#endif
     }
 
     // create pixel shader
