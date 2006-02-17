@@ -415,8 +415,8 @@ void GN::gfx::D3DQuad::drawQuads(
         const int statePairs[] =
         {
             RS_BLENDING     , ( DQ_OPAQUE & options ) ? RSV_FALSE : RSV_TRUE,
+            RS_DEPTH_WRITE  , ( DQ_ENABLE_DEPTH_WRITE & options ) ? RSV_TRUE : RSV_FALSE,
             RS_DEPTH_TEST   , RSV_TRUE,
-            RS_DEPTH_WRITE  , RSV_FALSE,
             RS_CULL_MODE    , RSV_CULL_NONE,
         };
         r.setRenderStates( statePairs, sizeof(statePairs)/sizeof(statePairs[0])/2 );

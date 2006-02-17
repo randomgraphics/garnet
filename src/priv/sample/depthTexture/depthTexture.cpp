@@ -141,7 +141,7 @@ public:
         r.setRenderDepth( mDepth.get() );
         r.clearScreen();
         r.drawQuads(
-            DQ_3D_POSITION | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS,
+            DQ_ENABLE_DEPTH_WRITE | DQ_3D_POSITION | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS,
             &vb[0].x, &vb[0].u, sizeof(QuadVert), 1 );
 
         // draw depth texture to screen

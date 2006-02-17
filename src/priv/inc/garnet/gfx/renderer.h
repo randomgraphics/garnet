@@ -323,9 +323,14 @@ namespace GN { namespace gfx
         DQ_3D_POSITION = 1<<4,
 
         //!
-        //! Draw quad without alpha-blending.
+        //! Disable blending. Default is enabled.
         //!
         DQ_OPAQUE = 1<<5,
+
+        //!
+        //! Enable depth write. Default is disabled.
+        //!
+        DQ_ENABLE_DEPTH_WRITE = 1 << 6,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合

@@ -137,14 +137,16 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
             GN_INFO( "\n"
                 "Usage : %s [options]\n\n"
                 "Options : (options are case-insensitive)\n"
-                "    -h, -?     : Show help screen.\n"
-                "    -ref       : Use reference device.\n"
-                "    -ogl       : Use OpenGL renderer.\n",
+                "    -h, -?             : Show help screen.\n"
+                "    -ref               : Use reference device.\n"
+                "    -d3d, -ogl, -fake  : Select rendering API.\n",
                 GN::path::baseName(argv[0]).cstr() );
             return false;
         }
-        if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
-        if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+        else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
+        else if( 0 == strCmpI( a, "-d3d" ) ) mInitParam.rapi = gfx::API_D3D;
+        else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+        else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
     }
 
     // success
