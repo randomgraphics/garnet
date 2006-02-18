@@ -12,17 +12,18 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - GFX system
+    - support render-to-texture on xenon (including depth texture)
+    - more display details in DispDesc
   - code page convertor
   - import a GUI toolkit
-  - implement core module
-  - resource managers (textures, meshes, materials/effects)
   - sample application
     - render to texture
     - GLSL test application
   - mesh class
   - effect class: ut
   - blender exporter/importer
-  - gui system
+  - GUI system
     - font class
 
 - p2
@@ -48,6 +49,8 @@ TODO
 DONE
 ====
 
+- resource managers (textures, meshes, materials/effects)
+- implement core module
 - POSIX implementation
   - implement input module on POSIX platform
   - implement GNogl on POSIX platform
