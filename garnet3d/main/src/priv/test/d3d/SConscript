@@ -1,7 +1,0 @@
-Import( 'env' )
-
-if 'win32' == env['PLATFORM']:
-    env.GN_build_program(
-            'GNd3dTest',
-            env.GN_glob('*.cpp'),
-            libs=Split('GNd3d') )

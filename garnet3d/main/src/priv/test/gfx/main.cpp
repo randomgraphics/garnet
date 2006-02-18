@@ -283,23 +283,22 @@ public:
 };
 
 #if GN_MSWIN
-#define DEFAULT_MODULE "D3D"
+#define DEFAULT_MODULE "-D3D"
 #else
-#define DEFAULT_MODULE "OGL"
+#define DEFAULT_MODULE "-OGL"
 #endif
 
 //!
 //! Print usage
 //!
-void usage( const char * appName )
+void usage()
 {
     printf(
         "GFX module test application.\n"
         "\n"
-        "Usage: %s [-d3d|-ogl|-fake]\n"
+        "Usage: GNgfxTest [-d3d|-ogl|-fake]\n"
         "\n"
         "Note: default module is %s\n",
-        appName,
         DEFAULT_MODULE );
 }
 
@@ -314,7 +313,7 @@ int main( int argc, const char * argv[] )
 
     if( argc < 2 )
     {
-        usage( argv[0] );
+        usage();
         module = DEFAULT_MODULE;
     }
     else

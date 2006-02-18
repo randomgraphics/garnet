@@ -22,6 +22,7 @@ struct D3DQuadStruct
     D3DQuadVertex v[4];
 };
 
+#if GN_XENON
 //
 //
 // -----------------------------------------------------------------------------
@@ -64,6 +65,7 @@ sAssembleVS( LPDIRECT3DDEVICE9 dev, const char * code )
 
     GN_UNGUARD;
 }
+#endif
 
 //
 //
@@ -163,26 +165,19 @@ bool GN::gfx::D3DQuad::deviceCreate()
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // create vertex shader
-    if( r.supportShader( VERTEX_SHADER, LANG_D3D_ASM ) )
-    {
-        static const char * code =
-            "vs.1.1 \n"
-            "dcl_position0 v0 \n"
-            "dcl_texcoord0 v1 \n"
-            "mov oPos, v0 \n"
-            "mov oT0, v1 \n";
-        mVtxShader = sAssembleVS( dev, code );
-        if( 0 == mVtxShader ) return false;
-        mFVF = D3DQuadVertex::FVF_VS;
-    }
-    else
-    {
-#if !GN_XENON
-        mFVF = D3DQuadVertex::FVF_FFP;
+#if GN_XENON
+    static const char * code =
+        "vs.1.1 \n"
+        "dcl_position0 v0 \n"
+        "dcl_texcoord0 v1 \n"
+        "mov oPos, v0 \n"
+        "mov oT0, v1 \n";
+    mVtxShader = sAssembleVS( dev, code );
+    if( 0 == mVtxShader ) return false;
+    mFVF = D3DQuadVertex::FVF_VS;
 #else
-        GN_UNEXPECTED(); // Program should not reach here on Xenon.
+    mFVF = D3DQuadVertex::FVF_FFP;
 #endif
-    }
 
     // create pixel shader
     if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )

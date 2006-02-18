@@ -120,6 +120,13 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
 {
     GN_GUARD;
 
+#if GN_XENON
+    GN_UNUSED_PARAM( argc );
+    GN_UNUSED_PARAM( argv );
+    mInitParam.rapi = gfx::API_D3D;
+    mInitParam.ro = gfx::RendererOptions();
+    mInitParam.iapi = input::API_NATIVE;
+#else
     // setup defualt parameters
 #if GN_MSWIN
     mInitParam.rapi = gfx::API_D3D;
@@ -127,7 +134,7 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
     mInitParam.rapi = gfx::API_OGL;
 #endif
     mInitParam.ro = gfx::RendererOptions();
-    mInitParam.useDInput = false;
+    mInitParam.iapi = input::API_NATIVE;
 
     for( int i = 1; i < argc; ++i )
     {
@@ -148,6 +155,7 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
         else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
         else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
     }
+#endif
 
     // success
     return true;
@@ -202,7 +210,7 @@ bool GN::sample::SampleApp::initInput()
     quitInput();
 
     // create INPUT system
-    GN::input::Input * input = GN::input::createInputSystem();
+    GN::input::Input * input = GN::input::createInputSystem( mInitParam.iapi );
     if( 0 == input ) return false;
 
     if( gRendererPtr )

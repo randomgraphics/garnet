@@ -254,12 +254,19 @@ namespace GN
             //@}
         };
 
+        enum InputApi
+        {
+            API_NATIVE,    //!< OS native API (Win32 or X11 or XInput)
+            API_DINPUT,    //!< DirectInput
+            API_XINPUT,    //!< XInput
+            API_FAKE,      //!< Fake
+            NUM_INPUT_API, //!< input API count.
+        };
+
         //!
         //! Create instance of input system.
         //!
-        //! \param useDirectInput   Only valid on MS Windows system.
-        //!
-        Input * createInputSystem( bool useDirectInput = false );
+        Input * createInputSystem( InputApi = API_NATIVE );
 
         //!
         //! convert string to keycode
