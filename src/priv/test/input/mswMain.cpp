@@ -26,7 +26,8 @@ class InputTest
 
     bool createInput( const char * api )
     {
-        mInput.attach( GN::input::createInputSystem( 0 == GN::strCmp("DI",api) ) );
+        mInput.attach( GN::input::createInputSystem(
+            0 == GN::strCmp("DI",api) ? GN::input::API_DINPUT : GN::input::API_NATIVE ) );
         if( !mInput || !mInput->attachToWindow( 0, mWin.getWindow() ) ) return false;
 
         // connect to input signals

@@ -7,10 +7,10 @@
 #if GN_XENON
 
 #define PRINT_ERROR() GN_ERROR( "Xenon does not support funciton : %s", GN_FUNCTION )
-void GN::win::setTitle( HandleType, const char * ) { PRINT_ERROR(); }
+void GN::win::setTitle( HandleType, const char * ) {}
 bool GN::win::getClientSize( HandleType, HandleType, uint32_t *, uint32_t * ) { PRINT_ERROR(); return false; }
-void GN::win::processMswMessages( HandleType, bool ) { PRINT_ERROR(); }
-const char * GN::win::msg2str( uint32_t ) {  PRINT_ERROR(); return ""; }
+void GN::win::processMswMessages( HandleType, bool ) {}
+const char * GN::win::msg2str( uint32_t ) { PRINT_ERROR(); return ""; }
 
 // *****************************************************************************
 // POSIX implementation

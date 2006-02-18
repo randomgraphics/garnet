@@ -219,7 +219,9 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 
     // Initiate adapter ID
     mAdapter = 0;
-#if !GN_XENON
+#if GN_XENON
+    devtypes.push_back( D3DDEVTYPE_HAL );
+#else
     // Look for nvidia adapter
     for( uint32_t i = 0; i < nAdapter; ++i )
     {

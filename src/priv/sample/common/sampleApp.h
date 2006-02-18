@@ -85,7 +85,7 @@ namespace GN
             {
                 gfx::RendererAPI rapi;
                 gfx::RendererOptions ro;
-                bool useDInput;
+                input::InputApi iapi;
             };
 
             InitParam mInitParam;

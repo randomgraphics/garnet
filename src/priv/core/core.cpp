@@ -53,13 +53,14 @@ namespace GN { namespace core
         {
             GN_GUARD_ALWAYS;
 
-            GN_INFO( "Initialize garnet core ..." );
+            GN_INFO( "Garnet core startup ..." );
 
             if( !mShaderDict.init() ) return false;
             if( !mTextureDict.init() ) return false;
             if( !mEffectDict.init() ) return false;
 
             // success
+            GN_INFO( "Garnet core startup ... Done." );
             return true;
 
             // failed
@@ -71,11 +72,13 @@ namespace GN { namespace core
         {
             GN_GUARD_ALWAYS;
 
-            GN_INFO( "Shutdown garnet core ..." );
+            GN_INFO( "Garnet core shutdown ..." );
 
             mEffectDict.quit();
             mTextureDict.quit();
             mShaderDict.quit();
+
+            GN_INFO( "Garnet core shutdown ... Done." );
 
             GN_UNGUARD_ALWAYS_NO_THROW;
         }

@@ -59,12 +59,12 @@ namespace GN { namespace gfx
         //!
         //! Get window handle
         //!
-        HWND getWindow() const { return 0; }
+        HWND getWindow() const { return (HWND)1; }
 
         //!
         //! Get monitor handle
         //!
-        HMONITOR getMonitor() const { return 0; }
+        HMONITOR getMonitor() const { return (HMONITOR)1; }
 
         //!
         //! Get client size
