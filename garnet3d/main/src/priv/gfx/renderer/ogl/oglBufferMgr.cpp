@@ -247,9 +247,7 @@ void GN::gfx::OGLRenderer::setVtxBufUp( const void * data, size_t stride )
 
     GN_ASSERT( p );
 
-    const VtxFmtDesc & vtxFmt = p->getFormat();
-
-    GN_ASSERT( 1 == vtxFmt.numStreams );
+    GN_ASSERT( 1 == p->getFormat().numStreams );
 
     p->bindBuffer(
         0, // stream index

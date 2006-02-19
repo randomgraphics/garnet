@@ -47,8 +47,12 @@
 
 // disable vc8.0 CRT warnings
 #if _MSC_VER >= 1400
+#ifndef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE
+#endif
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
+#endif
 #endif
 
 // *****************************************************************************

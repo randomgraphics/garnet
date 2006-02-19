@@ -136,35 +136,20 @@ def GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb ):
     else:
         return []
 
-# Брвы static object
-def GN_build_static_object( env, source=[], pchstop=0, pchcpp=0, pdb=0 ):
-    env = env.Copy()
-    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    return env.Object(source)
-
 # Брвы static object list
 def GN_build_static_objects( env, sources=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
-    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    return [env.Object(x) for x in sources]
-
-# Брвы shared object
-def GN_build_shared_object( env, source=[], pchstop=0, pchcpp=0, pdb=0 ):
-    env = env.Copy()
-    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
-    if GN_conf['static']:
-        return env.Object(source)
-    else:
-        return env.SharedObject(source)
+    pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    return [env.Object(x) for x in sources] + pchobj
 
 # Брвы shared object list
 def GN_build_shared_objects( env, sources=[], pchstop=0, pchcpp=0, pdb=0 ):
     env = env.Copy()
-    GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
+    pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if GN_conf['static']:
-        return [env.Object(x) for x in sources]
+        return [env.Object(x) for x in sources] + pchobj
     else:
-        return [env.SharedObject(x) for x in sources]
+        return [env.SharedObject(x) for x in sources] + pchobj
 
 # Брвы static library
 def GN_build_static_library( env, target, sources=[],
@@ -269,9 +254,7 @@ SConsEnvironment.GN_relpath = GN_relpath;
 #SConsEnvironment.GN_setup_PCH_PDB = GN_setup_PCH_PDB;
 SConsEnvironment.GN_glob = GN_glob
 SConsEnvironment.GN_has_manifest = GN_has_manifest
-SConsEnvironment.GN_build_static_object = GN_build_static_object
 SConsEnvironment.GN_build_static_objects = GN_build_static_objects
-SConsEnvironment.GN_build_shared_object = GN_build_shared_object
 SConsEnvironment.GN_build_shared_objects = GN_build_shared_objects
 SConsEnvironment.GN_build_static_library = GN_build_static_library
 SConsEnvironment.GN_build_shared_library = GN_build_shared_library
@@ -367,7 +350,7 @@ def default_env( options = None ):
         libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
         libs['strel'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
     elif 'win32' == env['PLATFORM']:
-        libs['common'] += Split('kernel32 user32 gdi32 shlwapi')
+        libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
@@ -604,9 +587,10 @@ sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase GNgfxLib GNwin GNinput GNgui')
-tests = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNft2Test' )
+tests = Split( 'GNut GNgfxTest GNinputTest GNwinTest GNft2Test GNfoxTest' )
 samples = Split( 'GNdepthTexture GNrenderToTexture' )
-programs = tests + samples
+tools = Split( 'FOXreswrap' )
+programs = tests + samples + tools
 
 # populate sample directory
 doInstall(
@@ -647,7 +631,7 @@ if GN_conf['run_unit_tests']:
 doInstall(
     'sdk',
     os.path.join('bin', 'sdk','bin'),
-    sharedBins )
+    sharedBins + tools )
 doInstall(
     'sdk',
     os.path.join('bin', 'sdk','lib'),

@@ -1,3 +1,5 @@
+ft2     : Freetype 2.1.10 (http://www.freetype.org)
+fox     : FOX-TOOLKIT 1.6.0 RC3 (http://www.fox-toolkit.org)
 glew    : glew-1.3.1 (http://glew.sourceforge.net)
 jpeg    : jpeg-6b (http://www.ijg.org)
 lua     : lua-5.1-beta (http://www.lua.org)
