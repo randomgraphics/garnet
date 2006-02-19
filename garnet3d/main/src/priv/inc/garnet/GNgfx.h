@@ -31,7 +31,6 @@ namespace GN
 #include "gfx/renderState.h"
 #include "gfx/vertexFormat.h"
 #include "gfx/misc.h"
-#include "gfx/d3dToString.h"
 
 // Platform-independent renderer.
 // Load GNgfxD3D.dll and GNgfxOGL.dll (or libGNgfxOGL.so) to use it.

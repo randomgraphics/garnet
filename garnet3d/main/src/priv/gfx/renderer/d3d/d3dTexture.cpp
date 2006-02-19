@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3dTexture.h"
 #include "d3dRenderer.h"
+#include "garnet/GNd3d.h"
 
 // *****************************************************************************
 // local functions
@@ -106,108 +107,6 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 
 //
 //
-// -----------------------------------------------------------------------------
-static inline GN::gfx::ClrFmt sD3DFMT2ClrFmt( D3DFORMAT d3dfmt )
-{
-    // determine texture format
-    switch( d3dfmt )
-    {
-        // 32 bits
-        case D3DFMT_A8R8G8B8     : return GN::gfx::FMT_BGRA_8_8_8_8;
-        case D3DFMT_X8R8G8B8     : return GN::gfx::FMT_BGRX_8_8_8_8;
-        //case D3DFMT_A2B10G10R10  : return GN::gfx::FMT_RGBA_10_10_10_2;
-        case D3DFMT_G16R16       : return GN::gfx::FMT_RG_16_16;
-        //case D3DFMT_X8L8V8U8     : return GN::gfx::FMT_UVLX_8_8_8_8;
-        //case D3DFMT_Q8W8V8U8     : return GN::gfx::FMT_UVWQ_8_8_8_8;
-        case D3DFMT_V16U16       : return GN::gfx::FMT_UV_16_16;
-        //case D3DFMT_W11V11U10    : return GN::gfx::FMT_UVW_10_11_11;
-        //case D3DFMT_A2W10V10U10  : return GN::gfx::FMT_UVWA_10_10_10_2;
-        case D3DFMT_R32F         : return GN::gfx::FMT_R_32_FLOAT;
-
-        // 16 bits
-        case D3DFMT_R5G6B5       : return GN::gfx::FMT_BGR_5_6_5;
-        case D3DFMT_X1R5G5B5     : return GN::gfx::FMT_BGRX_5_5_5_1;
-        case D3DFMT_A1R5G5B5     : return GN::gfx::FMT_BGRA_5_5_5_1;
-        case D3DFMT_A4R4G4B4     : return GN::gfx::FMT_BGRA_4_4_4_4;
-        //case D3DFMT_X4R4G4B4     : return GN::gfx::FMT_BGRX_4_4_4_4;
-        //case D3DFMT_A8P8         : return GN::gfx::FMT_PA_8_8;
-        case D3DFMT_A8L8         : return GN::gfx::FMT_LA_8_8;
-        case D3DFMT_V8U8         : return GN::gfx::FMT_UV_8_8;
-        //case D3DFMT_L6V5U5       : return GN::gfx::FMT_UVL_5_5_6;
-
-        // 8 bits
-        //case D3DFMT_R3G3B2       : return GN::gfx::FMT_BGR_2_3_3;
-        case D3DFMT_A8           : return GN::gfx::FMT_A_8;
-        //case D3DFMT_A8R3G3B2     : return GN::gfx::FMT_BGRA_2_3_3_8;
-        //case D3DFMT_P8           : return GN::gfx::FMT_P_8;
-        case D3DFMT_L8           : return GN::gfx::FMT_L_8;
-        //case D3DFMT_A4L4         : return GN::gfx::FMT_LA_4_4;
-
-        // compressed formats
-        //case D3DFMT_UYVY         : return GN::gfx::FMT_;
-        //case D3DFMT_YUY2         : return GN::gfx::FMT_;
-        case D3DFMT_DXT1         : return GN::gfx::FMT_DXT1;
-        case D3DFMT_DXT2         : return GN::gfx::FMT_DXT2;
-        case D3DFMT_DXT4         : return GN::gfx::FMT_DXT4;
-#if !GN_XENON
-        case D3DFMT_DXT3         : return GN::gfx::FMT_DXT3;
-        case D3DFMT_DXT5         : return GN::gfx::FMT_DXT5;
-
-        // depth formats
-        case D3DFMT_D16_LOCKABLE : return GN::gfx::FMT_D_16;
-#endif
-        case D3DFMT_D32          : return GN::gfx::FMT_D_32;
-        //case D3DFMT_D15S1        : return GN::gfx::FMT_DS_15_1;
-        case D3DFMT_D24S8        : return GN::gfx::FMT_DS_24_8;
-        case D3DFMT_D16          : return GN::gfx::FMT_D_16;
-        case D3DFMT_D24X8        : return GN::gfx::FMT_DX_24_8;
-        //case D3DFMT_D24X4S4      : return GN::gfx::FMT_DXS_24_4_4;
-
-        default                  :
-            // invalid format, failed
-            GN_ERROR( "Unsupported or invalid D3DFORMAT: '%s'!", GN::gfx::D3DFORMAT2Str(d3dfmt) );
-            return GN::gfx::FMT_INVALID;
-    }
-}
-
-static inline D3DFORMAT sClrFmt2D3DFMT( GN::gfx::ClrFmt clrfmt )
-{
-    // determine texture format
-    switch( clrfmt )
-    {
-        // 32 bits
-        case GN::gfx::FMT_BGRA_8_8_8_8  : return D3DFMT_A8R8G8B8;
-        case GN::gfx::FMT_R_32_FLOAT    : return D3DFMT_R32F;
-
-        // 16 bits
-        case GN::gfx::FMT_BGRA_5_5_5_1  : return D3DFMT_A1R5G5B5;
-        case GN::gfx::FMT_BGR_5_6_5     : return D3DFMT_R5G6B5;
-        case GN::gfx::FMT_LA_8_8        : return D3DFMT_A8L8;
-        case GN::gfx::FMT_UV_8_8        : return D3DFMT_V8U8;
-
-        // 8 bits
-        case GN::gfx::FMT_L_8           : return D3DFMT_L8;
-        case GN::gfx::FMT_A_8           : return D3DFMT_A8;
-
-        // compressed formats
-        case GN::gfx::FMT_DXT1          : return D3DFMT_DXT1;
-        case GN::gfx::FMT_DXT2          : return D3DFMT_DXT2;
-
-        // depth formats
-        case GN::gfx::FMT_D_16          : return D3DFMT_D16;
-        case GN::gfx::FMT_DX_24_8       : return D3DFMT_D24X8;
-        case GN::gfx::FMT_DS_24_8       : return D3DFMT_D24S8;
-        case GN::gfx::FMT_D_32          : return D3DFMT_D32;
-
-        default                       :
-            // invalid format, failed
-            GN_ERROR( "Unsupported or invalid color format: '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
-            return D3DFMT_UNKNOWN;
-    }
-}
-
-//
-//
 // ----------------------------------------------------------------------------
 static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3DRenderer & r )
 {
@@ -219,8 +118,8 @@ static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3DRenderer & r )
         if( D3D_OK == r.checkD3DDeviceFormat( D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, candidates[i] ) )
         {
             // success
-            GN_ASSERT( GN::gfx::FMT_INVALID != sD3DFMT2ClrFmt( candidates[i] ) );
-            return sD3DFMT2ClrFmt( candidates[i] );
+            GN_ASSERT( GN::gfx::FMT_INVALID != GN::gfx::d3d::d3dFormat2ClrFmt( candidates[i] ) );
+            return GN::gfx::d3d::d3dFormat2ClrFmt( candidates[i] );
         }
     }
 
@@ -299,7 +198,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         quit(); return selfOK(); );
 
     // set initialize parameters
-    mInitFormat = sD3DFMT2ClrFmt( info.Format );
+    mInitFormat = d3d::d3dFormat2ClrFmt( info.Format );
     if( (TexType)-1 == mInitType || FMT_INVALID == mInitFormat )
     {
         quit();
@@ -412,7 +311,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
         mInitLevels, format, mInitUsage) ) return false;
 
     // determine D3D format
-    D3DFORMAT d3dfmt = sClrFmt2D3DFMT( format );
+    D3DFORMAT d3dfmt = d3d::clrFmt2D3DFormat( format );
     if( D3DFMT_UNKNOWN == d3dfmt ) return false;
 
     // determine D3D usage & pool
