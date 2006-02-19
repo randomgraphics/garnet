@@ -38,6 +38,19 @@ jpeg_objs = jpeg_env.GN_build_static_objects( env.GN_glob( 'jpeg/*.c' ), pdb = '
 
 fox_env = env.Copy()
 fox_env.Append( CPPPATH = ['../inc/fox'] )
+#fox_conf = env.Configure()
+#if fox_conf.CheckCHeader( 'unistd.h' ) : fox_env.Append( CPPDEFINES=['HAVE_UNISTD_H'] )
+#if fox_conf.CheckCHeader( 'dirent.h' ) : fox_env.Append( CPPDEFINES=['HAVE_DIRENT_H'] )
+#if fox_conf.CheckCHeader( 'sys/time.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_TIME_H'] )
+#if fox_conf.CheckCHeader( 'sys/wait.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_WAIT_H'] )
+#if fox_conf.CheckCHeader( 'sys/param.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_PARAM_H'] )
+#if fox_conf.CheckCHeader( 'sys/select.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_SELECT_H'] )
+#if fox_conf.CheckCHeader( 'sys/ndir.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_NDIR_H'] )
+#if fox_conf.CheckCHeader( 'sys/dir.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_DIR_H'] )
+#if fox_conf.CheckCHeader( 'sys/ipc.h' ) and \
+#   fox_conf.CheckCHeader( 'sys/shm.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_XSHM_H'] )
+#if fox_conf.CheckCHeader( 'sys/mman.h' ) : fox_env.Append( CPPDEFINES=['HAVE_SYS_MMAP_H'] )
+#fox_conf.Finish();
 if 'cl' == env['CC']: fox_env.Append( CCFLAGS = ['/GR'] ) # Enable RTTI for Vistual Studio
 if '/W3' in fox_env['CCFLAGS']: # Decrease warning level.
     fox_env['CCFLAGS'].remove('/W3')

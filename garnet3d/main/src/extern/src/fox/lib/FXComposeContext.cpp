@@ -460,7 +460,7 @@ void FXComposeContext::editDoneCallback(void*,FXComposeContext* cc,void*){
 void FXComposeContext::editDrawCallback(void*,FXComposeContext* cc,void* ptr){
 #ifndef NO_XIM
   XIMPreeditDrawCallbackStruct *drawstruct=(XIMPreeditDrawCallbackStruct*)ptr;
-  XIMText *ximtext=drawstruct->text;
+  // XIMText *ximtext=drawstruct->text; // chenli : remove unused variable.
   FXTRACE((1,"editDrawCallback caret=%d first=%d len=%d\n",drawstruct->caret,drawstruct->chg_first,drawstruct->chg_length));
 #endif
   }
@@ -486,7 +486,7 @@ void FXComposeContext::statusDoneCallback(void*,FXComposeContext* cc,void*){
 
 void FXComposeContext::statusDrawCallback(void*,FXComposeContext* cc,void* ptr){
 #ifndef NO_XIM
-  XIMStatusDrawCallbackStruct* drawstruct=(XIMStatusDrawCallbackStruct*)ptr;
+  // XIMStatusDrawCallbackStruct* drawstruct=(XIMStatusDrawCallbackStruct*)ptr; // chenli: remove unused variable
   FXTRACE((1,"statusDrawCallback\n"));
 #endif
   }

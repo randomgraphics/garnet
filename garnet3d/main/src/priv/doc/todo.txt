@@ -12,6 +12,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - Fix FOXTOOLKIT buile break in cygwin
   - GFX system
     - support render-to-texture on xenon (including depth texture)
   - code page convertor
