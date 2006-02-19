@@ -62,7 +62,14 @@ bool GN::gfx::D3DVtxShaderHlsl::deviceCreate()
 
     GN_ASSERT( !mConstTable && !mD3DShader );
 
-    mD3DShader = d3d::compileVS( getRenderer().getDevice(), mCode.cstr(), mCode.size(), 0, mEntry.cstr(), 0 );
+    mD3DShader = d3d::compileVS(
+        getRenderer().getDevice(),
+        mCode.cstr(),
+        mCode.size(),
+        0, // flags
+        mEntry.cstr(),
+        0, // profile
+        &mConstTable );
     if( 0 == mD3DShader ) return false;
 
     // success

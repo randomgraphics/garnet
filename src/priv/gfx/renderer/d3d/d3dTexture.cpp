@@ -131,6 +131,51 @@ static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3DRenderer & r )
 }
 
 // ****************************************************************************
+//  public utils
+// ****************************************************************************
+
+//!
+//! Convert texture type to D3DRESOURCETYPE
+//!
+D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
+{
+    switch( type )
+    {
+        case TEXTYPE_1D   :
+        case TEXTYPE_2D   : return D3DRTYPE_TEXTURE;
+        case TEXTYPE_3D   : return D3DRTYPE_VOLUMETEXTURE;
+        case TEXTYPE_CUBE : return D3DRTYPE_CUBETEXTURE;
+
+        default:
+            // failed
+            GN_ERROR( "invalid texture type : %d", type );
+            return (D3DRESOURCETYPE)-1;
+    }
+}
+
+//!
+//! Convert texture usage to D3DUSAGE(s)
+//!
+uint32_t GN::gfx::texUsage2D3DUsage( uint32_t usage )
+{
+    uint32_t d3dUsage  = 0;
+    
+    d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
+    d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_DEPTHSTENCIL : 0;
+
+#if GN_XENON
+    if( TEXUSAGE_AUTOGEN_MIPMAP & usage )
+    {
+        GN_WARN( "Xenon does not support mipmap auto-generation!" );
+    }
+#else
+    d3dUsage |= TEXUSAGE_AUTOGEN_MIPMAP & usage ? D3DUSAGE_AUTOGENMIPMAP : 0;
+#endif
+
+    return d3dUsage;
+}
+
+// ****************************************************************************
 //  init / quit functions
 // ****************************************************************************
 
@@ -315,23 +360,14 @@ bool GN::gfx::D3DTexture::deviceRestore()
     if( D3DFMT_UNKNOWN == d3dfmt ) return false;
 
     // determine D3D usage & pool
-    mD3DUsage = 0;
-    mD3DUsage |= TEXUSAGE_RENDER_TARGET & getUsage() ? D3DUSAGE_RENDERTARGET : 0;
-#if GN_XENON
-    if( TEXUSAGE_AUTOGEN_MIPMAP & getUsage() )
-    {
-        GN_WARN( "Xenon does not support mipmap auto-generation!" );
-    }
-#else
-    mD3DUsage |= TEXUSAGE_AUTOGEN_MIPMAP & getUsage() ? D3DUSAGE_AUTOGENMIPMAP : 0;
-#endif
-    mD3DUsage |= TEXUSAGE_DEPTH & getUsage() ? D3DUSAGE_DEPTHSTENCIL : 0;
+    mD3DUsage = texUsage2D3DUsage( getUsage() );
     D3DPOOL d3dpool =
         ( TEXUSAGE_RENDER_TARGET & getUsage() || TEXUSAGE_DEPTH & getUsage() )
         ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED;
 
     // check texture format compatibility
-    HRESULT hr = mRenderer.checkD3DDeviceFormat( mD3DUsage, D3DRTYPE_TEXTURE, d3dfmt );
+    HRESULT hr = mRenderer.checkD3DDeviceFormat(
+        mD3DUsage, texType2D3DResourceType(getType()), d3dfmt );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
@@ -768,16 +804,13 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
 
     LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
 
+    // make sure texture format is supported by current device
+    GN_ASSERT( D3D_OK == mRenderer.checkD3DDeviceFormat(
+        d3dusage, texType2D3DResourceType(getType()), d3dformat ) );
+
     // create new texture
     if( TEXTYPE_1D == type || TEXTYPE_2D == type )
     {
-        if( D3DERR_NOTAVAILABLE == mRenderer.checkD3DDeviceFormat(
-            d3dusage, D3DRTYPE_TEXTURE, d3dformat ) )
-        {
-            GN_ERROR( "unsupported texture format!" );
-            return 0;
-        }
-
         LPDIRECT3DTEXTURE9 result;
         GN_DX_CHECK_RV(
             dev->CreateTexture( width, height, levels,
@@ -788,13 +821,6 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     }
     else if( TEXTYPE_3D == type )
     {
-        if( D3DERR_NOTAVAILABLE == mRenderer.checkD3DDeviceFormat(
-            d3dusage, D3DRTYPE_VOLUMETEXTURE, d3dformat ) )
-        {
-            GN_ERROR( "unsupported texture format!" );
-            return 0;
-        }
-
         LPDIRECT3DVOLUMETEXTURE9 result;
         GN_DX_CHECK_RV(
             dev->CreateVolumeTexture( width, height, depth, levels,
@@ -805,13 +831,6 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     }
     else if( TEXTYPE_CUBE == type )
     {
-        if( D3DERR_NOTAVAILABLE == mRenderer.checkD3DDeviceFormat(
-            d3dusage, D3DRTYPE_CUBETEXTURE, d3dformat ) )
-        {
-            GN_ERROR( "unsupported texture format!" );
-            return 0;
-        }
-
         GN_ASSERT( width == height );
         LPDIRECT3DCUBETEXTURE9 result;
         GN_DX_CHECK_RV(

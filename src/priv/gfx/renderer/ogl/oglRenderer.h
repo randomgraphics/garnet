@@ -280,6 +280,7 @@ namespace GN { namespace gfx
         //@{
 
     public :
+        virtual bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const;
         virtual Texture * createTexture( TexType textype,
                                          uint32_t sx, uint32_t sy, uint32_t sz,
                                          uint32_t levels,

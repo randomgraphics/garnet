@@ -14,6 +14,16 @@ namespace GN { namespace gfx
     class D3DRenderer;
 
     //!
+    //! Convert texture type to D3DRESOURCETYPE
+    //!
+    D3DRESOURCETYPE texType2D3DResourceType( TexType );
+
+    //!
+    //! Convert texture usage to D3DUSAGE(s)
+    //!
+    uint32_t texUsage2D3DUsage( uint32_t );
+
+    //!
     //! D3D texture
     //!
     class D3DTexture : public BasicTexture, public StdClass, public D3DResource

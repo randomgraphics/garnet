@@ -11,7 +11,9 @@ struct D3DQuadVertex
     enum
     {
         FVF_VS = D3DFVF_XYZW | D3DFVF_TEX1,
-#if !GN_XENON
+#if GN_XENON
+        FVF_FFP = FVF_VS,
+#else
         FVF_FFP = D3DFVF_XYZRHW | D3DFVF_TEX1,
 #endif
     };
@@ -86,9 +88,8 @@ bool GN::gfx::D3DQuad::deviceCreate()
         "mov oT0, v1 \n";
     mVtxShader = d3d::assembleVS( dev, code );
     if( 0 == mVtxShader ) return false;
-    mFVF = D3DQuadVertex::FVF_VS;
 #else
-    mFVF = D3DQuadVertex::FVF_FFP;
+    GN_ASSERT( 0 == mVtxShader );
 #endif
 
     // create pixel shader
@@ -249,11 +250,13 @@ void GN::gfx::D3DQuad::drawQuads(
     float scaleY, offsetY;
     if( DQ_USE_CURRENT_VS & options )
     {
+        GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_VS ) );
         scaleX = 1.0f; offsetX = 0.0f;
         scaleY = 1.0f; offsetY = 0.0f;
     }
     else if( mVtxShader )
     {
+        GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_VS ) );
         if( DQ_WINDOW_SPACE & options )
         {
             D3DVIEWPORT9 vp;
@@ -271,6 +274,7 @@ void GN::gfx::D3DQuad::drawQuads(
     }
     else
     {
+        GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_FFP ) );
         if( DQ_WINDOW_SPACE & options )
         {
             scaleX =  2.0f;
@@ -363,7 +367,6 @@ void GN::gfx::D3DQuad::drawQuads(
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3DQuadVertex) ) );
     GN_ASSERT( mIdxBuf );
     GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
-    GN_DX_CHECK( dev->SetFVF( mFVF ) );
 
     // draw
     GN_DX_CHECK( dev->DrawIndexedPrimitive(

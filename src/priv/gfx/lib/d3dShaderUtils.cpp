@@ -43,7 +43,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entry, const char * profile )
+LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -61,7 +61,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVS( LPDIRECT3DDEVICE9 dev, const ch
             sRefineFlags(flags,true),
             &bin,
             &err,
-            NULL )) )
+            constTable )) )
     {
         sPrintShaderCompileError( hr, code, err );
         return 0;
@@ -84,7 +84,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVS( LPDIRECT3DDEVICE9 dev, const ch
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags, const char * entry, const char * profile )
+LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -102,7 +102,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::compileVSFromFile( LPDIRECT3DDEVICE9 dev, 
             sRefineFlags(flags,true),
             &bin,
             &err,
-            NULL )) )
+            constTable )) )
     {
         sPrintShaderCompileError( hr, file, err );
         return 0;
@@ -201,7 +201,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d::assembleVSFromFile( LPDIRECT3DDEVICE9 dev,
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entry, const char * profile )
+LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, uint32_t flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -219,7 +219,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePS( LPDIRECT3DDEVICE9 dev, const cha
             sRefineFlags(flags,true),
             &bin,
             &err,
-            NULL )) )
+            constTable )) )
     {
         sPrintShaderCompileError( hr, code, err );
         return 0;
@@ -242,7 +242,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePS( LPDIRECT3DDEVICE9 dev, const cha
 //
 //
 // -----------------------------------------------------------------------------
-LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags, const char * entry, const char * profile )
+LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
 
@@ -260,7 +260,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d::compilePSFromFile( LPDIRECT3DDEVICE9 dev, c
             sRefineFlags(flags,true),
             &bin,
             &err,
-            NULL )) )
+            constTable )) )
     {
         sPrintShaderCompileError( hr, file, err );
         return 0;
