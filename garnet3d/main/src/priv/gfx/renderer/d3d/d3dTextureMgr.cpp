@@ -1,10 +1,27 @@
 #include "pch.h"
 #include "d3dRenderer.h"
 #include "d3dTexture.h"
+#include "garnet/GNd3d.h"
 
 // *****************************************************************************
 // interface functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::supportTextureFormat(
+    TexType type, uint32_t usage, ClrFmt format ) const
+{
+    GN_GUARD;
+
+    return D3D_OK == checkD3DDeviceFormat(
+        texUsage2D3DUsage(usage),
+        texType2D3DResourceType(type),
+        d3d::clrFmt2D3DFormat(format) );
+
+    GN_UNGUARD;
+}
 
 //
 //

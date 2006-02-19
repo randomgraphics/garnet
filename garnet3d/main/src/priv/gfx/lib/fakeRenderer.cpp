@@ -158,6 +158,8 @@ namespace GN { namespace gfx
 
         //@{
 
+    private:
+
         class FakeTexture : public Texture
         {
             std::vector<uint8_t> mBuffer;
@@ -219,6 +221,9 @@ namespace GN { namespace gfx
             virtual void * getAPIDependentData() const { return 0; }
         };
 
+    public:
+
+        bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const { return true; }
         virtual Texture *
         createTexture( TexType textype,
                        uint32_t sx, uint32_t sy, uint32_t sz,

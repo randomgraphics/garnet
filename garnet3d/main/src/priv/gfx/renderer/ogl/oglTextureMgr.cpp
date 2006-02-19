@@ -151,6 +151,15 @@ sLoadTex2D( GN::gfx::Renderer & r, const GN::gfx::ImageDesc & desc, const uint8_
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::gfx::OGLRenderer::supportTextureFormat( TexType, uint32_t, ClrFmt ) const
+{
+    GN_UNIMPL_WARNING();
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::Texture *
 GN::gfx::OGLRenderer::createTexture( TexType  type,
                                      uint32_t sx, uint32_t sy, uint32_t sz,

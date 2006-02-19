@@ -847,6 +847,11 @@ namespace GN { namespace gfx
     public:
 
         //!
+        //! Test compability of specific texture format
+        //!
+        virtual bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const = 0;
+
+        //!
         //! Create new texture.
         //!
         //! \param textype     texture type
