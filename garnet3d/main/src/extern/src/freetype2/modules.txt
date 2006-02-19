@@ -1,0 +1,21 @@
+autofit    # auto-fitter
+base       # base component (public APIs)
+bdf        # BDF font driver
+cache      # cache sub-system
+cff        # CFF/CEF font driver
+cid        # PostScript CID-keyed font driver
+gzip       # support for gzip-compressed files
+lzw        # support for LZW-compressed files
+#otvalid    # validation of OpenType tables
+pcf        # PCF font driver
+pfr        # PFR/TrueDoc font driver
+psaux      # common PostScript routines module
+pshinter   # PostScript hinter module
+psnames    # PostScript names handling
+raster     # monochrome rasterizer
+smooth     # anti-aliased rasterizer
+sfnt       # SFNT-based format support routines
+truetype   # TrueType font driver
+type1      # PostScript Type 1 font driver
+type42     # PostScript Type 42 (embedded TrueType) driver
+winfonts   # Windows FON/FNT font driver

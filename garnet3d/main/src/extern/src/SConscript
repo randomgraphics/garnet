@@ -30,6 +30,7 @@ jpeg_objs = jpeg_env.GN_build_static_objects( env.GN_glob( 'jpeg/*.c' ), pdb = '
 # build source list
 srcs = []
 if 'xenon' != GN_conf['compiler']: srcs += env.GN_glob( 'glew/*.c' )
-srcs += env.GN_glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp') ) + jpeg_objs
+
+srcs += env.GN_glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True ) + jpeg_objs
 
 env.GN_build_static_library( 'GNextern', srcs )
