@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3dQuad.h"
 #include "d3dRenderer.h"
-#include "d3dUtils.h"
+#include "garnet/GNd3d.h"
 
 struct D3DQuadVertex
 {
@@ -21,94 +21,6 @@ struct D3DQuadStruct
 {
     D3DQuadVertex v[4];
 };
-
-#if GN_XENON
-//
-//
-// -----------------------------------------------------------------------------
-static LPDIRECT3DVERTEXSHADER9
-sAssembleVS( LPDIRECT3DDEVICE9 dev, const char * code )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // Assemble shader.
-    GN::AutoComPtr<ID3DXBuffer> bin;
-    GN::AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr = D3DXAssembleShader(
-        code, (UINT)GN::strLen(code),
-        NULL, NULL, // no macros, no includes,
-#if GN_DEBUG
-        D3DXSHADER_DEBUG,
-#else
-        0,
-#endif
-        &bin,
-        &err );
-    if( FAILED( hr ) )
-    {
-        GN::gfx::printShaderCompileError( hr, code, err );
-        return 0;
-    }
-
-    // Create shader
-    LPDIRECT3DVERTEXSHADER9 result;
-    GN_DX_CHECK_RV(
-        dev->CreateVertexShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
-#endif
-
-//
-//
-// -----------------------------------------------------------------------------
-static LPDIRECT3DPIXELSHADER9
-sAssemblePS( LPDIRECT3DDEVICE9 dev, const char * code )
-{
-    GN_GUARD;
-
-    GN_ASSERT( dev );
-
-    // Assemble shader.
-    GN::AutoComPtr<ID3DXBuffer> bin;
-    GN::AutoComPtr<ID3DXBuffer> err;
-    HRESULT hr = D3DXAssembleShader(
-        code, (UINT)GN::strLen(code),
-        NULL, NULL, // no macros, no includes,
-#if GN_DEBUG
-        D3DXSHADER_DEBUG,
-#else
-        0,
-#endif
-        &bin,
-        &err );
-    if( FAILED( hr ) )
-    {
-        GN::gfx::printShaderCompileError( hr, code, err );
-        return 0;
-    };
-
-    // Create shader
-    LPDIRECT3DPIXELSHADER9 result;
-    GN_DX_CHECK_RV(
-        dev->CreatePixelShader(
-            (const DWORD*)bin->GetBufferPointer(),
-            &result ),
-        NULL );
-
-    // success
-    return result;
-
-    GN_UNGUARD;
-}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -172,7 +84,7 @@ bool GN::gfx::D3DQuad::deviceCreate()
         "dcl_texcoord0 v1 \n"
         "mov oPos, v0 \n"
         "mov oT0, v1 \n";
-    mVtxShader = sAssembleVS( dev, code );
+    mVtxShader = d3d::assembleVS( dev, code );
     if( 0 == mVtxShader ) return false;
     mFVF = D3DQuadVertex::FVF_VS;
 #else
@@ -186,7 +98,7 @@ bool GN::gfx::D3DQuad::deviceCreate()
             "ps.1.1 \n"
             "tex t0 \n"
             "mov r0, t0 \n";
-        mPxlShader = sAssemblePS( dev, code );
+        mPxlShader = d3d::assemblePS( dev, code );
         if( 0 == mPxlShader ) return false;
     }
 

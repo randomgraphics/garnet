@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3dShader.h"
 #include "d3dRenderer.h"
-#include "d3dUtils.h"
+#include "garnet/GNd3d.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -19,7 +19,7 @@ bool GN::gfx::D3DVtxShaderAsm::init( const StrA & code )
 
     mCode = code;
 
-    if( !compileShader() || !analyzeUniforms() || !deviceCreate() || !deviceRestore() )
+    if( !deviceCreate() || !deviceRestore() )
     {
         quit(); return selfOK();
     }
@@ -40,8 +40,6 @@ void GN::gfx::D3DVtxShaderAsm::quit()
     deviceDispose();
     deviceDestroy();
 
-    safeRelease( mMachineCode );
-
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -61,13 +59,20 @@ bool GN::gfx::D3DVtxShaderAsm::deviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_ASSERT( mMachineCode && !mD3DShader );
+    GN_ASSERT( !mD3DShader );
 
-    GN_DX_CHECK_RV(
-        getRenderer().getDevice()->CreateVertexShader(
-            static_cast<const DWORD*>(mMachineCode->GetBufferPointer()),
-            &mD3DShader ),
-        false );
+    // create shader
+    mD3DShader = d3d::assembleVS( getRenderer().getDevice(), mCode.cstr(), mCode.size() );
+    if( 0 == mD3DShader ) return false;
+
+    // get shader function
+    UINT sz;
+    GN_DX_CHECK_RV( mD3DShader->GetFunction( 0, &sz ), false );
+    AutoObjArray<uint8_t> func( new uint8_t[sz] );
+    GN_DX_CHECK_RV( mD3DShader->GetFunction( func.get(), &sz ), false );
+
+    // analyze uniforms
+    if( !analyzeUniforms( (const DWORD*)func.get() ) ) return false;
 
     // success
     return true;
@@ -219,46 +224,12 @@ bool GN::gfx::D3DVtxShaderAsm::queryDeviceUniform( const char * name, HandleType
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderAsm::compileShader()
+bool GN::gfx::D3DVtxShaderAsm::analyzeUniforms( const DWORD * shaderFunction )
 {
     GN_GUARD;
 
-    // compile shader
-    DWORD flag = 0;
-
-#if GN_DEBUG
-    flag |= D3DXSHADER_DEBUG;
-#endif
-
-    AutoComPtr<ID3DXBuffer> err;
-
-    HRESULT hr = D3DXAssembleShader(
-        mCode.cstr(), (UINT)mCode.size(),
-        0, 0, // no defines, no includes
-        flag,
-        &mMachineCode, &err );
-    if( FAILED( hr ) )
-    {
-        printShaderCompileError( hr, mCode.cstr(), err );
-        return false;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderAsm::analyzeUniforms()
-{
-    GN_GUARD;
-
-    GN_ASSERT( mMachineCode );
-
-    DWORD version = D3DXGetShaderVersion( (const DWORD*)mMachineCode->GetBufferPointer() );
+    GN_ASSERT( shaderFunction );
+    DWORD version = D3DXGetShaderVersion( shaderFunction );
 
     if( 0 == version )
     {

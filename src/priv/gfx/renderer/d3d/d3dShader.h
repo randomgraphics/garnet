@@ -104,7 +104,7 @@ namespace GN { namespace gfx
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() { mCode.clear(); mMachineCode = 0; mD3DShader = 0; }
+        void clear() { mCode.clear(); mD3DShader = 0; }
         //@}
 
         // ********************************
@@ -137,7 +137,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
         StrA                    mCode;
-        LPD3DXBUFFER            mMachineCode;
         LPDIRECT3DVERTEXSHADER9 mD3DShader;
 
         size_t mMaxConstF, mMaxConstI, mMaxConstB;
@@ -146,8 +145,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool compileShader();
-        bool analyzeUniforms();
+        bool analyzeUniforms( const DWORD * shaderFunction );
         GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 
@@ -181,7 +179,7 @@ namespace GN { namespace gfx
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() { mCode.clear(); mMachineCode = 0; mD3DShader = 0; }
+        void clear() { mCode.clear(); mD3DShader = 0; }
         //@}
 
         // ********************************
@@ -214,7 +212,6 @@ namespace GN { namespace gfx
         // ********************************
     private:
         StrA                   mCode;
-        LPD3DXBUFFER           mMachineCode;
         LPDIRECT3DPIXELSHADER9 mD3DShader;
 
         size_t mMaxConstF, mMaxConstI, mMaxConstB;
@@ -223,8 +220,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
-        bool compileShader();
-        bool analyzeUniforms();
+        bool analyzeUniforms( const DWORD * );
         GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 

@@ -14,7 +14,6 @@ TODO
 - p1
   - GFX system
     - support render-to-texture on xenon (including depth texture)
-    - more display details in DispDesc
   - code page convertor
   - import a GUI toolkit
   - sample application
@@ -65,8 +64,6 @@ DONE
   - d3d hlsl shader
   - ogl ARB shader
   - Fix link problem of GFX module in static build.
-  - remove dependencies to GNd3d
-    - move d3dformat to string to gfx d3d module
   - fix device-lost bug in GNgfxTest
   - refine device management
   - drawQuad(...)

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "GNbase.h"
+#include "GNgfx.h"
 
 #if GN_MSWIN
 
@@ -32,25 +33,25 @@
 #error "directx 9.0 or higher is required!"
 #endif
 
-namespace GN
+namespace GN { namespace gfx
 {
     //!
     //! Namespace for d3d module
     //!
     namespace d3d
     {
-        //! \name Util functions
+        //! \name Shader compilation utils
         //@{
 
         //!
         //! Compile vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DVERTEXSHADER9 compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0 );
 
         //!
         //! Compile vertex shader from file
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0 );
 
         //!
         //! Assemble vertex shader from string
@@ -65,12 +66,12 @@ namespace GN
         //!
         //! Compile pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DPIXELSHADER9 compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0 );
 
         //!
         //! Compile pixel shader from file
         //!
-        LPDIRECT3DPIXELSHADER9 compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main" );
+        LPDIRECT3DPIXELSHADER9 compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0 );
 
         //!
         //! Assemble pixel shader from string
@@ -82,27 +83,30 @@ namespace GN
         //!
         LPDIRECT3DPIXELSHADER9 assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0 );
 
+        //@}
+
+        //! \name color format utils
+        //@{
+
         //!
-        //! Draw screen aligned quad on screen.
+        //! D3DFORMAT to string. Return "INVALID D3DFORMAT" if failed.
         //!
-        //! \param dev
-        //!     D3D device pointer
-        //! \param left, top, right, bottom
-        //!     Quad position.
-        //!     - On PC platform, position (0,0,1,1) will draw quad that fulfill current viewport,
-        //!       when there's no active vertex shader; or you may achieve same effect by using
-        //!       a "pass-through" vertex shader.
-        //!     - On Xenon, a valid vertex shader must be provided before calling this
-        //!       function. Similar with PC case, position (0,0,1,1) will draw quad as large as
-        //!       current viewport, if you pass-through vertex position in your shader.
+        const char * d3dFormat2Str( D3DFORMAT );
+
         //!
-        //! \param leftU, topV, rightU, bottomV
-        //!     Texture coordinates of quad corners.
+        //! Convert D3DFORMAT to ClrFmt. Return FMT_INVALID if failed.
         //!
-        void drawScreenAlignedQuad(
-            LPDIRECT3DDEVICE9 dev,
-            double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
-            double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 );
+        ClrFmt d3dFormat2ClrFmt( D3DFORMAT );
+
+        //!
+        //! Convert ClrFmt to D3DFORMAT. Return D3DFMT_UNKNOWN if failed
+        //!
+        D3DFORMAT clrFmt2D3DFormat( ClrFmt );
+
+        //@}
+
+        //! \name Misc. utils
+        //@{
 
         //!
         //! Get backbuffer descriptor
@@ -157,9 +161,10 @@ namespace GN
                 : Vector2<uint32_t>( 0, 0 );
             GN_UNGUARD_SLOW;
         }
+
         //@}
     }
-}
+}}
 
 #endif // GN_MSWIN
 

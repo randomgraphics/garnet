@@ -9,6 +9,7 @@
 #if !GN_XENON
 
 #include "GNbase.h"
+#include "GNgfx.h"
 
 #if GN_MSWIN
 #include <windows.h>
@@ -16,16 +17,13 @@
 
 #include <glew.h>
 
-namespace GN
+namespace GN { namespace gfx
 {
     //!
     //! Namespace for ogl module
     //!
     namespace ogl
     {
-        //! \name Util functions
-        //@{
-
         //!
         //! Get OpenGL error string
         //!
@@ -35,10 +33,8 @@ namespace GN
             sErrInfo = (const char*)gluErrorString( errCode );
             return sErrInfo.cstr();
         }
-
-        //@}
     }
-}
+}}
 
 #endif
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3dShader.h"
 #include "d3dRenderer.h"
-#include "d3dUtils.h"
+#include "garnet/GNd3d.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -62,33 +62,8 @@ bool GN::gfx::D3DPxlShaderHlsl::deviceCreate()
 
     GN_ASSERT( !mConstTable && !mD3DShader );
 
-    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
-
-    // compile shader
-    DWORD flag = 0;
-#if GN_DEBUG
-    flag |= D3DXSHADER_DEBUG | D3DXSHADER_SKIPOPTIMIZATION;
-#endif
-    AutoComPtr<ID3DXBuffer> err, bin;
-    HRESULT hr = D3DXCompileShader(
-        mCode.cstr(), (UINT)mCode.size(),
-        0, 0, // no defines, no includes
-        mEntry.cstr(),
-        D3DXGetPixelShaderProfile( dev ),
-        flag,
-        &bin, &err, &mConstTable );
-    if( FAILED( hr ) )
-    {
-        printShaderCompileError( hr, mCode.cstr(), err );
-        return false;
-    }
-
-    // create shader
-    GN_DX_CHECK_RV(
-        dev->CreatePixelShader(
-            static_cast<const DWORD*>(bin->GetBufferPointer()),
-            &mD3DShader ),
-        false );
+    mD3DShader = d3d::compilePS( getRenderer().getDevice(), mCode.cstr(), mCode.size(), 0, mEntry.cstr(), 0 );
+    if( 0 == mD3DShader ) return false;
 
     // success
     return true;
