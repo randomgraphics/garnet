@@ -23,12 +23,13 @@
 *********************************************************************************
 * $Id: FXApp.cpp,v 1.612 2006/01/22 17:58:16 fox Exp $                          *
 ********************************************************************************/
+#include "xincs.h"
+// cheli : fix icl build break: no code should be placed before PCH header.
 #ifdef WIN32
 #if _WIN32_WINNT < 0x0400
 #define _WIN32_WINNT 0x0400
 #endif
 #endif
-#include "xincs.h"
 #include "fxver.h"
 #include "fxdefs.h"
 #include "fxkeys.h"
