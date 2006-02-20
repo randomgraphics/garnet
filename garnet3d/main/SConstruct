@@ -191,12 +191,15 @@ for x in SConscript( 'src/media/SConscript' ):
 ################################################################################
 
 # install SDK headers
-sdkTargetDir = os.path.join( 'bin','sdk', 'inc' )
-sdkSourceDir = os.path.join( '#src','priv','inc' )
-for src in env.GN_glob(sdkSourceDir, True):
-    dst = os.path.join( sdkTargetDir, env.GN_relpath(src,sdkSourceDir) )
-    env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
-    env.Alias( 'sdk', dst )
+def copyHeaders( dstDir, srcDir ):
+    for src in env.GN_glob(srcDir, True):
+        dst = os.path.join( dstDir, env.GN_relpath(src,srcDir) )
+        env.Command( dst, src, Copy('$TARGET', '$SOURCE') )
+        env.Alias( 'sdk', dst )
+copyHeaders( os.path.join( 'bin','sdk', 'inc' ),
+             os.path.join( '#src','priv','inc' ) )
+copyHeaders( os.path.join( 'bin','sdk', 'inc', 'extern' ),
+             os.path.join( '#src', 'extern', 'inc' ) )
 
 ################################################################################
 #

@@ -102,7 +102,7 @@ namespace FX {
 //     function twice with the same arguments does NOT generally yield the same result.
 //     For instance, if the circumflex (^) is used to compose characters in the
 //     selected keyboard layout, and one types '^' followed by 'e', calling
-//     ToAscii() to translate the 'e' yields 'ê' (e-grave). Calling ToAscii() again,
+//     ToAscii() to translate the 'e' yields '? (e-grave). Calling ToAscii() again,
 //     however, yields a raw 'e'. Also, I found that the Win32 function
 //     TranslateMessage(), which is used to have Win32 generate WM_CHAR messages,
 //     calls ToAscii() internally.
