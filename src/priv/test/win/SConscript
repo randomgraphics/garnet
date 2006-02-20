@@ -1,6 +1,0 @@
-Import('env')
-
-env.GN_build_program(
-    'GNwinTest',
-    env.GN_glob('*.cpp'),
-    'pch.h', 'pch.cpp' )

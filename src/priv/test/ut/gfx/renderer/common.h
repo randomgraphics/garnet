@@ -8,7 +8,6 @@
 
 #include "../../testCommon.h"
 #include "garnet/GNgfx.h"
-#include "garnet/GNwin.h"
 
 //! \cond
 
@@ -175,6 +174,7 @@ protected:
     //
     void ntWindowAndNTRenderWindow()
     {
+#if 0
 #if GN_MSWIN && !GN_XENON
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
@@ -190,10 +190,12 @@ protected:
 
         scene.draw();
 #endif
+#endif
     }
 
     void externalWindow()
     {
+#if 0
 #if GN_MSWIN && !GN_XENON
         GN::win::MswWindow win;
         GN::win::MswWindow::CreateParam cp;
@@ -218,7 +220,8 @@ protected:
         //TS_ASSERT_EQUALS( dd.monitorHandle, win.getMonitor() );
         TS_ASSERT_EQUALS( dd.width, cp.clientWidth );
         TS_ASSERT_EQUALS( dd.height, cp.clientHeight );
-#endif        
+#endif
+#endif
     }
 
     void changeOptions()
