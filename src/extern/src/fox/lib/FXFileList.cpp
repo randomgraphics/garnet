@@ -896,9 +896,9 @@ FXint FXFileList::descendingGroup(const FXIconItem* a,const FXIconItem* b){
 
 
 //HANDLE FindFirstChangeNotification(
-//  LPCTSTR lpPathName,    // directory name
-//  BOOL bWatchSubtree,    // monitoring option
-//  DWORD dwNotifyFilter   // filter conditions
+//?LPCTSTR lpPathName, ??/ directory name
+//?BOOL bWatchSubtree, ??/ monitoring option
+//?DWORD dwNotifyFilter ?// filter conditions
 //);
 //
 //The HANDLE can be passed to FXApp::addInput(), and you'll be notified
