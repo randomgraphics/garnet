@@ -7,9 +7,17 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
-#include "garnet/GNwin.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
+
+#if GN_XENON
+#include <xtl.h>
+#elif GN_MSWIN
+#define NOMINMAX
+#include <windows.h>
+#elif GN_POSIX
+#include <X11/Xlib.h>
+#endif
 
 #include <exception>
 #include <malloc.h>

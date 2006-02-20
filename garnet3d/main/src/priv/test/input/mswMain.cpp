@@ -1,7 +1,6 @@
 #include "pch.h"
-#include "garnet/GNwin.h"
 
-#if GN_MSWIN && !GN_XENON
+#if 0 // GN_MSWIN && !GN_XENON
 
 //!
 //! input module test application
