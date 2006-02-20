@@ -246,6 +246,7 @@ void *FXFileDict::createData(const void* ptr){
   for(extra=p; *p && *p!=';'; p++);
 
   // Test flags
+  flags = 0; // chenli: fix build warning: variable "flags" is used before its value is set
   if(strstr(extra,"cd")) flags|=1;
   if(strstr(extra,"term")) flags|=2;
 

@@ -10,7 +10,9 @@
 #include "garnet/GNwin.h"
 #include "garnet/GNcore.h"
 
-#if GN_MSWIN
+#if GN_XENON
+#include <xtl.h>
+#elif GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #elif GN_POSIX

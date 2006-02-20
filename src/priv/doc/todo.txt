@@ -5,6 +5,8 @@ BUGS
   - Startup of GFXOGL module sometimes very slow:
     - pin down to the 1st call to opengl function in oglWinDisp.cpp
     - It seems caused by remote symbol loading
+  - Render target image is up-side-down in OGL, comparing with D3D.
+    - See GNrenderToTexture for an example.
 
 TODO
 ====
@@ -12,6 +14,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - A GUI system wrapper
   - Fix FOXTOOLKIT buile break in cygwin
   - GFX system
     - support render-to-texture on xenon (including depth texture)
