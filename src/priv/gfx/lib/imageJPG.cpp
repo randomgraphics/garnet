@@ -47,12 +47,12 @@ bool JpegReader::readHeader(
     if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
     {
         // force RGB output, if not gray-scale image
-        o_desc.format = GN::gfx::FMT_RGB_8_8_8;
+        o_desc.format = GN::gfx::FMT_RGB_8_8_8_UNORM;
         bpp = 3;
     }
     else
     {
-        o_desc.format = GN::gfx::FMT_L_8;
+        o_desc.format = GN::gfx::FMT_L_8_UNORM;
         bpp = 1;
     }
 

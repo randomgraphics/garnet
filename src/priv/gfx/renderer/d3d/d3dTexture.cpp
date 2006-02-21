@@ -341,7 +341,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
         }
         else
         {
-            format = FMT_BGRA_8_8_8_8; // this is default format
+            format = FMT_BGRA_8_8_8_8_UNORM; // this is default format
         }
     }
     else
@@ -377,10 +377,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
     }
     else
 #endif
-    {
-        GN_TODO( "need more error details" );
-        GN_DX_CHECK_RV(hr, false );
-    }
+    GN_DX_CHECK_RV(hr, false );
 
 #if !GN_XENON
     // evict managed resources first, if creating texture in default pool.

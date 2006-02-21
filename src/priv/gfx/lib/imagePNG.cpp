@@ -23,8 +23,8 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
                 case 1  :
                 case 2  :
                 case 4  : png_set_gray_1_2_4_to_8( png );
-                case 8  : return GN::gfx::FMT_L_8;
-                case 16 : return GN::gfx::FMT_L_16;
+                case 8  : return GN::gfx::FMT_L_8_UNORM;
+                case 16 : return GN::gfx::FMT_L_16_UNORM;
                 default :
                     GN_ERROR( "unsupport color depth %d", info->bit_depth );
             }
@@ -33,9 +33,9 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             switch( info->bit_depth )
             {
-                case 4  : return GN::gfx::FMT_LA_4_4;
-                case 8  : return GN::gfx::FMT_LA_8_8;
-                case 16 : return GN::gfx::FMT_LA_16_16;
+                case 4  : return GN::gfx::FMT_LA_4_4_UNORM;
+                case 8  : return GN::gfx::FMT_LA_8_8_UNORM;
+                case 16 : return GN::gfx::FMT_LA_16_16_UNORM;
                 default :
                     GN_ERROR( "unsupport color depth %d", info->bit_depth );
             }
@@ -47,8 +47,8 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             switch( info->bit_depth )
             {
                 case 8  : png_set_bgr( png );
-                          return GN::gfx::FMT_BGRA_8_8_8_8;
-                case 16 : return GN::gfx::FMT_RGBA_16_16_16_16;
+                          return GN::gfx::FMT_BGRA_8_8_8_8_UNORM;
+                case 16 : return GN::gfx::FMT_RGBA_16_16_16_16_UNORM;
                 default :
                     GN_ERROR( "unsupport color depth %d", info->bit_depth );
             }
@@ -58,7 +58,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             png_set_palette_to_rgb( png );
             png_set_add_alpha( png, 0xFFFF, PNG_FILLER_AFTER );
             png_set_bgr( png );
-            return GN::gfx::FMT_BGRA_8_8_8_8;
+            return GN::gfx::FMT_BGRA_8_8_8_8_UNORM;
 
         default:
             GN_ERROR( "unknown PNG format %d", info->color_type );

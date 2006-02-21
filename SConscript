@@ -239,7 +239,7 @@ def GN_build_program( env, target, sources=[],
     # handle manifest file
     if GN_has_manifest(env):
         manifest = File( os.path.join( os.path.dirname(result[0].abspath), '%s.exe.manifest'%target ) )
-        env.SideEffect( manifest, result )
+        #env.SideEffect( manifest, result )
         result += [manifest]
 
     if( addToTargetList ): GN_targets[target] = result
