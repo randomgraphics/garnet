@@ -107,6 +107,19 @@ namespace GN
 
         //@}
 
+        //! \name Get variable value. Return default value for incompatible type.
+        //@{
+
+        bool      B( const bool      & defVal ) const { bool r; return getB(r) ? r : defVal; }
+        int       I( const int       & defVal ) const { int r; return getI(r) ? r : defVal; }
+        float     F( const float     & defVal ) const { float r; return getF(r) ? r : defVal; }
+        void*     P( void* const     & defVal ) const { void* r; return getP(r) ? r : defVal; }
+        StrA      S( const StrA      & defVal ) const { StrA r; return getS(r) ? r : defVal; }
+        Vector4f  V( const Vector4f  & defVal ) const { Vector4f r; return getV(r) ? r : defVal; }
+        Matrix44f M( const Matrix44f & defVal ) const { Matrix44f r; return getM(r) ? r : defVal; }
+
+        //@}
+
         //! \name Type conversion management
         //@{
 

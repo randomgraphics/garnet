@@ -87,61 +87,61 @@ static GN_INLINE bool sColorFormat2OGL(
     gl_compressed = false;
     switch( clrfmt )
     {
-        case GN::gfx::FMT_RGBA_16_16_16_16:
+        case GN::gfx::FMT_RGBA_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGBA16;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_RGBX_16_16_16_16:
+        case GN::gfx::FMT_RGBX_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGB16;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_RGBA_8_8_8_8 :
+        case GN::gfx::FMT_RGBA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_RGBA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGRA_8_8_8_8 :
+        case GN::gfx::FMT_BGRA_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGBA8;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGRX_8_8_8_8 :
+        case GN::gfx::FMT_BGRX_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_RGB_8_8_8 :
+        case GN::gfx::FMT_RGB_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_RGB;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGR_8_8_8 :
+        case GN::gfx::FMT_BGR_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGR_EXT;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_BGRA_5_5_5_1 :
+        case GN::gfx::FMT_BGRA_5_5_5_1_UNORM :
             gl_internalformat  = GL_RGB5_A1;
             gl_format          = GL_BGRA_EXT;
             gl_type            = GL_UNSIGNED_SHORT_5_5_5_1;
             return true;
 
-        case GN::gfx::FMT_BGR_5_6_5 :
+        case GN::gfx::FMT_BGR_5_6_5_UNORM :
             gl_internalformat  = GL_RGB5;
             gl_format          = GL_BGR_EXT;
             gl_type            = GL_UNSIGNED_SHORT_5_6_5_REV;
             return true;
 
-        case GN::gfx::FMT_UV_8_8 :
+        case GN::gfx::FMT_RG_8_8_SNORM :
             if( GLEW_ATI_envmap_bumpmap )
             {
                 gl_internalformat  = GL_DU8DV8_ATI;
@@ -158,31 +158,31 @@ static GN_INLINE bool sColorFormat2OGL(
             }
             return true;
 
-        case GN::gfx::FMT_LA_16_16 :
+        case GN::gfx::FMT_LA_16_16_UNORM :
             gl_internalformat  = GL_LUMINANCE16_ALPHA16;
             gl_format          = GL_LUMINANCE_ALPHA;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_LA_8_8 :
+        case GN::gfx::FMT_LA_8_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8_ALPHA8;
             gl_format          = GL_LUMINANCE_ALPHA;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_L_16 :
+        case GN::gfx::FMT_L_16_UNORM :
             gl_internalformat  = GL_LUMINANCE16;
             gl_format          = GL_LUMINANCE;
             gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
-        case GN::gfx::FMT_L_8 :
+        case GN::gfx::FMT_L_8_UNORM :
             gl_internalformat  = GL_LUMINANCE8;
             gl_format          = GL_LUMINANCE;
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
-        case GN::gfx::FMT_A_8 :
+        case GN::gfx::FMT_A_8_UNORM :
             gl_internalformat  = GL_ALPHA8;
             gl_format          = GL_ALPHA;
             gl_type            = GL_UNSIGNED_BYTE;
@@ -322,7 +322,7 @@ bool GN::gfx::OGLBasicTexture::init(
         }
         else
         {
-            format = FMT_BGRA_8_8_8_8; // default color format
+            format = FMT_BGRA_8_8_8_8_UNORM; // default color format
         }
     }
 

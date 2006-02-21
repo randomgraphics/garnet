@@ -5,8 +5,6 @@
 //
 // -----------------------------------------------------------------------------
 #if GN_MSWIN && !GN_XENON
-static void sProcessMswMessages( GN::HandleType ) {}
-#else
 static void sProcessMswMessages( GN::HandleType wnd )
 {
     GN_GUARD;
@@ -35,6 +33,8 @@ static void sProcessMswMessages( GN::HandleType wnd )
 
     GN_UNGUARD;
 }
+#else
+static void sProcessMswMessages( GN::HandleType ) {}
 #endif
 
 // *****************************************************************************

@@ -12,12 +12,24 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, uint32_t * width, uint3
 {
     GN_GUARD;
 
-#if GN_MSWIN && !GN_XENON
+#if GN_XENON
+
+    GN_UNEXPECTED(); // program should not reach heare
+    GN_UNUSED_PARAM(disp);
+    GN_UNUSED_PARAM(win);
+    GN_UNUSED_PARAM(width);
+    GN_UNUSED_PARAM(height);
+    GN_ERROR( "Xenon platform does not support this function" );
+    return false;
+
+#elif GN_MSWIN && !GN_XENON
+
     GN_UNUSED_PARAM( disp );
     RECT rc;
     GN_MSW_CHECK_RV( ::GetClientRect( (HWND)win, &rc ), false );
     if( width ) *width = (uint32_t)(rc.right - rc.left);
     if( height ) *height = (uint32_t)(rc.bottom - rc.top);
+    return true;
 
 #elif GN_POSIX
 
@@ -25,11 +37,9 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, uint32_t * width, uint3
     GN_X_CHECK_RV( XGetWindowAttributes( (Display*)disp, (Window)win, &attr ), false );
     if( width ) *width = (uint32_t)attr.width;
     if( height ) *height = (uint32_t)attr.height;
+    return true;
 
 #endif
-
-    // success
-    return true;
 
     GN_UNGUARD;
 }

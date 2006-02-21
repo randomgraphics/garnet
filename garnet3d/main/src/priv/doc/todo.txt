@@ -14,7 +14,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
-  - A GUI system wrapper
+  - A window system wrapper
   - Fix FOXTOOLKIT buile break in cygwin
   - GFX system
     - support render-to-texture on xenon (including depth texture)
@@ -26,7 +26,7 @@ TODO
   - mesh class
   - effect class: ut
   - blender exporter/importer
-  - GUI system
+  - in-game GUI system
     - font class
 
 - p2
