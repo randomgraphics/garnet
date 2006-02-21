@@ -9,8 +9,6 @@ public:
 
     void tearDown() { GN::gfx::deleteRenderer(); }
 
-    void testntWindowAndNTRenderWindow() { ntWindowAndNTRenderWindow(); }
-
     void testExternalWindow() { externalWindow(); }
 
     void testChangeUserOptions() { changeOptions(); }
