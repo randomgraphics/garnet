@@ -43,10 +43,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwinTest", "7.1\GNwinTest.
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwin", "7.1\GNwin.vcproj", "{72B0E203-3E5A-401F-9EEF-255AC49084EF}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxLib", "7.1\GNgfxLib.vcproj", "{4C197C4E-59E9-48ED-95F8-A54434812D48}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
@@ -64,9 +60,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNdepthTexture", "7.1\GNdep
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
-		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
-	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
@@ -158,14 +151,6 @@ Global
 		{99C64004-2623-4D98-AB2F-D47B694B557B}.Stdbg.Build.0 = stdbg|Win32
 		{99C64004-2623-4D98-AB2F-D47B694B557B}.Strel.ActiveCfg = strel|Win32
 		{99C64004-2623-4D98-AB2F-D47B694B557B}.Strel.Build.0 = strel|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Debug.ActiveCfg = debug|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Debug.Build.0 = debug|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Release.ActiveCfg = release|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Release.Build.0 = release|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Stdbg.ActiveCfg = stdbg|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Stdbg.Build.0 = stdbg|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Strel.ActiveCfg = strel|Win32
-		{72B0E203-3E5A-401F-9EEF-255AC49084EF}.Strel.Build.0 = strel|Win32
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Debug.ActiveCfg = debug|Win32
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Debug.Build.0 = debug|Win32
 		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Release.ActiveCfg = release|Win32
@@ -202,5 +187,8 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
 	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
 	EndGlobalSection
 EndGlobal

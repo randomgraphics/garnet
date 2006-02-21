@@ -1,41 +1,6 @@
 #include "pch.h"
 #include "sampleApp.h"
-
-//
-//
-// -----------------------------------------------------------------------------
-#if GN_MSWIN && !GN_XENON
-static void sProcessMswMessages( GN::HandleType wnd )
-{
-    GN_GUARD;
-
-    GN_ASSERT( ::IsWindow( (HWND)wnd ) );
-
-    MSG msg;
-    while( true )
-    {
-        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
-        {
-            if( WM_QUIT == msg.message )
-            {
-                return;
-            }
-            ::TranslateMessage( &msg );
-            ::DispatchMessage(&msg);
-        }
-        else if( ::IsIconic( (HWND)wnd ) ) // Block minimized application
-        {
-            GN_INFO( "Wait for window messages..." );
-            ::WaitMessage();
-        }
-        else return; // Idle time
-    }
-
-    GN_UNGUARD;
-}
-#else
-static void sProcessMswMessages( GN::HandleType ) {}
-#endif
+#include "foxAll.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -58,6 +23,7 @@ bool GN::sample::SampleApp::init( int argc, const char * argv[] )
     GN::gfx::Renderer::sSigDeviceDestroy.connect( this, &SampleApp::onRendererDestroy );
 
     if( !checkCmdLine(argc,argv) ) { quit(); return selfOK(); }
+    if( !createMainWindow() ) { quit(); return selfOK(); }
     if( !onAppInit() ) { quit(); return selfOK(); }
     if( !initRenderer() ) { quit(); return selfOK(); }
     if( !initInput() ) { quit(); return selfOK(); }
@@ -78,6 +44,7 @@ void GN::sample::SampleApp::quit()
     quitRenderer();
     quitInput();
     onAppQuit();
+    destroyMainWindow();
 
     // disconnect to renderer signals
     GN::gfx::Renderer::sSigDeviceDestroy.disconnect( this );
@@ -104,9 +71,12 @@ int GN::sample::SampleApp::run()
 
     mDone = false;
 
+    FX::FXApp * app = FX::FXApp::instance();
+    GN_ASSERT( app );
+
     while( !mDone )
     {
-        sProcessMswMessages( gRenderer.getDispDesc().windowHandle );
+        app->runWhileEvents();
         gInput.processInputEvents();
         onUpdate();
         if( gRenderer.drawBegin() )
@@ -195,6 +165,58 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
     return true;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::sample::SampleApp::createMainWindow()
+{
+#if GN_XENON
+    mInitParam.ro.useExternalWindow = false;
+    mInitParam.ro.displayHandle = 0;
+    mInitParam.ro.parentWindow = 0;
+    return true;
+#else
+    GN_GUARD;
+
+    using namespace FX;
+
+    // create application and the window
+    FXApp * app = new FXApp( "Garnet sample application", "Garnet" );
+    const char * argv[] = {"SampleApp"};
+    app->init(1,argv);
+    FXMainWindow * main = new FXMainWindow( app, "Garnet sample application" );
+    main->resize( 640, 480 );
+
+    // TODO: attach event handlers
+
+    // show the window    
+    app->create();
+    main->show(PLACEMENT_SCREEN);
+
+    // update renderer option
+    mInitParam.ro.useExternalWindow = true;
+    mInitParam.ro.displayHandle = app->getDisplay();
+    mInitParam.ro.renderWindow = main->id();
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+#endif
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::sample::SampleApp::destroyMainWindow()
+{
+#if !GN_XENON
+    GN_GUARD;
+    delete FX::FXApp::instance();
+    GN_UNGUARD;
+#endif
 }
 
 //

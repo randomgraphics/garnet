@@ -14,10 +14,6 @@
 #include <cxxtest/TestTracker.h>
 #include <cxxtest/ValueTraits.h>
 
-#if GN_MSVC
-#include <crtdbg.h>
-#endif
-
 namespace CxxTest
 {
     class OutputStream
@@ -48,16 +44,6 @@ namespace CxxTest
 
         int run( int argc, const char * argv[] )
         {
-            //
-            // 如果是MSVC，则启用CRT的内存泄漏检测功能
-            //
-#if GN_MSVC
-            int tmpDbgFlag;
-            tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-            tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
-            _CrtSetDbgFlag(tmpDbgFlag);
-#endif
-
             if( argc < 2 )
             {
                 TestRunner::runAllTests( *this, 0 );

@@ -33,8 +33,23 @@ GN::doLog( const LogDesc & desc, const char * msg )
 // Garnet core
 // *****************************************************************************
 
+#if GN_MSVC
+#include <crtdbg.h>
+#endif
+static void sEnableCRTMemoryCheck()
+{
+#if GN_MSVC
+    int tmpDbgFlag;
+    tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
+    _CrtSetDbgFlag(tmpDbgFlag);
+#endif
+}
+
 namespace GN { namespace core
 {
+    
+    
     class GarnetCore
     {
         PluginManager mPluginManager;
@@ -52,6 +67,9 @@ namespace GN { namespace core
         bool initialize()
         {
             GN_GUARD_ALWAYS;
+
+            // enable MSVC CRT memory leak check
+            sEnableCRTMemoryCheck();
 
             GN_INFO( "Garnet core startup ..." );
 

@@ -3360,7 +3360,7 @@ static void getSystemFont(FXFontDesc& fontdesc){
 
 
 // Initialize application
-void FXApp::init(int& argc,char** argv,bool connect){
+void FXApp::init(int argc,const char ** argv,bool connect){
   const FXchar *fontspec=NULL;
   const FXchar *style=NULL;
   const FXchar *d=NULL;
