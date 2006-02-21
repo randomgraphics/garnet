@@ -8,6 +8,7 @@
 
 #include "../../testCommon.h"
 #include "garnet/GNgfx.h"
+#include "foxAll.h"
 
 //! \cond
 
@@ -169,46 +170,25 @@ protected:
         mApi = GN::gfx::API_OGL;
     }
 
-    //
-    // Make sure ntWindow and NTRenderWindow can work with each other.
-    //
-    void ntWindowAndNTRenderWindow()
-    {
-#if 0
-#if GN_MSWIN && !GN_XENON
-        GN::win::MswWindow win;
-        GN::win::MswWindow::CreateParam cp;
-        cp.clientWidth = 236;
-        cp.clientHeight = 189;
-        TS_ASSERT( win.create(cp) );
-        win.showWindow();
-
-        TestScene scene;
-        GN::gfx::RendererOptions ro;
-        ro.software = true;
-        if( !scene.create(mApi,ro) ) return;
-
-        scene.draw();
-#endif
-#endif
-    }
-
     void externalWindow()
     {
-#if 0
-#if GN_MSWIN && !GN_XENON
-        GN::win::MswWindow win;
-        GN::win::MswWindow::CreateParam cp;
-        cp.clientWidth = 236;
-        cp.clientHeight = 189;
-        TS_ASSERT( win.create(cp) );
-        if( !win.getWindow() ) return;
+#if !GN_XENON
+        using namespace FX;
+        FXApp app("Unit Test","Garnet");
+        const char * args [] = { "GNut" };
+        app.init(1, args);
+        FXMainWindow * main=new FXMainWindow(&app,"Unit Test",NULL,NULL,DECOR_ALL);
+        main->resize( 511, 236 );
+        app.create();
+        main->show(PLACEMENT_SCREEN);
+        app.runWhileEvents();
 
         TestScene scene;
         GN::gfx::RendererOptions ro;
 
         ro.useExternalWindow = true;
-        ro.renderWindow = win.getWindow();
+        ro.displayHandle = app.getDisplay();
+        ro.renderWindow = main->id();
         ro.software = true;
         if( !scene.create(mApi,ro) ) return;
 
@@ -216,11 +196,10 @@ protected:
 
         const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
 
-        TS_ASSERT_EQUALS( dd.windowHandle, win.getWindow() );
+        TS_ASSERT_EQUALS( dd.windowHandle, main->id() );
         //TS_ASSERT_EQUALS( dd.monitorHandle, win.getMonitor() );
-        TS_ASSERT_EQUALS( dd.width, cp.clientWidth );
-        TS_ASSERT_EQUALS( dd.height, cp.clientHeight );
-#endif
+        TS_ASSERT_EQUALS( dd.width, main->getWidth() );
+        TS_ASSERT_EQUALS( dd.height, main->getHeight() );
 #endif
     }
 

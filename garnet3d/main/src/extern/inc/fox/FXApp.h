@@ -662,7 +662,7 @@ public:
   * Parses and removes common command line arguments, reads the registry.
   * Finally, if connect is TRUE, it opens the display.
   */
-  virtual void init(int& argc,char** argv,bool connect=true);
+  virtual void init(int argc,const char ** argv,bool connect=true); // chenli: refine function parameters
 
   /**
   * Exit application.

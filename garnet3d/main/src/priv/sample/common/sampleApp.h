@@ -99,7 +99,8 @@ namespace GN
         private:
 
             bool checkCmdLine( int argc, const char * argv[] );
-            bool doInit();
+            bool createMainWindow();
+            void destroyMainWindow();
             bool initRenderer();
             void quitRenderer();
             bool initInput();
