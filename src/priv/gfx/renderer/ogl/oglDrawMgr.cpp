@@ -44,6 +44,11 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
             numIdx = numPrims > 0 ? numPrims + 2 : 0;
             break;
 
+        case GN::gfx::QUAD_LIST :
+            oglPrim = GL_QUADS;
+            numIdx = numPrims * 4;
+            break;
+
         default :
             oglPrim = GL_TRIANGLES;
             numIdx = numPrims * 3;

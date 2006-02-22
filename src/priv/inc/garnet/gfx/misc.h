@@ -68,6 +68,8 @@ namespace GN { namespace gfx
         LINE_STRIP,     //!< line strip
         TRIANGLE_LIST,  //!< triangle list
         TRIANGLE_STRIP, //!< triangle strip
+        QUAD_LIST     , //!< quad list. D3D9 does not support this primitive.
+        RECT_LIST     , //!< rect list. This is xenon special primitive.
         NUM_PRIMITIVES  //!< number of available primitive types
     };
 
@@ -87,6 +89,8 @@ namespace GN { namespace gfx
             case LINE_STRIP     : return "LINE_STRIP";
             case TRIANGLE_LIST  : return "TRIANGLE_LIST";
             case TRIANGLE_STRIP : return "TRIANGLE_STRIP";
+            case QUAD_LIST      : return "QUAD_LIST";
+            case RECT_LIST      : return "RECT_LIST";
             default             : return "Invalid primitive type!";
         }
         GN_UNGUARD_SLOW;
@@ -103,6 +107,8 @@ namespace GN { namespace gfx
         else if( "LINE_STRIP" == str ) return LINE_STRIP;
         else if( "TRIANGLE_LIST" == str ) return TRIANGLE_LIST;
         else if( "TRIANGLE_STRIP" == str ) return TRIANGLE_STRIP;
+        else if( "QUAD_LIST" == str ) return QUAD_LIST;
+        else if( "RECT_LIST" == str ) return RECT_LIST;
         else
         {
             // failed
@@ -129,6 +135,8 @@ namespace GN { namespace gfx
             case LINE_STRIP     : return (numvert >= 2) ? numvert - 1 : 0;
             case TRIANGLE_LIST  : return (numvert >= 3) ? numvert / 3 : 0;
             case TRIANGLE_STRIP : return (numvert >= 3) ? numvert - 2 : 0;
+            case QUAD_LIST      : return (numvert >= 4) ? numvert / 4 : 0;
+            case RECT_LIST      : return (numvert >= 3) ? numvert / 3 : 0;
             default             :
                 GN_ERROR( "Invalid primitive type!" );
                 return 0;
@@ -153,6 +161,8 @@ namespace GN { namespace gfx
             case LINE_STRIP     : return numprim > 0 ? numprim + 1 : 0;
             case TRIANGLE_LIST  : return numprim * 3;
             case TRIANGLE_STRIP : return numprim > 0 ? numprim + 2 : 0;
+            case QUAD_LIST      : return numprim * 4;
+            case RECT_LIST      : return numprim * 3;
             default :
                 GN_ERROR( "Invalid primitive type!" );
                 return 0;
