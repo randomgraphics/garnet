@@ -46,8 +46,23 @@ static bool sCreateShader( Shader * & result, const StrA & name )
         return false;
     }
 
+    // extract entry name out of shader name
+    struct Local
+    {
+        static bool isAt( char ch ) { return '@' == ch; }
+    };
+    StrA entry;
+    StrA path = name;
+    path.trimRightUntil( &Local::isAt );
+    if( path.empty() ) path = name; // handle case
+    if( path.size() < name.size() )
+    {
+        entry = name.subString( path.size(), name.size() );
+        path.trimRight( '@' );
+    }
+
     // get resouce path
-    StrA path = core::searchResource( name );
+    path = core::searchResource( path );
     if( path.empty() )
     {
         GN_ERROR( "Shader '%s' creation failed: path not found.", name.cstr() );
@@ -67,7 +82,7 @@ static bool sCreateShader( Shader * & result, const StrA & name )
     AutoObjArray<char> buf( new char[fp.size()+1] );
     AutoObjArray<char> typeStr( new char[fp.size()+1] );
     AutoObjArray<char> langStr( new char[fp.size()+1] );
-    AutoObjArray<char> entry( new char[fp.size()+1] );
+    AutoObjArray<char> entryStr( new char[fp.size()+1] );
 
     // read file
 	memset( buf.get(), 0, fp.size()+1 );
@@ -92,8 +107,8 @@ static bool sCreateShader( Shader * & result, const StrA & name )
         lang = LANG_OGL_ARB;
     }
     else if(
-        3 == ::sscanf( code, "// TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entry.get() ) ||
-        3 == ::sscanf( code, "# TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entry.get() ) )
+        3 == ::sscanf( code, "// TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entryStr.get() ) ||
+        3 == ::sscanf( code, "# TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entryStr.get() ) )
     {
         if( !str2ShaderType( type, typeStr.get() ) )
         {
@@ -113,7 +128,7 @@ static bool sCreateShader( Shader * & result, const StrA & name )
     }
 
     // create shader instance
-    result = gRenderer.createShader( type, lang, code, entry.get() );
+    result = gRenderer.createShader( type, lang, code, entry.empty() ? entryStr.get() : entry.cstr() );
     return NULL != result;
 
     GN_UNGUARD;
