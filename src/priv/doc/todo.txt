@@ -7,6 +7,7 @@ BUGS
     - It seems caused by remote symbol loading
   - Render target image is up-side-down in OGL, comparing with D3D.
     - See GNrenderToTexture for an example.
+  - GNrenderToTexture : black screen on cygwin.
 
 TODO
 ====
@@ -14,14 +15,12 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
-  - A window system wrapper
-  - Fix FOXTOOLKIT buile break in cygwin
+  - Fix FOX-TOOLKIT buile break in cygwin
+    - learn now to create GL compatible window on cygwin using FOX-TOOLKIT
   - GFX system
     - support render-to-texture on xenon (including depth texture)
   - code page convertor
-  - import a GUI toolkit
   - sample application
-    - render to texture
     - GLSL test application
   - mesh class
   - effect class: ut
@@ -35,6 +34,7 @@ TODO
     - shared uniform
   - Rewrite SCons script
   - runtime switchable GN_TRACE( level, msg, .... )
+
 - p3
   - try implementing a ray tracer
   - check doxygen errors and warnings.
@@ -52,6 +52,8 @@ TODO
 DONE
 ====
 
+- sample: render to texture
+- import a GUI toolkit : FOX-TOOLKIT
 - resource managers (textures, meshes, materials/effects)
 - implement core module
 - POSIX implementation
