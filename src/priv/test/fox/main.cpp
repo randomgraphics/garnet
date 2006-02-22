@@ -6,7 +6,7 @@ int main() { GN_INFO( "FOX TOOLKIT does not support Xenon platform." ); return 0
 #else
 using namespace FX;
 
-int main(int argc, char * argv[] )
+int main(int argc, const char * argv[] )
 {
     FXApp application("Hello","FoxTest");
 

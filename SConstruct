@@ -223,13 +223,13 @@ env.Default( Split('samples sdk media') )
 ################################################################################
 
 targets_text = ''
-targets_text += '%16s : %s\n'%( 'all', 'Build and install all targets of all variants for all compilers' )
-targets_text += '%16s : %s\n'%( 'samples', 'Build and install samples' )
-targets_text += '%16s : %s\n'%( 'sdk', 'Build and install SDK' )
-targets_text += '%16s : %s\n'%( 'media', 'Build and install media files' )
-targets_text += '%16s : %s\n'%( 'msvc', 'Build MSVC projects' )
+targets_text += '%20s : %s\n'%( 'all', 'Build and install all targets of all variants for all compilers' )
+targets_text += '%20s : %s\n'%( 'samples', 'Build and install samples' )
+targets_text += '%20s : %s\n'%( 'sdk', 'Build and install SDK' )
+targets_text += '%20s : %s\n'%( 'media', 'Build and install media files' )
+targets_text += '%20s : %s\n'%( 'msvc', 'Build MSVC projects' )
 for x in all_targets:
-    targets_text += '%16s : %s\n'%( x[0], env.File(x[1]) )
+    targets_text += '%20s : %s\n'%( x[0], env.File(x[1]) )
 
 help_text = """
 Usage:

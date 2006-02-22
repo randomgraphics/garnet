@@ -187,7 +187,7 @@ def GN_build_shared_library( env, target, sources=[],
         if not pdb and target: pdb = target + '.pdb'
         pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
         if 'GNcore' == target: libs += Split('GNbase GNextern')
-        else: libs += Split('GNcoreLib GNgfxLib GNbase GNcoreLib GNbase GNextern')
+        else: libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
         add_libs( env, libs )
         result = env.SharedLibrary( target, sources + pchobj )
 
@@ -229,8 +229,8 @@ def GN_build_program( env, target, sources=[],
     pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if not ignoreDefaultLibs:
         if GN_conf['static']:
-            libs += Split('GNgfxLib GNgfxD3D GNgfxOGL GNgfxCommon')
-        libs += Split('GNcoreLib GNinput GNgfxLib GNbase GNcoreLib GNinput GNbase GNextern')
+            libs += Split('GNgfxD3D GNgfxOGL GNgfxCommon')
+        libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
     extra = []
     for x in libs:
         if x in GN_targets: extra += ['#' + GN_targets[x][0].path]
@@ -587,7 +587,7 @@ def doInstall( alias, dir, names ):
 sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
-staticLibs = Split('GNextern GNbase GNgfxLib GNinput GNgui')
+staticLibs = Split('GNextern GNbase')
 tests = Split( 'GNut GNgfxTest GNinputTest GNft2Test GNfoxTest' )
 samples = Split( 'GNdepthTexture GNrenderToTexture' )
 tools = Split( 'FOXreswrap' )
