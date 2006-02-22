@@ -1,0 +1,8 @@
+Import( 'env' )
+
+objs = []
+objs += SConscript( 'base/SConscript' )
+objs += SConscript( 'gfx/SConscript' )
+objs += SConscript( 'input/SConscript' )
+
+env.GN_build_static_library( 'GNbase', objs, pdb = 'GNbase.pdb' )
