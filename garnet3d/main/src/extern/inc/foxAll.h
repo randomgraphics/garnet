@@ -30,7 +30,18 @@
 #pragma warning(disable:4244) // 从“int”转换到“FX::FXshort”，可能丢失数据
 #endif
 
+// we have zlib h
+#ifndef HAVE_ZLIB_H
+#define HAVE_ZLIB_H
+#define _GN_UNDEF_HAVE_ZLIB_H
+#endif
+
 #include "fox/fx.h"
+
+// undefine HAVE_ZLIB_H
+#ifdef _GN_UNDEF_HAVE_ZLIB_H
+#undef HAVE_ZLIB_H
+#endif
 
 #if defined(__ICL)
 #pragma warning(default:193)

@@ -119,7 +119,7 @@ static void init_source(j_decompress_ptr){
 // Read JPEG_BUFFER_SIZE bytes into the buffer
 // NOTE:- we need to read in one byte at a time, so as to make sure that
 // data belonging to the objects following this JPEG remain in the stream!
-static boolean fill_input_buffer(j_decompress_ptr cinfo){
+static JPEG_BOOL fill_input_buffer(j_decompress_ptr cinfo){ // chenli: fix build break: replace 'boolean' with 'JPEG_BOOL'
   FOX_jpeg_source_mgr *src=(FOX_jpeg_source_mgr*)cinfo->src;
 /*
 src->stream->load(src->buffer,JPEG_BUFFER_SIZE);
@@ -274,7 +274,7 @@ static void init_destination(j_compress_ptr cinfo){
 
 
 // Write the buffer to the stream
-static boolean empty_output_buffer(j_compress_ptr cinfo){
+static JPEG_BOOL empty_output_buffer(j_compress_ptr cinfo){ // chenli: fix build break: replace 'boolean' with 'JPEG_BOOL'
   FOX_jpeg_dest_mgr *dest=(FOX_jpeg_dest_mgr*)cinfo->dest;
   dest->stream->save(dest->buffer,JPEG_BUFFER_SIZE);
   dest->pub.free_in_buffer=JPEG_BUFFER_SIZE;

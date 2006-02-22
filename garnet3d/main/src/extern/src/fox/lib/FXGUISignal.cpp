@@ -98,12 +98,19 @@ FXGUISignal::FXGUISignal(FXApp* a,FXObject* tgt,FXSelector sel,void* ptr):app(a)
 #endif
   }
 
+#ifdef __CYGWIN__ // chenli: fix cygwin build break
+#include <sys/termios.h>
+#endif
 
 // Called by worker thread to wake GUI thread
 void FXGUISignal::signal(){
 #ifndef WIN32
   size_t n=0;
+#ifdef __CYGWIN__ // chenli: fix cygwin build break
+  if(0<=ioctl(fd[0],TIOCINQ,(char*)&n) && n==0){ write(fd[1],"!",1); }
+#else
   if(0<=ioctl(fd[0],FIONREAD,(char*)&n) && n==0){ write(fd[1],"!",1); }
+#endif
 #else
   SetEvent(event);
 #endif
