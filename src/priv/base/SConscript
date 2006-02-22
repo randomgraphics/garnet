@@ -4,5 +4,6 @@ objs = []
 objs += SConscript( 'base/SConscript' )
 objs += SConscript( 'gfx/SConscript' )
 objs += SConscript( 'input/SConscript' )
+objs += SConscript( 'win/SConscript' )
 
 env.GN_build_static_library( 'GNbase', objs, pdb = 'GNbase.pdb' )
