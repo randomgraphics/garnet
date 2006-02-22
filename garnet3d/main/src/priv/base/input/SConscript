@@ -1,0 +1,9 @@
+Import( 'env' )
+
+objs = env.GN_build_static_objects(
+    env.GN_glob('*.cpp'),
+    'pch.h',
+    'pch.cpp',
+    'GNbase.pdb' )
+
+Return( 'objs' )
