@@ -15,8 +15,7 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
-  - Fix FOX-TOOLKIT buile break in cygwin
-    - learn now to create GL compatible window on cygwin using FOX-TOOLKIT
+  - Learn now to create GL compatible window on cygwin using FOX-TOOLKIT
   - GFX system
     - support render-to-texture on xenon (including depth texture)
   - code page convertor
@@ -29,7 +28,6 @@ TODO
     - font class
 
 - p2
-  - continue implementing GFX module
   - refine GFX module:
     - shared uniform
   - Rewrite SCons script
@@ -38,7 +36,6 @@ TODO
 - p3
   - try implementing a ray tracer
   - check doxygen errors and warnings.
-  - XWindow class UT
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
