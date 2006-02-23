@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "basicMswInput.h"
+#include "basicInputMsw.h"
 
 #if GN_MSWIN && !GN_XENON
 
@@ -10,12 +10,12 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicMswInput::init()
+bool GN::input::BasicInputMsw::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::input::BasicMswInput, () );
+    GN_STDCLASS_INIT( GN::input::BasicInputMsw, () );
 
     // setup windows hooks
     if( !setupWindowHooks() ) { quit(); return selfOK(); }
@@ -34,7 +34,7 @@ bool GN::input::BasicMswInput::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::quit()
+void GN::input::BasicInputMsw::quit()
 {
     GN_GUARD;
 
@@ -55,7 +55,7 @@ void GN::input::BasicMswInput::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicMswInput::attachToWindow( HandleType, HandleType window )
+bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
 {
     GN_GUARD;
 
@@ -89,7 +89,7 @@ bool GN::input::BasicMswInput::attachToWindow( HandleType, HandleType window )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::getMousePosition( int & x, int & y ) const
+void GN::input::BasicInputMsw::getMousePosition( int & x, int & y ) const
 {
     GN_GUARD_SLOW;
 
@@ -111,7 +111,7 @@ void GN::input::BasicMswInput::getMousePosition( int & x, int & y ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wp, LPARAM )
+void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
 {
     GN_GUARD;
 
@@ -167,7 +167,7 @@ void GN::input::BasicMswInput::msgHandler( UINT message, WPARAM wp, LPARAM )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicMswInput::setupWindowHooks()
+bool GN::input::BasicInputMsw::setupWindowHooks()
 {
     GN_GUARD;
 
@@ -198,7 +198,7 @@ bool GN::input::BasicMswInput::setupWindowHooks()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::removeWindowHooks()
+void GN::input::BasicInputMsw::removeWindowHooks()
 {
     GN_GUARD;
 
@@ -220,7 +220,7 @@ void GN::input::BasicMswInput::removeWindowHooks()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::captureMouse()
+void GN::input::BasicInputMsw::captureMouse()
 {
     GN_GUARD;
 
@@ -235,7 +235,7 @@ void GN::input::BasicMswInput::captureMouse()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::BasicMswInput::releaesMouse()
+void GN::input::BasicInputMsw::releaesMouse()
 {
     GN_GUARD;
 
@@ -250,11 +250,11 @@ void GN::input::BasicMswInput::releaesMouse()
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
+GN::input::BasicInputMsw::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicMswInput * inst = safeCast<BasicMswInput*>(gInputPtr);
+    BasicInputMsw * inst = safeCast<BasicInputMsw*>(gInputPtr);
     GN_ASSERT( inst );
 
     const MSG * p = (const MSG*)lParam;
@@ -272,11 +272,11 @@ GN::input::BasicMswInput::sMsgHookProc( int nCode, WPARAM wp, LPARAM lParam )
 //
 // -----------------------------------------------------------------------------
 LRESULT CALLBACK
-GN::input::BasicMswInput::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
+GN::input::BasicInputMsw::sCwpHookProc( int nCode, WPARAM wp, LPARAM lParam )
 {
     GN_GUARD;
 
-    BasicMswInput * inst = safeCast<BasicMswInput*>(gInputPtr);
+    BasicInputMsw * inst = safeCast<BasicInputMsw*>(gInputPtr);
     GN_ASSERT( inst );
 
     const CWPSTRUCT * p = (const CWPSTRUCT*)lParam;

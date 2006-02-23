@@ -1,7 +1,7 @@
-#ifndef __GN_INPUT_X11INPUT_H__
-#define __GN_INPUT_X11INPUT_H__
+#ifndef __GN_INPUT_INPUTX11_H__
+#define __GN_INPUT_INPUTX11_H__
 // *****************************************************************************
-//! \file    x11Input.h
+//! \file    inputX11.h
 //! \brief   Input system on X11 platform
 //! \author  chenlee (2005.11.10)
 // *****************************************************************************
@@ -16,9 +16,9 @@ namespace GN { namespace input
     //!
     //! Input system on X11 platform
     //!
-    class X11Input : public BasicInput, public StdClass
+    class InputX11 : public BasicInput, public StdClass
     {
-         GN_DECLARE_STDCLASS( X11Input, StdClass );
+         GN_DECLARE_STDCLASS( InputX11, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -26,8 +26,8 @@ namespace GN { namespace input
 
         //@{
     public:
-        X11Input();
-        virtual ~X11Input() { quit(); }
+        InputX11();
+        virtual ~InputX11() { quit(); }
         //@}
 
         // ********************************
@@ -83,6 +83,6 @@ namespace GN { namespace input
 #endif // GN_POSIX
 
 // *****************************************************************************
-//                           End of x11Input.h
+//                           End of inputX11.h
 // *****************************************************************************
-#endif // __GN_INPUT_X11INPUT_H__
+#endif // __GN_INPUT_INPUTX11_H__

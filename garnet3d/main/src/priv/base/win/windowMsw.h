@@ -35,7 +35,7 @@ namespace GN { namespace win
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() {}
+        void clear() { mClassName.clear(); mModuleInstance = 0; mWindow = 0; }
         //@}
 
         // ********************************
@@ -45,16 +45,17 @@ namespace GN { namespace win
 
         //@{
 
-        DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
-        WindowHandle getWindowHandle() const { return (WindowHandle)1; }
-        Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
-        void show() {}
-        void hide() {}
-        void redraw() {}
-        void moveTo( int, int ) {}
-        void resize( size_t, size_t ) {}
+        DisplayHandle getDisplayHandle() const;
+        WindowHandle getWindowHandle() const { return mWindow; }
+        Vector2<size_t> getClientSize() const;
+        void show();
+        void hide();
+        void minimize() {}
+        void moveTo( int, int );
+        void resize( size_t, size_t );
+        void repaint() {}
         void run() {}
-        void runWhileEvents() {}
+        void runWhileEvents() { processWindowMessages(mWindow,false); }
         void stepOneEvent() {}
         void attachEventHandler( const StrA &, const WindowEventHandler & ) {}
         void removeEventHandler( const StrA &, const WindowEventHandler & ) {}
@@ -66,10 +67,20 @@ namespace GN { namespace win
         // ********************************
     private:
 
+        StrA mClassName;
+        HINSTANCE mModuleInstance;
+        HWND mWindow;
+
+        static std::map<void*,WindowMsw*> msInstanceMap;
+
         // ********************************
         // private functions
         // ********************************
     private:
+        bool createWindow( const WindowCreationParams & wcp );
+
+        LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
+        static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
     };
 }}
 

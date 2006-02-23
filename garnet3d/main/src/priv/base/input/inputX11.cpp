@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "x11Input.h"
+#include "inputX11.h"
 
 #if GN_POSIX
 
@@ -16,7 +16,7 @@ static const int UNINTERESTED_EVENTS = PointerMotionHintMask;
 //
 //
 // -----------------------------------------------------------------------------
-GN::input::X11Input::X11Input()
+GN::input::InputX11::InputX11()
 {
     clear();
 
@@ -34,12 +34,12 @@ GN::input::X11Input::X11Input()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::X11Input::init()
+bool GN::input::InputX11::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::input::X11Input, () );
+    GN_STDCLASS_INIT( GN::input::InputX11, () );
 
     // Do custom init here
 
@@ -52,7 +52,7 @@ bool GN::input::X11Input::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::X11Input::quit()
+void GN::input::InputX11::quit()
 {
     GN_GUARD;
 
@@ -70,7 +70,7 @@ void GN::input::X11Input::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::X11Input::attachToWindow( HandleType disp, HandleType win )
+bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
 {
     GN_GUARD;
 
@@ -112,13 +112,13 @@ bool GN::input::X11Input::attachToWindow( HandleType disp, HandleType win )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::X11Input::processInputEvents()
+void GN::input::InputX11::processInputEvents()
 {
     GN_GUARD_SLOW;
 
     if( !mDisplay || !mWindow )
     {
-        GN_ERROR( "X11Input is not initialized" );
+        GN_ERROR( "InputX11 is not initialized" );
         return;
     }
 
@@ -174,7 +174,7 @@ void GN::input::X11Input::processInputEvents()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::X11Input::getMousePosition( int & x, int & y ) const
+void GN::input::InputX11::getMousePosition( int & x, int & y ) const
 {
     GN_GUARD;
 

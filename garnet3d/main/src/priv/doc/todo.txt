@@ -16,6 +16,7 @@ TODO
 
 - p1
   - implement WIN module
+  - UT for Str::findFirst/LastOf(...)
   - Learn now to create GL compatible window on cygwin using FOX-TOOLKIT
   - GFX system
     - support render-to-texture on xenon (including depth texture)

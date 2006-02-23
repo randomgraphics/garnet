@@ -6,8 +6,8 @@
 //! \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "mswRenderWindow.h"
-#include "xRenderWindow.h"
+#include "renderWindowMsw.h"
+#include "renderWindowX11.h"
 
 //!
 //! trace the call sequence of device reset/recreate
@@ -97,12 +97,12 @@ namespace GN { namespace gfx
 
 #if GN_MSWIN
     protected:
-        MSWRenderWindow mWindow;  //!< Render window instance.
+        RenderWindowMsw mWindow;  //!< Render window instance.
     private:
-        WinProp        mWinProp; //!< Render window properites.
+        WinProp         mWinProp; //!< Render window properites.
 #elif GN_POSIX
     private:
-        XRenderWindow mWindow;  //!< Render window instance
+        RenderWindowX11 mWindow;  //!< Render window instance
 #endif
 
         //@}

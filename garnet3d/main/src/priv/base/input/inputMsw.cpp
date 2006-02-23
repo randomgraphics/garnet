@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "mswInput.h"
+#include "inputMsw.h"
 
 #if GN_MSWIN && !GN_XENON
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::input::MswInput::MswInput()
+GN::input::InputMsw::InputMsw()
 {
     // clear all fields to KEY_NONE
     memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
@@ -21,7 +21,7 @@ GN::input::MswInput::MswInput()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::input::MswInput::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
+void GN::input::InputMsw::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
 {
     switch( msg )
     {
@@ -76,7 +76,7 @@ void GN::input::MswInput::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
     }
 
     // call parent's method
-    BasicMswInput::msgHandler( msg, wp, lp );
+    BasicInputMsw::msgHandler( msg, wp, lp );
 }
 
 #endif // GN_MSWIN

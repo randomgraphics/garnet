@@ -1,7 +1,7 @@
-#ifndef __GN_INPUT_BASICWININPUT_H__
-#define __GN_INPUT_BASICWININPUT_H__
+#ifndef __GN_INPUT_BASICINPUTMSW_H__
+#define __GN_INPUT_BASICINPUTMSW_H__
 // *****************************************************************************
-//! \file    basicMswInput.h
+//! \file    basicInputMsw.h
 //! \brief   Basic input system for NT platform
 //! \author  chenlee (2005.10.25)
 // *****************************************************************************
@@ -15,9 +15,9 @@ namespace GN { namespace input
     //!
     //! Basic input system for MS windows. 实现windows系统下输入系统的基本功能.
     //!
-    class BasicMswInput : public BasicInput, public StdClass
+    class BasicInputMsw : public BasicInput, public StdClass
     {
-         GN_DECLARE_STDCLASS( BasicMswInput, StdClass );
+         GN_DECLARE_STDCLASS( BasicInputMsw, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -25,8 +25,8 @@ namespace GN { namespace input
 
         //@{
     public:
-        BasicMswInput()          { clear(); }
-        virtual ~BasicMswInput() { quit(); }
+        BasicInputMsw()          { clear(); }
+        virtual ~BasicInputMsw() { quit(); }
         //@}
 
         // ********************************
@@ -107,4 +107,4 @@ namespace GN { namespace input
 // *****************************************************************************
 //                           End of basicWinInput.h
 // *****************************************************************************
-#endif // __GN_INPUT_BASICWININPUT_H__
+#endif // __GN_INPUT_BASICINPUTMSW_H__

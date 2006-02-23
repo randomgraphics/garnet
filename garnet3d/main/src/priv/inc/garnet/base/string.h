@@ -279,6 +279,96 @@ namespace GN
         //!
         const CHAR * end() const { return mPtr+mLen; }
 
+        static const size_t NOT_FOUND = (size_t)-1; //!< indicate serach failure.
+
+        //!
+        //! Searches through a string for the first character that matches any elements in user specified string
+        //!
+        //! \param s
+        //!     User specified search pattern
+        //! \param offset, count
+        //!     Range of the search
+        //!
+        size_t findFirstOf( const char * s, size_t offset = 0, size_t count = 0 ) const
+        {
+            if( 0 == s || 0 == *s ) return NOT_FOUND;
+            if( offset >= mLen ) return NOT_FOUND;
+            if( 0 == count ) count = mLen;
+            if( offset + count > mLen ) count = mLen - offset;
+            const char * p = mPtr + offset;
+            for( size_t i = 0; i < count; ++i, ++p )
+            {
+                for( const char * t = s; *t; ++t )
+                {
+                    GN_ASSERT( *p && *t );
+                    if( *p == *t ) return offset + i;
+                }
+            }
+            return NOT_FOUND;
+        }
+
+        //!
+        //! Searches through a string for the first character that not any elements of user specifed string.
+        //!
+        size_t findFirstNotOf( const char * s, size_t offset = 0, size_t count = 0 ) const
+        {
+            if( 0 == s || 0 == *s ) return NOT_FOUND;
+            if( offset >= mLen ) return NOT_FOUND;
+            if( 0 == count ) count = mLen;
+            if( offset + count > mLen ) count = mLen - offset;
+            const char * p = mPtr + offset;
+            for( size_t i = 0; i < count; ++i, ++p )
+            {
+                for( const char * t = s; *t; ++t )
+                {
+                    GN_ASSERT( *p && *t );
+                    if( *p != *t ) return offset + i;
+                }
+            }
+            return NOT_FOUND;
+        }
+
+        //!
+        //! Searches through a string for the first character that matches users predication
+        //!
+        template<typename PRED>
+        size_t findFirstOf( const PRED & pred, size_t offset = 0, size_t count = 0 ) const
+        {
+            if( 0 == s || 0 == *s ) return NOT_FOUND;
+            if( offset >= mLen ) return NOT_FOUND;
+            if( 0 == count ) count = mLen;
+            if( offset + count > mLen ) count = mLen - offset;
+            const char * p = mPtr + offset;
+            for( size_t i = 0; i < count; ++i, ++p )
+            {
+                GN_ASSERT( *p );
+                if( pred(*p) ) return offset + i;
+            }
+            return NOT_FOUND;
+        }
+
+        //!
+        //! Searches through a string for the last character that matches any elements in user specified string
+        //!
+        size_t findLastOf( const char * s, size_t offset = 0, size_t count = 0 ) const
+        {
+            if( 0 == s || 0 == *s ) return NOT_FOUND;
+            if( offset >= mLen ) return NOT_FOUND;
+            if( 0 == count ) count = mLen;
+            if( offset + count > mLen ) count = mLen - offset;
+            GN_ASSERT( count > 0 );
+            const char * p = mPtr + offset + count - 1;
+            for( size_t i = count; i > 0; --i, --p )
+            {
+                for( const char * t = s; *t; ++t )
+                {
+                    GN_ASSERT( *p && *t );
+                    if( *p == *t ) return offset + count - i;
+                }
+            }
+            return NOT_FOUND;
+        }
+
         //!
         //! get first character of the string. If string is empty, return 0.
         //!

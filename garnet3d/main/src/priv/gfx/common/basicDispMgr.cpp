@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "basicRenderer.h"
-#include "mswRenderWindow.h"
-#include "xRenderWindow.h"
+#include "renderWindowMsw.h"
+#include "renderWindowX11.h"
 #include <limits.h>
 
 //

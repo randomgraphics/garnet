@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "mswInput.h"
-#include "diInput.h"
-#include "x11Input.h"
+#include "inputMsw.h"
+#include "inputDInput.h"
+#include "inputX11.h"
 
 // *****************************************************************************
 // Fake input system
@@ -39,11 +39,11 @@ static GN::input::Input * sCreateNativeInputSystem()
 #if GN_XENON
     return sCreateXInputSystem();
 #elif GN_MSWIN
-    GN::AutoObjPtr<GN::input::MswInput> p( new GN::input::MswInput );
+    GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
     if( !p->init() ) return 0;
     return p.detach();
 #else
-    GN::AutoObjPtr<GN::input::X11Input> p( new GN::input::X11Input );
+    GN::AutoObjPtr<GN::input::InputX11> p( new GN::input::InputX11 );
     if( !p->init() ) return 0;
     return p.detach();
 #endif
@@ -71,7 +71,7 @@ GN::input::Input * GN::input::createInputSystem( InputApi api )
 #if GN_MSWIN && !GN_XENON
         case API_DINPUT :
         {
-            AutoObjPtr<DIInput> p( new DIInput );
+            AutoObjPtr<InputDInput> p( new InputDInput );
             if( !p->init() ) return 0;
             return p.detach();
         }
