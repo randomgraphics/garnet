@@ -8,19 +8,9 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNcore.h"
+#include "garnet/GNwin.h"
 #include "garnet/GNgfx.h"
-
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
-#define NOMINMAX
-#include <windows.h>
-#endif
-
-#include <exception>
-#include <malloc.h>
-#include <stdlib.h>
-
+#include "garnet/GNinput.h"
 #include "garnet/base/pragma.h"
 
 // *****************************************************************************

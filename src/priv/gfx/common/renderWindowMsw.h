@@ -1,7 +1,7 @@
-#ifndef __GN_GFX_MSWRENDERWINDOW_H__
-#define __GN_GFX_MSWRENDERWINDOW_H__
+#ifndef __GN_GFX_RENDERWINDOWMSW_H__
+#define __GN_GFX_RENDERWINDOWMSW_H__
 // *****************************************************************************
-//! \file    mswRenderWindow.h
+//! \file    renderWindowMsw.h
 //! \brief   Render window class on NT platform
 //! \author  chenlee (2005.10.4)
 // *****************************************************************************
@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     //!
     //! Render window class on Xenon platform
     //!
-    class MSWRenderWindow
+    class RenderWindowMsw
     {
         // ********************************
         // ctor/dtor
@@ -21,8 +21,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MSWRenderWindow() : mWidth(0), mHeight(0) {}
-        ~MSWRenderWindow() { quit(); }
+        RenderWindowMsw() : mWidth(0), mHeight(0) {}
+        ~RenderWindowMsw() { quit(); }
         //@}
 
         // ********************************
@@ -115,7 +115,7 @@ namespace GN { namespace gfx
     //!
     //! Render window class on Windows (PC) platform
     //!
-    class MSWRenderWindow
+    class RenderWindowMsw
     {
         // ********************************
         // ctor/dtor
@@ -123,8 +123,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        MSWRenderWindow() : mWindow(0), mHook(0), mMonitor(0) { ++msInstanceID; }
-        ~MSWRenderWindow() { quit(); }
+        RenderWindowMsw() : mWindow(0), mHook(0), mMonitor(0) {}
+        ~RenderWindowMsw() { quit(); }
         //@}
 
         // ********************************
@@ -212,8 +212,7 @@ namespace GN { namespace gfx
 
         HMONITOR mMonitor;
 
-        static unsigned int msInstanceID;
-        static std::map<void*,MSWRenderWindow*> msInstanceMap;
+        static std::map<void*,RenderWindowMsw*> msInstanceMap;
 
         // ********************************
         // private functions
@@ -268,6 +267,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of mswRenderWindow.h
+//                           End of renderWindowMsw.h
 // *****************************************************************************
-#endif // __GN_GFX_MSWRENDERWINDOW_H__
+#endif // __GN_GFX_RENDERWINDOWMSW_H__

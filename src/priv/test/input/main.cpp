@@ -1,13 +1,11 @@
 #include "pch.h"
 
-#if 0 // GN_MSWIN && !GN_XENON
-
 //!
 //! input module test application
 //!
 class InputTest
 {
-    GN::win::MswWindow mWin;
+    GN::AutoObjPtr<GN::win::Window> mWin;
     GN::AutoObjPtr<GN::input::Input> mInput;
 
     bool mDone;
@@ -16,10 +14,9 @@ class InputTest
 
     bool createWindow()
     {
-        GN::win::MswWindow::CreateParam cp;
-        mWin.setWindowProcedure( GN::makeFunctor(this,&InputTest::winProc) );
-        if( !mWin.create(cp) ) return false;
-        mWin.showWindow();
+        mWin.attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+        if( mWin.empty() ) return false;
+        mWin->show();
         return true;
     }
 
@@ -27,7 +24,7 @@ class InputTest
     {
         mInput.attach( GN::input::createInputSystem(
             0 == GN::strCmp("DI",api) ? GN::input::API_DINPUT : GN::input::API_NATIVE ) );
-        if( !mInput || !mInput->attachToWindow( 0, mWin.getWindow() ) ) return false;
+        if( !mInput || !mInput->attachToWindow( 0, mWin->getWindowHandle() ) ) return false;
 
         // connect to input signals
         mInput->sigKeyPress.connect( this, &InputTest::onKeyPress );
@@ -37,7 +34,7 @@ class InputTest
         return true;
     }
 
-    LRESULT winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+    /*LRESULT winProc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
     {
         switch(msg)
         {
@@ -73,12 +70,12 @@ class InputTest
         }
 
         return ::DefWindowProc( hwnd, msg, wp, lp );
-    }
+    }*/
 
     void onKeyPress( GN::input::KeyEvent ke )
     {
         mLastKeyEvent = ke;
-        InvalidateRect( mWin.getWindow(), 0, true );
+        mWin->repaint();
         if( !ke.status.down )
         {
             if( GN::input::KEY_ESCAPE == ke.code ) mDone = true;
@@ -91,7 +88,7 @@ class InputTest
 
     void onAxisMove( GN::input::Axis, int  )
     {
-        InvalidateRect( mWin.getWindow(), 0, true );
+        mWin->repaint();
     }
 
 public:
@@ -111,8 +108,7 @@ public:
     //!
     bool init( const char * api )
     {
-        if( !createWindow() ||
-            !createInput(api) ) return false;
+        if( !createWindow() || !createInput(api) ) return false;
 
         mDone = false;
 
@@ -126,7 +122,7 @@ public:
     void quit()
     {
         mInput.clear();
-        mWin.destroy();
+        mWin.clear();
     }
 
     //!
@@ -142,19 +138,11 @@ public:
 
         while(!mDone)
         {
-            GN::win::processMswMessages( mWin.getWindow() );
+            mWin->runWhileEvents();
             mInput->processInputEvents();
-            update();
         }
 
         return 0;
-    }
-
-    //!
-    //! Frame update
-    //!
-    void update()
-    {
     }
 };
 
@@ -193,7 +181,3 @@ int main( int argc, const char * argv[] )
     if( !app.init( module ) ) return -1;
     return app.run();
 }
-
-#else // GN_MSWIN
-int main() { return 0; }
-#endif

@@ -1,8 +1,8 @@
-#ifndef __GN_GFX_XRENDERWINDOW_H__
-#define __GN_GFX_XRENDERWINDOW_H__
+#ifndef __GN_GFX_RENDERWINDOWX11_H__
+#define __GN_GFX_RENDERWINDOWX11_H__
 // *****************************************************************************
-//! \file    xRenderWindow.h
-//! \brief   Window class on X XRenderWindow platform
+//! \file    renderWindowX11.h
+//! \brief   Window class on X RenderWindowX11 platform
 //! \author  chenlee (2005.10.4)
 // *****************************************************************************
 
@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     //!
     //! Render window class on POSIX platform
     //!
-    class XRenderWindow
+    class RenderWindowX11
     {
         bool mUseExternalDisplay;
         bool mUseExternalWindow;
@@ -22,8 +22,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        XRenderWindow() : mDisplay(0), mWindow(0) {}
-        ~XRenderWindow() {}
+        RenderWindowX11() : mDisplay(0), mWindow(0) {}
+        ~RenderWindowX11() {}
         //@}
 
         // ********************************
@@ -92,6 +92,6 @@ namespace GN { namespace gfx
 #endif // GN_POSIX
 
 // *****************************************************************************
-//                           End of xRenderWindow.h
+//                           End of renderWindowX11.h
 // *****************************************************************************
-#endif // __GN_GFX_XRENDERWINDOW_H__
+#endif // __GN_GFX_RENDERWINDOWX11_H__

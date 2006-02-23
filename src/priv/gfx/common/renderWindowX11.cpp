@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "xRenderWindow.h"
+#include "renderWindowX11.h"
 
 #if GN_POSIX
 
@@ -114,7 +114,7 @@ int GN::gfx::getScreenNumberOfWindow( Display * disp, Window win )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XRenderWindow::initExternalRenderWindow(
+bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
     HandleType display, HandleType externalWindow )
 {
     GN_GUARD;
@@ -140,7 +140,7 @@ bool GN::gfx::XRenderWindow::initExternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XRenderWindow::initInternalRenderWindow(
+bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     HandleType display, HandleType parentWindow, uint32_t width, uint32_t height )
 {
     GN_GUARD;
@@ -239,7 +239,7 @@ bool GN::gfx::XRenderWindow::initInternalRenderWindow(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::XRenderWindow::quit()
+void GN::gfx::RenderWindowX11::quit()
 {
     GN_GUARD;
 
@@ -264,7 +264,7 @@ void GN::gfx::XRenderWindow::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::HandleType GN::gfx::XRenderWindow::getMonitor() const
+GN::HandleType GN::gfx::RenderWindowX11::getMonitor() const
 {
     GN_GUARD;
 
@@ -276,13 +276,13 @@ GN::HandleType GN::gfx::XRenderWindow::getMonitor() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XRenderWindow::getClientSize( uint32_t & width, uint32_t & height ) const
+bool GN::gfx::RenderWindowX11::getClientSize( uint32_t & width, uint32_t & height ) const
 {
     GN_GUARD;
 
     if( !sIsWindow( mDisplay, (void*)mWindow ) )
     {
-        GN_ERROR( "XRenderWindow is not initialized!" );
+        GN_ERROR( "RenderWindowX11 is not initialized!" );
         return false;
     }
 
@@ -305,7 +305,7 @@ bool GN::gfx::XRenderWindow::getClientSize( uint32_t & width, uint32_t & height 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::XRenderWindow::initDisplay( HandleType display )
+bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
 {
     GN_GUARD;
 

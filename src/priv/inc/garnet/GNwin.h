@@ -13,8 +13,8 @@ namespace GN
     //!
     namespace win
     {
-        typedef HandleType WindowHandle;  //!< window handle.
-        typedef HandleType DisplayHandle; //!< monitor handle.
+        typedef HandleType WindowHandle;  //!< window handle/ID.
+        typedef HandleType DisplayHandle; //!< monitor handle on MSWIN; display ID on X11.
 
         typedef Functor2<void,void*,bool&> WindowEventHandler; //!< Window event handler.
 
@@ -41,8 +41,10 @@ namespace GN
             //@{
             virtual void show() = 0;
             virtual void hide() = 0;
+            virtual void minimize() = 0;
             virtual void moveTo( int x, int y ) = 0;
             virtual void resize( size_t clientWidth, size_t clientHeight ) = 0;
+            virtual void repaint() = 0;
             //@}
 
             //! \name window events
@@ -80,21 +82,32 @@ namespace GN
             size_t clientHeight; //!< client height. 0 means default height
             bool hasBorder; //!< has border or not
             bool hasTitleBar; //!< has title bar or not
-            bool hasStatusBar; //!< has status bar or not
             bool topMost; //!< top-most(always on top) or not
-
-            //!
-            //! Default parameters to create main render window.
-            //!
-            //! no border, no title, no parent, topmost, 640x480
-            //!
-            static WindowCreationParams WCP_MAIN_RENDER_WINDOW;
         };
+
+        //!
+        //! Default parameters to create main render window.
+        //!
+        //! border, title, no parent, 640x480
+        //!
+        extern const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW;
+
+        //!
+        //! Default parameters to create main render window.
+        //!
+        //! no border, no title, no parent, topmost, 640x480
+        //!
+        extern const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW;
 
         //!
         //! Create window instance
         //!
         Window * createWindow( const WindowCreationParams & );
+
+        //!
+        //! Process windows messages. No effects on platform other than MS Windows.
+        //!
+        void processWindowMessages( WindowHandle window, bool blockWhileMinized );
     }
 }
 

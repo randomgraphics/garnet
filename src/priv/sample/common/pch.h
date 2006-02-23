@@ -7,17 +7,11 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
+#include "garnet/GNwin.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
 #include "garnet/base/pragma.h"
-
-#if GN_XENON
-#include <xtl.h>
-#else
-#define NOMINMAX
-#include <windows.h>
-#endif
 
 // *****************************************************************************
 //                           End of pch.h

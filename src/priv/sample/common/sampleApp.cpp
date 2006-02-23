@@ -1,42 +1,6 @@
 #include "pch.h"
 #include "sampleApp.h"
 
-//
-//
-// -----------------------------------------------------------------------------
-#if GN_MSWIN && !GN_XENON
-static void sProcessMswMessages( GN::HandleType wnd )
-{
-    GN_GUARD;
-
-    GN_ASSERT( ::IsWindow( (HWND)wnd ) );
-
-    MSG msg;
-    while( true )
-    {
-        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
-        {
-            if( WM_QUIT == msg.message )
-            {
-                return;
-            }
-            ::TranslateMessage( &msg );
-            ::DispatchMessage(&msg);
-        }
-        else if( ::IsIconic( (HWND)wnd ) ) // Block minimized application
-        {
-            GN_INFO( "Wait for window messages..." );
-            ::WaitMessage();
-        }
-        else return; // Idle time
-    }
-
-    GN_UNGUARD;
-}
-#else
-static void sProcessMswMessages( GN::HandleType ) {}
-#endif
-
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -106,7 +70,7 @@ int GN::sample::SampleApp::run()
 
     while( !mDone )
     {
-        sProcessMswMessages( gRenderer.getDispDesc().windowHandle );
+        GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
         gInput.processInputEvents();
         onUpdate();
         if( gRenderer.drawBegin() )

@@ -8,7 +8,7 @@
 
 #include "../../testCommon.h"
 #include "garnet/GNgfx.h"
-#include "foxAll.h"
+#include "garnet/GNwin.h"
 
 //! \cond
 
@@ -172,23 +172,19 @@ protected:
 
     void externalWindow()
     {
-#if !GN_XENON
-        using namespace FX;
-        FXApp app("Unit Test","Garnet");
-        const char * args [] = { "GNut" };
-        app.init(1, args);
-        FXMainWindow * main=new FXMainWindow(&app,"Unit Test",NULL,NULL,DECOR_ALL);
-        main->resize( 511, 236 );
-        app.create();
-        main->show(PLACEMENT_SCREEN);
-        app.runWhileEvents();
+        GN::AutoObjPtr<GN::win::Window> win;
+        win.attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+        TS_ASSERT( !win.empty() );
+        if( win.empty() ) return;
+        win->resize( 511, 236 );
+        win->show();
 
         TestScene scene;
         GN::gfx::RendererOptions ro;
 
         ro.useExternalWindow = true;
-        ro.displayHandle = app.getDisplay();
-        ro.renderWindow = main->id();
+        ro.displayHandle = win->getDisplayHandle();
+        ro.renderWindow = win->getWindowHandle();
         ro.software = true;
         if( !scene.create(mApi,ro) ) return;
 
@@ -196,11 +192,11 @@ protected:
 
         const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
 
-        TS_ASSERT_EQUALS( dd.windowHandle, main->id() );
-        //TS_ASSERT_EQUALS( dd.monitorHandle, win.getMonitor() );
-        TS_ASSERT_EQUALS( dd.width, main->getWidth() );
-        TS_ASSERT_EQUALS( dd.height, main->getHeight() );
-#endif
+        TS_ASSERT_EQUALS( dd.windowHandle, win->getWindowHandle() );
+        //TS_ASSERT_EQUALS( dd.monitorHandle, win->getDisplayHandle() );
+        GN::Vector2<size_t> winSize = win->getClientSize();
+        TS_ASSERT_EQUALS( dd.width, winSize.x );
+        TS_ASSERT_EQUALS( dd.height, winSize.y );
     }
 
     void changeOptions()
