@@ -18,6 +18,7 @@ def generate(env):
     SCons.Tool.xenoncl.generate(env)
     SCons.Tool.xenonlink.generate(env)
     SCons.Tool.xenonlib.generate(env)
+    SCons.Tool.msvs.generate(env)
 
 def exists(env):
     return 'XEDK' in os.environ;
