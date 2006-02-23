@@ -10,6 +10,9 @@ if 'vc80-x64' == GN_conf['compiler']:
 elif 'vc80' == GN_conf['compiler']:
     variant = '%s|Win32'%GN_conf['variant']
     target_dir = '8.0'
+elif 'xenon' == GN_conf['compiler']:
+    variant = '%s|Xenon'%GN_conf['variant']
+    target_dir = '7.1'
 else:
     variant = '%s|Win32'%GN_conf['variant']
     target_dir = '7.1'
