@@ -6,6 +6,8 @@
 //! \author  chenlee (2006.2.23)
 // *****************************************************************************
 
+#if GN_MSWIN && !GN_XENON
+
 namespace GN { namespace win
 {
     //!
@@ -50,15 +52,15 @@ namespace GN { namespace win
         Vector2<size_t> getClientSize() const;
         void show();
         void hide();
-        void minimize() {}
+        void minimize() { GN_UNIMPL_WARNING(); }
         void moveTo( int, int );
         void resize( size_t, size_t );
-        void repaint() {}
-        void run() {}
+        void repaint();
+        void run() { GN_UNIMPL_WARNING(); }
         void runWhileEvents() { processWindowMessages(mWindow,false); }
-        void stepOneEvent() {}
-        void attachEventHandler( const StrA &, const WindowEventHandler & ) {}
-        void removeEventHandler( const StrA &, const WindowEventHandler & ) {}
+        void stepOneEvent() { GN_UNIMPL_WARNING(); }
+        void attachEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
+        void removeEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
 
         //@}
 
@@ -83,6 +85,8 @@ namespace GN { namespace win
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
     };
 }}
+
+#endif
 
 // *****************************************************************************
 //                           End of windowMsw.h

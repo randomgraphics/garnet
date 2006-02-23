@@ -1,5 +1,5 @@
-#ifndef __GN_GFXCOMMON_PCH_H__
-#define __GN_GFXCOMMON_PCH_H__
+#ifndef __GN_PCH_H__
+#define __GN_PCH_H__
 // *****************************************************************************
 // \file    pch.h
 // \brief   PCH header
@@ -10,7 +10,7 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 
-#if GN_MSWIN
+#if GN_MSWIN && !GN_XENON
 #define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
 #endif
@@ -28,4 +28,4 @@
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************
-#endif // __GN_GFXCOMMON_PCH_H__
+#endif // __GN_PCH_H__
