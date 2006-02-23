@@ -334,7 +334,6 @@ namespace GN
         template<typename PRED>
         size_t findFirstOf( const PRED & pred, size_t offset = 0, size_t count = 0 ) const
         {
-            if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mLen ) return NOT_FOUND;
             if( 0 == count ) count = mLen;
             if( offset + count > mLen ) count = mLen - offset;
