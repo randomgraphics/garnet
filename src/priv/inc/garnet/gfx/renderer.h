@@ -1153,7 +1153,7 @@ namespace GN { namespace gfx
             mTransformProj;  //!< Projection transformation
 
         FixedStack<Rectf>
-            mViewport; //!< Resolution-independent viewport: (0,0,1,1) means whole screen.
+            mViewport; //!< Resolution-independent viewport: (0,0,1,1) means whole screen or render target.
 
         FixedStack<Vector4f>
             mLight0Pos,        //!< Light0 position
