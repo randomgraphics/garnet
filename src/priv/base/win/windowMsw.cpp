@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "windowMsw.h"
 
+#if GN_MSWIN && !GN_XENON
+
 std::map<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
 // *****************************************************************************
@@ -152,6 +154,19 @@ void GN::win::WindowMsw::resize( size_t w, size_t h )
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::win::WindowMsw::repaint()
+{
+    GN_GUARD;
+    GN_MSW_CHECK( ::RedrawWindow(
+        mWindow,
+        NULL, NULL, // rc, rgn
+        RDW_ERASE | RDW_FRAME | RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_ALLCHILDREN ) );
+    GN_UNGUARD;
+}
+
 // *****************************************************************************
 // Private methods
 // *****************************************************************************
@@ -289,3 +304,5 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 
     GN_UNGUARD;
 }
+
+#endif
