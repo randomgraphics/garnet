@@ -32,67 +32,6 @@ jpeg_env.Append( CPPPATH = [Dir('jpeg').srcnode()] )
 if 'gcc' == env['CC']: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
 jpeg_objs = jpeg_env.GN_build_static_objects( env.GN_glob( 'jpeg/*.c' ), pdb = 'GNextern.pdb' )
 
-# *****************
-# build fox library
-# *****************
-
-if 'xenon' != GN_conf['compiler']:
-    fox_env = env.Copy()
-    fox_env.Append(
-        CPPPATH = ['../inc/fox'],
-        CPPDEFINES = Split('HAVE_ZLIB_H HAVE_JPEG_H HAVE_PNG_H') )
-    if 'win32' == env['PLATFORM']:
-        fox_env.Append( CPPDEFINES = ['WIN32'] )
-    else:
-        import os.path
-        # This is to overcome scons bug that incorrectly convert build dir back to source dir.
-        conf_dir = GN_conf['variant_dir'] + '_foxconf'
-        fox_conf = fox_env.Configure(
-            conf_dir = conf_dir,
-            log_file = os.path.join(conf_dir,'config.log'),
-            )
-        if fox_conf.CheckCHeader( 'unistd.h' )                  : fox_env.Append( CPPDEFINES=['HAVE_UNISTD_H'] )
-        if fox_conf.CheckCHeader( 'dirent.h' )                  : fox_env.Append( CPPDEFINES=['HAVE_DIRENT_H'] )
-        if fox_conf.CheckCHeader( 'GL/gl.h' )                   : fox_env.Append( CPPDEFINES=['HAVE_GL_H'] )
-        if fox_conf.CheckCHeader( 'GL/glu.h' )                  : fox_env.Append( CPPDEFINES=['HAVE_GLU_H'] )
-        if fox_conf.CheckCHeader( 'sys/time.h' )                : fox_env.Append( CPPDEFINES=['HAVE_SYS_TIME_H'] )
-        if fox_conf.CheckCHeader( 'sys/wait.h' )                : fox_env.Append( CPPDEFINES=['HAVE_SYS_WAIT_H'] )
-        if fox_conf.CheckCHeader( 'sys/param.h' )               : fox_env.Append( CPPDEFINES=['HAVE_SYS_PARAM_H'] )
-        if fox_conf.CheckCHeader( 'sys/select.h' )              : fox_env.Append( CPPDEFINES=['HAVE_SYS_SELECT_H'] )
-        if fox_conf.CheckCHeader( 'sys/ndir.h' )                : fox_env.Append( CPPDEFINES=['HAVE_SYS_NDIR_H'] )
-        if fox_conf.CheckCHeader( 'sys/dir.h' )                 : fox_env.Append( CPPDEFINES=['HAVE_SYS_DIR_H'] )
-        if fox_conf.CheckCHeader( 'sys/ipc.h' ) and \
-           fox_conf.CheckCHeader( 'sys/shm.h' ) and \
-           fox_conf.CheckCHeader( Split('X11/Xlib.h X11/extensions/XShm.h') )   : fox_env.Append( CPPDEFINES=['HAVE_SYS_XSHM_H'] )
-        if fox_conf.CheckCHeader( 'sys/mman.h' )                                : fox_env.Append( CPPDEFINES=['HAVE_SYS_MMAP_H'] )
-        if fox_conf.CheckCHeader( Split('X11/Xlib.h X11/Xcursor/Xcursor.h') )   : fox_env.Append( CPPDEFINES=['HAVE_XCURSOR_H'] )
-        if fox_conf.CheckCHeader( Split('X11/Xlib.h X11/Xft/Xft.h') )           : fox_env.Append( CPPDEFINES=['HAVE_XFT_H'] )
-        if fox_conf.CheckCHeader( Split('X11/Xlib.h X11/extensions/shape.h') )  : fox_env.Append( CPPDEFINES=['HAVE_XSHAPE_H'] )
-        if fox_conf.CheckCHeader( Split('X11/Xlib.h X11/extensions/Xrandr.h') ) : fox_env.Append( CPPDEFINES=['HAVE_XRANDR_H'] )
-        fox_conf.Finish();
-    if 'cl' == env['CC']:
-        fox_env.Append( CCFLAGS = ['/GR'] ) # Enable RTTI for Vistual Studio
-        unimportant_warnings = [
-            '4018', # '<=' : signed/unsigned mismatch
-            '4146', # unary minus operator applied to unsigned type, result still unsigned
-            '4244', # onversion from 'LONG' to 'FX::FXushort', possible loss of data
-            '4307', # '+' : integral constant overflow
-            '4800', # forcing value to bool 'true' or 'false' (performance warning)
-            ]
-        fox_env.Append( CCFLAGS = ['/wd%s'%w for w in unimportant_warnings] )
-    if 'icl' == env['CC']:
-        unimportant_warnings = [
-            '61',   # integer operation result is out of range
-            '69',   # integer conversion resulted in truncation
-            '186',  # pointless comparison of unsigned integer with zero
-            ]
-        fox_env.Append( CCFLAGS = ['/Qwd%s'%w for w in unimportant_warnings] )
-    #if '/WX' in fox_env['CCFLAGS']: fox_env['CCFLAGS'].remove('/WX')
-    if '-Werror' in fox_env['CCFLAGS']: fox_env['CCFLAGS'].remove('-Werror')
-    fox_objs = fox_env.GN_build_static_objects( env.GN_glob('fox/lib/*.cpp'), 'xincs.h', 'fox/lib/pch.cpp', 'GNextern.pdb' )
-    fox_env.GN_build_program( 'FOXreswrap', ['fox/utils/reswrap.cpp'], pdb = 'FOXreswrap.pdb', ignoreDefaultLibs=True )
-else: fox_objs = []
-
 # ********************
 # build extern library
 # ********************
@@ -101,5 +40,4 @@ srcs = []
 if 'xenon' != GN_conf['compiler']: srcs += env.GN_glob( 'glew/*.c' )
 srcs += env.GN_glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
 srcs += jpeg_objs
-srcs += fox_objs
 env.GN_build_static_library( 'GNextern', srcs )
