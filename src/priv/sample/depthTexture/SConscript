@@ -2,5 +2,4 @@ Import('env')
 env.GN_build_program(
     'GNdepthTexture',
     env.GN_glob('*.cpp'),
-    'pch.h', 'pch.cpp',
-    libs = ['GNsampleCommon'] )
+    'pch.h', 'pch.cpp' )

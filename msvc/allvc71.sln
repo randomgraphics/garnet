@@ -31,23 +31,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputTest", "7.1\GNinputT
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinput", "7.1\GNinput.vcproj", "{813D9241-581A-44E0-840A-F2CB26D10EA0}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNut", "7.1\GNut.vcproj", "{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNwinTest", "7.1\GNwinTest.vcproj", "{99C64004-2623-4D98-AB2F-D47B694B557B}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxLib", "7.1\GNgfxLib.vcproj", "{4C197C4E-59E9-48ED-95F8-A54434812D48}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNsampleCommon", "7.1\GNsampleCommon.vcproj", "{E335E055-BF9F-48E3-9303-AB0A704A315F}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -127,14 +111,6 @@ Global
 		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Stdbg.Build.0 = stdbg|Win32
 		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Strel.ActiveCfg = strel|Win32
 		{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}.Strel.Build.0 = strel|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Debug.ActiveCfg = debug|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Debug.Build.0 = debug|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Release.ActiveCfg = release|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Release.Build.0 = release|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Stdbg.ActiveCfg = stdbg|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Stdbg.Build.0 = stdbg|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Strel.ActiveCfg = strel|Win32
-		{813D9241-581A-44E0-840A-F2CB26D10EA0}.Strel.Build.0 = strel|Win32
 		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Debug.ActiveCfg = debug|Win32
 		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Debug.Build.0 = debug|Win32
 		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Release.ActiveCfg = release|Win32
@@ -143,30 +119,6 @@ Global
 		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Stdbg.Build.0 = stdbg|Win32
 		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Strel.ActiveCfg = strel|Win32
 		{6FFBC754-64A4-4B99-BA6A-51DC9AAB91EA}.Strel.Build.0 = strel|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Debug.ActiveCfg = debug|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Debug.Build.0 = debug|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Release.ActiveCfg = release|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Release.Build.0 = release|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Stdbg.ActiveCfg = stdbg|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Stdbg.Build.0 = stdbg|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Strel.ActiveCfg = strel|Win32
-		{99C64004-2623-4D98-AB2F-D47B694B557B}.Strel.Build.0 = strel|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Debug.ActiveCfg = debug|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Debug.Build.0 = debug|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Release.ActiveCfg = release|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Release.Build.0 = release|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Stdbg.ActiveCfg = stdbg|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Stdbg.Build.0 = stdbg|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel.ActiveCfg = strel|Win32
-		{4C197C4E-59E9-48ED-95F8-A54434812D48}.Strel.Build.0 = strel|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Debug.ActiveCfg = debug|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Debug.Build.0 = debug|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Release.ActiveCfg = release|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Release.Build.0 = release|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Stdbg.ActiveCfg = stdbg|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Stdbg.Build.0 = stdbg|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Strel.ActiveCfg = strel|Win32
-		{E335E055-BF9F-48E3-9303-AB0A704A315F}.Strel.Build.0 = strel|Win32
 		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Debug.ActiveCfg = debug|Win32
 		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Debug.Build.0 = debug|Win32
 		{E2602755-C7BC-49D2-9DFD-8408162F5305}.Release.ActiveCfg = release|Win32

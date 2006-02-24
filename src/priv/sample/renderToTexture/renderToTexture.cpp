@@ -1,10 +1,9 @@
 #include "pch.h"
-#include "../common/sampleApp.h"
 
 using namespace GN;
 using namespace GN::gfx;
 
-class RenderToTexture : public GN::sample::SampleApp
+class RenderToTexture : public GN::app::SampleApp
 {
     AutoRef<Texture> mRt0, mRt1;
 
