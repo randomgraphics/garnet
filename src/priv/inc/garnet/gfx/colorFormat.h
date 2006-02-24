@@ -173,6 +173,11 @@ namespace GN { namespace gfx
     const ClrFmtDesc & getClrFmtDesc( ClrFmt );
 
     //!
+    //! convert color format tag to string
+    //!
+    inline const char * clrFmt2Str( ClrFmt fmt ) { return getClrFmtDesc(fmt).name; }
+
+    //!
     //! convert 4 floats to uint32
     //!
     GN_FORCE_INLINE uint32_t float4ToRGBA32( const Vector4f & color )

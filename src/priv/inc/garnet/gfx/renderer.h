@@ -704,18 +704,6 @@ namespace GN { namespace gfx
         virtual void bindShaders( const Shader * const shaders[] ) = 0;
 
         //!
-        //! Bind programmable vertex shader to rendering device. Set to NULL to use
-        //! fixed pipeline.
-        //!
-        void bindVtxShader( const Shader * s ) { bindShader( VERTEX_SHADER, s ); }
-
-        //!
-        //! Bind programmable pixel to rendering device. Set to NULL to use
-        //! fixed pipeline.
-        //!
-        void bindPxlShader( const Shader * s ) { bindShader( PIXEL_SHADER, s ); }
-
-        //!
         //! Bind programmable shaders to rendering device. Set to NULL to use
         //! fixed pipeline.
         //!
@@ -726,6 +714,28 @@ namespace GN { namespace gfx
         //! fixed pipeline.
         //!
         void bindShaderHandles( uint32_t vtxShader, uint32_t pxlShader );
+
+        //!
+        //! Bind programmable vertex shader to rendering device. Set to NULL to use
+        //! fixed pipeline.
+        //!
+        void bindVtxShader( const Shader * s ) { bindShader( VERTEX_SHADER, s ); }
+
+        //!
+        //! Bind shader by handle.
+        //!
+        void bindVtxShaderHandle( uint32_t h ) { bindShader( VERTEX_SHADER, gShaderDict.getResource(h) ); }
+
+        //!
+        //! Bind programmable pixel to rendering device. Set to NULL to use
+        //! fixed pipeline.
+        //!
+        void bindPxlShader( const Shader * s ) { bindShader( PIXEL_SHADER, s ); }
+
+        //!
+        //! Bind shader by handle.
+        //!
+        void bindPxlShaderHandle( uint32_t h ) { bindShader( PIXEL_SHADER, gShaderDict.getResource(h) ); }
 
         //@}
 
@@ -950,6 +960,11 @@ namespace GN { namespace gfx
         }
 
         //!
+        //! bind one texture handle
+        //!
+        void bindTextureHandle( uint32_t stage, uint32_t tex ) { return bindTexture( stage, gTexDict.getResource(tex) ); }
+
+        //!
         //! bind textures ( from stage[start] to stage[start+numtex-1] )
         //!
         //! \param texlist texture list
@@ -969,6 +984,17 @@ namespace GN { namespace gfx
                 }
             }
             if( start > mDirtyTextureStages ) mDirtyTextureStages = start;
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! bind texture handles
+        //!
+        void bindTextureHandles( const uint32_t texlist[], uint32_t start, uint32_t count )
+        {
+            GN_GUARD_SLOW;
+            for( size_t i = 0; i < count; ++i, ++start )
+                bindTextureHandle( start, texlist[i] );
             GN_UNGUARD_SLOW;
         }
 

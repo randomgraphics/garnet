@@ -337,7 +337,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
             // find default depth texture format
             format = sGetDefaultDepthTextureFormat( mRenderer );
             if( FMT_INVALID == format ) return false;
-            GN_TRACE( "Use default depth texture format: %s", getClrFmtDesc(format).name );
+            GN_TRACE( "Use default depth texture format: %s", clrFmt2Str(format) );
         }
         else
         {
@@ -357,7 +357,11 @@ bool GN::gfx::D3DTexture::deviceRestore()
 
     // determine D3D format
     D3DFORMAT d3dfmt = d3d::clrFmt2D3DFormat( format );
-    if( D3DFMT_UNKNOWN == d3dfmt ) return false;
+    if( D3DFMT_UNKNOWN == d3dfmt )
+    {
+        GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(format) );
+        return false;
+    }
 
     // determine D3D usage & pool
     mD3DUsage = texUsage2D3DUsage( getUsage() );
