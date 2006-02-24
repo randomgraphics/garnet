@@ -132,11 +132,9 @@ public:
 //!
 class GfxTestApp : public GN::app::SampleApp
 {
-    GN::Clock mClock;
-
     bool mDone;
 
-    GN::StrA mFPS;
+    GN::app::FpsCounter mFps;
 
     Scene * mScene;
 
@@ -148,6 +146,7 @@ public:
 
     bool onRendererCreate()
     {
+        mFps.reset();
         mScene = new Scene;
         return mScene->init();
     }
@@ -185,17 +184,8 @@ public:
         mScene->draw();
 
         // draw FPS
-        static size_t frames = 0;
-        static double lastTime = mClock.getTimeD();
-        double currentTime = mClock.getTimeD();
-        ++frames;
-        if( currentTime - lastTime >= 0.5 )
-        {
-            mFPS.format( "FPS: %.2f", frames/(currentTime - lastTime) );
-            lastTime = currentTime;
-            frames = 0;
-        }
-        r.drawDebugTextA( mFPS.cstr(), 0, 0 );
+        mFps.onFrame();
+        r.drawDebugTextA( mFps.fpsString(), 0, 0 );
 
         // draw mouse position on screen
         GN::StrA mousePos;

@@ -15,14 +15,8 @@ bool GN::app::SampleApp::init( int argc, const char * argv[] )
     // standard init procedure
     GN_STDCLASS_INIT( GN::app::SampleApp, () );
 
-    // connect to renderer signals
-    GN::gfx::Renderer::sSigDeviceCreate.connect( this, &SampleApp::onRendererCreate );
-    GN::gfx::Renderer::sSigDeviceRestore.connect( this, &SampleApp::onRendererRestore );
-    GN::gfx::Renderer::sSigDeviceDispose.connect( this, &SampleApp::onRendererDispose );
-    GN::gfx::Renderer::sSigDeviceDestroy.connect( this, &SampleApp::onRendererDestroy );
-
     if( !checkCmdLine(argc,argv) ) { quit(); return selfOK(); }
-    if( !onAppInit() ) { quit(); return selfOK(); }
+    if( !initApp() ) { quit(); return selfOK(); }
     if( !initRenderer() ) { quit(); return selfOK(); }
     if( !initInput() ) { quit(); return selfOK(); }
 
@@ -43,13 +37,7 @@ void GN::app::SampleApp::quit()
 
     quitRenderer();
     quitInput();
-    onAppQuit();
-
-    // disconnect to renderer signals
-    GN::gfx::Renderer::sSigDeviceDestroy.disconnect( this );
-    GN::gfx::Renderer::sSigDeviceDispose.disconnect( this );
-    GN::gfx::Renderer::sSigDeviceRestore.disconnect( this );
-    GN::gfx::Renderer::sSigDeviceCreate.disconnect( this );
+    quitApp();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -78,6 +66,7 @@ int GN::app::SampleApp::run()
         if( gRenderer.drawBegin() )
         {
             onRender();
+            drawHUD();
             gRenderer.drawEnd();
         }
     }
@@ -96,6 +85,20 @@ int GN::app::SampleApp::run()
 void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
+    if( input::KEY_R == ke.code && !ke.status.down ) reloadGfxResources();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::reloadGfxResources()
+{
+    GN_GUARD;
+
+    gTexDict.dispose();
+    gShaderDict.dispose();
+
+    GN_UNGUARD;
 }
 
 //
@@ -106,7 +109,7 @@ bool GN::app::SampleApp::switchRenderer()
     GN_GUARD;
 
     mInitParam.rapi = (gfx::RendererAPI)((mInitParam.rapi+1)%gfx::NUM_RENDERER_API);
-    return initRenderer();
+    return recreateRenderer();
 
     GN_UNGUARD;
 }
@@ -168,7 +171,72 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * argv[] )
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::app::SampleApp::initApp()
+{
+    GN_GUARD;
+
+    if( !onAppInit() ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::quitApp()
+{
+    GN_GUARD;
+
+    onAppQuit();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::app::SampleApp::initRenderer()
+{
+    GN_GUARD;
+
+    // connect to renderer signals
+    GN::gfx::Renderer::sSigDeviceCreate.connect( this, &SampleApp::onRendererCreate );
+    GN::gfx::Renderer::sSigDeviceRestore.connect( this, &SampleApp::onRendererRestore );
+    GN::gfx::Renderer::sSigDeviceDispose.connect( this, &SampleApp::onRendererDispose );
+    GN::gfx::Renderer::sSigDeviceDestroy.connect( this, &SampleApp::onRendererDestroy );
+
+    // create renderer
+    return recreateRenderer();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::quitRenderer()
+{
+    GN_GUARD;
+
+    // delete Renderer
+    GN::gfx::deleteRenderer();
+
+    // disconnect to renderer signals
+    GN::gfx::Renderer::sSigDeviceDestroy.disconnect( this );
+    GN::gfx::Renderer::sSigDeviceDispose.disconnect( this );
+    GN::gfx::Renderer::sSigDeviceRestore.disconnect( this );
+    GN::gfx::Renderer::sSigDeviceCreate.disconnect( this );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::app::SampleApp::recreateRenderer()
 {
     GN_GUARD;
 
@@ -185,18 +253,6 @@ bool GN::app::SampleApp::initRenderer()
 
     // success
     return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitRenderer()
-{
-    GN_GUARD;
-
-    GN::gfx::deleteRenderer();
 
     GN_UNGUARD;
 }
@@ -242,4 +298,19 @@ void GN::app::SampleApp::quitInput()
     if( gInputPtr ) delete gInputPtr;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::drawHUD()
+{
+    GN_GUARD_SLOW;
+
+    GN::gfx::Renderer & r = gRenderer;
+
+    mFps.onFrame();
+    if( mShowFps ) r.drawDebugTextA( mFps.fpsString(), 0, 0 );
+
+    GN_UNGUARD_SLOW;
 }

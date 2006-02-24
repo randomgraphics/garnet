@@ -94,56 +94,65 @@ GN::gfx::ClrFmt GN::gfx::d3d::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
 
     switch( d3dfmt )
     {
+        // 128 bits
+        case D3DFMT_A32B32G32R32F   : return FMT_RGBA_32_32_32_32_FLOAT;
+
+        // 64 bits
+        case D3DFMT_A16B16G16R16F   : return FMT_RGBA_16_16_16_16_FLOAT;
+        case D3DFMT_A16B16G16R16    : return FMT_RGBA_16_16_16_16_UNORM;
+        case D3DFMT_G32R32F         : return FMT_RG_32_32_FLOAT;
+
         // 32 bits
-        case D3DFMT_A8R8G8B8     : return FMT_BGRA_8_8_8_8_UNORM;
-        case D3DFMT_X8R8G8B8     : return FMT_BGRX_8_8_8_8_UNORM;
-        case D3DFMT_A2B10G10R10  : return FMT_RGBA_10_10_10_2_UNORM;
-        case D3DFMT_G16R16       : return FMT_RG_16_16_UNORM;
-      //case D3DFMT_X8L8V8U8     : return FMT_UVLX_8_8_8_8_UNORM;
-        case D3DFMT_Q8W8V8U8     : return FMT_RGBA_8_8_8_8_SNORM;
-        case D3DFMT_V16U16       : return FMT_RG_16_16_SNORM;
-      //case D3DFMT_W11V11U10    : return FMT_RGB_10_11_11_SNORM;
-      //case D3DFMT_A2W10V10U10  : return FMT_RGBA_10_10_10_2_SNORM;
-        case D3DFMT_R32F         : return FMT_R_32_FLOAT;
+        case D3DFMT_A8R8G8B8        : return FMT_BGRA_8_8_8_8_UNORM;
+        case D3DFMT_X8R8G8B8        : return FMT_BGRX_8_8_8_8_UNORM;
+        case D3DFMT_A2B10G10R10     : return FMT_RGBA_10_10_10_2_UNORM;
+        case D3DFMT_G16R16F         : return FMT_RG_16_16_FLOAT;
+        case D3DFMT_G16R16          : return FMT_RG_16_16_UNORM;
+      //case D3DFMT_X8L8V8U8        : return FMT_UVLX_8_8_8_8_UNORM;
+        case D3DFMT_Q8W8V8U8        : return FMT_RGBA_8_8_8_8_SNORM;
+        case D3DFMT_V16U16          : return FMT_RG_16_16_SNORM;
+      //case D3DFMT_W11V11U10       : return FMT_RGB_10_11_11_SNORM;
+      //case D3DFMT_A2W10V10U10     : return FMT_RGBA_10_10_10_2_SNORM;
+        case D3DFMT_R32F            : return FMT_R_32_FLOAT;
 
         // 16 bits
-        case D3DFMT_R5G6B5       : return FMT_BGR_5_6_5_UNORM;
-        case D3DFMT_X1R5G5B5     : return FMT_BGRX_5_5_5_1_UNORM;
-        case D3DFMT_A1R5G5B5     : return FMT_BGRA_5_5_5_1_UNORM;
-        case D3DFMT_A4R4G4B4     : return FMT_BGRA_4_4_4_4_UNORM;
-        case D3DFMT_X4R4G4B4     : return FMT_BGRX_4_4_4_4_UNORM;
-      //case D3DFMT_A8P8         : return FMT_PA_8_8;
-        case D3DFMT_A8L8         : return FMT_LA_8_8_UNORM;
-        case D3DFMT_V8U8         : return FMT_RG_8_8_SNORM;
-      //case D3DFMT_L6V5U5       : return FMT_UVL_5_5_6;
+        case D3DFMT_R5G6B5          : return FMT_BGR_5_6_5_UNORM;
+        case D3DFMT_X1R5G5B5        : return FMT_BGRX_5_5_5_1_UNORM;
+        case D3DFMT_A1R5G5B5        : return FMT_BGRA_5_5_5_1_UNORM;
+        case D3DFMT_A4R4G4B4        : return FMT_BGRA_4_4_4_4_UNORM;
+        case D3DFMT_X4R4G4B4        : return FMT_BGRX_4_4_4_4_UNORM;
+      //case D3DFMT_A8P8            : return FMT_PA_8_8;
+        case D3DFMT_A8L8            : return FMT_LA_8_8_UNORM;
+        case D3DFMT_V8U8            : return FMT_RG_8_8_SNORM;
+      //case D3DFMT_L6V5U5          : return FMT_UVL_5_5_6;
 
         // 8 bits
-      //case D3DFMT_R3G3B2       : return FMT_BGR_2_3_3;
-        case D3DFMT_A8           : return FMT_A_8_UNORM;
-      //case D3DFMT_A8R3G3B2     : return FMT_BGRA_2_3_3_8;
-      //case D3DFMT_P8           : return FMT_P_8;
-        case D3DFMT_L8           : return FMT_L_8_UNORM;
-      //case D3DFMT_A4L4         : return FMT_LA_4_4;
+      //case D3DFMT_R3G3B2          : return FMT_BGR_2_3_3;
+        case D3DFMT_A8              : return FMT_A_8_UNORM;
+      //case D3DFMT_A8R3G3B2        : return FMT_BGRA_2_3_3_8;
+      //case D3DFMT_P8              : return FMT_P_8;
+        case D3DFMT_L8              : return FMT_L_8_UNORM;
+      //case D3DFMT_A4L4            : return FMT_LA_4_4;
 
         // compressed formats
-      //case D3DFMT_UYVY         : return FMT_;
-      //case D3DFMT_YUY2         : return FMT_;
-        case D3DFMT_DXT1         : return FMT_DXT1;
-        case D3DFMT_DXT2         : return FMT_DXT2;
-        case D3DFMT_DXT4         : return FMT_DXT4;
+      //case D3DFMT_UYVY            : return FMT_;
+      //case D3DFMT_YUY2            : return FMT_;
+        case D3DFMT_DXT1            : return FMT_DXT1;
+        case D3DFMT_DXT2            : return FMT_DXT2;
+        case D3DFMT_DXT4            : return FMT_DXT4;
 #if !GN_XENON
-        case D3DFMT_DXT3         : return FMT_DXT3;
-        case D3DFMT_DXT5         : return FMT_DXT5;
+        case D3DFMT_DXT3            : return FMT_DXT3;
+        case D3DFMT_DXT5            : return FMT_DXT5;
 
         // depth formats
-        case D3DFMT_D16_LOCKABLE : return FMT_D_16;
+        case D3DFMT_D16_LOCKABLE    : return FMT_D_16;
 #endif
-        case D3DFMT_D32          : return FMT_D_32;
-      //case D3DFMT_D15S1        : return FMT_DS_15_1;
-        case D3DFMT_D24S8        : return FMT_DS_24_8;
-        case D3DFMT_D16          : return FMT_D_16;
-        case D3DFMT_D24X8        : return FMT_DX_24_8;
-      //case D3DFMT_D24X4S4      : return FMT_DXS_24_4_4;
+        case D3DFMT_D32             : return FMT_D_32;
+      //case D3DFMT_D15S1           : return FMT_DS_15_1;
+        case D3DFMT_D24S8           : return FMT_DS_24_8;
+        case D3DFMT_D16             : return FMT_D_16;
+        case D3DFMT_D24X8           : return FMT_DX_24_8;
+      //case D3DFMT_D24X4S4         : return FMT_DXS_24_4_4;
 
         // failed
         default : return FMT_INVALID;
@@ -157,29 +166,39 @@ D3DFORMAT GN::gfx::d3d::clrFmt2D3DFormat( ClrFmt clrfmt )
 {
     switch( clrfmt )
     {
+        // 128 bits
+        case FMT_RGBA_32_32_32_32_FLOAT : return D3DFMT_A32B32G32R32F;
+
+        // 64 bits
+        case FMT_RGBA_16_16_16_16_FLOAT : return D3DFMT_A16B16G16R16F;
+        case FMT_RGBA_16_16_16_16_UNORM : return D3DFMT_A16B16G16R16;
+        case FMT_RG_32_32_FLOAT         : return D3DFMT_G32R32F;
+
         // 32 bits
-        case FMT_BGRA_8_8_8_8_UNORM  : return D3DFMT_A8R8G8B8;
-        case FMT_R_32_FLOAT          : return D3DFMT_R32F;
+        case FMT_BGRA_8_8_8_8_UNORM     : return D3DFMT_A8R8G8B8;
+        case FMT_RG_16_16_FLOAT         : return D3DFMT_G16R16F;
+        case FMT_RG_16_16_UNORM         : return D3DFMT_G16R16;
+        case FMT_R_32_FLOAT             : return D3DFMT_R32F;
 
         // 16 bits
-        case FMT_BGRA_5_5_5_1_UNORM  : return D3DFMT_A1R5G5B5;
-        case FMT_BGR_5_6_5_UNORM     : return D3DFMT_R5G6B5;
-        case FMT_LA_8_8_UNORM        : return D3DFMT_A8L8;
-        case FMT_RG_8_8_SNORM        : return D3DFMT_V8U8;
+        case FMT_BGRA_5_5_5_1_UNORM     : return D3DFMT_A1R5G5B5;
+        case FMT_BGR_5_6_5_UNORM        : return D3DFMT_R5G6B5;
+        case FMT_LA_8_8_UNORM           : return D3DFMT_A8L8;
+        case FMT_RG_8_8_SNORM           : return D3DFMT_V8U8;
 
         // 8 bits
-        case FMT_L_8_UNORM           : return D3DFMT_L8;
-        case FMT_A_8_UNORM           : return D3DFMT_A8;
+        case FMT_L_8_UNORM              : return D3DFMT_L8;
+        case FMT_A_8_UNORM              : return D3DFMT_A8;
 
         // compressed formats
-        case FMT_DXT1                : return D3DFMT_DXT1;
-        case FMT_DXT2                : return D3DFMT_DXT2;
+        case FMT_DXT1                   : return D3DFMT_DXT1;
+        case FMT_DXT2                   : return D3DFMT_DXT2;
 
         // depth formats
-        case FMT_D_16                : return D3DFMT_D16;
-        case FMT_DX_24_8             : return D3DFMT_D24X8;
-        case FMT_DS_24_8             : return D3DFMT_D24S8;
-        case FMT_D_32                : return D3DFMT_D32;
+        case FMT_D_16                   : return D3DFMT_D16;
+        case FMT_DX_24_8                : return D3DFMT_D24X8;
+        case FMT_DS_24_8                : return D3DFMT_D24S8;
+        case FMT_D_32                   : return D3DFMT_D32;
 
         // failed
         default : return D3DFMT_UNKNOWN;

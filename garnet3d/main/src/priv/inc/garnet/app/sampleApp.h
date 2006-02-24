@@ -12,6 +12,58 @@
 namespace GN { namespace app
 {
     //!
+    //! Simple FPS counter
+    //!
+    class FpsCounter
+    {
+        GN::Clock mClock;
+        float     mFpsValue;
+        StrA      mFpsString;
+        size_t    mFrameCounter;
+        double    mLastFrameTime;
+
+    public:
+
+        //!
+        //! reset the counter
+        //!
+        void reset()
+        {
+            mFpsValue = .0f;
+            mFpsString = "FPS: 0.00";
+            mFrameCounter = 0;
+            mLastFrameTime = mClock.getTimeD();
+        }
+
+        //!
+        //! Update the counter
+        //!
+        void onFrame()
+        {
+            double currentTime = mClock.getTimeD();
+            ++mFrameCounter;
+            if( currentTime - mLastFrameTime >= 0.5 )
+            {
+                mFpsValue = (float)( mFrameCounter/(currentTime - mLastFrameTime) );
+                mFpsString.format( "FPS: %.2f", mFpsValue );
+                mLastFrameTime = currentTime;
+                mFrameCounter = 0;
+            }
+        }
+
+        //!
+        //! Get FPS value
+        //!
+        float fpsValue() const { return mFpsValue; }
+
+        //!
+        //! Get FPS string
+        //!
+        const char * fpsString() const { return mFpsString.cstr(); }
+    };
+    
+    
+    //!
     //! Sample application framework
     //!
     class SampleApp : public StdClass, public SlotBase
@@ -38,7 +90,11 @@ namespace GN { namespace app
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() {}
+        void clear()
+        {
+            mShowFps = true;
+            mFps.reset();
+        }
         //@}
 
         // ********************************
@@ -62,6 +118,8 @@ namespace GN { namespace app
         virtual void onCharPress( wchar_t ) {}
         virtual void onAxisMove( input::Axis, int ) {}
 
+        void reloadGfxResources();
+
         void postExistEvent() { mDone = true; }
 
         bool switchRenderer();
@@ -82,9 +140,11 @@ namespace GN { namespace app
 
         InitParam mInitParam;
 
-        GN::Clock mClock;
-
         bool mDone;
+
+        // fps stuff
+        bool mShowFps;
+        FpsCounter mFps;
 
         // ********************************
         // private functions
@@ -92,10 +152,14 @@ namespace GN { namespace app
     private:
 
         bool checkCmdLine( int argc, const char * argv[] );
+        bool initApp();
+        void quitApp();
         bool initRenderer();
         void quitRenderer();
+        bool recreateRenderer();
         bool initInput();
         void quitInput();
+        void drawHUD();
     };
 }}
 

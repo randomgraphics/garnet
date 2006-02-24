@@ -120,8 +120,8 @@ const GN::gfx::ClrFmtDesc & GN::gfx::getClrFmtDesc( ClrFmt fmt )
         }
     } s_table;
 
-    GN_ASSERT( 0 <= fmt && fmt <= NUM_CLRFMTS );
-    return s_table.table[fmt];
+    if( 0 <= fmt && fmt <= NUM_CLRFMTS ) return s_table.table[fmt];
+    else return s_table.table[FMT_INVALID];
 
     GN_UNGUARD;
 }

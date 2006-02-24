@@ -246,7 +246,7 @@ static GN_INLINE bool sColorFormat2OGL(
     }
 
     // failed
-    GN_ERROR( "invalid or unsupported format '%s'!", GN::gfx::getClrFmtDesc(clrfmt).name );
+    GN_ERROR( "invalid or unsupported format '%s'!", GN::gfx::clrFmt2Str(clrfmt) );
     return false;
 }
 
@@ -538,7 +538,7 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
                 break;
 
             default:
-                GN_ERROR( "unsupport compress format '%s'!", getClrFmtDesc(getFormat()).name );
+                GN_ERROR( "unsupport compress format '%s'!", clrFmt2Str(getFormat()) );
                 return false;
         }
     }
