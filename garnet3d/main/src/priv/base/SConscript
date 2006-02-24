@@ -1,6 +1,7 @@
 Import( 'env' )
 
 objs = []
+objs += SConscript( 'app/SConscript' )
 objs += SConscript( 'base/SConscript' )
 objs += SConscript( 'gfx/SConscript' )
 objs += SConscript( 'input/SConscript' )

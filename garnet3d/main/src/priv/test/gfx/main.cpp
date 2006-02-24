@@ -130,7 +130,7 @@ public:
 //!
 //! GFX module test application
 //!
-class GfxTest
+class GfxTestApp : public GN::app::SampleApp
 {
     GN::Clock mClock;
 
@@ -142,87 +142,21 @@ class GfxTest
 
 public:
 
-    //!
-    //! Default constructor
-    //!
-    GfxTest() : mScene(0) {}
+    GfxTestApp() : mScene(0) {}
 
-    //!
-    //! Destructor
-    //!
-    ~GfxTest() { quit(); }
+    ~GfxTestApp() { quit(); }
 
-    //!
-    //! Initialize test application
-    //!
-    bool init( const char * apiName )
+    bool onRendererCreate()
     {
-        // create renderer
-        GN::gfx::RendererAPI api;
-        if( 0 == GN::strCmpI( apiName, "-ogl" ) )
-            api = GN::gfx::API_OGL;
-        else if( 0 == GN::strCmpI( apiName, "-d3d" ) )
-            api = GN::gfx::API_D3D;
-        else if( 0 == GN::strCmpI( apiName, "-fake" ) )
-            api = GN::gfx::API_FAKE;
-        else
-        {
-            GN_ERROR( "invalid rendering API. Must be [-ogl|-d3d|-fake]." );
-            return false;
-        }
-        GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( api, ro );
-        if( 0 == r ) return false;
-
-        // create input
-        const GN::gfx::DispDesc & dd = r->getDispDesc();
-        GN::input::Input * i = GN::input::createInputSystem();
-        if( !i || !i->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
-        i->sigKeyPress.connect( this, &GfxTest::onKeyPress );
-
-        // create scene
         mScene = new Scene;
-        if( !mScene->init() ) return false;
-
-        // success
-        mDone = false;
-        return true;
+        return mScene->init();
     }
 
-    //!
-    //! Quit test application
-    //!
-    void quit()
+    void onRendererDestroy()
     {
         GN::safeDelete(mScene);
-        delete gInputPtr;
-        GN::gfx::deleteRenderer();
     }
 
-    //!
-    //! Run test application
-    //!
-    int run()
-    {
-        while(!mDone)
-        {
-            GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
-            gInput.processInputEvents();
-            update();
-            if( gRendererPtr && gRenderer.drawBegin() )
-            {
-                render();
-                gRenderer.drawEnd();
-            }
-        }
-
-        return 0;
-    }
-
-
-    //!
-    //! Key event handler
-    //!
     void onKeyPress( GN::input::KeyEvent ke )
     {
         if( GN::input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
@@ -234,19 +168,13 @@ public:
         }
     }
 
-    //!
-    //! Frame update
-    //!
-    void update()
+    void onUpdate()
     {
         const GN::input::KeyStatus * kb = gInput.getKeyboardStatus();
         mDone = kb[GN::input::KEY_ESCAPE].down;
     }
 
-    //!
-    //! Frame render
-    //!
-    void render()
+    void onRender()
     {
         GN::gfx::Renderer & r = gRenderer;
         
@@ -278,49 +206,9 @@ public:
     }
 };
 
-#if GN_MSWIN
-#define DEFAULT_MODULE "-D3D"
-#else
-#define DEFAULT_MODULE "-OGL"
-#endif
-
-//!
-//! Print usage
-//!
-void usage()
-{
-    printf(
-        "GFX module test application.\n"
-        "\n"
-        "Usage: GNgfxTest [-d3d|-ogl|-fake]\n"
-        "\n"
-        "Note: default module is %s\n",
-        DEFAULT_MODULE );
-}
-
-//!
-//! Main entry point
-//!
 int main( int argc, const char * argv[] )
 {
-    GN_GUARD_ALWAYS;
-
-    const char * module;
-
-    if( argc < 2 )
-    {
-        usage();
-        module = DEFAULT_MODULE;
-    }
-    else
-    {
-        module = argv[1];
-    }
-
-    GfxTest app;
-    if( !app.init( module ) ) return -1;
+    GfxTestApp app;
+    if( !app.init( argc, argv ) ) return -1;
     return app.run();
-
-    GN_UNGUARD_ALWAYS_NO_THROW;
-    return -1;
 }

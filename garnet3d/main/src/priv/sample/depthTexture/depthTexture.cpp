@@ -1,9 +1,7 @@
 #include "pch.h"
-#include "../common/sampleApp.h"
 
 using namespace GN;
 using namespace GN::gfx;
-using namespace GN::sample;
 
 struct Scene
 {
@@ -156,7 +154,7 @@ public:
     }
 };
 
-class DepthTexture : public SampleApp
+class DepthTexture : public GN::app::SampleApp
 {
     SceneNoPs mSceneNoPs;
     SceneWithPs mSceneWithPs;

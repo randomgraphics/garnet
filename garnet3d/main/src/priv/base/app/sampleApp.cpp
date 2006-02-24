@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "sampleApp.h"
+#include "garnet/GNapp.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -8,12 +8,12 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::sample::SampleApp::init( int argc, const char * argv[] )
+bool GN::app::SampleApp::init( int argc, const char * argv[] )
 {
-    GN_GUARD;
+    GN_GUARD_ALWAYS;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::sample::SampleApp, () );
+    GN_STDCLASS_INIT( GN::app::SampleApp, () );
 
     // connect to renderer signals
     GN::gfx::Renderer::sSigDeviceCreate.connect( this, &SampleApp::onRendererCreate );
@@ -29,15 +29,17 @@ bool GN::sample::SampleApp::init( int argc, const char * argv[] )
     // success
     return selfOK();
 
-    GN_UNGUARD;
+    // failed
+    GN_UNGUARD_ALWAYS_NO_THROW;
+    quit(); return selfOK();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sample::SampleApp::quit()
+void GN::app::SampleApp::quit()
 {
-    GN_GUARD;
+    GN_GUARD_ALWAYS;
 
     quitRenderer();
     quitInput();
@@ -52,7 +54,7 @@ void GN::sample::SampleApp::quit()
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
-    GN_UNGUARD;
+    GN_UNGUARD_ALWAYS_NO_THROW;
 }
 
 // *****************************************************************************
@@ -62,9 +64,9 @@ void GN::sample::SampleApp::quit()
 //
 //
 // -----------------------------------------------------------------------------
-int GN::sample::SampleApp::run()
+int GN::app::SampleApp::run()
 {
-    GN_GUARD;
+    GN_GUARD_ALWAYS;
 
     mDone = false;
 
@@ -83,13 +85,15 @@ int GN::sample::SampleApp::run()
     // success
     return 0;
 
-    GN_UNGUARD;
+    // failed
+    GN_UNGUARD_ALWAYS_NO_THROW;
+    return -1;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sample::SampleApp::onKeyPress( input::KeyEvent ke )
+void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
 }
@@ -97,7 +101,7 @@ void GN::sample::SampleApp::onKeyPress( input::KeyEvent ke )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::sample::SampleApp::switchRenderer()
+bool GN::app::SampleApp::switchRenderer()
 {
     GN_GUARD;
 
@@ -114,7 +118,7 @@ bool GN::sample::SampleApp::switchRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
+bool GN::app::SampleApp::checkCmdLine( int argc, const char * argv[] )
 {
     GN_GUARD;
 
@@ -164,7 +168,7 @@ bool GN::sample::SampleApp::checkCmdLine( int argc, const char * argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::sample::SampleApp::initRenderer()
+bool GN::app::SampleApp::initRenderer()
 {
     GN_GUARD;
 
@@ -188,7 +192,7 @@ bool GN::sample::SampleApp::initRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sample::SampleApp::quitRenderer()
+void GN::app::SampleApp::quitRenderer()
 {
     GN_GUARD;
 
@@ -200,7 +204,7 @@ void GN::sample::SampleApp::quitRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::sample::SampleApp::initInput()
+bool GN::app::SampleApp::initInput()
 {
     GN_GUARD;
 
@@ -231,7 +235,7 @@ bool GN::sample::SampleApp::initInput()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sample::SampleApp::quitInput()
+void GN::app::SampleApp::quitInput()
 {
     GN_GUARD;
 
