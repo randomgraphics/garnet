@@ -11,7 +11,7 @@ using namespace GN::gfx;
 //
 // Create a 1x1 pure blue shader.
 // -----------------------------------------------------------------------------
-static bool sCreateNullShader( Shader * & result, const StrA & )
+static bool sCreateNullShader( Shader * & result, const StrA &, void * )
 {
     result = NULL;
     return true;
@@ -35,7 +35,7 @@ static bool sCheckPrefix( const char * str, const char * prefix )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sCreateShader( Shader * & result, const StrA & name )
+static bool sCreateShader( Shader * & result, const StrA & name, void * )
 {
     GN_GUARD;
 
@@ -134,6 +134,14 @@ static bool sCreateShader( Shader * & result, const StrA & name )
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteShader( Shader * & ptr, void * )
+{
+    GN::safeDecref( ptr );
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -153,11 +161,11 @@ bool core::CoreShaderDict::init()
 
     // register functors
     mDict->setCreator( &sCreateShader );
-    mDict->setDeletor( &safeDecref<Shader> );
+    mDict->setDeletor( &sDeleteShader );
     mDict->setNullor( &sCreateNullShader );
 
     // connect to renderer signals
-    Renderer::sSigDeviceDestroy.connect( mDict, &ShaderDictionary::dispose );
+    Renderer::sSigDeviceDestroy.connect( mDict, &ShaderDictionary::disposeAll );
 
     // success
     return selfOK();

@@ -1,3 +1,6 @@
 @echo off
 del /s GN*.vcproj 2>nul
-call scons -U . variant=all compiler="vc71 vc80 vc80-x64 xenon" -j1 --no-cache %*
+for %%c in (vc71 vc80 vc80-x64 xenon) do (
+    echo call scons -U . variant=all compiler=%%c -j1 --no-cache %*
+    call scons -U . variant=all compiler=%%c -j1 --no-cache %*
+)

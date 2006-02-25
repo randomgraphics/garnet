@@ -72,9 +72,9 @@ namespace GN
 
         typedef RES ResType; //!< resource type
 
-        typedef Functor2<bool,RES&,const StrA &> Creator; //!< Resource creation functor
+        typedef Functor3<bool,RES&,const StrA &,void*> Creator; //!< Resource creation functor
 
-        typedef Functor1<void,RES&> Deletor; //!< Resource deletion functor
+        typedef Functor2<void,RES&,void*> Deletor; //!< Resource deletion functor
 
         typedef Functor1<bool,const StrA&> NameChecker; //!< Resource name checker.
 
@@ -158,7 +158,7 @@ namespace GN
             GN_GUARD;
 
             // dispose all resources
-            dispose();
+            disposeAll();
 
             // delete resource descriptions
             ResHandle h = mResHandles.first();
@@ -186,36 +186,101 @@ namespace GN
         }
 
         //!
-        //! Release all resource instances. But keep resource manager itself unchanged.
+        //! Return true for valid resource handle
         //!
-        void dispose()
+        bool validResourceHandle( ResHandle h ) const { return mResHandles.validHandle( h ); }
+
+        //!
+        //! Return true for valid resource name
+        //!
+        bool validResourceName( const StrA & n ) const { return mResNames.end() != mResNames.find( n ); }
+
+        //!
+        //! Get resource by handle.
+        //!
+        bool getResource( RES & result, ResHandle handle )
         {
-            GN_GUARD;
-            ResHandle h = mResHandles.first();
-            while( h )
-            {
-                doDispose( mResHandles.get(h) );
-                h = mResHandles.next( h );
-            }
-            deleteNullInstance();
-            GN_UNGUARD;
+            GN_GUARD_SLOW;
+            return getResourceImpl( result, handle, 0 );
+            GN_UNGUARD_SLOW;
         }
 
         //!
-        //! Preload all resources
+        //! Get resource by handle.
         //!
-        bool preload()
+        //! If failed, return default constructed resource instance.
+        //!
+        RES getResource( ResHandle handle )
         {
-            GN_GUARD;
+            GN_GUARD_SLOW;
             RES res;
-            bool ok = true;
-            ResHandle h;
-            for( h = mResHandles.first(); h != 0; h = mResHandles.next(h) )
+            if( getResource( res, handle ) ) return res;
+            else return RES();
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get resource by name
+        //!
+        //! \sa getResourceHandle()
+        //!
+        bool getResource( RES & result, const StrA & name, bool autoAddNewName = true )
+        {
+            GN_GUARD_SLOW;
+            ResHandle h = getResourceHandle( name, autoAddNewName );
+            return getResourceImpl( result, h, name.cstr() );
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get resource by name.
+        //!
+        //! If failed, return default constructed resource instance.
+        //!
+        //! \sa getResourceHandle()
+        //!
+        RES getResource( const StrA & name, bool autoAddNewName = true )
+        {
+            GN_GUARD_SLOW;
+            RES res;
+            if( getResource( res, name, autoAddNewName ) ) return res;
+            else return RES();
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get resource handle
+        //!
+        //! \param name
+        //!     User specified resource name.
+        //! \param autoAddNewName
+        //!     - If true, when the resource name that is not in manager currently but pass name-checker,
+        //!       it'll be add to manager automatically, and a valid handle will be return.
+        //!     - If false, return 0 for non-exist resource name.
+        //!
+        ResHandle getResourceHandle( const StrA & name, bool autoAddNewName = true )
+        {
+            GN_GUARD_SLOW;
+            StringMap::const_iterator iter = mResNames.find( name );
+            if( mResNames.end() != iter ) return iter->second;
+            if( autoAddNewName && ( !mNameChecker || mNameChecker(name) ) ) return addResource( name );
+            return 0; // failed
+            GN_UNGUARD_SLOW;
+        }
+
+        //!
+        //! Get resource name
+        //!
+        const StrA & getResourceName( ResHandle handle ) const
+        {
+            GN_GUARD_SLOW;
+            if( validResourceHandle(handle) )
             {
-                ok &= getResource( res, h );
+                GN_ASSERT( mResHandles.get(handle) );
+                return mResHandles.get(handle)->name;
             }
-            return ok;
-            GN_UNGUARD;
+            else return StrA::EMPTYSTR;
+            GN_UNGUARD_SLOW;
         }
 
         //!
@@ -223,6 +288,7 @@ namespace GN
         //!
         ResHandle addResource(
             const StrA & name,
+            void * userData = 0,
             const Creator & creator = Creator(),
             const Creator & nullor  = Creator(),
             bool overrideExistingResource = false )
@@ -262,6 +328,7 @@ namespace GN
             item->creator = creator;
             item->nullor = nullor;
             item->name = name;
+            item->userData = userData;
             item->disposed = true;
             return h;
 
@@ -287,101 +354,120 @@ namespace GN
         }
 
         //!
-        //! Remove resource from manager (unimplemented)
+        //! Remove resource from manager
         //!
-        void removeResource( ResHandle handle );
-
-        //!
-        //! Remove resource from manager (unimplemented)
-        //!
-        void removeResource( const StrA & name );
-
-        //!
-        //! Get resource handle
-        //!
-        //! \param name
-        //!     User specified resource name.
-        //! \param autoAddNewName
-        //!     - If true, when the resource name that is not in manager currently but pass name-checker,
-        //!       it'll be add to manager automatically, and a valid handle will be return.
-        //!     - If false, return 0 for non-exist resource name.
-        //!
-        ResHandle getResourceHandle( const StrA & name, bool autoAddNewName = true )
+        void removeResourceHandle( ResHandle handle )
         {
-            GN_GUARD_SLOW;
-            StringMap::const_iterator iter = mResNames.find( name );
-            if( mResNames.end() != iter ) return iter->second;
-            if( autoAddNewName && ( !mNameChecker || mNameChecker(name) ) ) return addResource( name );
-            return 0; // failed
-            GN_UNGUARD_SLOW;
-        }
-
-        //!
-        //! Get resource name
-        //!
-        const StrA & getResourceName( ResHandle handle ) const
-        {
-            GN_GUARD_SLOW;
-            if( mResHandles.validHandle(handle) )
+            GN_GUARD;
+            if( !validResourceHandle(handle) )
             {
-                GN_ASSERT( mResHandles.get(handle) );
-                return mResHandles.get(handle)->name;
+                GN_ERROR( "invalid resource handle: %d", handle );
+                return;
             }
-            else return StrA::EMPTYSTR;
-            GN_UNGUARD_SLOW;
+            StringMap::iterator iter = mResNames.find( mResHandles[handle]->name );
+            GN_ASSERT( iter != mResNames.end() );
+            doDispose( mResHandles[handle] );
+            mResHandles.remove( handle );
+            mResNames.erase( iter );
+            GN_UNGUARD;
         }
 
         //!
-        //! Get resource by handle.
+        //! Remove resource from manager (unimplemented)
         //!
-        bool getResource( RES & result, ResHandle handle )
+        void removeResourceName( const StrA & name )
         {
-            GN_GUARD_SLOW;
-            return getResourceByHandle( result, handle, 0 );
-            GN_UNGUARD_SLOW;
+            GN_GUARD;
+            StringMap::iterator iter = mResNames.find( name );
+            if( mResNames.end() == iter )
+            {
+                GN_ERROR( "invalid resource name: %s", name.cstr() );
+                return;
+            }
+            ResHandle h = iter->second;
+            GN_ASSERT( mResHandles.validHandle( h ) );
+            doDispose( mResHandles[h] );
+            mResHandles.remove( h );
+            mResNames.erase( iter );
+            GN_UNGUARD;
         }
 
         //!
-        //! Get resource by handle.
+        //! Dispose specific resource
         //!
-        //! If failed, return default constructed resource instance.
-        //!
-        RES getResource( ResHandle handle )
+        void disposeResourceHandle( ResHandle h )
         {
-            GN_GUARD_SLOW;
+            GN_GUARD;
+            if( !validResourceHandle( h ) )
+            {
+                GN_ERROR( "invalid resource handle: %d", handle );
+                return;
+            }
+            doDispose( mResHandles[h] );
+            GN_UNGUARD;
+        }
+
+        //!
+        //! Dispose specific resource
+        //!
+        void disposeResourceName( const StrA & name )
+        {
+            GN_GUARD;
+            StringMap::const_iterator iter = mResNames.find( name );
+            if( mResNames.end() == iter )
+            {
+                GN_ERROR( "invalid resource name: %s", name.cstr() );
+                return;
+            }
+            disposeHandle( iter->second );
+            GN_UNGUARD;
+        }
+
+        //!
+        //! Release all resource instances. But keep resource manager itself unchanged.
+        //!
+        void disposeAll()
+        {
+            GN_GUARD;
+            ResHandle h = mResHandles.first();
+            while( h )
+            {
+                doDispose( mResHandles.get(h) );
+                h = mResHandles.next( h );
+            }
+            deleteNullInstance();
+            GN_UNGUARD;
+        }
+
+        //!
+        //! Preload all resources
+        //!
+        bool preload()
+        {
+            GN_GUARD;
             RES res;
-            if( getResource( res, handle ) ) return res;
-            else return RES();
-            GN_UNGUARD_SLOW;
+            bool ok = true;
+            ResHandle h;
+            for( h = mResHandles.first(); h != 0; h = mResHandles.next(h) )
+            {
+                ok &= getResource( res, h );
+            }
+            return ok;
+            GN_UNGUARD;
         }
 
         //!
-        //! Get resource by name
+        //! Set user data for specfic resource
         //!
-        //! \sa getResourceHandle()
-        //!
-        bool getResource( RES & result, const StrA & name, bool autoAddNewName = true )
+        void setUserData( ResHandle h, void * data )
         {
-            GN_GUARD_SLOW;
-            ResHandle h = getResourceHandle( name, autoAddNewName );
-            return getResourceByHandle( result, h, name.cstr() );
-            GN_UNGUARD_SLOW;
-        }
-
-        //!
-        //! Get resource by name.
-        //!
-        //! If failed, return default constructed resource instance.
-        //!
-        //! \sa getResourceHandle()
-        //!
-        RES getResource( const StrA & name, bool autoAddNewName = true )
-        {
-            GN_GUARD_SLOW;
-            RES res;
-            if( getResource( res, name, autoAddNewName ) ) return res;
-            else return RES();
-            GN_UNGUARD_SLOW;
+            if( !validResourceHandle(h) )
+            {
+                GN_ERROR( "invalid resource handle: %d", h );
+                return;
+            }
+            GN_ASSERT( mResHandles[h] );
+            mResHandles[h]->userData = data;
         }
 
         // *****************************
@@ -398,6 +484,7 @@ namespace GN
             Creator nullor; // Use to create per-resource "NULL" instance.
             RES     res;
             StrA    name;
+            void *  userData;
             bool    disposed;
         };
 
@@ -422,11 +509,11 @@ namespace GN
 
     private:
 
-        bool getResourceByHandle( RES & res, ResHandle handle, const char * name )
+        bool getResourceImpl( RES & res, ResHandle handle, const char * name )
         {
             GN_GUARD_SLOW;
 
-            if( !mResHandles.validHandle(handle) )
+            if( !validResourceHandle(handle) )
             {
                 if( name )
                     GN_ERROR( "Resource '%s' is invalid. Fall back to null instance...", name );
@@ -436,7 +523,7 @@ namespace GN
                 if( 0 == mNullInstance )
                 {
                     RES * tmp = new RES;
-                    if( !mNullor || !mNullor( *tmp, name ) )
+                    if( !mNullor || !mNullor( *tmp, name, 0 ) )
                     {
                         if( name )
                             GN_ERROR( "Fail to create null instance for resource '%s'.", name );
@@ -463,11 +550,11 @@ namespace GN
 
                 if( item->creator )
                 {
-                    ok = item->creator( item->res, item->name );
+                    ok = item->creator( item->res, item->name, item->userData );
                 }
                 else if( mCreator )
                 {
-                    ok = mCreator( item->res, item->name );
+                    ok = mCreator( item->res, item->name, item->userData );
                 }
 
                 if( !ok )
@@ -475,11 +562,11 @@ namespace GN
                     GN_WARN( "Fall back to null instance for resource '%s'.", item->name.cstr() );
                     if( item->nullor )
                     {
-                        ok = item->nullor( item->res, item->name );
+                        ok = item->nullor( item->res, item->name, item->userData );
                     }
                     if( !ok && mNullor )
                     {
-                        ok = mNullor( item->res, item->name );
+                        ok = mNullor( item->res, item->name, item->userData );
                     }
                     if( !ok )
                     {
@@ -504,7 +591,7 @@ namespace GN
             GN_ASSERT( item );
             if( !item->disposed )
             {
-                if( mDeletor ) mDeletor( item->res );
+                if( mDeletor ) mDeletor( item->res, item->userData );
                 item->disposed = true;
             }
         }
@@ -515,7 +602,7 @@ namespace GN
             {
                 if( mNullDeletor )
                 {
-                    mNullDeletor( *mNullInstance );
+                    mNullDeletor( *mNullInstance, 0 );
                     mNullDeletor.clear();
                 }
                 delete mNullInstance;

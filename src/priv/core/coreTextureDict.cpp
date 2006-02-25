@@ -11,7 +11,7 @@ using namespace GN::gfx;
 //
 // Create a 1x1 pure blue texture.
 // -----------------------------------------------------------------------------
-static bool sCreateNullTexture( Texture * & result, const StrA & name )
+static bool sCreateNullTexture( Texture * & result, const StrA & name, void * )
 {
     GN_GUARD;
 
@@ -39,7 +39,7 @@ static bool sCreateNullTexture( Texture * & result, const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sCreateTexture( Texture * & result, const StrA & name )
+static bool sCreateTexture( Texture * & result, const StrA & name, void * )
 {
     GN_GUARD;
 
@@ -50,7 +50,7 @@ static bool sCreateTexture( Texture * & result, const StrA & name )
         return false;
     }
 
-    // get resouce path
+    // get resource path
     StrA path = GN::core::searchResource( name );
     if( path.empty() )
     {
@@ -75,6 +75,14 @@ static bool sCreateTexture( Texture * & result, const StrA & name )
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteTexture( Texture * & ptr, void * )
+{
+    GN::safeDecref( ptr );
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -94,11 +102,11 @@ bool GN::core::CoreTextureDict::init()
 
     // register functors
     mDict->setCreator( &sCreateTexture );
-    mDict->setDeletor( &safeDecref<Texture> );
+    mDict->setDeletor( &sDeleteTexture );
     mDict->setNullor( &sCreateNullTexture );
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigDeviceDispose.connect( mDict, &gfx::TextureDictionary::dispose );
+    GN::gfx::Renderer::sSigDeviceDispose.connect( mDict, &gfx::TextureDictionary::disposeAll );
 
     // success
     return selfOK();

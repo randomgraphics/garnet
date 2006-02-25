@@ -210,7 +210,7 @@ void GN::gfx::OGLQuad::drawQuads(
             GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
             GN_OGL_CHECK( glPushMatrix() );
             GN_OGL_CHECK( glLoadIdentity() );
-            GN_OGL_CHECK( glOrtho( 0, vp[2], 0, vp[3], 0, 1 ) );
+            GN_OGL_CHECK( glOrtho( 0, vp[2], vp[3], 0, 0, 1 ) );
 
             GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
             GN_OGL_CHECK( glPushMatrix() );

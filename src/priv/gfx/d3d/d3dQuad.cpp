@@ -277,10 +277,10 @@ void GN::gfx::D3DQuad::drawQuads(
         GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_FFP ) );
         if( DQ_WINDOW_SPACE & options )
         {
-            scaleX =  2.0f;
-            scaleY = -2.0f;
-            offsetX = -1.0f;
-            offsetY =  1.0f;
+            scaleX  = 1.0f;
+            scaleY  = 1.0f;
+            offsetX = 0.0f;
+            offsetY = 0.0f;
         }
         else
         {

@@ -242,19 +242,6 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         D3DXGetImageInfoFromFileInMemory( &buf[0], (UINT)sz, &info ),
         quit(); return selfOK(); );
 
-    // set initialize parameters
-    mInitFormat = d3d::d3dFormat2ClrFmt( info.Format );
-    if( (TexType)-1 == mInitType || FMT_INVALID == mInitFormat )
-    {
-        quit();
-        return selfOK();
-    }
-    mInitSize[0] = info.Width;
-    mInitSize[1] = info.Height;
-    mInitSize[2] = info.Depth;
-    mInitLevels = info.MipLevels;
-    mInitUsage = 0;
-
     LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
 
     // load texture contents
@@ -264,7 +251,24 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         GN_DX_CHECK_DO(
             D3DXCreateTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
             quit(); return selfOK(); );
+
+        D3DSURFACE_DESC desc;
+        GN_DX_CHECK_DO(
+            tex->GetLevelDesc( 0, &desc ),
+            quit(); return selfOK(); );
+
+        mInitFormat = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == mInitFormat )
+        {
+            GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
+            return false;
+        }
+
         mInitType = TEXTYPE_2D;
+        mInitSize[0] = desc.Width;
+        mInitSize[1] = desc.Height;
+        mInitSize[2] = 1;
+        mInitLevels = tex->GetLevelCount();
         mD3DTexture = tex;
     }
     else if( D3DRTYPE_VOLUMETEXTURE == info.ResourceType )
@@ -273,7 +277,24 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         GN_DX_CHECK_DO(
             D3DXCreateVolumeTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
             quit(); return selfOK(); );
+
+        D3DVOLUME_DESC desc;
+        GN_DX_CHECK_DO(
+            tex->GetLevelDesc( 0, &desc ),
+            quit(); return selfOK(); );
+
+        mInitFormat = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == mInitFormat )
+        {
+            GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
+            return false;
+        }
+
         mInitType = TEXTYPE_3D;
+        mInitSize[0] = desc.Width;
+        mInitSize[1] = desc.Height;
+        mInitSize[2] = desc.Depth;
+        mInitLevels = tex->GetLevelCount();
         mD3DTexture = tex;
     }
     else if( D3DRTYPE_CUBETEXTURE == info.ResourceType )
@@ -282,7 +303,24 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         GN_DX_CHECK_DO(
             D3DXCreateCubeTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
             quit(); return selfOK(); );
+
+        D3DSURFACE_DESC desc;
+        GN_DX_CHECK_DO(
+            tex->GetLevelDesc( 0, &desc ),
+            quit(); return selfOK(); );
+
+        mInitFormat = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == mInitFormat )
+        {
+            GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
+            return false;
+        }
+
         mInitType = TEXTYPE_CUBE;
+        mInitSize[0] = desc.Width;
+        mInitSize[1] = desc.Height;
+        mInitSize[2] = 6;
+        mInitLevels = tex->GetLevelCount();
         mD3DTexture = tex;
     }
     else
@@ -290,6 +328,15 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         GN_ERROR( "unknown resource type!" );
         quit(); return selfOK();
     }
+
+    // set other initialize parameters
+    mInitUsage = 0;
+
+    // store texture properties
+    if( !setProperties(
+        mInitType,
+        mInitSize[0],mInitSize[1],mInitSize[2],
+        mInitLevels, mInitFormat, mInitUsage) ) return false;
 
     // success
     return selfOK();

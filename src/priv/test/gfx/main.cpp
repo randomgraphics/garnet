@@ -142,8 +142,6 @@ public:
 
     GfxTestApp() : mScene(0) {}
 
-    ~GfxTestApp() { quit(); }
-
     bool onRendererCreate()
     {
         mFps.reset();
@@ -199,6 +197,5 @@ public:
 int main( int argc, const char * argv[] )
 {
     GfxTestApp app;
-    if( !app.init( argc, argv ) ) return -1;
-    return app.run();
+    return app.run( argc, argv );
 }

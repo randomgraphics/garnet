@@ -475,7 +475,7 @@ void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, cons
 
     // disable programmable pipeline
     Renderer::bindShaders( 0, 0 );
-    applyDrawState( 0 );
+    applyShaderState();
     mFont->drawTextW( s, x, y, c );
 
     GN_UNGUARD_SLOW;

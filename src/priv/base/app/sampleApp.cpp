@@ -2,62 +2,19 @@
 #include "garnet/GNapp.h"
 
 // *****************************************************************************
-// Initialize and shutdown
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::app::SampleApp::init( int argc, const char * argv[] )
-{
-    GN_GUARD_ALWAYS;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( GN::app::SampleApp, () );
-
-    if( !checkCmdLine(argc,argv) ) { quit(); return selfOK(); }
-    if( !initApp() ) { quit(); return selfOK(); }
-    if( !initRenderer() ) { quit(); return selfOK(); }
-    if( !initInput() ) { quit(); return selfOK(); }
-
-    // success
-    return selfOK();
-
-    // failed
-    GN_UNGUARD_ALWAYS_NO_THROW;
-    quit(); return selfOK();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::app::SampleApp::quit()
-{
-    GN_GUARD_ALWAYS;
-
-    quitRenderer();
-    quitInput();
-    quitApp();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD_ALWAYS_NO_THROW;
-}
-
-// *****************************************************************************
 // public functions
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-int GN::app::SampleApp::run()
+int GN::app::SampleApp::run( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
-    mDone = false;
+    if( !init( argc, argv ) ) return -1;
 
+    mDone = false;
     while( !mDone )
     {
         GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
@@ -72,10 +29,12 @@ int GN::app::SampleApp::run()
     }
 
     // success
+    quit();
     return 0;
 
     // failed
     GN_UNGUARD_ALWAYS_NO_THROW;
+    quit();
     return -1;
 }
 
@@ -95,8 +54,8 @@ void GN::app::SampleApp::reloadGfxResources()
 {
     GN_GUARD;
 
-    gTexDict.dispose();
-    gShaderDict.dispose();
+    gTexDict.disposeAll();
+    gShaderDict.disposeAll();
 
     GN_UNGUARD;
 }
@@ -121,7 +80,41 @@ bool GN::app::SampleApp::switchRenderer()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::checkCmdLine( int argc, const char * argv[] )
+bool GN::app::SampleApp::init( int argc, const char * const argv[] )
+{
+    GN_GUARD_ALWAYS;
+
+    if( !checkCmdLine(argc,argv) ) { quit(); return false; }
+    if( !initApp() ) { quit(); return false; }
+    if( !initRenderer() ) { quit(); return false; }
+    if( !initInput() ) { quit(); return false; }
+
+    // success
+    return true;
+
+    // failed
+    GN_UNGUARD_ALWAYS_NO_THROW;
+    quit(); return false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::quit()
+{
+    GN_GUARD_ALWAYS;
+
+    quitRenderer();
+    quitInput();
+    quitApp();
+
+    GN_UNGUARD_ALWAYS_NO_THROW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 {
     GN_GUARD;
 
@@ -132,7 +125,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * argv[] )
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.iapi = input::API_NATIVE;
 #else
-    // setup defualt parameters
+    // setup default parameters
 #if GN_MSWIN
     mInitParam.rapi = gfx::API_D3D;
 #else
