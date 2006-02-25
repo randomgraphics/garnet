@@ -8,6 +8,7 @@ BUGS
   - Render target image is up-side-down in OGL, comparing with D3D.
     - See GNrenderToTexture for an example.
   - GNrenderToTexture : black screen on cygwin.
+  - Multi-quad flashing bug: see GNguiTest.
 
 TODO
 ====
@@ -15,19 +16,21 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
-  - in-game GUI system
-    - font class
-    - fix CEGUI memleak
-  - UT for Str::findFirst/LastOf(...)
-  - Learn now to create GL compatible window on cygwin using FOX-TOOLKIT
   - GFX system
+    - Why quad renderer is so slow, comparing with CEGUI sample application.
+    - Why there are so many SetTextureStageState(...)
     - support render-to-texture on xenon (including depth texture)
+    - use glInterleavedArray(...) to implement OGL quad renderer
   - code page convertor
   - sample application
     - GLSL test application
   - mesh class
   - effect class: ut
   - blender exporter/importer
+  - in-game GUI system
+    - font class
+    - fix CEGUI memleak
+  - UT for Str::findFirst/LastOf(...)
 
 - p2
   - refine GFX module:

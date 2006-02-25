@@ -38,10 +38,12 @@ namespace GN { namespace gfx {
     private:
         void clear()
         {
-            mVtxBuf = 0;
-            mIdxBuf = 0;
+            mDeclFfp = 0;
+            mDeclVs = 0;
             mVtxShader = 0;
             mPxlShader = 0;
+            mVtxBuf = 0;
+            mIdxBuf = 0;
             mNextQuad = 0;
         }
         //@}
@@ -76,10 +78,11 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
-        LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
-        LPDIRECT3DINDEXBUFFER9  mIdxBuf;
+        LPDIRECT3DVERTEXDECLARATION9 mDeclFfp, mDeclVs;
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
         LPDIRECT3DPIXELSHADER9  mPxlShader;
+        LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
+        LPDIRECT3DINDEXBUFFER9  mIdxBuf;
 
         size_t mNextQuad; // cursor that indicates next avaiable quad in vertex buffer.
 
