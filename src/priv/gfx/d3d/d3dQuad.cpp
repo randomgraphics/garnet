@@ -7,22 +7,31 @@ struct D3DQuadVertex
 {
     GN::Vector4f p;
     GN::Vector2f t;
-
-    enum
-    {
-        FVF_VS = D3DFVF_XYZW | D3DFVF_TEX1,
-#if GN_XENON
-        FVF_FFP = FVF_VS,
-#else
-        FVF_FFP = D3DFVF_XYZRHW | D3DFVF_TEX1,
-#endif
-    };
+    GN::Vector2f _; // padding to 32 bytes
 };
+GN_CASSERT( sizeof(D3DQuadVertex) == 32 );
 
 struct D3DQuadStruct
 {
     D3DQuadVertex v[4];
 };
+
+static const D3DVERTEXELEMENT9 sDeclVs[] =
+{
+    { 0,  0, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_POSITION, 0 },
+    { 0, 16, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_TEXCOORD, 0 },
+    D3DDECL_END()
+};
+#if GN_XENON
+static const D3DVERTEXELEMENT9 * sDeclFfp = sDeclVs;
+#else
+static const D3DVERTEXELEMENT9 sDeclFfp[] =
+{
+    { 0,  0, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_POSITIONT, 0 },
+    { 0, 16, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_TEXCOORD, 0 },
+    D3DDECL_END()
+};
+#endif
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -77,6 +86,10 @@ bool GN::gfx::D3DQuad::deviceCreate()
 
     D3DRenderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
+
+    // create vertex decl
+    GN_DX_CHECK_RV( dev->CreateVertexDeclaration( sDeclFfp, &mDeclFfp ), false );
+    GN_DX_CHECK_RV( dev->CreateVertexDeclaration( sDeclVs, &mDeclVs ), false );
 
     // create vertex shader
 #if GN_XENON
@@ -182,6 +195,8 @@ void GN::gfx::D3DQuad::deviceDestroy()
 {
     GN_GUARD;
 
+    safeRelease( mDeclFfp );
+    safeRelease( mDeclVs );
     safeRelease( mVtxShader );
     safeRelease( mPxlShader );
     safeRelease( mIdxBuf );
@@ -250,13 +265,13 @@ void GN::gfx::D3DQuad::drawQuads(
     float scaleY, offsetY;
     if( DQ_USE_CURRENT_VS & options )
     {
-        GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_VS ) );
+        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclFfp ) );
         scaleX = 1.0f; offsetX = 0.0f;
         scaleY = 1.0f; offsetY = 0.0f;
     }
     else if( mVtxShader )
     {
-        GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_VS ) );
+        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
         if( DQ_WINDOW_SPACE & options )
         {
             D3DVIEWPORT9 vp;
@@ -274,7 +289,7 @@ void GN::gfx::D3DQuad::drawQuads(
     }
     else
     {
-        GN_DX_CHECK( dev->SetFVF( D3DQuadVertex::FVF_FFP ) );
+        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclFfp ) );
         if( DQ_WINDOW_SPACE & options )
         {
             scaleX  = 1.0f;

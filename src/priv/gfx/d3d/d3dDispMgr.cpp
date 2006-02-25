@@ -141,7 +141,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     {
         d3dpp.BackBufferWidth  = dd.width;
         d3dpp.BackBufferHeight = dd.height;
-        d3dpp.SwapEffect       = D3DSWAPEFFECT_COPY;
+        d3dpp.SwapEffect       = D3DSWAPEFFECT_DISCARD;
     }
 
     // set other parameters

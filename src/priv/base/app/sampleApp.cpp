@@ -118,6 +118,10 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 {
     GN_GUARD;
 
+    // default is 800x600
+    mInitParam.ro.windowedWidth = 800;
+    mInitParam.ro.windowedHeight = 600;
+
 #if GN_XENON
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
@@ -300,10 +304,8 @@ void GN::app::SampleApp::drawHUD()
 {
     GN_GUARD_SLOW;
 
-    GN::gfx::Renderer & r = gRenderer;
-
     mFps.onFrame();
-    if( mShowFps ) r.drawDebugTextA( mFps.fpsString(), 0, 0 );
+    if( mShowFps ) gRenderer.drawDebugTextA( mFps.fpsString(), 0, 0 );
 
     GN_UNGUARD_SLOW;
 }
