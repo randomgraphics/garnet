@@ -198,6 +198,5 @@ public:
 int main( int argc, const char * argv[] )
 {
     DepthTexture app;
-    if( !app.init(argc,argv) ) return -1;
-    return app.run();
+    return app.run( argc, argv );
 }

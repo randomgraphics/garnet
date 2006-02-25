@@ -22,6 +22,7 @@ def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
+import SCons.Tool.xenon
 
 # 定义缺省的选项
 if 'win32' == conf['platform']:
@@ -29,7 +30,8 @@ if 'win32' == conf['platform']:
         default_compiler = 'vc80-x64'
     else:
         default_compiler = 'vc80'
-    all_compilers = 'vc71 vc80 vc80-x64 icl icl-em64t xenon'
+    all_compilers = 'vc71 vc80 vc80-x64 icl icl-em64t'
+    if SCons.Tool.xenon.exists( Environment() ) : all_compilers += ' xenon'
 else:
     default_compiler = 'gcc'
     all_compilers = 'gcc icl'

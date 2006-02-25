@@ -66,35 +66,16 @@ namespace GN { namespace app
     //!
     //! Sample application framework
     //!
-    class SampleApp : public StdClass, public SlotBase
+    class SampleApp : public SlotBase
     {
-         GN_DECLARE_STDCLASS( SampleApp, StdClass );
-
         // ********************************
         // ctor/dtor
         // ********************************
 
         //@{
     public:
-        SampleApp()          { clear(); }
-        virtual ~SampleApp() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init( int argc, const char * argv[] );
-        void quit();
-        bool ok() const { return MyParent::ok(); }
-    private:
-        void clear()
-        {
-            mShowFps = true;
-            mFps.reset();
-        }
+        SampleApp() : mShowFps(true) { mFps.reset(); }
+        virtual ~SampleApp() {}
         //@}
 
         // ********************************
@@ -104,8 +85,7 @@ namespace GN { namespace app
 
         //@{
 
-        virtual int run();
-
+        virtual int  run( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
         virtual bool onRendererCreate() { return true; }
@@ -151,7 +131,9 @@ namespace GN { namespace app
         // ********************************
     private:
 
-        bool checkCmdLine( int argc, const char * argv[] );
+        bool init( int argc, const char *  const argv[] );
+        void quit();
+        bool checkCmdLine( int argc, const char * const argv[] );
         bool initApp();
         void quitApp();
         bool initRenderer();

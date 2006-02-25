@@ -2,23 +2,23 @@
 
 typedef GN::ResourceManager<int> ResMgr;
 
-bool defCreator( int & res, const GN::StrA & name )
+bool defCreator( int & res, const GN::StrA & name, void * )
 {
     return 1 == ::sscanf( name.cstr(), "%d", &res );
 }
 
-bool nullCreator( int & res, const GN::StrA & )
+bool nullCreator( int & res, const GN::StrA &, void * )
 {
     res = -1;
     return true;
 }
 
-bool failedCreator( int &, const GN::StrA & )
+bool failedCreator( int &, const GN::StrA &, void * )
 {
     return false;
 }
 
-void defDeletor( int & )
+void defDeletor( int &, void* )
 {
     // do nothing
 }
@@ -66,6 +66,7 @@ public:
         // per-resource nullor failed
         TS_ASSERT( rm.addResource(
             "1",
+            0,
             ResMgr::Creator(),
             GN::makeFunctor(&failedCreator) ) );
         TS_ASSERT_EQUALS( 0, rm.getResource("1") );
@@ -73,6 +74,7 @@ public:
         // per-resource nullor success
         TS_ASSERT( rm.addResource(
             "2",
+            0,
             ResMgr::Creator(),
             GN::makeFunctor(&nullCreator) ) );
         TS_ASSERT_EQUALS( -1, rm.getResource("2") );
@@ -90,7 +92,7 @@ public:
         TS_ASSERT_EQUALS( 0, rm.getResource( "1" ) );
 
         // default nullor success
-        rm.dispose();
+        rm.disposeAll();
         rm.setCreator( GN::makeFunctor(&defCreator) );
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
     }
@@ -106,7 +108,7 @@ public:
     {
         ResMgr rm;
 
-        TS_ASSERT( rm.addResource( "1", GN::makeFunctor(&defCreator), ResMgr::Creator(), false ) );
+        TS_ASSERT( rm.addResource( "1", 0, GN::makeFunctor(&defCreator), ResMgr::Creator(), false ) );
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
 
         // default is not overriding
@@ -114,7 +116,7 @@ public:
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
 
         // override existing
-        TS_ASSERT( rm.addResource( "1", GN::makeFunctor(&nullCreator), ResMgr::Creator(), true ) );
+        TS_ASSERT( rm.addResource( "1", 0, GN::makeFunctor(&nullCreator), ResMgr::Creator(), true ) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "1" ) );
     }
 

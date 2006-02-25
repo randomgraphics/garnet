@@ -4,6 +4,7 @@ objs = []
 objs += SConscript( 'app/SConscript' )
 objs += SConscript( 'base/SConscript' )
 objs += SConscript( 'gfx/SConscript' )
+objs += SConscript( 'gui/SConscript' )
 objs += SConscript( 'input/SConscript' )
 objs += SConscript( 'win/SConscript' )
 

@@ -106,9 +106,9 @@ namespace GN { namespace gfx
         template<typename T>
         void getBaseMapSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            if( sx ) *sx = mSize.x;
-            if( sy ) *sy = mSize.y;
-            if( sz ) *sz = mSize.z;
+            if( sx ) *sx = (T)mSize.x;
+            if( sy ) *sy = (T)mSize.y;
+            if( sz ) *sz = (T)mSize.z;
         }
 
         //!

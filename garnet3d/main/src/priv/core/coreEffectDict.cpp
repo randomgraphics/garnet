@@ -18,7 +18,7 @@ bool GN::core::CoreEffectDict::init()
     mDict = new gfx::effect::EffectDictionary;
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigDeviceDestroy.connect( mDict, &gfx::effect::EffectDictionary::dispose );
+    GN::gfx::Renderer::sSigDeviceDestroy.connect( mDict, &gfx::effect::EffectDictionary::disposeAll );
 
     // success
     return selfOK();

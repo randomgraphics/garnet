@@ -37,7 +37,7 @@ def build_proj( target, srcdir=[], incdir=[], moduleName='' ):
     sources = env.GN_glob( ['%s/*.[c]*'%x for x in srcdir], True )
     if 0 == len(incdir):
         if '' == moduleName: moduleName = target
-        includes = env.GN_glob( '#src/priv/inc/garnet/%s.h'%moduleName )
+        includes = env.GN_glob( '#src/priv/inc/garnet/%s.h'%moduleName, True )
         includes += env.GN_glob( '#src/priv/inc/garnet/%s/*.[hi]*'%moduleName[2:], True )
     else:
         includes = env.GN_glob( ['%s/*.[hi]*'%x for x in incdir], True )
@@ -65,17 +65,17 @@ def build_proj( target, srcdir=[], incdir=[], moduleName='' ):
 ###############################################################################
 
 build_proj( 'GNextern', ['#src/extern/src'], ['#src/extern/inc'] )
-build_proj( 'GNbase', ['#src/priv/base'] )
+build_proj( 'GNbase', ['#src/priv/base'], ['#src/priv/inc/garnet'] )
 build_proj( 'GNcore', ['#src/priv/core'] )
 build_proj( 'GNgfxLib', ['#src/priv/gfx/lib'], [], 'GNgfx' )
-build_proj( 'GNgfxCommon', ['#src/priv/gfx/renderer/common'], [], 'GNgfx' )
-build_proj( 'GNgfxD3D', ['#src/priv/gfx/renderer/d3d'], [], 'GNgfx' )
-build_proj( 'GNgfxOGL', ['#src/priv/gfx/renderer/ogl'], [], 'GNgfx' )
+build_proj( 'GNgfxCommon', ['#src/priv/gfx/common'], [], 'GNgfx' )
+build_proj( 'GNgfxD3D', ['#src/priv/gfx/d3d'], [], 'GNgfx' )
+build_proj( 'GNgfxOGL', ['#src/priv/gfx/ogl'], [], 'GNgfx' )
 build_proj( 'GNinput', ['#src/priv/input'] )
 build_proj( 'GNut', ['#src/priv/test/ut'] )
 build_proj( 'GNgfxTest', ['#src/priv/test/gfx'] )
 build_proj( 'GNinputTest', ['#src/priv/test/input'] )
-build_proj( 'GNwinTest', ['#src/priv/test/win'] )
+build_proj( 'GNguiTest', ['#src/priv/test/gui'] )
 build_proj( 'GNft2Test', ['#src/priv/test/ft2'] )
 build_proj( 'GNdepthTexture', ['#src/priv/sample/depthTexture'] )
 build_proj( 'GNrenderToTexture', ['#src/priv/sample/renderToTexture'] )
