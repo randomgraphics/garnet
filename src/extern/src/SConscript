@@ -12,16 +12,16 @@ if 'icl' == env['CC']:
         ]
     env.Append( CCFLAGS = ['/W3'] + ['/Qwd%s'%w for w in unimportant_warnings] )
 elif 'cl' == env['CC']:
-    env.Append(
-        CCFLAGS= ['/W3'],
-        CPPDEFINES = Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE') )
+    unimportant_warnings = []
     if 'x64' == env.get('MSVS_PLATFORM'):
-        unimportant_warnings = [
+        unimportant_warnings += [
             '4334', # 32-bit shift convert to 64-bit
             '4267', # conversion from 'size_t' to xxx, possible loss of data
             '4244', # conversion from 'type1' to 'type2', possible loss of data
             ]
-        env.Append( CCFLAGS = ['/wd%s'%w for w in unimportant_warnings] )
+    env.Append(
+        CCFLAGS= ['/W3'] + ['/wd%s'%w for w in unimportant_warnings],
+        CPPDEFINES = Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE') )
 
 # ******************
 # build jpeg library

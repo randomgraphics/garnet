@@ -503,6 +503,11 @@ def check_config( conf, conf_dir ):
     # =========================
     conf['has_boost'] = c.CheckCXXHeader( 'boost/any.hpp' )
 
+    # ==========
+    # ¼ì²é cegui
+    # ==========
+    conf['has_cegui'] = c.CheckCXXHeader( 'CEGUI.h' )
+
     # =====================
     # ¼ì²é RenderMonkey SDK
     # =====================
