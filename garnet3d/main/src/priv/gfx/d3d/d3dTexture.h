@@ -180,17 +180,6 @@ namespace GN { namespace gfx
         D3DRenderer & mRenderer;
 
         //!
-        //! \name texture initialization parameters
-        //!
-        //@{
-        TexType  mInitType;
-        uint32_t mInitSize[3];
-        uint32_t mInitLevels;
-        ClrFmt   mInitFormat;
-        uint32_t mInitUsage;
-        //@}
-
-        //!
         //! D3D texture instance pointer
         //!
         IDirect3DBaseTexture9 * mD3DTexture;
