@@ -15,7 +15,9 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
-  - implement WIN module
+  - in-game GUI system
+    - font class
+    - fix CEGUI memleak
   - UT for Str::findFirst/LastOf(...)
   - Learn now to create GL compatible window on cygwin using FOX-TOOLKIT
   - GFX system
@@ -26,8 +28,6 @@ TODO
   - mesh class
   - effect class: ut
   - blender exporter/importer
-  - in-game GUI system
-    - font class
 
 - p2
   - refine GFX module:

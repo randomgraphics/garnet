@@ -193,16 +193,10 @@ bool GN::gfx::D3DTexture::init( TexType type,
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3DTexture, () );
 
-    mInitType = type;
-    mInitSize[0] = sx;
-    mInitSize[1] = sy;
-    mInitSize[2] = sz;
-    mInitLevels = levels;
-    mInitFormat = format;
-    mInitUsage = usage;
-
     // create device data
-    if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !setProperties( type, sx, sy, sz, levels, format, usage ) ||
+        !deviceCreate() ||
+        !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -244,6 +238,12 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
 
     LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
 
+    TexType             type;
+    Vector3<uint32_t>   size;
+    uint32_t            levels;
+    ClrFmt              format;
+    uint32_t            usage;
+
     // load texture contents
     if( D3DRTYPE_TEXTURE == info.ResourceType )
     {
@@ -257,19 +257,20 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
             tex->GetLevelDesc( 0, &desc ),
             quit(); return selfOK(); );
 
-        mInitFormat = d3d::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == mInitFormat )
+        mD3DTexture = tex;
+
+        // update texture properties
+        format = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == format )
         {
             GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
             return false;
         }
-
-        mInitType = TEXTYPE_2D;
-        mInitSize[0] = desc.Width;
-        mInitSize[1] = desc.Height;
-        mInitSize[2] = 1;
-        mInitLevels = tex->GetLevelCount();
-        mD3DTexture = tex;
+        type = TEXTYPE_2D;
+        size[0] = desc.Width;
+        size[1] = desc.Height;
+        size[2] = 1;
+        levels = tex->GetLevelCount();
     }
     else if( D3DRTYPE_VOLUMETEXTURE == info.ResourceType )
     {
@@ -283,19 +284,20 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
             tex->GetLevelDesc( 0, &desc ),
             quit(); return selfOK(); );
 
-        mInitFormat = d3d::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == mInitFormat )
+        mD3DTexture = tex;
+
+        // update texture properties
+        format = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == format )
         {
             GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
             return false;
         }
-
-        mInitType = TEXTYPE_3D;
-        mInitSize[0] = desc.Width;
-        mInitSize[1] = desc.Height;
-        mInitSize[2] = desc.Depth;
-        mInitLevels = tex->GetLevelCount();
-        mD3DTexture = tex;
+        type = TEXTYPE_3D;
+        size[0] = desc.Width;
+        size[1] = desc.Height;
+        size[2] = desc.Depth;
+        levels = tex->GetLevelCount();
     }
     else if( D3DRTYPE_CUBETEXTURE == info.ResourceType )
     {
@@ -309,19 +311,20 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
             tex->GetLevelDesc( 0, &desc ),
             quit(); return selfOK(); );
 
-        mInitFormat = d3d::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == mInitFormat )
+        mD3DTexture = tex;
+
+        // update texture properties
+        format = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == format )
         {
             GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
             return false;
         }
-
-        mInitType = TEXTYPE_CUBE;
-        mInitSize[0] = desc.Width;
-        mInitSize[1] = desc.Height;
-        mInitSize[2] = 6;
-        mInitLevels = tex->GetLevelCount();
-        mD3DTexture = tex;
+        type = TEXTYPE_CUBE;
+        size[0] = desc.Width;
+        size[1] = desc.Height;
+        size[2] = 6;
+        levels = tex->GetLevelCount();
     }
     else
     {
@@ -329,14 +332,12 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         quit(); return selfOK();
     }
 
-    // set other initialize parameters
-    mInitUsage = 0;
-
     // store texture properties
+    usage = 0;
     if( !setProperties(
-        mInitType,
-        mInitSize[0],mInitSize[1],mInitSize[2],
-        mInitLevels, mInitFormat, mInitUsage) ) return false;
+        type,
+        size[0], size[1], size[2],
+        levels, format, usage ) ) return false;
 
     // success
     return selfOK();
@@ -376,10 +377,10 @@ bool GN::gfx::D3DTexture::deviceRestore()
     GN_ASSERT( !mD3DTexture );
 
     // determine default format
-    ClrFmt format;
-    if( FMT_DEFAULT == mInitFormat )
+    if( FMT_DEFAULT == getFormat() )
     {
-        if( TEXUSAGE_DEPTH & mInitUsage )
+        ClrFmt format;
+        if( TEXUSAGE_DEPTH & getUsage() )
         {
             // find default depth texture format
             format = sGetDefaultDepthTextureFormat( mRenderer );
@@ -389,24 +390,23 @@ bool GN::gfx::D3DTexture::deviceRestore()
         else
         {
             format = FMT_BGRA_8_8_8_8_UNORM; // this is default format
+            GN_TRACE( "Use default texture format: %s", clrFmt2Str(format) );
         }
+        setProperties(
+            getType(),
+            getBaseMapSize().x,
+            getBaseMapSize().y,
+            getBaseMapSize().z,
+            getLevels(),
+            format,
+            getUsage() );
     }
-    else
-    {
-        format = mInitFormat;
-    }
-
-    // store texture properties
-    if( !setProperties(
-        mInitType,
-        mInitSize[0],mInitSize[1],mInitSize[2],
-        mInitLevels, format, mInitUsage) ) return false;
 
     // determine D3D format
-    D3DFORMAT d3dfmt = d3d::clrFmt2D3DFormat( format );
+    D3DFORMAT d3dfmt = d3d::clrFmt2D3DFormat( getFormat() );
     if( D3DFMT_UNKNOWN == d3dfmt )
     {
-        GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(format) );
+        GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getFormat()) );
         return false;
     }
 

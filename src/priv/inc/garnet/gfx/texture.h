@@ -242,7 +242,8 @@ namespace GN { namespace gfx
     protected :
 
         //!
-        //! Set texture properties
+        //! Set texture properties. Subclass must call this function to set 
+        //! all texture properities to valid value.
         //!
         //!  - for 1D texture, mSize.y and size_z is always 1
         //!  - for non-3D texture, mSize.z is always 1
@@ -270,8 +271,16 @@ namespace GN { namespace gfx
             if( TEXTYPE_3D != type ) mSize.z = 1;
             else mSize.z = sz;
 
-            // store format & creation flags
+            // store format
+            if( ( format < 0 || format >= NUM_CLRFMTS ) &&
+                FMT_DEFAULT != format )
+            {
+                GN_ERROR( "invalid texture format: %s", clrFmt2Str(format) );
+                return false;
+            }
             mFormat = format;
+
+            // store usage flags
             mUsage = usage;
 
             // calculate mipmap levels
