@@ -8,7 +8,6 @@ BUGS
   - Render target image is up-side-down in OGL, comparing with D3D.
     - See GNrenderToTexture for an example.
   - GNrenderToTexture : black screen on cygwin.
-  - Multi-quad flashing bug: see GNguiTest.
 
 TODO
 ====

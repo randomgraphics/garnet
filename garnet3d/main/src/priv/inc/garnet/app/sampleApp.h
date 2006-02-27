@@ -25,6 +25,11 @@ namespace GN { namespace app
     public:
 
         //!
+        //! Constructor
+        //!
+        FpsCounter() { reset(); }
+
+        //!
         //! reset the counter
         //!
         void reset()
@@ -42,12 +47,13 @@ namespace GN { namespace app
         {
             double currentTime = mClock.getTimeD();
             ++mFrameCounter;
-            if( currentTime - mLastFrameTime >= 0.5 )
+            if( currentTime - mLastFrameTime >= 1.0f )
             {
-                mFpsValue = (float)( mFrameCounter/(currentTime - mLastFrameTime) );
+                mFpsValue = (float)( mFrameCounter );
                 mFpsString.format( "FPS: %.2f", mFpsValue );
                 mLastFrameTime = currentTime;
                 mFrameCounter = 0;
+                //GN_INFO( mFpsString.cstr() );
             }
         }
 

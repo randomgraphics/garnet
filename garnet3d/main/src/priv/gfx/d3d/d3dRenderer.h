@@ -694,6 +694,7 @@ namespace GN { namespace gfx
 
         D3DFont * mFont; // Font class
 
+        friend class D3DQuad; // let D3DQuad class manipulate state dirty flags directly.
         D3DQuad * mQuad; // Quad renderer class
 
         D3DDrawState mDrawState;

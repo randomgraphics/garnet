@@ -305,20 +305,11 @@ void GN::gfx::D3DRenderer::drawQuads(
     size_t count )
 {
     GN_GUARD_SLOW;
-
+    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::drawQuads" );
     GN_ASSERT( mDrawBegan && mQuad );
-
     applyDrawState();
-
     mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
-
-    mDrawState.dirtyFlags.vtxShader = 1;
-    mDrawState.dirtyFlags.pxlShader = 1;
-    mDrawState.dirtyFlags.vtxBufs |= 1;
-    mDrawState.dirtyFlags.vtxBinding = 1;
-
-    mFfpDirtyFlags.TextureStates = 1;
-
+    PIXPERF_END_EVENT();
     GN_UNGUARD_SLOW;
 }
 
@@ -396,6 +387,8 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::applyDrawState" );
+
     // apply textures
     if( getDirtyTextureStages() > 0 ) applyTexture();
 
@@ -428,6 +421,8 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
         // clear dirty flags
         mDrawState.dirtyFlags.u32 = 0;
     }
+
+    PIXPERF_END_EVENT();
 
     GN_UNGUARD_SLOW;
 }

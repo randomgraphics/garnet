@@ -98,6 +98,8 @@ void GN::gfx::D3DRenderer::applyFfpState()
 {
     GN_GUARD;
 
+    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::applyFfpState()" );
+
     // make sure at least one state is dirty
     GN_ASSERT( mFfpDirtyFlags.u32 );
 
@@ -232,6 +234,8 @@ void GN::gfx::D3DRenderer::applyFfpState()
 
     // clear dirty flags
     mFfpDirtyFlags.u32 = 0;
+
+    PIXPERF_END_EVENT();
 
     GN_UNGUARD;
 }

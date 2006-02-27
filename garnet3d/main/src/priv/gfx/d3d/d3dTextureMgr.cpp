@@ -97,6 +97,8 @@ void GN::gfx::D3DRenderer::applyTexture() const
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::applyTexture()" );
+
     GN_ASSERT( getDirtyTextureStages() > 0 );
 
     const Texture * const * texlist = getCurrentTextures();
@@ -125,6 +127,8 @@ void GN::gfx::D3DRenderer::applyTexture() const
     }
 
     clearDirtyTextureStages();
+
+    PIXPERF_END_EVENT();
 
     GN_UNGUARD_SLOW;
 }
