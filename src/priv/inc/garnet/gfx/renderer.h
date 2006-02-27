@@ -1464,8 +1464,10 @@ namespace GN { namespace gfx
         //! \param positions, posStride
         //!     顶点坐标数据，由一系列的顶点组成。4个顶点表示一个矩形。
         //!     选项 DQ_WINDOW_SPACE 和 DQ_3D_POSITION 会影响坐标的含义。
+        //!     Note "posStride" is stride of one vertex.
         //! \param texcoords, texStride
         //!     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
+        //!     Note "texStride" is stride of one vertex.
         //! \param count
         //!     Number of quads.
         //!

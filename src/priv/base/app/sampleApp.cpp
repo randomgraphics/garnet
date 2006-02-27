@@ -118,10 +118,6 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 {
     GN_GUARD;
 
-    // default is 800x600
-    mInitParam.ro.windowedWidth = 800;
-    mInitParam.ro.windowedHeight = 600;
-
 #if GN_XENON
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
@@ -136,6 +132,8 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.rapi = gfx::API_OGL;
 #endif
     mInitParam.ro = gfx::RendererOptions();
+    mInitParam.ro.windowedWidth = 800; // default is 800x600
+    mInitParam.ro.windowedHeight = 600;
     mInitParam.iapi = input::API_NATIVE;
 
     for( int i = 1; i < argc; ++i )
