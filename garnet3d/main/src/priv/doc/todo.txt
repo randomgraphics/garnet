@@ -28,7 +28,6 @@ TODO
   - blender exporter/importer
   - in-game GUI system
     - font class
-    - fix CEGUI memleak
   - UT for Str::findFirst/LastOf(...)
 
 - p2
