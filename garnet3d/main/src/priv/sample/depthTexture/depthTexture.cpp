@@ -53,13 +53,13 @@ public:
         };
         r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
         r.bindTexture( 0, 0 );
-        r.setRenderDepth( mDepth.get() );
+        r.setRenderDepth( mDepth );
         r.clearScreen();
         r.drawQuads( DQ_3D_POSITION, &vb[0].x, &vb[0].u, sizeof(QuadVert), 1 );
 
         // draw depth texture to screen
         r.setRenderDepth( 0 );
-        r.bindTexture( 0, mDepth.get() );
+        r.bindTexture( 0, mDepth );
         r.clearScreen();
         r.draw2DQuad( DQ_OPAQUE );
     }
@@ -135,8 +135,8 @@ public:
         r.bindTexture( 0, 0 );
         r.bindTexture( 1, 0 );
         r.bindShaderHandles( mVs1, mPs1 );
-        r.setRenderTarget( 0, mTarget.get() );
-        r.setRenderDepth( mDepth.get() );
+        r.setRenderTarget( 0, mTarget );
+        r.setRenderDepth( mDepth );
         r.clearScreen();
         r.drawQuads(
             DQ_ENABLE_DEPTH_WRITE | DQ_3D_POSITION | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS,
@@ -145,8 +145,8 @@ public:
         // draw depth texture to screen
         r.setRenderTarget( 0, 0 );
         r.setRenderDepth( 0 );
-        r.bindTexture( 0, mDepth.get() );
-        r.bindTexture( 1, mTarget.get() );
+        r.bindTexture( 0, mDepth );
+        r.bindTexture( 1, mTarget );
         r.bindShaderHandles( mVs2, mPs2 );
         r.clearScreen();
         r.draw2DQuad( DQ_OPAQUE | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS );

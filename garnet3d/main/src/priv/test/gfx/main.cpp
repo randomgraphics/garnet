@@ -114,7 +114,7 @@ public:
 
         r.bindTexture( 0, gTexDict.getResource(tex0) );
         r.draw2DQuad( 0, 0, 0, 0.5, 0.5 );
-        if( ps1 )
+        /*if( ps1 )
         {
             r.bindShaders( 0, ps1 );
             r.draw2DQuad( GN::gfx::DQ_USE_CURRENT_PS, 0.5, 0.0, 1.0, 0.5 );
@@ -123,7 +123,7 @@ public:
         {
             r.bindShaders( 0, ps2 );
             r.draw2DQuad( GN::gfx::DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
-        }
+        }*/
     }
 };
 
@@ -132,19 +132,13 @@ public:
 //!
 class GfxTestApp : public GN::app::SampleApp
 {
-    bool mDone;
-
-    GN::app::FpsCounter mFps;
-
     Scene * mScene;
-
 public:
 
     GfxTestApp() : mScene(0) {}
 
     bool onRendererCreate()
     {
-        mFps.reset();
         mScene = new Scene;
         return mScene->init();
     }
@@ -156,19 +150,18 @@ public:
 
     void onKeyPress( GN::input::KeyEvent ke )
     {
+        GN::app::SampleApp::onKeyPress( ke );
         if( GN::input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
         {
             // toggle fullscreen mode
             GN::gfx::RendererOptions ro = gRenderer.getOptions();
             ro.fullscreen = !ro.fullscreen;
-            if( !gRenderer.changeOptions(ro) ) mDone = true;
+            if( !gRenderer.changeOptions(ro) ) postExistEvent();
         }
     }
 
     void onUpdate()
     {
-        const GN::input::KeyStatus * kb = gInput.getKeyboardStatus();
-        mDone = kb[GN::input::KEY_ESCAPE].down;
     }
 
     void onRender()
@@ -180,10 +173,6 @@ public:
         // draw scene
         GN_ASSERT( mScene );
         mScene->draw();
-
-        // draw FPS
-        mFps.onFrame();
-        r.drawDebugTextA( mFps.fpsString(), 0, 0 );
 
         // draw mouse position on screen
         GN::StrA mousePos;

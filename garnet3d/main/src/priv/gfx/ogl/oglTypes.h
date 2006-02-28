@@ -117,7 +117,7 @@ namespace GN { namespace gfx
         {
             if( VERTEX_SHADER == type )
             {
-                if( shader != vtxShader.get() )
+                if( shader != vtxShader )
                 {
                     dirtyFlags.vtxShader = true;
                     vtxShader.reset( shader );
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
             }
             else if( PIXEL_SHADER == type )
             {
-                if( shader != pxlShader.get() )
+                if( shader != pxlShader )
                 {
                     dirtyFlags.pxlShader = true;
                     pxlShader.reset( shader );
@@ -147,12 +147,12 @@ namespace GN { namespace gfx
                 GN_ERROR( "shader list can't be NULL." );
                 return;
             }
-            if( shaders[VERTEX_SHADER] != vtxShader.get() )
+            if( shaders[VERTEX_SHADER] != vtxShader )
             {
                 dirtyFlags.vtxShader = true;
                 vtxShader.reset( shaders[VERTEX_SHADER] );
             }
-            if( shaders[PIXEL_SHADER] != pxlShader.get() )
+            if( shaders[PIXEL_SHADER] != pxlShader )
             {
                 dirtyFlags.pxlShader = true;
                 pxlShader.reset( shaders[PIXEL_SHADER] );

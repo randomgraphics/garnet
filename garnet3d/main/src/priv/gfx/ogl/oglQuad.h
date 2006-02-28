@@ -8,6 +8,8 @@
 
 namespace GN { namespace gfx
 {
+    class OGLRenderer;
+    
     //!
     //! OGL quad renderer
     //!
@@ -21,7 +23,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLQuad( Renderer & r ) : mRenderer(r) { clear(); }
+        OGLQuad( OGLRenderer & r ) : mRenderer(r) { clear(); }
         virtual ~OGLQuad() { quit(); }
         //@}
 
@@ -33,19 +35,11 @@ namespace GN { namespace gfx
     public:
         bool init();
         void quit();
-        bool ok() const
-        {
-            return MyParent::ok()
-                && 0 != mVtxBinding
-                && 0 != mVtxBuf
-                && 0 != mIdxBuf;
-        }
+        bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {
-            mVtxBinding = 0;
             mVtxBuf = 0;
-            mIdxBuf = 0;
             mNextQuad = 0;
         }
         //@}
@@ -72,11 +66,17 @@ namespace GN { namespace gfx
 
         enum { MAX_QUADS = 4096 };
 
-        Renderer & mRenderer;
+        struct QuadVertex
+        {
+            Vector2f t;
+            Vector3f p;
+            Vector3f _; // padding to 32 bytes
+        };
+        GN_CASSERT( 32 == sizeof(QuadVertex) );
 
-        uint32_t mVtxBinding;
-        VtxBuf * mVtxBuf;
-        IdxBuf * mIdxBuf;
+        QuadVertex * mVtxBuf;
+
+        OGLRenderer & mRenderer;
 
         size_t   mNextQuad;
 

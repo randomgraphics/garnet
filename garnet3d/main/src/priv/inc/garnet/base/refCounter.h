@@ -117,12 +117,12 @@ namespace GN
         //!
         //! construct from a normal pointer
         //!
-        AutoRef( XPTR p = 0 ) throw() : mPtr(p) {}
+        explicit AutoRef( XPTR p = 0 ) throw() : mPtr(p) {}
 
         //!
         //! copy constructor
         //!
-        AutoRef( const AutoRef & p ) throw() : mPtr( p.get() )
+        AutoRef( const AutoRef & p ) throw() : mPtr( p )
         {
             if(mPtr) mPtr->incref();
         }
@@ -131,7 +131,7 @@ namespace GN
         //! copy constructor
         //!
         template <class Y>
-        AutoRef( const AutoRef<Y> & p ) throw() : mPtr( p.get() )
+        AutoRef( const AutoRef<Y> & p ) throw() : mPtr( p )
         {
             if(mPtr) mPtr->incref();
         }
@@ -149,7 +149,7 @@ namespace GN
         //!
         AutoRef & operator = ( const AutoRef & rhs )
         {
-            reset( rhs.get() );
+            reset( rhs );
             return *this;
         }
 
@@ -159,7 +159,7 @@ namespace GN
         template <class Y>
         AutoRef & operator = ( const AutoRef<Y> & rhs )
         {
-            reset( rhs.get() );
+            reset( rhs );
             return *this;
         }
 

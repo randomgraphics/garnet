@@ -401,7 +401,7 @@ void GN::gfx::D3DRenderer::applyVtxBuffers()
             {
                 GN_DX_CHECK( mDevice->SetStreamSource(
                     i,
-                    safeCast<const D3DVtxBuf*>( vbd.buf.get() )->getD3DVb(),
+                    safeCast<const D3DVtxBuf*>(vbd.buf.get())->getD3DVb(),
                     0,
                     (UINT)( vbd.stride ? vbd.stride : vtxFmt.streams[i].stride ) ) );
             }

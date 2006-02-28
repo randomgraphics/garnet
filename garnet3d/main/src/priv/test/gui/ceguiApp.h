@@ -18,9 +18,15 @@
 
 using namespace GN;
 
+//!
+//! CEGUI test application
+//!
 class GuiTest : public GN::app::SampleApp
 {
 public:
+
+    //! \name from SampleApp
+    //@{
 
     bool onAppInit()
     {
@@ -59,7 +65,7 @@ public:
                 }
 
                 AutoObjPtr<uint8_t> buffer( new uint8_t[fp.size()] );
-                if( fp.size() != fp.read( buffer.get(), fp.size() ) )
+                if( fp.size() != fp.read( buffer, fp.size() ) )
                 {
                     throw GenericException((utf8*)
                         "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);
@@ -148,6 +154,8 @@ public:
         //for( int i = 0; i < 30; ++i )
         CEGUI::System::getSingleton().renderGUI();
     }
+
+    //@}
 };
 
 // *****************************************************************************

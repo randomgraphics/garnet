@@ -66,7 +66,7 @@ uint32_t GN::gfx::OGLRenderer::createVtxBinding( const VtxFmtDesc & format )
         // create new vertex binding object
         AutoObjPtr<OGLVtxBinding> p( new OGLVtxBinding(*this) );
         if( !p->init( format ) ) return 0;
-        h = mVtxBindings.add( p.get() );
+        h = mVtxBindings.add( p );
         p.detach();
     }
 
@@ -194,13 +194,12 @@ void GN::gfx::OGLRenderer::applyVtxBinding()
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) );
-
-    OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
-
-    GN_ASSERT( p );
-
-    p->bind();
+    if( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) )
+    {
+        OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+        GN_ASSERT( p );
+        p->bind();
+    }
 
     GN_UNGUARD_SLOW;
 }
@@ -212,23 +211,24 @@ void GN::gfx::OGLRenderer::applyVtxBufState( size_t startVtx )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) );
-
-    OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
-
-    GN_ASSERT( p );
-
-    const VtxFmtDesc & vtxFmt = p->getFormat();
-
-    for( size_t i = 0; i < vtxFmt.numStreams; ++i )
+    if( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) )
     {
-        const OGLDrawState::VtxBufDesc & vbd = mCurrentDrawState.vtxBufs[i];
+        OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
 
-        p->bindBuffer(
-            i,
-            vbd.buf.empty() ? 0 : safeCast<const OGLBasicVtxBuf*>( vbd.buf.get() )->getVtxData(),
-            startVtx,
-            vbd.stride ? vbd.stride : vtxFmt.streams[i].stride );
+        GN_ASSERT( p );
+
+        const VtxFmtDesc & vtxFmt = p->getFormat();
+
+        for( size_t i = 0; i < vtxFmt.numStreams; ++i )
+        {
+            const OGLDrawState::VtxBufDesc & vbd = mCurrentDrawState.vtxBufs[i];
+
+            p->bindBuffer(
+                i,
+                vbd.buf.empty() ? 0 : safeCast<const OGLBasicVtxBuf*>( vbd.buf.get() )->getVtxData(),
+                startVtx,
+                vbd.stride ? vbd.stride : vtxFmt.streams[i].stride );
+        }
     }
 
     GN_UNGUARD_SLOW;

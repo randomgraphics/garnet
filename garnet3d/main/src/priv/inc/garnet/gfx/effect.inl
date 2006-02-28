@@ -48,7 +48,7 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t mActivePass ) const
     {
         GN_ASSERT( mShaders.items.validHandle(p.shaders[iShader]) );
         const ShaderData & sd = mShaders.items[p.shaders[iShader]];
-        shaders[iShader] = sd.value.get();
+        shaders[iShader] = sd.value;
     }
     gRenderer.bindShaders( shaders );
 
@@ -76,7 +76,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
         GN_ASSERT( mShaders.items.validHandle(p.shaders[iShader]) );
         ShaderData & sd = mShaders.items[p.shaders[iShader]];
 
-        shaders[iShader] = sd.value.get();
+        shaders[iShader] = sd.value;
 
         // apply dirty uniforms
         for( std::set<size_t>::const_iterator iUniform = sd.dirtyUniforms.begin(); iUniform != sd.dirtyUniforms.end(); ++iUniform )

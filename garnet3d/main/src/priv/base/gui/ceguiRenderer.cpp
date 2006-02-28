@@ -70,8 +70,8 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(void)
     GN_GUARD;
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
-    if( 0 == p ) return 0;
-    mTextures.push_back( p.get() );
+    if( !p ) return 0;
+    mTextures.push_back( p );
     return p.detach();
 
     GN_UNGUARD;
@@ -86,9 +86,9 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(
     GN_GUARD;
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
-    if( 0 == p ) return 0;
+    if( !p ) return 0;
     p->loadFromFile( filename, resourceGroup );
-    mTextures.push_back( p.get() );
+    mTextures.push_back( p );
     return p.detach();
 
     GN_UNGUARD;
@@ -102,9 +102,9 @@ CEGUI::Texture* CEGUI::GarnetRenderer::createTexture(float size)
     GN_GUARD;
 
     GN::AutoObjPtr<GarnetTexture> p( new GarnetTexture(this) );
-    if( 0 == p ) return 0;
+    if( !p ) return 0;
     p->loadFromMemory( 0, (uint)size, (uint)size );
-    mTextures.push_back( p.get() );
+    mTextures.push_back( p );
     return p.detach();
 
     GN_UNGUARD;

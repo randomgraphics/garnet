@@ -298,7 +298,7 @@ void GN::gfx::OGLRenderer::applyShaderState()
         if( !newProg->init(
             safeCast<const OGLBasicShaderGLSL*>(vs),
             safeCast<const OGLBasicShaderGLSL*>(ps) ) ) return ;
-        mGLSLProgramMap[key] = newProg.get();
+        mGLSLProgramMap[key] = newProg;
         newProg.detach()->apply();
     }
 

@@ -37,10 +37,10 @@ public:
         TS_ASSERT_EQUALS( 2, p1->a );
 
         p1.attach( 0 );
-        TS_ASSERT_EQUALS( (S1*)0, p1.get() );
+        TS_ASSERT_EQUALS( (S1*)0, p1 );
 
         p1.attach( 0 );
-        TS_ASSERT_EQUALS( (S1*)0, p1.get() );
+        TS_ASSERT_EQUALS( (S1*)0, p1 );
     }
 
     void testDetatch()
@@ -53,7 +53,7 @@ public:
         S1 * p3 = p2.detach();
         delete p3;
         TS_ASSERT_EQUALS( p1, p3 );
-        TS_ASSERT( !p2.get() );
+        TS_ASSERT( !p2 );
     }
 };
 int AutoPtrTest::a;
