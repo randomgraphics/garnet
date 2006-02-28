@@ -1,0 +1,10 @@
+Import('env GN_conf')
+
+env = env.Copy()
+
+if GN_conf['has_cegui'] : env.Append( CPPDEFINES=['HAS_CEGUI'] )
+
+env.GN_build_program(
+    'GNguiTest',
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp' )
