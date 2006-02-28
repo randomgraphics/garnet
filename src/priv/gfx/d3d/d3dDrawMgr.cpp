@@ -410,13 +410,13 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
 
         if( mDrawState.dirtyFlags.idxBuf )
         {
-            const IdxBuf * buf = mDrawState.idxBuf.get();
+            const IdxBuf * buf = mDrawState.idxBuf;
             GN_DX_CHECK( mDevice->SetIndices( buf ? safeCast<const D3DIdxBuf*>(buf)->getD3DIb() : 0 ) );
         }
 
         applyShader(
-            mDrawState.vtxShader.get(), !!mDrawState.dirtyFlags.vtxShader,
-            mDrawState.pxlShader.get(), !!mDrawState.dirtyFlags.pxlShader );
+            mDrawState.vtxShader, !!mDrawState.dirtyFlags.vtxShader,
+            mDrawState.pxlShader, !!mDrawState.dirtyFlags.pxlShader );
 
         // clear dirty flags
         mDrawState.dirtyFlags.u32 = 0;

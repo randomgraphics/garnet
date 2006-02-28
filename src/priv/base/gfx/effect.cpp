@@ -293,7 +293,7 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
 
             r.bindVtxBinding( g.vtxBinding );
             r.bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
-            r.bindIdxBuf( g.idxBuf.get() );
+            r.bindIdxBuf( g.idxBuf );
 
             if( g.idxBuf.empty() )
             {

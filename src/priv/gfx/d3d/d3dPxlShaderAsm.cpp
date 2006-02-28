@@ -66,7 +66,7 @@ bool GN::gfx::D3DPxlShaderAsm::deviceCreate()
     UINT sz;
     GN_DX_CHECK_RV( mD3DShader->GetFunction( 0, &sz ), false );
     AutoObjArray<uint8_t> func( new uint8_t[sz] );
-    GN_DX_CHECK_RV( mD3DShader->GetFunction( func.get(), &sz ), false );
+    GN_DX_CHECK_RV( mD3DShader->GetFunction( func, &sz ), false );
 
     // analyze uniforms
     if( !analyzeUniforms( (const DWORD*)func.get() ) ) return false;

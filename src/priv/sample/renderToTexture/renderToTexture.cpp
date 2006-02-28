@@ -37,22 +37,22 @@ public:
 
         // draw to RT0
         r.bindTexture( 0, gTexDict.getResource(mTex0) );
-        r.setRenderTarget( 0, mRt0.get() );
+        r.setRenderTarget( 0, mRt0 );
         r.clearScreen();
         r.draw2DQuad( 0 );
 
         // draw to RT1
         r.bindTexture( 0, gTexDict.getResource(mTex1) );
-        r.setRenderTarget( 0, mRt1.get() );
+        r.setRenderTarget( 0, mRt1 );
         r.clearScreen();
         r.draw2DQuad( 0 );
 
         // draw 2 RTs to screen
         r.setRenderTarget( 0, 0 );
         r.clearScreen();
-        r.bindTexture( 0, mRt0.get() );
+        r.bindTexture( 0, mRt0 );
         r.draw2DQuad( 0, 0.0, 0.0, 0.5, 1.0 );
-        r.bindTexture( 0, mRt1.get() );
+        r.bindTexture( 0, mRt1 );
         r.draw2DQuad( 0, 0.5, 0.0, 1.0, 1.0 );//*/
     }
 };

@@ -458,7 +458,9 @@ void GN::gfx::OGLRenderer::drawQuads(
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan && mQuad );
-
+    if( !( DQ_USE_CURRENT_VS & options ) ) bindVtxShader(0);
+    if( !( DQ_USE_CURRENT_PS & options ) ) bindPxlShader(0);
+    applyDrawState(0);
     mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
 
     GN_UNGUARD_SLOW;
@@ -475,7 +477,7 @@ void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, cons
 
     // disable programmable pipeline
     Renderer::bindShaders( 0, 0 );
-    applyShaderState();
+    applyDrawState(0);
     mFont->drawTextW( s, x, y, c );
 
     GN_UNGUARD_SLOW;

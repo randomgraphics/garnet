@@ -85,15 +85,15 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     AutoObjArray<char> entryStr( new char[fp.size()+1] );
 
     // read file
-	memset( buf.get(), 0, fp.size()+1 );
-    if( 0 == fp.read( buf.get(), fp.size() ) )
+	memset( buf, 0, fp.size()+1 );
+    if( 0 == fp.read( buf, fp.size() ) )
     {
         GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cstr(), path.cstr() );
         return false;
     }
 	fp.close();
 
-    const char * code = buf.get();
+    const char * code = buf;
     ShaderType type;
     ShadingLanguage lang;
     if( sCheckPrefix( code, "!!ARBvp" ) )
@@ -110,12 +110,12 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         3 == ::sscanf( code, "// TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entryStr.get() ) ||
         3 == ::sscanf( code, "# TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entryStr.get() ) )
     {
-        if( !str2ShaderType( type, typeStr.get() ) )
+        if( !str2ShaderType( type, typeStr ) )
         {
             GN_ERROR( "Shader '%s' creation failed: invalid shader type '%s'.", name.cstr(), typeStr.get() );
             return false;
         }
-        if( !str2ShadingLanguage( lang, langStr.get() ) )
+        if( !str2ShadingLanguage( lang, langStr ) )
         {
             GN_ERROR( "Shader '%s' creation failed: invalid shading language '%s'.", name.cstr(), langStr.get() );
             return false;
@@ -128,7 +128,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
 
     // create shader instance
-    result = gRenderer.createShader( type, lang, code, entry.empty() ? entryStr.get() : entry.cstr() );
+    result = gRenderer.createShader( type, lang, code, entry.empty() ? entryStr : entry.cstr() );
     return NULL != result;
 
     GN_UNGUARD;

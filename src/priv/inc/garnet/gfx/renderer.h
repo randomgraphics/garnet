@@ -950,7 +950,7 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
             GN_ASSERT( stage < MAX_TEXTURE_STAGES );
-            if( mCurrentTextures[stage].get() != tex )
+            if( mCurrentTextures[stage] != tex )
             {
                 mCurrentTextures[stage].reset( tex );
                 ++stage;
@@ -978,7 +978,7 @@ namespace GN { namespace gfx
             const Texture * const * tex = texlist;
             for( uint32_t i = 0; i < count; ++i, ++start, ++tex )
             {
-                if( mCurrentTextures[start].get() != *tex )
+                if( mCurrentTextures[start] != *tex )
                 {
                     mCurrentTextures[start].reset( *tex );
                 }

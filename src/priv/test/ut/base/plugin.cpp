@@ -119,18 +119,18 @@ public:
         TS_ASSERT( !mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance ) );
 
         p.attach( mgr.createInstance<MyPlugin>( "a", "p" ) );
-        TS_ASSERT_EQUALS( whoAreYou( p.get() ), 1 );
+        TS_ASSERT_EQUALS( whoAreYou( p ), 1 );
 
         // force override existing plugin
         TS_ASSERT( mgr.registerPlugin( "a", "p", "ap", &Plugin2::newInstance, true ) );
 
         p.attach( mgr.createInstance<MyPlugin>( "a", "p" ) );
-        TS_ASSERT_EQUALS( whoAreYou( p.get() ), 2 );
+        TS_ASSERT_EQUALS( whoAreYou( p ), 2 );
 
         // create instance of invalid plugin
         p.attach( mgr.createInstance<MyPlugin>( "A", "p" ) );
-        TS_ASSERT_EQUALS( whoAreYou( p.get() ), -1 );
+        TS_ASSERT_EQUALS( whoAreYou( p ), -1 );
         p.attach( mgr.createInstance<MyPlugin>( "a", "P" ) );
-        TS_ASSERT_EQUALS( whoAreYou( p.get() ), -1 );
+        TS_ASSERT_EQUALS( whoAreYou( p ), -1 );
     }
 };

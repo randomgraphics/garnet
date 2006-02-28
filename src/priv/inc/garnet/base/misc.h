@@ -411,9 +411,9 @@ namespace GN
             }
 
             //!
-            //! Convert to boolean
+            //! Convert to T *
             //!
-            operator bool() const { return 0 != mPtr; }
+            operator T*() const { return mPtr; }
 
             //!
             //! dereference operator

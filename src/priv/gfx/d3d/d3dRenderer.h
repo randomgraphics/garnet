@@ -111,7 +111,7 @@ namespace GN { namespace gfx
         //!
         void bindIdxBuf( const IdxBuf * buf )
         {
-            if( buf == idxBuf.get() ) return;
+            if( buf == idxBuf ) return;
             dirtyFlags.idxBuf = true;
             idxBuf.reset( buf );
         }
@@ -123,13 +123,13 @@ namespace GN { namespace gfx
         {
             if( VERTEX_SHADER == type )
             {
-                if( shader == vtxShader.get() ) return;
+                if( shader == vtxShader ) return;
                 dirtyFlags.vtxShader |= true;
                 vtxShader.reset( shader );
             }
             else if( PIXEL_SHADER == type )
             {
-                if( shader == pxlShader.get() ) return;
+                if( shader == pxlShader ) return;
                 dirtyFlags.pxlShader |= true;
                 pxlShader.reset( shader );
             }
@@ -149,12 +149,12 @@ namespace GN { namespace gfx
                 GN_ERROR( "shader list can't be NULL." );
                 return;
             }
-            if( shaders[VERTEX_SHADER] != vtxShader.get() )
+            if( shaders[VERTEX_SHADER] != vtxShader )
             {
                 dirtyFlags.vtxShader |= true;
                 vtxShader.reset( shaders[VERTEX_SHADER] );
             }
-            if( shaders[PIXEL_SHADER] != pxlShader.get() )
+            if( shaders[PIXEL_SHADER] != pxlShader )
             {
                 dirtyFlags.pxlShader |= true;
                 pxlShader.reset( shaders[PIXEL_SHADER] );
@@ -166,7 +166,7 @@ namespace GN { namespace gfx
         //!
         void bindPxlShader( const Shader * shader )
         {
-            if( shader == pxlShader.get() ) return;
+            if( shader == pxlShader ) return;
             dirtyFlags.pxlShader |= true;
             pxlShader.reset( shader );
         }

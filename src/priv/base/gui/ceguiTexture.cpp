@@ -19,8 +19,8 @@ static bool sCreateTextureFromFile( GN::gfx::Texture * & result, const GN::StrA 
     // analyze texture name
     AutoObjPtr<char> filename( new char[name.size()+1] );
     AutoObjPtr<char> group( new char[name.size()+1] );
-    memset( filename.get(), 0, name.size()+1 );
-    memset( group.get(), 0, name.size()+1 );
+    memset( filename, 0, name.size()+1 );
+    memset( group, 0, name.size()+1 );
     sscanf( name.cstr(), "%s %s", filename.get(), group.get() );
 
     // load texture file using CEGUI's resource provider
