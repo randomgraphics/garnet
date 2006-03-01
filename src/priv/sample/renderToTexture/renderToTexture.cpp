@@ -27,8 +27,8 @@ public:
 
     void onRendererDestroy()
     {
-        mRt0.reset();
-        mRt1.reset();
+        mRt0.clear();
+        mRt1.clear();
     }
 
     void onRender()

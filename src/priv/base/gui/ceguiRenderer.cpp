@@ -4,6 +4,16 @@
 
 #ifdef HAS_CEGUI
 
+// link to CEGUI libraries
+#if GN_MSVC
+#if GN_DEBUG && defined(CEGUI_LOAD_MODULE_APPEND_SUFFIX_FOR_DEBUG)
+#define LIBNAME(X) X CEGUI_LOAD_MODULE_DEBUG_SUFFIX ".lib"
+#else
+#define LIBNAME(X) X ".lib"
+#endif
+#pragma comment( lib, LIBNAME( "CEGUIbase" ) )
+#endif
+
 // *****************************************************************************
 //  from Renderer
 // *****************************************************************************

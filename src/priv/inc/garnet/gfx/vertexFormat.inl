@@ -60,7 +60,7 @@ GN::gfx::str2VtxSem( VtxSem & result, const char * str )
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::VtxFmtDesc::reset()
+GN_INLINE void GN::gfx::VtxFmtDesc::clear()
 {
     for( int i = 0; i < NUM_VTXSEMS; ++i )
     {

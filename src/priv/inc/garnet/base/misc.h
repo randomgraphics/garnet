@@ -384,9 +384,9 @@ namespace GN
             T * get() const { return mPtr; }
 
             //!
-            //! clear internal pointer
+            //! clear internal pointer. Same as attach(0)
             //!
-            void clear() { attach(0); }
+            void clear() { if( mPtr ) release(), mPtr = 0; }
 
             //!
             //! attach to new pointer (release the old one)
@@ -620,9 +620,14 @@ namespace GN
         bool empty() const { return 0 == mPtr; }
 
         //!
+        //! Clear to empty. Same as reset(NULL).
+        //!
+        void clear() { if( mPtr ) mPtr->Release(); mPtr = 0; }
+
+        //!
         //! Release existing interface, then hold new interface
         //!
-        void reset( T * p = 0 ) throw()
+        void reset( T * p ) throw()
         {
             if( p ) p->AddRef();
             if( mPtr ) mPtr->Release();

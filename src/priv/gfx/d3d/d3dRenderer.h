@@ -76,13 +76,13 @@ namespace GN { namespace gfx
             GN_CASSERT( sizeof(DirtyFlags) == 4 );
             for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i )
             {
-                vtxBufs[i].buf.reset();
+                vtxBufs[i].buf.clear();
                 vtxBufs[i].stride = 0;
             }
             vtxBinding = 0;
-            idxBuf.reset();
-            vtxShader.reset();
-            pxlShader.reset();
+            idxBuf.clear();
+            vtxShader.clear();
+            pxlShader.clear();
             dirtyFlags.u32 = 0;
         }
 

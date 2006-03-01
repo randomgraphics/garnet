@@ -221,12 +221,17 @@ namespace GN
         XPTR const * addr() const throw() { return &mPtr; }
 
         //!
+        //! Clear to empty. Same as reset(NULL).
+        //!
+        void clear() { if( mPtr ) mPtr->decref(); mPtr = 0; }
+
+        //!
         //! reset with new pointer data
         //!
         //! this function will release old pointer, if not NULL; then increase
         //! the reference counter of new pointer, if not NULL.
         //!
-        void reset( XPTR p = 0 )
+        void reset( XPTR p )
         {
             if( p ) p->incref();
             if( mPtr ) mPtr->decref();
@@ -249,7 +254,7 @@ namespace GN
         //!
         void attach( XPTR ptr )
         {
-            reset();
+            clear();
             mPtr = ptr;
         }
 

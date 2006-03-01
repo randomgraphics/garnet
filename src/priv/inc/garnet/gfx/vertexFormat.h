@@ -72,12 +72,12 @@ namespace GN { namespace gfx
         //!
         //! Constructor
         //!
-        VtxFmtDesc() { reset(); }
+        VtxFmtDesc() { clear(); }
 
         //!
-        //! Reset to empty declarator.
+        //! Clear to empty declarator.
         //!
-        GN_INLINE void reset();
+        GN_INLINE void clear();
 
         //!
         //! Add new attribute into vertex format declarator.

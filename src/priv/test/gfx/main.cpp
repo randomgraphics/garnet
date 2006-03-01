@@ -104,8 +104,8 @@ public:
     void quit()
     {
         eff0.quit();
-        ps1.reset();
-		ps2.reset();
+        ps1.clear();
+		ps2.clear();
     }
 
     void draw()

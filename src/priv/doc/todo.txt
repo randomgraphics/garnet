@@ -17,9 +17,7 @@ TODO
 - p1
   - GFX system
     - Why quad renderer is so slow, comparing with CEGUI sample application.
-    - Why there are so many SetTextureStageState(...)
     - support render-to-texture on xenon (including depth texture)
-    - use glInterleavedArray(...) to implement OGL quad renderer
   - code page convertor
   - sample application
     - GLSL test application
@@ -31,10 +29,11 @@ TODO
   - UT for Str::findFirst/LastOf(...)
 
 - p2
+  - more sofisitcated log management: see log4cxx for example.
+    - runtime switchable GN_TRACE( level, msg, .... )
   - refine GFX module:
     - shared uniform
   - Rewrite SCons script
-  - runtime switchable GN_TRACE( level, msg, .... )
 
 - p3
   - try implementing a ray tracer
