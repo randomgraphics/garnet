@@ -32,7 +32,7 @@ public:
 
     void destroy()
     {
-        mDepth.reset();
+        mDepth.clear();
     }
 
     void render()
@@ -111,8 +111,8 @@ public:
 
     void destroy()
     {
-		mTarget.reset();
-        mDepth.reset();
+		mTarget.clear();
+        mDepth.clear();
     }
 
     void render()

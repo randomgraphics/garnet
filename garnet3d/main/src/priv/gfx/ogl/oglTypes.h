@@ -81,12 +81,12 @@ namespace GN { namespace gfx
         {
             for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i )
             {
-                vtxBufs[i].buf.reset();
+                vtxBufs[i].buf.clear();
                 vtxBufs[i].stride = 0;
             }
             vtxBinding = 0;
-            vtxShader.reset();
-            pxlShader.reset();
+            vtxShader.clear();
+            pxlShader.clear();
             dirtyFlags.u32 = 0;
         }
 

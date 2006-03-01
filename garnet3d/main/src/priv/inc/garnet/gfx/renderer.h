@@ -836,7 +836,7 @@ namespace GN { namespace gfx
         //!
         void clearCurrentTextures()
         {
-            for( size_t i = 0; i < MAX_TEXTURE_STAGES; ++i ) mCurrentTextures[i].reset();
+            for( size_t i = 0; i < MAX_TEXTURE_STAGES; ++i ) mCurrentTextures[i].clear();
         }
 
         //!

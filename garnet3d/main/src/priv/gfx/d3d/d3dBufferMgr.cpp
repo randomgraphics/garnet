@@ -240,7 +240,7 @@ void GN::gfx::D3DRenderer::bufferDeviceDispose()
     uint32_t h = mVtxBindings.first();
     while( h )
     {
-        mVtxBindings[h].decl.reset();
+        mVtxBindings[h].decl.clear();
         h = mVtxBindings.next( h );
     }
 

@@ -30,9 +30,9 @@ namespace GN
         ~Registry() {}
 
         //!
-        //! Reset to empty registry.
+        //! Clear to empty registry.
         //!
-        void reset() { mKeys.clear(); }
+        void clear() { mKeys.clear(); }
 
         //!
         //! Get value of specific registry key

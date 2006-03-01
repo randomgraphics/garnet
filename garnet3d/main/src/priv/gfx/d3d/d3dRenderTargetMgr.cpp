@@ -2,6 +2,7 @@
 #include "d3dRenderer.h"
 #include "d3dTexture.h"
 
+#if !GN_XENON
 
 // *****************************************************************************
 // device management
@@ -105,6 +106,12 @@ void GN::gfx::D3DRenderer::setRenderTarget(
         if( index >= getCaps(CAPS_MAX_RENDER_TARGETS) )
         {
             GN_ERROR( "render target index (%d) is too large!", index );
+            return;
+        }
+        // make sure target texture is a RTT
+        if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getUsage()) )
+        {
+            GN_ERROR( "Only texture with TEXUSAGE_RENDER_TARGET usage can be used as render target." );
             return;
         }
     }
@@ -246,3 +253,5 @@ GN_INLINE void GN::gfx::D3DRenderer::resizeAutoDepthBuffer( const Vector2<uint32
 
     GN_UNGUARD_SLOW;
 }
+
+#endif

@@ -43,7 +43,7 @@ void GN::gfx::OGLRenderer::bufferClear()
     }
     mVtxBindings.clear();
 
-    mCurrentIdxBuf.reset();
+    mCurrentIdxBuf.clear();
 
     GN_UNGUARD;
 }

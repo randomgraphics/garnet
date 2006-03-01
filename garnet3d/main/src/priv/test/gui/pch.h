@@ -8,7 +8,7 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNcore.h"
-#include "garnet/GNgui.h"
+//#include "garnet/GNgui.h"
 #include "garnet/GNapp.h"
 #include "../base/gui/ceguiRenderer.h"
 #include "garnet/base/pragma.h"
