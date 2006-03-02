@@ -97,7 +97,7 @@ void GN::gfx::D3DRenderer::applyTexture() const
 {
     GN_GUARD_SLOW;
 
-    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::applyTexture()" );
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::applyTexture()" );
 
     GN_ASSERT( getDirtyTextureStages() > 0 );
 
