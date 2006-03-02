@@ -36,21 +36,19 @@
 #endif
 
 #ifndef GN_RETAIL
-#define PIXPERF_BEGIN_EVENT( color, name )  D3DPERF_BeginEvent( color, name )
+#if GN_XENON
+#define PIXPERF_BEGIN_EVENT( color, name )  PIXBeginNamedEvent( color, name )
+#define PIXPERF_END_EVENT()                 PIXEndNamedEvent()
+#define PIXPERF_SET_MARKER( color, name )   PIXSetMarker( color, name )
+#else
+#define PIXPERF_BEGIN_EVENT( color, name )  D3DPERF_BeginEvent( color, GN_JOIN( L, name ) )
 #define PIXPERF_END_EVENT()                 D3DPERF_EndEvent()
-#define PIXPERF_SET_MARKER( color, name )   D3DPERF_SetMarker( color, name )
-#define PIXPERF_SET_REGION( color, name )   D3DPERF_SetRegion( color, name )
-#define PIXPERF_QUERY_REPEAT_FRAME()        D3DPERF_QueryRepeatFrame()
-#define PIXPERF_SET_OPTIONS( options )      D3DPERF_SetOptions( options )
-#define PIXPERF_GET_STATUS( color, name )   D3DPERF_GetStatus
+#define PIXPERF_SET_MARKER( color, name )   D3DPERF_SetMarker( color, GN_JOIN( L, name ) )
+#endif
 #else
 #define PIXPERF_BEGIN_EVENT( color, name )
 #define PIXPERF_END_EVENT()
 #define PIXPERF_SET_MARKER( color, name )
-#define PIXPERF_SET_REGION( color, name )
-#define PIXPERF_QUERY_REPEAT_FRAME()
-#define PIXPERF_SET_OPTIONS( options )
-#define PIXPERF_GET_STATUS( color, name )
 #endif
 
 #include "garnet/base/pragma.h"

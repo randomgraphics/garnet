@@ -98,7 +98,7 @@ void GN::gfx::D3DRenderer::applyFfpState()
 {
     GN_GUARD;
 
-    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::applyFfpState()" );
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::applyFfpState()" );
 
     // make sure at least one state is dirty
     GN_ASSERT( mFfpDirtyFlags.u32 );

@@ -305,7 +305,7 @@ void GN::gfx::D3DRenderer::drawQuads(
     size_t count )
 {
     GN_GUARD_SLOW;
-    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::drawQuads" );
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawQuads" );
     GN_ASSERT( mDrawBegan && mQuad );
     applyDrawState();
     mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
@@ -387,7 +387,7 @@ GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
 {
     GN_GUARD_SLOW;
 
-    PIXPERF_BEGIN_EVENT( 0, L"GN::gfx::D3DRenderer::applyDrawState" );
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::applyDrawState" );
 
     // apply textures
     if( getDirtyTextureStages() > 0 ) applyTexture();
