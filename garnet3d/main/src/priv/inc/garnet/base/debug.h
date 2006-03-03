@@ -183,6 +183,7 @@
             GN_ERROR( DXGetErrorString9A(rr) );     \
             /* some D3D errors are expected */      \
             if( D3DERR_DEVICELOST != rr &&          \
+                D3DERR_NOTFOUND != rr &&            \
                 D3DERR_OUTOFVIDEOMEMORY != rr )     \
             {                                       \
                 GN_UNEXPECTED();                    \
