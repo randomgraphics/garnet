@@ -861,14 +861,14 @@
 				<Filter
 					Name="app"
 					Filter="">
-					<File
-						RelativePath="..\src\priv\inc\garnet\app\sampleApp.h">
-					</File>
 				</Filter>
 			</Filter>
 			<Filter
 				Name="src"
 				Filter="">
+				<File
+					RelativePath="..\src\priv\inc\garnet\app\sampleApp.h">
+				</File>
 				<Filter
 					Name="base"
 					Filter="">
@@ -3306,6 +3306,9 @@
 									PrecompiledHeaderThrough="pch.h"
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxD3D.pch"/>
 							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\d3d\d3dRenderTargetMgrXenon.cpp">
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\d3d\d3dResource.cpp">
