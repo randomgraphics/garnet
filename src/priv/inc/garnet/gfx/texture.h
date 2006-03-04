@@ -27,6 +27,7 @@ namespace GN { namespace gfx
         TEXTYPE_2D,    //!< 2D texture
         TEXTYPE_3D,    //!< 3D texture
         TEXTYPE_CUBE,  //!< Cube texture
+        TEXTYPE_STACK, //!< Stack texture
         NUM_TEXTYPES   //!< Number of avaliable texture types.
     };
 
@@ -80,6 +81,16 @@ namespace GN { namespace gfx
         NUM_TEXFACES
     };
 
+    //!
+    //! 贴图锁定的返回结果
+    //!
+    struct TexLockedResult
+    {
+        size_t rowBytes;   //!< bytes per line
+        size_t sliceBytes; //!< bytes per slice
+        void * data;       //!< 指向被锁定图象的第一个字节
+    };
+
     struct Texture;
 
     //!
@@ -104,7 +115,7 @@ namespace GN { namespace gfx
         //! get size of base map
         //!
         template<typename T>
-        void getBaseMapSize( T * sx, T * sy = 0, T * sz = 0 ) const
+        void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
             if( sx ) *sx = (T)mSize.x;
             if( sy ) *sy = (T)mSize.y;
@@ -114,17 +125,45 @@ namespace GN { namespace gfx
         //!
         //! get size of base map
         //!
-        const Vector3<uint32_t> & getBaseMapSize() const { return mSize; }
+        const Vector3<size_t> & getBaseSize() const { return mSize; }
 
         //!
         //! get size of specific mip level
         //!
-        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy = 0, uint32_t * sz = 0 ) const = 0;
+        virtual void getMipSize( size_t level, size_t * sx, size_t * sy = 0, size_t * sz = 0 ) const = 0;
+
+        //!
+        //! get size of specific mip level (templat version)
+        //!
+        template<typename T>
+        void getMipSizeT( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
+        {
+            size_t x, y, z;
+            getMipSize( level, &x, &y, &z );
+            if( sx ) *sx = (T)x;
+            if( sy ) *sy = (T)y;
+            if( sz ) *sz = (T)z;
+        }
+
+        //!
+        //! get size of specific mip level
+        //!
+        Vector3<size_t> getMipSize( size_t level ) const
+        {
+            Vector3<size_t> sz;
+            getMipSize( level, &sz.x, &sz.y, &sz.z );
+            return sz;
+        }
+
+        //!
+        //! get number of faces
+        //!
+        size_t getFaces() const { return mFaces; }
 
         //!
         //! get number of mipmap levels
         //!
-        uint32_t getLevels() const { return mLevels; }
+        size_t getLevels() const { return mLevels; }
 
         //!
         //! get texture format
@@ -134,7 +173,7 @@ namespace GN { namespace gfx
         //!
         //! get texture usage
         //!
-        uint32_t getUsage() const { return mUsage; }
+        BitField getUsage() const { return mUsage; }
 
         //!
         //! set texture filters
@@ -163,58 +202,40 @@ namespace GN { namespace gfx
         //@{
 
         //!
+        //! Lock specific level of the texture. Can be used to all kind of texture.
+        //!
+        //! \param result   return locking result
+        //! \param face     Specify face you want to lock.
+        //! \param level    Specify mipmap level you want to lock.
+        //! \param area     Specify locking area in the mipmap. Null means whole level.
+        //! \param flag     Locking flags. See LockFlag for details.
+        //!
+        //! \return         Return false, if locking failed.
+        //!
+        virtual bool lock(
+            TexLockedResult & result,
+            size_t face,
+            size_t level,
+            const Boxi * area,
+            BitField flag ) = 0;
+
+        //!
         //! lock a 1D texture, only can be called on 1D texture
         //!
-        //! \param level    specify the miplevel you want to lock, starting from 0
-        //! \param offset   offset from start of texture, in pixel unit.
-        //! \param length   length of the lock, in pixel unit. 0 means "to the end
-        //!                 of the texture".
-        //! \param flag     locking flags
-        //!
-        //! \return         return false, if lock failed.
-        //!
-        virtual void * lock1D( uint32_t level, uint32_t offset, uint32_t length, uint32_t flag ) = 0;
-
-        //!
-        //! lock a 2D texture, only can be called on 2D texture
-        //!
-        //! \param result   return the locking result.
-        //! \param level    specify the miplevel you want to lock, starting from 0
-        //! \param area     specify locking area, 0 means whole texture.
-        //! \param flag     locking flags
-        //!
-        //! \return         return false, if lock failed.
-        //!
-        virtual bool lock2D( LockedRect &  result, uint32_t level, const Recti * area, uint32_t flag ) = 0;
-
-        //!
-        //! lock a 3D texture, only can be called on 3D texture
-        //!
-        //! \param result   return the locking result.
-        //! \param level    specify the miplevel you want to lock, starting from 0
-        //! \param box      specify locking area, 0 means whole texture.
-        //! \param flag     locking flags
-        //!
-        //! \return         return false, if lock failed.
-        //!
-        virtual bool lock3D( LockedBox &  result, uint32_t level, const Boxi * box, uint32_t flag ) = 0;
-
-        //!
-        //! lock a cube texture, only can be called on cube texture
-        //!
-        //! \param result   return the locking result.
-        //! \param face     specify the face you want t lock
-        //! \param level    specify the miplevel you want to lock, starting from 0
-        //! \param area     specify locking area, 0 means whole texture.
-        //! \param flag     locking flags
-        //!
-        //! \return         return false, if lock failed.
-        //!
-        virtual bool lockCube( LockedRect &  result,
-                               TexFace       face,
-                               uint32_t      level,
-                               const Recti * area,
-                               uint32_t      flag ) = 0;
+        void * lock1D( size_t level, size_t offset, size_t length, BitField flag )
+        {
+            GN_ASSERT( TEXTYPE_1D == getType() );
+            TexLockedResult result;
+            Boxi area;
+            area.x = (int)offset;
+            area.y = 0;
+            area.z = 0;
+            area.w = (int)length;
+            area.h = 0;
+            area.d = 0;
+            if( !lock( result, 0, level, &area, flag ) ) return 0;
+            return result.data;
+        }
 
         //!
         //! unlock previous lock
@@ -250,10 +271,11 @@ namespace GN { namespace gfx
         //!  - for cube texture, mSize.y is always equal to mSize.x
         //!
         bool setProperties( TexType  type,
-                            uint32_t sx, uint32_t sy, uint32_t sz,
-                            uint32_t levels,
+                            size_t   sx, size_t sy, size_t sz,
+                            size_t   faces,
+                            size_t   levels,
                             ClrFmt   format,
-                            uint32_t usage )
+                            BitField usage )
         {
             // check type
             if( type < 0 || type >= NUM_TEXTYPES )
@@ -265,11 +287,72 @@ namespace GN { namespace gfx
 
             // initiate texture size
             mSize.x =sx;
-            if( TEXTYPE_1D == type ) mSize.y = 1;
-            else if( TEXTYPE_CUBE == type ) mSize.y = sx;
-            else mSize.y = sy;
-            if( TEXTYPE_3D != type ) mSize.z = 1;
-            else mSize.z = sz;
+            switch( type )
+            {
+                case TEXTYPE_1D :
+                {
+                    mSize.y = 1;
+                    mSize.z = 1;
+                    break;
+                }
+
+                case TEXTYPE_2D :
+                case TEXTYPE_CUBE :
+                case TEXTYPE_STACK :
+                {
+                    mSize.y = sy;
+                    mSize.z = 1;
+                    break;
+                }
+
+                case TEXTYPE_3D :
+                {
+                    mSize.y = sy;
+                    mSize.z = sz;
+                    break;
+                }
+
+                default : GN_UNEXPECTED();
+            }
+
+            // initialize face count
+            if( TEXTYPE_CUBE == type )
+            {
+                if( 0 != faces && 6 != faces )
+                {
+                    GN_WARN( "Cubemap must have 6 faces." );
+                }
+                mFaces = 6;
+            }
+            else if( TEXTYPE_STACK == type )
+            {
+                mFaces = 0 == faces ? 1 : faces;
+            }
+            else
+            {
+                if( 0 != faces && 1 != faces )
+                {
+                    GN_WARN( "Texture other then cube/stack texture can have only 1 face." );
+                }
+                mFaces = 1;
+            }
+
+            // calculate maximum mipmap levels
+            size_t nx = 0, ny = 0, nz = 0;
+            size_t maxLevels;
+
+            maxLevels = mSize.x;
+            while( maxLevels > 0 ) { maxLevels >>= 1; ++nx; }
+
+            maxLevels = mSize.y;
+            while( maxLevels > 0 ) { maxLevels >>= 1; ++ny; }
+
+            maxLevels = mSize.z;
+            while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
+
+            maxLevels = max( max(nx, ny), nz );
+
+            mLevels = 0 == levels ? maxLevels : min( maxLevels, levels );
 
             // store format
             if( ( format < 0 || format >= NUM_CLRFMTS ) &&
@@ -283,23 +366,6 @@ namespace GN { namespace gfx
             // store usage flags
             mUsage = usage;
 
-            // calculate mipmap levels
-            uint32_t nx = 0, ny = 0, nz = 0;
-            uint32_t k;
-
-            k = mSize.x;
-            while( k > 0 ) { k >>= 1; ++nx; }
-
-            k = mSize.y;
-            while( k > 0 ) { k >>= 1; ++ny; }
-
-            k = mSize.z;
-            while( k > 0 ) { k >>= 1; ++nz; }
-
-            k = max( max(nx, ny), nz );
-
-            mLevels = 0 == levels ? k : min( k, levels );
-
             // success
             return true;
         }
@@ -311,12 +377,13 @@ namespace GN { namespace gfx
 
     private :
 
-        TexType             mType;    //!< texture type
-        Vector3<uint32_t>   mSize;    //!< texture size
-        uint32_t            mLevels;  //!< number of mipmap levels
-        ClrFmt              mFormat;  //!< pixel format
-        uint32_t            mUsage;   //!< creation flags
-        TextureLoader       mLoader;  //!< content loader
+        TexType           mType;    //!< texture type
+        Vector3<size_t>   mSize;    //!< texture size
+        size_t            mFaces;   //!< texture face count
+        size_t            mLevels;  //!< number of mipmap levels
+        ClrFmt            mFormat;  //!< pixel format
+        BitField          mUsage;   //!< usage flags
+        TextureLoader     mLoader;  //!< content loader
     };
 
     //!
@@ -334,7 +401,7 @@ namespace GN { namespace gfx
     texType2Str( StrA & str, TexType textype )
     {
         static const char * sTable [] =
-        { "1D", "2D", "3D", "CUBE" };
+        { "1D", "2D", "3D", "CUBE", "STACK" };
 
         if( 0 <= textype && textype < NUM_TEXTYPES )
         {
@@ -348,7 +415,7 @@ namespace GN { namespace gfx
     texType2Str( TexType textype )
     {
         static const char * sTable [] =
-        { "1D", "2D", "3D", "CUBE" };
+        { "1D", "2D", "3D", "CUBE", "STACK" };
 
         if( 0 <= textype && textype < NUM_TEXTYPES )
         {
@@ -360,12 +427,12 @@ namespace GN { namespace gfx
     inline bool
     str2TexType( TexType & value, const char * name )
     {
-        static const char * sTable [] =
-        { "1D", "2D", "3D", "CUBE" };
+        static const char * sTable[] =
+        { "1D", "2D", "3D", "CUBE", "STACK" };
 
         if( name )
         {
-            for( int i = 0; i < 4; ++i )
+            for( int i = 0; i < NUM_TEXTYPES; ++i )
             {
                 if( 0 == ::strcmp(sTable[i],name) )
                 {

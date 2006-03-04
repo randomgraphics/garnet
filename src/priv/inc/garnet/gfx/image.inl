@@ -1,82 +1,125 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::gfx::ImageDesc::getTotalBytes() const
+GN_INLINE bool GN::gfx::ImageDesc::setFaceAndLevel( size_t faces, size_t levels )
 {
-    size_t nbytes = 0;
-    for( uint8_t i = 0; i < numMips; ++i )
+    safeMemFree( mipmaps );
+    numFaces = faces;
+    numLevels = levels;
+    if( numFaces > 0 && numLevels > 0 )
     {
-        nbytes += getLevelBytes( i );
+        mipmaps = (MipmapDesc*)memAlloc( numFaces * numLevels * sizeof(MipmapDesc) );
+        if( 0 == mipmaps ) return false;
     }
-    return nbytes;
+    return true;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::gfx::ImageDesc::getLevelBytes( uint8_t level ) const
+GN_INLINE GN::gfx::MipmapDesc &
+GN::gfx::ImageDesc::getMipmap( size_t face, size_t level )
 {
-    GN_ASSERT( level < numMips );
-    const MipDesc & m = mips[level];
+    GN_ASSERT( mipmaps && face < numFaces && level < numLevels );
+    return mipmaps[face*numFaces+level];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE const GN::gfx::MipmapDesc &
+GN::gfx::ImageDesc::getMipmap( size_t face, size_t level ) const
+{
+    GN_ASSERT( mipmaps && face < numFaces && level < numLevels );
+    return mipmaps[face*numFaces+level];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE size_t GN::gfx::ImageDesc::getTotalBytes() const
+{
+    size_t nbytes = 0;
+    for( size_t l = 0; l < numLevels; ++l )
+    {
+        nbytes += getLevelBytes( l );
+    }
+    return nbytes * numFaces;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE size_t GN::gfx::ImageDesc::getLevelBytes( size_t level ) const
+{
+    if( 0 == numLevels ) return 0;
+    GN_ASSERT( mipmaps && 0 < numFaces && level < numLevels );
+    const MipmapDesc & m = getMipmap( 0, level );
     return m.levelPitch;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
+GN_INLINE size_t GN::gfx::ImageDesc::getFaceBytes() const
+{
+    size_t sz = 0;
+    for( size_t i = 0; i < numLevels; ++i ) sz += getLevelBytes( i );
+    return sz;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_INLINE size_t GN::gfx::ImageDesc::getPixelOffset(
-    uint8_t level, uint16_t x, uint16_t y, uint16_t z ) const
+    size_t face, size_t level, size_t x, size_t y, size_t z ) const
 {
     GN_ASSERT(
-        level < numMips &&
-        x < mips[level].width &&
-        y <mips[level].height &&
-        z < mips[level].depth );
-    return getScanlineOffset(level,y,z) + getClrFmtDesc(format).bits * x / 8;
+        x < getMipmap( face, level ).width &&
+        y < getMipmap( face, level ).height &&
+        z < getMipmap( face, level ).depth );
+    return getScanlineOffset(face,level,y,z) + getClrFmtDesc(format).bits * x / 8;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN_INLINE size_t GN::gfx::ImageDesc::getScanlineOffset(
-    uint8_t level, uint16_t y, uint16_t z ) const
+    size_t face, size_t level, size_t y, size_t z ) const
 {
-    const MipDesc & m = mips[level];
-    GN_ASSERT( level < numMips && y <m.height && z < m.depth );
-    return getSliceOffset(level,z) + m.rowPitch * y;
+    const MipmapDesc & m = getMipmap( face, level );
+    GN_ASSERT( y < m.height && z < m.depth );
+    return getSliceOffset( face, level, z ) + m.rowPitch * y;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::gfx::ImageDesc::getSliceOffset( uint8_t level, uint16_t z ) const
+GN_INLINE size_t GN::gfx::ImageDesc::getSliceOffset(
+    size_t face, size_t level, size_t z ) const
 {
-    const MipDesc & m = mips[level];
-    GN_ASSERT( level < numMips && z < m.depth );
-    size_t nbytes = 0;
-    for( uint8_t i = 0; i < level; ++i )
+    const MipmapDesc & m = getMipmap( face, level );
+    GN_ASSERT( z < m.depth );
+    return getLevelOffset(face,level) + m.slicePitch * z;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE size_t GN::gfx::ImageDesc::getLevelOffset( size_t face, size_t level ) const
+{
+    size_t sz = 0;
+    for( size_t i = 0; i < level; ++i )
     {
-        nbytes += getLevelBytes( i );
+        sz += getLevelBytes(i);
     }
-    return nbytes + m.slicePitch * z;
+    return getFaceOffset(face) + sz;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::gfx::ImageDesc::MipDesc &
-GN::gfx::ImageDesc::operator [] ( size_t level )
+GN_INLINE size_t GN::gfx::ImageDesc::getFaceOffset( size_t face ) const
 {
-    GN_ASSERT( level < numMips );
-    return mips[level];
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE const GN::gfx::ImageDesc::MipDesc &
-GN::gfx::ImageDesc::operator [] ( size_t level ) const
-{
-    GN_ASSERT( level < numMips );
-    return mips[level];
+    return face * getFaceBytes();
 }

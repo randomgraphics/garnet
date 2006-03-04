@@ -13,13 +13,13 @@
 namespace GN { namespace gfx
 {
     //!
-    //! Basic OGL texture class
+    //! OGL texture class
     //!
-    class OGLBasicTexture : public BasicTexture,
-                            public OGLResource,
-                            public StdClass
+    class OGLTexture : public BasicTexture,
+                       public OGLResource,
+                       public StdClass
     {
-         GN_DECLARE_STDCLASS( OGLBasicTexture, StdClass );
+         GN_DECLARE_STDCLASS( OGLTexture, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -27,8 +27,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLBasicTexture( OGLRenderer & r ) :OGLResource(r) { clear(); }
-        virtual ~OGLBasicTexture() { quit(); }
+        OGLTexture( OGLRenderer & r ) :OGLResource(r) { clear(); }
+        virtual ~OGLTexture() { quit(); }
         //@}
 
         // ********************************
@@ -38,19 +38,17 @@ namespace GN { namespace gfx
         //@{
     public:
         bool init( TexType  type,
-                   uint32_t sx, uint32_t sy, uint32_t sz,
-                   uint32_t miplevels,
+                   size_t sx, size_t sy, size_t sz,
+                   size_t faces,
+                   size_t levels,
                    ClrFmt   format,
-                   uint32_t usage );
+                   BitField usage );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {
             mOGLTexture = 0;
-            mLockedLevel = 0;
-            mLockedFlag = 0;
-            mLockedBuffer = 0;
 
             mFilters[0] = mFilters[1] = TEXFILTER_LINEAR;
             mWraps[0] = mWraps[1] = mWraps[2] = TEXWRAP_REPEAT;
@@ -76,48 +74,12 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void * lock1D( uint32_t level, uint32_t offset, uint32_t length, uint32_t flag )
-        {
-            GN_UNUSED_PARAM( level );
-            GN_UNUSED_PARAM( offset );
-            GN_UNUSED_PARAM( length );
-            GN_UNUSED_PARAM( flag );
-            GN_ERROR( "can't do 1D lock on %s texture", texType2Str( getType() ) );
-            return 0;
-        }
-        virtual bool lock2D( LockedRect & result, uint32_t level, const Recti * area, uint32_t flag )
-        {
-            GN_UNUSED_PARAM( result );
-            GN_UNUSED_PARAM( level );
-            GN_UNUSED_PARAM( area );
-            GN_UNUSED_PARAM( flag );
-            GN_ERROR( "can't do 2D lock on %s texture", texType2Str( getType() ) );
-            return false;
-        }
-        virtual bool lock3D( LockedBox & result, uint32_t level, const Boxi * box, uint32_t flag )
-        {
-            GN_UNUSED_PARAM( result );
-            GN_UNUSED_PARAM( level );
-            GN_UNUSED_PARAM( box );
-            GN_UNUSED_PARAM( flag );
-            GN_ERROR( "can't do 3D lock on %s texture", texType2Str( getType() ) );
-            return false;
-        }
-        virtual bool lockCube( LockedRect & result, TexFace face, uint32_t level, const Recti * area, uint32_t flag )
-        {
-            GN_UNUSED_PARAM( result );
-            GN_UNUSED_PARAM( face );
-            GN_UNUSED_PARAM( level );
-            GN_UNUSED_PARAM( area );
-            GN_UNUSED_PARAM( flag );
-            GN_ERROR( "can't do CUBE lock on %s texture", texType2Str( getType() ) );
-            return false;
-        }
-
+        virtual void getMipSize( size_t level, size_t * sx, size_t * sy, size_t * sz ) const;
         virtual void setFilter( TexFilter, TexFilter ) const;
-
+        virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, BitField flag );
+        virtual void unlock();
         virtual void updateMipmap() { GN_ERROR( "no implementation" ); }
-
         virtual void * getAPIDependentData() const { return (void*)getOGLTexture(); }
 
         //@}
@@ -166,7 +128,7 @@ namespace GN { namespace gfx
         //!
         //! convert cubemap face to GL tag
         //!
-        static GLenum cubeface2GL( TexFace face )
+        static GLenum sCubeface2OGL( size_t face )
         {
             GLenum sTable[NUM_TEXFACES] =
             {
@@ -213,293 +175,16 @@ namespace GN { namespace gfx
         //!
         //@{
         GLenum      mLockedTarget;
-        uint32_t    mLockedLevel;
-        Recti       mLockedArea;
-        uint32_t    mLockedFlag;
+        size_t      mLockedLevel;
+        Boxi        mLockedArea;
+        BitField    mLockedFlag;
         uint8_t *   mLockedBuffer;
         size_t      mLockedBytes;
         //@}
 
         // ********************************
-        //  protected functions
-        // ********************************
-    protected:
-
-        //!
-        //! set the 1st wrap mode
-        //!
-        void setWrapS( TexWrap mode ) const
-        {
-            if( mWraps[0] != mode )
-            {
-                mWraps[0] = mode;
-
-                GN_OGL_CHECK( glTexParameteri(
-                    mOGLTarget,
-                    GL_TEXTURE_WRAP_S,
-                    sTexWrap2OGL(TexWrap(mode)) ) );
-            }
-        }
-
-        //!
-        //! set the 2nd wrap mode
-        //!
-        void setWrapT( TexWrap mode ) const
-        {
-            if( mWraps[1] != mode )
-            {
-                mWraps[1] = mode;
-
-                GN_OGL_CHECK( glTexParameteri(
-                    mOGLTarget,
-                    GL_TEXTURE_WRAP_T,
-                    sTexWrap2OGL( mode ) ) );
-            }
-        }
-
-        //!
-        //! set the 3rd wrap mode
-        //!
-        void setWrapR( TexWrap mode ) const
-        {
-            GN_ASSERT( GLEW_EXT_texture3D );
-            if( mWraps[2] != mode )
-            {
-                mWraps[2] = mode;
-
-                GN_OGL_CHECK( glTexParameteri(
-                    mOGLTarget,
-                    GL_TEXTURE_WRAP_R,
-                    sTexWrap2OGL( mode ) ) );
-            }
-        }
-
-        //!
-        //! create new texture instance
-        //!
-        virtual GLuint newOGLTexture( GLint   internalformat,
-                                      GLsizei size_x,
-                                      GLsizei size_y,
-                                      GLsizei size_z,
-                                      GLint   miplevels,
-                                      GLenum  glformat,
-                                      GLenum  gltype ) = 0;
-
-        //!
-        //! private 2D lock operation
-        //!
-        bool privateLock2D( LockedRect &  result,
-                            GLenum        target,
-                            uint32_t      miplevel,
-                            const Recti * area,
-                            uint32_t      flag );
-
-        //!
-        //! private 2D unlock function
-        //!
-        void privateUnlock2D();
-
-        // ********************************
         //  private functions
         // ********************************
-    private:
-
-        //!
-        //! map wrap mode to opengl constant
-        //!
-        GLenum sTexWrap2OGL( TexWrap w ) const
-        {
-            if( TEXWRAP_REPEAT == w ) return GL_REPEAT;
-            else if( TEXWRAP_CLAMP == w ) return GL_CLAMP;
-            else if( TEXWRAP_CLAMP_TO_EDGE == w )
-            {
-                if( GLEW_EXT_texture_edge_clamp )
-                    return GL_CLAMP_TO_EDGE_EXT;
-                else if (GLEW_SGIS_texture_edge_clamp )
-                    return GL_CLAMP_TO_EDGE_SGIS;
-                else
-                {
-                    GN_ERROR( "do not support clamp to edge!" );
-                    return GL_CLAMP;
-                }
-            }
-            else
-            {
-                GN_ASSERT_EX( 0, "invaid wrap type!" );
-                return GL_REPEAT;
-            }
-        }
-    };
-
-    //!
-    //! OpenGL 1D texture class
-    //!
-    class OGLTex1D : public OGLBasicTexture
-    {
-        // ********************************
-        //! \name ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLTex1D( OGLRenderer & r ) : OGLBasicTexture(r) {}
-        ~OGLTex1D() {}
-        //@}
-
-        // ********************************
-        //! \name from Texture
-        // ********************************
-    public:
-
-        //@{
-
-        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
-        virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual void * lock1D( uint32_t level, uint32_t offset, uint32_t length, uint32_t flag );
-        virtual void unlock();
-
-        //@}
-
-        // ********************************
-        //! \name from OGLBasicTexture
-        // ********************************
-    protected:
-        virtual GLuint newOGLTexture( GLint   internalformat,
-                                      GLsizei size_x,
-                                      GLsizei size_y,
-                                      GLsizei size_z,
-                                      GLint   miplevels,
-                                      GLenum  glformat,
-                                      GLenum  gltype );
-    private:
-    };
-
-    //!
-    //! OpenGL 2D texture class
-    //!
-    class OGLTex2D : public OGLBasicTexture
-    {
-        // ********************************
-        //! \name ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLTex2D( OGLRenderer & r ) : OGLBasicTexture(r) {}
-        ~OGLTex2D() {}
-        //@}
-
-        // ********************************
-        //! \name from Texture
-        // ********************************
-    public:
-
-        //@{
-
-        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
-        virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock2D( LockedRect & result, uint32_t level, const Recti * area, uint32_t flag );
-        virtual void unlock();
-
-        //@}
-
-        // ********************************
-        //! \name from OGLBasicTexture
-        // ********************************
-    protected:
-        virtual GLuint newOGLTexture( GLint   internalformat,
-                                      GLsizei size_x,
-                                      GLsizei size_y,
-                                      GLsizei size_z,
-                                      GLint   miplevels,
-                                      GLenum  glformat,
-                                      GLenum  gltype );
-    private:
-    };
-
-    //!
-    //! OpenGL 3D texture class
-    //!
-    class OGLTex3D : public OGLBasicTexture
-    {
-        // ********************************
-        //! \name ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLTex3D( OGLRenderer & r ) : OGLBasicTexture(r) {}
-        ~OGLTex3D() {}
-        //@}
-
-        // ********************************
-        //! \name from Texture
-        // ********************************
-    public:
-
-        //@{
-
-        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
-        virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock3D( LockedBox &  result, uint32_t level, const Boxi * box, uint32_t flag );
-        virtual void unlock();
-
-        //@}
-
-        // ********************************
-        //! \name from OGLBasicTexture
-        // ********************************
-    protected:
-        virtual GLuint newOGLTexture( GLint   internalformat,
-                                      GLsizei size_x,
-                                      GLsizei size_y,
-                                      GLsizei size_z,
-                                      GLint   miplevels,
-                                      GLenum  glformat,
-                                      GLenum  gltype );
-    private:
-    };
-
-    //!
-    //! OpenGL cube texture class
-    //!
-    class OGLTexCube : public OGLBasicTexture
-    {
-        // ********************************
-        //! \name ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        OGLTexCube( OGLRenderer & r ) : OGLBasicTexture(r) {}
-        ~OGLTexCube() {}
-        //@}
-
-        // ********************************
-        //! \name from Texture
-        // ********************************
-    public:
-
-        //@{
-
-        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
-        virtual void setWrap( TexWrap, TexWrap, TexWrap ) const;
-        virtual bool lockCube( LockedRect & result, TexFace face, uint32_t level, const Recti * area, uint32_t flag );
-        virtual void unlock();
-
-        //@}
-
-        // ********************************
-        //! \name from OGLBasicTexture
-        // ********************************
-    protected:
-        virtual GLuint newOGLTexture( GLint   internalformat,
-                                      GLsizei size_x,
-                                      GLsizei size_y,
-                                      GLsizei size_z,
-                                      GLint   miplevels,
-                                      GLenum  glformat,
-                                      GLenum  gltype );
     private:
     };
 }}

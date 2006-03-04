@@ -440,13 +440,14 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const;
+        bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
         virtual Texture *
-        createTexture( TexType textype,
-                       uint32_t sx, uint32_t sy, uint32_t sz,
-                       uint32_t levels,
-                       ClrFmt format,
-                       uint32_t usage,
+        createTexture( TexType  textype,
+                       size_t   sx, size_t sy, size_t sz,
+                       size_t   faces,
+                       size_t   levels,
+                       ClrFmt   format,
+                       BitField usage,
                        const TextureLoader & loader );
         virtual Texture * createTextureFromFile( File & );
 
@@ -474,8 +475,8 @@ namespace GN { namespace gfx
     private:
 
         void applyTexture() const;
-        GN_INLINE void updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters ) const;
-        GN_INLINE void updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq ) const;
+        GN_INLINE void updateTextureFilters( size_t stage, const D3DTEXTUREFILTERTYPE * filters ) const;
+        GN_INLINE void updateTextureWraps( size_t stage, const D3DTEXTUREADDRESS * strq ) const;
 
         //@}
 

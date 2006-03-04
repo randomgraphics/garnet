@@ -169,51 +169,38 @@ namespace GN { namespace gfx
             FakeTexture() {}
 
             bool init( TexType type,
-                       uint32_t sx, uint32_t sy, uint32_t sz,
-                       uint32_t levels,
-                       ClrFmt format,
-                       uint32_t usage )
+                       size_t sx, size_t sy, size_t sz,
+                       size_t faces,
+                       size_t levels,
+                       ClrFmt   format,
+                       BitField usage )
             {
-                if( !setProperties( type, sx, sy, sz, levels, format, usage ) ) return false;
+                if( !setProperties( type, sx, sy, sz, faces, levels, format, usage ) ) return false;
                 mBuffer.resize( sx * sy * sz * getClrFmtDesc(format).bits / 8 );
                 return true;
             }
 
-            virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy = 0, uint32_t * sz = 0 ) const
+            virtual void getMipSize( size_t level, size_t * sx, size_t * sy = 0, size_t * sz = 0 ) const
             {
-                uint32_t x, y, z;
-                getBaseMapSize( &x, &y, &z );
+                size_t x, y, z;
+                getBaseSize( &x, &y, &z );
                 x >>= level; if( 0 == x ) x = 1; if( sx ) *sx = x;
                 y >>= level; if( 0 == y ) y = 1; if( sy ) *sy = y;
                 z >>= level; if( 0 == z ) z = 1; if( sz ) *sz = z;
             }
             virtual void setFilter( TexFilter, TexFilter ) const {}
             virtual void setWrap( TexWrap, TexWrap, TexWrap ) const {}
-            virtual void * lock1D( uint32_t level, uint32_t offset, uint32_t length, uint32_t flag ) { return &mBuffer[0]; }
-            virtual bool lock2D( LockedRect &  result, uint32_t level, const Recti * area, uint32_t flag )
+            virtual bool lock(
+                TexLockedResult & result,
+                size_t face,
+                size_t level,
+                const Boxi * area,
+                BitField flag )
             {
                 result.data = &mBuffer[0];
                 const ClrFmtDesc & desc = getClrFmtDesc( getFormat() );
-                result.rowBytes = getBaseMapSize().x * desc.bits * desc.blockHeight / 8;
-                return true;
-            }
-            virtual bool lock3D( LockedBox &  result, uint32_t level, const Boxi * box, uint32_t flag )
-            {
-                result.data = &mBuffer[0];
-                const ClrFmtDesc & desc = getClrFmtDesc( getFormat() );
-                result.rowBytes = getBaseMapSize().x * desc.bits * desc.blockHeight / 8;
-                result.sliceBytes = result.rowBytes * getBaseMapSize().y / desc.blockHeight;
-                return true;
-            }
-            virtual bool lockCube( LockedRect &  result,
-                                   TexFace       face,
-                                   uint32_t      level,
-                                   const Recti * area,
-                                   uint32_t      flag )
-            {
-                result.data = &mBuffer[0];
-                const ClrFmtDesc & desc = getClrFmtDesc( getFormat() );
-                result.rowBytes = getBaseMapSize().x * desc.bits * desc.blockHeight / 8;
+                result.rowBytes = getBaseSize().x * desc.bits * desc.blockHeight / 8;
+                result.sliceBytes = result.rowBytes * getBaseSize().y / desc.blockHeight;
                 return true;
             }
             virtual void unlock() {}
@@ -223,24 +210,25 @@ namespace GN { namespace gfx
 
     public:
 
-        bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const { return true; }
+        bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
         virtual Texture *
-        createTexture( TexType textype,
-                       uint32_t sx, uint32_t sy, uint32_t sz,
-                       uint32_t levels,
-                       ClrFmt format,
-                       uint32_t usage,
+        createTexture( TexType  textype,
+                       size_t   sx, size_t sy, size_t sz,
+                       size_t   faces,
+                       size_t   levels,
+                       ClrFmt   format,
+                       BitField usage,
                        const TextureLoader & loader )
         {
             AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( textype, sx, sy, sz, levels, format, usage ) ) return 0;
+            if( !tex->init( textype, sx, sy, sz, faces, levels, format, usage ) ) return 0;
             return tex.detach();
         }
 
         virtual Texture * createTextureFromFile( File & )
         {
             AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( TEXTYPE_2D, 256, 256, 1, 1, FMT_D3DCOLOR, 0 ) ) return 0;
+            if( !tex->init( TEXTYPE_2D, 256, 256, 1, 1, 1, FMT_D3DCOLOR, 0 ) ) return 0;
             return tex.detach();
         }
 

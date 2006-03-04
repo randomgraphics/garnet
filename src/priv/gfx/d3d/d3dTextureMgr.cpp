@@ -11,7 +11,7 @@
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3DRenderer::supportTextureFormat(
-    TexType type, uint32_t usage, ClrFmt format ) const
+    TexType type, BitField usage, ClrFmt format ) const
 {
     GN_GUARD;
 
@@ -27,19 +27,20 @@ bool GN::gfx::D3DRenderer::supportTextureFormat(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3DRenderer::createTexture( TexType textype,
-                                     uint32_t sx, uint32_t sy, uint32_t sz,
-                                     uint32_t levels,
-                                     ClrFmt format,
-                                     uint32_t usages,
+GN::gfx::D3DRenderer::createTexture( TexType  textype,
+                                     size_t   sx, size_t sy, size_t sz,
+                                     size_t   faces,
+                                     size_t   levels,
+                                     ClrFmt   format,
+                                     BitField usages,
                                      const TextureLoader & loader )
 {
     GN_GUARD;
 
     AutoRef<D3DTexture> p( new D3DTexture(*this) );
     p->setLoader( loader );
-    if( p->init(textype,sx,sy,sz,levels,format,usages) ) return p.detach();
-    return 0;
+    if( !p->init(textype,sx,sy,sz,faces,levels,format,usages) ) return 0;
+    return p.detach();
 
     GN_UNGUARD;
 }
@@ -73,7 +74,7 @@ bool GN::gfx::D3DRenderer::textureDeviceRestore()
     _GNGFX_DEVICE_TRACE();
 
     // reset texture parameters
-    for( uint32_t i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    for( size_t i = 0; i < MAX_TEXTURE_STAGES; ++i )
     {
         TexParameters & tp = mTexParameters[i];
         tp.min = tp.mag = tp.mip = D3DTEXF_FORCE_DWORD;
@@ -103,10 +104,10 @@ void GN::gfx::D3DRenderer::applyTexture() const
 
     const Texture * const * texlist = getCurrentTextures();
 
-    uint32_t n = min( getDirtyTextureStages(), getCaps(CAPS_MAX_TEXTURE_STAGES) );
+    size_t n = min<size_t>( getDirtyTextureStages(), getCaps(CAPS_MAX_TEXTURE_STAGES) );
 
     // apply texture list
-    for( uint32_t i = 0; i < n; ++i )
+    for( UINT i = 0; i < n; ++i )
     {
         const Texture * tex = texlist[i];
 
@@ -138,7 +139,7 @@ void GN::gfx::D3DRenderer::applyTexture() const
 //
 // ------------------------------------------------------------------------
 GN_INLINE void
-GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILTERTYPE * filters ) const
+GN::gfx::D3DRenderer::updateTextureFilters( size_t stage, const D3DTEXTUREFILTERTYPE * filters ) const
 {
     GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
@@ -147,19 +148,19 @@ GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILT
     if( *filters != mTexParameters[stage].min )
     {
         mTexParameters[stage].min = *filters;
-        GN_DX_CHECK( mDevice->SetSamplerState( stage, D3DSAMP_MINFILTER, *filters ) );
+        GN_DX_CHECK( mDevice->SetSamplerState( (UINT)stage, D3DSAMP_MINFILTER, *filters ) );
     }
     ++filters;
     if( *filters != mTexParameters[stage].mag )
     {
         mTexParameters[stage].mag = *filters;
-        GN_DX_CHECK( mDevice->SetSamplerState( stage, D3DSAMP_MAGFILTER, *filters ) );
+        GN_DX_CHECK( mDevice->SetSamplerState( (UINT)stage, D3DSAMP_MAGFILTER, *filters ) );
     }
     ++filters;
     if( *filters != mTexParameters[stage].mip )
     {
         mTexParameters[stage].mip = *filters;
-        GN_DX_CHECK( mDevice->SetSamplerState( stage, D3DSAMP_MIPFILTER, *filters ) );
+        GN_DX_CHECK( mDevice->SetSamplerState( (UINT)stage, D3DSAMP_MIPFILTER, *filters ) );
     }
 }
 
@@ -167,25 +168,25 @@ GN::gfx::D3DRenderer::updateTextureFilters( uint32_t stage, const D3DTEXTUREFILT
 //
 // ------------------------------------------------------------------------
 GN_INLINE void
-GN::gfx::D3DRenderer::updateTextureWraps( uint32_t stage, const D3DTEXTUREADDRESS * strq ) const
+GN::gfx::D3DRenderer::updateTextureWraps( size_t stage, const D3DTEXTUREADDRESS * strq ) const
 {
     GN_ASSERT( stage < MAX_TEXTURE_STAGES );
 
     if( *strq != mTexParameters[stage].s )
     {
         mTexParameters[stage].s = *strq;
-        mDevice->SetSamplerState( stage, D3DSAMP_ADDRESSU, *strq );
+        mDevice->SetSamplerState( (UINT)stage, D3DSAMP_ADDRESSU, *strq );
     }
     ++strq;
     if( *strq != mTexParameters[stage].t )
     {
         mTexParameters[stage].t = *strq;
-        mDevice->SetSamplerState( stage, D3DSAMP_ADDRESSV, *strq );
+        mDevice->SetSamplerState( (UINT)stage, D3DSAMP_ADDRESSV, *strq );
     }
     ++strq;
     if( *strq != mTexParameters[stage].r )
     {
         mTexParameters[stage].r = *strq;
-        mDevice->SetSamplerState( stage, D3DSAMP_ADDRESSW, *strq );
+        mDevice->SetSamplerState( (UINT)stage, D3DSAMP_ADDRESSW, *strq );
     }
 }

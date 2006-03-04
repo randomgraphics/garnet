@@ -41,18 +41,56 @@ namespace GN { namespace gfx
         //! Basic lock operation. Each lock function must call this function first,
         //! to ensure the lock operation is valid.
         //!
-        bool basicLock()
+        //! This function will also clip lock area to ensure it is not out of texture size.
+        //!
+        bool basicLock( size_t face, size_t level, const Boxi * area, Boxi & clippedArea )
         {
-            if( !isLocked() )
-            {
-                mLocked = 1;
-                return true;
-            }
-            else
+            if( isLocked() )
             {
                 GN_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
+
+            // check face
+            if( face >= getFaces() )
+            {
+                GN_ERROR( "invalid lock face : %d", face );
+                return false;
+            }
+
+            // check level
+            if( level >= getLevels() )
+            {
+                GN_ERROR( "invalid lock level : %d", level );
+                return false;
+            }
+
+            // get texture size
+            size_t sx, sy, sz;
+            getMipSize( level, &sx, &sy, &sz );
+
+            // make sure lock area is valid
+            if( area )
+            {
+                clippedArea = *area;
+                if( !sAdjustOffsetAndRange( clippedArea.x, clippedArea.w, (int)sx ) ||
+                    !sAdjustOffsetAndRange( clippedArea.y, clippedArea.h, (int)sy ) ||
+                    !sAdjustOffsetAndRange( clippedArea.z, clippedArea.d, (int)sz ) )
+                    return false;
+            }
+            else
+            {
+                clippedArea.x = 0;
+                clippedArea.y = 0;
+                clippedArea.z = 0;
+                clippedArea.w = (int)sx;
+                clippedArea.h = (int)sy;
+                clippedArea.d = (int)sz;
+            }
+            
+            // success            
+            mLocked = 1;
+            return true;
         }
 
         //!
@@ -81,6 +119,24 @@ namespace GN { namespace gfx
         //! 贴图的锁定标志
         //!
         bool mLocked;
+
+        // ********************************
+        //  private functions
+        // ********************************
+    private:
+
+        static inline bool
+        sAdjustOffsetAndRange( int & offset, int & length, int maxLength )
+        {
+            if( offset >= maxLength )
+            {
+                GN_ERROR( "offset is beyond the end of valid range." );
+                return false;
+            }
+            if( 0 == length ) length = maxLength;
+            if( offset + length > maxLength ) length = maxLength - offset;
+            return true;
+        }
     };
 }}
 

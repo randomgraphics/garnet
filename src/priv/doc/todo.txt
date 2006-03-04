@@ -16,6 +16,9 @@ TODO
 
 - p1
   - GFX system
+    - refine resource lock flags
+      - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
+      - no combination.
     - Why quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
   - code page convertor
@@ -36,6 +39,7 @@ TODO
   - Rewrite SCons script
 
 - p3
+  - image format conversion
   - try implementing a ray tracer
   - check doxygen errors and warnings.
   - Custom sscanf(...)

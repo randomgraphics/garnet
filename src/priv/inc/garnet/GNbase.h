@@ -27,13 +27,7 @@ namespace GN
 #include "base/pragma.h"
 
 // standard numeric types
-#include <stddef.h>
-#include <wchar.h>
-#if GN_POSIX
-#include <stdint.h>
-#else
-#include "base/stdint.h"
-#endif
+#include "base/numeric.h"
 
 // type traits
 #include "base/typeTraits.h"

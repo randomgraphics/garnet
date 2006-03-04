@@ -10,25 +10,9 @@
 //
 //
 // -----------------------------------------------------------------------------
-template<typename T>
-static inline bool sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
+static inline DWORD sLockFlag2D3D( GN::BitField flag )
 {
-    if( offset >= maxLength )
-    {
-        GN_ERROR( "offset is beyond the end of valid range." );
-        return false;
-    }
-    if( 0 == length ) length = maxLength;
-    if( offset + length > maxLength ) length = maxLength - offset;
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static inline uint32_t sLockFlag2D3D( uint32_t flag )
-{
-    uint32_t d3dflag = 0;
+    DWORD d3dflag = 0;
 
     if( (GN::gfx::LOCK_RO & flag) && !(GN::gfx::LOCK_WO & flag) )
     {
@@ -156,9 +140,9 @@ D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
 //!
 //! Convert texture usage to D3DUSAGE(s)
 //!
-uint32_t GN::gfx::texUsage2D3DUsage( uint32_t usage )
+DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
 {
-    uint32_t d3dUsage  = 0;
+    DWORD d3dUsage  = 0;
     
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
     d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_DEPTHSTENCIL : 0;
@@ -182,11 +166,12 @@ uint32_t GN::gfx::texUsage2D3DUsage( uint32_t usage )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::init( TexType type,
-                                uint32_t sx, uint32_t sy, uint32_t sz,
-                                uint32_t levels,
-                                ClrFmt format,
-                                uint32_t usage )
+bool GN::gfx::D3DTexture::init( TexType  type,
+                                size_t sx, size_t sy, size_t sz,
+                                size_t faces,
+                                size_t levels,
+                                ClrFmt   format,
+                                BitField usage )
 {
     GN_GUARD;
 
@@ -194,7 +179,7 @@ bool GN::gfx::D3DTexture::init( TexType type,
     GN_STDCLASS_INIT( GN::gfx::D3DTexture, () );
 
     // create device data
-    if( !setProperties( type, sx, sy, sz, levels, format, usage ) ||
+    if( !setProperties( type, sx, sy, sz, faces, levels, format, usage ) ||
         !deviceCreate() ||
         !deviceRestore() ) { quit(); return selfOK(); }
 
@@ -239,10 +224,11 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
 
     TexType             type;
-    Vector3<uint32_t>   size;
-    uint32_t            levels;
+    Vector3<size_t>   size;
+    size_t            faces;
+    size_t            levels;
     ClrFmt              format;
-    uint32_t            usage;
+    BitField            usage;
 
     // load texture contents
     if( D3DRTYPE_TEXTURE == info.ResourceType )
@@ -270,6 +256,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         size[0] = desc.Width;
         size[1] = desc.Height;
         size[2] = 1;
+        faces = 1;
         levels = tex->GetLevelCount();
     }
     else if( D3DRTYPE_VOLUMETEXTURE == info.ResourceType )
@@ -297,6 +284,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         size[0] = desc.Width;
         size[1] = desc.Height;
         size[2] = desc.Depth;
+        faces = 1;
         levels = tex->GetLevelCount();
     }
     else if( D3DRTYPE_CUBETEXTURE == info.ResourceType )
@@ -323,7 +311,8 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         type = TEXTYPE_CUBE;
         size[0] = desc.Width;
         size[1] = desc.Height;
-        size[2] = 6;
+        size[2] = 1;
+        faces = 6;
         levels = tex->GetLevelCount();
     }
     else
@@ -337,6 +326,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     if( !setProperties(
         type,
         size[0], size[1], size[2],
+        faces,
         levels, format, usage ) ) return false;
 
     // success
@@ -394,9 +384,10 @@ bool GN::gfx::D3DTexture::deviceRestore()
         }
         setProperties(
             getType(),
-            getBaseMapSize().x,
-            getBaseMapSize().y,
-            getBaseMapSize().z,
+            getBaseSize().x,
+            getBaseSize().y,
+            getBaseSize().z,
+            getFaces(),
             getLevels(),
             format,
             getUsage() );
@@ -439,8 +430,8 @@ bool GN::gfx::D3DTexture::deviceRestore()
 #endif
 
     // create texture instance in default pool
-    uint32_t sx, sy, sz;
-    getBaseMapSize( &sx, &sy, &sz );
+    size_t sx, sy, sz;
+    getBaseSize( &sx, &sy, &sz );
     mD3DTexture = newD3DTexture(
         getType(),
         sx, sy, sz,
@@ -488,8 +479,8 @@ void GN::gfx::D3DTexture::deviceDispose()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::getMipMapSize(
-    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
+void GN::gfx::D3DTexture::getMipSize(
+    size_t level, size_t * sx, size_t * sy, size_t * sz ) const
 {
     GN_GUARD_SLOW;
 
@@ -500,7 +491,7 @@ void GN::gfx::D3DTexture::getMipMapSize(
         LPDIRECT3DVOLUMETEXTURE9 tex3D = static_cast<LPDIRECT3DVOLUMETEXTURE9>( mD3DTexture );
 
         D3DVOLUME_DESC desc;
-        GN_DX_CHECK( tex3D->GetLevelDesc( level, &desc ) );
+        GN_DX_CHECK( tex3D->GetLevelDesc( (UINT)level, &desc ) );
 
         if( sx ) *sx = desc.Width;
         if( sy ) *sy = desc.Height;
@@ -513,12 +504,12 @@ void GN::gfx::D3DTexture::getMipMapSize(
         if( TEXTYPE_CUBE == getType() )
         {
             LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
-            GN_DX_CHECK( texCube->GetLevelDesc( level, &desc ) );
+            GN_DX_CHECK( texCube->GetLevelDesc( (UINT)level, &desc ) );
         }
         else
         {
             LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
-            GN_DX_CHECK( tex2D->GetLevelDesc( level, &desc ) );
+            GN_DX_CHECK( tex2D->GetLevelDesc( (UINT)level, &desc ) );
         }
 
         if( sx ) *sx = desc.Width;
@@ -552,235 +543,90 @@ void GN::gfx::D3DTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 //
 //
 // ----------------------------------------------------------------------------
-void * GN::gfx::D3DTexture::lock1D( uint32_t level,
-                                    uint32_t offset,
-                                    uint32_t length,
-                                    uint32_t flag )
+bool GN::gfx::D3DTexture::lock(
+    TexLockedResult & result,
+    size_t face,
+    size_t level,
+    const Boxi * area,
+    BitField flag )
 {
     GN_GUARD_SLOW;
 
-    if ( TEXTYPE_1D != getType() )
-    {
-        GN_ERROR( "can't do 1D lock on an non-1D texture!" );
-        return false;
-    }
-
     // call basic lock
-    if( !basicLock() ) return false;
+    Boxi clippedArea;
+    if( !basicLock( face, level, area, clippedArea ) ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
-    // adjust offset and length
-    uint32_t sx;
-    getMipMapSize( level, &sx, 0, 0 );
-    if( !sAdjustOffsetAndRange( offset, length, sx ) ) return 0;
+    switch( getType() )
+    {
+        case TEXTYPE_1D:
+        case TEXTYPE_2D:
+        {
+            RECT rc;
+            rc.left = clippedArea.x;
+            rc.top = clippedArea.y;
+            rc.right = clippedArea.x + clippedArea.w;
+            rc.bottom = clippedArea.y + clippedArea.h;
 
-    RECT d3drc;
-    d3drc.left = offset;
-    d3drc.top = 0;
-    d3drc.right = offset + length;
-    d3drc.bottom = 1;
+            D3DLOCKED_RECT lrc;
+            GN_DX_CHECK_RV( static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture)->LockRect(
+                (UINT)level, &lrc, &rc, sLockFlag2D3D(flag) ), false );
 
-    // lock texture
-    D3DLOCKED_RECT d3dlr;
-    LPDIRECT3DTEXTURE9 p = static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture);
-    GN_DX_CHECK_RV( p->LockRect( level, &d3dlr, &d3drc, sLockFlag2D3D(flag) ), 0 );
+            result.rowBytes = lrc.Pitch;
+            result.sliceBytes = lrc.Pitch * clippedArea.h;
+            result.data = lrc.pBits;
+            break;
+        }
+
+        case TEXTYPE_3D:
+        {
+            D3DBOX box;
+            box.Left = clippedArea.x;
+            box.Top = clippedArea.y;
+            box.Front = clippedArea.z;
+            box.Right = clippedArea.x + clippedArea.w;
+            box.Bottom = clippedArea.y + clippedArea.h;
+            box.Back = clippedArea.z + clippedArea.d;
+
+            D3DLOCKED_BOX lb;
+            GN_DX_CHECK_RV( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture)->LockBox(
+                (UINT)level, &lb, &box, sLockFlag2D3D(flag) ), false );
+
+            result.rowBytes = lb.RowPitch;
+            result.sliceBytes = lb.SlicePitch;
+            result.data = lb.pBits;
+            break;
+        }
+
+        case TEXTYPE_CUBE:
+        {
+            RECT rc;
+            rc.left = clippedArea.x;
+            rc.top = clippedArea.y;
+            rc.right = clippedArea.x + clippedArea.w;
+            rc.bottom = clippedArea.y + clippedArea.h;
+
+            GN_ASSERT( face < 6 );
+
+            D3DLOCKED_RECT lrc;
+            GN_DX_CHECK_RV( static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture)->LockRect(
+                sTexFace2D3D(face), (UINT)level, &lrc, &rc, sLockFlag2D3D(flag) ), false );
+
+            result.rowBytes = lrc.Pitch;
+            result.sliceBytes = lrc.Pitch * clippedArea.h;
+            result.data = lrc.pBits;
+            break;
+        }
+
+        default:
+            GN_UNEXPECTED();
+            GN_ERROR( "Invalid texture type." );
+            return false;
+    }
 
     // success
+    mLockedFace = face;
     mLockedLevel = level;
-    basicUnlocker.dismiss();
-    return d3dlr.pBits;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lock2D( LockedRect &  result,
-                                  uint32_t      level,
-                                  const Recti * area,
-                                  uint32_t      flag )
-{
-    GN_GUARD_SLOW;
-
-    if ( TEXTYPE_2D != getType() )
-    {
-        GN_ERROR( "can't do 2D lock on an non-2D texture!" );
-        return false;
-    }
-
-    // call basic lock
-    if( !basicLock() ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
-
-    // get surface size
-    uint32_t sx, sy;
-    getMipMapSize( level, &sx, &sy, 0 );
-
-    RECT d3drc;
-    if( area )
-    {
-        Recti rc( *area );
-        
-        if( !sAdjustOffsetAndRange( rc.x, rc.w, (int)sx ) ||
-            !sAdjustOffsetAndRange( rc.y, rc.h, (int)sy ) )
-            return 0;
-
-        d3drc.left   = rc.x;
-        d3drc.top    = rc.y;
-        d3drc.right  = d3drc.left + rc.w;
-        d3drc.bottom = d3drc.top + rc.h;
-    }
-    else
-    {
-        d3drc.left = d3drc.top = 0;
-        d3drc.right = sx;
-        d3drc.bottom = sy;
-    }
-
-    // lock texture
-    D3DLOCKED_RECT d3dlr;
-    LPDIRECT3DTEXTURE9 p = static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture);
-    GN_DX_CHECK_RV( p->LockRect( level, &d3dlr, &d3drc, sLockFlag2D3D(flag) ), false );
-
-    // success
-    mLockedLevel = level;
-    result.rowBytes = d3dlr.Pitch;
-    result.data = d3dlr.pBits;
-    basicUnlocker.dismiss();
-    return true;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lock3D( LockedBox &  result,
-                                  uint32_t     level,
-                                  const Boxi * box,
-                                  uint32_t     flag )
-{
-    GN_GUARD_SLOW;
-
-    if ( TEXTYPE_3D != getType() )
-    {
-        GN_ERROR( "can't do 3D lock on an non-3D texture!" );
-        return false;
-    }
-
-    // call basic lock
-    if( !basicLock() ) return 0;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
-
-    // get surface size
-    uint32_t sx, sy, sz;
-    getMipMapSize( level, &sx, &sy, &sz );
-
-    // construct D3DBOX
-    D3DBOX d3dbox;
-    if ( box )
-    {
-        Boxi b( *box );
-
-        if( !sAdjustOffsetAndRange( b.x, b.w, (int)sx ) ||
-            !sAdjustOffsetAndRange( b.y, b.h, (int)sy ) ||
-            !sAdjustOffsetAndRange( b.z, b.d, (int)sz ) )
-            return 0;
-        
-        d3dbox.Left   = (uint32_t)b.x;
-        d3dbox.Top    = (uint32_t)b.y;
-        d3dbox.Front  = (uint32_t)b.z;
-        d3dbox.Right  = (uint32_t)( b.x + b.w );
-        d3dbox.Bottom = (uint32_t)( b.y + b.h );
-        d3dbox.Back   = (uint32_t)( b.z + b.d );
-    }
-    else
-    {
-        d3dbox.Left   = 0;
-        d3dbox.Top    = 0;
-        d3dbox.Front  = 0;
-        d3dbox.Right  = sx;
-        d3dbox.Bottom = sy;
-        d3dbox.Back   = sz;
-    }
-
-    // lock texture
-    D3DLOCKED_BOX d3dlb;
-    LPDIRECT3DVOLUMETEXTURE9 p = static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture);
-    GN_DX_CHECK_RV( p->LockBox( level, &d3dlb, &d3dbox, sLockFlag2D3D(flag) ), false );
-
-    // success
-    mLockedLevel = level;
-    result.data = d3dlb.pBits;
-    result.rowBytes = d3dlb.RowPitch;
-    result.sliceBytes = d3dlb.SlicePitch;
-    basicUnlocker.dismiss();
-    return true;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lockCube( LockedRect &  result,
-                                    TexFace       face,
-                                    uint32_t      level,
-                                    const Recti * area,
-                                    uint32_t      flag )
-{
-    GN_GUARD_SLOW;
-
-    if ( TEXTYPE_CUBE != getType() )
-    {
-        GN_ERROR( "can't do CUBE lock on an non-CUBE texture!" );
-        return false;
-    }
-    // call basic lock
-    if( !basicLock() ) return 0;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
-
-    // get surface size
-    uint32_t sx;
-    getMipMapSize( level, &sx, 0, 0 );
-
-    // convert aera to RECT
-    RECT d3drc;
-    if( area )
-    {
-        Recti rc( *area );
-        
-        if( !sAdjustOffsetAndRange( rc.x, rc.w, (int)sx ) ||
-            !sAdjustOffsetAndRange( rc.y, rc.h, (int)sx  ) )
-            return 0;
-
-        d3drc.left   = rc.x;
-        d3drc.top    = rc.y;
-        d3drc.right  = d3drc.left + rc.w;
-        d3drc.bottom = d3drc.top + rc.h;
-        d3drc.bottom = d3drc.top + area->h;
-    }
-    else
-    {
-        d3drc.left = 0;
-        d3drc.top = 0;
-        d3drc.right = sx;
-        d3drc.bottom = sx;
-    }
-
-    // lock texture
-    D3DLOCKED_RECT d3dlr;
-    LPDIRECT3DCUBETEXTURE9 p = static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture);
-    GN_DX_CHECK_RV(
-        p->LockRect( sTexFace2D3D(face), level, &d3dlr, &d3drc, sLockFlag2D3D(flag) ),
-        false );
-
-    // success
-    mLockedFace = sTexFace2D3D(face);
-    mLockedLevel = level;
-    result.rowBytes = d3dlr.Pitch;
-    result.data = d3dlr.pBits;
     basicUnlocker.dismiss();
     return true;
 
@@ -799,15 +645,15 @@ void GN::gfx::D3DTexture::unlock()
     // unlock texture
     if( TEXTYPE_1D == getType() || TEXTYPE_2D == getType() )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture)->UnlockRect( mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture)->UnlockRect( (UINT)mLockedLevel ) );
     }
     else if( TEXTYPE_3D == getType() )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture)->UnlockBox( mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture)->UnlockBox( (UINT)mLockedLevel ) );
     }
     else if( TEXTYPE_CUBE == getType() )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture)->UnlockRect( mLockedFace, mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture)->UnlockRect( sTexFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
 
     GN_UNGUARD_SLOW;
@@ -840,11 +686,11 @@ void GN::gfx::D3DTexture::updateMipmap()
 // ----------------------------------------------------------------------------
 LPDIRECT3DBASETEXTURE9
 GN::gfx::D3DTexture::newD3DTexture( TexType   type,
-                                    uint32_t  width,
-                                    uint32_t  height,
-                                    uint32_t  depth,
-                                    uint32_t  levels,
-                                    uint32_t  d3dusage,
+                                    size_t    width,
+                                    size_t    height,
+                                    size_t    depth,
+                                    size_t    levels,
+                                    DWORD     d3dusage,
                                     D3DFORMAT d3dformat,
                                     D3DPOOL   d3dpool )
 {
@@ -861,7 +707,8 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     {
         LPDIRECT3DTEXTURE9 result;
         GN_DX_CHECK_RV(
-            dev->CreateTexture( width, height, levels,
+            dev->CreateTexture(
+                (UINT)width, (UINT)height, (UINT)levels,
                 d3dusage, d3dformat, d3dpool,
                 &result, 0 ),
             0 );
@@ -871,7 +718,8 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     {
         LPDIRECT3DVOLUMETEXTURE9 result;
         GN_DX_CHECK_RV(
-            dev->CreateVolumeTexture( width, height, depth, levels,
+            dev->CreateVolumeTexture(
+                (UINT)width, (UINT)height, (UINT)depth, (UINT)levels,
                 d3dusage, d3dformat, d3dpool,
                 &result, 0 ),
             0 );
@@ -882,7 +730,8 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
         GN_ASSERT( width == height );
         LPDIRECT3DCUBETEXTURE9 result;
         GN_DX_CHECK_RV(
-            dev->CreateCubeTexture( width, levels,
+            dev->CreateCubeTexture(
+                (UINT)width, (UINT)levels,
                 d3dusage, d3dformat, d3dpool,
                 &result, 0 ),
             0 );
@@ -896,4 +745,3 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
 
     GN_UNGUARD;
 }
-

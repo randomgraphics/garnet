@@ -822,7 +822,7 @@ namespace GN { namespace gfx
     private:
 
         AutoRef<const Texture> mCurrentTextures[MAX_TEXTURE_STAGES]; // current texture list
-        mutable AutoInit<uint32_t,0> mDirtyTextureStages;
+        mutable AutoInit<size_t,0> mDirtyTextureStages;
 
     protected:
 
@@ -842,7 +842,7 @@ namespace GN { namespace gfx
         //!
         //! Get dirty texture stage
         //!
-        uint32_t getDirtyTextureStages() const { return mDirtyTextureStages; }
+        size_t getDirtyTextureStages() const { return mDirtyTextureStages; }
 
         //!
         //! Clear dirty texture stage
@@ -859,15 +859,17 @@ namespace GN { namespace gfx
         //!
         //! Test compability of specific texture format
         //!
-        virtual bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const = 0;
+        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const = 0;
 
         //!
         //! Create new texture.
         //!
         //! \param textype     texture type
         //! \param sx, sy, sz  texture size
+        //! \param faces       texture face count. 0 means using default face
+        //!                    count: 6 for cubemap, 1 for others.
         //! \param levels      how many mipmap levels?
-        //!                    "0" means generate full mipmap levels down to 1x1
+        //!                    0 means generate full mipmap levels down to 1x1.
         //! \param format      texture format, FMT_DEFAULT means
         //!                    using default/appropriating format of current
         //!                    rendering hardware.
@@ -878,63 +880,64 @@ namespace GN { namespace gfx
         //!    - sz will be ignored for 2D texture.
         //!
         virtual Texture *
-        createTexture( TexType textype,
-                       uint32_t sx, uint32_t sy, uint32_t sz,
-                       uint32_t levels = 0,
-                       ClrFmt format = FMT_DEFAULT,
-                       uint32_t usage = 0,
+        createTexture( TexType  textype,
+                       size_t   sx, size_t sy, size_t sz,
+                       size_t   faces = 0,
+                       size_t   levels = 0,
+                       ClrFmt   format = FMT_DEFAULT,
+                       BitField usage = 0,
                        const TextureLoader & loader = TextureLoader() ) = 0;
 
         //!
         //! Create 1D texture
         //!
         Texture *
-        create1DTexture( uint32_t sx,
-                         uint32_t levels = 0,
-                         ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = 0,
+        create1DTexture( size_t   sx,
+                         size_t   levels = 0,
+                         ClrFmt   format = FMT_DEFAULT,
+                         BitField usage = 0,
                          const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_1D, sx, 0, 0, levels, format, usage, loader );
+            return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, loader );
         }
 
         //!
         //! Create 2D texture
         //!
         Texture *
-        create2DTexture( uint32_t sx, uint32_t sy,
-                         uint32_t levels = 0,
-                         ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = 0,
+        create2DTexture( size_t   sx, size_t sy,
+                         size_t   levels = 0,
+                         ClrFmt   format = FMT_DEFAULT,
+                         BitField usage = 0,
                          const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_2D, sx, sy, 0, levels, format, usage, loader );
+            return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, loader );
         }
 
         //!
         //! Create 3D texture
         //!
         Texture *
-        create3DTexture( uint32_t sx, uint32_t sy, uint32_t sz,
-                         uint32_t levels = 0,
-                         ClrFmt format = FMT_DEFAULT,
-                         uint32_t usage = 0,
+        create3DTexture( size_t   sx, size_t sy, size_t sz,
+                         size_t   levels = 0,
+                         ClrFmt   format = FMT_DEFAULT,
+                         BitField usage = 0,
                          const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_3D, sx, sy, sz, levels, format, usage, loader );
+            return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, loader );
         }
 
         //!
         //! Create CUBE texture
         //!
         Texture *
-        createCubeTexture( uint32_t sx,
-                           uint32_t levels = 0,
-                           ClrFmt format = FMT_DEFAULT,
-                           uint32_t usage = 0,
+        createCubeTexture( size_t   sx,
+                           size_t   levels = 0,
+                           ClrFmt   format = FMT_DEFAULT,
+                           BitField usage = 0,
                            const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_CUBE, sx, 0, 0, levels, format, usage, loader );
+            return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, loader );
         }
 
         //!
@@ -946,7 +949,7 @@ namespace GN { namespace gfx
         //!
         //! bind one texture
         //!
-        inline void bindTexture( uint32_t stage, const Texture * tex )
+        inline void bindTexture( size_t stage, const Texture * tex )
         {
             GN_GUARD_SLOW;
             GN_ASSERT( stage < MAX_TEXTURE_STAGES );
@@ -962,7 +965,7 @@ namespace GN { namespace gfx
         //!
         //! bind one texture handle
         //!
-        void bindTextureHandle( uint32_t stage, uint32_t tex ) { return bindTexture( stage, gTexDict.getResource(tex) ); }
+        void bindTextureHandle( size_t stage, TextureDictionary::HandleType tex ) { return bindTexture( stage, gTexDict.getResource(tex) ); }
 
         //!
         //! bind textures ( from stage[start] to stage[start+numtex-1] )
@@ -971,7 +974,7 @@ namespace GN { namespace gfx
         //! \param start   start stage
         //! \param count   number of textures
         //!
-        void bindTextures( const Texture * const texlist[], uint32_t start, uint32_t count )
+        void bindTextures( const Texture * const texlist[], size_t start, size_t count )
         {
             GN_GUARD_SLOW;
             GN_ASSERT( (start + count) <= MAX_TEXTURE_STAGES );
@@ -990,7 +993,7 @@ namespace GN { namespace gfx
         //!
         //! bind texture handles
         //!
-        void bindTextureHandles( const uint32_t texlist[], uint32_t start, uint32_t count )
+        void bindTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count )
         {
             GN_GUARD_SLOW;
             for( size_t i = 0; i < count; ++i, ++start )

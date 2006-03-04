@@ -126,28 +126,41 @@ static struct DdpfDesc
 // *****************************************************************************
 
 //!
-//! return IMG_INVAID if falied
+//! return image face count
 // -----------------------------------------------------------------------------
-static GN::gfx::ImageDesc::ImageType
-getImageType( const DDSFileHeader & header )
+static size_t sGetImageFaceCount( const DDSFileHeader & header )
 {
     if( DDS_DDSD_DEPTH & header.flags &&
-         DDS_CAPS_COMPLEX & header.caps &&
-         DDS_CAPS2_VOLUME & header.caps2 )
-        return GN::gfx::ImageDesc::IMG_3D;
+        DDS_CAPS_COMPLEX & header.caps &&
+        DDS_CAPS2_VOLUME & header.caps2 )
+    {
+        return 1; // volume texture
+    }
     else if( DDS_CAPS_COMPLEX & header.caps &&
              DDS_CAPS2_CUBEMAP & header.caps2 &&
              DDS_CAPS2_CUBEMAP_ALLFACES ==
              (header.caps2 & DDS_CAPS2_CUBEMAP_ALLFACES) )
-        return GN::gfx::ImageDesc::IMG_CUBE;
+    {
+        return 6; // cubemap
+    }
     else if( 0 == (DDS_CAPS2_CUBEMAP & header.caps2) &&
-              0 == (DDS_CAPS2_VOLUME & header.caps2) )
-        return GN::gfx::ImageDesc::IMG_2D;
+             0 == (DDS_CAPS2_VOLUME & header.caps2) )
+    {
+        return 1; // 2D texture
+    }
     else
     {
-        GN_ERROR( "unknown image type!" );
-        return GN::gfx::ImageDesc::IMG_INVALID;
+        GN_ERROR( "Fail to detect image face count!" );
+        return 0;
     }
+}
+
+//!
+//! return image depth
+// -----------------------------------------------------------------------------
+static uint32_t sGetImageDepth( const DDSFileHeader & header )
+{
+    return DDS_DDSD_DEPTH & header.flags ? header.depth : 1;
 }
 
 //
@@ -255,53 +268,52 @@ bool DDSReader::readHeader(
         return false;
     }
 
-    // grok basic image information
-    mImgDesc.type = getImageType( mHeader );
-    if( GN::gfx::ImageDesc::IMG_INVALID == mImgDesc.type ) return false;
+    //mImgDesc.type = getImageType( mHeader );
+    //if( GN::gfx::ImageDesc::IMG_INVALID == mImgDesc.type ) return false;
+
+    // grok image format
     mImgDesc.format = getImageFormat( mHeader.ddpf );
     if( GN::gfx::FMT_INVALID == mImgDesc.format ) return false;
 
     // grok image dimension
+    size_t faces = sGetImageFaceCount( mHeader );
+    if( 0 == faces ) return false;
     uint32_t width = mHeader.width;
     uint32_t height = mHeader.height;
-    uint32_t depth;
-    if( GN::gfx::ImageDesc::IMG_CUBE == mImgDesc.type )
-    {
-        depth = 6;
-    }
-    else
-    {
-        depth = (DDS_DDSD_DEPTH & mHeader.flags ) ? mHeader.depth : 1;
-        if( 0 == depth ) depth = 1;
-    }
+    uint32_t depth = sGetImageDepth( mHeader );
 
     // grok miplevel information
-    bool has_mipmap = ( DDS_DDSD_MIPMAPCOUNT & mHeader.flags )
-                   && ( DDS_CAPS_MIPMAP & mHeader.caps )
-                   && ( DDS_CAPS_COMPLEX & mHeader.caps );
+    bool hasMipmap = ( DDS_DDSD_MIPMAPCOUNT & mHeader.flags )
+                  && ( DDS_CAPS_MIPMAP & mHeader.caps )
+                  && ( DDS_CAPS_COMPLEX & mHeader.caps );
     uint8_t bits = GN::gfx::getClrFmtDesc(mImgDesc.format).bits;
-    mImgDesc.numMips = has_mipmap ? uint8_t(mHeader.mipCount) : 1;
-    if( 0 == mImgDesc.numMips ) mImgDesc.numMips = 1;
-    for( uint8_t i = 0; i < mImgDesc.numMips; ++i )
+    size_t levels = hasMipmap ? mHeader.mipCount : 1;
+    if( 0 == levels ) levels = 1;
+
+    // grok mipmaps
+    mImgDesc.setFaceAndLevel( faces, levels );
+    for( size_t f = 0; f < mImgDesc.numFaces; ++f )
+    for( size_t l = 0; l < mImgDesc.numLevels; ++l )
     {
-        GN::gfx::ImageDesc::MipDesc & m = mImgDesc[i];
-        m.width = uint16_t(width);
-        m.height = uint16_t(height);
-        m.depth = uint16_t(depth);
+        GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
+
+        m.width = width;
+        m.height = height;
+        m.depth = depth;
 
         switch( mImgDesc.format )
         {
             case GN::gfx::FMT_DXT1:
-                m.rowPitch = ((m.width + 3) >> 2) * 8;
-                m.slicePitch = m.rowPitch * ((m.height + 3) >> 2);
+                m.rowPitch = ((m.width + 3) >> 2) * 2;
+                m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
                 break;
 
 		    case GN::gfx::FMT_DXT2:
 		    case GN::gfx::FMT_DXT3:
             case GN::gfx::FMT_DXT4:
 		    case GN::gfx::FMT_DXT5:
-                m.rowPitch = ((m.width + 3) >> 2) * 16;
-                m.slicePitch = m.rowPitch * ((m.height + 3) >> 2);
+                m.rowPitch = ((m.width + 3) >> 2) * 4;
+                m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
                 break;
 
             default:
@@ -314,10 +326,10 @@ bool DDSReader::readHeader(
 
         if( width > 1 ) width >>= 1;
         if( height > 1 ) height >>= 1;
-        if( (GN::gfx::ImageDesc::IMG_CUBE != mImgDesc.type) && depth > 1 )
-            depth >>= 1;
+        if( depth > 1 ) depth >>= 1;
     }
-    GN_ASSERT( mImgDesc.validate() );
+
+    GN_ASSERT( mImgDesc.valid() );
 
     // success
     o_desc = mImgDesc;
@@ -343,16 +355,16 @@ bool DDSReader::readImage( void * o_data ) const
         return false;
     }
 
-    if( GN::gfx::ImageDesc::IMG_CUBE == mImgDesc.type )
+    /*if( GN::gfx::ImageDesc::IMG_CUBE == mImgDesc.type )
     {
         // special case for cube texture
         const uint8_t * src = mSrc;
         size_t size = mSize;
         for( uint8_t face = 0; face < 6; ++face )
         {
-            for( uint8_t level = 0; level < mImgDesc.numMips; ++level )
+            for( uint8_t level = 0; level < mImgDesc.numLevels; ++level )
             {
-                const GN::gfx::ImageDesc::MipDesc & m = mImgDesc[level];
+                const GN::gfx::MipmapDesc & m = mImgDesc[level];
 
                 if( size < m.slicePitch )
                 {
@@ -371,7 +383,7 @@ bool DDSReader::readImage( void * o_data ) const
             }
         }
     }
-    else
+    else*/
     {
         // 1D, 2D, 3D texture
         size_t nbytes = mImgDesc.getTotalBytes();

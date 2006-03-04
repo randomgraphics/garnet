@@ -280,20 +280,20 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        virtual bool supportTextureFormat( TexType type, uint32_t usage, ClrFmt format ) const;
-        virtual Texture * createTexture( TexType textype,
-                                         uint32_t sx, uint32_t sy, uint32_t sz,
-                                         uint32_t levels,
-                                         ClrFmt format,
-                                         uint32_t usage,
+        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
+        virtual Texture * createTexture( TexType  textype,
+                                         size_t   sx, size_t sy, size_t sz,
+                                         size_t   faces,
+                                         size_t   levels,
+                                         ClrFmt   format,
+                                         BitField usage,
                                          const TextureLoader & loader );
-        virtual Texture * createTextureFromFile( File & );
 
     public:
 
-        void chooseClientTextureStage( uint32_t ) const; //!< Choose one stage as client active texture stage.
-        void chooseTextureStage( uint32_t ) const; //!< Choose one texture stage as active stage
-        void disableTextureStage( uint32_t ) const; //!< Disable one texture stage
+        void chooseClientTextureStage( size_t ) const; //!< Choose one stage as client active texture stage.
+        void chooseTextureStage( size_t ) const; //!< Choose one texture stage as active stage
+        void disableTextureStage( size_t ) const; //!< Disable one texture stage
 
     private:
         bool textureInit() { return true; }
@@ -452,7 +452,7 @@ namespace GN { namespace gfx
         RenderTargetTextureDesc
             mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
             mCurrentDepth;  // current depth texture
-        Vector2<uint32_t>
+        Vector2<size_t>
             mCurrentRTSize; // current render target size
 
         //@}
