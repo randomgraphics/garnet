@@ -245,12 +245,12 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
         mDevice->DrawIndexedPrimitiveUP(
             sPrimMap[prim],
             0, // MinVertexIndex
-            numVertices,
-            numPrims,
+            (UINT)numVertices,
+            (UINT)numPrims,
             indexData,
             D3DFMT_INDEX16,
             vertexData,
-            strideInBytes ) );
+            (UINT)strideInBytes ) );
 
     // dirty draw state of stream 0
     mDrawState.dirtyFlags.vtxBufs |= 1;
@@ -283,7 +283,11 @@ void GN::gfx::D3DRenderer::drawUp(
     applyDrawState();
 
     // do draw
-    GN_DX_CHECK( mDevice->DrawPrimitiveUP( sPrimMap[prim], numPrims, vertexData, strideInBytes ) );
+    GN_DX_CHECK( mDevice->DrawPrimitiveUP(
+        sPrimMap[prim],
+        (UINT)numPrims,
+        vertexData,
+        (UINT)strideInBytes ) );
 
     // dirty draw state of stream 0
     mDrawState.dirtyFlags.vtxBufs |= 1;

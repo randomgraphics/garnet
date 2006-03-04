@@ -191,7 +191,7 @@ void GN::gfx::OGLQuad::drawQuads(
     GN_OGL_CHECK( glInterleavedArrays( GL_T2F_V3F, sizeof(QuadVertex), mVtxBuf ) );
 
     // do draw
-    GN_OGL_CHECK( glDrawArrays( GL_QUADS, 0, count*4 ) );
+    GN_OGL_CHECK( glDrawArrays( GL_QUADS, 0, (GLsizei)count*4 ) );
 
     if( !( DQ_USE_CURRENT_VS & options ) )
     {

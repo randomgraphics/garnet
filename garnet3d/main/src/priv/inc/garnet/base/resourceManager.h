@@ -68,7 +68,7 @@ namespace GN
     {
     public:
 
-        typedef uint32_t ResHandle; //!< resource Handle. 0 means invalid handle
+        typedef uint32_t HandleType; //!< resource Handle. 0 means invalid handle
 
         typedef RES ResType; //!< resource type
 
@@ -161,7 +161,7 @@ namespace GN
             disposeAll();
 
             // delete resource descriptions
-            ResHandle h = mResHandles.first();
+            HandleType h = mResHandles.first();
             while( h )
             {
                 GN_ASSERT( mResHandles[h] );
@@ -188,7 +188,7 @@ namespace GN
         //!
         //! Return true for valid resource handle
         //!
-        bool validResourceHandle( ResHandle h ) const { return mResHandles.validHandle( h ); }
+        bool validResourceHandle( HandleType h ) const { return mResHandles.validHandle( h ); }
 
         //!
         //! Return true for valid resource name
@@ -198,7 +198,7 @@ namespace GN
         //!
         //! Get resource by handle.
         //!
-        bool getResource( RES & result, ResHandle handle )
+        bool getResource( RES & result, HandleType handle )
         {
             GN_GUARD_SLOW;
             return getResourceImpl( result, handle, 0 );
@@ -210,7 +210,7 @@ namespace GN
         //!
         //! If failed, return default constructed resource instance.
         //!
-        RES getResource( ResHandle handle )
+        RES getResource( HandleType handle )
         {
             GN_GUARD_SLOW;
             RES res;
@@ -227,7 +227,7 @@ namespace GN
         bool getResource( RES & result, const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
-            ResHandle h = getResourceHandle( name, autoAddNewName );
+            HandleType h = getResourceHandle( name, autoAddNewName );
             return getResourceImpl( result, h, name.cstr() );
             GN_UNGUARD_SLOW;
         }
@@ -258,7 +258,7 @@ namespace GN
         //!       it'll be add to manager automatically, and a valid handle will be return.
         //!     - If false, return 0 for non-exist resource name.
         //!
-        ResHandle getResourceHandle( const StrA & name, bool autoAddNewName = true )
+        HandleType getResourceHandle( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
             StringMap::const_iterator iter = mResNames.find( name );
@@ -271,7 +271,7 @@ namespace GN
         //!
         //! Get resource name
         //!
-        const StrA & getResourceName( ResHandle handle ) const
+        const StrA & getResourceName( HandleType handle ) const
         {
             GN_GUARD_SLOW;
             if( validResourceHandle(handle) )
@@ -286,7 +286,7 @@ namespace GN
         //!
         //! Add new resource item to manager
         //!
-        ResHandle addResource(
+        HandleType addResource(
             const StrA & name,
             void * userData = 0,
             const Creator & creator = Creator(),
@@ -295,7 +295,7 @@ namespace GN
         {
             GN_GUARD;
 
-            ResHandle h;
+            HandleType h;
             ResDesc * item;
             StringMap::const_iterator ci = mResNames.find(name);
             if( mResNames.end() != ci )
@@ -356,7 +356,7 @@ namespace GN
         //!
         //! Remove resource from manager
         //!
-        void removeResourceHandle( ResHandle handle )
+        void removeResourceHandle( HandleType handle )
         {
             GN_GUARD;
             if( !validResourceHandle(handle) )
@@ -384,7 +384,7 @@ namespace GN
                 GN_ERROR( "invalid resource name: %s", name.cstr() );
                 return;
             }
-            ResHandle h = iter->second;
+            HandleType h = iter->second;
             GN_ASSERT( mResHandles.validHandle( h ) );
             doDispose( mResHandles[h] );
             mResHandles.remove( h );
@@ -395,7 +395,7 @@ namespace GN
         //!
         //! Dispose specific resource
         //!
-        void disposeResourceHandle( ResHandle h )
+        void disposeResourceHandle( HandleType h )
         {
             GN_GUARD;
             if( !validResourceHandle( h ) )
@@ -429,7 +429,7 @@ namespace GN
         void disposeAll()
         {
             GN_GUARD;
-            ResHandle h = mResHandles.first();
+            HandleType h = mResHandles.first();
             while( h )
             {
                 doDispose( mResHandles.get(h) );
@@ -447,7 +447,7 @@ namespace GN
             GN_GUARD;
             RES res;
             bool ok = true;
-            ResHandle h;
+            HandleType h;
             for( h = mResHandles.first(); h != 0; h = mResHandles.next(h) )
             {
                 ok &= getResource( res, h );
@@ -459,7 +459,7 @@ namespace GN
         //!
         //! Set user data for specfic resource
         //!
-        void setUserData( ResHandle h, void * data )
+        void setUserData( HandleType h, void * data )
         {
             if( !validResourceHandle(h) )
             {
@@ -488,8 +488,8 @@ namespace GN
             bool    disposed;
         };
 
-        typedef std::map<StrA,ResHandle>          StringMap;
-        typedef HandleManager<ResDesc*,ResHandle> ResHandleMgr;
+        typedef std::map<StrA,HandleType>          StringMap;
+        typedef HandleManager<ResDesc*,HandleType> ResHandleMgr;
 
         ResHandleMgr mResHandles;
         StringMap    mResNames;
@@ -509,7 +509,7 @@ namespace GN
 
     private:
 
-        bool getResourceImpl( RES & res, ResHandle handle, const char * name )
+        bool getResourceImpl( RES & res, HandleType handle, const char * name )
         {
             GN_GUARD_SLOW;
 

@@ -147,7 +147,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     {
         if( tex )
         {
-            tex->getMipMapSize( level, &mCurrentRTSize.x, &mCurrentRTSize.y );
+            tex->getMipSize( level, &mCurrentRTSize.x, &mCurrentRTSize.y );
         }
         else
         {

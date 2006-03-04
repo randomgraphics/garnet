@@ -35,12 +35,6 @@ bool JpegReader::readHeader(
 
     // read jpeg header
     jpeg_read_header( &mCInfo, JPEG_TRUE );
-    if( mCInfo.image_width > GN::gfx::ImageDesc::MAX_IMGSIZE ||
-        mCInfo.image_height > GN::gfx::ImageDesc::MAX_IMGSIZE )
-    {
-        GN_ERROR( "image size is too large!" );
-        return false;
-    }
 
     // check image format
     size_t bpp;
@@ -57,9 +51,8 @@ bool JpegReader::readHeader(
     }
 
     // fill image descriptor
-    GN::gfx::ImageDesc::MipDesc & m = o_desc.mips[0];
-    o_desc.type     = GN::gfx::ImageDesc::IMG_2D;
-    o_desc.numMips  = 1;
+    o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width         = (uint16_t)mCInfo.image_width;
     m.height        = (uint16_t)mCInfo.image_height;
     m.depth         = 1;
@@ -68,7 +61,7 @@ bool JpegReader::readHeader(
     m.levelPitch    = m.slicePitch;
 
     // success
-    GN_ASSERT( o_desc.validate() );
+    GN_ASSERT( o_desc.valid() );
     return true;
 
     // failed

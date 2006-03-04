@@ -32,15 +32,15 @@ struct GfxResources
         GN::gfx::Renderer & r = gRenderer;
 
         // create textures
-        tex1d.attach( r.createTexture( GN::gfx::TEXTYPE_1D, 128, 128, 128 ) );
-        tex2d.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 128, 128 ) );
-        tex3d.attach( r.createTexture( GN::gfx::TEXTYPE_3D, 128, 128, 128 ) );
-        texcube.attach( r.createTexture( GN::gfx::TEXTYPE_CUBE, 128, 128, 128 ) );
+        tex1d.attach( r.createTexture( GN::gfx::TEXTYPE_1D, 128, 128, 128, 128 ) );
+        tex2d.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 128, 128, 128 ) );
+        tex3d.attach( r.createTexture( GN::gfx::TEXTYPE_3D, 128, 128, 128, 128 ) );
+        texcube.attach( r.createTexture( GN::gfx::TEXTYPE_CUBE, 128, 128, 128, 128 ) );
 
         // create render targets
-        rt1.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt2.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 64, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt3.attach( r.createTexture( GN::gfx::TEXTYPE_2D, 128, 64, 0, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt1.attach( r.create2DTexture(  64, 64, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt2.attach( r.create2DTexture(  64, 64, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt3.attach( r.create2DTexture( 128, 64, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
         TS_ASSERT( rt1 );
         TS_ASSERT( rt2 );
         TS_ASSERT( rt3 );

@@ -40,25 +40,6 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! 2D锁定的返回结果
-    //!
-    struct LockedRect
-    {
-        size_t rowBytes; //!< bytes per line
-        void * data;     //!< 指向被锁定图象的第一个字节
-    };
-
-    //!
-    //! 3D锁定的返回结果
-    //!
-    struct LockedBox
-    {
-        size_t rowBytes;   //!< bytes per line
-        size_t sliceBytes; //!< bytes per slice
-        void * data;       //!< 指向被锁定图象的第一个字节
-    };
-
-    //!
     //! 绘图原语
     //!
     enum PrimitiveType

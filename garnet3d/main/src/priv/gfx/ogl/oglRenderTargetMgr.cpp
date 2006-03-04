@@ -107,11 +107,11 @@ void GN::gfx::OGLRenderer::setRenderTarget(
 
     if( rttd.tex )
     {
-        const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(rttd.tex);
+        const OGLTexture * gltex = safeCast<const OGLTexture*>(rttd.tex);
 
         // get texture size
-        uint32_t sx, sy;
-        gltex->getMipMapSize( level, &sx, &sy );
+        size_t sx, sy;
+        gltex->getMipSize( level, &sx, &sy, 0 );
 
         GLint oldtex;
 
@@ -123,8 +123,8 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                OGLBasicTexture::cubeface2GL(face), level,
-                gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
+                OGLTexture::sCubeface2OGL(face), (GLsizei)level,
+                gltex->getOGLInternalFormat(), 0, 0, (GLsizei)sx, (GLsizei)sx, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, oldtex ) );
         }
         else if( TEXTYPE_2D == tt || TEXTYPE_1D == tt )
@@ -132,8 +132,8 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_2D, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                GL_TEXTURE_2D, level,
-                gltex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
+                GL_TEXTURE_2D, (GLsizei)level,
+                gltex->getOGLInternalFormat(), 0, 0, (GLsizei)sx, (GLsizei)sy, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, oldtex ) );
         }
         else
@@ -155,7 +155,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
     {
         if( tex )
         {
-            tex->getMipMapSize( level, &mCurrentRTSize.x, &mCurrentRTSize.y );
+            tex->getMipSize( level, &mCurrentRTSize.x, &mCurrentRTSize.y );
         }
         else
         {
@@ -196,7 +196,7 @@ void GN::gfx::OGLRenderer::setRenderDepth(
 
     if( mCurrentDepth.tex )
     {
-        const OGLBasicTexture * gltex = safeCast<const OGLBasicTexture*>(mCurrentDepth.tex);
+        const OGLTexture * gltex = safeCast<const OGLTexture*>(mCurrentDepth.tex);
 
         // get texture size
         GLsizei sx, sy;
@@ -212,7 +212,7 @@ void GN::gfx::OGLRenderer::setRenderDepth(
             GN_ASSERT( sx == sy );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                OGLBasicTexture::cubeface2GL(face), level,
+                OGLTexture::sCubeface2OGL(face), level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
         }
         else if( TEXTYPE_2D == tt || TEXTYPE_1D == tt )

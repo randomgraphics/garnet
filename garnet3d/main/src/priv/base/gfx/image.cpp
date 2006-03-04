@@ -13,15 +13,8 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::ImageDesc::validate() const
+bool GN::gfx::ImageDesc::valid() const
 {
-    // check type
-    if( type < 0 || type >= NUM_IMAGE_TYPES )
-    {
-        GN_ERROR( "invalid image type!" );
-        return false;
-    }
-
     // check format
     if( format < 0 || format >= NUM_CLRFMTS )
     {
@@ -29,27 +22,28 @@ bool GN::gfx::ImageDesc::validate() const
         return false;
     }
 
-    // check numMips
-    if( numMips > MAX_MIPLEVELS )
+    // check mipmap pointer
+    if( numFaces > 0 && numLevels > 0 && 0 == mipmaps )
     {
-        GN_ERROR( "numMips is out of range!" );
+        GN_ERROR( "Null mipmap array!" );
         return false;
     }
 
     const GN::gfx::ClrFmtDesc & fd = getClrFmtDesc( format );
 
     // check mipmaps
-    for ( uint8_t i = 0; i < numMips; ++ i )
+    for( size_t f = 0; f < numFaces; ++f )
+    for( size_t l = 0; l < numLevels; ++l )
     {
-        const MipDesc & m = mips[i];
+        const MipmapDesc & m = getMipmap( f, l );
 
         // check image size
         if( 0 == m.width || 0 == m.height || 0 == m.depth )
         {
-            GN_ERROR( "mipmaps[%d] size is zero!", i );
+            GN_ERROR( "mipmaps[%d] size is zero!", l );
             return false;
         }
-        if( IMG_1D == type && ( 1 != m.height || 1 != m.depth ) )
+        /*if( IMG_1D == type && ( 1 != m.height || 1 != m.depth ) )
         {
             GN_ERROR( "height and depth must be 1 for 1D image!" );
             return false;
@@ -68,26 +62,26 @@ bool GN::gfx::ImageDesc::validate() const
         {
             GN_ERROR( "width and height must be equal for cubemap!" );
             return false;
-        }
+        }*/
 
         // check pitches
-        uint16_t w = m.width / fd.blockWidth;
-        uint16_t h = m.height / fd.blockHeight;
+        size_t w = m.width / fd.blockWidth;
+        size_t h = m.height / fd.blockHeight;
         if( 0 == w ) w = 1;
         if( 0 == h ) h = 1;
         if( m.rowPitch != (uint32_t)w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
         {
-            GN_ERROR( "rowPitch of mipmaps[%d] is incorrect!", i );
+            GN_ERROR( "rowPitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
         }
         if( m.slicePitch != m.rowPitch * h )
         {
-            GN_ERROR( "slicePitch of mipmaps[%d] is incorrect!", i );
+            GN_ERROR( "slicePitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
         }
         if( m.levelPitch != m.slicePitch * m.depth )
         {
-            GN_ERROR( "levelPitch of mipmaps[%d] is incorrect!", i );
+            GN_ERROR( "levelPitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
         }
     }
@@ -134,7 +128,7 @@ class GN::gfx::ImageReader::Impl
     PngReader   mPng;
     DDSReader   mDds;
 
-    FileFormat  mFormat;
+    FileFormat  mFileFormat;
     ReaderState mState;
 
 public:
@@ -142,7 +136,7 @@ public:
     //!
     //! default ctor
     //!
-    Impl() : mFormat(UNKNOWN), mState(INVALID) {}
+    Impl() : mFileFormat(UNKNOWN), mState(INVALID) {}
 
     //!
     //! reset image reader
@@ -154,14 +148,14 @@ public:
         static const size_t HEADER_BYTES = 10;
 
         // reset internal states
-        mFormat = UNKNOWN;
+        mFileFormat = UNKNOWN;
         mState  = INVALID;
 
         // get file size
         size_t sz = i_file.size();
         if( sz <= HEADER_BYTES )
         {
-            GN_ERROR( "image file size is too small!" );
+            GN_ERROR( "Image file size is too small! Must not be a valid image file." );
             return false;
         }
         mSrc.resize( sz );
@@ -170,7 +164,7 @@ public:
         sz = i_file.read( &mSrc[0], HEADER_BYTES );
         if( size_t(-1) == sz || sz < HEADER_BYTES )
         {
-            GN_ERROR( "fail to read image header!" );
+            GN_ERROR( "Fail to read image header!" );
             return false;
         }
 
@@ -179,23 +173,23 @@ public:
             'I' == mSrc[8] && 'F' == mSrc[9] )
         {
             // JPEG format
-            mFormat = JPEG;
+            mFileFormat = JPEG;
         }
         else if( 'B' == mSrc[0] && 'M' == mSrc[1] )
         {
             // BMP format
-            mFormat = BMP;
+            mFileFormat = BMP;
         }
         else if ( 0 == png_sig_cmp(&mSrc[0], 0, 8) )
         {
             // PNG format
-            mFormat = PNG;
+            mFileFormat = PNG;
         }
         else if( 'D' == mSrc[0] && 'D' == mSrc[1] &&
                  'S' == mSrc[2] && ' ' == mSrc[3] )
         {
             // DDS format
-            mFormat = DDS;
+            mFileFormat = DDS;
         }
         else
         {
@@ -233,7 +227,7 @@ public:
             if( !reader.readHeader( o_desc, &mSrc[0], mSrc.size() ) ) \
             { mState = INVALID; return false; }
 
-        switch( mFormat )
+        switch( mFileFormat )
         {
             case JPEG : READ_HEADER( mJpg ); break;
             //case BMP  : READ_HEADER( mBmp ); break;
@@ -277,7 +271,7 @@ public:
             if( !reader.readImage( o_data ) ) \
             { mState = INVALID; return false; }
 
-        switch( mFormat )
+        switch( mFileFormat )
         {
             case JPEG : READ_IMAGE( mJpg ); break;
             //case BMP  : READ_IMAGE( mBmp ); break;

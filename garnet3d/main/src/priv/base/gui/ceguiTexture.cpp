@@ -76,15 +76,15 @@ static bool sCreateMemoryTexture( GN::gfx::Texture * & result, const GN::StrA & 
     if( memBuf )
     {
         // lock texture
-        LockedRect rc;
-        if( !tex->lock2D( rc, 0, 0, LOCK_WO | LOCK_DISCARD ) ) return false;
+        TexLockedResult tlr;
+        if( !tex->lock( tlr, 0, 0, 0, LOCK_WO | LOCK_DISCARD ) ) return false;
 
         // copy data
         const uint8_t * src = (const uint8_t*)memBuf;
         size_t srcPitch = (size_t)w * 4;
-        GN_ASSERT( rc.rowBytes >= srcPitch );
-        uint8_t * dst = (uint8_t*)rc.data;
-        for( int y = 0; y < h; ++y, src += srcPitch, dst += rc.rowBytes )
+        GN_ASSERT( tlr.rowBytes >= srcPitch );
+        uint8_t * dst = (uint8_t*)tlr.data;
+        for( int y = 0; y < h; ++y, src += srcPitch, dst += tlr.rowBytes )
         {
             memcpy( dst, src, srcPitch );
         }
@@ -123,7 +123,7 @@ void CEGUI::GarnetTexture::loadFromFile(const CEGUI::String& filename, const Str
 
     // update texture size
     GN::gfx::Texture * tex = gTexDict.getResource(  mTextureHandle );
-    if( tex ) tex->getBaseMapSize( &mWidth, &mHeight );
+    if( tex ) tex->getBaseSize( &mWidth, &mHeight );
 
     GN_UNGUARD;
 }
@@ -162,7 +162,7 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
 
     // update texture size
     GN::gfx::Texture * tex = gTexDict.getResource(  mTextureHandle );
-    if( tex ) tex->getBaseMapSize( &mWidth, &mHeight );
+    if( tex ) tex->getBaseSize( &mWidth, &mHeight );
 
     GN_UNGUARD;
 }

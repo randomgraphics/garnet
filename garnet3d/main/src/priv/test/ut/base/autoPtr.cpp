@@ -37,10 +37,7 @@ public:
         TS_ASSERT_EQUALS( 2, p1->a );
 
         p1.attach( 0 );
-        TS_ASSERT_EQUALS( (S1*)0, p1 );
-
-        p1.attach( 0 );
-        TS_ASSERT_EQUALS( (S1*)0, p1 );
+        TS_ASSERT_EQUALS( (S1*)0, p1.get() );
     }
 
     void testDetatch()

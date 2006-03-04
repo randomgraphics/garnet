@@ -21,7 +21,7 @@ namespace GN { namespace gfx
     //!
     //! Convert texture usage to D3DUSAGE(s)
     //!
-    uint32_t texUsage2D3DUsage( uint32_t );
+    DWORD texUsage2D3DUsage( BitField );
 
     //!
     //! D3D texture
@@ -46,11 +46,12 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( TexType type,
-                   uint32_t w, uint32_t h, uint32_t d,
-                   uint32_t levels,
-                   ClrFmt format,
-                   uint32_t usage );
+        bool init( TexType  type,
+                   size_t   w, size_t h, size_t d,
+                   size_t   faces,
+                   size_t   levels,
+                   ClrFmt   format,
+                   BitField usage );
         bool initFromFile( File & );
         void quit();
         bool ok() const { return MyParent::ok(); }
@@ -82,26 +83,10 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void getMipMapSize( uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const;
+        virtual void getMipSize( size_t level, size_t * sx, size_t * sy, size_t * sz ) const;
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual void * lock1D( uint32_t level,
-                               uint32_t offset,
-                               uint32_t length,
-                               uint32_t flag );
-        virtual bool lock2D( LockedRect &  result,
-                             uint32_t      level,
-                             const Recti * area,
-                             uint32_t      flag );
-        virtual bool lock3D( LockedBox &  result,
-                             uint32_t     level,
-                             const Boxi * box,
-                             uint32_t     flag );
-        virtual bool lockCube( LockedRect &  result,
-                               TexFace       face,
-                               uint32_t      level,
-                               const Recti * area,
-                               uint32_t      flag );
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, BitField flag );
         virtual void unlock();
         virtual void updateMipmap();
         virtual void * getAPIDependentData() const { return getD3DTexture(); }
@@ -121,7 +106,7 @@ namespace GN { namespace gfx
         //!
         //! \note Do not foget to release the returned surface after using it.
         //!
-        LPDIRECT3DSURFACE9 getSurface( TexFace face, uint32_t level ) const
+        LPDIRECT3DSURFACE9 getSurface( TexFace face, size_t level ) const
         {
             GN_GUARD_SLOW;
 
@@ -135,14 +120,14 @@ namespace GN { namespace gfx
                 case TEXTYPE_2D:
                     {
                         LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
-                        GN_DX_CHECK_RV( tex2D->GetSurfaceLevel( level, &surf ), 0 );
+                        GN_DX_CHECK_RV( tex2D->GetSurfaceLevel( (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 
                 case TEXTYPE_CUBE:
                     {
                         LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
-                        GN_DX_CHECK_RV( texCube->GetCubeMapSurface( sTexFace2D3D(face), level, &surf ), 0 );
+                        GN_DX_CHECK_RV( texCube->GetCubeMapSurface( sTexFace2D3D(face), (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 
@@ -187,7 +172,7 @@ namespace GN { namespace gfx
         //!
         //! D3D texture parameters
         //!
-        uint32_t mD3DUsage;
+        DWORD mD3DUsage;
 
         //!
         //! D3D filters( min, mag, mip )
@@ -203,8 +188,8 @@ namespace GN { namespace gfx
         //! \name locking related variables
         //!
         //@{
-        D3DCUBEMAP_FACES mLockedFace;
-        uint32_t         mLockedLevel;
+        size_t mLockedFace;
+        size_t mLockedLevel;
         //@}
 
         // ********************************
@@ -215,7 +200,7 @@ namespace GN { namespace gfx
         //!
         //! convert garnet cube face to D3D tag
         //!
-        static D3DCUBEMAP_FACES sTexFace2D3D( TexFace face )
+        static D3DCUBEMAP_FACES sTexFace2D3D( size_t face )
         {
             static D3DCUBEMAP_FACES sTable[ NUM_TEXFACES ] =
             {
@@ -235,11 +220,11 @@ namespace GN { namespace gfx
         //!
         LPDIRECT3DBASETEXTURE9
         newD3DTexture( TexType   type,
-                       uint32_t  width,
-                       uint32_t  height,
-                       uint32_t  depth,
-                       uint32_t  levels,
-                       uint32_t  d3dusage,
+                       size_t    width,
+                       size_t    height,
+                       size_t    depth,
+                       size_t    levels,
+                       DWORD     d3dusage,
                        D3DFORMAT d3dformat,
                        D3DPOOL   d3dpool );
     };

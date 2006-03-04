@@ -127,7 +127,7 @@ public:
         // rm should be empty
         TS_ASSERT( rm.empty() );
 
-        ResMgr::ResHandle h1 = rm.addResource( "1" );
+        ResMgr::HandleType h1 = rm.addResource( "1" );
         TS_ASSERT( h1 );
 
         // rm should NOT be empty

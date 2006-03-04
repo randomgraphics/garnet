@@ -75,6 +75,32 @@ static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 }
 
 //!
+//! map wrap mode to opengl constant
+// -----------------------------------------------------------------------------
+static GN_INLINE GLenum sTexWrap2OGL( GN::gfx::TexWrap w )
+{
+    if( GN::gfx::TEXWRAP_REPEAT == w ) return GL_REPEAT;
+    else if( GN::gfx::TEXWRAP_CLAMP == w ) return GL_CLAMP;
+    else if( GN::gfx::TEXWRAP_CLAMP_TO_EDGE == w )
+    {
+        if( GLEW_EXT_texture_edge_clamp )
+            return GL_CLAMP_TO_EDGE_EXT;
+        else if (GLEW_SGIS_texture_edge_clamp )
+            return GL_CLAMP_TO_EDGE_SGIS;
+        else
+        {
+            GN_ERROR( "do not support clamp to edge!" );
+            return GL_CLAMP;
+        }
+    }
+    else
+    {
+        GN_ASSERT_EX( 0, "invaid wrap type!" );
+        return GL_REPEAT;
+    }
+}
+
+//!
 //! convert garnet color format to OpenGL format
 // -----------------------------------------------------------------------------
 static GN_INLINE bool sColorFormat2OGL(
@@ -278,40 +304,127 @@ static bool sGen2DMipmap( GLenum target,
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+// OGL texture creation routines
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-template<typename T>
-static inline bool sAdjustOffsetAndRange( T & offset, T & length, T maxLength )
+GLuint sNew2DTexture(
+    GLint   internalformat,
+    GLsizei size_x,
+    GLsizei size_y,
+    GLint   levels,
+    GLenum  format,
+    GLenum  type )
 {
-    if( offset >= maxLength )
+    GN_GUARD;
+
+    // declare an auto-opengl-property-stack
+    AutoAttributeStack aas( GL_CURRENT_BIT );
+
+    // generate new texture
+    GLuint result;
+    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
+    AutoDeleteTexture autoDel( result );
+
+    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, result ) );
+    if( !sGen2DMipmap(
+            GL_TEXTURE_2D, size_x, size_y, levels,
+            internalformat, format, type ) )
+        return 0;
+
+    // success
+    autoDel.dismiss();
+    return result;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static GLuint sNew3DTexture(
+    GLint   /*internalformat*/,
+    GLsizei /*size_x*/,
+    GLsizei /*size_y*/,
+    GLsizei /*size_z*/,
+    GLint   /*levels*/,
+    GLenum  /*format*/,
+    GLenum  /*type*/ )
+{
+    GN_GUARD;
+
+    GN_ERROR( "no implementation" );
+    return 0;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static GLuint sNewCubeTexture(
+    GLint   internalformat,
+    GLsizei size_x,
+    GLint   levels,
+    GLenum  format,
+    GLenum  type )
+{
+    GN_GUARD;
+
+    // declare an auto-opengl-property-stack
+    AutoAttributeStack aas( GL_CURRENT_BIT );
+
+    // generate new texture
+    GLuint result;
+    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
+    AutoDeleteTexture autoDel( result );
+
+    if( !GLEW_ARB_texture_cube_map )
     {
-        GN_ERROR( "offset is beyond the end of valid range." );
-        return false;
+        GN_ERROR( "do not support cube map!" );
+        return 0;
     }
-    if( 0 == length ) length = maxLength;
-    if( offset + length > maxLength ) length = maxLength - offset;
-    return true;
+
+    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, result ) );
+    for( GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB;
+         face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB;
+         ++face )
+    {
+        if( !sGen2DMipmap(
+                face, size_x, size_x, levels,
+                internalformat, format, type ) )
+            return 0;
+    }
+
+    // success
+    autoDel.dismiss();
+    return result;
+
+    GN_UNGUARD;
 }
 
 // *****************************************************************************
-// OGLBasicTexture implementation
+// OGLTexture implementation
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicTexture::init(
-    TexType type,
-    uint32_t sx, uint32_t sy, uint32_t sz,
-    uint32_t levels,
-    ClrFmt format,
-    uint32_t usage )
+bool GN::gfx::OGLTexture::init(
+    TexType  type,
+    size_t   sx, size_t sy, size_t sz,
+    size_t   faces,
+    size_t   levels,
+    ClrFmt   format,
+    BitField usage )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( OGLBasicTexture, () );
+    GN_STDCLASS_INIT( OGLTexture, () );
 
     // determine pixelformat
     if( FMT_DEFAULT == format )
@@ -327,7 +440,7 @@ bool GN::gfx::OGLBasicTexture::init(
     }
 
     // store texture properties
-    if( !setProperties( type,sx,sy,sz,levels,format,usage ) )
+    if( !setProperties( type,sx,sy,sz,faces,levels,format,usage ) )
     { quit(); return selfOK(); }
 
     // determine gl texture type
@@ -378,7 +491,7 @@ bool GN::gfx::OGLBasicTexture::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicTexture::quit()
+void GN::gfx::OGLTexture::quit()
 {
     GN_GUARD;
 
@@ -394,17 +507,44 @@ void GN::gfx::OGLBasicTexture::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicTexture::deviceCreate()
+bool GN::gfx::OGLTexture::deviceCreate()
 {
     GN_GUARD;
 
     // create new opengl texture object
-    uint32_t sx, sy, sz;
-    getBaseMapSize( &sx, &sy, &sz );
+    size_t sx, sy, sz;
+    getBaseSize( &sx, &sy, &sz );
     GLint levels = (GLint)getLevels();
-    mOGLTexture = newOGLTexture(
-        mOGLInternalFormat, sx, sy, sz, levels,
-        mOGLFormat, mOGLType );
+    switch( getType() )
+    {
+        case TEXTYPE_1D :
+        case TEXTYPE_2D :
+            mOGLTexture = sNew2DTexture(
+                mOGLInternalFormat, (GLsizei)sx, (GLsizei)sy, (GLint)levels,
+                mOGLFormat, mOGLType );
+            break;
+
+        case TEXTYPE_3D :
+            mOGLTexture = sNew3DTexture(
+                mOGLInternalFormat, (GLsizei)sx, (GLsizei)sy, (GLsizei)sz, (GLint)levels,
+                mOGLFormat, mOGLType );
+            break;
+
+        case TEXTYPE_CUBE :
+            mOGLTexture = sNewCubeTexture(
+                mOGLInternalFormat, (GLsizei)sx, (GLint)levels,
+                mOGLFormat, mOGLType );
+            break;
+
+        case TEXTYPE_STACK :
+            GN_ERROR( "OpenGL does not support STACK texture." );
+            mOGLTexture = 0;
+            break;
+
+        default:
+            GN_UNEXPECTED();
+            mOGLTexture = 0;
+    }
     if( 0 == mOGLTexture ) return false;
 
     // enable/disable mipmap autogeneration
@@ -445,7 +585,7 @@ bool GN::gfx::OGLBasicTexture::deviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicTexture::deviceDestroy()
+void GN::gfx::OGLTexture::deviceDestroy()
 {
     GN_GUARD;
 
@@ -465,7 +605,42 @@ void GN::gfx::OGLBasicTexture::deviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicTexture::setFilter( TexFilter min, TexFilter mag ) const
+void GN::gfx::OGLTexture::getMipSize(
+    size_t level, size_t * sx, size_t * sy, size_t * sz ) const
+{
+    GN_GUARD_SLOW;
+
+    bind();
+
+    if( sx )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
+    }
+
+    if( sy )
+    {
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
+    }
+
+    if( sz )
+    {
+        if( TEXTYPE_3D == getType() )
+        {
+            GN_OGL_CHECK( glGetTexLevelParameteriv(
+                GL_TEXTURE_3D_EXT, (GLint)level, GL_TEXTURE_DEPTH_EXT, (GLint*)sz ) );
+        }
+        else *sz = 1;
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::OGLTexture::setFilter( TexFilter min, TexFilter mag ) const
 {
     GN_ASSERT( selfOK() );
 
@@ -492,34 +667,60 @@ void GN::gfx::OGLBasicTexture::setFilter( TexFilter min, TexFilter mag ) const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicTexture::privateLock2D(
-    LockedRect & result, GLenum target, uint32_t level, const Recti * area, uint32_t flag )
+void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
+{
+    GN_GUARD_SLOW;
+
+    bind();
+
+    if( mWraps[0] != s )
+    {
+        mWraps[0] = s;
+
+        GN_OGL_CHECK( glTexParameteri(
+            mOGLTarget,
+            GL_TEXTURE_WRAP_S,
+            sTexWrap2OGL( s ) ) );
+    }
+
+    if( mWraps[1] != t )
+    {
+        mWraps[1] = t;
+
+        GN_OGL_CHECK( glTexParameteri(
+            mOGLTarget,
+            GL_TEXTURE_WRAP_T,
+            sTexWrap2OGL( t ) ) );
+    }
+
+    if( TEXTYPE_3D == getType() && mWraps[2] != r )
+    {
+        mWraps[2] = r;
+
+        GN_OGL_CHECK( glTexParameteri(
+            mOGLTarget,
+            GL_TEXTURE_WRAP_R,
+            sTexWrap2OGL( r ) ) );
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLTexture::lock(
+    TexLockedResult & result,
+    size_t face,
+    size_t level,
+    const Boxi * area,
+    BitField flag )
 {
     GN_GUARD_SLOW;
 
     // call basic lock
-    if( !basicLock() ) return 0;
-    AutoScope< Functor0<bool> > baiscUnlocker( makeFunctor( this,&OGLBasicTexture::basicUnlock ) );
-
-    // get texture size( as well as binding self as current texture )
-    int sx, sy;
-    getMipMapSize( level, (uint32_t*)&sx, (uint32_t*)&sy, 0 );
-
-    // determine locked area
-    if( area )
-    {
-        mLockedArea = *area;
-        if( !sAdjustOffsetAndRange( mLockedArea.x, mLockedArea.w, sx ) ||
-            !sAdjustOffsetAndRange( mLockedArea.y, mLockedArea.h, sy ) )
-            return 0;
-    }
-    else
-    {
-        mLockedArea.x = 0;
-        mLockedArea.y = 0;
-        mLockedArea.w = sx;
-        mLockedArea.h = sy;
-    }
+    if( !basicLock( face, level, area, mLockedArea ) ) return false;
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&OGLTexture::basicUnlock) );
 
     // 计算pitch
     if( mOGLCompressed )
@@ -528,13 +729,15 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
         {
             case FMT_DXT1:
                 result.rowBytes = ((mLockedArea.w + 3) >> 2) * 8;
-                mLockedBytes = result.rowBytes * ((mLockedArea.h + 3) >> 2);
+                result.sliceBytes = result.rowBytes * ((mLockedArea.h + 3) >> 2);
+                mLockedBytes = result.sliceBytes * mLockedArea.d;
                 break;
 
 		    case FMT_DXT3:
 		    case FMT_DXT5:
                 result.rowBytes = ((mLockedArea.w + 3) >> 2) * 16;
-                mLockedBytes = result.rowBytes * ((mLockedArea.h + 3) >> 2);
+                result.sliceBytes = result.rowBytes * ((mLockedArea.h + 3) >> 2);
+                mLockedBytes = result.sliceBytes * mLockedArea.d;
                 break;
 
             default:
@@ -548,12 +751,13 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
         GN_OGL_CHECK( glGetIntegerv( GL_PACK_ALIGNMENT, &alignment ) );
         GN_ASSERT( isPowerOf2(alignment) ); // alignment必定是2^n
         size_t bpp = getClrFmtDesc(getFormat()).bits / 8;
-        result.rowBytes = mLockedArea.w * bpp;
         // 将宽度值按照alignment的大小对齐
 #define _GN_ALIGN(X,A) X = ( (X & -A) + (X & (A - 1) ? A : 0) )
         _GN_ALIGN(result.rowBytes,alignment);
 #undef _GN_ALIGN
-        mLockedBytes = result.rowBytes * mLockedArea.h;
+        result.rowBytes = mLockedArea.w * bpp;
+        result.sliceBytes = result.rowBytes * mLockedArea.h;
+        mLockedBytes = result.sliceBytes * mLockedArea.d;
     }
 
     // 分配缓冲区
@@ -561,18 +765,18 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
     GN_ASSERT( mLockedBuffer );
 
     // 如果不是只写锁定，则读取当前的贴图内容到缓冲区中
-    if( LOCK_RO & mLockedFlag )
+    if( LOCK_RO & flag )
     {
         GN_ASSERT_EX( 0, "目前不支持从贴图中读取数据!" );
     }
 
     // success
-    mLockedTarget  = target;
+    mLockedTarget  = TEXTYPE_CUBE == getType() ? OGLTexture::sCubeface2OGL(face) : mOGLTarget;
     mLockedLevel   = level;
     mLockedFlag    = flag;
     result.data    = mLockedBuffer;
-    baiscUnlocker.dismiss();
-    return 1;
+    basicUnlocker.dismiss();
+    return true;
 
     GN_UNGUARD_SLOW;
 }
@@ -580,7 +784,7 @@ bool GN::gfx::OGLBasicTexture::privateLock2D(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicTexture::privateUnlock2D()
+void GN::gfx::OGLTexture::unlock()
 {
     GN_GUARD_SLOW;
 
@@ -595,432 +799,42 @@ void GN::gfx::OGLBasicTexture::privateUnlock2D()
 
     GN_ASSERT( mLockedBuffer );
 
-    // 将缓冲区中的内容写入贴图
-    if( mOGLCompressed )
+    if( TEXTYPE_3D == getType() )
     {
-        if( GLEW_ARB_texture_compression )
+        GN_UNIMPL_WARNING();
+    }
+    else
+    {
+        // 将缓冲区中的内容写入贴图
+        if( mOGLCompressed )
         {
-            GN_OGL_CHECK( glCompressedTexSubImage2DARB(
-                mLockedTarget, mLockedLevel,
-                mLockedArea.x, mLockedArea.y,
-                mLockedArea.w, mLockedArea.h,
-                mOGLInternalFormat,
-                (GLsizei)mLockedBytes, mLockedBuffer ) );
+            if( GLEW_ARB_texture_compression )
+            {
+                GN_OGL_CHECK( glCompressedTexSubImage2DARB(
+                    mLockedTarget, (GLint)mLockedLevel,
+                    mLockedArea.x, mLockedArea.y,
+                    mLockedArea.w, mLockedArea.h,
+                    mOGLInternalFormat,
+                    (GLsizei)mLockedBytes, mLockedBuffer ) );
+            }
+            else
+            {
+                GN_WARN( "do not support texture compression!" );
+            }
         }
         else
         {
-            GN_WARN( "do not support texture compression!" );
+            GN_OGL_CHECK( glTexSubImage2D(
+                mLockedTarget, (GLint)mLockedLevel,
+                mLockedArea.x, mLockedArea.y,
+                mLockedArea.w, mLockedArea.h,
+                mOGLFormat, mOGLType, mLockedBuffer ) );
         }
-    }
-    else
-    {
-        GN_OGL_CHECK( glTexSubImage2D(
-            mLockedTarget, mLockedLevel,
-            mLockedArea.x, mLockedArea.y,
-            mLockedArea.w, mLockedArea.h,
-            mOGLFormat, mOGLType, mLockedBuffer ) );
     }
 
     // release mLockedBuffer
-    delete [] mLockedBuffer; mLockedBuffer = 0;
+    delete [] mLockedBuffer;
+    mLockedBuffer = 0;
 
     GN_UNGUARD_SLOW;
-}
-
-// *****************************************************************************
-// GN::gfx::OGLTex1D implementation
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex1D::getMipMapSize(
-    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
-{
-    GN_GUARD_SLOW;
-
-    bind();
-
-    if( sx )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
-    }
-    if( sy ) *sy = 1;
-    if( sz ) *sz = 1;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex1D::setWrap( TexWrap s, TexWrap, TexWrap ) const
-{
-    GN_GUARD_SLOW;
-
-    bind();
-
-    setWrapS( s );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void * GN::gfx::OGLTex1D::lock1D( uint32_t level,
-                                  uint32_t offset,
-                                  uint32_t length,
-                                  uint32_t flag )
-{
-    GN_GUARD_SLOW;
-
-    Recti area( offset, 0, length, 1 );
-    LockedRect lr;
-    if( privateLock2D( lr, GL_TEXTURE_2D, level, &area, flag ) )
-        return lr.data;
-    else
-        return 0;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex1D::unlock()
-{
-    GN_GUARD_SLOW;
-    privateUnlock2D();
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GLuint GN::gfx::OGLTex1D::newOGLTexture(
-    GLint   internalformat,
-    GLsizei size_x,
-    GLsizei /*size_y*/,
-    GLsizei /*size_z*/,
-    GLint   levels,
-    GLenum  format,
-    GLenum  type )
-{
-    GN_GUARD;
-
-    // declare an auto-opengl-property-stack
-    AutoAttributeStack aas( GL_CURRENT_BIT );
-
-    // generate new texture
-    GLuint result;
-    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
-    AutoDeleteTexture autoDel( result );
-
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, result ) );
-    if( !sGen2DMipmap(
-            GL_TEXTURE_2D, size_x, 1, levels,
-            internalformat, format, type ) )
-        return 0;
-
-    // success
-    autoDel.dismiss();
-    return result;
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// GN::gfx::OGLTex2D implementation
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex2D::getMipMapSize(
-    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
-{
-    GN_GUARD_SLOW;
-
-    bind();
-
-    if( sx )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
-    }
-    if( sy )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
-    }
-    if( sz ) *sz = 1;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex2D::setWrap( TexWrap s, TexWrap t, TexWrap ) const
-{
-    GN_GUARD_SLOW;
-    bind();
-    setWrapS( s );
-    setWrapT( t );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLTex2D::lock2D(
-    LockedRect & result, uint32_t level, const Recti * area, uint32_t flag )
-{
-    GN_GUARD_SLOW;
-    return privateLock2D( result, GL_TEXTURE_2D, level, area, flag );
-    GN_UNGUARD_SLOW
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex2D::unlock()
-{
-    GN_GUARD_SLOW;
-    return privateUnlock2D();
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GLuint GN::gfx::OGLTex2D::newOGLTexture(
-    GLint   internalformat,
-    GLsizei size_x,
-    GLsizei size_y,
-    GLsizei /*size_z*/,
-    GLint   levels,
-    GLenum  format,
-    GLenum  type )
-{
-    GN_GUARD;
-
-    // declare an auto-opengl-property-stack
-    AutoAttributeStack aas( GL_CURRENT_BIT );
-
-    // generate new texture
-    GLuint result;
-    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
-    AutoDeleteTexture autoDel( result );
-
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, result ) );
-    if( !sGen2DMipmap(
-            GL_TEXTURE_2D, size_x, size_y, levels,
-            internalformat, format, type ) )
-        return 0;
-
-    // success
-    autoDel.dismiss();
-    return result;
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// GN::gfx::OGLTex3D implementation
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex3D::getMipMapSize(
-    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
-{
-    GN_GUARD_SLOW;
-
-    bind();
-
-    if( sx )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_3D_EXT, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
-    }
-    if( sy )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_3D_EXT, level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
-    }
-    if( sz )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_3D_EXT, level, GL_TEXTURE_DEPTH_EXT, (GLint*)sz ) );
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex3D::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
-{
-    GN_GUARD_SLOW;
-    bind();
-    setWrapS( s );
-    setWrapT( t );
-    setWrapR( r );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLTex3D::lock3D( LockedBox &  /*result*/,
-                                uint32_t     /*level*/,
-                                const Boxi * /*box*/,
-                                uint32_t     /*flag*/ )
-{
-    GN_ERROR( "no implementation" );
-    return 0;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTex3D::unlock()
-{
-    GN_ERROR( "no implementation" );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GLuint GN::gfx::OGLTex3D::newOGLTexture(
-    GLint   /*internalformat*/,
-    GLsizei /*size_x*/,
-    GLsizei /*size_y*/,
-    GLsizei /*size_z*/,
-    GLint   /*levels*/,
-    GLenum  /*format*/,
-    GLenum  /*type*/ )
-{
-    GN_GUARD;
-
-    GN_ERROR( "no implementation" );
-    return 0;
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// GN::gfx::OGLTexCube implementation
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexCube::getMipMapSize(
-    uint32_t level, uint32_t * sx, uint32_t * sy, uint32_t * sz ) const
-{
-    GN_GUARD_SLOW;
-
-    bind();
-
-    if( sx )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_CUBE_MAP, level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
-    }
-    if( sy )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_CUBE_MAP, level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
-    }
-    if( sz ) *sz = 1;
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexCube::setWrap( TexWrap s, TexWrap t, TexWrap ) const
-{
-    GN_GUARD_SLOW;
-    bind();
-    setWrapS( s );
-    setWrapT( t );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexCube::lockCube( LockedRect &  result,
-                                    TexFace       face,
-                                    uint32_t      level,
-                                    const Recti * area,
-                                    uint32_t      flag )
-{
-    GN_GUARD_SLOW;
-    return privateLock2D( result, cubeface2GL(face), level, area, flag );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexCube::unlock()
-{
-    GN_GUARD_SLOW;
-    privateUnlock2D();
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GLuint GN::gfx::OGLTexCube::newOGLTexture(
-    GLint   internalformat,
-    GLsizei size_x,
-    GLsizei /*size_y*/,
-    GLsizei /*size_z*/,
-    GLint   levels,
-    GLenum  format,
-    GLenum  type )
-{
-    GN_GUARD;
-
-    // declare an auto-opengl-property-stack
-    AutoAttributeStack aas( GL_CURRENT_BIT );
-
-    // generate new texture
-    GLuint result;
-    GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
-    AutoDeleteTexture autoDel( result );
-
-    if( !GLEW_ARB_texture_cube_map )
-    {
-        GN_ERROR( "do not support cube map!" );
-        return 0;
-    }
-
-    GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, result ) );
-    for( GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB;
-         face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB;
-         ++face )
-    {
-        if( !sGen2DMipmap(
-                face, size_x, size_x, levels,
-                internalformat, format, type ) )
-            return 0;
-    }
-
-    // success
-    autoDel.dismiss();
-    return result;
-
-    GN_UNGUARD;
 }

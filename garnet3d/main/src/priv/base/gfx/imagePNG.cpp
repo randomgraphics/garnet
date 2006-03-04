@@ -112,16 +112,15 @@ bool PngReader::readHeader(
     uint32_t bpp = GN::gfx::getClrFmtDesc(o_desc.format).bits;
 
     // update o_desc
-    GN::gfx::ImageDesc::MipDesc & m = o_desc.mips[0];
-    o_desc.type     = GN::gfx::ImageDesc::IMG_2D;
-    o_desc.numMips  = 1;
+    o_desc.setFaceAndLevel( 1, 1 ); // 2D image
+    GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width         = (uint16_t)mInfo->width;
     m.height        = (uint16_t)mInfo->height;
     m.depth         = 1;
     m.rowPitch      = mInfo->width * bpp / 8;
     m.slicePitch    = m.rowPitch * mInfo->height;
     m.levelPitch    = m.slicePitch;
-    GN_ASSERT( o_desc.validate() );
+    GN_ASSERT( o_desc.valid() );
 
     // store image pitch
     mRowPitch = m.rowPitch;

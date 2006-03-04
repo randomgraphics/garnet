@@ -8,82 +8,80 @@
 
 namespace GN { namespace gfx
 {
+    /*!
+    //! image type
+    //!
+    enum ImageType
+    {
+        IMG_1D,    //!< 1D image
+        IMG_2D,    //!< 2D image
+        IMG_3D,    //!< volume mage
+        IMG_CUBE,  //!< cubemap image
+        IMG_STACK, //!< stack image (xenon only)
+
+        NUM_IMAGE_TYPES, //!< number of available image types
+        IMG_INVALID      //!< indicate invalid image type
+    };*/
+
+    //!
+    //! mipmap descriptor
+    //!
+    //! \note
+    //! - for 2D texture, depth is always 1
+    //! - for cube texture, depth is always 6
+    //! - for 3D texture, depth is based on mipmap level
+    //! - 两个pitch值可以通过mipmap的其他参数计算出来。
+    //!   这里列出这两个值仅仅是为了避免重复计算，方便使用。
+    //!
+    struct MipmapDesc
+    {
+        uint32_t width,  //!< mipmap width in pixel
+                 height, //!< mipmap height in pixel
+                 depth;  //!< mipmap depth in pixel
+
+        //!
+        //! bytes of one row of texel. For DXT compressed texture, this
+        //! is 1/4 of bytes of one "block row"
+        //!
+        uint32_t rowPitch;
+
+        //!
+        //! bytes of one slice.
+        //!
+        uint32_t slicePitch;
+
+        //!
+        //! total bytes of this mip level.
+        //!
+        uint32_t levelPitch;
+    };
+
     //!
     //! image descriptor
     //!
     struct ImageDesc
     {
         // ****************************
-        //! \name consts and types
-        // ****************************
-
-        //@{
-
-        enum
-        {
-            MAX_MIPLEVELS = 16,                 //!< maximum mipmap levels
-            MAX_IMGSIZE   = (1<<MAX_MIPLEVELS)  //!< maximum image size (64K)
-        };
-
-        //!
-        //! image type
-        //!
-        enum ImageType
-        {
-            IMG_1D,   //!< 1D image
-            IMG_2D,   //!< 2D image
-            IMG_3D,   //!< volume mage
-            IMG_CUBE, //!< cubemap image
-
-            NUM_IMAGE_TYPES, //!< number of available image types
-            IMG_INVALID      //!< indicate invalid image type
-        };
-
-        //!
-        //! mipmap descriptor
-        //!
-        //! \note
-        //! - for 2D texture, depth is always 1
-        //! - for cube texture, depth is always 6
-        //! - for 3D texture, depth is based on mipmap level
-        //! - 两个pitch值可以通过mipmap的其他参数计算出来。
-        //!   这里列出这两个值仅仅是为了避免重复计算，方便使用。
-        //!
-        struct MipDesc
-        {
-            uint16_t width,  //!< mipmap width in pixel
-                     height, //!< mipmap height in pixel
-                     depth;  //!< mipmap depth in pixel
-
-            //!
-            //! bytes of one row. For DXT compressed texture, this
-            //  is bytes of one "block row" (4 scanlines, that is)
-            //!
-            uint32_t rowPitch;
-
-            //!
-            //! bytes of one slice.
-            //!
-            uint32_t slicePitch;
-
-            //!
-            //! total bytes of this mip level.
-            //!
-            uint32_t levelPitch;
-        };
-
-        //@}
-
-        // ****************************
         //! \name member data
         // ****************************
 
         //@{
 
-        ImageType   type;                //!< image type
-        ClrFmt      format;              //!< color format
-        uint8_t     numMips;             //!< number of avaliable mipmaps
-        MipDesc     mips[MAX_MIPLEVELS]; //!< mipmaps
+        ClrFmt       format;    //!< color format
+        size_t       numFaces;  //!< number of image faces. 6 for cubemaps, 1 for others
+        size_t       numLevels; //!< number of avaliable mipmaps
+        MipmapDesc * mipmaps;   //!< mipmap array, face major. Mip data of face n, mips m is : mip[f*numFaces+m]
+
+        //@}
+
+        // ****************************
+        //! \name ctor / dtor
+        // ****************************
+
+        //@{
+
+        ImageDesc() : mipmaps(0) {}
+        ~ImageDesc() { safeMemFree( mipmaps ); }
 
         //@}
 
@@ -96,7 +94,22 @@ namespace GN { namespace gfx
         //!
         //! make sure an meaningfull image descriptor
         //!
-        bool validate() const;
+        bool valid() const;
+
+        //!
+        //! set image face count and level count, allocate mipmap array as well.
+        //!
+        bool setFaceAndLevel( size_t faces, size_t levels );
+
+        //!
+        //! return descriptor of specific mipmap
+        //!
+        MipmapDesc & getMipmap( size_t face, size_t level );
+
+        //!
+        //! return descriptor of specific mipmap
+        //!
+        const MipmapDesc & getMipmap( size_t face, size_t level ) const;
 
         //!
         //! total bytes of the whole image
@@ -106,37 +119,38 @@ namespace GN { namespace gfx
         //!
         //! bytes of one mip level
         //!
-        GN_INLINE size_t getLevelBytes( uint8_t level ) const;
+        GN_INLINE size_t getLevelBytes( size_t level ) const;
+
+        //!
+        //! bytes per face
+        //!
+        GN_INLINE size_t getFaceBytes() const;
 
         //!
         //! offset of specific pixel
         //!
-        GN_INLINE size_t getPixelOffset( uint8_t level, uint16_t x, uint16_t y, uint16_t z ) const;
+        GN_INLINE size_t getPixelOffset( size_t face, size_t level, size_t x, size_t y, size_t z ) const;
 
         //!
         //! offset of specific scanline
         //!
-        GN_INLINE size_t getScanlineOffset( uint8_t level, uint16_t y, uint16_t z ) const;
+        GN_INLINE size_t getScanlineOffset( size_t face, size_t level, size_t y, size_t z ) const;
 
         //!
         //! offset of specific slice
         //!
-        GN_INLINE size_t getSliceOffset( uint8_t level, uint16_t z ) const;
+        GN_INLINE size_t getSliceOffset( size_t face, size_t level, size_t z ) const;
 
         //!
         //! offset of specific mip level
         //!
-        GN_INLINE size_t getLevelOffset( uint8_t level ) const { return getSliceOffset(level,0); }
+        GN_INLINE size_t getLevelOffset( size_t face, size_t level ) const;
 
-        //@}
+        //!
+        //! offset of specific face
+        //!
+        GN_INLINE size_t getFaceOffset( size_t face ) const;
 
-        // ****************************
-        //! \name member operators
-        // ****************************
-
-        //@{
-        MipDesc & operator [] ( size_t );
-        const MipDesc & operator [] ( size_t ) const;
         //@}
     };
 
