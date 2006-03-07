@@ -22,19 +22,14 @@ bool GN::gfx::OGLRenderer::supportTextureFormat( TexType, BitField, ClrFmt ) con
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::OGLRenderer::createTexture( TexType  type,
-                                     size_t   sx, size_t sy, size_t sz,
-                                     size_t   faces,
-                                     size_t   levels,
-                                     ClrFmt   format,
-                                     BitField usage,
+GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc,
                                      const TextureLoader & loader )
 {
     GN_GUARD;
 
     AutoRef<OGLTexture> p( new OGLTexture(*this) );
     p->setLoader( loader );
-    if( !p->init(type,sx,sy,sz,faces,levels,format,usage) ) 0;
+    if( !p->init( desc ) ) return 0;
     return p.detach();
 
     GN_UNGUARD;

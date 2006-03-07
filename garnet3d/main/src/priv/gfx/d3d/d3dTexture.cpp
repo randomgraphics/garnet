@@ -166,12 +166,7 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::init( TexType  type,
-                                size_t sx, size_t sy, size_t sz,
-                                size_t faces,
-                                size_t levels,
-                                ClrFmt   format,
-                                BitField usage )
+bool GN::gfx::D3DTexture::init( const TextureDesc & desc )
 {
     GN_GUARD;
 
@@ -179,7 +174,7 @@ bool GN::gfx::D3DTexture::init( TexType  type,
     GN_STDCLASS_INIT( GN::gfx::D3DTexture, () );
 
     // create device data
-    if( !setProperties( type, sx, sy, sz, faces, levels, format, usage ) ||
+    if( !setDesc( desc ) ||
         !deviceCreate() ||
         !deviceRestore() ) { quit(); return selfOK(); }
 
@@ -223,12 +218,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
 
     LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
 
-    TexType             type;
-    Vector3<size_t>   size;
-    size_t            faces;
-    size_t            levels;
-    ClrFmt              format;
-    BitField            usage;
+    TextureDesc texDesc;
 
     // load texture contents
     if( D3DRTYPE_TEXTURE == info.ResourceType )
@@ -246,18 +236,18 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         mD3DTexture = tex;
 
         // update texture properties
-        format = d3d::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == format )
+        texDesc.format = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == texDesc.format )
         {
             GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
             return false;
         }
-        type = TEXTYPE_2D;
-        size[0] = desc.Width;
-        size[1] = desc.Height;
-        size[2] = 1;
-        faces = 1;
-        levels = tex->GetLevelCount();
+        texDesc.type = TEXTYPE_2D;
+        texDesc.width = desc.Width;
+        texDesc.height = desc.Height;
+        texDesc.depth = 1;
+        texDesc.faces = 1;
+        texDesc.levels = tex->GetLevelCount();
     }
     else if( D3DRTYPE_VOLUMETEXTURE == info.ResourceType )
     {
@@ -274,18 +264,18 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         mD3DTexture = tex;
 
         // update texture properties
-        format = d3d::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == format )
+        texDesc.format = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == texDesc.format )
         {
             GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
             return false;
         }
-        type = TEXTYPE_3D;
-        size[0] = desc.Width;
-        size[1] = desc.Height;
-        size[2] = desc.Depth;
-        faces = 1;
-        levels = tex->GetLevelCount();
+        texDesc.type = TEXTYPE_3D;
+        texDesc.width = desc.Width;
+        texDesc.height = desc.Height;
+        texDesc.depth = desc.Depth;
+        texDesc.faces = 1;
+        texDesc.levels = tex->GetLevelCount();
     }
     else if( D3DRTYPE_CUBETEXTURE == info.ResourceType )
     {
@@ -302,18 +292,18 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
         mD3DTexture = tex;
 
         // update texture properties
-        format = d3d::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == format )
+        texDesc.format = d3d::d3dFormat2ClrFmt( desc.Format );
+        if( FMT_INVALID == texDesc.format )
         {
             GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d::d3dFormat2Str( desc.Format ) );
             return false;
         }
-        type = TEXTYPE_CUBE;
-        size[0] = desc.Width;
-        size[1] = desc.Height;
-        size[2] = 1;
-        faces = 6;
-        levels = tex->GetLevelCount();
+        texDesc.type = TEXTYPE_CUBE;
+        texDesc.width = desc.Width;
+        texDesc.height = desc.Height;
+        texDesc.depth = 1;
+        texDesc.faces = 6;
+        texDesc.levels = tex->GetLevelCount();
     }
     else
     {
@@ -322,12 +312,8 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     }
 
     // store texture properties
-    usage = 0;
-    if( !setProperties(
-        type,
-        size[0], size[1], size[2],
-        faces,
-        levels, format, usage ) ) return false;
+    texDesc.usage = 0;
+    if( !setDesc( texDesc ) ) return false;
 
     // success
     return selfOK();
@@ -367,49 +353,41 @@ bool GN::gfx::D3DTexture::deviceRestore()
     GN_ASSERT( !mD3DTexture );
 
     // determine default format
-    if( FMT_DEFAULT == getFormat() )
+    if( FMT_DEFAULT == getDesc().format )
     {
-        ClrFmt format;
-        if( TEXUSAGE_DEPTH & getUsage() )
+        TextureDesc desc = getDesc();
+        if( TEXUSAGE_DEPTH & getDesc().usage )
         {
             // find default depth texture format
-            format = sGetDefaultDepthTextureFormat( mRenderer );
-            if( FMT_INVALID == format ) return false;
-            GN_TRACE( "Use default depth texture format: %s", clrFmt2Str(format) );
+            desc.format = sGetDefaultDepthTextureFormat( mRenderer );
+            if( FMT_INVALID == desc.format ) return false;
+            GN_TRACE( "Use default depth texture format: %s", clrFmt2Str(desc.format) );
         }
         else
         {
-            format = FMT_BGRA_8_8_8_8_UNORM; // this is default format
-            GN_TRACE( "Use default texture format: %s", clrFmt2Str(format) );
+            desc.format = FMT_BGRA_8_8_8_8_UNORM; // this is default format
+            GN_TRACE( "Use default texture format: %s", clrFmt2Str(desc.format) );
         }
-        setProperties(
-            getType(),
-            getBaseSize().x,
-            getBaseSize().y,
-            getBaseSize().z,
-            getFaces(),
-            getLevels(),
-            format,
-            getUsage() );
+        setDesc( desc );
     }
 
     // determine D3D format
-    D3DFORMAT d3dfmt = d3d::clrFmt2D3DFormat( getFormat() );
+    D3DFORMAT d3dfmt = d3d::clrFmt2D3DFormat( getDesc().format );
     if( D3DFMT_UNKNOWN == d3dfmt )
     {
-        GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getFormat()) );
+        GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );
         return false;
     }
 
     // determine D3D usage & pool
-    mD3DUsage = texUsage2D3DUsage( getUsage() );
+    mD3DUsage = texUsage2D3DUsage( getDesc().usage );
     D3DPOOL d3dpool =
-        ( TEXUSAGE_RENDER_TARGET & getUsage() || TEXUSAGE_DEPTH & getUsage() )
+        ( TEXUSAGE_RENDER_TARGET & getDesc().usage || TEXUSAGE_DEPTH & getDesc().usage )
         ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED;
 
     // check texture format compatibility
     HRESULT hr = mRenderer.checkD3DDeviceFormat(
-        mD3DUsage, texType2D3DResourceType(getType()), d3dfmt );
+        mD3DUsage, texType2D3DResourceType(getDesc().type), d3dfmt );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
@@ -430,12 +408,11 @@ bool GN::gfx::D3DTexture::deviceRestore()
 #endif
 
     // create texture instance in default pool
-    size_t sx, sy, sz;
-    getBaseSize( &sx, &sy, &sz );
+    const Vector3<uint32_t> & sz = getBaseSize();
     mD3DTexture = newD3DTexture(
-        getType(),
-        sx, sy, sz,
-        getLevels(),
+        getDesc().type,
+        sz.x, sz.y, sz.z,
+        getDesc().levels,
         mD3DUsage,
         d3dfmt,
         d3dpool );
@@ -479,29 +456,30 @@ void GN::gfx::D3DTexture::deviceDispose()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::getMipSize(
-    size_t level, size_t * sx, size_t * sy, size_t * sz ) const
+GN::Vector3<uint32_t> GN::gfx::D3DTexture::getMipSize( size_t level ) const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( level < getLevels() );
+    GN_ASSERT( level < getDesc().levels );
 
-    if( TEXTYPE_3D == getType() )
+    Vector3<uint32_t> sz;
+
+    if( TEXTYPE_3D == getDesc().type )
     {
         LPDIRECT3DVOLUMETEXTURE9 tex3D = static_cast<LPDIRECT3DVOLUMETEXTURE9>( mD3DTexture );
 
         D3DVOLUME_DESC desc;
         GN_DX_CHECK( tex3D->GetLevelDesc( (UINT)level, &desc ) );
 
-        if( sx ) *sx = desc.Width;
-        if( sy ) *sy = desc.Height;
-        if( sz ) *sz = desc.Depth;
+        sz.x = desc.Width;
+        sz.y = desc.Height;
+        sz.z = desc.Depth;
     }
     else
     {
         D3DSURFACE_DESC desc;
 
-        if( TEXTYPE_CUBE == getType() )
+        if( TEXTYPE_CUBE == getDesc().type )
         {
             LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
             GN_DX_CHECK( texCube->GetLevelDesc( (UINT)level, &desc ) );
@@ -512,10 +490,13 @@ void GN::gfx::D3DTexture::getMipSize(
             GN_DX_CHECK( tex2D->GetLevelDesc( (UINT)level, &desc ) );
         }
 
-        if( sx ) *sx = desc.Width;
-        if( sy ) *sy = desc.Height;
-        if( sz ) *sz = 1;
+        sz.x = desc.Width;
+        sz.y = desc.Height;
+        sz.z = 1;
     }
+
+    // success
+    return sz;
 
     GN_UNGUARD_SLOW;
 }
@@ -557,7 +538,7 @@ bool GN::gfx::D3DTexture::lock(
     if( !basicLock( face, level, area, clippedArea ) ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
-    switch( getType() )
+    switch( getDesc().type )
     {
         case TEXTYPE_1D:
         case TEXTYPE_2D:
@@ -643,15 +624,15 @@ void GN::gfx::D3DTexture::unlock()
     if( !basicUnlock() ) return;
 
     // unlock texture
-    if( TEXTYPE_1D == getType() || TEXTYPE_2D == getType() )
+    if( TEXTYPE_1D == getDesc().type || TEXTYPE_2D == getDesc().type )
     {
         GN_DX_CHECK( static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture)->UnlockRect( (UINT)mLockedLevel ) );
     }
-    else if( TEXTYPE_3D == getType() )
+    else if( TEXTYPE_3D == getDesc().type )
     {
         GN_DX_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture)->UnlockBox( (UINT)mLockedLevel ) );
     }
-    else if( TEXTYPE_CUBE == getType() )
+    else if( TEXTYPE_CUBE == getDesc().type )
     {
         GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture)->UnlockRect( sTexFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
@@ -700,7 +681,7 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
 
     // make sure texture format is supported by current device
     GN_ASSERT( D3D_OK == mRenderer.checkD3DDeviceFormat(
-        d3dusage, texType2D3DResourceType(getType()), d3dformat ) );
+        d3dusage, texType2D3DResourceType(getDesc().type), d3dformat ) );
 
     // create new texture
     if( TEXTYPE_1D == type || TEXTYPE_2D == type )

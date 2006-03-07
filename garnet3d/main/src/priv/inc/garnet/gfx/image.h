@@ -68,8 +68,8 @@ namespace GN { namespace gfx
         //@{
 
         ClrFmt       format;    //!< color format
-        size_t       numFaces;  //!< number of image faces. 6 for cubemaps, 1 for others
-        size_t       numLevels; //!< number of avaliable mipmaps
+        uint32_t     numFaces;  //!< number of image faces. 6 for cubemaps, 1 for others
+        uint32_t     numLevels; //!< number of avaliable mipmaps
         MipmapDesc * mipmaps;   //!< mipmap array, face major. Mip data of face n, mips m is : mip[f*numFaces+m]
 
         //@}

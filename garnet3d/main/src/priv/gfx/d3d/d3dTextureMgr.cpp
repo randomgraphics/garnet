@@ -27,19 +27,14 @@ bool GN::gfx::D3DRenderer::supportTextureFormat(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3DRenderer::createTexture( TexType  textype,
-                                     size_t   sx, size_t sy, size_t sz,
-                                     size_t   faces,
-                                     size_t   levels,
-                                     ClrFmt   format,
-                                     BitField usages,
+GN::gfx::D3DRenderer::createTexture( const TextureDesc & desc,
                                      const TextureLoader & loader )
 {
     GN_GUARD;
 
     AutoRef<D3DTexture> p( new D3DTexture(*this) );
     p->setLoader( loader );
-    if( !p->init(textype,sx,sy,sz,faces,levels,format,usages) ) return 0;
+    if( !p->init( desc ) ) return 0;
     return p.detach();
 
     GN_UNGUARD;

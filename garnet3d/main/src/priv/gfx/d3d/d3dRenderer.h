@@ -442,12 +442,7 @@ namespace GN { namespace gfx
     public :
         bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
         virtual Texture *
-        createTexture( TexType  textype,
-                       size_t   sx, size_t sy, size_t sz,
-                       size_t   faces,
-                       size_t   levels,
-                       ClrFmt   format,
-                       BitField usage,
+        createTexture( const TextureDesc & desc,
                        const TextureLoader & loader );
         virtual Texture * createTextureFromFile( File & );
 

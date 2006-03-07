@@ -19,9 +19,9 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
     if( !reader.readImage( &buf[0] ) ) return 0;
 
     // get image size
-    size_t w = desc.mipmaps[0].width;
-    size_t h = desc.mipmaps[0].height;
-    size_t d = desc.mipmaps[0].depth;
+    uint32_t w = desc.mipmaps[0].width;
+    uint32_t h = desc.mipmaps[0].height;
+    uint32_t d = desc.mipmaps[0].depth;
 
     // determine texture type, based on image demension
     TexType type;

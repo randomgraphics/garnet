@@ -862,31 +862,27 @@ namespace GN { namespace gfx
         virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const = 0;
 
         //!
-        //! Create new texture.
-        //!
-        //! \param textype     texture type
-        //! \param sx, sy, sz  texture size
-        //! \param faces       texture face count. 0 means using default face
-        //!                    count: 6 for cubemap, 1 for others.
-        //! \param levels      how many mipmap levels?
-        //!                    0 means generate full mipmap levels down to 1x1.
-        //! \param format      texture format, FMT_DEFAULT means
-        //!                    using default/appropriating format of current
-        //!                    rendering hardware.
-        //! \param usage       texture usage, one or combination of TexUsage
-        //! \param loader      Optional content loader
-        //! \note
-        //!    - sy/sz will be ignored for 1D/Cube texture,
-        //!    - sz will be ignored for 2D texture.
+        //! Create new texture
+        //! See TextureDesc for detail explaination of each fields in descriptor.
         //!
         virtual Texture *
-        createTexture( TexType  textype,
+        createTexture( const TextureDesc & desc, const TextureLoader & loader = TextureLoader() ) = 0;
+
+        //!
+        //! Create new texture, with individual creation parameters.
+        //!
+        Texture *
+        createTexture( TexType  type,
                        size_t   sx, size_t sy, size_t sz,
                        size_t   faces = 0,
                        size_t   levels = 0,
                        ClrFmt   format = FMT_DEFAULT,
                        BitField usage = 0,
-                       const TextureLoader & loader = TextureLoader() ) = 0;
+                       const TextureLoader & loader = TextureLoader() )
+        {
+            TextureDesc desc = { type, (uint32_t)sx, (uint32_t)sy, (uint32_t)sz, (uint32_t)faces, (uint32_t)levels, format, usage };
+            return createTexture( desc, loader );
+        }
 
         //!
         //! Create 1D texture

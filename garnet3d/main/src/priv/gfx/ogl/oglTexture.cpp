@@ -413,13 +413,7 @@ static GLuint sNewCubeTexture(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::init(
-    TexType  type,
-    size_t   sx, size_t sy, size_t sz,
-    size_t   faces,
-    size_t   levels,
-    ClrFmt   format,
-    BitField usage )
+bool GN::gfx::OGLTexture::init( TextureDesc desc )
 {
     GN_GUARD;
 
@@ -427,24 +421,23 @@ bool GN::gfx::OGLTexture::init(
     GN_STDCLASS_INIT( OGLTexture, () );
 
     // determine pixelformat
-    if( FMT_DEFAULT == format )
+    if( FMT_DEFAULT == desc.format )
     {
-        if( TEXUSAGE_DEPTH == usage )
+        if( TEXUSAGE_DEPTH == desc.usage )
         {
-            format = FMT_D_32; // default depth format
+            desc.format = FMT_D_32; // default depth format
         }
         else
         {
-            format = FMT_BGRA_8_8_8_8_UNORM; // default color format
+            desc.format = FMT_BGRA_8_8_8_8_UNORM; // default color format
         }
     }
 
     // store texture properties
-    if( !setProperties( type,sx,sy,sz,faces,levels,format,usage ) )
-    { quit(); return selfOK(); }
+    if( !setDesc( desc ) ) { quit(); return selfOK(); }
 
     // determine gl texture type
-    switch( getType() )
+    switch( getDesc().type )
     {
         case TEXTYPE_1D   :
         case TEXTYPE_2D   :
@@ -476,7 +469,7 @@ bool GN::gfx::OGLTexture::init(
                            mOGLFormat,
                            mOGLType,
                            mOGLCompressed,
-                           getFormat() ) )
+                           getDesc().format ) )
     { quit(); return selfOK(); }
 
     if( !deviceCreate() ) { quit(); return selfOK(); }
@@ -512,27 +505,25 @@ bool GN::gfx::OGLTexture::deviceCreate()
     GN_GUARD;
 
     // create new opengl texture object
-    size_t sx, sy, sz;
-    getBaseSize( &sx, &sy, &sz );
-    GLint levels = (GLint)getLevels();
-    switch( getType() )
+    const TextureDesc & desc = getDesc();
+    switch( getDesc().type )
     {
         case TEXTYPE_1D :
         case TEXTYPE_2D :
             mOGLTexture = sNew2DTexture(
-                mOGLInternalFormat, (GLsizei)sx, (GLsizei)sy, (GLint)levels,
+                mOGLInternalFormat, desc.width, desc.height, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
         case TEXTYPE_3D :
             mOGLTexture = sNew3DTexture(
-                mOGLInternalFormat, (GLsizei)sx, (GLsizei)sy, (GLsizei)sz, (GLint)levels,
+                mOGLInternalFormat, desc.width, desc.height, desc.depth, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
         case TEXTYPE_CUBE :
             mOGLTexture = sNewCubeTexture(
-                mOGLInternalFormat, (GLsizei)sx, (GLint)levels,
+                mOGLInternalFormat, desc.width, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
@@ -548,9 +539,9 @@ bool GN::gfx::OGLTexture::deviceCreate()
     if( 0 == mOGLTexture ) return false;
 
     // enable/disable mipmap autogeneration
-    if( TEXTYPE_CUBE != getType() && GLEW_SGIS_generate_mipmap )
+    if( TEXTYPE_CUBE != getDesc().type && GLEW_SGIS_generate_mipmap )
     {
-        if( TEXUSAGE_AUTOGEN_MIPMAP & getUsage() )
+        if( TEXUSAGE_AUTOGEN_MIPMAP & desc.usage )
         {
             GN_OGL_CHECK( glTexParameteri( mOGLTarget,GL_GENERATE_MIPMAP_SGIS, GL_TRUE) );
         }
@@ -605,34 +596,30 @@ void GN::gfx::OGLTexture::deviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::getMipSize(
-    size_t level, size_t * sx, size_t * sy, size_t * sz ) const
+GN::Vector3<uint32_t> GN::gfx::OGLTexture::getMipSize( size_t level ) const
 {
     GN_GUARD_SLOW;
 
     bind();
 
-    if( sx )
+    GLint sx, sy, sz;
+
+    GN_OGL_CHECK( glGetTexLevelParameteriv(
+        GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_WIDTH, &sx ) );
+    GN_OGL_CHECK( glGetTexLevelParameteriv(
+        GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_HEIGHT, &sy ) );
+    if( TEXTYPE_3D == getDesc().type )
     {
         GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_WIDTH, (GLint*)sx ) );
+            GL_TEXTURE_3D_EXT, (GLint)level, GL_TEXTURE_DEPTH_EXT, &sz ) );
     }
+    else sz = 1;
 
-    if( sy )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_HEIGHT, (GLint*)sy ) );
-    }
-
-    if( sz )
-    {
-        if( TEXTYPE_3D == getType() )
-        {
-            GN_OGL_CHECK( glGetTexLevelParameteriv(
-                GL_TEXTURE_3D_EXT, (GLint)level, GL_TEXTURE_DEPTH_EXT, (GLint*)sz ) );
-        }
-        else *sz = 1;
-    }
+    // success
+    return Vector3<uint32_t>(
+        (uint32_t)sx,
+        (uint32_t)sy,
+        (uint32_t)sz );
 
     GN_UNGUARD_SLOW;
 }
@@ -693,7 +680,7 @@ void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
             sTexWrap2OGL( t ) ) );
     }
 
-    if( TEXTYPE_3D == getType() && mWraps[2] != r )
+    if( TEXTYPE_3D == getDesc().type && mWraps[2] != r )
     {
         mWraps[2] = r;
 
@@ -725,7 +712,7 @@ bool GN::gfx::OGLTexture::lock(
     // 计算pitch
     if( mOGLCompressed )
     {
-        switch ( getFormat() )
+        switch ( getDesc().format )
         {
             case FMT_DXT1:
                 result.rowBytes = ((mLockedArea.w + 3) >> 2) * 8;
@@ -741,7 +728,7 @@ bool GN::gfx::OGLTexture::lock(
                 break;
 
             default:
-                GN_ERROR( "unsupport compress format '%s'!", clrFmt2Str(getFormat()) );
+                GN_ERROR( "unsupport compress format '%s'!", clrFmt2Str(getDesc().format) );
                 return false;
         }
     }
@@ -750,7 +737,7 @@ bool GN::gfx::OGLTexture::lock(
         GLint alignment;
         GN_OGL_CHECK( glGetIntegerv( GL_PACK_ALIGNMENT, &alignment ) );
         GN_ASSERT( isPowerOf2(alignment) ); // alignment必定是2^n
-        size_t bpp = getClrFmtDesc(getFormat()).bits / 8;
+        size_t bpp = getClrFmtDesc(getDesc().format).bits / 8;
         // 将宽度值按照alignment的大小对齐
 #define _GN_ALIGN(X,A) X = ( (X & -A) + (X & (A - 1) ? A : 0) )
         _GN_ALIGN(result.rowBytes,alignment);
@@ -771,7 +758,7 @@ bool GN::gfx::OGLTexture::lock(
     }
 
     // success
-    mLockedTarget  = TEXTYPE_CUBE == getType() ? OGLTexture::sCubeface2OGL(face) : mOGLTarget;
+    mLockedTarget  = TEXTYPE_CUBE == getDesc().type ? OGLTexture::sCubeface2OGL(face) : mOGLTarget;
     mLockedLevel   = level;
     mLockedFlag    = flag;
     result.data    = mLockedBuffer;
@@ -799,7 +786,7 @@ void GN::gfx::OGLTexture::unlock()
 
     GN_ASSERT( mLockedBuffer );
 
-    if( TEXTYPE_3D == getType() )
+    if( TEXTYPE_3D == getDesc().type )
     {
         GN_UNIMPL_WARNING();
     }

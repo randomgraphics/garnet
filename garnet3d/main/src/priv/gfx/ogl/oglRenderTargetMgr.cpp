@@ -91,14 +91,14 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             return;
         }
         // make sure target texture is a RTT
-        if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getUsage()) )
+        if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getDesc().usage) )
         {
             GN_ERROR( "Only texture with TEXUSAGE_RENDER_TARGET usage can be used as render target." );
             return;
         }
     }
     GN_ASSERT( index < getCaps(CAPS_MAX_RENDER_TARGETS) );
-    GN_ASSERT( !tex || (TEXUSAGE_RENDER_TARGET & tex->getUsage()) );
+    GN_ASSERT( !tex || (TEXUSAGE_RENDER_TARGET & tex->getDesc().usage) );
 
     RenderTargetTextureDesc & rttd = mCurrentRTs[index];
 
@@ -110,21 +110,20 @@ void GN::gfx::OGLRenderer::setRenderTarget(
         const OGLTexture * gltex = safeCast<const OGLTexture*>(rttd.tex);
 
         // get texture size
-        size_t sx, sy;
-        gltex->getMipSize( level, &sx, &sy, 0 );
+        Vector3<uint32_t> mipsize = gltex->getMipSize( level );
 
         GLint oldtex;
 
         // copy framebuffer to current render target texture
-        TexType tt = rttd.tex->getType();
+        TexType tt = rttd.tex->getDesc().type;
         if( TEXTYPE_CUBE == tt )
         {
-            GN_ASSERT( sx == sy );
+            GN_ASSERT( mipsize.x == mipsize.y );
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                OGLTexture::sCubeface2OGL(face), (GLsizei)level,
-                gltex->getOGLInternalFormat(), 0, 0, (GLsizei)sx, (GLsizei)sx, 0 ) );
+                OGLTexture::sCubeface2OGL(face), (GLint)level,
+                gltex->getOGLInternalFormat(), 0, 0, mipsize.x, mipsize.x, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, oldtex ) );
         }
         else if( TEXTYPE_2D == tt || TEXTYPE_1D == tt )
@@ -132,8 +131,8 @@ void GN::gfx::OGLRenderer::setRenderTarget(
             GN_OGL_CHECK( glGetIntegerv( GL_TEXTURE_BINDING_2D, &oldtex ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                GL_TEXTURE_2D, (GLsizei)level,
-                gltex->getOGLInternalFormat(), 0, 0, (GLsizei)sx, (GLsizei)sy, 0 ) );
+                GL_TEXTURE_2D, (GLint)level,
+                gltex->getOGLInternalFormat(), 0, 0, mipsize.x, mipsize.y, 0 ) );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, oldtex ) );
         }
         else
@@ -183,13 +182,13 @@ void GN::gfx::OGLRenderer::setRenderDepth(
     // make sure target texture is a depth texture
     if( isParameterCheckEnabled() )
     {
-        if( tex && !(TEXUSAGE_DEPTH & tex->getUsage()) )
+        if( tex && !(TEXUSAGE_DEPTH & tex->getDesc().usage) )
         {
             GN_ERROR( "Only texture with TEXUSAGE_DEPTH usage can be used as depth texture." );
             return;
         }
     }
-    GN_ASSERT( !tex || (TEXUSAGE_DEPTH & tex->getUsage()) );
+    GN_ASSERT( !tex || (TEXUSAGE_DEPTH & tex->getDesc().usage) );
 
     // skip redundant call
     if( mCurrentDepth.equal( tex, level, face ) ) return;
@@ -199,14 +198,14 @@ void GN::gfx::OGLRenderer::setRenderDepth(
         const OGLTexture * gltex = safeCast<const OGLTexture*>(mCurrentDepth.tex);
 
         // get texture size
-        GLsizei sx, sy;
+        GLint sx, sy;
         GN_OGL_CHECK( glGetTexLevelParameteriv(
-                gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, (GLint*)&sx ) );
+                gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, &sx ) );
         GN_OGL_CHECK( glGetTexLevelParameteriv(
-                gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, (GLint*)&sy ) );
+                gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, &sy ) );
 
         // copy framebuffer to current render target texture
-        TexType tt = mCurrentDepth.tex->getType();
+        TexType tt = mCurrentDepth.tex->getDesc().type;
         if( TEXTYPE_CUBE == tt )
         {
             GN_ASSERT( sx == sy );

@@ -46,12 +46,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( TexType  type,
-                   size_t   w, size_t h, size_t d,
-                   size_t   faces,
-                   size_t   levels,
-                   ClrFmt   format,
-                   BitField usage );
+        bool init( const TextureDesc & desc );
         bool initFromFile( File & );
         void quit();
         bool ok() const { return MyParent::ok(); }
@@ -83,7 +78,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void getMipSize( size_t level, size_t * sx, size_t * sy, size_t * sz ) const;
+        virtual GN::Vector3<uint32_t> getMipSize( size_t level ) const;
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, BitField flag );
@@ -114,7 +109,7 @@ namespace GN { namespace gfx
 
             LPDIRECT3DSURFACE9 surf;
 
-            switch( getType() )
+            switch( getDesc().type )
             {
                 case TEXTYPE_1D:
                 case TEXTYPE_2D:
@@ -211,7 +206,7 @@ namespace GN { namespace gfx
                 D3DCUBEMAP_FACE_POSITIVE_Z,
                 D3DCUBEMAP_FACE_NEGATIVE_Z,
             };
-            GN_ASSERT( 0 <= face && face < 6 );
+            GN_ASSERT( face < 6 );
             return sTable[face];
         }
 
