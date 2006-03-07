@@ -29,6 +29,17 @@
 namespace GN { namespace gfx
 {
     //!
+    //! Msaa type
+    //!
+    enum MsaaType
+    {
+        MSAA_NONE,
+        MSAA_LOW_QUALITY,
+        MSAA_MEDIUM_QUALITY,
+        MSAA_HIGH_QULITY,
+    };
+
+    //!
     //! Renderer option structure.
     //!
     //! \sa Renderer::getOptions()
@@ -107,6 +118,11 @@ namespace GN { namespace gfx
         uint32_t windowedHeight;
 
         //!
+        //! Msaa type
+        //!
+        MsaaType msaa;
+
+        //!
         //! fullscreen or windowed mode.
         //! ȱʡΪfalse.
         //!
@@ -150,6 +166,7 @@ namespace GN { namespace gfx
             , autoBackbufferResizing(true)
             , windowedWidth(0)
             , windowedHeight(0)
+            , msaa(MSAA_NONE)
             , fullscreen(false)
             , vsync(false)
             , software(false)

@@ -1,88 +1,77 @@
 #include "pch.h"
 #include "d3dRenderer.h"
 
-//!
-//! 枚举符合条件的显示模式，并返回相应的D3DFormat
+//
+//
 // ------------------------------------------------------------------------
-static D3DFORMAT
-sCheckD3DFormat( IDirect3D9 & d3d,
-                 UINT adapter,
-                 const GN::gfx::DispDesc & dd,
-                 bool fullscreen )
+static D3DFORMAT sDetermineBackBufferFormat(
+    IDirect3D9 & d3d,
+    UINT adapter,
+    D3DDEVTYPE, //devtype
+    const GN::gfx::DispDesc & dd,
+    GN::gfx::MsaaType, // msaa
+    bool fullscreen )
 {
     GN_GUARD;
 
-    D3DDISPLAYMODE d3ddm;
-    d3ddm.Format = D3DFMT_UNKNOWN;
-
-    // if window mode, then use current display mode
+    // shortcut for windowed mode
     if( !fullscreen )
     {
 #if GN_XENON
         GN_ERROR( "Xenon does not support windowed mode." );
         return D3DFMT_UNKNOWN;
 #else
+        D3DDISPLAYMODE d3ddm;
         GN_DX_CHECK_RV(
             d3d.GetAdapterDisplayMode(adapter, &d3ddm),
             D3DFMT_UNKNOWN );
-#endif
-        }
-
-    // fullscreen mode
-    else
-    {
-        D3DFORMAT d3dfmt;
-        switch( dd.depth )
-        {
-            case 16 : d3dfmt = D3DFMT_R5G6B5;   break;
-            case 24 :
-            // FIXME : 有的显卡支持A8R8G8B8模式，而有的支持X8R8G8B8模式。
-            //         因此此处不应强行指定为X8R8G8B8，而应该根据实际显
-            //         卡的支持情况来选择合适的显示模式。
-            case 32 : d3dfmt = D3DFMT_X8R8G8B8; break;
-            default : GN_ERROR( "unsupported depth!" );
-                return D3DFMT_UNKNOWN;
-        }
-
-#if GN_XENON
-        // TODO: enumerate TV modes.
-        d3ddm.Width = dd.width;
-        d3ddm.Height = dd.height;
-        d3ddm.Format = d3dfmt;
-        d3ddm.RefreshRate = 0;
-#else
-        UINT dmcount = d3d.GetAdapterModeCount(adapter, d3dfmt );
-        if (0 == dmcount)
-        {
-            GN_ERROR( "fail to get number of display modes!" );
-            return D3DFMT_UNKNOWN;
-        }
-
-        UINT i;
-        for ( i = 0; i < dmcount; i++ )
-        {
-            GN_DX_CHECK_RV(
-                d3d.EnumAdapterModes(adapter, d3dfmt, i, &d3ddm),
-                D3DFMT_UNKNOWN );
-
-            if( d3ddm.Width == dd.width &&
-                d3ddm.Height == dd.height &&
-                d3ddm.Format == d3dfmt &&
-                ( 0 == dd.refrate || d3ddm.RefreshRate == dd.refrate) )
-                break;
-        }
-
-        // not found!
-        if (i >= dmcount)
-        {
-            GN_ERROR( "fail to found appropriate D3D format!" );
-            return D3DFMT_UNKNOWN;
-        }
+        return d3ddm.Format;
 #endif
     }
 
-    // success
-    return d3ddm.Format;
+    using namespace GN;
+    using namespace GN::gfx;
+
+    // determin backbuffer format candidates
+    D3DFORMAT d16Candidates[] = { D3DFMT_A1R5G5B5, D3DFMT_R5G6B5, D3DFMT_UNKNOWN };
+    D3DFORMAT d32Candidates[] = { D3DFMT_A2R10G10B10, D3DFMT_A8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_UNKNOWN };
+    const D3DFORMAT * candidates;
+    switch( dd.depth )
+    {
+        case 16 : candidates = d16Candidates; break;
+        case 24 :
+        case 32 : candidates = d32Candidates; break;
+        default : GN_ERROR( "unsupported depth: %d!", dd.depth );
+            return D3DFMT_UNKNOWN;
+    }
+
+    // check device support for each candidates
+    for( ; D3DFMT_UNKNOWN != *candidates; ++candidates )
+    {
+        // get display mode count of this format
+        UINT dmcount = d3d.GetAdapterModeCount( adapter, *candidates );
+        if( 0 == dmcount ) continue;
+
+        D3DDISPLAYMODE d3ddm;
+        UINT i;
+        for( i = 0; i < dmcount; i++ )
+        {
+            GN_DX_CHECK_DO(
+                d3d.EnumAdapterModes( adapter, *candidates, i, &d3ddm ),
+                continue; );
+
+            if( d3ddm.Width == dd.width &&
+                d3ddm.Height == dd.height &&
+                d3ddm.Format == *candidates &&
+                ( 0 == dd.refrate || d3ddm.RefreshRate == dd.refrate) )
+                // found!
+                return *candidates;
+        }
+    }
+
+    // failed
+    GN_ERROR( "No suitable backbuffer format found!" );
+    return D3DFMT_UNKNOWN;
 
     GN_UNGUARD;
 }
@@ -94,42 +83,43 @@ static bool
 sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
              IDirect3D9 & d3d,
              UINT adapter,
+             D3DDEVTYPE devtype,
              const GN::gfx::DispDesc & dd,
+             GN::gfx::MsaaType msaa,
              bool fullscreen,
              bool vsync )
 {
     GN_GUARD;
 
-    // get d3dformat from display mode
-    D3DFORMAT d3dfmt = sCheckD3DFormat( d3d, adapter, dd, fullscreen );
-    if( D3DFMT_UNKNOWN == d3dfmt ) return 0;
-
     // clear all field, first
     ZeroMemory( &d3dpp, sizeof(d3dpp) );
 
+    // set back buffer parameters
+    GN_ASSERT( dd.height > 0 && dd.width > 0 );
+    d3dpp.BackBufferCount  = 0;
+    d3dpp.BackBufferWidth  = dd.width;
+    d3dpp.BackBufferHeight = dd.height;
+    d3dpp.BackBufferFormat = sDetermineBackBufferFormat( d3d, adapter, devtype, dd, msaa, fullscreen );
+    if( D3DFMT_UNKNOWN == d3dpp.BackBufferFormat ) return 0;
+
+    // set msaa parameters
+    d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
+    d3dpp.MultiSampleQuality = 0;
+
     //
     // set depth and stencil buffer parameters
+    // note: we'll create depth surface in draw manager.
     //
-    // FIXME : 应当首先枚举有效的depth-buffer-format
-    //
-    d3dpp.EnableAutoDepthStencil = 0; // note: we'll create depth surface in draw manager.
-    d3dpp.AutoDepthStencilFormat = D3DFMT_D24X8;
+    d3dpp.EnableAutoDepthStencil = 0;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
 
     // set display mode parameters
     d3dpp.Windowed = !fullscreen;
 
-    // set back buffer parameters
-    d3dpp.BackBufferCount  = 0;
-    d3dpp.BackBufferFormat = d3dfmt;
-
-    // set display mode specific parameters
-    GN_ASSERT( dd.height > 0 && dd.width > 0 );
+    // setup full screen parameters
     if( fullscreen )
     {
         d3dpp.FullScreen_RefreshRateInHz = dd.refrate;
-        d3dpp.BackBufferWidth            = dd.width;
-        d3dpp.BackBufferHeight           = dd.height;
-        d3dpp.SwapEffect                 = D3DSWAPEFFECT_FLIP;
 
 #if !GN_XENON
         // modify render window style
@@ -137,14 +127,9 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         SetWindowLong( (HWND)dd.windowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE );
 #endif
     }
-    else // windowed mode
-    {
-        d3dpp.BackBufferWidth  = dd.width;
-        d3dpp.BackBufferHeight = dd.height;
-        d3dpp.SwapEffect       = D3DSWAPEFFECT_DISCARD;
-    }
 
     // set other parameters
+    d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;
     d3dpp.PresentationInterval = vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     d3dpp.hDeviceWindow        = (HWND)dd.windowHandle;
 
@@ -253,14 +238,14 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
     }
 #endif
 
-    // init d3d present parameters
-    if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
-
     // Check device caps and determine device behavior flags.
     HRESULT r = D3D_OK;
     for( size_t t = 0; t < devtypes.size(); ++ t )
     {
         mDeviceType = devtypes[t];
+
+        // init d3d present parameters
+        if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, mDeviceType, dd, ro.msaa, ro.fullscreen, ro.vsync ) ) return false;
 
         // check device type
         D3DCAPS9 caps;
@@ -332,7 +317,15 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
         const DispDesc & dd = getDispDesc();
 
         // rebuild d3dpp based on current device settings
-        if( !sSetupD3dpp( mPresentParameters, *mD3D, mAdapter, dd, ro.fullscreen, ro.vsync ) ) return false;
+        if( !sSetupD3dpp(
+            mPresentParameters,
+            *mD3D,
+            mAdapter,
+            mDeviceType,
+            dd,
+            getOptions().msaa,
+            ro.fullscreen,
+            ro.vsync ) ) return false;
 
         // NOTE: Applications can expect messages to be sent to them during this
         //       call (for example, before this call is returned); applications

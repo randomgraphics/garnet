@@ -225,7 +225,7 @@ GN_INLINE void GN::gfx::D3DRenderer::resizeAutoDepthBuffer( const Vector2<uint32
         AutoComPtr<IDirect3DSurface9> newSurf;
         GN_DX_CHECK_R( mDevice->CreateDepthStencilSurface(
             sz.x, sz.y,
-            mPresentParameters.AutoDepthStencilFormat,
+            D3DFMT_D24S8, // TODO: enumerate avaliable depth format
             mPresentParameters.MultiSampleType, mPresentParameters.MultiSampleQuality,
             mPresentParameters.Flags & D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL,
             &mAutoDepth, 0 ) );

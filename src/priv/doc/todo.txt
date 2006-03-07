@@ -16,6 +16,7 @@ TODO
 
 - p1
   - GFX system
+    - add support to MSAA/FSAA
     - refine resource lock flags
       - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
       - no combination.
