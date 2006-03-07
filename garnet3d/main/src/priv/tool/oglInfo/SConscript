@@ -1,0 +1,5 @@
+Import('env')
+env.GN_build_program(
+    'GNoglInfo',
+    env.GN_glob('*.cpp'),
+    'pch.h', 'pch.cpp' )
