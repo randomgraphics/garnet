@@ -117,8 +117,8 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & );
-        virtual void bindRenderStateBlock( uint32_t );
+        virtual RsbHandle createRenderStateBlock( const RenderStateBlockDesc & );
+        virtual void bindRenderStateBlock( RsbHandle );
         virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const;
         virtual uint32_t setRenderState( RenderState, RenderStateValue );
         virtual uint32_t setRenderStates( const int * statePairs, size_t count );
@@ -202,7 +202,7 @@ namespace GN { namespace gfx
         struct RenderTargetTextureDesc
         {
             const Texture * tex;   //!< Render target texture.
-            uint32_t        level; //!< Mipmap level.
+            size_t          level; //!< Mipmap level.
             TexFace         face;  //!< Effective only when tex is cubemap.
 
             //!
@@ -213,7 +213,7 @@ namespace GN { namespace gfx
             //!
             //! Equality check
             //!
-            bool equal( const Texture * t, uint32_t l, TexFace f ) const
+            bool equal( const Texture * t, size_t l, TexFace f ) const
             {
                 return tex == t && ( 0 == tex || ( level == l && face == f ) );
             }

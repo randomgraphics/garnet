@@ -281,8 +281,7 @@ namespace GN { namespace gfx
 
     public :
         virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
-        virtual Texture * createTexture( const TextureDesc & desc,
-                                         const TextureLoader & loader );
+        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader );
 
     public:
 
@@ -425,8 +424,8 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, uint32_t level, TexFace face );
-        virtual void setRenderDepth( const Texture * texture, uint32_t level, TexFace face );
+        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, TexFace face );
+        virtual void setRenderDepth( const Texture * texture, size_t level, TexFace face );
 
     private:
 
@@ -464,7 +463,7 @@ namespace GN { namespace gfx
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags );
+        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrims,
                                   size_t        startVtx,
@@ -485,7 +484,7 @@ namespace GN { namespace gfx
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawQuads( uint32_t options,
+        virtual void drawQuads( BitField options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count );

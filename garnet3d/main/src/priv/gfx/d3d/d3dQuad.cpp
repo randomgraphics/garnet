@@ -214,7 +214,7 @@ void GN::gfx::D3DQuad::deviceDestroy()
 void GN::gfx::D3DQuad::drawQuads(
     const float * positions, size_t posStride,
     const float * texcoords, size_t texStride,
-    size_t count, uint32_t options )
+    size_t count, BitField options )
 {
     GN_GUARD_SLOW;
 

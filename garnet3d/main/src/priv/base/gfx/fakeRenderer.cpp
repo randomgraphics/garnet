@@ -305,10 +305,10 @@ namespace GN { namespace gfx
 
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
-                                      uint32_t level,
+                                      size_t level,
                                       TexFace face ) {}
         virtual void setRenderDepth( const Texture * texture,
-                                     uint32_t level,
+                                     size_t level,
                                      TexFace face ) {}
 
         //@}
@@ -326,7 +326,7 @@ namespace GN { namespace gfx
         virtual bool drawBegin() { return true; }
         virtual void drawEnd() {}
         virtual void drawFinish() {}
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags ) {}
+        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags ) {}
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrim,
                                   size_t        startVtx,
@@ -348,7 +348,7 @@ namespace GN { namespace gfx
                              const void *  vertexData,
                              size_t        strideInBytes ) {}
         virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t ) {}
-        virtual void drawQuads( uint32_t options,
+        virtual void drawQuads( BitField options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count ) {}

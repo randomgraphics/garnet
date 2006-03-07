@@ -131,7 +131,7 @@ void GN::gfx::D3DRenderer::drawFinish()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::clearScreen(
-    const GN::Vector4f & c, float z, uint32_t s, uint32_t flags )
+    const GN::Vector4f & c, float z, uint32_t s, BitField flags )
 {
     GN_GUARD_SLOW;
 
@@ -303,7 +303,7 @@ void GN::gfx::D3DRenderer::drawUp(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawQuads(
-    uint32_t options,
+    BitField options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
     size_t count )

@@ -259,6 +259,10 @@ namespace GN { namespace gfx
                          PSCAPS_D3D_XVS
     };
 
+    typedef uint32_t RsbHandle; //!< Render state block handle
+
+    typedef uint32_t VtxBindingHandle; //!< Vertex binding handle
+
     enum
     {
         MAX_RENDER_TARGETS = 4 //!< We support 4 render targets at most.
@@ -371,7 +375,7 @@ namespace GN { namespace gfx
         Parameter<AutoRef<Shader> > vtxShader; //!< vertex shader
         Parameter<AutoRef<Shader> > pxlShader; //!< pixle shader
 
-        Parameter<uint32_t> renderStateBlock; //!< render states
+        Parameter<RsbHandle> renderStateBlock; //!< render states
 
         Parameter<AutoRef<Texture> > textures[MAX_TEXTURE_STAGES]; //!< texture list
 
@@ -405,13 +409,13 @@ namespace GN { namespace gfx
     //!
     struct RenderingGeometry
     {
-        uint32_t vtxBinding; //!< vertex binding ID.
-        AutoRef<VtxBuf> vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list
-        uint32_t numVtxBufs; //!< vertex buffer count
-        AutoRef<IdxBuf> idxBuf; //!< index buffer
+        VtxBindingHandle vtxBinding; //!< vertex binding ID.
+        AutoRef<VtxBuf>  vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list
+        size_t           numVtxBufs; //!< vertex buffer count
+        AutoRef<IdxBuf>  idxBuf; //!< index buffer
 
         PrimitiveType prim;      //!< primitive type
-        size_t        numPrims;   //!< primitive count
+        size_t        numPrims;  //!< primitive count
         size_t        startVtx;  //!< base vertex index
         size_t        minVtxIdx; //!< ignored if index buffer is NULL.
         size_t        numVtx;    //!< ignored if index buffer is NULL.
@@ -713,7 +717,7 @@ namespace GN { namespace gfx
         //! Bind programmable shader handles to rendering device. Set to 0 to use
         //! fixed pipeline.
         //!
-        void bindShaderHandles( uint32_t vtxShader, uint32_t pxlShader );
+        void bindShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
 
         //!
         //! Bind programmable vertex shader to rendering device. Set to NULL to use
@@ -724,7 +728,7 @@ namespace GN { namespace gfx
         //!
         //! Bind shader by handle.
         //!
-        void bindVtxShaderHandle( uint32_t h ) { bindShader( VERTEX_SHADER, gShaderDict.getResource(h) ); }
+        void bindVtxShaderHandle( ShaderDictionary::HandleType h ) { bindShader( VERTEX_SHADER, gShaderDict.getResource(h) ); }
 
         //!
         //! Bind programmable pixel to rendering device. Set to NULL to use
@@ -735,7 +739,7 @@ namespace GN { namespace gfx
         //!
         //! Bind shader by handle.
         //!
-        void bindPxlShaderHandle( uint32_t h ) { bindShader( PIXEL_SHADER, gShaderDict.getResource(h) ); }
+        void bindPxlShaderHandle( ShaderDictionary::HandleType h ) { bindShader( PIXEL_SHADER, gShaderDict.getResource(h) ); }
 
         //@}
 
@@ -751,13 +755,13 @@ namespace GN { namespace gfx
         //! request a render state block object with specific render state block structure.
         //! Return 0, if failed.
         //!
-        virtual uint32_t
+        virtual RsbHandle
         createRenderStateBlock( const RenderStateBlockDesc & ) = 0;
 
         //!
         //! Bind render state block to rendering device
         //!
-        virtual void bindRenderStateBlock( uint32_t ) = 0;
+        virtual void bindRenderStateBlock( RsbHandle ) = 0;
 
         //!
         //! Get current render state.
@@ -1010,7 +1014,7 @@ namespace GN { namespace gfx
         //!
         //! Create vertex bindings.
         //!
-        virtual uint32_t createVtxBinding( const VtxFmtDesc & ) = 0;
+        virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & ) = 0;
 
         //!
         //! Create new vertex buffer
@@ -1054,7 +1058,7 @@ namespace GN { namespace gfx
         //!
         //! Bind vertex bindings
         //!
-        virtual void bindVtxBinding( uint32_t ) = 0;
+        virtual void bindVtxBinding( VtxBindingHandle ) = 0;
 
         //!
         //! Bind a serias vertex buffers to rendering device.
@@ -1260,7 +1264,7 @@ namespace GN { namespace gfx
         //!
         //! Set single texture state
         //!
-        void setTextureState( uint32_t stage, TextureState state, TextureStateValue value )
+        void setTextureState( size_t stage, TextureState state, TextureStateValue value )
         {
             GN_ASSERT( stage < MAX_TEXTURE_STAGES );
             GN_ASSERT( 0 <= state && state < NUM_TEXTURE_STATES );
@@ -1321,7 +1325,7 @@ namespace GN { namespace gfx
         //!
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
-                                      uint32_t level = 0,
+                                      size_t level = 0,
                                       TexFace face = TEXFACE_PX ) = 0;
 
         //!
@@ -1336,7 +1340,7 @@ namespace GN { namespace gfx
         //!     Ignored if target_texture is not cubemap.
         //!
         virtual void setRenderDepth( const Texture * texture,
-                                     uint32_t level = 0,
+                                     size_t level = 0,
                                      TexFace face = TEXFACE_PX ) = 0;
 
         //@}
@@ -1390,7 +1394,7 @@ namespace GN { namespace gfx
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
                      float z = 1.0f, uint32_t s = 0,
-                     uint32_t flags = C_BUFFER | Z_BUFFER ) = 0;
+                     BitField flags = C_BUFFER | Z_BUFFER ) = 0;
 
         //!
         //! Draw indexed primitives.
@@ -1471,7 +1475,7 @@ namespace GN { namespace gfx
         //!     Number of quads.
         //!
         virtual void drawQuads(
-            uint32_t options,
+            BitField options,
             const void * positions, size_t posStride,
             const void * texcoords, size_t texStride,
             size_t count ) = 0;
@@ -1480,7 +1484,7 @@ namespace GN { namespace gfx
         //! Draw quads, with same position and texture stride.
         //!
         void drawQuads(
-            uint32_t options,
+            BitField options,
             const void * positions, const void * texcoords, size_t stride,
             size_t count )
         {
@@ -1493,7 +1497,7 @@ namespace GN { namespace gfx
         //! \note This function may not very effecient.
         //!
         void draw2DQuad(
-            uint32_t options,
+            BitField options,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
         {
