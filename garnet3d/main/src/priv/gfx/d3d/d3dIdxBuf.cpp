@@ -8,7 +8,7 @@
 
 // Note: these two functions are implemented in d3dVtxBuf.cpp
 extern DWORD sBufUsage2D3D( bool dynamic );
-extern DWORD sLockFlags2D3D( bool dynamic, uint32_t lock );
+extern DWORD sLockFlags2D3D( bool dynamic, GN::gfx::LockFlag lock );
 
 // *****************************************************************************
 // init / quit functions
@@ -72,7 +72,7 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mLocked && !mD3DIb );
+    GN_ASSERT( !isLocked() && !mD3DIb );
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
@@ -119,7 +119,7 @@ void GN::gfx::D3DIdxBuf::deviceDispose()
 {
     GN_GUARD;
 
-    if( mLocked )
+    if( isLocked() )
     {
         unlock();
         GN_ERROR( "call unlock() before u dispose the index buffer!" );
@@ -137,48 +137,37 @@ void GN::gfx::D3DIdxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, uint32_t flag )
+uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
-    if( mLocked )
-    {
-        GN_ERROR( "This buffer is already locked!" );
-        return 0;
-    }
-    if( startIdx >= getNumIdx() )
-    {
-        GN_ERROR( "startIdx is beyond the end of index buffer!" );
-        return 0;
-    }
+    if( !basicLock( startIdx, numIdx, flag ) ) return false;
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DIdxBuf::basicUnlock) );
 
-    // adjust startIdx and numIdx
-    if( 0 == numIdx ) numIdx = getNumIdx();
-    if( startIdx + numIdx > getNumIdx() ) numIdx = getNumIdx() - startIdx;
-
+    uint16_t * buf;
     if( mSysCopy.empty() )
     {
-        void * buf;
         GN_DX_CHECK_RV(
             mD3DIb->Lock(
                 (UINT)( startIdx<<1 ),
                 (UINT)( numIdx<<1 ),
-                &buf,
+                (void**)&buf,
                 sLockFlags2D3D( isDynamic(), flag ) ),
             0 );
-        mLocked = true;
-        return (uint16_t*)buf;
     }
     else
     {
-        mLocked       = true;
         mLockStartIdx = startIdx;
         mLockNumIdx   = numIdx;
         mLockFlag     = flag;
-        return &mSysCopy[startIdx];
+        buf = &mSysCopy[startIdx];
     }
+
+    // success
+    basicUnlocker.dismiss();
+    return (uint16_t*)buf;
 
     GN_UNGUARD_SLOW;
 }
@@ -192,13 +181,7 @@ void GN::gfx::D3DIdxBuf::unlock()
 
     GN_ASSERT( selfOK() );
 
-    if( !mLocked )
-    {
-        GN_ERROR( "Can't unlock a index buffer that is not locked at all!" );
-        return;
-    }
-
-    mLocked = false;
+    if( !basicUnlock() ) return;
 
     if( mSysCopy.empty() )
     {

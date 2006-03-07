@@ -77,7 +77,7 @@ static bool sCreateMemoryTexture( GN::gfx::Texture * & result, const GN::StrA & 
     {
         // lock texture
         TexLockedResult tlr;
-        if( !tex->lock( tlr, 0, 0, 0, LOCK_WO | LOCK_DISCARD ) ) return false;
+        if( !tex->lock( tlr, 0, 0, 0, LOCK_DISCARD ) ) return false;
 
         // copy data
         const uint8_t * src = (const uint8_t*)memBuf;

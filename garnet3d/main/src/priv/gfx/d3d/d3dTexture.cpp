@@ -10,14 +10,36 @@
 //
 //
 // -----------------------------------------------------------------------------
-static inline DWORD sLockFlag2D3D( GN::BitField flag )
+static inline DWORD sLockFlag2D3D( DWORD d3dUsage, GN::gfx::LockFlag flag )
 {
     DWORD d3dflag = 0;
+
+    GN_UNUSED_PARAM( d3dUsage );
+    GN_UNUSED_PARAM( flag );
+
+    /*switch( flag )
+    {
+        case GN::gfx::LOCK_RW :
+            return 0;
+
+        case GN::gfx::LOCK_RO :
+            if( 
+            break;
+
+        case GN::gfx::LOCK_DISCARD :
+        case GN::gfx::LOCK_NO_OVERWRITE :
+        default :
+            GN_UNEXPECTED();
+            GN_ERROR( "invalid lock flag: %d", flag );
+            return 0;
+    }
+
+    if( GN::gfx::TEXUSAGE_READBACK & usage 
 
     if( (GN::gfx::LOCK_RO & flag) && !(GN::gfx::LOCK_WO & flag) )
     {
         d3dflag |= D3DLOCK_READONLY;
-    }
+    }*/
 
 #if GN_DEBUG
     d3dflag |= D3DLOCK_NOSYSLOCK;
@@ -147,6 +169,13 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
     d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_DEPTHSTENCIL : 0;
 
+    // Note: D3DUSAGE_DYNAMIC can't use with D3DUSAGE_RENDERTARGET and D3DUSAGE_DEPTH.
+    if( !(TEXUSAGE_RENDER_TARGET&usage) && !(TEXUSAGE_DEPTH) )
+    {
+        d3dUsage |= D3DUSAGE_WRITEONLY;
+        d3dUsage |= (TEXUSAGE_DYNAMIC & usage) ? D3DUSAGE_DYNAMIC : 0;
+    }
+
 #if GN_XENON
     if( TEXUSAGE_AUTOGEN_MIPMAP & usage )
     {
@@ -225,7 +254,19 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     {
         LPDIRECT3DTEXTURE9 tex;
         GN_DX_CHECK_DO(
-            D3DXCreateTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
+            D3DXCreateTextureFromFileInMemoryEx(
+                dev,
+                &buf[0], (UINT)sz,
+                D3DX_DEFAULT, D3DX_DEFAULT, // width, height
+                D3DX_DEFAULT, // miplevels
+                0, // usage
+                D3DFMT_UNKNOWN,
+                D3DPOOL_DEFAULT,
+                D3DX_DEFAULT, D3DX_DEFAULT, // filters
+                0, // colorkey
+                NULL, // source info
+                NULL, // palette
+                &tex ),
             quit(); return selfOK(); );
 
         D3DSURFACE_DESC desc;
@@ -253,7 +294,19 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     {
         LPDIRECT3DVOLUMETEXTURE9 tex;
         GN_DX_CHECK_DO(
-            D3DXCreateVolumeTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
+            D3DXCreateVolumeTextureFromFileInMemoryEx(
+                dev,
+                &buf[0], (UINT)sz,
+                D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, // width, height and depth
+                D3DX_DEFAULT, // miplevels
+                0, // usage
+                D3DFMT_UNKNOWN,
+                D3DPOOL_DEFAULT,
+                D3DX_DEFAULT, D3DX_DEFAULT, // filters
+                0, // colorkey
+                NULL, // source info
+                NULL, // palette
+                &tex ),
             quit(); return selfOK(); );
 
         D3DVOLUME_DESC desc;
@@ -281,7 +334,18 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     {
         LPDIRECT3DCUBETEXTURE9 tex;
         GN_DX_CHECK_DO(
-            D3DXCreateCubeTextureFromFileInMemory( dev, &buf[0], (UINT)sz, &tex ),
+            D3DXCreateCubeTextureFromFileInMemoryEx(
+                dev, &buf[0], (UINT)sz,
+                D3DX_DEFAULT, // width
+                D3DX_DEFAULT, // miplevels
+                0, // usage
+                D3DFMT_UNKNOWN,
+                D3DPOOL_DEFAULT,
+                D3DX_DEFAULT, D3DX_DEFAULT, // filters
+                0, // colorkey
+                NULL, // source info
+                NULL, // palette
+                &tex ),
             quit(); return selfOK(); );
 
         D3DSURFACE_DESC desc;
@@ -314,6 +378,10 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
     // store texture properties
     texDesc.usage = 0;
     if( !setDesc( texDesc ) ) return false;
+
+    // setup other properites
+    mD3DUsage = 0;
+    mWritable = true;
 
     // success
     return selfOK();
@@ -379,11 +447,8 @@ bool GN::gfx::D3DTexture::deviceRestore()
         return false;
     }
 
-    // determine D3D usage & pool
+    // determine D3D usage
     mD3DUsage = texUsage2D3DUsage( getDesc().usage );
-    D3DPOOL d3dpool =
-        ( TEXUSAGE_RENDER_TARGET & getDesc().usage || TEXUSAGE_DEPTH & getDesc().usage )
-        ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED;
 
     // check texture format compatibility
     HRESULT hr = mRenderer.checkD3DDeviceFormat(
@@ -399,15 +464,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 #endif
     GN_DX_CHECK_RV(hr, false );
 
-#if !GN_XENON
-    // evict managed resources first, if creating texture in default pool.
-    if( D3DPOOL_DEFAULT == d3dpool )
-    {
-        GN_DX_CHECK_RV( mRenderer.getDevice()->EvictManagedResources(), 0 );
-    }
-#endif
-
-    // create texture instance in default pool
+    // create texture instance
     const Vector3<uint32_t> & sz = getBaseSize();
     mD3DTexture = newD3DTexture(
         getDesc().type,
@@ -415,8 +472,24 @@ bool GN::gfx::D3DTexture::deviceRestore()
         getDesc().levels,
         mD3DUsage,
         d3dfmt,
-        d3dpool );
+        D3DPOOL_DEFAULT );
     if( 0 == mD3DTexture ) return false;
+
+    // create shadow copy
+    if( TEXUSAGE_READBACK & getDesc().usage )
+    {
+        mShadowCopy = newD3DTexture(
+            getDesc().type,
+            sz.x, sz.y, sz.z,
+            getDesc().levels,
+            0,
+            d3dfmt,
+            D3DPOOL_SYSTEMMEM );
+    }
+
+    // setup misc. flag
+    mWritable = !(mD3DUsage & D3DUSAGE_RENDERTARGET)
+             && !(mD3DUsage & D3DUSAGE_DEPTHSTENCIL);
 
     // call user-defined content loader
     if( !getLoader().empty() )
@@ -444,7 +517,10 @@ void GN::gfx::D3DTexture::deviceDispose()
         unlock();
     }
 
+    GN_ASSERT( !mLockCopy );
+
     safeRelease( mD3DTexture );
+    safeRelease( mShadowCopy );
 
     GN_UNGUARD;
 }
@@ -529,7 +605,7 @@ bool GN::gfx::D3DTexture::lock(
     size_t face,
     size_t level,
     const Boxi * area,
-    BitField flag )
+    LockFlag flag )
 {
     GN_GUARD_SLOW;
 
@@ -537,6 +613,30 @@ bool GN::gfx::D3DTexture::lock(
     Boxi clippedArea;
     if( !basicLock( face, level, area, clippedArea ) ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
+
+    bool readBack = LOCK_RO == flag || LOCK_RW == flag;
+
+    if( mShadowCopy ) mLockedTexture = mShadowCopy;
+    else if( readBack || !mWritable )
+    {
+        // create temporary surface for read-lock of non-shadow texture,
+        // or write-lock of non-writable texture.
+        GN_ASSERT( !mLockCopy );
+        size_t sx, sy, sz;
+        getBaseSize( &sx, &sy, &sz );
+        mLockCopy = newD3DTexture(
+            getDesc().type,
+            sx, sy, sz,
+            getDesc().levels,
+            0,
+            d3d::clrFmt2D3DFormat( getDesc().format ),
+            D3DPOOL_SYSTEMMEM );
+        if( 0 == mLockCopy ) return false;
+        mLockedTexture = mLockCopy;
+    }
+    else mLockedTexture = mD3DTexture;
+
+    DWORD d3dLockFlag = sLockFlag2D3D( mD3DUsage, flag );
 
     switch( getDesc().type )
     {
@@ -550,8 +650,8 @@ bool GN::gfx::D3DTexture::lock(
             rc.bottom = clippedArea.y + clippedArea.h;
 
             D3DLOCKED_RECT lrc;
-            GN_DX_CHECK_RV( static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture)->LockRect(
-                (UINT)level, &lrc, &rc, sLockFlag2D3D(flag) ), false );
+            GN_DX_CHECK_RV( static_cast<LPDIRECT3DTEXTURE9>(mLockedTexture)->LockRect(
+                (UINT)level, &lrc, &rc, d3dLockFlag ), false );
 
             result.rowBytes = lrc.Pitch;
             result.sliceBytes = lrc.Pitch * clippedArea.h;
@@ -570,8 +670,8 @@ bool GN::gfx::D3DTexture::lock(
             box.Back = clippedArea.z + clippedArea.d;
 
             D3DLOCKED_BOX lb;
-            GN_DX_CHECK_RV( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture)->LockBox(
-                (UINT)level, &lb, &box, sLockFlag2D3D(flag) ), false );
+            GN_DX_CHECK_RV( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mLockedTexture)->LockBox(
+                (UINT)level, &lb, &box, d3dLockFlag ), false );
 
             result.rowBytes = lb.RowPitch;
             result.sliceBytes = lb.SlicePitch;
@@ -590,8 +690,8 @@ bool GN::gfx::D3DTexture::lock(
             GN_ASSERT( face < 6 );
 
             D3DLOCKED_RECT lrc;
-            GN_DX_CHECK_RV( static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture)->LockRect(
-                sTexFace2D3D(face), (UINT)level, &lrc, &rc, sLockFlag2D3D(flag) ), false );
+            GN_DX_CHECK_RV( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->LockRect(
+                sTexFace2D3D(face), (UINT)level, &lrc, &rc, d3dLockFlag ), false );
 
             result.rowBytes = lrc.Pitch;
             result.sliceBytes = lrc.Pitch * clippedArea.h;
@@ -606,6 +706,7 @@ bool GN::gfx::D3DTexture::lock(
     }
 
     // success
+    mLockedFlag = flag;
     mLockedFace = face;
     mLockedLevel = level;
     basicUnlocker.dismiss();
@@ -623,19 +724,33 @@ void GN::gfx::D3DTexture::unlock()
 
     if( !basicUnlock() ) return;
 
+    GN_ASSERT( mLockedTexture );
+
     // unlock texture
     if( TEXTYPE_1D == getDesc().type || TEXTYPE_2D == getDesc().type )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DTEXTURE9>(mD3DTexture)->UnlockRect( (UINT)mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DTEXTURE9>(mLockedTexture)->UnlockRect( (UINT)mLockedLevel ) );
     }
     else if( TEXTYPE_3D == getDesc().type )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mD3DTexture)->UnlockBox( (UINT)mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mLockedTexture)->UnlockBox( (UINT)mLockedLevel ) );
     }
     else if( TEXTYPE_CUBE == getDesc().type )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mD3DTexture)->UnlockRect( sTexFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->UnlockRect( sTexFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
+
+    if( LOCK_RO == mLockedFlag || mLockedTexture == mD3DTexture )
+    {
+        safeRelease( mLockCopy );
+        return;
+    }
+
+    // copy data from mLockedTexture to mD3DTexture
+    GN_DX_CHECK( mRenderer.getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
+
+    // release mLockCopy
+    safeRelease( mLockCopy );
 
     GN_UNGUARD_SLOW;
 }
@@ -682,6 +797,14 @@ GN::gfx::D3DTexture::newD3DTexture( TexType   type,
     // make sure texture format is supported by current device
     GN_ASSERT( D3D_OK == mRenderer.checkD3DDeviceFormat(
         d3dusage, texType2D3DResourceType(getDesc().type), d3dformat ) );
+
+#if !GN_XENON
+    // evict managed resources first, if creating texture in default pool.
+    if( D3DPOOL_DEFAULT == d3dpool )
+    {
+        GN_DX_CHECK_RV( mRenderer.getDevice()->EvictManagedResources(), 0 );
+    }
+#endif
 
     // create new texture
     if( TEXTYPE_1D == type || TEXTYPE_2D == type )

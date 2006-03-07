@@ -20,8 +20,11 @@ TODO
     - refine resource lock flags
       - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
       - no combination.
+    - consider removing syscopy from vertex/index buffer
     - Why D3D quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
+    - UT: format conversion between ClrFmt and D3DFMT
+    - test: IDirect3DDevice9::UpdateTexture() when target is render target texture.
   - code page convertor
   - sample application
     - GLSL test application

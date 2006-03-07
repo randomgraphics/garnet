@@ -190,7 +190,7 @@ namespace GN { namespace gfx
                 size_t face,
                 size_t level,
                 const Boxi * area,
-                BitField flag )
+                LockFlag flag )
             {
                 result.data = &mBuffer[0];
                 const ClrFmtDesc & desc = getClrFmtDesc( getDesc().format );
@@ -240,7 +240,7 @@ namespace GN { namespace gfx
 
             FakeVtxBuf( size_t bytes ) { mBuffer.resize(bytes); }
 
-            virtual void * lock( size_t offset, size_t bytes, uint32_t flag ) { return &mBuffer[0]; }
+            virtual void * lock( size_t offset, size_t bytes, LockFlag flag ) { return &mBuffer[0]; }
             virtual void unlock() {}
         };
 
@@ -252,7 +252,7 @@ namespace GN { namespace gfx
 
             FakeIdxBuf( size_t numIdx ) { mBuffer.resize(numIdx); }
 
-            virtual uint16_t * lock( size_t startIdx, size_t numIdx, uint32_t flag ) { return &mBuffer[0]; }
+            virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag ) { return &mBuffer[0]; }
             virtual void unlock() {}
         };
 

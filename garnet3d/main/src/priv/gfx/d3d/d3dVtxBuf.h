@@ -7,13 +7,14 @@
 // *****************************************************************************
 
 #include "d3dResource.h"
+#include "../common/basicBuffer.h"
 
 namespace GN { namespace gfx
 {
     //!
     //! D3D vertex buffer class.
     //!
-    class D3DVtxBuf : public VtxBuf, public D3DResource, public StdClass
+    class D3DVtxBuf : public BasicVtxBuf, public D3DResource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3DVtxBuf, StdClass );
 
@@ -41,7 +42,6 @@ namespace GN { namespace gfx
         {
             mSysCopy.clear();
             mD3DVb = 0;
-            mLocked = false;
         }
         //@}
 
@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, uint32_t flag );
+        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
         virtual void unlock();
 
         // ********************************
@@ -84,10 +84,9 @@ namespace GN { namespace gfx
 
         std::vector<uint8_t>    mSysCopy;
         LPDIRECT3DVERTEXBUFFER9 mD3DVb;
-        bool                    mLocked;
         size_t                  mLockOffset;
         size_t                  mLockBytes;
-        uint32_t                mLockFlag;
+        LockFlag                mLockFlag;
     };
 }}
 

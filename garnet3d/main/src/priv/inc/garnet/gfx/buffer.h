@@ -42,7 +42,7 @@ namespace GN { namespace gfx
         void setLoader( const VtxBufLoader & loader ) { mLoader = loader; }
 
         //!
-        //! Lock specific stream
+        //! Lock vertex buffer
         //!
         //! \param offset
         //!     offset in bytes of lock range.
@@ -50,11 +50,11 @@ namespace GN { namespace gfx
         //!     bytes of lock range. '0' means to the end of the buffer.
         //! \param flag
         //!     Locking flags, see LockFlag.
-        //!     Note that LOCK_RO can be used for buffer that has system copy
+        //!     Note that LOCK_RW and LOCK_RO can only be used for buffers with system copy
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual void * lock( size_t offset, size_t bytes, uint32_t flag ) = 0;
+        virtual void * lock( size_t offset, size_t bytes, LockFlag flag ) = 0;
 
         //!
         //! Unlock specific stream
@@ -113,11 +113,11 @@ namespace GN { namespace gfx
         //!     index count of this locking, '0' means to the end of the buffer.
         //! \param flag
         //!     Locking flags, see LockFlag.
-        //!     Note that LOCK_RO can be used for buffer that has system copy
+        //!     Note that LOCK_RW and LOCK_RO can only be used for buffers with system copy
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual uint16_t * lock( size_t startIdx, size_t numIdx, uint32_t flag ) = 0;
+        virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag ) = 0;
 
         //!
         //! unlock the buffer
