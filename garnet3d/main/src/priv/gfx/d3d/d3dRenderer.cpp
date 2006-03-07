@@ -167,6 +167,7 @@ bool GN::gfx::D3DRenderer::changeOptions( RendererOptions ro, bool forceRecreati
     }
     else if(
         oldDesc != newDesc ||
+        oldOptions.msaa != ro.msaa ||
         oldOptions.fullscreen != ro.fullscreen ||
         oldOptions.vsync != ro.vsync )
     {
