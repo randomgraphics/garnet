@@ -32,11 +32,12 @@ namespace GN { namespace gfx
     //!
     enum LockFlag
     {
-        LOCK_RO = 1,                 //!< 只读锁定
-        LOCK_WO = 1 << 1,            //!< 只写锁定
-        LOCK_DISCARD = 1 << 2,       //!< Discard old content
-        LOCK_NO_OVERWRITE = 1 << 3,  //!< no overwrite to existing content
-        LOCK_RW = LOCK_RO | LOCK_WO  //!< 读写锁定
+        LOCK_RW,           //!< read-write lock, the slowest one.
+        LOCK_RO,           //!< read-only lock.
+        LOCK_WO,           //!< write-only lock
+        LOCK_DISCARD,      //!< write-only lock, discard old value.
+        LOCK_NO_OVERWRITE, //!< write-only lock, promise not to modify any section of the buffer being used.
+        NUM_LOCK_FLAGS     //!< number of lock flags.
     };
 
     //!

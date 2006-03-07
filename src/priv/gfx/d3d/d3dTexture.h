@@ -54,12 +54,14 @@ namespace GN { namespace gfx
         void clear()
         {
             mD3DTexture = 0;
+            mShadowCopy = 0;
             mD3DFilters[0] =
             mD3DFilters[1] = D3DTEXF_LINEAR;
             mD3DFilters[2] = D3DTEXF_NONE;
             mD3DWraps[0] =
             mD3DWraps[1] =
             mD3DWraps[2] = D3DTADDRESS_WRAP;
+            mLockCopy = 0;
         }
         //@}
 
@@ -81,7 +83,7 @@ namespace GN { namespace gfx
         virtual GN::Vector3<uint32_t> getMipSize( size_t level ) const;
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, BitField flag );
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap();
         virtual void * getAPIDependentData() const { return getD3DTexture(); }
@@ -165,9 +167,23 @@ namespace GN { namespace gfx
         IDirect3DBaseTexture9 * mD3DTexture;
 
         //!
+        //! shadow copy in system memory
+        //!
+        IDirect3DBaseTexture9 * mShadowCopy;
+
+        //!
+        //! temporary copy in system memory for lock operation
+        //!
+        IDirect3DBaseTexture9 * mLockCopy;
+
+        //!
         //! D3D texture parameters
         //!
+        //@{
         DWORD mD3DUsage;
+        //@}
+
+        bool mWritable;  //!< Is the D3D texture writable?
 
         //!
         //! D3D filters( min, mag, mip )
@@ -183,9 +199,15 @@ namespace GN { namespace gfx
         //! \name locking related variables
         //!
         //@{
+        IDirect3DBaseTexture9 * mLockedTexture;
+        LockFlag mLockedFlag;
         size_t mLockedFace;
         size_t mLockedLevel;
         //@}
+
+        //!
+        //! System copy of texture content
+        //!
 
         // ********************************
         // private functions

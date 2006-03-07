@@ -40,6 +40,9 @@ namespace GN { namespace gfx
         TEXUSAGE_AUTOGEN_MIPMAP = 1<<1, //!< texture that can auto-generate mipmaps
         TEXUSAGE_RENDER_TARGET  = 1<<2, //!< render target texture
         TEXUSAGE_DEPTH          = 1<<3, //!< depth texture
+        TEXUSAGE_READBACK       = 1<<4, //!< Normally, read data from texture is extremly slow.
+                                        //!< Use this flag to increase reading speed, in exchange for rendering speed.
+                                        //!< Use this flag when you really need it.
     };
 
     //!
@@ -191,7 +194,7 @@ namespace GN { namespace gfx
         //! \param face     Specify face you want to lock.
         //! \param level    Specify mipmap level you want to lock.
         //! \param area     Specify locking area in the mipmap. Null means whole level.
-        //! \param flag     Locking flags. See LockFlag for details.
+        //! \param flag     Locking flag. See LockFlag for details.
         //!
         //! \return         Return false, if locking failed.
         //!
@@ -200,12 +203,12 @@ namespace GN { namespace gfx
             size_t face,
             size_t level,
             const Boxi * area,
-            BitField flag ) = 0;
+            LockFlag flag ) = 0;
 
         //!
-        //! lock a 1D texture, only can be called on 1D texture
+        //! lock a 1D texture.
         //!
-        void * lock1D( size_t level, size_t offset, size_t length, BitField flag )
+        void * lock1D( size_t level, size_t offset, size_t length, LockFlag flag )
         {
             GN_ASSERT( TEXTYPE_1D == getDesc().type );
             TexLockedResult result;

@@ -58,7 +58,7 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
 
         const MipmapDesc & m = desc.getMipmap( f, l );
 
-        if( !p->lock( tlr, f, l, 0, LOCK_WO|LOCK_DISCARD ) ) return false;
+        if( !p->lock( tlr, f, l, 0, LOCK_DISCARD ) ) return false;
 
         GN_ASSERT(
             m.width <= p->getMipSize(l).x &&

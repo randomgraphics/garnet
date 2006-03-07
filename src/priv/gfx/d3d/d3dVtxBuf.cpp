@@ -21,28 +21,33 @@ DWORD sBufUsage2D3D( bool dynamic )
 //!
 //! convert garnet buffer lock flags to D3D flags
 // ----------------------------------------------------------------------------
-DWORD sLockFlags2D3D( bool dynamic, uint32_t lock )
+DWORD sLockFlags2D3D( bool dynamic, GN::gfx::LockFlag flag )
 {
-    DWORD d3dFlag;
+    using namespace GN::gfx;
 
-    if( dynamic )
+    static DWORD staticFlags[] =
     {
-        if( GN::gfx::LOCK_RO == lock )
-            d3dFlag = D3DLOCK_READONLY;
-        else if( GN::gfx::LOCK_WO == lock || GN::gfx::LOCK_DISCARD == lock )
-            d3dFlag = D3DLOCK_DISCARD;
-        else if( GN::gfx::LOCK_NO_OVERWRITE == lock )
-            d3dFlag = D3DLOCK_NOOVERWRITE;
-        else
-            d3dFlag = 0;
-    }
-    else
+        0,
+        D3DLOCK_READONLY,
+        0,
+        0,
+        0
+    };
+    GN_CASSERT( sizeof(staticFlags)/sizeof(staticFlags[0]) == NUM_LOCK_FLAGS );
+
+    static DWORD dynamicFlags[] =
     {
-        if( GN::gfx::LOCK_RO == lock )
-            d3dFlag = D3DLOCK_READONLY;
-        else
-            d3dFlag = 0;
-    }
+        0,
+        D3DLOCK_READONLY,
+        0,
+        D3DLOCK_DISCARD,
+        D3DLOCK_NOOVERWRITE
+    };
+    GN_CASSERT( sizeof(dynamicFlags)/sizeof(dynamicFlags[0]) == NUM_LOCK_FLAGS );
+
+    GN_ASSERT( flag < NUM_LOCK_FLAGS );
+
+    DWORD d3dFlag = dynamic ? dynamicFlags[flag] : staticFlags[flag];
 
 #if GN_DEBUG
     d3dFlag |= D3DLOCK_NOSYSLOCK;
@@ -111,7 +116,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mLocked && !mD3DVb );
+    GN_ASSERT( !isLocked() && !mD3DVb );
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
@@ -160,7 +165,7 @@ void GN::gfx::D3DVtxBuf::deviceDispose()
 {
     GN_GUARD;
 
-    if( mLocked )
+    if( isLocked() )
     {
         unlock();
         GN_ERROR( "call unlock() before u release the vertex buffer!" );
@@ -178,30 +183,18 @@ void GN::gfx::D3DVtxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, uint32_t flag )
+void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
-    if( mLocked )
-    {
-        GN_ERROR( "Vertex buffer is already locked!" );
-        return 0;
-    }
-    if( offset >= getSizeInBytes() )
-    {
-        GN_ERROR( "offset is beyond the end of vertex buffer!" );
-        return 0;
-    }
+    if( !basicLock( offset, bytes, flag ) ) return false;
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DVtxBuf::basicUnlock) );
 
-    // adjust offset and bytes
-    if( 0 == bytes ) bytes = getSizeInBytes();
-    if( offset + bytes > getSizeInBytes() ) bytes = getSizeInBytes() - offset;
-
+    void * buf;
     if ( mSysCopy.empty() )
     {
-        void * buf;
         GN_DX_CHECK_RV(
             mD3DVb->Lock(
                 (UINT)offset,
@@ -209,17 +202,18 @@ void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, uint32_t flag )
                 &buf,
                 sLockFlags2D3D(isDynamic(),flag) ),
             0 );
-        mLocked = true;
-        return buf;
     }
     else
     {
-        mLocked     = true;
         mLockOffset = offset;
         mLockBytes  = bytes;
         mLockFlag   = flag;
-        return &mSysCopy[offset];
+        buf = &mSysCopy[offset];
     }
+
+    // success
+    basicUnlocker.dismiss();
+    return buf;
 
     GN_UNGUARD_SLOW;
 }
@@ -233,13 +227,7 @@ void GN::gfx::D3DVtxBuf::unlock()
 
     GN_ASSERT( selfOK() );
 
-    if( !mLocked )
-    {
-        GN_ERROR( "Can't unlock a vertex buffer that is not locked at all!" );
-        return;
-    }
-
-    mLocked = false;
+    if( !basicUnlock() ) return;
 
     if ( mSysCopy.empty() )
     {
