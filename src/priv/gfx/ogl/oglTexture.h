@@ -37,12 +37,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( TexType  type,
-                   size_t sx, size_t sy, size_t sz,
-                   size_t faces,
-                   size_t levels,
-                   ClrFmt   format,
-                   BitField usage );
+        bool init( TextureDesc );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -74,7 +69,7 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void getMipSize( size_t level, size_t * sx, size_t * sy, size_t * sz ) const;
+        virtual Vector3<uint32_t> getMipSize( size_t level ) const;
         virtual void setFilter( TexFilter, TexFilter ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, BitField flag );
@@ -96,7 +91,7 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
 
-            switch( getType() )
+            switch( getDesc().type )
             {
                 case TEXTYPE_1D   :
                 case TEXTYPE_2D   :
@@ -139,7 +134,7 @@ namespace GN { namespace gfx
                 GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB,
                 GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB,
             };
-            GN_ASSERT( 0 <= face && face < 6 );
+            GN_ASSERT( face < 6 );
             return sTable[face];
         }
 

@@ -43,33 +43,13 @@ bool GN::gfx::ImageDesc::valid() const
             GN_ERROR( "mipmaps[%d] size is zero!", l );
             return false;
         }
-        /*if( IMG_1D == type && ( 1 != m.height || 1 != m.depth ) )
-        {
-            GN_ERROR( "height and depth must be 1 for 1D image!" );
-            return false;
-        }
-        if( IMG_2D == type && 1 != m.depth )
-        {
-            GN_ERROR( "depth must be 1 for 2D image!" );
-            return false;
-        }
-        if( IMG_CUBE == type && 6 != m.depth )
-        {
-            GN_ERROR( "depth must be 6 for cubemap!" );
-            return false;
-        }
-        if( IMG_CUBE == type && (m.width != m.height) )
-        {
-            GN_ERROR( "width and height must be equal for cubemap!" );
-            return false;
-        }*/
 
         // check pitches
-        size_t w = m.width / fd.blockWidth;
-        size_t h = m.height / fd.blockHeight;
+        uint32_t w = m.width / fd.blockWidth;
+        uint32_t h = m.height / fd.blockHeight;
         if( 0 == w ) w = 1;
         if( 0 == h ) h = 1;
-        if( m.rowPitch != (uint32_t)w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
+        if( m.rowPitch != w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
         {
             GN_ERROR( "rowPitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;

@@ -109,7 +109,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
             return;
         }
         // make sure target texture is a RTT
-        if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getUsage()) )
+        if( tex && !(TEXUSAGE_RENDER_TARGET & tex->getDesc().usage) )
         {
             GN_ERROR( "Only texture with TEXUSAGE_RENDER_TARGET usage can be used as render target." );
             return;
@@ -127,7 +127,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     if( tex )
     {
         // check texture's creation flag
-        if( !(TEXUSAGE_RENDER_TARGET & tex->getUsage() ) )
+        if( !(TEXUSAGE_RENDER_TARGET & tex->getDesc().usage ) )
         {
             GN_ERROR( "Texture must have usage of TEXUSAGE_RENDER_TARGET!" );
             return;
@@ -187,7 +187,7 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, uint32_t level, 
     // check texture's creation flag
     if( isParameterCheckEnabled() )
     {
-        if( tex && !(TEXUSAGE_DEPTH & tex->getUsage()) )
+        if( tex && !(TEXUSAGE_DEPTH & tex->getDesc().usage) )
         {
             GN_ERROR( "can't set non-depth-texture as depth buffer!" );
             return;

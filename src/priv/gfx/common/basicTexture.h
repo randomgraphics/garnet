@@ -52,30 +52,29 @@ namespace GN { namespace gfx
             }
 
             // check face
-            if( face >= getFaces() )
+            if( face >= getDesc().faces )
             {
                 GN_ERROR( "invalid lock face : %d", face );
                 return false;
             }
 
             // check level
-            if( level >= getLevels() )
+            if( level >= getDesc().levels )
             {
                 GN_ERROR( "invalid lock level : %d", level );
                 return false;
             }
 
             // get texture size
-            size_t sx, sy, sz;
-            getMipSize( level, &sx, &sy, &sz );
+            Vector3<uint32_t> sz = getMipSize( level );
 
             // make sure lock area is valid
             if( area )
             {
                 clippedArea = *area;
-                if( !sAdjustOffsetAndRange( clippedArea.x, clippedArea.w, (int)sx ) ||
-                    !sAdjustOffsetAndRange( clippedArea.y, clippedArea.h, (int)sy ) ||
-                    !sAdjustOffsetAndRange( clippedArea.z, clippedArea.d, (int)sz ) )
+                if( !sAdjustOffsetAndRange( clippedArea.x, clippedArea.w, (int)sz.x ) ||
+                    !sAdjustOffsetAndRange( clippedArea.y, clippedArea.h, (int)sz.y ) ||
+                    !sAdjustOffsetAndRange( clippedArea.z, clippedArea.d, (int)sz.z ) )
                     return false;
             }
             else
@@ -83,9 +82,9 @@ namespace GN { namespace gfx
                 clippedArea.x = 0;
                 clippedArea.y = 0;
                 clippedArea.z = 0;
-                clippedArea.w = (int)sx;
-                clippedArea.h = (int)sy;
-                clippedArea.d = (int)sz;
+                clippedArea.w = (int)sz.x;
+                clippedArea.h = (int)sz.y;
+                clippedArea.d = (int)sz.z;
             }
             
             // success            

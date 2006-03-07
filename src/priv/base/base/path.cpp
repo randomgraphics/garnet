@@ -394,7 +394,7 @@ void GN::path::joinTo(
     size_t i = 0;
 
     // ignore leading empty parts
-    while( parts[i]->empty() && i < n ) ++i;
+    while( i < n && parts[i]->empty() ) ++i;
 
     if( i < n ) tmp = *parts[i], ++i;
 

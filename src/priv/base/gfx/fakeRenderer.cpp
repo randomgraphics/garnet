@@ -168,25 +168,20 @@ namespace GN { namespace gfx
 
             FakeTexture() {}
 
-            bool init( TexType type,
-                       size_t sx, size_t sy, size_t sz,
-                       size_t faces,
-                       size_t levels,
-                       ClrFmt   format,
-                       BitField usage )
+            bool init( const TextureDesc & desc )
             {
-                if( !setProperties( type, sx, sy, sz, faces, levels, format, usage ) ) return false;
-                mBuffer.resize( sx * sy * sz * getClrFmtDesc(format).bits / 8 );
+                if( !setDesc( desc ) ) return false;
+                mBuffer.resize( getDesc().width * getDesc().height * getDesc().depth * getClrFmtDesc(getDesc().format).bits / 8 );
                 return true;
             }
 
-            virtual void getMipSize( size_t level, size_t * sx, size_t * sy = 0, size_t * sz = 0 ) const
+            virtual Vector3<uint32_t> getMipSize( size_t level ) const
             {
-                size_t x, y, z;
-                getBaseSize( &x, &y, &z );
-                x >>= level; if( 0 == x ) x = 1; if( sx ) *sx = x;
-                y >>= level; if( 0 == y ) y = 1; if( sy ) *sy = y;
-                z >>= level; if( 0 == z ) z = 1; if( sz ) *sz = z;
+                Vector3<uint32_t> sz( getBaseSize() );
+                sz.x >>= level; if( 0 == sz.x ) sz.x = 1;
+                sz.y >>= level; if( 0 == sz.y ) sz.y = 1;
+                sz.z >>= level; if( 0 == sz.z ) sz.z = 1;
+                return sz;
             }
             virtual void setFilter( TexFilter, TexFilter ) const {}
             virtual void setWrap( TexWrap, TexWrap, TexWrap ) const {}
@@ -198,7 +193,7 @@ namespace GN { namespace gfx
                 BitField flag )
             {
                 result.data = &mBuffer[0];
-                const ClrFmtDesc & desc = getClrFmtDesc( getFormat() );
+                const ClrFmtDesc & desc = getClrFmtDesc( getDesc().format );
                 result.rowBytes = getBaseSize().x * desc.bits * desc.blockHeight / 8;
                 result.sliceBytes = result.rowBytes * getBaseSize().y / desc.blockHeight;
                 return true;
@@ -212,23 +207,18 @@ namespace GN { namespace gfx
 
         bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
         virtual Texture *
-        createTexture( TexType  textype,
-                       size_t   sx, size_t sy, size_t sz,
-                       size_t   faces,
-                       size_t   levels,
-                       ClrFmt   format,
-                       BitField usage,
-                       const TextureLoader & loader )
+        createTexture( const TextureDesc & desc, const TextureLoader & loader )
         {
             AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( textype, sx, sy, sz, faces, levels, format, usage ) ) return 0;
+            if( !tex->init( desc ) ) return 0;
             return tex.detach();
         }
 
         virtual Texture * createTextureFromFile( File & )
         {
+            TextureDesc desc = { TEXTYPE_2D, 256, 256, 1, 1, 1, FMT_D3DCOLOR, 0 };
             AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( TEXTYPE_2D, 256, 256, 1, 1, 1, FMT_D3DCOLOR, 0 ) ) return 0;
+            if( !tex->init( desc ) ) return 0;
             return tex.detach();
         }
 

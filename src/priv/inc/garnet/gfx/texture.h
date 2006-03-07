@@ -81,6 +81,31 @@ namespace GN { namespace gfx
         NUM_TEXFACES
     };
 
+    struct Texture;
+
+    //!
+    //! Texture content loader
+    //!
+    typedef Functor1<bool,Texture&> TextureLoader;
+
+    //!
+    //! Texture descriptor
+    //!
+    struct TextureDesc
+    {
+        TexType  type;      //!< texture type
+        uint32_t width;     //!< basemap width
+        uint32_t height;    //!< basemap height
+        uint32_t depth;     //!< basemap depth
+        uint32_t faces;     //!< face count. When used as parameter of Renderer::createTexture(),
+                            //!< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
+        uint32_t levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
+                            //!< you may set it to 0 to create full mipmap tower (down to 1x1).
+        ClrFmt   format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
+                            //!< you may set it to FMT_DEFAULT. To use default texture format.
+        BitField usage;     //!< usage
+    };
+
     //!
     //! 贴图锁定的返回结果
     //!
@@ -91,25 +116,20 @@ namespace GN { namespace gfx
         void * data;       //!< 指向被锁定图象的第一个字节
     };
 
-    struct Texture;
-
-    //!
-    //! Texture content loader
-    //!
-    typedef Functor1<bool,Texture&> TextureLoader;
-
     //!
     //! 贴图对象
     //!
     struct Texture : public RefCounter
     {
-        //! \name basic texture properties
-        //@{
+        //!
+        //! Get texture descriptor
+        //!
+        const TextureDesc & getDesc() const { return mDesc; }
 
         //!
-        //! get texture type
+        //! get size of base map
         //!
-        TexType getType() const { return mType; }
+        const Vector3<uint32_t> & getBaseSize() const { return *(const Vector3<uint32_t>*)&mDesc.width; }
 
         //!
         //! get size of base map
@@ -117,63 +137,28 @@ namespace GN { namespace gfx
         template<typename T>
         void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            if( sx ) *sx = (T)mSize.x;
-            if( sy ) *sy = (T)mSize.y;
-            if( sz ) *sz = (T)mSize.z;
+            const Vector3<uint32_t> & baseSize = getBaseSize();
+            if( sx ) *sx = (T)baseSize.x;
+            if( sy ) *sy = (T)baseSize.y;
+            if( sz ) *sz = (T)baseSize.z;
         }
-
-        //!
-        //! get size of base map
-        //!
-        const Vector3<size_t> & getBaseSize() const { return mSize; }
 
         //!
         //! get size of specific mip level
         //!
-        virtual void getMipSize( size_t level, size_t * sx, size_t * sy = 0, size_t * sz = 0 ) const = 0;
+        virtual Vector3<uint32_t> getMipSize( size_t level ) const = 0;
 
         //!
-        //! get size of specific mip level (templat version)
+        //! get size of specific mip level
         //!
         template<typename T>
-        void getMipSizeT( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
+        void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            size_t x, y, z;
-            getMipSize( level, &x, &y, &z );
-            if( sx ) *sx = (T)x;
-            if( sy ) *sy = (T)y;
-            if( sz ) *sz = (T)z;
+            Vector3<uint32_t> mipSize = getMipSize( level );
+            if( sx ) *sx = (T)mipSize.x;
+            if( sy ) *sy = (T)mipSize.y;
+            if( sz ) *sz = (T)mipSize.z;
         }
-
-        //!
-        //! get size of specific mip level
-        //!
-        Vector3<size_t> getMipSize( size_t level ) const
-        {
-            Vector3<size_t> sz;
-            getMipSize( level, &sz.x, &sz.y, &sz.z );
-            return sz;
-        }
-
-        //!
-        //! get number of faces
-        //!
-        size_t getFaces() const { return mFaces; }
-
-        //!
-        //! get number of mipmap levels
-        //!
-        size_t getLevels() const { return mLevels; }
-
-        //!
-        //! get texture format
-        //!
-        ClrFmt getFormat() const { return mFormat; }
-
-        //!
-        //! get texture usage
-        //!
-        BitField getUsage() const { return mUsage; }
 
         //!
         //! set texture filters
@@ -190,8 +175,6 @@ namespace GN { namespace gfx
         virtual void setWrap( TexWrap s,
                               TexWrap t = TEXWRAP_REPEAT,
                               TexWrap r = TEXWRAP_REPEAT ) const = 0;
-
-        //@}
 
         //!
         //! Set content loader
@@ -224,7 +207,7 @@ namespace GN { namespace gfx
         //!
         void * lock1D( size_t level, size_t offset, size_t length, BitField flag )
         {
-            GN_ASSERT( TEXTYPE_1D == getType() );
+            GN_ASSERT( TEXTYPE_1D == getDesc().type );
             TexLockedResult result;
             Boxi area;
             area.x = (int)offset;
@@ -263,36 +246,27 @@ namespace GN { namespace gfx
     protected :
 
         //!
-        //! Set texture properties. Subclass must call this function to set 
+        //! Set texture descriptor. Subclass must call this function to set 
         //! all texture properities to valid value.
         //!
-        //!  - for 1D texture, mSize.y and size_z is always 1
-        //!  - for non-3D texture, mSize.z is always 1
-        //!  - for cube texture, mSize.y is always equal to mSize.x
-        //!
-        bool setProperties( TexType  type,
-                            size_t   sx, size_t sy, size_t sz,
-                            size_t   faces,
-                            size_t   levels,
-                            ClrFmt   format,
-                            BitField usage )
+        bool setDesc( const TextureDesc & desc )
         {
             // check type
-            if( type < 0 || type >= NUM_TEXTYPES )
+            if( desc.type < 0 || desc.type >= NUM_TEXTYPES )
             {
                 GN_ERROR( "invalid texture type!" );
                 return false;
             }
-            mType = type;
+            mDesc.type = desc.type;
 
             // initiate texture size
-            mSize.x =sx;
-            switch( type )
+            mDesc.width =desc.width;
+            switch( desc.type )
             {
                 case TEXTYPE_1D :
                 {
-                    mSize.y = 1;
-                    mSize.z = 1;
+                    mDesc.height = 1;
+                    mDesc.depth = 1;
                     break;
                 }
 
@@ -300,15 +274,15 @@ namespace GN { namespace gfx
                 case TEXTYPE_CUBE :
                 case TEXTYPE_STACK :
                 {
-                    mSize.y = sy;
-                    mSize.z = 1;
+                    mDesc.height = desc.height;
+                    mDesc.depth = 1;
                     break;
                 }
 
                 case TEXTYPE_3D :
                 {
-                    mSize.y = sy;
-                    mSize.z = sz;
+                    mDesc.height = desc.height;
+                    mDesc.depth = desc.depth;
                     break;
                 }
 
@@ -316,55 +290,55 @@ namespace GN { namespace gfx
             }
 
             // initialize face count
-            if( TEXTYPE_CUBE == type )
+            if( TEXTYPE_CUBE == desc.type )
             {
-                if( 0 != faces && 6 != faces )
+                if( 0 != desc.faces && 6 != desc.faces )
                 {
-                    GN_WARN( "Cubemap must have 6 faces." );
+                    GN_WARN( "Cubemap must have 6 desc.faces." );
                 }
-                mFaces = 6;
+                mDesc.faces = 6;
             }
-            else if( TEXTYPE_STACK == type )
+            else if( TEXTYPE_STACK == desc.type )
             {
-                mFaces = 0 == faces ? 1 : faces;
+                mDesc.faces = 0 == desc.faces ? 1 : desc.faces;
             }
             else
             {
-                if( 0 != faces && 1 != faces )
+                if( 0 != desc.faces && 1 != desc.faces )
                 {
                     GN_WARN( "Texture other then cube/stack texture can have only 1 face." );
                 }
-                mFaces = 1;
+                mDesc.faces = 1;
             }
 
             // calculate maximum mipmap levels
-            size_t nx = 0, ny = 0, nz = 0;
-            size_t maxLevels;
+            uint32_t nx = 0, ny = 0, nz = 0;
+            uint32_t maxLevels;
 
-            maxLevels = mSize.x;
+            maxLevels = mDesc.width;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nx; }
 
-            maxLevels = mSize.y;
+            maxLevels = mDesc.height;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++ny; }
 
-            maxLevels = mSize.z;
+            maxLevels = mDesc.depth;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
 
             maxLevels = max( max(nx, ny), nz );
 
-            mLevels = 0 == levels ? maxLevels : min( maxLevels, levels );
+            mDesc.levels = ( 0 == desc.levels ) ? maxLevels : min( maxLevels, desc.levels );
 
             // store format
-            if( ( format < 0 || format >= NUM_CLRFMTS ) &&
-                FMT_DEFAULT != format )
+            if( ( desc.format < 0 || desc.format >= NUM_CLRFMTS ) &&
+                FMT_DEFAULT != desc.format )
             {
-                GN_ERROR( "invalid texture format: %s", clrFmt2Str(format) );
+                GN_ERROR( "invalid texture format: %s", clrFmt2Str(desc.format) );
                 return false;
             }
-            mFormat = format;
+            mDesc.format = desc.format;
 
             // store usage flags
-            mUsage = usage;
+            mDesc.usage = desc.usage;
 
             // success
             return true;
@@ -376,14 +350,8 @@ namespace GN { namespace gfx
         const TextureLoader & getLoader() const { return mLoader; }
 
     private :
-
-        TexType           mType;    //!< texture type
-        Vector3<size_t>   mSize;    //!< texture size
-        size_t            mFaces;   //!< texture face count
-        size_t            mLevels;  //!< number of mipmap levels
-        ClrFmt            mFormat;  //!< pixel format
-        BitField          mUsage;   //!< usage flags
-        TextureLoader     mLoader;  //!< content loader
+        TextureDesc   mDesc;   //!< descriptor
+        TextureLoader mLoader; //!< content loader
     };
 
     //!

@@ -19,7 +19,7 @@ TODO
     - refine resource lock flags
       - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
       - no combination.
-    - Why quad renderer is so slow, comparing with CEGUI sample application.
+    - Why D3D quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
   - code page convertor
   - sample application
