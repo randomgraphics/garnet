@@ -596,7 +596,7 @@ sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase')
 tests = Split( 'GNut GNgfxTest GNinputTest GNft2Test GNguiTest' )
 samples = Split( 'GNdepthTexture GNrenderToTexture' )
-tools = []
+tools = Split( 'GNoglInfo' )
 programs = tests + samples + tools
 
 # populate sample directory
@@ -610,6 +610,12 @@ doInstall(
     'tests',
     os.path.join('bin','test'),
     sharedBins + tests )
+
+# populate tool directory
+doInstall(
+    'tools',
+    os.path.join('bin','tool'),
+    sharedBins + tools )
 
 # make executable depends on all shared libraries.
 for y in programs:
