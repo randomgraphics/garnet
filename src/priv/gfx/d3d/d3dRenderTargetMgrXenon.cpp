@@ -97,7 +97,7 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::setRenderTarget(
-    size_t index, const Texture * tex, uint32_t level, TexFace face )
+    size_t index, const Texture * tex, size_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -170,7 +170,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, uint32_t level, TexFace face )
+void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 

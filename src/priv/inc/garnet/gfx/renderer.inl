@@ -92,7 +92,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::bindShaderHandles( uint32_t vtxShader, uint32_t pxlShader )
+    inline void Renderer::bindShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader )
     {
         GN_GUARD_SLOW;
         const Shader * shaders[NUM_SHADER_TYPES];

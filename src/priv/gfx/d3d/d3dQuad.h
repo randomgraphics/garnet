@@ -71,7 +71,7 @@ namespace GN { namespace gfx {
         void drawQuads(
             const float * positions, size_t posStride,
             const float * texCoords, size_t texStride,
-            size_t count, uint32_t options );
+            size_t count, BitField options );
 
         // ********************************
         // private variables

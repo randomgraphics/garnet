@@ -79,7 +79,7 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceRestore()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::setRenderTarget(
-    size_t index, const Texture * tex, uint32_t level, TexFace face )
+    size_t index, const Texture * tex, size_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -175,7 +175,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::setRenderDepth(
-    const Texture * tex, uint32_t level, TexFace face )
+    const Texture * tex, size_t level, TexFace face )
 {
     GN_GUARD_SLOW;
 
@@ -200,9 +200,9 @@ void GN::gfx::OGLRenderer::setRenderDepth(
         // get texture size
         GLint sx, sy;
         GN_OGL_CHECK( glGetTexLevelParameteriv(
-                gltex->getOGLTarget(), level, GL_TEXTURE_WIDTH, &sx ) );
+                gltex->getOGLTarget(), (GLint)level, GL_TEXTURE_WIDTH, &sx ) );
         GN_OGL_CHECK( glGetTexLevelParameteriv(
-                gltex->getOGLTarget(), level, GL_TEXTURE_HEIGHT, &sy ) );
+                gltex->getOGLTarget(), (GLint)level, GL_TEXTURE_HEIGHT, &sy ) );
 
         // copy framebuffer to current render target texture
         TexType tt = mCurrentDepth.tex->getDesc().type;
@@ -211,14 +211,14 @@ void GN::gfx::OGLRenderer::setRenderDepth(
             GN_ASSERT( sx == sy );
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                OGLTexture::sCubeface2OGL(face), level,
+                OGLTexture::sCubeface2OGL(face), (GLint)level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
         }
         else if( TEXTYPE_2D == tt || TEXTYPE_1D == tt )
         {
             GN_OGL_CHECK( glBindTexture( GL_TEXTURE_2D, gltex->getOGLTexture() ) );
             GN_OGL_CHECK( glCopyTexImage2D(
-                GL_TEXTURE_2D, level,
+                GL_TEXTURE_2D, (GLint)level,
                 gltex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
         }
         else

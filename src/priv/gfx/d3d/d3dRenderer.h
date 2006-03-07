@@ -484,10 +484,10 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        virtual uint32_t createVtxBinding( const VtxFmtDesc & );
+        virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
         virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
-        virtual void bindVtxBinding( uint32_t );
+        virtual void bindVtxBinding( VtxBindingHandle );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
         virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
         virtual void bindIdxBuf( const IdxBuf * );
@@ -508,7 +508,7 @@ namespace GN { namespace gfx
 
     private :
 
-        HandleManager<D3DVtxBindingDesc,uint32_t> mVtxBindings;
+        HandleManager<D3DVtxBindingDesc,VtxBindingHandle> mVtxBindings;
 
         //@}
 
@@ -589,8 +589,8 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, uint32_t level, TexFace face );
-        virtual void setRenderDepth( const Texture * texture, uint32_t level, TexFace face );
+        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, TexFace face );
+        virtual void setRenderDepth( const Texture * texture, size_t level, TexFace face );
 
     private:
         bool renderTargetInit() { return true; }
@@ -635,7 +635,7 @@ namespace GN { namespace gfx
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, uint32_t flags );
+        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrims,
                                   size_t        startVtx,
@@ -656,7 +656,7 @@ namespace GN { namespace gfx
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawQuads( uint32_t options,
+        virtual void drawQuads( BitField options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count );
