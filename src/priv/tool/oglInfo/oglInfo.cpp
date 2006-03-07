@@ -108,6 +108,7 @@ void printOglInfo( GN::HandleType disp, int index )
         info += glexts[i] + " ";
     }
     info +=
+        "\n"
         "===================================================\n"
         "\n\n";
 
@@ -128,11 +129,7 @@ void doPrint( HDC hdc, int pfdIndex )
 {
     // Set the pixel format for the device context
     PIXELFORMATDESCRIPTOR pfd;
-    if( !SetPixelFormat(hdc, pfdIndex, &pfd) )
-    {
-        GN_ERROR( "SetPixelFormat failed!" );
-        return;
-    }
+    GN_MSW_CHECK_R( SetPixelFormat( hdc, pfdIndex, &pfd ) );
 
     // create OGL render context
     HGLRC hrc;
@@ -163,7 +160,7 @@ int main()
     int count = DescribePixelFormat(hdc, 1, 0, 0);
     GN_INFO( "%d pixelformats in total.", count );
 
-    for( int i = 0; i < count; ++i )
+    for( int i = 1; i <= count; ++i )
     {
         doPrint( hdc, i );
     }
