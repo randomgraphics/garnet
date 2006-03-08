@@ -7,7 +7,8 @@ BUGS
     - It seems caused by remote symbol loading
   - Render target image is up-side-down in OGL, comparing with D3D.
     - See GNrenderToTexture for an example.
-  - GNrenderToTexture : black screen on cygwin.
+  - GNrenderToTexture: black screen on cygwin.
+  - GNdepthTexture: extremly slow on ATI x1800, possibly caused by ARB programs.
 
 TODO
 ====
