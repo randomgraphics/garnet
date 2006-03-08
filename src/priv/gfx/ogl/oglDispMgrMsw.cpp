@@ -88,22 +88,18 @@ static int sChoosePixelFormat( HDC hdc )
     // prefer hardware than mixed, than software
     if( candidates[0] > 0 )
     {
-        GN_INFO( "select pixelformat #%d (ICD).", candidates[0] );
         return candidates[0];
     }
     else if( candidates[1] > 0 )
     {
-        GN_INFO( "select pixelformat #%d (MCD).", candidates[1] );
         return candidates[1];
     }
     else if( candidates[2] > 0 )
     {
-        GN_INFO( "select pixelformat #%d(what's this?).", candidates[2] );
         return candidates[2];
     }
     else if( candidates[3] > 0 )
     {
-        GN_INFO( "select pixelformat %d(Software).", candidates[3] );
         return candidates[3];
     }
 
@@ -152,6 +148,7 @@ static bool sSetupPixelFormat( HDC hdc )
     // choose pixel format
     int n = sChoosePixelFormat( hdc );
     if( 0 == n ) return false;
+    GN_INFO( "select pixelformat #%d.", n );
 
     // Set the pixel format for the device context
     if (!SetPixelFormat(hdc, n, &pfd))
