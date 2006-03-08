@@ -6,12 +6,14 @@
 //! \author  chenlee (2005.11.21)
 // *****************************************************************************
 
+#include "../common/basicBuffer.h"
+
 namespace GN { namespace gfx
 {
     //!
     //! OGL index buffer class
     //!
-    class OGLIdxBuf : public IdxBuf, public StdClass
+    class OGLIdxBuf : public BasicIdxBuf, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLIdxBuf, StdClass );
 
@@ -38,7 +40,6 @@ namespace GN { namespace gfx
         void clear()
         {
             mBuffer = 0;
-            mLocked = false;
         }
         //@}
 
@@ -47,8 +48,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual uint16_t * lock( size_t startIdx, size_t numIdx, uint32_t flag );
-        virtual void unlock() { mLocked = false; }
+        virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag );
+        virtual void unlock() {}
 
         // ********************************
         // public functions
@@ -66,7 +67,6 @@ namespace GN { namespace gfx
     private:
 
         uint16_t * mBuffer;
-        bool       mLocked;
 
         // ********************************
         // private functions

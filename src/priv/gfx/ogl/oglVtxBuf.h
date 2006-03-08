@@ -7,13 +7,14 @@
 // *****************************************************************************
 
 #include "oglTypes.h"
+#include "../common/basicBuffer.h"
 
 namespace GN { namespace gfx
 {
     //!
     //! Basic OGL vertex buffer class
     //!
-    struct OGLBasicVtxBuf : public VtxBuf
+    struct OGLBasicVtxBuf : public BasicVtxBuf
     {
         //!
         //! 返回指向顶点数据的指针
@@ -48,7 +49,7 @@ namespace GN { namespace gfx
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() { mBuffer = 0; mLocked = false; }
+        void clear() { mBuffer = 0; }
         //@}
 
         // ********************************
@@ -56,7 +57,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, uint32_t flag );
+        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
         virtual void unlock();
 
         // ********************************
@@ -72,7 +73,6 @@ namespace GN { namespace gfx
     private:
 
         uint8_t * mBuffer;
-        bool      mLocked;
     };
 
     //!
@@ -106,8 +106,7 @@ namespace GN { namespace gfx
         {
             mSysCopy = 0;
             mOGLVertexBufferObject = 0;
-            mLocked = false;
-        }
+         }
         //@}
 
         // ********************************
@@ -125,7 +124,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, uint32_t flag );
+        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
         virtual void unlock();
 
         // ********************************
@@ -147,10 +146,9 @@ namespace GN { namespace gfx
         uint8_t * mSysCopy;
         GLuint    mOGLVertexBufferObject;
         GLenum    mOGLUsage;
-        bool      mLocked;
         size_t    mLockOffset; //!< bytes from buffer start to locked start.
         size_t    mLockBytes;
-        uint32_t  mLockFlag;
+        LockFlag  mLockFlag;
     };
 }}
 

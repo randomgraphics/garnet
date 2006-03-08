@@ -17,9 +17,6 @@ TODO
 - p1
   - GFX system
     - add support to MSAA/FSAA
-    - refine resource lock flags
-      - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
-      - no combination.
     - consider removing syscopy from vertex/index buffer
     - Why D3D quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
@@ -71,6 +68,9 @@ DONE
 - SCons
   - EMT64 icl support
 - Refine GFX:
+  - refine resource lock flags
+    - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
+    - no combination.
   - OGL GLSL shader
   - parameter manager
   - quad renderer for GFXOGL module

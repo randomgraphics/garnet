@@ -118,7 +118,7 @@ void GN::gfx::OGLVtxBufVBO::deviceDestroy()
 {
     GN_GUARD;
 
-    if( mLocked )
+    if( isLocked() )
     {
         GN_WARN( "call unlock() before u release the vstream!" );
         unlock();
@@ -142,29 +142,15 @@ void GN::gfx::OGLVtxBufVBO::deviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufVBO::lock( size_t offset, size_t bytes, uint32_t flag )
+void * GN::gfx::OGLVtxBufVBO::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
-    if( mLocked )
-    {
-        GN_ERROR( "Vertex buffer is already locked!" );
-        return 0;
-    }
-    if( offset >= getSizeInBytes() )
-    {
-        GN_ERROR( "offset is beyond the end of vertex buffer!" );
-        return 0;
-    }
-
-    // adjust offset and bytes
-    if( 0 == bytes ) bytes = getSizeInBytes();
-    if( offset + bytes > getSizeInBytes() ) bytes = getSizeInBytes() - offset;
+    if( !basicLock( offset, bytes, flag ) ) return false;
 
     // store locking parameters
-    mLocked     = true;
     mLockOffset = offset;
     mLockBytes  = bytes;
     mLockFlag   = flag;
@@ -182,13 +168,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
 
     GN_ASSERT( selfOK() );
 
-    if( !mLocked )
-    {
-        GN_ERROR( "Can't unlock a vertex buffer that is not locked at all!" );
-        return;
-    }
-
-    mLocked = false;
+    if( !basicUnlock() ) return;
 
     if( LOCK_RO != mLockFlag )
     {
