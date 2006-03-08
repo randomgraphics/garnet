@@ -352,6 +352,14 @@ namespace GN { namespace gfx
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count ) {}
+        virtual void drawLines( BitField options,
+                                const void * positions,
+                                size_t stride,
+                                size_t count,
+                                uint32_t color,
+                                const Matrix44f & model,
+                                const Matrix44f & view,
+                                const Matrix44f & proj ) {}
         virtual void drawDebugTextA( const char * text, int x, int y, const Vector4f & color ) {}
         virtual void drawDebugTextW( const wchar_t * text, int x, int y, const Vector4f & color ) {}
 

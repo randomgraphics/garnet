@@ -17,6 +17,7 @@ TODO
 
 - p1
   - GFX system
+    - D3D line renderer
     - add support to MSAA/FSAA
     - consider removing syscopy from vertex/index buffer
     - Why D3D quad renderer is so slow, comparing with CEGUI sample application.

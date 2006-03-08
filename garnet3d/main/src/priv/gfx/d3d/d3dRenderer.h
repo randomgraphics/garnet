@@ -16,8 +16,8 @@ namespace GN { namespace gfx
     class D3DResource; // Forward declaration of D3DResource.
 
     class D3DFont;
-
     class D3DQuad;
+    class D3DLine;
 
     //!
     //! D3D vertex buffer binding descriptor
@@ -660,6 +660,14 @@ namespace GN { namespace gfx
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count );
+        virtual void drawLines( BitField options,
+                                const void * positions,
+                                size_t stride,
+                                size_t count,
+                                uint32_t color,
+                                const Matrix44f & model,
+                                const Matrix44f & view,
+                                const Matrix44f & proj );
         virtual void drawDebugTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
         // private functions
@@ -672,6 +680,7 @@ namespace GN { namespace gfx
             mDrawBegan = false;
             mFont = 0;
             mQuad = 0;
+            mLine = 0;
             mDrawState.clear();
         }
 
@@ -692,6 +701,8 @@ namespace GN { namespace gfx
 
         friend class D3DQuad; // let D3DQuad class manipulate state dirty flags directly.
         D3DQuad * mQuad; // Quad renderer class
+
+        D3DLine * mLine;
 
         D3DDrawState mDrawState;
 

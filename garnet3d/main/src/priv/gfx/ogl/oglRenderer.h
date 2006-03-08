@@ -13,6 +13,7 @@ namespace GN { namespace gfx
 {
     class OGLFont;
     class OGLQuad;
+    class OGLLine;
 
     //!
     //! OGL renderer class
@@ -488,6 +489,14 @@ namespace GN { namespace gfx
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 size_t count );
+        virtual void drawLines( BitField options,
+                                const void * positions,
+                                size_t stride,
+                                size_t count,
+                                uint32_t color,
+                                const Matrix44f & model,
+                                const Matrix44f & view,
+                                const Matrix44f & proj );
         virtual void drawDebugTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
     private:
@@ -501,6 +510,7 @@ namespace GN { namespace gfx
             mLastDrawState.clear();
             mFont = 0;
             mQuad = 0;
+            mLine = 0;
         }
 
         bool drawDeviceCreate();
@@ -516,6 +526,7 @@ namespace GN { namespace gfx
 
         OGLFont * mFont;
         OGLQuad * mQuad;
+        OGLLine * mLine;
 
     private:
         GN_INLINE void applyDrawState( size_t startVtx );

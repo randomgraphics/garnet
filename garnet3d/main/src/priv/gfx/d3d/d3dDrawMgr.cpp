@@ -320,6 +320,24 @@ void GN::gfx::D3DRenderer::drawQuads(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::gfx::D3DRenderer::drawLines(
+    BitField,// options,
+    const void *,// positions,
+    size_t,// stride,
+    size_t,// count,
+    uint32_t,// color,
+    const Matrix44f &,// model,
+    const Matrix44f &,// view,
+    const Matrix44f & )// proj )
+{
+    GN_GUARD_SLOW;
+    GN_UNIMPL_WARNING();
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawDebugTextW(
     const wchar_t * text, int x, int y, const Vector4f & color )
 {

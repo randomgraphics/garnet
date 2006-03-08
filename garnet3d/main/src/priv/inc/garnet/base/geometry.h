@@ -279,7 +279,7 @@ namespace GN
         //!
         Vector2 & normalize()
         {
-			normalize( *this, *this );
+			sNormalize( *this, *this );
             return *this;
         }
 
@@ -289,7 +289,7 @@ namespace GN
         static Vector2 sNormalize( const Vector2 & v )
         {
             Vector2 r;
-            normalize( r, v );
+            sNormalize( r, v );
             return r;
         }
 
@@ -609,7 +609,7 @@ namespace GN
         //!
         Vector3 & normalize()
         {
-			normalize( *this, *this );
+			sNormalize( *this, *this );
             return *this;
         }
         //!
@@ -618,7 +618,7 @@ namespace GN
         static Vector3 sNormalize( const Vector3 & v )
         {
             Vector3 r;
-            normalize( r, v );
+            sNormalize( r, v );
             return r;
         }
         //!

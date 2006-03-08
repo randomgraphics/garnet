@@ -311,30 +311,24 @@ void GN::gfx::D3DQuad::drawQuads(
     // fill vertex buffer
     if( DQ_3D_POSITION & options )
     {
-        for( size_t i = 0; i < count; ++i )
+        for( size_t i = 0; i < count*4; ++i )
         {
-            D3DQuadStruct & q = ((D3DQuadStruct*)vbData)[i];
-            for( size_t j = 0; j < 4; ++j )
-            {
-                q.v[j].p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2], 1 );
-                q.v[j].t.set( texcoords[0], texcoords[1] );
-                positions = (const float*)( ((const uint8_t*)positions) + posStride );
-                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-            }
+            D3DQuadVertex & v = ((D3DQuadVertex*)vbData)[i];
+            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2], 1 );
+            v.t.set( texcoords[0], texcoords[1] );
+            positions = (const float*)( ((const uint8_t*)positions) + posStride );
+            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
         }
     }
     else
     {
-        for( size_t i = 0; i < count; ++i )
+        for( size_t i = 0; i < count*4; ++i )
         {
-            D3DQuadStruct & q = ((D3DQuadStruct*)vbData)[i];
-            for( size_t j = 0; j < 4; ++j )
-            {
-                q.v[j].p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0, 1 );
-                q.v[j].t.set( texcoords[0], texcoords[1] );
-                positions = (const float*)( ((const uint8_t*)positions) + posStride );
-                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-            }
+            D3DQuadVertex & v = ((D3DQuadVertex*)vbData)[i];
+            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0, 1 );
+            v.t.set( texcoords[0], texcoords[1] );
+            positions = (const float*)( ((const uint8_t*)positions) + posStride );
+            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
         }
     }
 
@@ -347,7 +341,7 @@ void GN::gfx::D3DQuad::drawQuads(
         const int statePairs[] =
         {
             RS_BLENDING     , ( DQ_OPAQUE & options ) ? RSV_FALSE : RSV_TRUE,
-            RS_DEPTH_WRITE  , ( DQ_ENABLE_DEPTH_WRITE & options ) ? RSV_TRUE : RSV_FALSE,
+            RS_DEPTH_WRITE  , ( DQ_UPDATE_DEPTH & options ) ? RSV_TRUE : RSV_FALSE,
             RS_DEPTH_TEST   , RSV_TRUE,
             RS_CULL_MODE    , RSV_CULL_NONE,
         };

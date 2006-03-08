@@ -200,10 +200,10 @@ namespace GN
         Vector3<T> F = forward;
         F.normalize();
 
-        Vector3<T> S = Vector3<T>::cross( Vector3<T>::normalize(up), F );
+        Vector3<T> S = Vector3<T>::sCross( Vector3<T>::sNormalize(up), F );
         S.normalize();
 
-        Vector3<T> U = Vector3<T>::cross( F, S );
+        Vector3<T> U = Vector3<T>::sCross( F, S );
         U.normalize();
 
         rows[0][0] = S.x;
@@ -232,10 +232,10 @@ namespace GN
         Vector3<T> F = forward;
         F.normalize();
 
-        Vector3<T> S = Vector3<T>::cross( F, Vector3<T>::normalize(up) );
+        Vector3<T> S = Vector3<T>::sCross( F, Vector3<T>::sNormalize(up) );
         S.normalize();
 
-        Vector3<T> U = Vector3<T>::cross( S, F );
+        Vector3<T> U = Vector3<T>::sCross( S, F );
         U.normalize();
 
         rows[0][0] = S.x;
@@ -526,10 +526,10 @@ namespace GN
         Vector3<T> F = to - eye;
         F.normalize();
 
-        Vector3<T> S = Vector3<T>::cross( Vector3<T>::normalize(up), F );
+        Vector3<T> S = Vector3<T>::sCross( Vector3<T>::sNormalize(up), F );
         S.normalize();
 
-        Vector3<T> U = Vector3<T>::cross( F, S );
+        Vector3<T> U = Vector3<T>::sCross( F, S );
         U.normalize();
 
         rows[0][0] = S.x;
@@ -571,10 +571,10 @@ namespace GN
         Vector3<T> F = to - eye;
         F.normalize();
 
-        Vector3<T> S = Vector3<T>::cross( F, Vector3<T>::normalize(up) );
+        Vector3<T> S = Vector3<T>::sCross( F, Vector3<T>::sNormalize(up) );
         S.normalize();
 
-        Vector3<T> U = Vector3<T>::cross( S, F );
+        Vector3<T> U = Vector3<T>::sCross( S, F );
         U.normalize();
 
         rows[0][0] = S.x;
