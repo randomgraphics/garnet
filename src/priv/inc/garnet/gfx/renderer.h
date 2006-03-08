@@ -304,7 +304,7 @@ namespace GN { namespace gfx
         //!
         //! 使用当前的渲染状态。
         //!
-        //! By default, Renderer::drawQuad() will use a special render state block that
+        //! By default, Renderer::drawQuads() will use a special render state block that
         //! suites for transparent quads:
         //!   - enable blending
         //!   - enable depth testing
@@ -315,7 +315,7 @@ namespace GN { namespace gfx
         //!
         //! 使用当前的Vertex Shader。
         //!
-        //! - 缺省情况下，Renderer::drawQuad() 会使用一个内置的vertex shader
+        //! - 缺省情况下，Renderer::drawQuads() 会使用一个内置的vertex shader
         //! - 自定义的vertex shader应接受一组2D空间坐标和一组2D贴图坐标。
         //!
         DQ_USE_CURRENT_VS = 1<<1,
@@ -323,13 +323,14 @@ namespace GN { namespace gfx
         //!
         //! 使用当前的Pixel Shader。
         //!
-        //! 缺省情况下，Renderer::drawQuad() 会使用一个内置的Pixel Shader，直接直接输出
+        //! 缺省情况下，Renderer::drawQuads() 会使用一个内置的Pixel Shader，直接直接输出
         //! 第0层贴图的颜色。
         //!
         DQ_USE_CURRENT_PS = 1<<2,
 
         //!
-        //! position in window space: (0,0) for left-up corner, (width,height) for right-bottom corner.
+        //! position in window (post-transformed) space:
+        //! (0,0) for left-up corner, (width,height) for right-bottom corner.
         //!
         //! By default, quad positios are in screen space. That is:
         //! (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
@@ -351,12 +352,61 @@ namespace GN { namespace gfx
         //!
         //! Enable depth write. Default is disabled.
         //!
-        DQ_ENABLE_DEPTH_WRITE = 1 << 6,
+        DQ_UPDATE_DEPTH = 1 << 6,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合
         //!
         DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS
+    };
+
+    //!
+    //! Options for Renderer::drawLines
+    //!
+    enum DrawLineOptions
+    {
+        //!
+        //! 使用当前的渲染状态。
+        //!
+        //! By default, Renderer::drawLines() will use a special render state block that
+        //! suites for colored lines
+        //!
+        DL_USE_CURRENT_RS = 1<<0,
+
+        //!
+        //! 使用当前的Vertex Shader。
+        //!
+        //! - 缺省情况下，Renderer::drawLines() 会使用一个内置的vertex shader
+        //! - 自定义的vertex shader应接受一组3D空间坐标
+        //!
+        DL_USE_CURRENT_VS = 1<<1,
+
+        //!
+        //! 使用当前的Pixel Shader。
+        //!
+        //! 缺省情况下，Renderer::drawLines() 会使用一个内置的Pixel Shader
+        //!
+        DL_USE_CURRENT_PS = 1<<2,
+
+        //!
+        //! position in window (post-transformed) space:
+        //! (0,0) for left-up corner, (width,height) for right-bottom corner.
+        //!
+        //! By default, line positions are in object space.
+        //!
+        //! \note This option is meaningful only when DL_USE_CURRENT_VS is _NOT_ set.
+        //!
+        DL_WINDOW_SPACE = 1<<3,
+
+        //!
+        //! Using line strip. By default input points are treated as line list.
+        //!
+        DL_LINE_STRIP = 1<<4,
+
+        //!
+        //! 上述 DL_USE_CURRENT_XX 的集合
+        //!
+        DL_USE_CURRENT = DL_USE_CURRENT_RS | DL_USE_CURRENT_VS | DL_USE_CURRENT_PS
     };
 
     //!
@@ -1542,6 +1592,33 @@ namespace GN { namespace gfx
 
             drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1 );
         }
+
+        //!
+        //! Draw line segments
+        //!
+        //! \param options
+        //!     渲染选项，详见 DrawLineOptions。Set to 0 to use default options
+        //! \param positions
+        //!     顶点坐标数据，由一系列的顶点组成。2个顶点表示一个矩形。
+        //!     选项 DQ_WINDOW_SPACE 和 DQ_3D_POSITION 会影响坐标的含义。
+        //! \param stride
+        //!     stride of one vertex.
+        //! \param count
+        //!     Number of line segments (note: _NOT_ number of points)
+        //! \param color
+        //!     line color. in FMT_RGBA32 format.
+        //! \param model, view, proj
+        //!     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
+        //!
+        virtual void drawLines(
+            BitField options,
+            const void * positions,
+            size_t stride,
+            size_t count,
+            uint32_t color,
+            const Matrix44f & model,
+            const Matrix44f & view,
+            const Matrix44f & proj ) = 0;
 
         //!
         //! 在屏幕上指定的位置绘制2D字符串.

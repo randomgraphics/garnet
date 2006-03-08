@@ -40,12 +40,14 @@ namespace GN
     //!
     //! 角度->弧度
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE float deg2rad( float a ) { return a*0.01745329252f; }
+    template<typename T>
+    GN_FORCE_INLINE T deg2rad( T a ) { return a*(T)0.01745329252f; }
 
     //!
     //! 弧度->角度
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE float rad2deg( float a ) { return a*57.29577951f;   }
+    template<typename T>
+    GN_FORCE_INLINE T rad2deg( T a ) { return a*(T)57.29577951f;   }
 
     //!
     //! 检查n是否为2^n

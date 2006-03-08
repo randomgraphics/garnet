@@ -21,6 +21,8 @@ namespace GN { namespace app
         StrA      mFpsString;
         size_t    mFrameCounter;
         double    mLastFrameTime;
+        double    mCurrentTime;
+        bool      mBeforeFirstUpdate;
 
     public:
 
@@ -30,14 +32,21 @@ namespace GN { namespace app
         FpsCounter() { reset(); }
 
         //!
+        //! Get time
+        //!
+        double getCurrentTime() const { return mCurrentTime; }
+
+        //!
         //! reset the counter
         //!
         void reset()
         {
-            mFpsValue = .0f;
+            mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
             mFpsString = "FPS: 0.00";
             mFrameCounter = 0;
-            mLastFrameTime = mClock.getTimeD();
+            mCurrentTime = mClock.getTimeD();
+            mLastFrameTime = mCurrentTime - 1.0f/60.0f;
+            mBeforeFirstUpdate = true;
         }
 
         //!
@@ -45,27 +54,32 @@ namespace GN { namespace app
         //!
         void onFrame()
         {
-            double currentTime = mClock.getTimeD();
+            mCurrentTime = mClock.getTimeD();
             ++mFrameCounter;
-            if( currentTime - mLastFrameTime >= 1.0f )
+            if( mCurrentTime - mLastFrameTime >= 1.0f )
             {
+                mBeforeFirstUpdate = false;
                 mFpsValue = (float)( mFrameCounter );
                 mFpsString.format( "FPS: %.2f", mFpsValue );
-                mLastFrameTime = currentTime;
+                mLastFrameTime = mCurrentTime;
                 mFrameCounter = 0;
-                //GN_INFO( mFpsString.cstr() );
+            }
+            else if( mBeforeFirstUpdate )
+            {
+                mFpsValue = (float)( (mCurrentTime - mLastFrameTime) / mFrameCounter );
+                mFpsString.format( "FPS: %.2f", mFpsValue );
             }
         }
 
         //!
         //! Get FPS value
         //!
-        float fpsValue() const { return mFpsValue; }
+        float getFps() const { return mFpsValue; }
 
         //!
         //! Get FPS string
         //!
-        const char * fpsString() const { return mFpsString.cstr(); }
+        const char * getFpsString() const { return mFpsString.cstr(); }
     };
     
     
@@ -91,6 +105,8 @@ namespace GN { namespace app
 
         //@{
 
+        static float UPDATE_INTERVAL;
+
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
@@ -103,6 +119,21 @@ namespace GN { namespace app
         virtual void onKeyPress( input::KeyEvent );
         virtual void onCharPress( wchar_t ) {}
         virtual void onAxisMove( input::Axis, int ) {}
+
+        //!
+        //! Return seconds since application starts
+        //!
+        double getCurrentTime() const { return mFps.getCurrentTime(); }
+
+        //!
+        //! Return seconds of last frame
+        //!
+        double getLastFrameTime() const { return mLastFrameTime; }
+
+        //!
+        //! Return time since last update
+        //!
+        double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
         void reloadGfxResources();
 
@@ -128,9 +159,11 @@ namespace GN { namespace app
 
         bool mDone;
 
-        // fps stuff
+        // time stuff
         bool mShowFps;
         FpsCounter mFps;
+        double mLastFrameTime;
+        double mTimeSinceLastUpdate;
 
         // ********************************
         // private functions

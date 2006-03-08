@@ -1,8 +1,8 @@
-#ifndef __GN_GFXOGL_OGLQUAD_H__
-#define __GN_GFXOGL_OGLQUAD_H__
+#ifndef __GN_GFXOGL_OGLLINE_H__
+#define __GN_GFXOGL_OGLLINE_H__
 // *****************************************************************************
-//! \file    ogl/oglQuad.h
-//! \brief   OGL quad renderer
+//! \file    ogl/oglLine.h
+//! \brief   OGL line renderer
 //! \author  chenlee (2005.12.7)
 // *****************************************************************************
 
@@ -11,11 +11,11 @@ namespace GN { namespace gfx
     class OGLRenderer;
     
     //!
-    //! OGL quad renderer
+    //! OGL line renderer
     //!
-    class OGLQuad : public StdClass
+    class OGLLine : public StdClass
     {
-        GN_DECLARE_STDCLASS( OGLQuad, StdClass );
+        GN_DECLARE_STDCLASS( OGLLine, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLQuad( OGLRenderer & r ) : mRenderer(r) { clear(); }
-        virtual ~OGLQuad() { quit(); }
+        OGLLine( OGLRenderer & r ) : mRenderer(r) { clear(); }
+        virtual ~OGLLine() { quit(); }
         //@}
 
         // ********************************
@@ -40,7 +40,7 @@ namespace GN { namespace gfx
         void clear()
         {
             mVtxBuf = 0;
-            mNextQuad = 0;
+            mNextLine = 0;
         }
         //@}
 
@@ -50,36 +50,39 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! Draw quads on screen
+        //! Draw lines on screen
         //!
-        //! \sa Renderer::drawQuads
+        //! \sa Renderer::drawLines
         //!
-        void drawQuads(
+        void drawLines(
             BitField options,
-            const float * positions, size_t posStride,
-            const float * texCoords, size_t texStride,
-            size_t count );
+            const float * positions,
+            size_t stride,
+            size_t count,
+            uint32_t color,
+            const Matrix44f & model,
+            const Matrix44f & view,
+            const Matrix44f & proj );
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        enum { MAX_QUADS = 4096 };
+        enum { MAX_LINES = 4096 };
 
-        struct QuadVertex
+        struct LineVertex
         {
-            Vector2f t;
+            uint32_t c;
             Vector3f p;
-            Vector3f _; // padding to 32 bytes
         };
-        GN_CASSERT( 32 == sizeof(QuadVertex) );
+        GN_CASSERT( 16 == sizeof(LineVertex) );
 
-        QuadVertex * mVtxBuf;
+        LineVertex * mVtxBuf;
 
         OGLRenderer & mRenderer;
 
-        size_t   mNextQuad;
+        size_t mNextLine;
 
         // ********************************
         // private functions
@@ -89,6 +92,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of oglQuad.h
+//                           End of oglLine.h
 // *****************************************************************************
-#endif // __GN_GFXOGL_OGLQUAD_H__
+#endif // __GN_GFXOGL_OGLLINE_H__

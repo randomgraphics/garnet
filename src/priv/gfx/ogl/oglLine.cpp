@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglQuad.h"
+#include "oglLine.h"
 #include "oglRenderer.h"
 
 // *****************************************************************************
@@ -9,16 +9,16 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLQuad::init()
+bool GN::gfx::OGLLine::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLQuad, () );
+    GN_STDCLASS_INIT( GN::gfx::OGLLine, () );
 
     // create vertex buffer
     GN_ASSERT( !mVtxBuf );
-    mVtxBuf = new QuadVertex[MAX_QUADS*4];
+    mVtxBuf = new LineVertex[MAX_LINES*2];
     if( !mVtxBuf )
     {
         GN_ERROR( "out of memory!" );
@@ -34,7 +34,7 @@ bool GN::gfx::OGLQuad::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLQuad::quit()
+void GN::gfx::OGLLine::quit()
 {
     GN_GUARD;
 
@@ -53,73 +53,61 @@ void GN::gfx::OGLQuad::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLQuad::drawQuads(
+void GN::gfx::OGLLine::drawLines(
     BitField options,
-    const float * positions, size_t posStride,
-    const float * texcoords, size_t texStride,
-    size_t count )
+    const float * positions,
+    size_t stride,
+    size_t count,
+    uint32_t color,
+    const Matrix44f & model,
+    const Matrix44f & view,
+    const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
-    if( 0 == positions || 0 == texcoords )
+    if( 0 == positions )
     {
         GN_ERROR( "NULL parameter(s)!" );
         return;
     }
 
-    if( 0 == posStride || 0 == texStride )
+    if( 0 == stride )
     {
         GN_ERROR( "stride can't be zero!" );
         return;
     }
 
-    GN_ASSERT( mNextQuad < MAX_QUADS );
+    GN_ASSERT( mNextLine < MAX_LINES );
 
     // handle large amount of array
-    while( count + mNextQuad > MAX_QUADS )
+    while( count + mNextLine > MAX_LINES )
     {
-        size_t n = MAX_QUADS - mNextQuad;
+        size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
-        drawQuads( options, positions, posStride, texcoords, texStride, n );
-        positions = (const float*)( ((const uint8_t*)positions) + n * posStride * 4 );
-        texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+        drawLines( options, positions, stride, n, color, model, view, proj );
+        positions = (const float*)( ((const uint8_t*)positions) + n * stride * 2 );
         count -= n;
     }
 
     // fill vertex data
     GN_ASSERT( mVtxBuf );
-    if( DQ_3D_POSITION & options )
+    size_t vertexCount = ( DL_LINE_STRIP & options ) ? count + 1 : count * 2;
+    for( size_t i = 0; i < vertexCount; ++i )
     {
-        for( size_t i = 0; i < count*4; ++i )
-        {
-            QuadVertex & v = mVtxBuf[i];
-            v.p.set( positions[0], positions[1], positions[2] );
-            v.t.set( texcoords[0], texcoords[1] );
-            positions = (const float*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-        }
-    }
-    else
-    {
-        for( size_t i = 0; i < count*4; ++i )
-        {
-            QuadVertex & v = mVtxBuf[i];
-            v.p.set( positions[0], positions[1], 0 );
-            v.t.set( texcoords[0], texcoords[1] );
-            positions = (const float*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-        }
+        mVtxBuf[i].p.set( positions[0], positions[1], positions[2] );
+        mVtxBuf[i].c = color;
+        positions = (const float*)( ((const uint8_t*)positions) + stride );
     }
 
     // determine attributes that need to be restored.
     GLbitfield attribs = GL_TEXTURE_BIT;
-    if( !(DQ_USE_CURRENT_RS & options ) )
+    if( !(DL_USE_CURRENT_RS & options ) )
         attribs |= GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT | GL_DEPTH_BITS | GL_ENABLE_BIT;
-    if( !(DQ_USE_CURRENT_VS & options ) )
+    if( !(DL_USE_CURRENT_VS & options ) )
         attribs |= GL_TRANSFORM_BIT;
-    if( !(DQ_USE_CURRENT_PS & options ) )
+    if( !(DL_USE_CURRENT_PS & options ) )
         attribs |= GL_CURRENT_BIT;
 
     // push OGL attributes
@@ -127,20 +115,22 @@ void GN::gfx::OGLQuad::drawQuads(
     GN_OGL_CHECK( glPushClientAttrib( GL_CLIENT_VERTEX_ARRAY_BIT ) );
 
     // apply render states
-    if( !( DQ_USE_CURRENT_RS & options ) )
+    if( !( DL_USE_CURRENT_RS & options ) )
     {
-        if( DQ_OPAQUE & options ) glDisable( GL_BLEND ); else glEnable( GL_BLEND );
-        glDepthMask( !!(DQ_UPDATE_DEPTH & options) );
+        glDisable( GL_BLEND );
+        glDepthMask( GL_TRUE );
         glEnable( GL_DEPTH_TEST );
-        glDisable( GL_CULL_FACE );
         glDisable( GL_LIGHTING );
     }
 
     // apply vertex shader 
-    if( !( DQ_USE_CURRENT_VS & options ) )
+    if( !( DL_USE_CURRENT_VS & options ) )
     {
+        // enable color material
+        //glEnable( GL_COLOR_MATERIAL );
+
         // setup OGL matrices
-        if( DQ_WINDOW_SPACE & options )
+        if( DL_WINDOW_SPACE & options )
         {
             GLdouble vp[4];
             GN_OGL_CHECK( glGetDoublev( GL_VIEWPORT, vp ) );
@@ -157,36 +147,30 @@ void GN::gfx::OGLQuad::drawQuads(
         }
         else
         {
-            // position is in unit space (0,0)->(1,1)
+            // position is in object space
             GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
             GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadIdentity() );
-            GN_OGL_CHECK( glOrtho( 0, 1, 1, 0, 0, 1 ) );
+            GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(proj)[0] ) );
 
             GN_OGL_CHECK( glMatrixMode( GL_MODELVIEW ) );
             GN_OGL_CHECK( glPushMatrix() );
-            GN_OGL_CHECK( glLoadIdentity() );
+            GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(view*model)[0] ) );
         }
     }
 
-    if( !( DQ_USE_CURRENT_PS & options ) )
-    {
-        // setup material color
-        static Vector4f white(1,1,1,1);
-        GN_OGL_CHECK( glColor4fv( white ) );
-    }
-
-    // apply texture states
-    mRenderer.chooseTextureStage( 0 );
-    GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,  GL_MODULATE ) );
+    // disable texture
+    mRenderer.disableTextureStage( 0 );
 
     // apply vertex binding
-    GN_OGL_CHECK( glInterleavedArrays( GL_T2F_V3F, sizeof(QuadVertex), mVtxBuf ) );
+    GN_OGL_CHECK( glInterleavedArrays( GL_C4UB_V3F, sizeof(LineVertex), mVtxBuf ) );
 
     // do draw
-    GN_OGL_CHECK( glDrawArrays( GL_QUADS, 0, (GLsizei)count*4 ) );
+    GN_OGL_CHECK( glDrawArrays(
+        ( DL_LINE_STRIP & options ) ? GL_LINE_STRIP : GL_LINES,
+        0,
+        (GLsizei)vertexCount ) );
 
-    if( !( DQ_USE_CURRENT_VS & options ) )
+    if( !( DL_USE_CURRENT_VS & options ) )
     {
         // restore OGL matrices
         GN_OGL_CHECK( glMatrixMode( GL_PROJECTION ) );
@@ -199,10 +183,10 @@ void GN::gfx::OGLQuad::drawQuads(
     GN_OGL_CHECK( glPopClientAttrib() );
     GN_OGL_CHECK( glPopAttrib() );
 
-    // update mNextQuad
-    mNextQuad += count;
-    GN_ASSERT( mNextQuad <= MAX_QUADS );
-    if( MAX_QUADS == mNextQuad ) mNextQuad = 0;
+    // update mNextLine
+    mNextLine += count;
+    GN_ASSERT( mNextLine <= MAX_LINES );
+    if( MAX_LINES == mNextLine ) mNextLine = 0;
 
     GN_UNGUARD_SLOW;
 }

@@ -2,6 +2,7 @@
 #include "oglRenderer.h"
 #include "oglFont.h"
 #include "oglQuad.h"
+#include "oglLine.h"
 #include "oglIdxBuf.h"
 
 // *****************************************************************************
@@ -72,15 +73,20 @@ bool GN::gfx::OGLRenderer::drawDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    // create font class
+    // create font renderer
     GN_ASSERT( !mFont );
     mFont = new OGLFont(*this);
     if( !mFont->init() ) return false;
 
-    // create quad class
+    // create quad renderer
     GN_ASSERT( !mQuad );
     mQuad = new OGLQuad(*this);
     if( !mQuad->init() ) return false;
+
+    // create line renderer
+    GN_ASSERT( !mLine );
+    mLine = new OGLLine(*this);
+    if( !mLine->init() ) return false;
 
     // success
     return true;
@@ -99,6 +105,7 @@ void GN::gfx::OGLRenderer::drawDeviceDestroy()
 
     safeDelete( mFont );
     safeDelete( mQuad );
+    safeDelete( mLine );
 
     GN_UNGUARD
 }
@@ -461,7 +468,28 @@ void GN::gfx::OGLRenderer::drawQuads(
     if( !( DQ_USE_CURRENT_VS & options ) ) bindVtxShader(0);
     if( !( DQ_USE_CURRENT_PS & options ) ) bindPxlShader(0);
     applyDrawState(0);
-    mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
+    mQuad->drawQuads( options, (const float*)positions, posStride, (const float*)texcoords, texStride, count );
+
+    GN_UNGUARD_SLOW;
+}
+
+void GN::gfx::OGLRenderer::drawLines(
+    BitField options,
+    const void * positions,
+    size_t stride,
+    size_t count,
+    uint32_t color,
+    const Matrix44f & model,
+    const Matrix44f & view,
+    const Matrix44f & proj )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mDrawBegan && mQuad );
+    if( !( DL_USE_CURRENT_VS & options ) ) bindVtxShader(0);
+    if( !( DL_USE_CURRENT_PS & options ) ) bindPxlShader(0);
+    applyDrawState(0);
+    mLine->drawLines( options, (const float*)positions, stride, count, color, model, view, proj );
 
     GN_UNGUARD_SLOW;
 }

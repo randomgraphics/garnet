@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "garnet/GNapp.h"
 
+float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -15,13 +17,33 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
     if( !init( argc, argv ) ) return -1;
 
     mDone = false;
+
+    double elapsedUpdateTime;
+    double lastUpdateTime = mFps.getCurrentTime();
+
     while( !mDone )
     {
+        // process user input
         GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
         gInput.processInputEvents();
-        onUpdate();
+
+        // update time stuff
+        mFps.onFrame();
+
+        // call update in fixed interval
+        elapsedUpdateTime = mFps.getCurrentTime() - lastUpdateTime;
+        if( elapsedUpdateTime > UPDATE_INTERVAL )
+        {
+            int count = (int)( elapsedUpdateTime / UPDATE_INTERVAL );
+            for( int i = 0; i < count; ++i ) onUpdate();
+            lastUpdateTime += UPDATE_INTERVAL * count;
+        }
+
+        // do render
         if( gRenderer.drawBegin() )
         {
+            mLastFrameTime = 1.0 / mFps.getFps();
+            mTimeSinceLastUpdate = mFps.getCurrentTime() - lastUpdateTime;
             onRender();
             drawHUD();
             gRenderer.drawEnd();
@@ -302,8 +324,7 @@ void GN::app::SampleApp::drawHUD()
 {
     GN_GUARD_SLOW;
 
-    mFps.onFrame();
-    if( mShowFps ) gRenderer.drawDebugTextA( mFps.fpsString(), 0, 0 );
+    if( mShowFps ) gRenderer.drawDebugTextA( mFps.getFpsString(), 0, 0 );
 
     GN_UNGUARD_SLOW;
 }
