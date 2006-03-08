@@ -43,7 +43,7 @@ namespace GN { namespace gfx
         //!
         //! This function will also clip lock area to ensure it is not out of texture size.
         //!
-        bool basicLock( size_t face, size_t level, const Boxi * area, Boxi & clippedArea )
+        bool basicLock( size_t face, size_t level, const Boxi * area, LockFlag flag, Boxi & clippedArea )
         {
             if( isLocked() )
             {
@@ -62,6 +62,13 @@ namespace GN { namespace gfx
             if( level >= getDesc().levels )
             {
                 GN_ERROR( "invalid lock level : %d", level );
+                return false;
+            }
+
+            // check flag
+            if( flag >= NUM_LOCK_FLAGS )
+            {
+                GN_ERROR( "invalid lock flag : %d", flag );
                 return false;
             }
 

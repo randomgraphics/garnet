@@ -72,7 +72,7 @@ namespace GN { namespace gfx
         virtual Vector3<uint32_t> getMipSize( size_t level ) const;
         virtual void setFilter( TexFilter, TexFilter ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, BitField flag );
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap() { GN_ERROR( "no implementation" ); }
         virtual void * getAPIDependentData() const { return (void*)getOGLTexture(); }
@@ -172,7 +172,7 @@ namespace GN { namespace gfx
         GLenum      mLockedTarget;
         size_t      mLockedLevel;
         Boxi        mLockedArea;
-        BitField    mLockedFlag;
+        LockFlag    mLockedFlag;
         uint8_t *   mLockedBuffer;
         size_t      mLockedBytes;
         //@}

@@ -489,7 +489,8 @@ bool GN::gfx::D3DTexture::deviceRestore()
 
     // setup misc. flag
     mWritable = !(mD3DUsage & D3DUSAGE_RENDERTARGET)
-             && !(mD3DUsage & D3DUSAGE_DEPTHSTENCIL);
+             && !(mD3DUsage & D3DUSAGE_DEPTHSTENCIL)
+             &&  (mD3DUsage & D3DUSAGE_DYNAMIC);
 
     // call user-defined content loader
     if( !getLoader().empty() )
@@ -611,7 +612,7 @@ bool GN::gfx::D3DTexture::lock(
 
     // call basic lock
     Boxi clippedArea;
-    if( !basicLock( face, level, area, clippedArea ) ) return false;
+    if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
     bool readBack = LOCK_RO == flag || LOCK_RW == flag;

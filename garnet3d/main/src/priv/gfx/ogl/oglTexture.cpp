@@ -701,12 +701,12 @@ bool GN::gfx::OGLTexture::lock(
     size_t face,
     size_t level,
     const Boxi * area,
-    BitField flag )
+    LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     // call basic lock
-    if( !basicLock( face, level, area, mLockedArea ) ) return false;
+    if( !basicLock( face, level, area, flag, mLockedArea ) ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&OGLTexture::basicUnlock) );
 
     // 计算pitch
@@ -752,9 +752,9 @@ bool GN::gfx::OGLTexture::lock(
     GN_ASSERT( mLockedBuffer );
 
     // 如果不是只写锁定，则读取当前的贴图内容到缓冲区中
-    if( LOCK_RO & flag )
+    if( LOCK_RO == flag || LOCK_RW == flag )
     {
-        GN_ASSERT_EX( 0, "目前不支持从贴图中读取数据!" );
+        GN_WARN( "目前不支持从贴图中读取数据!" );
     }
 
     // success
@@ -778,8 +778,8 @@ void GN::gfx::OGLTexture::unlock()
     // call basic unlock
     if( !basicUnlock() ) return;
 
-    // if not a write locking, return directly
-    if( 0 == ( LOCK_WO & mLockedFlag ) ) return;
+    // do nothing for read-only lock
+    if( LOCK_RO == mLockedFlag ) return;
 
     // bind myself as current texture
     bind();

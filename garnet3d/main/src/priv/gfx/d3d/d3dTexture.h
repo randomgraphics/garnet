@@ -55,13 +55,13 @@ namespace GN { namespace gfx
         {
             mD3DTexture = 0;
             mShadowCopy = 0;
+            mLockCopy = 0;
             mD3DFilters[0] =
             mD3DFilters[1] = D3DTEXF_LINEAR;
             mD3DFilters[2] = D3DTEXF_NONE;
             mD3DWraps[0] =
             mD3DWraps[1] =
             mD3DWraps[2] = D3DTADDRESS_WRAP;
-            mLockCopy = 0;
         }
         //@}
 
@@ -204,10 +204,6 @@ namespace GN { namespace gfx
         size_t mLockedFace;
         size_t mLockedLevel;
         //@}
-
-        //!
-        //! System copy of texture content
-        //!
 
         // ********************************
         // private functions

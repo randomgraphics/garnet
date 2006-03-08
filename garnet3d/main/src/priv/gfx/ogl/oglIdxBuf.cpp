@@ -60,26 +60,11 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-uint16_t * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t /*numIdx*/, uint32_t /*flag*/ )
+uint16_t * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
 {
     GN_GUARD_SLOW;
-
     GN_ASSERT( selfOK() );
-
-    if( mLocked )
-    {
-        GN_ERROR( "This buffer is already locked!" );
-        return 0;
-    }
-    if( startIdx >= getNumIdx() )
-    {
-        GN_ERROR( "startIdx is beyond the end of index buffer!" );
-        return 0;
-    }
-
-    // success
-    mLocked = true;
+    if( !basicLock( startIdx, numIdx, flag ) ) return 0;
     return mBuffer + startIdx;
-
     GN_UNGUARD_SLOW
 }

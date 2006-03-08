@@ -60,27 +60,12 @@ void GN::gfx::OGLVtxBufNormal::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t /*numVtx*/, uint32_t /*flag*/ )
+void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
-
     GN_ASSERT( selfOK() );
-
-    if( mLocked )
-    {
-        GN_ERROR( "Vertex buffer is already locked!" );
-        return 0;
-    }
-    if( offset >= getSizeInBytes() )
-    {
-        GN_ERROR( "offset is beyond the end of vertex buffer!" );
-        return 0;
-    }
-
-    // success
-    mLocked = true;
+    if( !basicLock( offset, bytes, flag ) ) return false;
     return &mBuffer[offset];
-
     GN_UNGUARD_SLOW;
 }
 
@@ -90,17 +75,7 @@ void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t /*numVtx*/, uint32_
 void GN::gfx::OGLVtxBufNormal::unlock()
 {
     GN_GUARD_SLOW;
-
     GN_ASSERT( selfOK() );
-
-    if( !mLocked )
-    {
-        GN_ERROR( "Can't unlock a vertex buffer that is not locked at all!" );
-        return;
-    }
-
-    mLocked = false;
-
+    basicUnlock();
     GN_UNGUARD_SLOW;
 }
-
