@@ -55,13 +55,13 @@ public:
         r.bindTexture( 0, 0 );
         r.setRenderDepth( mDepth );
         r.clearScreen();
-        r.drawQuads( DQ_3D_POSITION, &vb[0].x, &vb[0].u, sizeof(QuadVert), 1 );
+        r.drawQuads( DQ_3D_POSITION, &vb[0].x, &vb[0].u, 0, sizeof(QuadVert), 1 );
 
         // draw depth texture to screen
         r.setRenderDepth( 0 );
         r.bindTexture( 0, mDepth );
         r.clearScreen();
-        r.draw2DQuad( DQ_OPAQUE );
+        r.draw2DTexturedQuad( DQ_OPAQUE );
     }
 };
 
@@ -140,7 +140,7 @@ public:
         r.clearScreen();
         r.drawQuads(
             DQ_UPDATE_DEPTH | DQ_3D_POSITION | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS,
-            &vb[0].x, &vb[0].u, sizeof(QuadVert), 1 );
+            &vb[0].x, &vb[0].u, 0, sizeof(QuadVert), 1 );
 
         // draw depth texture to screen
         r.setRenderTarget( 0, 0 );
@@ -149,7 +149,7 @@ public:
         r.bindTexture( 1, mTarget );
         r.bindShaderHandles( mVs2, mPs2 );
         r.clearScreen();
-        r.draw2DQuad( DQ_OPAQUE | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS );
+        r.draw2DTexturedQuad( DQ_OPAQUE | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS );
         //*/
     }
 };
