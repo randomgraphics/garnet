@@ -58,6 +58,7 @@ namespace GN { namespace gfx
             BitField options,
             const float * positions, size_t posStride,
             const float * texCoords, size_t texStride,
+            const uint32_t * colors, size_t clrStride,
             size_t count );
 
         // ********************************
@@ -70,8 +71,9 @@ namespace GN { namespace gfx
         struct QuadVertex
         {
             Vector2f t;
+            uint32_t c;
             Vector3f p;
-            Vector3f _; // padding to 32 bytes
+            Vector2f _; // padding to 32 bytes
         };
         GN_CASSERT( 32 == sizeof(QuadVertex) );
 

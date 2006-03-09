@@ -41,7 +41,8 @@ namespace GN { namespace gfx {
             mDeclFfp = 0;
             mDeclVs = 0;
             mVtxShader = 0;
-            mPxlShader = 0;
+            mPxlShaderTextured = 0;
+            mPxlShaderSolid = 0;
             mVtxBuf = 0;
             mIdxBuf = 0;
             mNextQuad = 0;
@@ -69,9 +70,11 @@ namespace GN { namespace gfx {
         //! \sa Renderer::drawQuads
         //!
         void drawQuads(
+            BitField options,
             const float * positions, size_t posStride,
             const float * texCoords, size_t texStride,
-            size_t count, BitField options );
+            const uint32_t * colors, size_t clrStride,
+            size_t count );
 
         // ********************************
         // private variables
@@ -80,7 +83,8 @@ namespace GN { namespace gfx {
 
         LPDIRECT3DVERTEXDECLARATION9 mDeclFfp, mDeclVs;
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
-        LPDIRECT3DPIXELSHADER9  mPxlShader;
+        LPDIRECT3DPIXELSHADER9  mPxlShaderTextured;
+        LPDIRECT3DPIXELSHADER9  mPxlShaderSolid;
         LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
         LPDIRECT3DINDEXBUFFER9  mIdxBuf;
 

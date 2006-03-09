@@ -7,7 +7,8 @@ struct D3DQuadVertex
 {
     GN::Vector4f p;
     GN::Vector2f t;
-    GN::Vector2f _; // padding to 32 bytes
+    uint32_t     c;
+    float        _; // padding to 32 bytes
 };
 GN_CASSERT( sizeof(D3DQuadVertex) == 32 );
 
@@ -18,8 +19,10 @@ struct D3DQuadStruct
 
 static const D3DVERTEXELEMENT9 sDeclVs[] =
 {
-    { 0,  0, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_POSITION, 0 },
-    { 0, 16, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_TEXCOORD, 0 },
+    { 0,  0, D3DDECLTYPE_FLOAT4  , 0, D3DDECLUSAGE_POSITION, 0 },
+    { 0, 16, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD, 0 },
+    { 0, 24, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
+    { 0, 28, D3DDECLTYPE_FLOAT1  , 0, D3DDECLUSAGE_TEXCOORD, 1 },
     D3DDECL_END()
 };
 #if GN_XENON
@@ -27,8 +30,10 @@ static const D3DVERTEXELEMENT9 * sDeclFfp = sDeclVs;
 #else
 static const D3DVERTEXELEMENT9 sDeclFfp[] =
 {
-    { 0,  0, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_POSITIONT, 0 },
-    { 0, 16, D3DDECLTYPE_FLOAT4, 0, D3DDECLUSAGE_TEXCOORD, 0 },
+    { 0,  0, D3DDECLTYPE_FLOAT4  , 0, D3DDECLUSAGE_POSITIONT, 0 },
+    { 0, 16, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD , 0 },
+    { 0, 24, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR    , 0 },
+    { 0, 28, D3DDECLTYPE_FLOAT1  , 0, D3DDECLUSAGE_TEXCOORD , 1 },
     D3DDECL_END()
 };
 #endif
@@ -82,7 +87,7 @@ bool GN::gfx::D3DQuad::deviceCreate()
 {
     GN_GUARD;
 
-    GN_ASSERT( !mVtxShader && !mPxlShader && !mIdxBuf );
+    GN_ASSERT( !mVtxShader && !mPxlShaderTextured && !mPxlShaderSolid && !mIdxBuf );
 
     D3DRenderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
@@ -108,12 +113,19 @@ bool GN::gfx::D3DQuad::deviceCreate()
     // create pixel shader
     if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
     {
-        static const char * code =
+        static const char * code1 =
             "ps.1.1 \n"
             "tex t0 \n"
             "mov r0, t0 \n";
-        mPxlShader = d3d::assemblePS( dev, code );
-        if( 0 == mPxlShader ) return false;
+        mPxlShaderTextured = d3d::assemblePS( dev, code1 );
+        if( 0 == mPxlShaderTextured ) return false;
+
+        static const char * code2 =
+            "ps.1.1 \n"
+            "tex t0 \n"
+            "mov r0, t0 \n";
+        mPxlShaderSolid = d3d::assemblePS( dev, code2 );
+        if( 0 == mPxlShaderSolid ) return false;
     }
 
     // create index buffer
@@ -198,7 +210,8 @@ void GN::gfx::D3DQuad::deviceDestroy()
     safeRelease( mDeclFfp );
     safeRelease( mDeclVs );
     safeRelease( mVtxShader );
-    safeRelease( mPxlShader );
+    safeRelease( mPxlShaderTextured );
+    safeRelease( mPxlShaderSolid );
     safeRelease( mIdxBuf );
 
     GN_UNGUARD;
@@ -212,21 +225,22 @@ void GN::gfx::D3DQuad::deviceDestroy()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3DQuad::drawQuads(
+    BitField options,
     const float * positions, size_t posStride,
     const float * texcoords, size_t texStride,
-    size_t count, BitField options )
+    const uint32_t * colors, size_t clrStride,
+    size_t count )
 {
     GN_GUARD_SLOW;
 
-    if( 0 == positions || 0 == texcoords )
+    if( 0 == positions )
     {
-        GN_ERROR( "NULL parameter(s)!" );
+        GN_ERROR( "Quad positions can't be NULL!" );
         return;
     }
-
-    if( 0 == posStride || 0 == texStride )
+    if( 0 == posStride )
     {
-        GN_ERROR( "stride can't be zero!" );
+        GN_ERROR( "stride of positions can't be zero!" );
         return;
     }
 
@@ -237,9 +251,12 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
-        drawQuads( positions, posStride, texcoords, texStride, n, options );
+        drawQuads( options, positions, posStride, texcoords, texStride, colors, clrStride, n );
         positions = (const float*)( ((const uint8_t*)positions) + n * posStride * 4 );
-        texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+        if( texcoords )
+            texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+        if( colors )
+            colors = (const uint32_t*)( ((const uint8_t*)colors) + n * clrStride * 4 );
         count -= n;
     }
 
@@ -315,9 +332,20 @@ void GN::gfx::D3DQuad::drawQuads(
         {
             D3DQuadVertex & v = ((D3DQuadVertex*)vbData)[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2], 1 );
-            v.t.set( texcoords[0], texcoords[1] );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+
+            if( texcoords )
+            {
+                v.t.set( texcoords[0], texcoords[1] );
+                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            }
+
+            if( colors )
+            {
+                v.c = *colors;
+                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
+            }
+            else v.c = 0xFFFFFFFF;
         }
     }
     else
@@ -326,9 +354,20 @@ void GN::gfx::D3DQuad::drawQuads(
         {
             D3DQuadVertex & v = ((D3DQuadVertex*)vbData)[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0, 1 );
-            v.t.set( texcoords[0], texcoords[1] );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+
+            if( texcoords )
+            {
+                v.t.set( texcoords[0], texcoords[1] );
+                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            }
+
+            if( colors )
+            {
+                v.c = *colors;
+                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
+            }
+            else v.c = 0xFFFFFFFF;
         }
     }
 
@@ -356,7 +395,7 @@ void GN::gfx::D3DQuad::drawQuads(
     }
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
-        GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
+        GN_DX_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
         r.mDrawState.dirtyFlags.pxlShader = 1;
     }
 
@@ -365,6 +404,7 @@ void GN::gfx::D3DQuad::drawQuads(
     dev->GetPixelShader( &currentPs );
     if( currentPs )
     {
+        // TODO: setup TSS based on present of texcoords and colors.
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );

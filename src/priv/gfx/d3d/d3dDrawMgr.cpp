@@ -306,13 +306,19 @@ void GN::gfx::D3DRenderer::drawQuads(
     BitField options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
+    const void * colors, size_t clrStride,
     size_t count )
 {
     GN_GUARD_SLOW;
     PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawQuads" );
     GN_ASSERT( mDrawBegan && mQuad );
     applyDrawState();
-    mQuad->drawQuads( (const float*)positions, posStride, (const float*)texcoords, texStride, count, options );
+    mQuad->drawQuads(
+        options,
+        (const float*)positions, posStride,
+        (const float*)texcoords, texStride,
+        (const uint32_t*)colors, clrStride,
+        count );
     PIXPERF_END_EVENT();
     GN_UNGUARD_SLOW;
 }

@@ -475,7 +475,8 @@ bool GN::gfx::D3DTexture::deviceRestore()
         D3DPOOL_DEFAULT );
     if( 0 == mD3DTexture ) return false;
 
-    // create shadow copy
+    // create shadow copy (Note: Xenon texture has no need of shadow copy)
+#if !GN_XENON
     if( TEXUSAGE_READBACK & getDesc().usage )
     {
         mShadowCopy = newD3DTexture(
@@ -486,11 +487,16 @@ bool GN::gfx::D3DTexture::deviceRestore()
             d3dfmt,
             D3DPOOL_SYSTEMMEM );
     }
+#endif
 
     // setup misc. flag
+#if GN_XENON
+    mWritable = true; // Xenon texture is always writeable.
+#else
     mWritable = !(mD3DUsage & D3DUSAGE_RENDERTARGET)
              && !(mD3DUsage & D3DUSAGE_DEPTHSTENCIL)
              &&  (mD3DUsage & D3DUSAGE_DYNAMIC);
+#endif
 
     // call user-defined content loader
     if( !getLoader().empty() )
@@ -615,10 +621,12 @@ bool GN::gfx::D3DTexture::lock(
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
     AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
 
-    bool readBack = LOCK_RO == flag || LOCK_RW == flag;
-
+#if GN_XENON
+    // On Xenon, always lock target texture directly
+    mLockedTexture = mD3DTexture;
+#else
     if( mShadowCopy ) mLockedTexture = mShadowCopy;
-    else if( readBack || !mWritable )
+    else if( ( LOCK_RO == flag || LOCK_RW == flag ) || !mWritable )
     {
         // create temporary surface for read-lock of non-shadow texture,
         // or write-lock of non-writable texture.
@@ -636,6 +644,7 @@ bool GN::gfx::D3DTexture::lock(
         mLockedTexture = mLockCopy;
     }
     else mLockedTexture = mD3DTexture;
+#endif
 
     DWORD d3dLockFlag = sLockFlag2D3D( mD3DUsage, flag );
 
@@ -748,7 +757,9 @@ void GN::gfx::D3DTexture::unlock()
     }
 
     // copy data from mLockedTexture to mD3DTexture
+#if !GN_XENON
     GN_DX_CHECK( mRenderer.getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
+#endif
 
     // release mLockCopy
     safeRelease( mLockCopy );

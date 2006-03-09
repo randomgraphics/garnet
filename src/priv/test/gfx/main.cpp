@@ -131,16 +131,16 @@ public:
         Renderer & r = gRenderer;
 
         r.bindTexture( 0, gTexDict.getResource(tex0) );
-        r.draw2DQuad( 0, 0, 0, 0.5, 0.5 );
+        r.draw2DTexturedQuad( 0, 0, 0, 0.5, 0.5 );
         if( ps1 )
         {
             r.bindShaders( 0, ps1 );
-            r.draw2DQuad( DQ_USE_CURRENT_PS, 0.5, 0.0, 1.0, 0.5 );
+            r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.5, 0.0, 1.0, 0.5 );
         }
         if( ps2 )
         {
             r.bindShaders( 0, ps2 );
-            r.draw2DQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
+            r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
         // the a line box

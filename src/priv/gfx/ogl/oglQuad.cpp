@@ -57,21 +57,22 @@ void GN::gfx::OGLQuad::drawQuads(
     BitField options,
     const float * positions, size_t posStride,
     const float * texcoords, size_t texStride,
+    const uint32_t * colors, size_t clrStride,
     size_t count )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
-    if( 0 == positions || 0 == texcoords )
+    if( 0 == positions )
     {
-        GN_ERROR( "NULL parameter(s)!" );
+        GN_ERROR( "Positions can't be NULL!" );
         return;
     }
 
     if( 0 == posStride || 0 == texStride )
     {
-        GN_ERROR( "stride can't be zero!" );
+        GN_ERROR( "Position stride can't be zero!" );
         return;
     }
 
@@ -82,11 +83,20 @@ void GN::gfx::OGLQuad::drawQuads(
     {
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
-        drawQuads( options, positions, posStride, texcoords, texStride, n );
+        drawQuads( options, positions, posStride, texcoords, texStride, colors, clrStride, n );
         positions = (const float*)( ((const uint8_t*)positions) + n * posStride * 4 );
-        texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+        if( texcoords )
+            texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+        if( colors )
+            colors = (const uint32_t*)( ((const uint8_t*)colors) + n * clrStride * 4 );
         count -= n;
     }
+
+#define sBgra2Rgba( x ) ( \
+          ( (x)&0xFF000000) | \
+          (((x)&0x00FF0000)>>16) | \
+          ( (x)&0x0000FF00) | \
+          (((x)&0x000000FF)<<16) )
 
     // fill vertex data
     GN_ASSERT( mVtxBuf );
@@ -95,10 +105,22 @@ void GN::gfx::OGLQuad::drawQuads(
         for( size_t i = 0; i < count*4; ++i )
         {
             QuadVertex & v = mVtxBuf[i];
+
             v.p.set( positions[0], positions[1], positions[2] );
-            v.t.set( texcoords[0], texcoords[1] );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+
+            if( texcoords )
+            {
+                v.t.set( texcoords[0], texcoords[1] );
+                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            }
+
+            if( colors )
+            {
+                v.c = sBgra2Rgba(*colors);
+                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
+            }
+            else v.c = 0xFFFFFFFF;
         }
     }
     else
@@ -106,10 +128,22 @@ void GN::gfx::OGLQuad::drawQuads(
         for( size_t i = 0; i < count*4; ++i )
         {
             QuadVertex & v = mVtxBuf[i];
+
             v.p.set( positions[0], positions[1], 0 );
-            v.t.set( texcoords[0], texcoords[1] );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+
+            if( texcoords )
+            {
+                v.t.set( texcoords[0], texcoords[1] );
+                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            }
+
+            if( colors )
+            {
+                v.c = sBgra2Rgba(*colors);
+                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
+            }
+            else v.c = 0xFFFFFFFF;
         }
     }
 
@@ -120,7 +154,7 @@ void GN::gfx::OGLQuad::drawQuads(
     if( !(DQ_USE_CURRENT_VS & options ) )
         attribs |= GL_TRANSFORM_BIT;
     if( !(DQ_USE_CURRENT_PS & options ) )
-        attribs |= GL_CURRENT_BIT;
+        attribs |= GL_ENABLE_BIT;
 
     // push OGL attributes
     GN_OGL_CHECK( glPushAttrib( attribs ) );
@@ -171,9 +205,7 @@ void GN::gfx::OGLQuad::drawQuads(
 
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
-        // setup material color
-        static Vector4f white(1,1,1,1);
-        GN_OGL_CHECK( glColor4fv( white ) );
+        glEnable( GL_COLOR_MATERIAL );
     }
 
     // apply texture states
@@ -181,7 +213,7 @@ void GN::gfx::OGLQuad::drawQuads(
     GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,  GL_MODULATE ) );
 
     // apply vertex binding
-    GN_OGL_CHECK( glInterleavedArrays( GL_T2F_V3F, sizeof(QuadVertex), mVtxBuf ) );
+    GN_OGL_CHECK( glInterleavedArrays( GL_T2F_C4UB_V3F, sizeof(QuadVertex), mVtxBuf ) );
 
     // do draw
     GN_OGL_CHECK( glDrawArrays( GL_QUADS, 0, (GLsizei)count*4 ) );

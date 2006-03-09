@@ -352,7 +352,7 @@ namespace GN { namespace gfx
         //!
         //! Enable depth write. Default is disabled.
         //!
-        DQ_UPDATE_DEPTH = 1 << 6,
+        DQ_UPDATE_DEPTH = 1<<6,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合
@@ -1538,6 +1538,12 @@ namespace GN { namespace gfx
         //! \param texcoords, texStride
         //!     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
         //!     Note "texStride" is stride of one vertex.
+        //!     Specify texcoords to NULL, if you want non-textured quad.
+        //!     texStride is be ignored in this case.
+        //! \param colors, clrStride
+        //!     顶点颜色数组，由一系列的BGRA32颜色值组成。4个顶点表示一个矩形。
+        //!     Note "clrStride" is stride of one vertex.
+        //!     Set colors to NULL, to specify pure white for all vertices.
         //! \param count
         //!     Number of quads.
         //!
@@ -1545,25 +1551,26 @@ namespace GN { namespace gfx
             BitField options,
             const void * positions, size_t posStride,
             const void * texcoords, size_t texStride,
+            const void * colors, size_t clrStride,
             size_t count ) = 0;
 
         //!
-        //! Draw quads, with same position and texture stride.
+        //! Draw quads, with same stride for positions, texcoords and colors
         //!
         void drawQuads(
             BitField options,
-            const void * positions, const void * texcoords, size_t stride,
+            const void * positions, const void * texcoords, const void * colors, size_t stride,
             size_t count )
         {
-            drawQuads( options, positions, stride, texcoords, stride, count );
+            drawQuads( options, positions, stride, texcoords, stride, colors, stride, count );
         }
 
         //!
-        //! Draw single 2D quad.
+        //! Draw single 2D textured quad.
         //!
         //! \note This function may not very effecient.
         //!
-        void draw2DQuad(
+        void draw2DTexturedQuad(
             BitField options,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
@@ -1590,7 +1597,33 @@ namespace GN { namespace gfx
             tex[2].set( u2, v2 );
             tex[3].set( u1, v2 );
 
-            drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), tex, sizeof(Vector2f), 1 );
+            drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), tex, sizeof(Vector2f), 0, 0, 1 );
+        }
+
+        //!
+        //! Draw single 2D solid quad.
+        //!
+        //! \note This function may not very effecient.
+        //!
+        void draw2DSolidQuad(
+            BitField options,
+            double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
+            uint32_t color = 0xFFFFFFFF )
+        {
+            float x1 = (float)left;
+            float y1 = (float)top;
+            float x2 = (float)right;
+            float y2 = (float)bottom;
+
+            Vector2f pos[4];
+            pos[0].set( x1, y1 );
+            pos[1].set( x2, y1 );
+            pos[2].set( x2, y2 );
+            pos[3].set( x1, y2 );
+
+            uint32_t colors[] = { color, color, color, color };
+
+            drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), 0, 0, colors, sizeof(uint32_t), 1 );
         }
 
         //!
