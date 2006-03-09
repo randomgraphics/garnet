@@ -37,38 +37,33 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_UNIMPL_WARNING();
-/*
-    // get default render target surface
-    GN_ASSERT( 0 == mDefaultRT0 );
-    GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
-
-    // restore render target size to default value
-    mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
-    mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
-
     // make sure MRT caps does not exceed maximum allowance value
     GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= MAX_RENDER_TARGETS );
 
+    // store old RT data
+    RenderTargetTextureDesc oldRT[MAX_RENDER_TARGETS], oldDepth;
+    for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
+    {
+        oldRT[i] = mCurrentRTs[i];
+    }
+    oldDepth = mCurrentDepth;
+
+    //set default render target
+    mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
+    mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
+    for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
+    {
+        mCurrentRTs[i].tex = 0;
+    }
+    setViewport( getViewport() );
+
     // (re)apply render targets
-    RenderTargetTextureDesc desc;
     for( size_t i = 0; i < getCaps(CAPS_MAX_RENDER_TARGETS); ++i )
     {
-        desc = mCurrentRTs[i];
-
-        // 将mCurrentRts修改为无效值，以便绕过SetRenderTarget()的重复调用检测。
-        // mCurrentDepth同理。
-        mCurrentRTs[i].tex = (const Texture*)0xdeadbeef;
-        mCurrentRTs[i].face = NUM_TEXFACES;
-        setRenderTarget( i, desc.tex, desc.level, desc.face );
+        setRenderTarget( i, oldRT[i].tex, oldRT[i].level, oldRT[i].face );
     }
+    setRenderDepth( oldDepth.tex, oldDepth.level, oldDepth.face );
 
-    // (re)apply depth texture
-    desc = mCurrentDepth;
-    mCurrentDepth.tex = (const Texture*)0xdeadbeef;
-    mCurrentDepth.face = NUM_TEXFACES;
-    setRenderDepth( desc.tex, desc.level, desc.face );
-*/
     // success
     return true;
 
@@ -84,7 +79,9 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_UNIMPL_WARNING();
+    // release render target pointers
+    safeRelease( mDefaultRT0 );
+    safeRelease( mAutoDepth );
 
     GN_UNGUARD;
 }
@@ -115,9 +112,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     // skip redundant call
     if( rttd.equal( tex, level, face ) ) return;
 
-    GN_UNIMPL();
-
-    /* resolve content from EDRAM to current render target texture
+    // resolve content from EDRAM to current render target texture
     if( rttd.tex )
     {
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(rttd.tex);
@@ -126,7 +121,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
         GN_CASSERT( D3DRESOLVE_RENDERTARGET2 == D3DRESOLVE_RENDERTARGET0+2 );
         GN_CASSERT( D3DRESOLVE_RENDERTARGET1 == D3DRESOLVE_RENDERTARGET0+1 );
         GN_DX_CHECK( mDevice->Resolve(
-            D3DRESOLVE_RENDERTARGET0 + i,
+            D3DRESOLVE_RENDERTARGET0 + index,
             NULL, // destRect
             d3dTex->getD3DTexture(),
             NULL, // destPoint
@@ -162,7 +157,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
         // Because viewport is using relative coordinates based on render target size,
         // so here we have to re-apply the viewport.
         setViewport( getViewport() );
-    }*/
+    }
 
     GN_UNGUARD_SLOW;
 }
@@ -180,7 +175,7 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, Te
 
     GN_UNIMPL();
 
-    /* resolve to depth texture
+    // resolve to depth texture
     if( mCurrentDepth.tex )
     {
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(mCurrentDepth.tex);
@@ -199,7 +194,7 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, Te
     if( mCurrentDepth.tex ) mCurrentDepth.tex->decref();
     mCurrentDepth.tex = tex;
     mCurrentDepth.level = level;
-    mCurrentDepth.face = face;*/
+    mCurrentDepth.face = face;
 
     GN_UNGUARD_SLOW;
 }

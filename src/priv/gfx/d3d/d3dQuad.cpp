@@ -102,8 +102,10 @@ bool GN::gfx::D3DQuad::deviceCreate()
         "vs.1.1 \n"
         "dcl_position0 v0 \n"
         "dcl_texcoord0 v1 \n"
+        "dcl_color0 v2 \n"
         "mov oPos, v0 \n"
-        "mov oT0, v1 \n";
+        "mov oT0, v1 \n"
+        "mov oD0, v2 \n";
     mVtxShader = d3d::assembleVS( dev, code );
     if( 0 == mVtxShader ) return false;
 #else
@@ -122,8 +124,7 @@ bool GN::gfx::D3DQuad::deviceCreate()
 
         static const char * code2 =
             "ps.1.1 \n"
-            "tex t0 \n"
-            "mov r0, t0 \n";
+            "mov r0, v0 \n";
         mPxlShaderSolid = d3d::assemblePS( dev, code2 );
         if( 0 == mPxlShaderSolid ) return false;
     }
@@ -423,6 +424,9 @@ void GN::gfx::D3DQuad::drawQuads(
     r.mDrawState.dirtyFlags.vtxBinding = 1;
 
     // draw
+#if GN_XENON
+    GN_DX_CHECK( dev->DrawPrimitive( D3DPT_QUADLIST, (UINT)(mNextQuad * 4), (UINT)count ) );
+#else
     GN_DX_CHECK( dev->DrawIndexedPrimitive(
         D3DPT_TRIANGLELIST,
         (INT)( mNextQuad * 4 ),  // BaseVertexIndex
@@ -430,6 +434,7 @@ void GN::gfx::D3DQuad::drawQuads(
         (UINT)( count * 4 ),     // NumVertices
         0,                       // StartIndex
         (UINT)( count * 2 ) ) ); // PrimitiveCount
+#endif
 
     // update mNextQuad
     mNextQuad += count;
