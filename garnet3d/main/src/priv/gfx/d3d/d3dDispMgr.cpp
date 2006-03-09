@@ -12,21 +12,19 @@ static D3DFORMAT sDetermineBackBufferFormat(
     GN::gfx::MsaaType, // msaa
     bool fullscreen )
 {
+#if GN_XENON
+    return D3DFMT_X8R8G8B8; // use fixed back buffer format on Xenon
+#else
     GN_GUARD;
 
     // shortcut for windowed mode
     if( !fullscreen )
     {
-#if GN_XENON
-        GN_ERROR( "Xenon does not support windowed mode." );
-        return D3DFMT_UNKNOWN;
-#else
         D3DDISPLAYMODE d3ddm;
         GN_DX_CHECK_RV(
             d3d.GetAdapterDisplayMode(adapter, &d3ddm),
             D3DFMT_UNKNOWN );
         return d3ddm.Format;
-#endif
     }
 
     using namespace GN;
@@ -74,6 +72,7 @@ static D3DFORMAT sDetermineBackBufferFormat(
     return D3DFMT_UNKNOWN;
 
     GN_UNGUARD;
+#endif
 }
 
 //!

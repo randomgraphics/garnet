@@ -460,6 +460,7 @@ void GN::gfx::OGLRenderer::drawQuads(
     BitField options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
+    const void * colors, size_t clrStride,
     size_t count )
 {
     GN_GUARD_SLOW;
@@ -468,7 +469,12 @@ void GN::gfx::OGLRenderer::drawQuads(
     if( !( DQ_USE_CURRENT_VS & options ) ) bindVtxShader(0);
     if( !( DQ_USE_CURRENT_PS & options ) ) bindPxlShader(0);
     applyDrawState(0);
-    mQuad->drawQuads( options, (const float*)positions, posStride, (const float*)texcoords, texStride, count );
+    mQuad->drawQuads(
+        options,
+        (const float*)positions, posStride,
+        (const float*)texcoords, texStride,
+        (const uint32_t*)colors, clrStride,
+        count );
 
     GN_UNGUARD_SLOW;
 }

@@ -351,6 +351,7 @@ namespace GN { namespace gfx
         virtual void drawQuads( BitField options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
+                                const void * colors, size_t clrStride,
                                 size_t count ) {}
         virtual void drawLines( BitField options,
                                 const void * positions,
