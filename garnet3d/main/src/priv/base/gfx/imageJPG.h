@@ -134,6 +134,11 @@ public:
     }
 
     //!
+    //! Check file format. Return true if the file is JPEG file
+    //!
+    bool checkFormat( GN::File & );
+
+    //!
     //! read JPEG header
     //!
     bool readHeader(

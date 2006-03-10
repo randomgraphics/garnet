@@ -60,6 +60,11 @@ public:
     ~PngReader() { destroyPng(); }
 
     //!
+    //! Check file format. Return true if the file is PNG file
+    //!
+    bool checkFormat( GN::File & );
+
+    //!
     //! read PNG header
     //!
     bool readHeader(

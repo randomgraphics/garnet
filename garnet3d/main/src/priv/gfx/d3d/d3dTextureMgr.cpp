@@ -48,9 +48,10 @@ GN::gfx::D3DRenderer::createTextureFromFile( File & file )
 {
     GN_GUARD;
 
-    AutoRef<D3DTexture> p( new D3DTexture(*this) );
-    if( p->initFromFile(file) ) return p.detach();
-    return 0;
+    //AutoRef<D3DTexture> p( new D3DTexture(*this) );
+    //if( !p->initFromFile(file) ) return 0;
+    //return p.detach();
+    return MyParent::createTextureFromFile( file );
 
     GN_UNGUARD;
 }

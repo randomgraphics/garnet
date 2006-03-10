@@ -176,6 +176,7 @@ D3DFORMAT GN::gfx::d3d::clrFmt2D3DFormat( ClrFmt clrfmt )
 
         // 32 bits
         case FMT_BGRA_8_8_8_8_UNORM     : return D3DFMT_A8R8G8B8;
+        case FMT_BGRX_8_8_8_8_UNORM     : return D3DFMT_X8R8G8B8;
         case FMT_RG_16_16_FLOAT         : return D3DFMT_G16R16F;
         case FMT_RG_16_16_UNORM         : return D3DFMT_G16R16;
         case FMT_R_32_FLOAT             : return D3DFMT_R32F;
