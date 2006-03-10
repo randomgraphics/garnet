@@ -14,7 +14,7 @@ extern "C"
 //!
 //! png image reader.
 //!
-class PngReader
+class PNGReader
 {
     png_struct    * mPng;
     png_info      * mInfo;
@@ -52,12 +52,12 @@ public:
     //!
     //! constructor
     //!
-    PngReader() : mPng(0), mInfo(0) {}
+    PNGReader() : mPng(0), mInfo(0) {}
 
     //!
     //! destructor
     //!
-    ~PngReader() { destroyPng(); }
+    ~PNGReader() { destroyPng(); }
 
     //!
     //! Check file format. Return true if the file is PNG file

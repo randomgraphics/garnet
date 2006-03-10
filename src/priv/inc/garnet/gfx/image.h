@@ -86,6 +86,42 @@ namespace GN { namespace gfx
         //@}
 
         // ****************************
+        //! \name copy operation
+        // ****************************
+
+        //@{
+
+        ImageDesc( const ImageDesc & d )
+            : format( d.format )
+            , numFaces( d.numFaces )
+            , numLevels( d.numLevels )
+            , mipmaps( 0 )
+        {
+            if( d.mipmaps > 0 )
+            {
+                setFaceAndLevel( numFaces, numLevels );
+                size_t mipCount = numFaces * numLevels;
+                memcpy( mipmaps, d.mipmaps, sizeof(MipmapDesc)*mipCount );
+            }
+        }
+
+        ImageDesc & operator=( const ImageDesc & rhs )
+        {
+            format = rhs.format;
+            numFaces = rhs.numFaces;
+            numLevels = rhs.numLevels;
+            if( rhs.mipmaps > 0 )
+            {
+                setFaceAndLevel( numFaces, numLevels );
+                size_t mipCount = numFaces * numLevels;
+                memcpy( mipmaps, rhs.mipmaps, sizeof(MipmapDesc)*mipCount );
+            }
+            return *this;
+        }
+
+        //@}
+
+        // ****************************
         //! \name member functions
         // ****************************
 

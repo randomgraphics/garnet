@@ -167,13 +167,16 @@ GN_COLOR_FORMAT( RGB_5_6_5_UNORM              , 16    , CH3( SWIZZLE(R,G,B,1) , 
 GN_COLOR_FORMAT( BGR_5_6_5_UNORM              , 16    , CH3( SWIZZLE(B,G,R,1) , CH(0   , 5   , UNORM), CH(5   , 6   , UNORM), CH(11  , 5   , UNORM)                        ) )
 
 // LA
+GN_COLOR_FORMAT( LA_32_32_UNORM               , 64    , CH2( SWIZZLE(R,R,R,G) , CH(0   , 32  , UNORM), CH(32  , 32  , UNORM)                                               ) )
 GN_COLOR_FORMAT( LA_16_16_UNORM               , 32    , CH2( SWIZZLE(R,R,R,G) , CH(0   , 16  , UNORM), CH(16  , 16  , UNORM)                                               ) )
 GN_COLOR_FORMAT( LA_8_8_UNORM                 , 16    , CH2( SWIZZLE(R,R,R,G) , CH(0   , 8   , UNORM), CH(8   , 8   , UNORM)                                               ) )
 GN_COLOR_FORMAT( LA_4_4_UNORM                 , 8     , CH2( SWIZZLE(R,R,R,G) , CH(0   , 4   , UNORM), CH(4   , 4   , UNORM)                                               ) )
+GN_COLOR_FORMAT( L_32_UNORM                   , 32    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 32  , UNORM)                                                                      ) )
 GN_COLOR_FORMAT( L_16_UNORM                   , 16    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 16  , UNORM)                                                                      ) )
 GN_COLOR_FORMAT( L_8_UNORM                    , 8     , CH1( SWIZZLE(R,R,R,1) , CH(0   , 8   , UNORM)                                                                      ) )
-GN_COLOR_FORMAT( A_16_UNORM                   , 16    , CH1( SWIZZLE(1,1,1,R) , CH(0   , 0   , UNORM)                                                                      ) )
-GN_COLOR_FORMAT( A_8_UNORM                    , 8     , CH1( SWIZZLE(1,1,1,R) , CH(0   , 0   , UNORM)                                                                      ) )
+GN_COLOR_FORMAT( A_32_UNORM                   , 32    , CH1( SWIZZLE(1,1,1,R) , CH(0   , 32  , UNORM)                                                                      ) )
+GN_COLOR_FORMAT( A_16_UNORM                   , 16    , CH1( SWIZZLE(1,1,1,R) , CH(0   , 16  , UNORM)                                                                      ) )
+GN_COLOR_FORMAT( A_8_UNORM                    , 8     , CH1( SWIZZLE(1,1,1,R) , CH(0   , 8   , UNORM)                                                                      ) )
 
 // depth format
 GN_COLOR_FORMAT( D_32                         , 32    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 32  , UNORM)                                                                      ) )
