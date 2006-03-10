@@ -108,7 +108,7 @@ public:
 //!
 //! jpeg image reader
 //!
-class JpegReader
+class JPGReader
 {
     jmp_buf                 mJumpBuf;
     jpeg_decompress_struct  mCInfo;
@@ -120,7 +120,7 @@ public:
     //!
     //! constructor
     //!
-    JpegReader() : mErr(&mJumpBuf)
+    JPGReader() : mErr(&mJumpBuf)
     {
         memset( &mCInfo, 0, sizeof(mCInfo) );
     }
@@ -128,7 +128,7 @@ public:
     //!
     //! destructor
     //!
-    ~JpegReader()
+    ~JPGReader()
     {
         jpeg_destroy_decompress(&mCInfo);
     }

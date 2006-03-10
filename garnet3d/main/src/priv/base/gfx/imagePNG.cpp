@@ -74,7 +74,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
 //
 //
 // -----------------------------------------------------------------------------
-bool PngReader::checkFormat( GN::File & fp )
+bool PNGReader::checkFormat( GN::File & fp )
 {
     GN_GUARD;
 
@@ -92,7 +92,7 @@ bool PngReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool PngReader::readHeader(
+bool PNGReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -152,7 +152,7 @@ bool PngReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool PngReader::readImage( void * o_data )
+bool PNGReader::readImage( void * o_data )
 {
     GN_GUARD;
 
@@ -205,7 +205,7 @@ bool PngReader::readImage( void * o_data )
 //
 //
 // -----------------------------------------------------------------------------
-void PngReader::destroyPng()
+void PNGReader::destroyPng()
 {
     GN_GUARD;
 
@@ -228,12 +228,12 @@ void PngReader::destroyPng()
 //
 //
 // -----------------------------------------------------------------------------
-void PngReader::readImageData(
+void PNGReader::readImageData(
     png_struct * i_png, png_byte * o_data, png_size_t i_length )
 {
     GN_GUARD;
 
-    PngReader * reader = (PngReader*) png_get_io_ptr( i_png );
+    PNGReader * reader = (PNGReader*) png_get_io_ptr( i_png );
     GN_ASSERT( reader );
 
     if ( i_length >= reader->mSize )

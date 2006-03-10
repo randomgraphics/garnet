@@ -10,7 +10,7 @@ uint8_t JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 //
 //
 // -----------------------------------------------------------------------------
-bool JpegReader::checkFormat( GN::File & fp )
+bool JPGReader::checkFormat( GN::File & fp )
 {
     GN_GUARD;
 
@@ -30,7 +30,7 @@ bool JpegReader::checkFormat( GN::File & fp )
 //
 //
 // -----------------------------------------------------------------------------
-bool JpegReader::readHeader(
+bool JPGReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
 {
     GN_GUARD;
@@ -91,7 +91,7 @@ bool JpegReader::readHeader(
 //
 //
 // -----------------------------------------------------------------------------
-bool JpegReader::readImage( void * o_data )
+bool JPGReader::readImage( void * o_data )
 {
     GN_GUARD;
 

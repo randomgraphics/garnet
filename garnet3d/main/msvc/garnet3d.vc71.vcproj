@@ -3124,6 +3124,44 @@
 							RelativePath="..\src\priv\gfx\d3d\d3dIdxBuf.h">
 						</File>
 						<File
+							RelativePath="..\src\priv\gfx\d3d\d3dLine.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxD3D.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxD3D.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxD3D.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxD3D.pch"/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\d3d\d3dLine.h">
+						</File>
+						<File
 							RelativePath="..\src\priv\gfx\d3d\d3dPxlShaderAsm.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
