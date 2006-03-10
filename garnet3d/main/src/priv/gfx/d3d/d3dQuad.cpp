@@ -6,23 +6,19 @@
 struct D3DQuadVertex
 {
     GN::Vector4f p;
-    GN::Vector2f t;
     uint32_t     c;
+    GN::Vector2f t;
     float        _; // padding to 32 bytes
 };
 GN_CASSERT( sizeof(D3DQuadVertex) == 32 );
 
-struct D3DQuadStruct
-{
-    D3DQuadVertex v[4];
-};
+static const size_t QUAD_STRIDE = sizeof(D3DQuadVertex)*4;
 
 static const D3DVERTEXELEMENT9 sDeclVs[] =
 {
     { 0,  0, D3DDECLTYPE_FLOAT4  , 0, D3DDECLUSAGE_POSITION, 0 },
-    { 0, 16, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD, 0 },
-    { 0, 24, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
-    { 0, 28, D3DDECLTYPE_FLOAT1  , 0, D3DDECLUSAGE_TEXCOORD, 1 },
+    { 0, 16, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
+    { 0, 20, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD, 0 },
     D3DDECL_END()
 };
 #if GN_XENON
@@ -31,9 +27,8 @@ static const D3DVERTEXELEMENT9 * sDeclFfp = sDeclVs;
 static const D3DVERTEXELEMENT9 sDeclFfp[] =
 {
     { 0,  0, D3DDECLTYPE_FLOAT4  , 0, D3DDECLUSAGE_POSITIONT, 0 },
-    { 0, 16, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD , 0 },
-    { 0, 24, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR    , 0 },
-    { 0, 28, D3DDECLTYPE_FLOAT1  , 0, D3DDECLUSAGE_TEXCOORD , 1 },
+    { 0, 16, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR    , 0 },
+    { 0, 20, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD , 0 },
     D3DDECL_END()
 };
 #endif
@@ -173,7 +168,7 @@ bool GN::gfx::D3DQuad::deviceRestore()
     // create vertex buffer
     GN_DX_CHECK_RV(
         dev->CreateVertexBuffer(
-            (UINT)( sizeof(D3DQuadStruct) * MAX_QUADS ),
+            (UINT)( QUAD_STRIDE * MAX_QUADS ),
             D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
             0, // non-FVF
             D3DPOOL_DEFAULT,
@@ -273,8 +268,8 @@ void GN::gfx::D3DQuad::drawQuads(
     else
     {
         GN_DX_CHECK_R( mVtxBuf->Lock(
-            (UINT)( sizeof(D3DQuadStruct)*mNextQuad ),
-            (UINT)( sizeof(D3DQuadStruct)*count ),
+            (UINT)( QUAD_STRIDE * mNextQuad ),
+            (UINT)( QUAD_STRIDE * count ),
             &vbData, D3DLOCK_NOOVERWRITE ) );
     }
 
@@ -283,7 +278,7 @@ void GN::gfx::D3DQuad::drawQuads(
     float scaleY, offsetY;
     if( DQ_USE_CURRENT_VS & options )
     {
-        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclFfp ) );
+        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
         scaleX = 1.0f; offsetX = 0.0f;
         scaleY = 1.0f; offsetY = 0.0f;
     }

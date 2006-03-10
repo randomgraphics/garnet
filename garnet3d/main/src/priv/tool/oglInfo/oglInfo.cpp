@@ -125,7 +125,7 @@ void printOglInfo( GN::HandleType disp, int index )
 #pragma comment( lib, "glu32.lib" )
 #endif
 
-void doPrint( HDC hdc, int pfdIndex )
+void createOGL( HDC hdc, int pfdIndex )
 {
     // Set the pixel format for the device context
     PIXELFORMATDESCRIPTOR pfd;
@@ -147,6 +147,18 @@ void doPrint( HDC hdc, int pfdIndex )
     ::wglDeleteContext( hrc );
 }
 
+void createWindow( int pfdIndex )
+{
+    GN::AutoObjPtr<GN::win::Window> oglWindow( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+    if( !oglWindow ) return;
+
+    HWND hwnd = (HWND)oglWindow->getWindowHandle();
+    HDC hdc;
+    GN_MSW_CHECK_R( hdc = ::GetDC(hwnd) );
+    createOGL( hdc, pfdIndex );
+    ::ReleaseDC( hwnd, hdc );
+}
+
 int main()
 {
     GN::win::Window * mainWindow = GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW );
@@ -160,12 +172,12 @@ int main()
     int count = DescribePixelFormat(hdc, 1, 0, 0);
     GN_INFO( "%d pixelformats in total.", count );
 
+    ::ReleaseDC( hwnd, hdc );
+
     for( int i = 1; i <= count; ++i )
     {
-        doPrint( hdc, i );
+        createWindow( i );
     }
-
-    ::ReleaseDC( hwnd, hdc );
 
     // success
     return 0;

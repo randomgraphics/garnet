@@ -317,7 +317,6 @@ namespace GN
                 if( 0 == h )
                 {
                     GN_ERROR( "Fail to create new resource item!" );
-                    mResNames.erase(name);
                     delete item;
                     return 0;
                 }
@@ -367,6 +366,7 @@ namespace GN
             StringMap::iterator iter = mResNames.find( mResHandles[handle]->name );
             GN_ASSERT( iter != mResNames.end() );
             doDispose( mResHandles[handle] );
+            delete mResHandles[handle];
             mResHandles.remove( handle );
             mResNames.erase( iter );
             GN_UNGUARD;
@@ -387,6 +387,7 @@ namespace GN
             HandleType h = iter->second;
             GN_ASSERT( mResHandles.validHandle( h ) );
             doDispose( mResHandles[h] );
+            delete mResHandles[h];
             mResHandles.remove( h );
             mResNames.erase( iter );
             GN_UNGUARD;

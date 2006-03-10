@@ -144,4 +144,36 @@ public:
         TS_ASSERT_DIFFERS( 0, rm.getResourceHandle("2") );
         TS_ASSERT_EQUALS( rm.getResourceHandle("2"), rm.getResourceHandle("2") );
     }
+
+    void testRemoveHandle()
+    {
+        ResMgr rm;
+
+        ResMgr::HandleType h1 = rm.addResource( "1" );
+        ResMgr::HandleType h2 = rm.addResource( "2" );
+
+        TS_ASSERT( rm.validResourceHandle( h1 ) );
+        TS_ASSERT( rm.validResourceHandle( h2 ) );
+
+        rm.removeResourceHandle( h1 );
+
+        TS_ASSERT( !rm.validResourceHandle( h1 ) );
+        TS_ASSERT( rm.validResourceHandle( h2 ) );
+    }
+
+    void testRemoveName()
+    {
+        ResMgr rm;
+
+        ResMgr::HandleType h1 = rm.addResource( "1" );
+        ResMgr::HandleType h2 = rm.addResource( "2" );
+
+        TS_ASSERT( rm.validResourceHandle( h1 ) );
+        TS_ASSERT( rm.validResourceHandle( h2 ) );
+
+        rm.removeResourceName( "1" );
+
+        TS_ASSERT( !rm.validResourceHandle( h1 ) );
+        TS_ASSERT( rm.validResourceHandle( h2 ) );
+    }
 };
