@@ -2,6 +2,7 @@
 #include "d3dRenderer.h"
 #include "d3dFont.h"
 #include "d3dQuad.h"
+#include "d3dLine.h"
 #include "d3dIdxBuf.h"
 
 // static primitive map
@@ -47,6 +48,9 @@ bool GN::gfx::D3DRenderer::drawInit()
     mQuad = new D3DQuad(*this);
     if( !mQuad->init() ) return false;
 
+    mLine = new D3DLine(*this);
+    if( !mLine->init() ) return false;
+
     // success
     return true;
 
@@ -62,6 +66,7 @@ void GN::gfx::D3DRenderer::drawQuit()
 
     safeDelete( mFont );
     safeDelete( mQuad );
+    safeDelete( mLine );
 
     GN_UNGUARD;
 }
@@ -327,17 +332,25 @@ void GN::gfx::D3DRenderer::drawQuads(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::drawLines(
-    BitField,// options,
-    const void *,// positions,
-    size_t,// stride,
-    size_t,// count,
-    uint32_t,// color,
-    const Matrix44f &,// model,
-    const Matrix44f &,// view,
-    const Matrix44f & )// proj )
+    BitField options,
+    const void * positions,
+    size_t stride,
+    size_t count,
+    uint32_t color,
+    const Matrix44f & model,
+    const Matrix44f & view,
+    const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
-    GN_UNIMPL_WARNING();
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawLines" );
+    GN_ASSERT( mDrawBegan && mLine );
+    applyDrawState();
+    mLine->drawLines(
+        options,
+        (const float*)positions, stride,
+        count, color,
+        model, view, proj );
+    PIXPERF_END_EVENT();
     GN_UNGUARD_SLOW;
 }
 

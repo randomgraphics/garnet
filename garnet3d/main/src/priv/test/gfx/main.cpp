@@ -143,7 +143,7 @@ public:
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
-        // the a line box
+        // the a wireframe box
         {
             static const float E = 80.0f;
             static float lines[] =
@@ -170,7 +170,7 @@ public:
                 lines,
                 sizeof(float)*3,
                 count,
-                ubyte4ToRGBA32(255,255,0,255),
+                ubyte4ToBGRA32(255,255,0,255),
                 world, view, proj );
         }
     }

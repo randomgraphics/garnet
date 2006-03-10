@@ -178,7 +178,7 @@ namespace GN { namespace gfx
     inline const char * clrFmt2Str( ClrFmt fmt ) { return getClrFmtDesc(fmt).name; }
 
     //!
-    //! compose a RGBA32 color value from 4 unsigned bytes.
+    //! compose RGBA32 color value from 4 unsigned bytes.
     //!
     GN_FORCE_INLINE uint32_t ubyte4ToRGBA32( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
     {
@@ -190,7 +190,19 @@ namespace GN { namespace gfx
     }
 
     //!
-    //! convert 4 floats to uint32
+    //! compose BGRA32/D3DCOLOR color value from 4 unsigned bytes.
+    //!
+    GN_FORCE_INLINE uint32_t ubyte4ToBGRA32( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
+    {
+        return
+            ( (uint32_t)b <<  0 ) |
+            ( (uint32_t)g <<  8 ) |
+            ( (uint32_t)r << 16 ) |
+            ( (uint32_t)a << 24 );
+    }
+
+    //!
+    //! convert 4 floats to RGBA32
     //!
     GN_FORCE_INLINE uint32_t float4ToRGBA32( const Vector4f & color )
     {
@@ -202,7 +214,7 @@ namespace GN { namespace gfx
     }
 
     //!
-    //! convert 4 floats to uint32
+    //! convert 4 floats to BGRA32
     //!
     GN_FORCE_INLINE uint32_t float4ToBGRA32( const Vector4f & color )
     {

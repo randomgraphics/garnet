@@ -11,12 +11,30 @@ namespace GN
     //!
     //! Allocate memory from heap. Can cross DLL boundary.
     //!
-    void * memAlloc( size_t );
+    void * memAlloc( size_t sizeInBytes );
+
+    //!
+    //! Allocate typed memory from heap. Can cross DLL boundary.
+    //!
+    template<typename T>
+    inline T * memAllocT( size_t elementCount )
+    {
+        return (T*)memAlloc( sizeof(T)*elementCount );
+    }
 
     //!
     //! Re-allocate memory from heap. Can cross DLL boundary.
     //!
-    void * memReAlloc( void *, size_t );
+    void * memReAlloc( void *, size_t sizeInBytes );
+
+    //!
+    //! Re-allocate typed memory from heap. Can cross DLL boundary.
+    //!
+    template<typename T>
+    inline T * memReAllocT( void * ptr, size_t elementCount )
+    {
+        return (T*)memReAlloc( ptr, sizeof(T)*elementCount );
+    }
 
     //!
     //! Free heap-allocated memory. Can cross DLL boundary.

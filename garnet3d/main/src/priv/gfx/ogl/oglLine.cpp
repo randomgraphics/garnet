@@ -91,9 +91,16 @@ void GN::gfx::OGLLine::drawLines(
         count -= n;
     }
 
+#define BGRA2RGBA( x ) ( \
+          ( (x)&0xFF000000) | \
+          (((x)&0x00FF0000)>>16) | \
+          ( (x)&0x0000FF00) | \
+          (((x)&0x000000FF)<<16) )
+
     // fill vertex data
     GN_ASSERT( mVtxBuf );
     size_t vertexCount = ( DL_LINE_STRIP & options ) ? count + 1 : count * 2;
+    color = BGRA2RGBA( color );
     for( size_t i = 0; i < vertexCount; ++i )
     {
         mVtxBuf[i].p.set( positions[0], positions[1], positions[2] );
