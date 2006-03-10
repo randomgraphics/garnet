@@ -172,6 +172,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 GN::path::baseName(argv[0]).cstr() );
             return false;
         }
+        else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
         else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
         else if( 0 == strCmpI( a, "-d3d" ) ) mInitParam.rapi = gfx::API_D3D;
         else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
