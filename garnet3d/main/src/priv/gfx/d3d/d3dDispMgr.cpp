@@ -4,6 +4,44 @@
 //
 //
 // ------------------------------------------------------------------------
+static void sDetermineMsaa(
+    IDirect3D9 & d3d,
+    UINT adapter,
+    D3DDEVTYPE devtype,
+    D3DFORMAT surfaceFormat,
+    GN::gfx::MsaaType msaa,
+    bool fullscreen,
+    D3DMULTISAMPLE_TYPE & d3dType,
+    DWORD & quality )
+{
+    GN_GUARD;
+
+    // default is no MSAA
+    d3dType = D3DMULTISAMPLE_NONE;
+    quality = 0;
+
+    if( GN::gfx::MSAA_NONE != msaa )
+    {
+        DWORD q;
+        if( SUCCEEDED( d3d.CheckDeviceMultiSampleType(
+            adapter,
+            devtype,
+            surfaceFormat,
+            !fullscreen,
+            D3DMULTISAMPLE_NONMASKABLE,
+            &q ) ) )
+        {
+            d3dType = D3DMULTISAMPLE_NONMASKABLE;
+            quality = q - 1;
+        }
+    }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// ------------------------------------------------------------------------
 static D3DFORMAT sDetermineBackBufferFormat(
     IDirect3D9 & d3d,
     UINT adapter,
@@ -102,8 +140,9 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     if( D3DFMT_UNKNOWN == d3dpp.BackBufferFormat ) return 0;
 
     // set msaa parameters
-    d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
-    d3dpp.MultiSampleQuality = 0;
+    sDetermineMsaa(
+        d3d, adapter, devtype, d3dpp.BackBufferFormat, msaa, fullscreen,
+        d3dpp.MultiSampleType, d3dpp.MultiSampleQuality );
 
     //
     // set depth and stencil buffer parameters

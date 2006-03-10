@@ -33,10 +33,11 @@ namespace GN { namespace gfx
     //!
     enum MsaaType
     {
-        MSAA_NONE,
-        MSAA_LOW_QUALITY,
-        MSAA_MEDIUM_QUALITY,
-        MSAA_HIGH_QULITY,
+        MSAA_NONE,   //!< No MSAA
+        MSAA_LOW,    //!< low quality MSAA
+        MSAA_MEDIUM, //!< medium quality MSAA
+        MSAA_HIGH,   //!< high quality MSAA
+        MSAA_ULTRA,  //!< ultra quality MSAA
     };
 
     //!
