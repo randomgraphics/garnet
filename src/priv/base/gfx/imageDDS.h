@@ -72,6 +72,11 @@ public:
     }
 
     //!
+    //! Check file format. Return true if the file is DDS file
+    //!
+    bool checkFormat( GN::File & );
+
+    //!
     //! Read DDS header
     //!
     bool readHeader(

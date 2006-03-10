@@ -74,6 +74,24 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
 //
 //
 // -----------------------------------------------------------------------------
+bool PngReader::checkFormat( GN::File & fp )
+{
+    GN_GUARD;
+
+    unsigned char buf[8];
+
+    if( !fp.seek( 0, GN::FSEEK_SET ) ) return false;
+
+    if( 8 != fp.read( buf, 8 ) ) return false;
+
+    return 0 == png_sig_cmp( buf, 0, 8 );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool PngReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
 {

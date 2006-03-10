@@ -232,6 +232,26 @@ static GN::gfx::ClrFmt getImageFormat( const DDPixelFormat & ddpf )
 //
 //
 // -----------------------------------------------------------------------------
+bool DDSReader::checkFormat( GN::File & fp )
+{
+    GN_GUARD;
+
+    char buf[5];
+
+    if( !fp.seek( 0, GN::FSEEK_SET ) ) return false;
+
+    if( 4 != fp.read( buf, 4 ) ) return false;
+
+    buf[4] = 0;
+
+    return 0 == GN::strCmp( buf, "DDS " );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool DDSReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const uint8_t * i_buff, size_t i_size )
 {

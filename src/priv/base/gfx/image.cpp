@@ -125,60 +125,28 @@ public:
     {
         GN_GUARD;
 
-        static const size_t HEADER_BYTES = 10;
-
         // reset internal states
         mFileFormat = UNKNOWN;
         mState  = INVALID;
 
-        // get file size
-        size_t sz = i_file.size();
-        if( sz <= HEADER_BYTES )
-        {
-            GN_ERROR( "Image file size is too small! Must not be a valid image file." );
-            return false;
-        }
-        mSrc.resize( sz );
-
-        // read file header
-        sz = i_file.read( &mSrc[0], HEADER_BYTES );
-        if( size_t(-1) == sz || sz < HEADER_BYTES )
-        {
-            GN_ERROR( "Fail to read image header!" );
-            return false;
-        }
-
-        // detect file format
-        if( 'J' == mSrc[6] && 'F' == mSrc[7] &&
-            'I' == mSrc[8] && 'F' == mSrc[9] )
-        {
-            // JPEG format
-            mFileFormat = JPEG;
-        }
-        else if( 'B' == mSrc[0] && 'M' == mSrc[1] )
-        {
-            // BMP format
-            mFileFormat = BMP;
-        }
-        else if ( 0 == png_sig_cmp(&mSrc[0], 0, 8) )
-        {
-            // PNG format
-            mFileFormat = PNG;
-        }
-        else if( 'D' == mSrc[0] && 'D' == mSrc[1] &&
-                 'S' == mSrc[2] && ' ' == mSrc[3] )
-        {
-            // DDS format
-            mFileFormat = DDS;
-        }
-        else
+        // determine file format
+        #define CHECK_FORMAT( reader, format ) \
+            if( reader.checkFormat( i_file ) ) mFileFormat = format; else
+        CHECK_FORMAT( mDds, DDS )
+        CHECK_FORMAT( mJpg, JPEG )
+        CHECK_FORMAT( mPng, PNG )
+        //CHECK_FORMAT( mTga, TGA )
         {
             GN_ERROR( "unknown image file format!" );
             return false;
         }
+        #undef CHECK_FORMAT
 
         // read whole file
-        sz = i_file.read( &mSrc[HEADER_BYTES], mSrc.size() - HEADER_BYTES );
+        size_t sz = i_file.size();
+        mSrc.resize( sz );
+        if( !i_file.seek( 0, FSEEK_SET ) ) return false;
+        sz = i_file.read( &mSrc[0], mSrc.size() );
         if( size_t(-1) == sz ) return false;
 
         // success

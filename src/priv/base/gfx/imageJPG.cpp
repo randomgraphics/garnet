@@ -10,6 +10,26 @@ uint8_t JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 //
 //
 // -----------------------------------------------------------------------------
+bool JpegReader::checkFormat( GN::File & fp )
+{
+    GN_GUARD;
+
+    char buf[5];
+
+    if( !fp.seek( 6, GN::FSEEK_SET ) ) return false;
+
+    if( 4 != fp.read( buf, 4 ) ) return false;
+
+    buf[4] = 0;
+
+    return 0 == GN::strCmp( buf, "JFIF" );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool JpegReader::readHeader(
     GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
 {
@@ -41,8 +61,8 @@ bool JpegReader::readHeader(
     if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
     {
         // force RGB output, if not gray-scale image
-        o_desc.format = GN::gfx::FMT_RGB_8_8_8_UNORM;
-        bpp = 3;
+        o_desc.format = GN::gfx::FMT_BGRX_8_8_8_8_UNORM;
+        bpp = 4;
     }
     else
     {
@@ -56,7 +76,7 @@ bool JpegReader::readHeader(
     m.width         = (uint16_t)mCInfo.image_width;
     m.height        = (uint16_t)mCInfo.image_height;
     m.depth         = 1;
-    m.rowPitch      = (uint32_t)(sizeof(JOCTET) * bpp * mCInfo.image_width);
+    m.rowPitch      = (uint32_t)(bpp * mCInfo.image_width);
     m.slicePitch    = m.rowPitch * m.height;
     m.levelPitch    = m.slicePitch;
 
@@ -77,11 +97,10 @@ bool JpegReader::readImage( void * o_data )
 
     GN_ASSERT( o_data );
 
-    if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
-    {
-        // force RGB output, if not gray-scale image
-        mCInfo.out_color_space = JCS_RGB;
-    }
+    bool grayscale = JCS_GRAYSCALE == mCInfo.jpeg_color_space;
+
+    // force RGB output, if not gray-scale image
+    if( grayscale ) mCInfo.out_color_space = JCS_RGB;
 
     // catch jpg error
     if ( 0 != setjmp( mJumpBuf ) )
@@ -99,16 +118,28 @@ bool JpegReader::readImage( void * o_data )
         mCInfo.output_height == mCInfo.image_height &&
         mCInfo.out_color_components == mCInfo.output_components );
 
+	size_t width = (size_t)mCInfo.output_width;
+	size_t height = (size_t)mCInfo.output_height;
+    size_t rowPitch = width * mCInfo.output_components;
+    GN::AutoObjPtr<uint8_t> rgbBuf;
+    uint8_t * decompressedBuf;
+    if( !grayscale )
+    {
+        // create temporary RGB_8_8_8 buffer
+        rgbBuf.attach( new uint8_t[rowPitch*height] );
+        decompressedBuf = rgbBuf;
+    }
+    else decompressedBuf = (uint8_t*)o_data;
+
     // read scanlines
-    uint32_t rowPitch = mCInfo.output_width * mCInfo.output_components;
     std::vector<uint8_t*> scanlines;
-    scanlines.resize( size_t(mCInfo.rec_outbuf_height) );
+    scanlines.resize( height );
     for( size_t i = 0; i < scanlines.size(); ++i )
     {
-        scanlines[i] = ((uint8_t*)o_data) + rowPitch * i;
+        scanlines[i] = rgbBuf.get() + rowPitch * i;
     }
-    JDIMENSION left_scanlines = mCInfo.output_height;
-    JDIMENSION readen_scanlines;
+    size_t left_scanlines = height;
+    size_t readen_scanlines;
     size_t     readen_bytes;
     while( left_scanlines > 0 )
     {
@@ -124,8 +155,28 @@ bool JpegReader::readImage( void * o_data )
         }
     }
 
-    // success
     jpeg_finish_decompress( &mCInfo );
+
+    // convert RGB_8_8_8 to BGRX_8_8_8_8
+    if( !grayscale )
+    {
+        uint8_t * src = (uint8_t*)rgbBuf.get();
+        uint8_t * dst = (uint8_t*)o_data;
+        for( size_t y = 0; y < height; ++y )
+        {
+            for( size_t x = 0; x < width; ++x )
+            {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                dst[3] = 0xFF;
+                src += 3;
+                dst += 4;
+            }
+        }
+    }
+
+    // success
     return true;
 
     GN_UNGUARD;
