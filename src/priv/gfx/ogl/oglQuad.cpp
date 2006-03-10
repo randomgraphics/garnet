@@ -92,7 +92,7 @@ void GN::gfx::OGLQuad::drawQuads(
         count -= n;
     }
 
-#define sBgra2Rgba( x ) ( \
+#define BGRA2RGBA( x ) ( \
           ( (x)&0xFF000000) | \
           (((x)&0x00FF0000)>>16) | \
           ( (x)&0x0000FF00) | \
@@ -117,7 +117,7 @@ void GN::gfx::OGLQuad::drawQuads(
 
             if( colors )
             {
-                v.c = sBgra2Rgba(*colors);
+                v.c = BGRA2RGBA(*colors);
                 colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
             }
             else v.c = 0xFFFFFFFF;
@@ -140,7 +140,7 @@ void GN::gfx::OGLQuad::drawQuads(
 
             if( colors )
             {
-                v.c = sBgra2Rgba(*colors);
+                v.c = BGRA2RGBA(*colors);
                 colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
             }
             else v.c = 0xFFFFFFFF;

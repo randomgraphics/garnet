@@ -1639,7 +1639,7 @@ namespace GN { namespace gfx
         //! \param count
         //!     Number of line segments (note: _NOT_ number of points)
         //! \param color
-        //!     line color. in FMT_RGBA32 format.
+        //!     line color. in FMT_BGRA32 format.
         //! \param model, view, proj
         //!     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         //!

@@ -698,12 +698,13 @@ namespace GN { namespace gfx
 
         bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
 
-        D3DFont * mFont; // Font class
+        D3DFont * mFont; // Font renderer
+        D3DQuad * mQuad; // Quad renderer
+        D3DLine * mLine; // Line renderer
 
-        friend class D3DQuad; // let D3DQuad class manipulate state dirty flags directly.
-        D3DQuad * mQuad; // Quad renderer class
-
-        D3DLine * mLine;
+        // let these renderers manipulate state dirty flags directly.
+        friend class D3DQuad;
+        friend class D3DLine;
 
         D3DDrawState mDrawState;
 
