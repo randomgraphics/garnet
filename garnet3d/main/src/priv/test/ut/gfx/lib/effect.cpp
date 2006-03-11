@@ -11,9 +11,9 @@ public:
         using namespace GN;
         using namespace GN::gfx;
 
-        // create fake renderer
+        // create default renderer
         RendererOptions ro;
-        TS_ASSERT( createRenderer( API_FAKE, ro) );
+        TS_ASSERT( createRenderer( API_NATIVE, ro) );
 
         // initialize texture dictionary
         gTexDict.addResource( "tex0" );

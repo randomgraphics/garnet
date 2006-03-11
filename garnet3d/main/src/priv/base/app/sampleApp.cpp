@@ -148,11 +148,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.iapi = input::API_NATIVE;
 #else
     // setup default parameters
-#if GN_MSWIN
-    mInitParam.rapi = gfx::API_D3D;
-#else
-    mInitParam.rapi = gfx::API_OGL;
-#endif
+    mInitParam.rapi = gfx::API_AUTO;
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.ro.windowedWidth = 800; // default is 800x600
     mInitParam.ro.windowedHeight = 600;
@@ -168,7 +164,8 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 "Options : (options are case-insensitive)\n"
                 "    -h, -?             : Show help screen.\n"
                 "    -ref               : Use reference device.\n"
-                "    -d3d, -ogl, -fake  : Select rendering API.\n",
+                "    -d3d, -ogl, -fake  : Select rendering API.\n"
+                "    -msaa              : Enable MSAA/FSAA.\n",
                 GN::path::baseName(argv[0]).cstr() );
             return false;
         }
@@ -259,7 +256,7 @@ bool GN::app::SampleApp::recreateRenderer()
     GN_GUARD;
 
     // (re)create renderer
-    GN::gfx::Renderer * r = gfx::createRenderer( mInitParam.rapi, mInitParam.ro );
+    GN::gfx::Renderer * r = gfx::createRenderer( mInitParam.ro, mInitParam.rapi );
     if( NULL == r ) return false;
 
     // reattach input window

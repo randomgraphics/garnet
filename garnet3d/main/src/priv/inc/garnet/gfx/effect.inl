@@ -3,21 +3,25 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::gfx::effect::Effect::drawBegin() const
+GN_INLINE bool GN::gfx::effect::Effect::drawBegin( size_t * numPass ) const
 {
     GN_GUARD_SLOW;
 
     // make sure effect is initialized.
     GN_ASSERT( ok() );
 
+    GN_ASSERT( !mDrawBegun );
+
     // prepare technique
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     TechniqueData & t = mTechniques.items[mActiveTechnique];
-    if( !t.ready && !initTechnique(mActiveTechnique) ) return 0;
+    if( !t.ready && !initTechnique(mActiveTechnique) ) return false;
     GN_ASSERT( t.ready );
 
     // success
-    return t.passes.size();
+    mDrawBegun = true;
+    if( numPass ) *numPass = t.passes.size();
+    return true;
 
     GN_UNGUARD_SLOW;
 }
@@ -25,13 +29,13 @@ GN_INLINE size_t GN::gfx::effect::Effect::drawBegin() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t mActivePass ) const
+GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( !mPassBegun );
+    GN_ASSERT( mDrawBegun && !mPassBegun );
     mPassBegun = true;
-    mActivePass = mActivePass;
+    mActivePass = passIdx;
 
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     TechniqueData & t = mTechniques.items[mActiveTechnique];
@@ -90,7 +94,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
             }
             else
             {
-                GN_ASSERT( !ud.isTextureStates && ur.shaderUniformHandle );
+                GN_ASSERT( ur.shaderUniformHandle );
                 shaders[iShader]->setUniform( ur.shaderUniformHandle, ud.value );
             }
         }

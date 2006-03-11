@@ -1652,6 +1652,21 @@ namespace GN
         //!
         //! set the content of the matrix
         //!
+        Matrix44 & set( T _00, T _01, T _02, T _03,
+                        T _10, T _11, T _12, T _13,
+                        T _20, T _21, T _22, T _23,
+                        T _30, T _31, T _32, T _33 )
+        {
+            rows[0].set(_00,_01,_02,_03);
+            rows[1].set(_10,_11,_12,_13);
+            rows[2].set(_20,_21,_22,_23);
+            rows[3].set(_30,_31,_32,_33);
+            return *this;
+        }
+
+        //!
+        //! set the content of the matrix
+        //!
         Matrix44 & set( const Matrix33<T> & m33,
                         const Vector3<T> & col3 = Vector3<T>(0,0,0),
                         const Vector3<T> & row3 = Vector3<T>(0,0,0),

@@ -1,11 +1,24 @@
 #include "pch.h"
 
+// *************************************************************************
+// local functions
+// *************************************************************************
+
+//!
+//! Function prototype to create instance of renderer.
+//!
+typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOptions & );
+
+//
 // create fake renderer
+//
 extern GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & );
 
 #if GN_STATIC
 
+//
 // create D3D renderer
+//
 #if GN_MSWIN
 extern GN::gfx::Renderer * createD3DRenderer( const GN::gfx::RendererOptions & );
 #else
@@ -13,7 +26,9 @@ inline GN::gfx::Renderer * createD3DRenderer( const GN::gfx::RendererOptions & )
 { GN_ERROR( "No D3D support on platform other than MS Windows." ); return 0; }
 #endif
 
+//
 // create OGL renderer
+//
 #if GN_XENON
 inline GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & )
 { GN_ERROR( "No OGL support on Xenon." ); return 0; }
@@ -23,34 +38,36 @@ extern GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & )
 
 #endif
 
-//!
-//! Function prototype to create instance of renderer.
-//!
-typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOptions & );
-
 //
-//
-// -------------------------------------------------------------------------
-void GN::gfx::deleteRenderer()
+// determine renderer API
+// -----------------------------------------------------------------------------
+static GN::gfx::RendererAPI sDetermineRendererAPI()
 {
-    GN_GUARD;
-
-    delete gRendererPtr;
-    Renderer::msSharedLib.free();
-
-    GN_UNGUARD;
+#if GN_XENON
+    return GN::gfx::API_D3D;
+#elif GN_MSWIN
+    return GN::gfx::API_D3D;
+#else
+    return GN::gfx::API_OGL;
+#endif
 }
+
+// *************************************************************************
+// public functions
+// *************************************************************************
 
 //
 //
 // -------------------------------------------------------------------------
 GN::gfx::Renderer * GN::gfx::createRenderer(
-    RendererAPI api, const RendererOptions & ro )
+    const RendererOptions & ro, RendererAPI api )
 {
     GN_GUARD;
 
     // release old renderer
     deleteRenderer();
+
+    if( API_AUTO == api ) api = sDetermineRendererAPI();
 
     // then create new one.
     if( API_FAKE == api ) return createFakeRenderer( ro );
@@ -75,5 +92,18 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
     if( !creator ) return 0;
     return creator( ro );
 #endif
+    GN_UNGUARD;
+}
+
+//
+//
+// -------------------------------------------------------------------------
+void GN::gfx::deleteRenderer()
+{
+    GN_GUARD;
+
+    delete gRendererPtr;
+    Renderer::msSharedLib.free();
+
     GN_UNGUARD;
 }

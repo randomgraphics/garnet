@@ -21,15 +21,46 @@ class Scene
         // create effect 0
         {
             effect::EffectDesc desc;
-            effect::ShaderDesc & vs = desc.shaders["vs"];
-            effect::ShaderDesc & ps = desc.shaders["ps"];
+
+            // define effect parameters
+            effect::UniformDesc & pvw = desc.uniforms["pvw"];
+            pvw.hasDefaultValue = true;
+            Matrix44f defaultPvw(
+                2,  0,  0, -1,
+                0, -2,  0,  1,
+                0,  0,  1,  0,
+                0,  0,  0,  1 );
+            pvw.defaultValue.setM( &defaultPvw, 1 );
+
+            // set render states
+            desc.rsb.rs[RS_CULL_MODE] = RSV_CULL_NONE;
+            desc.rsb.rs[RS_DEPTH_WRITE] = RSV_FALSE;
+
+            // init vs0
+            effect::ShaderDesc & vs = desc.shaders["vs.1.1"];
             vs.type = VERTEX_SHADER;
+            vs.lang = LANG_D3D_ASM;
+            vs.code =
+                "vs.1.1 \n"
+                "dcl_position v0 \n"
+                "m4x4 oPos, v0, c0";
+            vs.uniforms["c0"] = "pvw";
+
+            effect::ShaderDesc & ps = desc.shaders["ps.1.1"];
             ps.type = PIXEL_SHADER;
-            effect::TechniqueDesc & tech = desc.techniques["ffp"];
+            ps.lang = LANG_D3D_ASM;
+            ps.code =
+                "ps.1.1 \n"
+                "def c0, 1,1,1,1 \n"
+                "mov r0, c0";
+
+            // create tech0
+            effect::TechniqueDesc & tech = desc.techniques["t0"];
             tech.passes.resize(1);
             effect::PassDesc & pass0 = tech.passes[0];
-            pass0.shaders[VERTEX_SHADER] = "vs";
-            pass0.shaders[PIXEL_SHADER] = "ps";
+            pass0.shaders[VERTEX_SHADER] = "vs.1.1";
+            pass0.shaders[PIXEL_SHADER] = "ps.1.1";
+
             if( !eff0.init( desc ) ) return false;
         }
 
@@ -130,17 +161,38 @@ public:
     {
         Renderer & r = gRenderer;
 
+        // quad 1
         r.bindTexture( 0, gTexDict.getResource(tex0) );
         r.draw2DTexturedQuad( 0, 0, 0, 0.5, 0.5 );
+
+        // quad 2
         if( ps1 )
         {
             r.bindShaders( 0, ps1 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.5, 0.0, 1.0, 0.5 );
         }
+
+        // quad 3
         if( ps2 )
         {
             r.bindShaders( 0, ps2 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
+        }
+
+        // quad 4
+        {
+            size_t n;
+            if( eff0.drawBegin( &n ) )
+            {
+                for( size_t i = 0; i < n; ++i )
+                {
+                    eff0.passBegin( i );
+                    eff0.commitChanges();
+                    r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
+                    eff0.passEnd();
+                }
+                eff0.drawEnd();
+            }
         }
 
         // the a wireframe box

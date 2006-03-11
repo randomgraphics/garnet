@@ -130,12 +130,12 @@ struct TestScene
         GN::gfx::deleteRenderer();
     }
 
-    bool create( GN::gfx::RendererAPI api, const GN::gfx::RendererOptions & ro )
+    bool create( const GN::gfx::RendererOptions & ro, GN::gfx::RendererAPI api )
     {
         destroy();
 
         // create renderer
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( api, ro );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, api );
         TS_ASSERT( r );
         if( !r ) return false;
 
@@ -186,7 +186,7 @@ protected:
         ro.displayHandle = win->getDisplayHandle();
         ro.renderWindow = win->getWindowHandle();
         ro.software = true;
-        if( !scene.create(mApi,ro) ) return;
+        if( !scene.create(ro,mApi) ) return;
 
         scene.draw();
 
@@ -207,7 +207,7 @@ protected:
         ro.windowedWidth = 320;
         ro.windowedHeight = 640;
         ro.software = true;
-        if( !scene.create(mApi,ro) ) return;
+        if( !scene.create(ro,mApi) ) return;
 
         const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
         TS_ASSERT_EQUALS( gRenderer.getOptions().software, true );
@@ -239,7 +239,7 @@ protected:
         ro.fullscreen = true;
         ro.displayMode.width = 640;
         ro.displayMode.height = 480;
-        if( !scene.create(mApi,ro) ) return;
+        if( !scene.create(ro,mApi) ) return;
 
         scene.draw();
 
@@ -257,7 +257,7 @@ protected:
         GN::gfx::RendererOptions ro;
         ro.useExternalWindow = false;
         ro.parentWindow = 0;
-        if( !scene.create(mApi,ro) ) return;
+        if( !scene.create(ro,mApi) ) return;
 
         const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
         TS_ASSERT_EQUALS( dd.width, 640 );
@@ -269,7 +269,7 @@ protected:
     void renderStateBlock()
     {
         GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( mApi, ro );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, mApi );
         TS_ASSERT( r );
         if( 0 == r ) return;
 
@@ -310,7 +310,7 @@ protected:
     void vtxBuf()
     {
         GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( mApi, ro );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, mApi );
         TS_ASSERT( r );
         if( 0 == r ) return;
 
@@ -320,7 +320,7 @@ protected:
     void renderTarget()
     {
         GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( mApi, ro );
+        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, mApi );
         TS_ASSERT( r );
         if( 0 == r ) return;
 

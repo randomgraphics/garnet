@@ -50,8 +50,8 @@ namespace GN { namespace gfx {
             ShadingLanguage lang; //!< Shading language. Ignored if code is empty.
             StrA code; //!< Shader code. Empty means fixed functional pipeline.
             StrA entry; //!< Entry function of the code. Ignored, if code is empty.
-            std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage.
-            std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding.
+            std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage, value is texture name.
+            std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding, value is uniform name.
         };
 
         //!
@@ -199,19 +199,22 @@ namespace GN { namespace gfx {
             //! Standard call sequence:
             //! <pre>
             //!     set_common_uniforms_and_textures();
-            //!     size_t numPasses = myEffect->drawBegin();
-            //!     for( size_t i = 0; i < numPasses; ++i )
+            //!     size_t numPasses;
+            //!     if( myEffect->drawBegin( &numPasses ) )
             //!     {
-            //!         myEffect->passBegin( i );
-            //!         for_each_mesh
+            //!         for( size_t i = 0; i < numPasses; ++i )
             //!         {
-            //!             set_mesh_specific_uniforms_and_textures();
-            //!             myEffect->commitChanges();
-            //!             draw_the_mesh();
+            //!             myEffect->passBegin( i );
+            //!             for_each_mesh
+            //!             {
+            //!                 set_mesh_specific_uniforms_and_textures();
+            //!                 myEffect->commitChanges();
+            //!                 draw_the_mesh();
+            //!             }
+            //!             myEffect->passEnd();
             //!         }
-            //!         myEffect->passEnd();
+            //!         myEffect->drawEnd();
             //!     }
-            //!     myEffect->drawEnd();
             //! </pre>
             // ********************************
         public:
@@ -224,9 +227,9 @@ namespace GN { namespace gfx {
             void draw( const GeometryData * geometryDataArray, size_t count ) const;
 
             //!
-            //! Begin rendering. Return number of pass.
+            //! Begin rendering.
             //!
-            size_t drawBegin() const;
+            bool drawBegin( size_t * numPass ) const;
 
             //!
             //! End rendering.
@@ -358,16 +361,15 @@ namespace GN { namespace gfx {
             struct UniformData
             {
                 StrA                        name;
-                bool                        isTextureStates;
                 UniformValue                value;
-                TextureStateBlockDesc       textureStates;
                 std::vector<ShaderRefData>  shaders; // shaders that are referencing this uniform.
             };
 
             struct UniformRefData
             {
-                uint32_t handle; //!< handle to mUniforms
-                bool     ffp;    //!< is it binding to fixed functional pipeline?
+                StrA     binding; //!< uniform binding name
+                uint32_t handle;  //!< handle to mUniforms
+                bool     ffp;     //!< is it binding to fixed functional pipeline?
                 union
                 {
                     uint32_t         shaderUniformHandle; // shader uniform handle. Effective only when ffp is false.
