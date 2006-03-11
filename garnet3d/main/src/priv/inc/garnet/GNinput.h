@@ -54,6 +54,16 @@ namespace GN
             //! last mouse button
             //!
             KEY_MOUSEBTN_LAST = KEY_MOUSEBTN_7,
+
+            //!
+            //! first xb360 button
+            //!
+            KEY_XB360_FIRST = KEY_XB360_UP,
+
+            //!
+            //! last xb360 button
+            //!
+            KEY_XB360_LAST = KEY_XB360_Y,
         };
         #undef GNINPUT_DEFINE_KEYCODE
         //@}
@@ -63,17 +73,17 @@ namespace GN
         //!
         enum Axis
         {
-            AXIS_0,  //!< Axis 0
-            AXIS_1,  //!< Axis 1
-            AXIS_2,  //!< Axis 2
-            AXIS_3,  //!< Axis 3
+            AXIS_MOUSE_X,       //!< mouse X
+            AXIS_MOUSE_Y,       //!< mouse Y
+            AXIS_MOUSE_WHEEL_0, //!< mouse wheel 0
+            AXIS_MOUSE_WHEEL_1, //!< mouse wheel 1
 
-            AXIS_X = AXIS_0, //!< Horizonal move
-            AXIS_Y = AXIS_1, //!< Vertical move
-            AXIS_Z = AXIS_2, //!< Depth move
-
-            AXIS_WHEEL_0 = AXIS_2, //!< Mouse wheel 0
-            AXIS_WHEEL_1 = AXIS_3, //!< Mouse whell 1
+            AXIS_XB360_LEFT_TRIGGER,  //!< xb360 left trigger
+            AXIS_XB360_RIGHT_TRIGGER, //!< xb360 right trigger
+            AXIS_XB360_THRMB_LX,      //!< xb360 left thrumb X
+            AXIS_XB360_THRMB_LY,      //!< xb360 left thrumb Y
+            AXIS_XB360_THRMB_RX,      //!< xb360 right thrumb X
+            AXIS_XB360_THRMB_RY,      //!< xb360 right thrumb Y
         };
 
         // TODO: joystick support
@@ -256,9 +266,8 @@ namespace GN
 
         enum InputApi
         {
-            API_NATIVE,    //!< OS native API (Win32 or X11 or XInput)
+            API_NATIVE,    //!< OS native API (Win32, X11, XInput)
             API_DINPUT,    //!< DirectInput
-            API_XINPUT,    //!< XInput
             API_FAKE,      //!< Fake
             NUM_INPUT_API, //!< input API count.
         };
