@@ -498,6 +498,11 @@ def check_config( conf, conf_dir ):
     # ===========
     conf['has_d3d'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
 
+    # ==============
+    # 是否支持XInput
+    # ==============
+    conf['has_xinput'] = c.CheckCXXHeader( ['windows.h', 'XInput.h'] )
+
     # =========================
     # 检查是否存在boost library
     # =========================

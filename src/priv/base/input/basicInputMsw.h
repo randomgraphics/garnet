@@ -43,6 +43,7 @@ namespace GN { namespace input
         {
             mMsgHook = mCwpHook = 0;
             mMouseCapture = false;
+            mXInputPacketNumber = 0;
         }
         //@}
 
@@ -52,6 +53,7 @@ namespace GN { namespace input
     public:
 
         bool attachToWindow( HandleType, HandleType );
+        void processInputEvents();
         void getMousePosition( int & x, int & y ) const;
 
         // ********************************
@@ -82,6 +84,8 @@ namespace GN { namespace input
         HWND mWindow;
         HHOOK mMsgHook, mCwpHook;
         bool  mMouseCapture;
+
+        DWORD mXInputPacketNumber;
 
         // ********************************
         // private functions

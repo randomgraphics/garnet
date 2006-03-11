@@ -97,6 +97,8 @@ void GN::input::InputDInput::processInputEvents()
 {
     GN_GUARD_SLOW;
 
+    MyParent::processInputEvents();
+
     if( mAttached && mAcquired )
     {
         if( mLost && !acquire() ) return;

@@ -28,17 +28,9 @@ namespace GN { namespace input
 // local functions
 // *****************************************************************************
 
-static GN::input::Input * sCreateXInputSystem()
-{
-    GN_UNIMPL_WARNING();
-    return new GN::input::FakeInput;
-}
-
 static GN::input::Input * sCreateNativeInputSystem()
 {
-#if GN_XENON
-    return sCreateXInputSystem();
-#elif GN_MSWIN
+#if GN_MSWIN
     GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
     if( !p->init() ) return 0;
     return p.detach();
@@ -76,8 +68,6 @@ GN::input::Input * GN::input::createInputSystem( InputApi api )
             return p.detach();
         }
 #endif
-
-        case API_XINPUT : return sCreateXInputSystem();
 
         case API_FAKE :
         {

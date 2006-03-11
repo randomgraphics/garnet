@@ -26,8 +26,6 @@ namespace GN { namespace input
         //!
         InputMsw();
 
-        void processInputEvents() { /* do nothing here*/ }
-
     protected:
 
         // inherited from BasicInputMsw
