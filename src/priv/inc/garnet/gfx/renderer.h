@@ -499,6 +499,7 @@ namespace GN { namespace gfx
         API_D3D,  //!< Direct3D
         API_FAKE, //!< Fake API
         NUM_RENDERER_API, //!< Number of avaliable API.
+        API_AUTO, //!< determine rendering API automatically.
     };
 
     //!
@@ -1775,7 +1776,7 @@ namespace GN { namespace gfx
     private:
 
         static GN_PUBLIC SharedLib msSharedLib;
-        friend Renderer * createRenderer( RendererAPI, const RendererOptions & );
+        friend Renderer * createRenderer( const RendererOptions &, RendererAPI );
         friend void deleteRenderer();
 
         //@}
@@ -1786,9 +1787,7 @@ namespace GN { namespace gfx
     //!
     //! This function will release old renderer, then create a new one with new settings.
     //!
-    //! \note This function is implemented in core module.
-    //!
-    Renderer * createRenderer( RendererAPI, const RendererOptions & );
+    Renderer * createRenderer( const RendererOptions &, RendererAPI = API_AUTO );
 
     //!
     //! Delete renderer

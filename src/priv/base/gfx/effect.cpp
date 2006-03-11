@@ -216,6 +216,18 @@ bool GN::gfx::effect::Effect::init( const EffectDesc & d )
 
     if( !createEffect() ) { quit(); return selfOK(); }
 
+    GN_ASSERT( mTextures.items.size() == mTextures.names.size() );
+    GN_ASSERT( mTextures.items.size() == mDesc.textures.size() );
+
+    GN_ASSERT( mUniforms.items.size() == mUniforms.names.size() );
+    GN_ASSERT( mUniforms.items.size() == mDesc.uniforms.size() );
+
+    GN_ASSERT( mShaders.items.size() == mShaders.names.size() );
+    GN_ASSERT( mShaders.items.size() == mDesc.shaders.size() );
+
+    GN_ASSERT( mTechniques.items.size() == mTechniques.names.size() );
+    GN_ASSERT( mTechniques.items.size() == mDesc.techniques.size() );
+
     // success
     return selfOK();
 
@@ -270,44 +282,47 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
 
     Renderer & r = gRenderer;
 
-    size_t numPasses = drawBegin();
-    for( size_t i = 0; i < numPasses; ++i )
+    size_t numPasses;
+    if( drawBegin( &numPasses ) )
     {
-        passBegin( i );
-
-        // render the geometries
-        for( size_t i = 0; i < count; ++i )
+        for( size_t i = 0; i < numPasses; ++i )
         {
-            const GeometryData & g = geometryDataArray[i];
+            passBegin( i );
 
-            for( std::map<StrA,UniformValue>::const_iterator i = g.uniforms.begin(); i != g.uniforms.end(); ++i )
+            // render the geometries
+            for( size_t i = 0; i < count; ++i )
             {
-                setUniformByName( i->first, i->second );
-            }
-            for( std::map<StrA,uint32_t>::const_iterator i = g.textures.begin(); i != g.textures.end(); ++i )
-            {
-                setTextureByName( i->first, i->second );
+                const GeometryData & g = geometryDataArray[i];
+
+                for( std::map<StrA,UniformValue>::const_iterator i = g.uniforms.begin(); i != g.uniforms.end(); ++i )
+                {
+                    setUniformByName( i->first, i->second );
+                }
+                for( std::map<StrA,uint32_t>::const_iterator i = g.textures.begin(); i != g.textures.end(); ++i )
+                {
+                    setTextureByName( i->first, i->second );
+                }
+
+                commitChanges();
+
+                r.bindVtxBinding( g.vtxBinding );
+                r.bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
+                r.bindIdxBuf( g.idxBuf );
+
+                if( g.idxBuf.empty() )
+                {
+                    r.draw( g.prim, g.numPrim, g.startVtx );
+                }
+                else
+                {
+                    r.drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
+                }
             }
 
-            commitChanges();
-
-            r.bindVtxBinding( g.vtxBinding );
-            r.bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
-            r.bindIdxBuf( g.idxBuf );
-
-            if( g.idxBuf.empty() )
-            {
-                r.draw( g.prim, g.numPrim, g.startVtx );
-            }
-            else
-            {
-                r.drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
-            }
+            passEnd();
         }
-
-        passEnd();
+        drawEnd();
     }
-    drawEnd();
 
     GN_UNGUARD_SLOW;
 }
@@ -384,6 +399,7 @@ bool GN::gfx::effect::Effect::createEffect()
         for( std::map<StrA,StrA>::const_iterator i = s.uniforms.begin(); i != s.uniforms.end(); ++i )
         {
             UniformRefData ud;
+            ud.binding = i->first;
             ud.ffp = sCheckFfpParameterType( i->first, &ud.ffpParameterType );
             ud.handle = mUniforms.find( i->second );
             GN_ASSERT( ud.handle ); // check is already done in EffectDesc::valid()
@@ -473,6 +489,8 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
 
     TechniqueData & td = mTechniques.items[handle];
 
+    GN_ASSERT( !td.ready );
+
     for( size_t i = 0; i < td.passes.size(); ++i )
     {
         PassData & pd = td.passes[i];
@@ -484,7 +502,7 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
             const ShaderDesc & s = mDesc.getShader(sd.name);
 
             // create shaders instance
-            if( !sd.value.empty() && !s.code.empty() )
+            if( sd.value.empty() && !s.code.empty() )
             {
                 sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.entry ) );
                 if( sd.value.empty() )
@@ -500,23 +518,18 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
                 UniformRefData & ur = sd.uniforms[i];
                 if( !ur.ffp )
                 {
-                    // Make non-FFP binding belongs to non-FFP shader (already checked in EffectDesc::valid() ).
+                    // Make sure non-FFP binding belongs to non-FFP shader (already checked in EffectDesc::valid() ).
                     GN_ASSERT( sd.value );
 
-                    std::map<StrA,StrA>::const_iterator u = s.uniforms.find( mUniforms.items[ur.handle].name );
-
-                    GN_ASSERT( u != s.uniforms.end() &&
-                               u->second == mUniforms.items[ur.handle].name );
-
-                    const StrA & binding = u->first;
-                    const StrA & name = u->second;
-
-                    ur.shaderUniformHandle = sd.value->getUniformHandle( binding );
+                    ur.shaderUniformHandle = sd.value->getUniformHandle( ur.binding );
 
                     if( 0 == ur.shaderUniformHandle )
                     {
+                        const StrA & name = mUniforms.items[ur.handle].name;
                         GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
-                            name.cstr(), sd.name.cstr(), binding.cstr() );
+                            name.cstr(),
+                            sd.name.cstr(),
+                            ur.binding.cstr() );
                         return false;
                     }
                 }
@@ -525,6 +538,7 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
     }
 
     // success
+    td.ready = true;
     return true;
 
     GN_UNGUARD;
