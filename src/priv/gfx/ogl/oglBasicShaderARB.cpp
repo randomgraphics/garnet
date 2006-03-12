@@ -132,6 +132,9 @@ bool GN::gfx::OGLBasicShaderARB::deviceCreate()
     GN_OGL_CHECK_RV(
         glGetProgramivARB( mTarget, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, (GLint*)&mMaxEnvUniforms ),
         false );
+    GN_OGL_CHECK_RV(
+        glGetIntegerv( GL_MAX_PROGRAM_MATRICES_ARB, (GLint*)&mMaxMatrixUniforms ),
+        false );
 
     // successful
     return true;
@@ -239,39 +242,74 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 
     desc.u32 = (uint32_t)u.userData;
 
-    PFNGLPROGRAMLOCALPARAMETER4FVARBPROC fp;
-    if( LOCAL_PARAMETER == desc.type )
+    if( ENV_PARAMETER == desc.type )
     {
-        fp = glProgramLocalParameter4fvARB;
+        switch( u.value.type )
+        {
+            case UVT_VECTOR4 :
+                for( size_t i = 0; i < u.value.vector4s.size(); ++i )
+                {
+                    GN_OGL_CHECK( glProgramEnvParameter4fvARB(
+                        mTarget,
+                        (GLuint)(desc.index+i),
+                        (const float * )&u.value.vector4s[0] ) );
+                }
+                break;
+
+            case UVT_MATRIX44 :
+            case UVT_FLOAT :
+            case UVT_BOOL :
+            case UVT_INT :
+                GN_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
+                break;
+
+            default:
+               // program should not reach here.
+               GN_UNEXPECTED();
+        }
+    }
+    else if( LOCAL_PARAMETER == desc.type )
+    {
+        switch( u.value.type )
+        {
+            case UVT_VECTOR4 :
+                for( size_t i = 0; i < u.value.vector4s.size(); ++i )
+                {
+                    GN_OGL_CHECK( glProgramLocalParameter4fvARB(
+                        mTarget,
+                        (GLuint)(desc.index+i),
+                        (const float * )&u.value.vector4s[0] ) );
+                }
+                break;
+
+            case UVT_MATRIX44 :
+            case UVT_FLOAT :
+            case UVT_BOOL :
+            case UVT_INT :
+                GN_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
+                break;
+
+            default:
+               // program should not reach here.
+               GN_UNEXPECTED();
+        }
     }
     else
     {
-        GN_ASSERT( ENV_PARAMETER == desc.type );
-        fp = glProgramEnvParameter4fvARB;
-    }
+        GN_ASSERT( MATRIX_PARAMETER == desc.type );
 
-    switch( u.value.type )
-    {
-        case UVT_VECTOR4 :
-            for( size_t i = 0; i < u.value.vector4s.size(); ++i )
+        if( UVT_MATRIX44 == u.value.type )
+        {
+            for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
             {
-                GN_OGL_CHECK( fp(
-                    mTarget,
-                    (GLuint)(desc.index+i),
-                    (const float * )&u.value.vector4s[0] ) );
+                GN_OGL_CHECK( glMatrixMode( (GLenum)(GL_MATRIX0_ARB+desc.index+i) ) );
+                GN_OGL_CHECK( glLoadMatrixf( Matrix44f::sTranspose(u.value.matrix44s[i])[0] ) );
             }
-            break;
-
-        case UVT_MATRIX44 :
-        case UVT_FLOAT :
-        case UVT_BOOL :
-        case UVT_INT :
-            GN_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
-            break;
-
-        default:
-           // program should not reach here.
-           GN_UNEXPECTED();
+        }
+        else
+        {
+            GN_ERROR( "Maxtrix uniform can only accept uniform type of matrix." );
+        }
     }
 
     GN_UNGUARD_SLOW;
@@ -309,7 +347,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'E':
             if( index >= mMaxEnvUniforms )
             {
-                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
+                GN_ERROR( "global uniform index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
                 return false;
             }
             desc.type = ENV_PARAMETER;
@@ -319,10 +357,20 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'L':
             if( index >= mMaxLocalUniforms )
             {
-                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
+                GN_ERROR( "local uniform index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
                 return false;
             }
             desc.type = LOCAL_PARAMETER;
+            break;
+
+        case 'm':
+        case 'M':
+            if( index >= mMaxMatrixUniforms )
+            {
+                GN_ERROR( "matrix uniform index(%d) is too large. (max: %d)", index, mMaxMatrixUniforms );
+                return false;
+            }
+            desc.type = MATRIX_PARAMETER;
             break;
 
         default:

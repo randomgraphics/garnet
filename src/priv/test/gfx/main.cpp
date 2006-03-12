@@ -23,43 +23,66 @@ class Scene
             effect::EffectDesc desc;
 
             // define effect parameters
-            effect::UniformDesc & pvw = desc.uniforms["pvw"];
-            pvw.hasDefaultValue = true;
-            Matrix44f defaultPvw(
+            desc.uniforms["color"];
+            desc.uniforms["pvw"].hasDefaultValue = true;
+            desc.uniforms["pvw"].defaultValue.setM( Matrix44f(
                 2,  0,  0, -1,
                 0, -2,  0,  1,
                 0,  0,  1,  0,
-                0,  0,  0,  1 );
-            pvw.defaultValue.setM( &defaultPvw, 1 );
+                0,  0,  0,  1 ) );
 
             // set render states
             desc.rsb.rs[RS_CULL_MODE] = RSV_CULL_NONE;
             desc.rsb.rs[RS_DEPTH_WRITE] = RSV_FALSE;
 
             // init vs0
-            effect::ShaderDesc & vs = desc.shaders["vs.1.1"];
-            vs.type = VERTEX_SHADER;
-            vs.lang = LANG_D3D_ASM;
-            vs.code =
+            desc.shaders["vs.1.1"].type = VERTEX_SHADER;
+            desc.shaders["vs.1.1"].lang = LANG_D3D_ASM;
+            desc.shaders["vs.1.1"].code =
                 "vs.1.1 \n"
                 "dcl_position v0 \n"
                 "m4x4 oPos, v0, c0";
-            vs.uniforms["c0"] = "pvw";
+            desc.shaders["vs.1.1"].uniforms["c0"] = "pvw";
 
-            effect::ShaderDesc & ps = desc.shaders["ps.1.1"];
-            ps.type = PIXEL_SHADER;
-            ps.lang = LANG_D3D_ASM;
-            ps.code =
+            // init vs1
+            desc.shaders["arbvp1"].type = VERTEX_SHADER;
+            desc.shaders["arbvp1"].lang = LANG_OGL_ARB;
+            desc.shaders["arbvp1"].code =
+                "!!ARBvp1.0 \n"
+                "PARAM pvw[4] = { state.matrix.program[0] }; \n"
+                "DP4 result.position.x, pvw[0], vertex.position; \n"
+                "DP4 result.position.y, pvw[1], vertex.position; \n"
+                "DP4 result.position.z, pvw[2], vertex.position; \n"
+                "DP4 result.position.w, pvw[3], vertex.position; \n"
+                "END";
+            desc.shaders["arbvp1"].uniforms["m0"] = "pvw";
+
+            // init ps0
+            desc.shaders["ps.1.1"].type = PIXEL_SHADER;
+            desc.shaders["ps.1.1"].lang = LANG_D3D_ASM;
+            desc.shaders["ps.1.1"].code =
                 "ps.1.1 \n"
-                "def c0, 1,1,1,1 \n"
                 "mov r0, c0";
+            desc.shaders["ps.1.1"].uniforms["c0"] = "color";
+
+            // init ps1
+            desc.shaders["arbfp1"].type = PIXEL_SHADER;
+            desc.shaders["arbfp1"].lang = LANG_OGL_ARB;
+            desc.shaders["arbfp1"].code =
+                "!!ARBfp1.0 \n"
+                "MOV result.color, program.local[0]; \n"
+                "END";
+            desc.shaders["arbfp1"].uniforms["l0"] = "color";
 
             // create tech0
-            effect::TechniqueDesc & tech = desc.techniques["t0"];
-            tech.passes.resize(1);
-            effect::PassDesc & pass0 = tech.passes[0];
-            pass0.shaders[VERTEX_SHADER] = "vs.1.1";
-            pass0.shaders[PIXEL_SHADER] = "ps.1.1";
+            desc.techniques["t0"].passes.resize(1);
+            desc.techniques["t0"].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
+            desc.techniques["t0"].passes[0].shaders[PIXEL_SHADER] = "ps.1.1";
+
+            // create tech1
+            desc.techniques["t1"].passes.resize(1);
+            desc.techniques["t1"].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
+            desc.techniques["t1"].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
 
             if( !eff0.init( desc ) ) return false;
         }
@@ -155,6 +178,17 @@ public:
         static float angle = 0.0f;
         angle += deg2rad(0.2f);
         world.rotateY( angle );
+
+        // update color
+        static int r = 0; static int rr = 1;
+        static int g = 80; static int gg = 1;
+        static int b = 160; static int bb = 1;
+        r += rr; if( 0 == r || 255 == r ) rr = -rr;
+        g += gg; if( 0 == g || 255 == g ) gg = -gg;
+        b += bb; if( 0 == b || 255 == b ) bb = -bb;
+        GN::gfx::UniformValue u;
+        u.setV( GN::Vector4f( r/255.0f, g/255.0f, b/255.0f, 1.0f ) );
+        eff0.setUniformByName( "color", u );
     }
 
     void draw()
