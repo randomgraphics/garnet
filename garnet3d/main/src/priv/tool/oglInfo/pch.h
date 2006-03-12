@@ -19,6 +19,8 @@
 
 #if GN_MSWIN && !GN_XENON
 #include <wglew.h>
+#elif GN_POSIX
+#include <glxew.h>
 #endif
 
 #include "garnet/base/pragma.h"

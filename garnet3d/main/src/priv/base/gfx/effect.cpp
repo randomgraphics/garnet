@@ -338,6 +338,12 @@ bool GN::gfx::effect::Effect::createEffect()
 {
     GN_GUARD;
 
+    if( !gRendererPtr )
+    {
+        GN_ERROR( "Renderer is not ready." );
+        return false;
+    }
+
     GN_ASSERT( mDesc.valid() && mUniforms.empty() && mTextures.empty() );
 
     // create texture list

@@ -10,18 +10,12 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-
-        // create default renderer
         RendererOptions ro;
-        TS_ASSERT( createRenderer( API_NATIVE, ro) );
-
-        // initialize texture dictionary
-        gTexDict.addResource( "tex0" );
+        TS_ASSERT( createRenderer( ro ) );
     }
 
     void tearDown()
     {
-        gTexDict.clear();
         GN::gfx::deleteRenderer();
     }
 
@@ -33,35 +27,48 @@ public:
 
         desc.clear();
 
-        // create 2 uniforms
-        desc.uniforms["u0"];
-        desc.uniforms["u1"];
-        desc.uniforms["u2"].hasDefaultValue = true;
-        desc.uniforms["u2"].defaultValue.setM( &Matrix44f::IDENTITY, 1 );
+        // create uniforms
+        desc.uniforms["color"].hasDefaultValue = true;
+        desc.uniforms["color"].defaultValue.setV( Vector4f(1,0,0,1) );
 
-        // create 2 textures
-        desc.textures["t0"].defaultValue = "tex0";
-        desc.textures["t1"].defaultValue = "tex1";
+        desc.uniforms["pvw"].hasDefaultValue = true;
+        desc.uniforms["pvw"].defaultValue.setM(
+            Matrix44f( 2,  0,  0, -1,
+                       0, -2,  0,  1,
+                       0,  0,  1,  0,
+                       0,  0,  0,  1 ) );
+
+        // create textures
+        desc.textures["t0"].defaultValue = "texture/rabit.png";
+        desc.textures["t1"].defaultValue = "texture/earth.jpg";
 
         // create 1 vertex shader
         ShaderDesc & vs0 = desc.shaders["vs0"];
-        vs0.code = "vs.1.1\nmov oPos, c0";
+        vs0.code =
+            "vs.1.1\n "
+            "dcl_position v0 \n"
+            "dcl_texcoord v1 \n"
+            "m4x4 oPos, v0, c0 \n"
+            "mov oT0, v1 \n"
+            "mov oD0, c4";
         vs0.type = VERTEX_SHADER;
         vs0.lang = LANG_D3D_ASM;
-        vs0.uniforms["c0"] = "u0";
-        vs0.uniforms["c1"] = "u1";
-        vs0.uniforms["FFP_TRANSFORM_WORLD"] = "u2";
+        vs0.uniforms["c0"] = "pvw";
+        vs0.uniforms["c4"] = "color";
 
         // create another vertex shader (FFP shader)
         ShaderDesc & vs1 = desc.shaders["vs1"];
         vs1.type = VERTEX_SHADER;
-        vs1.uniforms["FFP_TRANSFORM_VIEW"] = "u2";
+        vs1.uniforms["FFP_TRANSFORM_VIEW"] = "pvw";
 
         // create 1 pixel shader
         ShaderDesc & ps0 = desc.shaders["ps0"];
-        ps0.code = "ps.1.1\nmov oPos, c0";
+        ps0.code =
+            "ps.1.1 \n"
+            "mov r0, c0";
         ps0.type = PIXEL_SHADER;
         ps0.lang = LANG_D3D_ASM;
+        ps0.uniforms["c0"] = "color";
         ps0.textures[0] = "t0";
         ps0.textures[1] = "t1";
 
@@ -78,6 +85,32 @@ public:
         PassDesc & p1 = tech1.passes[0];
         p1.shaders[VERTEX_SHADER] = "vs1";
         p1.shaders[PIXEL_SHADER] = "ps0";
+    }
+
+    void doDraw( const GN::gfx::effect::Effect & e )
+    {
+        using namespace GN;
+        using namespace GN::gfx;
+
+        if( !gRendererPtr ) return;
+
+        gRenderer.clearScreen();
+        if( gRenderer.drawBegin() )
+        {
+            size_t n;
+            if( e.drawBegin( &n ) )
+            {
+                for( size_t i = 0; i < n; ++i )
+                {
+                    e.passBegin( i );
+                    e.commitChanges();
+                    gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
+                    e.passEnd();
+                }
+                e.drawEnd();
+            }
+            gRenderer.drawEnd();
+        }
     }
 
     void testEmptyTechniqueList()
@@ -179,10 +212,12 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
-        desc.shaders["vs1"].uniforms["c0"] = "u0";
+        desc.shaders["vs0"].uniforms["haha"] = "pvw";
 
         Effect e;
-        TS_ASSERT( !e.init( desc ) );
+        TS_ASSERT( e.init( desc ) );
+
+        doDraw( e );
     }
 
     void testInvalidPassRsb()
@@ -263,7 +298,24 @@ public:
         TS_ASSERT( !e.init( desc ) );
     }
 
-    void testValidDesc()
+    void testInvalidShaderCode()
+    {
+        using namespace GN;
+        using namespace GN::gfx;
+        using namespace GN::gfx::effect;
+
+        EffectDesc desc;
+        initDesc1( desc );
+
+        desc.shaders["vs0"].code = "haha";
+
+        Effect e;
+        TS_ASSERT( e.init( desc ) );
+
+        doDraw( e );
+    }
+
+    void testDesc1()
     {
         using namespace GN;
         using namespace GN::gfx;
@@ -274,5 +326,10 @@ public:
 
         Effect e;
         TS_ASSERT( e.init( desc ) );
+
+        doDraw( e );
     }
+
+    // TODO: same shader, same uniform, multiple bindings.
+
 };

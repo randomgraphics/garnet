@@ -229,7 +229,7 @@ def GN_build_program( env, target, sources=[],
     pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if not ignoreDefaultLibs:
         if GN_conf['static']:
-            libs += Split('GNgfxD3D GNgfxOGL GNgfxCommon')
+            libs += Split('GNbase GNgfxD3D GNgfxOGL GNgfxCommon')
         libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
     extra = []
     for x in libs:

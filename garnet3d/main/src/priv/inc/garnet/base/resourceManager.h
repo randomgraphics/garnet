@@ -401,7 +401,7 @@ namespace GN
             GN_GUARD;
             if( !validResourceHandle( h ) )
             {
-                GN_ERROR( "invalid resource handle: %d", handle );
+                GN_ERROR( "invalid resource handle: %d", h );
                 return;
             }
             doDispose( mResHandles[h] );
@@ -420,7 +420,7 @@ namespace GN
                 GN_ERROR( "invalid resource name: %s", name.cstr() );
                 return;
             }
-            disposeHandle( iter->second );
+            disposeResourceHandle( iter->second );
             GN_UNGUARD;
         }
 
