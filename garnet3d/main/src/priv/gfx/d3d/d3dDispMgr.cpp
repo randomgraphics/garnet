@@ -295,23 +295,24 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
             continue;
         }
 
-#if GN_XENON
+        // define device behavior
         mBehavior = 0;
-#else
+#if !GN_XENON
         if( ro.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
         {
-            mBehavior = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+            mBehavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
         }
-#if !GN_DEBUG
-        // use pure device only in non-debug build
-        else if( D3DDEVCAPS_PUREDEVICE & caps.DevCaps )
-        {
-            mBehavior = D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_PUREDEVICE;
-        }
-#endif
         else
         {
-            mBehavior = D3DCREATE_MIXED_VERTEXPROCESSING;
+            mBehavior |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
+        }
+        if( ro.pure )
+        {
+            mBehavior |= D3DCREATE_PUREDEVICE;
+        }
+        if( ro.multithread )
+        {
+            mBehavior |= D3DCREATE_MULTITHREADED;
         }
 #endif
 

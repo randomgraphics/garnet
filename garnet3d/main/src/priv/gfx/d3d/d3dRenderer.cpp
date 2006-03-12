@@ -159,7 +159,9 @@ bool GN::gfx::D3DRenderer::changeOptions( RendererOptions ro, bool forceRecreati
         oldDesc.windowHandle != newDesc.windowHandle ||
         oldDesc.monitorHandle != newDesc.monitorHandle ||
         oldOptions.reference != ro.reference ||
-        oldOptions.software != ro.software )
+        oldOptions.software != ro.software ||
+        oldOptions.pure != ro.pure ||
+        oldOptions.multithread != ro.multithread )
     {
         // we have to recreate the whole device.
         deviceDestroy();

@@ -23,11 +23,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxCommon", "7.1\GNgfxCom
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfxTest", "7.1\GNgfxTest.vcproj", "{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestGfx", "7.1\GNtestGfx.vcproj", "{E02AA3B9-18D7-46C3-BEF5-44823CFD78A7}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNinputTest", "7.1\GNinputTest.vcproj", "{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestInput", "7.1\GNtestInput.vcproj", "{277441C3-4DA1-4FD1-BE8D-BCFA37C8A023}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -35,15 +35,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNut", "7.1\GNut.vcproj", "
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNrenderToTexture", "7.1\GNrenderToTexture.vcproj", "{E2602755-C7BC-49D2-9DFD-8408162F5305}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNsampleRenderToTexture", "7.1\GNsampleRenderToTexture.vcproj", "{E2602755-C7BC-49D2-9DFD-8408162F5305}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNdepthTexture", "7.1\GNdepthTexture.vcproj", "{E0CBB63B-6A6B-48C8-8CFB-D1BF446CB3CA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNsampleDepthTexture", "7.1\GNsampleDepthTexture.vcproj", "{E0CBB63B-6A6B-48C8-8CFB-D1BF446CB3CA}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNguiTest", "7.1\GNguiTest.vcproj", "{349C8DCC-942C-4BD4-8822-664711C6BE3F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestGui", "7.1\GNtestGui.vcproj", "{349C8DCC-942C-4BD4-8822-664711C6BE3F}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject

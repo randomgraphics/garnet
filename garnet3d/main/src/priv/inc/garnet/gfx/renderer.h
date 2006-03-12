@@ -136,8 +136,10 @@ namespace GN { namespace gfx
 
         //! \name D3D only parameters
         //@{
-        bool software;   //!< using software device. ȱʡΪfalse.
-        bool reference;  //!< using reference device. ȱʡΪfalse.
+        bool software;    //!< use software device. ȱʡΪfalse.
+        bool reference;   //!< use reference device. ȱʡΪfalse.
+        bool pure;        //!< use pure device. Default is false.
+        bool multithread; //!< use multi-thread safe deivce. Default is false.
         //@}
 
         //! \name OGL only parameters
@@ -172,6 +174,7 @@ namespace GN { namespace gfx
             , vsync(false)
             , software(false)
             , reference(false)
+            , pure(false)
             , autoRestore(true)
         {
             displayMode.set(0,0,0,0);
@@ -597,7 +600,7 @@ namespace GN { namespace gfx
         //! Change renderer options.
         //!
         //! \param ro
-        //!     new rendeer options
+        //!     new renderer options
         //! \param forceDeviceRecreation
         //!     force a full device recreation
         //! \note
@@ -606,7 +609,7 @@ namespace GN { namespace gfx
         virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation = false ) = 0;
 
         //!
-        //! Get current renderer options
+        //! Get renderer options
         //!
         const RendererOptions & getOptions() const { return mOptions; }
 
