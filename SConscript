@@ -599,9 +599,9 @@ sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase')
-tests = Split( 'GNut GNgfxTest GNinputTest GNft2Test GNguiTest' )
-samples = Split( 'GNdepthTexture GNrenderToTexture' )
-tools = Split( 'GNoglInfo' )
+tests = Split( 'GNut GNtestGfx GNtestInput GNtestFt2 GNtestGui GNtestD3D' )
+samples = Split( 'GNsampleDepthTexture GNsampleRenderToTexture' )
+tools = Split( 'GNtoolOGLInfo' )
 programs = tests + samples + tools
 
 # populate sample directory

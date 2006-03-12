@@ -105,11 +105,19 @@ namespace GN { namespace app
 
         //@{
 
+        struct InitParam
+        {
+            gfx::RendererAPI rapi;
+            gfx::RendererOptions ro;
+            input::InputApi iapi;
+        };
+
         static float UPDATE_INTERVAL;
 
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
+        virtual void determineInitParam( InitParam & ) {}
         virtual bool onRendererCreate() { return true; }
         virtual bool onRendererRestore() { return true; }
         virtual void onRendererDispose() {}
@@ -147,13 +155,6 @@ namespace GN { namespace app
         // private variables
         // ********************************
     private:
-
-        struct InitParam
-        {
-            gfx::RendererAPI rapi;
-            gfx::RendererOptions ro;
-            input::InputApi iapi;
-        };
 
         InitParam mInitParam;
 

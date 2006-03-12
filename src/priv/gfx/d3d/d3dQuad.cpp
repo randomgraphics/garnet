@@ -148,6 +148,9 @@ bool GN::gfx::D3DQuad::deviceCreate()
     }
     GN_DX_CHECK( mIdxBuf->Unlock() );
 
+    // create render state block
+    GN_DX_CHECK_RV( dev->CreateStateBlock( D3DSBT_PIXELSTATE, &mRsb ), false );
+
     // success
     return true;
 
@@ -209,6 +212,7 @@ void GN::gfx::D3DQuad::deviceDestroy()
     safeRelease( mPxlShaderTextured );
     safeRelease( mPxlShaderSolid );
     safeRelease( mIdxBuf );
+    safeRelease( mRsb );
 
     GN_UNGUARD;
 }
@@ -373,14 +377,13 @@ void GN::gfx::D3DQuad::drawQuads(
     // setup render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
-        const int statePairs[] =
-        {
-            RS_BLENDING     , ( DQ_OPAQUE & options ) ? RSV_FALSE : RSV_TRUE,
-            RS_DEPTH_WRITE  , ( DQ_UPDATE_DEPTH & options ) ? RSV_TRUE : RSV_FALSE,
-            RS_DEPTH_TEST   , RSV_TRUE,
-            RS_CULL_MODE    , RSV_CULL_NONE,
-        };
-        r.setRenderStates( statePairs, sizeof(statePairs)/sizeof(statePairs[0])/2 );
+        GN_DX_CHECK( mRsb->Capture() );
+        BOOL old = D3DXDebugMute( TRUE );
+        GN_DX_CHECK( dev->SetRenderState( D3DRS_ALPHABLENDENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE ) );
+        GN_DX_CHECK( dev->SetRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE ) );
+        GN_DX_CHECK( dev->SetRenderState( D3DRS_ZENABLE, TRUE ) );
+        GN_DX_CHECK( dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE ) );
+        D3DXDebugMute( old );
     }
 
     // bind shaders
@@ -430,6 +433,14 @@ void GN::gfx::D3DQuad::drawQuads(
         0,                       // StartIndex
         (UINT)( count * 2 ) ) ); // PrimitiveCount
 #endif
+
+    // restore render states
+    if( !( DQ_USE_CURRENT_RS & options ) )
+    {
+        BOOL old = D3DXDebugMute( TRUE );
+        GN_DX_CHECK( mRsb->Apply() );
+        D3DXDebugMute( old );
+    }
 
     // update mNextQuad
     mNextQuad += count;

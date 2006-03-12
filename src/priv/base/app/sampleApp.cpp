@@ -165,19 +165,22 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 "    -h, -?             : Show help screen.\n"
                 "    -ref               : Use reference device.\n"
                 "    -d3d, -ogl, -fake  : Select rendering API.\n"
-                "    -msaa              : Enable MSAA/FSAA.\n",
-                GN::path::baseName(argv[0]).cstr() );
+                "    -msaa              : Enable MSAA/FSAA.\n"
+                "    -pure              : Use pure device (D3D only).\n"
+                , GN::path::baseName(argv[0]).cstr() );
             return false;
         }
-        else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
         else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
         else if( 0 == strCmpI( a, "-d3d" ) ) mInitParam.rapi = gfx::API_D3D;
         else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
         else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
+        else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
+        else if( 0 == strCmpI( a, "-pure") ) mInitParam.ro.pure = true;
     }
 #endif
 
     // success
+    determineInitParam( mInitParam );
     return true;
 
     GN_UNGUARD;

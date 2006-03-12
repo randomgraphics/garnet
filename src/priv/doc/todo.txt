@@ -6,9 +6,9 @@ BUGS
     - pin down to the 1st call to opengl function in oglWinDisp.cpp
     - It seems caused by remote symbol loading
   - Render target image is up-side-down in OGL, comparing with D3D.
-    - See GNrenderToTexture for an example.
-  - GNrenderToTexture: black screen on cygwin.
-  - GNdepthTexture: extremly slow on ATI x1800, possibly caused by ARB programs.
+    - See GNsampleRenderToTexture for an example.
+  - GNsampleRenderToTexture: black screen on cygwin.
+  - GNsampleDepthTexture: extremly slow on ATI x1800, possibly caused by ARB programs.
 
 TODO
 ====
@@ -80,7 +80,7 @@ DONE
   - d3d hlsl shader
   - ogl ARB shader
   - Fix link problem of GFX module in static build.
-  - fix device-lost bug in GNgfxTest
+  - fix device-lost bug in GNtestGfx
   - refine device management
   - drawQuad(...)
     - D3DQuad(): support to FFP
