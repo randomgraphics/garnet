@@ -85,6 +85,8 @@ class Scene
             desc.techniques["t1"].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
 
             if( !eff0.init( desc ) ) return false;
+
+            eff0.setActiveTechniqueByName( gRenderer.getD3DDevice() ? "t0" : "t1" );
         }
 
         // success
