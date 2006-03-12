@@ -180,6 +180,9 @@ void GN::gfx::OGLRenderer::clearScreen(
 
     GLbitfield glflag = 0;
 
+    // store GL attributes
+    glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+
     // clear color buffer
     if( flags & C_BUFFER )
     {
@@ -206,6 +209,9 @@ void GN::gfx::OGLRenderer::clearScreen(
 
     // do clear
     GN_OGL_CHECK( glClear( glflag ) );
+
+    // restore GL attributes
+    glPopAttrib();
 
     GN_UNGUARD_SLOW;
 }

@@ -82,8 +82,9 @@ namespace GN { namespace gfx
         {
             mProgram = 0;
             mCode.clear();
-            mMaxLocalUniforms = 0;
             mMaxEnvUniforms = 0;
+            mMaxLocalUniforms = 0;
+            mMaxMatrixUniforms = 0;
         }
         //@}
 
@@ -126,17 +127,19 @@ namespace GN { namespace gfx
             uint32_t u32;
             struct
             {
-                int type  : 2;  //one of ARBParameterType
-                int index : 30; // ARB uniform index
+                unsigned int type  : 2;  //one of ARBParameterType
+                unsigned int index : 30; // ARB uniform index
             };
         };
+        GN_CASSERT( 4 == sizeof(UniformDesc) );
 
         const GLenum mTarget; // ARB program target
         GLuint mProgram;      // ARB program handle
         StrA  mCode;          // shader code
 
-        GLuint mMaxLocalUniforms;
         GLuint mMaxEnvUniforms;
+        GLuint mMaxLocalUniforms;
+        GLuint mMaxMatrixUniforms;
 
         // ********************************
         // private functions
