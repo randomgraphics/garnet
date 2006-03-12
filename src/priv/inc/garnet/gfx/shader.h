@@ -76,8 +76,15 @@ namespace GN { namespace gfx
         void setI( const int32_t *, size_t );
         void setF( const float *, size_t );
         void setV( const Vector4f *, size_t );
-        void setM( const Matrix44f *, size_t ); //!< \note Matrix should be row major
+        void setM( const Matrix44f *, size_t );
+
+        void setB( int32_t v ) { setB( &v, 1 ); }
+        void setI( int32_t v ) { setI( &v, 1 ); }
+        void setF( float v ) { setF( &v, 1 ); }
+        void setV( const Vector4f & v ) { setV( &v, 1 ); }
+        void setM( const Matrix44f & v ) { setM( &v, 1 ); }
         //@}
+
     };
 
     //!
