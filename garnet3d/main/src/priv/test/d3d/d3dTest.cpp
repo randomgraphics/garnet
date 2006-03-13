@@ -17,7 +17,7 @@ class MyApp : public SampleApp
     AutoComPtr<IDirect3DStateBlock9> rsb;
 public:
 
-    void determineInitParam( InitParam & ip )
+    void onDetermineInitParam( InitParam & ip )
     {
         ip.ro.pure = true;
     }

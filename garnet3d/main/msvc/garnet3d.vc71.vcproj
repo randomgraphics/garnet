@@ -861,6 +861,9 @@
 				<Filter
 					Name="app"
 					Filter="">
+					<File
+						RelativePath="..\src\priv\inc\garnet\app\sampleApp.h">
+					</File>
 				</Filter>
 			</Filter>
 			<Filter
@@ -1883,6 +1886,44 @@
 							RelativePath="..\src\priv\base\gfx\imagePNG.h">
 						</File>
 						<File
+							RelativePath="..\src\priv\base\gfx\imageTGA.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName)gfx.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName)gfx.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName)gfx.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName)gfx.pch"/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\base\gfx\imageTGA.h">
+						</File>
+						<File
 							RelativePath="..\src\priv\base\gfx\pch.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -2082,6 +2123,44 @@
 							RelativePath="..\src\priv\base\input\basicInputMsw.h">
 						</File>
 						<File
+							RelativePath="..\src\priv\base\input\basicInputXInput.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).input.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).input.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).input.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).input.pch"/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\base\input\basicInputXInput.h">
+						</File>
+						<File
 							RelativePath="..\src\priv\base\input\input.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -2235,6 +2314,9 @@
 							RelativePath="..\src\priv\base\input\inputX11.h">
 						</File>
 						<File
+							RelativePath="..\src\priv\base\input\inputXenon.h">
+						</File>
+						<File
 							RelativePath="..\src\priv\base\input\pch.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -2356,9 +2438,6 @@
 									PrecompiledHeaderThrough="pch.h"
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName).app.pch"/>
 							</FileConfiguration>
-						</File>
-						<File
-							RelativePath="..\src\priv\inc\garnet\app\sampleApp.h">
 						</File>
 					</Filter>
 				</Filter>

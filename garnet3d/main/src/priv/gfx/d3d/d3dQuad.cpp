@@ -33,6 +33,14 @@ static const D3DVERTEXELEMENT9 sDeclFfp[] =
 };
 #endif
 
+
+//
+// Fake D3DXDebugMute() for Xenon
+// -----------------------------------------------------------------------------
+#if GN_XENON
+static BOOL D3DXDebugMute( BOOL ) { return FALSE; }
+#endif
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -264,17 +272,20 @@ void GN::gfx::D3DQuad::drawQuads(
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // lock vertex buffer
-    void * vbData;
+    D3DQuadVertex * vbData;
+#if GN_XENON
+    dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
+#endif
     if( 0 == mNextQuad )
     {
-        GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, &vbData, D3DLOCK_DISCARD ) );
+        GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
     }
     else
     {
         GN_DX_CHECK_R( mVtxBuf->Lock(
             (UINT)( QUAD_STRIDE * mNextQuad ),
             (UINT)( QUAD_STRIDE * count ),
-            &vbData, D3DLOCK_NOOVERWRITE ) );
+            (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
     }
 
     // calculate vertex scale and offset
@@ -330,7 +341,7 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         for( size_t i = 0; i < count*4; ++i )
         {
-            D3DQuadVertex & v = ((D3DQuadVertex*)vbData)[i];
+            D3DQuadVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2], 1 );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
 
@@ -352,7 +363,7 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         for( size_t i = 0; i < count*4; ++i )
         {
-            D3DQuadVertex & v = ((D3DQuadVertex*)vbData)[i];
+            D3DQuadVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0, 1 );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
 

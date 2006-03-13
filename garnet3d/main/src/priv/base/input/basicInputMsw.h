@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.10.25)
 // *****************************************************************************
 
-#include "basicInput.h"
+#include "basicInputXInput.h"
 
 #if GN_MSWIN && !GN_XENON
 
@@ -15,7 +15,7 @@ namespace GN { namespace input
     //!
     //! Basic input system for MS windows. 实现windows系统下输入系统的基本功能.
     //!
-    class BasicInputMsw : public BasicInput, public StdClass
+    class BasicInputMsw : public BasicXInput, public StdClass
     {
          GN_DECLARE_STDCLASS( BasicInputMsw, StdClass );
 
@@ -43,7 +43,6 @@ namespace GN { namespace input
         {
             mMsgHook = mCwpHook = 0;
             mMouseCapture = false;
-            mXInputPacketNumber = 0;
         }
         //@}
 
@@ -53,7 +52,6 @@ namespace GN { namespace input
     public:
 
         bool attachToWindow( HandleType, HandleType );
-        void processInputEvents();
         void getMousePosition( int & x, int & y ) const;
 
         // ********************************
@@ -84,8 +82,6 @@ namespace GN { namespace input
         HWND mWindow;
         HHOOK mMsgHook, mCwpHook;
         bool  mMouseCapture;
-
-        DWORD mXInputPacketNumber;
 
         // ********************************
         // private functions

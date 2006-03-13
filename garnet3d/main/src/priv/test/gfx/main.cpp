@@ -233,7 +233,7 @@ public:
             }
         }
 
-        // the a wireframe box
+        // a wireframe box
         {
             static const float E = 80.0f;
             static float lines[] =

@@ -117,7 +117,7 @@ namespace GN { namespace app
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
-        virtual void determineInitParam( InitParam & ) {}
+        virtual void onDetermineInitParam( InitParam & ) {}
         virtual bool onRendererCreate() { return true; }
         virtual bool onRendererRestore() { return true; }
         virtual void onRendererDispose() {}
