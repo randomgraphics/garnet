@@ -180,7 +180,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 #endif
 
     // success
-    determineInitParam( mInitParam );
+    onDetermineInitParam( mInitParam );
     return true;
 
     GN_UNGUARD;

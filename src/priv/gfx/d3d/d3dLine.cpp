@@ -89,6 +89,9 @@ bool GN::gfx::D3DLine::deviceCreate()
         mVtxShader = d3d::assembleVS( dev, code );
         if( 0 == mVtxShader ) return false;
     }
+#if GN_XENON
+    else GN_UNEXPECTED();
+#endif
 
     // create pixel shader
     if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
@@ -220,6 +223,9 @@ void GN::gfx::D3DLine::drawLines(
 
     // lock vertex buffer
     D3DLineVertex * vbData;
+#if GN_XENON
+    dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
+#endif
     if( 0 == mNextLine )
     {
         GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
@@ -292,6 +298,9 @@ void GN::gfx::D3DLine::drawLines(
         }
         else
         {
+#if GN_XENON
+        GN_UNEXPECTED(); // Should always use shader on Xenon
+#else
             Matrix44f mat;
             mat = Matrix44f::sTranspose( model );
             GN_DX_CHECK( dev->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
@@ -302,6 +311,7 @@ void GN::gfx::D3DLine::drawLines(
             r.mFfpDirtyFlags.TransformWorld = 1;
             r.mFfpDirtyFlags.TransformView = 1;
             r.mFfpDirtyFlags.TransformProj = 1;
+#endif
         }
     }
     if( !( DL_USE_CURRENT_PS & options ) )

@@ -22,16 +22,21 @@ static void sDetermineMsaa(
 
     if( GN::gfx::MSAA_NONE != msaa )
     {
+#if GN_XENON
+        D3DMULTISAMPLE_TYPE type = D3DMULTISAMPLE_4_SAMPLES;
+#else
+        D3DMULTISAMPLE_TYPE type = D3DMULTISAMPLE_NONMASKABLE;
+#endif
         DWORD q;
         if( SUCCEEDED( d3d.CheckDeviceMultiSampleType(
             adapter,
             devtype,
             surfaceFormat,
             !fullscreen,
-            D3DMULTISAMPLE_NONMASKABLE,
+            type,
             &q ) ) )
         {
-            d3dType = D3DMULTISAMPLE_NONMASKABLE;
+            d3dType = type;
             quality = q - 1;
         }
     }

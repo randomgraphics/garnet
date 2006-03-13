@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "inputXenon.h"
 #include "inputMsw.h"
 #include "inputDInput.h"
 #include "inputX11.h"
@@ -30,7 +31,10 @@ namespace GN { namespace input
 
 static GN::input::Input * sCreateNativeInputSystem()
 {
-#if GN_MSWIN
+#if GN_XENON
+    GN::AutoObjPtr<GN::input::InputXenon> p( new GN::input::InputXenon );
+    return p.detach();
+#elif GN_MSWIN
     GN::AutoObjPtr<GN::input::InputMsw> p( new GN::input::InputMsw );
     if( !p->init() ) return 0;
     return p.detach();
