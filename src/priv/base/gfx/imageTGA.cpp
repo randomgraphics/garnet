@@ -273,7 +273,7 @@ bool TGAReader::readHeader(
     m.width      = header.width;
     m.height     = header.height;
     m.depth      = 1;
-    m.rowPitch   = header.width * mOutputBytesPerPixel;
+    m.rowPitch   = (uint32_t)( header.width * mOutputBytesPerPixel );
     m.slicePitch = m.rowPitch * header.height;
     m.levelPitch = m.slicePitch;
     GN_ASSERT( o_desc.valid() );

@@ -4,6 +4,8 @@
 using namespace GN;
 using namespace GN::gfx;
 
+bool gAnimation = true;
+
 class Scene
 {
     AutoRef<Shader> ps1, ps2;
@@ -288,9 +290,16 @@ public:
     void onKeyPress( input::KeyEvent ke )
     {
         app::SampleApp::onKeyPress( ke );
+
+        // toggle animation
+        if( input::KEY_SPACEBAR == ke.code && ke.status.down )
+        {
+            gAnimation = !gAnimation;
+        }
+
+        // toggle fullscreen mode
         if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
         {
-            // toggle fullscreen mode
             RendererOptions ro = gRenderer.getOptions();
             ro.fullscreen = !ro.fullscreen;
             if( !gRenderer.changeOptions(ro) ) postExistEvent();
@@ -299,7 +308,7 @@ public:
 
     void onUpdate()
     {
-        mScene->update();
+        if( gAnimation ) mScene->update();
     }
 
     void onRender()
