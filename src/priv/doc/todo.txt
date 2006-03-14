@@ -17,6 +17,7 @@ TODO
 
 - p1
   - GFX system
+    - find a way to mix API-specific and API-netural draw sequances and resources.
     - add support to MSAA/FSAA
     - Cg shader
     - consider removing syscopy from vertex/index buffer

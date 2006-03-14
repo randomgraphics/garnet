@@ -40,6 +40,10 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceRestore()
     // make sure MRT caps does not exceed maximum allowance value
     GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= MAX_RENDER_TARGETS );
 
+    // get default render target surface
+    GN_ASSERT( 0 == mBackBuffer );
+    GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mBackBuffer ), false );
+
     // store old RT data
     RenderTargetTextureDesc oldRT[MAX_RENDER_TARGETS], oldDepth;
     for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
@@ -49,7 +53,8 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceRestore()
     oldDepth = mCurrentDepth;
 
     //set default render target
-    mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
+    mColorBufferSize.set( 0, 0 );
+    mDepthBufferSize.set( 0, 0 );
     mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
     for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
     {
@@ -80,8 +85,9 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
     _GNGFX_DEVICE_TRACE();
 
     // release render target pointers
-    safeRelease( mDefaultRT0 );
-    safeRelease( mAutoDepth );
+    safeRelease( mBackBuffer );
+    for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) safeRelease( mColorBuffers[i] );
+    safeRelease( mDepthBuffer );
 
     GN_UNGUARD;
 }
@@ -94,7 +100,7 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::setRenderTarget(
-    size_t index, const Texture * tex, size_t level, TexFace face )
+    size_t index, const Texture * tex, size_t level, size_t face )
 {
     GN_GUARD_SLOW;
 
@@ -117,12 +123,15 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     {
         const D3DTexture * d3dTex = safeCast<const D3DTexture*>(rttd.tex);
 
+        D3DRECT rc = { 0, 0 };
+        rttd.tex->getMipSize<LONG>( level, &rc.x2, &rc.y2, (LONG*)NULL );
+
         GN_CASSERT( D3DRESOLVE_RENDERTARGET3 == D3DRESOLVE_RENDERTARGET0+3 );
         GN_CASSERT( D3DRESOLVE_RENDERTARGET2 == D3DRESOLVE_RENDERTARGET0+2 );
         GN_CASSERT( D3DRESOLVE_RENDERTARGET1 == D3DRESOLVE_RENDERTARGET0+1 );
         GN_DX_CHECK( mDevice->Resolve(
             D3DRESOLVE_RENDERTARGET0 + index,
-            NULL, // destRect
+            &rc,
             d3dTex->getD3DTexture(),
             NULL, // destPoint
             rttd.level,
@@ -137,7 +146,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     rttd.level = level;
     rttd.face = face;
 
-    // update render target size
+    // resize color and depth buffer
     if( 0 == index )
     {
         if( tex )
@@ -152,7 +161,8 @@ void GN::gfx::D3DRenderer::setRenderTarget(
         }
 
         // update automatic depth surface
-        resizeAutoDepthBuffer( mCurrentRTSize );
+        resizeColorBuffers( mCurrentRTSize );
+        resizeDepthBuffer( mCurrentRTSize );
 
         // Because viewport is using relative coordinates based on render target size,
         // so here we have to re-apply the viewport.
@@ -165,7 +175,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, TexFace face )
+void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, size_t face )
 {
     GN_GUARD_SLOW;
 
@@ -206,28 +216,100 @@ void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, Te
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::resizeAutoDepthBuffer( const Vector2<uint32_t> & sz )
+GN_INLINE void GN::gfx::D3DRenderer::resizeColorBuffers( const Vector2<uint32_t> & sz )
 {
     GN_GUARD_SLOW;
 
     // Check surface size
-    if( sz.x > mAutoDepthSize.x || sz.y > mAutoDepthSize.y || NULL == mAutoDepth )
+    if( sz.x > mColorBufferSize.x || sz.y > mColorBufferSize.y || NULL == mDepthBuffer )
     {
-        // release old buffer
-        safeRelease( mAutoDepth );
+        uint32_t newX = max( sz.x, mColorBufferSize.x );
+        uint32_t newY = max( sz.y, mColorBufferSize.y );
 
-        // create a new buffer
-        AutoComPtr<IDirect3DSurface9> newSurf;
-        GN_DX_CHECK_R( mDevice->CreateDepthStencilSurface(
-            sz.x, sz.y,
-            D3DFMT_D24S8, // TODO: enumerate avaliable depth format
-            mPresentParameters.MultiSampleType, mPresentParameters.MultiSampleQuality,
-            mPresentParameters.Flags & D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL,
-            &mAutoDepth, 0 ) );
+        D3DFORMAT newFormat = D3DFMT_A8R8G8B8; // TODO: let user specify format.
+
+        const D3DPRESENT_PARAMETERS & d3dpp = getPresentParameters();
+        D3DMULTISAMPLE_TYPE msaaType = d3dpp.MultiSampleType;
+        DWORD msaaQuality = d3dpp.MultiSampleQuality;
+
+        // check for MASS compability
+        if( !checkD3DDeviceMsaa( newFormat ) )
+        {
+            msaaType = D3DMULTISAMPLE_NONE;
+            msaaQuality = 0;
+        }
+
+        // create new color buffers
+        for( int i = 0; i < MAX_RENDER_TARGETS; ++i )
+        {
+            // release old buffer
+            safeRelease( mColorBuffers[i] );
+
+            // create new buffer
+            GN_DX_CHECK( mDevice->CreateRenderTarget(
+                    newX, newY,
+                    newFormat,
+                    msaaType, msaaQuality,
+                    FALSE, // non-lockable
+                    &mColorBuffers[i], 0 ) );
+
+            // bind color buffers
+            GN_DX_CHECK( mDevice->SetRenderTarget( i, mColorBuffers[i] ) );
+        }
+
+        // update buffer size
+        mColorBufferSize.x = newX;
+        mColorBufferSize.y = newY;
     }
 
-    // update D3D depth surface
-    GN_DX_CHECK_R( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::D3DRenderer::resizeDepthBuffer( const Vector2<uint32_t> & sz )
+{
+    GN_GUARD_SLOW;
+
+    // Check surface size
+    if( sz.x > mDepthBufferSize.x || sz.y > mDepthBufferSize.y || NULL == mDepthBuffer )
+    {
+        uint32_t newX = max( sz.x, mDepthBufferSize.x );
+        uint32_t newY = max( sz.y, mDepthBufferSize.y );
+
+        D3DFORMAT newFormat = D3DFMT_D24S8; // TODO: let user specify format.
+
+        const D3DPRESENT_PARAMETERS & d3dpp = getPresentParameters();
+        D3DMULTISAMPLE_TYPE msaaType = d3dpp.MultiSampleType;
+        DWORD msaaQuality = d3dpp.MultiSampleQuality;
+
+        // check for MASS compability
+        if( !checkD3DDeviceMsaa( newFormat ) )
+        {
+            msaaType = D3DMULTISAMPLE_NONE;
+            msaaQuality = 0;
+        }
+        
+        // release old buffer
+        safeRelease( mDepthBuffer );
+
+        // create a new buffer
+        GN_DX_CHECK_R( mDevice->CreateDepthStencilSurface(
+            newX, newY,
+            newFormat, // TODO: enumerate avaliable depth format
+            msaaType,
+            msaaQuality,
+            TRUE, // discard
+            &mDepthBuffer, 0 ) );
+
+        // bind color and depth buffer
+        GN_DX_CHECK( mDevice->SetDepthStencilSurface( mDepthBuffer ) );
+
+        // update buffer size
+        mDepthBufferSize.x = newX;
+        mDepthBufferSize.y = newY;
+    }
 
     GN_UNGUARD_SLOW;
 }

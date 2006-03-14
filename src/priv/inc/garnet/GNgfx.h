@@ -30,6 +30,7 @@ namespace GN
 #include "gfx/image.h"
 #include "gfx/renderState.h"
 #include "gfx/vertexFormat.h"
+#include "gfx/shape.h"
 #include "gfx/misc.h"
 
 // Platform-independent renderer.

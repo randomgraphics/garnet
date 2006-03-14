@@ -103,7 +103,7 @@ namespace GN { namespace gfx
         //!
         //! \note Do not foget to release the returned surface after using it.
         //!
-        LPDIRECT3DSURFACE9 getSurface( TexFace face, size_t level ) const
+        LPDIRECT3DSURFACE9 getSurface( size_t face, size_t level ) const
         {
             GN_GUARD_SLOW;
 
@@ -124,7 +124,7 @@ namespace GN { namespace gfx
                 case TEXTYPE_CUBE:
                     {
                         LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
-                        GN_DX_CHECK_RV( texCube->GetCubeMapSurface( sTexFace2D3D(face), (DWORD)level, &surf ), 0 );
+                        GN_DX_CHECK_RV( texCube->GetCubeMapSurface( sCubeFace2D3D(face), (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 
@@ -213,9 +213,9 @@ namespace GN { namespace gfx
         //!
         //! convert garnet cube face to D3D tag
         //!
-        static D3DCUBEMAP_FACES sTexFace2D3D( size_t face )
+        static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
         {
-            static D3DCUBEMAP_FACES sTable[ NUM_TEXFACES ] =
+            static D3DCUBEMAP_FACES sTable[ NUM_CUBEFACES ] =
             {
                 D3DCUBEMAP_FACE_POSITIVE_X,
                 D3DCUBEMAP_FACE_NEGATIVE_X,

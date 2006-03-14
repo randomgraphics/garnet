@@ -73,15 +73,15 @@ namespace GN { namespace gfx
     //!
     //! cube texture face
     //!
-    enum TexFace
+    enum CubeFace
     {
-        TEXFACE_PX, //!< positive X
-        TEXFACE_NX, //!< negative X
-        TEXFACE_PY, //!< positive Y
-        TEXFACE_NY, //!< negative Y
-        TEXFACE_PZ, //!< positive Z
-        TEXFACE_NZ, //!< negative Z
-        NUM_TEXFACES
+        CUBEFACE_PX = 0, //!< positive X
+        CUBEFACE_NX, //!< negative X
+        CUBEFACE_PY, //!< positive Y
+        CUBEFACE_NY, //!< negative Y
+        CUBEFACE_PZ, //!< positive Z
+        CUBEFACE_NZ, //!< negative Z
+        NUM_CUBEFACES
     };
 
     struct Texture;
@@ -273,8 +273,14 @@ namespace GN { namespace gfx
                     break;
                 }
 
-                case TEXTYPE_2D :
                 case TEXTYPE_CUBE :
+                {
+                    mDesc.height = desc.width;
+                    mDesc.depth = 1;
+                    break;
+                }
+
+                case TEXTYPE_2D :
                 case TEXTYPE_STACK :
                 {
                     mDesc.height = desc.height;

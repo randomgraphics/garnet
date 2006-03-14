@@ -306,10 +306,10 @@ namespace GN { namespace gfx
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
                                       size_t level,
-                                      TexFace face ) {}
+                                      size_t face ) {}
         virtual void setRenderDepth( const Texture * texture,
                                      size_t level,
-                                     TexFace face ) {}
+                                     size_t face ) {}
 
         //@}
 

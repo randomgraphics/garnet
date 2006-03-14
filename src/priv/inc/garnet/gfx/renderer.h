@@ -440,7 +440,7 @@ namespace GN { namespace gfx
         {
             AutoRef<Texture> texture; //!< render target 
             uint32_t         level;   //!< mipmap level
-            TexFace          face;    //!< cubemap face
+            size_t           face;    //!< cubemap face
         };
 
         Parameter<AutoRef<Shader> > vtxShader; //!< vertex shader
@@ -1393,12 +1393,12 @@ namespace GN { namespace gfx
         //! \param level
         //!     Mipmap level.
         //! \param face
-        //!     Ignored if target_texture is not cubemap.
+        //!     Must be zero, if target_texture is not cube/stack texture.
         //!
         virtual void setRenderTarget( size_t index,
                                       const Texture * texture,
                                       size_t level = 0,
-                                      TexFace face = TEXFACE_PX ) = 0;
+                                      size_t face = 0 ) = 0;
 
         //!
         //! set render target texture
@@ -1409,11 +1409,11 @@ namespace GN { namespace gfx
         //! \param level
         //!     Mipmap level.
         //! \param face
-        //!     Ignored if target_texture is not cubemap.
+        //!     Must be zero, if target_texture is not cube/stack texture.
         //!
         virtual void setRenderDepth( const Texture * texture,
                                      size_t level = 0,
-                                     TexFace face = TEXFACE_PX ) = 0;
+                                     size_t face = 0 ) = 0;
 
         //@}
 

@@ -425,8 +425,8 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, TexFace face );
-        virtual void setRenderDepth( const Texture * texture, size_t level, TexFace face );
+        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, size_t face );
+        virtual void setRenderDepth( const Texture * texture, size_t level, size_t face );
 
     private:
 
