@@ -282,6 +282,9 @@ namespace GN { namespace gfx
         UINT                          getBehavior() const { return mBehavior; }
         const D3DPRESENT_PARAMETERS & getPresentParameters() const { return mPresentParameters; }
 
+        //!
+        //! Check resource format compability
+        //!
         HRESULT checkD3DDeviceFormat( uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const
         {
             return mD3D->CheckDeviceFormat(
@@ -289,6 +292,22 @@ namespace GN { namespace gfx
                 mDeviceType,
                 mPresentParameters.BackBufferFormat,
                 usage, rtype, format );
+        }
+
+        //!
+        //! Check render target MSAA compability
+        //!
+        bool checkD3DDeviceMsaa( D3DFORMAT format ) const
+        {
+            if( D3DMULTISAMPLE_NONE == mPresentParameters.MultiSampleType ) return true;
+            DWORD maxQuality;
+            HRESULT hr = mD3D->CheckDeviceMultiSampleType(
+                mAdapter,
+                mDeviceType,
+                format,
+                mPresentParameters.Windowed,
+                mPresentParameters.MultiSampleType, &maxQuality );
+            return D3D_OK == hr && mPresentParameters.MultiSampleQuality < maxQuality;
         }
 
     private :
@@ -589,8 +608,10 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, TexFace face );
-        virtual void setRenderDepth( const Texture * texture, size_t level, TexFace face );
+        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, size_t face );
+        virtual void setRenderDepth( const Texture * texture, size_t level, size_t face );
+
+#if GN_XENON
 
     private:
         bool renderTargetInit() { return true; }
@@ -598,7 +619,44 @@ namespace GN { namespace gfx
         bool renderTargetOK() const { return true; }
         void renderTargetClear()
         {
-            mDefaultRT0 = mAutoDepth = 0;
+            mBackBuffer = 0;
+            for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) mColorBuffers[i] = 0;
+            mDepthBuffer = 0;
+            mCurrentRTSize.set( 0, 0 );
+            mColorBufferSize.set( 0, 0 );
+            mDepthBufferSize.set( 0, 0 );
+        }
+
+        bool renderTargetDeviceCreate();
+        bool renderTargetDeviceRestore();
+        void renderTargetDeviceDispose();
+        void renderTargetDeviceDestroy() {}
+
+        GN_INLINE void resizeColorBuffers( const Vector2<uint32_t> & );
+        GN_INLINE void resizeDepthBuffer( const Vector2<uint32_t> & );
+
+    private:
+
+        LPDIRECT3DSURFACE9
+            mBackBuffer, // back buffer
+            mColorBuffers[MAX_RENDER_TARGETS], // color buffers
+            mDepthBuffer; // depth buffer
+        RenderTargetTextureDesc
+            mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
+            mCurrentDepth;  // current depth texture
+        Vector2<uint32_t>
+            mCurrentRTSize, // current effective render target size (can't larger then color and depth buffer size)
+            mColorBufferSize, // size of color buffer
+            mDepthBufferSize; // size of depth buffer
+#else
+
+    private:
+        bool renderTargetInit() { return true; }
+        void renderTargetQuit() {}
+        bool renderTargetOK() const { return true; }
+        void renderTargetClear()
+        {
+            mBackBuffer = mAutoDepth = 0;
             mCurrentRTSize.set( 0, 0 );
             mAutoDepthSize.set( 0, 0 );
         }
@@ -611,8 +669,9 @@ namespace GN { namespace gfx
         GN_INLINE void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
 
     private:
+
         LPDIRECT3DSURFACE9
-            mDefaultRT0,    // default color buffer
+            mBackBuffer,    // default color buffer
             mAutoDepth;     // automatic depth buffer
         RenderTargetTextureDesc
             mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
@@ -620,6 +679,8 @@ namespace GN { namespace gfx
         Vector2<uint32_t>
             mCurrentRTSize, // current render target size
             mAutoDepthSize; // size of automatic depth buffer
+
+#endif
 
         //@}
 

@@ -203,7 +203,7 @@ namespace GN { namespace gfx
         {
             const Texture * tex;   //!< Render target texture.
             size_t          level; //!< Mipmap level.
-            TexFace         face;  //!< Effective only when tex is cubemap.
+            size_t          face;  //!< Effective only when tex is cube/stack texture.
 
             //!
             //! Ctor
@@ -213,7 +213,7 @@ namespace GN { namespace gfx
             //!
             //! Equality check
             //!
-            bool equal( const Texture * t, size_t l, TexFace f ) const
+            bool equal( const Texture * t, size_t l, size_t f ) const
             {
                 return tex == t && ( 0 == tex || ( level == l && face == f ) );
             }

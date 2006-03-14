@@ -37,16 +37,16 @@ bool GN::gfx::D3DRenderer::renderTargetDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
+    // make sure MRT caps does not exceed maximum allowance value
+    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= MAX_RENDER_TARGETS );
+
     // get default render target surface
-    GN_ASSERT( 0 == mDefaultRT0 );
-    GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mDefaultRT0 ), false );
+    GN_ASSERT( 0 == mBackBuffer );
+    GN_DX_CHECK_RV( mDevice->GetRenderTarget( 0, &mBackBuffer ), false );
 
     // restore render target size to default value
     mCurrentRTSize.set( getDispDesc().width, getDispDesc().height );
-    mAutoDepthSize.set( getDispDesc().width, getDispDesc().height );
-
-    // make sure MRT caps does not exceed maximum allowance value
-    GN_ASSERT( getCaps(CAPS_MAX_RENDER_TARGETS) <= MAX_RENDER_TARGETS );
+    mAutoDepthSize.set( 0, 0 );
 
     // (re)apply render targets
     RenderTargetTextureDesc desc;
@@ -83,7 +83,7 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
     _GNGFX_DEVICE_TRACE();
 
     // release render target pointers
-    safeRelease( mDefaultRT0 );
+    safeRelease( mBackBuffer );
     safeRelease( mAutoDepth );
 
     GN_UNGUARD;
@@ -97,7 +97,7 @@ void GN::gfx::D3DRenderer::renderTargetDeviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3DRenderer::setRenderTarget(
-    size_t index, const Texture * tex, size_t level, TexFace face )
+    size_t index, const Texture * tex, size_t level, size_t face )
 {
     GN_GUARD_SLOW;
 
@@ -146,8 +146,8 @@ void GN::gfx::D3DRenderer::setRenderTarget(
     }
     else if( 0 == index )
     {
-        GN_ASSERT( mDefaultRT0 );
-        surf.reset( mDefaultRT0 );
+        GN_ASSERT( mBackBuffer );
+        surf.reset( mBackBuffer );
         surfSize.x = getDispDesc().width;
         surfSize.y = getDispDesc().height;
         GN_ASSERT( surf );
@@ -180,7 +180,7 @@ void GN::gfx::D3DRenderer::setRenderTarget(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, TexFace face )
+void GN::gfx::D3DRenderer::setRenderDepth( const Texture * tex, size_t level, size_t face )
 {
     GN_GUARD_SLOW;
 

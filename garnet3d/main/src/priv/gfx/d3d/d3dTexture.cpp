@@ -166,6 +166,13 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
 {
     DWORD d3dUsage  = 0;
     
+#if GN_XENON
+    if( TEXUSAGE_AUTOGEN_MIPMAP & usage )
+    {
+        GN_WARN( "Xenon does not support mipmap auto-generation!" );
+    }
+#else
+
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
     d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_DEPTHSTENCIL : 0;
 
@@ -176,12 +183,6 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
         d3dUsage |= (TEXUSAGE_DYNAMIC & usage) ? D3DUSAGE_DYNAMIC : 0;
     }
 
-#if GN_XENON
-    if( TEXUSAGE_AUTOGEN_MIPMAP & usage )
-    {
-        GN_WARN( "Xenon does not support mipmap auto-generation!" );
-    }
-#else
     d3dUsage |= TEXUSAGE_AUTOGEN_MIPMAP & usage ? D3DUSAGE_AUTOGENMIPMAP : 0;
 #endif
 
@@ -701,7 +702,7 @@ bool GN::gfx::D3DTexture::lock(
 
             D3DLOCKED_RECT lrc;
             GN_DX_CHECK_RV( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->LockRect(
-                sTexFace2D3D(face), (UINT)level, &lrc, &rc, d3dLockFlag ), false );
+                sCubeFace2D3D(face), (UINT)level, &lrc, &rc, d3dLockFlag ), false );
 
             result.rowBytes = lrc.Pitch;
             result.sliceBytes = lrc.Pitch * clippedArea.h;
@@ -747,7 +748,7 @@ void GN::gfx::D3DTexture::unlock()
     }
     else if( TEXTYPE_CUBE == getDesc().type )
     {
-        GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->UnlockRect( sTexFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
+        GN_DX_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->UnlockRect( sCubeFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
 
     if( LOCK_RO == mLockedFlag || mLockedTexture == mD3DTexture )

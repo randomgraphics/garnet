@@ -79,7 +79,7 @@ bool GN::gfx::OGLRenderer::renderTargetDeviceRestore()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::setRenderTarget(
-    size_t index, const Texture * tex, size_t level, TexFace face )
+    size_t index, const Texture * tex, size_t level, size_t face )
 {
     GN_GUARD_SLOW;
 
@@ -175,7 +175,7 @@ void GN::gfx::OGLRenderer::setRenderTarget(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::setRenderDepth(
-    const Texture * tex, size_t level, TexFace face )
+    const Texture * tex, size_t level, size_t face )
 {
     GN_GUARD_SLOW;
 
