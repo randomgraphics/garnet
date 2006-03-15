@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglVtxBinding.h"
+#include "oglVtxFmt.h"
 #include "oglRenderer.h"
 
 // *****************************************************************************
@@ -151,12 +151,12 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBinding::init( const VtxFmtDesc & format )
+bool GN::gfx::OGLVtxFmt::init( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLVtxBinding, () );
+    GN_STDCLASS_INIT( GN::gfx::OGLVtxFmt, () );
 
     mFormat = format;
 
@@ -169,7 +169,7 @@ bool GN::gfx::OGLVtxBinding::init( const VtxFmtDesc & format )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBinding::quit()
+void GN::gfx::OGLVtxFmt::quit()
 {
     GN_GUARD;
 
@@ -190,7 +190,7 @@ void GN::gfx::OGLVtxBinding::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBinding::bind() const
+void GN::gfx::OGLVtxFmt::bind() const
 {
     GN_GUARD_SLOW;
 
@@ -247,7 +247,7 @@ void GN::gfx::OGLVtxBinding::bind() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBinding::bindBuffer(
+void GN::gfx::OGLVtxFmt::bindBuffer(
     size_t index, const uint8_t * buf, size_t startVtx, size_t stride ) const
 {
     GN_GUARD_SLOW;

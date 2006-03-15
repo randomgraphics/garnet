@@ -73,8 +73,8 @@ struct GfxResources
         GN::gfx::VtxFmtDesc fmt1, fmt2;
         fmt1.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT4 );
         fmt2.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT2 );
-        vtxbinding1 = r.createVtxBinding( fmt1 );
-        vtxbinding2 = r.createVtxBinding( fmt2 );
+        vtxbinding1 = r.createVtxFmt( fmt1 );
+        vtxbinding2 = r.createVtxFmt( fmt2 );
         TS_ASSERT( vtxbinding1 );
         TS_ASSERT( vtxbinding2 );
         if( !vtxbinding1 & !vtxbinding2 ) return false;

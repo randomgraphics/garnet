@@ -51,11 +51,11 @@ namespace GN { namespace gfx
 
             struct
             {
-                int vtxBuf     : 16; //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
-                int vtxBinding : 1;  //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
-                int vtxShader  : 1;  //!< Vertex shader dirty flag
-                int pxlShader  : 1;  //!< Pixel shader dirty flag
-                int reserved   : 13; //!< Reserved for future use.
+                int vtxBuf    : 16; //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
+                int vtxFmt    : 1;  //!< Vertex buffer dirty flags. bit 0-15 for vertex buffers, bit 16 for vertex binding.
+                int vtxShader : 1;  //!< Vertex shader dirty flag
+                int pxlShader : 1;  //!< Pixel shader dirty flag
+                int reserved  : 13; //!< Reserved for future use.
             };
         };
 
@@ -69,7 +69,7 @@ namespace GN { namespace gfx
         };
 
         VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< current vertex buffers
-        uint32_t              vtxBinding;                  //!< current vertex binding handle
+        VtxFmtHandle          vtxFmt;                     //!< current vertex format handle
         AutoRef<const Shader> vtxShader;                   //!< current vertex shader
         AutoRef<const Shader> pxlShader;                   //!< current pixel shader
         DirtyFlags            dirtyFlags;                  //!< dirty flags
@@ -84,7 +84,7 @@ namespace GN { namespace gfx
                 vtxBufs[i].buf.clear();
                 vtxBufs[i].stride = 0;
             }
-            vtxBinding = 0;
+            vtxFmt = 0;
             vtxShader.clear();
             pxlShader.clear();
             dirtyFlags.u32 = 0;
@@ -93,10 +93,10 @@ namespace GN { namespace gfx
         //!
         //! bind vertex binding
         //!
-        void bindVtxBinding( uint32_t handle )
+        void bindVtxFmt( VtxFmtHandle handle )
         {
-            dirtyFlags.vtxBinding = true;
-            vtxBinding = handle;
+            dirtyFlags.vtxFmt = true;
+            vtxFmt = handle;
         }
 
         //!

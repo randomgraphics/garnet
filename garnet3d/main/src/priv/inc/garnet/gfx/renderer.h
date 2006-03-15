@@ -282,7 +282,7 @@ namespace GN { namespace gfx
 
     typedef uint32_t RsbHandle; //!< Render state block handle
 
-    typedef uint32_t VtxBindingHandle; //!< Vertex binding handle
+    typedef uint32_t VtxFmtHandle; //!< Vertex format handle
 
     enum
     {
@@ -419,6 +419,34 @@ namespace GN { namespace gfx
     struct RenderingContext
     {
         //!
+        //! Context flag structure
+        //!
+        union FieldFlags
+        {
+            unsigned int u32; //!< all flags as uint32
+            struct
+            {
+                // byte 0
+                unsigned int shaders            : 2; //!< shaders
+                unsigned int rsb                : 1; //!< render state block
+                unsigned int colorBuffers       : 3; //!< number of color buffers
+                unsigned int depthBuffer        : 1; //!< depth buffer
+                unsigned int viewport           : 1; //!< viewport
+                // byte 1
+                unsigned int world              : 1; //!< world transformation
+                unsigned int view               : 1; //!< view transformation
+                unsigned int proj               : 1; //!< projection transformation
+                unsigned int light0Pos          : 1; //!< light 0 position
+                unsigned int light0Diffuse      : 1; //!< light 0 diffuse
+                unsigned int materialDiffuse    : 1; //!< material diffues color
+                unsigned int materialSpecular   : 1; //!< material specular color
+                unsigned int textureStates      : 1; //!< texture states
+                // byte 2,3
+                unsigned int                    : 16;
+            };
+        };
+
+        //!
         //! render target binding descriptor
         //!
         struct RenderTargetDesc
@@ -428,12 +456,13 @@ namespace GN { namespace gfx
             size_t           face;    //!< cubemap face
         };
 
-        AutoRef<Shader>       shaders[NUM_SHADER_TYPES];
-        RsbHandle             rsb;
-        RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS];
+        FieldFlags            flags; //!< field flags
+        AutoRef<Shader>       shaders[NUM_SHADER_TYPES]; //!< shaders
+        RsbHandle             rsb; //!< render state block handle
+        RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
         size_t                numColorBuffers;
-        RenderTargetDesc      depthBuffer;
-        Rectf                 viewport;
+        RenderTargetDesc      depthBuffer; //!< depth buffers
+        Rectf                 viewport; //!< viewport
         Matrix44f             world, //!< world transformation
                               view, //!< view transformation
                               proj; //!< projection transformation
@@ -444,10 +473,22 @@ namespace GN { namespace gfx
         TextureStateBlockDesc textureStates; //!< texture stage states
 
         //!
-        //! Reset all fields to initial value.
+        //! Clear to empty context, all fields are leave unused.
         //!
         void clear()
         {
+            GN_CASSERT( 4 == sizeof(FieldFlags) );
+            flags.u32 = 0;
+            for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i].clear();
+            for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) colorBuffers[i].texture.clear();
+        }
+
+        //!
+        //! Reset to default context.
+        //!
+        void reset()
+        {
+            flags.u32 = 0xFFFFFFFF; // set all flags to true.
             for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i].clear();
             rsb = 0;
             for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) colorBuffers[i].texture.clear();
@@ -472,30 +513,51 @@ namespace GN { namespace gfx
     struct VtxPxlData
     {
         //!
+        //! flag structure
+        //!
+        union FieldFlags
+        {
+            unsigned int u32; //!< all flags as uint32
+            struct
+            {
+                // byte 0
+                unsigned int textures : 1; //!< textures
+                unsigned int vtxFmt   : 1; //!< vertex format
+                unsigned int vtxBufs  : 1; //!< vertex buffers
+                unsigned int idxBuf   : 1; //!< index buffer
+                unsigned int          : 4;
+                // byte 1-3
+                unsigned int          : 24;
+            };
+        };
+
+        //!
         //! Vertex buffer binding descriptor
         //!
         struct VtxBufDesc
         {
-            AutoRef<VtxBuf> buffer;
-            size_t          stride;
+            AutoRef<VtxBuf> buffer; //!< buffer pointer
+            size_t          stride; //!< buffer stride
         };
 
-        AutoRef<Texture>      textures[MAX_TEXTURE_STAGES]; //!< texture list
-        size_t                numTextures;
-        VtxBindingHandle      vtxBinding; //!< vertex binding
-        VtxBufDesc            vtxBuffers[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current @vtxBinding.
-        AutoRef<IdxBuf>       idxBuffer; //!< index buffer
+        FieldFlags       flags; //!< flags
+        AutoRef<Texture> textures[MAX_TEXTURE_STAGES]; //!< texture list
+        size_t           numTextures; //!< texture count
+        VtxFmtHandle     vtxFmt; //!< vertex format handle
+        VtxBufDesc       vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current @vtxFmt.
+        AutoRef<IdxBuf>  idxBuf; //!< index buffer
 
         //!
         //! clear to empty
         //!
         void clear()
         {
+            GN_CASSERT( 4 == sizeof(FieldFlags) );
             for( int i = 0; i < MAX_TEXTURE_STAGES; ++i ) textures[i].clear();
             numTextures = 0;
-            vtxBinding = 0;
-            for( int i = 0; i < MAX_VERTEX_STREAMS; ++i ) vtxBuffers[i].buffer.clear();
-            idxBuffer.clear();
+            vtxFmt = 0;
+            for( int i = 0; i < MAX_VERTEX_STREAMS; ++i ) vtxBufs[i].buffer.clear();
+            idxBuf.clear();
         }
     };
 
@@ -813,9 +875,9 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! Create vertex bindings.
+        //! Create vertex format handle.
         //!
-        virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & ) = 0;
+        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) = 0;
 
         //!
         //! Create new vertex buffer

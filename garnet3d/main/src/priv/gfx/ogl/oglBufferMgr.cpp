@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "oglRenderer.h"
-#include "oglVtxBinding.h"
+#include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 
@@ -17,7 +17,7 @@ struct EqualFormat
     bool operator()( void * p ) const
     {
         GN_ASSERT( p );
-        return format == ((GN::gfx::OGLVtxBinding*)p)->getFormat();
+        return format == ((GN::gfx::OGLVtxFmt*)p)->getFormat();
     }
 };
 
@@ -33,15 +33,15 @@ void GN::gfx::OGLRenderer::bufferClear()
     GN_GUARD;
 
     // delete all vertex buffer binding objects
-    uint32_t h = mVtxBindings.first();
+    uint32_t h = mVtxFmts.first();
     while( h )
     {
-        OGLVtxBinding * p = (OGLVtxBinding*)mVtxBindings[h];
+        OGLVtxFmt * p = (OGLVtxFmt*)mVtxFmts[h];
         GN_ASSERT( p );
         delete p;
-        h = mVtxBindings.next( h );
+        h = mVtxFmts.next( h );
     }
-    mVtxBindings.clear();
+    mVtxFmts.clear();
 
     mCurrentIdxBuf.clear();
 
@@ -55,18 +55,18 @@ void GN::gfx::OGLRenderer::bufferClear()
 //
 //
 // -----------------------------------------------------------------------------
-uint32_t GN::gfx::OGLRenderer::createVtxBinding( const VtxFmtDesc & format )
+uint32_t GN::gfx::OGLRenderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
-    uint32_t h = mVtxBindings.findIf( EqualFormat(format) );
+    uint32_t h = mVtxFmts.findIf( EqualFormat(format) );
 
     if( 0 == h )
     {
         // create new vertex binding object
-        AutoObjPtr<OGLVtxBinding> p( new OGLVtxBinding(*this) );
+        AutoObjPtr<OGLVtxFmt> p( new OGLVtxFmt(*this) );
         if( !p->init( format ) ) return 0;
-        h = mVtxBindings.add( p );
+        h = mVtxFmts.add( p );
         p.detach();
     }
 
@@ -124,17 +124,17 @@ GN::gfx::OGLRenderer::createIdxBuf(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::bindVtxBinding( uint32_t handle )
+void GN::gfx::OGLRenderer::bindVtxFmt( uint32_t handle )
 {
     GN_GUARD;
 
-    if( !mVtxBindings.validHandle(handle) )
+    if( !mVtxFmts.validHandle(handle) )
     {
         GN_ERROR( "invalid vertex binding handle : %d", handle );
         return;
     }
 
-    mCurrentDrawState.bindVtxBinding( handle );
+    mCurrentDrawState.bindVtxFmt( handle );
 
     GN_UNGUARD;
 }
@@ -190,13 +190,13 @@ void GN::gfx::OGLRenderer::bindVtxBuf( size_t index, const VtxBuf * buffer, size
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::applyVtxBinding()
+void GN::gfx::OGLRenderer::applyVtxFmt()
 {
     GN_GUARD_SLOW;
 
-    if( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) )
+    if( mVtxFmts.validHandle( mCurrentDrawState.vtxFmt ) )
     {
-        OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+        OGLVtxFmt * p = (OGLVtxFmt *)mVtxFmts[mCurrentDrawState.vtxFmt];
         GN_ASSERT( p );
         p->bind();
     }
@@ -211,9 +211,9 @@ void GN::gfx::OGLRenderer::applyVtxBufState( size_t startVtx )
 {
     GN_GUARD_SLOW;
 
-    if( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) )
+    if( mVtxFmts.validHandle( mCurrentDrawState.vtxFmt ) )
     {
-        OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+        OGLVtxFmt * p = (OGLVtxFmt *)mVtxFmts[mCurrentDrawState.vtxFmt];
 
         GN_ASSERT( p );
 
@@ -241,9 +241,9 @@ void GN::gfx::OGLRenderer::setVtxBufUp( const void * data, size_t stride )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mVtxBindings.validHandle( mCurrentDrawState.vtxBinding ) );
+    GN_ASSERT( mVtxFmts.validHandle( mCurrentDrawState.vtxFmt ) );
 
-    OGLVtxBinding * p = (OGLVtxBinding *)mVtxBindings[mCurrentDrawState.vtxBinding];
+    OGLVtxFmt * p = (OGLVtxFmt *)mVtxFmts[mCurrentDrawState.vtxFmt];
 
     GN_ASSERT( p );
 

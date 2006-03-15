@@ -544,9 +544,9 @@ GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t startVtx )
     // apply other states
     if( mCurrentDrawState.dirtyFlags.u32 )
     {
-        if( mCurrentDrawState.dirtyFlags.vtxBinding )
+        if( mCurrentDrawState.dirtyFlags.vtxFmt )
         {
-            applyVtxBinding();
+            applyVtxFmt();
         }
 
         if( mCurrentDrawState.dirtyFlags.vtxBuf )
