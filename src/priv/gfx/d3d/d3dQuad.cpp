@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3dQuad.h"
 #include "d3dRenderer.h"
+#include "d3dRenderStateBlock.h"
 #include "garnet/GNd3d.h"
 
 struct D3DQuadVertex
@@ -31,14 +32,6 @@ static const D3DVERTEXELEMENT9 sDeclFfp[] =
     { 0, 20, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD , 0 },
     D3DDECL_END()
 };
-#endif
-
-
-//
-// Fake D3DXDebugMute() for Xenon
-// -----------------------------------------------------------------------------
-#if GN_XENON
-static BOOL D3DXDebugMute( BOOL ) { return FALSE; }
 #endif
 
 // *****************************************************************************
@@ -389,24 +382,23 @@ void GN::gfx::D3DQuad::drawQuads(
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
         GN_DX_CHECK( mRsb->Capture() );
-        BOOL old = D3DXDebugMute( TRUE );
-        GN_DX_CHECK( dev->SetRenderState( D3DRS_ALPHABLENDENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE ) );
-        GN_DX_CHECK( dev->SetRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE ) );
-        GN_DX_CHECK( dev->SetRenderState( D3DRS_ZENABLE, TRUE ) );
-        GN_DX_CHECK( dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE ) );
-        D3DXDebugMute( old );
+        D3DRenderer & r = getRenderer();
+        r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE );
+        r.setD3DRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE );
+        r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
+        r.setD3DRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
     }
 
     // bind shaders
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
-        r.mDrawState.dirtyFlags.vtxShader = 1;
+        // TODO: r.mDrawState.dirtyFlags.vtxShader = 1;
     }
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
         GN_DX_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
-        r.mDrawState.dirtyFlags.pxlShader = 1;
+        // TODO: r.mDrawState.dirtyFlags.pxlShader = 1;
     }
 
     // setup texture states, for fixed-functional pipeline only
@@ -415,13 +407,14 @@ void GN::gfx::D3DQuad::drawQuads(
     if( !currentPs )
     {
         // TODO: setup TSS based on present of texcoords and colors.
+        D3DRenderer & r = getRenderer();
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
         r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
         r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
-        r.mFfpDirtyFlags.TextureStates = 1;
+        // TODO: r.mFfpDirtyFlags.TextureStates = 1;
     }
 
     // bind buffers
@@ -429,8 +422,8 @@ void GN::gfx::D3DQuad::drawQuads(
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3DQuadVertex) ) );
     GN_ASSERT( mIdxBuf );
     GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
-    r.mDrawState.dirtyFlags.vtxBufs |= 1;
-    r.mDrawState.dirtyFlags.vtxBinding = 1;
+    // TODO: r.mDrawState.dirtyFlags.vtxBufs |= 1;
+    // TODO: r.mDrawState.dirtyFlags.vtxBinding = 1;
 
     // draw
 #if GN_XENON

@@ -1,3 +1,5 @@
+#include "d3dRenderer.h"
+
 /*
  * Setup individual render state
  *

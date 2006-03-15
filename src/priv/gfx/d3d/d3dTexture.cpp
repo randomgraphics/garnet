@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dTexture.h"
 #include "d3dRenderer.h"
+#include "d3dTexture.h"
 #include "garnet/GNd3d.h"
 
 // *****************************************************************************

@@ -171,9 +171,6 @@ void GN::gfx::D3DRenderer::drawIndexed(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
-    // update draw state
-    applyDrawState();
-
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX_CHECK(
@@ -206,9 +203,6 @@ void GN::gfx::D3DRenderer::draw(
     // make sure numPrims is not too large
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
-
-    // update draw state
-    applyDrawState();
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
@@ -243,9 +237,6 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
-    // update draw state
-    applyDrawState();
-
     GN_DX_CHECK(
         mDevice->DrawIndexedPrimitiveUP(
             sPrimMap[prim],
@@ -257,9 +248,7 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
             vertexData,
             (UINT)strideInBytes ) );
 
-    // dirty draw state of stream 0
-    mDrawState.dirtyFlags.vtxBufs |= 1;
-    mDrawState.dirtyFlags.idxBuf |= 1;
+    // TODO: dirty rendering context of vertex stream 0 and index buffer
 
     // success
     mNumPrims += numPrims;
@@ -284,9 +273,6 @@ void GN::gfx::D3DRenderer::drawUp(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
-    // update draw state
-    applyDrawState();
-
     // do draw
     GN_DX_CHECK( mDevice->DrawPrimitiveUP(
         sPrimMap[prim],
@@ -294,8 +280,7 @@ void GN::gfx::D3DRenderer::drawUp(
         vertexData,
         (UINT)strideInBytes ) );
 
-    // dirty draw state of stream 0
-    mDrawState.dirtyFlags.vtxBufs |= 1;
+    // TODO: dirty rendering context of vertex stream 0
 
     // success
     mNumPrims += numPrims;
@@ -317,7 +302,6 @@ void GN::gfx::D3DRenderer::drawQuads(
     GN_GUARD_SLOW;
     PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawQuads" );
     GN_ASSERT( mDrawBegan && mQuad );
-    applyDrawState();
     mQuad->drawQuads(
         options,
         (const float*)positions, posStride,
@@ -344,7 +328,6 @@ void GN::gfx::D3DRenderer::drawLines(
     GN_GUARD_SLOW;
     PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawLines" );
     GN_ASSERT( mDrawBegan && mLine );
-    applyDrawState();
     mLine->drawLines(
         options,
         (const float*)positions, stride,
@@ -419,51 +402,4 @@ bool GN::gfx::D3DRenderer::handleDeviceLost()
 
     GN_UNGUARD;
 #endif
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::applyDrawState()
-{
-    GN_GUARD_SLOW;
-
-    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::applyDrawState" );
-
-    // apply textures
-    if( getDirtyTextureStages() > 0 ) applyTexture();
-
-    // apply FFP states
-    if( 0 != mFfpDirtyFlags.u32 ) applyFfpState();
-
-    // apply other draw states
-    if( mDrawState.dirtyFlags.u32 )
-    {
-        if( mDrawState.dirtyFlags.vtxBinding )
-        {
-            applyVtxBinding( mDrawState.vtxBinding );
-        }
-
-        if( mDrawState.dirtyFlags.vtxBufs )
-        {
-            applyVtxBuffers();
-        }
-
-        if( mDrawState.dirtyFlags.idxBuf )
-        {
-            const IdxBuf * buf = mDrawState.idxBuf;
-            GN_DX_CHECK( mDevice->SetIndices( buf ? safeCast<const D3DIdxBuf*>(buf)->getD3DIb() : 0 ) );
-        }
-
-        applyShader(
-            mDrawState.vtxShader, !!mDrawState.dirtyFlags.vtxShader,
-            mDrawState.pxlShader, !!mDrawState.dirtyFlags.pxlShader );
-
-        // clear dirty flags
-        mDrawState.dirtyFlags.u32 = 0;
-    }
-
-    PIXPERF_END_EVENT();
-
-    GN_UNGUARD_SLOW;
 }

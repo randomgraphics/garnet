@@ -110,9 +110,9 @@ namespace GN { namespace gfx
     enum
     {
         //!
-        //! 最多16层贴图
+        //! 最多32层贴图
         //!
-        MAX_TEXTURE_STAGES = 16
+        MAX_TEXTURE_STAGES = 32
     };
 
     //!

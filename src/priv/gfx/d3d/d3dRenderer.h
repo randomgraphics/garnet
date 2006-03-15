@@ -29,150 +29,6 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! D3D draw state
-    //!
-    struct D3DDrawState
-    {
-        //!
-        //! Renderer state dirty flags
-        //!
-        union DirtyFlags
-        {
-            uint32_t u32; //!< Dirty flags as unsigned integer
-            int32_t  i32; //!< Dirty flags as signed integer
-
-            struct
-            {
-                int vtxBufs    : 16; //!< Vertex buffer dirty flags
-                int vtxBinding : 1;  //!< Vertex binding dirty flag
-                int idxBuf     : 1;  //!< Index buffer dirty flag
-                int vtxShader  : 1;  //!< Vertex shader
-                int pxlShader  : 1;  //!< Pixel shader
-                int reserved   : 12; //!< Reserved for future use.
-            };
-        };
-
-        //!
-        //! Vertex buffer state
-        //!
-        struct VtxBufDesc
-        {
-            AutoRef<const VtxBuf> buf;    //!< the buffer pointer
-            size_t                stride; //!< vertex stride
-        };
-
-        VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers
-        uint32_t              vtxBinding;                  //!< vertex binding handle
-        AutoRef<const IdxBuf> idxBuf;                      //!< index buffer
-        AutoRef<const Shader> vtxShader;                   //!< vertex shader
-        AutoRef<const Shader> pxlShader;                   //!< pixel shader
-        DirtyFlags            dirtyFlags;                  //!< dirty flags
-
-        //!
-        //! clear buffer states
-        //!
-        void clear()
-        {
-            GN_CASSERT( sizeof(DirtyFlags) == 4 );
-            for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i )
-            {
-                vtxBufs[i].buf.clear();
-                vtxBufs[i].stride = 0;
-            }
-            vtxBinding = 0;
-            idxBuf.clear();
-            vtxShader.clear();
-            pxlShader.clear();
-            dirtyFlags.u32 = 0;
-        }
-
-        //!
-        //! bind vertex buffer
-        //!
-        void bindVtxBuf( size_t index, const VtxBuf * buf, size_t stride )
-        {
-            GN_ASSERT( index < MAX_VERTEX_STREAMS );
-            dirtyFlags.vtxBufs |= 1 << index;
-            vtxBufs[index].buf.reset( buf );
-            vtxBufs[index].stride = stride;
-        }
-
-        //!
-        //! bind vertex binding
-        //!
-        void bindVtxBinding( uint32_t handle )
-        {
-            dirtyFlags.vtxBinding = true;
-            vtxBinding = handle;
-        }
-
-        //!
-        //! bind index buffer
-        //!
-        void bindIdxBuf( const IdxBuf * buf )
-        {
-            if( buf == idxBuf ) return;
-            dirtyFlags.idxBuf = true;
-            idxBuf.reset( buf );
-        }
-
-        //!
-        //! bind shader
-        //!
-        void bindShader( ShaderType type, const Shader * shader )
-        {
-            if( VERTEX_SHADER == type )
-            {
-                if( shader == vtxShader ) return;
-                dirtyFlags.vtxShader |= true;
-                vtxShader.reset( shader );
-            }
-            else if( PIXEL_SHADER == type )
-            {
-                if( shader == pxlShader ) return;
-                dirtyFlags.pxlShader |= true;
-                pxlShader.reset( shader );
-            }
-            else
-            {
-                GN_ERROR( "invalid shader type: %d", type );
-            }
-        }
-
-        //!
-        //! bind shader list
-        //!
-        void bindShaders( const Shader * const shaders[] )
-        {
-            if( 0 == shaders )
-            {
-                GN_ERROR( "shader list can't be NULL." );
-                return;
-            }
-            if( shaders[VERTEX_SHADER] != vtxShader )
-            {
-                dirtyFlags.vtxShader |= true;
-                vtxShader.reset( shaders[VERTEX_SHADER] );
-            }
-            if( shaders[PIXEL_SHADER] != pxlShader )
-            {
-                dirtyFlags.pxlShader |= true;
-                pxlShader.reset( shaders[PIXEL_SHADER] );
-            }
-        }
-
-        //!
-        //! bind pixel shader
-        //!
-        void bindPxlShader( const Shader * shader )
-        {
-            if( shader == pxlShader ) return;
-            dirtyFlags.pxlShader |= true;
-            pxlShader.reset( shader );
-        }
-    };
-
-    //!
     //! D3D renderer class
     //!
     class D3DRenderer : public BasicRenderer
@@ -202,12 +58,8 @@ namespace GN { namespace gfx
             return MyParent::ok()
                 && dispOK()
                 && capsOK()
-                && shaderOK()
-                && rsbOK()
-                && textureOK()
-                && bufferOK()
-                && ffpOK()
-                && renderTargetOK()
+                && resourceOK()
+                && contextOK()
                 && drawOK();
         }
 
@@ -217,12 +69,8 @@ namespace GN { namespace gfx
             deviceClear();
             dispClear();
             capsClear();
-            shaderClear();
-            rsbClear();
-            textureClear();
-            bufferClear();
-            ffpClear();
-            renderTargetClear();
+            resourceClear();
+            contextClear();
             drawClear();
         }
         //@}
@@ -349,6 +197,9 @@ namespace GN { namespace gfx
 
     public :
 
+        virtual bool supportShader( ShaderType, ShadingLanguage );
+        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
+
         //!
         //! define API dependent caps
         //!
@@ -364,11 +215,7 @@ namespace GN { namespace gfx
         //!
         //! get D3D special caps
         //!
-        uint32_t getD3DCaps( D3DCaps c ) const
-        {
-            GN_ASSERT( 0 <= c && c < NUM_D3DCAPS );
-            return mD3DCaps[c].get();
-        }
+        uint32_t getD3DCaps( D3DCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_D3DCAPS ); return mD3DCaps[c]; }
 
     private :
         bool capsInit() { return true; }
@@ -379,155 +226,11 @@ namespace GN { namespace gfx
         bool capsDeviceCreate();
         bool capsDeviceRestore();
         void capsDeviceDispose() {}
-        void capsDeviceDestroy();
+        void capsDeviceDestroy() {}
 
     private :
 
-        CapsDesc mD3DCaps[NUM_D3DCAPS];
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                      Shader Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-
-        virtual bool supportShader( ShaderType, ShadingLanguage );
-        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry );
-        virtual void bindShader( ShaderType type, const Shader * shader ) { mDrawState.bindShader( type, shader ); }
-        virtual void bindShaders( const Shader * const shaders[] ) { mDrawState.bindShaders(shaders); }
-
-    private :
-        bool shaderInit() { return true; }
-        void shaderQuit() {}
-        bool shaderOK() const { return true; }
-        void shaderClear() {}
-
-        bool shaderDeviceCreate() { return true; }
-        bool shaderDeviceRestore() { return true; }
-        void shaderDeviceDispose() {}
-        void shaderDeviceDestroy() {}
-
-        void applyShader(
-                const Shader * vtxShader, bool vtxShaderDirty,
-                const Shader * pxlShader, bool pxlShaderDirty ) const;
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                      RSBlock Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-
-        void setD3DRenderState( D3DRENDERSTATETYPE, DWORD );
-        void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
-        void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
-
-    private :
-        bool rsbInit() { return true; }
-        void rsbQuit() {}
-        bool rsbOK() const { return true; }
-        void rsbClear() {}
-
-        bool rsbDeviceCreate() { return true; }
-        bool rsbDeviceRestore();
-        void rsbDeviceDispose() { disposeDeviceData(); }
-        void rsbDeviceDestroy() {}
-
-        // from BasicRenderer
-        virtual DeviceRenderStateBlock *
-        createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to );
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                     Texture Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-        bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
-        virtual Texture *
-        createTexture( const TextureDesc & desc,
-                       const TextureLoader & loader );
-        virtual Texture * createTextureFromFile( File & );
-
-    private :
-        bool textureInit() { return true; }
-        void textureQuit() { clearCurrentTextures(); }
-        bool textureOK() const { return true; }
-        void textureClear() {}
-
-        bool textureDeviceCreate() { return true; }
-        bool textureDeviceRestore();
-        void textureDeviceDispose() { setAllTextureStagesDirty(); }
-        void textureDeviceDestroy() {}
-
-    private:
-
-        struct TexParameters
-        {
-            D3DTEXTUREFILTERTYPE min, mag, mip;
-            D3DTEXTUREADDRESS s, q, r, t;
-        };
-
-        mutable TexParameters mTexParameters[MAX_TEXTURE_STAGES];
-
-    private:
-
-        void applyTexture() const;
-        GN_INLINE void updateTextureFilters( size_t stage, const D3DTEXTUREFILTERTYPE * filters ) const;
-        GN_INLINE void updateTextureWraps( size_t stage, const D3DTEXTUREADDRESS * strq ) const;
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                 Renderable Buffer Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-        virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
-        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
-        virtual void bindVtxBinding( VtxBindingHandle );
-        virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
-        virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
-        virtual void bindIdxBuf( const IdxBuf * );
-
-    private :
-        bool bufferInit() { return true; }
-        void bufferQuit() {}
-        bool bufferOK() const { return true; }
-        void bufferClear() { mVtxBindings.clear(); }
-
-        bool bufferDeviceCreate() { return true; }
-        bool bufferDeviceRestore();
-        void bufferDeviceDispose();
-        void bufferDeviceDestroy() {}
-
-        void applyVtxBinding( uint32_t );
-        void applyVtxBuffers();
-
-    private :
-
-        HandleManager<D3DVtxBindingDesc,VtxBindingHandle> mVtxBindings;
+        uint32_t mD3DCaps[NUM_D3DCAPS];
 
         //@}
 
@@ -538,6 +241,14 @@ namespace GN { namespace gfx
     // ************************************************************************
 
         //@{
+
+    public :
+
+        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry );
+        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader );
+        virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & );
+        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
+        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
 
     public :
 
@@ -561,6 +272,10 @@ namespace GN { namespace gfx
 
     private:
 
+        bool resourceInit() { return true; }
+        void resourceQuit() {}
+        bool resourceOK() const { return true; }
+        void resourceClear() {}
         bool resourceDeviceCreate();
         bool resourceDeviceRestore();
         void resourceDeviceDispose();
@@ -569,118 +284,70 @@ namespace GN { namespace gfx
     private :
 
         std::list<D3DResource*> mResourceList;
+        HandleManager<D3DVtxBindingDesc,VtxBindingHandle> mVtxBindings;
 
         //@}
 
-    // ************************************************************************
+
+    // ********************************************************************
     //
-    //! \name               Fixed Function Pipeline Manager
+    //! \name Context manager
     //
-    // ************************************************************************
+    // ********************************************************************
 
         //@{
 
     public:
-        virtual Matrix44f & composePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
-        virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
+
+        virtual void setContext( const RenderingContext & newContext );
+        virtual void setVtxPxlData( const VtxPxlData & );
+
+    public:
+
+        void setD3DRenderState( D3DRENDERSTATETYPE, DWORD );
+        void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
+        void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
 
     private :
-        bool ffpInit() { return true; }
-        void ffpQuit() {}
-        bool ffpOK() const { return true; }
-        void ffpClear() {}
 
-        bool ffpDeviceCreate() { return true; }
-        bool ffpDeviceRestore() { reapplyAllFfpStates(); return true; }
-        void ffpDeviceDispose() {}
-        void ffpDeviceDestroy() {}
-
-        void applyFfpState();
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                  Render Target Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, size_t face );
-        virtual void setRenderDepth( const Texture * texture, size_t level, size_t face );
-
-#if GN_XENON
+        bool contextInit();
+        void contextQuit();
+        bool contextOK() const { return true; }
+        void contextClear();
+        bool contextDeviceCreate();
+        bool contextDeviceRestore();
+        void contextDeviceDispose();
+        void contextDeviceDestroy();
 
     private:
-        bool renderTargetInit() { return true; }
-        void renderTargetQuit() {}
-        bool renderTargetOK() const { return true; }
-        void renderTargetClear()
+
+        GN_INLINE void bindContext( const RenderingContext & newContext, bool forceRebind );
+        GN_INLINE void bindVtxPxlData( const VtxPxlData & newData, bool forceRebind );
+
+    private:
+
+        template<typename T>
+        struct StateValue
         {
-            mBackBuffer = 0;
-            for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) mColorBuffers[i] = 0;
-            mDepthBuffer = 0;
-            mCurrentRTSize.set( 0, 0 );
-            mColorBufferSize.set( 0, 0 );
-            mDepthBufferSize.set( 0, 0 );
-        }
+            T    value;
+            bool initialized;
+            StateValue() : initialized(false) {}
+            void clear() { initialized = false; }
+        };
 
-        bool renderTargetDeviceCreate();
-        bool renderTargetDeviceRestore();
-        void renderTargetDeviceDispose();
-        void renderTargetDeviceDestroy() {}
-
-        GN_INLINE void resizeColorBuffers( const Vector2<uint32_t> & );
-        GN_INLINE void resizeDepthBuffer( const Vector2<uint32_t> & );
-
-    private:
-
-        LPDIRECT3DSURFACE9
-            mBackBuffer, // back buffer
-            mColorBuffers[MAX_RENDER_TARGETS], // color buffers
-            mDepthBuffer; // depth buffer
-        RenderTargetTextureDesc
-            mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
-            mCurrentDepth;  // current depth texture
-        Vector2<uint32_t>
-            mCurrentRTSize, // current effective render target size (can't larger then color and depth buffer size)
-            mColorBufferSize, // size of color buffer
-            mDepthBufferSize; // size of depth buffer
-#else
-
-    private:
-        bool renderTargetInit() { return true; }
-        void renderTargetQuit() {}
-        bool renderTargetOK() const { return true; }
-        void renderTargetClear()
+        enum
         {
-            mBackBuffer = mAutoDepth = 0;
-            mCurrentRTSize.set( 0, 0 );
-            mAutoDepthSize.set( 0, 0 );
-        }
+            MAX_D3D_RENDER_STATES = 256,
+            MAX_D3D_SAMPLER_STATES = 16,
+            MAX_D3D_TEXTURE_STATES = 32,
+        };
 
-        bool renderTargetDeviceCreate();
-        bool renderTargetDeviceRestore();
-        void renderTargetDeviceDispose();
-        void renderTargetDeviceDestroy() {}
+        StateValue<DWORD> mRenderStates[MAX_D3D_RENDER_STATES];
+        StateValue<DWORD> mSamplerStates[MAX_TEXTURE_STAGES][MAX_D3D_SAMPLER_STATES];
+        StateValue<DWORD> mTextureStates[MAX_TEXTURE_STAGES][MAX_D3D_TEXTURE_STATES];
 
-        GN_INLINE void resizeAutoDepthBuffer( const Vector2<uint32_t> & );
-
-    private:
-
-        LPDIRECT3DSURFACE9
-            mBackBuffer,    // default color buffer
-            mAutoDepth;     // automatic depth buffer
-        RenderTargetTextureDesc
-            mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
-            mCurrentDepth;  // current depth texture
-        Vector2<uint32_t>
-            mCurrentRTSize, // current render target size
-            mAutoDepthSize; // size of automatic depth buffer
-
-#endif
+        RenderingContext mContext;
+        VtxPxlData       mVtxPxlData;
 
         //@}
 
@@ -743,31 +410,21 @@ namespace GN { namespace gfx
             mFont = 0;
             mQuad = 0;
             mLine = 0;
-            mDrawState.clear();
         }
 
         bool drawDeviceCreate() { return true; }
         bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose() { mDrawState.dirtyFlags.i32 = -1; }
+        void drawDeviceDispose() {}
         void drawDeviceDestroy() {}
 
         bool handleDeviceLost();
 
-        GN_INLINE void applyDrawState();
-
     private:
 
         bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
-
         D3DFont * mFont; // Font renderer
         D3DQuad * mQuad; // Quad renderer
         D3DLine * mLine; // Line renderer
-
-        // let these renderers manipulate state dirty flags directly.
-        friend class D3DQuad;
-        friend class D3DLine;
-
-        D3DDrawState mDrawState;
 
         //@}
 
@@ -779,15 +436,14 @@ namespace GN { namespace gfx
 
         //@{
 
-        void dumpCurrentState( StrA & ) const {}
+        virtual void dumpCurrentState( StrA & ) const {}
 
         //@}
     };
 }}
 
 #if GN_ENABLE_INLINE
-#include "d3dRenderStateBlockMgr.inl"
-#include "d3dBufferMgr.inl"
+#include "d3dContextMgr.inl"
 #endif
 
 // *****************************************************************************
