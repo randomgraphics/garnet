@@ -17,7 +17,7 @@ bool GN::gfx::BasicRenderer::init()
 
     // initialize sub-components one by one
     if( !dispInit() ) { quit(); return selfOK(); }
-    if( !rsbInit()  ) { quit(); return selfOK(); }
+    if( !resInit()  ) { quit(); return selfOK(); }
     if( !drawInit() ) { quit(); return selfOK(); }
 
     // success
@@ -35,7 +35,7 @@ void GN::gfx::BasicRenderer::quit()
 
     // shutdown sub-components in reverse sequence
     drawQuit();
-    rsbQuit();
+    resQuit();
     dispQuit();
 
     // standard quit procedure

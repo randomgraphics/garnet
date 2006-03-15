@@ -2,6 +2,7 @@
 #include "d3dLine.h"
 #include "d3dRenderer.h"
 #include "garnet/GNd3d.h"
+#include "d3dRenderStateBlock.h"
 
 struct D3DLineVertex
 {
@@ -21,7 +22,7 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     { 0, 12, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
     D3DDECL_END()
 };
-
+ 
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -103,6 +104,9 @@ bool GN::gfx::D3DLine::deviceCreate()
         if( 0 == mPxlShader ) return false;
     }
 
+    // create render state block
+    GN_DX_CHECK_RV( dev->CreateStateBlock( D3DSBT_PIXELSTATE, &mRsb ), false );
+
     // success
     return true;
 
@@ -161,6 +165,7 @@ void GN::gfx::D3DLine::deviceDestroy()
     safeRelease( mDecl );
     safeRelease( mVtxShader );
     safeRelease( mPxlShader );
+    safeRelease( mRsb );
 
     GN_UNGUARD;
 }
@@ -276,20 +281,18 @@ void GN::gfx::D3DLine::drawLines(
     // setup render states
     if( !( DL_USE_CURRENT_RS & options ) )
     {
-        const int statePairs[] =
-        {
-            RS_BLENDING     , RSV_FALSE,
-            RS_DEPTH_WRITE  , RSV_TRUE,
-            RS_DEPTH_TEST   , RSV_TRUE,
-        };
-        r.setRenderStates( statePairs, sizeof(statePairs)/sizeof(statePairs[0])/2 );
+        GN_DX_CHECK( mRsb->Capture() );
+        D3DRenderer & r = getRenderer();
+        r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
+        r.setD3DRenderState( D3DRS_ZWRITEENABLE, TRUE );
+        r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
     }
 
     // bind shaders
     if( !( DL_USE_CURRENT_VS & options ) )
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
-        r.mDrawState.dirtyFlags.vtxShader = 1;
+        // TODO: r.mDrawState.dirtyFlags.vtxShader = 1;
 
         if( mVtxShader )
         {
@@ -308,16 +311,16 @@ void GN::gfx::D3DLine::drawLines(
             GN_DX_CHECK( dev->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
             mat = Matrix44f::sTranspose( proj );
             GN_DX_CHECK( dev->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
-            r.mFfpDirtyFlags.TransformWorld = 1;
-            r.mFfpDirtyFlags.TransformView = 1;
-            r.mFfpDirtyFlags.TransformProj = 1;
+            // TODO: r.mFfpDirtyFlags.TransformWorld = 1;
+            // TODO: r.mFfpDirtyFlags.TransformView = 1;
+            // TODO: r.mFfpDirtyFlags.TransformProj = 1;
 #endif
         }
     }
     if( !( DL_USE_CURRENT_PS & options ) )
     {
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
-        r.mDrawState.dirtyFlags.pxlShader = 1;
+        // TODO: r.mDrawState.dirtyFlags.pxlShader = 1;
     }
 
     // setup texture states, for fixed-functional pipeline only
@@ -326,13 +329,14 @@ void GN::gfx::D3DLine::drawLines(
     if( !currentPs )
     {
         // TODO: setup TSS based on present of texcoords and colors.
+        D3DRenderer & r = getRenderer();
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_DIFFUSE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE );
         r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
         r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
-        r.mFfpDirtyFlags.TextureStates = 1;
+        // TODO: r.mFfpDirtyFlags.TextureStates = 1;
     }
 
     // bind buffers
@@ -340,14 +344,22 @@ void GN::gfx::D3DLine::drawLines(
     GN_ASSERT( sizeof(D3DLineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3DLineVertex) ) );
     GN_DX_CHECK( dev->SetVertexDeclaration( mDecl ) );
-    r.mDrawState.dirtyFlags.vtxBufs |= 1;
-    r.mDrawState.dirtyFlags.vtxBinding = 1;
+    // TODO: r.mDrawState.dirtyFlags.vtxBufs |= 1;
+    // TODO: r.mDrawState.dirtyFlags.vtxBinding = 1;
 
     // draw
     GN_DX_CHECK( dev->DrawPrimitive(
         d3dpt,
         (UINT)( mNextLine * 2 ), 
         (UINT)count ) );
+
+    // restore render states
+    if( !( DQ_USE_CURRENT_RS & options ) )
+    {
+        BOOL old = D3DXDebugMute( TRUE );
+        GN_DX_CHECK( mRsb->Apply() );
+        D3DXDebugMute( old );
+    }
 
     // update mNextLine
     mNextLine += count;

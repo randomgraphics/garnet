@@ -1272,7 +1272,7 @@ namespace GN
         //!
         //! 将本矩阵归一
         //!
-        Matrix33 & identify()
+        Matrix33 & identity()
         {
             rows[0].set(1,0,0);
             rows[1].set(0,1,0);
@@ -1332,7 +1332,7 @@ namespace GN
         //!
         Matrix33 & scale( const Vector3<T> & f )
         {
-            identify();
+            identity();
             rows[0][0] = f[0];
             rows[1][1] = f[1];
             rows[2][2] = f[2];
@@ -1679,9 +1679,9 @@ namespace GN
             return *this;
         }
         //!
-        //! identify the matrix
+        //! identity the matrix
         //!
-        Matrix44 & identify()
+        Matrix44 & identity()
         {
             rows[0].set( ((T)1.0), ((T)0.0), ((T)0.0), ((T)0.0) );
             rows[1].set( ((T)0.0), ((T)1.0), ((T)0.0), ((T)0.0) );
@@ -1800,7 +1800,7 @@ namespace GN
         //!
         Matrix44 & translate( T x, T y = (T)0, T z = (T)0 )
         {
-            identify();
+            identity();
             rows[0][3] = x;
             rows[1][3] = y;
             rows[2][3] = z;
@@ -2165,7 +2165,7 @@ namespace GN
         //!
         //! 归一化
         //!
-        Quaternion & identify()
+        Quaternion & identity()
         {
             w = ((T)1.0); v.set(0, 0, 0); return *this;
         }
@@ -2576,7 +2576,14 @@ namespace GN
         //! Constructor
         //!
         Rect( T x_, T y_, T w_, T h_ ) : x(x_), y(y_), w(w_), h(h_) {}
-
+        //!
+        //! Equality
+        //!
+        bool operator==( const Rect & rhs ) const { return x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h; }
+        //!
+        //! Equality
+        //!
+        bool operator!=( const Rect & rhs ) const { return x != rhs.x || y != rhs.y || w != rhs.w || h != rhs.h; }
         //!
         //! Set rectangle values
         //!

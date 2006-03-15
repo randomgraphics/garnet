@@ -224,7 +224,7 @@ namespace GN { namespace gfx
         #define GNGFX_CAPS(X) CAPS_##X,
         #include "rendererCapsMeta.h"
         #undef GNGFX_CAPS
-        NUM_CAPS,
+        NUM_RENDERER_CAPS,
         CAPS_INVALID
     };
 
@@ -414,83 +414,89 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Rendering parmaqeter structure. Completly define how rendering would be done.
+    //! Rendering context. Completely define how rendering would be donw
     //!
-    struct RenderingParameters
+    struct RenderingContext
     {
         //!
-        //! template of one parameter
-        //!
-        template<typename T>
-        struct Parameter
-        {
-            T value;   //!< parameter value
-            bool used; //!< parameter is being used or not.
-
-            //!
-            //! default constructor.
-            //!
-            Parameter() : used(false) {}
-        };
-
-        //!
-        //! render target descriptor
+        //! render target binding descriptor
         //!
         struct RenderTargetDesc
         {
-            AutoRef<Texture> texture; //!< render target 
-            uint32_t         level;   //!< mipmap level
+            AutoRef<Texture> texture; //!< render target
+            size_t           level;   //!< mipmap level
             size_t           face;    //!< cubemap face
         };
 
-        Parameter<AutoRef<Shader> > vtxShader; //!< vertex shader
-        Parameter<AutoRef<Shader> > pxlShader; //!< pixle shader
-
-        Parameter<RsbHandle> renderStateBlock; //!< render states
-
-        Parameter<AutoRef<Texture> > textures[MAX_TEXTURE_STAGES]; //!< texture list
-
-        Parameter<RenderTargetDesc> renderTargets[MAX_RENDER_TARGETS]; //!< render target list
-        Parameter<RenderTargetDesc> renderDepth; //!< depth texture
+        AutoRef<Shader>       shaders[NUM_SHADER_TYPES];
+        RsbHandle             rsb;
+        RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS];
+        size_t                numColorBuffers;
+        RenderTargetDesc      depthBuffer;
+        Rectf                 viewport;
+        Matrix44f             world, //!< world transformation
+                              view, //!< view transformation
+                              proj; //!< projection transformation
+        Vector4f              light0Pos, //!< light0 position
+                              light0Diffuse, //!< light0 diffuse color
+                              materialDiffuse, //!< diffuse material color
+                              materialSpecular; //!< specular material color
+        TextureStateBlockDesc textureStates; //!< texture stage states
 
         //!
-        //! \name Fixed pipeline parameters
+        //! Reset all fields to initial value.
         //!
-        //@{
-        Parameter<Matrix44f>
-            TransformWorld, //!< world transformation
-            TransformView, //!< view transformation
-            TransformProj; //!< projection transformation
-        Parameter<Rectf>
-            Viewport; //!< Viewport
-        Parameter<Vector4f>
-            Light0Pos, //!< light0 position
-            Light0Diffuse, //!< light0 diffuse color
-            MaterialDiffuse, //!< diffuse material color
-            MaterialSpecular; //!< specular material color
-        Parameter<TextureStateBlockDesc>
-            TextureStates; //!< texture stage states
-        //@}
+        void clear()
+        {
+            for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i].clear();
+            rsb = 0;
+            for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) colorBuffers[i].texture.clear();
+            numColorBuffers = 0;
+            depthBuffer.texture.clear();
+            viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
+            world.identity();
+            view.identity();
+            proj.identity();
+            light0Pos.set( 0.0f, 0.0f, 0.0f, 1.0f );
+            light0Diffuse.set( 1.0f, 1.0f, 1.0f, 1.0f );
+            materialDiffuse.set( 1.0f, 1.0f, 1.0f, 1.0f );
+            materialSpecular.set( 0.2f, 0.2f, 0.2f, 1.0f );
+            textureStates.reset( TextureStateBlockDesc::RESET_TO_DEFAULT );
+        }
+
     };
 
     //!
-    //! Define geomety data
+    //! Vertex and pixel data. Define input data of renderer.
     //!
-    //! \todo Customizable vertex buffer stride.
-    //!
-    struct RenderingGeometry
+    struct VtxPxlData
     {
-        VtxBindingHandle vtxBinding; //!< vertex binding ID.
-        AutoRef<VtxBuf>  vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list
-        size_t           numVtxBufs; //!< vertex buffer count
-        AutoRef<IdxBuf>  idxBuf; //!< index buffer
+        //!
+        //! Vertex buffer binding descriptor
+        //!
+        struct VtxBufDesc
+        {
+            AutoRef<VtxBuf> buffer;
+            size_t          stride;
+        };
 
-        PrimitiveType prim;      //!< primitive type
-        size_t        numPrims;  //!< primitive count
-        size_t        startVtx;  //!< base vertex index
-        size_t        minVtxIdx; //!< ignored if index buffer is NULL.
-        size_t        numVtx;    //!< ignored if index buffer is NULL.
-        size_t        startIdx;  //!< ignored if index buffer is NULL.
+        AutoRef<Texture>      textures[MAX_TEXTURE_STAGES]; //!< texture list
+        size_t                numTextures;
+        VtxBindingHandle      vtxBinding; //!< vertex binding
+        VtxBufDesc            vtxBuffers[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current @vtxBinding.
+        AutoRef<IdxBuf>       idxBuffer; //!< index buffer
+
+        //!
+        //! clear to empty
+        //!
+        void clear()
+        {
+            for( int i = 0; i < MAX_TEXTURE_STAGES; ++i ) textures[i].clear();
+            numTextures = 0;
+            vtxBinding = 0;
+            for( int i = 0; i < MAX_VERTEX_STREAMS; ++i ) vtxBuffers[i].buffer.clear();
+            idxBuffer.clear();
+        }
     };
 
     //!
@@ -671,84 +677,34 @@ namespace GN { namespace gfx
 
     protected:
 
-        //!
-        //! caps descriptor
-        //!
-        class CapsDesc
-        {
-            uint32_t value; //!< caps value
-#if GN_DEBUG
-            bool     valid; //!< caps is initialized or not.
-#endif
-
-        public:
-            CapsDesc()
-#if GN_DEBUG
-                : valid(false)
-#endif
-            {}
-
-            //!
-            //! get caps value
-            //!
-            uint32_t get() const
-            {
-                GN_ASSERT( valid );
-                return value;
-            }
-
-            //!
-            //! set caps value
-            //!
-            void set( uint32_t value );
-
-            //!
-            //! reset caps value (to invalid state)
-            //!
-            void reset();
-        };
-
-    private:
-
-        CapsDesc mCaps[NUM_CAPS];
-
-    protected:
-
-        //!
-        //! update caps. called by child class.
-        //!
-        void setCaps( RendererCaps, uint32_t );
-
-        //!
-        //! reset(clear) all caps. called by child class.
-        //!
-        void resetAllCaps();
+        uint32_t mCaps[NUM_RENDERER_CAPS];
 
     public:
 
         //!
         //! Get render device caps
         //!
-        uint32_t getCaps( RendererCaps c ) const
-        {
-            GN_ASSERT( 0 <= c && c < NUM_CAPS );
-            return mCaps[c].get();
-        }
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Shader Manager
-        //
-        // ********************************************************************
-
-        //@{
+        virtual uint32_t getCaps( RendererCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
 
         //!
         //! Does specific shading language supported by hardware?
         //!
         virtual bool supportShader( ShaderType, ShadingLanguage ) = 0;
+
+        //!
+        //! Test compability of specific texture format
+        //!
+        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const = 0;
+
+        //@}
+
+        // ********************************************************************
+        //
+        //! \name Resource Manager
+        //
+        // ********************************************************************
+
+        //@{
 
         //!
         //! Create shader. Parameter 'entry' will be ignored for low-level shading language.
@@ -769,61 +725,6 @@ namespace GN { namespace gfx
         createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
-        //! Bind a shaders to rendering device. Set NULL to use fixed pipeline.
-        //!
-        virtual void bindShader( ShaderType type, const Shader * shader ) = 0;
-
-        //!
-        //! Bind a list of shaders to rendering device. The list must have
-        //! NUM_SHADER_TYPES elements.
-        //!
-        virtual void bindShaders( const Shader * const shaders[] ) = 0;
-
-        //!
-        //! Bind programmable shaders to rendering device. Set to NULL to use
-        //! fixed pipeline.
-        //!
-        void bindShaders( const Shader * vtxShader, const Shader * pxlShader );
-
-        //!
-        //! Bind programmable shader handles to rendering device. Set to 0 to use
-        //! fixed pipeline.
-        //!
-        void bindShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
-
-        //!
-        //! Bind programmable vertex shader to rendering device. Set to NULL to use
-        //! fixed pipeline.
-        //!
-        void bindVtxShader( const Shader * s ) { bindShader( VERTEX_SHADER, s ); }
-
-        //!
-        //! Bind shader by handle.
-        //!
-        void bindVtxShaderHandle( ShaderDictionary::HandleType h ) { bindShader( VERTEX_SHADER, gShaderDict.getResource(h) ); }
-
-        //!
-        //! Bind programmable pixel to rendering device. Set to NULL to use
-        //! fixed pipeline.
-        //!
-        void bindPxlShader( const Shader * s ) { bindShader( PIXEL_SHADER, s ); }
-
-        //!
-        //! Bind shader by handle.
-        //!
-        void bindPxlShaderHandle( ShaderDictionary::HandleType h ) { bindShader( PIXEL_SHADER, gShaderDict.getResource(h) ); }
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Render State Block Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-        //!
         //! request a render state block object with specific render state block structure.
         //! Return 0, if failed.
         //!
@@ -831,118 +732,17 @@ namespace GN { namespace gfx
         createRenderStateBlock( const RenderStateBlockDesc & ) = 0;
 
         //!
-        //! Bind render state block to rendering device
-        //!
-        virtual void bindRenderStateBlock( RsbHandle ) = 0;
-
-        //!
-        //! Get current render state.
-        //!
-        //! \note Better not use this functio in performance critical code.
-        //!
-        virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const = 0;
-
-        //!
-        //! Another style of getting current render state.
-        //!
-        //! \note This is even slower because of extra data copy.
-        //!
-        RenderStateBlockDesc getCurrentRenderStateBlock() const
-        {
-            RenderStateBlockDesc result;
-            getCurrentRenderStateBlock(result);
-            return result;
-        }
-
-        //!
-        //! Update individual render state.
-        //!
-        //! \return
-        //!     Return the render state block handler that represents current render state.
-        //!     Return 0, if failed.
-        //!
-        //! \note
-        //!     This function is purely for coding convenience.
-        //!     Please use render state block at performance critical section.
-        //!
-        virtual uint32_t setRenderState( RenderState state, RenderStateValue value ) = 0;
-
-        //!
-        //! Update a bunch of render states.
-        //!
-        //! \param statePairs
-        //!     Render state and values like this : ( state1, value1, state2, value2, .... )
-        //! \param count
-        //!     Number of render state and value pairs.
-        //!
-        //! \return
-        //!     Return the render state block handler that represents current render state.
-        //!     Return 0, if failed.
-        //!
-        //! \note
-        //!     This function is faster then multiple calls to setRenderState(), but slower
-        //!     then using render state block handle.
-        //!
-        virtual uint32_t setRenderStates( const int * statePairs, size_t count ) = 0;
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Texture Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-    private:
-
-        AutoRef<const Texture> mCurrentTextures[MAX_TEXTURE_STAGES]; // current texture list
-        mutable AutoInit<size_t,0> mDirtyTextureStages;
-
-    protected:
-
-        //!
-        //! Get current texture list
-        //!
-        const Texture * const * getCurrentTextures() const { return mCurrentTextures[0].addr(); }
-
-        //!
-        //! Clear current textures
-        //!
-        void clearCurrentTextures()
-        {
-            for( size_t i = 0; i < MAX_TEXTURE_STAGES; ++i ) mCurrentTextures[i].clear();
-        }
-
-        //!
-        //! Get dirty texture stage
-        //!
-        size_t getDirtyTextureStages() const { return mDirtyTextureStages; }
-
-        //!
-        //! Clear dirty texture stage
-        //!
-        void clearDirtyTextureStages() const { mDirtyTextureStages = 0; }
-
-        //!
-        //! Set all stages dirty
-        //!
-        void setAllTextureStagesDirty() { mDirtyTextureStages = MAX_TEXTURE_STAGES; }
-
-    public:
-
-        //!
-        //! Test compability of specific texture format
-        //!
-        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const = 0;
-
-        //!
         //! Create new texture
         //! See TextureDesc for detail explaination of each fields in descriptor.
         //!
         virtual Texture *
         createTexture( const TextureDesc & desc, const TextureLoader & loader = TextureLoader() ) = 0;
+
+        //!
+        //! Load texture from file
+        //!
+        virtual Texture *
+        createTextureFromFile( File & file ) = 0;
 
         //!
         //! Create new texture, with individual creation parameters.
@@ -1013,77 +813,6 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! Load texture from file
-        //!
-        virtual Texture *
-        createTextureFromFile( File & file ) = 0;
-
-        //!
-        //! bind one texture
-        //!
-        inline void bindTexture( size_t stage, const Texture * tex )
-        {
-            GN_GUARD_SLOW;
-            GN_ASSERT( stage < MAX_TEXTURE_STAGES );
-            if( mCurrentTextures[stage] != tex )
-            {
-                mCurrentTextures[stage].reset( tex );
-                ++stage;
-                if( stage > mDirtyTextureStages ) mDirtyTextureStages = stage;
-            }
-            GN_UNGUARD_SLOW;
-        }
-
-        //!
-        //! bind one texture handle
-        //!
-        void bindTextureHandle( size_t stage, TextureDictionary::HandleType tex ) { return bindTexture( stage, gTexDict.getResource(tex) ); }
-
-        //!
-        //! bind textures ( from stage[start] to stage[start+numtex-1] )
-        //!
-        //! \param texlist texture list
-        //! \param start   start stage
-        //! \param count   number of textures
-        //!
-        void bindTextures( const Texture * const texlist[], size_t start, size_t count )
-        {
-            GN_GUARD_SLOW;
-            GN_ASSERT( (start + count) <= MAX_TEXTURE_STAGES );
-            const Texture * const * tex = texlist;
-            for( uint32_t i = 0; i < count; ++i, ++start, ++tex )
-            {
-                if( mCurrentTextures[start] != *tex )
-                {
-                    mCurrentTextures[start].reset( *tex );
-                }
-            }
-            if( start > mDirtyTextureStages ) mDirtyTextureStages = start;
-            GN_UNGUARD_SLOW;
-        }
-
-        //!
-        //! bind texture handles
-        //!
-        void bindTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count )
-        {
-            GN_GUARD_SLOW;
-            for( size_t i = 0; i < count; ++i, ++start )
-                bindTextureHandle( start, texlist[i] );
-            GN_UNGUARD_SLOW;
-        }
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Renderable Buffer Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-        //!
         //! Create vertex bindings.
         //!
         virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & ) = 0;
@@ -1127,293 +856,25 @@ namespace GN { namespace gfx
                       bool   sysCopy = true,
                       const  IdxBufLoader & loader = IdxBufLoader() ) = 0;
 
-        //!
-        //! Bind vertex bindings
-        //!
-        virtual void bindVtxBinding( VtxBindingHandle ) = 0;
-
-        //!
-        //! Bind a serias vertex buffers to rendering device.
-        //!
-        //! \param buffers  Buffer list.
-        //! \param start    Stream index of the 1st buffer in buffer list.
-        //! \param count    Stream count in buffer list.
-        //!
-        virtual void
-        bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count ) = 0;
-
-        //!
-        //! Bind a vertex buffers to rendering device, with user-specified stride.
-        //!
-        //! \note
-        //! - By default, vertex buffer stride will be determined by current vertex binding.
-        //!   Use this function only when your want to use custom stride for your vertex buffer.
-        //! - To bind a single vertex buffer with default stride, please use
-        //!   bindVtxBufs( &yourBuffer, yourIndex, 1 ) instead.
-        //!
-        virtual void
-        bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride ) = 0;
-
-        //!
-        //! Bind index buffer to rendering device
-        //!
-        virtual void bindIdxBuf( const IdxBuf * ) = 0;
-
         //@}
 
         // ********************************************************************
         //
-        //! \name Fixed Function Pipeline Manager.
+        //! \name Context Manager
         //
         // ********************************************************************
 
         //@{
 
-    protected:
+        //!
+        //! Set rendering context
+        //!
+        virtual void setContext( const RenderingContext & ) = 0;
 
         //!
-        //! Fixed-size stack container that do not perform any runtime
-        //! memory allocation/deallocation.
+        //! Set rendering data
         //!
-        template< class T, size_t MAX_DEPTH = 256 >
-        class FixedStack
-        {
-            T      mTop;              //!< top element
-            T      mStack[MAX_DEPTH]; //!< element stack
-            size_t mDepth;            //!< current depth
-
-        public :
-
-            //!
-            //! default constructor
-            //!
-            FixedStack() : mDepth(0) {}
-
-            //!
-            //! get current depth
-            //!
-            size_t depth() const { return mDepth; }
-
-            //!
-            //! push the top element into stack
-            //!
-            void push()
-            {
-                GN_ASSERT( mDepth < MAX_DEPTH );
-                mStack[mDepth] = mTop;
-                ++mDepth;
-            }
-
-            //!
-            //! pop out the stack to top element
-            //!
-            T & pop()
-            {
-                GN_ASSERT( mDepth > 0 );
-                mTop = mStack[--mDepth];
-                return mTop;
-            }
-
-            //!
-            //! Get top element
-            //!
-            const T & top() const { return mTop; }
-
-            //!
-            //! Get top element
-            //!
-            T & top() { return mTop; }
-        };
-
-        //!
-        //! Fixed function pipeline dirty flags
-        //!
-        union FfpDirtyFlags
-        {
-            uint16_t u32; //!< dirty flags as unsigned 32-bit integer
-            int16_t  i32; //!< dirty flags as signed 32-bit integer
-            struct
-            {
-                int TransformWorld   : 1; //!< world matrix dirty flag
-                int TransformView    : 1; //!< view matrix dirty flag
-                int TransformProj    : 1; //!< projection matrix dirty flag
-                int Viewport         : 1; //!< viewport dirty flag
-                int Light0Pos        : 1; //!< light 0 position dirty flag
-                int Light0Diffuse    : 1; //!< light 0 color dirty flag
-                int MaterialDiffuse  : 1; //!< material diffuse dirty flag
-                int MaterialSpecular : 1; //!< material specular dirty flag
-                int TextureStates    : 1; //!< texture states dirty flag
-            };
-        };
-
-        FfpDirtyFlags mFfpDirtyFlags; //!< Fixed function pipeline dirty flags.
-
-        FixedStack<Matrix44f>
-            mTransformWorld, //!< World transformation
-            mTransformView,  //!< Camera transformation
-            mTransformProj;  //!< Projection transformation
-
-        FixedStack<Rectf>
-            mViewport; //!< Resolution-independent viewport: (0,0,1,1) means whole screen or render target.
-
-        FixedStack<Vector4f>
-            mLight0Pos,        //!< Light0 position
-            mLight0Diffuse,    //!< Light0 diffuse color
-            mMaterialDiffuse,  //!< Material diffuse color
-            mMaterialSpecular; //!< Material specular color
-
-        FixedStack<TextureStateBlockDesc>
-            mTextureStates; //!< Texture stage states
-
-        //!
-        //! re-apply all fixed function pipeline states
-        //!
-        void reapplyAllFfpStates()
-        {
-            setTransformWorld( getTransformWorld() );
-            setTransformView( getTransformView() );
-            setTransformProj( getTransformProj() );
-            setViewport( getViewport() );
-            setLight0Pos( getLight0Pos() );
-            setLight0Diffuse( getLight0Diffuse() );
-            setMaterialDiffuse( getMaterialDiffuse() );
-            setMaterialSpecular( getMaterialSpecular() );
-            setTextureStates( getTextureStates() );
-        }
-
-    private:
-
-        //!
-        //! construct default value
-        //!
-        void ffpCtor()
-        {
-            Vector4f v;
-
-            GN_CASSERT( 4 == sizeof(FfpDirtyFlags) );
-            mFfpDirtyFlags.u32 = 0;
-
-            setTransformWorld( Matrix44f::IDENTITY );
-            setTransformView( Matrix44f::IDENTITY );
-            setTransformProj( Matrix44f::IDENTITY );
-            setViewport( 0, 0, 1, 1 );
-            setLight0Pos( v.set(0,0,0,1) );
-            setLight0Diffuse( v.set(1,1,1,1) );
-            setMaterialDiffuse( v.set(1,1,1,1) );
-            setMaterialSpecular( v.set(0,0,0,0) );
-            setTextureStates( TextureStateBlockDesc::DEFAULT );
-        }
-
-    public:
-
-#define GN_RENDERER_FFP_METHODS( name, type ) \
-    void set##name(const type & newValue ) { m##name.top() = newValue; mFfpDirtyFlags.name = true; } \
-    const type & get##name() const { return m##name.top(); } \
-    void push##name() { m##name.push(); } \
-    void pop##name() { m##name.pop(); mFfpDirtyFlags.name = true; }
-
-        GN_RENDERER_FFP_METHODS( TransformWorld, Matrix44f );
-        GN_RENDERER_FFP_METHODS( TransformView, Matrix44f );
-        GN_RENDERER_FFP_METHODS( TransformProj, Matrix44f );
-        GN_RENDERER_FFP_METHODS( Viewport, Rectf );
-        GN_RENDERER_FFP_METHODS( Light0Pos, Vector4f );
-        GN_RENDERER_FFP_METHODS( Light0Diffuse, Vector4f );
-        GN_RENDERER_FFP_METHODS( MaterialDiffuse, Vector4f );
-        GN_RENDERER_FFP_METHODS( MaterialSpecular, Vector4f );
-        GN_RENDERER_FFP_METHODS( TextureStates, TextureStateBlockDesc );
-
-#undef GN_RENDERER_FFP_METHODS
-
-        //!
-        //! Set viewport with 4 individual parameters
-        //!
-        void setViewport( float left, float top, float width, float height )
-        {
-            Rectf rc( left, top, width, height );
-            setViewport( rc );
-        }
-
-        //!
-        //! Set single texture state
-        //!
-        void setTextureState( size_t stage, TextureState state, TextureStateValue value )
-        {
-            GN_ASSERT( stage < MAX_TEXTURE_STAGES );
-            GN_ASSERT( 0 <= state && state < NUM_TEXTURE_STATES );
-            GN_ASSERT( 0 <= value && value < NUM_TEXTURE_STATE_VALUES );
-            TextureStateBlockDesc & desc = mTextureStates.top();
-            desc.ts[stage][state] = value;
-            mFfpDirtyFlags.TextureStates = true;
-        }
-
-        //!
-        //! This function is provided because different API has different ways
-        //! to compose projection matrix.
-        //!
-        virtual Matrix44f &
-        composePerspectiveMatrix( Matrix44f & result,
-                                  float fovy,
-                                  float ratio,
-                                  float znear,
-                                  float zfar ) const = 0;
-        //!
-        //! This function is provided because different API has different ways
-        //! to compose projection matrix.
-        //!
-        virtual Matrix44f &
-        composeOrthoMatrix( Matrix44f & result,
-                            float left,
-                            float bottom,
-                            float width,
-                            float height,
-                            float znear,
-                            float zfar ) const = 0;
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Render Target Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-    public:
-
-        //!
-        //! set render target texture
-        //!
-        //! \param index
-        //!     render target index, starting from 0
-        //! \param texture
-        //!     target texture, must be created with flag TEXUSAGE_RENDER_TARGET. Set
-        //!     this parameter to NULL will reset to default target (back buffer
-        //!     for RT0 and null for others.
-        //! \param level
-        //!     Mipmap level.
-        //! \param face
-        //!     Must be zero, if target_texture is not cube/stack texture.
-        //!
-        virtual void setRenderTarget( size_t index,
-                                      const Texture * texture,
-                                      size_t level = 0,
-                                      size_t face = 0 ) = 0;
-
-        //!
-        //! set render target texture
-        //!
-        //! \param texture
-        //!     Target texture, must be created with flag TEXUSAGE_DEPTH. Set this
-        //!     parameter to NULL will reset to default depth buffer.
-        //! \param level
-        //!     Mipmap level.
-        //! \param face
-        //!     Must be zero, if target_texture is not cube/stack texture.
-        //!
-        virtual void setRenderDepth( const Texture * texture,
-                                     size_t level = 0,
-                                     size_t face = 0 ) = 0;
+        virtual void setVtxPxlData( const VtxPxlData & ) = 0;
 
         //@}
 
@@ -1525,11 +986,6 @@ namespace GN { namespace gfx
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes ) = 0;
-
-        //!
-        //! draw geometry
-        //!
-        virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t ) = 0;
 
         //!
         //! Draw quads
@@ -1725,6 +1181,40 @@ namespace GN { namespace gfx
     public:
 
         //!
+        //! This function is provided because different API has different ways
+        //! to compose projection matrix.
+        //!
+        Matrix44f &
+        composePerspectiveMatrix( Matrix44f & result,
+                                  float fovy,
+                                  float ratio,
+                                  float znear,
+                                  float zfar ) const
+        {
+            return getD3DDevice()
+                ? result.perspectiveD3D( fovy, ratio, znear, zfar )
+                : result.perspectiveOGL( fovy, ratio, znear, zfar );
+        }
+
+        //!
+        //! This function is provided because different API has different ways
+        //! to compose projection matrix.
+        //!
+        Matrix44f &
+        composeOrthoMatrix( Matrix44f & result,
+                            float left,
+                            float bottom,
+                            float width,
+                            float height,
+                            float znear,
+                            float zfar ) const
+        {
+            return getD3DDevice()
+                ? result.orthoD3D( left, left+width, bottom, bottom+height, znear, zfar )
+                : result.orthoOGL( left, left+width, bottom, bottom+height, znear, zfar );
+        }
+
+        //!
         //! Enable/Disable parameter check for performance critical functions.
         //!
         //! Enabled by default for debug build; disabled by default for release build.
@@ -1756,10 +1246,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        Renderer()
-        {
-            ffpCtor();
-        }
+        Renderer() {}
 
         //!
         //! Dtor

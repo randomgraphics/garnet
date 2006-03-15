@@ -67,7 +67,7 @@ namespace GN
             // Invertable matrix is very rare, and normally means error,
             // so we write output a warning here.
             GN_WARN( "Matrix is un-invertable!" );
-            return identify();
+            return identity();
         }
 
         T fInvDet = 1.0f/fDet;
@@ -94,7 +94,7 @@ namespace GN
         T s = (T)::sin( angle );
         T c = (T)::cos( angle );
 
-        identify();
+        identity();
 
         rows[1][1] = c;
         rows[1][2] = -s;
@@ -117,7 +117,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        identify();
+        identity();
 
         rows[0][0] = c;
         rows[0][2] = s;
@@ -140,7 +140,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        identify();
+        identity();
 
         rows[0][0] = c;
         rows[0][1] = -s;
@@ -321,7 +321,7 @@ namespace GN
     {
         Matrix44<T> a(*this);
         Matrix44<T>  & b = *this;
-        b.identify();
+        b.identity();
 
         int r, c;
         int cc;
@@ -350,7 +350,7 @@ namespace GN
                 // Invertible matrix is very rare, and normally means error,
                 // so we write output a warning here.
                 GN_WARN( "Matrix is un-invertable!" );
-                return identify();
+                return identity();
             }
 
             // Swap row "rowMax" with row "c"
@@ -407,7 +407,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        identify();
+        identity();
 
         rows[1][1] = c;
         rows[1][2] = -s;
@@ -431,7 +431,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        identify();
+        identity();
 
         rows[0][0] = c;
         rows[0][2] = s;
@@ -455,7 +455,7 @@ namespace GN
         T s = ::sin( angle );
         T c = ::cos( angle );
 
-        identify();
+        identity();
 
         rows[0][0] = c;
         rows[0][1] = -s;
@@ -619,7 +619,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = 2.0f / d;                  // 此处和directx不同
@@ -646,7 +646,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = -2.0f / d;                 // 此处和directx不同
@@ -673,7 +673,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = 1.0f / d;                  // 此处和opengl不同
@@ -700,7 +700,7 @@ namespace GN
                   h = top - bottom,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f / w;
         rows[1][1] = 2.0f / h;
         rows[2][2] = -1.0f / d;                 // 此处和opengl不同
@@ -726,7 +726,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = (znear + zfar) / d;        // 此处和directx不同
@@ -751,7 +751,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = -(znear + zfar) / d;       // 此处和directx不同
@@ -776,7 +776,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = zfar / d;                  // 此处和opengl不同
@@ -801,7 +801,7 @@ namespace GN
                   w = h * ratio,
                   d = zfar - znear;
 
-        identify();
+        identity();
         rows[0][0] = 2.0f * znear / w;
         rows[1][1] = 2.0f * znear / h;
         rows[2][2] = -zfar / d;                 // 此处和opengl不同

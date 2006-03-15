@@ -37,6 +37,7 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
     mPassBegun = true;
     mActivePass = passIdx;
 
+    /*
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     TechniqueData & t = mTechniques.items[mActiveTechnique];
 
@@ -54,7 +55,7 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
         const ShaderData & sd = mShaders.items[p.shaders[iShader]];
         shaders[iShader] = sd.value;
     }
-    gRenderer.bindShaders( shaders );
+    gRenderer.bindShaders( shaders );*/
 
     GN_UNGUARD_SLOW;
 }
@@ -100,14 +101,14 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
         }
         sd.dirtyUniforms.clear();
 
-        // apply textures
+        /* apply textures
         for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
         {
             const TextureRefData & tr = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(tr.handle) );
             const TextureData & td = mTextures.items[tr.handle];
             gRenderer.bindTexture( tr.stage, gTexDict.getResource(td.value) );
-        }
+        }*/
     }
 
     GN_UNGUARD_SLOW;

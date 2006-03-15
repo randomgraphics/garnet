@@ -21,10 +21,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        FakeRenderer()
-        {
-            capsCtor();
-        }
+        FakeRenderer() {}
 
         //!
         //! dtor
@@ -36,7 +33,7 @@ namespace GN { namespace gfx
         }
 
         //@}
-        
+
         // ********************************************************************
         //
         //! \name Device Manager
@@ -87,23 +84,31 @@ namespace GN { namespace gfx
 
     public:
 
-        void capsCtor()
+        virtual uint32_t getCaps( RendererCaps c ) const
         {
-            setCaps( CAPS_MAX_2D_TEXTURE_SIZE, 4096 );
-            setCaps( CAPS_MAX_CLIP_PLANES    , 8 );
-            setCaps( CAPS_MAX_RENDER_TARGETS , 4 );
-            setCaps( CAPS_MAX_PRIMITIVES     , 65535 );
-            setCaps( CAPS_MAX_TEXTURE_STAGES , 8 );
-            setCaps( CAPS_PER_STAGE_CONSTANT , 1 );
-            setCaps( CAPS_PSCAPS             , 0xFF );
-            setCaps( CAPS_VSCAPS             , 0xFF );
+            switch( c )
+            {
+                case CAPS_MAX_2D_TEXTURE_SIZE : return 4096;
+                case CAPS_MAX_CLIP_PLANES     : return 8;
+                case CAPS_MAX_RENDER_TARGETS  : return 4;
+                case CAPS_MAX_PRIMITIVES      : return 65535;
+                case CAPS_MAX_TEXTURE_STAGES  : return 8;
+                case CAPS_PER_STAGE_CONSTANT  : return 1;
+                case CAPS_PSCAPS              : return 0xFF;
+                case CAPS_VSCAPS              : return 0xFF;
+                default :
+                    GN_ERROR( "invlid cap: %d", c );
+                    return 0;
+            };
         }
+        virtual bool supportShader( ShaderType, ShadingLanguage ) { return true; }
+        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
 
         //@}
 
         // ********************************************************************
         //
-        //! \name Shader Manager
+        //! \name resource Manager
         //
         // ********************************************************************
 
@@ -120,45 +125,6 @@ namespace GN { namespace gfx
             FakeShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
                 : Shader(type,lang), mCode(code), mEntry(entry) {}
         };
-
-        virtual bool supportShader( ShaderType, ShadingLanguage ) { return true; }
-
-        virtual Shader *
-        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
-        {
-            return new FakeShader( type, lang, code, entry );
-        }
-
-        virtual void bindShader( ShaderType type, const Shader * shader ) {}
-        virtual void bindShaders( const Shader * const shaders[] ) {}
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Render State Block Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & ) { return 1; }
-        virtual void bindRenderStateBlock( uint32_t )  {}
-        virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const {}
-        virtual uint32_t setRenderState( RenderState state, RenderStateValue value ) { return 1; }
-        virtual uint32_t setRenderStates( const int * statePairs, size_t count ) { return 1; }
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Texture Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-    private:
 
         class FakeTexture : public Texture
         {
@@ -203,35 +169,6 @@ namespace GN { namespace gfx
             virtual void * getAPIDependentData() const { return 0; }
         };
 
-    public:
-
-        bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
-        virtual Texture *
-        createTexture( const TextureDesc & desc, const TextureLoader & loader )
-        {
-            AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( desc ) ) return 0;
-            return tex.detach();
-        }
-
-        virtual Texture * createTextureFromFile( File & )
-        {
-            TextureDesc desc = { TEXTYPE_2D, 256, 256, 1, 1, 1, FMT_D3DCOLOR, 0 };
-            AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( desc ) ) return 0;
-            return tex.detach();
-        }
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Renderable Buffer Manager
-        //
-        // ********************************************************************
-
-        //@{
-
         class FakeVtxBuf : public VtxBuf
         {
             std::vector<uint8_t> mBuffer;
@@ -256,60 +193,42 @@ namespace GN { namespace gfx
             virtual void unlock() {}
         };
 
+    public:
+
+        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
+        {
+            return new FakeShader( type, lang, code, entry );
+        }
+        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & ) { return 1; }
+        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader )
+        {
+            AutoRef<FakeTexture> tex( new FakeTexture );
+            if( !tex->init( desc ) ) return 0;
+            return tex.detach();
+        }
+        virtual Texture * createTextureFromFile( File & )
+        {
+            TextureDesc desc = { TEXTYPE_2D, 256, 256, 1, 1, 1, FMT_D3DCOLOR, 0 };
+            AutoRef<FakeTexture> tex( new FakeTexture );
+            if( !tex->init( desc ) ) return 0;
+            return tex.detach();
+        }
         virtual uint32_t createVtxBinding( const VtxFmtDesc & ) { return 1; }
         virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader ) { return new FakeVtxBuf( bytes ); }
         virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader ) { return new FakeIdxBuf( numIdx ); }
-        virtual void bindVtxBinding( uint32_t )  {}
-        virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count ) {}
-        virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride ) {}
-        virtual void bindIdxBuf( const IdxBuf * ) {}
 
         //@}
 
         // ********************************************************************
         //
-        //! \name Fixed Function Pipeline Manager.
+        //! \name Context manager
         //
         // ********************************************************************
 
         //@{
 
-    public:
-
-        virtual Matrix44f &
-        composePerspectiveMatrix( Matrix44f & result,
-                                  float fovy,
-                                  float ratio,
-                                  float znear,
-                                  float zfar ) const { return Matrix44f::IDENTITY; }
-        virtual Matrix44f &
-        composeOrthoMatrix( Matrix44f & result,
-                            float left,
-                            float bottom,
-                            float width,
-                            float height,
-                            float znear,
-                            float zfar ) const { return Matrix44f::IDENTITY; }
-
-        //@}
-
-        // ********************************************************************
-        //
-        //! \name Render Target Manager
-        //
-        // ********************************************************************
-
-        //@{
-
-    public:
-
-        virtual void setRenderTarget( size_t index,
-                                      const Texture * texture,
-                                      size_t level,
-                                      size_t face ) {}
-        virtual void setRenderDepth( const Texture * texture,
-                                     size_t level,
-                                     size_t face ) {}
+        virtual void setContext( const RenderingContext & ) {}
+        virtual void setVtxPxlData( const VtxPxlData & ) {};
 
         //@}
 
@@ -347,7 +266,6 @@ namespace GN { namespace gfx
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes ) {}
-        virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t ) {}
         virtual void drawQuads( BitField options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
@@ -376,6 +294,18 @@ namespace GN { namespace gfx
 
     public:
 
+        virtual Matrix44f & composePerspectiveMatrix( Matrix44f & result,
+                                                      float fovy,
+                                                      float ratio,
+                                                      float znear,
+                                                      float zfar ) const { return Matrix44f::IDENTITY; }
+        virtual Matrix44f & composeOrthoMatrix( Matrix44f & result,
+                                                float left,
+                                                float bottom,
+                                                float width,
+                                                float height,
+                                                float znear,
+                                                float zfar ) const { return Matrix44f::IDENTITY; }
         void dumpCurrentState( StrA & ) const {}
 
         //@}

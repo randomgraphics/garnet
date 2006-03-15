@@ -280,8 +280,6 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
         return;
     }
 
-    Renderer & r = gRenderer;
-
     size_t numPasses;
     if( drawBegin( &numPasses ) )
     {
@@ -305,7 +303,7 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
 
                 commitChanges();
 
-                r.bindVtxBinding( g.vtxBinding );
+                /*r.bindVtxBinding( g.vtxBinding );
                 r.bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
                 r.bindIdxBuf( g.idxBuf );
 
@@ -316,7 +314,7 @@ void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size
                 else
                 {
                     r.drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
-                }
+                }*/
             }
 
             passEnd();

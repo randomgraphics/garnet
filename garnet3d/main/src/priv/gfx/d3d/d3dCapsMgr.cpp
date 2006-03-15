@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "d3dRenderer.h"
+#include "d3dTexture.h"
+#include "garnet/GNd3d.h"
 
 // *****************************************************************************
 // local functions that initialize individual capability
@@ -102,9 +104,9 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
 
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
-        setCaps(CAPS_##name, sCapsInit_##name( d3dcaps ) );
+        mCaps[CAPS_##name] = sCapsInit_##name( d3dcaps );
     #define GNGFX_D3DCAPS( name ) \
-        mD3DCaps[D3DCAPS_##name].set( sD3DCapsInit_##name( d3dcaps ) );
+        mD3DCaps[D3DCAPS_##name] = sD3DCapsInit_##name( d3dcaps );
     #include "garnet/gfx/rendererCapsMeta.h"
     #include "d3dCapsMeta.h"
     #undef GNGFX_CAPS
@@ -239,19 +241,73 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+// from Renderer
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::capsDeviceDestroy()
+bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang )
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
+    // check parameter
+    if( 0 > type || type >= NUM_SHADER_TYPES )
+    {
+        GN_ERROR( "invalid shader usage!" );
+        return false;
+    }
+    if( 0 > lang || lang >= NUM_SHADING_LANGUAGES )
+    {
+        GN_ERROR( "invalid shading language!" );
+        return false;
+    }
 
-    // clear all caps
-    resetAllCaps();
-    for( size_t i = 0; i < NUM_D3DCAPS; ++i ) mD3DCaps[i].reset();
+    switch( lang )
+    {
+        // OGL shaders are always unsupported
+        case LANG_OGL_ARB :
+        case LANG_OGL_GLSL :
+            return false;
+
+        // DX shaders are always supported
+        case LANG_D3D_ASM :
+        case LANG_D3D_HLSL :
+            if( VERTEX_SHADER == type )
+            {
+                return 0 != ( getCaps( CAPS_VSCAPS ) & VSCAPS_D3D_ALL );
+            }
+            else
+            {
+                GN_ASSERT( PIXEL_SHADER == type );
+                return 0 != ( getCaps( CAPS_PSCAPS ) & VSCAPS_D3D_ALL );
+            }
+
+        // TODO: Check Cg shader caps
+        case LANG_CG :
+            return false;
+
+        default :
+            GN_ASSERT_EX( 0, "program should never reach here!" );
+            return false;
+    }
 
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::supportTextureFormat(
+    TexType type, BitField usage, ClrFmt format ) const
+{
+    GN_GUARD;
+
+    return D3D_OK == checkD3DDeviceFormat(
+        texUsage2D3DUsage(usage),
+        texType2D3DResourceType(type),
+        d3d::clrFmt2D3DFormat(format) );
+
+    GN_UNGUARD;
+}

@@ -161,7 +161,7 @@ public:
         if( !loadEffect() ) return false;
 
         // initialize matrices
-        world.identify();
+        world.identity();
         view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
         gRenderer.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 1.0f, 1000.0f );
 

@@ -86,7 +86,7 @@ namespace GN { namespace gfx
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap();
-        virtual void * getAPIDependentData() const { return getD3DTexture(); }
+        virtual void * getAPIDependentData() const { return mD3DTexture; }
 
         // ********************************
         // public functions
@@ -94,9 +94,22 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! get D3D texture
+        //! Bind myself to specific stage
         //!
-        LPDIRECT3DBASETEXTURE9 getD3DTexture() const { return mD3DTexture; }
+        void bind( UINT stage ) const
+        {
+            D3DRenderer & r = getRenderer();
+            
+            r.getDevice()->SetTexture( stage, mD3DTexture );
+
+            r.setD3DSamplerState( stage, D3DSAMP_MINFILTER, mD3DFilters[0] );
+            r.setD3DSamplerState( stage, D3DSAMP_MAGFILTER, mD3DFilters[1] );
+            r.setD3DSamplerState( stage, D3DSAMP_MIPFILTER, mD3DFilters[2] );
+
+            r.setD3DSamplerState( stage, D3DSAMP_ADDRESSU, mD3DWraps[0] );
+            r.setD3DSamplerState( stage, D3DSAMP_ADDRESSV, mD3DWraps[1] );
+            r.setD3DSamplerState( stage, D3DSAMP_ADDRESSW, mD3DWraps[2] );
+        }
 
         //!
         //! get D3D surface. Can _NOT_ be used on 3D texture.
@@ -141,18 +154,6 @@ namespace GN { namespace gfx
 
             GN_UNGUARD_SLOW;
         }
-
-        //!
-        //! get filters
-        //!
-        const D3DTEXTUREFILTERTYPE * getD3DFilters() const
-        { return mD3DFilters; }
-
-        //!
-        //! get address wrapping modes
-        //!
-        const D3DTEXTUREADDRESS * getD3DWraps() const
-        { return mD3DWraps; }
 
         // ********************************
         // private variables

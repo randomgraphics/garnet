@@ -56,14 +56,14 @@ namespace GN { namespace gfx
         {
             return MyParent::ok()
                 && dispOk()
-                && rsbOk()
+                && resOk()
                 && drawOk();
         }
     private :
         void clear()
         {
             drawClear();
-            rsbClear();
+            resClear();
             dispClear();
         }
         //@}
@@ -109,7 +109,17 @@ namespace GN { namespace gfx
 
         // *****************************************************************************
         //
-        //! \name                   Render state manager
+        //! \name                   Caps Manager
+        //
+        // *****************************************************************************
+
+        //@{
+
+        //@}
+
+        // *****************************************************************************
+        //
+        //! \name                   Resource Manager
         //
         // *****************************************************************************
 
@@ -118,62 +128,25 @@ namespace GN { namespace gfx
     public :
 
         virtual RsbHandle createRenderStateBlock( const RenderStateBlockDesc & );
-        virtual void bindRenderStateBlock( RsbHandle );
-        virtual void getCurrentRenderStateBlock( RenderStateBlockDesc & ) const;
-        virtual uint32_t setRenderState( RenderState, RenderStateValue );
-        virtual uint32_t setRenderStates( const int * statePairs, size_t count );
+        virtual Texture * createTextureFromFile( File & );
 
     protected:
 
-        bool rebindCurrentRsb();
-        void disposeDeviceData() { mDevRsbMap.clear(); }
+        bool validRsbHandle( RsbHandle h ) const { return mRsbHandles.validHandle( h ); }
+        const RenderStateBlockDesc & getRsbFromHandle( RsbHandle h ) const { return mRsbHandles[h]; }
 
-    private :
+    private:
 
-        bool rsbInit();
-        void rsbQuit() {}
-        bool rsbOk() const { return true; }
-        void rsbClear() { mRsbHandles.clear(); mDevRsbMap.clear(); mCurrentRsb = 0; }
+        bool resInit() { return true; }
+        void resQuit() {}
+        bool resOk() const { return true; }
+        void resClear() { mRsbHandles.clear(); }
 
-        //!
-        //! Create device render state block, that can switch device render state
-        //! from 'from' to 'to'.
-        //!
-        virtual DeviceRenderStateBlock *
-        createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to ) = 0;
+    private:
 
-    private :
-
-        union DevRsbKey
-        {
-            uint64_t u64;
-            struct
-            {
-                uint32_t from, to;
-            };
-            bool operator<( const DevRsbKey & rhs ) const { return u64 < rhs.u64; }
-        };
         typedef HandleManager<RenderStateBlockDesc,uint32_t> RsbHandleManager;
-        typedef AutoRef<DeviceRenderStateBlock> DeviceRenderStateBlockRefPtr;
-        typedef std::map<DevRsbKey,DeviceRenderStateBlockRefPtr> DevRsbMap;
 
         RsbHandleManager mRsbHandles;
-        DevRsbMap        mDevRsbMap;
-        uint32_t         mCurrentRsb;
-
-        //@}
-
-        // *****************************************************************************
-        //
-        //! \name                   Texture manager
-        //
-        // *****************************************************************************
-
-        //@{
-
-    public:
-
-        virtual Texture * createTextureFromFile( File & );
 
         //@}
 
@@ -184,8 +157,9 @@ namespace GN { namespace gfx
         // *****************************************************************************
 
         //@{
+
     public:
-        virtual void drawGeometry( const RenderingParameters &, const RenderingGeometry *, size_t );
+
         virtual void drawDebugTextA( const char * text, int x, int y, const Vector4f & color );
 
     private:
@@ -194,33 +168,7 @@ namespace GN { namespace gfx
         bool drawOk() const { return true; }
         void drawClear()    { mNumPrims = 0; mNumDraws = 0; }
 
-    protected:
-
-        //!
-        //! Render target texture descriptor
-        //!
-        struct RenderTargetTextureDesc
-        {
-            const Texture * tex;   //!< Render target texture.
-            size_t          level; //!< Mipmap level.
-            size_t          face;  //!< Effective only when tex is cube/stack texture.
-
-            //!
-            //! Ctor
-            //!
-            RenderTargetTextureDesc() : tex(0) {}
-
-            //!
-            //! Equality check
-            //!
-            bool equal( const Texture * t, size_t l, size_t f ) const
-            {
-                return tex == t && ( 0 == tex || ( level == l && face == f ) );
-            }
-        };
-
         //@}
-
     };
 }}
 
