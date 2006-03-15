@@ -17,7 +17,7 @@ struct EqualFormat
 {
     const GN::gfx::VtxFmtDesc & format;
     EqualFormat( const GN::gfx::VtxFmtDesc & f ) : format(f) {}
-    bool operator()( const GN::gfx::D3DVtxBindingDesc & vbd ) const { return format == vbd.format; }
+    bool operator()( const GN::gfx::D3DVtxDeclDesc & vbd ) const { return format == vbd.format; }
 };
 
 // *****************************************************************************
@@ -200,21 +200,21 @@ GN::gfx::D3DRenderer::createTexture( const TextureDesc & desc,
 //
 //
 // -----------------------------------------------------------------------------
-uint32_t GN::gfx::D3DRenderer::createVtxBinding( const VtxFmtDesc & format )
+uint32_t GN::gfx::D3DRenderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
-    uint32_t h = mVtxBindings.findIf( EqualFormat(format) );
+    uint32_t h = mVtxFmts.findIf( EqualFormat(format) );
 
     if( 0 == h )
     {
         // create new vertex decl
-        D3DVtxBindingDesc vbd;
+        D3DVtxDeclDesc vbd;
         vbd.format = format;
         vbd.decl.attach( createD3DVertexDecl( mDevice, format ) );
         if( !vbd.decl ) return 0;
 
-        h = mVtxBindings.add( vbd );
+        h = mVtxFmts.add( vbd );
     }
 
     // success

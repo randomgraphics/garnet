@@ -345,7 +345,7 @@ void GN::gfx::D3DLine::drawLines(
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3DLineVertex) ) );
     GN_DX_CHECK( dev->SetVertexDeclaration( mDecl ) );
     // TODO: r.mDrawState.dirtyFlags.vtxBufs |= 1;
-    // TODO: r.mDrawState.dirtyFlags.vtxBinding = 1;
+    // TODO: r.mDrawState.dirtyFlags.vtxFmt = 1;
 
     // draw
     GN_DX_CHECK( dev->DrawPrimitive(

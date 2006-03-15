@@ -20,9 +20,9 @@ namespace GN { namespace gfx
     class D3DLine;
 
     //!
-    //! D3D vertex buffer binding descriptor
+    //! D3D vertex buffer declaration descriptor
     //!
-    struct D3DVtxBindingDesc
+    struct D3DVtxDeclDesc
     {
         VtxFmtDesc                              format; //!< vertex format
         AutoComPtr<IDirect3DVertexDeclaration9> decl;   //!< D3D decl
@@ -246,7 +246,7 @@ namespace GN { namespace gfx
 
         virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry );
         virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader );
-        virtual VtxBindingHandle createVtxBinding( const VtxFmtDesc & );
+        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
         virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
 
@@ -284,7 +284,7 @@ namespace GN { namespace gfx
     private :
 
         std::list<D3DResource*> mResourceList;
-        HandleManager<D3DVtxBindingDesc,VtxBindingHandle> mVtxBindings;
+        HandleManager<D3DVtxDeclDesc,VtxFmtHandle> mVtxFmts;
 
         //@}
 

@@ -314,10 +314,10 @@ namespace GN { namespace gfx
         //@{
 
     public :
-        virtual uint32_t createVtxBinding( const VtxFmtDesc & );
+        virtual uint32_t createVtxFmt( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
         virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
-        virtual void bindVtxBinding( uint32_t );
+        virtual void bindVtxFmt( uint32_t );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
         virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
         virtual void bindIdxBuf( const IdxBuf * buf ) { mCurrentIdxBuf.reset( buf ); }
@@ -333,16 +333,16 @@ namespace GN { namespace gfx
         void bufferDeviceDispose() {}
         void bufferDeviceDestroy() {}
 
-        void applyVtxBinding();
+        void applyVtxFmt();
         void applyVtxBufState( size_t startVtx );
 
         void setVtxBufUp( const void * data, size_t stride ); // apply user-supplied vertex buffer, used by DIPUP()/DPUP()
 
     private :
 
-        typedef HandleManager<void*,uint32_t> VtxBindingManager;
+        typedef HandleManager<void*,VtxFmtHandle> VtxFmtManager;
 
-        VtxBindingManager mVtxBindings;
+        VtxFmtManager mVtxFmts;
 
         AutoRef<const IdxBuf> mCurrentIdxBuf;
 

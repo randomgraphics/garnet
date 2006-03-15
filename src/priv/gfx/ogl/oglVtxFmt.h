@@ -1,7 +1,7 @@
-#ifndef __GN_GFXOGL_OGLVTXBINDING_H__
-#define __GN_GFXOGL_OGLVTXBINDING_H__
+#ifndef __GN_GFXOGL_OGLVTXFMT_H__
+#define __GN_GFXOGL_OGLVTXFMT_H__
 // *****************************************************************************
-//! \file    ogl/oglVtxBinding.h
+//! \file    ogl/oglVtxFmt.h
 //! \brief   OGL vertex binding class
 //! \author  chenlee (2005.11.21)
 // *****************************************************************************
@@ -13,9 +13,9 @@ namespace GN { namespace gfx
     //!
     //! OGL vertex binding class
     //!
-    class OGLVtxBinding : public OGLResource, public StdClass
+    class OGLVtxFmt : public OGLResource, public StdClass
     {
-         GN_DECLARE_STDCLASS( OGLVtxBinding, StdClass );
+         GN_DECLARE_STDCLASS( OGLVtxFmt, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -23,8 +23,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLVtxBinding( OGLRenderer & r ) : OGLResource(r) { clear(); }
-        virtual ~OGLVtxBinding() { quit(); }
+        OGLVtxFmt( OGLRenderer & r ) : OGLResource(r) { clear(); }
+        virtual ~OGLVtxFmt() { quit(); }
         //@}
 
         // ********************************
@@ -85,6 +85,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of oglVtxBinding.h
+//                           End of oglVtxFmt.h
 // *****************************************************************************
-#endif // __GN_GFXOGL_OGLVTXBINDING_H__
+#endif // __GN_GFXOGL_OGLVTXFMT_H__

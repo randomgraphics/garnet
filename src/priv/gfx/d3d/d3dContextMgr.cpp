@@ -196,6 +196,7 @@ void GN::gfx::D3DRenderer::contextDeviceDestroy()
 void GN::gfx::D3DRenderer::setContext( const RenderingContext & newContext )
 {
     GN_GUARD_SLOW;
+    if( 0 == newContext.flags.u32 ) return; // shortcut for "empty" context
     bindContext( newContext, false );
     mContext = newContext;
     GN_UNGUARD_SLOW;
@@ -207,6 +208,7 @@ void GN::gfx::D3DRenderer::setContext( const RenderingContext & newContext )
 void GN::gfx::D3DRenderer::setVtxPxlData( const VtxPxlData & newData )
 {
     GN_GUARD_SLOW;
+    if( 0 == newData.flags.u32 ) return; // shortcut for "empty" data
     bindVtxPxlData( newData, false );
     mVtxPxlData = newData;
     GN_UNGUARD_SLOW;
@@ -230,6 +232,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContext(
     if( isParameterCheckEnabled() )
     {
         // TODO: verify data in new context
+        // TODO: make sure all fields in current context are valid.
     }
 
     //
@@ -417,25 +420,65 @@ GN_INLINE void GN::gfx::D3DRenderer::bindVtxPxlData(
     if( isParameterCheckEnabled() )
     {
         // TODO: verify data in new context
+        // TODO: make sure all fields in current context are valid.
     }
 
     //
-    // bind vertex binding and vertx buffers
+    // bind vertex format
     //
-    if( 0 != newData.vtxBinding )
+    const D3DVtxDeclDesc * decl;
+    if( newData.flags.vtxFmt )
     {
-        const D3DVtxBindingDesc & desc = mVtxBindings[newData.vtxBinding];
+        decl = &mVtxFmts[newData.vtxFmt];
+        GN_ASSERT( decl->decl );
+        if( newData.vtxFmt != mVtxPxlData.vtxFmt || forceRebind )
+        {
+            mDevice->SetVertexDeclaration( decl->decl );
+        }
+    }
+    else if( mVtxPxlData.vtxFmt )
+    {
+        decl = &mVtxFmts[mVtxPxlData.vtxFmt];
+    }
+    else decl = 0;
+
+    //!
+    //! bind vertex buffers
+    //!
+    if( newData.flags.vtxBufs && decl )
+    {
+        for( UINT i = 0; i < decl->format.numStreams; ++i )
+        {
+            const VtxPxlData::VtxBufDesc & vb = newData.vtxBufs[i];
+            if( vb.buffer != mVtxPxlData.vtxBufs[i].buffer || forceRebind )
+            {
+                GN_ASSERT( vb.buffer );
+                GN_DX_CHECK( mDevice->SetStreamSource(
+                    i,
+                    safeCast<const D3DVtxBuf*>(vb.buffer.get())->getD3DVb(),
+                    0,
+                    (UINT)vb.stride ) );
+            }
+        }
+    }
+
+    //
+    // bind vertex format and vertx buffers
+    //
+    if( 0 != newData.vtxFmt )
+    {
+        const D3DVtxDeclDesc & desc = mVtxFmts[newData.vtxFmt];
         GN_ASSERT( desc.decl );
 
-        if( newData.vtxBinding != mVtxPxlData.vtxBinding || forceRebind )
+        if( newData.vtxFmt != mVtxPxlData.vtxFmt || forceRebind )
         {
             mDevice->SetVertexDeclaration( desc.decl );
         }
 
         for( UINT i = 0; i < desc.format.numStreams; ++i )
         {
-            const VtxPxlData::VtxBufDesc & vb = newData.vtxBuffers[i];
-            if( vb.buffer != mVtxPxlData.vtxBuffers[i].buffer || forceRebind )
+            const VtxPxlData::VtxBufDesc & vb = newData.vtxBufs[i];
+            if( vb.buffer != mVtxPxlData.vtxBufs[i].buffer || forceRebind )
             {
                 GN_ASSERT( vb.buffer );
                 GN_DX_CHECK( mDevice->SetStreamSource(
@@ -451,41 +494,46 @@ GN_INLINE void GN::gfx::D3DRenderer::bindVtxPxlData(
     //
     // bind index buffer
     //
-    if( newData.idxBuffer != mVtxPxlData.idxBuffer || forceRebind )
+    if( newData.flags.idxBuf &&
+      ( newData.idxBuf != mVtxPxlData.idxBuf || forceRebind ) )
     {
-        GN_DX_CHECK( mDevice->SetIndices( newData.idxBuffer
-            ? safeCast<const D3DIdxBuf*>(newData.idxBuffer.get())->getD3DIb()
+        GN_DX_CHECK( mDevice->SetIndices( newData.idxBuf
+            ? safeCast<const D3DIdxBuf*>(newData.idxBuf.get())->getD3DIb()
             : 0 ) );
     }
 
     //
     // bind textures
     //
-    UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-    UINT numTex = min<UINT>( (UINT)newData.numTextures, maxStages );
-    UINT stage;
-    for( stage = 0; stage < numTex; ++stage )
+    if( newData.flags.textures )
     {
-        const Texture * tex = newData.textures[stage];
-        if( tex != mVtxPxlData.textures[stage] ||
-            stage > mVtxPxlData.numTextures ||
-            !forceRebind )
+        UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
+        UINT numTex = min<UINT>( newData.numTextures, maxStages );
+        UINT stage;
+        for( stage = 0; stage < numTex; ++stage )
         {
-            if( tex )
+            const Texture * tex = newData.textures[stage];
+            if( tex != mVtxPxlData.textures[stage] ||
+                stage > mVtxPxlData.numTextures ||
+                !forceRebind )
             {
-                safeCast<const D3DTexture*>(tex)->bind( stage );
-            }
-            else
-            {
-                mDevice->SetTexture( stage, NULL );
+                if( tex )
+                {
+                    safeCast<const D3DTexture*>(tex)->bind( stage );
+                }
+                else
+                {
+                    mDevice->SetTexture( stage, NULL );
+                }
             }
         }
+        // clear unused stages
+        numTex = min<UINT>( mVtxPxlData.numTextures, maxStages );
+        for( ; stage < numTex; ++stage )
+        {
+            mDevice->SetTexture( stage, 0 );
+        }
     }
-    // clear unused stages
-    for( ; stage < newData.numTextures; ++stage )
-    {
-        mDevice->SetTexture( stage, 0 );
-    }
-
+    
     GN_UNGUARD_SLOW;
 }

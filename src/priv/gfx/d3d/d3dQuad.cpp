@@ -423,7 +423,7 @@ void GN::gfx::D3DQuad::drawQuads(
     GN_ASSERT( mIdxBuf );
     GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
     // TODO: r.mDrawState.dirtyFlags.vtxBufs |= 1;
-    // TODO: r.mDrawState.dirtyFlags.vtxBinding = 1;
+    // TODO: r.mDrawState.dirtyFlags.vtxFmt = 1;
 
     // draw
 #if GN_XENON
