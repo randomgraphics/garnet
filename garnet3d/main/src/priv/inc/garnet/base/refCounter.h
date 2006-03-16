@@ -149,7 +149,7 @@ namespace GN
         //!
         AutoRef & operator = ( const AutoRef & rhs )
         {
-            reset( rhs );
+            set( rhs );
             return *this;
         }
 
@@ -159,7 +159,7 @@ namespace GN
         template <class Y>
         AutoRef & operator = ( const AutoRef<Y> & rhs )
         {
-            reset( rhs );
+            set( rhs );
             return *this;
         }
 
@@ -221,17 +221,17 @@ namespace GN
         XPTR const * addr() const throw() { return &mPtr; }
 
         //!
-        //! Clear to empty. Same as reset(NULL).
+        //! Clear to empty. Same as set(NULL).
         //!
         void clear() { if( mPtr ) mPtr->decref(); mPtr = 0; }
 
         //!
-        //! reset with new pointer data
+        //! set new pointer data
         //!
         //! this function will release old pointer, if not NULL; then increase
         //! the reference counter of new pointer, if not NULL.
         //!
-        void reset( XPTR p )
+        void set( XPTR p )
         {
             if( p ) p->incref();
             if( mPtr ) mPtr->decref();

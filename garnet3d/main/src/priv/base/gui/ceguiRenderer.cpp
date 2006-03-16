@@ -225,6 +225,12 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
 
     const QuadDesc * start = quads;
 
+    GN::gfx::ContextData cd;
+
+    cd.clearToNull();
+    cd.flags.textures = 1;
+    cd.numTextures = 1;
+
     while( count > 0 )
     {
         if( quads->vertices[0].tex == start->vertices[0].tex )
@@ -237,7 +243,8 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
         GN_ASSERT( quads > start );
 
         // draw quads from start to quads (they have same texture)
-        //r.bindTextureHandle( 0, start->vertices[0].tex );
+        cd.textures[0] = gTexDict.getResource( start->vertices[0].tex );
+        r.setContextData( cd );
         r.drawQuads(
             GN::gfx::DQ_WINDOW_SPACE,
             &start->vertices[0].x, sizeof(QuadVertex),
@@ -251,7 +258,8 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
     // draw remaining quads
     if( quads > start )
     {
-        //r.bindTextureHandle( 0, start->vertices[0].tex );
+        cd.textures[0] = gTexDict.getResource( start->vertices[0].tex );
+        r.setContextData( cd );
         r.drawQuads(
             GN::gfx::DQ_WINDOW_SPACE,
             &start->vertices[0].x, sizeof(QuadVertex),

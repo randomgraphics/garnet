@@ -32,7 +32,7 @@ static void sApplyRenderStateBlock(
     GN::gfx::RenderStateValue rsv;
     #define GNGFX_DEFINE_RS( tag, defvalue )                     \
         rsv = diff.rs[GN::gfx::RS_##tag];                        \
-        if( GN::gfx::RSV_INVALID != rsv )                        \
+        if( GN::gfx::RSV_EMPTY != rsv )                          \
         {                                                        \
             GN_ASSERT( rsv < GN::gfx::NUM_RENDER_STATE_VALUES ); \
             if( GN::gfx::RS_BLEND_SRC != GN::gfx::RS_##tag &&    \
@@ -43,8 +43,8 @@ static void sApplyRenderStateBlock(
     #undef GNGFX_DEFINE_RS
 
     // apply blending factors
-    if( GN::gfx::RSV_INVALID != diff.rs[GN::gfx::RS_BLEND_SRC] ||
-        GN::gfx::RSV_INVALID != diff.rs[GN::gfx::RS_BLEND_DST] )
+    if( GN::gfx::RSV_EMPTY != diff.rs[GN::gfx::RS_BLEND_SRC] ||
+        GN::gfx::RSV_EMPTY != diff.rs[GN::gfx::RS_BLEND_DST] )
     {
         GN_ASSERT(
             to.rs[GN::gfx::RS_BLEND_SRC] < GN::gfx::NUM_RENDER_STATE_VALUES &&

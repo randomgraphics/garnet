@@ -53,3 +53,5 @@ GNGFX_DEFINE_RSV( CULL_NONE     , D3DCULL_NONE          , GL_FALSE ) //!< no cul
 GNGFX_DEFINE_RSV( FILL_SOLID    , D3DFILL_SOLID         , GL_FILL  ) //!< solid mode
 GNGFX_DEFINE_RSV( FILL_LINE     , D3DFILL_WIREFRAME     , GL_LINE  ) //!< line mode
 GNGFX_DEFINE_RSV( FILL_POINT    , D3DFILL_POINT         , GL_POINT ) //!< point mode
+
+GNGFX_DEFINE_RSV( EMPTY         , 0                     , 0        ) //!< empty/unused/undefine

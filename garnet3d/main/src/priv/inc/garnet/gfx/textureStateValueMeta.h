@@ -139,3 +139,8 @@ GNGFX_DEFINE_TSV( CONSTANT_INV_ALPHA , D3DTA_CONSTANT_INV_ALPHA , GL_CONSTANT_AR
 #undef D3DTA_CONSTANT_ALPHA
 #undef D3DTA_CONSTANT_INV_COLOR
 #undef D3DTA_CONSTANT_INV_ALPHA
+
+//!
+//! empty/unused/undefine
+//!
+GNGFX_DEFINE_TSV( EMPTY      , 0                   , 0                  , 0 )

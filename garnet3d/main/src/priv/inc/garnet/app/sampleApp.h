@@ -105,14 +105,17 @@ namespace GN { namespace app
 
         //@{
 
+        //!
+        //! application initialization structure
+        //!
         struct InitParam
         {
-            gfx::RendererAPI rapi;
-            gfx::RendererOptions ro;
-            input::InputApi iapi;
+            gfx::RendererAPI rapi;   //!< renderer API
+            gfx::RendererOptions ro; //!< renderer options
+            input::InputApi iapi;    //!< input API
         };
 
-        static float UPDATE_INTERVAL;
+        static float UPDATE_INTERVAL; //!< Time interval for calling onUpdate()
 
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }

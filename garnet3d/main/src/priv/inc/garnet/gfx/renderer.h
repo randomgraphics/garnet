@@ -333,6 +333,13 @@ namespace GN { namespace gfx
         DQ_USE_CURRENT_PS = 1<<2,
 
         //!
+        //! 使用当前的Texture states.
+        //!
+        //! Effective only when using fixed function pipeline.
+        //!
+        DQ_USE_CURRENT_TS = 1<<3,
+
+        //!
         //! position in window (post-transformed) space:
         //! (0,0) for left-up corner, (width,height) for right-bottom corner.
         //!
@@ -341,27 +348,27 @@ namespace GN { namespace gfx
         //!
         //! \note This option is meaningful only when DQ_USE_CURRENT_VS is _NOT_ set.
         //!
-        DQ_WINDOW_SPACE = 1<<3,
+        DQ_WINDOW_SPACE = 1<<4,
 
         //!
         //! Use 3-D position. Default is 2-D position
         //!
-        DQ_3D_POSITION = 1<<4,
+        DQ_3D_POSITION = 1<<5,
 
         //!
         //! Disable blending. Default is enabled.
         //!
-        DQ_OPAQUE = 1<<5,
+        DQ_OPAQUE = 1<<6,
 
         //!
         //! Enable depth write. Default is disabled.
         //!
-        DQ_UPDATE_DEPTH = 1<<6,
+        DQ_UPDATE_DEPTH = 1<<7,
 
         //!
         //! 上述 DQ_USE_CURRENT_XX 的集合
         //!
-        DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS
+        DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_USE_CURRENT_TS
     };
 
     //!
@@ -393,6 +400,13 @@ namespace GN { namespace gfx
         DL_USE_CURRENT_PS = 1<<2,
 
         //!
+        //! 使用当前的Texture states.
+        //!
+        //! Effective only when using fixed function pipeline.
+        //!
+        DL_USE_CURRENT_TS = 1<<3,
+
+        //!
         //! position in window (post-transformed) space:
         //! (0,0) for left-up corner, (width,height) for right-bottom corner.
         //!
@@ -400,49 +414,52 @@ namespace GN { namespace gfx
         //!
         //! \note This option is meaningful only when DL_USE_CURRENT_VS is _NOT_ set.
         //!
-        DL_WINDOW_SPACE = 1<<3,
+        DL_WINDOW_SPACE = 1<<4,
 
         //!
         //! Using line strip. By default input points are treated as line list.
         //!
-        DL_LINE_STRIP = 1<<4,
+        DL_LINE_STRIP = 1<<5,
 
         //!
         //! 上述 DL_USE_CURRENT_XX 的集合
         //!
-        DL_USE_CURRENT = DL_USE_CURRENT_RS | DL_USE_CURRENT_VS | DL_USE_CURRENT_PS
+        DL_USE_CURRENT = DL_USE_CURRENT_RS | DL_USE_CURRENT_VS | DL_USE_CURRENT_PS | DL_USE_CURRENT_TS
     };
 
     //!
-    //! Rendering context. Completely define how rendering would be donw
+    //! Rendering context state. Completely define how rendering would be donw
     //!
-    struct RenderingContext
+    struct ContextState
     {
         //!
-        //! Context flag structure
+        //! Context flag structure. If flag is zero, means that field is undefined,
+        //! and should not being used to update device state.
         //!
         union FieldFlags
         {
             unsigned int u32; //!< all flags as uint32
             struct
             {
-                // byte 0
-                unsigned int shaders            : 2; //!< shaders
-                unsigned int rsb                : 1; //!< render state block
-                unsigned int colorBuffers       : 3; //!< number of color buffers
-                unsigned int depthBuffer        : 1; //!< depth buffer
-                unsigned int viewport           : 1; //!< viewport
+                    // byte 0
+                unsigned int vtxShader          :  1; //!< vertex shdader
+                unsigned int pxlShader          :  1; //!< pixel shader
+                unsigned int rsb                :  1; //!< render state block
+                unsigned int colorBuffers       :  1; //!< color buffers
+                unsigned int depthBuffer        :  1; //!< depth buffer
+                unsigned int viewport           :  1; //!< viewport
+                unsigned int                    :  2; //!< reserved
                 // byte 1
-                unsigned int world              : 1; //!< world transformation
-                unsigned int view               : 1; //!< view transformation
-                unsigned int proj               : 1; //!< projection transformation
-                unsigned int light0Pos          : 1; //!< light 0 position
-                unsigned int light0Diffuse      : 1; //!< light 0 diffuse
-                unsigned int materialDiffuse    : 1; //!< material diffues color
-                unsigned int materialSpecular   : 1; //!< material specular color
-                unsigned int textureStates      : 1; //!< texture states
+                unsigned int world              :  1; //!< world transformation
+                unsigned int view               :  1; //!< view transformation
+                unsigned int proj               :  1; //!< projection transformation
+                unsigned int light0Pos          :  1; //!< light 0 position
+                unsigned int light0Diffuse      :  1; //!< light 0 diffuse
+                unsigned int materialDiffuse    :  1; //!< material diffues color
+                unsigned int materialSpecular   :  1; //!< material specular color
+                unsigned int textureStates      :  1; //!< texture states
                 // byte 2,3
-                unsigned int                    : 16;
+                unsigned int                    : 16; //!< reserved
             };
         };
 
@@ -451,16 +468,16 @@ namespace GN { namespace gfx
         //!
         struct RenderTargetDesc
         {
-            AutoRef<Texture> texture; //!< render target
-            size_t           level;   //!< mipmap level
-            size_t           face;    //!< cubemap face
+            const Texture * texture; //!< render target
+            size_t          level;   //!< mipmap level
+            size_t          face;    //!< cubemap face
         };
 
         FieldFlags            flags; //!< field flags
-        AutoRef<Shader>       shaders[NUM_SHADER_TYPES]; //!< shaders
-        RsbHandle             rsb; //!< render state block handle
+        const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
+        RsbHandle             rsb; //!< render state block handle. 0 means default render state.
         RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
-        size_t                numColorBuffers;
+        size_t                numColorBuffers; //!< color buffer count
         RenderTargetDesc      depthBuffer; //!< depth buffers
         Rectf                 viewport; //!< viewport
         Matrix44f             world, //!< world transformation
@@ -473,27 +490,24 @@ namespace GN { namespace gfx
         TextureStateBlockDesc textureStates; //!< texture stage states
 
         //!
-        //! Clear to empty context, all fields are leave unused.
+        //! Clear to null context, all fields are unused/undefined.
         //!
-        void clear()
+        void clearToNull()
         {
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
-            for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i].clear();
-            for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) colorBuffers[i].texture.clear();
         }
 
         //!
         //! Reset to default context.
         //!
-        void reset()
+        void resetToDefault()
         {
             flags.u32 = 0xFFFFFFFF; // set all flags to true.
-            for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i].clear();
+            for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i] = 0;
             rsb = 0;
-            for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) colorBuffers[i].texture.clear();
             numColorBuffers = 0;
-            depthBuffer.texture.clear();
+            depthBuffer.texture = 0;
             viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
             world.identity();
             view.identity();
@@ -502,18 +516,45 @@ namespace GN { namespace gfx
             light0Diffuse.set( 1.0f, 1.0f, 1.0f, 1.0f );
             materialDiffuse.set( 1.0f, 1.0f, 1.0f, 1.0f );
             materialSpecular.set( 0.2f, 0.2f, 0.2f, 1.0f );
-            textureStates.reset( TextureStateBlockDesc::RESET_TO_DEFAULT );
+            textureStates.resetToDefault();
+        }
+
+        //!
+        //! Merge incoming context into current one.
+        //!
+        void mergeWith( const ContextState & another )
+        {
+            if( another.flags.vtxShader ) shaders[VERTEX_SHADER] = another.shaders[VERTEX_SHADER];
+            if( another.flags.pxlShader ) shaders[PIXEL_SHADER] = another.shaders[PIXEL_SHADER];
+            if( another.flags.rsb ) rsb = another.rsb;
+            if( another.flags.colorBuffers )
+            {
+                for( size_t i = 0; i < another.numColorBuffers; ++i ) colorBuffers[i] = another.colorBuffers[i];
+                numColorBuffers = another.numColorBuffers;
+            }
+            if( another.flags.depthBuffer ) depthBuffer = another.depthBuffer;
+            if( another.flags.viewport ) viewport = another.viewport;
+            if( another.flags.world ) world = another.world;
+            if( another.flags.view ) view = another.view;
+            if( another.flags.proj ) proj = another.proj;
+            if( another.flags.light0Pos ) light0Pos = another.light0Pos;
+            if( another.flags.light0Diffuse ) light0Diffuse = another.light0Diffuse;
+            if( another.flags.materialDiffuse ) materialDiffuse = another.materialDiffuse;
+            if( another.flags.materialSpecular ) materialSpecular = another.materialSpecular;
+            if( another.flags.textureStates ) textureStates = another.textureStates;
+            flags.u32 |= another.flags.u32;
         }
 
     };
 
     //!
-    //! Vertex and pixel data. Define input data of renderer.
+    //! Rendering context data. Define input data of renderer.
     //!
-    struct VtxPxlData
+    struct ContextData
     {
         //!
-        //! flag structure
+        //! Context flag structure. If flag is zero, means that field is undefined,
+        //! and should not being used to update device state.
         //!
         union FieldFlags
         {
@@ -521,13 +562,13 @@ namespace GN { namespace gfx
             struct
             {
                 // byte 0
-                unsigned int textures : 1; //!< textures
-                unsigned int vtxFmt   : 1; //!< vertex format
-                unsigned int vtxBufs  : 1; //!< vertex buffers
-                unsigned int idxBuf   : 1; //!< index buffer
-                unsigned int          : 4;
+                unsigned int textures :  1; //!< textures
+                unsigned int vtxFmt   :  1; //!< vertex format
+                unsigned int vtxBufs  :  1; //!< vertex buffers
+                unsigned int idxBuf   :  1; //!< index buffer
+                unsigned int          :  4; //!< reserved
                 // byte 1-3
-                unsigned int          : 24;
+                unsigned int          : 24; //!< reserved
             };
         };
 
@@ -536,28 +577,54 @@ namespace GN { namespace gfx
         //!
         struct VtxBufDesc
         {
-            AutoRef<VtxBuf> buffer; //!< buffer pointer
-            size_t          stride; //!< buffer stride
+            const VtxBuf * buffer; //!< buffer pointer
+            size_t         stride; //!< buffer stride
         };
 
-        FieldFlags       flags; //!< flags
-        AutoRef<Texture> textures[MAX_TEXTURE_STAGES]; //!< texture list
-        size_t           numTextures; //!< texture count
-        VtxFmtHandle     vtxFmt; //!< vertex format handle
-        VtxBufDesc       vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current @vtxFmt.
-        AutoRef<IdxBuf>  idxBuf; //!< index buffer
+        FieldFlags      flags; //!< flags
+        const Texture * textures[MAX_TEXTURE_STAGES]; //!< texture list
+        size_t          numTextures; //!< texture count
+        VtxFmtHandle    vtxFmt; //!< vertex format handle
+        VtxBufDesc      vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current vtxFmt.
+        const IdxBuf *  idxBuf; //!< index buffer
 
         //!
-        //! clear to empty
+        //! clear to empty, all fields are undefined.
         //!
-        void clear()
+        void clearToNull()
         {
             GN_CASSERT( 4 == sizeof(FieldFlags) );
-            for( int i = 0; i < MAX_TEXTURE_STAGES; ++i ) textures[i].clear();
+            flags.u32 = 0;
+        }
+
+        //!
+        //! reset to empty input data. 
+        //!
+        void resetToEmpty()
+        {
+            flags.u32 = 0xFFFFFFFF;
             numTextures = 0;
             vtxFmt = 0;
-            for( int i = 0; i < MAX_VERTEX_STREAMS; ++i ) vtxBufs[i].buffer.clear();
-            idxBuf.clear();
+            idxBuf = 0;
+        }
+
+        //!
+        //! Merge incoming data into current one.
+        //!
+        void mergeWith( const ContextData & another )
+        {
+            if( another.flags.textures )
+            {
+                for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
+                numTextures = another.numTextures;
+            }
+            if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
+            if( another.flags.vtxBufs )
+            {
+                for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i ) vtxBufs[i] = another.vtxBufs[i];
+            }
+            if( another.flags.idxBuf ) idxBuf = another.idxBuf;
+            flags.u32 |= another.flags.u32;
         }
     };
 
@@ -928,15 +995,178 @@ namespace GN { namespace gfx
 
         //@{
 
-        //!
-        //! Set rendering context
-        //!
-        virtual void setContext( const RenderingContext & ) = 0;
+    public:
 
         //!
-        //! Set rendering data
+        //! Set rendering state context
         //!
-        virtual void setVtxPxlData( const VtxPxlData & ) = 0;
+        virtual void setContextState( const ContextState & ) = 0;
+
+        //!
+        //! Set rendering data context
+        //!
+        virtual void setContextData( const ContextData & ) = 0;
+
+        //!
+        //! Rebind current rendering context to rendering device.
+        //!
+        //! \par
+        //!     This function will "reset" some of states of low-level rendering device,
+        //!     based on input field flags, to sync-up with current context stored in
+        //!     in renderer.
+        //! \par
+        //!     Call this function to restore state of low-level rendering device, when
+        //!     state is modified (by calling OpenGL functions or IDirect3DDevice methods,
+        //!     for example), and you want to restore deivce to its previous states.
+        //!
+        virtual void rebindContextState( ContextState::FieldFlags ) = 0;
+
+        //!
+        //! Rebind current vertex-pixel data to rendering device.
+        //!
+        //! This function has analogy to rebindContextState().
+        //!
+        virtual void rebindContextData( ContextData::FieldFlags ) = 0;
+
+        //!
+        //! Get current render state block descriptor
+        //!
+        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const = 0;
+
+        // ********************************************************************
+        //
+        //! \name Helper functions to update rendering context
+        //
+        // ********************************************************************
+
+        //@{
+
+    private:
+
+        ContextState         mHelperContextState;
+        ContextData          mHelperContextData;
+        AutoInit<bool,false> mHelperUpdateBegun;
+
+    public:
+
+        //!
+        //! start context and VP data update
+        //!
+        void contextUpdateBegin();
+
+        //!
+        //! end context and VP data update, flush modified context and data to renderer.
+        //!
+        void contextUpdateEnd();
+
+        //!
+        //! Set a shader. Set NULL to use fixed pipeline.
+        //!
+        void setShader( ShaderType type, const Shader * shader );
+
+        //!
+        //! Set a list of shaders. The list must have at least NUM_SHADER_TYPES elements.
+        //!
+        void setShaders( const Shader * const shaders[] );
+
+        //!
+        //! Set shaders. Set to NULL to use fixed pipeline.
+        //!
+        void setShaders( const Shader * vtxShader, const Shader * pxlShader );
+
+        //!
+        //! Set shaders by handle. Set to 0 to use fixed pipeline.
+        //!
+        void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
+
+        //!
+        //! Set vertex shader. Set to NULL to use fixed pipeline.
+        //!
+        void setVtxShader( const Shader * s );
+
+        //!
+        //! Set vertex shader by handle.
+        //!
+        void setVtxShaderHandle( ShaderDictionary::HandleType h );
+
+        //!
+        //! Set pixel shader. Set to NULL to use fixed pipeline.
+        //!
+        void setPxlShader( const Shader * s );
+
+        //!
+        //! Set pixel shader by handle. Set 0 to use fixed function pipeline
+        //!
+        void setPxlShaderHandle( ShaderDictionary::HandleType h );
+
+        //!
+        //! Set render state block.
+        //!
+        void setRenderStateBlock( RsbHandle );
+
+        //!
+        //! Set individual render state.
+        //!
+        void setRenderState( RenderState state, RenderStateValue value );
+
+        //!
+        //! Set a bunch of render states.
+        //!
+        void setRenderStates( const int * statePairs, size_t count );
+
+        //!
+        //! Set viewport.
+        //!
+        void setViewport( const Rectf & );
+
+        //!
+        //! Set viewport.
+        //!
+        void setViewport( float left, float top, float width, float height );
+
+        //!
+        //! Set texture stage state.
+        //!
+        void setTextureState( size_t stage, TextureState state, TextureStateValue value );
+
+        //!
+        //! Set a texture.
+        //!
+        void setTexture( size_t stage, const Texture * tex );
+
+        //!
+        //! Set a texture by handle.
+        //!
+        void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
+
+        //!
+        //! set textures, from stage[start] to stage[start+numtex-1].
+        //!
+        //! \param texlist texture list
+        //! \param start   start stage
+        //! \param count   number of textures
+        //!
+        void setTextures( const Texture * const texlist[], size_t start, size_t count );
+
+        //!
+        //! set textures by handle.
+        //!
+        void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
+
+        //!
+        //! Set vertex format.
+        //!
+        void setVtxFmt( VtxFmtHandle );
+
+        //!
+        //! Set vertex buffer
+        //!
+        void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+
+        //!
+        //! Set index buffer.
+        //!
+        void setIdxBuf( const IdxBuf * );
 
         //@}
 

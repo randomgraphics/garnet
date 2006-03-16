@@ -71,7 +71,7 @@ public:
         }
 
         TS_ASSERT( !GN::gfx::renderState2Str(s,GN::gfx::NUM_RENDER_STATES) );
-        TS_ASSERT_EQUALS( "BAD_RS", GN::gfx::renderState2Str(GN::gfx::NUM_RENDER_STATES) );
+        TS_ASSERT_EQUALS( "RS_INVALID", GN::gfx::renderState2Str(GN::gfx::NUM_RENDER_STATES) );
         TS_ASSERT( !GN::gfx::str2RenderState( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2RenderState( t, NULL ) );
         TS_ASSERT_EQUALS( GN::gfx::RS_INVALID, GN::gfx::str2RenderState( "haha" ) );
@@ -108,7 +108,7 @@ public:
         }
 
         TS_ASSERT( !GN::gfx::renderStateValue2Str(s,GN::gfx::NUM_RENDER_STATE_VALUES) );
-        TS_ASSERT_EQUALS( "BAD_RSV", GN::gfx::renderStateValue2Str(GN::gfx::NUM_RENDER_STATE_VALUES) );
+        TS_ASSERT_EQUALS( "RSV_INVALID", GN::gfx::renderStateValue2Str(GN::gfx::NUM_RENDER_STATE_VALUES) );
         TS_ASSERT( !GN::gfx::str2RenderStateValue( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2RenderStateValue( t, NULL ) );
         TS_ASSERT_EQUALS( GN::gfx::RSV_INVALID, GN::gfx::str2RenderStateValue( "haha" ) );
@@ -145,7 +145,7 @@ public:
         }
 
         TS_ASSERT( !GN::gfx::textureState2Str(s,GN::gfx::NUM_TEXTURE_STATES) );
-        TS_ASSERT_EQUALS( "BAD_TS", GN::gfx::textureState2Str(GN::gfx::NUM_TEXTURE_STATES) );
+        TS_ASSERT_EQUALS( "TS_INVALID", GN::gfx::textureState2Str(GN::gfx::NUM_TEXTURE_STATES) );
         TS_ASSERT( !GN::gfx::str2TextureState( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2TextureState( t, NULL ) );
         TS_ASSERT_EQUALS( GN::gfx::TS_INVALID, GN::gfx::str2TextureState( "haha" ) );
@@ -182,7 +182,7 @@ public:
         }
 
         TS_ASSERT( !GN::gfx::textureStateValue2Str(s,GN::gfx::NUM_TEXTURE_STATE_VALUES) );
-        TS_ASSERT_EQUALS( "BAD_TSV", GN::gfx::textureStateValue2Str(GN::gfx::NUM_TEXTURE_STATE_VALUES) );
+        TS_ASSERT_EQUALS( "TSV_INVALID", GN::gfx::textureStateValue2Str(GN::gfx::NUM_TEXTURE_STATE_VALUES) );
         TS_ASSERT( !GN::gfx::str2TextureStateValue( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2TextureStateValue( t, NULL ) );
         TS_ASSERT_EQUALS( GN::gfx::TSV_INVALID, GN::gfx::str2TextureStateValue( "haha" ) );

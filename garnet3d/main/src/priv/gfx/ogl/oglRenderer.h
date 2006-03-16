@@ -320,7 +320,7 @@ namespace GN { namespace gfx
         virtual void bindVtxFmt( uint32_t );
         virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
         virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
-        virtual void bindIdxBuf( const IdxBuf * buf ) { mCurrentIdxBuf.reset( buf ); }
+        virtual void bindIdxBuf( const IdxBuf * buf ) { mCurrentIdxBuf.set( buf ); }
 
     private :
         bool bufferInit() { return true; }

@@ -68,8 +68,8 @@ namespace GN { namespace gfx
         #include "renderStateValueMeta.h"
         #undef GNGFX_DEFINE_RSV
 
-        NUM_RENDER_STATE_VALUES,    //!< number of available render states
-        RSV_INVALID                 //!< indicate a invalid value
+        NUM_RENDER_STATE_VALUES,              //!< number of available render states
+        RSV_INVALID = NUM_RENDER_STATE_VALUES //!< indicate a invalid value
     };
 
     //!
@@ -161,9 +161,8 @@ namespace GN { namespace gfx
         #define GNGFX_DEFINE_TSV( tag, d3dval, glval1, glval2 ) TSV_##tag,
         #include "textureStateValueMeta.h"
         #undef GNGFX_DEFINE_TSV
-
-        NUM_TEXTURE_STATE_VALUES,   //!< number of available texture stage state values
-        TSV_INVALID,                //!< indicate a invalid value
+        NUM_TEXTURE_STATE_VALUES,               //!< number of available texture stage state values
+        TSV_INVALID = NUM_TEXTURE_STATE_VALUES, //!< indicate a invalid value
     };
 
     //!
@@ -194,21 +193,21 @@ namespace GN { namespace gfx
     struct RenderStateBlockDesc
     {
         static const RenderStateBlockDesc DEFAULT; //!< default rsblock
-        static const RenderStateBlockDesc INVALID; //!< invalid rsblock
-
-        //!
-        //! reset flag
-        //!
-        enum ResetFlag
-        {
-            RESET_TO_INVALID, //!< reset all fields to "RSV_INVALID"
-            RESET_TO_DEFAULT, //!< reset all fields to default value
-        };
+        static const RenderStateBlockDesc EMPTY; //!< empty rsblock. All fields are RSV_EMPTY
 
         //!
         //! render states
         //!
         RenderStateValue rs[NUM_RENDER_STATES];
+
+        //!
+        //! Only used to construct static members.
+        //!
+        RenderStateBlockDesc( bool toEmpty )
+        {
+            if( toEmpty ) resetToEmpty();
+            else resetToDefault();
+        }
 
         // ********************************
         //! \name constructors
@@ -218,17 +217,14 @@ namespace GN { namespace gfx
         //@{
 
         //!
-        //! default constructor
+        //! default constructor, do nothing.
         //!
         RenderStateBlockDesc() {}
 
         //!
-        //! construct & reset a render state block description structure
+        //! copy constructor
         //!
-        RenderStateBlockDesc( ResetFlag flag )
-        {
-            reset( flag );
-        }
+        RenderStateBlockDesc( const RenderStateBlockDesc & another ) { ::memcpy( rs, another.rs, sizeof(rs) ); }
 
         //@}
 
@@ -240,9 +236,14 @@ namespace GN { namespace gfx
         //@{
 
         //!
-        //! reset all fields to default/invalid value
+        //! reset all fields to RSV_EMPTY
         //!
-        void reset( ResetFlag flag );
+        void resetToEmpty();
+
+        //!
+        //! reset all fields to default value
+        //!
+        void resetToDefault();
 
         //!
         //! make sure a valid render state block
@@ -269,7 +270,7 @@ namespace GN { namespace gfx
         bool operator != ( const RenderStateBlockDesc & ) const;
 
         //!
-        //! 求和（将参数中所有的非invalid项复写到this中）.
+        //! 求和（将参数中所有的非empty项复写到this中）.
         //! <b>注意，此加法运算不符合交换率，(A+B) != (B+A)</b>
         //!
         RenderStateBlockDesc & operator += ( const RenderStateBlockDesc & );
@@ -280,7 +281,7 @@ namespace GN { namespace gfx
         RenderStateBlockDesc   operator +  ( const RenderStateBlockDesc & ) const;
 
         //!
-        //! 求差（相同的项相减结果为 RSV_INVALID 或者 TSV_INVALID）
+        //! 求差, 相同的项相减结果为 RSV_EMPTY
         //!
         RenderStateBlockDesc & operator -= ( const RenderStateBlockDesc & );
 
@@ -298,21 +299,21 @@ namespace GN { namespace gfx
     struct TextureStateBlockDesc
     {
         static const TextureStateBlockDesc DEFAULT; //!< default rsblock
-        static const TextureStateBlockDesc INVALID; //!< invalid rsblock
-
-        //!
-        //! reset flag
-        //!
-        enum ResetFlag
-        {
-            RESET_TO_INVALID, //!< reset all fields to "TSV_INVALID"
-            RESET_TO_DEFAULT, //!< reset all fields to default value
-        };
+        static const TextureStateBlockDesc EMPTY;   //!< empty rsblock (all fields are TSV_EMPTY)
 
         //!
         //! texture stage states
         //!
         TextureStateValue ts[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES];
+
+        //!
+        //! Only used to construct static data members.
+        //!
+        TextureStateBlockDesc( bool toEmpty )
+        {
+            if( toEmpty ) resetToEmpty();
+            else resetToDefault();
+        }
 
         // ********************************
         //! \name constructors
@@ -322,17 +323,14 @@ namespace GN { namespace gfx
         //@{
 
         //!
-        //! default constructor
+        //! default constructor. Do nothing
         //!
         TextureStateBlockDesc() {}
 
         //!
-        //! construct & reset a render state block description structure
+        //! copy constructor
         //!
-        TextureStateBlockDesc( ResetFlag flag )
-        {
-            reset( flag );
-        }
+        TextureStateBlockDesc( const TextureStateBlockDesc & another ) { ::memcpy( ts, another.ts, sizeof(ts) ); }
 
         //@}
 
@@ -344,9 +342,19 @@ namespace GN { namespace gfx
         //@{
 
         //!
-        //! reset all fields to default/invalid value
+        //! reset all fields to TSV_EMPTY
         //!
-        void reset( ResetFlag flag );
+        void resetToEmpty();
+
+        //!
+        //! reset all fields to default value
+        //!
+        void resetToDefault();
+
+        //!
+        //! make sure a valid texture state block
+        //!
+        bool valid() const;
 
         //@}
 
@@ -368,7 +376,7 @@ namespace GN { namespace gfx
         bool operator != ( const TextureStateBlockDesc & ) const;
 
         //!
-        //! 求和（将参数中所有的非invalid项复写到this中）.
+        //! 求和（将参数中所有的非empty项复写到this中）.
         //! <b>注意，此加法运算不符合交换率，(A+B) != (B+A)</b>
         //!
         TextureStateBlockDesc & operator += ( const TextureStateBlockDesc & );
@@ -379,7 +387,7 @@ namespace GN { namespace gfx
         TextureStateBlockDesc   operator +  ( const TextureStateBlockDesc & ) const;
 
         //!
-        //! 求差（相同的项相减结果为 RSV_INVALID 或者 TSV_INVALID）
+        //! 求差, 相同的项相减结果为 TSV_EMPTY
         //!
         TextureStateBlockDesc & operator -= ( const TextureStateBlockDesc & );
 
@@ -388,7 +396,6 @@ namespace GN { namespace gfx
         //!
         TextureStateBlockDesc   operator  - ( const TextureStateBlockDesc & ) const;
     };
-    
 }}
 
 #if GN_ENABLE_INLINE

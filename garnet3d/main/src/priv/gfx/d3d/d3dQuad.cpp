@@ -264,6 +264,20 @@ void GN::gfx::D3DQuad::drawQuads(
     D3DRenderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
+    // store D3D device states
+    AutoComPtr<IDirect3DVertexShader9> oldVs;
+    AutoComPtr<IDirect3DPixelShader9> oldPs;
+    AutoComPtr<IDirect3DVertexBuffer9> oldVb; UINT oldVbOffset; UINT oldVbStride;
+    AutoComPtr<IDirect3DIndexBuffer9> oldIb;
+    AutoComPtr<IDirect3DVertexDeclaration9> oldDecl;
+    GN_DX_CHECK( dev->GetVertexShader( &oldVs ) );
+    GN_DX_CHECK( dev->GetPixelShader( &oldPs ) );
+    GN_DX_CHECK( dev->GetStreamSource( 0, &oldVb, &oldVbOffset, &oldVbStride ) );
+    GN_DX_CHECK( dev->GetIndices( &oldIb ) );
+    GN_DX_CHECK( dev->GetVertexDeclaration( &oldDecl ) );
+    // TODO: avoid using D3D state block.
+    mRsb->Capture();
+
     // lock vertex buffer
     D3DQuadVertex * vbData;
 #if GN_XENON
@@ -381,8 +395,6 @@ void GN::gfx::D3DQuad::drawQuads(
     // setup render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
-        GN_DX_CHECK( mRsb->Capture() );
-        D3DRenderer & r = getRenderer();
         r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE );
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
@@ -393,37 +405,33 @@ void GN::gfx::D3DQuad::drawQuads(
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
-        // TODO: r.mDrawState.dirtyFlags.vtxShader = 1;
-    }
-    if( !( DQ_USE_CURRENT_PS & options ) )
-    {
-        GN_DX_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
-        // TODO: r.mDrawState.dirtyFlags.pxlShader = 1;
     }
 
+    LPDIRECT3DPIXELSHADER9 effectivePs;
+    if( !( DQ_USE_CURRENT_PS & options ) )
+    {
+        effectivePs = texcoords ? mPxlShaderTextured : mPxlShaderSolid;
+        GN_DX_CHECK( dev->SetPixelShader( effectivePs ) );
+    }
+    else effectivePs = oldPs;
+
     // setup texture states, for fixed-functional pipeline only
-    AutoComPtr<IDirect3DPixelShader9> currentPs;
-    dev->GetPixelShader( &currentPs );
-    if( !currentPs )
+    if( !effectivePs && !( DQ_USE_CURRENT_TS & options ) )
     {
         // TODO: setup TSS based on present of texcoords and colors.
-        D3DRenderer & r = getRenderer();
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
         r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
         r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
-        // TODO: r.mFfpDirtyFlags.TextureStates = 1;
     }
 
-    // bind buffers
+    // bind decl and buffers
     GN_ASSERT( mVtxBuf );
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3DQuadVertex) ) );
     GN_ASSERT( mIdxBuf );
     GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
-    // TODO: r.mDrawState.dirtyFlags.vtxBufs |= 1;
-    // TODO: r.mDrawState.dirtyFlags.vtxFmt = 1;
 
     // draw
 #if GN_XENON
@@ -439,7 +447,11 @@ void GN::gfx::D3DQuad::drawQuads(
 #endif
 
     // restore render states
-    if( !( DQ_USE_CURRENT_RS & options ) )
+    GN_DX_CHECK( dev->SetVertexShader( oldVs ) );
+    GN_DX_CHECK( dev->SetPixelShader( oldPs ) );
+    GN_DX_CHECK( dev->SetStreamSource( 0, oldVb, oldVbOffset, oldVbStride ) );
+    GN_DX_CHECK( dev->SetIndices( oldIb ) );
+    GN_DX_CHECK( dev->SetVertexDeclaration( oldDecl ) );
     {
         BOOL old = D3DXDebugMute( TRUE );
         GN_DX_CHECK( mRsb->Apply() );

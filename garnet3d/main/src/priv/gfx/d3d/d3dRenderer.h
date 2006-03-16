@@ -299,8 +299,11 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setContext( const RenderingContext & newContext );
-        virtual void setVtxPxlData( const VtxPxlData & );
+        virtual void setContextState( const ContextState & newContext );
+        virtual void setContextData( const ContextData & );
+        virtual void rebindContextState( ContextState::FieldFlags );
+        virtual void rebindContextData( ContextData::FieldFlags );
+        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const;
 
     public:
 
@@ -308,10 +311,14 @@ namespace GN { namespace gfx
         void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
         void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
 
+        //DWORD getD3DRenderState( D3DRENDERSTATETYPE );
+        //DWORD getD3DSamplerState( UINT, D3DSAMPLERSTATETYPE );
+        //DWORD getD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE );
+
     private :
 
-        bool contextInit();
-        void contextQuit();
+        bool contextInit() { return true; }
+        void contextQuit() {}
         bool contextOK() const { return true; }
         void contextClear();
         bool contextDeviceCreate();
@@ -321,8 +328,15 @@ namespace GN { namespace gfx
 
     private:
 
-        GN_INLINE void bindContext( const RenderingContext & newContext, bool forceRebind );
-        GN_INLINE void bindVtxPxlData( const VtxPxlData & newData, bool forceRebind );
+        GN_INLINE void bindContextState(
+            const ContextState & newContext,
+            ContextState::FieldFlags newFlag,
+            bool forceRebind );
+
+        GN_INLINE void bindContextData(
+            const ContextData & newData,
+            ContextData::FieldFlags newFlag,
+            bool forceRebind );
 
     private:
 
@@ -346,8 +360,8 @@ namespace GN { namespace gfx
         StateValue<DWORD> mSamplerStates[MAX_TEXTURE_STAGES][MAX_D3D_SAMPLER_STATES];
         StateValue<DWORD> mTextureStates[MAX_TEXTURE_STAGES][MAX_D3D_TEXTURE_STATES];
 
-        RenderingContext mContext;
-        VtxPxlData       mVtxPxlData;
+        ContextState mContextState;
+        ContextData  mContextData;
 
         //@}
 

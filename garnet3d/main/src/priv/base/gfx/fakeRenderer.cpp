@@ -227,8 +227,11 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void setContext( const RenderingContext & ) {}
-        virtual void setVtxPxlData( const VtxPxlData & ) {};
+        virtual void setContextState( const ContextState & ) {}
+        virtual void setContextData( const ContextData & ) {};
+        virtual void rebindContextState( ContextState::FieldFlags ) {}
+        virtual void rebindContextData( ContextData::FieldFlags ) {}
+        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const { return RenderStateBlockDesc::DEFAULT; }
 
         //@}
 
