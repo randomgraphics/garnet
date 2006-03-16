@@ -92,12 +92,15 @@ bool GN::gfx::D3DRenderer::contextDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
-    //
-    // TODO: restore render/sampler/texture states
-    //
-    for( UINT i = 0; i < getCaps(CAPS_MAX_TEXTURE_STAGES); ++i )
-    {
-    }
+    // initialize all render/texture/sampler states
+    for( int i = 0; i < MAX_D3D_RENDER_STATES; ++i ) mRenderStates[i].clear();
+    for( int s = 0; s < MAX_TEXTURE_STAGES; ++s )
+        for( int i = 0; i < MAX_D3D_SAMPLER_STATES; ++i ) mSamplerStates[s][i].clear();
+#if !GN_XENON
+    for( int s = 0; s < MAX_TEXTURE_STAGES; ++s )
+        for( int i = 0; i < MAX_D3D_TEXTURE_STATES; ++i ) mTextureStates[s][i].clear();
+    setD3DRenderState( D3DRS_COLORVERTEX, 1 ); // always enable color vertex
+#endif
 
     // rebind context and data
     bindContextState( mContextState, mContextState.flags, true );
@@ -509,7 +512,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
         else
         {
             decl = 0;
-            GN_DX_CHECK( mDevice->SetVertexDeclaration( 0 ) );
+            //GN_DX_CHECK( mDevice->SetVertexDeclaration( 0 ) );
         }
     }
     else if( mContextData.vtxFmt )

@@ -45,7 +45,6 @@ namespace GN { namespace gfx {
             mPxlShaderSolid = 0;
             mVtxBuf = 0;
             mIdxBuf = 0;
-            mRsb = 0;
             mNextQuad = 0;
         }
         //@}
@@ -88,7 +87,6 @@ namespace GN { namespace gfx {
         LPDIRECT3DPIXELSHADER9  mPxlShaderSolid;
         LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
         LPDIRECT3DINDEXBUFFER9  mIdxBuf;
-        LPDIRECT3DSTATEBLOCK9   mRsb;
 
         size_t mNextQuad; // cursor that indicates next avaiable quad in vertex buffer.
 
