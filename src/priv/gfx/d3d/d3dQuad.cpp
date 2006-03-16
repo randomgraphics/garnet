@@ -149,9 +149,6 @@ bool GN::gfx::D3DQuad::deviceCreate()
     }
     GN_DX_CHECK( mIdxBuf->Unlock() );
 
-    // create render state block
-    GN_DX_CHECK_RV( dev->CreateStateBlock( D3DSBT_PIXELSTATE, &mRsb ), false );
-
     // success
     return true;
 
@@ -213,7 +210,6 @@ void GN::gfx::D3DQuad::deviceDestroy()
     safeRelease( mPxlShaderTextured );
     safeRelease( mPxlShaderSolid );
     safeRelease( mIdxBuf );
-    safeRelease( mRsb );
 
     GN_UNGUARD;
 }
@@ -264,19 +260,73 @@ void GN::gfx::D3DQuad::drawQuads(
     D3DRenderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
-    // store D3D device states
-    AutoComPtr<IDirect3DVertexShader9> oldVs;
-    AutoComPtr<IDirect3DPixelShader9> oldPs;
-    AutoComPtr<IDirect3DVertexBuffer9> oldVb; UINT oldVbOffset; UINT oldVbStride;
-    AutoComPtr<IDirect3DIndexBuffer9> oldIb;
-    AutoComPtr<IDirect3DVertexDeclaration9> oldDecl;
-    GN_DX_CHECK( dev->GetVertexShader( &oldVs ) );
-    GN_DX_CHECK( dev->GetPixelShader( &oldPs ) );
-    GN_DX_CHECK( dev->GetStreamSource( 0, &oldVb, &oldVbOffset, &oldVbStride ) );
-    GN_DX_CHECK( dev->GetIndices( &oldIb ) );
-    GN_DX_CHECK( dev->GetVertexDeclaration( &oldDecl ) );
-    // TODO: avoid using D3D state block.
-    mRsb->Capture();
+    // store/restore D3D device states
+    struct StateHolder
+    {
+        D3DRenderer & r;
+        AutoComPtr<IDirect3DVertexShader9> vs;
+        AutoComPtr<IDirect3DPixelShader9> ps;
+        AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
+        AutoComPtr<IDirect3DIndexBuffer9> ib;
+        AutoComPtr<IDirect3DVertexDeclaration9> decl;
+        DWORD
+            blendEnable,
+            zEnable,
+            zWrite,
+            cullMode,
+            colorOp0,
+            colorArg0,
+            alphaOp0,
+            alphaArg0,
+            colorOp1,
+            alphaOp1;
+
+        StateHolder( D3DRenderer & r_ ) : r(r_)
+        {
+            LPDIRECT3DDEVICE9 dev = r.getDevice();
+            GN_DX_CHECK( dev->GetVertexShader( &vs ) );
+            GN_DX_CHECK( dev->GetPixelShader( &ps ) );
+            GN_DX_CHECK( dev->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+            GN_DX_CHECK( dev->GetIndices( &ib ) );
+            GN_DX_CHECK( dev->GetVertexDeclaration( &decl ) );
+            blendEnable = r.getD3DRenderState( D3DRS_ALPHABLENDENABLE );
+            zEnable     = r.getD3DRenderState( D3DRS_ZENABLE          );
+            zWrite      = r.getD3DRenderState( D3DRS_ZWRITEENABLE     );
+            cullMode    = r.getD3DRenderState( D3DRS_CULLMODE         );
+#if !GN_XENON
+            colorOp0  = r.getD3DTextureState( 0, D3DTSS_COLOROP   );
+            colorArg0 = r.getD3DTextureState( 0, D3DTSS_COLORARG1 );
+            alphaOp0  = r.getD3DTextureState( 0, D3DTSS_ALPHAOP   );
+            alphaArg0 = r.getD3DTextureState( 0, D3DTSS_ALPHAARG1 );
+            colorOp1  = r.getD3DTextureState( 1, D3DTSS_COLOROP   );
+            alphaOp1  = r.getD3DTextureState( 1, D3DTSS_ALPHAOP   );
+#endif
+        }
+
+        ~StateHolder()
+        {
+            LPDIRECT3DDEVICE9 dev = r.getDevice();
+            GN_DX_CHECK( dev->SetVertexShader( vs ) );
+            GN_DX_CHECK( dev->SetPixelShader( ps ) );
+            GN_DX_CHECK( dev->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+            GN_DX_CHECK( dev->SetIndices( ib ) );
+            if( decl ) GN_DX_CHECK( dev->SetVertexDeclaration( decl ) );
+            r.setD3DRenderState( D3DRS_ALPHABLENDENABLE , blendEnable );
+            r.setD3DRenderState( D3DRS_ZENABLE          , zEnable     );
+            r.setD3DRenderState( D3DRS_ZWRITEENABLE     , zWrite      );
+            r.setD3DRenderState( D3DRS_CULLMODE         , cullMode    );
+#if !GN_XENON
+            r.setD3DTextureState( 0, D3DTSS_COLOROP   , colorOp0  );
+            r.setD3DTextureState( 0, D3DTSS_COLORARG1 , colorArg0 );
+            r.setD3DTextureState( 0, D3DTSS_ALPHAOP   , alphaOp0  );
+            r.setD3DTextureState( 0, D3DTSS_ALPHAARG1 , alphaArg0 );
+            r.setD3DTextureState( 1, D3DTSS_COLOROP   , colorOp1  );
+            r.setD3DTextureState( 1, D3DTSS_ALPHAOP   , alphaOp1  );
+#endif
+        }
+    };
+
+    StateHolder automaticStateHolder(r); // this will restore D3D states by the end of this function.
 
     // lock vertex buffer
     D3DQuadVertex * vbData;
@@ -399,7 +449,7 @@ void GN::gfx::D3DQuad::drawQuads(
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
         r.setD3DRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
-    }
+   }
 
     // bind shaders
     if( !( DQ_USE_CURRENT_VS & options ) )
@@ -407,16 +457,16 @@ void GN::gfx::D3DQuad::drawQuads(
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
     }
 
-    LPDIRECT3DPIXELSHADER9 effectivePs;
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
-        effectivePs = texcoords ? mPxlShaderTextured : mPxlShaderSolid;
-        GN_DX_CHECK( dev->SetPixelShader( effectivePs ) );
+        GN_DX_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
     }
-    else effectivePs = oldPs;
 
+#if !GN_XENON
     // setup texture states, for fixed-functional pipeline only
-    if( !effectivePs && !( DQ_USE_CURRENT_TS & options ) )
+    AutoComPtr<IDirect3DPixelShader9> currentPs;
+    GN_DX_CHECK( dev->GetPixelShader( &currentPs ) );
+    if( !currentPs && !( DQ_USE_CURRENT_TS & options ) )
     {
         // TODO: setup TSS based on present of texcoords and colors.
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
@@ -426,6 +476,7 @@ void GN::gfx::D3DQuad::drawQuads(
         r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
         r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
     }
+#endif
 
     // bind decl and buffers
     GN_ASSERT( mVtxBuf );
@@ -445,18 +496,6 @@ void GN::gfx::D3DQuad::drawQuads(
         0,                       // StartIndex
         (UINT)( count * 2 ) ) ); // PrimitiveCount
 #endif
-
-    // restore render states
-    GN_DX_CHECK( dev->SetVertexShader( oldVs ) );
-    GN_DX_CHECK( dev->SetPixelShader( oldPs ) );
-    GN_DX_CHECK( dev->SetStreamSource( 0, oldVb, oldVbOffset, oldVbStride ) );
-    GN_DX_CHECK( dev->SetIndices( oldIb ) );
-    GN_DX_CHECK( dev->SetVertexDeclaration( oldDecl ) );
-    {
-        BOOL old = D3DXDebugMute( TRUE );
-        GN_DX_CHECK( mRsb->Apply() );
-        D3DXDebugMute( old );
-    }
 
     // update mNextQuad
     mNextQuad += count;

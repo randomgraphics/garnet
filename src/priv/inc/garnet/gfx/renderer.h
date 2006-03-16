@@ -496,6 +496,7 @@ namespace GN { namespace gfx
         {
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
+            numColorBuffers = 0;
         }
 
         //!
@@ -595,6 +596,7 @@ namespace GN { namespace gfx
         {
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
+            numTextures = 0;
         }
 
         //!

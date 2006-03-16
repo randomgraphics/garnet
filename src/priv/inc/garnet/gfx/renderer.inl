@@ -52,7 +52,8 @@ namespace GN { namespace gfx
     {
         GN_ASSERT( mHelperUpdateBegun );
         mHelperUpdateBegun = false;
-        // TODO: flush modified context
+        if( mHelperContextState.flags.u32 ) setContextState( mHelperContextState );
+        if( mHelperContextData.flags.u32 ) setContextData( mHelperContextData );
     }
 
 #define _GNGFX_CONTEXT_UPDATE_BEGIN() \

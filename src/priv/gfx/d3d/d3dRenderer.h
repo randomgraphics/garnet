@@ -308,12 +308,15 @@ namespace GN { namespace gfx
     public:
 
         void setD3DRenderState( D3DRENDERSTATETYPE, DWORD );
-        void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
-        void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
+        DWORD getD3DRenderState( D3DRENDERSTATETYPE );
 
-        //DWORD getD3DRenderState( D3DRENDERSTATETYPE );
-        //DWORD getD3DSamplerState( UINT, D3DSAMPLERSTATETYPE );
-        //DWORD getD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE );
+        void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
+        DWORD getD3DSamplerState( UINT, D3DSAMPLERSTATETYPE );
+
+#if !GN_XENON
+        void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
+        DWORD getD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE );
+#endif
 
     private :
 
@@ -345,7 +348,6 @@ namespace GN { namespace gfx
         {
             T    value;
             bool initialized;
-            StateValue() : initialized(false) {}
             void clear() { initialized = false; }
         };
 
