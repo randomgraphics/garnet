@@ -243,6 +243,7 @@ namespace GN { namespace gfx
         
         mHelperContextData.flags.textures = 1;
         mHelperContextData.textures[stage] = tex;
+        ++stage;
         mHelperContextData.numTextures = max( stage, mHelperContextData.numTextures );
 
         _GNGFX_CONTEXT_UPDATE_END();

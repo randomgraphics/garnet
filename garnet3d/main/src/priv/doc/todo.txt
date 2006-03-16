@@ -17,9 +17,10 @@ TODO
 
 - p1
   - GFX system
-    - find a way to mix custom and predefined resource and draw sequence
-    - redefine renderer interface.
-      - can stateblock restore texture states as well?
+    - render target management
+    - Allow mix of garnet-wrapped and low-level graphics resources.
+      - possiblly by using rebindContextState() and rebindContextData()
+      - need future investigation
   - code page convertor
   - sample application
     - GLSL test application
