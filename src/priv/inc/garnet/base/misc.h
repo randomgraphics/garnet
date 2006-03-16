@@ -548,7 +548,7 @@ namespace GN
         //!
         AutoComPtr & operator==( const AutoComPtr & rhs )
         {
-            reset( rhs.mPtr );
+            set( rhs.mPtr );
             return *this;
         }
 
@@ -620,14 +620,14 @@ namespace GN
         bool empty() const { return 0 == mPtr; }
 
         //!
-        //! Clear to empty. Same as reset(NULL).
+        //! Clear to empty. Same as set(NULL).
         //!
         void clear() { if( mPtr ) mPtr->Release(); mPtr = 0; }
 
         //!
         //! Release existing interface, then hold new interface
         //!
-        void reset( T * p ) throw()
+        void set( T * p ) throw()
         {
             if( p ) p->AddRef();
             if( mPtr ) mPtr->Release();

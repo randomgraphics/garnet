@@ -268,20 +268,23 @@ protected:
 
     void renderStateBlock()
     {
-        GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, mApi );
+        using namespace GN;
+        using namespace GN::gfx;
+        
+        RendererOptions ro;
+        Renderer * r = createRenderer( ro, mApi );
         TS_ASSERT( r );
         if( 0 == r ) return;
 
         // renderer should be initialized with default render state
-        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
+        TS_ASSERT( r->getCurrentRenderStateBlock() == RenderStateBlockDesc::DEFAULT );
 
-        GN::gfx::RenderStateBlockDesc
-            rsbd1( GN::gfx::RenderStateBlockDesc::RESET_TO_DEFAULT ),
-            rsbd2( GN::gfx::RenderStateBlockDesc::RESET_TO_INVALID );
+        RenderStateBlockDesc
+            rsbd1( RenderStateBlockDesc::RESET_TO_DEFAULT ),
+            rsbd2( RenderStateBlockDesc::RESET_TO_INVALID );
 
-        uint32_t rsb1 = r->createRenderStateBlock(rsbd1);
-        uint32_t rsb2 = r->createRenderStateBlock(rsbd2);
+        RsbHandle rsb1 = r->createRenderStateBlock(rsbd1);
+        RsbHandle rsb2 = r->createRenderStateBlock(rsbd2);
         TS_ASSERT( rsb1 );
         TS_ASSERT( rsb2 );
 
@@ -293,18 +296,22 @@ protected:
         TS_ASSERT_EQUALS( rsb2, r->createRenderStateBlock(rsbd2) );
 
         // try setRenderState
-        uint32_t rsb3 = r->setRenderState( GN::gfx::RS_BLENDING, GN::gfx::RSV_TRUE );
-        uint32_t rsb4 = r->setRenderState( GN::gfx::RS_BLENDING, GN::gfx::RSV_FALSE );
+        r->setRenderState( RS_BLENDING, RSV_TRUE );
+        TS_ASSERT( r->getCurrentRenderStateBlock().rs[RS_BLENDING], RSV_TRUE );
+        RsbHandle rsb3 = r->createRenderStateBlock( r->getCurrentRenderStateBlock() );
+        r->setRenderState( RS_BLENDING, RSV_FALSE );
+        TS_ASSERT( r->getCurrentRenderStateBlock().rs[RS_BLENDING], RSV_FALSE );
+        RsbHandle rsb4 = r->createRenderStateBlock( r->getCurrentRenderStateBlock() );
         TS_ASSERT( rsb3 );
         TS_ASSERT( rsb4 );
         TS_ASSERT_DIFFERS( rsb3, rsb4 );
         TS_ASSERT_EQUALS( rsb4, rsb1 );
-        TS_ASSERT( r->getCurrentRenderStateBlock() == GN::gfx::RenderStateBlockDesc::DEFAULT );
+        TS_ASSERT( r->getCurrentRenderStateBlock() == RenderStateBlockDesc::DEFAULT );
 
         // try setRenderState with invalid value
-        TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_INVALID, GN::gfx::RSV_TRUE ) );
-        TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_BLENDING, GN::gfx::RSV_INVALID ) );
-        TS_ASSERT_EQUALS( 0, r->setRenderState( GN::gfx::RS_INVALID, GN::gfx::RSV_INVALID ) );
+        //TS_ASSERT_EQUALS( 0, r->setRenderState( RS_INVALID, RSV_TRUE ) );
+        //TS_ASSERT_EQUALS( 0, r->setRenderState( RS_BLENDING, RSV_INVALID ) );
+        //TS_ASSERT_EQUALS( 0, r->setRenderState( RS_INVALID, RSV_INVALID ) );
     }
 
     void vtxBuf()

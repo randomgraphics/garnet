@@ -278,11 +278,16 @@ void GN::gfx::D3DLine::drawLines(
     // unlock the buffer
     GN_DX_CHECK( mVtxBuf->Unlock() );
 
+    // setup context and data flags
+    ContextState::FieldFlags cf;
+    ContextData::FieldFlags df;
+    cf.u32 = 0;
+    df.u32 = 0;
+
     // setup render states
     if( !( DL_USE_CURRENT_RS & options ) )
     {
-        GN_DX_CHECK( mRsb->Capture() );
-        D3DRenderer & r = getRenderer();
+        cf.rsb = 1;
         r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, TRUE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
@@ -291,8 +296,9 @@ void GN::gfx::D3DLine::drawLines(
     // bind shaders
     if( !( DL_USE_CURRENT_VS & options ) )
     {
+        cf.vtxShader = 1;
+
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
-        // TODO: r.mDrawState.dirtyFlags.vtxShader = 1;
 
         if( mVtxShader )
         {
@@ -302,8 +308,11 @@ void GN::gfx::D3DLine::drawLines(
         else
         {
 #if GN_XENON
-        GN_UNEXPECTED(); // Should always use shader on Xenon
+            GN_UNEXPECTED(); // Should always use shader on Xenon
 #else
+            cf.world = 1;
+            cf.view = 1;
+            cf.proj = 1;
             Matrix44f mat;
             mat = Matrix44f::sTranspose( model );
             GN_DX_CHECK( dev->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
@@ -311,41 +320,37 @@ void GN::gfx::D3DLine::drawLines(
             GN_DX_CHECK( dev->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
             mat = Matrix44f::sTranspose( proj );
             GN_DX_CHECK( dev->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
-            // TODO: r.mFfpDirtyFlags.TransformWorld = 1;
-            // TODO: r.mFfpDirtyFlags.TransformView = 1;
-            // TODO: r.mFfpDirtyFlags.TransformProj = 1;
 #endif
         }
     }
+
     if( !( DL_USE_CURRENT_PS & options ) )
     {
+        cf.pxlShader = 1;
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
-        // TODO: r.mDrawState.dirtyFlags.pxlShader = 1;
     }
 
     // setup texture states, for fixed-functional pipeline only
     AutoComPtr<IDirect3DPixelShader9> currentPs;
-    dev->GetPixelShader( &currentPs );
-    if( !currentPs )
+    GN_DX_CHECK( dev->GetPixelShader( &currentPs ) );
+    if( !currentPs && !( DL_USE_CURRENT_TS & options ) )
     {
-        // TODO: setup TSS based on present of texcoords and colors.
-        D3DRenderer & r = getRenderer();
+        cf.textureStates = 1;
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_DIFFUSE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE );
         r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
         r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
-        // TODO: r.mFfpDirtyFlags.TextureStates = 1;
     }
 
     // bind buffers
+    df.vtxFmt = 1;
+    df.vtxBufs = 1;
     GN_ASSERT( mVtxBuf );
     GN_ASSERT( sizeof(D3DLineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
     GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3DLineVertex) ) );
     GN_DX_CHECK( dev->SetVertexDeclaration( mDecl ) );
-    // TODO: r.mDrawState.dirtyFlags.vtxBufs |= 1;
-    // TODO: r.mDrawState.dirtyFlags.vtxFmt = 1;
 
     // draw
     GN_DX_CHECK( dev->DrawPrimitive(
@@ -353,13 +358,9 @@ void GN::gfx::D3DLine::drawLines(
         (UINT)( mNextLine * 2 ), 
         (UINT)count ) );
 
-    // restore render states
-    if( !( DQ_USE_CURRENT_RS & options ) )
-    {
-        BOOL old = D3DXDebugMute( TRUE );
-        GN_DX_CHECK( mRsb->Apply() );
-        D3DXDebugMute( old );
-    }
+    // restore renderer states
+    r.rebindContextState( cf );
+    r.rebindContextData( df );
 
     // update mNextLine
     mNextLine += count;

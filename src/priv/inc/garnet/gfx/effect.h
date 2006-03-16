@@ -65,7 +65,7 @@ namespace GN { namespace gfx {
             //!
             //! Ctor
             //!
-            PassDesc() : rsb(RenderStateBlockDesc::INVALID) {}
+            PassDesc() : rsb(RenderStateBlockDesc::EMPTY) {}
         };
 
         //!
@@ -79,7 +79,7 @@ namespace GN { namespace gfx {
             //!
             //! Ctor
             //!
-            TechniqueDesc() : rsb(RenderStateBlockDesc::INVALID) {}
+            TechniqueDesc() : rsb(RenderStateBlockDesc::EMPTY) {}
         };
 
         //!
@@ -112,7 +112,7 @@ namespace GN { namespace gfx {
                 uniforms.clear();
                 shaders.clear();
                 techniques.clear();
-                rsb.reset( RenderStateBlockDesc::RESET_TO_DEFAULT );
+                rsb.resetToDefault();
             }
 
             //!

@@ -1,4 +1,4 @@
-#include "../../testCommon.h"
+#include "../testCommon.h"
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
 
@@ -11,7 +11,7 @@ public:
         using namespace GN;
         using namespace GN::gfx;
         RendererOptions ro;
-        TS_ASSERT( createRenderer( ro ) );
+        TS_ASSERT( createRenderer( ro, API_FAKE ) );
     }
 
     void tearDown()

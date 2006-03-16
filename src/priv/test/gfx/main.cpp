@@ -200,24 +200,24 @@ public:
         Renderer & r = gRenderer;
 
         // quad 1
-        r.bindTexture( 0, gTexDict.getResource(tex0) );
+        r.setTexture( 0, gTexDict.getResource(tex0) );
         r.draw2DTexturedQuad( 0, 0, 0, 0.5, 0.5 );
 
         // quad 2
         if( ps1 )
         {
-            r.bindShaders( 0, ps1 );
+            r.setShaders( 0, ps1 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.5, 0.0, 1.0, 0.5 );
         }
 
         // quad 3
         if( ps2 )
         {
-            r.bindShaders( 0, ps2 );
+            r.setShaders( 0, ps2 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
-        // quad 4
+        /* quad 4
         {
             size_t n;
             if( eff0.drawBegin( &n ) )
@@ -231,7 +231,7 @@ public:
                 }
                 eff0.drawEnd();
             }
-        }
+        }*/
 
         // a wireframe box
         {

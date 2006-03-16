@@ -16,13 +16,23 @@ GN_INLINE const char * GN::gfx::renderState2Str( RenderState rs )
     #undef GNGFX_DEFINE_RS
     };
     if( 0 <= rs && rs < NUM_RENDER_STATES ) return table[rs];
-    else return "BAD_RS";
+    else return "RS_INVALID";
 }
 //
 GN_INLINE bool GN::gfx::renderState2Str( StrA & result, RenderState rs )
 {
-    result = renderState2Str(rs);
-    return "BAD_RS" != result;
+    static const char * table [] =
+    {
+    #define GNGFX_DEFINE_RS( tag, defval ) #tag,
+    #include "renderStateMeta.h"
+    #undef GNGFX_DEFINE_RS
+    };
+    if( 0 <= rs && rs < NUM_RENDER_STATES )
+    {
+        result = table[rs];
+        return true;
+    }
+    else return false;
 }
 //
 GN_INLINE GN::gfx::RenderState GN::gfx::str2RenderState( const char * str )
@@ -62,13 +72,23 @@ GN_INLINE const char * GN::gfx::renderStateValue2Str( RenderStateValue rsval )
     #undef GNGFX_DEFINE_RSV
     };
     if( 0 <= rsval && rsval < NUM_RENDER_STATE_VALUES ) return table[rsval];
-    else return "BAD_RSV";
+    else return "RSV_INVALID";
 }
 //
 GN_INLINE bool GN::gfx::renderStateValue2Str( StrA & result, RenderStateValue rsval )
 {
-    result = renderStateValue2Str( rsval );
-    return "BAD_RSV" != result;
+    static const char * table [] =
+    {
+    #define GNGFX_DEFINE_RSV( tag, d3dval, glval ) #tag,
+    #include "renderStateValueMeta.h"
+    #undef GNGFX_DEFINE_RSV
+    };
+    if( 0 <= rsval && rsval < NUM_RENDER_STATE_VALUES )
+    {
+        result = table[rsval];
+        return true;
+    }
+    else return false;
 }
 //
 GN_INLINE GN::gfx::RenderStateValue GN::gfx::str2RenderStateValue( const char * str )
@@ -109,13 +129,24 @@ GN_INLINE const char * GN::gfx::textureState2Str( TextureState ts )
     #undef GNGFX_DEFINE_TS
     };
     if( 0 <= ts && ts < NUM_TEXTURE_STATES ) return table[ts];
-    else return "BAD_TS";
+    else return "TS_INVALID";
 }
 //
 GN_INLINE bool GN::gfx::textureState2Str( StrA & result, TextureState ts )
 {
-    result = textureState2Str( ts );
-    return "BAD_TS" != result;
+    static const char * table [] =
+    {
+    #define GNGFX_DEFINE_TS( tag, defval0, defval, \
+                          d3dname, glname1, glname2 ) #tag,
+    #include "textureStateMeta.h"
+    #undef GNGFX_DEFINE_TS
+    };
+    if( 0 <= ts && ts < NUM_TEXTURE_STATES )
+    {
+        result = table[ts];
+        return true;
+    }
+    else return false;
 }
 //
 GN_INLINE GN::gfx::TextureState GN::gfx::str2TextureState( const char * str )
@@ -156,13 +187,23 @@ GN_INLINE const char * GN::gfx::textureStateValue2Str( TextureStateValue tssval 
     #undef GNGFX_DEFINE_TSV
     };
     if( 0 <= tssval && tssval < NUM_TEXTURE_STATE_VALUES ) return table[tssval];
-    else return "BAD_TSV";
+    else return "TSV_INVALID";
 }
 //
 GN_INLINE bool GN::gfx::textureStateValue2Str( StrA & result, TextureStateValue tssval )
 {
-    result = textureStateValue2Str( tssval );
-    return "BAD_TSV" != result;
+    static const char * table [] =
+    {
+    #define GNGFX_DEFINE_TSV( tag, d3dval, glval1, glval2 ) #tag,
+    #include "textureStateValueMeta.h"
+    #undef GNGFX_DEFINE_TSV
+    };
+    if( 0 <= tssval && tssval < NUM_TEXTURE_STATE_VALUES )
+    {
+        result = table[tssval];
+        return true;
+    }
+    else return false;
 }
 //
 GN_INLINE GN::gfx::TextureStateValue GN::gfx::str2TextureStateValue( const char * str )
@@ -214,7 +255,7 @@ GN::gfx::RenderStateBlockDesc::operator += ( const RenderStateBlockDesc & rhs )
 {
     for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
     {
-        if( RSV_INVALID != rhs.rs[i] ) rs[i] = rhs.rs[i];
+        if( RSV_EMPTY != rhs.rs[i] ) rs[i] = rhs.rs[i];
     }
 
     // success
@@ -226,7 +267,7 @@ GN::gfx::RenderStateBlockDesc::operator -= ( const RenderStateBlockDesc & rhs )
 {
     for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
     {
-        if(  rs[i] == rhs.rs[i]  ) rs[i] = RSV_INVALID;
+        if(  rs[i] == rhs.rs[i]  ) rs[i] = RSV_EMPTY;
     }
 
     // success
@@ -277,7 +318,7 @@ GN::gfx::TextureStateBlockDesc::operator += ( const TextureStateBlockDesc & rhs 
         const TextureStateValue * t2 = rhs.ts[i];
         for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
         {
-            if( TSV_INVALID != t2[j] ) t1[j] = t2[j];
+            if( TSV_EMPTY != t2[j] ) t1[j] = t2[j];
         }
     }
 
@@ -294,7 +335,7 @@ GN::gfx::TextureStateBlockDesc::operator -= ( const TextureStateBlockDesc & rhs 
         const TextureStateValue * t2 = rhs.ts[i];
         for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
         {
-            if( t1[j] == t2[j] ) t1[j] = TSV_INVALID;
+            if( t1[j] == t2[j] ) t1[j] = TSV_EMPTY;
         }
     }
 

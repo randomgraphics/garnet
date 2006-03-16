@@ -172,7 +172,7 @@ void GN::gfx::OGLRenderer::applyFfpState()
                 for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
                 {
                     tsv = desc.ts[i][j];
-                    if( TSV_INVALID != tsv )
+                    if( TSV_EMPTY != tsv )
                     {
                         if( TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
                         {
@@ -187,7 +187,7 @@ void GN::gfx::OGLRenderer::applyFfpState()
             else
             {
                 tsv = desc.ts[i][TS_COLOROP];
-                if( TSV_INVALID != tsv )
+                if( TSV_EMPTY != tsv )
                 {
                     GLint glop = sTs2OGL[TS_COLOROP].op1;
                     switch( glop )

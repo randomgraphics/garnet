@@ -106,7 +106,7 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( index < MAX_VERTEX_STREAMS );
             dirtyFlags.vtxBuf |= 1 << index;
-            vtxBufs[index].buf.reset( buf );
+            vtxBufs[index].buf.set( buf );
             vtxBufs[index].stride = stride;
         }
 
@@ -120,7 +120,7 @@ namespace GN { namespace gfx
                 if( shader != vtxShader )
                 {
                     dirtyFlags.vtxShader = true;
-                    vtxShader.reset( shader );
+                    vtxShader.set( shader );
                 }
             }
             else if( PIXEL_SHADER == type )
@@ -128,7 +128,7 @@ namespace GN { namespace gfx
                 if( shader != pxlShader )
                 {
                     dirtyFlags.pxlShader = true;
-                    pxlShader.reset( shader );
+                    pxlShader.set( shader );
                 }
             }
             else
@@ -150,12 +150,12 @@ namespace GN { namespace gfx
             if( shaders[VERTEX_SHADER] != vtxShader )
             {
                 dirtyFlags.vtxShader = true;
-                vtxShader.reset( shaders[VERTEX_SHADER] );
+                vtxShader.set( shaders[VERTEX_SHADER] );
             }
             if( shaders[PIXEL_SHADER] != pxlShader )
             {
                 dirtyFlags.pxlShader = true;
-                pxlShader.reset( shaders[PIXEL_SHADER] );
+                pxlShader.set( shaders[PIXEL_SHADER] );
             }
         }
     };

@@ -132,8 +132,26 @@ namespace GN { namespace gfx
 
     protected:
 
+        //!
+        //! check render state block handle
+        //!
         bool validRsbHandle( RsbHandle h ) const { return mRsbHandles.validHandle( h ); }
-        const RenderStateBlockDesc & getRsbFromHandle( RsbHandle h ) const { return mRsbHandles[h]; }
+
+        //!
+        //! return render state block descriptor from handle
+        //!
+        const RenderStateBlockDesc & getRsbFromHandle( RsbHandle h ) const
+        {
+            if( 0 == h )
+            {
+                return RenderStateBlockDesc::DEFAULT;
+            }
+            else
+            {
+                GN_ASSERT( mRsbHandles.validHandle(h) );
+                return mRsbHandles[h];
+            }
+        }
 
     private:
 

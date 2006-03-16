@@ -151,10 +151,9 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
 
     //
     // set depth and stencil buffer parameters
-    // note: we'll create depth surface in draw manager.
     //
-    d3dpp.EnableAutoDepthStencil = 0;
-    d3dpp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+    d3dpp.EnableAutoDepthStencil = true;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
 
     // set display mode parameters
     d3dpp.Windowed = !fullscreen;
