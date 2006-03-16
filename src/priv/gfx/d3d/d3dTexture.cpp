@@ -762,6 +762,14 @@ void GN::gfx::D3DTexture::unlock()
     GN_DX_CHECK( mRenderer.getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
 #endif
 
+    //
+    // dump texture content
+    //
+    //static int i = 0;
+    //char fname[100];
+    //sprintf( fname, "tex_%d.dds", i );
+    //GN_DX_CHECK( D3DXSaveTextureToFileA( fname, D3DXIFF_DDS, mD3DTexture, 0 ) );
+
     // release mLockCopy
     safeRelease( mLockCopy );
 
