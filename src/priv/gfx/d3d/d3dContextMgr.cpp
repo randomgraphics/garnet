@@ -243,6 +243,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     //
     if( newFlags.vtxShader )
     {
+        newFlags.vtxShader = 0;
         const GN::gfx::Shader * o = mContextState.shaders[VERTEX_SHADER];
         const GN::gfx::Shader * n = newState.shaders[VERTEX_SHADER];
         if( o != n || forceRebind )
@@ -267,6 +268,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     //
     if( newFlags.pxlShader )
     {
+        newFlags.pxlShader = 0;
         const GN::gfx::Shader * o = mContextState.shaders[PIXEL_SHADER];
         const GN::gfx::Shader * n = newState.shaders[PIXEL_SHADER];
         if( o != n || forceRebind )
@@ -291,6 +293,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     //
     if( newFlags.rsb )
     {
+        newFlags.rsb = 0;
         GN::gfx::RenderStateValue rsv;
         #define GNGFX_DEFINE_RS( tag, defvalue )         \
             rsv = newState.rsb.rs[RS_##tag];             \
@@ -305,9 +308,11 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     //
     if( newFlags.colorBuffers )
     {
+        newFlags.colorBuffers = 0;
     }
     if( newFlags.depthBuffer )
     {
+        newFlags.depthBuffer = 0;
     }
 
     //
@@ -315,6 +320,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     //
     if( newFlags.viewport )
     {
+        newFlags.viewport = 0;
         if( newState.viewport != mContextState.viewport || forceRebind )
         {
             // clamp viewport in valid range
@@ -362,6 +368,11 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     // bind FFP parameters
     //
 #if !GN_XENON
+
+    // When using programmable pipeline, FFP states should not change too often.
+    // So here we add a check point to skip FFP states update once and for all.
+    if( 0 == newFlags.u32 ) return;
+
     if( newFlags.world )
     {
         if( newState.world != mContextState.world || forceRebind )
