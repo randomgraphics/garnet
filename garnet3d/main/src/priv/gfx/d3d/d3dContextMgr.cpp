@@ -575,7 +575,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
     if( newFlags.textures )
     {
         UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-        UINT numTex = min<UINT>( newData.numTextures, maxStages );
+        UINT numTex = min<UINT>( (UINT)newData.numTextures, maxStages );
         UINT stage;
         for( stage = 0; stage < numTex; ++stage )
         {
@@ -595,7 +595,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
             }
         }
         // clear unused stages
-        numTex = min<UINT>( mContextData.numTextures, maxStages );
+        numTex = min<UINT>( (UINT)mContextData.numTextures, maxStages );
         for( ; stage < numTex; ++stage )
         {
             mDevice->SetTexture( stage, 0 );
