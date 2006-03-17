@@ -120,6 +120,31 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
+    inline void ContextState::setColorBuffer( size_t index, const Texture * texture, size_t face, size_t level, size_t slice )
+    {
+        GN_ASSERT( index < MAX_RENDER_TARGETS );
+        RenderTargetDesc desc = { texture, face, level, slice };
+        if( colorBuffers[index] != desc )
+        {
+            flags.colorBuffers = 1;
+            colorBuffers[index] = desc;
+            ++index;
+            numColorBuffers = max( numColorBuffers, index );
+        }
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void ContextState::setDepthBuffer( const Texture * texture, size_t face, size_t level, size_t slice )
+    {
+        RenderTargetDesc desc = { texture, face, level, slice };
+        _GNGFX_CONTEXT_STATE( depthBuffer, depthBuffer, desc );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     inline void ContextState::setViewport( const Rectf & vp )
     {
         _GNGFX_CONTEXT_STATE( viewport, viewport, vp );
@@ -159,10 +184,13 @@ namespace GN { namespace gfx
     inline void ContextData::setTexture( size_t stage, const Texture * tex )
     {
         GN_ASSERT( stage < (size_t)MAX_TEXTURE_STAGES );
-        flags.textures = 1;
-        textures[stage] = tex;
-        ++stage;
-        numTextures = max( stage, numTextures );
+        if( textures[stage] != tex )
+        {
+            flags.textures = 1;
+            textures[stage] = tex;
+            ++stage;
+            numTextures = max( stage, numTextures );
+        }
     }
 
     //
@@ -374,6 +402,22 @@ namespace GN { namespace gfx
     inline void Renderer::setRenderStates( const int * statePairs, size_t count )
     {
         _GNGFX_CONTEXT_UPDATE_STATE( setRenderStates( statePairs, count ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setColorBuffer( size_t index, const Texture * texture, size_t face, size_t level, size_t slice )
+    {
+        _GNGFX_CONTEXT_UPDATE_STATE( setColorBuffer( index, texture, face, level, slice ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setDepthBuffer( const Texture * texture, size_t face, size_t level, size_t slice )
+    {
+        _GNGFX_CONTEXT_UPDATE_STATE( setDepthBuffer( texture, face, level, slice ) );
     }
 
     //

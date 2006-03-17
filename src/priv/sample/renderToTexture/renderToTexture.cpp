@@ -37,18 +37,18 @@ public:
 
         // draw to RT0
         r.setTexture( 0, gTexDict.getResource(mTex0) );
-        //r.setRenderTarget( 0, mRt0 );
+        r.setColorBuffer( 0, mRt0 );
         r.clearScreen();
         r.draw2DTexturedQuad( 0 );
 
         // draw to RT1
         r.setTexture( 0, gTexDict.getResource(mTex1) );
-        //r.setRenderTarget( 0, mRt1 );
+        r.setColorBuffer( 0, mRt1 );
         r.clearScreen();
         r.draw2DTexturedQuad( 0 );
 
         // draw 2 RTs to screen
-        //r.setRenderTarget( 0, 0 );
+        r.setColorBuffer( 0, 0 );
         r.clearScreen();
         r.setTexture( 0, mRt0 );
         r.draw2DTexturedQuad( 0, 0.0, 0.0, 0.5, 1.0 );
