@@ -330,6 +330,7 @@ void GN::gfx::D3DLine::drawLines(
     }
 
     // setup texture states, for fixed-functional pipeline only
+#if !GN_XENON
     AutoComPtr<IDirect3DPixelShader9> currentPs;
     GN_DX_CHECK( dev->GetPixelShader( &currentPs ) );
     if( !currentPs && !( DL_USE_CURRENT_TS & options ) )
@@ -342,6 +343,7 @@ void GN::gfx::D3DLine::drawLines(
         r.setD3DTextureState( 1, D3DTSS_COLOROP, D3DTOP_DISABLE );
         r.setD3DTextureState( 1, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
     }
+#endif
 
     // bind buffers
     df.vtxFmt = 1;

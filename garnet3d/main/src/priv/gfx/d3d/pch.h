@@ -33,7 +33,7 @@
 #if GN_XENON
 #define D3DUSAGE_DYNAMIC D3DUSAGE_CPU_CACHED_MEMORY
 #define D3DLOCK_DISCARD 0
-static BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
+inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
 #endif
 
 #ifndef GN_RETAIL
