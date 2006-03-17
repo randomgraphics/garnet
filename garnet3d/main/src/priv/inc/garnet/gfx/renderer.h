@@ -567,82 +567,82 @@ namespace GN { namespace gfx
         //!
         //! Set a shader. Set NULL to use fixed pipeline.
         //!
-        void setShader( ShaderType type, const Shader * shader );
+        inline void setShader( ShaderType type, const Shader * shader );
 
         //!
         //! Set a list of shaders. The list must have at least NUM_SHADER_TYPES elements.
         //!
-        void setShaders( const Shader * const shaders[] );
+        inline void setShaders( const Shader * const shaders[] );
 
         //!
         //! Set shaders. Set to NULL to use fixed pipeline.
         //!
-        void setShaders( const Shader * vtxShader, const Shader * pxlShader );
+        inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
 
         //!
         //! Set shaders by handle. Set to 0 to use fixed pipeline.
         //!
-        void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
+        inline void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
 
         //!
         //! Set vertex shader. Set to NULL to use fixed pipeline.
         //!
-        void setVtxShader( const Shader * s );
+        inline void setVtxShader( const Shader * s );
 
         //!
         //! Set vertex shader by handle.
         //!
-        void setVtxShaderHandle( ShaderDictionary::HandleType h );
+        inline void setVtxShaderHandle( ShaderDictionary::HandleType h );
 
         //!
         //! Set pixel shader. Set to NULL to use fixed pipeline.
         //!
-        void setPxlShader( const Shader * s );
+        inline void setPxlShader( const Shader * s );
 
         //!
         //! Set pixel shader by handle. Set 0 to use fixed function pipeline
         //!
-        void setPxlShaderHandle( ShaderDictionary::HandleType h );
+        inline void setPxlShaderHandle( ShaderDictionary::HandleType h );
 
         //!
         //! Set render state block.
         //!
-        void setRenderStateBlock( const RenderStateBlockDesc & );
+        inline void setRenderStateBlock( const RenderStateBlockDesc & );
 
         //!
         //! Set individual render state.
         //!
-        void setRenderState( RenderState state, RenderStateValue value );
+        inline void setRenderState( RenderState state, RenderStateValue value );
 
         //!
         //! Set a bunch of render states.
         //!
-        void setRenderStates( const int * statePairs, size_t count );
+        inline void setRenderStates( const int * statePairs, size_t count );
 
         //!
         //! Set render target texture
         //!
-        void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+        inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
 
         //!
         //! Set depth buffer
         //!
-        void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+        inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
 
         //!
         //! Set viewport.
         //!
-        void setViewport( const Rectf & );
+        inline void setViewport( const Rectf & );
 
         //!
         //! Set viewport.
         //!
-        void setViewport( float left, float top, float width, float height );
+        inline void setViewport( float left, float top, float width, float height );
 
         //!
         //! Set texture stage state.
         //!
-        void setTextureState( size_t stage, TextureState state, TextureStateValue value );
+        inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
 
         //@}
     };
@@ -699,7 +699,7 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! reset to empty input data. 
+        //! reset to empty input data.
         //!
         void resetToEmpty()
         {
@@ -739,12 +739,12 @@ namespace GN { namespace gfx
         //!
         //! Set a texture.
         //!
-        void setTexture( size_t stage, const Texture * tex );
+        inline void setTexture( size_t stage, const Texture * tex );
 
         //!
         //! Set a texture by handle.
         //!
-        void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
+        inline void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
 
         //!
         //! set textures, from stage[start] to stage[start+numtex-1].
@@ -753,27 +753,27 @@ namespace GN { namespace gfx
         //! \param start   start stage
         //! \param count   number of textures
         //!
-        void setTextures( const Texture * const texlist[], size_t start, size_t count );
+        inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
 
         //!
         //! set textures by handle.
         //!
-        void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
+        inline void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
 
         //!
         //! Set vertex format.
         //!
-        void setVtxFmt( VtxFmtHandle );
+        inline void setVtxFmt( VtxFmtHandle );
 
         //!
         //! Set vertex buffer
         //!
-        void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
 
         //!
         //! Set index buffer.
         //!
-        void setIdxBuf( const IdxBuf * );
+        inline void setIdxBuf( const IdxBuf * );
 
         //@}
     };
@@ -1205,37 +1205,37 @@ namespace GN { namespace gfx
         //!
         //! start context and VP data update
         //!
-        void contextUpdateBegin();
+        inline void contextUpdateBegin();
 
         //!
         //! end context and VP data update, flush modified context and data to renderer.
         //!
-        void contextUpdateEnd();
+        inline void contextUpdateEnd();
 
-        void setShader( ShaderType type, const Shader * shader );
-        void setShaders( const Shader * const shaders[] );
-        void setShaders( const Shader * vtxShader, const Shader * pxlShader );
-        void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
-        void setVtxShader( const Shader * s );
-        void setVtxShaderHandle( ShaderDictionary::HandleType h );
-        void setPxlShader( const Shader * s );
-        void setPxlShaderHandle( ShaderDictionary::HandleType h );
-        void setRenderStateBlock( const RenderStateBlockDesc & );
-        void setRenderState( RenderState state, RenderStateValue value );
-        void setRenderStates( const int * statePairs, size_t count );
-        void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
-        void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
-        void setViewport( const Rectf & );
-        void setViewport( float left, float top, float width, float height );
-        void setTextureState( size_t stage, TextureState state, TextureStateValue value );
+        inline void setShader( ShaderType type, const Shader * shader );
+        inline void setShaders( const Shader * const shaders[] );
+        inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
+        inline void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
+        inline void setVtxShader( const Shader * s );
+        inline void setVtxShaderHandle( ShaderDictionary::HandleType h );
+        inline void setPxlShader( const Shader * s );
+        inline void setPxlShaderHandle( ShaderDictionary::HandleType h );
+        inline void setRenderStateBlock( const RenderStateBlockDesc & );
+        inline void setRenderState( RenderState state, RenderStateValue value );
+        inline void setRenderStates( const int * statePairs, size_t count );
+        inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+        inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+        inline void setViewport( const Rectf & );
+        inline void setViewport( float left, float top, float width, float height );
+        inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
 
-        void setTexture( size_t stage, const Texture * tex );
-        void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
-        void setTextures( const Texture * const texlist[], size_t start, size_t count );
-        void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
-        void setVtxFmt( VtxFmtHandle );
-        void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
-        void setIdxBuf( const IdxBuf * );
+        inline void setTexture( size_t stage, const Texture * tex );
+        inline void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
+        inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
+        inline void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
+        inline void setVtxFmt( VtxFmtHandle );
+        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+        inline void setIdxBuf( const IdxBuf * );
 
         //@}
 

@@ -136,7 +136,7 @@ bool JPGReader::readImage( void * o_data )
     scanlines.resize( height );
     for( size_t i = 0; i < scanlines.size(); ++i )
     {
-        scanlines[i] = rgbBuf.get() + rowPitch * i;
+        scanlines[i] = decompressedBuf + rowPitch * i;
     }
     size_t left_scanlines = height;
     size_t readen_scanlines;
@@ -160,6 +160,7 @@ bool JPGReader::readImage( void * o_data )
     // convert RGB_8_8_8 to BGRX_8_8_8_8
     if( !grayscale )
     {
+        GN_ASSERT( rgbBuf );
         uint8_t * src = (uint8_t*)rgbBuf.get();
         uint8_t * dst = (uint8_t*)o_data;
         for( size_t y = 0; y < height; ++y )
