@@ -4,7 +4,7 @@ namespace GN { namespace gfx
     // ContextState methods
     // *************************************************************************
 
-#define _GNGFX_CONTEXT_STATE( FLAG, NAME, VALUE ) flags.FLAG = 1; NAME = VALUE;
+#define _GNGFX_CONTEXT_STATE( FLAG, NAME, VALUE ) if( (NAME) != (VALUE) ) { flags.FLAG = 1; (NAME) = (VALUE); } else void(0)
 
     //
     //
@@ -92,7 +92,7 @@ namespace GN { namespace gfx
     {
         GN_ASSERT( 0 <= state && state < NUM_RENDER_STATES );
         GN_ASSERT( 0 <= value && value < NUM_RENDER_STATE_VALUES );
-        rsb.rs[state] = value;
+        _GNGFX_CONTEXT_STATE( rsb, rsb.rs[state], value );
     }
 
     //
@@ -113,7 +113,7 @@ namespace GN { namespace gfx
             GN_ASSERT( 0 <= state && state < NUM_RENDER_STATES );
             GN_ASSERT( 0 <= value && value < NUM_RENDER_STATE_VALUES );
 
-            rsb.rs[state] = (RenderStateValue)value;
+            _GNGFX_CONTEXT_STATE( rsb, rsb.rs[state], (RenderStateValue)value );
         }
     }
 
@@ -151,7 +151,7 @@ namespace GN { namespace gfx
     // ContextData methods
     // *************************************************************************
 
-#define _GNGFX_CONTEXT_DATA( FLAG, NAME, VALUE ) flags.FLAG = 1; NAME = VALUE;
+#define _GNGFX_CONTEXT_DATA( FLAG, NAME, VALUE ) if( (NAME) != (VALUE) ) { flags.FLAG = 1; (NAME) = (VALUE); } else void(0)
 
     //
     //
