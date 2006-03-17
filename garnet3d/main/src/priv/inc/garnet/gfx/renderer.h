@@ -467,8 +467,19 @@ namespace GN { namespace gfx
         struct RenderTargetDesc
         {
             const Texture * texture; //!< render target
+            size_t          face;    //!< cubemap face. Must be zero for non-cube/stack texture.
             size_t          level;   //!< mipmap level
-            size_t          face;    //!< cubemap face
+            size_t          slice;   //!< slice index. Must be zero for 3D texture.
+
+            //!
+            //! equality check
+            //!
+            bool operator!=( const RenderTargetDesc & rhs ) const
+            {
+                if( texture != rhs.texture ) return true;
+                if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
+                return face != rhs.face || level != level || slice != slice;
+            }
         };
 
         FieldFlags            flags; //!< field flags
@@ -476,7 +487,7 @@ namespace GN { namespace gfx
         RenderStateBlockDesc  rsb; //!< render state block.
         RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
         size_t                numColorBuffers; //!< color buffer count
-        RenderTargetDesc      depthBuffer; //!< depth buffers
+        RenderTargetDesc      depthBuffer; //!< depth buffer
         Rectf                 viewport; //!< viewport
         Matrix44f             world, //!< world transformation
                               view, //!< view transformation
@@ -607,6 +618,16 @@ namespace GN { namespace gfx
         //! Set a bunch of render states.
         //!
         void setRenderStates( const int * statePairs, size_t count );
+
+        //!
+        //! Set render target texture
+        //!
+        void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+
+        //!
+        //! Set depth buffer
+        //!
+        void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
 
         //!
         //! Set viewport.
@@ -1202,6 +1223,8 @@ namespace GN { namespace gfx
         void setRenderStateBlock( const RenderStateBlockDesc & );
         void setRenderState( RenderState state, RenderStateValue value );
         void setRenderStates( const int * statePairs, size_t count );
+        void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+        void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
         void setViewport( const Rectf & );
         void setViewport( float left, float top, float width, float height );
         void setTextureState( size_t stage, TextureState state, TextureStateValue value );

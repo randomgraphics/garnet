@@ -18,6 +18,7 @@ TODO
 - p1
   - GFX system
     - render target management
+    - queryXXX(....)
     - Allow mix of garnet-wrapped and low-level graphics resources.
       - possiblly by using rebindContextState() and rebindContextData()
       - need future investigation
