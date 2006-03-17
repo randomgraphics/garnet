@@ -42,7 +42,6 @@ namespace GN { namespace gfx {
             mVtxShader = 0;
             mPxlShader = 0;
             mVtxBuf = 0;
-            mRsb = 0;
             mNextLine = 0;
         }
         //@}
@@ -89,7 +88,6 @@ namespace GN { namespace gfx {
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
         LPDIRECT3DPIXELSHADER9  mPxlShader;
         LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
-        LPDIRECT3DSTATEBLOCK9   mRsb;
 
         size_t mNextLine; // cursor that indicates next avaiable line in vertex buffer.
 
