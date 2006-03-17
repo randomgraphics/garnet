@@ -103,9 +103,6 @@ bool GN::gfx::D3DLine::deviceCreate()
         if( 0 == mPxlShader ) return false;
     }
 
-    // create render state block
-    GN_DX_CHECK_RV( dev->CreateStateBlock( D3DSBT_PIXELSTATE, &mRsb ), false );
-
     // success
     return true;
 
@@ -164,7 +161,6 @@ void GN::gfx::D3DLine::deviceDestroy()
     safeRelease( mDecl );
     safeRelease( mVtxShader );
     safeRelease( mPxlShader );
-    safeRelease( mRsb );
 
     GN_UNGUARD;
 }
