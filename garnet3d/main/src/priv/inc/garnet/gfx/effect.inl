@@ -37,25 +37,22 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
     mPassBegun = true;
     mActivePass = passIdx;
 
-    /*
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     TechniqueData & t = mTechniques.items[mActiveTechnique];
 
     const PassData & p = t.passes[mActivePass];
 
-    // apply render states
-    GN_ASSERT( p.rsb );
-    gRenderer.bindRenderStateBlock( p.rsb );
+    Renderer & r = gRenderer;
 
-    // bind shaders
-    Shader * shaders[NUM_SHADER_TYPES];
-    for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
+    // update renderer context
+    r.contextUpdateBegin();
+    r.setRenderStateBlock( p.rsb );
+    for( size_t i = 0; i < NUM_SHADER_TYPES; ++i )
     {
-        GN_ASSERT( mShaders.items.validHandle(p.shaders[iShader]) );
-        const ShaderData & sd = mShaders.items[p.shaders[iShader]];
-        shaders[iShader] = sd.value;
+        GN_ASSERT( mShaders.items.validHandle( p.shaders[i] ) );
+        r.setShader( (ShaderType)i, mShaders.items[p.shaders[i]].value );
     }
-    gRenderer.bindShaders( shaders );*/
+    r.contextUpdateEnd();
 
     GN_UNGUARD_SLOW;
 }
@@ -73,6 +70,8 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
     TechniqueData & t = mTechniques.items[mActiveTechnique];
 
     const PassData & p = t.passes[mActivePass];
+
+    gRenderer.contextUpdateBegin();
 
     // apply uniforms and textures
     Shader * shaders[NUM_SHADER_TYPES];
@@ -101,15 +100,17 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
         }
         sd.dirtyUniforms.clear();
 
-        /* apply textures
+        // apply textures
         for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
         {
             const TextureRefData & tr = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(tr.handle) );
             const TextureData & td = mTextures.items[tr.handle];
-            gRenderer.bindTexture( tr.stage, gTexDict.getResource(td.value) );
-        }*/
+            gRenderer.setTextureHandle( tr.stage, td.value );
+        }
     }
+
+    gRenderer.contextUpdateEnd();
 
     GN_UNGUARD_SLOW;
 }

@@ -217,7 +217,7 @@ public:
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
-        /* quad 4
+        // quad 4
         {
             size_t n;
             if( eff0.drawBegin( &n ) )
@@ -231,7 +231,7 @@ public:
                 }
                 eff0.drawEnd();
             }
-        }*/
+        }
 
         // a wireframe box
         {

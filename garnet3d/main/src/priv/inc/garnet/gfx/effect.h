@@ -141,28 +141,6 @@ namespace GN { namespace gfx {
         };
 
         //!
-        //! Define geometry data used by effect class
-        //!
-        struct GeometryData
-        {
-            std::map<StrA,UniformValue> uniforms; //!< geometry specific uniforms. Key is uniform name.
-            std::map<StrA,uint32_t>     textures; //!< geometry specific textures. Key is texture name; value is texture resource ID.
-            
-            
-            VtxFmtHandle    vtxFmt; //!< vertex binding ID.
-            AutoRef<VtxBuf> vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffer list.
-            uint32_t        numVtxBufs; //!< vertex buffer count
-            AutoRef<IdxBuf> idxBuf; //!< index buffer
-
-            PrimitiveType prim;      //!< primitive type
-            size_t        numPrim;   //!< primitive count
-            size_t        startVtx;  //!< base vertex index
-            size_t        minVtxIdx; //!< ignored if index buffer is NULL.
-            size_t        numVtx;    //!< ignored if index buffer is NULL.
-            size_t        startIdx;  //!< ignored if index buffer is NULL.
-        };
-
-        //!
         //! Effect class
         //!
         class Effect : public StdClass
@@ -220,11 +198,6 @@ namespace GN { namespace gfx {
         public:
 
             //@{
-
-            //!
-            //! Draw a list of geometries in one call (recommened).
-            //!
-            void draw( const GeometryData * geometryDataArray, size_t count ) const;
 
             //!
             //! Begin rendering.

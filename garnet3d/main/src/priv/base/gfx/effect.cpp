@@ -264,67 +264,6 @@ void GN::gfx::effect::Effect::quit()
 // public functions
 // *****************************************************************************
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::draw( const GeometryData * geometryDataArray, size_t count ) const
-{
-    GN_GUARD_SLOW;
-
-    // make sure effect is initialized.
-    GN_ASSERT( ok() );
-
-    if( 0 == geometryDataArray || count > 0 )
-    {
-        GN_ERROR( "invalid geometry data array (null data pointer)!" );
-        return;
-    }
-
-    size_t numPasses;
-    if( drawBegin( &numPasses ) )
-    {
-        for( size_t i = 0; i < numPasses; ++i )
-        {
-            passBegin( i );
-
-            // render the geometries
-            for( size_t i = 0; i < count; ++i )
-            {
-                const GeometryData & g = geometryDataArray[i];
-
-                for( std::map<StrA,UniformValue>::const_iterator i = g.uniforms.begin(); i != g.uniforms.end(); ++i )
-                {
-                    setUniformByName( i->first, i->second );
-                }
-                for( std::map<StrA,uint32_t>::const_iterator i = g.textures.begin(); i != g.textures.end(); ++i )
-                {
-                    setTextureByName( i->first, i->second );
-                }
-
-                commitChanges();
-
-                /*r.bindVtxFmt( g.vtxFmt );
-                r.bindVtxBufs( g.vtxBufs[0].addr(), 0, g.numVtxBufs );
-                r.bindIdxBuf( g.idxBuf );
-
-                if( g.idxBuf.empty() )
-                {
-                    r.draw( g.prim, g.numPrim, g.startVtx );
-                }
-                else
-                {
-                    r.drawIndexed( g.prim, g.numPrim, g.startVtx, g.minVtxIdx, g.numVtx, g.startIdx );
-                }*/
-            }
-
-            passEnd();
-        }
-        drawEnd();
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
 // *****************************************************************************
 // private functions
 // *****************************************************************************
