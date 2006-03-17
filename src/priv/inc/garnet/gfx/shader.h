@@ -72,17 +72,17 @@ namespace GN { namespace gfx
 
         //! \name set uniform value
         //@{
-        void setB( const int32_t *, size_t );
-        void setI( const int32_t *, size_t );
-        void setF( const float *, size_t );
-        void setV( const Vector4f *, size_t );
-        void setM( const Matrix44f *, size_t );
+        inline void setB( const int32_t *, size_t );
+        inline void setI( const int32_t *, size_t );
+        inline void setF( const float *, size_t );
+        inline void setV( const Vector4f *, size_t );
+        inline void setM( const Matrix44f *, size_t );
 
-        void setB( int32_t v ) { setB( &v, 1 ); }
-        void setI( int32_t v ) { setI( &v, 1 ); }
-        void setF( float v ) { setF( &v, 1 ); }
-        void setV( const Vector4f & v ) { setV( &v, 1 ); }
-        void setM( const Matrix44f & v ) { setM( &v, 1 ); }
+        inline void setB( int32_t v ) { setB( &v, 1 ); }
+        inline void setI( int32_t v ) { setI( &v, 1 ); }
+        inline void setF( float v ) { setF( &v, 1 ); }
+        inline void setV( const Vector4f & v ) { setV( &v, 1 ); }
+        inline void setM( const Matrix44f & v ) { setM( &v, 1 ); }
         //@}
 
     };

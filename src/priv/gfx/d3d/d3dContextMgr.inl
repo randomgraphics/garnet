@@ -69,7 +69,7 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DSamplerState(
     GN_GUARD_SLOW;
 
     GN_ASSERT(
-        0 <= stage && stage < MAX_TEXTURE_STAGES &&
+        stage < MAX_TEXTURE_STAGES &&
         0 <= type && type < MAX_D3D_SAMPLER_STATES );
 
     StateValue<DWORD> & s = mSamplerStates[stage][type];
@@ -109,7 +109,7 @@ GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DSamplerState( UINT stage, D3DSAMPLER
     GN_GUARD_SLOW;
 
     GN_ASSERT(
-        0 <= stage && stage < MAX_TEXTURE_STAGES &&
+        stage < MAX_TEXTURE_STAGES &&
         0 <= type && type < MAX_D3D_SAMPLER_STATES &&
         mSamplerStates[stage][type].initialized );
 
@@ -137,7 +137,7 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DTextureState(
 {
     GN_GUARD_SLOW;
     GN_ASSERT(
-        0 <= stage && stage < MAX_TEXTURE_STAGES &&
+        stage < MAX_TEXTURE_STAGES &&
         0 <= type && type < MAX_D3D_TEXTURE_STATES );
 
     StateValue<DWORD> & s = mTextureStates[stage][type];
@@ -176,7 +176,7 @@ GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DTextureState( UINT stage, D3DTEXTURE
     GN_GUARD_SLOW;
 
     GN_ASSERT(
-        0 <= stage && stage < MAX_TEXTURE_STAGES &&
+        stage < MAX_TEXTURE_STAGES &&
         0 <= type && type < MAX_D3D_SAMPLER_STATES &&
         mTextureStates[stage][type].initialized );
 
