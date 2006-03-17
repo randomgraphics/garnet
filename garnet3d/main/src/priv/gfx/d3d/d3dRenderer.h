@@ -353,14 +353,22 @@ namespace GN { namespace gfx
 
         enum
         {
-            MAX_D3D_RENDER_STATES = 256,
+#if GN_XENON
+            // Note: Xenon has no texture states
+            MAX_D3D_RENDER_STATES  = D3DRS_MAX,
+            MAX_D3D_SAMPLER_STATES = D3DSAMP_MAX,
+#else
+            MAX_D3D_RENDER_STATES  = 256,
             MAX_D3D_SAMPLER_STATES = 16,
             MAX_D3D_TEXTURE_STATES = 32,
+#endif
         };
 
         StateValue<DWORD> mRenderStates[MAX_D3D_RENDER_STATES];
         StateValue<DWORD> mSamplerStates[MAX_TEXTURE_STAGES][MAX_D3D_SAMPLER_STATES];
+#if !GN_XENON
         StateValue<DWORD> mTextureStates[MAX_TEXTURE_STAGES][MAX_D3D_TEXTURE_STATES];
+#endif
 
         ContextState mContextState;
         ContextData  mContextData;
