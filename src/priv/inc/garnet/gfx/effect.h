@@ -389,7 +389,7 @@ namespace GN { namespace gfx {
             struct PassData
             {
                 uint32_t shaders[NUM_SHADER_TYPES]; //!< shader handles of this pass.
-                uint32_t rsb; //!< render state block handle.
+                RenderStateBlockDesc rsb; //!< render state block
             };
 
             struct TechniqueData

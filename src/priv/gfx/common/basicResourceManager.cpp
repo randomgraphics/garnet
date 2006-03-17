@@ -4,31 +4,6 @@
 //
 //
 // -----------------------------------------------------------------------------
-uint32_t GN::gfx::BasicRenderer::createRenderStateBlock( const RenderStateBlockDesc & desc )
-{
-    GN_GUARD;
-
-    // find for existing render stage block
-    uint32_t handle = mRsbHandles.find( desc );
-
-    if( 0 == handle )
-    {
-        // not found. we have to create new one
-        handle = mRsbHandles.add( desc );
-        if( 0 == handle )
-        {
-            GN_ERROR( "Fail to create new render state block!" );
-        }
-    }
-
-    return handle;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::gfx::Texture *
 GN::gfx::BasicRenderer::createTextureFromFile( File & file )
 {

@@ -250,6 +250,32 @@ namespace GN { namespace gfx
         //!
         bool valid() const;
 
+        //!
+        //! 求和, 将参数中所有的非 RSV_EMPTY 的项复写到this中
+        //!
+        void mergeWith( const RenderStateBlockDesc & );
+
+        //!
+        //! 求和. Note that sMerge(A,B,C) != sMerge(A,C,B)
+        //!
+        static RenderStateBlockDesc & sMerge(
+            RenderStateBlockDesc &,
+            const RenderStateBlockDesc &,
+            const RenderStateBlockDesc & );
+
+        //!
+        //! 求差, 相同的项相减结果为 RSV_EMPTY, 不同的项则保留原值
+        //!
+        void diffWith( const RenderStateBlockDesc & );
+
+        //!
+        //! 求差.
+        //!
+        static RenderStateBlockDesc & sDiff(
+            RenderStateBlockDesc &,
+            const RenderStateBlockDesc &,
+            const RenderStateBlockDesc & );
+
         //@}
 
         // ********************************
@@ -270,25 +296,13 @@ namespace GN { namespace gfx
         bool operator != ( const RenderStateBlockDesc & ) const;
 
         //!
-        //! 求和（将参数中所有的非empty项复写到this中）.
-        //! <b>注意，此加法运算不符合交换率，(A+B) != (B+A)</b>
+        //! add, same as sMerge.
         //!
-        RenderStateBlockDesc & operator += ( const RenderStateBlockDesc & );
-
-        //!
-        //! 求和
-        //!
-        RenderStateBlockDesc   operator +  ( const RenderStateBlockDesc & ) const;
-
-        //!
-        //! 求差, 相同的项相减结果为 RSV_EMPTY
-        //!
-        RenderStateBlockDesc & operator -= ( const RenderStateBlockDesc & );
-
-        //!
-        //! 求差
-        //!
-        RenderStateBlockDesc   operator  - ( const RenderStateBlockDesc & ) const;
+        friend RenderStateBlockDesc operator+ ( const RenderStateBlockDesc & a, const RenderStateBlockDesc & b )
+        {
+            RenderStateBlockDesc r;
+            return sMerge( r, a, b );
+        }
     };
 
     //!
@@ -356,6 +370,32 @@ namespace GN { namespace gfx
         //!
         bool valid() const;
 
+        //!
+        //! 求和（将参数中所有的非EMPTY项复写到this中）.
+        //!
+        void mergeWith( const TextureStateBlockDesc & );
+
+        //!
+        //! 求和. Note that sMerge(A,B,C) != sMerge(A,C,B)
+        //!
+        static TextureStateBlockDesc & sMerge(
+            TextureStateBlockDesc &,
+            const TextureStateBlockDesc &,
+            const TextureStateBlockDesc & );
+
+        //!
+        //! 求差, 相同的项相减结果为 TSV_EMPTY, 相异的项则保留原值
+        //!
+        void diffWith( const TextureStateBlockDesc & );
+
+        //!
+        //! 求差.
+        //!
+        static TextureStateBlockDesc & sDiff(
+            TextureStateBlockDesc &,
+            const TextureStateBlockDesc &,
+            const TextureStateBlockDesc & );
+
         //@}
 
         // ********************************
@@ -374,27 +414,6 @@ namespace GN { namespace gfx
         //! 等值判定
         //!
         bool operator != ( const TextureStateBlockDesc & ) const;
-
-        //!
-        //! 求和（将参数中所有的非empty项复写到this中）.
-        //! <b>注意，此加法运算不符合交换率，(A+B) != (B+A)</b>
-        //!
-        TextureStateBlockDesc & operator += ( const TextureStateBlockDesc & );
-
-        //!
-        //! 求和
-        //!
-        TextureStateBlockDesc   operator +  ( const TextureStateBlockDesc & ) const;
-
-        //!
-        //! 求差, 相同的项相减结果为 TSV_EMPTY
-        //!
-        TextureStateBlockDesc & operator -= ( const TextureStateBlockDesc & );
-
-        //!
-        //! 求差
-        //!
-        TextureStateBlockDesc   operator  - ( const TextureStateBlockDesc & ) const;
     };
 }}
 

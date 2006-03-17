@@ -455,13 +455,6 @@ bool GN::gfx::effect::Effect::createEffect()
             const PassDesc & p = t.passes[iPass];
             PassData & pd = td.passes[iPass];
 
-            pd.rsb = gRenderer.createRenderStateBlock( mDesc.rsb + t.rsb + p.rsb );
-            if( 0 == pd.rsb )
-            {
-                GN_ERROR( "Fail to create render state block for pass(%d) of technique named '%s'.",
-                    iPass, iTech->first.cstr() );
-                return false;
-            }
             for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
             {
                 const StrA & s = p.shaders[iShader];
@@ -469,6 +462,7 @@ bool GN::gfx::effect::Effect::createEffect()
                 GN_ASSERT( pd.shaders[iShader] &&
                            mDesc.getShader(s).type == (ShaderType)iShader ); // check is already done in EffectDesc::valid()
             }
+            pd.rsb = mDesc.rsb + t.rsb + p.rsb;
         }
 
         // add technique data to technique list
