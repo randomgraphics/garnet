@@ -4,7 +4,6 @@
 #include "d3dContextMgr.inl"
 #endif
 #include "d3dShader.h"
-#include "d3dRenderStateBlock.h"
 #include "d3dTexture.h"
 #include "d3dVertexDecl.h"
 #include "d3dVtxBuf.h"
@@ -45,6 +44,15 @@ static inline void sSetD3DVector( D3DVECTOR & dst, const GN::Vector4f & src )
     dst.y = src.y * k;
     dst.z = src.z * k;
 }
+
+static DWORD sRenderStateValue2D3D[GN::gfx::NUM_RENDER_STATE_VALUES] =
+{
+    #define GNGFX_DEFINE_RSV( tag, d3dval, glval ) d3dval,
+    #include "garnet/gfx/renderStateValueMeta.h"
+    #undef GNGFX_DEFINE_RSV
+};
+
+#include "d3dRenderState.inl"
 
 static D3DTEXTURESTAGESTATETYPE sTextureState2D3D[GN::gfx::NUM_TEXTURE_STATES] =
 {
@@ -203,7 +211,7 @@ const GN::gfx::RenderStateBlockDesc & GN::gfx::D3DRenderer::getCurrentRenderStat
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mContextState.flags.rsb );
-    return getRsbFromHandle( mContextState.rsb );
+    return mContextState.rsb;
     GN_UNGUARD_SLOW;
 }
 
@@ -283,15 +291,13 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     //
     if( newFlags.rsb )
     {
-        if( forceRebind )
-        {
-            applyRenderStateBlock( *this, getRsbFromHandle( newState.rsb ) );
-        }
-        else if( newState.rsb != mContextState.rsb )
-        {
-            applyRenderStateBlock( *this,
-                getRsbFromHandle( newState.rsb ) - getRsbFromHandle( mContextState.rsb ) );
-        }
+        GN::gfx::RenderStateValue rsv;
+        #define GNGFX_DEFINE_RS( tag, defvalue )         \
+            rsv = newState.rsb.rs[RS_##tag];             \
+            GN_ASSERT( rsv < NUM_RENDER_STATE_VALUES );  \
+            if( rsv != RSV_EMPTY ) sSet_##tag( *this, rsv );
+        #include "garnet/gfx/renderStateMeta.h"
+        #undef GNGFX_DEFINE_RS
     }
 
     //

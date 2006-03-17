@@ -280,8 +280,6 @@ namespace GN { namespace gfx
                          PSCAPS_D3D_XVS
     };
 
-    typedef uint32_t RsbHandle; //!< Render state block handle
-
     typedef uint32_t VtxFmtHandle; //!< Vertex format handle
 
     enum
@@ -475,7 +473,7 @@ namespace GN { namespace gfx
 
         FieldFlags            flags; //!< field flags
         const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
-        RsbHandle             rsb; //!< render state block handle. 0 means default render state.
+        RenderStateBlockDesc  rsb; //!< render state block.
         RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
         size_t                numColorBuffers; //!< color buffer count
         RenderTargetDesc      depthBuffer; //!< depth buffers
@@ -496,6 +494,7 @@ namespace GN { namespace gfx
         {
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
+            rsb.resetToEmpty();
             numColorBuffers = 0;
         }
 
@@ -506,7 +505,7 @@ namespace GN { namespace gfx
         {
             flags.u32 = 0xFFFFFFFF; // set all flags to true.
             for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i] = 0;
-            rsb = 0;
+            rsb.resetToDefault();
             numColorBuffers = 0;
             depthBuffer.texture = 0;
             viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
@@ -527,7 +526,7 @@ namespace GN { namespace gfx
         {
             if( another.flags.vtxShader ) shaders[VERTEX_SHADER] = another.shaders[VERTEX_SHADER];
             if( another.flags.pxlShader ) shaders[PIXEL_SHADER] = another.shaders[PIXEL_SHADER];
-            if( another.flags.rsb ) rsb = another.rsb;
+            if( another.flags.rsb ) rsb.mergeWith( another.rsb );
             if( another.flags.colorBuffers )
             {
                 for( size_t i = 0; i < another.numColorBuffers; ++i ) colorBuffers[i] = another.colorBuffers[i];
@@ -542,10 +541,89 @@ namespace GN { namespace gfx
             if( another.flags.light0Diffuse ) light0Diffuse = another.light0Diffuse;
             if( another.flags.materialDiffuse ) materialDiffuse = another.materialDiffuse;
             if( another.flags.materialSpecular ) materialSpecular = another.materialSpecular;
-            if( another.flags.textureStates ) textureStates = another.textureStates;
+            if( another.flags.textureStates ) textureStates.mergeWith( textureStates );
             flags.u32 |= another.flags.u32;
         }
 
+        //!
+        //! \name Helper functions to set single state.
+        //!
+        //! These functions are recommended over directly accessing of data member,
+        //! Because these functions can update fieid flags as well.
+        //!
+        //@{
+
+        //!
+        //! Set a shader. Set NULL to use fixed pipeline.
+        //!
+        void setShader( ShaderType type, const Shader * shader );
+
+        //!
+        //! Set a list of shaders. The list must have at least NUM_SHADER_TYPES elements.
+        //!
+        void setShaders( const Shader * const shaders[] );
+
+        //!
+        //! Set shaders. Set to NULL to use fixed pipeline.
+        //!
+        void setShaders( const Shader * vtxShader, const Shader * pxlShader );
+
+        //!
+        //! Set shaders by handle. Set to 0 to use fixed pipeline.
+        //!
+        void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
+
+        //!
+        //! Set vertex shader. Set to NULL to use fixed pipeline.
+        //!
+        void setVtxShader( const Shader * s );
+
+        //!
+        //! Set vertex shader by handle.
+        //!
+        void setVtxShaderHandle( ShaderDictionary::HandleType h );
+
+        //!
+        //! Set pixel shader. Set to NULL to use fixed pipeline.
+        //!
+        void setPxlShader( const Shader * s );
+
+        //!
+        //! Set pixel shader by handle. Set 0 to use fixed function pipeline
+        //!
+        void setPxlShaderHandle( ShaderDictionary::HandleType h );
+
+        //!
+        //! Set render state block.
+        //!
+        void setRenderStateBlock( const RenderStateBlockDesc & );
+
+        //!
+        //! Set individual render state.
+        //!
+        void setRenderState( RenderState state, RenderStateValue value );
+
+        //!
+        //! Set a bunch of render states.
+        //!
+        void setRenderStates( const int * statePairs, size_t count );
+
+        //!
+        //! Set viewport.
+        //!
+        void setViewport( const Rectf & );
+
+        //!
+        //! Set viewport.
+        //!
+        void setViewport( float left, float top, float width, float height );
+
+        //!
+        //! Set texture stage state.
+        //!
+        void setTextureState( size_t stage, TextureState state, TextureStateValue value );
+
+        //@}
     };
 
     //!
@@ -585,7 +663,7 @@ namespace GN { namespace gfx
         FieldFlags      flags; //!< flags
         const Texture * textures[MAX_TEXTURE_STAGES]; //!< texture list
         size_t          numTextures; //!< texture count
-        VtxFmtHandle    vtxFmt; //!< vertex format handle
+        VtxFmtHandle    vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
         VtxBufDesc      vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current vtxFmt.
         const IdxBuf *  idxBuf; //!< index buffer
 
@@ -628,6 +706,55 @@ namespace GN { namespace gfx
             if( another.flags.idxBuf ) idxBuf = another.idxBuf;
             flags.u32 |= another.flags.u32;
         }
+
+        //!
+        //! \name Helper functions to set single data.
+        //!
+        //! These functions are recommended over directly accessing of data member,
+        //! Because these functions can update fieid flags as well.
+        //!
+        //@{
+
+        //!
+        //! Set a texture.
+        //!
+        void setTexture( size_t stage, const Texture * tex );
+
+        //!
+        //! Set a texture by handle.
+        //!
+        void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
+
+        //!
+        //! set textures, from stage[start] to stage[start+numtex-1].
+        //!
+        //! \param texlist texture list
+        //! \param start   start stage
+        //! \param count   number of textures
+        //!
+        void setTextures( const Texture * const texlist[], size_t start, size_t count );
+
+        //!
+        //! set textures by handle.
+        //!
+        void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
+
+        //!
+        //! Set vertex format.
+        //!
+        void setVtxFmt( VtxFmtHandle );
+
+        //!
+        //! Set vertex buffer
+        //!
+        void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+
+        //!
+        //! Set index buffer.
+        //!
+        void setIdxBuf( const IdxBuf * );
+
+        //@}
     };
 
     //!
@@ -856,13 +983,6 @@ namespace GN { namespace gfx
         createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
 
         //!
-        //! request a render state block object with specific render state block structure.
-        //! Return 0, if failed.
-        //!
-        virtual RsbHandle
-        createRenderStateBlock( const RenderStateBlockDesc & ) = 0;
-
-        //!
         //! Create new texture
         //! See TextureDesc for detail explaination of each fields in descriptor.
         //!
@@ -1037,7 +1157,17 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Helper functions to update rendering context
+        //! \name Helper functions to update rendering context.
+        //!
+        //! - See corresponding methods in ContextState and ContextData for usage
+        //!   of each method.
+        //! - Recommended way of call sequence is:
+        //!   <code>
+        //!     contextUpdateBegin();
+        //!     ... // call context update methods here.
+        //!     contextUpdateEnd();
+        //!   </code>
+        //! - Call single update method out side of contextUpdateBegin()
         //
         // ********************************************************************
 
@@ -1061,113 +1191,27 @@ namespace GN { namespace gfx
         //!
         void contextUpdateEnd();
 
-        //!
-        //! Set a shader. Set NULL to use fixed pipeline.
-        //!
         void setShader( ShaderType type, const Shader * shader );
-
-        //!
-        //! Set a list of shaders. The list must have at least NUM_SHADER_TYPES elements.
-        //!
         void setShaders( const Shader * const shaders[] );
-
-        //!
-        //! Set shaders. Set to NULL to use fixed pipeline.
-        //!
         void setShaders( const Shader * vtxShader, const Shader * pxlShader );
-
-        //!
-        //! Set shaders by handle. Set to 0 to use fixed pipeline.
-        //!
         void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
-
-        //!
-        //! Set vertex shader. Set to NULL to use fixed pipeline.
-        //!
         void setVtxShader( const Shader * s );
-
-        //!
-        //! Set vertex shader by handle.
-        //!
         void setVtxShaderHandle( ShaderDictionary::HandleType h );
-
-        //!
-        //! Set pixel shader. Set to NULL to use fixed pipeline.
-        //!
         void setPxlShader( const Shader * s );
-
-        //!
-        //! Set pixel shader by handle. Set 0 to use fixed function pipeline
-        //!
         void setPxlShaderHandle( ShaderDictionary::HandleType h );
-
-        //!
-        //! Set render state block.
-        //!
-        void setRenderStateBlock( RsbHandle );
-
-        //!
-        //! Set individual render state.
-        //!
+        void setRenderStateBlock( const RenderStateBlockDesc & );
         void setRenderState( RenderState state, RenderStateValue value );
-
-        //!
-        //! Set a bunch of render states.
-        //!
         void setRenderStates( const int * statePairs, size_t count );
-
-        //!
-        //! Set viewport.
-        //!
         void setViewport( const Rectf & );
-
-        //!
-        //! Set viewport.
-        //!
         void setViewport( float left, float top, float width, float height );
-
-        //!
-        //! Set texture stage state.
-        //!
         void setTextureState( size_t stage, TextureState state, TextureStateValue value );
 
-        //!
-        //! Set a texture.
-        //!
         void setTexture( size_t stage, const Texture * tex );
-
-        //!
-        //! Set a texture by handle.
-        //!
         void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
-
-        //!
-        //! set textures, from stage[start] to stage[start+numtex-1].
-        //!
-        //! \param texlist texture list
-        //! \param start   start stage
-        //! \param count   number of textures
-        //!
         void setTextures( const Texture * const texlist[], size_t start, size_t count );
-
-        //!
-        //! set textures by handle.
-        //!
         void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
-
-        //!
-        //! Set vertex format.
-        //!
         void setVtxFmt( VtxFmtHandle );
-
-        //!
-        //! Set vertex buffer
-        //!
         void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
-
-        //!
-        //! Set index buffer.
-        //!
         void setIdxBuf( const IdxBuf * );
 
         //@}

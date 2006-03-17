@@ -199,7 +199,6 @@ namespace GN { namespace gfx
         {
             return new FakeShader( type, lang, code, entry );
         }
-        virtual uint32_t createRenderStateBlock( const RenderStateBlockDesc & ) { return 1; }
         virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader )
         {
             AutoRef<FakeTexture> tex( new FakeTexture );

@@ -127,44 +127,16 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual RsbHandle createRenderStateBlock( const RenderStateBlockDesc & );
         virtual Texture * createTextureFromFile( File & );
-
-    protected:
-
-        //!
-        //! check render state block handle
-        //!
-        bool validRsbHandle( RsbHandle h ) const { return mRsbHandles.validHandle( h ); }
-
-        //!
-        //! return render state block descriptor from handle
-        //!
-        const RenderStateBlockDesc & getRsbFromHandle( RsbHandle h ) const
-        {
-            if( 0 == h )
-            {
-                return RenderStateBlockDesc::DEFAULT;
-            }
-            else
-            {
-                GN_ASSERT( mRsbHandles.validHandle(h) );
-                return mRsbHandles[h];
-            }
-        }
 
     private:
 
         bool resInit() { return true; }
         void resQuit() {}
         bool resOk() const { return true; }
-        void resClear() { mRsbHandles.clear(); }
+        void resClear() {}
 
     private:
-
-        typedef HandleManager<RenderStateBlockDesc,uint32_t> RsbHandleManager;
-
-        RsbHandleManager mRsbHandles;
 
         //@}
 

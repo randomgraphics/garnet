@@ -238,6 +238,62 @@ GN_INLINE bool GN::gfx::str2TextureStateValue( TextureStateValue & result, const
 //
 //
 // -----------------------------------------------------------------------------
+GN_INLINE void
+GN::gfx::RenderStateBlockDesc::mergeWith( const RenderStateBlockDesc & another )
+{
+    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
+    {
+        if( RSV_EMPTY != another.rs[i] ) rs[i] = another.rs[i];
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE GN::gfx::RenderStateBlockDesc &
+GN::gfx::RenderStateBlockDesc::sMerge(
+    RenderStateBlockDesc & r,
+    const RenderStateBlockDesc & a,
+    const RenderStateBlockDesc & b )
+{
+    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
+    {
+        r.rs[i] = ( RSV_EMPTY == b.rs[i] ) ? a.rs[i] : b.rs[i];
+    }
+    return r;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void
+GN::gfx::RenderStateBlockDesc::diffWith( const RenderStateBlockDesc & another )
+{
+    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
+    {
+        if(  rs[i] == another.rs[i]  ) rs[i] = RSV_EMPTY;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE GN::gfx::RenderStateBlockDesc &
+GN::gfx::RenderStateBlockDesc::sDiff(
+    RenderStateBlockDesc & r,
+    const RenderStateBlockDesc & a,
+    const RenderStateBlockDesc & b )
+{
+    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
+    {
+        r.rs[i] = ( a.rs[i] == b.rs[i] ) ? RSV_EMPTY : a.rs[i];
+    }
+    return r;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_INLINE bool
 GN::gfx::RenderStateBlockDesc::operator == ( const RenderStateBlockDesc & rhs ) const
 {
@@ -249,50 +305,89 @@ GN::gfx::RenderStateBlockDesc::operator != ( const RenderStateBlockDesc & rhs ) 
 {
     return this != &rhs && 0 != ::memcmp( rs, rhs.rs, sizeof(rs) );
 }
-//
-GN_INLINE GN::gfx::RenderStateBlockDesc &
-GN::gfx::RenderStateBlockDesc::operator += ( const RenderStateBlockDesc & rhs )
-{
-    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
-    {
-        if( RSV_EMPTY != rhs.rs[i] ) rs[i] = rhs.rs[i];
-    }
-
-    // success
-    return *this;
-}
-//
-GN_INLINE GN::gfx::RenderStateBlockDesc &
-GN::gfx::RenderStateBlockDesc::operator -= ( const RenderStateBlockDesc & rhs )
-{
-    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
-    {
-        if(  rs[i] == rhs.rs[i]  ) rs[i] = RSV_EMPTY;
-    }
-
-    // success
-    return *this;
-}
-//
-GN_INLINE GN::gfx::RenderStateBlockDesc
-GN::gfx::RenderStateBlockDesc::operator + ( const RenderStateBlockDesc & rhs ) const
-{
-    RenderStateBlockDesc result( *this );
-    result += rhs;
-    return result;
-}
-//
-GN_INLINE GN::gfx::RenderStateBlockDesc
-GN::gfx::RenderStateBlockDesc::operator - ( const RenderStateBlockDesc & rhs ) const
-{
-    RenderStateBlockDesc result( *this );
-    result -= rhs;
-    return result;
-}
 
 // *****************************************************************************
 // TextureStateBlockDesc
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void
+GN::gfx::TextureStateBlockDesc::mergeWith( const TextureStateBlockDesc & another )
+{
+    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    {
+        TextureStateValue       * t1 = ts[i];
+        const TextureStateValue * t2 = another.ts[i];
+        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
+        {
+            if( TSV_EMPTY != t2[j] ) t1[j] = t2[j];
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE GN::gfx::TextureStateBlockDesc &
+GN::gfx::TextureStateBlockDesc::sMerge(
+    TextureStateBlockDesc & r,
+    const TextureStateBlockDesc & a,
+    const TextureStateBlockDesc & b )
+
+{
+    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    {
+        TextureStateValue       * tr = r.ts[i];
+        const TextureStateValue * ta = a.ts[i];
+        const TextureStateValue * tb = b.ts[i];
+        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
+        {
+            tr[j] = ( TSV_EMPTY == tb[j] ) ? ta[j] : tb[j];
+        }
+    }
+    return r;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void
+GN::gfx::TextureStateBlockDesc::diffWith( const TextureStateBlockDesc & another )
+{
+    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    {
+        TextureStateValue       * t1 = ts[i];
+        const TextureStateValue * t2 = another.ts[i];
+        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
+        {
+            if( t1[j] == t2[j] ) t1[j] = TSV_EMPTY;
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE GN::gfx::TextureStateBlockDesc &
+GN::gfx::TextureStateBlockDesc::sDiff(
+    TextureStateBlockDesc & r,
+    const TextureStateBlockDesc & a,
+    const TextureStateBlockDesc & b )
+{
+    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    {
+        TextureStateValue       * tr = r.ts[i];
+        const TextureStateValue * ta = a.ts[i];
+        const TextureStateValue * tb = b.ts[i];
+        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
+        {
+            tr[j] = ( ta[j] == tb[j] ) ? TSV_EMPTY : ta[j];
+        }
+    }
+    return r;
+}
 
 //
 //
@@ -307,56 +402,6 @@ GN_INLINE bool
 GN::gfx::TextureStateBlockDesc::operator != ( const TextureStateBlockDesc & rhs ) const
 {
     return this != &rhs && 0 != ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
-}
-//
-GN_INLINE GN::gfx::TextureStateBlockDesc &
-GN::gfx::TextureStateBlockDesc::operator += ( const TextureStateBlockDesc & rhs )
-{
-    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * t1 = ts[i];
-        const TextureStateValue * t2 = rhs.ts[i];
-        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            if( TSV_EMPTY != t2[j] ) t1[j] = t2[j];
-        }
-    }
-
-    // success
-    return *this;
-}
-//
-GN_INLINE GN::gfx::TextureStateBlockDesc &
-GN::gfx::TextureStateBlockDesc::operator -= ( const TextureStateBlockDesc & rhs )
-{
-    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * t1 = ts[i];
-        const TextureStateValue * t2 = rhs.ts[i];
-        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            if( t1[j] == t2[j] ) t1[j] = TSV_EMPTY;
-        }
-    }
-
-    // success
-    return *this;
-}
-//
-GN_INLINE GN::gfx::TextureStateBlockDesc
-GN::gfx::TextureStateBlockDesc::operator + ( const TextureStateBlockDesc & rhs ) const
-{
-    TextureStateBlockDesc result( *this );
-    result += rhs;
-    return result;
-}
-//
-GN_INLINE GN::gfx::TextureStateBlockDesc
-GN::gfx::TextureStateBlockDesc::operator - ( const TextureStateBlockDesc & rhs ) const
-{
-    TextureStateBlockDesc result( *this );
-    result -= rhs;
-    return result;
 }
 
 //! \endcond

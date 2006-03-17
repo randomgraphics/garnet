@@ -2,7 +2,6 @@
 #include "d3dLine.h"
 #include "d3dRenderer.h"
 #include "garnet/GNd3d.h"
-#include "d3dRenderStateBlock.h"
 
 struct D3DLineVertex
 {
