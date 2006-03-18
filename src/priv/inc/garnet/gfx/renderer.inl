@@ -237,6 +237,8 @@ namespace GN { namespace gfx
         flags.vtxBufs = 1;
         vtxBufs[index].buffer = buffer;
         vtxBufs[index].stride = stride;
+        ++index;
+        if( index > numVtxBufs ) numVtxBufs = index;
     }
 
     //

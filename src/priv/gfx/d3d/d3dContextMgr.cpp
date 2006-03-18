@@ -158,6 +158,7 @@ void GN::gfx::D3DRenderer::setContextState( const ContextState & newState )
 #endif
 
     mContextState.mergeWith( newState );
+    holdContextState( mContextState );
 
     GN_UNGUARD_SLOW;
 }
@@ -180,6 +181,7 @@ void GN::gfx::D3DRenderer::setContextData( const ContextData & newData )
 #endif
 
     mContextData.mergeWith( newData );
+    holdContextData( mContextData );
 
     GN_UNGUARD_SLOW;
 }
@@ -514,11 +516,11 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
     //
     // bind vertex format
     //
-    const D3DVtxDeclDesc * decl;
     if( newFlags.vtxFmt )
     {
         if( newData.vtxFmt )
         {
+            const D3DVtxDeclDesc * decl;
             decl = &mVtxFmts[newData.vtxFmt];
             GN_ASSERT( decl->decl );
             if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
@@ -526,24 +528,14 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
                 GN_DX_CHECK( mDevice->SetVertexDeclaration( decl->decl ) );
             }
         }
-        else
-        {
-            decl = 0;
-            //GN_DX_CHECK( mDevice->SetVertexDeclaration( 0 ) );
-        }
     }
-    else if( mContextData.vtxFmt )
-    {
-        decl = &mVtxFmts[mContextData.vtxFmt];
-    }
-    else decl = 0;
 
     //!
     //! bind vertex buffers
     //!
-    if( newFlags.vtxBufs && decl )
+    if( newFlags.vtxBufs )
     {
-        for( UINT i = 0; i < decl->format.numStreams; ++i )
+        for( UINT i = 0; i < newData.numVtxBufs; ++i )
         {
             const ContextData::VtxBufDesc & vb = newData.vtxBufs[i];
             if( vb.buffer != mContextData.vtxBufs[i].buffer || forceRebind )
