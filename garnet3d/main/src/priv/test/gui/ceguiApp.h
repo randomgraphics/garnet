@@ -37,7 +37,7 @@ public:
     {
     }
 
-    bool onRendererCreate()
+    bool onRendererInit()
     {
         using namespace CEGUI;
 
@@ -102,7 +102,7 @@ public:
         return true;
     }
 
-    void onRendererDestroy()
+    void onRendererQuit()
     {
         CEGUI::System * sys = CEGUI::System::getSingletonPtr();
         if( sys )

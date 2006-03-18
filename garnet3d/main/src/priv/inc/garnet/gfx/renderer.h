@@ -20,10 +20,12 @@
 //! Implement static renderer data members
 //!
 #define GN_IMPLEMENT_RENDERER_STATIC_MEMBERS() \
+    ::GN::Signal0<bool> GN::gfx::Renderer::sSigInit; \
     ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceCreate; \
     ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceRestore; \
     ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDispose; \
     ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDestroy; \
+    ::GN::Signal0<void> GN::gfx::Renderer::sSigQuit; \
     ::GN::SharedLib     GN::gfx::Renderer::msSharedLib;
 
 namespace GN { namespace gfx
@@ -827,60 +829,67 @@ namespace GN { namespace gfx
         //!
         //! - 信号可以被多次触发，且一定是严格按照如下的顺序：
         //!   <pre>
-        //!                           +--------------+
-        //!                           |              |
-        //!                          \|/             |
-        //!                           '              |
-        //!   (start)-->create----->restore------->dispose------>destroy-->(end)
-        //!               .                                          |
-        //!              /|\                                         |
-        //!               |                                          |
-        //!               +------------------------------------------+
+        //!                                         +---------------+
+        //!                                        \|/              |
+        //!                                         '               |
+        //!   (start)-->init-->deviceCreate-->deviceRestore-->deviceDispose-->deviceDestroy-->quit-->(end)
+        //!              .           .                                            |            |
+        //!             /|\         /|\                                           |            |
+        //!              |           +--------------------------------------------+            |
+        //!              |                                                                     |
+        //!              +---------------------------------------------------------------------+
         //!   </pre>
-        //! - create信号后面必定会跟随一个restore信号.
-        //! - 收到create或者restore信号说明渲染器ready to use。
+        //! - init发生后, 必定发生一个deviceCreate
+        //! - deviceCreate发生后, 必定发生一个deviceRestore
+        //! - 收到init/deviceCreate/deviceRestore信号说明渲染器ready to use。
         //! - 这些信号的标准使用方法如下：
-        //!   - 收到create信号后, 创建所有图形资源。
-        //!   - 收到restore信号后，填充图形资源的内容，如从磁盘读取贴图和模型。
-        //!   - 忽略dispose信号
-        //!   - 收到destroy信号后，删除所有的图形资源
+        //!   - 收到init信号后, 创建所有图形资源。
+        //!   - 收到deviceRestore信号后，填充图形资源的内容，如从磁盘读取贴图和模型。
+        //!     但应避免创建新的资源，因为这个信号在程序生命期中有可能被多次触发。
+        //!   - 收到quit信号后，删除所有的图形资源
+        //!   - 通常情况下可以忽略deviceCreate, deviceDispose和deviceDestroy信号。
+        //!     TODO: 它们的具体使用方法有待进一步说明。
         // ********************************************************************
 
         //@{
 
         //!
-        //! Triggered right after render device is created.
+        //! Triggered right after renderer is created successfully, and ready to use.
+        //!
+        static GN_PUBLIC Signal0<bool> sSigInit;
+
+        //!
+        //! D3D/OGL device creation signal
         //!
         static GN_PUBLIC Signal0<bool> sSigDeviceCreate;
 
         //!
-        //! Triggered after rendering device is created or restored from
-        //! disposed state.
+        //! Triggered after renderer is created or restored from last dispose successfully, and ready to use.
+        //!
+        //! (Re)load content of graphics resources. But do _NOT_ create new graphics
+        //! resources here.
+        //! - Only lockable resources (texture, vertex/index buffer) that have
+        //!   neither system-copy no content loader need contexnt reloading.
+        //! - No need to restore shaders, RSBs and VtxFmtHandle.
         //!
         static GN_PUBLIC Signal0<bool> sSigDeviceRestore;
 
         //!
-        //! Triggered right before invalidating of rendering device.
-        //!
-        //! - Only lockable resources (such as texture and vertex buffer) that have
-        //!   neither system-copy no content loader will lost their contents after
-        //!   device dispose.
-        //! - Note that only contents are lost, not resources themselves.
-        //! - Non-lockable resources (such as shaders and render-state-blocks )
-        //!   will survive device dispose.
-        //! - After receiving this signal, no rendering function should be called,
-        //!   until you receive sSigDeviceRestore.
+        //! D3D/OGL device dispose signal
         //!
         static GN_PUBLIC Signal0<void> sSigDeviceDispose;
 
         //!
-        //! Triggered right before render device is deleted.
-        //!
-        //! \note
-        //! - You must release all graphics resources (such as textures, shaders...),
-        //!   after received this signal.
+        //! D3D/OGL device destroy signal
         //!
         static GN_PUBLIC Signal0<void> sSigDeviceDestroy;
+
+        //!
+        //! Triggered right before renderer is about to be destroied.
+        //!
+        //! You must release _ALL_ graphics resourcesafter received this signal.
+        //!
+        static GN_PUBLIC Signal0<void> sSigQuit;
 
         //@}
 
@@ -915,7 +924,7 @@ namespace GN { namespace gfx
         //! \note
         //!     This function may trigger sSigDeviceRestore and/or sSigDeviceDispose.
         //!
-        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation = false ) = 0;
+        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation = false ) = 0;
 
         //!
         //! Get renderer options

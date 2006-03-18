@@ -22,15 +22,16 @@ public:
         ip.ro.pure = true;
     }
 
-    bool onRendererCreate()
+    bool onRendererDeviceRestore()
     {
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
         GN_DX_CHECK( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
         return true;
     }
 
-    void onRendererDestroy()
+    void onRendererDeviceDispose()
     {
+        rsb.clear();
     }
 
     void onUpdate()

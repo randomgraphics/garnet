@@ -30,6 +30,7 @@ namespace GN { namespace gfx
         {
             sSigDeviceDispose();
             sSigDeviceDestroy();
+            sSigQuit();
         }
 
         //@}
@@ -47,10 +48,10 @@ namespace GN { namespace gfx
         bool init( const RendererOptions & ro )
         {
             changeOptions( ro, false );
-            return sSigDeviceCreate() &&  sSigDeviceRestore();
+            return sSigInit() && sSigDeviceCreate() && sSigDeviceRestore();
         }
 
-        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation ) { setOptions( ro ); return true; }
+        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation ) { setOptions( ro ); return true; }
 
         //@}
 

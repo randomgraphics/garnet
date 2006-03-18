@@ -84,21 +84,24 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation );
+        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation );
 
     private :
 
-        void deviceClear()
+        enum OptionChangingType
         {
-            mDeviceChanging = false;
-        }
+            OCT_AUTO,
+            OCT_CREATE,
+            OCT_INIT
+        };
 
-        bool deviceCreate();
+        bool doOptionChange( RendererOptions, OptionChangingType );
+
+        void deviceClear() { mDeviceChanging = false; }
+        bool deviceCreate( bool triggerInitSignal );
         bool deviceRestore();
         void deviceDispose();
-        void deviceDestroy();
-
-    private:
+        void deviceDestroy( bool triggerQuitSignal );
 
         //!
         //! if true, then we are inside function changeOptions().

@@ -78,7 +78,7 @@ bool GN::gfx::D3DRenderer::init(const RendererOptions & ro )
     if( !drawInit()         ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !changeOptions( ro, true ) ) { quit(); return selfOK(); }
+    if( !doOptionChange( ro, OCT_INIT ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -93,7 +93,7 @@ void GN::gfx::D3DRenderer::quit()
 {
     GN_GUARD;
 
-    deviceDestroy();
+    deviceDestroy( true );
 
     drawQuit();
     contextQuit();
@@ -107,82 +107,27 @@ void GN::gfx::D3DRenderer::quit()
 }
 
 // *****************************************************************************
+// from Renderer
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::changeOptions( const RendererOptions & ro, bool forceRecreation )
+{
+    GN_GUARD;
+    return doOptionChange( ro, forceRecreation ? OCT_CREATE : OCT_AUTO );
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
 // device management
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::changeOptions( RendererOptions ro, bool forceRecreation )
-{
-    GN_GUARD;
-
-    // prepare for function re-entrance.
-    if( mDeviceChanging )
-    {
-        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
-        return true;
-    }
-    ScopeBool __dummy__(mDeviceChanging);
-
-#if GN_XENON
-    if( !ro.fullscreen )
-    {
-        GN_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
-        ro.fullscreen = true;
-        ro.displayMode.set(0,0,0,0);
-    }
-    if( ro.useExternalWindow )
-    {
-        GN_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
-        ro.useExternalWindow = false;
-    }
-#endif
-
-    // store old settings
-    const RendererOptions oldOptions = getOptions();
-    const DispDesc oldDesc = getDispDesc();
-
-    // setup new settings
-    if( !processUserOptions( ro ) ) return false;
-
-    const DispDesc & newDesc = getDispDesc();
-
-    if( forceRecreation ||
-        oldDesc.windowHandle != newDesc.windowHandle ||
-        oldDesc.monitorHandle != newDesc.monitorHandle ||
-        oldOptions.reference != ro.reference ||
-        oldOptions.software != ro.software ||
-        oldOptions.pure != ro.pure ||
-        oldOptions.multithread != ro.multithread )
-    {
-        // we have to recreate the whole device.
-        deviceDestroy();
-        return deviceCreate();
-    }
-    else if(
-        oldDesc != newDesc ||
-        oldOptions.msaa != ro.msaa ||
-        oldOptions.fullscreen != ro.fullscreen ||
-        oldOptions.vsync != ro.vsync )
-    {
-        // a device reset should be enough
-        deviceDispose();
-        return deviceRestore();
-    }
-    else
-    {
-        // do nothing, if new setting is equal to current setting
-        return true;
-    }
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::deviceCreate()
+bool GN::gfx::D3DRenderer::deviceCreate( bool triggerInitSignal )
 {
     GN_GUARD;
 
@@ -201,6 +146,12 @@ bool GN::gfx::D3DRenderer::deviceCreate()
     #undef COMPONENT_RECREATE
 
     // trigger signals
+    if( triggerInitSignal )
+    {
+        GN_INFO( "GFX SIGNAL: D3D renderer init." );
+        if( !sSigInit() ) return false;
+    }
+
     GN_INFO( "GFX SIGNAL: D3D device create." );
     if( !sSigDeviceCreate() ) return false;
 
@@ -262,7 +213,7 @@ void GN::gfx::D3DRenderer::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::deviceDestroy()
+void GN::gfx::D3DRenderer::deviceDestroy( bool triggerQuitSignal )
 {
     GN_GUARD;
 
@@ -275,6 +226,12 @@ void GN::gfx::D3DRenderer::deviceDestroy()
 
         GN_INFO( "GFX SIGNAL: D3D device destroy." );
         sSigDeviceDestroy();
+
+        if( triggerQuitSignal )
+        {
+            GN_INFO( "GFX SIGNAL: D3D renderer quit." );
+            sSigQuit();
+        }
     }
 
     #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
@@ -286,6 +243,80 @@ void GN::gfx::D3DRenderer::deviceDestroy()
     COMPONENT_DESTROY( disp );
 
     #undef COMPONENT_DESTROY
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3DRenderer::doOptionChange( RendererOptions ro, OptionChangingType type )
+{
+    GN_GUARD;
+
+    // prepare for function re-entrance.
+    if( mDeviceChanging )
+    {
+        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
+        return true;
+    }
+    ScopeBool __dummy__(mDeviceChanging);
+
+#if GN_XENON
+    if( !ro.fullscreen )
+    {
+        GN_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
+        ro.fullscreen = true;
+        ro.displayMode.set(0,0,0,0);
+    }
+    if( ro.useExternalWindow )
+    {
+        GN_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
+        ro.useExternalWindow = false;
+    }
+#endif
+
+    // store old settings
+    const RendererOptions oldOptions = getOptions();
+    const DispDesc oldDesc = getDispDesc();
+
+    // setup new settings
+    if( !processUserOptions( ro ) ) return false;
+
+    const DispDesc & newDesc = getDispDesc();
+
+    if( OCT_CREATE == type ||
+        OCT_INIT == type ||
+        oldDesc.windowHandle != newDesc.windowHandle ||
+        oldDesc.monitorHandle != newDesc.monitorHandle ||
+        oldOptions.reference != ro.reference ||
+        oldOptions.software != ro.software ||
+        oldOptions.pure != ro.pure ||
+        oldOptions.multithread != ro.multithread )
+    {
+        // we have to recreate the whole device.
+        deviceDestroy( OCT_INIT == type );
+        return deviceCreate( OCT_INIT == type );
+    }
+    else if(
+        oldDesc != newDesc ||
+        oldOptions.msaa != ro.msaa ||
+        oldOptions.fullscreen != ro.fullscreen ||
+        oldOptions.vsync != ro.vsync )
+    {
+        // a device reset should be enough
+        deviceDispose();
+        return deviceRestore();
+    }
+    else
+    {
+        // do nothing, if new setting is equal to current setting
+        return true;
+    }
 
     GN_UNGUARD;
 }

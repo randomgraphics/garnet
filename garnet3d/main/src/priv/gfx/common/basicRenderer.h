@@ -162,6 +162,8 @@ namespace GN { namespace gfx
         void holdContextState( const ContextState & ); //!< hold reference to resources in context state
         void holdContextData( const ContextData & ); //!< hold reference to resources in context data
 
+    private:
+
         //!
         //! Use to hold references to currently binded resources, in case client user
         //! delete those resources.

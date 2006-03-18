@@ -67,6 +67,12 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
     if( input::KEY_R == ke.code && !ke.status.down ) reloadGfxResources();
+    if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
+    {
+        GN::gfx::RendererOptions ro = gRenderer.getOptions();
+        ro.fullscreen = !ro.fullscreen;
+        if( !gRenderer.changeOptions(ro) ) postExistEvent();
+    }
 }
 
 //
@@ -221,10 +227,12 @@ bool GN::app::SampleApp::initRenderer()
     GN_GUARD;
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigDeviceCreate.connect( this, &SampleApp::onRendererCreate );
-    GN::gfx::Renderer::sSigDeviceRestore.connect( this, &SampleApp::onRendererRestore );
-    GN::gfx::Renderer::sSigDeviceDispose.connect( this, &SampleApp::onRendererDispose );
-    GN::gfx::Renderer::sSigDeviceDestroy.connect( this, &SampleApp::onRendererDestroy );
+    GN::gfx::Renderer::sSigInit.connect( this, &SampleApp::onRendererInit );
+    GN::gfx::Renderer::sSigDeviceCreate.connect( this, &SampleApp::onRendererDeviceCreate );
+    GN::gfx::Renderer::sSigDeviceRestore.connect( this, &SampleApp::onRendererDeviceRestore );
+    GN::gfx::Renderer::sSigDeviceDispose.connect( this, &SampleApp::onRendererDeviceDispose );
+    GN::gfx::Renderer::sSigDeviceDestroy.connect( this, &SampleApp::onRendererDeviceDestroy );
+    GN::gfx::Renderer::sSigQuit.connect( this, &SampleApp::onRendererQuit );
 
     // create renderer
     return recreateRenderer();
@@ -243,10 +251,12 @@ void GN::app::SampleApp::quitRenderer()
     GN::gfx::deleteRenderer();
 
     // disconnect to renderer signals
+    GN::gfx::Renderer::sSigQuit.disconnect( this );
     GN::gfx::Renderer::sSigDeviceDestroy.disconnect( this );
     GN::gfx::Renderer::sSigDeviceDispose.disconnect( this );
     GN::gfx::Renderer::sSigDeviceRestore.disconnect( this );
     GN::gfx::Renderer::sSigDeviceCreate.disconnect( this );
+    GN::gfx::Renderer::sSigInit.disconnect( this );
 
     GN_UNGUARD;
 }
