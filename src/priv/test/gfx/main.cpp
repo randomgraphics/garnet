@@ -276,13 +276,13 @@ public:
 
     GfxTestApp() : mScene(0) {}
 
-    bool onRendererCreate()
+    bool onRendererInit()
     {
         mScene = new Scene;
         return mScene->init();
     }
 
-    void onRendererDestroy()
+    void onRendererQuit()
     {
         safeDelete(mScene);
     }
@@ -295,14 +295,6 @@ public:
         if( input::KEY_SPACEBAR == ke.code && ke.status.down )
         {
             gAnimation = !gAnimation;
-        }
-
-        // toggle fullscreen mode
-        if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
-        {
-            RendererOptions ro = gRenderer.getOptions();
-            ro.fullscreen = !ro.fullscreen;
-            if( !gRenderer.changeOptions(ro) ) postExistEvent();
         }
     }
 

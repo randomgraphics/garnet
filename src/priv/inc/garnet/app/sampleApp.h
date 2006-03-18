@@ -121,10 +121,12 @@ namespace GN { namespace app
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
         virtual void onDetermineInitParam( InitParam & ) {}
-        virtual bool onRendererCreate() { return true; }
-        virtual bool onRendererRestore() { return true; }
-        virtual void onRendererDispose() {}
-        virtual void onRendererDestroy() {}
+        virtual bool onRendererInit() { return true; }
+        virtual bool onRendererDeviceCreate() { return true; }
+        virtual bool onRendererDeviceRestore() { return true; }
+        virtual void onRendererDeviceDispose() {}
+        virtual void onRendererDeviceDestroy() {}
+        virtual void onRendererQuit() {}
         virtual void onUpdate() {}
         virtual void onRender() {}
         virtual void onKeyPress( input::KeyEvent );
