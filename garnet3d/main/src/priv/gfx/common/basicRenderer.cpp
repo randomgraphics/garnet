@@ -16,9 +16,10 @@ bool GN::gfx::BasicRenderer::init()
     GN_STDCLASS_INIT( BasicRenderer, () );
 
     // initialize sub-components one by one
-    if( !dispInit() ) { quit(); return selfOK(); }
-    if( !resInit()  ) { quit(); return selfOK(); }
-    if( !drawInit() ) { quit(); return selfOK(); }
+    if( !dispInit()    ) { quit(); return selfOK(); }
+    if( !resInit()     ) { quit(); return selfOK(); }
+    if( !contextInit() ) { quit(); return selfOK(); }
+    if( !drawInit()    ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -35,6 +36,7 @@ void GN::gfx::BasicRenderer::quit()
 
     // shutdown sub-components in reverse sequence
     drawQuit();
+    contextQuit();
     resQuit();
     dispQuit();
 

@@ -503,6 +503,10 @@ namespace GN { namespace gfx
         //!
         void clearToNull()
         {
+#if GN_DEBUG
+            // fill with invalid data
+            ::memset( this, sizeof(*this), 0xcd );
+#endif
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
             rsb.resetToEmpty();
@@ -514,6 +518,10 @@ namespace GN { namespace gfx
         //!
         void resetToDefault()
         {
+#if GN_DEBUG
+            // fill with invalid data
+            ::memset( this, sizeof(*this), 0xcd );
+#endif
             flags.u32 = 0xFFFFFFFF; // set all flags to true.
             for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i] = 0;
             rsb.resetToDefault();
@@ -685,7 +693,8 @@ namespace GN { namespace gfx
         const Texture * textures[MAX_TEXTURE_STAGES]; //!< texture list
         size_t          numTextures; //!< texture count
         VtxFmtHandle    vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
-        VtxBufDesc      vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers. Note that vertex buffer count is determined by current vtxFmt.
+        VtxBufDesc      vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers.
+        size_t          numVtxBufs; //!< vertex buffer count.
         const IdxBuf *  idxBuf; //!< index buffer
 
         //!
@@ -693,9 +702,14 @@ namespace GN { namespace gfx
         //!
         void clearToNull()
         {
+#if GN_DEBUG
+            // fill with invalid data
+            ::memset( this, sizeof(*this), 0xcd );
+#endif
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
             numTextures = 0;
+            numVtxBufs = 0;
         }
 
         //!
@@ -703,9 +717,14 @@ namespace GN { namespace gfx
         //!
         void resetToEmpty()
         {
+#if GN_DEBUG
+            // fill with invalid data
+            ::memset( this, sizeof(*this), 0xcd );
+#endif
             flags.u32 = 0xFFFFFFFF;
             numTextures = 0;
             vtxFmt = 0;
+            numVtxBufs = 0;
             idxBuf = 0;
         }
 
@@ -719,12 +738,17 @@ namespace GN { namespace gfx
                 for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
                 numTextures = another.numTextures;
             }
+
             if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
+
             if( another.flags.vtxBufs )
             {
-                for( size_t i = 0; i < MAX_VERTEX_STREAMS; ++i ) vtxBufs[i] = another.vtxBufs[i];
+                for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxBufs[i] = another.vtxBufs[i];
+                numVtxBufs = another.numVtxBufs;
             }
+
             if( another.flags.idxBuf ) idxBuf = another.idxBuf;
+
             flags.u32 |= another.flags.u32;
         }
 

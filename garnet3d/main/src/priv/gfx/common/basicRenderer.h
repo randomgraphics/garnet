@@ -57,12 +57,14 @@ namespace GN { namespace gfx
             return MyParent::ok()
                 && dispOk()
                 && resOk()
+                && contextOk()
                 && drawOk();
         }
     private :
         void clear()
         {
             drawClear();
+            contextClear();
             resClear();
             dispClear();
         }
@@ -137,6 +139,44 @@ namespace GN { namespace gfx
         void resClear() {}
 
     private:
+
+        //@}
+
+        // *****************************************************************************
+        //
+        //! \name                   Context Manager
+        //
+        // *****************************************************************************
+
+        //@{
+
+    private:
+
+        bool contextInit() { return true; }
+        void contextQuit() {}
+        bool contextOk() const { return true; }
+        void contextClear();
+
+    protected:
+
+        void holdContextState( const ContextState & ); //!< hold reference to resources in context state
+        void holdContextData( const ContextData & ); //!< hold reference to resources in context data
+
+        //!
+        //! Use to hold references to currently binded resources, in case client user
+        //! delete those resources.
+        //!
+        struct ResourceHolder
+        {
+            AutoRef<const Shader>  shaders[NUM_SHADER_TYPES];
+            AutoRef<const Texture> colorBuffers[MAX_RENDER_TARGETS];
+            AutoRef<const Texture> depthBuffer;
+            AutoRef<const Texture> textures[MAX_TEXTURE_STAGES];
+            AutoRef<const VtxBuf>  vtxBufs[MAX_VERTEX_STREAMS];
+            AutoRef<const IdxBuf>  idxBuf;
+        };
+
+        ResourceHolder mResourceHolder;
 
         //@}
 
