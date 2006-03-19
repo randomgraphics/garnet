@@ -266,7 +266,7 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
-        setCaps( CAPS_##name, sCapsInit_##name() );
+        mCaps[CAPS_##name] = sCapsInit_##name();
     #include "garnet/gfx/rendererCapsMeta.h"
     #undef GNGFX_CAPS
 
@@ -283,17 +283,77 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+// from Renderer
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::capsDeviceDestroy()
+bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang )
 {
     GN_GUARD;
 
-    _GNGFX_DEVICE_TRACE();
+    // check parameter
+    if( 0 > type || type >= NUM_SHADER_TYPES )
+    {
+        GN_ERROR( "invalid shader usage!" );
+        return false;
+    }
+    if( 0 > lang || lang >= NUM_SHADING_LANGUAGES )
+    {
+        GN_ERROR( "invalid shading language!" );
+        return false;
+    }
 
-    // clear all caps
-    resetAllCaps();
+    switch( lang )
+    {
+        // ARB shaders
+        case LANG_OGL_ARB :
+            if( VERTEX_SHADER == type )
+            {
+                return 0 != GLEW_ARB_vertex_program;
+            }
+            else
+            {
+                GN_ASSERT( PIXEL_SHADER == type );
+                return 0 != GLEW_ARB_fragment_program;
+            }
+
+        // GLSL shaders
+        case LANG_OGL_GLSL :
+            if( !GLEW_ARB_shader_objects || !GLEW_ARB_shading_language_100 ) return false;
+            if( VERTEX_SHADER == type )
+            {
+                return 0 != GLEW_ARB_vertex_shader;
+            }
+            else
+            {
+                GN_ASSERT( PIXEL_SHADER == type );
+                return 0 != GLEW_ARB_fragment_shader;
+            }
+
+        // DX shaders are always unsupported
+        case LANG_D3D_ASM :
+        case LANG_D3D_HLSL :
+            return false;
+
+        // TODO: Check Cg shader caps
+        case LANG_CG : return false;
+
+        default:
+            GN_ASSERT_EX( 0, "program should never reach here!" );
+            return false;
+    }
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLRenderer::supportTextureFormat( TexType, BitField, ClrFmt ) const
+{
+    GN_UNIMPL_WARNING();
+    return true;
 }

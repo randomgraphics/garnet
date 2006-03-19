@@ -248,7 +248,7 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
             vertexData,
             (UINT)strideInBytes ) );
 
-    // TODO: dirty rendering context of vertex stream 0 and index buffer
+    GN_TODO( "dirty rendering context of vertex stream 0 and index buffer" );
 
     // success
     mNumPrims += numPrims;
@@ -280,7 +280,7 @@ void GN::gfx::D3DRenderer::drawUp(
         vertexData,
         (UINT)strideInBytes ) );
 
-    // TODO: dirty rendering context of vertex stream 0
+    GN_TODO( "dirty rendering context of vertex stream 0" );
 
     // success
     mNumPrims += numPrims;

@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.12.6)
 // *****************************************************************************
 
-#include "oglTypes.h"
+#include "oglResource.h"
 
 namespace GN { namespace gfx
 {

@@ -327,12 +327,10 @@ namespace GN { namespace gfx
         void contextQuit() {}
         bool contextOK() const { return true; }
         void contextClear();
-        bool contextDeviceCreate();
+        bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
-        void contextDeviceDispose();
-        void contextDeviceDestroy();
-
-    private:
+        void contextDeviceDispose() {}
+        void contextDeviceDestroy() {}
 
         GN_INLINE void bindContextState(
             const ContextState & newContext,

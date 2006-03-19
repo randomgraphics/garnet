@@ -7,10 +7,10 @@
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
-#include "oglTypes.h"
 
 namespace GN { namespace gfx
 {
+    struct OGLResource;
     class OGLFont;
     class OGLQuad;
     class OGLLine;
@@ -45,12 +45,8 @@ namespace GN { namespace gfx
             return MyParent::ok()
                 && dispOK()
                 && capsOK()
-                && shaderOK()
-                && rsbOK()
-                && textureOK()
-                && bufferOK()
-                && ffpOK()
-                && renderTargetOK()
+                && resourceOK()
+                && contextOK()
                 && drawOK();
         }
 
@@ -60,12 +56,8 @@ namespace GN { namespace gfx
             deviceClear();
             dispClear();
             capsClear();
-            shaderClear();
-            rsbClear();
-            textureClear();
-            bufferClear();
-            ffpClear();
-            renderTargetClear();
+            resourceClear();
+            contextClear();
             drawClear();
         }
         //@}
@@ -79,19 +71,17 @@ namespace GN { namespace gfx
         //@{
 
     public:
-        virtual bool changeOptions( RendererOptions ro, bool forceDeviceRecreation );
+        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation );
 
-    protected :
+    private :
+
+        void deviceClear() { mDeviceChanging = false; }
         bool deviceCreate();
         bool deviceRestore();
         void deviceDispose();
         void deviceDestroy();
 
-    private :
-        void deviceClear()
-        {
-            mDeviceChanging = false;
-        }
+        bool doOptionChange( RendererOptions ro, bool forceDeviceRecreation );
 
     private:
 
@@ -174,6 +164,11 @@ namespace GN { namespace gfx
 
         //@{
 
+    public :
+
+        virtual bool supportShader( ShaderType, ShadingLanguage );
+        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
+
     private :
         bool capsInit() { return true; }
         void capsQuit() {}
@@ -183,13 +178,13 @@ namespace GN { namespace gfx
         bool capsDeviceCreate();
         bool capsDeviceRestore() { return true; }
         void capsDeviceDispose() {}
-        void capsDeviceDestroy();
+        void capsDeviceDestroy() {}
 
         //@}
 
     // ************************************************************************
     //
-    //! \name                      Shader Manager
+    //! \name                     Resource Manager
     //
     // ************************************************************************
 
@@ -197,12 +192,25 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual bool supportShader( ShaderType, ShadingLanguage );
         virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry );
-        virtual void bindShader( ShaderType type, const Shader * shader ) { mCurrentDrawState.bindShader( type, shader ); }
-        virtual void bindShaders( const Shader * const shaders[] ) { mCurrentDrawState.bindShaders(shaders); }
+        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader );
+        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
+        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
+        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
 
     public:
+
+        //!
+        //! Insert resource into resource list. Can be only called by
+        //! constructor of OGLResource.
+        //!
+        void insertResource( OGLResource * p ) { mResourceList.push_back(p); }
+
+        //!
+        //! Remove resource from resource list. Can be only called by
+        //! destructor of OGLResource.
+        //!
+        void removeResource( OGLResource * p ) { mResourceList.remove(p); }
 
         //!
         //! Inform OGL renderer that GLSL shader is deleted, to give OGL renderer a chance
@@ -211,17 +219,15 @@ namespace GN { namespace gfx
         void removeGLSLShader( ShaderType, Shader * );
 
     private :
-        bool shaderInit() { return true; }
-        void shaderQuit() {}
-        bool shaderOK() const { return true; }
-        void shaderClear() {}
 
-        bool shaderDeviceCreate() { return true; }
-        bool shaderDeviceRestore() { return true; }
-        void shaderDeviceDispose() {}
-        void shaderDeviceDestroy();
-
-        void applyShaderState();
+        bool resourceInit() { return true; }
+        void resourceQuit() {}
+        bool resourceOK() const { return true; }
+        void resourceClear() {}
+        bool resourceDeviceCreate();
+        bool resourceDeviceRestore();
+        void resourceDeviceDispose();
+        void resourceDeviceDestroy();
 
     private:
 
@@ -243,46 +249,29 @@ namespace GN { namespace gfx
 
         typedef std::map<GLSLShaders,void*> GLSLProgramMap;
 
-        GLSLProgramMap mGLSLProgramMap;
+        typedef HandleManager<void*,VtxFmtHandle> VtxFmtManager;
+
+        std::list<OGLResource*> mResourceList;
+        GLSLProgramMap          mGLSLProgramMap;
+        VtxFmtManager           mVtxFmts;
 
         //@}
 
     // ************************************************************************
     //
-    //! \name             Render State Block Manager
+    //! \name                   Context Manager
     //
     // ************************************************************************
 
         //@{
 
-    private :
-        bool rsbInit() { return true; }
-        void rsbQuit() {}
-        bool rsbOK() const { return true; }
-        void rsbClear() {}
+    public:
 
-        bool rsbDeviceCreate() { return rebindCurrentRsb(); }
-        bool rsbDeviceRestore() { return true; }
-        void rsbDeviceDispose() {}
-        void rsbDeviceDestroy() { disposeDeviceData(); }
-
-        // from BasicRenderer
-        virtual DeviceRenderStateBlock *
-        createDeviceRenderStateBlock( const RenderStateBlockDesc & from, const RenderStateBlockDesc & to );
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                     Texture Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
-        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader );
+        virtual void setContextState( const ContextState & newContext );
+        virtual void setContextData( const ContextData & );
+        virtual void rebindContextState( ContextState::FieldFlags );
+        virtual void rebindContextData( ContextData::FieldFlags );
+        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const;
 
     public:
 
@@ -291,164 +280,23 @@ namespace GN { namespace gfx
         void disableTextureStage( size_t ) const; //!< Disable one texture stage
 
     private:
-        bool textureInit() { return true; }
-        void textureQuit() { clearCurrentTextures(); }
-        bool textureOK() const { return true; }
-        void textureClear() {}
 
-        bool textureDeviceCreate() { return true; }
-        bool textureDeviceRestore() { return true; }
-        void textureDeviceDispose() { setAllTextureStagesDirty(); }
-        void textureDeviceDestroy() {}
+        bool contextInit() { return true; }
+        void contextQuit() {}
+        bool contextOK() const { return true; }
+        void contextClear();
+        bool contextDeviceCreate();
+        bool contextDeviceRestore();
+        void contextDeviceDispose();
+        void contextDeviceDestroy();
 
-        void applyTexture() const;
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                 Renderable Buffer Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-        virtual uint32_t createVtxFmt( const VtxFmtDesc & );
-        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
-        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
-        virtual void bindVtxFmt( uint32_t );
-        virtual void bindVtxBufs( const VtxBuf * const buffers[], size_t start, size_t count );
-        virtual void bindVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
-        virtual void bindIdxBuf( const IdxBuf * buf ) { mCurrentIdxBuf.set( buf ); }
-
-    private :
-        bool bufferInit() { return true; }
-        void bufferQuit() {}
-        bool bufferOK() const { return true; }
-        void bufferClear();
-
-        bool bufferDeviceCreate() { return true; }
-        bool bufferDeviceRestore() { return true; }
-        void bufferDeviceDispose() {}
-        void bufferDeviceDestroy() {}
-
-        void applyVtxFmt();
-        void applyVtxBufState( size_t startVtx );
-
-        void setVtxBufUp( const void * data, size_t stride ); // apply user-supplied vertex buffer, used by DIPUP()/DPUP()
-
-    private :
-
-        typedef HandleManager<void*,VtxFmtHandle> VtxFmtManager;
-
-        VtxFmtManager mVtxFmts;
-
-        AutoRef<const IdxBuf> mCurrentIdxBuf;
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                     Resource Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public :
-
-        //!
-        //! Insert resource into resource list. Can be only called by
-        //! constructor of OGLResource.
-        //!
-        void insertResource( OGLResource * p )
-        {
-            mResourceList.push_back(p);
-        }
-
-        //!
-        //! Remove resource from resource list. Can be only called by
-        //! destructor of OGLResource.
-        //!
-        void removeResource( OGLResource * p )
-        {
-            mResourceList.remove(p);
-        }
+        GN_INLINE void bindContextState( const ContextState & newContext, ContextState::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextData( const ContextData & newData, ContextData::FieldFlags newFlag, bool forceRebind );
 
     private:
 
-        bool resourceDeviceCreate();
-        bool resourceDeviceRestore();
-        void resourceDeviceDispose();
-        void resourceDeviceDestroy();
-
-    private :
-
-        std::list<OGLResource*> mResourceList;
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name                  Render Parameters Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public:
-        virtual Matrix44f & composePerspectiveMatrix( Matrix44f &, float, float, float, float ) const;
-        virtual Matrix44f & composeOrthoMatrix( Matrix44f &, float, float, float, float, float, float ) const;
-
-    private :
-        bool ffpInit() { return true; }
-        void ffpQuit() {}
-        bool ffpOK() const { return true; }
-        void ffpClear() {}
-
-        bool ffpDeviceCreate() { return true; }
-        bool ffpDeviceRestore() { reapplyAllFfpStates(); return true; }
-        void ffpDeviceDispose() {}
-        void ffpDeviceDestroy() {}
-
-        void applyFfpState();
-
-        //@}
-
-    // ************************************************************************
-    //
-    //! \name              Render Target Manager
-    //
-    // ************************************************************************
-
-        //@{
-
-    public:
-        virtual void setRenderTarget( size_t index, const Texture * texture, size_t level, size_t face );
-        virtual void setRenderDepth( const Texture * texture, size_t level, size_t face );
-
-    private:
-
-        bool renderTargetInit() { return true; }
-        void renderTargetQuit() {}
-        bool renderTargetOK() const { return true; }
-        void renderTargetClear()
-        {
-            mCurrentRTSize.set( 0, 0 );
-        }
-
-        bool renderTargetDeviceCreate();
-        bool renderTargetDeviceRestore();
-        void renderTargetDeviceDispose() {}
-        void renderTargetDeviceDestroy() {}
-
-    private:
-        RenderTargetTextureDesc
-            mCurrentRTs[MAX_RENDER_TARGETS], // current color textures.
-            mCurrentDepth;  // current depth texture
-        Vector2<size_t>
-            mCurrentRTSize; // current render target size
+        ContextState mContextState;
+        ContextData  mContextData;
 
         //@}
 
@@ -461,6 +309,7 @@ namespace GN { namespace gfx
         //@{
 
     public:
+
         virtual bool drawBegin();
         virtual void drawEnd();
         virtual void drawFinish();
@@ -501,14 +350,13 @@ namespace GN { namespace gfx
         virtual void drawDebugTextW( const wchar_t * text, int x, int y, const Vector4f & color );
 
     private:
+
         bool drawInit() { return true; }
         void drawQuit() {}
         bool drawOK() const { return true; }
         void drawClear()
         {
             mDrawBegan = false;
-            mCurrentDrawState.clear();
-            mLastDrawState.clear();
             mFont = 0;
             mQuad = 0;
             mLine = 0;
@@ -516,21 +364,15 @@ namespace GN { namespace gfx
 
         bool drawDeviceCreate();
         bool drawDeviceRestore() { return true; }
-        void drawDeviceDispose() { mCurrentDrawState.dirtyFlags.i32 = -1; }
+        void drawDeviceDispose() {}
         void drawDeviceDestroy();
 
     private:
+
         bool mDrawBegan;
-
-        OGLDrawState mCurrentDrawState;
-        OGLDrawState mLastDrawState;
-
         OGLFont * mFont;
         OGLQuad * mQuad;
         OGLLine * mLine;
-
-    private:
-        GN_INLINE void applyDrawState( size_t startVtx );
 
         //@}
 
@@ -551,7 +393,7 @@ namespace GN { namespace gfx
 }}
 
 #if GN_ENABLE_INLINE
-#include "oglTextureMgr.inl"
+#include "oglResourceMgr.inl"
 #endif
 
 // *****************************************************************************
