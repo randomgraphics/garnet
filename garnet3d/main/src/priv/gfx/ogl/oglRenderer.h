@@ -76,13 +76,20 @@ namespace GN { namespace gfx
 
     private :
 
+        enum OptionChangingType
+        {
+            OCT_AUTO,
+            OCT_CREATE,
+            OCT_INIT
+        };
+
         void deviceClear() { mDeviceChanging = false; }
-        bool deviceCreate();
+        bool deviceCreate( bool triggerInitSignal );
         bool deviceRestore();
         void deviceDispose();
-        void deviceDestroy();
+        void deviceDestroy( bool triggerQuitSignal );
 
-        bool doOptionChange( RendererOptions ro, bool forceDeviceRecreation );
+        bool doOptionChange( RendererOptions, OptionChangingType );
 
     private:
 

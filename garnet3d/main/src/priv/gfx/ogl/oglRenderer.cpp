@@ -49,7 +49,7 @@ bool GN::gfx::OGLRenderer::init(const RendererOptions & ro )
     if( !drawInit()     ) { quit(); return selfOK(); }
 
     // create & reset device data
-    if( !doOptionChange( ro, true ) ) { quit(); return selfOK(); }
+    if( !doOptionChange( ro, OCT_INIT ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -64,7 +64,7 @@ void GN::gfx::OGLRenderer::quit()
 {
     GN_GUARD;
 
-    deviceDestroy();
+    deviceDestroy( true );
 
     drawQuit();
     contextQuit();
@@ -86,7 +86,7 @@ void GN::gfx::OGLRenderer::quit()
 bool GN::gfx::OGLRenderer::changeOptions( const RendererOptions & ro, bool forceRecreation )
 {
     GN_GUARD;
-    return doOptionChange( ro, forceRecreation );
+    return doOptionChange( ro, forceRecreation ? OCT_CREATE : OCT_AUTO );
     GN_UNGUARD;
 }
 
@@ -97,7 +97,7 @@ bool GN::gfx::OGLRenderer::changeOptions( const RendererOptions & ro, bool force
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::deviceCreate()
+bool GN::gfx::OGLRenderer::deviceCreate( bool triggerInitSignal )
 {
     GN_GUARD;
 
@@ -113,12 +113,18 @@ bool GN::gfx::OGLRenderer::deviceCreate()
 
     #undef COMPONENT_RECREATE
 
-    // trigger renderer signals
-    if( !sSigDeviceCreate() || !sSigDeviceRestore() )
+    // trigger signals
+    if( triggerInitSignal )
     {
-        GN_ERROR( "fail to process OGL device restore signal!" );
-        return false;
+        GN_INFO( "GFX SIGNAL: OGL renderer init." );
+        if( !sSigInit() ) return false;
     }
+
+    GN_INFO( "GFX SIGNAL: OGL device create." );
+    if( !sSigDeviceCreate() ) return false;
+
+    GN_INFO( "GFX SIGNAL: OGL device restore." );
+    if( !sSigDeviceRestore() ) return false;
 
     // success
     return true;
@@ -142,11 +148,8 @@ bool GN::gfx::OGLRenderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    if( !sSigDeviceRestore() )
-    {
-        GN_ERROR( "fail to process OGL device restore signal!" );
-        return false;
-    }
+    GN_INFO( "GFX SIGNAL: OGL device restore." );
+    if( !sSigDeviceRestore() ) return false;
 
     // success
     return true;
@@ -163,7 +166,7 @@ void GN::gfx::OGLRenderer::deviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    // trigger signals
+    GN_INFO( "GFX SIGNAL: OGL device dispose." );
     sSigDeviceDispose();
 
     drawDeviceDispose();
@@ -178,15 +181,26 @@ void GN::gfx::OGLRenderer::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::deviceDestroy()
+void GN::gfx::OGLRenderer::deviceDestroy( bool triggerQuitSignal )
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
-    // trigger signals
-    sSigDeviceDispose();
-    sSigDeviceDestroy();
+    if( getOGLRC() )
+    {
+        GN_INFO( "GFX SIGNAL: OGL device dispose." );
+        sSigDeviceDispose();
+
+        GN_INFO( "GFX SIGNAL: OGL device destroy." );
+        sSigDeviceDestroy();
+
+        if( triggerQuitSignal )
+        {
+            GN_INFO( "GFX SIGNAL: OGL renderer quit." );
+            sSigQuit();
+        }
+    }
 
     #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
 
@@ -208,7 +222,7 @@ void GN::gfx::OGLRenderer::deviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::doOptionChange( RendererOptions ro, bool forceRecreation )
+bool GN::gfx::OGLRenderer::doOptionChange( RendererOptions ro, OptionChangingType type )
 {
     GN_GUARD;
 
@@ -229,12 +243,17 @@ bool GN::gfx::OGLRenderer::doOptionChange( RendererOptions ro, bool forceRecreat
 
     const DispDesc & newDesc = getDispDesc();
 
-    if( forceRecreation ||
+    if( OCT_INIT == type )
+    {
+        deviceDestroy( true );
+        return deviceCreate( true );
+    }
+    if( OCT_CREATE == type ||
         oldDesc.windowHandle != newDesc.windowHandle )
     {
         // we have to perform a full device recreation
-        deviceDestroy();
-        return deviceCreate();
+        deviceDestroy( false );
+        return deviceCreate( false );
     }
     else if( oldDesc != newDesc ||
         oldOptions.fullscreen != ro.fullscreen ||
@@ -253,4 +272,3 @@ bool GN::gfx::OGLRenderer::doOptionChange( RendererOptions ro, bool forceRecreat
 
     GN_UNGUARD;
 }
-
