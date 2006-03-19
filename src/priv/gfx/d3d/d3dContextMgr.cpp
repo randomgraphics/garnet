@@ -158,7 +158,7 @@ void GN::gfx::D3DRenderer::setContextState( const ContextState & newState )
 #endif
 
     mContextState.mergeWith( newState );
-    holdContextState( mContextState );
+    holdContextState( newState );
 
     GN_UNGUARD_SLOW;
 }
@@ -181,7 +181,7 @@ void GN::gfx::D3DRenderer::setContextData( const ContextData & newData )
 #endif
 
     mContextData.mergeWith( newData );
-    holdContextData( mContextData );
+    holdContextData( newData );
 
     GN_UNGUARD_SLOW;
 }
@@ -306,15 +306,11 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     }
 
     //
-    // TODO: bind color and depth buffers
+    // TODO: bind render targets
     //
-    if( newFlags.colorBuffers )
+    if( newFlags.renderTargets )
     {
-        newFlags.colorBuffers = 0;
-    }
-    if( newFlags.depthBuffer )
-    {
-        newFlags.depthBuffer = 0;
+        newFlags.renderTargets = 0;
     }
 
     //
