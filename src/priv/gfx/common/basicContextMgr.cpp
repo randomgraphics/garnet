@@ -37,8 +37,11 @@ void GN::gfx::BasicRenderer::holdContextState( const ContextState & state )
 {
     GN_GUARD;
 
-    if( state.flags.vtxShader || state.flags.pxlShader )
-        sUpdateAutoRefArray( mResourceHolder.shaders, state.shaders, NUM_SHADER_TYPES );
+    if( state.flags.vtxShader )
+        mResourceHolder.shaders[VERTEX_SHADER].set( state.shaders[VERTEX_SHADER] );
+
+    if( state.flags.pxlShader )
+        mResourceHolder.shaders[PIXEL_SHADER].set( state.shaders[PIXEL_SHADER] );
 
     if( state.flags.renderTargets )
     {

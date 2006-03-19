@@ -3,6 +3,8 @@
 #include "oglFont.h"
 #include "oglQuad.h"
 #include "oglLine.h"
+#include "oglVtxFmt.h"
+#include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 
 // *****************************************************************************
@@ -14,9 +16,9 @@
 // ------------------------------------------------------------------------
 static GN_INLINE
 bool sPrimitiveType2OGL( GLenum                 & oglPrim,
-                        size_t                 & numIdx,
-                        GN::gfx::PrimitiveType   prim,
-                        size_t                   numPrims )
+                         size_t                 & numIdx,
+                         GN::gfx::PrimitiveType   prim,
+                         size_t                   numPrims )
 {
     switch(prim)
     {
@@ -58,6 +60,36 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
     }
 
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline void sApplyVtxBuf(
+    const GN::gfx::OGLVtxFmt & vtxFmt,
+    const GN::gfx::ContextData::VtxBufDesc * vtxBufs,
+    size_t numVtxBufs,
+    size_t startVtx )
+{
+    GN_GUARD_SLOW;
+
+    using namespace GN;
+    using namespace GN::gfx;
+
+    GN_ASSERT_EX( vtxFmt.getFormat().numStreams <= numVtxBufs, "No enough vertex buffers." );
+
+    for( size_t i = 0; i < vtxFmt.getFormat().numStreams; ++i )
+    {
+        const ContextData::VtxBufDesc & vbd = vtxBufs[i];
+
+        vtxFmt.bindBuffer(
+            i,
+            vbd.buffer ? safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData() : 0,
+            startVtx,
+            vbd.stride );
+    }
+
+    GN_UNGUARD_SLOW;
 }
 
 // *****************************************************************************
@@ -216,8 +248,6 @@ void GN::gfx::OGLRenderer::clearScreen(
     GN_UNGUARD_SLOW;
 }
 
-#pragma warning(disable:4100)
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -239,6 +269,16 @@ void GN::gfx::OGLRenderer::drawIndexed(
     GN_VERIFY_EX(
         sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrims ),
         "Fail to map primitive!" );
+
+    // bind vertex buffer based on current startVtx
+    GN_ASSERT(
+        mVtxFmts.validHandle(mContextData.vtxFmt) &&
+        mVtxFmts[mContextData.vtxFmt] );
+    sApplyVtxBuf(
+        *mVtxFmts[mContextData.vtxFmt],
+        mContextData.vtxBufs,
+        mContextData.numVtxBufs,
+        startVtx );
 
     // get current index buffer
     GN_ASSERT( mContextData.idxBuf );
@@ -303,6 +343,16 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
         sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrims ),
         "Fail to map primitive!" );
 
+    // bind vertex buffer based on current startVtx
+    GN_ASSERT(
+        mVtxFmts.validHandle(mContextData.vtxFmt) &&
+        mVtxFmts[mContextData.vtxFmt] );
+    sApplyVtxBuf(
+        *mVtxFmts[mContextData.vtxFmt],
+        mContextData.vtxBufs,
+        mContextData.numVtxBufs,
+        startVtx );
+
     if( GLEW_EXT_compiled_vertex_array )
     {
         // lock array if GL_EXT_compiled_vertex_array is supported
@@ -338,13 +388,9 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     size_t           strideInBytes,
     const uint16_t * indexData )
 {
-/*    GN_GUARD_SLOW;
+    GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
-
-    // set user vertex buffer
-    setVtxBufUp( vertexData, strideInBytes );
-    mCurrentDrawState.dirtyFlags.vtxBuf |= 1; // dirty vertex stream 0
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -352,6 +398,17 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     GN_VERIFY_EX(
         sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrims ),
         "Fail to map primitive!" );
+
+    // bind vertex buffer based on current startVtx
+    GN_ASSERT(
+        mVtxFmts.validHandle(mContextData.vtxFmt) &&
+        mVtxFmts[mContextData.vtxFmt] &&
+        1 == mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams );
+    mVtxFmts[mContextData.vtxFmt]->bindBuffer(
+        0, // stream index
+        (const uint8_t* )vertexData,
+        0, // startVtx,
+        strideInBytes );
 
 #if GN_DEBUG
     // Verify index buffer
@@ -394,7 +451,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     mNumPrims += numPrims;
     ++mNumDraws;
 
-    GN_UNGUARD_SLOW;*/
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -406,16 +463,9 @@ void GN::gfx::OGLRenderer::drawUp(
     const void *  vertexData,
     size_t        strideInBytes )
 {
-/*    GN_GUARD_SLOW;
+    GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
-
-    // update draw state
-    applyDrawState(0);
-
-    // set user vertex buffer
-    setVtxBufUp( vertexData, strideInBytes );
-    mCurrentDrawState.dirtyFlags.vtxBuf |= 1; // dirty vertex stream 0
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -423,6 +473,17 @@ void GN::gfx::OGLRenderer::drawUp(
     GN_VERIFY_EX(
         sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrims ),
         "Fail to map primitive!" );
+
+    // bind vertex buffer based on current startVtx
+    GN_ASSERT(
+        mVtxFmts.validHandle(mContextData.vtxFmt) &&
+        mVtxFmts[mContextData.vtxFmt] &&
+        1 == mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams );
+    mVtxFmts[mContextData.vtxFmt]->bindBuffer(
+        0, // stream index
+        (const uint8_t* )vertexData,
+        0, // startVtx,
+        strideInBytes );
 
     if( GLEW_EXT_compiled_vertex_array )
     {
@@ -445,7 +506,7 @@ void GN::gfx::OGLRenderer::drawUp(
     mNumPrims += numPrims;
     ++mNumDraws;
 
-    GN_UNGUARD_SLOW;*/
+    GN_UNGUARD_SLOW;
 }
 
 //
@@ -460,6 +521,10 @@ void GN::gfx::OGLRenderer::drawQuads(
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mQuad );
+    contextUpdateBegin();
+    if( !(DQ_USE_CURRENT_VS & options) ) setVtxShader( 0 );
+    if( !(DQ_USE_CURRENT_PS & options) ) setPxlShader( 0 );
+    contextUpdateEnd();
     mQuad->drawQuads(
         options,
         (const float*)positions, posStride,
@@ -484,6 +549,10 @@ void GN::gfx::OGLRenderer::drawLines(
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mQuad );
+    contextUpdateBegin();
+    if( !(DL_USE_CURRENT_VS & options) ) setVtxShader( 0 );
+    if( !(DL_USE_CURRENT_PS & options) ) setPxlShader( 0 );
+    contextUpdateEnd();
     mLine->drawLines( options, (const float*)positions, stride, count, color, model, view, proj );
     GN_UNGUARD_SLOW;
 }
@@ -495,6 +564,7 @@ void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, cons
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mFont );
+    setShaders( 0, 0 ); // disable programmable pipeline
     mFont->drawTextW( s, x, y, c );
     GN_UNGUARD_SLOW;
 }

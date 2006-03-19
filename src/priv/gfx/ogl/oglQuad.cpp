@@ -170,7 +170,7 @@ void GN::gfx::OGLQuad::drawQuads(
         glDisable( GL_LIGHTING );
     }
 
-    // apply vertex shader 
+    // apply vertex shader
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
         // setup OGL matrices

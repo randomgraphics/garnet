@@ -73,6 +73,8 @@ static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
 void GN::gfx::OGLRenderer::contextClear()
 {
     _GNGFX_DEVICE_TRACE();
+    mContextState.resetToDefault();
+    mContextData.resetToEmpty();
 }
 
 //
