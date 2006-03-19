@@ -237,6 +237,12 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
+    // store vertex and index buffer
+    AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
+    AutoComPtr<IDirect3DIndexBuffer9> ib;
+    GN_DX_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+    GN_DX_CHECK( mDevice->GetIndices( &ib ) );
+
     GN_DX_CHECK(
         mDevice->DrawIndexedPrimitiveUP(
             sPrimMap[prim],
@@ -248,7 +254,9 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
             vertexData,
             (UINT)strideInBytes ) );
 
-    GN_TODO( "dirty rendering context of vertex stream 0 and index buffer" );
+    // restore vertex and index buffer
+    GN_DX_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+    GN_DX_CHECK( mDevice->SetIndices( ib ) );
 
     // success
     mNumPrims += numPrims;
@@ -273,6 +281,10 @@ void GN::gfx::D3DRenderer::drawUp(
     //
     GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
+    // store vertex and index buffer
+    AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
+    GN_DX_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+
     // do draw
     GN_DX_CHECK( mDevice->DrawPrimitiveUP(
         sPrimMap[prim],
@@ -280,7 +292,8 @@ void GN::gfx::D3DRenderer::drawUp(
         vertexData,
         (UINT)strideInBytes ) );
 
-    GN_TODO( "dirty rendering context of vertex stream 0" );
+    // restore vertex and index buffer
+    GN_DX_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
 
     // success
     mNumPrims += numPrims;
