@@ -14,6 +14,19 @@
 // *****************************************************************************
 
 //!
+//! render state value map
+//!
+static GLenum sRsv2OGL[GN::gfx::NUM_RENDER_STATE_VALUES] =
+{
+    #define GNGFX_DEFINE_RSV( tag, d3dval, glval ) glval,
+    #include "garnet/gfx/renderStateValueMeta.h"
+    #undef GNGFX_DEFINE_RSV
+};
+
+// Individual RS/TSS functions
+#include "oglRenderState.inl"
+
+//!
 //! opengl texture operation structure
 //!
 struct OGLTextureState
@@ -206,19 +219,117 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     }
 
     //
-    // bind vertex shader
+    // bind shader
     //
-    if( newFlags.vtxShader )
+    if( newFlags.vtxShader || newFlags.pxlShader )
     {
         newFlags.vtxShader = 0;
-    }
-
-    //
-    // bind pixel shader
-    //
-    if( newFlags.pxlShader )
-    {
         newFlags.pxlShader = 0;
+
+        const Shader * glslVs = 0;
+        const Shader * glslPs = 0;
+
+        const Shader * oldVtxShader = mContextState.shaders[VERTEX_SHADER];
+        const Shader * oldPxlShader = mContextState.shaders[PIXEL_SHADER];
+        const Shader * newVtxShader = newState.shaders[VERTEX_SHADER];
+        const Shader * newPxlShader = newState.shaders[PIXEL_SHADER];
+
+        if( newState.flags.vtxShader )
+        {
+            GN_ASSERT(
+                0 == newVtxShader ||
+                VERTEX_SHADER == newVtxShader->getType() );
+
+            if( oldVtxShader )
+            {
+                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
+                sh->disable();
+            }
+            if( newVtxShader )
+            {
+                if( LANG_OGL_GLSL != newVtxShader->getLang() )
+                {
+                    const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
+                    sh->enable();
+                    sh->apply();
+                }
+                else
+                {
+                    glslVs = newVtxShader;
+                }
+            }
+        }
+        else if( oldVtxShader )
+        {
+            if( LANG_OGL_GLSL != oldVtxShader->getLang() )
+            {
+                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
+                sh->applyDirtyUniforms();
+            }
+            else
+            {
+                glslVs = oldVtxShader;
+            }
+        }
+
+        if( newState.flags.pxlShader )
+        {
+            GN_ASSERT(
+                0 == newPxlShader ||
+                PIXEL_SHADER == newPxlShader->getType() );
+
+            if( oldPxlShader )
+            {
+                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
+                sh->disable();
+            }
+            if( newPxlShader )
+            {
+                if( LANG_OGL_GLSL != newPxlShader->getLang() )
+                {
+                    const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
+                    sh->enable();
+                    sh->apply();
+                }
+                else
+                {
+                    glslPs = newPxlShader;
+                }
+            }
+        }
+        else if( oldPxlShader )
+        {
+            if( LANG_OGL_GLSL != oldPxlShader->getLang() )
+            {
+                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
+                sh->applyDirtyUniforms();
+            }
+            else
+            {
+                glslPs = oldPxlShader;
+            }
+        }
+
+        // handle GLSL shader and program in special way
+        if( !glslVs && !glslPs ) return;
+        GLSLShaders key = { glslVs, glslPs };
+        GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
+        if( mGLSLProgramMap.end() != i )
+        {
+            // found!
+            GN_ASSERT( i->second );
+            ((const OGLProgramGLSL*)i->second)->apply();
+        }
+        else
+        {
+            // not found. we have to create a new GLSL program object
+            AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
+            if( !newProg->init(
+                safeCast<const OGLBasicShaderGLSL*>(glslVs),
+                safeCast<const OGLBasicShaderGLSL*>(glslPs) ) ) return ;
+            mGLSLProgramMap[key] = newProg;
+            newProg.detach()->apply();
+        }
     }
 
     //
@@ -227,6 +338,55 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     if( newFlags.rsb )
     {
         newFlags.rsb = 0;
+
+        const RenderStateBlockDesc & from = mContextState.rsb;
+        const RenderStateBlockDesc & to = newState.rsb;
+        RenderStateBlockDesc diff;
+        RenderStateBlockDesc::sDiff( diff, to, from );
+
+        // apply all RSs (except blending factors) to API
+        GN::gfx::RenderStateValue rsv;
+        #define GNGFX_DEFINE_RS( tag, defvalue )                  \
+            rsv = diff.rs[GN::gfx::RS_##tag];                     \
+            GN_ASSERT( rsv < GN::gfx::NUM_RENDER_STATE_VALUES );  \
+            if( GN::gfx::RSV_EMPTY != rsv )                       \
+            {                                                     \
+                if( GN::gfx::RS_BLEND_SRC != GN::gfx::RS_##tag && \
+                     GN::gfx::RS_BLEND_DST != GN::gfx::RS_##tag ) \
+                    sSet_##tag( rsv );                            \
+            }
+        #include "garnet/gfx/renderStateMeta.h"
+        #undef GNGFX_DEFINE_RS
+
+        // apply blending factors
+        if( GN::gfx::RSV_EMPTY != diff.rs[GN::gfx::RS_BLEND_SRC] ||
+            GN::gfx::RSV_EMPTY != diff.rs[GN::gfx::RS_BLEND_DST] )
+        {
+            GN::gfx::RenderStateValue src = GN::gfx::RSV_EMPTY == diff.rs[GN::gfx::RS_BLEND_SRC]
+                ? to.rs[GN::gfx::RS_BLEND_SRC] : diff.rs[GN::gfx::RS_BLEND_SRC] ;
+
+            GN::gfx::RenderStateValue dst = GN::gfx::RSV_EMPTY == diff.rs[GN::gfx::RS_BLEND_DST]
+                ? to.rs[GN::gfx::RS_BLEND_DST] : diff.rs[GN::gfx::RS_BLEND_DST] ;
+
+            GN_OGL_CHECK( glBlendFunc( sRsv2OGL[src], sRsv2OGL[dst] ) );
+        }
+
+        // NOTE : 当启用OpenGL的ColorMaterial属性时，材质信息会随着顶点的颜色
+        //        而改变，因而需要用下面的代码来恢复材质信息。如果禁用了
+        //        ColorMaterial属性，则可以注释掉这段代码。
+        //
+        //// restore material parameters
+        //const GLfloat * diff = r.fastget_ambient();
+        //const GLfloat * ambi = r.fastget_ambient();
+        //const GLfloat * spec = r.fastget_specular();
+        //const GLfloat * emis = r.fastget_emission();
+        //uint32_t            shin = r.fastget_shininess();
+
+        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE  , diff ) );
+        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT  , ambi ) );
+        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR , spec ) );
+        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION , emis ) );
+        //GN_OGL_CHECK( glMateriali ( GL_FRONT_AND_BACK, GL_SHININESS, shin ) );
     }
 
     //
@@ -243,6 +403,14 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     if( newFlags.viewport )
     {
         newFlags.viewport = 0;
+        if( newState.viewport != mContextState.viewport )
+        {
+            GLint x = (GLint)( newState.viewport.x * getDispDesc().width);
+            GLint y = (GLint)( newState.viewport.y * getDispDesc().height );
+            GLsizei w = (GLsizei)( newState.viewport.w * getDispDesc().width );
+            GLsizei h = (GLsizei)( newState.viewport.h * getDispDesc().height );
+            glViewport( x, y, w, h );
+        }
     }
 
     //
@@ -398,30 +566,44 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     //
     if( newFlags.vtxFmt )
     {
-    }
-
-    //!
-    //! bind vertex buffers
-    //!
-    if( newFlags.vtxBufs )
-    {
-    }
-
-    //
-    // bind index buffer
-    //
-    if( newFlags.idxBuf )
-    {
-        if( newData.idxBuf != mContextData.idxBuf || forceRebind )
+        if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
         {
+            GN_ASSERT( mVtxFmts[newData.vtxFmt] );
+            mVtxFmts[newData.vtxFmt]->bind();
         }
     }
+
+    // Note: vertex and index buffers are handled in draw manager
 
     //
     // bind textures
     //
     if( newFlags.textures )
     {
+        size_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
+
+        size_t numtex = min( maxStages, newData.numTextures );
+
+        size_t i;
+        for ( i = 0; i < numtex; ++i )
+        {
+            // if null handle, then disable this texture stage
+            if( newData.textures[i] )
+            {
+                chooseTextureStage( i );
+                safeCast<const OGLTexture *>(newData.textures[i])->bind();
+            }
+            else
+            {
+                disableTextureStage( i );
+            }
+        }
+                    
+        // disable remaining texture stages
+        for( ; i < maxStages; ++i )
+        {
+            disableTextureStage( i );
+        }
     }
     
     GN_UNGUARD_SLOW;

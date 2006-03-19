@@ -11,6 +11,7 @@
 namespace GN { namespace gfx
 {
     struct OGLResource;
+    class OGLVtxFmt;
     class OGLFont;
     class OGLQuad;
     class OGLLine;
@@ -249,7 +250,7 @@ namespace GN { namespace gfx
 
         typedef std::map<GLSLShaders,void*> GLSLProgramMap;
 
-        typedef HandleManager<void*,VtxFmtHandle> VtxFmtManager;
+        typedef HandleManager<OGLVtxFmt*,VtxFmtHandle> VtxFmtManager;
 
         std::list<OGLResource*> mResourceList;
         GLSLProgramMap          mGLSLProgramMap;
