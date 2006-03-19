@@ -6,7 +6,7 @@
 //! \author  chenlee (2005.11.21)
 // *****************************************************************************
 
-#include "oglTypes.h"
+#include "oglResource.h"
 #include "../common/basicBuffer.h"
 
 namespace GN { namespace gfx

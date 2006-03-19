@@ -138,8 +138,6 @@ namespace GN { namespace gfx
         bool resOk() const { return true; }
         void resClear() {}
 
-    private:
-
         //@}
 
         // *****************************************************************************

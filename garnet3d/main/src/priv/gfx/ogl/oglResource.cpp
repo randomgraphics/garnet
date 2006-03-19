@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "oglTypes.h"
+#include "oglResource.h"
 #include "oglRenderer.h"
 
 GN::gfx::OGLResource::OGLResource( OGLRenderer & r )

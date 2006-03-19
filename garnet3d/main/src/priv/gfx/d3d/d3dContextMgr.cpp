@@ -85,15 +85,6 @@ void GN::gfx::D3DRenderer::contextClear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::contextDeviceCreate()
-{
-    _GNGFX_DEVICE_TRACE();
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::gfx::D3DRenderer::contextDeviceRestore()
 {
     GN_GUARD;
@@ -118,22 +109,6 @@ bool GN::gfx::D3DRenderer::contextDeviceRestore()
     return true;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::contextDeviceDispose()
-{
-    _GNGFX_DEVICE_TRACE();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::contextDeviceDestroy()
-{
-    _GNGFX_DEVICE_TRACE();
 }
 
 // *****************************************************************************

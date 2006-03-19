@@ -7,7 +7,7 @@
 // *****************************************************************************
 
 #include "../common/basicTexture.h"
-#include "oglTypes.h"
+#include "oglResource.h"
 #include "oglRenderer.h"
 
 namespace GN { namespace gfx
@@ -125,7 +125,7 @@ namespace GN { namespace gfx
         //!
         static GLenum sCubeface2OGL( size_t face )
         {
-            GLenum sTable[NUM_TEXFACES] =
+            GLenum sTable[NUM_CUBEFACES] =
             {
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB,
                 GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB,

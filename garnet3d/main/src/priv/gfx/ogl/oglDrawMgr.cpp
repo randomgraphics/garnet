@@ -216,6 +216,8 @@ void GN::gfx::OGLRenderer::clearScreen(
     GN_UNGUARD_SLOW;
 }
 
+#pragma warning(disable:4100)
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -231,8 +233,6 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     GN_ASSERT( mDrawBegan );
 
-    applyDrawState( startVtx );
-
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
     size_t  numIdx;
@@ -241,13 +241,8 @@ void GN::gfx::OGLRenderer::drawIndexed(
         "Fail to map primitive!" );
 
     // get current index buffer
-    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mCurrentIdxBuf.get() );
-
-    if( 0 == ib )
-    {
-        GN_ERROR( "There's no index buffer!" );
-        return;
-    }
+    GN_ASSERT( mContextData.idxBuf );
+    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mContextData.idxBuf );
 
 #if GN_DEBUG
     // Verify index buffer
@@ -301,9 +296,6 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
 
     GN_ASSERT( mDrawBegan );
 
-    // update draw state
-    applyDrawState( startVtx );
-
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
     size_t  numIdx;
@@ -346,12 +338,9 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     size_t           strideInBytes,
     const uint16_t * indexData )
 {
-    GN_GUARD_SLOW;
+/*    GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
-
-    // update draw state
-    applyDrawState(0);
 
     // set user vertex buffer
     setVtxBufUp( vertexData, strideInBytes );
@@ -405,7 +394,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     mNumPrims += numPrims;
     ++mNumDraws;
 
-    GN_UNGUARD_SLOW;
+    GN_UNGUARD_SLOW;*/
 }
 
 //
@@ -417,7 +406,7 @@ void GN::gfx::OGLRenderer::drawUp(
     const void *  vertexData,
     size_t        strideInBytes )
 {
-    GN_GUARD_SLOW;
+/*    GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
 
@@ -456,7 +445,7 @@ void GN::gfx::OGLRenderer::drawUp(
     mNumPrims += numPrims;
     ++mNumDraws;
 
-    GN_UNGUARD_SLOW;
+    GN_UNGUARD_SLOW;*/
 }
 
 //
@@ -470,21 +459,19 @@ void GN::gfx::OGLRenderer::drawQuads(
     size_t count )
 {
     GN_GUARD_SLOW;
-
     GN_ASSERT( mDrawBegan && mQuad );
-    if( !( DQ_USE_CURRENT_VS & options ) ) bindVtxShader(0);
-    if( !( DQ_USE_CURRENT_PS & options ) ) bindPxlShader(0);
-    applyDrawState(0);
     mQuad->drawQuads(
         options,
         (const float*)positions, posStride,
         (const float*)texcoords, texStride,
         (const uint32_t*)colors, clrStride,
         count );
-
     GN_UNGUARD_SLOW;
 }
 
+//
+//
+// ----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawLines(
     BitField options,
     const void * positions,
@@ -496,13 +483,8 @@ void GN::gfx::OGLRenderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
-
     GN_ASSERT( mDrawBegan && mQuad );
-    if( !( DL_USE_CURRENT_VS & options ) ) bindVtxShader(0);
-    if( !( DL_USE_CURRENT_PS & options ) ) bindPxlShader(0);
-    applyDrawState(0);
     mLine->drawLines( options, (const float*)positions, stride, count, color, model, view, proj );
-
     GN_UNGUARD_SLOW;
 }
 
@@ -512,56 +494,7 @@ void GN::gfx::OGLRenderer::drawLines(
 void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
-
     GN_ASSERT( mDrawBegan && mFont );
-
-    // disable programmable pipeline
-    Renderer::bindShaders( 0, 0 );
-    applyDrawState(0);
     mFont->drawTextW( s, x, y, c );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::applyDrawState( size_t startVtx )
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( mDrawBegan );
-
-    // apply textures
-    if( getDirtyTextureStages() > 0 ) applyTexture();
-
-    // apply FFP states
-    if( 0 != mFfpDirtyFlags.u32 )
-    {
-        applyFfpState();
-    }
-
-    // apply other states
-    if( mCurrentDrawState.dirtyFlags.u32 )
-    {
-        if( mCurrentDrawState.dirtyFlags.vtxFmt )
-        {
-            applyVtxFmt();
-        }
-
-        if( mCurrentDrawState.dirtyFlags.vtxBuf )
-        {
-            applyVtxBufState( startVtx );
-        }
-
-        applyShaderState();
-
-        // clear dirty flags
-        mCurrentDrawState.dirtyFlags.u32 = 0;
-
-        // replicate to last state
-        mLastDrawState = mCurrentDrawState;
-    }
-
     GN_UNGUARD_SLOW;
 }
