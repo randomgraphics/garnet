@@ -445,10 +445,9 @@ namespace GN { namespace gfx
                 unsigned int vtxShader          :  1; //!< vertex shdader
                 unsigned int pxlShader          :  1; //!< pixel shader
                 unsigned int rsb                :  1; //!< render state block
-                unsigned int colorBuffers       :  1; //!< color buffers
-                unsigned int depthBuffer        :  1; //!< depth buffer
+                unsigned int renderTargets      :  1; //!< render targets
                 unsigned int viewport           :  1; //!< viewport
-                unsigned int                    :  2; //!< reserved
+                unsigned int                    :  3; //!< reserved
                 // byte 1
                 unsigned int world              :  1; //!< world transformation
                 unsigned int view               :  1; //!< view transformation
@@ -464,32 +463,41 @@ namespace GN { namespace gfx
         };
 
         //!
-        //! render target binding descriptor
+        //! Render targets descriptor
         //!
         struct RenderTargetDesc
         {
-            const Texture * texture; //!< render target
-            size_t          face;    //!< cubemap face. Must be zero for non-cube/stack texture.
-            size_t          level;   //!< mipmap level
-            size_t          slice;   //!< slice index. Must be zero for 3D texture.
-
             //!
-            //! equality check
+            //! Render target surface descriptor
             //!
-            bool operator!=( const RenderTargetDesc & rhs ) const
+            struct SurfaceDesc
             {
-                if( texture != rhs.texture ) return true;
-                if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
-                return face != rhs.face || level != level || slice != slice;
-            }
+                const Texture * texture; //!< render target
+                size_t          face;    //!< cubemap face. Must be zero for non-cube/stack texture.
+                size_t          level;   //!< mipmap level
+                size_t          slice;   //!< slice index. Must be zero for 3D texture.
+
+                //!
+                //! equality check
+                //!
+                bool operator!=( const SurfaceDesc & rhs ) const
+                {
+                    if( texture != rhs.texture ) return true;
+                    if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
+                    return face != rhs.face || level != level || slice != slice;
+                }
+            };
+
+            SurfaceDesc colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
+            size_t      numColorBuffers;  //!< number of color buffers. Set to 0 to render to back buffer.
+            SurfaceDesc depthBuffer; //!< depth surface.
+            MsaaType    msaa; //!< MSAA type. Ignored, if numColorBuffers is zero.
         };
 
         FieldFlags            flags; //!< field flags
         const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
         RenderStateBlockDesc  rsb; //!< render state block.
-        RenderTargetDesc      colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
-        size_t                numColorBuffers; //!< color buffer count
-        RenderTargetDesc      depthBuffer; //!< depth buffer
+        RenderTargetDesc      renderTargets; //!< render target descriptor
         Rectf                 viewport; //!< viewport
         Matrix44f             world, //!< world transformation
                               view, //!< view transformation
@@ -512,7 +520,7 @@ namespace GN { namespace gfx
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
             rsb.resetToEmpty();
-            numColorBuffers = 0;
+            renderTargets.numColorBuffers = 0;
         }
 
         //!
@@ -527,8 +535,9 @@ namespace GN { namespace gfx
             flags.u32 = 0xFFFFFFFF; // set all flags to true.
             for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i] = 0;
             rsb.resetToDefault();
-            numColorBuffers = 0;
-            depthBuffer.texture = 0;
+            renderTargets.numColorBuffers = 0;
+            renderTargets.depthBuffer.texture = 0;
+            renderTargets.msaa = MSAA_NONE;
             viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
             world.identity();
             view.identity();
@@ -548,12 +557,7 @@ namespace GN { namespace gfx
             if( another.flags.vtxShader ) shaders[VERTEX_SHADER] = another.shaders[VERTEX_SHADER];
             if( another.flags.pxlShader ) shaders[PIXEL_SHADER] = another.shaders[PIXEL_SHADER];
             if( another.flags.rsb ) rsb.mergeWith( another.rsb );
-            if( another.flags.colorBuffers )
-            {
-                for( size_t i = 0; i < another.numColorBuffers; ++i ) colorBuffers[i] = another.colorBuffers[i];
-                numColorBuffers = another.numColorBuffers;
-            }
-            if( another.flags.depthBuffer ) depthBuffer = another.depthBuffer;
+            if( another.flags.renderTargets ) renderTargets = another.renderTargets;
             if( another.flags.viewport ) viewport = another.viewport;
             if( another.flags.world ) world = another.world;
             if( another.flags.view ) view = another.view;
@@ -630,7 +634,15 @@ namespace GN { namespace gfx
         inline void setRenderStates( const int * statePairs, size_t count );
 
         //!
-        //! Set render target texture
+        //! Set render target texture.
+        //!
+        //! \param index
+        //!     Render target index. Must be in range [0,MAX_RENDERT_TARGETS)
+        //! \param texture
+        //!     Render target texture pointer. Set to NULL to disable this and all render targets
+        //!     with larger index. Set index 0 to NULL to render to back buffer.
+        //! \param face, level, slice
+        //!     Surface in texture. Ignored if texture is NULL.
         //!
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
 
@@ -638,6 +650,11 @@ namespace GN { namespace gfx
         //! Set depth buffer
         //!
         inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+
+        //!
+        //! Set render target MSAA type
+        //!
+        inline void setMsaa( MsaaType );
 
         //!
         //! Set viewport.
@@ -1258,6 +1275,7 @@ namespace GN { namespace gfx
         inline void setRenderStates( const int * statePairs, size_t count );
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
         inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
+        inline void setMsaa( MsaaType );
         inline void setViewport( const Rectf & );
         inline void setViewport( float left, float top, float width, float height );
         inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );

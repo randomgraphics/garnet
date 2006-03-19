@@ -174,35 +174,15 @@
 #ifdef D3DCOMPILE_USEVOIDS
 #define GN_DX_CHECK_DO( func, something ) func
 #else
-#ifdef D3D_OK
 #define GN_DX_CHECK_DO( func, something )           \
     if( true ) {                                    \
         HRESULT rr = func;                          \
         if( FAILED(rr) )                            \
         {                                           \
             GN_ERROR( DXGetErrorString9A(rr) );     \
-            /* some D3D errors are expected */      \
-            if( D3DERR_DEVICELOST != rr &&          \
-                D3DERR_NOTFOUND != rr &&            \
-                D3DERR_OUTOFVIDEOMEMORY != rr )     \
-            {                                       \
-                GN_UNEXPECTED();                    \
-            }                                       \
             something                               \
         }                                           \
     } else void(0)
-#else
-#define GN_DX_CHECK_DO( func, something )           \
-    if( true ) {                                    \
-        HRESULT rr = func;                          \
-        if( FAILED(rr) )                            \
-        {                                           \
-            GN_ERROR( DXGetErrorString9A(rr) );     \
-            GN_UNEXPECTED();                        \
-            something                               \
-        }                                           \
-    } else void(0)
-#endif // D3D_OK
 #endif // D3DCOMPILE_USEVOIDS
 
 //!

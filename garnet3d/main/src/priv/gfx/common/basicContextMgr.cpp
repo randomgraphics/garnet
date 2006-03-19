@@ -37,13 +37,15 @@ void GN::gfx::BasicRenderer::holdContextState( const ContextState & state )
 {
     GN_GUARD;
 
-    GN_ASSERT( 0xFFFFFFFF == state.flags.u32 );
+    if( state.flags.vtxShader || state.flags.pxlShader )
+        sUpdateAutoRefArray( mResourceHolder.shaders, state.shaders, NUM_SHADER_TYPES );
 
-    sUpdateAutoRefArray( mResourceHolder.shaders, state.shaders, NUM_SHADER_TYPES );
-
-    for( size_t i = 0; i < state.numColorBuffers; ++i ) mResourceHolder.colorBuffers[i].set( state.colorBuffers[i].texture );
-
-    mResourceHolder.depthBuffer.set( state.depthBuffer.texture );
+    if( state.flags.renderTargets )
+    {
+        for( size_t i = 0; i < state.renderTargets.numColorBuffers; ++i )
+            mResourceHolder.colorBuffers[i].set( state.renderTargets.colorBuffers[i].texture );
+        mResourceHolder.depthBuffer.set( state.renderTargets.depthBuffer.texture );
+    }
 
     GN_UNGUARD;
 }
@@ -55,13 +57,14 @@ void GN::gfx::BasicRenderer::holdContextData( const ContextData & data )
 {
     GN_GUARD;
 
-    GN_ASSERT( 0xFFFFFFFF == data.flags.u32 );
+    if( data.flags.textures )
+        sUpdateAutoRefArray( mResourceHolder.textures, data.textures, data.numTextures );
 
-    sUpdateAutoRefArray( mResourceHolder.textures, data.textures, data.numTextures );
+    if( data.flags.vtxBufs )
+        for( size_t i = 0; i < data.numVtxBufs; ++i )
+            mResourceHolder.vtxBufs[i].set( data.vtxBufs[i].buffer );
 
-    for( size_t i = 0; i < data.numVtxBufs; ++i ) mResourceHolder.vtxBufs[i].set( data.vtxBufs[i].buffer );
-
-    mResourceHolder.idxBuf.set( data.idxBuf );
+    if( data.flags.idxBuf ) mResourceHolder.idxBuf.set( data.idxBuf );
 
     GN_UNGUARD;
 }

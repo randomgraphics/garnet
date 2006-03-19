@@ -72,6 +72,15 @@ bool GN::gfx::D3DPxlShaderHlsl::deviceCreate()
         &mConstTable );
     if( 0 == mD3DShader ) return false;
 
+    // update userdata of all uniforms
+    uint32_t handle = getFirstUniform();
+    while( handle )
+    {
+        Uniform & u = getUniform( handle );
+        if( !queryDeviceUniform( u.name.cstr(), u.userData ) ) return false;
+        handle = getNextUniform( handle );
+    }
+
     // success
     return true;
 
