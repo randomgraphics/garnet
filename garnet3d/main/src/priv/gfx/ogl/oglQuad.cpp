@@ -163,7 +163,18 @@ void GN::gfx::OGLQuad::drawQuads(
     // apply render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
-        if( DQ_OPAQUE & options ) glDisable( GL_BLEND ); else glEnable( GL_BLEND );
+        if( DQ_OPAQUE & options )
+        {
+            glDisable( GL_BLEND );
+            glDisable( GL_ALPHA_TEST );
+        }
+        else
+        {
+            glEnable( GL_BLEND );
+            glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+            glEnable( GL_ALPHA_TEST );
+            glAlphaFunc( GL_GREATER, 0.0f );
+        }
         glDepthMask( !!(DQ_UPDATE_DEPTH & options) );
         glEnable( GL_DEPTH_TEST );
         glDisable( GL_CULL_FACE );

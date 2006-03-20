@@ -92,6 +92,11 @@ bool GN::gfx::OGLRenderer::contextDeviceCreate()
 bool GN::gfx::OGLRenderer::contextDeviceRestore()
 {
     _GNGFX_DEVICE_TRACE();
+
+    // rebind context and data
+    bindContextState( mContextState, mContextState.flags, true );
+    bindContextData( mContextData, mContextData.flags, true );
+
     return true;
 }
 
@@ -242,6 +247,8 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
                 0 == newVtxShader ||
                 VERTEX_SHADER == newVtxShader->getType() );
 
+            // TODO: check forceRebind
+
             if( oldVtxShader )
             {
                 const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
@@ -280,6 +287,8 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
                 0 == newPxlShader ||
                 PIXEL_SHADER == newPxlShader->getType() );
 
+            // TODO: check forceRebind
+
             if( oldPxlShader )
             {
                 const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
@@ -313,24 +322,26 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
         }
 
         // handle GLSL shader and program in special way
-        if( !glslVs && !glslPs ) return;
-        GLSLShaders key = { glslVs, glslPs };
-        GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
-        if( mGLSLProgramMap.end() != i )
+        if( glslVs || glslPs )
         {
-            // found!
-            GN_ASSERT( i->second );
-            ((const OGLProgramGLSL*)i->second)->apply();
-        }
-        else
-        {
-            // not found. we have to create a new GLSL program object
-            AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
-            if( !newProg->init(
-                safeCast<const OGLBasicShaderGLSL*>(glslVs),
-                safeCast<const OGLBasicShaderGLSL*>(glslPs) ) ) return ;
-            mGLSLProgramMap[key] = newProg;
-            newProg.detach()->apply();
+            GLSLShaders key = { glslVs, glslPs };
+            GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
+            if( mGLSLProgramMap.end() != i )
+            {
+                // found!
+                GN_ASSERT( i->second );
+                ((const OGLProgramGLSL*)i->second)->apply();
+            }
+            else
+            {
+                // not found. we have to create a new GLSL program object
+                AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
+                if( !newProg->init(
+                	safeCast<const OGLBasicShaderGLSL*>(glslVs),
+                	safeCast<const OGLBasicShaderGLSL*>(glslPs) ) ) return ;
+                mGLSLProgramMap[key] = newProg;
+                newProg.detach()->apply();
+            }
         }
     }
 
@@ -357,7 +368,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
         // apply all RSs (except blending factors) to API
         #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
             if( newRsb.isSet( RS_##tag ) &&                          \
-                newRsb.get(RS_##tag) != oldRsb.get(RS_##tag) )       \
+                ( newRsb.get(RS_##tag) != oldRsb.get(RS_##tag) || forceRebind ) ) \
             {                                                        \
                 if( RS_ALPHA_FUNC == RS_##tag )                      \
                 {                                                    \
@@ -431,7 +442,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     if( newFlags.viewport )
     {
         newFlags.viewport = 0;
-        if( newState.viewport != mContextState.viewport )
+        if( newState.viewport != mContextState.viewport || forceRebind )
         {
             GLint x = (GLint)( newState.viewport.x * getDispDesc().width);
             GLint y = (GLint)( newState.viewport.y * getDispDesc().height );
@@ -523,7 +534,8 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
                         tsv = newDesc.get( i, (TextureState) j );
 
                         if( !oldDesc.isSet( i, (TextureState)j ) ||
-                            oldDesc.get( i, (TextureState)j ) != tsv )
+                            oldDesc.get( i, (TextureState)j ) != tsv ||
+                            forceRebind )
                         {
                             if( TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
                             {
@@ -541,7 +553,8 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
                 tsv = newDesc.get( i, TS_COLOROP );
 
                 if( !oldDesc.isSet( i, TS_COLOROP ) ||
-                    oldDesc.get( i, TS_COLOROP ) != tsv )
+                    oldDesc.get( i, TS_COLOROP ) != tsv ||
+                    forceRebind )
                 {
                     GLint glop = sTs2OGL[TS_COLOROP].op1;
                     switch( glop )
@@ -593,10 +606,13 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     //
     if( newFlags.vtxFmt )
     {
-        if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
+        if( newData.vtxFmt )
         {
-            GN_ASSERT( mVtxFmts[newData.vtxFmt] );
-            mVtxFmts[newData.vtxFmt]->bind();
+            if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
+            {
+                GN_ASSERT( mVtxFmts[newData.vtxFmt] );
+                mVtxFmts[newData.vtxFmt]->bind();
+            }
         }
     }
 
