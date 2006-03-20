@@ -64,7 +64,6 @@ void GN::gfx::OGLFont::drawTextW( const wchar_t * s, int x, int y, const Vector4
     glDisable(GL_LIGHTING);
     glDisable(GL_FOG);
     mRenderer.disableTextureStage( 0 );
-    glEnable(GL_COLOR_MATERIAL);
     glColor4fv( c );
 
     // set transform

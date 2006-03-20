@@ -223,12 +223,12 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     //
     // bind shader
     //
-    if( newFlags.vtxShader || newFlags.pxlShader )
+    if( newFlags.shaders )
     {
-        newFlags.vtxShader = 0;
-        newFlags.pxlShader = 0;
+        unsigned int shaderBits = newFlags.shaders;
+        newFlags.shaders = 0;
 
-        const Shader * glslVs = 0;
+		const Shader * glslVs = 0;
         const Shader * glslPs = 0;
 
         const Shader * oldVtxShader = mContextState.shaders[VERTEX_SHADER];
@@ -236,7 +236,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
         const Shader * newVtxShader = newState.shaders[VERTEX_SHADER];
         const Shader * newPxlShader = newState.shaders[PIXEL_SHADER];
 
-        if( newState.flags.vtxShader )
+        if( shaderBits & ( 1 << VERTEX_SHADER ) )
         {
             GN_ASSERT(
                 0 == newVtxShader ||
@@ -274,7 +274,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
             }
         }
 
-        if( newState.flags.pxlShader )
+        if( shaderBits & ( 1 << PIXEL_SHADER ) )
         {
             GN_ASSERT(
                 0 == newPxlShader ||

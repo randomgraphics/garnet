@@ -270,6 +270,9 @@ void GN::gfx::D3DQuad::drawQuads(
         AutoComPtr<IDirect3DVertexDeclaration9> decl;
         DWORD
             blendEnable,
+            alphaTest,
+            alphaFunc,
+            alphaRef,
             zEnable,
             zWrite,
             cullMode,
@@ -289,6 +292,9 @@ void GN::gfx::D3DQuad::drawQuads(
             GN_DX_CHECK( dev->GetIndices( &ib ) );
             GN_DX_CHECK( dev->GetVertexDeclaration( &decl ) );
             blendEnable = r.getD3DRenderState( D3DRS_ALPHABLENDENABLE );
+            alphaTest   = r.getD3DRenderState( D3DRS_ALPHATESTENABLE );
+            alphaFunc   = r.getD3DRenderState( D3DRS_ALPHAFUNC );
+            //alphaRef    = r.getD3DRenderState( D3DRS_ALPHAREF );
             zEnable     = r.getD3DRenderState( D3DRS_ZENABLE          );
             zWrite      = r.getD3DRenderState( D3DRS_ZWRITEENABLE     );
             cullMode    = r.getD3DRenderState( D3DRS_CULLMODE         );
@@ -311,6 +317,9 @@ void GN::gfx::D3DQuad::drawQuads(
             GN_DX_CHECK( dev->SetIndices( ib ) );
             if( decl ) GN_DX_CHECK( dev->SetVertexDeclaration( decl ) );
             r.setD3DRenderState( D3DRS_ALPHABLENDENABLE , blendEnable );
+            r.setD3DRenderState( D3DRS_ALPHATESTENABLE  , alphaTest   );
+            r.setD3DRenderState( D3DRS_ALPHAFUNC        , alphaFunc   );
+            //r.setD3DRenderState( D3DRS_ALPHAREF         , alphaRef    );
             r.setD3DRenderState( D3DRS_ZENABLE          , zEnable     );
             r.setD3DRenderState( D3DRS_ZWRITEENABLE     , zWrite      );
             r.setD3DRenderState( D3DRS_CULLMODE         , cullMode    );
@@ -447,6 +456,9 @@ void GN::gfx::D3DQuad::drawQuads(
         r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE );
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
+        r.setD3DRenderState( D3DRS_ALPHATESTENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE );
+        r.setD3DRenderState( D3DRS_ALPHAFUNC, D3DCMP_GREATER );
+        //r.setD3DRenderState( D3DRS_ALPHAREF, 0 );
         r.setD3DRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
    }
 

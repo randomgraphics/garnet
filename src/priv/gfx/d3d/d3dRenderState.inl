@@ -23,6 +23,15 @@ void sSet_ALPHA_FUNC( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
     r.setD3DRenderState( D3DRS_ALPHAFUNC, sRenderStateValue2D3D[val] );
 }
 
+/*
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_ALPHA_REF( GN::gfx::D3DRenderer & r, GN::gfx::RenderStateValue val )
+{
+    r.setD3DRenderState( D3DRS_ALPHAREF, val );
+}*/
+
 //
 //
 // ----------------------------------------------------------------------------

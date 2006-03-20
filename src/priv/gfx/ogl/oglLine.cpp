@@ -115,7 +115,7 @@ void GN::gfx::OGLLine::drawLines(
     if( !(DL_USE_CURRENT_VS & options ) )
         attribs |= GL_TRANSFORM_BIT;
     if( !(DL_USE_CURRENT_PS & options ) )
-        attribs |= GL_CURRENT_BIT;
+        attribs |= GL_CURRENT_BIT | GL_ENABLE_BIT;
 
     // push OGL attributes
     GN_OGL_CHECK( glPushAttrib( attribs ) );
@@ -127,7 +127,6 @@ void GN::gfx::OGLLine::drawLines(
         glDisable( GL_BLEND );
         glDepthMask( GL_TRUE );
         glEnable( GL_DEPTH_TEST );
-        glDisable( GL_LIGHTING );
     }
 
     // apply vertex shader 
@@ -166,7 +165,11 @@ void GN::gfx::OGLLine::drawLines(
     }
 
     // disable texture
-    mRenderer.disableTextureStage( 0 );
+    if( !(DL_USE_CURRENT_PS & options ) )
+    {
+        mRenderer.disableTextureStage( 0 );
+        glDisable( GL_LIGHTING );
+    }
 
     // apply vertex binding
     GN_OGL_CHECK( glInterleavedArrays( GL_C4UB_V3F, sizeof(LineVertex), mVtxBuf ) );

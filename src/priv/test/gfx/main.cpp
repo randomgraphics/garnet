@@ -201,7 +201,7 @@ public:
 
         // quad 1
         r.setTexture( 0, gTexDict.getResource(tex0) );
-        r.draw2DTexturedQuad( 0, 0, 0, 0.5, 0.5 );
+        r.draw2DTexturedQuad( DQ_UPDATE_DEPTH, 0, 0, 0.5, 0.5 );
 
         // quad 2
         if( ps1 )
