@@ -167,7 +167,6 @@ void GN::gfx::OGLQuad::drawQuads(
         glDepthMask( !!(DQ_UPDATE_DEPTH & options) );
         glEnable( GL_DEPTH_TEST );
         glDisable( GL_CULL_FACE );
-        glDisable( GL_LIGHTING );
     }
 
     // apply vertex shader
@@ -205,12 +204,10 @@ void GN::gfx::OGLQuad::drawQuads(
 
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
-        glEnable( GL_COLOR_MATERIAL );
+        glDisable( GL_LIGHTING );
+        mRenderer.chooseTextureStage( 0 );
+        GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,  GL_MODULATE ) );
     }
-
-    // apply texture states
-    mRenderer.chooseTextureStage( 0 );
-    GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,  GL_MODULATE ) );
 
     // apply vertex binding
     GN_OGL_CHECK( glInterleavedArrays( GL_T2F_C4UB_V3F, sizeof(QuadVertex), mVtxBuf ) );
