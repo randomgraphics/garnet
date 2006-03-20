@@ -38,6 +38,7 @@ namespace GN
 #include "gfx/shader.h"
 #include "gfx/texture.h"
 #include "gfx/buffer.h"
+#include "gfx/context.h"
 #include "gfx/renderer.h"
 
 // *****************************************************************************

@@ -331,7 +331,7 @@ void GN::gfx::D3DLine::drawLines(
     GN_DX_CHECK( dev->GetPixelShader( &currentPs ) );
     if( !currentPs && !( DL_USE_CURRENT_TS & options ) )
     {
-        cf.textureStates = 1;
+        cf.tsb = 1;
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_DIFFUSE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );

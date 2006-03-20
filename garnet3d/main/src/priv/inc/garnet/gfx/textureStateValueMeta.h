@@ -16,7 +16,6 @@
 #error "GNGFX_DEFINE_TSV not defined!"
 #endif
 
-GNGFX_DEFINE_TSV( DISABLE    , D3DTOP_DISABLE      , GL_REPLACE         , 1 ) //!< disable
 GNGFX_DEFINE_TSV( ARG0       , D3DTOP_SELECTARG1   , GL_REPLACE         , 1 ) //!< arg0
 GNGFX_DEFINE_TSV( MODULATE   , D3DTOP_MODULATE     , GL_MODULATE        , 1 ) //!< arg0 * arg1
 GNGFX_DEFINE_TSV( MODULATE2  , D3DTOP_MODULATE2X   , GL_MODULATE        , 2 ) //!< arg0 * arg1 * 2
@@ -139,8 +138,3 @@ GNGFX_DEFINE_TSV( CONSTANT_INV_ALPHA , D3DTA_CONSTANT_INV_ALPHA , GL_CONSTANT_AR
 #undef D3DTA_CONSTANT_ALPHA
 #undef D3DTA_CONSTANT_INV_COLOR
 #undef D3DTA_CONSTANT_INV_ALPHA
-
-//!
-//! empty/unused/undefine
-//!
-GNGFX_DEFINE_TSV( EMPTY      , 0                   , 0                  , 0 )

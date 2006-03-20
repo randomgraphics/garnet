@@ -1,6 +1,58 @@
 //! \cond NEVER
 
 // *****************************************************************************
+// RenderStateDescriptor
+// *****************************************************************************
+
+GN_INLINE const GN::gfx::RenderStateDesc &
+GN::gfx::getRenderStateDesc( RenderState rs )
+{
+    struct Local
+    {
+        static RenderStateDesc ctorENUM( const char * name, int32_t minVal, int32_t maxVal )
+        {
+            RenderStateDesc desc;
+            desc.name = name;
+            desc.valueType = RenderStateDesc::VT_ENUM;
+            desc.minI = minVal;
+            desc.maxI = maxVal;
+            return desc;
+        }
+
+        static RenderStateDesc ctorINT( const char * name, int32_t minVal, int32_t maxVal )
+        {
+            RenderStateDesc desc;
+            desc.name = name;
+            desc.valueType = RenderStateDesc::VT_INT;
+            desc.minI = minVal;
+            desc.maxI = maxVal;
+            return desc;
+        }
+
+        static RenderStateDesc ctorFLOAT( const char * name, float minVal, float maxVal )
+        {
+            RenderStateDesc desc;
+            desc.name = name;
+            desc.valueType = RenderStateDesc::VT_FLOAT;
+            desc.minF = minVal;
+            desc.maxF = maxVal;
+            return desc;
+        }
+    };
+
+    const GN::gfx::RenderStateDesc sTable[] =
+    {
+    #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) Local::ctor##type( #tag, minVal, maxVal ),
+    #include "renderStateMeta.h"
+    #undef GNGFX_DEFINE_RS
+    };
+
+    GN_ASSERT( 0 <= rs && rs < NUM_RENDER_STATES );
+    return sTable[rs];
+}
+
+
+// *****************************************************************************
 // tag <-> string conversion
 // *****************************************************************************
 
@@ -9,27 +61,15 @@
 // -----------------------------------------------------------------------------
 GN_INLINE const char * GN::gfx::renderState2Str( RenderState rs )
 {
-    static const char * table [] =
-    {
-    #define GNGFX_DEFINE_RS( tag, defval ) #tag,
-    #include "renderStateMeta.h"
-    #undef GNGFX_DEFINE_RS
-    };
-    if( 0 <= rs && rs < NUM_RENDER_STATES ) return table[rs];
+    if( 0 <= rs && rs < NUM_RENDER_STATES ) return getRenderStateDesc(rs).name;
     else return "RS_INVALID";
 }
 //
 GN_INLINE bool GN::gfx::renderState2Str( StrA & result, RenderState rs )
 {
-    static const char * table [] =
-    {
-    #define GNGFX_DEFINE_RS( tag, defval ) #tag,
-    #include "renderStateMeta.h"
-    #undef GNGFX_DEFINE_RS
-    };
     if( 0 <= rs && rs < NUM_RENDER_STATES )
     {
-        result = table[rs];
+        result = getRenderStateDesc(rs).name;
         return true;
     }
     else return false;
@@ -37,17 +77,12 @@ GN_INLINE bool GN::gfx::renderState2Str( StrA & result, RenderState rs )
 //
 GN_INLINE GN::gfx::RenderState GN::gfx::str2RenderState( const char * str )
 {
-    static const char * table [] =
-    {
-    #define GNGFX_DEFINE_RS( tag, defval ) #tag,
-    #include "renderStateMeta.h"
-    #undef GNGFX_DEFINE_RS
-    };
     if( str )
     {
-        for( size_t i = 0; i < NUM_RENDER_STATES; ++i )
+        for( int i = 0; i < NUM_RENDER_STATES; ++i )
         {
-            if( 0 == ::strcmp(table[i],str) ) return (RenderState)i;
+            if( 0 == ::strcmp( getRenderStateDesc( (RenderState)i ).name, str ) )
+                return (RenderState)i;
         }
     }
     // failed
@@ -123,8 +158,7 @@ GN_INLINE const char * GN::gfx::textureState2Str( TextureState ts )
 {
     static const char * table [] =
     {
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, \
-                          d3dname, glname1, glname2 ) #tag,
+    #define GNGFX_DEFINE_TS( tag, defval0, d3dname, glname1, glname2 ) #tag,
     #include "textureStateMeta.h"
     #undef GNGFX_DEFINE_TS
     };
@@ -136,8 +170,7 @@ GN_INLINE bool GN::gfx::textureState2Str( StrA & result, TextureState ts )
 {
     static const char * table [] =
     {
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, \
-                          d3dname, glname1, glname2 ) #tag,
+    #define GNGFX_DEFINE_TS( tag, defval0, d3dname, glname1, glname2 ) #tag,
     #include "textureStateMeta.h"
     #undef GNGFX_DEFINE_TS
     };
@@ -153,8 +186,7 @@ GN_INLINE GN::gfx::TextureState GN::gfx::str2TextureState( const char * str )
 {
     static const char * table [] =
     {
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, \
-                          d3dname, glname1, glname2 ) #tag,
+    #define GNGFX_DEFINE_TS( tag, defval0, d3dname, glname1, glname2 ) #tag,
     #include "textureStateMeta.h"
     #undef GNGFX_DEFINE_TS
     };
@@ -238,73 +270,33 @@ GN_INLINE bool GN::gfx::str2TextureStateValue( TextureStateValue & result, const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void
-GN::gfx::RenderStateBlockDesc::mergeWith( const RenderStateBlockDesc & another )
+GN_INLINE bool GN::gfx::RenderStateBlockDesc::isSet( RenderState type ) const
 {
-    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
-    {
-        if( RSV_EMPTY != another.rs[i] ) rs[i] = another.rs[i];
-    }
+    GN_ASSERT( 0 <= type && type < NUM_RENDER_STATES );
+    return !!( mFlags & ( 1 << type ) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::gfx::RenderStateBlockDesc &
-GN::gfx::RenderStateBlockDesc::sMerge(
-    RenderStateBlockDesc & r,
-    const RenderStateBlockDesc & a,
-    const RenderStateBlockDesc & b )
+GN_INLINE int32_t GN::gfx::RenderStateBlockDesc::get( RenderState type ) const
 {
-    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
-    {
-        r.rs[i] = ( RSV_EMPTY == b.rs[i] ) ? a.rs[i] : b.rs[i];
-    }
-    return r;
+    GN_ASSERT( 0 <= type && type < NUM_RENDER_STATES );
+    GN_ASSERT( isSet( type ) );
+    return mValues[type];
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void
-GN::gfx::RenderStateBlockDesc::diffWith( const RenderStateBlockDesc & another )
+GN_INLINE void GN::gfx::RenderStateBlockDesc::set( RenderState type, int value )
 {
-    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
-    {
-        if(  rs[i] == another.rs[i]  ) rs[i] = RSV_EMPTY;
-    }
+    GN_ASSERT( 0 <= type && type < NUM_RENDER_STATES );
+    GN_ASSERT( getRenderStateDesc(type).checkValueI( value ) );
+    mFlags |= 1 << type;
+    mValues[type] = value;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE GN::gfx::RenderStateBlockDesc &
-GN::gfx::RenderStateBlockDesc::sDiff(
-    RenderStateBlockDesc & r,
-    const RenderStateBlockDesc & a,
-    const RenderStateBlockDesc & b )
-{
-    for( int i = 0; i < GN::gfx::NUM_RENDER_STATES; ++i )
-    {
-        r.rs[i] = ( a.rs[i] == b.rs[i] ) ? RSV_EMPTY : a.rs[i];
-    }
-    return r;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE bool
-GN::gfx::RenderStateBlockDesc::operator == ( const RenderStateBlockDesc & rhs ) const
-{
-    return this == &rhs || 0 == ::memcmp( rs, rhs.rs, sizeof(rs) );
-}
-//
-GN_INLINE bool
-GN::gfx::RenderStateBlockDesc::operator != ( const RenderStateBlockDesc & rhs ) const
-{
-    return this != &rhs && 0 != ::memcmp( rs, rhs.rs, sizeof(rs) );
-}
 
 // *****************************************************************************
 // TextureStateBlockDesc
@@ -313,95 +305,39 @@ GN::gfx::RenderStateBlockDesc::operator != ( const RenderStateBlockDesc & rhs ) 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void
-GN::gfx::TextureStateBlockDesc::mergeWith( const TextureStateBlockDesc & another )
+bool GN::gfx::TextureStateBlockDesc::isSet( size_t stage, TextureState type ) const
 {
-    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * t1 = ts[i];
-        const TextureStateValue * t2 = another.ts[i];
-        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            if( TSV_EMPTY != t2[j] ) t1[j] = t2[j];
-        }
-    }
+    GN_ASSERT( stage < MAX_TEXTURE_STAGES && 0 <= type && type < NUM_TEXTURE_STATES );
+    return stage < mNumStages && !!( mFlags[stage] & (1<<type) );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::gfx::TextureStateBlockDesc &
-GN::gfx::TextureStateBlockDesc::sMerge(
-    TextureStateBlockDesc & r,
-    const TextureStateBlockDesc & a,
-    const TextureStateBlockDesc & b )
-
+GN::gfx::TextureStateValue
+GN::gfx::TextureStateBlockDesc::get( size_t stage, TextureState type ) const
 {
-    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * tr = r.ts[i];
-        const TextureStateValue * ta = a.ts[i];
-        const TextureStateValue * tb = b.ts[i];
-        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            tr[j] = ( TSV_EMPTY == tb[j] ) ? ta[j] : tb[j];
-        }
-    }
-    return r;
+    GN_ASSERT( isSet( stage, type ) );
+    return mValues[stage][type];
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void
-GN::gfx::TextureStateBlockDesc::diffWith( const TextureStateBlockDesc & another )
+void GN::gfx::TextureStateBlockDesc::set(
+    size_t stage, TextureState type, TextureStateValue value )
 {
-    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
+    GN_ASSERT(
+        stage < MAX_TEXTURE_STAGES &&
+        0 <= type && type < NUM_TEXTURE_STATES &&
+        0 <= value && value < NUM_TEXTURE_STATE_VALUES );
+    if( stage >= mNumStages )
     {
-        TextureStateValue       * t1 = ts[i];
-        const TextureStateValue * t2 = another.ts[i];
-        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            if( t1[j] == t2[j] ) t1[j] = TSV_EMPTY;
-        }
+        for( size_t i = mNumStages; i <= stage; ++i ) mFlags[i] = 0;
+        mNumStages = stage + 1;
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE GN::gfx::TextureStateBlockDesc &
-GN::gfx::TextureStateBlockDesc::sDiff(
-    TextureStateBlockDesc & r,
-    const TextureStateBlockDesc & a,
-    const TextureStateBlockDesc & b )
-{
-    for( int i = 0; i < MAX_TEXTURE_STAGES; ++i )
-    {
-        TextureStateValue       * tr = r.ts[i];
-        const TextureStateValue * ta = a.ts[i];
-        const TextureStateValue * tb = b.ts[i];
-        for( int j = 0; j < GN::gfx::NUM_TEXTURE_STATES; ++j )
-        {
-            tr[j] = ( ta[j] == tb[j] ) ? TSV_EMPTY : ta[j];
-        }
-    }
-    return r;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE bool
-GN::gfx::TextureStateBlockDesc::operator == ( const TextureStateBlockDesc & rhs ) const
-{
-    return this == &rhs || 0 == ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
-}
-//
-GN_INLINE bool
-GN::gfx::TextureStateBlockDesc::operator != ( const TextureStateBlockDesc & rhs ) const
-{
-    return this != &rhs && 0 != ::memcmp( ts, rhs.ts, sizeof(ts) ) ;
+    mValues[stage][type] = value;
+    mFlags[stage] |= 1 << type;
 }
 
 //! \endcond

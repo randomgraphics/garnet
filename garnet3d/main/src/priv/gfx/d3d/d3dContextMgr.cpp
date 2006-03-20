@@ -56,7 +56,7 @@ static DWORD sRenderStateValue2D3D[GN::gfx::NUM_RENDER_STATE_VALUES] =
 
 static D3DTEXTURESTAGESTATETYPE sTextureState2D3D[GN::gfx::NUM_TEXTURE_STATES] =
 {
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 )  d3dname,
+    #define GNGFX_DEFINE_TS( tag, defval0, d3dname, glname1, glname2 )  d3dname,
     #include "garnet/gfx/textureStateMeta.h"
     #undef GNGFX_DEFINE_TS
 };
@@ -251,11 +251,9 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     if( newFlags.rsb )
     {
         newFlags.rsb = 0;
-        GN::gfx::RenderStateValue rsv;
-        #define GNGFX_DEFINE_RS( tag, defvalue )         \
-            rsv = newState.rsb.rs[RS_##tag];             \
-            GN_ASSERT( rsv < NUM_RENDER_STATE_VALUES );  \
-            if( rsv != RSV_EMPTY ) sSet_##tag( *this, rsv );
+        GN_ASSERT( newState.rsb.valid() );
+        #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
+            if( newState.rsb.isSet(RS_##tag) ) sSet_##tag( *this, newState.rsb.get(RS_##tag) );
         #include "garnet/gfx/renderStateMeta.h"
         #undef GNGFX_DEFINE_RS
     }
@@ -397,47 +395,46 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
         }
     }
 
-    if( newFlags.textureStates )
+    if( newFlags.tsb )
     {
-        if( newState.textureStates != mContextState.textureStates || forceRebind )
+        const TextureStateBlockDesc & desc = newState.tsb;
+        DWORD d3dtsv;
+        uint32_t numStages = GN::min<uint32_t>( desc.getNumStages(), getCaps( CAPS_MAX_TEXTURE_STAGES ) );
+        for ( uint32_t i = 0; i < numStages; ++i )
         {
-            // apply all TSSs to API
-            uint32_t i;
-            const TextureStateBlockDesc & desc = newState.textureStates;
-            TextureStateValue tsv;
-            DWORD d3dtsv;
-            uint32_t numStages = GN::min<uint32_t>( MAX_TEXTURE_STAGES, getCaps( CAPS_MAX_TEXTURE_STAGES ) );
-            for ( i = 0; i < numStages; ++i )
+            for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
             {
-                for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
+                if( desc.isSet( i, (TextureState)j ) )
                 {
-                    tsv = desc.ts[i][j];
-                    if( TSV_EMPTY != tsv )
-                    {
-                        d3dtsv = sTextureStateValue2D3D[tsv];
+                    d3dtsv = sTextureStateValue2D3D[ desc.get( i, (TextureState)j ) ];
 
-                        if( D3DTOP_DOTPRODUCT3 == d3dtsv &&
-                            !getD3DCaps( D3DCAPS_DOT3 ) )
-                        {
-                            GN_DO_ONCE( GN_WARN(
-                                "Current D3D device does not support "
-                                "dot3 operation! "
-                                "Fallback to D3DTOP_SELECTARG1." ) );
-                            d3dtsv = D3DTOP_SELECTARG1;
-                        }
-                        else if( D3DTA_CONSTANT == (d3dtsv&D3DTA_SELECTMASK) &&
-                            !getCaps( CAPS_PER_STAGE_CONSTANT ) )
-                        {
-                            GN_DO_ONCE( GN_WARN(
-                                    "Current D3D device does not support "
-                                    "per-stage constant! "
-                                    "Fallback to D3DTA_TFACTOR." ) );
-                            d3dtsv = D3DTA_TFACTOR;
-                        }
-                        setD3DTextureState( i, sTextureState2D3D[j], d3dtsv );
+                    if( D3DTOP_DOTPRODUCT3 == d3dtsv &&
+                        !getD3DCaps( D3DCAPS_DOT3 ) )
+                    {
+                        GN_DO_ONCE( GN_WARN(
+                            "Current D3D device does not support "
+                            "dot3 operation! "
+                            "Fallback to D3DTOP_SELECTARG1." ) );
+                        d3dtsv = D3DTOP_SELECTARG1;
                     }
+                    else if( D3DTA_CONSTANT == (d3dtsv&D3DTA_SELECTMASK) &&
+                        !getCaps( CAPS_PER_STAGE_CONSTANT ) )
+                    {
+                        GN_DO_ONCE( GN_WARN(
+                                "Current D3D device does not support "
+                                "per-stage constant! "
+                                "Fallback to D3DTA_TFACTOR." ) );
+                        d3dtsv = D3DTA_TFACTOR;
+                    }
+                    setD3DTextureState( i, sTextureState2D3D[j], d3dtsv );
                 }
             }
+        }
+        // disable remaining stages
+        if( numStages < getCaps( CAPS_MAX_TEXTURE_STAGES ) )
+        {
+            setD3DTextureState( numStages, D3DTSS_COLOROP, D3DTOP_DISABLE );
+            setD3DTextureState( numStages, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
         }
     }
 #endif // !GN_XENON

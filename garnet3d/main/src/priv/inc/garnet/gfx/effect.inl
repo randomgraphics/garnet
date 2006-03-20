@@ -50,7 +50,29 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
     for( size_t i = 0; i < NUM_SHADER_TYPES; ++i )
     {
         GN_ASSERT( mShaders.items.validHandle( p.shaders[i] ) );
-        r.setShader( (ShaderType)i, mShaders.items[p.shaders[i]].value );
+
+        ShaderData & sd = mShaders.items[p.shaders[i]];
+
+        // bind shader
+        r.setShader( (ShaderType)i, sd.value );
+
+        // apply dirty uniforms
+        for( std::set<size_t>::const_iterator iUniform = sd.dirtyUniforms.begin(); iUniform != sd.dirtyUniforms.end(); ++iUniform )
+        {
+            GN_ASSERT( (*iUniform) < sd.uniforms.size() );
+            const UniformRefData & ur = sd.uniforms[*iUniform];
+            const UniformData & ud = mUniforms.items[ur.handle];
+            if( ur.ffp )
+            {
+                sSetFfpParameter( ur.ffpParameterType, ud );
+            }
+            else
+            {
+                GN_ASSERT( ur.shaderUniformHandle );
+                sd.value->setUniform( ur.shaderUniformHandle, ud.value );
+            }
+        }
+        sd.dirtyUniforms.clear();
     }
     r.contextUpdateEnd();
 
@@ -74,13 +96,11 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
     gRenderer.contextUpdateBegin();
 
     // apply uniforms and textures
-    Shader * shaders[NUM_SHADER_TYPES];
     for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
     {
-        GN_ASSERT( mShaders.items.validHandle(p.shaders[iShader]) );
-        ShaderData & sd = mShaders.items[p.shaders[iShader]];
+        GN_ASSERT( mShaders.items.validHandle( p.shaders[iShader] ) );
 
-        shaders[iShader] = sd.value;
+        ShaderData & sd = mShaders.items[p.shaders[iShader]];
 
         // apply dirty uniforms
         for( std::set<size_t>::const_iterator iUniform = sd.dirtyUniforms.begin(); iUniform != sd.dirtyUniforms.end(); ++iUniform )
@@ -95,7 +115,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
             else
             {
                 GN_ASSERT( ur.shaderUniformHandle );
-                shaders[iShader]->setUniform( ur.shaderUniformHandle, ud.value );
+                sd.value->setUniform( ur.shaderUniformHandle, ud.value );
             }
         }
         sd.dirtyUniforms.clear();

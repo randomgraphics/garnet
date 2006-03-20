@@ -6,7 +6,7 @@
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_ALPHA_TEST( GN::gfx::RenderStateValue val )
+void sSet_ALPHA_TEST( int val )
 {
     if( val )
         glEnable( GL_ALPHA_TEST );
@@ -18,17 +18,25 @@ void sSet_ALPHA_TEST( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_ALPHA_FUNC( GN::gfx::RenderStateValue val )
+void sSet_ALPHA_FUNC( int )
 {
-    // FIXME : 允许用户修改reference value
-    GN_OGL_CHECK( glAlphaFunc( sRsv2OGL[val], 0.0f ) );
+    GN_ASSERT_EX( 0, "your program should not reach here!" );
 }
 
 //
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_BLENDING( GN::gfx::RenderStateValue val )
+void sSet_ALPHA_REF( int )
+{
+    GN_ASSERT_EX( 0, "your program should not reach here!" );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_BLENDING( int val )
 {
     if( val )
     {
@@ -44,7 +52,7 @@ void sSet_BLENDING( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_BLEND_SRC( GN::gfx::RenderStateValue )
+void sSet_BLEND_SRC( int )
 {
     GN_ASSERT_EX( 0, "your program should not reach here!" );
 }
@@ -53,7 +61,7 @@ void sSet_BLEND_SRC( GN::gfx::RenderStateValue )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_BLEND_DST( GN::gfx::RenderStateValue )
+void sSet_BLEND_DST( int )
 {
     GN_ASSERT_EX( 0, "your program should not reach here!" );
 }
@@ -62,7 +70,7 @@ void sSet_BLEND_DST( GN::gfx::RenderStateValue )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_CULL_MODE( GN::gfx::RenderStateValue val )
+void sSet_CULL_MODE( int val )
 {
     if( GN::gfx::RSV_CULL_NONE == val )
     {
@@ -79,7 +87,7 @@ void sSet_CULL_MODE( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_FOG( GN::gfx::RenderStateValue val )
+void sSet_FOG( int val )
 {
     if( val )
         glEnable( GL_FOG );
@@ -91,7 +99,7 @@ void sSet_FOG( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE void
-sSet_LIGHTING( GN::gfx::RenderStateValue val )
+sSet_LIGHTING( int val )
 {
     if( val )
         glEnable( GL_LIGHTING );
@@ -103,7 +111,7 @@ sSet_LIGHTING( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_DEPTH_TEST( GN::gfx::RenderStateValue val )
+void sSet_DEPTH_TEST( int val )
 {
     if( val )
         glEnable( GL_DEPTH_TEST );
@@ -115,7 +123,7 @@ void sSet_DEPTH_TEST( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_DEPTH_FUNC( GN::gfx::RenderStateValue val )
+void sSet_DEPTH_FUNC( int val )
 {
     GN_OGL_CHECK( glDepthFunc( sRsv2OGL[val] ) );
 }
@@ -124,7 +132,7 @@ void sSet_DEPTH_FUNC( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_DEPTH_WRITE( GN::gfx::RenderStateValue val )
+void sSet_DEPTH_WRITE( int val )
 {
     GN_OGL_CHECK( glDepthMask( (GLboolean)val ) );
 }
@@ -133,7 +141,7 @@ void sSet_DEPTH_WRITE( GN::gfx::RenderStateValue val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_FILL_MODE( GN::gfx::RenderStateValue val )
+void sSet_FILL_MODE( int val )
 {
     GN_OGL_CHECK( glPolygonMode( GL_FRONT_AND_BACK, sRsv2OGL[val] ) );
 }
