@@ -291,7 +291,7 @@ void GN::gfx::D3DLine::drawLines(
     // bind shaders
     if( !( DL_USE_CURRENT_VS & options ) )
     {
-        cf.vtxShader = 1;
+        cf.setShaderBit( VERTEX_SHADER );
 
         GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
 
@@ -321,7 +321,7 @@ void GN::gfx::D3DLine::drawLines(
 
     if( !( DL_USE_CURRENT_PS & options ) )
     {
-        cf.pxlShader = 1;
+        cf.setShaderBit( PIXEL_SHADER );
         GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
     }
 

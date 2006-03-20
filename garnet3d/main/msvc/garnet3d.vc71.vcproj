@@ -2678,6 +2678,41 @@
 							RelativePath="..\src\priv\gfx\common\basicBuffer.h">
 						</File>
 						<File
+							RelativePath="..\src\priv\gfx\common\basicContextMgr.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxCommon.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxCommon.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxCommon.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxCommon.pch"/>
+							</FileConfiguration>
+						</File>
+						<File
 							RelativePath="..\src\priv\gfx\common\basicDispMgr.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -3735,43 +3770,6 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="..\src\priv\gfx\ogl\oglBufferMgr.cpp">
-							<FileConfiguration
-								Name="Debug|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Debug|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-						</File>
-						<File
 							RelativePath="..\src\priv\gfx\ogl\oglCapsMgr.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -3844,6 +3842,46 @@
 									PrecompiledHeaderThrough="pch.h"
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
 							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\ogl\oglContextMgr.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon"
+								ExcludedFromBuild="TRUE">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon"
+								ExcludedFromBuild="TRUE">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\ogl\oglContextMgr.inl">
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\ogl\oglDispMgrMsw.cpp">
@@ -3921,43 +3959,6 @@
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\ogl\oglDrawMgr.cpp">
-							<FileConfiguration
-								Name="Debug|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Debug|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-						</File>
-						<File
-							RelativePath="..\src\priv\gfx\ogl\oglFfpMgr.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -4234,80 +4235,6 @@
 							RelativePath="..\src\priv\gfx\ogl\oglRenderState.inl">
 						</File>
 						<File
-							RelativePath="..\src\priv\gfx\ogl\oglRenderStateBlockMgr.cpp">
-							<FileConfiguration
-								Name="Debug|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Debug|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-						</File>
-						<File
-							RelativePath="..\src\priv\gfx\ogl\oglRenderTargetMgr.cpp">
-							<FileConfiguration
-								Name="Debug|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Debug|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-						</File>
-						<File
 							RelativePath="..\src\priv\gfx\ogl\oglResource.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -4345,10 +4272,10 @@
 							</FileConfiguration>
 						</File>
 						<File
-							RelativePath="..\src\priv\gfx\ogl\oglShader.h">
+							RelativePath="..\src\priv\gfx\ogl\oglResource.h">
 						</File>
 						<File
-							RelativePath="..\src\priv\gfx\ogl\oglShaderMgr.cpp">
+							RelativePath="..\src\priv\gfx\ogl\oglResourceMgr.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -4383,6 +4310,9 @@
 									PrecompiledHeaderThrough="pch.h"
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
 							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\ogl\oglShader.h">
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\ogl\oglTexture.cpp">
@@ -4423,46 +4353,6 @@
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\ogl\oglTexture.h">
-						</File>
-						<File
-							RelativePath="..\src\priv\gfx\ogl\oglTextureMgr.cpp">
-							<FileConfiguration
-								Name="Debug|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Debug|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Xenon"
-								ExcludedFromBuild="TRUE">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
-							</FileConfiguration>
-						</File>
-						<File
-							RelativePath="..\src\priv\gfx\ogl\oglTextureMgr.inl">
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\ogl\oglTypes.h">
@@ -4583,6 +4473,46 @@
 									PrecompiledHeaderThrough="pch.h"
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
 							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\ogl\oglVtxFmt.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon"
+								ExcludedFromBuild="TRUE">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon"
+								ExcludedFromBuild="TRUE">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).gfxOGL.pch"/>
+							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\gfx\ogl\oglVtxFmt.h">
 						</File>
 						<File
 							RelativePath="..\src\priv\gfx\ogl\pch.cpp">

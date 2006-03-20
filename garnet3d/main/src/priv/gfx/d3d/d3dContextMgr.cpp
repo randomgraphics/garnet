@@ -216,54 +216,34 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
     }
 
     //
-    // bind vertex shader
+    // bind shaders
     //
-    if( newFlags.vtxShader )
+    for( int i = 0; i < NUM_SHADER_TYPES; ++i )
     {
-        newFlags.vtxShader = 0;
-        const GN::gfx::Shader * o = mContextState.shaders[VERTEX_SHADER];
-        const GN::gfx::Shader * n = newState.shaders[VERTEX_SHADER];
-        if( o != n || forceRebind )
+        if( newFlags.shaderBit(i) )
         {
-            if( n )
+            const GN::gfx::Shader * o = mContextState.shaders[i];
+            const GN::gfx::Shader * n = newState.shaders[i];
+            if( o != n || forceRebind )
             {
-                GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->apply();
+                if( n )
+                {
+                    GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->apply();
+                }
+                else switch( i )
+                {
+                    case VERTEX_SHADER : GN_DX_CHECK( mDevice->SetVertexShader( 0 ) ); break;
+                    case PIXEL_SHADER  : GN_DX_CHECK( mDevice->SetVertexShader( 0 ) ); break;
+                    default : GN_UNEXPECTED();
+                }
             }
-            else
+            else if( n )
             {
-                GN_DX_CHECK( mDevice->SetVertexShader( 0 ) );
+                GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->applyDirtyUniforms();
             }
-        }
-        else if( n )
-        {
-            GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->applyDirtyUniforms();
         }
     }
-
-    //
-    // bind pixel shader
-    //
-    if( newFlags.pxlShader )
-    {
-        newFlags.pxlShader = 0;
-        const GN::gfx::Shader * o = mContextState.shaders[PIXEL_SHADER];
-        const GN::gfx::Shader * n = newState.shaders[PIXEL_SHADER];
-        if( o != n || forceRebind )
-        {
-            if( n )
-            {
-                GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->apply();
-            }
-            else
-            {
-                GN_DX_CHECK( mDevice->SetPixelShader( 0 ) );
-            }
-        }
-        else if( n )
-        {
-            GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->applyDirtyUniforms();
-        }
-    }
+    newFlags.shaders = 0;
 
     //
     // bind render states
