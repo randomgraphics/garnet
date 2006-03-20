@@ -453,12 +453,20 @@ void GN::gfx::D3DQuad::drawQuads(
     // setup render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
-        r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE );
+        if( DQ_OPAQUE & options )
+        {
+            r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
+            r.setD3DRenderState( D3DRS_ALPHATESTENABLE, FALSE );
+        }
+        else
+        {
+            r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
+            r.setD3DRenderState( D3DRS_ALPHATESTENABLE, TRUE );
+            r.setD3DRenderState( D3DRS_ALPHAFUNC, D3DCMP_GREATER );
+            r.setD3DRenderState( D3DRS_ALPHAREF, 0 );
+        }
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
-        r.setD3DRenderState( D3DRS_ALPHATESTENABLE, ( DQ_OPAQUE & options ) ? FALSE : TRUE );
-        r.setD3DRenderState( D3DRS_ALPHAFUNC, D3DCMP_GREATER );
-        //r.setD3DRenderState( D3DRS_ALPHAREF, 0 );
         r.setD3DRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
    }
 

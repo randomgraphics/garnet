@@ -318,7 +318,7 @@ public:
     {
         Renderer & r = gRenderer;
         
-        r.clearScreen( Vector4f(0,0,0,1) ); // clear to pure blue.
+        r.clearScreen( Vector4f(0,0,0,1) ); // clear to pure black
 
         // draw scene
         GN_ASSERT( mScene );
