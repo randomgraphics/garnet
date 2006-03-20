@@ -44,12 +44,12 @@ public:
     void testRenderState()
     {
         GN::gfx::RenderState tag[] = {
-            #define GNGFX_DEFINE_RS( tag, defval ) GN::gfx::RS_##tag,
+            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) GN::gfx::RS_##tag,
             #include "garnet/gfx/renderStateMeta.h"
             #undef GNGFX_DEFINE_RS
         };
         const char * str[] = {
-            #define GNGFX_DEFINE_RS( tag, defval ) #tag,
+            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) #tag,
             #include "garnet/gfx/renderStateMeta.h"
             #undef GNGFX_DEFINE_RS
         };
@@ -118,12 +118,12 @@ public:
     void testTextureState()
     {
         GN::gfx::TextureState tag[] = {
-            #define GNGFX_DEFINE_TS( tag, def0, def1, d3d, ogl1, ogl2 ) GN::gfx::TS_##tag,
+            #define GNGFX_DEFINE_TS( tag, def0, d3d, ogl1, ogl2 ) GN::gfx::TS_##tag,
             #include "garnet/gfx/textureStateMeta.h"
             #undef GNGFX_DEFINE_TS
         };
         const char * str[] = {
-            #define GNGFX_DEFINE_TS( tag, def0, def1, d3d, ogl1, ogl2 ) #tag,
+            #define GNGFX_DEFINE_TS( tag, def0, d3d, ogl1, ogl2 ) #tag,
             #include "garnet/gfx/textureStateMeta.h"
             #undef GNGFX_DEFINE_TS
         };

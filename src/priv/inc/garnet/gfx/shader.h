@@ -243,7 +243,10 @@ namespace GN { namespace gfx
 
             Uniform u;
             u.name = name;
-
+#if GN_DEBUG
+            u.value.type = (UniformValueType)0xbadbeef;
+            u.userData = (HandleType)0xbadbeef;
+#endif
             uint32_t h = mUniforms.add( u );
             mUniformNames[name] = h;
 

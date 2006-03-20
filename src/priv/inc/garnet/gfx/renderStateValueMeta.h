@@ -45,13 +45,11 @@ GNGFX_DEFINE_RSV( BLEND_SAS     , D3DBLEND_SRCALPHASAT  , GL_SRC_ALPHA_SATURATE 
 //
 // culling mode
 //
+GNGFX_DEFINE_RSV( CULL_NONE     , D3DCULL_NONE          , GL_FALSE ) //!< no culling
 GNGFX_DEFINE_RSV( CULL_CW       , D3DCULL_CW            , GL_BACK  ) //!< Ë³Ê±Õë
 GNGFX_DEFINE_RSV( CULL_CCW      , D3DCULL_CCW           , GL_FRONT ) //!< ÄæÊ±Õë
-GNGFX_DEFINE_RSV( CULL_NONE     , D3DCULL_NONE          , GL_FALSE ) //!< no culling
 
 // polygon filling mode
 GNGFX_DEFINE_RSV( FILL_SOLID    , D3DFILL_SOLID         , GL_FILL  ) //!< solid mode
 GNGFX_DEFINE_RSV( FILL_LINE     , D3DFILL_WIREFRAME     , GL_LINE  ) //!< line mode
 GNGFX_DEFINE_RSV( FILL_POINT    , D3DFILL_POINT         , GL_POINT ) //!< point mode
-
-GNGFX_DEFINE_RSV( EMPTY         , 0                     , 0        ) //!< empty/unused/undefine

@@ -230,7 +230,7 @@ public:
         initDesc1( desc );
 
         PassDesc & p0 = desc.techniques["t0"].passes[0];
-        p0.rsb.rs[RS_ALPHA_TEST] = NUM_RENDER_STATE_VALUES;
+        p0.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );
@@ -277,7 +277,7 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
-        desc.techniques["t0"].rsb.rs[RS_ALPHA_TEST] = NUM_RENDER_STATE_VALUES;
+        desc.techniques["t0"].rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );
@@ -292,7 +292,7 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
-        desc.rsb.rs[RS_ALPHA_TEST] = NUM_RENDER_STATE_VALUES;
+        desc.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );

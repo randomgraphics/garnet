@@ -48,7 +48,7 @@ struct OGLTextureStateValue
 //!
 static OGLTextureState sTs2OGL[GN::gfx::NUM_TEXTURE_STATES] =
 {
-    #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dval, glname1, glname2 ) { glname1, glname2 },
+    #define GNGFX_DEFINE_TS( tag, defval0, d3dval, glname1, glname2 ) { glname1, glname2 },
     #include "garnet/gfx/textureStateMeta.h"
     #undef GNGFX_DEFINE_TS
 };
@@ -341,36 +341,62 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     {
         newFlags.rsb = 0;
 
-        const RenderStateBlockDesc & from = mContextState.rsb;
-        const RenderStateBlockDesc & to = newState.rsb;
-        RenderStateBlockDesc diff;
-        RenderStateBlockDesc::sDiff( diff, to, from );
+        GN_ASSERT( newState.rsb.valid() );
+
+        const RenderStateBlockDesc & newRsb = newState.rsb;
+        const RenderStateBlockDesc & oldRsb = mContextState.rsb;
+
+        bool updateAlphaFunc = false;
+        int alphaFunc = oldRsb.get( RS_ALPHA_FUNC );
+        int alphaRef  = oldRsb.get( RS_ALPHA_REF );
+
+        bool updateBlend = false;
+        int blendSrc  = oldRsb.get( RS_BLEND_SRC );
+        int blendDst  = oldRsb.get( RS_BLEND_DST );
 
         // apply all RSs (except blending factors) to API
-        GN::gfx::RenderStateValue rsv;
-        #define GNGFX_DEFINE_RS( tag, defvalue )                  \
-            rsv = diff.rs[GN::gfx::RS_##tag];                     \
-            GN_ASSERT( rsv < GN::gfx::NUM_RENDER_STATE_VALUES );  \
-            if( GN::gfx::RSV_EMPTY != rsv )                       \
-            {                                                     \
-                if( GN::gfx::RS_BLEND_SRC != GN::gfx::RS_##tag && \
-                     GN::gfx::RS_BLEND_DST != GN::gfx::RS_##tag ) \
-                    sSet_##tag( rsv );                            \
+        #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
+            if( newRsb.isSet( RS_##tag ) &&                          \
+                newRsb.get(RS_##tag) != oldRsb.get(RS_##tag) )       \
+            {                                                        \
+                if( RS_ALPHA_FUNC == RS_##tag )                      \
+                {                                                    \
+                    updateAlphaFunc = true;                          \
+                    alphaFunc = newRsb.get( RS_ALPHA_FUNC );         \
+                }                                                    \
+                else if( RS_ALPHA_REF == RS_##tag )                  \
+                {                                                    \
+                    updateAlphaFunc = true;                          \
+                    alphaRef = newRsb.get( RS_ALPHA_REF );           \
+                }                                                    \
+                else if( RS_BLEND_SRC == RS_##tag )                  \
+                {                                                    \
+                    updateBlend = true;                              \
+                    blendSrc = newRsb.get( RS_BLEND_SRC );           \
+                }                                                    \
+                else if( RS_BLEND_DST == RS_##tag )                  \
+                {                                                    \
+                    updateBlend = true;                              \
+                    blendDst = newRsb.get( RS_BLEND_DST );           \
+                }                                                    \
+                else                                                 \
+                {                                                    \
+                    sSet_##tag( newRsb.get(RS_##tag) );              \
+                }                                                    \
             }
         #include "garnet/gfx/renderStateMeta.h"
         #undef GNGFX_DEFINE_RS
 
-        // apply blending factors
-        if( GN::gfx::RSV_EMPTY != diff.rs[GN::gfx::RS_BLEND_SRC] ||
-            GN::gfx::RSV_EMPTY != diff.rs[GN::gfx::RS_BLEND_DST] )
+        // apply alpha function
+        if( updateAlphaFunc )
         {
-            GN::gfx::RenderStateValue src = GN::gfx::RSV_EMPTY == diff.rs[GN::gfx::RS_BLEND_SRC]
-                ? to.rs[GN::gfx::RS_BLEND_SRC] : diff.rs[GN::gfx::RS_BLEND_SRC] ;
+            GN_OGL_CHECK( glAlphaFunc( sRsv2OGL[alphaFunc], alphaRef / 255.0f ) );
+        }
 
-            GN::gfx::RenderStateValue dst = GN::gfx::RSV_EMPTY == diff.rs[GN::gfx::RS_BLEND_DST]
-                ? to.rs[GN::gfx::RS_BLEND_DST] : diff.rs[GN::gfx::RS_BLEND_DST] ;
-
-            GN_OGL_CHECK( glBlendFunc( sRsv2OGL[src], sRsv2OGL[dst] ) );
+        // apply blending factors
+        if( updateBlend )
+        {
+            GN_OGL_CHECK( glBlendFunc( sRsv2OGL[blendSrc], sRsv2OGL[blendDst] ) );
         }
 
         // NOTE : 当启用OpenGL的ColorMaterial属性时，材质信息会随着顶点的颜色
@@ -473,56 +499,49 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
         }
     }
 
-    if( newFlags.textureStates )
+    if( newFlags.tsb )
     {
-        TextureStateBlockDesc desc = newState.textureStates;
+        const TextureStateBlockDesc & newDesc = newState.tsb;
+        const TextureStateBlockDesc & oldDesc = mContextState.tsb;
 
-        // Note: OpenGL has no way to "disable" texture stage. We simulate it
-        //       by replicating previous stage.
-        for( uint32_t i = 0; i < MAX_TEXTURE_STAGES; ++i )
-        {
-            if( TSV_DISABLE == desc.ts[i][TS_COLOROP] )
-            {
-                desc.ts[i][TS_ALPHAOP] = TSV_ARG0;
-                desc.ts[i][TS_COLORARG0] = TSV_CURRENT_COLOR;
-                desc.ts[i][TS_ALPHAARG0] = TSV_CURRENT_ALPHA;
-            }
-        }
+        TextureStateValue tsv;
+
+        uint32_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
+        uint32_t numStages = GN::min<uint32_t>( newDesc.getNumStages(), maxStages );
 
         // apply all TSSs to API
-        TextureStateValue tsv;
-        uint32_t numstages = GN::min<uint32_t>( MAX_TEXTURE_STAGES, getCaps(CAPS_MAX_TEXTURE_STAGES) );
-        for ( uint32_t i = 0; i < numstages; ++i )
+        for ( uint32_t i = 0; i < numStages; ++i )
         {
             chooseTextureStage( i );
-
-            /* disabled unused texture stages (for performance reason)
-            if( GN::gfx::TSV_DISABLE == desc.ts( i, GN::gfx::TS_COLOROP ) )
-            {
-                disableTextureStage( i );
-            }*/
 
             if( GLEW_ARB_texture_env_combine )
             {
                 for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
                 {
-                    tsv = desc.ts[i][j];
-                    if( TSV_INVALID != tsv )
+                    if( newDesc.isSet( i, (TextureState)j ) )
                     {
-                        if( TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
+                        tsv = newDesc.get( i, (TextureState) j );
+
+                        if( !oldDesc.isSet( i, (TextureState)j ) ||
+                            oldDesc.get( i, (TextureState)j ) != tsv )
                         {
-                            GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_dot3!" ) );
-                            tsv = TSV_ARG0;
+                            if( TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
+                            {
+                                GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_dot3!" ) );
+                                tsv = TSV_ARG0;
+                            }
+                            GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op1, sTsv2OGL[tsv].val1 ) );
+                            GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op2, sTsv2OGL[tsv].val2 ) );
                         }
-                        GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op1, sTsv2OGL[tsv].val1 ) );
-                        GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op2, sTsv2OGL[tsv].val2 ) );
                     }
                 }
             }
-            else
+            else if( newDesc.isSet( i, TS_COLOROP ) )
             {
-                tsv = desc.ts[i][TS_COLOROP];
-                if( TSV_INVALID != tsv )
+                tsv = newDesc.get( i, TS_COLOROP );
+
+                if( !oldDesc.isSet( i, TS_COLOROP ) ||
+                    oldDesc.get( i, TS_COLOROP ) != tsv )
                 {
                     GLint glop = sTs2OGL[TS_COLOROP].op1;
                     switch( glop )
@@ -539,6 +558,12 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
                 }
             }
         }
+        // disabled remaining stages
+        for( uint32_t i = numStages; i < maxStages; ++i )
+        {
+            disableTextureStage( i );
+        }
+
     }
 
     GN_UNGUARD_SLOW;
@@ -600,13 +625,13 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
                 disableTextureStage( i );
             }
         }
-                    
+
         // disable remaining texture stages
         for( ; i < maxStages; ++i )
         {
             disableTextureStage( i );
         }
     }
-    
+
     GN_UNGUARD_SLOW;
 }

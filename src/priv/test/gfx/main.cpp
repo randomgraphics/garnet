@@ -34,8 +34,8 @@ class Scene
                 0,  0,  0,  1 ) );
 
             // set render states
-            desc.rsb.rs[RS_CULL_MODE] = RSV_CULL_NONE;
-            desc.rsb.rs[RS_DEPTH_WRITE] = RSV_FALSE;
+            desc.rsb.set( RS_CULL_MODE, RSV_CULL_NONE );
+            desc.rsb.set( RS_DEPTH_WRITE, RSV_FALSE );
 
             // init vs0
             desc.shaders["vs.1.1"].type = VERTEX_SHADER;
@@ -59,6 +59,9 @@ class Scene
                 "END";
             desc.shaders["arbvp1"].uniforms["m0"] = "pvw";
 
+            // init vs2
+            desc.shaders["fixvs"].type = VERTEX_SHADER;
+
             // init ps0
             desc.shaders["ps.1.1"].type = PIXEL_SHADER;
             desc.shaders["ps.1.1"].lang = LANG_D3D_ASM;
@@ -76,6 +79,9 @@ class Scene
                 "END";
             desc.shaders["arbfp1"].uniforms["l0"] = "color";
 
+			// init ps2
+			desc.shaders["fixps"].type = PIXEL_SHADER;
+
             // create tech0
             desc.techniques["t0"].passes.resize(1);
             desc.techniques["t0"].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
@@ -85,6 +91,11 @@ class Scene
             desc.techniques["t1"].passes.resize(1);
             desc.techniques["t1"].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
             desc.techniques["t1"].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
+
+            // create tech2
+            desc.techniques["t2"].passes.resize(1);
+            desc.techniques["t2"].passes[0].shaders[VERTEX_SHADER] = "fixvs";
+            desc.techniques["t2"].passes[0].shaders[PIXEL_SHADER] = "fixps";
 
             if( !eff0.init( desc ) ) return false;
 

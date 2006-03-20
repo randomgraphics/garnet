@@ -9,6 +9,7 @@ BUGS
     - See GNsampleRenderToTexture for an example.
   - GNsampleRenderToTexture: black screen on cygwin.
   - GNsampleDepthTexture: extremly slow on ATI x1800, possibly caused by ARB programs.
+  - GNtestGfx: no blending when using OGL renderer.
 
 TODO
 ====

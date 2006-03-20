@@ -16,13 +16,62 @@ namespace GN { namespace gfx
     //!
     enum RenderState
     {
-        #define GNGFX_DEFINE_RS( tag, defval ) RS_##tag,
+        #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) RS_##tag,
         #include "renderStateMeta.h"
         #undef GNGFX_DEFINE_RS
 
         NUM_RENDER_STATES,   //!< number of available render states
         RS_INVALID           //!< indicate invalid render state type
     };
+
+    //!
+    //! Render state descriptor
+    //!
+    struct RenderStateDesc
+    {
+        //!
+        //! render state value type
+        //!
+        enum ValueType
+        {
+            VT_ENUM,  //!< value is enumeration (one of RenderStateValue)
+            VT_INT,   //!< value is integer
+            VT_FLOAT, //!< value is float
+        };
+
+        const char * name;   //!< render state name
+        ValueType valueType; //!< value type
+        union
+        {
+            int32_t defI; //!< default value as enumeration or integer
+            float   defF; //!< default value
+        };
+        union
+        {
+            int32_t minI; //!< min value as enumeration or integer
+            float   minF; //!< min value is float
+        };
+        union
+        {
+            int32_t maxI; //!< max value as enumeration or integer
+            float   maxF; //!< max value is float
+        };
+
+        //!
+        //! Check render state value
+        //!
+        bool checkValueI( int32_t ) const;
+
+        //!
+        //! Check render state value
+        //!
+        bool checkValueF( float ) const;
+    };
+
+    //!
+    //! Get descriptor of specific render state
+    //!
+    const RenderStateDesc & getRenderStateDesc( RenderState );
 
     //!
     //! Convert render state type to string
@@ -120,7 +169,7 @@ namespace GN { namespace gfx
     //!
     enum TextureState
     {
-        #define GNGFX_DEFINE_TS( tag, defval0, defval, d3dname, glname1, glname2 ) TS_##tag,
+        #define GNGFX_DEFINE_TS( tag, defval0, d3dname, glname1, glname2 ) TS_##tag,
         #include "textureStateMeta.h"
         #undef GNGFX_DEFINE_TS
 
@@ -190,21 +239,23 @@ namespace GN { namespace gfx
     //!
     //! Render State Block Description Structure
     //!
-    struct RenderStateBlockDesc
+    class RenderStateBlockDesc
     {
-        static const RenderStateBlockDesc DEFAULT; //!< default rsblock
-        static const RenderStateBlockDesc EMPTY; //!< empty rsblock. All fields are RSV_EMPTY
+        enum
+        {
+            // flag that indicates a "complete" block
+            COMPLETE = ((uint32_t)-1) >> ( 32 - NUM_RENDER_STATES ),
+        };
 
-        //!
-        //! render states
-        //!
-        RenderStateValue rs[NUM_RENDER_STATES];
+        int32_t  mValues[NUM_RENDER_STATES]; // render state values
+        uint32_t mFlags; // Render state validality flag
 
         //!
         //! Only used to construct static members.
         //!
         RenderStateBlockDesc( bool toEmpty )
         {
+            GN_CASSERT( NUM_RENDER_STATES <= 32 ); // make sure flag is large enough
             if( toEmpty ) resetToEmpty();
             else resetToDefault();
         }
@@ -224,7 +275,22 @@ namespace GN { namespace gfx
         //!
         //! copy constructor
         //!
-        RenderStateBlockDesc( const RenderStateBlockDesc & another ) { ::memcpy( rs, another.rs, sizeof(rs) ); }
+        RenderStateBlockDesc( const RenderStateBlockDesc & another ) : mFlags( another.mFlags )
+        {
+            ::memcpy( mValues, another.mValues, sizeof(mValues) );
+        }
+
+        //@}
+
+        // ********************************
+        //! \name  public data members
+        // ********************************
+    public :
+
+        //@{
+
+        static const RenderStateBlockDesc DEFAULT; //!< default rsblock
+        static const RenderStateBlockDesc EMPTY; //!< empty rsblock. All fields are RSV_EMPTY
 
         //@}
 
@@ -251,30 +317,35 @@ namespace GN { namespace gfx
         bool valid() const;
 
         //!
-        //! 求和, 将参数中所有的非 RSV_EMPTY 的项复写到this中
+        //! check if specific render state is set or not.
+        //!
+        bool isSet( RenderState type ) const;
+
+        //!
+        //! get specific render state. Assert failure will
+        //! be triggered, if flag of the render state is *not* set.
+        //!
+        int32_t get( RenderState type ) const;
+
+        //!
+        //! set specific render state
+        //!
+        void set( RenderState type, int value );
+
+        //!
+        //! 求和, 将参数中的有效项复写到this中.
+        //!
+        //! \note a.mergeWith(b) does *not* equal with b.mergeWith(a)
         //!
         void mergeWith( const RenderStateBlockDesc & );
 
         //!
-        //! 求和. Note that sMerge(A,B,C) != sMerge(A,C,B)
+        //! 求和, same as: r = a; r.mergeWith(b);
         //!
         static RenderStateBlockDesc & sMerge(
-            RenderStateBlockDesc &,
-            const RenderStateBlockDesc &,
-            const RenderStateBlockDesc & );
-
-        //!
-        //! 求差, 相同的项相减结果为 RSV_EMPTY, 不同的项则保留原值
-        //!
-        void diffWith( const RenderStateBlockDesc & );
-
-        //!
-        //! 求差.
-        //!
-        static RenderStateBlockDesc & sDiff(
-            RenderStateBlockDesc &,
-            const RenderStateBlockDesc &,
-            const RenderStateBlockDesc & );
+            RenderStateBlockDesc & r,
+            const RenderStateBlockDesc & a,
+            const RenderStateBlockDesc & b );
 
         //@}
 
@@ -286,23 +357,33 @@ namespace GN { namespace gfx
         //@{
 
         //!
-        //! 等值判定
+        //! assignment
         //!
-        bool operator == ( const RenderStateBlockDesc & ) const;
-
-        //!
-        //! 等值判定
-        //!
-        bool operator != ( const RenderStateBlockDesc & ) const;
+        RenderStateBlockDesc & operator=( const RenderStateBlockDesc & rhs )
+        {
+            ::memcpy( mValues, rhs.mValues, sizeof(mValues) );
+            mFlags = rhs.mFlags;
+            return *this;
+        }
 
         //!
         //! add, same as sMerge.
         //!
-        friend RenderStateBlockDesc operator+ ( const RenderStateBlockDesc & a, const RenderStateBlockDesc & b )
+        friend RenderStateBlockDesc operator+( const RenderStateBlockDesc & a, const RenderStateBlockDesc & b )
         {
             RenderStateBlockDesc r;
             return sMerge( r, a, b );
         }
+
+        //!
+        //! equality check
+        //!
+        bool operator==( const RenderStateBlockDesc & rhs ) const;
+
+        //!
+        //! equality check
+        //!
+        bool operator!=( const RenderStateBlockDesc & rhs ) const;
     };
 
     //!
@@ -310,21 +391,20 @@ namespace GN { namespace gfx
     //!
     //! \note Texture states are used ONLY for fixed function pipeline.
     //!
-    struct TextureStateBlockDesc
+    class TextureStateBlockDesc
     {
-        static const TextureStateBlockDesc DEFAULT; //!< default rsblock
-        static const TextureStateBlockDesc EMPTY;   //!< empty rsblock (all fields are TSV_EMPTY)
+        enum { COMPLETE = 255 >> ( 8 - NUM_TEXTURE_STATES ) };
 
-        //!
-        //! texture stage states
-        //!
-        TextureStateValue ts[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES];
+        size_t            mNumStages;
+        TextureStateValue mValues[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES]; // values
+        uint8_t           mFlags[MAX_TEXTURE_STAGES];
 
         //!
         //! Only used to construct static data members.
         //!
         TextureStateBlockDesc( bool toEmpty )
         {
+            GN_CASSERT( NUM_TEXTURE_STATES <= 8 ); // make sure flag is large enough
             if( toEmpty ) resetToEmpty();
             else resetToDefault();
         }
@@ -344,7 +424,23 @@ namespace GN { namespace gfx
         //!
         //! copy constructor
         //!
-        TextureStateBlockDesc( const TextureStateBlockDesc & another ) { ::memcpy( ts, another.ts, sizeof(ts) ); }
+        TextureStateBlockDesc( const TextureStateBlockDesc & another )
+        {
+            ::memcpy( mValues, another.mValues, sizeof(mValues) );
+            ::memcpy( mFlags, another.mFlags, sizeof(mFlags) );
+        }
+
+        //@}
+
+        // ********************************
+        //! \name  public data members
+        // ********************************
+    public :
+
+        //@{
+
+        static const TextureStateBlockDesc DEFAULT; //!< default rsblock
+        static const TextureStateBlockDesc EMPTY;   //!< empty rsblock (all fields are TSV_EMPTY)
 
         //@}
 
@@ -371,6 +467,27 @@ namespace GN { namespace gfx
         bool valid() const;
 
         //!
+        //! get effective stage count
+        //!
+        size_t getNumStages() const { return mNumStages; }
+
+        //!
+        //! check if specific render state is set or not.
+        //!
+        bool isSet( size_t stage, TextureState type ) const;
+
+        //!
+        //! get specific render state. Assert failure will
+        //! be triggered, if flag of the render state is *not* set.
+        //!
+        TextureStateValue get( size_t stage, TextureState type ) const;
+
+        //!
+        //! set specific render state
+        //!
+        void set( size_t stage, TextureState type, TextureStateValue value );
+
+        //!
         //! 求和（将参数中所有的非EMPTY项复写到this中）.
         //!
         void mergeWith( const TextureStateBlockDesc & );
@@ -379,19 +496,6 @@ namespace GN { namespace gfx
         //! 求和. Note that sMerge(A,B,C) != sMerge(A,C,B)
         //!
         static TextureStateBlockDesc & sMerge(
-            TextureStateBlockDesc &,
-            const TextureStateBlockDesc &,
-            const TextureStateBlockDesc & );
-
-        //!
-        //! 求差, 相同的项相减结果为 TSV_EMPTY, 相异的项则保留原值
-        //!
-        void diffWith( const TextureStateBlockDesc & );
-
-        //!
-        //! 求差.
-        //!
-        static TextureStateBlockDesc & sDiff(
             TextureStateBlockDesc &,
             const TextureStateBlockDesc &,
             const TextureStateBlockDesc & );
@@ -406,14 +510,25 @@ namespace GN { namespace gfx
         //@{
 
         //!
-        //! 等值判定
+        //! copy assignment
         //!
-        bool operator == ( const TextureStateBlockDesc & ) const;
+        TextureStateBlockDesc & operator=( const TextureStateBlockDesc & rhs )
+        {
+            mNumStages = rhs.mNumStages;
+            ::memcpy( mValues, rhs.mValues, sizeof(mValues[0])*mNumStages );
+            ::memcpy( mFlags, rhs.mFlags, sizeof(mFlags[0])*mNumStages );
+            return *this;
+        }
 
         //!
-        //! 等值判定
+        //! equality check
         //!
-        bool operator != ( const TextureStateBlockDesc & ) const;
+        bool operator==( const TextureStateBlockDesc & rhs ) const;
+
+        //!
+        //! equality check
+        //!
+        bool operator!=( const TextureStateBlockDesc & rhs ) const;
     };
 }}
 
