@@ -442,8 +442,7 @@ namespace GN { namespace gfx
             struct
             {
                     // byte 0
-                unsigned int vtxShader          :  1; //!< vertex shdader
-                unsigned int pxlShader          :  1; //!< pixel shader
+                unsigned int shaders            :  2; //!< one bit for each shader type
                 unsigned int rsb                :  1; //!< render state block
                 unsigned int renderTargets      :  1; //!< render targets
                 unsigned int viewport           :  1; //!< viewport
@@ -460,6 +459,14 @@ namespace GN { namespace gfx
                 // byte 2,3
                 unsigned int                    : 16; //!< reserved
             };
+
+            //! \name helper functions to access shader bits
+            //@{
+            bool shaderBit( int type ) const { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); return 0 != ( shaders & (1<<type) ); }
+            bool vtxShaderBit() const { return 0 != ( shaders & (1<<VERTEX_SHADER) ); }
+            bool pxlShaderBit() const { return 0 != ( shaders & (1<<PIXEL_SHADER) ); }
+            void setShaderBit( int type ) { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); shaders |= 1 << type; }
+            //@}
         };
 
         //!
@@ -554,8 +561,10 @@ namespace GN { namespace gfx
         //!
         void mergeWith( const ContextState & another )
         {
-            if( another.flags.vtxShader ) shaders[VERTEX_SHADER] = another.shaders[VERTEX_SHADER];
-            if( another.flags.pxlShader ) shaders[PIXEL_SHADER] = another.shaders[PIXEL_SHADER];
+            for( int i = 0; i < NUM_SHADER_TYPES; ++i )
+            {
+               if( another.flags.shaderBit(i) ) shaders[i] = another.shaders[i];
+            }
             if( another.flags.rsb ) rsb.mergeWith( another.rsb );
             if( another.flags.renderTargets ) renderTargets = another.renderTargets;
             if( another.flags.viewport ) viewport = another.viewport;

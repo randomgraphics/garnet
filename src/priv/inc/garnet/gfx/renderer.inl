@@ -11,11 +11,12 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void ContextState::setShader( ShaderType type, const Shader * shader )
     {
-        switch( type )
+        GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES );
+        GN_ASSERT( !shader || type == shader->getType() );
+        if( shaders[type] != shader )
         {
-            case VERTEX_SHADER : setVtxShader( shader ); break;
-            case PIXEL_SHADER  : setPxlShader( shader ); break;
-            default            : GN_ERROR( "invalid shader type : %d", type );
+            flags.shaders |= 1<<type;
+            shaders[type] = shader;
         }
     }
 
@@ -32,8 +33,8 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void ContextState::setShaders( const Shader * vtxShader, const Shader * pxlShader )
     {
-        _GNGFX_CONTEXT_STATE( vtxShader, shaders[0], vtxShader );
-        _GNGFX_CONTEXT_STATE( pxlShader, shaders[1], pxlShader );
+        setShader( VERTEX_SHADER, vtxShader );
+        setShader( PIXEL_SHADER, pxlShader );
     }
 
     //
@@ -50,7 +51,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void ContextState::setVtxShader( const Shader * s )
     {
-        _GNGFX_CONTEXT_STATE( vtxShader, shaders[0], s );
+        setShader( VERTEX_SHADER, s );
     }
 
     //
@@ -66,7 +67,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void ContextState::setPxlShader( const Shader * s )
     {
-        _GNGFX_CONTEXT_STATE( pxlShader, shaders[1], s );
+        setShader( PIXEL_SHADER, s );
     }
 
     //
