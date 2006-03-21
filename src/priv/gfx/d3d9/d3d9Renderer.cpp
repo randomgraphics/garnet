@@ -29,7 +29,7 @@
 
 #else // !GN_XENON
 
-#pragma comment(lib, "d3d9.lib") // D3D for PC has no d3d9d.lib
+#pragma comment(lib, "d3d9.lib") // D3D9 for PC has no d3d9d.lib
 
 #endif // GN_XENON
 
@@ -148,14 +148,14 @@ bool GN::gfx::D3D9Renderer::deviceCreate( bool triggerInitSignal )
     // trigger signals
     if( triggerInitSignal )
     {
-        GN_INFO( "GFX SIGNAL: D3D renderer init." );
+        GN_INFO( "GFX SIGNAL: D3D9 renderer init." );
         if( !sSigInit() ) return false;
     }
 
-    GN_INFO( "GFX SIGNAL: D3D device create." );
+    GN_INFO( "GFX SIGNAL: D3D9 device create." );
     if( !sSigDeviceCreate() ) return false;
 
-    GN_INFO( "GFX SIGNAL: D3D device restore." );
+    GN_INFO( "GFX SIGNAL: D3D9 device restore." );
     if( !sSigDeviceRestore() ) return false;
 
     // success
@@ -180,7 +180,7 @@ bool GN::gfx::D3D9Renderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    GN_INFO( "GFX SIGNAL: D3D device restore." );
+    GN_INFO( "GFX SIGNAL: D3D9 device restore." );
     if( !sSigDeviceRestore() ) return false;
 
     // success
@@ -198,7 +198,7 @@ void GN::gfx::D3D9Renderer::deviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_INFO( "GFX SIGNAL: D3D device dispose." );
+    GN_INFO( "GFX SIGNAL: D3D9 device dispose." );
     sSigDeviceDispose();
 
     drawDeviceDispose();
@@ -221,15 +221,15 @@ void GN::gfx::D3D9Renderer::deviceDestroy( bool triggerQuitSignal )
 
     if( mDevice )
     {
-        GN_INFO( "GFX SIGNAL: D3D device dispose." );
+        GN_INFO( "GFX SIGNAL: D3D9 device dispose." );
         sSigDeviceDispose();
 
-        GN_INFO( "GFX SIGNAL: D3D device destroy." );
+        GN_INFO( "GFX SIGNAL: D3D9 device destroy." );
         sSigDeviceDestroy();
 
         if( triggerQuitSignal )
         {
-            GN_INFO( "GFX SIGNAL: D3D renderer quit." );
+            GN_INFO( "GFX SIGNAL: D3D9 renderer quit." );
             sSigQuit();
         }
     }
