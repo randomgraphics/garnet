@@ -1,5 +1,5 @@
 Import( 'env GN_conf' )
 dirs = Split('common')
 if 'xenon' != GN_conf['compiler']: dirs += ['ogl']
-if GN_conf['has_d3d9'] : dirs += ['d3d']
+if GN_conf['has_d3d9'] : dirs += ['d3d9']
 SConscript( dirs=dirs )
