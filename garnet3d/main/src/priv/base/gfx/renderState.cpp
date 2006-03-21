@@ -12,6 +12,51 @@
 // RenderStateDesc
 // *****************************************************************************
 
+const GN::gfx::RenderStateDesc * GN::gfx::detail::sGenerateRenderStateDescriptors()
+{
+    struct Local
+    {
+        static RenderStateDesc ctorENUM( const char * name, int32_t minVal, int32_t maxVal )
+        {
+            RenderStateDesc desc;
+            desc.name = name;
+            desc.valueType = RenderStateDesc::VT_ENUM;
+            desc.minI = minVal;
+            desc.maxI = maxVal;
+            return desc;
+        }
+
+        static RenderStateDesc ctorINT( const char * name, int32_t minVal, int32_t maxVal )
+        {
+            RenderStateDesc desc;
+            desc.name = name;
+            desc.valueType = RenderStateDesc::VT_INT;
+            desc.minI = minVal;
+            desc.maxI = maxVal;
+            return desc;
+        }
+
+        static RenderStateDesc ctorFLOAT( const char * name, float minVal, float maxVal )
+        {
+            RenderStateDesc desc;
+            desc.name = name;
+            desc.valueType = RenderStateDesc::VT_FLOAT;
+            desc.minF = minVal;
+            desc.maxF = maxVal;
+            return desc;
+        }
+    };
+
+    static const GN::gfx::RenderStateDesc sTable[] =
+    {
+    #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) Local::ctor##type( #tag, minVal, maxVal ),
+    #include "garnet/gfx/renderStateMeta.h"
+    #undef GNGFX_DEFINE_RS
+    };
+
+    return sTable;
+}
+
 //
 //
 // -----------------------------------------------------------------------------

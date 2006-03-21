@@ -68,15 +68,12 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
 static inline void sApplyVtxBuf(
     const GN::gfx::OGLVtxFmt & vtxFmt,
     const GN::gfx::ContextData::VtxBufDesc * vtxBufs,
-    size_t numVtxBufs,
     size_t startVtx )
 {
     GN_GUARD_SLOW;
 
     using namespace GN;
     using namespace GN::gfx;
-
-    GN_ASSERT_EX( vtxFmt.getFormat().numStreams <= numVtxBufs, "No enough vertex buffers." );
 
     for( size_t i = 0; i < vtxFmt.getFormat().numStreams; ++i )
     {
@@ -273,11 +270,11 @@ void GN::gfx::OGLRenderer::drawIndexed(
     // bind vertex buffer based on current startVtx
     GN_ASSERT(
         mVtxFmts.validHandle(mContextData.vtxFmt) &&
-        mVtxFmts[mContextData.vtxFmt] );
+        mVtxFmts[mContextData.vtxFmt] &&
+        mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams <= mContextData.numVtxBufs );
     sApplyVtxBuf(
         *mVtxFmts[mContextData.vtxFmt],
         mContextData.vtxBufs,
-        mContextData.numVtxBufs,
         startVtx );
 
     // get current index buffer
@@ -346,11 +343,11 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
     // bind vertex buffer based on current startVtx
     GN_ASSERT(
         mVtxFmts.validHandle(mContextData.vtxFmt) &&
-        mVtxFmts[mContextData.vtxFmt] );
+        mVtxFmts[mContextData.vtxFmt] &&
+        mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams <= mContextData.numVtxBufs );
     sApplyVtxBuf(
         *mVtxFmts[mContextData.vtxFmt],
         mContextData.vtxBufs,
-        mContextData.numVtxBufs,
         startVtx );
 
     if( GLEW_EXT_compiled_vertex_array )

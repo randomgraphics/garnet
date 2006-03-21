@@ -21,6 +21,12 @@ namespace GN
     //!
     namespace gfx
     {
+        //!
+        //! namespace for GFX implemenation details
+        //!
+        namespace detail
+        {
+        }
     }
 }
 
