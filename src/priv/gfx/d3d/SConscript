@@ -1,7 +1,7 @@
 Import( 'env' )
 
 env.GN_build_shared_library(
-    'GNgfxD3D',
+    'GNgfxD3D9',
     env.GN_glob('*.cpp'),
     'pch.h',
     'pch.cpp',
