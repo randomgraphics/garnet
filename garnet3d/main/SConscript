@@ -229,7 +229,7 @@ def GN_build_program( env, target, sources=[],
     pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if not ignoreDefaultLibs:
         if GN_conf['static']:
-            libs += Split('GNbase GNgfxD3D GNgfxOGL GNgfxCommon')
+            libs += Split('GNbase GNgfxD3D9 GNgfxOGL GNgfxCommon')
         libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
     extra = []
     for x in libs:
@@ -493,10 +493,15 @@ def check_config( conf, conf_dir ):
     # =================
     conf['has_cg'] = c.CheckCHeader('cg/cg.h')
 
-    # ===========
-    # 是否支持D3D
-    # ===========
-    conf['has_d3d'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
+    # ============
+    # 是否支持D3D9
+    # ============
+    conf['has_d3d9'] = c.CheckCXXHeader('xtl.h') or c.CheckCXXHeader( 'd3d9.h' ) and c.CheckCXXHeader( 'd3dx9.h' )
+
+    # =============
+    # 是否支持D3D10
+    # =============
+    conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' )
 
     # ==============
     # 是否支持XInput
@@ -595,7 +600,7 @@ def doInstall( alias, dir, names ):
             GN_targets[name] = item
             env.Alias( alias, item )
 
-sharedModules = Split( 'GNcore GNgfxD3D GNgfxOGL' )
+sharedModules = Split( 'GNcore GNgfxD3D9 GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase')

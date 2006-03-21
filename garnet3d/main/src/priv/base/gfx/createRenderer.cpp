@@ -83,7 +83,7 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
     CreateRendererFunc creator;
     switch( api )
     {
-        case API_D3D  : dllName = "GNgfxD3D"; break;
+        case API_D3D  : dllName = "GNgfxD3D9"; break;
         case API_OGL  : dllName = "GNgfxOGL"; break;
         default       : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }

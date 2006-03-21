@@ -69,7 +69,7 @@ build_proj( 'GNbase'                  , ['#src/priv/base'], ['#src/priv/inc/garn
 build_proj( 'GNcore'                  , ['#src/priv/core'] )
 build_proj( 'GNgfxLib'                , ['#src/priv/gfx/lib'], [], 'GNgfx' )
 build_proj( 'GNgfxCommon'             , ['#src/priv/gfx/common'], [], 'GNgfx' )
-build_proj( 'GNgfxD3D'                , ['#src/priv/gfx/d3d'], [], 'GNgfx' )
+build_proj( 'GNgfxD3D9'               , ['#src/priv/gfx/d3d'], [], 'GNgfx' )
 build_proj( 'GNgfxOGL'                , ['#src/priv/gfx/ogl'], [], 'GNgfx' )
 build_proj( 'GNinput'                 , ['#src/priv/input'] )
 build_proj( 'GNut'                    , ['#src/priv/test/ut'] )
