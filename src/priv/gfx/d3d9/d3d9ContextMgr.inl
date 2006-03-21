@@ -13,21 +13,21 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
     if( s.initialized && !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
-        GN_DX_CHECK( mDevice->GetRenderState( type, &d ) );
+        GN_DX9_CHECK( mDevice->GetRenderState( type, &d ) );
         GN_ASSERT( d == s.value );
     }
 #endif
 
     if( value != s.value || !s.initialized )
     {
-        GN_DX_CHECK( mDevice->SetRenderState( type, value ) );
+        GN_DX9_CHECK( mDevice->SetRenderState( type, value ) );
         s.initialized = true;
         s.value = value;
 #if GN_DEBUG
         if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
         {
             DWORD d;
-            GN_DX_CHECK( mDevice->GetRenderState( type, &d ) );
+            GN_DX9_CHECK( mDevice->GetRenderState( type, &d ) );
             GN_ASSERT( d == s.value );
         }
 #endif
@@ -50,7 +50,7 @@ GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DRenderState( D3DRENDERSTATETYPE typ
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
-        GN_DX_CHECK( mDevice->GetRenderState( type, &d ) );
+        GN_DX9_CHECK( mDevice->GetRenderState( type, &d ) );
         GN_ASSERT( d == mRenderStates[type].value );
     }
 #endif
@@ -78,14 +78,14 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
     if( s.initialized && !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
-        GN_DX_CHECK( mDevice->GetSamplerState( stage, type, &d ) );
+        GN_DX9_CHECK( mDevice->GetSamplerState( stage, type, &d ) );
         GN_ASSERT( d == s.value );
     }
 #endif
 
     if( value != s.value || !s.initialized )
     {
-        GN_DX_CHECK( mDevice->SetSamplerState( stage, type, value ) );
+        GN_DX9_CHECK( mDevice->SetSamplerState( stage, type, value ) );
         s.initialized = true;
         s.value = value;
 
@@ -93,7 +93,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
         if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
         {
             DWORD d;
-            GN_DX_CHECK( mDevice->GetSamplerState( stage, type, &d ) );
+            GN_DX9_CHECK( mDevice->GetSamplerState( stage, type, &d ) );
             GN_ASSERT( d == s.value );
         }
 #endif
@@ -117,7 +117,7 @@ GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DSamplerState( UINT stage, D3DSAMPLE
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
-        GN_DX_CHECK( mDevice->GetSamplerState( stage, type, &d ) );
+        GN_DX9_CHECK( mDevice->GetSamplerState( stage, type, &d ) );
         GN_ASSERT( d == mSamplerStates[stage][type].value );
     }
 #endif
@@ -146,21 +146,21 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DTextureState(
     if( s.initialized && !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
-        GN_DX_CHECK( mDevice->GetTextureStageState( stage, type, &d ) );
+        GN_DX9_CHECK( mDevice->GetTextureStageState( stage, type, &d ) );
         GN_ASSERT( d == s.value );
     }
 #endif
 
     if( value != s.value || !s.initialized )
     {
-        GN_DX_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
+        GN_DX9_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
         s.initialized = true;
         s.value = value;
 #if GN_DEBUG
         if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
         {
             DWORD d;
-            GN_DX_CHECK( mDevice->GetTextureStageState( stage, type, &d ) );
+            GN_DX9_CHECK( mDevice->GetTextureStageState( stage, type, &d ) );
             GN_ASSERT( d == s.value );
         }
 #endif
@@ -184,7 +184,7 @@ GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DTextureState( UINT stage, D3DTEXTUR
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
-        GN_DX_CHECK( mDevice->GetTextureStageState( stage, type, &d ) );
+        GN_DX9_CHECK( mDevice->GetTextureStageState( stage, type, &d ) );
         GN_ASSERT( d == mTextureStates[stage][type].value );
     }
 #endif

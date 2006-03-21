@@ -17,13 +17,23 @@ extern GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & 
 #if GN_STATIC
 
 //
-// create D3D renderer
+// create D3D9 renderer
 //
 #if GN_MSWIN
 extern GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & );
 #else
 inline GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & )
-{ GN_ERROR( "No D3D support on platform other than MS Windows." ); return 0; }
+{ GN_ERROR( "No D3D9 support on platform other than MS Windows." ); return 0; }
+#endif
+
+//
+// create D3D10 renderer
+//
+#if GN_MSWIN && !GN_XENON
+extern GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions & );
+#else
+inline GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions & )
+{ GN_ERROR( "No D3D10 support on platform other than MS Vista." ); return 0; }
 #endif
 
 //
@@ -74,18 +84,20 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
 #if GN_STATIC
     switch( api )
     {
-        case API_D3D9 : return createD3D9Renderer( ro );
-        case API_OGL  : return createOGLRenderer( ro );
-        default       : GN_ERROR( "Invalid API(%d)", api ); return 0;
+        case API_D3D9  : return createD3D9Renderer( ro );
+        case API_D3D10 : return createD3D10Renderer( ro );
+        case API_OGL   : return createOGLRenderer( ro );
+        default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }
 #else
     const char * dllName;
     CreateRendererFunc creator;
     switch( api )
     {
-        case API_D3D9 : dllName = "GNgfxD3D9"; break;
-        case API_OGL  : dllName = "GNgfxOGL"; break;
-        default       : GN_ERROR( "Invalid API(%d)", api ); return 0;
+        case API_D3D9  : dllName = "GNgfxD3D9"; break;
+        case API_D3D10 : dllName = "GNgfxD3D10"; break;
+        case API_OGL   : dllName = "GNgfxOGL"; break;
+        default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }
     if( !Renderer::msSharedLib.load( dllName ) ) return 0;
     creator = (CreateRendererFunc)Renderer::msSharedLib.getSymbol( "GNgfxCreateRenderer" );

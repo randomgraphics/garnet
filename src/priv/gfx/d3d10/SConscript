@@ -1,0 +1,8 @@
+Import( 'env' )
+
+env.GN_build_shared_library(
+    'GNgfxD3D10',
+    env.GN_glob('*.cpp'),
+    'pch.h',
+    'pch.cpp',
+    libs = Split('GNgfxCommon') )

@@ -26,7 +26,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtoolOGLInfo", "8.0\GNtool
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestGui", "8.0\GNtestGui.vcproj", "{3C7D1DE8-C651-40A2-B334-0F18557EB853}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestD3D", "8.0\GNtestD3D.vcproj", "{191C7E8F-B272-4B8A-B770-1D8CC6CAA925}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestD3D9", "8.0\GNtestD3D9.vcproj", "{191C7E8F-B272-4B8A-B770-1D8CC6CAA925}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

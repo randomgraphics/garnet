@@ -25,7 +25,7 @@ public:
     bool onRendererDeviceRestore()
     {
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
-        GN_DX_CHECK( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
+        GN_DX9_CHECK( dev->CreateStateBlock( D3DSBT_ALL, &rsb ) );
         return true;
     }
 

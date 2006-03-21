@@ -257,27 +257,27 @@ namespace GN { namespace gfx
             {
                 case UVT_BOOL:
                     if( !u.value.bools.empty() )
-                        GN_DX_CHECK( table->SetBoolArray( dev, h, (const BOOL*)&u.value.bools[0], (UINT)u.value.bools.size() ) );
+                        GN_DX9_CHECK( table->SetBoolArray( dev, h, (const BOOL*)&u.value.bools[0], (UINT)u.value.bools.size() ) );
                     break;
 
                 case UVT_INT:
                     if( !u.value.ints.empty() )
-                        GN_DX_CHECK( table->SetIntArray( dev, h, (const INT*)&u.value.ints[0], (UINT)u.value.ints.size() ) );
+                        GN_DX9_CHECK( table->SetIntArray( dev, h, (const INT*)&u.value.ints[0], (UINT)u.value.ints.size() ) );
                     break;
 
                 case UVT_FLOAT:
                     if( !u.value.floats.empty() )
-                        GN_DX_CHECK( table->SetFloatArray( dev, h, &u.value.floats[0], (UINT)u.value.floats.size() ) );
+                        GN_DX9_CHECK( table->SetFloatArray( dev, h, &u.value.floats[0], (UINT)u.value.floats.size() ) );
                     break;
 
                 case UVT_VECTOR4:
                     if( !u.value.vector4s.empty() )
-                        GN_DX_CHECK( table->SetVectorArray( dev, h, (const D3DXVECTOR4*)&u.value.vector4s[0], (UINT)u.value.vector4s.size() ) );
+                        GN_DX9_CHECK( table->SetVectorArray( dev, h, (const D3DXVECTOR4*)&u.value.vector4s[0], (UINT)u.value.vector4s.size() ) );
                     break;
 
                 case UVT_MATRIX44:
                     if( !u.value.matrix44s.empty() )
-                        GN_DX_CHECK( table->SetMatrixTransposeArray( dev, h, (const D3DXMATRIX*)&u.value.matrix44s[0], (UINT)u.value.matrix44s.size() ) );
+                        GN_DX9_CHECK( table->SetMatrixTransposeArray( dev, h, (const D3DXMATRIX*)&u.value.matrix44s[0], (UINT)u.value.matrix44s.size() ) );
                     break;
 
                 default:

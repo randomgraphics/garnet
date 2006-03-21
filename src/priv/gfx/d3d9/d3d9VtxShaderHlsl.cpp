@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d9Shader.h"
 #include "d3d9Renderer.h"
-#include "garnet/GNd3d.h"
+#include "garnet/GNd3d9.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -62,7 +62,7 @@ bool GN::gfx::D3D9VtxShaderHlsl::deviceCreate()
 
     GN_ASSERT( !mConstTable && !mD3DShader );
 
-    mD3DShader = d3d::compileVS(
+    mD3DShader = d3d9::compileVS(
         getRenderer().getDevice(),
         mCode.cstr(),
         mCode.size(),
@@ -118,7 +118,7 @@ void GN::gfx::D3D9VtxShaderHlsl::apply() const
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
-    GN_DX_CHECK( dev->SetVertexShader( mD3DShader ) );
+    GN_DX9_CHECK( dev->SetVertexShader( mD3DShader ) );
 
     // apply ALL uniforms to D3D device
     uint32_t handle = getFirstUniform();

@@ -2,6 +2,6 @@ Import('env')
 
 if 'win32' == env['PLATFORM']:
     env.GN_build_program(
-        'GNtestD3D',
+        'GNtestD3D9',
         env.GN_glob('*.cpp'),
         'pch.h', 'pch.cpp' )

@@ -172,7 +172,7 @@ GN::gfx::createD3D9VertexDecl( LPDIRECT3DDEVICE9 dev, const VtxFmtDesc & format 
     GN_ASSERT( !elements.empty() );
 
     LPDIRECT3DVERTEXDECLARATION9 decl;
-    GN_DX_CHECK_RV( dev->CreateVertexDeclaration( &elements[0], &decl ), 0 );
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( &elements[0], &decl ), 0 );
 
     // success
     return decl;

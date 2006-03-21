@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
 #include "d3d9Texture.h"
-#include "garnet/GNd3d.h"
+#include "garnet/GNd3d9.h"
 
 // *****************************************************************************
 // local functions that initialize individual capability
@@ -100,7 +100,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceCreate()
 
     // get d3ddevcaps
     D3DCAPS9 d3dcaps;
-    GN_DX_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+    GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
 
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
@@ -129,7 +129,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
 
     // get d3ddevcaps
     D3DCAPS9 d3dcaps;
-    GN_DX_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+    GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
 
     // 逐一的检查每一个caps，保证它们都未被改变过
     #define GNGFX_CAPS( name ) \
@@ -197,7 +197,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
     // get adapter and driver information
     D3DADAPTER_IDENTIFIER9 aid;
     memset( &aid, 0, sizeof(aid) );
-    GN_DX_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
+    GN_DX9_CHECK( mD3D->GetAdapterIdentifier( mAdapter, 0, &aid ) );
 
     // output device information
     GN_INFO(
@@ -307,7 +307,7 @@ bool GN::gfx::D3D9Renderer::supportTextureFormat(
     return D3D_OK == checkD3DDeviceFormat(
         texUsage2D3DUsage(usage),
         texType2D3DResourceType(type),
-        d3d::clrFmt2D3DFormat(format) );
+        d3d9::clrFmt2D3DFormat(format) );
 
     GN_UNGUARD;
 }

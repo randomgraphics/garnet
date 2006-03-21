@@ -65,8 +65,8 @@ namespace GN { namespace gfx {
     public:
 
         bool deviceCreate() { return createFont(); }
-        bool deviceRestore() { GN_ASSERT( mFont ); GN_DX_CHECK_RV( mFont->OnResetDevice(), false ); return true; }
-        void deviceDispose() { if( mFont ) GN_DX_CHECK( mFont->OnLostDevice() ); }
+        bool deviceRestore() { GN_ASSERT( mFont ); GN_DX9_CHECK_RV( mFont->OnResetDevice(), false ); return true; }
+        void deviceDispose() { if( mFont ) GN_DX9_CHECK( mFont->OnLostDevice() ); }
         void deviceDestroy() { safeRelease( mFont ); }
 
         // ********************************

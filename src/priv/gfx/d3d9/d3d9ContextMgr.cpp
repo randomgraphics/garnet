@@ -232,8 +232,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
                 }
                 else switch( i )
                 {
-                    case VERTEX_SHADER : GN_DX_CHECK( mDevice->SetVertexShader( 0 ) ); break;
-                    case PIXEL_SHADER  : GN_DX_CHECK( mDevice->SetVertexShader( 0 ) ); break;
+                    case VERTEX_SHADER : GN_DX9_CHECK( mDevice->SetVertexShader( 0 ) ); break;
+                    case PIXEL_SHADER  : GN_DX9_CHECK( mDevice->SetVertexShader( 0 ) ); break;
                     default : GN_UNEXPECTED();
                 }
             }
@@ -289,8 +289,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             // get size of render target 0
             AutoComPtr<IDirect3DSurface9> rt0;
             D3DSURFACE_DESC rt0Desc;
-            GN_DX_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
-            GN_DX_CHECK( rt0->GetDesc( &rt0Desc ) );
+            GN_DX9_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
+            GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
 
             // set d3d viewport
             D3DVIEWPORT9 d3dvp = {
@@ -302,7 +302,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             };
 
             // update D3D viewport
-            GN_DX_CHECK( mDevice->SetViewport(&d3dvp) );
+            GN_DX9_CHECK( mDevice->SetViewport(&d3dvp) );
 
             // update D3D scissors
             RECT rc = {
@@ -311,7 +311,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
                 int( d3dvp.X+d3dvp.Width ),
                 int( d3dvp.Y+d3dvp.Height ),
             };
-            GN_DX_CHECK( mDevice->SetScissorRect( &rc ) );
+            GN_DX9_CHECK( mDevice->SetScissorRect( &rc ) );
         }
     }
 
@@ -329,7 +329,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         if( newState.world != mContextState.world || forceRebind )
         {
             Matrix44f mat = Matrix44f::sTranspose( newState.world );
-            GN_DX_CHECK( mDevice->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
+            GN_DX9_CHECK( mDevice->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
         }
     }
 
@@ -338,7 +338,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         if( newState.view != mContextState.view || forceRebind )
         {
             Matrix44f mat = Matrix44f::sTranspose( newState.view );
-            GN_DX_CHECK( mDevice->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
+            GN_DX9_CHECK( mDevice->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
         }
     }
 
@@ -347,7 +347,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         if( newState.proj != mContextState.proj || forceRebind )
         {
             Matrix44f mat = Matrix44f::sTranspose( newState.proj );
-            GN_DX_CHECK( mDevice->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
+            GN_DX9_CHECK( mDevice->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
         }
     }
 
@@ -373,7 +373,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             d3dlight.Attenuation2 = 0.0f;
             d3dlight.Theta = D3DX_PI;
             d3dlight.Phi = D3DX_PI;
-            GN_DX_CHECK( mDevice->SetLight( 0, &d3dlight ) );
+            GN_DX9_CHECK( mDevice->SetLight( 0, &d3dlight ) );
         }
     }
 
@@ -391,7 +391,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             sSetColorValue( mat.Ambient, 0, 0, 0, 0 );
             sSetColorValue( mat.Emissive, 0, 0, 0, 0 );
             mat.Power = 1.0f;
-            GN_DX_CHECK( mDevice->SetMaterial( &mat ) );
+            GN_DX9_CHECK( mDevice->SetMaterial( &mat ) );
         }
     }
 
@@ -473,7 +473,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
             GN_ASSERT( decl->decl );
             if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
             {
-                GN_DX_CHECK( mDevice->SetVertexDeclaration( decl->decl ) );
+                GN_DX9_CHECK( mDevice->SetVertexDeclaration( decl->decl ) );
             }
         }
     }
@@ -489,7 +489,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
             if( vb.buffer != mContextData.vtxBufs[i].buffer || forceRebind )
             {
                 GN_ASSERT( vb.buffer );
-                GN_DX_CHECK( mDevice->SetStreamSource(
+                GN_DX9_CHECK( mDevice->SetStreamSource(
                     i,
                     safeCast<const D3D9VtxBuf*>(vb.buffer)->getD3DVb(),
                     0,
@@ -504,7 +504,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     if( newFlags.idxBuf &&
       ( newData.idxBuf != mContextData.idxBuf || forceRebind ) )
     {
-        GN_DX_CHECK( mDevice->SetIndices( newData.idxBuf
+        GN_DX9_CHECK( mDevice->SetIndices( newData.idxBuf
             ? safeCast<const D3D9IdxBuf*>(newData.idxBuf)->getD3DIb()
             : 0 ) );
     }

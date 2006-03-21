@@ -108,7 +108,7 @@ bool GN::gfx::D3D9Font::createFont()
     ::GetObjectW( GetStockObject(SYSTEM_FIXED_FONT), sizeof(lf), &lf );
 
     // create d3dx font
-    GN_DX_CHECK_RV(
+    GN_DX9_CHECK_RV(
         D3DXCreateFontW(
             getRenderer().getDevice(),
             lf.lfHeight,
