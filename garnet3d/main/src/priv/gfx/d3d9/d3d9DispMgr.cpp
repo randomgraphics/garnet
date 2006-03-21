@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "d3dRenderer.h"
+#include "d3d9Renderer.h"
 
 //
 //
@@ -189,7 +189,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::dispInit()
+bool GN::gfx::D3D9Renderer::dispInit()
 {
     GN_GUARD;
 
@@ -210,7 +210,7 @@ bool GN::gfx::D3DRenderer::dispInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::dispQuit()
+void GN::gfx::D3D9Renderer::dispQuit()
 {
     GN_GUARD;
 
@@ -226,7 +226,7 @@ void GN::gfx::D3DRenderer::dispQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::dispDeviceCreate()
+bool GN::gfx::D3D9Renderer::dispDeviceCreate()
 {
     GN_GUARD;
 
@@ -346,7 +346,7 @@ bool GN::gfx::D3DRenderer::dispDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::dispDeviceRestore()
+bool GN::gfx::D3D9Renderer::dispDeviceRestore()
 {
     GN_GUARD;
 
@@ -392,7 +392,7 @@ bool GN::gfx::D3DRenderer::dispDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::dispDeviceDispose()
+void GN::gfx::D3D9Renderer::dispDeviceDispose()
 {
     _GNGFX_DEVICE_TRACE();
     mDispOK = false;
@@ -401,7 +401,7 @@ void GN::gfx::D3DRenderer::dispDeviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::dispDeviceDestroy()
+void GN::gfx::D3D9Renderer::dispDeviceDestroy()
 {
     GN_GUARD;
 

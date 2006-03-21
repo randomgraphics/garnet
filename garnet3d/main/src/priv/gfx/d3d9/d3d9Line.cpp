@@ -1,18 +1,18 @@
 #include "pch.h"
-#include "d3dLine.h"
-#include "d3dRenderer.h"
+#include "d3d9Line.h"
+#include "d3d9Renderer.h"
 #include "garnet/GNd3d.h"
 
-struct D3DLineVertex
+struct D3D9LineVertex
 {
     GN::Vector3f p;
     uint32_t     c;
 };
-GN_CASSERT( sizeof(D3DLineVertex) == 16 );
+GN_CASSERT( sizeof(D3D9LineVertex) == 16 );
 
 enum
 {
-    LINE_STRIDE = sizeof(D3DLineVertex)*2
+    LINE_STRIDE = sizeof(D3D9LineVertex)*2
 };
 
 static const D3DVERTEXELEMENT9 sDecl[] =
@@ -29,12 +29,12 @@ static const D3DVERTEXELEMENT9 sDecl[] =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DLine::init()
+bool GN::gfx::D3D9Line::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DLine, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9Line, () );
 
     // success
     return selfOK();
@@ -45,7 +45,7 @@ bool GN::gfx::D3DLine::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DLine::quit()
+void GN::gfx::D3D9Line::quit()
 {
     GN_GUARD;
 
@@ -59,19 +59,19 @@ void GN::gfx::D3DLine::quit()
 }
 
 // *****************************************************************************
-// from D3DResource
+// from D3D9Resource
 // *****************************************************************************
 
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DLine::deviceCreate()
+bool GN::gfx::D3D9Line::deviceCreate()
 {
     GN_GUARD;
 
     GN_ASSERT( !mVtxShader && !mPxlShader );
 
-    D3DRenderer & r = getRenderer();
+    D3D9Renderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // create vertex decl
@@ -112,7 +112,7 @@ bool GN::gfx::D3DLine::deviceCreate()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DLine::deviceRestore()
+bool GN::gfx::D3D9Line::deviceRestore()
 {
     GN_GUARD;
 
@@ -142,7 +142,7 @@ bool GN::gfx::D3DLine::deviceRestore()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DLine::deviceDispose()
+void GN::gfx::D3D9Line::deviceDispose()
 {
     GN_GUARD;
 
@@ -154,7 +154,7 @@ void GN::gfx::D3DLine::deviceDispose()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DLine::deviceDestroy()
+void GN::gfx::D3D9Line::deviceDestroy()
 {
     GN_GUARD;
 
@@ -172,7 +172,7 @@ void GN::gfx::D3DLine::deviceDestroy()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DLine::drawLines(
+void GN::gfx::D3D9Line::drawLines(
     BitField options,
     const float * positions, size_t stride,
     size_t count, uint32_t color,
@@ -205,7 +205,7 @@ void GN::gfx::D3DLine::drawLines(
         count -= n;
     }
 
-    D3DRenderer & r = getRenderer();
+    D3D9Renderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     D3DPRIMITIVETYPE d3dpt;
@@ -222,7 +222,7 @@ void GN::gfx::D3DLine::drawLines(
     }
 
     // lock vertex buffer
-    D3DLineVertex * vbData;
+    D3D9LineVertex * vbData;
 #if GN_XENON
     dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
 #endif
@@ -234,7 +234,7 @@ void GN::gfx::D3DLine::drawLines(
     {
         GN_DX_CHECK_R( mVtxBuf->Lock(
             (UINT)( LINE_STRIDE*mNextLine ),
-            (UINT)( sizeof(D3DLineVertex)*vertexCount ),
+            (UINT)( sizeof(D3D9LineVertex)*vertexCount ),
             (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
     }
 
@@ -253,7 +253,7 @@ void GN::gfx::D3DLine::drawLines(
 
         for( size_t i = 0; i < vertexCount; ++i )
         {
-            D3DLineVertex & v = vbData[i];
+            D3D9LineVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
             v.c = color;
             positions = (const float*)( ((const uint8_t*)positions) + stride );
@@ -263,7 +263,7 @@ void GN::gfx::D3DLine::drawLines(
     {
         for( size_t i = 0; i < vertexCount; ++i )
         {
-            D3DLineVertex & v = vbData[i];
+            D3D9LineVertex & v = vbData[i];
             v.p.set( positions[0], positions[1], positions[2] );
             v.c = color;
             positions = (const float*)( ((const uint8_t*)positions) + stride );
@@ -345,8 +345,8 @@ void GN::gfx::D3DLine::drawLines(
     df.vtxFmt = 1;
     df.vtxBufs = 1;
     GN_ASSERT( mVtxBuf );
-    GN_ASSERT( sizeof(D3DLineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
-    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3DLineVertex) ) );
+    GN_ASSERT( sizeof(D3D9LineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
+    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3D9LineVertex) ) );
     GN_DX_CHECK( dev->SetVertexDeclaration( mDecl ) );
 
     // draw
@@ -364,7 +364,7 @@ void GN::gfx::D3DLine::drawLines(
     GN_ASSERT( mNextLine <= MAX_LINES );
     if( MAX_LINES == mNextLine ) mNextLine = 0;
 
-    // TODO: update statistics information in D3DRenderer ( draw count, primitive count )
+    // TODO: update statistics information in D3D9Renderer ( draw count, primitive count )
 
     GN_UNGUARD_SLOW;
 }

@@ -413,9 +413,9 @@ namespace GN { namespace gfx
     //!
     enum RendererAPI
     {
-        API_OGL,  //!< OpenGL
-        API_D3D,  //!< Direct3D
-        API_FAKE, //!< Fake API
+        API_OGL,   //!< OpenGL
+        API_D3D9,  //!< D3D9
+        API_FAKE,  //!< Fake API
         NUM_RENDERER_API, //!< Number of avaliable API.
         API_AUTO, //!< determine rendering API automatically.
     };

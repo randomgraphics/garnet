@@ -1,39 +1,39 @@
-#ifndef __GN_GFX_D3DRENDERER_H__
-#define __GN_GFX_D3DRENDERER_H__
+#ifndef __GN_GFXD3D9_D3D9RENDERER_H__
+#define __GN_GFXD3D9_D3D9RENDERER_H__
 // *****************************************************************************
-//! \file    d3dRenderer.h
-//! \brief   D3D renderer class
+//! \file    d3d9Renderer.h
+//! \brief   D3D9 renderer class
 //! \author  chenlee (2005.10.2)
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
 
-//! \def GNGFX_D3DCAPS
+//! \def GNGFX_D3D9CAPS
 //! Define D3D special caps.
 
 namespace GN { namespace gfx
 {
-    class D3DResource; // Forward declaration of D3DResource.
+    class D3D9Resource; // Forward declaration of D3D9Resource.
 
-    class D3DFont;
-    class D3DQuad;
-    class D3DLine;
+    class D3D9Font;
+    class D3D9Quad;
+    class D3D9Line;
 
     //!
-    //! D3D vertex buffer declaration descriptor
+    //! D3D9 vertex buffer declaration descriptor
     //!
-    struct D3DVtxDeclDesc
+    struct D3D9VtxDeclDesc
     {
         VtxFmtDesc                              format; //!< vertex format
         AutoComPtr<IDirect3DVertexDeclaration9> decl;   //!< D3D decl
     };
 
     //!
-    //! D3D renderer class
+    //! D3D9 renderer class
     //!
-    class D3DRenderer : public BasicRenderer
+    class D3D9Renderer : public BasicRenderer
     {
-        GN_DECLARE_STDCLASS(D3DRenderer, BasicRenderer);
+        GN_DECLARE_STDCLASS(D3D9Renderer, BasicRenderer);
 
         // ********************************
         // ctor/dtor
@@ -41,8 +41,8 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        D3DRenderer()          { clear(); }
-        virtual ~D3DRenderer() { quit(); }
+        D3D9Renderer()          { clear(); }
+        virtual ~D3D9Renderer() { quit(); }
         //@}
 
         // ********************************
@@ -208,17 +208,17 @@ namespace GN { namespace gfx
         //!
         enum D3DCaps
         {
-            #define GNGFX_D3DCAPS(X) D3DCAPS_##X,
-            #include "d3dCapsMeta.h"
-            #undef GNGFX_D3DCAPS
-            NUM_D3DCAPS,
-            D3DCAPS_INVALID,
+            #define GNGFX_D3D9CAPS(X) D3D9CAPS_##X,
+            #include "d3d9CapsMeta.h"
+            #undef GNGFX_D3D9CAPS
+            NUM_D3D9CAPS,
+            D3D9CAPS_INVALID,
         };
 
         //!
         //! get D3D special caps
         //!
-        uint32_t getD3DCaps( D3DCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_D3DCAPS ); return mD3DCaps[c]; }
+        uint32_t getD3DCaps( D3DCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_D3D9CAPS ); return mD3DCaps[c]; }
 
     private :
         bool capsInit() { return true; }
@@ -233,7 +233,7 @@ namespace GN { namespace gfx
 
     private :
 
-        uint32_t mD3DCaps[NUM_D3DCAPS];
+        uint32_t mD3DCaps[NUM_D3D9CAPS];
 
         //@}
 
@@ -257,18 +257,18 @@ namespace GN { namespace gfx
 
         //!
         //! Insert resource into resource list. Can be only called by
-        //! constructor of D3DResource.
+        //! constructor of D3D9Resource.
         //!
-        void insertResource( D3DResource * p )
+        void insertResource( D3D9Resource * p )
         {
             mResourceList.push_back(p);
         }
 
         //!
         //! Remove resource from resource list. Can be only called by
-        //! destructor of D3DResource.
+        //! destructor of D3D9Resource.
         //!
-        void removeResource( D3DResource * p )
+        void removeResource( D3D9Resource * p )
         {
             mResourceList.remove(p);
         }
@@ -286,8 +286,8 @@ namespace GN { namespace gfx
 
     private :
 
-        std::list<D3DResource*> mResourceList;
-        HandleManager<D3DVtxDeclDesc,VtxFmtHandle> mVtxFmts;
+        std::list<D3D9Resource*> mResourceList;
+        HandleManager<D3D9VtxDeclDesc,VtxFmtHandle> mVtxFmts;
 
         //@}
 
@@ -447,9 +447,9 @@ namespace GN { namespace gfx
     private:
 
         bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
-        D3DFont * mFont; // Font renderer
-        D3DQuad * mQuad; // Quad renderer
-        D3DLine * mLine; // Line renderer
+        D3D9Font * mFont; // Font renderer
+        D3D9Quad * mQuad; // Quad renderer
+        D3D9Line * mLine; // Line renderer
 
         //@}
 
@@ -468,10 +468,10 @@ namespace GN { namespace gfx
 }}
 
 #if GN_ENABLE_INLINE
-#include "d3dContextMgr.inl"
+#include "d3d9ContextMgr.inl"
 #endif
 
 // *****************************************************************************
-//                           End of d3dRenderer.h
+//                           End of d3d9Renderer.h
 // *****************************************************************************
-#endif // __GN_GFX_D3DRENDERER_H__
+#endif // __GN_GFXD3D9_D3D9RENDERER_H__

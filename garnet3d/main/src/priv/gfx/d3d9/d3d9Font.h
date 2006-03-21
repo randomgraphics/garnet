@@ -1,12 +1,12 @@
-#ifndef __GN_GFXD3D_D3DFONT_H__
-#define __GN_GFXD3D_D3DFONT_H__
+#ifndef __GN_GFXD3D9_D3D9FONT_H__
+#define __GN_GFXD3D9_D3D9FONT_H__
 // *****************************************************************************
-//! \file    d3d/d3dFont.h
-//! \brief   D3D Font class
+//! \file    d3d9/d3d9Font.h
+//! \brief   D3D9 Font class
 //! \author  chenlee (2005.12.2)
 // *****************************************************************************
 
-#include "d3dResource.h"
+#include "d3d9Resource.h"
 
 namespace GN { namespace gfx {
 
@@ -14,14 +14,14 @@ namespace GN { namespace gfx {
     //!
     //! Fake D3D font class for Xenon platform
     //!
-    class D3DFont : public StdClass
+    class D3D9Font : public StdClass
     {
     public:
 
         //!
         //! Ctor (for compability to PC version)
         //!
-        D3DFont( D3DRenderer & ) {}
+        D3D9Font( D3D9Renderer & ) {}
 
         //!
         //! Draw unicode text
@@ -32,9 +32,9 @@ namespace GN { namespace gfx {
     //!
     //! D3D font class
     //!
-    class D3DFont : public StdClass, public D3DResource
+    class D3D9Font : public StdClass, public D3D9Resource
     {
-         GN_DECLARE_STDCLASS( D3DFont, StdClass );
+         GN_DECLARE_STDCLASS( D3D9Font, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -42,8 +42,8 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        D3DFont( D3DRenderer & r ) : D3DResource(r) { clear(); }
-        virtual ~D3DFont() { quit(); }
+        D3D9Font( D3D9Renderer & r ) : D3D9Resource(r) { clear(); }
+        virtual ~D3D9Font() { quit(); }
         //@}
 
         // ********************************
@@ -60,7 +60,7 @@ namespace GN { namespace gfx {
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
     public:
 
@@ -97,6 +97,6 @@ namespace GN { namespace gfx {
 }}
 
 // *****************************************************************************
-//                           End of d3dFont.h
+//                           End of d3d9Font.h
 // *****************************************************************************
-#endif // __GN_GFXD3D_D3DFONT_H__
+#endif // __GN_GFXD3D9_D3D9FONT_H__

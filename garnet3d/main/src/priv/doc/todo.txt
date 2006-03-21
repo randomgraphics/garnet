@@ -89,7 +89,7 @@ DONE
   - fix device-lost bug in GNtestGfx
   - refine device management
   - drawQuad(...)
-    - D3DQuad(): support to FFP
+    - D3D9Quad(): support to FFP
   - buffer manager of GFXOGL
   - vertex binding of GFXOGL
   - enable multiple context support of GLEW

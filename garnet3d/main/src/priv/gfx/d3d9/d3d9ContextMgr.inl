@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::setD3DRenderState(
+GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
     D3DRENDERSTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -38,7 +38,7 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DRenderState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DRenderState( D3DRENDERSTATETYPE type )
+GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DRenderState( D3DRENDERSTATETYPE type )
 {
     GN_GUARD_SLOW;
 
@@ -63,7 +63,7 @@ GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DRenderState( D3DRENDERSTATETYPE type
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::setD3DSamplerState(
+GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
     UINT stage, D3DSAMPLERSTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -104,7 +104,7 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DSamplerState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DSamplerState( UINT stage, D3DSAMPLERSTATETYPE type )
+GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DSamplerState( UINT stage, D3DSAMPLERSTATETYPE type )
 {
     GN_GUARD_SLOW;
 
@@ -132,7 +132,7 @@ GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DSamplerState( UINT stage, D3DSAMPLER
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::setD3DTextureState(
+GN_INLINE void GN::gfx::D3D9Renderer::setD3DTextureState(
     UINT stage, D3DTEXTURESTAGESTATETYPE type, DWORD value )
 {
     GN_GUARD_SLOW;
@@ -171,7 +171,7 @@ GN_INLINE void GN::gfx::D3DRenderer::setD3DTextureState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE DWORD GN::gfx::D3DRenderer::getD3DTextureState( UINT stage, D3DTEXTURESTAGESTATETYPE type )
+GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DTextureState( UINT stage, D3DTEXTURESTAGESTATETYPE type )
 {
     GN_GUARD_SLOW;
 

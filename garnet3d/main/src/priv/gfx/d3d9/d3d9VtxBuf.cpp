@@ -1,15 +1,15 @@
 #include "pch.h"
-#include "d3dVtxBuf.h"
-#include "d3DRenderer.h"
+#include "d3d9VtxBuf.h"
+#include "d3d9Renderer.h"
 
 // *****************************************************************************
 // Local functions
 // *****************************************************************************
 
 //!
-//! convert garnet buffer usage flags to D3D flags
+//! convert garnet buffer usage flags to D3D9 flags
 // ----------------------------------------------------------------------------
-DWORD sBufUsage2D3D( bool dynamic )
+DWORD sBufUsage2D3D9( bool dynamic )
 {
     DWORD d3dUsage = D3DUSAGE_WRITEONLY;
 
@@ -19,9 +19,9 @@ DWORD sBufUsage2D3D( bool dynamic )
 }
 
 //!
-//! convert garnet buffer lock flags to D3D flags
+//! convert garnet buffer lock flags to D3D9 flags
 // ----------------------------------------------------------------------------
-DWORD sLockFlags2D3D( bool dynamic, GN::gfx::LockFlag flag )
+DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag flag )
 {
     using namespace GN::gfx;
 
@@ -63,13 +63,13 @@ DWORD sLockFlags2D3D( bool dynamic, GN::gfx::LockFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxBuf::init(
+bool GN::gfx::D3D9VtxBuf::init(
     size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3DVtxBuf, () );
+    GN_STDCLASS_INIT( D3D9VtxBuf, () );
 
     if( 0 == bytes )
     {
@@ -92,7 +92,7 @@ bool GN::gfx::D3DVtxBuf::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxBuf::quit()
+void GN::gfx::D3D9VtxBuf::quit()
 {
     GN_GUARD;
 
@@ -106,13 +106,13 @@ void GN::gfx::D3DVtxBuf::quit()
 }
 
 // *****************************************************************************
-// from D3DResource
+// from D3D9Resource
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxBuf::deviceRestore()
+bool GN::gfx::D3D9VtxBuf::deviceRestore()
 {
     GN_GUARD;
 
@@ -131,7 +131,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
     GN_DX_CHECK_RV(
         dev->CreateVertexBuffer(
             (UINT)getSizeInBytes(),
-            sBufUsage2D3D( isDynamic() ),
+            sBufUsage2D3D9( isDynamic() ),
             0,  // non-FVF vstream
             D3DPOOL_DEFAULT,
             &mD3DVb,
@@ -161,7 +161,7 @@ bool GN::gfx::D3DVtxBuf::deviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxBuf::deviceDispose()
+void GN::gfx::D3D9VtxBuf::deviceDispose()
 {
     GN_GUARD;
 
@@ -183,14 +183,14 @@ void GN::gfx::D3DVtxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
+void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
     if( !basicLock( offset, bytes, flag ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DVtxBuf::basicUnlock) );
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3D9VtxBuf::basicUnlock) );
 
     void * buf;
     if ( mSysCopy.empty() )
@@ -200,7 +200,7 @@ void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
                 (UINT)offset,
                 (UINT)bytes,
                 &buf,
-                sLockFlags2D3D(isDynamic(),flag) ),
+                sLockFlags2D3D9(isDynamic(),flag) ),
             0 );
     }
     else
@@ -221,7 +221,7 @@ void * GN::gfx::D3DVtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxBuf::unlock()
+void GN::gfx::D3D9VtxBuf::unlock()
 {
     GN_GUARD_SLOW;
 
@@ -246,7 +246,7 @@ void GN::gfx::D3DVtxBuf::unlock()
             (UINT)mLockOffset,
             (UINT)mLockBytes,
             &dst,
-            sLockFlags2D3D(isDynamic(),mLockFlag) ) );
+            sLockFlags2D3D9(isDynamic(),mLockFlag) ) );
         ::memcpy( dst, &mSysCopy[mLockOffset], mLockBytes );
         mD3DVb->Unlock();
     }

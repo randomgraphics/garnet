@@ -1,26 +1,26 @@
-#ifndef __GN_GFX_D3DRESOURCE_H__
-#define __GN_GFX_D3DRESOURCE_H__
+#ifndef __GN_GFXD3D9_D3D9RESOURCE_H__
+#define __GN_GFXD3D9_D3D9RESOURCE_H__
 // *****************************************************************************
-//! \file    d3dResource.h
+//! \file    d3d9Resource.h
 //! \brief   
 //! \author  chenlee (2005.10.2)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    class D3DRenderer;
+    class D3D9Renderer;
 
     //!
-    //! General D3D resource class
+    //! General D3D9 resource class
     //!
-    class D3DResource
+    class D3D9Resource
     {
     public:
 
         //!
         //! Get the renderer that the resource belongs to.
         //!
-        D3DRenderer & getRenderer() const { return mRenderer; }
+        D3D9Renderer & getRenderer() const { return mRenderer; }
 
         virtual bool deviceCreate() = 0;  //!< Respond to D3D device creation.
         virtual bool deviceRestore() = 0; //!< Respond to D3D device restoration.
@@ -29,16 +29,16 @@ namespace GN { namespace gfx
 
     protected :
 
-        D3DResource( D3DRenderer & ); //!< ctor
-        virtual ~D3DResource();       //!< dtor
+        D3D9Resource( D3D9Renderer & ); //!< ctor
+        virtual ~D3D9Resource();       //!< dtor
 
     private:
 
-        D3DRenderer & mRenderer;
+        D3D9Renderer & mRenderer;
     };
 }}
 
 // *****************************************************************************
-//                           End of d3dResource.h
+//                           End of d3d9Resource.h
 // *****************************************************************************
-#endif // __GN_GFX_D3DRESOURCE_H__
+#endif // __GN_GFXD3D9_D3D9RESOURCE_H__

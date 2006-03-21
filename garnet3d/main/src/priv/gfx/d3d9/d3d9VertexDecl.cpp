@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "d3dVertexDecl.h"
+#include "d3d9VertexDecl.h"
 
 // *****************************************************************************
 // local functions
@@ -8,7 +8,7 @@
 //!
 //! d3d vertex semantic structure
 //!
-struct VtxSemDesc
+struct D3D9VtxSemDesc
 {
     D3DDECLUSAGE usage; //!< D3D vertex usage
     BYTE         index; //!< register index
@@ -17,7 +17,7 @@ struct VtxSemDesc
 //!
 //! vertex semantic convert table
 //!
-static VtxSemDesc sVtxSem2D3D[GN::gfx::NUM_VTXSEMS] =
+static D3D9VtxSemDesc sVtxSem2D3D[GN::gfx::NUM_VTXSEMS] =
 {
     #define GNGFX_DEFINE_VTXSEM( tag, d3ddecl, d3dindex, glname, glindex, cgname ) \
         { static_cast<D3DDECLUSAGE>(d3ddecl), d3dindex },
@@ -154,14 +154,14 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
 }
 
 // *****************************************************************************
-// local functions
+// public functions
 // *****************************************************************************
 
 //
 // create D3D decl from vertex format structure
 // -----------------------------------------------------------------------------
 LPDIRECT3DVERTEXDECLARATION9
-GN::gfx::createD3DVertexDecl( LPDIRECT3DDEVICE9 dev, const VtxFmtDesc & format )
+GN::gfx::createD3D9VertexDecl( LPDIRECT3DDEVICE9 dev, const VtxFmtDesc & format )
 {
     GN_GUARD;
 

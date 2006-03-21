@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "d3dRenderer.h"
-#include "d3dShader.h"
-#include "d3dTexture.h"
-#include "d3dVertexDecl.h"
-#include "d3dVtxBuf.h"
-#include "d3dIdxBuf.h"
+#include "d3d9Renderer.h"
+#include "d3d9Shader.h"
+#include "d3d9Texture.h"
+#include "d3d9VertexDecl.h"
+#include "d3d9VtxBuf.h"
+#include "d3d9IdxBuf.h"
 
 // *****************************************************************************
 // local functions
@@ -17,7 +17,7 @@ struct EqualFormat
 {
     const GN::gfx::VtxFmtDesc & format;
     EqualFormat( const GN::gfx::VtxFmtDesc & f ) : format(f) {}
-    bool operator()( const GN::gfx::D3DVtxDeclDesc & vbd ) const { return format == vbd.format; }
+    bool operator()( const GN::gfx::D3D9VtxDeclDesc & vbd ) const { return format == vbd.format; }
 };
 
 // *****************************************************************************
@@ -26,13 +26,13 @@ struct EqualFormat
 
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::resourceDeviceCreate()
+bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3DResource*>::iterator i = mResourceList.begin();
+    std::list<D3D9Resource*>::iterator i = mResourceList.begin();
     while( i != mResourceList.end() )
     {
         if( !(*i)->deviceCreate() ) return false;
@@ -48,13 +48,13 @@ bool GN::gfx::D3DRenderer::resourceDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::resourceDeviceRestore()
+bool GN::gfx::D3D9Renderer::resourceDeviceRestore()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3DResource*>::iterator i = mResourceList.begin();
+    std::list<D3D9Resource*>::iterator i = mResourceList.begin();
     while( i != mResourceList.end() )
     {
         if( !(*i)->deviceRestore() ) return false;
@@ -70,13 +70,13 @@ bool GN::gfx::D3DRenderer::resourceDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::resourceDeviceDispose()
+void GN::gfx::D3D9Renderer::resourceDeviceDispose()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3DResource*>::reverse_iterator i = mResourceList.rbegin();
+    std::list<D3D9Resource*>::reverse_iterator i = mResourceList.rbegin();
     while( i != mResourceList.rend() )
     {
         (*i)->deviceDispose();
@@ -89,13 +89,13 @@ void GN::gfx::D3DRenderer::resourceDeviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::resourceDeviceDestroy()
+void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
 {
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3DResource*>::reverse_iterator i = mResourceList.rbegin();
+    std::list<D3D9Resource*>::reverse_iterator i = mResourceList.rbegin();
     while( i != mResourceList.rend() )
     {
         (*i)->deviceDestroy();
@@ -113,7 +113,7 @@ void GN::gfx::D3DRenderer::resourceDeviceDestroy()
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
-GN::gfx::D3DRenderer::createShader(
+GN::gfx::D3D9Renderer::createShader(
     ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
 {
     GN_GUARD;
@@ -132,14 +132,14 @@ GN::gfx::D3DRenderer::createShader(
             {
                 case LANG_D3D_ASM :
                 {
-                    AutoRef<D3DVtxShaderAsm> p( new D3DVtxShaderAsm(*this) );
+                    AutoRef<D3D9VtxShaderAsm> p( new D3D9VtxShaderAsm(*this) );
                     if( !p->init( code ) ) return 0;
                     return p.detach();
                 }
 
                 case LANG_D3D_HLSL:
                 {
-                    AutoRef<D3DVtxShaderHlsl> p( new D3DVtxShaderHlsl(*this) );
+                    AutoRef<D3D9VtxShaderHlsl> p( new D3D9VtxShaderHlsl(*this) );
                     if( !p->init( code, entry ) ) return 0;
                     return p.detach();
                 }
@@ -154,14 +154,14 @@ GN::gfx::D3DRenderer::createShader(
             {
                 case LANG_D3D_ASM :
                 {
-                    AutoRef<D3DPxlShaderAsm> p( new D3DPxlShaderAsm(*this) );
+                    AutoRef<D3D9PxlShaderAsm> p( new D3D9PxlShaderAsm(*this) );
                     if( !p->init( code ) ) return 0;
                     return p.detach();
                 }
 
                 case LANG_D3D_HLSL:
                 {
-                    AutoRef<D3DPxlShaderHlsl> p( new D3DPxlShaderHlsl(*this) );
+                    AutoRef<D3D9PxlShaderHlsl> p( new D3D9PxlShaderHlsl(*this) );
                     if( !p->init( code, entry ) ) return 0;
                     return p.detach();
                 }
@@ -184,12 +184,12 @@ GN::gfx::D3DRenderer::createShader(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3DRenderer::createTexture( const TextureDesc & desc,
+GN::gfx::D3D9Renderer::createTexture( const TextureDesc & desc,
                                      const TextureLoader & loader )
 {
     GN_GUARD;
 
-    AutoRef<D3DTexture> p( new D3DTexture(*this) );
+    AutoRef<D3D9Texture> p( new D3D9Texture(*this) );
     p->setLoader( loader );
     if( !p->init( desc ) ) return 0;
     return p.detach();
@@ -200,7 +200,7 @@ GN::gfx::D3DRenderer::createTexture( const TextureDesc & desc,
 //
 //
 // -----------------------------------------------------------------------------
-uint32_t GN::gfx::D3DRenderer::createVtxFmt( const VtxFmtDesc & format )
+uint32_t GN::gfx::D3D9Renderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
@@ -209,9 +209,9 @@ uint32_t GN::gfx::D3DRenderer::createVtxFmt( const VtxFmtDesc & format )
     if( 0 == h )
     {
         // create new vertex decl
-        D3DVtxDeclDesc vbd;
+        D3D9VtxDeclDesc vbd;
         vbd.format = format;
-        vbd.decl.attach( createD3DVertexDecl( mDevice, format ) );
+        vbd.decl.attach( createD3D9VertexDecl( mDevice, format ) );
         if( !vbd.decl ) return 0;
 
         h = mVtxFmts.add( vbd );
@@ -227,12 +227,12 @@ uint32_t GN::gfx::D3DRenderer::createVtxFmt( const VtxFmtDesc & format )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3DRenderer::createVtxBuf(
+GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf(
     size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
 {
     GN_GUARD;
 
-    AutoRef<D3DVtxBuf> buf( new D3DVtxBuf(*this) );
+    AutoRef<D3D9VtxBuf> buf( new D3D9VtxBuf(*this) );
 
     if( !buf->init( bytes, dynamic, sysCopy, loader ) ) return 0;
 
@@ -244,12 +244,12 @@ GN::gfx::VtxBuf * GN::gfx::D3DRenderer::createVtxBuf(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3DRenderer::createIdxBuf(
+GN::gfx::IdxBuf * GN::gfx::D3D9Renderer::createIdxBuf(
     size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
 {
     GN_GUARD;
 
-    AutoRef<D3DIdxBuf> buf( new D3DIdxBuf(*this) );
+    AutoRef<D3D9IdxBuf> buf( new D3D9IdxBuf(*this) );
 
     if( !buf->init( numIdx, dynamic, sysCopy, loader ) ) return 0;
 

@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "d3dRenderer.h"
+#include "d3d9Renderer.h"
 #if !GN_ENABLE_INLINE
-#include "d3dContextMgr.inl"
+#include "d3d9ContextMgr.inl"
 #endif
-#include "d3dShader.h"
-#include "d3dTexture.h"
-#include "d3dVertexDecl.h"
-#include "d3dVtxBuf.h"
-#include "d3dIdxBuf.h"
+#include "d3d9Shader.h"
+#include "d3d9Texture.h"
+#include "d3d9VertexDecl.h"
+#include "d3d9VtxBuf.h"
+#include "d3d9IdxBuf.h"
 
 // *****************************************************************************
 // local functions
@@ -52,7 +52,7 @@ static DWORD sRenderStateValue2D3D[GN::gfx::NUM_RENDER_STATE_VALUES] =
     #undef GNGFX_DEFINE_RSV
 };
 
-#include "d3dRenderState.inl"
+#include "d3d9RenderState.inl"
 
 static D3DTEXTURESTAGESTATETYPE sTextureState2D3D[GN::gfx::NUM_TEXTURE_STATES] =
 {
@@ -75,7 +75,7 @@ static DWORD sTextureStateValue2D3D[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::contextClear()
+void GN::gfx::D3D9Renderer::contextClear()
 {
     _GNGFX_DEVICE_TRACE();
     mContextState.resetToDefault();
@@ -85,7 +85,7 @@ void GN::gfx::D3DRenderer::contextClear()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::contextDeviceRestore()
+bool GN::gfx::D3D9Renderer::contextDeviceRestore()
 {
     GN_GUARD;
 
@@ -118,7 +118,7 @@ bool GN::gfx::D3DRenderer::contextDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setContextState( const ContextState & newState )
+void GN::gfx::D3D9Renderer::setContextState( const ContextState & newState )
 {
     GN_GUARD_SLOW;
 
@@ -141,7 +141,7 @@ void GN::gfx::D3DRenderer::setContextState( const ContextState & newState )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::setContextData( const ContextData & newData )
+void GN::gfx::D3D9Renderer::setContextData( const ContextData & newData )
 {
     GN_GUARD_SLOW;
 
@@ -164,7 +164,7 @@ void GN::gfx::D3DRenderer::setContextData( const ContextData & newData )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::rebindContextState( ContextState::FieldFlags flags )
+void GN::gfx::D3D9Renderer::rebindContextState( ContextState::FieldFlags flags )
 {
     GN_GUARD_SLOW;
     bindContextState( mContextState, flags, true );
@@ -174,7 +174,7 @@ void GN::gfx::D3DRenderer::rebindContextState( ContextState::FieldFlags flags )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::rebindContextData( ContextData::FieldFlags flags )
+void GN::gfx::D3D9Renderer::rebindContextData( ContextData::FieldFlags flags )
 {
     GN_GUARD_SLOW;
     bindContextData( mContextData, flags, true );
@@ -184,7 +184,7 @@ void GN::gfx::D3DRenderer::rebindContextData( ContextData::FieldFlags flags )
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx::RenderStateBlockDesc & GN::gfx::D3DRenderer::getCurrentRenderStateBlock() const
+const GN::gfx::RenderStateBlockDesc & GN::gfx::D3D9Renderer::getCurrentRenderStateBlock() const
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mContextState.flags.rsb );
@@ -199,7 +199,7 @@ const GN::gfx::RenderStateBlockDesc & GN::gfx::D3DRenderer::getCurrentRenderStat
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
+GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     const ContextState & newState,
     ContextState::FieldFlags newFlags,
     bool forceRebind )
@@ -228,7 +228,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
             {
                 if( n )
                 {
-                    GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->apply();
+                    GN::safeCast<const GN::gfx::D3D9BasicShader*>(n)->apply();
                 }
                 else switch( i )
                 {
@@ -239,7 +239,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
             }
             else if( n )
             {
-                GN::safeCast<const GN::gfx::D3DBasicShader*>(n)->applyDirtyUniforms();
+                GN::safeCast<const GN::gfx::D3D9BasicShader*>(n)->applyDirtyUniforms();
             }
         }
     }
@@ -409,7 +409,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
                     d3dtsv = sTextureStateValue2D3D[ desc.get( i, (TextureState)j ) ];
 
                     if( D3DTOP_DOTPRODUCT3 == d3dtsv &&
-                        !getD3DCaps( D3DCAPS_DOT3 ) )
+                        !getD3DCaps( D3D9CAPS_DOT3 ) )
                     {
                         GN_DO_ONCE( GN_WARN(
                             "Current D3D device does not support "
@@ -445,7 +445,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
+GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     const ContextData & newData,
     ContextData::FieldFlags newFlags,
     bool forceRebind )
@@ -468,7 +468,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
     {
         if( newData.vtxFmt )
         {
-            const D3DVtxDeclDesc * decl;
+            const D3D9VtxDeclDesc * decl;
             decl = &mVtxFmts[newData.vtxFmt];
             GN_ASSERT( decl->decl );
             if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
@@ -491,7 +491,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
                 GN_ASSERT( vb.buffer );
                 GN_DX_CHECK( mDevice->SetStreamSource(
                     i,
-                    safeCast<const D3DVtxBuf*>(vb.buffer)->getD3DVb(),
+                    safeCast<const D3D9VtxBuf*>(vb.buffer)->getD3DVb(),
                     0,
                     (UINT)vb.stride ) );
             }
@@ -505,7 +505,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
       ( newData.idxBuf != mContextData.idxBuf || forceRebind ) )
     {
         GN_DX_CHECK( mDevice->SetIndices( newData.idxBuf
-            ? safeCast<const D3DIdxBuf*>(newData.idxBuf)->getD3DIb()
+            ? safeCast<const D3D9IdxBuf*>(newData.idxBuf)->getD3DIb()
             : 0 ) );
     }
 
@@ -526,7 +526,7 @@ GN_INLINE void GN::gfx::D3DRenderer::bindContextData(
             {
                 if( tex )
                 {
-                    safeCast<const D3DTexture*>(tex)->bind( stage );
+                    safeCast<const D3D9Texture*>(tex)->bind( stage );
                 }
                 else
                 {

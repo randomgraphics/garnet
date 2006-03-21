@@ -1,20 +1,20 @@
-#ifndef __GN_GFXD3D_D3DQUAD_H__
-#define __GN_GFXD3D_D3DQUAD_H__
+#ifndef __GN_GFXD3D9_D3D9LINE_H__
+#define __GN_GFXD3D9_D3D9LINE_H__
 // *****************************************************************************
-//! \file    d3d/d3dQuad.h
-//! \brief   D3D quad renderer class
+//! \file    d3d9/d3d9Line.h
+//! \brief   D3D9 line renderer class
 //! \author  chenlee (2005.12.2)
 // *****************************************************************************
 
-#include "d3dResource.h"
+#include "d3d9Resource.h"
 
 namespace GN { namespace gfx {
     //!
-    //! Class for rendering quad(s) on screen
+    //! D3D line renderer
     //!
-    class D3DQuad : public D3DResource, public StdClass
+    class D3D9Line : public D3D9Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3DQuad, StdClass );
+         GN_DECLARE_STDCLASS( D3D9Line, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -22,8 +22,8 @@ namespace GN { namespace gfx {
 
         //@{
     public:
-        D3DQuad( D3DRenderer & r ) : D3DResource(r) { clear(); }
-        virtual ~D3DQuad() { quit(); }
+        D3D9Line( D3D9Renderer & r ) : D3D9Resource(r) { clear(); }
+        virtual ~D3D9Line() { quit(); }
         //@}
 
         // ********************************
@@ -38,19 +38,16 @@ namespace GN { namespace gfx {
     private:
         void clear()
         {
-            mDeclFfp = 0;
-            mDeclVs = 0;
+            mDecl = 0;
             mVtxShader = 0;
-            mPxlShaderTextured = 0;
-            mPxlShaderSolid = 0;
+            mPxlShader = 0;
             mVtxBuf = 0;
-            mIdxBuf = 0;
-            mNextQuad = 0;
+            mNextLine = 0;
         }
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
     public:
 
@@ -65,35 +62,34 @@ namespace GN { namespace gfx {
     public:
 
         //!
-        //! Draw quads on screen
+        //! Draw lines on screen
         //!
-        //! \sa Renderer::drawQuads
+        //! \sa Renderer::drawLines
         //!
-        void drawQuads(
+        void drawLines(
             BitField options,
-            const float * positions, size_t posStride,
-            const float * texCoords, size_t texStride,
-            const uint32_t * colors, size_t clrStride,
-            size_t count );
+            const float * positions, size_t stride,
+            size_t count, uint32_t color,
+            const Matrix44f & model,
+            const Matrix44f & view,
+            const Matrix44f & proj );
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        LPDIRECT3DVERTEXDECLARATION9 mDeclFfp, mDeclVs;
-        LPDIRECT3DVERTEXSHADER9 mVtxShader;
-        LPDIRECT3DPIXELSHADER9  mPxlShaderTextured;
-        LPDIRECT3DPIXELSHADER9  mPxlShaderSolid;
-        LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
-        LPDIRECT3DINDEXBUFFER9  mIdxBuf;
-
-        size_t mNextQuad; // cursor that indicates next avaiable quad in vertex buffer.
-
         enum
         {
-            MAX_QUADS = 4096 //!< maxinum number of quads vertex and index buffer can hold.
+            MAX_LINES = 4096 //!< maxinum number of lines vertex and index buffer can hold.
         };
+
+        LPDIRECT3DVERTEXDECLARATION9 mDecl;
+        LPDIRECT3DVERTEXSHADER9 mVtxShader;
+        LPDIRECT3DPIXELSHADER9  mPxlShader;
+        LPDIRECT3DVERTEXBUFFER9 mVtxBuf;
+
+        size_t mNextLine; // cursor that indicates next avaiable line in vertex buffer.
 
         // ********************************
         // private functions
@@ -103,6 +99,6 @@ namespace GN { namespace gfx {
 }}
 
 // *****************************************************************************
-//                           End of d3dQuad.h
+//                           End of d3d9Line.h
 // *****************************************************************************
-#endif // __GN_GFXD3D_D3DQUAD_H__
+#endif // __GN_GFXD3D9_D3D9LINE_H__
