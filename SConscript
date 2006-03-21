@@ -229,7 +229,7 @@ def GN_build_program( env, target, sources=[],
     pchobj = GN_setup_PCH_PDB( env, pchstop, pchcpp, pdb )
     if not ignoreDefaultLibs:
         if GN_conf['static']:
-            libs += Split('GNbase GNgfxD3D9 GNgfxOGL GNgfxCommon')
+            libs += Split('GNbase GNgfxD3D9 GNgfxD3D10 GNgfxOGL GNgfxCommon')
         libs += Split('GNcoreLib GNbase GNcoreLib GNbase GNextern')
     extra = []
     for x in libs:
@@ -600,7 +600,7 @@ def doInstall( alias, dir, names ):
             GN_targets[name] = item
             env.Alias( alias, item )
 
-sharedModules = Split( 'GNcore GNgfxD3D9 GNgfxOGL' )
+sharedModules = Split( 'GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
 sharedLibs = ['%sLib'%x for x in sharedModules]
 staticLibs = Split('GNextern GNbase')
