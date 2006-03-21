@@ -399,7 +399,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     {
         const TextureStateBlockDesc & desc = newState.tsb;
         DWORD d3dtsv;
-        uint32_t numStages = GN::min<uint32_t>( desc.getNumStages(), getCaps( CAPS_MAX_TEXTURE_STAGES ) );
+        uint32_t numStages = GN::min<uint32_t>( (uint32_t)desc.getNumStages(), getCaps( CAPS_MAX_TEXTURE_STAGES ) );
         for ( uint32_t i = 0; i < numStages; ++i )
         {
             for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )

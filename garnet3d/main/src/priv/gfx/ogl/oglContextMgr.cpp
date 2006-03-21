@@ -518,7 +518,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
         TextureStateValue tsv;
 
         uint32_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-        uint32_t numStages = GN::min<uint32_t>( newDesc.getNumStages(), maxStages );
+        uint32_t numStages = GN::min<uint32_t>( (uint32_t)newDesc.getNumStages(), maxStages );
 
         // apply all TSSs to API
         for ( uint32_t i = 0; i < numStages; ++i )
