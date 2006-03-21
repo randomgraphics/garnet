@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "garnet/GNd3d.h"
+#include "garnet/GNd3d9.h"
 
 #if GN_MSWIN
 
 //
 //
 // -----------------------------------------------------------------------------
-const char * GN::gfx::d3d::d3dFormat2Str( D3DFORMAT d3dfmt )
+const char * GN::gfx::d3d9::d3dFormat2Str( D3DFORMAT d3dfmt )
 {
     struct Item { int fmt; const char * str; };
     static const Item sTable[] =
@@ -85,7 +85,7 @@ const char * GN::gfx::d3d::d3dFormat2Str( D3DFORMAT d3dfmt )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ClrFmt GN::gfx::d3d::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
+GN::gfx::ClrFmt GN::gfx::d3d9::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
 {
 #if GN_XENON
         // force TILE flag
@@ -162,7 +162,7 @@ GN::gfx::ClrFmt GN::gfx::d3d::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
 //
 //
 // -----------------------------------------------------------------------------
-D3DFORMAT GN::gfx::d3d::clrFmt2D3DFormat( ClrFmt clrfmt )
+D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt )
 {
     switch( clrfmt )
     {

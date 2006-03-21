@@ -130,14 +130,14 @@ namespace GN { namespace gfx
                 case TEXTYPE_2D:
                     {
                         LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
-                        GN_DX_CHECK_RV( tex2D->GetSurfaceLevel( (DWORD)level, &surf ), 0 );
+                        GN_DX9_CHECK_RV( tex2D->GetSurfaceLevel( (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 
                 case TEXTYPE_CUBE:
                     {
                         LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
-                        GN_DX_CHECK_RV( texCube->GetCubeMapSurface( sCubeFace2D3D(face), (DWORD)level, &surf ), 0 );
+                        GN_DX9_CHECK_RV( texCube->GetCubeMapSurface( sCubeFace2D3D(face), (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 

@@ -122,13 +122,13 @@ bool GN::gfx::D3D9VtxBuf::deviceRestore()
 
 #if !GN_XENON
     // evict managed resources
-    GN_DX_CHECK_RV( dev->EvictManagedResources(), false );
+    GN_DX9_CHECK_RV( dev->EvictManagedResources(), false );
 #endif
 
     //
     // create d3d vertex buffer
     //
-    GN_DX_CHECK_RV(
+    GN_DX9_CHECK_RV(
         dev->CreateVertexBuffer(
             (UINT)getSizeInBytes(),
             sBufUsage2D3D9( isDynamic() ),
@@ -147,7 +147,7 @@ bool GN::gfx::D3D9VtxBuf::deviceRestore()
     {
         // copy data from system copy
         void * dst;
-        GN_DX_CHECK_RV( mD3DVb->Lock( 0, 0, &dst, 0 ), false );
+        GN_DX9_CHECK_RV( mD3DVb->Lock( 0, 0, &dst, 0 ), false );
         ::memcpy( dst, GN::vec2ptr(mSysCopy), mSysCopy.size() );
         mD3DVb->Unlock();
     }
@@ -195,7 +195,7 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
     void * buf;
     if ( mSysCopy.empty() )
     {
-        GN_DX_CHECK_RV(
+        GN_DX9_CHECK_RV(
             mD3DVb->Lock(
                 (UINT)offset,
                 (UINT)bytes,
@@ -231,7 +231,7 @@ void GN::gfx::D3D9VtxBuf::unlock()
 
     if ( mSysCopy.empty() )
     {
-        GN_DX_CHECK( mD3DVb->Unlock() );
+        GN_DX9_CHECK( mD3DVb->Unlock() );
     }
     else if ( LOCK_RO != mLockFlag )
     {
@@ -242,7 +242,7 @@ void GN::gfx::D3D9VtxBuf::unlock()
 
         // update d3d buffer
         void * dst;
-        GN_DX_CHECK_R( mD3DVb->Lock(
+        GN_DX9_CHECK_R( mD3DVb->Lock(
             (UINT)mLockOffset,
             (UINT)mLockBytes,
             &dst,

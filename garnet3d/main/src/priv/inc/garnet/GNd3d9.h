@@ -1,7 +1,7 @@
-#ifndef __GN_D3DAPP_GND3D_H__
-#define __GN_D3DAPP_GND3D_H__
+#ifndef __GN_GND3D9_H__
+#define __GN_GND3D9_H__
 // *****************************************************************************
-//! \file    GNd3d.h
+//! \file    GNd3d9.h
 //! \brief   Public interface for d3d module (collection of common D3D utils).
 //! \author  chenlee (2005.8.11)
 // *****************************************************************************
@@ -36,9 +36,9 @@
 namespace GN { namespace gfx
 {
     //!
-    //! Namespace for d3d module
+    //! Namespace for d3d9 module
     //!
-    namespace d3d
+    namespace d3d9
     {
         //! \name Shader compilation utils
         //@{
@@ -116,8 +116,8 @@ namespace GN { namespace gfx
             GN_GUARD_SLOW;
             GN_ASSERT( dev );
             AutoComPtr<IDirect3DSurface9> surf;
-            GN_DX_CHECK_RV( dev->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &surf ), false );
-            GN_DX_CHECK_RV( surf->GetDesc( &desc ), false );
+            GN_DX9_CHECK_RV( dev->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &surf ), false );
+            GN_DX9_CHECK_RV( surf->GetDesc( &desc ), false );
 			return true;
             GN_UNGUARD_SLOW;
         }
@@ -143,8 +143,8 @@ namespace GN { namespace gfx
             GN_GUARD_SLOW;
             GN_ASSERT( dev );
             AutoComPtr<IDirect3DSurface9> surf;
-            GN_DX_CHECK_RV( dev->GetDepthStencilSurface( &surf ), false );
-            GN_DX_CHECK_RV( surf->GetDesc( &desc ), false );
+            GN_DX9_CHECK_RV( dev->GetDepthStencilSurface( &surf ), false );
+            GN_DX9_CHECK_RV( surf->GetDesc( &desc ), false );
 			return true;
             GN_UNGUARD_SLOW;
         }
@@ -169,6 +169,6 @@ namespace GN { namespace gfx
 #endif // GN_MSWIN
 
 // *****************************************************************************
-//                           End of GNd3d.h
+//                           End of GNd3d9.h
 // *****************************************************************************
 #endif // __GN_D3DAPP_GND3D_H__

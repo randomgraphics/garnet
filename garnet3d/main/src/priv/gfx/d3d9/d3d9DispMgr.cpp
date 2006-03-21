@@ -64,7 +64,7 @@ static D3DFORMAT sDetermineBackBufferFormat(
     if( !fullscreen )
     {
         D3DDISPLAYMODE d3ddm;
-        GN_DX_CHECK_RV(
+        GN_DX9_CHECK_RV(
             d3d.GetAdapterDisplayMode(adapter, &d3ddm),
             D3DFMT_UNKNOWN );
         return d3ddm.Format;
@@ -97,7 +97,7 @@ static D3DFORMAT sDetermineBackBufferFormat(
         UINT i;
         for( i = 0; i < dmcount; i++ )
         {
-            GN_DX_CHECK_DO(
+            GN_DX9_CHECK_DO(
                 d3d.EnumAdapterModes( adapter, *candidates, i, &d3ddm ),
                 continue; );
 
@@ -253,7 +253,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
     for( uint32_t i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
-        GN_DX_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_DX9_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
         if( 0 == strcmp(Identifier.Description,"NVIDIA NVPerfHUD") )
         {
             mAdapter = i;
@@ -321,7 +321,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
 #endif
 
         // device found, create it!
-        GN_DX_CHECK_RV(
+        GN_DX9_CHECK_RV(
             mD3D->CreateDevice(
                 mAdapter,
                 mDeviceType,
@@ -373,7 +373,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceRestore()
         // NOTE: Applications can expect messages to be sent to them during this
         //       call (for example, before this call is returned); applications
         //       should take precautions not to call into Direct3D at this time.
-        GN_DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+        GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
     }
     else
     {

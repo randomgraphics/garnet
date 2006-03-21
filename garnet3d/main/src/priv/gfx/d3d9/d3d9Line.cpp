@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d9Line.h"
 #include "d3d9Renderer.h"
-#include "garnet/GNd3d.h"
+#include "garnet/GNd3d9.h"
 
 struct D3D9LineVertex
 {
@@ -75,7 +75,7 @@ bool GN::gfx::D3D9Line::deviceCreate()
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // create vertex decl
-    GN_DX_CHECK_RV( dev->CreateVertexDeclaration( sDecl, &mDecl ), false );
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDecl, &mDecl ), false );
 
     // create vertex shader
     if( r.supportShader( VERTEX_SHADER, LANG_D3D_ASM ) )
@@ -86,7 +86,7 @@ bool GN::gfx::D3D9Line::deviceCreate()
             "dcl_color0 v1 \n"
             "m4x4 oPos, v0, c0 \n"
             "mov oD0, v1 \n";
-        mVtxShader = d3d::assembleVS( dev, code );
+        mVtxShader = d3d9::assembleVS( dev, code );
         if( 0 == mVtxShader ) return false;
     }
 #if GN_XENON
@@ -99,7 +99,7 @@ bool GN::gfx::D3D9Line::deviceCreate()
         static const char * code =
             "ps.1.1 \n"
             "mov r0, v0 \n";
-        mPxlShader = d3d::assemblePS( dev, code );
+        mPxlShader = d3d9::assemblePS( dev, code );
         if( 0 == mPxlShader ) return false;
     }
 
@@ -121,7 +121,7 @@ bool GN::gfx::D3D9Line::deviceRestore()
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
     // create vertex buffer
-    GN_DX_CHECK_RV(
+    GN_DX9_CHECK_RV(
         dev->CreateVertexBuffer(
             (UINT)( LINE_STRIDE * MAX_LINES ),
             D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
@@ -228,11 +228,11 @@ void GN::gfx::D3D9Line::drawLines(
 #endif
     if( 0 == mNextLine )
     {
-        GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
+        GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
     }
     else
     {
-        GN_DX_CHECK_R( mVtxBuf->Lock(
+        GN_DX9_CHECK_R( mVtxBuf->Lock(
             (UINT)( LINE_STRIDE*mNextLine ),
             (UINT)( sizeof(D3D9LineVertex)*vertexCount ),
             (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
@@ -245,7 +245,7 @@ void GN::gfx::D3D9Line::drawLines(
         float scaleX, offsetX;
         float scaleY, offsetY;
         D3DVIEWPORT9 vp;
-        GN_DX_CHECK( dev->GetViewport( &vp ) );
+        GN_DX9_CHECK( dev->GetViewport( &vp ) );
         scaleX = 2.0f/(float)vp.Width;
         scaleY = -2.0f/(float)vp.Height;
         offsetX = -1.0f;
@@ -271,7 +271,7 @@ void GN::gfx::D3D9Line::drawLines(
     }
 
     // unlock the buffer
-    GN_DX_CHECK( mVtxBuf->Unlock() );
+    GN_DX9_CHECK( mVtxBuf->Unlock() );
 
     // setup context and data flags
     ContextState::FieldFlags cf;
@@ -293,12 +293,12 @@ void GN::gfx::D3D9Line::drawLines(
     {
         cf.setShaderBit( VERTEX_SHADER );
 
-        GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
+        GN_DX9_CHECK( dev->SetVertexShader( mVtxShader ) );
 
         if( mVtxShader )
         {
             Matrix44f mat = proj * view * model;
-            GN_DX_CHECK( dev->SetVertexShaderConstantF( 0, mat[0], 4 ) );
+            GN_DX9_CHECK( dev->SetVertexShaderConstantF( 0, mat[0], 4 ) );
         }
         else
         {
@@ -310,11 +310,11 @@ void GN::gfx::D3D9Line::drawLines(
             cf.proj = 1;
             Matrix44f mat;
             mat = Matrix44f::sTranspose( model );
-            GN_DX_CHECK( dev->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
+            GN_DX9_CHECK( dev->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
             mat = Matrix44f::sTranspose( view );
-            GN_DX_CHECK( dev->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
+            GN_DX9_CHECK( dev->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
             mat = Matrix44f::sTranspose( proj );
-            GN_DX_CHECK( dev->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
+            GN_DX9_CHECK( dev->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
 #endif
         }
     }
@@ -322,13 +322,13 @@ void GN::gfx::D3D9Line::drawLines(
     if( !( DL_USE_CURRENT_PS & options ) )
     {
         cf.setShaderBit( PIXEL_SHADER );
-        GN_DX_CHECK( dev->SetPixelShader( mPxlShader ) );
+        GN_DX9_CHECK( dev->SetPixelShader( mPxlShader ) );
     }
 
     // setup texture states, for fixed-functional pipeline only
 #if !GN_XENON
     AutoComPtr<IDirect3DPixelShader9> currentPs;
-    GN_DX_CHECK( dev->GetPixelShader( &currentPs ) );
+    GN_DX9_CHECK( dev->GetPixelShader( &currentPs ) );
     if( !currentPs && !( DL_USE_CURRENT_TS & options ) )
     {
         cf.tsb = 1;
@@ -346,11 +346,11 @@ void GN::gfx::D3D9Line::drawLines(
     df.vtxBufs = 1;
     GN_ASSERT( mVtxBuf );
     GN_ASSERT( sizeof(D3D9LineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
-    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3D9LineVertex) ) );
-    GN_DX_CHECK( dev->SetVertexDeclaration( mDecl ) );
+    GN_DX9_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3D9LineVertex) ) );
+    GN_DX9_CHECK( dev->SetVertexDeclaration( mDecl ) );
 
     // draw
-    GN_DX_CHECK( dev->DrawPrimitive(
+    GN_DX9_CHECK( dev->DrawPrimitive(
         d3dpt,
         (UINT)( mNextLine * 2 ), 
         (UINT)count ) );

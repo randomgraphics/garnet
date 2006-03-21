@@ -91,7 +91,7 @@ bool GN::gfx::D3D9Renderer::drawBegin()
     if( !handleDeviceLost() ) return false;
 
     // begin scene
-    GN_DX_CHECK_RV( mDevice->BeginScene(), 0 );
+    GN_DX9_CHECK_RV( mDevice->BeginScene(), 0 );
 
     // success
     mDrawBegan = true;
@@ -111,8 +111,8 @@ void GN::gfx::D3D9Renderer::drawEnd()
 
     GN_ASSERT( mDrawBegan );
     mDrawBegan = false;
-    GN_DX_CHECK( mDevice->EndScene() );
-    GN_DX_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+    GN_DX9_CHECK( mDevice->EndScene() );
+    GN_DX9_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -126,8 +126,8 @@ void GN::gfx::D3D9Renderer::drawFinish()
 
     GN_ASSERT( mDrawBegan );
 
-    GN_DX_CHECK_R( mDevice->EndScene() );
-    GN_DX_CHECK( mDevice->BeginScene() );
+    GN_DX9_CHECK_R( mDevice->EndScene() );
+    GN_DX9_CHECK( mDevice->BeginScene() );
 
     GN_UNGUARD_SLOW;
 }
@@ -146,7 +146,7 @@ void GN::gfx::D3D9Renderer::clearScreen(
         | (flags & S_BUFFER ? D3DCLEAR_STENCIL : 0);
 
     // do clear
-    GN_DX_CHECK( mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s ) );
+    GN_DX9_CHECK( mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s ) );
 
     GN_UNGUARD_SLOW;
 }
@@ -173,7 +173,7 @@ void GN::gfx::D3D9Renderer::drawIndexed(
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
-    GN_DX_CHECK(
+    GN_DX9_CHECK(
         mDevice->DrawIndexedPrimitive(
             sPrimMap[prim],     // primitive type
             (UINT)startVtx ,     // start vertex
@@ -206,7 +206,7 @@ void GN::gfx::D3D9Renderer::draw(
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
-    GN_DX_CHECK(
+    GN_DX9_CHECK(
         mDevice->DrawPrimitive(
             sPrimMap[prim],     // primitive type
             (UINT)startVtx,      // start vertex
@@ -240,10 +240,10 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
     AutoComPtr<IDirect3DIndexBuffer9> ib;
-    GN_DX_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
-    GN_DX_CHECK( mDevice->GetIndices( &ib ) );
+    GN_DX9_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+    GN_DX9_CHECK( mDevice->GetIndices( &ib ) );
 
-    GN_DX_CHECK(
+    GN_DX9_CHECK(
         mDevice->DrawIndexedPrimitiveUP(
             sPrimMap[prim],
             0, // MinVertexIndex
@@ -255,8 +255,8 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
             (UINT)strideInBytes ) );
 
     // restore vertex and index buffer
-    GN_DX_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
-    GN_DX_CHECK( mDevice->SetIndices( ib ) );
+    GN_DX9_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+    GN_DX9_CHECK( mDevice->SetIndices( ib ) );
 
     // success
     mNumPrims += numPrims;
@@ -283,17 +283,17 @@ void GN::gfx::D3D9Renderer::drawUp(
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
-    GN_DX_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+    GN_DX9_CHECK( mDevice->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
 
     // do draw
-    GN_DX_CHECK( mDevice->DrawPrimitiveUP(
+    GN_DX9_CHECK( mDevice->DrawPrimitiveUP(
         sPrimMap[prim],
         (UINT)numPrims,
         vertexData,
         (UINT)strideInBytes ) );
 
     // restore vertex and index buffer
-    GN_DX_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+    GN_DX9_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
 
     // success
     mNumPrims += numPrims;
@@ -390,7 +390,7 @@ bool GN::gfx::D3D9Renderer::handleDeviceLost()
         deviceDispose();
 
         // reset d3ddevice
-        GN_DX_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+        GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
 
         // try restore
         if( !deviceRestore() ) return false;

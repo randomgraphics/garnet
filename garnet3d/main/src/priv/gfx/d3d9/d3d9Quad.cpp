@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d9Quad.h"
 #include "d3d9Renderer.h"
-#include "garnet/GNd3d.h"
+#include "garnet/GNd3d9.h"
 
 struct D3D9QuadVertex
 {
@@ -88,8 +88,8 @@ bool GN::gfx::D3D9Quad::deviceCreate()
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // create vertex decl
-    GN_DX_CHECK_RV( dev->CreateVertexDeclaration( sDeclFfp, &mDeclFfp ), false );
-    GN_DX_CHECK_RV( dev->CreateVertexDeclaration( sDeclVs, &mDeclVs ), false );
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDeclFfp, &mDeclFfp ), false );
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDeclVs, &mDeclVs ), false );
 
     // create vertex shader
 #if GN_XENON
@@ -101,7 +101,7 @@ bool GN::gfx::D3D9Quad::deviceCreate()
         "mov oPos, v0 \n"
         "mov oT0, v1 \n"
         "mov oD0, v2 \n";
-    mVtxShader = d3d::assembleVS( dev, code );
+    mVtxShader = d3d9::assembleVS( dev, code );
     if( 0 == mVtxShader ) return false;
 #else
     GN_ASSERT( 0 == mVtxShader );
@@ -114,18 +114,18 @@ bool GN::gfx::D3D9Quad::deviceCreate()
             "ps.1.1 \n"
             "tex t0 \n"
             "mov r0, t0 \n";
-        mPxlShaderTextured = d3d::assemblePS( dev, code1 );
+        mPxlShaderTextured = d3d9::assemblePS( dev, code1 );
         if( 0 == mPxlShaderTextured ) return false;
 
         static const char * code2 =
             "ps.1.1 \n"
             "mov r0, v0 \n";
-        mPxlShaderSolid = d3d::assemblePS( dev, code2 );
+        mPxlShaderSolid = d3d9::assemblePS( dev, code2 );
         if( 0 == mPxlShaderSolid ) return false;
     }
 
     // create index buffer
-    GN_DX_CHECK_RV(
+    GN_DX9_CHECK_RV(
         dev->CreateIndexBuffer(
             (UINT)( sizeof(uint16_t) * MAX_QUADS * 6 ),
             0, // usage
@@ -136,7 +136,7 @@ bool GN::gfx::D3D9Quad::deviceCreate()
 
     // fill index buffer
     uint16_t * ibData;
-    GN_DX_CHECK_RV( mIdxBuf->Lock( 0, 0, (void**)&ibData, 0 ), false );
+    GN_DX9_CHECK_RV( mIdxBuf->Lock( 0, 0, (void**)&ibData, 0 ), false );
     for( uint16_t i = 0; i < MAX_QUADS; ++i )
     {
         ibData[i*6+0] = i*4+0;
@@ -146,7 +146,7 @@ bool GN::gfx::D3D9Quad::deviceCreate()
         ibData[i*6+4] = i*4+2;
         ibData[i*6+5] = i*4+3;
     }
-    GN_DX_CHECK( mIdxBuf->Unlock() );
+    GN_DX9_CHECK( mIdxBuf->Unlock() );
 
     // success
     return true;
@@ -166,7 +166,7 @@ bool GN::gfx::D3D9Quad::deviceRestore()
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
     // create vertex buffer
-    GN_DX_CHECK_RV(
+    GN_DX9_CHECK_RV(
         dev->CreateVertexBuffer(
             (UINT)( QUAD_STRIDE * MAX_QUADS ),
             D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
@@ -286,11 +286,11 @@ void GN::gfx::D3D9Quad::drawQuads(
         StateHolder( D3D9Renderer & r_ ) : r(r_)
         {
             LPDIRECT3DDEVICE9 dev = r.getDevice();
-            GN_DX_CHECK( dev->GetVertexShader( &vs ) );
-            GN_DX_CHECK( dev->GetPixelShader( &ps ) );
-            GN_DX_CHECK( dev->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
-            GN_DX_CHECK( dev->GetIndices( &ib ) );
-            GN_DX_CHECK( dev->GetVertexDeclaration( &decl ) );
+            GN_DX9_CHECK( dev->GetVertexShader( &vs ) );
+            GN_DX9_CHECK( dev->GetPixelShader( &ps ) );
+            GN_DX9_CHECK( dev->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
+            GN_DX9_CHECK( dev->GetIndices( &ib ) );
+            GN_DX9_CHECK( dev->GetVertexDeclaration( &decl ) );
             blendEnable = r.getD3DRenderState( D3DRS_ALPHABLENDENABLE );
             alphaTest   = r.getD3DRenderState( D3DRS_ALPHATESTENABLE );
             alphaFunc   = r.getD3DRenderState( D3DRS_ALPHAFUNC );
@@ -311,11 +311,11 @@ void GN::gfx::D3D9Quad::drawQuads(
         ~StateHolder()
         {
             LPDIRECT3DDEVICE9 dev = r.getDevice();
-            GN_DX_CHECK( dev->SetVertexShader( vs ) );
-            GN_DX_CHECK( dev->SetPixelShader( ps ) );
-            GN_DX_CHECK( dev->SetStreamSource( 0, vb, vbOffset, vbStride ) );
-            GN_DX_CHECK( dev->SetIndices( ib ) );
-            if( decl ) GN_DX_CHECK( dev->SetVertexDeclaration( decl ) );
+            GN_DX9_CHECK( dev->SetVertexShader( vs ) );
+            GN_DX9_CHECK( dev->SetPixelShader( ps ) );
+            GN_DX9_CHECK( dev->SetStreamSource( 0, vb, vbOffset, vbStride ) );
+            GN_DX9_CHECK( dev->SetIndices( ib ) );
+            if( decl ) GN_DX9_CHECK( dev->SetVertexDeclaration( decl ) );
             r.setD3DRenderState( D3DRS_ALPHABLENDENABLE , blendEnable );
             r.setD3DRenderState( D3DRS_ALPHATESTENABLE  , alphaTest   );
             r.setD3DRenderState( D3DRS_ALPHAFUNC        , alphaFunc   );
@@ -343,11 +343,11 @@ void GN::gfx::D3D9Quad::drawQuads(
 #endif
     if( 0 == mNextQuad )
     {
-        GN_DX_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
+        GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
     }
     else
     {
-        GN_DX_CHECK_R( mVtxBuf->Lock(
+        GN_DX9_CHECK_R( mVtxBuf->Lock(
             (UINT)( QUAD_STRIDE * mNextQuad ),
             (UINT)( QUAD_STRIDE * count ),
             (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
@@ -358,17 +358,17 @@ void GN::gfx::D3D9Quad::drawQuads(
     float scaleY, offsetY;
     if( DQ_USE_CURRENT_VS & options )
     {
-        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
+        GN_DX9_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
         scaleX = 1.0f; offsetX = 0.0f;
         scaleY = 1.0f; offsetY = 0.0f;
     }
     else if( mVtxShader )
     {
-        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
+        GN_DX9_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
         if( DQ_WINDOW_SPACE & options )
         {
             D3DVIEWPORT9 vp;
-            GN_DX_CHECK( dev->GetViewport( &vp ) );
+            GN_DX9_CHECK( dev->GetViewport( &vp ) );
             scaleX = 2.0f/(float)vp.Width;
             scaleY = -2.0f/(float)vp.Height;
         }
@@ -382,7 +382,7 @@ void GN::gfx::D3D9Quad::drawQuads(
     }
     else
     {
-        GN_DX_CHECK( dev->SetVertexDeclaration( mDeclFfp ) );
+        GN_DX9_CHECK( dev->SetVertexDeclaration( mDeclFfp ) );
         if( DQ_WINDOW_SPACE & options )
         {
             scaleX  = 1.0f;
@@ -393,7 +393,7 @@ void GN::gfx::D3D9Quad::drawQuads(
         else
         {
             D3DVIEWPORT9 vp;
-            GN_DX_CHECK( dev->GetViewport( &vp ) );
+            GN_DX9_CHECK( dev->GetViewport( &vp ) );
             scaleX = (float)vp.Width;
             scaleY = (float)vp.Height;
             offsetX = .0f;
@@ -448,7 +448,7 @@ void GN::gfx::D3D9Quad::drawQuads(
     }
 
     // unlock the buffer
-    GN_DX_CHECK( mVtxBuf->Unlock() );
+    GN_DX9_CHECK( mVtxBuf->Unlock() );
 
     // setup render states
     if( !( DQ_USE_CURRENT_RS & options ) )
@@ -473,18 +473,18 @@ void GN::gfx::D3D9Quad::drawQuads(
     // bind shaders
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
-        GN_DX_CHECK( dev->SetVertexShader( mVtxShader ) );
+        GN_DX9_CHECK( dev->SetVertexShader( mVtxShader ) );
     }
 
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
-        GN_DX_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
+        GN_DX9_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
     }
 
 #if !GN_XENON
     // setup texture states, for fixed-functional pipeline only
     AutoComPtr<IDirect3DPixelShader9> currentPs;
-    GN_DX_CHECK( dev->GetPixelShader( &currentPs ) );
+    GN_DX9_CHECK( dev->GetPixelShader( &currentPs ) );
     if( !currentPs && !( DQ_USE_CURRENT_TS & options ) )
     {
         // TODO: setup TSS based on present of texcoords and colors.
@@ -499,15 +499,15 @@ void GN::gfx::D3D9Quad::drawQuads(
 
     // bind decl and buffers
     GN_ASSERT( mVtxBuf );
-    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3D9QuadVertex) ) );
+    GN_DX9_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3D9QuadVertex) ) );
     GN_ASSERT( mIdxBuf );
-    GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
+    GN_DX9_CHECK( dev->SetIndices( mIdxBuf ) );
 
     // draw
 #if GN_XENON
-    GN_DX_CHECK( dev->DrawPrimitive( D3DPT_QUADLIST, (UINT)(mNextQuad * 4), (UINT)count ) );
+    GN_DX9_CHECK( dev->DrawPrimitive( D3DPT_QUADLIST, (UINT)(mNextQuad * 4), (UINT)count ) );
 #else
-    GN_DX_CHECK( dev->DrawIndexedPrimitive(
+    GN_DX9_CHECK( dev->DrawIndexedPrimitive(
         D3DPT_TRIANGLELIST,
         (INT)( mNextQuad * 4 ),  // BaseVertexIndex
         0,                       // MinIndex

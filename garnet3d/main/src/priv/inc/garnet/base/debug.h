@@ -169,12 +169,12 @@
 #define GN_MSW_CHECK_RV( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
 
 //!
-//! DX error check routine
+//! DX9 error check routine
 //!
 #ifdef D3DCOMPILE_USEVOIDS
-#define GN_DX_CHECK_DO( func, something ) func
+#define GN_DX9_CHECK_DO( func, something ) func
 #else
-#define GN_DX_CHECK_DO( func, something )           \
+#define GN_DX9_CHECK_DO( func, something )          \
     if( true ) {                                    \
         HRESULT rr = func;                          \
         if( FAILED(rr) )                            \
@@ -189,20 +189,20 @@
 //! DX error check routine
 //!
 #if GN_DEBUG
-#define GN_DX_CHECK( func )         GN_DX_CHECK_DO( func, )
+#define GN_DX9_CHECK( func )         GN_DX9_CHECK_DO( func, )
 #else
-#define GN_DX_CHECK( func )         func
+#define GN_DX9_CHECK( func )         func
 #endif
 
 //!
 //! DX error check routine
 //!
-#define GN_DX_CHECK_R( func )        GN_DX_CHECK_DO( func, return; )
+#define GN_DX9_CHECK_R( func )        GN_DX9_CHECK_DO( func, return; )
 
 //!
 //! DX error check routine
 //!
-#define GN_DX_CHECK_RV( func, rval ) GN_DX_CHECK_DO( func, return rval; )
+#define GN_DX9_CHECK_RV( func, rval ) GN_DX9_CHECK_DO( func, return rval; )
 
 
 #elif GN_POSIX

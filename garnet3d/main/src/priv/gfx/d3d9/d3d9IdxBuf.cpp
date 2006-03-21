@@ -78,11 +78,11 @@ bool GN::gfx::D3D9IdxBuf::deviceRestore()
 
 #if !GN_XENON
     // evict managed resources
-    GN_DX_CHECK_RV( dev->EvictManagedResources(), 0 );
+    GN_DX9_CHECK_RV( dev->EvictManagedResources(), 0 );
 #endif
 
     // create d3d ibuffer
-    GN_DX_CHECK_RV(
+    GN_DX9_CHECK_RV(
         dev->CreateIndexBuffer(
             (UINT)( getNumIdx() * 2 ),
             sBufUsage2D3D9( isDynamic() ),
@@ -101,7 +101,7 @@ bool GN::gfx::D3D9IdxBuf::deviceRestore()
     {
         // copy data from system copy to D3D buffer
         void * dst;
-        GN_DX_CHECK_RV( mD3DIb->Lock( 0, 0, &dst, 0 ), false );
+        GN_DX9_CHECK_RV( mD3DIb->Lock( 0, 0, &dst, 0 ), false );
         ::memcpy( dst, &mSysCopy[0], mSysCopy.size()*2 );
         mD3DIb->Unlock();
     }
@@ -149,7 +149,7 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
     uint16_t * buf;
     if( mSysCopy.empty() )
     {
-        GN_DX_CHECK_RV(
+        GN_DX9_CHECK_RV(
             mD3DIb->Lock(
                 (UINT)( startIdx<<1 ),
                 (UINT)( numIdx<<1 ),
@@ -185,7 +185,7 @@ void GN::gfx::D3D9IdxBuf::unlock()
 
     if( mSysCopy.empty() )
     {
-        GN_DX_CHECK( mD3DIb->Unlock() );
+        GN_DX9_CHECK( mD3DIb->Unlock() );
     }
     else if( LOCK_RO != mLockFlag )
     {
@@ -198,7 +198,7 @@ void GN::gfx::D3D9IdxBuf::unlock()
 
         // update d3d index buffer
         void * dst;
-        GN_DX_CHECK_R( mD3DIb->Lock(
+        GN_DX9_CHECK_R( mD3DIb->Lock(
             (UINT)( mLockStartIdx<<1 ),
             (UINT)( mLockNumIdx ),
             &dst,

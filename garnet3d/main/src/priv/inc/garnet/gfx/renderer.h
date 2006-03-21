@@ -415,6 +415,7 @@ namespace GN { namespace gfx
     {
         API_OGL,   //!< OpenGL
         API_D3D9,  //!< D3D9
+        API_D3D10, //!< D3D10
         API_FAKE,  //!< Fake API
         NUM_RENDERER_API, //!< Number of avaliable API.
         API_AUTO, //!< determine rendering API automatically.

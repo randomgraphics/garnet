@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "d3d9Shader.h"
 #include "d3d9Renderer.h"
-#include "garnet/GNd3d.h"
+#include "garnet/GNd3d9.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -62,14 +62,14 @@ bool GN::gfx::D3D9VtxShaderAsm::deviceCreate()
     GN_ASSERT( !mD3DShader );
 
     // create shader
-    mD3DShader = d3d::assembleVS( getRenderer().getDevice(), mCode.cstr(), mCode.size() );
+    mD3DShader = d3d9::assembleVS( getRenderer().getDevice(), mCode.cstr(), mCode.size() );
     if( 0 == mD3DShader ) return false;
 
     // get shader function
     UINT sz;
-    GN_DX_CHECK_RV( mD3DShader->GetFunction( 0, &sz ), false );
+    GN_DX9_CHECK_RV( mD3DShader->GetFunction( 0, &sz ), false );
     AutoObjArray<uint8_t> func( new uint8_t[sz] );
-    GN_DX_CHECK_RV( mD3DShader->GetFunction( func, &sz ), false );
+    GN_DX9_CHECK_RV( mD3DShader->GetFunction( func, &sz ), false );
 
     // analyze uniforms
     if( !analyzeUniforms( (const DWORD*)func.get() ) ) return false;
@@ -110,7 +110,7 @@ void GN::gfx::D3D9VtxShaderAsm::apply() const
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
-    GN_DX_CHECK( dev->SetVertexShader( mD3DShader ) );
+    GN_DX9_CHECK( dev->SetVertexShader( mD3DShader ) );
 
     // apply ALL uniforms to D3D device
     uint32_t handle = getFirstUniform();
@@ -238,7 +238,7 @@ bool GN::gfx::D3D9VtxShaderAsm::analyzeUniforms( const DWORD * shaderFunction )
     }
 
     D3DCAPS9 caps;
-    GN_DX_CHECK_RV( getRenderer().getDevice()->GetDeviceCaps( &caps ), false );
+    GN_DX9_CHECK_RV( getRenderer().getDevice()->GetDeviceCaps( &caps ), false );
 
     if( HIWORD(version) >= 3 ) // vs_3_x
     {
@@ -285,17 +285,17 @@ GN::gfx::D3D9VtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_FLOAT:
                     if( u.value.floats.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, &u.value.floats[0], (UINT)( u.value.floats.size() + 3 ) / 4 ) );
+                    GN_DX9_CHECK( dev->SetVertexShaderConstantF( desc.index, &u.value.floats[0], (UINT)( u.value.floats.size() + 3 ) / 4 ) );
                     break;
 
                 case UVT_VECTOR4:
                     if( u.value.vector4s.empty() ) return;
-                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, u.value.vector4s[0], (UINT)u.value.vector4s.size() ) );
+                    GN_DX9_CHECK( dev->SetVertexShaderConstantF( desc.index, u.value.vector4s[0], (UINT)u.value.vector4s.size() ) );
                     break;
 
                 case UVT_MATRIX44:
                     if( u.value.matrix44s.empty() ) return;
-                    GN_DX_CHECK( dev->SetVertexShaderConstantF( desc.index, u.value.matrix44s[0][0], (UINT)(u.value.matrix44s.size()*4) ) );
+                    GN_DX9_CHECK( dev->SetVertexShaderConstantF( desc.index, u.value.matrix44s[0][0], (UINT)(u.value.matrix44s.size()*4) ) );
                     break;
 
                 case UVT_BOOL:
@@ -311,7 +311,7 @@ GN::gfx::D3D9VtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_INT:
                     if( u.value.floats.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetVertexShaderConstantI( desc.index, (const int*)&u.value.ints[0], (UINT)( u.value.ints.size() + 3 ) / 4 ) );
+                    GN_DX9_CHECK( dev->SetVertexShaderConstantI( desc.index, (const int*)&u.value.ints[0], (UINT)( u.value.ints.size() + 3 ) / 4 ) );
                     break;
 
                 case UVT_FLOAT:
@@ -329,7 +329,7 @@ GN::gfx::D3D9VtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_BOOL:
                     if( u.value.floats.empty() ) return;
                     // FIXME : may read memory beyond the end of array, if (array_size % 4 != 0)
-                    GN_DX_CHECK( dev->SetVertexShaderConstantB( desc.index, (const BOOL*)&u.value.bools[0], (UINT)u.value.bools.size() ) );
+                    GN_DX9_CHECK( dev->SetVertexShaderConstantB( desc.index, (const BOOL*)&u.value.bools[0], (UINT)u.value.bools.size() ) );
                     break;
 
                 case UVT_FLOAT:
