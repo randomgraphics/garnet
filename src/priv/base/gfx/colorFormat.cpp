@@ -3,11 +3,11 @@
 //
 //
 // -------------------------------------------------------------------------
-const GN::gfx::ClrFmtDesc & GN::gfx::getClrFmtDesc( ClrFmt fmt )
+const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
 {
     GN_GUARD;
 
-    static struct ClrDescTable
+    static struct ClrDescGenerator
     {
         ClrFmtDesc table[NUM_CLRFMTS+1];
 
@@ -96,7 +96,7 @@ const GN::gfx::ClrFmtDesc & GN::gfx::getClrFmtDesc( ClrFmt fmt )
         //!
         //! constructor
         //!
-        ClrDescTable()
+        ClrDescGenerator()
         {
             // clear description table
             memset( table, 0, sizeof(table) );
@@ -118,10 +118,9 @@ const GN::gfx::ClrFmtDesc & GN::gfx::getClrFmtDesc( ClrFmt fmt )
             pdesc->numChannels = 0;
             pdesc->bits = 0;
         }
-    } s_table;
+    } sGenerator;
 
-    if( 0 <= fmt && fmt <= NUM_CLRFMTS ) return s_table.table[fmt];
-    else return s_table.table[FMT_INVALID];
+    return sGenerator.table;
 
     GN_UNGUARD;
 }

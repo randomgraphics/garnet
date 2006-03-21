@@ -4,53 +4,18 @@
 // RenderStateDescriptor
 // *****************************************************************************
 
+namespace GN { namespace gfx { namespace detail
+{
+    const GN::gfx::RenderStateDesc * sGenerateRenderStateDescriptors();
+}}}
+
 GN_INLINE const GN::gfx::RenderStateDesc &
 GN::gfx::getRenderStateDesc( RenderState rs )
 {
-    struct Local
-    {
-        static RenderStateDesc ctorENUM( const char * name, int32_t minVal, int32_t maxVal )
-        {
-            RenderStateDesc desc;
-            desc.name = name;
-            desc.valueType = RenderStateDesc::VT_ENUM;
-            desc.minI = minVal;
-            desc.maxI = maxVal;
-            return desc;
-        }
-
-        static RenderStateDesc ctorINT( const char * name, int32_t minVal, int32_t maxVal )
-        {
-            RenderStateDesc desc;
-            desc.name = name;
-            desc.valueType = RenderStateDesc::VT_INT;
-            desc.minI = minVal;
-            desc.maxI = maxVal;
-            return desc;
-        }
-
-        static RenderStateDesc ctorFLOAT( const char * name, float minVal, float maxVal )
-        {
-            RenderStateDesc desc;
-            desc.name = name;
-            desc.valueType = RenderStateDesc::VT_FLOAT;
-            desc.minF = minVal;
-            desc.maxF = maxVal;
-            return desc;
-        }
-    };
-
-    const GN::gfx::RenderStateDesc sTable[] =
-    {
-    #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) Local::ctor##type( #tag, minVal, maxVal ),
-    #include "renderStateMeta.h"
-    #undef GNGFX_DEFINE_RS
-    };
-
+    static const GN::gfx::RenderStateDesc * const sTable = detail::sGenerateRenderStateDescriptors();
     GN_ASSERT( 0 <= rs && rs < NUM_RENDER_STATES );
     return sTable[rs];
 }
-
 
 // *****************************************************************************
 // tag <-> string conversion
@@ -305,7 +270,8 @@ GN_INLINE void GN::gfx::RenderStateBlockDesc::set( RenderState type, int value )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::TextureStateBlockDesc::isSet( size_t stage, TextureState type ) const
+GN_INLINE bool
+GN::gfx::TextureStateBlockDesc::isSet( size_t stage, TextureState type ) const
 {
     GN_ASSERT( stage < MAX_TEXTURE_STAGES && 0 <= type && type < NUM_TEXTURE_STATES );
     return stage < mNumStages && !!( mFlags[stage] & (1<<type) );
@@ -314,7 +280,7 @@ bool GN::gfx::TextureStateBlockDesc::isSet( size_t stage, TextureState type ) co
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::TextureStateValue
+GN_INLINE GN::gfx::TextureStateValue
 GN::gfx::TextureStateBlockDesc::get( size_t stage, TextureState type ) const
 {
     GN_ASSERT( isSet( stage, type ) );
@@ -324,7 +290,7 @@ GN::gfx::TextureStateBlockDesc::get( size_t stage, TextureState type ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::TextureStateBlockDesc::set(
+GN_INLINE void GN::gfx::TextureStateBlockDesc::set(
     size_t stage, TextureState type, TextureStateValue value )
 {
     GN_ASSERT(

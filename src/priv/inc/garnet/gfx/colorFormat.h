@@ -167,10 +167,22 @@ namespace GN { namespace gfx
         ChannelDesc  channels[4];   //!< valid when numChannels > 0
     };
 
+    //! \cond NEVER
+    namespace detail
+    {
+        const ClrFmtDesc * sGenerateClrFmtDescTable();
+    }
+    //! \endcond
+
     //!
     //! get format description
     //!
-    const ClrFmtDesc & getClrFmtDesc( ClrFmt );
+    inline const ClrFmtDesc & getClrFmtDesc( ClrFmt fmt )
+    {
+        static const ClrFmtDesc * const sTable = detail::sGenerateClrFmtDescTable();
+        if( 0 <= fmt && fmt <= NUM_CLRFMTS ) return sTable[fmt];
+        else return sTable[FMT_INVALID];
+    }
 
     //!
     //! convert color format tag to string

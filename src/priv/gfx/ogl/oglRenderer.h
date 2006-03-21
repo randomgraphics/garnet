@@ -401,7 +401,7 @@ namespace GN { namespace gfx
 }}
 
 #if GN_ENABLE_INLINE
-#include "oglResourceMgr.inl"
+#include "oglContextMgr.inl"
 #endif
 
 // *****************************************************************************
