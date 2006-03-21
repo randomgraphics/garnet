@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dRenderer.h"
-#include "d3dTexture.h"
+#include "d3d9Renderer.h"
+#include "d3d9Texture.h"
 #include "garnet/GNd3d.h"
 
 // *****************************************************************************
@@ -75,12 +75,12 @@ static uint32_t sCapsInit_VSCAPS( const D3DCAPS9 & d3dcaps )
     return result;
 }
 //
-static uint32_t sD3DCapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
+static uint32_t sD3D9CapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DPTEXTURECAPS_CUBEMAP & d3dcaps.TextureCaps );
 }
 //
-static uint32_t sD3DCapsInit_DOT3( const D3DCAPS9 & d3dcaps )
+static uint32_t sD3D9CapsInit_DOT3( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DTEXOPCAPS_DOTPRODUCT3 & d3dcaps.TextureOpCaps );
 }
@@ -92,7 +92,7 @@ static uint32_t sD3DCapsInit_DOT3( const D3DCAPS9 & d3dcaps )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::capsDeviceCreate()
+bool GN::gfx::D3D9Renderer::capsDeviceCreate()
 {
     GN_GUARD;
 
@@ -105,12 +105,12 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
     // 逐一的初始化每一个caps
     #define GNGFX_CAPS( name ) \
         mCaps[CAPS_##name] = sCapsInit_##name( d3dcaps );
-    #define GNGFX_D3DCAPS( name ) \
-        mD3DCaps[D3DCAPS_##name] = sD3DCapsInit_##name( d3dcaps );
+    #define GNGFX_D3D9CAPS( name ) \
+        mD3DCaps[D3D9CAPS_##name] = sD3D9CapsInit_##name( d3dcaps );
     #include "garnet/gfx/rendererCapsMeta.h"
-    #include "d3dCapsMeta.h"
+    #include "d3d9CapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GNGFX_D3DCAPS
+    #undef GNGFX_D3D9CAPS
 
     // successful
     return true;
@@ -121,7 +121,7 @@ bool GN::gfx::D3DRenderer::capsDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::capsDeviceRestore()
+bool GN::gfx::D3D9Renderer::capsDeviceRestore()
 {
     GN_GUARD;
 
@@ -139,17 +139,17 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
                       " is modified by device reset" ); \
             return false; \
         }
-    #define GNGFX_D3DCAPS( name ) \
-        if( getD3DCaps(D3DCAPS_##name) != sD3DCapsInit_##name( d3dcaps ) ) \
+    #define GNGFX_D3D9CAPS( name ) \
+        if( getD3DCaps(D3D9CAPS_##name) != sD3D9CapsInit_##name( d3dcaps ) ) \
         { \
-            GN_ERROR( "D3DCAPS_" #name \
+            GN_ERROR( "D3D9CAPS_" #name \
                       " is modified by device reset" ); \
             return false; \
         }
     #include "garnet/gfx/rendererCapsMeta.h"
-    #include "d3dCapsMeta.h"
+    #include "d3d9CapsMeta.h"
     #undef GNGFX_CAPS
-    #undef GNGFX_D3DCAPS
+    #undef GNGFX_D3D9CAPS
 
     // output device info
     StrA devtype;
@@ -248,7 +248,7 @@ bool GN::gfx::D3DRenderer::capsDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang )
+bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, ShadingLanguage lang )
 {
     GN_GUARD;
 
@@ -299,7 +299,7 @@ bool GN::gfx::D3DRenderer::supportShader( ShaderType type, ShadingLanguage lang 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::supportTextureFormat(
+bool GN::gfx::D3D9Renderer::supportTextureFormat(
     TexType type, BitField usage, ClrFmt format ) const
 {
     GN_GUARD;

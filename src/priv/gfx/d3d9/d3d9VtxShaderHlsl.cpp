@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dShader.h"
-#include "d3dRenderer.h"
+#include "d3d9Shader.h"
+#include "d3d9Renderer.h"
 #include "garnet/GNd3d.h"
 
 // *****************************************************************************
@@ -10,12 +10,12 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderHlsl::init( const StrA & code, const StrA & entry )
+bool GN::gfx::D3D9VtxShaderHlsl::init( const StrA & code, const StrA & entry )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3DVtxShaderHlsl, () );
+    GN_STDCLASS_INIT( D3D9VtxShaderHlsl, () );
 
     mCode = code;
     mEntry = entry;
@@ -34,7 +34,7 @@ bool GN::gfx::D3DVtxShaderHlsl::init( const StrA & code, const StrA & entry )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxShaderHlsl::quit()
+void GN::gfx::D3D9VtxShaderHlsl::quit()
 {
     GN_GUARD;
 
@@ -48,13 +48,13 @@ void GN::gfx::D3DVtxShaderHlsl::quit()
 }
 
 // *****************************************************************************
-// from D3DResource
+// from D3D9Resource
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderHlsl::deviceCreate()
+bool GN::gfx::D3D9VtxShaderHlsl::deviceCreate()
 {
     GN_GUARD;
 
@@ -90,7 +90,7 @@ bool GN::gfx::D3DVtxShaderHlsl::deviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxShaderHlsl::deviceDestroy()
+void GN::gfx::D3D9VtxShaderHlsl::deviceDestroy()
 {
     GN_GUARD;
 
@@ -104,13 +104,13 @@ void GN::gfx::D3DVtxShaderHlsl::deviceDestroy()
 
 
 // *****************************************************************************
-// from D3DBasicShader
+// from D3D9BasicShader
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxShaderHlsl::apply() const
+void GN::gfx::D3D9VtxShaderHlsl::apply() const
 {
     GN_GUARD_SLOW;
 
@@ -135,7 +135,7 @@ void GN::gfx::D3DVtxShaderHlsl::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DVtxShaderHlsl::applyDirtyUniforms() const
+void GN::gfx::D3D9VtxShaderHlsl::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
 
@@ -161,7 +161,7 @@ void GN::gfx::D3DVtxShaderHlsl::applyDirtyUniforms() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DVtxShaderHlsl::queryDeviceUniform( const char * name, HandleType & userData ) const
+bool GN::gfx::D3D9VtxShaderHlsl::queryDeviceUniform( const char * name, HandleType & userData ) const
 {
     GN_GUARD;
 

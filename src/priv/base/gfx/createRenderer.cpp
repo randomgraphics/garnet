@@ -20,9 +20,9 @@ extern GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & 
 // create D3D renderer
 //
 #if GN_MSWIN
-extern GN::gfx::Renderer * createD3DRenderer( const GN::gfx::RendererOptions & );
+extern GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & );
 #else
-inline GN::gfx::Renderer * createD3DRenderer( const GN::gfx::RendererOptions & )
+inline GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & )
 { GN_ERROR( "No D3D support on platform other than MS Windows." ); return 0; }
 #endif
 
@@ -44,9 +44,9 @@ extern GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & )
 static GN::gfx::RendererAPI sDetermineRendererAPI()
 {
 #if GN_XENON
-    return GN::gfx::API_D3D;
+    return GN::gfx::API_D3D9;
 #elif GN_MSWIN
-    return GN::gfx::API_D3D;
+    return GN::gfx::API_D3D9;
 #else
     return GN::gfx::API_OGL;
 #endif
@@ -74,7 +74,7 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
 #if GN_STATIC
     switch( api )
     {
-        case API_D3D  : return createD3DRenderer( ro );
+        case API_D3D9 : return createD3D9Renderer( ro );
         case API_OGL  : return createOGLRenderer( ro );
         default       : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }
@@ -83,7 +83,7 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
     CreateRendererFunc creator;
     switch( api )
     {
-        case API_D3D  : dllName = "GNgfxD3D9"; break;
+        case API_D3D9 : dllName = "GNgfxD3D9"; break;
         case API_OGL  : dllName = "GNgfxOGL"; break;
         default       : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }

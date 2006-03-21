@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dRenderer.h"
-#include "d3dResource.h"
+#include "d3d9Renderer.h"
+#include "d3d9Resource.h"
 
 #if GN_MSVC
 
@@ -49,7 +49,7 @@ GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )
 {
     GN_GUARD;
 
-    GN::AutoObjPtr<GN::gfx::D3DRenderer> p( new GN::gfx::D3DRenderer );
+    GN::AutoObjPtr<GN::gfx::D3D9Renderer> p( new GN::gfx::D3D9Renderer );
     if( !p->init(ro) ) return 0;
     return p.detach();
 
@@ -63,12 +63,12 @@ GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::init(const RendererOptions & ro )
+bool GN::gfx::D3D9Renderer::init(const RendererOptions & ro )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DRenderer, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9Renderer, () );
 
     // init sub-components
     if( !dispInit()         ) { quit(); return selfOK(); }
@@ -89,7 +89,7 @@ bool GN::gfx::D3DRenderer::init(const RendererOptions & ro )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::quit()
+void GN::gfx::D3D9Renderer::quit()
 {
     GN_GUARD;
 
@@ -113,7 +113,7 @@ void GN::gfx::D3DRenderer::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::changeOptions( const RendererOptions & ro, bool forceRecreation )
+bool GN::gfx::D3D9Renderer::changeOptions( const RendererOptions & ro, bool forceRecreation )
 {
     GN_GUARD;
     return doOptionChange( ro, forceRecreation ? OCT_CREATE : OCT_AUTO );
@@ -127,7 +127,7 @@ bool GN::gfx::D3DRenderer::changeOptions( const RendererOptions & ro, bool force
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::deviceCreate( bool triggerInitSignal )
+bool GN::gfx::D3D9Renderer::deviceCreate( bool triggerInitSignal )
 {
     GN_GUARD;
 
@@ -167,7 +167,7 @@ bool GN::gfx::D3DRenderer::deviceCreate( bool triggerInitSignal )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::deviceRestore()
+bool GN::gfx::D3D9Renderer::deviceRestore()
 {
     GN_GUARD;
 
@@ -192,7 +192,7 @@ bool GN::gfx::D3DRenderer::deviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::deviceDispose()
+void GN::gfx::D3D9Renderer::deviceDispose()
 {
     GN_GUARD;
 
@@ -213,7 +213,7 @@ void GN::gfx::D3DRenderer::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::deviceDestroy( bool triggerQuitSignal )
+void GN::gfx::D3D9Renderer::deviceDestroy( bool triggerQuitSignal )
 {
     GN_GUARD;
 
@@ -254,7 +254,7 @@ void GN::gfx::D3DRenderer::deviceDestroy( bool triggerQuitSignal )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::doOptionChange( RendererOptions ro, OptionChangingType type )
+bool GN::gfx::D3D9Renderer::doOptionChange( RendererOptions ro, OptionChangingType type )
 {
     GN_GUARD;
 

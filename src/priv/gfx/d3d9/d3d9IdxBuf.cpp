@@ -1,14 +1,14 @@
 #include "pch.h"
-#include "d3dIdxBuf.h"
-#include "d3dRenderer.h"
+#include "d3d9IdxBuf.h"
+#include "d3d9Renderer.h"
 
 // *****************************************************************************
 // Local functions
 // *****************************************************************************
 
 // Note: these two functions are implemented in d3dVtxBuf.cpp
-extern DWORD sBufUsage2D3D( bool dynamic );
-extern DWORD sLockFlags2D3D( bool dynamic, GN::gfx::LockFlag lock );
+extern DWORD sBufUsage2D3D9( bool dynamic );
+extern DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag lock );
 
 // *****************************************************************************
 // init / quit functions
@@ -17,13 +17,13 @@ extern DWORD sLockFlags2D3D( bool dynamic, GN::gfx::LockFlag lock );
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DIdxBuf::init(
+bool GN::gfx::D3D9IdxBuf::init(
     size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DIdxBuf, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9IdxBuf, () );
 
     // check parameter
     if( 0 == numIdx )
@@ -48,7 +48,7 @@ bool GN::gfx::D3DIdxBuf::init(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DIdxBuf::quit()
+void GN::gfx::D3D9IdxBuf::quit()
 {
     GN_GUARD;
 
@@ -68,7 +68,7 @@ void GN::gfx::D3DIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DIdxBuf::deviceRestore()
+bool GN::gfx::D3D9IdxBuf::deviceRestore()
 {
     GN_GUARD;
 
@@ -85,7 +85,7 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
     GN_DX_CHECK_RV(
         dev->CreateIndexBuffer(
             (UINT)( getNumIdx() * 2 ),
-            sBufUsage2D3D( isDynamic() ),
+            sBufUsage2D3D9( isDynamic() ),
             D3DFMT_INDEX16,
             D3DPOOL_DEFAULT,
             &mD3DIb,
@@ -115,7 +115,7 @@ bool GN::gfx::D3DIdxBuf::deviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DIdxBuf::deviceDispose()
+void GN::gfx::D3D9IdxBuf::deviceDispose()
 {
     GN_GUARD;
 
@@ -137,14 +137,14 @@ void GN::gfx::D3DIdxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
+uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( selfOK() );
 
     if( !basicLock( startIdx, numIdx, flag ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DIdxBuf::basicUnlock) );
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3D9IdxBuf::basicUnlock) );
 
     uint16_t * buf;
     if( mSysCopy.empty() )
@@ -154,7 +154,7 @@ uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag fl
                 (UINT)( startIdx<<1 ),
                 (UINT)( numIdx<<1 ),
                 (void**)&buf,
-                sLockFlags2D3D( isDynamic(), flag ) ),
+                sLockFlags2D3D9( isDynamic(), flag ) ),
             0 );
     }
     else
@@ -175,7 +175,7 @@ uint16_t * GN::gfx::D3DIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag fl
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DIdxBuf::unlock()
+void GN::gfx::D3D9IdxBuf::unlock()
 {
     GN_GUARD_SLOW;
 
@@ -202,7 +202,7 @@ void GN::gfx::D3DIdxBuf::unlock()
             (UINT)( mLockStartIdx<<1 ),
             (UINT)( mLockNumIdx ),
             &dst,
-            sLockFlags2D3D( isDynamic(), mLockFlag ) ) );
+            sLockFlags2D3D9( isDynamic(), mLockFlag ) ) );
         ::memcpy( dst, &mSysCopy[mLockStartIdx], mLockNumIdx );
         mD3DIb->Unlock();
     }

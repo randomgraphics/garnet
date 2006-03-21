@@ -1,4 +1,4 @@
-#include "d3dRenderer.h"
+#include "d3d9Renderer.h"
 
 /*
  * Setup individual render state
@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_ALPHA_TEST( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_ALPHA_TEST( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ALPHATESTENABLE, sRenderStateValue2D3D[val] );
 }
@@ -18,7 +18,7 @@ void sSet_ALPHA_TEST( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_ALPHA_FUNC( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_ALPHA_FUNC( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ALPHAFUNC, sRenderStateValue2D3D[val] );
 }
@@ -26,7 +26,7 @@ void sSet_ALPHA_FUNC( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_ALPHA_REF( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_ALPHA_REF( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ALPHAREF, val );
 }
@@ -35,7 +35,7 @@ void sSet_ALPHA_REF( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_BLENDING( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_BLENDING( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, sRenderStateValue2D3D[val] );
 }
@@ -44,7 +44,7 @@ void sSet_BLENDING( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_BLEND_SRC( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_BLEND_SRC( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_SRCBLEND, sRenderStateValue2D3D[val] );
 }
@@ -53,7 +53,7 @@ void sSet_BLEND_SRC( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_BLEND_DST( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_BLEND_DST( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_DESTBLEND, sRenderStateValue2D3D[val] );
 }
@@ -62,7 +62,7 @@ void sSet_BLEND_DST( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_CULL_MODE( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_CULL_MODE( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_CULLMODE, sRenderStateValue2D3D[val] );
 }
@@ -71,7 +71,7 @@ void sSet_CULL_MODE( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_FOG( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_FOG( GN::gfx::D3D9Renderer & r, int32_t val )
 {
 #if GN_XENON
     GN_UNUSED_PARAM(r);
@@ -85,7 +85,7 @@ void sSet_FOG( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE void
-sSet_LIGHTING( GN::gfx::D3DRenderer & r, int32_t val )
+sSet_LIGHTING( GN::gfx::D3D9Renderer & r, int32_t val )
 {
 #if GN_XENON
     GN_UNUSED_PARAM(r);
@@ -108,7 +108,7 @@ sSet_LIGHTING( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_DEPTH_TEST( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_DEPTH_TEST( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ZENABLE, sRenderStateValue2D3D[val] );
 }
@@ -117,7 +117,7 @@ void sSet_DEPTH_TEST( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_DEPTH_FUNC( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_DEPTH_FUNC( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ZFUNC, sRenderStateValue2D3D[val] );
 }
@@ -126,7 +126,7 @@ void sSet_DEPTH_FUNC( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_DEPTH_WRITE( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_DEPTH_WRITE( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_ZWRITEENABLE, sRenderStateValue2D3D[val] );
 }
@@ -135,7 +135,7 @@ void sSet_DEPTH_WRITE( GN::gfx::D3DRenderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
-void sSet_FILL_MODE( GN::gfx::D3DRenderer & r, int32_t val )
+void sSet_FILL_MODE( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_FILLMODE, sRenderStateValue2D3D[val] );
 }

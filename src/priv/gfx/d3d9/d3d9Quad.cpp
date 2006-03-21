@@ -1,18 +1,18 @@
 #include "pch.h"
-#include "d3dQuad.h"
-#include "d3dRenderer.h"
+#include "d3d9Quad.h"
+#include "d3d9Renderer.h"
 #include "garnet/GNd3d.h"
 
-struct D3DQuadVertex
+struct D3D9QuadVertex
 {
     GN::Vector4f p;
     uint32_t     c;
     GN::Vector2f t;
     float        _; // padding to 32 bytes
 };
-GN_CASSERT( sizeof(D3DQuadVertex) == 32 );
+GN_CASSERT( sizeof(D3D9QuadVertex) == 32 );
 
-static const size_t QUAD_STRIDE = sizeof(D3DQuadVertex)*4;
+static const size_t QUAD_STRIDE = sizeof(D3D9QuadVertex)*4;
 
 static const D3DVERTEXELEMENT9 sDeclVs[] =
 {
@@ -40,12 +40,12 @@ static const D3DVERTEXELEMENT9 sDeclFfp[] =
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DQuad::init()
+bool GN::gfx::D3D9Quad::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DQuad, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9Quad, () );
 
     // do nothing
 
@@ -58,7 +58,7 @@ bool GN::gfx::D3DQuad::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DQuad::quit()
+void GN::gfx::D3D9Quad::quit()
 {
     GN_GUARD;
 
@@ -72,19 +72,19 @@ void GN::gfx::D3DQuad::quit()
 }
 
 // *****************************************************************************
-// from D3DResource
+// from D3D9Resource
 // *****************************************************************************
 
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DQuad::deviceCreate()
+bool GN::gfx::D3D9Quad::deviceCreate()
 {
     GN_GUARD;
 
     GN_ASSERT( !mVtxShader && !mPxlShaderTextured && !mPxlShaderSolid && !mIdxBuf );
 
-    D3DRenderer & r = getRenderer();
+    D3D9Renderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // create vertex decl
@@ -157,7 +157,7 @@ bool GN::gfx::D3DQuad::deviceCreate()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DQuad::deviceRestore()
+bool GN::gfx::D3D9Quad::deviceRestore()
 {
     GN_GUARD;
 
@@ -187,7 +187,7 @@ bool GN::gfx::D3DQuad::deviceRestore()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DQuad::deviceDispose()
+void GN::gfx::D3D9Quad::deviceDispose()
 {
     GN_GUARD;
 
@@ -199,7 +199,7 @@ void GN::gfx::D3DQuad::deviceDispose()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DQuad::deviceDestroy()
+void GN::gfx::D3D9Quad::deviceDestroy()
 {
     GN_GUARD;
 
@@ -220,7 +220,7 @@ void GN::gfx::D3DQuad::deviceDestroy()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DQuad::drawQuads(
+void GN::gfx::D3D9Quad::drawQuads(
     BitField options,
     const float * positions, size_t posStride,
     const float * texcoords, size_t texStride,
@@ -256,13 +256,13 @@ void GN::gfx::D3DQuad::drawQuads(
         count -= n;
     }
 
-    D3DRenderer & r = getRenderer();
+    D3D9Renderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // store/restore D3D device states
     struct StateHolder
     {
-        D3DRenderer & r;
+        D3D9Renderer & r;
         AutoComPtr<IDirect3DVertexShader9> vs;
         AutoComPtr<IDirect3DPixelShader9> ps;
         AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -283,7 +283,7 @@ void GN::gfx::D3DQuad::drawQuads(
             colorOp1,
             alphaOp1;
 
-        StateHolder( D3DRenderer & r_ ) : r(r_)
+        StateHolder( D3D9Renderer & r_ ) : r(r_)
         {
             LPDIRECT3DDEVICE9 dev = r.getDevice();
             GN_DX_CHECK( dev->GetVertexShader( &vs ) );
@@ -337,7 +337,7 @@ void GN::gfx::D3DQuad::drawQuads(
     StateHolder automaticStateHolder(r); // this will restore D3D states by the end of this function.
 
     // lock vertex buffer
-    D3DQuadVertex * vbData;
+    D3D9QuadVertex * vbData;
 #if GN_XENON
     dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
 #endif
@@ -406,7 +406,7 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         for( size_t i = 0; i < count*4; ++i )
         {
-            D3DQuadVertex & v = vbData[i];
+            D3D9QuadVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2], 1 );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
 
@@ -428,7 +428,7 @@ void GN::gfx::D3DQuad::drawQuads(
     {
         for( size_t i = 0; i < count*4; ++i )
         {
-            D3DQuadVertex & v = vbData[i];
+            D3D9QuadVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0, 1 );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
 
@@ -499,7 +499,7 @@ void GN::gfx::D3DQuad::drawQuads(
 
     // bind decl and buffers
     GN_ASSERT( mVtxBuf );
-    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3DQuadVertex) ) );
+    GN_DX_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3D9QuadVertex) ) );
     GN_ASSERT( mIdxBuf );
     GN_DX_CHECK( dev->SetIndices( mIdxBuf ) );
 
@@ -521,7 +521,7 @@ void GN::gfx::D3DQuad::drawQuads(
     GN_ASSERT( mNextQuad <= MAX_QUADS );
     if( MAX_QUADS == mNextQuad ) mNextQuad = 0;
 
-    // TODO: update statistics information in D3DRenderer ( draw count, primitive count )
+    // TODO: update statistics information in D3D9Renderer ( draw count, primitive count )
 
     GN_UNGUARD_SLOW;
 }

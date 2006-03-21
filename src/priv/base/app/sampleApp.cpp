@@ -149,7 +149,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 #if GN_XENON
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
-    mInitParam.rapi = gfx::API_D3D;
+    mInitParam.rapi = gfx::API_D3D9;
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.iapi = input::API_NATIVE;
 #else
@@ -177,7 +177,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             return false;
         }
         else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
-        else if( 0 == strCmpI( a, "-d3d" ) ) mInitParam.rapi = gfx::API_D3D;
+        else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
         else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
         else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
         else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;

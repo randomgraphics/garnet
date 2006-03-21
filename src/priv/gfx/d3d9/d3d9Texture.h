@@ -1,17 +1,17 @@
-#ifndef __GN_GFXD3D_D3DTEXTURE_H__
-#define __GN_GFXD3D_D3DTEXTURE_H__
+#ifndef __GN_GFXD3D9_D3D9TEXTURE_H__
+#define __GN_GFXD3D9_D3D9TEXTURE_H__
 // *****************************************************************************
-//! \file    d3dTexture.h
+//! \file    d3d9Texture.h
 //! \brief   D3D texture class
 //! \author  chenlee (2005.11.5)
 // *****************************************************************************
 
 #include "../common/basicTexture.h"
-#include "d3dResource.h"
+#include "d3d9Resource.h"
 
 namespace GN { namespace gfx
 {
-    class D3DRenderer;
+    class D3D9Renderer;
 
     //!
     //! Convert texture type to D3DRESOURCETYPE
@@ -26,9 +26,9 @@ namespace GN { namespace gfx
     //!
     //! D3D texture
     //!
-    class D3DTexture : public BasicTexture, public StdClass, public D3DResource
+    class D3D9Texture : public BasicTexture, public StdClass, public D3D9Resource
     {
-         GN_DECLARE_STDCLASS( D3DTexture, StdClass );
+         GN_DECLARE_STDCLASS( D3D9Texture, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -36,8 +36,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3DTexture( D3DRenderer & r ) : D3DResource(r), mRenderer(r) { clear(); }
-        virtual ~D3DTexture() { quit(); }
+        D3D9Texture( D3D9Renderer & r ) : D3D9Resource(r), mRenderer(r) { clear(); }
+        virtual ~D3D9Texture() { quit(); }
         //@}
 
         // ********************************
@@ -66,7 +66,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
 
     public:
@@ -98,7 +98,7 @@ namespace GN { namespace gfx
         //!
         void bind( UINT stage ) const
         {
-            D3DRenderer & r = getRenderer();
+            D3D9Renderer & r = getRenderer();
             
             r.getDevice()->SetTexture( stage, mD3DTexture );
 
@@ -160,7 +160,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        D3DRenderer & mRenderer;
+        D3D9Renderer & mRenderer;
 
         //!
         //! D3D texture instance pointer
@@ -245,6 +245,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of d3dTexture.h
+//                           End of d3d9Texture.h
 // *****************************************************************************
-#endif // __GN_GFXD3D_D3DTEXTURE_H__
+#endif // __GN_GFXD3D9_D3D9TEXTURE_H__

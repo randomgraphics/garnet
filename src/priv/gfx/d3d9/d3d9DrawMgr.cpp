@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "d3dRenderer.h"
-#include "d3dFont.h"
-#include "d3dQuad.h"
-#include "d3dLine.h"
-#include "d3dIdxBuf.h"
+#include "d3d9Renderer.h"
+#include "d3d9Font.h"
+#include "d3d9Quad.h"
+#include "d3d9Line.h"
+#include "d3d9IdxBuf.h"
 
 // static primitive map
 static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
@@ -38,17 +38,17 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::drawInit()
+bool GN::gfx::D3D9Renderer::drawInit()
 {
     GN_GUARD;
 
-    mFont = new D3DFont(*this);
+    mFont = new D3D9Font(*this);
     if( !mFont->init() ) return false;
 
-    mQuad = new D3DQuad(*this);
+    mQuad = new D3D9Quad(*this);
     if( !mQuad->init() ) return false;
 
-    mLine = new D3DLine(*this);
+    mLine = new D3D9Line(*this);
     if( !mLine->init() ) return false;
 
     // success
@@ -60,7 +60,7 @@ bool GN::gfx::D3DRenderer::drawInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawQuit()
+void GN::gfx::D3D9Renderer::drawQuit()
 {
     GN_GUARD;
 
@@ -78,7 +78,7 @@ void GN::gfx::D3DRenderer::drawQuit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::drawBegin()
+bool GN::gfx::D3D9Renderer::drawBegin()
 {
     GN_GUARD_SLOW;
 
@@ -105,7 +105,7 @@ bool GN::gfx::D3DRenderer::drawBegin()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawEnd()
+void GN::gfx::D3D9Renderer::drawEnd()
 {
     GN_GUARD_SLOW;
 
@@ -120,7 +120,7 @@ void GN::gfx::D3DRenderer::drawEnd()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawFinish()
+void GN::gfx::D3D9Renderer::drawFinish()
 {
     GN_GUARD_SLOW;
 
@@ -135,7 +135,7 @@ void GN::gfx::D3DRenderer::drawFinish()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::clearScreen(
+void GN::gfx::D3D9Renderer::clearScreen(
     const GN::Vector4f & c, float z, uint32_t s, BitField flags )
 {
     GN_GUARD_SLOW;
@@ -154,7 +154,7 @@ void GN::gfx::D3DRenderer::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawIndexed(
+void GN::gfx::D3D9Renderer::drawIndexed(
     PrimitiveType prim,
     size_t        numPrims,
     size_t        startVtx,
@@ -192,7 +192,7 @@ void GN::gfx::D3DRenderer::drawIndexed(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::draw(
+void GN::gfx::D3D9Renderer::draw(
     PrimitiveType prim, size_t numPrims, size_t startVtx )
 {
     GN_GUARD_SLOW;
@@ -222,7 +222,7 @@ void GN::gfx::D3DRenderer::draw(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawIndexedUp(
+void GN::gfx::D3D9Renderer::drawIndexedUp(
     PrimitiveType    prim,
     size_t           numPrims,
     size_t           numVertices,
@@ -268,7 +268,7 @@ void GN::gfx::D3DRenderer::drawIndexedUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawUp(
+void GN::gfx::D3D9Renderer::drawUp(
     PrimitiveType prim,
     size_t        numPrims,
     const void *  vertexData,
@@ -305,7 +305,7 @@ void GN::gfx::D3DRenderer::drawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawQuads(
+void GN::gfx::D3D9Renderer::drawQuads(
     BitField options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
@@ -313,7 +313,7 @@ void GN::gfx::D3DRenderer::drawQuads(
     size_t count )
 {
     GN_GUARD_SLOW;
-    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawQuads" );
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3D9Renderer::drawQuads" );
     GN_ASSERT( mDrawBegan && mQuad );
     mQuad->drawQuads(
         options,
@@ -328,7 +328,7 @@ void GN::gfx::D3DRenderer::drawQuads(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawLines(
+void GN::gfx::D3D9Renderer::drawLines(
     BitField options,
     const void * positions,
     size_t stride,
@@ -339,7 +339,7 @@ void GN::gfx::D3DRenderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
-    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3DRenderer::drawLines" );
+    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3D9Renderer::drawLines" );
     GN_ASSERT( mDrawBegan && mLine );
     mLine->drawLines(
         options,
@@ -353,7 +353,7 @@ void GN::gfx::D3DRenderer::drawLines(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DRenderer::drawDebugTextW(
+void GN::gfx::D3D9Renderer::drawDebugTextW(
     const wchar_t * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;
@@ -371,7 +371,7 @@ void GN::gfx::D3DRenderer::drawDebugTextW(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DRenderer::handleDeviceLost()
+bool GN::gfx::D3D9Renderer::handleDeviceLost()
 {
 #if GN_XENON
     // There's no device lost on Xenon.

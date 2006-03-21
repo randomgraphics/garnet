@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dShader.h"
-#include "d3dRenderer.h"
+#include "d3d9Shader.h"
+#include "d3d9Renderer.h"
 #include "garnet/GNd3d.h"
 
 // *****************************************************************************
@@ -10,12 +10,12 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DPxlShaderAsm::init( const StrA & code )
+bool GN::gfx::D3D9PxlShaderAsm::init( const StrA & code )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3DPxlShaderAsm, () );
+    GN_STDCLASS_INIT( D3D9PxlShaderAsm, () );
 
     mCode = code;
 
@@ -30,7 +30,7 @@ bool GN::gfx::D3DPxlShaderAsm::init( const StrA & code )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DPxlShaderAsm::quit()
+void GN::gfx::D3D9PxlShaderAsm::quit()
 {
     GN_GUARD;
 
@@ -44,13 +44,13 @@ void GN::gfx::D3DPxlShaderAsm::quit()
 }
 
 // *****************************************************************************
-// from D3DResource
+// from D3D9Resource
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DPxlShaderAsm::deviceCreate()
+bool GN::gfx::D3D9PxlShaderAsm::deviceCreate()
 {
     GN_GUARD;
 
@@ -80,7 +80,7 @@ bool GN::gfx::D3DPxlShaderAsm::deviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DPxlShaderAsm::deviceDestroy()
+void GN::gfx::D3D9PxlShaderAsm::deviceDestroy()
 {
     GN_GUARD;
 
@@ -93,13 +93,13 @@ void GN::gfx::D3DPxlShaderAsm::deviceDestroy()
 
 
 // *****************************************************************************
-// from D3DBasicShader
+// from D3D9BasicShader
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DPxlShaderAsm::apply() const
+void GN::gfx::D3D9PxlShaderAsm::apply() const
 {
     GN_GUARD_SLOW;
 
@@ -124,7 +124,7 @@ void GN::gfx::D3DPxlShaderAsm::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DPxlShaderAsm::applyDirtyUniforms() const
+void GN::gfx::D3D9PxlShaderAsm::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
 
@@ -150,7 +150,7 @@ void GN::gfx::D3DPxlShaderAsm::applyDirtyUniforms() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DPxlShaderAsm::queryDeviceUniform( const char * name, HandleType & userData ) const
+bool GN::gfx::D3D9PxlShaderAsm::queryDeviceUniform( const char * name, HandleType & userData ) const
 {
     GN_GUARD;
 
@@ -220,7 +220,7 @@ bool GN::gfx::D3DPxlShaderAsm::queryDeviceUniform( const char * name, HandleType
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DPxlShaderAsm::analyzeUniforms( const DWORD * func )
+bool GN::gfx::D3D9PxlShaderAsm::analyzeUniforms( const DWORD * func )
 {
     GN_GUARD;
 
@@ -263,7 +263,7 @@ bool GN::gfx::D3DPxlShaderAsm::analyzeUniforms( const DWORD * func )
 //
 // --------------------------------------------------------------------------------------
 GN_INLINE void
-GN::gfx::D3DPxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u ) const
+GN::gfx::D3D9PxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & u ) const
 {
     GN_GUARD_SLOW;
 

@@ -1,19 +1,19 @@
-#ifndef __GN_GFXD3D_D3DSHADER_H__
-#define __GN_GFXD3D_D3DSHADER_H__
+#ifndef __GN_GFXD3D9_D3D9SHADER_H__
+#define __GN_GFXD3D9_D3D9SHADER_H__
 // *****************************************************************************
-//! \file    d3d/d3dShader.h
+//! \file    d3d9/d3d9Shader.h
 //! \brief   D3D shader classes
 //! \author  chenlee (2005.11.26)
 // *****************************************************************************
 
-#include "d3dResource.h"
+#include "d3d9Resource.h"
 
 namespace GN { namespace gfx
 {
     //!
-    //! Basic D3D shader class
+    //! Basic D3D9 shader class
     //!
-    struct D3DBasicShader : public Shader
+    struct D3D9BasicShader : public Shader
     {
         //!
         //! Apply shader as well as shader constants to D3D device
@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         //!
         //! protected ctor
         //!
-        D3DBasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
+        D3D9BasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
     };
 
     // *************************************************************************
@@ -38,9 +38,9 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     //!
-    //! Basic D3D asm shader class
+    //! Basic D3D9 asm shader class
     //!
-    struct D3DShaderAsm : public D3DBasicShader
+    struct D3D9ShaderAsm : public D3D9BasicShader
     {
         enum
         {
@@ -71,15 +71,15 @@ namespace GN { namespace gfx
         //!
         //! protected ctor
         //!
-        D3DShaderAsm( ShaderType type) : D3DBasicShader(type,LANG_D3D_ASM) {}
+        D3D9ShaderAsm( ShaderType type) : D3D9BasicShader(type,LANG_D3D_ASM) {}
     };
 
     //!
-    //! D3D asm vertex shader class
+    //! D3D9 asm vertex shader class
     //!
-    class D3DVtxShaderAsm : public D3DShaderAsm, public D3DResource, public StdClass
+    class D3D9VtxShaderAsm : public D3D9ShaderAsm, public D3D9Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3DVtxShaderAsm, StdClass );
+         GN_DECLARE_STDCLASS( D3D9VtxShaderAsm, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -87,11 +87,11 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3DVtxShaderAsm( D3DRenderer & r )
-            : D3DShaderAsm(VERTEX_SHADER)
-            , D3DResource(r)
+        D3D9VtxShaderAsm( D3D9Renderer & r )
+            : D3D9ShaderAsm(VERTEX_SHADER)
+            , D3D9Resource(r)
         { clear(); }
-        virtual ~D3DVtxShaderAsm() { quit(); }
+        virtual ~D3D9VtxShaderAsm() { quit(); }
         //@}
 
         // ********************************
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
     public:
 
@@ -118,7 +118,7 @@ namespace GN { namespace gfx
         void deviceDestroy();
 
         // ********************************
-        // from D3DBasicShader
+        // from D3D9BasicShader
         // ********************************
     public:
 
@@ -150,11 +150,11 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! D3D asm pixel shader class
+    //! D3D9 asm pixel shader class
     //!
-    class D3DPxlShaderAsm : public D3DShaderAsm, public D3DResource, public StdClass
+    class D3D9PxlShaderAsm : public D3D9ShaderAsm, public D3D9Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3DPxlShaderAsm, StdClass );
+         GN_DECLARE_STDCLASS( D3D9PxlShaderAsm, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -162,11 +162,11 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3DPxlShaderAsm( D3DRenderer & r )
-            : D3DShaderAsm(PIXEL_SHADER)
-            , D3DResource(r)
+        D3D9PxlShaderAsm( D3D9Renderer & r )
+            : D3D9ShaderAsm(PIXEL_SHADER)
+            , D3D9Resource(r)
         { clear(); }
-        virtual ~D3DPxlShaderAsm() { quit(); }
+        virtual ~D3D9PxlShaderAsm() { quit(); }
         //@}
 
         // ********************************
@@ -183,7 +183,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
     public:
 
@@ -193,7 +193,7 @@ namespace GN { namespace gfx
         void deviceDestroy();
 
         // ********************************
-        // from D3DBasicShader
+        // from D3D9BasicShader
         // ********************************
     public:
 
@@ -229,9 +229,9 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     //!
-    //! Basic D3D HLSL shader class
+    //! Basic D3D9 HLSL shader class
     //!
-    struct D3DShaderHlsl : public D3DBasicShader
+    struct D3D9ShaderHlsl : public D3D9BasicShader
     {
 
     protected:
@@ -239,7 +239,7 @@ namespace GN { namespace gfx
         //!
         //! protected ctor
         //!
-        D3DShaderHlsl( ShaderType type) : D3DBasicShader(type,LANG_D3D_ASM) {}
+        D3D9ShaderHlsl( ShaderType type) : D3D9BasicShader(type,LANG_D3D_ASM) {}
 
         //!
         //! apply uniform to D3D device
@@ -290,11 +290,11 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! D3D HLSL vertex shader class
+    //! D3D9 HLSL vertex shader class
     //!
-    class D3DVtxShaderHlsl : public D3DShaderHlsl, public D3DResource, public StdClass
+    class D3D9VtxShaderHlsl : public D3D9ShaderHlsl, public D3D9Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3DVtxShaderHlsl, StdClass );
+         GN_DECLARE_STDCLASS( D3D9VtxShaderHlsl, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -302,11 +302,11 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3DVtxShaderHlsl( D3DRenderer & r )
-            : D3DShaderHlsl(VERTEX_SHADER)
-            , D3DResource(r)
+        D3D9VtxShaderHlsl( D3D9Renderer & r )
+            : D3D9ShaderHlsl(VERTEX_SHADER)
+            , D3D9Resource(r)
         { clear(); }
-        virtual ~D3DVtxShaderHlsl() { quit(); }
+        virtual ~D3D9VtxShaderHlsl() { quit(); }
         //@}
 
         // ********************************
@@ -323,7 +323,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
     public:
         bool deviceCreate();
@@ -332,7 +332,7 @@ namespace GN { namespace gfx
         void deviceDestroy();
 
         // ********************************
-        // from D3DBasicShader
+        // from D3D9BasicShader
         // ********************************
     public:
 
@@ -362,11 +362,11 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! D3D HLSL pixel shader class
+    //! D3D9 HLSL pixel shader class
     //!
-    class D3DPxlShaderHlsl : public D3DShaderHlsl, public D3DResource, public StdClass
+    class D3D9PxlShaderHlsl : public D3D9ShaderHlsl, public D3D9Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3DPxlShaderHlsl, StdClass );
+         GN_DECLARE_STDCLASS( D3D9PxlShaderHlsl, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -374,11 +374,11 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3DPxlShaderHlsl( D3DRenderer & r )
-            : D3DShaderHlsl(PIXEL_SHADER)
-            , D3DResource(r)
+        D3D9PxlShaderHlsl( D3D9Renderer & r )
+            : D3D9ShaderHlsl(PIXEL_SHADER)
+            , D3D9Resource(r)
         { clear(); }
-        virtual ~D3DPxlShaderHlsl() { quit(); }
+        virtual ~D3D9PxlShaderHlsl() { quit(); }
         //@}
 
         // ********************************
@@ -395,7 +395,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
     public:
         bool deviceCreate();
@@ -404,7 +404,7 @@ namespace GN { namespace gfx
         void deviceDestroy();
 
         // ********************************
-        // from D3DBasicShader
+        // from D3D9BasicShader
         // ********************************
     public:
 
@@ -435,6 +435,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of d3dShader.h
+//                           End of d3d9Shader.h
 // *****************************************************************************
-#endif // __GN_GFXD3D_D3DSHADER_H__
+#endif // __GN_GFXD3D9_D3D9SHADER_H__

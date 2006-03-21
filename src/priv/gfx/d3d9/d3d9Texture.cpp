@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dRenderer.h"
-#include "d3dTexture.h"
+#include "d3d9Renderer.h"
+#include "d3d9Texture.h"
 #include "garnet/GNd3d.h"
 
 // *****************************************************************************
@@ -114,7 +114,7 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 //
 //
 // ----------------------------------------------------------------------------
-static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3DRenderer & r )
+static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
 {
     GN_GUARD;
 
@@ -196,12 +196,12 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::init( const TextureDesc & desc )
+bool GN::gfx::D3D9Texture::init( const TextureDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DTexture, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9Texture, () );
 
     // create device data
     if( !setDesc( desc ) ||
@@ -217,12 +217,12 @@ bool GN::gfx::D3DTexture::init( const TextureDesc & desc )
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::initFromFile( File & file )
+bool GN::gfx::D3D9Texture::initFromFile( File & file )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DTexture, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9Texture, () );
 
     GN_ASSERT( !mD3DTexture );
 
@@ -393,7 +393,7 @@ bool GN::gfx::D3DTexture::initFromFile( File & file )
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::quit()
+void GN::gfx::D3D9Texture::quit()
 {
     GN_GUARD;
 
@@ -415,7 +415,7 @@ void GN::gfx::D3DTexture::quit()
 //!       those in managed pool. Because backbuffer format might be changed.
 //!       And we have re-check the compability of texture format.
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::deviceRestore()
+bool GN::gfx::D3D9Texture::deviceRestore()
 {
     GN_GUARD;
 
@@ -514,7 +514,7 @@ bool GN::gfx::D3DTexture::deviceRestore()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::deviceDispose()
+void GN::gfx::D3D9Texture::deviceDispose()
 {
     GN_GUARD;
 
@@ -540,7 +540,7 @@ void GN::gfx::D3DTexture::deviceDispose()
 //
 //
 // ----------------------------------------------------------------------------
-GN::Vector3<uint32_t> GN::gfx::D3DTexture::getMipSize( size_t level ) const
+GN::Vector3<uint32_t> GN::gfx::D3D9Texture::getMipSize( size_t level ) const
 {
     GN_GUARD_SLOW;
 
@@ -588,7 +588,7 @@ GN::Vector3<uint32_t> GN::gfx::D3DTexture::getMipSize( size_t level ) const
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::setFilter( TexFilter min, TexFilter mag ) const
+void GN::gfx::D3D9Texture::setFilter( TexFilter min, TexFilter mag ) const
 {
     GN_ASSERT( selfOK() );
     sTexFilter2D3D( mD3DFilters[0], &mD3DFilters[2], min );
@@ -598,7 +598,7 @@ void GN::gfx::D3DTexture::setFilter( TexFilter min, TexFilter mag ) const
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
+void GN::gfx::D3D9Texture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 {
     mD3DWraps[0] = sTexWrap2D3D( s );
     mD3DWraps[1] = sTexWrap2D3D( t );
@@ -608,7 +608,7 @@ void GN::gfx::D3DTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3DTexture::lock(
+bool GN::gfx::D3D9Texture::lock(
     TexLockedResult & result,
     size_t face,
     size_t level,
@@ -620,7 +620,7 @@ bool GN::gfx::D3DTexture::lock(
     // call basic lock
     Boxi clippedArea;
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3DTexture::basicUnlock) );
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3D9Texture::basicUnlock) );
 
 #if GN_XENON
     // On Xenon, always lock target texture directly
@@ -729,7 +729,7 @@ bool GN::gfx::D3DTexture::lock(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::unlock()
+void GN::gfx::D3D9Texture::unlock()
 {
     GN_GUARD_SLOW;
 
@@ -779,7 +779,7 @@ void GN::gfx::D3DTexture::unlock()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3DTexture::updateMipmap()
+void GN::gfx::D3D9Texture::updateMipmap()
 {
     GN_GUARD;
 
@@ -802,7 +802,7 @@ void GN::gfx::D3DTexture::updateMipmap()
 //
 // ----------------------------------------------------------------------------
 LPDIRECT3DBASETEXTURE9
-GN::gfx::D3DTexture::newD3DTexture( TexType   type,
+GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
                                     size_t    width,
                                     size_t    height,
                                     size_t    depth,

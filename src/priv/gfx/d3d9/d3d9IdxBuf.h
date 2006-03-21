@@ -1,22 +1,22 @@
-#ifndef __GN_GFXD3D_D3DVTXBUF_H__
-#define __GN_GFXD3D_D3DVTXBUF_H__
+#ifndef __GN_GFXD3D9_D3D9IDXBUF_H__
+#define __GN_GFXD3D9_D3D9IDXBUF_H__
 // *****************************************************************************
-//! \file    d3d/d3dVtxBuf.h
-//! \brief   D3D vertex buffer class
-//! \author  chenlee (2005.11.20)
+//! \file    d3d9/d3d9IdxBuf.h
+//! \brief   D3D index buffer class
+//! \author  chenlee (2005.11.21)
 // *****************************************************************************
 
-#include "d3dResource.h"
+#include "d3d9Resource.h"
 #include "../common/basicBuffer.h"
 
 namespace GN { namespace gfx
 {
     //!
-    //! D3D vertex buffer class.
+    //! D3D index buffer class.
     //!
-    class D3DVtxBuf : public BasicVtxBuf, public D3DResource, public StdClass
+    class D3D9IdxBuf : public BasicIdxBuf, public D3D9Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3DVtxBuf, StdClass );
+         GN_DECLARE_STDCLASS( D3D9IdxBuf, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -24,8 +24,8 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3DVtxBuf( D3DRenderer & r ) : D3DResource(r) { clear(); }
-        virtual ~D3DVtxBuf() { quit(); }
+        D3D9IdxBuf( D3D9Renderer & r ) : D3D9Resource(r) { clear(); }
+        virtual ~D3D9IdxBuf() { quit(); }
         //@}
 
         // ********************************
@@ -34,30 +34,30 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, bool dynamic, bool hasSysCopy, const VtxBufLoader & loader );
+        bool init( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {
             mSysCopy.clear();
-            mD3DVb = 0;
+            mD3DIb = 0;
         }
         //@}
 
         // ********************************
-        // from VtxBuf
+        // from IdxBuf
         // ********************************
     public:
 
-        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
+        virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag );
         virtual void unlock();
 
         // ********************************
-        // from D3DResource
+        // from D3D9Resource
         // ********************************
-
     public:
+
         bool deviceCreate() { return true; }
         bool deviceRestore();
         void deviceDispose();
@@ -69,12 +69,12 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! Return pointer of D3D vertex buffer
+        //! Return pointer of D3D index buffer
         //!
-        LPDIRECT3DVERTEXBUFFER9 getD3DVb() const
+        LPDIRECT3DINDEXBUFFER9 getD3DIb() const
         {
-            GN_ASSERT( mD3DVb );
-            return mD3DVb;
+            GN_ASSERT( mD3DIb );
+            return mD3DIb;
         }
 
         // ********************************
@@ -82,15 +82,16 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        std::vector<uint8_t>    mSysCopy;
-        LPDIRECT3DVERTEXBUFFER9 mD3DVb;
-        size_t                  mLockOffset;
-        size_t                  mLockBytes;
-        LockFlag                mLockFlag;
+        std::vector<uint16_t>  mSysCopy;
+        LPDIRECT3DINDEXBUFFER9 mD3DIb;
+
+        size_t   mLockStartIdx;
+        size_t   mLockNumIdx;
+        LockFlag mLockFlag;
     };
 }}
 
 // *****************************************************************************
-//                           End of d3dVtxBuf.h
+//                           End of d3d9IdxBuf.h
 // *****************************************************************************
-#endif // __GN_GFXD3D_D3DVTXBUF_H__
+#endif // __GN_GFXD3D9_D3D9IDXBUF_H__

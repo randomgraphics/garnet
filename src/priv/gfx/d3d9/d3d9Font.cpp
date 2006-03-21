@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "d3dFont.h"
-#include "d3dRenderer.h"
+#include "d3d9Font.h"
+#include "d3d9Renderer.h"
 
 #if !GN_XENON
 
@@ -20,12 +20,12 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DFont::init()
+bool GN::gfx::D3D9Font::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3DFont, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9Font, () );
 
     // do nothing here.
 
@@ -38,7 +38,7 @@ bool GN::gfx::D3DFont::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DFont::quit()
+void GN::gfx::D3D9Font::quit()
 {
     GN_GUARD;
 
@@ -58,7 +58,7 @@ void GN::gfx::D3DFont::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3DFont::drawTextW( const wchar_t * text, int x, int y, const Vector4f & color )
+void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;
 
@@ -97,7 +97,7 @@ void GN::gfx::D3DFont::drawTextW( const wchar_t * text, int x, int y, const Vect
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3DFont::createFont()
+bool GN::gfx::D3D9Font::createFont()
 {
     GN_GUARD;
 
