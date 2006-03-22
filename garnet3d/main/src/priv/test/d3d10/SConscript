@@ -1,7 +1,7 @@
 Import('env GN_conf')
 
-if GN_conf['has_d3d9']:
+if GN_conf['has_d3d10']:
     env.GN_build_program(
-        'GNtestD3D9',
+        'GNtestD3D10',
         env.GN_glob('*.cpp'),
         'pch.h', 'pch.cpp' )

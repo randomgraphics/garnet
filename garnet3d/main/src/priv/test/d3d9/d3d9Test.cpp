@@ -19,6 +19,7 @@ public:
 
     void onDetermineInitParam( InitParam & ip )
     {
+        ip.rapi = API_D3D9;
         ip.ro.pure = true;
     }
 

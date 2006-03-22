@@ -234,8 +234,7 @@ bool GN::gfx::D3D10Renderer::doOptionChange( RendererOptions ro, OptionChangingT
     }
     else if(
         oldDesc != newDesc ||
-        oldOptions.fullscreen != ro.fullscreen ||
-        oldOptions.vsync != ro.vsync )
+        oldOptions.fullscreen != ro.fullscreen )
     {
         GN_UNIMPL_WARNING();
         return false;
