@@ -12,11 +12,6 @@ import copy, os, os.path
 #SourceSignatures( "timestamp" )
 #TargetSignatures( "content" )
 
-# 记录当前的OS
-conf = {
-    'platform' : Environment()['PLATFORM'],
-}
-
 # 读取环境变量
 def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
@@ -24,14 +19,28 @@ def getenv( name, defval = None ):
 
 import SCons.Tool.xenon
 
-# 定义缺省的选项
+# 记录当前的OS
+conf = {
+    'platform' : Environment()['PLATFORM'],
+    'mswin'    : None,
+}
+
+# 辨别Windows的类型
 if 'win32' == conf['platform']:
     if 'AMD64' == getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == getenv('PROCESSOR_ARCHITEW6432'):
-        default_compiler = 'vc80-x64'
+        conf['mswin'] = 'pcx64'
     else:
-        default_compiler = 'vc80'
+        conf['mswin'] = 'pcx86'
+
+# 定义缺省的选项
+if 'win32' == conf['platform']:
     all_compilers = 'vc71 vc80 vc80-x64 icl icl-em64t'
-    if SCons.Tool.xenon.exists( Environment() ) : all_compilers += ' xenon'
+    if 'pcx64' == conf['mswin']:
+        default_compiler = 'vc80-x64'
+    elif 'pcx86' == conf['mswin']:
+        default_compiler = 'vc80'
+    elif SCons.Tool.xenon.exists( Environment() ):
+        all_compilers += ' xenon'
 else:
     default_compiler = 'gcc'
     all_compilers = 'gcc icl'
