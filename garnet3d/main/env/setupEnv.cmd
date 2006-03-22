@@ -8,9 +8,9 @@ REM ==========
 REM setup path
 REM ==========
 if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
-    set mypath=%GARNET_ROOT%\env\bin\x64;%GARNET_ROOT%\env\bin\win32;%GARNET_ROOT%\env\bin\common
+    set mypath=%GARNET_ROOT%\env\bin\mswin\x64;%GARNET_ROOT%\env\bin\mswin\x86
 ) else (
-    set mypath=%GARNET_ROOT%\env\bin\win32;%GARNET_ROOT%\env\bin\common
+    set mypath=%GARNET_ROOT%\env\bin\mswin\x86
 )
 set PATH=%mypath%;%PATH%
 set mypath=
