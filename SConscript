@@ -559,9 +559,11 @@ GN_conf['variant_dir'] = variant_dir
 
 env = default_env()
 
-env.Prepend(
-    CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':variant_dir})
-    )
+env.Prepend( CPPPATH = Split('%(root)s/extern/inc %(root)s/priv/inc'%{'root':variant_dir}) )
+if 'pcx64' == GN_conf['mswin']:
+    env.Prepend( LIBPATH = Split('%(root)s/extern/lib/x64'%{'root':variant_dir}) )
+elif 'pcx86' == GN_conf['mswin']:
+    env.Prepend( LIBPATH = Split('%(root)s/extern/lib/x86'%{'root':variant_dir}) )
 
 if float(GN_conf['enable_cache']): env.CacheDir( cache_dir )
 
@@ -592,13 +594,24 @@ SConscript( 'src/SConscript', build_dir=variant_dir, duplicate=0 )
 #
 ################################################################################
 def doInstall( alias, dir, names ):
+    target_dir = os.path.join( dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['variant'] )
     for name in names:
         if name in GN_targets and GN_targets[name]:
-            item = env.Install(
-                os.path.join( dir, GN_conf['platform'], GN_conf['compiler'], GN_conf['variant'] ),
-                GN_targets[name] )
+            item = env.Install( target_dir, GN_targets[name] )
             GN_targets[name] = item
             env.Alias( alias, item )
+        elif name in externBins:
+            item = env.Install( target_dir, name )
+            env.Alias( alias, item )
+
+externBins = []
+externLibs = []
+if 'pcx64' == GN_conf['mswin']:
+    externBins = env.GN_glob( '#src/extern/bin/mswin/x64/*.*' )
+    externLibs = env.GN_glob( '#src/extern/lib/mswin/x64/*.*' )
+elif 'pcx86' == GN_conf['mswin']:
+    externBins = env.GN_glob( '#src/extern/bin/mswin/x86/*.*' )
+    externLibs = env.GN_glob( '#src/extern/lib/mswin/x86/*.*' )
 
 sharedModules = Split( 'GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL' )
 sharedBins = ['%sBin'%x for x in sharedModules]
@@ -613,21 +626,21 @@ programs = tests + samples + tools
 doInstall(
     'samples',
     os.path.join('bin','sample'),
-    sharedBins + samples )
+    externBins + sharedBins + samples )
 
 # populate test directory
 doInstall(
     'tests',
     os.path.join('bin','test'),
-    sharedBins + tests )
+    externBins + sharedBins + tests )
 
 # populate tool directory
 doInstall(
     'tools',
     os.path.join('bin','tool'),
-    sharedBins + tools )
+    externBins + sharedBins + tools )
 
-# make executable depends on all shared libraries.
+# make executable depends on all shared libraries
 for y in programs:
     if y in GN_targets:
         for x in sharedBins:
@@ -635,11 +648,14 @@ for y in programs:
     else:
         env.GN_warn( "Target '%s' is not avaliable!"%y )
 
-# Make binaries depend on their by-products, such as manifest and PDB, to make sure
-# those files are copied to binary directory, before execution of the binaries.
+# Make binaries depend on their by-products ( such as manifest and PDB ) and extern
+# binaries, to make sure those files are copied to binary directory, before execution
+# of the binaries.
 for target in (sharedBins+programs):
     if target in GN_targets:
         for x in GN_targets[target][1:]:
+            env.Depends( GN_targets[target][0], x )
+        for x in externBins:
             env.Depends( GN_targets[target][0], x )
     else:
         env.GN_warn( "Target '%s' is not avaliable!"%target )
