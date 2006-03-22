@@ -114,6 +114,7 @@ namespace GN { namespace gfx
             mAdapter = 0;
             mDevice = 0;
             mSwapChain = 0;
+            mRTView = 0;
         }
 
         bool dispDeviceCreate();
@@ -124,6 +125,7 @@ namespace GN { namespace gfx
         IDXGIAdapter   * mAdapter;
         ID3D10Device   * mDevice;
         IDXGISwapChain * mSwapChain;
+        ID3D10RenderTargetView * mRTView;
 
         //@}
 
@@ -227,10 +229,10 @@ namespace GN { namespace gfx
         //@{
 
     public: // from Renderer
-        virtual bool drawBegin() { return true; }
-        virtual void drawEnd() {}
+        virtual bool drawBegin();
+        virtual void drawEnd();
         virtual void drawFinish() {}
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags ) {}
+        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrims,
                                   size_t        startVtx,
