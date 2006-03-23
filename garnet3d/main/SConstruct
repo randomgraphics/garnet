@@ -410,12 +410,6 @@ def GN_newSourceCluster( env, sources, pchHeader = None, pchSource = None ):
 
 # ´´½¨ Target
 def GN_newTarget( env, type, name, sources = None, pdb = None, dependencies = None ):
-
-    # check for redundant target
-    if ALL_targets[CURRENT_compiler][CURRENT_variant].has_key( name ) :
-        env.GN_info( "Ingore redundant target: %s"%(name) )
-        return
-
     # create new target instance
     t = Target()
     if UTIL_staticBuild( CURRENT_variant ) and 'shlib' == type: type = 'stlib'
@@ -423,8 +417,8 @@ def GN_newTarget( env, type, name, sources = None, pdb = None, dependencies = No
     t.path = Dir('.')
     t.sources = sources
     t.dependencies = dependencies
-    if pdb  : t.pdb = File(pdb)
-    else    : t.pdb = File( "%s.pdb"%(name) )
+    if pdb : t.pdb = File(pdb)
+    else   : t.pdb = File("%s.pdb"%(name))
 
     # insert to global target list
     ALL_targets[CURRENT_compiler][CURRENT_variant][name] = t
@@ -762,7 +756,19 @@ def BUILD_sharedLib( name, target ):
     libName = '%s%s%s'%(env['SHLIBPREFIX'],name,env['SHLIBSUFFIX'])
     shlib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
     BUILD_handleManifest( env, shlib )
-    target.targets = env.Install( BUILD_binDir, env.Install( BUILD_libDir, shlib ) )
+
+    def extname( path ):
+        p,e = os.path.splitext( str(path) )
+        return e
+
+    target.targets = []
+    for x in shlib:
+        e = extname( x )
+        if '.lib' == e or '.exp' == e  or '.a' == e :
+            d = BUILD_libDir
+        else:
+            d = BUILD_binDir
+        target.targets.append( env.Install( d, x )[0] )
 
     Alias( name, target.targets )
     Default( target.targets )
@@ -794,26 +800,50 @@ def BUILD_program( name, target ):
 # build all targets
 #
 BUILD_env = Environment()
-for compiler, c in ALL_targets.iteritems() :
+for compiler, variants in ALL_targets.iteritems() :
     BUILD_compiler = compiler
-    for variant, v in c.iteritems():
+    for variant, targets in variants.iteritems():
 
         BUILD_variant = variant
         BUILD_bldDir = UTIL_buildDir( compiler, variant )
         BUILD_libDir = os.path.join( BUILD_bldDir, 'lib' )
         BUILD_binDir = os.path.join( BUILD_bldDir, 'bin' )
 
-        for name, x in v.iteritems():
-
+        # do build
+        for name, x in targets.iteritems():
             if 'stlib' == x.type   : BUILD_staticLib( name, x )
             elif 'shlib' == x.type : BUILD_sharedLib( name, x )
             elif 'prog' == x.type  : BUILD_program( name, x )
+            # TODO: special case for build documents
             else: BUILD_env.GN_error( 'Unknown target type for target %s: %s'%(name,x.type) )
-
             BUILD_env.GN_trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
-# TODO: special case for build documents
+        # post build actions
+        stlibs = Split('GNextern GNbase GNcore')
+        shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
+        tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNut')
+        samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
+        tools = Split('GNtoolOglInfo')
+        progs = tests + samples + tools
+
+        def getTargets( n ):
+            if n in targets : return targets[n].targets
+            else : return []
+
+        # Make binaries depend on their by-products, such as manifest and PDB, to make sure
+        # those files are copied to binary directory, before execution of the binaries.
+        for n in ( shlibs + progs ):
+            t = getTargets(n)
+            for x in t[1:] :
+                BUILD_env.Depends( t[0], x )
+
+        # Make executables depend on shared libraries.
+        for pn in progs:
+            for pt in getTargets(pn):
+                for sn in shlibs:
+                    for st in getTargets(sn):
+                        BUILD_env.Depends( pt, st )
 
 ################################################################################
 #
