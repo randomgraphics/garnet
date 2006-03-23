@@ -1,6 +1,3 @@
-Import('env')
-
-env.GN_build_program(
-    'GNtestFt2',
-    env.GN_glob('*.cpp'),
-    'pch.h', 'pch.cpp' )
+env = Environment()
+cluster = env.GN_newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
+env.GN_newTarget( 'prog', 'GNtestFt2', [cluster] )

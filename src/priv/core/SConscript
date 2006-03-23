@@ -1,10 +1,15 @@
-Import( 'env' )
+sources = [
+    'core.cpp',
+    'coreEffectDict.cpp',
+    'coreSearchResource.cpp',
+    'coreShaderDict.cpp',
+    'coreTextureDict.cpp',
+]
 
-env = env.Copy()
-env.Append( CPPDEFINES = ['_GN_CORE'] )
+env = Environment()
 
-core = env.GN_build_shared_library(
-    'GNcore',
-    env.GN_glob('*.cpp'),
-    'pch.h',
-    'pch.cpp' )
+cluster = env.GN_newSourceCluster( sources )
+
+cluster.addCompileFlags( CPPDEFINES = ['_GN_CORE'] )
+
+env.GN_newTarget( 'shlib', 'GNcore', [cluster] )

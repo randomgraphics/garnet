@@ -1,11 +1,8 @@
-Import( 'env GN_conf' )
+Import( 'conf' )
 
-import sys, glob
+import sys
 
-# initialize local environment
-env = env.Copy()
-env.Append( CPPPATH = ['.'] )
-if GN_conf['has_boost']: env.Append( CPPDEFINES = ['HAS_BOOST'] )
+env = Environment()
 
 # build case list
 cases = []
@@ -23,4 +20,7 @@ cxxtest = env.Command(
 env.Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
-env.GN_build_program( 'GNut', ['testCommon.cpp',cxxtest] )
+cluster = env.GN_newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
+cluster.addCompileFlags( CPPPATH = ['.'] )
+if conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
+env.GN_newTarget( 'prog', 'GNut', [cluster] )

@@ -1,5 +1,3 @@
-Import('env')
-env.GN_build_program(
-    'GNsampleRenderToTexture',
-    env.GN_glob('*.cpp'),
-    'pch.h', 'pch.cpp' )
+env = Environment()
+cluster = env.GN_newSourceCluster( ['renderToTexture.cpp'], 'pch.h', 'pch.cpp' )
+env.GN_newTarget( 'prog', 'GNsampleRenderToTexture', [cluster] )

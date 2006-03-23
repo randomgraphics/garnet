@@ -1,8 +1,23 @@
-Import( 'env' )
-
-env.GN_build_shared_library(
-    'GNgfxD3D9',
-    env.GN_glob('*.cpp'),
-    'pch.h',
-    'pch.cpp',
-    libs = Split('GNgfxCommon') )
+sources = [
+    'd3d9CapsMgr.cpp',
+    'd3d9ContextMgr.cpp',
+    'd3d9DispMgr.cpp',
+    'd3d9DrawMgr.cpp',
+    'd3d9Font.cpp',
+    'd3d9IdxBuf.cpp',
+    'd3d9Line.cpp',
+    'd3d9PxlShaderAsm.cpp',
+    'd3d9PxlShaderHlsl.cpp',
+    'd3d9Quad.cpp',
+    'd3d9Renderer.cpp',
+    'd3d9Resource.cpp',
+    'd3d9ResourceManager.cpp',
+    'd3d9Texture.cpp',
+    'd3d9VertexDecl.cpp',
+    'd3d9VtxBuf.cpp',
+    'd3d9VtxShaderAsm.cpp',
+    'd3d9VtxShaderHlsl.cpp',
+]
+env = Environment()
+cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+env.GN_newTarget( 'shlib', 'GNgfxD3D9', [cluster], dependencies = ['GNgfxCommon'] )
