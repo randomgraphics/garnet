@@ -1,7 +1,3 @@
-Import('env GN_conf')
-
-if GN_conf['has_d3d9']:
-    env.GN_build_program(
-        'GNtestD3D9',
-        env.GN_glob('*.cpp'),
-        'pch.h', 'pch.cpp' )
+env = Environment()
+cluster = env.GN_newSourceCluster( ['d3d9Test.cpp'], 'pch.h', 'pch.cpp' )
+env.GN_newTarget( 'prog', 'GNtestD3D9', [cluster] )

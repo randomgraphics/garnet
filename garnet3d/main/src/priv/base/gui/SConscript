@@ -1,13 +1,6 @@
-Import( 'env GN_conf' )
-
-env = env.Copy()
-
-if GN_conf['has_cegui'] : env.Append( CPPDEFINES=['HAS_CEGUI'] )
-
-objs = env.GN_build_static_objects(
-    env.GN_glob('*.cpp'),
-    'pch.h',
-    'pch.cpp',
-    'GNbase.pdb' )
-
-Return( 'objs' )
+sources = [
+    'ceguiRenderer.cpp',
+    'ceguiTexture.cpp',
+]
+r = Environment().GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+Return( 'r' )

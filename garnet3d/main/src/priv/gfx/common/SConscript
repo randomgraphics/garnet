@@ -1,6 +1,12 @@
-Import('env')
-
-env.GN_build_static_library(
-    'GNgfxCommon',
-    env.GN_glob('*.cpp'),
-    'pch.h', 'pch.cpp' )
+sources = [
+    'basicContextMgr.cpp',
+    'basicDispMgr.cpp',
+    'basicDrawMgr.cpp',
+    'basicRenderer.cpp',
+    'basicResourceManager.cpp',
+    'renderWindowMsw.cpp',
+    'renderWindowX11.cpp',
+]
+env = Environment()
+cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+env.GN_newTarget( 'stlib', 'GNgfxCommon', [cluster] )

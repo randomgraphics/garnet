@@ -1,43 +1,47 @@
-Import( 'env GN_conf' )
+Import( 'conf' )
 
-# **********************
-# initialize environment
-# **********************
+env = Environment()
 
-env = env.Copy()
-if '/W4' in env['CCFLAGS']: env['CCFLAGS'].remove('/W4')
-if 'icl' == env['CC']:
+lib = env.GN_newTarget( 'stlib', 'GNextern', [] )
+
+# ******************
+# define build flags
+# ******************
+
+ccflags = []
+cppdefines = []
+
+if 'icl' == conf['compiler']:
     unimportant_warnings = [
         '1572', # floating-point comparison
         ]
-    env.Append( CCFLAGS = ['/W3'] + ['/Qwd%s'%w for w in unimportant_warnings] )
-elif 'cl' == env['CC']:
-    unimportant_warnings = []
-    if 'x64' == env.get('MSVS_PLATFORM'):
-        unimportant_warnings += [
-            '4334', # 32-bit shift convert to 64-bit
-            '4267', # conversion from 'size_t' to xxx, possible loss of data
-            '4244', # conversion from 'type1' to 'type2', possible loss of data
-            ]
-    env.Append(
-        CCFLAGS= ['/W3'] + ['/wd%s'%w for w in unimportant_warnings],
-        CPPDEFINES = Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE') )
+    ccflags += ['/W3'] + ['/Qwd%s'%w for w in unimportant_warnings]
+elif 'vc71' == conf['compiler']:
+    ccflags += ['/W3']
+elif 'vc80' == conf['compiler']:
+    ccflags += ['/W3']
+    cppdefines += Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE')
+elif 'vc80-x64' == conf['compiler']:
+    unimportant_warnings = [
+        '4334', # 32-bit shift convert to 64-bit
+        '4267', # conversion from 'size_t' to xxx, possible loss of data
+        '4244', # conversion from 'type1' to 'type2', possible loss of data
+        ]
+    ccflags += ['/W3'] + ['/wd%s'%w for w in unimportant_warnings]
+    cppdefines += Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE')
 
-# ******************
-# build jpeg library
-# ******************
+# **********************
+# define source clusters
+# **********************
+jpeg_cluster = env.GN_newSourceCluster( env.GN_glob( 'jpeg/*.c' ) )
+if 'gcc' == conf['compiler']: jpeg_cluster.extraFlags.ccflags = ['-Wno-main']
+jpeg_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
+lib.addCluster( jpeg_cluster )
 
-jpeg_env = env.Copy()
-jpeg_env.Append( CPPPATH = [Dir('jpeg').srcnode()] )
-if 'gcc' == env['CC']: jpeg_env.Append( CCFLAGS = ['-Wno-main'] )
-jpeg_objs = jpeg_env.GN_build_static_objects( env.GN_glob( 'jpeg/*.c' ), pdb = 'GNextern.pdb' )
-
-# ********************
-# build extern library
-# ********************
-
-srcs = []
-if 'xenon' != GN_conf['compiler']: srcs += env.GN_glob( 'glew/*.c' )
-srcs += env.GN_glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
-srcs += jpeg_objs
-env.GN_build_static_library( 'GNextern', srcs )
+common_sources = env.GN_glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
+if conf['has_ogl']: common_sources += env.GN_glob( 'glew/*.c' )
+common_cluster = env.GN_newSourceCluster( common_sources )
+common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
+lib.addCluster( common_cluster )

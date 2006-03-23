@@ -1,8 +1,25 @@
-Import( 'env' )
-
-env.GN_build_shared_library(
-    'GNgfxOGL',
-    env.GN_glob('*.cpp'),
-    'pch.h',
-    'pch.cpp',
-    libs = ['GNgfxCommon'] )
+sources = [
+    'oglBasicShaderARB.cpp',
+    'oglBasicShaderGLSL.cpp',
+    'oglCapsMgr.cpp',
+    'oglCharBitmap8x13.cpp',
+    'oglContextMgr.cpp',
+    'oglDispMgrMsw.cpp',
+    'oglDispMgrX11.cpp',
+    'oglDrawMgr.cpp',
+    'oglFont.cpp',
+    'oglIdxBuf.cpp',
+    'oglLine.cpp',
+    'oglProgramGLSL.cpp',
+    'oglQuad.cpp',
+    'oglRenderer.cpp',
+    'oglResource.cpp',
+    'oglResourceMgr.cpp',
+    'oglTexture.cpp',
+    'oglVtxBufNormal.cpp',
+    'oglVtxBufVBO.cpp',
+    'oglVtxFmt.cpp',
+]
+env = Environment()
+cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+env.GN_newTarget( 'shlib', 'GNgfxOGL', [cluster], dependencies = ['GNgfxCommon'] )
