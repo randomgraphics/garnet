@@ -1,3 +1,3 @@
-env = Environment()
-cluster = env.GN_newSourceCluster( ['d3d10Test.cpp'], 'pch.h', 'pch.cpp' )
-env.GN_newTarget( 'prog', 'GNtestD3D10', [cluster] )
+Import( 'GN' )
+cluster = GN.newSourceCluster( ['d3d10Test.cpp'], 'pch.h', 'pch.cpp' )
+GN.newTarget( 'prog', 'GNtestD3D10', [cluster] )

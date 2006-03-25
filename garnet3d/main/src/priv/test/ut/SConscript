@@ -1,26 +1,24 @@
-Import( 'conf' )
+Import( 'GN' )
 
 import sys
 
-env = Environment()
-
 # build case list
 cases = []
-cases += env.GN_glob( 'base/*.cpp' )
+cases += GN.glob( 'base/*.cpp' )
 #if 'win32' == env['PLATFORM']: cases += ['gfx/renderer/ogl.cpp']
 #if 'win32' == env['PLATFORM']: cases += ['gfx/renderer/d3d.cpp']
 
 # generate cxxtest glue file.
-cxxtest = env.Command(
+cxxtest = Command(
     'ut.cpp', cases,
     '%s %s --error-printer --include="garnet/GNbase.h" -o $TARGET ${SOURCES.abspath}'%(
         sys.executable,
         File('cxxtestgen.py').srcnode().path)
     )
-env.Depends( cxxtest, 'cxxtestgen.py' )
+Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
-cluster = env.GN_newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
+cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
 cluster.addCompileFlags( CPPPATH = ['.'] )
-if conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
-env.GN_newTarget( 'prog', 'GNut', [cluster] )
+if GN.conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
+GN.newTarget( 'prog', 'GNut', [cluster] )

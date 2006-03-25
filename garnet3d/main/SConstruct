@@ -13,8 +13,11 @@ def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
+# 用于config的环境变量
+CONF_env = Environment()
+
 # 记录当前的OS
-CONF_platform = Environment()['PLATFORM']
+CONF_platform = CONF_env['PLATFORM']
 
 # 辨别Windows的类型
 CONF_mswin = None
@@ -33,7 +36,7 @@ if 'win32' == CONF_platform:
         CONF_defaultCompiler = 'vc80-x64'
     elif 'pcx86' == GN_mswin:
         CONF_defaultCompiler = 'vc80'
-    elif SCons.Tool.xenon.exists( Environment() ):
+    elif SCons.Tool.xenon.exists( CONF_env ):
         CONF_allCompilers += ' xenon'
 else:
     CONF_defaultCompiler = 'gcc'
@@ -85,182 +88,173 @@ def UTIL_buildDir( compiler, variant ) : return os.path.join( UTIL_buildRoot(), 
 #
 # Create new build environment
 #
-___DEFAULT_envs = {}
-def UTIL_newDefaultEnv( compiler, variant ):
-    def createDefaultEnv( compiler, variant ):
-        # crete new enviroment instance
-        tools = ['default']
-        msvs_version = '7.1'
-        msvs_platform = 'x86'
-        icl_version = None
-        icl_abi = 'ia32'
-        if 'xenon' == compiler:
-            tools = ['xenon']
-        elif 'icl' == compiler :
-            tools += ['intelc']
-        elif 'icl-em64t' == compiler :
-            tools += ['intelc']
-            icl_abi = 'em64t'
-            msvs_version = '8.0'
-            msvs_platform = 'x64'
-        elif 'vc80' == compiler :
-            msvs_version = '8.0'
-        elif 'vc80-x64' == compiler :
-            msvs_version = '8.0'
-            msvs_platform = 'x64'
-        env = Environment(
-            tools = tools,
-            MSVS_VERSION = msvs_version,
-            MSVS_PLATFORM = msvs_platform,
-            ICL_VERSION = icl_version,
-            ICL_ABI = icl_abi )
+def UTIL_newEnv( compiler, variant ):
+    # crete new enviroment instance
+    tools = ['default']
+    msvs_version = '7.1'
+    msvs_platform = 'x86'
+    icl_version = None
+    icl_abi = 'ia32'
+    if 'xenon' == compiler:
+        tools = ['xenon']
+    elif 'icl' == compiler :
+        tools += ['intelc']
+    elif 'icl-em64t' == compiler :
+        tools += ['intelc']
+        icl_abi = 'em64t'
+        msvs_version = '8.0'
+        msvs_platform = 'x64'
+    elif 'vc80' == compiler :
+        msvs_version = '8.0'
+    elif 'vc80-x64' == compiler :
+        msvs_version = '8.0'
+        msvs_platform = 'x64'
+    env = Environment(
+        tools = tools,
+        MSVS_VERSION = msvs_version,
+        MSVS_PLATFORM = msvs_platform,
+        ICL_VERSION = icl_version,
+        ICL_ABI = icl_abi )
 
-        env.SConsignFile( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) )
+    env.SConsignFile( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) )
 
-        # setup builder for gcc precompiled header
-        if 'g++' == env['CXX']:
+    # setup builder for gcc precompiled header
+    if 'g++' == env['CXX']:
 
-            import SCons.Defaults
-            import SCons.Tool
+        import SCons.Defaults
+        import SCons.Tool
 
-            # attach gch builder
-            bld = Builder(
-                action = '$CXXCOM',
-                suffix = '.h.gch',
-                source_scanner = SCons.Tool.SourceFileScanner )
-            env.Append( BUILDERS={'PCH':bld} )
+        # attach gch builder
+        bld = Builder(
+            action = '$CXXCOM',
+            suffix = '.h.gch',
+            source_scanner = SCons.Tool.SourceFileScanner )
+        env.Append( BUILDERS={'PCH':bld} )
 
-            # Sets up the PCH dependencies for an object file
-            def pch_emitter( target, source, env, parent_emitter ):
-                parent_emitter( target, source, env )
-                if env.has_key('PCH') and env['PCH']:
-                    env.Depends(target, env['PCH'])
-                return (target, source)
-            def static_pch_emitter(target,source,env):
-                return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
-            def shared_pch_emitter(target,source,env):
-                return pch_emitter(target,source,env,SCons.Defaults.SharedObjectEmitter)
-            for suffix in Split('.c .C .cc .cxx .cpp .c++'):
-                env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
-                env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
+        # Sets up the PCH dependencies for an object file
+        def pch_emitter( target, source, env, parent_emitter ):
+            parent_emitter( target, source, env )
+            if env.has_key('PCH') and env['PCH']:
+                env.Depends(target, env['PCH'])
+            return (target, source)
+        def static_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.StaticObjectEmitter)
+        def shared_pch_emitter(target,source,env):
+            return pch_emitter(target,source,env,SCons.Defaults.SharedObjectEmitter)
+        for suffix in Split('.c .C .cc .cxx .cpp .c++'):
+            env['BUILDERS']['StaticObject'].add_emitter( suffix, static_pch_emitter );
+            env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
-        # 缺省编译选项
-        def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
-        cppdefines = generate_empty_options()
-        cpppath    = generate_empty_options()
-        libpath    = generate_empty_options()
-        libs       = generate_empty_options()
-        ccflags    = generate_empty_options()
-        cxxflags   = generate_empty_options()
-        linkflags  = generate_empty_options()
+    # 缺省编译选项
+    def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
+    cppdefines = generate_empty_options()
+    cpppath    = generate_empty_options()
+    libpath    = generate_empty_options()
+    libs       = generate_empty_options()
+    ccflags    = generate_empty_options()
+    cxxflags   = generate_empty_options()
+    linkflags  = generate_empty_options()
 
-        # define profile tag
-        if float(CONF_enableProfile): cppdefines['common'] = ['GN_ENABLE_PROFILE=1']
+    # define profile tag
+    if float(CONF_enableProfile): cppdefines['common'] = ['GN_ENABLE_PROFILE=1']
 
-        # 定制不同平台的编译选项
-        if 'xenon' == compiler:
-            libs['common'] += Split('xboxkrnl xbdm dxerr9')
-            libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
-            libs['strel'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-        elif 'win32' == env['PLATFORM']:
-            libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+    # 定制不同平台的编译选项
+    if 'xenon' == compiler:
+        libs['common'] += Split('xboxkrnl xbdm dxerr9')
+        libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
+        libs['strel'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+    elif 'win32' == env['PLATFORM']:
+        libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+    else:
+        cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
+        libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
+        libs['common'] += Split('GL GLU X11')
+
+    # 定制不同编译模式的编译选项
+    cppdefines['debug']   += ['GN_DEBUG=1']
+    cppdefines['release'] += ['NDEBUG']
+    cppdefines['stdbg']   += ['GN_STATIC=1', 'GN_DEBUG=1']
+    cppdefines['strel']   += ['GN_STATIC=1', 'NDEBUG']
+
+    # 定制不同编译器的编译选项
+    if 'cl' == env['CC']:
+        #
+        # To workaround an bug in scons 0.96.1, this variable has to be imported
+        # on AMD64 platform, to make msvs link.exe work.
+        #
+        env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
+
+        cppdefines['debug']   += Split('_DEBUG')
+        cppdefines['stdbg']   += Split('_DEBUG')
+
+        if float(env['MSVS_VERSION']) >= 8.0:
+            cxxflags['common']  += ['/EHa']
+            linkflags['common'] += Split( '/NODEFAULTLIB:libcp.lib' )
         else:
-            cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
-            libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
-            libs['common'] += Split('GL GLU X11')
+            cxxflags['common']  += ['/EHs']
 
-        # 定制不同编译模式的编译选项
-        cppdefines['debug']   += ['GN_DEBUG=1']
-        cppdefines['release'] += ['NDEBUG']
-        cppdefines['stdbg']   += ['GN_STATIC=1', 'GN_DEBUG=1']
-        cppdefines['strel']   += ['GN_STATIC=1', 'NDEBUG']
+        ccflags['common']  += Split('/W4 /WX')
+        ccflags['debug']   += Split('/MDd /GR')
+        ccflags['release'] += Split('/MD /O2')
+        ccflags['stdbg']   += Split('/MTd /GR')
+        ccflags['strel']   += Split('/MT /O2')
 
-        # 定制不同编译器的编译选项
-        if 'cl' == env['CC']:
-            #
-            # To workaround an bug in scons 0.96.1, this variable has to be imported
-            # on AMD64 platform, to make msvs link.exe work.
-            #
-            env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
+        # this is for vtune and magellan to do instrumentation
+        linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP']
 
-            cppdefines['debug']   += Split('_DEBUG')
-            cppdefines['stdbg']   += Split('_DEBUG')
+        linkflags['release'] += ['/OPT:REF']
+        linkflags['strel']   += ['/OPT:REF']
 
-            if float(env['MSVS_VERSION']) >= 8.0:
-                cxxflags['common']  += ['/EHa']
-                linkflags['common'] += Split( '/NODEFAULTLIB:libcp.lib' )
-            else:
-                cxxflags['common']  += ['/EHs']
+    elif 'icl' == env['CC']:
+        ccflags['common']  += Split('/W4 /WX /Qpchi- /Zc:forScope')
+        ccflags['debug']   += Split('/MDd /GR /Ge /traceback')
+        ccflags['release'] += Split('/O2 /MD')
+        ccflags['stdbg']   += Split('/MTd /GR /Ge /traceback')
+        ccflags['strel']   += Split('/O2 /MT')
 
-            ccflags['common']  += Split('/W4 /WX')
-            ccflags['debug']   += Split('/MDd /GR')
-            ccflags['release'] += Split('/MD /O2')
-            ccflags['stdbg']   += Split('/MTd /GR')
-            ccflags['strel']   += Split('/MT /O2')
+        cxxflags['common'] += ['/EHs']
 
-            # this is for vtune and magellan to do instrumentation
-            linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP']
+        cppdefines['debug']   += Split('_DEBUG')
+        cppdefines['stdbg']   += Split('_DEBUG')
 
-            linkflags['release'] += ['/OPT:REF']
-            linkflags['strel']   += ['/OPT:REF']
+        # this is for vtune to do instrumentation
+        linkflags['release'] = Split('/FIXED:NO /OPT:REF')
+        linkflags['strel']   = Split('/FIXED:NO /OPT:REF')
 
-        elif 'icl' == env['CC']:
-            ccflags['common']  += Split('/W4 /WX /Qpchi- /Zc:forScope')
-            ccflags['debug']   += Split('/MDd /GR /Ge /traceback')
-            ccflags['release'] += Split('/O2 /MD')
-            ccflags['stdbg']   += Split('/MTd /GR /Ge /traceback')
-            ccflags['strel']   += Split('/O2 /MT')
+    elif 'gcc' == env['CC']:
+        ccflags['common']  += Split('-Wall -Werror')
+        ccflags['debug']   += ['-g']
+        ccflags['release'] += ['-O3']
+        ccflags['stdbg']   += ['-g']
+        ccflags['strel']   += ['-O3']
 
-            cxxflags['common'] += ['/EHs']
+    else:
+        print 'unknown compiler: ' + env['CC']
+        Exit(-1)
 
-            cppdefines['debug']   += Split('_DEBUG')
-            cppdefines['stdbg']   += Split('_DEBUG')
+    def apply_options( env, variant ):
+        env.Append(
+            CPPDEFINES = cppdefines[variant],
+            CPPPATH = cpppath[variant],
+            LIBPATH = libpath[variant],
+            CCFLAGS = ccflags[variant],
+            CXXFLAGS = cxxflags[variant],
+            LINKFLAGS = linkflags[variant] );
+        env.Prepend(
+            LIBS    = libs[variant] ); # for gcc link
 
-            # this is for vtune to do instrumentation
-            linkflags['release'] = Split('/FIXED:NO /OPT:REF')
-            linkflags['strel']   = Split('/FIXED:NO /OPT:REF')
+    # apply compile options based on current build
+    apply_options( env, variant )
+    apply_options( env, 'common' )
 
-        elif 'gcc' == env['CC']:
-            ccflags['common']  += Split('-Wall -Werror')
-            ccflags['debug']   += ['-g']
-            ccflags['release'] += ['-O3']
-            ccflags['stdbg']   += ['-g']
-            ccflags['strel']   += ['-O3']
-
-        else:
-            print 'unknown compiler: ' + env['CC']
-            Exit(-1)
-
-        def apply_options( env, variant ):
-            env.Append(
-                CPPDEFINES = cppdefines[variant],
-                CPPPATH = cpppath[variant],
-                LIBPATH = libpath[variant],
-                CCFLAGS = ccflags[variant],
-                CXXFLAGS = cxxflags[variant],
-                LINKFLAGS = linkflags[variant] );
-            env.Prepend(
-                LIBS    = libs[variant] ); # for gcc link
-
-        # apply compile options based on current build
-        apply_options( env, variant )
-        apply_options( env, 'common' )
-
-        # end of function default_env()
-        return env
-
-    if not compiler in ___DEFAULT_envs:
-        ___DEFAULT_envs[compiler] = {}
-    if not variant  in ___DEFAULT_envs[compiler]:
-        ___DEFAULT_envs[compiler][variant] = createDefaultEnv( compiler, variant )
-    env = ___DEFAULT_envs[compiler][variant].Copy()
+    # end of function default_env()
     return env
 
 #
 # Check sysem configuration
 #
 def UTIL_checkConfig( conf, confDir, compiler, variant ):
-    env = UTIL_newDefaultEnv( compiler, variant )
+    env = UTIL_newEnv( compiler, variant )
 
     # Do NOT treat warning as error
     ccflags = str(env.Dictionary('CCFLAGS'))
@@ -313,128 +307,120 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 
 ################################################################################
 #
-# 定义 global functions
+# 定义 GarnetEnv class
 #
 ################################################################################
 
-# 输出调试信息
-def GN_trace( env, level, msg ):
-    level = float(level)
-    assert( level > 0 )
-    if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
-        print 'TRACE(%d) : %s'%(level,msg)
+class GarnetEnv :
 
-# 输出提示信息
-def GN_info( env, msg ): print 'INFO : %s'%msg
+    conf = {}
 
-# 输出警告信息
-def GN_warn( env, msg ):
-    print '===================================================================='
-    print 'WARNING : %s'%msg
-    print '===================================================================='
+    # 输出调试信息
+    def trace( self, level, msg ):
+        level = float(level)
+        assert( level > 0 )
+        if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
+            print 'TRACE(%d) : %s'%(level,msg)
 
-# 输出错误信息
-def GN_error( env, msg ):
-    print '===================================================================='
-    print 'ERROR : %s'%msg
-    print '===================================================================='
+    # 输出提示信息
+    def info( self, msg ): print 'INFO : %s'%msg
 
-# 生成从target到base的相对路径
-def GN_relpath( env, target, base ):
-    """
-    Return a relative path to the target from either the current dir or an optional base dir.
-    Base can be a directory specified either as absolute or relative to current dir.
-    """
+    # 输出警告信息
+    def warn( self, msg ):
+        print '===================================================================='
+        print 'WARNING : %s'%msg
+        print '===================================================================='
 
-    base_list = (os.path.abspath(base)).split(os.sep)
-    target_list = (os.path.abspath(target)).split(os.sep)
+    # 输出错误信息
+    def error( self, msg ):
+        print '===================================================================='
+        print 'ERROR : %s'%msg
+        print '===================================================================='
 
-    # On the windows platform the target may be on a completely different drive from the base.
-    if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
-        raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
+    # 生成从target到base的相对路径
+    def relpath( self, target, base ):
+        """
+        Return a relative path to the target from either the current dir or an optional base dir.
+        Base can be a directory specified either as absolute or relative to current dir.
+        """
 
-    # Starting from the filepath root, work out how much of the filepath is
-    # shared by base and target.
-    for i in range(min(len(base_list), len(target_list))):
-        if base_list[i] <> target_list[i]: break
-    else:
-        # If we broke out of the loop, i is pointing to the first differing path elements.
-        # If we didn't break out of the loop, i is pointing to identical path elements.
-        # Increment i so that in all cases it points to the first differing path elements.
-        i+=1
+        base_list = (os.path.abspath(base)).split(os.sep)
+        target_list = (os.path.abspath(target)).split(os.sep)
 
-    rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:]
-    return os.path.join(*rel_list)
+        # On the windows platform the target may be on a completely different drive from the base.
+        if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
+            raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
 
-# 查找指定目录下的文件
-def GN_glob( env, patterns, recursive = False ):
-    def do_glob( env, pattern, dir, recursive ):
-        files = []
-        root = Dir(dir).srcnode().abspath;
-        try:
-            for file in os.listdir( root ):
-                if os.path.isdir( os.path.join(root,file) ):
-                    if recursive and ( not '.svn' == file ) : # ignore subversion directory
-                        files = files + do_glob( env, pattern, os.path.join(dir,file), recursive )
-                else:
-                    # Note: ignore precompiled header
-                    if not ('pch.cpp' == file or 'stdafx.cpp' == file):
-                        #print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
-                        if fnmatch.fnmatch(file, pattern):
-                            files.append( os.path.join( dir, file ) )
-        except WindowsError:
-            pass
-        return files
-    #GN_info( env, 'GN_glob %s'%patterns )
-    files = []
-    if not patterns is list: patterns = [patterns]
-    for p in Flatten(patterns):
-        if os.path.isdir( env.GetBuildPath(p) ):
-            #print '    do_glob(*.*,%s)'%p
-            files += do_glob( env, '*.*', p, recursive )
+        # Starting from the filepath root, work out how much of the filepath is
+        # shared by base and target.
+        for i in range(min(len(base_list), len(target_list))):
+            if base_list[i] <> target_list[i]: break
         else:
-            (dir,pattern) = os.path.split(p);
-            if '' == pattern: pattern = '*.*';
-            if '' == dir: dir = '.';
-            #print '    do_glob(%s,%s)'%(pattern,dir)
-            files += do_glob( env, pattern, dir, recursive )
-    return files
+            # If we broke out of the loop, i is pointing to the first differing path elements.
+            # If we didn't break out of the loop, i is pointing to identical path elements.
+            # Increment i so that in all cases it points to the first differing path elements.
+            i+=1
 
-# 创建 source cluster
-def GN_newSourceCluster( env, sources, pchHeader = None, pchSource = None ):
-    s = SourceCluster()
-    s.sources = [File(x) for x in sources]
-    if pchHeader: s.pchHeader = pchHeader
-    if pchSource: s.pchSource = File(pchSource)
-    return s
+        rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:]
+        return os.path.join(*rel_list)
 
-# 创建 Target
-def GN_newTarget( env, type, name, sources = None, pdb = None, dependencies = None ):
-    # create new target instance
-    t = Target()
-    if UTIL_staticBuild( CURRENT_variant ) and 'shlib' == type: type = 'stlib'
-    t.type = type
-    t.path = Dir('.')
-    t.sources = sources
-    t.dependencies = dependencies
-    if pdb : t.pdb = File(pdb)
-    else   : t.pdb = File("%s.pdb"%(name))
+    # 查找指定目录下的文件
+    def glob( self, patterns, recursive = False ):
+        def do_glob( pattern, dir, recursive ):
+            files = []
+            root = Dir(dir).srcnode().abspath;
+            try:
+                for file in os.listdir( root ):
+                    if os.path.isdir( os.path.join(root,file) ):
+                        if recursive and ( not '.svn' == file ) : # ignore subversion directory
+                            files = files + do_glob( pattern, os.path.join(dir,file), recursive )
+                    else:
+                        # Note: ignore precompiled header
+                        if not ('pch.cpp' == file or 'stdafx.cpp' == file):
+                            #print 'fnmatch(%s,%s) = %s'%(file,pattern,fnmatch.fnmatch(file, pattern))
+                            if fnmatch.fnmatch(file, pattern):
+                                files.append( os.path.join( dir, file ) )
+            except WindowsError:
+                pass
+            return files
+        #print 'glob %s'%patterns )
+        files = []
+        if not patterns is list: patterns = [patterns]
+        for p in Flatten(patterns):
+            if os.path.isdir( GetBuildPath(p) ):
+                #print '    do_glob(*.*,%s)'%p
+                files += do_glob( '*.*', p, recursive )
+            else:
+                (dir,pattern) = os.path.split(p);
+                if '' == pattern: pattern = '*.*';
+                if '' == dir: dir = '.';
+                #print '    do_glob(%s,%s)'%(pattern,dir)
+                files += do_glob( pattern, dir, recursive )
+        return files
 
-    # insert to global target list
-    ALL_targets[CURRENT_compiler][CURRENT_variant][name] = t
+    # 创建 source cluster
+    def newSourceCluster( self, sources, pchHeader = None, pchSource = None ):
+        s = SourceCluster()
+        s.sources = [File(x) for x in sources]
+        if pchHeader: s.pchHeader = pchHeader
+        if pchSource: s.pchSource = File(pchSource)
+        return s
 
-    return t
+    # 创建 Target
+    def newTarget( self, type, name, sources = None, pdb = None, dependencies = None ):
+        # create new target instance
+        t = Target()
+        if UTIL_staticBuild( CURRENT_variant ) and 'shlib' == type: type = 'stlib'
+        t.type = type
+        t.path = Dir('.')
+        t.sources = sources
+        t.dependencies = dependencies
+        if pdb : t.pdb = File(pdb)
+        else   : t.pdb = File("%s.pdb"%(name))
+        ALL_targets[CURRENT_compiler][CURRENT_variant][name] = t # insert to global target list
+        return t
 
-# register global functions to scons.
-from SCons.Script.SConscript import SConsEnvironment
-SConsEnvironment.GN_trace = GN_trace;
-SConsEnvironment.GN_info = GN_info;
-SConsEnvironment.GN_warn = GN_warn;
-SConsEnvironment.GN_error = GN_error;
-SConsEnvironment.GN_relpath = GN_relpath;
-SConsEnvironment.GN_glob = GN_glob
-SConsEnvironment.GN_newSourceCluster = GN_newSourceCluster
-SConsEnvironment.GN_newTarget = GN_newTarget
+GN = GarnetEnv()
 
 ################################################################################
 #
@@ -574,15 +560,14 @@ for c in COLLECT_compilers:
 #
 ################################################################################
 
-CURRENT_conf = None
 CURRENT_compiler = None
 CURRENT_variant = None
 for c in ALL_configs :
-    CURRENT_conf = c
+    GN.conf = c
     CURRENT_compiler = c['compiler']
     CURRENT_variant = c['variant']
     bldDir = UTIL_buildDir( CURRENT_compiler, CURRENT_variant )
-    SConscript( 'SConscript', exports={'conf':c}, build_dir=bldDir, duplicate=0 )
+    SConscript( 'SConscript', exports=['GN'], build_dir=bldDir, duplicate=0 )
 
 ################################################################################
 #
@@ -592,6 +577,7 @@ for c in ALL_configs :
 
 BUILD_compiler = None
 BUILD_variant = None
+BUILD_env = None
 BUILD_bldDir = None
 BUILD_libDir = None
 BUILD_binDir = None
@@ -600,7 +586,7 @@ BUILD_binDir = None
 # Create new compile environment
 #
 def BUILD_newCompileEnv( cluster ):
-    env = UTIL_newDefaultEnv( BUILD_compiler, BUILD_variant )
+    env = BUILD_env.Copy()
 
     env.Prepend( CPPPATH = ['#src/extern/inc', 'src/priv/inc'] )
 
@@ -629,7 +615,7 @@ def BUILD_newCompileEnv( cluster ):
 # Create new link environment
 #
 def BUILD_newLinkEnv( target ):
-    env = UTIL_newDefaultEnv( BUILD_compiler, BUILD_variant )
+    env = BUILD_env.Copy()
 
     if target.pdb: env['PDB'] = target.pdb
 
@@ -710,7 +696,7 @@ def BUILD_toList( x ):
 def BUILD_addLib( env, name, lib ):
     if not lib in env['LIBS']:
         env.Prepend( LIBS = [lib] )
-        env.GN_trace( 1, 'Add depends of %s : %s'%(name,lib) )
+        GN.trace( 1, 'Add depends of %s : %s'%(name,lib) )
 
 def BUILD_addExternalDependencies( env, name, deps ):
     for x in reversed(deps):
@@ -725,7 +711,7 @@ def BUILD_addDependencies( env, name, deps ):
             if 'GNcore' == x or 'stlib' == targets[x].type : # here we ignore shared libraried other then GNcore.
                 BUILD_addLib( env, name, x )
         else:
-            env.GN_warn( "Ingore non-exist dependency for target %s: %s"%(name,x) )
+            GN.warn( "Ingore non-exist dependency for target %s: %s"%(name,x) )
 
 #
 # does compiler produce manifest file?
@@ -751,7 +737,7 @@ def BUILD_sharedLib( name, target ):
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
-    env.GN_trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
+    GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
 
     libName = '%s%s%s'%(env['SHLIBPREFIX'],name,env['SHLIBSUFFIX'])
     shlib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
@@ -786,7 +772,7 @@ def BUILD_program( name, target ):
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
-    env.GN_trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
+    GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
 
     exeName = '%s%s%s'%(env['PROGPREFIX'],name,env['PROGSUFFIX'])
     prog = env.Program( os.path.join(str(target.path),exeName), objs )
@@ -799,11 +785,11 @@ def BUILD_program( name, target ):
 #
 # build all targets
 #
-BUILD_env = Environment()
 for compiler, variants in ALL_targets.iteritems() :
     BUILD_compiler = compiler
     for variant, targets in variants.iteritems():
 
+        BUILD_env = UTIL_newEnv( compiler, variant )
         BUILD_variant = variant
         BUILD_bldDir = UTIL_buildDir( compiler, variant )
         BUILD_libDir = os.path.join( BUILD_bldDir, 'lib' )
@@ -815,8 +801,8 @@ for compiler, variants in ALL_targets.iteritems() :
             elif 'shlib' == x.type : BUILD_sharedLib( name, x )
             elif 'prog' == x.type  : BUILD_program( name, x )
             # TODO: special case for build documents
-            else: BUILD_env.GN_error( 'Unknown target type for target %s: %s'%(name,x.type) )
-            BUILD_env.GN_trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
+            else: GN.error( 'Unknown target type for target %s: %s'%(name,x.type) )
+            GN.trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
         # post build actions
@@ -836,14 +822,14 @@ for compiler, variants in ALL_targets.iteritems() :
         for n in ( shlibs + progs ):
             t = getTargets(n)
             for x in t[1:] :
-                BUILD_env.Depends( t[0], x )
+                Depends( t[0], x )
 
         # Make executables depend on shared libraries.
         for pn in progs:
             for pt in getTargets(pn):
                 for sn in shlibs:
                     for st in getTargets(sn):
-                        BUILD_env.Depends( pt, st )
+                        Depends( pt, st )
 
 ################################################################################
 #
@@ -880,6 +866,6 @@ Usage:
 Options:%s
 
 """ % (
-    HELP_opts.GenerateHelpText( BUILD_env ),
+    HELP_opts.GenerateHelpText( CONF_env ),
     )
 Help( HELP_text )

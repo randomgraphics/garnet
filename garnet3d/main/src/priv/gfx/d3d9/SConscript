@@ -1,3 +1,4 @@
+Import( 'GN' )
 sources = [
     'd3d9CapsMgr.cpp',
     'd3d9ContextMgr.cpp',
@@ -18,6 +19,5 @@ sources = [
     'd3d9VtxShaderAsm.cpp',
     'd3d9VtxShaderHlsl.cpp',
 ]
-env = Environment()
-cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-env.GN_newTarget( 'shlib', 'GNgfxD3D9', [cluster], dependencies = ['GNgfxCommon'] )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+GN.newTarget( 'shlib', 'GNgfxD3D9', [cluster], dependencies = ['GNgfxCommon'] )
