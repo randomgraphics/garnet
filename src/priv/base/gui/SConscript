@@ -1,6 +1,7 @@
+Import( 'GN' )
 sources = [
     'ceguiRenderer.cpp',
     'ceguiTexture.cpp',
 ]
-r = Environment().GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

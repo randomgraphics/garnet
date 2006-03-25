@@ -1,3 +1,4 @@
+Import( 'GN' )
 sources = [
     'oglBasicShaderARB.cpp',
     'oglBasicShaderGLSL.cpp',
@@ -20,6 +21,5 @@ sources = [
     'oglVtxBufVBO.cpp',
     'oglVtxFmt.cpp',
 ]
-env = Environment()
-cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-env.GN_newTarget( 'shlib', 'GNgfxOGL', [cluster], dependencies = ['GNgfxCommon'] )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+GN.newTarget( 'shlib', 'GNgfxOGL', [cluster], dependencies = ['GNgfxCommon'] )

@@ -1,3 +1,5 @@
+Import( 'GN' )
+
 sources = [
     'core.cpp',
     'coreEffectDict.cpp',
@@ -6,10 +8,8 @@ sources = [
     'coreTextureDict.cpp',
 ]
 
-env = Environment()
-
-cluster = env.GN_newSourceCluster( sources )
+cluster = GN.newSourceCluster( sources )
 
 cluster.addCompileFlags( CPPDEFINES = ['_GN_CORE'] )
 
-env.GN_newTarget( 'shlib', 'GNcore', [cluster] )
+GN.newTarget( 'shlib', 'GNcore', [cluster] )

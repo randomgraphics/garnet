@@ -1,3 +1,4 @@
+Import( 'GN' )
 sources = [
     'basicInput.cpp',
     'basicInputMsw.cpp',
@@ -7,5 +8,5 @@ sources = [
     'inputMsw.cpp',
     'inputX11.cpp',
 ]
-r = Environment().GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

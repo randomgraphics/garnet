@@ -1,3 +1,4 @@
+Import( 'GN' )
 sources = [
     'colorFormat.cpp',
     'createRenderer.cpp',
@@ -14,5 +15,5 @@ sources = [
     'shape.cpp',
     'vertex.cpp',
 ]
-r = Environment().GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

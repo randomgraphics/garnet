@@ -1,3 +1,4 @@
+Import( 'GN' )
 sources = [
     'basicContextMgr.cpp',
     'basicDispMgr.cpp',
@@ -7,6 +8,5 @@ sources = [
     'renderWindowMsw.cpp',
     'renderWindowX11.cpp',
 ]
-env = Environment()
-cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-env.GN_newTarget( 'stlib', 'GNgfxCommon', [cluster] )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+GN.newTarget( 'stlib', 'GNgfxCommon', [cluster] )

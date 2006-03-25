@@ -1,8 +1,6 @@
-Import( 'conf' )
+Import( 'GN' )
 
-env = Environment()
-
-lib = env.GN_newTarget( 'stlib', 'GNextern', [] )
+lib = GN.newTarget( 'stlib', 'GNextern', [] )
 
 # ******************
 # define build flags
@@ -11,17 +9,17 @@ lib = env.GN_newTarget( 'stlib', 'GNextern', [] )
 ccflags = []
 cppdefines = []
 
-if 'icl' == conf['compiler']:
+if 'icl' == GN.conf['compiler']:
     unimportant_warnings = [
         '1572', # floating-point comparison
         ]
     ccflags += ['/W3'] + ['/Qwd%s'%w for w in unimportant_warnings]
-elif 'vc71' == conf['compiler']:
+elif 'vc71' == GN.conf['compiler']:
     ccflags += ['/W3']
-elif 'vc80' == conf['compiler']:
+elif 'vc80' == GN.conf['compiler']:
     ccflags += ['/W3']
     cppdefines += Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE')
-elif 'vc80-x64' == conf['compiler']:
+elif 'vc80-x64' == GN.conf['compiler']:
     unimportant_warnings = [
         '4334', # 32-bit shift convert to 64-bit
         '4267', # conversion from 'size_t' to xxx, possible loss of data
@@ -33,15 +31,15 @@ elif 'vc80-x64' == conf['compiler']:
 # **********************
 # define source clusters
 # **********************
-jpeg_cluster = env.GN_newSourceCluster( env.GN_glob( 'jpeg/*.c' ) )
-if 'gcc' == conf['compiler']: jpeg_cluster.extraFlags.ccflags = ['-Wno-main']
+jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
+if 'gcc' == GN.conf['compiler']: jpeg_cluster.extraFlags.ccflags = ['-Wno-main']
 jpeg_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 lib.addCluster( jpeg_cluster )
 
-common_sources = env.GN_glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
-if conf['has_ogl']: common_sources += env.GN_glob( 'glew/*.c' )
-common_cluster = env.GN_newSourceCluster( common_sources )
+common_sources = GN.glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
+if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
+common_cluster = GN.newSourceCluster( common_sources )
 common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 lib.addCluster( common_cluster )

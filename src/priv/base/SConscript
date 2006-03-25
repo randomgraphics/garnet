@@ -1,3 +1,4 @@
+Import( 'GN' )
 sources = []
 sources.append( SConscript( 'app/SConscript' ) )
 sources.append( SConscript( 'base/SConscript' ) )
@@ -6,4 +7,4 @@ sources.append( SConscript( 'gui/SConscript' ) )
 sources.append( SConscript( 'input/SConscript' ) )
 #sources.append( SConscript( 'util/SConscript' ) )
 sources.append( SConscript( 'win/SConscript' ) )
-Environment().GN_newTarget( 'stlib', 'GNbase', sources )
+GN.newTarget( 'stlib', 'GNbase', sources )

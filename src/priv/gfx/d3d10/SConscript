@@ -1,8 +1,8 @@
+Import( 'GN' )
 sources = [
     'd3d10DispMgr.cpp',
     'd3d10DrawMgr.cpp',
     'd3d10Renderer.cpp',
 ]
-env = Environment()
-cluster = env.GN_newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-env.GN_newTarget( 'shlib', 'GNgfxD3D10', [cluster], dependencies = ['GNgfxCommon'] )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+GN.newTarget( 'shlib', 'GNgfxD3D10', [cluster], dependencies = ['GNgfxCommon'] )
