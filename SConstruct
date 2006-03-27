@@ -2,6 +2,9 @@
 
 import os, os.path, re, fnmatch, SCons.Tool.xenon
 
+# enviroment use by local functions
+LOCAL_env = Environment()
+
 ################################################################################
 #
 # 定义编译选项
@@ -13,11 +16,8 @@ def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
-# 用于config的环境变量
-CONF_env = Environment()
-
 # 记录当前的OS
-CONF_platform = CONF_env['PLATFORM']
+CONF_platform = LOCAL_env['PLATFORM']
 
 # 辨别Windows的类型
 CONF_mswin = None
@@ -36,7 +36,7 @@ if 'win32' == CONF_platform:
         CONF_defaultCompiler = 'vc80-x64'
     elif 'pcx86' == GN_mswin:
         CONF_defaultCompiler = 'vc80'
-    elif SCons.Tool.xenon.exists( CONF_env ):
+    elif SCons.Tool.xenon.exists( LOCAL_env ):
         CONF_allCompilers += ' xenon'
 else:
     CONF_defaultCompiler = 'gcc'
@@ -146,7 +146,7 @@ def UTIL_newEnv( compiler, variant ):
             env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
     # 缺省编译选项
-    def generate_empty_options() : return { 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
+    def generate_empty_options() : return { 'neutral':[], 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
     cppdefines = generate_empty_options()
     cpppath    = generate_empty_options()
     libpath    = generate_empty_options()
@@ -406,6 +406,13 @@ class GarnetEnv :
         if pchSource: s.pchSource = File(pchSource)
         return s
 
+    # 创建 custom source cluster
+    def newCustomSourceCluster( self, sources, action ):
+        s = SourceCluster()
+        s.sources = [File(x) for x in sources]
+        s.action = action
+        return s
+
     # 创建 Target
     def newTarget( self, type, name, sources = None, pdb = None, dependencies = None ):
         # create new target instance
@@ -418,6 +425,20 @@ class GarnetEnv :
         if pdb : t.pdb = File(pdb)
         else   : t.pdb = File("%s.pdb"%(name))
         ALL_targets[CURRENT_compiler][CURRENT_variant][name] = t # insert to global target list
+        return t
+
+    # 创建 neutral(compiler insensitive) custom target.
+    def newNeutralCustomTarget( self, name, sources = None ):
+
+        # check for redundant target
+        if name in ALL_targets['neutral']['neutral'] : return ALL_targets['neutral']['neutral']
+
+        # create new target instance
+        t = Target()
+        t.type = 'custom'
+        t.path = Dir('.')
+        t.sources = sources
+        ALL_targets['neutral']['neutral'][name] = t # insert to global target list
         return t
 
 GN = GarnetEnv()
@@ -450,6 +471,9 @@ class SourceCluster:
         self.pchSource = None
         self.extraCompileFlags = CompileFlags()
         self.removedCompileFlags = CompileFlags()
+        self.action = None # custom action object, only used for 'custom' type target.
+                           # Should accept a enviroment and a list of sources as parameter,
+                           # and return list of targets.
 
     def addCompileFlags( self,
                          CPPPATH = None,
@@ -474,7 +498,7 @@ class SourceCluster:
 class Target:
 
     def __init__(self):
-        self.type = None
+        self.type = None # could be 'stlib, shlib, prog, custom'
         self.path = None
         self.targets = []
         self.sources = [] # list of source clusters
@@ -516,7 +540,7 @@ else:
         COLLECT_variants = Split( CONF_variant )
 
 ALL_configs = []
-ALL_targets = {}
+ALL_targets = { "neutral" : { "neutral" : {} } }
 for c in COLLECT_compilers:
 
     if not c in CONF_allCompilers:
@@ -783,6 +807,18 @@ def BUILD_program( name, target ):
     Default( target.targets )
 
 #
+# build custom target
+#
+def BUILD_custom( name, target ):
+    assert( 'custom' == target.type )
+    env = BUILD_env.Copy()
+    target.targets = []
+    for s in target.sources:
+        target.targets += s.action( env, s.sources )
+    Alias( name, target.targets )
+    Default( target.targets )
+
+#
 # build all targets
 #
 for compiler, variants in ALL_targets.iteritems() :
@@ -797,12 +833,14 @@ for compiler, variants in ALL_targets.iteritems() :
 
         # do build
         for name, x in targets.iteritems():
-            if 'stlib' == x.type   :
+            if 'stlib' == x.type :
                 BUILD_staticLib( name, x )
             elif 'shlib' == x.type :
                 BUILD_sharedLib( name, x )
-            elif 'prog' == x.type  :
+            elif 'prog' == x.type :
                 BUILD_program( name, x )
+            elif 'custom' == x.type :
+                BUILD_custom( name, x )
             # TODO: special case for build documents
             else: GN.error( 'Unknown target type for target %s: %s'%(name,x.type) )
             GN.trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
@@ -837,7 +875,6 @@ for compiler, variants in ALL_targets.iteritems() :
 #
 ################################################################################
 
-MSVS_env = Environment()
 for compiler, variants in ALL_targets.iteritems() :
     for variant, targets in variants.iteritems():
         for name, x in targets.iteritems():
@@ -846,7 +883,7 @@ for compiler, variants in ALL_targets.iteritems() :
                 'msvc/SConscript',
                     exports={
                         'GN' : GN,
-                        'env' : MSVS_env,
+                        'env' : LOCAL_env,
                         'compiler' : compiler,
                         'variant' : variant,
                         'name' : name,
@@ -860,6 +897,23 @@ for compiler, variants in ALL_targets.iteritems() :
 # 定义 help screen
 #
 ################################################################################
+
+def HELP_generateTargetList():
+    names = set()
+    maxlen = 0;
+    for v in ALL_targets.itervalues():
+        for t in v.itervalues():
+            for n in t.keys():
+                print n
+                names.add( n )
+                l = len( n )
+                if l > maxlen: maxlen = l
+    names = [x for x in names]
+    names.sort()
+    s = ''
+    #for n in names: s += ('\n%' + str(maxlen+4) + 's')%n
+    for n in names: s += '\n\t%s'%n
+    return s
 
 HELP_opts = Options()
 HELP_opts.Add(
@@ -887,9 +941,12 @@ HELP_text = """
 Usage:
     scons [options] [target1 target2 ...]
 
-Options:%s
+Options: %s
+
+Targets: %s
 
 """ % (
-    HELP_opts.GenerateHelpText( CONF_env ),
+    HELP_opts.GenerateHelpText( LOCAL_env ),
+    HELP_generateTargetList()
     )
 Help( HELP_text )

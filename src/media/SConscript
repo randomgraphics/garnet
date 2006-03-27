@@ -1,6 +1,17 @@
-Import( 'env' )
+Import( 'GN' )
 
-files = []
-files += env.GN_glob( "*.*", True )
+import os.path
 
-Return( 'files' )
+srcdir = str( Dir('.').srcnode().path )
+
+def doCopy( env, sources ):
+    targets = []
+    for x in sources:
+        src = str(x.srcnode().path)
+        dst = os.path.join( '#bin', 'media', GN.relpath( src, srcdir ) )
+        targets.append( env.InstallAs( dst, src ) )
+    return targets
+
+sources = GN.glob( "*.*", True )
+cluster = GN.newCustomSourceCluster( sources, doCopy )
+GN.newNeutralCustomTarget( 'GNmedia', [cluster] )
