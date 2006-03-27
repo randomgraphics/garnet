@@ -1,7 +1,12 @@
 Import('GN env compiler variant name target')
 
+# local functions
+def to_relpath( files ):
+    return [ GN.relpath( File(x).srcnode().path, Dir(target_dir).srcnode().path ) for x in files ]
+
 import os.path
 
+# determine variant string
 if 'vc80-x64' == compiler:
     variant_str = '%s|x64'%variant
     target_dir = '8.0'
@@ -15,30 +20,37 @@ else:
     variant_str = '%s|Win32'%variant
     target_dir = '7.1'
 
+# build target directory
 absdir = Dir(target_dir).srcnode().abspath
-
 if not os.path.exists( absdir ) : os.makedirs( absdir )
 
+# compose command line arguments
 cmdargs = 'variant_str=%s compiler=%s'%(variant,compiler)
 
-def to_relpath( files ):
-    return [ GN.relpath( File(x).path, Dir(target_dir).srcnode().path ) for x in files ]
-
+# collect source files
 sources = []
 for x in target.sources : sources += x.sources
-localincs = GN.glob( '%s/*.[c]*'%target.path, True )
+sources += GN.glob( '%s/*.[hi]*'%target.path, True )
 
-print target.targets[0]
+# collect header files
+incs = []
+if 'GNbase' == name:
+    incs = GN.glob( '#src/priv/inc/*.[hi]*', True )
+elif 'GNextern' == name:
+    incs = GN.glob( '#src/extern/inc/*.[hi]*', True )
+
+# do build
 proj = env.MSVSProject(
     target      = os.path.join( target_dir, name ) + env['MSVSPROJECTSUFFIX'],
     buildtarget = target.targets[0],
     variant     = variant_str,
     cmdargs     = cmdargs,
-    srcs        = [],#to_relpath( sources ),
-    incs        = [],
-    localincs   = [],#to_relpath( localincs ),
+    srcs        = to_relpath( sources ),
+    incs        = to_relpath( incs ),
+    localincs   = [],
     resources   = [],
     misc        = [],
     auto_build_solution = 0,
     )
+AlwaysBuild( proj )
 Alias( 'msvc', proj )
