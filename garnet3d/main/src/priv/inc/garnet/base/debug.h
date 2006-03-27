@@ -32,32 +32,32 @@
         { GN_DEBUG_BREAK(); }                                   \
     }
 
+//!
+//! Perform runtime assert.
+//!
+//! This macro will perform assertion in all builds, in case you want assert in
+//! release build. Normally, you don't need this.
+//!
+#define GN_DO_ASSERT( exp, desc ) if( !(exp) ) GN_ASSERT_FAILURE(desc) else void(0)
+
+
+//!
+//! Assert macro with description
+//!
 #if GN_DEBUG
+#define GN_ASSERT_EX( exp, desc ) GN_DO_ASSERT( exp, desc )
+#else
+#define GN_ASSERT_EX( exp, desc ) void(0)
+#endif
 
 //!
-//! assert macro with a description string (debug-build)
+//! Verification macro with description
 //!
-#define GN_ASSERT_EX( exp, desc ) \
-        if( !(exp) ) GN_ASSERT_FAILURE(desc) else void(0)
-
-//!
-//! verify macro with a description string (debug-build)
-//!
+#if GN_DEBUG
 #define GN_VERIFY_EX GN_ASSERT_EX
-
-#else // !GN_DEBUG
-
-//!
-//! assert macro with a description string (release-build)
-//!
-#define GN_ASSERT_EX( exp, desc )  void(0)
-
-//!
-//! assert macro with a description string (release-build)
-//!
-#define GN_VERIFY_EX( exp, desc )   (exp)
-
-#endif // GN_DEBUG
+#else
+#define GN_VERIFY_EX( exp, desc ) (exp)
+#endif
 
 //!
 //! assert macro
