@@ -797,39 +797,63 @@ for compiler, variants in ALL_targets.iteritems() :
 
         # do build
         for name, x in targets.iteritems():
-            if 'stlib' == x.type   : BUILD_staticLib( name, x )
-            elif 'shlib' == x.type : BUILD_sharedLib( name, x )
-            elif 'prog' == x.type  : BUILD_program( name, x )
+            if 'stlib' == x.type   :
+                BUILD_staticLib( name, x )
+            elif 'shlib' == x.type :
+                BUILD_sharedLib( name, x )
+            elif 'prog' == x.type  :
+                BUILD_program( name, x )
             # TODO: special case for build documents
             else: GN.error( 'Unknown target type for target %s: %s'%(name,x.type) )
             GN.trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
-        # post build actions
+        # build additional dependencies:
+        # - Make binaries depend on their by-products, such as manifest and PDB, to make sure
+        #   those files are copied to binary directory, before execution of the binaries.
+        # - Make executables depend on shared libraries.
         stlibs = Split('GNextern GNbase GNcore')
         shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
         tools = Split('GNtoolOglInfo')
         progs = tests + samples + tools
-
         def getTargets( n ):
             if n in targets : return targets[n].targets
             else : return []
-
-        # Make binaries depend on their by-products, such as manifest and PDB, to make sure
-        # those files are copied to binary directory, before execution of the binaries.
         for n in ( shlibs + progs ):
             t = getTargets(n)
             for x in t[1:] :
                 Depends( t[0], x )
-
-        # Make executables depend on shared libraries.
         for pn in progs:
             for pt in getTargets(pn):
                 for sn in shlibs:
                     for st in getTargets(sn):
                         Depends( pt, st )
+
+################################################################################
+#
+# 生成msvc工程文件
+#
+################################################################################
+
+MSVS_env = Environment()
+for compiler, variants in ALL_targets.iteritems() :
+    for variant, targets in variants.iteritems():
+        for name, x in targets.iteritems():
+            if 'stlib' == x.type or 'shlib' == x.type or 'prog' == x.type :
+                SConscript( 
+                'msvc/SConscript',
+                    exports={
+                        'GN' : GN,
+                        'env' : MSVS_env,
+                        'compiler' : compiler,
+                        'variant' : variant,
+                        'name' : name,
+                        'target' : x,
+                        },
+                    build_dir=os.path.join( UTIL_buildDir( compiler, variant ), "msvc" )
+                    )
 
 ################################################################################
 #
