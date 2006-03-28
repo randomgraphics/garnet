@@ -1,5 +1,20 @@
 #include "pch.h"
 
+namespace GN
+{
+    // Global runtime assert behavior flag. Implemented in core module.
+    GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior;
+}
+//
+//
+// -----------------------------------------------------------------------------
+GN::RuntimeAssertBehavior GN::setRuntimeAssertBehavior( RuntimeAssertBehavior rab )
+{
+    RuntimeAssertBehavior old = gRuntimeAssertBehavior;
+    gRuntimeAssertBehavior = rab;
+    return old;
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -8,8 +23,10 @@ GN::assertFunc(
     const char * msg,
     const char * file,
     int          line,
-    bool *       ignore ) throw()
+    bool *       ignoreFromNowOn ) throw()
 {
+    if( RAB_SILENCE == gRuntimeAssertBehavior ) return false;
+    
     ::fprintf(
         stderr,
         "\n"
@@ -21,6 +38,10 @@ GN::assertFunc(
         file?file:"",
         line,
         msg?msg:"" );
+
+    if( RAB_LOG_ONLY == gRuntimeAssertBehavior ) return false;
+
+    if( RAB_BREAK_ALWAYS == gRuntimeAssertBehavior ) return true;
 
 #if GN_MSWIN && GN_PC
     char buf[1024];
@@ -38,10 +59,10 @@ GN::assertFunc(
         MB_YESNOCANCEL|MB_ICONQUESTION
         );
 
-    if(ignore) *ignore = ( IDCANCEL == ret );
+    if(ignoreFromNowOn) *ignoreFromNowOn = ( IDCANCEL == ret );
     return IDYES == ret;
 #else
-    if( *ignore ) *ignore = false;
+    if( *ignoreFromNowOn ) *ignoreFromNowOn = false;
     return true;
 #endif
 }

@@ -24,12 +24,12 @@
 //!
 //! Assert failture
 //!
-#define GN_ASSERT_FAILURE( desc )                               \
-    {                                                           \
-        static bool sIgnoreAll = false;                         \
-        if( !sIgnoreAll && GN::assertFunc( desc, __FILE__,      \
-            __LINE__, &sIgnoreAll ) )                           \
-        { GN_DEBUG_BREAK(); }                                   \
+#define GN_ASSERT_FAILURE( desc )                                \
+    {                                                            \
+        static bool sIgnoreFromNowOn = false;                    \
+        if( !sIgnoreFromNowOn && GN::assertFunc( desc, __FILE__, \
+            __LINE__, &sIgnoreFromNowOn ) )                      \
+        { GN_DEBUG_BREAK(); }                                    \
     }
 
 //!
@@ -250,6 +250,22 @@ namespace GN
     // ************************************************************************
 
     //@{
+
+    enum RuntimeAssertBehavior
+    {
+        RAB_ASK_USER,       //!< Ask user how to respond assert failure. This is default behavior
+        RAB_BREAK_ALWAYS,   //!< Always break into debugger.
+        RAB_LOG_ONLY,       //!< Ignore assert failure, output log message only.
+        RAB_SILENCE,        //!< Silence ignore assert failure. No break, No message.
+    };
+
+    //!
+    //! Change runtime assert behavior. Default is RAB_ASK_USER.
+    //!
+    //! \return
+    //!     Return old behavior.
+    //!
+    RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
 
     //!
     //! break into debugger ( ASCII version )
