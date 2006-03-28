@@ -14,8 +14,8 @@ namespace GN
     template<class T>
     struct DoubleLinkedItem
     {
-        T * prev;
-        T * next;
+        T * prev; //!< pointer to previous item
+        T * next; //!< pointer to next item
     };
 
     //!
