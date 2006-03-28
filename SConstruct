@@ -917,14 +917,14 @@ def HELP_generateTargetList():
     names.sort()
     s = ''
     #for n in names: s += ('\n%' + str(maxlen+4) + 's')%n
-    for n in names: s += '\n\t%s'%n
+    for n in names: s += '\n    %s'%n
     return s
 
 HELP_opts = Options()
 HELP_opts.Add(
     'trace',
-    'Set trace level. Default is 0.',
-    CONF_defaultCmdArgs['compiler'] )
+    'Set trace level. (GN_BUILD_TRACE)',
+    CONF_defaultCmdArgs['trace'] )
 HELP_opts.Add(
     'compiler',
     'Specify compiler. Could be : one of (%s) or "all". (GN_BUILD_COMPILER)'%CONF_allCompilers,
@@ -946,12 +946,11 @@ HELP_text = """
 Usage:
     scons [options] [target1 target2 ...]
 
-Options: %s
+Options:%s
 
-Targets: %s
-
+Targets:%s
 """ % (
-    HELP_opts.GenerateHelpText( LOCAL_env ),
+    HELP_opts.GenerateHelpText( Environment( options = HELP_opts ) ),
     HELP_generateTargetList()
     )
 Help( HELP_text )
