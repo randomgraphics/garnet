@@ -238,7 +238,7 @@ class Options:
 
         return string.join(lines, '')
 
-    format = '\n%s: %s\n    default: %s\n    actual: %s\n'
+    format = '\n    %s: %s\n        default: %s\n        actual: %s'
 
     def FormatOptionHelpText(self, env, key, help, default, actual):
         return self.format % (key, help, default, actual)
