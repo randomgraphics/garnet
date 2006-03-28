@@ -45,7 +45,6 @@ TODO
     - shared uniform
   - more sofisitcated log management: see log4cxx for example.
     - runtime switchable GN_TRACE( level, msg, .... )
-  - Rewrite SCons script
 
 - p3
   - support to multiple joysticks.
@@ -62,62 +61,64 @@ TODO
   - implement POSIX version of GN::path:glob()
   - UT for path functions: resolve, glob
 
-DONE
-====
+WORKLOG
+=======
 
-- sample: render to texture
-- import a GUI toolkit : FOX-TOOLKIT
-- resource managers (textures, meshes, materials/effects)
-- implement core module
-- POSIX implementation
-  - implement input module on POSIX platform
-  - implement GNogl on POSIX platform
-- UT for getEnv() and setEnv().
-- convert input module to static library
-- SCons
-  - EMT64 icl support
-- Refine GFX:
-  - refine resource lock flags
-    - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
-    - no combination.
-  - OGL GLSL shader
-  - parameter manager
-  - quad renderer for GFXOGL module
-  - d3d hlsl shader
-  - ogl ARB shader
-  - Fix link problem of GFX module in static build.
-  - fix device-lost bug in GNtestGfx
-  - refine device management
-  - drawQuad(...)
-    - D3D9Quad(): support to FFP
-  - buffer manager of GFXOGL
-  - vertex binding of GFXOGL
-  - enable multiple context support of GLEW
-  - Window property save/restore
-  - Refine ntWindow class:
-    - support external window
-    - getClientSize();
-  - remove platform specific code from display manager.
-  - UT for GFX module: using external render window
-- Run UT for both GFXD3D and GFXOGL will throw exception.
-  - FIXED: should use different render window class for each instance of NTRenderWindow.
-
-ISSUES
-======
-
-- QUESTION: Use boost jam, or refine SCons?
-  - bjam
-    - pros
-      - fast script parsing speed
-      - build-in support to amd64
-    - cons
-      - can't generate VC project
+- Before 2006.3.38
+  - Rewrite SCons script
+  - sample: render to texture
+  - import a GUI toolkit : FOX-TOOLKIT
+  - resource managers (textures, meshes, materials/effects)
+  - implement core module
+  - POSIX implementation
+    - implement input module on POSIX platform
+    - implement GNogl on POSIX platform
+  - UT for getEnv() and setEnv().
+  - convert input module to static library
   - SCons
-    - pros
-      - can generate VC project
-      - much more readable then jam code.
-    - cons
-      - script parsing is a little bit slow
-      - no amd64 support
-      - can distinguish different version of same compiler
-  - ANSWER: SCons
+    - EMT64 icl support
+  - Refine GFX:
+    - refine resource lock flags
+      - LOCK_NORMAL, LOCK_READONLY, LOCK_DISCARD, LOCK_NO_OVERWRITE,
+      - no combination.
+    - OGL GLSL shader
+    - parameter manager
+    - quad renderer for GFXOGL module
+    - d3d hlsl shader
+    - ogl ARB shader
+    - Fix link problem of GFX module in static build.
+    - fix device-lost bug in GNtestGfx
+    - refine device management
+    - drawQuad(...)
+      - D3D9Quad(): support to FFP
+    - buffer manager of GFXOGL
+    - vertex binding of GFXOGL
+    - enable multiple context support of GLEW
+    - Window property save/restore
+    - Refine ntWindow class:
+      - support external window
+      - getClientSize();
+    - remove platform specific code from display manager.
+    - UT for GFX module: using external render window
+  - Run UT for both GFXD3D and GFXOGL will throw exception.
+    - FIXED: should use different render window class for each instance of NTRenderWindow.
+
+  ISSUES
+  ======
+
+  - QUESTION: Use boost jam, or refine SCons?
+    - bjam
+      - pros
+        - fast script parsing speed
+        - build-in support to amd64
+      - cons
+        - can't generate VC project
+    - SCons
+      - pros
+        - can generate VC project
+        - much more readable then jam code.
+      - cons
+        - script parsing is a little bit slow
+        - no amd64 support
+        - can distinguish different version of same compiler
+    - ANSWER: SCons

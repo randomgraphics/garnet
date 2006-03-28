@@ -1,1 +1,1 @@
-SConscript( dirs=Split('base core gfx manual sample test tool') )
+SConscript( dirs=Split('base core doc gfx sample test tool') )

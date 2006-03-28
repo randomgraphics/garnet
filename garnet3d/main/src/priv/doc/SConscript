@@ -6,7 +6,7 @@ import sys, os.path
 class DocGenerator:
 
     def __init__(self):
-        self.target = File('garnet3d.chm')
+        self.target = File('refernece.chm')
 
     def __call__( self, env, sources ):
 
@@ -17,7 +17,7 @@ class DocGenerator:
             doxygen = 'doxygen'
             genchm = 'NO'
 
-        outdir = os.path.dirname( self.target.path )
+        outdir = os.path.dirname( self.target.abspath )
         doxyFileName = os.path.join( outdir, 'DoxyFile' )
 
         doxyfile = env.Command(
@@ -41,4 +41,4 @@ class DocGenerator:
 
 Import( 'GN' )
 cluster = GN.newCustomSourceCluster( ['gendoxyfile.py','doxyfile.in'], DocGenerator() )
-GN.newNeutralCustomTarget( 'GNman', [cluster] )
+GN.newNeutralCustomTarget( 'GNdoc', [cluster] )
