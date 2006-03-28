@@ -15,18 +15,24 @@ GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
 // implement static renderer data members
 GN_IMPLEMENT_RENDERER_STATIC_MEMBERS()
 
-//
-// Implement global log function.
-// -----------------------------------------------------------------------------
-GN_PUBLIC GN::Signal2<void,const GN::LogDesc &, const char *> GN::core::gSigLog;
-GN_PUBLIC void
-GN::doLog( const LogDesc & desc, const char * msg )
+namespace GN
 {
-    // trigger log signal
-    core::gSigLog( desc, msg );
+    // Global runtime assert behavior flag.
+    GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
 
-    // do default log
-    detail::defaultLogImpl(desc,msg);
+    //
+    // Implement global log function.
+    // -------------------------------------------------------------------------
+    GN_PUBLIC Signal2<void,const GN::LogDesc &, const char *> core::gSigLog;
+    GN_PUBLIC void
+    doLog( const LogDesc & desc, const char * msg )
+    {
+        // trigger log signal
+        core::gSigLog( desc, msg );
+
+        // do default log
+        detail::defaultLogImpl(desc,msg);
+    }
 }
 
 // *****************************************************************************

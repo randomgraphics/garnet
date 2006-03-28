@@ -9,39 +9,45 @@ GN::StrA                g_funcName;
 int                     g_int1 = 0;
 int                     g_int2 = 0;
 
-void foo1(int, int)
+void foo1(int i1, int i2)
 {
     g_funcName = "foo1()";
     g_callSequence.push_back( "foo1()" );
+    g_int1 = i1;
+    g_int2 = i2;
 }
 
-void foo2(int, int)
+void foo2(int i1, int i2)
 {
     g_funcName = "foo2()";
     g_callSequence.push_back( "foo2()" );
+    g_int1 = i1;
+    g_int2 = i2;
 }
 
-#if GN_MSVC
-
-void __fastcall foo3(int, int)
+void GN_FASTCALL foo3(int i1, int i2)
 {
-    g_funcName = "__fastcall foo3()";
-    g_callSequence.push_back( "__fastcall foo3()" );
+    g_funcName = "foo3()";
+    g_callSequence.push_back( "foo3()" );
+    g_int1 = i1;
+    g_int2 = i2;
 }
 
-void __stdcall foo4(int, int)
+void GN_STDCALL foo4(int i1, int i2)
 {
-    g_funcName = "__stdcall foo4()";
-    g_callSequence.push_back( "__stdcall foo4()" );
+    g_funcName = "foo4()";
+    g_callSequence.push_back( "foo4()" );
+    g_int1 = i1;
+    g_int2 = i2;
 }
 
-void __cdecl foo5(int, int)
+void GN_CDECL foo5(int i1, int i2)
 {
-    g_funcName = "__cdecl foo5()";
-    g_callSequence.push_back( "__cdecl foo5()" );
+    g_funcName = "foo5()";
+    g_callSequence.push_back( "foo5()" );
+    g_int1 = i1;
+    g_int2 = i2;
 }
-
-#endif
 
 struct aaa
 {
@@ -55,28 +61,36 @@ struct aaa
         g_int2 = b;
     }
 
-    void foo1(int, int) const
+    void foo1(int a, int b) const
     {
         g_funcName = "aaa::foo1() const";
         g_callSequence.push_back( "aaa::foo1() const" );
+        g_int1 = a;
+        g_int2 = b;
     }
 
-    void foo2(int, int)
+    void foo2(int a, int b)
     {
         g_funcName = "aaa::foo2()";
         g_callSequence.push_back( "aaa::foo2()" );
+        g_int1 = a;
+        g_int2 = b;
     }
 
-    void foo2(int, int) const
+    void foo2(int a, int b) const
     {
         g_funcName = "aaa::foo2() const";
         g_callSequence.push_back( "aaa::foo2() const" );
+        g_int1 = a;
+        g_int2 = b;
     }
 
-    int foo3(int, int) const
+    int foo3(int a, int b) const
     {
         g_funcName = "aaa::foo3() const";
         g_callSequence.push_back( "aaa::foo3()" );
+        g_int1 = a;
+        g_int2 = b;
         return 0;
     }
 };
@@ -85,10 +99,12 @@ struct bbb : public aaa, public GN::SlotBase
 {
     virtual ~bbb() {}
 
-    void foo( int, int ) const
+    void foo( int a, int b ) const
     {
         g_funcName = "bbb::foo()";
         g_callSequence.push_back( "bbb::foo()" );
+        g_int1 = a;
+        g_int2 = b;
     }
 };
 
@@ -116,22 +132,24 @@ bool unequal( const F1 & f1, const F2 & f2 )
         (f1>f2||f2>f1);
 }
 
+#define ASSERT_FUNC( NAME, INT1, INT2 ) \
+    TS_ASSERT_EQUALS( g_funcName, NAME ); \
+    TS_ASSERT_EQUALS( g_int1, INT1 ); \
+    TS_ASSERT_EQUALS( g_int2, INT2 );
+
 class FunctorTest : public CxxTest::TestSuite
 {
 public:
 
     void testCallConvension()
     {
-#if GN_MSVC
-
         GN::Functor2<void,int,int> f3, f4, f5;
-        //f3 = GN::makeFunctor( &foo3 );
-        //f4 = GN::makeFunctor( &foo4 );
-        //f5 = GN::makeFunctor( &foo5 );
-        //f3(0,0);
-        //f4(0,0);
-        //f5(0,0);
-#endif
+        f3 = GN::makeFunctor( &foo3 );
+        f4 = GN::makeFunctor( &foo4 );
+        f5 = GN::makeFunctor( &foo5 );
+        f3(1,2); ASSERT_FUNC( "foo3()", 1, 2 );
+        f4(3,4); ASSERT_FUNC( "foo4()", 3, 4 );
+        f5(5,6); ASSERT_FUNC( "foo5()", 5, 6 );
     }
 
     void testMakeFunctor()
@@ -143,9 +161,9 @@ public:
         f2 = GN::makeFunctor<aaa,aaa,void,int,int>( &a, &aaa::foo1 );
         f3 = GN::makeFunctor<aaa,aaa,void,int,int>( &ca, &aaa::foo1 );
 
-        f1(0,0); TS_ASSERT_EQUALS( g_funcName, "foo1()" );
-        f2(0,0); TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
-        f3(0,0); TS_ASSERT_EQUALS( g_funcName, "aaa::foo1() const" );
+        f1(1,2); ASSERT_FUNC( "foo1()", 1, 2 );
+        f2(3,4); ASSERT_FUNC( "aaa::foo1()", 3, 4 );
+        f3(5,6); ASSERT_FUNC( "aaa::foo1() const", 5, 6 );
     }
 
     void testFunctor()
@@ -159,33 +177,33 @@ public:
         f1.bind( &foo1 );
         TS_ASSERT( equal(f1,f1) );
         f1(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "foo1()" );
+        ASSERT_FUNC( "foo1()", 1, 2 );
 
         // same free functions
         f2.bind( &foo1 );
         TS_ASSERT( equal(f1,f2) );
         g_funcName = "";
-        f2(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "foo1()");
+        f2(3,4);
+        ASSERT_FUNC( "foo1()", 3, 4 );
 
         // different free functions
         f2.bind( &foo2 );
         TS_ASSERT( unequal(f1,f2) );
         f2(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "foo2()");
+        ASSERT_FUNC( "foo2()", 1, 2);
 
         // free function != member function
         f2.bind<aaa,aaa>( &a,&aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
-        f2(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
+        f2(3,4);
+        ASSERT_FUNC( "aaa::foo1()", 3, 4 );
 
         // self compare, member function
         f1.bind<aaa,aaa>( &a,&aaa::foo1 );
         TS_ASSERT( equal(f1,f1) );
         g_funcName = "";
         f1(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
+        ASSERT_FUNC( "aaa::foo1()", 1, 2 );
 
         // same member function
         f2.bind<aaa,aaa>( &a,&aaa::foo1 );
@@ -195,22 +213,22 @@ public:
         // different member function, same class, different constness
         f1.bind<aaa,aaa>( &ca, &aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
-        f1(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1() const" );
+        f1(3,4);
+        ASSERT_FUNC( "aaa::foo1() const", 3, 4 );
 
         // different member function, same class, different function
         f2.bind<aaa,aaa>( &ca, &aaa::foo2 );
         TS_ASSERT( unequal(f1,f2) );
         f2(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo2() const" );
+        ASSERT_FUNC( "aaa::foo2() const", 1, 2 );
 
         f1.bind<aaa,aaa>( &a, &aaa::foo1 );
         f2.bind<aaa,aaa>( &ca, &aaa::foo2 );
         TS_ASSERT( unequal(f1,f2) );
-        f1(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
+        f1(3,4);
+        ASSERT_FUNC( "aaa::foo1()", 3, 4 );
         f2(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo2() const" );
+        ASSERT_FUNC( "aaa::foo2() const", 1, 2 );
 
         // different member function, different class
         f1.bind<aaa,aaa>(&a,&aaa::foo1 );
@@ -218,10 +236,10 @@ public:
         TS_ASSERT( unequal(f1,f2) );
         g_funcName = "";
         f1(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
+        ASSERT_FUNC( "aaa::foo1()", 1, 2 );
         g_funcName = "";
-        f2(1,2);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
+        f2(3,4);
+        ASSERT_FUNC( "aaa::foo1()", 3, 4 );
 
 #ifdef HAS_BOOST
         // working with boost::bind
@@ -231,9 +249,7 @@ public:
         g_int1 = 0;
         g_int2 = 0;
         boost::bind<void>( f1, _1, _1 )(i);
-        TS_ASSERT_EQUALS( g_funcName, "aaa::foo1()" );
-        TS_ASSERT_EQUALS( g_int1, 2 );
-        TS_ASSERT_EQUALS( g_int2, 2 );
+        ASSERT_FUNC( "aaa::foo1()", 2, 2 );
 #endif
     }
 

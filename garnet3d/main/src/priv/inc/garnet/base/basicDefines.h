@@ -11,7 +11,7 @@
 // *****************************************************************************
 
 #define GN_MSVC 0 //!< If 1, means current compiler is msvc (or icl)
-#define GN_ICL  0 //!< If 1, means current compiler is intel c++ compiler 
+#define GN_ICL  0 //!< If 1, means current compiler is intel c++ compiler
 #define GN_GCC  0 //!< If 1, means current compierl is gcc/g++
 #define GN_BCB  0 //!< If 1, means current compierl is boland c++ compiler
 
@@ -188,6 +188,37 @@
 #endif
 
 // *****************************************************************************
+// Call Convension
+// *****************************************************************************
+
+#if GN_MSVC
+#define GN_HAS_FASTCALL 1       //!< support fastcall convension or not
+#define GN_FASTCALL __fastcall  //!< fastcall keyword
+
+#define GN_HAS_STDCALL 1        //!< support stdcall convension or not
+#define GN_STDCALL __stdcall    //!< stdcall keyword
+
+#define GN_HAS_THISCALL 1       //!< support thiscall convension or not
+#define GN_THISCALL __thiscall  //!< thiscall keyword
+
+#define GN_HAS_CDECL 1          //!< support cdecl convesion or not
+#define GN_CDECL __cdecl        //!< cdecl keyword
+#else
+#define GN_HAS_FASTCALL 0       //!< support fastcall convension or not
+#define GN_FASTCALL             //!< fastcall keyword
+
+#define GN_HAS_STDCALL 0        //!< support stdcall convension or not
+#define GN_STDCALL              //!< stdcall keyword
+
+#define GN_HAS_THISCALL 0       //!< support thiscall convension or not
+#define GN_THISCALL             //!< thiscall keyword
+
+#define GN_HAS_CDECL 1          //!< support cdecl convesion or not
+#define GN_CDECL __cdecl        //!< cdecl keyword
+#endif
+
+
+// *****************************************************************************
 // Misc.
 // *****************************************************************************
 
@@ -202,12 +233,9 @@
 #define GN_FUNCTION          ""
 #endif
 
-//!
-//! 连接两个名称
-//!
-#define GN_JOIN(s1, s2)          GN_JOIN_DIRECT(s1, s2)
-#define GN_JOIN3(s1, s2, s3)     GN_JOIN( GN_JOIN( s1, s2 ), s3 )
-#define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 )
+#define GN_JOIN(s1, s2)          GN_JOIN_DIRECT(s1, s2) //!< join 2 symbols
+#define GN_JOIN3(s1, s2, s3)     GN_JOIN( GN_JOIN( s1, s2 ), s3 ) //!< join 3 symbols
+#define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 ) //!< join 4 symbols
 #define GN_JOIN_DIRECT(s1, s2)   s1##s2 //!< Auxillary macro used by GN_JOIN
 
 // *****************************************************************************

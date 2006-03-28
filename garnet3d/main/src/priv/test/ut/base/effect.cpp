@@ -230,7 +230,9 @@ public:
         initDesc1( desc );
 
         PassDesc & p0 = desc.techniques["t0"].passes[0];
+        GN::RuntimeAssertBehavior rab = GN::setRuntimeAssertBehavior( GN::RAB_LOG_ONLY );
         p0.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
+        GN::setRuntimeAssertBehavior( rab );
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );
@@ -277,7 +279,9 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
+        GN::RuntimeAssertBehavior rab = GN::setRuntimeAssertBehavior( GN::RAB_LOG_ONLY );
         desc.techniques["t0"].rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
+        GN::setRuntimeAssertBehavior( rab );
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );
@@ -292,7 +296,9 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
+        GN::RuntimeAssertBehavior rab = GN::setRuntimeAssertBehavior( GN::RAB_LOG_ONLY );
         desc.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
+        GN::setRuntimeAssertBehavior( rab );
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );
