@@ -21,6 +21,28 @@ void foo2(int, int)
     g_callSequence.push_back( "foo2()" );
 }
 
+#if GN_MSVC
+
+void __fastcall foo3(int, int)
+{
+    g_funcName = "__fastcall foo3()";
+    g_callSequence.push_back( "__fastcall foo3()" );
+}
+
+void __stdcall foo4(int, int)
+{
+    g_funcName = "__stdcall foo4()";
+    g_callSequence.push_back( "__stdcall foo4()" );
+}
+
+void __cdecl foo5(int, int)
+{
+    g_funcName = "__cdecl foo5()";
+    g_callSequence.push_back( "__cdecl foo5()" );
+}
+
+#endif
+
 struct aaa
 {
     virtual ~aaa() {}
@@ -97,6 +119,20 @@ bool unequal( const F1 & f1, const F2 & f2 )
 class FunctorTest : public CxxTest::TestSuite
 {
 public:
+
+    void testCallConvension()
+    {
+#if GN_MSVC
+
+        GN::Functor2<void,int,int> f3, f4, f5;
+        //f3 = GN::makeFunctor( &foo3 );
+        //f4 = GN::makeFunctor( &foo4 );
+        //f5 = GN::makeFunctor( &foo5 );
+        //f3(0,0);
+        //f4(0,0);
+        //f5(0,0);
+#endif
+    }
 
     void testMakeFunctor()
     {

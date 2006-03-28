@@ -6,7 +6,9 @@
 #ifdef GN_SIGSLOT_TEMPL_N
 
 #ifndef GN_JOIN
-#define GN_JOIN(s1, s2)         GN_CONCATNATE_DIRECT(s1, s2)
+#define GN_JOIN(s1, s2)               GN_CONCATNATE_DIRECT(s1, s2)
+#define GN_JOIN3(s1, s2, s3)          GN_JOIN( GN_JOIN( s1, s2 ), s3 )
+#define GN_JOIN4(s1, s2, s3, s4)      GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 )
 #define GN_CONCATNATE_DIRECT(s1, s2)  s1##s2
 #endif
 
