@@ -81,7 +81,7 @@ def UTIL_staticBuild( variant ) : return 'stdbg' == variant or 'strel' == varian
 # 是否是调试编译模式
 def UTIL_debugBuild( variant ) : return 'debug' == variant or 'stdbg' == variant
 
-def UTIL_buildRoot() : return os.path.join( 'bin', 'tmp', CONF_platform )
+def UTIL_buildRoot() : return os.path.join( 'bin', 'scons.tmp', CONF_platform )
 
 def UTIL_buildDir( compiler, variant ) : return os.path.join( UTIL_buildRoot(), compiler, variant )
 
@@ -871,6 +871,12 @@ for compiler, variants in ALL_targets.iteritems() :
 
 ################################################################################
 #
+# TODO: 生成bin/dist目录
+#
+################################################################################
+
+################################################################################
+#
 # 生成msvc工程文件
 #
 ################################################################################
@@ -904,7 +910,6 @@ def HELP_generateTargetList():
     for v in ALL_targets.itervalues():
         for t in v.itervalues():
             for n in t.keys():
-                print n
                 names.add( n )
                 l = len( n )
                 if l > maxlen: maxlen = l

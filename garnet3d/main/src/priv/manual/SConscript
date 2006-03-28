@@ -1,3 +1,44 @@
 Import( 'GN' )
-cluster = GN.newSourceCluster( ['doxyfile.in'] )
-GN.newTarget( 'doxygen', 'GNman', [cluster] )
+
+import sys, os.path
+
+# store Doc generate functor
+class DocGenerator:
+
+    def __init__(self):
+        self.target = File('garnet3d.chm')
+
+    def __call__( self, env, sources ):
+
+        if 'win32' == GN.conf['platform']:
+            doxygen = File('#env/bin/mswin/x86/doxygen.exe').path
+            genchm = 'YES'
+        else:
+            doxygen = 'doxygen'
+            genchm = 'NO'
+
+        outdir = os.path.dirname( self.target.path )
+        doxyFileName = os.path.join( outdir, 'DoxyFile' )
+
+        doxyfile = env.Command(
+            doxyFileName, sources,
+            '%s $SOURCES OUTPUT_DIRECTORY=%s CHM_FILE=%s GENERATE_HTMLHELP=%s HHC_LOCATION=%s > $TARGET'%(
+                sys.executable,
+                outdir,
+                self.target.abspath,
+                genchm,
+                File('#env/bin/mswin/x86/hhc.exe').abspath,
+                )
+            )
+
+        manual = env.Command(
+            self.target, doxyFileName,
+            '%s $SOURCES'%(doxygen)
+            )
+
+        env.Depends( manual, GN.glob( '#src/priv/*.[h|inl]', True ) )
+        return manual
+
+Import( 'GN' )
+cluster = GN.newCustomSourceCluster( ['gendoxyfile.py','doxyfile.in'], DocGenerator() )
+GN.newNeutralCustomTarget( 'GNman', [cluster] )
