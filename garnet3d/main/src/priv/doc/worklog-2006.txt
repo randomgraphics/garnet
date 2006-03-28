@@ -64,6 +64,9 @@ TODO
 WORKLOG
 =======
 
+- 2006.3.28:
+  - add call convension support to functor (working in progress)
+
 - Before 2006.3.38
   - Rewrite SCons script
   - sample: render to texture

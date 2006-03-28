@@ -205,8 +205,10 @@
 //!
 //! 连接两个名称
 //!
-#define GN_JOIN(s1, s2)         GN_JOIN_DIRECT(s1, s2)
-#define GN_JOIN_DIRECT(s1, s2)  s1##s2 //!< Auxillary macro used by GN_JOIN
+#define GN_JOIN(s1, s2)          GN_JOIN_DIRECT(s1, s2)
+#define GN_JOIN3(s1, s2, s3)     GN_JOIN( GN_JOIN( s1, s2 ), s3 )
+#define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 )
+#define GN_JOIN_DIRECT(s1, s2)   s1##s2 //!< Auxillary macro used by GN_JOIN
 
 // *****************************************************************************
 //                           End of basicDefines.h
