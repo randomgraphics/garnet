@@ -200,7 +200,7 @@ namespace GN { namespace gfx
 
         virtual void setContext( const RendererContext & newContext ) {}
         virtual void rebindContext( RendererContext::FieldFlags ) {}
-        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const { return mContextState.rsb; }
+        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const { return mContext.rsb; }
 
     private :
 
