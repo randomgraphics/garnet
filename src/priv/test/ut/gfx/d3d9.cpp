@@ -1,11 +1,11 @@
 #include "common.h"
 
-class GfxD3DTest : public CxxTest::TestSuite, public GfxTest
+class GfxD3D9Test : public CxxTest::TestSuite, public GfxTest
 {
 
 public:
 
-    void setUp() { d3dInit(); }
+    void setUp() { d3d9Init(); }
 
     void tearDown() { GN::gfx::deleteRenderer(); }
 

@@ -143,19 +143,18 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
 
     GN_ASSERT( selfOK() );
 
-    if( !basicLock( startIdx, numIdx, flag ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3D9IdxBuf::basicUnlock) );
+    if( !basicLock( startIdx, numIdx, flag ) ) return 0;
 
     uint16_t * buf;
     if( mSysCopy.empty() )
     {
-        GN_DX9_CHECK_RV(
+        GN_DX9_CHECK_DO(
             mD3DIb->Lock(
                 (UINT)( startIdx<<1 ),
                 (UINT)( numIdx<<1 ),
                 (void**)&buf,
                 sLockFlags2D3D9( isDynamic(), flag ) ),
-            0 );
+            basicUnlock(); return 0; );
     }
     else
     {
@@ -166,7 +165,6 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
     }
 
     // success
-    basicUnlocker.dismiss();
     return (uint16_t*)buf;
 
     GN_UNGUARD_SLOW;

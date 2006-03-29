@@ -166,25 +166,25 @@ namespace GN
         }
 
         template<class X, class Y>
-        inline void connect( Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) ) const
+        inline void connect( Y & classRef, R (X::*memFuncPtr)(PARAM_TYPES) ) const
         {
             GN_ASSERT( !IsConst<Y>::value ); // Y can't be const class
-            if( 0 == classPtr || 0 == memFuncPtr ) return;
+            if( 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
             SlotDesc desc;
-            desc.func.bind( *classPtr, memFuncPtr );
-            desc.classPtr = classPtr;
-            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
+            desc.func.bind( classRef, memFuncPtr );
+            desc.classPtr = &classRef;
+            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)&classRef : 0;
             addSlotItem( desc );
         }
 
         template<class X, class Y>
-        inline void connect( const Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) const ) const
+        inline void connect( const Y & classRef, R (X::*memFuncPtr)(PARAM_TYPES) const ) const
         {
-            if( 0 == classPtr || 0 == memFuncPtr ) return;
+            if( 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
             SlotDesc desc;
-            desc.func.bind( *classPtr, memFuncPtr );
-            desc.classPtr = classPtr;
-            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
+            desc.func.bind( classRef, memFuncPtr );
+            desc.classPtr = &classRef;
+            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)&classRef : 0;
             addSlotItem( desc );
         }
 
@@ -200,23 +200,21 @@ namespace GN
         }
 
         template<class X>
-        void disconnect( const X * slotPtr ) const
+        void disconnect( const X & slot ) const
         {
-            if( !slotPtr ) return;
-
             // remove the class from private slot list that has same class ptr
             typename SlotContainer::iterator i, t, e = mSlots.end();
             for( i = mSlots.begin(); i != e; )
             {
                 t = i; ++i;
-                if( slotPtr == t->classPtr )
+                if( &slot == t->classPtr )
                     mSlots.erase(t);
             }
 
             if( IsBaseAndDerived<SlotBase,X>::value )
             {
                 // remove itself from target slot's singal array.
-                disconnectFromSlotClass( *(const SlotBase*)slotPtr );
+                disconnectFromSlotClass( (const SlotBase &)slot );
             }
         }
 

@@ -190,18 +190,17 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
     GN_ASSERT( selfOK() );
 
     if( !basicLock( offset, bytes, flag ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&D3D9VtxBuf::basicUnlock) );
 
     void * buf;
     if ( mSysCopy.empty() )
     {
-        GN_DX9_CHECK_RV(
+        GN_DX9_CHECK_DO(
             mD3DVb->Lock(
                 (UINT)offset,
                 (UINT)bytes,
                 &buf,
                 sLockFlags2D3D9(isDynamic(),flag) ),
-            0 );
+            basicUnlock(); return 0; );
     }
     else
     {
@@ -212,7 +211,6 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
     }
 
     // success
-    basicUnlocker.dismiss();
     return buf;
 
     GN_UNGUARD_SLOW;

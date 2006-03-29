@@ -707,7 +707,7 @@ bool GN::gfx::OGLTexture::lock(
 
     // call basic lock
     if( !basicLock( face, level, area, flag, mLockedArea ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(this,&OGLTexture::basicUnlock) );
+    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(*this,&OGLTexture::basicUnlock) );
 
     // º∆À„pitch
     if( mOGLCompressed )

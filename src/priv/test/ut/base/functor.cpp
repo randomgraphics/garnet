@@ -258,8 +258,8 @@ public:
         aaa a;
         const aaa & b = a;
         GN::Signal2<void,int,int> s1;
-        s1.connect( &a, &aaa::foo1 );
-        s1.connect<aaa,aaa>( &b, &aaa::foo1 );
+        s1.connect( a, &aaa::foo1 );
+        s1.connect<aaa,aaa>( b, &aaa::foo1 );
         TS_ASSERT_EQUALS( s1.getNumSlots(), 2 );
         g_callSequence.clear();
         s1(0,1);
@@ -282,9 +282,9 @@ public:
         aaa a;
         GN::Signal2<void,int,int> s;
 
-        s.connect( &a, &aaa::foo1 );
+        s.connect( a, &aaa::foo1 );
         TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
-        s.disconnect( &a );
+        s.disconnect( a );
         TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
     }
 
@@ -293,9 +293,9 @@ public:
         bbb b;
         GN::Signal2<void,int,int> s;
 
-        s.connect( &b, &bbb::foo1 );
+        s.connect( b, &bbb::foo1 );
         TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
-        s.disconnect( &b );
+        s.disconnect( b );
         TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
     }
 
@@ -304,7 +304,7 @@ public:
         GN::Signal2<void,int,int> s;
         {
             bbb b;
-            s.connect( &b, &bbb::foo1 );
+            s.connect( b, &bbb::foo1 );
             TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
             TS_ASSERT_EQUALS( b.getNumSignals(), 1 );
         }
@@ -316,7 +316,7 @@ public:
         bbb b;
         {
             GN::Signal2<void,int,int> s;
-            s.connect( &b, &bbb::foo1 );
+            s.connect( b, &bbb::foo1 );
             TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
             TS_ASSERT_EQUALS( b.getNumSignals(), 1 );
         }
@@ -327,10 +327,10 @@ public:
     {
         aaa a;
         GN::Signal2<void,int,int> s1;
-        s1.connect( &a, &aaa::foo1 );
-        s1.connect( &a, &aaa::foo2 );
+        s1.connect( a, &aaa::foo1 );
+        s1.connect( a, &aaa::foo2 );
         s1.connect( &foo1 );
-        s1.connect( &a, &aaa::foo1 ); // duplicate member function
+        s1.connect( a, &aaa::foo1 ); // duplicate member function
         s1.connect( &foo1 );          // duplicate free function
         TS_ASSERT_EQUALS( s1.getNumSlots(), 3 );
         g_callSequence.clear();
@@ -342,8 +342,8 @@ public:
         {
             bbb b;
 
-			s1.connect( &b, &bbb::foo );
-            s1.connect( &b, &aaa::foo1 );
+			s1.connect( b, &bbb::foo );
+            s1.connect( b, &aaa::foo1 );
 
             TS_ASSERT_EQUALS( s1.getNumSlots(), 5 );
             TS_ASSERT_EQUALS( b.getNumSignals(), 2 );
@@ -359,8 +359,8 @@ public:
 
             {
                 GN::Signal2<void,int,int> s2;
-                s2.connect( &b, &bbb::foo );
-                s2.connect( &a, &aaa::foo1 );
+                s2.connect( b, &bbb::foo );
+                s2.connect( a, &aaa::foo1 );
 
                 TS_ASSERT_EQUALS( s2.getNumSlots(), 2 );
                 TS_ASSERT_EQUALS( b.getNumSignals(), 3 );
