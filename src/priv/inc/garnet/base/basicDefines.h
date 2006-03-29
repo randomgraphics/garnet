@@ -201,7 +201,11 @@
 #define GN_STDCALL __stdcall
 
 #define GN_HAS_THISCALL 1
+#if _MSC_VER >= 1400
 #define GN_THISCALL __thiscall
+#else
+#define GN_THISCALL
+#endif
 
 #define GN_HAS_CDECL 1
 #define GN_CDECL __cdecl
