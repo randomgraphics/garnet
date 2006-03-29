@@ -78,8 +78,7 @@ static DWORD sTextureStateValue2D3D[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
 void GN::gfx::D3D9Renderer::contextClear()
 {
     _GNGFX_DEVICE_TRACE();
-    mContextState.resetToDefault();
-    mContextData.resetToEmpty();
+    mContext.resetToDefault();
 }
 
 //
@@ -101,9 +100,8 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
     setD3DRenderState( D3DRS_COLORVERTEX, 1 ); // always enable color vertex
 #endif
 
-    // rebind context and data
-    bindContextState( mContextState, mContextState.flags, true );
-    bindContextData( mContextData, mContextData.flags, true );
+    // rebind context
+    bindContext( mContext, mContext.flags, true );
 
     // success
     return true;
@@ -118,22 +116,22 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::setContextState( const ContextState & newState )
+void GN::gfx::D3D9Renderer::setContext( const RendererContext & newContext )
 {
     GN_GUARD_SLOW;
 
 #if GN_DEBUG
-    // make sure bindContextState() does not rely on flags in tmp structure.
-    ContextState tmp = newState;
-    ContextState::FieldFlags flags = tmp.flags;
+    // make sure bindContext() does not rely on flags in tmp structure.
+    RendererContext tmp = newContext;
+    RendererContext::FieldFlags flags = tmp.flags;
     tmp.flags.u32 = 0;
-    bindContextState( tmp, flags, false );
+    bindContext( tmp, flags, false );
 #else
-    bindContextState( newState, newState.flags, false );
+    bindContext( newContext, newContext.flags, false );
 #endif
 
-    mContextState.mergeWith( newState );
-    holdContextState( newState );
+    mContext.mergeWith( newContext );
+    holdContextReference( newContext );
 
     GN_UNGUARD_SLOW;
 }
@@ -141,43 +139,10 @@ void GN::gfx::D3D9Renderer::setContextState( const ContextState & newState )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::setContextData( const ContextData & newData )
+void GN::gfx::D3D9Renderer::rebindContext( RendererContext::FieldFlags flags )
 {
     GN_GUARD_SLOW;
-
-#if GN_DEBUG
-    // make sure bindContextData() does not rely on flags in tmp structure.
-    ContextData tmp = newData;
-    ContextData::FieldFlags flags = tmp.flags;
-    tmp.flags.u32 = 0;
-    bindContextData( tmp, flags, false );
-#else
-    bindContextData( newData, newData.flags, false );
-#endif
-
-    mContextData.mergeWith( newData );
-    holdContextData( newData );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::rebindContextState( ContextState::FieldFlags flags )
-{
-    GN_GUARD_SLOW;
-    bindContextState( mContextState, flags, true );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::rebindContextData( ContextData::FieldFlags flags )
-{
-    GN_GUARD_SLOW;
-    bindContextData( mContextData, flags, true );
+    bindContext( mContext, flags, true );
     GN_UNGUARD_SLOW;
 }
 
@@ -186,10 +151,8 @@ void GN::gfx::D3D9Renderer::rebindContextData( ContextData::FieldFlags flags )
 // -----------------------------------------------------------------------------
 const GN::gfx::RenderStateBlockDesc & GN::gfx::D3D9Renderer::getCurrentRenderStateBlock() const
 {
-    GN_GUARD_SLOW;
-    GN_ASSERT( mContextState.flags.rsb );
-    return mContextState.rsb;
-    GN_UNGUARD_SLOW;
+    GN_ASSERT( mContext.flags.rsb );
+    return mContext.rsb;
 }
 
 // *****************************************************************************
@@ -199,9 +162,9 @@ const GN::gfx::RenderStateBlockDesc & GN::gfx::D3D9Renderer::getCurrentRenderSta
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
-    const ContextState & newState,
-    ContextState::FieldFlags newFlags,
+GN_INLINE void GN::gfx::D3D9Renderer::bindContext(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
@@ -215,6 +178,28 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         // TODO: make sure all fields in current context are valid.
     }
 
+    if( newFlags.state ) bindContextState( newContext, newFlags, forceRebind );
+#if !GN_XENON
+    if( newFlags.ffp ) bindContextFfp( newContext, newFlags, forceRebind );
+#endif
+    if( newFlags.data ) bindContextData( newContext, newFlags, forceRebind );
+
+    GN_UNGUARD_SLOW;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( newFlags.state );
+
     //
     // bind shaders
     //
@@ -222,8 +207,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     {
         if( newFlags.shaderBit(i) )
         {
-            const GN::gfx::Shader * o = mContextState.shaders[i];
-            const GN::gfx::Shader * n = newState.shaders[i];
+            const GN::gfx::Shader * o = mContext.shaders[i];
+            const GN::gfx::Shader * n = newContext.shaders[i];
             if( o != n || forceRebind )
             {
                 if( n )
@@ -243,17 +228,15 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             }
         }
     }
-    newFlags.shaders = 0;
 
     //
     // bind render states
     //
     if( newFlags.rsb )
     {
-        newFlags.rsb = 0;
-        GN_ASSERT( newState.rsb.valid() );
+        GN_ASSERT( newContext.rsb.valid() );
         #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-            if( newState.rsb.isSet(RS_##tag) ) sSet_##tag( *this, newState.rsb.get(RS_##tag) );
+            if( newContext.rsb.isSet(RS_##tag) ) sSet_##tag( *this, newContext.rsb.get(RS_##tag) );
         #include "garnet/gfx/renderStateMeta.h"
         #undef GNGFX_DEFINE_RS
     }
@@ -263,7 +246,6 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     if( newFlags.renderTargets )
     {
-        newFlags.renderTargets = 0;
     }
 
     //
@@ -271,14 +253,13 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     if( newFlags.viewport )
     {
-        newFlags.viewport = 0;
-        if( newState.viewport != mContextState.viewport || forceRebind )
+        if( newContext.viewport != mContext.viewport || forceRebind )
         {
             // clamp viewport in valid range
-            float l = newState.viewport.x;
-            float t = newState.viewport.y;
-            float r = l + newState.viewport.w;
-            float b = t + newState.viewport.h;
+            float l = newContext.viewport.x;
+            float t = newContext.viewport.y;
+            float r = l + newContext.viewport.w;
+            float b = t + newContext.viewport.h;
             clamp<float>( l, 0.0f, 1.0f );
             clamp<float>( b, 0.0f, 1.0f );
             clamp<float>( r, 0.0f, 1.0f );
@@ -315,48 +296,59 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         }
     }
 
-    //
-    // bind FFP parameters
-    //
-#if !GN_XENON
+    GN_UNGUARD_SLOW;
+}
 
-    // When using programmable pipeline, FFP states should not change too often.
-    // So here we add a check point to skip FFP states update once and for all.
-    if( 0 == newFlags.u32 ) return;
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+#if GN_XENON
+    GN_UNUSED_PARAM( newContext );
+    GN_UNUSED_PARAM( newFlags );
+    GN_UNUSED_PARAM( forceRebind );
+#else
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( newFlags.ffp );
 
     if( newFlags.world )
     {
-        if( newState.world != mContextState.world || forceRebind )
+        if( newContext.world != mContext.world || forceRebind )
         {
-            Matrix44f mat = Matrix44f::sTranspose( newState.world );
+            Matrix44f mat = Matrix44f::sTranspose( newContext.world );
             GN_DX9_CHECK( mDevice->SetTransform( D3DTS_WORLD, (const D3DMATRIX*)&mat ) );
         }
     }
 
     if( newFlags.view )
     {
-        if( newState.view != mContextState.view || forceRebind )
+        if( newContext.view != mContext.view || forceRebind )
         {
-            Matrix44f mat = Matrix44f::sTranspose( newState.view );
+            Matrix44f mat = Matrix44f::sTranspose( newContext.view );
             GN_DX9_CHECK( mDevice->SetTransform( D3DTS_VIEW, (const D3DMATRIX*)&mat ) );
         }
     }
 
     if( newFlags.proj )
     {
-        if( newState.proj != mContextState.proj || forceRebind )
+        if( newContext.proj != mContext.proj || forceRebind )
         {
-            Matrix44f mat = Matrix44f::sTranspose( newState.proj );
+            Matrix44f mat = Matrix44f::sTranspose( newContext.proj );
             GN_DX9_CHECK( mDevice->SetTransform( D3DTS_PROJECTION, (const D3DMATRIX*)&mat ) );
         }
     }
 
     if( newFlags.light0Diffuse || newFlags.light0Pos )
     {
-        const Vector4f & diff = newFlags.light0Diffuse ? newState.light0Diffuse : mContextState.light0Diffuse;
-        const Vector4f & pos = newFlags.light0Pos ? newState.light0Pos : mContextState.light0Pos;
-        if( diff != mContextState.light0Diffuse ||
-            pos != mContextState.light0Pos ||
+        const Vector4f & diff = newFlags.light0Diffuse ? newContext.light0Diffuse : mContext.light0Diffuse;
+        const Vector4f & pos = newFlags.light0Pos ? newContext.light0Pos : mContext.light0Pos;
+        if( diff != mContext.light0Diffuse ||
+            pos != mContext.light0Pos ||
             forceRebind )
         {
             D3DLIGHT9 d3dlight;
@@ -379,10 +371,10 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
 
     if( newFlags.materialDiffuse || newFlags.materialSpecular )
     {
-        const Vector4f & diff = newFlags.materialDiffuse ? newState.materialDiffuse : mContextState.materialDiffuse;
-        const Vector4f & spec = newFlags.materialSpecular ? newState.materialSpecular : mContextState.materialSpecular;
-        if( diff != mContextState.materialDiffuse ||
-            spec != mContextState.materialSpecular ||
+        const Vector4f & diff = newFlags.materialDiffuse ? newContext.materialDiffuse : mContext.materialDiffuse;
+        const Vector4f & spec = newFlags.materialSpecular ? newContext.materialSpecular : mContext.materialSpecular;
+        if( diff != mContext.materialDiffuse ||
+            spec != mContext.materialSpecular ||
             forceRebind )
         {
             D3DMATERIAL9 mat;
@@ -397,7 +389,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
 
     if( newFlags.tsb )
     {
-        const TextureStateBlockDesc & desc = newState.tsb;
+        const TextureStateBlockDesc & desc = newContext.tsb;
         DWORD d3dtsv;
         uint32_t numStages = GN::min<uint32_t>( (uint32_t)desc.getNumStages(), getCaps( CAPS_MAX_TEXTURE_STAGES ) );
         for ( uint32_t i = 0; i < numStages; ++i )
@@ -437,41 +429,34 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             setD3DTextureState( numStages, D3DTSS_ALPHAOP, D3DTOP_DISABLE );
         }
     }
-#endif // !GN_XENON
 
     GN_UNGUARD_SLOW;
+#endif // !GN_XENON
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
-    const ContextData & newData,
-    ContextData::FieldFlags newFlags,
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
 
-    //
-    // Parameter check
-    //
-    if( isParameterCheckEnabled() )
-    {
-        // TODO: verify data in new context
-        // TODO: make sure all fields in current context are valid.
-    }
+    GN_ASSERT( newFlags.data );
 
     //
     // bind vertex format
     //
     if( newFlags.vtxFmt )
     {
-        if( newData.vtxFmt )
+        if( newContext.vtxFmt )
         {
             const D3D9VtxDeclDesc * decl;
-            decl = &mVtxFmts[newData.vtxFmt];
+            decl = &mVtxFmts[newContext.vtxFmt];
             GN_ASSERT( decl->decl );
-            if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
+            if( newContext.vtxFmt != mContext.vtxFmt || forceRebind )
             {
                 GN_DX9_CHECK( mDevice->SetVertexDeclaration( decl->decl ) );
             }
@@ -483,10 +468,10 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     //!
     if( newFlags.vtxBufs )
     {
-        for( UINT i = 0; i < newData.numVtxBufs; ++i )
+        for( UINT i = 0; i < newContext.numVtxBufs; ++i )
         {
-            const ContextData::VtxBufDesc & vb = newData.vtxBufs[i];
-            if( vb.buffer != mContextData.vtxBufs[i].buffer || forceRebind )
+            const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
+            if( vb.buffer != mContext.vtxBufs[i].buffer || forceRebind )
             {
                 GN_ASSERT( vb.buffer );
                 GN_DX9_CHECK( mDevice->SetStreamSource(
@@ -502,10 +487,10 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     // bind index buffer
     //
     if( newFlags.idxBuf &&
-      ( newData.idxBuf != mContextData.idxBuf || forceRebind ) )
+      ( newContext.idxBuf != mContext.idxBuf || forceRebind ) )
     {
-        GN_DX9_CHECK( mDevice->SetIndices( newData.idxBuf
-            ? safeCast<const D3D9IdxBuf*>(newData.idxBuf)->getD3DIb()
+        GN_DX9_CHECK( mDevice->SetIndices( newContext.idxBuf
+            ? safeCast<const D3D9IdxBuf*>(newContext.idxBuf)->getD3DIb()
             : 0 ) );
     }
 
@@ -515,13 +500,13 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     if( newFlags.textures )
     {
         UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-        UINT numTex = min<UINT>( (UINT)newData.numTextures, maxStages );
+        UINT numTex = min<UINT>( (UINT)newContext.numTextures, maxStages );
         UINT stage;
         for( stage = 0; stage < numTex; ++stage )
         {
-            const Texture * tex = newData.textures[stage];
-            if( tex != mContextData.textures[stage] ||
-                stage > mContextData.numTextures ||
+            const Texture * tex = newContext.textures[stage];
+            if( tex != mContext.textures[stage] ||
+                stage > mContext.numTextures ||
                 !forceRebind )
             {
                 if( tex )
@@ -535,12 +520,12 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
             }
         }
         // clear unused stages
-        numTex = min<UINT>( (UINT)mContextData.numTextures, maxStages );
+        numTex = min<UINT>( (UINT)mContext.numTextures, maxStages );
         for( ; stage < numTex; ++stage )
         {
             mDevice->SetTexture( stage, 0 );
         }
     }
-    
+
     GN_UNGUARD_SLOW;
 }

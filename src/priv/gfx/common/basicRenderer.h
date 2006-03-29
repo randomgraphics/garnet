@@ -157,8 +157,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        void holdContextState( const ContextState & ); //!< hold reference to resources in context state
-        void holdContextData( const ContextData & ); //!< hold reference to resources in context data
+        void holdContextReference( const RendererContext & ); //!< hold reference to resources in context state
 
     private:
 

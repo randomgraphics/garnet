@@ -275,10 +275,8 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setContextState( const ContextState & newContext );
-        virtual void setContextData( const ContextData & );
-        virtual void rebindContextState( ContextState::FieldFlags );
-        virtual void rebindContextData( ContextData::FieldFlags );
+        virtual void setContext( const RendererContext & newContext );
+        virtual void rebindContext( RendererContext::FieldFlags );
         virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const;
 
     public:
@@ -298,13 +296,14 @@ namespace GN { namespace gfx
         void contextDeviceDispose();
         void contextDeviceDestroy();
 
-        GN_INLINE void bindContextState( const ContextState & newContext, ContextState::FieldFlags newFlag, bool forceRebind );
-        GN_INLINE void bindContextData( const ContextData & newData, ContextData::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContext( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextState( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextFfp( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextData( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
 
     private:
 
-        ContextState mContextState;
-        ContextData  mContextData;
+        RendererContext mContext;
 
         //@}
 

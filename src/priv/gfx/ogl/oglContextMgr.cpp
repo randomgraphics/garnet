@@ -73,8 +73,7 @@ static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
 void GN::gfx::OGLRenderer::contextClear()
 {
     _GNGFX_DEVICE_TRACE();
-    mContextState.resetToDefault();
-    mContextData.resetToEmpty();
+    mContext.resetToDefault();
 }
 
 //
@@ -93,9 +92,8 @@ bool GN::gfx::OGLRenderer::contextDeviceRestore()
 {
     _GNGFX_DEVICE_TRACE();
 
-    // rebind context and data
-    bindContextState( mContextState, mContextState.flags, true );
-    bindContextData( mContextData, mContextData.flags, true );
+    // rebind context
+    bindContext( mContext, mContext.flags, true );
 
     return true;
 }
@@ -123,22 +121,22 @@ void GN::gfx::OGLRenderer::contextDeviceDestroy()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::setContextState( const ContextState & newState )
+void GN::gfx::OGLRenderer::setContext( const RendererContext & newContext )
 {
     GN_GUARD_SLOW;
 
 #if GN_DEBUG
-    // make sure bindContextState() does not rely on flags in tmp structure.
-    ContextState tmp = newState;
-    ContextState::FieldFlags flags = tmp.flags;
+    // make sure bindContext() does not rely on flags in tmp structure.
+    RendererContext tmp = newContext;
+    RendererContext::FieldFlags flags = tmp.flags;
     tmp.flags.u32 = 0;
-    bindContextState( tmp, flags, false );
+    bindContext( tmp, flags, false );
 #else
-    bindContextState( newState, newState.flags, false );
+    bindContext( newContext, newContext.flags, false );
 #endif
 
-    mContextState.mergeWith( newState );
-    holdContextState( newState );
+    mContext.mergeWith( newContext );
+    holdContextReference( newContext );
 
     GN_UNGUARD_SLOW;
 }
@@ -146,43 +144,10 @@ void GN::gfx::OGLRenderer::setContextState( const ContextState & newState )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::setContextData( const ContextData & newData )
+void GN::gfx::OGLRenderer::rebindContext( RendererContext::FieldFlags flags )
 {
     GN_GUARD_SLOW;
-
-#if GN_DEBUG
-    // make sure bindContextData() does not rely on flags in tmp structure.
-    ContextData tmp = newData;
-    ContextData::FieldFlags flags = tmp.flags;
-    tmp.flags.u32 = 0;
-    bindContextData( tmp, flags, false );
-#else
-    bindContextData( newData, newData.flags, false );
-#endif
-
-    mContextData.mergeWith( newData );
-    holdContextData( newData );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::rebindContextState( ContextState::FieldFlags flags )
-{
-    GN_GUARD_SLOW;
-    bindContextState( mContextState, flags, true );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::rebindContextData( ContextData::FieldFlags flags )
-{
-    GN_GUARD_SLOW;
-    bindContextData( mContextData, flags, true );
+    bindContext( mContext, flags, true );
     GN_UNGUARD_SLOW;
 }
 
@@ -192,10 +157,8 @@ void GN::gfx::OGLRenderer::rebindContextData( ContextData::FieldFlags flags )
 const GN::gfx::RenderStateBlockDesc &
 GN::gfx::OGLRenderer::getCurrentRenderStateBlock() const
 {
-    GN_GUARD_SLOW;
-    GN_ASSERT( mContextState.flags.rsb );
-    return mContextState.rsb;
-    GN_UNGUARD_SLOW;
+    GN_ASSERT( mContext.flags.rsb );
+    return mContext.rsb;
 }
 
 // *****************************************************************************
@@ -209,9 +172,9 @@ GN::gfx::OGLRenderer::getCurrentRenderStateBlock() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
-    const ContextState & newState,
-    ContextState::FieldFlags newFlags,
+GN_INLINE void GN::gfx::OGLRenderer::bindContext(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
@@ -225,23 +188,41 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
         // TODO: make sure all fields in current context are valid.
     }
 
+    if( newFlags.state ) bindContextState( newContext, newFlags, forceRebind );
+#if !GN_XENON
+    if( newFlags.ffp ) bindContextFfp( newContext, newFlags, forceRebind );
+#endif
+    if( newFlags.data ) bindContextData( newContext, newFlags, forceRebind );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( newFlags.state );
+
     //
     // bind shader
     //
     if( newFlags.shaders )
     {
-        unsigned int shaderBits = newFlags.shaders;
-        newFlags.shaders = 0;
-
 		const Shader * glslVs = 0;
         const Shader * glslPs = 0;
 
-        const Shader * oldVtxShader = mContextState.shaders[VERTEX_SHADER];
-        const Shader * oldPxlShader = mContextState.shaders[PIXEL_SHADER];
-        const Shader * newVtxShader = newState.shaders[VERTEX_SHADER];
-        const Shader * newPxlShader = newState.shaders[PIXEL_SHADER];
+        const Shader * oldVtxShader = mContext.shaders[VERTEX_SHADER];
+        const Shader * oldPxlShader = mContext.shaders[PIXEL_SHADER];
+        const Shader * newVtxShader = newContext.shaders[VERTEX_SHADER];
+        const Shader * newPxlShader = newContext.shaders[PIXEL_SHADER];
 
-        if( shaderBits & ( 1 << VERTEX_SHADER ) )
+        if( newFlags.shaders & ( 1 << VERTEX_SHADER ) )
         {
             GN_ASSERT(
                 0 == newVtxShader ||
@@ -281,7 +262,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
             }
         }
 
-        if( shaderBits & ( 1 << PIXEL_SHADER ) )
+        if( newFlags.shaders & ( 1 << PIXEL_SHADER ) )
         {
             GN_ASSERT(
                 0 == newPxlShader ||
@@ -350,12 +331,10 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     //
     if( newFlags.rsb )
     {
-        newFlags.rsb = 0;
+        GN_ASSERT( newContext.rsb.valid() );
 
-        GN_ASSERT( newState.rsb.valid() );
-
-        const RenderStateBlockDesc & newRsb = newState.rsb;
-        const RenderStateBlockDesc & oldRsb = mContextState.rsb;
+        const RenderStateBlockDesc & newRsb = newContext.rsb;
+        const RenderStateBlockDesc & oldRsb = mContext.rsb;
 
         bool updateAlphaFunc = false;
         int alphaFunc = oldRsb.get( RS_ALPHA_FUNC );
@@ -433,7 +412,6 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     //
     if( newFlags.renderTargets )
     {
-        newFlags.renderTargets = 0;
     }
 
     //
@@ -441,20 +419,30 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     //
     if( newFlags.viewport )
     {
-        newFlags.viewport = 0;
-        if( newState.viewport != mContextState.viewport || forceRebind )
+        if( newContext.viewport != mContext.viewport || forceRebind )
         {
-            GLint x = (GLint)( newState.viewport.x * getDispDesc().width);
-            GLint y = (GLint)( newState.viewport.y * getDispDesc().height );
-            GLsizei w = (GLsizei)( newState.viewport.w * getDispDesc().width );
-            GLsizei h = (GLsizei)( newState.viewport.h * getDispDesc().height );
+            GLint x = (GLint)( newContext.viewport.x * getDispDesc().width);
+            GLint y = (GLint)( newContext.viewport.y * getDispDesc().height );
+            GLsizei w = (GLsizei)( newContext.viewport.w * getDispDesc().width );
+            GLsizei h = (GLsizei)( newContext.viewport.h * getDispDesc().height );
             glViewport( x, y, w, h );
         }
     }
 
-    //
-    // bind FFP parameters
-    //
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( newFlags.ffp );
 
     // When using programmable pipeline, FFP states should not change too often.
     // So here we add a check point to skip FFP states update once and for all.
@@ -462,58 +450,58 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
 
     if( newFlags.world || newFlags.view )
     {
-        const Matrix44f & world = newFlags.world ? newState.world : mContextState.world;
-        const Matrix44f & view = newFlags.view ? newState.view : mContextState.view;
+        const Matrix44f & world = newFlags.world ? newContext.world : mContext.world;
+        const Matrix44f & view = newFlags.view ? newContext.view : mContext.view;
         glMatrixMode( GL_MODELVIEW );
         glLoadMatrixf( Matrix44f::sTranspose(view*world)[0] );
     }
 
     if( newFlags.proj )
     {
-        if( newState.proj != mContextState.proj || forceRebind )
+        if( newContext.proj != mContext.proj || forceRebind )
         {
             glMatrixMode( GL_PROJECTION );
-            glLoadMatrixf( Matrix44f::sTranspose(newState.proj)[0] );
+            glLoadMatrixf( Matrix44f::sTranspose(newContext.proj)[0] );
         }
     }
 
     if( newFlags.light0Pos )
     {
-        if( newState.light0Pos != mContextState.light0Pos || forceRebind )
+        if( newContext.light0Pos != mContext.light0Pos || forceRebind )
         {
-            glLightfv( GL_LIGHT0, GL_DIFFUSE, newState.light0Pos );
+            glLightfv( GL_LIGHT0, GL_DIFFUSE, newContext.light0Pos );
         }
     }
 
     if( newFlags.light0Diffuse )
     {
-        if( newState.light0Diffuse != mContextState.light0Diffuse || forceRebind )
+        if( newContext.light0Diffuse != mContext.light0Diffuse || forceRebind )
         {
-            glLightfv( GL_LIGHT0, GL_DIFFUSE, newState.light0Diffuse );
+            glLightfv( GL_LIGHT0, GL_DIFFUSE, newContext.light0Diffuse );
         }
     }
 
     if( newFlags.materialDiffuse )
     {
-        if( newState.materialDiffuse != mContextState.materialDiffuse || forceRebind )
+        if( newContext.materialDiffuse != mContext.materialDiffuse || forceRebind )
         {
-            GN_OGL_CHECK( glColor4fv( newState.materialDiffuse ) );
-            GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, newState.materialDiffuse ) );
+            GN_OGL_CHECK( glColor4fv( newContext.materialDiffuse ) );
+            GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, newContext.materialDiffuse ) );
         }
     }
 
     if( newFlags.materialSpecular )
     {
-        if( newState.materialSpecular != mContextState.materialSpecular || forceRebind )
+        if( newContext.materialSpecular != mContext.materialSpecular || forceRebind )
         {
-            GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, newState.materialSpecular ) );
+            GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, newContext.materialSpecular ) );
         }
     }
 
     if( newFlags.tsb )
     {
-        const TextureStateBlockDesc & newDesc = newState.tsb;
-        const TextureStateBlockDesc & oldDesc = mContextState.tsb;
+        const TextureStateBlockDesc & newDesc = newContext.tsb;
+        const TextureStateBlockDesc & oldDesc = mContext.tsb;
 
         TextureStateValue tsv;
 
@@ -586,32 +574,25 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
 //
 // -----------------------------------------------------------------------------
 GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
-    const ContextData & newData,
-    ContextData::FieldFlags newFlags,
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
 
-    //
-    // Parameter check
-    //
-    if( isParameterCheckEnabled() )
-    {
-        // TODO: verify data in new context
-        // TODO: make sure all fields in current context are valid.
-    }
+    GN_ASSERT( newFlags.data );
 
     //
     // bind vertex format
     //
     if( newFlags.vtxFmt )
     {
-        if( newData.vtxFmt )
+        if( newContext.vtxFmt )
         {
-            if( newData.vtxFmt != mContextData.vtxFmt || forceRebind )
+            if( newContext.vtxFmt != mContext.vtxFmt || forceRebind )
             {
-                GN_ASSERT( mVtxFmts[newData.vtxFmt] );
-                mVtxFmts[newData.vtxFmt]->bind();
+                GN_ASSERT( mVtxFmts[newContext.vtxFmt] );
+                mVtxFmts[newContext.vtxFmt]->bind();
             }
         }
     }
@@ -625,16 +606,16 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     {
         size_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
 
-        size_t numtex = min( maxStages, newData.numTextures );
+        size_t numtex = min( maxStages, newContext.numTextures );
 
         size_t i;
         for ( i = 0; i < numtex; ++i )
         {
             // if null handle, then disable this texture stage
-            if( newData.textures[i] )
+            if( newContext.textures[i] )
             {
                 chooseTextureStage( i );
-                safeCast<const OGLTexture *>(newData.textures[i])->bind();
+                safeCast<const OGLTexture *>(newContext.textures[i])->bind();
             }
             else
             {

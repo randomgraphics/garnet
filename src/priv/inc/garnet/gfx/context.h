@@ -28,9 +28,9 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Rendering context state. Completely define how rendering would be donw
+    //! Renderer context state. Completely define how rendering would be done
     //!
-    struct ContextState
+    struct RendererContext
     {
         //!
         //! Context flag structure. If flag is zero, means that field is undefined,
@@ -39,25 +39,40 @@ namespace GN { namespace gfx
         union FieldFlags
         {
             unsigned int u32; //!< all flags as uint32
+
             struct
             {
-                    // byte 0
-                unsigned int shaders            :  2; //!< one bit for each shader type
-                unsigned int rsb                :  1; //!< render state block
-                unsigned int renderTargets      :  1; //!< render targets
-                unsigned int viewport           :  1; //!< viewport
-                unsigned int                    :  3; //!< reserved
-                // byte 1
-                unsigned int world              :  1; //!< world transformation
-                unsigned int view               :  1; //!< view transformation
-                unsigned int proj               :  1; //!< projection transformation
-                unsigned int light0Pos          :  1; //!< light 0 position
-                unsigned int light0Diffuse      :  1; //!< light 0 diffuse
-                unsigned int materialDiffuse    :  1; //!< material diffues color
-                unsigned int materialSpecular   :  1; //!< material specular color
-                unsigned int tsb                :  1; //!< texture state block
-                // byte 2,3
-                unsigned int                    : 16; //!< reserved
+                unsigned char state;    //!< frequently used states
+                unsigned char ffp;      //!< fixed function pipeline states
+                unsigned char data;     //!< rendering data flags
+                unsigned char reserved; //!< reserved for future use.
+            };
+
+            struct
+            {
+                // byte 0
+                unsigned int shaders            : 2; //!< one bit for each shader type
+                unsigned int rsb                : 1; //!< render state block
+                unsigned int renderTargets      : 1; //!< render targets
+                unsigned int viewport           : 1; //!< viewport
+                unsigned int                    : 3; //!< reserved
+                // byte 1 (fixed function pipeline)
+                unsigned int world              : 1; //!< world transformation
+                unsigned int view               : 1; //!< view transformation
+                unsigned int proj               : 1; //!< projection transformation
+                unsigned int light0Pos          : 1; //!< light 0 position
+                unsigned int light0Diffuse      : 1; //!< light 0 diffuse
+                unsigned int materialDiffuse    : 1; //!< material diffues color
+                unsigned int materialSpecular   : 1; //!< material specular color
+                unsigned int tsb                : 1; //!< texture state block
+                // byte 2 (texture and mesh)
+                unsigned int textures           : 1; //!< textures
+                unsigned int vtxFmt             : 1; //!< vertex format
+                unsigned int vtxBufs            : 1; //!< vertex buffers
+                unsigned int idxBuf             : 1; //!< index buffer
+                unsigned int                    : 4; //!< reserved
+                // byte 3 (reserved)
+                unsigned int                    : 8; //!< reserved
             };
 
             //! \name helper functions to access shader bits
@@ -101,11 +116,21 @@ namespace GN { namespace gfx
             MsaaType    msaa; //!< MSAA type. Ignored, if numColorBuffers is zero.
         };
 
+        //!
+        //! Vertex buffer binding descriptor
+        //!
+        struct VtxBufDesc
+        {
+            const VtxBuf * buffer; //!< buffer pointer
+            size_t         stride; //!< buffer stride
+        };
+
         FieldFlags            flags; //!< field flags
         const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
         RenderStateBlockDesc  rsb; //!< render state block.
         RenderTargetDesc      renderTargets; //!< render target descriptor
         Rectf                 viewport; //!< viewport
+
         Matrix44f             world, //!< world transformation
                               view, //!< view transformation
                               proj; //!< projection transformation
@@ -114,6 +139,13 @@ namespace GN { namespace gfx
                               materialDiffuse, //!< diffuse material color
                               materialSpecular; //!< specular material color
         TextureStateBlockDesc tsb; //!< texture state block
+
+        const Texture *       textures[MAX_TEXTURE_STAGES]; //!< texture list
+        size_t                numTextures; //!< texture count
+        VtxFmtHandle          vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
+        VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers.
+        size_t                numVtxBufs; //!< vertex buffer count.
+        const IdxBuf *        idxBuf; //!< index buffer
 
         //!
         //! Clear to null context, all fields are unused/undefined.
@@ -130,6 +162,9 @@ namespace GN { namespace gfx
             renderTargets.numColorBuffers = 0;
             renderTargets.depthBuffer.texture = 0;
             renderTargets.msaa = MSAA_NONE;
+
+            numTextures = 0;
+            numVtxBufs = 0;
         }
 
         //!
@@ -148,6 +183,7 @@ namespace GN { namespace gfx
             renderTargets.depthBuffer.texture = 0;
             renderTargets.msaa = MSAA_NONE;
             viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
+
             world.identity();
             view.identity();
             proj.identity();
@@ -156,12 +192,17 @@ namespace GN { namespace gfx
             materialDiffuse.set( 1.0f, 1.0f, 1.0f, 1.0f );
             materialSpecular.set( 0.2f, 0.2f, 0.2f, 1.0f );
             tsb.resetToDefault();
+
+            numTextures = 0;
+            vtxFmt = 0;
+            numVtxBufs = 0;
+            idxBuf = 0;
         }
 
         //!
         //! Merge incoming context into current one.
         //!
-        void mergeWith( const ContextState & another )
+        void mergeWith( const RendererContext & another )
         {
             for( int i = 0; i < NUM_SHADER_TYPES; ++i )
             {
@@ -170,6 +211,7 @@ namespace GN { namespace gfx
             if( another.flags.rsb ) rsb.mergeWith( another.rsb );
             if( another.flags.renderTargets ) renderTargets = another.renderTargets;
             if( another.flags.viewport ) viewport = another.viewport;
+
             if( another.flags.world ) world = another.world;
             if( another.flags.view ) view = another.view;
             if( another.flags.proj ) proj = another.proj;
@@ -178,6 +220,20 @@ namespace GN { namespace gfx
             if( another.flags.materialDiffuse ) materialDiffuse = another.materialDiffuse;
             if( another.flags.materialSpecular ) materialSpecular = another.materialSpecular;
             if( another.flags.tsb ) tsb.mergeWith( tsb );
+
+            if( another.flags.textures )
+            {
+                for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
+                numTextures = another.numTextures;
+            }
+            if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
+            if( another.flags.vtxBufs )
+            {
+                for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxBufs[i] = another.vtxBufs[i];
+                numVtxBufs = another.numVtxBufs;
+            }
+            if( another.flags.idxBuf ) idxBuf = another.idxBuf;
+
             flags.u32 |= another.flags.u32;
         }
 
@@ -281,114 +337,6 @@ namespace GN { namespace gfx
         //! Set texture stage state.
         //!
         inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
-
-        //@}
-    };
-
-    //!
-    //! Rendering context data. Define input data of renderer.
-    //!
-    struct ContextData
-    {
-        //!
-        //! Context flag structure. If flag is zero, means that field is undefined,
-        //! and should not being used to update device state.
-        //!
-        union FieldFlags
-        {
-            unsigned int u32; //!< all flags as uint32
-            struct
-            {
-                // byte 0
-                unsigned int textures :  1; //!< textures
-                unsigned int vtxFmt   :  1; //!< vertex format
-                unsigned int vtxBufs  :  1; //!< vertex buffers
-                unsigned int idxBuf   :  1; //!< index buffer
-                unsigned int          :  4; //!< reserved
-                // byte 1-3
-                unsigned int          : 24; //!< reserved
-            };
-        };
-
-        //!
-        //! Vertex buffer binding descriptor
-        //!
-        struct VtxBufDesc
-        {
-            const VtxBuf * buffer; //!< buffer pointer
-            size_t         stride; //!< buffer stride
-        };
-
-        FieldFlags      flags; //!< flags
-        const Texture * textures[MAX_TEXTURE_STAGES]; //!< texture list
-        size_t          numTextures; //!< texture count
-        VtxFmtHandle    vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
-        VtxBufDesc      vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers.
-        size_t          numVtxBufs; //!< vertex buffer count.
-        const IdxBuf *  idxBuf; //!< index buffer
-
-        //!
-        //! clear to empty, all fields are undefined.
-        //!
-        void clearToNull()
-        {
-#if GN_DEBUG
-            // fill with invalid data
-            ::memset( this, sizeof(*this), 0xcd );
-#endif
-            GN_CASSERT( 4 == sizeof(FieldFlags) );
-            flags.u32 = 0;
-            numTextures = 0;
-            numVtxBufs = 0;
-        }
-
-        //!
-        //! reset to empty input data.
-        //!
-        void resetToEmpty()
-        {
-#if GN_DEBUG
-            // fill with invalid data
-            ::memset( this, sizeof(*this), 0xcd );
-#endif
-            flags.u32 = 0xFFFFFFFF;
-            numTextures = 0;
-            vtxFmt = 0;
-            numVtxBufs = 0;
-            idxBuf = 0;
-        }
-
-        //!
-        //! Merge incoming data into current one.
-        //!
-        void mergeWith( const ContextData & another )
-        {
-            if( another.flags.textures )
-            {
-                for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
-                numTextures = another.numTextures;
-            }
-
-            if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
-
-            if( another.flags.vtxBufs )
-            {
-                for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxBufs[i] = another.vtxBufs[i];
-                numVtxBufs = another.numVtxBufs;
-            }
-
-            if( another.flags.idxBuf ) idxBuf = another.idxBuf;
-
-            flags.u32 |= another.flags.u32;
-        }
-
-        //!
-        //! \name Helper functions to set single data.
-        //!
-        //! These functions are recommended over directly accessing of data member,
-        //! Because these functions can update fieid flags as well.
-        //!
-        //@{
 
         //!
         //! Set a texture.

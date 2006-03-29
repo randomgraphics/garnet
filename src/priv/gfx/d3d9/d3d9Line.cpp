@@ -274,10 +274,8 @@ void GN::gfx::D3D9Line::drawLines(
     GN_DX9_CHECK( mVtxBuf->Unlock() );
 
     // setup context and data flags
-    ContextState::FieldFlags cf;
-    ContextData::FieldFlags df;
+    RendererContext::FieldFlags cf;
     cf.u32 = 0;
-    df.u32 = 0;
 
     // setup render states
     if( !( DL_USE_CURRENT_RS & options ) )
@@ -342,8 +340,8 @@ void GN::gfx::D3D9Line::drawLines(
 #endif
 
     // bind buffers
-    df.vtxFmt = 1;
-    df.vtxBufs = 1;
+    cf.vtxFmt = 1;
+    cf.vtxBufs = 1;
     GN_ASSERT( mVtxBuf );
     GN_ASSERT( sizeof(D3D9LineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
     GN_DX9_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3D9LineVertex) ) );
@@ -355,9 +353,8 @@ void GN::gfx::D3D9Line::drawLines(
         (UINT)( mNextLine * 2 ), 
         (UINT)count ) );
 
-    // restore renderer states
-    r.rebindContextState( cf );
-    r.rebindContextData( df );
+    // restore renderer context
+    r.rebindContext( cf );
 
     // update mNextLine
     mNextLine += count;

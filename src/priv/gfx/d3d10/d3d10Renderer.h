@@ -198,10 +198,8 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setContextState( const ContextState & newContext ) {}
-        virtual void setContextData( const ContextData & ) {}
-        virtual void rebindContextState( ContextState::FieldFlags ) {}
-        virtual void rebindContextData( ContextData::FieldFlags ) {}
+        virtual void setContext( const RendererContext & newContext ) {}
+        virtual void rebindContext( RendererContext::FieldFlags ) {}
         virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const { return mContextState.rsb; }
 
     private :
@@ -215,8 +213,7 @@ namespace GN { namespace gfx
 
     private:
 
-        ContextState mContextState;
-        ContextData  mContextData;
+        RendererContext mContext;
 
         //@}
 
