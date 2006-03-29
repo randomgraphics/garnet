@@ -184,8 +184,8 @@ def UTIL_newEnv( compiler, variant ):
         #
         env['ENV']['USERPROFILE'] = os.environ['USERPROFILE']
 
-        cppdefines['debug']   += Split('_DEBUG')
-        cppdefines['stdbg']   += Split('_DEBUG')
+        cppdefines['debug']   += ['_DEBUG']
+        cppdefines['stdbg']   += ['_DEBUG']
 
         if float(env['MSVS_VERSION']) >= 8.0:
             cxxflags['common']  += ['/EHa']
@@ -194,7 +194,7 @@ def UTIL_newEnv( compiler, variant ):
             cxxflags['common']  += ['/EHs']
 
         ccflags['common']  += Split('/W4 /WX')
-        ccflags['debug']   += Split('/MDd /GR')
+        ccflags['debug']   += Split('/MDd /GR /RTCscu')
         ccflags['release'] += Split('/MD /O2')
         ccflags['stdbg']   += Split('/MTd /GR')
         ccflags['strel']   += Split('/MT /O2')
@@ -414,7 +414,7 @@ class GarnetEnv :
         return s
 
     # 创建 Target
-    def newTarget( self, type, name, sources = None, pdb = None, dependencies = None ):
+    def newTarget( self, type, name, sources, dependencies = [], pdb = None ):
         # create new target instance
         t = Target()
         if UTIL_staticBuild( CURRENT_variant ) and 'shlib' == type: type = 'stlib'
@@ -428,7 +428,7 @@ class GarnetEnv :
         return t
 
     # 创建 neutral(compiler insensitive) custom target.
-    def newNeutralCustomTarget( self, name, sources = None ):
+    def newNeutralCustomTarget( self, name, sources ):
 
         # check for redundant target
         if name in ALL_targets['neutral']['neutral'] : return ALL_targets['neutral']['neutral']
@@ -613,6 +613,9 @@ def BUILD_newCompileEnv( cluster ):
     env = BUILD_env.Copy()
 
     env.Prepend( CPPPATH = ['#src/extern/inc', 'src/priv/inc'] )
+
+    if 'icl' == env['CC']: env.Append( CCFLAGS = ['/Zi', '/debug:full'] )
+    elif 'cl' == env['CC']: env.Append( CCFLAGS = ['/Z7', '/Yd'] )
 
     a = cluster.extraCompileFlags
     env.Append(

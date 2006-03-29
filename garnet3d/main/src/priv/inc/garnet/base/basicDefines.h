@@ -193,7 +193,20 @@
 
 //@{
 
-#if GN_MSVC
+#if GN_ICL
+#define GN_HAS_FASTCALL 0
+#define GN_FASTCALL
+
+#define GN_HAS_STDCALL 0
+#define GN_STDCALL
+
+#define GN_HAS_THISCALL 0
+#define GN_THISCALL
+
+#define GN_HAS_CDECL 1
+#define GN_CDECL __cdecl
+
+#elif GN_MSVC
 #define GN_HAS_FASTCALL 1
 #define GN_FASTCALL __fastcall
 

@@ -97,13 +97,10 @@ bool GN::core::CoreTextureDict::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::core::CoreTextureDict, () );
 
-    // create the dictionary instance
-    mDict = new gfx::TextureDictionary;
-
     // register functors
-    mDict->setCreator( &sCreateTexture );
-    mDict->setDeletor( &sDeleteTexture );
-    mDict->setNullor( &sCreateNullTexture );
+    mDict.setCreator( &sCreateTexture );
+    mDict.setDeletor( &sDeleteTexture );
+    mDict.setNullor( &sCreateNullTexture );
 
     // connect to renderer signals
     GN::gfx::Renderer::sSigDeviceDispose.connect( mDict, &gfx::TextureDictionary::disposeAll );
@@ -121,11 +118,8 @@ void GN::core::CoreTextureDict::quit()
 {
     GN_GUARD;
 
-    if( mDict )
-    {
-        GN::gfx::Renderer::sSigDeviceDispose.disconnect( mDict );
-        delete mDict;
-    }
+    GN::gfx::Renderer::sSigDeviceDispose.disconnect( mDict );
+    mDict.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

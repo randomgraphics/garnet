@@ -156,13 +156,10 @@ bool core::CoreShaderDict::init()
     // standard init procedure
     GN_STDCLASS_INIT( core::CoreShaderDict, () );
 
-    // create the dictionary instance
-    mDict = new ShaderDictionary;
-
     // register functors
-    mDict->setCreator( &sCreateShader );
-    mDict->setDeletor( &sDeleteShader );
-    mDict->setNullor( &sCreateNullShader );
+    mDict.setCreator( &sCreateShader );
+    mDict.setDeletor( &sDeleteShader );
+    mDict.setNullor( &sCreateNullShader );
 
     // connect to renderer signals
     Renderer::sSigDeviceDestroy.connect( mDict, &ShaderDictionary::disposeAll );
@@ -180,11 +177,8 @@ void core::CoreShaderDict::quit()
 {
     GN_GUARD;
 
-    if( mDict )
-    {
-        Renderer::sSigDeviceDestroy.disconnect( mDict );
-        delete mDict;
-    }
+    Renderer::sSigDeviceDestroy.disconnect( mDict );
+    mDict.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

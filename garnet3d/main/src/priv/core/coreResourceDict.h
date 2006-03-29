@@ -45,7 +45,7 @@ namespace GN { namespace core
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() { mDict = 0; }
+        void clear() { mDict.clear(); }
         //@}
 
         // ********************************
@@ -58,7 +58,7 @@ namespace GN { namespace core
         // ********************************
     private:
 
-        gfx::ShaderDictionary * mDict;
+        gfx::ShaderDictionary mDict;
 
         // ********************************
         // private functions
@@ -93,7 +93,7 @@ namespace GN { namespace core
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() { mDict = 0; }
+        void clear() { mDict.clear(); }
         //@}
 
         // ********************************
@@ -106,7 +106,7 @@ namespace GN { namespace core
         // ********************************
     private:
 
-        gfx::TextureDictionary * mDict;
+        gfx::TextureDictionary mDict;
 
         // ********************************
         // private functions
@@ -141,7 +141,7 @@ namespace GN { namespace core
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() { mDict = 0; }
+        void clear() { mDict.clear(); }
         //@}
 
         // ********************************
@@ -154,7 +154,7 @@ namespace GN { namespace core
         // ********************************
     private:
 
-        gfx::effect::EffectDictionary * mDict;
+        gfx::effect::EffectDictionary mDict;
 
         // ********************************
         // private functions

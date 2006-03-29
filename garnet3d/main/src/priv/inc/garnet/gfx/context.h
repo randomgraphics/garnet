@@ -128,6 +128,8 @@ namespace GN { namespace gfx
             flags.u32 = 0;
             rsb.resetToEmpty();
             renderTargets.numColorBuffers = 0;
+            renderTargets.depthBuffer.texture = 0;
+            renderTargets.msaa = MSAA_NONE;
         }
 
         //!

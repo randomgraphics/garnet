@@ -6,7 +6,7 @@
 // \author  chenlee (2005.10.7)
 // *****************************************************************************
 
-#include "../../testCommon.h"
+#include "../testCommon.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNwin.h"
 
@@ -25,7 +25,8 @@ struct GfxResources
     GN::AutoRef<GN::gfx::Texture> tex1d, tex2d, tex3d, texcube, rt1, rt2, rt3;
     GN::AutoRef<GN::gfx::VtxBuf> vb1, vb2;
     GN::AutoRef<GN::gfx::IdxBuf> ib1, ib2;
-    uint32_t rsb1, rsb2, vtxbinding1, vtxbinding2;
+    GN::gfx::RenderStateBlockDesc rsb1, rsb2;
+    uint32_t vtxFmt1, vtxFmt2;
 
     bool create()
     {
@@ -46,14 +47,10 @@ struct GfxResources
         TS_ASSERT( rt3 );
 
         // create render state blocks
-        GN::gfx::RenderStateBlockDesc rsbd(GN::gfx::RenderStateBlockDesc::DEFAULT);
-        rsbd.rs[GN::gfx::RS_BLENDING] = GN::gfx::RSV_TRUE;
-        rsb1 = r.createRenderStateBlock( rsbd );
-        rsbd.rs[GN::gfx::RS_ALPHA_TEST] = GN::gfx::RSV_TRUE;
-        rsb2 = r.createRenderStateBlock( rsbd );
-        TS_ASSERT( rsb1 );
-        TS_ASSERT( rsb2 );
-        if( 0 == rsb1 && 0 == rsb2 ) return false;
+        rsb1.resetToDefault();
+        rsb1.set( GN::gfx::RS_BLENDING, GN::gfx::RSV_TRUE );
+        rsb2.resetToDefault();
+        rsb2.set( GN::gfx::RS_ALPHA_TEST, GN::gfx::RSV_TRUE );
 
         // create vertex buffers
         vb1.attach( r.createVtxBuf( 100 ) );
@@ -73,11 +70,11 @@ struct GfxResources
         GN::gfx::VtxFmtDesc fmt1, fmt2;
         fmt1.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT4 );
         fmt2.addAttrib( 0, 0, GN::gfx::VTXSEM_COORD, GN::gfx::FMT_FLOAT2 );
-        vtxbinding1 = r.createVtxFmt( fmt1 );
-        vtxbinding2 = r.createVtxFmt( fmt2 );
-        TS_ASSERT( vtxbinding1 );
-        TS_ASSERT( vtxbinding2 );
-        if( !vtxbinding1 & !vtxbinding2 ) return false;
+        vtxFmt1 = r.createVtxFmt( fmt1 );
+        vtxFmt2 = r.createVtxFmt( fmt2 );
+        TS_ASSERT( vtxFmt1 );
+        TS_ASSERT( vtxFmt2 );
+        if( !vtxFmt1 & !vtxFmt2 ) return false;
 
         // success
         return true;
@@ -90,26 +87,26 @@ struct GfxResources
         if( r.drawBegin() )
         {
             // draw to rt1
-            r.setRenderTarget( 0, rt1 );
+            r.setColorBuffer( 0, rt1 );
             r.clearScreen( GN::Vector4f(1,0,0,1) ); // clear to red
 
             // draw to rt2
-            r.setRenderTarget( 0, rt2 );
+            r.setColorBuffer( 0, rt2 );
             r.clearScreen( GN::Vector4f(0,0,1,1) ); // clear to blue
 
             // draw to rt3
-            r.setRenderTarget( 0, rt3 );
-            r.bindTexture( 0, rt1 );
+            r.setColorBuffer( 0, rt3 );
+            r.setTexture( 0, rt1 );
             r.draw2DTexturedQuad( 0, 0, 1, 0.5 );
-            r.bindTexture( 0, rt2 );
+            r.setTexture( 0, rt2 );
             r.draw2DTexturedQuad( 0, 0.5, 1, 1 );
 
             // draw to screen
-            r.setRenderTarget( 0, 0 );
+            r.setColorBuffer( 0, 0 );
             r.clearScreen( GN::Vector4f(0,1,0,1) ); // clear to green
-            r.bindTexture( 0, rt3 );
-            r.bindRenderStateBlock( rsb1 );
-            r.bindRenderStateBlock( rsb2 );
+            r.setTexture( 0, rt3 );
+            r.setRenderStateBlock( rsb1 );
+            r.setRenderStateBlock( rsb2 );
 
             // draw end
             r.drawEnd();
@@ -160,9 +157,9 @@ class GfxTest
 
 protected:
 
-    void d3dInit()
+    void d3d9Init()
     {
-        mApi = GN::gfx::API_D3D;
+        mApi = GN::gfx::API_D3D9;
     }
 
     void oglInit()
@@ -277,36 +274,16 @@ protected:
         if( 0 == r ) return;
 
         // renderer should be initialized with default render state
-        TS_ASSERT( r->getCurrentRenderStateBlock() == RenderStateBlockDesc::DEFAULT );
-
-        RenderStateBlockDesc
-            rsbd1( RenderStateBlockDesc::RESET_TO_DEFAULT ),
-            rsbd2( RenderStateBlockDesc::RESET_TO_INVALID );
-
-        RsbHandle rsb1 = r->createRenderStateBlock(rsbd1);
-        RsbHandle rsb2 = r->createRenderStateBlock(rsbd2);
-        TS_ASSERT( rsb1 );
-        TS_ASSERT( rsb2 );
-
-        // different rsb should have different handler
-        TS_ASSERT_DIFFERS( rsb1, rsb2 );
-
-        // query for same rsb should return same handler
-        TS_ASSERT_EQUALS( rsb1, r->createRenderStateBlock(rsbd1) );
-        TS_ASSERT_EQUALS( rsb2, r->createRenderStateBlock(rsbd2) );
+        TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock(), RenderStateBlockDesc::DEFAULT );
 
         // try setRenderState
         r->setRenderState( RS_BLENDING, RSV_TRUE );
-        TS_ASSERT( r->getCurrentRenderStateBlock().rs[RS_BLENDING], RSV_TRUE );
-        RsbHandle rsb3 = r->createRenderStateBlock( r->getCurrentRenderStateBlock() );
+        TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock().get(RS_BLENDING), RSV_TRUE );
+
         r->setRenderState( RS_BLENDING, RSV_FALSE );
-        TS_ASSERT( r->getCurrentRenderStateBlock().rs[RS_BLENDING], RSV_FALSE );
-        RsbHandle rsb4 = r->createRenderStateBlock( r->getCurrentRenderStateBlock() );
-        TS_ASSERT( rsb3 );
-        TS_ASSERT( rsb4 );
-        TS_ASSERT_DIFFERS( rsb3, rsb4 );
-        TS_ASSERT_EQUALS( rsb4, rsb1 );
-        TS_ASSERT( r->getCurrentRenderStateBlock() == RenderStateBlockDesc::DEFAULT );
+        TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock().get(RS_BLENDING), RSV_FALSE );
+
+        TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock(), RenderStateBlockDesc::DEFAULT );
 
         // try setRenderState with invalid value
         //TS_ASSERT_EQUALS( 0, r->setRenderState( RS_INVALID, RSV_TRUE ) );
