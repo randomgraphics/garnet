@@ -188,35 +188,39 @@
 #endif
 
 // *****************************************************************************
-// Call Convension
+//! \name Call Convension
 // *****************************************************************************
 
+//@{
+
 #if GN_MSVC
-#define GN_HAS_FASTCALL 1       //!< support fastcall convension or not
-#define GN_FASTCALL __fastcall  //!< fastcall keyword
+#define GN_HAS_FASTCALL 1
+#define GN_FASTCALL __fastcall
 
-#define GN_HAS_STDCALL 1        //!< support stdcall convension or not
-#define GN_STDCALL __stdcall    //!< stdcall keyword
+#define GN_HAS_STDCALL 1
+#define GN_STDCALL __stdcall
 
-#define GN_HAS_THISCALL 1       //!< support thiscall convension or not
-#define GN_THISCALL __thiscall  //!< thiscall keyword
+#define GN_HAS_THISCALL 1
+#define GN_THISCALL __thiscall
 
-#define GN_HAS_CDECL 1          //!< support cdecl convesion or not
-#define GN_CDECL __cdecl        //!< cdecl keyword
+#define GN_HAS_CDECL 1
+#define GN_CDECL __cdecl
+
 #else
-#define GN_HAS_FASTCALL 0       //!< support fastcall convension or not
-#define GN_FASTCALL             //!< fastcall keyword
+#define GN_HAS_FASTCALL 0
+#define GN_FASTCALL
 
-#define GN_HAS_STDCALL 0        //!< support stdcall convension or not
-#define GN_STDCALL              //!< stdcall keyword
+#define GN_HAS_STDCALL 0
+#define GN_STDCALL
 
-#define GN_HAS_THISCALL 0       //!< support thiscall convension or not
-#define GN_THISCALL             //!< thiscall keyword
+#define GN_HAS_THISCALL 0
+#define GN_THISCALL
 
-#define GN_HAS_CDECL 1          //!< support cdecl convesion or not
-#define GN_CDECL __cdecl        //!< cdecl keyword
+#define GN_HAS_CDECL 1
+#define GN_CDECL __cdecl
 #endif
 
+//@}
 
 // *****************************************************************************
 // Misc.

@@ -171,7 +171,7 @@ namespace GN
             GN_ASSERT( !IsConst<Y>::value ); // Y can't be const class
             if( 0 == classPtr || 0 == memFuncPtr ) return;
             SlotDesc desc;
-            desc.func.bind( classPtr, memFuncPtr );
+            desc.func.bind( *classPtr, memFuncPtr );
             desc.classPtr = classPtr;
             desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
             addSlotItem( desc );
@@ -182,7 +182,7 @@ namespace GN
         {
             if( 0 == classPtr || 0 == memFuncPtr ) return;
             SlotDesc desc;
-            desc.func.bind( classPtr, memFuncPtr );
+            desc.func.bind( *classPtr, memFuncPtr );
             desc.classPtr = classPtr;
             desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
             addSlotItem( desc );

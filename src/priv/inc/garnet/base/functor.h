@@ -72,6 +72,7 @@
 #define PARAM_COMMA_9 ,
 #define PARAM_COMMA   GN_JOIN( PARAM_COMMA_, GN_FUNCTOR_TEMPL_N)
 
+#define METHODPTR_NAME                                GN_JOIN( FunctorMethodPtr, GN_FUNCTOR_TEMPL_N )
 #define CLOSUREBASE_NAME                              GN_JOIN( ClosureBase, GN_FUNCTOR_TEMPL_N )
 #define FREECLOSURE_NAME( CALL_CONVENSION, DUMMY )    GN_JOIN3( FreeClosure, CALL_CONVENSION, GN_FUNCTOR_TEMPL_N )
 #define MEMCLOSURE_NAME( CALL_CONVENSION, CONSTNESS ) GN_JOIN4( MemClosure, CALL_CONVENSION, CONSTNESS, GN_FUNCTOR_TEMPL_N )
@@ -81,6 +82,24 @@ namespace GN
 {
     namespace detail
     {
+        template <typename R PARAM_COMMA PARAM_TEMPLS, class C>
+        struct METHODPTR_NAME
+        {
+            typedef R ( GN_FASTCALL C::*FP_fastcall)( PARAM_TYPES );
+            typedef R ( GN_STDCALL  C::*FP_stdcall)( PARAM_TYPES );
+            typedef R ( GN_THISCALL C::*FP_thiscall)( PARAM_TYPES );
+            typedef R ( GN_CDECL    C::*FP_cdecl)( PARAM_TYPES );
+        };
+
+        template <typename R PARAM_COMMA PARAM_TEMPLS, class C>
+        struct METHODPTR_NAME<R PARAM_COMMA PARAM_TYPES, const C>
+        {
+            typedef R ( GN_FASTCALL C::*FP_fastcall)( PARAM_TYPES ) const;
+            typedef R ( GN_STDCALL  C::*FP_stdcall)( PARAM_TYPES ) const;
+            typedef R ( GN_THISCALL C::*FP_thiscall)( PARAM_TYPES ) const;
+            typedef R ( GN_CDECL    C::*FP_cdecl)( PARAM_TYPES );
+        };
+
         template <typename R PARAM_COMMA PARAM_TEMPLS>
         class CLOSUREBASE_NAME
         {
@@ -172,22 +191,22 @@ namespace GN
             typedef MEMCLOSURE_NAME(CALL_CONVENSION,CONSTNESS)<X, R PARAM_COMMA PARAM_TYPES> ThisType;                  \
             typedef R(CALL_CONVENSION X::*MemFn)(PARAM_TYPES) CONSTNESS;                                                \
                                                                                                                         \
-            CONSTNESS X * mClassPtr;                                                                                    \
+            CONSTNESS X & mClassRef;                                                                                    \
             MemFn mFunc;                                                                                                \
                                                                                                                         \
         public:                                                                                                         \
                                                                                                                         \
-            MEMCLOSURE_NAME(CALL_CONVENSION,CONSTNESS)( CONSTNESS X * x, const MemFn & f )                              \
-                : BaseType(MEM_FUNC), mClassPtr(x), mFunc(f)                                                            \
+            MEMCLOSURE_NAME(CALL_CONVENSION,CONSTNESS)( CONSTNESS X & x, const MemFn & f )                              \
+                : BaseType(MEM_FUNC), mClassRef(x), mFunc(f)                                                            \
             {                                                                                                           \
-                GN_ASSERT( x && f );                                                                                    \
+                GN_ASSERT( f );                                                                                         \
             }                                                                                                           \
                                                                                                                         \
             virtual bool isEqual( const BaseType & other ) const                                                        \
             {                                                                                                           \
                 return                                                                                                  \
                     BaseType::getType() == other.getType() &&                                                           \
-                    mClassPtr == ((ThisType&)other).mClassPtr &&                                                        \
+                    &mClassRef == &((ThisType&)other).mClassRef &&                                                      \
                     mFunc == ((ThisType&)other).mFunc;                                                                  \
             }                                                                                                           \
                                                                                                                         \
@@ -195,14 +214,14 @@ namespace GN
             {                                                                                                           \
                 if ( BaseType::getType() != other.getType() ) return BaseType::getType() < other.getType();             \
                 const ThisType & o = (ThisType&)other;                                                                  \
-                if ( mClassPtr != o.mClassPtr ) return mClassPtr < o.mClassPtr;                                         \
+                if ( &mClassRef != &o.mClassRef ) return &mClassRef < &o.mClassRef;                                     \
                 return ::memcmp( &mFunc,&o.mFunc,sizeof(mFunc) ) < 0;                                                   \
             }                                                                                                           \
                                                                                                                         \
             virtual R run( PARAM_LIST ) const                                                                           \
             {                                                                                                           \
-                GN_ASSERT(  mClassPtr && mFunc );                                                                       \
-                return (mClassPtr->*mFunc)( PARAM_VALUES );                                                             \
+                GN_ASSERT(  mFunc );                                                                                    \
+                return (mClassRef.*mFunc)( PARAM_VALUES );                                                              \
             }                                                                                                           \
         }
 
@@ -293,9 +312,9 @@ namespace GN
 
 #define BIND_TO_MEMFUNC( CALL_CONVENSION, CONSTNESS )                                                             \
         template<class X, class Y>                                                                                \
-        inline void bind( CONSTNESS Y * x,  R( CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS )                                               \
+        inline void bind( CONSTNESS Y & x,  R( CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS )                    \
         {                                                                                                         \
-            if ( 0==x || 0==f )                                                                                   \
+            if ( 0==f )                                                                                           \
             {                                                                                                     \
                 GN_ERROR( "bind to null member function pointer!" );                                              \
                 return;                                                                                           \
@@ -468,7 +487,7 @@ namespace GN
 #define MAKE_MEMFUNCTOR( CALL_CONVENSION, CONSTNESS )                                \
     template<class X, class Y, typename R PARAM_COMMA PARAM_TEMPLS>                  \
     inline FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES>                                   \
-    makeFunctor( CONSTNESS Y * x, R( CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS ) \
+    makeFunctor( CONSTNESS Y & x, R( CALL_CONVENSION X::*f)(PARAM_TYPES) CONSTNESS ) \
     {                                                                                \
         GN_CASSERT( !IsConst<Y>::value );                                            \
         FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES> fn;                                  \

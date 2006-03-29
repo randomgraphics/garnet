@@ -158,8 +158,8 @@ public:
         const aaa & ca = a;
         GN::Functor2<void,int,int> f1, f2, f3;
         f1 = GN::makeFunctor( &foo1 );
-        f2 = GN::makeFunctor<aaa,aaa,void,int,int>( &a, &aaa::foo1 );
-        f3 = GN::makeFunctor<aaa,aaa,void,int,int>( &ca, &aaa::foo1 );
+        f2 = GN::makeFunctor<aaa,aaa,void,int,int>( a, &aaa::foo1 );
+        f3 = GN::makeFunctor<aaa,aaa,void,int,int>( ca, &aaa::foo1 );
 
         f1(1,2); ASSERT_FUNC( "foo1()", 1, 2 );
         f2(3,4); ASSERT_FUNC( "aaa::foo1()", 3, 4 );
@@ -193,37 +193,37 @@ public:
         ASSERT_FUNC( "foo2()", 1, 2);
 
         // free function != member function
-        f2.bind<aaa,aaa>( &a,&aaa::foo1 );
+        f2.bind<aaa,aaa>( a,&aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
         f2(3,4);
         ASSERT_FUNC( "aaa::foo1()", 3, 4 );
 
         // self compare, member function
-        f1.bind<aaa,aaa>( &a,&aaa::foo1 );
+        f1.bind<aaa,aaa>( a,&aaa::foo1 );
         TS_ASSERT( equal(f1,f1) );
         g_funcName = "";
         f1(1,2);
         ASSERT_FUNC( "aaa::foo1()", 1, 2 );
 
         // same member function
-        f2.bind<aaa,aaa>( &a,&aaa::foo1 );
+        f2.bind<aaa,aaa>( a,&aaa::foo1 );
         TS_ASSERT( equal(f1,f2) );
         f2(1,2);
 
         // different member function, same class, different constness
-        f1.bind<aaa,aaa>( &ca, &aaa::foo1 );
+        f1.bind<aaa,aaa>( ca, &aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
         f1(3,4);
         ASSERT_FUNC( "aaa::foo1() const", 3, 4 );
 
         // different member function, same class, different function
-        f2.bind<aaa,aaa>( &ca, &aaa::foo2 );
+        f2.bind<aaa,aaa>( ca, &aaa::foo2 );
         TS_ASSERT( unequal(f1,f2) );
         f2(1,2);
         ASSERT_FUNC( "aaa::foo2() const", 1, 2 );
 
-        f1.bind<aaa,aaa>( &a, &aaa::foo1 );
-        f2.bind<aaa,aaa>( &ca, &aaa::foo2 );
+        f1.bind<aaa,aaa>( a, &aaa::foo1 );
+        f2.bind<aaa,aaa>( ca, &aaa::foo2 );
         TS_ASSERT( unequal(f1,f2) );
         f1(3,4);
         ASSERT_FUNC( "aaa::foo1()", 3, 4 );
@@ -231,8 +231,8 @@ public:
         ASSERT_FUNC( "aaa::foo2() const", 1, 2 );
 
         // different member function, different class
-        f1.bind<aaa,aaa>(&a,&aaa::foo1 );
-        f2.bind<aaa,bbb>(&b,&aaa::foo1 );
+        f1.bind<aaa,aaa>(a,&aaa::foo1 );
+        f2.bind<aaa,bbb>(b,&aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
         g_funcName = "";
         f1(1,2);
