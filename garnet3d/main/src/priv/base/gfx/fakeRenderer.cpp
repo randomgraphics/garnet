@@ -227,10 +227,8 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual void setContextState( const ContextState & ) {}
-        virtual void setContextData( const ContextData & ) {};
-        virtual void rebindContextState( ContextState::FieldFlags ) {}
-        virtual void rebindContextData( ContextData::FieldFlags ) {}
+        virtual void setContext( const RendererContext & ) {}
+        virtual void rebindContext( RendererContext::FieldFlags ) {}
         virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const { return RenderStateBlockDesc::DEFAULT; }
 
         //@}

@@ -67,7 +67,7 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
 // -----------------------------------------------------------------------------
 static inline void sApplyVtxBuf(
     const GN::gfx::OGLVtxFmt & vtxFmt,
-    const GN::gfx::ContextData::VtxBufDesc * vtxBufs,
+    const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
     size_t startVtx )
 {
     GN_GUARD_SLOW;
@@ -77,7 +77,7 @@ static inline void sApplyVtxBuf(
 
     for( size_t i = 0; i < vtxFmt.getFormat().numStreams; ++i )
     {
-        const ContextData::VtxBufDesc & vbd = vtxBufs[i];
+        const RendererContext::VtxBufDesc & vbd = vtxBufs[i];
 
         vtxFmt.bindBuffer(
             i,
@@ -269,17 +269,17 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     // bind vertex buffer based on current startVtx
     GN_ASSERT(
-        mVtxFmts.validHandle(mContextData.vtxFmt) &&
-        mVtxFmts[mContextData.vtxFmt] &&
-        mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams <= mContextData.numVtxBufs );
+        mVtxFmts.validHandle(mContext.vtxFmt) &&
+        mVtxFmts[mContext.vtxFmt] &&
+        mVtxFmts[mContext.vtxFmt]->getFormat().numStreams <= mContext.numVtxBufs );
     sApplyVtxBuf(
-        *mVtxFmts[mContextData.vtxFmt],
-        mContextData.vtxBufs,
+        *mVtxFmts[mContext.vtxFmt],
+        mContext.vtxBufs,
         startVtx );
 
     // get current index buffer
-    GN_ASSERT( mContextData.idxBuf );
-    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mContextData.idxBuf );
+    GN_ASSERT( mContext.idxBuf );
+    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mContext.idxBuf );
 
 #if GN_DEBUG
     // Verify index buffer
@@ -342,12 +342,12 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
 
     // bind vertex buffer based on current startVtx
     GN_ASSERT(
-        mVtxFmts.validHandle(mContextData.vtxFmt) &&
-        mVtxFmts[mContextData.vtxFmt] &&
-        mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams <= mContextData.numVtxBufs );
+        mVtxFmts.validHandle(mContext.vtxFmt) &&
+        mVtxFmts[mContext.vtxFmt] &&
+        mVtxFmts[mContext.vtxFmt]->getFormat().numStreams <= mContext.numVtxBufs );
     sApplyVtxBuf(
-        *mVtxFmts[mContextData.vtxFmt],
-        mContextData.vtxBufs,
+        *mVtxFmts[mContext.vtxFmt],
+        mContext.vtxBufs,
         startVtx );
 
     if( GLEW_EXT_compiled_vertex_array )
@@ -398,10 +398,10 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 
     // bind vertex buffer based on current startVtx
     GN_ASSERT(
-        mVtxFmts.validHandle(mContextData.vtxFmt) &&
-        mVtxFmts[mContextData.vtxFmt] &&
-        1 == mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams );
-    mVtxFmts[mContextData.vtxFmt]->bindBuffer(
+        mVtxFmts.validHandle(mContext.vtxFmt) &&
+        mVtxFmts[mContext.vtxFmt] &&
+        1 == mVtxFmts[mContext.vtxFmt]->getFormat().numStreams );
+    mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const uint8_t* )vertexData,
         0, // startVtx,
@@ -473,10 +473,10 @@ void GN::gfx::OGLRenderer::drawUp(
 
     // bind vertex buffer based on current startVtx
     GN_ASSERT(
-        mVtxFmts.validHandle(mContextData.vtxFmt) &&
-        mVtxFmts[mContextData.vtxFmt] &&
-        1 == mVtxFmts[mContextData.vtxFmt]->getFormat().numStreams );
-    mVtxFmts[mContextData.vtxFmt]->bindBuffer(
+        mVtxFmts.validHandle(mContext.vtxFmt) &&
+        mVtxFmts[mContext.vtxFmt] &&
+        1 == mVtxFmts[mContext.vtxFmt]->getFormat().numStreams );
+    mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const uint8_t* )vertexData,
         0, // startVtx,

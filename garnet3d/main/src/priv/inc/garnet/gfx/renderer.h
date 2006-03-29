@@ -779,14 +779,9 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! Set rendering state context
+        //! Set rendering context
         //!
-        virtual void setContextState( const ContextState & ) = 0;
-
-        //!
-        //! Set rendering data context
-        //!
-        virtual void setContextData( const ContextData & ) = 0;
+        virtual void setContext( const RendererContext & ) = 0;
 
         //!
         //! Rebind current rendering context to rendering device.
@@ -800,14 +795,7 @@ namespace GN { namespace gfx
         //!     state is modified (by calling OpenGL functions or IDirect3DDevice methods,
         //!     for example), and you want to restore deivce to its previous states.
         //!
-        virtual void rebindContextState( ContextState::FieldFlags ) = 0;
-
-        //!
-        //! Rebind current vertex-pixel data to rendering device.
-        //!
-        //! This function has analogy to rebindContextState().
-        //!
-        virtual void rebindContextData( ContextData::FieldFlags ) = 0;
+        virtual void rebindContext( RendererContext::FieldFlags ) = 0;
 
         //!
         //! Get current render state block descriptor
@@ -818,7 +806,7 @@ namespace GN { namespace gfx
         //
         //! \name Helper functions to update rendering context.
         //!
-        //! - See corresponding methods in ContextState and ContextData for usage
+        //! - See corresponding methods in RendererContext and ContextData for usage
         //!   of each method.
         //! - Recommended way of call sequence is:
         //!   <code>
@@ -834,9 +822,8 @@ namespace GN { namespace gfx
 
     private:
 
-        ContextState         mHelperContextState;
-        ContextData          mHelperContextData;
-        AutoInit<bool,false> mHelperUpdateBegun;
+        RendererContext      mHelperContext;
+        AutoInit<bool,false> mHelperContextUpdateBegun;
 
     public:
 

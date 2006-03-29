@@ -33,40 +33,34 @@ void GN::gfx::BasicRenderer::contextClear()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::holdContextState( const ContextState & state )
+void GN::gfx::BasicRenderer::holdContextReference( const RendererContext & context )
 {
-    GN_GUARD;
+    GN_GUARD_SLOW;
 
     for( int i = 0; i < NUM_SHADER_TYPES; ++i )
     {
-        if( state.flags.shaderBit(i) ) mResourceHolder.shaders[i].set( state.shaders[i] );
+        if( context.flags.shaderBit(i) ) mResourceHolder.shaders[i].set( context.shaders[i] );
     }
 
-    if( state.flags.renderTargets )
+    if( context.flags.renderTargets )
     {
-        for( size_t i = 0; i < state.renderTargets.numColorBuffers; ++i )
-            mResourceHolder.colorBuffers[i].set( state.renderTargets.colorBuffers[i].texture );
-        mResourceHolder.depthBuffer.set( state.renderTargets.depthBuffer.texture );
+        for( size_t i = 0; i < context.renderTargets.numColorBuffers; ++i )
+            mResourceHolder.colorBuffers[i].set( context.renderTargets.colorBuffers[i].texture );
+        mResourceHolder.depthBuffer.set( context.renderTargets.depthBuffer.texture );
     }
 
-    GN_UNGUARD;
-}
+    if( context.flags.textures )
+    {
+        sUpdateAutoRefArray( mResourceHolder.textures, context.textures, context.numTextures );
+    }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::holdContextData( const ContextData & data )
-{
-    GN_GUARD;
+    if( context.flags.vtxBufs )
+    {
+        for( size_t i = 0; i < context.numVtxBufs; ++i )
+            mResourceHolder.vtxBufs[i].set( context.vtxBufs[i].buffer );
+    }
 
-    if( data.flags.textures )
-        sUpdateAutoRefArray( mResourceHolder.textures, data.textures, data.numTextures );
+    if( context.flags.idxBuf ) mResourceHolder.idxBuf.set( context.idxBuf );
 
-    if( data.flags.vtxBufs )
-        for( size_t i = 0; i < data.numVtxBufs; ++i )
-            mResourceHolder.vtxBufs[i].set( data.vtxBufs[i].buffer );
-
-    if( data.flags.idxBuf ) mResourceHolder.idxBuf.set( data.idxBuf );
-
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
