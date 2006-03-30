@@ -19,6 +19,5 @@ Depends( cxxtest, 'cxxtestgen.py' )
 
 # build unit test application
 cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
-cluster.addCompileFlags( CPPPATH = ['.'] )
 if GN.conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
 GN.newTarget( 'prog', 'GNut', [cluster] )

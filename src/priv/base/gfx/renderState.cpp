@@ -265,7 +265,7 @@ bool GN::gfx::TextureStateBlockDesc::valid() const
     for( size_t s = 0; s < mNumStages; ++s )
     for( int i = 0; i < NUM_TEXTURE_STATES; ++i )
     {
-        if( !isSet( s, (TextureState)i ) || 0 <= mValues[s][i] && mValues[s][i] < NUM_RENDER_STATE_VALUES ) continue;
+        if( !isSet( s, (TextureState)i ) || 0 <= mValues[s][i] && mValues[s][i] < NUM_TEXTURE_STATE_VALUES ) continue;
         GN_ERROR( "TextureState[%d][%s]含有无效值：%d.", s, textureState2Str( (TextureState)i ), i );
         return false;
     }

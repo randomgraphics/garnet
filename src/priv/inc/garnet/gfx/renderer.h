@@ -20,13 +20,13 @@
 //! Implement static renderer data members
 //!
 #define GN_IMPLEMENT_RENDERER_STATIC_MEMBERS() \
-    ::GN::Signal0<bool> GN::gfx::Renderer::sSigInit; \
-    ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceCreate; \
-    ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceRestore; \
-    ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDispose; \
-    ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDestroy; \
-    ::GN::Signal0<void> GN::gfx::Renderer::sSigQuit; \
-    ::GN::SharedLib     GN::gfx::Renderer::msSharedLib;
+    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigInit; \
+    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceCreate; \
+    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigDeviceRestore; \
+    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDispose; \
+    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDeviceDestroy; \
+    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigQuit; \
+    GN_PUBLIC ::GN::SharedLib     GN::gfx::Renderer::msSharedLib;
 
 namespace GN { namespace gfx
 {

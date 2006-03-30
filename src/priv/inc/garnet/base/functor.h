@@ -72,7 +72,6 @@
 #define PARAM_COMMA_9 ,
 #define PARAM_COMMA   GN_JOIN( PARAM_COMMA_, GN_FUNCTOR_TEMPL_N)
 
-#define METHODPTR_NAME                                GN_JOIN( FunctorMethodPtr, GN_FUNCTOR_TEMPL_N )
 #define CLOSUREBASE_NAME                              GN_JOIN( ClosureBase, GN_FUNCTOR_TEMPL_N )
 #define FREECLOSURE_NAME( CALL_CONVENSION, DUMMY )    GN_JOIN3( FreeClosure, CALL_CONVENSION, GN_FUNCTOR_TEMPL_N )
 #define MEMCLOSURE_NAME( CALL_CONVENSION, CONSTNESS ) GN_JOIN4( MemClosure, CALL_CONVENSION, CONSTNESS, GN_FUNCTOR_TEMPL_N )
@@ -82,24 +81,6 @@ namespace GN
 {
     namespace detail
     {
-        template <typename R PARAM_COMMA PARAM_TEMPLS, class C>
-        struct METHODPTR_NAME
-        {
-            typedef R ( GN_FASTCALL C::*FP_fastcall)( PARAM_TYPES );
-            typedef R ( GN_STDCALL  C::*FP_stdcall)( PARAM_TYPES );
-            typedef R ( GN_THISCALL C::*FP_thiscall)( PARAM_TYPES );
-            typedef R ( GN_CDECL    C::*FP_cdecl)( PARAM_TYPES );
-        };
-
-        template <typename R PARAM_COMMA PARAM_TEMPLS, class C>
-        struct METHODPTR_NAME<R PARAM_COMMA PARAM_TYPES, const C>
-        {
-            typedef R ( GN_FASTCALL C::*FP_fastcall)( PARAM_TYPES ) const;
-            typedef R ( GN_STDCALL  C::*FP_stdcall)( PARAM_TYPES ) const;
-            typedef R ( GN_THISCALL C::*FP_thiscall)( PARAM_TYPES ) const;
-            typedef R ( GN_CDECL    C::*FP_cdecl)( PARAM_TYPES );
-        };
-
         template <typename R PARAM_COMMA PARAM_TEMPLS>
         class CLOSUREBASE_NAME
         {

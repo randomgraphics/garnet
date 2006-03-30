@@ -3,7 +3,7 @@
 namespace GN
 {
     // Global runtime assert behavior flag. Implemented in core module.
-    GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior;
+    extern GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior;
 }
 //
 //
