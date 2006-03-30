@@ -324,10 +324,10 @@ namespace GN { namespace gfx
         bool contextInit() { return true; }
         void contextQuit() {}
         bool contextOK() const { return true; }
-        void contextClear();
+        void contextClear() { mContext.resetToDefault(); }
         bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
-        void contextDeviceDispose() {}
+        void contextDeviceDispose() { mAutoColor0.clear(); mAutoDepth.clear(); }
         void contextDeviceDestroy() {}
 
         GN_INLINE void bindContext(
@@ -380,6 +380,8 @@ namespace GN { namespace gfx
 #endif
 
         RendererContext mContext;
+
+        AutoComPtr<IDirect3DSurface9> mAutoColor0, mAutoDepth;
 
         //@}
 

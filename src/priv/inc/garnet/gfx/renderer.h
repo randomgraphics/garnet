@@ -601,7 +601,7 @@ namespace GN { namespace gfx
         //!
         //! Get render device caps
         //!
-        virtual uint32_t getCaps( RendererCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
+        uint32_t getCaps( RendererCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
 
         //!
         //! Does specific shading language supported by hardware?

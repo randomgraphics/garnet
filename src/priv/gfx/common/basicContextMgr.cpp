@@ -1,33 +1,27 @@
 #include "pch.h"
 #include "basicRenderer.h"
 
-template<class T>
-static void sClearAutoRefArray( GN::AutoRef<T> data[], size_t count )
-{
-    GN_ASSERT( data && count );
-    for( size_t i = 0; i < count; ++i ) data[i].clear();
-}
-
-template<class T>
-static void sUpdateAutoRefArray( GN::AutoRef<T> dst[], T * const src[], size_t count )
-{
-    GN_ASSERT( dst && src && count );
-    for( size_t i = 0; i < count; ++i ) dst[i].set( src[i] );
-}
-
 //
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::contextClear()
 {
     GN_GUARD;
-    sClearAutoRefArray( mResourceHolder.shaders, NUM_SHADER_TYPES );
-    sClearAutoRefArray( mResourceHolder.colorBuffers, MAX_RENDER_TARGETS );
+    mResourceHolder.shaders.clear();
+    mResourceHolder.colorBuffers.clear();
     mResourceHolder.depthBuffer.clear();
-    sClearAutoRefArray( mResourceHolder.textures, MAX_TEXTURE_STAGES );
-    sClearAutoRefArray( mResourceHolder.vtxBufs, MAX_VERTEX_STREAMS );
+    mResourceHolder.textures.clear();
+    mResourceHolder.vtxBufs.clear();
     mResourceHolder.idxBuf.clear();
     GN_UNGUARD;
+}
+
+#define UPDATE_AUTOREF_ARRAY( array, newCount, newData, field ) \
+{ \
+    GN_ASSERT( newData && newCount <= array.MAX_COUNT ); \
+    for( size_t i = 0; i < newCount; ++i ) array.data[i].set( newData[i]##field ); \
+    for( size_t i = newCount; i < newCount; ++i ) array.data[i].clear(); \
+    array.count = newCount; \
 }
 
 //
@@ -39,25 +33,34 @@ void GN::gfx::BasicRenderer::holdContextReference( const RendererContext & conte
 
     for( int i = 0; i < NUM_SHADER_TYPES; ++i )
     {
-        if( context.flags.shaderBit(i) ) mResourceHolder.shaders[i].set( context.shaders[i] );
+        if( context.flags.shaderBit(i) ) mResourceHolder.shaders.data[i].set( context.shaders[i] );
     }
 
     if( context.flags.renderTargets )
     {
-        for( size_t i = 0; i < context.renderTargets.numColorBuffers; ++i )
-            mResourceHolder.colorBuffers[i].set( context.renderTargets.colorBuffers[i].texture );
+        UPDATE_AUTOREF_ARRAY(
+            mResourceHolder.colorBuffers,
+            context.renderTargets.numColorBuffers,
+            context.renderTargets.colorBuffers,
+            .texture );
         mResourceHolder.depthBuffer.set( context.renderTargets.depthBuffer.texture );
     }
 
     if( context.flags.textures )
     {
-        sUpdateAutoRefArray( mResourceHolder.textures, context.textures, context.numTextures );
+        UPDATE_AUTOREF_ARRAY(
+            mResourceHolder.textures,
+            context.numTextures,
+            context.textures, );
     }
 
     if( context.flags.vtxBufs )
     {
-        for( size_t i = 0; i < context.numVtxBufs; ++i )
-            mResourceHolder.vtxBufs[i].set( context.vtxBufs[i].buffer );
+        UPDATE_AUTOREF_ARRAY(
+            mResourceHolder.vtxBufs,
+            context.numVtxBufs,
+            context.vtxBufs,
+            .buffer );
     }
 
     if( context.flags.idxBuf ) mResourceHolder.idxBuf.set( context.idxBuf );
