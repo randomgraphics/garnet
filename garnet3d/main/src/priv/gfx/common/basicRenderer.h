@@ -161,20 +161,30 @@ namespace GN { namespace gfx
 
     private:
 
-        //!
-        //! Use to hold references to currently binded resources, in case client user
-        //! delete those resources.
-        //!
-        struct ResourceHolder
+        template<class T,size_t COUNT>
+        struct AutoRefArray
         {
-            AutoRef<const Shader>  shaders[NUM_SHADER_TYPES];
-            AutoRef<const Texture> colorBuffers[MAX_RENDER_TARGETS];
-            AutoRef<const Texture> depthBuffer;
-            AutoRef<const Texture> textures[MAX_TEXTURE_STAGES];
-            AutoRef<const VtxBuf>  vtxBufs[MAX_VERTEX_STREAMS];
-            AutoRef<const IdxBuf>  idxBuf;
+            enum { MAX_COUNT = COUNT };
+            AutoRef<const T> data[COUNT];
+            size_t           count;
+            AutoRefArray() : count(0) {}
+            void clear() { for( size_t i = 0; i < COUNT; ++i ) data[i].clear(); count = 0; }
         };
 
+        struct ResourceHolder
+        {
+            AutoRefArray<Shader,NUM_SHADER_TYPES>    shaders;
+            AutoRefArray<Texture,MAX_RENDER_TARGETS> colorBuffers;
+            AutoRef<const Texture>                   depthBuffer;
+            AutoRefArray<Texture,MAX_TEXTURE_STAGES> textures;
+            AutoRefArray<VtxBuf,MAX_VERTEX_STREAMS>  vtxBufs;
+            AutoRef<const IdxBuf>                    idxBuf;
+        };
+
+        //
+        // Use to hold references to currently binded resources, in case client user
+        // delete those resources.
+        //
         ResourceHolder mResourceHolder;
 
         //@}

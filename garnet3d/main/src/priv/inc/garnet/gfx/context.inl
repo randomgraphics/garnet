@@ -110,10 +110,10 @@ namespace GN { namespace gfx
 
         if( !flags.renderTargets || index >= renderTargets.numColorBuffers )
         {
+            flags.renderTargets = 1;
             if( index >= renderTargets.numColorBuffers && NULL == texture ) return;
             renderTargets.colorBuffers[index] = desc;
             renderTargets.numColorBuffers = index + 1;
-            flags.renderTargets = 1;
         }
         else if( NULL == texture )
         {
