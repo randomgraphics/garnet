@@ -264,6 +264,9 @@ namespace GN
             //@}
         };
 
+        //!
+        //! Input API type
+        //!
         enum InputApi
         {
             API_NATIVE,    //!< OS native API (Win32, X11, XInput)

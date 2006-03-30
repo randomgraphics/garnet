@@ -223,7 +223,7 @@
 #define GN_HAS_CDECL 1
 #define GN_CDECL __cdecl
 
-#else
+#elif GN_GCC
 #define GN_HAS_FASTCALL 0
 #define GN_FASTCALL
 
@@ -234,7 +234,7 @@
 #define GN_THISCALL
 
 #define GN_HAS_CDECL 1
-#define GN_CDECL __cdecl
+#define GN_CDECL
 #endif
 
 //@}

@@ -480,7 +480,12 @@ class SourceCluster:
                          CPPDEFINES = None,
                          CCFLAGS = None,
                          CXXFLAGS = None ):
-        if CPPPATH : self.extraCompileFlags.cpppath += CPPPATH
+        if CPPPATH :
+            for x in CPPPATH:
+                p1 = Dir(x).path
+                p2 = Dir(x).srcnode().path
+                self.extraCompileFlags.cpppath.append( p1 )
+                if p2 != p1: self.extraCompileFlags.cpppath.append( p2 )
         if CPPDEFINES : self.extraCompileFlags.cppdefines += CPPDEFINES
         if CCFLAGS : self.extraCompileFlags.ccflags += CCFLAGS
         if CXXFLAGS : self.extraCompileFlags.cxxflags += CXXFLAGS
@@ -801,6 +806,8 @@ def BUILD_program( name, target ):
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
     GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
 
+    if 'gcc' == env['CC']: env.Prepend( LIBS=['GNcore','GNbase'] )
+
     exeName = '%s%s%s'%(env['PROGPREFIX'],name,env['PROGSUFFIX'])
     prog = env.Program( os.path.join(str(target.path),exeName), objs )
     BUILD_handleManifest( env, prog )
@@ -884,22 +891,23 @@ for compiler, variants in ALL_targets.iteritems() :
 #
 ################################################################################
 
-for compiler, variants in ALL_targets.iteritems() :
-    for variant, targets in variants.iteritems():
-        for name, x in targets.iteritems():
-            if 'stlib' == x.type or 'shlib' == x.type or 'prog' == x.type :
-                SConscript( 
-                'msvc/SConscript',
-                    exports={
-                        'GN' : GN,
-                        'env' : LOCAL_env,
-                        'compiler' : compiler,
-                        'variant' : variant,
-                        'name' : name,
-                        'target' : x,
-                        },
-                    build_dir=os.path.join( UTIL_buildDir( compiler, variant ), "msvc" )
-                    )
+if 'MSVSProject' in LOCAL_env['BUILDERS']:
+    for compiler, variants in ALL_targets.iteritems() :
+        for variant, targets in variants.iteritems():
+            for name, x in targets.iteritems():
+                if 'stlib' == x.type or 'shlib' == x.type or 'prog' == x.type :
+                    SConscript( 
+                    'msvc/SConscript',
+                        exports={
+                            'GN' : GN,
+                            'env' : LOCAL_env,
+                            'compiler' : compiler,
+                            'variant' : variant,
+                            'name' : name,
+                            'target' : x,
+                            },
+                        build_dir=os.path.join( UTIL_buildDir( compiler, variant ), "msvc" )
+                        )
 
 ################################################################################
 #

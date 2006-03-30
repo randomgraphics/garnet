@@ -40,5 +40,6 @@ class DocGenerator:
         return manual
 
 Import( 'GN' )
-cluster = GN.newCustomSourceCluster( ['gendoxyfile.py','doxyfile.in'], DocGenerator() )
-GN.newNeutralCustomTarget( 'GNdoc', [cluster] )
+if 'win32' == GN.conf['platform']:
+    cluster = GN.newCustomSourceCluster( ['gendoxyfile.py','doxyfile.in'], DocGenerator() )
+    GN.newNeutralCustomTarget( 'GNdoc', [cluster] )
