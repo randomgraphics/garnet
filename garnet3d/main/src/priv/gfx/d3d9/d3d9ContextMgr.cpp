@@ -264,74 +264,74 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             }
         }
 
-        //// apply other color buffers
-        //uint32_t maxCount = getCaps( CAPS_MAX_RENDER_TARGETS );
-        //uint32_t count = min( (uint32_t)newContext.renderTargets.numColorBuffers, maxCount );
-        //for( uint32_t i = 1; i < count; ++i )
-        //{
-        //    newSurf = &newContext.renderTargets.colorBuffers[i];
-        //    oldSurf = (i >= mContext.renderTargets.numColorBuffers) ? &sNullSurface : &mContext.renderTargets.colorBuffers[i];
-        //    if( *newSurf != *oldSurf || forceRebind )
-        //    {
-        //        if( 0 == newSurf->texture )
-        //        {
-        //            GN_DX9_CHECK( mDevice->SetRenderTarget( 0, 0 ) );
-        //        }
-        //        else
-        //        {
-        //            const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
-        //            AutoComPtr<IDirect3DSurface9> surf;
-        //            surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
-        //            if( surf )
-        //            {
-        //                GN_DX9_CHECK( mDevice->SetRenderTarget( 0, surf ) );
-        //            }
-        //        }
-        //    }
-        //}
+        // apply other color buffers
+        uint32_t maxCount = getCaps( CAPS_MAX_RENDER_TARGETS );
+        uint32_t count = min( (uint32_t)newContext.renderTargets.numColorBuffers, maxCount );
+        for( uint32_t i = 1; i < count; ++i )
+        {
+            newSurf = &newContext.renderTargets.colorBuffers[i];
+            oldSurf = (i >= mContext.renderTargets.numColorBuffers) ? &sNullSurface : &mContext.renderTargets.colorBuffers[i];
+            if( *newSurf != *oldSurf || forceRebind )
+            {
+                if( 0 == newSurf->texture )
+                {
+                    GN_DX9_CHECK( mDevice->SetRenderTarget( 0, 0 ) );
+                }
+                else
+                {
+                    const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
+                    AutoComPtr<IDirect3DSurface9> surf;
+                    surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
+                    if( surf )
+                    {
+                        GN_DX9_CHECK( mDevice->SetRenderTarget( 0, surf ) );
+                    }
+                }
+            }
+        }
 
-        //// disable unused color buffers
-        //for( uint32_t i = count?count:1; i < maxCount; ++i )
-        //{
-        //    GN_DX9_CHECK( mDevice->SetRenderTarget( i, 0 ) );
-        //}
+        // disable unused color buffers
+        for( uint32_t i = count?count:1; i < maxCount; ++i )
+        {
+            GN_DX9_CHECK( mDevice->SetRenderTarget( i, 0 ) );
+        }
 
-        //// bind depth buffer
-        //newSurf = &newContext.renderTargets.depthBuffer;
-        //oldSurf = &mContext.renderTargets.depthBuffer;
-        //if( 0 == newSurf )
-        //{
-        //    AutoComPtr<IDirect3DSurface9> rt0;
-        //    GN_DX9_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
-        //    GN_ASSERT( rt0 );
-        //    D3DSURFACE_DESC rt0Desc, depthDesc;
-        //    GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
-        //    GN_DX9_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
-        //    if( depthDesc.Width < rt0Desc.Width ||
-        //        depthDesc.Height < rt0Desc.Height ||
-        //        forceRebind )
-        //    {
-        //        // create new depth buffer
-        //        mAutoDepth.clear();
-        //        GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
-        //            max(depthDesc.Width, rt0Desc.Width),
-        //            max(depthDesc.Height, rt0Desc.Height),
-        //            depthDesc.Format,
-        //            depthDesc.MultiSampleType,
-        //            depthDesc.MultiSampleQuality,
-        //            mPresentParameters.Flags | D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL,
-        //            &mAutoDepth, 0 ) );
-        //        GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
-        //    }
-        //    
-        //}
-        //else if( newSurf != oldSurf || forceRebind )
-        //{
-        //    AutoComPtr<IDirect3DSurface9> surf;
-        //    const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
-        //    surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
-        //    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( surf ) );
-        //}
+        // bind depth buffer
+        newSurf = &newContext.renderTargets.depthBuffer;
+        oldSurf = &mContext.renderTargets.depthBuffer;
+        if( 0 == newSurf->texture )
+        {
+            AutoComPtr<IDirect3DSurface9> rt0;
+            GN_DX9_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
+            GN_ASSERT( rt0 );
+            D3DSURFACE_DESC rt0Desc, depthDesc;
+            GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
+            GN_DX9_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
+            if( depthDesc.Width < rt0Desc.Width ||
+                depthDesc.Height < rt0Desc.Height ||
+                forceRebind )
+            {
+                // create new depth buffer
+                mAutoDepth.clear();
+                GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
+                    max(depthDesc.Width, rt0Desc.Width),
+                    max(depthDesc.Height, rt0Desc.Height),
+                    depthDesc.Format,
+                    depthDesc.MultiSampleType,
+                    depthDesc.MultiSampleQuality,
+                    mPresentParameters.Flags | D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL,
+                    &mAutoDepth, 0 ) );
+                GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+            }
+            
+        }
+        else if( *newSurf != *oldSurf || forceRebind )
+        {
+            AutoComPtr<IDirect3DSurface9> surf;
+            const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
+            surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
+            GN_DX9_CHECK( mDevice->SetDepthStencilSurface( surf ) );
+        }
     }
 
     //
