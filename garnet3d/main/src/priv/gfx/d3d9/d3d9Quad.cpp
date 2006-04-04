@@ -5,33 +5,22 @@
 
 struct D3D9QuadVertex
 {
-    GN::Vector4f p;
+    GN::Vector3f p;
     uint32_t     c;
     GN::Vector2f t;
-    float        _; // padding to 32 bytes
+    float        _[2]; // padding to 32 bytes
 };
 GN_CASSERT( sizeof(D3D9QuadVertex) == 32 );
 
 static const size_t QUAD_STRIDE = sizeof(D3D9QuadVertex)*4;
 
-static const D3DVERTEXELEMENT9 sDeclVs[] =
+static const D3DVERTEXELEMENT9 sVtxElements[] =
 {
-    { 0,  0, D3DDECLTYPE_FLOAT4  , 0, D3DDECLUSAGE_POSITION, 0 },
-    { 0, 16, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
-    { 0, 20, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD, 0 },
+    { 0,  0, D3DDECLTYPE_FLOAT3  , 0, D3DDECLUSAGE_POSITION, 0 },
+    { 0, 12, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
+    { 0, 16, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD, 0 },
     D3DDECL_END()
 };
-#if GN_XENON
-static const D3DVERTEXELEMENT9 * sDeclFfp = sDeclVs;
-#else
-static const D3DVERTEXELEMENT9 sDeclFfp[] =
-{
-    { 0,  0, D3DDECLTYPE_FLOAT4  , 0, D3DDECLUSAGE_POSITIONT, 0 },
-    { 0, 16, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR    , 0 },
-    { 0, 20, D3DDECLTYPE_FLOAT2  , 0, D3DDECLUSAGE_TEXCOORD , 0 },
-    D3DDECL_END()
-};
-#endif
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -88,8 +77,7 @@ bool GN::gfx::D3D9Quad::deviceCreate()
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
     // create vertex decl
-    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDeclFfp, &mDeclFfp ), false );
-    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDeclVs, &mDeclVs ), false );
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sVtxElements, &mDecl ), false );
 
     // create vertex shader
 #if GN_XENON
@@ -203,8 +191,7 @@ void GN::gfx::D3D9Quad::deviceDestroy()
 {
     GN_GUARD;
 
-    safeRelease( mDeclFfp );
-    safeRelease( mDeclVs );
+    safeRelease( mDecl );
     safeRelease( mVtxShader );
     safeRelease( mPxlShaderTextured );
     safeRelease( mPxlShaderSolid );
@@ -259,82 +246,9 @@ void GN::gfx::D3D9Quad::drawQuads(
     D3D9Renderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
 
-    // store/restore D3D device states
-    struct StateHolder
-    {
-        D3D9Renderer & r;
-        AutoComPtr<IDirect3DVertexShader9> vs;
-        AutoComPtr<IDirect3DPixelShader9> ps;
-        AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
-        AutoComPtr<IDirect3DIndexBuffer9> ib;
-        AutoComPtr<IDirect3DVertexDeclaration9> decl;
-        DWORD
-            blendEnable,
-            alphaTest,
-            alphaFunc,
-            alphaRef,
-            zEnable,
-            zWrite,
-            cullMode,
-            colorOp0,
-            colorArg0,
-            alphaOp0,
-            alphaArg0,
-            colorOp1,
-            alphaOp1;
-
-        StateHolder( D3D9Renderer & r_ ) : r(r_)
-        {
-            LPDIRECT3DDEVICE9 dev = r.getDevice();
-            GN_DX9_CHECK( dev->GetVertexShader( &vs ) );
-            GN_DX9_CHECK( dev->GetPixelShader( &ps ) );
-            GN_DX9_CHECK( dev->GetStreamSource( 0, &vb, &vbOffset, &vbStride ) );
-            GN_DX9_CHECK( dev->GetIndices( &ib ) );
-            GN_DX9_CHECK( dev->GetVertexDeclaration( &decl ) );
-            blendEnable = r.getD3DRenderState( D3DRS_ALPHABLENDENABLE );
-            alphaTest   = r.getD3DRenderState( D3DRS_ALPHATESTENABLE );
-            alphaFunc   = r.getD3DRenderState( D3DRS_ALPHAFUNC );
-            //alphaRef    = r.getD3DRenderState( D3DRS_ALPHAREF );
-            zEnable     = r.getD3DRenderState( D3DRS_ZENABLE          );
-            zWrite      = r.getD3DRenderState( D3DRS_ZWRITEENABLE     );
-            cullMode    = r.getD3DRenderState( D3DRS_CULLMODE         );
-#if !GN_XENON
-            colorOp0  = r.getD3DTextureState( 0, D3DTSS_COLOROP   );
-            colorArg0 = r.getD3DTextureState( 0, D3DTSS_COLORARG1 );
-            alphaOp0  = r.getD3DTextureState( 0, D3DTSS_ALPHAOP   );
-            alphaArg0 = r.getD3DTextureState( 0, D3DTSS_ALPHAARG1 );
-            colorOp1  = r.getD3DTextureState( 1, D3DTSS_COLOROP   );
-            alphaOp1  = r.getD3DTextureState( 1, D3DTSS_ALPHAOP   );
-#endif
-        }
-
-        ~StateHolder()
-        {
-            LPDIRECT3DDEVICE9 dev = r.getDevice();
-            GN_DX9_CHECK( dev->SetVertexShader( vs ) );
-            GN_DX9_CHECK( dev->SetPixelShader( ps ) );
-            GN_DX9_CHECK( dev->SetStreamSource( 0, vb, vbOffset, vbStride ) );
-            GN_DX9_CHECK( dev->SetIndices( ib ) );
-            if( decl ) GN_DX9_CHECK( dev->SetVertexDeclaration( decl ) );
-            r.setD3DRenderState( D3DRS_ALPHABLENDENABLE , blendEnable );
-            r.setD3DRenderState( D3DRS_ALPHATESTENABLE  , alphaTest   );
-            r.setD3DRenderState( D3DRS_ALPHAFUNC        , alphaFunc   );
-            //r.setD3DRenderState( D3DRS_ALPHAREF         , alphaRef    );
-            r.setD3DRenderState( D3DRS_ZENABLE          , zEnable     );
-            r.setD3DRenderState( D3DRS_ZWRITEENABLE     , zWrite      );
-            r.setD3DRenderState( D3DRS_CULLMODE         , cullMode    );
-#if !GN_XENON
-            r.setD3DTextureState( 0, D3DTSS_COLOROP   , colorOp0  );
-            r.setD3DTextureState( 0, D3DTSS_COLORARG1 , colorArg0 );
-            r.setD3DTextureState( 0, D3DTSS_ALPHAOP   , alphaOp0  );
-            r.setD3DTextureState( 0, D3DTSS_ALPHAARG1 , alphaArg0 );
-            r.setD3DTextureState( 1, D3DTSS_COLOROP   , colorOp1  );
-            r.setD3DTextureState( 1, D3DTSS_ALPHAOP   , alphaOp1  );
-#endif
-        }
-    };
-
-    StateHolder automaticStateHolder(r); // this will restore D3D states by the end of this function.
+    // setup render context flags
+    RendererContext::FieldFlags cf;
+    cf.u32 = 0;
 
     // lock vertex buffer
     D3D9QuadVertex * vbData;
@@ -358,13 +272,11 @@ void GN::gfx::D3D9Quad::drawQuads(
     float scaleY, offsetY;
     if( DQ_USE_CURRENT_VS & options )
     {
-        GN_DX9_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
         scaleX = 1.0f; offsetX = 0.0f;
         scaleY = 1.0f; offsetY = 0.0f;
     }
-    else if( mVtxShader )
+    else
     {
-        GN_DX9_CHECK( dev->SetVertexDeclaration( mDeclVs ) );
         if( DQ_WINDOW_SPACE & options )
         {
             D3DVIEWPORT9 vp;
@@ -380,26 +292,6 @@ void GN::gfx::D3D9Quad::drawQuads(
         offsetX = -1.0f;
         offsetY =  1.0f;
     }
-    else
-    {
-        GN_DX9_CHECK( dev->SetVertexDeclaration( mDeclFfp ) );
-        if( DQ_WINDOW_SPACE & options )
-        {
-            scaleX  = 1.0f;
-            scaleY  = 1.0f;
-            offsetX = 0.0f;
-            offsetY = 0.0f;
-        }
-        else
-        {
-            D3DVIEWPORT9 vp;
-            GN_DX9_CHECK( dev->GetViewport( &vp ) );
-            scaleX = (float)vp.Width;
-            scaleY = (float)vp.Height;
-            offsetX = .0f;
-            offsetY = .0f;
-        }
-    }
 
     // fill vertex buffer
     if( DQ_3D_POSITION & options )
@@ -407,7 +299,7 @@ void GN::gfx::D3D9Quad::drawQuads(
         for( size_t i = 0; i < count*4; ++i )
         {
             D3D9QuadVertex & v = vbData[i];
-            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2], 1 );
+            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
 
             if( texcoords )
@@ -429,7 +321,7 @@ void GN::gfx::D3D9Quad::drawQuads(
         for( size_t i = 0; i < count*4; ++i )
         {
             D3D9QuadVertex & v = vbData[i];
-            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0, 1 );
+            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0 );
             positions = (const float*)( ((const uint8_t*)positions) + posStride );
 
             if( texcoords )
@@ -453,6 +345,7 @@ void GN::gfx::D3D9Quad::drawQuads(
     // setup render states
     if( !( DQ_USE_CURRENT_RS & options ) )
     {
+        cf.rsb = 1;
         if( DQ_OPAQUE & options )
         {
             r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
@@ -473,21 +366,39 @@ void GN::gfx::D3D9Quad::drawQuads(
     // bind shaders
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
+        cf.setShaderBit( VERTEX_SHADER );
         GN_DX9_CHECK( dev->SetVertexShader( mVtxShader ) );
     }
 
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
+        cf.setShaderBit( PIXEL_SHADER );
         GN_DX9_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
     }
 
 #if !GN_XENON
+
+    // setup transformation matrix for FFP only
+    AutoComPtr<IDirect3DVertexShader9> currentVs;
+    GN_DX9_CHECK( dev->GetVertexShader( &currentVs ) );
+    if( !currentVs )
+    {
+        cf.world = 1;
+        cf.view = 1;
+        cf.proj = 1;
+        D3DXMATRIXA16 mat;
+        D3DXMatrixIdentity( &mat );
+        GN_DX9_CHECK( dev->SetTransform( D3DTS_WORLD, &mat ) );
+        GN_DX9_CHECK( dev->SetTransform( D3DTS_VIEW, &mat ) );
+        GN_DX9_CHECK( dev->SetTransform( D3DTS_PROJECTION, &mat ) );
+    }
+
     // setup texture states, for fixed-functional pipeline only
     AutoComPtr<IDirect3DPixelShader9> currentPs;
     GN_DX9_CHECK( dev->GetPixelShader( &currentPs ) );
     if( !currentPs && !( DQ_USE_CURRENT_TS & options ) )
     {
-        // TODO: setup TSS based on present of texcoords and colors.
+        cf.tsb = 1;
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
         r.setD3DTextureState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
         r.setD3DTextureState( 0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1 );
@@ -498,7 +409,11 @@ void GN::gfx::D3D9Quad::drawQuads(
 #endif
 
     // bind decl and buffers
+    cf.vtxFmt = 1;
+    cf.vtxBufs = 1;
+    cf.idxBuf = 1;
     GN_ASSERT( mVtxBuf );
+    GN_DX9_CHECK( dev->SetVertexDeclaration( mDecl ) );
     GN_DX9_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, (UINT)sizeof(D3D9QuadVertex) ) );
     GN_ASSERT( mIdxBuf );
     GN_DX9_CHECK( dev->SetIndices( mIdxBuf ) );
@@ -516,12 +431,13 @@ void GN::gfx::D3D9Quad::drawQuads(
         (UINT)( count * 2 ) ) ); // PrimitiveCount
 #endif
 
+    // restore render context
+    r.rebindContext( cf );
+
     // update mNextQuad
     mNextQuad += count;
     GN_ASSERT( mNextQuad <= MAX_QUADS );
     if( MAX_QUADS == mNextQuad ) mNextQuad = 0;
-
-    // TODO: update statistics information in D3D9Renderer ( draw count, primitive count )
 
     GN_UNGUARD_SLOW;
 }

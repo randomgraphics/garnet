@@ -38,8 +38,7 @@ namespace GN { namespace gfx {
     private:
         void clear()
         {
-            mDeclFfp = 0;
-            mDeclVs = 0;
+            mDecl = 0;
             mVtxShader = 0;
             mPxlShaderTextured = 0;
             mPxlShaderSolid = 0;
@@ -81,7 +80,7 @@ namespace GN { namespace gfx {
         // ********************************
     private:
 
-        LPDIRECT3DVERTEXDECLARATION9 mDeclFfp, mDeclVs;
+        LPDIRECT3DVERTEXDECLARATION9 mDecl;
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
         LPDIRECT3DPIXELSHADER9  mPxlShaderTextured;
         LPDIRECT3DPIXELSHADER9  mPxlShaderSolid;
