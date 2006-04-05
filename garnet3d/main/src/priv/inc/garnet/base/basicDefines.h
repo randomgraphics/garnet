@@ -193,20 +193,8 @@
 
 //@{
 
-#if GN_ICL
-#define GN_HAS_FASTCALL 0
-#define GN_FASTCALL
-
-#define GN_HAS_STDCALL 0
-#define GN_STDCALL
-
-#define GN_HAS_THISCALL 0
-#define GN_THISCALL
-
-#define GN_HAS_CDECL 1
-#define GN_CDECL __cdecl
-
-#elif GN_MSVC
+// Note: call convension is only avaliable for MSVC on x86 platform.
+#if GN_MSVC && GN_X86
 #define GN_HAS_FASTCALL 1
 #define GN_FASTCALL __fastcall
 
@@ -223,7 +211,7 @@
 #define GN_HAS_CDECL 1
 #define GN_CDECL __cdecl
 
-#elif GN_GCC
+#else
 #define GN_HAS_FASTCALL 0
 #define GN_FASTCALL
 
