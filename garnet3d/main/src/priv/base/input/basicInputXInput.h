@@ -6,8 +6,6 @@
 //! \author  chenlee (2006.3.13)
 // *****************************************************************************
 
-#if GN_MSWIN
-
 #include "basicInput.h"
 
 namespace GN { namespace input
@@ -19,21 +17,24 @@ namespace GN { namespace input
     {
         DWORD mXInputPacketNumber;
 
+    protected:
+
+        void * mXInputGetState; //!< function pointer to "XInputGetState"
+
     public:
 
         //!
         //! Constructor
         //!
-        BasicXInput() : mXInputPacketNumber(0) {}
+        BasicXInput() : mXInputPacketNumber(0), mXInputGetState(0) {}
 
         //
         // inherited from Input
         //
         void processInputEvents();
+
     };
 }}
-
-#endif
 
 // *****************************************************************************
 //                           End of basicInputXInput.h

@@ -17,6 +17,9 @@ bool GN::input::BasicInputMsw::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::input::BasicInputMsw, () );
 
+    // setup xinput function pointers
+    if( !setupXInputFunctionPointers() ) { quit(); return selfOK(); }
+
     // setup windows hooks
     if( !setupWindowHooks() ) { quit(); return selfOK(); }
 
@@ -40,6 +43,9 @@ void GN::input::BasicInputMsw::quit()
 
     // remove windows hook
     removeWindowHooks();
+
+    // release xinput library
+    if( mXInputLibrary ) ::FreeLibrary( mXInputLibrary ), mXInputLibrary = 0;
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -163,6 +169,30 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
 // *****************************************************************************
 //                             private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::input::BasicInputMsw::setupXInputFunctionPointers()
+{
+#ifdef HAS_XINPUT
+    return true;
+#else
+    GN_GUARD;
+
+    GN_ASSERT( !mXInputLibrary && !mXInputGetState );
+
+    mXInputLibrary = ::LoadLibraryA( XINPUT_DLL_A );
+    if( 0 == mXInputLibrary ) return true;
+
+    mXInputGetState = ::GetProcAddressA( mXInputLibrary, "XInputGetState" );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+#endif
+}
 
 //
 //

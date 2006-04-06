@@ -9,11 +9,21 @@
 #if GN_XENON
 
 #include "basicInputXInput.h"
+#include <XInput.h>
 
 namespace GN { namespace input
 {
     class InputXenon : public BasicXInput
     {
+    public:
+        //!
+        //! Ctor
+        //!
+        InputXenon()
+        {
+            mXInputGetState = &XInputGetState;
+        }
+
         // *****************************
         // from Input
         // *****************************

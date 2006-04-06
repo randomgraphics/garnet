@@ -1,38 +1,23 @@
 #include "pch.h"
 #include "basicInputXInput.h"
 
-#if GN_MSWIN
-
-
-
-#if GN_XENON
-
-// Xenon platform always has XInput.
-#ifndef HAS_XINPUT
-#define HAS_XINPUT
-#endif
-
-#elif defined(HAS_XINPUT)
-
+#if defined(HAS_XINPUT) || GN_XENON
 #include <XInput.h>
-#if GN_MSVC
-#pragma comment( lib, "XInput.lib" )
-#endif
 
-#endif // GN_XENON
-
+typedef DWORD (WINAPI*XInputGetStateFuncPtr)(DWORD dwUserIndex,XINPUT_STATE* pState);
 
 //
 //
 // -----------------------------------------------------------------------------
 void GN::input::BasicXInput::processInputEvents()
 {
-#ifdef HAS_XINPUT
     GN_GUARD;
+
+    if( !mXInputGetState ) return;
 
     // process xinput event
     XINPUT_STATE state;
-    if( ERROR_SUCCESS == XInputGetState( 0, &state ) &&
+    if( ERROR_SUCCESS == ((XInputGetStateFuncPtr)mXInputGetState)( 0, &state ) &&
         mXInputPacketNumber != state.dwPacketNumber )
     {
         mXInputPacketNumber = state.dwPacketNumber;
@@ -54,7 +39,13 @@ void GN::input::BasicXInput::processInputEvents()
     }
 
     GN_UNGUARD;
-#endif
 }
 
-#endif // GN_MSWIN
+#else
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::input::BasicXInput::processInputEvents() {}
+
+#endif
