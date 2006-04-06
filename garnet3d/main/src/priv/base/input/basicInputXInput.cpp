@@ -2,7 +2,6 @@
 #include "basicInputXInput.h"
 
 #if defined(HAS_XINPUT) || GN_XENON
-#include <XInput.h>
 
 typedef DWORD (WINAPI*XInputGetStateFuncPtr)(DWORD dwUserIndex,XINPUT_STATE* pState);
 
