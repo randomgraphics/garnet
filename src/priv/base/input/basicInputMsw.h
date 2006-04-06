@@ -41,6 +41,8 @@ namespace GN { namespace input
     private:
         void clear()
         {
+            mXInputLibrary = 0;
+            mXInputGetState = 0;
             mMsgHook = mCwpHook = 0;
             mMouseCapture = false;
         }
@@ -79,15 +81,18 @@ namespace GN { namespace input
         // ********************************
     private:
 
-        HWND mWindow;
+        HMODULE mXInputLibrary;
         HHOOK mMsgHook, mCwpHook;
         bool  mMouseCapture;
+
+        HWND mWindow;
 
         // ********************************
         // private functions
         // ********************************
     private:
 
+        bool setupXInputFunctionPointers();
         bool setupWindowHooks();
         void removeWindowHooks();
 

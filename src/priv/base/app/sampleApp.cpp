@@ -169,17 +169,17 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 "Usage : %s [options]\n\n"
                 "Options : (options are case-insensitive)\n"
                 "    -h, -?                 : Show help screen.\n"
-                "    -ref                   : Use reference device.\n"
                 "    -d3d9/d3d10/ogl/fake   : Select rendering API.\n"
+                "    -ref                   : Use reference device.\n"
                 "    -msaa                  : Enable MSAA/FSAA.\n"
                 "    -pure                  : Use pure device (D3D only).\n"
                 , GN::path::baseName(argv[0]).cstr() );
             return false;
         }
-        else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
         else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
         else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.rapi = gfx::API_D3D10;
         else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+        else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
         else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
         else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
         else if( 0 == strCmpI( a, "-pure") ) mInitParam.ro.pure = true;
