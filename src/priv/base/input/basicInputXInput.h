@@ -8,6 +8,10 @@
 
 #include "basicInput.h"
 
+#if defined(HAS_XINPUT) || GN_XENON
+#include <XInput.h>
+#endif
+
 namespace GN { namespace input
 {
     //!

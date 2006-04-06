@@ -176,8 +176,6 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
 bool GN::input::BasicInputMsw::setupXInputFunctionPointers()
 {
 #ifdef HAS_XINPUT
-    return true;
-#else
     GN_GUARD;
 
     GN_ASSERT( !mXInputLibrary && !mXInputGetState );
@@ -185,12 +183,14 @@ bool GN::input::BasicInputMsw::setupXInputFunctionPointers()
     mXInputLibrary = ::LoadLibraryA( XINPUT_DLL_A );
     if( 0 == mXInputLibrary ) return true;
 
-    mXInputGetState = ::GetProcAddressA( mXInputLibrary, "XInputGetState" );
+    mXInputGetState = ::GetProcAddress( mXInputLibrary, "XInputGetState" );
 
     // success
     return true;
 
     GN_UNGUARD;
+#else
+    return true;
 #endif
 }
 
