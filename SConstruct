@@ -195,9 +195,9 @@ def UTIL_newEnv( compiler, variant ):
 
         ccflags['common']  += Split('/W4 /WX')
         ccflags['debug']   += Split('/MDd /GR /RTCscu')
-        ccflags['release'] += Split('/MD /O2')
+        ccflags['release'] += Split('/MD /O2 /GL')
         ccflags['stdbg']   += Split('/MTd /GR')
-        ccflags['strel']   += Split('/MT /O2')
+        ccflags['strel']   += Split('/MT /O2 /GL')
 
         # this is for vtune and magellan to do instrumentation
         linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP']
