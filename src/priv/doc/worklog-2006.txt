@@ -17,6 +17,9 @@ TODO
 - 程序中标注TODO的地方
 
 - p1
+  - try multi-thread architect
+    - separate sim() and render() loop
+    - File loader in another thread.
   - GFX system
     - render target management
     - queryXXX(....)
