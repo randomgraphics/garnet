@@ -26,7 +26,7 @@ namespace GN { namespace gfx
     //!     Return indices of triangle list. Must be large enough to hold at least 12*3=36 indices.
     //!     Can be NULL if you do not need it.
     //! \param quadList
-    //!     Return indices of triangle list. Must be large enough to hold at least 6*4=24 indices.
+    //!     Return indices of quad list. Must be large enough to hold at least 6*4=24 indices.
     //!     Can be NULL if you do not need it.
     //!
     void createBox(
