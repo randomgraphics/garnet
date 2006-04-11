@@ -394,9 +394,7 @@ void GN::gfx::D3D9Quad::drawQuads(
     }
 
     // setup texture states, for fixed-functional pipeline only
-    AutoComPtr<IDirect3DPixelShader9> currentPs;
-    GN_DX9_CHECK( dev->GetPixelShader( &currentPs ) );
-    if( !currentPs && !( DQ_USE_CURRENT_TS & options ) )
+    if( !( DL_USE_CURRENT_PS & options ) && !mPxlShaderTextured && !mPxlShaderSolid && !( DQ_USE_CURRENT_TS & options ) )
     {
         cf.tsb = 1;
         r.setD3DTextureState( 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1 );
