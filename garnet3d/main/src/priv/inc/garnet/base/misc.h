@@ -546,7 +546,7 @@ namespace GN
         //!
         //! Assignment operator
         //!
-        AutoComPtr & operator==( const AutoComPtr & rhs )
+        AutoComPtr & operator=( const AutoComPtr & rhs )
         {
             set( rhs.mPtr );
             return *this;
