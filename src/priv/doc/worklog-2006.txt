@@ -68,6 +68,9 @@ TODO
 WORKLOG
 =======
 
+- 2006.4.11
+  - add: user-supplied hints to shader creation.
+
 - 2006.3.28:
   - call convension support to functor
   - switchable runtime assert behavior

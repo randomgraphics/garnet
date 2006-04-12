@@ -110,13 +110,19 @@ namespace GN
         //! \name Get variable value. Return default value for incompatible type.
         //@{
 
-        bool      B( const bool      & defVal ) const { bool r; return getB(r) ? r : defVal; }
-        int       I( const int       & defVal ) const { int r; return getI(r) ? r : defVal; }
-        float     F( const float     & defVal ) const { float r; return getF(r) ? r : defVal; }
-        void*     P( void* const     & defVal ) const { void* r; return getP(r) ? r : defVal; }
-        StrA      S()                           const { StrA r; getS(r); return r; }
-        Vector4f  V( const Vector4f  & defVal ) const { Vector4f r; return getV(r) ? r : defVal; }
-        Matrix44f M( const Matrix44f & defVal ) const { Matrix44f r; return getM(r) ? r : defVal; }
+        #define _GN_VARIANT_GET( type, var ) \
+            if( type != mType && var.timeStamp != mTimeStamp && !convertTo( type ) ) return defVal; \
+            else return var.value;
+
+        bool              B( const bool      & defVal ) const { _GN_VARIANT_GET(VARIANT_BOOL, mBool ); }
+        int               I( const int       & defVal ) const { _GN_VARIANT_GET(VARIANT_INT, mInt ); }
+        float             F( const float     & defVal ) const { _GN_VARIANT_GET(VARIANT_FLOAT, mFloat ); }
+        void*             P( void* const     & defVal ) const { _GN_VARIANT_GET(VARIANT_POINTER, mPointer ); }
+        const StrA &      S() const { if( VARIANT_STRING != mType && mString.timeStamp != mTimeStamp ) convertTo( VARIANT_STRING ); return mString.value; }
+        const Vector4f &  V( const Vector4f  & defVal ) const { _GN_VARIANT_GET(VARIANT_VECTOR4, mVector4 ); }
+        const Matrix44f & M( const Matrix44f & defVal ) const { _GN_VARIANT_GET(VARIANT_MATRIX44, mMatrix44 ); }
+
+        #undef _GN_VARIANT_GET
 
         //@}
 
