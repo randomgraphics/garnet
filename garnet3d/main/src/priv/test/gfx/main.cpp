@@ -148,7 +148,7 @@ public:
                 "{ \n"
                 "   return diffuse; \n"
                 "} \n";
-            ps2.attach( r.createPxlShader( LANG_D3D_HLSL, code, "entry=psMain" ) );
+            ps2.attach( r.createPxlShader( LANG_D3D_HLSL, code, "entry=psMain sm30=false" ) );
             if( !ps2 ) return false;
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }

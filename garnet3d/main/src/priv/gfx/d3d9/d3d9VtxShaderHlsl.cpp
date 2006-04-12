@@ -62,15 +62,20 @@ bool GN::gfx::D3D9VtxShaderHlsl::deviceCreate()
 
     GN_ASSERT( !mConstTable && !mD3DShader );
 
-    const Registry & hints = getHints();
+    // determine compile profile
+    const char * target = getTarget();
+    if( strEmpty(target) )
+        target = D3DXGetVertexShaderProfile( getRenderer().getDevice() );
+    if( !useSm3() && ( 0 == strCmpI( "vs_3_0", target ) || ( 0 == strCmpI( "vs.3.0", target ) ) ) )
+        target = "vs_2_a";
 
     mD3DShader = d3d9::compileVS(
         getRenderer().getDevice(),
         mCode.cstr(),
         mCode.size(),
         0, // flags
-        hints.getKey( "entry", StrA("main") ).S().cstr(),
-        hints.getKey( "target", StrA("") ).S().cstr(),
+        getEntry(),
+        target,
         &mConstTable );
     if( 0 == mD3DShader ) return false;
 

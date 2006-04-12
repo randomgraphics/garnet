@@ -233,20 +233,37 @@ namespace GN { namespace gfx
     //!
     struct D3D9ShaderHlsl : public D3D9BasicShader
     {
-
-        Registry mHints;
+        StrA mEntry;
+        StrA mTarget;
+        bool mSm3;
 
     protected:
 
         //!
-        //! Set shader hints
-        //!
-        const Registry & getHints() const { return mHints; }
-
-        //!
         //! Set shader hints string
         //!
-        void setHints( const StrA & s ) { mHints.clear(); mHints.importFromStr( s ); }
+        void setHints( const StrA & s )
+        {
+            Registry r;
+            const Variant * v;
+            r.importFromStr( s );
+
+            v = r.getKey( "entry" );
+            if( v ) mEntry = v->S();
+            else mEntry = "main";
+
+            v = r.getKey( "target" );
+            if( v ) mTarget = v->S();
+            else mTarget = "";
+
+            v = r.getKey( "sm30" );
+            if( v ) mSm3 = v->B( true );
+            else mSm3 = true;
+        }
+
+        const char * getEntry() const { return mEntry.cstr(); } //!< get entry name
+        const char * getTarget() const { return mTarget.cstr(); } //!< get target name
+        bool useSm3() const { return mSm3; } //!< Use shader model 3.0 or not?
 
         //!
         //! protected ctor

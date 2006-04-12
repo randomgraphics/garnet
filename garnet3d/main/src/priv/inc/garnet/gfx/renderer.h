@@ -636,9 +636,14 @@ namespace GN { namespace gfx
         //!     Shader compilation hints. Hints string must be in format that can be imported
         //!     into a registry object. See Registry::importFromStr() for details.
         //!     \par
-        //!     For D3D shader, two hints are supported:
+        //!     For D3D shader, several hints are supported:
         //!     - "entry": specify entry function name, default is "main"
-        //!     - "target": specify HLSL compile target, default is "auto"
+        //!     - "target": specify HLSL compile target, default is empty, means using the highest possible target.
+        //!     - "sm30": favor shader model 3.0 or not, default is yes.
+        //!       - In DirectX, VS 3.0 and PS 3.0 can _ONLY_ be used with each other. So sometimes, you may want
+        //!         your HLSL shader to be compiled into VS/PS 2.x. So it can be used with other non-SM3 shaders.
+        //!       - This hints has higher priority then "target". So if you set "target" to "vs_3_0", while setting
+        //!         this hint to "true". The shader will be compiled to "vs_2_a".
         //!
         virtual Shader *
         createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints = "" ) = 0;
