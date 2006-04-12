@@ -626,20 +626,34 @@ namespace GN { namespace gfx
         //!
         //! Create shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
+        //! \param type
+        //!     Shader type
+        //! \param lang
+        //!     Shading language
+        //! \param code
+        //!     Shader code
+        //! \param hints
+        //!     Shader compilation hints. Hints string must be in format that can be imported
+        //!     into a registry object. See Registry::importFromStr() for details.
+        //!     \par
+        //!     For D3D shader, two hints are supported:
+        //!     - "entry": specify entry function name, default is "main"
+        //!     - "target": specify HLSL compile target, default is "auto"
+        //!
         virtual Shader *
-        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry = "main" ) = 0;
+        createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints = "" ) = 0;
 
         //!
         //! Create vetex shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         Shader *
-        createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
+        createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
 
         //!
         //! Create pixel shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         Shader *
-        createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & entry = "main" );
+        createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
 
         //!
         //! Create new texture

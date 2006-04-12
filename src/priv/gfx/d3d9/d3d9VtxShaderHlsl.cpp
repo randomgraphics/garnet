@@ -10,7 +10,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9VtxShaderHlsl::init( const StrA & code, const StrA & entry )
+bool GN::gfx::D3D9VtxShaderHlsl::init( const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
@@ -18,7 +18,7 @@ bool GN::gfx::D3D9VtxShaderHlsl::init( const StrA & code, const StrA & entry )
     GN_STDCLASS_INIT( D3D9VtxShaderHlsl, () );
 
     mCode = code;
-    mEntry = entry;
+    setHints( hints );
 
     if( !deviceCreate() || !deviceRestore() )
     {
@@ -62,13 +62,15 @@ bool GN::gfx::D3D9VtxShaderHlsl::deviceCreate()
 
     GN_ASSERT( !mConstTable && !mD3DShader );
 
+    const Registry & hints = getHints();
+
     mD3DShader = d3d9::compileVS(
         getRenderer().getDevice(),
         mCode.cstr(),
         mCode.size(),
         0, // flags
-        mEntry.cstr(),
-        0, // profile
+        hints.getKey( "entry", StrA("main") ).S().cstr(),
+        hints.getKey( "target", StrA("") ).S().cstr(),
         &mConstTable );
     if( 0 == mD3DShader ) return false;
 

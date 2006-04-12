@@ -46,18 +46,18 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         return false;
     }
 
-    // extract entry name out of shader name
+    // extract hints out of shader name
     struct Local
     {
         static bool isAt( char ch ) { return '@' == ch; }
     };
-    StrA entry;
+    StrA hints;
     StrA path = name;
     path.trimRightUntil( &Local::isAt );
     if( path.empty() ) path = name; // handle case
     if( path.size() < name.size() )
     {
-        entry = name.subString( path.size(), name.size() );
+        hints = name.subString( path.size(), name.size() );
         path.trimRight( '@' );
     }
 
@@ -82,7 +82,6 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     AutoObjArray<char> buf( new char[fp.size()+1] );
     AutoObjArray<char> typeStr( new char[fp.size()+1] );
     AutoObjArray<char> langStr( new char[fp.size()+1] );
-    AutoObjArray<char> entryStr( new char[fp.size()+1] );
 
     // read file
 	memset( buf, 0, fp.size()+1 );
@@ -107,8 +106,8 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         lang = LANG_OGL_ARB;
     }
     else if(
-        3 == ::sscanf( code, "// TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entryStr.get() ) ||
-        3 == ::sscanf( code, "# TYPE=%s LANG=%s ENTRY=%s", typeStr.get(), langStr.get(), entryStr.get() ) )
+        2 == ::sscanf( code, "// type=%s lang=%s", typeStr.get(), langStr.get() ) ||
+        2 == ::sscanf( code, "# type=%s lang=%s", typeStr.get(), langStr.get() ) )
     {
         if( !str2ShaderType( type, typeStr ) )
         {
@@ -128,7 +127,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
 
     // create shader instance
-    result = gRenderer.createShader( type, lang, code, entry.empty() ? entryStr : entry.cstr() );
+    result = gRenderer.createShader( type, lang, code, hints );
     return NULL != result;
 
     GN_UNGUARD;

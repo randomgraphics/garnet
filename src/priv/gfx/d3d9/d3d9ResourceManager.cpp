@@ -114,7 +114,7 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
 // -----------------------------------------------------------------------------
 GN::gfx::Shader *
 GN::gfx::D3D9Renderer::createShader(
-    ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
+    ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
@@ -140,7 +140,7 @@ GN::gfx::D3D9Renderer::createShader(
                 case LANG_D3D_HLSL:
                 {
                     AutoRef<D3D9VtxShaderHlsl> p( new D3D9VtxShaderHlsl(*this) );
-                    if( !p->init( code, entry ) ) return 0;
+                    if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
 
@@ -162,7 +162,7 @@ GN::gfx::D3D9Renderer::createShader(
                 case LANG_D3D_HLSL:
                 {
                     AutoRef<D3D9PxlShaderHlsl> p( new D3D9PxlShaderHlsl(*this) );
-                    if( !p->init( code, entry ) ) return 0;
+                    if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
 

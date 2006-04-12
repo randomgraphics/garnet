@@ -234,12 +234,24 @@ namespace GN { namespace gfx
     struct D3D9ShaderHlsl : public D3D9BasicShader
     {
 
+        Registry mHints;
+
     protected:
+
+        //!
+        //! Set shader hints
+        //!
+        const Registry & getHints() const { return mHints; }
+
+        //!
+        //! Set shader hints string
+        //!
+        void setHints( const StrA & s ) { mHints.clear(); mHints.importFromStr( s ); }
 
         //!
         //! protected ctor
         //!
-        D3D9ShaderHlsl( ShaderType type) : D3D9BasicShader(type,LANG_D3D_ASM) {}
+        D3D9ShaderHlsl( ShaderType type ) : D3D9BasicShader(type,LANG_D3D_ASM) {}
 
         //!
         //! apply uniform to D3D device
@@ -315,7 +327,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const StrA & code, const StrA & entry );
+        bool init( const StrA & code, const StrA & hints );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -387,7 +399,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const StrA & code, const StrA & entry );
+        bool init( const StrA & code, const StrA & hints );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:

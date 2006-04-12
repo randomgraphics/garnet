@@ -441,7 +441,7 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
             // create shaders instance
             if( sd.value.empty() && !s.code.empty() )
             {
-                sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.entry ) );
+                sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.hints ) );
                 if( sd.value.empty() )
                 {
                     GN_ERROR( "Fail to create shader '%s' for technique '%s'.", sd.name.cstr(), td.name.cstr() );
