@@ -117,14 +117,14 @@ namespace GN { namespace gfx
 
         class FakeShader : public Shader
         {
-            StrA mCode, mEntry;
+            StrA mCode, mHints;
 
             virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const { return true; }
 
         public:
 
-            FakeShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
-                : Shader(type,lang), mCode(code), mEntry(entry) {}
+            FakeShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints )
+                : Shader(type,lang), mCode(code), mHints(hints) {}
         };
 
         class FakeTexture : public Texture
@@ -196,9 +196,9 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry )
+        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints )
         {
-            return new FakeShader( type, lang, code, entry );
+            return new FakeShader( type, lang, code, hints );
         }
         virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader )
         {
