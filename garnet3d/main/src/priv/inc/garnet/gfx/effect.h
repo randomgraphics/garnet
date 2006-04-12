@@ -49,7 +49,7 @@ namespace GN { namespace gfx {
             ShaderType type; //!< Shader type.
             ShadingLanguage lang; //!< Shading language. Ignored if code is empty.
             StrA code; //!< Shader code. Empty means fixed functional pipeline.
-            StrA entry; //!< Entry function of the code. Ignored, if code is empty.
+            StrA hints; //!< Shader hints.
             std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage, value is texture name.
             std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding, value is uniform name.
         };

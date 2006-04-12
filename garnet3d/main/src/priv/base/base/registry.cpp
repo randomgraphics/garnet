@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <pcrecpp.h>
 
 //
 //
@@ -44,4 +45,27 @@ bool GN::Registry::setKey( const StrA & name, const Variant & value, bool overwr
 
     // success
     return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::Registry::importFromStr( const StrA & s )
+{
+    GN_GUARD;
+
+    if( s.empty() ) return;
+
+    static const char * pattern = "[\n\t ]*(\\w+)[\t ]*=[\t ]*(\\w*)";
+    pcrecpp::RE re( pattern );
+
+    pcrecpp::StringPiece sp( s.cstr(), (int)s.size() );
+
+    std::string name, value;
+    while( re.FindAndConsume( &sp, &name, &value ) )
+    {
+        setKey( name.c_str(), StrA(value.c_str()), true );
+    }
+
+    GN_UNGUARD;
 }

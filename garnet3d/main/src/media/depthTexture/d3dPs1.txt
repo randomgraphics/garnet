@@ -1,4 +1,4 @@
-// TYPE=PIXEL LANG=D3D_HLSL ENTRY=main
+// type=PIXEL lang=D3D_HLSL
 
 void main(
       in float tex0 : TEXCOORD0

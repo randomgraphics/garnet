@@ -57,6 +57,12 @@ namespace GN
         //!     Return false, if the key exist and overwriteExisting is false.
         //!
         bool setKey( const StrA & name, const Variant & value, bool overwriteExisting = true );
+
+        //!
+        //! Import registry from string.
+        //! Import string must be in format of: "name1=value1\nname2=value2\n..."
+        //!
+        void importFromStr( const StrA & );
     };
 }
 
