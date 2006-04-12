@@ -91,10 +91,9 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
     setD3DRenderState( D3DRS_COLORVERTEX, 1 ); // always enable color vertex
 #endif
 
-    // get current/default color and depth buffer
+    // get current/default color buffer
     GN_DX9_CHECK_RV( mDevice->GetRenderTarget( 0, &mAutoColor0 ), false );
-    GN_DX9_CHECK_RV( mDevice->GetDepthStencilSurface( &mAutoDepth ), false );
-    GN_ASSERT( mAutoColor0 && mAutoDepth );
+    GN_ASSERT( mAutoColor0 );
 
     // rebind context
     bindContext( mContext, mContext.flags, true );
@@ -304,26 +303,41 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             AutoComPtr<IDirect3DSurface9> rt0;
             GN_DX9_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
             GN_ASSERT( rt0 );
-            D3DSURFACE_DESC rt0Desc, depthDesc;
+            D3DSURFACE_DESC rt0Desc;
             GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
-            GN_DX9_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
-            if( depthDesc.Width < rt0Desc.Width ||
-                depthDesc.Height < rt0Desc.Height ||
-                forceRebind )
+            if( mAutoDepth )
             {
-                // create new depth buffer
-                mAutoDepth.clear();
+                D3DSURFACE_DESC depthDesc;
+                GN_DX9_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
+                if( depthDesc.Width < rt0Desc.Width ||
+                    depthDesc.Height < rt0Desc.Height ||
+                    forceRebind )
+                {
+                    // create new depth buffer
+                    mAutoDepth.clear();
+                    GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
+                        max(depthDesc.Width, rt0Desc.Width),
+                        max(depthDesc.Height, rt0Desc.Height),
+                        depthDesc.Format,
+                        depthDesc.MultiSampleType,
+                        depthDesc.MultiSampleQuality,
+                        TRUE, // discardable depth buffer
+                        &mAutoDepth, 0 ) );
+                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+                }
+            }
+            else
+            {
                 GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
-                    max(depthDesc.Width, rt0Desc.Width),
-                    max(depthDesc.Height, rt0Desc.Height),
-                    depthDesc.Format,
-                    depthDesc.MultiSampleType,
-                    depthDesc.MultiSampleQuality,
+                    rt0Desc.Width,
+                    rt0Desc.Height,
+                    D3DFMT_D24S8, // TODO: enumerate appropriate depth buffer format.
+                    mPresentParameters.MultiSampleType,
+                    mPresentParameters.MultiSampleQuality,
                     mPresentParameters.Flags | D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL,
                     &mAutoDepth, 0 ) );
                 GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
             }
-            
         }
         else if( *newSurf != *oldSurf || forceRebind )
         {
@@ -331,7 +345,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             const D3D9Texture * tex = safeCast<const D3D9Texture*>(newSurf->texture);
             surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
             GN_DX9_CHECK( mDevice->SetDepthStencilSurface( surf ) );
-        }
+        }//*/
     }
 
     //
