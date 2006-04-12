@@ -892,15 +892,16 @@ for compiler, variants in ALL_targets.iteritems() :
 ################################################################################
 
 if 'MSVSProject' in LOCAL_env['BUILDERS']:
-    for compiler, variants in ALL_targets.iteritems() :
+    for compiler, variants in ALL_targets.iteritems():
         for variant, targets in variants.iteritems():
+            MSVS_env = UTIL_newEnv( compiler, variant )
             for name, x in targets.iteritems():
                 if 'stlib' == x.type or 'shlib' == x.type or 'prog' == x.type :
                     SConscript( 
                     'msvc/SConscript',
                         exports={
                             'GN' : GN,
-                            'env' : LOCAL_env,
+                            'env' : MSVS_env,
                             'compiler' : compiler,
                             'variant' : variant,
                             'name' : name,

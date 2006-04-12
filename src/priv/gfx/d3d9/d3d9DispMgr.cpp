@@ -149,17 +149,6 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3d, adapter, devtype, d3dpp.BackBufferFormat, msaa, fullscreen,
         d3dpp.MultiSampleType, d3dpp.MultiSampleQuality );
 
-    //
-    // set depth and stencil buffer parameters
-    //
-    d3dpp.EnableAutoDepthStencil = true;
-    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
-
-    // make sure color and depth buffer are compatible
-    GN_DX9_CHECK_RV(
-        d3d.CheckDepthStencilMatch( adapter, devtype, d3dpp.BackBufferFormat, d3dpp.BackBufferFormat, d3dpp.AutoDepthStencilFormat ),
-        false );
-
     // set display mode parameters
     d3dpp.Windowed = !fullscreen;
 

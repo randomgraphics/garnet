@@ -216,6 +216,8 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         "    Hardware TnL                   : %s\n"
         "    Texture Blend Stages (FFP)     : %d\n"
         "    Max Simulaneous Textures (FFP) : %d\n"
+        "    MSAA Type                      : %d\n"
+        "    MSAA Quality                   : %d\n"
         "===================================================\n"
         "\n\n",
         devtype.cstr(),
@@ -233,7 +235,9 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         psver.cstr(),
         hwtnl.cstr(),
         d3dcaps.MaxTextureBlendStages,
-        d3dcaps.MaxSimultaneousTextures );
+        d3dcaps.MaxSimultaneousTextures,
+        mPresentParameters.MultiSampleType,
+        mPresentParameters.MultiSampleQuality );
 
     // success
     return true;
