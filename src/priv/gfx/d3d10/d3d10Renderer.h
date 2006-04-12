@@ -166,7 +166,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & entry ) { return 0; }
+        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints ) { return 0; }
         virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader ) { return 0; }
         virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) { return 0; }
         virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader ) { return 0; }

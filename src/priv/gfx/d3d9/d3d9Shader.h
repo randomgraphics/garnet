@@ -231,7 +231,7 @@ namespace GN { namespace gfx
     //!
     //! Basic D3D9 HLSL shader class
     //!
-    struct D3D9ShaderHlsl : public D3D9BasicShader
+    class D3D9ShaderHlsl : public D3D9BasicShader
     {
         StrA mEntry;
         StrA mTarget;
