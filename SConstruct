@@ -84,7 +84,7 @@ def UTIL_staticBuild( variant ) : return 'stdbg' == variant or 'strel' == varian
 # 是否是调试编译模式
 def UTIL_debugBuild( variant ) : return 'debug' == variant or 'stdbg' == variant
 
-def UTIL_buildRoot() : return os.path.join( 'bin', 'scons.tmp', CONF_platform )
+def UTIL_buildRoot() : return os.path.join( 'bin', 'build.tmp', 'scons', CONF_platform )
 
 def UTIL_buildDir( compiler, variant ) : return os.path.join( UTIL_buildRoot(), compiler, variant )
 
