@@ -36,7 +36,7 @@ if 'win32' == CONF_platform:
         CONF_defaultCompiler = 'vc80-x64'
     elif 'pcx86' == GN_mswin:
         CONF_defaultCompiler = 'vc80'
-    elif SCons.Tool.xenon.exists( LOCAL_env ):
+    if SCons.Tool.xenon.exists( LOCAL_env ):
         CONF_allCompilers += ' xenon'
 else:
     CONF_defaultCompiler = 'gcc'
@@ -62,6 +62,9 @@ CONF_compiler = ARGUMENTS.get('compiler', CONF_defaultCmdArgs['compiler'])
 
 # 定义编译类型
 CONF_variant = ARGUMENTS.get('variant', CONF_defaultCmdArgs['variant'] )
+if 'xenon' == CONF_compiler:
+    if 'debug' == CONF_variant : CONF_variant = 'stdbg'
+    elif 'release' == CONF_variant : CONF_variant = 'strel'
 
 # 是否支持Cg语言.
 CONF_enableCg  = ARGUMENTS.get('cg', CONF_defaultCmdArgs['enableCg'] )
@@ -564,7 +567,7 @@ for c in COLLECT_compilers:
         debug  = UTIL_debugBuild( v )
 
         # ignore non-static build for xenon
-        if 'xenon' == c and static : continue
+        if 'xenon' == c and not static : continue
 
         conf = {
             'platform'   : CONF_platform,

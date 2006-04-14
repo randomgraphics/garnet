@@ -18,6 +18,9 @@
 #include <xtl.h>
 #include <xgraphics.h>
 #include <xboxmath.h>
+#if _XTL_VER < 1881
+#error XDK build 1881 or newer is required.
+#endif
 #elif GN_PC
 #define NOMINMAX //!< This is to disable windows min/max macros
 #include <windows.h>
@@ -31,8 +34,6 @@
 #include <dxerr9.h>
 
 #if GN_XENON
-#define D3DUSAGE_DYNAMIC D3DUSAGE_CPU_CACHED_MEMORY
-#define D3DLOCK_DISCARD 0
 inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
 #endif
 

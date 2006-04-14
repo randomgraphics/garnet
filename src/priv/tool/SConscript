@@ -1,1 +1,2 @@
-SConscript( dirs=Split('oglInfo') )
+Import( 'GN' )
+if GN.conf['has_ogl']: SConscript( dirs=Split('oglInfo') )
