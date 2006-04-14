@@ -15,6 +15,19 @@ if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
 set PATH=%mypath%;%PATH%
 set mypath=
 
+REM =======================
+REM setup xenon environment
+REM =======================
+if "xenon" == "%GN_BUILD_COMPILER%" (
+    if "" == "%XEDK%" (
+        echo Environment variable XEDK not found.
+    ) else (
+        pushd .
+        call %XEDK%\bin\win32\xdkvars.bat
+        popd
+    )
+)
+
 
 REM ===========
 REM setup scons
