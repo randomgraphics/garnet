@@ -8,7 +8,7 @@
 
 #include "basicInput.h"
 
-#if defined(HAS_XINPUT) || GN_XENON
+#if defined(HAS_XINPUT)
 #include <XInput.h>
 #endif
 

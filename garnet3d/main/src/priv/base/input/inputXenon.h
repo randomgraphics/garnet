@@ -9,7 +9,6 @@
 #if GN_XENON
 
 #include "basicInputXInput.h"
-#include <XInput.h>
 
 namespace GN { namespace input
 {
