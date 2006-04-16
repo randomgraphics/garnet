@@ -126,6 +126,10 @@ namespace GN
         CHAR * mPtr;   //!< string buffer pointer.
         size_t mLen;   //!< How many charecters in the string, not including pending zero.
         size_t mCaps;  //!< How many characters can we hold?
+        static GN_PUBLIC FixedSizedObjectAllocator<Str<CHAR> > msAllocator; //!< global string allocator
+        void * operator new( size_t ) { return msAllocator.alloc(); }
+        void operator delete( void * p ) { return msAllocator.dealloc( p ); }
+
     public:
 
         //!
