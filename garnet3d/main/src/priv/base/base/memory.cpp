@@ -4,33 +4,33 @@ namespace GN
 {
     void * memAlloc( size_t sz )
     {
-        #if GN_MSWIN
-        void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
-        #else
+        //#if GN_MSWIN
+        //void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
+        //#else
         void * ptr = ::malloc( sz );
-        #endif
+        //#endif
         if ( 0 == ptr ) GN_ERROR( "out of memory!" );
         return ptr;
     }
 
     void * memReAlloc( void * ptr, size_t sz )
     {
-        #if GN_MSWIN
-        ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
-        #else
+        //#if GN_MSWIN
+        //ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
+        //#else
         ptr = ::realloc( ptr, sz );
-        #endif
+        //#endif
         if ( 0 == ptr ) GN_ERROR( "out of memory!" );
         return ptr;
     }
 
     void memFree( void * ptr )
     {
-        #if GN_MSWIN
-        ::HeapFree( ::GetProcessHeap(), 0, ptr );
-        #else
+        //#if GN_MSWIN
+        //::HeapFree( ::GetProcessHeap(), 0, ptr );
+        //#else
         ::free( ptr );
-        #endif
+        //#endif
     }
 }
 
