@@ -173,7 +173,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 "    -ref                   : Use reference device.\n"
                 "    -msaa                  : Enable MSAA/FSAA.\n"
                 "    -pure                  : Use pure device (D3D only).\n"
-                , GN::path::baseName(argv[0]).cstr() );
+                , GN::path::baseName(argv[0]).cptr() );
             return false;
         }
         else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;

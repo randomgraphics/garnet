@@ -94,7 +94,7 @@ namespace GN { namespace gfx
         else
         {
             // failed
-            GN_ERROR( "invalid primitive string : '%s'!", str.cstr() );
+            GN_ERROR( "invalid primitive string : '%s'!", str.cptr() );
             return NUM_PRIMITIVES;
         }
         GN_UNGUARD_SLOW;

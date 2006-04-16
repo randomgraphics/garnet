@@ -87,7 +87,7 @@ bool GN::gfx::OGLBasicShaderGLSL::deviceCreate()
     AutoShaderDel autodel( glDeleteObjectARB, mHandle );
 
     // set shader mCode
-    const char * code_str = mCode.cstr();
+    const char * code_str = mCode.cptr();
     GLint code_size = static_cast<GLint>( mCode.size() );
     GN_OGL_CHECK_RV(
         glShaderSourceARB( mHandle, 1, &code_str, &code_size ),
@@ -188,7 +188,7 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
         GLint location;
         
         GN_OGL_CHECK_DO(
-            location = glGetUniformLocationARB( program, u.name.cstr() ),
+            location = glGetUniformLocationARB( program, u.name.cptr() ),
             continue; );
 
         if( location >= 0 )
@@ -239,7 +239,7 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
         }
         else
         {
-            GN_ERROR( "'%s' is not a valid GLSL uniform.", u.name.cstr() );
+            GN_ERROR( "'%s' is not a valid GLSL uniform.", u.name.cptr() );
         }
     }
     clearDirtySet();

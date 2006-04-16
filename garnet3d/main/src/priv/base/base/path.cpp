@@ -165,11 +165,11 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
     HANDLE fh;
 
     GN::StrA findPattern = GN::path::resolve(dirName) + "\\" + (useRegex ? "*.*" : pattern);
-    fh = ::FindFirstFileA( findPattern.cstr(), &wfd );
+    fh = ::FindFirstFileA( findPattern.cptr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh ) return;
 
     GN::AutoObjPtr<pcrecpp::RE> re;
-    if( useRegex ) re.attach( new pcrecpp::RE( pattern.cstr() ) );
+    if( useRegex ) re.attach( new pcrecpp::RE( pattern.cptr() ) );
 
     do
     {
@@ -250,10 +250,10 @@ bool GN::path::exist( const StrA & path )
 
 #if GN_MSWIN
 #if GN_PC
-    return !!::PathFileExistsA( native.cstr() );
+    return !!::PathFileExistsA( native.cptr() );
 #else
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( native.cstr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( native.cptr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -266,7 +266,7 @@ bool GN::path::exist( const StrA & path )
 #endif
 #else
     if( isDir(native) ) return true;
-    FILE * fp = fopen( native.cstr(), "r" );
+    FILE * fp = fopen( native.cptr(), "r" );
     if( 0 == fp ) return false;
     fclose( fp );
     return true;
@@ -282,10 +282,10 @@ bool GN::path::isDir( const StrA & path )
 
 #if GN_MSWIN
 #if GN_PC
-    return !!::PathIsDirectoryA( native.cstr() );
+    return !!::PathIsDirectoryA( native.cptr() );
 #else
     WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( native.cstr(), &wfd );
+    HANDLE fh = ::FindFirstFileA( native.cptr(), &wfd );
     if( INVALID_HANDLE_VALUE == fh )
     {
         return false;
@@ -297,7 +297,7 @@ bool GN::path::isDir( const StrA & path )
     }
 #endif
 #else
-    DIR * d = opendir( native.cstr() );
+    DIR * d = opendir( native.cptr() );
     if( 0 == d ) return false;
     closedir( d );
     return true;
@@ -422,12 +422,12 @@ bool GN::path::resolve( StrA & result, const StrA & path )
     char absPath[MAX_PATH_LENGTH+1];
 
 #if GN_POSIX
-    if( 0 == realpath( relPath.cstr(), absPath ) )
+    if( 0 == realpath( relPath.cptr(), absPath ) )
 #else
-    if( 0 == _fullpath( absPath, relPath.cstr(), MAX_PATH_LENGTH ) )
+    if( 0 == _fullpath( absPath, relPath.cptr(), MAX_PATH_LENGTH ) )
 #endif
     {
-        GN_ERROR( "invalid path '%s'.", path.cstr() );
+        GN_ERROR( "invalid path '%s'.", path.cptr() );
         return false;
     }
 
@@ -459,13 +459,13 @@ GN::path::glob(
 
     if( !exist(dirName) )
     {
-        GN_WARN( "'%s' does not exist!", dirName.cstr() );
+        GN_WARN( "'%s' does not exist!", dirName.cptr() );
         return result;
     }
 
     if( !isDir(dirName) )
     {
-        GN_WARN( "'%s' is not directory!", dirName.cstr() );
+        GN_WARN( "'%s' is not directory!", dirName.cptr() );
         return result;
     }
 

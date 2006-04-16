@@ -228,7 +228,7 @@ namespace GN
         {
             GN_GUARD_SLOW;
             HandleType h = getResourceHandle( name, autoAddNewName );
-            return getResourceImpl( result, h, name.cstr() );
+            return getResourceImpl( result, h, name.cptr() );
             GN_UNGUARD_SLOW;
         }
 
@@ -302,7 +302,7 @@ namespace GN
             {
                 if( !overrideExistingResource )
                 {
-                    GN_ERROR( "resource '%s' already exist!", name.cstr() );
+                    GN_ERROR( "resource '%s' already exist!", name.cptr() );
                     return 0;
                 }
                 GN_ASSERT( mResHandles.validHandle(ci->second) );
@@ -381,7 +381,7 @@ namespace GN
             StringMap::iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
-                GN_ERROR( "invalid resource name: %s", name.cstr() );
+                GN_ERROR( "invalid resource name: %s", name.cptr() );
                 return;
             }
             HandleType h = iter->second;
@@ -417,7 +417,7 @@ namespace GN
             StringMap::const_iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
-                GN_ERROR( "invalid resource name: %s", name.cstr() );
+                GN_ERROR( "invalid resource name: %s", name.cptr() );
                 return;
             }
             disposeResourceHandle( iter->second );
@@ -560,7 +560,7 @@ namespace GN
 
                 if( !ok )
                 {
-                    GN_WARN( "Fall back to null instance for resource '%s'.", item->name.cstr() );
+                    GN_WARN( "Fall back to null instance for resource '%s'.", item->name.cptr() );
                     if( item->nullor )
                     {
                         ok = item->nullor( item->res, item->name, item->userData );
@@ -571,7 +571,7 @@ namespace GN
                     }
                     if( !ok )
                     {
-                        GN_ERROR( "Fail to create NULL instance for resource '%s'.", item->name.cstr() );
+                        GN_ERROR( "Fail to create NULL instance for resource '%s'.", item->name.cptr() );
                         return false;
                     }
                 }

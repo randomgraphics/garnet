@@ -77,11 +77,11 @@ bool GN::AnsiFile::open( const StrA & filename, const StrA & mode )
     }
 
     // 打开文件
-    FILE * fp = ::fopen( filename.cstr(), mode.cstr() );
+    FILE * fp = ::fopen( filename.cptr(), mode.cptr() );
     if( 0 == fp )
     {
         GN_ERROR( "fail to open file '%s' with mode '%s'!",
-            filename.cstr(), mode.cstr() );
+            filename.cptr(), mode.cptr() );
         close(); return false;
     }
 

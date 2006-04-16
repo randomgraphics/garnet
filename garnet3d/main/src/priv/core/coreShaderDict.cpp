@@ -65,17 +65,17 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     path = core::searchResource( path );
     if( path.empty() )
     {
-        GN_ERROR( "Shader '%s' creation failed: path not found.", name.cstr() );
+        GN_ERROR( "Shader '%s' creation failed: path not found.", name.cptr() );
         return false;
     }
 
-    GN_INFO( "Load shader '%s' from file '%s'.", name.cstr(), path.cstr() ); 
+    GN_INFO( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     AnsiFile fp;
     if( !fp.open( path::resolve(path), "rt" ) )
     {
-        GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cstr(), path.cstr() );
+        GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 
@@ -87,7 +87,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
 	memset( buf, 0, fp.size()+1 );
     if( 0 == fp.read( buf, fp.size() ) )
     {
-        GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cstr(), path.cstr() );
+        GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 	fp.close();
@@ -111,18 +111,18 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     {
         if( !str2ShaderType( type, typeStr ) )
         {
-            GN_ERROR( "Shader '%s' creation failed: invalid shader type '%s'.", name.cstr(), typeStr.get() );
+            GN_ERROR( "Shader '%s' creation failed: invalid shader type '%s'.", name.cptr(), typeStr.get() );
             return false;
         }
         if( !str2ShadingLanguage( lang, langStr ) )
         {
-            GN_ERROR( "Shader '%s' creation failed: invalid shading language '%s'.", name.cstr(), langStr.get() );
+            GN_ERROR( "Shader '%s' creation failed: invalid shading language '%s'.", name.cptr(), langStr.get() );
             return false;
         }
     }
     else
     {
-        GN_ERROR( "Shader '%s' creation failed: unknown/invalid shader header.", name.cstr() );
+        GN_ERROR( "Shader '%s' creation failed: unknown/invalid shader header.", name.cptr() );
         return false;
     }
 

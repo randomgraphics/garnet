@@ -210,8 +210,8 @@ namespace GN
         StrA result;
         getEnv( result, name );
         return "1" == result ||
-               0 == strCmpI( "yes", result.cstr() ) ||
-               0 == strCmpI( "true", result.cstr() );
+               0 == strCmpI( "yes", result.cptr() ) ||
+               0 == strCmpI( "true", result.cptr() );
     }
 
     //!
@@ -652,6 +652,62 @@ namespace GN
             mPtr = NULL;
             return pt;
         }
+    };
+
+    //!
+    //! Simple C-style array wrapper
+    //!
+    template<typename T>
+    class AutoArray
+    {
+        size_t mCount;
+        T *    mData;
+
+    public:
+
+        AutoArray() : mCount(0), mData(0) {} //!< default ctor
+        AutoArray( size_t count ) : mCount(count), mData(new T[count]) {} //!< constructor with initial size
+        ~AutoArray() { clear(); } //!< Destructor
+
+        //!
+        //! Get item with specified index
+        //!
+        T & at( size_t idx ) const { GN_ASSERT( idx < mCount ); return mData[idx]; }
+
+        //!
+        //! clear array content
+        //!
+        void clear() { safeDeleteArray<T>( mData ); mCount = 0; }
+
+        //!
+        //! convert to C-style pointer
+        //!
+        T * cptr() const { return mData; }
+
+        //!
+        //! is empty array?
+        //!
+        bool empty() const { return 0 == mCount; }
+
+        //!
+        //! change array size
+        //!
+        void resize( size_t count )
+        {
+            safeDeleteArray<T>( mData );
+            if( count > 0 ) mData = new T[count];
+            mCount = count;
+        }
+
+        //!
+        //! get element count
+        //!
+        size_t size() const { return mCount; }
+
+        //!
+        //! convert to C-style pointer
+        //!
+        operator T*() const { return mData; }
     };
 }
 

@@ -224,14 +224,14 @@ public:
         TS_ASSERT_EQUALS(  1, GN::strCmp(L"abc",L"ABC") );
         TS_ASSERT_EQUALS( -1, GN::strCmp(L"abc",L"abcd") );
 
-        TS_ASSERT( -1 == GN::strCmpI<wchar_t>( 0, s1.cstr() ) );
-        TS_ASSERT( 1 == GN::strCmpI<wchar_t>( s1.cstr(), 0 ) );
-        TS_ASSERT( 1 == GN::strCmpI( s5.cstr(), s3.cstr() ) );
-        TS_ASSERT( 0 == GN::strCmpI( s4.cstr(), s4.cstr() ) );
-        TS_ASSERT( 0 == GN::strCmpI( s2.cstr(), s4.cstr() ) );
-        TS_ASSERT( 0 == GN::strCmpI( s4.cstr(), s2.cstr() ) );
-        TS_ASSERT( -1 == GN::strCmpI( s1.cstr(), s4.cstr() ) );
-        TS_ASSERT( 1 == GN::strCmpI( s4.cstr(), s1.cstr() ) );
+        TS_ASSERT( -1 == GN::strCmpI<wchar_t>( 0, s1.cptr() ) );
+        TS_ASSERT( 1 == GN::strCmpI<wchar_t>( s1.cptr(), 0 ) );
+        TS_ASSERT( 1 == GN::strCmpI( s5.cptr(), s3.cptr() ) );
+        TS_ASSERT( 0 == GN::strCmpI( s4.cptr(), s4.cptr() ) );
+        TS_ASSERT( 0 == GN::strCmpI( s2.cptr(), s4.cptr() ) );
+        TS_ASSERT( 0 == GN::strCmpI( s4.cptr(), s2.cptr() ) );
+        TS_ASSERT( -1 == GN::strCmpI( s1.cptr(), s4.cptr() ) );
+        TS_ASSERT( 1 == GN::strCmpI( s4.cptr(), s1.cptr() ) );
 
     }
 

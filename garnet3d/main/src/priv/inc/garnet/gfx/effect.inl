@@ -146,7 +146,7 @@ GN_INLINE uint32_t GN::gfx::effect::Effect::getTechniqueHandle( const StrA & nam
 {
     GN_GUARD_SLOW;
     uint32_t handle = mTechniques.find( name );
-    if( 0 == handle ) GN_ERROR( "invalid technique name: %s", name.cstr() );
+    if( 0 == handle ) GN_ERROR( "invalid technique name: %s", name.cptr() );
     return handle;
     GN_UNGUARD_SLOW;
 }
@@ -207,7 +207,7 @@ GN_INLINE uint32_t GN::gfx::effect::Effect::getUniformHandle( const StrA & name 
 {
     GN_GUARD_SLOW;
     uint32_t handle = mUniforms.find( name );
-    if( 0 == handle ) GN_ERROR( "invalid uniform name: %s", name.cstr() );
+    if( 0 == handle ) GN_ERROR( "invalid uniform name: %s", name.cptr() );
     return handle;
     GN_UNGUARD_SLOW;
 }
@@ -261,7 +261,7 @@ GN_INLINE uint32_t GN::gfx::effect::Effect::getTextureHandle( const StrA & name 
 {
     GN_GUARD_SLOW;
     uint32_t handle = mTextures.find( name );
-    if( 0 == handle ) GN_ERROR( "invalid texture name: %s", name.cstr() );
+    if( 0 == handle ) GN_ERROR( "invalid texture name: %s", name.cptr() );
     return handle;
     GN_UNGUARD_SLOW;
 }

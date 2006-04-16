@@ -116,9 +116,9 @@ void GN::gfx::RenderWindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
+        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cstr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -208,10 +208,10 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t he
     do
     {
         mClassName.format( "GNgfxRenderWindow_%d", rand() );
-    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cstr(), &wcex ) );
+    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
-    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
+    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_NOCLOSE;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
@@ -222,7 +222,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t he
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.cstr();
+    wcex.lpszClassName  = mClassName.cptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExA(&wcex) )
     {
@@ -241,7 +241,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t he
     // create window
     mWindow = ::CreateWindowExA(
         exStyle,
-        mClassName.cstr(),
+        mClassName.cptr(),
         "", // no title
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,

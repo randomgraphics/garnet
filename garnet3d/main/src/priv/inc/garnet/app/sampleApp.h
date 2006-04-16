@@ -79,7 +79,7 @@ namespace GN { namespace app
         //!
         //! Get FPS string
         //!
-        const char * getFpsString() const { return mFpsString.cstr(); }
+        const char * getFpsString() const { return mFpsString.cptr(); }
     };
     
     

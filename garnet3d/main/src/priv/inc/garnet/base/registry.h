@@ -110,7 +110,7 @@ namespace GN
         //!
         const Variant * getItem( const StrA & name ) const
         {
-            return getItemByKey( name2Key(name), name.cstr(), true );
+            return getItemByKey( name2Key(name), name.cptr(), true );
         }
 
         //!

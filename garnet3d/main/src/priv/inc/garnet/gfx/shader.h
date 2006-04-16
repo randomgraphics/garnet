@@ -237,7 +237,7 @@ namespace GN { namespace gfx
 
             if( mUniformNames.end() != mUniformNames.find(name) )
             {
-                GN_ERROR( "uniform named '%s' already exists.", name.cstr() );
+                GN_ERROR( "uniform named '%s' already exists.", name.cptr() );
                 return 0;
             }
 
@@ -343,9 +343,9 @@ namespace GN { namespace gfx
 
         // query for device-dependent uniform
         HandleType userData;
-        if( !queryDeviceUniform( name.cstr(), userData ) )
+        if( !queryDeviceUniform( name.cptr(), userData ) )
         {
-            GN_ERROR( "invalid uniform name: %s.", name.cstr() );
+            GN_ERROR( "invalid uniform name: %s.", name.cptr() );
             return 0;
         }
 

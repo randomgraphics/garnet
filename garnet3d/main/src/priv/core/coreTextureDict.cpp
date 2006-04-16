@@ -18,7 +18,7 @@ static bool sCreateNullTexture( Texture * & result, const StrA & name, void * )
     // check for global renderer
     if( 0 == gRendererPtr )
     {
-        GN_ERROR( "Null texture '%s' creation failed: renderer is not ready.", name.cstr() );
+        GN_ERROR( "Null texture '%s' creation failed: renderer is not ready.", name.cptr() );
         return false;
     }
 
@@ -54,17 +54,17 @@ static bool sCreateTexture( Texture * & result, const StrA & name, void * )
     StrA path = GN::core::searchResource( name );
     if( path.empty() )
     {
-        GN_ERROR( "Texture '%s' creation failed: path not found.", name.cstr() );
+        GN_ERROR( "Texture '%s' creation failed: path not found.", name.cptr() );
         return false;
     }
 
-    GN_INFO( "Load texture '%s' from file '%s'.", name.cstr(), path.cstr() ); 
+    GN_INFO( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     AnsiFile fp;
     if( !fp.open( path::resolve(path), "rb" ) )
     {
-        GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cstr(), path.cstr() );
+        GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 

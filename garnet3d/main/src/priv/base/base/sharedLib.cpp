@@ -48,14 +48,14 @@ bool GN::SharedLib::load( const char * libName )
         filename = path::toNative( libName );
 
     // load library
-    mHandle = SHLIB_LOAD( filename.cstr() );
+    mHandle = SHLIB_LOAD( filename.cptr() );
     if( 0 == mHandle )
     {
-        GN_ERROR( "Fail to load library %s: %s!", filename.cstr(), SHLIB_ERROR() );
+        GN_ERROR( "Fail to load library %s: %s!", filename.cptr(), SHLIB_ERROR() );
         return false;
     }
 
-    GN_INFO( "Load library '%s'.", filename.cstr() );
+    GN_INFO( "Load library '%s'.", filename.cptr() );
 
     // success
     mFileName = filename;
@@ -75,7 +75,7 @@ void GN::SharedLib::free()
     {
         SHLIB_FREE( mHandle );
         mHandle = 0;
-        GN_INFO( "Unload library '%s'.", mFileName.cstr() );
+        GN_INFO( "Unload library '%s'.", mFileName.cptr() );
     }
 
     GN_UNGUARD;

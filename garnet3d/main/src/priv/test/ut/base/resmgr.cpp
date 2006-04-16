@@ -4,7 +4,7 @@ typedef GN::ResourceManager<int> ResMgr;
 
 bool defCreator( int & res, const GN::StrA & name, void * )
 {
-    return 1 == ::sscanf( name.cstr(), "%d", &res );
+    return 1 == ::sscanf( name.cptr(), "%d", &res );
 }
 
 bool nullCreator( int & res, const GN::StrA &, void * )

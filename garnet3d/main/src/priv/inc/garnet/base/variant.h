@@ -164,7 +164,7 @@ namespace GN
         template<> int  getValue<int>() const { return mInt.value; }
         template<> float getValue<float>() const { return mFloat.value; }
         template<> void * getValue<void*>() const { return (void*)mPointer.value; }
-        template<> const char * getValue<const char*>() const { return mString.value.cstr(); }
+        template<> const char * getValue<const char*>() const { return mString.value.cptr(); }
         template<> const StrA & getValue<const StrA&>() const { return mString.value; }
         template<> const Vector4f & getValue<const Vector4f&>() const { return mVector4.value; }
         template<> const Matrix44f & getValue<const Matrix44f&>() const { return mMatrix44.value; }

@@ -329,7 +329,7 @@ public:
         int x = 1, y = 1;
         gInput.getMousePosition( x, y );
         mousePos.format( "Mouse: %d, %d", x, y );
-        r.drawDebugTextA( mousePos.cstr(), 0, 100 );//*/
+        r.drawDebugTextA( mousePos.cptr(), 0, 100 );//*/
     }
 };
 

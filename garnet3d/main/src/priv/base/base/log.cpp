@@ -11,7 +11,7 @@ GN::detail::LogHelper::log( const char * fmt, ... )
     va_start( arglist, fmt );
     s.format( fmt, arglist );
     va_end( arglist );
-    GN::doLog( mDesc, s.cstr() );
+    GN::doLog( mDesc, s.cptr() );
 }
 
 //
@@ -26,7 +26,7 @@ GN::detail::LogHelper::logc( const char * cate, const char * fmt, ... )
     s.format( fmt, arglist );
     va_end( arglist );
     mDesc.cate = cate ? cate : "";
-    GN::doLog( mDesc, s.cstr() );
+    GN::doLog( mDesc, s.cptr() );
 }
 
 //
@@ -43,7 +43,7 @@ GN::detail::LogHelper::loglc(
     va_end( arglist );
     mDesc.level = level;
     mDesc.cate = cate ? cate : "";
-    GN::doLog( mDesc, s.cstr() );
+    GN::doLog( mDesc, s.cptr() );
 }
 
 //
@@ -163,7 +163,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
                     fp,
                     "%s(%d) : %s : %s : %s\n",
                     file, desc.line,
-                    cate, levelStr(desc.level).cstr(),
+                    cate, levelStr(desc.level).cptr(),
                     msg );
             }
         }
@@ -176,7 +176,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
                 desc.level > GN::LOGLEVEL_INFO ? stdout : stderr,
                 "%s(%d) : %s : %s : %s\n",
                 file, desc.line,
-                cate, levelStr(desc.level).cstr(),
+                cate, levelStr(desc.level).cptr(),
                 msg );
         }
 #endif
@@ -187,7 +187,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
         ::_snprintf( buf, 16383,
             "%s(%d) : %s : %s : %s\n",
             file, desc.line,
-            cate, levelStr(desc.level).cstr(),
+            cate, levelStr(desc.level).cptr(),
             msg );
         buf[16383] = 0;
         ::OutputDebugStringA( buf );

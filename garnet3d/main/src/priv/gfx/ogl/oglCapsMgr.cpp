@@ -155,7 +155,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         "===================================================\n"
         "\n\n";
 
-    GN_INFO( info.cstr() );
+    GN_INFO( info.cptr() );
 
     GN_UNGUARD;
 }

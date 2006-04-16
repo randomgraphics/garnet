@@ -43,7 +43,7 @@ GN::PluginManager::getPluginID( PluginTypeID type, const StrA & name ) const
     }
     else
     {
-        GN_ERROR( "invalid plugin name '%s'!", name.cstr() );
+        GN_ERROR( "invalid plugin name '%s'!", name.cptr() );
         return PluginID::INVALID;
     }
 
@@ -61,7 +61,7 @@ GN::PluginManager::registerPluginType( const StrA & type, const StrA & desc )
     PluginTypeID id( getPluginTypeID( type ) );
     if ( id > 0 )
     {
-        GN_ERROR( "Plugin type '%s' already exists!", type.cstr() );
+        GN_ERROR( "Plugin type '%s' already exists!", type.cptr() );
         return 0;
     }
 
@@ -142,8 +142,8 @@ GN::PluginID GN::PluginManager::registerPlugin(
         if ( !overrideExistingPlugin )
         {
             GN_ERROR( "Plugin '%s::%s' already exist",
-                getPluginTypeName(type).cstr(),
-                getPluginName(id).cstr() );
+                getPluginTypeName(type).cptr(),
+                getPluginName(id).cptr() );
             return PluginID::INVALID;
         }
 

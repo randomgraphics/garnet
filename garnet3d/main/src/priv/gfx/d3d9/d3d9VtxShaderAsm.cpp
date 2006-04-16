@@ -62,7 +62,7 @@ bool GN::gfx::D3D9VtxShaderAsm::deviceCreate()
     GN_ASSERT( !mD3DShader );
 
     // create shader
-    mD3DShader = d3d9::assembleVS( getRenderer().getDevice(), mCode.cstr(), mCode.size() );
+    mD3DShader = d3d9::assembleVS( getRenderer().getDevice(), mCode.cptr(), mCode.size() );
     if( 0 == mD3DShader ) return false;
 
     // get shader function
