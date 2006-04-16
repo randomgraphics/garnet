@@ -245,20 +245,10 @@ namespace GN { namespace gfx
         void setHints( const StrA & s )
         {
             Registry r;
-            const Variant * v;
             r.importFromStr( s );
-
-            v = r.getKey( "entry" );
-            if( v ) mEntry = v->S();
-            else mEntry = "main";
-
-            v = r.getKey( "target" );
-            if( v ) mTarget = v->S();
-            else mTarget = "";
-
-            v = r.getKey( "sm30" );
-            if( v ) mSm3 = v->B( true );
-            else mSm3 = true;
+            mEntry = r.getItem( "entry", "main" ).getd("");
+            mTarget = r.getItem( "target", "" ).getd("");
+            mSm3 = r.getItem( "sm30", true ).getd(true);
         }
 
         const char * getEntry() const { return mEntry.cstr(); } //!< get entry name

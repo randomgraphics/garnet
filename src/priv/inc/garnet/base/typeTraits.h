@@ -46,6 +46,24 @@ namespace GN
     //! \endcond
 
     //!
+    //! Is same type or not?
+    //!
+    template <typename T1, typename T2>
+    struct IsSameType
+    {
+        static const bool value = false; //!< 如题.
+    };
+
+    //!
+    //! Is same type or not?
+    //!
+    template <typename T>
+    struct IsSameType<T,T>
+    {
+        static const bool value = true; //!< 如题.
+    };
+
+    //!
     //! Test constness
     //!
     template <typename T>
