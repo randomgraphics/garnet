@@ -8,20 +8,20 @@
 
 static inline bool sBool2Int( bool b, int & i ) { i = b ? 1 : 0; return true; }
 static inline bool sBool2Float( bool b, float & f ) { f = b ? 1.0f : 0.0f; return true; }
-static inline bool sBool2Pointer( bool b, void* & p ) { p = b ? (void*)1 : 0; return true; }
+static inline bool sBool2Pointer( bool b, const void* & p ) { p = b ? (void*)1 : 0; return true; }
 static inline bool sBool2String( bool b, GN::StrA & s ) { s = b ? "yes" : "no"; return true; }
 
 static inline bool sInt2Bool( int i, bool & b ) { b = !!i; return true; }
 static inline bool sInt2Float( int i, float & f ) { f = (float)i; return true; }
-static inline bool sInt2Pointer( int i, void* & p ) { p = (void*)i; return true; }
+static inline bool sInt2Pointer( int i, const void* & p ) { p = (void*)i; return true; }
 static inline bool sInt2String( int i, GN::StrA & s ) { s = GN::strFormat("%d",i); return true; }
 
 static inline bool sFloat2Bool( float f, bool & b ) { b = (0.0f!=f); return true; }
 static inline bool sFloat2Int( float f, int & i ) { i = (int)f; return true; }
-static inline bool sFloat2Pointer( float f, void* & p ) { p = (void*)(int)f; return true; }
+static inline bool sFloat2Pointer( float f, const void* & p ) { p = (void*)(int)f; return true; }
 static inline bool sFloat2String( float f, GN::StrA & s ) { s = GN::strFormat("%f",f); return true; }
 
-static inline bool sPointer2String( void * p, GN::StrA & s ) { s = GN::strFormat("%p",p); return true; }
+static inline bool sPointer2String( const void * p, GN::StrA & s ) { s = GN::strFormat("%p",p); return true; }
 
 static inline bool sString2Bool( const GN::StrA & s, bool & b )
 {
@@ -48,7 +48,7 @@ static inline bool sString2Bool( const GN::StrA & s, bool & b )
 }
 static inline bool sString2Int( const GN::StrA & s, int & i ) { return 1 == ::sscanf( s.cstr(), "%d", &i ); }
 static inline bool sString2Float( const GN::StrA & s, float & f ) { return 1 == ::sscanf( s.cstr(), "%f", &f ); }
-static inline bool sString2Pointer( const GN::StrA & s, void* & p ) { return 1 == ::sscanf( s.cstr(), "%p", &p ); }
+static inline bool sString2Pointer( const GN::StrA & s, const void* & p ) { return 1 == ::sscanf( s.cstr(), "%p", &p ); }
 static inline bool sString2Vector4( const GN::StrA & s, GN::Vector4f & v ) { return 4 == ::sscanf( s.cstr(), "(%f,%f,%f,%f)", &v.x, &v.y, &v.z, &v.w ); }
 
 static inline bool sVector42String( const GN::Vector4f & v, GN::StrA & s ) { s = GN::strFormat( "(%f,%f,%f,%f)", v.x, v.y, v.z, v.w ); return true; }

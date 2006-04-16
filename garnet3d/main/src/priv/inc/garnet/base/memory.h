@@ -42,8 +42,15 @@ namespace GN
     void memFree( void * );
 }
 
+//! \name overloaded global new and delete operators
+//@{
+inline void * operator new( size_t s ) { return ::GN::memAlloc( s ); }
+inline void * operator new[]( size_t s ) { return ::GN::memAlloc( s ); }
+inline void operator delete( void* p ) { return ::GN::memFree( p ); }
+inline void operator delete[]( void* p ) { return ::GN::memFree( p ); }
+//@}
+
 // *****************************************************************************
 //                           End of memory.h
 // *****************************************************************************
 #endif // __GN_BASE_MEMORY_H__
-

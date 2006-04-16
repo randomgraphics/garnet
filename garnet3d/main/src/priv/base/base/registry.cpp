@@ -1,50 +1,51 @@
 #include "pch.h"
 #include <pcrecpp.h>
 
-//
-//
-// -----------------------------------------------------------------------------
-const GN::Variant * GN::Registry::getKey( const StrA & name ) const
-{
-    Variant def;
-    const Variant & ret = getKey( name, def );
-    return (&ret==&def) ? NULL : &ret;
-}
+// *****************************************************************************
+// private methods
+// *****************************************************************************
+
+// *****************************************************************************
+// public methods
+// *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-const GN::Variant &
-GN::Registry::getKey( const StrA & name, const Variant & defval ) const
+GN::Registry::ItemKey GN::Registry::setItem(
+    const StrA & name, const Variant & value, bool overwriteExisting )
 {
-    std::map<StrA,Variant>::const_iterator i = mKeys.find(name);
-    return (i==mKeys.end()) ? defval : (*i).second;
-}
+    GN_GUARD;
 
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::Registry::setKey( const StrA & name, const Variant & value, bool overwriteExisting )
-{
-    std::map<StrA,Variant>::iterator i = mKeys.find(name);
-    if ( mKeys.end() == i )
+    ItemKey key = name2Key( name );
+
+    if (  0 == key )
     {
-        // This is a new key
-        mKeys[name] = value;
+        // insert a new item to 
+        Item i;
+        i.name = name;
+        i.value = value;
+        key = mItems.add( i );
+        if( 0 == key ) return 0;
+        GN_ASSERT( mNames.end() == mNames.find(name) );
+        mNames[name] = key;
     }
     else if ( overwriteExisting )
     {
         // Override old value
-        (*i).second = value;
+        GN_ASSERT( mItems[key].name == name && mNames.find(name)->second == key );
+        mItems[key].value = value;
     }
     else
     {
-        GN_ERROR( "can't overwrite exising key '%s'!", name.cstr() );
-        return false; // error!
+        GN_ERROR( "Item '%s' is already existed.!", name.cstr() );
+        return 0;
     }
 
     // success
-    return true;
+    return key;
+
+    GN_UNGUARD;
 }
 
 //
@@ -64,7 +65,7 @@ void GN::Registry::importFromStr( const StrA & s )
     std::string name, value;
     while( re.FindAndConsume( &sp, &name, &value ) )
     {
-        setKey( name.c_str(), StrA(value.c_str()), true );
+        setItem( name.c_str(), StrA(value.c_str()), true );
     }
 
     GN_UNGUARD;

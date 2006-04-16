@@ -192,40 +192,40 @@ def UTIL_newEnv( compiler, variant ):
 
         if float(env['MSVS_VERSION']) >= 8.0:
             cxxflags['common']  += ['/EHa']
-            linkflags['common'] += Split( '/NODEFAULTLIB:libcp.lib' )
+            linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
         else:
             cxxflags['common']  += ['/EHs']
 
-        ccflags['common']  += Split('/W4 /WX')
-        ccflags['debug']   += Split('/MDd /GR /RTCscu')
-        ccflags['release'] += Split('/MD /O2 /GL')
-        ccflags['stdbg']   += Split('/MTd /GR')
-        ccflags['strel']   += Split('/MT /O2 /GL')
+        ccflags['common']  += ['/W4','/WX']
+        ccflags['debug']   += ['/MDd','/GR','/RTCscu']
+        ccflags['release'] += ['/MD','/O2','/GL']
+        ccflags['stdbg']   += ['/MTd','/GR']
+        ccflags['strel']   += ['/MT','/O2','/GL']
 
         # this is for vtune and magellan to do instrumentation
         linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP']
 
-        linkflags['release'] += ['/OPT:REF']
-        linkflags['strel']   += ['/OPT:REF']
+        linkflags['release'] += ['/OPT:REF','/LTCG:STATUS']
+        linkflags['strel']   += ['/OPT:REF','/LTCG:STATUS']
 
     elif 'icl' == env['CC']:
-        ccflags['common']  += Split('/W4 /WX /Qpchi- /Zc:forScope')
-        ccflags['debug']   += Split('/MDd /GR /Ge /traceback')
-        ccflags['release'] += Split('/O2 /MD')
-        ccflags['stdbg']   += Split('/MTd /GR /Ge /traceback')
-        ccflags['strel']   += Split('/O2 /MT')
+        ccflags['common']  += ['/W4','/WX','/Qpchi-','/Zc:forScope']
+        ccflags['debug']   += ['/MDd','/GR','/Ge','/traceback']
+        ccflags['release'] += ['/O2','/MD']
+        ccflags['stdbg']   += ['/MTd','/GR','/Ge','/traceback']
+        ccflags['strel']   += ['/O2','/MT']
 
         cxxflags['common'] += ['/EHs']
 
-        cppdefines['debug']   += Split('_DEBUG')
-        cppdefines['stdbg']   += Split('_DEBUG')
+        cppdefines['debug']   += ['_DEBUG']
+        cppdefines['stdbg']   += ['_DEBUG']
 
         # this is for vtune to do instrumentation
-        linkflags['release'] = Split('/FIXED:NO /OPT:REF')
-        linkflags['strel']   = Split('/FIXED:NO /OPT:REF')
+        linkflags['release'] = ['/FIXED:NO','/OPT:REF']
+        linkflags['strel']   = ['/FIXED:NO','/OPT:REF']
 
     elif 'gcc' == env['CC']:
-        ccflags['common']  += Split('-Wall -Werror')
+        ccflags['common']  += ['-Wall','-Werror']
         ccflags['debug']   += ['-g']
         ccflags['release'] += ['-O3']
         ccflags['stdbg']   += ['-g']
