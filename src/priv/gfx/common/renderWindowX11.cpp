@@ -334,10 +334,10 @@ bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
     {
         mUseExternalDisplay = false;
         StrA dispStr = getEnv("DISPLAY");
-        mDisplay = XOpenDisplay( dispStr.cstr() );
+        mDisplay = XOpenDisplay( dispStr.cptr() );
         if( 0 == mDisplay )
         {
-            GN_ERROR( "Fail to open display '%s'.", dispStr.cstr() );
+            GN_ERROR( "Fail to open display '%s'.", dispStr.cptr() );
             return false;
         }
 

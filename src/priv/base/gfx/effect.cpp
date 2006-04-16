@@ -51,6 +51,110 @@ static inline bool sCheckFfpParameterType( const GN::StrA & name, T * type )
 }
 
 // *****************************************************************************
+// ConditionalExpression methods
+// *****************************************************************************
+
+enum ArithmeticOperator
+{
+    CMP_LT,
+    CMP_LE,
+    CMP_EQ,
+    CMP_NE,
+    CMP_GE,
+    CMP_GR,
+
+    ALU_ADD,
+    ALU_DEC,
+    ALU_NEQ,
+
+    BIT_AND,
+    BIT_OR,
+    BIT_NOT,
+    BIT_XOR,
+
+    REL_AND,
+    REL_OR,
+    REL_NOT,
+    REL_XOR,
+
+    NUM_OPCODES,
+};
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::effect::ConditionalExpression::doEval(
+    uint32_t & value, const Token * & p, const Token * e ) const
+{
+    if( p >= e )
+    {
+        GN_ERROR( "incomplete expression!" );
+        return false;
+    }
+
+    if( OPCODE == p->type )
+    {
+        int32_t op = p->opcode;
+
+        if( op < 0 || op >= NUM_OPCODES )
+        {
+            GN_ERROR( "invalid opcode : %d", op );
+            return false;
+        }
+
+        uint32_t a0, a1;
+        ++p;
+        if( !doEval( a0, p, e ) ) return false;
+        if( !doEval( a1, p, e ) ) return false;
+        switch( op )
+        {
+            case CMP_LT : value = a0 < a1; break;
+            //...
+            default : GN_UNIMPL();
+        }
+    }
+    else if( GFXCAPS == p->type )
+    {
+    }
+    else if( VALUE == p->type )
+    {
+        value = p->value;
+    }
+    else
+    {
+        GN_ERROR( "invalid item type: %d", p->type );
+        return false;
+    }
+
+    // success
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::effect::ConditionalExpression::evaluate( uint32_t & value ) const
+{
+    if( mTokens.empty() )
+    {
+        value = 1;
+        return true;
+    }
+
+    const Token * p = &mTokens[0];
+    return doEval( value, p, p + mTokens.size() );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::effect::ConditionalExpression::fromStr( const char *, size_t )
+{
+    mTokens.clear();
+    GN_UNIMPL_WARNING();
+}
+
+// *****************************************************************************
 // Effect descriptor methods
 // *****************************************************************************
 
@@ -69,7 +173,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
 
         if( shader.type < 0 || shader.type >= NUM_SHADER_TYPES )
         {
-            GN_ERROR( "Shader(%s)的类型非法: %d。", shaderName.cstr(), shader.type );
+            GN_ERROR( "Shader(%s)的类型非法: %d。", shaderName.cptr(), shader.type );
             return false;
         }
 
@@ -77,7 +181,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
         {
             if( shader.lang < 0 || shader.lang >= NUM_SHADING_LANGUAGES )
             {
-                GN_ERROR( "Shader(%s)的语言类型非法: %d。", shaderName.cstr(), shader.lang );
+                GN_ERROR( "Shader(%s)的语言类型非法: %d。", shaderName.cptr(), shader.lang );
                 return false;
             }
         }
@@ -90,14 +194,14 @@ bool GN::gfx::effect::EffectDesc::valid() const
 
             if( !sExist( textures, name ) )
             {
-                GN_ERROR( "Shader(%s)中含有无效的贴图引用：%s。", shaderName.cstr(), name.cstr() );
+                GN_ERROR( "Shader(%s)中含有无效的贴图引用：%s。", shaderName.cptr(), name.cptr() );
                 return false;
             }
 
             if( stage >= MAX_TEXTURE_STAGES )
             {
                 GN_ERROR( "Shader(%s)的贴图引用(%s)的stage超过允许上限(%d): %d.",
-                    shaderName.cstr(), name.cstr(), MAX_TEXTURE_STAGES, stage );
+                    shaderName.cptr(), name.cptr(), MAX_TEXTURE_STAGES, stage );
                 return false;
             }
         }
@@ -111,7 +215,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
             
             if( !sExist( uniforms, name ) )
             {
-                GN_ERROR( "Shader(%s)中含有无效的变量引用：%s。", shaderName.cstr(), name.cstr() );
+                GN_ERROR( "Shader(%s)中含有无效的变量引用：%s。", shaderName.cptr(), name.cptr() );
                 return false;
             }
 
@@ -119,7 +223,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
             if( shader.code.empty() && !sCheckFfpParameterType( binding, (size_t*)NULL ) )
             {
                 GN_ERROR( "FFP shader(%s)对Uniform(%s)使用了非FFP的绑定: %s.",
-                    shaderName.cstr(), name.cstr(), binding.cstr() );
+                    shaderName.cptr(), name.cptr(), binding.cptr() );
                 return false;
             }
         }
@@ -144,7 +248,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
 
             if( !pass.rsb.valid() )
             {
-                GN_ERROR( "Render state block of technique('%s')::pass(%d) is invalid.!", techName.cstr(), i );
+                GN_ERROR( "Render state block of technique('%s')::pass(%d) is invalid.!", techName.cptr(), i );
                 return false;
             }
 
@@ -154,7 +258,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
 
                 if( !sExist( shaders, shaderName ) )
                 {
-                    GN_ERROR( "Technique(%s)引用了无效的Shader: %s.", techName.cstr(), shaderName.cstr() );
+                    GN_ERROR( "Technique(%s)引用了无效的Shader: %s.", techName.cptr(), shaderName.cptr() );
                     return false;
                 }
 
@@ -163,9 +267,9 @@ bool GN::gfx::effect::EffectDesc::valid() const
                 if( (ShaderType)i != shader.type )
                 {
                     GN_ERROR( "Shader(%s)的类型(%s)与Technique(%s)所期望的类型(%s)不一致.",
-                        shaderName.cstr(),
+                        shaderName.cptr(),
                         shaderType2Str( shader.type ),
-                        techName.cstr(),
+                        techName.cptr(),
                         shaderType2Str( (ShaderType)i ) );
                     return false;
                 }
@@ -174,7 +278,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
 
         if( !tech.rsb.valid() )
         {
-            GN_ERROR( "Technique(%s)含有无效的render state block.!", techName.cstr() );
+            GN_ERROR( "Technique(%s)含有无效的render state block.!", techName.cptr() );
             return false;
         }
     }
@@ -298,7 +402,7 @@ bool GN::gfx::effect::Effect::createEffect()
             if( 0 == id )
             {
                 GN_WARN( "Default texture value '%s' of texture '%s' is not a valid texture resource.",
-                    i->second.defaultValue.cstr(), td.name.cstr() );
+                    i->second.defaultValue.cptr(), td.name.cptr() );
             }
             else
             {
@@ -444,7 +548,7 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
                 sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.hints ) );
                 if( sd.value.empty() )
                 {
-                    GN_ERROR( "Fail to create shader '%s' for technique '%s'.", sd.name.cstr(), td.name.cstr() );
+                    GN_ERROR( "Fail to create shader '%s' for technique '%s'.", sd.name.cptr(), td.name.cptr() );
                     return false;
                 }
             }
@@ -464,9 +568,9 @@ bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
                     {
                         const StrA & name = mUniforms.items[ur.handle].name;
                         GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
-                            name.cstr(),
-                            sd.name.cstr(),
-                            ur.binding.cstr() );
+                            name.cptr(),
+                            sd.name.cptr(),
+                            ur.binding.cptr() );
                         return false;
                     }
                 }

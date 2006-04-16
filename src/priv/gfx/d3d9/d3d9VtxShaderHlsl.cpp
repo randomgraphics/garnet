@@ -71,7 +71,7 @@ bool GN::gfx::D3D9VtxShaderHlsl::deviceCreate()
 
     mD3DShader = d3d9::compileVS(
         getRenderer().getDevice(),
-        mCode.cstr(),
+        mCode.cptr(),
         mCode.size(),
         0, // flags
         getEntry(),
@@ -84,7 +84,7 @@ bool GN::gfx::D3D9VtxShaderHlsl::deviceCreate()
     while( handle )
     {
         Uniform & u = getUniform( handle );
-        if( !queryDeviceUniform( u.name.cstr(), u.userData ) ) return false;
+        if( !queryDeviceUniform( u.name.cptr(), u.userData ) ) return false;
         handle = getNextUniform( handle );
     }
 

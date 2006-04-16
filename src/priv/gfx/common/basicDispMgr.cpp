@@ -255,7 +255,7 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
 #endif
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
-        strFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cstr() );
+        strFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cptr() );
 
     // success
     setOptions( ro );

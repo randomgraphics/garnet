@@ -50,7 +50,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrA & t ) : s(t) {}
         /** convert to string */
-        const char *asString() const { return s.cstr(); }
+        const char *asString() const { return s.cptr(); }
     };
 
     //!
@@ -64,7 +64,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const GN::StrW & t ) : s(GN::wcs2mbs(t)) {}
         /** convert to string */
-        const char *asString() const { return s.cstr(); }
+        const char *asString() const { return s.cptr(); }
     };
 
     //!
@@ -78,7 +78,7 @@ namespace CxxTest
         /** ctor */
         ValueTraits( const wchar_t * t ) : s(GN::wcs2mbs(t,0)) {}
         /** convert to string */
-        const char *asString() const { return s.cstr(); }
+        const char *asString() const { return s.cptr(); }
     };
 }
 

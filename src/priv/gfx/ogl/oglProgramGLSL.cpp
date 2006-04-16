@@ -89,7 +89,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
             "\n========== GLSL program link error =========\n"
             "%s\n"
             "==============================================\n",
-            getProgramInfoLog(mProgram).cstr() );
+            getProgramInfoLog(mProgram).cptr() );
     }
 
     // success

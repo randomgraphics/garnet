@@ -112,7 +112,7 @@ void printOglInfo( GN::HandleType disp, int index )
         "===================================================\n"
         "\n\n";
 
-    GN_INFO( info.cstr() );
+    GN_INFO( info.cptr() );
 
     GN_UNGUARD;
 }

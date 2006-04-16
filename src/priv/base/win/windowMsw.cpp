@@ -48,9 +48,9 @@ void GN::win::WindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
+        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cstr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -192,7 +192,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     do
     {
         mClassName.format( "GNwindowMsw_%d", rand() );
-    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cstr(), &wcex ) );
+    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
     wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -205,14 +205,14 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     wcex.hCursor        = LoadCursor (0,IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = 0;
-    wcex.lpszClassName  = mClassName.cstr();
+    wcex.lpszClassName  = mClassName.cptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExA(&wcex) )
     {
         GN_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
     }
-    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cstr(), mModuleInstance );
+    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
 
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
@@ -237,8 +237,8 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     // create window
     mWindow = ::CreateWindowExA(
         exStyle,
-        mClassName.cstr(),
-        wcp.caption.cstr(),
+        mClassName.cptr(),
+        wcp.caption.cptr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         rc.right - rc.left, rc.bottom - rc.top,

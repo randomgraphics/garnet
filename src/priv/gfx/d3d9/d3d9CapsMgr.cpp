@@ -220,7 +220,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         "    MSAA Quality                   : %d\n"
         "===================================================\n"
         "\n\n",
-        devtype.cstr(),
+        devtype.cptr(),
         aid.Driver,
         HIWORD(aid.DriverVersion.HighPart),
         LOWORD(aid.DriverVersion.HighPart),
@@ -231,9 +231,9 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         mPresentParameters.BackBufferWidth,
         mPresentParameters.BackBufferHeight,
         mPresentParameters.Windowed ? "Windowed" : "Fullscreen",
-        vsver.cstr(),
-        psver.cstr(),
-        hwtnl.cstr(),
+        vsver.cptr(),
+        psver.cptr(),
+        hwtnl.cptr(),
         d3dcaps.MaxTextureBlendStages,
         d3dcaps.MaxSimultaneousTextures,
         mPresentParameters.MultiSampleType,

@@ -17,11 +17,71 @@
 #define gEffectDictPtr (GN::gfx::EffectDictionary::sGetInstancePtr())
 
 namespace GN { namespace gfx {
+
     //!
     //! namespace for graphics effect classes
     //!
     namespace effect
     {
+        class ConditionalExpression
+        {
+            enum TokenType
+            {
+                OPCODE,
+                GFXCAPS,
+                VALUE,
+            };
+
+            struct Token
+            {
+                TokenType type;
+                union
+                {
+                    int32_t  opcode;
+                    int32_t  gfxcaps;
+                    uint32_t value;
+                };
+            };
+
+            // TODO: use custom allocator to optimize runtime memory allocation performance.
+
+            AutoArray<Token> mTokens;
+
+            bool doEval( uint32_t & value, const Token * & p, const Token * e ) const;
+
+        public:
+
+            //!
+            //! Default ctor
+            //!
+            ConditionalExpression() {}
+
+            //!
+            //! Construct from string
+            //!
+            explicit ConditionalExpression( const char * s, size_t strLen = 0 ) { fromStr( s, strLen ); }
+
+            //!
+            //! Evaluate the expression. Note that empty expression is treated as "1".
+            //!
+            bool evaluate( uint32_t & value ) const;
+
+            //!
+            //! Construct expression from string. Setup a empty expression, if string is invalid.
+            //!
+            void fromStr( const char * s, size_t strLen = 0 );
+
+            //!
+            //! convert to string
+            //!
+            void toStr( StrA & s ) const;
+
+            //!
+            //! convert to string
+            //!
+            StrA toStr() const { StrA s; toStr(s); return s; }
+        };
+
         //!
         //! Texture descriptor
         //!

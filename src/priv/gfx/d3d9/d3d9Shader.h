@@ -251,8 +251,8 @@ namespace GN { namespace gfx
             mSm3 = r.getItem( "sm30", true ).getd(true);
         }
 
-        const char * getEntry() const { return mEntry.cstr(); } //!< get entry name
-        const char * getTarget() const { return mTarget.cstr(); } //!< get target name
+        const char * getEntry() const { return mEntry.cptr(); } //!< get entry name
+        const char * getTarget() const { return mTarget.cptr(); } //!< get target name
         bool useSm3() const { return mSm3; } //!< Use shader model 3.0 or not?
 
         //!

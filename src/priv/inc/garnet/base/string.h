@@ -203,7 +203,7 @@ namespace GN
             if( s.empty() ) return;
             size_t l = s.size();
             setCaps( mLen + l );
-            ::memcpy( mPtr+mLen, s.cstr(), l*sizeof(CHAR) );
+            ::memcpy( mPtr+mLen, s.cptr(), l*sizeof(CHAR) );
             mLen += l;
             mPtr[mLen] = 0;
         }
@@ -262,7 +262,7 @@ namespace GN
         //!
         //! return c-style const char pointer
         //!
-        const CHAR * cstr() const { return mPtr; }
+        const CHAR * cptr() const { return mPtr; }
 
         //!
         //! empty string or not?
@@ -751,7 +751,7 @@ namespace GN
         //!
         friend std::ostream & operator << ( std::ostream & os, const Str & str )
         {
-            os << str.cstr();
+            os << str.cptr();
             return os;
         }
 
@@ -832,7 +832,7 @@ namespace GN
     //! convert wide char string to multi-byte string
     //!
     inline void
-    wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.cstr(), i.size() ); }
+    wcs2mbs( StrA & o, const StrW & i ) { return wcs2mbs( o, i.cptr(), i.size() ); }
 
     //!
     //! convert wide char string to multi-byte string
@@ -844,7 +844,7 @@ namespace GN
     //! convert wide char string to multi-byte string
     //!
     inline StrA
-    wcs2mbs( const StrW & i ) { return wcs2mbs( i.cstr(), i.size() ); }
+    wcs2mbs( const StrW & i ) { return wcs2mbs( i.cptr(), i.size() ); }
 
     //!
     //! convert multi-byte string to wide char string
@@ -855,7 +855,7 @@ namespace GN
     //! convert multi-byte string to wide char string
     //!
     inline void
-    mbs2wcs( StrW & o, const StrA & i ) { return mbs2wcs( o, i.cstr(), i.size() ); }
+    mbs2wcs( StrW & o, const StrA & i ) { return mbs2wcs( o, i.cptr(), i.size() ); }
 
     //!
     //! convert multi-byte string to wide char string
@@ -867,7 +867,7 @@ namespace GN
     //! convert multi-byte string to wide char string
     //!
     inline StrW
-    mbs2wcs( const StrA & i ) { return mbs2wcs( i.cstr(), i.size() ); }
+    mbs2wcs( const StrA & i ) { return mbs2wcs( i.cptr(), i.size() ); }
 }
 
 // *****************************************************************************

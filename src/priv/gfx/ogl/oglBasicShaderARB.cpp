@@ -42,7 +42,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 
     // load program
     glBindProgramARB( target, program );
-    glProgramStringARB( target, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)code.size(), code.cstr() );
+    glProgramStringARB( target, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)code.size(), code.cptr() );
     if( GL_NO_ERROR != glGetError() )
     {
         GLint        errPos;
@@ -57,7 +57,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
             "character(%d)\n"
             "%s\n"
             "=========================================================\n",
-            code.cstr(), errPos, errStr );
+            code.cptr(), errPos, errStr );
         return false;
     }
 

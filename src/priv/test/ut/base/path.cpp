@@ -58,9 +58,9 @@ public:
             GN::path::toNative("pwd:")
         };
 
-        GN_INFO( "appDir = %s", s[0].cstr() );
-        GN_INFO( "startup = %s", s[1].cstr() );
-        GN_INFO( "pwd = %s", s[2].cstr() );
+        GN_INFO( "appDir = %s", s[0].cptr() );
+        GN_INFO( "startup = %s", s[1].cptr() );
+        GN_INFO( "pwd = %s", s[2].cptr() );
 
         for( size_t i = 0; i < 3; ++i )
         {
