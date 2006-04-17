@@ -281,6 +281,7 @@ namespace GN { namespace gfx {
             StrA hints; //!< Shader hints.
             std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage, value is texture name.
             std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding, value is uniform name.
+            CondExp conditions; //!< required renderer caps of this shader.
         };
 
         //!
@@ -429,9 +430,9 @@ namespace GN { namespace gfx {
             //@{
 
             //!
-            //! Begin rendering.
+            //! Begin rendering. Return number of rendering passes.
             //!
-            bool drawBegin( size_t * numPass ) const;
+            size_t drawBegin() const;
 
             //!
             //! End rendering.
@@ -471,13 +472,13 @@ namespace GN { namespace gfx {
             uint32_t getTechniqueHandle( const StrA & name ) const;
 
             //!
-            //! set active technique. 0 means the first technique.
+            //! set active technique. 0 means the default one.
             //!
             void setActiveTechnique( uint32_t ) const;
 
             //!
             //! Set active technique.
-            //! \param name Technique name. Empty string means the first technique.
+            //! \param name Technique name. Empty string means the default one.
             //!
             void setActiveTechniqueByName( const StrA & name ) const;
 
@@ -597,7 +598,6 @@ namespace GN { namespace gfx {
             struct TechniqueData
             {
                 StrA                  name;
-                bool                  ready; //!< true, if tecnique is ready to use.
                 std::vector<PassData> passes;
             };
 
@@ -644,7 +644,6 @@ namespace GN { namespace gfx {
         private:
 
             bool createEffect(); // called by init()
-            bool initTechnique( uint32_t handle ) const; // initialize specific technique.
 
             static void sSetFfpParameter( FfpParameterType, const UniformData & );
         };

@@ -21,6 +21,7 @@ TODO
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
+    - rewrite effect class, make the code more consice.
     - render target management
     - queryXXX(....)
     - Allow mix of garnet-wrapped and low-level graphics resources.

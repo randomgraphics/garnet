@@ -230,18 +230,15 @@ public:
 
         // quad 4
         {
-            size_t n;
-            if( eff0.drawBegin( &n ) )
+            size_t n = eff0.drawBegin();
+            for( size_t i = 0; i < n; ++i )
             {
-                for( size_t i = 0; i < n; ++i )
-                {
-                    eff0.passBegin( i );
-                    eff0.commitChanges();
-                    r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
-                    eff0.passEnd();
-                }
-                eff0.drawEnd();
+                eff0.passBegin( i );
+                eff0.commitChanges();
+                r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
+                eff0.passEnd();
             }
+            eff0.drawEnd();
         }
 
         // a wireframe box

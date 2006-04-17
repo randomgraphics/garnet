@@ -3,25 +3,18 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE bool GN::gfx::effect::Effect::drawBegin( size_t * numPass ) const
+GN_INLINE size_t GN::gfx::effect::Effect::drawBegin() const
 {
     GN_GUARD_SLOW;
 
-    // make sure effect is initialized.
-    GN_ASSERT( ok() );
-
-    GN_ASSERT( !mDrawBegun );
-
-    // prepare technique
-    GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
-    TechniqueData & t = mTechniques.items[mActiveTechnique];
-    if( !t.ready && !initTechnique(mActiveTechnique) ) return false;
-    GN_ASSERT( t.ready );
+    GN_ASSERT(
+        ok() &&
+        !mDrawBegun &&
+        mTechniques.items.validHandle(mActiveTechnique) );
 
     // success
     mDrawBegun = true;
-    if( numPass ) *numPass = t.passes.size();
-    return true;
+    return mTechniques.items[mActiveTechnique].passes.size();
 
     GN_UNGUARD_SLOW;
 }
