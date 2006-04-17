@@ -19,6 +19,38 @@ public:
         GN::gfx::deleteRenderer();
     }
 
+    void testCondExp()
+    {
+        using namespace GN;
+        using namespace GN::gfx;
+        using namespace GN::gfx::effect;
+
+        // empty condition
+        CondExp emptyExp;
+        TS_ASSERT( emptyExp.evaluate() );
+
+        // comparasion
+        CondExp c0 = CondExp::sValue(0);
+        CondExp c1 = CondExp::sValue(1);
+        TS_ASSERT( (c0< c1).evaluate() );
+        TS_ASSERT( (c0<=c1).evaluate() );
+        TS_ASSERT( (c0==c0).evaluate() );
+        TS_ASSERT( (c0!=c1).evaluate() );
+        TS_ASSERT( (c1>=c0).evaluate() );
+        TS_ASSERT( (c1> c0).evaluate() );
+
+        // relation
+        TS_ASSERT( !(c0&&c1).evaluate() );
+        TS_ASSERT(  (c1&&c1).evaluate() );
+        TS_ASSERT( !(c0||c0).evaluate() );
+        TS_ASSERT(  (c0||c1).evaluate() );
+
+        // complex
+        CondExp c2 = CondExp::sValue(2);
+        CondExp c3 = CondExp::sValue(2);
+        TS_ASSERT( ((c0==c1)||(c2==c3)||(c1==c3)).evaluate() );
+    }
+
     void initDesc1( GN::gfx::effect::EffectDesc & desc )
     {
         using namespace GN;

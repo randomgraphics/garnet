@@ -23,7 +23,10 @@ namespace GN { namespace gfx {
     //!
     namespace effect
     {
-        class ConditionalExpression
+        //!
+        //! Contidional expression for renderer caps check
+        //!
+        class CondExp
         {
             enum TokenType
             {
@@ -32,13 +35,35 @@ namespace GN { namespace gfx {
                 VALUE,
             };
 
+            enum Operation
+            {
+                CMP_LT,
+                CMP_LE,
+                CMP_EQ,
+                CMP_NE,
+                CMP_GE,
+                CMP_GT,
+
+                ALU_ADD,
+                ALU_DEC,
+
+                BIT_AND,
+                BIT_OR,
+                BIT_XOR,
+
+                REL_AND,
+                REL_OR,
+
+                NUM_OPCODES,
+            };
+
             struct Token
             {
                 TokenType type;
                 union
                 {
                     int32_t  opcode;
-                    int32_t  gfxcaps;
+                    int      gfxcaps;
                     uint32_t value;
                 };
             };
@@ -47,24 +72,112 @@ namespace GN { namespace gfx {
 
             AutoArray<Token> mTokens;
 
-            bool doEval( uint32_t & value, const Token * & p, const Token * e ) const;
+            static bool sDoEval( uint32_t & value, const Token * & p, const Token * e );
+
+            static uint32_t sCalc( int32_t op, uint32_t a0, uint32_t a1 )
+            {
+                GN_ASSERT( 0 <= op && op <= NUM_OPCODES );
+                switch( op )
+                {
+                    case CMP_LT  : return a0 < a1;
+                    case CMP_LE  : return a0 <= a1;
+                    case CMP_EQ  : return a0 == a1;
+                    case CMP_NE  : return a0 != a1;
+                    case CMP_GE  : return a0 >= a1;
+                    case CMP_GT  : return a0 > a1;
+                    case REL_AND : return a0 && a1;
+                    case REL_OR  : return a0 || a1;
+                    default : GN_UNIMPL(); return 0;
+                }
+            }
+
+            static void sCombine( CondExp & r, Operation op, const CondExp & c1, const CondExp & c2 )
+            {
+                static Token sEmptyToken = { VALUE, 1 };
+
+                const Token * t1, * t2;
+                size_t n1, n2;
+
+                if( c1.mTokens.empty() )
+                {
+                    t1 = &sEmptyToken;
+                    n1 = 1;
+                }
+                else
+                {
+                    t1 = c1.mTokens;
+                    n1 = c1.mTokens.size();
+                }
+
+                if( c2.mTokens.empty() )
+                {
+                    t2 = &sEmptyToken;
+                    n2 = 1;
+                }
+                else
+                {
+                    t2 = c2.mTokens;
+                    n2 = c2.mTokens.size();
+                }
+
+                if( 1 == n1 && VALUE == t1->type && 1 == n2 && VALUE == t2->type )
+                {
+                    uint32_t newValue = sCalc( op, t1->value, t2->value );
+                    if( 1 == newValue )
+                    {
+                        r.mTokens.clear();
+                    }
+                    else
+                    {
+                        r.mTokens.resize( 1 );
+                        r.mTokens[0].type = VALUE;
+                        r.mTokens[0].value = newValue;
+                    }
+                }
+                else
+                {
+                    GN_ASSERT( n1 > 0 && n2 > 0 );
+                    r.mTokens.resize( n1 + n2 + 1 );
+                    r.mTokens[0].type = OPCODE;
+                    r.mTokens[0].opcode = op;
+
+                    memcpy( r.mTokens + 1, t1, n1 * sizeof(Token) );
+                    memcpy( r.mTokens + n1 + 1, t2, n2 * sizeof(Token) );
+                }
+            }
 
         public:
 
             //!
             //! Default ctor
             //!
-            ConditionalExpression() {}
+            CondExp() {}
+
+            //!
+            //! Copy constructor
+            //!
+            CondExp( const CondExp & c )
+            {
+                mTokens.resize( c.mTokens.size() );
+                memcpy( mTokens, c.mTokens, sizeof(Token)*mTokens.size() );
+            }
 
             //!
             //! Construct from string
             //!
-            explicit ConditionalExpression( const char * s, size_t strLen = 0 ) { fromStr( s, strLen ); }
+            explicit CondExp( const char * s, size_t strLen = 0 ) { fromStr( s, strLen ); }
 
             //!
-            //! Evaluate the expression. Note that empty expression is treated as "1".
+            //! Evaluate the expression. Return false for invalid expression.
+            //!
+            //! Note that empty expression is valid, and the value is "1"
             //!
             bool evaluate( uint32_t & value ) const;
+
+            //!
+            //! Evaluate the expression. Return 0 for invalid expression, and 1 for empty expression.
+            //!
+            uint32_t evaluate() const { uint32_t v; return evaluate(v) ? v : 0; }
 
             //!
             //! Construct expression from string. Setup a empty expression, if string is invalid.
@@ -80,6 +193,62 @@ namespace GN { namespace gfx {
             //! convert to string
             //!
             StrA toStr() const { StrA s; toStr(s); return s; }
+
+            //!
+            //! Copy operator
+            //!
+            CondExp & operator=( const CondExp & rhs )
+            {
+                mTokens.resize( rhs.mTokens.size() );
+                memcpy( mTokens, rhs.mTokens, sizeof(Token)*mTokens.size() );
+                return *this;
+            }
+
+            //@{
+
+            //!
+            //! make new CondExp from gfxcaps
+            //!
+            static CondExp sGfxCaps( RendererCaps c )
+            {
+                CondExp exp;
+                exp.mTokens.resize(1);
+                exp.mTokens[0].type = GFXCAPS;
+                exp.mTokens[0].gfxcaps = c;
+            }
+
+            //!
+            //! make new CondExp from gfxcaps
+            //!
+            static CondExp sValue( uint32_t v )
+            {
+                CondExp exp;
+                exp.mTokens.resize(1);
+                exp.mTokens[0].type = VALUE;
+                exp.mTokens[0].value = v;
+                return exp;
+            }
+
+#define GN_CONDEXP_OPERATOR( x, y ) \
+            CondExp operator x ( const CondExp & rhs ) const \
+            { \
+                CondExp c; \
+                sCombine( c, y, *this, rhs ); \
+                return c; \
+            }
+
+            GN_CONDEXP_OPERATOR( <  , CMP_LT  );
+            GN_CONDEXP_OPERATOR( <= , CMP_LE  );
+            GN_CONDEXP_OPERATOR( == , CMP_EQ  );
+            GN_CONDEXP_OPERATOR( != , CMP_NE  );
+            GN_CONDEXP_OPERATOR( >= , CMP_GE  );
+            GN_CONDEXP_OPERATOR( >  , CMP_GT  );
+            GN_CONDEXP_OPERATOR( && , REL_AND );
+            GN_CONDEXP_OPERATOR( || , REL_OR  );
+
+#undef GN_CONDEXP_OPERATOR
+
+            //@}
         };
 
         //!

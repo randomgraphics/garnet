@@ -4,6 +4,13 @@ pushd %~dp0..
 set GARNET_ROOT=%cd%
 popd
 
+REM ============================
+REM setup garnet build parameers
+REM ============================
+
+if "" == "%GN_BUILD_COMPILER%" set GN_BUILD_COMPILER=vc80
+if "" == "%GN_BUILD_VARIANT%" set GN_BUILD_VARIANT=debug
+
 REM ==========
 REM setup path
 REM ==========
@@ -41,7 +48,8 @@ REM setup alias
 REM ===========
 
 alias root      "cd /d %GARNET_ROOT%\$*"
-alias bin       "cd /d %GARNET_ROOT%\bin"
+alias bin       "cd /d %GARNET_ROOT%\bin\$*"
+alias bld       "cd /d %GARNET_ROOT%\bin\build.tmp\scons\win32\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
 alias env       "cd /d %GARNET_ROOT%\env\$*"
 alias msvc      "cd /d %GARNET_ROOT%\msvc"
 alias src       "cd /d %GARNET_ROOT%\src\$*"

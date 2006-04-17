@@ -51,40 +51,13 @@ static inline bool sCheckFfpParameterType( const GN::StrA & name, T * type )
 }
 
 // *****************************************************************************
-// ConditionalExpression methods
+// CondExp methods
 // *****************************************************************************
-
-enum ArithmeticOperator
-{
-    CMP_LT,
-    CMP_LE,
-    CMP_EQ,
-    CMP_NE,
-    CMP_GE,
-    CMP_GR,
-
-    ALU_ADD,
-    ALU_DEC,
-    ALU_NEQ,
-
-    BIT_AND,
-    BIT_OR,
-    BIT_NOT,
-    BIT_XOR,
-
-    REL_AND,
-    REL_OR,
-    REL_NOT,
-    REL_XOR,
-
-    NUM_OPCODES,
-};
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::ConditionalExpression::doEval(
-    uint32_t & value, const Token * & p, const Token * e ) const
+bool GN::gfx::effect::CondExp::sDoEval( uint32_t & value, const Token * & p, const Token * e )
 {
     if( p >= e )
     {
@@ -102,23 +75,28 @@ bool GN::gfx::effect::ConditionalExpression::doEval(
             return false;
         }
 
-        uint32_t a0, a1;
         ++p;
-        if( !doEval( a0, p, e ) ) return false;
-        if( !doEval( a1, p, e ) ) return false;
-        switch( op )
-        {
-            case CMP_LT : value = a0 < a1; break;
-            //...
-            default : GN_UNIMPL();
-        }
+
+        uint32_t a0, a1;
+        if( !sDoEval( a0, p, e ) ) return false;
+        if( !sDoEval( a1, p, e ) ) return false;
+
+        value = sCalc( op, a0, a1 );
     }
     else if( GFXCAPS == p->type )
     {
+        if( p->gfxcaps < 0 || p->gfxcaps >= NUM_RENDERER_CAPS )
+        {
+            GN_ERROR( "invalid renderer caps!" );
+            return false;
+        }
+        value = gRenderer.getCaps( p->gfxcaps );
+        ++p;
     }
     else if( VALUE == p->type )
     {
         value = p->value;
+        ++p;
     }
     else
     {
@@ -133,7 +111,7 @@ bool GN::gfx::effect::ConditionalExpression::doEval(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::ConditionalExpression::evaluate( uint32_t & value ) const
+bool GN::gfx::effect::CondExp::evaluate( uint32_t & value ) const
 {
     if( mTokens.empty() )
     {
@@ -142,13 +120,13 @@ bool GN::gfx::effect::ConditionalExpression::evaluate( uint32_t & value ) const
     }
 
     const Token * p = &mTokens[0];
-    return doEval( value, p, p + mTokens.size() );
+    return sDoEval( value, p, p + mTokens.size() );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::ConditionalExpression::fromStr( const char *, size_t )
+void GN::gfx::effect::CondExp::fromStr( const char *, size_t )
 {
     mTokens.clear();
     GN_UNIMPL_WARNING();

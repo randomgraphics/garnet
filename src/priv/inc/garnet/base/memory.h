@@ -30,6 +30,7 @@ namespace GN
     {
         struct BlockHeader
         {
+            // TODO: addd some checking pattern at head of block.
             BlockHeader * prev;
             BlockHeader * next;
             BlockHeader * nextFree;
@@ -116,6 +117,8 @@ namespace GN
             GN_ASSERT( (size_t)p > DATA_OFFSET );
 
             BlockHeader * b = (BlockHeader*)( ((uint8_t*)p) - DATA_OFFSET );
+
+            // TODO: check pattern at head of blcok. Make sure this is a valid memory block.
 
             // add to free list
             b->nextFree = mFreeList;
