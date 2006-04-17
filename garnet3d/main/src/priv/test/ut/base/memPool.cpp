@@ -7,9 +7,19 @@ class MemPoolTest : public CxxTest::TestSuite
         static GN::FixedSizedObjectAllocator<Test> sAllocator;
         inline void * operator new( size_t ) { return sAllocator.alloc(); }
         inline void operator delete( void* p ) { sAllocator.dealloc(p); }
+        inline void * operator new( size_t, void * p ) { GN_INFO("placement new"); return p; }
+        inline void operator delete( void*, void * ) { GN_INFO("placement delete"); }
     };
 
 public:
+
+    void testPlacementNew()
+    {
+        uint8_t buf[sizeof(Test)*10];
+        Test * a = new(buf) Test;
+        TS_ASSERT_EQUALS( a, (Test*)buf );
+        a->~Test();
+    }
 
     void testClassAllocator()
     {
