@@ -405,8 +405,21 @@ bool GN::gfx::effect::Effect::createEffect()
         const ShaderDesc & s = i->second;
 
         ShaderData sd;
-
         sd.name = i->first;
+
+        // check shader condition
+        if( !s.conditions.evaluate() ) continue;
+
+        // create shaders instance
+        if( sd.value.empty() && !s.code.empty() )
+        {
+            sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.hints ) );
+            if( sd.value.empty() )
+            {
+                GN_ERROR( "Fail to create shader '%s'.", sd.name.cptr() );
+                continue;
+            }
+        }
 
         // build texture referencing list
         sd.textures.reserve( s.textures.size() );
@@ -420,21 +433,43 @@ bool GN::gfx::effect::Effect::createEffect()
         }
 
         // build uniform referencing list
+        bool urlok = true;
         sd.uniforms.reserve( s.uniforms.size() );
         for( std::map<StrA,StrA>::const_iterator i = s.uniforms.begin(); i != s.uniforms.end(); ++i )
         {
-            UniformRefData ud;
-            ud.binding = i->first;
-            ud.ffp = sCheckFfpParameterType( i->first, &ud.ffpParameterType );
-            ud.handle = mUniforms.find( i->second );
-            GN_ASSERT( ud.handle ); // check is already done in EffectDesc::valid()
-            sd.uniforms.push_back( ud );
+            UniformRefData urd;
+
+            urd.binding = i->first;
+            urd.ffp = sCheckFfpParameterType( i->first, &urd.ffpParameterType );
+            urd.handle = mUniforms.find( i->second );
+            GN_ASSERT( urd.handle ); // check is already done in EffectDesc::valid()
+            sd.uniforms.push_back( urd );
+
+            // get shader-specific handle of the uniform
+            if( !urd.ffp )
+            {
+                // Make sure non-FFP binding belongs to non-FFP shader
+                GN_ASSERT( sd.value );
+
+                urd.shaderUniformHandle = sd.value->getUniformHandle( urd.binding );
+
+                if( 0 == urd.shaderUniformHandle )
+                {
+                    const StrA & name = mUniforms.items[urd.handle].name;
+                    GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
+                        name.cptr(),
+                        sd.name.cptr(),
+                        urd.binding.cptr() );
+                    urlok = false;
+                    continue;
+                }
+            }
         }
+        if( !urlok ) continue;
 
         mShaders.add( sd.name, sd );
     }
 
-    // build shader referencing list for all uniforms
     for( uint32_t hUniform = mUniforms.items.first(); hUniform != 0; hUniform = mUniforms.items.next(hUniform) )
     {
         UniformData & ud = mUniforms.items[hUniform];
@@ -467,10 +502,10 @@ bool GN::gfx::effect::Effect::createEffect()
         const TechniqueDesc & t = iTech->second;
         TechniqueData td;
         td.name = iTech->first;
-        td.ready = false;
 
-        // create pass list
         td.passes.resize( t.passes.size() );
+
+        bool techok = true;
         for( size_t iPass = 0; iPass < t.passes.size(); ++iPass )
         {
             const PassDesc & p = t.passes[iPass];
@@ -480,84 +515,24 @@ bool GN::gfx::effect::Effect::createEffect()
             {
                 const StrA & s = p.shaders[iShader];
                 pd.shaders[iShader] = mShaders.find( s );
-                GN_ASSERT( pd.shaders[iShader] &&
-                           mDesc.getShader(s).type == (ShaderType)iShader ); // check is already done in EffectDesc::valid()
+                techok = 0 != pd.shaders[iShader];
+                GN_ASSERT( mDesc.getShader(s).type == (ShaderType)iShader );
             }
             pd.rsb = mDesc.rsb + t.rsb + p.rsb;
         }
+        if( !techok ) continue;
 
         // add technique data to technique list
         mTechniques.add( iTech->first, td );
     }
+    if( mTechniques.empty() )
+    {
+        GN_ERROR( "No valid technique found." );
+        return false;
+    }
     mActiveTechnique = mTechniques.items.first();
 
     // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::initTechnique( uint32_t handle ) const
-{
-    GN_GUARD;
-
-    GN_ASSERT( mTechniques.items.validHandle( handle ) );
-
-    TechniqueData & td = mTechniques.items[handle];
-
-    GN_ASSERT( !td.ready );
-
-    for( size_t i = 0; i < td.passes.size(); ++i )
-    {
-        PassData & pd = td.passes[i];
-
-        for( size_t i = 0; i < NUM_SHADER_TYPES; ++i )
-        {
-            GN_ASSERT( mShaders.items.validHandle( pd.shaders[i] ) );
-            ShaderData & sd = mShaders.items[pd.shaders[i]];
-            const ShaderDesc & s = mDesc.getShader(sd.name);
-
-            // create shaders instance
-            if( sd.value.empty() && !s.code.empty() )
-            {
-                sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.hints ) );
-                if( sd.value.empty() )
-                {
-                    GN_ERROR( "Fail to create shader '%s' for technique '%s'.", sd.name.cptr(), td.name.cptr() );
-                    return false;
-                }
-            }
-
-            // realize uniform handles.
-            for( size_t i = 0; i < sd.uniforms.size(); ++i )
-            {
-                UniformRefData & ur = sd.uniforms[i];
-                if( !ur.ffp )
-                {
-                    // Make sure non-FFP binding belongs to non-FFP shader (already checked in EffectDesc::valid() ).
-                    GN_ASSERT( sd.value );
-
-                    ur.shaderUniformHandle = sd.value->getUniformHandle( ur.binding );
-
-                    if( 0 == ur.shaderUniformHandle )
-                    {
-                        const StrA & name = mUniforms.items[ur.handle].name;
-                        GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
-                            name.cptr(),
-                            sd.name.cptr(),
-                            ur.binding.cptr() );
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-
-    // success
-    td.ready = true;
     return true;
 
     GN_UNGUARD;
