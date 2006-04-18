@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "glew.h"
+#include <glew.h>
 
 #if GN_MSVC
 #pragma comment( lib, "opengl32.lib" )
