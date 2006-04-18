@@ -215,6 +215,7 @@ namespace GN { namespace gfx {
                 exp.mTokens.resize(1);
                 exp.mTokens[0].type = GFXCAPS;
                 exp.mTokens[0].gfxcaps = c;
+                return exp;
             }
 
             //!

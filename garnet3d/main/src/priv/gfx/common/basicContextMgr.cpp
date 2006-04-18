@@ -19,7 +19,7 @@ void GN::gfx::BasicRenderer::contextClear()
 #define UPDATE_AUTOREF_ARRAY( array, newCount, newData, field ) \
 { \
     GN_ASSERT( newData && newCount <= array.MAX_COUNT ); \
-    for( size_t i = 0; i < newCount; ++i ) array.data[i].set( newData[i]##field ); \
+    for( size_t i = 0; i < newCount; ++i ) array.data[i].set( newData[i]field ); \
     for( size_t i = newCount; i < newCount; ++i ) array.data[i].clear(); \
     array.count = newCount; \
 }

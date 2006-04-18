@@ -183,6 +183,7 @@ public:
         int           i;
         float         f;
         void *        p;
+        const char *  c;
         GN::StrA      s;
         GN::Vector4f  v;
         GN::Matrix44f m;
@@ -195,6 +196,7 @@ public:
         TS_ASSERT( var.get(i) ); TS_ASSERT_EQUALS( 1, i );
         TS_ASSERT( var.get(f) ); TS_ASSERT_EQUALS( 1.0f, f );
         TS_ASSERT( var.get(p) ); TS_ASSERT_EQUALS( (void*)1, p );
+        TS_ASSERT( var.get(c) ); TS_ASSERT_EQUALS( "1", c );
         TS_ASSERT( var.get(s) ); TS_ASSERT_EQUALS( "1", s );
         TS_ASSERT( !var.get(v) );
         TS_ASSERT( !var.get(m) );
@@ -205,6 +207,7 @@ public:
         TS_ASSERT( var.get(i) ); TS_ASSERT_EQUALS( 0, i );
         TS_ASSERT( var.get(f) ); TS_ASSERT_EQUALS( 0.0f, f );
         TS_ASSERT( var.get(p) ); TS_ASSERT_EQUALS( (void*)0, p );
+        TS_ASSERT( var.get(c) ); TS_ASSERT_EQUALS( "0", c );
         TS_ASSERT( var.get(s) ); TS_ASSERT_EQUALS( "0", s );
         TS_ASSERT( !var.get(v) );
         TS_ASSERT( !var.get(m) );

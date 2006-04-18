@@ -6,6 +6,8 @@
 //! \author  chenlee (2005.7.23)
 // *****************************************************************************
 
+#include <new>
+
 namespace GN
 {
     //!
@@ -28,22 +30,25 @@ namespace GN
     //!
     class FixedSizedMemoryAllocator
     {
+    protected:
+
+        //!
+        //! Memory block header
+        //!
         struct BlockHeader
         {
             // TODO: addd some checking pattern at head of block.
-            BlockHeader * prev;
-            BlockHeader * next;
-            BlockHeader * nextFree;
-            void * data() const { return (void*)( ((uint8_t*)this) + (size_t)&((BlockHeader*)NULL)->nextFree ); }
+            BlockHeader * prev; //!< point to previous block. NULL means head block.
+            BlockHeader * next; //!< point to next block. NULL means last block.
+            BlockHeader * nextFree; //!< point to next free block.
+            void * data() const { return (void*)( ((uint8_t*)this) + (size_t)&((BlockHeader*)NULL)->nextFree ); } //!< return pointer to data area.
         };
 
-        const size_t DATA_OFFSET;
-        const size_t BLOCK_SIZE;
+        const size_t DATA_OFFSET; //!< offset of data area to the head of block.
+        const size_t BLOCK_SIZE; //!< block size in bytes.
 
-        BlockHeader * mAllBlocks;
-        BlockHeader * mFreeList;
-
-        virtual void destruct( void * ) {} //!< destruct memory block. Do nothing for POD types.
+        BlockHeader * mAllBlocks; //!< point to first block
+        BlockHeader * mFreeList; //!< point to first free block
 
     public:
 
@@ -66,14 +71,11 @@ namespace GN
         //!
         ~FixedSizedMemoryAllocator()
         {
-            shrink();
-
             BlockHeader * p = mAllBlocks;
             while( mAllBlocks )
             {
                 p = mAllBlocks;
                 mAllBlocks = mAllBlocks->next;
-                destruct( p->data() );
                 memFree( p );
             }
         }
@@ -159,27 +161,46 @@ namespace GN
     template<typename T>
     class FixedSizedObjectAllocator : public FixedSizedMemoryAllocator
     {
-        virtual void destruct( void * p )
-        {
-            ((void)p);
-            ((T*)p)->~T();
-        };
-
     public:
 
         //!
         //! Default ctor
         //!
         FixedSizedObjectAllocator() : FixedSizedMemoryAllocator( sizeof(T) ) {}
+
+        //!
+        //! Default ctor.
+        //!
+        ~FixedSizedObjectAllocator()
+        {
+            shrink();
+
+            // call destructor of each one of remaining instances.
+            BlockHeader * p = mAllBlocks;
+            while( mAllBlocks )
+            {
+                p = mAllBlocks;
+                mAllBlocks = mAllBlocks->next;
+                ((T*)p->data())->~T();
+                memFree( p );
+            }
+        }
     };
 }
 
 //! \name overloaded global new and delete operators
 //@{
-inline void * operator new( size_t s ) { return ::GN::memAlloc( s ); }
-inline void * operator new[]( size_t s ) { return ::GN::memAlloc( s ); }
-inline void operator delete( void* p ) { ::GN::memFree( p ); }
-inline void operator delete[]( void* p ) { ::GN::memFree( p ); }
+#if GN_GCC
+#define GN_THROW_BADALLOC() throw(std::bad_alloc)
+#define GN_NOTHROW() throw()
+#else
+#define GN_THROW_BADALLOC()
+#define GN_NOTHROW() throw()
+#endif
+inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::memAlloc( s ); }
+inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::memAlloc( s ); }
+inline void operator delete( void* p ) GN_NOTHROW() { ::GN::memFree( p ); }
+inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::memFree( p ); }
 //@}
 
 // *****************************************************************************
