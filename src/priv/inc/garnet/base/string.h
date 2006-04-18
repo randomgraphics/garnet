@@ -128,20 +128,20 @@ namespace GN
         size_t mCaps;  //!< How many characters can we hold?
         static GN_PUBLIC FixedSizedObjectAllocator<Str<CHAR> > msAllocator; //!< global string allocator
 
-        void * operator new( size_t ) { return msAllocator.alloc(); }
-        void operator delete( void * p ) { msAllocator.dealloc( p ); }
+        void * operator new( size_t ) GN_THROW_BADALLOC() { return msAllocator.alloc(); }
+        void operator delete( void * p ) GN_NOTHROW() { msAllocator.dealloc( p ); }
 
     public:
 
         //!
         //! placement new operator, for compability with vc71
         //!
-        void * operator new( size_t, void * p ) { return p; }
+        void * operator new( size_t, void * p ) GN_THROW_BADALLOC() { return p; }
 
         //!
         //! placement delete operator, for compability with vc71
         //!
-        void operator delete( void *, void * ) {}
+        void operator delete( void *, void * ) GN_NOTHROW() {}
 
     public:
 

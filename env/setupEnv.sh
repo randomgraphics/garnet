@@ -2,33 +2,32 @@
 # setup scons
 # ===========
 echo SCons Directory : ${GARNET_ROOT}/env/scons
-set PATH=${GARNET_ROOT}/env/scons/Scripts:${PATH}
-set SCONS_LIB_DIR=${GARNET_ROOT}/env/scons/Lib
+PATH=${GARNET_ROOT}/env/scons/Scripts:${PATH}
+SCONS_LIB_DIR=${GARNET_ROOT}/env/scons/Lib
 export PATH SCONS_LIB_DIR
 
 # ===========
 # setup alias
 # ===========
 
-alias j_root="cd ${GARNET_ROOT}/"
-alias j_src="cd ${GARNET_ROOT}/src/"
-alias j_priv="cd ${GARNET_ROOT}/src/priv/"
-alias j_base="cd ${GARNET_ROOT}/src/priv/base/"
-alias j_core="cd ${GARNET_ROOT}/src/priv/core/"
-alias j_gfx="cd ${GARNET_ROOT}/src/priv/gfx/"
-alias j_test="cd ${GARNET_ROOT}/src/priv/test/"
-alias j_sample="cd ${GARNET_ROOT}/src/priv/sample/"
-alias j_doc="cd ${GARNET_ROOT}/src/priv/doc/"
-alias j_man="cd ${GARNET_ROOT}/src/priv/manual/"
-alias j_misc="cd ${GARNET_ROOT}/src/priv/misc/"
-alias j_tool="cd ${GARNET_ROOT}/src/priv/tool/"
-alias j_inc="cd ${GARNET_ROOT}/src/priv/inc/garnet/"
-alias j_extern="cd ${GARNET_ROOT}/src/extern/"
-alias j_media="cd ${GARNET_ROOT}/src/media/"
-alias j_bin="cd ${GARNET_ROOT}/bin/"
-alias j_msvc="cd ${GARNET_ROOT}/msvc"
-alias j_env="cd ${GARNET_ROOT}/env/"
-alias -p
+alias gnroot="cd ${GARNET_ROOT}/"
+alias gnsrc="cd ${GARNET_ROOT}/src/"
+alias gnpriv="cd ${GARNET_ROOT}/src/priv/"
+alias gnbase="cd ${GARNET_ROOT}/src/priv/base/"
+alias gncore="cd ${GARNET_ROOT}/src/priv/core/"
+alias gngfx="cd ${GARNET_ROOT}/src/priv/gfx/"
+alias gntest="cd ${GARNET_ROOT}/src/priv/test/"
+alias gnsample="cd ${GARNET_ROOT}/src/priv/sample/"
+alias gndoc="cd ${GARNET_ROOT}/src/priv/doc/"
+alias gnman="cd ${GARNET_ROOT}/src/priv/manual/"
+alias gnmisc="cd ${GARNET_ROOT}/src/priv/misc/"
+alias gntool="cd ${GARNET_ROOT}/src/priv/tool/"
+alias gninc="cd ${GARNET_ROOT}/src/priv/inc/garnet/"
+alias gnextern="cd ${GARNET_ROOT}/src/extern/"
+alias gnmedia="cd ${GARNET_ROOT}/src/media/"
+alias gnbin="cd ${GARNET_ROOT}/bin/"
+alias gnmsvc="cd ${GARNET_ROOT}/msvc"
+alias gnenv="cd ${GARNET_ROOT}/env/"
 
 # =====
 # Misc.

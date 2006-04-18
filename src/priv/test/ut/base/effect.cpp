@@ -129,18 +129,15 @@ public:
         gRenderer.clearScreen();
         if( gRenderer.drawBegin() )
         {
-            size_t n;
-            if( e.drawBegin( &n ) )
+            size_t n = e.drawBegin();
+            for( size_t i = 0; i < n; ++i )
             {
-                for( size_t i = 0; i < n; ++i )
-                {
-                    e.passBegin( i );
-                    e.commitChanges();
-                    gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
-                    e.passEnd();
-                }
-                e.drawEnd();
+                e.passBegin( i );
+                e.commitChanges();
+                gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
+                e.passEnd();
             }
+            e.drawEnd();
             gRenderer.drawEnd();
         }
     }

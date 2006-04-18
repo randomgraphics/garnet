@@ -191,7 +191,7 @@ def UTIL_newEnv( compiler, variant ):
         cppdefines['stdbg']   += ['_DEBUG']
 
         if float(env['MSVS_VERSION']) >= 8.0:
-            cxxflags['common']  += ['/EHa']
+            cxxflags['common']  += ['/EHs']
             linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
         else:
             cxxflags['common']  += ['/EHs']
@@ -321,7 +321,7 @@ class GarnetEnv :
     # 输出调试信息
     def trace( self, level, msg ):
         level = float(level)
-        assert( level > 0 )
+        assert( 0 != level )
         if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
             print 'TRACE(%d) : %s'%(level,msg)
 
@@ -654,7 +654,10 @@ def BUILD_newLinkEnv( target ):
 
     if target.pdb: env['PDB'] = target.pdb
 
-    env.Prepend( LIBPATH = [BUILD_libDir] )
+    if 'gcc' == env['CC']:
+        env.Prepend( LIBPATH = [BUILD_binDir,BUILD_libDir] )
+    else:
+        env.Prepend( LIBPATH = [BUILD_libDir] )
     if 'pcx64' == CONF_mswin:
         env.Prepend( LIBPATH = ['src/extern/lib/x64'] )
     elif 'pcx86' == CONF_mswin:
@@ -762,7 +765,7 @@ def BUILD_handleManifest( env, target ):
 #
 def BUILD_sharedLib( name, target ):
     objs = []
-    for s in target.sources: objs += BUILD_staticObjs( s )
+    for s in target.sources: objs += BUILD_sharedObjs( s )
 
     env = BUILD_newLinkEnv( target )
 
@@ -938,7 +941,10 @@ def HELP_generateTargetList():
 HELP_opts = Options()
 HELP_opts.Add(
     'trace',
-    'Set trace level. (GN_BUILD_TRACE)',
+    'Set trace level (GN_BUILD_TRACE).\n'
+    '           Specify level  N to enable levels [1..N],\n'
+    '           Specify level -N to enable level N only.'
+    ,
     CONF_defaultCmdArgs['trace'] )
 HELP_opts.Add(
     'compiler',
