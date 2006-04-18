@@ -10,7 +10,7 @@ BUGS
   - GNsampleRenderToTexture: black screen on cygwin.
   - GNsampleDepthTexture: extremly slow on ATI x1800, possibly caused by ARB programs.
   - quad renderer is slow on HP notebook with intel graphics chip.
-  - memory leak in GNut
+  - memory leak in "GNut" and "GNtestGfx -ogl".
 
 TODO
 ====
