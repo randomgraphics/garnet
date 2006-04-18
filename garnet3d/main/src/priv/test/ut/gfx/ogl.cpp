@@ -13,7 +13,7 @@ public:
 
     void testChangeUserOptions() { changeOptions(); }
 
-    void testFullscreen() { fullscreen(); }
+    //void testFullscreen() { fullscreen(); }
 
     void testDefaultBackbufferSize() { defaultBackbufferSize(); }
 
