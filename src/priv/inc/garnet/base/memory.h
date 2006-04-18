@@ -32,6 +32,8 @@ namespace GN
     {
     protected:
 
+        // TODO: use big chunk of memory to increase performance and memory locality.
+
         //!
         //! Memory block header
         //!
