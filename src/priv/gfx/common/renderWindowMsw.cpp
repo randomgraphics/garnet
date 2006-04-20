@@ -213,7 +213,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t he
     // register window class
     GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
     wcex.cbSize         = sizeof(WNDCLASSEX);
-    wcex.style          = CS_NOCLOSE;
+    wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
@@ -276,6 +276,11 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
 
     switch(msg)
     {
+        case WM_CLOSE:
+            // do not close the window. just trigger the signal
+            Renderer::sSigWindowClosing();
+            break;
+
         case WM_ENTERSIZEMOVE :
             mInsideSizeMove = true;
             break;
