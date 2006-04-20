@@ -42,6 +42,16 @@ GNGFX_DEFINE_RS( BLEND_SRC       , ENUM             , RSV_BLEND_SA     , RSV_BLE
 //!
 GNGFX_DEFINE_RS( BLEND_DST       , ENUM             , RSV_BLEND_ISA    , RSV_BLEND_ZERO    , RSV_BLEND_SAS  )
 
+//!
+//! Color writeable mask, default is all channels.
+//!
+//! - bit 0 : red
+//! - bit 1 : green
+//! - bit 2 : blue
+//! - bit 3 : alpha
+//!
+GNGFX_DEFINE_RS( COLOR0_WRITE    , INT              , 0xF              , 0                 , 0xF            )
+
 #if GN_LEFT_HAND
 //!
 //! culling mode, default is CULL_CCW
@@ -53,16 +63,6 @@ GNGFX_DEFINE_RS( CULL_MODE       , ENUM             , RSV_CULL_CCW     , RSV_CUL
 //!
 GNGFX_DEFINE_RS( CULL_MODE       , ENUM             , RSV_CULL_CW      , RSV_CULL_NONE     , RSV_CULL_CCW   )
 #endif
-
-//!
-//! fog enable, default is false
-//!
-GNGFX_DEFINE_RS( FOG             , ENUM             , RSV_FALSE        , RSV_FALSE         , RSV_TRUE       )
-
-//!
-//! lighting enable, default is false
-//!
-GNGFX_DEFINE_RS( LIGHTING        , ENUM             , RSV_FALSE        , RSV_FALSE         , RSV_TRUE       )
 
 //!
 //! depth testing enable, default is true
@@ -83,3 +83,13 @@ GNGFX_DEFINE_RS( DEPTH_WRITE     , ENUM             , RSV_TRUE         , RSV_FAL
 //! polyling mode, default is FILL_SOLID
 //!
 GNGFX_DEFINE_RS( FILL_MODE       , ENUM             , RSV_FILL_SOLID   , RSV_FILL_SOLID    , RSV_FILL_POINT )
+
+//!
+//! fog enable, default is false
+//!
+GNGFX_DEFINE_RS( FOG             , ENUM             , RSV_FALSE        , RSV_FALSE         , RSV_TRUE       )
+
+//!
+//! lighting enable, default is false
+//!
+GNGFX_DEFINE_RS( LIGHTING        , ENUM             , RSV_FALSE        , RSV_FALSE         , RSV_TRUE       )
