@@ -36,56 +36,14 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<OGLResource*>::iterator i = mResourceList.begin();
-    while( i != mResourceList.end() )
+    if( !mResourceList.empty() )
     {
-        if( !(*i)->deviceCreate() ) return false;
-        ++i;
+        GN_ERROR( "Not _ALL_ graphics resouces are released!" );
+        return false;
     }
 
     // success
     return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::resourceDeviceRestore()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    std::list<OGLResource*>::iterator i = mResourceList.begin();
-    while( i != mResourceList.end() )
-    {
-        if( !(*i)->deviceRestore() ) return false;
-        ++i;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::resourceDeviceDispose()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    std::list<OGLResource*>::reverse_iterator i = mResourceList.rbegin();
-    while( i != mResourceList.rend() )
-    {
-        (*i)->deviceDispose();
-        ++i;
-    }
 
     GN_UNGUARD;
 }
@@ -99,11 +57,17 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<OGLResource*>::reverse_iterator i = mResourceList.rbegin();
-    while( i != mResourceList.rend() )
+    // release vertex formats
+    mVtxFmts.clear();
+
+    if( !mResourceList.empty() )
     {
-        (*i)->deviceDestroy();
-        ++i;
+        GN_ERROR( "All graphics resouces MUST be released, after recieving 'destroy' signal!" );
+        for( std::list<OGLResource*>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i )
+        {
+            const OGLResource * r = *i;
+            GN_ERROR( "0x%p", r );
+        }
     }
 
     GN_UNGUARD;

@@ -33,7 +33,7 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
     mOGLUsage = dynamic ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
-    if( !deviceCreate() && !deviceRestore() ) { quit(); return selfOK(); }
+    if( !createVBO() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -45,76 +45,6 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxBufVBO::quit()
-{
-    GN_GUARD;
-
-    deviceDispose();
-    deviceDestroy();
-
-    safeMemFree( mSysCopy );
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// from OGLResource
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufVBO::deviceCreate()
-{
-    GN_GUARD;
-
-    struct AutoDel
-    {
-        PFNGLDELETEBUFFERSARBPROC func;
-        GLuint vbo;
-
-        AutoDel( PFNGLDELETEBUFFERSARBPROC f, GLuint v ) : func(f), vbo(v) {}
-
-        ~AutoDel() { if(vbo) func( 1, &vbo ); }
-
-        void dismiss() { vbo = 0; }
-    };
-
-    // create VBO
-    GN_OGL_CHECK_RV( glGenBuffersARB( 1, &mOGLVertexBufferObject ), false );
-    AutoDel ad( glDeleteBuffersARB, mOGLVertexBufferObject );
-
-    // initialize VBO memory store
-    GN_OGL_CHECK_RV(
-        glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ),
-        false );
-    GN_OGL_CHECK_RV(
-        glBufferDataARB(
-            GL_ARRAY_BUFFER_ARB,
-            getSizeInBytes(),
-            mSysCopy,
-            mOGLUsage ),
-        false );
-
-    // call user-defined content loader
-    if( !getLoader().empty() )
-    {
-        if( !getLoader()( *this ) ) return false;
-    }
-
-    // success
-    ad.dismiss();
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufVBO::deviceDestroy()
 {
     GN_GUARD;
 
@@ -131,6 +61,11 @@ void GN::gfx::OGLVtxBufVBO::deviceDestroy()
         GN_OGL_CHECK( glDeleteBuffersARB( 1, &mOGLVertexBufferObject ) );
         mOGLVertexBufferObject = 0;
     }
+
+    safeMemFree( mSysCopy );
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
@@ -199,4 +134,56 @@ void GN::gfx::OGLVtxBufVBO::unlock()
     }
 
     GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLVtxBufVBO::createVBO()
+{
+    GN_GUARD;
+
+    struct AutoDel
+    {
+        PFNGLDELETEBUFFERSARBPROC func;
+        GLuint vbo;
+
+        AutoDel( PFNGLDELETEBUFFERSARBPROC f, GLuint v ) : func(f), vbo(v) {}
+
+        ~AutoDel() { if(vbo) func( 1, &vbo ); }
+
+        void dismiss() { vbo = 0; }
+    };
+
+    // create VBO
+    GN_OGL_CHECK_RV( glGenBuffersARB( 1, &mOGLVertexBufferObject ), false );
+    AutoDel ad( glDeleteBuffersARB, mOGLVertexBufferObject );
+
+    // initialize VBO memory store
+    GN_OGL_CHECK_RV(
+        glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ),
+        false );
+    GN_OGL_CHECK_RV(
+        glBufferDataARB(
+            GL_ARRAY_BUFFER_ARB,
+            getSizeInBytes(),
+            mSysCopy,
+            mOGLUsage ),
+        false );
+
+    // call user-defined content loader
+    if( !getLoader().empty() )
+    {
+        if( !getLoader()( *this ) ) return false;
+    }
+
+    // success
+    ad.dismiss();
+    return true;
+
+    GN_UNGUARD;
 }

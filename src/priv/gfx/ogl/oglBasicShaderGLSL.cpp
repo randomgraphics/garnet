@@ -38,9 +38,7 @@ bool GN::gfx::OGLBasicShaderGLSL::init( const StrA & code )
     // standard init procedure
     GN_STDCLASS_INIT( OGLBasicShaderGLSL, () );
 
-    mCode = code;
-
-    if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !createShader( code ) ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -55,77 +53,6 @@ void GN::gfx::OGLBasicShaderGLSL::quit()
 {
     GN_GUARD;
 
-    deviceDispose();
-    deviceDestroy();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// from OGLResource
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderGLSL::deviceCreate()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mCode.empty() );
-
-    // generate new texture
-    mHandle = glCreateShaderObjectARB( mUsage );
-    if( 0 == mHandle )
-    {
-        GN_ERROR( "Fail to generate new program object!" );
-        return 0;
-    }
-    AutoShaderDel autodel( glDeleteObjectARB, mHandle );
-
-    // set shader mCode
-    const char * code_str = mCode.cptr();
-    GLint code_size = static_cast<GLint>( mCode.size() );
-    GN_OGL_CHECK_RV(
-        glShaderSourceARB( mHandle, 1, &code_str, &code_size ),
-        0 );
-
-    // compile shader
-    GN_OGL_CHECK_RV( glCompileShaderARB( mHandle ), 0 );
-    int compile_ok;
-    GN_OGL_CHECK_RV( glGetObjectParameterivARB(
-        mHandle, GL_OBJECT_COMPILE_STATUS_ARB, &compile_ok ), 0 );
-    if( !compile_ok )
-    {
-        char buf[4096];
-        GN_OGL_CHECK( glGetInfoLogARB( mHandle, 4095, NULL, buf ) );
-        GN_INFO(
-            "\n========== GLSL shader =========\n"
-            "%s\n"
-            "\n========= compile error ========\n"
-            "%s\n"
-            "==================================\n",
-            code_str, buf );
-        return false;
-    }
-
-    // success
-    autodel.dismiss();
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderGLSL::deviceDestroy()
-{
-    GN_GUARD;
-
     // delete shader object
     if( 0 != mHandle )
     {
@@ -133,6 +60,9 @@ void GN::gfx::OGLBasicShaderGLSL::deviceDestroy()
         mHandle = 0;
         getRenderer().removeGLSLShader( getType(), this );
     }
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
@@ -246,4 +176,59 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
 
 
     GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
+{
+    GN_GUARD;
+
+    GN_ASSERT( !mCode.empty() );
+
+    // generate new texture
+    mHandle = glCreateShaderObjectARB( mUsage );
+    if( 0 == mHandle )
+    {
+        GN_ERROR( "Fail to generate new program object!" );
+        return 0;
+    }
+    AutoShaderDel autodel( glDeleteObjectARB, mHandle );
+
+    // set shader code
+    const char * code_str = code.cptr();
+    GLint code_size = static_cast<GLint>( code.size() );
+    GN_OGL_CHECK_RV(
+        glShaderSourceARB( mHandle, 1, &code_str, &code_size ),
+        0 );
+
+    // compile shader
+    GN_OGL_CHECK_RV( glCompileShaderARB( mHandle ), 0 );
+    int compile_ok;
+    GN_OGL_CHECK_RV( glGetObjectParameterivARB(
+        mHandle, GL_OBJECT_COMPILE_STATUS_ARB, &compile_ok ), 0 );
+    if( !compile_ok )
+    {
+        char buf[4096];
+        GN_OGL_CHECK( glGetInfoLogARB( mHandle, 4095, NULL, buf ) );
+        GN_INFO(
+            "\n========== GLSL shader =========\n"
+            "%s\n"
+            "\n========= compile error ========\n"
+            "%s\n"
+            "==================================\n",
+            code_str, buf );
+        return false;
+    }
+
+    // success
+    autodel.dismiss();
+    return true;
+
+    GN_UNGUARD;
 }

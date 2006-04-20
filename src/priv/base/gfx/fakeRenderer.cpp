@@ -28,9 +28,11 @@ namespace GN { namespace gfx
         //!
         ~FakeRenderer()
         {
-            sSigDeviceDispose();
-            sSigDeviceDestroy();
-            sSigQuit();
+            if( mInitialized )
+            {
+                sSigCreate();
+                sSigDestroy();
+            }
         }
 
         //@}
@@ -45,13 +47,20 @@ namespace GN { namespace gfx
 
     public:
 
-        bool init( const RendererOptions & ro )
+        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation )
         {
-            changeOptions( ro, false );
-            return sSigInit() && sSigDeviceCreate() && sSigDeviceRestore();
+            setOptions( ro );
+            if( !mInitialized )
+            {
+                mInitialized = true;
+                if( !sSigCreate() || !sSigRestore() ) return false;
+            }
+            return true;
         }
 
-        virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation ) { setOptions( ro ); return true; }
+    private:
+
+        AutoInit<bool,false> mInitialized;
 
         //@}
 
@@ -317,13 +326,9 @@ namespace GN { namespace gfx
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & ro )
+GN::gfx::Renderer * createFakeRenderer( )
 {
     GN_GUARD;
-
-    GN::gfx::FakeRenderer * p = new GN::gfx::FakeRenderer;
-    p->init( ro );
-    return p;
-
+    return new GN::gfx::FakeRenderer;
     GN_UNGUARD;
 }

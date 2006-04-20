@@ -228,12 +228,10 @@ bool GN::app::SampleApp::initRenderer()
     GN_GUARD;
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigInit.connect( *this, &SampleApp::onRendererInit );
-    GN::gfx::Renderer::sSigDeviceCreate.connect( *this, &SampleApp::onRendererDeviceCreate );
-    GN::gfx::Renderer::sSigDeviceRestore.connect( *this, &SampleApp::onRendererDeviceRestore );
-    GN::gfx::Renderer::sSigDeviceDispose.connect( *this, &SampleApp::onRendererDeviceDispose );
-    GN::gfx::Renderer::sSigDeviceDestroy.connect( *this, &SampleApp::onRendererDeviceDestroy );
-    GN::gfx::Renderer::sSigQuit.connect( *this, &SampleApp::onRendererQuit );
+    GN::gfx::Renderer::sSigCreate.connect( *this, &SampleApp::onRendererCreate );
+    GN::gfx::Renderer::sSigRestore.connect( *this, &SampleApp::onRendererRestore );
+    GN::gfx::Renderer::sSigDispose.connect( *this, &SampleApp::onRendererDispose );
+    GN::gfx::Renderer::sSigDestroy.connect( *this, &SampleApp::onRendererDestroy );
 
     // create renderer
     return recreateRenderer();
@@ -252,12 +250,10 @@ void GN::app::SampleApp::quitRenderer()
     GN::gfx::deleteRenderer();
 
     // disconnect to renderer signals
-    GN::gfx::Renderer::sSigQuit.disconnect( *this );
-    GN::gfx::Renderer::sSigDeviceDestroy.disconnect( *this );
-    GN::gfx::Renderer::sSigDeviceDispose.disconnect( *this );
-    GN::gfx::Renderer::sSigDeviceRestore.disconnect( *this );
-    GN::gfx::Renderer::sSigDeviceCreate.disconnect( *this );
-    GN::gfx::Renderer::sSigInit.disconnect( *this );
+    GN::gfx::Renderer::sSigDestroy.disconnect( *this );
+    GN::gfx::Renderer::sSigDispose.disconnect( *this );
+    GN::gfx::Renderer::sSigRestore.disconnect( *this );
+    GN::gfx::Renderer::sSigCreate.disconnect( *this );
 
     GN_UNGUARD;
 }
@@ -270,8 +266,9 @@ bool GN::app::SampleApp::recreateRenderer()
     GN_GUARD;
 
     // (re)create renderer
-    GN::gfx::Renderer * r = gfx::createRenderer( mInitParam.ro, mInitParam.rapi );
+    GN::gfx::Renderer * r = gfx::createRenderer( mInitParam.rapi );
     if( NULL == r ) return false;
+    if( !r->changeOptions( mInitParam.ro ) ) return false;
 
     // reattach input window
     const GN::gfx::DispDesc & dd = r->getDispDesc();

@@ -161,7 +161,7 @@ bool core::CoreShaderDict::init()
     mDict.setNullor( &sCreateNullShader );
 
     // connect to renderer signals
-    Renderer::sSigDeviceDestroy.connect( mDict, &ShaderDictionary::disposeAll );
+    Renderer::sSigDestroy.connect( mDict, &ShaderDictionary::disposeAll );
 
     // success
     return selfOK();
@@ -176,7 +176,7 @@ void core::CoreShaderDict::quit()
 {
     GN_GUARD;
 
-    Renderer::sSigDeviceDestroy.disconnect( mDict );
+    Renderer::sSigDestroy.disconnect( mDict );
     mDict.clear();
 
     // standard quit procedure

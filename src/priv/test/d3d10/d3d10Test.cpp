@@ -22,12 +22,12 @@ public:
         ip.ro.reference = true;
     }
 
-    bool onRendererDeviceCreate()
+    bool onRendererCreate()
     {
         return true;
     }
 
-    void onRendererDeviceDestroy()
+    void onRendererDestroy()
     {
     }
 

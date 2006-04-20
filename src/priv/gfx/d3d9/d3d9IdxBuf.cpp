@@ -37,7 +37,7 @@ bool GN::gfx::D3D9IdxBuf::init(
     setLoader( loader );
     if( sysCopy ) mSysCopy.resize( numIdx );
 
-    if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -53,7 +53,6 @@ void GN::gfx::D3D9IdxBuf::quit()
     GN_GUARD;
 
     deviceDispose();
-    deviceDestroy();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

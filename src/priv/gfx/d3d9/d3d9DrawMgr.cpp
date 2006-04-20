@@ -38,9 +38,11 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Renderer::drawInit()
+bool GN::gfx::D3D9Renderer::drawDeviceCreate()
 {
     GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
 
     mFont = new D3D9Font(*this);
     if( !mFont->init() ) return false;
@@ -60,9 +62,11 @@ bool GN::gfx::D3D9Renderer::drawInit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawQuit()
+void GN::gfx::D3D9Renderer::drawDeviceDestroy()
 {
     GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
 
     safeDelete( mFont );
     safeDelete( mQuad );

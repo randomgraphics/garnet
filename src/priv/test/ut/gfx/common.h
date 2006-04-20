@@ -115,26 +115,23 @@ struct GfxResources
 };
 
 
-struct TestScene
+struct TestScene : public GN::SlotBase
 {
     GN::AutoObjPtr<GfxResources> res;
 
-    ~TestScene() { destroy(); }
-
-    void destroy()
+    TestScene()
     {
-        res.clear();
-        GN::gfx::deleteRenderer();
+        using namespace GN;
+        using namespace GN::gfx;
+        Renderer::sSigCreate.connect( *this, &TestScene::create );
+        Renderer::sSigDestroy.connect( *this, &TestScene::destroy );
     }
 
-    bool create( const GN::gfx::RendererOptions & ro, GN::gfx::RendererAPI api )
+    ~TestScene() { destroy(); }
+
+    bool create()
     {
         destroy();
-
-        // create renderer
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, api );
-        TS_ASSERT( r );
-        if( !r ) return false;
 
         // create resource
         res.attach( new GfxResources );
@@ -142,6 +139,11 @@ struct TestScene
 
         // success
         return true;
+    }
+
+    void destroy()
+    {
+        res.clear();
     }
 
     void draw()
@@ -157,6 +159,11 @@ class GfxTest
 
 protected:
 
+#define CREATE_RENDERER( r, ro ) \
+        r = createRenderer( mApi ); \
+        TS_ASSERT( r ); if( 0 == r ) return; \
+        if( !r->changeOptions( ro ) ) { TS_ASSERT(0); return; }
+
     void d3d9Init()
     {
         mApi = GN::gfx::API_D3D9;
@@ -169,44 +176,55 @@ protected:
 
     void externalWindow()
     {
-        GN::AutoObjPtr<GN::win::Window> win;
-        win.attach( GN::win::createWindow( GN::win::WCP_WINDOWED_RENDER_WINDOW ) );
+        using namespace GN;
+        using namespace GN::gfx;
+
+        GN::AutoObjPtr<win::Window> win;
+        win.attach( win::createWindow( win::WCP_WINDOWED_RENDER_WINDOW ) );
         TS_ASSERT( !win.empty() );
         if( win.empty() ) return;
         win->resize( 511, 236 );
         win->show();
 
         TestScene scene;
-        GN::gfx::RendererOptions ro;
+        Renderer * r;
+        RendererOptions ro;
 
         ro.useExternalWindow = true;
         ro.displayHandle = win->getDisplayHandle();
         ro.renderWindow = win->getWindowHandle();
         ro.software = true;
-        if( !scene.create(ro,mApi) ) return;
+        CREATE_RENDERER( r, ro );
 
         scene.draw();
 
-        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = gRenderer.getDispDesc();
 
         TS_ASSERT_EQUALS( dd.windowHandle, win->getWindowHandle() );
         //TS_ASSERT_EQUALS( dd.monitorHandle, win->getDisplayHandle() );
-        GN::Vector2<size_t> winSize = win->getClientSize();
+        Vector2<size_t> winSize = win->getClientSize();
         TS_ASSERT_EQUALS( dd.width, winSize.x );
         TS_ASSERT_EQUALS( dd.height, winSize.y );
+
+		// delete renderer, to make sure renderer is deleted before window.
+		deleteRenderer();
     }
 
     void changeOptions()
     {
+        using namespace GN;
+        using namespace GN::gfx;
+
         TestScene scene;
-        GN::gfx::RendererOptions ro;
+        Renderer * r;
+        RendererOptions ro;
 
         ro.windowedWidth = 320;
         ro.windowedHeight = 640;
         ro.software = true;
-        if( !scene.create(ro,mApi) ) return;
+        CREATE_RENDERER( r, ro );
 
-        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = gRenderer.getDispDesc();
         TS_ASSERT_EQUALS( gRenderer.getOptions().software, true );
 
         scene.draw();
@@ -230,13 +248,17 @@ protected:
 
     void fullscreen()
     {
-        TestScene scene;
-        GN::gfx::RendererOptions ro;
+        using namespace GN;
+        using namespace GN::gfx;
 
+        TestScene scene;
+
+        Renderer * r;
+        RendererOptions ro;
         ro.fullscreen = true;
         ro.displayMode.width = 640;
         ro.displayMode.height = 480;
-        if( !scene.create(ro,mApi) ) return;
+        CREATE_RENDERER( r, ro );
 
         scene.draw();
 
@@ -249,14 +271,18 @@ protected:
 
     void defaultBackbufferSize()
     {
+        using namespace GN;
+        using namespace GN::gfx;
+
         TestScene scene;
 
-        GN::gfx::RendererOptions ro;
+        Renderer * r;
+        RendererOptions ro;
         ro.useExternalWindow = false;
         ro.parentWindow = 0;
-        if( !scene.create(ro,mApi) ) return;
+        CREATE_RENDERER( r, ro );
 
-        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = gRenderer.getDispDesc();
         TS_ASSERT_EQUALS( dd.width, 640 );
         TS_ASSERT_EQUALS( dd.height, 480 );
 
@@ -267,11 +293,10 @@ protected:
     {
         using namespace GN;
         using namespace GN::gfx;
-        
+
+        Renderer * r;
         RendererOptions ro;
-        Renderer * r = createRenderer( ro, mApi );
-        TS_ASSERT( r );
-        if( 0 == r ) return;
+        CREATE_RENDERER( r, ro );
 
         // renderer should be initialized with default render state
         TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock(), RenderStateBlockDesc::DEFAULT );
@@ -293,28 +318,32 @@ protected:
 
     void vtxBuf()
     {
-        GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, mApi );
-        TS_ASSERT( r );
-        if( 0 == r ) return;
+        using namespace GN;
+        using namespace GN::gfx;
+
+        Renderer * r;
+        RendererOptions ro;
+        CREATE_RENDERER( r, ro );
 
         GN_WARN( "TODO: vertex buffer UT!" );
     }
 
     void renderTarget()
     {
-        GN::gfx::RendererOptions ro;
-        GN::gfx::Renderer * r = GN::gfx::createRenderer( ro, mApi );
-        TS_ASSERT( r );
-        if( 0 == r ) return;
+        using namespace GN;
+        using namespace GN::gfx;
 
-        GN::AutoRef<GN::gfx::Texture> rt1, rt2, rt3, rt4;
+        Renderer * r;
+        RendererOptions ro;
+        CREATE_RENDERER( r, ro );
+
+        GN::AutoRef<Texture> rt1, rt2, rt3, rt4;
 
         // create render targets
-        rt1.attach( r->create1DTexture( 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt2.attach( r->create2DTexture( 256, 256, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt3.attach( r->create3DTexture( 128, 128, 4, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt4.attach( r->createCubeTexture( 128, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt1.attach( r->create1DTexture( 256, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        rt2.attach( r->create2DTexture( 256, 256, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        rt3.attach( r->create3DTexture( 128, 128, 4, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        rt4.attach( r->createCubeTexture( 128, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
         TS_ASSERT( rt1 );
         TS_ASSERT( rt2 );
         TS_ASSERT( !rt3 );

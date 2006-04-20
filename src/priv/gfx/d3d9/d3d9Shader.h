@@ -102,9 +102,9 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code );
         void quit();
-        bool ok() const { return MyParent::ok(); }
+        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
-        void clear() { mCode.clear(); mD3DShader = 0; }
+        void clear() { mD3DShader = 0; }
         //@}
 
         // ********************************
@@ -112,10 +112,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool deviceCreate();
         bool deviceRestore() { return true; }
         void deviceDispose() {}
-        void deviceDestroy();
 
         // ********************************
         // from D3D9BasicShader
@@ -136,15 +134,15 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-        StrA                    mCode;
-        LPDIRECT3DVERTEXSHADER9 mD3DShader;
 
+        LPDIRECT3DVERTEXSHADER9 mD3DShader;
         size_t mMaxConstF, mMaxConstI, mMaxConstB;
 
         // ********************************
         // private functions
         // ********************************
     private:
+        bool createShader( const StrA & );
         bool analyzeUniforms( const DWORD * shaderFunction );
         GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
@@ -177,9 +175,9 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code );
         void quit();
-        bool ok() const { return MyParent::ok(); }
+        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
-        void clear() { mCode.clear(); mD3DShader = 0; }
+        void clear() { mD3DShader = 0; }
         //@}
 
         // ********************************
@@ -187,10 +185,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        bool deviceCreate();
         bool deviceRestore() { return true; }
         void deviceDispose() {}
-        void deviceDestroy();
 
         // ********************************
         // from D3D9BasicShader
@@ -211,15 +207,15 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-        StrA                   mCode;
-        LPDIRECT3DPIXELSHADER9 mD3DShader;
 
+        LPDIRECT3DPIXELSHADER9 mD3DShader;
         size_t mMaxConstF, mMaxConstI, mMaxConstB;
 
         // ********************************
         // private functions
         // ********************************
     private:
+        bool createShader( const StrA & );
         bool analyzeUniforms( const DWORD * );
         GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
@@ -233,27 +229,29 @@ namespace GN { namespace gfx
     //!
     class D3D9ShaderHlsl : public D3D9BasicShader
     {
-        StrA mEntry;
-        StrA mTarget;
-        bool mSm3;
-
     protected:
 
         //!
-        //! Set shader hints string
+        //! shader creation hints structure
         //!
-        void setHints( const StrA & s )
+        struct CreationHints
         {
-            Registry r;
-            r.importFromStr( s );
-            mEntry = r.getItem( "entry", "main" ).getd("");
-            mTarget = r.getItem( "target", "" ).getd("");
-            mSm3 = r.getItem( "sm30", true ).getd(true);
-        }
+            StrA entry;  //!< entry function
+            StrA target; //!< shader profile
+            bool sm3;    //!< favor shader model 3.0
 
-        const char * getEntry() const { return mEntry.cptr(); } //!< get entry name
-        const char * getTarget() const { return mTarget.cptr(); } //!< get target name
-        bool useSm3() const { return mSm3; } //!< Use shader model 3.0 or not?
+            //!
+            //! Setup hints from string.
+            //!
+            void fromStr( const StrA & s )
+            {
+                Registry r;
+                r.importFromStr( s );
+                entry = r.getItem( "entry", "main" ).getd("");
+                target = r.getItem( "target", "" ).getd("");
+                sm3 = r.getItem( "sm30", true ).getd(true);
+            }
+        };
 
         //!
         //! protected ctor
@@ -336,19 +334,17 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code, const StrA & hints );
         void quit();
-        bool ok() const { return MyParent::ok(); }
+        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
-        void clear() { mCode.clear(); mConstTable = 0; mD3DShader = 0; }
+        void clear() { mConstTable = 0; mD3DShader = 0; }
         //@}
 
         // ********************************
         // from D3D9Resource
         // ********************************
     public:
-        bool deviceCreate();
         bool deviceRestore() { return true; }
         void deviceDispose() {}
-        void deviceDestroy();
 
         // ********************************
         // from D3D9BasicShader
@@ -369,8 +365,6 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-        StrA                    mCode;
-        StrA                    mEntry;
         LPD3DXCONSTANTTABLE     mConstTable;
         LPDIRECT3DVERTEXSHADER9 mD3DShader;
 
@@ -378,6 +372,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+        bool createShader( const StrA &, const StrA & );
     };
 
     //!
@@ -408,19 +403,18 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code, const StrA & hints );
         void quit();
-        bool ok() const { return MyParent::ok(); }
+        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
-        void clear() { mCode.clear(); mConstTable = 0; mD3DShader = 0; }
+        void clear() { mConstTable = 0; mD3DShader = 0; }
         //@}
 
         // ********************************
         // from D3D9Resource
         // ********************************
     public:
-        bool deviceCreate();
+
         bool deviceRestore() { return true; }
         void deviceDispose() {}
-        void deviceDestroy();
 
         // ********************************
         // from D3D9BasicShader
@@ -441,8 +435,7 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-        StrA                   mCode;
-        StrA                   mEntry;
+
         LPD3DXCONSTANTTABLE    mConstTable;
         LPDIRECT3DPIXELSHADER9 mD3DShader;
 
@@ -450,6 +443,7 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+        bool createShader( const StrA &, const StrA & );
     };
 }}
 

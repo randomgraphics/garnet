@@ -16,7 +16,7 @@ bool GN::core::CoreEffectDict::init()
     GN_STDCLASS_INIT( GN::core::CoreEffectDict, () );
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigDeviceDestroy.connect( mDict, &gfx::effect::EffectDictionary::disposeAll );
+    GN::gfx::Renderer::sSigDestroy.connect( mDict, &gfx::effect::EffectDictionary::disposeAll );
 
     // success
     return selfOK();
@@ -31,7 +31,7 @@ void GN::core::CoreEffectDict::quit()
 {
     GN_GUARD;
 
-    GN::gfx::Renderer::sSigDeviceDestroy.disconnect( mDict );
+    GN::gfx::Renderer::sSigDestroy.disconnect( mDict );
     mDict.clear();
 
     // standard quit procedure

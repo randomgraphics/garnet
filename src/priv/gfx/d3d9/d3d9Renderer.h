@@ -51,7 +51,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init();
         void quit();
         bool ok() const
         {
@@ -87,26 +87,13 @@ namespace GN { namespace gfx
         virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation );
 
     private :
-
-        enum OptionChangingType
-        {
-            OCT_AUTO,
-            OCT_CREATE,
-            OCT_INIT
-        };
-
-        bool doOptionChange( RendererOptions, OptionChangingType );
-
         void deviceClear() { mDeviceChanging = false; }
-        bool deviceCreate( bool triggerInitSignal );
+        bool deviceCreate();
         bool deviceRestore();
         void deviceDispose();
-        void deviceDestroy( bool triggerQuitSignal );
+        void deviceDestroy();
 
-        //!
-        //! if true, then we are inside function changeOptions().
-        //!
-        bool mDeviceChanging;
+        bool mDeviceChanging; //! if true, then we are inside function changeOptions().
 
         //@}
 
@@ -328,7 +315,7 @@ namespace GN { namespace gfx
         bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
         void contextDeviceDispose() { mAutoColor0.clear(); mAutoDepth.clear(); }
-        void contextDeviceDestroy() {}
+        void contextDeviceDestroy() { clearContextResources(); }
 
         GN_INLINE void bindContext(
             const RendererContext & newContext,
@@ -435,8 +422,8 @@ namespace GN { namespace gfx
 
         // private functions
     private:
-        bool drawInit();
-        void drawQuit();
+        bool drawInit() { return true; }
+        void drawQuit() {}
         bool drawOK() const { return true; }
         void drawClear()
         {
@@ -446,10 +433,10 @@ namespace GN { namespace gfx
             mLine = 0;
         }
 
-        bool drawDeviceCreate() { return true; }
+        bool drawDeviceCreate();
         bool drawDeviceRestore() { return true; }
         void drawDeviceDispose() {}
-        void drawDeviceDestroy() {}
+        void drawDeviceDestroy();
 
         bool handleDeviceLost();
 

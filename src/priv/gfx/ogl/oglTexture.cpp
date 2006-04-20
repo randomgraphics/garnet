@@ -472,38 +472,6 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
                            getDesc().format ) )
     { quit(); return selfOK(); }
 
-    if( !deviceCreate() ) { quit(); return selfOK(); }
-    if( !deviceRestore() ) { quit(); return selfOK(); }
-
-    // success
-    return selfOK();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::quit()
-{
-    GN_GUARD;
-
-    deviceDispose();
-    deviceDestroy();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLTexture::deviceCreate()
-{
-    GN_GUARD;
-
     // create new opengl texture object
     const TextureDesc & desc = getDesc();
     switch( getDesc().type )
@@ -536,7 +504,7 @@ bool GN::gfx::OGLTexture::deviceCreate()
             GN_UNEXPECTED();
             mOGLTexture = 0;
     }
-    if( 0 == mOGLTexture ) return false;
+    if( 0 == mOGLTexture ) { quit(); return selfOK(); }
 
     // enable/disable mipmap autogeneration
     if( TEXTYPE_CUBE != getDesc().type && GLEW_SGIS_generate_mipmap )
@@ -564,11 +532,11 @@ bool GN::gfx::OGLTexture::deviceCreate()
     // call user-defined content loader
     if( !getLoader().empty() )
     {
-        if( !getLoader()( *this ) ) return false;
+        if( !getLoader()( *this ) ) { quit(); return selfOK(); };
     }
 
-    // successful
-    return true;
+    // success
+    return selfOK();
 
     GN_UNGUARD;
 }
@@ -576,7 +544,7 @@ bool GN::gfx::OGLTexture::deviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLTexture::deviceDestroy()
+void GN::gfx::OGLTexture::quit()
 {
     GN_GUARD;
 
@@ -589,6 +557,10 @@ void GN::gfx::OGLTexture::deviceDestroy()
 
     // delete opengl texture
     if (mOGLTexture) glDeleteTextures( 1, &mOGLTexture ), mOGLTexture = 0;
+
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }

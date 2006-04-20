@@ -51,18 +51,6 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        //       from OGLResource
-        // ********************************
-
-        //@{
-    public:
-        bool deviceCreate();
-        bool deviceRestore() { return true; }
-        void deviceDispose() {}
-        void deviceDestroy();
-        //@}
-
-        // ********************************
         //! \name from Texture
         // ********************************
     public:

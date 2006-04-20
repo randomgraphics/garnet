@@ -36,6 +36,8 @@ bool GN::gfx::D3D9Line::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Line, () );
 
+    if( !createDeclAndShaders() || !deviceRestore() ) { quit(); return selfOK(); }
+
     // success
     return selfOK();
 
@@ -50,7 +52,10 @@ void GN::gfx::D3D9Line::quit()
     GN_GUARD;
 
     deviceDispose();
-    deviceDestroy();
+
+    safeRelease( mDecl );
+    safeRelease( mVtxShader );
+    safeRelease( mPxlShader );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -61,53 +66,6 @@ void GN::gfx::D3D9Line::quit()
 // *****************************************************************************
 // from D3D9Resource
 // *****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3D9Line::deviceCreate()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mVtxShader && !mPxlShader );
-
-    D3D9Renderer & r = getRenderer();
-    LPDIRECT3DDEVICE9 dev = r.getDevice();
-
-    // create vertex decl
-    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDecl, &mDecl ), false );
-
-    // create vertex shader
-    if( r.supportShader( VERTEX_SHADER, LANG_D3D_ASM ) )
-    {
-        static const char * code =
-            "vs.1.1 \n"
-            "dcl_position0 v0 \n"
-            "dcl_color0 v1 \n"
-            "m4x4 oPos, v0, c0 \n"
-            "mov oD0, v1 \n";
-        mVtxShader = d3d9::assembleVS( dev, code );
-        if( 0 == mVtxShader ) return false;
-    }
-#if GN_XENON
-    else GN_UNEXPECTED();
-#endif
-
-    // create pixel shader
-    if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
-    {
-        static const char * code =
-            "ps.1.1 \n"
-            "mov r0, v0 \n";
-        mPxlShader = d3d9::assemblePS( dev, code );
-        if( 0 == mPxlShader ) return false;
-    }
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
 
 //
 //
@@ -147,20 +105,6 @@ void GN::gfx::D3D9Line::deviceDispose()
     GN_GUARD;
 
     safeRelease( mVtxBuf );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3D9Line::deviceDestroy()
-{
-    GN_GUARD;
-
-    safeRelease( mDecl );
-    safeRelease( mVtxShader );
-    safeRelease( mPxlShader );
 
     GN_UNGUARD;
 }
@@ -362,4 +306,55 @@ void GN::gfx::D3D9Line::drawLines(
     // TODO: update statistics information in D3D9Renderer ( draw count, primitive count )
 
     GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+bool GN::gfx::D3D9Line::createDeclAndShaders()
+{
+    GN_GUARD;
+
+    GN_ASSERT( !mVtxShader && !mPxlShader );
+
+    D3D9Renderer & r = getRenderer();
+    LPDIRECT3DDEVICE9 dev = r.getDevice();
+
+    // create vertex decl
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDecl, &mDecl ), false );
+
+    // create vertex shader
+    if( r.supportShader( VERTEX_SHADER, LANG_D3D_ASM ) )
+    {
+        static const char * code =
+            "vs.1.1 \n"
+            "dcl_position0 v0 \n"
+            "dcl_color0 v1 \n"
+            "m4x4 oPos, v0, c0 \n"
+            "mov oD0, v1 \n";
+        mVtxShader = d3d9::assembleVS( dev, code );
+        if( 0 == mVtxShader ) return false;
+    }
+#if GN_XENON
+    else GN_UNEXPECTED();
+#endif
+
+    // create pixel shader
+    if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
+    {
+        static const char * code =
+            "ps.1.1 \n"
+            "mov r0, v0 \n";
+        mPxlShader = d3d9::assemblePS( dev, code );
+        if( 0 == mPxlShader ) return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
 }

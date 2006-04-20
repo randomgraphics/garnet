@@ -126,7 +126,7 @@ void GN::gfx::D3D9Renderer::setContext( const RendererContext & newContext )
 #endif
 
     mContext.mergeWith( newContext );
-    holdContextReference( newContext );
+    holdContextResources( newContext );
 
     GN_UNGUARD_SLOW;
 }

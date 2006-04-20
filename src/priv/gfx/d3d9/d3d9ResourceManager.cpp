@@ -32,11 +32,10 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3D9Resource*>::iterator i = mResourceList.begin();
-    while( i != mResourceList.end() )
+    if( !mResourceList.empty() )
     {
-        if( !(*i)->deviceCreate() ) return false;
-        ++i;
+        GN_ERROR( "Not _ALL_ graphics resouces are released!" );
+        return false;
     }
 
     // success
@@ -95,11 +94,12 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    std::list<D3D9Resource*>::reverse_iterator i = mResourceList.rbegin();
-    while( i != mResourceList.rend() )
+    // release vertex formats
+    mVtxFmts.clear();
+
+    if( !mResourceList.empty() )
     {
-        (*i)->deviceDestroy();
-        ++i;
+        GN_ERROR( "All graphics resouces MUST be released, after receiving 'destroy' signal!" );
     }
 
     GN_UNGUARD;

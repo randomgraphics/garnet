@@ -89,16 +89,6 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from OGLResource
-        // ********************************
-    public:
-
-        bool deviceCreate();
-        bool deviceRestore() { return true; }
-        void deviceDispose() {}
-        void deviceDestroy();
-
-        // ********************************
         // from OGLBasicShader
         // ********************************
     public:
@@ -145,6 +135,8 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+
+        bool createShader( const StrA & );
 
         inline void applyUniform( const Uniform & ) const; // apply single uniform
 
@@ -227,16 +219,6 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // from OGLResource
-        // ********************************
-    public:
-
-        bool deviceCreate();
-        bool deviceRestore() { return true; }
-        void deviceDispose() {}
-        void deviceDestroy();
-
-        // ********************************
         // from OGLBasicShader
         // ********************************
     public:
@@ -281,6 +263,8 @@ namespace GN { namespace gfx
         // private functions
         // ********************************
     private:
+
+        bool createShader( const StrA & );
 
         static GLenum sSelectUsage( ShaderType type )
         {

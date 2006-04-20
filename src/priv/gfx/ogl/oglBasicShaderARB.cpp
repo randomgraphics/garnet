@@ -82,9 +82,7 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderARB, () );
 
-    mCode = code;
-
-    if( !deviceCreate() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !createShader( code ) ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -99,62 +97,15 @@ void GN::gfx::OGLBasicShaderARB::quit()
 {
     GN_GUARD;
 
-    deviceDispose();
-    deviceDestroy();
-
-    // standard quit procedure
-    GN_STDCLASS_QUIT();
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
-// Device management
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderARB::deviceCreate()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mProgram );
-
-    // compile shader
-    mProgram = sCompileShader( mTarget, mCode );
-    if( 0 == mProgram )  return false;
-
-    // get maximum uniform count
-    GN_OGL_CHECK_RV(
-        glGetProgramivARB( mTarget, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, (GLint*)&mMaxLocalUniforms ),
-        false );
-    GN_OGL_CHECK_RV(
-        glGetProgramivARB( mTarget, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, (GLint*)&mMaxEnvUniforms ),
-        false );
-    GN_OGL_CHECK_RV(
-        glGetIntegerv( GL_MAX_PROGRAM_MATRICES_ARB, (GLint*)&mMaxMatrixUniforms ),
-        false );
-
-    // successful
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderARB::deviceDestroy()
-{
-    GN_GUARD;
-
     if( mProgram )
     {
         GN_ASSERT( glIsProgramARB( mProgram ) );
         glDeleteProgramsARB( 1, &mProgram );
         mProgram = 0;
     }
+
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
@@ -230,6 +181,37 @@ void GN::gfx::OGLBasicShaderARB::applyDirtyUniforms() const
 // *****************************************************************************
 // private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::OGLBasicShaderARB::createShader( const StrA & code )
+{
+    GN_GUARD;
+
+    GN_ASSERT( !mProgram );
+
+    // compile shader
+    mProgram = sCompileShader( mTarget, code );
+    if( 0 == mProgram )  return false;
+
+    // get maximum uniform count
+    GN_OGL_CHECK_RV(
+        glGetProgramivARB( mTarget, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, (GLint*)&mMaxLocalUniforms ),
+        false );
+    GN_OGL_CHECK_RV(
+        glGetProgramivARB( mTarget, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, (GLint*)&mMaxEnvUniforms ),
+        false );
+    GN_OGL_CHECK_RV(
+        glGetIntegerv( GL_MAX_PROGRAM_MATRICES_ARB, (GLint*)&mMaxMatrixUniforms ),
+        false );
+
+    // successful
+    return true;
+
+    GN_UNGUARD;
+}
+
 
 //
 //

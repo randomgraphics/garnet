@@ -7,12 +7,12 @@
 //!
 //! Function prototype to create instance of renderer.
 //!
-typedef GN::gfx::Renderer * (*CreateRendererFunc)( const GN::gfx::RendererOptions & );
+typedef GN::gfx::Renderer * (*CreateRendererFunc)();
 
 //
 // create fake renderer
 //
-extern GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & );
+extern GN::gfx::Renderer * createFakeRenderer();
 
 #if GN_STATIC
 
@@ -20,9 +20,9 @@ extern GN::gfx::Renderer * createFakeRenderer( const GN::gfx::RendererOptions & 
 // create D3D9 renderer
 //
 #if GN_MSWIN
-extern GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & );
+extern GN::gfx::Renderer * createD3D9Renderer();
 #else
-inline GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & )
+inline GN::gfx::Renderer * createD3D9Renderer()
 { GN_ERROR( "No D3D9 support on platform other than MS Windows." ); return 0; }
 #endif
 
@@ -30,9 +30,9 @@ inline GN::gfx::Renderer * createD3D9Renderer( const GN::gfx::RendererOptions & 
 // create D3D10 renderer
 //
 #if GN_MSWIN && !GN_XENON
-extern GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions & );
+extern GN::gfx::Renderer * createD3D10Renderer();
 #else
-inline GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions & )
+inline GN::gfx::Renderer * createD3D10Renderer()
 { GN_ERROR( "No D3D10 support on platform other than MS Vista." ); return 0; }
 #endif
 
@@ -40,10 +40,10 @@ inline GN::gfx::Renderer * createD3D10Renderer( const GN::gfx::RendererOptions &
 // create OGL renderer
 //
 #if GN_XENON
-inline GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & )
+inline GN::gfx::Renderer * createOGLRenderer()
 { GN_ERROR( "No OGL support on Xenon." ); return 0; }
 #else
-extern GN::gfx::Renderer * createOGLRenderer( const GN::gfx::RendererOptions & );
+extern GN::gfx::Renderer * createOGLRenderer();
 #endif
 
 #endif
@@ -69,8 +69,7 @@ static GN::gfx::RendererAPI sDetermineRendererAPI()
 //
 //
 // -------------------------------------------------------------------------
-GN::gfx::Renderer * GN::gfx::createRenderer(
-    const RendererOptions & ro, RendererAPI api )
+GN::gfx::Renderer * GN::gfx::createRenderer( RendererAPI api )
 {
     GN_GUARD;
 
@@ -80,13 +79,13 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
     if( API_AUTO == api ) api = sDetermineRendererAPI();
 
     // then create new one.
-    if( API_FAKE == api ) return createFakeRenderer( ro );
+    if( API_FAKE == api ) return createFakeRenderer();
 #if GN_STATIC
     switch( api )
     {
-        case API_D3D9  : return createD3D9Renderer( ro );
-        case API_D3D10 : return createD3D10Renderer( ro );
-        case API_OGL   : return createOGLRenderer( ro );
+        case API_D3D9  : return createD3D9Renderer();
+        case API_D3D10 : return createD3D10Renderer();
+        case API_OGL   : return createOGLRenderer();
         default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }
 #else
@@ -102,7 +101,7 @@ GN::gfx::Renderer * GN::gfx::createRenderer(
     if( !Renderer::msSharedLib.load( dllName ) ) return 0;
     creator = (CreateRendererFunc)Renderer::msSharedLib.getSymbol( "GNgfxCreateRenderer" );
     if( !creator ) return 0;
-    return creator( ro );
+    return creator();
 #endif
     GN_UNGUARD;
 }
