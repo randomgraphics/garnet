@@ -59,6 +59,11 @@ const char * GN::gfx::d3d9::d3dFormat2Str( D3DFORMAT d3dfmt )
         { D3DFMT_R32F,            "D3DFMT_R32F" },
         { D3DFMT_G32R32F,         "D3DFMT_G32R32F" },
         { D3DFMT_A32B32G32R32F,   "D3DFMT_A32B32G32R32F" },
+
+        // ATI special formats
+        { MAKEFOURCC('D','F','2','4'),   "MAKEFOURCC('D','F','2','4')" },
+        { MAKEFOURCC('D','F','1','6'),   "MAKEFOURCC('D','F','1','6')" },
+
 #if !GN_XENON
         { D3DFMT_R8G8B8,          "D3DFMT_R8G8B8" },
         { D3DFMT_R3G3B2,          "D3DFMT_R3G3B2" },

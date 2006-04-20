@@ -114,24 +114,27 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 //
 //
 // ----------------------------------------------------------------------------
-static GN::gfx::ClrFmt sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
+static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
 {
     GN_GUARD;
 
-    static D3DFORMAT candidates[] = { D3DFMT_D32, D3DFMT_D24S8, D3DFMT_D24X8, D3DFMT_D16 };
+    static D3DFORMAT candidates[] =
+    {
+        (D3DFORMAT)MAKEFOURCC('D','F','2','4'), (D3DFORMAT)MAKEFOURCC('D','F','1','6'), // for ATI
+        D3DFMT_D32, D3DFMT_D24FS8, D3DFMT_D24S8, D3DFMT_D24X8, D3DFMT_D16 // for NVIDIA
+    };
     for( size_t i = 0; i < sizeof(candidates)/sizeof(candidates[0]); ++i )
     {
         if( D3D_OK == r.checkD3DDeviceFormat( D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, candidates[i] ) )
         {
             // success
-            GN_ASSERT( GN::gfx::FMT_INVALID != GN::gfx::d3d9::d3dFormat2ClrFmt( candidates[i] ) );
-            return GN::gfx::d3d9::d3dFormat2ClrFmt( candidates[i] );
+            return candidates[i];
         }
     }
 
     // failed
     GN_ERROR( "Current renderer does not support depth texture." );
-    return GN::gfx::FMT_INVALID;
+    return D3DFMT_UNKNOWN;
 
     GN_UNGUARD;
 }
@@ -274,14 +277,8 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
             quit(); return selfOK(); );
 
         mD3DTexture = tex;
+        mD3DFormat = desc.Format;
 
-        // update texture properties
-        texDesc.format = d3d9::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == texDesc.format )
-        {
-            GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d9::d3dFormat2Str( desc.Format ) );
-            return false;
-        }
         texDesc.type = TEXTYPE_2D;
         texDesc.width = desc.Width;
         texDesc.height = desc.Height;
@@ -314,14 +311,8 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
             quit(); return selfOK(); );
 
         mD3DTexture = tex;
+        mD3DFormat = desc.Format;
 
-        // update texture properties
-        texDesc.format = d3d9::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == texDesc.format )
-        {
-            GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d9::d3dFormat2Str( desc.Format ) );
-            return false;
-        }
         texDesc.type = TEXTYPE_3D;
         texDesc.width = desc.Width;
         texDesc.height = desc.Height;
@@ -353,14 +344,8 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
             quit(); return selfOK(); );
 
         mD3DTexture = tex;
+        mD3DFormat = desc.Format;
 
-        // update texture properties
-        texDesc.format = d3d9::d3dFormat2ClrFmt( desc.Format );
-        if( FMT_INVALID == texDesc.format )
-        {
-            GN_ERROR( "Can't convert D3D format %s to garnet color format.", d3d9::d3dFormat2Str( desc.Format ) );
-            return false;
-        }
         texDesc.type = TEXTYPE_CUBE;
         texDesc.width = desc.Width;
         texDesc.height = desc.Height;
@@ -376,6 +361,7 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
 
     // store texture properties
     texDesc.usage = 0;
+    texDesc.format = FMT_DEFAULT;
     if( !setDesc( texDesc ) ) return false;
 
     // setup other properites
@@ -418,31 +404,26 @@ bool GN::gfx::D3D9Texture::deviceRestore()
 
     GN_ASSERT( !mD3DTexture );
 
-    // determine default format
+    // determine texture format
+    mD3DFormat = D3DFMT_UNKNOWN;
     if( FMT_DEFAULT == getDesc().format )
     {
-        TextureDesc desc = getDesc();
-        if( TEXUSAGE_DEPTH & getDesc().usage )
+        mD3DFormat = ( TEXUSAGE_DEPTH & getDesc().usage ) ? sGetDefaultDepthTextureFormat( mRenderer ) : D3DFMT_A8R8G8B8;
+        if( D3DFMT_UNKNOWN == mD3DFormat )
         {
-            // find default depth texture format
-            desc.format = sGetDefaultDepthTextureFormat( mRenderer );
-            if( FMT_INVALID == desc.format ) return false;
-            GN_TRACE( "Use default depth texture format: %s", clrFmt2Str(desc.format) );
+            GN_ERROR( "Fail to detect default texture format." );
+            return false;
         }
-        else
-        {
-            desc.format = FMT_BGRA_8_8_8_8_UNORM; // this is default format
-            GN_TRACE( "Use default texture format: %s", clrFmt2Str(desc.format) );
-        }
-        setDesc( desc );
+        GN_TRACE( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
     }
-
-    // determine D3D format
-    D3DFORMAT d3dfmt = d3d9::clrFmt2D3DFormat( getDesc().format );
-    if( D3DFMT_UNKNOWN == d3dfmt )
+    else
     {
-        GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );
-        return false;
+        mD3DFormat = d3d9::clrFmt2D3DFormat( getDesc().format );
+        if( D3DFMT_UNKNOWN == mD3DFormat )
+        {
+            GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );
+            return false;
+        }
     }
 
     // determine D3D usage
@@ -450,7 +431,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
 
     // check texture format compatibility
     HRESULT hr = mRenderer.checkD3DDeviceFormat(
-        mD3DUsage, texType2D3DResourceType(getDesc().type), d3dfmt );
+        mD3DUsage, texType2D3DResourceType(getDesc().type), mD3DFormat );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
@@ -469,7 +450,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
         sz.x, sz.y, sz.z,
         getDesc().levels,
         mD3DUsage,
-        d3dfmt,
+        mD3DFormat,
         D3DPOOL_DEFAULT );
     if( 0 == mD3DTexture ) return false;
 
@@ -482,7 +463,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
             sz.x, sz.y, sz.z,
             getDesc().levels,
             0,
-            d3dfmt,
+            mD3DFormat,
             D3DPOOL_SYSTEMMEM );
     }
 #endif
@@ -626,7 +607,7 @@ bool GN::gfx::D3D9Texture::lock(
     if( mShadowCopy ) mLockedTexture = mShadowCopy;
     else if( ( LOCK_RO == flag || LOCK_RW == flag ) || !mWritable )
     {
-        // create temporary surface for read-lock of non-shadow texture,
+        // create temporary surface for read-lock of non-shadowed texture,
         // or write-lock of non-writable texture.
         GN_ASSERT( !mLockCopy );
         size_t sx, sy, sz;
@@ -636,7 +617,7 @@ bool GN::gfx::D3D9Texture::lock(
             sx, sy, sz,
             getDesc().levels,
             0,
-            d3d9::clrFmt2D3DFormat( getDesc().format ),
+            mD3DFormat,
             D3DPOOL_SYSTEMMEM );
         if( 0 == mLockCopy ) return false;
         mLockedTexture = mLockCopy;

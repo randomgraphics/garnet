@@ -104,7 +104,7 @@ public:
         
         // create render target textures
         const DispDesc & dd = r.getDispDesc();
-        mTarget.attach( r.create2DTexture( dd.width, dd.height, 1, FMT_D3DCOLOR, TEXUSAGE_RENDER_TARGET ) );
+        mTarget.attach( r.create2DTexture( dd.width, dd.height, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
         if( mTarget.empty() ) return false;
         mDepth.attach( r.create2DTexture( dd.width, dd.height, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
         if( mDepth.empty() ) return false;
