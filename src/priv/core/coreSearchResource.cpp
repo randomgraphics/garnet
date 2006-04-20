@@ -28,8 +28,7 @@ GN::StrA GN::core::searchResource( const StrA & name )
     CHECK_PATH( ( getEnv("GARNET_ROOT"), "bin/media", name ) );
 
     // hack for special cases
-    CHECK_PATH( ( "app:../../../../media", name ) ); // for sample and test binaries
-    CHECK_PATH( ( "app:../../../../../media", name ) ); // for sdk binaries
+    CHECK_PATH( ( "app:../../../../../../media", name ) ); // for temporary build binaries
 
     // resource not found.
     return StrA::EMPTYSTR;

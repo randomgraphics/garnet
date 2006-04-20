@@ -62,9 +62,54 @@ void sSet_BLEND_DST( GN::gfx::D3D9Renderer & r, int32_t val )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
+void sSet_COLOR0_WRITE( GN::gfx::D3D9Renderer & r, int32_t val )
+{
+    r.setD3DRenderState( D3DRS_COLORWRITEENABLE, (DWORD)val );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
 void sSet_CULL_MODE( GN::gfx::D3D9Renderer & r, int32_t val )
 {
     r.setD3DRenderState( D3DRS_CULLMODE, sRenderStateValue2D3D[val] );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_DEPTH_TEST( GN::gfx::D3D9Renderer & r, int32_t val )
+{
+    r.setD3DRenderState( D3DRS_ZENABLE, sRenderStateValue2D3D[val] );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_DEPTH_FUNC( GN::gfx::D3D9Renderer & r, int32_t val )
+{
+    r.setD3DRenderState( D3DRS_ZFUNC, sRenderStateValue2D3D[val] );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_DEPTH_WRITE( GN::gfx::D3D9Renderer & r, int32_t val )
+{
+    r.setD3DRenderState( D3DRS_ZWRITEENABLE, sRenderStateValue2D3D[val] );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_FILL_MODE( GN::gfx::D3D9Renderer & r, int32_t val )
+{
+    r.setD3DRenderState( D3DRS_FILLMODE, sRenderStateValue2D3D[val] );
 }
 
 //
@@ -102,40 +147,4 @@ sSet_LIGHTING( GN::gfx::D3D9Renderer & r, int32_t val )
         r.setD3DRenderState( D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1 );
     }
 #endif
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-static GN_INLINE
-void sSet_DEPTH_TEST( GN::gfx::D3D9Renderer & r, int32_t val )
-{
-    r.setD3DRenderState( D3DRS_ZENABLE, sRenderStateValue2D3D[val] );
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-static GN_INLINE
-void sSet_DEPTH_FUNC( GN::gfx::D3D9Renderer & r, int32_t val )
-{
-    r.setD3DRenderState( D3DRS_ZFUNC, sRenderStateValue2D3D[val] );
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-static GN_INLINE
-void sSet_DEPTH_WRITE( GN::gfx::D3D9Renderer & r, int32_t val )
-{
-    r.setD3DRenderState( D3DRS_ZWRITEENABLE, sRenderStateValue2D3D[val] );
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-static GN_INLINE
-void sSet_FILL_MODE( GN::gfx::D3D9Renderer & r, int32_t val )
-{
-    r.setD3DRenderState( D3DRS_FILLMODE, sRenderStateValue2D3D[val] );
 }

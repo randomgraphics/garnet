@@ -70,6 +70,19 @@ void sSet_BLEND_DST( int )
 //
 // ----------------------------------------------------------------------------
 static GN_INLINE
+void sSet_COLOR0_WRITE( int val )
+{
+    glColorMask(
+        (GLboolean)( val & 0x1 ),
+        (GLboolean)( val & 0x2 ),
+        (GLboolean)( val & 0x4 ),
+        (GLboolean)( val & 0x8 ) );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
 void sSet_CULL_MODE( int val )
 {
     if( GN::gfx::RSV_CULL_NONE == val )
@@ -81,30 +94,6 @@ void sSet_CULL_MODE( int val )
         glEnable( GL_CULL_FACE );
         GN_OGL_CHECK( glCullFace( sRsv2OGL[val] ) );
     }
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-static GN_INLINE
-void sSet_FOG( int val )
-{
-    if( val )
-        glEnable( GL_FOG );
-    else
-        glDisable( GL_FOG );
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-static GN_INLINE void
-sSet_LIGHTING( int val )
-{
-    if( val )
-        glEnable( GL_LIGHTING );
-    else
-        glDisable( GL_LIGHTING );
 }
 
 //
@@ -146,3 +135,26 @@ void sSet_FILL_MODE( int val )
     GN_OGL_CHECK( glPolygonMode( GL_FRONT_AND_BACK, sRsv2OGL[val] ) );
 }
 
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE
+void sSet_FOG( int val )
+{
+    if( val )
+        glEnable( GL_FOG );
+    else
+        glDisable( GL_FOG );
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+static GN_INLINE void
+sSet_LIGHTING( int val )
+{
+    if( val )
+        glEnable( GL_LIGHTING );
+    else
+        glDisable( GL_LIGHTING );
+}

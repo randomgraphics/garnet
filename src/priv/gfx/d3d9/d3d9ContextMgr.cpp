@@ -394,7 +394,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
                     D3DFMT_D24S8, // TODO: enumerate appropriate depth buffer format.
                     mPresentParameters.MultiSampleType,
                     mPresentParameters.MultiSampleQuality,
-                    mPresentParameters.Flags | D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL,
+                    TRUE,
                     &mAutoDepth, 0 ) );
                 GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
             }
