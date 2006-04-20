@@ -179,6 +179,7 @@ namespace GN { namespace gfx
         //! D3D texture parameters
         //!
         //@{
+        D3DFORMAT mD3DFormat;
         DWORD mD3DUsage;
         //@}
 

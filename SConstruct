@@ -881,6 +881,7 @@ for compiler, variants in ALL_targets.iteritems() :
                 Depends( t[0], x )
         for pn in progs:
             for pt in getTargets(pn):
+                Depends( pt, 'GNmedia' )
                 for sn in shlibs:
                     for st in getTargets(sn):
                         Depends( pt, st )
