@@ -172,13 +172,13 @@ public:
 
     DepthTexture() : mScene(0) {}
 
-    bool onRendererDeviceCreate()
+    bool onRendererCreate()
     {
         mScene = ( 0 != gRenderer.getCaps( CAPS_PSCAPS ) ) ? (Scene*)&mSceneWithPs : (Scene*)&mSceneNoPs;
         return mScene->create();
     }
 
-    void onRendererDeviceDestroy()
+    void onRendererDestroy()
     {
         if( mScene ) mScene->destroy(), mScene = 0;
     }

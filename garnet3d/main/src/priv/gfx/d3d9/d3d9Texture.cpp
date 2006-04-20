@@ -204,9 +204,7 @@ bool GN::gfx::D3D9Texture::init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D9Texture, () );
 
     // create device data
-    if( !setDesc( desc ) ||
-        !deviceCreate() ||
-        !deviceRestore() ) { quit(); return selfOK(); }
+    if( !setDesc( desc ) || !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -398,7 +396,6 @@ void GN::gfx::D3D9Texture::quit()
     GN_GUARD;
 
     deviceDispose();
-    deviceDestroy();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

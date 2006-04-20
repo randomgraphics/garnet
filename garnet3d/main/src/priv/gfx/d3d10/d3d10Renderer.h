@@ -35,7 +35,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init();
         void quit();
         bool ok() const
         {
@@ -67,18 +67,9 @@ namespace GN { namespace gfx
 
     private :
 
-        enum OptionChangingType
-        {
-            OCT_AUTO,
-            OCT_CREATE,
-            OCT_INIT
-        };
-
-        bool doOptionChange( RendererOptions, OptionChangingType );
-
         void deviceClear() { mDeviceChanging = false; }
-        bool deviceCreate( bool triggerInitSignal );
-        void deviceDestroy( bool triggerQuitSignal );
+        bool deviceCreate();
+        void deviceDestroy();
 
         //!
         //! if true, then we are inside function changeOptions().

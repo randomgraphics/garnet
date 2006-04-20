@@ -228,7 +228,7 @@ public:
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
-        // quad 4
+        /* quad 4
         {
             size_t n = eff0.drawBegin();
             for( size_t i = 0; i < n; ++i )
@@ -239,7 +239,7 @@ public:
                 eff0.passEnd();
             }
             eff0.drawEnd();
-        }
+        }//*/
 
         // a wireframe box
         {
@@ -284,13 +284,13 @@ public:
 
     GfxTestApp() : mScene(0) {}
 
-    bool onRendererInit()
+    bool onRendererCreate()
     {
         mScene = new Scene;
         return mScene->init();
     }
 
-    void onRendererQuit()
+    void onRendererDestroy()
     {
         safeDelete(mScene);
     }

@@ -11,7 +11,7 @@ class RenderToTexture : public GN::app::SampleApp
 
 public:
 
-    bool onRendererInit()
+    bool onRendererCreate()
     {
         Renderer & r = gRenderer;
         
@@ -25,7 +25,7 @@ public:
         return true;
     }
 
-    void onRendererQuit()
+    void onRendererDestroy()
     {
         mRt0.clear();
         mRt1.clear();

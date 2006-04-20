@@ -53,10 +53,8 @@ namespace GN { namespace gfx {
         // ********************************
     public:
 
-        bool deviceCreate();
         bool deviceRestore();
         void deviceDispose();
-        void deviceDestroy();
 
         // ********************************
         // public functions
@@ -98,6 +96,7 @@ namespace GN { namespace gfx {
         // private functions
         // ********************************
     private:
+        bool createResources();
     };
 }}
 

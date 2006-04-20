@@ -39,7 +39,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const RendererOptions & );
+        bool init();
         void quit();
         bool ok() const
         {
@@ -76,20 +76,11 @@ namespace GN { namespace gfx
 
     private :
 
-        enum OptionChangingType
-        {
-            OCT_AUTO,
-            OCT_CREATE,
-            OCT_INIT
-        };
-
         void deviceClear() { mDeviceChanging = false; }
-        bool deviceCreate( bool triggerInitSignal );
+        bool deviceCreate();
         bool deviceRestore();
         void deviceDispose();
-        void deviceDestroy( bool triggerQuitSignal );
-
-        bool doOptionChange( RendererOptions, OptionChangingType );
+        void deviceDestroy();
 
     private:
 
@@ -233,8 +224,8 @@ namespace GN { namespace gfx
         bool resourceOK() const { return true; }
         void resourceClear() {}
         bool resourceDeviceCreate();
-        bool resourceDeviceRestore();
-        void resourceDeviceDispose();
+        bool resourceDeviceRestore() { return true; }
+        void resourceDeviceDispose() {}
         void resourceDeviceDestroy();
 
     private:

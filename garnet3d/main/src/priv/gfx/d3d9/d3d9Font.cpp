@@ -27,7 +27,7 @@ bool GN::gfx::D3D9Font::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Font, () );
 
-    // do nothing here.
+    if( !createFont() || !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -43,7 +43,8 @@ void GN::gfx::D3D9Font::quit()
     GN_GUARD;
 
     deviceDispose();
-    deviceDestroy();
+
+    safeRelease( mFont );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

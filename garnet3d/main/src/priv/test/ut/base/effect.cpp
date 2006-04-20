@@ -10,8 +10,9 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        TS_ASSERT( createRenderer( API_FAKE ) );
         RendererOptions ro;
-        TS_ASSERT( createRenderer( ro, API_FAKE ) );
+        gRenderer.changeOptions( ro );
     }
 
     void tearDown()

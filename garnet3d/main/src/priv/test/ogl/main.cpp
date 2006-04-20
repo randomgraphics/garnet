@@ -19,12 +19,12 @@ public:
         ip.rapi = API_OGL;
     }
 
-    bool onRendererInit()
+    bool onRendererCreate()
     {
         return true;
     }
 
-    void onRendererQuit()
+    void onRendererDestroy()
     {
     }
 

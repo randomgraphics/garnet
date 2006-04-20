@@ -112,6 +112,7 @@ void GN::gfx::OGLRenderer::contextDeviceDispose()
 void GN::gfx::OGLRenderer::contextDeviceDestroy()
 {
     _GNGFX_DEVICE_TRACE();
+    clearContextResources(); 
 }
 
 // *****************************************************************************
@@ -136,7 +137,7 @@ void GN::gfx::OGLRenderer::setContext( const RendererContext & newContext )
 #endif
 
     mContext.mergeWith( newContext );
-    holdContextReference( newContext );
+    holdContextResources( newContext );
 
     GN_UNGUARD_SLOW;
 }

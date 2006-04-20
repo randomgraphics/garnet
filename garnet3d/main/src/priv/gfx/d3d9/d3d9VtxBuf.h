@@ -58,10 +58,8 @@ namespace GN { namespace gfx
         // ********************************
 
     public:
-        bool deviceCreate() { return true; }
         bool deviceRestore();
         void deviceDispose();
-        void deviceDestroy() {}
 
         // ********************************
         // public functions

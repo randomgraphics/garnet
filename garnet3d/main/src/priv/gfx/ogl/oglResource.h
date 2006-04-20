@@ -15,11 +15,6 @@ namespace GN { namespace gfx
     //!
     struct OGLResource
     {
-        virtual bool deviceCreate() = 0;  //!< Respond to OGL device creation.
-        virtual bool deviceRestore() = 0; //!< Respond to OGL device restoration.
-        virtual void deviceDispose() = 0; //!< Respond to OGL device dispose(lost).
-        virtual void deviceDestroy() = 0; //!< Respond to OGL device deletion.
-
     protected :
 
         //@{

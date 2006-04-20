@@ -11,17 +11,15 @@
 // *****************************************************************************
 
 #if GN_STATIC
-GN::gfx::Renderer *
-createOGLRenderer( const GN::gfx::RendererOptions & ro )
+GN::gfx::Renderer * createOGLRenderer()
 #else
-extern "C" GN_EXPORT GN::gfx::Renderer *
-GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )
+extern "C" GN_EXPORT GN::gfx::Renderer * GNgfxCreateRenderer()
 #endif
 {
     GN_GUARD;
 
     GN::AutoObjPtr<GN::gfx::OGLRenderer> p( new GN::gfx::OGLRenderer );
-    if( !p->init(ro) ) return 0;
+    if( !p->init() ) return 0;
     return p.detach();
 
     GN_UNGUARD;
@@ -34,7 +32,7 @@ GNgfxCreateRenderer( const GN::gfx::RendererOptions & ro )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::init(const RendererOptions & ro )
+bool GN::gfx::OGLRenderer::init()
 {
     GN_GUARD;
 
@@ -47,9 +45,6 @@ bool GN::gfx::OGLRenderer::init(const RendererOptions & ro )
     if( !resourceInit() ) { quit(); return selfOK(); }
     if( !contextInit()  ) { quit(); return selfOK(); }
     if( !drawInit()     ) { quit(); return selfOK(); }
-
-    // create & reset device data
-    if( !doOptionChange( ro, OCT_INIT ) ) { quit(); return selfOK(); }
 
     // successful
     return selfOK();
@@ -64,7 +59,7 @@ void GN::gfx::OGLRenderer::quit()
 {
     GN_GUARD;
 
-    deviceDestroy( true );
+    deviceDestroy();
 
     drawQuit();
     contextQuit();
@@ -86,7 +81,47 @@ void GN::gfx::OGLRenderer::quit()
 bool GN::gfx::OGLRenderer::changeOptions( const RendererOptions & ro, bool forceRecreation )
 {
     GN_GUARD;
-    return doOptionChange( ro, forceRecreation ? OCT_CREATE : OCT_AUTO );
+
+    // prepare for function re-entrance.
+    if( mDeviceChanging )
+    {
+        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
+        return true;
+    }
+    ScopeBool __dummy__(mDeviceChanging);
+
+    // store old display settings
+    const RendererOptions & oldOptions = getOptions();
+    const DispDesc oldDesc = getDispDesc();
+
+    // setup new display settings
+    if( !processUserOptions( ro ) ) return false;
+
+    const DispDesc & newDesc = getDispDesc();
+
+    if( forceRecreation ||
+        0 == getOGLRC() ||
+        oldDesc.windowHandle != newDesc.windowHandle )
+    {
+        // we have to perform a full device recreation
+        deviceDestroy();
+        return deviceCreate();
+    }
+    else if( oldDesc != newDesc ||
+        oldOptions.fullscreen != ro.fullscreen ||
+        oldOptions.vsync != ro.vsync ||
+        oldOptions.autoRestore != ro.autoRestore )
+    {
+        // a device reset should be enough
+        deviceDispose();
+        return deviceRestore();
+    }
+    else
+    {
+        // do nothing, if new setting is equal to current setting
+        return true;
+    }
+
     GN_UNGUARD;
 }
 
@@ -97,7 +132,7 @@ bool GN::gfx::OGLRenderer::changeOptions( const RendererOptions & ro, bool force
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::deviceCreate( bool triggerInitSignal )
+bool GN::gfx::OGLRenderer::deviceCreate()
 {
     GN_GUARD;
 
@@ -114,17 +149,11 @@ bool GN::gfx::OGLRenderer::deviceCreate( bool triggerInitSignal )
     #undef COMPONENT_RECREATE
 
     // trigger signals
-    if( triggerInitSignal )
-    {
-        GN_INFO( "GFX SIGNAL: OGL renderer init." );
-        if( !sSigInit() ) return false;
-    }
-
     GN_INFO( "GFX SIGNAL: OGL device create." );
-    if( !sSigDeviceCreate() ) return false;
+    if( !sSigCreate() ) return false;
 
     GN_INFO( "GFX SIGNAL: OGL device restore." );
-    if( !sSigDeviceRestore() ) return false;
+    if( !sSigRestore() ) return false;
 
     // success
     return true;
@@ -149,7 +178,7 @@ bool GN::gfx::OGLRenderer::deviceRestore()
 
     // trigger reset event
     GN_INFO( "GFX SIGNAL: OGL device restore." );
-    if( !sSigDeviceRestore() ) return false;
+    if( !sSigRestore() ) return false;
 
     // success
     return true;
@@ -167,7 +196,7 @@ void GN::gfx::OGLRenderer::deviceDispose()
     _GNGFX_DEVICE_TRACE();
 
     GN_INFO( "GFX SIGNAL: OGL device dispose." );
-    sSigDeviceDispose();
+    sSigDispose();
 
     drawDeviceDispose();
     contextDeviceDispose();
@@ -181,7 +210,7 @@ void GN::gfx::OGLRenderer::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::deviceDestroy( bool triggerQuitSignal )
+void GN::gfx::OGLRenderer::deviceDestroy()
 {
     GN_GUARD;
 
@@ -190,16 +219,10 @@ void GN::gfx::OGLRenderer::deviceDestroy( bool triggerQuitSignal )
     if( getOGLRC() )
     {
         GN_INFO( "GFX SIGNAL: OGL device dispose." );
-        sSigDeviceDispose();
+        sSigDispose();
 
         GN_INFO( "GFX SIGNAL: OGL device destroy." );
-        sSigDeviceDestroy();
-
-        if( triggerQuitSignal )
-        {
-            GN_INFO( "GFX SIGNAL: OGL renderer quit." );
-            sSigQuit();
-        }
+        sSigDestroy();
     }
 
     #define COMPONENT_DESTROY(X) X##DeviceDispose(); X##DeviceDestroy();
@@ -213,62 +236,4 @@ void GN::gfx::OGLRenderer::deviceDestroy( bool triggerQuitSignal )
     #undef COMPONENT_DESTROY
 
     GN_UNGUARD;
-}
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::doOptionChange( RendererOptions ro, OptionChangingType type )
-{
-    GN_GUARD;
-
-    // prepare for function re-entrance.
-    if( mDeviceChanging )
-    {
-        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
-        return true;
-    }
-    ScopeBool __dummy__(mDeviceChanging);
-
-    // store old display settings
-    const RendererOptions oldOptions = getOptions();
-    const DispDesc oldDesc = getDispDesc();
-
-    // setup new display settings
-    if( !processUserOptions( ro ) ) return false;
-
-    const DispDesc & newDesc = getDispDesc();
-
-    if( OCT_INIT == type )
-    {
-        deviceDestroy( true );
-        return deviceCreate( true );
-    }
-    if( OCT_CREATE == type ||
-        oldDesc.windowHandle != newDesc.windowHandle )
-    {
-        // we have to perform a full device recreation
-        deviceDestroy( false );
-        return deviceCreate( false );
-    }
-    else if( oldDesc != newDesc ||
-        oldOptions.fullscreen != ro.fullscreen ||
-        oldOptions.vsync != ro.vsync ||
-        oldOptions.autoRestore != ro.autoRestore )
-    {
-        // a device reset should be enough
-        deviceDispose();
-        return deviceRestore();
-    }
-    else
-    {
-        // do nothing, if new setting is equal to current setting
-        return true;
-    }
-
-    GN_UNGUARD;
-}
+} 

@@ -153,11 +153,12 @@ namespace GN { namespace gfx
         bool contextInit() { return true; }
         void contextQuit() {}
         bool contextOk() const { return true; }
-        void contextClear();
+        void contextClear() { clearContextResources(); }
 
     protected:
 
-        void holdContextReference( const RendererContext & ); //!< hold reference to resources in context state
+        void holdContextResources( const RendererContext & ); //!< hold reference to resources in context state
+        void clearContextResources();
 
     private:
 

@@ -103,7 +103,7 @@ bool GN::core::CoreTextureDict::init()
     mDict.setNullor( &sCreateNullTexture );
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigDeviceDispose.connect( mDict, &gfx::TextureDictionary::disposeAll );
+    GN::gfx::Renderer::sSigDispose.connect( mDict, &gfx::TextureDictionary::disposeAll );
 
     // success
     return selfOK();
@@ -118,7 +118,7 @@ void GN::core::CoreTextureDict::quit()
 {
     GN_GUARD;
 
-    GN::gfx::Renderer::sSigDeviceDispose.disconnect( mDict );
+    GN::gfx::Renderer::sSigDispose.disconnect( mDict );
     mDict.clear();
 
     // standard quit procedure

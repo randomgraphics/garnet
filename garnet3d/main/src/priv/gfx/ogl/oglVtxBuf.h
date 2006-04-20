@@ -110,16 +110,6 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        // From OGLResource
-        // ********************************
-    public:
-
-        bool deviceCreate();
-        bool deviceRestore() { return true; }
-        void deviceDispose() {}
-        void deviceDestroy();
-
-        // ********************************
         // from VtxBuf
         // ********************************
     public:
@@ -149,6 +139,12 @@ namespace GN { namespace gfx
         size_t    mLockOffset; //!< bytes from buffer start to locked start.
         size_t    mLockBytes;
         LockFlag  mLockFlag;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+        bool createVBO();
     };
 }}
 

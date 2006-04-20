@@ -36,7 +36,7 @@ bool GN::gfx::D3D9Quad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Quad, () );
 
-    // do nothing
+    if( !createResources() || !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -52,7 +52,12 @@ void GN::gfx::D3D9Quad::quit()
     GN_GUARD;
 
     deviceDispose();
-    deviceDestroy();
+
+    safeRelease( mDecl );
+    safeRelease( mVtxShader );
+    safeRelease( mPxlShaderTextured );
+    safeRelease( mPxlShaderSolid );
+    safeRelease( mIdxBuf );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -63,84 +68,6 @@ void GN::gfx::D3D9Quad::quit()
 // *****************************************************************************
 // from D3D9Resource
 // *****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3D9Quad::deviceCreate()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mVtxShader && !mPxlShaderTextured && !mPxlShaderSolid && !mIdxBuf );
-
-    D3D9Renderer & r = getRenderer();
-    LPDIRECT3DDEVICE9 dev = r.getDevice();
-
-    // create vertex decl
-    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sVtxElements, &mDecl ), false );
-
-    // create vertex shader
-#if GN_XENON
-    static const char * code =
-        "vs.1.1 \n"
-        "dcl_position0 v0 \n"
-        "dcl_texcoord0 v1 \n"
-        "dcl_color0 v2 \n"
-        "mov oPos, v0 \n"
-        "mov oT0, v1 \n"
-        "mov oD0, v2 \n";
-    mVtxShader = d3d9::assembleVS( dev, code );
-    if( 0 == mVtxShader ) return false;
-#else
-    GN_ASSERT( 0 == mVtxShader );
-#endif
-
-    // create pixel shader
-    if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
-    {
-        static const char * code1 =
-            "ps.1.1 \n"
-            "tex t0 \n"
-            "mov r0, t0 \n";
-        mPxlShaderTextured = d3d9::assemblePS( dev, code1 );
-        if( 0 == mPxlShaderTextured ) return false;
-
-        static const char * code2 =
-            "ps.1.1 \n"
-            "mov r0, v0 \n";
-        mPxlShaderSolid = d3d9::assemblePS( dev, code2 );
-        if( 0 == mPxlShaderSolid ) return false;
-    }
-
-    // create index buffer
-    GN_DX9_CHECK_RV(
-        dev->CreateIndexBuffer(
-            (UINT)( sizeof(uint16_t) * MAX_QUADS * 6 ),
-            0, // usage
-            D3DFMT_INDEX16,
-            D3DPOOL_MANAGED,
-            &mIdxBuf, 0 ),
-        false );
-
-    // fill index buffer
-    uint16_t * ibData;
-    GN_DX9_CHECK_RV( mIdxBuf->Lock( 0, 0, (void**)&ibData, 0 ), false );
-    for( uint16_t i = 0; i < MAX_QUADS; ++i )
-    {
-        ibData[i*6+0] = i*4+0;
-        ibData[i*6+1] = i*4+1;
-        ibData[i*6+2] = i*4+2;
-        ibData[i*6+3] = i*4+0;
-        ibData[i*6+4] = i*4+2;
-        ibData[i*6+5] = i*4+3;
-    }
-    GN_DX9_CHECK( mIdxBuf->Unlock() );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
 
 //
 //
@@ -180,22 +107,6 @@ void GN::gfx::D3D9Quad::deviceDispose()
     GN_GUARD;
 
     safeRelease( mVtxBuf );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3D9Quad::deviceDestroy()
-{
-    GN_GUARD;
-
-    safeRelease( mDecl );
-    safeRelease( mVtxShader );
-    safeRelease( mPxlShaderTextured );
-    safeRelease( mPxlShaderSolid );
-    safeRelease( mIdxBuf );
 
     GN_UNGUARD;
 }
@@ -439,3 +350,87 @@ void GN::gfx::D3D9Quad::drawQuads(
 
     GN_UNGUARD_SLOW;
 }
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+bool GN::gfx::D3D9Quad::createResources()
+{
+    GN_GUARD;
+
+    GN_ASSERT( !mVtxShader && !mPxlShaderTextured && !mPxlShaderSolid && !mIdxBuf );
+
+    D3D9Renderer & r = getRenderer();
+    LPDIRECT3DDEVICE9 dev = r.getDevice();
+
+    // create vertex decl
+    GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sVtxElements, &mDecl ), false );
+
+    // create vertex shader
+#if GN_XENON
+    static const char * code =
+        "vs.1.1 \n"
+        "dcl_position0 v0 \n"
+        "dcl_texcoord0 v1 \n"
+        "dcl_color0 v2 \n"
+        "mov oPos, v0 \n"
+        "mov oT0, v1 \n"
+        "mov oD0, v2 \n";
+    mVtxShader = d3d9::assembleVS( dev, code );
+    if( 0 == mVtxShader ) return false;
+#else
+    GN_ASSERT( 0 == mVtxShader );
+#endif
+
+    // create pixel shader
+    if( r.supportShader( PIXEL_SHADER, LANG_D3D_ASM ) )
+    {
+        static const char * code1 =
+            "ps.1.1 \n"
+            "tex t0 \n"
+            "mov r0, t0 \n";
+        mPxlShaderTextured = d3d9::assemblePS( dev, code1 );
+        if( 0 == mPxlShaderTextured ) return false;
+
+        static const char * code2 =
+            "ps.1.1 \n"
+            "mov r0, v0 \n";
+        mPxlShaderSolid = d3d9::assemblePS( dev, code2 );
+        if( 0 == mPxlShaderSolid ) return false;
+    }
+
+    // create index buffer
+    GN_DX9_CHECK_RV(
+        dev->CreateIndexBuffer(
+            (UINT)( sizeof(uint16_t) * MAX_QUADS * 6 ),
+            0, // usage
+            D3DFMT_INDEX16,
+            D3DPOOL_MANAGED,
+            &mIdxBuf, 0 ),
+        false );
+
+    // fill index buffer
+    uint16_t * ibData;
+    GN_DX9_CHECK_RV( mIdxBuf->Lock( 0, 0, (void**)&ibData, 0 ), false );
+    for( uint16_t i = 0; i < MAX_QUADS; ++i )
+    {
+        ibData[i*6+0] = i*4+0;
+        ibData[i*6+1] = i*4+1;
+        ibData[i*6+2] = i*4+2;
+        ibData[i*6+3] = i*4+0;
+        ibData[i*6+4] = i*4+2;
+        ibData[i*6+5] = i*4+3;
+    }
+    GN_DX9_CHECK( mIdxBuf->Unlock() );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+

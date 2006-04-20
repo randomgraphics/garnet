@@ -1,21 +1,6 @@
 #include "pch.h"
 #include "basicRenderer.h"
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::contextClear()
-{
-    GN_GUARD;
-    mResourceHolder.shaders.clear();
-    mResourceHolder.colorBuffers.clear();
-    mResourceHolder.depthBuffer.clear();
-    mResourceHolder.textures.clear();
-    mResourceHolder.vtxBufs.clear();
-    mResourceHolder.idxBuf.clear();
-    GN_UNGUARD;
-}
-
 #define UPDATE_AUTOREF_ARRAY( array, newCount, newData, field ) \
 { \
     GN_ASSERT( newData && newCount <= array.MAX_COUNT ); \
@@ -27,7 +12,7 @@ void GN::gfx::BasicRenderer::contextClear()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::holdContextReference( const RendererContext & context )
+void GN::gfx::BasicRenderer::holdContextResources( const RendererContext & context )
 {
     GN_GUARD_SLOW;
 
@@ -66,4 +51,19 @@ void GN::gfx::BasicRenderer::holdContextReference( const RendererContext & conte
     if( context.flags.idxBuf ) mResourceHolder.idxBuf.set( context.idxBuf );
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::clearContextResources()
+{
+    GN_GUARD;
+    mResourceHolder.shaders.clear();
+    mResourceHolder.colorBuffers.clear();
+    mResourceHolder.depthBuffer.clear();
+    mResourceHolder.textures.clear();
+    mResourceHolder.vtxBufs.clear();
+    mResourceHolder.idxBuf.clear();
+    GN_UNGUARD;
 }

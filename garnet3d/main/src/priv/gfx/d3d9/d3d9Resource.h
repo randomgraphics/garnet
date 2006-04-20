@@ -22,10 +22,8 @@ namespace GN { namespace gfx
         //!
         D3D9Renderer & getRenderer() const { return mRenderer; }
 
-        virtual bool deviceCreate() = 0;  //!< Respond to D3D device creation.
         virtual bool deviceRestore() = 0; //!< Respond to D3D device restoration.
         virtual void deviceDispose() = 0; //!< Respond to D3D device dispose(lost).
-        virtual void deviceDestroy() = 0; //!< Respond to D3D device deletion.
 
     protected :
 
