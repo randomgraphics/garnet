@@ -8,7 +8,9 @@ BUGS
   - Render target image is up-side-down in OGL, comparing with D3D.
     - See GNsampleRenderToTexture for an example.
   - GNsampleRenderToTexture: black screen on cygwin.
-  - GNsampleDepthTexture: extremly slow on ATI x1800, possibly caused by ARB programs.
+  - GNsampleDepthTexture:
+    - OGL: renderer extremly slow on ATI x1800, possibly caused by ARB programs.
+    - D3D: does not work on x1900
   - quad renderer is slow on HP notebook with intel graphics chip.
   - memory leak in "GNut" and "GNtestGfx -ogl".
 

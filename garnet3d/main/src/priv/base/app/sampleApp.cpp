@@ -232,6 +232,7 @@ bool GN::app::SampleApp::initRenderer()
     GN::gfx::Renderer::sSigRestore.connect( *this, &SampleApp::onRendererRestore );
     GN::gfx::Renderer::sSigDispose.connect( *this, &SampleApp::onRendererDispose );
     GN::gfx::Renderer::sSigDestroy.connect( *this, &SampleApp::onRendererDestroy );
+    GN::gfx::Renderer::sSigWindowClosing.connect( *this, &SampleApp::postExistEvent );
 
     // create renderer
     return recreateRenderer();
@@ -254,6 +255,7 @@ void GN::app::SampleApp::quitRenderer()
     GN::gfx::Renderer::sSigDispose.disconnect( *this );
     GN::gfx::Renderer::sSigRestore.disconnect( *this );
     GN::gfx::Renderer::sSigCreate.disconnect( *this );
+    GN::gfx::Renderer::sSigWindowClosing.disconnect( *this );
 
     GN_UNGUARD;
 }

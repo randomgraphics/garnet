@@ -24,6 +24,7 @@
     GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigRestore; \
     GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDispose; \
     GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDestroy; \
+    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigWindowClosing; \
     GN_PUBLIC ::GN::SharedLib     GN::gfx::Renderer::msSharedLib;
 
 namespace GN { namespace gfx
@@ -478,6 +479,21 @@ namespace GN { namespace gfx
         //! D3D/OGL device destroy signal
         //!
         static GN_PUBLIC Signal0<void> sSigDestroy;
+
+        //!
+        //! 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
+        //!
+        //! This signal is useful when you want application to quit when user click close button or
+        //! press ALT-F4, while using internal render window.
+        //! \par
+        //! Internal render window is "unclosable". That means, when user try to close internal render
+        //! window, nothing will happen, besides triggering this signal.
+        //! \par
+        //! This signall will be triggered as well, when using external render window, to make the renderer
+        //! behavior consistent. But normally, you should have been handled external window messages somewhere
+        //! else. So you can safely ignore this signal.
+        //!
+        static GN_PUBLIC Signal0<void> sSigWindowClosing;
 
         //@}
 
