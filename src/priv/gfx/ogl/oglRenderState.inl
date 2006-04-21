@@ -72,11 +72,11 @@ void sSet_BLEND_DST( int )
 static GN_INLINE
 void sSet_COLOR0_WRITE( int val )
 {
-    glColorMask(
-        (GLboolean)( val & 0x1 ),
-        (GLboolean)( val & 0x2 ),
-        (GLboolean)( val & 0x4 ),
-        (GLboolean)( val & 0x8 ) );
+    GLboolean r = !!( val & 0x1 );
+    GLboolean g = !!( val & 0x2 );
+    GLboolean b = !!( val & 0x4 );
+    GLboolean a = !!( val & 0x8 );
+    glColorMask( r, g, b, a );
 }
 
 //
