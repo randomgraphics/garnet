@@ -99,11 +99,21 @@ namespace GN { namespace gfx
             //!
             //! equality check
             //!
+            bool operator==( const SurfaceDesc & rhs ) const
+            {
+                if( texture != rhs.texture ) return false;
+                if( NULL == texture ) return true; // ignore remaining parameters, if texture is NULL.
+                return face == rhs.face && level == rhs.level && slice == rhs.slice;
+            }
+
+            //!
+            //! equality check
+            //!
             bool operator!=( const SurfaceDesc & rhs ) const
             {
                 if( texture != rhs.texture ) return true;
                 if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
-                return face != rhs.face || level != level || slice != slice;
+                return face != rhs.face || level != rhs.level || slice != rhs.slice;
             }
         };
 

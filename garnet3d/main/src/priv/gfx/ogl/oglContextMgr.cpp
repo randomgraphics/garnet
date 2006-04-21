@@ -193,8 +193,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
     {
         bindContextShaders( newContext, newFlags, forceRebind );
         bindContextRenderStates( newContext, newFlags, forceRebind );
-        bindContextRenderTargets( newContext, newFlags, forceRebind );
-        bindContextViewport( newContext, newFlags, forceRebind );
+        bindContextRenderTargetsAndViewport( newContext, newFlags, forceRebind );
     }
 #if !GN_XENON
     if( newFlags.ffp ) bindContextFfp( newContext, newFlags, forceRebind );
@@ -437,47 +436,137 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargets(
-    const RendererContext & newContext,
-    RendererContext::FieldFlags newFlags,
-    bool forceRebind )
-{
-//    GN_GUARD_SLOW;
-
-    GN_UNUSED_PARAM( newContext );
-    GN_UNUSED_PARAM( forceRebind );
-
-    if( newFlags.colorBuffers )
-    {
-    }
-    if( newFlags.depthBuffer )
-    {
-    }
-
-//    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextViewport(
+GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargetsAndViewport(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
 
-    if( newFlags.viewport )
+    // bind color buffers
+    bool rebindViewport = false;
+    if( newFlags.colorBuffers )
     {
-        if( newContext.viewport != mContext.viewport || forceRebind )
+        uint32_t count = min( (uint32_t)newContext.numColorBuffers, getCaps( CAPS_MAX_RENDER_TARGETS ) );
+        if( 
+        for( uint32_t i = 0; i < count; ++i )
         {
-            GLint x = (GLint)( newContext.viewport.x * getDispDesc().width);
-            GLint y = (GLint)( newContext.viewport.y * getDispDesc().height );
-            GLsizei w = (GLsizei)( newContext.viewport.w * getDispDesc().width );
-            GLsizei h = (GLsizei)( newContext.viewport.h * getDispDesc().height );
-            glViewport( x, y, w, h );
+            const RendererContext::SurfaceDesc * oldSurface = i < mContext.numColorBuffers ? &mContext.colorBuffers[i] : 0;
+            const RendererContext::SurfaceDesc * newSurface = &newContext.colorBuffers[i];
+
+            if( !forceRebind )
+            {
+                if( oldSurface == newSurface ) continue;
+                if( oldSurface && newSurface && *oldSurface == *newSurface ) continue;
+            }
+
+            if( oldSurface && oldSurface->texture )
+            {
+                const OGLTexture * oldtex = safeCast<const OGLTexture*>(oldSurface->texture);
+
+                // get (old) texture size
+                uint32_t sx, sy;
+                oldSurface->texture->getMipSize<uint32_t>( oldSurface->level, &sx, &sy );
+
+                // copy framebuffer to current (old) render target texture
+                GLint currentTexID;
+                switch( oldtex->getDesc().type )
+                {
+                    case TEXTYPE_CUBE :
+                        GN_ASSERT( sx == sy );
+                        GN_OGL_CHECK(
+                            glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &currentTexID ) );
+                        GN_OGL_CHECK(
+                            glBindTexture( GL_TEXTURE_CUBE_MAP_ARB,
+                                oldtex->getOGLTexture() ) );
+                        GN_OGL_CHECK(
+                            glCopyTexImage2D(
+                                OGLTexture::sCubeface2OGL( oldSurface->face ), 0,
+                                oldtex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
+                        GN_OGL_CHECK(
+                            glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, currentTexID ) );
+                        break;
+
+                    case TEXTYPE_2D :
+                        GN_OGL_CHECK(
+                            glGetIntegerv( GL_TEXTURE_BINDING_2D, &currentTexID ) );
+                        GN_OGL_CHECK(
+                            glBindTexture( GL_TEXTURE_2D,
+                                oldtex->getOGLTexture() ) );
+                        GN_OGL_CHECK(
+                            glCopyTexImage2D( GL_TEXTURE_2D, 0,
+                                oldtex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
+                        GN_OGL_CHECK(
+                            glBindTexture( GL_TEXTURE_2D, currentTexID ) );
+                        break;
+
+                    case TEXTYPE_1D :
+                        GN_ASSERT( 1 == sy );
+                        GN_OGL_CHECK(
+                            glGetIntegerv( GL_TEXTURE_BINDING_1D, &currentTexID ) );
+                        GN_OGL_CHECK(
+                            glBindTexture( GL_TEXTURE_1D,
+                                oldtex->getOGLTexture() ) );
+                        GN_OGL_CHECK(
+                            glCopyTexImage1D( GL_TEXTURE_1D, 0,
+                                oldtex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
+                        GN_OGL_CHECK(
+                            glBindTexture( GL_TEXTURE_1D, currentTexID ) );
+                        break;
+
+                    default:
+                        GN_ERROR( "invalid texture type!" );
+                        return;
+                }
+            }
+
+            // update render target size
+            if( 0 == i )
+            {
+                uint32_t oldw = mColorBufferWidth;
+                uint32_t oldh = mColorBufferHeight;
+                if( newSurface && newSurface->texture )
+                {
+                    newSurface->texture->getMipSize<uint32_t>( newSurface->level, &mColorBufferWidth, &mColorBufferHeight );
+                }
+                else
+                {
+                    // use default back buffer size
+                    mColorBufferWidth = getDispDesc().width;
+                    mColorBufferHeight = getDispDesc().height;
+                }
+
+                rebindViewport = ( oldw != mColorBufferWidth || oldh != mColorBufferHeight );
+            }
         }
     }
+
+    // bind depth buffer
+    if( newFlags.depthBuffer )
+    {
+    }
+
+    // bind viewport
+    if( newFlags.viewport )
+    {
+        if( rebindViewport || newContext.viewport != mContext.viewport || forceRebind )
+        {
+            GLint x = (GLint)( newContext.viewport.x * mColorBufferWidth );
+            GLint y = (GLint)( newContext.viewport.y * mColorBufferHeight );
+            GLsizei w = (GLsizei)( newContext.viewport.w * mColorBufferWidth );
+            GLsizei h = (GLsizei)( newContext.viewport.h * mColorBufferHeight );
+            GN_OGL_CHECK( glViewport( x, y, w, h ) );
+        }
+    } else if( rebindViewport )
+    {
+        GLint x = (GLint)( mContext.viewport.x * mColorBufferWidth );
+        GLint y = (GLint)( mContext.viewport.y * mColorBufferHeight );
+        GLsizei w = (GLsizei)( mContext.viewport.w * mColorBufferWidth );
+        GLsizei h = (GLsizei)( mContext.viewport.h * mColorBufferHeight );
+        GN_OGL_CHECK( glViewport( x, y, w, h ) );
+    }
+
+    GN_OGL_CHECK( ; );
 
     GN_UNGUARD_SLOW;
 }
