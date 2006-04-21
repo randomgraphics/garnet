@@ -63,6 +63,75 @@ static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
     #undef GNGFX_DEFINE_TSV
 };
 
+//
+//
+// ------------------------------------------------------------------------
+static GN_INLINE void
+sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
+{
+    using namespace GN;
+    using namespace GN::gfx;
+    
+    GN_ASSERT( surf.texture );
+
+    const OGLTexture * oldtex = safeCast<const OGLTexture*>(surf.texture);
+
+    // get (old) texture size
+    uint32_t sx, sy;
+    surf.texture->getMipSize<uint32_t>( surf.level, &sx, &sy );
+
+    // copy framebuffer to current (old) render target texture
+    GLint currentTexID;
+    switch( oldtex->getDesc().type )
+    {
+        case TEXTYPE_CUBE :
+            GN_ASSERT( sx == sy );
+            GN_OGL_CHECK(
+                glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &currentTexID ) );
+            GN_OGL_CHECK(
+                glBindTexture( GL_TEXTURE_CUBE_MAP_ARB,
+                    oldtex->getOGLTexture() ) );
+            GN_OGL_CHECK(
+                glCopyTexImage2D(
+                    OGLTexture::sCubeface2OGL( surf.face ), 0,
+                    oldtex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
+            GN_OGL_CHECK(
+                glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, currentTexID ) );
+            break;
+
+        case TEXTYPE_2D :
+            GN_OGL_CHECK(
+                glGetIntegerv( GL_TEXTURE_BINDING_2D, &currentTexID ) );
+            GN_OGL_CHECK(
+                glBindTexture( GL_TEXTURE_2D,
+                    oldtex->getOGLTexture() ) );
+            GN_OGL_CHECK(
+                glCopyTexImage2D( GL_TEXTURE_2D, 0,
+                    oldtex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
+            GN_OGL_CHECK(
+                glBindTexture( GL_TEXTURE_2D, currentTexID ) );
+            break;
+
+        case TEXTYPE_1D :
+            GN_ASSERT( 1 == sy );
+            GN_OGL_CHECK(
+                glGetIntegerv( GL_TEXTURE_BINDING_1D, &currentTexID ) );
+            GN_OGL_CHECK(
+                glBindTexture( GL_TEXTURE_1D,
+                    oldtex->getOGLTexture() ) );
+            GN_OGL_CHECK(
+                glCopyTexImage1D( GL_TEXTURE_1D, 0,
+                    oldtex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
+            GN_OGL_CHECK(
+                glBindTexture( GL_TEXTURE_1D, currentTexID ) );
+            break;
+
+        default:
+            GN_ERROR( "invalid texture type!" );
+            return;
+    }
+}
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -448,95 +517,39 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargetsAndViewport(
     if( newFlags.colorBuffers )
     {
         uint32_t count = min( (uint32_t)newContext.numColorBuffers, getCaps( CAPS_MAX_RENDER_TARGETS ) );
-        if( 
+        if( 0 == count ) count = 1;
         for( uint32_t i = 0; i < count; ++i )
         {
             const RendererContext::SurfaceDesc * oldSurface = i < mContext.numColorBuffers ? &mContext.colorBuffers[i] : 0;
-            const RendererContext::SurfaceDesc * newSurface = &newContext.colorBuffers[i];
+            const RendererContext::SurfaceDesc * newSurface = i < newContext.numColorBuffers ? &newContext.colorBuffers[i] : 0;
 
-            if( !forceRebind )
+            if( forceRebind || // if "force" rebinding, then do it.
+                oldSurface != newSurface && // if oldSurface and newSurface are both NULL, then do nothing.
+                // program reaches here, means at least one surface is _NOT_ null. So if one of them is NULL
+                // or content of the two surfaces are different, we have to do the binding.
+                ( NULL == oldSurface || NULL == newSurface || *oldSurface != *newSurface ) )
             {
-                if( oldSurface == newSurface ) continue;
-                if( oldSurface && newSurface && *oldSurface == *newSurface ) continue;
-            }
+                // Do copy only when oldSurface points to a texture.
+                if( oldSurface && oldSurface->texture ) sCopyFrameBufferTo( *oldSurface );
 
-            if( oldSurface && oldSurface->texture )
-            {
-                const OGLTexture * oldtex = safeCast<const OGLTexture*>(oldSurface->texture);
-
-                // get (old) texture size
-                uint32_t sx, sy;
-                oldSurface->texture->getMipSize<uint32_t>( oldSurface->level, &sx, &sy );
-
-                // copy framebuffer to current (old) render target texture
-                GLint currentTexID;
-                switch( oldtex->getDesc().type )
+                // update render target size
+                if( 0 == i )
                 {
-                    case TEXTYPE_CUBE :
-                        GN_ASSERT( sx == sy );
-                        GN_OGL_CHECK(
-                            glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &currentTexID ) );
-                        GN_OGL_CHECK(
-                            glBindTexture( GL_TEXTURE_CUBE_MAP_ARB,
-                                oldtex->getOGLTexture() ) );
-                        GN_OGL_CHECK(
-                            glCopyTexImage2D(
-                                OGLTexture::sCubeface2OGL( oldSurface->face ), 0,
-                                oldtex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
-                        GN_OGL_CHECK(
-                            glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, currentTexID ) );
-                        break;
+                    uint32_t oldw = mColorBufferWidth;
+                    uint32_t oldh = mColorBufferHeight;
+                    if( newSurface && newSurface->texture )
+                    {
+                        newSurface->texture->getMipSize<uint32_t>( newSurface->level, &mColorBufferWidth, &mColorBufferHeight );
+                    }
+                    else
+                    {
+                        // use default back buffer size
+                        mColorBufferWidth = getDispDesc().width;
+                        mColorBufferHeight = getDispDesc().height;
+                    }
 
-                    case TEXTYPE_2D :
-                        GN_OGL_CHECK(
-                            glGetIntegerv( GL_TEXTURE_BINDING_2D, &currentTexID ) );
-                        GN_OGL_CHECK(
-                            glBindTexture( GL_TEXTURE_2D,
-                                oldtex->getOGLTexture() ) );
-                        GN_OGL_CHECK(
-                            glCopyTexImage2D( GL_TEXTURE_2D, 0,
-                                oldtex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
-                        GN_OGL_CHECK(
-                            glBindTexture( GL_TEXTURE_2D, currentTexID ) );
-                        break;
-
-                    case TEXTYPE_1D :
-                        GN_ASSERT( 1 == sy );
-                        GN_OGL_CHECK(
-                            glGetIntegerv( GL_TEXTURE_BINDING_1D, &currentTexID ) );
-                        GN_OGL_CHECK(
-                            glBindTexture( GL_TEXTURE_1D,
-                                oldtex->getOGLTexture() ) );
-                        GN_OGL_CHECK(
-                            glCopyTexImage1D( GL_TEXTURE_1D, 0,
-                                oldtex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
-                        GN_OGL_CHECK(
-                            glBindTexture( GL_TEXTURE_1D, currentTexID ) );
-                        break;
-
-                    default:
-                        GN_ERROR( "invalid texture type!" );
-                        return;
+                    rebindViewport = ( oldw != mColorBufferWidth || oldh != mColorBufferHeight );
                 }
-            }
-
-            // update render target size
-            if( 0 == i )
-            {
-                uint32_t oldw = mColorBufferWidth;
-                uint32_t oldh = mColorBufferHeight;
-                if( newSurface && newSurface->texture )
-                {
-                    newSurface->texture->getMipSize<uint32_t>( newSurface->level, &mColorBufferWidth, &mColorBufferHeight );
-                }
-                else
-                {
-                    // use default back buffer size
-                    mColorBufferWidth = getDispDesc().width;
-                    mColorBufferHeight = getDispDesc().height;
-                }
-
-                rebindViewport = ( oldw != mColorBufferWidth || oldh != mColorBufferHeight );
             }
         }
     }
@@ -544,6 +557,13 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargetsAndViewport(
     // bind depth buffer
     if( newFlags.depthBuffer )
     {
+        const RendererContext::SurfaceDesc & oldSurface = mContext.depthBuffer;
+        const RendererContext::SurfaceDesc & newSurface = newContext.depthBuffer;
+
+        if( oldSurface.texture && ( oldSurface != newSurface || forceRebind ) )
+        {
+            sCopyFrameBufferTo( oldSurface );
+        }
     }
 
     // bind viewport

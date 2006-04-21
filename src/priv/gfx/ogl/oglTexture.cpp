@@ -406,6 +406,19 @@ static GLuint sNewCubeTexture(
     GN_UNGUARD;
 }
 
+struct OGLAttribStack
+{
+    OGLAttribStack()
+    {
+        glPushAttrib( GL_ALL_ATTRIB_BITS );
+    }
+
+    ~OGLAttribStack()
+    {
+        glPopAttrib();
+    }
+};
+
 // *****************************************************************************
 // OGLTexture implementation
 // *****************************************************************************
@@ -419,6 +432,8 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
 
     // standard init procedure
     GN_STDCLASS_INIT( OGLTexture, () );
+
+    OGLAttribStack autoAttribStack; // auto-restore OGL states
 
     // determine pixelformat
     if( FMT_DEFAULT == desc.format )
@@ -519,6 +534,23 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
         }
     }
 
+    // setup mip size array
+    for( size_t i = 0; i < getDesc().levels; ++i )
+    {
+        GLint sx, sy, sz;
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
+        GN_OGL_CHECK( glGetTexLevelParameteriv(
+            GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_HEIGHT, &sy ) );
+        if( TEXTYPE_3D == getDesc().type )
+        {
+            GN_OGL_CHECK( glGetTexLevelParameteriv(
+                GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_DEPTH_EXT, &sz ) );
+        }
+        else sz = 1;
+        setMipSize( i, sx, sy, sz );
+    }
+
     // setup default filters and wrap modes
     GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR ) );
     GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) );
@@ -563,37 +595,6 @@ void GN::gfx::OGLTexture::quit()
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::Vector3<uint32_t> GN::gfx::OGLTexture::getMipSize( size_t level ) const
-{
-    GN_GUARD_SLOW;
-
-    bind();
-
-    GLint sx, sy, sz;
-
-    GN_OGL_CHECK( glGetTexLevelParameteriv(
-        GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_WIDTH, &sx ) );
-    GN_OGL_CHECK( glGetTexLevelParameteriv(
-        GL_TEXTURE_2D, (GLint)level, GL_TEXTURE_HEIGHT, &sy ) );
-    if( TEXTYPE_3D == getDesc().type )
-    {
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_3D_EXT, (GLint)level, GL_TEXTURE_DEPTH_EXT, &sz ) );
-    }
-    else sz = 1;
-
-    // success
-    return Vector3<uint32_t>(
-        (uint32_t)sx,
-        (uint32_t)sy,
-        (uint32_t)sz );
-
-    GN_UNGUARD_SLOW;
 }
 
 //

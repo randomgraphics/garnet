@@ -57,7 +57,6 @@ namespace GN { namespace gfx
 
         //@{
 
-        virtual Vector3<uint32_t> getMipSize( size_t level ) const;
         virtual void setFilter( TexFilter, TexFilter ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );

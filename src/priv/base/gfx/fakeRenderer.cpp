@@ -148,16 +148,15 @@ namespace GN { namespace gfx
             {
                 if( !setDesc( desc ) ) return false;
                 mBuffer.resize( getDesc().width * getDesc().height * getDesc().depth * getClrFmtDesc(getDesc().format).bits / 8 );
+                for( size_t i = 0; i < getDesc().levels; ++i )
+                {
+                    Vector3<uint32_t> sz( getBaseSize() );
+                    sz.x >>= i; if( 0 == sz.x ) sz.x = 1;
+                    sz.y >>= i; if( 0 == sz.y ) sz.y = 1;
+                    sz.z >>= i; if( 0 == sz.z ) sz.z = 1;
+                    setMipSize( i, sz );
+                }
                 return true;
-            }
-
-            virtual Vector3<uint32_t> getMipSize( size_t level ) const
-            {
-                Vector3<uint32_t> sz( getBaseSize() );
-                sz.x >>= level; if( 0 == sz.x ) sz.x = 1;
-                sz.y >>= level; if( 0 == sz.y ) sz.y = 1;
-                sz.z >>= level; if( 0 == sz.z ) sz.z = 1;
-                return sz;
             }
             virtual void setFilter( TexFilter, TexFilter ) const {}
             virtual void setWrap( TexWrap, TexWrap, TexWrap ) const {}

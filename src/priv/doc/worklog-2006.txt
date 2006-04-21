@@ -11,10 +11,9 @@ BUGS
 - GNsampleRenderToTexture:
   - black screen on cygwin.
 
-- GNsampleDepthTexture:
-  - OGL: renderer extremly slow on ATI x1800, possibly caused by ARB programs.
+- When using non-power-of-two texture, ATI x1000 card runs very very slow. Check it!
 
-- quad renderer is slow on HP notebook with intel graphics chip.
+- Quad renderer is slow on HP notebook with intel graphics chip.
 
 TODO
 ====
@@ -26,6 +25,7 @@ TODO
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
+    - restore OGL states after Texture::setFilter(...)
     - rewrite effect class, make the code more consice.
       - remove drawBegin() and drawEnd()
     - render target management

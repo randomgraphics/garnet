@@ -139,6 +139,55 @@ static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
     GN_UNGUARD;
 }
 
+//
+//
+// ----------------------------------------------------------------------------
+static GN::Vector3<uint32_t> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexType type, size_t level )
+{
+    GN_GUARD_SLOW;
+
+    using namespace GN;
+    using namespace GN::gfx;
+
+    Vector3<uint32_t> sz;
+
+    if( TEXTYPE_3D == type )
+    {
+        LPDIRECT3DVOLUMETEXTURE9 tex3D = static_cast<LPDIRECT3DVOLUMETEXTURE9>( tex );
+
+        D3DVOLUME_DESC desc;
+        GN_DX9_CHECK( tex3D->GetLevelDesc( (UINT)level, &desc ) );
+
+        sz.x = desc.Width;
+        sz.y = desc.Height;
+        sz.z = desc.Depth;
+    }
+    else
+    {
+        D3DSURFACE_DESC desc;
+
+        if( TEXTYPE_CUBE == type )
+        {
+            LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( tex );
+            GN_DX9_CHECK( texCube->GetLevelDesc( (UINT)level, &desc ) );
+        }
+        else
+        {
+            LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( tex );
+            GN_DX9_CHECK( tex2D->GetLevelDesc( (UINT)level, &desc ) );
+        }
+
+        sz.x = desc.Width;
+        sz.y = desc.Height;
+        sz.z = 1;
+    }
+
+    // success
+    return sz;
+
+    GN_UNGUARD_SLOW;
+}
+
 // ****************************************************************************
 //  public utils
 // ****************************************************************************
@@ -364,6 +413,12 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
     texDesc.format = FMT_DEFAULT;
     if( !setDesc( texDesc ) ) return false;
 
+    // setup mip size
+    for( size_t i = 0; i < getDesc().levels; ++i )
+    {
+        setMipSize( i, sGetMipSize( mD3DTexture, getDesc().type, i ) );
+    }
+
     // setup other properites
     mD3DUsage = 0;
     mWritable = true;
@@ -468,6 +523,12 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     }
 #endif
 
+    // setup mip size
+    for( size_t i = 0; i < getDesc().levels; ++i )
+    {
+        setMipSize( i, sGetMipSize( mD3DTexture, getDesc().type, i ) );
+    }
+
     // setup misc. flag
 #if GN_XENON
     mWritable = true; // Xenon texture is always writeable.
@@ -514,54 +575,6 @@ void GN::gfx::D3D9Texture::deviceDispose()
 // ****************************************************************************
 //      interface functions
 // ****************************************************************************
-
-//
-//
-// ----------------------------------------------------------------------------
-GN::Vector3<uint32_t> GN::gfx::D3D9Texture::getMipSize( size_t level ) const
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( level < getDesc().levels );
-
-    Vector3<uint32_t> sz;
-
-    if( TEXTYPE_3D == getDesc().type )
-    {
-        LPDIRECT3DVOLUMETEXTURE9 tex3D = static_cast<LPDIRECT3DVOLUMETEXTURE9>( mD3DTexture );
-
-        D3DVOLUME_DESC desc;
-        GN_DX9_CHECK( tex3D->GetLevelDesc( (UINT)level, &desc ) );
-
-        sz.x = desc.Width;
-        sz.y = desc.Height;
-        sz.z = desc.Depth;
-    }
-    else
-    {
-        D3DSURFACE_DESC desc;
-
-        if( TEXTYPE_CUBE == getDesc().type )
-        {
-            LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
-            GN_DX9_CHECK( texCube->GetLevelDesc( (UINT)level, &desc ) );
-        }
-        else
-        {
-            LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
-            GN_DX9_CHECK( tex2D->GetLevelDesc( (UINT)level, &desc ) );
-        }
-
-        sz.x = desc.Width;
-        sz.y = desc.Height;
-        sz.z = 1;
-    }
-
-    // success
-    return sz;
-
-    GN_UNGUARD_SLOW;
-}
 
 //
 //
