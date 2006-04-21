@@ -100,6 +100,14 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
     if( !mResourceList.empty() )
     {
         GN_ERROR( "All graphics resouces MUST be released, after receiving 'destroy' signal!" );
+
+        std::list<D3D9Resource*>::iterator i = mResourceList.begin();
+        while( i != mResourceList.end() )
+        {
+            D3D9Resource * r = *i;
+            GN_ERROR( "0x%p", r );
+            ++i;
+        }
     }
 
     GN_UNGUARD;

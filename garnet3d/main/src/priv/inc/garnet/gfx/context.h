@@ -53,9 +53,11 @@ namespace GN { namespace gfx
                 // byte 0
                 unsigned int shaders            : 2; //!< one bit for each shader type
                 unsigned int rsb                : 1; //!< render state block
-                unsigned int renderTargets      : 1; //!< render targets
+                unsigned int colorBuffers       : 1; //!< render target textures
+                unsigned int depthBuffer        : 1; //!< depth texture
+                unsigned int msaa               : 1; //!< MSAA for RTT
                 unsigned int viewport           : 1; //!< viewport
-                unsigned int                    : 3; //!< reserved
+                unsigned int                    : 1; //!< reserved
                 // byte 1 (fixed function pipeline)
                 unsigned int world              : 1; //!< world transformation
                 unsigned int view               : 1; //!< view transformation
@@ -85,35 +87,24 @@ namespace GN { namespace gfx
         };
 
         //!
-        //! Render targets descriptor
+        //! Render target surface descriptor
         //!
-        struct RenderTargetDesc
+        struct SurfaceDesc
         {
+            const Texture * texture; //!< render target
+            size_t          face;    //!< cubemap face. Must be zero for non-cube/stack texture.
+            size_t          level;   //!< mipmap level
+            size_t          slice;   //!< slice index. Must be zero for 3D texture.
+
             //!
-            //! Render target surface descriptor
+            //! equality check
             //!
-            struct SurfaceDesc
+            bool operator!=( const SurfaceDesc & rhs ) const
             {
-                const Texture * texture; //!< render target
-                size_t          face;    //!< cubemap face. Must be zero for non-cube/stack texture.
-                size_t          level;   //!< mipmap level
-                size_t          slice;   //!< slice index. Must be zero for 3D texture.
-
-                //!
-                //! equality check
-                //!
-                bool operator!=( const SurfaceDesc & rhs ) const
-                {
-                    if( texture != rhs.texture ) return true;
-                    if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
-                    return face != rhs.face || level != level || slice != slice;
-                }
-            };
-
-            SurfaceDesc colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
-            size_t      numColorBuffers;  //!< number of color buffers. Set to 0 to render to back buffer.
-            SurfaceDesc depthBuffer; //!< depth surface.
-            MsaaType    msaa; //!< MSAA type. Ignored, if numColorBuffers is zero.
+                if( texture != rhs.texture ) return true;
+                if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
+                return face != rhs.face || level != level || slice != slice;
+            }
         };
 
         //!
@@ -128,7 +119,10 @@ namespace GN { namespace gfx
         FieldFlags            flags; //!< field flags
         const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
         RenderStateBlockDesc  rsb; //!< render state block.
-        RenderTargetDesc      renderTargets; //!< render target descriptor
+        SurfaceDesc           colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
+        size_t                numColorBuffers;  //!< number of color buffers. Set to 0 to render to back buffer.
+        SurfaceDesc           depthBuffer; //!< depth surface.
+        MsaaType              msaa; //!< MSAA type for RTT. Not effective, if rendering to back buffer
         Rectf                 viewport; //!< viewport
 
         Matrix44f             world, //!< world transformation
@@ -159,10 +153,7 @@ namespace GN { namespace gfx
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
             rsb.resetToEmpty();
-            renderTargets.numColorBuffers = 0;
-            renderTargets.depthBuffer.texture = 0;
-            renderTargets.msaa = MSAA_NONE;
-
+            numColorBuffers = 0;
             numTextures = 0;
             numVtxBufs = 0;
         }
@@ -179,9 +170,9 @@ namespace GN { namespace gfx
             flags.u32 = 0xFFFFFFFF; // set all flags to true.
             for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i] = 0;
             rsb.resetToDefault();
-            renderTargets.numColorBuffers = 0;
-            renderTargets.depthBuffer.texture = 0;
-            renderTargets.msaa = MSAA_NONE;
+            numColorBuffers = 0;
+            depthBuffer.texture = 0;
+            msaa = MSAA_NONE;
             viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
 
             world.identity();
@@ -204,35 +195,50 @@ namespace GN { namespace gfx
         //!
         void mergeWith( const RendererContext & another )
         {
-            for( int i = 0; i < NUM_SHADER_TYPES; ++i )
+            if( another.flags.state )
             {
-               if( another.flags.shaderBit(i) ) shaders[i] = another.shaders[i];
+                for( int i = 0; i < NUM_SHADER_TYPES; ++i )
+                {
+                   if( another.flags.shaderBit(i) ) shaders[i] = another.shaders[i];
+                }
+                if( another.flags.rsb ) rsb.mergeWith( another.rsb );
+                if( another.flags.colorBuffers )
+                {
+                    for( size_t i = 0; i < another.numColorBuffers; ++i ) colorBuffers[i] = another.colorBuffers[i];
+                    numColorBuffers = another.numColorBuffers;
+                }
+                if( another.flags.depthBuffer ) depthBuffer = another.depthBuffer;
+                if( another.flags.msaa ) msaa = another.msaa;
+                if( another.flags.viewport ) viewport = another.viewport;
             }
-            if( another.flags.rsb ) rsb.mergeWith( another.rsb );
-            if( another.flags.renderTargets ) renderTargets = another.renderTargets;
-            if( another.flags.viewport ) viewport = another.viewport;
 
-            if( another.flags.world ) world = another.world;
-            if( another.flags.view ) view = another.view;
-            if( another.flags.proj ) proj = another.proj;
-            if( another.flags.light0Pos ) light0Pos = another.light0Pos;
-            if( another.flags.light0Diffuse ) light0Diffuse = another.light0Diffuse;
-            if( another.flags.materialDiffuse ) materialDiffuse = another.materialDiffuse;
-            if( another.flags.materialSpecular ) materialSpecular = another.materialSpecular;
-            if( another.flags.tsb ) tsb.mergeWith( tsb );
+            if( another.flags.ffp )
+            {
+                if( another.flags.world ) world = another.world;
+                if( another.flags.view ) view = another.view;
+                if( another.flags.proj ) proj = another.proj;
+                if( another.flags.light0Pos ) light0Pos = another.light0Pos;
+                if( another.flags.light0Diffuse ) light0Diffuse = another.light0Diffuse;
+                if( another.flags.materialDiffuse ) materialDiffuse = another.materialDiffuse;
+                if( another.flags.materialSpecular ) materialSpecular = another.materialSpecular;
+                if( another.flags.tsb ) tsb.mergeWith( tsb );
+            }
 
-            if( another.flags.textures )
+            if( another.flags.data )
             {
-                for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
-                numTextures = another.numTextures;
+                if( another.flags.textures )
+                {
+                    for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
+                    numTextures = another.numTextures;
+                }
+                if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
+                if( another.flags.vtxBufs )
+                {
+                    for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxBufs[i] = another.vtxBufs[i];
+                    numVtxBufs = another.numVtxBufs;
+                }
+                if( another.flags.idxBuf ) idxBuf = another.idxBuf;
             }
-            if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
-            if( another.flags.vtxBufs )
-            {
-                for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxBufs[i] = another.vtxBufs[i];
-                numVtxBufs = another.numVtxBufs;
-            }
-            if( another.flags.idxBuf ) idxBuf = another.idxBuf;
 
             flags.u32 |= another.flags.u32;
         }
@@ -327,6 +333,21 @@ namespace GN { namespace gfx
         //! Set viewport.
         //!
         inline void setViewport( float left, float top, float width, float height );
+
+        //!
+        //! Set world matrix
+        //!
+        inline void setWorld( const Matrix44f & value ) { flags.world = 1; world = value; }
+
+        //!
+        //! Set view matrix
+        //!
+        inline void setView( const Matrix44f & value ) { flags.view = 1; view = value; }
+
+        //!
+        //! Set proj matrix
+        //!
+        inline void setProj( const Matrix44f & value ) { flags.proj = 1; proj = value; }
 
         //!
         //! Set texture stage state block.

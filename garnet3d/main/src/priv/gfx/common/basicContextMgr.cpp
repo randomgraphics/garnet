@@ -21,14 +21,18 @@ void GN::gfx::BasicRenderer::holdContextResources( const RendererContext & conte
         if( context.flags.shaderBit(i) ) mResourceHolder.shaders.data[i].set( context.shaders[i] );
     }
 
-    if( context.flags.renderTargets )
+    if( context.flags.colorBuffers )
     {
         UPDATE_AUTOREF_ARRAY(
             mResourceHolder.colorBuffers,
-            context.renderTargets.numColorBuffers,
-            context.renderTargets.colorBuffers,
+            context.numColorBuffers,
+            context.colorBuffers,
             .texture );
-        mResourceHolder.depthBuffer.set( context.renderTargets.depthBuffer.texture );
+    }
+
+    if( context.flags.depthBuffer )
+    {
+        mResourceHolder.depthBuffer.set( context.depthBuffer.texture );
     }
 
     if( context.flags.textures )
