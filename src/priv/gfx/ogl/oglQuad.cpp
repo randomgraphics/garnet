@@ -70,7 +70,7 @@ void GN::gfx::OGLQuad::drawQuads(
         return;
     }
 
-    if( 0 == posStride || 0 == texStride )
+    if( 0 == posStride )
     {
         GN_ERROR( "Position stride can't be zero!" );
         return;

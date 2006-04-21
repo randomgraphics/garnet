@@ -868,7 +868,7 @@ for compiler, variants in ALL_targets.iteritems() :
         # - Make executables depend on shared libraries.
         stlibs = Split('GNextern GNbase GNcore')
         shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
-        tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNut')
+        tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
         tools = Split('GNtoolOglInfo')
         progs = tests + samples + tools

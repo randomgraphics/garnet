@@ -1,18 +1,20 @@
 BUGS
 ====
 
-- GFX:
-  - Startup of GFXOGL module sometimes very slow:
-    - pin down to the 1st call to opengl function in oglWinDisp.cpp
-    - It seems caused by remote symbol loading
-  - Render target image is up-side-down in OGL, comparing with D3D.
-    - See GNsampleRenderToTexture for an example.
-  - GNsampleRenderToTexture: black screen on cygwin.
-  - GNsampleDepthTexture:
-    - OGL: renderer extremly slow on ATI x1800, possibly caused by ARB programs.
-    - memory leak
-  - quad renderer is slow on HP notebook with intel graphics chip.
-  - memory leak in "GNut" and "GNtestGfx -ogl".
+- Startup of GFXOGL module sometimes very slow:
+  - pin down to the 1st call to opengl function in oglWinDisp.cpp
+  - It seems caused by remote symbol loading
+
+- Render target image is up-side-down in OGL, comparing with D3D.
+  - See GNsampleRenderToTexture for an example.
+
+- GNsampleRenderToTexture:
+  - black screen on cygwin.
+
+- GNsampleDepthTexture:
+  - OGL: renderer extremly slow on ATI x1800, possibly caused by ARB programs.
+
+- quad renderer is slow on HP notebook with intel graphics chip.
 
 TODO
 ====

@@ -81,7 +81,6 @@ namespace GN { namespace gfx
         void clear()
         {
             mProgram = 0;
-            mCode.clear();
             mMaxEnvUniforms = 0;
             mMaxLocalUniforms = 0;
             mMaxMatrixUniforms = 0;
@@ -125,7 +124,6 @@ namespace GN { namespace gfx
 
         const GLenum mTarget; // ARB program target
         GLuint mProgram;      // ARB program handle
-        StrA  mCode;          // shader code
 
         GLuint mMaxEnvUniforms;
         GLuint mMaxLocalUniforms;
@@ -214,7 +212,6 @@ namespace GN { namespace gfx
         void clear()
         {
             mHandle = 0;
-            mCode.clear();
         }
         //@}
 
@@ -257,7 +254,6 @@ namespace GN { namespace gfx
 
         const GLenum mUsage;
         GLhandleARB  mHandle;
-        StrA         mCode;
 
         // ********************************
         // private functions

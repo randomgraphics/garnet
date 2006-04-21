@@ -82,6 +82,8 @@ public:
 
     void destroy()
     {
+        mColor.clear();
+        mDepth.clear();
     }
 
     void update()
@@ -140,7 +142,7 @@ public:
 
     void onRendererDestroy()
     {
-        if( mScene ) mScene->destroy(), mScene = 0;
+        safeDelete( mScene );
     }
 
     void onUpdate()
