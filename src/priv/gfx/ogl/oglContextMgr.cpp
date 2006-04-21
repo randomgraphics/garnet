@@ -189,7 +189,13 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
         // TODO: make sure all fields in current context are valid.
     }
 
-    if( newFlags.state ) bindContextState( newContext, newFlags, forceRebind );
+    if( newFlags.state )
+    {
+        bindContextShaders( newContext, newFlags, forceRebind );
+        bindContextRenderStates( newContext, newFlags, forceRebind );
+        bindContextRenderTargets( newContext, newFlags, forceRebind );
+        bindContextViewport( newContext, newFlags, forceRebind );
+    }
 #if !GN_XENON
     if( newFlags.ffp ) bindContextFfp( newContext, newFlags, forceRebind );
 #endif
@@ -201,216 +207,246 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
+GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( newFlags.state );
+    if( 0 == newFlags.shaders ) return;
 
-    //
-    // bind shader
-    //
-    if( newFlags.shaders )
+	const Shader * glslVs = 0;
+    const Shader * glslPs = 0;
+
+    const Shader * oldVtxShader = mContext.shaders[VERTEX_SHADER];
+    const Shader * oldPxlShader = mContext.shaders[PIXEL_SHADER];
+    const Shader * newVtxShader = newContext.shaders[VERTEX_SHADER];
+    const Shader * newPxlShader = newContext.shaders[PIXEL_SHADER];
+
+    if( newFlags.shaderBit( VERTEX_SHADER ) )
     {
-		const Shader * glslVs = 0;
-        const Shader * glslPs = 0;
+        GN_ASSERT(
+            0 == newVtxShader ||
+            VERTEX_SHADER == newVtxShader->getType() );
 
-        const Shader * oldVtxShader = mContext.shaders[VERTEX_SHADER];
-        const Shader * oldPxlShader = mContext.shaders[PIXEL_SHADER];
-        const Shader * newVtxShader = newContext.shaders[VERTEX_SHADER];
-        const Shader * newPxlShader = newContext.shaders[PIXEL_SHADER];
-
-        if( newFlags.shaders & ( 1 << VERTEX_SHADER ) )
+        if( oldVtxShader != newVtxShader || forceRebind )
         {
-            GN_ASSERT(
-                0 == newVtxShader ||
-                VERTEX_SHADER == newVtxShader->getType() );
-
-            // TODO: check forceRebind
-
             if( oldVtxShader )
             {
                 const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
                 sh->disable();
             }
-            if( newVtxShader )
+            if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
             {
-                if( LANG_OGL_GLSL != newVtxShader->getLang() )
-                {
-                    const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
-                    sh->enable();
-                    sh->apply();
-                }
-                else
-                {
-                    glslVs = newVtxShader;
-                }
-            }
-        }
-        else if( oldVtxShader )
-        {
-            if( LANG_OGL_GLSL != oldVtxShader->getLang() )
-            {
-                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
-                sh->applyDirtyUniforms();
+                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
+                sh->enable();
+                sh->apply();
             }
             else
             {
-                glslVs = oldVtxShader;
+                GN_ASSERT( 0 == newVtxShader || LANG_OGL_GLSL == newVtxShader->getLang() );
+                glslVs = newVtxShader;
             }
         }
-
-        if( newFlags.shaders & ( 1 << PIXEL_SHADER ) )
+        else if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
         {
-            GN_ASSERT(
-                0 == newPxlShader ||
-                PIXEL_SHADER == newPxlShader->getType() );
+            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
+            sh->applyDirtyUniforms();
+        }
+        else
+        {
+            GN_ASSERT( 0 == newVtxShader || LANG_OGL_GLSL == newVtxShader->getLang() );
+            glslVs = newVtxShader;
+        }
+    }
+    else if( oldVtxShader && LANG_OGL_GLSL != oldVtxShader->getLang() )
+    {
+        const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldVtxShader);
+        sh->applyDirtyUniforms();
+    }
+    else
+    {
+        GN_ASSERT( 0 == oldVtxShader || LANG_OGL_GLSL == oldVtxShader->getLang() );
+        glslVs = oldVtxShader;
+    }
 
-            // TODO: check forceRebind
+    if( newFlags.shaderBit( PIXEL_SHADER ) )
+    {
+        GN_ASSERT(
+            0 == newPxlShader ||
+            PIXEL_SHADER == newPxlShader->getType() );
 
+        if( oldPxlShader != newPxlShader || forceRebind )
+        {
             if( oldPxlShader )
             {
                 const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
                 sh->disable();
             }
-            if( newPxlShader )
+            if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
             {
-                if( LANG_OGL_GLSL != newPxlShader->getLang() )
-                {
-                    const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
-                    sh->enable();
-                    sh->apply();
-                }
-                else
-                {
-                    glslPs = newPxlShader;
-                }
-            }
-        }
-        else if( oldPxlShader )
-        {
-            if( LANG_OGL_GLSL != oldPxlShader->getLang() )
-            {
-                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
-                sh->applyDirtyUniforms();
+                const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
+                sh->enable();
+                sh->apply();
             }
             else
             {
-                glslPs = oldPxlShader;
+                GN_ASSERT( 0 == newPxlShader || LANG_OGL_GLSL == newPxlShader->getLang() );
+                glslPs = newPxlShader;
             }
         }
-
-        // handle GLSL shader and program in special way
-        if( glslVs || glslPs )
+        else if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
         {
-            GLSLShaders key = { glslVs, glslPs };
-            GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
-            if( mGLSLProgramMap.end() != i )
-            {
-                // found!
-                GN_ASSERT( i->second );
-                ((const OGLProgramGLSL*)i->second)->apply();
-            }
-            else
-            {
-                // not found. we have to create a new GLSL program object
-                AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
-                if( !newProg->init(
-                	safeCast<const OGLBasicShaderGLSL*>(glslVs),
-                	safeCast<const OGLBasicShaderGLSL*>(glslPs) ) ) return ;
-                mGLSLProgramMap[key] = newProg;
-                newProg.detach()->apply();
-            }
+            const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
+            sh->applyDirtyUniforms();
+        }
+        else
+        {
+            GN_ASSERT( 0 == newPxlShader || LANG_OGL_GLSL == newPxlShader->getLang() );
+            glslPs = newPxlShader;
         }
     }
-
-    //
-    // bind render states
-    //
-    if( newFlags.rsb )
+    else if( oldPxlShader && LANG_OGL_GLSL != oldPxlShader->getLang() )
     {
-        GN_ASSERT( newContext.rsb.valid() );
-
-        const RenderStateBlockDesc & newRsb = newContext.rsb;
-        const RenderStateBlockDesc & oldRsb = mContext.rsb;
-
-        bool updateAlphaFunc = false;
-        int alphaFunc = oldRsb.get( RS_ALPHA_FUNC );
-        int alphaRef  = oldRsb.get( RS_ALPHA_REF );
-
-        bool updateBlend = false;
-        int blendSrc  = oldRsb.get( RS_BLEND_SRC );
-        int blendDst  = oldRsb.get( RS_BLEND_DST );
-
-        // apply all RSs (except blending factors) to API
-        #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-            if( newRsb.isSet( RS_##tag ) &&                          \
-                ( newRsb.get(RS_##tag) != oldRsb.get(RS_##tag) || forceRebind ) ) \
-            {                                                        \
-                if( RS_ALPHA_FUNC == RS_##tag )                      \
-                {                                                    \
-                    updateAlphaFunc = true;                          \
-                    alphaFunc = newRsb.get( RS_ALPHA_FUNC );         \
-                }                                                    \
-                else if( RS_ALPHA_REF == RS_##tag )                  \
-                {                                                    \
-                    updateAlphaFunc = true;                          \
-                    alphaRef = newRsb.get( RS_ALPHA_REF );           \
-                }                                                    \
-                else if( RS_BLEND_SRC == RS_##tag )                  \
-                {                                                    \
-                    updateBlend = true;                              \
-                    blendSrc = newRsb.get( RS_BLEND_SRC );           \
-                }                                                    \
-                else if( RS_BLEND_DST == RS_##tag )                  \
-                {                                                    \
-                    updateBlend = true;                              \
-                    blendDst = newRsb.get( RS_BLEND_DST );           \
-                }                                                    \
-                else                                                 \
-                {                                                    \
-                    sSet_##tag( newRsb.get(RS_##tag) );              \
-                }                                                    \
-            }
-        #include "garnet/gfx/renderStateMeta.h"
-        #undef GNGFX_DEFINE_RS
-
-        // apply alpha function
-        if( updateAlphaFunc )
-        {
-            GN_OGL_CHECK( glAlphaFunc( sRsv2OGL[alphaFunc], alphaRef / 255.0f ) );
-        }
-
-        // apply blending factors
-        if( updateBlend )
-        {
-            GN_OGL_CHECK( glBlendFunc( sRsv2OGL[blendSrc], sRsv2OGL[blendDst] ) );
-        }
-
-        // NOTE : 当启用OpenGL的ColorMaterial属性时，材质信息会随着顶点的颜色
-        //        而改变，因而需要用下面的代码来恢复材质信息。如果禁用了
-        //        ColorMaterial属性，则可以注释掉这段代码。
-        //
-        //// restore material parameters
-        //const GLfloat * diff = r.fastget_ambient();
-        //const GLfloat * ambi = r.fastget_ambient();
-        //const GLfloat * spec = r.fastget_specular();
-        //const GLfloat * emis = r.fastget_emission();
-        //uint32_t            shin = r.fastget_shininess();
-
-        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE  , diff ) );
-        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT  , ambi ) );
-        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR , spec ) );
-        //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION , emis ) );
-        //GN_OGL_CHECK( glMateriali ( GL_FRONT_AND_BACK, GL_SHININESS, shin ) );
+        const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(oldPxlShader);
+        sh->applyDirtyUniforms();
+    }
+    else
+    {
+        GN_ASSERT( 0 == oldPxlShader || LANG_OGL_GLSL == oldPxlShader->getLang() );
+        glslPs = oldPxlShader;
     }
 
+    // handle GLSL shader and program in special way
+    if( glslVs || glslPs )
+    {
+        GLSLShaders key = { glslVs, glslPs };
+        GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
+        if( mGLSLProgramMap.end() != i )
+        {
+            // found!
+            GN_ASSERT( i->second );
+            ((const OGLProgramGLSL*)i->second)->apply();
+        }
+        else
+        {
+            // not found. we have to create a new GLSL program object
+            AutoObjPtr<OGLProgramGLSL> newProg( new OGLProgramGLSL );
+            if( !newProg->init(
+            	safeCast<const OGLBasicShaderGLSL*>(glslVs),
+            	safeCast<const OGLBasicShaderGLSL*>(glslPs) ) ) return ;
+            mGLSLProgramMap[key] = newProg;
+            newProg.detach()->apply();
+        }
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+    GN_GUARD_SLOW;
+
+    if( 0 == newFlags.rsb ) return;
+
+    GN_ASSERT( newContext.rsb.valid() );
+
+    const RenderStateBlockDesc & newRsb = newContext.rsb;
+    const RenderStateBlockDesc & oldRsb = mContext.rsb;
+
+    bool updateAlphaFunc = false;
+    int alphaFunc = oldRsb.get( RS_ALPHA_FUNC );
+    int alphaRef  = oldRsb.get( RS_ALPHA_REF );
+
+    bool updateBlend = false;
+    int blendSrc  = oldRsb.get( RS_BLEND_SRC );
+    int blendDst  = oldRsb.get( RS_BLEND_DST );
+
+    // apply all RSs (except blending factors) to API
+    #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
+        if( newRsb.isSet( RS_##tag ) &&                          \
+            ( newRsb.get(RS_##tag) != oldRsb.get(RS_##tag) || forceRebind ) ) \
+        {                                                        \
+            if( RS_ALPHA_FUNC == RS_##tag )                      \
+            {                                                    \
+                updateAlphaFunc = true;                          \
+                alphaFunc = newRsb.get( RS_ALPHA_FUNC );         \
+            }                                                    \
+            else if( RS_ALPHA_REF == RS_##tag )                  \
+            {                                                    \
+                updateAlphaFunc = true;                          \
+                alphaRef = newRsb.get( RS_ALPHA_REF );           \
+            }                                                    \
+            else if( RS_BLEND_SRC == RS_##tag )                  \
+            {                                                    \
+                updateBlend = true;                              \
+                blendSrc = newRsb.get( RS_BLEND_SRC );           \
+            }                                                    \
+            else if( RS_BLEND_DST == RS_##tag )                  \
+            {                                                    \
+                updateBlend = true;                              \
+                blendDst = newRsb.get( RS_BLEND_DST );           \
+            }                                                    \
+            else                                                 \
+            {                                                    \
+                sSet_##tag( newRsb.get(RS_##tag) );              \
+            }                                                    \
+        }
+    #include "garnet/gfx/renderStateMeta.h"
+    #undef GNGFX_DEFINE_RS
+
+    // apply alpha function
+    if( updateAlphaFunc )
+    {
+        GN_OGL_CHECK( glAlphaFunc( sRsv2OGL[alphaFunc], alphaRef / 255.0f ) );
+    }
+
+    // apply blending factors
+    if( updateBlend )
+    {
+        GN_OGL_CHECK( glBlendFunc( sRsv2OGL[blendSrc], sRsv2OGL[blendDst] ) );
+    }
+
+    // NOTE : 当启用OpenGL的ColorMaterial属性时，材质信息会随着顶点的颜色
+    //        而改变，因而需要用下面的代码来恢复材质信息。如果禁用了
+    //        ColorMaterial属性，则可以注释掉这段代码。
     //
-    // TODO: bind render targets
-    //
+    //// restore material parameters
+    //const GLfloat * diff = r.fastget_ambient();
+    //const GLfloat * ambi = r.fastget_ambient();
+    //const GLfloat * spec = r.fastget_specular();
+    //const GLfloat * emis = r.fastget_emission();
+    //uint32_t            shin = r.fastget_shininess();
+
+    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE  , diff ) );
+    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT  , ambi ) );
+    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR , spec ) );
+    //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION , emis ) );
+    //GN_OGL_CHECK( glMateriali ( GL_FRONT_AND_BACK, GL_SHININESS, shin ) );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargets(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+//    GN_GUARD_SLOW;
+
+    GN_UNUSED_PARAM( newContext );
+    GN_UNUSED_PARAM( forceRebind );
+
     if( newFlags.colorBuffers )
     {
     }
@@ -418,9 +454,19 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     {
     }
 
-    //
-    // bind viewport
-    //
+//    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::OGLRenderer::bindContextViewport(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind )
+{
+    GN_GUARD_SLOW;
+
     if( newFlags.viewport )
     {
         if( newContext.viewport != mContext.viewport || forceRebind )

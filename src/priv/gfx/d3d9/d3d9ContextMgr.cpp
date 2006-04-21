@@ -200,9 +200,9 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     for( int i = 0; i < NUM_SHADER_TYPES; ++i )
     {
+        const GN::gfx::Shader * o = mContext.shaders[i];
         if( newFlags.shaderBit(i) )
         {
-            const GN::gfx::Shader * o = mContext.shaders[i];
             const GN::gfx::Shader * n = newContext.shaders[i];
             if( o != n || forceRebind )
             {
@@ -221,6 +221,9 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             {
                 GN::safeCast<const GN::gfx::D3D9BasicShader*>(n)->applyDirtyUniforms();
             }
+        } else if( o )
+        {
+            GN::safeCast<const GN::gfx::D3D9BasicShader*>(o)->applyDirtyUniforms();
         }
     }
 

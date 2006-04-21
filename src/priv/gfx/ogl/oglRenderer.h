@@ -288,7 +288,10 @@ namespace GN { namespace gfx
         void contextDeviceDestroy();
 
         GN_INLINE void bindContext( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
-        GN_INLINE void bindContextState( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextShaders( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextRenderStates( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextRenderTargets( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
+        GN_INLINE void bindContextViewport( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
         GN_INLINE void bindContextFfp( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
         GN_INLINE void bindContextData( const RendererContext & newContext, RendererContext::FieldFlags newFlag, bool forceRebind );
 
