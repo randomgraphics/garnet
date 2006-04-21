@@ -3,28 +3,78 @@
 using namespace GN;
 using namespace GN::gfx;
 
-struct Scene
+class Scene
 {
-    virtual ~Scene() {}
-
-    virtual bool create() = 0;
-    virtual void destroy() = 0;
-    virtual void render() = 0;
-};
-
-class SceneNoPs : public Scene
-{
+    AutoRef<Texture> mColor;
     AutoRef<Texture> mDepth;
+
+    struct BoxVert
+    {
+        float x, y, z, nx, ny, nz, u, v;
+    };
+
+    VtxFmtHandle mDecl;
+
+    BoxVert mBoxVerts[24];
+    uint16_t mBoxIndices[36];
+
+    Matrix44f mWorld, mView, mProj;
+
+    uint32_t mTex0;
+
+    uint32_t mVs, mPs;
+
 public:
+
+    ~Scene() { destroy(); }
 
     bool create()
     {
         Renderer & r = gRenderer;
+
+        // create color texture
+        mColor.attach( r.create2DTexture( 256, 256, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        if( mColor.empty() ) return false;
 
         // create depth texture
-        const DispDesc & dd = r.getDispDesc();
-        mDepth.attach( r.create2DTexture( dd.width, dd.height, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
+        mDepth.attach( r.create2DTexture( 256, 256, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
         if( mDepth.empty() ) return false;
+
+        // create texture
+        mTex0 = gTexDict.getResourceHandle( "texture/rabit.png" );
+
+        // create decl
+        VtxFmtDesc fmt;
+        fmt.addAttrib( 0,  0, VTXSEM_COORD, FMT_FLOAT3 );
+        fmt.addAttrib( 0, 12, VTXSEM_NORMAL, FMT_FLOAT3 );
+        fmt.addAttrib( 0, 24, VTXSEM_TEX0, FMT_FLOAT2 );
+        mDecl = r.createVtxFmt( fmt );
+        if( 0 == mDecl ) return false;
+
+        // create box
+        float edge = 200.0f;
+        createBox(
+            edge, edge, edge,
+            &mBoxVerts[0].x, sizeof(BoxVert),
+            &mBoxVerts[0].u, sizeof(BoxVert),
+            &mBoxVerts[0].nx, sizeof(BoxVert),
+            mBoxIndices, 0 );
+
+        // initialize matrices
+        mWorld.identity();
+        mView.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
+        r.composePerspectiveMatrix( mProj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+
+        // try create shaders
+        mVs = mPs = 0;
+        if( r.supportShader( VERTEX_SHADER, LANG_D3D_HLSL ) )
+        {
+            mVs = gShaderDict.getResourceHandle( "depthTexture/d3dVs.txt" );
+        }
+        if( r.supportShader( PIXEL_SHADER, LANG_D3D_HLSL ) )
+        {
+            mPs = gShaderDict.getResourceHandle( "depthTexture/d3dPs.txt" );
+        }
 
         // success
         return true;
@@ -32,7 +82,14 @@ public:
 
     void destroy()
     {
-        mDepth.clear();
+    }
+
+    void update()
+    {
+        // update mWorld matrix
+        static float angle = 0.0f;
+        angle += deg2rad(0.2f);
+        mWorld.rotateY( angle );
     }
 
     void render()
@@ -40,132 +97,35 @@ public:
         Renderer & r = gRenderer;
 
         // render to depth texture
-        struct QuadVert
-        {
-            float x, y, z;
-            float u, v;
-        } vb[] = 
-        {
-            { -1.0f, -1.0f, 0.0f, 0.0f, 0.0f },
-            { -1.0f,  1.0f, 0.0f, 0.0f, 1.0f },
-            {  1.0f,  1.0f, 1.0f, 1.0f, 1.0f },
-            {  1.0f, -1.0f, 1.0f, 1.0f, 0.0f },
-        };
         r.contextUpdateBegin();
+            r.setShaders( 0, 0 );
             r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-            r.setTexture( 0, 0 );
+            r.setColorBuffer( 0, mColor );
             r.setDepthBuffer( mDepth );
+            r.setWorld( mWorld ); r.setView( mView ); r.setProj( mProj );
+            r.setTextureHandle( 0, mTex0 );
+            r.setVtxFmt( mDecl );
         r.contextUpdateEnd();
         r.clearScreen();
-        r.drawQuads( DQ_3D_POSITION, &vb[0].x, &vb[0].u, 0, sizeof(QuadVert), 1 );
+        r.drawIndexedUp( TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
 
-        // draw depth texture to screen
-        r.contextUpdateBegin();
-            r.setDepthBuffer( 0 );
-            r.setTexture( 0, mDepth );
-        r.contextUpdateEnd();
-        r.clearScreen();
-        r.draw2DTexturedQuad( DQ_OPAQUE );
-    }
-};
-
-class SceneWithPs : public Scene
-{
-    uint32_t mVs1, mVs2, mPs1, mPs2;
-    AutoRef<Texture> mTarget, mDepth;
-
-    bool createD3DShaders()
-    {
-        mVs1 = gShaderDict.getResourceHandle( "depthTexture/d3dVs1.txt" );
-        mPs1 = gShaderDict.getResourceHandle( "depthTexture/d3dPs1.txt" );
-        mVs2 = gShaderDict.getResourceHandle( "depthTexture/d3dVs2.txt" );
-        mPs2 = gShaderDict.getResourceHandle( "depthTexture/d3dPs2.txt" );
-        return mVs1 && mPs1 && mVs2 && mPs2;
-    }
-
-    bool createOGLShaders()
-    {
-        mVs1 = gShaderDict.getResourceHandle( "depthTexture/oglVs1.txt" );
-        mPs1 = gShaderDict.getResourceHandle( "depthTexture/oglPs1.txt" );
-        mVs2 = gShaderDict.getResourceHandle( "depthTexture/oglVs2.txt" );
-        mPs2 = gShaderDict.getResourceHandle( "depthTexture/oglPs2.txt" );
-        return mVs1 && mPs1 && mVs2 && mPs2;
-    }
-
-public:
-
-    bool create()
-    {
-        Renderer & r = gRenderer;
-
-        // create shaders
-        if( r.getD3DDevice() && !createD3DShaders() ) return false;
-        if( r.getOGLRC() && !createOGLShaders() ) return false;
-        
-        // create render target textures
-        const DispDesc & dd = r.getDispDesc();
-        mTarget.attach( r.create2DTexture( dd.width, dd.height, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
-        if( mTarget.empty() ) return false;
-        mDepth.attach( r.create2DTexture( dd.width, dd.height, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
-        if( mDepth.empty() ) return false;
-
-        // success
-        return true;
-    }
-
-    void destroy()
-    {
-		mTarget.clear();
-        mDepth.clear();
-    }
-
-    void render()
-    {
-        Renderer & r = gRenderer;
-
-        // render to depth texture
-        struct QuadVert
+        r.setColorBuffer( 0, 0 );
+        r.setDepthBuffer( 0 );
+        r.setTexture( 0, mDepth );
+        if( mVs && mPs )
         {
-            float x, y, z;
-            float u, v;
-        } vb[] = 
+            r.setShaderHandles( mVs, mPs );
+            r.draw2DTexturedQuad( DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_OPAQUE );
+        }
+        else
         {
-            // x     y     z     u     v
-            { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f },
-            { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f },
-            { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
-            { 1.0f, 0.0f, 1.0f, 1.0f, 0.0f },
-        };
-        r.contextUpdateBegin();
-            r.setTexture( 0, 0 );
-            r.setTexture( 1, 0 );
-            r.setShaderHandles( mVs1, mPs1 );
-            r.setColorBuffer( 0, mTarget );
-            r.setDepthBuffer( mDepth );
-        r.contextUpdateEnd();
-        r.clearScreen();
-        r.drawQuads(
-            DQ_UPDATE_DEPTH | DQ_3D_POSITION | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS,
-            &vb[0].x, &vb[0].u, 0, sizeof(QuadVert), 1 );
-
-        // draw depth texture to screen
-        r.contextUpdateBegin();
-            r.setColorBuffer( 0, 0 );
-            r.setDepthBuffer( 0 );
-            r.setTexture( 0, mDepth );
-            r.setTexture( 1, mTarget );
-            r.setShaderHandles( mVs2, mPs2 );
-        r.contextUpdateEnd();
-        r.clearScreen();
-        r.draw2DTexturedQuad( DQ_OPAQUE | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS );
-        //*/
+            r.draw2DTexturedQuad( DQ_OPAQUE );
+        }
     }
 };
 
 class DepthTexture : public GN::app::SampleApp
 {
-    SceneNoPs mSceneNoPs;
-    SceneWithPs mSceneWithPs;
     Scene * mScene;
 
 public:
@@ -174,7 +134,7 @@ public:
 
     bool onRendererCreate()
     {
-        mScene = ( 0 != gRenderer.getCaps( CAPS_PSCAPS ) ) ? (Scene*)&mSceneWithPs : (Scene*)&mSceneNoPs;
+        mScene = new Scene;
         return mScene->create();
     }
 
@@ -185,6 +145,7 @@ public:
 
     void onUpdate()
     {
+        mScene->update();
     }
 
     void onRender()

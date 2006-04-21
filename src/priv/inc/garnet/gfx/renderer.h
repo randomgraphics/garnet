@@ -871,6 +871,10 @@ namespace GN { namespace gfx
         inline void setMsaa( MsaaType );
         inline void setViewport( const Rectf & );
         inline void setViewport( float left, float top, float width, float height );
+
+        inline void setWorld( const Matrix44f & );
+        inline void setView( const Matrix44f & );
+        inline void setProj( const Matrix44f & );
         inline void setTextureStateBlock( const TextureStateBlockDesc & );
         inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
 

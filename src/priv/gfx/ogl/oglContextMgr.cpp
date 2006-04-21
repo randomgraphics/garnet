@@ -411,7 +411,10 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextState(
     //
     // TODO: bind render targets
     //
-    if( newFlags.renderTargets )
+    if( newFlags.colorBuffers )
+    {
+    }
+    if( newFlags.depthBuffer )
     {
     }
 

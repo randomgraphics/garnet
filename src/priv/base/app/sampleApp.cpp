@@ -335,7 +335,14 @@ void GN::app::SampleApp::drawHUD()
 {
     GN_GUARD_SLOW;
 
-    if( mShowFps ) gRenderer.drawDebugTextA( mFps.getFpsString(), 0, 0 );
+    using namespace GN::gfx;
+
+    if( mShowFps )
+    {
+        Renderer & r = gRenderer;
+        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 0, 100, 16, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
+        r.drawDebugTextA( mFps.getFpsString(), 0, 0 );
+    }
 
     GN_UNGUARD_SLOW;
 }

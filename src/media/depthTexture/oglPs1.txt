@@ -1,5 +1,0 @@
-!!ARBfp1.0
-PARAM c0 = { 0, 1, 0, 1 };
-MOV result.color, c0;
-MOV result.depth, fragment.texcoord;
-END

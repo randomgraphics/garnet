@@ -106,22 +106,22 @@ namespace GN { namespace gfx
     {
         GN_ASSERT( index < MAX_RENDER_TARGETS );
 
-        RenderTargetDesc::SurfaceDesc desc = { texture, face, level, slice };
+        SurfaceDesc desc = { texture, face, level, slice };
 
-        if( !flags.renderTargets || index >= renderTargets.numColorBuffers )
+        if( !flags.colorBuffers || index >= numColorBuffers )
         {
-            flags.renderTargets = 1;
-            if( index >= renderTargets.numColorBuffers && NULL == texture ) return;
-            renderTargets.colorBuffers[index] = desc;
-            renderTargets.numColorBuffers = index + 1;
+            flags.colorBuffers = 1;
+            if( index >= numColorBuffers && NULL == texture ) return;
+            colorBuffers[index] = desc;
+            numColorBuffers = index + 1;
         }
         else if( NULL == texture )
         {
-            renderTargets.numColorBuffers = index;
+            numColorBuffers = index;
         }
         else
         {
-            renderTargets.colorBuffers[index] = desc;
+            colorBuffers[index] = desc;
         }
     }
 
@@ -130,8 +130,8 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void RendererContext::setDepthBuffer( const Texture * texture, size_t face, size_t level, size_t slice )
     {
-        RenderTargetDesc::SurfaceDesc desc = { texture, face, level, slice };
-        _GNGFX_CONTEXT_UPDATE( renderTargets, renderTargets.depthBuffer, desc );
+        SurfaceDesc desc = { texture, face, level, slice };
+        _GNGFX_CONTEXT_UPDATE( depthBuffer, depthBuffer, desc );
     }
 
     //
@@ -139,7 +139,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void RendererContext::setMsaa( MsaaType type )
     {
-        _GNGFX_CONTEXT_UPDATE( renderTargets, renderTargets.msaa, type );
+        _GNGFX_CONTEXT_UPDATE( msaa, msaa, type );
     }
 
     //

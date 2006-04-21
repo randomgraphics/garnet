@@ -188,6 +188,30 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
+    inline void Renderer::setWorld( const Matrix44f & value )
+    {
+        _GNGFX_CONTEXT_UPDATE( setWorld( value ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setView( const Matrix44f & value )
+    {
+        _GNGFX_CONTEXT_UPDATE( setView( value ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setProj( const Matrix44f & value )
+    {
+        _GNGFX_CONTEXT_UPDATE( setProj( value ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     inline void Renderer::setTextureStateBlock( const TextureStateBlockDesc & value )
     {
         _GNGFX_CONTEXT_UPDATE( setTextureStateBlock( value ) );
