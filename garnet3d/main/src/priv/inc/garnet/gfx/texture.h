@@ -149,7 +149,7 @@ namespace GN { namespace gfx
         //!
         //! get size of specific mip level
         //!
-        virtual Vector3<uint32_t> getMipSize( size_t level ) const = 0;
+        const Vector3<uint32_t> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
         //!
         //! get size of specific mip level
@@ -157,7 +157,7 @@ namespace GN { namespace gfx
         template<typename T>
         void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            Vector3<uint32_t> mipSize = getMipSize( level );
+            const Vector3<uint32_t> & mipSize = getMipSize( level );
             if( sx ) *sx = (T)mipSize.x;
             if( sy ) *sy = (T)mipSize.y;
             if( sz ) *sz = (T)mipSize.z;
@@ -337,6 +337,9 @@ namespace GN { namespace gfx
 
             mDesc.levels = ( 0 == desc.levels ) ? maxLevels : min( maxLevels, desc.levels );
 
+            // allocate mipmap size array
+            mMipSize.resize( mDesc.levels );
+
             // store format
             if( ( desc.format < 0 || desc.format >= NUM_CLRFMTS ) &&
                 FMT_DEFAULT != desc.format )
@@ -354,6 +357,25 @@ namespace GN { namespace gfx
         }
 
         //!
+        //! setup mip size
+        //!
+        void setMipSize( size_t level, const Vector3<uint32_t> & s )
+        {
+            GN_ASSERT( level < mDesc.levels );
+            mMipSize[level] = s;
+        }
+
+        //!
+        //! setup mip size
+        //!
+        template<typename T>
+        void setMipSize( size_t level, T sx, T sy, T sz )
+        {
+            GN_ASSERT( level < mDesc.levels );
+            mMipSize[level].set( (uint32_t)sx, (uint32_t)sy, (uint32_t)sz );
+        }
+
+        //!
         //! Get content loader
         //!
         const TextureLoader & getLoader() const { return mLoader; }
@@ -361,6 +383,7 @@ namespace GN { namespace gfx
     private :
         TextureDesc   mDesc;   //!< descriptor
         TextureLoader mLoader; //!< content loader
+        std::vector< Vector3<uint32_t> > mMipSize; //!< mipmap size of each level
     };
 
     //!
