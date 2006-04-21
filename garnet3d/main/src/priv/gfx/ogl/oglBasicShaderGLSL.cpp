@@ -189,7 +189,7 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
 {
     GN_GUARD;
 
-    GN_ASSERT( !mCode.empty() );
+    GN_ASSERT( !code.empty() );
 
     // generate new texture
     mHandle = glCreateShaderObjectARB( mUsage );
