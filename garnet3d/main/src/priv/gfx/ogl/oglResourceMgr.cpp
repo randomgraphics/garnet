@@ -58,11 +58,17 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
     _GNGFX_DEVICE_TRACE();
 
     // release vertex formats
+    for( VtxFmtHandle h = mVtxFmts.first(); h != 0; h = mVtxFmts.next( h ) )
+    {
+        GN_ASSERT( mVtxFmts[h] );
+        delete mVtxFmts[h];
+    }
     mVtxFmts.clear();
 
     if( !mResourceList.empty() )
     {
         GN_ERROR( "All graphics resouces MUST be released, after recieving 'destroy' signal!" );
+        GN_UNEXPECTED();
         for( std::list<OGLResource*>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i )
         {
             const OGLResource * r = *i;
