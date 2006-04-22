@@ -194,8 +194,6 @@ void GN::gfx::OGLVtxFmt::bind() const
 {
     GN_GUARD_SLOW;
 
-    // TODO: use display list to accelerate this function
-
     OGLRenderer & r = getRenderer();
 
     // VERTSEM_COORD
