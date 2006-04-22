@@ -35,6 +35,8 @@ bool GN::gfx::OGLBasicShaderGLSL::init( const StrA & code )
 {
     GN_GUARD;
 
+    OGLAutoAttribStack autoAttribStack;
+
     // standard init procedure
     GN_STDCLASS_INIT( OGLBasicShaderGLSL, () );
 
@@ -52,6 +54,8 @@ bool GN::gfx::OGLBasicShaderGLSL::init( const StrA & code )
 void GN::gfx::OGLBasicShaderGLSL::quit()
 {
     GN_GUARD;
+
+    OGLAutoAttribStack autoAttribStack;
 
     // delete shader object
     if( 0 != mHandle )

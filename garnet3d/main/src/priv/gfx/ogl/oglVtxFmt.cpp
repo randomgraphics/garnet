@@ -234,7 +234,7 @@ void GN::gfx::OGLVtxFmt::bind() const
     // VTXSEM_TEXn
     for( uint32_t i = 0; i < r.getCaps( CAPS_MAX_TEXTURE_STAGES ); ++i )
     {
-        getRenderer().chooseClientTextureStage( i );
+        r.chooseClientTextureStage( i );
         if( mFormat.attribs[VTXSEM_TEX0+i].used )
             GN_OGL_CHECK( glEnableClientState( GL_TEXTURE_COORD_ARRAY ) );
         else

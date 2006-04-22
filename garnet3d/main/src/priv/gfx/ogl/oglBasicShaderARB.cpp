@@ -79,6 +79,8 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
 {
     GN_GUARD;
 
+    OGLAutoAttribStack autoAttribStack;
+
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderARB, () );
 
@@ -96,6 +98,8 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
 void GN::gfx::OGLBasicShaderARB::quit()
 {
     GN_GUARD;
+
+    OGLAutoAttribStack autoAttribStack;
 
     if( mProgram )
     {

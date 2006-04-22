@@ -7,28 +7,6 @@
 // *****************************************************************************
 
 //!
-//! Automatically pop OGL attributes while out of scope.
-//!
-struct AutoAttributeStack
-{
-    //!
-    //! Ctor
-    //!
-    AutoAttributeStack( GLuint bit )
-    {
-        GN_OGL_CHECK( glPushAttrib( bit ) );
-    }
-
-    //!
-    //! Dtor
-    //!
-    ~AutoAttributeStack()
-    {
-        GN_OGL_CHECK( glPopAttrib() );
-    }
-};
-
-//!
 //! Automatically delete OGL textures while out of scope.
 //!
 class AutoDeleteTexture
@@ -321,9 +299,6 @@ GLuint sNew2DTexture(
 {
     GN_GUARD;
 
-    // declare an auto-opengl-property-stack
-    AutoAttributeStack aas( GL_CURRENT_BIT );
-
     // generate new texture
     GLuint result;
     GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
@@ -374,9 +349,6 @@ static GLuint sNewCubeTexture(
 {
     GN_GUARD;
 
-    // declare an auto-opengl-property-stack
-    AutoAttributeStack aas( GL_CURRENT_BIT );
-
     // generate new texture
     GLuint result;
     GN_OGL_CHECK_RV( glGenTextures(1, &result), 0 );
@@ -406,19 +378,6 @@ static GLuint sNewCubeTexture(
     GN_UNGUARD;
 }
 
-struct OGLAttribStack
-{
-    OGLAttribStack()
-    {
-        glPushAttrib( GL_ALL_ATTRIB_BITS );
-    }
-
-    ~OGLAttribStack()
-    {
-        glPopAttrib();
-    }
-};
-
 // *****************************************************************************
 // OGLTexture implementation
 // *****************************************************************************
@@ -433,7 +392,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     // standard init procedure
     GN_STDCLASS_INIT( OGLTexture, () );
 
-    OGLAttribStack autoAttribStack; // auto-restore OGL states
+    OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 
     // determine pixelformat
     if( FMT_DEFAULT == desc.format )
@@ -602,25 +561,18 @@ void GN::gfx::OGLTexture::quit()
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLTexture::setFilter( TexFilter min, TexFilter mag ) const
 {
-    GN_ASSERT( selfOK() );
-
-    bind();
-
-    if( mFilters[0] != min )
+    GLenum glmin = sTexFilter2OGL( min );
+    GLenum glmag = sTexFilter2OGL( mag );
+    if( mOGLFilters[0] != glmin )
     {
-        mFilters[0] = min;
-        GN_OGL_CHECK( glTexParameteri(
-            mOGLTarget,
-            GL_TEXTURE_MIN_FILTER,
-            sTexFilter2OGL( min) ) );
+        mOGLFilters[0] = glmin;
+        mFilterAndWrapDirty = true;
     }
 
-    if( mFilters[1] != mag )
+    if( mOGLFilters[1] != glmag )
     {
-        mFilters[1] = mag;
-        GN_OGL_CHECK( glTexParameteri( mOGLTarget,
-            GL_TEXTURE_MAG_FILTER,
-            sTexFilter2OGL( mag ) ) );
+        mOGLFilters[1] = glmag;
+        mFilterAndWrapDirty = true;
     }
 }
 
@@ -631,36 +583,26 @@ void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 {
     GN_GUARD_SLOW;
 
-    bind();
-
-    if( mWraps[0] != s )
+    GLenum gls = sTexWrap2OGL( s );
+    GLenum glt = sTexWrap2OGL( t );
+    GLenum glr = sTexWrap2OGL( r );
+    
+    if( mOGLWraps[0] != gls )
     {
-        mWraps[0] = s;
-
-        GN_OGL_CHECK( glTexParameteri(
-            mOGLTarget,
-            GL_TEXTURE_WRAP_S,
-            sTexWrap2OGL( s ) ) );
+        mOGLWraps[0] = gls;
+        mFilterAndWrapDirty = true;
     }
 
-    if( mWraps[1] != t )
+    if( mOGLWraps[1] != glt )
     {
-        mWraps[1] = t;
-
-        GN_OGL_CHECK( glTexParameteri(
-            mOGLTarget,
-            GL_TEXTURE_WRAP_T,
-            sTexWrap2OGL( t ) ) );
+        mOGLWraps[1] = glt;
+        mFilterAndWrapDirty = true;
     }
 
-    if( TEXTYPE_3D == getDesc().type && mWraps[2] != r )
+    if( TEXTYPE_3D == getDesc().type && mOGLWraps[2] != glr )
     {
-        mWraps[2] = r;
-
-        GN_OGL_CHECK( glTexParameteri(
-            mOGLTarget,
-            GL_TEXTURE_WRAP_R,
-            sTexWrap2OGL( r ) ) );
+        mOGLWraps[2] = glr;
+        mFilterAndWrapDirty = true;
     }
 
     GN_UNGUARD_SLOW;
@@ -753,6 +695,9 @@ void GN::gfx::OGLTexture::unlock()
 
     // do nothing for read-only lock
     if( LOCK_RO == mLockedFlag ) return;
+
+    // Auto-restore texture binding when exiting this function.
+    OGLAutoAttribStack autoAttribStack( GL_TEXTURE_BIT  );
 
     // bind myself as current texture
     bind();

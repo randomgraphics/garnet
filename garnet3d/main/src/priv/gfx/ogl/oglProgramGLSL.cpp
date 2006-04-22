@@ -13,6 +13,8 @@ bool GN::gfx::OGLProgramGLSL::init( const OGLBasicShaderGLSL * vs, const OGLBasi
 {
     GN_GUARD;
 
+    OGLAutoAttribStack autoAttribStack;
+
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLProgramGLSL, () );
 
@@ -36,6 +38,9 @@ bool GN::gfx::OGLProgramGLSL::init( const OGLBasicShaderGLSL * vs, const OGLBasi
 void GN::gfx::OGLProgramGLSL::quit()
 {
     GN_GUARD;
+
+    // delete program
+    if( mProgram ) glDeleteObjectARB( mProgram );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
