@@ -25,10 +25,6 @@ TODO
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
-    - renderer state dump system
-    - UT to make sure OGL resource creation/deletion do not affect renderer states
-    - remove sys-copy of VBO.
-    - check whether can we use display list for vertex format setup
     - rewrite effect class, make the code more consice.
       - remove drawBegin() and drawEnd()
     - render target management
@@ -46,9 +42,13 @@ TODO
 
 - p2
   - GFX system
-    - add support to MSAA/FSAA
+    - consider remove drawBegin() and drawEnd()
+    - renderer state dump system
+    - UT to make sure OGL resource creation/deletion do not affect renderer states
+    - add support to OGL FSAA
     - Cg shader
     - consider removing syscopy from vertex/index buffer
+      - remove sys-copy of VBO.
     - Why D3D quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
     - UT: format conversion between ClrFmt and D3DFMT
