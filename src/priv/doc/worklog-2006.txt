@@ -25,19 +25,20 @@ TODO
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
-    - restore OGL states after Texture::setFilter(...)
+    - renderer state dump system
+    - UT to make sure OGL resource creation/deletion do not affect renderer states
+    - remove sys-copy of VBO.
+    - check whether can we use display list for vertex format setup
     - rewrite effect class, make the code more consice.
       - remove drawBegin() and drawEnd()
     - render target management
+      - D3D: msaa
+      - OGL: FBO
     - queryXXX(....)
-    - Allow mix of garnet-wrapped and low-level graphics resources.
-      - possiblly by using rebindContextState() and rebindContextData()
-      - need future investigation
   - code page convertor
   - sample application
     - GLSL test application
   - mesh class
-  - effect class: ut
   - blender exporter/importer
   - in-game GUI system
     - font class

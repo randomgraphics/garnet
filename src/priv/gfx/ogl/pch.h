@@ -23,6 +23,30 @@
 #endif
 #include <GL/glu.h>
 
+//!
+//! Automatically pop OGL attributes while out of scope.
+//!
+struct OGLAutoAttribStack
+{
+    //!
+    //! Ctor
+    //!
+    OGLAutoAttribStack( GLuint bits = GL_ALL_ATTRIB_BITS )
+    {
+        GN_ASSERT( bits );
+        GN_OGL_CHECK( glPushAttrib( bits ) );
+    }
+
+    //!
+    //! Dtor
+    //!
+    ~OGLAutoAttribStack()
+    {
+        GN_OGL_CHECK( glPopAttrib() );
+    }
+};
+
+
 #include "garnet/base/pragma.h"
 
 // *****************************************************************************

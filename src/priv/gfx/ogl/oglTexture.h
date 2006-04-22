@@ -44,9 +44,9 @@ namespace GN { namespace gfx
         void clear()
         {
             mOGLTexture = 0;
-
-            mFilters[0] = mFilters[1] = TEXFILTER_LINEAR;
-            mWraps[0] = mWraps[1] = mWraps[2] = TEXWRAP_REPEAT;
+            mFilterAndWrapDirty = true;
+            mOGLFilters[0] = mOGLFilters[1] = GL_LINEAR;
+            mOGLWraps[0] = mOGLWraps[1] = mOGLWraps[2] = GL_REPEAT;
         }
         //@}
 
@@ -94,6 +94,18 @@ namespace GN { namespace gfx
             }
             GN_OGL_CHECK( glEnable(mOGLTarget) );
             GN_OGL_CHECK( glBindTexture(mOGLTarget, mOGLTexture) );
+
+            if( mFilterAndWrapDirty )
+            {
+                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MIN_FILTER, mOGLFilters[0] ) );
+                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MAG_FILTER, mOGLFilters[1] ) );
+                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_S, mOGLWraps[0] ) );
+                GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_T, mOGLWraps[1] ) );
+                if( TEXTYPE_3D == getDesc().type )
+                {
+                    GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, mOGLWraps[2] ) );
+                }
+            }
 
             GN_UNGUARD_SLOW;
         }
@@ -149,8 +161,9 @@ namespace GN { namespace gfx
         bool   mOGLCompressed;
         //@}
 
-        mutable TexFilter mFilters[2]; //! filters (min,mag)
-        mutable TexWrap   mWraps[3];   //! address modes (s,t,r)
+        mutable bool   mFilterAndWrapDirty;
+        mutable GLenum mOGLFilters[2]; //! filters (min,mag)
+        mutable GLenum mOGLWraps[3];   //! address modes (s,t,r)
 
         //!
         //! \name 2D locking related variables

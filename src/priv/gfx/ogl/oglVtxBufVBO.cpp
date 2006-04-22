@@ -13,6 +13,8 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
 {
     GN_GUARD;
 
+    OGLAutoAttribStack autoAttribStack;
+
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLVtxBufVBO, () );
 
@@ -107,6 +109,8 @@ void GN::gfx::OGLVtxBufVBO::unlock()
 
     if( LOCK_RO != mLockFlag )
     {
+        OGLAutoAttribStack autoAttribStack( GL_CURRENT_BIT );
+        
         GN_ASSERT(
             mLockOffset < getSizeInBytes() &&
             0 < mLockBytes &&
