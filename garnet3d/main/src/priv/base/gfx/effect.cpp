@@ -229,10 +229,12 @@ bool GN::gfx::effect::EffectDesc::valid() const
     }
 
     // check techniques
-    for( std::map<StrA,TechniqueDesc>::const_iterator i = techniques.begin(); i != techniques.end(); ++i )
+    for( size_t i = 0; i < techniques.size(); ++i )
     {
-        const StrA & techName = i->first;
-        const TechniqueDesc & tech = i->second;
+        const TechniqueDesc & tech = techniques[i];
+        const StrA & techName = tech.name;
+
+        // TODO: check for non-unqiuetechnique name
 
         for( size_t i = 0; i < tech.passes.size(); ++i )
         {
@@ -438,13 +440,20 @@ bool GN::gfx::effect::Effect::createEffect()
     }
 
     // create technique list
-    for( std::map<StrA,TechniqueDesc>::const_iterator iTech = mDesc.techniques.begin();
-         iTech != mDesc.techniques.end(); ++iTech )
+    for( size_t i = 0; i < mDesc.techniques.size(); ++i )
     {
-        TechniqueData data;
-        if( createTechnique( data, iTech->first, iTech->second ) )
+        const TechniqueDesc & desc = mDesc.techniques[i];
+
+        if( mTechniques.find( desc.name ) )
         {
-            GN_ASSERT( data.name == iTech->first );
+            GN_WARN( "Ignore redundant technique named '%s'. There's already a technique with same name in this effect.", desc.name.cptr() );
+            continue;
+        }
+        
+        TechniqueData data;
+        if( createTechnique( data, desc ) )
+        {
+            GN_ASSERT( data.name == desc.name );
             mTechniques.add( data.name, data );
         }
     }
@@ -556,11 +565,11 @@ bool GN::gfx::effect::Effect::createShader( ShaderData & data, const StrA & name
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const StrA & name, const TechniqueDesc & desc )
+bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const TechniqueDesc & desc )
 {
     GN_GUARD;
 
-    data.name = name;
+    data.name = desc.name;
 
     data.passes.resize( desc.passes.size() );
 
@@ -578,7 +587,7 @@ bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const StrA 
 
             if( 0 == passData.shaders[iShader] )
             {
-                GN_TRACE( "Technique '%s' is ignored, because shader '%s' is not found.", name.cptr(), shaderName.cptr() );
+                GN_TRACE( "Technique '%s' is ignored, because shader '%s' is not found.", desc.name.cptr(), shaderName.cptr() );
                 return false;
             }
  

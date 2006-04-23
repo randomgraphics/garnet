@@ -335,6 +335,7 @@ namespace GN { namespace gfx {
         //!
         struct TechniqueDesc
         {
+            StrA                  name; //!< technique name
             std::vector<PassDesc> passes; //!< pass list.
             RenderStateBlockDesc  rsb; //!< Technique specific render states
 
@@ -349,11 +350,11 @@ namespace GN { namespace gfx {
         //!
         struct EffectDesc
         {
-            std::map<StrA,TextureDesc>   textures;   //!< Texture list
-            std::map<StrA,UniformDesc>   uniforms;   //!< Uniform list
-            std::map<StrA,ShaderDesc>    shaders;    //!< Shader list
-            std::map<StrA,TechniqueDesc> techniques; //!< Technique list
-            RenderStateBlockDesc         rsb;        //!< Effect global render states
+            std::map<StrA,TextureDesc> textures;   //!< Texture list
+            std::map<StrA,UniformDesc> uniforms;   //!< Uniform list
+            std::map<StrA,ShaderDesc>  shaders;    //!< Shader list
+            std::vector<TechniqueDesc> techniques; //!< Technique list. Technique name must be unique.
+            RenderStateBlockDesc       rsb;        //!< Effect global render states
 
             //!
             //! Ctor
@@ -612,10 +613,10 @@ namespace GN { namespace gfx {
                 void clear() { names.clear(); items.clear(); }
                 bool empty() const { GN_ASSERT(names.size() == items.size()); return items.empty(); }
                 size_t size() const { GN_ASSERT(names.size() == items.size()); return items.size(); }
-                uint32_t find( const StrA & name ) const
+                EffectItemID find( const StrA & name ) const
                 {
                     if( 0 == name ) return 0;
-                    std::map<StrA,uint32_t>::const_iterator i = names.find(name);
+                    std::map<StrA,EffectItemID>::const_iterator i = names.find(name);
                     if( names.end() == i ) return 0;
                     GN_ASSERT( items.validHandle(i->second)  );
                     return i->second;
@@ -640,7 +641,7 @@ namespace GN { namespace gfx {
 
             bool createEffect(); // called by init()
             bool createShader( ShaderData &, const StrA &, const ShaderDesc & );
-            bool createTechnique( TechniqueData &, const StrA &, const TechniqueDesc & );
+            bool createTechnique( TechniqueData &, const TechniqueDesc & );
             static void sSetFfpUniform( int32_t, const UniformData & );
         };
 
