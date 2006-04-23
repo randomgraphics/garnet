@@ -6,7 +6,7 @@
 GN_INLINE size_t GN::gfx::effect::Effect::getNumPasses() const
 {
     GN_GUARD_SLOW;
-    GN_ASSERT( mActiveTechnique < mTechniques.size() );
+    GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     return mTechniques.items[mActiveTechnique].passes.size();
     GN_UNGUARD_SLOW;
 }
