@@ -85,6 +85,12 @@ namespace GN { namespace gfx
         inline void setM( const Matrix44f & v ) { setM( &v, 1 ); }
         //@}
 
+#if GN_DEBUG
+        //!
+        //! ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
+        //!
+        UniformValue() : type(NUM_UNIFORM_VALUE_TYPES) {}
+#endif
     };
 
     //!

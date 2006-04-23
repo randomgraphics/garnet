@@ -42,6 +42,8 @@ TODO
 
 - p2
   - GFX system
+    - UT of LRU list in resource manager
+    - seperate sampler and texture, like D3D.
     - consider remove drawBegin() and drawEnd()
     - renderer state dump system
     - UT to make sure OGL resource creation/deletion do not affect renderer states

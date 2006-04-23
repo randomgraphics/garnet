@@ -72,8 +72,8 @@ public:
                        0,  0,  0,  1 ) );
 
         // create textures
-        desc.textures["t0"].defaultValue = "texture/rabit.png";
-        desc.textures["t1"].defaultValue = "texture/earth.jpg";
+        desc.textures["t0"];
+        desc.textures["t1"];
 
         // create 1 vertex shader
         ShaderDesc & vs0 = desc.shaders["vs0"];
@@ -130,15 +130,13 @@ public:
         gRenderer.clearScreen();
         if( gRenderer.drawBegin() )
         {
-            size_t n = e.drawBegin();
-            for( size_t i = 0; i < n; ++i )
+            for( size_t i = 0; i < e.getNumPasses(); ++i )
             {
                 e.passBegin( i );
                 e.commitChanges();
                 gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
                 e.passEnd();
             }
-            e.drawEnd();
             gRenderer.drawEnd();
         }
     }

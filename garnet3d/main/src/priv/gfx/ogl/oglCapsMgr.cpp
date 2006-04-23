@@ -216,7 +216,7 @@ static uint32_t sCapsInit_PER_STAGE_CONSTANT()
     return true;
 }
 //
-static uint32_t sCapsInit_PSCAPS()
+static uint32_t sCapsInit_PS()
 {
     uint32_t result = 0;
     if( GLEW_ARB_fragment_program ) result |= GN::gfx::PSCAPS_OGL_ARB1;
@@ -226,7 +226,7 @@ static uint32_t sCapsInit_PSCAPS()
     return result;
 }
 //
-static uint32_t sCapsInit_VSCAPS()
+static uint32_t sCapsInit_VS()
 {
     uint32_t result = 0;
     if( GLEW_ARB_vertex_program ) result |= GN::gfx::VSCAPS_OGL_ARB1;

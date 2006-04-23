@@ -41,7 +41,7 @@ static uint32_t sCapsInit_PER_STAGE_CONSTANT( const D3DCAPS9 & d3dcaps )
     return D3DPMISCCAPS_PERSTAGECONSTANT & d3dcaps.PrimitiveMiscCaps;
 }
 //
-static uint32_t sCapsInit_PSCAPS( const D3DCAPS9 & d3dcaps )
+static uint32_t sCapsInit_PS( const D3DCAPS9 & d3dcaps )
 {
     uint32_t result = 0;
 
@@ -61,7 +61,7 @@ static uint32_t sCapsInit_PSCAPS( const D3DCAPS9 & d3dcaps )
     return result;
 }
 //
-static uint32_t sCapsInit_VSCAPS( const D3DCAPS9 & d3dcaps )
+static uint32_t sCapsInit_VS( const D3DCAPS9 & d3dcaps )
 {
     uint32_t result = 0;
 
@@ -280,12 +280,12 @@ bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, ShadingLanguage lang
         case LANG_D3D_HLSL :
             if( VERTEX_SHADER == type )
             {
-                return 0 != ( getCaps( CAPS_VSCAPS ) & VSCAPS_D3D_ALL );
+                return 0 != ( getCaps( CAPS_VS ) & VSCAPS_D3D_ALL );
             }
             else
             {
                 GN_ASSERT( PIXEL_SHADER == type );
-                return 0 != ( getCaps( CAPS_PSCAPS ) & VSCAPS_D3D_ALL );
+                return 0 != ( getCaps( CAPS_PS ) & VSCAPS_D3D_ALL );
             }
 
         // TODO: Check Cg shader caps

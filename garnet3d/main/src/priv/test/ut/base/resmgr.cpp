@@ -155,7 +155,7 @@ public:
         TS_ASSERT( rm.validResourceHandle( h1 ) );
         TS_ASSERT( rm.validResourceHandle( h2 ) );
 
-        rm.removeResourceHandle( h1 );
+        rm.removeResourceByHandle( h1 );
 
         TS_ASSERT( !rm.validResourceHandle( h1 ) );
         TS_ASSERT( rm.validResourceHandle( h2 ) );
@@ -171,7 +171,7 @@ public:
         TS_ASSERT( rm.validResourceHandle( h1 ) );
         TS_ASSERT( rm.validResourceHandle( h2 ) );
 
-        rm.removeResourceName( "1" );
+        rm.removeResourceByName( "1" );
 
         TS_ASSERT( !rm.validResourceHandle( h1 ) );
         TS_ASSERT( rm.validResourceHandle( h2 ) );

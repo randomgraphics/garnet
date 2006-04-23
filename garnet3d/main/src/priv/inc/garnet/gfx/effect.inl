@@ -3,19 +3,11 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::gfx::effect::Effect::drawBegin() const
+GN_INLINE size_t GN::gfx::effect::Effect::getNumPasses() const
 {
     GN_GUARD_SLOW;
-
-    GN_ASSERT(
-        ok() &&
-        !mDrawBegun &&
-        mTechniques.items.validHandle(mActiveTechnique) );
-
-    // success
-    mDrawBegun = true;
+    GN_ASSERT( mActiveTechnique < mTechniques.size() );
     return mTechniques.items[mActiveTechnique].passes.size();
-
     GN_UNGUARD_SLOW;
 }
 
@@ -26,7 +18,7 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegun && !mPassBegun );
+    GN_ASSERT( !mPassBegun );
     mPassBegun = true;
     mActivePass = passIdx;
 
@@ -49,20 +41,29 @@ GN_INLINE void GN::gfx::effect::Effect::passBegin( size_t passIdx ) const
         // bind shader
         r.setShader( (ShaderType)i, sd.value );
 
-        // apply dirty uniforms
-        for( std::set<size_t>::const_iterator iUniform = sd.dirtyUniforms.begin(); iUniform != sd.dirtyUniforms.end(); ++iUniform )
+        // TODO: apply texture/sampler properties
+        /*for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
         {
-            GN_ASSERT( (*iUniform) < sd.uniforms.size() );
-            const UniformRefData & ur = sd.uniforms[*iUniform];
-            const UniformData & ud = mUniforms.items[ur.handle];
-            if( ur.ffp )
+            const TextureRefData & trd = sd.textures[iTexture];
+            GN_ASSERT( mTextures.items.validHandle(trd.id) );
+            const TextureData & td = mTextures.items[trd.id];
+            gRenderer.setTextureHandle( trd.stage, td.value );
+        }*/
+
+        // apply dirty uniforms
+        for( size_t iUniform = 0; iUniform < sd.dirtyUniforms.size(); ++iUniform )
+        {
+            GN_ASSERT( sd.dirtyUniforms[iUniform] < sd.uniforms.size() );
+            const UniformRefData & urd = sd.uniforms[sd.dirtyUniforms[iUniform]];
+            const UniformData & ud = mUniforms.items[urd.id];
+            if( urd.ffp )
             {
-                sSetFfpParameter( ur.ffpParameterType, ud );
+                sSetFfpUniform( urd.ffpType, ud );
             }
             else
             {
-                GN_ASSERT( ur.shaderUniformHandle );
-                sd.value->setUniform( ur.shaderUniformHandle, ud.value );
+                GN_ASSERT( urd.shaderUniformHandle );
+                sd.value->setUniform( urd.shaderUniformHandle, ud.value );
             }
         }
         sd.dirtyUniforms.clear();
@@ -79,7 +80,7 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mDrawBegun && mPassBegun );
+    GN_ASSERT( mPassBegun );
 
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     TechniqueData & t = mTechniques.items[mActiveTechnique];
@@ -95,32 +96,23 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
 
         ShaderData & sd = mShaders.items[p.shaders[iShader]];
 
-        // apply dirty uniforms
-        for( std::set<size_t>::const_iterator iUniform = sd.dirtyUniforms.begin(); iUniform != sd.dirtyUniforms.end(); ++iUniform )
+        // apply dirty uniforms again, in case user may change uniforms between passBegin() and commitChanges()
+        for( size_t iUniform = 0; iUniform < sd.dirtyUniforms.size(); ++iUniform )
         {
-            GN_ASSERT( (*iUniform) < sd.uniforms.size() );
-            const UniformRefData & ur = sd.uniforms[*iUniform];
-            const UniformData & ud = mUniforms.items[ur.handle];
-            if( ur.ffp )
+            GN_ASSERT( sd.dirtyUniforms[iUniform] < sd.uniforms.size() );
+            const UniformRefData & urd = sd.uniforms[sd.dirtyUniforms[iUniform]];
+            const UniformData & ud = mUniforms.items[urd.id];
+            if( urd.ffp )
             {
-                sSetFfpParameter( ur.ffpParameterType, ud );
+                sSetFfpUniform( urd.ffpType, ud );
             }
             else
             {
-                GN_ASSERT( ur.shaderUniformHandle );
-                sd.value->setUniform( ur.shaderUniformHandle, ud.value );
+                GN_ASSERT( urd.shaderUniformHandle );
+                sd.value->setUniform( urd.shaderUniformHandle, ud.value );
             }
         }
         sd.dirtyUniforms.clear();
-
-        // apply textures
-        for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
-        {
-            const TextureRefData & tr = sd.textures[iTexture];
-            GN_ASSERT( mTextures.items.validHandle(tr.handle) );
-            const TextureData & td = mTextures.items[tr.handle];
-            gRenderer.setTextureHandle( tr.stage, td.value );
-        }
     }
 
     gRenderer.contextUpdateEnd();
@@ -135,19 +127,19 @@ GN_INLINE void GN::gfx::effect::Effect::commitChanges() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE uint32_t GN::gfx::effect::Effect::getTechniqueHandle( const StrA & name ) const
+GN_INLINE GN::gfx::effect::EffectItemID GN::gfx::effect::Effect::getTechniqueID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
-    uint32_t handle = mTechniques.find( name );
-    if( 0 == handle ) GN_ERROR( "invalid technique name: %s", name.cptr() );
-    return handle;
+    EffectItemID id = mTechniques.find( name );
+    if( 0 == id ) GN_ERROR( "invalid technique name: %s", name.cptr() );
+    return id;
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::setActiveTechnique( uint32_t handle ) const
+GN_INLINE void GN::gfx::effect::Effect::setActiveTechnique( EffectItemID id ) const
 {
     GN_GUARD_SLOW;
 
@@ -157,18 +149,18 @@ GN_INLINE void GN::gfx::effect::Effect::setActiveTechnique( uint32_t handle ) co
         return;
     }
 
-    if( 0 == handle )
+    if( 0 == id )
     {
         // use the first technique.
         mActiveTechnique = mTechniques.items.first();
     }
-    else if( !mTechniques.items.validHandle( handle ) )
+    else if( !mTechniques.items.validHandle( id ) )
     {
-        GN_ERROR( "Invalid technique handle: %d.", handle );
+        GN_ERROR( "Invalid technique id: %d.", id );
     }
     else
     {
-        mActiveTechnique = handle;
+        mActiveTechnique = id;
     }
     GN_ASSERT( mTechniques.items.validHandle( mActiveTechnique ) );
 
@@ -182,9 +174,9 @@ GN_INLINE void GN::gfx::effect::Effect::setActiveTechnique( uint32_t handle ) co
 GN_INLINE void GN::gfx::effect::Effect::setActiveTechniqueByName( const StrA & name ) const
 {
     GN_GUARD_SLOW;
-    uint32_t handle = getTechniqueHandle( name );
-    if( 0 == handle ) return;
-    setActiveTechnique( handle );
+    EffectItemID id = getTechniqueID( name );
+    if( 0 == id ) return;
+    setActiveTechnique( id );
     GN_UNGUARD_SLOW;
 }
 
@@ -196,36 +188,42 @@ GN_INLINE void GN::gfx::effect::Effect::setActiveTechniqueByName( const StrA & n
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE uint32_t GN::gfx::effect::Effect::getUniformHandle( const StrA & name ) const
+GN_INLINE GN::gfx::effect::EffectItemID GN::gfx::effect::Effect::getUniformID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
-    uint32_t handle = mUniforms.find( name );
-    if( 0 == handle ) GN_ERROR( "invalid uniform name: %s", name.cptr() );
-    return handle;
+    EffectItemID id = mUniforms.find( name );
+    if( 0 == id ) GN_ERROR( "invalid uniform name: %s", name.cptr() );
+    return id;
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::setUniform( uint32_t handle, const UniformValue & value ) const
+GN_INLINE void GN::gfx::effect::Effect::setUniform( EffectItemID id, const UniformValue & value ) const
 {
     GN_GUARD_SLOW;
 
-    if( !mUniforms.items.validHandle(handle) )
+    if( !mUniforms.items.validHandle(id) )
     {
-        GN_ERROR( "invalid uniform handle: %d", handle );
+        GN_ERROR( "invalid uniform id: %d", id );
         return;
     }
 
-    UniformData & u = mUniforms.items[handle];
+    UniformData & u = mUniforms.items[id];
     u.value = value;
 
     for( size_t i = 0; i < u.shaders.size(); ++i )
     {
-        ShaderRefData & sr = u.shaders[i];
-        ShaderData & sd = mShaders.items[sr.shader];
-        sd.dirtyUniforms.insert( sr.index );
+        ShaderRefData & srd = u.shaders[i];
+        ShaderData & sd = mShaders.items[srd.id];
+
+        // avoid redunant index in dirty array
+        // TODO: use sorted-array to increase search speed.
+        if( sd.dirtyUniforms.end() == std::find( sd.dirtyUniforms.begin(), sd.dirtyUniforms.end(), srd.index ) )
+        {
+            sd.dirtyUniforms.push_back( srd.index );
+        }
     }
 
     GN_UNGUARD_SLOW;
@@ -237,9 +235,9 @@ GN_INLINE void GN::gfx::effect::Effect::setUniform( uint32_t handle, const Unifo
 GN_INLINE void GN::gfx::effect::Effect::setUniformByName( const StrA & name, const UniformValue & value ) const
 {
     GN_GUARD_SLOW;
-    uint32_t handle = getUniformHandle( name );
-    if( 0 == handle ) return;
-    setUniform( handle, value );
+    EffectItemID id = getUniformID( name );
+    if( 0 == id ) return;
+    setUniform( id, value );
     GN_UNGUARD_SLOW;
 }
 
@@ -250,30 +248,29 @@ GN_INLINE void GN::gfx::effect::Effect::setUniformByName( const StrA & name, con
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE uint32_t GN::gfx::effect::Effect::getTextureHandle( const StrA & name ) const
+GN_INLINE GN::gfx::effect::EffectItemID GN::gfx::effect::Effect::getTextureID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
-    uint32_t handle = mTextures.find( name );
-    if( 0 == handle ) GN_ERROR( "invalid texture name: %s", name.cptr() );
-    return handle;
+    EffectItemID id = mTextures.find( name );
+    if( 0 == id ) GN_ERROR( "invalid texture name: %s", name.cptr() );
+    return id;
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::setTexture( uint32_t handle, uint32_t id ) const
+GN_INLINE void GN::gfx::effect::Effect::setTexture( EffectItemID id, const Texture * tex ) const
 {
     GN_GUARD_SLOW;
 
-    if( !mTextures.items.validHandle(handle) )
+    if( !mTextures.items.validHandle(id) )
     {
-        GN_ERROR( "invalid texture handle: %d", handle );
+        GN_ERROR( "invalid texture id: %d", id );
         return;
     }
 
-    TextureData & u = mTextures.items[handle];
-    u.value = id;
+    mTextures.items[id].value = tex;
 
     GN_UNGUARD_SLOW;
 }
@@ -281,11 +278,11 @@ GN_INLINE void GN::gfx::effect::Effect::setTexture( uint32_t handle, uint32_t id
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::effect::Effect::setTextureByName( const StrA & name, uint32_t id ) const
+GN_INLINE void GN::gfx::effect::Effect::setTextureByName( const StrA & name, const Texture * tex ) const
 {
     GN_GUARD_SLOW;
-    uint32_t handle = getTextureHandle( name );
-    if( 0 == handle ) return;
-    setTexture( handle, id );
+    EffectItemID id = getTextureID( name );
+    if( 0 == id ) return;
+    setTexture( id, tex );
     GN_UNGUARD_SLOW;
 }
