@@ -8,6 +8,19 @@
 // local functions
 // *****************************************************************************
 
+enum FfpUniformType
+{
+    FFP_TRANSFORM_WORLD,
+    FFP_TRANSFORM_VIEW,
+    FFP_TRANSFORM_PROJ,
+    FFP_VIEWPORT,
+    FFP_LIGHT0_POS,
+    FFP_LIGHT0_DIFFUSE,
+    FFP_MATERIAL_DIFFUSE,
+    FFP_MATERIAL_SPECULAR,
+    NUM_FFP_UNIFORM_TYPES,
+};
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -20,8 +33,7 @@ static inline bool sExist( const std::map<GN::StrA,T> & theMap, const GN::StrA &
 //
 //
 // -----------------------------------------------------------------------------
-template<typename T>
-static inline bool sCheckFfpParameterType( const GN::StrA & name, T * type )
+static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
 {
     GN_GUARD;
 
@@ -36,12 +48,13 @@ static inline bool sCheckFfpParameterType( const GN::StrA & name, T * type )
         "FFP_MATERIAL_DIFFUSE",
         "FFP_MATERIAL_SPECULAR",
     };
+    static const int32_t n = (int32_t)( sizeof(sTable)/sizeof(sTable[0]) );
 
-    for( size_t i = 0; i < sizeof(sTable)/sizeof(sTable[0]); ++i )
+    for( int32_t i = 0; i < n; ++i )
     {
         if( sTable[i] == name )
         {
-            if( type ) *type = (T)i;
+            if( type ) *type = i;
             return true;
         }
     }
@@ -49,6 +62,7 @@ static inline bool sCheckFfpParameterType( const GN::StrA & name, T * type )
 
     GN_UNGUARD;
 }
+
 
 // *****************************************************************************
 // CondExp methods
@@ -198,7 +212,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
             }
 
             // FFP shader can only bind uniform to FFP parameter"
-            if( shader.code.empty() && !sCheckFfpParameterType( binding, (size_t*)NULL ) )
+            if( shader.code.empty() && !sIsFfpUniformType( binding, NULL ) )
             {
                 GN_ERROR( "FFP shader(%s)对Uniform(%s)使用了非FFP的绑定: %s.",
                     shaderName.cptr(), name.cptr(), binding.cptr() );
@@ -305,10 +319,8 @@ bool GN::gfx::effect::Effect::init( const EffectDesc & d )
     GN_ASSERT( mUniforms.items.size() == mDesc.uniforms.size() );
 
     GN_ASSERT( mShaders.items.size() == mShaders.names.size() );
-    GN_ASSERT( mShaders.items.size() == mDesc.shaders.size() );
 
     GN_ASSERT( mTechniques.items.size() == mTechniques.names.size() );
-    GN_ASSERT( mTechniques.items.size() == mDesc.techniques.size() );
 
     // success
     return selfOK();
@@ -371,22 +383,8 @@ bool GN::gfx::effect::Effect::createEffect()
     {
         TextureData td;
         td.name = i->first;
+        td.value = 0;
         mTextures.add( i->first, td );
-
-        // set default texture value
-        if( !i->second.defaultValue.empty() )
-        {
-            uint32_t id = gTexDict.getResourceHandle( i->second.defaultValue );
-            if( 0 == id )
-            {
-                GN_WARN( "Default texture value '%s' of texture '%s' is not a valid texture resource.",
-                    i->second.defaultValue.cptr(), td.name.cptr() );
-            }
-            else
-            {
-                setTextureByName( td.name, id );
-            }
-        }
     }
 
     // create uniform list
@@ -402,134 +400,61 @@ bool GN::gfx::effect::Effect::createEffect()
     for( std::map<StrA,ShaderDesc>::const_iterator i = mDesc.shaders.begin();
          i != mDesc.shaders.end(); ++i )
     {
-        const ShaderDesc & s = i->second;
-
-        ShaderData sd;
-        sd.name = i->first;
-
-        // check shader condition
-        if( !s.conditions.evaluate() ) continue;
-
-        // create shaders instance
-        if( sd.value.empty() && !s.code.empty() )
+        ShaderData data;
+        if( createShader( data, i->first, i->second ) )
         {
-            sd.value.attach( gRenderer.createShader( s.type, s.lang, s.code, s.hints ) );
-            if( sd.value.empty() )
-            {
-                GN_ERROR( "Fail to create shader '%s'.", sd.name.cptr() );
-                continue;
-            }
+            GN_ASSERT( data.name == i->first );
+            mShaders.add( data.name, data );
         }
-
-        // build texture referencing list
-        sd.textures.reserve( s.textures.size() );
-        for( std::map<uint32_t,StrA>::const_iterator i = s.textures.begin(); i != s.textures.end(); ++i )
-        {
-            TextureRefData td;
-            td.stage = i->first;
-            td.handle = mTextures.find( i->second );
-            GN_ASSERT( td.handle ); // check is already done in EffectDesc::valid()
-            sd.textures.push_back( td );
-        }
-
-        // build uniform referencing list
-        bool urlok = true;
-        sd.uniforms.reserve( s.uniforms.size() );
-        for( std::map<StrA,StrA>::const_iterator i = s.uniforms.begin(); i != s.uniforms.end(); ++i )
-        {
-            UniformRefData urd;
-
-            urd.binding = i->first;
-            urd.ffp = sCheckFfpParameterType( i->first, &urd.ffpParameterType );
-            urd.handle = mUniforms.find( i->second );
-            GN_ASSERT( urd.handle ); // check is already done in EffectDesc::valid()
-            sd.uniforms.push_back( urd );
-
-            // get shader-specific handle of the uniform
-            if( !urd.ffp )
-            {
-                // Make sure non-FFP binding belongs to non-FFP shader
-                GN_ASSERT( sd.value );
-
-                urd.shaderUniformHandle = sd.value->getUniformHandle( urd.binding );
-
-                if( 0 == urd.shaderUniformHandle )
-                {
-                    const StrA & name = mUniforms.items[urd.handle].name;
-                    GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
-                        name.cptr(),
-                        sd.name.cptr(),
-                        urd.binding.cptr() );
-                    urlok = false;
-                    continue;
-                }
-            }
-        }
-        if( !urlok ) continue;
-
-        mShaders.add( sd.name, sd );
     }
 
+    // build shader-referencing list for uniforms:
+    //  for each uniforms:
+    //    for each shaders:
+    //      if the shader is referencing the uniform:
+    //        add this shader to the uniform's shader-referencing list
     for( uint32_t hUniform = mUniforms.items.first(); hUniform != 0; hUniform = mUniforms.items.next(hUniform) )
     {
         UniformData & ud = mUniforms.items[hUniform];
-
         for( uint32_t hShader = mShaders.items.first(); hShader != 0; hShader = mShaders.items.next(hShader) )
         {
             const ShaderData & sd = mShaders.items[hShader];
             for( size_t i = 0; i < sd.uniforms.size(); ++i )
             {
-                const UniformRefData & ur = sd.uniforms[i];
-                GN_ASSERT( mUniforms.items.validHandle(ur.handle) );
-                if( mUniforms.items[ur.handle].name == ud.name )
+                const UniformRefData & urd = sd.uniforms[i];
+                GN_ASSERT( mUniforms.items.validHandle(urd.id) );
+                if( mUniforms.items[urd.id].name == ud.name )
                 {
-                    ShaderRefData urd = { hShader, i };
-                    ud.shaders.push_back( urd );
+                    ShaderRefData srd = { hShader, i };
+                    ud.shaders.push_back( srd );
                 }
             }
         }
 
-        // set default uniform value.
+        // Set default uniform value.
+        // Note that setUniform() will update shader's uniform-dirty-list as well.
         const UniformDesc & u = mDesc.getUniform(ud.name);
         if( u.hasDefaultValue ) setUniform( hUniform, u.defaultValue );
     }
 
     // create technique list
-    GN_ASSERT( !mDesc.techniques.empty() );
     for( std::map<StrA,TechniqueDesc>::const_iterator iTech = mDesc.techniques.begin();
          iTech != mDesc.techniques.end(); ++iTech )
     {
-        const TechniqueDesc & t = iTech->second;
-        TechniqueData td;
-        td.name = iTech->first;
-
-        td.passes.resize( t.passes.size() );
-
-        bool techok = true;
-        for( size_t iPass = 0; iPass < t.passes.size(); ++iPass )
+        TechniqueData data;
+        if( createTechnique( data, iTech->first, iTech->second ) )
         {
-            const PassDesc & p = t.passes[iPass];
-            PassData & pd = td.passes[iPass];
-
-            for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
-            {
-                const StrA & s = p.shaders[iShader];
-                pd.shaders[iShader] = mShaders.find( s );
-                techok = 0 != pd.shaders[iShader];
-                GN_ASSERT( mDesc.getShader(s).type == (ShaderType)iShader );
-            }
-            pd.rsb = mDesc.rsb + t.rsb + p.rsb;
+            GN_ASSERT( data.name == iTech->first );
+            mTechniques.add( data.name, data );
         }
-        if( !techok ) continue;
-
-        // add technique data to technique list
-        mTechniques.add( iTech->first, td );
     }
     if( mTechniques.empty() )
     {
         GN_ERROR( "No valid technique found." );
         return false;
     }
+
+    // setup active technique
     mActiveTechnique = mTechniques.items.first();
 
     // success
@@ -541,7 +466,137 @@ bool GN::gfx::effect::Effect::createEffect()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::sSetFfpParameter( FfpParameterType, const UniformData & )
+bool GN::gfx::effect::Effect::createShader( ShaderData & data, const StrA & name, const ShaderDesc & desc )
+{
+    GN_GUARD;
+
+    // check shader condition
+    if( !desc.conditions.evaluate() )
+    {
+        GN_TRACE( "Shader named '%s' does not pass condition check. Ignored", name.cptr() );
+        return false;
+    }
+
+    // store shader name
+    data.name = name;
+
+    // create shaders instance
+    if( data.value.empty() && !desc.code.empty() )
+    {
+        data.value.attach( gRenderer.createShader( desc.type, desc.lang, desc.code, desc.hints ) );
+        if( data.value.empty() )
+        {
+            GN_ERROR( "Fail to create shader '%s'.", name.cptr() );
+            return false;
+        }
+    }
+
+    // build texture referencing list
+    data.textures.reserve( desc.textures.size() );
+    for( std::map<uint32_t,StrA>::const_iterator i = desc.textures.begin(); i != desc.textures.end(); ++i )
+    {
+        TextureRefData trd;
+        trd.stage = i->first;
+        trd.id = mTextures.find( i->second );
+        GN_ASSERT( trd.id ); // must be true for valid shader descriptor
+        data.textures.push_back( trd );
+    }
+
+    // build uniform referencing list
+    data.uniforms.reserve( desc.uniforms.size() );
+    for( std::map<StrA,StrA>::const_iterator i = desc.uniforms.begin(); i != desc.uniforms.end(); ++i )
+    {
+        UniformRefData urd;
+
+        const StrA & uniBinding = i->first;
+        const StrA & uniName = i->second;
+
+        urd.id = mUniforms.find( uniName );
+        if( 0 == urd.id )
+        {
+            GN_ERROR( "Invalid uniform referencing to uniform named '%s', in shader '%s'.", uniName.cptr(), name.cptr() );
+            return false;
+        }
+
+        urd.ffp = sIsFfpUniformType( uniBinding, &urd.ffpType );
+        if( !urd.ffp )
+        {
+            // Make sure no programmable uniforms binding to FFP shader.
+            if( !data.value )
+            {
+                GN_ERROR( "Can't use non-FFP uniform named '%s', in FFP shader named '%s'.", uniName.cptr(), name.cptr() );
+                return false;
+            }
+
+            urd.shaderUniformHandle = data.value->getUniformHandle( uniBinding );
+
+            if( 0 == urd.shaderUniformHandle )
+            {
+                GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
+                    uniName.cptr(),
+                    name.cptr(),
+                    uniBinding.cptr() );
+                return false;
+            }
+        }
+
+        data.uniforms.push_back( urd );
+    }
+
+    // pre-allocate memory for dirty uniform array
+    data.dirtyUniforms.reserve( data.uniforms.size() );
+
+    // success
+    GN_ASSERT( data.dirtyUniforms.empty() );
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const StrA & name, const TechniqueDesc & desc )
+{
+    GN_GUARD;
+
+    data.name = name;
+
+    data.passes.resize( desc.passes.size() );
+
+    for( size_t iPass = 0; iPass < desc.passes.size(); ++iPass )
+    {
+        const PassDesc & passDesc = desc.passes[iPass];
+
+        PassData & passData = data.passes[iPass];
+
+        for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
+        {
+            const StrA & shaderName = passDesc.shaders[iShader];
+
+            passData.shaders[iShader] = mShaders.find( shaderName );
+
+            if( 0 == passData.shaders[iShader] )
+            {
+                GN_TRACE( "Technique '%s' is ignored, because shader '%s' is not found.", name.cptr(), shaderName.cptr() );
+                return false;
+            }
+ 
+            GN_ASSERT( mDesc.getShader(shaderName).type == (ShaderType)iShader );
+        }
+        passData.rsb = mDesc.rsb + desc.rsb + passDesc.rsb;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::effect::Effect::sSetFfpUniform( int32_t, const UniformData & )
 {
     GN_GUARD;
 

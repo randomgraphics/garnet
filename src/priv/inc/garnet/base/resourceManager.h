@@ -92,6 +92,10 @@ namespace GN
             , mNameChecker(checker)
             , mNullInstance(0)
         {
+            mLRUHead.prev = NULL;
+            mLRUHead.next = &mLRUTail;
+            mLRUTail.prev = &mLRUHead;
+            mLRUTail.next = NULL;
         }
 
         //!
@@ -355,48 +359,61 @@ namespace GN
         //!
         //! Remove resource from manager
         //!
-        void removeResourceHandle( HandleType handle )
+        void removeResourceByHandle( HandleType handle )
         {
             GN_GUARD;
-            if( !validResourceHandle(handle) )
-            {
+            if( validResourceHandle(handle) )
+                removeResourceByName( mResHandles[handle]->name );
+            else
                 GN_ERROR( "invalid resource handle: %d", handle );
-                return;
-            }
-            StringMap::iterator iter = mResNames.find( mResHandles[handle]->name );
-            GN_ASSERT( iter != mResNames.end() );
-            doDispose( mResHandles[handle] );
-            delete mResHandles[handle];
-            mResHandles.remove( handle );
-            mResNames.erase( iter );
             GN_UNGUARD;
         }
 
         //!
         //! Remove resource from manager (unimplemented)
         //!
-        void removeResourceName( const StrA & name )
+        void removeResourceByName( const StrA & name )
         {
             GN_GUARD;
+
+            // find the resource
             StringMap::iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
                 GN_ERROR( "invalid resource name: %s", name.cptr() );
                 return;
             }
+
+            // get the resource handle and pointer
             HandleType h = iter->second;
-            GN_ASSERT( mResHandles.validHandle( h ) );
-            doDispose( mResHandles[h] );
-            delete mResHandles[h];
+            ResDesc * r = mResHandles[h];
+            GN_ASSERT( r );
+
+            // dispose it
+            doDispose( r );
+
+            // remove it from handle and name manager
             mResHandles.remove( h );
             mResNames.erase( iter );
+
+            // remove it from LRU list
+            if( r->prev )
+            {
+                GN_ASSERT( r->next );
+                r->prev->next = r->next;
+                r->next->prev = r->prev;
+            }
+
+            // delete it
+            delete r;
+
             GN_UNGUARD;
         }
 
         //!
         //! Dispose specific resource
         //!
-        void disposeResourceHandle( HandleType h )
+        void disposeResourceByHandle( HandleType h )
         {
             GN_GUARD;
             if( !validResourceHandle( h ) )
@@ -411,7 +428,7 @@ namespace GN
         //!
         //! Dispose specific resource
         //!
-        void disposeResourceName( const StrA & name )
+        void disposeResourceByName( const StrA & name )
         {
             GN_GUARD;
             StringMap::const_iterator iter = mResNames.find( name );
@@ -420,7 +437,7 @@ namespace GN
                 GN_ERROR( "invalid resource name: %s", name.cptr() );
                 return;
             }
-            disposeResourceHandle( iter->second );
+            disposeResourceByHandle( iter->second );
             GN_UNGUARD;
         }
 
@@ -487,6 +504,12 @@ namespace GN
             StrA    name;
             void *  userData;
             bool    disposed;
+
+            // LRU list
+            ResDesc * prev;
+            ResDesc * next;
+
+            ResDesc() : userData(0), prev(0), next(0) {}
         };
 
         typedef std::map<StrA,HandleType>          StringMap;
@@ -494,6 +517,9 @@ namespace GN
 
         ResHandleMgr mResHandles;
         StringMap    mResNames;
+
+        ResDesc      mLRUHead;
+        ResDesc      mLRUTail;
 
         // global resource manipulators
         Creator      mCreator;
@@ -579,6 +605,17 @@ namespace GN
                 GN_ASSERT( ok );
                 item->disposed = false;
             }
+
+            // adjust access queue: move item to head of LRU list.
+            if( item->prev )
+            {
+                GN_ASSERT( item->next );
+                item->prev->next = item->next;
+                item->next->prev = item->prev;
+            }
+            item->next = mLRUHead.next;
+            item->prev = &mLRUHead;
+            mLRUHead.next = item;
 
             // success
             res = item->res;

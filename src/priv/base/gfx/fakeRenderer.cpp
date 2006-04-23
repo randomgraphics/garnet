@@ -104,8 +104,8 @@ namespace GN { namespace gfx
                 case CAPS_MAX_PRIMITIVES      : return 65535;
                 case CAPS_MAX_TEXTURE_STAGES  : return 8;
                 case CAPS_PER_STAGE_CONSTANT  : return 1;
-                case CAPS_PSCAPS              : return 0xFF;
-                case CAPS_VSCAPS              : return 0xFF;
+                case CAPS_PS                  : return 0xFF;
+                case CAPS_VS                  : return 0xFF;
                 default :
                     GN_ERROR( "invlid cap: %d", c );
                     return 0;

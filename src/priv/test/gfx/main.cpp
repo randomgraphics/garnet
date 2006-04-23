@@ -22,6 +22,9 @@ class Scene
 
         // create effect 0
         {
+            using namespace GN::gfx;
+            using namespace GN::gfx::effect;
+
             effect::EffectDesc desc;
 
             // define effect parameters
@@ -45,6 +48,7 @@ class Scene
                 "dcl_position v0 \n"
                 "m4x4 oPos, v0, c0";
             desc.shaders["vs.1.1"].uniforms["c0"] = "pvw";
+            desc.shaders["vs.1.1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_VS ), CondExp::sValue(VSCAPS_D3D_1_1) );
 
             // init vs1
             desc.shaders["arbvp1"].type = VERTEX_SHADER;
@@ -58,6 +62,7 @@ class Scene
                 "DP4 result.position.w, pvw[3], vertex.position; \n"
                 "END";
             desc.shaders["arbvp1"].uniforms["m0"] = "pvw";
+            desc.shaders["arbvp1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_VS ), CondExp::sValue(VSCAPS_OGL_ARB1) );
 
             // init vs2
             desc.shaders["fixvs"].type = VERTEX_SHADER;
@@ -69,6 +74,7 @@ class Scene
                 "ps.1.1 \n"
                 "mov r0, c0";
             desc.shaders["ps.1.1"].uniforms["c0"] = "color";
+            desc.shaders["ps.1.1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_PS ), CondExp::sValue(PSCAPS_D3D_1_1) );
 
             // init ps1
             desc.shaders["arbfp1"].type = PIXEL_SHADER;
@@ -78,28 +84,27 @@ class Scene
                 "MOV result.color, program.local[0]; \n"
                 "END";
             desc.shaders["arbfp1"].uniforms["l0"] = "color";
+            desc.shaders["arbfp1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_PS ), CondExp::sValue(PSCAPS_OGL_ARB1) );
 
 			// init ps2
 			desc.shaders["fixps"].type = PIXEL_SHADER;
 
             // create tech0
-            desc.techniques["t0"].passes.resize(1);
-            desc.techniques["t0"].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
-            desc.techniques["t0"].passes[0].shaders[PIXEL_SHADER] = "ps.1.1";
+            desc.techniques["d3dWithShader"].passes.resize(1);
+            desc.techniques["d3dWithShader"].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
+            desc.techniques["d3dWithShader"].passes[0].shaders[PIXEL_SHADER] = "ps.1.1";
 
             // create tech1
-            desc.techniques["t1"].passes.resize(1);
-            desc.techniques["t1"].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
-            desc.techniques["t1"].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
+            desc.techniques["oglWithShader"].passes.resize(1);
+            desc.techniques["oglWithShader"].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
+            desc.techniques["oglWithShader"].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
 
             // create tech2
-            desc.techniques["t2"].passes.resize(1);
-            desc.techniques["t2"].passes[0].shaders[VERTEX_SHADER] = "fixvs";
-            desc.techniques["t2"].passes[0].shaders[PIXEL_SHADER] = "fixps";
+            desc.techniques["ffp"].passes.resize(1);
+            desc.techniques["ffp"].passes[0].shaders[VERTEX_SHADER] = "fixvs";
+            desc.techniques["ffp"].passes[0].shaders[PIXEL_SHADER] = "fixps";
 
             if( !eff0.init( desc ) ) return false;
-
-            eff0.setActiveTechniqueByName( gRenderer.getD3DDevice() ? "t0" : "t1" );
         }
 
         // success
@@ -228,17 +233,13 @@ public:
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
-        /* quad 4
+        //* quad 4
+        for( size_t i = 0; i < eff0.getNumPasses(); ++i )
         {
-            size_t n = eff0.drawBegin();
-            for( size_t i = 0; i < n; ++i )
-            {
-                eff0.passBegin( i );
-                eff0.commitChanges();
-                r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
-                eff0.passEnd();
-            }
-            eff0.drawEnd();
+            eff0.passBegin( i );
+            eff0.commitChanges();
+            r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
+            eff0.passEnd();
         }//*/
 
         // a wireframe box

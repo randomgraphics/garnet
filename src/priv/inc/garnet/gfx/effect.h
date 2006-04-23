@@ -46,13 +46,16 @@ namespace GN { namespace gfx {
 
                 ALU_ADD,
                 ALU_DEC,
+             // ALU_NEG,
 
                 BIT_AND,
                 BIT_OR,
                 BIT_XOR,
+             // BIT_NOT,
 
                 REL_AND,
                 REL_OR,
+             // REL_NOT,
 
                 NUM_OPCODES,
             };
@@ -85,8 +88,14 @@ namespace GN { namespace gfx {
                     case CMP_NE  : return a0 != a1;
                     case CMP_GE  : return a0 >= a1;
                     case CMP_GT  : return a0 > a1;
+
+                    case BIT_AND : return a0 & a1;
+                    case BIT_OR  : return a0 | a1;
+                    case BIT_XOR : return a0 ^ a1;
+
                     case REL_AND : return a0 && a1;
                     case REL_OR  : return a0 || a1;
+
                     default : GN_UNIMPL(); return 0;
                 }
             }
@@ -205,6 +214,7 @@ namespace GN { namespace gfx {
             }
 
             //@{
+            //! \name CondExp constructors
 
             //!
             //! make new CondExp from gfxcaps
@@ -228,6 +238,27 @@ namespace GN { namespace gfx {
                 exp.mTokens[0].type = VALUE;
                 exp.mTokens[0].value = v;
                 return exp;
+            }
+
+            static CondExp sBitAnd( const CondExp & a0, const CondExp & a1 )
+            {
+                CondExp c;
+                sCombine( c, BIT_AND, a0, a1 );
+                return c;
+            }
+
+            static CondExp sBitOr( const CondExp & a0, const CondExp & a1 )
+            {
+                CondExp c;
+                sCombine( c, BIT_OR, a0, a1 );
+                return c;
+            }
+
+            static CondExp sBitXor( const CondExp & a0, const CondExp & a1 )
+            {
+                CondExp c;
+                sCombine( c, BIT_XOR, a0, a1 );
+                return c;
             }
 
 #define GN_CONDEXP_OPERATOR( x, y ) \
@@ -257,7 +288,7 @@ namespace GN { namespace gfx {
         //!
         struct TextureDesc
         {
-            StrA defaultValue; //!< Default texture resource name. Empty means no default value.
+            // TODO: filters, wraps ...
         };
 
         //!
@@ -371,6 +402,8 @@ namespace GN { namespace gfx {
             }
         };
 
+        typedef uint32_t EffectItemID; //!< effect item (such as technique, uniform and texture) ID.
+
         //!
         //! Effect class
         //!
@@ -399,7 +432,7 @@ namespace GN { namespace gfx {
             void quit();
             bool ok() const { return MyParent::ok(); }
         private:
-            void clear() { mDrawBegun = false; mPassBegun = false; }
+            void clear() { mPassBegun = false; }
             //@}
 
             // ********************************
@@ -408,22 +441,20 @@ namespace GN { namespace gfx {
             //! Standard call sequence:
             //! <pre>
             //!     set_common_uniforms_and_textures();
-            //!     size_t numPasses;
-            //!     if( myEffect->drawBegin( &numPasses ) )
+            //!     size_t numPasses = myEffect->getNumPasses() )
+            //!     for( size_t i = 0; i < numPasses; ++i )
             //!     {
-            //!         for( size_t i = 0; i < numPasses; ++i )
+            //!         myEffect->passBegin( i );
+            //!         for_each_mesh
             //!         {
-            //!             myEffect->passBegin( i );
-            //!             for_each_mesh
-            //!             {
-            //!                 set_mesh_specific_uniforms_and_textures();
-            //!                 myEffect->commitChanges();
-            //!                 draw_the_mesh();
-            //!             }
-            //!             myEffect->passEnd();
+            //!             set_mesh_specific_uniforms_textures();
+            //!             set_mesh_vertex_and_index_buffers();
+            //!             myEffect->commitChanges();
+            //!             draw_the_mesh();
             //!         }
-            //!         myEffect->drawEnd();
+            //!         myEffect->passEnd();
             //!     }
+            //!     myEffect->drawEnd();
             //! </pre>
             // ********************************
         public:
@@ -431,18 +462,12 @@ namespace GN { namespace gfx {
             //@{
 
             //!
-            //! Begin rendering. Return number of rendering passes.
+            //! Get rendering pass count. This value may change when active technique changes.
             //!
-            size_t drawBegin() const;
+            size_t getNumPasses() const;
 
             //!
-            //! End rendering.
-            //!
-            void drawEnd() const { GN_ASSERT(mDrawBegun); mDrawBegun = false; }
-
-            //!
-            //! apply render state of specific pass
-            //! Must be called between drawBegin() and drawEnd().
+            //! apply render state of specific pass.
             //!
             void passBegin( size_t ) const;
 
@@ -468,14 +493,14 @@ namespace GN { namespace gfx {
             //@{
 
             //!
-            //! get technique handle
+            //! get technique ID
             //!
-            uint32_t getTechniqueHandle( const StrA & name ) const;
+            EffectItemID getTechniqueID( const StrA & name ) const;
 
             //!
             //! set active technique. 0 means the default one.
             //!
-            void setActiveTechnique( uint32_t ) const;
+            void setActiveTechnique( EffectItemID ) const;
 
             //!
             //! Set active technique.
@@ -491,40 +516,22 @@ namespace GN { namespace gfx {
         public:
 
             //@{
-
-            //!
-            //! Get handle of uniform variable
-            //!
-            uint32_t getUniformHandle( const StrA & ) const;
-
-            void setUniform( uint32_t, const UniformValue & ) const;
-
+            EffectItemID getUniformID( const StrA & ) const;
+            void setUniform( EffectItemID, const UniformValue & ) const;
             void setUniformByName( const StrA &, const UniformValue & ) const;
-
             //@}
 
             // ********************************
             //! \name texture management
+            //!
+            //! Note that effect class won't hold reference of the textures.
             // ********************************
         public:
 
             //@{
-
-            //!
-            //! get texture handle
-            //!
-            uint32_t getTextureHandle( const StrA & ) const;
-
-            //!
-            //! set texture
-            //!
-            void setTexture( uint32_t key, uint32_t id ) const;
-
-            //!
-            //! set texture by name
-            //!
-            void setTextureByName( const StrA & name, uint32_t id ) const;
-
+            EffectItemID getTextureID( const StrA & ) const;
+            void setTexture( EffectItemID, const Texture * ) const;
+            void setTextureByName( const StrA &, const Texture * ) const;
             //@}
 
             // ********************************
@@ -532,34 +539,22 @@ namespace GN { namespace gfx {
             // ********************************
         private:
 
-            enum FfpParameterType
-            {
-                FFP_TRANSFORM_WORLD,
-                FFP_TRANSFORM_VIEW,
-                FFP_TRANSFORM_PROJ,
-                FFP_VIEWPORT,
-                FFP_LIGHT0_POS,
-                FFP_LIGHT0_DIFFUSE,
-                FFP_MATERIAL_DIFFUSE,
-                FFP_MATERIAL_SPECULAR,
-            };
-
             struct TextureData
             {
-                StrA     name;
-                uint32_t value;
+                StrA            name;  // texture name
+                const Texture * value;
             };
 
             struct TextureRefData
             {
-                uint32_t handle;
-                uint32_t stage;
+                EffectItemID id; // texture ID that is referenced.
+                uint32_t     stage;
             };
 
             struct ShaderRefData
             {
-                uint32_t shader; // shader handle
-                size_t   index;  // index to shader's uniform referencing list
+                EffectItemID id;    // shader ID that is referenced
+                size_t       index; // index to ShaderData::uniforms: which uniform are we referencing to.
             };
 
             struct UniformData
@@ -571,14 +566,13 @@ namespace GN { namespace gfx {
 
             struct UniformRefData
             {
-                StrA     binding; //!< uniform binding name
-                uint32_t handle;  //!< handle to mUniforms
-                bool     ffp;     //!< is it binding to fixed functional pipeline?
+                EffectItemID id; //!< uniform ID that is being referenced.
                 union
                 {
-                    uint32_t         shaderUniformHandle; // shader uniform handle. Effective only when ffp is false.
-                    FfpParameterType ffpParameterType;    // ffp parameter type. Effective only when ffp is true.
+                    uint32_t shaderUniformHandle; //!< shader-specific uniform handle. Effective only when ffp is false.
+                    int32_t  ffpType; //!< FFP uniform type. Effective only when ffp is true.
                 };                
+                bool ffp;     //!< is this binding to fixed functional pipeline? (determined by binding name)
             };
 
             struct ShaderData
@@ -587,12 +581,12 @@ namespace GN { namespace gfx {
                 AutoRef<Shader>             value;
                 std::vector<TextureRefData> textures;      // texture referencing list.
                 std::vector<UniformRefData> uniforms;      // uniform referencing list.
-                std::set<size_t>            dirtyUniforms; // dirty uniform list. Each item is a index into the shader's uniform list.
+                std::vector<size_t>         dirtyUniforms; // dirty uniform list. Each item is a index into ShaderData::uniforms
             };
 
             struct PassData
             {
-                uint32_t shaders[NUM_SHADER_TYPES]; //!< shader handles of this pass.
+                EffectItemID shaders[NUM_SHADER_TYPES]; //!< shader IDs of this pass.
                 RenderStateBlockDesc rsb; //!< render state block
             };
 
@@ -605,8 +599,8 @@ namespace GN { namespace gfx {
             template<typename T>
             struct NamedItemManager
             {
-                std::map<StrA,uint32_t>   names;
-                HandleManager<T,uint32_t> items;
+                std::map<StrA,EffectItemID>   names;
+                HandleManager<T,EffectItemID> items;
 
                 bool add( const StrA & name, const T & item )
                 {
@@ -616,7 +610,8 @@ namespace GN { namespace gfx {
                     return true;
                 }
                 void clear() { names.clear(); items.clear(); }
-                bool empty() const { return names.empty() && items.empty(); }
+                bool empty() const { GN_ASSERT(names.size() == items.size()); return items.empty(); }
+                size_t size() const { GN_ASSERT(names.size() == items.size()); return items.size(); }
                 uint32_t find( const StrA & name ) const
                 {
                     if( 0 == name ) return 0;
@@ -635,7 +630,6 @@ namespace GN { namespace gfx {
             NamedItemManager<TechniqueData> mTechniques;
             
             mutable uint32_t mActiveTechnique;
-            mutable bool     mDrawBegun;
             mutable bool     mPassBegun;
             mutable size_t   mActivePass;
 
@@ -645,8 +639,9 @@ namespace GN { namespace gfx {
         private:
 
             bool createEffect(); // called by init()
-
-            static void sSetFfpParameter( FfpParameterType, const UniformData & );
+            bool createShader( ShaderData &, const StrA &, const ShaderDesc & );
+            bool createTechnique( TechniqueData &, const StrA &, const TechniqueDesc & );
+            static void sSetFfpUniform( int32_t, const UniformData & );
         };
 
         //!

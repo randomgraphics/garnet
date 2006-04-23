@@ -72,7 +72,7 @@ namespace CEGUI
 
         void destroy()
         {
-            if( mTextureHandle ) gTexDict.removeResourceHandle(mTextureHandle), mTextureHandle = 0;
+            if( mTextureHandle ) gTexDict.removeResourceByHandle(mTextureHandle), mTextureHandle = 0;
             GN::safeMemFree(mMemBuffer);
         }
     };
