@@ -109,7 +109,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
 
     if( LOCK_RO != mLockFlag )
     {
-        OGLAutoAttribStack autoAttribStack( GL_CURRENT_BIT );
+        OGLAutoAttribStack autoAttribStack( 0, GL_CLIENT_VERTEX_ARRAY_BIT );
         
         GN_ASSERT(
             mLockOffset < getSizeInBytes() &&

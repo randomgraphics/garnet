@@ -26,15 +26,26 @@
 //!
 //! Automatically pop OGL attributes while out of scope.
 //!
-struct OGLAutoAttribStack
+class OGLAutoAttribStack
 {
+    GLuint mBits;
+    GLuint mClientBits;
+
+public:
     //!
     //! Ctor
     //!
-    OGLAutoAttribStack( GLuint bits = GL_ALL_ATTRIB_BITS )
+    OGLAutoAttribStack( GLuint bits = GL_ALL_ATTRIB_BITS, GLuint clientBits = GL_CLIENT_ALL_ATTRIB_BITS )
+        : mBits( bits ), mClientBits( clientBits )
     {
-        GN_ASSERT( bits );
-        GN_OGL_CHECK( glPushAttrib( bits ) );
+        if( bits )
+        {
+            GN_OGL_CHECK( glPushAttrib( bits ) );
+        }
+        if( clientBits )
+        {
+            GN_OGL_CHECK( glPushClientAttrib( clientBits ) );
+        }
     }
 
     //!
@@ -42,7 +53,14 @@ struct OGLAutoAttribStack
     //!
     ~OGLAutoAttribStack()
     {
-        GN_OGL_CHECK( glPopAttrib() );
+        if( mBits )
+        {
+            GN_OGL_CHECK( glPopAttrib() );
+        }
+        if( mClientBits )
+        {
+            GN_OGL_CHECK( glPopClientAttrib() );
+        }
     }
 };
 
