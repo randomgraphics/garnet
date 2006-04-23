@@ -106,18 +106,22 @@ public:
         ps0.textures[1] = "t1";
 
         // create 1 technique
-        TechniqueDesc & tech0 = desc.techniques["t0"];
+        TechniqueDesc tech0;
+        tech0.name = "t0";
         tech0.passes.resize(1);
         PassDesc & p0 = tech0.passes[0];
         p0.shaders[VERTEX_SHADER] = "vs0";
         p0.shaders[PIXEL_SHADER] = "ps0";
+        desc.techniques.push_back( tech0 );
 
         // create another technique
-        TechniqueDesc & tech1 = desc.techniques["t1"];
+        TechniqueDesc tech1;
+        tech1.name = "t1";
         tech1.passes.resize(1);
         PassDesc & p1 = tech1.passes[0];
         p1.shaders[VERTEX_SHADER] = "vs1";
         p1.shaders[PIXEL_SHADER] = "ps0";
+        desc.techniques.push_back( tech1 );
     }
 
     void doDraw( const GN::gfx::effect::Effect & e )
@@ -257,7 +261,7 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
-        PassDesc & p0 = desc.techniques["t0"].passes[0];
+        PassDesc & p0 = desc.techniques[0].passes[0];
         GN::RuntimeAssertBehavior rab = GN::setRuntimeAssertBehavior( GN::RAB_LOG_ONLY );
         p0.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
         GN::setRuntimeAssertBehavior( rab );
@@ -275,7 +279,7 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
-        PassDesc & p0 = desc.techniques["t0"].passes[0];
+        PassDesc & p0 = desc.techniques[0].passes[0];
         p0.shaders[VERTEX_SHADER] = "haha";
 
         Effect e;
@@ -291,7 +295,7 @@ public:
         EffectDesc desc;
         initDesc1( desc );
 
-        PassDesc & p0 = desc.techniques["t0"].passes[0];
+        PassDesc & p0 = desc.techniques[0].passes[0];
         p0.shaders[VERTEX_SHADER] = "ps0";
 
         Effect e;
@@ -308,7 +312,7 @@ public:
         initDesc1( desc );
 
         GN::RuntimeAssertBehavior rab = GN::setRuntimeAssertBehavior( GN::RAB_LOG_ONLY );
-        desc.techniques["t0"].rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
+        desc.techniques[0].rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
         GN::setRuntimeAssertBehavior( rab );
 
         Effect e;
