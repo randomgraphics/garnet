@@ -89,20 +89,26 @@ class Scene
 			// init ps2
 			desc.shaders["fixps"].type = PIXEL_SHADER;
 
+            // allocate 3 techniques
+            desc.techniques.resize( 3 );
+
             // create tech0
-            desc.techniques["d3dWithShader"].passes.resize(1);
-            desc.techniques["d3dWithShader"].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
-            desc.techniques["d3dWithShader"].passes[0].shaders[PIXEL_SHADER] = "ps.1.1";
+            desc.techniques[0].name = "d3dWithShader";
+            desc.techniques[0].passes.resize(1);
+            desc.techniques[0].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
+            desc.techniques[0].passes[0].shaders[PIXEL_SHADER] = "ps.1.1";
 
             // create tech1
-            desc.techniques["oglWithShader"].passes.resize(1);
-            desc.techniques["oglWithShader"].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
-            desc.techniques["oglWithShader"].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
+            desc.techniques[1].name = "oglWithShader";
+            desc.techniques[1].passes.resize(1);
+            desc.techniques[1].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
+            desc.techniques[1].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
 
             // create tech2
-            desc.techniques["ffp"].passes.resize(1);
-            desc.techniques["ffp"].passes[0].shaders[VERTEX_SHADER] = "fixvs";
-            desc.techniques["ffp"].passes[0].shaders[PIXEL_SHADER] = "fixps";
+            desc.techniques[2].name = "ffp";
+            desc.techniques[2].passes.resize(1);
+            desc.techniques[2].passes[0].shaders[VERTEX_SHADER] = "fixvs";
+            desc.techniques[2].passes[0].shaders[PIXEL_SHADER] = "fixps";
 
             if( !eff0.init( desc ) ) return false;
         }
