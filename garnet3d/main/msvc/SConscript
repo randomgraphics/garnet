@@ -25,7 +25,7 @@ absdir = Dir(target_dir).srcnode().abspath
 if not os.path.exists( absdir ) : os.makedirs( absdir )
 
 # compose command line arguments
-cmdargs = 'variant_str=%s compiler=%s'%(variant,compiler)
+cmdargs = 'variant=%s compiler=%s'%(variant,compiler)
 
 # collect source files
 sources = []
