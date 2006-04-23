@@ -25,8 +25,6 @@ TODO
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
-    - rewrite effect class, make the code more consice.
-      - remove drawBegin() and drawEnd()
     - render target management
       - D3D: msaa
       - OGL: FBO
@@ -43,7 +41,6 @@ TODO
 - p2
   - GFX system
     - UT of LRU list in resource manager
-    - seperate sampler and texture, like D3D.
     - consider remove drawBegin() and drawEnd()
     - renderer state dump system
     - UT to make sure OGL resource creation/deletion do not affect renderer states
