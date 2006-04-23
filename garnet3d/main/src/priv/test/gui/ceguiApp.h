@@ -55,7 +55,7 @@ public:
                 }
 
                 StrA name;
-                name.format( "c:/devel/cegui/datafiles/%s", filename.c_str() );
+                name.format( "c:/TOOLS/cegui/datafiles/%s", filename.c_str() );
 
                 AnsiFile fp;
                 if( !fp.open( name, "rb" ) )

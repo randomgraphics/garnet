@@ -4,4 +4,5 @@ sources = [
     'ceguiTexture.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+if GN.conf['has_cegui']: r.addCompileFlags( CPPDEFINES = ['HAS_CEGUI'] )
 Return( 'r' )
