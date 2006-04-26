@@ -4,7 +4,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::StrA GN::core::searchResource( const StrA & name )
+GN::StrA GN::core::searchResourceFile( const StrA & name )
 {
     GN_GUARD;
 

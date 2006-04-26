@@ -51,7 +51,7 @@ static bool sCreateTexture( Texture * & result, const StrA & name, void * )
     }
 
     // get resource path
-    StrA path = GN::core::searchResource( name );
+    StrA path = GN::core::searchResourceFile( name );
     if( path.empty() )
     {
         GN_ERROR( "Texture '%s' creation failed: path not found.", name.cptr() );
@@ -62,7 +62,7 @@ static bool sCreateTexture( Texture * & result, const StrA & name, void * )
 
     // open file
     AnsiFile fp;
-    if( !fp.open( path::resolve(path), "rb" ) )
+    if( !fp.open( path::toNative(path), "rb" ) )
     {
         GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;

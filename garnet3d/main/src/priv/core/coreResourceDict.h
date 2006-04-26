@@ -6,24 +6,73 @@
 //! \author  chenlee (2006.2.11)
 // *****************************************************************************
 
+#include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
 
 namespace GN { namespace core
 {
     //!
-    //! Search specific resoure on various locations of disk.
+    //! Search resoure file on disk.
     //!
-    //! Return path of the resouce. Return empty if not found.
+    //! Return path of the resouce. Return empty string if not found.
     //!
-    StrA searchResource( const StrA & name );
+    GN_PUBLIC StrA searchResourceFile( const StrA & name );
+
+    //!
+    //! Raw resource dictionary class of core module
+    //!
+    class CoreRawResourceDict : public StdClass
+    {
+        GN_DECLARE_STDCLASS( CoreRawResourceDict, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        CoreRawResourceDict()          { clear(); }
+        virtual ~CoreRawResourceDict() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() { mDict.clear(); }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        RawResourceDictionary mDict;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
 
     //!
     //! Shader dictionary class of core module
     //!
     class CoreShaderDict : public StdClass
     {
-         GN_DECLARE_STDCLASS( CoreShaderDict, StdClass );
+        GN_DECLARE_STDCLASS( CoreShaderDict, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -71,7 +120,7 @@ namespace GN { namespace core
     //!
     class CoreTextureDict : public StdClass
     {
-         GN_DECLARE_STDCLASS( CoreTextureDict, StdClass );
+        GN_DECLARE_STDCLASS( CoreTextureDict, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -119,7 +168,7 @@ namespace GN { namespace core
     //!
     class CoreEffectDict : public StdClass
     {
-         GN_DECLARE_STDCLASS( CoreEffectDict, StdClass );
+        GN_DECLARE_STDCLASS( CoreEffectDict, StdClass );
 
         // ********************************
         // ctor/dtor

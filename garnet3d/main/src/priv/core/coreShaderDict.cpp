@@ -62,7 +62,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
 
     // get resouce path
-    path = core::searchResource( path );
+    path = core::searchResourceFile( path );
     if( path.empty() )
     {
         GN_ERROR( "Shader '%s' creation failed: path not found.", name.cptr() );
@@ -73,7 +73,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
 
     // open file
     AnsiFile fp;
-    if( !fp.open( path::resolve(path), "rt" ) )
+    if( !fp.open( path::toNative(path), "rt" ) )
     {
         GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
