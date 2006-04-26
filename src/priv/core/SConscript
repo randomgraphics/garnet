@@ -3,6 +3,7 @@ Import( 'GN' )
 sources = [
     'core.cpp',
     'coreEffectDict.cpp',
+    'coreRawResourceDict.cpp',
     'coreSearchResource.cpp',
     'coreShaderDict.cpp',
     'coreTextureDict.cpp',
