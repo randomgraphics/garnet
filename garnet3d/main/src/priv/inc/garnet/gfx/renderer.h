@@ -24,8 +24,7 @@
     GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigRestore; \
     GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDispose; \
     GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDestroy; \
-    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigWindowClosing; \
-    GN_PUBLIC ::GN::SharedLib     GN::gfx::Renderer::msSharedLib;
+    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigWindowClosing;
 
 namespace GN { namespace gfx
 {
@@ -1256,7 +1255,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        Renderer() {}
+        Renderer() : mSharedLib(0) {}
 
         //!
         //! Dtor
@@ -1275,7 +1274,7 @@ namespace GN { namespace gfx
 
     private:
 
-        static GN_PUBLIC SharedLib msSharedLib;
+        SharedLib * mSharedLib;
         friend Renderer * createRenderer( RendererAPI );
         friend void deleteRenderer();
 

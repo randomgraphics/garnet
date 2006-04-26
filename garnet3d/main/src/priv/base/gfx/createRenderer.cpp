@@ -98,10 +98,14 @@ GN::gfx::Renderer * GN::gfx::createRenderer( RendererAPI api )
         case API_OGL   : dllName = "GNgfxOGL"; break;
         default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }
-    if( !Renderer::msSharedLib.load( dllName ) ) return 0;
-    creator = (CreateRendererFunc)Renderer::msSharedLib.getSymbol( "GNgfxCreateRenderer" );
+    std::auto_ptr<SharedLib> dll( new SharedLib );
+    if( !dll->load( dllName ) ) return 0;
+    creator = (CreateRendererFunc)dll->getSymbol( "GNgfxCreateRenderer" );
     if( !creator ) return 0;
-    return creator();
+    Renderer * r = creator();
+    if( 0 == r ) return 0;
+    r->mSharedLib = dll.release();
+    return r;
 #endif
     GN_UNGUARD;
 }
@@ -113,8 +117,12 @@ void GN::gfx::deleteRenderer()
 {
     GN_GUARD;
 
-    delete gRendererPtr;
-    Renderer::msSharedLib.free();
+    if( gRendererPtr )
+    {
+        SharedLib * dll = gRenderer.mSharedLib;
+        delete gRendererPtr;
+        delete dll;
+    }
 
     GN_UNGUARD;
 }
