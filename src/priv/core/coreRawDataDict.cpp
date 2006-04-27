@@ -8,10 +8,10 @@
 using namespace GN;
 using namespace GN::core;
 
-struct CoreRawResource : public RawResource
+struct CoreRawData : public RawData
 {
     std::vector<uint8_t> rawData;
-    CoreRawResource( size_t sz ) : rawData(sz) {}
+    CoreRawData( size_t sz ) : rawData(sz) {}
     virtual size_t size() const { GN_ASSERT(!rawData.empty()); return rawData.size(); }
     virtual void * data() const { GN_ASSERT(!rawData.empty()); return (void*)&rawData[0]; }
 };
@@ -19,10 +19,10 @@ struct CoreRawResource : public RawResource
 //
 // 
 // -----------------------------------------------------------------------------
-static bool sCreateNullResource( RawResource * & result, const StrA &, void * )
+static bool sCreateNullResource( RawData * & result, const StrA &, void * )
 {
     GN_GUARD;
-    CoreRawResource * r = new CoreRawResource(1);
+    CoreRawData * r = new CoreRawData(1);
     r->rawData[0] = 0;
     result = r;
     return true;
@@ -32,7 +32,7 @@ static bool sCreateNullResource( RawResource * & result, const StrA &, void * )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sCreateResource( RawResource * & result, const StrA & name, void * )
+static bool sCreateResource( RawData * & result, const StrA & name, void * )
 {
     GN_GUARD;
 
@@ -55,15 +55,15 @@ static bool sCreateResource( RawResource * & result, const StrA & name, void * )
     }
 
     // read file content
-    CoreRawResource * r = new CoreRawResource( fp.size() );
+    CoreRawData * r = new CoreRawData( fp.size() );
     if( 0 == fp.size() )
     {
-        r = new CoreRawResource(1);
+        r = new CoreRawData(1);
         r->rawData[0] = 0;
     }
     else
     {
-        r = new CoreRawResource( fp.size() );
+        r = new CoreRawData( fp.size() );
         if( fp.size() != fp.read( &r->rawData[0], fp.size() ) )
         {
             GN_ERROR( "Raw resource '%s' creation failed: read file '%s' error.", name.cptr(), path.cptr() );
@@ -82,7 +82,7 @@ static bool sCreateResource( RawResource * & result, const StrA & name, void * )
 //
 //
 // -----------------------------------------------------------------------------
-static void sDeleteResource( RawResource * & ptr, void * )
+static void sDeleteResource( RawData * & ptr, void * )
 {
     GN::safeDelete( ptr );
 }
@@ -94,12 +94,12 @@ static void sDeleteResource( RawResource * & ptr, void * )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::core::CoreRawResourceDict::init()
+bool GN::core::CoreRawDataDict::init()
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::core::CoreRawResourceDict, () );
+    GN_STDCLASS_INIT( GN::core::CoreRawDataDict, () );
 
     // register functors
     mDict.setCreator( &sCreateResource );
@@ -115,7 +115,7 @@ bool GN::core::CoreRawResourceDict::init()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::core::CoreRawResourceDict::quit()
+void GN::core::CoreRawDataDict::quit()
 {
     GN_GUARD;
 

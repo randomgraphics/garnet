@@ -22,9 +22,9 @@ namespace GN { namespace core
     //!
     //! Raw resource dictionary class of core module
     //!
-    class CoreRawResourceDict : public StdClass
+    class CoreRawDataDict : public StdClass
     {
-        GN_DECLARE_STDCLASS( CoreRawResourceDict, StdClass );
+        GN_DECLARE_STDCLASS( CoreRawDataDict, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -32,8 +32,8 @@ namespace GN { namespace core
 
         //@{
     public:
-        CoreRawResourceDict()          { clear(); }
-        virtual ~CoreRawResourceDict() { quit(); }
+        CoreRawDataDict()          { clear(); }
+        virtual ~CoreRawDataDict() { quit(); }
         //@}
 
         // ********************************
@@ -59,7 +59,7 @@ namespace GN { namespace core
         // ********************************
     private:
 
-        RawResourceDictionary mDict;
+        RawDataDictionary mDict;
 
         // ********************************
         // private functions

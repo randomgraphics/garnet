@@ -11,12 +11,12 @@
 //!
 //! global raw resource dictionary
 //!
-#define gRawResourceDict (GN::core::RawResourceDictionary::sGetInstance())
+#define gRawResourceDict (GN::core::RawDataDictionary::sGetInstance())
 
 //!
 //! pointer to global raw resource dictionary
 //!
-#define gRawResourceDictPtr (GN::core::RawResourceDictionary::sGetInstancePtr())
+#define gRawResourceDictPtr (GN::core::RawDataDictionary::sGetInstancePtr())
 
 namespace GN
 {
@@ -58,14 +58,9 @@ namespace GN
     namespace core
     {
         //!
-        //! Global log signal
+        //! Represent raw data block
         //!
-        extern GN_PUBLIC Signal2<void,const LogDesc &, const char *> gSigLog;
-
-        //!
-        //! Represent raw resource data block
-        //!
-        struct RawResource : public NoCopy
+        struct RawData : public NoCopy
         {
             //!
             //! get data size
@@ -81,7 +76,12 @@ namespace GN
         //!
         //! Raw resource manager class (singleton)
         //!
-        typedef ResourceManager<RawResource*> RawResourceDictionary;
+        typedef ResourceManager<RawData*,true> RawDataDictionary;
+
+        //!
+        //! Global log signal
+        //!
+        extern GN_PUBLIC Signal2<void,const LogDesc &, const char *> gSigLog;
     }
 }
 
