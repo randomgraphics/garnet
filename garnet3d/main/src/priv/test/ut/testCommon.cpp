@@ -7,6 +7,8 @@
 //
 int myInit( int /*argc*/, const char * /*argv*/[] )
 {
+    GN::enableCRTMemoryCheck();
+
     // setup environment variables to control log behavior.
     GN::putEnv( "GN_LOG_FILENAME", "GNut.log.txt" );
     GN::putEnv( "GN_LOG_QUIET", "1" );

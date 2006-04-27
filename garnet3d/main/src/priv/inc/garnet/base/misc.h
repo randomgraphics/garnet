@@ -220,6 +220,11 @@ namespace GN
     void sleep( uint32_t microSeconds );
 
     //!
+    //! enable CRT memory leak checking. Currently only work for MSVC compiler
+    //!
+    void enableCRTMemoryCheck();
+
+    //!
     //! Hard to explain in English, please see code by your self :)
     //!
     struct ScopeBool

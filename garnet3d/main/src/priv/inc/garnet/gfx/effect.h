@@ -6,16 +6,6 @@
 //! \author  chenlee (2006.1.7)
 // *****************************************************************************
 
-//!
-//! global effect dictionary
-//!
-#define gEffectDict (GN::gfx::EffectDictionary::sGetInstance())
-
-//!
-//! pointer to global effect dictionary
-//!
-#define gEffectDictPtr (GN::gfx::EffectDictionary::sGetInstancePtr())
-
 namespace GN { namespace gfx {
     //!
     //! Graphics effect descriptor
@@ -638,11 +628,6 @@ namespace GN { namespace gfx {
         bool createTechnique( TechniqueData &, const EffectDesc::TechniqueDesc & );
         static void sSetFfpUniform( int32_t, const UniformData & );
     };
-
-    //!
-    //! Effect manager class (singleton)
-    //!
-    typedef ResourceManager<Effect*,true> EffectDictionary;
 }}
 
 #if GN_ENABLE_INLINE

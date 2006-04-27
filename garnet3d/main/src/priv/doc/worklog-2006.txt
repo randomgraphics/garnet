@@ -75,6 +75,9 @@ TODO
 WORKLOG
 =======
 
+- 2006.4.27
+  - redesign resource manager classes to avoid using singleton
+
 - 2006.4.11
   - add: user-supplied hints to shader creation.
 

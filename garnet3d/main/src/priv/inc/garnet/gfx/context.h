@@ -277,29 +277,14 @@ namespace GN { namespace gfx
         inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
 
         //!
-        //! Set shaders by handle. Set to 0 to use fixed pipeline.
-        //!
-        inline void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
-
-        //!
         //! Set vertex shader. Set to NULL to use fixed pipeline.
         //!
         inline void setVtxShader( const Shader * s );
 
         //!
-        //! Set vertex shader by handle.
-        //!
-        inline void setVtxShaderHandle( ShaderDictionary::HandleType h );
-
-        //!
         //! Set pixel shader. Set to NULL to use fixed pipeline.
         //!
         inline void setPxlShader( const Shader * s );
-
-        //!
-        //! Set pixel shader by handle. Set 0 to use fixed function pipeline
-        //!
-        inline void setPxlShaderHandle( ShaderDictionary::HandleType h );
 
         //!
         //! Set render state block.
@@ -375,11 +360,6 @@ namespace GN { namespace gfx
         inline void setTexture( size_t stage, const Texture * tex );
 
         //!
-        //! Set a texture by handle.
-        //!
-        inline void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
-
-        //!
         //! set textures, from stage[start] to stage[start+numtex-1].
         //!
         //! \param texlist texture list
@@ -387,11 +367,6 @@ namespace GN { namespace gfx
         //! \param count   number of textures
         //!
         inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
-
-        //!
-        //! set textures by handle.
-        //!
-        inline void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
 
         //!
         //! Set vertex format.

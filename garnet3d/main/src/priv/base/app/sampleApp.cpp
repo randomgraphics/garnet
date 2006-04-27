@@ -10,6 +10,15 @@ float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 //
 //
 // -----------------------------------------------------------------------------
+GN::app::SampleApp::SampleApp() : mShowFps(true)
+{
+    enableCRTMemoryCheck();
+    mFps.reset();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 int GN::app::SampleApp::run( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
@@ -66,26 +75,13 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
-    if( input::KEY_R == ke.code && !ke.status.down ) reloadGfxResources();
+    if( input::KEY_R == ke.code && !ke.status.down ) reloadResources();
     if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
     {
         GN::gfx::RendererOptions ro = gRenderer.getOptions();
         ro.fullscreen = !ro.fullscreen;
         if( !gRenderer.changeOptions(ro) ) postExistEvent();
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::app::SampleApp::reloadGfxResources()
-{
-    GN_GUARD;
-
-    gTexDict.disposeAll();
-    gShaderDict.disposeAll();
-
-    GN_UNGUARD;
 }
 
 //
@@ -113,6 +109,7 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
     GN_GUARD_ALWAYS;
 
     if( !checkCmdLine(argc,argv) ) { quit(); return false; }
+    if( !initResMgr() ) { quit(); return false; }
     if( !initApp() ) { quit(); return false; }
     if( !initRenderer() ) { quit(); return false; }
     if( !initInput() ) { quit(); return false; }
@@ -135,6 +132,7 @@ void GN::app::SampleApp::quit()
     quitRenderer();
     quitInput();
     quitApp();
+    quitResMgr();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -191,6 +189,21 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     return true;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::app::SampleApp::initResMgr()
+{
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::quitResMgr()
+{
 }
 
 //

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
+#include "garnet/gfx/effect.h"
 #include "garnet/GNinput.h"
 
 namespace GN { namespace app
@@ -81,8 +82,75 @@ namespace GN { namespace app
         //!
         const char * getFpsString() const { return mFpsString.cptr(); }
     };
-    
-    
+
+    //!
+    //! Represent raw data block
+    //!
+    struct RawData : public NoCopy
+    {
+        //!
+        //! get data size
+        //!
+        virtual size_t size() const = 0;
+
+        //!
+        //! get data pointer
+        //!
+        virtual void * data() const = 0;
+    };
+
+    //!
+    //! Resource manager class used by sample application
+    //!
+    struct SampleResourceManager
+    {
+        ResourceManager<RawData*> rawData;  //!< raw data manager
+        ResourceManager<gfx::Shader*> shaders; //!< shader manager
+        ResourceManager<gfx::Texture*> textures; //!< texture manager
+        ResourceManager<gfx::Effect*> effects; //!< effect manager
+
+        //!
+        //! ctor
+        //!
+        SampleResourceManager();
+
+        //!
+        //! dtor
+        //!
+        ~SampleResourceManager();
+
+        //!
+        //! bind shader handles to renderer
+        //!
+        void bindShaderHandles( gfx::Renderer & r, uint32_t vs, uint32_t ps )
+        {
+            r.setShaders( shaders.getResource(vs), shaders.getResource(ps) );
+        }
+
+        //!
+        //! bind texture handle to renderer
+        //!
+        void bindTextureHandle( gfx::Renderer & r, size_t stage, uint32_t tex )
+        {
+            r.setTexture( stage, textures.getResource(tex) );
+        }
+
+        //!
+        //! dispose all resources
+        //!
+        void disposeAll()
+        {
+            rawData.disposeAll();
+            shaders.disposeAll();
+            textures.disposeAll();
+            effects.disposeAll();
+        }
+
+    private:
+        void onRendererDispose();
+        void onRendererDestroy();
+    };
+
     //!
     //! Sample application framework
     //!
@@ -94,7 +162,7 @@ namespace GN { namespace app
 
         //@{
     public:
-        SampleApp() : mShowFps(true) { mFps.reset(); }
+        SampleApp();
         virtual ~SampleApp() {}
         //@}
 
@@ -146,11 +214,25 @@ namespace GN { namespace app
         //!
         double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
-        void reloadGfxResources();
+        //!
+        //! Force reloading of all resources
+        //!
+        void reloadResources() { mResMgr.disposeAll(); }
 
+        //!
+        //! post exit event. Application will exit at next frame.
+        //!
         void postExistEvent() { mDone = true; }
 
+        //!
+        //! switch renderer API
+        //!
         bool switchRenderer();
+
+        //!
+        //! get resource managare instance
+        //!
+        SampleResourceManager & getResMgr() { return mResMgr; }
 
         //@}
 
@@ -161,13 +243,15 @@ namespace GN { namespace app
 
         InitParam mInitParam;
 
-        bool mDone;
+        SampleResourceManager mResMgr;
 
         // time stuff
         bool mShowFps;
         FpsCounter mFps;
         double mLastFrameTime;
         double mTimeSinceLastUpdate;
+
+        bool mDone; // exit flag
 
         // ********************************
         // private functions
@@ -177,6 +261,8 @@ namespace GN { namespace app
         bool init( int argc, const char *  const argv[] );
         void quit();
         bool checkCmdLine( int argc, const char * const argv[] );
+        bool initResMgr();
+        void quitResMgr();
         bool initApp();
         void quitApp();
         bool initRenderer();

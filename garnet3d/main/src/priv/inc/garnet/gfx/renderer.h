@@ -858,11 +858,8 @@ namespace GN { namespace gfx
         inline void setShader( ShaderType type, const Shader * shader );
         inline void setShaders( const Shader * const shaders[] );
         inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
-        inline void setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader );
         inline void setVtxShader( const Shader * s );
-        inline void setVtxShaderHandle( ShaderDictionary::HandleType h );
         inline void setPxlShader( const Shader * s );
-        inline void setPxlShaderHandle( ShaderDictionary::HandleType h );
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
         inline void setRenderState( RenderState state, int32_t value );
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
@@ -878,9 +875,7 @@ namespace GN { namespace gfx
         inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
 
         inline void setTexture( size_t stage, const Texture * tex );
-        inline void setTextureHandle( size_t stage, TextureDictionary::HandleType tex );
         inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
-        inline void setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count );
         inline void setVtxFmt( VtxFmtHandle );
         inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
         inline void setIdxBuf( const IdxBuf * );

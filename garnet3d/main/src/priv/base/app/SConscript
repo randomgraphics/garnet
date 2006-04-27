@@ -1,3 +1,7 @@
 Import( 'GN' )
-r = GN.newSourceCluster( ['sampleApp.cpp'], 'pch.h', 'pch.cpp' )
+sources = [
+	'sampleApp.cpp',
+	'sampleResourceManager.cpp',
+]
+r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

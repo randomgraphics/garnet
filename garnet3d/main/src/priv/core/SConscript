@@ -2,11 +2,6 @@ Import( 'GN' )
 
 sources = [
     'core.cpp',
-    'coreEffectDict.cpp',
-    'coreRawDataDict.cpp',
-    'coreShaderDict.cpp',
-    'coreTextureDict.cpp',
-    'searchResource.cpp',
 ]
 
 cluster = GN.newSourceCluster( sources )
