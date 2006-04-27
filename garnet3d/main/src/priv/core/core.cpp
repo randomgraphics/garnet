@@ -15,7 +15,7 @@ GN_IMPLEMENT_SINGLETON( GN::gfx::Renderer )
 GN_IMPLEMENT_SINGLETON( GN::gfx::ShaderDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::TextureDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::EffectDictionary )
-GN_IMPLEMENT_SINGLETON( GN::core::RawResourceDictionary )
+GN_IMPLEMENT_SINGLETON( GN::core::RawDataDictionary )
 
 // implement static renderer data members
 GN_IMPLEMENT_RENDERER_STATIC_MEMBERS()
@@ -65,7 +65,7 @@ namespace GN { namespace core
     {
         PluginManager mPluginManager;
         ProfilerManager mProfilerManager;
-        CoreRawResourceDict mRawResDict;
+        CoreRawDataDict mRawResDict;
         CoreShaderDict mShaderDict;
         CoreTextureDict mTextureDict;
         CoreEffectDict mEffectDict;
