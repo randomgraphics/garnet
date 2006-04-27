@@ -53,6 +53,9 @@ static int sChoosePixelFormat( HDC hdc )
         // check z-buffer
         if( 0 == pfd.cDepthBits ) continue;
 
+        // check stencil buffer
+        if( 0 == pfd.cStencilBits ) continue;
+
         // check acceleration flag
         if( PFD_GENERIC_ACCELERATED & pfd.dwFlags )
         {

@@ -145,9 +145,9 @@ void GN::gfx::D3D9Renderer::clearScreen(
     GN_GUARD_SLOW;
 
     // build d3d clear flag
-    int d3dflag = (flags & C_BUFFER ? D3DCLEAR_TARGET : 0)
-        | (flags & Z_BUFFER ? D3DCLEAR_ZBUFFER : 0)
-        | (flags & S_BUFFER ? D3DCLEAR_STENCIL : 0);
+    int d3dflag = (flags & CLEAR_C ? D3DCLEAR_TARGET : 0)
+        | (flags & CLEAR_Z ? D3DCLEAR_ZBUFFER : 0)
+        | (flags & CLEAR_S ? D3DCLEAR_STENCIL : 0);
 
     // do clear
     GN_DX9_CHECK( mDevice->Clear( 0, 0, d3dflag, sRgba2D3DCOLOR(c), z, s ) );
