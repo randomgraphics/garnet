@@ -30,7 +30,7 @@ namespace GN { namespace gfx
         {
             if( mInitialized )
             {
-                sSigCreate();
+                sSigDispose();
                 sSigDestroy();
             }
         }
