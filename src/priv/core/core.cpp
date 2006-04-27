@@ -14,7 +14,7 @@ GN_IMPLEMENT_SINGLETON( GN::input::Input )
 GN_IMPLEMENT_SINGLETON( GN::gfx::Renderer )
 GN_IMPLEMENT_SINGLETON( GN::gfx::ShaderDictionary )
 GN_IMPLEMENT_SINGLETON( GN::gfx::TextureDictionary )
-GN_IMPLEMENT_SINGLETON( GN::gfx::effect::EffectDictionary )
+GN_IMPLEMENT_SINGLETON( GN::gfx::EffectDictionary )
 GN_IMPLEMENT_SINGLETON( GN::core::RawResourceDictionary )
 
 // implement static renderer data members

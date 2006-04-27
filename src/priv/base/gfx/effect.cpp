@@ -71,7 +71,7 @@ static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::CondExp::sDoEval( uint32_t & value, const Token * & p, const Token * e )
+bool GN::gfx::EffectDesc::CondExp::sDoEval( uint32_t & value, const Token * & p, const Token * e )
 {
     if( p >= e )
     {
@@ -125,7 +125,7 @@ bool GN::gfx::effect::CondExp::sDoEval( uint32_t & value, const Token * & p, con
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::CondExp::evaluate( uint32_t & value ) const
+bool GN::gfx::EffectDesc::CondExp::evaluate( uint32_t & value ) const
 {
     if( mTokens.empty() )
     {
@@ -140,7 +140,7 @@ bool GN::gfx::effect::CondExp::evaluate( uint32_t & value ) const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::CondExp::fromStr( const char *, size_t )
+void GN::gfx::EffectDesc::CondExp::fromStr( const char *, size_t )
 {
     mTokens.clear();
     GN_UNIMPL_WARNING();
@@ -153,7 +153,7 @@ void GN::gfx::effect::CondExp::fromStr( const char *, size_t )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::EffectDesc::valid() const
+bool GN::gfx::EffectDesc::valid() const
 {
     GN_GUARD;
 
@@ -297,7 +297,7 @@ bool GN::gfx::effect::EffectDesc::valid() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::init( const EffectDesc & d )
+bool GN::gfx::Effect::init( const EffectDesc & d )
 {
     GN_GUARD;
 
@@ -333,7 +333,7 @@ bool GN::gfx::effect::Effect::init( const EffectDesc & d )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::init( const Effect & e )
+bool GN::gfx::Effect::init( const Effect & e )
 {
     GN_GUARD;
 
@@ -346,7 +346,7 @@ bool GN::gfx::effect::Effect::init( const Effect & e )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::quit()
+void GN::gfx::Effect::quit()
 {
     GN_GUARD;
 
@@ -367,7 +367,7 @@ void GN::gfx::effect::Effect::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::createEffect()
+bool GN::gfx::Effect::createEffect()
 {
     GN_GUARD;
 
@@ -380,7 +380,7 @@ bool GN::gfx::effect::Effect::createEffect()
     GN_ASSERT( mDesc.valid() && mUniforms.empty() && mTextures.empty() );
 
     // create texture list
-    for( std::map<StrA,TextureDesc>::const_iterator i = mDesc.textures.begin();
+    for( std::map<StrA,EffectDesc::TextureDesc>::const_iterator i = mDesc.textures.begin();
          i != mDesc.textures.end(); ++i )
     {
         TextureData td;
@@ -390,7 +390,7 @@ bool GN::gfx::effect::Effect::createEffect()
     }
 
     // create uniform list
-    for( std::map<StrA,UniformDesc>::const_iterator i = mDesc.uniforms.begin();
+    for( std::map<StrA,EffectDesc::UniformDesc>::const_iterator i = mDesc.uniforms.begin();
          i != mDesc.uniforms.end(); ++i )
     {
         UniformData ud;
@@ -399,7 +399,7 @@ bool GN::gfx::effect::Effect::createEffect()
     }
 
     // create shader list
-    for( std::map<StrA,ShaderDesc>::const_iterator i = mDesc.shaders.begin();
+    for( std::map<StrA,EffectDesc::ShaderDesc>::const_iterator i = mDesc.shaders.begin();
          i != mDesc.shaders.end(); ++i )
     {
         ShaderData data;
@@ -435,14 +435,14 @@ bool GN::gfx::effect::Effect::createEffect()
 
         // Set default uniform value.
         // Note that setUniform() will update shader's uniform-dirty-list as well.
-        const UniformDesc & u = mDesc.getUniform(ud.name);
+        const EffectDesc::UniformDesc & u = mDesc.getUniform(ud.name);
         if( u.hasDefaultValue ) setUniform( hUniform, u.defaultValue );
     }
 
     // create technique list
     for( size_t i = 0; i < mDesc.techniques.size(); ++i )
     {
-        const TechniqueDesc & desc = mDesc.techniques[i];
+        const EffectDesc::TechniqueDesc & desc = mDesc.techniques[i];
 
         if( mTechniques.find( desc.name ) )
         {
@@ -475,7 +475,7 @@ bool GN::gfx::effect::Effect::createEffect()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::createShader( ShaderData & data, const StrA & name, const ShaderDesc & desc )
+bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const EffectDesc::ShaderDesc & desc )
 {
     GN_GUARD;
 
@@ -565,7 +565,7 @@ bool GN::gfx::effect::Effect::createShader( ShaderData & data, const StrA & name
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const TechniqueDesc & desc )
+bool GN::gfx::Effect::createTechnique( TechniqueData & data, const EffectDesc::TechniqueDesc & desc )
 {
     GN_GUARD;
 
@@ -575,7 +575,7 @@ bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const Techn
 
     for( size_t iPass = 0; iPass < desc.passes.size(); ++iPass )
     {
-        const PassDesc & passDesc = desc.passes[iPass];
+        const EffectDesc::PassDesc & passDesc = desc.passes[iPass];
 
         PassData & passData = data.passes[iPass];
 
@@ -605,7 +605,7 @@ bool GN::gfx::effect::Effect::createTechnique( TechniqueData & data, const Techn
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::effect::Effect::sSetFfpUniform( int32_t, const UniformData & )
+void GN::gfx::Effect::sSetFfpUniform( int32_t, const UniformData & )
 {
     GN_GUARD;
 

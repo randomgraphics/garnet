@@ -17,11 +17,10 @@
 #define gEffectDictPtr (GN::gfx::EffectDictionary::sGetInstancePtr())
 
 namespace GN { namespace gfx {
-
     //!
-    //! namespace for graphics effect classes
+    //! Graphics effect descriptor
     //!
-    namespace effect
+    struct EffectDesc
     {
         //!
         //! Contidional expression for renderer caps check
@@ -345,311 +344,305 @@ namespace GN { namespace gfx {
             TechniqueDesc() : rsb(RenderStateBlockDesc::EMPTY) {}
         };
 
+        std::map<StrA,TextureDesc> textures;   //!< Texture list
+        std::map<StrA,UniformDesc> uniforms;   //!< Uniform list
+        std::map<StrA,ShaderDesc>  shaders;    //!< Shader list
+        std::vector<TechniqueDesc> techniques; //!< Technique list. Technique name must be unique.
+        RenderStateBlockDesc       rsb;        //!< Effect global render states
+
         //!
-        //! Graphics effect descriptor
+        //! Ctor
         //!
-        struct EffectDesc
+        EffectDesc() : rsb(RenderStateBlockDesc::DEFAULT) {}
+
+        //!
+        //! Make sure the effect descriptor is valid.
+        //!
+        bool valid() const;
+
+        //!
+        //! clear to a empty descriptor
+        //!
+        void clear()
         {
-            std::map<StrA,TextureDesc> textures;   //!< Texture list
-            std::map<StrA,UniformDesc> uniforms;   //!< Uniform list
-            std::map<StrA,ShaderDesc>  shaders;    //!< Shader list
-            std::vector<TechniqueDesc> techniques; //!< Technique list. Technique name must be unique.
-            RenderStateBlockDesc       rsb;        //!< Effect global render states
+            textures.clear();
+            uniforms.clear();
+            shaders.clear();
+            techniques.clear();
+            rsb.resetToDefault();
+        }
 
-            //!
-            //! Ctor
-            //!
-            EffectDesc() : rsb(RenderStateBlockDesc::DEFAULT) {}
+        //!
+        //! Get uniform by name.
+        //! \param name
+        //!     MUST be a valid uniform name.
+        //!
+        const UniformDesc & getUniform( const StrA & name ) const
+        {
+            std::map<StrA,UniformDesc>::const_iterator i = uniforms.find( name );
+            GN_ASSERT( uniforms.end() != i );
+            return i->second;
+        }
 
-            //!
-            //! Make sure the effect descriptor is valid.
-            //!
-            bool valid() const;
+        //!
+        //! Get shader by name.
+        //! \param name
+        //!     MUST be a valid shader name.
+        //!
+        const ShaderDesc & getShader( const StrA & name ) const
+        {
+            std::map<StrA,ShaderDesc>::const_iterator i = shaders.find( name );
+            GN_ASSERT( shaders.end() != i );
+            return i->second;
+        }
+    };
 
-            //!
-            //! clear to a empty descriptor
-            //!
-            void clear()
+    typedef uint32_t EffectItemID; //!< effect item (such as technique, uniform and texture) ID.
+
+    //!
+    //! Effect class
+    //!
+    class Effect : public StdClass
+    {
+        GN_DECLARE_STDCLASS( Effect, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        Effect()          { clear(); }
+        virtual ~Effect() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const EffectDesc & ); //!< initialize from descriptor
+        bool init( const Effect & ); //!< Make effect clone
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() { mPassBegun = false; }
+        //@}
+
+        // ********************************
+        //! \name rendering functions
+        //!
+        //! Standard call sequence:
+        //! <pre>
+        //!     set_common_uniforms_and_textures();
+        //!     size_t numPasses = myEffect->getNumPasses() )
+        //!     for( size_t i = 0; i < numPasses; ++i )
+        //!     {
+        //!         myEffect->passBegin( i );
+        //!         for_each_mesh
+        //!         {
+        //!             set_mesh_specific_uniforms_textures();
+        //!             set_mesh_vertex_and_index_buffers();
+        //!             myEffect->commitChanges();
+        //!             draw_the_mesh();
+        //!         }
+        //!         myEffect->passEnd();
+        //!     }
+        //!     myEffect->drawEnd();
+        //! </pre>
+        // ********************************
+    public:
+
+        //@{
+
+        //!
+        //! Get rendering pass count. This value may change when active technique changes.
+        //!
+        size_t getNumPasses() const;
+
+        //!
+        //! apply render state of specific pass.
+        //!
+        void passBegin( size_t ) const;
+
+        //!
+        //! end the rendering pass.
+        //! Must be called between drawBegin() and drawEnd(), and after passBegin().
+        //!
+        void passEnd() const { GN_ASSERT(mPassBegun); mPassBegun = false; }
+
+        //!
+        //! Commit modified uniforms and textures to renderer.
+        //! Must be called between passBegin() and passEnd().
+        //!
+        void commitChanges() const;
+
+        //@}
+
+        // ********************************
+        //! \name technique management
+        // ********************************
+    public:
+
+        //@{
+
+        //!
+        //! get technique ID
+        //!
+        EffectItemID getTechniqueID( const StrA & name ) const;
+
+        //!
+        //! set active technique. 0 means the default one.
+        //!
+        void setActiveTechnique( EffectItemID ) const;
+
+        //!
+        //! Set active technique.
+        //! \param name Technique name. Empty string means the default one.
+        //!
+        void setActiveTechniqueByName( const StrA & name ) const;
+
+        //@}
+
+        // ********************************
+        //! \name uniform management
+        // ********************************
+    public:
+
+        //@{
+        EffectItemID getUniformID( const StrA & ) const;
+        void setUniform( EffectItemID, const UniformValue & ) const;
+        void setUniformByName( const StrA &, const UniformValue & ) const;
+        //@}
+
+        // ********************************
+        //! \name texture management
+        //!
+        //! Note that effect class won't hold reference of the textures.
+        // ********************************
+    public:
+
+        //@{
+        EffectItemID getTextureID( const StrA & ) const;
+        void setTexture( EffectItemID, const Texture * ) const;
+        void setTextureByName( const StrA &, const Texture * ) const;
+        //@}
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        struct TextureData
+        {
+            StrA            name;  // texture name
+            const Texture * value;
+        };
+
+        struct TextureRefData
+        {
+            EffectItemID id; // texture ID that is referenced.
+            uint32_t     stage;
+        };
+
+        struct ShaderRefData
+        {
+            EffectItemID id;    // shader ID that is referenced
+            size_t       index; // index to ShaderData::uniforms: which uniform are we referencing to.
+        };
+
+        struct UniformData
+        {
+            StrA                        name;
+            UniformValue                value;
+            std::vector<ShaderRefData>  shaders; // shaders that are referencing this uniform.
+        };
+
+        struct UniformRefData
+        {
+            EffectItemID id; //!< uniform ID that is being referenced.
+            union
             {
-                textures.clear();
-                uniforms.clear();
-                shaders.clear();
-                techniques.clear();
-                rsb.resetToDefault();
+                uint32_t shaderUniformHandle; //!< shader-specific uniform handle. Effective only when ffp is false.
+                int32_t  ffpType; //!< FFP uniform type. Effective only when ffp is true.
+            };                
+            bool ffp;     //!< is this binding to fixed functional pipeline? (determined by binding name)
+        };
+
+        struct ShaderData
+        {
+            StrA                        name;
+            AutoRef<Shader>             value;
+            std::vector<TextureRefData> textures;      // texture referencing list.
+            std::vector<UniformRefData> uniforms;      // uniform referencing list.
+            std::vector<size_t>         dirtyUniforms; // dirty uniform list. Each item is a index into ShaderData::uniforms
+        };
+
+        struct PassData
+        {
+            EffectItemID shaders[NUM_SHADER_TYPES]; //!< shader IDs of this pass.
+            RenderStateBlockDesc rsb; //!< render state block
+        };
+
+        struct TechniqueData
+        {
+            StrA                  name;
+            std::vector<PassData> passes;
+        };
+
+        template<typename T>
+        struct NamedItemManager
+        {
+            std::map<StrA,EffectItemID>   names;
+            HandleManager<T,EffectItemID> items;
+
+            bool add( const StrA & name, const T & item )
+            {
+                GN_ASSERT( names.end() == names.find(name) );
+                names[name] = items.add( item );
+                GN_ASSERT( items.validHandle( names[name] ) );
+                return true;
             }
-
-            //!
-            //! Get uniform by name.
-            //! \param name
-            //!     MUST be a valid uniform name.
-            //!
-            const UniformDesc & getUniform( const StrA & name ) const
+            void clear() { names.clear(); items.clear(); }
+            bool empty() const { GN_ASSERT(names.size() == items.size()); return items.empty(); }
+            size_t size() const { GN_ASSERT(names.size() == items.size()); return items.size(); }
+            EffectItemID find( const StrA & name ) const
             {
-                std::map<StrA,UniformDesc>::const_iterator i = uniforms.find( name );
-                GN_ASSERT( uniforms.end() != i );
-                return i->second;
-            }
-
-            //!
-            //! Get shader by name.
-            //! \param name
-            //!     MUST be a valid shader name.
-            //!
-            const ShaderDesc & getShader( const StrA & name ) const
-            {
-                std::map<StrA,ShaderDesc>::const_iterator i = shaders.find( name );
-                GN_ASSERT( shaders.end() != i );
+                if( 0 == name ) return 0;
+                std::map<StrA,EffectItemID>::const_iterator i = names.find(name);
+                if( names.end() == i ) return 0;
+                GN_ASSERT( items.validHandle(i->second)  );
                 return i->second;
             }
         };
 
-        typedef uint32_t EffectItemID; //!< effect item (such as technique, uniform and texture) ID.
+        EffectDesc mDesc;
 
-        //!
-        //! Effect class
-        //!
-        class Effect : public StdClass
-        {
-             GN_DECLARE_STDCLASS( Effect, StdClass );
+        NamedItemManager<TextureData>   mTextures;
+        NamedItemManager<UniformData>   mUniforms;
+        NamedItemManager<ShaderData>    mShaders;
+        NamedItemManager<TechniqueData> mTechniques;
+        
+        mutable uint32_t mActiveTechnique;
+        mutable bool     mPassBegun;
+        mutable size_t   mActivePass;
 
-            // ********************************
-            // ctor/dtor
-            // ********************************
+        // ********************************
+        // private functions
+        // ********************************
+    private:
 
-            //@{
-        public:
-            Effect()          { clear(); }
-            virtual ~Effect() { quit(); }
-            //@}
+        bool createEffect(); // called by init()
+        bool createShader( ShaderData &, const StrA &, const EffectDesc::ShaderDesc & );
+        bool createTechnique( TechniqueData &, const EffectDesc::TechniqueDesc & );
+        static void sSetFfpUniform( int32_t, const UniformData & );
+    };
 
-            // ********************************
-            // from StdClass
-            // ********************************
-
-            //@{
-        public:
-            bool init( const EffectDesc & ); //!< initialize from descriptor
-            bool init( const Effect & ); //!< Make effect clone
-            void quit();
-            bool ok() const { return MyParent::ok(); }
-        private:
-            void clear() { mPassBegun = false; }
-            //@}
-
-            // ********************************
-            //! \name rendering functions
-            //!
-            //! Standard call sequence:
-            //! <pre>
-            //!     set_common_uniforms_and_textures();
-            //!     size_t numPasses = myEffect->getNumPasses() )
-            //!     for( size_t i = 0; i < numPasses; ++i )
-            //!     {
-            //!         myEffect->passBegin( i );
-            //!         for_each_mesh
-            //!         {
-            //!             set_mesh_specific_uniforms_textures();
-            //!             set_mesh_vertex_and_index_buffers();
-            //!             myEffect->commitChanges();
-            //!             draw_the_mesh();
-            //!         }
-            //!         myEffect->passEnd();
-            //!     }
-            //!     myEffect->drawEnd();
-            //! </pre>
-            // ********************************
-        public:
-
-            //@{
-
-            //!
-            //! Get rendering pass count. This value may change when active technique changes.
-            //!
-            size_t getNumPasses() const;
-
-            //!
-            //! apply render state of specific pass.
-            //!
-            void passBegin( size_t ) const;
-
-            //!
-            //! end the rendering pass.
-            //! Must be called between drawBegin() and drawEnd(), and after passBegin().
-            //!
-            void passEnd() const { GN_ASSERT(mPassBegun); mPassBegun = false; }
-
-            //!
-            //! Commit modified uniforms and textures to renderer.
-            //! Must be called between passBegin() and passEnd().
-            //!
-            void commitChanges() const;
-
-            //@}
-
-            // ********************************
-            //! \name technique management
-            // ********************************
-        public:
-
-            //@{
-
-            //!
-            //! get technique ID
-            //!
-            EffectItemID getTechniqueID( const StrA & name ) const;
-
-            //!
-            //! set active technique. 0 means the default one.
-            //!
-            void setActiveTechnique( EffectItemID ) const;
-
-            //!
-            //! Set active technique.
-            //! \param name Technique name. Empty string means the default one.
-            //!
-            void setActiveTechniqueByName( const StrA & name ) const;
-
-            //@}
-
-            // ********************************
-            //! \name uniform management
-            // ********************************
-        public:
-
-            //@{
-            EffectItemID getUniformID( const StrA & ) const;
-            void setUniform( EffectItemID, const UniformValue & ) const;
-            void setUniformByName( const StrA &, const UniformValue & ) const;
-            //@}
-
-            // ********************************
-            //! \name texture management
-            //!
-            //! Note that effect class won't hold reference of the textures.
-            // ********************************
-        public:
-
-            //@{
-            EffectItemID getTextureID( const StrA & ) const;
-            void setTexture( EffectItemID, const Texture * ) const;
-            void setTextureByName( const StrA &, const Texture * ) const;
-            //@}
-
-            // ********************************
-            // private variables
-            // ********************************
-        private:
-
-            struct TextureData
-            {
-                StrA            name;  // texture name
-                const Texture * value;
-            };
-
-            struct TextureRefData
-            {
-                EffectItemID id; // texture ID that is referenced.
-                uint32_t     stage;
-            };
-
-            struct ShaderRefData
-            {
-                EffectItemID id;    // shader ID that is referenced
-                size_t       index; // index to ShaderData::uniforms: which uniform are we referencing to.
-            };
-
-            struct UniformData
-            {
-                StrA                        name;
-                UniformValue                value;
-                std::vector<ShaderRefData>  shaders; // shaders that are referencing this uniform.
-            };
-
-            struct UniformRefData
-            {
-                EffectItemID id; //!< uniform ID that is being referenced.
-                union
-                {
-                    uint32_t shaderUniformHandle; //!< shader-specific uniform handle. Effective only when ffp is false.
-                    int32_t  ffpType; //!< FFP uniform type. Effective only when ffp is true.
-                };                
-                bool ffp;     //!< is this binding to fixed functional pipeline? (determined by binding name)
-            };
-
-            struct ShaderData
-            {
-                StrA                        name;
-                AutoRef<Shader>             value;
-                std::vector<TextureRefData> textures;      // texture referencing list.
-                std::vector<UniformRefData> uniforms;      // uniform referencing list.
-                std::vector<size_t>         dirtyUniforms; // dirty uniform list. Each item is a index into ShaderData::uniforms
-            };
-
-            struct PassData
-            {
-                EffectItemID shaders[NUM_SHADER_TYPES]; //!< shader IDs of this pass.
-                RenderStateBlockDesc rsb; //!< render state block
-            };
-
-            struct TechniqueData
-            {
-                StrA                  name;
-                std::vector<PassData> passes;
-            };
-
-            template<typename T>
-            struct NamedItemManager
-            {
-                std::map<StrA,EffectItemID>   names;
-                HandleManager<T,EffectItemID> items;
-
-                bool add( const StrA & name, const T & item )
-                {
-                    GN_ASSERT( names.end() == names.find(name) );
-                    names[name] = items.add( item );
-                    GN_ASSERT( items.validHandle( names[name] ) );
-                    return true;
-                }
-                void clear() { names.clear(); items.clear(); }
-                bool empty() const { GN_ASSERT(names.size() == items.size()); return items.empty(); }
-                size_t size() const { GN_ASSERT(names.size() == items.size()); return items.size(); }
-                EffectItemID find( const StrA & name ) const
-                {
-                    if( 0 == name ) return 0;
-                    std::map<StrA,EffectItemID>::const_iterator i = names.find(name);
-                    if( names.end() == i ) return 0;
-                    GN_ASSERT( items.validHandle(i->second)  );
-                    return i->second;
-                }
-            };
-
-            EffectDesc mDesc;
-
-            NamedItemManager<TextureData>   mTextures;
-            NamedItemManager<UniformData>   mUniforms;
-            NamedItemManager<ShaderData>    mShaders;
-            NamedItemManager<TechniqueData> mTechniques;
-            
-            mutable uint32_t mActiveTechnique;
-            mutable bool     mPassBegun;
-            mutable size_t   mActivePass;
-
-            // ********************************
-            // private functions
-            // ********************************
-        private:
-
-            bool createEffect(); // called by init()
-            bool createShader( ShaderData &, const StrA &, const ShaderDesc & );
-            bool createTechnique( TechniqueData &, const TechniqueDesc & );
-            static void sSetFfpUniform( int32_t, const UniformData & );
-        };
-
-        //!
-        //! Effect manager class (singleton)
-        //!
-        typedef ResourceManager<Effect*,true> EffectDictionary;
-    }
+    //!
+    //! Effect manager class (singleton)
+    //!
+    typedef ResourceManager<Effect*,true> EffectDictionary;
 }}
 
 #if GN_ENABLE_INLINE

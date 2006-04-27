@@ -12,7 +12,7 @@ class Scene
 
     uint32_t tex0;
 
-    effect::Effect eff0;
+    Effect eff0;
 
     Matrix44f world, view, proj;
 
@@ -23,9 +23,8 @@ class Scene
         // create effect 0
         {
             using namespace GN::gfx;
-            using namespace GN::gfx::effect;
 
-            effect::EffectDesc desc;
+            EffectDesc desc;
 
             // define effect parameters
             desc.uniforms["color"];
@@ -48,7 +47,7 @@ class Scene
                 "dcl_position v0 \n"
                 "m4x4 oPos, v0, c0";
             desc.shaders["vs.1.1"].uniforms["c0"] = "pvw";
-            desc.shaders["vs.1.1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_VS ), CondExp::sValue(VSCAPS_D3D_1_1) );
+            desc.shaders["vs.1.1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_VS ), EffectDesc::CondExp::sValue(VSCAPS_D3D_1_1) );
 
             // init vs1
             desc.shaders["arbvp1"].type = VERTEX_SHADER;
@@ -62,7 +61,7 @@ class Scene
                 "DP4 result.position.w, pvw[3], vertex.position; \n"
                 "END";
             desc.shaders["arbvp1"].uniforms["m0"] = "pvw";
-            desc.shaders["arbvp1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_VS ), CondExp::sValue(VSCAPS_OGL_ARB1) );
+            desc.shaders["arbvp1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_VS ), EffectDesc::CondExp::sValue(VSCAPS_OGL_ARB1) );
 
             // init vs2
             desc.shaders["fixvs"].type = VERTEX_SHADER;
@@ -74,7 +73,7 @@ class Scene
                 "ps.1.1 \n"
                 "mov r0, c0";
             desc.shaders["ps.1.1"].uniforms["c0"] = "color";
-            desc.shaders["ps.1.1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_PS ), CondExp::sValue(PSCAPS_D3D_1_1) );
+            desc.shaders["ps.1.1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_PS ), EffectDesc::CondExp::sValue(PSCAPS_D3D_1_1) );
 
             // init ps1
             desc.shaders["arbfp1"].type = PIXEL_SHADER;
@@ -84,7 +83,7 @@ class Scene
                 "MOV result.color, program.local[0]; \n"
                 "END";
             desc.shaders["arbfp1"].uniforms["l0"] = "color";
-            desc.shaders["arbfp1"].conditions = CondExp::sBitAnd( CondExp::sGfxCaps( CAPS_PS ), CondExp::sValue(PSCAPS_OGL_ARB1) );
+            desc.shaders["arbfp1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_PS ), EffectDesc::CondExp::sValue(PSCAPS_OGL_ARB1) );
 
 			// init ps2
 			desc.shaders["fixps"].type = PIXEL_SHADER;

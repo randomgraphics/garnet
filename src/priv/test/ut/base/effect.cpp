@@ -24,15 +24,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         // empty condition
-        CondExp emptyExp;
+        EffectDesc::CondExp emptyExp;
         TS_ASSERT( emptyExp.evaluate() );
 
         // comparasion
-        CondExp c0 = CondExp::sValue(0);
-        CondExp c1 = CondExp::sValue(1);
+        EffectDesc::CondExp c0 = EffectDesc::CondExp::sValue(0);
+        EffectDesc::CondExp c1 = EffectDesc::CondExp::sValue(1);
         TS_ASSERT( (c0< c1).evaluate() );
         TS_ASSERT( (c0<=c1).evaluate() );
         TS_ASSERT( (c0==c0).evaluate() );
@@ -47,16 +46,15 @@ public:
         TS_ASSERT(  (c0||c1).evaluate() );
 
         // complex
-        CondExp c2 = CondExp::sValue(2);
-        CondExp c3 = CondExp::sValue(2);
+        EffectDesc::CondExp c2 = EffectDesc::CondExp::sValue(2);
+        EffectDesc::CondExp c3 = EffectDesc::CondExp::sValue(2);
         TS_ASSERT( ((c0==c1)||(c2==c3)||(c1==c3)).evaluate() );
     }
 
-    void initDesc1( GN::gfx::effect::EffectDesc & desc )
+    void initDesc1( GN::gfx::EffectDesc & desc )
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         desc.clear();
 
@@ -76,7 +74,7 @@ public:
         desc.textures["t1"];
 
         // create 1 vertex shader
-        ShaderDesc & vs0 = desc.shaders["vs0"];
+        EffectDesc::ShaderDesc & vs0 = desc.shaders["vs0"];
         vs0.code =
             "vs.1.1\n "
             "dcl_position v0 \n"
@@ -90,12 +88,12 @@ public:
         vs0.uniforms["c4"] = "color";
 
         // create another vertex shader (FFP shader)
-        ShaderDesc & vs1 = desc.shaders["vs1"];
+        EffectDesc::ShaderDesc & vs1 = desc.shaders["vs1"];
         vs1.type = VERTEX_SHADER;
         vs1.uniforms["FFP_TRANSFORM_VIEW"] = "pvw";
 
         // create 1 pixel shader
-        ShaderDesc & ps0 = desc.shaders["ps0"];
+        EffectDesc::ShaderDesc & ps0 = desc.shaders["ps0"];
         ps0.code =
             "ps.1.1 \n"
             "mov r0, c0";
@@ -106,25 +104,25 @@ public:
         ps0.textures[1] = "t1";
 
         // create 1 technique
-        TechniqueDesc tech0;
+        EffectDesc::TechniqueDesc tech0;
         tech0.name = "t0";
         tech0.passes.resize(1);
-        PassDesc & p0 = tech0.passes[0];
+        EffectDesc::PassDesc & p0 = tech0.passes[0];
         p0.shaders[VERTEX_SHADER] = "vs0";
         p0.shaders[PIXEL_SHADER] = "ps0";
         desc.techniques.push_back( tech0 );
 
         // create another technique
-        TechniqueDesc tech1;
+        EffectDesc::TechniqueDesc tech1;
         tech1.name = "t1";
         tech1.passes.resize(1);
-        PassDesc & p1 = tech1.passes[0];
+        EffectDesc::PassDesc & p1 = tech1.passes[0];
         p1.shaders[VERTEX_SHADER] = "vs1";
         p1.shaders[PIXEL_SHADER] = "ps0";
         desc.techniques.push_back( tech1 );
     }
 
-    void doDraw( const GN::gfx::effect::Effect & e )
+    void doDraw( const GN::gfx::Effect & e )
     {
         using namespace GN;
         using namespace GN::gfx;
@@ -149,7 +147,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -164,7 +161,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -179,7 +175,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -194,7 +189,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -209,7 +203,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -224,7 +217,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -239,7 +231,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -256,12 +247,11 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
 
-        PassDesc & p0 = desc.techniques[0].passes[0];
+        EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
         GN::RuntimeAssertBehavior rab = GN::setRuntimeAssertBehavior( GN::RAB_LOG_ONLY );
         p0.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
         GN::setRuntimeAssertBehavior( rab );
@@ -274,12 +264,11 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
 
-        PassDesc & p0 = desc.techniques[0].passes[0];
+        EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
         p0.shaders[VERTEX_SHADER] = "haha";
 
         Effect e;
@@ -290,12 +279,11 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
 
-        PassDesc & p0 = desc.techniques[0].passes[0];
+        EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
         p0.shaders[VERTEX_SHADER] = "ps0";
 
         Effect e;
@@ -306,7 +294,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -323,7 +310,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -340,7 +326,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -357,7 +342,6 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
-        using namespace GN::gfx::effect;
 
         EffectDesc desc;
         initDesc1( desc );
