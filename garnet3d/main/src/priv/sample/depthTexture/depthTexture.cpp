@@ -121,7 +121,7 @@ public:
         r.setTexture( 0, mDepth );
         if( mVs && mPs )
         {
-            rm.bindShaderHandles( r, 0, 0 );
+            rm.bindShaderHandles( r, mVs, mPs );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_OPAQUE );
         }
         else

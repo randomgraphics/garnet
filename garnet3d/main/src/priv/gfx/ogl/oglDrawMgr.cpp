@@ -213,7 +213,7 @@ void GN::gfx::OGLRenderer::clearScreen(
     glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 
     // clear color buffer
-    if( flags & C_BUFFER )
+    if( flags & CLEAR_C )
     {
         glflag |= GL_COLOR_BUFFER_BIT;
         glClearColor( c.r, c.g, c.b, c.a );
@@ -221,7 +221,7 @@ void GN::gfx::OGLRenderer::clearScreen(
     }
 
     // clean z-buffer
-    if( flags & Z_BUFFER )
+    if( flags & CLEAR_Z )
     {
         glflag |= GL_DEPTH_BUFFER_BIT;
         glClearDepth( z );
@@ -229,7 +229,7 @@ void GN::gfx::OGLRenderer::clearScreen(
     }
 
     // clearn stencil buffer
-    if( flags & S_BUFFER )
+    if( flags & CLEAR_S )
     {
         glflag |= GL_STENCIL_BUFFER_BIT;
         glClearStencil( s );

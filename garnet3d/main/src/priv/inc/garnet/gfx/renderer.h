@@ -273,10 +273,10 @@ namespace GN { namespace gfx
     //!
     enum ClearFlag
     {
-        C_BUFFER       = 1,     //!< clear color buffer
-        Z_BUFFER       = 2,     //!< clear z buffer
-        S_BUFFER       = 4,     //!< clear stencil buffer
-        ALL_BUFFERS    = 7      //!< clear all buffers
+        CLEAR_C      = 1,     //!< clear color buffer
+        CLEAR_Z      = 2,     //!< clear z buffer
+        CLEAR_S      = 4,     //!< clear stencil buffer
+        CLEAR_ALL    = 7      //!< clear all buffers
     };
 
     //!
@@ -931,7 +931,7 @@ namespace GN { namespace gfx
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
                      float z = 1.0f, uint32_t s = 0,
-                     BitField flags = C_BUFFER | Z_BUFFER ) = 0;
+                     BitField flags = CLEAR_ALL ) = 0;
 
         //!
         //! Draw indexed primitives.
