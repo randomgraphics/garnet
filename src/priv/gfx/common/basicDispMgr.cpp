@@ -226,7 +226,10 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
     }
     else
     {
-        if( !sDetermineWindowSize( ro, dm, desc.width, desc.height ) ) return false;
+        uint32_t w, h;
+        if( !sDetermineWindowSize( ro, dm, w, h ) ) return false;
+        desc.width = ro.windowedWidth ? ro.windowedWidth : w;
+        desc.height = ro.windowedHeight ? ro.windowedHeight : h;
         desc.depth = dm.depth;
         desc.refrate = 0;
     }
