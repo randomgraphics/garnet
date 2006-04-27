@@ -41,15 +41,6 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader )
-    {
-        setVtxShaderHandle( vtxShader );
-        setPxlShaderHandle( pxlShader );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     inline void RendererContext::setVtxShader( const Shader * s )
     {
         setShader( VERTEX_SHADER, s );
@@ -58,25 +49,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setVtxShaderHandle( ShaderDictionary::HandleType h )
-    {
-        setVtxShader( gShaderDict.getResource(h) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     inline void RendererContext::setPxlShader( const Shader * s )
     {
         setShader( PIXEL_SHADER, s );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void RendererContext::setPxlShaderHandle( ShaderDictionary::HandleType h )
-    {
-        setShader( PIXEL_SHADER, gShaderDict.getResource(h) );
     }
 
     //
@@ -208,28 +183,12 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setTextureHandle( size_t stage, TextureDictionary::HandleType tex )
-    {
-        setTexture( stage, gTexDict.getResource(tex) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     inline void RendererContext::setTextures( const Texture * const texlist[], size_t start, size_t count )
     {
         for( size_t i = 0; i < count; ++i, ++start )
         {
             setTexture( start, texlist[i] );
         }
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void RendererContext::setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count )
-    {
-        for( size_t i = 0; i < count; ++i, ++start ) setTextureHandle( start, texlist[i] );
     }
 
     //

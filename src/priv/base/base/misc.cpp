@@ -74,3 +74,19 @@ void GN::sleep( uint32_t microSeconds )
     GN_CASSERT_EX( 0, unimplemented );
 #endif
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+#if GN_MSVC
+#include <crtdbg.h>
+void GN::enableCRTMemoryCheck()
+{
+    int tmpDbgFlag;
+    tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+    tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
+    _CrtSetDbgFlag(tmpDbgFlag);
+}
+#else
+void GN::enableCRTMemoryCheck() {}
+#endif

@@ -6,16 +6,6 @@
 //! \author  chenlee (2005.9.30)
 // *****************************************************************************
 
-//!
-//! global texture dictionary
-//!
-#define gTexDict (GN::gfx::TextureDictionary::sGetInstance())
-
-//!
-//! pointer to global texture dictionary
-//!
-#define gTexDictPtr (GN::gfx::TextureDictionary::sGetInstancePtr())
-
 namespace GN { namespace gfx
 {
     //!
@@ -385,11 +375,6 @@ namespace GN { namespace gfx
         TextureLoader mLoader; //!< content loader
         std::vector< Vector3<uint32_t> > mMipSize; //!< mipmap size of each level
     };
-
-    //!
-    //! Texture manager class (singleton)
-    //!
-    typedef ResourceManager<Texture*,true> TextureDictionary;
 
     //! \name convert between texture tags and string
     //@{

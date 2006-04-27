@@ -92,14 +92,6 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setShaderHandles( ShaderDictionary::HandleType vtxShader, ShaderDictionary::HandleType pxlShader )
-    {
-        _GNGFX_CONTEXT_UPDATE( setShaderHandles( vtxShader, pxlShader ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     inline void Renderer::setVtxShader( const Shader * s )
     {
         _GNGFX_CONTEXT_UPDATE( setVtxShader( s ) );
@@ -108,25 +100,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setVtxShaderHandle( ShaderDictionary::HandleType h )
-    {
-        _GNGFX_CONTEXT_UPDATE( setVtxShaderHandle( h ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     inline void Renderer::setPxlShader( const Shader * s )
     {
         _GNGFX_CONTEXT_UPDATE( setPxlShader( s ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void Renderer::setPxlShaderHandle( ShaderDictionary::HandleType h )
-    {
-        _GNGFX_CONTEXT_UPDATE( setPxlShaderHandle( h ) );
     }
 
     //
@@ -236,25 +212,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setTextureHandle( size_t stage, TextureDictionary::HandleType tex )
-    {
-        _GNGFX_CONTEXT_UPDATE( setTextureHandle( stage, tex ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
     inline void Renderer::setTextures( const Texture * const texlist[], size_t start, size_t count )
     {
         _GNGFX_CONTEXT_UPDATE( setTextures( texlist, start, count ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void Renderer::setTextureHandles( const TextureDictionary::HandleType texlist[], size_t start, size_t count )
-    {
-        _GNGFX_CONTEXT_UPDATE( setTextureHandles( texlist, start, count ) );
     }
 
     //

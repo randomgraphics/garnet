@@ -8,6 +8,8 @@ bool gAnimation = true;
 
 class Scene
 {
+    GN::app::SampleApp & app;
+    
     AutoRef<Shader> ps1, ps2;
 
     uint32_t tex0;
@@ -120,7 +122,7 @@ class Scene
 
 public:
 
-    Scene() {}
+    Scene( GN::app::SampleApp & a ) : app(a) {}
 
     ~Scene() { quit(); }
 
@@ -176,7 +178,7 @@ public:
         }
 
         // get texture handle
-        tex0 = gTexDict.getResourceHandle( "texture/rabit.png" );
+        tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
 
         // create the effect
         if( !loadEffect() ) return false;
@@ -221,7 +223,7 @@ public:
         Renderer & r = gRenderer;
 
         // quad 1
-        r.setTexture( 0, gTexDict.getResource(tex0) );
+        r.setTexture( 0, app.getResMgr().textures.getResource(tex0) );
         r.draw2DTexturedQuad( DQ_UPDATE_DEPTH, 0, 0, 0.5, 0.5 );
 
         // quad 2
@@ -292,7 +294,7 @@ public:
 
     bool onRendererCreate()
     {
-        mScene = new Scene;
+        mScene = new Scene(*this);
         return mScene->init();
     }
 

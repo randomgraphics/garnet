@@ -10,16 +10,6 @@
 #include <map>
 #include <set>
 
-//!
-//! global shader dictionary
-//!
-#define gShaderDict (GN::gfx::ShaderDictionary::sGetInstance())
-
-//!
-//! pointer to global shader dictionary
-//!
-#define gShaderDictPtr (GN::gfx::ShaderDictionary::sGetInstancePtr())
-
 namespace GN { namespace gfx
 {
     //!
@@ -279,11 +269,6 @@ namespace GN { namespace gfx
         std::map<StrA,uint32_t>         mUniformNames; //!< uniform name -> uniform handle
         mutable std::set<uint32_t>      mDirtySet;     //!< Store handle of dirty uniforms.
     };
-
-    //!
-    //! Shader manager class (singleton)
-    //!
-    typedef ResourceManager<Shader*,true> ShaderDictionary;
 
     // *************************************************************************
     // inline methods

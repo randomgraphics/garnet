@@ -5,6 +5,8 @@ using namespace GN::gfx;
 
 class Scene
 {
+    GN::app::SampleApp & mApp;
+    
     AutoRef<Texture> mColor;
     AutoRef<Texture> mDepth;
 
@@ -26,6 +28,8 @@ class Scene
 
 public:
 
+    Scene( GN::app::SampleApp & app ) : mApp(app) {}
+
     ~Scene() { destroy(); }
 
     bool create()
@@ -41,7 +45,7 @@ public:
         if( mDepth.empty() ) return false;
 
         // create texture
-        mTex0 = gTexDict.getResourceHandle( "texture/rabit.png" );
+        mTex0 = mApp.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
 
         // create decl
         VtxFmtDesc fmt;
@@ -69,11 +73,11 @@ public:
         mVs = mPs = 0;
         if( r.supportShader( VERTEX_SHADER, LANG_D3D_HLSL ) )
         {
-            mVs = gShaderDict.getResourceHandle( "depthTexture/d3dVs.txt" );
+            mVs = mApp.getResMgr().shaders.getResourceHandle( "depthTexture/d3dVs.txt" );
         }
         if( r.supportShader( PIXEL_SHADER, LANG_D3D_HLSL ) )
         {
-            mPs = gShaderDict.getResourceHandle( "depthTexture/d3dPs.txt" );
+            mPs = mApp.getResMgr().shaders.getResourceHandle( "depthTexture/d3dPs.txt" );
         }
 
         // success
@@ -97,6 +101,7 @@ public:
     void render()
     {
         Renderer & r = gRenderer;
+        GN::app::SampleResourceManager & rm = mApp.getResMgr();
 
         // render to depth texture
         r.contextUpdateBegin();
@@ -105,7 +110,7 @@ public:
             r.setColorBuffer( 0, mColor );
             r.setDepthBuffer( mDepth );
             r.setWorld( mWorld ); r.setView( mView ); r.setProj( mProj );
-            r.setTextureHandle( 0, mTex0 );
+            rm.bindTextureHandle( r, 0, mTex0 );
             r.setVtxFmt( mDecl );
         r.contextUpdateEnd();
         r.clearScreen();
@@ -116,7 +121,7 @@ public:
         r.setTexture( 0, mDepth );
         if( mVs && mPs )
         {
-            r.setShaderHandles( mVs, mPs );
+            rm.bindShaderHandles( r, 0, 0 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_OPAQUE );
         }
         else
@@ -136,7 +141,7 @@ public:
 
     bool onRendererCreate()
     {
-        mScene = new Scene;
+        mScene = new Scene(*this);
         return mScene->create();
     }
 
