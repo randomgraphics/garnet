@@ -203,7 +203,7 @@ namespace GN { namespace core
         // ********************************
     private:
 
-        gfx::effect::EffectDictionary mDict;
+        gfx::EffectDictionary mDict;
 
         // ********************************
         // private functions

@@ -16,7 +16,7 @@ bool GN::core::CoreEffectDict::init()
     GN_STDCLASS_INIT( GN::core::CoreEffectDict, () );
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigDestroy.connect( mDict, &gfx::effect::EffectDictionary::disposeAll );
+    GN::gfx::Renderer::sSigDestroy.connect( mDict, &gfx::EffectDictionary::disposeAll );
 
     // success
     return selfOK();
