@@ -14,12 +14,12 @@ namespace GN { namespace gfx
     //!
     //! Vertex buffer content loader
     //!
-    typedef Functor1<bool,VtxBuf&> VtxBufLoader;
+    typedef Delegate1<bool,VtxBuf&> VtxBufLoader;
 
     //!
     //! Index buffer content loader
     //!
-    typedef Functor1<bool,IdxBuf&> IdxBufLoader;
+    typedef Delegate1<bool,IdxBuf&> IdxBufLoader;
 
     //!
     //! Vertex buffer interface.

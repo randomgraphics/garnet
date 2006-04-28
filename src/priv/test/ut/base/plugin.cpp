@@ -45,8 +45,7 @@ public:
 
     void test1()
     {
-        GN::PluginManager & mgr = GN::PluginManager::sGetInstance();
-        mgr.reset();
+        GN::PluginManager mgr;
 
         TS_ASSERT( !mgr.registerPlugin( "", "aa", "", 0 ) );
         TS_ASSERT( !mgr.registerPlugin( "aa", "", "", 0 ) );
@@ -103,8 +102,7 @@ public:
 
     void testOverrideExistingPlugin()
     {
-        GN::PluginManager & mgr = GN::PluginManager::sGetInstance();
-        mgr.reset();
+        GN::PluginManager mgr;
 
         GN::AutoObjPtr<MyPlugin> p;
 

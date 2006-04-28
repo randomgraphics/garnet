@@ -79,7 +79,7 @@ namespace GN { namespace gfx
     //!
     //! Texture content loader
     //!
-    typedef Functor1<bool,Texture&> TextureLoader;
+    typedef Delegate1<bool,Texture&> TextureLoader;
 
     //!
     //! Texture descriptor

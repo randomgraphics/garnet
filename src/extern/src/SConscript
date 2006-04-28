@@ -1,7 +1,5 @@
 Import( 'GN' )
 
-lib = GN.newTarget( 'stlib', 'GNextern', [] )
-
 # ******************
 # define build flags
 # ******************
@@ -35,11 +33,18 @@ jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
 if 'gcc' == GN.conf['compiler']: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
-lib.addCluster( jpeg_cluster )
 
 common_sources = GN.glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
 if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
 common_cluster = GN.newSourceCluster( common_sources )
 common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
-lib.addCluster( common_cluster )
+
+# **********************
+# define source clusters
+# **********************
+lib = GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,common_cluster] )
+if 'win32' == GN.conf['platform']:
+    lib.externalDependencies = ['glu32','opengl32']
+else:
+    lib.externalDependencies = ['GLU','GL','X11']

@@ -11,16 +11,12 @@
 #include "garnet/GNgfx.h"
 #include "garnet/GNapp.h"
 
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
+#if GN_MSWIN
 #define NOMINMAX
 #include <windows.h>
 #endif
 
-#include <d3d9.h>
-#include <d3dx9.h>
-#include <dxerr9.h>
+#include <glew.h>
 
 #include "garnet/base/pragma.h"
 

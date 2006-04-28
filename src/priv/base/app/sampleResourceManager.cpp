@@ -360,8 +360,8 @@ GN::app::SampleResourceManager::SampleResourceManager()
     rawData.setDeletor( &sDeleteRawData );
     rawData.setNullor( &sCreateNullRawData );
 
-    Renderer::sSigDispose.connect( *this, &SampleResourceManager::onRendererDispose );
-    Renderer::sSigDestroy.connect( *this, &SampleResourceManager::onRendererDestroy );
+    Renderer::sSigDispose.connect( this, &SampleResourceManager::onRendererDispose );
+    Renderer::sSigDestroy.connect( this, &SampleResourceManager::onRendererDestroy );
 }
 
 //
@@ -369,8 +369,8 @@ GN::app::SampleResourceManager::SampleResourceManager()
 // -----------------------------------------------------------------------------
 GN::app::SampleResourceManager::~SampleResourceManager()
 {
-    Renderer::sSigDispose.disconnect( *this );
-    Renderer::sSigDestroy.disconnect( *this );
+    Renderer::sSigDispose.disconnect( this );
+    Renderer::sSigDestroy.disconnect( this );
     disposeAll();
 }
 

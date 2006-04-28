@@ -611,7 +611,7 @@ bool GN::gfx::D3D9Texture::lock(
     // call basic lock
     Boxi clippedArea;
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
-    AutoScope< Functor0<bool> > basicUnlocker( makeFunctor(*this,&D3D9Texture::basicUnlock) );
+    AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
 
 #if GN_XENON
     // On Xenon, always lock target texture directly

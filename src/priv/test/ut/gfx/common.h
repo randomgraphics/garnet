@@ -123,8 +123,8 @@ struct TestScene : public GN::SlotBase
     {
         using namespace GN;
         using namespace GN::gfx;
-        Renderer::sSigCreate.connect( *this, &TestScene::create );
-        Renderer::sSigDestroy.connect( *this, &TestScene::destroy );
+        Renderer::sSigCreate.connect( this, &TestScene::create );
+        Renderer::sSigDestroy.connect( this, &TestScene::destroy );
     }
 
     ~TestScene() { destroy(); }
