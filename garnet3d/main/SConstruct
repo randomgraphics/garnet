@@ -171,7 +171,6 @@ def UTIL_newEnv( compiler, variant ):
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
-        libs['common'] += Split('GL GLU X11')
 
     # 定制不同编译模式的编译选项
     cppdefines['debug']   += ['GN_DEBUG=1']
@@ -773,8 +772,8 @@ def BUILD_sharedLib( name, target ):
     if 'GNcore' != name : stdlibs.append( 'GNcore' )
     stdlibs += Split('GNbase GNextern')
 
-    BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
+    BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
 
     libName = '%s%s%s'%(env['SHLIBPREFIX'],name,env['SHLIBSUFFIX'])

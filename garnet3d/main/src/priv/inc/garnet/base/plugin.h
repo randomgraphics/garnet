@@ -127,7 +127,7 @@ namespace GN
     class PluginFactory
     {
         typedef PluginBase* (*FactoryFuncPtr)( void * );
-        typedef Functor1<PluginBase*, void *> FactoryFunctor;
+        typedef Delegate1<PluginBase*, void *> FactoryFunctor;
 
         FactoryFunctor mFunc;
 

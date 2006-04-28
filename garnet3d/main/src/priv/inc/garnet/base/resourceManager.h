@@ -72,11 +72,11 @@ namespace GN
 
         typedef RES ResType; //!< resource type
 
-        typedef Functor3<bool,RES&,const StrA &,void*> Creator; //!< Resource creation functor
+        typedef Delegate3<bool,RES&,const StrA &,void*> Creator; //!< Resource creation functor
 
-        typedef Functor2<void,RES&,void*> Deletor; //!< Resource deletion functor
+        typedef Delegate2<void,RES&,void*> Deletor; //!< Resource deletion functor
 
-        typedef Functor1<bool,const StrA&> NameChecker; //!< Resource name checker.
+        typedef Delegate1<bool,const StrA&> NameChecker; //!< Resource name checker.
 
         //!
         //! Default constructor

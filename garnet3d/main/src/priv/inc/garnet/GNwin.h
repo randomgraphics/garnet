@@ -16,7 +16,7 @@ namespace GN
         typedef HandleType WindowHandle;  //!< window handle/ID.
         typedef HandleType DisplayHandle; //!< monitor handle on MSWIN; display ID on X11.
 
-        typedef Functor2<void,void*,bool&> WindowEventHandler; //!< Window event handler.
+        typedef Delegate2<void,void*,bool&> WindowEventHandler; //!< Window event handler.
 
         //!
         //! General window class

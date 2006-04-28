@@ -241,11 +241,11 @@ bool GN::app::SampleApp::initRenderer()
     GN_GUARD;
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigCreate.connect( *this, &SampleApp::onRendererCreate );
-    GN::gfx::Renderer::sSigRestore.connect( *this, &SampleApp::onRendererRestore );
-    GN::gfx::Renderer::sSigDispose.connect( *this, &SampleApp::onRendererDispose );
-    GN::gfx::Renderer::sSigDestroy.connect( *this, &SampleApp::onRendererDestroy );
-    GN::gfx::Renderer::sSigWindowClosing.connect( *this, &SampleApp::postExistEvent );
+    GN::gfx::Renderer::sSigCreate.connect( this, &SampleApp::onRendererCreate );
+    GN::gfx::Renderer::sSigRestore.connect( this, &SampleApp::onRendererRestore );
+    GN::gfx::Renderer::sSigDispose.connect( this, &SampleApp::onRendererDispose );
+    GN::gfx::Renderer::sSigDestroy.connect( this, &SampleApp::onRendererDestroy );
+    GN::gfx::Renderer::sSigWindowClosing.connect( this, &SampleApp::postExistEvent );
 
     // create renderer
     return recreateRenderer();
@@ -264,11 +264,11 @@ void GN::app::SampleApp::quitRenderer()
     GN::gfx::deleteRenderer();
 
     // disconnect to renderer signals
-    GN::gfx::Renderer::sSigDestroy.disconnect( *this );
-    GN::gfx::Renderer::sSigDispose.disconnect( *this );
-    GN::gfx::Renderer::sSigRestore.disconnect( *this );
-    GN::gfx::Renderer::sSigCreate.disconnect( *this );
-    GN::gfx::Renderer::sSigWindowClosing.disconnect( *this );
+    GN::gfx::Renderer::sSigDestroy.disconnect( this );
+    GN::gfx::Renderer::sSigDispose.disconnect( this );
+    GN::gfx::Renderer::sSigRestore.disconnect( this );
+    GN::gfx::Renderer::sSigCreate.disconnect( this );
+    GN::gfx::Renderer::sSigWindowClosing.disconnect( this );
 
     GN_UNGUARD;
 }
@@ -319,9 +319,9 @@ bool GN::app::SampleApp::initInput()
     }
 
     // connect to input signals
-    input->sigKeyPress.connect( *this, &SampleApp::onKeyPress );
-    input->sigCharPress.connect( *this, &SampleApp::onCharPress );
-    input->sigAxisMove.connect( *this, &SampleApp::onAxisMove );
+    input->sigKeyPress.connect( this, &SampleApp::onKeyPress );
+    input->sigCharPress.connect( this, &SampleApp::onCharPress );
+    input->sigAxisMove.connect( this, &SampleApp::onAxisMove );
 
     // success
     return true;

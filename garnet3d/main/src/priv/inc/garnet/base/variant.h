@@ -46,7 +46,7 @@ namespace GN
     //!
     //! variant type convert functor
     //!
-    typedef Functor2<
+    typedef Delegate2<
         bool,          //!< return value. 
         const void *,  //!< from
         void*          //!< to

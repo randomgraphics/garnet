@@ -64,8 +64,8 @@ namespace GN
 #include "base/math.h"
 #include "base/geometry.h"
 
-// functor & callback
-#include "base/functor.h"
+// delegate & callback
+#include "base/delegate.h"
 #include "base/sigslot.h"
 
 // variant class

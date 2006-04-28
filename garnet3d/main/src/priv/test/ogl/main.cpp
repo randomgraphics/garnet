@@ -1,10 +1,4 @@
 #include "pch.h"
-#include <glew.h>
-
-#if GN_MSVC
-#pragma comment( lib, "opengl32.lib" )
-#pragma comment( lib, "glu32.lib" )
-#endif
 
 using namespace GN;
 using namespace GN::gfx;

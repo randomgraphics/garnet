@@ -80,7 +80,7 @@ namespace GN { namespace gfx
         //!
         //! This is hook functor.
         //!
-        typedef Functor4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
+        typedef Delegate4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
 
         //!
         //! This signal will be triggered, whenever the windows receive a message.
@@ -188,7 +188,7 @@ namespace GN { namespace gfx
         //!
         //! This is hook functor.
         //!
-        typedef Functor4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
+        typedef Delegate4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
 
         //!
         //! This signal will be triggered, whenever the windows receive a message.

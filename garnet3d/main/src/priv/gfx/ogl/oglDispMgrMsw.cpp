@@ -264,7 +264,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     // setup message hook
     if( ro.autoRestore )
     {
-        mWindow.sigMessage.connect( *this, &OGLRenderer::msgHook );
+        mWindow.sigMessage.connect( this, &OGLRenderer::msgHook );
     }
 
     // set swap interval
@@ -292,7 +292,7 @@ void GN::gfx::OGLRenderer::dispDeviceDispose()
     mDispOK = false;
 
     // remove message hook
-    mWindow.sigMessage.disconnect( *this );
+    mWindow.sigMessage.disconnect( this );
 
     // restore display mode
     restoreDisplayMode();

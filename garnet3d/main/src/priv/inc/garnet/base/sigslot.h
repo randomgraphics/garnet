@@ -73,7 +73,7 @@
 #define PARAM_COMMA   GN_JOIN( PARAM_COMMA_, GN_SIGSLOT_TEMPL_N)
 
 #define SIGNAL_NAME     GN_JOIN(Signal,GN_SIGSLOT_TEMPL_N)
-#define FUNCTOR_NAME    GN_JOIN(Functor,GN_SIGSLOT_TEMPL_N)
+#define DELEGATE_NAME    GN_JOIN(Delegate,GN_SIGSLOT_TEMPL_N)
 
 namespace GN
 {
@@ -83,7 +83,7 @@ namespace GN
     template<typename R PARAM_COMMA PARAM_TEMPLS>
     class SIGNAL_NAME : public detail::SignalBase
     {
-        typedef FUNCTOR_NAME<R PARAM_COMMA PARAM_TYPES>  FunctorType;
+        typedef DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES>  FunctorType;
 
         struct SlotDesc
         {
@@ -166,25 +166,25 @@ namespace GN
         }
 
         template<class X, class Y>
-        inline void connect( Y & classRef, R (X::*memFuncPtr)(PARAM_TYPES) ) const
+        inline void connect( Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) ) const
         {
             GN_ASSERT( !IsConst<Y>::value ); // Y can't be const class
-            if( 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
+            if( 0 == classPtr || 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
             SlotDesc desc;
-            desc.func.bind( classRef, memFuncPtr );
-            desc.classPtr = &classRef;
-            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)&classRef : 0;
+            desc.func.bind( classPtr, memFuncPtr );
+            desc.classPtr = classPtr;
+            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
             addSlotItem( desc );
         }
 
         template<class X, class Y>
-        inline void connect( const Y & classRef, R (X::*memFuncPtr)(PARAM_TYPES) const ) const
+        inline void connect( const Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) const ) const
         {
-            if( 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
+            if( 0 == classPtr || 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
             SlotDesc desc;
-            desc.func.bind( classRef, memFuncPtr );
-            desc.classPtr = &classRef;
-            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)&classRef : 0;
+            desc.func.bind( classPtr, memFuncPtr );
+            desc.classPtr = classPtr;
+            desc.basePtr = IsBaseAndDerived<SlotBase,Y>::value ? (const SlotBase*)classPtr : 0;
             addSlotItem( desc );
         }
 
@@ -200,21 +200,23 @@ namespace GN
         }
 
         template<class X>
-        void disconnect( const X & slot ) const
+        void disconnect( const X * slot ) const
         {
+            if( 0 == slot ) return;
+
             // remove the class from private slot list that has same class ptr
             typename SlotContainer::iterator i, t, e = mSlots.end();
             for( i = mSlots.begin(); i != e; )
             {
                 t = i; ++i;
-                if( &slot == t->classPtr )
+                if( slot == t->classPtr )
                     mSlots.erase(t);
             }
 
             if( IsBaseAndDerived<SlotBase,X>::value )
             {
                 // remove itself from target slot's singal array.
-                disconnectFromSlotClass( (const SlotBase &)slot );
+                disconnectFromSlotClass( (const SlotBase &)*slot );
             }
         }
 
@@ -323,7 +325,7 @@ namespace GN
 #undef PARAM_COMMA
 
 #undef SIGNAL_NAME
-#undef FUNCTOR_NAME
+#undef DELEGATE_NAME
 
 #undef GN_SIGSLOT_TEMPL_N
 

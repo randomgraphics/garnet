@@ -47,12 +47,12 @@ public:
         TS_ASSERT( !rm.getResource( "2", false ) );
 
         // default nullor failure
-        rm.setNullor( GN::makeFunctor(&failedCreator) );
+        rm.setNullor( GN::makeDelegate(&failedCreator) );
         TS_ASSERT_EQUALS( 0, rm.getResource( "1" ) );
         TS_ASSERT_EQUALS( 0, rm.getResource( "2", false ) );
 
         // default nullor success
-        rm.setNullor( GN::makeFunctor(&nullCreator) );
+        rm.setNullor( GN::makeDelegate(&nullCreator) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "1" ) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "2", false ) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "2" ) );
@@ -68,7 +68,7 @@ public:
             "1",
             0,
             ResMgr::Creator(),
-            GN::makeFunctor(&failedCreator) ) );
+            GN::makeDelegate(&failedCreator) ) );
         TS_ASSERT_EQUALS( 0, rm.getResource("1") );
 
         // per-resource nullor success
@@ -76,7 +76,7 @@ public:
             "2",
             0,
             ResMgr::Creator(),
-            GN::makeFunctor(&nullCreator) ) );
+            GN::makeDelegate(&nullCreator) ) );
         TS_ASSERT_EQUALS( -1, rm.getResource("2") );
     }
 
@@ -88,12 +88,12 @@ public:
         TS_ASSERT( rm.addResource( "1" ) );
 
         // default nullor failure
-        rm.setCreator( GN::makeFunctor(&failedCreator) );
+        rm.setCreator( GN::makeDelegate(&failedCreator) );
         TS_ASSERT_EQUALS( 0, rm.getResource( "1" ) );
 
         // default nullor success
         rm.disposeAll();
-        rm.setCreator( GN::makeFunctor(&defCreator) );
+        rm.setCreator( GN::makeDelegate(&defCreator) );
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
     }
 
@@ -108,7 +108,7 @@ public:
     {
         ResMgr rm;
 
-        TS_ASSERT( rm.addResource( "1", 0, GN::makeFunctor(&defCreator), ResMgr::Creator(), false ) );
+        TS_ASSERT( rm.addResource( "1", 0, GN::makeDelegate(&defCreator), ResMgr::Creator(), false ) );
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
 
         // default is not overriding
@@ -116,7 +116,7 @@ public:
         TS_ASSERT_EQUALS( 1, rm.getResource( "1" ) );
 
         // override existing
-        TS_ASSERT( rm.addResource( "1", 0, GN::makeFunctor(&nullCreator), ResMgr::Creator(), true ) );
+        TS_ASSERT( rm.addResource( "1", 0, GN::makeDelegate(&nullCreator), ResMgr::Creator(), true ) );
         TS_ASSERT_EQUALS( -1, rm.getResource( "1" ) );
     }
 

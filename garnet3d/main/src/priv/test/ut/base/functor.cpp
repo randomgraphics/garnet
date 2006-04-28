@@ -143,35 +143,35 @@ public:
 
     void testCallConvension()
     {
-        GN::Functor2<void,int,int> f3, f4, f5;
-        f3 = GN::makeFunctor( &foo3 );
-        f4 = GN::makeFunctor( &foo4 );
-        f5 = GN::makeFunctor( &foo5 );
+        GN::Delegate2<void,int,int> f3, f4, f5;
+        f3 = GN::makeDelegate( &foo3 );
+        f4 = GN::makeDelegate( &foo4 );
+        f5 = GN::makeDelegate( &foo5 );
         f3(1,2); ASSERT_FUNC( "foo3()", 1, 2 );
         f4(3,4); ASSERT_FUNC( "foo4()", 3, 4 );
         f5(5,6); ASSERT_FUNC( "foo5()", 5, 6 );
     }
 
-    void testMakeFunctor()
+    void testMakeDeletate()
     {
         aaa a;
         const aaa & ca = a;
-        GN::Functor2<void,int,int> f1, f2, f3;
-        f1 = GN::makeFunctor( &foo1 );
-        f2 = GN::makeFunctor<aaa,aaa,void,int,int>( a, &aaa::foo1 );
-        f3 = GN::makeFunctor<aaa,aaa,void,int,int>( ca, &aaa::foo1 );
+        GN::Delegate2<void,int,int> f1, f2, f3;
+        f1 = GN::makeDelegate( &foo1 );
+        f2 = GN::makeDelegate<aaa,aaa,void,int,int>( &a, &aaa::foo1 );
+        f3 = GN::makeDelegate<aaa,aaa,void,int,int>( &ca, &aaa::foo1 );
 
         f1(1,2); ASSERT_FUNC( "foo1()", 1, 2 );
         f2(3,4); ASSERT_FUNC( "aaa::foo1()", 3, 4 );
         f3(5,6); ASSERT_FUNC( "aaa::foo1() const", 5, 6 );
     }
 
-    void testFunctor()
+    void testDeleagte()
     {
         aaa a;
         bbb b;
         const aaa & ca = a;
-        GN::Functor2<void,int,int> f1, f2;
+        GN::Delegate2<void,int,int> f1, f2;
 
         // self comparision, free function
         f1.bind( &foo1 );
@@ -193,37 +193,37 @@ public:
         ASSERT_FUNC( "foo2()", 1, 2);
 
         // free function != member function
-        f2.bind<aaa,aaa>( a,&aaa::foo1 );
+        f2.bind<aaa,aaa>( &a,&aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
         f2(3,4);
         ASSERT_FUNC( "aaa::foo1()", 3, 4 );
 
         // self compare, member function
-        f1.bind<aaa,aaa>( a,&aaa::foo1 );
+        f1.bind<aaa,aaa>( &a,&aaa::foo1 );
         TS_ASSERT( equal(f1,f1) );
         g_funcName = "";
         f1(1,2);
         ASSERT_FUNC( "aaa::foo1()", 1, 2 );
 
         // same member function
-        f2.bind<aaa,aaa>( a,&aaa::foo1 );
+        f2.bind<aaa,aaa>( &a,&aaa::foo1 );
         TS_ASSERT( equal(f1,f2) );
         f2(1,2);
 
         // different member function, same class, different constness
-        f1.bind<aaa,aaa>( ca, &aaa::foo1 );
+        f1.bind<aaa,aaa>( &ca, &aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
         f1(3,4);
         ASSERT_FUNC( "aaa::foo1() const", 3, 4 );
 
         // different member function, same class, different function
-        f2.bind<aaa,aaa>( ca, &aaa::foo2 );
+        f2.bind<aaa,aaa>( &ca, &aaa::foo2 );
         TS_ASSERT( unequal(f1,f2) );
         f2(1,2);
         ASSERT_FUNC( "aaa::foo2() const", 1, 2 );
 
-        f1.bind<aaa,aaa>( a, &aaa::foo1 );
-        f2.bind<aaa,aaa>( ca, &aaa::foo2 );
+        f1.bind<aaa,aaa>( &a, &aaa::foo1 );
+        f2.bind<aaa,aaa>( &ca, &aaa::foo2 );
         TS_ASSERT( unequal(f1,f2) );
         f1(3,4);
         ASSERT_FUNC( "aaa::foo1()", 3, 4 );
@@ -231,8 +231,8 @@ public:
         ASSERT_FUNC( "aaa::foo2() const", 1, 2 );
 
         // different member function, different class
-        f1.bind<aaa,aaa>(a,&aaa::foo1 );
-        f2.bind<aaa,bbb>(b,&aaa::foo1 );
+        f1.bind<aaa,aaa>( &a,&aaa::foo1 );
+        f2.bind<aaa,bbb>( &b,&aaa::foo1 );
         TS_ASSERT( unequal(f1,f2) );
         g_funcName = "";
         f1(1,2);
@@ -253,13 +253,44 @@ public:
 #endif
     }
 
+    struct F1
+    {
+        int & ii;
+        F1( int & i ) : ii(i) {}
+        void operator()() { ii = 1; }
+    };
+    struct F2
+    {
+        int & ii;
+        F2( int & i ) : ii(i) {}
+        void operator()() { ii = 2; }
+    };
+
+    void testBindToFunctor()
+    {
+        int i = 0;
+        F1 f1(i);
+        F2 f2(i);
+
+        GN::Delegate0<void> d1, d2;
+
+        d1.bind( f1 );
+        d2.bind( &f2 );
+
+        d1(); // copy_of_f1.opeartor()
+        TS_ASSERT_EQUALS( i, 1 );
+
+        d2(); // fp->operator()
+        TS_ASSERT_EQUALS( i, 2 );
+    }
+
     void testConstAndNonConst()
     {
         aaa a;
         const aaa & b = a;
         GN::Signal2<void,int,int> s1;
-        s1.connect( a, &aaa::foo1 );
-        s1.connect<aaa,aaa>( b, &aaa::foo1 );
+        s1.connect( &a, &aaa::foo1 );
+        s1.connect<aaa,aaa>( &b, &aaa::foo1 );
         TS_ASSERT_EQUALS( s1.getNumSlots(), 2 );
         g_callSequence.clear();
         s1(0,1);
@@ -282,9 +313,9 @@ public:
         aaa a;
         GN::Signal2<void,int,int> s;
 
-        s.connect( a, &aaa::foo1 );
+        s.connect( &a, &aaa::foo1 );
         TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
-        s.disconnect( a );
+        s.disconnect( &a );
         TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
     }
 
@@ -293,9 +324,9 @@ public:
         bbb b;
         GN::Signal2<void,int,int> s;
 
-        s.connect( b, &bbb::foo1 );
+        s.connect( &b, &bbb::foo1 );
         TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
-        s.disconnect( b );
+        s.disconnect( &b );
         TS_ASSERT_EQUALS( s.getNumSlots(), 0 );
     }
 
@@ -304,7 +335,7 @@ public:
         GN::Signal2<void,int,int> s;
         {
             bbb b;
-            s.connect( b, &bbb::foo1 );
+            s.connect( &b, &bbb::foo1 );
             TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
             TS_ASSERT_EQUALS( b.getNumSignals(), 1 );
         }
@@ -316,7 +347,7 @@ public:
         bbb b;
         {
             GN::Signal2<void,int,int> s;
-            s.connect( b, &bbb::foo1 );
+            s.connect( &b, &bbb::foo1 );
             TS_ASSERT_EQUALS( s.getNumSlots(), 1 );
             TS_ASSERT_EQUALS( b.getNumSignals(), 1 );
         }
@@ -327,10 +358,10 @@ public:
     {
         aaa a;
         GN::Signal2<void,int,int> s1;
-        s1.connect( a, &aaa::foo1 );
-        s1.connect( a, &aaa::foo2 );
+        s1.connect( &a, &aaa::foo1 );
+        s1.connect( &a, &aaa::foo2 );
         s1.connect( &foo1 );
-        s1.connect( a, &aaa::foo1 ); // duplicate member function
+        s1.connect( &a, &aaa::foo1 ); // duplicate member function
         s1.connect( &foo1 );          // duplicate free function
         TS_ASSERT_EQUALS( s1.getNumSlots(), 3 );
         g_callSequence.clear();
@@ -342,8 +373,8 @@ public:
         {
             bbb b;
 
-			s1.connect( b, &bbb::foo );
-            s1.connect( b, &aaa::foo1 );
+			s1.connect( &b, &bbb::foo );
+            s1.connect( &b, &aaa::foo1 );
 
             TS_ASSERT_EQUALS( s1.getNumSlots(), 5 );
             TS_ASSERT_EQUALS( b.getNumSignals(), 2 );
@@ -359,8 +390,8 @@ public:
 
             {
                 GN::Signal2<void,int,int> s2;
-                s2.connect( b, &bbb::foo );
-                s2.connect( a, &aaa::foo1 );
+                s2.connect( &b, &bbb::foo );
+                s2.connect( &a, &aaa::foo1 );
 
                 TS_ASSERT_EQUALS( s2.getNumSlots(), 2 );
                 TS_ASSERT_EQUALS( b.getNumSignals(), 3 );
