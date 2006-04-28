@@ -37,6 +37,8 @@ TODO
   - in-game GUI system
     - font class
   - UT for Str::findFirst/LastOf(...)
+  - refine sigslot class to allow any type of functor
+  - string buffer memory allocator.
 
 - p2
   - GFX system
