@@ -7,30 +7,29 @@ Import( 'GN' )
 ccflags = []
 cppdefines = []
 
-if 'icl' == GN.conf['compiler']:
+if 'icl' == GN.compiler.name :
     unimportant_warnings = [
         '1572', # floating-point comparison
         ]
     ccflags += ['/W3'] + ['/Qwd%s'%w for w in unimportant_warnings]
-elif 'vc71' == GN.conf['compiler']:
+elif 'vc71' == GN.compiler.name:
     ccflags += ['/W3']
-elif 'vc80' == GN.conf['compiler']:
+elif 'vc80' == GN.compiler.name:
     ccflags += ['/W3']
     cppdefines += Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE')
-elif 'vc80-x64' == GN.conf['compiler']:
-    unimportant_warnings = [
-        '4334', # 32-bit shift convert to 64-bit
-        '4267', # conversion from 'size_t' to xxx, possible loss of data
-        '4244', # conversion from 'type1' to 'type2', possible loss of data
-        ]
-    ccflags += ['/W3'] + ['/wd%s'%w for w in unimportant_warnings]
-    cppdefines += Split('_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_DEPRECATE')
+    if 'x64' == GN.compiler.cpu:
+        unimportant_warnings = [
+            '4334', # 32-bit shift convert to 64-bit
+            '4267', # conversion from 'size_t' to xxx, possible loss of data
+            '4244', # conversion from 'type1' to 'type2', possible loss of data
+            ]
+        ccflags += ['/W3'] + ['/wd%s'%w for w in unimportant_warnings]
 
 # **********************
 # define source clusters
 # **********************
 jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
-if 'gcc' == GN.conf['compiler']: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
+if 'gcc' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 
@@ -44,7 +43,7 @@ common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 # define source clusters
 # **********************
 lib = GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,common_cluster] )
-if 'mswin' == GN.conf['platform']:
+if 'mswin' == GN.compiler.os:
     lib.externalDependencies = ['glu32','opengl32']
 else:
     lib.externalDependencies = ['GLU','GL','X11']

@@ -9,7 +9,18 @@ REM setup garnet build parameers
 REM ============================
 
 if "" == "%GN_BUILD_COMPILER%" set GN_BUILD_COMPILER=vc80
+if "" == "%GN_BUILD_TARGET_OS%" set GN_BUILD_TARGET_OS=mswin
+if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
+    if "" == "%GN_BUILD_TARGET_CPU%" set GN_BUILD_TARGET_CPU=x64
+) else (
+    if "" == "%GN_BUILD_TARGET_CPU%" set GN_BUILD_TARGET_CPU=x86
+)
 if "" == "%GN_BUILD_VARIANT%" set GN_BUILD_VARIANT=debug
+
+echo GN_BUILD_COMPILER = %GN_BUILD_COMPILER%
+echo GN_BUILD_TARGET_OS = %GN_BUILD_TARGET_OS%
+echo GN_BUILD_TARGET_CPU = %GN_BUILD_TARGET_CPU%
+echo GN_BUILD_VARIANT = %GN_BUILD_VARIANT%
 
 REM ==========
 REM setup path
@@ -35,7 +46,6 @@ if "xenon" == "%GN_BUILD_COMPILER%" (
     )
 )
 
-
 REM ===========
 REM setup scons
 REM ===========
@@ -49,7 +59,7 @@ REM ===========
 
 alias root      "cd /d %GARNET_ROOT%\$*"
 alias bin       "cd /d %GARNET_ROOT%\bin\$*"
-alias bld       "cd /d %GARNET_ROOT%\bin\build.tmp\scons\win32\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
+alias bld       "cd /d %GARNET_ROOT%\bin\build.tmp\scons\%GN_BUILD_TARGET_OS%\%GN_BUILD_TARGET_CPU%\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
 alias env       "cd /d %GARNET_ROOT%\env\$*"
 alias msvc      "cd /d %GARNET_ROOT%\msvc"
 alias src       "cd /d %GARNET_ROOT%\src\$*"

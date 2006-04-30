@@ -5,26 +5,22 @@ import sys, os.path
 # store Doc generate functor
 class DocGenerator:
 
-    def __init__(self):
-        self.target = File('reference.chm')
+    def __init__( self ):
+        self.target = File('#bin/sdk/doc/reference.chm')
+        self.outdir = Dir('.')
 
     def __call__( self, env, sources ):
 
-        if 'mswin' == GN.conf['platform']:
-            doxygen = File('#env/bin/mswin/x86/doxygen.exe').path
-            genchm = 'YES'
-        else:
-            doxygen = 'doxygen'
-            genchm = 'NO'
+        doxygen = File('#env/bin/mswin/x86/doxygen.exe').path
+        genchm = 'YES'
 
-        outdir = os.path.dirname( self.target.abspath )
-        doxyFileName = os.path.join( outdir, 'DoxyFile' )
+        doxyFileName = os.path.join( self.outdir.abspath, 'DoxyFile' )
 
         doxyfile = env.Command(
             doxyFileName, sources,
             '%s $SOURCES OUTPUT_DIRECTORY=%s CHM_FILE=%s GENERATE_HTMLHELP=%s HHC_LOCATION=%s > $TARGET'%(
                 sys.executable,
-                outdir,
+                self.outdir,
                 self.target.abspath,
                 genchm,
                 File('#env/bin/mswin/x86/hhc.exe').abspath,
@@ -40,6 +36,6 @@ class DocGenerator:
         return manual
 
 Import( 'GN' )
-if 'mswin' == GN.conf['platform']:
+if 'mswin' == GN.compiler.os:
     cluster = GN.newCustomSourceCluster( ['gendoxyfile.py','doxyfile.in'], DocGenerator() )
     GN.newNeutralCustomTarget( 'GNdoc', [cluster] )
