@@ -36,63 +36,62 @@ else:
     Exit(-1)
 
 # 定义可用的编译器列表
-CONF_allCompilers = ''
-CONF_defaultCompiler = None
+class Compiler:
+    def __init__( self, name, os, cpu ):
+        self.name = name; # compiler name
+        self.os = os; # target OS
+        self.cpu = cpu; # target CPU
+
+    def __repr__( self ) : return '%s-%s-%s'%(self.name,self.os,self.cpu)
+    def __str__( self ) : return '%s-%s-%s'%(self.name,self.os,self.cpu)
+
+CONF_allCompilers = []
 if 'mswin' == CONF_os:
-    CONF_allCompilers = 'vc71 vc80 vc80-x64 icl icl-em64t'
-    if SCons.Tool.xenon.exists( LOCAL_env ): CONF_allCompilers += ' xenon'
-    if 'x64' == CONF_cpu:
-        CONF_defaultCompiler = 'vc80-x64'
-    else:
-        assert( 'x86' == CONF_cpu )
-        CONF_defaultCompiler = 'vc80'
+    CONF_allCompilers.append( Compiler('vc71','mswin','x86') )
+    CONF_allCompilers.append( Compiler('vc80','mswin','x86') )
+    CONF_allCompilers.append( Compiler('vc80','mswin','x64') )
+    CONF_allCompilers.append( Compiler('icl','mswin','x86') )
+    CONF_allCompilers.append( Compiler('icl','mswin','x64') )
+    CONF_allCompilers.append( Compiler('icl','mswin','ia64') )
+    if SCons.Tool.xenon.exists( LOCAL_env ): CONF_allCompilers.append( Compiler('xenon','xenon','ppc') )
+elif 'cygwin' == CONF_os:
+    CONF_allCompilers.append( Compiler('gcc','cygwin','x86') )
 else:
-    CONF_allCompilers = 'gcc icl'
-    CONF_defaultCompiler = 'gcc'
+    assert( 'unix' == CONF_os )
+    CONF_allCompilers.append( Compiler('gcc','unix','x86') )
+
+# Get a compiler for specific target OS and CPU type.
+def CONF_getCompiler( os, cpu ):
+    for c in CONF_allCompilers:
+        if c.os == os and c.cpu == cpu : return c;
+    return None;
 
 # 定义编译模式
 CONF_allVariants = 'debug profile retail stdbg stprof stret'
 
 # 定义缺省的命令行选项
 CONF_defaultCmdArgs = {
-    'trace'             : getenv('GN_BUILD_TRACE',  '0'),
-    'variant'           : getenv('GN_BUILD_VARIANT', 'debug'),
-    'compiler'          : getenv('GN_BUILD_COMPILER', CONF_defaultCompiler), # default compiler
-    'enableCg'          : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
+    'trace'     : getenv('GN_BUILD_TRACE',  '0'),
+    'variant'   : getenv('GN_BUILD_VARIANT', 'debug'),
+    'compiler'  : getenv('GN_BUILD_COMPILER', CONF_getCompiler(CONF_os,CONF_cpu).name ),
+    'os'        : getenv('GN_BUILD_TARGET_OS', CONF_os ),
+    'cpu'       : getenv('GN_BUILD_TARGET_CPU', CONF_cpu ),
+    'cg'        : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
     }
 
 # 是否打开trace
 CONF_trace = float( ARGUMENTS.get('trace', CONF_defaultCmdArgs['trace']) )
 
-# 定义编译器类型
-CONF_compiler = ARGUMENTS.get('compiler', CONF_defaultCmdArgs['compiler'])
-
 # 定义编译类型
 CONF_variant = ARGUMENTS.get('variant', CONF_defaultCmdArgs['variant'] )
-if 'xenon' == CONF_compiler: # disable dynamic link on Xenon
-    if 'debug' == CONF_variant : CONF_variant = 'stdbg'
-    elif 'profile' == CONF_variant : CONF_variant = 'stprof'
-    elif 'retail' == CONF_variant : CONF_variant = 'stret'
+
+# 定义编译器类型
+CONF_compiler = Compiler( ARGUMENTS.get('compiler', CONF_defaultCmdArgs['compiler'] ),
+                          ARGUMENTS.get('os', CONF_defaultCmdArgs['os'] ),
+                          ARGUMENTS.get('cpu', CONF_defaultCmdArgs['cpu'] ) )
 
 # 是否支持Cg语言.
-CONF_enableCg  = ARGUMENTS.get('cg', CONF_defaultCmdArgs['enableCg'] )
-
-# 编译器的目标OS和cpu类型
-CONF_target_platform = None
-CONF_target_cpu = None
-if 'mswin' == CONF_os:
-    CONF_target_platform = 'mswin'
-    if CONF_compiler in ['vc71','vc80','icl']:
-        CONF_target_cpu = 'x86'
-    elif CONF_compiler in ['vc80-x64','icl-em64t']:
-        CONF_target_cpu = 'x64'
-elif 'cygwin' == CONF_os:
-    CONF_target_platform = 'cygwin'
-    CONF_target_cpu = 'x86'
-else :
-    assert( 'unix' == CONF_os )
-    CONF_target_platform = 'unix'
-    CONF_target_cpu = 'x86'
+CONF_enableCg  = ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] )
 
 ################################################################################
 #
@@ -102,35 +101,47 @@ else :
 
 def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
-def UTIL_buildRoot() :
-    return os.path.join( 'bin', 'build.tmp', 'scons', CONF_target_platform, CONF_target_cpu )
+def UTIL_buildRoot( compiler = None ) :
+    if not compiler:
+        return os.path.join( 'bin', 'build.tmp', 'scons' )
+    else:
+        return os.path.join( 'bin', 'build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
 
-def UTIL_buildDir( compiler, variant ) : return os.path.join( UTIL_buildRoot(), compiler, variant )
+def UTIL_buildDir( compiler, variant ) :
+    if not isinstance( compiler, Compiler ):
+        assert( isinstance(compiler,int) )
+        assert( isinstance(variant,int) )
+        return os.path.join( 'bin', 'build.tmp', 'scons' )
+    else:
+        return os.path.join( UTIL_buildRoot(compiler), variant )
 
 #
 # Create new build environment
 #
 def UTIL_newEnv( compiler, variant ):
-    # crete new enviroment instance
+
+    if not isinstance( compiler, Compiler ):
+        assert( isinstance(compiler,int) )
+        assert( isinstance(variant,int) )
+        return Environment()
+
     tools = ['default']
     msvs_version = '7.1'
     msvs_platform = 'x86'
     icl_version = None
     icl_abi = 'ia32'
-    if 'xenon' == compiler:
+    if 'xenon' == compiler.name:
         tools = ['xenon']
-    elif 'icl' == compiler :
+    elif 'icl' == compiler.name :
         tools += ['intelc']
-    elif 'icl-em64t' == compiler :
-        tools += ['intelc']
-        icl_abi = 'em64t'
+        if 'x64' == compiler.cpu :
+            icl_abi = 'em64t'
+            msvs_version = '8.0'
+            msvs_platform = 'x64'
+    elif 'vc80' == compiler.name :
         msvs_version = '8.0'
-        msvs_platform = 'x64'
-    elif 'vc80' == compiler :
-        msvs_version = '8.0'
-    elif 'vc80-x64' == compiler :
-        msvs_version = '8.0'
-        msvs_platform = 'x64'
+        if 'x64' == compiler.cpu :
+            msvs_platform = 'x64'
     env = Environment(
         tools = tools,
         MSVS_VERSION = msvs_version,
@@ -178,12 +189,12 @@ def UTIL_newEnv( compiler, variant ):
     linkflags  = generate_empty_options()
 
     # 定制不同平台的编译选项
-    if 'xenon' == compiler:
+    if 'xenon' == compiler.os:
         libs['common'] += Split('xboxkrnl xbdm dxerr9')
         libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
         libs['stprof'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
         libs['stret'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-    elif 'win32' == env['PLATFORM']:
+    elif 'mswin' == compiler.os:
         libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     else:
         cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
@@ -208,11 +219,7 @@ def UTIL_newEnv( compiler, variant ):
         cppdefines['debug']   += ['_DEBUG']
         cppdefines['stdbg']   += ['_DEBUG']
 
-        if float(env['MSVS_VERSION']) >= 8.0:
-            cxxflags['common']  += ['/EHs']
-            linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
-        else:
-            cxxflags['common']  += ['/EHs']
+        cxxflags['common']  += ['/EHs']
 
         ccflags['common']  += ['/W4','/WX']
         ccflags['debug']   += ['/MDd','/GR','/RTCscu']
@@ -222,6 +229,8 @@ def UTIL_newEnv( compiler, variant ):
         ccflags['stprof']  += ['/MT','/O2']
         ccflags['stret']   += ['/MT','/O2','/GL']
 
+        if float(env['MSVS_VERSION']) >= 8.0:
+            linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
         linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
         linkflags['profile'] += ['/OPT:REF','/LTCG:STATUS']
         linkflags['stprof']  += ['/OPT:REF','/LTCG:STATUS']
@@ -341,7 +350,10 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 
 class GarnetEnv :
 
-    conf = {}
+    def __init__( self ) :
+        self.compiler = None
+        self.variant = None
+        self.conf = {}
 
     # 输出调试信息
     def trace( self, level, msg ):
@@ -445,30 +457,31 @@ class GarnetEnv :
     def newTarget( self, type, name, sources, dependencies = [], pdb = None ):
         # create new target instance
         t = Target()
-        if UTIL_staticBuild( CURRENT_variant ) and 'shlib' == type: type = 'stlib'
+        if UTIL_staticBuild( self.variant ) and 'shlib' == type: type = 'stlib'
         t.type = type
         t.path = Dir('.')
         t.sources = sources
         t.dependencies = dependencies
         if pdb : t.pdb = File(pdb)
         else   : t.pdb = File("%s.pdb"%(name))
-        ALL_targets[CURRENT_compiler][CURRENT_variant][name] = t # insert to global target list
+        ALL_targets[self.compiler][self.variant][name] = t # insert to global target list
         return t
 
     # 创建 neutral(compiler insensitive) custom target.
     def newNeutralCustomTarget( self, name, sources ):
 
         # check for redundant target
-        if name in ALL_targets['neutral']['neutral'] : return ALL_targets['neutral']['neutral']
+        if name in ALL_targets[0][0] : return ALL_targets[0][0]
 
         # create new target instance
         t = Target()
         t.type = 'custom'
         t.path = Dir('.')
         t.sources = sources
-        ALL_targets['neutral']['neutral'][name] = t # insert to global target list
+        ALL_targets[0][0][name] = t # insert to global target list
         return t
 
+# Create garnet build environment (singleton)
 GN = GarnetEnv()
 
 ################################################################################
@@ -557,28 +570,30 @@ class Target:
 #
 ################################################################################
 
+def COLLECT_getCompilers( candidate ):
+    result = []
+    for c in CONF_allCompilers:
+        if ( 'all' == candidate.name or c.name == candidate.name ) and \
+           ( 'all' == candidate.os or c.os == candidate.os ) and \
+           ( 'all' == candidate.cpu or c.cpu == candidate.cpu ) : result.append( c )
+    if 0 == len(result): print 'ERROR : invalid compiler : %s'%candidate
+    return result
+
 COLLECT_compilers = []
 COLLECT_variants = []
 if 'all' in COMMAND_LINE_TARGETS:
-    COLLECT_compilers = Split( CONF_allCompilers )
+    COLLECT_compilers = CONF_allCompilers
     COLLECT_variants = Split( CONF_allVariants )
 else:
-    if 'all' == CONF_compiler:
-        COLLECT_compilers = Split( CONF_allCompilers )
-    else:
-        COLLECT_compilers = Split( CONF_compiler )
+    COLLECT_compilers = COLLECT_getCompilers( CONF_compiler )
     if 'all' == CONF_variant:
         COLLECT_variants = Split( CONF_allVariants )
     else:
         COLLECT_variants = Split( CONF_variant )
 
-ALL_configs = []
-ALL_targets = { "neutral" : { "neutral" : {} } }
+ALL_conf = []
+ALL_targets = { 0 : { 0 : {} } }
 for c in COLLECT_compilers:
-
-    if not c in CONF_allCompilers:
-        print "ERROR: Ignore invalid compiler '%s'"%c
-        continue
 
     ALL_targets[c] = {}
 
@@ -588,16 +603,10 @@ for c in COLLECT_compilers:
             print "ERROR: Ignore invalid variant '%s'"%v
             continue
 
-        conf = {
-            'platform' : CONF_target_platform,
-            #'cpu'      : CONF_target_cpu,
-            'compiler' : c,
-            'variant'  : v,
-        }
-
+        conf = {}
         UTIL_checkConfig( conf, os.path.join(UTIL_buildDir(c,v),'config'), c, v )
 
-        ALL_configs.append( conf )
+        ALL_conf.append( [c,v,conf] )
 
         ALL_targets[c][v] = {}
 
@@ -607,14 +616,11 @@ for c in COLLECT_compilers:
 #
 ################################################################################
 
-CURRENT_compiler = None
-CURRENT_variant = None
-for c in ALL_configs :
-    GN.conf = c
-    CURRENT_compiler = c['compiler']
-    CURRENT_variant = c['variant']
-    bldDir = UTIL_buildDir( CURRENT_compiler, CURRENT_variant )
-    SConscript( 'SConscript', exports=['GN'], build_dir=bldDir, duplicate=0 )
+for c in ALL_conf:
+    GN.compiler = c[0];
+    GN.variant = c[1];
+    GN.conf = c[2]
+    SConscript( 'SConscript', exports=['GN'], build_dir=UTIL_buildDir( GN.compiler, GN.variant ), duplicate=0 )
 
 ################################################################################
 #
@@ -851,7 +857,6 @@ def BUILD_custom( name, target ):
 for compiler, variants in ALL_targets.iteritems() :
     BUILD_compiler = compiler
     for variant, targets in variants.iteritems():
-
         BUILD_env = UTIL_newEnv( compiler, variant )
         BUILD_variant = variant
         BUILD_bldDir = UTIL_buildDir( compiler, variant )
@@ -960,8 +965,16 @@ HELP_opts.Add(
     CONF_defaultCmdArgs['trace'] )
 HELP_opts.Add(
     'compiler',
-    'Specify compiler. Could be : one of (%s) or "all". (GN_BUILD_COMPILER)'%CONF_allCompilers,
+    'Specify compiler. Could be : one of (%s) or "all". (GN_BUILD_COMPILER)'%'...',
     CONF_defaultCmdArgs['compiler'] )
+HELP_opts.Add(
+    'os',
+    'Specify build target OS. Could be : one of (%s) or "all". (GN_BUILD_TARGET_OS)'%'...',
+    CONF_defaultCmdArgs['os'] )
+HELP_opts.Add(
+    'cpu',
+    'Specify build target CPU type. Could be : one of (%s) or "all". (GN_BUILD_TARGET_OS)'%'...',
+    CONF_defaultCmdArgs['cpu'] )
 HELP_opts.Add(
     'variant',
     'Specify variant. Could be : one of (%s) or "all". (GN_BUILD_VARIANT)'%CONF_allVariants,
@@ -969,7 +982,7 @@ HELP_opts.Add(
 HELP_opts.Add(
     'cg',
     'Support Cg language or not. This flag has no effect, if Cg library is not found.(GN_BUILD_ENABLE_CG).',
-    CONF_defaultCmdArgs['enableCg'] )
+    CONF_defaultCmdArgs['cg'] )
 
 HELP_text = """
 Usage:
