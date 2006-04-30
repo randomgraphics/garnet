@@ -5,7 +5,7 @@
 #if GN_MSVC
 
 #pragma comment( lib, "dxerr9.lib" )
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #pragma comment(lib, "d3dx9d.lib")
 #else
 #pragma comment(lib, "d3dx9.lib")
@@ -16,7 +16,7 @@
 #pragma comment(lib, "xboxkrnl.lib")
 #pragma comment(lib, "xbdm.lib")
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #pragma comment(lib, "d3d9d.lib")
 #pragma comment(lib, "xapilibd.lib")
 #pragma comment(lib, "xgraphicsd.lib")
@@ -24,7 +24,7 @@
 #pragma comment(lib, "d3d9.lib")
 #pragma comment(lib, "xapilib.lib")
 #pragma comment(lib, "xgraphics.lib")
-#endif // GN_DEBUG
+#endif // GN_DEBUG_BUILD
 // more libraries: xnetd.lib xaudiod.lib xactd.lib vcompd.lib
 
 #else // !GN_XENON

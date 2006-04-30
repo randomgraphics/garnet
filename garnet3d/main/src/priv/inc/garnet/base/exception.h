@@ -162,7 +162,7 @@ namespace GN
 #define GN_UNGUARD_ALWAYS               GN_UNGUARD_ALWAYS_DO( throw; )
 #define GN_UNGUARD_ALWAYS_NO_THROW      GN_UNGUARD_ALWAYS_DO( ; )
 
-#if !GN_DISABLE_GUARD
+#if GN_ENABLE_GUARD
 #define GN_GUARD                       GN_GUARD_ALWAYS
 #define GN_UNGUARD                     GN_UNGUARD_ALWAYS
 #else
@@ -173,7 +173,7 @@ namespace GN
 //
 // guard macros for time-critical-function
 //
-#if (GN_DEBUG || GN_ENABLE_SLOW_GUARD) && !GN_DISABLE_GUARD
+#if (GN_DEBUG_BUILD || GN_ENABLE_SLOW_GUARD) && GN_ENABLE_GUARD
 #define GN_GUARD_SLOW                  GN_GUARD_ALWAYS
 #define GN_UNGUARD_SLOW                GN_UNGUARD_ALWAYS
 #else

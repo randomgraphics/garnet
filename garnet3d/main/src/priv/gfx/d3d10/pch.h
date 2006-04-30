@@ -31,7 +31,7 @@
 //!
 //! D3D10 error check routine
 //!
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #define GN_D3D10_CHECK( func )         GN_D3D10_CHECK_DO( func, )
 #else
 #define GN_D3D10_CHECK( func )         func

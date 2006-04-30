@@ -29,7 +29,7 @@
 //!
 //! output trace message
 //!
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #define GN_TRACE  ::GN::detail::LogHelper( GN::LOGLEVEL_TRACE_0, NULL, GN_FUNCTION, __FILE__, __LINE__ ).log
 #else
 #define GN_TRACE  ::GN::detail::LogHelper::fake

@@ -116,7 +116,7 @@ void GN::Variant::buildValueArray()
     mValues[VARIANT_STRING] = &mString;
     mValues[VARIANT_VECTOR4] = &mVector4;
     mValues[VARIANT_MATRIX44] = &mMatrix44;
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     for( int i = 0; i < NUM_VARIANT_TYPES; ++i )
     {
         GN_ASSERT( mValues[i] );

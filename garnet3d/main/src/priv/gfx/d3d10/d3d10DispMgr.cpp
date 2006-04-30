@@ -18,7 +18,7 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
     const DispDesc & dd = getDispDesc();
 
     UINT flags = 0;
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     flags |= D3D10_CREATE_DEVICE_DEBUG;
 #endif
     if( !ro.multithread ) flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;

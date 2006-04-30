@@ -339,7 +339,7 @@ bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
             return false;
         }
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
         // Trun on synchronous behavior for debug build.
         XSynchronize( mDisplay, true );
 #endif

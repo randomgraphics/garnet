@@ -174,7 +174,7 @@ void GN::gfx::D3D9Renderer::setContext( const RendererContext & newContext )
 {
     GN_GUARD_SLOW;
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     // make sure bindContext() does not rely on flags in tmp structure.
     RendererContext tmp = newContext;
     RendererContext::FieldFlags flags = tmp.flags;

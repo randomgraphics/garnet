@@ -9,7 +9,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
 
     StateValue<DWORD> & s = mRenderStates[type];
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     if( s.initialized && !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
@@ -23,7 +23,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
         GN_DX9_CHECK( mDevice->SetRenderState( type, value ) );
         s.initialized = true;
         s.value = value;
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
         if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
         {
             DWORD d;
@@ -46,7 +46,7 @@ GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DRenderState( D3DRENDERSTATETYPE typ
         0 <= type && type < MAX_D3D_RENDER_STATES &&
         mRenderStates[type].initialized );
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
@@ -74,7 +74,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
 
     StateValue<DWORD> & s = mSamplerStates[stage][type];
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     if( s.initialized && !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
@@ -89,7 +89,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DSamplerState(
         s.initialized = true;
         s.value = value;
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
         if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
         {
             DWORD d;
@@ -113,7 +113,7 @@ GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DSamplerState( UINT stage, D3DSAMPLE
         0 <= type && type < MAX_D3D_SAMPLER_STATES &&
         mSamplerStates[stage][type].initialized );
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
@@ -142,7 +142,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DTextureState(
 
     StateValue<DWORD> & s = mTextureStates[stage][type];
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     if( s.initialized && !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;
@@ -156,7 +156,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DTextureState(
         GN_DX9_CHECK( mDevice->SetTextureStageState( stage, type, value ) );
         s.initialized = true;
         s.value = value;
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
         if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
         {
             DWORD d;
@@ -180,7 +180,7 @@ GN_INLINE DWORD GN::gfx::D3D9Renderer::getD3DTextureState( UINT stage, D3DTEXTUR
         0 <= type && type < MAX_D3D_SAMPLER_STATES &&
         mTextureStates[stage][type].initialized );
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     if( !(D3DCREATE_PUREDEVICE & getBehavior()) )
     {
         DWORD d;

@@ -10,7 +10,7 @@ class DocGenerator:
 
     def __call__( self, env, sources ):
 
-        if 'win32' == GN.conf['platform']:
+        if 'mswin' == GN.conf['platform']:
             doxygen = File('#env/bin/mswin/x86/doxygen.exe').path
             genchm = 'YES'
         else:
@@ -40,6 +40,6 @@ class DocGenerator:
         return manual
 
 Import( 'GN' )
-if 'win32' == GN.conf['platform']:
+if 'mswin' == GN.conf['platform']:
     cluster = GN.newCustomSourceCluster( ['gendoxyfile.py','doxyfile.in'], DocGenerator() )
     GN.newNeutralCustomTarget( 'GNdoc', [cluster] )

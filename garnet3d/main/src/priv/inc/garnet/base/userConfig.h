@@ -6,19 +6,44 @@
 //! \author  chenlee (2005.7.24)
 // *****************************************************************************
 
-// GN_DEBUG
-// ========
+// GN_DEBUG_BUILD
+// ==============
 //!
-//! Enable debug build. Default is false.
+//! Enable debug build. Default is off.
 //!
-#ifndef GN_DEBUG
-#define GN_DEBUG 0
+#ifndef GN_DEBUG_BUILD
+#define GN_DEBUG_BUILD 0
+#endif
+
+// GN_PROFILE_BUILD
+// ================
+//!
+//! Enable profile build. Default is on.
+//!
+#ifndef GN_PROFILE_BUILD
+#define GN_PROFILE_BUILD 0
+#endif
+
+// GN_RETAIL_BUILD
+// ===============
+//!
+//! Enable retail build. Default is on.
+//!
+#ifndef GN_RETAIL_BUILD
+#define GN_RETAIL_BUILD 1
+#endif
+
+//
+// check for invalid build type
+//
+#if 1 != (GN_DEBUG_BUILD + GN_PROFILE_BUILD + GN_RETAIL_BUILD)
+#error Invalid build type
 #endif
 
 // GN_STATIC
 // =========
 //!
-//! Enable static build. Default is false.
+//! Enable static build. Default is off.
 //!
 #ifndef GN_STATIC
 #define GN_STATIC 0
@@ -30,47 +55,36 @@
 //! Enable inline function build. Enabled by default in non-debug build.
 //!
 #ifndef GN_ENABLE_INLINE
-#define GN_ENABLE_INLINE (!GN_DEBUG)
+#define GN_ENABLE_INLINE (!GN_DEBUG_BUILD)
 #endif
 
-// GN_DISABLE_GUARD
+// GN_ENABLE_GUARD
 // ================
 //!
-//! Disable function guard. Default is false.
+//! Enable function guard. Default is on.
 //!
-//! Note that function guard is enabled by default, even in release build.
+//! By default, function guard is enabled even in release build.
 //!
-//! This flag will also disable slow function guard.
+//! Disable this flag will disable slow function guard as well.
 //!
-#ifndef GN_DISABLE_GUARD
-#define GN_DISABLE_GUARD 0
+#ifndef GN_ENABLE_GUARD
+#define GN_ENABLE_GUARD 1
 #endif
 
 // GN_ENABLE_SLOW_GUARD
 // ====================
 //!
-//! Enable slow function guard. Default is false.
+//! Enable slow function guard. Default is off.
 //!
 //! We call function guards used in time-critical functions as slow function
 //! guard, or simplly "slow guard", because those guards may incur heavy
 //! performance penalty to application. By default, slow guards is only enabled
 //! in debug build, and disabled in release build.
 //!
-//! To enable slow guards in release build, define this flag to non-zero value.
-//!
-//! Note that this flag has no effection when GN_DISABLE_GUARD is non-zero.
+//! Note that this flag has no effection when GN_ENABLE_GUARD is off.
 //!
 #ifndef GN_ENABLE_SLOW_GUARD
 #define GN_ENABLE_SLOW_GUARD 0
-#endif
-
-// GN_ENABLE_PROFILE
-// =================
-//!
-//! Enable performance profiler. Disabled by default.
-//!
-#ifndef GN_ENABLE_PROFILE
-#define GN_ENABLE_PROFILE 0
 #endif
 
 // GN_DEFAULT_LOCALE

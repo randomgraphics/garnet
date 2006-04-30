@@ -1179,7 +1179,7 @@ namespace GN { namespace gfx
 
     private:
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
         AutoInit<bool,true> mEnableParameterCheck;
 #else
         AutoInit<bool,false> mEnableParameterCheck;

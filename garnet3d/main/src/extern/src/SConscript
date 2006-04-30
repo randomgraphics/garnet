@@ -44,7 +44,7 @@ common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 # define source clusters
 # **********************
 lib = GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,common_cluster] )
-if 'win32' == GN.conf['platform']:
+if 'mswin' == GN.conf['platform']:
     lib.externalDependencies = ['glu32','opengl32']
 else:
     lib.externalDependencies = ['GLU','GL','X11']

@@ -41,7 +41,7 @@ static inline DWORD sLockFlag2D3D( DWORD d3dUsage, GN::gfx::LockFlag flag )
         d3dflag |= D3DLOCK_READONLY;
     }*/
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     d3dflag |= D3DLOCK_NOSYSLOCK;
 #endif
 

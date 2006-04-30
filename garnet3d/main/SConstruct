@@ -16,34 +16,42 @@ def getenv( name, defval = None ):
     if name in os.environ: return os.environ[name]
     else: return defval
 
-# 记录当前的OS
-CONF_platform = LOCAL_env['PLATFORM']
-
-# 辨别Windows的类型
-CONF_mswin = None
-if 'win32' == CONF_platform:
+# 检测当前的OS和CPU类型
+CONF_os = None
+CONF_cpu = None
+if 'win32' == LOCAL_env['PLATFORM']:
+    CONF_os = 'mswin'
     if 'AMD64' == getenv('PROCESSOR_ARCHITECTURE') or 'AMD64' == getenv('PROCESSOR_ARCHITEW6432'):
-        GN_mswin = 'pcx64'
+        CONF_cpu = 'x64'
     else:
-        GN_mswin = 'pcx86'
+        CONF_cpu = 'x86'
+elif 'cygwin' == LOCAL_env['PLATFORM']:
+    CONF_os = 'cygwin'
+    CONF_cpu = 'x86'
+elif 'unix' == LOCAL_env['PLATFORM']:
+    CONF_os = 'unix'
+    CONF_cpu = 'x86'
+else:
+    print 'Unknown OS'
+    Exit(-1)
 
 # 定义可用的编译器列表
 CONF_allCompilers = ''
 CONF_defaultCompiler = None
-if 'win32' == CONF_platform:
+if 'mswin' == CONF_os:
     CONF_allCompilers = 'vc71 vc80 vc80-x64 icl icl-em64t'
-    if 'pcx64' == GN_mswin:
+    if SCons.Tool.xenon.exists( LOCAL_env ): CONF_allCompilers += ' xenon'
+    if 'x64' == CONF_cpu:
         CONF_defaultCompiler = 'vc80-x64'
-    elif 'pcx86' == GN_mswin:
+    else:
+        assert( 'x86' == CONF_cpu )
         CONF_defaultCompiler = 'vc80'
-    if SCons.Tool.xenon.exists( LOCAL_env ):
-        CONF_allCompilers += ' xenon'
 else:
-    CONF_defaultCompiler = 'gcc'
     CONF_allCompilers = 'gcc icl'
+    CONF_defaultCompiler = 'gcc'
 
 # 定义编译模式
-CONF_allVariants = 'debug release stdbg strel'
+CONF_allVariants = 'debug profile retail stdbg stprof stret'
 
 # 定义缺省的命令行选项
 CONF_defaultCmdArgs = {
@@ -51,7 +59,6 @@ CONF_defaultCmdArgs = {
     'variant'           : getenv('GN_BUILD_VARIANT', 'debug'),
     'compiler'          : getenv('GN_BUILD_COMPILER', CONF_defaultCompiler), # default compiler
     'enableCg'          : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
-    'enableProfile'     : getenv('GN_BUILD_ENABLE_PROFILE', 0), # disabled by default
     }
 
 # 是否打开trace
@@ -62,15 +69,30 @@ CONF_compiler = ARGUMENTS.get('compiler', CONF_defaultCmdArgs['compiler'])
 
 # 定义编译类型
 CONF_variant = ARGUMENTS.get('variant', CONF_defaultCmdArgs['variant'] )
-if 'xenon' == CONF_compiler:
+if 'xenon' == CONF_compiler: # disable dynamic link on Xenon
     if 'debug' == CONF_variant : CONF_variant = 'stdbg'
-    elif 'release' == CONF_variant : CONF_variant = 'strel'
+    elif 'profile' == CONF_variant : CONF_variant = 'stprof'
+    elif 'retail' == CONF_variant : CONF_variant = 'stret'
 
 # 是否支持Cg语言.
 CONF_enableCg  = ARGUMENTS.get('cg', CONF_defaultCmdArgs['enableCg'] )
 
-# 是否启用profiler.
-CONF_enableProfile = ARGUMENTS.get('prof', CONF_defaultCmdArgs['enableProfile'] )
+# 编译器的目标OS和cpu类型
+CONF_target_platform = None
+CONF_target_cpu = None
+if 'mswin' == CONF_os:
+    CONF_target_platform = 'mswin'
+    if CONF_compiler in ['vc71','vc80','icl']:
+        CONF_target_cpu = 'x86'
+    elif CONF_compiler in ['vc80-x64','icl-em64t']:
+        CONF_target_cpu = 'x64'
+elif 'cygwin' == CONF_os:
+    CONF_target_platform = 'cygwin'
+    CONF_target_cpu = 'x86'
+else :
+    assert( 'unix' == CONF_os )
+    CONF_target_platform = 'unix'
+    CONF_target_cpu = 'x86'
 
 ################################################################################
 #
@@ -78,13 +100,10 @@ CONF_enableProfile = ARGUMENTS.get('prof', CONF_defaultCmdArgs['enableProfile'] 
 #
 ################################################################################
 
-# 是否是静态编译模式
-def UTIL_staticBuild( variant ) : return 'stdbg' == variant or 'strel' == variant
+def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
-# 是否是调试编译模式
-def UTIL_debugBuild( variant ) : return 'debug' == variant or 'stdbg' == variant
-
-def UTIL_buildRoot() : return os.path.join( 'bin', 'build.tmp', 'scons', CONF_platform )
+def UTIL_buildRoot() :
+    return os.path.join( 'bin', 'build.tmp', 'scons', CONF_target_platform, CONF_target_cpu )
 
 def UTIL_buildDir( compiler, variant ) : return os.path.join( UTIL_buildRoot(), compiler, variant )
 
@@ -149,7 +168,7 @@ def UTIL_newEnv( compiler, variant ):
             env['BUILDERS']['SharedObject'].add_emitter( suffix, shared_pch_emitter );
 
     # 缺省编译选项
-    def generate_empty_options() : return { 'neutral':[], 'common':[],'debug':[],'release':[],'stdbg':[],'strel':[] }
+    def generate_empty_options() : return { 'neutral':[], 'common':[],'debug':[],'profile':[],'retail':[],'stdbg':[],'stprof':[],'stret':[] }
     cppdefines = generate_empty_options()
     cpppath    = generate_empty_options()
     libpath    = generate_empty_options()
@@ -158,14 +177,12 @@ def UTIL_newEnv( compiler, variant ):
     cxxflags   = generate_empty_options()
     linkflags  = generate_empty_options()
 
-    # define profile tag
-    if float(CONF_enableProfile): cppdefines['common'] = ['GN_ENABLE_PROFILE=1']
-
     # 定制不同平台的编译选项
     if 'xenon' == compiler:
         libs['common'] += Split('xboxkrnl xbdm dxerr9')
         libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
-        libs['strel'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+        libs['stprof'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+        libs['stret'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
     elif 'win32' == env['PLATFORM']:
         libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     else:
@@ -173,10 +190,12 @@ def UTIL_newEnv( compiler, variant ):
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
 
     # 定制不同编译模式的编译选项
-    cppdefines['debug']   += ['GN_DEBUG=1']
-    cppdefines['release'] += ['NDEBUG']
-    cppdefines['stdbg']   += ['GN_STATIC=1', 'GN_DEBUG=1']
-    cppdefines['strel']   += ['GN_STATIC=1', 'NDEBUG']
+    cppdefines['debug']   += ['GN_DEBUG_BUILD=1','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=0']
+    cppdefines['profile'] += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=1','GN_RETAIL_BUILD=0','NDEBUG']
+    cppdefines['retail']  += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=1','NDEBUG']
+    cppdefines['stdbg']   += ['GN_DEBUG_BUILD=1','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=0','GN_STATIC=1',]
+    cppdefines['stprof']  += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=1','GN_RETAIL_BUILD=0','GN_STATIC=1','NDEBUG']
+    cppdefines['stret']   += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=1','GN_STATIC=1','NDEBUG']
 
     # 定制不同编译器的编译选项
     if 'cl' == env['CC']:
@@ -197,38 +216,45 @@ def UTIL_newEnv( compiler, variant ):
 
         ccflags['common']  += ['/W4','/WX']
         ccflags['debug']   += ['/MDd','/GR','/RTCscu']
-        ccflags['release'] += ['/MD','/O2','/GL']
+        ccflags['profile'] += ['/MD','/O2']
+        ccflags['retail']  += ['/MD','/O2','/GL']
         ccflags['stdbg']   += ['/MTd','/GR']
-        ccflags['strel']   += ['/MT','/O2','/GL']
+        ccflags['stprof']  += ['/MT','/O2']
+        ccflags['stret']   += ['/MT','/O2','/GL']
 
-        # this is for vtune and magellan to do instrumentation
-        linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP']
-
-        linkflags['release'] += ['/OPT:REF','/LTCG:STATUS']
-        linkflags['strel']   += ['/OPT:REF','/LTCG:STATUS']
+        linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
+        linkflags['profile'] += ['/OPT:REF','/LTCG:STATUS']
+        linkflags['stprof']  += ['/OPT:REF','/LTCG:STATUS']
+        linkflags['retail']  += ['/OPT:REF','/LTCG:STATUS']
+        linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
 
     elif 'icl' == env['CC']:
         ccflags['common']  += ['/W4','/WX','/Qpchi-','/Zc:forScope']
         ccflags['debug']   += ['/MDd','/GR','/Ge','/traceback']
-        ccflags['release'] += ['/O2','/MD']
+        ccflags['profile'] += ['/O2','/MD']
+        ccflags['retail']  += ['/O2','/MD']
         ccflags['stdbg']   += ['/MTd','/GR','/Ge','/traceback']
-        ccflags['strel']   += ['/O2','/MT']
+        ccflags['stret']   += ['/O2','/MT']
 
         cxxflags['common'] += ['/EHs']
 
-        cppdefines['debug']   += ['_DEBUG']
-        cppdefines['stdbg']   += ['_DEBUG']
+        cppdefines['debug'] += ['_DEBUG']
+        cppdefines['stdbg'] += ['_DEBUG']
 
-        # this is for vtune to do instrumentation
-        linkflags['release'] = ['/FIXED:NO','/OPT:REF']
-        linkflags['strel']   = ['/FIXED:NO','/OPT:REF']
+        linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
+        linkflags['profile'] += ['/OPT:REF']
+        linkflags['retail']  += ['/OPT:REF']
+        linkflags['stprof']  += ['/OPT:REF']
+        linkflags['stret']   += ['/OPT:REF']
 
     elif 'gcc' == env['CC']:
         ccflags['common']  += ['-Wall','-Werror']
         ccflags['debug']   += ['-g']
-        ccflags['release'] += ['-O3']
+        ccflags['profile'] += ['-O3']
+        ccflags['retail']  += ['-O3']
         ccflags['stdbg']   += ['-g']
-        ccflags['strel']   += ['-O3']
+        ccflags['stprof']  += ['-O3']
+        ccflags['stret']   += ['-O3']
 
     else:
         print 'unknown compiler: ' + env['CC']
@@ -562,24 +588,14 @@ for c in COLLECT_compilers:
             print "ERROR: Ignore invalid variant '%s'"%v
             continue
 
-        static = UTIL_staticBuild( v )
-        debug  = UTIL_debugBuild( v )
-
-        # ignore non-static build for xenon
-        if 'xenon' == c and not static : continue
-
         conf = {
-            'platform'   : CONF_platform,
-            'mswin'      : CONF_mswin,
-            'compiler'   : c,
-            'variant'    : v,
-            'static'     : static,
-            'debug'      : debug
+            'platform' : CONF_target_platform,
+            #'cpu'      : CONF_target_cpu,
+            'compiler' : c,
+            'variant'  : v,
         }
 
-        buildDir = UTIL_buildDir(c,v)
-
-        UTIL_checkConfig( conf, os.path.join(buildDir,'config'), c, v )
+        UTIL_checkConfig( conf, os.path.join(UTIL_buildDir(c,v),'config'), c, v )
 
         ALL_configs.append( conf )
 
@@ -657,10 +673,6 @@ def BUILD_newLinkEnv( target ):
         env.Prepend( LIBPATH = [BUILD_binDir,BUILD_libDir] )
     else:
         env.Prepend( LIBPATH = [BUILD_libDir] )
-    if 'pcx64' == CONF_mswin:
-        env.Prepend( LIBPATH = ['src/extern/lib/x64'] )
-    elif 'pcx86' == CONF_mswin:
-        env.Prepend( LIBPATH = ['src/extern/lib/x86'] )
 
     a = target.extraLinkFlags
     env.Append(
@@ -956,12 +968,8 @@ HELP_opts.Add(
     CONF_defaultCmdArgs['variant'] )
 HELP_opts.Add(
     'cg',
-    'Support Cg language or not. (GN_BUILD_ENABLE_CG)',
+    'Support Cg language or not. This flag has no effect, if Cg library is not found.(GN_BUILD_ENABLE_CG).',
     CONF_defaultCmdArgs['enableCg'] )
-HELP_opts.Add(
-    'prof',
-    'Enable performance profiler. (GN_BUILD_ENABLE_PROFILE)',
-    CONF_defaultCmdArgs['enableProfile'] )
 
 HELP_text = """
 Usage:

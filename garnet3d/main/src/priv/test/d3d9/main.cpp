@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #if GN_MSVC
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #pragma comment( lib, "d3dx9d.lib" )
 #else
 #pragma comment( lib, "d3dx9.lib" )
