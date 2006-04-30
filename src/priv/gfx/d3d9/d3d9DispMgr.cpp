@@ -198,6 +198,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;
     d3dpp.PresentationInterval = vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     d3dpp.hDeviceWindow        = (HWND)dd.windowHandle;
+    d3dpp.Flags                = D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 
     // success
     return true;
@@ -253,6 +254,8 @@ void GN::gfx::D3D9Renderer::dispQuit()
 bool GN::gfx::D3D9Renderer::dispDeviceCreate()
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
 
@@ -374,6 +377,8 @@ bool GN::gfx::D3D9Renderer::dispDeviceRestore()
 {
     GN_GUARD;
 
+    PIXPERF_FUNCTION_EVENT();
+
     _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK && mD3D && mDevice );
@@ -418,6 +423,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceRestore()
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::dispDeviceDispose()
 {
+    PIXPERF_FUNCTION_EVENT();
     _GNGFX_DEVICE_TRACE();
     mDispOK = false;
 }
@@ -428,6 +434,8 @@ void GN::gfx::D3D9Renderer::dispDeviceDispose()
 void GN::gfx::D3D9Renderer::dispDeviceDestroy()
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
 
@@ -448,7 +456,7 @@ GN::gfx::D3D9Renderer::newMsaaDesc( D3DFORMAT format )
 {
     GN_GUARD;
 
-    PIXPERF_SCOPE_EVENT( 0, "GN::gfx::D3D9Renderer::newMsaaDesc" );
+    PIXPERF_FUNCTION_EVENT();
 
     std::vector<D3DMsaaDesc> table;
 

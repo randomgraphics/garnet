@@ -86,6 +86,8 @@ bool GN::gfx::D3D9Renderer::drawBegin()
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_FUNCTION_EVENT();
+
     GN_ASSERT( !mDrawBegan );
 
     // handle render window size move
@@ -113,6 +115,8 @@ void GN::gfx::D3D9Renderer::drawEnd()
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_FUNCTION_EVENT();
+
     GN_ASSERT( mDrawBegan );
     mDrawBegan = false;
     GN_DX9_CHECK( mDevice->EndScene() );
@@ -127,6 +131,8 @@ void GN::gfx::D3D9Renderer::drawEnd()
 void GN::gfx::D3D9Renderer::drawFinish()
 {
     GN_GUARD_SLOW;
+
+    PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( mDrawBegan );
 
@@ -236,6 +242,8 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_FUNCTION_EVENT();
+
     //
     // make sure numPrims is not too large
     //
@@ -317,7 +325,7 @@ void GN::gfx::D3D9Renderer::drawQuads(
     size_t count )
 {
     GN_GUARD_SLOW;
-    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3D9Renderer::drawQuads" );
+    PIXPERF_FUNCTION_EVENT();
     GN_ASSERT( mDrawBegan && mQuad );
     mQuad->drawQuads(
         options,
@@ -343,7 +351,7 @@ void GN::gfx::D3D9Renderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
-    PIXPERF_BEGIN_EVENT( 0, "GN::gfx::D3D9Renderer::drawLines" );
+    PIXPERF_FUNCTION_EVENT();
     GN_ASSERT( mDrawBegan && mLine );
     mLine->drawLines(
         options,
@@ -361,6 +369,8 @@ void GN::gfx::D3D9Renderer::drawDebugTextW(
     const wchar_t * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;
+
+    PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( mDrawBegan && mFont );
     mFont->drawTextW( text, x, y, color );
@@ -382,6 +392,8 @@ bool GN::gfx::D3D9Renderer::handleDeviceLost()
     return true;
 #else
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( mDevice );
 
