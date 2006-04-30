@@ -80,6 +80,12 @@ TODO
 WORKLOG
 =======
 
+- 2006.4.30
+  - refine build script:
+    - new build variant: PROFILE
+    - rename RELEASE build to RETAIL build
+    - more flexible compiler definition
+
 - 2006.4.29
   - upgrade to doxygen 1.4.6
   - upgrade to lua 5.1
