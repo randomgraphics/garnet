@@ -20,7 +20,7 @@ elif 'x64' == compiler.cpu:
 elif 'x86' == compiler.cpu:
     variant_str = '%s|Win32'%variant
 else:
-    print 'ERROR : unknown target CPU : ', compiler.cpu
+    GN.error( 'unknown target CPU : %s'%compiler.cpu )
     Exit(-1)
 
 # build target directory

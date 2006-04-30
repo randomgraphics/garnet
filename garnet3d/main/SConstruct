@@ -32,7 +32,7 @@ elif 'unix' == LOCAL_env['PLATFORM']:
     CONF_os = 'unix'
     CONF_cpu = 'x86'
 else:
-    print 'Unknown OS'
+    print 'FATAL: Unknown OS'
     Exit(-1)
 
 # 定义可用的编译器列表
@@ -98,6 +98,28 @@ CONF_enableCg  = ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] )
 # 局部于本文件的工具函数
 #
 ################################################################################
+
+# 输出调试信息
+def UTIL_trace( level, msg ):
+    level = float(level)
+    assert( 0 != level )
+    if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
+        print 'TRACE(%d) : %s'%(level,msg)
+
+# 输出提示信息
+def UTIL_info( msg ): print 'INFO : %s'%msg
+
+# 输出警告信息
+def UTIL_warn( msg ):
+    #print '===================================================================='
+    print 'WARNING : %s'%msg
+    #print '===================================================================='
+
+# 输出错误信息
+def UTIL_error( msg ):
+    print '===================================================================='
+    print 'ERROR : %s'%msg
+    print '===================================================================='
 
 def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
@@ -266,7 +288,7 @@ def UTIL_newEnv( compiler, variant ):
         ccflags['stret']   += ['-O3']
 
     else:
-        print 'unknown compiler: ' + env['CC']
+        UTIL_error( 'unknown compiler: %s'%env['CC'] )
         Exit(-1)
 
     def apply_options( env, variant ):
@@ -356,26 +378,10 @@ class GarnetEnv :
         self.conf = {}
 
     # 输出调试信息
-    def trace( self, level, msg ):
-        level = float(level)
-        assert( 0 != level )
-        if ( CONF_trace > 0 and level <= CONF_trace ) or ( CONF_trace < 0 and level == -CONF_trace ):
-            print 'TRACE(%d) : %s'%(level,msg)
-
-    # 输出提示信息
-    def info( self, msg ): print 'INFO : %s'%msg
-
-    # 输出警告信息
-    def warn( self, msg ):
-        print '===================================================================='
-        print 'WARNING : %s'%msg
-        print '===================================================================='
-
-    # 输出错误信息
-    def error( self, msg ):
-        print '===================================================================='
-        print 'ERROR : %s'%msg
-        print '===================================================================='
+    def trace( self, level, msg ): UTIL_trace( level, msg )
+    def info( self, msg ): UTIL_info( msg )
+    def warn( self, msg ): UTIL_warn( msg )
+    def error( self, msg ): UTIL_error( msg )
 
     # 生成从target到base的相对路径
     def relpath( self, target, base ):
