@@ -49,7 +49,7 @@ DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag flag )
 
     DWORD d3dFlag = dynamic ? dynamicFlags[flag] : staticFlags[flag];
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
     d3dFlag |= D3DLOCK_NOSYSLOCK;
 #endif
 

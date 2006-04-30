@@ -157,7 +157,7 @@ namespace GN { namespace gfx
         //!
         void clearToNull()
         {
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
             // fill with invalid data
             ::memset( this, sizeof(*this), 0xcd );
 #endif
@@ -174,7 +174,7 @@ namespace GN { namespace gfx
         //!
         void resetToDefault()
         {
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
             // fill with invalid data
             ::memset( this, sizeof(*this), 0xcd );
 #endif

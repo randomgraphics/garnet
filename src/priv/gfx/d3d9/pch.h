@@ -10,7 +10,7 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 
@@ -26,7 +26,7 @@
 #include <windows.h>
 #endif
 
-#if GN_DEBUG && !defined(D3D_DEBUG_INFO)
+#if GN_DEBUG_BUILD && !defined(D3D_DEBUG_INFO)
 #define D3D_DEBUG_INFO
 #endif
 #include <d3d9.h>
@@ -37,7 +37,7 @@
 inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
 #endif
 
-#if 0
+#if GN_RETAIL_BUILD // disable PIX tag in retail build.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )
 #define PIXPERF_END_EVENT()
 #define PIXPERF_SET_MARKER_EX( color, name )
@@ -75,7 +75,7 @@ struct PixPerfScopeEvent
     }
 };
 #endif // GN_XENON
-#endif // GN_RETAIL
+#endif // GN_RETAIL_BUILD
 
 #define PIXPERF_BEGIN_EVENT( name ) PIXPERF_BEGIN_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
 #define PIXPERF_SCOPE_EVENT( name ) PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )

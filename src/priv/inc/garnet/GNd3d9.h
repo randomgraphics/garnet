@@ -11,7 +11,7 @@
 
 #if GN_MSWIN
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
 #endif
 

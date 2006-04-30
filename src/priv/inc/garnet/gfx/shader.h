@@ -75,7 +75,7 @@ namespace GN { namespace gfx
         inline void setM( const Matrix44f & v ) { setM( &v, 1 ); }
         //@}
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
         //!
         //! ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
         //!
@@ -239,7 +239,7 @@ namespace GN { namespace gfx
 
             Uniform u;
             u.name = name;
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
             u.value.type = (UniformValueType)0xbadbeef;
             u.userData = (HandleType)0xbadbeef;
 #endif

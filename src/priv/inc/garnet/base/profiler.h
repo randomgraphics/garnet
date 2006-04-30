@@ -11,7 +11,7 @@
 
 //! \name prof macros
 //@{
-#ifdef GN_ENABLE_PROFILE
+#ifdef GN_PROFILE_BUILD
 //!
 //! start a profile timer
 //!
