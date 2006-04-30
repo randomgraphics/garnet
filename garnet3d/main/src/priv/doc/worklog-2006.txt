@@ -15,6 +15,9 @@ BUGS
 
 - Quad renderer is slow on HP notebook with intel graphics chip.
 
+- ATI depth texture doesn't work when backbuffer size is smaller then texture 
+  size (only happens when using debug DX runtime. So seems a DX bug)
+
 TODO
 ====
 
@@ -78,7 +81,8 @@ WORKLOG
 =======
 
 - 2006.4.29
-  - upgrade doxygen to 1.4.6
+  - upgrade to doxygen 1.4.6
+  - upgrade to lua 5.1
   - refine log functions
   - refine render target management of D3D9 renderer.
 

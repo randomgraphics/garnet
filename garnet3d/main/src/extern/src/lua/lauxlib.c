@@ -1,5 +1,5 @@
 /*
-** $Id: lauxlib.c,v 1.156 2005/10/21 13:47:42 roberto Exp $
+** $Id: lauxlib.c,v 1.158 2006/01/16 12:42:21 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
@@ -226,16 +226,24 @@ LUALIB_API void (luaL_register) (lua_State *L, const char *libname,
 }
 
 
+static int libsize (const luaL_Reg *l) {
+  int size = 0;
+  for (; l->name; l++) size++;
+  return size;
+}
+
+
 LUALIB_API void luaI_openlib (lua_State *L, const char *libname,
                               const luaL_Reg *l, int nup) {
   if (libname) {
+    int size = libsize(l);
     /* check whether lib already exists */
-    luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED");
+    luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", size);
     lua_getfield(L, -1, libname);  /* get _LOADED[libname] */
     if (!lua_istable(L, -1)) {  /* not found? */
       lua_pop(L, 1);  /* remove previous result */
       /* try global variable (and create one if it does not exist) */
-      if (luaL_findtable(L, LUA_GLOBALSINDEX, libname) != NULL)
+      if (luaL_findtable(L, LUA_GLOBALSINDEX, libname, size) != NULL)
         luaL_error(L, "name conflict for module " LUA_QS, libname);
       lua_pushvalue(L, -1);
       lua_setfield(L, -3, libname);  /* _LOADED[libname] = new table */
@@ -287,23 +295,33 @@ static void getsizes (lua_State *L) {
 
 LUALIB_API void luaL_setn (lua_State *L, int t, int n) {
   t = abs_index(L, t);
-  getsizes(L);
-  lua_pushvalue(L, t);
-  lua_pushinteger(L, n);
-  lua_rawset(L, -3);  /* sizes[t] = n */
-  lua_pop(L, 1);  /* remove `sizes' */
+  lua_pushliteral(L, "n");
+  lua_rawget(L, t);
+  if (checkint(L, 1) >= 0) {  /* is there a numeric field `n'? */
+    lua_pushliteral(L, "n");  /* use it */
+    lua_pushinteger(L, n);
+    lua_rawset(L, t);
+  }
+  else {  /* use `sizes' */
+    getsizes(L);
+    lua_pushvalue(L, t);
+    lua_pushinteger(L, n);
+    lua_rawset(L, -3);  /* sizes[t] = n */
+    lua_pop(L, 1);  /* remove `sizes' */
+  }
 }
 
 
 LUALIB_API int luaL_getn (lua_State *L, int t) {
   int n;
   t = abs_index(L, t);
-  getsizes(L);  /* try sizes[t] */
+  lua_pushliteral(L, "n");  /* try t.n */
+  lua_rawget(L, t);
+  if ((n = checkint(L, 1)) >= 0) return n;
+  getsizes(L);  /* else try sizes[t] */
   lua_pushvalue(L, t);
   lua_rawget(L, -2);
   if ((n = checkint(L, 2)) >= 0) return n;
-  lua_getfield(L, t, "n");  /* else try t.n */
-  if ((n = checkint(L, 1)) >= 0) return n;
   return (int)lua_objlen(L, t);
 }
 
@@ -331,7 +349,7 @@ LUALIB_API const char *luaL_gsub (lua_State *L, const char *s, const char *p,
 
 
 LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
-                                       const char *fname) {
+                                       const char *fname, int szhint) {
   const char *e;
   lua_pushvalue(L, idx);
   do {
@@ -341,7 +359,7 @@ LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
     lua_rawget(L, -2);
     if (lua_isnil(L, -1)) {  /* no such field? */
       lua_pop(L, 1);  /* remove this nil */
-      lua_newtable(L);  /* create a new table for field */
+      lua_createtable(L, 0, (*e == '.' ? 1 : szhint)); /* new table for field */
       lua_pushlstring(L, fname, e - fname);
       lua_pushvalue(L, -2);
       lua_settable(L, -4);  /* set new table into field */

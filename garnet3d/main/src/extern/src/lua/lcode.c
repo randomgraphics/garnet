@@ -1,5 +1,5 @@
 /*
-** $Id: lcode.c,v 2.20 2005/10/24 17:37:52 roberto Exp $
+** $Id: lcode.c,v 2.24 2005/12/22 16:19:56 roberto Exp $
 ** Code generator for Lua
 ** See Copyright Notice in lua.h
 */
@@ -196,7 +196,7 @@ void luaK_checkstack (FuncState *fs, int n) {
   if (newstack > fs->f->maxstacksize) {
     if (newstack >= MAXSTACK)
       luaX_syntaxerror(fs->ls, "function or expression too complex");
-    fs->f->maxstacksize = cast(lu_byte, newstack);
+    fs->f->maxstacksize = cast_byte(newstack);
   }
 }
 
@@ -227,11 +227,11 @@ static int addk (FuncState *fs, TValue *k, TValue *v) {
   Proto *f = fs->f;
   int oldsize = f->sizek;
   if (ttisnumber(idx)) {
-    lua_assert(luaO_rawequalObj(&fs->f->k[cast(int, nvalue(idx))], v));
-    return cast(int, nvalue(idx));
+    lua_assert(luaO_rawequalObj(&fs->f->k[cast_int(nvalue(idx))], v));
+    return cast_int(nvalue(idx));
   }
   else {  /* constant not found; create a new entry */
-    setnvalue(idx, cast(lua_Number, fs->nk));
+    setnvalue(idx, cast_num(fs->nk));
     luaM_growvector(L, f->k, fs->nk, f->sizek, TValue,
                     MAXARG_Bx, "constant table overflow");
     while (oldsize < f->sizek) setnilvalue(&f->k[oldsize++]);
@@ -559,7 +559,7 @@ void luaK_goiftrue (FuncState *fs, expdesc *e) {
 }
 
 
-void luaK_goiffalse (FuncState *fs, expdesc *e) {
+static void luaK_goiffalse (FuncState *fs, expdesc *e) {
   int pc;  /* pc of last jump */
   luaK_dischargevars(fs, e);
   switch (e->k) {
@@ -639,13 +639,15 @@ static int constfolding (OpCode op, expdesc *e1, expdesc *e2) {
     case OP_DIV:
       if (v2 == 0) return 0;  /* do not attempt to divide by 0 */
       r = luai_numdiv(v1, v2); break;
-    case OP_MOD: r = luai_nummod(v1, v2); break;
+    case OP_MOD:
+      if (v2 == 0) return 0;  /* do not attempt to divide by 0 */
+      r = luai_nummod(v1, v2); break;
     case OP_POW: r = luai_numpow(v1, v2); break;
     case OP_UNM: r = luai_numunm(v1); break;
     case OP_LEN: return 0;  /* no constant folding for 'len' */
     default: lua_assert(0); r = 0; break;
   }
-  if (r != r) return 0;  /* do not attempt to produce NaN */
+  if (luai_numisnan(r)) return 0;  /* do not attempt to produce NaN */
   e1->u.nval = r;
   return 1;
 }
@@ -778,7 +780,7 @@ void luaK_fixline (FuncState *fs, int line) {
 }
 
 
-int luaK_code (FuncState *fs, Instruction i, int line) {
+static int luaK_code (FuncState *fs, Instruction i, int line) {
   Proto *f = fs->f;
   dischargejpc(fs);  /* `pc' will change */
   /* put new instruction in code array */

@@ -1,5 +1,5 @@
 /*
-** $Id: luaconf.h,v 1.71 2005/10/25 13:36:28 roberto Exp $
+** $Id: luaconf.h,v 1.81 2006/02/10 17:44:06 roberto Exp $
 ** Configuration file for Lua
 ** See Copyright Notice in lua.h
 */
@@ -29,31 +29,34 @@
 #endif
 
 
-#if !defined(LUA_ANSI)
+#if !defined(LUA_ANSI) && defined(_WIN32)
+#define LUA_WIN
+#endif
 
-#if defined(__linux__)
+#if defined(LUA_USE_LINUX)
+#define LUA_USE_POSIX
+#define LUA_USE_DLOPEN		/* needs an extra library: -ldl */
+#define LUA_USE_READLINE	/* needs some extra libraries */
+#endif
+
+#if defined(LUA_USE_MACOSX)
+#define LUA_USE_POSIX
+#define LUA_DL_DYLD		/* does not need extra library */
+#endif
+
+
+
+/*
+@@ LUA_USE_POSIX includes all functionallity listed as X/Open System
+@* Interfaces Extension (XSI).
+** CHANGE it (define it) if your system is XSI compatible.
+*/
+#if defined(LUA_USE_POSIX)
 #define LUA_USE_MKSTEMP
 #define LUA_USE_ISATTY
-#define LUA_USE_ULONGJMP
 #define LUA_USE_POPEN
-#endif
-
-#if defined(__APPLE__) && defined(__MACH__)
-#define LUA_USE_MKSTEMP
-#define LUA_USE_ISATTY
 #define LUA_USE_ULONGJMP
-#define LUA_USE_POPEN
-#define LUA_DL_DYLD
 #endif
-
-#if defined(_WIN32)
-#define LUA_DL_DLL
-#endif
-
-#endif
-
-
-
 
 
 /*
@@ -180,13 +183,6 @@
 
 
 /*
-@@ lua_assert describes the internal assertions in Lua.
-** CHANGE that only if you need to debug Lua.
-*/
-#define lua_assert(c)		((void)0)
-
-
-/*
 @@ LUA_QL describes how error messages quote program elements.
 ** CHANGE it if you want a different appearance.
 */
@@ -219,7 +215,7 @@
 #if defined(LUA_USE_ISATTY)
 #include <unistd.h>
 #define lua_stdin_is_tty()	isatty(0)
-#elif !defined(LUA_ANSI) && defined(_WIN32)
+#elif defined(LUA_WIN)
 #include <io.h>
 #include <stdio.h>
 #define lua_stdin_is_tty()	_isatty(_fileno(stdin))
@@ -370,8 +366,7 @@
 #include <assert.h>
 #define luai_apicheck(L,o)	{ (void)L; assert(o); }
 #else
-/* (By default lua_assert is empty, so luai_apicheck is also empty.) */
-#define luai_apicheck(L,o)	{ (void)L; lua_assert(o); }
+#define luai_apicheck(L,o)	{ (void)L; }
 #endif
 
 
@@ -483,31 +478,6 @@
 
 
 
-/*
-@@ lua_number2int is a macro to convert lua_Number to int.
-@@ lua_number2integer is a macro to convert lua_Number to lua_Integer.
-** CHANGE them if you know a faster way to convert a lua_Number to
-** int (with any rounding method and without throwing errors) in your
-** system. In Pentium machines, a naive typecast from double to int
-** in C is extremely slow, so any alternative is worth trying.
-*/
-
-/* On a Pentium, resort to a trick */
-#if !defined(LUA_ANSI) && !defined(__SSE2__) && \
-    (defined(__i386) || defined (_M_IX86))
-union luai_Cast { double l_d; long l_l; };
-#define lua_number2int(i,d) \
-  { volatile union luai_Cast u; u.l_d = (d) + 6755399441055744.0; (i) = u.l_l; }
-#define lua_number2integer(i,n)		lua_number2int(i, n)
-
-/* this option always works, but may be slow */
-#else
-#define lua_number2int(i,d)	((i)=(int)(d))
-#define lua_number2integer(i,d)	((i)=(lua_Integer)(d))
-
-#endif
-
-
 
 /*
 ** {==================================================================
@@ -518,6 +488,7 @@ union luai_Cast { double l_d; long l_l; };
 ** ===================================================================
 */
 
+#define LUA_NUMBER_DOUBLE
 #define LUA_NUMBER	double
 
 /*
@@ -556,6 +527,32 @@ union luai_Cast { double l_d; long l_l; };
 #define luai_numeq(a,b)		((a)==(b))
 #define luai_numlt(a,b)		((a)<(b))
 #define luai_numle(a,b)		((a)<=(b))
+#define luai_numisnan(a)	(!luai_numeq((a), (a)))
+#endif
+
+
+/*
+@@ lua_number2int is a macro to convert lua_Number to int.
+@@ lua_number2integer is a macro to convert lua_Number to lua_Integer.
+** CHANGE them if you know a faster way to convert a lua_Number to
+** int (with any rounding method and without throwing errors) in your
+** system. In Pentium machines, a naive typecast from double to int
+** in C is extremely slow, so any alternative is worth trying.
+*/
+
+/* On a Pentium, resort to a trick */
+#if defined(LUA_NUMBER_DOUBLE) && !defined(LUA_ANSI) && !defined(__SSE2__) && \
+    (defined(__i386) || defined (_M_IX86) || defined(__i386__))
+union luai_Cast { double l_d; long l_l; };
+#define lua_number2int(i,d) \
+  { volatile union luai_Cast u; u.l_d = (d) + 6755399441055744.0; (i) = u.l_l; }
+#define lua_number2integer(i,n)		lua_number2int(i, n)
+
+/* this option always works, but may be slow */
+#else
+#define lua_number2int(i,d)	((i)=(int)(d))
+#define lua_number2integer(i,d)	((i)=(lua_Integer)(d))
+
 #endif
 
 /* }================================================================== */
@@ -646,16 +643,16 @@ union luai_Cast { double l_d; long l_l; };
 #define lua_popen(L,c,m)	((void)L, popen(c,m))
 #define lua_pclose(L,file)	((void)L, (pclose(file) != -1))
 
-#elif !defined(LUA_ANSI) && defined(_WIN32)
+#elif defined(LUA_WIN)
 
 #define lua_popen(L,c,m)	((void)L, _popen(c,m))
 #define lua_pclose(L,file)	((void)L, (_pclose(file) != -1))
 
 #else
 
-#define lua_popen(L,c,m)  \
-  ((void)c, (void)m, luaL_error(L, LUA_QL("popen") " not supported"), (FILE*)0)
-#define lua_pclose(L,file)		((void)L, (void)file, 0)
+#define lua_popen(L,c,m)	((void)((void)c, m),  \
+		luaL_error(L, LUA_QL("popen") " not supported"), (FILE*)0)
+#define lua_pclose(L,file)		((void)((void)L, file), 0)
 
 #endif
 
@@ -675,6 +672,10 @@ union luai_Cast { double l_d; long l_l; };
 */
 #if defined(LUA_USE_DLOPEN)
 #define LUA_DL_DLOPEN
+#endif
+
+#if defined(LUA_WIN)
+#define LUA_DL_DLL
 #endif
 
 
@@ -699,6 +700,26 @@ union luai_Cast { double l_d; long l_l; };
 #define luai_userstateresume(L,n)	((void)L)
 #define luai_userstateyield(L,n)	((void)L)
 
+
+/*
+@@ LUA_INTFRMLEN is the length modifier for integer conversions
+@* in 'string.format'.
+@@ LUA_INTFRM_T is the integer type correspoding to the previous length
+@* modifier.
+** CHANGE them if your system supports long long or does not support long.
+*/
+
+#if defined(LUA_USELONGLONG)
+
+#define LUA_INTFRMLEN		"ll"
+#define LUA_INTFRM_T		long long
+
+#else
+
+#define LUA_INTFRMLEN		"l"
+#define LUA_INTFRM_T		long
+
+#endif
 
 
 
