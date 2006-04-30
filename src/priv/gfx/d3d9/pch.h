@@ -42,15 +42,39 @@ inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for 
 #define PIXPERF_BEGIN_EVENT( color, name )  PIXBeginNamedEvent( color, name )
 #define PIXPERF_END_EVENT()                 PIXEndNamedEvent()
 #define PIXPERF_SET_MARKER( color, name )   PIXSetMarker( color, name )
+struct PIXPERF_SCOPE_EVENT
+{
+    PIXPERF_SCOPE_EVENT( D3DCOLOR color, const char * name )
+    {
+        PIXBeginNamedEvent( color, name );
+    }
+    ~PIXPERF_SCOPE_EVENT()
+    {
+        PIXEndNamedEvent();
+    }
+};
 #else
 #define PIXPERF_BEGIN_EVENT( color, name )  D3DPERF_BeginEvent( color, GN_JOIN( L, name ) )
 #define PIXPERF_END_EVENT()                 D3DPERF_EndEvent()
 #define PIXPERF_SET_MARKER( color, name )   D3DPERF_SetMarker( color, GN_JOIN( L, name ) )
+#define PIXPERF_SCOPE_EVENT( color, name )  PixPerfScopeEvent( color, GN_JOIN( L, name ) )
+struct PixPerfScopeEvent
+{
+    PixPerfScopeEvent( D3DCOLOR color, const wchar_t * name )
+    {
+        D3DPERF_BeginEvent( color, name );
+    }
+    ~PixPerfScopeEvent()
+    {
+        D3DPERF_EndEvent();
+    }
+};
 #endif
 #else
 #define PIXPERF_BEGIN_EVENT( color, name )
 #define PIXPERF_END_EVENT()
 #define PIXPERF_SET_MARKER( color, name )
+#define PIXPERF_SCOPE_EVENT( color, name )
 #endif
 
 #include "garnet/base/pragma.h"

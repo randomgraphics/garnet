@@ -29,7 +29,7 @@
 //#pragma warning( disable : 4251 ) // need DLL interface ...
 #pragma warning( disable : 4511 ) // can't generate copy constructor
 #pragma warning( disable : 4512 ) // can't generate assignment operator
-#pragma warning( disable : 4714 ) // 标记为 __forceinline 的函数未内联
+//#pragma warning( disable : 4714 ) // 标记为 __forceinline 的函数未内联
 #pragma warning( disable : 4786 ) // symbol trunc to 255 ...
 #if defined(NDEBUG)
 #pragma warning( disable : 4702 ) // 无法访问的代码

@@ -8,6 +8,7 @@
 #include "d3d9VertexDecl.h"
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
+#include "garnet/GNd3d9.h"
 
 // *****************************************************************************
 // local functions
@@ -68,6 +69,46 @@ static DWORD sTextureStateValue2D3D[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
     #undef GNGFX_DEFINE_TSV
 };
 
+static GN_INLINE void sSetupViewport( LPDIRECT3DDEVICE9 dev, float l, float t, float r, float b )
+{
+    GN_ASSERT(
+        0.0f <= l && l <= 1.0f &&
+        0.0f <= t && t <= 1.0f &&
+        0.0f <= r && r <= 1.0f &&
+        0.0f <= b && b <= 1.0f &&
+        l <= r && t <= b );
+
+    float w = r - l;
+    float h = b - t;
+
+    // get size of render target 0
+    GN::AutoComPtr<IDirect3DSurface9> rt0;
+    D3DSURFACE_DESC rt0Desc;
+    GN_DX9_CHECK( dev->GetRenderTarget( 0, &rt0 ) );
+    GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
+
+    // set d3d viewport
+    D3DVIEWPORT9 d3dvp = {
+        (DWORD)l * rt0Desc.Width,
+        (DWORD)t * rt0Desc.Height,
+        (DWORD)w * rt0Desc.Width,
+        (DWORD)h * rt0Desc.Height,
+        0.0f, 1.0f,
+    };
+
+    // update D3D viewport
+    GN_DX9_CHECK( dev->SetViewport(&d3dvp) );
+
+    // update D3D scissors
+    RECT rc = {
+        int( d3dvp.X ),
+        int( d3dvp.Y ),
+        int( d3dvp.X+d3dvp.Width ),
+        int( d3dvp.Y+d3dvp.Height ),
+    };
+    GN_DX9_CHECK( dev->SetScissorRect( &rc ) );
+}
+
 // *****************************************************************************
 // init/shutdown
 // *****************************************************************************
@@ -91,9 +132,10 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
     setD3DRenderState( D3DRS_COLORVERTEX, 1 ); // always enable color vertex
 #endif
 
-    // get current/default color buffer
+    // get default color and depth buffer
     GN_DX9_CHECK_RV( mDevice->GetRenderTarget( 0, &mAutoColor0 ), false );
-    GN_ASSERT( mAutoColor0 );
+    GN_DX9_CHECK_RV( mDevice->GetDepthStencilSurface( &mAutoDepth ), false );
+    GN_ASSERT( mAutoColor0 ); // depth buffer might not be avaliable.
 
     // rebind context
     bindContext( mContext, mContext.flags, true );
@@ -104,6 +146,23 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9Renderer::contextDeviceDispose()
+{
+    GN_GUARD;
+
+    _GNGFX_DEVICE_TRACE();
+
+    mAutoColor0.clear();
+    mAutoDepth.clear();
+
+    for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) mRenderTargets[i].clear();
+
+    GN_UNGUARD;
+}
+ 
 // *****************************************************************************
 // from Renderer
 // *****************************************************************************
@@ -242,6 +301,53 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     // bind render targets
     //
+    bool rebindViewport;
+    bindContextRenderTargets( newContext, newFlags, forceRebind, rebindViewport );
+
+    //
+    // bind viewport
+    //
+    if( rebindViewport )
+    {
+        float l = mContext.viewport.x;
+        float t = mContext.viewport.y;
+        float r = l + mContext.viewport.w;
+        float b = t + mContext.viewport.h;
+        sSetupViewport( mDevice, l, t, r, b );
+    }
+    else if( newFlags.viewport )
+    {
+        if( newContext.viewport != mContext.viewport || forceRebind )
+        {
+            float l = newContext.viewport.x;
+            float t = newContext.viewport.y;
+            float r = l + newContext.viewport.w;
+            float b = t + newContext.viewport.h;
+
+            // clamp viewport in valid range
+            clamp<float>( l, 0.0f, 1.0f );
+            clamp<float>( b, 0.0f, 1.0f );
+            clamp<float>( r, 0.0f, 1.0f );
+            clamp<float>( t, 0.0f, 1.0f );
+
+            sSetupViewport( mDevice, l , t, r, b );
+        }
+    }
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargets(
+    const RendererContext & newContext,
+    RendererContext::FieldFlags newFlags,
+    bool forceRebind,
+    bool & needRebindViewport )
+{
+    needRebindViewport = false;
+
 #if GN_XENON
 	if( newFlags.colorBuffers )
     {
@@ -331,6 +437,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
                 surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
                 GN_DX9_CHECK( mDevice->SetRenderTarget( 0, surf ) );
             }
+            needRebindViewport = true;
         }
 
         // apply other color buffers
@@ -370,7 +477,6 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     {
         const RendererContext::SurfaceDesc *newSurf, *oldSurf;
 
-        // bind depth buffer
         newSurf = &newContext.depthBuffer;
         oldSurf = &mContext.depthBuffer;
         if( 0 == newSurf->texture )
@@ -382,22 +488,30 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
             if( mAutoDepth )
             {
-                // enlarge new depth buffer
+                // create new depth buffer, if current one is not compatible with the color buffer.
+                // TODO: find appropriate depth format using IDirect3DDevice9::CheckDepthStencilMatch(...)
                 D3DSURFACE_DESC depthDesc;
                 GN_DX9_CHECK( mAutoDepth->GetDesc( &depthDesc ) );
                 if( depthDesc.Width < rt0Desc.Width ||
-                    depthDesc.Height < rt0Desc.Height )
+                    depthDesc.Height < rt0Desc.Height ||
+                    depthDesc.MultiSampleType != rt0Desc.MultiSampleType ||
+                    depthDesc.MultiSampleQuality != rt0Desc.MultiSampleQuality )
                 {
+                    uint32_t w = max(depthDesc.Width, rt0Desc.Width);
+                    uint32_t h = max(depthDesc.Height, rt0Desc.Height);
                     mAutoDepth.clear();
                     GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
-                        max(depthDesc.Width, rt0Desc.Width),
-                        max(depthDesc.Height, rt0Desc.Height),
+                        w,
+                        h,
                         depthDesc.Format,
-                        depthDesc.MultiSampleType,
-                        depthDesc.MultiSampleQuality,
+                        rt0Desc.MultiSampleType,
+                        rt0Desc.MultiSampleQuality,
                         TRUE, // discardable depth buffer
                         &mAutoDepth, 0 ) );
                     GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+                    GN_TRACE( "Recreate depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
+                        w, h, d3d9::d3dFormat2Str(depthDesc.Format),
+                        rt0Desc.MultiSampleType, rt0Desc.MultiSampleQuality );
                 }
                 else if( *newSurf != *oldSurf || forceRebind )
                 {
@@ -410,11 +524,13 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
                     rt0Desc.Width,
                     rt0Desc.Height,
                     D3DFMT_D24S8, // TODO: enumerate appropriate depth buffer format.
-                    mPresentParameters.MultiSampleType,
-                    mPresentParameters.MultiSampleQuality,
+                    rt0Desc.MultiSampleType,
+                    rt0Desc.MultiSampleQuality,
                     TRUE,
                     &mAutoDepth, 0 ) );
                 GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+                GN_TRACE( "Create depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
+                    rt0Desc.Width, rt0Desc.Height, "D3DFMT_D24S8", rt0Desc.MultiSampleType, rt0Desc.MultiSampleQuality );
             }
         }
         else if( *newSurf != *oldSurf || forceRebind )
@@ -426,56 +542,6 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         }
     }
 #endif
-
-    //
-    // bind viewport
-    //
-    if( newFlags.viewport )
-    {
-        if( newContext.viewport != mContext.viewport || forceRebind )
-        {
-            // clamp viewport in valid range
-            float l = newContext.viewport.x;
-            float t = newContext.viewport.y;
-            float r = l + newContext.viewport.w;
-            float b = t + newContext.viewport.h;
-            clamp<float>( l, 0.0f, 1.0f );
-            clamp<float>( b, 0.0f, 1.0f );
-            clamp<float>( r, 0.0f, 1.0f );
-            clamp<float>( t, 0.0f, 1.0f );
-            float w = r - l;
-            float h = b - t;
-
-            // get size of render target 0
-            AutoComPtr<IDirect3DSurface9> rt0;
-            D3DSURFACE_DESC rt0Desc;
-            GN_DX9_CHECK( mDevice->GetRenderTarget( 0, &rt0 ) );
-            GN_DX9_CHECK( rt0->GetDesc( &rt0Desc ) );
-
-            // set d3d viewport
-            D3DVIEWPORT9 d3dvp = {
-                (DWORD)l * rt0Desc.Width,
-                (DWORD)t * rt0Desc.Height,
-                (DWORD)w * rt0Desc.Width,
-                (DWORD)h * rt0Desc.Height,
-                0.0f, 1.0f,
-            };
-
-            // update D3D viewport
-            GN_DX9_CHECK( mDevice->SetViewport(&d3dvp) );
-
-            // update D3D scissors
-            RECT rc = {
-                int( d3dvp.X ),
-                int( d3dvp.Y ),
-                int( d3dvp.X+d3dvp.Width ),
-                int( d3dvp.Y+d3dvp.Height ),
-            };
-            GN_DX9_CHECK( mDevice->SetScissorRect( &rc ) );
-        }
-    }
-
-    GN_UNGUARD_SLOW;
 }
 
 //

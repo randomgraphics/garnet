@@ -85,6 +85,36 @@ static uint32_t sD3D9CapsInit_DOT3( const D3DCAPS9 & d3dcaps )
     return 0 != ( D3DTEXOPCAPS_DOTPRODUCT3 & d3dcaps.TextureOpCaps );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static const char * sD3DMsaaType2Str( D3DMULTISAMPLE_TYPE type )
+{
+    static const char * sTable[] =
+    {
+        "D3DMULTISAMPLE_NONE", // = 0,
+        "D3DMULTISAMPLE_NONMASKABLE ", // = 1,
+        "D3DMULTISAMPLE_2_SAMPLES", // = 2,
+        "D3DMULTISAMPLE_3_SAMPLES", // = 3,
+        "D3DMULTISAMPLE_4_SAMPLES", // = 4,
+        "D3DMULTISAMPLE_5_SAMPLES", // = 5,
+        "D3DMULTISAMPLE_6_SAMPLES", // = 6,
+        "D3DMULTISAMPLE_7_SAMPLES", // = 7,
+        "D3DMULTISAMPLE_8_SAMPLES", // = 8,
+        "D3DMULTISAMPLE_9__SAMPLES", // = 9,
+        "D3DMULTISAMPLE_10_SAMPLES", // = 10,
+        "D3DMULTISAMPLE_11_SAMPLES", // = 11,
+        "D3DMULTISAMPLE_12_SAMPLES", // = 12,
+        "D3DMULTISAMPLE_13_SAMPLES", // = 13,
+        "D3DMULTISAMPLE_14_SAMPLES", // = 14,
+        "D3DMULTISAMPLE_15_SAMPLES", // = 15,
+        "D3DMULTISAMPLE_16_SAMPLES", // = 16,
+    };
+
+    if( type < sizeof(sTable)/sizeof(sTable[0]) ) return sTable[type];
+    else return "UNKNOWN_D3D_MSAA_TYPE";
+}
+
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -216,7 +246,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         "    Hardware TnL                   : %s\n"
         "    Texture Blend Stages (FFP)     : %d\n"
         "    Max Simulaneous Textures (FFP) : %d\n"
-        "    MSAA Type                      : %d\n"
+        "    MSAA Type                      : %s\n"
         "    MSAA Quality                   : %d\n"
         "===================================================\n"
         "\n\n",
@@ -236,7 +266,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         hwtnl.cptr(),
         d3dcaps.MaxTextureBlendStages,
         d3dcaps.MaxSimultaneousTextures,
-        mPresentParameters.MultiSampleType,
+        sD3DMsaaType2Str( mPresentParameters.MultiSampleType ),
         mPresentParameters.MultiSampleQuality );
 
     // success

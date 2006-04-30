@@ -154,8 +154,8 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     // setup default parameters
     mInitParam.rapi = gfx::API_AUTO;
     mInitParam.ro = gfx::RendererOptions();
-    mInitParam.ro.windowedWidth = 800; // default is 800x600
-    mInitParam.ro.windowedHeight = 600;
+    mInitParam.ro.windowedWidth = 640;
+    mInitParam.ro.windowedHeight = 480;
     mInitParam.iapi = input::API_NATIVE;
 
     for( int i = 1; i < argc; ++i )

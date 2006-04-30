@@ -25,6 +25,7 @@ namespace GN { namespace gfx
         MSAA_MEDIUM, //!< medium quality MSAA
         MSAA_HIGH,   //!< high quality MSAA
         MSAA_ULTRA,  //!< ultra quality MSAA
+        NUM_MSAA_TYPES, //!< number of MSAA types
     };
 
     //!

@@ -797,7 +797,10 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! Set rendering context
+        //! Set rendering context.
+        //!
+        //! When you want to change many renderer states, this method is recommended
+        //! over single context update helper functions, for performance reason.
         //!
         virtual void setContext( const RendererContext & ) = 0;
 
@@ -821,19 +824,19 @@ namespace GN { namespace gfx
         virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const = 0;
 
         // ********************************************************************
-        //
+        //!
         //! \name Helper functions to update rendering context.
         //!
-        //! - See corresponding methods in RendererContext and ContextData for usage
-        //!   of each method.
-        //! - Recommended way of call sequence is:
-        //!   <code>
+        //! - See corresponding methods in RendererContext for usage of each method.
+        //! - Recommended call sequence is:
+        //! <pre>
         //!     contextUpdateBegin();
         //!     ... // call context update methods here.
         //!     contextUpdateEnd();
-        //!   </code>
-        //! - Call single update method out side of contextUpdateBegin()
-        //
+        //! </pre>
+        //! - Call update method outside of contextUpdateBegin() and contextUpdateEnd() is allowed,
+        //!   but not recommented for performance reason.
+        //!
         // ********************************************************************
 
         //@{
@@ -846,12 +849,12 @@ namespace GN { namespace gfx
     public:
 
         //!
-        //! start context and VP data update
+        //! start context update
         //!
         inline void contextUpdateBegin();
 
         //!
-        //! end context and VP data update, flush modified context and data to renderer.
+        //! end context update, flush modified context to renderer.
         //!
         inline void contextUpdateEnd();
 

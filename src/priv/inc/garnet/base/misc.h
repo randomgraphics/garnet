@@ -687,7 +687,12 @@ namespace GN
         //!
         //! convert to C-style pointer
         //!
-        T * cptr() const { return mData; }
+        const T * cptr() const { return mData; }
+
+        //!
+        //! convert to C-style pointer
+        //!
+        T * cptr() { return mData; }
 
         //!
         //! is empty array?
@@ -712,7 +717,12 @@ namespace GN
         //!
         //! convert to C-style pointer
         //!
-        operator T*() const { return mData; }
+        operator const T*() const { return mData; }
+
+        //!
+        //! convert to C-style pointer
+        //!
+        operator T*() { return mData; }
     };
 
     //!
@@ -742,6 +752,16 @@ namespace GN
         T & at( size_t idx ) const { GN_ASSERT( idx < mCount ); return mData[idx]; }
 
         //!
+        //! get last element. the array must not be empty.
+        //!
+        const T & back() const { GN_ASSERT( mCount > 0 ); return mData[mCount-1]; }
+
+        //!
+        //! get last element. the array must not be empty.
+        //!
+        T & back() { GN_ASSERT( mCount > 0 ); return mData[mCount-1]; }
+
+        //!
         //! clear array content
         //!
         void clear() { mCount = 0; }
@@ -749,12 +769,27 @@ namespace GN
         //!
         //! convert to C-style pointer
         //!
-        T * cptr() const { return mData; }
+        const T * cptr() const { return mData; }
+
+        //!
+        //! convert to C-style pointer
+        //!
+        T * cptr() { return mData; }
 
         //!
         //! is empty array?
         //!
         bool empty() const { return 0 == mCount; }
+
+        //!
+        //! get first element. the array must not be empty.
+        //!
+        const T & front() const { GN_ASSERT( mCount > 0 ); return mData[0]; }
+
+        //!
+        //! get first element. the array must not be empty.
+        //!
+        T & front() { GN_ASSERT( mCount > 0 ); return mData[0]; }
 
         //!
         //! change array size
@@ -773,7 +808,12 @@ namespace GN
         //!
         //! convert to C-style pointer
         //!
-        operator T*() const { return mData; }
+        operator const T*() const { return mData; }
+
+        //!
+        //! convert to C-style pointer
+        //!
+        operator T*() { return mData; }
     };
 }
 

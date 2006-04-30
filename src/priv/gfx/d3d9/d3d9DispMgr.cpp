@@ -1,6 +1,47 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
 
+
+//
+//
+// ------------------------------------------------------------------------
+static void sGetMsaaDescTable(
+    std::vector<GN::gfx::D3D9Renderer::D3DMsaaDesc> & table,
+    IDirect3D9 & d3d,
+    UINT adapter,
+    D3DDEVTYPE devtype,
+    D3DFORMAT surfaceFormat,
+    bool fullscreen )
+{
+    GN_GUARD;
+
+    table.reserve( 16 );
+    table.resize( 1 );
+    table[0].type = D3DMULTISAMPLE_NONE;
+    table[0].quality = 0;
+
+    GN::gfx::D3D9Renderer::D3DMsaaDesc desc;
+    DWORD quality;
+    for( int type = D3DMULTISAMPLE_NONMASKABLE; type <= D3DMULTISAMPLE_16_SAMPLES; ++type )
+    {
+        if( D3D_OK == d3d.CheckDeviceMultiSampleType(
+          adapter,
+          devtype,
+          surfaceFormat,
+          !fullscreen,
+          (D3DMULTISAMPLE_TYPE)type,
+          &quality ) )
+        {
+            GN_ASSERT( quality > 0 );
+            desc.type = (D3DMULTISAMPLE_TYPE)type;
+            desc.quality = quality - 1;
+            table.push_back( desc );
+        }
+    }
+
+    GN_UNGUARD;
+}
+
 //
 //
 // ------------------------------------------------------------------------
@@ -16,30 +57,17 @@ static void sDetermineMsaa(
 {
     GN_GUARD;
 
-    // default is no MSAA
-    d3dType = D3DMULTISAMPLE_NONE;
-    quality = 0;
+    GN_ASSERT( msaa < GN::gfx::NUM_MSAA_TYPES );
 
-    if( GN::gfx::MSAA_NONE != msaa )
-    {
-#if GN_XENON
-        D3DMULTISAMPLE_TYPE type = D3DMULTISAMPLE_4_SAMPLES;
-#else
-        D3DMULTISAMPLE_TYPE type = D3DMULTISAMPLE_NONMASKABLE;
-#endif
-        DWORD q;
-        if( SUCCEEDED( d3d.CheckDeviceMultiSampleType(
-            adapter,
-            devtype,
-            surfaceFormat,
-            !fullscreen,
-            type,
-            &q ) ) )
-        {
-            d3dType = type;
-            quality = q - 1;
-        }
-    }
+    std::vector<GN::gfx::D3D9Renderer::D3DMsaaDesc> table;
+
+    sGetMsaaDescTable( table, d3d, adapter, devtype, surfaceFormat, fullscreen );
+    GN_ASSERT( !table.empty() );
+
+    size_t n = table.size() * msaa / 4;
+    if( n == table.size() ) --n;
+    d3dType = table[n].type;
+    quality = table[n].quality;
 
     GN_UNGUARD;
 }
@@ -50,9 +78,7 @@ static void sDetermineMsaa(
 static D3DFORMAT sDetermineBackBufferFormat(
     IDirect3D9 & d3d,
     UINT adapter,
-    D3DDEVTYPE, //devtype
     const GN::gfx::DispDesc & dd,
-    GN::gfx::MsaaType, // msaa
     bool fullscreen )
 {
 #if GN_XENON
@@ -141,13 +167,17 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     d3dpp.BackBufferCount  = 0;
     d3dpp.BackBufferWidth  = dd.width;
     d3dpp.BackBufferHeight = dd.height;
-    d3dpp.BackBufferFormat = sDetermineBackBufferFormat( d3d, adapter, devtype, dd, msaa, fullscreen );
+    d3dpp.BackBufferFormat = sDetermineBackBufferFormat( d3d, adapter, dd, fullscreen );
     if( D3DFMT_UNKNOWN == d3dpp.BackBufferFormat ) return 0;
 
     // set msaa parameters
     sDetermineMsaa(
         d3d, adapter, devtype, d3dpp.BackBufferFormat, msaa, fullscreen,
         d3dpp.MultiSampleType, d3dpp.MultiSampleQuality );
+
+    // setup depth parameters
+    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
+    d3dpp.EnableAutoDepthStencil = true;
 
     // set display mode parameters
     d3dpp.Windowed = !fullscreen;
@@ -360,7 +390,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceRestore()
             mAdapter,
             mDeviceType,
             dd,
-            getOptions().msaa,
+            ro.msaa,
             ro.fullscreen,
             ro.vsync ) ) return false;
 
@@ -404,6 +434,54 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
     GN_ASSERT( !mDispOK );
 
     safeRelease(mDevice);
+
+    mMsaaDescTable.clear();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx::D3D9Renderer::D3DMsaaDesc *
+GN::gfx::D3D9Renderer::newMsaaDesc( D3DFORMAT format )
+{
+    GN_GUARD;
+
+    PIXPERF_SCOPE_EVENT( 0, "GN::gfx::D3D9Renderer::newMsaaDesc" );
+
+    std::vector<D3DMsaaDesc> table;
+
+    sGetMsaaDescTable( table, *mD3D, mAdapter, mDeviceType, format, getOptions().fullscreen );
+
+    GN_ASSERT( !table.empty() );
+
+    GN_ASSERT( mMsaaDescTable.find( format ) == mMsaaDescTable.end() );
+    D3DMsaaDesc * result = mMsaaDescTable[format];
+
+    size_t n;
+
+    result[MSAA_NONE].type = table[0].type;
+    result[MSAA_NONE].quality = table[0].quality;
+
+    n = table.size() / 4;
+    result[MSAA_LOW].type = table[n].type;
+    result[MSAA_LOW].quality = table[n].quality;
+
+    n = table.size() / 2;
+    result[MSAA_MEDIUM].type = table[n].type;
+    result[MSAA_MEDIUM].quality = table[n].quality;
+
+    n = table.size() * 3 / 4;
+    result[MSAA_HIGH].type = table[n].type;
+    result[MSAA_HIGH].quality = table[n].quality;
+
+    n = table.size() - 1;
+    result[MSAA_ULTRA].type = table[n].type;
+    result[MSAA_ULTRA].quality = table[n].quality;
+
+    // success
+    return result;
 
     GN_UNGUARD;
 }
