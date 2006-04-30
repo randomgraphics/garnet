@@ -1,7 +1,7 @@
 ft2     : Freetype 2.1.10 (http://www.freetype.org)
 glew    : glew-1.3.1 (http://glew.sourceforge.net)
 jpeg    : jpeg-6b (http://www.ijg.org)
-lua     : lua-5.1-beta (http://www.lua.org)
+lua     : lua-5.1 (http://www.lua.org)
 pcre    : pcre-6.4 (http://www.pcre.org/)
 png     : libpng-1.2.8 (http://www.libpng.org/pub/png/libpng.html)
 tinyxml : TinyXML-2.3.2 (http://www.grinninglizard.com/tinyxml)
