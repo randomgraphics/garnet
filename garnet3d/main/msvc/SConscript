@@ -6,26 +6,29 @@ def to_relpath( files ):
 
 import os.path
 
-# determine variant string
-if 'vc80-x64' == compiler:
-    variant_str = '%s|x64'%variant
+# determine target directory
+if 'vc80' == compiler.name:
     target_dir = '8.0'
-elif 'vc80' == compiler:
-    variant_str = '%s|Win32'%variant
-    target_dir = '8.0'
-elif 'xenon' == compiler:
-    variant_str = '%s|Xenon'%variant
-    target_dir = '7.1'
 else:
-    variant_str = '%s|Win32'%variant
     target_dir = '7.1'
+
+# determine variant string
+if 'ppc' == compiler.cpu:
+    variant_str = '%s|Xenon'%variant
+elif 'x64' == compiler.cpu:
+    variant_str = '%s|x64'%variant
+elif 'x86' == compiler.cpu:
+    variant_str = '%s|Win32'%variant
+else:
+    print 'ERROR : unknown target CPU : ', compiler.cpu
+    Exit(-1)
 
 # build target directory
 absdir = Dir(target_dir).srcnode().abspath
 if not os.path.exists( absdir ) : os.makedirs( absdir )
 
 # compose command line arguments
-cmdargs = 'variant=%s compiler=%s'%(variant,compiler)
+cmdargs = 'variant=%s compiler=%s os=%s cpu=%s'%(variant,compiler.name, compiler.os, compiler.cpu)
 
 # collect source files
 sources = []
