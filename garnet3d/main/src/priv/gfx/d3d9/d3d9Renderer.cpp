@@ -67,6 +67,8 @@ bool GN::gfx::D3D9Renderer::init()
 {
     GN_GUARD;
 
+    PIXPERF_FUNCTION_EVENT();
+
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Renderer, () );
 
@@ -89,6 +91,8 @@ bool GN::gfx::D3D9Renderer::init()
 void GN::gfx::D3D9Renderer::quit()
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     deviceDestroy();
 
@@ -113,6 +117,8 @@ void GN::gfx::D3D9Renderer::quit()
 bool GN::gfx::D3D9Renderer::changeOptions( const RendererOptions & options, bool forceRecreation )
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     // prepare for function re-entrance.
     if( mDeviceChanging )
@@ -190,6 +196,8 @@ bool GN::gfx::D3D9Renderer::deviceCreate()
 {
     GN_GUARD;
 
+    PIXPERF_FUNCTION_EVENT();
+
     _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( mDeviceChanging );
@@ -224,6 +232,8 @@ bool GN::gfx::D3D9Renderer::deviceRestore()
 {
     GN_GUARD;
 
+    PIXPERF_FUNCTION_EVENT();
+
     _GNGFX_DEVICE_TRACE();
 
     if( !dispDeviceRestore() ) return false;
@@ -249,6 +259,8 @@ void GN::gfx::D3D9Renderer::deviceDispose()
 {
     GN_GUARD;
 
+    PIXPERF_FUNCTION_EVENT();
+
     _GNGFX_DEVICE_TRACE();
 
     GN_INFO( "GFX SIGNAL: D3D9 device dispose." );
@@ -269,6 +281,8 @@ void GN::gfx::D3D9Renderer::deviceDispose()
 void GN::gfx::D3D9Renderer::deviceDestroy()
 {
     GN_GUARD;
+
+    PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
 

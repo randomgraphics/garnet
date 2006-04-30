@@ -223,6 +223,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContext(
 {
     GN_GUARD_SLOW;
 
+    PIXPERF_FUNCTION_EVENT();
+
     //
     // Parameter check
     //

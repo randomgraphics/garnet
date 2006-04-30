@@ -37,27 +37,32 @@
 inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
 #endif
 
-#ifndef GN_RETAIL
+#if 0
+#define PIXPERF_BEGIN_EVENT_EX( color, name )
+#define PIXPERF_END_EVENT()
+#define PIXPERF_SET_MARKER_EX( color, name )
+#define PIXPERF_SCOPE_EVENT_EX( color, name )
+#else
 #if GN_XENON
-#define PIXPERF_BEGIN_EVENT( color, name )  PIXBeginNamedEvent( color, name )
-#define PIXPERF_END_EVENT()                 PIXEndNamedEvent()
-#define PIXPERF_SET_MARKER( color, name )   PIXSetMarker( color, name )
-struct PIXPERF_SCOPE_EVENT
+#define PIXPERF_BEGIN_EVENT_EX( color, name )   PIXBeginNamedEvent( color, name )
+#define PIXPERF_END_EVENT()                     PIXEndNamedEvent()
+#define PIXPERF_SET_MARKER_EX( color, name )    PIXSetMarker( color, name )
+struct PIXPERF_SCOPE_EVENT_EX
 {
-    PIXPERF_SCOPE_EVENT( D3DCOLOR color, const char * name )
+    PIXPERF_SCOPE_EVENT_EX( D3DCOLOR color, const char * name )
     {
         PIXBeginNamedEvent( color, name );
     }
-    ~PIXPERF_SCOPE_EVENT()
+    ~PIXPERF_SCOPE_EVENT_EX()
     {
         PIXEndNamedEvent();
     }
 };
-#else
-#define PIXPERF_BEGIN_EVENT( color, name )  D3DPERF_BeginEvent( color, GN_JOIN( L, name ) )
-#define PIXPERF_END_EVENT()                 D3DPERF_EndEvent()
-#define PIXPERF_SET_MARKER( color, name )   D3DPERF_SetMarker( color, GN_JOIN( L, name ) )
-#define PIXPERF_SCOPE_EVENT( color, name )  PixPerfScopeEvent( color, GN_JOIN( L, name ) )
+#else // GN_XENON
+#define PIXPERF_BEGIN_EVENT_EX( color, name )   D3DPERF_BeginEvent( color, GN_JOIN_DIRECT( L, name ) )
+#define PIXPERF_END_EVENT()                     D3DPERF_EndEvent()
+#define PIXPERF_SET_MARKER_EX( color, name )    D3DPERF_SetMarker( color, GN_JOIN_DIRECT( L, name ) )
+#define PIXPERF_SCOPE_EVENT_EX( color, name )   PixPerfScopeEvent __pixScopeEvent__( color, GN_JOIN_DIRECT( L, name ) )
 struct PixPerfScopeEvent
 {
     PixPerfScopeEvent( D3DCOLOR color, const wchar_t * name )
@@ -69,13 +74,13 @@ struct PixPerfScopeEvent
         D3DPERF_EndEvent();
     }
 };
-#endif
-#else
-#define PIXPERF_BEGIN_EVENT( color, name )
-#define PIXPERF_END_EVENT()
-#define PIXPERF_SET_MARKER( color, name )
-#define PIXPERF_SCOPE_EVENT( color, name )
-#endif
+#endif // GN_XENON
+#endif // GN_RETAIL
+
+#define PIXPERF_BEGIN_EVENT( name ) PIXPERF_BEGIN_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
+#define PIXPERF_SCOPE_EVENT( name ) PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
+#define PIXPERF_SET_MARKER( name )  PIXPERF_SET_MARKER_EX( D3DCOLOR_ARGB(255,255,0,0), name )
+#define PIXPERF_FUNCTION_EVENT()    PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), GN_FUNCTION )
 
 #include "garnet/base/pragma.h"
 
