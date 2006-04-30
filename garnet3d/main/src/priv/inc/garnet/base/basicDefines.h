@@ -157,7 +157,7 @@
 //! automatic inline macro
 //!
 #if GN_ENABLE_INLINE
-#define GN_INLINE       GN_FORCE_INLINE
+#define GN_INLINE       inline
 #else
 #define GN_INLINE
 #endif

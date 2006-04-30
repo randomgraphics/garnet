@@ -1,4 +1,4 @@
-# Doxyfile 1.4.3
+# Doxyfile 1.4.6
 PROJECT_NAME           = Garnet3D
 OUTPUT_DIRECTORY       = "$OUTPUT_DIRECTORY"
 OUTPUT_LANGUAGE        = Chinese
@@ -10,6 +10,7 @@ SORT_BY_SCOPE_NAME     = YES
 QUIET                  = YES
 INPUT                  = src/priv
 FILE_PATTERNS          = *.h *.inl
+EXCLUDE_PATTERNS       = pch.h pch.cpp
 RECURSIVE              = YES
 GENERATE_HTMLHELP      = "$GENERATE_HTMLHELP"
 CHM_FILE               = "$CHM_FILE"

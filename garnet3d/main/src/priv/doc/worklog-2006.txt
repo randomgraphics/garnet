@@ -77,6 +77,11 @@ TODO
 WORKLOG
 =======
 
+- 2006.4.29
+  - upgrade doxygen to 1.4.6
+  - refine log functions
+  - refine render target management of D3D9 renderer.
+
 - 2006.4.27
   - redesign resource manager classes to avoid using singleton
 

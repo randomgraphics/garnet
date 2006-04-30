@@ -106,10 +106,12 @@ namespace GN { namespace gfx
         //@{
 
     public :
+
         virtual void * getD3DDevice() const { return getDevice(); }
         virtual void * getOGLRC() const { return 0; }
 
     public :
+
         //
         // Access to D3D interfaces
         //
@@ -133,19 +135,24 @@ namespace GN { namespace gfx
         }
 
         //!
-        //! Check render target MSAA compability
+        //! D3D MSAA descriptor
         //!
-        bool checkD3DDeviceMsaa( D3DFORMAT format ) const
+        struct D3DMsaaDesc
         {
-            if( D3DMULTISAMPLE_NONE == mPresentParameters.MultiSampleType ) return true;
-            DWORD maxQuality;
-            HRESULT hr = mD3D->CheckDeviceMultiSampleType(
-                mAdapter,
-                mDeviceType,
-                format,
-                mPresentParameters.Windowed,
-                mPresentParameters.MultiSampleType, &maxQuality );
-            return D3D_OK == hr && mPresentParameters.MultiSampleQuality < maxQuality;
+            D3DMULTISAMPLE_TYPE type;    //!< D3D MSAA type
+            DWORD               quality; //!< D3D MSAA quality
+        };
+
+        //!
+        //! Check render target MSAA compability.
+        //!
+        //! Return value is a array that has NUM_MSAA_TYPES elements, to descript how MSAA qualities are mapped to D3D.
+        //!
+        const D3DMsaaDesc * getMsaaDesc( D3DFORMAT format )
+        {
+            MsaaDescTable::const_iterator i = mMsaaDescTable.find( format );
+            if( mMsaaDescTable.end() != i ) return i->second;
+            else return newMsaaDesc( format );
         }
 
     private :
@@ -165,7 +172,10 @@ namespace GN { namespace gfx
         void dispDeviceDispose();
         void dispDeviceDestroy();
 
+        const D3DMsaaDesc * newMsaaDesc( D3DFORMAT ); // create new MSAA descriptor for specific D3D format.
+
     private :
+
         bool                    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
         bool                    mDeviceRecreation; //!< only true between dispDeviceCreate() and dispDeviceRestore()
         UINT                    mAdapter;
@@ -174,6 +184,9 @@ namespace GN { namespace gfx
         D3DPRESENT_PARAMETERS   mPresentParameters;
         IDirect3D9            * mD3D;
         IDirect3DDevice9      * mDevice;
+
+        typedef std::map<D3DFORMAT,StackArray<D3DMsaaDesc,NUM_MSAA_TYPES> > MsaaDescTable;
+        MsaaDescTable mMsaaDescTable;
 
         //@}
 
@@ -314,7 +327,7 @@ namespace GN { namespace gfx
         void contextClear() { mContext.resetToDefault(); }
         bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
-        void contextDeviceDispose() { mAutoColor0.clear(); mAutoDepth.clear(); }
+        void contextDeviceDispose();
         void contextDeviceDestroy() { clearContextResources(); }
 
         GN_INLINE void bindContext(
@@ -326,6 +339,12 @@ namespace GN { namespace gfx
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
+
+        GN_INLINE void bindContextRenderTargets( // called _ONLY_ by bindContextState()
+            const RendererContext & newContext,
+            RendererContext::FieldFlags newFlag,
+            bool forceRebind,
+            bool & needRebindViewport );
 
         GN_INLINE void bindContextFfp(
             const RendererContext & newContext,
@@ -369,6 +388,8 @@ namespace GN { namespace gfx
         RendererContext mContext;
 
         AutoComPtr<IDirect3DSurface9> mAutoColor0, mAutoDepth;
+
+        AutoComPtr<IDirect3DSurface9> mRenderTargets[MAX_RENDER_TARGETS];
 
         //@}
 

@@ -6,7 +6,7 @@ import sys, os.path
 class DocGenerator:
 
     def __init__(self):
-        self.target = File('refernece.chm')
+        self.target = File('reference.chm')
 
     def __call__( self, env, sources ):
 

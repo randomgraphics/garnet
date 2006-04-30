@@ -36,12 +36,15 @@ public:
     {
         Renderer & r = gRenderer;
 
+        uint32_t w = 512; //r.getDispDesc().width;
+        uint32_t h = 512; //r.getDispDesc().height;
+
         // create color texture
-        mColor.attach( r.create2DTexture( 256, 256, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        mColor.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
         if( mColor.empty() ) return false;
 
         // create depth texture
-        mDepth.attach( r.create2DTexture( 256, 256, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
+        mDepth.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
         if( mDepth.empty() ) return false;
 
         // create texture
@@ -90,12 +93,25 @@ public:
         mDepth.clear();
     }
 
+    AutoInit<bool,true> mAnimate;
+
+    void onKeyPress( input::KeyEvent key )
+    {
+        if( input::KEY_SPACEBAR == key.code && key.status.down )
+        {
+            mAnimate = !mAnimate;
+        }
+    }
+
     void update()
     {
         // update mWorld matrix
         static float angle = 0.0f;
-        angle += deg2rad(0.2f);
-        mWorld.rotateY( angle );
+        if( mAnimate )
+        {
+            angle += deg2rad(0.2f);
+            mWorld.rotateY( angle );
+        }
     }
 
     void render()
@@ -153,6 +169,12 @@ public:
     void onUpdate()
     {
         mScene->update();
+    }
+
+    void onKeyPress( input::KeyEvent key )
+    {
+        GN::app::SampleApp::onKeyPress( key );
+        mScene->onKeyPress( key );
     }
 
     void onRender()
