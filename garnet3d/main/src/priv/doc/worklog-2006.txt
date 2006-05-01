@@ -23,6 +23,12 @@ TODO
 
 - 程序中标注TODO的地方
 
+- to make a simle game, like teris clone:
+  - load effect/shader from xml file
+  - load mesh
+  - simple GUI
+  - task manager/coordinator
+
 - p1
   - try multi-thread architect
     - separate sim() and render() loop

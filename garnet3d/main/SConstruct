@@ -125,9 +125,11 @@ def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
 def UTIL_buildRoot( compiler = None ) :
     if not compiler:
-        return os.path.join( 'bin', 'build.tmp', 'scons' )
+        return os.path.join( '#bin', 'build.tmp', 'scons' )
     else:
-        return os.path.join( 'bin', 'build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
+        return os.path.join( '#bin', 'build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
+
+def UTIL_distRoot() : return '#bin'
 
 def UTIL_buildDir( compiler, variant ) :
     if not isinstance( compiler, Compiler ):
@@ -171,7 +173,7 @@ def UTIL_newEnv( compiler, variant ):
         ICL_VERSION = icl_version,
         ICL_ABI = icl_abi )
 
-    env.SConsignFile( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) )
+    env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
 
     # setup builder for gcc precompiled header
     if 'g++' == env['CXX']:
@@ -444,6 +446,9 @@ class GarnetEnv :
                 files += do_glob( pattern, dir, recursive )
         return files
 
+    # get root distribution directory
+    def distRoot( self ) : return UTIL_distRoot()
+
     # ´´½¨ source cluster
     def newSourceCluster( self, sources, pchHeader = None, pchSource = None ):
         s = SourceCluster()
@@ -642,6 +647,11 @@ BUILD_libDir = None
 BUILD_binDir = None
 
 #
+# Get libarary suffix. Currently, none.
+#
+def BUILD_getSuffix(): return ""
+ 
+#
 # Create new compile environment
 #
 def BUILD_newCompileEnv( cluster ):
@@ -679,7 +689,13 @@ def BUILD_newCompileEnv( cluster ):
 def BUILD_newLinkEnv( target ):
     env = BUILD_env.Copy()
 
-    if target.pdb: env['PDB'] = target.pdb
+    def extname( path ):
+        p,e = os.path.splitext( str(path) )
+        return e
+
+    if target.pdb:
+        p,e = os.path.splitext( str(target.pdb) )
+        env['PDB'] = p+BUILD_getSuffix()+e
 
     if 'gcc' == env['CC']:
         env.Prepend( LIBPATH = [BUILD_binDir,BUILD_libDir] )
@@ -742,7 +758,7 @@ def BUILD_staticLib( name, target ):
     objs = []
     for s in target.sources: objs += BUILD_staticObjs( s )
     env = BUILD_newLinkEnv( target )
-    libName = '%s%s%s'%(env['LIBPREFIX'],name,env['LIBSUFFIX'])
+    libName = '%s%s%s%s'%( env['LIBPREFIX'], name, BUILD_getSuffix(), env['LIBSUFFIX'] )
     target.targets = env.Install( BUILD_libDir, env.Library( os.path.join(str(target.path),libName), objs ) )
     Alias( name, target.targets )
     Default( target.targets )
@@ -754,14 +770,17 @@ def BUILD_toList( x ):
     if x : return x
     else : return []
 
-def BUILD_addLib( env, name, lib ):
+def BUILD_addLib( env, name, lib, addSuffix ):
     if not lib in env['LIBS']:
-        env.Prepend( LIBS = [lib] )
+        if addSuffix:
+            env.Prepend( LIBS = [lib+BUILD_getSuffix()] )
+        else:
+            env.Prepend( LIBS = [lib] )
         GN.trace( 1, 'Add depends of %s : %s'%(name,lib) )
 
 def BUILD_addExternalDependencies( env, name, deps ):
     for x in reversed(deps):
-        BUILD_addLib( env, name, x )
+        BUILD_addLib( env, name, x, False )
 
 def BUILD_addDependencies( env, name, deps ):
     targets = ALL_targets[BUILD_compiler][BUILD_variant]
@@ -770,7 +789,7 @@ def BUILD_addDependencies( env, name, deps ):
             BUILD_addExternalDependencies( env, name, BUILD_toList(targets[x].externalDependencies) )
             BUILD_addDependencies( env, name, BUILD_toList(targets[x].dependencies) )
             if 'GNcore' == x or 'stlib' == targets[x].type : # here we ignore shared libraried other then GNcore.
-                BUILD_addLib( env, name, x )
+                BUILD_addLib( env, name, x, True )
         else:
             GN.warn( "Ingore non-exist dependency for target %s: %s"%(name,x) )
 
@@ -800,7 +819,7 @@ def BUILD_sharedLib( name, target ):
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
 
-    libName = '%s%s%s'%(env['SHLIBPREFIX'],name,env['SHLIBSUFFIX'])
+    libName = '%s%s%s%s'%(env['SHLIBPREFIX'],name,BUILD_getSuffix(),env['SHLIBSUFFIX'])
     shlib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
     BUILD_handleManifest( env, shlib )
 
@@ -837,7 +856,7 @@ def BUILD_program( name, target ):
 
     if 'gcc' == env['CC']: env.Prepend( LIBS=['GNcore','GNbase'] )
 
-    exeName = '%s%s%s'%(env['PROGPREFIX'],name,env['PROGSUFFIX'])
+    exeName = '%s%s%s%s'%(env['PROGPREFIX'],name,BUILD_getSuffix(),env['PROGSUFFIX'])
     prog = env.Program( os.path.join(str(target.path),exeName), objs )
     BUILD_handleManifest( env, prog )
     target.targets = env.Install( BUILD_binDir, prog )

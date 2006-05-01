@@ -8,7 +8,7 @@ def doCopy( env, sources ):
     targets = []
     for x in sources:
         src = str(x.srcnode().path)
-        dst = os.path.join( '#bin', 'media', GN.relpath( src, srcdir ) )
+        dst = os.path.join( GN.distRoot(), 'media', GN.relpath( src, srcdir ) )
         targets.append( env.InstallAs( dst, src ) )
     return targets
 
