@@ -27,6 +27,7 @@ static GN::StrA sSearchResourceFile( const StrA & name )
     // search in application directory
     CHECK_PATH( ("app:", name ) );
     CHECK_PATH( ( "app:/media", name ) );
+    CHECK_PATH( ( "app:../media", name ) );
 
     // search in garnet binary tree.
     CHECK_PATH( ( getEnv("GARNET_ROOT"), "bin/media", name ) );

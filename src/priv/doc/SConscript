@@ -6,7 +6,7 @@ import sys, os.path
 class DocGenerator:
 
     def __init__( self ):
-        self.target = File('#bin/sdk/doc/reference.chm')
+        self.target = File( os.path.join( GN.distRoot(), 'doc', 'reference.chm' ) )
         self.outdir = Dir('.')
 
     def __call__( self, env, sources ):
