@@ -879,7 +879,6 @@ for compiler, variants in ALL_targets.iteritems() :
                 BUILD_program( name, x )
             elif 'custom' == x.type :
                 BUILD_custom( name, x )
-            # TODO: special case for build documents
             else: GN.error( 'Unknown target type for target %s: %s'%(name,x.type) )
             GN.trace( 1, "%s : compiler(%s), variant(%s), type(%s), path(%s), targets(%s)"%(
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
