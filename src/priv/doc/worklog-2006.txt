@@ -84,6 +84,14 @@ TODO
   - implement POSIX version of GN::path:glob()
   - UT for path functions: resolve, glob
 
+ISSUES
+======
+
+- why use custom string class, instead of STL string:
+  - std::string can't accept NULL pointer as valid input.
+  - std::char_trait<wchar_t> is not well supported on cygwin.
+
+
 WORKLOG
 =======
 
