@@ -48,7 +48,7 @@ TODO
     - font class
   - UT for Str::findFirst/LastOf(...)
   - refine sigslot class to allow any type of functor
-  - string buffer memory allocator.
+  - string: use stack array for short string
 
 - p2
   - GFX system
