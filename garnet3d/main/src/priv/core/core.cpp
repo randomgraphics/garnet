@@ -34,4 +34,44 @@ namespace GN
         // do default log
         detail::defaultLogImpl(desc,msg);
     }
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    GN_PUBLIC void * memAlloc( size_t sz )
+    {
+        //#if GN_MSWIN
+        //void * ptr = ::HeapAlloc( ::GetProcessHeap(), 0, sz );
+        //#else
+        void * ptr = ::malloc( sz );
+        //#endif
+        if ( 0 == ptr ) GN_ERROR( "out of memory!" );
+        return ptr;
+    }
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    GN_PUBLIC void * memReAlloc( void * ptr, size_t sz )
+    {
+        //#if GN_MSWIN
+        //ptr = ::HeapReAlloc( ::GetProcessHeap(), 0, ptr, sz );
+        //#else
+        ptr = ::realloc( ptr, sz );
+        //#endif
+        if ( 0 == ptr ) GN_ERROR( "out of memory!" );
+        return ptr;
+    }
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    GN_PUBLIC void memFree( void * ptr )
+    {
+        //#if GN_MSWIN
+        //::HeapFree( ::GetProcessHeap(), 0, ptr );
+        //#else
+        ::free( ptr );
+        //#endif
+    }
 }
