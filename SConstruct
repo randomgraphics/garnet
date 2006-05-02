@@ -694,7 +694,7 @@ def BUILD_newLinkEnv( target ):
         return e
 
     if target.pdb:
-        p,e = os.path.splitext( str(target.pdb) )
+        p,e = os.path.splitext( target.pdb.path )
         env['PDB'] = p+BUILD_getSuffix()+e
 
     if 'gcc' == env['CC']:

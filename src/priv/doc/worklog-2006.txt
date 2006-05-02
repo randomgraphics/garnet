@@ -39,6 +39,7 @@ TODO
       - OGL: FBO
     - queryXXX(....)
   - code page convertor
+    - may support convertion from/to utf8 be enough?
   - sample application
     - GLSL test application
   - mesh class
