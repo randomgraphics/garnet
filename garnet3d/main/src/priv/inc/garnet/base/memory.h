@@ -8,6 +8,17 @@
 
 #include <new>
 
+//! \name macro to exception throw
+//@{
+#if GN_GCC
+#define GN_THROW_BADALLOC() throw(std::bad_alloc)
+#define GN_NOTHROW() throw()
+#else
+#define GN_THROW_BADALLOC()
+#define GN_NOTHROW() throw()
+#endif
+//@}
+
 namespace GN
 {
     //!
@@ -24,6 +35,81 @@ namespace GN
     //! Free heap-allocated memory. Can cross DLL boundary.
     //!
     void memFree( void * );
+
+    //!
+    //! STL allocator that use garnet memory management routines.
+    //!
+    template<class T>
+	class MemAllocator
+	{
+        //! \cond NEVER
+    public:
+    	typedef typename T         value_type;
+    	typedef size_t             size_type;
+    	typedef ptrdiff_t          difference_type;
+    	typedef const value_type * const_pointer;
+    	typedef const value_type & const_reference;
+    	typedef value_type *       pointer;
+    	typedef value_type &       reference;
+
+    	template<class T2>
+        struct rebind
+        {
+    		typedef MemAllocator<T2> other;
+    	};
+
+    	MemAllocator() GN_NOTHROW() {}
+
+        ~MemAllocator() GN_NOTHROW() {}
+
+    	MemAllocator( const MemAllocator<T> & ) GN_NOTHROW() {}
+
+    	template<class T2>
+    	MemAllocator( const MemAllocator<T2> & ) GN_NOTHROW() {}
+
+    	template<class T2>
+    	MemAllocator<T> & operator=( const MemAllocator<T2> & )
+		{
+			return *this;
+		}
+
+    	pointer address( reference x ) const
+		{
+			return &x;
+		}
+
+    	const_pointer address( const_reference x ) const
+		{
+			return &x;
+		}
+
+    	pointer allocate( size_type count, const void * = 0 )
+    	{
+            return (pointer)memAlloc( count * sizeof(T) );
+    	}
+
+    	void deallocate( pointer ptr, size_type )
+    	{
+            memFree( ptr );
+    	}
+
+    	void construct( pointer ptr, const T & x )
+    	{
+            new (ptr) T(x);
+    	}
+
+    	void destroy( pointer ptr )
+    	{
+            ptr->T::~T();
+    	}
+
+    	size_type max_size() const GN_NOTHROW()
+    	{
+        	size_type count = (size_t)(-1) / sizeof(T);
+        	return ( 0 < count ? count : 1 );
+    	}
+        //! \endcond
+	};
 
     //!
     //! Fixed sized memory allocator
@@ -192,13 +278,7 @@ namespace GN
 
 //! \name overloaded global new and delete operators
 //@{
-#if GN_GCC
-#define GN_THROW_BADALLOC() throw(std::bad_alloc)
-#define GN_NOTHROW() throw()
-#else
-#define GN_THROW_BADALLOC()
-#define GN_NOTHROW() throw()
-#endif
+// TODO: more standard conforming implementation.
 inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::memAlloc( s ); }
 inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::memAlloc( s ); }
 inline void operator delete( void* p ) GN_NOTHROW() { ::GN::memFree( p ); }

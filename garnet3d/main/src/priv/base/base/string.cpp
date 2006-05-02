@@ -65,7 +65,7 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
     else
     {
         o.mPtr[l] = 0;
-        o.mLen = l;
+        o.mCount = l;
     }
 }
 
@@ -92,6 +92,6 @@ void GN::mbs2wcs( StrW & o, const char * i, size_t l )
     else
     {
         o.mPtr[l] = 0;
-        o.mLen = l;
+        o.mCount = l;
     }
 }

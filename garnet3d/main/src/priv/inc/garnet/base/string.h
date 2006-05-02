@@ -120,14 +120,22 @@ namespace GN
     //!
     //! Custom string class
     //!
-    template<typename CHAR>
+    template<typename CHAR, typename ALLOCATOR = MemAllocator<CHAR> >
     class Str
     {
-        CHAR * mPtr;   //!< string buffer pointer.
-        size_t mLen;   //!< How many charecters in the string, not including pending zero.
-        size_t mCaps;  //!< How many characters can we hold?
+        typedef typename CHAR CharType;
+        typedef typename ALLOCATOR AllocatorType;
 
-        static GN_PUBLIC FixedSizedObjectAllocator<Str<CHAR> > msAllocator; //!< global string allocator
+        CharType * mPtr;   //!< string buffer pointer.
+        size_t     mCount; //!< How many charecters in the string, not including null end.
+        size_t     mCaps;  //!< How many characters can we hold, not including null end?
+
+        //!
+        //! static string allocator. Note that this allocator is used to allocate
+        //! the string class itself, not the string buffer. And it is _NOT_ effective
+        //! for on-stack instance.
+        //!
+        static GN_PUBLIC FixedSizedObjectAllocator<Str<CharType> > msAllocator;
 
     public:
 
@@ -161,7 +169,7 @@ namespace GN
         //!
         //! default constructor
         //!
-        Str() : mLen(0), mCaps(0)
+        Str() : mCount(0), mCaps(0)
         {
             mPtr = alloc(mCaps);
             mPtr[0] = 0;
@@ -170,31 +178,31 @@ namespace GN
         //!
         //! copy constructor
         //!
-        Str( const Str & s ) : mLen(s.mLen), mCaps(calcCaps(s.mLen))
+        Str( const Str & s ) : mCount(s.mCount), mCaps(calcCaps(s.mCount))
         {
             mPtr = alloc(mCaps);
-            ::memcpy( mPtr, s.mPtr, (mLen+1)*sizeof(CHAR) );
+            ::memcpy( mPtr, s.mPtr, (mCount+1)*sizeof(CharType) );
         }
 
         //!
         //! copy constructor from c-style string
         //!
-        Str( const CHAR * s, size_t l = 0 )
+        Str( const CharType * s, size_t l = 0 )
         {
             if ( 0 == s )
             {
                 mCaps = 0;
-                mLen = 0;
+                mCount = 0;
                 mPtr = alloc(mCaps);
                 mPtr[0] = 0;
             }
             else
             {
-                l = strLen<CHAR>(s,l);
+                l = strLen<CharType>(s,l);
                 mCaps = calcCaps(l);
                 mPtr = alloc(mCaps);
-                mLen = l;
-                ::memcpy( mPtr, s, l*sizeof(CHAR) );
+                mCount = l;
+                ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
             }
         }
@@ -204,20 +212,20 @@ namespace GN
         //!
         ~Str()
         {
-            dealloc(mPtr);
+            dealloc( mPtr, mCaps );
         }
 
         //!
         //! append to this string
         //!
-        void append( const CHAR * s, size_t l = 0 )
+        void append( const CharType * s, size_t l = 0 )
         {
             if ( 0 == s ) return;
-            l = strLen<CHAR>(s,l);
-            setCaps( mLen + l );
-            ::memcpy( mPtr+mLen, s, l*sizeof(CHAR) );
-            mLen += l;
-            mPtr[mLen] = 0;
+            l = strLen<CharType>(s,l);
+            setCaps( mCount + l );
+            ::memcpy( mPtr+mCount, s, l*sizeof(CharType) );
+            mCount += l;
+            mPtr[mCount] = 0;
         }
 
         //!
@@ -227,40 +235,40 @@ namespace GN
         {
             if( s.empty() ) return;
             size_t l = s.size();
-            setCaps( mLen + l );
-            ::memcpy( mPtr+mLen, s.cptr(), l*sizeof(CHAR) );
-            mLen += l;
-            mPtr[mLen] = 0;
+            setCaps( mCount + l );
+            ::memcpy( mPtr+mCount, s.cptr(), l*sizeof(CharType) );
+            mCount += l;
+            mPtr[mCount] = 0;
         }
 
         //!
         //! append to this string
         //!
-        void append( CHAR ch )
+        void append( CharType ch )
         {
             if ( 0 == ch ) return;
-            setCaps( mLen + 1 );
-            mPtr[mLen] = ch;
-            ++mLen;
-            mPtr[mLen] = 0;
+            setCaps( mCount + 1 );
+            mPtr[mCount] = ch;
+            ++mCount;
+            mPtr[mCount] = 0;
         }
 
         //!
         //! assign value to string class
         //!
-        void assign( const CHAR * s, size_t l = 0 )
+        void assign( const CharType * s, size_t l = 0 )
         {
             if ( 0 == s )
             {
                 mPtr[0] = 0;
-                mLen = 0;
+                mCount = 0;
             }
             else
             {
-                l = strLen<CHAR>(s,l);
+                l = strLen<CharType>(s,l);
                 setCaps(l);
-                mLen = l;
-                ::memcpy( mPtr, s, l*sizeof(CHAR) );
+                mCount = l;
+                ::memcpy( mPtr, s, l*sizeof(CharType) );
                 mPtr[l] = 0;
             }
         }
@@ -268,12 +276,12 @@ namespace GN
         //!
         //! begin iterator(1)
         //!
-        CHAR * begin() { return mPtr; }
+        CharType * begin() { return mPtr; }
 
         //!
         //! begin iterator(2)
         //!
-        const CHAR * begin() const { return mPtr; }
+        const CharType * begin() const { return mPtr; }
 
         //!
         //! Clear to empty string
@@ -281,28 +289,28 @@ namespace GN
         void clear()
         {
             mPtr[0] = 0;
-            mLen = 0;
+            mCount = 0;
         }
 
         //!
         //! return c-style const char pointer
         //!
-        const CHAR * cptr() const { return mPtr; }
+        const CharType * cptr() const { return mPtr; }
 
         //!
         //! empty string or not?
         //!
-        bool empty() const { return 0 == mLen; }
+        bool empty() const { return 0 == mCount; }
 
         //!
         //! begin iterator(1)
         //!
-        CHAR * end() { return mPtr+mLen; }
+        CharType * end() { return mPtr+mCount; }
 
         //!
         //! begin iterator(2)
         //!
-        const CHAR * end() const { return mPtr+mLen; }
+        const CharType * end() const { return mPtr+mCount; }
 
         static const size_t NOT_FOUND = (size_t)-1; //!< indicate serach failure.
 
@@ -317,9 +325,9 @@ namespace GN
         size_t findFirstOf( const char * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
-            if( offset >= mLen ) return NOT_FOUND;
-            if( 0 == count ) count = mLen;
-            if( offset + count > mLen ) count = mLen - offset;
+            if( offset >= mCount ) return NOT_FOUND;
+            if( 0 == count ) count = mCount;
+            if( offset + count > mCount ) count = mCount - offset;
             const char * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
@@ -338,9 +346,9 @@ namespace GN
         size_t findFirstNotOf( const char * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
-            if( offset >= mLen ) return NOT_FOUND;
-            if( 0 == count ) count = mLen;
-            if( offset + count > mLen ) count = mLen - offset;
+            if( offset >= mCount ) return NOT_FOUND;
+            if( 0 == count ) count = mCount;
+            if( offset + count > mCount ) count = mCount - offset;
             const char * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
@@ -359,9 +367,9 @@ namespace GN
         template<typename PRED>
         size_t findFirstOf( const PRED & pred, size_t offset = 0, size_t count = 0 ) const
         {
-            if( offset >= mLen ) return NOT_FOUND;
-            if( 0 == count ) count = mLen;
-            if( offset + count > mLen ) count = mLen - offset;
+            if( offset >= mCount ) return NOT_FOUND;
+            if( 0 == count ) count = mCount;
+            if( offset + count > mCount ) count = mCount - offset;
             const char * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
@@ -377,9 +385,9 @@ namespace GN
         size_t findLastOf( const char * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
-            if( offset >= mLen ) return NOT_FOUND;
-            if( 0 == count ) count = mLen;
-            if( offset + count > mLen ) count = mLen - offset;
+            if( offset >= mCount ) return NOT_FOUND;
+            if( 0 == count ) count = mCount;
+            if( offset + count > mCount ) count = mCount - offset;
             GN_ASSERT( count > 0 );
             const char * p = mPtr + offset + count - 1;
             for( size_t i = count; i > 0; --i, --p )
@@ -396,12 +404,12 @@ namespace GN
         //!
         //! get first character of the string. If string is empty, return 0.
         //!
-        CHAR first() const { return mPtr[0]; }
+        CharType first() const { return mPtr[0]; }
 
         //!
         //! printf-like string formatting
         //!
-        const CHAR * format( const CHAR * fmt, ... )
+        const CharType * format( const CharType * fmt, ... )
         {
             va_list arglist;
             va_start( arglist, fmt );
@@ -413,7 +421,7 @@ namespace GN
         //!
         //! printf-like string formatting(2)
         //!
-        const CHAR * format( const CHAR * fmt, va_list args )
+        const CharType * format( const CharType * fmt, va_list args )
         {
             if( strEmpty(fmt) )
             {
@@ -421,7 +429,7 @@ namespace GN
             }
             else
             {
-                CHAR buf[16384];  // 16k should be enough in most cases
+                CharType buf[16384];  // 16k should be enough in most cases
                 strPrintf( buf, 16384, fmt, args );
                 buf[16383] = 0;
                 assign( buf );
@@ -437,37 +445,37 @@ namespace GN
         //!
         //! Insert a character at specific position
         //!
-        void insert( size_t pos, CHAR ch )
+        void insert( size_t pos, CharType ch )
         {
             if( 0 == ch ) return;
-            if( pos >= mLen )
+            if( pos >= mCount )
             {
                 append( ch );
             }
             else
             {
-                setCaps( mLen + 1 );
-                for( size_t i = mLen+1; i > pos; --i )
+                setCaps( mCount + 1 );
+                for( size_t i = mCount+1; i > pos; --i )
                 {
                     mPtr[i] = mPtr[i-1];
                 }
                 mPtr[pos] = ch;
-                ++mLen;
+                ++mCount;
             }
         }
 
         //!
         //! get last character of the string. If string is empty, return 0.
         //!
-        CHAR last() const { return mLen>0 ? mPtr[mLen-1] : (CHAR)0; }
+        CharType last() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
 
         //!
         //! Replace specific character with another
         //!
-        void replace( CHAR from, CHAR to )
+        void replace( CharType from, CharType to )
         {
-            CHAR * p = mPtr;
-            for( size_t i = 0; i < mLen; ++i, ++p )
+            CharType * p = mPtr;
+            for( size_t i = 0; i < mCount; ++i, ++p )
             {
                 if( from == *p ) *p = to;
             }
@@ -479,25 +487,26 @@ namespace GN
         void setCaps( size_t newCaps )
         {
             if ( mCaps >= newCaps ) return;
-            mCaps = calcCaps(newCaps);
-            CHAR * newPtr = alloc(mCaps);
-            ::memcpy( newPtr, mPtr, sizeof(CHAR)*(mLen+1) );
-            dealloc(mPtr);
+            size_t oldCaps = mCaps;
+            mCaps = calcCaps( newCaps );
+            CharType * newPtr = alloc( mCaps );
+            ::memcpy( newPtr, mPtr, sizeof(CharType)*(mCount+1) );
+            dealloc( mPtr, oldCaps );
             mPtr = newPtr;
         }
 
         //!
         //! return string length in character, not including ending zero
         //!
-        size_t size() const { return mLen; }
+        size_t size() const { return mCount; }
 
         //!
         //! Get sub string
         //!
         void subString( Str & result, size_t offset, size_t length ) const
         {
-            if( offset >= mLen ) { result.clear(); return; }
-            if( offset + length > mLen ) length = mLen - offset;
+            if( offset >= mCount ) { result.clear(); return; }
+            if( offset + length > mCount ) length = mCount - offset;
             result.assign( mPtr+offset, length );
         }
 
@@ -513,22 +522,22 @@ namespace GN
 
         //!
         //! convert to STL string(1)
-        void toSTL( std::basic_string<CHAR> & s ) const
+        void toSTL( std::basic_string<CharType> & s ) const
         {
-            s.assign( mPtr, mLen );
+            s.assign( mPtr, mCount );
         }
 
         //!
         //! convert to STL string(2)
-        std::basic_string<CHAR> toSTL() const
+        std::basic_string<CharType> toSTL() const
         {
-            return std::basic_string<CHAR>(mPtr,mLen);
+            return std::basic_string<CharType>(mPtr,mCount);
         }
 
         //!
         //! Trim characters for both side
         //!
-        void trim( CHAR ch )
+        void trim( CharType ch )
         {
             trimRight( ch );
             trimLeft( ch );
@@ -537,35 +546,35 @@ namespace GN
         //!
         //! Trim left characters
         //!
-        void trimLeft( CHAR ch )
+        void trimLeft( CharType ch )
         {
-            CHAR * p = mPtr;
-            CHAR * e = mPtr+mLen;
+            CharType * p = mPtr;
+            CharType * e = mPtr+mCount;
             while( p < e && ch == *p )
             {
                 ++p;
             }
-            mLen = e - p;
-            for( size_t i = 0; i < mLen; ++i )
+            mCount = e - p;
+            for( size_t i = 0; i < mCount; ++i )
             {
                 mPtr[i] = p[i];
             }
-            mPtr[mLen] = 0;
+            mPtr[mCount] = 0;
         }
 
         //!
         //! Trim right characters
         //!
-        void trimRight( CHAR ch )
+        void trimRight( CharType ch )
         {
-            if( 0 == mLen ) return;
-            CHAR * p = mPtr + mLen - 1;
+            if( 0 == mCount ) return;
+            CharType * p = mPtr + mCount - 1;
             while( p >= mPtr && ch == *p )
             {
                 *p = 0;
                 --p;
             }
-            mLen = p - mPtr + 1;
+            mCount = p - mPtr + 1;
         }
 
         //!
@@ -574,41 +583,41 @@ namespace GN
         template<typename PRED>
         void trimRightUntil( const PRED & pred )
         {
-            if( 0 == mLen ) return;
-            CHAR * p = mPtr + mLen - 1;
+            if( 0 == mCount ) return;
+            CharType * p = mPtr + mCount - 1;
             while( p >= mPtr && !pred(*p) )
             {
                 *p = 0;
                 --p;
             }
-            mLen = p - mPtr + 1;
+            mCount = p - mPtr + 1;
         }
 
         //!
         //! indexing operator
         //!
-        CHAR & operator [] ( size_t i ) { GN_ASSERT( i <= mLen  ); return mPtr[i]; }
+        CharType & operator [] ( size_t i ) { GN_ASSERT( i <= mCount  ); return mPtr[i]; }
 
         //!
         //! constant indexing operator
         //!
-        const CHAR & operator [] ( size_t i ) const { GN_ASSERT( i <= mLen  ); return mPtr[i]; }
+        const CharType & operator [] ( size_t i ) const { GN_ASSERT( i <= mCount  ); return mPtr[i]; }
 
         //!
         //! assign operator
         //!
         Str & operator = ( const Str & s )
         {
-            assign( s.mPtr, s.mLen );
+            assign( s.mPtr, s.mCount );
             return *this;
         }
 
         //!
         //! assign operator
         //!
-        Str & operator = ( const CHAR * s )
+        Str & operator = ( const CharType * s )
         {
-            assign( s, strLen<CHAR>(s) );
+            assign( s, strLen<CharType>(s) );
             return *this;
         }
 
@@ -624,7 +633,7 @@ namespace GN
         //!
         //! += operator (2)
         //!
-        Str & operator += ( const CHAR * s )
+        Str & operator += ( const CharType * s )
         {
             append( s, 0 );
             return *this;
@@ -633,7 +642,7 @@ namespace GN
         //!
         //! += operator (3)
         //!
-        Str & operator += ( CHAR ch )
+        Str & operator += ( CharType ch )
         {
             append( ch );
             return *this;
@@ -642,7 +651,7 @@ namespace GN
         //!
         //! += operator (4)
         //!
-        Str & operator += ( std::basic_string<CHAR> & s )
+        Str & operator += ( std::basic_string<CharType> & s )
         {
             append( s.c_str(), 0 );
             return *this;
@@ -651,7 +660,7 @@ namespace GN
         //!
         //! equality operator(1)
         //!
-        friend bool operator == ( const CHAR * s1, const Str & s2 )
+        friend bool operator == ( const CharType * s1, const Str & s2 )
         {
             return 0 == strCmp( s1, s2.mPtr );
         }
@@ -659,7 +668,7 @@ namespace GN
         //!
         //! equality operator(2)
         //!
-        friend bool operator == ( const Str & s1, const CHAR * s2 )
+        friend bool operator == ( const Str & s1, const CharType * s2 )
         {
             return 0 == strCmp( s1.mPtr, s2 );
         }
@@ -675,7 +684,7 @@ namespace GN
         //!
         //! unequality operator(1)
         //!
-        friend bool operator != ( const CHAR * s1, const Str & s2 )
+        friend bool operator != ( const CharType * s1, const Str & s2 )
         {
             return 0 != strCmp( s1, s2.mPtr );
         }
@@ -683,7 +692,7 @@ namespace GN
         //!
         //! unequality operator(2)
         //!
-        friend bool operator != ( const Str & s1, const CHAR * s2 )
+        friend bool operator != ( const Str & s1, const CharType * s2 )
         {
             return 0 != strCmp( s1.mPtr, s2 );
         }
@@ -699,7 +708,7 @@ namespace GN
         //!
         //! less operator(1)
         //!
-        friend bool operator < ( const CHAR * s1, const Str & s2 )
+        friend bool operator < ( const CharType * s1, const Str & s2 )
         {
             return -1 == strCmp( s1, s2.mPtr );
         }
@@ -707,7 +716,7 @@ namespace GN
         //!
         //! less operator(2)
         //!
-        friend bool operator < ( const Str & s1, const CHAR * s2 )
+        friend bool operator < ( const Str & s1, const CharType * s2 )
         {
             return -1 == strCmp( s1.mPtr, s2 );
         }
@@ -724,7 +733,7 @@ namespace GN
         //!
         //! concatnate operator(1)
         //!
-        friend Str operator + ( const CHAR * s1, const Str & s2 )
+        friend Str operator + ( const CharType * s1, const Str & s2 )
         {
             Str r(s1);
             r.append(s2);
@@ -734,7 +743,7 @@ namespace GN
         //!
         //! concatnate operator(2)
         //!
-        friend Str operator + ( const Str & s1, const CHAR * s2 )
+        friend Str operator + ( const Str & s1, const CharType * s2 )
         {
             Str r(s1);
             r.append(s2);
@@ -754,7 +763,7 @@ namespace GN
         //!
         //! concatnate operator(4)
         //!
-        friend Str operator + ( const Str & s1, const std::basic_string<CHAR> & s2 )
+        friend Str operator + ( const Str & s1, const std::basic_string<CharType> & s2 )
         {
             Str r(s1);
             r.append( s2.c_str() );
@@ -764,7 +773,7 @@ namespace GN
         //!
         //! concatnate operator(5)
         //!
-        friend Str operator + ( const std::basic_string<CHAR> & s1, const Str & s2 )
+        friend Str operator + ( const std::basic_string<CharType> & s1, const Str & s2 )
         {
             Str r(s2);
             r.append( s1.c_str() );
@@ -782,25 +791,36 @@ namespace GN
 
     private:
 
-        size_t calcCaps( size_t len )
+        // align caps to 2^n-1
+        size_t calcCaps( size_t count )
         {
-            len |= len >> 16;
-            len |= len >> 8;
-            len |= len >> 4;
-            len |= len >> 2;
-            len |= len >> 1;
-            return len;
+            #if GN_X64
+            count |= count >> 32;
+            #endif
+            count |= count >> 16;
+            count |= count >> 8;
+            count |= count >> 4;
+            count |= count >> 2;
+            count |= count >> 1;
+            return count;
         }
 
-        // Allocate a memory buffer that can hold at least 'len' characters, and one extra '\0'.
-        static CHAR * alloc( size_t len )
+        // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
+        static CharType * alloc( size_t count )
         {
-            return (CHAR*)memAlloc( sizeof(CHAR) * (len+1) );
+            // TODO: call a.construct() if CharType is class type.
+            AllocatorType a;
+            return a.allocate( count + 1 );
         }
 
-        static void dealloc( CHAR * ptr )
+        static void dealloc( CharType * ptr, size_t count )
         {
-            if ( ptr ) memFree( ptr );
+            if ( ptr )
+            {
+                // TODO: call a.destructor(), if CharType is class type.
+                AllocatorType a;
+                a.deallocate( ptr, count + 1 );
+            }
         }
 
         friend Str<char> wcs2mbs( const wchar_t *, size_t );
@@ -810,7 +830,7 @@ namespace GN
     };
 
     // Implement static data member
-    template <typename CHAR> Str<CHAR> Str<CHAR>::EMPTYSTR;
+    template <typename CHAR, typename ALLOC> Str<CHAR,ALLOC> Str<CHAR,ALLOC>::EMPTYSTR;
 
     //!
     //! multi-byte string class
