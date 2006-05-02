@@ -24,17 +24,17 @@ namespace GN
     //!
     //! Allocate memory from heap. Can cross DLL boundary.
     //!
-    void * memAlloc( size_t sizeInBytes );
+    GN_PUBLIC void * memAlloc( size_t sizeInBytes );
 
     //!
     //! Re-allocate memory from heap. Can cross DLL boundary.
     //!
-    void * memReAlloc( void *, size_t sizeInBytes );
+    GN_PUBLIC void * memReAlloc( void *, size_t sizeInBytes );
 
     //!
     //! Free heap-allocated memory. Can cross DLL boundary.
     //!
-    void memFree( void * );
+    GN_PUBLIC void memFree( void * );
 
     //!
     //! STL allocator that use garnet memory management routines.

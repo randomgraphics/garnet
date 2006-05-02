@@ -5,7 +5,6 @@ sources = [
     'debug.cpp',
     'file.cpp',
     'log.cpp',
-    'memory.cpp',
     'misc.cpp',
     'path.cpp',
     'plugin.cpp',
