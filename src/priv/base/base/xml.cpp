@@ -163,6 +163,9 @@ bool GN::XmlProcessor::parseBuffer(
         return false;
     }
 
+    GN_ASSERT( userData.prev );
+    result.root = userData.prev;
+
     // success
     return true;
 
