@@ -11,9 +11,8 @@ bool doParse( XmlProcessor & proc, XmlParseResult & xpr, const char * filename )
 
     std::vector<char> buf( fp.size() );
 
-    if( fp.size() != fp.read( &buf[0], fp.size() ) ) return false;
-
-    if( !proc.parseBuffer( xpr, &buf[0], buf.size() ) )
+    size_t sz = fp.read( &buf[0], fp.size() );
+    if( !proc.parseBuffer( xpr, &buf[0], sz ) )
     {
         GN_ERROR( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
         return false;
@@ -27,10 +26,19 @@ void doPrint( XmlNode * root, int ident )
 {
     GN_ASSERT( root );
 
-    for( int i = 0; i < ident; ++i ) printf( "\t" );
-    printf( "%s\n", root->name.cptr() );
-
-    if( root->child ) doPrint( root->child, ident + 1 );
+    if( root->child )
+    {
+        for( int i = 0; i < ident; ++i ) printf( "\t" );
+        printf( "<%s>\n", root->name.cptr() );
+        if( root->child ) doPrint( root->child, ident + 1 );
+        for( int i = 0; i < ident; ++i ) printf( "\t" );
+        printf( "</%s>\n", root->name.cptr() );
+    }
+    else
+    {
+        for( int i = 0; i < ident; ++i ) printf( "\t" );
+        printf( "<%s/>\n", root->name.cptr() );
+    }
     if( root->sibling ) doPrint( root->sibling, ident );
 }
 

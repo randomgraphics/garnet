@@ -5,6 +5,11 @@
 #ifndef Expat_INCLUDED
 #define Expat_INCLUDED 1
 
+// chenli@2006.5.3: force static build.
+#ifndef XML_STATIC
+#define XML_STATIC
+#endif
+
 #ifdef __VMS
 /*      0        1         2         3      0        1         2         3
         1234567890123456789012345678901     1234567890123456789012345678901 */
