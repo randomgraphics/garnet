@@ -93,8 +93,11 @@ static lua_CFunction ll_sym (lua_State *L, void *lib, const char *sym) {
 ** =======================================================================
 */
 
+#ifdef _XBOX_VER
+#include <xtl.h>
+#else
 #include <windows.h>
-
+#endif
 
 #undef setprogdir
 
@@ -116,10 +119,12 @@ static void setprogdir (lua_State *L) {
 static void pusherror (lua_State *L) {
   int error = GetLastError();
   char buffer[128];
+#ifndef _XBOX_VER
   if (FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
       NULL, error, 0, buffer, sizeof(buffer), NULL))
     lua_pushstring(L, buffer);
   else
+#endif
     lua_pushfstring(L, "system error %d\n", error);
 }
 

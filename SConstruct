@@ -334,7 +334,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # ==============
     # 是否支持OpenGL
     # ==============
-    conf['has_ogl'] = 'xenon' != compiler
+    conf['has_ogl'] = 'xenon' != compiler.name
 
     # ============
     # 是否支持D3D9

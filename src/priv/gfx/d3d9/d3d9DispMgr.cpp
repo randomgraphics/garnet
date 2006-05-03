@@ -22,7 +22,11 @@ static void sGetMsaaDescTable(
 
     GN::gfx::D3D9Renderer::D3DMsaaDesc desc;
     DWORD quality;
+#if GN_XENON
+    for( int type = D3DMULTISAMPLE_2_SAMPLES; type <= D3DMULTISAMPLE_4_SAMPLES; ++type )
+#else
     for( int type = D3DMULTISAMPLE_NONMASKABLE; type <= D3DMULTISAMPLE_16_SAMPLES; ++type )
+#endif
     {
         if( D3D_OK == d3d.CheckDeviceMultiSampleType(
           adapter,
