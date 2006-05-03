@@ -52,7 +52,23 @@ void XMLCALL sStartElementHandler(
     n->child = NULL;
     n->name = name;
 
-    // TODO: setup attribute list
+    // setup attribute list
+    while( *atts )
+    {
+        GN::XmlAttrib * a = tracer->proc->createAttrib();
+        if( 0 == a )
+        {
+            XML_ParserStop( tracer->parser );
+            return;
+        }
+
+        a->node = n;
+        a->next = NULL;
+        a->name = atts[0];
+        a->value = atts[1];
+
+        atts += 2;
+    }
 
     // update tracer
     if( tracer->prev )
