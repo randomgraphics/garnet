@@ -33,6 +33,9 @@ TODO
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
+  - UT
+    - VectorFile
+    - Str::findFirst/LastOf(...)
   - try multi-thread architect
     - separate sim() and render() loop
     - File loader in another thread.
@@ -49,7 +52,6 @@ TODO
   - blender exporter/importer
   - in-game GUI system
     - font class
-  - UT for Str::findFirst/LastOf(...)
   - refine sigslot class to allow any type of functor
   - string: use stack array for short string
 

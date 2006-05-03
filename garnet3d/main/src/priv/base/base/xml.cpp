@@ -27,6 +27,49 @@ static void * sXmlMalloc( size_t sz ) { return GN::memAlloc( sz ); }
 static void * sXmlRealloc( void * p, size_t sz ) { return GN::memReAlloc( p, sz ); }
 static void sXmlFree( void * p ) { return GN::memFree( p ); }
 
+static void sIdent( GN::File & fp, int ident )
+{
+    for( int i = 0; i < ident; ++i ) fp <<"\t";
+}
+
+static void sFormattedAttribute( GN::File & fp, const GN::XmlAttrib * att, int ident )
+{
+    for( ; 0 != att; att = att->next )
+    {
+        sIdent( fp, ident );
+        fp << att->name << "=\"" << att->value << "\"\n";
+    }
+}
+
+static void sFormattedOutput( GN::File & fp, const GN::XmlNode * root, int ident )
+{
+    GN_ASSERT( root );
+
+    sIdent( fp, ident );
+    fp << "<" << root->name;
+
+    if( root->attrib )
+    {
+        fp << "\n";
+        sFormattedAttribute( fp, root->attrib, ident + 1 );
+        sIdent( fp, ident );
+    }
+
+    if( root->child )
+    {
+        fp << ">\n";
+        if( root->child ) sFormattedOutput( fp, root->child, ident + 1 );
+        sIdent( fp, ident );
+        fp << "</" << root->name << ">\n";
+    }
+    else
+    {
+        fp << "/>\n";
+    }
+
+    if( root->sibling ) sFormattedOutput( fp, root->sibling, ident );
+}
+
 // *****************************************************************************
 // Expat handlers
 // *****************************************************************************
@@ -56,6 +99,7 @@ void XMLCALL sStartElementHandler(
     n->parent = tracer->parent;
     n->sibling = NULL;
     n->child = NULL;
+    n->attrib = NULL;
     n->name = name;
 
     // create attribute list
@@ -175,13 +219,18 @@ bool GN::XmlProcessor::parseBuffer(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlProcessor::writeToFile( File & file, const XmlNode & root )
+bool GN::XmlProcessor::writeToFile( File & file, const XmlNode & root, bool compact )
 {
     GN_GUARD;
 
-    GN_UNIMPL_WARNING();
-    GN_UNUSED_PARAM( file );
-    GN_UNUSED_PARAM( root );
+    if( compact )
+    {
+    }
+    else
+    {
+        sFormattedOutput( file, &root, 0 );
+    }
+
     return true;
 
     GN_UNGUARD;
