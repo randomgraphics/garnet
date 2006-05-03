@@ -12,7 +12,8 @@ sources = [
     'registry.cpp',
     'sharedLib.cpp',
     'string.cpp',
-    'variant.cpp'
+    'variant.cpp',
+    'xml.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

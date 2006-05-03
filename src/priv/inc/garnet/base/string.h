@@ -130,35 +130,6 @@ namespace GN
         size_t     mCount; //!< How many charecters in the string, not including null end.
         size_t     mCaps;  //!< How many characters can we hold, not including null end?
 
-        //!
-        //! static string allocator. Note that this allocator is used to allocate
-        //! the string class itself, not the string buffer. And it is _NOT_ effective
-        //! for on-stack instance.
-        //!
-        static GN_PUBLIC FixedSizedObjectAllocator<Str<CharType> > msAllocator;
-
-    public:
-
-        //!
-        //! new operator
-        //!
-        void * operator new( size_t ) GN_THROW_BADALLOC() { return msAllocator.alloc(); }
-
-        //!
-        //! delete operator
-        //!
-        void operator delete( void * p ) GN_NOTHROW() { msAllocator.dealloc( p ); }
-
-        //!
-        //! placement new operator, for compability with vc71
-        //!
-        void * operator new( size_t, void * p ) GN_THROW_BADALLOC() { return p; }
-
-        //!
-        //! placement delete operator, for compability with vc71
-        //!
-        void operator delete( void *, void * ) GN_NOTHROW() {}
-
     public:
 
         //!

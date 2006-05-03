@@ -3,10 +3,6 @@
 #include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
 
-// implement static members for string class
-template<> GN_PUBLIC GN::FixedSizedObjectAllocator< GN::Str<char> > GN::Str<char>::msAllocator;
-template<> GN_PUBLIC GN::FixedSizedObjectAllocator< GN::Str<wchar_t> > GN::Str<wchar_t>::msAllocator;
-
 // implement global singletons
 GN_IMPLEMENT_SINGLETON( GN::PluginManager )
 GN_IMPLEMENT_SINGLETON( GN::ProfilerManager )
