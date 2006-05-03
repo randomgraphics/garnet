@@ -70,6 +70,10 @@ TODO
     - runtime switchable GN_TRACE( level, msg, .... )
 
 - p3
+  - new build system:
+    - two steps:
+      - compiler configuration script, called by setupEnv.cmd/setupEnv.sh
+      - build script
   - support to multiple joysticks.
   - image format conversion
   - try implementing a ray tracer
@@ -87,10 +91,21 @@ TODO
 ISSUES
 ======
 
-- why use custom string class, instead of STL string:
-  - std::string can't accept NULL pointer as valid input.
-  - std::char_trait<wchar_t> is not well supported on cygwin.
+- Custom string class or std::string?
+  - RESOLVED: custom string class.
+  - WHY?
+    - std::string can't accept NULL pointer as valid input.
+    - std::char_trait<wchar_t> is not well supported on cygwin.
 
+- TinyXml or Expat w/ DOM wrapper?
+  - OPEN.
+    - TinyXml:
+      - easy to use (DOM)
+      - no format output to string buffer
+    - Expat
+      - may faster then TinyXml
+      - need a wrapper to make it easy to use
+      - no xml output support
 
 WORKLOG
 =======
