@@ -33,7 +33,7 @@ if 'gcc' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-mai
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 
-common_sources = GN.glob( Split('lua/*.c zlib/*.c png/*.c pcre/*.c* tinyxml/*.cpp freetype2/*.c'), True )
+common_sources = GN.glob( Split('expat/*.c freetype2/*.c lua/*.c pcre/*.c* png/*.c tinyxml/*.cpp zlib/*.c'), True )
 if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
 common_cluster = GN.newSourceCluster( common_sources )
 common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
