@@ -45,5 +45,5 @@ common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 lib = GN.newTarget( 'stlib', 'GNextern', [jpeg_cluster,common_cluster] )
 if 'mswin' == GN.compiler.os:
     lib.externalDependencies = ['glu32','opengl32']
-else:
+elif 'xenon' != GN.compiler.os:
     lib.externalDependencies = ['GLU','GL','X11']

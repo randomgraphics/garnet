@@ -62,7 +62,7 @@ distribution.
 
 #define TIXML_SAFE		// TinyXml isn't fully buffer overrun protected, safe code. This is work in progress.
 #ifdef TIXML_SAFE
-	#if defined(_MSC_VER) && (_MSC_VER >= 1400 )
+	#if defined(_MSC_VER) && !defined(_XBOX_VER) && (_MSC_VER >= 1400 )
 		// Microsoft visual studio, version 2005 and higher.
 		#define TIXML_SNPRINTF _snprintf_s
 		#define TIXML_SNSCANF  _snscanf_s

@@ -1,11 +1,25 @@
 #include "pch.h"
 
 #if GN_MSVC
+
+#if GN_XENON
+#if GN_DEBUG_BUILD
+#pragma comment(lib, "d3d9d.lib")
+#pragma comment( lib, "xgraphicsd.lib" )
+#pragma comment(lib, "xapilibd.lib")
+#else
+#pragma comment(lib, "d3d9.lib")
+#pragma comment( lib, "xgraphics.lib" )
+#pragma comment(lib, "xapilib.lib")
+#endif
+#else
 #if GN_DEBUG_BUILD
 #pragma comment( lib, "d3dx9d.lib" )
 #else
 #pragma comment( lib, "d3dx9.lib" )
 #endif
+#endif
+
 #endif
 
 using namespace GN;

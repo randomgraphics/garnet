@@ -164,7 +164,6 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
     if( logDisabled ) return;
 
     StrA logFileName = getEnv( "GN_LOG_FILENAME" );
-    bool logToScreen = !getEnvBoolean( "GN_LOG_QUIET" );
 
     const char * file = desc.file ? desc.file : "UNKNOWN FILE";
 
@@ -178,6 +177,7 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
     }
 
 #if !GN_XENON // Xenon has no console output
+    bool logToScreen = !getEnvBoolean( "GN_LOG_QUIET" );
     if( logToScreen )
     {
         // output to console
