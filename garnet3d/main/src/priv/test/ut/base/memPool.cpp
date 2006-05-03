@@ -31,6 +31,12 @@ public:
         a->~Test();
     }
 
+    void testObjectPoolWithPOD()
+    {
+        GN::FixedSizedObjectAllocator<char> a;
+        a.alloc();
+    }
+
     void testClassAllocator()
     {
         using namespace GN;

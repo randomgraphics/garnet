@@ -8,61 +8,37 @@
 
 namespace GN
 {
-    class XmlNode;
+    struct XmlNode;
 
     //!
     //! XML attribute class
     //!
-    class XmlAttribute
+    struct XmlAttrib
     {
-        XmlNode      * mNode;  
-        XmlAttribute * mPrev;  //!< pointer to previous attribute
-        XmlAttribute * mNnext; //!< pointer to next attribute
-
-        friend class XmlProcessor;
+        XmlNode   * node;  //!< pointer to the node that this attribute belongs to. 
+        XmlAttrib * next;  //!< pointer to next attribute
+        StrA        name;  //!< attribute name
+        StrA        value; //!< attribute value
 
     protected:
 
         //! \name protected ctor/dtor to prevent user from creatiing/deleting this class.
         //@{
-        XmlAttribute()          {}
-        virtual ~XmlAttribute() {}
+        XmlAttrib()          {}
+        virtual ~XmlAttrib() {}
         //@}
-
-    public:
-
-        StrA name; //!< attribute name
-        StrA value; //!< attribute value
-
-    public:
-
-        //!
-        //! pointer to the element that this attribute belongs to.
-        //!
-        XmlNode * node() const { return mNode; }
-
-        //!
-        //! get previous attribute
-        //!
-        XmlAttribute * prev() const { return mPrev; }
-
-        //!
-        //! get next attribute
-        //!
-        XmlAttribute * next() const { return mNext; }
     };
 
     //!
     //! XML node class
     //!
-    class XmlNode
+    struct XmlNode
     {
-        XmlNode      * mParent;
-        XmlNode      * mSibling;
-        XmlNode      * mFirstChild;
-        XmlAttribute * mFirstAttrib;
-
-        friend class XmlProcessor;
+        XmlNode   * parent;  //!< pointer to parent node
+        XmlNode   * sibling; //!< pointer to next brother node
+        XmlNode   * child;   //!< pointer to first child
+        XmlAttrib * attrib;  //!< pointer to first attribute
+        StrA        name;    //!< element name
 
     protected:
 
@@ -71,42 +47,17 @@ namespace GN
         XmlNode()          {}
         virtual ~XmlNode() {}
         //@}
-
-    public:
-
-        StrA name; //!< element name
-
-    public:
-
-        //!
-        //! get parent node
-        //!
-        XmlNode * parent() const { return mParent; }
-
-        //!
-        //! get next sibling node
-        //!
-        XmlNode * sibling() const { return mSibling; }
-
-        //!
-        //! get first child node
-        //!
-        XmlNode * firstChild() const { return mFirstChild; }
-
-        //!
-        //! get first attribute
-        //!
-        XmlNode * firstAttrib() const { return mFirstAttrib; }
     };
 
     //!
     //! XML parse result
     //!
-    struct ParseResult
+    struct XmlParseResult
     {
-        XmlNode * root; //!< root node of the xml document
-        int errLine;    //!< error position
-        int errColume;  //!< error position
+        XmlNode * root;   //!< root node of the xml document
+        size_t errLine;   //!< error position
+        size_t errColume; //!< error position
+        StrA errInfo;     //!< error information
     };
 
     //!
@@ -114,13 +65,61 @@ namespace GN
     //!
     class XmlProcessor
     {
+        struct PooledNode : public XmlNode
+        {
+            PooledNode() {}
+            ~PooledNode() {}
+        };
+
+        struct PooledAttrib : public XmlAttrib
+        {
+            PooledAttrib() {}
+            ~PooledAttrib() {}
+        };
+
+        std::vector<PooledNode*> mNodes;
+        std::vector<PooledAttrib*> mAttribs;
+
     public:
+
+        //!
+        //! ctor
+        //!
+        XmlProcessor() { mNodes.reserve(256); mAttribs.reserve(256); }
+
+        //!
+        //! dtor
+        //!
+        ~XmlProcessor() { releaseAllNodesAndAttribs(); }
 
         //!
         //! parse xml document
         //!
-        bool parse( ParseResult & result, const char * content, size_t length );
-   };
+        bool parseBuffer( XmlParseResult & result, const char * content, size_t length = 0 );
+
+        //!
+        //! write xml document to file
+        //!
+        bool writeToFile( File & file, const XmlNode & root );
+
+        //!
+        //! Create new node. Nodes are created in pooled memory. No need
+        //! to release them. They will be release automatically, when the
+        //! XML processer is destroied or releaseNodesAndAttribs() is called.
+        //!
+        XmlNode * createNode();
+
+        //!
+        //! Create new attribute. Attributes are created in pooled memory also,
+        //! just like XmlNode. 
+        //!
+        XmlAttrib * createAttrib();
+
+        //!
+        //! Release all attributes and nodes
+        //!
+        void releaseAllNodesAndAttribs();
+    };
 };
 
 // *****************************************************************************

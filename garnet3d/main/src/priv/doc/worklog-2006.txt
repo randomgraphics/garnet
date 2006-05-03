@@ -30,6 +30,9 @@ TODO
   - task manager/coordinator
 
 - p1
+  - memory pool class is not looking good
+    - when call dtor and when not?
+    - see others pool implementation on net
   - try multi-thread architect
     - separate sim() and render() loop
     - File loader in another thread.
