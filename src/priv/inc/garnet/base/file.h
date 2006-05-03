@@ -106,6 +106,26 @@ namespace GN
     };
 
     //!
+    //! stream operator
+    //!
+    inline File & operator<<( File & fp, const char * s )
+    {
+        if( 0 == s ) return fp;
+        fp.write( s, strLen(s) );
+        return fp;
+    }
+
+    //!
+    //! stream operator
+    //!
+    inline File & operator<<( File & fp, const StrA & s )
+    {
+        if( s.empty() ) return fp;
+        fp.write( s.cptr(), s.size() );
+        return fp;
+    }
+
+    //!
     //! 用File包装的standard file stream
     //!
     class StdFile : public File
@@ -116,7 +136,7 @@ namespace GN
         //!
         //! constructor
         //!
-        StdFile( FILE * );
+        StdFile( FILE * fp ) : mFile(fp) { GN_ASSERT(fp); }
 
         // from File
     public:
@@ -173,7 +193,7 @@ namespace GN
     };
 
     //!
-    //! file class that wraps a memory buffer
+    //! file class that wraps a fixed-sized memory buffer
     //!
     template< typename T >
     class MemFile : public File
@@ -207,6 +227,37 @@ namespace GN
         bool   seek( int offset, FileSeekMode origin );
         size_t tell() const { return mPtr - mStart; }
         size_t size() const { return mSize; }
+        //@}
+    };
+
+    //!
+    //! File class the wraps a vector class
+    //!
+    class VectorFile : public File
+    {
+        std::vector<uint8_t> mBuffer;
+        size_t mCursor;
+
+    public:
+
+        //!
+        //! ctor
+        //!
+        VectorFile() : mCursor(0) {}
+
+        //!
+        //! dtor
+        //!
+        ~VectorFile() {}
+
+        //! \name from File
+        //@{
+        size_t read( void * buf, size_t size );
+        size_t write( const void * buf, size_t size );
+        bool   eof() const { return mBuffer.size() == mCursor; }
+        bool   seek( int offset, FileSeekMode origin );
+        size_t tell() const { return mCursor; }
+        size_t size() const { return mBuffer.size(); }
         //@}
     };
 

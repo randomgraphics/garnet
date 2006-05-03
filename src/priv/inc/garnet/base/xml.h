@@ -98,9 +98,9 @@ namespace GN
         bool parseBuffer( XmlParseResult & result, const char * content, size_t length = 0 );
 
         //!
-        //! write xml document to file
+        //! write xml document to file. If compact if false, the format output with newline and ident
         //!
-        bool writeToFile( File & file, const XmlNode & root );
+        bool writeToFile( File & file, const XmlNode & root, bool compact );
 
         //!
         //! Create new node. Nodes are created in pooled memory. No need

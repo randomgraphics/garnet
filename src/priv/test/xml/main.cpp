@@ -22,26 +22,6 @@ bool doParse( XmlProcessor & proc, XmlParseResult & xpr, const char * filename )
     return true;
 }
 
-void doPrint( XmlNode * root, int ident )
-{
-    GN_ASSERT( root );
-
-    if( root->child )
-    {
-        for( int i = 0; i < ident; ++i ) printf( "\t" );
-        printf( "<%s>\n", root->name.cptr() );
-        if( root->child ) doPrint( root->child, ident + 1 );
-        for( int i = 0; i < ident; ++i ) printf( "\t" );
-        printf( "</%s>\n", root->name.cptr() );
-    }
-    else
-    {
-        for( int i = 0; i < ident; ++i ) printf( "\t" );
-        printf( "<%s/>\n", root->name.cptr() );
-    }
-    if( root->sibling ) doPrint( root->sibling, ident );
-}
-
 int main( int argc, const char * argv[] )
 {
     if( argc < 2 )
@@ -52,7 +32,11 @@ int main( int argc, const char * argv[] )
 
     XmlProcessor proc;
     XmlParseResult xpr;
-    if( doParse( proc, xpr, argv[1] ) ) doPrint( xpr.root, 0 );
+    if( doParse( proc, xpr, argv[1] ) )
+    {
+        StdFile fp(stdout);
+        proc.writeToFile( fp, *xpr.root, 0 );
+    }
 
     return 0;
 }

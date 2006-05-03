@@ -128,3 +128,91 @@ GN::MemFile<T>::seek( int offset, FileSeekMode origin )
     GN_ASSERT( mStart <= mPtr && mPtr <= (mStart+mSize) );
     return true;
 }
+
+
+//
+//
+//  ----------------------------------------------------------------------------
+inline size_t GN::VectorFile::read( void * buf, size_t size )
+{
+    GN_ASSERT( mCursor <= mBuffer.size() );
+
+    if( size + mCursor > mBuffer.size() ) size = mBuffer.size() - mCursor;
+
+    if( 0 == size ) return 0;
+
+    if( 0 == buf )
+    {
+        GN_ERROR( "null output buffer!" );
+        return size_t(-1);
+    }
+
+    memcpy( buf, &mBuffer[mCursor], size );
+
+    mCursor += size;
+    GN_ASSERT( mCursor <= mBuffer.size() );
+
+    return size;
+}
+
+//
+//
+//  ----------------------------------------------------------------------------
+inline size_t GN::VectorFile::write( const void * buf, size_t size )
+{
+    GN_ASSERT( mCursor <= mBuffer.size() );
+
+    if( 0 == size ) return 0;
+
+    if( 0 == buf )
+    {
+        GN_ERROR( "null output buffer!" );
+        return size_t(-1);
+    }
+
+    // resize the vector on demond
+    if( size + mCursor > mBuffer.size() )
+    {
+        mBuffer.resize( size + mCursor );
+    }
+
+    memcpy( &mBuffer[mCursor], buf, size );
+
+    mCursor += size;
+    GN_ASSERT( mCursor <= mBuffer.size() );
+
+    return size;
+}
+
+//
+//
+//  ----------------------------------------------------------------------------
+inline bool GN::VectorFile::seek( int offset, FileSeekMode origin )
+{
+    size_t cur;
+    if( FSEEK_CUR == origin )
+    {
+        cur = mCursor + (size_t)offset;
+    }
+    else if( FSEEK_END == origin )
+    {
+        cur = mBuffer.size() + (size_t)offset;
+    }
+    else if( FSEEK_SET == origin )
+    {
+        cur = (size_t)offset;
+    }
+    else
+    {
+        GN_ERROR( "invalid seek origin!" );
+        return false;
+    }
+
+    if( cur > mBuffer.size() )
+    {
+        GN_ERROR( "out of range" );
+        return false;
+    }
+    mCursor = cur;
+    return true;
+}
