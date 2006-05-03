@@ -23,7 +23,7 @@ elif 'vc80' == GN.compiler.name:
             '4267', # conversion from 'size_t' to xxx, possible loss of data
             '4244', # conversion from 'type1' to 'type2', possible loss of data
             ]
-        ccflags += ['/W3'] + ['/wd%s'%w for w in unimportant_warnings]
+        ccflags += ['/wd%s'%w for w in unimportant_warnings]
 
 # **********************
 # define source clusters

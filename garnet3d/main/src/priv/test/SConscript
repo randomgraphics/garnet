@@ -1,1 +1,1 @@
-SConscript( dirs=Split('d3d9 d3d10 ft2 gfx input ogl ut') )
+SConscript( dirs=Split('d3d9 d3d10 ft2 gfx input ogl ut xml') )

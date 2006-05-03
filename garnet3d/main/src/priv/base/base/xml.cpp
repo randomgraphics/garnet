@@ -2,16 +2,9 @@
 #include "garnet/base/xml.h"
 #include <expat.h>
 
-#pragma warning(disable:4100) // unused parameter
-#pragma warning(disable:4702) // unreachable code
-
 // *****************************************************************************
 // local functions
 // *****************************************************************************
-
-static void * sXmlMalloc( size_t sz ) { return GN::memAlloc( sz ); }
-static void * sXmlRealloc( void * p, size_t sz ) { return GN::memReAlloc( p, sz ); }
-static void sXmlFree( void * p ) { return GN::memFree( p ); }
 
 struct AutoFree
 {
@@ -25,9 +18,14 @@ struct ParseTracer
 {
     XML_Parser parser;
     GN::XmlProcessor * proc;
+    GN::XmlParseResult * result;
     GN::XmlNode * parent;
     GN::XmlNode * prev;
 };
+
+static void * sXmlMalloc( size_t sz ) { return GN::memAlloc( sz ); }
+static void * sXmlRealloc( void * p, size_t sz ) { return GN::memReAlloc( p, sz ); }
+static void sXmlFree( void * p ) { return GN::memFree( p ); }
 
 // *****************************************************************************
 // Expat handlers
@@ -47,18 +45,30 @@ void XMLCALL sStartElementHandler(
 
     // create new node
     GN::XmlNode * n = tracer->proc->createNode();
+    if( 0 == n )
+    {
+        XML_StopParser( tracer->parser, XML_FALSE );
+        tracer->result->errInfo = "Fail to create node.";
+        tracer->result->errLine = XML_GetCurrentLineNumber( tracer->parser );
+        tracer->result->errColumn = XML_GetCurrentColumnNumber( tracer->parser );
+        return;
+    }
     n->parent = tracer->parent;
     n->sibling = NULL;
     n->child = NULL;
     n->name = name;
 
-    // setup attribute list
+    // create attribute list
+    GN::XmlAttrib * lastAttrib = NULL;
     while( *atts )
     {
         GN::XmlAttrib * a = tracer->proc->createAttrib();
         if( 0 == a )
         {
-            XML_ParserStop( tracer->parser );
+            XML_StopParser( tracer->parser, XML_FALSE );
+            tracer->result->errInfo = "Fail to create attribute.";
+            tracer->result->errLine = XML_GetCurrentLineNumber( tracer->parser );
+            tracer->result->errColumn = XML_GetCurrentColumnNumber( tracer->parser );
             return;
         }
 
@@ -66,6 +76,16 @@ void XMLCALL sStartElementHandler(
         a->next = NULL;
         a->name = atts[0];
         a->value = atts[1];
+
+        if( lastAttrib )
+        {
+            lastAttrib->next = a;
+        }
+        else
+        {
+            n->attrib = a;
+        }
+        lastAttrib = a;
 
         atts += 2;
     }
@@ -88,9 +108,7 @@ void XMLCALL sStartElementHandler(
 //
 //
 // -----------------------------------------------------------------------------
-void XMLCALL sEndElementHandler(
-    void * userData,
-    const XML_Char * name )
+void XMLCALL sEndElementHandler( void * userData, const XML_Char * )
 {
     ParseTracer * tracer = (ParseTracer*)userData;
 
@@ -111,32 +129,37 @@ bool GN::XmlProcessor::parseBuffer(
 {
     GN_GUARD;
 
+    result.errInfo.clear();
+    result.errLine = 0;
+    result.errColumn = 0;
+
     // create parser
     XML_Memory_Handling_Suite mm = { &sXmlMalloc, &sXmlRealloc, &sXmlFree };
     XML_Parser parser = XML_ParserCreate_MM( 0, &mm, 0 );
     if( 0 == parser )
     {
         result.errInfo = "Fail to create parser.";
-        result.errLine = 0;
-        result.errColume = 0;
         return false;
     }
     AutoFree af(parser); // free the parser automatically when go out of this function.
 
     // setup user data
-    ParseTracer userData = { parser, this, NULL, NULL };
+    ParseTracer userData = { parser, this, &result, NULL, NULL };
     XML_SetUserData( parser, &userData );
 
     // setup handlers
     XML_SetElementHandler( parser, &sStartElementHandler, &sEndElementHandler );
 
     // start parse
-    XML_Status status = XML_Parse( parser, content, length, true );
+    XML_Status status = XML_Parse( parser, content, (int)length, XML_TRUE );
     if( XML_STATUS_OK != status )
     {
-        result.errInfo = "XML_Parse() failed.";
-        result.errLine = XML_GetCurrentLineNumber( parser );
-        result.errColume = XML_GetCurrentColumnNumber( parser );
+        if( result.errInfo.empty() )
+        {
+            result.errInfo = "XML_Parse() failed.";
+            result.errLine = XML_GetCurrentLineNumber( parser );
+            result.errColumn = XML_GetCurrentColumnNumber( parser );
+        }
         return false;
     }
 
@@ -153,6 +176,9 @@ bool GN::XmlProcessor::writeToFile( File & file, const XmlNode & root )
 {
     GN_GUARD;
 
+    GN_UNIMPL_WARNING();
+    GN_UNUSED_PARAM( file );
+    GN_UNUSED_PARAM( root );
     return true;
 
     GN_UNGUARD;

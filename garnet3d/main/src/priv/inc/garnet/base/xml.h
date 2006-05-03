@@ -56,7 +56,7 @@ namespace GN
     {
         XmlNode * root;   //!< root node of the xml document
         size_t errLine;   //!< error position
-        size_t errColume; //!< error position
+        size_t errColumn; //!< error position
         StrA errInfo;     //!< error information
     };
 
