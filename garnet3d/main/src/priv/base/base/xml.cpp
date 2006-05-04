@@ -473,8 +473,8 @@ bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compa
 {
     GN_GUARD;
 
-    static const uint8_t bom[3] = { 0xEF, 0xBB, 0xBF };
-    if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
+    //static const uint8_t bom[3] = { 0xEF, 0xBB, 0xBF };
+    //if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
 
     file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
