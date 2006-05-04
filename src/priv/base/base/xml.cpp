@@ -58,6 +58,10 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
 
         case GN::XML_COMMENT:
         {
+            const GN::XmlComment * c = root->toComment();
+            GN_ASSERT( c && !c->child ); // comment node should have no child.
+            sIdent( fp, ident );
+            fp << "<!-- " << c->text << " -->\n";
             break;
         }
 
@@ -133,6 +137,9 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
 
         case GN::XML_COMMENT:
         {
+            const GN::XmlComment * c = root->toComment();
+            GN_ASSERT( c && !c->child ); // comment node should have no child.
+            fp << "<!-- " << c->text << " -->";
             break;
         }
 
@@ -201,7 +208,6 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     n->child = NULL;
 
     // update tracer
-    // update tracer
     if( tracer->prev )
     {
         // this is not the first node in this level. Let its previous sibling points to this.
@@ -216,6 +222,31 @@ static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
     tracer->prev = NULL;
 
     return n;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static GN::StrA sMangleText( const char * s, int len )
+{
+    // skip leading spaces
+    while( len > 0 && (' '==*s || '\t'==*s || '\n'==*s) )
+    {
+        ++s; --len;
+    }
+    if( 0 == len ) return "";
+
+    // skip tailing spaces
+    const XML_Char * e = s + len - 1;
+    while( len > 0 && (' '==*e || '\t'==*e || '\n'==*e) )
+    {
+        --e; --len;
+    }
+    if( 0 == len ) return "";
+
+    GN_TODO( "convert special characters" );
+    
+    return GN::StrA( s, len );
 }
 
 // *****************************************************************************
@@ -308,6 +339,7 @@ static void XMLCALL sEndCdataSectionHandler( void * userData )
     GN_ASSERT( tracer->parent && tracer->parent->type == GN::XML_CDATA );
 
     // update tracer
+    GN_ASSERT( tracer->parent );
     tracer->prev = tracer->parent;
     tracer->parent = tracer->parent->parent;
 }
@@ -329,20 +361,51 @@ static void XMLCALL sCharacterDataHandler(
     }
     else
     {
-        // skip leading spaces
-        while( len > 0 && (' '==*s || '\t'==*s || '\n'==*s) )
-        {
-            ++s; --len;
-        }
-        if( 0 == len ) return;
+        GN::StrA text = sMangleText( s, len );
+        if( text.empty() ) return;
 
         if( tracer->parent->type == GN::XML_ELEMENT )
         {
             if( tracer->prev && tracer->prev->type == GN::XML_TEXT )
             {
+                // merge characters into previous text node
+                tracer->prev->toText()->text.append( ' ' );
+                tracer->prev->toText()->text.append( text );
+            }
+            else
+            {
+                // create new text node
+                GN::XmlNode * n = sNewNode( tracer, GN::XML_TEXT );
+                if( 0 == n ) return;
+                GN::XmlText * t = n->toText();
+                t->text = text;
+
+                // update tracer
+                GN_ASSERT( t == tracer->parent );
+                tracer->prev = tracer->parent;
+                tracer->parent = tracer->parent->parent;
             }
         }
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void XMLCALL sCommentHandler( void * userData, const XML_Char * data )
+{
+    ParseTracer * tracer = (ParseTracer*)userData;
+
+    // create new node
+    GN::XmlNode * n = sNewNode( tracer, GN::XML_COMMENT );
+    if( 0 == n ) return;
+    GN::XmlComment * c = n->toComment();
+    c->text.assign( data );
+
+    // update tracer
+    GN_ASSERT( c == tracer->parent );
+    tracer->prev = tracer->parent;
+    tracer->parent = tracer->parent->parent;
 }
 
 // *****************************************************************************
@@ -379,6 +442,7 @@ bool GN::XmlDocument::parseBuffer(
     XML_SetElementHandler( parser, &sStartElementHandler, &sEndElementHandler );
     XML_SetCdataSectionHandler( parser, &sStartCdataSectionHandler, &sEndCdataSectionHandler );
     XML_SetCharacterDataHandler( parser, &sCharacterDataHandler );
+    XML_SetCommentHandler( parser, &sCommentHandler );
 
     // start parse
     XML_Status status = XML_Parse( parser, content, (int)length, XML_TRUE );
@@ -408,10 +472,22 @@ bool GN::XmlDocument::parseBuffer(
 bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compact )
 {
     GN_GUARD;
+
+    static const uint8_t bom[3] = { 0xEF, 0xBB, 0xBF };
+    if( sizeof(bom) != file.write( bom, sizeof(bom) ) ) return false;
+
+    file << "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+
     if( compact )
+    {
         return sCompactNodes( file, &root );
+    }
     else
+    {
+        file << "\n";
         return sFormatNodes( file, &root, 0 );
+    }
+
     GN_UNGUARD;
 }
 
