@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;GN_DEBUG=1;GN_STATIC=1"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;GN_BUILD_VARIANT=2;GN_STATIC=1"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -64,7 +64,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
-				PreprocessorDefinitions="_XBOX;_DEBUG;_LIB;GN_DEBUG=1;GN_STATIC=1"
+				PreprocessorDefinitions="_XBOX;_DEBUG;_LIB;GN_BUILD_VARIANT=2;GN_STATIC=1"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -92,7 +92,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;GN_DEBUG=0;GN_STATIC=1"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;GN_BUILD_VARIANT=1;GN_STATIC=1"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
@@ -130,7 +130,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\src\extern\inc;..\src\priv\inc"
-				PreprocessorDefinitions="_XBOX;NDEBUG;_LIB;GN_DEBUG=0;GN_STATIC=1"
+				PreprocessorDefinitions="_XBOX;NDEBUG;_LIB;GN_BUILD_VARIANT=1;GN_STATIC=1"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
@@ -606,9 +606,6 @@
 					<File
 						RelativePath="..\src\extern\src\tinyxml\tinyxmlparser.cpp">
 					</File>
-					<File
-						RelativePath="..\src\extern\src\tinyxml\tinyxmltostr.cpp">
-					</File>
 				</Filter>
 				<Filter
 					Name="glew"
@@ -1017,41 +1014,6 @@
 						</File>
 						<File
 							RelativePath="..\src\priv\base\base\log.cpp">
-							<FileConfiguration
-								Name="Debug|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName)Base.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Debug|Xenon">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName)Base.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Win32">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName)Base.pch"/>
-							</FileConfiguration>
-							<FileConfiguration
-								Name="Release|Xenon">
-								<Tool
-									Name="VCCLCompilerTool"
-									UsePrecompiledHeader="3"
-									PrecompiledHeaderThrough="pch.h"
-									PrecompiledHeaderFile="$(IntDir)/$(TargetName)Base.pch"/>
-							</FileConfiguration>
-						</File>
-						<File
-							RelativePath="..\src\priv\base\base\memory.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
 								<Tool
@@ -2474,6 +2436,41 @@
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName).app.pch"/>
 							</FileConfiguration>
 						</File>
+						<File
+							RelativePath="..\src\priv\base\app\sampleResourceManager.cpp">
+							<FileConfiguration
+								Name="Debug|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).app.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).app.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Win32">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).app.pch"/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Release|Xenon">
+								<Tool
+									Name="VCCLCompilerTool"
+									UsePrecompiledHeader="3"
+									PrecompiledHeaderThrough="pch.h"
+									PrecompiledHeaderFile="$(IntDir)/$(TargetName).app.pch"/>
+							</FileConfiguration>
+						</File>
 					</Filter>
 				</Filter>
 				<Filter
@@ -2481,117 +2478,6 @@
 					Filter="">
 					<File
 						RelativePath="..\src\priv\core\core.cpp">
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Xenon">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Xenon">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\src\priv\core\coreEffectDict.cpp">
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Xenon">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Xenon">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\src\priv\core\coreResourceDict.h">
-					</File>
-					<File
-						RelativePath="..\src\priv\core\coreSearchResource.cpp">
-						<FileConfiguration
-							Name="Debug|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Xenon">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Xenon">
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="3"
-								PrecompiledHeaderThrough="pch.h"
-								PrecompiledHeaderFile="$(IntDir)/core.pch"/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\src\priv\core\coreShaderDict.cpp">
-					</File>
-					<File
-						RelativePath="..\src\priv\core\coreTextureDict.cpp">
 						<FileConfiguration
 							Name="Debug|Win32">
 							<Tool

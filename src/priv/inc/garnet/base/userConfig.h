@@ -6,38 +6,22 @@
 //! \author  chenlee (2005.7.24)
 // *****************************************************************************
 
-// GN_DEBUG_BUILD
-// ==============
-//!
-//! Enable debug build. Default is off.
-//!
-#ifndef GN_DEBUG_BUILD
-#define GN_DEBUG_BUILD 0
-#endif
-
-// GN_PROFILE_BUILD
+// GN_BUILD_VARIANT
 // ================
 //!
-//! Enable profile build. Default is on.
+//! Main switch of build variant. Possible values are:
 //!
-#ifndef GN_PROFILE_BUILD
-#define GN_PROFILE_BUILD 0
-#endif
-
-// GN_RETAIL_BUILD
-// ===============
+//!   0 - retail build (default)
+//!   1 - profile build
+//!   2 - debug build
 //!
-//! Enable retail build. Default is on.
-//!
-#ifndef GN_RETAIL_BUILD
-#define GN_RETAIL_BUILD 1
-#endif
-
-//
+#ifndef GN_BUILD_VARIANT
+#define GN_BUILD_VARIANT 0
+#else
 // check for invalid build type
-//
-#if 1 != (GN_DEBUG_BUILD + GN_PROFILE_BUILD + GN_RETAIL_BUILD)
-#error Invalid build type
+#if (GN_BUILD_VARIANT<0) || (GN_BUILD_VARIANT>2)
+#error GN_BUILD_VARIANT must be: 0-retail, 1-profile, 2-debug
+#endif
 #endif
 
 // GN_STATIC
@@ -55,7 +39,7 @@
 //! Enable inline function build. Enabled by default in non-debug build.
 //!
 #ifndef GN_ENABLE_INLINE
-#define GN_ENABLE_INLINE (!GN_DEBUG_BUILD)
+#define GN_ENABLE_INLINE (2 != GN_BUILD_VARIANT)
 #endif
 
 // GN_ENABLE_GUARD
