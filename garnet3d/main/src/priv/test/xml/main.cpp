@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-bool doParse( XmlProcessor & proc, XmlParseResult & xpr, const char * filename )
+bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
     AnsiFile fp;
 
@@ -12,7 +12,7 @@ bool doParse( XmlProcessor & proc, XmlParseResult & xpr, const char * filename )
     std::vector<char> buf( fp.size() );
 
     size_t sz = fp.read( &buf[0], fp.size() );
-    if( !proc.parseBuffer( xpr, &buf[0], sz ) )
+    if( !doc.parseBuffer( xpr, &buf[0], sz ) )
     {
         GN_ERROR( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
         return false;
@@ -30,12 +30,12 @@ int main( int argc, const char * argv[] )
         return -1;
     }
 
-    XmlProcessor proc;
+    XmlDocument doc;
     XmlParseResult xpr;
-    if( doParse( proc, xpr, argv[1] ) )
+    if( doParse( doc, xpr, argv[1] ) )
     {
         StdFile fp(stdout);
-        proc.writeToFile( fp, *xpr.root, 0 );
+        doc.writeToFile( fp, *xpr.root, 0 );
     }
 
     return 0;
