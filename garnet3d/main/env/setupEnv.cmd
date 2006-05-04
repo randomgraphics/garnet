@@ -37,9 +37,11 @@ REM =======================
 REM setup xenon environment
 REM =======================
 if "xenon" == "%GN_BUILD_COMPILER%" (
+	echo.
     if "" == "%XEDK%" (
         echo Environment variable XEDK not found.
     ) else (
+    	echo Using XDK at %XEDK%
         pushd .
         call %XEDK%\bin\win32\xdkvars.bat
         popd

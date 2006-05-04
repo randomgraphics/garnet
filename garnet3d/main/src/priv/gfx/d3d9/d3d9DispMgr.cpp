@@ -268,10 +268,8 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
     const RendererOptions & ro = getOptions();
     const DispDesc & dd = getDispDesc();
 
-    UINT nAdapter = mD3D->GetAdapterCount();
     HWND window = (HWND)dd.windowHandle;
-    HMONITOR monitor = (HMONITOR)dd.monitorHandle;
-    GN_ASSERT( nAdapter && window && monitor );
+    GN_ASSERT( window );
 
     std::vector<D3DDEVTYPE> devtypes;
 
@@ -280,7 +278,9 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
 #if GN_XENON
     devtypes.push_back( D3DDEVTYPE_HAL );
 #else
-    // Look for nvidia adapter
+	// Look for nvidia adapter
+    UINT nAdapter = mD3D->GetAdapterCount();
+    GN_ASSERT( nAdapter );
     for( uint32_t i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
@@ -294,6 +294,8 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
     }
 
     // Look for an adapter ordinal that is tied to a HMONITOR, only if NVPerfHUD adapter is not available.
+    HMONITOR monitor = (HMONITOR)dd.monitorHandle;
+    GN_ASSERT( monitor );
     if( 0 == mAdapter )
     {
         for( UINT i = 0; i < nAdapter; ++i )

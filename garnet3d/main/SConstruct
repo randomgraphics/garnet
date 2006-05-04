@@ -225,12 +225,12 @@ def UTIL_newEnv( compiler, variant ):
         libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
 
     # 定制不同编译模式的编译选项
-    cppdefines['debug']   += ['GN_DEBUG_BUILD=1','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=0']
-    cppdefines['profile'] += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=1','GN_RETAIL_BUILD=0','NDEBUG']
-    cppdefines['retail']  += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=1','NDEBUG']
-    cppdefines['stdbg']   += ['GN_DEBUG_BUILD=1','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=0','GN_STATIC=1',]
-    cppdefines['stprof']  += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=1','GN_RETAIL_BUILD=0','GN_STATIC=1','NDEBUG']
-    cppdefines['stret']   += ['GN_DEBUG_BUILD=0','GN_PROFILE_BUILD=0','GN_RETAIL_BUILD=1','GN_STATIC=1','NDEBUG']
+    cppdefines['debug']   += ['GN_BUILD_VARIANT=2']
+    cppdefines['profile'] += ['GN_BUILD_VARIANT=1','NDEBUG']
+    cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
+    cppdefines['stdbg']   += ['GN_BUILD_VARIANT=2','GN_STATIC=1',]
+    cppdefines['stprof']  += ['GN_BUILD_VARIANT=1','GN_STATIC=1','NDEBUG']
+    cppdefines['stret']   += ['GN_BUILD_VARIANT=0','GN_STATIC=1','NDEBUG']
 
     # 定制不同编译器的编译选项
     if 'cl' == env['CC']:
