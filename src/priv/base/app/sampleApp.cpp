@@ -10,7 +10,7 @@ float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 //
 //
 // -----------------------------------------------------------------------------
-GN::app::SampleApp::SampleApp() : mShowFps(true)
+GN::app::SampleApp::SampleApp() : mShowHUD(true)
 {
     enableCRTMemoryCheck();
     mFps.reset();
@@ -350,7 +350,7 @@ void GN::app::SampleApp::drawHUD()
 
     using namespace GN::gfx;
 
-    if( mShowFps )
+    if( mShowHUD )
     {
         Renderer & r = gRenderer;
         r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 0, 100, 16, ubyte4ToBGRA32( 0, 0, 0, 128 ) );

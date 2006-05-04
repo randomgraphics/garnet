@@ -229,6 +229,11 @@ namespace GN { namespace app
         //!
         bool switchRenderer();
 
+		//!
+		//! show HUD or not?
+		//!
+		void showHUD( bool show ) { mShowHUD = show; }
+
         //!
         //! get resource managare instance
         //!
@@ -246,7 +251,7 @@ namespace GN { namespace app
         SampleResourceManager mResMgr;
 
         // time stuff
-        bool mShowFps;
+        bool mShowHUD;
         FpsCounter mFps;
         double mLastFrameTime;
         double mTimeSinceLastUpdate;
