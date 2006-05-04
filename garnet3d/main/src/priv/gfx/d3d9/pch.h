@@ -44,16 +44,17 @@ inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for 
 #define PIXPERF_SCOPE_EVENT_EX( color, name )
 #else
 #if GN_XENON
-#define PIXPERF_BEGIN_EVENT_EX( color, name )   PIXBeginNamedEvent( color, name )
-#define PIXPERF_END_EVENT()                     PIXEndNamedEvent()
-#define PIXPERF_SET_MARKER_EX( color, name )    PIXSetMarker( color, name )
-struct PIXPERF_SCOPE_EVENT_EX
+#define PIXPERF_BEGIN_EVENT_EX( color, name )   //PIXBeginNamedEvent( color, name )
+#define PIXPERF_END_EVENT()                     //PIXEndNamedEvent()
+#define PIXPERF_SET_MARKER_EX( color, name )    //PIXSetMarker( color, name )
+#define PIXPERF_SCOPE_EVENT_EX( color, name )   //PixPerfScopeEvent( color, name )
+struct PixPerfScopeEvent
 {
-    PIXPERF_SCOPE_EVENT_EX( D3DCOLOR color, const char * name )
+    PixPerfScopeEvent( D3DCOLOR color, const char * name )
     {
         PIXBeginNamedEvent( color, name );
     }
-    ~PIXPERF_SCOPE_EVENT_EX()
+    ~PixPerfScopeEvent()
     {
         PIXEndNamedEvent();
     }

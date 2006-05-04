@@ -658,7 +658,7 @@
 					RelativePath="..\src\priv\inc\garnet\GNcore.h">
 				</File>
 				<File
-					RelativePath="..\src\priv\inc\garnet\GNd3d.h">
+					RelativePath="..\src\priv\inc\garnet\GNd3d9.h">
 				</File>
 				<File
 					RelativePath="..\src\priv\inc\garnet\GNgfx.h">
