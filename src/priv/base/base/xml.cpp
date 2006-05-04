@@ -17,7 +17,7 @@ struct AutoFree
 struct ParseTracer
 {
     XML_Parser parser;
-    GN::XmlProcessor * proc;
+    GN::XmlDocument * doc;
     GN::XmlParseResult * result;
     GN::XmlNode * parent;
     GN::XmlNode * prev;
@@ -32,7 +32,7 @@ static void sIdent( GN::File & fp, int ident )
     for( int i = 0; i < ident; ++i ) fp <<"\t";
 }
 
-static void sFormattedAttribute( GN::File & fp, const GN::XmlAttrib * att, int ident )
+static void sFormatAttributes( GN::File & fp, const GN::XmlAttrib * att, int ident )
 {
     for( ; 0 != att; att = att->next )
     {
@@ -41,33 +41,181 @@ static void sFormattedAttribute( GN::File & fp, const GN::XmlAttrib * att, int i
     }
 }
 
-static void sFormattedOutput( GN::File & fp, const GN::XmlNode * root, int ident )
+static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
 {
     GN_ASSERT( root );
 
-    sIdent( fp, ident );
-    fp << "<" << root->name;
-
-    if( root->attrib )
+    switch( root->type )
     {
-        fp << "\n";
-        sFormattedAttribute( fp, root->attrib, ident + 1 );
-        sIdent( fp, ident );
-    }
+        case GN::XML_CDATA:
+        {
+            const GN::XmlCdata * c = root->toCdata();
+            GN_ASSERT( c && !c->child ); // cdata node should have no child.
+            sIdent( fp, ident );
+            fp << "<![CDATA[" << c->text << "]]>\n";
+            break;
+        }
 
-    if( root->child )
-    {
-        fp << ">\n";
-        if( root->child ) sFormattedOutput( fp, root->child, ident + 1 );
-        sIdent( fp, ident );
-        fp << "</" << root->name << ">\n";
-    }
-    else
-    {
-        fp << "/>\n";
-    }
+        case GN::XML_COMMENT:
+        {
+            break;
+        }
 
-    if( root->sibling ) sFormattedOutput( fp, root->sibling, ident );
+        case GN::XML_ELEMENT:
+        {
+            const GN::XmlElement * e = root->toElement();
+            GN_ASSERT( e );
+
+            sIdent( fp, ident );
+            fp << "<" << e->name;
+
+            if( e->attrib )
+            {
+                fp << "\n";
+                sFormatAttributes( fp, e->attrib, ident + 1 );
+                sIdent( fp, ident );
+            }
+
+            if( e->child )
+            {
+                fp << ">\n";
+                if( e->child ) sFormatNodes( fp, e->child, ident + 1 );
+                sIdent( fp, ident );
+                fp << "</" << e->name << ">\n";
+            }
+            else
+            {
+                fp << "/>\n";
+            }
+            break;
+        }
+
+        case GN::XML_TEXT:
+        {
+            const GN::XmlText * t = root->toText();
+            GN_ASSERT( t && !t->child ); // text node should have no child.
+            sIdent( fp, ident );
+            fp << t->text << "\n";
+            break;
+        }
+
+        default:
+            GN_UNEXPECTED(); // program should not reach here
+            GN_ERROR( "Unknown node type!" );
+            return false;
+    };
+
+    // print brothers
+    return root->sibling ? sFormatNodes( fp, root->sibling, ident ) : true;
+}
+
+static void sCompactAttributes( GN::File & fp, const GN::XmlAttrib * att )
+{
+    for( ; 0 != att; att = att->next )
+    {
+        fp << " " << att->name << "=\"" << att->value << "\"";
+    }
+}
+
+static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
+{
+    GN_ASSERT( root );
+
+    switch( root->type )
+    {
+        case GN::XML_CDATA:
+        {
+            const GN::XmlCdata * c = root->toCdata();
+            GN_ASSERT( !c->child ); // cdata node should have no child.
+            fp << "<![CDATA[" << c->text << "]]>";
+            break;
+        }
+
+        case GN::XML_COMMENT:
+        {
+            break;
+        }
+
+        case GN::XML_ELEMENT:
+        {
+            const GN::XmlElement * e = root->toElement();
+            GN_ASSERT( e );
+            fp << "<" << e->name;
+            if( e->attrib )
+            {
+                sCompactAttributes( fp, e->attrib );
+            }
+            if( e->child )
+            {
+                fp << ">\n";
+                if( e->child ) sCompactNodes( fp, e->child );
+                fp << "</" << e->name << ">";
+            }
+            else
+            {
+                fp << "/>";
+            }
+            break;
+        }
+
+        case GN::XML_TEXT:
+        {
+            const GN::XmlText * t = root->toText();
+            GN_ASSERT( !t->child ); // text node should have no child.
+            // TODO: trim text before print
+            fp << t->text;
+            break;
+        }
+
+        default:
+            GN_UNEXPECTED(); // program should not reach here
+            GN_ERROR( "Unknown node type!" );
+            return false;
+    };
+
+    // print brothers
+    return root->sibling ? sCompactNodes( fp, root->sibling ) : true;
+}
+
+
+static void sParseFail( ParseTracer * tracer, const char * errInfo )
+{
+    XML_StopParser( tracer->parser, XML_FALSE );
+    tracer->result->errInfo = errInfo;
+    tracer->result->errLine = XML_GetCurrentLineNumber( tracer->parser );
+    tracer->result->errColumn = XML_GetCurrentColumnNumber( tracer->parser );
+}
+
+static GN::XmlNode * sNewNode( ParseTracer * tracer, GN::XmlNodeType type )
+{
+    GN::XmlNode * n = tracer->doc->createNode( type );
+    if( 0 == n )
+    {
+        sParseFail(
+            tracer,
+            GN::strFormat( "Fail to create node with type of '%d'", type ).cptr() );
+        return NULL;
+    }
+    n->parent = tracer->parent;
+    n->sibling = NULL;
+    n->child = NULL;
+
+    // update tracer
+    // update tracer
+    if( tracer->prev )
+    {
+        // this is not the first node in this level. Let its previous sibling points to this.
+        tracer->prev->sibling = n;
+    }
+    else if( tracer->parent )
+    {
+        // this is the first node in this level. Let the parent node points to this.
+        tracer->parent->child = n;
+    }
+    tracer->parent = n;
+    tracer->prev = NULL;
+
+    return n;
 }
 
 // *****************************************************************************
@@ -87,36 +235,26 @@ void XMLCALL sStartElementHandler(
     ParseTracer * tracer = (ParseTracer*)userData;
 
     // create new node
-    GN::XmlNode * n = tracer->proc->createNode();
-    if( 0 == n )
-    {
-        XML_StopParser( tracer->parser, XML_FALSE );
-        tracer->result->errInfo = "Fail to create node.";
-        tracer->result->errLine = XML_GetCurrentLineNumber( tracer->parser );
-        tracer->result->errColumn = XML_GetCurrentColumnNumber( tracer->parser );
-        return;
-    }
-    n->parent = tracer->parent;
-    n->sibling = NULL;
-    n->child = NULL;
-    n->attrib = NULL;
-    n->name = name;
+    GN::XmlNode * n = sNewNode( tracer, GN::XML_ELEMENT );
+    if( 0 == n ) return;
+    GN::XmlElement * e = n->toElement();
+    GN_ASSERT( e );
+
+    e->attrib = NULL;
+    e->name = name;
 
     // create attribute list
     GN::XmlAttrib * lastAttrib = NULL;
     while( *atts )
     {
-        GN::XmlAttrib * a = tracer->proc->createAttrib();
+        GN::XmlAttrib * a = tracer->doc->createAttrib();
         if( 0 == a )
         {
-            XML_StopParser( tracer->parser, XML_FALSE );
-            tracer->result->errInfo = "Fail to create attribute.";
-            tracer->result->errLine = XML_GetCurrentLineNumber( tracer->parser );
-            tracer->result->errColumn = XML_GetCurrentColumnNumber( tracer->parser );
+            sParseFail( tracer, "Fail to create attribute." );
             return;
         }
 
-        a->node = n;
+        a->node = e;
         a->next = NULL;
         a->name = atts[0];
         a->value = atts[1];
@@ -127,26 +265,12 @@ void XMLCALL sStartElementHandler(
         }
         else
         {
-            n->attrib = a;
+            e->attrib = a;
         }
         lastAttrib = a;
 
         atts += 2;
     }
-
-    // update tracer
-    if( tracer->prev )
-    {
-        // this is not the first node in this level. Let its previous sibling points to this.
-        tracer->prev->sibling = n;
-    }
-    else if( tracer->parent )
-    {
-        // this is the first node in this level. Let the parent node points to this.
-        tracer->parent->child = n;
-    }
-    tracer->parent = n;
-    tracer->prev = NULL;
 }
 
 //
@@ -157,8 +281,68 @@ void XMLCALL sEndElementHandler( void * userData, const XML_Char * )
     ParseTracer * tracer = (ParseTracer*)userData;
 
     // update tracer
+    GN_ASSERT( tracer->parent );
     tracer->prev = tracer->parent;
-    tracer->parent = tracer->parent ? tracer->parent->parent : NULL;
+    tracer->parent = tracer->parent->parent;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void XMLCALL sStartCdataSectionHandler( void * userData )
+{
+    ParseTracer * tracer = (ParseTracer*)userData;
+
+    // create new node
+    GN::XmlNode * n = sNewNode( tracer, GN::XML_CDATA );
+    if( 0 == n ) return;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void XMLCALL sEndCdataSectionHandler( void * userData )
+{
+    ParseTracer * tracer = (ParseTracer*)userData;
+
+    GN_ASSERT( tracer->parent && tracer->parent->type == GN::XML_CDATA );
+
+    // update tracer
+    tracer->prev = tracer->parent;
+    tracer->parent = tracer->parent->parent;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void XMLCALL sCharacterDataHandler(
+    void * userData, const XML_Char * s, int len )
+{
+    ParseTracer * tracer = (ParseTracer*)userData;
+
+    GN_ASSERT( tracer->parent );
+
+    if( tracer->parent->type == GN::XML_CDATA )
+    {
+        GN::XmlCdata * t = tracer->parent->toCdata();
+        t->text.append( s, len );
+    }
+    else
+    {
+        // skip leading spaces
+        while( len > 0 && (' '==*s || '\t'==*s || '\n'==*s) )
+        {
+            ++s; --len;
+        }
+        if( 0 == len ) return;
+
+        if( tracer->parent->type == GN::XML_ELEMENT )
+        {
+            if( tracer->prev && tracer->prev->type == GN::XML_TEXT )
+            {
+            }
+        }
+    }
 }
 
 // *****************************************************************************
@@ -168,7 +352,7 @@ void XMLCALL sEndElementHandler( void * userData, const XML_Char * )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlProcessor::parseBuffer(
+bool GN::XmlDocument::parseBuffer(
     XmlParseResult & result, const char * content, size_t length )
 {
     GN_GUARD;
@@ -193,6 +377,8 @@ bool GN::XmlProcessor::parseBuffer(
 
     // setup handlers
     XML_SetElementHandler( parser, &sStartElementHandler, &sEndElementHandler );
+    XML_SetCdataSectionHandler( parser, &sStartCdataSectionHandler, &sEndCdataSectionHandler );
+    XML_SetCharacterDataHandler( parser, &sCharacterDataHandler );
 
     // start parse
     XML_Status status = XML_Parse( parser, content, (int)length, XML_TRUE );
@@ -219,29 +405,30 @@ bool GN::XmlProcessor::parseBuffer(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlProcessor::writeToFile( File & file, const XmlNode & root, bool compact )
+bool GN::XmlDocument::writeToFile( File & file, const XmlNode & root, bool compact )
 {
     GN_GUARD;
-
     if( compact )
-    {
-    }
+        return sCompactNodes( file, &root );
     else
-    {
-        sFormattedOutput( file, &root, 0 );
-    }
-
-    return true;
-
+        return sFormatNodes( file, &root, 0 );
     GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlNode * GN::XmlProcessor::createNode()
+GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
 {
-    PooledNode * p = new PooledNode;
+    XmlNode * p;
+    switch( type )
+    {
+        case XML_CDATA   : p = new PooledNode<XmlCdata>; break;
+        case XML_COMMENT : p = new PooledNode<XmlComment>; break;
+        case XML_ELEMENT : p = new PooledNode<XmlElement>; break;
+        case XML_TEXT    : p = new PooledNode<XmlText>; break;
+        default          : GN_ERROR( "invalid node type : %d", type ); return NULL;
+    }
     mNodes.push_back( p );
     return p;
 }
@@ -249,7 +436,7 @@ GN::XmlNode * GN::XmlProcessor::createNode()
 //
 //
 // -----------------------------------------------------------------------------
-GN::XmlAttrib * GN::XmlProcessor::createAttrib()
+GN::XmlAttrib * GN::XmlDocument::createAttrib()
 {
     PooledAttrib * p = new PooledAttrib;
     mAttribs.push_back( p );
@@ -259,7 +446,7 @@ GN::XmlAttrib * GN::XmlProcessor::createAttrib()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::XmlProcessor::releaseAllNodesAndAttribs()
+void GN::XmlDocument::releaseAllNodesAndAttribs()
 {
     GN_GUARD;
 

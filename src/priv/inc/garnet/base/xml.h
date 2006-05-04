@@ -8,17 +8,20 @@
 
 namespace GN
 {
-    struct XmlNode;
+    struct XmlCdata;
+    struct XmlElement;
+    struct XmlComment;
+    struct XmlText;
 
     //!
     //! XML attribute class
     //!
     struct XmlAttrib
     {
-        XmlNode   * node;  //!< pointer to the node that this attribute belongs to. 
-        XmlAttrib * next;  //!< pointer to next attribute
-        StrA        name;  //!< attribute name
-        StrA        value; //!< attribute value
+        XmlElement * node;  //!< pointer to the element that this attribute belongs to. 
+        XmlAttrib  * next;  //!< pointer to next attribute
+        StrA         name;  //!< attribute name
+        StrA         value; //!< attribute value
 
     protected:
 
@@ -30,23 +33,139 @@ namespace GN
     };
 
     //!
+    //! XML node type
+    //!
+    enum XmlNodeType
+    {
+        XML_CDATA,   //!< cdata node
+        XML_COMMENT, //!< comment node
+        XML_ELEMENT, //!< element node
+        XML_TEXT,    //!< text node
+        NUM_XML_NODE_TYPES, //!< number of node types.
+    };
+
+    //!
     //! XML node class
     //!
     struct XmlNode
     {
-        XmlNode   * parent;  //!< pointer to parent node
-        XmlNode   * sibling; //!< pointer to next brother node
-        XmlNode   * child;   //!< pointer to first child
+        const XmlNodeType type;    //!< node type. can't be modified.
+        XmlNode         * parent;  //!< pointer to parent node
+        XmlNode         * sibling; //!< pointer to next brother node
+        XmlNode         * child;   //!< pointer to first child
+
+        //!
+        //! conver to cdata node
+        //!
+        XmlCdata * toCdata() { return XML_CDATA == type ? (XmlCdata*)this : 0; }
+
+        //!
+        //! conver to comment node
+        //!
+        const XmlCdata * toCdata() const { return XML_CDATA == type ? (const XmlCdata*)this : 0; }
+
+        //!
+        //! conver to comment node
+        //!
+        XmlComment * toComment() { return XML_COMMENT == type ? (XmlComment*)this : 0; }
+
+        //!
+        //! conver to comment node
+        //!
+        const XmlComment * toComment() const { return XML_COMMENT == type ? (const XmlComment*)this : 0; }
+
+        //!
+        //! Convert to element node
+        //!
+        XmlElement * toElement() { return XML_ELEMENT == type ? (XmlElement*)this : 0; }
+
+        //!
+        //! Convert to element node
+        //!
+        const XmlElement * toElement() const { return XML_ELEMENT == type ? (const XmlElement*)this : 0; }
+
+        //!
+        //! conver to text node
+        //!
+        XmlText * toText() { return XML_TEXT == type ? (XmlText*)this : 0; }
+
+        //!
+        //! conver to comment node
+        //!
+        const XmlText * toText() const { return XML_TEXT == type ? (const XmlText*)this : 0; }
+
+        //!
+        //! virtual dtor
+        //!
+        virtual ~XmlNode() {}
+
+    protected:
+
+        //!
+        //! protected ctor to prevent user from creatiing this class.
+        //!
+        XmlNode( XmlNodeType t ) : type(t) { GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES ); }
+    };
+
+    //!
+    //! XML cdata node
+    //!
+    struct XmlCdata : public XmlNode
+    {
+        StrA text;  //!< text content.
+
+    protected:
+
+        //!
+        //! protected ctor to prevent user from creatiing this class.
+        //!
+        XmlCdata() : XmlNode(XML_CDATA) {}
+    };
+
+    //!
+    //! XML comment node
+    //!
+    struct XmlComment : public XmlNode
+    {
+        StrA text; //!< comment text
+
+    protected:
+
+        //!
+        //! protected ctor to prevent user from creatiing this class.
+        //!
+        XmlComment() : XmlNode(XML_COMMENT) {}
+    };
+
+    //!
+    //! XML element node
+    //!
+    struct XmlElement : public XmlNode
+    {
         XmlAttrib * attrib;  //!< pointer to first attribute
         StrA        name;    //!< element name
 
     protected:
 
-        //! \name protected ctor/dtor to prevent user from creatiing/deleting this class.
-        //@{
-        XmlNode()          {}
-        virtual ~XmlNode() {}
-        //@}
+        //!
+        //! protected ctor to prevent user from creatiing this class.
+        //!
+        XmlElement() : XmlNode(XML_ELEMENT) {}
+    };
+
+    //!
+    //! XML text node
+    //!
+    struct XmlText : public XmlNode
+    {
+        StrA text;  //!< text content.
+
+    protected:
+
+        //!
+        //! protected ctor to prevent user from creatiing this class.
+        //!
+        XmlText() : XmlNode(XML_TEXT) {}
     };
 
     //!
@@ -61,23 +180,15 @@ namespace GN
     };
 
     //!
-    //! XML processor
+    //! XML document
     //!
-    class XmlProcessor
+    class XmlDocument
     {
-        struct PooledNode : public XmlNode
-        {
-            PooledNode() {}
-            ~PooledNode() {}
-        };
+        // T must be one of XML node class
+        template<class T> struct PooledNode : public T {};
+        struct PooledAttrib : public XmlAttrib {};
 
-        struct PooledAttrib : public XmlAttrib
-        {
-            PooledAttrib() {}
-            ~PooledAttrib() {}
-        };
-
-        std::vector<PooledNode*> mNodes;
+        std::vector<XmlNode*> mNodes;
         std::vector<PooledAttrib*> mAttribs;
 
     public:
@@ -85,12 +196,12 @@ namespace GN
         //!
         //! ctor
         //!
-        XmlProcessor() { mNodes.reserve(256); mAttribs.reserve(256); }
+        XmlDocument() { mNodes.reserve(256); mAttribs.reserve(256); }
 
         //!
         //! dtor
         //!
-        ~XmlProcessor() { releaseAllNodesAndAttribs(); }
+        ~XmlDocument() { releaseAllNodesAndAttribs(); }
 
         //!
         //! parse xml document
@@ -107,7 +218,7 @@ namespace GN
         //! to release them. They will be release automatically, when the
         //! XML processer is destroied or releaseNodesAndAttribs() is called.
         //!
-        XmlNode * createNode();
+        XmlNode * createNode( XmlNodeType );
 
         //!
         //! Create new attribute. Attributes are created in pooled memory also,
