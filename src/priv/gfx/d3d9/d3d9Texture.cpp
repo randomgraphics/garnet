@@ -286,9 +286,8 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
     // read file contents
     std::vector<uint8_t> buf;
     buf.resize( file.size() );
-    size_t sz = file.read( &buf[0], buf.size() );
-    if( size_t(-1) == sz )
-    { quit(); return selfOK(); }
+    size_t sz;
+    if( !file.read( &buf[0], buf.size(), &sz ) ) { quit(); return selfOK(); }
 
     // get image info.
     D3DXIMAGE_INFO info;

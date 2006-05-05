@@ -101,12 +101,15 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
     else
     {
         r = new SampleRawData( fp.size() );
-        if( fp.size() != fp.read( &r->buffer[0], fp.size() ) )
+        size_t readen;
+        if( !fp.read( &r->buffer[0], fp.size(), &readen ) )
         {
             GN_ERROR( "Raw resource '%s' creation failed: read file '%s' error.", name.cptr(), path.cptr() );
             delete r;
             return false;
         }
+        GN_ASSERT( readen <= fp.size() );
+        if( readen < fp.size() ) r->buffer.resize( readen );
     }
 
     // success
@@ -204,13 +207,15 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     AutoObjArray<char> langStr( new char[fp.size()+1] );
 
     // read file
-	memset( buf, 0, fp.size()+1 );
-    if( 0 == fp.read( buf, fp.size() ) )
+    size_t readen;
+    if( !fp.read( buf, fp.size(), &readen ) )
     {
         GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 	fp.close();
+    GN_ASSERT( readen <= fp.size() );
+    buf[readen] = 0;
 
     const char * code = buf;
     ShaderType type;

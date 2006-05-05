@@ -18,7 +18,8 @@ bool JPGReader::checkFormat( GN::File & fp )
 
     if( !fp.seek( 6, GN::FSEEK_SET ) ) return false;
 
-    if( 4 != fp.read( buf, 4 ) ) return false;
+    size_t sz;
+    if( !fp.read( buf, 4, &sz ) || 4 != sz ) return false;
 
     buf[4] = 0;
 
