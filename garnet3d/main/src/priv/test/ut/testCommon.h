@@ -25,7 +25,34 @@ namespace CxxTest
     //!
     //! Equality check of multi-byte char c-style string
     //!
-    bool equals<const char *>( const char * x, const char * y )
+    bool equals<const char *, const char *>( const char * x, const char * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    //!
+    //! Equality check of multi-byte char c-style string
+    //!
+    bool equals<const char *, char *>( const char * x, char * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    //!
+    //! Equality check of multi-byte char c-style string
+    //!
+    bool equals<char *, const char *>( char * x, const char * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    //!
+    //! Equality check of multi-byte char c-style string
+    //!
+    bool equals<char *, char *>( char * x, char * y )
     {
         return 0 == ::GN::strCmp(x,y);
     }
@@ -34,7 +61,34 @@ namespace CxxTest
     //!
     //! Equality check of wide char c-style string
     //!
-    bool equals<const wchar_t *>( const wchar_t * x, const wchar_t * y )
+    bool equals<const wchar_t *, const wchar_t *>( const wchar_t * x, const wchar_t * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    //!
+    //! Equality check of wide char c-style string
+    //!
+    bool equals<wchar_t *, const wchar_t *>( wchar_t * x, const wchar_t * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    //!
+    //! Equality check of wide char c-style string
+    //!
+    bool equals<const wchar_t *, wchar_t *>( const wchar_t * x, wchar_t * y )
+    {
+        return 0 == ::GN::strCmp(x,y);
+    }
+
+    CXXTEST_TEMPLATE_INSTANTIATION
+    //!
+    //! Equality check of wide char c-style string
+    //!
+    bool equals<wchar_t *, wchar_t *>( wchar_t * x, wchar_t * y )
     {
         return 0 == ::GN::strCmp(x,y);
     }

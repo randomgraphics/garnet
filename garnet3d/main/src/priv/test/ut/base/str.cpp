@@ -8,6 +8,39 @@ class StringTest : public CxxTest::TestSuite
 {
 public:
 
+    void testStrPrintf()
+    {
+        char buf1[5] = { '\0', '\0', '\0', '4', '5' };
+        char * s1 = buf1;
+
+        GN::strPrintf( s1, 3, "a" );
+        TS_ASSERT_EQUALS( s1, "a" );
+
+        GN::strPrintf( s1, 3, "aa" );
+        TS_ASSERT_EQUALS( s1, "aa" );
+
+        GN::strPrintf( s1, 3, "aaa" );
+        TS_ASSERT_EQUALS( s1, "aa" );
+
+        GN::strPrintf( s1, 3, "aaaa" );
+        TS_ASSERT_EQUALS( s1, "aa" );
+
+        wchar_t buf2[5] = { L'\0', L'\0', L'\0', L'4', L'5' };
+        wchar_t * s2 = buf2;
+
+        GN::strPrintf( s2, 3, L"a" );
+        TS_ASSERT_EQUALS( s2, L"a" );
+
+        GN::strPrintf( s2, 3, L"aa" );
+        TS_ASSERT_EQUALS( s2, L"aa" );
+
+        GN::strPrintf( s2, 3, L"aaa" );
+        TS_ASSERT_EQUALS( s2, L"aa" );
+
+        GN::strPrintf( s2, 3, L"aaaa" );
+        TS_ASSERT_EQUALS( s2, L"aa" );
+    }
+
     void testAppend()
     {
         GN::StrW s1;

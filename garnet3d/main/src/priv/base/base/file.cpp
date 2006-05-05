@@ -4,12 +4,21 @@
 //                   implementation of StdFile
 // *****************************************************************************
 
+GN::StdFile::StdFile( FILE * fp ) : mFile(fp)
+{
+    GN_ASSERT(fp);
+    if( stdin == fp ) setName( "stdin" );
+    else if( stdout == fp ) setName( "stdout" );
+    else if( stderr == fp ) setName( "stderr" );
+    else setName( strFormat( "#%p", fp ) );
+}
 //
 size_t GN::StdFile::read( void * buffer, size_t size )
 {
     GN_GUARD;
+    if( 0 == mFile ) { GN_ERROR( "NULL file pointer!" ); return (size_t)-1; }
     size_t r = ::fread( buffer, 1, size, mFile );
-    if ( (size_t)-1 == r ) GN_ERROR( "fread() failed!" );
+    if ( (size_t)-1 == r ) GN_ERROR( "%s : fread() failed!", name().cptr() );
     return r;
     GN_UNGUARD;
 }
@@ -17,9 +26,75 @@ size_t GN::StdFile::read( void * buffer, size_t size )
 size_t GN::StdFile::write( const void * buffer, size_t size )
 {
     GN_GUARD;
+    if( 0 == mFile ) { GN_ERROR( "NULL file pointer!" ); return (size_t)-1; }
     size_t r = ::fwrite( buffer, 1, size, mFile );
-    if ( (size_t)-1 == r ) GN_ERROR( "fwrite() failed!" );
+    if ( (size_t)-1 == r ) GN_ERROR( "%s: fwrite() failed!", name().cptr() );
     return r;
+    GN_UNGUARD;
+}
+//
+bool GN::StdFile::eof() const
+{
+    GN_GUARD;
+    if( 0 == mFile ) { GN_ERROR( "NULL file pointer!" ); return false; }
+    return 0 != ::feof( mFile );
+    GN_UNGUARD;
+}
+//
+bool GN::StdFile::seek( int offset, FileSeekMode origin )
+{
+    GN_GUARD;
+
+    if( 0 == mFile ) { GN_ERROR( "NULL file pointer!" ); return false; }
+
+    // NOTE : this table must be always synchronized with definition of
+    //        fseek_t ( see types/file.h )
+    static int seek_table[] =
+    {
+        SEEK_CUR,
+        SEEK_END,
+        SEEK_SET,
+    };
+
+    // check parameter
+    if( origin >= NUM_FSEEKS )
+    {
+        GN_ERROR( "%s: invalid seek origin!", name().cptr() );
+        return false;
+    }
+
+    if( 0 != ::fseek( mFile, offset, seek_table[origin] ) )
+    {
+        GN_ERROR( "%s : fseek() failed!", name().cptr() );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+//
+size_t GN::StdFile::tell() const
+{
+    GN_GUARD;
+    if( 0 == mFile ) { GN_ERROR( "NULL file pointer!" ); return (size_t)-1; }
+    size_t r = ::ftell( mFile );
+    if( size_t(-1) == r ) GN_ERROR( "%s : ftell() failed!", name().cptr() );
+    return r;
+    GN_UNGUARD;
+}
+//
+size_t GN::StdFile::size() const
+{
+    GN_GUARD;
+    if( 0 == mFile ) { GN_ERROR( "NULL file pointer!" ); return (size_t)-1; }
+    long oldPos = ::ftell( mFile );
+    if( -1 == oldPos ) { GN_ERROR( "%s : fail to get current file position!", name().cptr() ); return (size_t)-1; }
+    if( 0 == ::fseek( mFile, SEEK_END, 0 ) ) { GN_ERROR( "%s : fail to seek to the end of file!", name().cptr() ); return (size_t)-1; }
+    size_t newPos = ::ftell( mFile );
+    if( 0 == ::fseek( mFile, SEEK_SET, oldPos ) ) { GN_ERROR( "%s : fail to restore file position!", name().cptr() ); return (size_t)-1; }
+    return newPos;
     GN_UNGUARD;
 }
 
@@ -191,7 +266,14 @@ bool GN::AnsiFile::seek( int offset, FileSeekMode origin )
         return false;
     }
 
-    return 0 == ::fseek( mFile, offset, seek_table[origin] );
+    if( 0 != ::fseek( mFile, offset, seek_table[origin] ) )
+    {
+        GN_ERROR( "%s : fseek() failed!", name().cptr() );
+        return false;
+    }
+
+    // success
+    return true;
 
     GN_UNGUARD;
 }
