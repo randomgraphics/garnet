@@ -13,26 +13,30 @@ GN::MemFile<T>::reset( T * buf, size_t size, const StrA & name )
 //
 //
 //  ----------------------------------------------------------------------------
-template<typename T> inline size_t
-GN::MemFile<T>::read( void * buf, size_t size )
+template<typename T> inline bool
+GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
 {
     GN_GUARD;
 
     // check for no-op
-    if( 0 == size ) return 0;
+    if( 0 == size )
+    {
+        if( readen ) *readen = 0;
+        return true;
+    }
 
     // check parameter
     if( 0 == buf )
     {
         GN_ERROR( "null output buf!" );
-        return size_t(-1);
+        return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
         GN_ERROR( "null file!" );
-        return size_t(-1);
+        return false;
     }
 
     GN_ASSERT( mStart && mStart <= mPtr && mPtr <= (mStart+mSize) );
@@ -45,7 +49,8 @@ GN::MemFile<T>::read( void * buf, size_t size )
     GN_ASSERT( mPtr <= (mStart+mSize) );
 
     // success
-    return size;
+    if( readen ) *readen = size;
+    return true;
 
     GN_UNGUARD;
 }
@@ -53,8 +58,8 @@ GN::MemFile<T>::read( void * buf, size_t size )
 //
 //
 //  ----------------------------------------------------------------------------
-template<typename T> inline size_t
-GN::MemFile<T>::write( const void * buf, size_t size )
+template<typename T> inline bool
+GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 {
     GN_GUARD;
 
@@ -62,20 +67,24 @@ GN::MemFile<T>::write( const void * buf, size_t size )
     GN_CASSERT( !IsConst<T>::value );
 
     // check for no-op
-    if( 0 == size ) return 0;
+    if( 0 == size )
+    {
+        if( written ) *written = 0;
+        return true;
+    }
 
     // check parameter
     if( 0 == buf )
     {
         GN_ERROR( "null input buf!" );
-        return size_t(-1);
+        return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
         GN_ERROR( "null file!" );
-        return size_t(-1);
+        return false;
     }
 
     GN_ASSERT( mStart && mStart <= mPtr && mPtr <= (mStart+mSize) );
@@ -88,7 +97,8 @@ GN::MemFile<T>::write( const void * buf, size_t size )
     GN_ASSERT( mPtr <= (mStart+mSize) );
 
     // success
-    return size;
+    if( written ) *written = size;
+    return true;
 
     GN_UNGUARD;
 }
@@ -129,22 +139,25 @@ GN::MemFile<T>::seek( int offset, FileSeekMode origin )
     return true;
 }
 
-
 //
 //
 //  ----------------------------------------------------------------------------
-inline size_t GN::VectorFile::read( void * buf, size_t size )
+inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 {
     GN_ASSERT( mCursor <= mBuffer.size() );
 
     if( size + mCursor > mBuffer.size() ) size = mBuffer.size() - mCursor;
 
-    if( 0 == size ) return 0;
+    if( 0 == size )
+    {
+        if( readen ) *readen = 0;
+        return true;
+    }
 
     if( 0 == buf )
     {
         GN_ERROR( "null output buffer!" );
-        return size_t(-1);
+        return false;
     }
 
     memcpy( buf, &mBuffer[mCursor], size );
@@ -152,22 +165,27 @@ inline size_t GN::VectorFile::read( void * buf, size_t size )
     mCursor += size;
     GN_ASSERT( mCursor <= mBuffer.size() );
 
-    return size;
+    if( readen ) *readen = size;
+    return true;
 }
 
 //
 //
 //  ----------------------------------------------------------------------------
-inline size_t GN::VectorFile::write( const void * buf, size_t size )
+inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * written )
 {
     GN_ASSERT( mCursor <= mBuffer.size() );
 
-    if( 0 == size ) return 0;
+    if( 0 == size )
+    {
+        if( written ) *written = 0;
+        return true;
+    }
 
     if( 0 == buf )
     {
         GN_ERROR( "null output buffer!" );
-        return size_t(-1);
+        return false;
     }
 
     // resize the vector on demond
@@ -181,7 +199,8 @@ inline size_t GN::VectorFile::write( const void * buf, size_t size )
     mCursor += size;
     GN_ASSERT( mCursor <= mBuffer.size() );
 
-    return size;
+    if( written ) *written = size;
+    return true;
 }
 
 //

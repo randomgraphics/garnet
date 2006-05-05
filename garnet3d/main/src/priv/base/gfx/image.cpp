@@ -149,8 +149,9 @@ public:
         size_t sz = i_file.size();
         mSrc.resize( sz );
         if( !i_file.seek( 0, FSEEK_SET ) ) return false;
-        sz = i_file.read( &mSrc[0], mSrc.size() );
-        if( size_t(-1) == sz ) return false;
+        if( !i_file.read( &mSrc[0], mSrc.size(), &sz ) ) return false;
+        GN_ASSERT( sz <= mSrc.size() );
+        if( sz < mSrc.size() ) mSrc.resize( sz );
 
         // success
         mState = INITIALIZED;

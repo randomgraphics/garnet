@@ -48,41 +48,39 @@ namespace GN
     struct File
     {
         //!
-        //! 读取size个字节到buffer中，返回实际读取的字节数,
+        //! 读取size个字节到buffer中
         //!
-        //! \return   -1 means failed.
-        //!
-        virtual size_t read( void * /*buffer*/, size_t /*size*/ ) { return size_t(-1); }
+        virtual bool read( void * /*buffer*/, size_t /*size*/, size_t * /*readen*/ ) { return false; }
 
         //!
-        //! 向文件中写入size个字节，返回实际写入到字节数
+        //! 向文件中写入size个字节
         //!
         //! \return   -1 means failed
         //!
-        virtual size_t write( const void * /*buffer*/, size_t /*size*/ ) { return size_t(-1); }
+        virtual bool write( const void * /*buffer*/, size_t /*size*/, size_t * /*written*/ ) { return false; }
 
         //!
-        //! 是否已经到文件结尾
+        //! 是否已经到文件结尾. Return true, if something goes wrong.
         //!
-        virtual bool   eof() const { return false; }
+        virtual bool eof() const { return true; }
 
         //!
         //! 设定文件读写游标的位置
         //!
         //! \return   return false if error
         //!
-        virtual bool   seek( int /*offset*/, FileSeekMode /*origin*/ ) { return false; }
+        virtual bool seek( int /*offset*/, FileSeekMode /*origin*/ ) { return false; }
 
         //!
-        //! 返回当前文件读写游标的位置
+        //! 返回当前文件读写游标的位置. Return 0 if something goes wrong.
         //!
-        //! \return   On error, return -1L
-        virtual size_t tell() const { return size_t(-1); }
+        //! \return
+        virtual size_t tell() const { return 0; }
 
         //!
-        //! 返回文件的总长度. If error, return -1L.
+        //! 返回文件的总长度. Return 0 if something goes wrong.
         //!
-        virtual size_t size() const { return size_t(-1); }
+        virtual size_t size() const { return 0; }
 
         //!
         //! return file name string
@@ -112,7 +110,7 @@ namespace GN
     {
         char buf[256];
         strPrintf( buf, 256, "%d", i );
-        fp.write( buf, strLen(buf) );
+        fp.write( buf, strLen(buf), 0 );
         return fp;
     }
 
@@ -123,7 +121,7 @@ namespace GN
     {
         char buf[256];
         strPrintf( buf, 256, "%Iu", s );
-        fp.write( buf, strLen(buf) );
+        fp.write( buf, strLen(buf), 0 );
         return fp;
     }
 
@@ -133,7 +131,7 @@ namespace GN
     inline File & operator<<( File & fp, const char * s )
     {
         if( 0 == s ) return fp;
-        fp.write( s, strLen(s) );
+        fp.write( s, strLen(s), 0 );
         return fp;
     }
 
@@ -143,7 +141,7 @@ namespace GN
     inline File & operator<<( File & fp, const StrA & s )
     {
         if( s.empty() ) return fp;
-        fp.write( s.cptr(), s.size() );
+        fp.write( s.cptr(), s.size(), 0 );
         return fp;
     }
 
@@ -153,19 +151,44 @@ namespace GN
     class StdFile : public File
     {
         FILE * mFile;
+
+    protected:
+
+        //!
+        //! Change the internal file pointer
+        //!
+        void setFile( FILE * fp )
+        {
+            mFile = fp;
+            if( stdin == fp ) setName( "stdin" );
+            else if( stdout == fp ) setName( "stdout" );
+            else if( stderr == fp ) setName( "stderr" );
+            else setName( strFormat( "#%p", fp ) );
+        }
+
     public :
 
         //!
         //! constructor
         //!
-        StdFile( FILE * fp );
+        StdFile( FILE * fp ) { setFile(fp); }
+
+        //!
+        //! get internal file pointer
+        //!
+        FILE * getFILE() const { return mFile; }
+
+        //!
+        //! Convert to ANSI FILE *
+        //!
+        operator FILE* () const { return mFile; }
 
         // from File
     public:
-        size_t read( void *, size_t );
-        size_t write( const void * buffer, size_t size );
-        bool   eof() const;
-        bool   seek( int, FileSeekMode );
+        bool read( void *, size_t, size_t* );
+        bool write( const void * buffer, size_t size, size_t* );
+        bool eof() const;
+        bool seek( int, FileSeekMode );
         size_t tell() const;
         size_t size() const;
     };
@@ -173,13 +196,12 @@ namespace GN
     //!
     //! file class using ANSI file functions
     //!
-    class AnsiFile : public File
+    class AnsiFile : public StdFile
     {
-        FILE * mFile;
         size_t mSize;
     public:
 
-        AnsiFile() : mFile(0), mSize(0) {}
+        AnsiFile() : StdFile(0), mSize(0) {}
         ~AnsiFile() { close(); }
 
         //!
@@ -206,15 +228,10 @@ namespace GN
         //!
         //! Convert to ANSI FILE *
         //!
-        operator FILE* () const { GN_ASSERT(mFile); return mFile; }
+        operator FILE* () const { return getFILE(); }
 
         // from File
     public:
-        size_t read( void * buffer, size_t size );
-        size_t write( const void * buffer, size_t size );
-        bool   eof() const;
-        bool   seek( int offset, FileSeekMode );
-        size_t tell() const;
         size_t size() const { return mSize; }
     };
 
@@ -247,10 +264,10 @@ namespace GN
 
         //! \name from File
         //@{
-        size_t read( void * buf, size_t size );
-        size_t write( const void * buf, size_t size );
-        bool   eof() const { return (mStart+mSize) == mPtr; }
-        bool   seek( int offset, FileSeekMode origin );
+        bool read( void *, size_t, size_t* );
+        bool write( const void * buffer, size_t size, size_t* );
+        bool eof() const { return (mStart+mSize) == mPtr; }
+        bool seek( int offset, FileSeekMode origin );
         size_t tell() const { return mPtr - mStart; }
         size_t size() const { return mSize; }
         //@}
@@ -278,10 +295,10 @@ namespace GN
 
         //! \name from File
         //@{
-        size_t read( void * buf, size_t size );
-        size_t write( const void * buf, size_t size );
-        bool   eof() const { return mBuffer.size() == mCursor; }
-        bool   seek( int offset, FileSeekMode origin );
+        bool read( void *, size_t, size_t* );
+        bool write( const void * buffer, size_t size, size_t* );
+        bool eof() const { return mBuffer.size() == mCursor; }
+        bool seek( int offset, FileSeekMode origin );
         size_t tell() const { return mCursor; }
         size_t size() const { return mBuffer.size(); }
         //@}

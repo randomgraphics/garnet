@@ -11,7 +11,8 @@ bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 
     std::vector<char> buf( fp.size() );
 
-    size_t sz = fp.read( &buf[0], fp.size() );
+    size_t sz;
+    if( !fp.read( &buf[0], fp.size(), &sz ) ) return false;
     if( !doc.parseBuffer( xpr, &buf[0], sz ) )
     {
         GN_ERROR( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );

@@ -173,7 +173,8 @@ bool TGAReader::checkFormat( GN::File & fp )
 
     // read TGA header
     if( !fp.seek( 0, GN::FSEEK_SET ) ) return false;
-    if( sizeof(TGA_HEADER) != fp.read( &header, sizeof(TGA_HEADER) ) ) return false;
+    size_t sz;
+    if( !fp.read( &header, sizeof(TGA_HEADER), &sz ) || sizeof(TGA_HEADER) != sz ) return false;
 
     // check header fields
     return (  0 == header.colourmaptype
