@@ -169,7 +169,6 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
         {
             const GN::XmlText * t = root->toText();
             GN_ASSERT( !t->child ); // text node should have no child.
-            // TODO: trim text before print
             fp << t->text;
             break;
         }

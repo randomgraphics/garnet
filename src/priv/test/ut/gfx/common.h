@@ -198,7 +198,7 @@ protected:
 
         scene.draw();
 
-        const DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = r->getDispDesc();
 
         TS_ASSERT_EQUALS( dd.windowHandle, win->getWindowHandle() );
         //TS_ASSERT_EQUALS( dd.monitorHandle, win->getDisplayHandle() );
@@ -224,15 +224,15 @@ protected:
         ro.software = true;
         CREATE_RENDERER( r, ro );
 
-        const DispDesc & dd = gRenderer.getDispDesc();
-        TS_ASSERT_EQUALS( gRenderer.getOptions().software, true );
+        const DispDesc & dd = r->getDispDesc();
+        TS_ASSERT_EQUALS( r->getOptions().software, true );
 
         scene.draw();
 
         // recreate the device
         ro.software = false;
-        TS_ASSERT( gRenderer.changeOptions(ro) );
-        TS_ASSERT_EQUALS( gRenderer.getOptions().software, false );
+        TS_ASSERT( r->changeOptions(ro) );
+        TS_ASSERT_EQUALS( r->getOptions().software, false );
         TS_ASSERT_EQUALS( dd.width, 320 );
         TS_ASSERT_EQUALS( dd.height, 640 );
         scene.draw();
@@ -240,7 +240,7 @@ protected:
         // reset the device
         ro.windowedWidth = 256;
         ro.windowedHeight = 128;
-        TS_ASSERT( gRenderer.changeOptions(ro) );
+        TS_ASSERT( r->changeOptions(ro) );
         TS_ASSERT_EQUALS( dd.width, 256 );
         TS_ASSERT_EQUALS( dd.height, 128 );
         scene.draw();
@@ -264,7 +264,7 @@ protected:
 
         ro.displayMode.width = 1024;
         ro.displayMode.height = 768;
-        TS_ASSERT( gRenderer.changeOptions( ro ) );
+        TS_ASSERT( r->changeOptions( ro ) );
 
         scene.draw();
     }
@@ -282,7 +282,7 @@ protected:
         ro.parentWindow = 0;
         CREATE_RENDERER( r, ro );
 
-        const DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = r->getDispDesc();
         TS_ASSERT_EQUALS( dd.width, 640 );
         TS_ASSERT_EQUALS( dd.height, 480 );
 

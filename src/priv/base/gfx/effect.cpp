@@ -605,11 +605,62 @@ bool GN::gfx::Effect::createTechnique( TechniqueData & data, const EffectDesc::T
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Effect::sSetFfpUniform( int32_t, const UniformData & )
+void GN::gfx::Effect::sSetFfpUniform( int32_t type, const UniformData & data )
 {
     GN_GUARD;
 
-    GN_UNIMPL_WARNING();
+    Renderer & r = gRenderer;
+
+    const UniformValue & value = data.value;
+
+    switch( type )
+    {
+        case FFP_TRANSFORM_WORLD :
+            if( UVT_MATRIX44 == type )
+            {
+                GN_ASSERT( !value.matrix44s.empty() );
+                r.setWorld( value.matrix44s[0] );
+            }
+            else
+            {
+                GN_ERROR( "FFP_TRANSFORM_WORLD only accepts matrix type." );
+            }
+            break;
+
+        case FFP_TRANSFORM_VIEW :
+            if( UVT_MATRIX44 == type )
+            {
+                GN_ASSERT( !value.matrix44s.empty() );
+                r.setView( value.matrix44s[0] );
+            }
+            else
+            {
+                GN_ERROR( "FFP_TRANSFORM_VIEW only accepts matrix type." );
+            }
+            break;
+
+        case FFP_TRANSFORM_PROJ :
+            if( UVT_MATRIX44 == type )
+            {
+                GN_ASSERT( !value.matrix44s.empty() );
+                r.setProj( value.matrix44s[0] );
+            }
+            else
+            {
+                GN_ERROR( "FFP_TRANSFORM_PROJ only accepts matrix type." );
+            }
+
+        case FFP_VIEWPORT :
+        case FFP_LIGHT0_POS :
+        case FFP_LIGHT0_DIFFUSE :
+        case FFP_MATERIAL_DIFFUSE :
+        case FFP_MATERIAL_SPECULAR :
+            GN_UNIMPL_WARNING();
+            break;
+
+        default:
+            GN_UNEXPECTED();
+    }
 
     GN_UNGUARD;
 }
