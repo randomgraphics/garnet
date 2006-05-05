@@ -98,10 +98,33 @@ namespace GN
     }
 
     //!
-    //! printf-like format string
+    //! safe sprintf. This function always outputs null-terminated string,
+    //! like StringCchPrintf(...)
     //!
     void
     strPrintf(
+        char *       buf,
+        size_t       bufSizeInChar,
+        const char * fmt,
+        ... );
+
+    //!
+    //! safe sprintf. This function always outputs null-terminated string,
+    //! like StringCchPrintf(...)
+    //!
+    void
+    strPrintf(
+        wchar_t *       buf,
+        size_t          bufSizeInWchar,
+        const wchar_t * fmt,
+        ... );
+
+    //!
+    //! safe sprintf. This function always outputs null-terminated string,
+    //! like StringCchPrintf(...)
+    //!
+    void
+    strVarPrintf(
         char *       buf,
         size_t       bufSizeInChar,
         const char * fmt,
@@ -111,7 +134,7 @@ namespace GN
     //! printf-like format string (wide-char)
     //!
     void
-    strPrintf(
+    strVarPrintf(
         wchar_t *       buf,
         size_t          bufSizeInWchar,
         const wchar_t * fmt,
@@ -401,7 +424,7 @@ namespace GN
             else
             {
                 CharType buf[16384];  // 16k should be enough in most cases
-                strPrintf( buf, 16384, fmt, args );
+                strVarPrintf( buf, 16384, fmt, args );
                 buf[16383] = 0;
                 assign( buf );
             }

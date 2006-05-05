@@ -13,7 +13,6 @@ enum FfpUniformType
     FFP_TRANSFORM_WORLD,
     FFP_TRANSFORM_VIEW,
     FFP_TRANSFORM_PROJ,
-    FFP_VIEWPORT,
     FFP_LIGHT0_POS,
     FFP_LIGHT0_DIFFUSE,
     FFP_MATERIAL_DIFFUSE,
@@ -42,13 +41,12 @@ static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
         "FFP_TRANSFORM_WORLD",
         "FFP_TRANSFORM_VIEW",
         "FFP_TRANSFORM_PROJ",
-        "FFP_VIEWPORT",
         "FFP_LIGHT0_POS",
         "FFP_LIGHT0_DIFFUSE",
         "FFP_MATERIAL_DIFFUSE",
         "FFP_MATERIAL_SPECULAR",
     };
-    static const int32_t n = (int32_t)( sizeof(sTable)/sizeof(sTable[0]) );
+    static const int32_t n = (int32_t)GN_ARRAY_COUNT( sTable );
 
     for( int32_t i = 0; i < n; ++i )
     {
@@ -650,7 +648,6 @@ void GN::gfx::Effect::sSetFfpUniform( int32_t type, const UniformData & data )
                 GN_ERROR( "FFP_TRANSFORM_PROJ only accepts matrix type." );
             }
 
-        case FFP_VIEWPORT :
         case FFP_LIGHT0_POS :
         case FFP_LIGHT0_DIFFUSE :
         case FFP_MATERIAL_DIFFUSE :

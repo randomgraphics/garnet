@@ -56,7 +56,7 @@ static inline GN::StrA sGetAppDir()
 #elif GN_POSIX
     char linkName[MAX_PATH_LENGTH+1];
     char realPath[MAX_PATH_LENGTH+1];
-    sprintf( linkName, "/proc/%d/exe", getpid() );
+    GN::strPrintf( linkName, MAX_PATH_LENGTH, "/proc/%d/exe", getpid() );
     if( 0 == realpath( linkName, realPath) )
     {
         GN_ERROR( "Fail to get real path of file '%s'.", linkName );

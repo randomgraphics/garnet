@@ -108,6 +108,28 @@ namespace GN
     //!
     //! stream operator
     //!
+    inline File & operator<<( File & fp, int i )
+    {
+        char buf[256];
+        strPrintf( buf, 256, "%d", i );
+        fp.write( buf, strLen(buf) );
+        return fp;
+    }
+
+    //!
+    //! stream operator
+    //!
+    inline File & operator<<( File & fp, size_t s )
+    {
+        char buf[256];
+        strPrintf( buf, 256, "%Iu", s );
+        fp.write( buf, strLen(buf) );
+        return fp;
+    }
+
+    //!
+    //! stream operator
+    //!
     inline File & operator<<( File & fp, const char * s )
     {
         if( 0 == s ) return fp;
@@ -136,12 +158,16 @@ namespace GN
         //!
         //! constructor
         //!
-        StdFile( FILE * fp ) : mFile(fp) { GN_ASSERT(fp); }
+        StdFile( FILE * fp );
 
         // from File
     public:
         size_t read( void *, size_t );
         size_t write( const void * buffer, size_t size );
+        bool   eof() const;
+        bool   seek( int, FileSeekMode );
+        size_t tell() const;
+        size_t size() const;
     };
 
     //!

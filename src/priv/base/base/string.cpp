@@ -6,7 +6,31 @@
 //
 // -----------------------------------------------------------------------------
 void
-GN::strPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
+GN::strPrintf( char * buf, size_t bufSize, const char * fmt, ... )
+{
+    va_list arglist;
+    va_start( arglist, fmt );
+    strVarPrintf( buf, bufSize, fmt, arglist );
+    va_end( arglist );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::strPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, ... )
+{
+    va_list arglist;
+    va_start( arglist, fmt );
+    strVarPrintf( buf, bufSize, fmt, arglist );
+    va_end( arglist );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void
+GN::strVarPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
 {
     if ( buf && bufSize )
     {
@@ -25,7 +49,7 @@ GN::strPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
 //
 // -----------------------------------------------------------------------------
 void
-GN::strPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args )
+GN::strVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list args )
 {
     if ( buf && bufSize )
     {

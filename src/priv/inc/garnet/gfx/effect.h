@@ -363,6 +363,11 @@ namespace GN { namespace gfx {
         }
 
         //!
+        //! setup the descriptor from XML string
+        //!
+        bool fromXml( const char * str, size_t size = 0 );
+
+        //!
         //! Get uniform by name.
         //! \param name
         //!     MUST be a valid uniform name.
