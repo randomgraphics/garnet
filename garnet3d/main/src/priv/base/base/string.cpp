@@ -180,51 +180,31 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 // -----------------------------------------------------------------------------
 size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 {
-    if( 0 == o || 0 == os )
+    StrW wcs;
+    mbs2wcs( wcs, i, is );
+    if( o )
     {
-        // calculate required size
-        if( 0 == i ) return 0;
-        if( 0 == is ) is = strLen( i );
-#if GN_MSVC8
-        size_t sz;
-        if( 0 != mbstowcs_s( &sz, 0, 0, i, is ) ) return 0;
-        return sz;
-#else
-        size_t sz = mbstowcs( i, is );
-        if( (size_t)-1 == sz ) return 0;
-        return sz;
-#endif
+        if( os > wcs.size() )
+        {
+            memcpy( o, wcs.cptr(), sizeof(wchar_t)*wcs.size() );
+            o[wcs.size()] = 0;
+            return wcs.size();
+        }
+        else if( os > 0 )
+        {
+            --os;
+            memcpy( o, wcs.cptr(), sizeof(wchar_t)*os );
+            o[os] = 0;
+            return os;
+        }
+        else
+        {
+            return 0;
+        }
     }
     else
     {
-        if( 0 == i )
-        {
-            *o = 0;
-            return 0;
-        }
-        if( 0 == is ) is = strLen(i);
-#if GN_MSVC8
-        size_t sz;
-        if( 0 != mbstowcs_s( &sz, o, os, i, is ) )
-        {
-            *o = 0;
-            return 0;
-        }
-        return sz;
-#else
-        GN_TODO( "not being tested!" );
-        std::vector<wchar_t> buf(is+1);
-        size_t sz = mbstowcs( &buf[0], i, is );
-        if( (size_t)-1 == sz )
-        {
-            *o = 0;
-            return 0;
-        }
-        if( sz >= os ) sz = os - 1;
-        memcpy( o, &buf[0], sz*2 );
-        o[sz-1] = 0;
-        return sz;
-#endif
+        return wcs.size();
     }
 }
 
@@ -239,11 +219,18 @@ void GN::mbs2wcs( StrW & o, const char * i, size_t l )
     o.setCaps( l + 1 );
 #if GN_MSVC8
     size_t ol;
-    ::mbstowcs_s( &ol, o.mPtr, l+1, i, l );
-    l = ol;
+    if( 0 != ::mbstowcs_s( &ol, o.mPtr, l+1, i, l ) )
+    {
+        o.clear();
+    }
+    else
+    {
+        o.mPtr[ol] = 0;
+        while( ol > 0 && 0 == o.mPtr[ol] ) --ol;
+        o.mCount = ol+1;
+    }
 #else
     l = ::mbstowcs( o.mPtr, i, l );
-#endif
     if( (size_t)-1 == l || 0 == l )
     {
         o.clear();
@@ -253,4 +240,5 @@ void GN::mbs2wcs( StrW & o, const char * i, size_t l )
         o.mPtr[l] = 0;
         o.mCount = l;
     }
+#endif
 }

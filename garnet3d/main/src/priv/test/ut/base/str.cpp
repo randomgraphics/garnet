@@ -8,6 +8,30 @@ class StringTest : public CxxTest::TestSuite
 {
 public:
 
+    void testMbs2wcs()
+    {
+        const char * mbs = "abc";
+        wchar_t wcs[6] = { L'\0', L'\0', L'\0', L'\0', L'5', L'\0' };
+
+        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 1, mbs, 0 ), 0 );
+        TS_ASSERT_EQUALS( wcs, L"" );
+
+        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 2, mbs, 0 ), 1 );
+        TS_ASSERT_EQUALS( wcs, L"a" );
+
+        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 3, mbs, 0 ), 2 );
+        TS_ASSERT_EQUALS( wcs, L"ab" );
+
+        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 4, mbs, 0 ), 3 );
+        TS_ASSERT_EQUALS( wcs, L"abc" );
+
+        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 5, mbs, 0 ), 3 );
+        TS_ASSERT_EQUALS( wcs, L"abc" );
+
+        TS_ASSERT_EQUALS( GN::mbs2wcs( wcs, 5, mbs, 100 ), 3 );
+        TS_ASSERT_EQUALS( wcs, L"abc" );
+    }
+
     void testStrPrintf()
     {
         char buf1[5] = { '\0', '\0', '\0', '4', '5' };
