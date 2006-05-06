@@ -888,6 +888,11 @@ namespace GN
     //!
     //! convert multi-byte string to wide char string
     //!
+    void mbs2wcs( wchar_t *, size_t, const char *, size_t );
+
+    //!
+    //! convert multi-byte string to wide char string
+    //!
     void mbs2wcs( StrW &, const char *, size_t );
 
     //!

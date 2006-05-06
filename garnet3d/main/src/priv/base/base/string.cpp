@@ -1,7 +1,5 @@
 #include "pch.h"
 
-#define VS8 (GN_MSVC&&_MSC_VER>=1400)
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -34,7 +32,7 @@ GN::strVarPrintf( char * buf, size_t bufSize, const char * fmt, va_list args )
 {
     if ( buf && bufSize )
     {
-#if VS8
+#if GN_MSVC8
         _vsnprintf_s( buf, bufSize, _TRUNCATE, fmt, args );
 #elif GN_MSVC
         _vsnprintf( buf, bufSize, fmt, args );
@@ -53,7 +51,7 @@ GN::strVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list ar
 {
     if ( buf && bufSize )
     {
-#if VS8
+#if GN_MSVC8
         _vsnwprintf_s( buf, bufSize, _TRUNCATE, fmt, args );
 #elif GN_MSVC
         _vsnwprintf( buf, bufSize, fmt, args );
@@ -75,7 +73,7 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
     if ( 0 == l ) l = strLen(i);
 
     o.setCaps( l + 1 );
-#if VS8
+#if GN_MSVC8
     size_t ol;
     ::wcstombs_s( &ol, o.mPtr, l+1, i, l );
     l = ol;
@@ -96,13 +94,20 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::mbs2wcs( wchar_t *, size_t, const char *, size_t )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::mbs2wcs( StrW & o, const char * i, size_t l )
 {
     if ( 0 == i ) { o.clear(); return; }
     if ( 0 == l ) l = strLen(i);
 
     o.setCaps( l + 1 );
-#if VS8
+#if GN_MSVC8
     size_t ol;
     ::mbstowcs_s( &ol, o.mPtr, l+1, i, l );
     l = ol;

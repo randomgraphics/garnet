@@ -30,11 +30,12 @@
 #undef GN_MSVC
 #define GN_MSVC 1
 #define GN_COMPILER "msvc"
+#define GN_MSVC8 (_MSC_VER >= 1400)
 // disable VC8 CRT warnings
-#if _MSC_VER >= 1400
-#ifndef _CRT_SECURE_NO_DEPRECATE
-#define _CRT_SECURE_NO_DEPRECATE
-#endif
+#if GN_MSVC8
+//#ifndef _CRT_SECURE_NO_DEPRECATE
+//#define _CRT_SECURE_NO_DEPRECATE
+//#endif
 #ifndef _CRT_NONSTDC_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
 #endif

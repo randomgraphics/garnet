@@ -45,13 +45,12 @@ GN::assertFunc(
 
 #if GN_MSWIN && GN_PC
     char buf[1024];
-    ::_snprintf( buf, 1023,
+    strPrintf( buf, 1024,
         "%s(%d)\n"
         "%s\n\n"
         "转入调试器？\n"
         "（如果选择Cancel，则以后这个Assert失败时将不再弹出对话框）",
         file?file:"", line, msg?msg:"" );
-    buf[1023] = 0;
     int ret = ::MessageBoxA(
         0,
         buf,
