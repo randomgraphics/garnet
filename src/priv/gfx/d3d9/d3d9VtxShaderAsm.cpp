@@ -108,7 +108,7 @@ bool GN::gfx::D3D9VtxShaderAsm::queryDeviceUniform( const char * name, HandleTyp
 
     unsigned int index;
 
-    if( 1 != strScanf( name+1, "%u", &index ) )
+    if( !str2Int<unsigned int>( index, name+1 ) )
     {
         GN_ERROR( "invalid register name: %s", name );
         return false;

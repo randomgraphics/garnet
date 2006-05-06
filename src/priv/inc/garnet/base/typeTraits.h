@@ -42,6 +42,18 @@ namespace GN
 #pragma warning(default:1595)
 #endif
         };
+
+        template<typename T> struct GetNumberSign {};
+        template<> struct GetNumberSign<int8_t>{ static const bool value = true; };
+        template<> struct GetNumberSign<uint8_t>{ static const bool value = false; };
+        template<> struct GetNumberSign<int16_t>{ static const bool value = true; };
+        template<> struct GetNumberSign<uint16_t>{ static const bool value = false; };
+        template<> struct GetNumberSign<int32_t>{ static const bool value = true; };
+        template<> struct GetNumberSign<uint32_t>{ static const bool value = false; };
+        template<> struct GetNumberSign<int64_t>{ static const bool value = true; };
+        template<> struct GetNumberSign<uint64_t>{ static const bool value = false; };
+        template<> struct GetNumberSign<float>{ static const bool value = true; };
+        template<> struct GetNumberSign<double>{ static const bool value = true; };
     }
     //! \endcond
 
@@ -111,6 +123,15 @@ namespace GN
         static const bool value =
             IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value;
     };
+
+    //! \name Integer type based on signed/unsigned and bit-width
+    //@{
+    template<typename T> struct NumberType
+    {
+        static const bool   sign = detail::GetNumberSign<T>::value;
+        static const size_t bitWidth = sizeof(T);
+    };
+    //@}
 }
 
 // *****************************************************************************
