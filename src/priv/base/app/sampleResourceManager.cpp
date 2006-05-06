@@ -5,10 +5,6 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
 
-#if GN_MSVC8
-#define sscanf sscanf_s
-#endif
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -235,8 +231,8 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         lang = LANG_OGL_ARB;
     }
     else if(
-        2 == ::sscanf( code, "// type=%s lang=%s", typeStr.get(), langStr.get() ) ||
-        2 == ::sscanf( code, "# type=%s lang=%s", typeStr.get(), langStr.get() ) )
+        2 == strScanf( code, "// type=%s lang=%s", typeStr.get(), langStr.get() ) ||
+        2 == strScanf( code, "# type=%s lang=%s", typeStr.get(), langStr.get() ) )
     {
         if( !str2ShaderType( type, typeStr ) )
         {

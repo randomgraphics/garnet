@@ -94,8 +94,54 @@ void GN::wcs2mbs( StrA & o, const wchar_t * i, size_t l )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::mbs2wcs( wchar_t *, size_t, const char *, size_t )
+size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 {
+    if( 0 == o || 0 == os )
+    {
+        // calculate required size
+        if( 0 == i ) return 0;
+        if( 0 == is ) is = strLen( i );
+#if GN_MSVC8
+        size_t sz;
+        if( 0 != mbstowcs_s( &sz, 0, 0, i, is ) ) return 0;
+        return sz;
+#else
+        size_t sz = mbstowcs( i, is );
+        if( (size_t)-1 == sz ) return 0;
+        return sz;
+#endif
+    }
+    else
+    {
+        if( 0 == i )
+        {
+            *o = 0;
+            return 0;
+        }
+        if( 0 == is ) is = strLen(i);
+#if GN_MSVC8
+        size_t sz;
+        if( 0 != mbstowcs_s( &sz, o, os, i, is ) )
+        {
+            *o = 0;
+            return 0;
+        }
+        return sz;
+#else
+        GN_TODO( "not being tested!" );
+        std::vector<wchar_t> buf(is+1);
+        size_t sz = mbstowcs( &buf[0], i, is );
+        if( (size_t)-1 == sz )
+        {
+            *o = 0;
+            return 0;
+        }
+        if( sz >= os ) sz = os - 1;
+        memcpy( o, &buf[0], sz*2 );
+        o[sz-1] = 0;
+        return sz;
+#endif
+    }
 }
 
 //

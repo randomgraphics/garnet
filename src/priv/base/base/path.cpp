@@ -34,7 +34,7 @@ static inline GN::StrA sPwd()
     return "game:";
 #else
     char buf[MAX_PATH_LENGTH+1];
-    getcwd( buf, MAX_PATH_LENGTH );
+    _getcwd( buf, MAX_PATH_LENGTH );
     buf[MAX_PATH_LENGTH] = 0;
     GN::StrA ret(buf);
     ret.trimRight( PATH_SEPARATOR );

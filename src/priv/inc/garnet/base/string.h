@@ -6,6 +6,7 @@
 //! \author  chenlee (2005.4.17)
 // *****************************************************************************
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <string>
 #include <ostream>
@@ -886,9 +887,24 @@ namespace GN
     wcs2mbs( const StrW & i ) { return wcs2mbs( i.cptr(), i.size() ); }
 
     //!
-    //! convert multi-byte string to wide char string
+    //! convert multi-byte string to wide char string.
     //!
-    void mbs2wcs( wchar_t *, size_t, const char *, size_t );
+    //! Normally, it returns number of wide characters written into output buffer, not including the null terminator.
+    //! If output wide-char buffer is NULL, it returns required size of wide-char buffer size in words, not including the null terminator.
+    //! If anything goes wrong, it'll return 0.
+    //! Note that ouput string is always null-terminated.
+    //!
+    //! \param obuf
+    //!     Output buffer. If NULL, this function will return required size of output buffer in words.
+    //! \param ocount
+    //!     Maximum of wide chars the ouput buffer can hold, including null terminator.
+    //! \param ibuf
+    //!     Input buffer. If NULL, this function will return zero.
+    //! \param icount
+    //!     character count in input buffer, not including null terminator. If zero,
+    //!     then input buffer must be a null-terminated string.
+    //!
+    size_t mbs2wcs( wchar_t * obuf, size_t ocount, const char * ibuf, size_t icount );
 
     //!
     //! convert multi-byte string to wide char string
@@ -913,6 +929,15 @@ namespace GN
     inline StrW
     mbs2wcs( const StrA & i ) { return mbs2wcs( i.cptr(), i.size() ); }
 }
+
+//!
+//! string scanf function. Currently, just a define.
+//!
+#if GN_MSVC8
+#define strScanf sscanf_s
+#else
+#define strScanf sscanf
+#endif
 
 // *****************************************************************************
 //                 End of string.h

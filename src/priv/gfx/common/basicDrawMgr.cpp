@@ -18,12 +18,7 @@ void GN::gfx::BasicRenderer::drawDebugTextA(
     ws = (wchar_t*)alloca( sizeof(wchar_t) * (len+1) );
 
     // convert mbs -> unicode
-    size_t wlen = mbstowcs( ws, s, len );
-    if( static_cast<size_t>(-1L) == wlen )
-    {
-        GN_ERROR( "fail to convert multi-byte string to unicode string!" );
-        return;
-    }
+    size_t wlen = mbs2wcs( ws, len, s, len );
     ws[wlen] = 0;
 
     // call UNICODE version of drawText()

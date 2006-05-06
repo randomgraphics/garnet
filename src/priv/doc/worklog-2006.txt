@@ -30,7 +30,6 @@ TODO
   - task manager/coordinator
 
 - p1
-  - remove security warnings of vs8
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
@@ -115,6 +114,9 @@ ISSUES
 
 WORKLOG
 =======
+
+- 2006.5.6
+  - remove security warnings of vs8
 
 - 2006.5.5
   - refine interface of File class:

@@ -316,7 +316,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
 
     // get uniform index
     unsigned int index;
-    if( 1 != sscanf( name+1, "%u", &index ) )
+    if( 1 != strScanf( name+1, "%u", &index ) )
     {
         GN_ERROR(
             "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"
