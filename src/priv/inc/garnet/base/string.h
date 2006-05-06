@@ -849,12 +849,23 @@ namespace GN
     bool str2Double( double &, const char *  );
 
     template<typename T> bool str2Int( T & i, const char * s );
-    template<int16_t> bool str2Int( int16_t & i, const char * s ) { return str2Int16( i, s ); }
-    template<uint16_t> bool str2Int( uint16_t & i, const char * s ) { return str2Uint16( i, s ); }
-    template<int32_t> bool str2Int( int32_t & i, const char * s ) { return str2Int32( i, s ); }
-    template<uint32_t> bool str2Int( uint32_t & i, const char * s ) { return str2Uint32( i, s ); }
-    template<int64_t> bool str2Int( int64_t & i, const char * s ) { return str2Int64( i, s ); }
-    template<uint64_t> bool str2Int( uint64_t & i, const char * s ) { return str2Uint64( i, s ); }
+
+    template<> inline bool str2Int<int16_t>( int16_t & i, const char * s ) { return str2Int16( i, s ); }
+    template<> inline bool str2Int<uint16_t>( uint16_t & i, const char * s ) { return str2Uint16( i, s ); }
+    template<> inline bool str2Int<int32_t>( int32_t & i, const char * s ) { return str2Int32( i, s ); }
+    template<> inline bool str2Int<uint32_t>( uint32_t & i, const char * s ) { return str2Uint32( i, s ); }
+    template<> inline bool str2Int<int64_t>( int64_t & i, const char * s ) { return str2Int64( i, s ); }
+    template<> inline bool str2Int<uint64_t>( uint64_t & i, const char * s ) { return str2Uint64( i, s ); }
+
+    template<> inline bool str2Int<int>( int & i, const char * s )
+    {
+        return str2Int32( *(int32_t*)&i, s );
+    }
+
+    template<> inline bool str2Int<unsigned int>( unsigned int & i, const char * s )
+    {
+        return str2Uint32( *(uint32_t*)&i, s );
+    }
 
     //@}
 

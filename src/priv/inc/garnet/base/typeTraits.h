@@ -124,14 +124,13 @@ namespace GN
             IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value;
     };
 
-    //! \name Integer type based on signed/unsigned and bit-width
-    //@{
-    template<typename T> struct NumberType
+    //!
+    //! Integer type based on signed/unsigned and bit-width
+    //!
+    template<typename T> struct SignedType
     {
-        static const bool   sign = detail::GetNumberSign<T>::value;
-        static const size_t bitWidth = sizeof(T);
+        static const bool value = detail::GetNumberSign<T>::value; //!< is signed or not?
     };
-    //@}
 }
 
 // *****************************************************************************
