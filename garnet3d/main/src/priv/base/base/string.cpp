@@ -64,6 +64,90 @@ GN::strVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list ar
     }
 }
 
+// *****************************************************************************
+//
+// *****************************************************************************
+
+#if GN_MSVC8
+#define sscanf sscanf_s
+#endif
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Int16( int16_t & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%hi", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Uint16( uint16_t & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%hu", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Int32( int32_t & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%i", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Uint32( uint32_t & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%u", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Int64( int64_t & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%I64i", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Uint64( uint64_t & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%I64u", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Float( float & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%f", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2Double( double & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    return 1 == sscanf( s, "%lf", &i );
+}
+
+// *****************************************************************************
+//
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------

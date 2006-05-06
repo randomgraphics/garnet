@@ -46,13 +46,33 @@ static inline bool sString2Bool( const GN::StrA & s, bool & b )
         return false;
     }
 }
-static inline bool sString2Int( const GN::StrA & s, int & i ) { return 1 == strScanf( s.cptr(), "%d", &i ); }
-static inline bool sString2Float( const GN::StrA & s, float & f ) { return 1 == strScanf( s.cptr(), "%f", &f ); }
-static inline bool sString2Pointer( const GN::StrA & s, const void* & p ) { return 1 == strScanf( s.cptr(), "%p", &p ); }
-static inline bool sString2Vector4( const GN::StrA & s, GN::Vector4f & v ) { return 4 == strScanf( s.cptr(), "(%f,%f,%f,%f)", &v.x, &v.y, &v.z, &v.w ); }
-
-static inline bool sVector42String( const GN::Vector4f & v, GN::StrA & s ) { s = GN::strFormat( "(%f,%f,%f,%f)", v.x, v.y, v.z, v.w ); return true; }
-
+static inline bool sString2Int( const GN::StrA & s, int & i )
+{
+    return GN::str2Int<int>( i, s.cptr() );
+}
+static inline bool sString2Float( const GN::StrA & s, float & f )
+{
+    return GN::str2Float( f, s.cptr() );
+}
+static inline bool sString2Pointer( const GN::StrA & s, const void* & p )
+{
+    size_t i;
+    bool r = GN::str2Int<size_t>( i, s.cptr() );
+    if( r ) p = (void*)i;
+    return r;
+}
+static inline bool sString2Vector4( const GN::StrA & s, GN::Vector4f & v )
+{
+#if GN_MSVC8
+#define sscanf sscanf_s
+#endif
+    return 4 == sscanf( s.cptr(), "(%f,%f,%f,%f)", &v.x, &v.y, &v.z, &v.w );
+}
+static inline bool sVector42String( const GN::Vector4f & v, GN::StrA & s )
+{
+    s = GN::strFormat( "(%f,%f,%f,%f)", v.x, v.y, v.z, v.w );
+    return true;
+}
 static inline bool sMatrix442String( const GN::Matrix44f & m, GN::StrA & s )
 {
     s = GN::strFormat(
