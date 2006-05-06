@@ -191,12 +191,13 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
     // output to debugger
 #if GN_MSWIN
     char buf[16384];
-    ::_snprintf( buf, 16383,
+    strPrintf(
+        buf,
+        16384,
         "%s(%d) : %s : %s\n",
         file, desc.line,
         sLevel2Str(desc.level).cptr(),
         msg );
-    buf[16383] = 0;
     ::OutputDebugStringA( buf );
 #endif
 }

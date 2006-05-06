@@ -1,5 +1,16 @@
 #include "pch.h"
 
+static FILE * sOpenFile( const char * filename, const char * mode )
+{
+#if GN_MSVC8
+    FILE * fp;
+    if( 0 != fopen_s( &fp, filename, mode ) ) return 0;
+    return fp;
+#else
+    return fopen( filename, mode );
+#endif
+}
+
 // *****************************************************************************
 //                   implementation of StdFile
 // *****************************************************************************
@@ -256,7 +267,7 @@ bool GN::AnsiFile::open( const StrA & filename, const StrA & mode )
     }
 
     // 打开文件
-    FILE * fp = ::fopen( filename.cptr(), mode.cptr() );
+    FILE * fp = sOpenFile( filename.cptr(), mode.cptr() );
     if( 0 == fp )
     {
         GN_ERROR( "fail to open file '%s' with mode '%s'!",

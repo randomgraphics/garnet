@@ -5,6 +5,10 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
 
+#if GN_MSVC8
+#define sscanf sscanf_s
+#endif
+
 //
 //
 // -----------------------------------------------------------------------------

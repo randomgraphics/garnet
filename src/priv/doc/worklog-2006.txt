@@ -31,7 +31,6 @@ TODO
 
 - p1
   - remove security warnings of vs8
-  - refine File::read()/write()
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net

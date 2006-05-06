@@ -46,6 +46,9 @@ static inline bool sString2Bool( const GN::StrA & s, bool & b )
         return false;
     }
 }
+#if GN_MSVC8
+#define sscanf sscanf_s
+#endif
 static inline bool sString2Int( const GN::StrA & s, int & i ) { return 1 == ::sscanf( s.cptr(), "%d", &i ); }
 static inline bool sString2Float( const GN::StrA & s, float & f ) { return 1 == ::sscanf( s.cptr(), "%f", &f ); }
 static inline bool sString2Pointer( const GN::StrA & s, const void* & p ) { return 1 == ::sscanf( s.cptr(), "%p", &p ); }

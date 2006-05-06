@@ -52,9 +52,23 @@ void GN::getEnv( StrA & result, const char * name )
     result.clear();
 #else
     if( strEmpty(name) )
+    {
         result.clear();
+    }
     else
+    {
+#if GN_MSVC8
+        char * value;
+        size_t sz;
+        if( 0 == _dupenv_s( &value, &sz, name ) )
+        {
+            result.assign( value, sz );
+            ::free( value );
+        }
+#else
         result.assign( ::getenv(name) );
+#endif
+    }
 #endif
 }
 
