@@ -21,7 +21,7 @@ static bool sCreateTextureFromFile( GN::gfx::Texture * & result, const GN::StrA 
     AutoObjPtr<char> group( new char[name.size()+1] );
     memset( filename, 0, name.size()+1 );
     memset( group, 0, name.size()+1 );
-    sscanf( name.cptr(), "%s %s", filename.get(), group.get() );
+    strScanf( name.cptr(), "%s %s", filename.get(), group.get() );
 
     // load texture file using CEGUI's resource provider
     CEGUI::ResourceProvider * rp = CEGUI::System::getSingleton().getResourceProvider();
@@ -62,7 +62,7 @@ static bool sCreateMemoryTexture( GN::gfx::Texture * & result, const GN::StrA & 
 
     // get texture size
     int w, h;
-    if( 2 != sscanf( name.cptr(), "CEGUITexture(%d,%d)", &w, &h ) )
+    if( 2 != strScanf( name.cptr(), "CEGUITexture(%d,%d)", &w, &h ) )
     {
         GN_ERROR( "Invalid texture name: %s", name.cptr() );
         return false;

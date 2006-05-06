@@ -34,7 +34,7 @@ void GN::putEnv( const char * name, const char * value )
         s.format( "%s=%s", name, value );
     }
 
-    if( 0 != ::putenv( const_cast<char*>(s.cptr()) ) )
+    if( 0 != _putenv( const_cast<char*>(s.cptr()) ) )
     {
         GN_ERROR( "fail to set environment '%s'.", s.cptr() );
     }
