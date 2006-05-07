@@ -5,6 +5,7 @@ sources = [
     'd3d9FormatUtils.cpp',
     'd3d9ShaderUtils.cpp',
     'effect.cpp',
+    'effectFromXml.cpp',
     'fakeRenderer.cpp',
     'image.cpp',
     'imageDDS.cpp',

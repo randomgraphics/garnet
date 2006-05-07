@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+	<parameters>
+		<texture name="tex0"/>
+		<texture name="tex1"/>
+		<uniform name="pvw" type="matrix44">
+			<matrix44>
+				1, 0, 0, 0,
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 1
+			</matrix44>
+		</uniform>
+		<uniform name="color" type="vector4"/>
+	</parameters>
+	<shaders>
+		<shader name="sh1">
+			<conditions>...</conditions>
+			...
+		</shader>
+		<shader name="sh2">...</shader>
+	</shaders>
+	<techniques>
+		<rsb>...</rsb>
+		<technique name="t0">...</technique>
+		<technique name="t1">...</technique>
+	</techniques>
+</effect>
