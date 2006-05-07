@@ -288,8 +288,50 @@ bool GN::gfx::EffectDesc::valid() const
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::EffectDesc::fromXml( const char * str, size_t size )
+{
+    GN_GUARD;
+
+    clear();
+
+    // shortcut for empty string
+    if( strEmpty(str) || 0 == size ) return true;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::EffectDesc::fromXml( File & fp )
+{
+    GN_GUARD;
+
+    std::vector<char> buf( fp.size() );
+    size_t sz;
+
+    if( !fp.read( &buf[0], fp.size(), &sz ) ) return false;
+
+    return fromXml( &buf[0], sz );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::EffectDesc::toXml( File & )
+{
+}
+
 // *****************************************************************************
-// Initialize and shutdown
+// Effect class
 // *****************************************************************************
 
 //

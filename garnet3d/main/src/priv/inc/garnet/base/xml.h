@@ -204,9 +204,14 @@ namespace GN
         ~XmlDocument() { releaseAllNodesAndAttribs(); }
 
         //!
-        //! parse xml document
+        //! parse xml string buffer
         //!
-        bool parseBuffer( XmlParseResult & result, const char * content, size_t length = 0 );
+        bool parse( XmlParseResult & result, const char * content, size_t length = 0 );
+
+        //!
+        //! parse xml file
+        //!
+        bool parse( XmlParseResult &, File & );
 
         //!
         //! write xml document to file. If compact if false, the format output with newline and ident

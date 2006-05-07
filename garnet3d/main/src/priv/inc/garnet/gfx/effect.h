@@ -368,6 +368,16 @@ namespace GN { namespace gfx {
         bool fromXml( const char * str, size_t size = 0 );
 
         //!
+        //! setup the descriptor from XML string
+        //!
+        bool fromXml( File & );
+
+        //!
+        //! write the descriptor to file
+        //!
+        void toXml( File & );
+
+        //!
         //! Get uniform by name.
         //! \param name
         //!     MUST be a valid uniform name.

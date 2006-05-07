@@ -57,7 +57,7 @@ public:
                 StrA name;
                 name.format( "c:/TOOLS/cegui/datafiles/%s", filename.c_str() );
 
-                AnsiFile fp;
+                DiskFile fp;
                 if( !fp.open( name, "rb" ) )
                 {
                     throw InvalidRequestException((utf8*)

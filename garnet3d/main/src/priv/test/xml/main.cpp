@@ -5,15 +5,11 @@ using namespace GN;
 
 bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
-    AnsiFile fp;
+    DiskFile fp;
 
     if( !fp.open( path::toNative(filename), "rt" ) ) return false;
 
-    std::vector<char> buf( fp.size() );
-
-    size_t sz;
-    if( !fp.read( &buf[0], fp.size(), &sz ) ) return false;
-    if( !doc.parseBuffer( xpr, &buf[0], sz ) )
+    if( !doc.parse( xpr, fp ) )
     {
         GN_ERROR( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
         return false;

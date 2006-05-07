@@ -84,7 +84,7 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
     GN_INFO( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
-    AnsiFile fp;
+    DiskFile fp;
     if( !fp.open( path::toNative(path), "rb" ) )
     {
         GN_ERROR( "Raw resource '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
@@ -195,7 +195,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     GN_INFO( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
-    AnsiFile fp;
+    DiskFile fp;
     if( !fp.open( path::toNative(path), "rt" ) )
     {
         GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
@@ -326,7 +326,7 @@ static bool sCreateTexture( Texture * & result, const StrA & name, void * )
     GN_INFO( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
-    AnsiFile fp;
+    DiskFile fp;
     if( !fp.open( path::toNative(path), "rb" ) )
     {
         GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );

@@ -214,13 +214,13 @@ size_t GN::StdFile::size() const
 }
 
 // *****************************************************************************
-//                   implementation of AnsiFile
+//                   implementation of DiskFile
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::AnsiFile::open(  const StrA & filename, int32_t openmode )
+bool GN::DiskFile::open(  const StrA & filename, int32_t openmode )
 {
     GN_GUARD;
 
@@ -252,7 +252,7 @@ bool GN::AnsiFile::open(  const StrA & filename, int32_t openmode )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::AnsiFile::open( const StrA & filename, const StrA & mode )
+bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
 {
     GN_GUARD;
 
@@ -291,7 +291,7 @@ bool GN::AnsiFile::open( const StrA & filename, const StrA & mode )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::AnsiFile::close() throw()
+void GN::DiskFile::close() throw()
 {
     GN_GUARD_ALWAYS;
 

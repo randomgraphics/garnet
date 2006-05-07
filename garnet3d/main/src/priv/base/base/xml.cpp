@@ -154,7 +154,7 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
             }
             if( e->child )
             {
-                fp << ">\n";
+                fp << ">";
                 if( e->child ) sCompactNodes( fp, e->child );
                 fp << "</" << e->name << ">";
             }
@@ -414,7 +414,7 @@ static void XMLCALL sCommentHandler( void * userData, const XML_Char * data )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::XmlDocument::parseBuffer(
+bool GN::XmlDocument::parse(
     XmlParseResult & result, const char * content, size_t length )
 {
     GN_GUARD;
@@ -461,6 +461,40 @@ bool GN::XmlDocument::parseBuffer(
 
     // success
     return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::XmlDocument::parse( XmlParseResult & result, File & fp )
+{
+    GN_GUARD;
+
+    result.errInfo.clear();
+    result.errLine = 0;
+    result.errColumn = 0;
+
+    if( 0 == fp.size() )
+    {
+        result.errInfo = "File is empty!";
+        return false;
+    }
+
+    std::vector<char> buf( fp.size() );
+
+    size_t sz;
+
+    GN_TODO( "use memory-mapped file to avoid extra data copy" );
+
+    if( !fp.read( &buf[0], fp.size(), &sz ) )
+    {
+        result.errInfo = "Fail to read the file!";
+        return false;
+    }
+
+    return parse( result, &buf[0], sz );
 
     GN_UNGUARD;
 }
