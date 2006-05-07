@@ -3,7 +3,7 @@
 	<parameters>
 		<texture name="tex0"/>
 		<texture name="tex1"/>
-		<uniform name="pvw" type="matrix44">
+		<uniform name="pvw">
 			<matrix44>
 				1, 0, 0, 0,
 				0, 1, 0, 0,
@@ -11,10 +11,10 @@
 				0, 0, 0, 1
 			</matrix44>
 		</uniform>
-		<uniform name="color" type="vector4"/>
+		<uniform name="color"/>
 	</parameters>
 	<shaders>
-		<shader name="sh1">
+		<shader name="sh1" type="vs">
 			<conditions>...</conditions>
 			...
 		</shader>

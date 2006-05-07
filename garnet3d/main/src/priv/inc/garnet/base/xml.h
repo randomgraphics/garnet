@@ -145,6 +145,32 @@ namespace GN
         XmlAttrib * attrib;  //!< pointer to first attribute
         StrA        name;    //!< element name
 
+        //!
+        //! find specific attribute of element
+        //!
+        XmlAttrib * findAttrib( const char * name )
+        {
+            for( XmlAttrib * a = attrib; a; a = a->next )
+            {
+                if( name == a->name ) return a;
+            }
+            return NULL;
+        }
+
+        //!
+        //! find specific child of element
+        //!
+        XmlElement * findChildElement( const char * name )
+        {
+            for( XmlNode * n = child; n; n = n->sibling )
+            {
+                XmlElement * e = n->toElement();
+                if( !e ) continue;
+                if( name == e->name ) return e;
+            }
+            return NULL;
+        }
+
     protected:
 
         //!
