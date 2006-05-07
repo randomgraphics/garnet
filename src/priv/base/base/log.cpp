@@ -171,9 +171,17 @@ void GN::detail::defaultLogImpl( const LogDesc & desc, const char * msg )
 
     if( !logFileName.empty() )
     {
-        AnsiFile fp;
-        if( fp.open( logFileName, "at" ) )
+#if GN_MSVC8
+        FILE * fp;
+        if( 0 == fopen_s( &fp, logFileName.cptr(), "at" ) )
+#else
+        FILE * fp = fopen( logFileName.cptr(), "at" );
+        if( fp )
+#endif
+        {
             sDoPrint( fp, file, desc.line, desc.level, msg );
+            fclose( fp );
+        }
     }
 
 #if !GN_XENON // Xenon has no console output

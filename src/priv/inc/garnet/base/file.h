@@ -50,37 +50,42 @@ namespace GN
         //!
         //! 读取size个字节到buffer中
         //!
-        virtual bool read( void * /*buffer*/, size_t /*size*/, size_t * /*readen*/ ) { return false; }
+        virtual bool read( void * /*buffer*/, size_t /*size*/, size_t * /*readen*/ ) = 0;
 
         //!
         //! 向文件中写入size个字节
         //!
         //! \return   -1 means failed
         //!
-        virtual bool write( const void * /*buffer*/, size_t /*size*/, size_t * /*written*/ ) { return false; }
+        virtual bool write( const void * /*buffer*/, size_t /*size*/, size_t * /*written*/ ) = 0;
 
         //!
         //! 是否已经到文件结尾. Return true, if something goes wrong.
         //!
-        virtual bool eof() const { return true; }
+        virtual bool eof() const = 0;
 
         //!
         //! 设定文件读写游标的位置
         //!
         //! \return   return false if error
         //!
-        virtual bool seek( int /*offset*/, FileSeekMode /*origin*/ ) { return false; }
+        virtual bool seek( int /*offset*/, FileSeekMode /*origin*/ ) = 0;
 
         //!
         //! 返回当前文件读写游标的位置. Return 0 if something goes wrong.
         //!
         //! \return
-        virtual size_t tell() const { return 0; }
+        virtual size_t tell() const = 0;
 
         //!
         //! 返回文件的总长度. Return 0 if something goes wrong.
         //!
-        virtual size_t size() const { return 0; }
+        virtual size_t size() const = 0;
+
+        //!
+        //! get memory mapping of the file content. Return NULL if failed.
+        //!
+        virtual void * map( size_t offset, size_t length, bool readonly ) = 0;
 
         //!
         //! return file name string
@@ -191,18 +196,19 @@ namespace GN
         bool seek( int, FileSeekMode );
         size_t tell() const;
         size_t size() const;
+        void * map( size_t, size_t, bool ) { GN_ERROR( "StdFile: does not support map() operation!" ); return 0; }
     };
 
     //!
-    //! file class using ANSI file functions
+    //! disk file class
     //!
-    class AnsiFile : public StdFile
+    class DiskFile : public StdFile
     {
         size_t mSize;
     public:
 
-        AnsiFile() : StdFile(0), mSize(0) {}
-        ~AnsiFile() { close(); }
+        DiskFile() : StdFile(0), mSize(0) {}
+        ~DiskFile() { close(); }
 
         //!
         //! open a file
@@ -270,6 +276,15 @@ namespace GN
         bool seek( int offset, FileSeekMode origin );
         size_t tell() const { return mPtr - mStart; }
         size_t size() const { return mSize; }
+        void * map( size_t offset, size_t length, bool )
+        {
+            if( offset >= mSize || (offset + length) > mSize )
+            {
+                GN_ERROR( "invalid mapping range!" );
+                return 0;
+            }
+            return mStart + offset;
+        }
         //@}
     };
 
@@ -301,6 +316,15 @@ namespace GN
         bool seek( int offset, FileSeekMode origin );
         size_t tell() const { return mCursor; }
         size_t size() const { return mBuffer.size(); }
+        void * map( size_t offset, size_t length, bool )
+        {
+            if( offset >= mBuffer.size() || (offset + length) > mBuffer.size() )
+            {
+                GN_ERROR( "invalid mapping range!" );
+                return 0;
+            }
+            return &mBuffer[offset];
+        }
         //@}
     };
 
