@@ -97,7 +97,7 @@ bool GN::StdFile::eof() const
         return true;
     }
 
-    return 0 != ::feof( mFile );
+    return 0 != feof( mFile );
 
     GN_UNGUARD;
 }

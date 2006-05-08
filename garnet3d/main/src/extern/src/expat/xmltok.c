@@ -4,7 +4,11 @@
 
 #include <stddef.h>
 
-#ifdef _WIN32
+#if defined(__CYGWIN__)
+#include "cygwinconfig.h"
+#elif defined(_XBOX_) && _XBOX_VER >= 200
+#include "xb2config.h"
+#elif defined(_WIN32)
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
 #include "macconfig.h"
