@@ -96,7 +96,7 @@ bool GN::str2Uint16( uint16_t & i, const char * s )
 bool GN::str2Int32( int32_t & i, const char * s )
 {
     if( strEmpty(s) ) return false;
-    return 1 == sscanf( s, "%i", &i );
+    return 1 == sscanf( s, "%li", &i );
 }
 
 //
@@ -105,7 +105,7 @@ bool GN::str2Int32( int32_t & i, const char * s )
 bool GN::str2Uint32( uint32_t & i, const char * s )
 {
     if( strEmpty(s) ) return false;
-    return 1 == sscanf( s, "%u", &i );
+    return 1 == sscanf( s, "%lu", &i );
 }
 
 //
@@ -114,7 +114,7 @@ bool GN::str2Uint32( uint32_t & i, const char * s )
 bool GN::str2Int64( int64_t & i, const char * s )
 {
     if( strEmpty(s) ) return false;
-    return 1 == sscanf( s, "%I64i", &i );
+    return 1 == sscanf( s, "%lli", &i );
 }
 
 //
@@ -123,7 +123,7 @@ bool GN::str2Int64( int64_t & i, const char * s )
 bool GN::str2Uint64( uint64_t & i, const char * s )
 {
     if( strEmpty(s) ) return false;
-    return 1 == sscanf( s, "%I64u", &i );
+    return 1 == sscanf( s, "%llu", &i );
 }
 
 //

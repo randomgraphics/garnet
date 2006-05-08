@@ -146,8 +146,8 @@ namespace GN
     template<typename CHAR, typename ALLOCATOR = MemAllocator<CHAR> >
     class Str
     {
-        typedef typename CHAR CharType;
-        typedef typename ALLOCATOR AllocatorType;
+        typedef CHAR CharType;
+        typedef ALLOCATOR AllocatorType;
 
         CharType * mPtr;   //!< string buffer pointer.
         size_t     mCount; //!< How many charecters in the string, not including null end.

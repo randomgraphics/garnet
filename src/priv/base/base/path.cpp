@@ -18,11 +18,16 @@
 // *****************************************************************************
 
 #if GN_MSWIN
-#define MAX_PATH_LENGTH MAX_PATH
 #define PATH_SEPARATOR '\\'
 #else
-#define MAX_PATH_LENGTH PATH_MAX
 #define PATH_SEPARATOR '/'
+#endif
+
+#if GN_MSVC
+#define MAX_PATH_LENGTH MAX_PATH
+#define getcwd _getcwd
+#else
+#define MAX_PATH_LENGTH PATH_MAX
 #endif
 
 //
@@ -34,7 +39,7 @@ static inline GN::StrA sPwd()
     return "game:";
 #else
     char buf[MAX_PATH_LENGTH+1];
-    _getcwd( buf, MAX_PATH_LENGTH );
+    getcwd( buf, MAX_PATH_LENGTH );
     buf[MAX_PATH_LENGTH] = 0;
     GN::StrA ret(buf);
     ret.trimRight( PATH_SEPARATOR );

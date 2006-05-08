@@ -39,77 +39,77 @@ namespace GN
     //!
     //! STL allocator that use garnet memory management routines.
     //!
-    template<class T>
-	class MemAllocator
-	{
+    template<typename T>
+    class MemAllocator
+    {
         //! \cond NEVER
     public:
-    	typedef typename T         value_type;
-    	typedef size_t             size_type;
-    	typedef ptrdiff_t          difference_type;
-    	typedef const value_type * const_pointer;
-    	typedef const value_type & const_reference;
-    	typedef value_type *       pointer;
-    	typedef value_type &       reference;
+        typedef T                  value_type;
+        typedef size_t             size_type;
+        typedef ptrdiff_t          difference_type;
+        typedef const value_type * const_pointer;
+        typedef const value_type & const_reference;
+        typedef value_type *       pointer;
+        typedef value_type &       reference;
 
-    	template<class T2>
+        template<class T2>
         struct rebind
         {
-    		typedef MemAllocator<T2> other;
-    	};
+            typedef MemAllocator<T2> other;
+        };
 
-    	MemAllocator() GN_NOTHROW() {}
+        MemAllocator() GN_NOTHROW() {}
 
         ~MemAllocator() GN_NOTHROW() {}
 
-    	MemAllocator( const MemAllocator<T> & ) GN_NOTHROW() {}
+        MemAllocator( const MemAllocator<T> & ) GN_NOTHROW() {}
 
-    	template<class T2>
-    	MemAllocator( const MemAllocator<T2> & ) GN_NOTHROW() {}
+        template<class T2>
+        MemAllocator( const MemAllocator<T2> & ) GN_NOTHROW() {}
 
-    	template<class T2>
-    	MemAllocator<T> & operator=( const MemAllocator<T2> & )
-		{
-			return *this;
-		}
+        template<class T2>
+        MemAllocator<T> & operator=( const MemAllocator<T2> & )
+        {
+            return *this;
+        }
 
-    	pointer address( reference x ) const
-		{
-			return &x;
-		}
+        pointer address( reference x ) const
+        {
+            return &x;
+        }
 
-    	const_pointer address( const_reference x ) const
-		{
-			return &x;
-		}
+        const_pointer address( const_reference x ) const
+        {
+            return &x;
+        }
 
-    	pointer allocate( size_type count, const void * = 0 )
-    	{
+        pointer allocate( size_type count, const void * = 0 )
+        {
             return (pointer)memAlloc( count * sizeof(T) );
-    	}
+        }
 
-    	void deallocate( pointer ptr, size_type )
-    	{
+        void deallocate( pointer ptr, size_type )
+        {
             memFree( ptr );
-    	}
+        }
 
-    	void construct( pointer ptr, const T & x )
-    	{
+        void construct( pointer ptr, const T & x )
+        {
             new (ptr) T(x);
-    	}
+        }
 
-    	void destroy( pointer ptr )
-    	{
+        void destroy( pointer ptr )
+        {
             ptr->T::~T();
-    	}
+        }
 
-    	size_type max_size() const GN_NOTHROW()
-    	{
-        	size_type count = (size_t)(-1) / sizeof(T);
-        	return ( 0 < count ? count : 1 );
-    	}
+        size_type max_size() const GN_NOTHROW()
+        {
+            size_type count = (size_t)(-1) / sizeof(T);
+            return ( 0 < count ? count : 1 );
+        }
         //! \endcond
-	};
+    };
 
     //!
     //! Fixed sized memory allocator
