@@ -232,10 +232,12 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
     else if(
 #if GN_MSVC8
-#pragma warning(disable:4996)
-#endif
+        2 == sscanf_s( code, "// type=%s lang=%s", typeStr.get(), readen, langStr.get(), readen ) ||
+		2 == sscanf_s( code, "# type=%s lang=%s", typeStr.get(), readen, langStr.get(), readen ) )
+#else
         2 == sscanf( code, "// type=%s lang=%s", typeStr.get(), langStr.get() ) ||
         2 == sscanf( code, "# type=%s lang=%s", typeStr.get(), langStr.get() ) )
+#endif
     {
         if( !str2ShaderType( type, typeStr ) )
         {
