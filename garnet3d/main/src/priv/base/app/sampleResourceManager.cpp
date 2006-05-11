@@ -33,7 +33,7 @@ static GN::StrA sSearchResourceFile( const StrA & name )
     CHECK_PATH( ( getEnv("GARNET_ROOT"), "bin/media", name ) );
 
     // hack for special cases
-    CHECK_PATH( ( "app:../../../../../../media", name ) ); // for temporary build binaries
+    CHECK_PATH( ( "app:../../../../../../../media", name ) ); // for temporary build binaries
 
     // resource not found.
     return StrA::EMPTYSTR;
@@ -213,8 +213,8 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
-	fp.close();
     GN_ASSERT( readen <= fp.size() );
+	fp.close();
     buf[readen] = 0;
 
     const char * code = buf;
@@ -232,7 +232,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
     else if(
 #if GN_MSVC8
-#define sscanf sscanf_s
+#pragma warning(disable:4996)
 #endif
         2 == sscanf( code, "// type=%s lang=%s", typeStr.get(), langStr.get() ) ||
         2 == sscanf( code, "# type=%s lang=%s", typeStr.get(), langStr.get() ) )
