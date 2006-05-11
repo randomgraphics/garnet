@@ -18,9 +18,6 @@ BUGS
 - ATI depth texture doesn't work when backbuffer size is smaller then texture 
   size (only happens when using debug DX runtime. So seems a DX bug)
 
-- sscanf_s() may crash: replace sscanf() with sscanf_s() in 
-  sampleResourceManager.cpp, then run GNsampleDepthTexture.exe
-
 TODO
 ====
 
