@@ -328,7 +328,7 @@ namespace GN { namespace gfx
         bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
         void contextDeviceDispose();
-        void contextDeviceDestroy() { clearContextResources(); }
+        void contextDeviceDestroy();
 
         GN_INLINE void bindContext(
             const RendererContext & newContext,

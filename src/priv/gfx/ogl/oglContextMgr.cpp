@@ -180,8 +180,11 @@ void GN::gfx::OGLRenderer::contextDeviceDispose()
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::contextDeviceDestroy()
 {
+    GN_GUARD;
     _GNGFX_DEVICE_TRACE();
-    clearContextResources(); 
+    mContext.resetToDefault();
+    clearContextResources();
+    GN_UNGUARD;
 }
 
 // *****************************************************************************

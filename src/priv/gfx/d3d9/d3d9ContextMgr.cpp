@@ -162,7 +162,19 @@ void GN::gfx::D3D9Renderer::contextDeviceDispose()
 
     GN_UNGUARD;
 }
- 
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9Renderer::contextDeviceDestroy()
+{
+    GN_GUARD;
+    _GNGFX_DEVICE_TRACE();
+    mContext.resetToDefault();
+    clearContextResources();
+    GN_UNGUARD;
+}
+
 // *****************************************************************************
 // from Renderer
 // *****************************************************************************
