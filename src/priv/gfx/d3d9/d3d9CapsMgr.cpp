@@ -310,12 +310,12 @@ bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, ShadingLanguage lang
         case LANG_D3D_HLSL :
             if( VERTEX_SHADER == type )
             {
-                return 0 != ( getCaps( CAPS_VS ) & VSCAPS_D3D_ALL );
+                return 0 != getCaps( CAPS_VS );
             }
             else
             {
                 GN_ASSERT( PIXEL_SHADER == type );
-                return 0 != ( getCaps( CAPS_PS ) & VSCAPS_D3D_ALL );
+                return 0 != getCaps( CAPS_PS );
             }
 
         // TODO: Check Cg shader caps
