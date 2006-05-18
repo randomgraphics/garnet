@@ -14,9 +14,11 @@
 		<uniform name="color"/>
 	</parameters>
 	<shaders>
-		<shader name="sh1" type="vs">
+		<shader name="sh1" type="vs" lang="D3D_ASM" hints="...">
 			<conditions>...</conditions>
-			...
+		    <texref name="tex0" stage="0"/>
+		    <uniref name="pvw" binding="c0"/>
+			<code><![CDATA[]]></code>
 		</shader>
 		<shader name="sh2">...</shader>
 	</shaders>

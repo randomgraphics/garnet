@@ -562,7 +562,7 @@ namespace GN { namespace gfx
         {
             for( int i = 0; i < 2; ++i )
             {
-                if( 0 == ::strcmp(str,sTable[i]) )
+                if( 0 == strCmp( str, sTable[i] ) )
                 {
                     type = static_cast<ShaderType>(i);
                     return true;
@@ -628,7 +628,7 @@ namespace GN { namespace gfx
         {
             for( int i = 0; i < 5; ++i )
             {
-                if( 0 == ::strcmp(str,sTable[i]) )
+                if( 0 == strCmp(str,sTable[i]) )
                 {
                     lang = static_cast<ShadingLanguage>(i);
                     return true;
