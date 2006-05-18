@@ -1,0 +1,22 @@
+OPENNING
+========
+
+- Startup of GFXOGL module sometimes very slow:
+  - pin down to the 1st call to opengl function in oglWinDisp.cpp
+  - It seems caused by remote symbol loading
+
+- Render target image is up-side-down in OGL, comparing with D3D.
+  - See GNsampleRenderToTexture for an example.
+
+- GNsampleRenderToTexture:
+  - black screen on cygwin.
+
+- When using non-power-of-two texture, ATI x1000 card runs very very slow. Check it!
+
+- Quad renderer is slow on HP notebook with intel graphics chip.
+
+CLOSED
+======
+
+- ATI depth texture doesn't work when backbuffer size is smaller then texture size (only happens when using debug DX runtime. So seems a DX bug)
+  - FIXED (2006.5.18): upgrade ATI driver to 6.4
