@@ -228,15 +228,6 @@ namespace GN { namespace gfx
         VSCAPS_D3D_XVS   = 1<<4, //!< D3D xvs 3.0 (Xenon only)
         VSCAPS_OGL_ARB1  = 1<<5, //!< OpenGL ARB vertex program 1.0
         VSCAPS_OGL_GLSL  = 1<<6, //!< OpenGL shading language
-
-        //!
-        //! alias for all D3D vertex shader caps
-        //!
-        VSCAPS_D3D_ALL = VSCAPS_D3D_1_1 |
-                         VSCAPS_D3D_2_0 |
-                         VSCAPS_D3D_2_X |
-                         VSCAPS_D3D_3_0 |
-                         VSCAPS_D3D_XVS
     };
 
     //!
@@ -254,18 +245,6 @@ namespace GN { namespace gfx
         PSCAPS_D3D_XVS   = 1<<7, //!< D3D XPS 3.0 (Xenon only)
         PSCAPS_OGL_ARB1  = 1<<8, //!< OpenGL ARB pixel program 1.0
         PSCAPS_OGL_GLSL  = 1<<9, //!< OpenGL shading language
-
-        //!
-        //! alias for all D3D pixel shader caps
-        //!
-        PSCAPS_D3D_ALL = PSCAPS_D3D_1_1 |
-                         PSCAPS_D3D_1_2 |
-                         PSCAPS_D3D_1_3 |
-                         PSCAPS_D3D_1_4 |
-                         PSCAPS_D3D_2_0 |
-                         PSCAPS_D3D_2_X |
-                         PSCAPS_D3D_3_0 |
-                         PSCAPS_D3D_XVS
     };
 
     //!

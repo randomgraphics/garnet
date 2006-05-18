@@ -24,7 +24,13 @@
 	</shaders>
 	<techniques>
 		<rsb>...</rsb>
-		<technique name="t0">...</technique>
+		<technique name="t0">
+		    <rsb>...</rsb>
+		    <pass vs="sh1" ps="ffp"><!-- pass 0 -->
+		        <rsb>...</rsb>
+		    </pass>
+		    <pass/><!-- pass 1 -->
+		</technique>
 		<technique name="t1">...</technique>
 	</techniques>
 </effect>

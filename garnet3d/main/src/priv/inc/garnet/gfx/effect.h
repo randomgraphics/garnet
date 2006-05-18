@@ -378,6 +378,15 @@ namespace GN { namespace gfx {
         void toXml( File & );
 
         //!
+        //! Find uniform by name. Return NULL if not found.
+        //!
+        const UniformDesc * findUniform( const StrA & name ) const
+        {
+            std::map<StrA,UniformDesc>::const_iterator i = uniforms.find( name );
+            return ( uniforms.end() != i ) ? &i->second : NULL;
+        }
+
+        //!
         //! Get uniform by name.
         //! \param name
         //!     MUST be a valid uniform name.
@@ -387,6 +396,36 @@ namespace GN { namespace gfx {
             std::map<StrA,UniformDesc>::const_iterator i = uniforms.find( name );
             GN_ASSERT( uniforms.end() != i );
             return i->second;
+        }
+
+        //!
+        //! Find texture by name. Return NULL if not found.
+        //!
+        const TextureDesc * findTexture( const StrA & name ) const
+        {
+            std::map<StrA,TextureDesc>::const_iterator i = textures.find( name );
+            return ( textures.end() != i ) ? &i->second : NULL;
+        }
+
+        //!
+        //! Get texture by name.
+        //! \param name
+        //!     MUST be a valid texture name.
+        //!
+        const TextureDesc & getTexture( const StrA & name ) const
+        {
+            std::map<StrA,TextureDesc>::const_iterator i = textures.find( name );
+            GN_ASSERT( textures.end() != i );
+            return i->second;
+        }
+
+        //!
+        //! Find shader by name. Return NULL if not found.
+        //!
+        const ShaderDesc * findShader( const StrA & name ) const
+        {
+            std::map<StrA,ShaderDesc>::const_iterator i = shaders.find( name );
+            return ( shaders.end() != i ) ? &i->second : NULL;
         }
 
         //!

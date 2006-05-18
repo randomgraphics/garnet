@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+    <parameters>
+        <uniform name="color"/>
+        <uniform name="pvw">
+            <matrix44>
+                2,  0,  0, -1,
+                0, -2,  0,  1,
+                0,  0,  1,  0,
+                0,  0,  0,  1
+            </matrix44>
+        </uniform>
+    </parameters>
+    <shaders>
+
+        <!-- D3D ASM shader -->
+        <shader name="vs.1.1" type="VERTEX_SHADER" lang="D3D_ASM">
+            <conditions>...</conditions>
+            <uniref binding="c0" name="pvw"/>
+            <code><![CDATA[
+vs.1.1
+dcl_position v0
+m4x4 oPos, v0, c0
+]]>
+            </code>
+        </shader>
+
+        <shader name="ps.1.1" type="PIXEL_SHADER" lang="D3D_ASM">
+            <uniref binding="c0" name="color"/>
+            <code><![CDATA[
+ps.1.1
+mov r0, c0
+]]>
+            </code>
+        </shader>
+
+        <!-- OpenGL ARB program -->
+        <shader name="arbvp1" type="VERTEX_SHADER" lang="OGL_ARB">
+            <conditions>...</conditions>
+            <uniref binding="m0" name="pvw"/>
+            <code><![CDATA[
+!!ARBvp1.0
+PARAM pvw[4] = { state.matrix.program[0] };
+DP4 result.position.x, pvw[0], vertex.position;
+DP4 result.position.y, pvw[1], vertex.position;
+DP4 result.position.z, pvw[2], vertex.position;
+DP4 result.position.w, pvw[3], vertex.position;
+END
+]]>
+           </code>
+        </shader>
+
+        <shader name="arbfp1" type="PIXEL_SHADER" lang="OGL_ARB">
+            <conditions>...</conditions>
+            <uniref binding="l0" name="color"/>
+            <code><![CDATA[
+!!ARBfp1.0
+MOV result.color, program.local[0];
+END
+]]>
+            </code>
+        </shader>
+
+        <!-- Fixed functional pipeline -->
+        <shader name="fixvs" type="VERTEX_SHADER"/>
+        <shader name="fixps" type="PIXEL_SHADER"/>
+
+    </shaders>
+
+    <techniques>
+        <rsb
+            CULL_NODE="CULL_NONE"
+            DEPTH_WRITE="0"
+        />
+        <technique name="d3d">
+            <pass vs="vs.1.1" ps="ps.1.1"/>
+        </technique>
+        <technique name="ogl">
+            <pass vs="arbvp1" ps="arbfp1"/>
+        </technique>
+        <technique name="ffp">
+            <pass vs="fixvs" ps="fixps"/>
+        </technique>
+    </techniques>
+</effect>
