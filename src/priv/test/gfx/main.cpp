@@ -49,7 +49,7 @@ class Scene
                 "dcl_position v0 \n"
                 "m4x4 oPos, v0, c0";
             desc.shaders["vs.1.1"].uniforms["c0"] = "pvw";
-            //desc.shaders["vs.1.1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_VS ), EffectDesc::CondExp::sValue(VSCAPS_D3D_1_1) );
+            desc.shaders["vs.1.1"].conditions = EffectDesc::CondExp::sCombine( EffectDesc::CondExp::CHECK_SHADER_PROFILE, VERTEX_SHADER, "vs.1.1" );
 
             // init vs1
             desc.shaders["arbvp1"].type = VERTEX_SHADER;
