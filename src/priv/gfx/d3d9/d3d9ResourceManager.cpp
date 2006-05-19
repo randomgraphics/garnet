@@ -126,13 +126,6 @@ GN::gfx::D3D9Renderer::createShader(
 {
     GN_GUARD;
 
-    if( !supportShader( type, lang ) )
-    {
-        GN_ERROR( "Current renderer do not support shading language '%s' for shader type '%s'.",
-            shadingLanguage2Str(lang), shaderType2Str(type) );
-        return 0;
-    }
-
     switch( type )
     {
         case VERTEX_SHADER :

@@ -41,40 +41,6 @@ static uint32_t sCapsInit_PER_STAGE_CONSTANT( const D3DCAPS9 & d3dcaps )
     return D3DPMISCCAPS_PERSTAGECONSTANT & d3dcaps.PrimitiveMiscCaps;
 }
 //
-static uint32_t sCapsInit_PS( const D3DCAPS9 & d3dcaps )
-{
-    uint32_t result = 0;
-
-    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(3,0) )
-        result |= GN::gfx::PSCAPS_D3D_3_0;
-    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0) )
-        result |= GN::gfx::PSCAPS_D3D_2_0;
-    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4) )
-        result |= GN::gfx::PSCAPS_D3D_1_4;
-    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,3) )
-        result |= GN::gfx::PSCAPS_D3D_1_3;
-    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,2) )
-        result |= GN::gfx::PSCAPS_D3D_1_2;
-    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,1) )
-        result |= GN::gfx::PSCAPS_D3D_1_1;
-
-    return result;
-}
-//
-static uint32_t sCapsInit_VS( const D3DCAPS9 & d3dcaps )
-{
-    uint32_t result = 0;
-
-    if( d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0) )
-        result |= GN::gfx::VSCAPS_D3D_3_0;
-    if( d3dcaps.VertexShaderVersion >= D3DVS_VERSION(2,0) )
-        result |= GN::gfx::VSCAPS_D3D_2_0;
-    if( d3dcaps.VertexShaderVersion >= D3DVS_VERSION(1,1) )
-        result |= GN::gfx::VSCAPS_D3D_1_1;
-
-    return result;
-}
-//
 static uint32_t sD3D9CapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DPTEXTURECAPS_CUBEMAP & d3dcaps.TextureCaps );
@@ -282,48 +248,41 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, ShadingLanguage lang )
+bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, const StrA & profile )
 {
     GN_GUARD;
 
-    // check parameter
-    if( 0 > type || type >= NUM_SHADER_TYPES )
+    // get d3ddevcaps
+    D3DCAPS9 d3dcaps;
+    GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+
+    switch( type )
     {
-        GN_ERROR( "invalid shader usage!" );
-        return false;
-    }
-    if( 0 > lang || lang >= NUM_SHADING_LANGUAGES )
-    {
-        GN_ERROR( "invalid shading language!" );
-        return false;
-    }
+        case VERTEX_SHADER:
+            if( "vs_1_1" == profile ) return d3dcaps.VertexShaderVersion > D3DVS_VERSION(1,1);
+            else if( "vs_2_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(2,0);
+            else if( "vs_3_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0);
+#if GN_XENON
+            else if( "xvs" == profile ) return true;
+#endif
+            else return false;
+            break;
 
-    switch( lang )
-    {
-        // OGL shaders are always unsupported
-        case LANG_OGL_ARB :
-        case LANG_OGL_GLSL :
-            return false;
+        case PIXEL_SHADER:
+            if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion > D3DPS_VERSION(1,1);
+            else if( "ps_1_2" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,2);
+            else if( "ps_1_3" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,3);
+            else if( "ps_1_4" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4);
+            else if( "ps_2_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0);
+            else if( "ps_3_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(3,0);
+#if GN_XENON
+            else if( "xps" == profile ) return true;
+#endif
+            else return false;
+            break;
 
-        // DX shaders are always supported
-        case LANG_D3D_ASM :
-        case LANG_D3D_HLSL :
-            if( VERTEX_SHADER == type )
-            {
-                return 0 != getCaps( CAPS_VS );
-            }
-            else
-            {
-                GN_ASSERT( PIXEL_SHADER == type );
-                return 0 != getCaps( CAPS_PS );
-            }
-
-        // TODO: Check Cg shader caps
-        case LANG_CG :
-            return false;
-
-        default :
-            GN_ASSERT_EX( 0, "program should never reach here!" );
+        default:
+            GN_ERROR( "invalid shader type!" );
             return false;
     }
 

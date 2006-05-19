@@ -217,37 +217,6 @@ namespace GN { namespace gfx
     };
 
     //!
-    //! Vertex shader capability flags
-    //!
-    enum VSCaps
-    {
-        VSCAPS_D3D_1_1   = 1<<0, //!< DirectX vs.1.1
-        VSCAPS_D3D_2_0   = 1<<1, //!< DirectX vs.2.0
-        VSCAPS_D3D_2_X   = 1<<2, //!< DirectX vs.2.x
-        VSCAPS_D3D_3_0   = 1<<3, //!< DirectX vs.3.0
-        VSCAPS_D3D_XVS   = 1<<4, //!< D3D xvs 3.0 (Xenon only)
-        VSCAPS_OGL_ARB1  = 1<<5, //!< OpenGL ARB vertex program 1.0
-        VSCAPS_OGL_GLSL  = 1<<6, //!< OpenGL shading language
-    };
-
-    //!
-    //! Pixel shader capability flags
-    //!
-    enum PSCaps
-    {
-        PSCAPS_D3D_1_1   = 1<<0, //!< DirectX ps.1.1
-        PSCAPS_D3D_1_2   = 1<<1, //!< DirectX ps.1.2
-        PSCAPS_D3D_1_3   = 1<<2, //!< DirectX ps.1.3
-        PSCAPS_D3D_1_4   = 1<<3, //!< DirectX ps.1.4
-        PSCAPS_D3D_2_0   = 1<<4, //!< DirectX ps.2.0
-        PSCAPS_D3D_2_X   = 1<<5, //!< DirectX ps.2.x
-        PSCAPS_D3D_3_0   = 1<<6, //!< DirectX ps.3.0
-        PSCAPS_D3D_XVS   = 1<<7, //!< D3D XPS 3.0 (Xenon only)
-        PSCAPS_OGL_ARB1  = 1<<8, //!< OpenGL ARB pixel program 1.0
-        PSCAPS_OGL_GLSL  = 1<<9, //!< OpenGL shading language
-    };
-
-    //!
     //! ÇåÆÁ±êÖ¾
     //!
     enum ClearFlag
@@ -583,9 +552,14 @@ namespace GN { namespace gfx
         uint32_t getCaps( int32_t c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
 
         //!
-        //! Does specific shading language supported by hardware?
+        //! Check renderer support to specific shader profile. Profile tag could be:
+        //!     vs_1_1 vs_2_0 vs_2_x vs_3_0 xvs
+        //!     ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_x ps_3_0 xps
+        //!     arbvp1, arbfp1, glsl
         //!
-        virtual bool supportShader( ShaderType, ShadingLanguage ) = 0;
+        //! \note Profile tag is case sensitive.
+        //!
+        virtual bool supportShader( ShaderType, const StrA & ) = 0;
 
         //!
         //! Test compability of specific texture format

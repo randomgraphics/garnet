@@ -195,6 +195,29 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
 
     GN_ASSERT( !code.empty() );
 
+    // check device caps
+    if( GL_VERTEX_SHADER_ARB == mUsage )
+    {
+        if( !GLEW_ARB_vertex_shader ||
+            !GLEW_ARB_shader_objects ||
+            !GLEW_ARB_shading_language_100 )
+        {
+            GN_ERROR( "do not support GLSL vertex shader!" );
+            return false;
+        }
+    }
+    else
+    {
+        GN_ASSERT( GL_FRAGMENT_SHADER_ARB == mUsage );
+        if( !GLEW_ARB_fragment_shader ||
+            !GLEW_ARB_shader_objects ||
+            !GLEW_ARB_shading_language_100 )
+        {
+            GN_ERROR( "do not support GLSL fragment program!" );
+            return false;
+        }
+    }
+
     // generate new texture
     mHandle = glCreateShaderObjectARB( mUsage );
     if( 0 == mHandle )
