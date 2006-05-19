@@ -73,10 +73,17 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
 
     // setup viewport
     D3D10_VIEWPORT vp;
+#if D3D10_SDK_VERSION >= 28
     vp.TopLeftX = 0;
     vp.TopLeftY = 0;
     vp.Width = dd.width;
     vp.Height = dd.height;
+#else
+    vp.TopLeftX = 0.0f;
+    vp.TopLeftY = 0.0f;
+    vp.Width = (float)dd.width;
+    vp.Height = (float)dd.height;
+#endif
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
     mDevice->RSSetViewports( 1, &vp );
