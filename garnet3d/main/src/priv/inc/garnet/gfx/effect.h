@@ -21,7 +21,6 @@ namespace GN { namespace gfx {
             {
                 OPCODE, // opcode
                 VALUEI, // integer value
-                VALUEF, // float value
                 VALUES, // string value
             };
 
@@ -53,6 +52,15 @@ namespace GN { namespace gfx {
                 NUM_OPCODES,
             };
 
+            struct OpCodeDesc
+            {
+                OpCode    op;
+                TokenType dst;
+                TokenType src0;
+                TokenType src1;
+                int       numArgs;
+            };
+
             struct Token
             {
                 TokenType type;
@@ -60,7 +68,6 @@ namespace GN { namespace gfx {
                 {
                     int32_t opcode;
                     int32_t valueI;
-                    float   valueF;
                 };
                 StrA  valueS;
             };
@@ -70,13 +77,19 @@ namespace GN { namespace gfx {
             AutoArray<Token> mTokens;
 
             //!
+            //! Token descriptor table
+            //!
+            static const OpCodeDesc msOpCodeTable[NUM_OPCODES];
+
+            //!
+            //! Evaluate single opcode
+            //!
+            static bool sCalc( Token & result, int32_t op, const Token * s0, const Token * s1 );
+
+            //!
             //! Evaluate expression of [p,e)
             //!
             static bool sDoEval( Token & result, const Token * & p, const Token * e );
-
-            static int32_t sCalc( int32_t op, int32_t a0, int32_t a1 );
-
-            static void sCombine( CondExp & r, OpCode op, const CondExp & c1, const CondExp & c2 );
 
         public:
 
@@ -84,6 +97,31 @@ namespace GN { namespace gfx {
             //! Default ctor
             //!
             CondExp() {}
+
+            //!
+            //! Construct from integer
+            //!
+            CondExp( int32_t i )
+            {
+                mTokens.resize(1);
+                mTokens[0].type = VALUEI;
+                mTokens[0].valueI = i;
+            }
+
+            //!
+            //! Construct from string
+            //!
+            CondExp( const StrA & s )
+            {
+                mTokens.resize(1);
+                mTokens[0].type = VALUES;
+                mTokens[0].valueI = s;
+            }
+
+            //!
+            //! Construct expression from specific operation.
+            //!
+            CondExp( OpCode op, const CondExp & c1, const CondExp & c2 );
 
             //!
             //! Copy constructor
@@ -95,22 +133,16 @@ namespace GN { namespace gfx {
             }
 
             //!
-            //! Construct from string
-            //!
-            explicit CondExp( const char * s, size_t strLen = 0 ) { fromStr( s, strLen ); }
-
-            //!
             //! Evaluate the expression.
             //!
             //! - Return true for:
             //!   - empty expression
-            //!   - 0
-            //!   - 0.0
+            //!   - zero integer
             //!   - empty string
             //! - Return false for:
             //!   - invalid expression
-            //!   - non-zero integer or float
-            //!   - non-empty string.
+            //!   - non-zero integer
+            //!   - non-empty string
             //!
             bool evaluate() const;
 
@@ -156,45 +188,25 @@ namespace GN { namespace gfx {
                 return exp;
             }
 
-            //!
-            //! make new CondExp from gfxcaps
-            //!
-            static CondExp sValueI( uint32_t v )
-            {
-                CondExp exp;
-                exp.mTokens.resize(1);
-                exp.mTokens[0].type = VALUEI;
-                exp.mTokens[0].valueI = v;
-                return exp;
-            }
-
             static CondExp sBitAnd( const CondExp & a0, const CondExp & a1 )
             {
-                CondExp c;
-                sCombine( c, BIT_AND, a0, a1 );
-                return c;
+                return CondExp( BIT_AND, a0, a1 );
             }
 
             static CondExp sBitOr( const CondExp & a0, const CondExp & a1 )
             {
-                CondExp c;
-                sCombine( c, BIT_OR, a0, a1 );
-                return c;
+                return CondExp( BIT_OR, a0, a1 );
             }
 
             static CondExp sBitXor( const CondExp & a0, const CondExp & a1 )
             {
-                CondExp c;
-                sCombine( c, BIT_XOR, a0, a1 );
-                return c;
+                return CondExp( BIT_XOR, a0, a1 );
             }
 
 #define GN_CONDEXP_OPERATOR( x, y ) \
             CondExp operator x ( const CondExp & rhs ) const \
             { \
-                CondExp c; \
-                sCombine( c, y, *this, rhs ); \
-                return c; \
+                return CondExp( y, *this, rhs ); \
             }
 
             GN_CONDEXP_OPERATOR( <  , CMP_LT  );
