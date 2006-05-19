@@ -104,14 +104,12 @@ namespace GN { namespace gfx
                 case CAPS_MAX_PRIMITIVES      : return 65535;
                 case CAPS_MAX_TEXTURE_STAGES  : return 8;
                 case CAPS_PER_STAGE_CONSTANT  : return 1;
-                case CAPS_PS                  : return 0xFF;
-                case CAPS_VS                  : return 0xFF;
                 default :
                     GN_ERROR( "invlid cap: %d", c );
                     return 0;
             };
         }
-        virtual bool supportShader( ShaderType, ShadingLanguage ) { return true; }
+        virtual bool supportShader( ShaderType, const StrA & ) { return true; }
         virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
 
         //@}

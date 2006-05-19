@@ -215,26 +215,6 @@ static uint32_t sCapsInit_PER_STAGE_CONSTANT()
     // OpenGL always supports this.
     return true;
 }
-//
-static uint32_t sCapsInit_PS()
-{
-    uint32_t result = 0;
-    if( GLEW_ARB_fragment_program ) result |= GN::gfx::PSCAPS_OGL_ARB1;
-    if( GLEW_ARB_shader_objects &&
-         GLEW_ARB_fragment_shader &&
-         GLEW_ARB_shading_language_100 ) result |= GN::gfx::PSCAPS_OGL_GLSL;
-    return result;
-}
-//
-static uint32_t sCapsInit_VS()
-{
-    uint32_t result = 0;
-    if( GLEW_ARB_vertex_program ) result |= GN::gfx::VSCAPS_OGL_ARB1;
-    if( GLEW_ARB_shader_objects &&
-         GLEW_ARB_vertex_shader &&
-         GLEW_ARB_shading_language_100 ) result |= GN::gfx::VSCAPS_OGL_GLSL;
-    return result;
-}
 
 // *****************************************************************************
 // device management
@@ -290,59 +270,28 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::supportShader( ShaderType type, ShadingLanguage lang )
+bool GN::gfx::OGLRenderer::supportShader( ShaderType type, const StrA & profile )
 {
     GN_GUARD;
 
-    // check parameter
-    if( 0 > type || type >= NUM_SHADER_TYPES )
+    switch( type )
     {
-        GN_ERROR( "invalid shader usage!" );
-        return false;
-    }
-    if( 0 > lang || lang >= NUM_SHADING_LANGUAGES )
-    {
-        GN_ERROR( "invalid shading language!" );
-        return false;
-    }
+        case VERTEX_SHADER:
+            if( "arbfp1" == profile ) return !!GLEW_ARB_vertex_program;
+            else if( "glsl" == profile ) return GLEW_ARB_shader_objects &&
+                                                 GLEW_ARB_vertex_shader &&
+                                                 GLEW_ARB_shading_language_100;
+            else return false;
 
-    switch( lang )
-    {
-        // ARB shaders
-        case LANG_OGL_ARB :
-            if( VERTEX_SHADER == type )
-            {
-                return 0 != GLEW_ARB_vertex_program;
-            }
-            else
-            {
-                GN_ASSERT( PIXEL_SHADER == type );
-                return 0 != GLEW_ARB_fragment_program;
-            }
-
-        // GLSL shaders
-        case LANG_OGL_GLSL :
-            if( !GLEW_ARB_shader_objects || !GLEW_ARB_shading_language_100 ) return false;
-            if( VERTEX_SHADER == type )
-            {
-                return 0 != GLEW_ARB_vertex_shader;
-            }
-            else
-            {
-                GN_ASSERT( PIXEL_SHADER == type );
-                return 0 != GLEW_ARB_fragment_shader;
-            }
-
-        // DX shaders are always unsupported
-        case LANG_D3D_ASM :
-        case LANG_D3D_HLSL :
-            return false;
-
-        // TODO: Check Cg shader caps
-        case LANG_CG : return false;
+        case PIXEL_SHADER:
+            if( "arbfp1" == profile ) return !!GLEW_ARB_fragment_program;
+            else if( "glsl" == profile ) return GLEW_ARB_shader_objects &&
+                                                 GLEW_ARB_fragment_shader &&
+                                                 GLEW_ARB_shading_language_100;
+            else return false;
 
         default:
-            GN_ASSERT_EX( 0, "program should never reach here!" );
+            GN_ERROR( "invalid shader type!" );
             return false;
     }
 

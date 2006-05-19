@@ -165,7 +165,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual bool supportShader( ShaderType, ShadingLanguage );
+        virtual bool supportShader( ShaderType, const StrA & );
         virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
 
     private :

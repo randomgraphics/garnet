@@ -130,7 +130,7 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual bool supportShader( ShaderType, ShadingLanguage ) { return false; }
+        virtual bool supportShader( ShaderType, const StrA & ) { return false; }
         virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return false; }
 
     private :

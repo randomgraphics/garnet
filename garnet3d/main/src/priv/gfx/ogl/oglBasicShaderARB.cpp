@@ -84,6 +84,7 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderARB, () );
 
+    // create shader
     if( !createShader( code ) ) { quit(); return selfOK(); }
 
     // success
@@ -194,6 +195,25 @@ bool GN::gfx::OGLBasicShaderARB::createShader( const StrA & code )
     GN_GUARD;
 
     GN_ASSERT( !mProgram );
+
+    // check device caps
+    if( GL_VERTEX_PROGRAM_ARB == mTarget )
+    {
+        if( !GLEW_ARB_vertex_program )
+        {
+            GN_ERROR( "do not support ARB vertex program!" );
+            return false;
+        }
+    }
+    else
+    {
+        GN_ASSERT( GL_FRAGMENT_PROGRAM_ARB == mTarget );
+        if( !GLEW_ARB_fragment_program )
+        {
+            GN_ERROR( "do not support ARB fragment program!" );
+            return false;
+        }
+    }
 
     // compile shader
     mProgram = sCompileShader( mTarget, code );
