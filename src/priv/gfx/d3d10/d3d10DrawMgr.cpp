@@ -22,10 +22,14 @@ bool GN::gfx::D3D10Renderer::drawBegin()
 void GN::gfx::D3D10Renderer::drawEnd()
 {
     GN_GUARD_SLOW;
+#if D3D10_SDK_VERSION >= 28
+    GN_D3D10_CHECK( mSwapChain->Present( getOptions().vsync ? 1 : 0, 0 ) );
+#else
     GN_D3D10_CHECK( mSwapChain->Present(
         0, 0, 0, 0,
         getOptions().vsync ? 1 : 0,
         0 ) );
+#endif
     GN_UNGUARD_SLOW;
 }
 
