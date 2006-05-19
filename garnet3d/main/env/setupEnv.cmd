@@ -85,12 +85,18 @@ REM =====
 set INCLUDE=
 set LIBS=
 
+REM ====================
+REM Update console title
+REM ====================
+title garnet3d ( %GARNET_ROOT% %GN_BUILD_COMPILER% %GN_BUILD_TARGET_OS% %GN_BUILD_TARGET_CPU% )
+
 REM ============
 REM End of setup
 REM ============
 
 echo Garnet root : %GARNET_ROOT%
 cd /d %GARNET_ROOT%
+
 
 REM =========================
 REM Call user specific script
