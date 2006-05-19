@@ -69,53 +69,11 @@ static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::CondExp::sDoEval( uint32_t & value, const Token * & p, const Token * e )
+bool GN::gfx::EffectDesc::CondExp::sDoEval( Token & result, const Token * & p, const Token * e )
 {
-    if( p >= e )
-    {
-        GN_ERROR( "incomplete expression!" );
-        return false;
-    }
-
-    if( OPCODE == p->type )
-    {
-        int32_t op = p->opcode;
-
-        if( op < 0 || op >= NUM_OPCODES )
-        {
-            GN_ERROR( "invalid opcode : %d", op );
-            return false;
-        }
-
-        ++p;
-
-        uint32_t a0, a1;
-        if( !sDoEval( a0, p, e ) ) return false;
-        if( !sDoEval( a1, p, e ) ) return false;
-
-        value = sCalc( op, a0, a1 );
-    }
-    else if( GFXCAPS == p->type )
-    {
-        if( p->gfxcaps < 0 || p->gfxcaps >= NUM_RENDERER_CAPS )
-        {
-            GN_ERROR( "invalid renderer caps!" );
-            return false;
-        }
-        value = gRenderer.getCaps( p->gfxcaps );
-        ++p;
-    }
-    else if( VALUE == p->type )
-    {
-        value = p->value;
-        ++p;
-    }
-    else
-    {
-        GN_ERROR( "invalid item type: %d", p->type );
-        return false;
-    }
-
+    GN_UNUSED_PARAM( result );
+    GN_UNUSED_PARAM( p );
+    GN_UNUSED_PARAM( e );
     // success
     return true;
 }
@@ -123,16 +81,106 @@ bool GN::gfx::EffectDesc::CondExp::sDoEval( uint32_t & value, const Token * & p,
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::CondExp::evaluate( uint32_t & value ) const
+int32_t GN::gfx::EffectDesc::CondExp::sCalc( int32_t op, int32_t a0, int32_t a1 )
 {
-    if( mTokens.empty() )
+    GN_ASSERT( 0 <= op && op <= NUM_OPCODES );
+    switch( op )
     {
-        value = 1;
-        return true;
+        case CMP_LT  : return a0 < a1;
+        case CMP_LE  : return a0 <= a1;
+        case CMP_EQ  : return a0 == a1;
+        case CMP_NE  : return a0 != a1;
+        case CMP_GE  : return a0 >= a1;
+        case CMP_GT  : return a0 > a1;
+
+        case BIT_AND : return a0 & a1;
+        case BIT_OR  : return a0 | a1;
+        case BIT_XOR : return a0 ^ a1;
+
+        case REL_AND : return a0 && a1;
+        case REL_OR  : return a0 || a1;
+
+        default : GN_UNIMPL(); return 0;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::EffectDesc::CondExp::sCombine(
+    CondExp & r, OpCode op, const CondExp & c1, const CondExp & c2 )
+{
+    static Token sEmptyToken = { VALUEI, 1 };
+
+    const Token * t1, * t2;
+    size_t n1, n2;
+
+    if( c1.mTokens.empty() )
+    {
+        t1 = &sEmptyToken;
+        n1 = 1;
+    }
+    else
+    {
+        t1 = c1.mTokens;
+        n1 = c1.mTokens.size();
     }
 
+    if( c2.mTokens.empty() )
+    {
+        t2 = &sEmptyToken;
+        n2 = 1;
+    }
+    else
+    {
+        t2 = c2.mTokens;
+        n2 = c2.mTokens.size();
+    }
+
+    if( 1 == n1 && VALUEI == t1->type && 1 == n2 && VALUEI == t2->type )
+    {
+        int32_t newValue = sCalc( op, t1->valueI, t2->valueI );
+        if( 1 == newValue )
+        {
+            r.mTokens.clear();
+        }
+        else
+        {
+            r.mTokens.resize( 1 );
+            r.mTokens[0].type = VALUEI;
+            r.mTokens[0].valueI = newValue;
+        }
+    }
+    else
+    {
+        GN_ASSERT( n1 > 0 && n2 > 0 );
+        r.mTokens.resize( n1 + n2 + 1 );
+        r.mTokens[0].type = OPCODE;
+        r.mTokens[0].opcode = op;
+
+        memcpy( r.mTokens + 1, t1, n1 * sizeof(Token) );
+        memcpy( r.mTokens + n1 + 1, t2, n2 * sizeof(Token) );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::EffectDesc::CondExp::evaluate() const
+{
+    if( mTokens.empty() ) return true;
+
+    Token result;
     const Token * p = &mTokens[0];
-    return sDoEval( value, p, p + mTokens.size() );
+    if( !sDoEval( result, p, p + mTokens.size() ) ) return false;
+
+    switch( result.type )
+    {
+        case VALUEI : return 0 != result.valueI;
+        case VALUEF : return 0.0 != result.valueF;
+        case VALUES : return !result.valueS.empty();
+        default : GN_UNEXPECTED(); return false; // program should not reach here.
+    }
 }
 
 //
