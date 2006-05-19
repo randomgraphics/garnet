@@ -19,12 +19,13 @@ namespace GN { namespace gfx {
         {
             enum TokenType
             {
-                OPCODE,
-                GFXCAPS,
-                VALUE,
+                OPCODE, // opcode
+                VALUEI, // integer value
+                VALUEF, // float value
+                VALUES, // string value
             };
 
-            enum Operation
+            enum OpCode
             {
                 CMP_LT,
                 CMP_LE,
@@ -35,16 +36,19 @@ namespace GN { namespace gfx {
 
                 ALU_ADD,
                 ALU_DEC,
-             // ALU_NEG,
+                ALU_NEG,
 
                 BIT_AND,
                 BIT_OR,
                 BIT_XOR,
-             // BIT_NOT,
+                BIT_NOT,
 
                 REL_AND,
                 REL_OR,
-             // REL_NOT,
+                REL_NOT,
+
+                CHECK_RENDERER_CAPS,
+                CHECK_SHADER_PROFILE,
 
                 NUM_OPCODES,
             };
@@ -54,95 +58,25 @@ namespace GN { namespace gfx {
                 TokenType type;
                 union
                 {
-                    int32_t  opcode;
-                    int      gfxcaps;
-                    uint32_t value;
+                    int32_t opcode;
+                    int32_t valueI;
+                    float   valueF;
                 };
+                StrA  valueS;
             };
 
             // TODO: use custom allocator to optimize runtime memory allocation performance.
 
             AutoArray<Token> mTokens;
 
-            static bool sDoEval( uint32_t & value, const Token * & p, const Token * e );
+            //!
+            //! Evaluate expression of [p,e)
+            //!
+            static bool sDoEval( Token & result, const Token * & p, const Token * e );
 
-            static uint32_t sCalc( int32_t op, uint32_t a0, uint32_t a1 )
-            {
-                GN_ASSERT( 0 <= op && op <= NUM_OPCODES );
-                switch( op )
-                {
-                    case CMP_LT  : return a0 < a1;
-                    case CMP_LE  : return a0 <= a1;
-                    case CMP_EQ  : return a0 == a1;
-                    case CMP_NE  : return a0 != a1;
-                    case CMP_GE  : return a0 >= a1;
-                    case CMP_GT  : return a0 > a1;
+            static int32_t sCalc( int32_t op, int32_t a0, int32_t a1 );
 
-                    case BIT_AND : return a0 & a1;
-                    case BIT_OR  : return a0 | a1;
-                    case BIT_XOR : return a0 ^ a1;
-
-                    case REL_AND : return a0 && a1;
-                    case REL_OR  : return a0 || a1;
-
-                    default : GN_UNIMPL(); return 0;
-                }
-            }
-
-            static void sCombine( CondExp & r, Operation op, const CondExp & c1, const CondExp & c2 )
-            {
-                static Token sEmptyToken = { VALUE, 1 };
-
-                const Token * t1, * t2;
-                size_t n1, n2;
-
-                if( c1.mTokens.empty() )
-                {
-                    t1 = &sEmptyToken;
-                    n1 = 1;
-                }
-                else
-                {
-                    t1 = c1.mTokens;
-                    n1 = c1.mTokens.size();
-                }
-
-                if( c2.mTokens.empty() )
-                {
-                    t2 = &sEmptyToken;
-                    n2 = 1;
-                }
-                else
-                {
-                    t2 = c2.mTokens;
-                    n2 = c2.mTokens.size();
-                }
-
-                if( 1 == n1 && VALUE == t1->type && 1 == n2 && VALUE == t2->type )
-                {
-                    uint32_t newValue = sCalc( op, t1->value, t2->value );
-                    if( 1 == newValue )
-                    {
-                        r.mTokens.clear();
-                    }
-                    else
-                    {
-                        r.mTokens.resize( 1 );
-                        r.mTokens[0].type = VALUE;
-                        r.mTokens[0].value = newValue;
-                    }
-                }
-                else
-                {
-                    GN_ASSERT( n1 > 0 && n2 > 0 );
-                    r.mTokens.resize( n1 + n2 + 1 );
-                    r.mTokens[0].type = OPCODE;
-                    r.mTokens[0].opcode = op;
-
-                    memcpy( r.mTokens + 1, t1, n1 * sizeof(Token) );
-                    memcpy( r.mTokens + n1 + 1, t2, n2 * sizeof(Token) );
-                }
-            }
+            static void sCombine( CondExp & r, OpCode op, const CondExp & c1, const CondExp & c2 );
 
         public:
 
@@ -166,16 +100,19 @@ namespace GN { namespace gfx {
             explicit CondExp( const char * s, size_t strLen = 0 ) { fromStr( s, strLen ); }
 
             //!
-            //! Evaluate the expression. Return false for invalid expression.
+            //! Evaluate the expression.
             //!
-            //! Note that empty expression is valid, and the value is "1"
+            //! - Return true for:
+            //!   - empty expression
+            //!   - 0
+            //!   - 0.0
+            //!   - empty string
+            //! - Return false for:
+            //!   - invalid expression
+            //!   - non-zero integer or float
+            //!   - non-empty string.
             //!
-            bool evaluate( uint32_t & value ) const;
-
-            //!
-            //! Evaluate the expression. Return 0 for invalid expression, and 1 for empty expression.
-            //!
-            uint32_t evaluate() const { uint32_t v; return evaluate(v) ? v : 0; }
+            bool evaluate() const;
 
             //!
             //! Construct expression from string. Setup a empty expression, if string is invalid.
@@ -211,21 +148,23 @@ namespace GN { namespace gfx {
             static CondExp sGfxCaps( RendererCaps c )
             {
                 CondExp exp;
-                exp.mTokens.resize(1);
-                exp.mTokens[0].type = GFXCAPS;
-                exp.mTokens[0].gfxcaps = c;
+                exp.mTokens.resize(2);
+                exp.mTokens[0].type = OPCODE;
+                exp.mTokens[0].opcode = CHECK_RENDERER_CAPS;
+                exp.mTokens[1].type = VALUEI;
+                exp.mTokens[1].valueI = c;
                 return exp;
             }
 
             //!
             //! make new CondExp from gfxcaps
             //!
-            static CondExp sValue( uint32_t v )
+            static CondExp sValueI( uint32_t v )
             {
                 CondExp exp;
                 exp.mTokens.resize(1);
-                exp.mTokens[0].type = VALUE;
-                exp.mTokens[0].value = v;
+                exp.mTokens[0].type = VALUEI;
+                exp.mTokens[0].valueI = v;
                 return exp;
             }
 
