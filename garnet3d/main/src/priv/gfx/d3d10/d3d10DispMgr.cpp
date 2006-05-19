@@ -25,7 +25,16 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
 
     // setup swap chain descriptor
     DXGI_SWAP_CHAIN_DESC sd;
-    ::memset( &sd, sizeof(sd), 0 );
+    ::memset( &sd, 0, sizeof(sd) );
+#if D3D10_SDK_VERSION >= 28
+    sd.BufferCount = 1;
+    sd.BufferDesc.Width = dd.width;
+    sd.BufferDesc.Height = dd.height;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    sd.BufferDesc.RefreshRate.Numerator = 60;
+    sd.BufferDesc.RefreshRate.Denominator = 1;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+#else
     sd.BackBufferCount = 1;
     sd.BackBufferDesc.Width = dd.width;
     sd.BackBufferDesc.Height = dd.height;
@@ -33,6 +42,7 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
     sd.BackBufferDesc.RefreshRate.Numerator = 60;
     sd.BackBufferDesc.RefreshRate.Denominator = 1;
     sd.BackBufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+#endif
     sd.OutputWindow = (HWND)dd.windowHandle;
     sd.SampleDesc.Count = 1;
     sd.SampleDesc.Quality = 0;
@@ -53,18 +63,22 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
 
     // initialize render target view
     AutoComPtr<ID3D10Texture2D> backBuffer;
+#if D3D10_SDK_VERSION >= 28
+    GN_D3D10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
+#else
     GN_D3D10_CHECK_RV( mSwapChain->GetBackBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
+#endif
     GN_D3D10_CHECK_RV( mDevice->CreateRenderTargetView( backBuffer, NULL, &mRTView ), false );
     mDevice->OMSetRenderTargets( 1, &mRTView, NULL );
 
     // setup viewport
     D3D10_VIEWPORT vp;
-    vp.Width = (float)dd.width;
-    vp.Height = (float)dd.height;
+    vp.TopLeftX = 0;
+    vp.TopLeftY = 0;
+    vp.Width = dd.width;
+    vp.Height = dd.height;
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
-    vp.TopLeftX = 0.0f;
-    vp.TopLeftY = 0.0f;
     mDevice->RSSetViewports( 1, &vp );
 
     // success
