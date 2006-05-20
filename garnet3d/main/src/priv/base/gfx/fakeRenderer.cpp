@@ -109,7 +109,7 @@ namespace GN { namespace gfx
                     return 0;
             };
         }
-        virtual bool supportShader( ShaderType, const StrA & ) { return true; }
+        virtual bool supportShader( const StrA & ) { return true; }
         virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
 
         //@}

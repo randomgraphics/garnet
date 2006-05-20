@@ -248,7 +248,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, const StrA & profile )
+bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 {
     GN_GUARD;
 
@@ -256,35 +256,27 @@ bool GN::gfx::D3D9Renderer::supportShader( ShaderType type, const StrA & profile
     D3DCAPS9 d3dcaps;
     GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
 
-    switch( type )
-    {
-        case VERTEX_SHADER:
-            if( "vs_1_1" == profile ) return d3dcaps.VertexShaderVersion > D3DVS_VERSION(1,1);
-            else if( "vs_2_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(2,0);
-            else if( "vs_3_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0);
+    // vs
+    if( "vs_1_1" == profile ) return d3dcaps.VertexShaderVersion > D3DVS_VERSION(1,1);
+    else if( "vs_2_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(2,0);
+    else if( "vs_3_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0);
 #if GN_XENON
-            else if( "xvs" == profile ) return true;
+    else if( "xvs" == profile ) return true;
 #endif
-            else return false;
-            break;
 
-        case PIXEL_SHADER:
-            if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion > D3DPS_VERSION(1,1);
-            else if( "ps_1_2" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,2);
-            else if( "ps_1_3" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,3);
-            else if( "ps_1_4" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4);
-            else if( "ps_2_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0);
-            else if( "ps_3_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(3,0);
+    // ps
+    else if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion > D3DPS_VERSION(1,1);
+    else if( "ps_1_2" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,2);
+    else if( "ps_1_3" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,3);
+    else if( "ps_1_4" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4);
+    else if( "ps_2_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0);
+    else if( "ps_3_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(3,0);
 #if GN_XENON
-            else if( "xps" == profile ) return true;
+    else if( "xps" == profile ) return true;
 #endif
-            else return false;
-            break;
 
-        default:
-            GN_ERROR( "invalid shader type!" );
-            return false;
-    }
+    // failed
+    else return false;
 
     GN_UNGUARD;
 }

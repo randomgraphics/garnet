@@ -555,11 +555,12 @@ namespace GN { namespace gfx
         //! Check renderer support to specific shader profile. Profile tag could be:
         //!     vs_1_1 vs_2_0 vs_2_x vs_3_0 xvs
         //!     ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_x ps_3_0 xps
-        //!     arbvp1, arbfp1, glsl
+        //!     arbvp1, arbfp1,
+        //!     glslvs, glslps,
         //!
         //! \note Profile tag is case sensitive.
         //!
-        virtual bool supportShader( ShaderType, const StrA & ) = 0;
+        virtual bool supportShader( const StrA & ) = 0;
 
         //!
         //! Test compability of specific texture format

@@ -69,30 +69,33 @@ static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
 const GN::gfx::EffectDesc::CondExp::OpCodeDesc
 GN::gfx::EffectDesc::CondExp::msOpCodeTable[NUM_OPCODES] =
 {
-    { GN::gfx::EffectDesc::CondExp::CMP_LT               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::CMP_LE               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::CMP_EQ               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::CMP_NE               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::CMP_GE               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::CMP_GT               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::ALU_ADD              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::ALU_DEC              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::ALU_NEG              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::BIT_AND              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::BIT_OR               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::BIT_XOR              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::BIT_NOT              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::REL_AND              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::REL_OR               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::REL_NOT              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
-    { GN::gfx::EffectDesc::CondExp::CHECK_RENDERER_CAPS  , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::OPCODE, 1 },
-    { GN::gfx::EffectDesc::CondExp::CHECK_SHADER_PROFILE , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUES, 2 },
+    { GN::gfx::EffectDesc::CMP_LT               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::CMP_LE               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::CMP_EQ               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::CMP_NE               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::CMP_GE               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::CMP_GT               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::ALU_ADD              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::ALU_DEC              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::ALU_NEG              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::BIT_AND              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::BIT_OR               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::BIT_XOR              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::BIT_NOT              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::REL_AND              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::REL_OR               , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::REL_NOT              , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::VALUEI, 2 },
+    { GN::gfx::EffectDesc::CHECK_RENDERER_CAPS  , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUEI, GN::gfx::EffectDesc::CondExp::OPCODE, 1 },
+    { GN::gfx::EffectDesc::CHECK_SHADER_PROFILE , GN::gfx::EffectDesc::CondExp::VALUEI , GN::gfx::EffectDesc::CondExp::VALUES, GN::gfx::EffectDesc::CondExp::OPCODE, 1 },
 };
+
+const GN::gfx::EffectDesc::CondExp GN::gfx::EffectDesc::CondExp::DUMMY;
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::CondExp::sCalc( Token & result, int32_t op, const Token * s0, const Token * s1 )
+bool GN::gfx::EffectDesc::CondExp::sCalc(
+    Token & result, int32_t op, const Token * s0, const Token * s1 )
 {
     GN_ASSERT( 0 <= op && op <= NUM_OPCODES );
 
@@ -153,7 +156,7 @@ bool GN::gfx::EffectDesc::CondExp::sCalc( Token & result, int32_t op, const Toke
             result.valueI = gRenderer.getCaps( s0->valueI ); break;
 
         case CHECK_SHADER_PROFILE :
-            result.valueI = gRenderer.supportShader( (GN::gfx::ShaderType)s0->valueI, s1->valueS ); break;
+            result.valueI = gRenderer.supportShader( s1->valueS ); break;
 
         default : GN_UNEXPECTED(); return false; // program should not reach here.
     }
@@ -187,12 +190,12 @@ bool GN::gfx::EffectDesc::CondExp::sDoEval( Token & result, const Token * & p, c
         const OpCodeDesc & ocd = msOpCodeTable[op];
 
         // get value of arguments
-        Token dst, s0, s1;
+        Token s0, s1;
         if( ocd.numArgs > 0 && !sDoEval( s0, p, e ) ) return false;
         if( ocd.numArgs > 1 && !sDoEval( s1, p, e ) ) return false;
 
         // do operation
-        if( !sCalc( dst, op, &s0, &s1 ) ) return false;
+        if( !sCalc( result, op, &s0, &s1 ) ) return false;
     }
     else
     {
@@ -207,7 +210,26 @@ bool GN::gfx::EffectDesc::CondExp::sDoEval( Token & result, const Token * & p, c
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::EffectDesc::CondExp::CondExp(
+bool GN::gfx::EffectDesc::CondExp::evaluate() const
+{
+    if( mTokens.empty() ) return true;
+
+    Token result;
+    const Token * p = &mTokens[0];
+    if( !sDoEval( result, p, p + mTokens.size() ) ) return false;
+
+    switch( result.type )
+    {
+        case VALUEI : return 0 != result.valueI;
+        case VALUES : return 0 != result.valueS[0];
+        default : GN_UNEXPECTED(); return false; // program should not reach here.
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::EffectDesc::CondExp::compose(
     OpCode op, const CondExp & c1, const CondExp & c2 )
 {
     static Token sEmptyToken = { VALUEI, 1 };
@@ -237,34 +259,25 @@ GN::gfx::EffectDesc::CondExp::CondExp(
         n2 = c2.mTokens.size();
     }
 
-    // can't construct from itself.
-    GN_ASSERT( this != &c1 && this != &c2 );
-
     GN_ASSERT( n1 > 0 && n2 > 0 );
-    mTokens.resize( n1 + n2 + 1 );
-    mTokens[0].type = OPCODE;
-    mTokens[0].opcode = op;
 
-    memcpy( mTokens + 1, t1, n1 * sizeof(Token) );
-    memcpy( mTokens + n1 + 1, t2, n2 * sizeof(Token) );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::CondExp::evaluate() const
-{
-    if( mTokens.empty() ) return true;
-
-    Token result;
-    const Token * p = &mTokens[0];
-    if( !sDoEval( result, p, p + mTokens.size() ) ) return false;
-
-    switch( result.type )
+    if( this == &c1 || this == &c2 )
     {
-        case VALUEI : return 0 != result.valueI;
-        case VALUES : return !result.valueS.empty();
-        default : GN_UNEXPECTED(); return false; // program should not reach here.
+        CondExp tmp;
+        tmp.mTokens.resize( n1 + n2 + 1 );
+        tmp.mTokens[0].type = OPCODE;
+        tmp.mTokens[0].opcode = op;
+        memcpy( tmp.mTokens + 1, t1, n1 * sizeof(Token) );
+        memcpy( tmp.mTokens + n1 + 1, t2, n2 * sizeof(Token) );
+        *this = tmp;
+    }
+    else
+    {
+        mTokens.resize( n1 + n2 + 1 );
+        mTokens[0].type = OPCODE;
+        mTokens[0].opcode = op;
+        memcpy( mTokens + 1, t1, n1 * sizeof(Token) );
+        memcpy( mTokens + n1 + 1, t2, n2 * sizeof(Token) );
     }
 }
 

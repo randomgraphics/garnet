@@ -328,7 +328,7 @@ bool GN::gfx::D3D9Line::createDeclAndShaders()
     GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( sDecl, &mDecl ), false );
 
     // create vertex shader
-    if( r.supportShader( VERTEX_SHADER, "vs_1_1" ) )
+    if( r.supportShader( "vs_1_1" ) )
     {
         static const char * code =
             "vs.1.1 \n"
@@ -344,7 +344,7 @@ bool GN::gfx::D3D9Line::createDeclAndShaders()
 #endif
 
     // create pixel shader
-    if( r.supportShader( PIXEL_SHADER, "ps_1_1" ) )
+    if( r.supportShader( "ps_1_1" ) )
     {
         static const char * code =
             "ps.1.1 \n"
