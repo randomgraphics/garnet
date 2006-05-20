@@ -13,6 +13,37 @@ namespace GN { namespace gfx {
     struct EffectDesc
     {
         //!
+        //! conditional expression opcode
+        //!
+        enum OpCode
+        {
+            CMP_LT, //!< s0 < s1
+            CMP_LE, //!< s0 <= s1
+            CMP_EQ, //!< s0 == s1
+            CMP_NE, //!< s0 != s1
+            CMP_GE, //!< s0 >= s1
+            CMP_GT, //!< s0 > s1
+
+            ALU_ADD, //!< s0 + s1
+            ALU_DEC, //!< s0 - s1
+            ALU_NEG, //!< -s0
+
+            BIT_AND, //!< s0 & s1
+            BIT_OR,  //!< s0 | s1
+            BIT_XOR, //!< s0 ^ s1
+            BIT_NOT, //!< ~s0
+
+            REL_AND, //!< s0 && s1
+            REL_OR,  //!< s0 || s1
+            REL_NOT, //!< !s0
+
+            CHECK_RENDERER_CAPS, //!< Renderer::getCaps( s0 )
+            CHECK_SHADER_PROFILE, //!< Renderer::supportShader( s0, s1 )
+
+            NUM_OPCODES, //!< number of avaliable opcode(s)
+        };
+        
+        //!
         //! Contidional expression for renderer caps check
         //!
         class CondExp
@@ -24,34 +55,6 @@ namespace GN { namespace gfx {
                 VALUES, // string value
             };
 
-            enum OpCode
-            {
-                CMP_LT,
-                CMP_LE,
-                CMP_EQ,
-                CMP_NE,
-                CMP_GE,
-                CMP_GT,
-
-                ALU_ADD,
-                ALU_DEC,
-                ALU_NEG,
-
-                BIT_AND,
-                BIT_OR,
-                BIT_XOR,
-                BIT_NOT,
-
-                REL_AND,
-                REL_OR,
-                REL_NOT,
-
-                CHECK_RENDERER_CAPS,
-                CHECK_SHADER_PROFILE,
-
-                NUM_OPCODES,
-            };
-
             struct OpCodeDesc
             {
                 OpCode    op;
@@ -61,6 +64,8 @@ namespace GN { namespace gfx {
                 int       numArgs;
             };
 
+            static const size_t STRLEN = 12;
+
             struct Token
             {
                 TokenType type;
@@ -68,8 +73,8 @@ namespace GN { namespace gfx {
                 {
                     int32_t opcode;
                     int32_t valueI;
+                    char    valueS[STRLEN];
                 };
-                StrA  valueS;
             };
 
             // TODO: use custom allocator to optimize runtime memory allocation performance.
@@ -80,6 +85,11 @@ namespace GN { namespace gfx {
             //! Token descriptor table
             //!
             static const OpCodeDesc msOpCodeTable[NUM_OPCODES];
+
+            //!
+            //! Dummy instance.
+            //!
+            static const CondExp DUMMY;
 
             //!
             //! Evaluate single opcode
@@ -96,7 +106,7 @@ namespace GN { namespace gfx {
             //!
             //! Default ctor
             //!
-            CondExp() {}
+            CondExp() { GN_CASSERT( sizeof(Token) == 16 ); }
 
             //!
             //! Construct from integer
@@ -111,17 +121,36 @@ namespace GN { namespace gfx {
             //!
             //! Construct from string
             //!
+            CondExp( const char * s )
+            {
+                mTokens.resize(1);
+                mTokens[0].type = VALUES;
+                size_t l = strLen(s);
+                if( l >= STRLEN ) l = STRLEN - 1;
+                memcpy( mTokens[0].valueS, s, l );
+                mTokens[0].valueS[l] = 0;
+            }
+
+            //!
+            //! Construct from string
+            //!
             CondExp( const StrA & s )
             {
                 mTokens.resize(1);
                 mTokens[0].type = VALUES;
-                mTokens[0].valueI = s;
+                size_t l = s.size();
+                if( l >= STRLEN ) l = STRLEN - 1;
+                memcpy( mTokens[0].valueS, s.cptr(), l );
+                mTokens[0].valueS[l] = 0;
             }
 
             //!
             //! Construct expression from specific operation.
             //!
-            CondExp( OpCode op, const CondExp & c1, const CondExp & c2 );
+            CondExp( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY )
+            {
+                compose( op, c1, c2 );
+            }
 
             //!
             //! Copy constructor
@@ -130,6 +159,19 @@ namespace GN { namespace gfx {
             {
                 mTokens.resize( c.mTokens.size() );
                 memcpy( mTokens, c.mTokens, sizeof(Token)*mTokens.size() );
+            }
+
+            //!
+            //! copy operator
+            //!
+            CondExp & operator=( const CondExp & rhs )
+            {
+                if( this != &rhs )
+                {
+                    mTokens.resize( rhs.mTokens.size() );
+                    memcpy( mTokens, rhs.mTokens, sizeof(Token)*mTokens.size() );
+                }
+                return *this;
             }
 
             //!
@@ -147,6 +189,11 @@ namespace GN { namespace gfx {
             bool evaluate() const;
 
             //!
+            //! Compose expression from two existing expression
+            //!
+            void compose( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY );
+
+            //!
             //! Construct expression from string. Setup a empty expression, if string is invalid.
             //!
             void fromStr( const char * s, size_t strLen = 0 );
@@ -160,16 +207,6 @@ namespace GN { namespace gfx {
             //! convert to string
             //!
             StrA toStr() const { StrA s; toStr(s); return s; }
-
-            //!
-            //! Copy operator
-            //!
-            CondExp & operator=( const CondExp & rhs )
-            {
-                mTokens.resize( rhs.mTokens.size() );
-                memcpy( mTokens, rhs.mTokens, sizeof(Token)*mTokens.size() );
-                return *this;
-            }
 
             //@{
             //! \name CondExp constructors

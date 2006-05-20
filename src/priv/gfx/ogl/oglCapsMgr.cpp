@@ -270,30 +270,19 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::supportShader( ShaderType type, const StrA & profile )
+bool GN::gfx::OGLRenderer::supportShader( const StrA & profile )
 {
     GN_GUARD;
 
-    switch( type )
-    {
-        case VERTEX_SHADER:
-            if( "arbfp1" == profile ) return !!GLEW_ARB_vertex_program;
-            else if( "glsl" == profile ) return GLEW_ARB_shader_objects &&
-                                                 GLEW_ARB_vertex_shader &&
-                                                 GLEW_ARB_shading_language_100;
-            else return false;
-
-        case PIXEL_SHADER:
-            if( "arbfp1" == profile ) return !!GLEW_ARB_fragment_program;
-            else if( "glsl" == profile ) return GLEW_ARB_shader_objects &&
-                                                 GLEW_ARB_fragment_shader &&
-                                                 GLEW_ARB_shading_language_100;
-            else return false;
-
-        default:
-            GN_ERROR( "invalid shader type!" );
-            return false;
-    }
+    if( "arbvp1" == profile ) return !!GLEW_ARB_vertex_program;
+    else if( "arbfp1" == profile ) return !!GLEW_ARB_fragment_program;
+    else if( "glslvs" == profile ) return GLEW_ARB_shader_objects &&
+                                          GLEW_ARB_vertex_shader &&
+                                          GLEW_ARB_shading_language_100;
+    else if( "glslps" == profile ) return GLEW_ARB_shader_objects &&
+                                          GLEW_ARB_fragment_shader &&
+                                          GLEW_ARB_shading_language_100;
+    else return false;
 
     GN_UNGUARD;
 }

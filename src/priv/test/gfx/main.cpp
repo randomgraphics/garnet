@@ -49,7 +49,7 @@ class Scene
                 "dcl_position v0 \n"
                 "m4x4 oPos, v0, c0";
             desc.shaders["vs.1.1"].uniforms["c0"] = "pvw";
-            desc.shaders["vs.1.1"].conditions = EffectDesc::CondExp::sCombine( EffectDesc::CondExp::CHECK_SHADER_PROFILE, VERTEX_SHADER, "vs.1.1" );
+            desc.shaders["vs.1.1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "vs_1_1" );
 
             // init vs1
             desc.shaders["arbvp1"].type = VERTEX_SHADER;
@@ -63,7 +63,7 @@ class Scene
                 "DP4 result.position.w, pvw[3], vertex.position; \n"
                 "END";
             desc.shaders["arbvp1"].uniforms["m0"] = "pvw";
-            //desc.shaders["arbvp1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_VS ), EffectDesc::CondExp::sValue(VSCAPS_OGL_ARB1) );
+            desc.shaders["arbvp1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "arbvp1" );
 
             // init vs2
             desc.shaders["fixvs"].type = VERTEX_SHADER;
@@ -75,7 +75,7 @@ class Scene
                 "ps.1.1 \n"
                 "mov r0, c0";
             desc.shaders["ps.1.1"].uniforms["c0"] = "color";
-            //desc.shaders["ps.1.1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_PS ), EffectDesc::CondExp::sValue(PSCAPS_D3D_1_1) );
+            desc.shaders["ps.1.1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "ps_1_1" );
 
             // init ps1
             desc.shaders["arbfp1"].type = PIXEL_SHADER;
@@ -85,7 +85,7 @@ class Scene
                 "MOV result.color, program.local[0]; \n"
                 "END";
             desc.shaders["arbfp1"].uniforms["l0"] = "color";
-            //desc.shaders["arbfp1"].conditions = EffectDesc::CondExp::sBitAnd( EffectDesc::CondExp::sGfxCaps( CAPS_PS ), EffectDesc::CondExp::sValue(PSCAPS_OGL_ARB1) );
+            desc.shaders["arbfp1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "arbfp1" );
 
 			// init ps2
 			desc.shaders["fixps"].type = PIXEL_SHADER;
@@ -131,7 +131,7 @@ public:
         Renderer & r = gRenderer;
 
         // create pixel shaders
-        if( r.supportShader( PIXEL_SHADER, "ps_1_1" ) )
+        if( r.supportShader( "ps_1_1" ) )
         {
             static const char * code =
                 "ps_1_1\n"
@@ -140,7 +140,7 @@ public:
             if( !ps1 ) return false;
             ps1->setUniformByNameV( "c0", Vector4f(0,1,0,1) );
         }
-        else if( r.supportShader( PIXEL_SHADER, "arbfp1" ) )
+        else if( r.supportShader( "arbfp1" ) )
         {
             static const char * code =
                 "!!ARBfp1.0 \n"
@@ -152,7 +152,7 @@ public:
             if( !ps1 ) return false;
             ps1->setUniformByNameV( "l0", Vector4f(0,1,0,1) );
         }
-        if( r.supportShader( PIXEL_SHADER, "ps_1_1" ) )
+        if( r.supportShader( "ps_1_1" ) )
         {
             static const char * code =
                 "float4 diffuse; \n"
@@ -164,7 +164,7 @@ public:
             if( !ps2 ) return false;
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }
-        else if( r.supportShader( PIXEL_SHADER, "glsl" ) )
+        else if( r.supportShader( "glslps" ) )
         {
             static const char * code =
                 "uniform vec4 diffuse; \n"

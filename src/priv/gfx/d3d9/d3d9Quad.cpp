@@ -387,7 +387,7 @@ bool GN::gfx::D3D9Quad::createResources()
 #endif
 
     // create pixel shader
-    if( r.supportShader( PIXEL_SHADER, "ps_1_1" ) )
+    if( r.supportShader( "ps_1_1" ) )
     {
         static const char * code1 =
             "ps.1.1 \n"
