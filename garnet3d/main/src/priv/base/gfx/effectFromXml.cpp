@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "garnet/gfx/effect.h"
 #include "garnet/base/xml.h"
+#include <pcrecpp.h>
 
 // *****************************************************************************
 // local functions
@@ -78,6 +79,7 @@ static void sParseTexture( EffectDesc & desc, const XmlElement & node )
 // -----------------------------------------------------------------------------
 static bool sParseFloats( float * buffer, size_t count, const XmlElement & node )
 {
+    static pcrecpp::RE re( "([+-]?([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?){n}" );
     GN_ASSERT( buffer && count );
     GN_UNUSED_PARAM( node );
     return false;

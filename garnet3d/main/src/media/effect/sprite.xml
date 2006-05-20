@@ -15,7 +15,9 @@
 
         <!-- D3D ASM shader -->
         <shader name="vs.1.1" type="VERTEX_SHADER" lang="D3D_ASM">
-            <conditions>...</conditions>
+            <conditions>
+                <CHECK_SHADER_SUPPORT><str>vs_1_1</str></CHECK_SHADER_SUPPORT>
+            </conditions>
             <uniref binding="c0" name="pvw"/>
             <code><![CDATA[
 vs.1.1

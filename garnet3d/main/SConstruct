@@ -905,7 +905,7 @@ for compiler, variants in ALL_targets.iteritems() :
         # build additional dependencies:
         stlibs = Split('GNextern GNbase GNcore')
         shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
-        tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestXml GNut')
+        tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
         tools = Split('GNtoolOglInfo')
         progs = tests + samples + tools
