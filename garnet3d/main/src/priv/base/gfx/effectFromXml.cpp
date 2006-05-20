@@ -22,11 +22,11 @@ static void sPostError( const XmlNode & node, const StrA & msg )
 // get value of specific attribute
 // -----------------------------------------------------------------------------
 static const char * sGetAttrib(
-    XmlElement & node,
+    const XmlElement & node,
     const char * attribName,
     const char * defaultValue = NULL )
 {
-    XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.findAttrib( attribName );
     return a ? a->name.cptr() : defaultValue;
 }
 
@@ -34,9 +34,9 @@ static const char * sGetAttrib(
 // get value of specific attribute
 // -----------------------------------------------------------------------------
 template<typename T>
-static T sGetIntAttrib( XmlElement & node, const char * attribName, T defaultValue )
+static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defaultValue )
 {
-    XmlAttrib * a = node.findAttrib( attribName );
+    const XmlAttrib * a = node.findAttrib( attribName );
 
     T result;
 
@@ -49,7 +49,7 @@ static T sGetIntAttrib( XmlElement & node, const char * attribName, T defaultVal
 //
 // get value of name attribute
 // -----------------------------------------------------------------------------
-static const char * sGetItemName( XmlElement & node, const char * nodeType )
+static const char * sGetItemName( const XmlElement & node, const char * nodeType )
 {
     XmlAttrib * a = node.findAttrib( "name" );
     if( !a )
@@ -63,7 +63,7 @@ static const char * sGetItemName( XmlElement & node, const char * nodeType )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseTexture( EffectDesc & desc, XmlElement & node )
+static void sParseTexture( EffectDesc & desc, const XmlElement & node )
 {
     GN_ASSERT( "texture" == node.name );
 
@@ -76,7 +76,17 @@ static void sParseTexture( EffectDesc & desc, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseUniform( EffectDesc & desc, XmlElement & node )
+static bool sParseFloats( float * buffer, size_t count, const XmlElement & node )
+{
+    GN_ASSERT( buffer && count );
+    GN_UNUSED_PARAM( node );
+    return false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sParseUniform( EffectDesc & desc, const XmlElement & node )
 {
     const char * n = sGetItemName( node, "uniform" );
     if( !n ) return;
@@ -84,17 +94,38 @@ static void sParseUniform( EffectDesc & desc, XmlElement & node )
     EffectDesc::UniformDesc & ud = desc.uniforms[n];
     ud.hasDefaultValue = false;
 
-    // TODO: parse default uniform value
+    // parse uniform value
+    const XmlElement * e = node.child ? node.child->toElement() : NULL;
+    if( !e ) return;
+
+    if( "matrix44" == e->name )
+    {
+        Matrix44f m;
+        if( sParseFloats( m[0], 16, *e ) )
+        {
+            ud.hasDefaultValue = true;
+            ud.defaultValue.setM( m );
+        }
+    }
+    else if( "vector4" == e->name )
+    {
+        Vector4f v;
+        if( sParseFloats( v, 4, *e ) )
+        {
+            ud.hasDefaultValue = true;
+            ud.defaultValue.setV( v );
+        }
+    }
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseParameters( EffectDesc & desc, XmlNode & root )
+static void sParseParameters( EffectDesc & desc, const XmlNode & root )
 {
-    for( XmlNode * n = root.child; n; n = n->sibling )
+    for( const XmlNode * n = root.child; n; n = n->sibling )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "texture" == e->name ) sParseTexture( desc, *e );
@@ -106,7 +137,7 @@ static void sParseParameters( EffectDesc & desc, XmlNode & root )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseTexref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, XmlElement & node )
+static void sParseTexref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
     const char * name = sGetAttrib( node, "name" );
     if( !name ) return sPostError( node, "no reference name" );
@@ -123,7 +154,7 @@ static void sParseTexref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, XmlEle
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseUniref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, XmlElement & node )
+static void sParseUniref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
     const char * name = sGetAttrib( node, "name" );
     if( !name ) return sPostError( node, "no reference name" );
@@ -140,7 +171,7 @@ static void sParseUniref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, XmlEle
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseConditions( EffectDesc::ShaderDesc & sd, XmlElement & node )
+static void sParseConditions( EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
     GN_UNUSED_PARAM( sd );
     GN_UNUSED_PARAM( node );
@@ -150,11 +181,11 @@ static void sParseConditions( EffectDesc::ShaderDesc & sd, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseCode( EffectDesc::ShaderDesc & sd, XmlElement & node )
+static void sParseCode( EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
-    for( XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->sibling )
     {
-        XmlCdata * c = n->toCdata();
+        const XmlCdata * c = n->toCdata();
         if( c )
         {
             sd.code = c->text;
@@ -166,7 +197,7 @@ static void sParseCode( EffectDesc::ShaderDesc & sd, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseShader( EffectDesc & desc, XmlElement & node )
+static void sParseShader( EffectDesc & desc, const XmlElement & node )
 {
     GN_ASSERT( "shader" == node.name );
 
@@ -196,9 +227,9 @@ static void sParseShader( EffectDesc & desc, XmlElement & node )
     sd.hints = sGetAttrib( node, "hints", "" );
 
     // parse children
-    for( XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->sibling )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "texref" == e->name ) sParseTexref( desc, sd, *e );
@@ -215,13 +246,13 @@ static void sParseShader( EffectDesc & desc, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseShaders( EffectDesc & desc, XmlElement & node )
+static void sParseShaders( EffectDesc & desc, const XmlElement & node )
 {
     GN_ASSERT( "shaders" == node.name );
 
-    for( XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->sibling )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "shader" == e->name ) sParseShader( desc, *e );
@@ -232,7 +263,7 @@ static void sParseShaders( EffectDesc & desc, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseRsb( RenderStateBlockDesc & rsb, XmlElement & node )
+static void sParseRsb( RenderStateBlockDesc & rsb, const XmlElement & node )
 {
     GN_UNUSED_PARAM( rsb );
     GN_UNUSED_PARAM( node );
@@ -244,7 +275,7 @@ static void sParseRsb( RenderStateBlockDesc & rsb, XmlElement & node )
 // -----------------------------------------------------------------------------
 static const char * sGetShaderRef(
     EffectDesc & desc,
-    XmlElement & node,
+    const XmlElement & node,
     const char * attribName,
     ShaderType type )
 {
@@ -266,7 +297,7 @@ static const char * sGetShaderRef(
 //
 //
 // -----------------------------------------------------------------------------
-static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, XmlElement & node )
+static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, const XmlElement & node )
 {
     const char * vs = sGetShaderRef( desc, node, "vs", VERTEX_SHADER );
     const char * ps = sGetShaderRef( desc, node, "ps", PIXEL_SHADER );
@@ -278,9 +309,9 @@ static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, XmlEl
     pd.shaders[VERTEX_SHADER] = vs;
     pd.shaders[PIXEL_SHADER] = ps;
 
-    for( XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->sibling )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "rsb" == e->name ) sParseRsb( pd.rsb, *e );
@@ -291,7 +322,7 @@ static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, XmlEl
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseTechnique( EffectDesc & desc, XmlElement & node )
+static void sParseTechnique( EffectDesc & desc, const XmlElement & node )
 {
     GN_ASSERT( "technique" == node.name );
 
@@ -303,9 +334,9 @@ static void sParseTechnique( EffectDesc & desc, XmlElement & node )
     td.name = name;
 
     // parse children
-    for( XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->sibling )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "rsb" == e->name ) sParseRsb( td.rsb, *e );
@@ -317,13 +348,13 @@ static void sParseTechnique( EffectDesc & desc, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseTechniques( EffectDesc & desc, XmlElement & node )
+static void sParseTechniques( EffectDesc & desc, const XmlElement & node )
 {
     GN_ASSERT( "techniques" == node.name );
 
-    for( XmlNode * n = node.child; n; n = n->sibling )
+    for( const XmlNode * n = node.child; n; n = n->sibling )
     {
-        XmlElement * e = n->toElement();
+        const XmlElement * e = n->toElement();
         if( !e ) continue;
 
         if( "rsb" == e->name ) sParseRsb( desc.rsb, *e );
@@ -335,13 +366,13 @@ static void sParseTechniques( EffectDesc & desc, XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sDoParse( EffectDesc & desc, XmlNode * root )
+static bool sDoParse( EffectDesc & desc, const XmlNode * root )
 {
     desc.clear();
 
     if( 0 == root ) return true; // empty effect
 
-    XmlElement * e = root->toElement();
+    const XmlElement * e = root->toElement();
 
     if( 0 == e ||e->name != "effect" )
     {
@@ -349,7 +380,7 @@ static bool sDoParse( EffectDesc & desc, XmlNode * root )
         return false;
     }
 
-    for( XmlNode * n = e->child; n; n = n->sibling )
+    for( const XmlNode * n = e->child; n; n = n->sibling )
     {
         e = n->toElement();
         if( !e ) continue;
