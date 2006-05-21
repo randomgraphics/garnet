@@ -867,6 +867,15 @@ namespace GN
         return str2Uint32( *(uint32_t*)&i, s );
     }
 
+    template<typename T> T str2Int( const char * s, T defaultValue )
+    {
+        T result;
+        if( str2Int( result, s ) )
+            return result;
+        else
+            return defaultValue;
+    }
+
     //@}
 
     //!

@@ -79,10 +79,32 @@ static void sParseTexture( EffectDesc & desc, const XmlElement & node )
 // -----------------------------------------------------------------------------
 static bool sParseFloats( float * buffer, size_t count, const XmlElement & node )
 {
-    static pcrecpp::RE re( "([+-]?([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?){n}" );
-    GN_ASSERT( buffer && count );
-    GN_UNUSED_PARAM( node );
-    return false;
+    const XmlText * t = NULL;
+    if( node.child ) t = node.child->toText();
+    if( !t )
+    {
+        sPostError( node, "missing text" );
+        return false;
+    }
+
+    static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
+
+    std::string substring;
+    pcrecpp::StringPiece text( t->text.cptr() );
+    for( size_t i = 0; i < count; ++i )
+    {
+        if( !re.Consume( &text, &substring ) ||
+            !str2Float( *buffer, substring.c_str() ) )
+        {
+            sPostError( node, strFormat("invalid float number : index(%d)",i) );
+            return false;
+        }
+
+        ++buffer; // next float
+    }
+
+    // success
+    return true;
 }
 
 //
