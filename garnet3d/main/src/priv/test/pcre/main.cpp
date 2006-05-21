@@ -41,21 +41,18 @@ int main( int argc, const char * argv[] )
 
     // do parse
     int consumed;
-    if( !re.DoMatch( buffer, pcrecpp::RE::UNANCHORED, &consumed, &args[0], n ) )
+    while( re.DoMatch( buffer, pcrecpp::RE::UNANCHORED, &consumed, &args[0], n ) )
     {
-        GN_ERROR( "pcrecpp::RE::DoMatch() failed" );
-        return -1;
+        printf( "Consume %d characters\n", consumed );
+        for( int i = 0; i < n; ++i )
+        {
+            printf( "[%02d] : %s\n", i, results[i].c_str() );
+        }
+        buffer += consumed;
     }
 
-    // release arggument array
+    // release argument array
     for( int i = 0; i < n; ++i ) delete args[i];
-
-    // print result
-    printf( "matched %d substrings\n", consumed );
-    for( int i = 0; i < consumed; ++i )
-    {
-        printf( "[%02d] : %s\n", i, results[i].c_str() );
-    }
 
     return 0;
 }
