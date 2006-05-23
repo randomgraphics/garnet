@@ -131,12 +131,20 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::assembleVS( LPDIRECT3DDEVICE9 dev, const 
 
     GN_ASSERT( dev );
 
+    // trim leading spaces in shader code
+    if( 0 == len ) len = strLen( code );
+    while( len > 0 && ( ' '==*code || '\t' == *code || '\n' == *code ) )
+    {
+        ++code;
+        --len;
+    }
+
     // Assemble shader.
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShader(
-            code, (UINT)( len ? len : strLen(code) ),
+            code, (UINT)len,
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags,false),
             &bin,
@@ -289,12 +297,20 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::assemblePS( LPDIRECT3DDEVICE9 dev, const c
 
     GN_ASSERT( dev );
 
+    // trim leading spaces in shader code
+    if( 0 == len ) len = strLen( code );
+    while( len > 0 && ( ' '==*code || '\t' == *code || '\n' == *code ) )
+    {
+        ++code;
+        --len;
+    }
+
     // Assemble shader.
     AutoComPtr<ID3DXBuffer> bin;
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShader(
-            code, (UINT)( len ? len : strLen(code) ),
+            code, (UINT)len,
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags,false),
             &bin,

@@ -40,9 +40,19 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
     }
     ARBAutoDel autodel( program );
 
+    // trim leading spaces in shader code
+    const char * ptr = code.cptr();
+    GLsizei      len = (GLsizei)code.size();
+    while( len > 0 &&
+        ( ' '==*ptr || '\t' == *ptr || '\n' == *ptr ) )
+    {
+        ++ptr;
+        --len;
+    }
+
     // load program
     glBindProgramARB( target, program );
-    glProgramStringARB( target, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)code.size(), code.cptr() );
+    glProgramStringARB( target, GL_PROGRAM_FORMAT_ASCII_ARB, len, ptr );
     if( GL_NO_ERROR != glGetError() )
     {
         GLint        errPos;

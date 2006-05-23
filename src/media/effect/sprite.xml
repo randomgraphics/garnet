@@ -14,14 +14,15 @@
     <shaders>
 
         <!-- D3D ASM shader -->
-        <shader name="vs.1.1" type="VERTEX" lang="D3D_ASM">
+        <shader name="vs.1.1" type="VERTEX">
             <conditions>
                 <token type="opcode" value="CHECK_SHADER_PROFILE">
                     <token type="values" value="vs_1_1"/>
                 </token>
             </conditions>
             <uniref binding="c0" name="pvw"/>
-            <code><![CDATA[
+            <code lang="D3D_ASM" hints="...">
+<![CDATA[
 vs.1.1
 dcl_position v0
 m4x4 oPos, v0, c0
@@ -29,9 +30,15 @@ m4x4 oPos, v0, c0
             </code>
         </shader>
 
-        <shader name="ps.1.1" type="PIXEL" lang="D3D_ASM">
+        <shader name="ps.1.1" type="PIXEL">
+            <conditions>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="ps_1_1"/>
+                </token>
+            </conditions>
             <uniref binding="c0" name="color"/>
-            <code><![CDATA[
+            <code lang="D3D_ASM">
+<![CDATA[
 ps.1.1
 mov r0, c0
 ]]>
@@ -39,10 +46,15 @@ mov r0, c0
         </shader>
 
         <!-- OpenGL ARB program -->
-        <shader name="arbvp1" type="VERTEX" lang="OGL_ARB">
-            <conditions>...</conditions>
+        <shader name="arbvp1" type="VERTEX">
+            <conditions>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="arbvp1"/>
+                </token>
+            </conditions>
             <uniref binding="m0" name="pvw"/>
-            <code><![CDATA[
+            <code lang="OGL_ARB">
+<![CDATA[
 !!ARBvp1.0
 PARAM pvw[4] = { state.matrix.program[0] };
 DP4 result.position.x, pvw[0], vertex.position;
@@ -54,10 +66,15 @@ END
            </code>
         </shader>
 
-        <shader name="arbfp1" type="PIXEL" lang="OGL_ARB">
-            <conditions>...</conditions>
+        <shader name="arbfp1" type="PIXEL">
+            <conditions>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="arbfp1"/>
+                </token>
+            </conditions>
             <uniref binding="l0" name="color"/>
-            <code><![CDATA[
+            <code lang="OGL_ARB">
+<![CDATA[
 !!ARBfp1.0
 MOV result.color, program.local[0];
 END
@@ -73,7 +90,7 @@ END
 
     <techniques>
         <rsb
-            CULL_NODE="CULL_NONE"
+            CULL_MODE="CULL_NONE"
             DEPTH_WRITE="0"
         />
         <technique name="d3d">

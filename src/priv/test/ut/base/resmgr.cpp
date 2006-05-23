@@ -4,7 +4,7 @@ typedef GN::ResourceManager<int> ResMgr;
 
 bool defCreator( int & res, const GN::StrA & name, void * )
 {
-    return str2Int<int>( res, name.cptr() );
+    return GN::str2Int<int>( res, name.cptr() );
 }
 
 bool nullCreator( int & res, const GN::StrA &, void * )

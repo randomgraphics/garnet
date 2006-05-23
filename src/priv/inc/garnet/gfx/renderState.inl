@@ -46,7 +46,7 @@ GN_INLINE GN::gfx::RenderState GN::gfx::str2RenderState( const char * str )
     {
         for( int i = 0; i < NUM_RENDER_STATES; ++i )
         {
-            if( 0 == ::strcmp( getRenderStateDesc( (RenderState)i ).name, str ) )
+            if( 0 == strCmp( getRenderStateDesc( (RenderState)i ).name, str ) )
                 return (RenderState)i;
         }
     }
@@ -101,9 +101,19 @@ GN_INLINE GN::gfx::RenderStateValue GN::gfx::str2RenderStateValue( const char * 
     };
     if( str )
     {
-        for( size_t i = 0; i < NUM_RENDER_STATE_VALUES; ++i )
+        if( 0 == strCmp( "0", str ) ||
+            0 == strCmp( "NO", str ) )
         {
-            if( 0 == ::strcmp(table[i],str) ) return (RenderStateValue)i;
+            return RSV_FALSE;
+        }
+        else if( 0 == strCmp( "1", str ) ||
+            0 == strCmp( "YES", str ) )
+        {
+            return RSV_TRUE;
+        }
+        else for( size_t i = 0; i < NUM_RENDER_STATE_VALUES; ++i )
+        {
+            if( 0 == strCmp(table[i],str) ) return (RenderStateValue)i;
         }
     }
     // failed
@@ -159,7 +169,7 @@ GN_INLINE GN::gfx::TextureState GN::gfx::str2TextureState( const char * str )
     {
         for( size_t i = 0; i < NUM_TEXTURE_STATES; ++i )
         {
-            if( 0 == ::strcmp(table[i],str) ) return (TextureState)i;
+            if( 0 == strCmp(table[i],str) ) return (TextureState)i;
         }
     }
     // failed
@@ -215,7 +225,7 @@ GN_INLINE GN::gfx::TextureStateValue GN::gfx::str2TextureStateValue( const char 
     {
         for( size_t i = 0; i < NUM_TEXTURE_STATE_VALUES; ++i )
         {
-            if( 0 == ::strcmp(table[i],str) ) return (TextureStateValue)i;
+            if( 0 == strCmp(table[i],str) ) return (TextureStateValue)i;
         }
     }
     // failed

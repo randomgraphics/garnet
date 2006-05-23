@@ -51,7 +51,7 @@ namespace GN { namespace gfx {
         static OpCode sStr2OpCode( const StrA & );
 
         //!
-        //! Condition token type
+        //! Conditional expression token type.
         //!
         enum TokenType
         {
@@ -60,17 +60,25 @@ namespace GN { namespace gfx {
             VALUES, //!< string value
         };
 
+        //!
+        //! Conditional expression token structure.
+        //!
         struct Token
         {
-            TokenType type;
-            static const size_t MAX_STRLEN = 12;
+            TokenType type; //!< token type
+
+            static const size_t MAX_STRLEN = 12; //!< max length of string value.
+
             union
             {
-                int32_t opcode;
-                int32_t valueI;
-                char    valueS[MAX_STRLEN];
+                int32_t opcode; //!< opcode
+                int32_t valueI; //!< integer value
+                char    valueS[MAX_STRLEN]; //!< string buffer
             };
 
+            //!
+            //! Set token as an opcode
+            //!
             void setOp( int32_t op )
             {
                 GN_CASSERT( sizeof(Token) == 16 );
@@ -79,12 +87,18 @@ namespace GN { namespace gfx {
                 opcode = op;
             }
 
+            //!
+            //! Set token as an integer value
+            //!
             void setI( int32_t i )
             {
                 type = VALUEI;
                 valueI = i;
             }
 
+            //!
+            //! Set token as an string
+            //!
             void setS( const StrA & s )
             {
                 type = VALUES;
@@ -112,6 +126,63 @@ namespace GN { namespace gfx {
             static const CondExp DUMMY;
 
             //!
+            //! Default ctor ( do nothing)
+            //!
+            CondExp() {}
+
+            //!
+            //! Construct from integer
+            //!
+            CondExp( int32_t i )
+            {
+                tokens.resize(1);
+                tokens[0].setI( i );
+            }
+
+            //!
+            //! Construct from string
+            //!
+            CondExp( const char * s )
+            {
+                tokens.resize(1);
+                tokens[0].setS( s );
+            }
+
+            //!
+            //! Construct from string
+            //!
+            CondExp( const StrA & s )
+            {
+                tokens.resize(1);
+                tokens[0].setS( s );
+            }
+
+            //!
+            //! Construct expression from specific operation.
+            //!
+            CondExp( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY )
+            {
+                compose( op, c1, c2 );
+            }
+
+            //!
+            //! Copy constructor
+            //!
+            CondExp( const CondExp & c )
+            {
+                tokens = c.tokens;
+            }
+
+            //!
+            //! copy operator
+            //!
+            CondExp & operator=( const CondExp & rhs )
+            {
+                if( this != &rhs ) tokens = rhs.tokens;
+                return *this;
+            }
+
+            //!
             //! Evaluate the expression.
             //!
             //! - Return true for:
@@ -129,6 +200,43 @@ namespace GN { namespace gfx {
             //! Construct expression from two existing expression
             //!
             void compose( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY );
+
+            //@{
+            //! \name CondExp constructors
+
+            static CondExp sBitAnd( const CondExp & a0, const CondExp & a1 )
+            {
+                return CondExp( BIT_AND, a0, a1 );
+            }
+
+            static CondExp sBitOr( const CondExp & a0, const CondExp & a1 )
+            {
+                return CondExp( BIT_OR, a0, a1 );
+            }
+
+            static CondExp sBitXor( const CondExp & a0, const CondExp & a1 )
+            {
+                return CondExp( BIT_XOR, a0, a1 );
+            }
+
+#define GN_CONDEXP_OPERATOR( x, y ) \
+            CondExp operator x ( const CondExp & rhs ) const \
+            { \
+                return CondExp( y, *this, rhs ); \
+            }
+
+            GN_CONDEXP_OPERATOR( <  , CMP_LT  );
+            GN_CONDEXP_OPERATOR( <= , CMP_LE  );
+            GN_CONDEXP_OPERATOR( == , CMP_EQ  );
+            GN_CONDEXP_OPERATOR( != , CMP_NE  );
+            GN_CONDEXP_OPERATOR( >= , CMP_GE  );
+            GN_CONDEXP_OPERATOR( >  , CMP_GT  );
+            GN_CONDEXP_OPERATOR( && , REL_AND );
+            GN_CONDEXP_OPERATOR( || , REL_OR  );
+
+#undef GN_CONDEXP_OPERATOR
+
+            //@}
         };
 
         //!
