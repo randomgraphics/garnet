@@ -28,7 +28,7 @@ static const char * sGetAttrib(
     const char * defaultValue = NULL )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    return a ? a->name.cptr() : defaultValue;
+    return a ? a->value.cptr() : defaultValue;
 }
 
 //
@@ -58,7 +58,7 @@ static const char * sGetItemName( const XmlElement & node, const char * nodeType
         sPostError( node, strFormat("Unnamed %s node. Ignored.", nodeType) );
         return 0;
     }
-    return a->name.cptr();
+    return a->value.cptr();
 }
 
 //
@@ -232,6 +232,8 @@ static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement 
         return false;
     }
 
+    sd.conditions.
+
     // parse child tokens
     for( const XmlNode * n = node.child; n; n = n->sibling )
     {
@@ -296,7 +298,7 @@ static void sParseShader( EffectDesc & desc, const XmlElement & node )
     const char * type = sGetAttrib( node, "type" );
     if( !str2ShaderType( sd.type, type ) )
     {
-        sPostError( node, "invalid shader type" );
+        sPostError( node, strFormat("invalid shader type: %s",type?type:"") );
         return;
     }
 
@@ -304,7 +306,7 @@ static void sParseShader( EffectDesc & desc, const XmlElement & node )
     const char * lang = sGetAttrib( node, "lang" );
     if( !str2ShadingLanguage( sd.lang, lang ) )
     {
-        sPostError( node, "invalid shading language" );
+        sPostError( node, strFormat("invalid shading language",lang?lang:"") );
         return;
     }
 
