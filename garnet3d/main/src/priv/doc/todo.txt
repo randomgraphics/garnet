@@ -2,6 +2,7 @@
 
 - to make a simle game, like teris clone:
   - load effect/shader from xml file
+    - almost done. need UT.
   - load mesh
   - simple GUI
   - task manager/coordinator

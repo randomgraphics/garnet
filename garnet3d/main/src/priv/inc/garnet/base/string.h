@@ -531,21 +531,41 @@ namespace GN
         //!
         //! Trim characters for both side
         //!
-        void trim( CharType ch )
+        void trim( const CharType * ch, size_t len = 0 )
         {
-            trimRight( ch );
-            trimLeft( ch );
+            if( 0 == ch ) return;
+            if( 0 == len ) len = strLen( ch );
+            trimRight( ch, len );
+            trimLeft( ch, len );
         }
+
+        //!
+        //! Trim characters for both side
+        //!
+        void trim( CharType ch ) { trim( &ch, 1 ); }
 
         //!
         //! Trim left characters
         //!
-        void trimLeft( CharType ch )
+        void trimLeft( const CharType * ch, size_t len = 0 )
         {
+            if( 0 == ch ) return;
+            if( 0 == len ) len = strLen( ch );
+            if( 0 == len ) return;
             CharType * p = mPtr;
             CharType * e = mPtr+mCount;
-            while( p < e && ch == *p )
+            while( p < e )
             {
+                bool equal = false;
+                for( size_t i = 0; i < len; ++i )
+                {
+                    if( *p == ch[i] )
+                    {
+                        equal = true;
+                        break;
+                    }
+                }
+                if( !equal ) break;
                 ++p;
             }
             mCount = e - p;
@@ -557,19 +577,42 @@ namespace GN
         }
 
         //!
+        //! Trim left characters
+        //!
+        void trimLeft( CharType ch ) { trimLeft( &ch, 1 ); }
+
+        //!
         //! Trim right characters
         //!
-        void trimRight( CharType ch )
+        void trimRight( const CharType * ch, size_t len = 0 )
         {
             if( 0 == mCount ) return;
+            if( 0 == ch ) return;
+            if( 0 == len ) len = strLen( ch );
+            if( 0 == len ) return;
             CharType * p = mPtr + mCount - 1;
-            while( p >= mPtr && ch == *p )
+            while( p >= mPtr )
             {
+                bool equal = false;
+                for( size_t i = 0; i < len; ++i )
+                {
+                    if( *p == ch[i] )
+                    {
+                        equal = true;
+                        break;
+                    }
+                }
+                if( !equal ) break;
                 *p = 0;
                 --p;
             }
             mCount = p - mPtr + 1;
         }
+
+        //!
+        //! Trim right characters
+        //!
+        void trimRight( CharType ch ) { trimRight( &ch, 1 ); }
 
         //!
         //! Trim right characters until meet the predication condition.

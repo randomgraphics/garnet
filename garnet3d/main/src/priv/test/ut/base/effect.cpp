@@ -30,8 +30,8 @@ public:
         TS_ASSERT( emptyExp.evaluate() );
 
         // comparasion
-        EffectDesc::CondExp c0 = EffectDesc::CondExp::sValue(0);
-        EffectDesc::CondExp c1 = EffectDesc::CondExp::sValue(1);
+        EffectDesc::CondExp c0( (int32_t)0 );
+        EffectDesc::CondExp c1( 1 );
         TS_ASSERT( (c0< c1).evaluate() );
         TS_ASSERT( (c0<=c1).evaluate() );
         TS_ASSERT( (c0==c0).evaluate() );
@@ -46,8 +46,8 @@ public:
         TS_ASSERT(  (c0||c1).evaluate() );
 
         // complex
-        EffectDesc::CondExp c2 = EffectDesc::CondExp::sValue(2);
-        EffectDesc::CondExp c3 = EffectDesc::CondExp::sValue(2);
+        EffectDesc::CondExp c2(2);
+        EffectDesc::CondExp c3(2);
         TS_ASSERT( ((c0==c1)||(c2==c3)||(c1==c3)).evaluate() );
     }
 

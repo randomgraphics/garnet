@@ -199,28 +199,29 @@ static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement 
         sPostError( node, "node name must be \"token\" here.!" );
         return false;
     }
-    
-    EffectDesc::CondExp token;
+
+    // parse the token
+    EffectDesc::Token t;
     StrA type = sGetAttrib( node, "type" );
     StrA value = sGetAttrib( node, "value" );
     if( "opcode" == type )
     {
-        EffectDesc::OpCode op = EffectDesc::sStr2OpCode( value );
-        if( EffectDesc::OPCODE_INVALID == op )
+        t.type = EffectDesc::OPCODE;
+        t.opcode = EffectDesc::sStr2OpCode( value );
+        if( EffectDesc::OPCODE_INVALID == t.opcode )
         {
             sPostError( node, strFormat( "invalid opcode: %s", value.cptr() ) );
             return false;
         }
-        token.fromOpCode( op );
     }
     else if( "values" == type )
     {
-        token.fromStr( value );
+        t.setS( value );
     }
     else if( "valuei" == type )
     {
-        int32_t i;
-        if( !str2Int32( i, value.cptr() ) )
+        t.type = EffectDesc::VALUEI;
+        if( !str2Int32( t.valueI, value.cptr() ) )
         {
             sPostError( node, strFormat( "invalid integer: %s", value.cptr() ) );
             return false;
@@ -228,11 +229,12 @@ static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement 
     }
     else
     {
-        sPostError( node, strFormat("invalid token type: %s",type.cptr()) );
+        sPostError( node, strFormat("invalid t type: %s",type.cptr()) );
         return false;
     }
 
-    sd.conditions.
+    // append to token array
+    sd.conditions.tokens.push_back( t );
 
     // parse child tokens
     for( const XmlNode * n = node.child; n; n = n->sibling )
@@ -259,7 +261,7 @@ static void sParseConditions( EffectDesc::ShaderDesc & sd, const XmlElement & no
         if( !e ) continue;
         if( !sParseConditionToken( sd, *e ) )
         {
-            sd.conditions.clear();
+            sd.conditions.tokens.clear();
             break;
         }
     }
@@ -275,7 +277,22 @@ static void sParseCode( EffectDesc::ShaderDesc & sd, const XmlElement & node )
         const XmlCdata * c = n->toCdata();
         if( c )
         {
+            // get shader code
             sd.code = c->text;
+
+            if( !sd.code.empty() )
+            {
+                // get hints
+                sd.hints = sGetAttrib( node, "hints", "" );
+
+                // get shading language
+                const char * lang = sGetAttrib( node, "lang" );
+                if( !str2ShadingLanguage( sd.lang, lang ) )
+                {
+                    sPostError( node, strFormat("invalid shading language: %s",lang?lang:"") );
+                }
+            }
+
             return;
         }
     }
@@ -301,17 +318,6 @@ static void sParseShader( EffectDesc & desc, const XmlElement & node )
         sPostError( node, strFormat("invalid shader type: %s",type?type:"") );
         return;
     }
-
-    // get shading language
-    const char * lang = sGetAttrib( node, "lang" );
-    if( !str2ShadingLanguage( sd.lang, lang ) )
-    {
-        sPostError( node, strFormat("invalid shading language",lang?lang:"") );
-        return;
-    }
-
-    // get hints
-    sd.hints = sGetAttrib( node, "hints", "" );
 
     // parse children
     for( const XmlNode * n = node.child; n; n = n->sibling )
@@ -352,9 +358,34 @@ static void sParseShaders( EffectDesc & desc, const XmlElement & node )
 // -----------------------------------------------------------------------------
 static void sParseRsb( RenderStateBlockDesc & rsb, const XmlElement & node )
 {
-    GN_UNUSED_PARAM( rsb );
-    GN_UNUSED_PARAM( node );
-    GN_TODO( "parse render states" );
+    RenderState rs;
+    RenderStateValue rsv;
+    for( const XmlAttrib * a = node.attrib; a; a = a->next )
+    {
+        if( !str2RenderState( rs, a->name.cptr() ) )
+        {
+            sPostError( node, strFormat( "invalid render state: %s", a->name.cptr() ) );
+            continue;
+        }
+
+        const RenderStateDesc & rsdesc = getRenderStateDesc( rs );
+
+        switch( rsdesc.valueType )
+        {
+            case RenderStateDesc::VT_ENUM:
+                if( !str2RenderStateValue( rsv, a->value.cptr() ) )
+                {
+                    sPostError( node, strFormat(
+                        "invalid render state value: %s (for render state %s)",
+                        a->value.cptr(), a->name.cptr() ) );
+                    continue;
+                }
+                rsb.set( rs, rsv );
+                break;
+
+            default: GN_UNEXPECTED();
+        }
+    }
 }
 
 //
@@ -430,6 +461,8 @@ static void sParseTechnique( EffectDesc & desc, const XmlElement & node )
         else if( "pass" == e->name ) sParsePass( desc, td, *e );
         else sPostError( *e, "Unknown node. Ignored" );
     }
+
+    desc.techniques.push_back( td );
 }
 
 //
