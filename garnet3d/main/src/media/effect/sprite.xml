@@ -14,9 +14,9 @@
     <shaders>
 
         <!-- D3D ASM shader -->
-        <shader name="vs.1.1" type="VERTEX_SHADER" lang="D3D_ASM">
+        <shader name="vs.1.1" type="VERTEX" lang="D3D_ASM">
             <conditions>
-                <token type="opcode" value="CHECK_SHADER_SUPPORT">
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
                     <token type="values" value="vs_1_1"/>
                 </token>
             </conditions>
@@ -29,7 +29,7 @@ m4x4 oPos, v0, c0
             </code>
         </shader>
 
-        <shader name="ps.1.1" type="PIXEL_SHADER" lang="D3D_ASM">
+        <shader name="ps.1.1" type="PIXEL" lang="D3D_ASM">
             <uniref binding="c0" name="color"/>
             <code><![CDATA[
 ps.1.1
@@ -39,7 +39,7 @@ mov r0, c0
         </shader>
 
         <!-- OpenGL ARB program -->
-        <shader name="arbvp1" type="VERTEX_SHADER" lang="OGL_ARB">
+        <shader name="arbvp1" type="VERTEX" lang="OGL_ARB">
             <conditions>...</conditions>
             <uniref binding="m0" name="pvw"/>
             <code><![CDATA[
@@ -54,7 +54,7 @@ END
            </code>
         </shader>
 
-        <shader name="arbfp1" type="PIXEL_SHADER" lang="OGL_ARB">
+        <shader name="arbfp1" type="PIXEL" lang="OGL_ARB">
             <conditions>...</conditions>
             <uniref binding="l0" name="color"/>
             <code><![CDATA[
@@ -66,8 +66,8 @@ END
         </shader>
 
         <!-- Fixed functional pipeline -->
-        <shader name="fixvs" type="VERTEX_SHADER"/>
-        <shader name="fixps" type="PIXEL_SHADER"/>
+        <shader name="fixvs" type="VERTEX"/>
+        <shader name="fixps" type="PIXEL"/>
 
     </shaders>
 

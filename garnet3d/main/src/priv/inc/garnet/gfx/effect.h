@@ -49,121 +49,67 @@ namespace GN { namespace gfx {
         //! Convert string to opcode. Return OPCODE_INVALID if failed.
         //!
         static OpCode sStr2OpCode( const StrA & );
-        
+
+        //!
+        //! Condition token type
+        //!
+        enum TokenType
+        {
+            OPCODE, //!< opcode
+            VALUEI, //!< integer value
+            VALUES, //!< string value
+        };
+
+        struct Token
+        {
+            TokenType type;
+            static const size_t MAX_STRLEN = 12;
+            union
+            {
+                int32_t opcode;
+                int32_t valueI;
+                char    valueS[MAX_STRLEN];
+            };
+
+            void setOp( int32_t op )
+            {
+                GN_CASSERT( sizeof(Token) == 16 );
+                GN_ASSERT( 0 <= op && op < NUM_OPCODES );
+                type = OPCODE;
+                opcode = op;
+            }
+
+            void setI( int32_t i )
+            {
+                type = VALUEI;
+                valueI = i;
+            }
+
+            void setS( const StrA & s )
+            {
+                type = VALUES;
+                size_t l = min( s.size(), MAX_STRLEN-1 );
+                memcpy( valueS, s.cptr(), l );
+                valueS[l] = 0;
+            }
+        };
+
         //!
         //! Contidional expression for renderer caps check
         //!
-        class CondExp
+        struct CondExp
         {
-            enum TokenType
-            {
-                OPCODE, // opcode
-                VALUEI, // integer value
-                VALUES, // string value
-            };
-
-            struct OpCodeDesc
-            {
-                OpCode    op;
-                TokenType dst;
-                TokenType src0;
-                TokenType src1;
-                int       numArgs;
-            };
-
-            static const size_t STRLEN = 12;
-
-            struct Token
-            {
-                TokenType type;
-                union
-                {
-                    int32_t opcode;
-                    int32_t valueI;
-                    char    valueS[STRLEN];
-                };
-            };
-
             // TODO: use custom allocator to optimize runtime memory allocation performance.
 
-            AutoArray<Token> mTokens;
-
             //!
-            //! Token descriptor table
+            //! expression tokens
             //!
-            static const OpCodeDesc msOpCodeTable[NUM_OPCODES];
+            std::vector<Token> tokens;
 
             //!
             //! Dummy instance.
             //!
             static const CondExp DUMMY;
-
-            //!
-            //! Evaluate single opcode
-            //!
-            static bool sCalc( Token & result, int32_t op, const Token * s0, const Token * s1 );
-
-            //!
-            //! Evaluate expression of [p,e)
-            //!
-            static bool sDoEval( Token & result, const Token * & p, const Token * e );
-
-        public:
-
-            //!
-            //! Default ctor
-            //!
-            CondExp() { GN_CASSERT( sizeof(Token) == 16 ); }
-
-            //!
-            //! Construct from integer
-            //!
-            CondExp( int32_t i ) { fromInt( i ); }
-
-            //!
-            //! Construct from string
-            //!
-            CondExp( const char * s ) { fromStr( s ); }
-
-            //!
-            //! Construct from string
-            //!
-            CondExp( const StrA & s ) { fromStr( s ); }
-
-            //!
-            //! Construct expression from specific operation.
-            //!
-            CondExp( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY )
-            {
-                compose( op, c1, c2 );
-            }
-
-            //!
-            //! Copy constructor
-            //!
-            CondExp( const CondExp & c )
-            {
-                mTokens.resize( c.mTokens.size() );
-                memcpy( mTokens, c.mTokens, sizeof(Token)*mTokens.size() );
-            }
-
-            //!
-            //! copy operator
-            //!
-            CondExp & operator=( const CondExp & rhs )
-            {
-                if( this != &rhs )
-                {
-                    mTokens.resize( rhs.mTokens.size() );
-                    memcpy( mTokens, rhs.mTokens, sizeof(Token)*mTokens.size() );
-                }
-                return *this;
-            }
-
-            //!
-            //! clear to empty expression
-            //!
-            void clear() { mTokens.clear(); }
 
             //!
             //! Evaluate the expression.
@@ -183,91 +129,6 @@ namespace GN { namespace gfx {
             //! Construct expression from two existing expression
             //!
             void compose( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY );
-
-            //!
-            //! Construct expression of single opcode.
-            //!
-            void fromOpCode( OpCode op )
-            {
-                GN_ASSERT( 0 <= op && op < NUM_OPCODES );
-                mTokens.resize(1);
-                mTokens[0].type = OPCODE;
-                mTokens[0].opcode = op;
-            }
-
-            //!
-            //! Construct expression of single integer value.
-            //!
-            void fromInt( int32_t i )
-            {
-                mTokens.resize(1);
-                mTokens[0].type = VALUEI;
-                mTokens[0].valueI = i;
-            }
-
-            //!
-            //! Construct expression of single string value.
-            //!
-            void fromStr( const StrA & s )
-            {
-                mTokens.resize(1);
-                mTokens[0].type = VALUES;
-                size_t l = s.size();
-                if( l >= STRLEN ) l = STRLEN - 1;
-                memcpy( mTokens[0].valueS, s.cptr(), l );
-                mTokens[0].valueS[l] = 0;
-            }
-
-            //@{
-            //! \name CondExp constructors
-
-            //!
-            //! make new CondExp from gfxcaps
-            //!
-            static CondExp sGfxCaps( RendererCaps c )
-            {
-                CondExp exp;
-                exp.mTokens.resize(2);
-                exp.mTokens[0].type = OPCODE;
-                exp.mTokens[0].opcode = CHECK_RENDERER_CAPS;
-                exp.mTokens[1].type = VALUEI;
-                exp.mTokens[1].valueI = c;
-                return exp;
-            }
-
-            static CondExp sBitAnd( const CondExp & a0, const CondExp & a1 )
-            {
-                return CondExp( BIT_AND, a0, a1 );
-            }
-
-            static CondExp sBitOr( const CondExp & a0, const CondExp & a1 )
-            {
-                return CondExp( BIT_OR, a0, a1 );
-            }
-
-            static CondExp sBitXor( const CondExp & a0, const CondExp & a1 )
-            {
-                return CondExp( BIT_XOR, a0, a1 );
-            }
-
-#define GN_CONDEXP_OPERATOR( x, y ) \
-            CondExp operator x ( const CondExp & rhs ) const \
-            { \
-                return CondExp( y, *this, rhs ); \
-            }
-
-            GN_CONDEXP_OPERATOR( <  , CMP_LT  );
-            GN_CONDEXP_OPERATOR( <= , CMP_LE  );
-            GN_CONDEXP_OPERATOR( == , CMP_EQ  );
-            GN_CONDEXP_OPERATOR( != , CMP_NE  );
-            GN_CONDEXP_OPERATOR( >= , CMP_GE  );
-            GN_CONDEXP_OPERATOR( >  , CMP_GT  );
-            GN_CONDEXP_OPERATOR( && , REL_AND );
-            GN_CONDEXP_OPERATOR( || , REL_OR  );
-
-#undef GN_CONDEXP_OPERATOR
-
-            //@}
         };
 
         //!
