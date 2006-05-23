@@ -11,7 +11,6 @@ namespace GN
     struct XmlCdata;
     struct XmlElement;
     struct XmlComment;
-    struct XmlText;
 
     //!
     //! XML attribute class
@@ -40,7 +39,6 @@ namespace GN
         XML_CDATA,   //!< cdata node
         XML_COMMENT, //!< comment node
         XML_ELEMENT, //!< element node
-        XML_TEXT,    //!< text node
         NUM_XML_NODE_TYPES, //!< number of node types.
     };
 
@@ -83,16 +81,6 @@ namespace GN
         //! Convert to element node
         //!
         const XmlElement * toElement() const { return XML_ELEMENT == type ? (const XmlElement*)this : 0; }
-
-        //!
-        //! conver to text node
-        //!
-        XmlText * toText() { return XML_TEXT == type ? (XmlText*)this : 0; }
-
-        //!
-        //! conver to comment node
-        //!
-        const XmlText * toText() const { return XML_TEXT == type ? (const XmlText*)this : 0; }
 
         //!
         //! virtual dtor
@@ -140,10 +128,15 @@ namespace GN
     //!
     //! XML element node
     //!
+    //! \note
+    //!     Here we assume that one element can have, at most, one text section.
+    //!     If there were multiple text sections, they would be merged into one.
+    //!
     struct XmlElement : public XmlNode
     {
         XmlAttrib * attrib;  //!< pointer to first attribute
         StrA        name;    //!< element name
+        StrA        text;    //!< optional text section
 
         //!
         //! find specific attribute of element
@@ -177,21 +170,6 @@ namespace GN
         //! protected ctor to prevent user from creatiing this class.
         //!
         XmlElement() : XmlNode(XML_ELEMENT) {}
-    };
-
-    //!
-    //! XML text node
-    //!
-    struct XmlText : public XmlNode
-    {
-        StrA text;  //!< text content.
-
-    protected:
-
-        //!
-        //! protected ctor to prevent user from creatiing this class.
-        //!
-        XmlText() : XmlNode(XML_TEXT) {}
     };
 
     //!

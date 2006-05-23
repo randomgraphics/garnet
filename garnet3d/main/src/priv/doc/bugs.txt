@@ -11,7 +11,7 @@ OPENNING
 - GNsampleRenderToTexture:
   - black screen on cygwin.
 
-- When using non-power-of-two texture, ATI x1000 card runs very very slow. Check it!
+- When using non-power-of-two render target texture, ATI x1000 card runs very very slow. Check it!
 
 - Quad renderer is slow on HP notebook with intel graphics chip.
 

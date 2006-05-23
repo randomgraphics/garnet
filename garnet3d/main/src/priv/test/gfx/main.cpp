@@ -14,111 +14,9 @@ class Scene
 
     uint32_t tex0;
 
-    Effect eff0;
+    uint32_t eff0;
 
     Matrix44f world, view, proj;
-
-    bool loadEffect()
-    {
-        GN_GUARD;
-
-        // create effect 0
-        {
-            using namespace GN::gfx;
-
-            EffectDesc desc;
-
-            // define effect parameters
-            desc.uniforms["color"];
-            desc.uniforms["pvw"].hasDefaultValue = true;
-            desc.uniforms["pvw"].defaultValue.setM( Matrix44f(
-                2,  0,  0, -1,
-                0, -2,  0,  1,
-                0,  0,  1,  0,
-                0,  0,  0,  1 ) );
-
-            // set render states
-            desc.rsb.set( RS_CULL_MODE, RSV_CULL_NONE );
-            desc.rsb.set( RS_DEPTH_WRITE, RSV_FALSE );
-
-            // init vs0
-            desc.shaders["vs.1.1"].type = VERTEX_SHADER;
-            desc.shaders["vs.1.1"].lang = LANG_D3D_ASM;
-            desc.shaders["vs.1.1"].code =
-                "vs.1.1 \n"
-                "dcl_position v0 \n"
-                "m4x4 oPos, v0, c0";
-            desc.shaders["vs.1.1"].uniforms["c0"] = "pvw";
-            desc.shaders["vs.1.1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "vs_1_1" );
-
-            // init vs1
-            desc.shaders["arbvp1"].type = VERTEX_SHADER;
-            desc.shaders["arbvp1"].lang = LANG_OGL_ARB;
-            desc.shaders["arbvp1"].code =
-                "!!ARBvp1.0 \n"
-                "PARAM pvw[4] = { state.matrix.program[0] }; \n"
-                "DP4 result.position.x, pvw[0], vertex.position; \n"
-                "DP4 result.position.y, pvw[1], vertex.position; \n"
-                "DP4 result.position.z, pvw[2], vertex.position; \n"
-                "DP4 result.position.w, pvw[3], vertex.position; \n"
-                "END";
-            desc.shaders["arbvp1"].uniforms["m0"] = "pvw";
-            desc.shaders["arbvp1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "arbvp1" );
-
-            // init vs2
-            desc.shaders["fixvs"].type = VERTEX_SHADER;
-
-            // init ps0
-            desc.shaders["ps.1.1"].type = PIXEL_SHADER;
-            desc.shaders["ps.1.1"].lang = LANG_D3D_ASM;
-            desc.shaders["ps.1.1"].code =
-                "ps.1.1 \n"
-                "mov r0, c0";
-            desc.shaders["ps.1.1"].uniforms["c0"] = "color";
-            desc.shaders["ps.1.1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "ps_1_1" );
-
-            // init ps1
-            desc.shaders["arbfp1"].type = PIXEL_SHADER;
-            desc.shaders["arbfp1"].lang = LANG_OGL_ARB;
-            desc.shaders["arbfp1"].code =
-                "!!ARBfp1.0 \n"
-                "MOV result.color, program.local[0]; \n"
-                "END";
-            desc.shaders["arbfp1"].uniforms["l0"] = "color";
-            desc.shaders["arbfp1"].conditions.compose( EffectDesc::CHECK_SHADER_PROFILE, "arbfp1" );
-
-			// init ps2
-			desc.shaders["fixps"].type = PIXEL_SHADER;
-
-            // allocate 3 techniques
-            desc.techniques.resize( 3 );
-
-            // create tech0
-            desc.techniques[0].name = "d3dWithShader";
-            desc.techniques[0].passes.resize(1);
-            desc.techniques[0].passes[0].shaders[VERTEX_SHADER] = "vs.1.1";
-            desc.techniques[0].passes[0].shaders[PIXEL_SHADER] = "ps.1.1";
-
-            // create tech1
-            desc.techniques[1].name = "oglWithShader";
-            desc.techniques[1].passes.resize(1);
-            desc.techniques[1].passes[0].shaders[VERTEX_SHADER] = "arbvp1";
-            desc.techniques[1].passes[0].shaders[PIXEL_SHADER] = "arbfp1";
-
-            // create tech2
-            desc.techniques[2].name = "ffp";
-            desc.techniques[2].passes.resize(1);
-            desc.techniques[2].passes[0].shaders[VERTEX_SHADER] = "fixvs";
-            desc.techniques[2].passes[0].shaders[PIXEL_SHADER] = "fixps";
-
-            if( !eff0.init( desc ) ) return false;
-        }
-
-        // success
-        return true;
-
-        GN_UNGUARD;
-    }
 
 public:
 
@@ -179,9 +77,11 @@ public:
 
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
+        if( !tex0 ) return false;
 
         // create the effect
-        if( !loadEffect() ) return false;
+        eff0 = app.getResMgr().effects.getResourceHandle( "effect/sprite.xml" );
+        if( !eff0 ) return false;
 
         // initialize matrices
         world.identity();
@@ -194,7 +94,6 @@ public:
 
     void quit()
     {
-        eff0.quit();
         ps1.clear();
 		ps2.clear();
     }
@@ -215,7 +114,7 @@ public:
         b += bb; if( 0 == b || 255 == b ) bb = -bb;
         GN::gfx::UniformValue u;
         u.setV( GN::Vector4f( r/255.0f, g/255.0f, b/255.0f, 1.0f ) );
-        eff0.setUniformByName( "color", u );
+        app.getResMgr().effects.getResource(eff0)->setUniformByName( "color", u );
     }
 
     void draw()
@@ -241,12 +140,13 @@ public:
         }
 
         //* quad 4
-        for( size_t i = 0; i < eff0.getNumPasses(); ++i )
+        Effect * eff = app.getResMgr().effects.getResource( eff0 );
+        for( size_t i = 0; i < eff->getNumPasses(); ++i )
         {
-            eff0.passBegin( i );
-            eff0.commitChanges();
+            eff->passBegin( i );
+            eff->commitChanges();
             r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
-            eff0.passEnd();
+            eff->passEnd();
         }//*/
 
         // a wireframe box

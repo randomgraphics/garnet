@@ -351,6 +351,84 @@ static void sDeleteTexture( Texture * & ptr, void * )
 }
 
 // *****************************************************************************
+// local effect loader from XML file
+// *****************************************************************************
+
+//
+// Create empty effect
+// -----------------------------------------------------------------------------
+static bool sCreateNullEffect( Effect * & result, const StrA &, void * )
+{
+    GN_GUARD;
+
+    EffectDesc desc;
+    desc.shaders["vs"].type = VERTEX_SHADER;
+    desc.shaders["ps"].type = PIXEL_SHADER;
+    desc.techniques.resize(1);
+    desc.techniques[0].name = "t0";
+    desc.techniques[0].passes.resize(1);
+    desc.techniques[0].passes[0].shaders[VERTEX_SHADER] = "vs";
+    desc.techniques[0].passes[0].shaders[PIXEL_SHADER] = "ps";
+
+    AutoObjPtr<Effect> eff( new Effect );
+    if( !eff->init( desc ) ) return false;
+
+    // success
+    result = eff.detach();
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+// Load empty effect from file
+// -----------------------------------------------------------------------------
+static bool sCreateEffect( Effect * & result, const StrA & name, void * )
+{
+    GN_GUARD;
+
+    // get resouce path
+    StrA path = sSearchResourceFile( name );
+    if( path.empty() )
+    {
+        GN_ERROR( "Effect '%s' creation failed: path not found.", name.cptr() );
+        return false;
+    }
+
+    GN_INFO( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+
+    // open file
+    DiskFile fp;
+    if( !fp.open( path::toNative(path), "rt" ) )
+    {
+        GN_ERROR( "Effect '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        return false;
+    }
+
+    // parse XML file
+    EffectDesc desc;
+    if( !desc.fromXml( fp ) ) return false;
+
+    // create effect instance
+    AutoObjPtr<Effect> eff( new Effect );
+    if( !eff->init( desc ) ) return false;
+
+    // success
+    result = eff.detach();
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteEffect( Effect * & ptr, void * )
+{
+    GN::safeDelete( ptr );
+}
+
+// *****************************************************************************
 // SampleResourceManager
 // *****************************************************************************
 
@@ -366,6 +444,10 @@ GN::app::SampleResourceManager::SampleResourceManager()
     textures.setCreator( &sCreateTexture );
     textures.setDeletor( &sDeleteTexture );
     textures.setNullor( &sCreateNullTexture );
+
+    effects.setCreator( &sCreateEffect );
+    effects.setDeletor( &sDeleteEffect );
+    effects.setNullor( &sCreateNullEffect );
 
     rawData.setCreator( &sCreateRawData );
     rawData.setDeletor( &sDeleteRawData );
