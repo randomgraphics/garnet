@@ -79,9 +79,7 @@ static void sParseTexture( EffectDesc & desc, const XmlElement & node )
 // -----------------------------------------------------------------------------
 static bool sParseFloats( float * buffer, size_t count, const XmlElement & node )
 {
-    const XmlText * t = NULL;
-    if( node.child ) t = node.child->toText();
-    if( !t )
+    if( node.text.empty() )
     {
         sPostError( node, "missing text" );
         return false;
@@ -90,7 +88,7 @@ static bool sParseFloats( float * buffer, size_t count, const XmlElement & node 
     static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
 
     std::string substring;
-    pcrecpp::StringPiece text( t->text.cptr() );
+    pcrecpp::StringPiece text( node.text.cptr() );
     for( size_t i = 0; i < count; ++i )
     {
         if( !re.Consume( &text, &substring ) ||
@@ -121,7 +119,6 @@ static void sParseUniform( EffectDesc & desc, const XmlElement & node )
     // parse uniform value
     const XmlElement * e = node.child ? node.child->toElement() : NULL;
     if( !e ) return;
-
     if( "matrix44" == e->name )
     {
         Matrix44f m;
@@ -195,11 +192,75 @@ static void sParseUniref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const 
 //
 //
 // -----------------------------------------------------------------------------
+static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement & node )
+{
+    if( "token" != node.name )
+    {
+        sPostError( node, "node name must be \"token\" here.!" );
+        return false;
+    }
+    
+    EffectDesc::CondExp token;
+    StrA type = sGetAttrib( node, "type" );
+    StrA value = sGetAttrib( node, "value" );
+    if( "opcode" == type )
+    {
+        EffectDesc::OpCode op = EffectDesc::sStr2OpCode( value );
+        if( EffectDesc::OPCODE_INVALID == op )
+        {
+            sPostError( node, strFormat( "invalid opcode: %s", value.cptr() ) );
+            return false;
+        }
+        token.fromOpCode( op );
+    }
+    else if( "values" == type )
+    {
+        token.fromStr( value );
+    }
+    else if( "valuei" == type )
+    {
+        int32_t i;
+        if( !str2Int32( i, value.cptr() ) )
+        {
+            sPostError( node, strFormat( "invalid integer: %s", value.cptr() ) );
+            return false;
+        }
+    }
+    else
+    {
+        sPostError( node, strFormat("invalid token type: %s",type.cptr()) );
+        return false;
+    }
+
+    // parse child tokens
+    for( const XmlNode * n = node.child; n; n = n->sibling )
+    {
+        const XmlElement * e = n->toElement();
+        if( !e ) continue;
+        if( !sParseConditionToken( sd, *e ) ) return false;
+    }
+
+    // success
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static void sParseConditions( EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
-    GN_UNUSED_PARAM( sd );
-    GN_UNUSED_PARAM( node );
-    GN_TODO( "parse shader conditions" );
+    GN_ASSERT( "conditions" == node.name );
+
+    for( const XmlNode * n = node.child; n; n = n->sibling )
+    {
+        const XmlElement * e = n->toElement();
+        if( !e ) continue;
+        if( !sParseConditionToken( sd, *e ) )
+        {
+            sd.conditions.clear();
+            break;
+        }
+    }
 }
 
 //

@@ -41,7 +41,14 @@ namespace GN { namespace gfx {
             CHECK_SHADER_PROFILE, //!< Renderer::supportShader( s0, s1 )
 
             NUM_OPCODES, //!< number of avaliable opcode(s)
+
+            OPCODE_INVALID = NUM_OPCODES, //!< invalid opcode
         };
+
+        //!
+        //! Convert string to opcode. Return OPCODE_INVALID if failed.
+        //!
+        static OpCode sStr2OpCode( const StrA & );
         
         //!
         //! Contidional expression for renderer caps check
@@ -111,38 +118,17 @@ namespace GN { namespace gfx {
             //!
             //! Construct from integer
             //!
-            CondExp( int32_t i )
-            {
-                mTokens.resize(1);
-                mTokens[0].type = VALUEI;
-                mTokens[0].valueI = i;
-            }
+            CondExp( int32_t i ) { fromInt( i ); }
 
             //!
             //! Construct from string
             //!
-            CondExp( const char * s )
-            {
-                mTokens.resize(1);
-                mTokens[0].type = VALUES;
-                size_t l = strLen(s);
-                if( l >= STRLEN ) l = STRLEN - 1;
-                memcpy( mTokens[0].valueS, s, l );
-                mTokens[0].valueS[l] = 0;
-            }
+            CondExp( const char * s ) { fromStr( s ); }
 
             //!
             //! Construct from string
             //!
-            CondExp( const StrA & s )
-            {
-                mTokens.resize(1);
-                mTokens[0].type = VALUES;
-                size_t l = s.size();
-                if( l >= STRLEN ) l = STRLEN - 1;
-                memcpy( mTokens[0].valueS, s.cptr(), l );
-                mTokens[0].valueS[l] = 0;
-            }
+            CondExp( const StrA & s ) { fromStr( s ); }
 
             //!
             //! Construct expression from specific operation.
@@ -175,6 +161,11 @@ namespace GN { namespace gfx {
             }
 
             //!
+            //! clear to empty expression
+            //!
+            void clear() { mTokens.clear(); }
+
+            //!
             //! Evaluate the expression.
             //!
             //! - Return true for:
@@ -189,24 +180,43 @@ namespace GN { namespace gfx {
             bool evaluate() const;
 
             //!
-            //! Compose expression from two existing expression
+            //! Construct expression from two existing expression
             //!
             void compose( OpCode op, const CondExp & c1, const CondExp & c2 = DUMMY );
 
             //!
-            //! Construct expression from string. Setup a empty expression, if string is invalid.
+            //! Construct expression of single opcode.
             //!
-            void fromStr( const char * s, size_t strLen = 0 );
+            void fromOpCode( OpCode op )
+            {
+                GN_ASSERT( 0 <= op && op < NUM_OPCODES );
+                mTokens.resize(1);
+                mTokens[0].type = OPCODE;
+                mTokens[0].opcode = op;
+            }
 
             //!
-            //! convert to string
+            //! Construct expression of single integer value.
             //!
-            void toStr( StrA & s ) const;
+            void fromInt( int32_t i )
+            {
+                mTokens.resize(1);
+                mTokens[0].type = VALUEI;
+                mTokens[0].valueI = i;
+            }
 
             //!
-            //! convert to string
+            //! Construct expression of single string value.
             //!
-            StrA toStr() const { StrA s; toStr(s); return s; }
+            void fromStr( const StrA & s )
+            {
+                mTokens.resize(1);
+                mTokens[0].type = VALUES;
+                size_t l = s.size();
+                if( l >= STRLEN ) l = STRLEN - 1;
+                memcpy( mTokens[0].valueS, s.cptr(), l );
+                mTokens[0].valueS[l] = 0;
+            }
 
             //@{
             //! \name CondExp constructors

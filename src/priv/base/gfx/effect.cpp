@@ -94,6 +94,40 @@ const GN::gfx::EffectDesc::CondExp GN::gfx::EffectDesc::CondExp::DUMMY;
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::EffectDesc::OpCode GN::gfx::EffectDesc::sStr2OpCode( const StrA & s )
+{
+    static const char * sTable[] =
+    {
+        "CMP_LT",
+        "CMP_LE",
+        "CMP_EQ",
+        "CMP_NE",
+        "CMP_GE",
+        "CMP_GT",
+        "ALU_ADD",
+        "ALU_DEC",
+        "ALU_NEG",
+        "BIT_AND",
+        "BIT_OR",
+        "BIT_XOR",
+        "BIT_NOT",
+        "REL_AND",
+        "REL_OR",
+        "REL_NOT",
+        "CHECK_RENDERER_CAPS",
+        "CHECK_SHADER_PROFILE",
+    };
+
+    for( size_t i = 0; i < GN_ARRAY_COUNT(sTable); ++i )
+    {
+        if( sTable[i] == s ) return (OpCode)i;
+    }
+    return OPCODE_INVALID;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::gfx::EffectDesc::CondExp::sCalc(
     Token & result, int32_t op, const Token * s0, const Token * s1 )
 {
@@ -279,15 +313,6 @@ void GN::gfx::EffectDesc::CondExp::compose(
         memcpy( mTokens + 1, t1, n1 * sizeof(Token) );
         memcpy( mTokens + n1 + 1, t2, n2 * sizeof(Token) );
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::EffectDesc::CondExp::fromStr( const char *, size_t )
-{
-    mTokens.clear();
-    GN_UNIMPL_WARNING();
 }
 
 // *****************************************************************************

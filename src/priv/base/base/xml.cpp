@@ -80,10 +80,21 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
                 sIdent( fp, ident );
             }
 
-            if( e->child )
+            if( !e->text.empty() || e->child )
             {
                 fp << ">\n";
-                if( e->child ) sFormatNodes( fp, e->child, ident + 1 );
+
+                if( !e->text.empty() )
+                {
+                    sIdent( fp, ident + 1 );
+                    fp << e->text << "\n";
+                }
+
+                if( e->child )
+                {
+                    sFormatNodes( fp, e->child, ident + 1 );
+                }
+
                 sIdent( fp, ident );
                 fp << "</" << e->name << ">\n";
             }
@@ -91,15 +102,6 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
             {
                 fp << "/>\n";
             }
-            break;
-        }
-
-        case GN::XML_TEXT:
-        {
-            const GN::XmlText * t = root->toText();
-            GN_ASSERT( t && !t->child ); // text node should have no child.
-            sIdent( fp, ident );
-            fp << t->text << "\n";
             break;
         }
 
@@ -152,9 +154,10 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
             {
                 sCompactAttributes( fp, e->attrib );
             }
-            if( e->child )
+            if( !e->text.empty() || e->child )
             {
                 fp << ">";
+                if( !e->text.empty() ) fp << e->text;
                 if( e->child ) sCompactNodes( fp, e->child );
                 fp << "</" << e->name << ">";
             }
@@ -162,14 +165,6 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
             {
                 fp << "/>";
             }
-            break;
-        }
-
-        case GN::XML_TEXT:
-        {
-            const GN::XmlText * t = root->toText();
-            GN_ASSERT( !t->child ); // text node should have no child.
-            fp << t->text;
             break;
         }
 
@@ -361,29 +356,10 @@ static void XMLCALL sCharacterDataHandler(
     else
     {
         GN::StrA text = sMangleText( s, len );
-        if( text.empty() ) return;
-
-        if( tracer->parent->type == GN::XML_ELEMENT )
+        if( !text.empty() && tracer->parent->type == GN::XML_ELEMENT )
         {
-            if( tracer->prev && tracer->prev->type == GN::XML_TEXT )
-            {
-                // merge characters into previous text node
-                tracer->prev->toText()->text.append( ' ' );
-                tracer->prev->toText()->text.append( text );
-            }
-            else
-            {
-                // create new text node
-                GN::XmlNode * n = sNewNode( tracer, GN::XML_TEXT );
-                if( 0 == n ) return;
-                GN::XmlText * t = n->toText();
-                t->text = text;
-
-                // update tracer
-                GN_ASSERT( t == tracer->parent );
-                tracer->prev = tracer->parent;
-                tracer->parent = tracer->parent->parent;
-            }
+            tracer->parent->toElement()->text += ' ';
+            tracer->parent->toElement()->text += text;
         }
     }
 }
@@ -535,7 +511,6 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
         case XML_CDATA   : p = new PooledNode<XmlCdata>; break;
         case XML_COMMENT : p = new PooledNode<XmlComment>; break;
         case XML_ELEMENT : p = new PooledNode<XmlElement>; break;
-        case XML_TEXT    : p = new PooledNode<XmlText>; break;
         default          : GN_ERROR( "invalid node type : %d", type ); return NULL;
     }
     mNodes.push_back( p );
