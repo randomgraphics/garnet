@@ -21,6 +21,7 @@
       - D3D: msaa
       - OGL: FBO
     - queryXXX(....)
+    - recreate OGL context, when monitor changed.
   - code page convertor
     - may support convertion from/to utf8 be enough?
   - sample application

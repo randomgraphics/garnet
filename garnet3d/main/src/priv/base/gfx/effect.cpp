@@ -156,7 +156,7 @@ bool GN::gfx::EffectDesc::CondExp::sCalc(
             result.valueI = gRenderer.getCaps( s0->valueI ); break;
 
         case CHECK_SHADER_PROFILE :
-            result.valueI = gRenderer.supportShader( s1->valueS ); break;
+            result.valueI = gRenderer.supportShader( s0->valueS ); break;
 
         default : GN_UNEXPECTED(); return false; // program should not reach here.
     }

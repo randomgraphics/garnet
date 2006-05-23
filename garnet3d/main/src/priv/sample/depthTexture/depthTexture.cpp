@@ -74,11 +74,11 @@ public:
 
         // try create shaders
         mVs = mPs = 0;
-        if( r.supportShader( VERTEX_SHADER, "vs_1_1" ) )
+        if( r.supportShader( "vs_1_1" ) )
         {
             mVs = mApp.getResMgr().shaders.getResourceHandle( "depthTexture/d3dVs.txt" );
         }
-        if( r.supportShader( PIXEL_SHADER, "ps_1_1" ) )
+        if( r.supportShader( "ps_1_1" ) )
         {
             mPs = mApp.getResMgr().shaders.getResourceHandle( "depthTexture/d3dPs.txt" );
         }
