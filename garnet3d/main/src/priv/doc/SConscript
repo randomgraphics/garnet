@@ -5,30 +5,30 @@ import sys, os.path
 # store Doc generate functor
 class DocGenerator:
 
-    def __init__( self ):
-        self.target = File( os.path.join( GN.distRoot(), 'doc', 'reference.chm' ) )
-        self.outdir = Dir('.')
-
-    def __call__( self, env, sources ):
+    def __call__( self, env, sources, bldDir ):
 
         doxygen = File('#env/bin/mswin/x86/doxygen.exe').path
         genchm = 'YES'
 
-        doxyFileName = os.path.join( self.outdir.abspath, 'DoxyFile' )
+        outdir = Dir(os.path.join( bldDir, 'doc' )).abspath
+
+        chmFileName = os.path.join( outdir, 'reference.chm' )
+
+        doxyFileName = os.path.join( outdir, 'DoxyFile' )
 
         doxyfile = env.Command(
             doxyFileName, sources,
             '%s $SOURCES OUTPUT_DIRECTORY=%s CHM_FILE=%s GENERATE_HTMLHELP=%s HHC_LOCATION=%s > $TARGET'%(
                 sys.executable,
-                self.outdir,
-                self.target.abspath,
+                outdir,
+                chmFileName,
                 genchm,
                 File('#env/bin/mswin/x86/hhc.exe').abspath,
                 )
             )
 
         manual = env.Command(
-            self.target, doxyFileName,
+            chmFileName, doxyFileName,
             '%s $SOURCES'%(doxygen)
             )
 

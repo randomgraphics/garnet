@@ -125,17 +125,15 @@ def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
 def UTIL_buildRoot( compiler = None ) :
     if not compiler:
-        return os.path.join( '#bin', 'build.tmp', 'scons' )
+        return os.path.join( '#build.tmp', 'scons' )
     else:
-        return os.path.join( '#bin', 'build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
-
-def UTIL_distRoot() : return '#bin'
+        return os.path.join( '#build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
 
 def UTIL_buildDir( compiler, variant ) :
     if not isinstance( compiler, Compiler ):
         assert( isinstance(compiler,int) )
         assert( isinstance(variant,int) )
-        return os.path.join( 'bin', 'build.tmp', 'scons' )
+        return os.path.join( '#build.tmp', 'scons' )
     else:
         return os.path.join( UTIL_buildRoot(compiler), variant )
 
@@ -446,9 +444,6 @@ class GarnetEnv :
                 files += do_glob( pattern, dir, recursive )
         return files
 
-    # get root distribution directory
-    def distRoot( self ) : return UTIL_distRoot()
-
     # 创建 source cluster
     def newSourceCluster( self, sources, pchHeader = None, pchSource = None ):
         s = SourceCluster()
@@ -478,7 +473,18 @@ class GarnetEnv :
         ALL_targets[self.compiler][self.variant][name] = t # insert to global target list
         return t
 
-    # 创建 neutral(compiler insensitive) custom target.
+    # 创建 custom compiler and platform _DEPENDANT_ target
+    def newCustomTarget( self, name, sources ):
+
+        # create new target instance
+        t = Target()
+        t.type = 'custom'
+        t.path = Dir('.')
+        t.sources = sources
+        ALL_targets[self.compiler][self.variant][name] = t # insert to global target list
+        return t
+
+    # 创建 compiler _INDEPENDANT_ target.
     def newNeutralCustomTarget( self, name, sources ):
 
         # check for redundant target
@@ -759,7 +765,7 @@ def BUILD_staticLib( name, target ):
     for s in target.sources: objs += BUILD_staticObjs( s )
     env = BUILD_newLinkEnv( target )
     libName = '%s%s%s%s'%( env['LIBPREFIX'], name, BUILD_getSuffix(), env['LIBSUFFIX'] )
-    target.targets = env.Install( BUILD_libDir, env.Library( os.path.join(str(target.path),libName), objs ) )
+    target.targets = env.Library( os.path.join(BUILD_libDir,libName), objs )
     Alias( name, target.targets )
     Default( target.targets )
 
@@ -872,7 +878,7 @@ def BUILD_custom( name, target ):
     env = BUILD_env.Copy()
     target.targets = []
     for s in target.sources:
-        target.targets += s.action( env, s.sources )
+        target.targets += s.action( env, s.sources, BUILD_bldDir )
     Alias( name, target.targets )
     Default( target.targets )
 
