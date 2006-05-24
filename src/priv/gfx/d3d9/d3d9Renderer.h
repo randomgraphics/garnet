@@ -29,6 +29,15 @@ namespace GN { namespace gfx
     };
 
     //!
+    //! Default depth surface format
+    //!
+#if GN_XENON
+    static const D3DFORMAT DEFAULT_DEPTH_FORMAT = D3DFMT_D24FS8;
+#else
+    static const D3DFORMAT DEFAULT_DEPTH_FORMAT = D3DFMT_D24S8;
+#endif
+
+    //!
     //! D3D9 renderer class
     //!
     class D3D9Renderer : public BasicRenderer
@@ -125,14 +134,7 @@ namespace GN { namespace gfx
         //!
         //! Check resource format compability
         //!
-        HRESULT checkD3DDeviceFormat( uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const
-        {
-            return mD3D->CheckDeviceFormat(
-                mAdapter,
-                mDeviceType,
-                mPresentParameters.BackBufferFormat,
-                usage, rtype, format );
-        }
+        HRESULT checkD3DDeviceFormat( uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const;
 
         //!
         //! D3D MSAA descriptor

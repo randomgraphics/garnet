@@ -35,6 +35,12 @@
 
 #if GN_XENON
 inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
+#ifndef D3DLOCK_DISCARD
+#define D3DLOCK_DISCARD 0
+#endif
+#ifndef D3DUSAGE_DYNAMIC
+#define D3DUSAGE_DYNAMIC 0
+#endif
 #endif
 
 #if GN_RETAIL_BUILD // disable PIX tag in retail build.

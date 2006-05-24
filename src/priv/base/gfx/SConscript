@@ -8,6 +8,7 @@ sources = [
     'effectFromXml.cpp',
     'fakeRenderer.cpp',
     'image.cpp',
+    'imageBMP.cpp',
     'imageDDS.cpp',
     'imageJPG.cpp',
     'imagePNG.cpp',

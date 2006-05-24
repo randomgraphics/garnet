@@ -48,7 +48,7 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
     AutoRef<Texture> p( createTexture(type,w,h,d,desc.numFaces,desc.numLevels,desc.format,0 ) );
     if( !p ) return 0;
 
-#define ASSERT_RANGE( x, l, s, e ) GN_ASSERT( (s) <= (x) && ((x)+(l)) < ((s)+(e)) )
+#define ASSERT_RANGE( x, l, s, e ) GN_ASSERT( (s) <= (x) && ((x)+(l)) <= ((s)+(e)) )
 
     // copy data to texture
     for( size_t f = 0; f < desc.numFaces; ++f )

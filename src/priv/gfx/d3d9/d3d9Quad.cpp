@@ -269,8 +269,8 @@ void GN::gfx::D3D9Quad::drawQuads(
             r.setD3DRenderState( D3DRS_ALPHAFUNC, D3DCMP_GREATER );
             r.setD3DRenderState( D3DRS_ALPHAREF, 0 );
         }
-        r.setD3DRenderState( D3DRS_ZWRITEENABLE, ( DQ_UPDATE_DEPTH & options ) ? TRUE : FALSE );
-        r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
+        r.setD3DRenderState( D3DRS_ZWRITEENABLE, !!( DQ_UPDATE_DEPTH & options ) );
+        r.setD3DRenderState( D3DRS_ZENABLE, !!(DQ_DEPTH_ENABLE & options ) );
         r.setD3DRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
    }
 
