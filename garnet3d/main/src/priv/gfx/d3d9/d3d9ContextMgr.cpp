@@ -418,7 +418,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                 GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
                     rt0Desc.Width,
                     rt0Desc.Height,
-                    D3DFMT_D24S8, // TODO: enumerate appropriate depth buffer format.
+                    DEFAULT_DEPTH_FORMAT, // TODO: enumerate appropriate depth buffer format.
                     mPresentParameters.MultiSampleType,
                     mPresentParameters.MultiSampleQuality,
                     TRUE,
@@ -542,14 +542,17 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                 GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
                     rt0Desc.Width,
                     rt0Desc.Height,
-                    D3DFMT_D24S8, // TODO: enumerate appropriate depth buffer format.
+                    DEFAULT_DEPTH_FORMAT, // TODO: enumerate appropriate depth buffer format.
                     rt0Desc.MultiSampleType,
                     rt0Desc.MultiSampleQuality,
                     TRUE,
                     &mAutoDepth, 0 ) );
                 GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
                 GN_TRACE( "Create depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
-                    rt0Desc.Width, rt0Desc.Height, "D3DFMT_D24S8", rt0Desc.MultiSampleType, rt0Desc.MultiSampleQuality );
+                    rt0Desc.Width, rt0Desc.Height,
+                    d3d9::d3dFormat2Str(DEFAULT_DEPTH_FORMAT),
+                    rt0Desc.MultiSampleType,
+                    rt0Desc.MultiSampleQuality );
             }
         }
         else if( *newSurf != *oldSurf || forceRebind )

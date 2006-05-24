@@ -640,6 +640,70 @@
 						</FileConfiguration>
 					</File>
 				</Filter>
+				<Filter
+					Name="expat"
+					Filter="">
+					<File
+						RelativePath="..\src\extern\src\expat\amigaconfig.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\ascii.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\asciitab.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\cygwinconfig.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\iasciitab.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\internal.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\latin1tab.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\macconfig.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\nametab.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\utf8tab.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\winconfig.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xb2config.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmlparse.c">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmlrole.c">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmlrole.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmltok.c">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmltok.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmltok_impl.h">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmltok_impl.inl">
+					</File>
+					<File
+						RelativePath="..\src\extern\src\expat\xmltok_ns.inl">
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
@@ -767,6 +831,9 @@
 					</File>
 					<File
 						RelativePath="..\src\priv\inc\garnet\base\variant.h">
+					</File>
+					<File
+						RelativePath="..\src\priv\inc\garnet\base\xml.h">
 					</File>
 				</Filter>
 				<Filter
@@ -1365,6 +1432,9 @@
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName)Base.pch"/>
 							</FileConfiguration>
 						</File>
+						<File
+							RelativePath="..\src\priv\base\base\xml.cpp">
+						</File>
 					</Filter>
 					<Filter
 						Name="win"
@@ -1664,6 +1734,9 @@
 							</FileConfiguration>
 						</File>
 						<File
+							RelativePath="..\src\priv\base\gfx\effectFromXml.cpp">
+						</File>
+						<File
 							RelativePath="..\src\priv\base\gfx\fakeRenderer.cpp">
 							<FileConfiguration
 								Name="Debug|Win32">
@@ -1732,6 +1805,12 @@
 									PrecompiledHeaderThrough="pch.h"
 									PrecompiledHeaderFile="$(IntDir)/$(TargetName)gfx.pch"/>
 							</FileConfiguration>
+						</File>
+						<File
+							RelativePath="..\src\priv\base\gfx\imageBMP.cpp">
+						</File>
+						<File
+							RelativePath="..\src\priv\base\gfx\imageBMP.h">
 						</File>
 						<File
 							RelativePath="..\src\priv\base\gfx\imageDDS.cpp">

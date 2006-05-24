@@ -293,6 +293,11 @@ namespace GN { namespace gfx
         DQ_UPDATE_DEPTH = 1<<7,
 
         //!
+        //! Enable depth test. Default is disabled.
+        //!
+        DQ_DEPTH_ENABLE = 1<<8,
+
+        //!
         //! 上述 DQ_USE_CURRENT_XX 的集合
         //!
         DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_USE_CURRENT_TS

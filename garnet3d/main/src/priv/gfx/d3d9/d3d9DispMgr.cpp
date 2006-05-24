@@ -180,7 +180,7 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3dpp.MultiSampleType, d3dpp.MultiSampleQuality );
 
     // setup depth parameters
-    d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
+    d3dpp.AutoDepthStencilFormat = GN::gfx::DEFAULT_DEPTH_FORMAT;
     d3dpp.EnableAutoDepthStencil = true;
 
     // set display mode parameters
@@ -452,6 +452,27 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
     mMsaaDescTable.clear();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+HRESULT GN::gfx::D3D9Renderer::checkD3DDeviceFormat(
+    uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const
+{
+#if GN_XENON
+    // no need to do this check on Xenon platform.
+    GN_UNUSED_PARAM( usage );
+    GN_UNUSED_PARAM( rtype );
+    GN_UNUSED_PARAM( format );
+    return D3D_OK;
+#else
+    return mD3D->CheckDeviceFormat(
+        mAdapter,
+        mDeviceType,
+        mPresentParameters.BackBufferFormat,
+        usage, rtype, format );
+#endif
 }
 
 //

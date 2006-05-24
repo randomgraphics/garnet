@@ -2,9 +2,10 @@
 #if !GN_ENABLE_INLINE
 #include "garnet/gfx/image.inl"
 #endif
-#include "imagePNG.h"
-#include "imageJPG.h"
+#include "imageBMP.h"
 #include "imageDDS.h"
+#include "imageJPG.h"
+#include "imagePNG.h"
 #include "imageTGA.h"
 
 // *****************************************************************************
@@ -86,11 +87,11 @@ class GN::gfx::ImageReader::Impl
     enum FileFormat
     {
         UNKNOWN = 0,
+        BMP,
+        DDS,
         JPEG,
         PNG,
-        DDS,
         TGA,
-        //BMP,
     };
 
     //!
@@ -106,12 +107,14 @@ class GN::gfx::ImageReader::Impl
 
     std::vector<uint8_t> mSrc;
 
-    JPGReader  mJPGReader;
-    PNGReader  mPNGReader;
-    DDSReader  mDDSReader;
-    TGAReader  mTGAReader;
+    BMPReader mBMPReader;
+    DDSReader mDDSReader;
+    JPGReader mJPGReader;
+    PNGReader mPNGReader;
+    TGAReader mTGAReader;
 
-    FileFormat  mFileFormat;
+    FileFormat mFileFormat;
+
     ReaderState mState;
 
 public:
@@ -135,6 +138,7 @@ public:
         // determine file format
         #define CHECK_FORMAT( reader, format ) \
             if( reader.checkFormat( i_file ) ) mFileFormat = format; else
+        CHECK_FORMAT( mBMPReader, BMP )
         CHECK_FORMAT( mDDSReader, DDS )
         CHECK_FORMAT( mJPGReader, JPEG )
         CHECK_FORMAT( mPNGReader, PNG )
@@ -181,9 +185,10 @@ public:
 
         switch( mFileFormat )
         {
+            case BMP  : READ_HEADER( mBMPReader ); break;
+            case DDS  : READ_HEADER( mDDSReader ); break;
             case JPEG : READ_HEADER( mJPGReader ); break;
             case PNG  : READ_HEADER( mPNGReader ); break;
-            case DDS  : READ_HEADER( mDDSReader ); break;
             case TGA  : READ_HEADER( mTGAReader ); break;
             default   :
                 GN_ERROR( "unknown or unsupport file format!" );
@@ -225,9 +230,10 @@ public:
 
         switch( mFileFormat )
         {
+            case BMP  : READ_IMAGE( mBMPReader ); break;
+            case DDS  : READ_IMAGE( mDDSReader ); break;
             case JPEG : READ_IMAGE( mJPGReader ); break;
             case PNG  : READ_IMAGE( mPNGReader ); break;
-            case DDS  : READ_IMAGE( mDDSReader ); break;
             case TGA  : READ_IMAGE( mTGAReader ); break;
             default   :
                 GN_ERROR( "unknown or unsupport file format!" );

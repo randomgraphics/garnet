@@ -8,21 +8,6 @@
 
 namespace GN { namespace gfx
 {
-    /*!
-    //! image type
-    //!
-    enum ImageType
-    {
-        IMG_1D,    //!< 1D image
-        IMG_2D,    //!< 2D image
-        IMG_3D,    //!< volume mage
-        IMG_CUBE,  //!< cubemap image
-        IMG_STACK, //!< stack image (xenon only)
-
-        NUM_IMAGE_TYPES, //!< number of available image types
-        IMG_INVALID      //!< indicate invalid image type
-    };*/
-
     //!
     //! mipmap descriptor
     //!
@@ -30,7 +15,7 @@ namespace GN { namespace gfx
     //! - for 2D texture, depth is always 1
     //! - for cube texture, depth is always 6
     //! - for 3D texture, depth is based on mipmap level
-    //! - 两个pitch值可以通过mipmap的其他参数计算出来。
+    //! - slicePitch 和 levelPitch 可以通过mipmap的其他参数计算出来。
     //!   这里列出这两个值仅仅是为了避免重复计算，方便使用。
     //!
     struct MipmapDesc
@@ -46,12 +31,12 @@ namespace GN { namespace gfx
         uint32_t rowPitch;
 
         //!
-        //! bytes of one slice.
+        //! bytes of one slice. Equals rowPitch * height
         //!
         uint32_t slicePitch;
 
         //!
-        //! total bytes of this mip level.
+        //! total bytes of this mip level. Equals slicePitch * depth.
         //!
         uint32_t levelPitch;
     };

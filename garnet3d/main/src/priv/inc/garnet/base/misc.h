@@ -60,6 +60,53 @@ namespace GN
     template<typename T> inline const T & max( const T & a, const T & b ) { return a > b ? a : b; }
 
     //!
+    //! Swap endian. Do "in-place" swap, if dst == src.
+    //!
+    GN_FORCE_INLINE void swapEndian8In32( void * dst, const void * src, size_t countInInt32 )
+    {
+        GN_ASSERT( dst && src );
+        uint32_t * d = (uint32_t*)dst;
+        const uint32_t * s = (const uint32_t*)src;
+        for( size_t i = 0; i < countInInt32; ++i, ++s, ++d )
+        {
+            *d = ( ((*s)         ) << 24 ) |
+                 ( ((*s)&0xFF00  ) << 8  ) |
+                 ( ((*s)&0xFF0000) >> 8  ) |
+                 ( ((*s)         ) >> 24 );
+        }
+    }
+
+    //!
+    //! Swap endian. Do "in-place" swap, if dst == src.
+    //!
+    GN_FORCE_INLINE void swapEndian16In32( void * dst, const void * src, size_t countInInt32 )
+    {
+        GN_ASSERT( dst && src );
+        uint32_t * d = (uint32_t*)dst;
+        const uint32_t * s = (const uint32_t*)src;
+        for( size_t i = 0; i < countInInt32; ++i, ++s, ++d )
+        {
+            *d = ( (*s) >> 16 ) |
+                 ( (*s) << 16 );
+        }
+    }
+
+    //!
+    //! Swap endian. Do "in-place" swap, if dst == src.
+    //!
+    GN_FORCE_INLINE void swapEndian8In16( void * dst, const void * src, size_t countInInt16 )
+    {
+        GN_ASSERT( dst && src );
+        uint16_t * d = (uint16_t*)dst;
+        const uint16_t * s = (const uint16_t*)src;
+        for( size_t i = 0; i < countInInt16; ++i, ++s, ++d )
+        {
+            *d = ( (*s) >> 8 ) |
+                 ( (*s) << 8 );
+        }
+    }
+
+    //!
     //! type cast function
     //!
     //! perform dynamic cast in debug build, and static cast in release build.

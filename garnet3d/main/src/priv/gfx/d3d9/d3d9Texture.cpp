@@ -116,6 +116,11 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 // ----------------------------------------------------------------------------
 static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
 {
+#if GN_XENON
+
+    return GN::gfx::DEFAULT_DEPTH_FORMAT;
+
+#else
     GN_GUARD;
 
     static D3DFORMAT candidates[] =
@@ -137,6 +142,7 @@ static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
     return D3DFMT_UNKNOWN;
 
     GN_UNGUARD;
+#endif
 }
 
 //
@@ -223,6 +229,8 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
     {
         GN_WARN( "Xenon does not support mipmap auto-generation!" );
     }
+    d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
+    d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_RENDERTARGET : 0;
 #else
 
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;

@@ -176,7 +176,14 @@ void GN::gfx::OGLQuad::drawQuads(
             glAlphaFunc( GL_GREATER, 0.0f );
         }
         glDepthMask( !!(DQ_UPDATE_DEPTH & options) );
-        glEnable( GL_DEPTH_TEST );
+        if( DQ_DEPTH_ENABLE & options )
+        {
+            glEnable( GL_DEPTH_TEST );
+        }
+        else
+        {
+            glDisable( GL_DEPTH_TEST );
+        }
         glDisable( GL_CULL_FACE );
     }
 
