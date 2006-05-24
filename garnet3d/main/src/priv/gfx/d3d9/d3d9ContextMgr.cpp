@@ -315,38 +315,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     // bind render targets
     //
-    bool rebindViewport;
-    bindContextRenderTargets( newContext, newFlags, forceRebind, rebindViewport );
-
-    //
-    // bind viewport
-    //
-    if( rebindViewport )
-    {
-        float l = mContext.viewport.x;
-        float t = mContext.viewport.y;
-        float r = l + mContext.viewport.w;
-        float b = t + mContext.viewport.h;
-        sSetupViewport( mDevice, l, t, r, b );
-    }
-    else if( newFlags.viewport )
-    {
-        if( newContext.viewport != mContext.viewport || forceRebind )
-        {
-            float l = newContext.viewport.x;
-            float t = newContext.viewport.y;
-            float r = l + newContext.viewport.w;
-            float b = t + newContext.viewport.h;
-
-            // clamp viewport in valid range
-            clamp<float>( l, 0.0f, 1.0f );
-            clamp<float>( b, 0.0f, 1.0f );
-            clamp<float>( r, 0.0f, 1.0f );
-            clamp<float>( t, 0.0f, 1.0f );
-
-            sSetupViewport( mDevice, l , t, r, b );
-        }
-    }
+    bindContextRenderTargetsAndViewport( newContext, newFlags, forceRebind );
 
     GN_UNGUARD_SLOW;
 }
@@ -354,23 +323,59 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargets(
+GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
     const RendererContext & newContext,
     RendererContext::FieldFlags newFlags,
-    bool forceRebind,
-    bool & needRebindViewport )
+    bool forceRebind )
 {
-    needRebindViewport = false;
+    bool needRebindViewport = false;
 
 #if GN_XENON
 	if( newFlags.colorBuffers )
     {
+        /*static const RendererContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
+        const RendererContext::SurfaceDesc *newSurf, *oldSurf;
+
+        for( uint32_t i = 0; i < 4; ++i )
+        {
+            newSurf = (i >= newContext.numColorBuffers) ? &sNullSurface : &newContext.colorBuffers[i];
+            oldSurf = (i >= mContext.numColorBuffers) ? &sNullSurface : &mContext.colorBuffers[i];
+            if( *newSurf != *oldSurf || forceRebind )
+            {
+                // copy content from RT to old/current RTT
+                if( *oldSurf )
+                {
+                    GN_TODO( "resolve to RTT" );
+                }
+
+                // setup new RT
+                if( 0 == newSurf->texture )
+                {
+                    // restore to default RT
+                    if( 0 == i )
+                    {
+                        GN_DX9_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
+                    }
+                    else
+                    {
+                        GN_DX9_CHECK( mDevice->SetRenderTarget( 0, 0 ) );
+                    }
+                }
+                else
+                {
+                    // setup RT based on RTT
+                    //const Vector3<uint32_t> & sz = newSurf->texture->getMipSize( newSurf->level );
+                    //setupRT( sz.x, sz.y, newSurf->texture->getDesc().format );
+                }
+
+            }
+        }*/
+
         // setup default render targets
         GN_DX9_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
         GN_DX9_CHECK( mDevice->SetRenderTarget( 1, 0 ) );
         GN_DX9_CHECK( mDevice->SetRenderTarget( 2, 0 ) );
         GN_DX9_CHECK( mDevice->SetRenderTarget( 3, 0 ) );
-
 	}
 
     if( newFlags.depthBuffer )
@@ -556,6 +561,36 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargets(
         }
     }
 #endif
+
+    //
+    // bind viewport
+    //
+    if( needRebindViewport )
+    {
+        float l = mContext.viewport.x;
+        float t = mContext.viewport.y;
+        float r = l + mContext.viewport.w;
+        float b = t + mContext.viewport.h;
+        sSetupViewport( mDevice, l, t, r, b );
+    }
+    else if( newFlags.viewport )
+    {
+        if( newContext.viewport != mContext.viewport || forceRebind )
+        {
+            float l = newContext.viewport.x;
+            float t = newContext.viewport.y;
+            float r = l + newContext.viewport.w;
+            float b = t + newContext.viewport.h;
+
+            // clamp viewport in valid range
+            clamp<float>( l, 0.0f, 1.0f );
+            clamp<float>( b, 0.0f, 1.0f );
+            clamp<float>( r, 0.0f, 1.0f );
+            clamp<float>( t, 0.0f, 1.0f );
+
+            sSetupViewport( mDevice, l , t, r, b );
+        }
+    }
 }
 
 //
