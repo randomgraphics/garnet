@@ -176,8 +176,6 @@ bool BMPReader::readImage( void * o_data ) const
             return false;
     }
 
-    // TODO: flip the image
-
     // success
     return true;
 
