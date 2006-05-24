@@ -55,7 +55,7 @@ public:
                 }
 
                 StrA name;
-                name.format( "c:/TOOLS/cegui/datafiles/%s", filename.c_str() );
+                name.format( "c:/devel/cegui/datafiles/%s", filename.c_str() );
 
                 DiskFile fp;
                 if( !fp.open( name, "rb" ) )
@@ -65,7 +65,7 @@ public:
                 }
 
                 AutoObjPtr<uint8_t> buffer( new uint8_t[fp.size()] );
-                if( fp.size() != fp.read( buffer, fp.size() ) )
+                if( !fp.read( buffer, fp.size(), NULL ) )
                 {
                     throw GenericException((utf8*)
                         "DefaultResourceProvider::loadRawDataContainer - Problem reading " + filename);

@@ -919,6 +919,17 @@ namespace GN
             return defaultValue;
     }
 
+    //!
+    //! Convert string to float array. String should be in format like:
+    //!    float1, float2, float3, ...
+    //! or:
+    //!    float1 float2 float3 ...
+    //!
+    //! \return
+    //!     Return count of floating filled into target buffer.
+    //!
+    size_t str2Floats( float * buffer, size_t count, const char * str, size_t stringLength = 0 );
+
     //@}
 
     //!
