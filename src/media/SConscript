@@ -4,14 +4,14 @@ import os.path
 
 srcdir = str( Dir('.').srcnode().path )
 
-def doCopy( env, sources ):
+def doCopy( env, sources, bldDir ):
     targets = []
     for x in sources:
         src = str(x.srcnode().path)
-        dst = os.path.join( GN.distRoot(), 'media', GN.relpath( src, srcdir ) )
+        dst = os.path.join( bldDir, 'media', GN.relpath( src, srcdir ) )
         targets.append( env.InstallAs( dst, src ) )
     return targets
 
 sources = GN.glob( "*.*", True )
 cluster = GN.newCustomSourceCluster( sources, doCopy )
-GN.newNeutralCustomTarget( 'GNmedia', [cluster] )
+GN.newCustomTarget( 'GNmedia', [cluster] )

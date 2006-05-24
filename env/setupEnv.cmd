@@ -61,7 +61,7 @@ REM ===========
 
 alias root      "cd /d %GARNET_ROOT%\$*"
 alias bin       "cd /d %GARNET_ROOT%\bin\$*"
-alias bld       "cd /d %GARNET_ROOT%\bin\build.tmp\scons\%GN_BUILD_TARGET_OS%\%GN_BUILD_TARGET_CPU%\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
+alias bld       "cd /d %GARNET_ROOT%\build.tmp\scons\%GN_BUILD_TARGET_OS%\%GN_BUILD_TARGET_CPU%\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
 alias env       "cd /d %GARNET_ROOT%\env\$*"
 alias msvc      "cd /d %GARNET_ROOT%\msvc"
 alias src       "cd /d %GARNET_ROOT%\src\$*"

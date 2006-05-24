@@ -29,12 +29,6 @@ static GN::StrA sSearchResourceFile( const StrA & name )
     CHECK_PATH( ( "app:/media", name ) );
     CHECK_PATH( ( "app:../media", name ) );
 
-    // search in garnet binary tree.
-    CHECK_PATH( ( getEnv("GARNET_ROOT"), "bin/media", name ) );
-
-    // hack for special cases
-    CHECK_PATH( ( "app:../../../../../../../media", name ) ); // for temporary build binaries
-
     // resource not found.
     return StrA::EMPTYSTR;
 
