@@ -24,7 +24,7 @@
 void CEGUI::GarnetRenderer::addQuad(
     const Rect& dest_rect,
     float z,
-    const Texture* tex,
+    const Texture * tex,
     const Rect& texture_rect,
     const ColourRect & colours,
     QuadSplitMode )
@@ -44,15 +44,13 @@ void CEGUI::GarnetRenderer::addQuad(
     uint32_t c2 = colours.d_bottom_right.getARGB();
     uint32_t c3 = colours.d_bottom_left.getARGB();
 
-    uint32_t texid = tex ? GN::safeCast<const GarnetTexture*>(tex)->getHandle() : 0;
-
     QuadDesc qd =
     {
         {
-            { x0, y0, z, u0, v0, c0, texid },
-            { x1, y0, z, u1, v0, c1, texid },
-            { x1, y1, z, u1, v1, c2, texid },
-            { x0, y1, z, u0, v1, c3, texid },
+            { x0, y0, z, u0, v0, c0, tex },
+            { x1, y0, z, u1, v0, c1, tex },
+            { x1, y1, z, u1, v1, c2, tex },
+            { x0, y1, z, u0, v1, c3, tex },
         }
     };
     if( mQueueEnabled ) mQuads.push_back( qd );
@@ -217,6 +215,44 @@ CEGUI::Rect CEGUI::GarnetRenderer::getRect(void) const
 //
 //
 // -----------------------------------------------------------------------------
+bool CEGUI::GarnetRenderer::onRendererRestore()
+{
+    // reload textures
+    std::vector<GarnetTexture*>::iterator i;
+    for( i = mTextures.begin(); i != mTextures.end(); ++i )
+    {
+        GN_ASSERT( *i );
+        if( !(*i)->reload() ) return false;
+    }
+
+	// update display size
+	EventArgs args;
+	fireEvent( EventDisplaySizeChanged, args, EventNamespace );
+
+	// Now we've come back, we MUST ensure a full redraw is done since the
+	// textures in the stored quads will have been invalidated.
+	System::getSingleton().signalRedraw();
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void CEGUI::GarnetRenderer::onRendererDispose()
+{
+    // dispose textures
+    std::vector<GarnetTexture*>::iterator i;
+    for( i = mTextures.begin(); i != mTextures.end(); ++i )
+    {
+        GN_ASSERT( *i );
+        (*i)->dispose();
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t count )
 {
     GN_GUARD_SLOW;
@@ -236,8 +272,12 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
 
         GN_ASSERT( quads > start );
 
+        // set texture
+        r.setTexture(
+            0,
+            start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
+
         // draw quads from start to quads (they have same texture)
-        r.setTextureHandle( 0, start->vertices[0].tex );
         r.drawQuads(
             GN::gfx::DQ_WINDOW_SPACE,
             &start->vertices[0].x, sizeof(QuadVertex),
@@ -251,7 +291,10 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
     // draw remaining quads
     if( quads > start )
     {
-        r.setTextureHandle( 0, start->vertices[0].tex );
+        r.setTexture(
+            0,
+            start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
+
         r.drawQuads(
             GN::gfx::DQ_WINDOW_SPACE,
             &start->vertices[0].x, sizeof(QuadVertex),

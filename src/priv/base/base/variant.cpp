@@ -63,23 +63,24 @@ static inline bool sString2Pointer( const GN::StrA & s, const void* & p )
 }
 static inline bool sString2Vector4( const GN::StrA & s, GN::Vector4f & v )
 {
-#if GN_MSVC8
-#define sscanf sscanf_s
-#endif
-    return 4 == sscanf( s.cptr(), "(%f,%f,%f,%f)", &v.x, &v.y, &v.z, &v.w );
+    return 4 == GN::str2Floats( v, 4, s.cptr(), s.size() );
 }
 static inline bool sVector42String( const GN::Vector4f & v, GN::StrA & s )
 {
-    s = GN::strFormat( "(%f,%f,%f,%f)", v.x, v.y, v.z, v.w );
+    s = GN::strFormat( "%f,%f,%f,%f", v.x, v.y, v.z, v.w );
     return true;
+}
+static inline bool sString2Matrix44( const GN::StrA & s, GN::Matrix44f & m )
+{
+    return 16 == GN::str2Floats( m[0], 16, s.cptr(), s.size() );
 }
 static inline bool sMatrix442String( const GN::Matrix44f & m, GN::StrA & s )
 {
     s = GN::strFormat(
-        "(%f,%f,%f,%f)\n"
-        "(%f,%f,%f,%f)\n"
-        "(%f,%f,%f,%f)\n"
-        "(%f,%f,%f,%f)",
+        "%f,%f,%f,%f,\n"
+        "%f,%f,%f,%f,\n"
+        "%f,%f,%f,%f,\n"
+        "%f,%f,%f,%f",
         m[0][0], m[0][1], m[0][2], m[0][3],
         m[1][0], m[1][1], m[1][2], m[1][3],
         m[2][0], m[2][1], m[2][2], m[2][3],
@@ -196,6 +197,7 @@ bool GN::Variant::convertTo( VariantType type ) const
             case ENCODE_KEY( VARIANT_STRING, VARIANT_FLOAT ) : success = sString2Float( mString.value, mFloat.value ); break;
             case ENCODE_KEY( VARIANT_STRING, VARIANT_POINTER ) : success = sString2Pointer( mString.value, mPointer.value ); break;
             case ENCODE_KEY( VARIANT_STRING, VARIANT_VECTOR4 ) : success = sString2Vector4( mString.value, mVector4.value ); break;
+            case ENCODE_KEY( VARIANT_STRING, VARIANT_MATRIX44 ) : success = sString2Matrix44( mString.value, mMatrix44.value ); break;
 
             case ENCODE_KEY( VARIANT_VECTOR4, VARIANT_STRING ) : success = sVector42String( mVector4.value, mString.value );
 

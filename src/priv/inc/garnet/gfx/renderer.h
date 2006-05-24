@@ -413,8 +413,8 @@ namespace GN { namespace gfx
         //!
         //! (Re)load content of graphics resources.
         //! - Only lockable resources (texture, vertex/index buffer) that have
-        //!   neither system-copy no content loader need content reloading.
-        //! - No need to restore shaders, RSBs and VtxFmtHandle.
+        //!   neither system-copy nor content loader need content reloading.
+        //! - No need to reload shaders, render state blocks and VtxFmtHandle.
         //!
         static GN_PUBLIC Signal0<bool> sSigRestore;
 
@@ -434,12 +434,12 @@ namespace GN { namespace gfx
         //! This signal is useful when you want application to quit when user click close button or
         //! press ALT-F4, while using internal render window.
         //! \par
-        //! Internal render window is "unclosable". That means, when user try to close internal render
-        //! window, nothing will happen, besides triggering this signal.
+        //! Note that if you igore this sigal, _NOTHING_ will happen. Internal render window will
+        //! _NOT_ be closed. You can only close the internal render window by delete the renderer.
         //! \par
         //! This signall will be triggered as well, when using external render window, to make the renderer
-        //! behavior consistent. But normally, you should have been handled external window messages somewhere
-        //! else. So you can safely ignore this signal.
+        //! behavior consistent. But normally, you should have handled external window messages somewhere
+        //! else. If that's the case, then you can safely ignore this signal.
         //!
         static GN_PUBLIC Signal0<void> sSigWindowClosing;
 

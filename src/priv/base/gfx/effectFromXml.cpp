@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "garnet/gfx/effect.h"
 #include "garnet/base/xml.h"
-#include <pcrecpp.h>
 
 // *****************************************************************************
 // local functions
@@ -85,20 +84,12 @@ static bool sParseFloats( float * buffer, size_t count, const XmlElement & node 
         return false;
     }
 
-    static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
+    size_t n = str2Floats( buffer, count, node.text.cptr() );
 
-    std::string substring;
-    pcrecpp::StringPiece text( node.text.cptr() );
-    for( size_t i = 0; i < count; ++i )
+    if( n < count )
     {
-        if( !re.Consume( &text, &substring ) ||
-            !str2Float( *buffer, substring.c_str() ) )
-        {
-            sPostError( node, strFormat("invalid float number : index(%d)",i) );
-            return false;
-        }
-
-        ++buffer; // next float
+        sPostError( node, strFormat( "invalid floating number at index %d", n ) );
+        return false;
     }
 
     // success

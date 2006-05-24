@@ -31,8 +31,8 @@
 //!
 //! Throw a custom exception class
 //!
-#define GN_THROW_EX( exp, msg ) \
-    throw exp( msg, GN_FUNCTION, __FILE__, __LINE__ )
+#define GN_THROW_EX( exp ) \
+    throw exp
 
 namespace GN
 {

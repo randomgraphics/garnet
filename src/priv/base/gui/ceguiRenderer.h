@@ -25,8 +25,17 @@ namespace CEGUI
 
         //@{
     public:
-        GarnetRenderer() : mQueueEnabled(true) {}
-        virtual ~GarnetRenderer() { destroyAllTextures(); }
+        GarnetRenderer() : mQueueEnabled(true)
+        {
+            GN::gfx::Renderer::sSigRestore.connect( this, &GarnetRenderer::onRendererRestore );
+            GN::gfx::Renderer::sSigDispose.connect( this, &GarnetRenderer::onRendererDispose );
+        }
+        virtual ~GarnetRenderer()
+        {
+            GN::gfx::Renderer::sSigRestore.disconnect( this );
+            GN::gfx::Renderer::sSigDispose.disconnect( this );
+            destroyAllTextures();
+        }
         //@}
 
         // *****************************
@@ -62,8 +71,11 @@ namespace CEGUI
         {
             float x, y, z, u, v;
             uint32_t bgra;
-            uint32_t tex;
-            uint32_t _reserved; // padding to 32 bytes.
+            union
+            {
+                const Texture * tex;
+                uint64_t _reserved; // padding to 32 bytes.
+            };
         };
         GN_CASSERT( sizeof(QuadVertex) == 32 );
 
@@ -80,6 +92,9 @@ namespace CEGUI
         // private functions
         // ********************************
     private:
+
+        bool onRendererRestore();
+        void onRendererDispose();
 
         inline void drawQuads( const QuadDesc * quads, size_t count );
     };

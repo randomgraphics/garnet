@@ -212,7 +212,7 @@ public:
         TS_ASSERT( !var.get(v) );
         TS_ASSERT( !var.get(m) );
 
-        var.set("(1,2,3,4)");
+        var.set("1,2,3,4");
         TS_ASSERT( var.get(v) );
         TS_ASSERT_EQUALS( 1.0f, v.x );
         TS_ASSERT_EQUALS( 2.0f, v.y );

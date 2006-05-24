@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <pcrecpp.h>
 
 //
 //
@@ -142,6 +143,34 @@ bool GN::str2Double( double & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     return 1 == sscanf( s, "%lf", &i );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+size_t GN::str2Floats( float * buffer, size_t count, const char * str, size_t stringLength )
+{
+    if( strEmpty(str) ) return 0;
+
+    static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
+
+    if( 0 == stringLength ) stringLength = strLen( str );
+    pcrecpp::StringPiece text( str, stringLength );
+
+    std::string substring;
+    for( size_t i = 0; i < count; ++i )
+    {
+        if( !re.Consume( &text, &substring ) ||
+            !str2Float( *buffer, substring.c_str() ) )
+        {
+            return i;
+        }
+
+        ++buffer; // next float
+    }
+
+    // success
+    return count;
 }
 
 // *****************************************************************************

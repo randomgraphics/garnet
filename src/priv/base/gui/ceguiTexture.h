@@ -8,7 +8,7 @@
 
 #ifdef HAS_CEGUI
 
-#include "ceguiHeaders.h    "
+#include "ceguiHeaders.h"
 
 namespace CEGUI
 {    
@@ -25,10 +25,9 @@ namespace CEGUI
     public:
         GarnetTexture( Renderer * r )
             : Texture(r)
-            , mTextureHandle(0)
             , mWidth(0), mHeight(0)
             , mMemBuffer(0) {}
-        virtual ~GarnetTexture() { destroy(); }
+        virtual ~GarnetTexture() { dispose(); GN::safeMemFree(mMemBuffer); }
         //@}
 
         // ********************************
@@ -48,33 +47,37 @@ namespace CEGUI
    public:
 
         //!
+        //! reload the content
+        //!
+        bool reload();
+
+        //!
+        //! dispose the content
+        //!
+        void dispose() { mGarnetTexture.clear(); }
+
+        //!
         //! Get internal texture handle
         //!
-        uint32_t getHandle() const { return mTextureHandle; }
+        GN::gfx::Texture * getGarnetTexture() const { return mGarnetTexture; }
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        static int msNameCounter;
-
-        uint32_t mTextureHandle;
+        GN::AutoRef<GN::gfx::Texture> mGarnetTexture;
         ushort mWidth;
         ushort mHeight;
 
+        String mFileName;
+        String mGroup;
         void * mMemBuffer;
 
         // ********************************
         // private functions
         // ********************************
     private:
-
-        void destroy()
-        {
-            if( mTextureHandle ) gTexDict.removeResourceByHandle(mTextureHandle), mTextureHandle = 0;
-            GN::safeMemFree(mMemBuffer);
-        }
     };
 }
 
