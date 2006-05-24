@@ -340,11 +340,10 @@ namespace GN { namespace gfx
             RendererContext::FieldFlags newFlag,
             bool forceRebind );
 
-        GN_INLINE void bindContextRenderTargets( // called _ONLY_ by bindContextState()
+        GN_INLINE void bindContextRenderTargetsAndViewport( // called _ONLY_ by bindContextState()
             const RendererContext & newContext,
             RendererContext::FieldFlags newFlag,
-            bool forceRebind,
-            bool & needRebindViewport );
+            bool forceRebind );
 
         GN_INLINE void bindContextFfp(
             const RendererContext & newContext,
