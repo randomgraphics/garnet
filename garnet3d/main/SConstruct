@@ -854,7 +854,7 @@ def BUILD_program( name, target ):
 
     env = BUILD_newLinkEnv( target )
 
-    stdlibs = Split('GNgfxD3D9 GNgfxD3D10 GNgfxOGL GNcore GNbase GNextern')
+    stdlibs = Split('GNutil GNgfxD3D9 GNgfxD3D10 GNgfxOGL GNcore GNbase GNextern')
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -909,7 +909,7 @@ for compiler, variants in ALL_targets.iteritems() :
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
         # build additional dependencies:
-        stlibs = Split('GNextern GNbase GNcore')
+        stlibs = Split('GNextern GNbase GNcore GNutil')
         shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
