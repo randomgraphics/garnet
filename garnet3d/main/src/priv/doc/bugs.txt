@@ -11,12 +11,13 @@ OPENNING
 - GNsampleRenderToTexture:
   - black screen on cygwin.
 
-- When using non-power-of-two render target texture, ATI x1000 card runs very very slow. Check it!
+- When using OpenGL API and non-power-of-two render target texture, ATI x1000 card runs very very slow. Check it!
 
 - Quad renderer is slow on HP notebook with intel graphics chip.
+
+- ATI depth texture doesn't work when backbuffer size is smaller then texture size (only happens when using debug DX runtime. So seems a DX bug)
+  - 2006.5.25: upgrading ATI driver to 6.4 doesn't work.
 
 CLOSED
 ======
 
-- ATI depth texture doesn't work when backbuffer size is smaller then texture size (only happens when using debug DX runtime. So seems a DX bug)
-  - FIXED (2006.5.18): upgrade ATI driver to 6.4

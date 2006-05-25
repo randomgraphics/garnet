@@ -36,8 +36,8 @@ public:
     {
         Renderer & r = gRenderer;
 
-        uint32_t w = 512;
-        uint32_t h = 512;
+        uint32_t w = 1024;
+        uint32_t h = 1024;
 
         // create color texture
         mColor.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
