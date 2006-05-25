@@ -225,7 +225,7 @@ static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement 
     }
 
     // append to token array
-    sd.conditions.tokens.push_back( t );
+    sd.prerequisites.tokens.push_back( t );
 
     // parse child tokens
     for( const XmlNode * n = node.child; n; n = n->sibling )
@@ -242,9 +242,9 @@ static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement 
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseConditions( EffectDesc::ShaderDesc & sd, const XmlElement & node )
+static void sParsePrerequisites( EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
-    GN_ASSERT( "conditions" == node.name );
+    GN_ASSERT( "prerequisites" == node.name );
 
     for( const XmlNode * n = node.child; n; n = n->sibling )
     {
@@ -252,7 +252,7 @@ static void sParseConditions( EffectDesc::ShaderDesc & sd, const XmlElement & no
         if( !e ) continue;
         if( !sParseConditionToken( sd, *e ) )
         {
-            sd.conditions.tokens.clear();
+            sd.prerequisites.tokens.clear();
             break;
         }
     }
@@ -318,7 +318,7 @@ static void sParseShader( EffectDesc & desc, const XmlElement & node )
 
         if( "texref" == e->name ) sParseTexref( desc, sd, *e );
         else if( "uniref" == e->name ) sParseUniref( desc, sd, *e );
-        else if( "conditions" == e->name ) sParseConditions( sd, *e );
+        else if( "prerequisites" == e->name ) sParsePrerequisites( sd, *e );
         else if( "code" == e->name ) sParseCode( sd, *e );
         else sPostError( *e, "Unknown node. Ignored" );
     }
@@ -567,5 +567,3 @@ bool GN::gfx::EffectDesc::fromXml( File & fp )
 
     GN_UNGUARD;
 }
-
-

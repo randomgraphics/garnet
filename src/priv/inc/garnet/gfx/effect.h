@@ -269,7 +269,7 @@ namespace GN { namespace gfx {
             StrA hints; //!< Shader hints.
             std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage, value is texture name.
             std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding, value is uniform name.
-            CondExp conditions; //!< required renderer caps of this shader.
+            CondExp prerequisites; //!< prerequisites of the shader.
         };
 
         //!

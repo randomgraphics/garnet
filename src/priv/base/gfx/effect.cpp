@@ -662,10 +662,10 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
 {
     GN_GUARD;
 
-    // check shader condition
-    if( !desc.conditions.evaluate() )
+    // check shader prerequisites
+    if( !desc.prerequisites.evaluate() )
     {
-        GN_TRACE( "Shader named '%s' does not pass condition check. Ignored", name.cptr() );
+        GN_TRACE( "Shader named '%s' does not pass prerequisites check. Ignored", name.cptr() );
         return false;
     }
 
