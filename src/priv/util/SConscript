@@ -1,0 +1,6 @@
+Import( 'GN' )
+sources = []
+sources.append( SConscript( 'app/SConscript' ) )
+sources.append( SConscript( 'gui/SConscript' ) )
+sources.append( SConscript( 'util/SConscript' ) )
+GN.newTarget( 'stlib', 'GNutil', sources )

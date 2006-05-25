@@ -77,6 +77,7 @@ alias misc      "cd /d %GARNET_ROOT%\src\priv\misc$*"
 alias sample    "cd /d %GARNET_ROOT%\src\priv\sample\$*"
 alias test      "cd /d %GARNET_ROOT%\src\priv\test\$*"
 alias tool      "cd /d %GARNET_ROOT%\src\priv\tool$*"
+alias util      "cd /d %GARNET_ROOT%\src\priv\util$*"
 
 REM =====
 REM Misc.
