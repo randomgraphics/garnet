@@ -181,7 +181,8 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
 
     // setup depth parameters
     d3dpp.AutoDepthStencilFormat = GN::gfx::DEFAULT_DEPTH_FORMAT;
-    d3dpp.EnableAutoDepthStencil = true;
+    d3dpp.EnableAutoDepthStencil = TRUE;
+    d3dpp.Flags                 |= D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 
     // set display mode parameters
     d3dpp.Windowed = !fullscreen;
@@ -202,7 +203,6 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
     d3dpp.SwapEffect           = D3DSWAPEFFECT_DISCARD;
     d3dpp.PresentationInterval = vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     d3dpp.hDeviceWindow        = (HWND)dd.windowHandle;
-    d3dpp.Flags                = D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 
     // success
     return true;

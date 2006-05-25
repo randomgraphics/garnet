@@ -134,7 +134,7 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
 
     // get default color and depth buffer
     GN_DX9_CHECK_RV( mDevice->GetRenderTarget( 0, &mAutoColor0 ), false );
-    GN_DX9_CHECK_RV( mDevice->GetDepthStencilSurface( &mAutoDepth ), false );
+    mDevice->GetDepthStencilSurface( &mAutoDepth );
     GN_ASSERT( mAutoColor0 ); // depth buffer might not be avaliable.
 
     // rebind context
