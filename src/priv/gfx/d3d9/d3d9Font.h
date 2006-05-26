@@ -12,29 +12,86 @@ namespace GN { namespace gfx {
 
 #if GN_XENON
     //!
-    //! Fake D3D font class for Xenon platform
+    //! D3D9 font class for Xenon platform
     //!
-    class D3D9Font : public StdClass
+    class D3D9Font : public D3D9Resource, public StdClass
     {
+        GN_DECLARE_STDCLASS( D3D9Font, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D9Font( D3D9Renderer & r ) : D3D9Resource(r) { clear(); }
+        virtual ~D3D9Font() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // from D3D9Resource
+        // ********************************
     public:
 
-        //!
-        //! Ctor (for compability to PC version)
-        //!
-        D3D9Font( D3D9Renderer & ) {}
+        bool deviceRestore();
+        void deviceDispose() { mTexture.clear(); }
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
 
         //!
         //! Draw unicode text
         //!
-        void drawTextW( const wchar_t *, int, int, const Vector4f & ) {}
+        void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        struct QuadVert
+        {
+            float x, y, z; // position
+            uint32_t c;    // color
+            float u, v;    // texcoord
+        };
+
+        static const size_t MAX_CHARS = 1024;
+
+        QuadVert         mBuffer[MAX_CHARS*4];
+        AutoRef<Texture> mTexture;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+        bool createFont();
+
     };
+
 #else
+
     //!
-    //! D3D font class
+    //! D3D9 font class for PC platform.
     //!
-    class D3D9Font : public StdClass, public D3D9Resource
+    class D3D9Font : public D3D9Resourc, epublic StdClass
     {
-         GN_DECLARE_STDCLASS( D3D9Font, StdClass );
+        GN_DECLARE_STDCLASS( D3D9Font, StdClass );
 
         // ********************************
         // ctor/dtor
