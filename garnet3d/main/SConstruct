@@ -212,10 +212,13 @@ def UTIL_newEnv( compiler, variant ):
 
     # 定制不同平台的编译选项
     if 'xenon' == compiler.os:
-        libs['common'] += Split('xboxkrnl xbdm dxerr9')
-        libs['stdbg'] += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
-        libs['stprof'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-        libs['stret'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+        libs['common']  += Split('xboxkrnl xbdm dxerr9')
+        libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
+        libs['profile'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+        libs['retail']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+        libs['stdbg']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
+        libs['stprof']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
+        libs['stret']   += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
     elif 'mswin' == compiler.os:
         libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
     else:
