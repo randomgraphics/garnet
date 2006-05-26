@@ -247,12 +247,20 @@ def UTIL_newEnv( compiler, variant ):
         cxxflags['common']  += ['/EHs']
 
         ccflags['common']  += ['/W4','/WX']
-        ccflags['debug']   += ['/MDd','/GR','/RTCscu']
-        ccflags['profile'] += ['/MD','/O2']
-        ccflags['retail']  += ['/MD','/O2','/GL']
+        ccflags['debug']   += ['/GR','/RTCscu']
+        ccflags['profile'] += ['/O2']
+        ccflags['retail']  += ['/O2','/GL']
         ccflags['stdbg']   += ['/MTd','/GR']
         ccflags['stprof']  += ['/MT','/O2']
         ccflags['stret']   += ['/MT','/O2','/GL']
+        if 'xenon' == compiler.os:
+            ccflags['debug']   += ['/MTd']
+            ccflags['profile'] += ['/MT']
+            ccflags['retail']  += ['/MT']
+        else:
+            ccflags['debug']   += ['/MDd']
+            ccflags['profile'] += ['/MD']
+            ccflags['retail']  += ['/MD']
 
         if float(env['MSVS_VERSION']) >= 8.0:
             linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
