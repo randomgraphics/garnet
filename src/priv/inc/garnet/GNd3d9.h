@@ -99,9 +99,11 @@ namespace GN { namespace gfx
         ClrFmt d3dFormat2ClrFmt( D3DFORMAT );
 
         //!
-        //! Convert ClrFmt to D3DFORMAT. Return D3DFMT_UNKNOWN if failed
+        //! Convert ClrFmt to D3DFORMAT. Return D3DFMT_UNKNOWN if failed.
         //!
-        D3DFORMAT clrFmt2D3DFormat( ClrFmt );
+        //! Note 'tiled' parameter only used for Xenon platform.
+        //!
+        D3DFORMAT clrFmt2D3DFormat( ClrFmt, bool tiled );
 
         //@}
 

@@ -97,6 +97,7 @@ namespace GN { namespace gfx
         ClrFmt   format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
                             //!< you may set it to FMT_DEFAULT. To use default texture format.
         BitField usage;     //!< usage
+        bool     tiled;     //!< tiled format. Ignored on platform other then Xenon. 
     };
 
     //!
@@ -244,17 +245,17 @@ namespace GN { namespace gfx
         //!
         bool setDesc( const TextureDesc & desc )
         {
+            mDesc = desc;
+
             // check type
-            if( desc.type < 0 || desc.type >= NUM_TEXTYPES )
+            if( mDesc.type < 0 || mDesc.type >= NUM_TEXTYPES )
             {
                 GN_ERROR( "invalid texture type!" );
                 return false;
             }
-            mDesc.type = desc.type;
 
-            // initiate texture size
-            mDesc.width =desc.width;
-            switch( desc.type )
+            // check texture size
+            switch( mDesc.type )
             {
                 case TEXTYPE_1D :
                 {
@@ -265,7 +266,7 @@ namespace GN { namespace gfx
 
                 case TEXTYPE_CUBE :
                 {
-                    mDesc.height = desc.width;
+                    mDesc.height = mDesc.width;
                     mDesc.depth = 1;
                     break;
                 }
@@ -273,37 +274,35 @@ namespace GN { namespace gfx
                 case TEXTYPE_2D :
                 case TEXTYPE_STACK :
                 {
-                    mDesc.height = desc.height;
                     mDesc.depth = 1;
                     break;
                 }
 
                 case TEXTYPE_3D :
                 {
-                    mDesc.height = desc.height;
-                    mDesc.depth = desc.depth;
+                    // do nothing
                     break;
                 }
 
                 default : GN_UNEXPECTED();
             }
 
-            // initialize face count
-            if( TEXTYPE_CUBE == desc.type )
+            // check face count
+            if( TEXTYPE_CUBE == mDesc.type )
             {
-                if( 0 != desc.faces && 6 != desc.faces )
+                if( 0 != mDesc.faces && 6 != mDesc.faces )
                 {
-                    GN_WARN( "Cubemap must have 6 desc.faces." );
+                    GN_WARN( "Cubemap must have 6 mDesc.faces." );
                 }
                 mDesc.faces = 6;
             }
-            else if( TEXTYPE_STACK == desc.type )
+            else if( TEXTYPE_STACK == mDesc.type )
             {
-                mDesc.faces = 0 == desc.faces ? 1 : desc.faces;
+                if( 0 == mDesc.faces ) mDesc.faces = 1;
             }
             else
             {
-                if( 0 != desc.faces && 1 != desc.faces )
+                if( 0 != mDesc.faces && 1 != mDesc.faces )
                 {
                     GN_WARN( "Texture other then cube/stack texture can have only 1 face." );
                 }
@@ -325,22 +324,18 @@ namespace GN { namespace gfx
 
             maxLevels = max( max(nx, ny), nz );
 
-            mDesc.levels = ( 0 == desc.levels ) ? maxLevels : min( maxLevels, desc.levels );
+            mDesc.levels = ( 0 == mDesc.levels ) ? maxLevels : min( maxLevels, mDesc.levels );
 
             // allocate mipmap size array
             mMipSize.resize( mDesc.levels );
 
-            // store format
-            if( ( desc.format < 0 || desc.format >= NUM_CLRFMTS ) &&
-                FMT_DEFAULT != desc.format )
+            // check format
+            if( ( mDesc.format < 0 || mDesc.format >= NUM_CLRFMTS ) &&
+                FMT_DEFAULT != mDesc.format )
             {
-                GN_ERROR( "invalid texture format: %s", clrFmt2Str(desc.format) );
+                GN_ERROR( "invalid texture format: %s", clrFmt2Str(mDesc.format) );
                 return false;
             }
-            mDesc.format = desc.format;
-
-            // store usage flags
-            mDesc.usage = desc.usage;
 
             // success
             return true;

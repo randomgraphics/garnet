@@ -292,7 +292,7 @@ bool GN::gfx::D3D9Renderer::supportTextureFormat(
     return D3D_OK == checkD3DDeviceFormat(
         texUsage2D3DUsage(usage),
         texType2D3DResourceType(type),
-        d3d9::clrFmt2D3DFormat(format) );
+        d3d9::clrFmt2D3DFormat(format,false) );
 
     GN_UNGUARD;
 }

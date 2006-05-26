@@ -466,6 +466,15 @@ bool GN::gfx::D3D9Texture::deviceRestore()
 
     GN_ASSERT( !mD3DTexture );
 
+#if GN_XENON
+    // handle tileness
+    TextureDesc modifiedDesc = getDesc();
+    modifiedDesc.tiled = modifiedDesc.tiled
+              || (TEXUSAGE_RENDER_TARGET & modifiedDesc.usage)
+              || (TEXUSAGE_DEPTH & modifiedDesc.usage);
+    setDesc( modifiedDesc );
+#endif
+
     // determine texture format
     mD3DFormat = D3DFMT_UNKNOWN;
     if( FMT_DEFAULT == getDesc().format )
@@ -480,7 +489,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     }
     else
     {
-        mD3DFormat = d3d9::clrFmt2D3DFormat( getDesc().format );
+        mD3DFormat = d3d9::clrFmt2D3DFormat( getDesc().format, getDesc().tiled );
         if( D3DFMT_UNKNOWN == mD3DFormat )
         {
             GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );

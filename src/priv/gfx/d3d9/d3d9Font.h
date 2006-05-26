@@ -66,9 +66,14 @@ namespace GN { namespace gfx {
 
         struct QuadVert
         {
-            float x, y, z; // position
-            uint32_t c;    // color
-            float u, v;    // texcoord
+            float x, y; // position
+            float u, v; // texcoord
+            uint32_t c; // color
+
+            void set( float x_, float y_, float u_, float v_, uint32_t c_ )
+            {
+                x = x_; y = y_; u = u_; v = v_; c = c_;
+            }
         };
 
         static const size_t MAX_CHARS = 1024;

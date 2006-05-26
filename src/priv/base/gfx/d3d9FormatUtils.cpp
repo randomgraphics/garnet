@@ -167,48 +167,59 @@ GN::gfx::ClrFmt GN::gfx::d3d9::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
 //
 //
 // -----------------------------------------------------------------------------
-D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt )
+D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt, bool tiled )
 {
+    int32_t d3dfmt;
     switch( clrfmt )
     {
         // 128 bits
-        case FMT_RGBA_32_32_32_32_FLOAT : return D3DFMT_A32B32G32R32F;
+        case FMT_RGBA_32_32_32_32_FLOAT : d3dfmt = D3DFMT_A32B32G32R32F; break;
 
         // 64 bits
-        case FMT_RGBA_16_16_16_16_FLOAT : return D3DFMT_A16B16G16R16F;
-        case FMT_RGBA_16_16_16_16_UNORM : return D3DFMT_A16B16G16R16;
-        case FMT_RG_32_32_FLOAT         : return D3DFMT_G32R32F;
+        case FMT_RGBA_16_16_16_16_FLOAT : d3dfmt = D3DFMT_A16B16G16R16F; break;
+        case FMT_RGBA_16_16_16_16_UNORM : d3dfmt = D3DFMT_A16B16G16R16; break;
+        case FMT_RG_32_32_FLOAT         : d3dfmt = D3DFMT_G32R32F; break;
 
         // 32 bits
-        case FMT_BGRA_8_8_8_8_UNORM     : return D3DFMT_A8R8G8B8;
-        case FMT_BGRX_8_8_8_8_UNORM     : return D3DFMT_X8R8G8B8;
-        case FMT_RG_16_16_FLOAT         : return D3DFMT_G16R16F;
-        case FMT_RG_16_16_UNORM         : return D3DFMT_G16R16;
-        case FMT_R_32_FLOAT             : return D3DFMT_R32F;
+        case FMT_BGRA_8_8_8_8_UNORM     : d3dfmt = D3DFMT_A8R8G8B8; break;
+        case FMT_BGRX_8_8_8_8_UNORM     : d3dfmt = D3DFMT_X8R8G8B8; break;
+        case FMT_RG_16_16_FLOAT         : d3dfmt = D3DFMT_G16R16F; break;
+        case FMT_RG_16_16_UNORM         : d3dfmt = D3DFMT_G16R16; break;
+        case FMT_R_32_FLOAT             : d3dfmt = D3DFMT_R32F; break;
 
         // 16 bits
-        case FMT_BGRA_5_5_5_1_UNORM     : return D3DFMT_A1R5G5B5;
-        case FMT_BGR_5_6_5_UNORM        : return D3DFMT_R5G6B5;
-        case FMT_LA_8_8_UNORM           : return D3DFMT_A8L8;
-        case FMT_RG_8_8_SNORM           : return D3DFMT_V8U8;
+        case FMT_BGRA_5_5_5_1_UNORM     : d3dfmt = D3DFMT_A1R5G5B5; break;
+        case FMT_BGR_5_6_5_UNORM        : d3dfmt = D3DFMT_R5G6B5; break;
+        case FMT_LA_8_8_UNORM           : d3dfmt = D3DFMT_A8L8; break;
+        case FMT_RG_8_8_SNORM           : d3dfmt = D3DFMT_V8U8; break;
 
         // 8 bits
-        case FMT_L_8_UNORM              : return D3DFMT_L8;
-        case FMT_A_8_UNORM              : return D3DFMT_A8;
+        case FMT_L_8_UNORM              : d3dfmt = D3DFMT_L8; break;
+        case FMT_A_8_UNORM              : d3dfmt = D3DFMT_A8; break;
 
         // compressed formats
-        case FMT_DXT1                   : return D3DFMT_DXT1;
-        case FMT_DXT2                   : return D3DFMT_DXT2;
+        case FMT_DXT1                   : d3dfmt = D3DFMT_DXT1; break;
+        case FMT_DXT2                   : d3dfmt = D3DFMT_DXT2; break;
 
         // depth formats
-        case FMT_D_16                   : return D3DFMT_D16;
-        case FMT_DX_24_8                : return D3DFMT_D24X8;
-        case FMT_DS_24_8                : return D3DFMT_D24S8;
-        case FMT_D_32                   : return D3DFMT_D32;
+        case FMT_D_16                   : d3dfmt = D3DFMT_D16; break;
+        case FMT_DX_24_8                : d3dfmt = D3DFMT_D24X8; break;
+        case FMT_DS_24_8                : d3dfmt = D3DFMT_D24S8; break;
+        case FMT_D_32                   : d3dfmt = D3DFMT_D32; break;
 
         // failed
         default : return D3DFMT_UNKNOWN;
     }
+
+#if GN_XENON
+    // remove tiled bit
+    if( !tiled ) d3dfmt &= ~(1 << D3DFORMAT_TILED_SHIFT);
+#else
+    GN_UNUSED_PARAM( tiled );
+#endif
+
+    // sucess
+    return (D3DFORMAT)d3dfmt;
 }
 
 #endif

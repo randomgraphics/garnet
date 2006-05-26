@@ -642,9 +642,10 @@ namespace GN { namespace gfx
                        size_t   levels = 0,
                        ClrFmt   format = FMT_DEFAULT,
                        BitField usage = 0,
+                       bool     tiled = false,
                        const TextureLoader & loader = TextureLoader() )
         {
-            TextureDesc desc = { type, (uint32_t)sx, (uint32_t)sy, (uint32_t)sz, (uint32_t)faces, (uint32_t)levels, format, usage };
+            TextureDesc desc = { type, (uint32_t)sx, (uint32_t)sy, (uint32_t)sz, (uint32_t)faces, (uint32_t)levels, format, usage, tiled };
             return createTexture( desc, loader );
         }
 
@@ -656,9 +657,10 @@ namespace GN { namespace gfx
                          size_t   levels = 0,
                          ClrFmt   format = FMT_DEFAULT,
                          BitField usage = 0,
+                         bool     tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, loader );
+            return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, tiled, loader );
         }
 
         //!
@@ -669,9 +671,10 @@ namespace GN { namespace gfx
                          size_t   levels = 0,
                          ClrFmt   format = FMT_DEFAULT,
                          BitField usage = 0,
+                         bool     tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, loader );
+            return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, tiled, loader );
         }
 
         //!
@@ -682,9 +685,10 @@ namespace GN { namespace gfx
                          size_t   levels = 0,
                          ClrFmt   format = FMT_DEFAULT,
                          BitField usage = 0,
+                         bool     tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, loader );
+            return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, tiled, loader );
         }
 
         //!
@@ -695,9 +699,10 @@ namespace GN { namespace gfx
                            size_t   levels = 0,
                            ClrFmt   format = FMT_DEFAULT,
                            BitField usage = 0,
+                           bool     tiled = false,
                            const TextureLoader & loader = TextureLoader() )
         {
-            return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, loader );
+            return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, tiled, loader );
         }
 
         //!
