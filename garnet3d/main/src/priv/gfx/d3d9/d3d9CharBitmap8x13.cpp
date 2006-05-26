@@ -1,17 +1,8 @@
 #include "pch.h"
 #include "d3d9Font.h"
+#include "d3d9CharBitmap.h"
 
 #if GN_XENON
-
-struct BitmapCharDesc
-{
-    uint32_t width;
-    uint32_t height;
-    int32_t  xorig;
-    int32_t  yorig;
-    int32_t  advance;
-    const uint8_t * bitmap;
-};
 
 static const uint8_t ch0data[] = { 0x0 };
 static const BitmapCharDesc ch0 = {1,1,0,0,8,ch0data};

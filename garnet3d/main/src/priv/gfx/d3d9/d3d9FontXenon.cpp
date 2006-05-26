@@ -5,9 +5,6 @@
 
 #if GN_XENON
 
-const uint32_t FONT_WIDTH  = 8;
-const uint32_t FONT_HEIGHT = 13;
-
 //
 // convert Vector4f to D3COLOR
 // ------------------------------------------------------------------------
@@ -69,15 +66,45 @@ bool GN::gfx::D3D9Font::deviceRestore()
 
     // create texture
     GN_ASSERT( !mTexture );
-    mTexture.attach( r.create2DTexture( 256, 256, 1, FMT_BGRA32, 0 ) );
+    mTexture.attach( r.create2DTexture( 128, 256, 1, FMT_LA_8_8_UNORM, 0, false ) );
     if( !mTexture ) return false;
+    mTexture->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
 
     // lock texture
     TexLockedResult tlr;
     if( !mTexture->lock( tlr, 0, 0, 0, LOCK_DISCARD ) ) return false;
 
-    // TODO: fill data
-    memset( tlr.data, 0xFF, tlr.sliceBytes );
+    // fill data
+    memset( tlr.data, 0, tlr.sliceBytes );
+    for( uint32_t ch = 0; ch < 256; ++ch )
+    {
+        if( 0x31 == ch )
+        {
+            ch = ch;
+        }
+
+        const BitmapCharDesc * desc = gBitmapChars8x13[ch];
+        GN_ASSERT( desc && desc->width <= 8 && desc->height <= 16 );
+
+        uint8_t * offset = ((uint8_t*)tlr.data) + (ch / 16) * tlr.rowBytes * 16 + (ch % 16) * 8 * 2;
+
+        Vector2<uint8_t> * ptr;
+
+        for( uint32_t y = 0; y < desc->height; ++y )
+        {
+            ptr = (Vector2<uint8_t>*)( offset + (desc->height-y) * tlr.rowBytes );
+
+            GN_ASSERT( (uint8_t*)tlr.data <= (uint8_t*)ptr );
+            GN_ASSERT( (uint8_t*)(ptr+8) <= ((uint8_t*)tlr.data + tlr.sliceBytes) );
+
+            for( uint32_t x = 0; x < 8; ++x, ++ptr )
+            {
+                uint8_t c = 255 * !!( desc->bitmap[y] & (1L<<(7-x)) );
+                ptr->x = c;
+                ptr->y = c;
+            }
+        }
+    }
 
     // unlock the texture
     mTexture->unlock();
@@ -100,13 +127,14 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
     GN_GUARD_SLOW;
 
     D3D9Renderer & r = getRenderer();
+    r.setTexture( 0, mTexture );
 
     size_t count = 0;
 
     int xx = x, yy = y;
-    int w = (int)FONT_WIDTH + 1;
-    int h = (int)FONT_HEIGHT + 1;
     D3DCOLOR c = sRgba2D3DCOLOR( color );
+
+    float x1, y1, x2, y2, u1, v1, u2, v2;
 
     while( *text )
     {
@@ -115,21 +143,29 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
             if( '\n' == *text )
             {
                 xx = x;
-                yy += h;
+                yy += 14;
             }
             else if( '\t' == *text )
             {
-                xx += w * 4;
+                xx += 9 * 4;
             }
             else
             {
-                QuadVert & v = mBuffer[count];
-                v.x = (float)xx;
-                v.y = (float)yy;
-                v.z = .0f;
-                v.c = c;
-                v.u = (float)(*text % 16) / 16.0f;
-                v.v = (float)(*text / 16) / 16.0f;
+                x1 = (float)xx;
+                y1 = (float)yy;
+                x2 = x1 + 8;
+                y2 = y1 + 16;
+                u1 = (float)(*text % 16) / 16.0f;
+                v1 = (float)(*text / 16) / 16.0f;
+                u2 = u1 + 1.0f / 16.0f;
+                v2 = v1 + 1.0f / 16.0f;
+
+                mBuffer[count*4+0].set( x1, y1, u1, v1, c );
+                mBuffer[count*4+1].set( x2, y1, u2, v1, c );
+                mBuffer[count*4+2].set( x2, y2, u2, v2, c );
+                mBuffer[count*4+3].set( x1, y2, u1, v2, c );
+
+                xx += 9;
                 ++count;
             }
 
@@ -139,7 +175,7 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
         else
         {
             r.drawQuads(
-                0,
+                DQ_WINDOW_SPACE,
                 &mBuffer[0].x, sizeof(QuadVert),
                 &mBuffer[0].u, sizeof(QuadVert),
                 &mBuffer[0].c, sizeof(QuadVert),
@@ -151,7 +187,7 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
     if( count > 0 )
     {
         r.drawQuads(
-            0,
+            DQ_WINDOW_SPACE,
             &mBuffer[0].x, sizeof(QuadVert),
             &mBuffer[0].u, sizeof(QuadVert),
             &mBuffer[0].c, sizeof(QuadVert),

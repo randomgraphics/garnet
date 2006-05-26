@@ -18,7 +18,7 @@ struct BitmapCharDesc
     const uint8_t * bitmap;
 };
 
-extern const BitmapCharDesc gBitmapChars8x13[];
+extern const BitmapCharDesc * const gBitmapChars8x13[];
 
 #endif // GN_XENON
 
