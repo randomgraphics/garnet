@@ -94,7 +94,7 @@ namespace GN { namespace gfx {
     //!
     //! D3D9 font class for PC platform.
     //!
-    class D3D9Font : public D3D9Resourc, epublic StdClass
+    class D3D9Font : public D3D9Resource, public StdClass
     {
         GN_DECLARE_STDCLASS( D3D9Font, StdClass );
 
