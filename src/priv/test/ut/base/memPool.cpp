@@ -11,8 +11,8 @@ class MemPoolTest : public CxxTest::TestSuite
         inline void operator delete( void*, void * ) { GN_INFO("placement delete"); }
     };
 
-    typedef std::vector<char,GN::MemAllocator<char> > CharArray;
-    typedef std::vector<Test,GN::MemAllocator<GN::StrA> > TestArray;
+    typedef std::vector<char,GN::StlAllocator<char> > CharArray;
+    typedef std::vector<Test,GN::StlAllocator<GN::StrA> > TestArray;
 
 public:
 

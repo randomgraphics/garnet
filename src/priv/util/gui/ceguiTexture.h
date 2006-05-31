@@ -27,7 +27,7 @@ namespace CEGUI
             : Texture(r)
             , mWidth(0), mHeight(0)
             , mMemBuffer(0) {}
-        virtual ~GarnetTexture() { dispose(); GN::safeMemFree(mMemBuffer); }
+        virtual ~GarnetTexture() { dispose(); GN::safeHeapFree(mMemBuffer); }
         //@}
 
         // ********************************

@@ -23,9 +23,9 @@ struct ParseTracer
     GN::XmlNode * prev;
 };
 
-static void * sXmlMalloc( size_t sz ) { return GN::memAlloc( sz ); }
-static void * sXmlRealloc( void * p, size_t sz ) { return GN::memReAlloc( p, sz ); }
-static void sXmlFree( void * p ) { return GN::memFree( p ); }
+static void * sXmlMalloc( size_t sz ) { return GN::heapAlloc( sz ); }
+static void * sXmlRealloc( void * p, size_t sz ) { return GN::heapRealloc( p, sz ); }
+static void sXmlFree( void * p ) { return GN::heapFree( p ); }
 
 static void sIdent( GN::File & fp, int ident )
 {

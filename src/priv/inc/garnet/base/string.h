@@ -143,7 +143,7 @@ namespace GN
     //!
     //! Custom string class
     //!
-    template<typename CHAR, typename ALLOCATOR = MemAllocator<CHAR> >
+    template<typename CHAR, typename ALLOCATOR = StlAllocator<CHAR> >
     class Str
     {
         typedef CHAR CharType;

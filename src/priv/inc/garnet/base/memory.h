@@ -24,23 +24,23 @@ namespace GN
     //!
     //! Allocate memory from heap. Can cross DLL boundary.
     //!
-    GN_PUBLIC void * memAlloc( size_t sizeInBytes );
+    GN_PUBLIC void * heapAlloc( size_t sizeInBytes );
 
     //!
     //! Re-allocate memory from heap. Can cross DLL boundary.
     //!
-    GN_PUBLIC void * memReAlloc( void *, size_t sizeInBytes );
+    GN_PUBLIC void * heapRealloc( void *, size_t sizeInBytes );
 
     //!
     //! Free heap-allocated memory. Can cross DLL boundary.
     //!
-    GN_PUBLIC void memFree( void * );
+    GN_PUBLIC void heapFree( void * );
 
     //!
-    //! STL allocator that use garnet memory management routines.
+    //! STL compilant allocator that use garnet heap memory management routines.
     //!
     template<typename T>
-    class MemAllocator
+    class StlAllocator
     {
         //! \cond NEVER
     public:
@@ -55,20 +55,20 @@ namespace GN
         template<class T2>
         struct rebind
         {
-            typedef MemAllocator<T2> other;
+            typedef StlAllocator<T2> other;
         };
 
-        MemAllocator() GN_NOTHROW() {}
+        StlAllocator() GN_NOTHROW() {}
 
-        ~MemAllocator() GN_NOTHROW() {}
+        ~StlAllocator() GN_NOTHROW() {}
 
-        MemAllocator( const MemAllocator<T> & ) GN_NOTHROW() {}
-
-        template<class T2>
-        MemAllocator( const MemAllocator<T2> & ) GN_NOTHROW() {}
+        StlAllocator( const StlAllocator<T> & ) GN_NOTHROW() {}
 
         template<class T2>
-        MemAllocator<T> & operator=( const MemAllocator<T2> & )
+        StlAllocator( const StlAllocator<T2> & ) GN_NOTHROW() {}
+
+        template<class T2>
+        StlAllocator<T> & operator=( const StlAllocator<T2> & )
         {
             return *this;
         }
@@ -85,12 +85,12 @@ namespace GN
 
         pointer allocate( size_type count, const void * = 0 )
         {
-            return (pointer)memAlloc( count * sizeof(T) );
+            return (pointer)heapAlloc( count * sizeof(T) );
         }
 
         void deallocate( pointer ptr, size_type )
         {
-            memFree( ptr );
+            heapFree( ptr );
         }
 
         void construct( pointer ptr, const T & x )
@@ -164,7 +164,7 @@ namespace GN
             {
                 p = mAllBlocks;
                 mAllBlocks = mAllBlocks->next;
-                memFree( p );
+                heapFree( p );
             }
         }
 
@@ -184,7 +184,7 @@ namespace GN
             else
             {
                 // no free blocks. need to allocate a new block from heap
-                p = (BlockHeader*)memAlloc( BLOCK_SIZE );
+                p = (BlockHeader*)heapAlloc( BLOCK_SIZE );
                 if( 0 == p ) return 0;
 
                 // add to head of block list
@@ -238,7 +238,7 @@ namespace GN
                     mAllBlocks = p->next;
                 }
 
-                memFree( p );
+                heapFree( p );
             }
         }
     };
@@ -270,7 +270,7 @@ namespace GN
                 p = mAllBlocks;
                 mAllBlocks = mAllBlocks->next;
                 ((T*)p->data())->~T();
-                memFree( p );
+                heapFree( p );
             }
         }
     };
@@ -279,10 +279,10 @@ namespace GN
 //! \name overloaded global new and delete operators
 //@{
 // TODO: more standard conforming implementation.
-inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::memAlloc( s ); }
-inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::memAlloc( s ); }
-inline void operator delete( void* p ) GN_NOTHROW() { ::GN::memFree( p ); }
-inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::memFree( p ); }
+inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::heapAlloc( s ); }
+inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::heapAlloc( s ); }
+inline void operator delete( void* p ) GN_NOTHROW() { ::GN::heapFree( p ); }
+inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::heapFree( p ); }
 //@}
 
 // *****************************************************************************

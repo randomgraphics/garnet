@@ -66,7 +66,7 @@ namespace GN { namespace gfx
         //@{
 
         ImageDesc() : mipmaps(0) {}
-        ~ImageDesc() { safeMemFree( mipmaps ); }
+        ~ImageDesc() { safeHeapFree( mipmaps ); }
 
         //@}
 

@@ -24,7 +24,7 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
 
     setProperties( numIdx, dynamic );
 
-    mBuffer = (uint16_t*) memAlloc( numIdx * 2 );
+    mBuffer = (uint16_t*) heapAlloc( numIdx * 2 );
 
     // call user-defined content loader
     if( !getLoader().empty() )
@@ -45,7 +45,7 @@ void GN::gfx::OGLIdxBuf::quit()
 {
     GN_GUARD;
 
-    safeMemFree(mBuffer);
+    safeHeapFree(mBuffer);
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
