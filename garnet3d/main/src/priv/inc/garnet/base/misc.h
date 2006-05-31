@@ -150,7 +150,7 @@ namespace GN
     }
 
     //!
-    //! general safe delLocation routine
+    //! general safe deallocation routine
     // ------------------------------------------------------------------------
     template < typename T, typename DEALLOC_FUNC >
     GN_FORCE_INLINE void safeDealloc( T * & ptr )
@@ -163,14 +163,14 @@ namespace GN
     }
 
     //!
-    //! free a C-style pointer
+    //! free a C-style heap pointer
     // ------------------------------------------------------------------------
     template < typename T >
-    GN_FORCE_INLINE void safeMemFree( T * & ptr )
+    GN_FORCE_INLINE void safeHeapFree( T * & ptr )
     {
         if( ptr )
         {
-            memFree( ptr );
+            heapFree( ptr );
             ptr = 0;
         }
     }
@@ -545,16 +545,16 @@ namespace GN
     };
 
     //!
-    //! Automatic C-style array created by memAlloc. Can NOT be used in STL containers.
+    //! Automatic C-style array created by heapAlloc. Can NOT be used in STL containers.
     //!
     template<typename T>
-    class AutoTypePtr : public detail::BaseAutoPtr< T, &safeMemFree >
+    class AutoTypePtr : public detail::BaseAutoPtr< T, &safeHeapFree >
     {
-        typedef detail::BaseAutoPtr< T, &safeMemFree > ParentType;
+        typedef detail::BaseAutoPtr< T, &safeHeapFree > ParentType;
 
         static void doRelease( T * p )
         {
-            if( p ) memFree(p);
+            if( p ) heapFree(p);
         }
 
     public:

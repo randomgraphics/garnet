@@ -28,7 +28,7 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
     setProperties( bytes, dynamic );
 
     // initialize system copy
-    mSysCopy = (uint8_t*)memAlloc( bytes );
+    mSysCopy = (uint8_t*)heapAlloc( bytes );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
@@ -64,7 +64,7 @@ void GN::gfx::OGLVtxBufVBO::quit()
         mOGLVertexBufferObject = 0;
     }
 
-    safeMemFree( mSysCopy );
+    safeHeapFree( mSysCopy );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

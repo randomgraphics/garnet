@@ -3,12 +3,12 @@
 // -----------------------------------------------------------------------------
 GN_INLINE bool GN::gfx::ImageDesc::setFaceAndLevel( size_t faces, size_t levels )
 {
-    safeMemFree( mipmaps );
+    safeHeapFree( mipmaps );
     numFaces = (uint32_t)faces;
     numLevels = (uint32_t)levels;
     if( numFaces > 0 && numLevels > 0 )
     {
-        mipmaps = (MipmapDesc*)memAlloc( numFaces * numLevels * sizeof(MipmapDesc) );
+        mipmaps = (MipmapDesc*)heapAlloc( numFaces * numLevels * sizeof(MipmapDesc) );
         if( 0 == mipmaps ) return false;
     }
     return true;

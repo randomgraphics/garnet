@@ -24,7 +24,7 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
     // store properties
     setProperties( bytes, dynamic );
 
-    mBuffer = (uint8_t*)memAlloc( bytes );
+    mBuffer = (uint8_t*)heapAlloc( bytes );
 
     // call user-defined content loader
     if( !getLoader().empty() )
@@ -45,7 +45,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 {
     GN_GUARD;
 
-    safeMemFree( mBuffer );
+    safeHeapFree( mBuffer );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

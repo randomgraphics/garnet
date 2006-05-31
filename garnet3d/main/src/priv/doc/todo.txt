@@ -8,6 +8,9 @@
   - task manager/coordinator
 
 - p1
+  - custom vector class:
+    - fix sized array/stack vector
+    - resizeable vector
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
