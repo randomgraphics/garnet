@@ -143,7 +143,7 @@ namespace GN
     //!
     //! Custom string class
     //!
-    template<typename CHAR, typename ALLOCATOR = StlAllocator<CHAR> >
+    template<typename CHAR, typename ALLOCATOR = StandardAllocator<CHAR> >
     class Str
     {
         typedef CHAR CharType;
@@ -845,19 +845,12 @@ namespace GN
         // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
         static CharType * alloc( size_t count )
         {
-            // TODO: call a.construct() if CharType is class type.
-            AllocatorType a;
-            return a.allocate( count + 1 );
+            return AllocatorType::sNew( count + 1 );
         }
 
         static void dealloc( CharType * ptr, size_t count )
         {
-            if ( ptr )
-            {
-                // TODO: call a.destructor(), if CharType is class type.
-                AllocatorType a;
-                a.deallocate( ptr, count + 1 );
-            }
+            AllocatorType::sDelete( ptr, count + 1 );
         }
 
         friend Str<char> wcs2mbs( const wchar_t *, size_t );
