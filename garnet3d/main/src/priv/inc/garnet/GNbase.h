@@ -43,6 +43,10 @@ namespace GN
 
 // memory management
 #include "base/memory.h"
+#include "base/allocator.h"
+
+// array types
+#include "base/array.h"
 
 // string types
 #include "base/string.h"

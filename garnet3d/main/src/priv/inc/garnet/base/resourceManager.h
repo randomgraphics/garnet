@@ -339,24 +339,6 @@ namespace GN
         }
 
         //!
-        //! Add a bunch of new resources to manager
-        //!
-        void addResources(
-            const std::vector<StrA> & names,
-            const Creator & creator = Creator(),
-            const Creator & nullor  = Creator(),
-            bool overrideExistingResource = false )
-        {
-            GN_GUARD;
-            std::vector<StrA>::const_iterator i;
-            for( i = names.begin(); i != names.end(); ++i )
-            {
-                addResource( (*i), creator, nullor, overrideExistingResource );
-            }
-            GN_UNGUARD;
-        }
-
-        //!
         //! Remove resource from manager
         //!
         void removeResourceByHandle( HandleType handle )
