@@ -41,6 +41,9 @@ namespace GN
 // exceptions
 #include "base/exception.h"
 
+// single/double linked list
+#include "base/linkedList.h"
+
 // memory management
 #include "base/memory.h"
 #include "base/allocator.h"
