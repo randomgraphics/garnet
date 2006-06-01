@@ -106,17 +106,17 @@ namespace GN
         };
 
         //!
-        //! do allocation.
+        //! do allocation, call constructor(s) as well.
         //!
-        static T * sNew( size_t count )
+        static T * sAlloc( size_t count )
         {
             return new T[count];
         }
 
         //!
-        //! do deallocation
+        //! do deallocation, call destructor(s) as well.
         //!
-        static void sDelete( T * p, size_t count )
+        static void sDealloc( T * p, size_t count )
         {
             ((void)(count)); // unused parameter
             delete [] p;

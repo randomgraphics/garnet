@@ -845,12 +845,12 @@ namespace GN
         // Allocate a memory buffer that can hold at least 'count' characters, and one extra '\0'.
         static CharType * alloc( size_t count )
         {
-            return AllocatorType::sNew( count + 1 );
+            return AllocatorType::sAlloc( count + 1 );
         }
 
         static void dealloc( CharType * ptr, size_t count )
         {
-            AllocatorType::sDelete( ptr, count + 1 );
+            AllocatorType::sDealloc( ptr, count + 1 );
         }
 
         friend Str<char> wcs2mbs( const wchar_t *, size_t );

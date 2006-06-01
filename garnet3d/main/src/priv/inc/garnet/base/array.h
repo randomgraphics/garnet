@@ -156,7 +156,7 @@ namespace GN
             if( mElements )
             {
                 GN_ASSERT( mCapacity > 0 );
-                AllocatorType::sDelete( mElements, mCapacity );
+                AllocatorType::sDealloc( mElements, mCapacity );
             }
         }
 
@@ -212,7 +212,7 @@ namespace GN
                 newCap |= newCap >> 4;
                 newCap |= newCap >> 2;
                 newCap |= newCap >> 1;
-                T * newBuf = AllocatorType::sNew( newCap );
+                T * newBuf = AllocatorType::sAlloc( newCap );
                 copyElements( newBuf, mElements, mCount );
                 dealloc();
                 mElements = newBuf;
