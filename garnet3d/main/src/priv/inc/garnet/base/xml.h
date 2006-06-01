@@ -240,7 +240,7 @@ namespace GN
         //!
         void releaseAllNodesAndAttribs();
     };
-};
+}
 
 // *****************************************************************************
 //                           End of xml.h

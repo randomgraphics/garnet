@@ -37,6 +37,11 @@ namespace GN
     GN_PUBLIC void heapFree( void * );
 }
 
+#if GN_ICL
+#pragma warning(push)
+#pragma warning(disable:522) // inline function is declared after being used.
+#endif
+
 //! \name overloaded global new and delete operators
 //@{
 // TODO: more standard conforming implementation.
@@ -45,6 +50,10 @@ inline void * operator new[]( size_t s ) GN_THROW_BADALLOC() { return ::GN::heap
 inline void operator delete( void* p ) GN_NOTHROW() { ::GN::heapFree( p ); }
 inline void operator delete[]( void* p ) GN_NOTHROW() { ::GN::heapFree( p ); }
 //@}
+
+#if GN_ICL
+#pragma warning(pop)
+#endif
 
 // *****************************************************************************
 //                           End of memory.h

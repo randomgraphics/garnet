@@ -293,7 +293,7 @@ namespace GN
             {                                                                                                           \
                 return (*mFunctor)( PARAM_VALUES );                                                                     \
             }                                                                                                           \
-        };
+        }
 
         DEFINE_FTRPTRCLOSURE( , );
         DEFINE_FTRPTRCLOSURE( , const );
