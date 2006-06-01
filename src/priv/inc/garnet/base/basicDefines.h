@@ -18,16 +18,18 @@
 // ±Ê ∂±‡“Î∆˜
 // *****************************************************************************
 
-#define GN_MSVC 0 //!< If 1, means current compiler is msvc (or icl)
-#define GN_ICL  0 //!< If 1, means current compiler is intel c++ compiler
-#define GN_GCC  0 //!< If 1, means current compierl is gcc/g++
-#define GN_BCB  0 //!< If 1, means current compierl is boland c++ compiler
+#define GN_MSVC  0 //!< If 1, means current compiler is msvc (or icl)
+#define GN_MSVC8 0 //!< If 1, means current compiler is msvc 8.x
+#define GN_ICL   0 //!< If 1, means current compiler is intel c++ compiler
+#define GN_GCC   0 //!< If 1, means current compierl is gcc/g++
+#define GN_BCB   0 //!< If 1, means current compierl is boland c++ compiler
 
 //! \def GN_COMPILER
 //! Indicate current compiler
 
 #if defined(_MSC_VER) && !defined(__ICL)
 #undef GN_MSVC
+#undef GN_MSVC8
 #define GN_MSVC 1
 #define GN_MSVC8 (_MSC_VER >= 1400)
 #define GN_COMPILER "msvc"
@@ -193,7 +195,7 @@
 //@{
 
 // Note: call convension is only avaliable for MSVC on x86 platform.
-#if GN_MSVC && GN_X86
+#if GN_MSVC && !GN_ICL && GN_X86
 #define GN_HAS_FASTCALL 1
 #define GN_FASTCALL __fastcall
 
