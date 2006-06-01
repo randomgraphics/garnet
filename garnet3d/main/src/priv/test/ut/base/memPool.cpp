@@ -47,7 +47,7 @@ namespace GN
         static const size_t ALIGNED_BYTES = 1 << ALIGNMENT;
         static const size_t ITEM_SIZE = ( sizeof(Item) + (ALIGNED_BYTES-1) ) & ~(ALIGNED_BYTES-1);
 
-        struct Pool : DoubleLinkedItem<Pool>
+        struct Pool : public DoubleLinkedItem<Pool>
         {
             size_t count; // used items in this pool
             uint8_t data[ITEM_SIZE*N];
