@@ -924,7 +924,7 @@ for compiler, variants in ALL_targets.iteritems() :
         shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
-        tools = Split('GNtoolOglInfo')
+        tools = Split('GNtoolOglInfo GNtoolGPUBenchmark')
         progs = tests + samples + tools
         def getTargets( n ):
             if n in targets : return targets[n].targets

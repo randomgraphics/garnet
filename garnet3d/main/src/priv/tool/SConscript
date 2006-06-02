@@ -1,2 +1,3 @@
 Import( 'GN' )
-if GN.conf['has_ogl']: SConscript( dirs=Split('oglInfo') )
+SConscript( dirs=['GPUBenchmark'] )
+if GN.conf['has_ogl']: SConscript( dirs=['oglInfo'] )

@@ -5,7 +5,7 @@ namespace GN { namespace gfx
     // *************************************************************************
 
 #define _GNGFX_CONTEXT_UPDATE( FLAG, NAME, VALUE ) \
-    if( (!flags.FLAG) || (NAME)!=(VALUE) ) { flags.FLAG = 1; (NAME) = (VALUE); } else void(0)
+    if( (!this->flags.FLAG) || (this->NAME)!=(VALUE) ) { this->flags.FLAG = 1; (this->NAME) = (VALUE); } else void(0)
 
     //
     //

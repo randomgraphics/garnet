@@ -25,41 +25,40 @@ namespace GN
     template<class T>
     class DoubleLinkedList
     {
-        typedef DoubleLinkedItem<T> ItemType;
+    public:
+
+        typedef DoubleLinkedItem<T> ItemType; //!< type of linked item
+
+        //! \name ctor and dtor
+        //@{
+        DoubleLinkedList() : mHead(0), mTail(0) {}
+        virtual ~DoubleLinkedList() {}
+        //@}
+
+        //! \name list operations
+        //@{
+        void       append( ItemType * newItem ) { insertAfter( mTail, newItem ); }
+        bool       empty() const { return 0 == mCount; };
+        ItemType * head() const { return mHead; }
+        void       insertAfter( ItemType * where, ItemType * newItem ) { doInsertAfter( where, newItem ); }
+        void       insertBefore( ItemType * where, ItemType * newItem ) { doInsertBefore( where, newItem ); }
+        void       remove( ItemType * item ) { doRemove( item ); }
+        size_t     size() const { return mCount; }
+        ItemType * tail() const { return mTail; }
+        //@}
+
+    private:
 
         ItemType *mHead, *mTail;
         size_t mCount;
+
+    private:
 
         // no copy
         DoubleLinkedList( const DoubleLinkedList & );
         const DoubleLinkedList & operator = ( const DoubleLinkedList & );
 
-    public:
-
-        //!
-        //! constructor
-        //!
-        DoubleLinkedList() : mHead(0), mTail(0) {}
-
-        //!
-        //! Destructor
-        //!
-        virtual ~DoubleLinkedList() {}
-
-        ItemType * head() const { return mHead; } //!< get head item
-        ItemType * tail() const { return mTail; } //!< get tail item
-        size_t     size() const { return mCount; } //!< get item count
-        bool       empty() const { return 0 == mCount; }; //!< is the list empty?
-
-        //!
-        //! append new item.
-        //!
-        void append( ItemType * newItem ) { insertAfter( mTail, newItem ); }
-
-        //!
-        //! insert new item after specified item.
-        //!
-        void insertAfter( ItemType * where, ItemType * newItem )
+        void doInsertAfter( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
 
@@ -75,10 +74,7 @@ namespace GN
             if( mTail == where ) mTail = newItem;
         }
 
-        //!
-        //! insert new item before specified item.
-        //!
-        void insertBefore( ItemType * where, ItemType * newItem )
+        void doInsertBefore( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
 
@@ -94,10 +90,7 @@ namespace GN
             if( mHead == where ) mHead = newItem;
         }
 
-        //!
-        //! remove specific item
-        //!
-        void remove( ItemType * item )
+        void doRemove( ItemType * item )
         {
             GN_ASSERT( item && this == item->owner );
             ItemType * prev = item->prev;
@@ -126,38 +119,36 @@ namespace GN
     template<class T>
     class SingleLinkedList
     {
-        typedef SingleLinkedList<T> ItemType;
+    public:
+
+        typedef SingleLinkedList<T> ItemType; //!< type of linked item
+
+        //! \name ctor and dtor
+        //@{
+        SingleLinkedList() : mHead(0), mTail(0) {}
+        virtual ~SingleLinkedList() {}
+        //@}
+
+        //! \name list operations
+        //@{
+        void       append( ItemType * newItem ) { insertAfter( tail(), newItem ); }
+        ItemType * head() const { return mHead; }
+        void       insertAfter( ItemType * where, ItemType * newItem ) { doInsertAfter( where, newItem ); }
+        void       removeNextOf( ItemType * item ) { doRemoveNextOf( item ); }
+        ItemType * tail() const { return mTail; }
+        //@}
+
+    private:
 
         ItemType *mHead, *mTail;
+
+    private:
 
         // no copy
         SingleLinkedList( const SingleLinkedList & );
         const SingleLinkedList & operator = ( const SingleLinkedList & );
 
-    public:
-
-        //!
-        //! constructor
-        //!
-        SingleLinkedList() : mHead(0), mTail(0) {}
-
-        //!
-        //! Destructor
-        //!
-        virtual ~SingleLinkedList() {}
-
-        ItemType * head() const { return mHead; } //!< get head item
-        ItemType * tail() const { return mTail; } //!< get tail item
-
-        //!
-        //! append new item
-        //!
-        void append( ItemType * newItem ) { insertAfter( tail(), newItem ); }
-
-        //!
-        //! insert new item after specified item.
-        //!
-        void insertAfter( ItemType * where, ItemType * newItem )
+        void doInsertAfter( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
             if( where )
@@ -173,10 +164,7 @@ namespace GN
             if( mTail == where ) mTail = newItem;
         }
 
-        //!
-        //! remove next item of specific one. Set to NULL, if you want to remove head item.
-        //!
-        void removeNextOf( ItemType * item )
+        void doRemoveNextOf( ItemType * item )
         {
             if( item )
             {
@@ -194,6 +182,7 @@ namespace GN
                 mHead = mHead->next;
             }
         }
+
     };
 }
 
