@@ -75,10 +75,10 @@ GN_INLINE void GN::gfx::VtxFmtDesc::clear()
 //
 // -----------------------------------------------------------------------------
 GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
-    uint8_t         stream,
-    uint8_t         offset,
+    uint8_t stream,
+    uint8_t offset,
     VtxSem  semantic,
-    ClrFmt     format )
+    ClrFmt  format )
 {
     // check parameters
     if( stream >= NUM_VTXSEMS )

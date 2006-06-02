@@ -110,6 +110,21 @@ namespace GN { namespace app
         ResourceManager<gfx::Effect*> effects; //!< effect manager
 
         //!
+        //! Search resource by name. Return full path of the resource file. Return empty string if not found.
+        //!
+        static GN::StrA sSearchResourceFile( const StrA & name );
+
+        //!
+        //! Create texture from file
+        //!
+        static gfx::Texture * sCreateTextureFromFile( const StrA & );
+
+        //!
+        //! Create shader from file
+        //!
+        static gfx::Shader * sCreateShaderFromFile( gfx::ShaderType type, gfx::ShadingLanguage lang, const StrA & name, const StrA & hints="" );
+
+        //!
         //! ctor
         //!
         SampleResourceManager();
@@ -183,7 +198,7 @@ namespace GN { namespace app
             input::InputApi iapi;    //!< input API
         };
 
-        static float UPDATE_INTERVAL; //!< Time interval for calling onUpdate()
+        static float UPDATE_INTERVAL; //!< Time interval for calling onUpdate(), in seconds.
 
         virtual int  run( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }

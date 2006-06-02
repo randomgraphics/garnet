@@ -237,6 +237,14 @@ namespace GN { namespace gfx
 
         //@}
 
+        //! \name get reference to shader name.
+        //!
+        //! Name field is for debug purpose only, it is not used by garnet library. Set it to any value you want.
+        //@{
+        const StrA & name() const { return mName; }
+        StrA & name() { return mName; }
+        //@}
+
     protected :
 
         //!
@@ -369,6 +377,7 @@ namespace GN { namespace gfx
         TextureDesc   mDesc;   //!< descriptor
         TextureLoader mLoader; //!< content loader
         std::vector< Vector3<uint32_t> > mMipSize; //!< mipmap size of each level
+        StrA          mName; //!< texture name. Only for debug purpose.
     };
 
     //! \name convert between texture tags and string

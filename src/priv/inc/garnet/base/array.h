@@ -162,7 +162,7 @@ namespace GN
 
         void copyElements( T * dst, const T * src, size_t count )
         {
-            for( size_t i = 0; i < mCount; ++i )
+            for( size_t i = 0; i < count; ++i )
             {
                 dst[i] = src[i];
             }

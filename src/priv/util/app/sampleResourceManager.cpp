@@ -5,36 +5,6 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
 
-//
-//
-// -----------------------------------------------------------------------------
-static GN::StrA sSearchResourceFile( const StrA & name )
-{
-    GN_GUARD;
-
-    if( path::isFile( name ) ) return name;
-
-    if( path::isAbsPath(name) ) return StrA::EMPTYSTR;
-
-    StrA fullPath;
-
-#define CHECK_PATH( X ) do { fullPath = path::join X ; if( path::isFile( fullPath ) ) return fullPath; } while(0)
-
-    // search in startup directory
-    CHECK_PATH( ("startup:", name) );
-    CHECK_PATH( ("startup:/media", name) );
-
-    // search in application directory
-    CHECK_PATH( ("app:", name ) );
-    CHECK_PATH( ( "app:/media", name ) );
-    CHECK_PATH( ( "app:../media", name ) );
-
-    // resource not found.
-    return StrA::EMPTYSTR;
-
-    GN_UNGUARD;
-}
-
 // *****************************************************************************
 // local raw data loader
 // *****************************************************************************
@@ -68,7 +38,7 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
     GN_GUARD;
 
     // get resource path
-    StrA path = sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sSearchResourceFile( name );
     if( path.empty() )
     {
         GN_ERROR( "Raw resource '%s' creation failed: path not found.", name.cptr() );
@@ -79,7 +49,7 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
 
     // open file
     DiskFile fp;
-    if( !fp.open( path::toNative(path), "rb" ) )
+    if( !fp.open( path, "rb" ) )
     {
         GN_ERROR( "Raw resource '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
@@ -179,7 +149,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
 
     // get resouce path
-    path = sSearchResourceFile( path );
+    path = SampleResourceManager::sSearchResourceFile( path );
     if( path.empty() )
     {
         GN_ERROR( "Shader '%s' creation failed: path not found.", name.cptr() );
@@ -190,7 +160,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
 
     // open file
     DiskFile fp;
-    if( !fp.open( path::toNative(path), "rt" ) )
+    if( !fp.open( path, "rt" ) )
     {
         GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
@@ -302,38 +272,8 @@ static bool sCreateNullTexture( Texture * & result, const StrA & name, void * )
 // -----------------------------------------------------------------------------
 static bool sCreateTexture( Texture * & result, const StrA & name, void * )
 {
-    GN_GUARD;
-
-    // check for global renderer
-    if( 0 == gRendererPtr )
-    {
-        GN_ERROR( "Texture '%s' creation failed: renderer is not ready." );
-        return false;
-    }
-
-    // get resource path
-    StrA path = sSearchResourceFile( name );
-    if( path.empty() )
-    {
-        GN_ERROR( "Texture '%s' creation failed: path not found.", name.cptr() );
-        return false;
-    }
-
-    GN_INFO( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
-
-    // open file
-    DiskFile fp;
-    if( !fp.open( path::toNative(path), "rb" ) )
-    {
-        GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
-        return false;
-    }
-
-    // create texture instance
-    result = gRenderer.createTextureFromFile( fp );
+    result = SampleResourceManager::sCreateTextureFromFile( name );
     return NULL != result;
-
-    GN_UNGUARD;
 }
 
 //
@@ -382,7 +322,7 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
     GN_GUARD;
 
     // get resouce path
-    StrA path = sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sSearchResourceFile( name );
     if( path.empty() )
     {
         GN_ERROR( "Effect '%s' creation failed: path not found.", name.cptr() );
@@ -393,7 +333,7 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
 
     // open file
     DiskFile fp;
-    if( !fp.open( path::toNative(path), "rt" ) )
+    if( !fp.open( path, "rt" ) )
     {
         GN_ERROR( "Effect '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
@@ -425,6 +365,139 @@ static void sDeleteEffect( Effect * & ptr, void * )
 // *****************************************************************************
 // SampleResourceManager
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::StrA GN::app::SampleResourceManager::sSearchResourceFile( const StrA & name )
+{
+    GN_GUARD;
+
+    if( path::isFile( name ) ) return name;
+
+    if( path::isAbsPath(name) ) return StrA::EMPTYSTR;
+
+    StrA fullPath;
+
+#define CHECK_PATH( X ) do { fullPath = path::join X ; if( path::isFile( fullPath ) ) return path::toNative(fullPath); } while(0)
+
+    // search in startup directory
+    CHECK_PATH( ("startup:", name) );
+    CHECK_PATH( ("startup:/media", name) );
+
+    // search in application directory
+    CHECK_PATH( ("app:", name ) );
+    CHECK_PATH( ( "app:/media", name ) );
+    CHECK_PATH( ( "app:../media", name ) );
+
+    // resource not found.
+    return StrA::EMPTYSTR;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+gfx::Texture *
+GN::app::SampleResourceManager::sCreateTextureFromFile( const StrA & name )
+{
+    GN_GUARD;
+
+    // check for global renderer
+    if( 0 == gRendererPtr )
+    {
+        GN_ERROR( "Texture '%s' creation failed: renderer is not ready." );
+        return 0;
+    }
+
+    // get resource path
+    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    if( path.empty() )
+    {
+        GN_ERROR( "Texture '%s' creation failed: path not found.", name.cptr() );
+        return 0;
+    }
+
+    GN_INFO( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+
+    // open file
+    DiskFile fp;
+    if( !fp.open( path, "rb" ) )
+    {
+        GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        return 0;
+    }
+
+    // create texture instance
+    Texture * r = gRenderer.createTextureFromFile( fp );
+#if !GN_RETAIL_BUILD
+    if( r ) r->name() = name;
+#endif
+    return r;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+Shader *
+GN::app::SampleResourceManager::sCreateShaderFromFile(
+    ShaderType type, ShadingLanguage lang, const StrA & name, const StrA & hints )
+{
+    GN_GUARD;
+
+    // check for global renderer
+    if( 0 == gRendererPtr )
+    {
+        GN_ERROR( "Shader '%s' creation failed: renderer is not ready." );
+        return 0;
+    }
+
+    // get resource path
+    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    if( path.empty() )
+    {
+        GN_ERROR( "Shader '%s' creation failed: path not found.", name.cptr() );
+        return 0;
+    }
+
+    GN_INFO( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+
+    // open file
+    DiskFile fp;
+    if( !fp.open( path, "rb" ) )
+    {
+        GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        return 0;
+    }
+
+    // read file
+    DynamicArray<char> buf( fp.size() + 1 );
+    size_t readen;
+    if( !fp.read( buf, fp.size(), &readen ) )
+    {
+        GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
+        return false;
+    }
+    GN_ASSERT( readen <= fp.size() );
+	fp.close();
+    buf[readen] = 0;
+
+    // create shader instance
+    Shader * r = gRenderer.createShader( type, lang, buf.cptr(), hints );
+#if !GN_RETAIL_BUILD
+    if( r ) r->name() = name;
+#endif
+    return r;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 
 //
 //

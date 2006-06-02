@@ -141,6 +141,14 @@ namespace GN { namespace gfx
         void setUniformByNameM( const StrA &, const Matrix44f & );
         //@}
 
+        //! \name get reference to shader name.
+        //!
+        //! Name field is for debug purpose only, it is not used by garnet library. Set it to any value you want.
+        //@{
+        const StrA & name() const { return mName; }
+        StrA & name() { return mName; }
+        //@}
+
     protected :
 
         //!
@@ -268,6 +276,8 @@ namespace GN { namespace gfx
         HandleManager<Uniform,uint32_t> mUniforms;     //!< uniform handle manager
         std::map<StrA,uint32_t>         mUniformNames; //!< uniform name -> uniform handle
         mutable std::set<uint32_t>      mDirtySet;     //!< Store handle of dirty uniforms.
+
+        StrA mName; //!< shader name ( debug purpose only )
     };
 
     // *************************************************************************
