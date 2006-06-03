@@ -254,6 +254,11 @@ namespace GN { namespace app
         //!
         SampleResourceManager & getResMgr() { return mResMgr; }
 
+        //!
+        //! get the FPS
+        //!
+        float getFps() const { return mFps.getFps(); }
+
         //@}
 
         // ********************************
