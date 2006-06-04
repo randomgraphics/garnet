@@ -31,6 +31,8 @@ elif 'vc80' == GN.compiler.name:
 jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
 if 'gcc' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
+if 'xenon' == GN.compiler.os:
+    jpeg_cluster.addCompileFlags( CPPDEFINES = ['NO_GETENV'] )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
 
 common_sources = GN.glob( Split('expat/*.c freetype2/*.c lua/*.c pcre/*.c* png/*.c tinyxml/*.cpp zlib/*.c'), True )

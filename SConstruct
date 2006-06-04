@@ -77,6 +77,7 @@ CONF_defaultCmdArgs = {
     'os'        : getenv('GN_BUILD_TARGET_OS', CONF_os ),
     'cpu'       : getenv('GN_BUILD_TARGET_CPU', CONF_cpu ),
     'cg'        : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
+    'xedeploy'  : getenv('GN_BUILD_XEDEPLOY', 1), # copy to devkit, default is true.
     }
 
 # 是否打开trace
@@ -92,6 +93,9 @@ CONF_compiler = Compiler( ARGUMENTS.get('compiler', CONF_defaultCmdArgs['compile
 
 # 是否支持Cg语言.
 CONF_enableCg  = ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] )
+
+# copy to devkit
+CONF_xedeploy = ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] )
 
 ################################################################################
 #
@@ -338,7 +342,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # =================
     # 是否支持Cg shader
     # =================
-    conf['has_cg'] = c.CheckCHeader('cg/cg.h')
+    conf['has_cg'] = CONF_enableCg and c.CheckCHeader('cg/cg.h')
 
     # ==============
     # 是否支持OpenGL
@@ -370,10 +374,31 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # ==========
     conf['has_cegui'] = c.CheckCXXHeader( 'CEGUI.h' )
 
+    # =====================
+    # Copy to devkit or not
+    # =====================
+    conf['xedeploy'] = CONF_xedeploy;
+
     # =============
     # finish config
     # =============
     c.Finish()
+
+#
+# Copy to Xenon devkit
+#
+class UTIL_copy_to_devkit:
+
+    def __init__( self, targetDir ):
+        self.targetDir = targetDir
+
+    def __call__( self, target, source, env ):
+        print self.targetDir
+        env.Execute( 'xbmkdir %s'%self.targetDir )
+        for x in target:
+            env.Execute( 'xbcp /Q /D /Y %s %s'%(x.abspath,self.targetDir) )
+            t = '%s\\%s'%(self.targetDir,os.path.basename(x.path))
+        return 0
 
 ################################################################################
 #
@@ -388,11 +413,12 @@ class GarnetEnv :
         self.variant = None
         self.conf = {}
 
-    # 输出调试信息
+    # UTIL functions
     def trace( self, level, msg ): UTIL_trace( level, msg )
     def info( self, msg ): UTIL_info( msg )
     def warn( self, msg ): UTIL_warn( msg )
     def error( self, msg ): UTIL_error( msg )
+    def copy_to_devkit( self, targetDir ) : return UTIL_copy_to_devkit( targetDir )
 
     # 生成从target到base的相对路径
     def relpath( self, target, base ):
@@ -475,6 +501,8 @@ class GarnetEnv :
         # create new target instance
         t = Target()
         if UTIL_staticBuild( self.variant ) and 'shlib' == type: type = 'stlib'
+        t.compiler = self.compiler
+        t.variant = self.variant
         t.type = type
         t.path = Dir('.')
         t.sources = sources
@@ -489,6 +517,8 @@ class GarnetEnv :
 
         # create new target instance
         t = Target()
+        t.compiler = self.compiler
+        t.variant = self.variant
         t.type = 'custom'
         t.path = Dir('.')
         t.sources = sources
@@ -503,6 +533,8 @@ class GarnetEnv :
 
         # create new target instance
         t = Target()
+        t.compiler = self.compiler
+        t.variant = self.variant
         t.type = 'custom'
         t.path = Dir('.')
         t.sources = sources
@@ -572,6 +604,8 @@ class SourceCluster:
 class Target:
 
     def __init__(self):
+        self.compiler = None
+        self.variant = None
         self.type = None # could be 'stlib, shlib, prog, custom'
         self.path = None
         self.targets = []
@@ -876,7 +910,11 @@ def BUILD_program( name, target ):
     exeName = '%s%s%s%s'%(env['PROGPREFIX'],name,BUILD_getSuffix(),env['PROGSUFFIX'])
     prog = env.Program( os.path.join(str(target.path),exeName), objs )
     BUILD_handleManifest( env, prog )
+
     target.targets = env.Install( BUILD_binDir, prog )
+
+    if 'xenon' == BUILD_compiler.name and CONF_xedeploy:
+        env.AddPostAction( target.targets, UTIL_copy_to_devkit('xe:\\garnet3d\\%s'%BUILD_variant) )
 
     Alias( name, target.targets )
     Default( target.targets )
@@ -1024,6 +1062,10 @@ HELP_opts.Add(
     'cg',
     'Support Cg language or not. This flag has no effect, if Cg library is not found.(GN_BUILD_ENABLE_CG).',
     CONF_defaultCmdArgs['cg'] )
+HELP_opts.Add(
+    'xedeploy',
+    'Copy to Xenon devkit. Only effective when building Xenon binaries.',
+    CONF_defaultCmdArgs['xedeploy'] )
 
 HELP_text = """
 Usage:
