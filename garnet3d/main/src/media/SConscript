@@ -2,16 +2,40 @@ Import( 'GN' )
 
 import os.path
 
-srcdir = str( Dir('.').srcnode().path )
+MEDIA_DIR = str( Dir('.').srcnode().path )
 
-def doCopy( env, sources, bldDir ):
-    targets = []
-    for x in sources:
-        src = str(x.srcnode().path)
-        dst = os.path.join( bldDir, 'media', GN.relpath( src, srcdir ) )
-        targets.append( env.InstallAs( dst, src ) )
-    return targets
+class doCopy:
+
+    def __init__( self, xedeploy, xedir ):
+        self.xedeploy = xedeploy
+        self.xedir = xedir
+
+    def __call__( self, env, sources, bldDir ):
+        targets = []
+        for x in sources:
+            src = str(x.srcnode().path)
+            relpath = GN.relpath( src, MEDIA_DIR )
+            dstdir = os.path.join( bldDir, 'media', relpath )
+            dst = env.InstallAs( dstdir, src )
+            targets.append( dst )
+            if self.xedeploy :
+                env.AddPostAction(
+                    dst,
+                    GN.copy_to_devkit(
+                        os.path.join(
+                            self.xedir,
+                            os.path.dirname(relpath)
+                        )
+                    )
+                )
+        return targets
 
 sources = GN.glob( "*.*", True )
-cluster = GN.newCustomSourceCluster( sources, doCopy )
+cluster = GN.newCustomSourceCluster(
+    sources,
+    doCopy(
+        GN.conf['xedeploy'] and 'xenon'==GN.compiler.name,
+        'xe:\\garnet3d\%s\media'%GN.variant
+    )
+)
 GN.newCustomTarget( 'GNmedia', [cluster] )
