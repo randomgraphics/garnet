@@ -35,13 +35,6 @@
 #define GN_TRACE  ::GN::detail::LogHelper::fake
 #endif
 
-//!
-//! Implement default log
-//!
-#define GN_IMPLEMENT_DEFAULT_LOG() \
-    GN_PUBLIC void ::GN::doLog( const LogDesc & desc, const char * msg ) \
-    { ::GN::detail::defaultLogImpl(desc,msg); }
-
 namespace GN
 {
     //!
@@ -145,11 +138,6 @@ namespace GN
             //!
             void loglc( int level, const char * cate, const char * fmt, ... );
         };
-
-        //!
-        //! Default implementation of log function.
-        //!
-        void defaultLogImpl( const LogDesc & desc, const char * msg );
     }
 } // end of namespace GN
 
