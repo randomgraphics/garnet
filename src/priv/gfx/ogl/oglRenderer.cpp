@@ -144,10 +144,10 @@ bool GN::gfx::OGLRenderer::deviceCreate()
     #undef COMPONENT_RECREATE
 
     // trigger signals
-    GN_INFO( "GFX SIGNAL: OGL device create." );
+    GN_TRACE( "GFX SIGNAL: OGL device create." );
     if( !sSigCreate() ) return false;
 
-    GN_INFO( "GFX SIGNAL: OGL device restore." );
+    GN_TRACE( "GFX SIGNAL: OGL device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -172,7 +172,7 @@ bool GN::gfx::OGLRenderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    GN_INFO( "GFX SIGNAL: OGL device restore." );
+    GN_TRACE( "GFX SIGNAL: OGL device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -190,7 +190,7 @@ void GN::gfx::OGLRenderer::deviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_INFO( "GFX SIGNAL: OGL device dispose." );
+    GN_TRACE( "GFX SIGNAL: OGL device dispose." );
     sSigDispose();
 
     drawDeviceDispose();
@@ -213,10 +213,10 @@ void GN::gfx::OGLRenderer::deviceDestroy()
 
     if( getOGLRC() )
     {
-        GN_INFO( "GFX SIGNAL: OGL device dispose." );
+        GN_TRACE( "GFX SIGNAL: OGL device dispose." );
         sSigDispose();
 
-        GN_INFO( "GFX SIGNAL: OGL device destroy." );
+        GN_TRACE( "GFX SIGNAL: OGL device destroy." );
         sSigDestroy();
     }
 

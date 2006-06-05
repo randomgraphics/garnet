@@ -117,17 +117,50 @@ GN_PUBLIC GN::Signal2<void,const GN::LogDesc &, const char *> GN::core::gSigLog;
 GN_PUBLIC void
 GN::doLog( const LogDesc & desc, const char * msg )
 {
+    if( 0 == msg || 0 == msg[0] ) return;
+
     // trigger log signal
     core::gSigLog( desc, msg );
 
-    if( 0 == msg || 0 == msg[0] ) return;
+    const char * file = desc.file ? desc.file : "UNKNOWN FILE";
+
+#if GN_XENON
+
+    if( desc.level <= LOGLEVEL_INFO )
+    {
+        const char * filename;
+        if( desc.level <= LOGLEVEL_ERROR )
+            filename = "game:\\garnet3d.error.log";
+        else if( desc.level == LOGLEVEL_WARN )
+            filename = "game:\\garnet3d.warn.log";
+        else
+            filename = "game:\\garnet3d.info.log";
+        FILE * fp = fopen( filename, "at" );
+        if( fp )
+        {
+            sDoPrint( fp, file, desc.line, desc.level, msg );
+            fclose( fp );
+        }
+    }
+    else
+    {
+        char buf[16384];
+        strPrintf(
+            buf,
+            16384,
+            "%s(%d) : %s : %s\n",
+            file, desc.line,
+            sLevel2Str(desc.level).cptr(),
+            msg );
+        ::OutputDebugStringA( buf );
+    }
+
+#else
 
     bool logDisabled = getEnvBoolean( "GN_LOG_DISABLED" );
     if( logDisabled ) return;
 
     StrA logFileName = getEnv( "GN_LOG_FILENAME" );
-
-    const char * file = desc.file ? desc.file : "UNKNOWN FILE";
 
     ConsoleColor cc(desc.level);
 
@@ -146,7 +179,6 @@ GN::doLog( const LogDesc & desc, const char * msg )
         }
     }
 
-#if !GN_XENON // Xenon has no console output
     bool logToScreen = !getEnvBoolean( "GN_LOG_QUIET" );
     if( logToScreen )
     {
@@ -156,7 +188,6 @@ GN::doLog( const LogDesc & desc, const char * msg )
         else
             sDoPrint( stdout, file, desc.line, desc.level, msg );
     }
-#endif
 
     // output to debugger
 #if GN_MSWIN
@@ -170,4 +201,6 @@ GN::doLog( const LogDesc & desc, const char * msg )
         msg );
     ::OutputDebugStringA( buf );
 #endif
+
+#endif // GN_XENON
 }

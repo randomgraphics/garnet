@@ -3,6 +3,10 @@
 using namespace GN;
 using namespace GN::gfx;
 
+// *****************************************************************************
+// Utils
+// *****************************************************************************
+
 template<typename T=float, size_t BUFFER_SIZE = 10 >
 class AverageValue
 {
@@ -50,6 +54,10 @@ public:
     }
 };
 
+// *****************************************************************************
+// Test cases
+// *****************************************************************************
+
 class BasicTestCase
 {
     app::SampleApp & mApp;
@@ -70,6 +78,10 @@ public:
 #include "fillrate.inl" // pixel pipeline speed
 #include "bandwidth.inl" // memory bandwidth
 //#include "triangles.cpp" // vertex pipeline speed
+
+// *****************************************************************************
+// Main benchmark application
+// *****************************************************************************
 
 class BenchmarkingApp : public app::SampleApp
 {
@@ -92,8 +104,9 @@ class BenchmarkingApp : public app::SampleApp
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
         GN_ASSERT( cd.theCase );
-        cd.theCase->destroy();
         GN_INFO( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
+        cd.theCase->destroy();
+        delete cd.theCase;
         mTestCases.pop_back();
 
         // return false, if no more cases.
@@ -117,6 +130,8 @@ public:
 
     bool onAppInit()
     {
+        GN_GUARD;
+
         CaseDesc cd;
 
         cd.theCase = new TestFillrate( *this, "Texel fillrate", true, FMT_D3DCOLOR );
@@ -131,10 +146,14 @@ public:
 
         // success
         return true;
+
+        GN_UNGUARD;
     }
 
     void onAppQuit()
     {
+        GN_GUARD;
+
         for( size_t i = 0; i < mTestCases.size(); ++i )
         {
             GN_ASSERT( mTestCases[i].theCase );
@@ -142,10 +161,14 @@ public:
             delete mTestCases[i].theCase;
         }
         mTestCases.clear();
+
+        GN_UNGUARD;
     }
 
     bool onRendererRestore()
     {
+        GN_GUARD;
+
         if( !mTestCases.empty() )
         {
             CaseDesc & cd = mTestCases.back();
@@ -155,29 +178,41 @@ public:
 
         // success
         return true;
+
+        GN_UNGUARD;
     }
 
     void onRendererDispose()
     {
+        GN_GUARD;
+
         if( !mTestCases.empty() )
         {
             CaseDesc & cd = mTestCases.back();
             GN_ASSERT( cd.theCase );
             cd.theCase->destroy();
         }
+
+        GN_UNGUARD;
     }
 
     void onKeyPress( input::KeyEvent ke )
     {
+        GN_GUARD_SLOW;
+
         app::SampleApp::onKeyPress( ke );
-        if( input::KEY_SPACEBAR == ke.code && !ke.status.down )
+        if( input::KEY_SPACEBAR == ke.code && !ke.status.down ||
+            input::KEY_XB360_A == ke.code && !ke.status.down )
         {
             if( !nextCase() ) postExitEvent();
         }
+
+        GN_UNGUARD_SLOW;
     }
 
     void onUpdate()
     {
+        GN_GUARD_SLOW;
         if( mTestCases.empty() )
         {
             postExitEvent();
@@ -198,16 +233,22 @@ public:
             GN_ASSERT( cd.theCase );
             cd.theCase->update();
         }
+
+        GN_UNGUARD_SLOW;
     }
 
     void onRender()
     {
+        GN_GUARD_SLOW;
+
         if( !mTestCases.empty() )
         {
             CaseDesc & cd = mTestCases.back();
             GN_ASSERT( cd.theCase );
             cd.theCase->render();
         }
+
+        GN_UNGUARD_SLOW;
     }
 };
 
