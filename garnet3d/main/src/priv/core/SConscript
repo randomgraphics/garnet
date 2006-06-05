@@ -2,6 +2,7 @@ Import( 'GN' )
 
 sources = [
     'core.cpp',
+    'coreLog.cpp',
 ]
 
 cluster = GN.newSourceCluster( sources )

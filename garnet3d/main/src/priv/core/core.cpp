@@ -18,20 +18,6 @@ namespace GN
     GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
 
     //
-    // Implement global log function.
-    // -------------------------------------------------------------------------
-    GN_PUBLIC Signal2<void,const GN::LogDesc &, const char *> core::gSigLog;
-    GN_PUBLIC void
-    doLog( const LogDesc & desc, const char * msg )
-    {
-        // trigger log signal
-        core::gSigLog( desc, msg );
-
-        // do default log
-        detail::defaultLogImpl(desc,msg);
-    }
-
-    //
     //
     // -----------------------------------------------------------------------------
     GN_PUBLIC void * heapAlloc( size_t sz )
