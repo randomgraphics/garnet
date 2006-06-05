@@ -284,7 +284,7 @@ void GN::gfx::D3D9Quad::drawQuads(
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
         cf.setShaderBit( PIXEL_SHADER );
-        GN_DX9_CHECK( dev->SetPixelShader( texcoords ? mPxlShaderTextured : mPxlShaderSolid ) );
+        GN_DX9_CHECK( dev->SetPixelShader( texcoords ? colors ? mPxlShaderColorTextured : mPxlShaderTextured : mPxlShaderSolid ) );
     }
 
 #if !GN_XENON
@@ -389,6 +389,14 @@ bool GN::gfx::D3D9Quad::createResources()
     // create pixel shader
     if( r.supportShader( "ps_1_1" ) )
     {
+        static const char * code0 =
+            "ps.1.1 \n"
+            "tex t0 \n"
+            "mov r0, t0 \n"
+            "mul r0, r0, v0 \n";
+        mPxlShaderColorTextured = d3d9::assemblePS( dev, code0 );
+        if( 0 == mPxlShaderColorTextured ) return false;
+
         static const char * code1 =
             "ps.1.1 \n"
             "tex t0 \n"

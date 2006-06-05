@@ -40,6 +40,7 @@ namespace GN { namespace gfx {
         {
             mDecl = 0;
             mVtxShader = 0;
+            mPxlShaderColorTextured = 0;
             mPxlShaderTextured = 0;
             mPxlShaderSolid = 0;
             mVtxBuf = 0;
@@ -80,6 +81,7 @@ namespace GN { namespace gfx {
 
         LPDIRECT3DVERTEXDECLARATION9 mDecl;
         LPDIRECT3DVERTEXSHADER9 mVtxShader;
+        LPDIRECT3DPIXELSHADER9  mPxlShaderColorTextured;
         LPDIRECT3DPIXELSHADER9  mPxlShaderTextured;
         LPDIRECT3DPIXELSHADER9  mPxlShaderSolid;
         LPDIRECT3DVERTEXBUFFER9 mVtxBuf;

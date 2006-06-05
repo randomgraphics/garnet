@@ -77,7 +77,6 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
         GN_ASSERT( monitor );
         return monitor;
 #else
-        GN_INFO( "Xenon platform does not support multi-monitors." );
         return (GN::HandleType)1; // magic value, means invalid screen.
 #endif
     }
@@ -102,9 +101,10 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMod
 
     if( (void*)1 == monitor )
     {
-        GN_WARN( "Use hard-coded display mode: 640x480 32bits" );
-        dm.width = 640;
-        dm.height = 480;
+        XVIDEO_MODE xvm;
+        XGetVideoMode( &xvm );
+        dm.width = xvm.dwDisplayWidth;
+        dm.height = xvm.dwDisplayHeight;
         dm.depth = 32;
         dm.refrate = 0;
     }

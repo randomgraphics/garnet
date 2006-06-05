@@ -20,6 +20,7 @@ namespace GN { namespace win
         //@{
 
         DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
+        MonitorHandle getMonitorHandle() const { return (MonitorHandle)1; }
         WindowHandle getWindowHandle() const { return (WindowHandle)1; }
         Vector2<size_t> getClientSize() const { return Vector2<size_t>(640,480); }
         void show() {}
@@ -104,7 +105,7 @@ namespace GN { namespace win
     //
     // -------------------------------------------------------------------------
 #if GN_XENON
-    MonitorHandle getMonitorByIndex( size_t ) { return (ScreenHandle)1; }
+    MonitorHandle getMonitorByIndex( size_t ) { return (MonitorHandle)1; }
 #elif GN_MSWIN
     struct MonitorEnumInfo
     {

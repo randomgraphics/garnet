@@ -213,10 +213,10 @@ bool GN::gfx::D3D9Renderer::deviceCreate()
     #undef COMPONENT_RECREATE
 
     // trigger signals
-    GN_INFO( "GFX SIGNAL: D3D9 device create." );
+    GN_TRACE( "GFX SIGNAL: D3D9 device create." );
     if( !sSigCreate() ) return false;
 
-    GN_INFO( "GFX SIGNAL: D3D9 device restore." );
+    GN_TRACE( "GFX SIGNAL: D3D9 device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -243,7 +243,7 @@ bool GN::gfx::D3D9Renderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    GN_INFO( "GFX SIGNAL: D3D9 device restore." );
+    GN_TRACE( "GFX SIGNAL: D3D9 device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -263,7 +263,7 @@ void GN::gfx::D3D9Renderer::deviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_INFO( "GFX SIGNAL: D3D9 device dispose." );
+    GN_TRACE( "GFX SIGNAL: D3D9 device dispose." );
     sSigDispose();
 
     drawDeviceDispose();
@@ -288,10 +288,10 @@ void GN::gfx::D3D9Renderer::deviceDestroy()
 
     if( mDevice )
     {
-        GN_INFO( "GFX SIGNAL: D3D9 device dispose." );
+        GN_TRACE( "GFX SIGNAL: D3D9 device dispose." );
         sSigDispose();
 
-        GN_INFO( "GFX SIGNAL: D3D9 device destroy." );
+        GN_TRACE( "GFX SIGNAL: D3D9 device destroy." );
         sSigDestroy();
     }
 
