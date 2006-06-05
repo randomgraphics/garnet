@@ -42,7 +42,7 @@ namespace GN
         }
 
         //!
-        //! 获得当前时间
+        //! 获得当前时间, in seconds
         //!
         double getTimeD() const
         {
@@ -52,7 +52,7 @@ namespace GN
         }
 
         //!
-        //! 获得当前时间
+        //! 获得当前时间, in seconds
         //!
         float getTimef() const
         {
