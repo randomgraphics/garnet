@@ -18,7 +18,7 @@ void GN::gfx::BasicRenderer::drawDebugTextA(
     ws = (wchar_t*)alloca( sizeof(wchar_t) * (len+1) );
 
     // convert mbs -> unicode
-    size_t wlen = mbs2wcs( ws, len, s, len );
+    size_t wlen = mbs2wcs( ws, len+1, s, len );
     ws[wlen] = 0;
 
     // call UNICODE version of drawText()

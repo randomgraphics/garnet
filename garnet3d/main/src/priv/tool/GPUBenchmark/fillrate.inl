@@ -1,6 +1,118 @@
 using namespace GN;
 using namespace GN::gfx;
 
+struct BasicEffect
+{
+    AutoRef<Shader>  vs, ps;
+    AutoRef<Texture> tex[32];
+    uint32_t         texCount;
+
+    float time;
+    Matrix44f pvw;
+
+    BasicEffect() : texCount(0), time(0.0f), pvw(Matrix44f::IDENTITY) {}
+
+    void update()
+    {
+        pvw.identity();
+        pvw[0][2] = 0.5f * cosf(time); // shear x
+        pvw[1][2] = 0.5f * sinf(time); // shear y
+        time += app::SampleApp::UPDATE_INTERVAL;
+    }
+
+    virtual ~BasicEffect() {}
+
+    virtual bool create() = 0;
+
+    virtual void applyUniforms() = 0;
+
+protected:
+
+    bool createD3DVs()
+    {
+        Renderer & r = gRenderer;
+
+        static const char * code =
+            "struct IO { float4 pos : POSITION; float2 uv : TEXCOORD0; }; \n"
+            "uniform float4x4 pvw; \n"
+            "void main( in IO i, out IO o ) \n"
+            "{ \n"
+            "   o.pos = mul( i.pos, pvw ); \n"
+            "   o.uv = i.uv; \n"
+            "}";
+
+        vs.attach( r.createVtxShader( LANG_D3D_HLSL, code ) );
+
+        return !!vs;
+    };
+};
+
+struct PureColored : public BasicEffect
+{
+    bool create()
+    {
+        Renderer & r = gRenderer;
+
+        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
+
+        if( !createD3DVs() ) return false;
+
+        static const char * code = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
+
+        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
+
+        return !!ps;
+    }
+
+    void applyUniforms()
+    {
+        vs->setUniformByNameM( "pvw", pvw );
+    }
+};
+
+struct SingleTextured : public BasicEffect
+{
+    ClrFmt mTextureFormat;
+
+    SingleTextured( const ClrFmt & fmt ) : mTextureFormat(fmt) {}
+    
+    bool create()
+    {
+        Renderer & r = gRenderer;
+
+        // check renderer caps
+        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
+
+        // create VS
+        if( !createD3DVs() ) return false;
+
+        // create PS
+        static const char * code =
+            "sampler s0 : register(s0); \n"
+            "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0 \n"
+            "{ return tex2D( s0, uv ); }";
+        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
+        if( !ps ) return false;
+
+        // create texture
+        tex[0].attach( r.create2DTexture( 512, 512, 1, mTextureFormat ) );
+        if( !tex[0] ) return false;
+        TexLockedResult tlr;
+        tex[0]->lock( tlr, 0, 0, 0, LOCK_DISCARD );
+        memset( tlr.data, 0xFF, tlr.sliceBytes );
+        tex[0]->unlock();
+
+        // success
+        texCount = 1;
+        return true;
+    }
+
+    void applyUniforms()
+    {
+        vs->setUniformByNameM( "pvw", pvw );
+    }
+};
+
 struct Pyramid
 {
     struct Vertex
@@ -74,28 +186,35 @@ struct Pyramid
 //!
 //! Fillrate benchmarking application
 //!
-class FillrateApp : public app::SampleApp
+class TestFillrate : public BasicTestCase
 {
     Pyramid mGeometry;
     BasicEffect * mEffect;
     RendererContext mContext;
-    StrA mFillrate;
+    StrA mFillrateStr;
 
 public:
 
-    FillrateApp() : mEffect(0) {}
+    bool   mInitTextured;
+    ClrFmt mInitFormat;
 
-    void onDetermineInitParam( InitParam & ip )
-    {
-        ip.rapi = API_D3D9;
-        ip.ro.fullscreen = false;
-    }
+    AverageValue<float> mFillrate;
 
-    bool onRendererRestore()
+public:
+
+    TestFillrate( app::SampleApp & app, const StrA & name, bool textured, ClrFmt textureFormat )
+        : BasicTestCase(app,name)
+        , mEffect( 0 )
+        , mInitTextured(textured), mInitFormat(textureFormat) {}
+
+    bool create()
     {
         if( !mGeometry.create() ) return false;
 
-        mEffect = new SingleTextured;
+        if( mInitTextured )
+            mEffect = new SingleTextured(mInitFormat);
+        else
+            mEffect = new PureColored;
         if( !mEffect || !mEffect->create() ) return false;
 
         VtxFmtDesc vfd;
@@ -118,33 +237,36 @@ public:
         return true;
     }
 
-    void onRendererDispose()
+    void destroy()
     {
         mGeometry.destroy();
         safeDelete( mEffect );
     }
 
-    void onKeyPress( input::KeyEvent ke )
-    {
-        app::SampleApp::onKeyPress( ke );
-    }
-
-    void onUpdate()
+    void update()
     {
         mEffect->update();
-
         const DispDesc & dd = gRenderer.getDispDesc();
-
-        float fr = dd.width * dd.height * dd.depth / 8 * getFps() / 1000000000;
-        mFillrate.format( "fillrate = %f GB/sec", fr );
+        float fr = dd.width * dd.height * dd.depth / 8 * getApp().getFps() / 1024 / 1024 / 1024;
+        mFillrateStr.format( "fillrate = %f GB/sec", fr );
+        mFillrate = fr;
     }
 
-    void onRender()
+    void render()
     {
         Renderer & r = gRenderer;
         mEffect->applyUniforms();
         r.setContext( mContext );
         mGeometry.draw();
-        r.drawDebugTextA( mFillrate.cptr(), 0, 100 );
+        static const Vector4f RED(1,0,0,1);
+        r.drawDebugTextA( getName().cptr(), 0, 80, RED );
+        r.drawDebugTextA( mFillrateStr.cptr(), 0, 100, RED );
+    }
+
+    StrA printResult()
+    {
+        return strFormat( "fillrate(%f) texture(%s)",
+            mFillrate.getAverageValue(),
+            mInitTextured ? clrFmt2Str(mInitFormat) : "NONE" );
     }
 };

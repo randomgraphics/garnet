@@ -80,7 +80,7 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
     {
         GN::gfx::RendererOptions ro = gRenderer.getOptions();
         ro.fullscreen = !ro.fullscreen;
-        if( !gRenderer.changeOptions(ro) ) postExistEvent();
+        if( !gRenderer.changeOptions(ro) ) postExitEvent();
     }
 }
 
@@ -170,6 +170,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "Options : (options are case-insensitive)\n"
                     "    -h, -?                 : Show help screen.\n"
                     "    -d3d9/d3d10/ogl/fake   : Select rendering API.\n"
+                    "    -fs                    : Use fullsreen mode.\n"
                     "    -ref                   : Use reference device.\n"
                     "    -msaa                  : Enable MSAA/FSAA.\n"
                     "    -pure                  : Use pure device (D3D only).\n"
@@ -181,6 +182,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
             else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.rapi = gfx::API_D3D10;
             else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+            else if( 0 == strCmpI( a, "-fs" ) ) mInitParam.ro.fullscreen = true;
             else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
             else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
             else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
@@ -252,7 +254,7 @@ bool GN::app::SampleApp::initRenderer()
     GN::gfx::Renderer::sSigRestore.connect( this, &SampleApp::onRendererRestore );
     GN::gfx::Renderer::sSigDispose.connect( this, &SampleApp::onRendererDispose );
     GN::gfx::Renderer::sSigDestroy.connect( this, &SampleApp::onRendererDestroy );
-    GN::gfx::Renderer::sSigWindowClosing.connect( this, &SampleApp::postExistEvent );
+    GN::gfx::Renderer::sSigWindowClosing.connect( this, &SampleApp::postExitEvent );
 
     // create renderer
     return recreateRenderer();

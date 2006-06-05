@@ -3,122 +3,216 @@
 using namespace GN;
 using namespace GN::gfx;
 
-struct BasicEffect
+template<typename T=float, size_t BUFFER_SIZE = 10 >
+class AverageValue
 {
-    AutoRef<Shader>  vs, ps;
-    AutoRef<Texture> tex[32];
-    uint32_t         texCount;
+    T mValues[BUFFER_SIZE];
 
-    float time;
-    Matrix44f pvw;
+    size_t mCount;
+    size_t mCursor;
 
-    BasicEffect() : texCount(0), time(0.0f), pvw(Matrix44f::IDENTITY) {}
+public:
 
-    void update()
+    AverageValue() : mCount(0), mCursor(0) {}
+
+    void newValue( T v )
     {
-        pvw.identity();
-        pvw[0][2] = 0.5f * cosf(time); // shear x
-        pvw[1][2] = 0.5f * sinf(time); // shear y
-        time += app::SampleApp::UPDATE_INTERVAL;
+        mValues[mCursor] = v;
+
+        mCursor = (mCursor + 1) % BUFFER_SIZE;
+
+        ++mCount;
     }
 
-    virtual ~BasicEffect() {}
+    AverageValue & operator=( T rhs )
+    {
+        newValue( rhs );
+        return *this;
+    }
 
-    virtual bool create() = 0;
+    T getInstantValue() const
+    {
+        GN_ASSERT( mCount > 0 );
+        return mValues[(mCursor-1)%BUFFER_SIZE]
+    }
 
-    virtual void applyUniforms() = 0;
+    T getAverageValue() const
+    {
+        GN_ASSERT( mCount > 0 );
+        T r = 0;
+        size_t count = min(mCount,BUFFER_SIZE);
+        for( size_t i = 0; i < count; ++i )
+        {
+            r += mValues[i];
+        }
+        r /= (T)count;
+        return r;
+    }
+};
 
+class BasicTestCase
+{
+    app::SampleApp & mApp;
+    StrA             mName;
 protected:
-
-    bool createD3DVs()
-    {
-        Renderer & r = gRenderer;
-
-        static const char * code =
-            "struct IO { float4 pos : POSITION; float2 uv : TEXCOORD0; }; \n"
-            "uniform float4x4 pvw; \n"
-            "void main( in IO i, out IO o ) \n"
-            "{ \n"
-            "   o.pos = mul( i.pos, pvw ); \n"
-            "   o.uv = i.uv; \n"
-            "}";
-
-        vs.attach( r.createVtxShader( LANG_D3D_HLSL, code ) );
-
-        return !!vs;
-    };
-};
-
-struct PureColored : public BasicEffect
-{
-    bool create()
-    {
-        Renderer & r = gRenderer;
-
-        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
-
-        if( !createD3DVs() ) return false;
-
-        static const char * code = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
-
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
-
-        return !!ps;
-    }
-
-    void applyUniforms()
-    {
-        vs->setUniformByNameM( "pvw", pvw );
-    }
-};
-
-struct SingleTextured : public BasicEffect
-{
-    bool create()
-    {
-        Renderer & r = gRenderer;
-
-        // check renderer caps
-        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
-
-        // create VS
-        if( !createD3DVs() ) return false;
-
-        // create PS
-        static const char * code =
-            "sampler s0 : register(s0); \n"
-            "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0 \n"
-            "{ return tex2D( s0, uv ); }";
-            //"{ return float4( uv, 0, 1 ); }";
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
-        if( !ps ) return false;
-
-        // load texture
-        tex[0].attach( app::SampleResourceManager::sCreateTextureFromFile( "texture/earth.jpg" ) );
-        if( !tex[0] ) return false;
-
-        // success
-        texCount = 1;
-        return true;
-    }
-
-    void applyUniforms()
-    {
-        vs->setUniformByNameM( "pvw", pvw );
-    }
+    BasicTestCase( app::SampleApp & app, const StrA & name ) : mApp(app), mName(name) {}
+public:
+    app::SampleApp & getApp() const { return mApp; }
+    const StrA & getName() const { return mName; }
+    virtual ~BasicTestCase() {}
+    virtual bool create() = 0;
+    virtual void destroy() = 0;
+    virtual void update() = 0;
+    virtual void render() = 0;
+    virtual StrA printResult() = 0;
 };
 
 #include "fillrate.inl" // pixel pipeline speed
 #include "bandwidth.inl" // memory bandwidth
 //#include "triangles.cpp" // vertex pipeline speed
 
+class BenchmarkingApp : public app::SampleApp
+{
+    Clock mClock;
+    bool mFirstFrame;
+
+    struct CaseDesc
+    {
+        BasicTestCase * theCase;
+    };
+
+    std::vector<CaseDesc> mTestCases;
+
+    // return false, if error and/or no more cases.
+    bool nextCase()
+    {
+        if( mTestCases.empty() ) return false;
+        
+        // exit current case.
+        GN_ASSERT( !mTestCases.empty() );
+        CaseDesc & cd = mTestCases.back();
+        GN_ASSERT( cd.theCase );
+        cd.theCase->destroy();
+        GN_INFO( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
+        mTestCases.pop_back();
+
+        // return false, if no more cases.
+        if( mTestCases.empty() ) return false;
+
+        // init next case
+        return mTestCases.back().theCase->create();
+    }
+
+public:
+
+    BenchmarkingApp() : mFirstFrame(true)
+    {
+        mClock.reset();
+    }
+
+    void onDetermineInitParam( InitParam & ip )
+    {
+        ip.rapi = API_D3D9;
+    }
+
+    bool onAppInit()
+    {
+        CaseDesc cd;
+
+        cd.theCase = new TestFillrate( *this, "Texel fillrate", true, FMT_D3DCOLOR );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestFillrate( *this, "Pixel fillrate", false, FMT_UNKNOWN );
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_D3DCOLOR, 2 );
+        mTestCases.push_back( cd );
+
+        // success
+        return true;
+    }
+
+    void onAppQuit()
+    {
+        for( size_t i = 0; i < mTestCases.size(); ++i )
+        {
+            GN_ASSERT( mTestCases[i].theCase );
+            mTestCases[i].theCase->destroy();
+            delete mTestCases[i].theCase;
+        }
+        mTestCases.clear();
+    }
+
+    bool onRendererRestore()
+    {
+        if( !mTestCases.empty() )
+        {
+            CaseDesc & cd = mTestCases.back();
+            GN_ASSERT( cd.theCase );
+            if( !cd.theCase->create() ) return false;
+        }
+
+        // success
+        return true;
+    }
+
+    void onRendererDispose()
+    {
+        if( !mTestCases.empty() )
+        {
+            CaseDesc & cd = mTestCases.back();
+            GN_ASSERT( cd.theCase );
+            cd.theCase->destroy();
+        }
+    }
+
+    void onKeyPress( input::KeyEvent ke )
+    {
+        app::SampleApp::onKeyPress( ke );
+        if( input::KEY_SPACEBAR == ke.code && !ke.status.down )
+        {
+            if( !nextCase() ) postExitEvent();
+        }
+    }
+
+    void onUpdate()
+    {
+        if( mTestCases.empty() )
+        {
+            postExitEvent();
+        }
+        else if( mFirstFrame )
+        {
+            mFirstFrame = false;
+            mClock.reset();
+        }
+        else if( mClock.getTimef() >= 10.0f )
+        {
+            mFirstFrame = true;
+            if( !nextCase() ) postExitEvent();
+        }
+        else
+        {
+            CaseDesc & cd = mTestCases.back();
+            GN_ASSERT( cd.theCase );
+            cd.theCase->update();
+        }
+    }
+
+    void onRender()
+    {
+        if( !mTestCases.empty() )
+        {
+            CaseDesc & cd = mTestCases.back();
+            GN_ASSERT( cd.theCase );
+            cd.theCase->render();
+        }
+    }
+};
+
 int main( int argc, const char * argv[] )
 {
-    int r;
-    {
-        BandwidthApp app;
-        r = app.run( argc, argv );
-        if( 0 != r ) return r;
-    }
-    return 0;
+    BenchmarkingApp app;
+    return app.run( argc, argv );
 }

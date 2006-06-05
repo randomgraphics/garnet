@@ -237,7 +237,7 @@ namespace GN { namespace app
         //!
         //! post exit event. Application will exit at next frame.
         //!
-        void postExistEvent() { mDone = true; }
+        void postExitEvent() { mDone = true; }
 
         //!
         //! switch renderer API
