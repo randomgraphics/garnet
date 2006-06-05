@@ -13,8 +13,9 @@ namespace GN
     //!
     namespace win
     {
-        typedef HandleType WindowHandle;  //!< window handle/ID.
-        typedef HandleType DisplayHandle; //!< monitor handle on MSWIN; display ID on X11.
+        typedef HandleType DisplayHandle; //!< Display ID on X11. No use on platform other then X11.
+        typedef HandleType MonitorHandle; //!< Screen ID on X11; Monitor handle on MS Windows.
+        typedef HandleType WindowHandle;  //!< Window handle/ID.
 
         typedef Delegate2<void,void*,bool&> WindowEventHandler; //!< Window event handler.
 
@@ -32,6 +33,7 @@ namespace GN
             //@{
 
             virtual DisplayHandle getDisplayHandle() const = 0;
+            virtual MonitorHandle getMonitorHandle() const = 0;
             virtual WindowHandle getWindowHandle() const = 0;
             virtual Vector2<size_t> getClientSize() const = 0;
 
@@ -103,6 +105,11 @@ namespace GN
         //! Create window instance
         //!
         Window * createWindow( const WindowCreationParams & );
+
+        //!
+        //! Get monitor handle by index. 0 is always primary screen. Return 0 for invalid index.
+        //!
+        MonitorHandle getMonitorByIndex( size_t );
 
         //!
         //! Process windows messages. No effects on platform other than MS Windows.

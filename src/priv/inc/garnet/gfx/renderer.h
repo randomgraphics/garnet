@@ -71,8 +71,8 @@ namespace GN { namespace gfx
         //! Monitor handle, effective only if useExternalWindow is false.
         //!
         //! - Should be HMONITOR on MS Window or pointer to Screen structure on X Windows.
-        //! - 0 means using the monitor where parent window stays in. If monitorHandle
-        //!   and parent window are both zero, primary monitor will be used.
+        //! - 0 means using the monitor where parent and/or render window stays in.
+        //!   If monitorHandle and parent window are both zero, primary monitor will be used.
         //! - 缺省为0.
         //!
         HandleType monitorHandle;
@@ -81,7 +81,7 @@ namespace GN { namespace gfx
         //! 是否监视渲染窗口的大小，并自动对渲染设备作相应的调整
         //! 缺省为true.
         //!
-        bool autoBackbufferResizing;
+        bool trackWindowSizeMove;
 
         //!
         //! Display mode for fullscreen mode. Ignored in windowed mode.
@@ -154,7 +154,7 @@ namespace GN { namespace gfx
             , useExternalWindow(false)
             , parentWindow(0)
             , monitorHandle(0)
-            , autoBackbufferResizing(true)
+            , trackWindowSizeMove(true)
             , windowedWidth(0)
             , windowedHeight(0)
             , msaa(MSAA_NONE)

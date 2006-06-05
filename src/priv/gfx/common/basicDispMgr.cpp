@@ -214,6 +214,10 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
 
     DispDesc desc;
 
+    // determine monitor handle
+    desc.monitorHandle = sDetermineMonitorHandle( ro );
+    if( 0 == desc.monitorHandle ) return false;
+
     // setup display mode
     DisplayMode dm;
     if( !sGetCurrentDisplayMode( ro, dm ) ) return false;
@@ -245,14 +249,13 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
     }
     else
     {
-        if( !mWindow.initInternalRenderWindow( ro.displayHandle, ro.parentWindow, desc.width, desc.height ) ) return false;
+        if( !mWindow.initInternalRenderWindow( ro.displayHandle, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
 #if GN_MSWIN
     if( !ro.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
 #endif
     desc.displayHandle = mWindow.getDisplay();
     desc.windowHandle = mWindow.getWindow();
-    desc.monitorHandle = mWindow.getMonitor();
 #if GN_POSIX
     GN_ASSERT( desc.displayHandle );
 #endif
@@ -279,7 +282,7 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
     // handle render window size move
     const RendererOptions & ro = getOptions();
     if( !ro.fullscreen && // only when we're in windowed mode
-        ro.autoBackbufferResizing &&
+        ro.trackWindowSizeMove &&
         mWindow.getSizeChangeFlag() )
     {
         RendererOptions newOptions = ro;

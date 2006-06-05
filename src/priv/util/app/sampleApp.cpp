@@ -161,26 +161,33 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     for( int i = 1; i < argc; ++i )
     {
         const char * a = argv[i];
-        if( 0 == strCmpI( a, "-?" ) || 0 == strCmpI( a, "-h" ) )
+        if( *a == '-' )
         {
-            GN_INFO( "\n"
-                "Usage : %s [options]\n\n"
-                "Options : (options are case-insensitive)\n"
-                "    -h, -?                 : Show help screen.\n"
-                "    -d3d9/d3d10/ogl/fake   : Select rendering API.\n"
-                "    -ref                   : Use reference device.\n"
-                "    -msaa                  : Enable MSAA/FSAA.\n"
-                "    -pure                  : Use pure device (D3D only).\n"
-                , GN::path::baseName(argv[0]).cptr() );
-            return false;
+            if( 0 == strCmpI( a, "-?" ) || 0 == strCmpI( a, "-h" ) )
+            {
+                GN_INFO( "\n"
+                    "Usage : %s [options]\n\n"
+                    "Options : (options are case-insensitive)\n"
+                    "    -h, -?                 : Show help screen.\n"
+                    "    -d3d9/d3d10/ogl/fake   : Select rendering API.\n"
+                    "    -ref                   : Use reference device.\n"
+                    "    -msaa                  : Enable MSAA/FSAA.\n"
+                    "    -pure                  : Use pure device (D3D only).\n"
+                    "    -m0                    : Use primary screen. (Default)\n"
+                    "    -m1                    : Use secondary screen.\n"
+                    , GN::path::baseName(argv[0]).cptr() );
+                return false;
+            }
+            else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
+            else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.rapi = gfx::API_D3D10;
+            else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+            else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
+            else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
+            else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
+            else if( 0 == strCmpI( a, "-pure") ) mInitParam.ro.pure = true;
+            else if( 0 == strCmpI( a, "-m0") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 0 );
+            else if( 0 == strCmpI( a, "-m1") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 1 );
         }
-        else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
-        else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.rapi = gfx::API_D3D10;
-        else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
-        else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
-        else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
-        else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
-        else if( 0 == strCmpI( a, "-pure") ) mInitParam.ro.pure = true;
     }
 #endif
 

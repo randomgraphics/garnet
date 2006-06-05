@@ -34,12 +34,12 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use external window
         //!
-        bool initExternalRenderWindow( HandleType, HandleType ) { return true; }
+        bool initExternalRenderWindow( HandleType disp, HandleType window ) { return true; }
 
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( HandleType, HandleType, uint32_t width, uint32_t height )
+        bool initInternalRenderWindow( HandleType disp, HandleType parent, HandleType monitor, uint32_t width, uint32_t height )
         {
             mWidth = width;
             mHeight = height;
@@ -136,12 +136,12 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use external window
         //!
-        bool initExternalRenderWindow( HandleType unused, HandleType externalWindow );
+        bool initExternalRenderWindow( HandleType dispUnused, HandleType externalWindow );
 
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( HandleType unused, HandleType parentWindow, uint32_t width, uint32_t height );
+        bool initInternalRenderWindow( HandleType dispUnused, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height );
 
         //!
         //! Delete render window
@@ -220,7 +220,7 @@ namespace GN { namespace gfx
     private:
 
         bool postInit();
-        bool createWindow( HWND parent, uint32_t width, uint32_t height );
+        bool createWindow( HWND parent, HMONITOR monitor, uint32_t width, uint32_t height );
         void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

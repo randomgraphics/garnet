@@ -103,6 +103,46 @@ namespace GN { namespace win
     //
     //
     // -------------------------------------------------------------------------
+#if GN_XENON
+    MonitorHandle getMonitorByIndex( size_t ) { return (ScreenHandle)1; }
+#elif GN_MSWIN
+    struct MonitorEnumInfo
+    {
+        HMONITOR handle;
+        size_t   targetIndex;
+        size_t   currentIndex;
+    };
+    static BOOL CALLBACK sMonitorEnumProc( HMONITOR hMonitor, HDC, LPRECT, LPARAM dwData )
+    {
+        MonitorEnumInfo * mei = (MonitorEnumInfo*)dwData;
+        if( mei->currentIndex == mei->targetIndex )
+        {
+            mei->handle = hMonitor;
+            return FALSE;
+        }
+        else
+        {
+            ++mei->currentIndex;
+            return TRUE;
+        }
+    }
+    MonitorHandle getMonitorByIndex( size_t i )
+    {
+        MonitorEnumInfo mei = { 0, i, 0 };
+        ::EnumDisplayMonitors( 0, 0, &sMonitorEnumProc, (LPARAM)&mei );
+        return mei.handle;
+    }
+#else
+    MonitorHandle getMonitorByIndex( size_t )
+    {
+        GN_UNIMPL();
+        return 0;
+    }
+#endif
+
+    //
+    //
+    // -------------------------------------------------------------------------
 #if GN_MSWIN && !GN_XENON
     void processWindowMessages( WindowHandle window, bool blockWhileMinized )
     {

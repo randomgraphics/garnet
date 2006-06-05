@@ -75,12 +75,15 @@ public:
 
     void onUpdate()
     {
-        /*TexLockedResult tlr;
+        uint32_t * p;
+        TexLockedResult tlr;
         for( size_t i = 0; i < NUM_TEX; ++i )
         {
             mTextures[i]->lock( tlr, 0, 0, 0, LOCK_DISCARD );
+            p = (uint32_t*)tlr.data;
+            *p = 0;
             mTextures[i]->unlock();
-        }*/
+        }
         const float GBperFrame = TEX_WIDTH * TEX_HEIGHT / 1024.0f / 1024.0f / 1024.0f * 4.0f * NUM_TEX;
         mBandwidth.format( "bandwidth = %f GB/sec", getFps() * GBperFrame );
     }
