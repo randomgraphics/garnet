@@ -67,13 +67,13 @@ void GN::win::WindowMsw::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::win::DisplayHandle GN::win::WindowMsw::getDisplayHandle() const
+GN::win::MonitorHandle GN::win::WindowMsw::getMonitorHandle() const
 {
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
     HMONITOR m = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
     if( 0 == m ) GN_ERROR( "Fail to get monitor handle from window!" );
-    return (DisplayHandle)m;
+    return (MonitorHandle)m;
     GN_UNGUARD;
 }
 

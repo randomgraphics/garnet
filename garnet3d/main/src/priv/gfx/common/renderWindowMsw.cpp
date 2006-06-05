@@ -51,11 +51,11 @@ bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType 
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowMsw::initInternalRenderWindow(
-    HandleType, HandleType parentWindow, uint32_t width, uint32_t height )
+    HandleType, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height )
 {
     GN_GUARD;
 
-    GN_ASSERT( width > 0 && height > 0 );
+    GN_ASSERT( 0 != monitor && width > 0 && height > 0 );
 
     if( !mUseExternalWindow && mWindow && parentWindow == ::GetParent(mWindow) )
     {
@@ -81,7 +81,7 @@ bool GN::gfx::RenderWindowMsw::initInternalRenderWindow(
     else
     {
         quit();
-        if( !createWindow( (HWND)parentWindow, width, height ) ) return false;
+        if( !createWindow( (HWND)parentWindow, (HMONITOR)monitor, width, height ) ) return false;
     }
 
     mUseExternalWindow = false;
@@ -192,7 +192,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t height )
+GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t width, uint32_t height )
 {
     GN_GUARD;
 
@@ -234,6 +234,11 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t he
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
 
+    // get monitor's working area rectangle
+    MONITORINFO mi;
+    mi.cbSize = sizeof(mi);
+    GN_MSW_CHECK_RV( GetMonitorInfoA( monitor, &mi ), false );
+
     // calculate window size
     RECT rc = { 0, 0, width, height };
     ::AdjustWindowRectEx( &rc, style, 0, exStyle );
@@ -244,7 +249,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, uint32_t width, uint32_t he
         mClassName.cptr(),
         "", // no title
         style,
-        CW_USEDEFAULT, CW_USEDEFAULT,
+        mi.rcWork.left, mi.rcWork.top,
         rc.right - rc.left, rc.bottom - rc.top,
         parent,
         0, // no menu

@@ -47,7 +47,8 @@ namespace GN { namespace win
 
         //@{
 
-        DisplayHandle getDisplayHandle() const;
+        DisplayHandle getDisplayHandle() const { return (DisplayHandle)1; }
+        MonitorHandle getMonitorHandle() const;
         WindowHandle getWindowHandle() const { return mWindow; }
         Vector2<size_t> getClientSize() const;
         void show();
