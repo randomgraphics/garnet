@@ -28,7 +28,7 @@ bool GN::gfx::D3D9Font::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Font, () );
 
-    if( !createFont() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -151,8 +151,10 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
             }
             else
             {
-                x1 = (float)xx;
-                y1 = (float)yy;
+                const BitmapCharDesc * desc = gBitmapChars8x13[*text];
+
+                x1 = (float)xx + desc->xorig;
+                y1 = (float)yy + (13 - desc->height);
                 x2 = x1 + 8;
                 y2 = y1 + 16;
                 u1 = (float)(*text % 16) / 16.0f;
@@ -195,18 +197,6 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
     }
 
     GN_UNGUARD_SLOW;
-}
-
-// *****************************************************************************
-// Private functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Font::createFont()
-{
-    return true;
 }
 
 #endif

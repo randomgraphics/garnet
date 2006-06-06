@@ -131,17 +131,10 @@ bool GN::gfx::D3D9Renderer::changeOptions( const RendererOptions & options, bool
     RendererOptions newro = options;
 
 #if GN_XENON
-    if( !newro.fullscreen )
-    {
-        GN_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
-        newro.fullscreen = true;
-        newro.displayMode.set(0,0,0,0);
-    }
-    if( newro.useExternalWindow )
-    {
-        GN_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
-        newro.useExternalWindow = false;
-    }
+    // Xenon does not support windowed mode and external render window.
+    newro.fullscreen = true;
+    //newro.displayMode.set(0,0,0,0);
+    newro.useExternalWindow = false;
 #endif
 
     // store old settings

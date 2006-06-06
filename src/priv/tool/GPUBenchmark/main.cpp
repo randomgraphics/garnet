@@ -126,6 +126,10 @@ public:
     void onDetermineInitParam( InitParam & ip )
     {
         ip.rapi = API_D3D9;
+        #if GN_XENON
+        ip.ro.fullscreen = true;
+        ip.ro.displayMode.set( 1024, 768, 32, 0 );
+        #endif
     }
 
     bool onAppInit()
