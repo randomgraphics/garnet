@@ -392,10 +392,16 @@ class UTIL_copy_to_devkit:
     def __init__( self, targetDir ):
         self.targetDir = targetDir
 
+    def mkdir( self, path, env ):
+        import popen2
+        parent = os.path.dirname( path )
+        if len(parent) > 0 :
+            self.mkdir( parent, env )
+        popen2.popen3( 'xbmkdir %s'%path )
+
     def __call__( self, target, source, env ):
-        print self.targetDir
-        env.Execute( 'xbmkdir %s'%self.targetDir )
         for x in target:
+            self.mkdir( self.targetDir, env )
             env.Execute( 'xbcp /Q /D /Y %s %s'%(x.abspath,self.targetDir) )
             t = '%s\\%s'%(self.targetDir,os.path.basename(x.path))
         return 0

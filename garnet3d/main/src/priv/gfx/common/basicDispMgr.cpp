@@ -54,8 +54,6 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, uint32_t * width, uint3
 static GN::HandleType
 sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 {
-    GN_GUARD;
-
     if( 0 == ro.monitorHandle )
     {
 #if GN_MSWIN && !GN_XENON
@@ -81,8 +79,6 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 #endif
     }
     else return ro.monitorHandle;
-
-    GN_UNGUARD;
 }
 
 //!

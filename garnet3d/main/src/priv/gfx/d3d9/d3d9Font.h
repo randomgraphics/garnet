@@ -85,8 +85,6 @@ namespace GN { namespace gfx {
         // private functions
         // ********************************
     private:
-        bool createFont();
-
     };
 
 #else
