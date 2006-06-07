@@ -33,7 +33,11 @@ static uint32_t sCapsInit_MAX_PRIMITIVES( const D3DCAPS9 & d3dcaps )
 //
 static uint32_t sCapsInit_MAX_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
 {
-    return d3dcaps.MaxTextureBlendStages;
+    if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(3,0) ) return 32;
+    else if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0) ) return 16;
+    else if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4) ) return 6;
+    else if( d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,1) ) return 4;
+    else return d3dcaps.MaxTextureBlendStages;
 }
 //
 static uint32_t sCapsInit_PER_STAGE_CONSTANT( const D3DCAPS9 & d3dcaps )
@@ -49,6 +53,11 @@ static uint32_t sD3D9CapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
 static uint32_t sD3D9CapsInit_DOT3( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DTEXOPCAPS_DOTPRODUCT3 & d3dcaps.TextureOpCaps );
+}
+//
+static uint32_t sD3D9CapsInit_MAX_FFP_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
+{
+    return d3dcaps.MaxTextureBlendStages;
 }
 
 //

@@ -12,34 +12,36 @@
 // -----------------------------------------------------------------------------
 static inline DWORD sLockFlag2D3D( DWORD d3dUsage, GN::gfx::LockFlag flag )
 {
-    DWORD d3dflag = 0;
+    using namespace GN;
+    using namespace GN::gfx;
 
-    GN_UNUSED_PARAM( d3dUsage );
-    GN_UNUSED_PARAM( flag );
+    DWORD d3dflag;
 
-    /*switch( flag )
+    if( D3DUSAGE_DYNAMIC & d3dUsage )
     {
-        case GN::gfx::LOCK_RW :
-            return 0;
-
-        case GN::gfx::LOCK_RO :
-            if( 
-            break;
-
-        case GN::gfx::LOCK_DISCARD :
-        case GN::gfx::LOCK_NO_OVERWRITE :
-        default :
-            GN_UNEXPECTED();
-            GN_ERROR( "invalid lock flag: %d", flag );
-            return 0;
+        // dynamic texture
+        switch( flag )
+        {
+            case LOCK_RO           : d3dflag = D3DLOCK_READONLY;
+            case LOCK_DISCARD      : d3dflag = D3DLOCK_DISCARD;
+            case LOCK_NO_OVERWRITE : d3dflag = D3DLOCK_NOOVERWRITE;
+            default                : d3dflag = 0;
+        }
     }
-
-    if( GN::gfx::TEXUSAGE_READBACK & usage 
-
-    if( (GN::gfx::LOCK_RO & flag) && !(GN::gfx::LOCK_WO & flag) )
+    else if( ( D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL ) & d3dUsage )
     {
-        d3dflag |= D3DLOCK_READONLY;
-    }*/
+        // render target texture
+        d3dflag = 0;
+    }
+    else
+    {
+        // normal static texture
+        switch( flag )
+        {
+            case LOCK_RO           : d3dflag = D3DLOCK_READONLY;
+            default                : d3dflag = 0;
+        }
+    }
 
 #if GN_DEBUG_BUILD
     d3dflag |= D3DLOCK_NOSYSLOCK;
@@ -237,10 +239,9 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
     d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_DEPTHSTENCIL : 0;
 
     // Note: D3DUSAGE_DYNAMIC can't use with D3DUSAGE_RENDERTARGET and D3DUSAGE_DEPTH.
-    if( !(TEXUSAGE_RENDER_TARGET&usage) && !(TEXUSAGE_DEPTH) )
+    if( !(TEXUSAGE_RENDER_TARGET&usage) && !(TEXUSAGE_DEPTH&usage) && (TEXUSAGE_DYNAMIC&usage) )
     {
-        d3dUsage |= D3DUSAGE_WRITEONLY;
-        d3dUsage |= (TEXUSAGE_DYNAMIC & usage) ? D3DUSAGE_DYNAMIC : 0;
+        d3dUsage |= D3DUSAGE_DYNAMIC;
     }
 
     d3dUsage |= TEXUSAGE_AUTOGEN_MIPMAP & usage ? D3DUSAGE_AUTOGENMIPMAP : 0;
@@ -629,11 +630,17 @@ bool GN::gfx::D3D9Texture::lock(
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
     AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
 
+    DWORD lockedUsage;
 #if GN_XENON
     // On Xenon, always lock target texture directly
     mLockedTexture = mD3DTexture;
+    lockedUsage = mD3DUsage;
 #else
-    if( mShadowCopy ) mLockedTexture = mShadowCopy;
+    if( mShadowCopy )
+    {
+        mLockedTexture = mShadowCopy;
+        lockedUsage = 0;
+    }
     else if( ( LOCK_RO == flag || LOCK_RW == flag ) || !mWritable )
     {
         // create temporary surface for read-lock of non-shadowed texture,
@@ -650,11 +657,17 @@ bool GN::gfx::D3D9Texture::lock(
             D3DPOOL_SYSTEMMEM );
         if( 0 == mLockCopy ) return false;
         mLockedTexture = mLockCopy;
+        lockedUsage = 0;
     }
-    else mLockedTexture = mD3DTexture;
+    else
+    {
+        mLockedTexture = mD3DTexture;
+        lockedUsage = mD3DUsage;
+    }
 #endif
 
-    DWORD d3dLockFlag = sLockFlag2D3D( mD3DUsage, flag );
+    // determine lock flag
+    DWORD d3dLockFlag = sLockFlag2D3D( lockedUsage, flag );
 
     switch( getDesc().type )
     {

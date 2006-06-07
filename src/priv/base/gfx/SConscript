@@ -18,4 +18,5 @@ sources = [
     'vertex.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+if GN.conf['has_d3d10'] : r.addCompileFlags( CPPDEFINES = ['HAS_D3D10'] )
 Return( 'r' )
