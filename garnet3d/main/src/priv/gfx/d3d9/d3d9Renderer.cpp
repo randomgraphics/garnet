@@ -2,37 +2,14 @@
 #include "d3d9Renderer.h"
 #include "d3d9Resource.h"
 
-#if GN_MSVC
-
+#if GN_MSVC && !GN_XENON
+#pragma comment(lib, "d3d9.lib") // D3D9 for PC has no d3d9d.lib
 #pragma comment( lib, "dxerr9.lib" )
 #if GN_DEBUG_BUILD
 #pragma comment(lib, "d3dx9d.lib")
 #else
 #pragma comment(lib, "d3dx9.lib")
 #endif
-
-#if GN_XENON
-
-#pragma comment(lib, "xboxkrnl.lib")
-#pragma comment(lib, "xbdm.lib")
-
-#if GN_DEBUG_BUILD
-#pragma comment(lib, "d3d9d.lib")
-#pragma comment(lib, "xapilibd.lib")
-#pragma comment(lib, "xgraphicsd.lib")
-#else
-#pragma comment(lib, "d3d9.lib")
-#pragma comment(lib, "xapilib.lib")
-#pragma comment(lib, "xgraphics.lib")
-#endif // GN_DEBUG_BUILD
-// more libraries: xnetd.lib xaudiod.lib xactd.lib vcompd.lib
-
-#else // !GN_XENON
-
-#pragma comment(lib, "d3d9.lib") // D3D9 for PC has no d3d9d.lib
-
-#endif // GN_XENON
-
 #endif // GN_MSVC
 
 // *****************************************************************************

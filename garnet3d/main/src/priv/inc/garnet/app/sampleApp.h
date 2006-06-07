@@ -57,10 +57,11 @@ namespace GN { namespace app
         {
             mCurrentTime = mClock.getTimeD();
             ++mFrameCounter;
-            if( mCurrentTime - mLastFrameTime >= 1.0f )
+            double duration = mCurrentTime - mLastFrameTime;
+            if( duration >= 1.0f )
             {
                 mBeforeFirstUpdate = false;
-                mFpsValue = (float)( mFrameCounter );
+                mFpsValue = (float)( mFrameCounter / duration );
                 mFpsString.format( "FPS: %.2f", mFpsValue );
                 mLastFrameTime = mCurrentTime;
                 mFrameCounter = 0;

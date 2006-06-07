@@ -214,21 +214,6 @@ def UTIL_newEnv( compiler, variant ):
     cxxflags   = generate_empty_options()
     linkflags  = generate_empty_options()
 
-    # 定制不同平台的编译选项
-    if 'xenon' == compiler.os:
-        libs['common']  += Split('xboxkrnl xbdm dxerr9')
-        libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
-        libs['profile'] += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-        libs['retail']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-        libs['stdbg']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd')
-        libs['stprof']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-        libs['stret']   += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp ')
-    elif 'mswin' == compiler.os:
-        libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
-    else:
-        cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
-        libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
-
     # 定制不同编译模式的编译选项
     cppdefines['debug']   += ['GN_BUILD_VARIANT=2']
     cppdefines['profile'] += ['GN_BUILD_VARIANT=1','NDEBUG']
@@ -236,6 +221,25 @@ def UTIL_newEnv( compiler, variant ):
     cppdefines['stdbg']   += ['GN_BUILD_VARIANT=2','GN_STATIC=1',]
     cppdefines['stprof']  += ['GN_BUILD_VARIANT=1','GN_STATIC=1','NDEBUG']
     cppdefines['stret']   += ['GN_BUILD_VARIANT=0','GN_STATIC=1','NDEBUG']
+
+    # 定制不同平台的编译选项
+    if 'xenon' == compiler.os:
+        ccflags['common'] += ['/QVMX128']
+        cppdefines['profile'] += ['PROFILE']
+        cppdefines['stprof']  += ['PROFILE']
+        linkflags['common'] += ['/NODEFAULTLIB']
+        libs['common']  += Split('xboxkrnl xbdm dxerr9')
+        libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd libcmtd')
+        libs['profile'] += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudioi xacti vcomp  libcmt')
+        libs['retail']  += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp  libcmt')
+        libs['stdbg']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd libcmtd')
+        libs['stprof']  += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudioi xacti vcomp  libcmt')
+        libs['stret']   += Split('xapilib  d3d9  d3dx9  xgraphics  xnet  xaudio  xact  vcomp  libcmt')
+    elif 'mswin' == compiler.os:
+        libs['common'] += Split('kernel32 user32 gdi32 shlwapi advapi32 shell32')
+    else:
+        cpppath['common'] += Split('/usr/X11R6/include /usr/local/include')
+        libpath['common'] += Split('/usr/X11R6/lib /usr/local/lib')
 
     # 定制不同编译器的编译选项
     if 'cl' == env['CC']:

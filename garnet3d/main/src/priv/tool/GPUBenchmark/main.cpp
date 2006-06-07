@@ -42,7 +42,7 @@ public:
 
     T getAverageValue() const
     {
-        GN_ASSERT( mCount > 0 );
+        if( 0 == mCount ) return 0;
         T r = 0;
         size_t count = min(mCount,BUFFER_SIZE);
         for( size_t i = 0; i < count; ++i )
@@ -51,6 +51,206 @@ public:
         }
         r /= (T)count;
         return r;
+    }
+};
+
+struct ManyManyQuads
+{
+    struct Vertex
+    {
+        float x, y, z;
+        float u, v;
+        float _[3]; // padding to 32 bytes
+    };
+
+    size_t DRAW_COUNT;
+    size_t VTX_COUNT;
+    size_t QUAD_COUNT;
+    size_t PRIM_COUNT;
+    size_t INDEX_COUNT;
+    PrimitiveType PRIM_TYPE;
+
+    uint32_t        vtxfmt;
+    AutoRef<VtxBuf> vtxbuf;
+    AutoRef<IdxBuf> idxbuf;
+
+    ManyManyQuads( size_t drawCount = 8, size_t quadCount = 256 )
+    {
+        DRAW_COUNT = drawCount;
+        VTX_COUNT = 4;
+#if GN_XENON
+        QUAD_COUNT = quadCount;
+        PRIM_TYPE = QUAD_LIST;
+        PRIM_COUNT = QUAD_COUNT;
+        INDEX_COUNT = QUAD_COUNT*4;
+#else
+        QUAD_COUNT = quadCount;
+        PRIM_TYPE = TRIANGLE_LIST;
+        PRIM_COUNT = QUAD_COUNT*2;
+        INDEX_COUNT = QUAD_COUNT*6;
+#endif
+    }
+
+    bool create()
+    {
+        Renderer & r = gRenderer;
+
+        // create vertex format
+        VtxFmtDesc vfd;
+        vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT3 );
+        vfd.addAttrib( 0, 12, VTXSEM_TEX0, FMT_FLOAT2 );
+        vtxfmt = gRenderer.createVtxFmt( vfd );
+        if( 0 == vtxfmt ) return false;
+
+        // create vertex buffer
+        static const Vertex sPyramidVertices[] =
+        {
+            { -1.0f,  1.0f, 0.0f, 0.0f, 0.0f },
+            { -1.0f, -1.0f, 0.0f, 0.0f, 1.0f },
+            {  1.0f, -1.0f, 0.0f, 1.0f, 1.0f },
+            {  1.0f,  1.0f, 0.0f, 1.0f, 0.0f },
+        };
+        vtxbuf.attach( r.createVtxBuf( sizeof(Vertex)*4 ) );
+        if( !vtxbuf ) return false;
+        Vertex * vtxptr = (Vertex*)vtxbuf->lock( 0, 0, LOCK_DISCARD );
+        if( 0 == vtxptr ) return false;
+        memcpy( vtxptr, sPyramidVertices, sizeof(Vertex)*4 );
+        vtxbuf->unlock();
+
+        // create index buffer
+        idxbuf.attach( r.createIdxBuf( INDEX_COUNT ) );
+        if( !idxbuf ) return false;
+        uint16_t * idxptr = idxbuf->lock( 0, 0, LOCK_DISCARD );
+        if( 0 == idxptr ) return false;
+        for( size_t i = 0; i < QUAD_COUNT; ++i )
+        {
+#if GN_XENON
+            idxptr[0] = 0;
+            idxptr[1] = 1;
+            idxptr[2] = 2;
+            idxptr[3] = 3;
+            idxptr += 4;
+#else
+            idxptr[0] = 0;
+            idxptr[1] = 1;
+            idxptr[2] = 2;
+            idxptr[3] = 0;
+            idxptr[4] = 2;
+            idxptr[5] = 3;
+            idxptr += 6;
+#endif
+        }
+        idxbuf->unlock();
+
+        // success
+        return true;
+    }
+
+    void destroy()
+    {
+        idxbuf.clear();
+        vtxbuf.clear();
+        vtxfmt = 0;
+    }
+
+    void draw()
+    {
+        Renderer & r = gRenderer;
+        for( size_t i = 0; i < DRAW_COUNT; ++i )
+            r.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
+    }
+};
+
+struct BasicEffect
+{
+    AutoRef<Shader>  vs, ps;
+
+    BasicEffect() {}
+
+    virtual ~BasicEffect() {}
+
+    virtual bool create() = 0;
+
+    void destroy()
+    {
+        vs.clear();
+        ps.clear();
+    }
+
+protected:
+
+    bool createD3DVs()
+    {
+        Renderer & r = gRenderer;
+
+        static const char * code =
+            "struct IO { float4 pos : POSITION; float2 uv : TEXCOORD0; }; \n"
+            "uniform float4x4 pvw; \n"
+            "void main( in IO i, out IO o ) \n"
+            "{ \n"
+            "   o = i; \n"
+            "}";
+
+        vs.attach( r.createVtxShader( LANG_D3D_HLSL, code, "sm30=no" ) );
+
+        return !!vs;
+    };
+};
+
+struct SolidEffect : public BasicEffect
+{
+    bool create()
+    {
+        Renderer & r = gRenderer;
+
+        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
+
+        if( !createD3DVs() ) return false;
+
+        static const char * code = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
+
+        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code, "sm30=no" ) );
+
+        return !!ps;
+    }
+};
+
+struct TexturedEffect : public BasicEffect
+{
+    uint32_t mCount;
+    
+    TexturedEffect( uint32_t count ) : mCount(count) {}
+    
+    bool create()
+    {
+        Renderer & r = gRenderer;
+
+        // check renderer caps
+        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
+
+        // create VS
+        if( !createD3DVs() ) return false;
+
+        // create PS
+        const StrA code = strFormat(
+            "#define TEX_COUNT %d                                \n"
+            "sampler ss[TEX_COUNT] : register(s0);               \n"
+            "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0    \n"
+            "{                                                   \n"
+            "       float4 o = 0;                                \n"
+            "       for( int i = 0; i < TEX_COUNT; ++i )         \n"
+            "       {                                            \n"
+            "               o += tex2D( ss[i], uv );             \n"
+            "       }                                            \n"
+            "       o /= TEX_COUNT;                              \n"
+            "       return o;                                    \n"
+            "}",
+            mCount );
+        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code, "sm30=no" ) );
+        if( !ps ) return false;
+
+        // success
+        return true;
     }
 };
 
@@ -99,7 +299,7 @@ class BenchmarkingApp : public app::SampleApp
     bool nextCase()
     {
         if( mTestCases.empty() ) return false;
-        
+
         // exit current case.
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
@@ -138,14 +338,20 @@ public:
 
         CaseDesc cd;
 
-        cd.theCase = new TestFillrate( *this, "Texel fillrate", true, FMT_D3DCOLOR );
+        cd.theCase = new TestFillrate( *this, "Pixel fillrate - DOUBLE_DEPTH", false, true, FMT_UNKNOWN );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Pixel fillrate", false, FMT_UNKNOWN );
+        cd.theCase = new TestFillrate( *this, "Pixel fillrate - NO_TEXTURE", false, false, FMT_UNKNOWN );
+        if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_D3DCOLOR, 2 );
+        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", true, false, FMT_D3DCOLOR );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth" );
+        if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
         // success
@@ -205,10 +411,16 @@ public:
         GN_GUARD_SLOW;
 
         app::SampleApp::onKeyPress( ke );
+
         if( input::KEY_SPACEBAR == ke.code && !ke.status.down ||
             input::KEY_XB360_A == ke.code && !ke.status.down )
         {
+            mFirstFrame = true;
             if( !nextCase() ) postExitEvent();
+        }
+        else if( input::KEY_XB360_X == ke.code )
+        {
+            postExitEvent();
         }
 
         GN_UNGUARD_SLOW;
@@ -221,7 +433,7 @@ public:
         {
             postExitEvent();
         }
-        else if( mFirstFrame )
+        /*else if( mFirstFrame )
         {
             mFirstFrame = false;
             mClock.reset();
@@ -230,7 +442,7 @@ public:
         {
             mFirstFrame = true;
             if( !nextCase() ) postExitEvent();
-        }
+        }*/
         else
         {
             CaseDesc & cd = mTestCases.back();

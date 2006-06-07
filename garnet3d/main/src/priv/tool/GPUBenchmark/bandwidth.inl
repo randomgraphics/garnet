@@ -1,3 +1,4 @@
+#include <d3d9.h>
 using namespace GN;
 using namespace GN::gfx;
 
@@ -9,52 +10,65 @@ class TestTextureBandwidth : public BasicTestCase
     ClrFmt   TEX_FORMAT;
     uint32_t TEX_COUNT;
 
-    AutoRef<Texture> mTextures[32];
-    AutoRef<Shader>  mPs;
+    AutoRef<Texture>     mTextures[3][32];
+    ManyManyQuads        mGeometry;
+    TexturedEffect       mEffect;
+    RendererContext      mContext;
+
     StrA mBandWidthStr;
 
     AverageValue<float> mBandwidth;
 
 public:
 
-    TestTextureBandwidth( app::SampleApp & app, const StrA & name, ClrFmt format, uint32_t count )
+    TestTextureBandwidth( app::SampleApp & app, const StrA & name )
         : BasicTestCase( app, name )
-        , TEX_FORMAT( format )
-        , TEX_COUNT( count )
+        , TEX_FORMAT( FMT_FLOAT4 )
+        , TEX_COUNT( 2 )
+        , mGeometry( 1, 64 )
+        , mEffect( TEX_COUNT )
     {
-        GN_ASSERT( TEX_COUNT <= 32 );
     }
 
     bool create()
     {
         Renderer & r = gRenderer;
 
-        const DispDesc & dd = r.getDispDesc();
+        // create geometry
+        if( !mGeometry.create() ) return false;
+
+        // create effect
+        if( !mEffect.create() ) return false;
 
         // create textures
-        for( size_t i = 0; i < TEX_COUNT; ++i )
+        const DispDesc & dd = r.getDispDesc();
+        for( size_t j = 0; j < 3; ++j )
         {
-            mTextures[i].attach( r.create2DTexture( dd.width, dd.height, 1, TEX_FORMAT, TEXUSAGE_DYNAMIC ) );
-            mTextures[i]->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
-            if( !mTextures[i] ) return false;
+            for( size_t i = 0; i < TEX_COUNT; ++i )
+            {
+#if GN_XENON            
+                mTextures[j][i].attach( r.create2DTexture( dd.width, dd.height, 1, TEX_FORMAT, 0, true ) );
+#else
+                mTextures[j][i].attach( r.create2DTexture( dd.width, dd.height, 1, TEX_FORMAT, TEXUSAGE_DYNAMIC ) );
+#endif
+                mTextures[j][i]->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
+                if( !mTextures[j][i] ) return false;
+                TexLockedResult tlr;
+                mTextures[j][i]->lock( tlr, 0, 0, 0, LOCK_DISCARD );
+                memset( tlr.data, 0, tlr.sliceBytes );
+                mTextures[j][i]->unlock();
+            }
         }
 
-        // create pixel shader
-        const StrA code = strFormat(
-            "#define TEX_COUNT %d                                \n"
-            "sampler ss[TEX_COUNT] : register(s0);               \n"
-            "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0    \n"
-            "{                                                   \n"
-            "       float4 o = 0;                                \n"
-            "       for( int i = 0; i < TEX_COUNT; ++i )         \n"
-            "       {                                            \n"
-            "               o += tex2D( ss[i], uv ) / TEX_COUNT; \n"
-            "       }                                            \n"
-            "       return o;                                    \n"
-            "}",
-            TEX_COUNT );
-        mPs.attach( r.createPxlShader( LANG_D3D_HLSL, code, "sm30=no" ) );
-        if( !mPs ) return false;
+        // update context
+        mContext.clearToNull();
+        mContext.setShaders( mEffect.vs, mEffect.ps );
+        //mContext.setRenderState( RS_DEPTH_TEST, 0 );
+        //mContext.setRenderState( RS_DEPTH_WRITE, 0 );
+        //mContext.setTextures( mTextures[0].addr(), 0, TEX_COUNT );
+        mContext.setVtxFmt( mGeometry.vtxfmt );
+        mContext.setVtxBuf( 0, mGeometry.vtxbuf, sizeof(ManyManyQuads::Vertex) );
+        mContext.setIdxBuf( mGeometry.idxbuf );
 
         // success
         return true;
@@ -62,42 +76,52 @@ public:
 
     void destroy()
     {
-        for( size_t i = 0; i < TEX_COUNT; ++i ) mTextures[i].clear();
-        mPs.clear();
+        for( int j = 0; j < 3; ++j ) for( size_t i = 0; i < TEX_COUNT; ++i ) mTextures[j][i].clear();
+        mEffect.destroy();
+        mGeometry.destroy();
     }
 
     void update()
     {
-        uint32_t * p;
-        TexLockedResult tlr;
-        for( size_t i = 0; i < TEX_COUNT; ++i )
-        {
-            mTextures[i]->lock( tlr, 0, 0, 0, LOCK_DISCARD );
-            p = (uint32_t*)tlr.data;
-            *p = 0;
-            mTextures[i]->unlock();
-        }
         const DispDesc & dd = gRenderer.getDispDesc();
-        float GBperFrame = dd.width * dd.height / 1024.0f / 1024.0f / 1024.0f * getClrFmtDesc(TEX_FORMAT).bits / 8 * TEX_COUNT;
-        float bandwidth = getApp().getFps() * GBperFrame;
-        mBandWidthStr.format( "bandwidth = %f GB/sec", bandwidth );
+
+        float pixfillrate = dd.width * dd.height / 1024.0f / 1024.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps() / 1024.0f;
+        float texfillrate = pixfillrate * TEX_COUNT;
+        float bandwidth = texfillrate * getClrFmtDesc(TEX_FORMAT).bits / 8;
+
         mBandwidth = bandwidth;
+
+        mBandWidthStr.format(
+            "bandwidth = %f GB/sec\npixel fillrate = %f Gpix/sec\ntexel fillrate = %f Gtexel/sec",
+            bandwidth, pixfillrate, texfillrate );
     }
 
     void render()
     {
+        static int index = 0;
+        index = (index + 1) % 3;
+
+#if 0 //!GN_XENON
+        TexLockedResult tlr;
+        for( size_t i = 0; i < TEX_COUNT; ++i )
+        {
+            mTextures[index][i]->lock( tlr, 0, 0, 0, LOCK_WO );
+            memset( tlr.data, 0, tlr.sliceBytes );
+            mTextures[index][i]->unlock();
+        }
+#endif
+
         Renderer & r = gRenderer;
-        r.contextUpdateBegin();
-            r.setTextures( mTextures[0].addr(), 0, TEX_COUNT );
-            r.setPxlShader( mPs );
-        r.contextUpdateEnd();
-        r.draw2DTexturedQuad( DQ_OPAQUE | DQ_USE_CURRENT_PS );
-        r.drawDebugTextA( getName().cptr(), 0, 80 );
-        r.drawDebugTextA( mBandWidthStr.cptr(), 0, 100 );
+        r.setContext( mContext );
+        r.setTextures( mTextures[index][0].addr(), 0, TEX_COUNT );
+        mGeometry.draw();
+        static const Vector4f RED(1,0,0,1);
+        r.drawDebugTextA( getName().cptr(), 0, 80, RED );
+        r.drawDebugTextA( mBandWidthStr.cptr(), 0, 100, RED );
     }
 
     StrA printResult()
     {
-        return strFormat( "bandwidth(%f) format(%s) count(%d)", mBandwidth.getAverageValue(), clrFmt2Str(TEX_FORMAT), TEX_COUNT );
+        return strFormat( "bandwidth(%f) format(%s)", mBandwidth.getAverageValue(), clrFmt2Str(TEX_FORMAT) );
     }
 };

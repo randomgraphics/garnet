@@ -285,7 +285,8 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX9_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
-        if( 0 == strcmp(Identifier.Description,"NVIDIA NVPerfHUD") )
+        GN_TRACE( "Enumerating D3D adapters: %s", Identifier.Description );
+        if( strstr(Identifier.Description,"NVPerfHUD") )
         {
             mAdapter = i;
             devtypes.push_back( D3DDEVTYPE_REF );
@@ -446,6 +447,32 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
     _GNGFX_DEVICE_TRACE();
 
     GN_ASSERT( !mDispOK );
+
+#if defined(D3D_DEBUG_INFO)
+    if( mDevice )
+    {
+		mDevice->SetVertexShader(0);
+		mDevice->SetPixelShader(0);
+
+		GN_INFO(
+			"\n"
+			"====== Dump unreleased D3D resources ========\n"
+			"	SwapChains: %d\n"
+			"	Textures: %d\n"
+			"	VertexBuffers: %d\n"
+			"	IndexBuffers: %d\n"
+			"	VertexShaders: %d\n"
+			"	PixelShaders: %d\n"
+			"=============================================\n"
+			"\n",
+			mDevice->SwapChains,
+			mDevice->Textures,
+			mDevice->VertexBuffers,
+			mDevice->IndexBuffers,
+			mDevice->VertexShaders,
+			mDevice->PixelShaders );
+	}
+#endif
 
     safeRelease(mDevice);
 

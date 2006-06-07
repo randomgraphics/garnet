@@ -688,7 +688,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
     {
         const TextureStateBlockDesc & desc = newContext.tsb;
         DWORD d3dtsv;
-        uint32_t numStages = GN::min<uint32_t>( (uint32_t)desc.getNumStages(), getCaps( CAPS_MAX_TEXTURE_STAGES ) );
+        uint32_t maxStages = getD3DCaps( D3D9CAPS_MAX_FFP_TEXTURE_STAGES );
+        uint32_t numStages = GN::min<uint32_t>( (uint32_t)desc.getNumStages(), maxStages );
         for ( uint32_t i = 0; i < numStages; ++i )
         {
             for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
@@ -720,7 +721,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
             }
         }
         // disable remaining stages
-        if( numStages < getCaps( CAPS_MAX_TEXTURE_STAGES ) )
+        if( numStages < maxStages )
         {
             setD3DTextureState( numStages, D3DTSS_COLOROP, D3DTOP_DISABLE );
             setD3DTextureState( numStages, D3DTSS_ALPHAOP, D3DTOP_DISABLE );

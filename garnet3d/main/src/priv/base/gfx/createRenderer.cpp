@@ -29,7 +29,7 @@ inline GN::gfx::Renderer * createD3D9Renderer()
 //
 // create D3D10 renderer
 //
-#if GN_MSWIN && !GN_XENON
+#if GN_MSWIN && !GN_XENON && defined(HAS_D3D10)
 extern GN::gfx::Renderer * createD3D10Renderer();
 #else
 inline GN::gfx::Renderer * createD3D10Renderer()

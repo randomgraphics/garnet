@@ -7,6 +7,10 @@
 #pragma comment(lib, "d3d9d.lib")
 #pragma comment( lib, "xgraphicsd.lib" )
 #pragma comment(lib, "xapilibd.lib")
+#elif GN_PROFILE_BUILD
+#pragma comment(lib, "d3d9i.lib")
+#pragma comment( lib, "xgraphics.lib" )
+#pragma comment(lib, "xapilibi.lib")
 #else
 #pragma comment(lib, "d3d9.lib")
 #pragma comment( lib, "xgraphics.lib" )

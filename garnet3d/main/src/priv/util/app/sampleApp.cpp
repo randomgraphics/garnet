@@ -44,7 +44,10 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
         if( elapsedUpdateTime > UPDATE_INTERVAL )
         {
             int count = (int)( elapsedUpdateTime / UPDATE_INTERVAL );
-            for( int i = 0; i < count; ++i ) onUpdate();
+            static const int MAX_COUNT = (int)( 1.0f / UPDATE_INTERVAL );
+            if( count > MAX_COUNT ) count = MAX_COUNT; // make easy of long time debug break.
+            for( int i = 0; i < count; ++i )
+                onUpdate();
             lastUpdateTime += UPDATE_INTERVAL * count;
         }
 
