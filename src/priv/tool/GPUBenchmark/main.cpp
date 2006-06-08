@@ -74,7 +74,7 @@ struct ManyManyQuads
     AutoRef<VtxBuf> vtxbuf;
     AutoRef<IdxBuf> idxbuf;
 
-    ManyManyQuads( size_t drawCount = 8, size_t quadCount = 256 )
+    ManyManyQuads( size_t drawCount = 1, size_t quadCount = 32 )
     {
         DRAW_COUNT = drawCount;
         VTX_COUNT = 4;
@@ -205,14 +205,25 @@ struct SolidEffect : public BasicEffect
 
         if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
 
-        if( !createD3DVs() ) return false;
+        // create VS
+        static const char * vscode =
+            "struct IO { float4 pos : POSITION; }; \n"
+            "uniform float4x4 pvw; \n"
+            "void main( in IO i, out IO o ) \n"
+            "{ \n"
+            "   o = i; \n"
+            "}";
+        vs.attach( r.createVtxShader( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        if( !vs ) return false;
 
-        static const char * code = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
+        // create PS
+        static const char * pscode = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
+        ps.attach( r.createPxlShader( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        if( !ps ) return false;
 
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code, "sm30=no" ) );
-
-        return !!ps;
-    }
+        // success
+        return true;
+     }
 };
 
 struct TexturedEffect : public BasicEffect
@@ -229,10 +240,18 @@ struct TexturedEffect : public BasicEffect
         if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
 
         // create VS
-        if( !createD3DVs() ) return false;
+        const char * vscode =
+            "struct IO { float4 pos : POSITION; float2 uv : TEXCOORD0; }; \n"
+            "uniform float4x4 pvw; \n"
+            "void main( in IO i, out IO o ) \n"
+            "{ \n"
+            "   o = i; \n"
+            "}";
+        vs.attach( r.createVtxShader( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        if( !vs ) return false;
 
         // create PS
-        const StrA code = strFormat(
+        const StrA pscode = strFormat(
             "#define TEX_COUNT %d                                \n"
             "sampler ss[TEX_COUNT] : register(s0);               \n"
             "float4 main( in float2 uv : TEXCOORD0 ) : COLOR0    \n"
@@ -246,7 +265,7 @@ struct TexturedEffect : public BasicEffect
             "       return o;                                    \n"
             "}",
             mCount );
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, code, "sm30=no" ) );
+        ps.attach( r.createPxlShader( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // success
@@ -272,12 +291,14 @@ public:
     virtual void destroy() = 0;
     virtual void update() = 0;
     virtual void render() = 0;
+    virtual void onkey( input::KeyEvent ) = 0;
+    virtual void onmove( input::Axis, int ) = 0;
     virtual StrA printResult() = 0;
 };
 
 #include "fillrate.inl" // pixel pipeline speed
-#include "bandwidth.inl" // memory bandwidth
-//#include "triangles.cpp" // vertex pipeline speed
+#include "verticeThroughput.inl" // vertex pipeline speed
+#include "dynatex.inl" // dynamic texture bandwidth
 
 // *****************************************************************************
 // Main benchmark application
@@ -338,21 +359,28 @@ public:
 
         CaseDesc cd;
 
-        cd.theCase = new TestFillrate( *this, "Pixel fillrate - DOUBLE_DEPTH", false, true, FMT_UNKNOWN );
+        /*
+        cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH", false, true );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Pixel fillrate - NO_TEXTURE", false, false, FMT_UNKNOWN );
+        cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE", false, false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", true, false, FMT_D3DCOLOR );
+        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", true, false );
         if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
+        mTestCases.push_back( cd );//*/
 
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth" );
+        /*
+        cd.theCase = new VerticeThroughput( *this, "Vertice throughput" );
         if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
+        mTestCases.push_back( cd );//*/
+
+        //*
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );//*/
 
         // success
         return true;
@@ -412,6 +440,13 @@ public:
 
         app::SampleApp::onKeyPress( ke );
 
+        if( !mTestCases.empty() )
+        {
+            CaseDesc & cd = mTestCases.back();
+            GN_ASSERT( cd.theCase );
+            cd.theCase->onkey( ke );
+        }
+
         if( input::KEY_SPACEBAR == ke.code && !ke.status.down ||
             input::KEY_XB360_A == ke.code && !ke.status.down )
         {
@@ -421,6 +456,20 @@ public:
         else if( input::KEY_XB360_X == ke.code )
         {
             postExitEvent();
+        }
+
+        GN_UNGUARD_SLOW;
+    }
+
+    void onAxisMove( input::Axis a, int d )
+    {
+        GN_GUARD_SLOW;
+
+        if( !mTestCases.empty() )
+        {
+            CaseDesc & cd = mTestCases.back();
+            GN_ASSERT( cd.theCase );
+            cd.theCase->onmove( a, d );
         }
 
         GN_UNGUARD_SLOW;

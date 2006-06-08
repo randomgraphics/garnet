@@ -7,16 +7,24 @@ GN_INLINE void GN::input::BasicInput::updateMousePosition( int x, int y, bool no
 
     if( notify )
     {
-        Vector2i oldpt = mMousePosition;
-        mMousePosition.set( x, y );
-        if( mMousePosition.x != oldpt.x )
-            triggerAxisMove( AXIS_MOUSE_X, mMousePosition.x - oldpt.x );
-        if( mMousePosition.y != oldpt.y )
-            triggerAxisMove( AXIS_MOUSE_Y, mMousePosition.y - oldpt.y );
+        int old;
+        if( mAxisStatus[AXIS_MOUSE_X] != x )
+        {
+            old = mAxisStatus[AXIS_MOUSE_X];
+            mAxisStatus[AXIS_MOUSE_X] = x;
+            triggerAxisMove( AXIS_MOUSE_X, x - old );
+        }
+        if( mAxisStatus[AXIS_MOUSE_Y] != y )
+        {
+            old = mAxisStatus[AXIS_MOUSE_Y];
+            mAxisStatus[AXIS_MOUSE_Y] = y;
+            triggerAxisMove( AXIS_MOUSE_Y, y - old );
+        }
     }
     else
     {
-        mMousePosition.set( x, y );
+        mAxisStatus[AXIS_MOUSE_X] = x;
+        mAxisStatus[AXIS_MOUSE_Y] = y;
     }
 
     GN_UNGUARD_SLOW;
