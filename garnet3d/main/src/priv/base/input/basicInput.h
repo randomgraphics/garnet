@@ -28,6 +28,7 @@ namespace GN { namespace input
     public:
 
         const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
+        const int * getAxisStatus() const { return mAxisStatus; }
 
         // ********************************
         //     custom protected functions
@@ -40,6 +41,7 @@ namespace GN { namespace input
         void resetInputStates()
         {
             memset( mKeyboardStatus, 0, sizeof(mKeyboardStatus) );
+            memset( mAxisStatus, 0, sizeof(mAxisStatus) );
             mKeyFlags.u8 = 0;
             mHalfWideChar = false;
         }
@@ -61,7 +63,26 @@ namespace GN { namespace input
         //@{
         void triggerKeyPress( KeyCode key, bool keydown );
         void triggerCharPress( char ch );
-        void triggerAxisMove( Axis axis, int distance ) { sigAxisMove(axis,distance); }
+        void triggerAxisMove( Axis axis, int distance )
+        {
+            GN_ASSERT( 0 <= axis && axis < NUM_AXISES );
+            mAxisStatus[axis] += distance;
+            sigAxisMove(axis,distance);
+        }
+        void triggerAxisMoveAbs( Axis axis, int value, int deadZone )
+        {
+            GN_ASSERT( 0 <= axis && axis < NUM_AXISES );
+
+            // handle dead zone
+            if( -deadZone <= value && value <= deadZone ) value = 0;
+
+            if( value != mAxisStatus[axis] )
+            {
+                int old = mAxisStatus[axis];
+                mAxisStatus[axis] = value;
+                sigAxisMove(axis, value - old );
+            }
+        }
         //@}
 
         // ********************************
@@ -69,12 +90,15 @@ namespace GN { namespace input
         // ********************************
     private:
 
-        Vector2i mMousePosition; //! store current mouse position
-
         //!
         //! 记录键盘的状态，用来过滤/修正不匹配的按键操作
         //!
-        KeyStatus mKeyboardStatus[KEY_NUM_OF_KEYS];
+        KeyStatus mKeyboardStatus[NUM_KEYS];
+
+        //!
+        //! axis positions
+        //!
+        int mAxisStatus[NUM_AXISES];
 
         //!
         //! 记录了CTRL/ALT/SHIFT的状态

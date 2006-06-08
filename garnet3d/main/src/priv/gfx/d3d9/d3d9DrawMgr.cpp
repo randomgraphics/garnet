@@ -90,11 +90,13 @@ bool GN::gfx::D3D9Renderer::drawBegin()
 
     GN_ASSERT( !mDrawBegan );
 
+#if !GN_XENON
     // handle render window size move
     if( !handleRenderWindowSizeMove() ) return false;
 
     // check for device lost
     if( !handleDeviceLost() ) return false;
+#endif
 
     // begin scene
     GN_DX9_CHECK_RV( mDevice->BeginScene(), 0 );

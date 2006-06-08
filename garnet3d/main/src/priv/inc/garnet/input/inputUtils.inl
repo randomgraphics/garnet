@@ -36,7 +36,7 @@ namespace GN { namespace input
             #undef  GNINPUT_DEFINE_KEYCODE
         };
 
-        if( KEY_NONE <= code && code < KEY_NUM_OF_KEYS )
+        if( KEY_NONE <= code && code < NUM_KEYS )
             return sTable[code];
         else
             return "";

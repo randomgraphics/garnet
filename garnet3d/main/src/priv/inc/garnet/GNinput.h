@@ -43,7 +43,7 @@ namespace GN
             //!
             //! number of available keycodes
             //!
-            KEY_NUM_OF_KEYS,
+            NUM_KEYS,
 
             //!
             //! first mouse button
@@ -80,10 +80,12 @@ namespace GN
 
             AXIS_XB360_LEFT_TRIGGER,  //!< xb360 left trigger
             AXIS_XB360_RIGHT_TRIGGER, //!< xb360 right trigger
-            AXIS_XB360_THRMB_LX,      //!< xb360 left thrumb X
-            AXIS_XB360_THRMB_LY,      //!< xb360 left thrumb Y
-            AXIS_XB360_THRMB_RX,      //!< xb360 right thrumb X
-            AXIS_XB360_THRMB_RY,      //!< xb360 right thrumb Y
+            AXIS_XB360_THUMB_LX,      //!< xb360 left thumb X
+            AXIS_XB360_THUMB_LY,      //!< xb360 left thumb Y
+            AXIS_XB360_THUMB_RX,      //!< xb360 right thumb X
+            AXIS_XB360_THUMB_RY,      //!< xb360 right thumb Y
+
+            NUM_AXISES, //!< number of axises.
         };
 
         // TODO: joystick support
@@ -172,7 +174,7 @@ namespace GN
             KeyEvent( const KeyEvent & k ) : u16(k.u16) {}
             KeyEvent( KeyCode kc, KeyStatus ks )
                 : code( static_cast<uint8_t>(kc) ), status(ks)
-            { GN_ASSERT( kc < KEY_NUM_OF_KEYS ); }
+            { GN_ASSERT( kc < NUM_KEYS ); }
             //@}
 
             //!
@@ -198,7 +200,7 @@ namespace GN
             //!
             const KeyEvent & set( KeyCode kc, KeyStatus ks )
             {
-                GN_ASSERT( kc < KEY_NUM_OF_KEYS );
+                GN_ASSERT( kc < NUM_KEYS );
                 code = static_cast<uint8_t>(kc);
                 status = ks;
                 return *this;
@@ -230,6 +232,14 @@ namespace GN
             //! Return keyboard status indexed by KeyCode.
             //!
             virtual const KeyStatus * getKeyboardStatus() const = 0;
+
+            //!
+            //! Return absolute value of all axises.
+            //!
+            //! \note
+            //! - Mouse positions are based left-up corner of the attached window.
+            //!
+            virtual const int * getAxisStatus() const = 0;
 
             //!
             //! 得到当前鼠标的位置（相对窗口的左上角）

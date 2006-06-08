@@ -154,7 +154,7 @@ void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vec
                 const BitmapCharDesc * desc = gBitmapChars8x13[*text];
 
                 x1 = (float)xx + desc->xorig;
-                y1 = (float)yy + (13 - desc->height);
+                y1 = (float)yy + (13 - desc->height) + desc->yorig;
                 x2 = x1 + 8;
                 y2 = y1 + 16;
                 u1 = (float)(*text % 16) / 16.0f;

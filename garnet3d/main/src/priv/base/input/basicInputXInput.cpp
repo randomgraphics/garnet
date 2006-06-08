@@ -14,13 +14,16 @@ void GN::input::BasicXInput::processInputEvents()
 
     if( !mXInputGetState ) return;
 
-    // process xinput event
+    // process gamepad key
     XINPUT_STATE state;
+    XINPUT_GAMEPAD & pad = state.Gamepad;
     if( ERROR_SUCCESS == ((XInputGetStateFuncPtr)mXInputGetState)( 0, &state ) &&
         mXInputPacketNumber != state.dwPacketNumber )
     {
         mXInputPacketNumber = state.dwPacketNumber;
-        WORD b = state.Gamepad.wButtons;
+
+        // update keys
+        WORD b = pad.wButtons;
         triggerKeyPress( KEY_XB360_UP             , !!(b & XINPUT_GAMEPAD_DPAD_UP)        );
         triggerKeyPress( KEY_XB360_DOWN           , !!(b & XINPUT_GAMEPAD_DPAD_DOWN)      );
         triggerKeyPress( KEY_XB360_LEFT           , !!(b & XINPUT_GAMEPAD_DPAD_LEFT)      );
@@ -35,6 +38,14 @@ void GN::input::BasicXInput::processInputEvents()
         triggerKeyPress( KEY_XB360_B              , !!(b & XINPUT_GAMEPAD_B)              );
         triggerKeyPress( KEY_XB360_X              , !!(b & XINPUT_GAMEPAD_X)              );
         triggerKeyPress( KEY_XB360_Y              , !!(b & XINPUT_GAMEPAD_Y)              );
+
+        // update axises
+        triggerAxisMoveAbs( AXIS_XB360_LEFT_TRIGGER  , (int)pad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD );
+        triggerAxisMoveAbs( AXIS_XB360_RIGHT_TRIGGER , (int)pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD );
+        triggerAxisMoveAbs( AXIS_XB360_THUMB_LX      , (int)pad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( AXIS_XB360_THUMB_LY      , (int)pad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( AXIS_XB360_THUMB_RX      , (int)pad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
+        triggerAxisMoveAbs( AXIS_XB360_THUMB_RY      , (int)pad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE );
     }
 
     GN_UNGUARD;

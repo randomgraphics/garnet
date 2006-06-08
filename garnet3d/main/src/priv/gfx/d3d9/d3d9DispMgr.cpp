@@ -448,7 +448,7 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
 
     GN_ASSERT( !mDispOK );
 
-#if defined(D3D_DEBUG_INFO)
+#if !GN_XENON && defined(D3D_DEBUG_INFO)
     if( mDevice )
     {
 		mDevice->SetVertexShader(0);

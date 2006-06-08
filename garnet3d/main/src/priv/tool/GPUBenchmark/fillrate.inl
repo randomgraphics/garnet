@@ -16,21 +16,22 @@ public:
 
     bool   mInitTextured;
     bool   mInitDoubleDepth;
-    ClrFmt mInitFormat;
 
     AverageValue<float> mFillrate;
 
 public:
 
-    TestFillrate( app::SampleApp & app, const StrA & name, bool textured, bool doubleDepth, ClrFmt textureFormat )
+    TestFillrate( app::SampleApp & app, const StrA & name, bool textured, bool doubleDepth )
         : BasicTestCase(app,name)
         , mEffect( 0 )
         , mInitTextured(textured)
         , mInitDoubleDepth(doubleDepth)
-        , mInitFormat(textureFormat) {}
+    {}
 
     bool create()
     {
+        Renderer & r = gRenderer;
+        
         // create geometry
         if( !mGeometry.create() ) return false;
 
@@ -42,7 +43,7 @@ public:
         if( !mEffect || !mEffect->create() ) return false;
 
         // create texture
-        mTex.attach( gRenderer.create2DTexture( 2, 2, 1, mInitFormat ) );
+        mTex.attach( r.create2DTexture( 2, 2, 1, FMT_D3DCOLOR, 0, true ) );
         if( !mTex ) return false;
         TexLockedResult tlr;
         mTex->lock( tlr, 0, 0, 0, LOCK_DISCARD );
@@ -62,9 +63,6 @@ public:
             mContext.setRenderState( RS_COLOR0_WRITE, 0xF );
             mContext.setPxlShader( mEffect->ps );
         }
-        mContext.setRenderState( RS_DEPTH_TEST, 1 );
-        mContext.setRenderState( RS_DEPTH_WRITE, 1 );
-        //mContext.setRenderState( RS_FILL_MODE, RSV_FILL_LINE );
         if( mInitTextured ) mContext.setTexture( 0, mTex );
         mContext.setVtxFmt( mGeometry.vtxfmt );
         mContext.setVtxBuf( 0, mGeometry.vtxbuf, sizeof(ManyManyQuads::Vertex) );
@@ -78,31 +76,60 @@ public:
     {
         mGeometry.destroy();
         safeDelete( mEffect );
+        mTex.clear();
     }
+
+    void onkey( input::KeyEvent key )
+    {
+        if( !key.status.down )
+        {
+            switch( key.code )
+            {
+                case input::KEY_XB360_RIGHT_SHOULDER :
+                case input::KEY_NUMPAD_ADD:
+                    mGeometry.DRAW_COUNT += 1;
+                    break;
+
+                case input::KEY_XB360_LEFT_SHOULDER:
+                case input::KEY_NUMPAD_SUBTRACT:
+                    if( mGeometry.DRAW_COUNT > 0 ) mGeometry.DRAW_COUNT -= 1;
+                    break;
+
+                default : ; // do nothing
+            }
+        }
+    }
+
+    void onmove( input::Axis, int ) {}
 
     void update()
     {
         const DispDesc & dd = gRenderer.getDispDesc();
-        float fr = dd.width * dd.height / 1024.0f / 1024.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps() / 1024.0f;
-        mFillrateStr.format( "fillrate = %f GB/sec", fr );
+        float fr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
+        mFillrateStr.format(
+            "%s\n"
+            "quads = %d x %d\n"
+            "fillrate = %f GB/sec",
+            getName().cptr(),
+            mGeometry.DRAW_COUNT, mGeometry.QUAD_COUNT,
+            fr );
         mFillrate = fr;
     }
 
     void render()
     {
         Renderer & r = gRenderer;
+
         r.setContext( mContext );
         mGeometry.draw();
+
         static const Vector4f RED(1,0,0,1);
-        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 80, 300, 116, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
-        r.drawDebugTextA( getName().cptr(), 0, 80, RED );
+        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 100, 300, 100+16*3, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
         r.drawDebugTextA( mFillrateStr.cptr(), 0, 100, RED );
     }
 
     StrA printResult()
     {
-        return strFormat( "fillrate(%f) texture(%s)",
-            mFillrate.getAverageValue(),
-            mInitTextured ? clrFmt2Str(mInitFormat) : "NONE" );
+        return strFormat( "fillrate(%f)", mFillrate.getAverageValue() );
     }
 };
