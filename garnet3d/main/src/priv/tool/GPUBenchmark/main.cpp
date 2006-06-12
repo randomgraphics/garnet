@@ -359,20 +359,21 @@ public:
 
         CaseDesc cd;
 
-        /*
-        cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH", false, true );
+        //                                                                 T      D      B
+        //*
+        cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , false, true , false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE", false, false );
+        cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE"    , false, false, false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", true, false );
+        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", true , false, false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
-        /*
+        //*
         cd.theCase = new VerticeThroughput( *this, "Vertice throughput" );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
