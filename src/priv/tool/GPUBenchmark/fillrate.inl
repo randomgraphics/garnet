@@ -14,18 +14,22 @@ class TestFillrate : public BasicTestCase
 
 public:
 
-    bool   mInitTextured;
-    bool   mInitDoubleDepth;
+    bool mInitTextured;
+    bool mInitDoubleDepth;
+    bool mInitMaxBandwidth;
 
     AverageValue<float> mFillrate;
 
 public:
 
-    TestFillrate( app::SampleApp & app, const StrA & name, bool textured, bool doubleDepth )
+    TestFillrate( app::SampleApp & app, const StrA & name,
+                  bool textured, bool doubleDepth,
+                  bool maxBandwidth )
         : BasicTestCase(app,name)
         , mEffect( 0 )
         , mInitTextured(textured)
         , mInitDoubleDepth(doubleDepth)
+        , mInitMaxBandwidth(maxBandwidth)
     {}
 
     bool create()
@@ -64,6 +68,10 @@ public:
             mContext.setPxlShader( mEffect->ps );
         }
         if( mInitTextured ) mContext.setTexture( 0, mTex );
+        if( mInitMaxBandwidth )
+        {
+            //mContext->
+        }
         mContext.setVtxFmt( mGeometry.vtxfmt );
         mContext.setVtxBuf( 0, mGeometry.vtxbuf, sizeof(ManyManyQuads::Vertex) );
         mContext.setIdxBuf( mGeometry.idxbuf );
@@ -106,13 +114,16 @@ public:
     {
         const DispDesc & dd = gRenderer.getDispDesc();
         float fr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
+        float bandwidth = fr * dd.depth / 8;
         mFillrateStr.format(
             "%s\n"
             "quads = %d x %d\n"
-            "fillrate = %f GB/sec",
+            "fillrate = %f GB/sec\n"
+            "EDRAM bandwidth = %f GB/sec",
             getName().cptr(),
             mGeometry.DRAW_COUNT, mGeometry.QUAD_COUNT,
-            fr );
+            fr,
+            bandwidth );
         mFillrate = fr;
     }
 
