@@ -177,6 +177,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "    -pure                  : Use pure device (D3D only).\n"
                     "    -m0                    : Use primary screen. (Default)\n"
                     "    -m1                    : Use secondary screen.\n"
+                    "    -di                    : Use direct input.\n"
                     , GN::path::baseName(argv[0]).cptr() );
                 return false;
             }
@@ -190,6 +191,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-pure") ) mInitParam.ro.pure = true;
             else if( 0 == strCmpI( a, "-m0") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 0 );
             else if( 0 == strCmpI( a, "-m1") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 1 );
+            else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::API_DINPUT;
         }
     }
 #endif
