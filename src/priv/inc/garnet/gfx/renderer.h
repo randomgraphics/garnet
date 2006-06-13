@@ -48,27 +48,29 @@ namespace GN { namespace gfx
         //!
         bool useExternalWindow;
 
-        union
-        {
-            //!
-            //! Handle of external render window.
-            //! 缺省为0.
-            //!
-            //! \note Effective only if useExternalWindow is true.
-            //!
-            HandleType renderWindow;
-
-            //!
-            //! Handle of parent window. Can be NULL.
-            //! 缺省为0.
-            //!
-            //! \note Effective only if useExternalWindow is false.
-            //!
-            void * parentWindow;
-        };
+        //! \name these fields are valid only when 'useExternalWindow' is true.
+        //!@{
 
         //!
-        //! Monitor handle, effective only if useExternalWindow is false.
+        //! Handle of external render window.
+        //! 缺省为0.
+        //!
+        //! \note Effective only if useExternalWindow is true.
+        //!
+        HandleType renderWindow;
+
+        //@}
+
+        //! \name these fields are valid only when 'useExternalWindow' is false.
+        //!@{
+
+        //!
+        //! Handle of parent window. Default is zero, means a top-level window.
+        //!
+        HandleType parentWindow;
+
+        //!
+        //! Monitor handle.
         //!
         //! - Should be HMONITOR on MS Window or pointer to Screen structure on X Windows.
         //! - 0 means using the monitor where parent and/or render window stays in.
@@ -76,6 +78,8 @@ namespace GN { namespace gfx
         //! - 缺省为0.
         //!
         HandleType monitorHandle;
+
+        //@}
 
         //!
         //! 是否监视渲染窗口的大小，并自动对渲染设备作相应的调整
@@ -152,6 +156,7 @@ namespace GN { namespace gfx
         RendererOptions()
             : displayHandle(0)
             , useExternalWindow(false)
+            , renderWindow(0)
             , parentWindow(0)
             , monitorHandle(0)
             , trackWindowSizeMove(true)
