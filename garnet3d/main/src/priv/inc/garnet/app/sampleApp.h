@@ -286,11 +286,9 @@ namespace GN { namespace app
 
         bool init( int argc, const char *  const argv[] );
         void quit();
-        bool checkCmdLine( int argc, const char * const argv[] );
-        bool initResMgr();
-        void quitResMgr();
         bool initApp();
         void quitApp();
+        bool checkCmdLine( int argc, const char * const argv[] );
         bool initRenderer();
         void quitRenderer();
         bool recreateRenderer();

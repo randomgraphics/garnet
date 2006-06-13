@@ -111,9 +111,8 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
-    if( !checkCmdLine(argc,argv) ) { quit(); return false; }
-    if( !initResMgr() ) { quit(); return false; }
     if( !initApp() ) { quit(); return false; }
+    if( !checkCmdLine(argc,argv) ) { quit(); return false; }
     if( !initRenderer() ) { quit(); return false; }
     if( !initInput() ) { quit(); return false; }
 
@@ -135,7 +134,6 @@ void GN::app::SampleApp::quit()
     quitRenderer();
     quitInput();
     quitApp();
-    quitResMgr();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -201,21 +199,6 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     return true;
 
     GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::app::SampleApp::initResMgr()
-{
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitResMgr()
-{
 }
 
 //

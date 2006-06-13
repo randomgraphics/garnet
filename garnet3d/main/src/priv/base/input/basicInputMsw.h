@@ -93,7 +93,7 @@ namespace GN { namespace input
     private:
 
         bool setupXInputFunctionPointers();
-        bool setupWindowHooks();
+        bool setupWindowHooks( HWND window ); // hook to specific window.
         void removeWindowHooks();
 
         void captureMouse();

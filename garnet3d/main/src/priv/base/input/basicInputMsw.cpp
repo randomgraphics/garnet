@@ -20,9 +20,6 @@ bool GN::input::BasicInputMsw::init()
     // setup xinput function pointers
     if( !setupXInputFunctionPointers() ) { quit(); return selfOK(); }
 
-    // setup windows hooks
-    if( !setupWindowHooks() ) { quit(); return selfOK(); }
-
     // initialize internal mouse position
     POINT pos;
     GN_MSW_CHECK_DO( ::GetCursorPos( &pos ), quit(); return selfOK(); );
@@ -83,6 +80,9 @@ bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
         ::ReleaseCapture();
         ::SetCapture( hwnd );
     }
+
+    // setup windows hooks
+    if( !setupWindowHooks( hwnd ) ) return false;
 
     // success
     mWindow = hwnd;
@@ -197,22 +197,25 @@ bool GN::input::BasicInputMsw::setupXInputFunctionPointers()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::input::BasicInputMsw::setupWindowHooks()
+bool GN::input::BasicInputMsw::setupWindowHooks( HWND hwnd )
 {
     GN_GUARD;
 
     // remove previous hook
     removeWindowHooks();
 
+    // get thread of the window
+    DWORD threadID = GetWindowThreadProcessId( hwnd, 0 );
+
     // setup hooks
     mMsgHook = ::SetWindowsHookEx(
         WH_GETMESSAGE, sMsgHookProc,
         0,
-        ::GetCurrentThreadId() );
+        threadID );
     mCwpHook = ::SetWindowsHookEx(
         WH_CALLWNDPROC, sCwpHookProc,
         0,
-        ::GetCurrentThreadId() );
+        threadID );
     if( 0 == mMsgHook || 0 == mCwpHook )
     {
         GN_ERROR( getOSErrorInfo() );
