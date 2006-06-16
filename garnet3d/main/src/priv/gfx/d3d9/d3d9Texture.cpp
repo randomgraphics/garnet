@@ -641,7 +641,7 @@ bool GN::gfx::D3D9Texture::lock(
         mLockedTexture = mShadowCopy;
         lockedUsage = 0;
     }
-    else if( ( LOCK_RO == flag || LOCK_RW == flag ) || !mWritable )
+    else if( LOCK_RO == flag || LOCK_RW == flag || !mWritable )
     {
         // create temporary surface for read-lock of non-shadowed texture,
         // or write-lock of non-writable texture.
@@ -779,7 +779,10 @@ void GN::gfx::D3D9Texture::unlock()
 
     // copy data from mLockedTexture to mD3DTexture
 #if !GN_XENON
-    GN_DX9_CHECK( mRenderer.getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
+    if( mLockedTexture != mD3DTexture )
+    {
+        GN_DX9_CHECK( mRenderer.getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
+    }
 #endif
 
     //

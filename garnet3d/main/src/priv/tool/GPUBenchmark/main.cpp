@@ -231,7 +231,7 @@ struct TexturedEffect : public BasicEffect
     uint32_t mCount;
     
     TexturedEffect( uint32_t count ) : mCount(count) {}
-    
+
     bool create()
     {
         Renderer & r = gRenderer;

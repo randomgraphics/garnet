@@ -135,7 +135,7 @@ public:
         mGeometry.draw();
 
         static const Vector4f RED(1,0,0,1);
-        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 100, 300, 100+16*3, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
+        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 100, 300, 100+16*4, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
         r.drawDebugTextA( mFillrateStr.cptr(), 0, 100, RED );
     }
 
