@@ -6,15 +6,11 @@
 //
 //
 // -----------------------------------------------------------------------------
-static uint32_t sRefineFlags( uint32_t flags, bool forCompile )
+static uint32_t sRefineFlags( uint32_t flags )
 {
 #if GN_DEBUG_BUILD
     flags |= D3DXSHADER_DEBUG;
-    if( forCompile ) flags |= D3DXSHADER_SKIPOPTIMIZATION;
-#else
-    GN_UNUSED_PARAM(forCompile);
 #endif
-
     return flags;
 }
 
@@ -58,7 +54,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::compileVS( LPDIRECT3DDEVICE9 dev, const c
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
-            sRefineFlags(flags,true),
+            sRefineFlags(flags),
             &bin,
             &err,
             constTable )) )
@@ -99,7 +95,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::compileVSFromFile( LPDIRECT3DDEVICE9 dev,
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
-            sRefineFlags(flags,true),
+            sRefineFlags(flags),
             &bin,
             &err,
             constTable )) )
@@ -146,7 +142,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::assembleVS( LPDIRECT3DDEVICE9 dev, const 
     if( FAILED(hr = D3DXAssembleShader(
             code, (UINT)len,
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags,false),
+            sRefineFlags(flags),
             &bin,
             &err )) )
     {
@@ -184,7 +180,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::assembleVSFromFile( LPDIRECT3DDEVICE9 dev
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
             GN::path::toNative(file).cptr(),
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags,false),
+            sRefineFlags(flags),
             &bin,
             &err )) )
     {
@@ -224,7 +220,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::compilePS( LPDIRECT3DDEVICE9 dev, const ch
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
-            sRefineFlags(flags,true),
+            sRefineFlags(flags),
             &bin,
             &err,
             constTable )) )
@@ -265,7 +261,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::compilePSFromFile( LPDIRECT3DDEVICE9 dev, 
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
-            sRefineFlags(flags,true),
+            sRefineFlags(flags),
             &bin,
             &err,
             constTable )) )
@@ -312,7 +308,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::assemblePS( LPDIRECT3DDEVICE9 dev, const c
     if( FAILED(hr = D3DXAssembleShader(
             code, (UINT)len,
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags,false),
+            sRefineFlags(flags),
             &bin,
             &err )) )
     {
@@ -350,7 +346,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::assemblePSFromFile( LPDIRECT3DDEVICE9 dev,
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
             GN::path::toNative(file).cptr(),
             NULL, NULL, // no macros, no includes,
-            sRefineFlags(flags,false),
+            sRefineFlags(flags),
             &bin,
             &err )) )
     {

@@ -27,6 +27,7 @@ static inline bool sString2Bool( const GN::StrA & s, bool & b )
 {
     if( 0 == GN::strCmpI( "yes", s.cptr() ) ||
         0 == GN::strCmpI( "true", s.cptr() ) ||
+        0 == GN::strCmpI( "on", s.cptr() ) ||
         0 == GN::strCmp( "1", s.cptr() ) )
     {
         b = true;
@@ -35,6 +36,7 @@ static inline bool sString2Bool( const GN::StrA & s, bool & b )
     else if(
         0 == GN::strCmpI( "no", s.cptr() ) ||
         0 == GN::strCmpI( "false", s.cptr() ) ||
+        0 == GN::strCmpI( "off", s.cptr() ) ||
         0 == GN::strCmp( "0", s.cptr() ) )
     {
         b = false;

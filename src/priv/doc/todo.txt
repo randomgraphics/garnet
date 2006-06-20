@@ -8,6 +8,7 @@
   - task manager/coordinator
 
 - p1
+  - simplify variant class to increase performance
   - custom vector class:
     - fixed sized array
     - resizeable array
@@ -29,6 +30,7 @@
       - OGL: FBO
     - queryXXX(....)
     - recreate OGL context, when monitor changed.
+    - support using "c0" as uniform name of D3D HLSL shader.
   - code page convertor
     - may support convertion from/to utf8 be enough?
   - sample application
@@ -38,9 +40,9 @@
   - in-game GUI system
     - font class
   - refine sigslot class to allow any type of functor
-  - string: use stack array for short string
 
 - p2
+  - string: use stack array for short string
   - memory-mapped file.
   - GFX system
     - UT of LRU list in resource manager
