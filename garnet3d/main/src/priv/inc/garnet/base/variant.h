@@ -207,9 +207,44 @@ namespace GN
         }
 
         //!
+        //! Copy constructor
+        //!
+        Variant( const Variant & v )
+            : mTimeStamp( v.mTimeStamp )
+            , mType( v.mType )
+            , mBool( v.mBool )
+            , mInt( v.mInt )
+            , mFloat( v.mFloat )
+            , mString( v.mString )
+            , mVector4( v.mVector4 )
+            , mMatrix44( v.mMatrix44 )
+            , mConvertTable( v.mConvertTable )
+        {
+            buildValueArray();
+        }
+
+        //!
         //! Destructor
         //!
         ~Variant() {}
+
+        //!
+        //! Assignment operator
+        //!
+        Variant & operator=( const Variant & v )
+        {
+            mTimeStamp = v.mTimeStamp;
+            mType = v.mType;
+            mBool = v.mBool;
+            mInt = v.mInt;
+            mFloat = v.mFloat;
+            mString = v.mString;
+            mVector4 = v.mVector4;
+            mMatrix44 = v.mMatrix44;
+            mConvertTable = v.mConvertTable;
+            buildValueArray();
+            return *this;
+        }
 
         //!
         //! get type
@@ -248,7 +283,9 @@ namespace GN
         {
             const VariantType t = TypeCool<T>::variantType;
             if( t != mType && mValues[t]->timeStamp != mTimeStamp && !convertTo( t ) )
+            {
                 return defval;
+            }
             GN_ASSERT( t == mType || mValues[t]->timeStamp == mTimeStamp );
             return sGetValue<typename TypeCool<T>::ReturnType>( *this );
         }

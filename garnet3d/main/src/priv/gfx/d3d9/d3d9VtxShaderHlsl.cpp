@@ -152,7 +152,7 @@ bool GN::gfx::D3D9VtxShaderHlsl::createShader( const StrA & code, const StrA & h
         getRenderer().getDevice(),
         code.cptr(),
         code.size(),
-        0, // flags
+        ch.optimize ? 0 : D3DXSHADER_SKIPOPTIMIZATION, // flags
         ch.entry.cptr(),
         target,
         &mConstTable );

@@ -239,6 +239,7 @@ namespace GN { namespace gfx
             StrA entry;  //!< entry function
             StrA target; //!< shader profile
             bool sm3;    //!< favor shader model 3.0
+            bool optimize; //!< enable shader optimization, default is on.
 
             //!
             //! Setup hints from string.
@@ -250,6 +251,7 @@ namespace GN { namespace gfx
                 entry = r.getItem( "entry", "main" ).getd("");
                 target = r.getItem( "target", "" ).getd("");
                 sm3 = r.getItem( "sm30", true ).getd(true);
+                optimize = r.getItem( "opt", true ).getd(true);
             }
         };
 

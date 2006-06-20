@@ -60,11 +60,11 @@ def _parse_msvc7_overrides(version,platform):
     try:
         (comps, t) = SCons.Util.RegGetValue(SCons.Util.HKEY_CURRENT_USER,
                                             r'Software\Microsoft\Windows\CurrentVersion' +\
-                                            r'\Explorer\Shell Folders\Local AppData')
+                                            r'\Explorer\Shell Folders\Local Settings')
     except SCons.Util.RegError:
         raise SCons.Errors.InternalError, "The Local AppData directory was not found in the registry."
 
-    comps = comps + '\\Microsoft\\VisualStudio\\' + version + '\\VCComponents.dat'
+    comps = comps + '\\Application Data\\Microsoft\\VisualStudio\\' + version + '\\VCComponents.dat'
 
 
     dirs = {}
