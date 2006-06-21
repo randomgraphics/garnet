@@ -6,13 +6,16 @@ public:
 
     void testGetEnv()
     {
+#if !GN_XENON
         TS_ASSERT( GN::getEnv(0).empty() );
         TS_ASSERT( GN::getEnv("asdfhasdf aslfjoursw").empty() );
         TS_ASSERT( !GN::getEnv("PATH").empty() );
+#endif
     }
 
     void testPutEnv()
     {
+#if !GN_XENON
         // invalid arguments
         GN::putEnv( 0, 0 );
         GN::putEnv( 0, "" );
@@ -39,10 +42,12 @@ public:
         // then clear it in another way.
         GN::putEnv( strangeEnv, "" );
         TS_ASSERT( GN::getEnv(strangeEnv).empty() );
+#endif
     }
 
     void testGetEnvBoolean()
     {
+#if !GN_XENON
         const char * strangeEnv = "testGetEnvBoolean_asdfyawnwauiynasiur";
 
         // make sure strangeEnv do not exist
@@ -63,5 +68,6 @@ public:
             TS_ASSERT( GN::getEnvBoolean(strangeEnv) );
             GN::putEnv( strangeEnv, no[j] );
         }
+#endif
     }
 };

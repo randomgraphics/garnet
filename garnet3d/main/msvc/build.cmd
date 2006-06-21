@@ -1,6 +1,6 @@
 @echo off
 del /s GN*.vcproj 2>nul
-for %%c in (vc80 vc71 Xenon) do (
+for %%c in (vc80 vc71 xenon) do (
 	for %%d in (x86 x64 ppc) do (
 		for %%o in (mswin xenon) do (
 			for %%v in (debug profile retail stdbg stprof stret) do (

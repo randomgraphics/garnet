@@ -82,56 +82,74 @@ namespace GN
             return mItems.validHandle( key ) ? mItems[key].name : StrA::EMPTYSTR;
         }
 
-        //!
-        //! Get registry item by key
-        //!
-        //! \return
-        //!     Return NULL if the key does not exist.
-        //!
-        const Variant * getItem( ItemKey key ) const { return getItemByKey( key, 0, true ); }
+        //! set registry value by name
+        //@{
+        ItemKey set( const StrA & name, const Variant & value, bool override = true );
+        ItemKey sets( const StrA & name, const StrA & value, bool override = true ) { return set( name, value, override ); }
+        //@}
 
-        //!
-        //! Get registry item by key
-        //!
-        //! \return
-        //!     Return default value if the key does not exist.
-        //!
-        const Variant & getItem( ItemKey key, const Variant & defaultValue ) const
+        //! get registry value by key
+        //@{
+        const Variant * get( ItemKey key ) const { return getItemByKey( key, 0, true ); }
+        //@}
+
+        //! get registry value by name
+        //@{
+        const Variant * get( const StrA & name ) const { return getItemByKey( name2Key(name), name.cptr(), true ); }
+        //@}
+
+        //! get registry value with default value, by key
+        //@{
+        const Variant & get( ItemKey key, const Variant & defval ) const
         {
             const Variant * item = getItemByKey( key, 0, false );
-            return (0 == item) ? defaultValue : *item;
+            return (0 == item) ? defval : *item;
         }
+        //@}
 
-        //!
-        //! Get registry item by name
-        //!
-        //! \return
-        //!     Return NULL if the name does not exist.
-        //!
-        const Variant * getItem( const StrA & name ) const
-        {
-            return getItemByKey( name2Key(name), name.cptr(), true );
-        }
-
-        //!
-        //! Get registry item by name
-        //!
-        //! \return
-        //!     Return default value if the key is not exist.
-        //!
-        const Variant & getItem( const StrA & name, const Variant & defaultValue ) const
+        //! get registry value with default value, by name
+        //@{
+        const Variant & get( const StrA & name, const Variant & defval ) const
         {
             const Variant * item = getItemByKey( name2Key(name), 0, false );
-            return (0 == item) ? defaultValue : *item;
+            return (0 == item) ? defval : *item;
         }
-
-        //!
-        //! Create a new key. Will fail, if the item exist and overwriteExisting is false.
-        //!
-        //! \return
-        //!     Return key of the item. 0 means failed.
-        //!
-        ItemKey setItem( const StrA & name, const Variant & value, bool overwriteExisting = true );
+        const StrA & gets( const StrA & name, const StrA & defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->gets();
+        }
+        bool getb( const StrA & name, bool defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->getdb( defval );
+        }
+        int geti( const StrA & name, int defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->getdi( defval );
+        }
+        float getf( const StrA & name, float defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->getdf( defval );
+        }
+        void * getp( const StrA & name, void * defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->getdp( defval );
+        }
+        Vector4f getv( const StrA & name, const Vector4f & defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->getdv( defval );
+        }
+        Matrix44f getm( const StrA & name, const Matrix44f & defval ) const
+        {
+            const Variant * item = get( name );
+            return (0 == item) ? defval : item->getdm( defval );
+        }
+        //@}
 
         //!
         //! get key of first item
