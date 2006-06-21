@@ -12,7 +12,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN::Registry::ItemKey GN::Registry::setItem(
+GN::Registry::ItemKey GN::Registry::set(
     const StrA & name, const Variant & value, bool overwriteExisting )
 {
     GN_GUARD;
@@ -65,7 +65,7 @@ void GN::Registry::importFromStr( const StrA & s )
     std::string name, value;
     while( re.FindAndConsume( &sp, &name, &value ) )
     {
-        setItem( name.c_str(), StrA(value.c_str()), true );
+        sets( name.c_str(), value.c_str(), true );
     }
 
     GN_UNGUARD;

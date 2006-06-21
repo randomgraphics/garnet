@@ -352,37 +352,4 @@ public:
         TS_ASSERT( !GN::gfx::str2TexWrap( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2TexWrap( t, NULL ) );
     }
-
-    void testVariantType()
-    {
-        GN::VariantType tag[] =
-        {
-            GN::VARIANT_BOOL,
-            GN::VARIANT_INT,
-            GN::VARIANT_FLOAT,
-            GN::VARIANT_POINTER,
-            GN::VARIANT_STRING,
-            GN::VARIANT_VECTOR4,
-            GN::VARIANT_MATRIX44,
-            GN::NUM_VARIANT_TYPES,
-            GN::VARIANT_INVALID,
-        };
-        const char * str[] =
-        {
-            "VARIANT_BOOL",
-            "VARIANT_INT",
-            "VARIANT_FLOAT",
-            "VARIANT_POINTER",
-            "VARIANT_STRING",
-            "VARIANT_VECTOR4",
-            "VARIANT_MATRIX44",
-            "VARIANT_INVALID",
-            "VARIANT_INVALID",
-        };
-
-        for( size_t i = 0; i < sizeof(tag)/sizeof(tag[0]); ++i )
-        {
-            TS_ASSERT_EQUALS( str[i], GN::variantType2Str( tag[i] ) );
-        }
-    }
 };

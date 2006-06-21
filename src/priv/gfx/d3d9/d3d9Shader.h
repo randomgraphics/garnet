@@ -248,10 +248,10 @@ namespace GN { namespace gfx
             {
                 Registry r;
                 r.importFromStr( s );
-                entry = r.getItem( "entry", "main" ).getd("");
-                target = r.getItem( "target", "" ).getd("");
-                sm3 = r.getItem( "sm30", true ).getd(true);
-                optimize = r.getItem( "opt", true ).getd(true);
+                entry = r.gets( "entry", "main" );
+                target = r.gets( "target", "" );
+                sm3 = r.getb( "sm30", true );
+                optimize = r.getb( "opt", true );
             }
         };
 
