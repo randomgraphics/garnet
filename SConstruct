@@ -510,7 +510,9 @@ class GarnetEnv :
     def newTarget( self, type, name, sources, dependencies = [], pdb = None ):
         # create new target instance
         t = Target()
-        if UTIL_staticBuild( self.variant ) and 'shlib' == type: type = 'stlib'
+        if 'shlib' == type:
+            if UTIL_staticBuild( self.variant ) : type = 'stlib'
+            else : type = 'dylib'
         t.compiler = self.compiler
         t.variant = self.variant
         t.type = type
@@ -616,7 +618,7 @@ class Target:
     def __init__(self):
         self.compiler = None
         self.variant = None
-        self.type = None # could be 'stlib, shlib, prog, custom'
+        self.type = None # could be 'stlib, dylib, shlib, prog, custom'
         self.path = None
         self.targets = []
         self.sources = [] # list of source clusters
@@ -846,7 +848,7 @@ def BUILD_addExternalDependencies( env, name, deps ):
 def BUILD_addDependencies( env, name, deps ):
     targets = ALL_targets[BUILD_compiler][BUILD_variant]
     for x in reversed(deps):
-        if x  in targets:
+        if x in targets:
             BUILD_addExternalDependencies( env, name, BUILD_toList(targets[x].externalDependencies) )
             BUILD_addDependencies( env, name, BUILD_toList(targets[x].dependencies) )
             if 'GNcore' == x or 'stlib' == targets[x].type : # here we ignore shared libraried other then GNcore.
@@ -864,9 +866,9 @@ def BUILD_handleManifest( env, target ):
         target += [manifest]
 
 #
-# build static library
+# build dynamic linked library
 #
-def BUILD_sharedLib( name, target ):
+def BUILD_dynamicLib( name, target ):
     objs = []
     for s in target.sources: objs += BUILD_sharedObjs( s )
 
@@ -881,15 +883,15 @@ def BUILD_sharedLib( name, target ):
     GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
 
     libName = '%s%s%s%s'%(env['SHLIBPREFIX'],name,BUILD_getSuffix(),env['SHLIBSUFFIX'])
-    shlib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
-    BUILD_handleManifest( env, shlib )
+    lib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
+    BUILD_handleManifest( env, lib )
 
     def extname( path ):
         p,e = os.path.splitext( str(path) )
         return e
 
     target.targets = []
-    for x in shlib:
+    for x in lib:
         e = extname( x )
         if '.lib' == e or '.exp' == e  or '.a' == e :
             d = BUILD_libDir
@@ -957,8 +959,8 @@ for compiler, variants in ALL_targets.iteritems() :
         for name, x in targets.iteritems():
             if 'stlib' == x.type :
                 BUILD_staticLib( name, x )
-            elif 'shlib' == x.type :
-                BUILD_sharedLib( name, x )
+            elif 'dylib' == x.type :
+                BUILD_dynamicLib( name, x )
             elif 'prog' == x.type :
                 BUILD_program( name, x )
             elif 'custom' == x.type :
@@ -972,7 +974,7 @@ for compiler, variants in ALL_targets.iteritems() :
         shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
-        tools = Split('GNtoolOglInfo GNtoolGPUBenchmark')
+        tools = Split('GNtoolOglInfo GNtoolGPUBenchmark GNtoolD3D9Wrapper')
         progs = tests + samples + tools
         def getTargets( n ):
             if n in targets : return targets[n].targets
@@ -1008,7 +1010,7 @@ if 'MSVSProject' in LOCAL_env['BUILDERS']:
         for variant, targets in variants.iteritems():
             MSVS_env = UTIL_newEnv( compiler, variant )
             for name, x in targets.iteritems():
-                if 'stlib' == x.type or 'shlib' == x.type or 'prog' == x.type :
+                if 'stlib' == x.type or 'dylib' == x.type or 'prog' == x.type :
                     SConscript( 
                     'msvc/SConscript',
                         exports={
