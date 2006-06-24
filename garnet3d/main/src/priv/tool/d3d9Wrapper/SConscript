@@ -1,0 +1,10 @@
+Import( 'GN' )
+
+sources = [
+    'myd3d9.cpp',
+    'mydevice9.cpp',
+]
+
+cluster = GN.newSourceCluster( sources )
+t = GN.newTarget( 'dylib', 'GNtoolD3D9Wrapper', [cluster] )
+t.addLinkFlags( LINKFLAGS=['/DEF:%s'%File('myd3d9.def').srcnode().path] )

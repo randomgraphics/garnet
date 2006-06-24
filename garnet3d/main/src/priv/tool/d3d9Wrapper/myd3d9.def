@@ -1,0 +1,9 @@
+EXPORTS
+	Direct3DCreate9=MyDirect3DCreate9
+	D3DPERF_BeginEvent=MyD3DPERF_BeginEvent
+	D3DPERF_EndEvent=MyD3DPERF_EndEvent
+	D3DPERF_GetStatus=MyD3DPERF_GetStatus
+	D3DPERF_QueryRepeatFrame=MyD3DPERF_QueryRepeatFrame
+	D3DPERF_SetMarker=MyD3DPERF_SetMarker
+	D3DPERF_SetOptions=MyD3DPERF_SetOptions
+	D3DPERF_SetRegion=MyD3DPERF_SetRegion

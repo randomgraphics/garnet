@@ -1,3 +1,4 @@
 Import( 'GN' )
 SConscript( dirs=['GPUBenchmark'] )
 if GN.conf['has_ogl']: SConscript( dirs=['oglInfo'] )
+if GN.conf['has_d3d9']: SConscript( dirs=['d3d9Wrapper'] )
