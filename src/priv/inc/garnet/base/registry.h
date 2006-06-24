@@ -116,37 +116,37 @@ namespace GN
         }
         const StrA & gets( const StrA & name, const StrA & defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->gets();
         }
         bool getb( const StrA & name, bool defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->getdb( defval );
         }
         int geti( const StrA & name, int defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->getdi( defval );
         }
         float getf( const StrA & name, float defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->getdf( defval );
         }
         void * getp( const StrA & name, void * defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->getdp( defval );
         }
         Vector4f getv( const StrA & name, const Vector4f & defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->getdv( defval );
         }
         Matrix44f getm( const StrA & name, const Matrix44f & defval ) const
         {
-            const Variant * item = get( name );
+            const Variant * item = getItemByKey( name2Key(name), 0, false );
             return (0 == item) ? defval : item->getdm( defval );
         }
         //@}
