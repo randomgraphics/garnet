@@ -10,7 +10,7 @@
 //
 // -----------------------------------------------------------------------------
 HRESULT MyDevice9::create(
-    MyD3D9 * d3d,
+    MyD3D9 * myd3d,
     UINT Adapter,
     D3DDEVTYPE DeviceType,
     HWND hFocusWindow,
@@ -19,16 +19,32 @@ HRESULT MyDevice9::create(
 {
     GN_GUARD;
 
-    GN_INFO( "create Direct3DDevice9 object" );
-
-    // store d3d pointer
-    GN_ASSERT( d3d );
+    // store myd3d pointer
+    GN_ASSERT( myd3d );
     GN_ASSERT( !mD3D9 );
-    mD3D9 = d3d;
-    d3d->AddRef();
+    mD3D9 = myd3d;
+    myd3d->AddRef();
+
+	// Look for nvidia adapter
+    UINT nAdapter = myd3d->GetAdapterCount();
+    GN_ASSERT( nAdapter );
+    GN_TRACE( "Looking for NVPerfHUD adapter in all adapters: total(%d), d3d(0x%p).", nAdapter, myd3d );
+    for( uint32_t i = 0; i < nAdapter; ++i )
+    {
+        D3DADAPTER_IDENTIFIER9 Identifier;
+        GN_DX9_CHECK( myd3d->GetAdapterIdentifier( i, 0, &Identifier ) );
+        GN_TRACE( "Enumerating D3D adapters: %s", Identifier.Description );
+        if( strstr(Identifier.Description,"NVPerfHUD") )
+        {
+            Adapter = i;
+            DeviceType = D3DDEVTYPE_REF;
+            break;
+        }
+    }
 
     // create device
-    return d3d->obj()->CreateDevice( Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &mObject );
+    GN_INFO( "create Direct3DDevice9 object: Adapter(%d), DeviceType(%d)", Adapter, DeviceType );
+    return myd3d->obj()->CreateDevice( Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &mObject );
 
     GN_UNGUARD;
 }

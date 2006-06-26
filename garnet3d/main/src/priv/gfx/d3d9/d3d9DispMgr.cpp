@@ -288,6 +288,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
         GN_TRACE( "Enumerating D3D adapters: %s", Identifier.Description );
         if( strstr(Identifier.Description,"NVPerfHUD") )
         {
+            GN_TRACE( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
             mAdapter = i;
             devtypes.push_back( D3DDEVTYPE_REF );
             break;

@@ -1,5 +1,5 @@
 EXPORTS
-	Direct3DCreate9=MyDirect3DCreate9
+	MyD3DCreate9=MyDirect3DCreate9
 	D3DPERF_BeginEvent=MyD3DPERF_BeginEvent
 	D3DPERF_EndEvent=MyD3DPERF_EndEvent
 	D3DPERF_GetStatus=MyD3DPERF_GetStatus
