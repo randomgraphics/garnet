@@ -2,8 +2,12 @@
 #include "myd3d9.h"
 #include "mydevice9.h"
 
+#if GN_MSVC
+#pragma comment(lib, "dxerr9.lib")
+#endif
+
 // *****************************************************************************
-// Function Pointers
+// Local function Pointers
 // *****************************************************************************
 
 /*
@@ -25,15 +29,55 @@ typedef void (WINAPI*FP_D3DPERF_SetOptions)( DWORD dwOptions );
 typedef DWORD (WINAPI*FP_D3DPERF_GetStatus)( void );
 
 static HMODULE                       gD3D9Dll = 0;
-static FP_Direct3DCreate9            gDirect3DCreate9;
-static FP_D3DPERF_BeginEvent         gD3DPERF_BeginEvent;
-static FP_D3DPERF_EndEvent           gD3DPERF_EndEvent;
-static FP_D3DPERF_SetMarker          gD3DPERF_SetMarker;
-static FP_D3DPERF_SetRegion          gD3DPERF_SetRegion;
-static FP_D3DPERF_QueryRepeatFrame   gD3DPERF_QueryRepeatFrame;
-static FP_D3DPERF_SetOptions         gD3DPERF_SetOptions;
-static FP_D3DPERF_GetStatus          gD3DPERF_GetStatus;
+static FP_Direct3DCreate9            gDirect3DCreate9 = 0;
+static FP_D3DPERF_BeginEvent         gD3DPERF_BeginEvent = 0;
+static FP_D3DPERF_EndEvent           gD3DPERF_EndEvent = 0;
+static FP_D3DPERF_SetMarker          gD3DPERF_SetMarker = 0;
+static FP_D3DPERF_SetRegion          gD3DPERF_SetRegion = 0;
+static FP_D3DPERF_QueryRepeatFrame   gD3DPERF_QueryRepeatFrame = 0;
+static FP_D3DPERF_SetOptions         gD3DPERF_SetOptions = 0;
+static FP_D3DPERF_GetStatus          gD3DPERF_GetStatus = 0;
 
+bool sLoadD3D9Dll()
+{
+    GN_GUARD;
+
+    using namespace GN;
+
+    // load library
+    StrA dllname = strFormat( "%s\\system32\\d3d9.dll", getEnv("windir").cptr() );
+    GN_TRACE( "Load system D3D DLL: %s", dllname.cptr() );
+    gD3D9Dll = LoadLibraryA( dllname.cptr() );
+    if( 0 == gD3D9Dll )
+    {
+        GN_ERROR( "fail to load system D3D9.DLL: %s", getOSErrorInfo() );
+        return false;
+    }
+
+    // get function pointers
+    #define GETFP( NAME ) \
+        g##NAME = (FP_##NAME)GetProcAddress( gD3D9Dll, #NAME ); \
+        if( 0 == g##NAME ) { GN_ERROR( "Fail to get symbol of %s", #NAME ); return false; }
+    GETFP( Direct3DCreate9 );
+    GETFP( D3DPERF_BeginEvent );
+    GETFP( D3DPERF_EndEvent );
+    GETFP( D3DPERF_SetMarker );
+    GETFP( D3DPERF_SetRegion );
+    GETFP( D3DPERF_QueryRepeatFrame );
+    GETFP( D3DPERF_SetOptions );
+    GETFP( D3DPERF_GetStatus );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+static void sFreeD3D9Dll()
+{
+    if( gD3D9Dll ) FreeLibrary( gD3D9Dll );
+    gD3D9Dll = 0;
+}
 
 // *****************************************************************************
 // MyD3D9
@@ -49,13 +93,14 @@ bool MyD3D9::create( UINT sdkVersion )
     // check SDK version
     if( (sdkVersion&0xFF) != D3D_SDK_VERSION )
     {
-        GN_ERROR( "unsupport SDK version %d (expecting %d)", (sdkVersion&0xFF), D3D_SDK_VERSION );
-        return false;
+        GN_WARN( "unsupport SDK version %d (expecting %d)", (sdkVersion&0xFF), D3D_SDK_VERSION );
+        //return false;
     }
 
-    GN_INFO( "create Direct3D9 object" );
+    if( !sLoadD3D9Dll() ) return false;
 
     GN_ASSERT( !mObject );
+    GN_INFO( "create Direct3D9 object" );
     mObject = gDirect3DCreate9( sdkVersion );
     return !!mObject;
 
@@ -105,33 +150,8 @@ BOOL WINAPI DllMain(
 {
     switch( fdwReason )
     {
-        case DLL_PROCESS_ATTACH :
-
-            // load library
-            gD3D9Dll = LoadLibraryA( "system32\\d3d9.dll" );
-            if( 0 == gD3D9Dll )
-            {
-                GN_ERROR( "fail to load original D3D9.DLL" );
-                return FALSE;
-            }
-
-            // get function pointers
-            #define GETFP( NAME ) \
-                g##NAME = (FP_##NAME)GetProcAddress( gD3D9Dll, #NAME ); \
-                if( 0 == g##NAME ) { GN_ERROR( "Fail to get symbol of %s", #NAME ); return FALSE; }
-            GETFP( Direct3DCreate9 );
-            GETFP( D3DPERF_BeginEvent );
-            GETFP( D3DPERF_EndEvent );
-            GETFP( D3DPERF_SetMarker );
-            GETFP( D3DPERF_SetRegion );
-            GETFP( D3DPERF_QueryRepeatFrame );
-            GETFP( D3DPERF_SetOptions );
-            GETFP( D3DPERF_GetStatus );
-
-            break;
-
         case DLL_PROCESS_DETACH :
-            if( gD3D9Dll ) FreeLibrary( gD3D9Dll ), gD3D9Dll = 0;
+            sFreeD3D9Dll();
             break;
 
         default : ; // do nothing
@@ -140,7 +160,6 @@ BOOL WINAPI DllMain(
     // success
     return TRUE;
 }
-
 
 // *****************************************************************************
 // exported functions
@@ -164,6 +183,15 @@ MyD3D9 * WINAPI MyDirect3DCreate9( UINT sdkVersion )
     GN_UNGUARD;
 }
 
+#if 1
+int WINAPI MyD3DPERF_BeginEvent( D3DCOLOR, LPCWSTR ) { return 0; }
+int WINAPI MyD3DPERF_EndEvent( void ) { return 0; }
+void WINAPI MyD3DPERF_SetMarker( D3DCOLOR, LPCWSTR ) {}
+void WINAPI MyD3DPERF_SetRegion( D3DCOLOR, LPCWSTR ) {}
+BOOL WINAPI MyD3DPERF_QueryRepeatFrame() { return TRUE; }
+void WINAPI MyD3DPERF_SetOptions( DWORD ) {}
+DWORD WINAPI MyD3DPERF_GetStatus( void ) { return 0; }
+#else
 int WINAPI MyD3DPERF_BeginEvent( D3DCOLOR col, LPCWSTR wszName )
 {
     return gD3DPERF_BeginEvent( col, wszName );
@@ -192,3 +220,4 @@ DWORD WINAPI MyD3DPERF_GetStatus( void )
 {
     return gD3DPERF_GetStatus();
 }
+#endif

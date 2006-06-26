@@ -15,6 +15,7 @@
 #define NOMINMAX
 #include <windows.h>
 #include <d3d9.h>
+#include <dxerr9.h>
 #endif
 
 template<class T>
