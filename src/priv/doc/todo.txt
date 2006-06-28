@@ -8,23 +8,18 @@
   - task manager/coordinator
 
 - p1
-  - simplify variant class to increase performance
   - custom vector class:
-    - fixed sized array
-    - resizeable array
     - UT
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
   - UT
-    - VectorFile
     - Str::findFirst/LastOf(...)
   - try multi-thread architect
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
-    - possible refinements:
-      - set sampling parameters (such as filters wrapping) at binding time
+    - set sampling parameters (such as filters wrapping) at binding time
     - render target management
       - D3D: msaa
       - OGL: FBO

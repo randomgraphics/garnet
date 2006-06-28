@@ -209,12 +209,6 @@ static uint32_t sCapsInit_MAX_TEXTURE_STAGES()
         return 1;
     }
 }
-//
-static uint32_t sCapsInit_PER_STAGE_CONSTANT()
-{
-    // OpenGL always supports this.
-    return true;
-}
 
 // *****************************************************************************
 // device management

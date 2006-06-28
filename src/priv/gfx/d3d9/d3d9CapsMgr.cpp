@@ -40,11 +40,6 @@ static uint32_t sCapsInit_MAX_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
     else return d3dcaps.MaxTextureBlendStages;
 }
 //
-static uint32_t sCapsInit_PER_STAGE_CONSTANT( const D3DCAPS9 & d3dcaps )
-{
-    return D3DPMISCCAPS_PERSTAGECONSTANT & d3dcaps.PrimitiveMiscCaps;
-}
-//
 static uint32_t sD3D9CapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DPTEXTURECAPS_CUBEMAP & d3dcaps.TextureCaps );

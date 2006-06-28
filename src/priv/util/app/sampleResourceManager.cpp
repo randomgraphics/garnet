@@ -474,7 +474,7 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
     }
 
     // read file
-    DynamicArray<char> buf( fp.size() + 1 );
+    DynaArray<char> buf( fp.size() + 1 );
     size_t readen;
     if( !fp.read( buf, fp.size(), &readen ) )
     {

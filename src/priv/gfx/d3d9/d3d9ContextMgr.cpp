@@ -707,15 +707,6 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
                             "Fallback to D3DTOP_SELECTARG1." ) );
                         d3dtsv = D3DTOP_SELECTARG1;
                     }
-                    else if( D3DTA_CONSTANT == (d3dtsv&D3DTA_SELECTMASK) &&
-                        !getCaps( CAPS_PER_STAGE_CONSTANT ) )
-                    {
-                        GN_DO_ONCE( GN_WARN(
-                                "Current D3D device does not support "
-                                "per-stage constant! "
-                                "Fallback to D3DTA_TFACTOR." ) );
-                        d3dtsv = D3DTA_TFACTOR;
-                    }
                     setD3DTextureState( i, sTextureState2D3D[j], d3dtsv );
                 }
             }
