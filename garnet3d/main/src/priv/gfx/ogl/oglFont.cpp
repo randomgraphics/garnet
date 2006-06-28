@@ -1,6 +1,77 @@
 #include "pch.h"
 #include "oglFont.h"
 #include "oglRenderer.h"
+#include "../common/charBitmap.h"
+
+// *****************************************************************************
+// Local functions
+// *****************************************************************************
+
+static const int FONT_HEIGHT = 14;
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline int sGetFontBitmapAdvance( char ch )
+{
+    const BitmapCharDesc * desc = gBitmapChars8x13[(uint8_t)ch];
+    return desc ? (uint32_t)desc->advance : 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDrawFontBitmap( char ch )
+{
+    GN_GUARD;
+
+    GLint swapbytes, lsbfirst, rowlength;
+    GLint skiprows, skippixels, alignment;
+
+    const BitmapCharDesc * desc = gBitmapChars8x13[(uint8_t)ch];
+    if( desc )
+    {
+        /* Save current modes. */
+        glGetIntegerv(GL_UNPACK_SWAP_BYTES, &swapbytes);
+        glGetIntegerv(GL_UNPACK_LSB_FIRST, &lsbfirst);
+        glGetIntegerv(GL_UNPACK_ROW_LENGTH, &rowlength);
+        glGetIntegerv(GL_UNPACK_SKIP_ROWS, &skiprows);
+        glGetIntegerv(GL_UNPACK_SKIP_PIXELS, &skippixels);
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
+
+        /* Little endian machines (DEC Alpha for example) could
+           benefit from setting GL_UNPACK_LSB_FIRST to GL_TRUE
+           instead of GL_FALSE, but this would require changing the
+           generated bitmaps too. */
+        glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
+        glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glBitmap(
+            desc->width,
+            desc->height,
+            (float)desc->xorig,
+            (float)desc->yorig,
+            (float)desc->advance,
+            0,
+            desc->bitmap );
+
+        /* Restore saved modes. */
+        glPixelStorei(GL_UNPACK_SWAP_BYTES, swapbytes);
+        glPixelStorei(GL_UNPACK_LSB_FIRST, lsbfirst);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, rowlength);
+        glPixelStorei(GL_UNPACK_SKIP_ROWS, skiprows);
+        glPixelStorei(GL_UNPACK_SKIP_PIXELS, skippixels);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+    }
+
+    GN_OGL_CHECK(;);
+
+    GN_UNGUARD;
+}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -46,7 +117,7 @@ void GN::gfx::OGLFont::quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLFont::drawTextW( const wchar_t * s, int x, int y, const Vector4f & c )
+void GN::gfx::OGLFont::drawText( const char * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
 
@@ -77,23 +148,24 @@ void GN::gfx::OGLFont::drawTextW( const wchar_t * s, int x, int y, const Vector4
     glPushMatrix();
     glLoadIdentity();
 
-    // draw wide char one by one
+    // draw char one by one
     int sx = x;
-    int sy = dd.height - y - mFontHeight;
+    int sy = dd.height - y - FONT_HEIGHT;
     while ( *s )
     {
-        wchar_t ch = *s; ++s;
+        char ch = *s; ++s;
 
-        if( L'\n' == ch )
+        if( '\n' == ch )
         {
             // next line
             sx = x;
-            sy -= mFontHeight;
+            sy -= FONT_HEIGHT;
         }
         else // normal char
         {
             glRasterPos2i( sx, sy );
-            sx += drawChar(ch);
+            glCallList( mDisplayLists + *s );
+            sx += sGetFontBitmapAdvance( *s );
         }
     }
 
@@ -120,33 +192,21 @@ bool GN::gfx::OGLFont::createFont()
 {
     GN_GUARD;
 
-#if GN_MSWIN
+    mDisplayLists = glGenLists(256);
+    if( 0 == mDisplayLists )
+    {
+        GN_ERROR( "Fail to generate opengl display lists!" );
+        return false;
+    }
 
-    HWND hwnd = (HWND)mRenderer.getDispDesc().windowHandle;
-
-    // get window DC
-    HDC dc;
-    GN_MSW_CHECK_RV( dc = ::GetDC( hwnd ), false );
-
-    // select default fixed font
-    HGDIOBJ oldfont = ::SelectObject( dc, ::GetStockObject(SYSTEM_FIXED_FONT) );
-
-    // get text height
-    SIZE sz;
-    GN_MSW_CHECK_DO( ::GetTextExtentPoint32W(dc, L"你", 1, &sz),
-        SelectObject( dc, oldfont );
-        ReleaseDC( hwnd, dc );
-        return false; );
-
-    ::SelectObject( dc, oldfont );
-    ::ReleaseDC( hwnd, dc );
-    mFontHeight = sz.cy;
-
-#else // GN_MSWIN
-
-    mFontHeight = getFontBitmapHeight();
-
-#endif
+    // generate display lists for each characters
+    for( GLuint i = 0; i < 256; ++i )
+    {
+        glNewList( mDisplayLists + i, GL_COMPILE );
+        sDrawFontBitmap( (char)i );
+        glEndList();
+        GN_OGL_CHECK_RV( , false );
+    }
 
     // success
     return true;
@@ -161,122 +221,12 @@ void GN::gfx::OGLFont::deleteFont()
 {
     GN_GUARD;
 
-    // release all cached wide-char items
-    FontMap::iterator i = mFontMap.begin();
-    for ( ;i != mFontMap.end(); ++i )
+    // release all display lists
+    if( mDisplayLists )    
     {
-        glDeleteLists( i->second.displayList, 1 );
+        glDeleteLists( mDisplayLists, 256 );
+        mDisplayLists = 0;
     }
-
-    // clear fontmap
-    mFontMap.clear();
 
     GN_UNGUARD;
 }
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::OGLFont::charInit( wchar_t c, CharDesc & cd )
-{
-    GN_GUARD;
-
-    // generate display lists
-    GLuint l = glGenLists(1);
-    if( 0 == l )
-    {
-        GN_ERROR( "Fail to generate opengl display list for wchar %s!",
-            wcs2mbs(&c,1).cptr() );
-        return false;
-    }
-
-#if GN_MSWIN
-
-    HWND hwnd = (HWND)mRenderer.getDispDesc().windowHandle;
-
-    // get window DC
-    HDC dc;
-    GN_MSW_CHECK_DO( dc = ::GetDC( hwnd ),
-        glDeleteLists(l, 1);
-        return false; );
-
-    // select default fixed font
-    HGDIOBJ oldfont = ::SelectObject( dc, ::GetStockObject(SYSTEM_FIXED_FONT) );
-
-    // get char width
-    SIZE sz;
-    GN_MSW_CHECK_DO( ::GetTextExtentPoint32W( dc, &c, 1, &sz ),
-        ::SelectObject( dc, oldfont );
-        ::ReleaseDC( hwnd, dc );
-        glDeleteLists( l, 1 );
-        return false; );
-
-    // create font list
-    GN_MSW_CHECK_DO( ::wglUseFontBitmapsW( dc, c, 1, l ),
-        ::SelectObject(dc, oldfont);
-        ::ReleaseDC( hwnd, dc );
-        glDeleteLists( l, 1 );
-        return false; );
-
-    // success
-    ::SelectObject(dc, oldfont);
-    ::ReleaseDC( hwnd, dc );
-    cd.advanceX = sz.cx;
-    cd.displayList   = l;
-    return true;
-
-#else // GN_MSWIN
-
-    glNewList( l, GL_COMPILE );
-    drawFontBitmap( (char)c );
-    glEndList();
-    cd.displayList = l;
-    cd.advanceX = getFontBitmapAdvance( (char)c );
-    GN_OGL_CHECK_RV( , false );
-    return true;
-
-#endif
-
-    GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-int GN::gfx::OGLFont::drawChar( wchar_t c )
-{
-    GN_GUARD_SLOW;
-
-    // 在fontmap中查找当前字符
-    FontMap::iterator i = mFontMap.find(c);
-    if( i == mFontMap.end() )
-    {
-        // 没找到，创建新的字符项
-        CharDesc cd;
-        if( !charInit( c, cd ) ) return 0;
-
-        // 如果fontmap已满，则删除一个已存在的字符项
-        // FIXME : 简单的删除begin()可能会引起抖动，理想的办法是随机删除
-        //         fontmap中的一项。
-        if( mFontMap.size() >= 128 )
-        {
-            glDeleteLists(mFontMap.begin()->second.displayList, 1);
-            mFontMap.erase( mFontMap.begin() );
-        }
-        // 将新的字符项插入fontmap
-        mFontMap[c] = cd;
-
-        // draw this character
-        glCallList( cd.displayList );
-        return cd.advanceX;
-    }
-    else
-    {
-        // 找到
-        glCallList( i->second.displayList );
-        return i->second.advanceX;
-    }
-
-    GN_UNGUARD_SLOW;
-}
-

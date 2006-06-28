@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "d3d9Font.h"
 #include "d3d9Renderer.h"
-
-#if !GN_XENON
+#include "../common/charBitmap.h"
 
 //
-//! convert Vector4f to D3COLOR
+// convert Vector4f to D3COLOR
 // ------------------------------------------------------------------------
 static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 {
@@ -27,7 +26,7 @@ bool GN::gfx::D3D9Font::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Font, () );
 
-    if( !createFont() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !deviceRestore() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();
@@ -44,10 +43,67 @@ void GN::gfx::D3D9Font::quit()
 
     deviceDispose();
 
-    safeRelease( mFont );
-
     // standard quit procedure
     GN_STDCLASS_QUIT();
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// from D3D9Resource
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::D3D9Font::deviceRestore()
+{
+    GN_GUARD;
+
+    D3D9Renderer & r = getRenderer();
+
+    // create texture
+    GN_ASSERT( !mTexture );
+    mTexture.attach( r.create2DTexture( 128, 256, 1, FMT_LA_8_8_UNORM, 0, false ) );
+    if( !mTexture ) return false;
+    mTexture->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
+
+    // lock texture
+    TexLockedResult tlr;
+    if( !mTexture->lock( tlr, 0, 0, 0, LOCK_DISCARD ) ) return false;
+
+    // fill data
+    memset( tlr.data, 0, tlr.sliceBytes );
+    for( uint32_t ch = 0; ch < 256; ++ch )
+    {
+        const BitmapCharDesc * desc = gBitmapChars8x13[ch];
+        GN_ASSERT( desc && desc->width <= 8 && desc->height <= 16 );
+
+        uint8_t * offset = ((uint8_t*)tlr.data) + (ch / 16) * tlr.rowBytes * 16 + (ch % 16) * 8 * 2;
+
+        Vector2<uint8_t> * ptr;
+
+        for( uint32_t y = 0; y < desc->height; ++y )
+        {
+            ptr = (Vector2<uint8_t>*)( offset + (desc->height-y) * tlr.rowBytes );
+
+            GN_ASSERT( (uint8_t*)tlr.data <= (uint8_t*)ptr );
+            GN_ASSERT( (uint8_t*)(ptr+8) <= ((uint8_t*)tlr.data + tlr.sliceBytes) );
+
+            for( uint32_t x = 0; x < 8; ++x, ++ptr )
+            {
+                uint8_t c = 255 * !!( desc->bitmap[y] & (1L<<(7-x)) );
+                ptr->x = c;
+                ptr->y = c;
+            }
+        }
+    }
+
+    // unlock the texture
+    mTexture->unlock();
+
+    // success
+    return true;
 
     GN_UNGUARD;
 }
@@ -59,100 +115,79 @@ void GN::gfx::D3D9Font::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Font::drawTextW( const wchar_t * text, int x, int y, const Vector4f & color )
+void GN::gfx::D3D9Font::drawText( const char * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;
 
-    // skip empty string
-    if( strEmpty(text) ) return;
+    D3D9Renderer & r = getRenderer();
+    r.setTexture( 0, mTexture );
 
-    int r;
-    RECT rc;
-    D3DCOLOR cl = sRgba2D3DCOLOR(color);
+    size_t count = 0;
 
-    // calculate drawing rect
-    rc.left = 0;
-    rc.top  = 0;
-    r = mFont->DrawTextW( 0, text, -1, &rc, DT_CALCRECT, cl );
-    if( 0 == r )
+    int xx = x, yy = y;
+    D3DCOLOR c = sRgba2D3DCOLOR( color );
+
+    float x1, y1, x2, y2, u1, v1, u2, v2;
+
+    while( *text )
     {
-        GN_ERROR( "fail to get text extent!" );
-        return;
+        if( count < MAX_CHARS )
+        {
+            if( '\n' == *text )
+            {
+                xx = x;
+                yy += 14;
+            }
+            else if( '\t' == *text )
+            {
+                xx += 9 * 4;
+            }
+            else
+            {
+                const BitmapCharDesc * desc = gBitmapChars8x13[(uint8_t)*text];
+
+                x1 = (float)xx;
+                y1 = (float)yy + (13 - desc->height) + desc->yorig;
+                x2 = x1 + 8;
+                y2 = y1 + 16;
+                u1 = (float)(*text % 16) / 16.0f;
+                v1 = (float)(*text / 16) / 16.0f;
+                u2 = u1 + 1.0f / 16.0f;
+                v2 = v1 + 1.0f / 16.0f;
+
+                mBuffer[count*4+0].set( x1, y1, u1, v1, c );
+                mBuffer[count*4+1].set( x2, y1, u2, v1, c );
+                mBuffer[count*4+2].set( x2, y2, u2, v2, c );
+                mBuffer[count*4+3].set( x1, y2, u1, v2, c );
+
+                xx += 9;
+                ++count;
+            }
+
+            // next char
+            ++text;
+        }
+        else
+        {
+            r.drawQuads(
+                DQ_WINDOW_SPACE,
+                &mBuffer[0].x, sizeof(QuadVert),
+                &mBuffer[0].u, sizeof(QuadVert),
+                &mBuffer[0].c, sizeof(QuadVert),
+                count );
+            count = 0;
+        }
     }
 
-    // draw text
-    OffsetRect( &rc, x, y );
-    r = mFont->DrawTextW( 0, text, -1, &rc, DT_LEFT, cl );
-    if( 0 == r )
+    if( count > 0 )
     {
-        GN_ERROR( "fail to draw text!" );
+        r.drawQuads(
+            DQ_WINDOW_SPACE,
+            &mBuffer[0].x, sizeof(QuadVert),
+            &mBuffer[0].u, sizeof(QuadVert),
+            &mBuffer[0].c, sizeof(QuadVert),
+            count );
     }
 
     GN_UNGUARD_SLOW;
 }
-
-// *****************************************************************************
-// Private functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Font::createFont()
-{
-    GN_GUARD;
-
-    GN_ASSERT( !mFont );
-
-    // Get font description
-    LOGFONTW lf;
-    ::GetObjectW( GetStockObject(SYSTEM_FIXED_FONT), sizeof(lf), &lf );
-
-    // create d3dx font
-    GN_DX9_CHECK_RV(
-        D3DXCreateFontW(
-            getRenderer().getDevice(),
-            lf.lfHeight,
-            lf.lfWidth,
-            lf.lfWeight,
-            0,
-            lf.lfItalic,
-            lf.lfCharSet,
-            lf.lfOutPrecision,
-            lf.lfQuality,
-            lf.lfPitchAndFamily,
-            lf.lfFaceName,
-            &mFont ),
-        false );
-
-    HWND hwnd = (HWND)getRenderer().getDispDesc().windowHandle;
-
-    // get window DC
-    HDC dc;
-    GN_MSW_CHECK_RV( ( dc = ::GetDC( hwnd ) ), false );
-
-    // select default fixed font
-    HGDIOBJ oldfont = ::SelectObject( dc, ::GetStockObject(SYSTEM_FIXED_FONT) );
-
-    // get text height
-    SIZE sz;
-    if( !::GetTextExtentPoint32W(dc, L"Äã", 1, &sz) )
-    {
-        GN_ERROR( "Fail to get text height : %s!", getOSErrorInfo() );
-        ::SelectObject( dc, oldfont );
-        ::ReleaseDC( hwnd, dc );
-        return false;
-    }
-    mFontHeight = sz.cy;
-
-    // release local variables
-    ::SelectObject( dc, oldfont );
-    ::ReleaseDC( hwnd, dc );
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-#endif

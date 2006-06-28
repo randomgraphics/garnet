@@ -39,7 +39,7 @@ namespace GN { namespace gfx
     private:
         void clear()
         {
-            mFontMap.clear();
+            mDisplayLists = 0;
         }
         //@}
 
@@ -51,26 +51,17 @@ namespace GN { namespace gfx
         //!
         //! Draw unicode string
         //!
-        //! \sa Renderer::drawDebugTextW()
+        //! \sa Renderer::drawDebugText()
         //!
-        void drawTextW( const wchar_t * s, int x, int y, const Vector4f & c );
+        void drawText( const char * s, int x, int y, const Vector4f & c );
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        // font parameters
-        struct CharDesc
-        {
-            GLuint displayList; // display list use to display the char
-            int    advanceX;    // Advance on X direction.
-        };
-        typedef std::map<wchar_t,CharDesc> FontMap;
-
         OGLRenderer & mRenderer;
-        FontMap       mFontMap;
-        int           mFontHeight;
+        GLuint        mDisplayLists; // display list for all characters (256 items)
 
         // ********************************
         // private functions
@@ -79,14 +70,6 @@ namespace GN { namespace gfx
 
         bool createFont();
         void deleteFont();
-        bool charInit( wchar_t, CharDesc & );
-        int  drawChar( wchar_t ); //!< Return x-advance of the character
-
-#if GN_POSIX
-        int      getFontBitmapAdvance( char ch );
-        uint32_t getFontBitmapHeight();
-        void     drawFontBitmap( char ch );
-#endif
     };
 }}
 

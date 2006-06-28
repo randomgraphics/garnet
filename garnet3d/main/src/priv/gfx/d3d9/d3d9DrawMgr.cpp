@@ -367,15 +367,15 @@ void GN::gfx::D3D9Renderer::drawLines(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawDebugTextW(
-    const wchar_t * text, int x, int y, const Vector4f & color )
+void GN::gfx::D3D9Renderer::drawDebugText(
+    const char * text, int x, int y, const Vector4f & color )
 {
     GN_GUARD_SLOW;
 
     PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( mDrawBegan && mFont );
-    mFont->drawTextW( text, x, y, color );
+    mFont->drawText( text, x, y, color );
 
     GN_UNGUARD_SLOW;
 }

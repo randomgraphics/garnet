@@ -2,11 +2,9 @@
 #define __GN_D3D9_D3D9CHARBITMAP_H__
 // *****************************************************************************
 //! \file    d3d9/d3d9CharBitmap.h
-//! \brief   Bitmap font image (for Xenon only)
+//! \brief   Bitmap font image
 //! \author  chenlee (2006.5.26)
 // *****************************************************************************
-
-#if GN_XENON
 
 struct BitmapCharDesc
 {
@@ -17,10 +15,7 @@ struct BitmapCharDesc
     int32_t  advance;
     const uint8_t * bitmap;
 };
-
 extern const BitmapCharDesc * const gBitmapChars8x13[];
-
-#endif // GN_XENON
 
 // *****************************************************************************
 //                           End of d3d9CharBitmap.h

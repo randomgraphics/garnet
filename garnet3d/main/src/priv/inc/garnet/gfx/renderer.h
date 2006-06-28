@@ -1094,8 +1094,8 @@ namespace GN { namespace gfx
         //!
         //! 在屏幕上指定的位置绘制2D字符串.
         //!
-        //! - 函数可以处理中英文的混合字符串，但运行速度较慢，主要为测试而用。
-        //!   文字的高度固定为16个象素，宽度为8(English)/16(Chinese)个象素。
+        //! - 目前只接受英文字符，但运行速度较慢，主要为测试而用。
+        //!   文字的高度固定为14个象素，宽度为8个象素。
         //! - 必须在 drawBegin() 和 drawEnd() 之间调用
         //!
         //! \param text  待绘制度字符串
@@ -1105,19 +1105,8 @@ namespace GN { namespace gfx
         //! \param color 文字颜色
         //!
         virtual void
-        drawDebugTextA( const char * text, int x, int y,
-                        const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
-
-        //!
-        //!  绘制unicode文字
-        //!
-        //! \sa drawDebugTextA()
-        //!
-        //! \note 必须在 drawBegin() 和 drawEnd() 之间调用
-        //!
-        virtual void
-        drawDebugTextW( const wchar_t * text, int x, int y,
-                        const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
+        drawDebugText( const char * text, int x, int y,
+                       const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
 
         //!
         //! 返回上一次 drawEnd() 到现在所绘制的原语的个数

@@ -184,7 +184,7 @@ public:
 #endif
 
         static const Vector4f RED(1,0,0,1);
-        r.drawDebugTextA( mBandWidthStr.cptr(), 0, 100, RED );
+        r.drawDebugText( mBandWidthStr.cptr(), 0, 100, RED );
     }
 
     StrA printResult()

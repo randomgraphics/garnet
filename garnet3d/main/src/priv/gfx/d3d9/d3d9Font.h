@@ -9,10 +9,8 @@
 #include "d3d9Resource.h"
 
 namespace GN { namespace gfx {
-
-#if GN_XENON
     //!
-    //! D3D9 font class for Xenon platform
+    //! D3D9 font class
     //!
     class D3D9Font : public D3D9Resource, public StdClass
     {
@@ -57,7 +55,7 @@ namespace GN { namespace gfx {
         //!
         //! Draw unicode text
         //!
-        void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
+        void drawText( const char * text, int x, int y, const Vector4f & color );
 
         // ********************************
         // private variables
@@ -86,72 +84,6 @@ namespace GN { namespace gfx {
         // ********************************
     private:
     };
-
-#else
-
-    //!
-    //! D3D9 font class for PC platform.
-    //!
-    class D3D9Font : public D3D9Resource, public StdClass
-    {
-        GN_DECLARE_STDCLASS( D3D9Font, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        D3D9Font( D3D9Renderer & r ) : D3D9Resource(r) { clear(); }
-        virtual ~D3D9Font() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init();
-        void quit();
-        bool ok() const { return MyParent::ok(); }
-    private:
-        void clear() { mFont = 0; }
-        //@}
-
-        // ********************************
-        // from D3D9Resource
-        // ********************************
-    public:
-
-        bool deviceRestore() { GN_ASSERT( mFont ); GN_DX9_CHECK_RV( mFont->OnResetDevice(), false ); return true; }
-        void deviceDispose() { if( mFont ) GN_DX9_CHECK( mFont->OnLostDevice() ); }
-
-        // ********************************
-        // public functions
-        // ********************************
-    public:
-
-        //!
-        //! Draw unicode text
-        //!
-        void drawTextW( const wchar_t * text, int x, int y, const Vector4f & color );
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
-        LPD3DXFONT mFont;
-        int        mFontHeight;
-
-        // ********************************
-        // private functions
-        // ********************************
-    private:
-        bool createFont();
-    };
-#endif
 }}
 
 // *****************************************************************************

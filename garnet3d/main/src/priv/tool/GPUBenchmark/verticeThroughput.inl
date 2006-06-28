@@ -327,7 +327,7 @@ public:
 
         // draw statistics
         static const Vector4f RED(1,0,0,1);
-        r.drawDebugTextA( mThroughputStr.cptr(), 0, 100, RED );
+        r.drawDebugText( mThroughputStr.cptr(), 0, 100, RED );
     }
 
     StrA printResult()
