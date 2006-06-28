@@ -145,7 +145,7 @@ namespace GN
     //! Resizeable array.
     //!
     template<class T, class ALLOCATOR = StandardAllocator<T> >
-    class DynamicArray
+    class DynaArray
     {
         T * mElements;
         size_t mCount;
@@ -168,7 +168,7 @@ namespace GN
             }
         }
 
-        void doClone( const DynamicArray & other )
+        void doClone( const DynaArray & other )
         {
             GN_ASSERT( mCount == other.mCount );
             resize( other.mCount );
@@ -228,22 +228,22 @@ namespace GN
         //!
         //! default constructor
         //!
-        DynamicArray() : mElements(0), mCount(0), mCapacity(0) {}
+        DynaArray() : mElements(0), mCount(0), mCapacity(0) {}
 
         //!
         //! constructor with user-defined count.
         //!
-        explicit DynamicArray( size_t count ) : mElements(0), mCount(0), mCapacity(0) { resize( count ); }
+        explicit DynaArray( size_t count ) : mElements(0), mCount(0), mCapacity(0) { resize( count ); }
 
         //!
         //! copy constructor
         //!
-        DynamicArray( const DynamicArray & other ) : mElements(0), mCount(0), mCapacity(0) { doClone( other ); }
+        DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0) { doClone( other ); }
 
         //!
         //! destructor
         //!
-        ~DynamicArray() { dealloc(); }
+        ~DynaArray() { dealloc(); }
 
         //! \name Common array operations.
         //!
@@ -272,7 +272,7 @@ namespace GN
         //! \name common operators
         //!
         //@{
-        DynamicArray & operator=( const DynamicArray & other ) { doClone(other); return *this; }
+        DynaArray & operator=( const DynaArray & other ) { doClone(other); return *this; }
         T            & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
         const T      & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         operator const T*() const { return mElements; }
