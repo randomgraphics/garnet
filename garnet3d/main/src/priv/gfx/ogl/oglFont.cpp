@@ -153,9 +153,7 @@ void GN::gfx::OGLFont::drawText( const char * s, int x, int y, const Vector4f & 
     int sy = dd.height - y - FONT_HEIGHT;
     while ( *s )
     {
-        char ch = *s; ++s;
-
-        if( '\n' == ch )
+        if( '\n' == *s )
         {
             // next line
             sx = x;
@@ -167,6 +165,8 @@ void GN::gfx::OGLFont::drawText( const char * s, int x, int y, const Vector4f & 
             glCallList( mDisplayLists + *s );
             sx += sGetFontBitmapAdvance( *s );
         }
+
+        ++s;
     }
 
     // end draw text, restore render states
