@@ -21,4 +21,4 @@ sources = [
     'oglVtxFmt.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-GN.newTarget( 'shlib', 'GNgfxOGL', [cluster], dependencies = ['GNgfxCommon'] )
+GN.newTarget( 'shlib', 'GNrndrOGL', [cluster], dependencies = ['GNrndrCommon'] )

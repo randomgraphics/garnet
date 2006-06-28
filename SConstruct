@@ -713,7 +713,7 @@ BUILD_binDir = None
 # Get libarary suffix. Currently, none.
 #
 def BUILD_getSuffix(): return ""
- 
+
 #
 # Create new compile environment
 #
@@ -911,7 +911,7 @@ def BUILD_program( name, target ):
 
     env = BUILD_newLinkEnv( target )
 
-    stdlibs = Split('GNutil GNgfxD3D9 GNgfxD3D10 GNgfxOGL GNcore GNbase GNextern')
+    stdlibs = Split('GNutil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNcore GNbase GNextern')
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -971,7 +971,7 @@ for compiler, variants in ALL_targets.iteritems() :
 
         # build additional dependencies:
         stlibs = Split('GNextern GNbase GNcore GNutil')
-        shlibs = Split('GNcore GNgfxD3D9 GNgfxD3D10 GNgfxOGL')
+        shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
         tools = Split('GNtoolOglInfo GNtoolGPUBenchmark GNtoolD3D9Wrapper')
@@ -1011,7 +1011,7 @@ if 'MSVSProject' in LOCAL_env['BUILDERS']:
             MSVS_env = UTIL_newEnv( compiler, variant )
             for name, x in targets.iteritems():
                 if 'stlib' == x.type or 'dylib' == x.type or 'prog' == x.type :
-                    SConscript( 
+                    SConscript(
                     'msvc/SConscript',
                         exports={
                             'GN' : GN,

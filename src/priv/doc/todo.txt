@@ -8,13 +8,13 @@
   - task manager/coordinator
 
 - p1
-  - custom vector class:
-    - UT
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
+  - multi-thread wrapper for platform-independency
   - UT
     - Str::findFirst/LastOf(...)
+    - custom vector class
   - try multi-thread architect
     - separate sim() and render() loop
     - File loader in another thread.
@@ -23,9 +23,7 @@
     - render target management
       - D3D: msaa
       - OGL: FBO
-    - queryXXX(....)
     - recreate OGL context, when monitor changed.
-    - support using "c0" as uniform name of D3D HLSL shader.
   - code page convertor
     - may support convertion from/to utf8 be enough?
   - sample application
@@ -37,20 +35,22 @@
   - refine sigslot class to allow any type of functor
 
 - p2
-  - string: use stack array for short string
+  - UT
+    - LRU list in resource manager
+    - make sure OGL resource creation/deletion do not affect renderer states
+    - format conversion between ClrFmt and D3DFMT
   - memory-mapped file.
   - GFX system
-    - UT of LRU list in resource manager
+    - queryXXX(....)
+    - support using "c0" as uniform name of D3D HLSL shader.
     - consider remove drawBegin() and drawEnd()
     - renderer state dump system
-    - UT to make sure OGL resource creation/deletion do not affect renderer states
     - add support to OGL FSAA
     - Cg shader
     - consider removing syscopy from vertex/index buffer
       - remove sys-copy of VBO.
     - Why D3D quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
-    - UT: format conversion between ClrFmt and D3DFMT
     - test: IDirect3DDevice9::UpdateTexture() when target is render target texture.
     - learn EXT_framebuffer_object, ARB_draw_buffer, ARB_pixel_buffer_object
     - shared uniform
@@ -78,6 +78,8 @@
 
 ISSUES
 ======
+
+- Do we need embed buffer for short string?
 
 - Custom string class or std::string?
   - RESOLVED: custom string class.

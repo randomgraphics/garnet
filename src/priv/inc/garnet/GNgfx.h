@@ -40,7 +40,6 @@ namespace GN
 #include "gfx/misc.h"
 
 // Platform-independent renderer.
-// Load GNgfxD3D9.dll and GNgfxOGL.dll (or libGNgfxOGL.so) to use it.
 #include "gfx/shader.h"
 #include "gfx/texture.h"
 #include "gfx/buffer.h"
