@@ -93,9 +93,9 @@ GN::gfx::Renderer * GN::gfx::createRenderer( RendererAPI api )
     CreateRendererFunc creator;
     switch( api )
     {
-        case API_D3D9  : dllName = "GNgfxD3D9"; break;
-        case API_D3D10 : dllName = "GNgfxD3D10"; break;
-        case API_OGL   : dllName = "GNgfxOGL"; break;
+        case API_D3D9  : dllName = "GNrndrD3D9"; break;
+        case API_D3D10 : dllName = "GNrndrD3D10"; break;
+        case API_OGL   : dllName = "GNrndrOGL"; break;
         default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
     }
     std::auto_ptr<SharedLib> dll( new SharedLib );

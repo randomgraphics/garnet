@@ -20,4 +20,4 @@ sources = [
     'd3d9VtxShaderHlsl.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-GN.newTarget( 'shlib', 'GNgfxD3D9', [cluster], dependencies = ['GNgfxCommon'] )
+GN.newTarget( 'shlib', 'GNrndrD3D9', [cluster], dependencies = ['GNrndrCommon'] )
