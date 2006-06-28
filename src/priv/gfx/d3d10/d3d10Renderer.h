@@ -254,7 +254,7 @@ namespace GN { namespace gfx
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj ) {}
-        virtual void drawDebugTextW( const wchar_t * text, int x, int y, const Vector4f & color ) {}
+        virtual void drawDebugText( const char * text, int x, int y, const Vector4f & color ) {}
 
     private:
 

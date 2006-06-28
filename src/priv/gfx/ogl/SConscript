@@ -3,7 +3,6 @@ sources = [
     'oglBasicShaderARB.cpp',
     'oglBasicShaderGLSL.cpp',
     'oglCapsMgr.cpp',
-    'oglCharBitmap8x13.cpp',
     'oglContextMgr.cpp',
     'oglDispMgrMsw.cpp',
     'oglDispMgrX11.cpp',

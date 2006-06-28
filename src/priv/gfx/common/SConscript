@@ -7,6 +7,7 @@ sources = [
     'basicResourceManager.cpp',
     'renderWindowMsw.cpp',
     'renderWindowX11.cpp',
+    'charBitmap8x13.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 GN.newTarget( 'stlib', 'GNgfxCommon', [cluster] )

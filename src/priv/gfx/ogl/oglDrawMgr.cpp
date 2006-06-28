@@ -557,11 +557,11 @@ void GN::gfx::OGLRenderer::drawLines(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawDebugTextW( const wchar_t * s, int x, int y, const Vector4f & c )
+void GN::gfx::OGLRenderer::drawDebugText( const char * s, int x, int y, const Vector4f & c )
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mFont );
     setShaders( 0, 0 ); // disable programmable pipeline
-    mFont->drawTextW( s, x, y, c );
+    mFont->drawText( s, x, y, c );
     GN_UNGUARD_SLOW;
 }

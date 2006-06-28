@@ -1,12 +1,10 @@
 Import( 'GN' )
 sources = [
     'd3d9CapsMgr.cpp',
-    'd3d9CharBitmap8x13.cpp',
     'd3d9ContextMgr.cpp',
     'd3d9DispMgr.cpp',
     'd3d9DrawMgr.cpp',
     'd3d9Font.cpp',
-    'd3d9FontXenon.cpp',
     'd3d9IdxBuf.cpp',
     'd3d9Line.cpp',
     'd3d9PxlShaderAsm.cpp',
