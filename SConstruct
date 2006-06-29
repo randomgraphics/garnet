@@ -624,6 +624,7 @@ class Target:
         self.sources = [] # list of source clusters
         self.dependencies = [] # list of denpendencies. item in this list must be valid target name.
         self.externalDependencies = [] # list of external dependencies. Could be any name.
+        self.ignoreDefaultDependencies = False
         self.pdb = None
         self.extraLinkFlags = LinkFlags()
         self.removedLinkFlags = LinkFlags()
@@ -875,9 +876,10 @@ def BUILD_dynamicLib( name, target ):
     env = BUILD_newLinkEnv( target )
 
     stdlibs = []
-    if 'GNcore' != name :
-        stdlibs += ['GNgfx','GNcore']
-    stdlibs += ['GNbase','GNextern']
+    if not target.ignoreDefaultDependencies:
+        if 'GNcore' != name :
+            stdlibs += ['GNgfx','GNcore']
+        stdlibs += ['GNbase','GNextern']
 
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
@@ -912,7 +914,10 @@ def BUILD_program( name, target ):
 
     env = BUILD_newLinkEnv( target )
 
-    stdlibs = Split('GNutil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfx GNcore GNbase GNextern')
+    if target.ignoreDefaultDependencies:
+        stdlibs = []
+    else:
+        stdlibs = Split('GNutil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfx GNcore GNbase GNextern')
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
