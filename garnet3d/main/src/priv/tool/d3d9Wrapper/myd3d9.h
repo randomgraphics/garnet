@@ -6,13 +6,17 @@
 //! \author  chenlee (2006.6.24)
 // *****************************************************************************
 
+//!
+//! IDirect3D9 wrapper
+//!
 class MyD3D9 : public BasicInterface<IDirect3D9>
 {
 public:
 
-    bool create( UINT sdkVersion );
+    bool create( UINT sdkVersion ); //!< create D3D object
 
-    /*** IDirect3D9 methods ***/
+    //! \name IDirect3D9 methods
+    //@{
     HRESULT  STDMETHODCALLTYPE RegisterSoftwareDevice(void* pInitializeFunction) { return obj()->RegisterSoftwareDevice( pInitializeFunction ); }
     UINT     STDMETHODCALLTYPE GetAdapterCount() { return obj()->GetAdapterCount(); }
     HRESULT  STDMETHODCALLTYPE GetAdapterIdentifier(UINT Adapter,DWORD Flags,D3DADAPTER_IDENTIFIER9* pIdentifier) { return obj()->GetAdapterIdentifier( Adapter, Flags, pIdentifier ); }
@@ -27,13 +31,8 @@ public:
     HRESULT  STDMETHODCALLTYPE GetDeviceCaps(UINT Adapter,D3DDEVTYPE DeviceType,D3DCAPS9* pCaps) { return obj()->GetDeviceCaps( Adapter, DeviceType, pCaps ); }
     HMONITOR STDMETHODCALLTYPE GetAdapterMonitor(UINT Adapter) { return obj()->GetAdapterMonitor( Adapter ); }
     HRESULT  STDMETHODCALLTYPE CreateDevice(UINT Adapter,D3DDEVTYPE DeviceType,HWND hFocusWindow,DWORD BehaviorFlags,D3DPRESENT_PARAMETERS* pPresentationParameters,IDirect3DDevice9** ppReturnedDeviceInterface);
+    //@}
 };
-
-#if GN_MSVC
-#define EXPORT       __declspec(dllexport)
-#else
-#define EXPORT
-#endif
 
 // *****************************************************************************
 //                           End of myd3d9.h
