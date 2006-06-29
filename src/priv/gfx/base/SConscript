@@ -7,6 +7,7 @@ sources = [
     'effect.cpp',
     'effectFromXml.cpp',
     'fakeRenderer.cpp',
+    'fatMesh.cpp',
     'image.cpp',
     'imageBMP.cpp',
     'imageDDS.cpp',
@@ -18,5 +19,7 @@ sources = [
     'vertex.cpp',
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+if GN.conf['has_d3d9'] : r.addCompileFlags( CPPDEFINES = ['HAS_D3D9'] )
 if GN.conf['has_d3d10'] : r.addCompileFlags( CPPDEFINES = ['HAS_D3D10'] )
+if GN.conf['has_ogl'] : r.addCompileFlags( CPPDEFINES = ['HAS_OGL'] )
 Return( 'r' )
