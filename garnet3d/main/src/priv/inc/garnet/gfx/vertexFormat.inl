@@ -75,10 +75,10 @@ GN_INLINE void GN::gfx::VtxFmtDesc::clear()
 //
 // -----------------------------------------------------------------------------
 GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
-    uint8_t stream,
-    uint8_t offset,
-    VtxSem  semantic,
-    ClrFmt  format )
+    uint8_t  stream,
+    uint16_t offset,
+    VtxSem   semantic,
+    ClrFmt   format )
 {
     // check parameters
     if( stream >= NUM_VTXSEMS )
@@ -107,15 +107,10 @@ GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
 
     // calculate attribute offset and stream stride
     if ( 0 == offset ) offset = s.stride;
-    uint8_t new_stride = getClrFmtDesc(format).bits / 8;
+    uint16_t new_stride = getClrFmtDesc(format).bits / 8;
     if ( 0 == new_stride )
     {
         GN_ERROR( "pixel size of the format must be larger than 1 byte!" );
-        return false;
-    }
-    if ( long(offset) + long(new_stride) > 256 )
-    {
-        GN_ERROR( "stride can't exceed 256!" );
         return false;
     }
     new_stride = new_stride + offset;
@@ -124,7 +119,7 @@ GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
     a.used = true;
     a.stream = stream;
     a.offset = offset;
-    a.format  = format;
+    a.format = format;
 
     // update stream
     if( numStreams <= stream ) numStreams = stream + 1;

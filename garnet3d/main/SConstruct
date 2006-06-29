@@ -874,8 +874,9 @@ def BUILD_dynamicLib( name, target ):
 
     env = BUILD_newLinkEnv( target )
 
-    stdlibs = ['GNgfx']
-    if 'GNcore' != name : stdlibs.append( 'GNcore' )
+    stdlibs = []
+    if 'GNcore' != name :
+        stdlibs += ['GNgfx','GNcore']
     stdlibs += ['GNbase','GNextern']
 
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )

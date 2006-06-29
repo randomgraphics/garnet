@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         {
             bool        used;     //!< Is this attribute used or not?
             uint8_t     stream;   //!< stream index.
-            uint8_t     offset;   //!< offset in vertex stream.
+            uint16_t    offset;   //!< offset in vertex stream.
             ClrFmt      format;   //!< attribute format (FMT_XXX).
         };
 
@@ -62,7 +62,7 @@ namespace GN { namespace gfx
         {
             VtxSem attribs[NUM_VTXSEMS]; //!< attribute indices into attribute array.
             uint8_t        numAttribs;   //!< number of attributes in this stream.
-            uint8_t        stride;       //!< stream stride in bytes.
+            uint16_t       stride;       //!< stream stride in bytes.
         };
 
         AttribDesc attribs[NUM_VTXSEMS]; //!< vertex attribute array, indexed by vertex semantic.
@@ -93,7 +93,7 @@ namespace GN { namespace gfx
         //!
         bool addAttrib(
             uint8_t        stream,
-            uint8_t        offset,
+            uint16_t       offset,
             VtxSem         semantic,
             ClrFmt         format );
 
