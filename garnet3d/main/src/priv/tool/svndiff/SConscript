@@ -1,0 +1,10 @@
+Import( 'GN' )
+
+sources = [
+    'svndiff.cpp'
+]
+
+cluster = GN.newSourceCluster( sources )
+t = GN.newTarget( 'prog', 'svndiff', [cluster] )
+t.ignoreDefaultDependencies = True
+
