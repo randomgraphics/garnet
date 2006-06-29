@@ -30,8 +30,8 @@ namespace GN
     }
 }
 
-// Common graphics definition and utilities.
-// Link to GNgfxLib.lib (or libGNgfxLib.o) to use it.
+// Basic graphics definition and utilities that are mainly building blocks of
+// renderer interface and higher level graphics classes.
 #include "gfx/colorFormat.h"
 #include "gfx/image.h"
 #include "gfx/renderState.h"
@@ -39,12 +39,15 @@ namespace GN
 #include "gfx/shape.h"
 #include "gfx/misc.h"
 
-// Platform-independent renderer.
+// Abstract renderer interfaces.
 #include "gfx/shader.h"
 #include "gfx/texture.h"
 #include "gfx/buffer.h"
 #include "gfx/context.h"
 #include "gfx/renderer.h"
+
+// More graphics classes and utilities that use renderer interfaces,
+// such as mesh effects and etc.
 
 // *****************************************************************************
 //                         END of GNgfx.h
