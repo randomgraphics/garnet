@@ -8,6 +8,9 @@
 
 class MyD3D9;
 
+//!
+//! IDirect3DDevice9 wrapper
+//!
 class MyDevice9 : public BasicInterface<IDirect3DDevice9>
 {
     MyD3D9 * mD3D9;
@@ -16,8 +19,14 @@ class MyDevice9 : public BasicInterface<IDirect3DDevice9>
 
 public:
 
+    //!
+    //! ctor
+    //!
     MyDevice9() : mD3D9(0) {}
 
+    //!
+    //! create D3D device object
+    //!
     HRESULT create(
         MyD3D9 * d3d,
         UINT Adapter,
@@ -26,6 +35,8 @@ public:
         DWORD BehaviorFlags,
         D3DPRESENT_PARAMETERS* pPresentationParameters );
 
+    //! \name IDirect3DDevice methods
+    //@{
     STDMETHOD(TestCooperativeLevel)(THIS) { return obj()->TestCooperativeLevel(); }
     STDMETHOD_(UINT, GetAvailableTextureMem)(THIS) { return obj()->GetAvailableTextureMem(); }
     STDMETHOD(EvictManagedResources)(THIS) { return obj()->EvictManagedResources(); }
@@ -142,6 +153,7 @@ public:
     STDMETHOD(DrawTriPatch)(THIS_ UINT Handle,CONST float* pNumSegs,CONST D3DTRIPATCH_INFO* pTriPatchInfo) { return obj()->DrawTriPatch( Handle, pNumSegs, pTriPatchInfo ); }
     STDMETHOD(DeletePatch)(THIS_ UINT Handle) { return obj()->DeletePatch( Handle ); }
     STDMETHOD(CreateQuery)(THIS_ D3DQUERYTYPE Type,IDirect3DQuery9** ppQuery) { return obj()->CreateQuery( Type, ppQuery ); }
+    //@}
 };
 
 // *****************************************************************************
