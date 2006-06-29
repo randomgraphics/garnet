@@ -21,9 +21,9 @@ Directory Structure
     - base         base library
     - core         core library
     - doc          documenation
+    - gfx          graphics libraries
     - inc          public headers of garnet library.
     - misc         misc. files (normally not source code)
-    - rndr         graphics renderer, includes d3d9, d3d10 and OGL
     - sample       sample applications.
     - test         test applications.
     - tool         tool applications.
@@ -36,7 +36,7 @@ Each one of components depends on all items below it:
 
   sample test tool
        util
-       rndr
+       gfx
        core
        base
       extern

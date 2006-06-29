@@ -874,9 +874,9 @@ def BUILD_dynamicLib( name, target ):
 
     env = BUILD_newLinkEnv( target )
 
-    stdlibs = []
+    stdlibs = ['GNgfx']
     if 'GNcore' != name : stdlibs.append( 'GNcore' )
-    stdlibs += Split('GNbase GNextern')
+    stdlibs += ['GNbase','GNextern']
 
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
@@ -911,7 +911,7 @@ def BUILD_program( name, target ):
 
     env = BUILD_newLinkEnv( target )
 
-    stdlibs = Split('GNutil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNcore GNbase GNextern')
+    stdlibs = Split('GNutil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfx GNcore GNbase GNextern')
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -970,7 +970,7 @@ for compiler, variants in ALL_targets.iteritems() :
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
         # build additional dependencies:
-        stlibs = Split('GNextern GNbase GNcore GNutil')
+        stlibs = Split('GNextern GNbase GNcore GNgfx GNutil')
         shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
