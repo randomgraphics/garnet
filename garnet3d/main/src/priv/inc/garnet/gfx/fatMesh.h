@@ -66,7 +66,7 @@ namespace GN { namespace gfx
         void setPos4( float x, float y, float z, float w ) { pos.set(x,y,z,w); format.pos = 4; }
         void setPos2( const Vector2f & v ) { setPos2( v.x, v.y ); }
         void setPos3( const Vector3f & v ) { setPos3( v.x, v.y, v.z ); }
-        void setPos4( const Vector4f & v ) { setPos4( v.x, v.y, v.z, v.w ); }
+        void setPos4( const Vector4f & v ) { setPos4( v.x, v.y, v.z, v.z ); }
         //@}
 
         //! \name set weight
@@ -77,7 +77,7 @@ namespace GN { namespace gfx
         void setWeight4( float x, float y, float z, float w ) { weight.set(x,y,z,w); format.weight = 4; }
         void setWeight2( const Vector2f & v ) { setWeight2( v.x, v.y ); }
         void setWeight3( const Vector3f & v ) { setWeight3( v.x, v.y, v.z ); }
-        void setWeight4( const Vector4f & v ) { setWeight4( v.x, v.y, v.z, v.w ); }
+        void setWeight4( const Vector4f & v ) { setWeight4( v.x, v.y, v.z, v.z ); }
         //@}
 
         //! \name set normal
@@ -119,43 +119,43 @@ namespace GN { namespace gfx
 
         //! \name set texture coordinates
         //@{
-        void setTexCoord1( size_t stage, float u )
+        void setTexcoord1( size_t stage, float u )
         {
             GN_ASSERT( stage < 8 );
             if( format.texcoord <= stage ) format.texcoord = stage + 1;
             size_t shift = stage << 1;
             format.texMasks &= ~(3<<shift);
-            texcoord.set( u, 0, 0, 0 );
+            texcoord[stage].set( u, 0, 0, 0 );
         }
-        void setTexCoord2( size_t stage, float u, float v )
+        void setTexcoord2( size_t stage, float u, float v )
         {
             GN_ASSERT( stage < 8 );
             if( format.texcoord <= stage ) format.texcoord = stage + 1;
             size_t shift = stage << 1;
             format.texMasks &= ~(3<<shift);
             format.texMasks |= 1<<shift;
-            texcoord.set( u, v, 0, 0 );
+            texcoord[stage].set( u, v, 0, 0 );
         }
-        void setTexCoord3( size_t stage, float u, float v, float w )
+        void setTexcoord3( size_t stage, float u, float v, float w )
         {
             GN_ASSERT( stage < 8 );
             if( format.texcoord <= stage ) format.texcoord = stage + 1;
             size_t shift = stage << 1;
             format.texMasks &= ~(3<<shift);
             format.texMasks |= 2<<shift;
-            texcoord.set( u, v, w, 0 );
+            texcoord[stage].set( u, v, w, 0 );
         }
-        void setTexCoord4( size_t stage, float u, float v, float w, float q )
+        void setTexcoord4( size_t stage, float u, float v, float w, float q )
         {
             GN_ASSERT( stage < 8 );
             if( format.texcoord <= stage ) format.texcoord = stage + 1;
             size_t shift = stage << 1;
             format.texMasks |= 3<<shift;
-            texcoord.set( u, v, w, q );
+            texcoord[stage].set( u, v, w, q );
         }
-        void setTexcoord2( size_t stage, const Vector2f & uv ) { setTexcoord2( stage, uv.u, uv.v ); }
-        void setTexcoord3( size_t stage, const Vector3f & uvw ) { setTexcoord3( stage, uvw.u, uvw.v, uvw.w ); }
-        void setTexcoord4( size_t stage, const Vector4f & uvwq ) { setTexcoord4( stage, uvwq.u, uvwq.v, uvwq.w, uvwq.q ); }
+        void setTexcoord2( size_t stage, const Vector2f & uv ) { setTexcoord2( stage, uv.x, uv.y ); }
+        void setTexcoord3( size_t stage, const Vector3f & uvw ) { setTexcoord3( stage, uvw.x, uvw.y, uvw.z ); }
+        void setTexcoord4( size_t stage, const Vector4f & uvwq ) { setTexcoord4( stage, uvwq.x, uvwq.y, uvwq.z, uvwq.w ); }
         //@}
     };
 
@@ -168,16 +168,21 @@ namespace GN { namespace gfx
 
         //! \name ctor and dtor
         //@{
-        FatMesh() { mTmpVtx.format.u32 = 0; }
+        FatMesh() { mTmpVtx.format.u32 = 0; mHasFaceNormal = true; }
         //@}
 
         //!
         //! clear to empty
         //!
-        void clear() { mVertices.clear(); mFaces.clear(); }
+        void clear() { mVertices.clear(); mFaces.clear(); clearOptimizationData(); }
 
         //! \name new vertex
         //@{
+        void newVertices( const FatVertex * verts, size_t count )
+        {
+            mVertices.append( verts, count );
+            clearOptimizationData();
+        }
         void newVertex( const FatVertex & v ) { mVertices.append( v ); }
         void pos1( float x ) { mTmpVtx.setPos1( x ); newVertex( mTmpVtx ); mTmpVtx.clear(); }
         void pos2( float x, float y ) { mTmpVtx.setPos2( x, y ); newVertex( mTmpVtx ); mTmpVtx.clear(); }
@@ -185,14 +190,14 @@ namespace GN { namespace gfx
         void pos4( float x, float y, float z, float w ) { mTmpVtx.setPos4( x, y, z, w ); newVertex( mTmpVtx ); mTmpVtx.clear(); }
         void pos2( const Vector2f & v ) { pos2( v.x, v.y ); }
         void pos3( const Vector3f & v ) { pos3( v.x, v.y, v.z ); }
-        void pos4( const Vector4f & v ) { pos4( v.x, v.y, v.z, v.w ); }
+        void pos4( const Vector4f & v ) { pos4( v.x, v.y, v.z, v.z ); }
         void weight1( float x ) { mTmpVtx.setWeight1( x ); }
         void weight2( float x, float y ) { mTmpVtx.setWeight2( x, y ); }
         void weight3( float x, float y, float z ) { mTmpVtx.setWeight3( x, y, z ); }
         void weight4( float x, float y, float z, float w ) { mTmpVtx.setWeight4( x, y, z, w ); }
         void weight2( const Vector2f & v ) { mTmpVtx.setWeight2( v.x, v.y ); }
         void weight3( const Vector3f & v ) { mTmpVtx.setWeight3( v.x, v.y, v.z ); }
-        void weight4( const Vector4f & v ) { mTmpVtx.setWeight4( v.x, v.y, v.z, v.w ); }
+        void weight4( const Vector4f & v ) { mTmpVtx.setWeight4( v.x, v.y, v.z, v.z ); }
         void normal( float x, float y, float z ) { mTmpVtx.setNormal( x, y, z ); }
         void normal( const Vector3f & n ) { mTmpVtx.setNormal( n.x, n.y, n.z ); }
         void diffuse( float r, float g, float b, float a = 1.0f ) { mTmpVtx.setDiffuse( r, g, b, a ); }
@@ -205,44 +210,105 @@ namespace GN { namespace gfx
         void tangent( const Vector3f & n ) { mTmpVtx.setTangent( n.x, n.y, n.z ); }
         void binormal( float x, float y, float z ) { mTmpVtx.setBinormal( x, y, z ); }
         void binormal( const Vector3f & n ) { mTmpVtx.setBinormal( n.x, n.y, n.z ); }
-        void texCoord( size_t stage, float u ) { mTmpVtx.setTexCoord1( stage, u ); }
-        void texCoord( size_t stage, float u, float v ) { mTmpVtx.setTexCoord2( stage, u, v ); }
-        void texCoord( size_t stage, float u, float v, float w ) { mTmpVtx.setTexCoord3( stage, u, v, w ); }
-        void texCoord( size_t stage, float u, float v, float w, float q ) { mTmpVtx.setTexCoord4( stage, u, v, w, q ); }
-        void texCoord( size_t stage, const Vector2f & v2 ) { mTmpVtx.setTexCoord2( stage, v2.x, v2.y ); }
-        void texCoord( size_t stage, const Vector3f & v3 ) { mTmpVtx.setTexCoord3( stage, v3.x, v3.y, v3.z ); }
-        void texCoord( size_t stage, const Vector4f & v4 ) { mTmpVtx.setTexCoord4( stage, v4.x, v4.y, v4.z, v4.w ); }
+        void texcoord( size_t stage, float u ) { mTmpVtx.setTexcoord1( stage, u ); }
+        void texcoord( size_t stage, float u, float v ) { mTmpVtx.setTexcoord2( stage, u, v ); }
+        void texcoord( size_t stage, float u, float v, float w ) { mTmpVtx.setTexcoord3( stage, u, v, w ); }
+        void texcoord( size_t stage, float u, float v, float w, float q ) { mTmpVtx.setTexcoord4( stage, u, v, w, q ); }
+        void texcoord( size_t stage, const Vector2f & v2 ) { mTmpVtx.setTexcoord2( stage, v2.x, v2.y ); }
+        void texcoord( size_t stage, const Vector3f & v3 ) { mTmpVtx.setTexcoord3( stage, v3.x, v3.y, v3.z ); }
+        void texcoord( size_t stage, const Vector4f & v4 ) { mTmpVtx.setTexcoord4( stage, v4.x, v4.y, v4.z, v4.w ); }
+        //@}
+
+        //! \name new face
+        //@{
+        void newFace( size_t i1, size_t i2, size_t i3, int material = 0 )
+        {
+            Face f;
+            f.i1 = i1; f.i2 = i2; f.i3 = i3;
+            f.material = material;
+            mFaces.append( f );
+            mHasFaceNormal = false;
+            clearOptimizationData();
+        }
+        void newFace( size_t i1, size_t i2, size_t i3, float nx, float ny, float nz, int material = 0 )
+        {
+            Face f;
+            f.i1 = i1; f.i2 = i2; f.i3 = i3;
+            f.normal.set( nx, ny, nz );
+            f.material = material;
+            mFaces.append( f );
+            clearOptimizationData();
+        }
+        void newFace( size_t i1, size_t i2, size_t i3, const Vector3f & normal, int material = 0 )
+        {
+            Face f;
+            f.i1 = i1; f.i2 = i2; f.i3 = i3;
+            f.normal = normal;
+            f.material = material;
+            mFaces.append( f );
+            clearOptimizationData();
+        }
+        template< typename INDEX_TYPE >
+        void newFaces( const INDEX_TYPE * indices, size_t faceCount, int material = 0 )
+        {
+            Face f;
+            f.material = material;
+            if( 0 == indices ) faceCount = 0;
+            for( size_t i = 0; i < faceCount; ++i, indices += 3 )
+            {
+                // make sure indices are positive.
+                GN_ASSERT( indices[0] >= 0 && indices[1] >= 0 && indices[2] >= 0 );
+
+                f.i1 = (size_t)indices[0];
+                f.i2 = (size_t)indices[1];
+                f.i3 = (size_t)indices[2];
+
+                mFaces.append( f );
+            }
+            mHasFaceNormal = false;
+            clearOptimizationData();
+        }
+        //@}
+
+        //! \name optimization
+        //@{
+        void sortByMaterial();
         //@}
 
     private:
 
-        //!
-        //! (Triangle) face
-        //!
+        // Triangle face
         struct Face
         {
-            //!
-            //! material ID.
-            //!
-            //! There's no pre-defined meaning for material ID. You can use it in any way you like the most.
-            //!
-            int material;
-
-            //!
-            //! vertice indices
-            //!
-            size_t i1, i2, i3;
-
-            //!
-            //! face normal
-            //!
-            Vector3f normal;
+            size_t i1, i2, i3; // vertice indices
+            Vector3f normal; // face normal
+            int material; // material ID.
         };
 
+        struct MaterialSegments
+        {
+            size_t start;
+            size_t count;
+            int material;
+        };
+
+        // raw mesh data
         DynaArray<FatVertex> mVertices;
         DynaArray<Face>      mFaces;
+        bool                 mHasFaceNormal; //!< True means all faces have normal.
 
+        // optimized mesh data
+        DynaArray<MaterialSegments> mMaterialSegments;
+
+        // misc.
         FatVertex  mTmpVtx;
+
+    private:
+
+        void clearOptimizationData()
+        {
+            mMaterialSegments.clear();
+        }
     };
 }}
 
