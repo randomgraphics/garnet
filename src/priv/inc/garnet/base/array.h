@@ -24,6 +24,16 @@ namespace GN
         static const size_t MAX_SIZE = N; //!< maximum size
 
         //!
+        //! convert to C pointer
+        //!
+        const T* cptr() const { return mElements; }
+
+        //!
+        //! convert to C pointer
+        //!
+        T* cptr() { return mElements; }
+
+        //!
         //! at operator
         //!
         T & operator[]( size_t i ) { GN_ASSERT( i < N ); return mElements[i]; }
@@ -32,16 +42,6 @@ namespace GN
         //! at operator
         //!
         const T & operator[]( size_t i ) const { GN_ASSERT( i < N ); return mElements[i]; }
-
-        //!
-        //! convert to C pointer
-        //!
-        operator const T*() const { return mElements; }
-
-        //!
-        //! convert to C pointer
-        //!
-        operator T*() { return mElements; }
     };
 
     //!
@@ -54,19 +54,26 @@ namespace GN
         T mElements[N];
         size_t mCount;
 
+        void copyElements( T * dst, const T * src, size_t count )
+        {
+            GN_ASSERT( 0 == count || dst && src );
+            for( size_t i = 0; i < count; ++i )
+            {
+                dst[i] = src[i];
+            }
+        }
+
         void doClone( const StackArray & other )
         {
-            for( size_t i = 0; i < mCount; ++i )
-            {
-                mElements[i] = other.mElements[i];
-            }
+            copyElements( mElements, other.mElements, mCount );
             mCount = other.mCount;
         }
 
         void doInsert( size_t position, const T & t )
         {
-            GN_ASSERT( mCount < N );
-            GN_ASSERT( position <= mCount );
+            GN_ASSERT( mCount <= N );
+            if( N == mCount ) { GN_WARN( "Can't insert more. Stack array is full already!" ); return; }
+            if( position > mCount ) { GN_WARN( "invalid insert position." ); return; }
             for( size_t i = mCount; i > position; --i )
             {
                 mElements[i] = mElements[i-1];
@@ -75,10 +82,9 @@ namespace GN
             ++mCount;
         }
 
-        T doErase( size_t position )
+        void doErase( size_t position )
         {
-            GN_ASSERT( mCount > 0 );
-            GN_ASSERT( position < mCount );
+            if( position >= mCount ) { GN_WARN( "Invalid erase position" ); return; }
             --mCount;
             for( size_t i = position; i < mCount; ++i )
             {
@@ -110,7 +116,7 @@ namespace GN
         //! \name Common array operations.
         //!
         //@{
-        void      append( const T & t ) { GN_ASSERT( mCount < N ); mElements[mCount] = t; ++mCount; }
+        void      append( const T & t ) { doInsert( mCount, t ); }
         const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         const T * begin() const { return mElements; }
@@ -118,16 +124,18 @@ namespace GN
         void      clear() { mCount = 0; }
         const T * cptr() const { return mElements; }
         T       * cptr() { return mElements; }
-        void      empty() { return 0 == mCount; }
+        void      empty() const { return 0 == mCount; }
         const T * end() const { return mElements + mCount; }
         T       * end() { return mElements + mCount; }
-        T         erase( size_t position ) { return doErase( position ); }
+        /** do nothing if position is invalid or array is empty */
+        void      erase( size_t position ) { doErase( position ); }
         const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
+        /** do nothing if position is invalid or array is full */
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
-        void      resize( size_t count ) { GN_ASSERT( count <= N ); mCount = count; }
-        T         popBack() { GN_ASSERT( mCount > 0 ); --mCount; return mElements[mCount]; }
-        void      size() { return mCount; }
+        void      resize( size_t count ) { if( count > N ) { GN_WARN("count is too large!"); count = N; } mCount = count; }
+        void      popBack() { if( mCount > 0 ) --mCount; }
+        size_t    size() const { return mCount; }
         //@}
 
         //! \name common operators
@@ -136,8 +144,6 @@ namespace GN
         StackArray & operator=( const StackArray & other ) { doClone(other); return *this; }
         T          & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
         const T    & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
-        operator const T*() const { return mElements; }
-        operator T*() { return mElements; }
         //@}
     };
 
@@ -162,6 +168,7 @@ namespace GN
 
         void copyElements( T * dst, const T * src, size_t count )
         {
+            GN_ASSERT( 0 == count || dst && src );
             for( size_t i = 0; i < count; ++i )
             {
                 dst[i] = src[i];
@@ -179,14 +186,14 @@ namespace GN
 
         void doClone( const DynaArray & other )
         {
-            GN_ASSERT( mCount == other.mCount );
             resize( other.mCount );
+            GN_ASSERT( mCount == other.mCount );
             copyElements( mElements, other.mElements, other.mCount );
         }
 
         void doInsert( size_t position, const T & t )
         {
-            GN_ASSERT( position <= mCount );
+            if( position > mCount ) { GN_WARN("invalid insert position"); return; }
 
             resize( mCount + 1 );
 
@@ -197,10 +204,9 @@ namespace GN
             mElements[position] = t;
         }
 
-        T doErase( size_t position )
+        void doErase( size_t position )
         {
-            GN_ASSERT( mCount > 0 );
-            GN_ASSERT( position < mCount );
+            if( position >= mCount ) { GN_WARN("invalid erase position"); return; }
             --mCount;
             for( size_t i = position; i < mCount; ++i )
             {
@@ -270,13 +276,15 @@ namespace GN
         bool      empty() const { return 0 == mCount; }
         const T * end() const { return mElements + mCount; }
         T       * end() { return mElements + mCount; }
-        T         erase( size_t position ) { return doErase( position ); }
+        /** do nothing if position is invalid */
+        void      erase( size_t position ) { return doErase( position ); }
         const T & front() const { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
+        /** do nothing if position is invalid */
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
         void      reserve( size_t count ) { doReserve( count ); }
         void      resize( size_t count ) { doReserve( count ); mCount = count; }
-        T         popBack() { GN_ASSERT( mCount > 0 ); --mCount; return mElements[mCount]; }
+        void      popBack() { if( mCount > 0 ) --mCount; }
         size_t    size() const { return mCount; }
         //@}
 
@@ -284,10 +292,8 @@ namespace GN
         //!
         //@{
         DynaArray & operator=( const DynaArray & other ) { doClone(other); return *this; }
-        T            & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
-        const T      & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
-        operator const T*() const { return mElements; }
-        operator T*() { return mElements; }
+        T         & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
+        const T   & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         //@}
     };
 }

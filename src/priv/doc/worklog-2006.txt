@@ -1,9 +1,13 @@
-- 2005.6.28
+- 2006.6.30
+  - continue implementing FatMesh class
+  - UT for array classes
+
+- 2006.6.28
   - remove CAPS_PER_STAGE_CONSTANT
   - custom array classes: fixed-sized, stack-based, heap-based
   - simplify variant and registry class to make them more intuitive
 
-- 2005.5.24
+- 2006.5.24
   - new quad rendering option: DQ_DEPTH_ENABLE
   - walkaround Xenon D3D CheckDeviceFormat() failure.
   - Fix Xenon build breaks.

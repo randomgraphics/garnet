@@ -520,7 +520,7 @@ GN::gfx::D3D9Renderer::newMsaaDesc( D3DFORMAT format )
     GN_ASSERT( !table.empty() );
 
     GN_ASSERT( mMsaaDescTable.find( format ) == mMsaaDescTable.end() );
-    D3DMsaaDesc * result = mMsaaDescTable[format];
+    D3DMsaaDesc * result = mMsaaDescTable[format].cptr();
 
     size_t n;
 

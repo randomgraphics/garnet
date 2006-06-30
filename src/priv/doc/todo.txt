@@ -14,7 +14,6 @@
   - multi-thread wrapper for platform-independency
   - UT
     - Str::findFirst/LastOf(...)
-    - custom vector class
   - try multi-thread architect
     - separate sim() and render() loop
     - File loader in another thread.

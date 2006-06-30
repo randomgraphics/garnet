@@ -153,7 +153,7 @@ namespace GN { namespace gfx
         const D3DMsaaDesc * getMsaaDesc( D3DFORMAT format )
         {
             MsaaDescTable::const_iterator i = mMsaaDescTable.find( format );
-            if( mMsaaDescTable.end() != i ) return i->second;
+            if( mMsaaDescTable.end() != i ) return i->second.cptr();
             else return newMsaaDesc( format );
         }
 
