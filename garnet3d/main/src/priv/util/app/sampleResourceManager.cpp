@@ -476,7 +476,7 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
     // read file
     DynaArray<char> buf( fp.size() + 1 );
     size_t readen;
-    if( !fp.read( buf, fp.size(), &readen ) )
+    if( !fp.read( buf.cptr(), fp.size(), &readen ) )
     {
         GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
         return false;
