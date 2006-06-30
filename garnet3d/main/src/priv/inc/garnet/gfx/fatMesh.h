@@ -122,7 +122,7 @@ namespace GN { namespace gfx
         void setTexcoord1( size_t stage, float u )
         {
             GN_ASSERT( stage < 8 );
-            if( format.texcoord <= stage ) format.texcoord = stage + 1;
+            if( format.texcoord <= stage ) format.texcoord = (unsigned int)stage + 1;
             size_t shift = stage << 1;
             format.texMasks &= ~(3<<shift);
             texcoord[stage].set( u, 0, 0, 0 );
@@ -130,7 +130,7 @@ namespace GN { namespace gfx
         void setTexcoord2( size_t stage, float u, float v )
         {
             GN_ASSERT( stage < 8 );
-            if( format.texcoord <= stage ) format.texcoord = stage + 1;
+            if( format.texcoord <= stage ) format.texcoord = (unsigned int)stage + 1;
             size_t shift = stage << 1;
             format.texMasks &= ~(3<<shift);
             format.texMasks |= 1<<shift;
@@ -139,7 +139,7 @@ namespace GN { namespace gfx
         void setTexcoord3( size_t stage, float u, float v, float w )
         {
             GN_ASSERT( stage < 8 );
-            if( format.texcoord <= stage ) format.texcoord = stage + 1;
+            if( format.texcoord <= stage ) format.texcoord = (unsigned int)stage + 1;
             size_t shift = stage << 1;
             format.texMasks &= ~(3<<shift);
             format.texMasks |= 2<<shift;
@@ -148,7 +148,7 @@ namespace GN { namespace gfx
         void setTexcoord4( size_t stage, float u, float v, float w, float q )
         {
             GN_ASSERT( stage < 8 );
-            if( format.texcoord <= stage ) format.texcoord = stage + 1;
+            if( format.texcoord <= stage ) format.texcoord = (unsigned int)stage + 1;
             size_t shift = stage << 1;
             format.texMasks |= 3<<shift;
             texcoord[stage].set( u, v, w, q );
@@ -272,7 +272,40 @@ namespace GN { namespace gfx
 
         //! \name optimization
         //@{
-        void sortByMaterial();
+
+        //!
+        //! optimization options
+        //!
+        struct OptimizeOptions
+        {
+            //! \name required fields
+            //@{
+            size_t maxPrimitivesInSingleDraw; //!< as name
+            bool vcache; //!< optimize for vcache
+            bool strip;  //!< use triangle strip, instead of triangle list.
+            bool useResetIndex; //!< use reset index (for Xenon)
+            bool use32BitIndex; //!< use 32-bit indices.
+            //@}
+
+            //! \name optional fields
+            //!@{
+            size_t   vtxCacheSize; //!< post-transformed vertex cache. Ignored, if vcache is false.
+            uint32_t resetIndex;   //!< reset index. Ignored, if useResetIndex is false.
+            //!@}
+        };
+
+        //!
+        //! do optimization, fill optimized data to target mesh.
+        //!
+        //! Target mesh may equal to source mesh, to perform in-place optimization.
+        //!
+        void optimize( FatMesh & target, const OptimizeOptions & );
+
+        //@}
+
+        //! \name rendering
+        //@{
+        void draw( int material ); //!< note, this function is very inefficient. Do not use this in performance critical code.
         //@}
 
     private:
@@ -285,11 +318,18 @@ namespace GN { namespace gfx
             int material; // material ID.
         };
 
-        struct MaterialSegments
+        struct VtxSegment
         {
             size_t start;
             size_t count;
-            int material;
+        };
+
+        struct FaceSegment
+        {
+            int                 material;
+            size_t              vtxSegIdx;
+            DynaArray<uint16_t> indices16;
+            DynaArray<uint32_t> indices32;
         };
 
         // raw mesh data
@@ -298,7 +338,10 @@ namespace GN { namespace gfx
         bool                 mHasFaceNormal; //!< True means all faces have normal.
 
         // optimized mesh data
-        DynaArray<MaterialSegments> mMaterialSegments;
+        DynaArray<VtxSegment>  mVtxSegments;
+        DynaArray<FaceSegment> mFaceSegments;
+        bool                   mUse32BitIndex;
+        bool                   mUseTriStrip;
 
         // misc.
         FatVertex  mTmpVtx;
@@ -307,8 +350,11 @@ namespace GN { namespace gfx
 
         void clearOptimizationData()
         {
-            mMaterialSegments.clear();
+            mVtxSegments.clear();
+            mFaceSegments.clear();
         }
+
+        inline void drawFaceSegment( size_t idx );
     };
 }}
 

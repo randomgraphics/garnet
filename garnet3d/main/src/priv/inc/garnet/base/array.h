@@ -267,7 +267,7 @@ namespace GN
         void      clear() { mCount = 0; }
         const T * cptr() const { return mElements; }
         T       * cptr() { return mElements; }
-        void      empty() { return 0 == mCount; }
+        bool      empty() const { return 0 == mCount; }
         const T * end() const { return mElements + mCount; }
         T       * end() { return mElements + mCount; }
         T         erase( size_t position ) { return doErase( position ); }
@@ -277,7 +277,7 @@ namespace GN
         void      reserve( size_t count ) { doReserve( count ); }
         void      resize( size_t count ) { doReserve( count ); mCount = count; }
         T         popBack() { GN_ASSERT( mCount > 0 ); --mCount; return mElements[mCount]; }
-        void      size() { return mCount; }
+        size_t    size() const { return mCount; }
         //@}
 
         //! \name common operators
