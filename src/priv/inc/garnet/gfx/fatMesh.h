@@ -108,13 +108,13 @@ namespace GN { namespace gfx
         //! \name set tangent
         //@{
         void setTangent( float x, float y, float z ) { tangent.set( x, y, z ); format.tangent = 1; }
-        void setTangent( const Vector3f & n ) { tangent = n; format.tangent = 1; }
+        void setTangent( const Vector3f & t ) { tangent = t; format.tangent = 1; }
         //@}
 
         //! \name set binormal
         //@{
         void setBinormal( float x, float y, float z ) { binormal.set( x, y, z ); format.binormal = 1; }
-        void setBinormal( const Vector3f & n ) { binormal = n; format.binormal = 1; }
+        void setBinormal( const Vector3f & b ) { binormal = b; format.binormal = 1; }
         //@}
 
         //! \name set texture coordinates
@@ -188,16 +188,16 @@ namespace GN { namespace gfx
         void pos2( float x, float y ) { mTmpVtx.setPos2( x, y ); newVertex( mTmpVtx ); mTmpVtx.clear(); }
         void pos3( float x, float y, float z ) { mTmpVtx.setPos3( x, y, z ); newVertex( mTmpVtx ); mTmpVtx.clear(); }
         void pos4( float x, float y, float z, float w ) { mTmpVtx.setPos4( x, y, z, w ); newVertex( mTmpVtx ); mTmpVtx.clear(); }
-        void pos2( const Vector2f & v ) { pos2( v.x, v.y ); }
-        void pos3( const Vector3f & v ) { pos3( v.x, v.y, v.z ); }
-        void pos4( const Vector4f & v ) { pos4( v.x, v.y, v.z, v.z ); }
+        void pos2( const Vector2f & v ) { pos2( v ); }
+        void pos3( const Vector3f & v ) { pos3( v ); }
+        void pos4( const Vector4f & v ) { pos4( v ); }
         void weight1( float x ) { mTmpVtx.setWeight1( x ); }
         void weight2( float x, float y ) { mTmpVtx.setWeight2( x, y ); }
         void weight3( float x, float y, float z ) { mTmpVtx.setWeight3( x, y, z ); }
         void weight4( float x, float y, float z, float w ) { mTmpVtx.setWeight4( x, y, z, w ); }
-        void weight2( const Vector2f & v ) { mTmpVtx.setWeight2( v.x, v.y ); }
-        void weight3( const Vector3f & v ) { mTmpVtx.setWeight3( v.x, v.y, v.z ); }
-        void weight4( const Vector4f & v ) { mTmpVtx.setWeight4( v.x, v.y, v.z, v.z ); }
+        void weight2( const Vector2f & v ) { mTmpVtx.setWeight2( v ); }
+        void weight3( const Vector3f & v ) { mTmpVtx.setWeight3( v ); }
+        void weight4( const Vector4f & v ) { mTmpVtx.setWeight4( v ); }
         void normal( float x, float y, float z ) { mTmpVtx.setNormal( x, y, z ); }
         void normal( const Vector3f & n ) { mTmpVtx.setNormal( n.x, n.y, n.z ); }
         void diffuse( float r, float g, float b, float a = 1.0f ) { mTmpVtx.setDiffuse( r, g, b, a ); }
@@ -207,42 +207,42 @@ namespace GN { namespace gfx
         void specular( const Vector3f & rgb, float a = 1.0f ) { mTmpVtx.setSpecular( rgb, a ); }
         void specular( const Vector4f & rgba ) { mTmpVtx.setSpecular( rgba ); }
         void tangent( float x, float y, float z ) { mTmpVtx.setTangent( x, y, z ); }
-        void tangent( const Vector3f & n ) { mTmpVtx.setTangent( n.x, n.y, n.z ); }
+        void tangent( const Vector3f & t ) { mTmpVtx.setTangent( t ); }
         void binormal( float x, float y, float z ) { mTmpVtx.setBinormal( x, y, z ); }
-        void binormal( const Vector3f & n ) { mTmpVtx.setBinormal( n.x, n.y, n.z ); }
+        void binormal( const Vector3f & b ) { mTmpVtx.setBinormal( b ); }
         void texcoord( size_t stage, float u ) { mTmpVtx.setTexcoord1( stage, u ); }
         void texcoord( size_t stage, float u, float v ) { mTmpVtx.setTexcoord2( stage, u, v ); }
         void texcoord( size_t stage, float u, float v, float w ) { mTmpVtx.setTexcoord3( stage, u, v, w ); }
         void texcoord( size_t stage, float u, float v, float w, float q ) { mTmpVtx.setTexcoord4( stage, u, v, w, q ); }
-        void texcoord( size_t stage, const Vector2f & v2 ) { mTmpVtx.setTexcoord2( stage, v2.x, v2.y ); }
-        void texcoord( size_t stage, const Vector3f & v3 ) { mTmpVtx.setTexcoord3( stage, v3.x, v3.y, v3.z ); }
-        void texcoord( size_t stage, const Vector4f & v4 ) { mTmpVtx.setTexcoord4( stage, v4.x, v4.y, v4.z, v4.w ); }
+        void texcoord( size_t stage, const Vector2f & uv ) { mTmpVtx.setTexcoord2( stage, uv ); }
+        void texcoord( size_t stage, const Vector3f & uvw ) { mTmpVtx.setTexcoord3( stage, uvw ); }
+        void texcoord( size_t stage, const Vector4f & uvwq ) { mTmpVtx.setTexcoord4( stage, uvwq ); }
         //@}
 
         //! \name new face
         //@{
-        void newFace( size_t i1, size_t i2, size_t i3, int material = 0 )
+        void newFace( size_t i0, size_t i1, size_t i2, int material = 0 )
         {
             Face f;
-            f.i1 = i1; f.i2 = i2; f.i3 = i3;
+            f.i0 = i0; f.i1 = i1; f.i2 = i2;
             f.material = material;
             mFaces.append( f );
             mHasFaceNormal = false;
             clearOptimizationData();
         }
-        void newFace( size_t i1, size_t i2, size_t i3, float nx, float ny, float nz, int material = 0 )
+        void newFace( size_t i0, size_t i1, size_t i2, float nx, float ny, float nz, int material = 0 )
         {
             Face f;
-            f.i1 = i1; f.i2 = i2; f.i3 = i3;
+            f.i0 = i0; f.i1 = i1; f.i2 = i2;
             f.normal.set( nx, ny, nz );
             f.material = material;
             mFaces.append( f );
             clearOptimizationData();
         }
-        void newFace( size_t i1, size_t i2, size_t i3, const Vector3f & normal, int material = 0 )
+        void newFace( size_t i0, size_t i1, size_t i2, const Vector3f & normal, int material = 0 )
         {
             Face f;
-            f.i1 = i1; f.i2 = i2; f.i3 = i3;
+            f.i0 = i0; f.i1 = i1; f.i2 = i2;
             f.normal = normal;
             f.material = material;
             mFaces.append( f );
@@ -259,9 +259,9 @@ namespace GN { namespace gfx
                 // make sure indices are positive.
                 GN_ASSERT( indices[0] >= 0 && indices[1] >= 0 && indices[2] >= 0 );
 
-                f.i1 = (size_t)indices[0];
-                f.i2 = (size_t)indices[1];
-                f.i3 = (size_t)indices[2];
+                f.i0 = (size_t)indices[0];
+                f.i1 = (size_t)indices[1];
+                f.i2 = (size_t)indices[2];
 
                 mFaces.append( f );
             }
@@ -280,26 +280,24 @@ namespace GN { namespace gfx
         {
             //! \name required fields
             //@{
-            size_t maxPrimitivesInSingleDraw; //!< as name
-            bool vcache; //!< optimize for vcache
-            bool strip;  //!< use triangle strip, instead of triangle list.
-            bool useResetIndex; //!< use reset index (for Xenon)
+            size_t maxPrimitivesInSingleDraw; //!< as is
+            bool vcache; //!< optimize for vcache.
+            bool strip;  //!< generate triangle strips.
+            bool useResetIndex; //!< use reset index to connect triangle strips (for Xenon)
             bool use32BitIndex; //!< use 32-bit indices.
             //@}
 
             //! \name optional fields
             //!@{
-            size_t   vtxCacheSize; //!< post-transformed vertex cache. Ignored, if vcache is false.
-            uint32_t resetIndex;   //!< reset index. Ignored, if useResetIndex is false.
+            size_t   vcacheSize; //!< size of vcache. Ignored, if vcache is false.
+            uint32_t resetIndex; //!< reset index. Ignored, if useResetIndex is false.
             //!@}
         };
 
         //!
-        //! do optimization, fill optimized data to target mesh.
+        //! In-place optimization.
         //!
-        //! Target mesh may equal to source mesh, to perform in-place optimization.
-        //!
-        void optimize( FatMesh & target, const OptimizeOptions & );
+        void optimize( const OptimizeOptions & );
 
         //@}
 
@@ -308,28 +306,35 @@ namespace GN { namespace gfx
         void draw( int material ); //!< note, this function is very inefficient. Do not use this in performance critical code.
         //@}
 
+        //! \name serialize
+        //@{
+        void readFrom( File & );
+        void writeTo( File & );
+        //@}
+
     private:
 
         // Triangle face
         struct Face
         {
-            size_t i1, i2, i3; // vertice indices
-            Vector3f normal; // face normal
-            int material; // material ID.
-        };
-
-        struct VtxSegment
-        {
-            size_t start;
-            size_t count;
+            size_t i0, i1, i2; // vertice indices
+            Vector3f normal;   // face normal
+            int material;      // material ID.
         };
 
         struct FaceSegment
         {
-            int                 material;
-            size_t              vtxSegIdx;
+            int                 material;  // material ID
+            size_t              vtxSegIdx; // index of vertex segment that this face segment belongs to.
+            DynaArray<uint32_t> indices32; // indices are based on start vertex of owner vertex segment.
             DynaArray<uint16_t> indices16;
-            DynaArray<uint32_t> indices32;
+        };
+
+        struct VtxSegment
+        {
+            size_t            start; // index of first vertex in mVertices.
+            size_t            count; // count of vertices in this segments.
+            DynaArray<size_t> faces; // index (into mFaces) of faces that belongs to this segments.
         };
 
         // raw mesh data
@@ -338,8 +343,8 @@ namespace GN { namespace gfx
         bool                 mHasFaceNormal; //!< True means all faces have normal.
 
         // optimized mesh data
-        DynaArray<VtxSegment>  mVtxSegments;
-        DynaArray<FaceSegment> mFaceSegments;
+        DynaArray<VtxSegment>  mVtxSegments; // optimized vertex segments.
+        DynaArray<FaceSegment> mFaceSegments; // optimized face segments.
         bool                   mUse32BitIndex;
         bool                   mUseTriStrip;
 
@@ -353,6 +358,9 @@ namespace GN { namespace gfx
             mVtxSegments.clear();
             mFaceSegments.clear();
         }
+
+        // Sort faces in specific vertex segment, by material ID. Store result into face segment array.
+        void sortByMaterial( size_t vtxSegIdx );
 
         inline void drawFaceSegment( size_t idx );
     };
