@@ -168,6 +168,15 @@ namespace GN
             }
         }
 
+        void doAppend( const T * p, size_t count )
+        {
+            if( 0 == p ) count = 0;
+            if( 0 == count ) return;
+            size_t oldCount = mCount;
+            resize( mCount + count );
+            copyElements( mElements + oldCount, p, count );
+        }
+
         void doClone( const DynaArray & other )
         {
             GN_ASSERT( mCount == other.mCount );
@@ -249,6 +258,8 @@ namespace GN
         //!
         //@{
         void      append( const T & t ) { resize( mCount + 1 ); back() = t; }
+        void      append( const T * p, size_t count ) { doAppend( p, count ); }
+        void      append( const DynaArray & a ) { doAppend( a.mElements, a.mCount ); }
         const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         T       & back() { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
         const T * begin() const { return mElements; }
