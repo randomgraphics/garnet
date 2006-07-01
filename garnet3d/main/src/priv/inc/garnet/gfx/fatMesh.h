@@ -308,8 +308,8 @@ namespace GN { namespace gfx
 
         //! \name serialize
         //@{
-        void readFrom( File & );
-        void writeTo( File & );
+        bool readFrom( File & );
+        bool writeTo( File &, char mode ); //!< mode must be 'B' (binary) or 'T' (text)
         //@}
 
     private:
@@ -332,9 +332,8 @@ namespace GN { namespace gfx
 
         struct VtxSegment
         {
-            size_t            start; // index of first vertex in mVertices.
-            size_t            count; // count of vertices in this segments.
-            DynaArray<size_t> faces; // index (into mFaces) of faces that belongs to this segments.
+            size_t start; // index of first vertex in mVertices.
+            size_t count; // count of vertices in this segments.
         };
 
         // raw mesh data
@@ -360,7 +359,7 @@ namespace GN { namespace gfx
         }
 
         // Sort faces in specific vertex segment, by material ID. Store result into face segment array.
-        void sortByMaterial( size_t vtxSegIdx );
+        void sortByMaterial( size_t vtxSegIdx, const DynaArray<size_t> & faces );
 
         inline void drawFaceSegment( size_t idx );
     };
