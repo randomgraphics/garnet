@@ -60,35 +60,34 @@ bool GN::gfx::D3D9Font::deviceRestore()
 {
     GN_GUARD;
 
-    D3D9Renderer & r = getRenderer();
+    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
     // create texture
     GN_ASSERT( !mTexture );
-    mTexture.attach( r.create2DTexture( 128, 256, 1, FMT_LA_8_8_UNORM, 0, false ) );
-    if( !mTexture ) return false;
-    mTexture->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
+    GN_DX9_CHECK_RV( dev->CreateTexture( 128, 256, 1, 0, D3DFMT_A8L8, D3DPOOL_MANAGED, &mTexture, 0 ), false );
 
     // lock texture
-    TexLockedResult tlr;
-    if( !mTexture->lock( tlr, 0, 0, 0, LOCK_DISCARD ) ) return false;
+    D3DLOCKED_RECT lrc;
+    GN_DX9_CHECK_RV( mTexture->LockRect( 0, &lrc, 0, 0 ), false );
 
     // fill data
-    memset( tlr.data, 0, tlr.sliceBytes );
+    size_t sliceBytes = lrc.Pitch * 256;
+    memset( lrc.pBits, 0, sliceBytes );
     for( uint32_t ch = 0; ch < 256; ++ch )
     {
         const BitmapCharDesc * desc = gBitmapChars8x13[ch];
         GN_ASSERT( desc && desc->width <= 8 && desc->height <= 16 );
 
-        uint8_t * offset = ((uint8_t*)tlr.data) + (ch / 16) * tlr.rowBytes * 16 + (ch % 16) * 8 * 2;
+        uint8_t * offset = ((uint8_t*)lrc.pBits) + (ch / 16) * lrc.Pitch * 16 + (ch % 16) * 8 * 2;
 
         Vector2<uint8_t> * ptr;
 
         for( uint32_t y = 0; y < desc->height; ++y )
         {
-            ptr = (Vector2<uint8_t>*)( offset + (desc->height-y) * tlr.rowBytes );
+            ptr = (Vector2<uint8_t>*)( offset + (desc->height-y) * lrc.Pitch );
 
-            GN_ASSERT( (uint8_t*)tlr.data <= (uint8_t*)ptr );
-            GN_ASSERT( (uint8_t*)(ptr+8) <= ((uint8_t*)tlr.data + tlr.sliceBytes) );
+            GN_ASSERT( (uint8_t*)lrc.pBits <= (uint8_t*)ptr );
+            GN_ASSERT( (uint8_t*)(ptr+8) <= ((uint8_t*)lrc.pBits + sliceBytes) );
 
             for( uint32_t x = 0; x < 8; ++x, ++ptr )
             {
@@ -100,7 +99,7 @@ bool GN::gfx::D3D9Font::deviceRestore()
     }
 
     // unlock the texture
-    mTexture->unlock();
+    mTexture->UnlockRect( 0 );
 
     // success
     return true;
@@ -120,7 +119,13 @@ void GN::gfx::D3D9Font::drawText( const char * text, int x, int y, const Vector4
     GN_GUARD_SLOW;
 
     D3D9Renderer & r = getRenderer();
-    r.setTexture( 0, mTexture );
+    LPDIRECT3DDEVICE9 dev = r.getDevice();
+
+    // bind texture, set texture filter
+    dev->SetTexture( 0, mTexture );
+    r.setD3DSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
+    r.setD3DSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
+    r.setD3DSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE );
 
     size_t count = 0;
 
@@ -188,6 +193,12 @@ void GN::gfx::D3D9Font::drawText( const char * text, int x, int y, const Vector4
             &mBuffer[0].c, sizeof(QuadVert),
             count );
     }
+
+    // rebind context
+    RendererContext::FieldFlags ff;
+    ff.u32 = 0;
+    ff.textures = 1;
+    r.rebindContext( ff );
 
     GN_UNGUARD_SLOW;
 }
