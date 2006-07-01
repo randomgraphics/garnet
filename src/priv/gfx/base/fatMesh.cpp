@@ -18,17 +18,19 @@ void GN::gfx::FatMesh::optimize( const OptimizeOptions & oo )
         GN_WARN( "do not support mesh with more than 0xFFFF vertices" );
         return;
     }
+    DynaArray<DynaArray<size_t> > faces; // indices of faces that belongs to each segments.
     mVtxSegments.resize( 1 );
     mVtxSegments[0].start = 0;
     mVtxSegments[0].count = mVertices.size();
-    mVtxSegments[0].faces.resize( mFaces.size() );
-    for( size_t i = 0; i < mFaces.size(); ++i ) mVtxSegments[0].faces[i] = i;
+    faces.resize( 1 );
+    faces[0].resize( mFaces.size() );
+    for( size_t i = 0; i < mFaces.size(); ++i ) faces[0][i] = i;
 
     // for each vertex segment
     for( size_t vtxSegIdx = 0; vtxSegIdx < mVtxSegments.size(); ++vtxSegIdx )
     {
         // sort by material, generate face segments as well.
-        sortByMaterial( vtxSegIdx );
+        sortByMaterial( vtxSegIdx, faces[vtxSegIdx] );
     }
 
     // for each face segment
@@ -81,6 +83,80 @@ void GN::gfx::FatMesh::draw( int material )
     GN_UNGUARD_SLOW;
 }
 
+#pragma pack(push,1)
+struct FatMeshDesc
+{
+    uint8_t  hasFaceNormal; // as is
+    uint32_t numVtx; // vertex count
+    uint32_t numFace; // face count
+};
+#pragma pack(pop)
+//
+//
+// ---------------------------------------------------------------------------------------
+bool GN::gfx::FatMesh::readFrom( File & fp )
+{
+    GN_GUARD;
+
+    // read file header
+    char header[8];
+    if( !fp.read( header, sizeof(header) ) )
+    {
+        GN_ERROR( "Fail to read file header." );
+        return false;
+    }
+
+    // check header
+    static char BIN_TAG[8] = {'F','A','T','M','E','S','H','B'};
+    static char TXT_TAG[8] = {'F','A','T','M','E','S','H','T'};
+    if( 0 != memcmp( BIN_TAG, header, 8 ) &&
+        0 != memcmp( TXT_TAG, header, 8 ) )
+    {
+        GN_ERROR( "FatMesh file must begin with \"FATMESHB\" or \"FATMESHT\"." );
+        return false;
+    }
+
+    if( 'B' == header[7] )
+    {
+        // TODO: read binary file
+    }
+    else( 'T' == header[7] )
+    {
+        // TODO: read text file
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// ---------------------------------------------------------------------------------------
+bool GN::gfx::FatMesh::writeTo( File & fp, char mode )
+{
+    GN_GUARD;
+
+    if( 'B' == mode )
+    {
+    }
+    else if( 'T' == mode )
+    {
+    }
+    else
+    {
+        GN_ERROR( "invalid mode. Must be 'B' or 'T'." );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+
 // ***************************************************************************************
 // private functions
 // ***************************************************************************************
@@ -88,16 +164,16 @@ void GN::gfx::FatMesh::draw( int material )
 //
 //
 // ---------------------------------------------------------------------------------------
-void GN::gfx::FatMesh::sortByMaterial( size_t vtxSegIdx )
+void GN::gfx::FatMesh::sortByMaterial( size_t vtxSegIdx, const DynaArray<size_t> & faces )
 {
     GN_GUARD;
 
     const VtxSegment & vs = mVtxSegments[vtxSegIdx];
 
     std::map< int,DynaArray<size_t> > matTable;
-    for( size_t i = 0; i < vs.faces.size(); ++i )
+    for( size_t i = 0; i < faces.size(); ++i )
     {
-        size_t faceIdx = vs.faces[i];
+        size_t faceIdx = faces[i];
         matTable[mFaces[faceIdx].material].append( faceIdx );
     }
 
