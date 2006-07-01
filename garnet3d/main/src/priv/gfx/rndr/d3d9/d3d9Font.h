@@ -36,7 +36,7 @@ namespace GN { namespace gfx {
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() {}
+        void clear() { mTexture = 0; }
         //@}
 
         // ********************************
@@ -45,7 +45,7 @@ namespace GN { namespace gfx {
     public:
 
         bool deviceRestore();
-        void deviceDispose() { mTexture.clear(); }
+        void deviceDispose() { safeRelease( mTexture ); }
 
         // ********************************
         // public functions
@@ -76,8 +76,8 @@ namespace GN { namespace gfx {
 
         static const size_t MAX_CHARS = 1024;
 
-        QuadVert         mBuffer[MAX_CHARS*4];
-        AutoRef<Texture> mTexture;
+        QuadVert           mBuffer[MAX_CHARS*4];
+        LPDIRECT3DTEXTURE9 mTexture;
 
         // ********************************
         // private functions
