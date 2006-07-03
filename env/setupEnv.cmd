@@ -78,6 +78,7 @@ alias sample    "cd /d %GARNET_ROOT%\src\priv\sample\$*"
 alias test      "cd /d %GARNET_ROOT%\src\priv\test\$*"
 alias tool      "cd /d %GARNET_ROOT%\src\priv\tool$*"
 alias util      "cd /d %GARNET_ROOT%\src\priv\util$*"
+alias cb        "mkdir %GARNET_ROOT%\build.tmp\cmake&pushd %GARNET_ROOT%\build.tmp\cmake&cmake ..\..\src&popd"
 
 REM =====
 REM Misc.
