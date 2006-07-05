@@ -303,8 +303,8 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
 
         // write mesh descriptor
         FatMeshDesc desc;
-        desc.numVtx = mVertices.size();
-        desc.numFace = mFaces.size();
+        desc.numVtx = (uint32_t)mVertices.size();
+        desc.numFace = (uint32_t)mFaces.size();
         desc.vtxFmt = mVertexFormat.u32;
         desc.hasFaceNormal = (uint8_t)mHasFaceNormal;
         desc.reserved[0] = desc.reserved[1] = desc.reserved[2] = 0;
