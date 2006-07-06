@@ -41,11 +41,13 @@ static const char * FACE_HEADER = "i0,i1,i2,normal.x,normal.y,normal.z,material"
 static bool sReadLn( GN::StrA & s, GN::File & fp )
 {
     if( fp.eof() ) return false;
+    s.clear();
     char ch;
     while( !fp.eof() )
     {
         if( !fp.read( &ch, 1, 0 ) ) return false;
-        if( '\n' == ch ) return true;
+        if( 13 == ch ) continue;
+        if( 10 == ch ) return true;
         s.append( ch );
     }
     return true;
@@ -54,6 +56,17 @@ static bool sReadLn( GN::StrA & s, GN::File & fp )
 // ***************************************************************************************
 // public functions
 // ***************************************************************************************
+
+//
+//
+// ---------------------------------------------------------------------------------------
+bool GN::gfx::FatVertexFormat::fromStr( const char * str, size_t len )
+{
+    if( 0 == str ) { GN_ERROR( "null string" ); return false; }
+    if( 0 == len ) len = strLen( str );
+    GN_UNIMPL_WARNING();
+    return false;
+}
 
 //
 //
@@ -196,7 +209,7 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
         uint32_t numVerts, numFaces, vtxFmt, faceNormal;
         if( 4 != sscanf(
             s.cptr(),
-            "NumVertices=%lu NumFaces=%lu VertexFormat=%lu FaceNormal=%lu",
+            " NumVertices=%lu NumFaces=%lu VertexFormat=%lu FaceNormal=%lu",
             &numVerts, &numFaces, &vtxFmt, &faceNormal ) )
         {
             GN_ERROR( "invalid file header!" );
@@ -287,6 +300,15 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
     return true;
 
     GN_UNGUARD;
+}
+
+//
+//
+// ---------------------------------------------------------------------------------------
+bool GN::gfx::FatMesh::readFromX( File & )
+{
+    GN_UNIMPL_WARNING();
+    return false;
 }
 
 //

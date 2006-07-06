@@ -22,8 +22,8 @@ namespace GN { namespace gfx
             unsigned int normal   :  1; //!< has normal
             unsigned int diffuse  :  1; //!< has diffuse
             // byte 1
-            unsigned int fog      :  1; //!< has fog
             unsigned int specular :  1; //!< has specular
+            unsigned int fog      :  1; //!< has fog
             unsigned int tangent  :  1; //!< has tangent
             unsigned int binormal :  1; //!< has binormal
             unsigned int texcoord :  4; //!< number of texture coordinates, 0-8
@@ -54,6 +54,11 @@ namespace GN { namespace gfx
         //! clear vertex format
         //!
         void clear() { GN_CASSERT( 4 == sizeof(FatVertexFormat) ); u32 = 0; }
+
+        //!
+        //! parse vertex format from string.
+        //!
+        bool fromStr( const char * str, size_t len = 0 );
 
         //!
         //! set texture channel mask
@@ -258,8 +263,15 @@ namespace GN { namespace gfx
 
         //! \name serialize
         //@{
-        bool readFrom( File & );
-        bool writeTo( File &, char mode ) const; //!< mode must be 'B' (binary) or 'T' (text)
+        bool readFrom( File & );//!< read from fatmesh file, support both binary and text format.
+        bool readFromX( File & ); //!< read from D3D X mesh file.
+        //!
+        //! write mesh to file. See sample mesh files in tree details of mesh file format.
+        //!
+        //! \param mode
+        //!     must be 'B' (binary) or 'T' (text)
+        //!
+        bool writeTo( File &, char mode ) const;
         //@}
 
     private:

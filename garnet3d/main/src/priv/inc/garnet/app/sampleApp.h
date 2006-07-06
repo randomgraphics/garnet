@@ -202,6 +202,12 @@ namespace GN { namespace app
         static float UPDATE_INTERVAL; //!< Time interval for calling onUpdate(), in seconds.
 
         virtual int  run( int argc, const char * const argv[] );
+        //!
+        //! \note
+        //!     - argv[0] is always application name
+        //!     - only non-standard/unknown argument will be send to this function.
+        //!
+        virtual bool onCheckCmdLine( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
         virtual void onDetermineInitParam( InitParam & ) {}
