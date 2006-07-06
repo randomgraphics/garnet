@@ -980,7 +980,7 @@ for compiler, variants in ALL_targets.iteritems() :
         shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
-        tools = Split('GNtoolOglInfo GNtoolGPUBenchmark GNtoolD3D9Wrapper')
+        tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshViewer GNtoolOglInfo')
         progs = tests + samples + tools
         def getTargets( n ):
             if n in targets : return targets[n].targets
@@ -991,7 +991,7 @@ for compiler, variants in ALL_targets.iteritems() :
             t = getTargets(n)
             for x in t[1:] :
                 Depends( t[0], x )
-        # - Make executables depend on shared libraries.
+        # - Make executables depend on shared libraries and media files.
         for pn in progs:
             for pt in getTargets(pn):
                 Depends( pt, 'GNmedia' )

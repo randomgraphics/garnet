@@ -75,6 +75,25 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::app::SampleApp::onCheckCmdLine( int argc, const char * const argv[] )
+{
+    GN_ASSERT( argc > 0 );
+    if( argc > 1 )
+    {
+        StrA s = "unknown command line arguments:";
+        for( int i = 1; i < argc; ++i )
+        {
+            s += " ";
+            s += argv[i];
+        }
+        GN_WARN( s.cptr() );
+    }
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
@@ -111,8 +130,9 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
-    if( !initApp() ) { quit(); return false; }
     if( !checkCmdLine(argc,argv) ) { quit(); return false; }
+    if( !initApp() ) { quit(); return false; }
+    onDetermineInitParam( mInitParam );
     if( !initRenderer() ) { quit(); return false; }
     if( !initInput() ) { quit(); return false; }
 
@@ -151,6 +171,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.rapi = gfx::API_D3D9;
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.iapi = input::API_NATIVE;
+    if( !onCheckCmdLine( argc, argv ) ) return false;
 #else
     // setup default parameters
     mInitParam.rapi = gfx::API_AUTO;
@@ -158,6 +179,9 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ro.windowedWidth = 640;
     mInitParam.ro.windowedHeight = 480;
     mInitParam.iapi = input::API_NATIVE;
+
+    DynaArray<const char*> unknownArgs;
+    unknownArgs.append( argv[0] );
 
     for( int i = 1; i < argc; ++i )
     {
@@ -192,12 +216,14 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-m0") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 0 );
             else if( 0 == strCmpI( a, "-m1") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 1 );
             else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::API_DINPUT;
+            else unknownArgs.append( a );
         }
+        else unknownArgs.append( a );
     }
+    if( !onCheckCmdLine( (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
 #endif
 
     // success
-    onDetermineInitParam( mInitParam );
     return true;
 
     GN_UNGUARD;
