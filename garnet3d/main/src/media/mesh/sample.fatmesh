@@ -1,0 +1,11 @@
+FATMESHT NumVertices=4 NumFaces=4 VertexFormat=3 FaceNormal=0
+pos.x,pos.y,pos.z,pos.w,weight.x,weight.y,weight.z,weight.w,normal.x,normal.y,normal.z,diffuse.r,diffuse.g,diffuse.b,diffuse.a,specular.r,specular.g,specular.b,specular.a,fog,tangent.x,tangent.y,tangent.z,binormal.x,binormal.y,binormal.z,texcoord[0].x,texcoord[0].y,texcoord[0].z,texcoord[0].w,texcoord[1].x,texcoord[1].y,texcoord[1].z,texcoord[1].w,texcoord[2].x,texcoord[2].y,texcoord[2].z,texcoord[2].w,texcoord[3].x,texcoord[3].y,texcoord[3].z,texcoord[3].w,texcoord[4].x,texcoord[4].y,texcoord[4].z,texcoord[4].w,texcoord[5].x,texcoord[5].y,texcoord[5].z,texcoord[5].w,texcoord[6].x,texcoord[6].y,texcoord[6].z,texcoord[6].w,texcoord[7].x,texcoord[7].y,texcoord[7].z,texcoord[7].w
+0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+i0,i1,i2,normal.x,normal.y,normal.z,material
+0,1,2,0,-1,0,0
+0,2,3,-1,0,0,0
+0,3,1,0,0,-1,0
+1,3,2,1,1,1,0
