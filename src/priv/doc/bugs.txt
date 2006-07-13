@@ -8,6 +8,9 @@ OPENNING
 - Render target image is up-side-down in OGL, comparing with D3D.
   - See GNsampleRenderToTexture for an example.
 
+- GNtestGfx:
+  - black screen on vista when using OGL.
+
 - GNsampleRenderToTexture:
   - black screen on cygwin.
 
