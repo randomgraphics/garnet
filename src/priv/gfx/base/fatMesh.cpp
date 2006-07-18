@@ -115,6 +115,9 @@ void GN::gfx::FatMesh::optimize( const OptimizeOptions & oo )
         }
     }
 
+    mUse32BitIndex = oo.use32BitIndex;
+    mUseTriStrip = oo.strip;
+
     GN_UNGUARD;
 }
 
@@ -135,6 +138,11 @@ void GN::gfx::FatMesh::draw( int material )
         oo.use32BitIndex = false;
         optimize( oo );
     }
+
+    // setup vertex format
+    VtxFmtDesc vfd;
+    vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT3 );
+    gRenderer.setVtxFmt( gRenderer.createVtxFmt( vfd ) );
 
     for( size_t idx = 0; idx < mFaceSegments.size(); ++idx )
     {
@@ -212,14 +220,15 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
             " NumVertices=%lu NumFaces=%lu VertexFormat=%lu FaceNormal=%lu",
             &numVerts, &numFaces, &vtxFmt, &faceNormal ) )
         {
-            GN_ERROR( "invalid file header!" );
+            GN_ERROR( "invalid file header: %s", s.cptr() );
             return false;
         }
         mVertexFormat.u32 = vtxFmt;
         mHasFaceNormal = !!faceNormal;
 
         // read vertex header
-        if( !sReadLn( s, fp ) || VERTEX_HEADER != s ) { GN_ERROR( "fail to read vertex header." ); return false; }
+        if( !sReadLn( s, fp ) ) { GN_ERROR( "fail to read vertex header." ); return false; }
+        if( VERTEX_HEADER != s ) { GN_ERROR( "invalid vertex header: %s", s.cptr() ); return false; }
 
         // read vertices
         mVertices.resize( numVerts );
