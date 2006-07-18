@@ -7,7 +7,7 @@ using namespace GN::gfx;
 // Utils
 // *****************************************************************************
 
-template<typename T=float, size_t BUFFER_SIZE = 10 >
+template<typename T=float, size_t BUFFER_SIZE = 3 >
 class AverageValue
 {
     T mValues[BUFFER_SIZE];
@@ -360,7 +360,7 @@ public:
         CaseDesc cd;
 
         //                                                                 T      D      B
-        //*
+        /*
         cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , false, true , false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
@@ -373,15 +373,44 @@ public:
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
-        //*
+        /*
         cd.theCase = new VerticeThroughput( *this, "Vertice throughput" );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
         //*
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4 );
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 1024 );
         if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );//*/
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 512 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 256 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 128 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 64 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 32 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 16 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 8 );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+        //*/
 
         // success
         return true;
