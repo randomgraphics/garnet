@@ -261,7 +261,7 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
     GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
 
     // vs
-    if( "vs_1_1" == profile ) return d3dcaps.VertexShaderVersion > D3DVS_VERSION(1,1);
+    if( "vs_1_1" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(1,1);
     else if( "vs_2_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(2,0);
     else if( "vs_3_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0);
 #if GN_XENON
@@ -269,7 +269,7 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 #endif
 
     // ps
-    else if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion > D3DPS_VERSION(1,1);
+    else if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,1);
     else if( "ps_1_2" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,2);
     else if( "ps_1_3" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,3);
     else if( "ps_1_4" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4);
