@@ -237,7 +237,11 @@ struct TexturedEffect : public BasicEffect
         Renderer & r = gRenderer;
 
         // check renderer caps
-        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
+        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) )
+        {
+            GN_ERROR( "hardware support to vs.1.1 and ps.1.1 is required." );
+            return false;
+        }
 
         // create VS
         const char * vscode =
@@ -379,37 +383,14 @@ public:
         mTestCases.push_back( cd );//*/
 
         //*
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 1024 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 512 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 256 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 128 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 64 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 32 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 16 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, 8 );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
+        uint32_t texSize = 1024;
+        while( texSize >= 8 )
+        {
+            cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_D3DCOLOR, texSize );
+            if( !cd.theCase ) return false;
+            mTestCases.push_back( cd );
+            texSize /= 2;
+        }
         //*/
 
         // success

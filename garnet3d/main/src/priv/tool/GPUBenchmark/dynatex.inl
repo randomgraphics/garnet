@@ -15,7 +15,7 @@ class TestTextureBandwidth : public BasicTestCase
     uint32_t       REPEAT_COUNT;
 
     AutoComPtr<IDirect3DTexture9> mTextures[16];
-    AutoComPtr<IDirect3DQuery9> mQuery;
+    AutoComPtr<IDirect3DQuery9> mBandwidthQuery;
 
     DynaArray<uint8_t> mMemBuf[2];
     ManyManyQuads      mGeometry;
@@ -79,13 +79,12 @@ class TestTextureBandwidth : public BasicTestCase
         }
     }
 
-    bool createQuery()
+    void createQuery()
     {
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)gRenderer.getD3DDevice();
 
-        GN_DX9_CHECK_RV( dev->CreateQuery( D3DQUERYTYPE_BANDWIDTHTIMINGS, &mQuery ), false );
-
-        return true;
+        if( D3D_OK != dev->CreateQuery( D3DQUERYTYPE_BANDWIDTHTIMINGS, &mBandwidthQuery ) )
+            GN_WARN( "no support to D3DQUERYTYPE_BANDWIDTHTIMINGS" );
     }
 
 public:
@@ -126,10 +125,17 @@ public:
         mMemBuf[0].resize( TEX_BYTES );
         memset( mMemBuf[0].cptr(), 0, TEX_BYTES );
         mMemBuf[1].resize( TEX_BYTES );
-        float * p = (float*)&mMemBuf[1][0];
-        for( size_t i = 0; i < TEX_BYTES / 4; ++i, ++p )
+        if( FMT_FLOAT4 == TEX_FORMAT )
         {
-            *p = 1.0f;
+            float * p = (float*)&mMemBuf[1][0];
+            for( size_t i = 0; i < TEX_BYTES / 4; ++i, ++p )
+            {
+                *p = 1.0f;
+            }
+        }
+        else
+        {
+            memset( mMemBuf[1].cptr(), 0xFF, TEX_BYTES );
         }
 
         // update context
@@ -142,7 +148,7 @@ public:
         mContext.setIdxBuf( mGeometry.idxbuf );
 
         // create D3D query object
-        if( !createQuery() ) return false;
+        createQuery();
 
         // success
         return true;
