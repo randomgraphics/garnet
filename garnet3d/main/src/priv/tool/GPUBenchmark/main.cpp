@@ -64,31 +64,24 @@ struct ManyManyQuads
     };
 
     size_t DRAW_COUNT;
-    size_t VTX_COUNT;
-    size_t QUAD_COUNT;
-    size_t PRIM_COUNT;
-    size_t INDEX_COUNT;
-    PrimitiveType PRIM_TYPE;
+    const size_t VTX_COUNT;
+    const size_t QUAD_COUNT;
+    const size_t PRIM_COUNT;
+    const size_t INDEX_COUNT;
+    const PrimitiveType PRIM_TYPE;
 
     uint32_t        vtxfmt;
     AutoRef<VtxBuf> vtxbuf;
     AutoRef<IdxBuf> idxbuf;
 
     ManyManyQuads( size_t drawCount = 1, size_t quadCount = 32 )
+        : DRAW_COUNT( drawCount )
+        , VTX_COUNT( 4 )
+        , QUAD_COUNT( quadCount )
+        , PRIM_COUNT( quadCount * 2 )
+        , INDEX_COUNT( quadCount * 6 )
+        , PRIM_TYPE( TRIANGLE_LIST )
     {
-        DRAW_COUNT = drawCount;
-        VTX_COUNT = 4;
-#if GN_XENON
-        QUAD_COUNT = quadCount;
-        PRIM_TYPE = QUAD_LIST;
-        PRIM_COUNT = QUAD_COUNT;
-        INDEX_COUNT = QUAD_COUNT*4;
-#else
-        QUAD_COUNT = quadCount;
-        PRIM_TYPE = TRIANGLE_LIST;
-        PRIM_COUNT = QUAD_COUNT*2;
-        INDEX_COUNT = QUAD_COUNT*6;
-#endif
     }
 
     bool create()
@@ -124,13 +117,6 @@ struct ManyManyQuads
         if( 0 == idxptr ) return false;
         for( size_t i = 0; i < QUAD_COUNT; ++i )
         {
-#if GN_XENON
-            idxptr[0] = 0;
-            idxptr[1] = 1;
-            idxptr[2] = 2;
-            idxptr[3] = 3;
-            idxptr += 4;
-#else
             idxptr[0] = 0;
             idxptr[1] = 1;
             idxptr[2] = 2;
@@ -138,7 +124,6 @@ struct ManyManyQuads
             idxptr[4] = 2;
             idxptr[5] = 3;
             idxptr += 6;
-#endif
         }
         idxbuf->unlock();
 
@@ -158,6 +143,25 @@ struct ManyManyQuads
         Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
             r.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
+    }
+
+    void drawPrimRange( uint32_t startPrim, uint32_t numPrims )
+    {
+        GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numPrims) <= PRIM_COUNT );
+        uint32_t startIdx = startPrim * 3;
+        Renderer & r = gRenderer;
+        for( size_t i = 0; i < DRAW_COUNT; ++i )
+            r.drawIndexed( PRIM_TYPE, numPrims, 0, 0, VTX_COUNT, startIdx );
+    }
+
+    void drawQuadRange( uint32_t startQuad, uint32_t numQuads )
+    {
+        GN_ASSERT( startQuad < QUAD_COUNT && (startQuad+numQuads) <= QUAD_COUNT );
+        uint32_t primCount = numQuads * 2;
+        uint32_t startIdx = startQuad * 6;
+        Renderer & r = gRenderer;
+        for( size_t i = 0; i < DRAW_COUNT; ++i )
+            r.drawIndexed( PRIM_TYPE, primCount, 0, 0, VTX_COUNT, startIdx );
     }
 };
 
@@ -303,6 +307,7 @@ public:
 #include "fillrate.inl" // pixel pipeline speed
 #include "verticeThroughput.inl" // vertex pipeline speed
 #include "dynatex.inl" // dynamic texture bandwidth
+#include "batchSize.inl" // batch size test
 
 // *****************************************************************************
 // Main benchmark application
@@ -382,7 +387,7 @@ public:
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
-        //*
+        /*
         uint32_t texSize = 1024;
         while( texSize >= 8 )
         {
@@ -390,6 +395,16 @@ public:
             if( !cd.theCase ) return false;
             mTestCases.push_back( cd );
             texSize /= 2;
+        }
+        //*/
+
+        //*
+        static uint32_t batchSizes[] = { 8 };//, 32, 128, 512, 2048, 8192, 32768 };
+        for( size_t i = 0; i < GN_ARRAY_COUNT(batchSizes); ++i )
+        {
+            cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );
+            if( !cd.theCase ) return false;
+            mTestCases.push_back( cd );
         }
         //*/
 
