@@ -96,7 +96,7 @@ struct ManyManyQuads
         if( 0 == vtxfmt ) return false;
 
         // create vertex buffer
-        static const Vertex sPyramidVertices[] =
+        static const Vertex sVertices[] =
         {
             { -1.0f,  1.0f, 0.0f, 0.0f, 0.0f },
             { -1.0f, -1.0f, 0.0f, 0.0f, 1.0f },
@@ -107,7 +107,7 @@ struct ManyManyQuads
         if( !vtxbuf ) return false;
         Vertex * vtxptr = (Vertex*)vtxbuf->lock( 0, 0, LOCK_DISCARD );
         if( 0 == vtxptr ) return false;
-        memcpy( vtxptr, sPyramidVertices, sizeof(Vertex)*4 );
+        memcpy( vtxptr, sVertices, sizeof(Vertex)*4 );
         vtxbuf->unlock();
 
         // create index buffer
@@ -387,19 +387,19 @@ public:
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
-        /*
+        //*
         uint32_t texSize = 1024;
         while( texSize >= 8 )
         {
-            cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_D3DCOLOR, texSize );
+            cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, texSize );
             if( !cd.theCase ) return false;
             mTestCases.push_back( cd );
             texSize /= 2;
         }
         //*/
 
-        //*
-        static uint32_t batchSizes[] = { 8 };//, 32, 128, 512, 2048, 8192, 32768 };
+        /*
+        static uint32_t batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
         for( size_t i = 0; i < GN_ARRAY_COUNT(batchSizes); ++i )
         {
             cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );

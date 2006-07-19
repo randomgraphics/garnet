@@ -64,7 +64,12 @@ bool GN::gfx::D3D9Font::deviceRestore()
 
     // create texture
     GN_ASSERT( !mTexture );
-    GN_DX9_CHECK_RV( dev->CreateTexture( 128, 256, 1, 0, D3DFMT_A8L8, D3DPOOL_MANAGED, &mTexture, 0 ), false );
+#if GN_XENON
+    D3DFORMAT format = D3DFMT_LIN_A8L8;
+#else
+    D3DFORMAT format = D3DFMT_A8L8;
+#endif
+    GN_DX9_CHECK_RV( dev->CreateTexture( 128, 256, 1, 0, format, D3DPOOL_MANAGED, &mTexture, 0 ), false );
 
     // lock texture
     D3DLOCKED_RECT lrc;

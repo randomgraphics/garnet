@@ -77,7 +77,6 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 // -----------------------------------------------------------------------------
 bool GN::app::SampleApp::onCheckCmdLine( int argc, const char * const argv[] )
 {
-    GN_ASSERT( argc > 0 );
     if( argc > 1 )
     {
         StrA s = "unknown command line arguments:";
