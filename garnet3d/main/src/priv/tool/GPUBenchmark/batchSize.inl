@@ -18,18 +18,23 @@ struct ColoredEffect : public BasicEffect
 
         // create VS
         const char * vscode =
-            "struct IO { float4 pos : POSITION; float2 uv : TEXCOORD0; }; \n"
-            "uniform float4x4 pvw; \n"
+            "struct IO                      \n"
+            "{                              \n"
+            "    float4 pos : POSITION;     \n"
+            "    float2 uv : TEXCOORD0;     \n"
+            "};                             \n"
+            "uniform float4x4 pvw;          \n"
             "void main( in IO i, out IO o ) \n"
-            "{ \n"
-            "   o = i; \n"
+            "{                              \n"
+            "   o = i;                      \n"
+            "   o.pos.xy /= 480.0;          \n"
             "}";
         vs.attach( r.createVtxShader( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
         const char * pscode =
-            "uniform float4 color : register(s0); \n"
+            "uniform float4 color : register(c0); \n"
             "float4 main() : COLOR0               \n"
             "{                                    \n"
             "       return color;                 \n"
@@ -54,8 +59,16 @@ class TestBatchSize : public BasicTestCase
     StrA mInfo;
     AverageValue<float> mBatchesPerSecond;
 
-    ManyManyQuads mGeometry;
-    ColoredEffect mEffect;
+    ManyManyQuads   mGeometry;
+    ColoredEffect   mEffect;
+    RendererContext mContext;
+
+    AutoComPtr<IDirect3DQuery9> mVertexThroughputQuery;
+
+    bool createQuery()
+    {
+        return true;
+    }
 
 public:
 
@@ -76,6 +89,19 @@ public:
         if( !mGeometry.create() ) return false;
         if( !mEffect.create() ) return false;
 
+        // create query
+        if( !createQuery() ) return false;
+
+        // initialize rendering context
+        mContext.clearToNull();
+        mContext.setShaders( mEffect.vs, mEffect.ps );
+        //mContext.setRenderState( RS_DEPTH_TEST, 0 );
+        //mContext.setRenderState( RS_DEPTH_WRITE, 0 );
+        mContext.setVtxFmt( mGeometry.vtxfmt );
+        mContext.setVtxBuf( 0, mGeometry.vtxbuf, sizeof(ManyManyQuads::Vertex) );
+        mContext.setIdxBuf( mGeometry.idxbuf );
+
+        // success
         return true;
     }
 
@@ -87,36 +113,60 @@ public:
 
     void BasicTestCase::update(void)
     {
-        uint32_t numBatches = mGeometry.PRIM_COUNT / BATCH_SIZE;
+        uint32_t numBatches = (uint32_t)mGeometry.PRIM_COUNT / BATCH_SIZE;
         float    batchesPerSec = getApp().getFps() * numBatches;
 
         mBatchesPerSecond.newValue( batchesPerSec );
 
         mInfo.format(
-            "batch size = %d\n"
-            "batches/frame = %d\n"
-            "batches/sec   = %f",
-            BATCH_SIZE, numBatches, batchesPerSec );
+            "batch size      = %d\n"
+            "batches/frame   = %d\n"
+            "batches/sec     = %f\n"
+            "triangles/frame = %d\n"
+            "triangles/sec   = %fM",
+            BATCH_SIZE,
+            numBatches,
+            batchesPerSec,
+            mGeometry.PRIM_COUNT,
+            batchesPerSec * BATCH_SIZE / 1000000.0F );
     }
 
     void BasicTestCase::render(void)
     {
-        uint32_t numBatches = mGeometry.PRIM_COUNT / BATCH_SIZE;
+        Renderer & r = gRenderer;
+        LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.getD3DDevice();
+
+        r.clearScreen();
+
+        // bind context
+        r.setContext( mContext );
+
+        // draw
+        uint32_t numBatches = (uint32_t)mGeometry.PRIM_COUNT / BATCH_SIZE;
         uint32_t startPrim = 0;
         static const Vector4f CLRS[2] = { Vector4f(1,0,0,1), Vector4f(0,1,0,1) };
         for( uint32_t i = 0; i < numBatches; ++i, startPrim += BATCH_SIZE )
         {
-            mEffect.ps->setUniformByNameV( "color", &CLRS[i&1], 1 );
+            dev->SetPixelShaderConstantF( 0, CLRS[i&1], 1 );
             mGeometry.drawPrimRange( startPrim, BATCH_SIZE );
         }
 
         // draw text
         static const Vector4f RED(1,0,0,1);
-        gRenderer.drawDebugText( mInfo.cptr(), 0, 100, RED );
+        r.drawDebugText( mInfo.cptr(), 0, 100, RED );
     }
 
-    void BasicTestCase::onkey( GN::input::KeyEvent )
+    void BasicTestCase::onkey( GN::input::KeyEvent key )
     {
+        if( !key.status.down )
+        {
+            switch( key.code )
+            {
+                case input::KEY_LEFT : if( BATCH_SIZE >= 32 ) BATCH_SIZE /= 4; break;
+                case input::KEY_RIGHT : if( BATCH_SIZE <= 8192 ) BATCH_SIZE *= 4; break;
+                default : ; // do nothing
+            }
+        }
     }
 
     void BasicTestCase::onmove( GN::input::Axis, int )
