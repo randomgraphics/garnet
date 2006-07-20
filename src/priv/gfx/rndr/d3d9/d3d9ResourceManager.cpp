@@ -5,6 +5,9 @@
 #include "d3d9VertexDecl.h"
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
+#include "d3d9Font.h"
+#include "d3d9Quad.h"
+#include "d3d9Line.h"
 
 // *****************************************************************************
 // local functions
@@ -37,6 +40,15 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
         GN_ERROR( "Not _ALL_ graphics resouces are released!" );
         return false;
     }
+
+    mFont = new D3D9Font(*this);
+    if( !mFont->init() ) return false;
+
+    mQuad = new D3D9Quad(*this);
+    if( !mQuad->init() ) return false;
+
+    mLine = new D3D9Line(*this);
+    if( !mLine->init() ) return false;
 
     // success
     return true;
@@ -93,6 +105,10 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
+
+    safeDelete( mFont );
+    safeDelete( mQuad );
+    safeDelete( mLine );
 
     // release vertex formats
     mVtxFmts.clear();

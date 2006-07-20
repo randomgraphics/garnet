@@ -8,8 +8,6 @@
   - task manager/coordinator
 
 - p1
-  - change D3D graphics resource creation/destroy policy: assuming that D3D device 
-    does not hold reference of currently used resources.
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net

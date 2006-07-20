@@ -455,10 +455,10 @@ namespace GN { namespace gfx
             mLine = 0;
         }
 
-        bool drawDeviceCreate();
+        bool drawDeviceCreate() { return true; }
         bool drawDeviceRestore() { return true; }
         void drawDeviceDispose() {}
-        void drawDeviceDestroy();
+        void drawDeviceDestroy() {}
 
         bool handleDeviceLost();
 

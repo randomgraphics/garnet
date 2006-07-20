@@ -155,6 +155,8 @@ void GN::gfx::D3D9Renderer::contextDeviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
+	if( mDevice ) mDevice->SetDepthStencilSurface( 0 );
+
     mAutoColor0.clear();
     mAutoDepth.clear();
 
@@ -169,9 +171,24 @@ void GN::gfx::D3D9Renderer::contextDeviceDispose()
 void GN::gfx::D3D9Renderer::contextDeviceDestroy()
 {
     GN_GUARD;
+
     _GNGFX_DEVICE_TRACE();
+
+    // unset resources used by D3D device.
+	if( mDevice )
+	{
+		for( uint32_t i = 0; i < getCaps(CAPS_MAX_TEXTURE_STAGES); ++i ) mDevice->SetTexture( i, 0 );
+		for( uint32_t i = 0; i < MAX_VERTEX_STREAMS; ++i ) mDevice->SetStreamSource( i, 0, 0, 0 );
+		mDevice->SetIndices( 0 );
+		mDevice->SetVertexDeclaration( 0 );
+		mDevice->SetVertexShader( 0 );
+		mDevice->SetPixelShader( 0 );
+	}
+
     mContext.resetToDefault();
-    clearContextResources();
+
+	clearContextResources();
+
     GN_UNGUARD;
 }
 
@@ -401,7 +418,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                     forceRebind )
                 {
                     // create new depth buffer
-                    mAutoDepth.clear();
+                    LPDIRECT3DSURFACE9 newDepth;
                     GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
                         max(depthDesc.Width, rt0Desc.Width),
                         max(depthDesc.Height, rt0Desc.Height),
@@ -409,8 +426,9 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                         depthDesc.MultiSampleType,
                         depthDesc.MultiSampleQuality,
                         TRUE, // discardable depth buffer
-                        &mAutoDepth, 0 ) );
-                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
+                        &newDepth, 0 ) );
+                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( newDepth ) );
+                    mAutoDepth.attach( newDepth );
                 }
             }
             else

@@ -932,7 +932,7 @@ def BUILD_program( name, target ):
     target.targets = env.Install( BUILD_binDir, prog )
 
     if 'xenon' == BUILD_compiler.name and CONF_xedeploy:
-        env.AddPostAction( target.targets, UTIL_copy_to_devkit('xe:\\garnet3d\\%s'%BUILD_variant) )
+        env.AddPostAction( target.targets[0], UTIL_copy_to_devkit('xe:\\garnet3d\\%s'%BUILD_variant) )
 
     Alias( name, target.targets )
     Default( target.targets )

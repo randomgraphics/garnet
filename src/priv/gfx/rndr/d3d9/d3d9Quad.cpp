@@ -36,7 +36,7 @@ bool GN::gfx::D3D9Quad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Quad, () );
 
-    if( !createResources() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !createResources() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();

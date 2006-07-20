@@ -32,50 +32,6 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 }
 
 // *****************************************************************************
-// device management
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::D3D9Renderer::drawDeviceCreate()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    mFont = new D3D9Font(*this);
-    if( !mFont->init() ) return false;
-
-    mQuad = new D3D9Quad(*this);
-    if( !mQuad->init() ) return false;
-
-    mLine = new D3D9Line(*this);
-    if( !mLine->init() ) return false;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawDeviceDestroy()
-{
-    GN_GUARD;
-
-    _GNGFX_DEVICE_TRACE();
-
-    safeDelete( mFont );
-    safeDelete( mQuad );
-    safeDelete( mLine );
-
-    GN_UNGUARD;
-}
-
-// *****************************************************************************
 // interface functions
 // *****************************************************************************
 
