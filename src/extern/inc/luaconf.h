@@ -643,7 +643,7 @@ union luai_Cast { double l_d; long l_l; };
 #define lua_popen(L,c,m)	((void)L, popen(c,m))
 #define lua_pclose(L,file)	((void)L, (pclose(file) != -1))
 
-#elif defined(LUA_WIN)
+#elif defined(LUA_WIN) && !defined(_XBOX_VER) // Xenon platform does not support _popen
 
 #define lua_popen(L,c,m)	((void)L, _popen(c,m))
 #define lua_pclose(L,file)	((void)L, (_pclose(file) != -1))
