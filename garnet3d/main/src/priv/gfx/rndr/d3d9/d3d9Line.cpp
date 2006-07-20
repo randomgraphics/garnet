@@ -36,7 +36,7 @@ bool GN::gfx::D3D9Line::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Line, () );
 
-    if( !createDeclAndShaders() || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !createDeclAndShaders() ) { quit(); return selfOK(); }
 
     // success
     return selfOK();

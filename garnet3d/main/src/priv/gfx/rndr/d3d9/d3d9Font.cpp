@@ -26,8 +26,6 @@ bool GN::gfx::D3D9Font::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Font, () );
 
-    if( !deviceRestore() ) { quit(); return selfOK(); }
-
     // success
     return selfOK();
 
