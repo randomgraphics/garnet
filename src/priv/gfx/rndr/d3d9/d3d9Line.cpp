@@ -228,6 +228,7 @@ void GN::gfx::D3D9Line::drawLines(
         r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, TRUE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
+        r.setD3DRenderState( D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
     }
 
     // bind shaders
