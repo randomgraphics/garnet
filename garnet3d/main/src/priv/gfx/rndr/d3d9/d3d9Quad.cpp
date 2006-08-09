@@ -272,7 +272,7 @@ void GN::gfx::D3D9Quad::drawQuads(
         }
         r.setD3DRenderState( D3DRS_COLORWRITEENABLE, 0xF );
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, !!( DQ_UPDATE_DEPTH & options ) );
-        r.setD3DRenderState( D3DRS_ZENABLE, !!(DQ_DEPTH_ENABLE & options ) );
+        r.setD3DRenderState( D3DRS_ZENABLE, !!( (DQ_DEPTH_ENABLE|DQ_UPDATE_DEPTH) & options ) );
         r.setD3DRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
    }
 

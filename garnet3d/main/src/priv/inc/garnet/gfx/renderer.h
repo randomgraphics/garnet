@@ -295,6 +295,8 @@ namespace GN { namespace gfx
         //!
         //! Enable depth write. Default is disabled.
         //!
+        //! Note thtat this option will implicitly enable DQ_DEPTH_ENABLE.
+        //!
         DQ_UPDATE_DEPTH = 1<<7,
 
         //!
