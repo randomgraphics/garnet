@@ -368,17 +368,24 @@ public:
 
         CaseDesc cd;
 
-        //                                                                 T      D      B
-        /*
-        cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , false, true , false );
+        //*
+        cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , 0, true , false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE"    , false, false, false );
+        cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE"    , 0, false, false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );
 
-        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", true , false, false );
+        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", 1 , false, false );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestFillrate( *this, "Fillrate - TWO_TEXTURES", 2 , false, false );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+
+        cd.theCase = new TestFillrate( *this, "Fillrate - FOUR_TEXTURES", 4 , false, false );
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
@@ -387,7 +394,7 @@ public:
         if( !cd.theCase ) return false;
         mTestCases.push_back( cd );//*/
 
-        //*
+        /*
         uint32_t texSize = 1024;
         while( texSize >= 8 )
         {

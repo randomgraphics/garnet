@@ -17,6 +17,26 @@
 namespace GN
 {
     //!
+    //! unsigned char
+    //!
+    typedef unsigned char UChar;
+
+    //!
+    //! unsigned short
+    //!
+    typedef unsigned short UShort;
+
+    //!
+    //! unsigned integer
+    //!
+    typedef unsigned int UInt;
+
+    //!
+    //! unsigned long
+    //!
+    typedef unsigned long ULong;
+
+    //!
     //! Bit field type. Normally used to hold bit flags.
     //!
     typedef int32_t BitField;

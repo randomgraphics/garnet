@@ -8,13 +8,13 @@ class TestFillrate : public BasicTestCase
 {
     ManyManyQuads mGeometry;
     BasicEffect * mEffect;
-    AutoRef<Texture> mTex;
+    AutoRef<Texture> mTextures[16];
     RendererContext mContext;
     StrA mFillrateStr;
 
 public:
 
-    bool mInitTextured;
+    UInt mInitTexCount;
     bool mInitDoubleDepth;
     bool mInitMaxBandwidth;
 
@@ -23,11 +23,12 @@ public:
 public:
 
     TestFillrate( app::SampleApp & app, const StrA & name,
-                  bool textured, bool doubleDepth,
+                  UInt texCount,
+                  bool doubleDepth,
                   bool maxBandwidth )
         : BasicTestCase(app,name)
         , mEffect( 0 )
-        , mInitTextured(textured)
+        , mInitTexCount(texCount)
         , mInitDoubleDepth(doubleDepth)
         , mInitMaxBandwidth(maxBandwidth)
     {}
@@ -40,19 +41,22 @@ public:
         if( !mGeometry.create() ) return false;
 
         // create effect
-        if( mInitTextured )
-            mEffect = new TexturedEffect(1);
+        if( mInitTexCount )
+            mEffect = new TexturedEffect( mInitTexCount );
         else
             mEffect = new SolidEffect;
         if( !mEffect || !mEffect->create() ) return false;
 
         // create texture
-        mTex.attach( r.create2DTexture( 2, 2, 1, FMT_D3DCOLOR, 0, true ) );
-        if( !mTex ) return false;
-        TexLockedResult tlr;
-        mTex->lock( tlr, 0, 0, 0, LOCK_DISCARD );
-        memset( tlr.data, 0xFF, tlr.sliceBytes );
-        mTex->unlock();
+        for( UInt i = 0; i < mInitTexCount; ++i )
+        {
+            mTextures[i].attach( r.create2DTexture( 2, 2, 1, FMT_D3DCOLOR, 0, true ) );
+            if( !mTextures[i] ) return false;
+            TexLockedResult tlr;
+            mTextures[i]->lock( tlr, 0, 0, 0, LOCK_DISCARD );
+            memset( tlr.data, 0xFF, tlr.sliceBytes );
+            mTextures[i]->unlock();
+        }
 
         // initialize the context
         mContext.clearToNull();
@@ -67,7 +71,7 @@ public:
             mContext.setRenderState( RS_COLOR0_WRITE, 0xF );
             mContext.setPxlShader( mEffect->ps );
         }
-        if( mInitTextured ) mContext.setTexture( 0, mTex );
+        for( UInt i = 0; i < mInitTexCount; ++i ) mContext.setTexture( i, mTextures[i] );
         if( mInitMaxBandwidth )
         {
             //mContext->
@@ -84,7 +88,7 @@ public:
     {
         mGeometry.destroy();
         safeDelete( mEffect );
-        mTex.clear();
+        for( UInt i = 0; i < 16; ++i ) mTextures[i].clear();
     }
 
     void onkey( input::KeyEvent key )
@@ -113,18 +117,21 @@ public:
     void update()
     {
         const DispDesc & dd = gRenderer.getDispDesc();
-        float fr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
-        float bandwidth = fr * dd.depth / 8;
+        float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
+        float texfr = pixfr * mInitTexCount;
+        float bandwidth = pixfr * dd.depth / 8;
         mFillrateStr.format(
             "%s\n"
             "quads = %d x %d\n"
-            "fillrate = %f GB/sec\n"
+            "pixel fillrate = %f GB/sec\n"
+            "texel fillrate = %f GB/sec\n"
             "EDRAM bandwidth = %f GB/sec",
             getName().cptr(),
             mGeometry.DRAW_COUNT, mGeometry.QUAD_COUNT,
-            fr,
+            pixfr,
+            texfr,
             bandwidth );
-        mFillrate = fr;
+        mFillrate = pixfr;
     }
 
     void render()
@@ -135,7 +142,7 @@ public:
         mGeometry.draw();
 
         static const Vector4f RED(1,0,0,1);
-        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 100, 300, 100+16*4, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
+        r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, 100, 300, 100+16*5, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
         r.drawDebugText( mFillrateStr.cptr(), 0, 100, RED );
     }
 
