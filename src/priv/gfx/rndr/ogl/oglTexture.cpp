@@ -193,18 +193,33 @@ static GN_INLINE bool sColorFormat2OGL(
             return true;
 
         case GN::gfx::FMT_D_16 :
+            if( !GLEW_ARB_depth_texture )
+            {
+                GN_ERROR( "does not support GL_ARB_depth_texture." );
+                return false;
+            }
             gl_internalformat  = GL_DEPTH_COMPONENT16_ARB;
             gl_format          = GL_DEPTH_COMPONENT;
             gl_type            = GL_FLOAT;
             return true;
 
         case GN::gfx::FMT_D_24 :
+            if( !GLEW_ARB_depth_texture )
+            {
+                GN_ERROR( "does not support GL_ARB_depth_texture." );
+                return false;
+            }
             gl_internalformat  = GL_DEPTH_COMPONENT24_ARB;
             gl_format          = GL_DEPTH_COMPONENT;
             gl_type            = GL_FLOAT;
             return true;
 
         case GN::gfx::FMT_D_32 :
+            if( !GLEW_ARB_depth_texture )
+            {
+                GN_ERROR( "does not support GL_ARB_depth_texture." );
+                return false;
+            }
             gl_internalformat  = GL_DEPTH_COMPONENT32_ARB;
             gl_format          = GL_DEPTH_COMPONENT;
             gl_type            = GL_FLOAT;
