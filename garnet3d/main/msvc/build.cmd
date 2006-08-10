@@ -8,7 +8,7 @@ for %%v in (debug profile retail stdbg stprof stret) do (
     REM ================================
     for %%d in (x86 x64) do (
         echo call scons -U . variant=%%v compiler=vc80 os=mswin cpu=%%d -j1 --no-cache %*
-        call scons -U . variant=%%v compiler=%%c os=%%o cpu=%%d -j1 --no-cache %*
+        call scons -U . variant=%%v compiler=vc80 os=mswin cpu=%%d -j1 --no-cache %*
     )
 
     REM ====================================
