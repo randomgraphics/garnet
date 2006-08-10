@@ -67,15 +67,15 @@ bool CEGUI::GarnetTexture::reload()
 {
     GN_GUARD;
 
-    // dispose old texture
-    dispose();
-
     using namespace GN;
 
     gfx::Renderer & r = gRenderer;
 
     if( mMemBuffer )
     {
+        // dispose old texture
+        dispose();
+
         // create the texture
         AutoRef<gfx::Texture> tex( r.create2DTexture( mWidth, mHeight, 1, gfx::FMT_BGRA32 ) );
         if( tex.empty() ) return false;
@@ -90,16 +90,26 @@ bool CEGUI::GarnetTexture::reload()
         size_t srcPitch = mWidth * 4;
         GN_ASSERT( tlr.rowBytes >= srcPitch );
         uint8_t * dst = (uint8_t*)tlr.data;
-        for( ushort y = 0; y < mHeight; ++y, src += srcPitch, dst += tlr.rowBytes )
+        if( srcPitch == tlr.rowBytes )
+        {
+            memcpy( dst, src, srcPitch * mHeight );
+        }
+        else for( ushort y = 0; y < mHeight; ++y, src += srcPitch, dst += tlr.rowBytes )
         {
             memcpy( dst, src, srcPitch );
         }
 
         // unlock texture
         tex->unlock();
+
+        // done
+        mGarnetTexture = tex;
     }
     else
     {
+        // dispose old texture
+        dispose();
+
         // load texture file using CEGUI's resource provider
         CEGUI::ResourceProvider * rp = CEGUI::System::getSingleton().getResourceProvider();
         GN_ASSERT( rp );
