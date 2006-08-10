@@ -1,6 +1,6 @@
 - 程序中标注TODO的地方
 
-- to make a simle game, like teris clone:
+- to make a simple game, like terris clone:
   - load effect/shader from xml file
     - almost done. need UT.
   - load mesh
@@ -25,8 +25,6 @@
     - recreate OGL context, when monitor changed.
   - code page convertor
     - may support convertion from/to utf8 be enough?
-  - sample application
-    - GLSL test application
   - mesh class
   - blender exporter/importer
   - in-game GUI system
