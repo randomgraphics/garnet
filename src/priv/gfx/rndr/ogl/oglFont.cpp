@@ -73,6 +73,45 @@ static void sDrawFontBitmap( char ch )
     GN_UNGUARD;
 }
 
+//
+// calculate bounding box of text paragraph
+// ------------------------------------------------------------------------
+static void sCalcBoundingRect( GN::Recti & rc, const char * text, int x, int y )
+{
+    rc.x = x;
+    rc.y = y;
+    rc.w = 0;
+    rc.h = 15;
+    
+    int w = 0;
+    char c;
+
+    while( *text )
+    {
+        c = *text;
+
+        if( '\n' == *text )
+        {
+            rc.h += 14;
+            if( w > rc.w ) rc.w = w;
+            w = 0;
+        }
+        else if( '\t' == *text )
+        {
+            w += 8 * 4;
+        }
+        else
+        {
+            w += 8;
+        }
+
+        // next char
+        ++text;
+    }
+
+    if( w > rc.w ) rc.w = w;
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -122,6 +161,11 @@ void GN::gfx::OGLFont::drawText( const char * s, int x, int y, const Vector4f & 
     GN_GUARD_SLOW;
 
     if( strEmpty(s) ) return;
+
+    // draw bounding rect of the text
+    Recti rc;
+    sCalcBoundingRect( rc, s, x, y );
+    mRenderer.draw2DSolidQuad( DQ_WINDOW_SPACE, rc.x, rc.y, rc.x+rc.w, rc.y+rc.h, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
 
     // push attributes
     glPushAttrib(

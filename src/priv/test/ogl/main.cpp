@@ -15,6 +15,7 @@ public:
 
     bool onRendererCreate()
     {
+        GN_OGL_CHECK( glClearColor( 1, 1, 1, 1 ) );
         return true;
     }
 

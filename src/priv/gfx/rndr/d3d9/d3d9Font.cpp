@@ -12,6 +12,45 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
     return dc;
 }
 
+//
+// calculate bounding box of text paragraph
+// ------------------------------------------------------------------------
+static void sCalcBoundingRect( GN::Recti & rc, const char * text, int x, int y )
+{
+    rc.x = x;
+    rc.y = y;
+    rc.w = 0;
+    rc.h = 15;
+    
+    int w = 0;
+    char c;
+
+    while( *text )
+    {
+        c = *text;
+
+        if( '\n' == *text )
+        {
+            rc.h += 14;
+            if( w > rc.w ) rc.w = w;
+            w = 0;
+        }
+        else if( '\t' == *text )
+        {
+            w += 9 * 4;
+        }
+        else
+        {
+            w += 9;
+        }
+
+        // next char
+        ++text;
+    }
+
+    if( w > rc.w ) rc.w = w;
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -123,6 +162,11 @@ void GN::gfx::D3D9Font::drawText( const char * text, int x, int y, const Vector4
 
     D3D9Renderer & r = getRenderer();
     LPDIRECT3DDEVICE9 dev = r.getDevice();
+
+    // draw bounding rect of the text
+    Recti rc;
+    sCalcBoundingRect( rc, text, x, y );
+    r.draw2DSolidQuad( DQ_WINDOW_SPACE, rc.x, rc.y, rc.x+rc.w, rc.y+rc.h, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
 
     // bind texture, set texture filter
     dev->SetTexture( 0, mTexture );
