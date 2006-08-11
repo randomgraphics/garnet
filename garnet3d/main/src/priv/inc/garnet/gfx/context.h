@@ -34,8 +34,8 @@ namespace GN { namespace gfx
     struct RendererContext
     {
         //!
-        //! Context flag structure. If flag is zero, means that field is undefined,
-        //! and should not being used to update device state.
+        //! Context flag structure.
+        //! Zero means that field is undefined, and should be ignored.
         //!
         union FieldFlags
         {
@@ -51,7 +51,7 @@ namespace GN { namespace gfx
 
             struct
             {
-                // byte 0
+                // byte 0 (general states)
                 unsigned int shaders            : 2; //!< one bit for each shader type
                 unsigned int rsb                : 1; //!< render state block
                 unsigned int colorBuffers       : 1; //!< render target textures
@@ -59,7 +59,7 @@ namespace GN { namespace gfx
                 unsigned int msaa               : 1; //!< MSAA for RTT
                 unsigned int viewport           : 1; //!< viewport
                 unsigned int                    : 1; //!< reserved
-                // byte 1 (fixed function pipeline)
+                // byte 1 (fixed functional pipeline states)
                 unsigned int world              : 1; //!< world transformation
                 unsigned int view               : 1; //!< view transformation
                 unsigned int proj               : 1; //!< projection transformation
@@ -68,7 +68,7 @@ namespace GN { namespace gfx
                 unsigned int materialDiffuse    : 1; //!< material diffues color
                 unsigned int materialSpecular   : 1; //!< material specular color
                 unsigned int tsb                : 1; //!< texture state block
-                // byte 2 (texture and mesh)
+                // byte 2 (graphics resources)
                 unsigned int textures           : 1; //!< textures
                 unsigned int vtxFmt             : 1; //!< vertex format
                 unsigned int vtxBufs            : 1; //!< vertex buffers
@@ -127,15 +127,20 @@ namespace GN { namespace gfx
             size_t         stride; //!< buffer stride
         };
 
+        // context flags
         FieldFlags            flags; //!< field flags
+
+        // general states
         const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
         RenderStateBlockDesc  rsb; //!< render state block.
         SurfaceDesc           colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
         size_t                numColorBuffers;  //!< number of color buffers. Set to 0 to render to back buffer.
         SurfaceDesc           depthBuffer; //!< depth surface.
         MsaaType              msaa; //!< MSAA type for RTT. Not effective, if rendering to back buffer
-        Rectf                 viewport; //!< viewport
+        Rectf                 viewport; //!< Viewport. Note that viewport is relative to current render target size.
+                                        //!< For example, viewport [0,0,1,1] means the whole render target.
 
+        // fixed functional vertex pipeline states
         Matrix44f             world, //!< world transformation
                               view, //!< view transformation
                               proj; //!< projection transformation
@@ -143,8 +148,11 @@ namespace GN { namespace gfx
                               light0Diffuse, //!< light0 diffuse color
                               materialDiffuse, //!< diffuse material color
                               materialSpecular; //!< specular material color
+
+        // fixed functional pixel pipeline states
         TextureStateBlockDesc tsb; //!< texture state block
 
+        // graphics resources
         const Texture *       textures[MAX_TEXTURE_STAGES]; //!< texture list
         size_t                numTextures; //!< texture count
         VtxFmtHandle          vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
