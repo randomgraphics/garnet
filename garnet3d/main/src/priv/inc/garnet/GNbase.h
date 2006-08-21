@@ -54,6 +54,9 @@ namespace GN
 // string types
 #include "base/string.h"
 
+// code page routines
+#include "base/codepage.h"
+
 // handle manager
 #include "base/handle.h"
 
