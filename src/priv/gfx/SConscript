@@ -1,8 +1,1 @@
-# build static graphics library
-Import( 'GN' )
-sources = []
-sources.append( SConscript( 'base/SConscript' ) )
-GN.newTarget( 'stlib', 'GNgfx', sources )
-
-# build renderers
-SConscript( 'rndr/SConscript' )
+SConscript( dirs=['base','rndr'] )

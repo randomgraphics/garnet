@@ -38,6 +38,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNrndrOGL", "8.0\GNrndrOGL.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNutil", "8.0\GNutil.vcproj", "{1C470C25-2F00-4D5C-93C8-A46122DA5443}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfx", "8.0\GNgfx.vcproj", "{4292532B-90C4-44EA-8555-2C7B93DC1090}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		debug|Win32 = debug|Win32
@@ -744,6 +746,42 @@ Global
 		{1C470C25-2F00-4D5C-93C8-A46122DA5443}.stret|x64.Build.0 = stret|x64
 		{1C470C25-2F00-4D5C-93C8-A46122DA5443}.stret|Xbox 360.ActiveCfg = stret|Xbox 360
 		{1C470C25-2F00-4D5C-93C8-A46122DA5443}.stret|Xbox 360.Build.0 = stret|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.debug|Win32.ActiveCfg = debug|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.debug|Win32.Build.0 = debug|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.debug|x64.ActiveCfg = debug|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.debug|x64.Build.0 = debug|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.debug|Xbox 360.ActiveCfg = debug|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.debug|Xbox 360.Build.0 = debug|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.profile|Win32.ActiveCfg = profile|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.profile|Win32.Build.0 = profile|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.profile|x64.ActiveCfg = profile|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.profile|x64.Build.0 = profile|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.profile|Xbox 360.ActiveCfg = profile|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.profile|Xbox 360.Build.0 = profile|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.retail|Win32.ActiveCfg = retail|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.retail|Win32.Build.0 = retail|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.retail|x64.ActiveCfg = retail|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.retail|x64.Build.0 = retail|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.retail|Xbox 360.ActiveCfg = retail|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.retail|Xbox 360.Build.0 = retail|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stdbg|Win32.ActiveCfg = stdbg|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stdbg|Win32.Build.0 = stdbg|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stdbg|x64.ActiveCfg = stdbg|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stdbg|x64.Build.0 = stdbg|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stdbg|Xbox 360.ActiveCfg = stdbg|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stdbg|Xbox 360.Build.0 = stdbg|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stprof|Win32.ActiveCfg = stprof|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stprof|Win32.Build.0 = stprof|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stprof|x64.ActiveCfg = stprof|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stprof|x64.Build.0 = stprof|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stprof|Xbox 360.ActiveCfg = stprof|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stprof|Xbox 360.Build.0 = stprof|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|Win32.ActiveCfg = stret|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|Win32.Build.0 = stret|Win32
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|x64.ActiveCfg = stret|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|x64.Build.0 = stret|x64
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|Xbox 360.ActiveCfg = stret|Xbox 360
+		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|Xbox 360.Build.0 = stret|Xbox 360
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
