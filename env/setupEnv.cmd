@@ -1,5 +1,24 @@
 @echo off
+goto :start
 
+
+REM ============
+REM sub routines
+REM ============
+
+:warn
+echo.
+echo ========
+echo = WARN = %*
+echo ========
+echo.
+goto :EOF
+
+
+REM ====================
+REM begin of main script
+REM ====================
+:start
 pushd %~dp0..
 set GARNET_ROOT=%cd%
 popd
@@ -39,7 +58,7 @@ REM =======================
 if "xenon" == "%GN_BUILD_COMPILER%" (
     echo.
     if "" == "%XEDK%" (
-        echo Environment variable XEDK not found.
+        call :warn Environment variable XEDK not found.
     ) else (
         echo Using XDK at "%XEDK%"
         pushd .
@@ -92,9 +111,9 @@ REM Update console title
 REM ====================
 title garnet3d ( %GARNET_ROOT% %GN_BUILD_COMPILER%-%GN_BUILD_TARGET_OS%-%GN_BUILD_TARGET_CPU% %GN_BUILD_VARIANT% )
 
-REM ============
-REM End of setup
-REM ============
+REM ===================
+REM End of common setup
+REM ===================
 
 echo Garnet root : %GARNET_ROOT%
 cd /d %GARNET_ROOT%
