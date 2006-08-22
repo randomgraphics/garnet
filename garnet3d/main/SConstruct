@@ -158,6 +158,8 @@ def UTIL_newEnv( compiler, variant ):
     icl_abi = 'ia32'
     if 'xenon' == compiler.name:
         tools = ['xenon']
+        msvs_version = '8.0'
+        msvs_platform = 'Xbox 360'
     elif 'icl' == compiler.name :
         tools += ['intelc']
         if 'x64' == compiler.cpu :

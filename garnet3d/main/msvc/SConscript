@@ -1,27 +1,18 @@
 Import('GN env compiler variant name target')
 
 # local functions
-def to_relpath( files ):
+def toRelativePath( files ):
     return [ GN.relpath( File(x).srcnode().path, Dir(target_dir).srcnode().path ) for x in files ]
+def getMsvsPlatform( env ) :
+    p = env['MSVS_PLATFORM']
+    if 'x86' == p : return 'Win32'
+    else: return p
 
 import os.path
 
-# determine target directory
-if 'vc80' == compiler.name:
-    target_dir = '8.0'
-else:
-    target_dir = '7.1'
-
-# determine variant string
-if 'ppc' == compiler.cpu:
-    variant_str = '%s|Xenon'%variant
-elif 'x64' == compiler.cpu:
-    variant_str = '%s|x64'%variant
-elif 'x86' == compiler.cpu:
-    variant_str = '%s|Win32'%variant
-else:
-    GN.error( 'unknown target CPU : %s'%compiler.cpu )
-    Exit(-1)
+# determine target directory and variant string
+target_dir = env['MSVS_VERSION']
+variant_str = '%s|%s'%(variant,getMsvsPlatform(env))
 
 # build target directory
 absdir = Dir(target_dir).srcnode().abspath
@@ -48,8 +39,8 @@ proj = env.MSVSProject(
     buildtarget = target.targets[0],
     variant     = variant_str,
     cmdargs     = cmdargs,
-    srcs        = to_relpath( sources ),
-    incs        = to_relpath( incs ),
+    srcs        = toRelativePath( sources ),
+    incs        = toRelativePath( incs ),
     localincs   = [],
     resources   = [],
     misc        = [],
