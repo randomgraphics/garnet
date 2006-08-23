@@ -217,6 +217,7 @@ def UTIL_newEnv( compiler, variant ):
     linkflags  = generate_empty_options()
 
     # 定制不同编译模式的编译选项
+    cppdefines['common']  += ['UNICODE','_UNICODE']
     cppdefines['debug']   += ['GN_BUILD_VARIANT=2']
     cppdefines['profile'] += ['GN_BUILD_VARIANT=1','NDEBUG']
     cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
