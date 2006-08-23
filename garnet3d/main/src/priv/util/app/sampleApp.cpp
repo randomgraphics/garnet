@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "garnet/GNapp.h"
+#define SO_ASSERT GN_ASSERT
+#include <SimpleOpt.h>
 
 float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 
@@ -182,24 +184,42 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     DynaArray<const char*> unknownArgs;
     unknownArgs.append( argv[0] );
 
-    for( int i = 1; i < argc; ++i )
+    static const CSimpleOptA::SOption sOptions[] = {
+        { 0, "-d3d9",  SO_NONE    },
+        { 0, "-d3d10", SO_NONE    },
+        { 0, "-ogl",   SO_NONE    },
+        { 0, "-fake",  SO_NONE    },
+        { 0, "-fs",    SO_NONE    },
+        { 0, "-ref",   SO_NONE    },
+        { 0, "-msaa",  SO_NONE    },
+        { 0, "-pure",  SO_NONE    },
+        { 0, "-m",     SO_REQ_SEP }, // specify monitor index
+        { 0, "-di",    SO_NONE    },
+        { 1, "-?",     SO_NONE    },
+        { 1, "-h",     SO_NONE    },
+        { 1, "--help", SO_NONE    },
+        SO_END_OF_OPTIONS            // END
+    };
+
+    CSimpleOptA so( argc, (char**)argv, sOptions );
+
+    while( so.Next() )
     {
-        const char * a = argv[i];
-        if( *a == '-' )
+        const char * a = so.OptionText();
+        if( SO_SUCCESS == so.LastError() )
         {
-            if( 0 == strCmpI( a, "-?" ) || 0 == strCmpI( a, "-h" ) )
+            if( 1 == so.OptionId() )
             {
                 GN_INFO( "\n"
                     "Usage : %s [options]\n\n"
                     "Options : (options are case-insensitive)\n"
-                    "    -h, -?                 : Show help screen.\n"
+                    "    -h, -?, --help         : Show help screen.\n"
                     "    -d3d9/d3d10/ogl/fake   : Select rendering API.\n"
                     "    -fs                    : Use fullsreen mode.\n"
                     "    -ref                   : Use reference device.\n"
                     "    -msaa                  : Enable MSAA/FSAA.\n"
                     "    -pure                  : Use pure device (D3D only).\n"
-                    "    -m0                    : Use primary screen. (Default)\n"
-                    "    -m1                    : Use secondary screen.\n"
+                    "    -m [num]               : Specify monitor index. Default is 0.\n"
                     "    -di                    : Use direct input.\n"
                     , GN::path::baseName(argv[0]).cptr() );
                 return false;
@@ -210,14 +230,30 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-fs" ) ) mInitParam.ro.fullscreen = true;
             else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
             else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
-            else if( 0 == strCmpI( a, "-msaa") ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
-            else if( 0 == strCmpI( a, "-pure") ) mInitParam.ro.pure = true;
-            else if( 0 == strCmpI( a, "-m0") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 0 );
-            else if( 0 == strCmpI( a, "-m1") ) mInitParam.ro.monitorHandle = win::getMonitorByIndex( 1 );
+            else if( 0 == strCmpI( a, "-msaa" ) ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
+            else if( 0 == strCmpI( a, "-pure" ) ) mInitParam.ro.pure = true;
+            else if( 0 == strCmpI( a, "-m" ) )
+            {
+                uint32_t idx;
+                if( !str2Uint32( idx, so.OptionArg() ) )
+                {
+                    GN_ERROR( "monitor index must be integer." );
+                    return false;
+                }
+                mInitParam.ro.monitorHandle = win::getMonitorByIndex( idx );
+            }
             else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::API_DINPUT;
-            else unknownArgs.append( a );
         }
-        else unknownArgs.append( a );
+        else
+        {
+            unknownArgs.append( a );
+        }
+    }
+
+    // handle unknown arguments
+    for( int i = 0; i < so.FileCount(); ++i )
+    {
+        unknownArgs.append( so.File( i ) );
     }
     if( !onCheckCmdLine( (int)unknownArgs.size(), unknownArgs.cptr() ) ) return false;
 #endif

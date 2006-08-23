@@ -1,6 +1,14 @@
 #include "pch.h"
 #include <pcrecpp.h>
-#include "simpleGlob.h"
+
+#if GN_MSVC8
+#pragma warning(disable:4996)
+#include <SimpleGlob.h>
+#pragma warning(default:4996)
+#else
+#include <SimpleGlob.h>
+#endif
+
 #if GN_MSWIN
 #if GN_PC
 #include <shlwapi.h>
