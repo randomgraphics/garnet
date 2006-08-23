@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <pcrecpp.h>
+#include "simpleGlob.h"
 #if GN_MSWIN
 #if GN_PC
 #include <shlwapi.h>
@@ -153,7 +154,7 @@ static inline bool sIsRoot( const GN::StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-static void sResursiveFind( std::vector<GN::StrA> & result,
+static void sRecursiveFind( std::vector<GN::StrA> & result,
                             const GN::StrA & dirName,
                             const GN::StrA & pattern,
                             bool recursive,
@@ -161,46 +162,39 @@ static void sResursiveFind( std::vector<GN::StrA> & result,
 {
     GN_GUARD;
 
+    using namespace GN;
+
     // validate dirName
-    GN_ASSERT( GN::path::exist(dirName) && GN::path::isDir(dirName) );
+    GN_ASSERT( path::exist(dirName) && path::isDir(dirName) );
 
-#if GN_MSWIN
+    StrA curDir = path::toNative( path::resolve( dirName ) );
 
-    WIN32_FIND_DATAA wfd;
-    HANDLE fh;
-
-    GN::StrA findPattern = GN::path::resolve(dirName) + "\\" + (useRegex ? "*.*" : pattern);
-    fh = ::FindFirstFileA( findPattern.cptr(), &wfd );
-    if( INVALID_HANDLE_VALUE == fh ) return;
-
-    GN::AutoObjPtr<pcrecpp::RE> re;
-    if( useRegex ) re.attach( new pcrecpp::RE( pattern.cptr() ) );
-
-    do
+    // search in sub-directories
+    if( recursive )
     {
-        if( FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes )
+        // TODO: ignore links/junctions
+        CSimpleGlobA sg( SG_GLOB_ONLYDIR | SG_GLOB_NODOT );
+        StrA p = path::join( curDir, "*" );
+        sg.Add( p.cptr() );
+        char ** dirs = sg.Files();
+        int c = sg.FileCount();
+        for( int i = 0; i < c; ++i, ++dirs )
         {
-            if( recursive )
-            {
-                sResursiveFind( result, wfd.cFileName, pattern, recursive, useRegex );
-            }
+            p = path::join( curDir, *dirs );
+            sRecursiveFind( result, p, pattern, recursive, useRegex );
         }
-        else if( !useRegex || re->FullMatch( wfd.cFileName ) )
-        {
-            result.push_back( wfd.cFileName ); // found one
-        }
-    } while( ::FindNextFileA( fh, &wfd ) );
+    }
 
-    ::FindClose( fh );
-
-#else
-    GN_UNUSED_PARAM( result );
-    GN_UNUSED_PARAM( dirName );
-    GN_UNUSED_PARAM( pattern );
-    GN_UNUSED_PARAM( recursive );
-    GN_UNUSED_PARAM( useRegex );
-    GN_UNIMPL();
-#endif
+    // search in current directory
+    CSimpleGlobA sg( SG_GLOB_ONLYFILE );
+    StrA p = path::join( curDir, (useRegex ? "*.*" : pattern) );
+    sg.Add( p.cptr() );
+    char ** files = sg.Files();
+    int c = sg.FileCount();
+    for( int i = 0; i < c; ++i, ++files )
+    {
+        result.push_back( path::join( curDir, *files ) );
+    }
 
     GN_UNGUARD;
 }
@@ -474,7 +468,8 @@ GN::path::glob(
         return result;
     }
 
-    sResursiveFind( result, dirName, pattern, recursive, useRegex );
+    sRecursiveFind( result, dirName, pattern, recursive, useRegex );
+
     return result;
 
     GN_UNGUARD;
