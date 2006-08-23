@@ -52,11 +52,6 @@
 # define SOCHAR_T       char
 #endif
 
-// disable VC 8.0 depreciate warnings
-#if GN_MSVC8
-#pragma warning(disable:4996)
-#endif
-
 #include <string.h>
 #include <wchar.h>
 
