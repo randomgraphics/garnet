@@ -509,7 +509,7 @@ class GarnetEnv :
         return s
 
     # ´´½¨ Target
-    def newTarget( self, type, name, sources, dependencies = [], pdb = None ):
+    def newTarget( self, type, name, sources, dependencies = [], ignoreDefaultDependencies = False, pdb = None ):
         # create new target instance
         t = Target()
         if 'shlib' == type:
@@ -521,6 +521,7 @@ class GarnetEnv :
         t.path = Dir('.')
         t.sources = sources
         t.dependencies = dependencies
+        t.ignoreDefaultDependencies = ignoreDefaultDependencies
         if pdb : t.pdb = File(pdb)
         else   : t.pdb = File("%s.pdb"%(name))
         ALL_targets[self.compiler][self.variant][name] = t # insert to global target list
