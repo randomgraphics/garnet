@@ -34,7 +34,7 @@
     /* check for twice init */                         \
     if( selfOK() )                                     \
     {                                                  \
-        GN_ERROR( "u call init() twice!" );            \
+        GN_ERROR(getLogger("GN.base.StdClass"))( "u call init() twice!" ); \
         quit(); return selfOK();                       \
     }                                                  \
     /* call parent's init() */                         \
@@ -135,7 +135,7 @@ namespace GN
         {
             if( selfOK() )
             {
-                GN_ERROR( "u call init() twice!" );
+                GN_ERROR(getLogger("GN.base.StdClass"))( "u call init() twice!" );
                 quit(); return selfOK();
             }
 

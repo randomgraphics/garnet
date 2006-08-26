@@ -7,6 +7,8 @@
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -55,7 +57,7 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
         default :
             oglPrim = GL_TRIANGLES;
             numIdx = numPrims * 3;
-            GN_ERROR( "invalid primitve type!" );
+            GN_ERROR(sLogger)( "invalid primitve type!" );
             return false;
     }
 

@@ -101,6 +101,9 @@ namespace GN { namespace gfx
         //! µ»÷µ≈–∂œ
         //!
         bool operator == ( const VtxFmtDesc & rhs ) const;
+
+    private:
+        static GN::Logger * sLogger;
     };
 
     //!\name Util functions

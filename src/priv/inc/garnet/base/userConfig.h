@@ -71,6 +71,15 @@
 #define GN_ENABLE_SLOW_GUARD 0
 #endif
 
+// GN_ENABLE_LOG
+// =============
+//!
+//! Enable runtime log. Default is on.
+//!
+#ifndef GN_ENABLE_LOG
+#define GN_ENABLE_LOG 1
+#endif
+
 // GN_DEFAULT_LOCALE
 // =================
 //!

@@ -235,13 +235,15 @@ namespace GN { namespace gfx
 
             if( name.empty() )
             {
-                GN_ERROR( "uniform name can't be empty!" );
+                static Logger * sLogger = getLogger("GN.gfx.Shader");
+                GN_ERROR(sLogger)( "uniform name can't be empty!" );
                 return 0;
             }
 
             if( mUniformNames.end() != mUniformNames.find(name) )
             {
-                GN_ERROR( "uniform named '%s' already exists.", name.cptr() );
+                static Logger * sLogger = getLogger("GN.gfx.Shader");
+                GN_ERROR(sLogger)( "uniform named '%s' already exists.", name.cptr() );
                 return 0;
             }
 
@@ -264,7 +266,8 @@ namespace GN { namespace gfx
         {
             if( !mUniforms.validHandle( handle ) )
             {
-                GN_ERROR( "invalid uniform handle '%d'", handle );
+                static Logger * sLogger = getLogger("GN.gfx.Shader");
+                GN_ERROR(sLogger)( "invalid uniform handle '%d'", handle );
                 return false;
             }
             return true;
@@ -346,7 +349,8 @@ namespace GN { namespace gfx
         HandleType userData;
         if( !queryDeviceUniform( name.cptr(), userData ) )
         {
-            GN_ERROR( "invalid uniform name: %s.", name.cptr() );
+            static Logger * sLogger = getLogger("GN.gfx.Shader");
+            GN_ERROR(sLogger)( "invalid uniform name: %s.", name.cptr() );
             return 0;
         }
 

@@ -5,6 +5,8 @@
 
 GN::PluginID GN::PluginID::INVALID(0);
 
+GN::Logger * GN::PluginManager::sLogger = GN::getLogger("GN.base.Plugin");
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -31,7 +33,7 @@ GN::PluginManager::getPluginID( PluginTypeID type, const StrA & name ) const
     // check type ID
     if ( !mTypes.validHandle( type ) )
     {
-        GN_ERROR( "invalid type ID" );
+        GN_ERROR(sLogger)( "invalid type ID" );
         return PluginID::INVALID;
     }
 
@@ -43,7 +45,7 @@ GN::PluginManager::getPluginID( PluginTypeID type, const StrA & name ) const
     }
     else
     {
-        GN_ERROR( "invalid plugin name '%s'!", name.cptr() );
+        GN_ERROR(sLogger)( "invalid plugin name '%s'!", name.cptr() );
         return PluginID::INVALID;
     }
 
@@ -61,7 +63,7 @@ GN::PluginManager::registerPluginType( const StrA & type, const StrA & desc )
     PluginTypeID id( getPluginTypeID( type ) );
     if ( id > 0 )
     {
-        GN_ERROR( "Plugin type '%s' already exists!", type.cptr() );
+        GN_ERROR(sLogger)( "Plugin type '%s' already exists!", type.cptr() );
         return 0;
     }
 
@@ -79,7 +81,7 @@ void GN::PluginManager::removePluginType( PluginTypeID type )
 
     if ( !mTypes.validHandle(type) )
     {
-        GN_ERROR( "Invalid plugin type ID '%d'!", type );
+        GN_ERROR(sLogger)( "Invalid plugin type ID '%d'!", type );
         return;
     }
 
@@ -123,13 +125,13 @@ GN::PluginID GN::PluginManager::registerPlugin(
 
     if ( !mTypes.validHandle( type ) )
     {
-        GN_ERROR( "Invalid plugin type ID!" );
+        GN_ERROR(sLogger)( "Invalid plugin type ID!" );
         return PluginID::INVALID;
     }
 
     if ( factory.empty() )
     {
-        GN_ERROR( "NULL factory function!" );
+        GN_ERROR(sLogger)( "NULL factory function!" );
         return PluginID::INVALID;
     }
 
@@ -141,7 +143,7 @@ GN::PluginID GN::PluginManager::registerPlugin(
 
         if ( !overrideExistingPlugin )
         {
-            GN_ERROR( "Plugin '%s::%s' already exist",
+            GN_ERROR(sLogger)( "Plugin '%s::%s' already exist",
                 getPluginTypeName(type).cptr(),
                 getPluginName(id).cptr() );
             return PluginID::INVALID;
@@ -190,7 +192,7 @@ void GN::PluginManager::removePlugin( PluginID id )
     std::map<PluginID,PluginItem>::iterator i = mPlugins.find( id );
     if ( mPlugins.end() == i )
     {
-        GN_ERROR( "Invalid plugin ID!" );
+        GN_ERROR(sLogger)( "Invalid plugin ID!" );
         return;
     }
 
@@ -216,7 +218,7 @@ GN::PluginManager::doInstanceCreation( PluginID id, void * param ) const
     std::map<PluginID,PluginItem>::const_iterator i = mPlugins.find( id );
     if ( mPlugins.end() == i )
     {
-        GN_ERROR( "Invalid plugin ID!" );
+        GN_ERROR(sLogger)( "Invalid plugin ID!" );
         return 0;
     }
 

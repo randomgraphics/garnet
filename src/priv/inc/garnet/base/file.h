@@ -103,6 +103,11 @@ namespace GN
         //!
         void setName( const StrA & name ) { mName = name; }
 
+        //!
+        //! File logger
+        //!
+        static Logger * sLogger;
+
     private:
 
         StrA mName;
@@ -196,7 +201,7 @@ namespace GN
         bool seek( int, FileSeekMode );
         size_t tell() const;
         size_t size() const;
-        void * map( size_t, size_t, bool ) { GN_ERROR( "StdFile: does not support map() operation!" ); return 0; }
+        void * map( size_t, size_t, bool ) { GN_ERROR(sLogger)( "StdFile: does not support map() operation!" ); return 0; }
     };
 
     //!
@@ -280,7 +285,7 @@ namespace GN
         {
             if( offset >= mSize || (offset + length) > mSize )
             {
-                GN_ERROR( "invalid mapping range!" );
+                GN_ERROR(sLogger)( "invalid mapping range!" );
                 return 0;
             }
             return mStart + offset;
@@ -320,7 +325,7 @@ namespace GN
         {
             if( offset >= mBuffer.size() || (offset + length) > mBuffer.size() )
             {
-                GN_ERROR( "invalid mapping range!" );
+                GN_ERROR(sLogger)( "invalid mapping range!" );
                 return 0;
             }
             return &mBuffer[offset];

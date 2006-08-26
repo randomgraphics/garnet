@@ -5,6 +5,8 @@
 
 std::map<void*,GN::win::WindowMsw*> GN::win::WindowMsw::msInstanceMap;
 
+static GN::Logger * sLogger = GN::getLogger("GN.win.MSW");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -37,7 +39,7 @@ void GN::win::WindowMsw::quit()
     // destroy window
     if( ::IsWindow( mWindow ) )
     {
-        GN_INFO( "Destroy window (handle: 0x%X)", mWindow );
+        GN_INFO(sLogger)( "Destroy window (handle: 0x%X)", mWindow );
         ::DestroyWindow( mWindow );
 
         // remove itself from instance map
@@ -48,7 +50,7 @@ void GN::win::WindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_INFO(sLogger)( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
         GN_MSW_CHECK( ::UnregisterClassA( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
@@ -72,7 +74,7 @@ GN::win::MonitorHandle GN::win::WindowMsw::getMonitorHandle() const
     GN_GUARD;
     GN_ASSERT( ::IsWindow( mWindow ) );
     HMONITOR m = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
-    if( 0 == m ) GN_ERROR( "Fail to get monitor handle from window!" );
+    if( 0 == m ) GN_ERROR(sLogger)( "Fail to get monitor handle from window!" );
     return (MonitorHandle)m;
     GN_UNGUARD;
 }
@@ -209,10 +211,10 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExA(&wcex) )
     {
-        GN_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
     }
-    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    GN_INFO(sLogger)( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
 
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
@@ -248,10 +250,10 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
         0 );
     if( 0 == mWindow )
     {
-        GN_ERROR( "fail to create window, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", getOSErrorInfo() );
         return false;
     }
-    GN_INFO( "Create window (handle: 0x%X)", mWindow );
+    GN_INFO(sLogger)( "Create window (handle: 0x%X)", mWindow );
 
     // add window handle to instance map
     GN_ASSERT(
@@ -287,7 +289,7 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GN_INFO( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_INFO(sLogger)( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,WindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
 

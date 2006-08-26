@@ -2,11 +2,14 @@
 #if !GN_ENABLE_INLINE
 #include "garnet/gfx/image.inl"
 #endif
+
 #include "imageBMP.h"
 #include "imageDDS.h"
 #include "imageJPG.h"
 #include "imagePNG.h"
 #include "imageTGA.h"
+
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // ImageDesc
@@ -20,14 +23,14 @@ bool GN::gfx::ImageDesc::valid() const
     // check format
     if( format < 0 || format >= NUM_CLRFMTS )
     {
-        GN_ERROR( "invalid image format!" );
+        GN_ERROR(sLogger)( "invalid image format!" );
         return false;
     }
 
     // check mipmap pointer
     if( numFaces > 0 && numLevels > 0 && 0 == mipmaps )
     {
-        GN_ERROR( "Null mipmap array!" );
+        GN_ERROR(sLogger)( "Null mipmap array!" );
         return false;
     }
 
@@ -42,7 +45,7 @@ bool GN::gfx::ImageDesc::valid() const
         // check image size
         if( 0 == m.width || 0 == m.height || 0 == m.depth )
         {
-            GN_ERROR( "mipmaps[%d] size is zero!", l );
+            GN_ERROR(sLogger)( "mipmaps[%d] size is zero!", l );
             return false;
         }
 
@@ -53,17 +56,17 @@ bool GN::gfx::ImageDesc::valid() const
         if( 0 == h ) h = 1;
         if( m.rowPitch != w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
         {
-            GN_ERROR( "rowPitch of mipmaps[%d][%d] is incorrect!", f, l );
+            GN_ERROR(sLogger)( "rowPitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
         }
         if( m.slicePitch != m.rowPitch * h )
         {
-            GN_ERROR( "slicePitch of mipmaps[%d][%d] is incorrect!", f, l );
+            GN_ERROR(sLogger)( "slicePitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
         }
         if( m.levelPitch != m.slicePitch * m.depth )
         {
-            GN_ERROR( "levelPitch of mipmaps[%d][%d] is incorrect!", f, l );
+            GN_ERROR(sLogger)( "levelPitch of mipmaps[%d][%d] is incorrect!", f, l );
             return false;
         }
     }
@@ -144,7 +147,7 @@ public:
         CHECK_FORMAT( mPNGReader, PNG )
         CHECK_FORMAT( mTGAReader, TGA )
         {
-            GN_ERROR( "unknown image file format!" );
+            GN_ERROR(sLogger)( "unknown image file format!" );
             return false;
         }
         #undef CHECK_FORMAT
@@ -173,7 +176,7 @@ public:
 
         if( INITIALIZED != mState )
         {
-            GN_ERROR( "image reader is not ready for header reading!" );
+            GN_ERROR(sLogger)( "image reader is not ready for header reading!" );
             return false;
         }
 
@@ -191,7 +194,7 @@ public:
             case PNG  : READ_HEADER( mPNGReader ); break;
             case TGA  : READ_HEADER( mTGAReader ); break;
             default   :
-                GN_ERROR( "unknown or unsupport file format!" );
+                GN_ERROR(sLogger)( "unknown or unsupport file format!" );
                 mState = INVALID;
                 return false;
         }
@@ -214,13 +217,13 @@ public:
 
         if( 0 == o_data )
         {
-            GN_ERROR( "null output buffer!" );
+            GN_ERROR(sLogger)( "null output buffer!" );
             return false;
         }
 
         if( HEADER_READEN != mState )
         {
-            GN_ERROR( "image reader is not ready for image reading!" );
+            GN_ERROR(sLogger)( "image reader is not ready for image reading!" );
             return false;
         }
 
@@ -236,7 +239,7 @@ public:
             case PNG  : READ_IMAGE( mPNGReader ); break;
             case TGA  : READ_IMAGE( mTGAReader ); break;
             default   :
-                GN_ERROR( "unknown or unsupport file format!" );
+                GN_ERROR(sLogger)( "unknown or unsupport file format!" );
                 mState = INVALID;
                 return false;
         }

@@ -2,6 +2,8 @@
 #include "oglShader.h"
 #include "oglRenderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Local function
 // *****************************************************************************
@@ -26,7 +28,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 
     if( code.empty() )
     {
-        GN_ERROR( "shader code can't be empty!" );
+        GN_ERROR(sLogger)( "shader code can't be empty!" );
         return false;
     }
 
@@ -35,7 +37,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
     glGenProgramsARB( 1, &program );
     if( 0 == program )
     {
-        GN_ERROR( "Fail to generate new program object!" );
+        GN_ERROR(sLogger)( "Fail to generate new program object!" );
         return 0;
     }
     ARBAutoDel autodel( program );
@@ -59,7 +61,7 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
         const char * errStr;
         glGetIntegerv( GL_PROGRAM_ERROR_POSITION_ARB, &errPos );
         errStr = (const char*)glGetString( GL_PROGRAM_ERROR_STRING_ARB );
-        GN_INFO(
+        GN_ERROR(sLogger)(
             "\n"
             "============= ARB Shader Program Compile Error ==========\n"
             "%s\n"
@@ -211,7 +213,7 @@ bool GN::gfx::OGLBasicShaderARB::createShader( const StrA & code )
     {
         if( !GLEW_ARB_vertex_program )
         {
-            GN_ERROR( "do not support ARB vertex program!" );
+            GN_ERROR(sLogger)( "do not support ARB vertex program!" );
             return false;
         }
     }
@@ -220,7 +222,7 @@ bool GN::gfx::OGLBasicShaderARB::createShader( const StrA & code )
         GN_ASSERT( GL_FRAGMENT_PROGRAM_ARB == mTarget );
         if( !GLEW_ARB_fragment_program )
         {
-            GN_ERROR( "do not support ARB fragment program!" );
+            GN_ERROR(sLogger)( "do not support ARB fragment program!" );
             return false;
         }
     }
@@ -276,7 +278,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
             case UVT_FLOAT :
             case UVT_BOOL :
             case UVT_INT :
-                GN_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
+                GN_ERROR(sLogger)( "OGL ARB shader only supports FLOAT4 uniform, currently" );
                 break;
 
             default:
@@ -302,7 +304,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
             case UVT_FLOAT :
             case UVT_BOOL :
             case UVT_INT :
-                GN_ERROR( "OGL ARB shader only supports FLOAT4 uniform, currently" );
+                GN_ERROR(sLogger)( "OGL ARB shader only supports FLOAT4 uniform, currently" );
                 break;
 
             default:
@@ -324,7 +326,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
         }
         else
         {
-            GN_ERROR( "Maxtrix uniform can only accept uniform type of matrix." );
+            GN_ERROR(sLogger)( "Maxtrix uniform can only accept uniform type of matrix." );
         }
     }
 
@@ -348,7 +350,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
     unsigned int index;
     if( !str2Int<unsigned int>( index, name+1 ) )
     {
-        GN_ERROR(
+        GN_ERROR(sLogger)(
             "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"
             "E means ENV parameter; L means LOCAL parameter. xxx is the register index.",
             name );
@@ -363,7 +365,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'E':
             if( index >= mMaxEnvUniforms )
             {
-                GN_ERROR( "global uniform index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
+                GN_ERROR(sLogger)( "global uniform index(%d) is too large. (max: %d)", index, mMaxEnvUniforms );
                 return false;
             }
             desc.type = ENV_PARAMETER;
@@ -373,7 +375,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'L':
             if( index >= mMaxLocalUniforms )
             {
-                GN_ERROR( "local uniform index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
+                GN_ERROR(sLogger)( "local uniform index(%d) is too large. (max: %d)", index, mMaxLocalUniforms );
                 return false;
             }
             desc.type = LOCAL_PARAMETER;
@@ -383,14 +385,14 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
         case 'M':
             if( index >= mMaxMatrixUniforms )
             {
-                GN_ERROR( "matrix uniform index(%d) is too large. (max: %d)", index, mMaxMatrixUniforms );
+                GN_ERROR(sLogger)( "matrix uniform index(%d) is too large. (max: %d)", index, mMaxMatrixUniforms );
                 return false;
             }
             desc.type = MATRIX_PARAMETER;
             break;
 
         default:
-            GN_ERROR(
+            GN_ERROR(sLogger)(
                 "Invalid parameter name: %s. It must be Exxx, exxx, Lxxx or lxxx. \n"
                 "E means ENV parameter; L means LOCAL parameter. xxx is the register index.",
                 name );

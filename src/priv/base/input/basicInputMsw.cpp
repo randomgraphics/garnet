@@ -3,6 +3,8 @@
 
 #if GN_MSWIN && !GN_XENON
 
+static GN::Logger * sLogger = GN::getLogger("GN.input.BasicInputMsw");
+
 // *****************************************************************************
 //    init / quit functions
 // *****************************************************************************
@@ -67,7 +69,7 @@ bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
     // check window handle
     if( !::IsWindow(hwnd) )
     {
-        GN_ERROR( "Window handle is not valid!" );
+        GN_ERROR(sLogger)( "Window handle is not valid!" );
         return false;
     }
 
@@ -86,7 +88,7 @@ bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
 
     // success
     mWindow = hwnd;
-    GN_TRACE( "Attach to window 0x%X", mWindow );
+    GN_TRACE(sLogger)( "Attach to window 0x%X", mWindow );
     return true;
 
     GN_UNGUARD;
@@ -218,7 +220,7 @@ bool GN::input::BasicInputMsw::setupWindowHooks( HWND hwnd )
         threadID );
     if( 0 == mMsgHook || 0 == mCwpHook )
     {
-        GN_ERROR( getOSErrorInfo() );
+        GN_ERROR(sLogger)( getOSErrorInfo() );
         return false;
     }
 

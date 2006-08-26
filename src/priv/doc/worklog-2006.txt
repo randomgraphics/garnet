@@ -1,3 +1,6 @@
+- 2006.8.26
+  - refine log system, inspired...ok, copied from apache log4j. 
+
 - 2006.6.30
   - continue implementing FatMesh class
   - UT for array classes

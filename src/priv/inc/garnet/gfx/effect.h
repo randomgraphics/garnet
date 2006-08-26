@@ -639,6 +639,8 @@ namespace GN { namespace gfx {
         mutable bool     mPassBegun;
         mutable size_t   mActivePass;
 
+        static Logger * sLogger;
+
         // ********************************
         // private functions
         // ********************************

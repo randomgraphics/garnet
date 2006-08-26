@@ -3,6 +3,8 @@
 #include "d3d9Renderer.h"
 #include "garnet/GNd3d9.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -110,7 +112,7 @@ bool GN::gfx::D3D9VtxShaderAsm::queryDeviceUniform( const char * name, HandleTyp
 
     if( !str2Int<unsigned int>( index, name+1 ) )
     {
-        GN_ERROR( "invalid register name: %s", name );
+        GN_ERROR(sLogger)( "invalid register name: %s", name );
         return false;
     }
 
@@ -122,7 +124,7 @@ bool GN::gfx::D3D9VtxShaderAsm::queryDeviceUniform( const char * name, HandleTyp
         case 'C':
             if( index >= mMaxConstF )
             {
-                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
+                GN_ERROR(sLogger)( "register index(%d) is too large. (max: %d)", index, mMaxConstF );
                 return false;
             }
             desc.type = CONST_F;
@@ -132,7 +134,7 @@ bool GN::gfx::D3D9VtxShaderAsm::queryDeviceUniform( const char * name, HandleTyp
         case 'I':
             if( index >= mMaxConstI )
             {
-                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
+                GN_ERROR(sLogger)( "register index(%d) is too large. (max: %d)", index, mMaxConstI );
                 return false;
             }
             desc.type = CONST_I;
@@ -142,14 +144,14 @@ bool GN::gfx::D3D9VtxShaderAsm::queryDeviceUniform( const char * name, HandleTyp
         case 'B':
             if( index >= mMaxConstB )
             {
-                GN_ERROR( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
+                GN_ERROR(sLogger)( "register index(%d) is too large. (max: %d)", index, mMaxConstB );
                 return false;
             }
             desc.type = CONST_B;
             break;
 
         default:
-            GN_ERROR( "invalid register name: %s", name );
+            GN_ERROR(sLogger)( "invalid register name: %s", name );
             return false;
     }
 
@@ -210,7 +212,7 @@ bool GN::gfx::D3D9VtxShaderAsm::analyzeUniforms( const DWORD * shaderFunction )
 
     if( 0 == version )
     {
-        GN_ERROR( "Fail to get shader version!" );
+        GN_ERROR(sLogger)( "Fail to get shader version!" );
         return false;
     }
 
@@ -277,7 +279,7 @@ GN::gfx::D3D9VtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
 
                 case UVT_BOOL:
                 case UVT_INT:
-                    GN_ERROR( "Setting integer or boolean value to float shader register does not work." );
+                    GN_ERROR(sLogger)( "Setting integer or boolean value to float shader register does not work." );
                     break;
             }
             break;
@@ -295,7 +297,7 @@ GN::gfx::D3D9VtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_VECTOR4:
                 case UVT_MATRIX44:
                 case UVT_BOOL:
-                    GN_ERROR( "integer register accepts only integer value." );
+                    GN_ERROR(sLogger)( "integer register accepts only integer value." );
                     break;
             }
             break;
@@ -313,14 +315,14 @@ GN::gfx::D3D9VtxShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_VECTOR4:
                 case UVT_MATRIX44:
                 case UVT_INT:
-                    GN_ERROR( "Bool register accepts only boolean value." );
+                    GN_ERROR(sLogger)( "Bool register accepts only boolean value." );
                     break;
             }
             break;
 
         default:
             // Program should not reach here.
-            GN_ERROR( "invalid register type!" );
+            GN_ERROR(sLogger)( "invalid register type!" );
             GN_UNEXPECTED();
     }
 

@@ -22,19 +22,8 @@ class PNGReader
     const uint8_t * mStart;
     size_t          mSize;
 
-    static void PNGAPI error( png_structp png, png_const_charp msg )
-    {
-        GN_ERROR( msg );
-        longjmp( png->jmpbuf, 1 );
-    }
-
-    //!
-    //! handle PNG warning
-    //!
-    static void PNGAPI warning( png_structp, png_const_charp msg )
-    {
-        GN_WARN( msg );
-    }
+    static void PNGAPI error( png_structp png, png_const_charp msg );
+    static void PNGAPI warning( png_structp, png_const_charp msg );
 
     //!
     //! destroy PNG structures

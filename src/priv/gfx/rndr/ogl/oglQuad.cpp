@@ -2,6 +2,8 @@
 #include "oglQuad.h"
 #include "oglRenderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -21,7 +23,7 @@ bool GN::gfx::OGLQuad::init()
     mVtxBuf = new QuadVertex[MAX_QUADS*4];
     if( !mVtxBuf )
     {
-        GN_ERROR( "out of memory!" );
+        GN_ERROR(sLogger)( "out of memory!" );
         quit(); return selfOK();
     }
 
@@ -66,13 +68,13 @@ void GN::gfx::OGLQuad::drawQuads(
 
     if( 0 == positions )
     {
-        GN_ERROR( "Positions can't be NULL!" );
+        GN_ERROR(sLogger)( "Positions can't be NULL!" );
         return;
     }
 
     if( 0 == posStride )
     {
-        GN_ERROR( "Position stride can't be zero!" );
+        GN_ERROR(sLogger)( "Position stride can't be zero!" );
         return;
     }
 

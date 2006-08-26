@@ -35,6 +35,13 @@ namespace GN
 // debug macros and functions
 #include "base/debug.h"
 
+// memory management
+#include "base/memory.h"
+#include "base/allocator.h"
+
+// string types
+#include "base/string.h"
+
 // log functions and macros
 #include "base/log.h"
 
@@ -44,15 +51,8 @@ namespace GN
 // single/double linked list
 #include "base/linkedList.h"
 
-// memory management
-#include "base/memory.h"
-#include "base/allocator.h"
-
 // array types
 #include "base/array.h"
-
-// string types
-#include "base/string.h"
 
 // code page routines
 #include "base/codepage.h"

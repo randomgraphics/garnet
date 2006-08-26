@@ -2,6 +2,8 @@
 #include "oglLine.h"
 #include "oglRenderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -21,7 +23,7 @@ bool GN::gfx::OGLLine::init()
     mVtxBuf = new LineVertex[MAX_LINES*2];
     if( !mVtxBuf )
     {
-        GN_ERROR( "out of memory!" );
+        GN_ERROR(sLogger)( "out of memory!" );
         quit(); return selfOK();
     }
 
@@ -69,13 +71,13 @@ void GN::gfx::OGLLine::drawLines(
 
     if( 0 == positions )
     {
-        GN_ERROR( "NULL parameter(s)!" );
+        GN_ERROR(sLogger)( "NULL parameter(s)!" );
         return;
     }
 
     if( 0 == stride )
     {
-        GN_ERROR( "stride can't be zero!" );
+        GN_ERROR(sLogger)( "stride can't be zero!" );
         return;
     }
 

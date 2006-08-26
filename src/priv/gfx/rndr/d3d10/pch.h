@@ -23,7 +23,7 @@
         HRESULT rr = func;                                  \
         if( FAILED(rr) )                                    \
         {                                                   \
-            GN_ERROR( "D3D10 ERROR CODE : 0x%08X", rr );    \
+            GN_ERROR(sLogger)( "D3D10 ERROR CODE : 0x%08X", rr ); \
             something                                       \
         }                                                   \
     } else void(0)

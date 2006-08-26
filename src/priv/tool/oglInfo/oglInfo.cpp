@@ -1,5 +1,7 @@
 #include "pch.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.oglInfo");
+
 //!
 //! Split a string into token list
 // ------------------------------------------------------------------------
@@ -112,7 +114,7 @@ void printOglInfo( GN::HandleType disp, int index )
         "===================================================\n"
         "\n\n";
 
-    GN_INFO( info.cptr() );
+    GN_INFO(sLogger)( info.cptr() );
 
     GN_UNGUARD;
 }
@@ -168,9 +170,9 @@ int main()
     HDC hdc;
     GN_MSW_CHECK_RV( hdc = ::GetDC(hwnd), -1 );
 
-    GN_INFO( "Enumerating pixelformats..." );
+    GN_INFO(sLogger)( "Enumerating pixelformats..." );
     int count = DescribePixelFormat(hdc, 1, 0, 0);
-    GN_INFO( "%d pixelformats in total.", count );
+    GN_INFO(sLogger)( "%d pixelformats in total.", count );
 
     ::ReleaseDC( hwnd, hdc );
 
@@ -187,7 +189,7 @@ int main()
 
 int main()
 {
-    GN_INFO( "Not implemented on platform other than MSWIN." );
+    GN_INFO(sLogger)(sLogger)( "Not implemented on platform other than MSWIN." );
     return 0;
 }
 

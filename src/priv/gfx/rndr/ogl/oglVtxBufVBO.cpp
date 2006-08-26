@@ -2,6 +2,8 @@
 #include "oglVtxBuf.h"
 #include "oglRenderer.h"
 
+GN::Logger * GN::gfx::OGLVtxBufVBO::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -20,7 +22,7 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
 
     if( 0 == bytes )
     {
-        GN_ERROR( "Vertex buffer size can't be zero!" );
+        GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
 
@@ -52,7 +54,7 @@ void GN::gfx::OGLVtxBufVBO::quit()
 
     if( isLocked() )
     {
-        GN_WARN( "call unlock() before u release the vstream!" );
+        GN_WARN(sLogger)( "call unlock() before u release the vstream!" );
         unlock();
     }
 

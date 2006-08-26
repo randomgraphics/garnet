@@ -207,8 +207,8 @@ class MemPoolTest : public CxxTest::TestSuite
         static GN::FixedSizedObjectAllocator<Test> sAllocator;
         inline void * operator new( size_t ) { return sAllocator.alloc(); }
         inline void operator delete( void* p ) { sAllocator.dealloc(p); }
-        inline void * operator new( size_t, void * p ) { GN_INFO("placement new"); return p; }
-        inline void operator delete( void*, void * ) { GN_INFO("placement delete"); }
+        inline void * operator new( size_t, void * p ) { GN_INFO(sLogger)("placement new"); return p; }
+        inline void operator delete( void*, void * ) { GN_INFO(sLogger)("placement delete"); }
     };
 
     typedef std::vector<char,GN::StlAllocator<char> > CharArray;

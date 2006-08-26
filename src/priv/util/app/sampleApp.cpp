@@ -5,6 +5,8 @@
 
 float GN::app::SampleApp::UPDATE_INTERVAL = 1.0f/60.0f;
 
+static GN::Logger * sLogger = GN::getLogger("GN.app.SampleApp");
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -87,7 +89,7 @@ bool GN::app::SampleApp::onCheckCmdLine( int argc, const char * const argv[] )
             s += " ";
             s += argv[i];
         }
-        GN_WARN( s.cptr() );
+        GN_WARN(sLogger)( s.cptr() );
     }
     return true;
 }
@@ -210,7 +212,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         {
             if( 1 == so.OptionId() )
             {
-                GN_INFO( "\n"
+                GN_INFO(sLogger)( "\n"
                     "Usage : %s [options]\n\n"
                     "Options : (options are case-insensitive)\n"
                     "    -h, -?, --help         : Show help screen.\n"
@@ -237,7 +239,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 uint32_t idx;
                 if( !str2Uint32( idx, so.OptionArg() ) )
                 {
-                    GN_ERROR( "monitor index must be integer." );
+                    GN_ERROR(sLogger)( "monitor index must be integer." );
                     return false;
                 }
                 mInitParam.ro.monitorHandle = win::getMonitorByIndex( idx );

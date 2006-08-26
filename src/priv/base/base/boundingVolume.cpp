@@ -1,5 +1,7 @@
 #include "pch.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.base.BoundVolume");
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -26,12 +28,12 @@ void GN::calcBoundingBox( Boxf & result, const Vector3f * positions, size_t coun
 
     if( 0 == positions )
     {
-        GN_ERROR( "Null position array." );
+        GN_ERROR(sLogger)( "Null position array." );
         return;
     }
     if( 0 == count )
     {
-        GN_ERROR( "There's no way to calculate bounding box for 0 vertices." );
+        GN_ERROR(sLogger)( "There's no way to calculate bounding box for 0 vertices." );
         return;
     }
 

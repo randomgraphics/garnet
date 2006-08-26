@@ -220,10 +220,10 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void enable() const { GN_WARN( "this function should not be called!" ); }
+        virtual void enable() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
         virtual void disable() const;
-        virtual void apply() const { GN_WARN( "this function should not be called!" ); }
-        virtual void applyDirtyUniforms() const { GN_WARN( "this function should not be called!" ); }
+        virtual void apply() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
+        virtual void applyDirtyUniforms() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
 
         // ********************************
         // from Shader

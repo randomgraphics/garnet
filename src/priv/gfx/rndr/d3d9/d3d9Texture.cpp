@@ -3,6 +3,9 @@
 #include "d3d9Texture.h"
 #include "garnet/GNd3d9.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+GN::Logger * GN::gfx::D3D9Texture::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -140,7 +143,7 @@ static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
     }
 
     // failed
-    GN_ERROR( "Current renderer does not support depth texture." );
+    GN_ERROR(sLogger)( "Current renderer does not support depth texture." );
     return D3DFMT_UNKNOWN;
 
     GN_UNGUARD;
@@ -214,7 +217,7 @@ D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
 
         default:
             // failed
-            GN_ERROR( "invalid texture type : %d", type );
+            GN_ERROR(sLogger)( "invalid texture type : %d", type );
             return (D3DRESOURCETYPE)-1;
     }
 }
@@ -288,7 +291,7 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
     // check for empty file
     if( 0 == file.size() )
     {
-        GN_ERROR( "empty file!" );
+        GN_ERROR(sLogger)( "empty file!" );
         quit(); return selfOK();
     }
 
@@ -412,7 +415,7 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
     }
     else
     {
-        GN_ERROR( "unknown resource type!" );
+        GN_ERROR(sLogger)( "unknown resource type!" );
         quit(); return selfOK();
     }
 
@@ -483,17 +486,17 @@ bool GN::gfx::D3D9Texture::deviceRestore()
         mD3DFormat = ( TEXUSAGE_DEPTH & getDesc().usage ) ? sGetDefaultDepthTextureFormat( mRenderer ) : D3DFMT_A8R8G8B8;
         if( D3DFMT_UNKNOWN == mD3DFormat )
         {
-            GN_ERROR( "Fail to detect default texture format." );
+            GN_ERROR(sLogger)( "Fail to detect default texture format." );
             return false;
         }
-        GN_TRACE( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
+        GN_TRACE(sLogger)( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
     }
     else
     {
         mD3DFormat = d3d9::clrFmt2D3DFormat( getDesc().format, getDesc().tiled );
         if( D3DFMT_UNKNOWN == mD3DFormat )
         {
-            GN_ERROR( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );
+            GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );
             return false;
         }
     }
@@ -507,7 +510,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
-        GN_WARN( "can't generate mipmap automatically!" );
+        GN_WARN(sLogger)( "can't generate mipmap automatically!" );
         GN_ASSERT( D3DUSAGE_AUTOGENMIPMAP & mD3DUsage );
         mD3DUsage &= !D3DUSAGE_AUTOGENMIPMAP;
     }
@@ -577,7 +580,7 @@ void GN::gfx::D3D9Texture::deviceDispose()
     // check if locked
     if( isLocked() )
     {
-        GN_WARN( "You are destroying a locked texture!" );
+        GN_WARN(sLogger)( "You are destroying a locked texture!" );
         unlock();
     }
 
@@ -732,7 +735,7 @@ bool GN::gfx::D3D9Texture::lock(
 
         default:
             GN_UNEXPECTED();
-            GN_ERROR( "Invalid texture type." );
+            GN_ERROR(sLogger)( "Invalid texture type." );
             return false;
     }
 

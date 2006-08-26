@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "oglVtxBuf.h"
 
+GN::Logger * GN::gfx::OGLVtxBufNormal::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -17,7 +19,7 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
 
     if( 0 == bytes )
     {
-        GN_ERROR( "Vertex buffer size can't be zero!" );
+        GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
 

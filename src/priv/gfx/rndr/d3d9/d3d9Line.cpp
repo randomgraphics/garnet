@@ -21,6 +21,8 @@ static const D3DVERTEXELEMENT9 sDecl[] =
     { 0, 12, D3DDECLTYPE_D3DCOLOR, 0, D3DDECLUSAGE_COLOR   , 0 },
     D3DDECL_END()
 };
+
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
  
 // *****************************************************************************
 // Initialize and shutdown
@@ -128,12 +130,12 @@ void GN::gfx::D3D9Line::drawLines(
 
     if( 0 == positions )
     {
-        GN_ERROR( "Line positions can't be NULL!" );
+        GN_ERROR(sLogger)( "Line positions can't be NULL!" );
         return;
     }
     if( 0 == stride )
     {
-        GN_ERROR( "stride of positions can't be zero!" );
+        GN_ERROR(sLogger)( "stride of positions can't be zero!" );
         return;
     }
 

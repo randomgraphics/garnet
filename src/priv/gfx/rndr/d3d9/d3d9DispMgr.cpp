@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 
 //
 //
@@ -112,7 +113,7 @@ static D3DFORMAT sDetermineBackBufferFormat(
         case 16 : candidates = d16Candidates; break;
         case 24 :
         case 32 : candidates = d32Candidates; break;
-        default : GN_ERROR( "unsupported depth: %d!", dd.depth );
+        default : GN_ERROR(sLogger)( "unsupported depth: %d!", dd.depth );
             return D3DFMT_UNKNOWN;
     }
 
@@ -141,7 +142,7 @@ static D3DFORMAT sDetermineBackBufferFormat(
     }
 
     // failed
-    GN_ERROR( "No suitable backbuffer format found!" );
+    GN_ERROR(sLogger)( "No suitable backbuffer format found!" );
     return D3DFMT_UNKNOWN;
 
     GN_UNGUARD;
@@ -226,7 +227,7 @@ bool GN::gfx::D3D9Renderer::dispInit()
     mD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if( 0 == mD3D )
     {
-        GN_ERROR( "incorrect SDK version!" );
+        GN_ERROR(sLogger)( "incorrect SDK version!" );
         return false;
     }
 
@@ -285,10 +286,10 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX9_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
-        GN_TRACE( "Enumerating D3D adapters: %s", Identifier.Description );
+        GN_TRACE(sLogger)( "Enumerating D3D adapters: %s", Identifier.Description );
         if( strstr(Identifier.Description,"NVPerfHUD") )
         {
-            GN_TRACE( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
+            GN_TRACE(sLogger)( "Found NVPerfHUD adapter. We will create D3D device using NVPerfHUD adapter." );
             mAdapter = i;
             devtypes.push_back( D3DDEVTYPE_REF );
             break;
@@ -330,7 +331,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
         if( D3DERR_NOTAVAILABLE == r ) continue;
         if( D3D_OK != r )
         {
-            GN_WARN( ::DXGetErrorString9A(r) );
+            GN_WARN(sLogger)( ::DXGetErrorString9A(r) );
             continue;
         }
 
@@ -372,7 +373,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
     }
 
     // failed
-    GN_ERROR( "no suitable D3D device found!" );
+    GN_ERROR(sLogger)( "no suitable D3D device found!" );
     return false;
 
     GN_UNGUARD;
@@ -455,7 +456,7 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
 		mDevice->SetVertexShader(0);
 		mDevice->SetPixelShader(0);
 
-		GN_INFO(
+		GN_INFO(sLogger)(
 			"\n"
 			"====== Dump unreleased D3D resources ========\n"
 			"	SwapChains: %d\n"

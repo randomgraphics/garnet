@@ -2,6 +2,8 @@
 #include "oglRenderer.h"
 #include <algorithm>
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // ****************************************************************************
 // local types/variables/functions
 // ****************************************************************************
@@ -54,7 +56,7 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
     {
         if( GL_TRUE != sFindExtension( extensions, *p ) )
         {
-            GN_ERROR( "Required extension '%s' was not supported!", *p );
+            GN_ERROR(sLogger)( "Required extension '%s' was not supported!", *p );
             fail = true;
         }
         // next extension
@@ -155,7 +157,7 @@ static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & g
         "===================================================\n"
         "\n\n";
 
-    GN_INFO( info.cptr() );
+    GN_INFO(sLogger)( info.cptr() );
 
     GN_UNGUARD;
 }

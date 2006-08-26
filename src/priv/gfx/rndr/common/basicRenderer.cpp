@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "basicRenderer.h"
 
+GN::Logger * GN::gfx::BasicRenderer::sLogger = GN::getLogger("GN.gfx.rndr.common");
+
 // *****************************************************************************
 //                         BasicRenderer init / quit functions
 // *****************************************************************************

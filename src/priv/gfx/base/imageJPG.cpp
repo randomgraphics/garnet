@@ -7,6 +7,20 @@
 
 uint8_t JpegDataSource::sFakeEOI[2] = { 0xFF, JPEG_EOI };
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.JPG");
+
+//
+//
+// -----------------------------------------------------------------------------
+void JpegErrorHandler::sErrorExit( j_common_ptr cinfo )
+{
+    char buffer[JMSG_LENGTH_MAX];
+    (*cinfo->err->format_message) (cinfo, buffer);
+    GN_ERROR(sLogger)( buffer );
+    JpegErrorHandler * err = (JpegErrorHandler*)cinfo->err;
+    longjmp( *err->mJumpBuf, -1 );
+}
+
 //
 //
 // -----------------------------------------------------------------------------

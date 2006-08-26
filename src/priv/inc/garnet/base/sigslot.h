@@ -143,6 +143,8 @@ namespace GN
 
         mutable SlotContainer mSlots;
 
+        static GN::Logger * sLogger;
+
     public:
 
         ~SIGNAL_NAME()
@@ -169,7 +171,7 @@ namespace GN
         inline void connect( Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) ) const
         {
             GN_ASSERT( !IsConst<Y>::value ); // Y can't be const class
-            if( 0 == classPtr || 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
+            if( 0 == classPtr || 0 == memFuncPtr ) { GN_ERROR(sLogger)( "Can't connect to NULL method pointer!" ); return; }
             SlotDesc desc;
             desc.func.bind( classPtr, memFuncPtr );
             desc.classPtr = classPtr;
@@ -180,7 +182,7 @@ namespace GN
         template<class X, class Y>
         inline void connect( const Y * classPtr, R (X::*memFuncPtr)(PARAM_TYPES) const ) const
         {
-            if( 0 == classPtr || 0 == memFuncPtr ) { GN_ERROR( "Can't connect to NULL method pointer!" ); return; }
+            if( 0 == classPtr || 0 == memFuncPtr ) { GN_ERROR(sLogger)( "Can't connect to NULL method pointer!" ); return; }
             SlotDesc desc;
             desc.func.bind( classPtr, memFuncPtr );
             desc.classPtr = classPtr;
@@ -262,6 +264,8 @@ namespace GN
             return mSlots.end();
         }
     };
+
+    template<typename R PARAM_COMMA PARAM_TEMPLS> GN::Logger * SIGNAL_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = getLogger("GN.base.Sigslot");
 }
 
 #undef PARAM_TEMPLS_0

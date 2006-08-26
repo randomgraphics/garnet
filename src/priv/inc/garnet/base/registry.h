@@ -24,6 +24,8 @@ namespace GN
         HandleManager<Item,uint32_t> mItems;
         std::map<StrA,uint32_t> mNames;
 
+        static Logger * sLogger;
+
         const Variant * getItemByKey( uint32_t key, const char * name, bool printError ) const
         {
             GN_GUARD_SLOW;
@@ -32,7 +34,7 @@ namespace GN
             {
                 if( printError )
                 {
-                    GN_ERROR( "invalid key '%d' for item named '%s'", key, name ? name : "<UNKNOWN>" );
+                    GN_ERROR(sLogger)( "invalid key '%d' for item named '%s'", key, name ? name : "<UNKNOWN>" );
                 }
                 return NULL;
             }

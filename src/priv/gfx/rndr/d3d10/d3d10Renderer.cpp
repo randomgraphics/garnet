@@ -12,6 +12,8 @@
 
 #endif // GN_MSVC
 
+GN::Logger * GN::gfx::D3D10Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D10");
+
 // *****************************************************************************
 // Global functions
 // *****************************************************************************
@@ -94,7 +96,7 @@ bool GN::gfx::D3D10Renderer::changeOptions( const RendererOptions & ro, bool for
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
+        GN_WARN(sLogger)( "This call to changeOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
@@ -104,13 +106,13 @@ bool GN::gfx::D3D10Renderer::changeOptions( const RendererOptions & ro, bool for
 #if GN_XENON
     if( !newro.fullscreen )
     {
-        GN_WARN( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
+        GN_WARN(sLogger)( "Windowed mode is not supported on Xenon platform. Force fullscreen mode." );
         newro.fullscreen = true;
         newro.displayMode.set(0,0,0,0);
     }
     if( newro.useExternalWindow )
     {
-        GN_WARN( "External render windowe is not supported on Xenon platform. Force internal render window." );
+        GN_WARN(sLogger)( "External render windowe is not supported on Xenon platform. Force internal render window." );
         newro.useExternalWindow = false;
     }
 #endif
@@ -176,10 +178,10 @@ bool GN::gfx::D3D10Renderer::deviceCreate()
     if( !drawDeviceCreate()     ) return false;
 
     // trigger signals
-    GN_TRACE( "GFX SIGNAL: D3D10 device create." );
+    GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device create." );
     if( !sSigCreate() ) return false;
 
-    GN_TRACE( "GFX SIGNAL: D3D10 device restore." );
+    GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -199,10 +201,10 @@ void GN::gfx::D3D10Renderer::deviceDestroy()
 
     if( mDevice )
     {
-        GN_TRACE( "GFX SIGNAL: D3D10 device dispose." );
+        GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device dispose." );
         sSigDispose();
 
-        GN_TRACE( "GFX SIGNAL: D3D10 device destroy." );
+        GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device destroy." );
         sSigDestroy();
     }
 

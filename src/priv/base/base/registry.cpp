@@ -1,9 +1,7 @@
 #include "pch.h"
 #include <pcrecpp.h>
 
-// *****************************************************************************
-// private methods
-// *****************************************************************************
+GN::Logger * GN::Registry::sLogger = GN::getLogger( "GN.base.Registry" );
 
 // *****************************************************************************
 // public methods
@@ -38,7 +36,7 @@ GN::Registry::ItemKey GN::Registry::set(
     }
     else
     {
-        GN_ERROR( "Item '%s' is already existed.!", name.cptr() );
+        GN_ERROR(sLogger)( "Item '%s' is already existed.!", name.cptr() );
         return 0;
     }
 

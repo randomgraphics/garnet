@@ -65,8 +65,16 @@ namespace GN { namespace gfx
         //!
         void setTexChannelMask( size_t stage, size_t channels )
         {
-            if( stage >= 8 ) { GN_ERROR( "stage is out of range [0-7]." ); return; }
-            if( channels < 1 || channels > 4 ) { GN_ERROR( "channels is out of range [1-4]." ); return; }
+            if( stage >= 8 )
+            {
+                static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.FatMesh");
+                GN_ERROR(sLogger)( "stage is out of range [0-7]." ); return;
+            }
+            if( channels < 1 || channels > 4 )
+            {
+                static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.FatMesh");
+                GN_ERROR(sLogger)( "channels is out of range [1-4]." ); return;
+            }
             size_t shift = stage << 1;
             unsigned int bits = (unsigned int)channels - 1;
             texMasks &= ~(3<<shift);
@@ -103,7 +111,12 @@ namespace GN { namespace gfx
         //@{
         void setTexcoord( size_t stage, float s, float t = .0f, float r = .0f, float q = .0f )
         {
-            if( stage >= 8 ) { GN_ERROR( "stage is out of range [0-7]." ); return; }
+            if( stage >= 8 )
+            {
+                static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.FatMesh");
+                GN_ERROR(sLogger)( "stage is out of range [0-7]." );
+                return;
+            }
             texcoord[stage].set( s, t, r, q );
         }
         void setTexcoord( size_t stage, const Vector2f & v ) { setTexcoord( stage, v.x, v.y ); }
@@ -139,7 +152,7 @@ namespace GN { namespace gfx
         //@{
         void setVertexFormat( FatVertexFormat fmt )
         {
-            if( !fmt.valid() ) { GN_WARN( "invalid vertex format" ); return; }
+            if( !fmt.valid() ) { GN_WARN(sLogger)( "invalid vertex format" ); return; }
             mVertexFormat = fmt;
         }
         void newVertices( const FatVertex * verts, size_t count )
@@ -313,6 +326,9 @@ namespace GN { namespace gfx
         // misc.
         FatVertex       mTmpVtx;
         FatVertexFormat mTmpFmt;
+
+        // Logger
+        static Logger * sLogger;
 
     private:
 

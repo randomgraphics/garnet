@@ -47,28 +47,28 @@ namespace GN { namespace gfx
         {
             if( isLocked() )
             {
-                GN_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
+                GN_ERROR(sLogger)( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
 
             // check face
             if( face >= getDesc().faces )
             {
-                GN_ERROR( "invalid lock face : %d", face );
+                GN_ERROR(sLogger)( "invalid lock face : %d", face );
                 return false;
             }
 
             // check level
             if( level >= getDesc().levels )
             {
-                GN_ERROR( "invalid lock level : %d", level );
+                GN_ERROR(sLogger)( "invalid lock level : %d", level );
                 return false;
             }
 
             // check flag
             if( flag >= NUM_LOCK_FLAGS )
             {
-                GN_ERROR( "invalid lock flag : %d", flag );
+                GN_ERROR(sLogger)( "invalid lock flag : %d", flag );
                 return false;
             }
 
@@ -111,7 +111,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GN_ERROR( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
+                GN_ERROR(sLogger)( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }
@@ -126,6 +126,8 @@ namespace GN { namespace gfx
         //!
         bool mLocked;
 
+        static Logger * sLogger;
+
         // ********************************
         //  private functions
         // ********************************
@@ -136,7 +138,7 @@ namespace GN { namespace gfx
         {
             if( offset >= maxLength )
             {
-                GN_ERROR( "offset is beyond the end of valid range." );
+                GN_ERROR(sLogger)( "offset is beyond the end of valid range." );
                 return false;
             }
             if( 0 == length ) length = maxLength;

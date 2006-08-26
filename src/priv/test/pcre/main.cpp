@@ -3,11 +3,13 @@
 
 using namespace GN;
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.pcre");
+
 int main( int argc, const char * argv[] )
 {
     if( argc < 3 )
     {
-        GN_INFO( "usage: %s <pattern> <string>", argv[0] );
+        GN_INFO(sLogger)( "usage: %s <pattern> <string>", argv[0] );
         return -1;
     }
 
@@ -19,7 +21,7 @@ int main( int argc, const char * argv[] )
     const std::string & err = re.error();
     if( !err.empty() )
     {
-        GN_ERROR( err.c_str() );
+        GN_ERROR(sLogger)( err.c_str() );
         return -1;
     }
 

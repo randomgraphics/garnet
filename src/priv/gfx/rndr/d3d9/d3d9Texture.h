@@ -139,12 +139,12 @@ namespace GN { namespace gfx
                     return surf;
 
                 case TEXTYPE_3D:
-                    GN_ERROR( "Can't get surface from 3D texture." );
+                    GN_ERROR(sLogger)( "Can't get surface from 3D texture." );
                     return 0;
 
                 default:
                     // program should not reach here.
-                    GN_ERROR( "Invalid texture type!" );
+                    GN_ERROR(sLogger)( "Invalid texture type!" );
                     GN_UNEXPECTED();
                     return 0;
             }
@@ -203,6 +203,8 @@ namespace GN { namespace gfx
         size_t mLockedFace;
         size_t mLockedLevel;
         //@}
+
+        static Logger * sLogger;
 
         // ********************************
         // private functions

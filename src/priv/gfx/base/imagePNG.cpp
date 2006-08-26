@@ -5,6 +5,8 @@
 #pragma warning(disable:4611) // interaction between 'function' and C++ object destruction is non-portable
 #endif
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.PNG");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -26,7 +28,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
                 case 8  : return GN::gfx::FMT_L_8_UNORM;
                 case 16 : return GN::gfx::FMT_L_16_UNORM;
                 default :
-                    GN_ERROR( "unsupport color depth %d", info->bit_depth );
+                    GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );
             }
             break;
 
@@ -37,7 +39,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
                 case 8  : return GN::gfx::FMT_LA_8_8_UNORM;
                 case 16 : return GN::gfx::FMT_LA_16_16_UNORM;
                 default :
-                    GN_ERROR( "unsupport color depth %d", info->bit_depth );
+                    GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );
             }
             break;
 
@@ -50,7 +52,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
                           return GN::gfx::FMT_BGRA_8_8_8_8_UNORM;
                 case 16 : return GN::gfx::FMT_RGBA_16_16_16_16_UNORM;
                 default :
-                    GN_ERROR( "unsupport color depth %d", info->bit_depth );
+                    GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );
             }
             break;
 
@@ -61,7 +63,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
             return GN::gfx::FMT_BGRA_8_8_8_8_UNORM;
 
         default:
-            GN_ERROR( "unknown PNG format %d", info->color_type );
+            GN_ERROR(sLogger)( "unknown PNG format %d", info->color_type );
             break;
     }
     return GN::gfx::FMT_UNKNOWN;
@@ -202,6 +204,24 @@ bool PNGReader::readImage( void * o_data )
 // *****************************************************************************
 // private functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void PNGAPI PNGReader::error( png_structp png, png_const_charp msg )
+{
+    GN_ERROR(sLogger)( msg );
+    longjmp( png->jmpbuf, 1 );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void PNGAPI PNGReader::warning( png_structp, png_const_charp msg )
+{
+    GN_WARN(sLogger)( msg );
+}
+
 
 //
 //

@@ -11,6 +11,8 @@
 //                        local functions
 // *****************************************************************************
 
+static GN::Logger * sLogger = GN::getLogger("GN.base.Clock");
+
 //!
 //! 获得计数器的主频
 // -----------------------------------------------------------------------------
@@ -26,7 +28,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
     //
     // FIXME: timer may warp in this second
     //
-    GN_INFO( "Clock : Evaluating CPU Frequency ......" );
+    GN_INFO(sLogger)( "Clock : Evaluating CPU Frequency ......" );
 
     GN::Clock::CycleType c1 = getSystemCycleCount();
 #if GN_MSWIN
@@ -39,7 +41,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
     r = (c2 - c1);
 #endif
 
-    GN_INFO( "Clock : OK! Current CPU Frequency is %d MHz!",
+    GN_INFO(sLogger)( "Clock : OK! Current CPU Frequency is %d MHz!",
         (uint32_t)(r / 1000000) ) );
 
 #else // !USE_RTDSC
@@ -47,7 +49,7 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
 #if GN_MSWIN
     if( !QueryPerformanceFrequency((LARGE_INTEGER*)&r) )
     {
-        GN_INFO( "Current system do NOT support high-res "
+        GN_INFO(sLogger)( "Current system do NOT support high-res "
             "performance counter, use getTickCount()!" );
         r = 1000;  // getTickCount()返回的是毫秒
     }
@@ -89,7 +91,7 @@ void GN::Clock::pause()
 {
     if (!mPaused)
     {
-        GN_INFO( "Timer pause!" );
+        GN_INFO(sLogger)( "Timer pause!" );
         mPauseTime = getSystemCycleCount();
         mPaused = true;
     }
@@ -102,7 +104,7 @@ void GN::Clock::resume()
 {
     if (mPaused)
     {
-        GN_INFO( "Timer resume!" );
+        GN_INFO(sLogger)( "Timer resume!" );
         mPauseElapsed += getSystemCycleCount() - mPauseTime;
         mPaused = false;
     }

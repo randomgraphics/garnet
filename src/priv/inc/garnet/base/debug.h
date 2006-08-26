@@ -82,12 +82,12 @@
 //!
 //! Output a warning message for unimplemented functionality
 //!
-#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN( "Function %s is not implmented yet.", GN_FUNCTION ) );
+#define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.unimpl"))( "Function %s is not implmented yet.", GN_FUNCTION ) );
 
 //!
 //! Output a todo message.
 //!
-#define GN_TODO(msg) GN_DO_ONCE( GN_WARN( "TODO: %s", msg ) );
+#define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: %s", msg ) );
 
 //!
 //! Compile-time assert
@@ -105,17 +105,18 @@
 
 //@{
 
-#define GN_OGL_CHECK_DO_DESC( func, errDesc, something )        \
-    if( true ) {                                                \
-        func;                                                   \
-        GLenum err = glGetError();                              \
-        if( GL_NO_ERROR != err )                                \
-        {                                                       \
-            GN_ERROR( "%s%s!", errDesc,                         \
-                (const char*)::gluErrorString(err) );           \
-            GN_UNEXPECTED();                                    \
-            something                                           \
-        }                                                       \
+#define GN_OGL_CHECK_DO_DESC( func, errDesc, something )                    \
+    if( true ) {                                                            \
+        func;                                                               \
+        GLenum err = glGetError();                                          \
+        if( GL_NO_ERROR != err )                                            \
+        {                                                                   \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.OGLError"); \
+            GN_ERROR(sLogger)( "%s%s!", errDesc,                            \
+                (const char*)::gluErrorString(err) );                       \
+            GN_UNEXPECTED();                                                \
+            something                                                       \
+        }                                                                   \
     } else void(0)
 //
 #define GN_OGL_CHECK_RV_DESC( func, errDesc, retVal ) GN_OGL_CHECK_DO_DESC( func, errDesc, return retVal; )
@@ -138,15 +139,16 @@
 //!
 //! check return value of Windows function (general version)
 //!
-#define GN_MSW_CHECK_DO( func, something )                  \
-    if( true ) {                                            \
-        intptr_t rr = (intptr_t)(func);                     \
-        if( 0 == rr )                                       \
-        {                                                   \
-            GN_ERROR( ::GN::getOSErrorInfo() );             \
-            GN_UNEXPECTED();                                \
-            something                                       \
-        }                                                   \
+#define GN_MSW_CHECK_DO( func, something )                                   \
+    if( true ) {                                                             \
+        intptr_t rr = (intptr_t)(func);                                      \
+        if( 0 == rr )                                                        \
+        {                                                                    \
+            static GN::Logger * sLogger = GN::getLogger("GN.base.MSWError"); \
+            GN_ERROR(sLogger)( ::GN::getOSErrorInfo() );                     \
+            GN_UNEXPECTED();                                                 \
+            something                                                        \
+        }                                                                    \
     } else void(0)
 
 //!
@@ -174,14 +176,15 @@
 #ifdef D3DCOMPILE_USEVOIDS
 #define GN_DX9_CHECK_DO( func, something ) func
 #else
-#define GN_DX9_CHECK_DO( func, something )          \
-    if( true ) {                                    \
-        HRESULT rr = func;                          \
-        if( FAILED(rr) )                            \
-        {                                           \
-            GN_ERROR( DXGetErrorString9A(rr) );     \
-            something                               \
-        }                                           \
+#define GN_DX9_CHECK_DO( func, something )                                  \
+    if( true ) {                                                            \
+        HRESULT rr = func;                                                  \
+        if( FAILED(rr) )                                                    \
+        {                                                                   \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DX9Error"); \
+            GN_ERROR(sLogger)( DXGetErrorString9A(rr) );                    \
+            something                                                       \
+        }                                                                   \
     } else void(0)
 #endif // D3DCOMPILE_USEVOIDS
 

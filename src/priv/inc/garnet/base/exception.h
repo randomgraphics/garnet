@@ -84,8 +84,7 @@ namespace GN
         const char * file,
         int          line )
     {
-        LogDesc desc( LOGLEVEL_ERROR, "Exception", func, file, line );
-        doLog( desc, msg );
+        GN_LOG_EX( getLogger("GN.base.exception"), Logger::LL_FATAL, func, file, line )( msg );
     }
 
     //!

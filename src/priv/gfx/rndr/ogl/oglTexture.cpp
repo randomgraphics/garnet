@@ -2,6 +2,9 @@
 #include "oglTexture.h"
 #include "oglRenderer.h"
 
+GN::Logger * GN::gfx::OGLTexture::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // local var/types/functions
 // *****************************************************************************
@@ -67,7 +70,7 @@ static GN_INLINE GLenum sTexWrap2OGL( GN::gfx::TexWrap w )
             return GL_CLAMP_TO_EDGE_SGIS;
         else
         {
-            GN_ERROR( "do not support clamp to edge!" );
+            GN_ERROR(sLogger)( "do not support clamp to edge!" );
             return GL_CLAMP;
         }
     }
@@ -154,8 +157,7 @@ static GN_INLINE bool sColorFormat2OGL(
             }
             else
             {
-                GN_WARN( "current hardware do not support "
-                         "UV texture format!" );
+                GN_WARN(sLogger)( "current hardware do not support UV texture format!" );
                 gl_internalformat  = 2;
                 gl_format          = GL_RGBA;
                 gl_type            = GL_BYTE;
@@ -195,7 +197,7 @@ static GN_INLINE bool sColorFormat2OGL(
         case GN::gfx::FMT_D_16 :
             if( !GLEW_ARB_depth_texture )
             {
-                GN_ERROR( "does not support GL_ARB_depth_texture." );
+                GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
                 return false;
             }
             gl_internalformat  = GL_DEPTH_COMPONENT16_ARB;
@@ -206,7 +208,7 @@ static GN_INLINE bool sColorFormat2OGL(
         case GN::gfx::FMT_D_24 :
             if( !GLEW_ARB_depth_texture )
             {
-                GN_ERROR( "does not support GL_ARB_depth_texture." );
+                GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
                 return false;
             }
             gl_internalformat  = GL_DEPTH_COMPONENT24_ARB;
@@ -217,7 +219,7 @@ static GN_INLINE bool sColorFormat2OGL(
         case GN::gfx::FMT_D_32 :
             if( !GLEW_ARB_depth_texture )
             {
-                GN_ERROR( "does not support GL_ARB_depth_texture." );
+                GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
                 return false;
             }
             gl_internalformat  = GL_DEPTH_COMPONENT32_ARB;
@@ -265,7 +267,7 @@ static GN_INLINE bool sColorFormat2OGL(
     }
 
     // failed
-    GN_ERROR( "invalid or unsupported format '%s'!", GN::gfx::clrFmt2Str(clrfmt) );
+    GN_ERROR(sLogger)( "invalid or unsupported format '%s'!", GN::gfx::clrFmt2Str(clrfmt) );
     return false;
 }
 
@@ -346,7 +348,7 @@ static GLuint sNew3DTexture(
 {
     GN_GUARD;
 
-    GN_ERROR( "no implementation" );
+    GN_ERROR(sLogger)( "no implementation" );
     return 0;
 
     GN_UNGUARD;
@@ -371,7 +373,7 @@ static GLuint sNewCubeTexture(
 
     if( !GLEW_ARB_texture_cube_map )
     {
-        GN_ERROR( "do not support cube map!" );
+        GN_ERROR(sLogger)( "do not support cube map!" );
         return 0;
     }
 
@@ -435,7 +437,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
         case TEXTYPE_3D   :
             if ( !GLEW_EXT_texture3D )
             {
-                GN_ERROR( "do not support 3D texture!" );
+                GN_ERROR(sLogger)( "do not support 3D texture!" );
                 quit(); return selfOK();
             }
             mOGLTarget = GL_TEXTURE_3D;
@@ -443,13 +445,13 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
         case TEXTYPE_CUBE :
             if ( !GLEW_ARB_texture_cube_map )
             {
-                GN_ERROR( "do not support CUBE texture!" );
+                GN_ERROR(sLogger)( "do not support CUBE texture!" );
                 quit(); return selfOK();
             }
             mOGLTarget = GL_TEXTURE_CUBE_MAP_ARB;
             break;
         default :
-            GN_ERROR( "invalid texture type!" );
+            GN_ERROR(sLogger)( "invalid texture type!" );
             quit(); return selfOK();
     }
 
@@ -485,7 +487,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
             break;
 
         case TEXTYPE_STACK :
-            GN_ERROR( "OpenGL does not support STACK texture." );
+            GN_ERROR(sLogger)( "OpenGL does not support STACK texture." );
             mOGLTexture = 0;
             break;
 
@@ -557,7 +559,7 @@ void GN::gfx::OGLTexture::quit()
     // check if locked
     if( isLocked() )
     {
-        GN_WARN( "call You are destroying a locked texture!" );
+        GN_WARN(sLogger)( "call You are destroying a locked texture!" );
         unlock();
     }
 
@@ -658,7 +660,7 @@ bool GN::gfx::OGLTexture::lock(
                 break;
 
             default:
-                GN_ERROR( "unsupport compress format '%s'!", clrFmt2Str(getDesc().format) );
+                GN_ERROR(sLogger)( "unsupport compress format '%s'!", clrFmt2Str(getDesc().format) );
                 return false;
         }
     }
@@ -684,7 +686,7 @@ bool GN::gfx::OGLTexture::lock(
     // 如果不是只写锁定，则读取当前的贴图内容到缓冲区中
     if( LOCK_RO == flag || LOCK_RW == flag )
     {
-        GN_WARN( "目前不支持从贴图中读取数据!" );
+        GN_WARN(sLogger)( "目前不支持从贴图中读取数据!" );
     }
 
     // success
@@ -739,7 +741,7 @@ void GN::gfx::OGLTexture::unlock()
             }
             else
             {
-                GN_WARN( "do not support texture compression!" );
+                GN_WARN(sLogger)( "do not support texture compression!" );
             }
         }
         else

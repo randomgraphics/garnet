@@ -9,6 +9,8 @@
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // local function
 // *****************************************************************************
@@ -127,7 +129,7 @@ sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
             break;
 
         default:
-            GN_ERROR( "invalid texture type!" );
+            GN_ERROR(sLogger)( "invalid texture type!" );
             return;
     }
 }
@@ -689,7 +691,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
                         {
                             if( TSV_DOT3 == tsv && !GLEW_ARB_texture_env_dot3 )
                             {
-                                GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_dot3!" ) );
+                                GN_DO_ONCE( GN_WARN(sLogger)( "do not support GL_ARB_texture_env_dot3!" ) );
                                 tsv = TSV_ARG0;
                             }
                             GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, sTs2OGL[j].op1, sTsv2OGL[tsv].val1 ) );
@@ -714,7 +716,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
                             GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, glop ) );
                             break;
                         default:
-                            GN_DO_ONCE( GN_WARN( "do not support GL_ARB_texture_env_combine" ) );
+                            GN_DO_ONCE( GN_WARN(sLogger)( "do not support GL_ARB_texture_env_combine" ) );
                             GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE ) );
                             break;
                     }

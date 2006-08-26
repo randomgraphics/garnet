@@ -2,6 +2,8 @@
 #include "oglShader.h"
 #include "oglRenderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -62,7 +64,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
     // check GL extensions
     if( !GLEW_ARB_shader_objects )
     {
-        GN_ERROR( "no GLSL shader support!" );
+        GN_ERROR(sLogger)( "no GLSL shader support!" );
         return false;
     }
     
@@ -70,7 +72,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
     GN_OGL_CHECK( mProgram = glCreateProgramObjectARB() );
     if( 0 == mProgram )
     {
-        GN_ERROR( "fail to create OpenGL shading language program object!" );
+        GN_ERROR(sLogger)( "fail to create OpenGL shading language program object!" );
         return false;
     }
 
@@ -90,7 +92,7 @@ bool GN::gfx::OGLProgramGLSL::createProgram()
         false );
     if( !linkOk )
     {
-        GN_ERROR(
+        GN_ERROR(sLogger)(
             "\n========== GLSL program link error =========\n"
             "%s\n"
             "==============================================\n",

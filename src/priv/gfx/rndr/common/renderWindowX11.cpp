@@ -6,6 +6,8 @@
 #include "glew.h"
 #include "glxew.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.renderWindow.X11");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -20,7 +22,7 @@ static int sXErrorHandler( Display * d, XErrorEvent * e )
     static char buf[4096];
     XGetErrorText( d, e->error_code, buf, 4095 );
 
-    GN_ERROR(
+    GN_ERROR(sLogger)(
         "X error : %s"
         "   Major opcode of failed request:  %d\n"
         "   Minor opcode of failed request:  %d\n"
@@ -55,7 +57,7 @@ Screen * sGetScreenStructureOfWindow( Display * disp, Window win )
 
     if( !disp || !win )
     {
-        GN_ERROR( "invalid display or invalid window!" );
+        GN_ERROR(sLogger)( "invalid display or invalid window!" );
         return NULL;
     }
 
@@ -121,7 +123,7 @@ bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
 
     if( !sIsWindow( display, externalWindow ) )
     {
-        GN_ERROR( "External render window is invalid!" );
+        GN_ERROR(sLogger)( "External render window is invalid!" );
         return false;
     }
 
@@ -177,7 +179,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
         AutoXPtr<XVisualInfo> vi( glXChooseVisual( mDisplay, scr, attributeList ) );
         if( 0 == vi )
         {
-            GN_ERROR( "Cannot find visual with desired attributes." );
+            GN_ERROR(sLogger)( "Cannot find visual with desired attributes." );
             return false;
         }
 
@@ -185,7 +187,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
         Colormap cmap = XCreateColormap( mDisplay, (Window)parentWindow, vi->visual, AllocNone );
         if( 0 == cmap )
         {
-            GN_ERROR( "Cannot allocate colormap." );
+            GN_ERROR(sLogger)( "Cannot allocate colormap." );
             return false;
         }
 
@@ -208,7 +210,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
             &swa ); // background
         if( 0 == mWindow )
         {
-            GN_ERROR( "XCreateSimpleWindow() failed." );
+            GN_ERROR(sLogger)( "XCreateSimpleWindow() failed." );
             return false;
         }
 
@@ -280,7 +282,7 @@ bool GN::gfx::RenderWindowX11::getClientSize( uint32_t & width, uint32_t & heigh
 
     if( !sIsWindow( mDisplay, (void*)mWindow ) )
     {
-        GN_ERROR( "RenderWindowX11 is not initialized!" );
+        GN_ERROR(sLogger)( "RenderWindowX11 is not initialized!" );
         return false;
     }
 
@@ -335,7 +337,7 @@ bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
         mDisplay = XOpenDisplay( dispStr.cptr() );
         if( 0 == mDisplay )
         {
-            GN_ERROR( "Fail to open display '%s'.", dispStr.cptr() );
+            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.cptr() );
             return false;
         }
 

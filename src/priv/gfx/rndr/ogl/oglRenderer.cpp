@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "oglRenderer.h"
 
+GN::Logger * GN::gfx::OGLRenderer::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Global functions
 // *****************************************************************************
@@ -80,7 +82,7 @@ bool GN::gfx::OGLRenderer::changeOptions( const RendererOptions & ro, bool force
     // prepare for function re-entrance.
     if( mDeviceChanging )
     {
-        GN_WARN( "This call to changeOptions() is ignored to avoid function re-entance!" );
+        GN_WARN(sLogger)( "This call to changeOptions() is ignored to avoid function re-entance!" );
         return true;
     }
     ScopeBool __dummy__(mDeviceChanging);
@@ -144,10 +146,10 @@ bool GN::gfx::OGLRenderer::deviceCreate()
     #undef COMPONENT_RECREATE
 
     // trigger signals
-    GN_TRACE( "GFX SIGNAL: OGL device create." );
+    GN_TRACE(sLogger)( "GFX SIGNAL: OGL device create." );
     if( !sSigCreate() ) return false;
 
-    GN_TRACE( "GFX SIGNAL: OGL device restore." );
+    GN_TRACE(sLogger)( "GFX SIGNAL: OGL device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -172,7 +174,7 @@ bool GN::gfx::OGLRenderer::deviceRestore()
     if( !drawDeviceRestore() ) return false;
 
     // trigger reset event
-    GN_TRACE( "GFX SIGNAL: OGL device restore." );
+    GN_TRACE(sLogger)( "GFX SIGNAL: OGL device restore." );
     if( !sSigRestore() ) return false;
 
     // success
@@ -190,7 +192,7 @@ void GN::gfx::OGLRenderer::deviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-    GN_TRACE( "GFX SIGNAL: OGL device dispose." );
+    GN_TRACE(sLogger)( "GFX SIGNAL: OGL device dispose." );
     sSigDispose();
 
     drawDeviceDispose();
@@ -213,10 +215,10 @@ void GN::gfx::OGLRenderer::deviceDestroy()
 
     if( getOGLRC() )
     {
-        GN_TRACE( "GFX SIGNAL: OGL device dispose." );
+        GN_TRACE(sLogger)( "GFX SIGNAL: OGL device dispose." );
         sSigDispose();
 
-        GN_TRACE( "GFX SIGNAL: OGL device destroy." );
+        GN_TRACE(sLogger)( "GFX SIGNAL: OGL device destroy." );
         sSigDestroy();
     }
 
