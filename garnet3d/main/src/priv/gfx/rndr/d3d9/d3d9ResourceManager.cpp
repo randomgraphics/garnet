@@ -37,7 +37,7 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR( "Not _ALL_ graphics resouces are released!" );
+        GN_ERROR(sLogger)( "Not _ALL_ graphics resouces are released!" );
         return false;
     }
 
@@ -115,13 +115,13 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR( "All graphics resouces MUST be released, after receiving 'destroy' signal!" );
+        GN_ERROR(sLogger)( "All graphics resouces MUST be released, after receiving 'destroy' signal!" );
 
         std::list<D3D9Resource*>::iterator i = mResourceList.begin();
         while( i != mResourceList.end() )
         {
             D3D9Resource * r = *i;
-            GN_ERROR( "0x%p", r );
+            GN_ERROR(sLogger)( "0x%p", r );
             ++i;
         }
     }
@@ -162,7 +162,7 @@ GN::gfx::D3D9Renderer::createShader(
                 }
 
                 default:
-                    GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
 
@@ -184,13 +184,13 @@ GN::gfx::D3D9Renderer::createShader(
                 }
 
                 default:
-                    GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
 
         default:
             GN_UNEXPECTED(); // program should not reach here
-            GN_ERROR( "invalid shader type: %d", type );
+            GN_ERROR(sLogger)( "invalid shader type: %d", type );
             return 0;
     }
 

@@ -57,12 +57,18 @@ static bool sReadLn( GN::StrA & s, GN::File & fp )
 // public functions
 // ***************************************************************************************
 
+GN::Logger * GN::gfx::FatMesh::sLogger = GN::getLogger("GN.gfx.base.FatMesh");
+
 //
 //
 // ---------------------------------------------------------------------------------------
 bool GN::gfx::FatVertexFormat::fromStr( const char * str, size_t len )
 {
-    if( 0 == str ) { GN_ERROR( "null string" ); return false; }
+    if( 0 == str )
+    {
+        static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.FatMesh");
+        GN_ERROR(sLogger)( "null string" ); return false;
+    }
     if( 0 == len ) len = strLen( str );
     GN_UNIMPL_WARNING();
     return false;
@@ -78,7 +84,7 @@ void GN::gfx::FatMesh::optimize( const OptimizeOptions & oo )
     // build vertex segments, to make sure index wouldn't be too large
     if( mVertices.size() > 0xFFFF )
     {
-        GN_WARN( "do not support mesh with more than 0xFFFF vertices" );
+        GN_WARN(sLogger)( "do not support mesh with more than 0xFFFF vertices" );
         return;
     }
     DynaArray<DynaArray<size_t> > faces; // indices of faces that belongs to each segments.
@@ -168,7 +174,7 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
     char header[TAG_LEN];
     if( !fp.read( header, sizeof(header), 0 ) )
     {
-        GN_ERROR( "Fail to read file header." );
+        GN_ERROR(sLogger)( "Fail to read file header." );
         return false;
     }
 
@@ -176,7 +182,7 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
     if( 0 != memcmp( BIN_TAG, header, TAG_LEN ) &&
         0 != memcmp( TXT_TAG, header, TAG_LEN ) )
     {
-        GN_ERROR( "FatMesh file must begin with \"FATMESHB\" or \"FATMESHT\"." );
+        GN_ERROR(sLogger)( "FatMesh file must begin with \"FATMESHB\" or \"FATMESHT\"." );
         return false;
     }
 
@@ -187,22 +193,22 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
 
         // read mesh descriptor
         if( !fp.read( &desc, sizeof(desc), &readen ) || sizeof(desc) != readen )
-        { GN_ERROR( "fail to read mesh descriptor." ); return false; }
+        { GN_ERROR(sLogger)( "fail to read mesh descriptor." ); return false; }
         mVertexFormat.u32 = desc.vtxFmt;
         mHasFaceNormal = !!desc.hasFaceNormal;
-        if( !mVertexFormat.valid() ) { GN_ERROR( "invalid vertex format." ); return false; }
+        if( !mVertexFormat.valid() ) { GN_ERROR(sLogger)( "invalid vertex format." ); return false; }
 
         // read vertices
         mVertices.resize( desc.numVtx );
         if( !fp.read( mVertices.cptr(), sizeof(FatVertex)*mVertices.size(), &readen ) ||
             readen != sizeof(FatVertex)*mVertices.size() )
-        { GN_ERROR( "fail to read vertices." ); return false; }
+        { GN_ERROR(sLogger)( "fail to read vertices." ); return false; }
 
         // read faces
         mFaces.resize( desc.numFace );
         if( !fp.read( mFaces.cptr(), sizeof(Face)*mFaces.size(), &readen ) ||
             readen != sizeof(Face)*mFaces.size() )
-        { GN_ERROR( "fail to read faces." ); return false; }
+        { GN_ERROR(sLogger)( "fail to read faces." ); return false; }
     }
     else if( 'T' == header[TAG_LEN-1] )
     {
@@ -213,22 +219,22 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
 #endif
 
         // read file header
-        if( !sReadLn( s, fp ) ) { GN_ERROR( "fail to read file header." ); return false; }
+        if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read file header." ); return false; }
         uint32_t numVerts, numFaces, vtxFmt, faceNormal;
         if( 4 != sscanf(
             s.cptr(),
             " NumVertices=%lu NumFaces=%lu VertexFormat=%lu FaceNormal=%lu",
             &numVerts, &numFaces, &vtxFmt, &faceNormal ) )
         {
-            GN_ERROR( "invalid file header: %s", s.cptr() );
+            GN_ERROR(sLogger)( "invalid file header: %s", s.cptr() );
             return false;
         }
         mVertexFormat.u32 = vtxFmt;
         mHasFaceNormal = !!faceNormal;
 
         // read vertex header
-        if( !sReadLn( s, fp ) ) { GN_ERROR( "fail to read vertex header." ); return false; }
-        if( VERTEX_HEADER != s ) { GN_ERROR( "invalid vertex header: %s", s.cptr() ); return false; }
+        if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read vertex header." ); return false; }
+        if( VERTEX_HEADER != s ) { GN_ERROR(sLogger)( "invalid vertex header: %s", s.cptr() ); return false; }
 
         // read vertices
         mVertices.resize( numVerts );
@@ -236,7 +242,7 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
         {
             FatVertex & v = mVertices[i];
 
-            if( !sReadLn( s, fp ) ) { GN_ERROR( "fail to read vertex #%u", i ); return false; }
+            if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read vertex #%u", i ); return false; }
 
             if( (12*4+3*3+1) != sscanf(
                 s.cptr(),
@@ -273,13 +279,13 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
                 &v.texcoord[6].x, &v.texcoord[6].y, &v.texcoord[6].z, &v.texcoord[6].w,
                 &v.texcoord[7].x, &v.texcoord[7].y, &v.texcoord[7].z, &v.texcoord[7].w ) )
             {
-                GN_ERROR( "fail to parse vertex #%u", i );
+                GN_ERROR(sLogger)( "fail to parse vertex #%u", i );
                 return false;
             }
         }
 
         // read face heder
-        if( !sReadLn( s, fp ) || FACE_HEADER != s ) { GN_ERROR( "fail to read face header." ); return false; }
+        if( !sReadLn( s, fp ) || FACE_HEADER != s ) { GN_ERROR(sLogger)( "fail to read face header." ); return false; }
 
         // read faces
         uint32_t i0, i1, i2;
@@ -288,14 +294,14 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
         {
             Face & f = mFaces[i];
 
-            if( !sReadLn( s, fp ) ) { GN_ERROR( "fail to read face #%u", i ); return false; }
+            if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read face #%u", i ); return false; }
 
             if( 7 != sscanf(
                 s.cptr(),
                 "%lu,%lu,%lu,%f,%f,%f,%d,",
                 &i0, &i1, &i2, &f.normal.x, &f.normal.y, &f.normal.z, &f.material ) )
             {
-                GN_ERROR( "fail to parse face #%u", i );
+                GN_ERROR(sLogger)( "fail to parse face #%u", i );
                 return false;
             }
 
@@ -330,7 +336,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
     if( 'B' == mode )
     {
         // write file tag
-        if( !fp.write( BIN_TAG, TAG_LEN, 0 ) ) { GN_ERROR( "fail to write file tag." ); return false; }
+        if( !fp.write( BIN_TAG, TAG_LEN, 0 ) ) { GN_ERROR(sLogger)( "fail to write file tag." ); return false; }
 
         // write mesh descriptor
         FatMeshDesc desc;
@@ -339,15 +345,15 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
         desc.vtxFmt = mVertexFormat.u32;
         desc.hasFaceNormal = (uint8_t)mHasFaceNormal;
         desc.reserved[0] = desc.reserved[1] = desc.reserved[2] = 0;
-        if( !fp.write( &desc, sizeof(desc), 0 ) ) { GN_ERROR( "fail to write mesh descriptor." ); return false; }
+        if( !fp.write( &desc, sizeof(desc), 0 ) ) { GN_ERROR(sLogger)( "fail to write mesh descriptor." ); return false; }
 
         // write vertices
         if( !fp.write( mVertices.cptr(), sizeof(FatVertex)*mVertices.size(), 0 ) )
-        { GN_ERROR( "fail to write vertices." ); return false; }
+        { GN_ERROR(sLogger)( "fail to write vertices." ); return false; }
 
         // write faces
         if( !fp.write( mFaces.cptr(), sizeof(Face)*mFaces.size(), 0 ) )
-        { GN_ERROR( "fail to write faces." ); return false; }
+        { GN_ERROR(sLogger)( "fail to write faces." ); return false; }
     }
     else if( 'T' == mode )
     {
@@ -363,7 +369,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
             mHasFaceNormal ? 1 : 0 );
         if( !fp.write( s.cptr(), s.size(), 0 ) )
         {
-            GN_ERROR( "fail to write mesh header." );
+            GN_ERROR(sLogger)( "fail to write mesh header." );
             return false;
         }
 
@@ -371,7 +377,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
         s.format( "%s\n", VERTEX_HEADER );
         if( !fp.write( s.cptr(), s.size(), 0 ) )
         {
-            GN_ERROR( "fail to write vertex header." );
+            GN_ERROR(sLogger)( "fail to write vertex header." );
             return false;
         }
 
@@ -419,7 +425,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
             // write vertex string to file
             if( !fp.write( s.cptr(), s.size(), 0 ) )
             {
-                GN_ERROR( "fail to write vertex #%lu", i );
+                GN_ERROR(sLogger)( "fail to write vertex #%lu", i );
                 return false;
             }
         }
@@ -428,7 +434,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
         s.format( "%s\n", FACE_HEADER );
         if( !fp.write( s.cptr(), s.size(), 0 ) )
         {
-            GN_ERROR( "fail to write face header." );
+            GN_ERROR(sLogger)( "fail to write face header." );
             return false;
         }
 
@@ -446,14 +452,14 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
             // write face string to file
             if( !fp.write( s.cptr(), s.size(), 0 ) )
             {
-                GN_ERROR( "fail to write face #%lu", i );
+                GN_ERROR(sLogger)( "fail to write face #%lu", i );
                 return false;
             }
         }
     }
     else
     {
-        GN_ERROR( "invalid mode. Must be 'B' or 'T'." );
+        GN_ERROR(sLogger)( "invalid mode. Must be 'B' or 'T'." );
         return false;
     }
 
@@ -530,14 +536,14 @@ inline void GN::gfx::FatMesh::drawFaceSegment( size_t idx )
 
     if( mUse32BitIndex )
     {
-        GN_WARN( "current renderer does not support 32bit index buffer" );
+        GN_WARN(sLogger)( "current renderer does not support 32bit index buffer" );
         return;
     }
 
     const FaceSegment & s = mFaceSegments[idx];
     if( s.indices16.size() < 3 )
     {
-        GN_WARN( "no enough indices (at least 3)" );
+        GN_WARN(sLogger)( "no enough indices (at least 3)" );
         return;
     }
 

@@ -6,6 +6,8 @@
 
 namespace GN { namespace gfx
 {
+    static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.FAKE");
+
     class FakeRenderer : public Renderer
     {
         // ********************************************************************
@@ -104,7 +106,7 @@ namespace GN { namespace gfx
                 case CAPS_MAX_PRIMITIVES      : return 65535;
                 case CAPS_MAX_TEXTURE_STAGES  : return 8;
                 default :
-                    GN_ERROR( "invlid cap: %d", c );
+                    GN_ERROR(sLogger)( "invlid cap: %d", c );
                     return 0;
             };
         }

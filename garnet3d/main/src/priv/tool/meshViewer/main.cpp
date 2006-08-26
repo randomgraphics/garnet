@@ -5,6 +5,8 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::input;
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
+
 class MeshViewerApp : public app::SampleApp
 {
     StrA    mMeshName;
@@ -20,10 +22,10 @@ public:
             if( '-' != *a )
             {
                 mMeshName = app::SampleResourceManager::sSearchResourceFile( a );
-                if( mMeshName.empty() ) { GN_ERROR( "mesh file '%s' not found.", a ); return false; }
+                if( mMeshName.empty() ) { GN_ERROR(sLogger)( "mesh file '%s' not found.", a ); return false; }
                 break;
             }
-            else GN_WARN( "unknown command line argument: %s", a );
+            else GN_WARN(sLogger)( "unknown command line argument: %s", a );
         }
         return true;
     }

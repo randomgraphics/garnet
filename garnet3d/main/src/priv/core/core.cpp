@@ -17,6 +17,8 @@ namespace GN
     // Global runtime assert behavior flag.
     GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
 
+    static Logger * sHeapLogger = getLogger("GN.core.HeapAllocation");
+
     //
     //
     // -----------------------------------------------------------------------------
@@ -27,7 +29,7 @@ namespace GN
         //#else
         void * ptr = ::malloc( sz );
         //#endif
-        if ( 0 == ptr ) GN_ERROR( "out of memory!" );
+        if ( 0 == ptr ) GN_ERROR(sHeapLogger)( "out of memory!" );
         return ptr;
     }
 
@@ -41,7 +43,7 @@ namespace GN
         //#else
         ptr = ::realloc( ptr, sz );
         //#endif
-        if ( 0 == ptr ) GN_ERROR( "out of memory!" );
+        if ( 0 == ptr ) GN_ERROR(sHeapLogger)( "out of memory!" );
         return ptr;
     }
 

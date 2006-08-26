@@ -12,7 +12,7 @@ struct ColoredEffect : public BasicEffect
         // check renderer caps
         if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) )
         {
-            GN_ERROR( "hardware support to vs.1.1 and ps.1.1 is required." );
+            GN_ERROR(sLogger)( "hardware support to vs.1.1 and ps.1.1 is required." );
             return false;
         }
 

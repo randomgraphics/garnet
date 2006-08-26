@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "oglIdxBuf.h"
 
+GN::Logger * GN::gfx::OGLIdxBuf::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -18,7 +20,7 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
     // check parameter
     if( 0 == numIdx )
     {
-        GN_ERROR( "invalid buffer length!" );
+        GN_ERROR(sLogger)( "invalid buffer length!" );
         quit(); return selfOK();
     }
 

@@ -15,10 +15,6 @@ namespace GN
     //!
     namespace core
     {
-        //!
-        //! Global log signal
-        //!
-        extern GN_PUBLIC Signal2<void,const LogDesc &, const char *> gSigLog;
     }
 }
 

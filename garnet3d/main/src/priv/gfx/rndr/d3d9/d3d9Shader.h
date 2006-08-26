@@ -301,7 +301,10 @@ namespace GN { namespace gfx
 
                 default:
                     // Program should not reach here.
-                    GN_ERROR( "invalid uniform type!" );
+                    {
+                        static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+                        GN_ERROR(sLogger)( "invalid uniform type!" );
+                    }
                     GN_UNEXPECTED();
             }
             GN_UNGUARD_SLOW;

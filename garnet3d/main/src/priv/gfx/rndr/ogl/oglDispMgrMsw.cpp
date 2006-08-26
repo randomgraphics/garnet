@@ -3,6 +3,8 @@
 
 #if GN_MSWIN
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // ****************************************************************************
 // local functions
 // ****************************************************************************
@@ -23,9 +25,9 @@ static int sChoosePixelFormat( HDC hdc )
     // flags that can not exist
     DWORD xxx_flags = PFD_NEED_PALETTE; // we're aiming for a RGB device
 
-    GN_INFO( "Enumerating pixelformats..." );
+    GN_INFO(sLogger)( "Enumerating pixelformats..." );
     int num = DescribePixelFormat(hdc, 1, 0, 0);
-    GN_INFO( "%d pixelformats in total.", num );
+    GN_INFO(sLogger)( "%d pixelformats in total.", num );
 
     int candidates[4] =
     {
@@ -39,7 +41,7 @@ static int sChoosePixelFormat( HDC hdc )
     {
         if (!DescribePixelFormat(hdc, i, sizeof(pfd), &pfd))
         {
-            GN_ERROR( "can't get the description of the %dth pixelformat!", i );
+            GN_ERROR(sLogger)( "can't get the description of the %dth pixelformat!", i );
             return 0;
         }
 
@@ -107,7 +109,7 @@ static int sChoosePixelFormat( HDC hdc )
     }
 
     // error
-    GN_ERROR( "no appropriate pixelformat!" );
+    GN_ERROR(sLogger)( "no appropriate pixelformat!" );
     return 0;
 
     GN_UNGUARD;
@@ -151,12 +153,12 @@ static bool sSetupPixelFormat( HDC hdc )
     // choose pixel format
     int n = sChoosePixelFormat( hdc );
     if( 0 == n ) return false;
-    GN_INFO( "select pixelformat #%d.", n );
+    GN_INFO(sLogger)( "select pixelformat #%d.", n );
 
     // Set the pixel format for the device context
     if (!SetPixelFormat(hdc, n, &pfd))
     {
-        GN_ERROR( "SetPixelFormat failed!" );
+        GN_ERROR(sLogger)( "SetPixelFormat failed!" );
         return false;
     }
 
@@ -184,7 +186,7 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
     HWND hwnd = (HWND)getDispDesc().windowHandle;
     if( !::IsWindow(hwnd) )
     {
-        GN_ERROR( "Invalid render window handle!" );
+        GN_ERROR(sLogger)( "Invalid render window handle!" );
         return false;
     }
 
@@ -250,7 +252,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
         GN_MSW_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
         // move window to left-top of the monitor, and set it as TOPMOST window.
-        GN_INFO( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
+        GN_INFO(sLogger)( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
         GN_MSW_CHECK( ::SetWindowPos(
             hwnd, HWND_TOPMOST,
             mi.rcWork.left, mi.rcWork.top,
@@ -272,7 +274,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     {
         if( !wglSwapIntervalEXT( ro.vsync ) )
         {
-            GN_WARN( "Fail to adjust SGI swap control" );
+            GN_WARN(sLogger)( "Fail to adjust SGI swap control" );
         }
     }
 
@@ -375,11 +377,11 @@ bool GN::gfx::OGLRenderer::activateDisplayMode()
         CDS_FULLSCREEN,
         NULL ) )
     {
-        GN_ERROR( "Failed to change to specified full screen mode!" );
+        GN_ERROR(sLogger)( "Failed to change to specified full screen mode!" );
         return false;
     }
     mDisplayModeActivated = true;
-    GN_INFO(
+    GN_INFO(sLogger)(
         "Fullscreen mode activated: width(%d), height(%d), depth(%d), refrate(%d).",
         dd.width, dd.height, dd.depth, dd.refrate );
 
@@ -406,10 +408,10 @@ void GN::gfx::OGLRenderer::restoreDisplayMode()
         // restore display mode
         if( DISP_CHANGE_SUCCESSFUL != ::ChangeDisplaySettings(0, 0) )
         {
-            GN_ERROR( "Failed to restore display mode: %s!", getOSErrorInfo() );
+            GN_ERROR(sLogger)( "Failed to restore display mode: %s!", getOSErrorInfo() );
         }
 
-        GN_INFO( "Display mode restored." );
+        GN_INFO(sLogger)( "Display mode restored." );
     }
 
     GN_UNGUARD;

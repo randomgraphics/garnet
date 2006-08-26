@@ -25,6 +25,8 @@ struct TGA_HEADER
 #pragma pack(pop)
 GN_CASSERT( sizeof(TGA_HEADER) == 18 );
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.TGA");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -91,7 +93,7 @@ static bool sReadRLERGBImage(
     GN_GUARD;
 
 #define CHECK_SRC_SIZE( bytes ) \
-    if( (src + (bytes) ) > end ) { GN_ERROR( "incomplete image data." ); return false; }
+    if( (src + (bytes) ) > end ) { GN_ERROR(sLogger)( "incomplete image data." ); return false; }
 
     const uint8_t * end = src + srcSize;
 
@@ -122,7 +124,7 @@ static bool sReadRLERGBImage(
                 case 24: sCopyPixel888( src, 0, dst, 4, runSize ); dst += runSize*4; break;
                 case 32: sCopyPixel8888( src, 0, dst, 4, runSize ); dst += runSize*4; break;
                 default:
-                    GN_ERROR( "unsupport uncompressed RGB TGA image bits: %d", header.bits );
+                    GN_ERROR(sLogger)( "unsupport uncompressed RGB TGA image bits: %d", header.bits );
                     return false;
             }
             src += srcBpp;
@@ -137,7 +139,7 @@ static bool sReadRLERGBImage(
                 case 24: sCopyPixel888( src, 3, dst, 4, runSize ); dst += runSize*4; break;
                 case 32: sCopyPixel8888( src, 4, dst, 4, runSize ); dst += runSize*4; break;
                 default:
-                    GN_ERROR( "unsupport uncompressed RGB TGA image bits: %d", header.bits );
+                    GN_ERROR(sLogger)( "unsupport uncompressed RGB TGA image bits: %d", header.bits );
                     return false;
             }
             src += srcBpp * runSize;
@@ -148,7 +150,7 @@ static bool sReadRLERGBImage(
     // check for incomplete image
     if( i < numPixels )
     {
-        GN_ERROR( "incomplete image data." );
+        GN_ERROR(sLogger)( "incomplete image data." );
         return false;
     }
 
@@ -215,19 +217,19 @@ bool TGAReader::readHeader(
     // copy TGA header
     if( i_size <= sizeof(TGA_HEADER) )
     {
-        GN_ERROR( "File size is too small to hold TGA file header." );
+        GN_ERROR(sLogger)( "File size is too small to hold TGA file header." );
         return false;
     }
 
     // What can we handle
     if( header.imagetype != 2 && header.imagetype != 3 && header.imagetype != 10 )
     {
-        GN_ERROR( "We can only handle TGA image type 2(rgb), 3(grey) and 10(rle-rgb).");
+        GN_ERROR(sLogger)( "We can only handle TGA image type 2(rgb), 3(grey) and 10(rle-rgb).");
         return false;
     }
     if( header.colourmaptype != 0 && header.colourmaptype != 1 )
     {
-        GN_ERROR( "We can only handle colour map types of 0 and 1." );
+        GN_ERROR(sLogger)( "We can only handle colour map types of 0 and 1." );
         return false;
     }
 
@@ -237,7 +239,7 @@ bool TGAReader::readHeader(
                        + header.colourmaptype * header.colourmaplength * header.colourmapbits / 8;
     if( i_size < minimalSize )
     {
-        GN_ERROR( "File size is not large enough: minimum(%d) actual(%d).", minimalSize, i_size );
+        GN_ERROR(sLogger)( "File size is not large enough: minimum(%d) actual(%d).", minimalSize, i_size );
         return false;
     }
 
@@ -250,7 +252,7 @@ bool TGAReader::readHeader(
             case 24 : o_desc.format = GN::gfx::FMT_BGRA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
             case 32 : o_desc.format = GN::gfx::FMT_BGRA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
             default :
-                GN_ERROR( "unsupport/invalid RGB image bits: %d.", header.bits );
+                GN_ERROR(sLogger)( "unsupport/invalid RGB image bits: %d.", header.bits );
                 return false;
         }
     }
@@ -263,7 +265,7 @@ bool TGAReader::readHeader(
             case 16 : o_desc.format = GN::gfx::FMT_L_16_UNORM; mOutputBytesPerPixel = 2; break;
             case 32 : o_desc.format = GN::gfx::FMT_L_32_UNORM; mOutputBytesPerPixel = 4; break;
             default :
-                GN_ERROR( "unsupport/invalid grey image bits: %d.", header.bits );
+                GN_ERROR(sLogger)( "unsupport/invalid grey image bits: %d.", header.bits );
                 return false;
         }
     }
@@ -296,7 +298,7 @@ bool TGAReader::readImage( void * o_data )
 
     if( 0 == o_data )
     {
-        GN_ERROR( "NULL output buffer!" );
+        GN_ERROR(sLogger)( "NULL output buffer!" );
         return false;
     }
 
@@ -348,7 +350,7 @@ bool TGAReader::readImage( void * o_data )
         {
             if( srcSize < numPixels * srcBpp )
             {
-                GN_ERROR( "incomplete image data." );
+                GN_ERROR(sLogger)( "incomplete image data." );
                 return false;
             }
             switch( header.bits )
@@ -357,7 +359,7 @@ bool TGAReader::readImage( void * o_data )
                 case 24: sCopyPixel888( src, 3, dst, 4, numPixels ); break;
                 case 32: sCopyPixel8888( src, 4, dst, 4, numPixels ); break;
                 default:
-                    GN_ERROR( "unsupport uncompressed RGB TGA image bits: %d", header.bits );
+                    GN_ERROR(sLogger)( "unsupport uncompressed RGB TGA image bits: %d", header.bits );
                     return false;
             }
             break;
@@ -368,7 +370,7 @@ bool TGAReader::readImage( void * o_data )
         {
             if( srcSize < numPixels * srcBpp )
             {
-                GN_ERROR( "incomplete image data." );
+                GN_ERROR(sLogger)( "incomplete image data." );
                 return false;
             }
             switch( header.bits )
@@ -377,7 +379,7 @@ bool TGAReader::readImage( void * o_data )
                 case 16: memcpy( dst, src, numPixels*2 ); break;
                 case 32: memcpy( dst, src, numPixels*4 ); break;
                 default:
-                    GN_ERROR( "unsupport uncompressed grayscale TGA image bits: %d", header.bits );
+                    GN_ERROR(sLogger)( "unsupport uncompressed grayscale TGA image bits: %d", header.bits );
                     return false;
             }
             break;
@@ -389,12 +391,12 @@ bool TGAReader::readImage( void * o_data )
             break;
 
         default:
-            GN_ERROR( "unsupport TGA image type : %d", header.imagetype );
+            GN_ERROR(sLogger)( "unsupport TGA image type : %d", header.imagetype );
             return false;
     }
 
     // TODO: handle interleaved image
-    if( id.interleaved ) GN_WARN( "TGA image is interleaved!" );
+    if( id.interleaved ) GN_WARN(sLogger)( "TGA image is interleaved!" );
 
     // flip the image
     if( 0 == id.flip )

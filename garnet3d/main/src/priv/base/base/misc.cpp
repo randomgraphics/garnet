@@ -5,6 +5,8 @@
 // -----------------------------------------------------------------------------
 void GN::putEnv( const char * name, const char * value )
 {
+    static GN::Logger * sLogger = GN::getLogger("GN.base.putEnv");
+
 #if GN_XENON
     // Xenon does not support putenv()
     GN_UNUSED_PARAM( name );
@@ -12,7 +14,7 @@ void GN::putEnv( const char * name, const char * value )
 #else
     if( strEmpty(name) )
     {
-        GN_ERROR( "Environment variable name can't be empty!" );
+        GN_ERROR(sLogger)( "Environment variable name can't be empty!" );
         return;
     }
 
@@ -21,7 +23,7 @@ void GN::putEnv( const char * name, const char * value )
 #if GN_POSIX
     if( 0 != ::setenv( name, value, 1 ) )
     {
-        GN_ERROR( "fail to set environment '%s=%s'.", name, value );
+        GN_ERROR(sLogger)( "fail to set environment '%s=%s'.", name, value );
     }
 #else
     StrA s;
@@ -36,7 +38,7 @@ void GN::putEnv( const char * name, const char * value )
 
     if( 0 != _putenv( const_cast<char*>(s.cptr()) ) )
     {
-        GN_ERROR( "fail to set environment '%s'.", s.cptr() );
+        GN_ERROR(sLogger)( "fail to set environment '%s'.", s.cptr() );
     }
 #endif
 #endif

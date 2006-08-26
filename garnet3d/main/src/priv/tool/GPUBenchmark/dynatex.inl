@@ -85,7 +85,7 @@ class TestTextureBandwidth : public BasicTestCase
 		StrA txt;
 		txt.format( "memcpy bandwidth = %fGB/s\n", LOOP_COUNT * BUF_SIZE / elapsed / 1000000000.0 );
 		OutputDebugStringA( txt.cptr() );
-		GN_INFO( txt.cptr() );
+		GN_INFO(sLogger)( txt.cptr() );
 
         memFree( src );
         memFree( dst );

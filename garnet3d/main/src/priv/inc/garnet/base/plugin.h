@@ -370,6 +370,8 @@ namespace GN
         HandleManager<NameItem,NameHandle> mNames;
         std::map<PluginID,PluginItem>      mPlugins;
 
+        static Logger * sLogger;
+
         // ********************************
         //   private functions
         // ********************************

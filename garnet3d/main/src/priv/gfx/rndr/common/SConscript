@@ -1,10 +1,12 @@
 Import( 'GN' )
 sources = [
+    'basicBuffer.cpp',
     'basicContextMgr.cpp',
     'basicDispMgr.cpp',
     'basicDrawMgr.cpp',
     'basicRenderer.cpp',
     'basicResourceManager.cpp',
+    'basicTexture.cpp',
     'renderWindowMsw.cpp',
     'renderWindowX11.cpp',
     'charBitmap8x13.cpp',

@@ -325,7 +325,7 @@ protected:
         RendererOptions ro;
         CREATE_RENDERER( r, ro );
 
-        GN_WARN( "TODO: vertex buffer UT!" );
+        GN_WARN(sLogger)( "TODO: vertex buffer UT!" );
     }
 
     void renderTarget()

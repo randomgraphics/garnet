@@ -9,13 +9,15 @@
 using namespace GN;
 using namespace GN::gfx;
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.Effect");
+
 //
 // post error message
 // -----------------------------------------------------------------------------
 static void sPostError( const XmlNode & node, const StrA & msg )
 {
     GN_UNUSED_PARAM( node );
-    GN_ERROR( "%s", msg.cptr() );
+    GN_ERROR(sLogger)( "%s", msg.cptr() );
 }
 
 //
@@ -487,7 +489,7 @@ static bool sDoParse( EffectDesc & desc, const XmlNode * root )
 
     if( 0 == e ||e->name != "effect" )
     {
-        GN_ERROR( "root node must be \"<effect>\"." );
+        GN_ERROR(sLogger)( "root node must be \"<effect>\"." );
         return false;
     }
 
@@ -522,7 +524,7 @@ bool GN::gfx::EffectDesc::fromXml( const char * str, size_t size )
 
     if( !doc.parse( xpr, str, size ) )
     {
-        GN_ERROR(
+        GN_ERROR(sLogger)(
             "Fail to read XML string:\n"
             "    line   : %d\n"
             "    column : %d\n"
@@ -551,7 +553,7 @@ bool GN::gfx::EffectDesc::fromXml( File & fp )
 
     if( !doc.parse( xpr, fp ) )
     {
-        GN_ERROR(
+        GN_ERROR(sLogger)(
             "Fail to read XML file %s:\n"
             "    line   : %d\n"
             "    column : %d\n"

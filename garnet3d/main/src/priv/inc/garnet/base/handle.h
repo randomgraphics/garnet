@@ -125,7 +125,7 @@ namespace GN
         {
             if( !validHandle(h) )
             {
-                GN_ERROR( "Invalid handle!" );
+                GN_ERROR(getLogger("GN.base.HandleManager"))( "Invalid handle!" );
             }
             else
             {

@@ -5,6 +5,8 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
 
+static GN::Logger * sLogger = GN::getLogger("GN.app.SampleResourceManager");
+
 // *****************************************************************************
 // local raw data loader
 // *****************************************************************************
@@ -41,17 +43,17 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
     StrA path = SampleResourceManager::sSearchResourceFile( name );
     if( path.empty() )
     {
-        GN_ERROR( "Raw resource '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Raw resource '%s' creation failed: path not found.", name.cptr() );
         return false;
     }
 
-    GN_INFO( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
     if( !fp.open( path, "rb" ) )
     {
-        GN_ERROR( "Raw resource '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Raw resource '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 
@@ -68,7 +70,7 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
         size_t readen;
         if( !fp.read( &r->buffer[0], fp.size(), &readen ) )
         {
-            GN_ERROR( "Raw resource '%s' creation failed: read file '%s' error.", name.cptr(), path.cptr() );
+            GN_ERROR(sLogger)( "Raw resource '%s' creation failed: read file '%s' error.", name.cptr(), path.cptr() );
             delete r;
             return false;
         }
@@ -129,7 +131,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     // check for global renderer
     if( 0 == gRendererPtr )
     {
-        GN_ERROR( "Shader '%s' creation failed: renderer is not ready." );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: renderer is not ready." );
         return false;
     }
 
@@ -152,17 +154,17 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     path = SampleResourceManager::sSearchResourceFile( path );
     if( path.empty() )
     {
-        GN_ERROR( "Shader '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: path not found.", name.cptr() );
         return false;
     }
 
-    GN_INFO( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
     if( !fp.open( path, "rt" ) )
     {
-        GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 
@@ -174,7 +176,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     size_t readen;
     if( !fp.read( buf, fp.size(), &readen ) )
     {
-        GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
     GN_ASSERT( readen <= fp.size() );
@@ -205,18 +207,18 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     {
         if( !str2ShaderType( type, typeStr ) )
         {
-            GN_ERROR( "Shader '%s' creation failed: invalid shader type '%s'.", name.cptr(), typeStr.get() );
+            GN_ERROR(sLogger)( "Shader '%s' creation failed: invalid shader type '%s'.", name.cptr(), typeStr.get() );
             return false;
         }
         if( !str2ShadingLanguage( lang, langStr ) )
         {
-            GN_ERROR( "Shader '%s' creation failed: invalid shading language '%s'.", name.cptr(), langStr.get() );
+            GN_ERROR(sLogger)( "Shader '%s' creation failed: invalid shading language '%s'.", name.cptr(), langStr.get() );
             return false;
         }
     }
     else
     {
-        GN_ERROR( "Shader '%s' creation failed: unknown/invalid shader header.", name.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: unknown/invalid shader header.", name.cptr() );
         return false;
     }
 
@@ -249,7 +251,7 @@ static bool sCreateNullTexture( Texture * & result, const StrA & name, void * )
     // check for global renderer
     if( 0 == gRendererPtr )
     {
-        GN_ERROR( "Null texture '%s' creation failed: renderer is not ready.", name.cptr() );
+        GN_ERROR(sLogger)( "Null texture '%s' creation failed: renderer is not ready.", name.cptr() );
         return false;
     }
 
@@ -325,17 +327,17 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
     StrA path = SampleResourceManager::sSearchResourceFile( name );
     if( path.empty() )
     {
-        GN_ERROR( "Effect '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Effect '%s' creation failed: path not found.", name.cptr() );
         return false;
     }
 
-    GN_INFO( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
     if( !fp.open( path, "rt" ) )
     {
-        GN_ERROR( "Effect '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Effect '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
 
@@ -407,7 +409,7 @@ GN::app::SampleResourceManager::sCreateTextureFromFile( const StrA & name )
     // check for global renderer
     if( 0 == gRendererPtr )
     {
-        GN_ERROR( "Texture '%s' creation failed: renderer is not ready." );
+        GN_ERROR(sLogger)( "Texture '%s' creation failed: renderer is not ready." );
         return 0;
     }
 
@@ -415,17 +417,17 @@ GN::app::SampleResourceManager::sCreateTextureFromFile( const StrA & name )
     StrA path = SampleResourceManager::sSearchResourceFile( name );
     if( path.empty() )
     {
-        GN_ERROR( "Texture '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Texture '%s' creation failed: path not found.", name.cptr() );
         return 0;
     }
 
-    GN_INFO( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
     if( !fp.open( path, "rb" ) )
     {
-        GN_ERROR( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Texture '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return 0;
     }
 
@@ -451,7 +453,7 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
     // check for global renderer
     if( 0 == gRendererPtr )
     {
-        GN_ERROR( "Shader '%s' creation failed: renderer is not ready." );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: renderer is not ready." );
         return 0;
     }
 
@@ -459,17 +461,17 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
     StrA path = SampleResourceManager::sSearchResourceFile( name );
     if( path.empty() )
     {
-        GN_ERROR( "Shader '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: path not found.", name.cptr() );
         return 0;
     }
 
-    GN_INFO( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
     if( !fp.open( path, "rb" ) )
     {
-        GN_ERROR( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
         return 0;
     }
 
@@ -478,7 +480,7 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
     size_t readen;
     if( !fp.read( buf.cptr(), fp.size(), &readen ) )
     {
-        GN_ERROR( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: can't read file '%s'.", name.cptr(), path.cptr() );
         return false;
     }
     GN_ASSERT( readen <= fp.size() );

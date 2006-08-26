@@ -4,6 +4,8 @@
 #include "renderWindowX11.h"
 #include <limits.h>
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.BasicRenderer");
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -19,7 +21,7 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, uint32_t * width, uint3
     GN_UNUSED_PARAM(win);
     GN_UNUSED_PARAM(width);
     GN_UNUSED_PARAM(height);
-    GN_ERROR( "Xenon platform does not support this function" );
+    GN_ERROR(sLogger)( "Xenon platform does not support this function" );
     return false;
 
 #elif GN_MSWIN && !GN_XENON
@@ -64,7 +66,7 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
             monitor = ::MonitorFromPoint( pt, MONITOR_DEFAULTTOPRIMARY );
             if( 0 == monitor )
             {
-                GN_ERROR( "Fail to get primary monitor handle." );
+                GN_ERROR(sLogger)( "Fail to get primary monitor handle." );
                 return 0;
             }
         }
@@ -106,7 +108,7 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMod
     }
     else
     {
-        GN_ERROR( "Can't specify monitor handle on Xenon platform." );
+        GN_ERROR(sLogger)( "Can't specify monitor handle on Xenon platform." );
         return false;
     }
 
@@ -286,7 +288,7 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
         mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
         if( !changeOptions( newOptions, false ) )
         {
-            GN_FATAL( "Fail to respond to render window size and position change!" );
+            GN_FATAL(sLogger)( "Fail to respond to render window size and position change!" );
             return false;
         }
     }

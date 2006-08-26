@@ -20,14 +20,8 @@ class JpegErrorHandler : public jpeg_error_mgr
 {
     jmp_buf * mJumpBuf;
 
-    static void s_error_exit( j_common_ptr cinfo )
-    {
-        char buffer[JMSG_LENGTH_MAX];
-        (*cinfo->err->format_message) (cinfo, buffer);
-        GN_ERROR( buffer );
-        JpegErrorHandler * err = (JpegErrorHandler*)cinfo->err;
-        longjmp( *err->mJumpBuf, -1 );
-    }
+    static void sErrorExit( j_common_ptr cinfo );
+
 public:
     //!
     //! Construct JPEG error handler
@@ -36,7 +30,7 @@ public:
     {
         GN_ASSERT( buf );
         jpeg_std_error( this );
-        error_exit = &s_error_exit;
+        error_exit = &sErrorExit;
     }
 };
 

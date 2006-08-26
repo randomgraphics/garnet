@@ -2,6 +2,8 @@
 #include "oglVtxFmt.h"
 #include "oglRenderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Local classes and functions
 // *****************************************************************************
@@ -116,7 +118,7 @@ public:
                 }
                 else
                 {
-                    GN_ERROR( "unsupport semantic %d!", sem );
+                    GN_ERROR(sLogger)( "unsupport semantic %d!", sem );
                     return;
                 }
                 item.enabled = true;
@@ -134,7 +136,7 @@ public:
             }
             else
             {
-                GN_ERROR( "unsupport semantic %d!", sem );
+                GN_ERROR(sLogger)( "unsupport semantic %d!", sem );
                 return;
             }
             item.enabled = false;
@@ -347,7 +349,7 @@ void GN::gfx::OGLVtxFmt::bindBuffer(
                 }
                 else
                 {
-                    GN_WARN( "unsupported vertex semantic!" );
+                    GN_WARN(sLogger)( "unsupported vertex semantic!" );
                 }
                 break;
 
@@ -371,7 +373,7 @@ void GN::gfx::OGLVtxFmt::bindBuffer(
                 }
                 else
                 {
-                    GN_WARN( "unsupported vertex semantic!" );
+                    GN_WARN(sLogger)( "unsupported vertex semantic!" );
                 }
                 break;
 

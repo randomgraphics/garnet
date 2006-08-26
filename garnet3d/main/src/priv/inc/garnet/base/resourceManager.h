@@ -115,7 +115,7 @@ namespace GN
         {
             if( !empty() )
             {
-                GN_WARN( "It is not safe to change delete functor, while resource manager is not empty." );
+                GN_WARN(sLogger)( "It is not safe to change delete functor, while resource manager is not empty." );
             }
             return mDeletor;
         }
@@ -306,7 +306,7 @@ namespace GN
             {
                 if( !overrideExistingResource )
                 {
-                    GN_ERROR( "resource '%s' already exist!", name.cptr() );
+                    GN_ERROR(sLogger)( "resource '%s' already exist!", name.cptr() );
                     return 0;
                 }
                 GN_ASSERT( mResHandles.validHandle(ci->second) );
@@ -320,7 +320,7 @@ namespace GN
                 h = mResHandles.add( item );
                 if( 0 == h )
                 {
-                    GN_ERROR( "Fail to create new resource item!" );
+                    GN_ERROR(sLogger)( "Fail to create new resource item!" );
                     delete item;
                     return 0;
                 }
@@ -347,7 +347,7 @@ namespace GN
             if( validResourceHandle(handle) )
                 removeResourceByName( mResHandles[handle]->name );
             else
-                GN_ERROR( "invalid resource handle: %d", handle );
+                GN_ERROR(sLogger)( "invalid resource handle: %d", handle );
             GN_UNGUARD;
         }
 
@@ -362,7 +362,7 @@ namespace GN
             StringMap::iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
-                GN_ERROR( "invalid resource name: %s", name.cptr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
                 return;
             }
 
@@ -400,7 +400,7 @@ namespace GN
             GN_GUARD;
             if( !validResourceHandle( h ) )
             {
-                GN_ERROR( "invalid resource handle: %d", h );
+                GN_ERROR(sLogger)( "invalid resource handle: %d", h );
                 return;
             }
             doDispose( mResHandles[h] );
@@ -416,7 +416,7 @@ namespace GN
             StringMap::const_iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
-                GN_ERROR( "invalid resource name: %s", name.cptr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
                 return;
             }
             disposeResourceByHandle( iter->second );
@@ -463,7 +463,7 @@ namespace GN
         {
             if( !validResourceHandle(h) )
             {
-                GN_ERROR( "invalid resource handle: %d", h );
+                GN_ERROR(sLogger)( "invalid resource handle: %d", h );
                 return;
             }
             GN_ASSERT( mResHandles[h] );
@@ -512,6 +512,8 @@ namespace GN
         RES   * mNullInstance;
         Deletor mNullDeletor;
 
+        static Logger * sLogger;
+
         // *****************************
         // private methods
         // *****************************
@@ -525,9 +527,9 @@ namespace GN
             if( !validResourceHandle(handle) )
             {
                 if( name )
-                    GN_ERROR( "Resource '%s' is invalid. Fall back to null instance...", name );
+                    GN_ERROR(sLogger)( "Resource '%s' is invalid. Fall back to null instance...", name );
                 else
-                    GN_ERROR( "Resource handle '%d' is invalid. Fall back to null instance...", handle );
+                    GN_ERROR(sLogger)( "Resource handle '%d' is invalid. Fall back to null instance...", handle );
 
                 if( 0 == mNullInstance )
                 {
@@ -535,9 +537,9 @@ namespace GN
                     if( !mNullor || !mNullor( *tmp, name, 0 ) )
                     {
                         if( name )
-                            GN_ERROR( "Fail to create null instance for resource '%s'.", name );
+                            GN_ERROR(sLogger)( "Fail to create null instance for resource '%s'.", name );
                         else
-                            GN_ERROR( "Fail to create null instance for resource handle '%d'.", handle );
+                            GN_ERROR(sLogger)( "Fail to create null instance for resource handle '%d'.", handle );
                         delete tmp;
                         return false;
                     }
@@ -568,7 +570,7 @@ namespace GN
 
                 if( !ok )
                 {
-                    GN_WARN( "Fall back to null instance for resource '%s'.", item->name.cptr() );
+                    GN_WARN(sLogger)( "Fall back to null instance for resource '%s'.", item->name.cptr() );
                     if( item->nullor )
                     {
                         ok = item->nullor( item->res, item->name, item->userData );
@@ -579,7 +581,7 @@ namespace GN
                     }
                     if( !ok )
                     {
-                        GN_ERROR( "Fail to create NULL instance for resource '%s'.", item->name.cptr() );
+                        GN_ERROR(sLogger)( "Fail to create NULL instance for resource '%s'.", item->name.cptr() );
                         return false;
                     }
                 }
@@ -631,6 +633,8 @@ namespace GN
             GN_ASSERT( !mNullDeletor && !mNullInstance );
         }
     };
+
+    template<typename RES, bool SINGLETON> GN::Logger * ResourceManager<RES,SINGLETON>::sLogger = getLogger("GN.base.ResourceManager");
 }
 
 // *****************************************************************************

@@ -83,22 +83,22 @@ GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
     // check parameters
     if( stream >= NUM_VTXSEMS )
     {
-        GN_ERROR( "invalid stream index!" );
+        GN_ERROR(sLogger)( "invalid stream index!" );
         return false;
     }
     if( semantic >= NUM_VTXSEMS )
     {
-        GN_ERROR( "invalid attribute semantic!" );
+        GN_ERROR(sLogger)( "invalid attribute semantic!" );
         return false;
     }
     if( attribs[semantic].used )
     {
-        GN_ERROR( "semantic '%s' is already occupied!", vtxSem2Str(semantic) );
+        GN_ERROR(sLogger)( "semantic '%s' is already occupied!", vtxSem2Str(semantic) );
         return false;
     }
     if( format >= NUM_CLRFMTS )
     {
-        GN_ERROR( "invalid attribute format!" );
+        GN_ERROR(sLogger)( "invalid attribute format!" );
         return false;
     }
 
@@ -110,7 +110,7 @@ GN_INLINE bool GN::gfx::VtxFmtDesc::addAttrib(
     uint16_t new_stride = getClrFmtDesc(format).bits / 8;
     if ( 0 == new_stride )
     {
-        GN_ERROR( "pixel size of the format must be larger than 1 byte!" );
+        GN_ERROR(sLogger)( "pixel size of the format must be larger than 1 byte!" );
         return false;
     }
     new_stride = new_stride + offset;

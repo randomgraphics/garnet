@@ -49,19 +49,19 @@ namespace GN { namespace gfx
         {
             if( isLocked() )
             {
-                GN_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
+                GN_ERROR(sLogger)( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
 
             if( offset >= getSizeInBytes() )
             {
-                GN_ERROR( "offset is beyond the end of vertex buffer!" );
+                GN_ERROR(sLogger)( "offset is beyond the end of vertex buffer!" );
                 return false;
             }
 
             if( flag >= NUM_LOCK_FLAGS )
             {
-                GN_ERROR( "invalid lock flag: %d!", flag );
+                GN_ERROR(sLogger)( "invalid lock flag: %d!", flag );
                 return false;
             }
 
@@ -86,7 +86,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GN_ERROR( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
+                GN_ERROR(sLogger)( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }
@@ -100,6 +100,8 @@ namespace GN { namespace gfx
         //! 锁定标志
         //!
         bool mLocked;
+
+        static Logger * sLogger;
 
         // ********************************
         //  private functions
@@ -146,19 +148,19 @@ namespace GN { namespace gfx
         {
             if( isLocked() )
             {
-                GN_ERROR( "dupilcate lock! lock/unlock() must be called accordinglly!" );
+                GN_ERROR(sLogger)( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
 
             if( startIdx >= getNumIdx() )
             {
-                GN_ERROR( "startIdx is beyond the end of index buffer!" );
+                GN_ERROR(sLogger)( "startIdx is beyond the end of index buffer!" );
                 return false;
             }
 
             if( flag >= NUM_LOCK_FLAGS )
             {
-                GN_ERROR( "invalid lock flag: %d!", flag );
+                GN_ERROR(sLogger)( "invalid lock flag: %d!", flag );
                 return false;
             }
 
@@ -183,7 +185,7 @@ namespace GN { namespace gfx
             }
             else
             {
-                GN_ERROR( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
+                GN_ERROR(sLogger)( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
         }
@@ -197,6 +199,8 @@ namespace GN { namespace gfx
         //! 锁定标志
         //!
         bool mLocked;
+
+        static Logger * sLogger;
 
         // ********************************
         //  private functions

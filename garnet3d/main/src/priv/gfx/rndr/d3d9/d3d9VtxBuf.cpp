@@ -2,6 +2,8 @@
 #include "d3d9VtxBuf.h"
 #include "d3d9Renderer.h"
 
+GN::Logger * GN::gfx::D3D9VtxBuf::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // Local functions
 // *****************************************************************************
@@ -73,7 +75,7 @@ bool GN::gfx::D3D9VtxBuf::init(
 
     if( 0 == bytes )
     {
-        GN_ERROR( "Vertex buffer size can't be zero!" );
+        GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         quit(); return selfOK();
     }
 
@@ -167,7 +169,7 @@ void GN::gfx::D3D9VtxBuf::deviceDispose()
     if( isLocked() )
     {
         unlock();
-        GN_ERROR( "call unlock() before u release the vertex buffer!" );
+        GN_ERROR(sLogger)( "call unlock() before u release the vertex buffer!" );
     }
 
     safeRelease( mD3DVb );

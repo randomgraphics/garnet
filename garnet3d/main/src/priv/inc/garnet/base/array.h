@@ -54,6 +54,8 @@ namespace GN
         T mElements[N];
         size_t mCount;
 
+        static Logger * sLogger;
+
         void copyElements( T * dst, const T * src, size_t count )
         {
             GN_ASSERT( 0 == count || dst && src );
@@ -72,8 +74,8 @@ namespace GN
         void doInsert( size_t position, const T & t )
         {
             GN_ASSERT( mCount <= N );
-            if( N == mCount ) { GN_WARN( "Can't insert more. Stack array is full already!" ); return; }
-            if( position > mCount ) { GN_WARN( "invalid insert position." ); return; }
+            if( N == mCount ) { GN_WARN(sLogger)( "Can't insert more. Stack array is full already!" ); return; }
+            if( position > mCount ) { GN_WARN(sLogger)( "invalid insert position." ); return; }
             for( size_t i = mCount; i > position; --i )
             {
                 mElements[i] = mElements[i-1];
@@ -84,7 +86,7 @@ namespace GN
 
         void doErase( size_t position )
         {
-            if( position >= mCount ) { GN_WARN( "Invalid erase position" ); return; }
+            if( position >= mCount ) { GN_WARN(sLogger)( "Invalid erase position" ); return; }
             --mCount;
             for( size_t i = position; i < mCount; ++i )
             {
@@ -133,7 +135,7 @@ namespace GN
         T       & front() { GN_ASSERT( mCount > 0 ); return mElements[0]; }
         /** do nothing if position is invalid or array is full */
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
-        void      resize( size_t count ) { if( count > N ) { GN_WARN("count is too large!"); count = N; } mCount = count; }
+        void      resize( size_t count ) { if( count > N ) { GN_WARN(sLogger)("count is too large!"); count = N; } mCount = count; }
         void      popBack() { if( mCount > 0 ) --mCount; }
         size_t    size() const { return mCount; }
         //@}
@@ -147,6 +149,8 @@ namespace GN
         //@}
     };
 
+    template<class T, size_t N> Logger * StackArray<T,N>::sLogger = getLogger("GN.base.StackArray");
+
     //!
     //! Resizeable array.
     //!
@@ -156,6 +160,8 @@ namespace GN
         T * mElements;
         size_t mCount;
         size_t mCapacity;
+
+        static Logger * sLogger;
 
         void dealloc()
         {
@@ -193,7 +199,7 @@ namespace GN
 
         void doInsert( size_t position, const T & t )
         {
-            if( position > mCount ) { GN_WARN("invalid insert position"); return; }
+            if( position > mCount ) { GN_WARN(sLogger)("invalid insert position"); return; }
 
             resize( mCount + 1 );
 
@@ -206,7 +212,7 @@ namespace GN
 
         void doErase( size_t position )
         {
-            if( position >= mCount ) { GN_WARN("invalid erase position"); return; }
+            if( position >= mCount ) { GN_WARN(sLogger)("invalid erase position"); return; }
             --mCount;
             for( size_t i = position; i < mCount; ++i )
             {
@@ -296,6 +302,8 @@ namespace GN
         const T   & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         //@}
     };
+
+    template<class T, class ALLOCATOR> Logger * DynaArray<T,ALLOCATOR>::sLogger = getLogger("GN.base.DynaArray");
 }
 
 // *****************************************************************************

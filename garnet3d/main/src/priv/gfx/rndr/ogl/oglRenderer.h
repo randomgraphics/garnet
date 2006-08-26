@@ -23,6 +23,8 @@ namespace GN { namespace gfx
     {
         GN_DECLARE_STDCLASS(OGLRenderer, BasicRenderer);
 
+        static Logger * sLogger;
+
         // ********************************
         // ctor/dtor
         // ********************************

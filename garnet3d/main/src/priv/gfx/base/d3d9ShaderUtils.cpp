@@ -3,6 +3,8 @@
 
 #if GN_MSWIN
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.d3d9ShaderUtils");
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -21,7 +23,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
 {
     GN_GUARD;
 
-    GN_ERROR(
+    GN_ERROR(sLogger)(
         "\n================== Shader compile failure ===============\n"
         "%s\n"
         "\n---------------------------------------------------------\n"

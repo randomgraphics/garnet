@@ -23,6 +23,8 @@
 #error "Unknown platform!"
 #endif
 
+static GN::Logger * sLogger = GN::getLogger("GN.base.SharedLib");
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -36,7 +38,7 @@ bool GN::SharedLib::load( const char * libName )
     // check parameter
     if( strEmpty(libName) )
     {
-        GN_ERROR( "Library name can't be empty!" );
+        GN_ERROR(sLogger)( "Library name can't be empty!" );
         return false;
     }
 
@@ -51,11 +53,11 @@ bool GN::SharedLib::load( const char * libName )
     mHandle = SHLIB_LOAD( filename.cptr() );
     if( 0 == mHandle )
     {
-        GN_ERROR( "Fail to load library %s: %s!", filename.cptr(), SHLIB_ERROR() );
+        GN_ERROR(sLogger)( "Fail to load library %s: %s!", filename.cptr(), SHLIB_ERROR() );
         return false;
     }
 
-    GN_INFO( "Load library '%s'.", filename.cptr() );
+    GN_INFO(sLogger)( "Load library '%s'.", filename.cptr() );
 
     // success
     mFileName = filename;
@@ -75,7 +77,7 @@ void GN::SharedLib::free()
     {
         SHLIB_FREE( mHandle );
         mHandle = 0;
-        GN_INFO( "Unload library '%s'.", mFileName.cptr() );
+        GN_INFO(sLogger)( "Unload library '%s'.", mFileName.cptr() );
     }
 
     GN_UNGUARD;
@@ -90,20 +92,20 @@ void * GN::SharedLib::getSymbol( const char * symbol )
 
     if( 0 == mHandle )
     {
-        GN_ERROR( "Shared library is uninitialized!" );
+        GN_ERROR(sLogger)( "Shared library is uninitialized!" );
         return 0;
     }
 
     if( strEmpty(symbol) )
     {
-        GN_ERROR( "Symbol name can't be empty!" );
+        GN_ERROR(sLogger)( "Symbol name can't be empty!" );
         return 0;
     }
 
     void * result = SHLIB_LOAD_SYMBOL( mHandle, symbol );
     if( 0 == result )
     {
-        GN_ERROR( "Failed to get symbol named '%s': %s.", symbol, SHLIB_ERROR() );
+        GN_ERROR(sLogger)( "Failed to get symbol named '%s': %s.", symbol, SHLIB_ERROR() );
     }
 
     return result;

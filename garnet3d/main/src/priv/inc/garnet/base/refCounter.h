@@ -65,7 +65,7 @@ namespace GN
         {
             if( mRef > 0 )
             {
-                GN_ERROR(
+                GN_ERROR(getLogger("GN.base.RefCounter"))(
                     "destructing a refcounter with its reference counter "
                     "greater then zero!" );
             }

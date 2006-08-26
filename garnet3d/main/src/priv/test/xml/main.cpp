@@ -3,6 +3,8 @@
 
 using namespace GN;
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.xml");
+
 bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
     DiskFile fp;
@@ -11,7 +13,7 @@ bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 
     if( !doc.parse( xpr, fp ) )
     {
-        GN_ERROR( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
+        GN_ERROR(sLogger)( "xml parse error (l:%d,c:%d) : %s", xpr.errLine, xpr.errColumn, xpr.errInfo.cptr() );
         return false;
     }
 
@@ -23,7 +25,7 @@ int main( int argc, const char * argv[] )
 {
     if( argc < 2 )
     {
-        GN_INFO( "usage: %s xmlfile", argv[0] );
+        GN_INFO(sLogger)( "usage: %s xmlfile", argv[0] );
         return -1;
     }
 

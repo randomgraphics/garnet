@@ -1,5 +1,7 @@
 #include "pch.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
+
 //!
 //! input module test application
 //!
@@ -132,7 +134,7 @@ public:
     {
         if( !mInput )
         {
-            GN_ERROR( "InputTest is not initialized!" );
+            GN_ERROR(sLogger)( "InputTest is not initialized!" );
             return -1;
         }
 

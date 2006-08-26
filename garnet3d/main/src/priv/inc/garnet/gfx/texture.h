@@ -253,12 +253,14 @@ namespace GN { namespace gfx
         //!
         bool setDesc( const TextureDesc & desc )
         {
+            static Logger * sLogger = getLogger("GN.gfx.Texture");
+            
             mDesc = desc;
 
             // check type
             if( mDesc.type < 0 || mDesc.type >= NUM_TEXTYPES )
             {
-                GN_ERROR( "invalid texture type!" );
+                GN_ERROR(sLogger)( "invalid texture type!" );
                 return false;
             }
 
@@ -300,7 +302,7 @@ namespace GN { namespace gfx
             {
                 if( 0 != mDesc.faces && 6 != mDesc.faces )
                 {
-                    GN_WARN( "Cubemap must have 6 mDesc.faces." );
+                    GN_WARN(sLogger)( "Cubemap must have 6 mDesc.faces." );
                 }
                 mDesc.faces = 6;
             }
@@ -312,7 +314,7 @@ namespace GN { namespace gfx
             {
                 if( 0 != mDesc.faces && 1 != mDesc.faces )
                 {
-                    GN_WARN( "Texture other then cube/stack texture can have only 1 face." );
+                    GN_WARN(sLogger)( "Texture other then cube/stack texture can have only 1 face." );
                 }
                 mDesc.faces = 1;
             }
@@ -341,7 +343,7 @@ namespace GN { namespace gfx
             if( ( mDesc.format < 0 || mDesc.format >= NUM_CLRFMTS ) &&
                 FMT_DEFAULT != mDesc.format )
             {
-                GN_ERROR( "invalid texture format: %s", clrFmt2Str(mDesc.format) );
+                GN_ERROR(sLogger)( "invalid texture format: %s", clrFmt2Str(mDesc.format) );
                 return false;
             }
 

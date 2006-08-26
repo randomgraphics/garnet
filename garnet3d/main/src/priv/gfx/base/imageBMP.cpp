@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "imageBMP.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.Image");
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -44,7 +46,7 @@ bool BMPReader::readHeader(
     // copy BMP header
     if( i_size <= sizeof(BMPHeader) )
     {
-        GN_ERROR( "File size is too small to hold BMP file header." );
+        GN_ERROR(sLogger)( "File size is too small to hold BMP file header." );
         return false;
     }
     memcpy( &mHeader, i_buf, sizeof(BMPHeader) );
@@ -58,7 +60,7 @@ bool BMPReader::readHeader(
         24 != mHeader.infoHeader.bitCount &&
         32 != mHeader.infoHeader.bitCount )
     {
-        GN_ERROR( "We can only handle uncompressed high-color and/or true-color BMP image.");
+        GN_ERROR(sLogger)( "We can only handle uncompressed high-color and/or true-color BMP image.");
         return false;
     }
 
@@ -66,7 +68,7 @@ bool BMPReader::readHeader(
     size_t headerSize = mHeader.fileHeader.offBits;
     if( i_size < headerSize )
     {
-        GN_ERROR( "File size is not large enough: minimum(%d) actual(%d).", headerSize, i_size );
+        GN_ERROR(sLogger)( "File size is not large enough: minimum(%d) actual(%d).", headerSize, i_size );
         return false;
     }
 
@@ -77,7 +79,7 @@ bool BMPReader::readHeader(
         case 24 : o_desc.format = GN::gfx::FMT_BGRX_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
         case 32 : o_desc.format = GN::gfx::FMT_BGRX_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
         default :
-            GN_ERROR( "unsupport/invalid RGB image bits: %d.", mHeader.infoHeader.bitCount );
+            GN_ERROR(sLogger)( "unsupport/invalid RGB image bits: %d.", mHeader.infoHeader.bitCount );
             return false;
     }
 
@@ -108,7 +110,7 @@ bool BMPReader::readImage( void * o_data ) const
 
     if( 0 == o_data )
     {
-        GN_ERROR( "NULL output buffer!" );
+        GN_ERROR(sLogger)( "NULL output buffer!" );
         return false;
     }
 
@@ -172,7 +174,7 @@ bool BMPReader::readImage( void * o_data ) const
             break;
 
         default:
-            GN_ERROR( "unsupport uncompressed RGB BMP image bits: %d", mHeader.infoHeader.bitCount );
+            GN_ERROR(sLogger)( "unsupport uncompressed RGB BMP image bits: %d", mHeader.infoHeader.bitCount );
             return false;
     }
 

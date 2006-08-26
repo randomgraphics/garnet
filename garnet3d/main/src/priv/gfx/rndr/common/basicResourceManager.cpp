@@ -40,7 +40,7 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
     }
     else
     {
-        GN_ERROR( "Can't determine texture type for image: face(%d), width(%d), height(%d), depth:%d)." );
+        GN_ERROR(sLogger)( "Can't determine texture type for image: face(%d), width(%d), height(%d), depth:%d)." );
         return 0;
     }
 

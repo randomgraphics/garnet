@@ -75,7 +75,7 @@ struct DenseMesh
         LPDIRECT3DDEVICE9 dev = (LPDIRECT3DDEVICE9)r.getD3DDevice();
         if( 0 == dev )
         {
-            GN_ERROR( "only work with D3D9 renderer" );
+            GN_ERROR(sLogger)( "only work with D3D9 renderer" );
             return false;
         }
 
@@ -83,7 +83,7 @@ struct DenseMesh
         StrA filename = app::SampleResourceManager::sSearchResourceFile( "mesh\\knot.x" );
         if( filename.empty() )
         {
-            GN_ERROR( "mesh file not found!" );
+            GN_ERROR(sLogger)( "mesh file not found!" );
             return false;
         }
 

@@ -3,6 +3,8 @@
 #include "d3d9Renderer.h"
 #include "garnet/GNd3d9.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -112,7 +114,7 @@ bool GN::gfx::D3D9PxlShaderHlsl::queryDeviceUniform( const char * name, HandleTy
     D3DXHANDLE h = mConstTable->GetConstantByName( NULL, name );
     if( 0 == h )
     {
-        GN_ERROR( "%s is not a valid shader uniform!", name );
+        GN_ERROR(sLogger)( "%s is not a valid shader uniform!", name );
         return false;
     }
 

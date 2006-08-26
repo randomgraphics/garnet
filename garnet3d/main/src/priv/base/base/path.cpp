@@ -39,6 +39,8 @@
 #define MAX_PATH_LENGTH PATH_MAX
 #endif
 
+static GN::Logger * sLogger = GN::getLogger("GN.base.path");
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -73,7 +75,7 @@ static inline GN::StrA sGetAppDir()
     GN::strPrintf( linkName, MAX_PATH_LENGTH, "/proc/%d/exe", getpid() );
     if( 0 == realpath( linkName, realPath) )
     {
-        GN_ERROR( "Fail to get real path of file '%s'.", linkName );
+        GN_ERROR(sLogger)( "Fail to get real path of file '%s'.", linkName );
         return GN::StrA::EMPTYSTR;
     }
     return GN::path::getParent( realPath );
@@ -434,7 +436,7 @@ bool GN::path::resolve( StrA & result, const StrA & path )
     if( 0 == _fullpath( absPath, relPath.cptr(), MAX_PATH_LENGTH ) )
 #endif
     {
-        GN_ERROR( "invalid path '%s'.", path.cptr() );
+        GN_ERROR(sLogger)( "invalid path '%s'.", path.cptr() );
         return false;
     }
 
@@ -466,13 +468,13 @@ GN::path::glob(
 
     if( !exist(dirName) )
     {
-        GN_WARN( "'%s' does not exist!", dirName.cptr() );
+        GN_WARN(sLogger)( "'%s' does not exist!", dirName.cptr() );
         return result;
     }
 
     if( !isDir(dirName) )
     {
-        GN_WARN( "'%s' is not directory!", dirName.cptr() );
+        GN_WARN(sLogger)( "'%s' is not directory!", dirName.cptr() );
         return result;
     }
 

@@ -19,6 +19,8 @@ namespace GN { namespace gfx
     {
         GN_DECLARE_STDCLASS(D3D10Renderer, BasicRenderer);
 
+        static Logger * sLogger;
+
         // ********************************
         // ctor/dtor
         // ********************************

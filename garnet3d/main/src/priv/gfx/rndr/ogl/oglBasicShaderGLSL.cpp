@@ -2,6 +2,8 @@
 #include "oglShader.h"
 #include "oglRenderer.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Local functions
 // *****************************************************************************
@@ -173,7 +175,7 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
         }
         else
         {
-            GN_ERROR( "'%s' is not a valid GLSL uniform.", u.name.cptr() );
+            GN_ERROR(sLogger)( "'%s' is not a valid GLSL uniform.", u.name.cptr() );
         }
     }
     clearDirtySet();
@@ -202,7 +204,7 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
             !GLEW_ARB_shader_objects ||
             !GLEW_ARB_shading_language_100 )
         {
-            GN_ERROR( "do not support GLSL vertex shader!" );
+            GN_ERROR(sLogger)( "do not support GLSL vertex shader!" );
             return false;
         }
     }
@@ -213,7 +215,7 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
             !GLEW_ARB_shader_objects ||
             !GLEW_ARB_shading_language_100 )
         {
-            GN_ERROR( "do not support GLSL fragment program!" );
+            GN_ERROR(sLogger)( "do not support GLSL fragment program!" );
             return false;
         }
     }
@@ -222,7 +224,7 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
     mHandle = glCreateShaderObjectARB( mUsage );
     if( 0 == mHandle )
     {
-        GN_ERROR( "Fail to generate new program object!" );
+        GN_ERROR(sLogger)( "Fail to generate new program object!" );
         return 0;
     }
     AutoShaderDel autodel( glDeleteObjectARB, mHandle );
@@ -243,7 +245,7 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
     {
         char buf[4096];
         GN_OGL_CHECK( glGetInfoLogARB( mHandle, 4095, NULL, buf ) );
-        GN_INFO(
+        GN_ERROR(sLogger)(
             "\n========== GLSL shader =========\n"
             "%s\n"
             "\n========= compile error ========\n"

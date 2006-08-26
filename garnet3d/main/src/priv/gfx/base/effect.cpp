@@ -4,6 +4,9 @@
 #include "garnet/gfx/effect.inl"
 #endif
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.Effect");
+GN::Logger * GN::gfx::Effect::sLogger = GN::getLogger("GN.gfx.base.Effect");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -149,12 +152,12 @@ static bool sCalc(
     {
         if( !s0 )
         {
-            GN_ERROR( "missing argument 0" );
+            GN_ERROR(sLogger)( "missing argument 0" );
             return false;
         }
         if( s0->type != ocd.src0 )
         {
-            GN_ERROR( "incompatible argument type: expecting %d, but %d", ocd.src0, s0->type );
+            GN_ERROR(sLogger)( "incompatible argument type: expecting %d, but %d", ocd.src0, s0->type );
             return false;
         }
     }
@@ -162,12 +165,12 @@ static bool sCalc(
     {
         if( !s1 )
         {
-            GN_ERROR( "missing argument 1" );
+            GN_ERROR(sLogger)( "missing argument 1" );
             return false;
         }
         if( s1->type != ocd.src1 )
         {
-            GN_ERROR( "incompatible argument type: expecting %d, but %d", ocd.src1, s1->type );
+            GN_ERROR(sLogger)( "incompatible argument type: expecting %d, but %d", ocd.src1, s1->type );
             return false;
         }
     }
@@ -219,7 +222,7 @@ static bool sDoEval(
 {
     if( p >= e )
     {
-        GN_ERROR( "incomplete expression" );
+        GN_ERROR(sLogger)( "incomplete expression" );
         return false;
     }
 
@@ -229,7 +232,7 @@ static bool sDoEval(
         int32_t op = p->opcode;
         if( op < 0 || op >= GN::gfx::EffectDesc::NUM_OPCODES )
         {
-            GN_ERROR( "invalid opcode : %d", op );
+            GN_ERROR(sLogger)( "invalid opcode : %d", op );
             return false;
         }
         ++p;
@@ -341,7 +344,7 @@ bool GN::gfx::EffectDesc::valid() const
 
         if( shader.type < 0 || shader.type >= NUM_SHADER_TYPES )
         {
-            GN_ERROR( "Shader(%s)的类型非法: %d。", shaderName.cptr(), shader.type );
+            GN_ERROR(sLogger)( "Shader(%s)的类型非法: %d。", shaderName.cptr(), shader.type );
             return false;
         }
 
@@ -349,7 +352,7 @@ bool GN::gfx::EffectDesc::valid() const
         {
             if( shader.lang < 0 || shader.lang >= NUM_SHADING_LANGUAGES )
             {
-                GN_ERROR( "Shader(%s)的语言类型非法: %d。", shaderName.cptr(), shader.lang );
+                GN_ERROR(sLogger)( "Shader(%s)的语言类型非法: %d。", shaderName.cptr(), shader.lang );
                 return false;
             }
         }
@@ -362,13 +365,13 @@ bool GN::gfx::EffectDesc::valid() const
 
             if( !sExist( textures, name ) )
             {
-                GN_ERROR( "Shader(%s)中含有无效的贴图引用：%s。", shaderName.cptr(), name.cptr() );
+                GN_ERROR(sLogger)( "Shader(%s)中含有无效的贴图引用：%s。", shaderName.cptr(), name.cptr() );
                 return false;
             }
 
             if( stage >= MAX_TEXTURE_STAGES )
             {
-                GN_ERROR( "Shader(%s)的贴图引用(%s)的stage超过允许上限(%d): %d.",
+                GN_ERROR(sLogger)( "Shader(%s)的贴图引用(%s)的stage超过允许上限(%d): %d.",
                     shaderName.cptr(), name.cptr(), MAX_TEXTURE_STAGES, stage );
                 return false;
             }
@@ -383,14 +386,14 @@ bool GN::gfx::EffectDesc::valid() const
 
             if( !sExist( uniforms, name ) )
             {
-                GN_ERROR( "Shader(%s)中含有无效的变量引用：%s。", shaderName.cptr(), name.cptr() );
+                GN_ERROR(sLogger)( "Shader(%s)中含有无效的变量引用：%s。", shaderName.cptr(), name.cptr() );
                 return false;
             }
 
             // FFP shader can only bind uniform to FFP parameter"
             if( shader.code.empty() && !sIsFfpUniformType( binding, NULL ) )
             {
-                GN_ERROR( "FFP shader(%s)对Uniform(%s)使用了非FFP的绑定: %s.",
+                GN_ERROR(sLogger)( "FFP shader(%s)对Uniform(%s)使用了非FFP的绑定: %s.",
                     shaderName.cptr(), name.cptr(), binding.cptr() );
                 return false;
             }
@@ -400,7 +403,7 @@ bool GN::gfx::EffectDesc::valid() const
     // at least one technique
     if( techniques.empty() )
     {
-        GN_ERROR( "Technique列表不能为空!" );
+        GN_ERROR(sLogger)( "Technique列表不能为空!" );
         return false;
     }
 
@@ -418,7 +421,7 @@ bool GN::gfx::EffectDesc::valid() const
 
             if( !pass.rsb.valid() )
             {
-                GN_ERROR( "Render state block of technique('%s')::pass(%d) is invalid.!", techName.cptr(), i );
+                GN_ERROR(sLogger)( "Render state block of technique('%s')::pass(%d) is invalid.!", techName.cptr(), i );
                 return false;
             }
 
@@ -428,7 +431,7 @@ bool GN::gfx::EffectDesc::valid() const
 
                 if( !sExist( shaders, shaderName ) )
                 {
-                    GN_ERROR( "Technique(%s)引用了无效的Shader: %s.", techName.cptr(), shaderName.cptr() );
+                    GN_ERROR(sLogger)( "Technique(%s)引用了无效的Shader: %s.", techName.cptr(), shaderName.cptr() );
                     return false;
                 }
 
@@ -436,7 +439,7 @@ bool GN::gfx::EffectDesc::valid() const
 
                 if( (ShaderType)i != shader.type )
                 {
-                    GN_ERROR( "Shader(%s)的类型(%s)与Technique(%s)所期望的类型(%s)不一致.",
+                    GN_ERROR(sLogger)( "Shader(%s)的类型(%s)与Technique(%s)所期望的类型(%s)不一致.",
                         shaderName.cptr(),
                         shaderType2Str( shader.type ),
                         techName.cptr(),
@@ -448,7 +451,7 @@ bool GN::gfx::EffectDesc::valid() const
 
         if( !tech.rsb.valid() )
         {
-            GN_ERROR( "Technique(%s)含有无效的render state block.!", techName.cptr() );
+            GN_ERROR(sLogger)( "Technique(%s)含有无效的render state block.!", techName.cptr() );
             return false;
         }
     }
@@ -456,7 +459,7 @@ bool GN::gfx::EffectDesc::valid() const
     // check global render state block
     if( !rsb.valid() )
     {
-        GN_ERROR( "Global render state block is invalid.!" );
+        GN_ERROR(sLogger)( "Global render state block is invalid.!" );
         return false;
     }
 
@@ -489,7 +492,7 @@ bool GN::gfx::Effect::init( const EffectDesc & d )
 
     if( !d.valid() )
     {
-        GN_ERROR( "effect descriptor is invalid!" );
+        GN_ERROR(sLogger)( "effect descriptor is invalid!" );
         quit(); return selfOK();
     }
 
@@ -556,7 +559,7 @@ bool GN::gfx::Effect::createEffect()
 
     if( !gRendererPtr )
     {
-        GN_ERROR( "Renderer is not ready." );
+        GN_ERROR(sLogger)( "Renderer is not ready." );
         return false;
     }
 
@@ -629,7 +632,7 @@ bool GN::gfx::Effect::createEffect()
 
         if( mTechniques.find( desc.name ) )
         {
-            GN_WARN( "Ignore redundant technique named '%s'. There's already a technique with same name in this effect.", desc.name.cptr() );
+            GN_WARN(sLogger)( "Ignore redundant technique named '%s'. There's already a technique with same name in this effect.", desc.name.cptr() );
             continue;
         }
 
@@ -642,7 +645,7 @@ bool GN::gfx::Effect::createEffect()
     }
     if( mTechniques.empty() )
     {
-        GN_ERROR( "No valid technique found." );
+        GN_ERROR(sLogger)( "No valid technique found." );
         return false;
     }
 
@@ -665,7 +668,7 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
     // check shader prerequisites
     if( !desc.prerequisites.evaluate() )
     {
-        GN_TRACE( "Shader named '%s' does not pass prerequisites check. Ignored", name.cptr() );
+        GN_TRACE(sLogger)( "Shader named '%s' does not pass prerequisites check. Ignored", name.cptr() );
         return false;
     }
 
@@ -678,7 +681,7 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
         data.value.attach( gRenderer.createShader( desc.type, desc.lang, desc.code, desc.hints ) );
         if( data.value.empty() )
         {
-            GN_ERROR( "Fail to create shader '%s'.", name.cptr() );
+            GN_ERROR(sLogger)( "Fail to create shader '%s'.", name.cptr() );
             return false;
         }
     }
@@ -706,7 +709,7 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
         urd.id = mUniforms.find( uniName );
         if( 0 == urd.id )
         {
-            GN_ERROR( "Invalid uniform referencing to uniform named '%s', in shader '%s'.", uniName.cptr(), name.cptr() );
+            GN_ERROR(sLogger)( "Invalid uniform referencing to uniform named '%s', in shader '%s'.", uniName.cptr(), name.cptr() );
             return false;
         }
 
@@ -716,7 +719,7 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
             // Make sure no programmable uniforms binding to FFP shader.
             if( !data.value )
             {
-                GN_ERROR( "Can't use non-FFP uniform named '%s', in FFP shader named '%s'.", uniName.cptr(), name.cptr() );
+                GN_ERROR(sLogger)( "Can't use non-FFP uniform named '%s', in FFP shader named '%s'.", uniName.cptr(), name.cptr() );
                 return false;
             }
 
@@ -724,7 +727,7 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
 
             if( 0 == urd.shaderUniformHandle )
             {
-                GN_ERROR( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
+                GN_ERROR(sLogger)( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
                     uniName.cptr(),
                     name.cptr(),
                     uniBinding.cptr() );
@@ -770,7 +773,7 @@ bool GN::gfx::Effect::createTechnique( TechniqueData & data, const EffectDesc::T
 
             if( 0 == passData.shaders[iShader] )
             {
-                GN_TRACE( "Technique '%s' is ignored, because shader '%s' is not found.", desc.name.cptr(), shaderName.cptr() );
+                GN_TRACE(sLogger)( "Technique '%s' is ignored, because shader '%s' is not found.", desc.name.cptr(), shaderName.cptr() );
                 return false;
             }
 
@@ -806,7 +809,7 @@ void GN::gfx::Effect::sSetFfpUniform( int32_t type, const UniformData & data )
             }
             else
             {
-                GN_ERROR( "FFP_TRANSFORM_WORLD only accepts matrix type." );
+                GN_ERROR(sLogger)( "FFP_TRANSFORM_WORLD only accepts matrix type." );
             }
             break;
 
@@ -818,7 +821,7 @@ void GN::gfx::Effect::sSetFfpUniform( int32_t type, const UniformData & data )
             }
             else
             {
-                GN_ERROR( "FFP_TRANSFORM_VIEW only accepts matrix type." );
+                GN_ERROR(sLogger)( "FFP_TRANSFORM_VIEW only accepts matrix type." );
             }
             break;
 
@@ -830,7 +833,7 @@ void GN::gfx::Effect::sSetFfpUniform( int32_t type, const UniformData & data )
             }
             else
             {
-                GN_ERROR( "FFP_TRANSFORM_PROJ only accepts matrix type." );
+                GN_ERROR(sLogger)( "FFP_TRANSFORM_PROJ only accepts matrix type." );
             }
 
         case FFP_LIGHT0_POS :

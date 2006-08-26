@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "d3d9VertexDecl.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -83,7 +85,7 @@ static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
         case GN::gfx::FMT_DHEN3N    : return D3DDECLTYPE_DHEN3N;
 #endif
         default:
-            GN_ERROR( "Invalid color format: %d!", fmt );
+            GN_ERROR(sLogger)( "Invalid color format: %d!", fmt );
             return D3DDECLTYPE(MAXD3DDECLTYPE+1);
     }
 }

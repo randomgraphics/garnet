@@ -311,6 +311,8 @@ namespace GN
 
         ClosureBase * mClosure;
 
+        static Logger * sLogger;
+
     public:
 
         //!
@@ -346,7 +348,7 @@ namespace GN
         {                                                                                                          \
             if( 0 == f )                                                                                           \
             {                                                                                                      \
-                GN_ERROR( "bind to null function pointer!" );                                                      \
+                GN_ERROR(sLogger)( "bind to null function pointer!" );                                                      \
                 return;                                                                                            \
             }                                                                                                      \
             clear();                                                                                               \
@@ -372,7 +374,7 @@ namespace GN
         {                                                                                                         \
             if( 0 == x && 0 == f )                                                                                \
             {                                                                                                     \
-                GN_ERROR( "bind to null member function pointer!" );                                              \
+                GN_ERROR(sLogger)( "bind to null member function pointer!" );                                              \
                 return;                                                                                           \
             }                                                                                                     \
             clear();                                                                                              \
@@ -415,7 +417,7 @@ namespace GN
         {                                                                                                \
             if( 0 == x )                                                                                 \
             {                                                                                            \
-                GN_ERROR( "bind to null functor pointer!" );                                             \
+                GN_ERROR(sLogger)( "bind to null functor pointer!" );                                             \
                 return;                                                                                  \
             }                                                                                            \
             clear();                                                                                     \
@@ -545,6 +547,8 @@ namespace GN
             }
         }
     };
+
+    template<typename R PARAM_COMMA PARAM_TEMPLS> Logger * DELEGATE_NAME<R PARAM_COMMA PARAM_TYPES>::sLogger = getLogger("GN.base.Delegate");
 
 #define MAKE_FREEDELEGATE( CALL_CONVENSION, DUMMY )       \
     template<typename R PARAM_COMMA PARAM_TEMPLS>         \

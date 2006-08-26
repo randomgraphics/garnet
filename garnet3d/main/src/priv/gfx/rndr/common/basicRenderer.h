@@ -34,6 +34,8 @@ namespace GN { namespace gfx
     {
         GN_DECLARE_STDCLASS( BasicRenderer, StdClass );
 
+        static Logger * sLogger;
+
         // ********************************
         // constructor/destructor
         // ********************************

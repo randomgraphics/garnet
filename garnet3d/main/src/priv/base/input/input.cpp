@@ -4,6 +4,8 @@
 #include "inputDInput.h"
 #include "inputX11.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.input");
+
 // *****************************************************************************
 // Fake input system
 // *****************************************************************************
@@ -81,7 +83,7 @@ GN::input::Input * GN::input::createInputSystem( InputApi api )
         }
 
         default :
-            GN_ERROR( "unknow or unsupport API : %d", api );
+            GN_ERROR(sLogger)( "unknow or unsupport API : %d", api );
             return 0;
     }
 

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "imageDDS.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.Image");
+
 // *****************************************************************************
 // local types
 // *****************************************************************************
@@ -150,7 +152,7 @@ static size_t sGetImageFaceCount( const DDSFileHeader & header )
     }
     else
     {
-        GN_ERROR( "Fail to detect image face count!" );
+        GN_ERROR(sLogger)( "Fail to detect image face count!" );
         return 0;
     }
 }
@@ -219,7 +221,7 @@ static GN::gfx::ClrFmt getImageFormat( const DDPixelFormat & ddpf )
    }
 
     // failed
-    GN_ERROR( "unknown DDS format!" );
+    GN_ERROR(sLogger)( "unknown DDS format!" );
     return GN::gfx::FMT_INVALID;
 
     GN_UNGUARD;
@@ -262,7 +264,7 @@ bool DDSReader::readHeader(
     if( i_size < sizeof(uint32_t) ||
         *((const uint32_t*)i_buff) != MAKE_FOURCC('D','D','S',' ') )
     {
-        GN_ERROR( "fail to read DDS magic number!" );
+        GN_ERROR(sLogger)( "fail to read DDS magic number!" );
         return false;
     }
     i_buff += 4;
@@ -271,7 +273,7 @@ bool DDSReader::readHeader(
     // read header
     if( i_size < sizeof(mHeader) )
     {
-        GN_ERROR( "fail to read DDS file header!" );
+        GN_ERROR(sLogger)( "fail to read DDS file header!" );
         return false;
     }
     memcpy( &mHeader, i_buff, sizeof(mHeader) );
@@ -285,7 +287,7 @@ bool DDSReader::readHeader(
                             | DDS_DDSD_PIXELFORMAT;
     if( required_flags != (required_flags & mHeader.flags) )
     {
-        GN_ERROR( "damage DDS header!" );
+        GN_ERROR(sLogger)( "damage DDS header!" );
         return false;
     }
 
@@ -372,7 +374,7 @@ bool DDSReader::readImage( void * o_data ) const
 
     if( DDS_DDPF_PALETTEINDEXED8 & mHeader.ddpf.flags )
     {
-        GN_ERROR( "do not support palette format!" );
+        GN_ERROR(sLogger)( "do not support palette format!" );
         return false;
     }
 
@@ -389,7 +391,7 @@ bool DDSReader::readImage( void * o_data ) const
 
                 if( size < m.slicePitch )
                 {
-                    GN_ERROR( "incomplete image data!" );
+                    GN_ERROR(sLogger)( "incomplete image data!" );
                     return false;
                 }
 
@@ -410,7 +412,7 @@ bool DDSReader::readImage( void * o_data ) const
         size_t nbytes = mImgDesc.getTotalBytes();
         if( nbytes != mSize )
         {
-            GN_ERROR( "image size is incorrect!" );
+            GN_ERROR(sLogger)( "image size is incorrect!" );
             return false;
         }
         memcpy( o_data, mSrc, nbytes );

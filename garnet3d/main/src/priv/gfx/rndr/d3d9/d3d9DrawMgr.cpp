@@ -358,7 +358,7 @@ bool GN::gfx::D3D9Renderer::handleDeviceLost()
     HRESULT hr = mDevice->TestCooperativeLevel();
     if( D3DERR_DEVICENOTRESET == hr )
     {
-        GN_INFO( "\n============ Restore lost device ===============" );
+        GN_INFO(sLogger)( "\n============ Restore lost device ===============" );
 
         // dispose
         deviceDispose();
@@ -369,18 +369,18 @@ bool GN::gfx::D3D9Renderer::handleDeviceLost()
         // try restore
         if( !deviceRestore() ) return false;
 
-        GN_INFO( "=================================================\n" );
+        GN_INFO(sLogger)( "=================================================\n" );
     }
     else if( D3DERR_DEVICELOST == hr )
     {
-        GN_INFO( "\nDevice has lost and could NOT be restored by now.\nWait for 2 seconds to try again...\n" );
+        GN_INFO(sLogger)( "\nDevice has lost and could NOT be restored by now.\nWait for 2 seconds to try again...\n" );
         ::Sleep( 2000 );
         return false;
     }
     else if (D3D_OK != hr)
     {
         // fatal error
-        GN_ERROR( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
+        GN_ERROR(sLogger)( "TestCooperativeLevel() failed: %s!", ::DXGetErrorString9A(hr) );
         return false;
     }
 

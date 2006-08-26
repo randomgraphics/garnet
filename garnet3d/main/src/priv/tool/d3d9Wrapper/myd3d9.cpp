@@ -6,6 +6,8 @@
 #pragma comment(lib, "dxerr9.lib")
 #endif
 
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9Wrapper");
+
 // *****************************************************************************
 // Local function Pointers
 // *****************************************************************************
@@ -46,18 +48,18 @@ bool sLoadD3D9Dll()
 
     // load library
     StrA dllname = strFormat( "%s\\system32\\d3d9.dll", getEnv("windir").cptr() );
-    GN_TRACE( "Load system D3D DLL: %s", dllname.cptr() );
+    GN_TRACE(sLogger)( "Load system D3D DLL: %s", dllname.cptr() );
     gD3D9Dll = LoadLibraryA( dllname.cptr() );
     if( 0 == gD3D9Dll )
     {
-        GN_ERROR( "fail to load system D3D9.DLL: %s", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to load system D3D9.DLL: %s", getOSErrorInfo() );
         return false;
     }
 
     // get function pointers
     #define GETFP( NAME ) \
         g##NAME = (FP_##NAME)GetProcAddress( gD3D9Dll, #NAME ); \
-        if( 0 == g##NAME ) { GN_ERROR( "Fail to get symbol of %s", #NAME ); return false; }
+        if( 0 == g##NAME ) { GN_ERROR(sLogger)( "Fail to get symbol of %s", #NAME ); return false; }
     GETFP( Direct3DCreate9 );
     GETFP( D3DPERF_BeginEvent );
     GETFP( D3DPERF_EndEvent );
@@ -93,14 +95,14 @@ bool MyD3D9::create( UINT sdkVersion )
     // check SDK version
     if( (sdkVersion&0xFF) != D3D_SDK_VERSION )
     {
-        GN_WARN( "unsupport SDK version %d (expecting %d)", (sdkVersion&0xFF), D3D_SDK_VERSION );
+        GN_WARN(sLogger)( "unsupport SDK version %d (expecting %d)", (sdkVersion&0xFF), D3D_SDK_VERSION );
         //return false;
     }
 
     if( !sLoadD3D9Dll() ) return false;
 
     GN_ASSERT( !mObject );
-    GN_INFO( "create Direct3D9 object" );
+    GN_INFO(sLogger)( "create Direct3D9 object" );
     mObject = gDirect3DCreate9( sdkVersion );
     return !!mObject;
 
@@ -122,7 +124,7 @@ HRESULT STDMETHODCALLTYPE MyD3D9::CreateDevice(
 
     if( !ppReturnedDeviceInterface )
     {
-        GN_ERROR( "ppReturnedDeviceInterface can't be NULL!" );
+        GN_ERROR(sLogger)( "ppReturnedDeviceInterface can't be NULL!" );
         return D3DERR_INVALIDCALL;
     }
 

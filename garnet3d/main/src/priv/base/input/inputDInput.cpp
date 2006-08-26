@@ -11,6 +11,8 @@
 
 #define IDX_INPUT_BUFFER_SIZE  128
 
+static GN::Logger * sLogger = GN::getLogger("GN.input.DI");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -161,7 +163,7 @@ bool GN::input::InputDInput::acquire()
     GN_DX9_CHECK_RV( mMouse->Acquire(), 0 );
 
     // success
-    GN_INFO( "Acquire DInput devices" );
+    GN_INFO(sLogger)( "Acquire DInput devices" );
     mAcquired = true;
     return true;
 
@@ -177,14 +179,14 @@ bool GN::input::InputDInput::unacquire()
 
     mAcquired = false;
 
-    GN_INFO( "Unacquire DInput devices" );
+    GN_INFO(sLogger)( "Unacquire DInput devices" );
     HRESULT rval;
     if( mKeyboard )
     {
         rval = mKeyboard->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR( "Fail to unacquire keyboard, %s!", DXGetErrorString9A(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire keyboard, %s!", DXGetErrorString9A(rval) );
             return false;
         }
     }
@@ -193,7 +195,7 @@ bool GN::input::InputDInput::unacquire()
         rval = mMouse->Unacquire();
         if (rval != DI_OK && rval != DI_NOEFFECT)
         {
-            GN_ERROR( "Fail to unacquire mouse, %s!", DXGetErrorString9A(rval) );
+            GN_ERROR(sLogger)( "Fail to unacquire mouse, %s!", DXGetErrorString9A(rval) );
             return false;
         }
     }

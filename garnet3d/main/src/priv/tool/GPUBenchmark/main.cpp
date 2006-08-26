@@ -3,6 +3,8 @@
 using namespace GN;
 using namespace GN::gfx;
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.gpuBenchmark");
+
 // *****************************************************************************
 // Utils
 // *****************************************************************************
@@ -243,7 +245,7 @@ struct TexturedEffect : public BasicEffect
         // check renderer caps
         if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) )
         {
-            GN_ERROR( "hardware support to vs.1.1 and ps.1.1 is required." );
+            GN_ERROR(sLogger)( "hardware support to vs.1.1 and ps.1.1 is required." );
             return false;
         }
 
@@ -334,7 +336,7 @@ class BenchmarkingApp : public app::SampleApp
         GN_ASSERT( !mTestCases.empty() );
         CaseDesc & cd = mTestCases.back();
         GN_ASSERT( cd.theCase );
-        GN_INFO( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
+        GN_INFO(sLogger)( "TEST RESULT: name(%s) %s", cd.theCase->getName().cptr(), cd.theCase->printResult().cptr() );
         cd.theCase->destroy();
         delete cd.theCase;
         mTestCases.pop_back();

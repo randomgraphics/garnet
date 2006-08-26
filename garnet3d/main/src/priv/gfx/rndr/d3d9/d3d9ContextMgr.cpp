@@ -546,7 +546,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                         TRUE, // discardable depth buffer
                         &mAutoDepth, 0 ) );
                     GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
-                    GN_TRACE( "Recreate depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
+                    GN_TRACE(sLogger)( "Recreate depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
                         w, h, d3d9::d3dFormat2Str(depthDesc.Format),
                         rt0Desc.MultiSampleType, rt0Desc.MultiSampleQuality );
                 }
@@ -566,7 +566,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                     TRUE,
                     &mAutoDepth, 0 ) );
                 GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
-                GN_TRACE( "Create depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
+                GN_TRACE(sLogger)( "Create depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
                     rt0Desc.Width, rt0Desc.Height,
                     d3d9::d3dFormat2Str(DEFAULT_DEPTH_FORMAT),
                     rt0Desc.MultiSampleType,
@@ -719,7 +719,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
                     if( D3DTOP_DOTPRODUCT3 == d3dtsv &&
                         !getD3DCaps( D3D9CAPS_DOT3 ) )
                     {
-                        GN_DO_ONCE( GN_WARN(
+                        GN_DO_ONCE( GN_WARN(sLogger)(
                             "Current D3D device does not support "
                             "dot3 operation! "
                             "Fallback to D3DTOP_SELECTARG1." ) );

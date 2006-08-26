@@ -38,7 +38,7 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR( "Not _ALL_ graphics resouces are released!" );
+        GN_ERROR(sLogger)( "Not _ALL_ graphics resouces are released!" );
         return false;
     }
 
@@ -67,12 +67,12 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
 
     if( !mResourceList.empty() )
     {
-        GN_ERROR( "All graphics resouces MUST be released, after recieving 'destroy' signal!" );
+        GN_ERROR(sLogger)( "All graphics resouces MUST be released, after recieving 'destroy' signal!" );
         GN_UNEXPECTED();
         for( std::list<OGLResource*>::iterator i = mResourceList.begin(); i != mResourceList.end(); ++i )
         {
             const OGLResource * r = *i;
-            GN_ERROR( "0x%p", r );
+            GN_ERROR(sLogger)( "0x%p", r );
         }
     }
 
@@ -111,7 +111,7 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                 }
 
                 default:
-                    GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
 
@@ -133,13 +133,13 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                 }
 
                 default:
-                    GN_ERROR( "unsupport shading language : %s", shadingLanguage2Str(lang) );
+                    GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
             }
 
         default:
             GN_UNEXPECTED(); // program should not reach here
-            GN_ERROR( "invalid shader type: %d", type );
+            GN_ERROR(sLogger)( "invalid shader type: %d", type );
             return 0;
     }
     GN_UNGUARD;

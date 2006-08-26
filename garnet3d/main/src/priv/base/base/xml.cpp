@@ -6,6 +6,8 @@
 // local functions
 // *****************************************************************************
 
+static GN::Logger * sLogger = GN::getLogger("GN.base.Xml");
+
 struct AutoFree
 {
     XML_Parser ptr;
@@ -107,7 +109,7 @@ static bool sFormatNodes( GN::File & fp, const GN::XmlNode * root, int ident )
 
         default:
             GN_UNEXPECTED(); // program should not reach here
-            GN_ERROR( "Unknown node type!" );
+            GN_ERROR(sLogger)( "Unknown node type!" );
             return false;
     };
 
@@ -170,7 +172,7 @@ static bool sCompactNodes( GN::File & fp, const GN::XmlNode * root )
 
         default:
             GN_UNEXPECTED(); // program should not reach here
-            GN_ERROR( "Unknown node type!" );
+            GN_ERROR(sLogger)( "Unknown node type!" );
             return false;
     };
 
@@ -511,7 +513,7 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
         case XML_CDATA   : p = new PooledNode<XmlCdata>; break;
         case XML_COMMENT : p = new PooledNode<XmlComment>; break;
         case XML_ELEMENT : p = new PooledNode<XmlElement>; break;
-        default          : GN_ERROR( "invalid node type : %d", type ); return NULL;
+        default          : GN_ERROR(sLogger)( "invalid node type : %d", type ); return NULL;
     }
     mNodes.push_back( p );
     return p;

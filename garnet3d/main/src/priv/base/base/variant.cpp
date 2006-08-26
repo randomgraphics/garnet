@@ -6,6 +6,8 @@
 
 #define ENCODE_KEY(from,to) ( ((((int16_t)from) & 0xFF) << 8) | (((int16_t)to) & 0xFF) )
 
+static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
+
 // *****************************************************************************
 // public methods
 // *****************************************************************************
@@ -67,7 +69,7 @@ bool GN::Variant::getb( bool & b ) const
     }
     else
     {
-        GN_ERROR( "Can't convert string '%s' to boolean.", mValue.cptr() );
+        GN_ERROR(sLogger)( "Can't convert string '%s' to boolean.", mValue.cptr() );
         return false;
     }
 }

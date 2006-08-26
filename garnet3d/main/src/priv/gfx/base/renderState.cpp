@@ -8,6 +8,8 @@
 #define GN_INLINE
 #endif
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.renderState");
+
 // *****************************************************************************
 // RenderStateDesc
 // *****************************************************************************
@@ -141,7 +143,7 @@ bool GN::gfx::RenderStateBlockDesc::valid() const
             case RenderStateDesc::VT_INT :
                 if( vi < d.minI || vi > d.maxI )
                 {
-                    GN_ERROR( "RenderState(%s)含有无效值：%d.", renderState2Str( (RenderState)i ), vi );
+                    GN_ERROR(sLogger)( "RenderState(%s)含有无效值：%d.", renderState2Str( (RenderState)i ), vi );
                     return false;
                 }
                 break;
@@ -149,7 +151,7 @@ bool GN::gfx::RenderStateBlockDesc::valid() const
             case RenderStateDesc::VT_FLOAT :
                 if( vf < d.minF || vf > d.minF )
                 {
-                    GN_ERROR( "RenderState(%s)含有无效值：%f.", renderState2Str( (RenderState)i ), vf );
+                    GN_ERROR(sLogger)( "RenderState(%s)含有无效值：%f.", renderState2Str( (RenderState)i ), vf );
                     return false;
                 }
                 break;
@@ -259,14 +261,14 @@ bool GN::gfx::TextureStateBlockDesc::valid() const
 
     if( mNumStages >= MAX_TEXTURE_STAGES )
     {
-        GN_ERROR( "Too many stages : %d", mNumStages );
+        GN_ERROR(sLogger)( "Too many stages : %d", mNumStages );
         return false;
     }
     for( size_t s = 0; s < mNumStages; ++s )
     for( int i = 0; i < NUM_TEXTURE_STATES; ++i )
     {
         if( !isSet( s, (TextureState)i ) || 0 <= mValues[s][i] && mValues[s][i] < NUM_TEXTURE_STATE_VALUES ) continue;
-        GN_ERROR( "TextureState[%d][%s]含有无效值：%d.", s, textureState2Str( (TextureState)i ), i );
+        GN_ERROR(sLogger)( "TextureState[%d][%s]含有无效值：%d.", s, textureState2Str( (TextureState)i ), i );
         return false;
     }
 

@@ -5,6 +5,8 @@
 
 std::map<void*,GN::gfx::RenderWindowMsw*> GN::gfx::RenderWindowMsw::msInstanceMap;
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.renderWindow.MSW");
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -20,13 +22,13 @@ bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType 
 
     if( !::IsWindow( (HWND)externalWindow ) )
     {
-        GN_ERROR( "External render window handle must be valid." );
+        GN_ERROR(sLogger)( "External render window handle must be valid." );
         return false;
     }
 
     if( msInstanceMap.end() != msInstanceMap.find( (HWND)externalWindow ) )
     {
-        GN_ERROR( "You can't create multiple render window instance for single window handle." );
+        GN_ERROR(sLogger)( "You can't create multiple render window instance for single window handle." );
         return false;
     }
 
@@ -34,7 +36,7 @@ bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType 
     mHook = ::SetWindowsHookEx( WH_CALLWNDPROC, &staticHookProc, 0, GetCurrentThreadId() );
     if( 0 == mHook )
     {
-        GN_ERROR( "Fail to setup message hook : %s", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "Fail to setup message hook : %s", getOSErrorInfo() );
         return false;
     }
 
@@ -116,7 +118,7 @@ void GN::gfx::RenderWindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_INFO( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_INFO(sLogger)( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
         GN_MSW_CHECK( ::UnregisterClassA( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
@@ -132,7 +134,7 @@ bool GN::gfx::RenderWindowMsw::getClientSize( uint32_t & width, uint32_t & heigh
 {
     if( !::IsWindow(mWindow) )
     {
-        GN_ERROR( "RenderWindowMsw class is yet to initialized!" );
+        GN_ERROR(sLogger)( "RenderWindowMsw class is yet to initialized!" );
         return false;
     }
 
@@ -162,7 +164,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
     mMonitor = ::MonitorFromWindow( mWindow, MONITOR_DEFAULTTONEAREST );
     if( 0 == mMonitor )
     {
-        GN_ERROR( "Fail to get monitor handle from window!" );
+        GN_ERROR(sLogger)( "Fail to get monitor handle from window!" );
         return false;
     }
 
@@ -211,7 +213,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t 
     } while( ::GetClassInfoExA( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
-    GN_INFO( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    GN_INFO(sLogger)( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
@@ -226,7 +228,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t 
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
     if( 0 == ::RegisterClassExA(&wcex) )
     {
-        GN_ERROR( "fail to register window class, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
     }
 
@@ -257,7 +259,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t 
         0 );
     if( 0 == mWindow )
     {
-        GN_ERROR( "fail to create window, %s!", getOSErrorInfo() );
+        GN_ERROR(sLogger)( "fail to create window, %s!", getOSErrorInfo() );
         return false;
     }
 
@@ -314,7 +316,7 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
         mMonitor = ::MonitorFromWindow( wnd, MONITOR_DEFAULTTONEAREST );
         if( 0 == mMonitor )
         {
-            GN_ERROR( "Fail to get monitor handle from window handle!" );
+            GN_ERROR(sLogger)( "Fail to get monitor handle from window handle!" );
         }
 
         //// Output monitor information
@@ -426,7 +428,7 @@ bool GN::gfx::WinProp::save( HWND hwnd )
 
     if( !::IsWindow(hwnd) )
     {
-        GN_ERROR( "Input window handle is invalid!" );
+        GN_ERROR(sLogger)( "Input window handle is invalid!" );
         return false;
     }
 

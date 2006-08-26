@@ -94,7 +94,8 @@ namespace GN { namespace gfx
         else
         {
             // failed
-            GN_ERROR( "invalid primitive string : '%s'!", str.cptr() );
+            static Logger * sLogger = getLogger("GN.gfx.misc");
+            GN_ERROR(sLogger)( "invalid primitive string : '%s'!", str.cptr() );
             return NUM_PRIMITIVES;
         }
         GN_UNGUARD_SLOW;
@@ -110,6 +111,7 @@ namespace GN { namespace gfx
     inline size_t calcPrimitiveCount( PrimitiveType pt, size_t numvert )
     {
         GN_GUARD_SLOW;
+
         switch( pt )
         {
             case POINT_LIST     : return numvert;
@@ -120,7 +122,10 @@ namespace GN { namespace gfx
             case QUAD_LIST      : return (numvert >= 4) ? numvert / 4 : 0;
             case RECT_LIST      : return (numvert >= 3) ? numvert / 3 : 0;
             default             :
-                GN_ERROR( "Invalid primitive type!" );
+                {
+                    static Logger * sLogger = getLogger("GN.gfx.misc");
+                    GN_ERROR(sLogger)( "Invalid primitive type!" );
+                }
                 return 0;
         }
         GN_UNGUARD_SLOW;
@@ -146,7 +151,10 @@ namespace GN { namespace gfx
             case QUAD_LIST      : return numprim * 4;
             case RECT_LIST      : return numprim * 3;
             default :
-                GN_ERROR( "Invalid primitive type!" );
+                {
+                    static Logger * sLogger = getLogger("GN.gfx.misc");
+                    GN_ERROR(sLogger)( "Invalid primitive type!" );
+                }
                 return 0;
         }
         GN_UNGUARD_SLOW;

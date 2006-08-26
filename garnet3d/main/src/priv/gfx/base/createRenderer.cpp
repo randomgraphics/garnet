@@ -4,6 +4,8 @@
 // local functions
 // *************************************************************************
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.createRenderer");
+
 //!
 //! Function prototype to create instance of renderer.
 //!
@@ -23,7 +25,7 @@ extern GN::gfx::Renderer * createFakeRenderer();
 extern GN::gfx::Renderer * createD3D9Renderer();
 #else
 inline GN::gfx::Renderer * createD3D9Renderer()
-{ GN_ERROR( "No D3D9 support on platform other than MS Windows." ); return 0; }
+{ GN_ERROR(sLogger)( "No D3D9 support on platform other than MS Windows." ); return 0; }
 #endif
 
 //
@@ -33,7 +35,7 @@ inline GN::gfx::Renderer * createD3D9Renderer()
 extern GN::gfx::Renderer * createD3D10Renderer();
 #else
 inline GN::gfx::Renderer * createD3D10Renderer()
-{ GN_ERROR( "No D3D10 support on platform other than MS Vista." ); return 0; }
+{ GN_ERROR(sLogger)( "No D3D10 support on platform other than MS Vista." ); return 0; }
 #endif
 
 //
@@ -41,7 +43,7 @@ inline GN::gfx::Renderer * createD3D10Renderer()
 //
 #if GN_XENON
 inline GN::gfx::Renderer * createOGLRenderer()
-{ GN_ERROR( "No OGL support on Xenon." ); return 0; }
+{ GN_ERROR(sLogger)( "No OGL support on Xenon." ); return 0; }
 #else
 extern GN::gfx::Renderer * createOGLRenderer();
 #endif
@@ -86,7 +88,7 @@ GN::gfx::Renderer * GN::gfx::createRenderer( RendererAPI api )
         case API_D3D9  : return createD3D9Renderer();
         case API_D3D10 : return createD3D10Renderer();
         case API_OGL   : return createOGLRenderer();
-        default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
+        default        : GN_ERROR(sLogger)( "Invalid API(%d)", api ); return 0;
     }
 #else
     const char * dllName;
@@ -96,7 +98,7 @@ GN::gfx::Renderer * GN::gfx::createRenderer( RendererAPI api )
         case API_D3D9  : dllName = "GNrndrD3D9"; break;
         case API_D3D10 : dllName = "GNrndrD3D10"; break;
         case API_OGL   : dllName = "GNrndrOGL"; break;
-        default        : GN_ERROR( "Invalid API(%d)", api ); return 0;
+        default        : GN_ERROR(sLogger)( "Invalid API(%d)", api ); return 0;
     }
     std::auto_ptr<SharedLib> dll( new SharedLib );
     if( !dll->load( dllName ) ) return 0;

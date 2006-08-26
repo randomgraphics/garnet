@@ -3,6 +3,8 @@
 #include "oglRenderer.h"
 #include "../common/charBitmap.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+
 // *****************************************************************************
 // Local functions
 // *****************************************************************************
@@ -239,7 +241,7 @@ bool GN::gfx::OGLFont::createFont()
     mDisplayLists = glGenLists(256);
     if( 0 == mDisplayLists )
     {
-        GN_ERROR( "Fail to generate opengl display lists!" );
+        GN_ERROR(sLogger)( "Fail to generate opengl display lists!" );
         return false;
     }
 

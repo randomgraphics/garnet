@@ -22,6 +22,8 @@ static const D3DVERTEXELEMENT9 sVtxElements[] =
     D3DDECL_END()
 };
 
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -130,12 +132,12 @@ void GN::gfx::D3D9Quad::drawQuads(
 
     if( 0 == positions )
     {
-        GN_ERROR( "Quad positions can't be NULL!" );
+        GN_ERROR(sLogger)( "Quad positions can't be NULL!" );
         return;
     }
     if( 0 == posStride )
     {
-        GN_ERROR( "stride of positions can't be zero!" );
+        GN_ERROR(sLogger)( "stride of positions can't be zero!" );
         return;
     }
 

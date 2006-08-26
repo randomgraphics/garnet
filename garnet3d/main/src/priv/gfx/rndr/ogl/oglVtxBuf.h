@@ -73,6 +73,8 @@ namespace GN { namespace gfx
     private:
 
         uint8_t * mBuffer;
+
+        static Logger * sLogger;
     };
 
     //!
@@ -139,6 +141,8 @@ namespace GN { namespace gfx
         size_t    mLockOffset; //!< bytes from buffer start to locked start.
         size_t    mLockBytes;
         LockFlag  mLockFlag;
+
+        static Logger * sLogger;
 
         // ********************************
         // private functions

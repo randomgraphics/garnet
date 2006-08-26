@@ -3,6 +3,8 @@
 
 namespace GN { namespace win
 {
+    static GN::Logger * sLogger = GN::getLogger("GN.win");
+
     // *************************************************************************
     // Fake Window
     // *************************************************************************
@@ -93,7 +95,7 @@ namespace GN { namespace win
 #else
 
         GN_UNUSED_PARAM( wcp );
-        GN_WARN( "No window class implementation on current platform." );
+        GN_WARN(sLogger)( "No window class implementation on current platform." );
         return new FakeWindow;
 
 #endif
@@ -165,7 +167,7 @@ namespace GN { namespace win
             }
             else if( ::IsIconic( (HWND)window ) && blockWhileMinized )
             {
-                GN_INFO( "Wait for window messages..." );
+                GN_INFO(sLogger)( "Wait for window messages..." );
                 ::WaitMessage();
             }
             else return; // Idle time

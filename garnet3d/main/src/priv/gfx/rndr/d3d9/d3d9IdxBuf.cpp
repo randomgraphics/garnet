@@ -2,6 +2,8 @@
 #include "d3d9IdxBuf.h"
 #include "d3d9Renderer.h"
 
+GN::Logger * GN::gfx::D3D9IdxBuf::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+
 // *****************************************************************************
 // Local functions
 // *****************************************************************************
@@ -28,7 +30,7 @@ bool GN::gfx::D3D9IdxBuf::init(
     // check parameter
     if( 0 == numIdx )
     {
-        GN_ERROR( "invalid buffer length!" );
+        GN_ERROR(sLogger)( "invalid buffer length!" );
         quit(); return selfOK();
     }
 
@@ -121,7 +123,7 @@ void GN::gfx::D3D9IdxBuf::deviceDispose()
     if( isLocked() )
     {
         unlock();
-        GN_ERROR( "call unlock() before u dispose the index buffer!" );
+        GN_ERROR(sLogger)( "call unlock() before u dispose the index buffer!" );
     }
 
     safeRelease( mD3DIb );
