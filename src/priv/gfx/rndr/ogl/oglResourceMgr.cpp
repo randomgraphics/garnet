@@ -93,7 +93,7 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
 
     switch( type )
     {
-        case VERTEX_SHADER :
+        case SHADER_VS :
             switch( lang )
             {
                 case LANG_OGL_ARB:
@@ -115,7 +115,7 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                     return 0;
             }
 
-        case PIXEL_SHADER :
+        case SHADER_PS :
             switch( lang )
             {
                 case LANG_OGL_ARB:

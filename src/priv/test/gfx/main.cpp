@@ -12,6 +12,8 @@ class Scene
     
     AutoRef<Shader> ps1, ps2, vsbox, psbox;
 
+    VtxFmtHandle vfbox;
+
     uint32_t tex0;
 
     uint32_t eff0;
@@ -34,7 +36,7 @@ public:
             static const char * code =
                 "ps_1_1\n"
                 "mov r0, c0";
-            ps1.attach( r.createPxlShader( LANG_D3D_ASM, code ) );
+            ps1.attach( r.createPS( LANG_D3D_ASM, code ) );
             if( !ps1 ) return false;
             ps1->setUniformByNameV( "c0", Vector4f(0,1,0,1) );
         }
@@ -46,7 +48,7 @@ public:
                 "OUTPUT oClr = result.color; \n"
                 "MOV oClr, white; \n"
                 "END";
-            ps1.attach( r.createPxlShader( LANG_OGL_ARB, code ) );
+            ps1.attach( r.createPS( LANG_OGL_ARB, code ) );
             if( !ps1 ) return false;
             ps1->setUniformByNameV( "l0", Vector4f(0,1,0,1) );
         }
@@ -58,7 +60,7 @@ public:
                 "{ \n"
                 "   return diffuse; \n"
                 "} \n";
-            ps2.attach( r.createPxlShader( LANG_D3D_HLSL, code, "entry=psMain sm30=false" ) );
+            ps2.attach( r.createPS( LANG_D3D_HLSL, code, "entry=psMain sm30=false" ) );
             if( !ps2 ) return false;
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }
@@ -70,7 +72,7 @@ public:
                 "{ \n"
                 "   gl_FragColor = diffuse; \n"
                 "} \n";
-            ps2.attach( r.createPxlShader( LANG_OGL_GLSL, code ) );
+            ps2.attach( r.createPS( LANG_OGL_GLSL, code ) );
             if( !ps2 ) return false;
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }
@@ -89,7 +91,7 @@ public:
                 "   o.clr = float4( abs(i.nml), 1.0 ); \n"
                 "   return o; \n"
                 "}";
-            vsbox.attach( r.createVtxShader( LANG_D3D_HLSL, code ) );
+            vsbox.attach( r.createVS( LANG_D3D_HLSL, code ) );
             if( !vsbox ) return false;
         }
         if( r.supportShader( "ps_1_1" ) )
@@ -99,9 +101,13 @@ public:
                 "{ \n"
                 "   return clr; \n"
                 "}";
-            psbox.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
+            psbox.attach( r.createPS( LANG_D3D_HLSL, code ) );
             if( !psbox ) return false;
         }
+
+        // create box vertex decl
+        vfbox = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
+        if( 0 == vfbox ) return 0;
 
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
@@ -124,6 +130,8 @@ public:
     {
         ps1.clear();
 		ps2.clear();
+        vsbox.clear();
+        psbox.clear();
     }
 
     void update()
@@ -183,7 +191,7 @@ public:
         }//*/
 
         //* draw solid box
-        if( vsbox && psbox )
+        if( vsbox && psbox && vfbox )
         {
             static struct TheBox
             {
@@ -207,8 +215,10 @@ public:
                         ib, 0 );
                 };
             } theBox;
+            r.setRenderState( RS_DEPTH_TEST, RSV_TRUE );
+            r.setRenderState( RS_DEPTH_WRITE, RSV_TRUE );
+            r.setVtxFmt( vfbox );
             r.setShaders( vsbox, psbox );
-            r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
             r.drawIndexedUp( TRIANGLE_LIST, 12, 24, theBox.vb, sizeof(TheBox::Vertex), theBox.ib );
         }//*/
 

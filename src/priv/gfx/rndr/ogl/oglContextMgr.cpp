@@ -292,16 +292,16 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
 	const Shader * glslVs = 0;
     const Shader * glslPs = 0;
 
-    const Shader * oldVtxShader = mContext.shaders[VERTEX_SHADER];
-    const Shader * oldPxlShader = mContext.shaders[PIXEL_SHADER];
-    const Shader * newVtxShader = newContext.shaders[VERTEX_SHADER];
-    const Shader * newPxlShader = newContext.shaders[PIXEL_SHADER];
+    const Shader * oldVtxShader = mContext.shaders[SHADER_VS];
+    const Shader * oldPxlShader = mContext.shaders[SHADER_PS];
+    const Shader * newVtxShader = newContext.shaders[SHADER_VS];
+    const Shader * newPxlShader = newContext.shaders[SHADER_PS];
 
-    if( newFlags.shaderBit( VERTEX_SHADER ) )
+    if( newFlags.shaderBit( SHADER_VS ) )
     {
         GN_ASSERT(
             0 == newVtxShader ||
-            VERTEX_SHADER == newVtxShader->getType() );
+            SHADER_VS == newVtxShader->getType() );
 
         if( oldVtxShader != newVtxShader || forceRebind )
         {
@@ -344,11 +344,11 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
         glslVs = oldVtxShader;
     }
 
-    if( newFlags.shaderBit( PIXEL_SHADER ) )
+    if( newFlags.shaderBit( SHADER_PS ) )
     {
         GN_ASSERT(
             0 == newPxlShader ||
-            PIXEL_SHADER == newPxlShader->getType() );
+            SHADER_PS == newPxlShader->getType() );
 
         if( oldPxlShader != newPxlShader || forceRebind )
         {

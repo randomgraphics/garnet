@@ -34,24 +34,24 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void RendererContext::setShaders( const Shader * vtxShader, const Shader * pxlShader )
     {
-        setShader( VERTEX_SHADER, vtxShader );
-        setShader( PIXEL_SHADER, pxlShader );
+        setShader( SHADER_VS, vtxShader );
+        setShader( SHADER_PS, pxlShader );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setVtxShader( const Shader * s )
+    inline void RendererContext::setVS( const Shader * s )
     {
-        setShader( VERTEX_SHADER, s );
+        setShader( SHADER_VS, s );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setPxlShader( const Shader * s )
+    inline void RendererContext::setPS( const Shader * s )
     {
-        setShader( PIXEL_SHADER, s );
+        setShader( SHADER_PS, s );
     }
 
     //

@@ -197,7 +197,7 @@ protected:
             "   o = i; \n"
             "}";
 
-        vs.attach( r.createVtxShader( LANG_D3D_HLSL, code, "sm30=no" ) );
+        vs.attach( r.createVS( LANG_D3D_HLSL, code, "sm30=no" ) );
 
         return !!vs;
     };
@@ -219,12 +219,12 @@ struct SolidEffect : public BasicEffect
             "{ \n"
             "   o = i; \n"
             "}";
-        vs.attach( r.createVtxShader( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
         static const char * pscode = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // success
@@ -257,7 +257,7 @@ struct TexturedEffect : public BasicEffect
             "{ \n"
             "   o = i; \n"
             "}";
-        vs.attach( r.createVtxShader( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
@@ -275,7 +275,7 @@ struct TexturedEffect : public BasicEffect
             "       return o;                                    \n"
             "}",
             mCount );
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // success

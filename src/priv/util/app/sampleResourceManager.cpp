@@ -188,12 +188,12 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     ShadingLanguage lang;
     if( sCheckPrefix( code, "!!ARBvp" ) )
     {
-        type = VERTEX_SHADER;
+        type = SHADER_VS;
         lang = LANG_OGL_ARB;
     }
     else if( sCheckPrefix( code, "!!ARBfp" ) )
     {
-        type = PIXEL_SHADER;
+        type = SHADER_PS;
         lang = LANG_OGL_ARB;
     }
     else if(
@@ -298,13 +298,13 @@ static bool sCreateNullEffect( Effect * & result, const StrA &, void * )
     GN_GUARD;
 
     EffectDesc desc;
-    desc.shaders["vs"].type = VERTEX_SHADER;
-    desc.shaders["ps"].type = PIXEL_SHADER;
+    desc.shaders["vs"].type = SHADER_VS;
+    desc.shaders["ps"].type = SHADER_PS;
     desc.techniques.resize(1);
     desc.techniques[0].name = "t0";
     desc.techniques[0].passes.resize(1);
-    desc.techniques[0].passes[0].shaders[VERTEX_SHADER] = "vs";
-    desc.techniques[0].passes[0].shaders[PIXEL_SHADER] = "ps";
+    desc.techniques[0].passes[0].shaders[SHADER_VS] = "vs";
+    desc.techniques[0].passes[0].shaders[SHADER_PS] = "ps";
 
     AutoObjPtr<Effect> eff( new Effect );
     if( !eff->init( desc ) ) return false;

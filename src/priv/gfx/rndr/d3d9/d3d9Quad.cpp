@@ -281,13 +281,13 @@ void GN::gfx::D3D9Quad::drawQuads(
     // bind shaders
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
-        cf.setShaderBit( VERTEX_SHADER );
+        cf.setShaderBit( SHADER_VS );
         GN_DX9_CHECK( dev->SetVertexShader( mVtxShader ) );
     }
 
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
-        cf.setShaderBit( PIXEL_SHADER );
+        cf.setShaderBit( SHADER_PS );
         GN_DX9_CHECK( dev->SetPixelShader( texcoords ? colors ? mPxlShaderColorTextured : mPxlShaderTextured : mPxlShaderSolid ) );
     }
 

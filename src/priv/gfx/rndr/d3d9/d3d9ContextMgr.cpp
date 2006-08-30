@@ -302,8 +302,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
                 }
                 else switch( i )
                 {
-                    case VERTEX_SHADER : GN_DX9_CHECK( mDevice->SetVertexShader( 0 ) ); break;
-                    case PIXEL_SHADER  : GN_DX9_CHECK( mDevice->SetPixelShader( 0 ) ); break;
+                    case SHADER_VS : GN_DX9_CHECK( mDevice->SetVertexShader( 0 ) ); break;
+                    case SHADER_PS  : GN_DX9_CHECK( mDevice->SetPixelShader( 0 ) ); break;
                     default : GN_UNEXPECTED();
                 }
             }

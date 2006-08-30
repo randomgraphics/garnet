@@ -521,8 +521,8 @@ void GN::gfx::OGLRenderer::drawQuads(
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mQuad );
     contextUpdateBegin();
-    if( !(DQ_USE_CURRENT_VS & options) ) setVtxShader( 0 );
-    if( !(DQ_USE_CURRENT_PS & options) ) setPxlShader( 0 );
+    if( !(DQ_USE_CURRENT_VS & options) ) setVS( 0 );
+    if( !(DQ_USE_CURRENT_PS & options) ) setPS( 0 );
     contextUpdateEnd();
     mQuad->drawQuads(
         options,
@@ -549,8 +549,8 @@ void GN::gfx::OGLRenderer::drawLines(
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mQuad );
     contextUpdateBegin();
-    if( !(DL_USE_CURRENT_VS & options) ) setVtxShader( 0 );
-    if( !(DL_USE_CURRENT_PS & options) ) setPxlShader( 0 );
+    if( !(DL_USE_CURRENT_VS & options) ) setVS( 0 );
+    if( !(DL_USE_CURRENT_PS & options) ) setPS( 0 );
     contextUpdateEnd();
     mLine->drawLines( options, (const float*)positions, stride, count, color, model, view, proj );
     GN_UNGUARD_SLOW;

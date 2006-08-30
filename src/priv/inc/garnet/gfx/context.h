@@ -81,8 +81,8 @@ namespace GN { namespace gfx
             //! \name helper functions to access shader bits
             //@{
             bool shaderBit( int type ) const { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); return 0 != ( shaders & (1<<type) ); }
-            bool vtxShaderBit() const { return 0 != ( shaders & (1<<VERTEX_SHADER) ); }
-            bool pxlShaderBit() const { return 0 != ( shaders & (1<<PIXEL_SHADER) ); }
+            bool vtxShaderBit() const { return 0 != ( shaders & (1<<SHADER_VS) ); }
+            bool pxlShaderBit() const { return 0 != ( shaders & (1<<SHADER_PS) ); }
             void setShaderBit( int type ) { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); shaders |= 1 << type; }
             //@}
         };
@@ -288,12 +288,12 @@ namespace GN { namespace gfx
         //!
         //! Set vertex shader. Set to NULL to use fixed pipeline.
         //!
-        inline void setVtxShader( const Shader * s );
+        inline void setVS( const Shader * s );
 
         //!
         //! Set pixel shader. Set to NULL to use fixed pipeline.
         //!
-        inline void setPxlShader( const Shader * s );
+        inline void setPS( const Shader * s );
 
         //!
         //! Set render state block.

@@ -88,7 +88,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3D9VtxShaderAsm( D3D9Renderer & r )
-            : D3D9ShaderAsm(VERTEX_SHADER)
+            : D3D9ShaderAsm(SHADER_VS)
             , D3D9Resource(r)
         { clear(); }
         virtual ~D3D9VtxShaderAsm() { quit(); }
@@ -161,7 +161,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3D9PxlShaderAsm( D3D9Renderer & r )
-            : D3D9ShaderAsm(PIXEL_SHADER)
+            : D3D9ShaderAsm(SHADER_PS)
             , D3D9Resource(r)
         { clear(); }
         virtual ~D3D9PxlShaderAsm() { quit(); }
@@ -325,7 +325,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3D9VtxShaderHlsl( D3D9Renderer & r )
-            : D3D9ShaderHlsl(VERTEX_SHADER)
+            : D3D9ShaderHlsl(SHADER_VS)
             , D3D9Resource(r)
         { clear(); }
         virtual ~D3D9VtxShaderHlsl() { quit(); }
@@ -394,7 +394,7 @@ namespace GN { namespace gfx
         //@{
     public:
         D3D9PxlShaderHlsl( D3D9Renderer & r )
-            : D3D9ShaderHlsl(PIXEL_SHADER)
+            : D3D9ShaderHlsl(SHADER_PS)
             , D3D9Resource(r)
         { clear(); }
         virtual ~D3D9PxlShaderHlsl() { quit(); }

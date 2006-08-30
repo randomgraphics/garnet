@@ -29,7 +29,7 @@ struct ColoredEffect : public BasicEffect
             "   o = i;                      \n"
             "   o.pos.xy /= 480.0;          \n"
             "}";
-        vs.attach( r.createVtxShader( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
         if( !vs ) return false;
 
         // create PS
@@ -39,7 +39,7 @@ struct ColoredEffect : public BasicEffect
             "{                                    \n"
             "       return color;                 \n"
             "}";
-        ps.attach( r.createPxlShader( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
         if( !ps ) return false;
 
         // success

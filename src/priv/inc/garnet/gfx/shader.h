@@ -17,9 +17,9 @@ namespace GN { namespace gfx
     //!
     enum ShaderType
     {
-        VERTEX_SHADER,      //!< vertex shader
-        PIXEL_SHADER,       //!< pixel shader
-        NUM_SHADER_TYPES    //!< number of available shader types
+        SHADER_VS,        //!< vertex shader
+        SHADER_PS,        //!< pixel shader
+        NUM_SHADER_TYPES  //!< number of available shader types
     };
 
     //!
@@ -552,7 +552,7 @@ namespace GN { namespace gfx
     inline const char *
     shaderType2Str( ShaderType type )
     {
-        static const char * sTable [] = { "VERTEX", "PIXEL" };
+        static const char * sTable [] = { "VS", "PS" };
         if( 0 <= type && type < NUM_SHADER_TYPES )
             return sTable[type];
         else
@@ -571,7 +571,7 @@ namespace GN { namespace gfx
     inline bool
     str2ShaderType( ShaderType & type, const char * str )
     {
-        static const char * sTable [] = { "VERTEX", "PIXEL" };
+        static const char * sTable [] = { "VS", "PS" };
         if( str )
         {
             for( int i = 0; i < 2; ++i )

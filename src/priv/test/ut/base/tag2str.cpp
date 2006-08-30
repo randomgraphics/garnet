@@ -194,20 +194,20 @@ public:
         GN::StrA str;
         GN::gfx::ShaderType type = GN::gfx::NUM_SHADER_TYPES;
 
-        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::PIXEL_SHADER ) );
-        TS_ASSERT_EQUALS( str, "PIXEL" );
-        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::VERTEX_SHADER ) );
-        TS_ASSERT_EQUALS( str, "VERTEX" );
+        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::SHADER_PS ) );
+        TS_ASSERT_EQUALS( str, "PS" );
+        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::SHADER_VS ) );
+        TS_ASSERT_EQUALS( str, "VS" );
         TS_ASSERT( !GN::gfx::shaderType2Str( str, GN::gfx::NUM_SHADER_TYPES ) );
 
-        TS_ASSERT_EQUALS( "PIXEL", GN::gfx::shaderType2Str(GN::gfx::PIXEL_SHADER) );
-        TS_ASSERT_EQUALS( "VERTEX", GN::gfx::shaderType2Str(GN::gfx::VERTEX_SHADER) );
+        TS_ASSERT_EQUALS( "PS", GN::gfx::shaderType2Str(GN::gfx::SHADER_PS) );
+        TS_ASSERT_EQUALS( "VS", GN::gfx::shaderType2Str(GN::gfx::SHADER_VS) );
         TS_ASSERT_EQUALS( "BAD_SHADER_TYPE", GN::gfx::shaderType2Str(GN::gfx::NUM_SHADER_TYPES) );
 
-        TS_ASSERT( GN::gfx::str2ShaderType(type,"VERTEX") );
-        TS_ASSERT_EQUALS( type, GN::gfx::VERTEX_SHADER );
-        TS_ASSERT( GN::gfx::str2ShaderType(type,"PIXEL") );
-        TS_ASSERT_EQUALS( type, GN::gfx::PIXEL_SHADER );
+        TS_ASSERT( GN::gfx::str2ShaderType(type,"VS") );
+        TS_ASSERT_EQUALS( type, GN::gfx::SHADER_VS );
+        TS_ASSERT( GN::gfx::str2ShaderType(type,"PS") );
+        TS_ASSERT_EQUALS( type, GN::gfx::SHADER_PS );
         TS_ASSERT( !GN::gfx::str2ShaderType(type,NULL) );
         TS_ASSERT( !GN::gfx::str2ShaderType(type,"haha") );
     }
