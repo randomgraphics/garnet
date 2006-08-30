@@ -18,6 +18,7 @@
     - separate sim() and render() loop
     - File loader in another thread.
   - GFX system
+    - double-check matrix major confusion.
     - set sampling parameters (such as filters wrapping) at binding time
     - render target management
       - D3D: msaa

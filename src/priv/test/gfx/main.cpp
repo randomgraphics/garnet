@@ -10,7 +10,7 @@ class Scene
 {
     GN::app::SampleApp & app;
     
-    AutoRef<Shader> ps1, ps2;
+    AutoRef<Shader> ps1, ps2, vsbox, psbox;
 
     uint32_t tex0;
 
@@ -75,6 +75,34 @@ public:
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }
 
+        // create shaders for box rendering
+        if( r.supportShader( "vs_1_1" ) )
+        {
+            static const char * code =
+                "uniform float4x4 gPvw; \n"
+                "struct VSInput { float4 pos : POSITION; float3 nml : NORMAL; }; \n"
+                "struct VSOutput { float4 pos : POSITION; float4 clr : COLOR0; }; \n"
+                "VSOutput main( VSInput i ) \n"
+                "{ \n"
+                "   VSOutput o; \n"
+                "   o.pos = mul( i.pos, gPvw ); \n"
+                "   o.clr = float4( abs(i.nml), 1.0 ); \n"
+                "   return o; \n"
+                "}";
+            vsbox.attach( r.createVtxShader( LANG_D3D_HLSL, code ) );
+            if( !vsbox ) return false;
+        }
+        if( r.supportShader( "ps_1_1" ) )
+        {
+            static const char * code =
+                "float4 main( float4 clr : COLOR0 ) : COLOR \n"
+                "{ \n"
+                "   return clr; \n"
+                "}";
+            psbox.attach( r.createPxlShader( LANG_D3D_HLSL, code ) );
+            if( !psbox ) return false;
+        }
+
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
         if( !tex0 ) return false;
@@ -104,6 +132,11 @@ public:
         static float angle = 0.0f;
         angle += deg2rad(0.2f);
         world.rotateY( angle );
+
+        if( vsbox )
+        {
+            vsbox->setUniformByNameM( "gPvw", proj * view * world );
+        }
 
         // update color
         static int r = 0; static int rr = 1;
@@ -149,7 +182,37 @@ public:
             eff->passEnd();
         }//*/
 
-        // a wireframe box
+        //* draw solid box
+        if( vsbox && psbox )
+        {
+            static struct TheBox
+            {
+                struct Vertex
+                {
+                    float x, y, z;
+                    float n[3];
+                    float u, v;
+                };
+                Vertex vb[24];
+                uint16_t ib[36];
+
+                TheBox()
+                {
+                    static const float E = 160.0f;
+                    createBox(
+                        E, E, E,
+                        &vb[0].x, sizeof(Vertex),
+                        &vb[0].u, sizeof(Vertex),
+                        vb[0].n, sizeof(Vertex),
+                        ib, 0 );
+                };
+            } theBox;
+            r.setShaders( vsbox, psbox );
+            r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
+            r.drawIndexedUp( TRIANGLE_LIST, 12, 24, theBox.vb, sizeof(TheBox::Vertex), theBox.ib );
+        }//*/
+
+        /* a wireframe box
         {
             static const float E = 80.0f;
             static float lines[] =
@@ -178,7 +241,7 @@ public:
                 count,
                 ubyte4ToBGRA32(255,255,0,255),
                 world, view, proj );
-        }
+        }//*/
     }
 };
 
