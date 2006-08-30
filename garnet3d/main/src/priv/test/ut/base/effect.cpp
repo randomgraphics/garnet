@@ -82,14 +82,14 @@ public:
             "m4x4 oPos, v0, c0 \n"
             "mov oT0, v1 \n"
             "mov oD0, c4";
-        vs0.type = VERTEX_SHADER;
+        vs0.type = SHADER_VS;
         vs0.lang = LANG_D3D_ASM;
         vs0.uniforms["c0"] = "pvw";
         vs0.uniforms["c4"] = "color";
 
         // create another vertex shader (FFP shader)
         EffectDesc::ShaderDesc & vs1 = desc.shaders["vs1"];
-        vs1.type = VERTEX_SHADER;
+        vs1.type = SHADER_VS;
         vs1.uniforms["FFP_TRANSFORM_VIEW"] = "pvw";
 
         // create 1 pixel shader
@@ -97,7 +97,7 @@ public:
         ps0.code =
             "ps.1.1 \n"
             "mov r0, c0";
-        ps0.type = PIXEL_SHADER;
+        ps0.type = SHADER_PS;
         ps0.lang = LANG_D3D_ASM;
         ps0.uniforms["c0"] = "color";
         ps0.textures[0] = "t0";
@@ -108,8 +108,8 @@ public:
         tech0.name = "t0";
         tech0.passes.resize(1);
         EffectDesc::PassDesc & p0 = tech0.passes[0];
-        p0.shaders[VERTEX_SHADER] = "vs0";
-        p0.shaders[PIXEL_SHADER] = "ps0";
+        p0.shaders[SHADER_VS] = "vs0";
+        p0.shaders[SHADER_PS] = "ps0";
         desc.techniques.push_back( tech0 );
 
         // create another technique
@@ -117,8 +117,8 @@ public:
         tech1.name = "t1";
         tech1.passes.resize(1);
         EffectDesc::PassDesc & p1 = tech1.passes[0];
-        p1.shaders[VERTEX_SHADER] = "vs1";
-        p1.shaders[PIXEL_SHADER] = "ps0";
+        p1.shaders[SHADER_VS] = "vs1";
+        p1.shaders[SHADER_PS] = "ps0";
         desc.techniques.push_back( tech1 );
     }
 
@@ -269,7 +269,7 @@ public:
         initDesc1( desc );
 
         EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
-        p0.shaders[VERTEX_SHADER] = "haha";
+        p0.shaders[SHADER_VS] = "haha";
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );
@@ -284,7 +284,7 @@ public:
         initDesc1( desc );
 
         EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
-        p0.shaders[VERTEX_SHADER] = "ps0";
+        p0.shaders[SHADER_VS] = "ps0";
 
         Effect e;
         TS_ASSERT( !e.init( desc ) );

@@ -60,16 +60,16 @@ public:
 
         // initialize the context
         mContext.clearToNull();
-        mContext.setVtxShader( mEffect->vs );
+        mContext.setVS( mEffect->vs );
         if( mInitDoubleDepth )
         {
             mContext.setRenderState( RS_COLOR0_WRITE, 0 );
-            mContext.setPxlShader( 0 );
+            mContext.setPS( 0 );
         }
         else
         {
             mContext.setRenderState( RS_COLOR0_WRITE, 0xF );
-            mContext.setPxlShader( mEffect->ps );
+            mContext.setPS( mEffect->ps );
         }
         for( UInt i = 0; i < mInitTexCount; ++i ) mContext.setTexture( i, mTextures[i] );
         if( mInitMaxBandwidth )

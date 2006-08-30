@@ -14,7 +14,7 @@
     <shaders>
 
         <!-- D3D ASM shader -->
-        <shader name="vs.1.1" type="VERTEX">
+        <shader name="vs.1.1" type="VS">
             <prerequisites>
                 <token type="opcode" value="CHECK_SHADER_PROFILE">
                     <token type="values" value="vs_1_1"/>
@@ -30,7 +30,7 @@ m4x4 oPos, v0, c0
             </code>
         </shader>
 
-        <shader name="ps.1.1" type="PIXEL">
+        <shader name="ps.1.1" type="PS">
             <prerequisites>
                 <token type="opcode" value="CHECK_SHADER_PROFILE">
                     <token type="values" value="ps_1_1"/>
@@ -46,7 +46,7 @@ mov r0, c0
         </shader>
 
         <!-- OpenGL ARB program -->
-        <shader name="arbvp1" type="VERTEX">
+        <shader name="arbvp1" type="VS">
             <prerequisites>
                 <token type="opcode" value="CHECK_SHADER_PROFILE">
                     <token type="values" value="arbvp1"/>
@@ -66,7 +66,7 @@ END
            </code>
         </shader>
 
-        <shader name="arbfp1" type="PIXEL">
+        <shader name="arbfp1" type="PS">
             <prerequisites>
                 <token type="opcode" value="CHECK_SHADER_PROFILE">
                     <token type="values" value="arbfp1"/>
@@ -83,8 +83,8 @@ END
         </shader>
 
         <!-- Fixed functional pipeline -->
-        <shader name="fixvs" type="VERTEX"/>
-        <shader name="fixps" type="PIXEL"/>
+        <shader name="fixvs" type="VS"/>
+        <shader name="fixps" type="PS"/>
 
     </shaders>
 

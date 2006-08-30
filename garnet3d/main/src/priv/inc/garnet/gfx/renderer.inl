@@ -8,12 +8,12 @@ namespace GN { namespace gfx
     //
     // -------------------------------------------------------------------------
     inline Shader *
-    Renderer::createVtxShader( ShadingLanguage lang,
+    Renderer::createVS( ShadingLanguage lang,
                                const StrA &    code,
                                const StrA &    hints )
     {
         GN_GUARD;
-        return createShader( VERTEX_SHADER, lang, code, hints );
+        return createShader( SHADER_VS, lang, code, hints );
         GN_UNGUARD;
     }
 
@@ -21,12 +21,12 @@ namespace GN { namespace gfx
     //
     // -------------------------------------------------------------------------
     inline Shader *
-    Renderer::createPxlShader( ShadingLanguage lang,
+    Renderer::createPS( ShadingLanguage lang,
                                const StrA &    code,
                                const StrA &    hints )
     {
         GN_GUARD;
-        return createShader( PIXEL_SHADER, lang, code, hints );
+        return createShader( SHADER_PS, lang, code, hints );
         GN_UNGUARD;
     }
 
@@ -92,17 +92,17 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setVtxShader( const Shader * s )
+    inline void Renderer::setVS( const Shader * s )
     {
-        _GNGFX_CONTEXT_UPDATE( setVtxShader( s ) );
+        _GNGFX_CONTEXT_UPDATE( setVS( s ) );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setPxlShader( const Shader * s )
+    inline void Renderer::setPS( const Shader * s )
     {
-        _GNGFX_CONTEXT_UPDATE( setPxlShader( s ) );
+        _GNGFX_CONTEXT_UPDATE( setPS( s ) );
     }
 
     //

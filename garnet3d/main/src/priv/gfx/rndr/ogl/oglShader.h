@@ -142,8 +142,8 @@ namespace GN { namespace gfx
         {
             switch( type )
             {
-                case VERTEX_SHADER : return GL_VERTEX_PROGRAM_ARB;
-                case PIXEL_SHADER : return GL_FRAGMENT_PROGRAM_ARB;
+                case SHADER_VS : return GL_VERTEX_PROGRAM_ARB;
+                case SHADER_PS : return GL_FRAGMENT_PROGRAM_ARB;
                 default:
                     GN_UNEXPECTED();
                     return 0;
@@ -160,7 +160,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        OGLVtxShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, VERTEX_SHADER ) {}
+        OGLVtxShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, SHADER_VS ) {}
     };
 
     //!
@@ -172,7 +172,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        OGLPxlShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, PIXEL_SHADER ) {}
+        OGLPxlShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, SHADER_PS ) {}
     };
 
     // *************************************************************************
@@ -266,8 +266,8 @@ namespace GN { namespace gfx
         {
             switch( type )
             {
-                case VERTEX_SHADER : return GL_VERTEX_SHADER_ARB;
-                case PIXEL_SHADER : return GL_FRAGMENT_SHADER_ARB;
+                case SHADER_VS : return GL_VERTEX_SHADER_ARB;
+                case SHADER_PS : return GL_FRAGMENT_SHADER_ARB;
                 default:
                     GN_UNEXPECTED();
                     return 0;
@@ -285,7 +285,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, VERTEX_SHADER ) {}
+        OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, SHADER_VS ) {}
     };
 
     //!
@@ -297,7 +297,7 @@ namespace GN { namespace gfx
         //!
         //! ctor
         //!
-        OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, PIXEL_SHADER ) {}
+        OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, SHADER_PS ) {}
     };
 
     //!

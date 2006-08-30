@@ -8,11 +8,11 @@
 #pragma pack(push,1)
 struct FatMeshDesc
 {
-    uint32_t numVtx;  // vertex count
-    uint32_t numFace; // face count
-    uint32_t vtxFmt;  // vertex format
+    uint32_t numVtx;        // vertex count
+    uint32_t numFace;       // face count
+    uint64_t vtxFmt;        // vertex format
     uint8_t  hasFaceNormal; // as is
-    uint8_t  reserved[3]; // reserved, must be zero
+    uint8_t  reserved[3];   // reserved, must be zero
 };
 #pragma pack(pop)
 
@@ -62,7 +62,7 @@ GN::Logger * GN::gfx::FatMesh::sLogger = GN::getLogger("GN.gfx.base.FatMesh");
 //
 //
 // ---------------------------------------------------------------------------------------
-bool GN::gfx::FatVertexFormat::fromStr( const char * str, size_t len )
+bool GN::gfx::FatVtxFmt::fromStr( const char * str, size_t len )
 {
     if( 0 == str )
     {
@@ -194,14 +194,14 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
         // read mesh descriptor
         if( !fp.read( &desc, sizeof(desc), &readen ) || sizeof(desc) != readen )
         { GN_ERROR(sLogger)( "fail to read mesh descriptor." ); return false; }
-        mVertexFormat.u32 = desc.vtxFmt;
+        mVertexFormat.u64 = desc.vtxFmt;
         mHasFaceNormal = !!desc.hasFaceNormal;
         if( !mVertexFormat.valid() ) { GN_ERROR(sLogger)( "invalid vertex format." ); return false; }
 
         // read vertices
         mVertices.resize( desc.numVtx );
-        if( !fp.read( mVertices.cptr(), sizeof(FatVertex)*mVertices.size(), &readen ) ||
-            readen != sizeof(FatVertex)*mVertices.size() )
+        if( !fp.read( mVertices.cptr(), sizeof(FatVtx)*mVertices.size(), &readen ) ||
+            readen != sizeof(FatVtx)*mVertices.size() )
         { GN_ERROR(sLogger)( "fail to read vertices." ); return false; }
 
         // read faces
@@ -220,16 +220,17 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
 
         // read file header
         if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read file header." ); return false; }
-        uint32_t numVerts, numFaces, vtxFmt, faceNormal;
+        uint32_t numVerts, numFaces, faceNormal;
+        uint64_t vtxFmt;
         if( 4 != sscanf(
             s.cptr(),
-            " NumVertices=%lu NumFaces=%lu VertexFormat=%lu FaceNormal=%lu",
+            " NumVertices=%lu NumFaces=%lu VertexFormat=%llu FaceNormal=%lu",
             &numVerts, &numFaces, &vtxFmt, &faceNormal ) )
         {
             GN_ERROR(sLogger)( "invalid file header: %s", s.cptr() );
             return false;
         }
-        mVertexFormat.u32 = vtxFmt;
+        mVertexFormat.u64 = vtxFmt;
         mHasFaceNormal = !!faceNormal;
 
         // read vertex header
@@ -240,7 +241,7 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
         mVertices.resize( numVerts );
         for( uint32_t i = 0; i < numVerts; ++i )
         {
-            FatVertex & v = mVertices[i];
+            FatVtx & v = mVertices[i];
 
             if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read vertex #%u", i ); return false; }
 
@@ -342,13 +343,13 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
         FatMeshDesc desc;
         desc.numVtx = (uint32_t)mVertices.size();
         desc.numFace = (uint32_t)mFaces.size();
-        desc.vtxFmt = mVertexFormat.u32;
+        desc.vtxFmt = mVertexFormat.u64;
         desc.hasFaceNormal = (uint8_t)mHasFaceNormal;
         desc.reserved[0] = desc.reserved[1] = desc.reserved[2] = 0;
         if( !fp.write( &desc, sizeof(desc), 0 ) ) { GN_ERROR(sLogger)( "fail to write mesh descriptor." ); return false; }
 
         // write vertices
-        if( !fp.write( mVertices.cptr(), sizeof(FatVertex)*mVertices.size(), 0 ) )
+        if( !fp.write( mVertices.cptr(), sizeof(FatVtx)*mVertices.size(), 0 ) )
         { GN_ERROR(sLogger)( "fail to write vertices." ); return false; }
 
         // write faces
@@ -365,7 +366,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
             TXT_TAG,
             mVertices.size(),
             mFaces.size(),
-            mVertexFormat.u32,
+            mVertexFormat.u64,
             mHasFaceNormal ? 1 : 0 );
         if( !fp.write( s.cptr(), s.size(), 0 ) )
         {
@@ -384,7 +385,7 @@ bool GN::gfx::FatMesh::writeTo( File & fp, char mode ) const
         // write vertices
         for( size_t i = 0; i < mVertices.size(); ++i )
         {
-            const FatVertex & v = mVertices[i];
+            const FatVtx & v = mVertices[i];
 
             // compose vertex string
             s.format(
@@ -556,7 +557,7 @@ inline void GN::gfx::FatMesh::drawFaceSegment( size_t idx )
         mUseTriStrip ? s.indices16.size() - 2 : s.indices16.size() / 3,
         v.count,
         mVertices.cptr() + v.start,
-        sizeof(FatVertex),
+        sizeof(FatVtx),
         s.indices16.cptr() );
 
     GN_UNGUARD_SLOW;

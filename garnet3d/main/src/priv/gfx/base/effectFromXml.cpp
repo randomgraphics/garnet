@@ -410,15 +410,15 @@ static const char * sGetShaderRef(
 // -----------------------------------------------------------------------------
 static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, const XmlElement & node )
 {
-    const char * vs = sGetShaderRef( desc, node, "vs", VERTEX_SHADER );
-    const char * ps = sGetShaderRef( desc, node, "ps", PIXEL_SHADER );
+    const char * vs = sGetShaderRef( desc, node, "vs", SHADER_VS );
+    const char * ps = sGetShaderRef( desc, node, "ps", SHADER_PS );
     if( !vs || !ps ) return;
 
     td.passes.resize( td.passes.size() + 1 );
     EffectDesc::PassDesc & pd = td.passes.back();
 
-    pd.shaders[VERTEX_SHADER] = vs;
-    pd.shaders[PIXEL_SHADER] = ps;
+    pd.shaders[SHADER_VS] = vs;
+    pd.shaders[SHADER_PS] = ps;
 
     for( const XmlNode * n = node.child; n; n = n->sibling )
     {

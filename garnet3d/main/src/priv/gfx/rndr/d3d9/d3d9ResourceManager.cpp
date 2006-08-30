@@ -144,7 +144,7 @@ GN::gfx::D3D9Renderer::createShader(
 
     switch( type )
     {
-        case VERTEX_SHADER :
+        case SHADER_VS :
             switch( lang )
             {
                 case LANG_D3D_ASM :
@@ -166,7 +166,7 @@ GN::gfx::D3D9Renderer::createShader(
                     return 0;
             }
 
-        case PIXEL_SHADER :
+        case SHADER_PS :
             switch( lang )
             {
                 case LANG_D3D_ASM :

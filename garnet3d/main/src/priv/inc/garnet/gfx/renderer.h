@@ -617,13 +617,13 @@ namespace GN { namespace gfx
         //! Create vetex shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         Shader *
-        createVtxShader( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
+        createVS( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
 
         //!
         //! Create pixel shader. Parameter 'entry' will be ignored for low-level shading language.
         //!
         Shader *
-        createPxlShader( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
+        createPS( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
 
         //!
         //! Create new texture
@@ -832,8 +832,8 @@ namespace GN { namespace gfx
         inline void setShader( ShaderType type, const Shader * shader );
         inline void setShaders( const Shader * const shaders[] );
         inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
-        inline void setVtxShader( const Shader * s );
-        inline void setPxlShader( const Shader * s );
+        inline void setVS( const Shader * s );
+        inline void setPS( const Shader * s );
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
         inline void setRenderState( RenderState state, int32_t value );
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );

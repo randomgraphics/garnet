@@ -11,9 +11,9 @@ namespace GN { namespace gfx
     //!
     //! Universal vertex format
     //!
-    union FatVertexFormat
+    union FatVtxFmt
     {
-        uint32_t u32; //!< all format flags as 32-bit integer.
+        uint64_t u64; //!< all format flags as 64-bit integer.
         struct
         {
             // byte 0
@@ -26,9 +26,14 @@ namespace GN { namespace gfx
             unsigned int fog      :  1; //!< has fog
             unsigned int tangent  :  1; //!< has tangent
             unsigned int binormal :  1; //!< has binormal
-            unsigned int texcoord :  4; //!< number of texture coordinates, 0-8
-            // byte 2,3
-            unsigned int texMasks : 16; //!< channel masks, 2 bits for one texture.
+            unsigned int          :  4; //!< reserved
+            // byte 2
+            unsigned int texcoord :  5; //!< number of texture coordinates, 0-16
+            unsigned int          :  3; //!< reserved
+            // byte 3 (reserved)
+            unsigned int          :  8; //!< reserved
+            // byte 4,5,6,7
+            unsigned int texMasks : 32; //!< channel masks, 2 bits for one texture.
                                         //!< 00 - 1 channel, 01 - 2 channels, 02 - 3 channels, 03 - 4 channels
         };
 
@@ -37,23 +42,23 @@ namespace GN { namespace gfx
         //!
         bool valid() const
         {
-            return pos <= 4 && weight <= 4 && texcoord <= 8;
+            return pos <= 4 && weight <= 4 && texcoord <= 16;
         }
 
         //!
         //! equality
         //!
-        bool operator == ( const FatVertexFormat & rhs ) const { return u32 == rhs.u32; }
+        bool operator == ( const FatVtxFmt & rhs ) const { return u64 == rhs.u64; }
 
         //!
         //! equality
         //!
-        bool operator != ( const FatVertexFormat & rhs ) const { return u32 != rhs.u32; }
+        bool operator != ( const FatVtxFmt & rhs ) const { return u64 != rhs.u64; }
 
         //!
         //! clear vertex format
         //!
-        void clear() { GN_CASSERT( 4 == sizeof(FatVertexFormat) ); u32 = 0; }
+        void clear() { GN_CASSERT( 8 == sizeof(FatVtxFmt) ); u64 = 0; }
 
         //!
         //! parse vertex format from string.
@@ -94,7 +99,7 @@ namespace GN { namespace gfx
     //!
     //! Universal vertex that can hold almost any kind of vertex data
     //!
-    struct FatVertex
+    struct FatVtx
     {
         Vector4f   pos;         //!< position
         Vector4f   weight;      //!< weights, for vertex blending or skinning
@@ -150,17 +155,17 @@ namespace GN { namespace gfx
 
         //! \name set vertices
         //@{
-        void setVertexFormat( FatVertexFormat fmt )
+        void setVertexFormat( const FatVtxFmt & fmt )
         {
             if( !fmt.valid() ) { GN_WARN(sLogger)( "invalid vertex format" ); return; }
             mVertexFormat = fmt;
         }
-        void newVertices( const FatVertex * verts, size_t count )
+        void newVertices( const FatVtx * verts, size_t count )
         {
             mVertices.append( verts, count );
             clearOptimizationData();
         }
-        void newVertex( const FatVertex & v ) { newVertices( &v, 1 ); }
+        void newVertex( const FatVtx & v ) { newVertices( &v, 1 ); }
         void pos( float x, float y = .0f, float z = .0f, float w = 1.0f ) { mTmpVtx.pos.set(x,y,z,w); newVertex( mTmpVtx ); }
         void pos( const Vector2f & v ) { pos( v.x, v.y ); }
         void pos( const Vector3f & v ) { pos( v.x, v.y, v.z ); }
@@ -312,10 +317,10 @@ namespace GN { namespace gfx
         };
 
         // raw mesh data
-        DynaArray<FatVertex> mVertices;
-        DynaArray<Face>      mFaces;
-        FatVertexFormat      mVertexFormat;
-        bool                 mHasFaceNormal; //!< True means all faces have normal.
+        DynaArray<FatVtx> mVertices;
+        DynaArray<Face>   mFaces;
+        FatVtxFmt         mVertexFormat;
+        bool              mHasFaceNormal; //!< True means all faces have normal.
 
         // optimized mesh data
         DynaArray<VtxSegment>  mVtxSegments; // optimized vertex segments.
@@ -324,8 +329,8 @@ namespace GN { namespace gfx
         bool                   mUseTriStrip;
 
         // misc.
-        FatVertex       mTmpVtx;
-        FatVertexFormat mTmpFmt;
+        FatVtx       mTmpVtx;
+        FatVtxFmt mTmpFmt;
 
         // Logger
         static Logger * sLogger;

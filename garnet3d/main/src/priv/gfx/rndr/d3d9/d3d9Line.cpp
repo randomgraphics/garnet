@@ -236,7 +236,7 @@ void GN::gfx::D3D9Line::drawLines(
     // bind shaders
     if( !( DL_USE_CURRENT_VS & options ) )
     {
-        cf.setShaderBit( VERTEX_SHADER );
+        cf.setShaderBit( SHADER_VS );
 
         GN_DX9_CHECK( dev->SetVertexShader( mVtxShader ) );
 
@@ -266,7 +266,7 @@ void GN::gfx::D3D9Line::drawLines(
 
     if( !( DL_USE_CURRENT_PS & options ) )
     {
-        cf.setShaderBit( PIXEL_SHADER );
+        cf.setShaderBit( SHADER_PS );
         GN_DX9_CHECK( dev->SetPixelShader( mPxlShader ) );
     }
 

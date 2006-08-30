@@ -69,6 +69,12 @@ namespace GN { namespace gfx
         StreamDesc streams[NUM_VTXSEMS]; //!< vertex stream array.
         uint8_t    numStreams;           //!< stream count.
 
+        static const VtxFmtDesc XYZ_NORM_UV; //!< position, normal, texture
+        static const VtxFmtDesc XYZ_UV;      //!< position, texture
+        static const VtxFmtDesc XYZ;         //!< position
+        static const VtxFmtDesc XYZW_UV;     //!< 4D-position, texture
+        static const VtxFmtDesc XYZW;        //!< 4D-position
+
         //!
         //! Constructor
         //!
