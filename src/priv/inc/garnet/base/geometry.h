@@ -2609,18 +2609,24 @@ namespace GN
         {
             return *reinterpret_cast<PointType*>(this);
         }
+        //!
         //! get rectangle size
+        //!
         const PointType & size() const
         {
             return *reinterpret_cast<const PointType*>(&w);
         }
+        //!
         //! get rectangle size
+        //!
         PointType & size()
         {
             return *reinterpret_cast<PointType*>(&w);
         }
+        //!
         //! Check if the point is inside the rectangle
-        bool Contain( const PointType & p ) const
+        //!
+        bool contain( const PointType & p ) const
         {
             // make sure r is normal rectangle
             GN_ASSERT( isNormalized() );
