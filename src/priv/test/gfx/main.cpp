@@ -10,16 +10,37 @@ class Scene
 {
     GN::app::SampleApp & app;
     
-    AutoRef<Shader> ps1, ps2, vsbox, psbox;
+    AutoRef<Shader> ps1, ps2;
 
     struct BoxContext
     {
+        struct Vertex
+        {
+            float x, y, z;
+            float n[3];
+            float u, v;
+        };
+
         bool ready;
         AutoRef<Shader> vs, ps;
         VtxFmtHandle vf;
         RendererContext rc;
+        Vertex vb[24];
+        uint16_t ib[36];
+
         void clear() { ready = false; vs.clear(); ps.clear(); }
-    } bc;
+
+        BoxContext()
+        {
+            static const float E = 160.0f;
+            createBox(
+                E, E, E,
+                &vb[0].x, sizeof(Vertex),
+                &vb[0].u, sizeof(Vertex),
+                vb[0].n, sizeof(Vertex),
+                ib, 0 );
+        };
+    } box;
 
     uint32_t tex0;
 
@@ -31,7 +52,7 @@ class Scene
     {
         Renderer & r = gRenderer;
 
-        bc.ready = false;
+        box.ready = false;
 
         // create shaders for box rendering
         if( r.supportShader( "vs_1_1" ) )
@@ -47,8 +68,8 @@ class Scene
                 "   o.clr = float4( abs(i.nml), 1.0 ); \n"
                 "   return o; \n"
                 "}";
-            bc.vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
-            if( !bc.vs ) return;
+            box.vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
+            if( !box.vs ) return;
         }
         else return;
 
@@ -59,21 +80,21 @@ class Scene
                 "{ \n"
                 "   return clr; \n"
                 "}";
-            bc.ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
-            if( !bc.ps ) return;
+            box.ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
+            if( !box.ps ) return;
         }
         else return;
 
         // create box vertex decl
-        bc.vf = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
-        if( 0 == bc.vf ) return;
+        box.vf = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
+        if( 0 == box.vf ) return;
 
         // setup context
-        bc.rc.resetToDefault();
-        //bc.rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-        bc.rc.setShaders( bc.vs, bc.ps );
-        bc.rc.setVtxFmt( bc.vf );
-        bc.ready = true;
+        box.rc.resetToDefault();
+        //box.rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
+        box.rc.setShaders( box.vs, box.ps );
+        box.rc.setVtxFmt( box.vf );
+        box.ready = true;
     }
 
 public:
@@ -157,7 +178,7 @@ public:
     {
         ps1.clear();
 		ps2.clear();
-        bc.clear();
+        box.clear();
     }
 
     void update()
@@ -167,9 +188,9 @@ public:
         angle += deg2rad(0.2f);
         world.rotateY( angle );
 
-        if( vsbox )
+        if( box.vs )
         {
-            vsbox->setUniformByNameM( "gPvw", proj * view * world );
+            box.vs->setUniformByNameM( "gPvw", proj * view * world );
         }
 
         // update color
@@ -217,32 +238,10 @@ public:
         }//*/
 
         //* draw solid box
-        if( bc.ready )
+        if( box.ready )
         {
-            static struct TheBox
-            {
-                struct Vertex
-                {
-                    float x, y, z;
-                    float n[3];
-                    float u, v;
-                };
-                Vertex vb[24];
-                uint16_t ib[36];
-
-                TheBox()
-                {
-                    static const float E = 160.0f;
-                    createBox(
-                        E, E, E,
-                        &vb[0].x, sizeof(Vertex),
-                        &vb[0].u, sizeof(Vertex),
-                        vb[0].n, sizeof(Vertex),
-                        ib, 0 );
-                };
-            } theBox;
-            r.setContext( bc.rc );
-            r.drawIndexedUp( TRIANGLE_LIST, 12, 24, theBox.vb, sizeof(TheBox::Vertex), theBox.ib );
+            r.setContext( box.rc );
+            r.drawIndexedUp( TRIANGLE_LIST, 12, 24, box.vb, sizeof(BoxContext::Vertex), box.ib );
         }//*/
 
         /* a wireframe box
