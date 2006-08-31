@@ -419,15 +419,16 @@ namespace GN { namespace gfx
         //!
         //! default constructor. Do nothing
         //!
-        TextureStateBlockDesc() {}
+        TextureStateBlockDesc() : mNumStages(0) {}
 
         //!
         //! copy constructor
         //!
         TextureStateBlockDesc( const TextureStateBlockDesc & another )
+            : mNumStages( another.mNumStages )
         {
-            ::memcpy( mValues, another.mValues, sizeof(mValues) );
-            ::memcpy( mFlags, another.mFlags, sizeof(mFlags) );
+            ::memcpy( mValues, another.mValues, sizeof(mValues[0])*mNumStages );
+            ::memcpy( mFlags, another.mFlags, sizeof(mFlags[0])*mNumStages );
         }
 
         //@}

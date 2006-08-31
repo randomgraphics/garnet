@@ -12,13 +12,69 @@ class Scene
     
     AutoRef<Shader> ps1, ps2, vsbox, psbox;
 
-    VtxFmtHandle vfbox;
+    struct BoxContext
+    {
+        bool ready;
+        AutoRef<Shader> vs, ps;
+        VtxFmtHandle vf;
+        RendererContext rc;
+        void clear() { ready = false; vs.clear(); ps.clear(); }
+    } bc;
 
     uint32_t tex0;
 
     uint32_t eff0;
 
     Matrix44f world, view, proj;
+
+    void createBoxContext()
+    {
+        Renderer & r = gRenderer;
+
+        bc.ready = false;
+
+        // create shaders for box rendering
+        if( r.supportShader( "vs_1_1" ) )
+        {
+            static const char * code =
+                "uniform float4x4 gPvw; \n"
+                "struct VSInput { float4 pos : POSITION; float3 nml : NORMAL; }; \n"
+                "struct VSOutput { float4 pos : POSITION; float4 clr : COLOR0; }; \n"
+                "VSOutput main( VSInput i ) \n"
+                "{ \n"
+                "   VSOutput o; \n"
+                "   o.pos = mul( i.pos, gPvw ); \n"
+                "   o.clr = float4( abs(i.nml), 1.0 ); \n"
+                "   return o; \n"
+                "}";
+            bc.vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
+            if( !bc.vs ) return;
+        }
+        else return;
+
+        if( r.supportShader( "ps_1_1" ) )
+        {
+            static const char * code =
+                "float4 main( float4 clr : COLOR0 ) : COLOR \n"
+                "{ \n"
+                "   return clr; \n"
+                "}";
+            bc.ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
+            if( !bc.ps ) return;
+        }
+        else return;
+
+        // create box vertex decl
+        bc.vf = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
+        if( 0 == bc.vf ) return;
+
+        // setup context
+        bc.rc.resetToDefault();
+        //bc.rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
+        bc.rc.setShaders( bc.vs, bc.ps );
+        bc.rc.setVtxFmt( bc.vf );
+        bc.ready = true;
+    }
 
 public:
 
@@ -77,37 +133,8 @@ public:
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }
 
-        // create shaders for box rendering
-        if( r.supportShader( "vs_1_1" ) )
-        {
-            static const char * code =
-                "uniform float4x4 gPvw; \n"
-                "struct VSInput { float4 pos : POSITION; float3 nml : NORMAL; }; \n"
-                "struct VSOutput { float4 pos : POSITION; float4 clr : COLOR0; }; \n"
-                "VSOutput main( VSInput i ) \n"
-                "{ \n"
-                "   VSOutput o; \n"
-                "   o.pos = mul( i.pos, gPvw ); \n"
-                "   o.clr = float4( abs(i.nml), 1.0 ); \n"
-                "   return o; \n"
-                "}";
-            vsbox.attach( r.createVS( LANG_D3D_HLSL, code ) );
-            if( !vsbox ) return false;
-        }
-        if( r.supportShader( "ps_1_1" ) )
-        {
-            static const char * code =
-                "float4 main( float4 clr : COLOR0 ) : COLOR \n"
-                "{ \n"
-                "   return clr; \n"
-                "}";
-            psbox.attach( r.createPS( LANG_D3D_HLSL, code ) );
-            if( !psbox ) return false;
-        }
-
-        // create box vertex decl
-        vfbox = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
-        if( 0 == vfbox ) return 0;
+        // create box rendering context
+        createBoxContext();
 
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
@@ -130,8 +157,7 @@ public:
     {
         ps1.clear();
 		ps2.clear();
-        vsbox.clear();
-        psbox.clear();
+        bc.clear();
     }
 
     void update()
@@ -191,7 +217,7 @@ public:
         }//*/
 
         //* draw solid box
-        if( vsbox && psbox && vfbox )
+        if( bc.ready )
         {
             static struct TheBox
             {
@@ -215,10 +241,7 @@ public:
                         ib, 0 );
                 };
             } theBox;
-            r.setRenderState( RS_DEPTH_TEST, RSV_TRUE );
-            r.setRenderState( RS_DEPTH_WRITE, RSV_TRUE );
-            r.setVtxFmt( vfbox );
-            r.setShaders( vsbox, psbox );
+            r.setContext( bc.rc );
             r.drawIndexedUp( TRIANGLE_LIST, 12, 24, theBox.vb, sizeof(TheBox::Vertex), theBox.ib );
         }//*/
 
