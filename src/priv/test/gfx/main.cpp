@@ -71,6 +71,18 @@ class Scene
             box.vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
             if( !box.vs ) return;
         }
+        else if( r.supportShader( "glslvs" ) )
+        {
+            static const char * code =
+                "uniform mat4 gPvw; \n"
+                "void main() \n"
+                "{ \n"
+                "   gl_Position = gPvw * gl_Vertex; \n"
+                "   gl_FrontColor = vec4( abs(gl_Normal), 1.0 ); \n"
+                "}";
+            box.vs.attach( r.createVS( LANG_OGL_GLSL, code ) );
+            if( !box.vs ) return;
+        }
         else return;
 
         if( r.supportShader( "ps_1_1" ) )
@@ -81,6 +93,16 @@ class Scene
                 "   return clr; \n"
                 "}";
             box.ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
+            if( !box.ps ) return;
+        }
+        else if( r.supportShader( "glslps" ) )
+        {
+            static const char * code =
+                "void main() \n"
+                "{ \n"
+                "   gl_FragColor = gl_Color; \n"
+                "}";
+            box.ps.attach( r.createPS( LANG_OGL_GLSL, code ) );
             if( !box.ps ) return;
         }
         else return;

@@ -220,31 +220,31 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
         }
     }
 
-    // generate new texture
-    mHandle = glCreateShaderObjectARB( mUsage );
-    if( 0 == mHandle )
+    // generate new shader
+    GLhandleARB sh = glCreateShaderObjectARB( mUsage );
+    if( 0 == sh )
     {
         GN_ERROR(sLogger)( "Fail to generate new program object!" );
         return 0;
     }
-    AutoShaderDel autodel( glDeleteObjectARB, mHandle );
+    AutoShaderDel autodel( glDeleteObjectARB, sh );
 
     // set shader code
     const char * code_str = code.cptr();
     GLint code_size = static_cast<GLint>( code.size() );
     GN_OGL_CHECK_RV(
-        glShaderSourceARB( mHandle, 1, &code_str, &code_size ),
+        glShaderSourceARB( sh, 1, &code_str, &code_size ),
         0 );
 
     // compile shader
-    GN_OGL_CHECK_RV( glCompileShaderARB( mHandle ), 0 );
+    GN_OGL_CHECK_RV( glCompileShaderARB( sh ), 0 );
     int compile_ok;
     GN_OGL_CHECK_RV( glGetObjectParameterivARB(
-        mHandle, GL_OBJECT_COMPILE_STATUS_ARB, &compile_ok ), 0 );
+        sh, GL_OBJECT_COMPILE_STATUS_ARB, &compile_ok ), 0 );
     if( !compile_ok )
     {
         char buf[4096];
-        GN_OGL_CHECK( glGetInfoLogARB( mHandle, 4095, NULL, buf ) );
+        GN_OGL_CHECK( glGetInfoLogARB( sh, 4095, NULL, buf ) );
         GN_ERROR(sLogger)(
             "\n========== GLSL shader =========\n"
             "%s\n"
@@ -257,6 +257,7 @@ bool GN::gfx::OGLBasicShaderGLSL::createShader( const StrA & code )
 
     // success
     autodel.dismiss();
+    mHandle = sh;
     return true;
 
     GN_UNGUARD;
