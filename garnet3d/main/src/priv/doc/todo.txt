@@ -12,8 +12,6 @@
     - when call dtor and when not?
     - see others pool implementation on net
   - multi-thread wrapper for platform-independency
-  - UT
-    - Str::findFirst/LastOf(...)
   - try multi-thread architect
     - separate sim() and render() loop
     - File loader in another thread.

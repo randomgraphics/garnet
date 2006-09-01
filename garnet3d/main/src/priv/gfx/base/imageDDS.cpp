@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "imageDDS.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.Image");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 
 // *****************************************************************************
 // local types

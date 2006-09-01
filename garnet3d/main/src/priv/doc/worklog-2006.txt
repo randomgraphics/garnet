@@ -1,3 +1,7 @@
+- 2006.9.2
+  - UT for Str::findFirst/LastOf(...)
+  - continue implementing new log system
+
 - 2006.8.26
   - refine log system, inspired...ok, copied from apache log4j. 
 

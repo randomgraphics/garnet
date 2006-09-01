@@ -364,13 +364,43 @@ namespace GN
         DebugReceiver   mDr;
         LoggerImpl mRootLogger;
 
-        std::map<StrA,Logger*> mLoggers;
+        std::map<StrA,LoggerImpl*> mLoggers;
 
-        static void sDeleteLogger( std::map<StrA,Logger*>::value_type & i ) { delete i.second; }
+        static void sDeleteLogger( std::map<StrA,LoggerImpl*>::value_type & i ) { delete i.second; }
+
+        LoggerImpl & findParent( const StrA & name )
+        {
+            // get parent name
+            size_t n = name.findLastOf( "." );
+            if( StrA::NOT_FOUND == n || n <= 1 ) return mRootLogger; // shortcut for root logger
+            StrA parent = name.subString( 0, n - 1 );
+
+            // check if parent logger exists.
+            std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( parent );
+            if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return *i->second; }
+
+            // do recusion, find parent of parent
+            return findParent( parent );
+        }
+
+        void printLoggerTree( int level, LoggerImpl & logger )
+        {
+            // print itself
+            for( int i = 0; i < level; ++i ) printf( "  " );
+            printf( "%s\n", logger.getName() );
+
+            // print children
+            LoggerImpl * c = logger.firstChild();
+            while( c )
+            {
+                printLoggerTree( level + 1, *c );
+                c = c->nextBrother();
+            }
+        }
 
     public:
 
-        LoggerContainer() : mRootLogger("")
+        LoggerContainer() : mRootLogger("ROOT")
         {
             // config root logger
 #if GN_DEBUG_BUILD
@@ -386,24 +416,31 @@ namespace GN
 
         ~LoggerContainer()
         {
+#if GN_DEBUG_BUILD
+            printLoggerTree( 0, mRootLogger );
+#endif
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
 
-        Logger * getLogger( const char * name )
+        Logger * getLogger( const StrA & name )
         {
-            if( 0 == name || 0 == *name ) return &mRootLogger;
+            // shortcut for root logger
+            if( name.empty() ) return &mRootLogger;
 
-            StrA n(name);
-
-            std::map<StrA,Logger*>::const_iterator i = mLoggers.find( n );
+            // find for existing logger
+            std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( name );
             if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return i->second; }
 
-            AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n) );
+            // not found. create new one.
+            AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(name) );
+            mLoggers[name] = newLogger.get();
 
-            newLogger->setParent( &mRootLogger );
-            mRootLogger.reapplyAttributes();
+            // update logger tree
+            LoggerImpl & parent = findParent( name );
+            newLogger->setParent( &parent );
+            parent.reapplyAttributes();
 
-            mLoggers[n] = newLogger.get();
+            // sucess
             return newLogger.detach();
         }
     };

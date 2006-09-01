@@ -222,7 +222,7 @@ namespace GN
     //@{
 
     //!
-    //! Get logger by name. Set name to NULL to get root logger.
+    //! Get logger by name. Set name to NULL or empty string to get root logger.
     //!
     GN_PUBLIC Logger * getLogger( const char * name );
 
@@ -230,11 +230,6 @@ namespace GN
     //! Get root logger
     //!
     inline Logger * getRootLogger() { return getLogger( 0 ); }
-
-    //!
-    //! Logger instance for base module
-    //!
-    extern Logger * gBaseLogger;
 
     //@}
 } // end of namespace GN

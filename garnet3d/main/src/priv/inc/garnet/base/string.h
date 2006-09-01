@@ -316,16 +316,16 @@ namespace GN
         //! \param offset, count
         //!     Range of the search
         //!
-        size_t findFirstOf( const char * s, size_t offset = 0, size_t count = 0 ) const
+        size_t findFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
             if( 0 == count ) count = mCount;
             if( offset + count > mCount ) count = mCount - offset;
-            const char * p = mPtr + offset;
+            const CharType * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
-                for( const char * t = s; *t; ++t )
+                for( const CharType * t = s; *t; ++t )
                 {
                     GN_ASSERT( *p && *t );
                     if( *p == *t ) return offset + i;
@@ -337,16 +337,16 @@ namespace GN
         //!
         //! Searches through a string for the first character that not any elements of user specifed string.
         //!
-        size_t findFirstNotOf( const char * s, size_t offset = 0, size_t count = 0 ) const
+        size_t findFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
             if( 0 == count ) count = mCount;
             if( offset + count > mCount ) count = mCount - offset;
-            const char * p = mPtr + offset;
+            const CharType * p = mPtr + offset;
             for( size_t i = 0; i < count; ++i, ++p )
             {
-                for( const char * t = s; *t; ++t )
+                for( const CharType * t = s; *t; ++t )
                 {
                     GN_ASSERT( *p && *t );
                     if( *p != *t ) return offset + i;
@@ -376,20 +376,20 @@ namespace GN
         //!
         //! Searches through a string for the last character that matches any elements in user specified string
         //!
-        size_t findLastOf( const char * s, size_t offset = 0, size_t count = 0 ) const
+        size_t findLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
             if( offset >= mCount ) return NOT_FOUND;
             if( 0 == count ) count = mCount;
             if( offset + count > mCount ) count = mCount - offset;
             GN_ASSERT( count > 0 );
-            const char * p = mPtr + offset + count - 1;
+            const CharType * p = mPtr + offset + count - 1;
             for( size_t i = count; i > 0; --i, --p )
             {
-                for( const char * t = s; *t; ++t )
+                for( const CharType * t = s; *t; ++t )
                 {
                     GN_ASSERT( *p && *t );
-                    if( *p == *t ) return offset + count - i;
+                    if( *p == *t ) return offset + i;
                 }
             }
             return NOT_FOUND;
