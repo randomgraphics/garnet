@@ -259,6 +259,19 @@ public:
 #else
         TS_WARN( "wide-char string formatting is not implemented on cygwin" );
 #endif
+
+        // findFirstOf
+        size_t n;
+        //    0123456
+        s1 = L"abcabc";
+        n = s1.findFirstOf( L"ab" ); TS_ASSERT_EQUALS( n, 0 );
+        n = s1.findFirstOf( L"bc" ); TS_ASSERT_EQUALS( n, 1 );
+        n = s1.findFirstOf( L"cb" ); TS_ASSERT_EQUALS( n, 1 );
+        n = s1.findFirstOf( L"d" ); TS_ASSERT_EQUALS( n, GN::StrW::NOT_FOUND );
+        n = s1.findLastOf( L"ab" ); TS_ASSERT_EQUALS( n, 5 );
+        n = s1.findLastOf( L"bc" ); TS_ASSERT_EQUALS( n, 6 );
+        n = s1.findLastOf( L"cb" ); TS_ASSERT_EQUALS( n, 6 );
+        n = s1.findLastOf( L"d" ); TS_ASSERT_EQUALS( n, GN::StrW::NOT_FOUND );
     }
 
     void testEquality()
