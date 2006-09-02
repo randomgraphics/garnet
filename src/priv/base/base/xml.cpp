@@ -6,7 +6,7 @@
 // local functions
 // *****************************************************************************
 
-static GN::Logger * sLogger = GN::getLogger("GN.base.Xml");
+static GN::Logger * sLogger = GN::getLogger("GN.base.xml");
 
 struct AutoFree
 {
