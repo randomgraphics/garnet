@@ -148,7 +148,16 @@ public:
 
     void testSubString()
     {
-        // TODO: implement this test case.
+        GN::StrW s1, s2;
+
+        //     012345
+        s1 = L"abcdef";
+
+        s2 = s1.subString( 0, 3 ); TS_ASSERT_EQUALS( s2, L"abc" );
+        s2 = s1.subString( 1, 4 ); TS_ASSERT_EQUALS( s2, L"bcde" );
+        s2 = s1.subString( 2, 5 ); TS_ASSERT_EQUALS( s2, L"cdef" );
+        s2 = s1.subString( 3, 0 ); TS_ASSERT_EQUALS( s2, L"def" );
+        s2 = s1.subString( 0, 0 ); TS_ASSERT_EQUALS( s2, L"abcdef" );
     }
 
     void testCtor()
@@ -262,15 +271,15 @@ public:
 
         // findFirstOf
         size_t n;
-        //    0123456
+        //     012345
         s1 = L"abcabc";
         n = s1.findFirstOf( L"ab" ); TS_ASSERT_EQUALS( n, 0 );
         n = s1.findFirstOf( L"bc" ); TS_ASSERT_EQUALS( n, 1 );
         n = s1.findFirstOf( L"cb" ); TS_ASSERT_EQUALS( n, 1 );
         n = s1.findFirstOf( L"d" ); TS_ASSERT_EQUALS( n, GN::StrW::NOT_FOUND );
-        n = s1.findLastOf( L"ab" ); TS_ASSERT_EQUALS( n, 5 );
-        n = s1.findLastOf( L"bc" ); TS_ASSERT_EQUALS( n, 6 );
-        n = s1.findLastOf( L"cb" ); TS_ASSERT_EQUALS( n, 6 );
+        n = s1.findLastOf( L"ab" ); TS_ASSERT_EQUALS( n, 4 );
+        n = s1.findLastOf( L"bc" ); TS_ASSERT_EQUALS( n, 5 );
+        n = s1.findLastOf( L"cb" ); TS_ASSERT_EQUALS( n, 5 );
         n = s1.findLastOf( L"d" ); TS_ASSERT_EQUALS( n, GN::StrW::NOT_FOUND );
     }
 

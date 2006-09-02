@@ -372,8 +372,9 @@ namespace GN
         {
             // get parent name
             size_t n = name.findLastOf( "." );
-            if( StrA::NOT_FOUND == n || n <= 1 ) return mRootLogger; // shortcut for root logger
-            StrA parent = name.subString( 0, n - 1 );
+            if( StrA::NOT_FOUND == n ) return mRootLogger; // shortcut for root logger
+            GN_ASSERT( n > 0 );
+            StrA parent = name.subString( 0, n );
 
             // check if parent logger exists.
             std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( parent );
@@ -422,21 +423,25 @@ namespace GN
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
 
-        Logger * getLogger( const StrA & name )
+        Logger * getLogger( const char * name )
         {
+            // trip leading and trailing dots
+            StrA n(name);
+            n.trim( '.' );
+
             // shortcut for root logger
-            if( name.empty() ) return &mRootLogger;
+            if( n.empty() ) return &mRootLogger;
 
             // find for existing logger
-            std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( name );
+            std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( n );
             if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return i->second; }
 
             // not found. create new one.
-            AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(name) );
-            mLoggers[name] = newLogger.get();
+            AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n) );
+            mLoggers[n] = newLogger.get();
 
             // update logger tree
-            LoggerImpl & parent = findParent( name );
+            LoggerImpl & parent = findParent( n );
             newLogger->setParent( &parent );
             parent.reapplyAttributes();
 

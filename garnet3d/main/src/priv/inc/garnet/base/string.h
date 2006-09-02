@@ -161,6 +161,11 @@ namespace GN
         static Str EMPTYSTR;
 
         //!
+        //! indicate serach failure.
+        //!
+        static const size_t NOT_FOUND = (size_t)-1;
+
+        //!
         //! default constructor
         //!
         Str() : mCount(0), mCaps(0)
@@ -306,15 +311,15 @@ namespace GN
         //!
         const CharType * end() const { return mPtr+mCount; }
 
-        static const size_t NOT_FOUND = (size_t)-1; //!< indicate serach failure.
-
         //!
         //! Searches through a string for the first character that matches any elements in user specified string
         //!
         //! \param s
         //!     User specified search pattern
         //! \param offset, count
-        //!     Range of the search
+        //!     Range of the search. (count==0) means to the end of input string.
+        //! \return
+        //!     Return index of the character of first occurance or NOT_FOUND.
         //!
         size_t findFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
@@ -389,7 +394,7 @@ namespace GN
                 for( const CharType * t = s; *t; ++t )
                 {
                     GN_ASSERT( *p && *t );
-                    if( *p == *t ) return offset + i;
+                    if( *p == *t ) return offset + i - 1;
                 }
             }
             return NOT_FOUND;
@@ -495,11 +500,12 @@ namespace GN
         size_t size() const { return mCount; }
 
         //!
-        //! Get sub string
+        //! Get sub string. (0==length) means to the end of original string.
         //!
         void subString( Str & result, size_t offset, size_t length ) const
         {
             if( offset >= mCount ) { result.clear(); return; }
+            if( 0 == length ) length = mCount;
             if( offset + length > mCount ) length = mCount - offset;
             result.assign( mPtr+offset, length );
         }
