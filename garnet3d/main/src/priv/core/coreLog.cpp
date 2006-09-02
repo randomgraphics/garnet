@@ -368,20 +368,15 @@ namespace GN
 
         static void sDeleteLogger( std::map<StrA,LoggerImpl*>::value_type & i ) { delete i.second; }
 
-        LoggerImpl & findParent( const StrA & name )
+        LoggerImpl * findParent( const StrA & name )
         {
             // get parent name
             size_t n = name.findLastOf( "." );
-            if( StrA::NOT_FOUND == n ) return mRootLogger; // shortcut for root logger
+            if( StrA::NOT_FOUND == n ) return &mRootLogger; // shortcut for root logger
             GN_ASSERT( n > 0 );
             StrA parent = name.subString( 0, n );
 
-            // check if parent logger exists.
-            std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( parent );
-            if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return *i->second; }
-
-            // do recusion, find parent of parent
-            return findParent( parent );
+            return getLogger( parent.cptr() );
         }
 
         void printLoggerTree( int level, LoggerImpl & logger )
@@ -423,7 +418,7 @@ namespace GN
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
 
-        Logger * getLogger( const char * name )
+        LoggerImpl * getLogger( const char * name )
         {
             // trip leading and trailing dots
             StrA n(name);
@@ -441,9 +436,10 @@ namespace GN
             mLoggers[n] = newLogger.get();
 
             // update logger tree
-            LoggerImpl & parent = findParent( n );
-            newLogger->setParent( &parent );
-            parent.reapplyAttributes();
+            LoggerImpl * parent = findParent( n );
+            GN_ASSERT( parent );
+            newLogger->setParent( parent );
+            parent->reapplyAttributes();
 
             // sucess
             return newLogger.detach();
