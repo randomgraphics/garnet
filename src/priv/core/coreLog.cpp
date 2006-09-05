@@ -383,7 +383,7 @@ namespace GN
         {
             // print itself
             for( int i = 0; i < level; ++i ) printf( "  " );
-            printf( "%s\n", logger.getName() );
+            printf( "%s\n", logger.getName().cptr() );
 
             // print children
             LoggerImpl * c = logger.firstChild();
