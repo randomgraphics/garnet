@@ -3,7 +3,7 @@
 
 using namespace GN;
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.xml");
+static GN::Logger * sLogger = GN::getLogger("GN.test.gfx.xml");
 
 bool doParse( XmlDocument & doc, XmlParseResult & xpr, const char * filename )
 {
