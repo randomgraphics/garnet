@@ -1,4 +1,4 @@
-// type=VERTEX lang=D3D_HLSL
+// type=VS lang=D3D_HLSL
 
 void main( in float4  iPos : POSITION,
            in float2  iTex : TEXCOORD0,
