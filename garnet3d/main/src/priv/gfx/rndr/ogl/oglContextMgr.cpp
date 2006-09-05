@@ -76,15 +76,15 @@ sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
     
     GN_ASSERT( surf.texture );
 
-    const OGLTexture * oldtex = safeCast<const OGLTexture*>(surf.texture);
+    const OGLTexture * tex = safeCast<const OGLTexture*>(surf.texture);
 
-    // get (old) texture size
+    // get texture size
     uint32_t sx, sy;
-    surf.texture->getMipSize<uint32_t>( surf.level, &sx, &sy );
+    tex->getMipSize<uint32_t>( surf.level, &sx, &sy );
 
     // copy framebuffer to current (old) render target texture
     GLint currentTexID;
-    switch( oldtex->getDesc().type )
+    switch( tex->getDesc().type )
     {
         case TEXTYPE_CUBE :
             GN_ASSERT( sx == sy );
@@ -92,11 +92,11 @@ sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
                 glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &currentTexID ) );
             GN_OGL_CHECK(
                 glBindTexture( GL_TEXTURE_CUBE_MAP_ARB,
-                    oldtex->getOGLTexture() ) );
+                    tex->getOGLTexture() ) );
             GN_OGL_CHECK(
-                glCopyTexImage2D(
+                glCopyTexSubImage2D(
                     OGLTexture::sCubeface2OGL( surf.face ), 0,
-                    oldtex->getOGLInternalFormat(), 0, 0, sx, sx, 0 ) );
+                    0, 0, 0, 0, sx, sx ) );
             GN_OGL_CHECK(
                 glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, currentTexID ) );
             break;
@@ -106,10 +106,10 @@ sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
                 glGetIntegerv( GL_TEXTURE_BINDING_2D, &currentTexID ) );
             GN_OGL_CHECK(
                 glBindTexture( GL_TEXTURE_2D,
-                    oldtex->getOGLTexture() ) );
+                    tex->getOGLTexture() ) );
             GN_OGL_CHECK(
-                glCopyTexImage2D( GL_TEXTURE_2D, 0,
-                    oldtex->getOGLInternalFormat(), 0, 0, sx, sy, 0 ) );
+                glCopyTexSubImage2D( GL_TEXTURE_2D, 0,
+                    0, 0, 0, 0, sx, sy ) );
             GN_OGL_CHECK(
                 glBindTexture( GL_TEXTURE_2D, currentTexID ) );
             break;
@@ -120,10 +120,9 @@ sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
                 glGetIntegerv( GL_TEXTURE_BINDING_1D, &currentTexID ) );
             GN_OGL_CHECK(
                 glBindTexture( GL_TEXTURE_1D,
-                    oldtex->getOGLTexture() ) );
+                    tex->getOGLTexture() ) );
             GN_OGL_CHECK(
-                glCopyTexImage1D( GL_TEXTURE_1D, 0,
-                    oldtex->getOGLInternalFormat(), 0, 0, sx, 0 ) );
+                glCopyTexSubImage1D( GL_TEXTURE_1D, 0, 0, 0, 0, sx ) );
             GN_OGL_CHECK(
                 glBindTexture( GL_TEXTURE_1D, currentTexID ) );
             break;
