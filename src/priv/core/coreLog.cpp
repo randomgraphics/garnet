@@ -379,17 +379,17 @@ namespace GN
             return getLogger( parent.cptr() );
         }
 
-        void printLoggerTree( int level, LoggerImpl & logger )
+        void printLoggerTree( StrA & str, int level, LoggerImpl & logger )
         {
             // print itself
-            for( int i = 0; i < level; ++i ) printf( "  " );
-            printf( "%s\n", logger.getName().cptr() );
+            for( int i = 0; i < level; ++i ) str.append( "  " );
+            str.append( strFormat( "%s\n", logger.getName().cptr() ) );
 
             // print children
             LoggerImpl * c = logger.firstChild();
             while( c )
             {
-                printLoggerTree( level + 1, *c );
+                printLoggerTree( str, level + 1, *c );
                 c = c->nextBrother();
             }
         }
@@ -413,7 +413,10 @@ namespace GN
         ~LoggerContainer()
         {
 #if GN_DEBUG_BUILD
-            printLoggerTree( 0, mRootLogger );
+            static Logger * sLogger = getLogger("GN.core.LoggerContainer");
+            StrA loggerTree;
+            printLoggerTree( loggerTree, 0, mRootLogger );
+            GN_TRACE(sLogger)( "\n%s", loggerTree.cptr() );
 #endif
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
