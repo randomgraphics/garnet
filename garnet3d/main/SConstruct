@@ -848,7 +848,7 @@ def BUILD_addLib( env, name, lib, addSuffix ):
             env.Prepend( LIBS = [lib+BUILD_getSuffix()] )
         else:
             env.Prepend( LIBS = [lib] )
-        GN.trace( 1, 'Add depends of %s : %s'%(name,lib) )
+        GN.trace( 2, 'Add depends of %s : %s'%(name,lib) )
 
 def BUILD_addExternalDependencies( env, name, deps ):
     for x in reversed(deps):
@@ -891,7 +891,7 @@ def BUILD_dynamicLib( name, target ):
 
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
-    GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
+    GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
 
     libName = '%s%s%s%s'%(env['SHLIBPREFIX'],name,BUILD_getSuffix(),env['SHLIBSUFFIX'])
     lib = env.SharedLibrary( os.path.join(str(target.path),libName), objs )
@@ -929,7 +929,7 @@ def BUILD_program( name, target ):
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
-    GN.trace( 1, "Depends of %s : %s"%(name,env['LIBS']) )
+    GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
 
     if 'gcc' == env['CC']: env.Prepend( LIBS=['GNcore','GNbase'] )
 
@@ -984,11 +984,10 @@ for compiler, variants in ALL_targets.iteritems() :
                 name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
         # build additional dependencies:
-        stlibs = Split('GNextern GNbase GNcore GNgfx GNutil')
         shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
-        tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshViewer GNtoolOglInfo')
+        tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshViewer GNtoolOGLInfo')
         progs = tests + samples + tools
         def getTargets( n ):
             if n in targets : return targets[n].targets
