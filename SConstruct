@@ -78,6 +78,7 @@ CONF_defaultCmdArgs = {
     'cpu'       : getenv('GN_BUILD_TARGET_CPU', CONF_cpu ),
     'cg'        : getenv('GN_BUILD_ENABLE_CG', 1), # use Cg by default.
     'xedeploy'  : getenv('GN_BUILD_XEDEPLOY', 1), # copy to devkit, default is true.
+    'locale'    : getenv('GN_BUILD_LOCALE', 'CHS'),
     }
 
 # 是否打开trace
@@ -96,6 +97,9 @@ CONF_enableCg  = ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] )
 
 # copy to devkit
 CONF_xedeploy = ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] )
+
+# locale
+CONF_locale = ARGUMENTS.get( 'locale', CONF_defaultCmdArgs['locale'] )
 
 ################################################################################
 #
@@ -217,7 +221,7 @@ def UTIL_newEnv( compiler, variant ):
     linkflags  = generate_empty_options()
 
     # 定制不同编译模式的编译选项
-    cppdefines['common']  += ['UNICODE','_UNICODE']
+    cppdefines['common']  += ['UNICODE','_UNICODE','GN_LOCALE=%s'%CONF_locale]
     cppdefines['debug']   += ['GN_BUILD_VARIANT=2']
     cppdefines['profile'] += ['GN_BUILD_VARIANT=1','NDEBUG']
     cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
@@ -1082,12 +1086,16 @@ HELP_opts.Add(
     CONF_defaultCmdArgs['variant'] )
 HELP_opts.Add(
     'cg',
-    'Support Cg language or not. This flag has no effect, if Cg library is not found.(GN_BUILD_ENABLE_CG).',
+    'Support Cg language or not. This flag has no effect, if Cg library is not found. (GN_BUILD_ENABLE_CG)',
     CONF_defaultCmdArgs['cg'] )
 HELP_opts.Add(
     'xedeploy',
-    'Copy to Xenon devkit. Only effective when building Xenon binaries.',
+    'Copy to Xenon devkit. Only effective when building Xenon binaries. (GN_BUILD_XEDEPLOY)',
     CONF_defaultCmdArgs['xedeploy'] )
+HELP_opts.Add(
+    'locale',
+    'Default locale. (GN_BUILD_LOCALE)',
+    CONF_defaultCmdArgs['locale'] )
 
 HELP_text = """
 Usage:
