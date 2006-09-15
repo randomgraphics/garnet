@@ -190,7 +190,7 @@ static uint32_t sCapsInit_MAX_CLIP_PLANES()
 static uint32_t sCapsInit_MAX_RENDER_TARGETS()
 {
     // FIXME: this is only suit for glCopyTexImage, not real PBuffer texture
-    return 4;
+    return 1;
 }
 //
 static uint32_t sCapsInit_MAX_PRIMITIVES()
