@@ -60,7 +60,7 @@ bool GN::gfx::D3D9Renderer::drawBegin()
     // success
     mDrawBegan = true;
     mNumPrims = 0;
-    mNumDraws = 0;
+    mNumBatches = 0;
     return true;
 
     GN_UNGUARD_SLOW;
@@ -79,23 +79,6 @@ void GN::gfx::D3D9Renderer::drawEnd()
     mDrawBegan = false;
     GN_DX9_CHECK( mDevice->EndScene() );
     GN_DX9_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawFinish()
-{
-    GN_GUARD_SLOW;
-
-    PIXPERF_FUNCTION_EVENT();
-
-    GN_ASSERT( mDrawBegan );
-
-    GN_DX9_CHECK_R( mDevice->EndScene() );
-    GN_DX9_CHECK( mDevice->BeginScene() );
 
     GN_UNGUARD_SLOW;
 }
@@ -152,7 +135,7 @@ void GN::gfx::D3D9Renderer::drawIndexed(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }
@@ -182,7 +165,7 @@ void GN::gfx::D3D9Renderer::draw(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }
@@ -230,7 +213,7 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }
@@ -267,7 +250,7 @@ void GN::gfx::D3D9Renderer::drawUp(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }

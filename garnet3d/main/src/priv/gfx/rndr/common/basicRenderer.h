@@ -204,7 +204,7 @@ namespace GN { namespace gfx
         bool drawInit()     { return true; }
         void drawQuit()     {}
         bool drawOk() const { return true; }
-        void drawClear()    { mNumPrims = 0; mNumDraws = 0; }
+        void drawClear()    { mNumPrims = 0; mNumBatches = 0; }
 
         //@}
     };
