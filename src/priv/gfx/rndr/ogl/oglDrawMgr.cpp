@@ -159,7 +159,7 @@ bool GN::gfx::OGLRenderer::drawBegin()
 
     mDrawBegan = 1;
     mNumPrims = 0;
-    mNumDraws = 0;
+    mNumBatches = 0;
     return true;
 
     GN_UNGUARD_SLOW;
@@ -183,20 +183,6 @@ void GN::gfx::OGLRenderer::drawEnd()
     GN_ASSERT( dd.displayHandle && dd.windowHandle );
     glXSwapBuffers( (Display*)dd.displayHandle, (Window)dd.windowHandle );
 #endif
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawFinish()
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( mDrawBegan );
-
-    GN_OGL_CHECK( glFinish() );
 
     GN_UNGUARD_SLOW;
 }
@@ -321,7 +307,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }
@@ -371,7 +357,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }
@@ -448,7 +434,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }
@@ -503,7 +489,7 @@ void GN::gfx::OGLRenderer::drawUp(
 
     // success
     mNumPrims += numPrims;
-    ++mNumDraws;
+    ++mNumBatches;
 
     GN_UNGUARD_SLOW;
 }

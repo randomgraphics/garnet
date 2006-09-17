@@ -12,7 +12,7 @@ bool GN::gfx::D3D10Renderer::drawBegin()
 {
     // TODO: handle render window size move
     mNumPrims = 0;
-    mNumDraws = 0;
+    mNumBatches = 0;
     return true;
 }
 

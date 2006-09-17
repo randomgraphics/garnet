@@ -80,15 +80,6 @@
 #define GN_ENABLE_LOG 1
 #endif
 
-// GN_DEFAULT_LOCALE
-// =================
-//!
-//! Define default locale. Default is CHS (Simplified Chinese).
-//!
-#ifndef GN_LOCALE
-#define GN_LOCALE "CHS"
-#endif
-
 // GN_LEFT_HAND
 // ============
 //!

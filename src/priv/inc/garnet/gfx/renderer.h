@@ -399,14 +399,15 @@ namespace GN { namespace gfx
         //!              /|\                            |
         //!               +-----------------------------+
         //!   </pre>
-        //! - create发生后, 必定发生一个restore
+        //! - create发生后, 必定会紧随着发生一个restore
         //! - 收到create/restore信号说明渲染器ready to use。
         //! - 收到destroy信号后，渲染器的context会被重置为缺省值。
         //! - 这些信号的标准使用方法如下：
         //!   - 收到create信号后, 创建所有图形资源。
         //!   - 收到restore信号后，填充图形资源的内容，如从磁盘读取贴图和模型。
-        //!     - 应避免创建新的资源，因为这个信号在程序生命期中有可能被多次触发。
-        //!     - 在此创建的资源应在收到dispose信号后释放
+        //!     - 应尽量避免在此创建新的资源，因为这个信号在程序生命期中有可能
+        //!       被多次触发。
+        //!     - 如必须在这里创建图形资源，则这些资源应在收到dispose信号后释放
         //!   - 收到dispose信号后，应释放在restore信号中创建的资源。
         //!   - 收到destroy信号后，删除所有的图形资源
         //!
@@ -420,7 +421,8 @@ namespace GN { namespace gfx
         static GN_PUBLIC Signal0<bool> sSigCreate;
 
         //!
-        //! Triggered after renderer is created or restored from last dispose successfully, and ready to use.
+        //! Triggered after renderer is created or restored successfully from
+        //! last dispose, and ready to use.
         //!
         //! (Re)load content of graphics resources.
         //! - Only lockable resources (texture, vertex/index buffer) that have
@@ -442,15 +444,18 @@ namespace GN { namespace gfx
         //!
         //! 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
         //!
-        //! This signal is useful when you want application to quit when user click close button or
-        //! press ALT-F4, while using internal render window.
+        //! This signal is useful when you want your application to quit when
+        //! user click close button or press ALT-F4, while using internal
+        //! render window.
         //! \par
-        //! Note that if you igore this sigal, _NOTHING_ will happen. Internal render window will
-        //! _NOT_ be closed. You can only close the internal render window by delete the renderer.
+        //! Note that if you igore this sigal, _NOTHING_ will happen. Internal
+        //! render window will _NOT_ be closed. You can only close the internal
+        //! render window by delete the renderer.
         //! \par
-        //! This signall will be triggered as well, when using external render window, to make the renderer
-        //! behavior consistent. But normally, you should have handled external window messages somewhere
-        //! else. If that's the case, then you can safely ignore this signal.
+        //! When using external render window, this signall will be triggered
+        //! as well, to make renderer behavior consistent. But normally, you
+        //! should have external window messages handled already somewhere else
+        //! in your code. So you may safely ignore this signal.
         //!
         static GN_PUBLIC Signal0<void> sSigWindowClosing;
 
@@ -770,8 +775,9 @@ namespace GN { namespace gfx
         //!
         //! Set rendering context.
         //!
-        //! When you want to change many renderer states, this method is recommended
-        //! over single context update helper functions, for performance reason.
+        //! This function, with pre-initialized renderer context structure, is
+        //! always prefered over context update helper functions below, for
+        //! better performance.
         //!
         virtual void setContext( const RendererContext & ) = 0;
 
@@ -779,13 +785,15 @@ namespace GN { namespace gfx
         //! Rebind current rendering context to rendering device.
         //!
         //! \par
-        //!     This function will "reset" some of states of low-level rendering device,
-        //!     based on input field flags, to sync-up with current context stored in
-        //!     in renderer.
+        //!     This function will rebind current rendering context to renderer.
         //! \par
-        //!     Call this function to restore state of low-level rendering device, when
-        //!     state is modified (by calling OpenGL functions or IDirect3DDevice methods,
-        //!     for example), and you want to restore deivce to its previous states.
+        //!     Renderer class have internal cache mechanism to avoid
+        //!     redunant state changing. But if you call D3D/OGL functions
+        //!     directly in your code that changes D3D/OGL states, this cache
+        //!     mechanism will be broken. One way to avoid this situation, is
+        //!     to store/restore D3D/OGL states by yourself. Another way is to
+        //!     call this function to force rebinding of current renderer
+        //!     context, which is much easier and less error prone.
         //!
         virtual void rebindContext( RendererContext::FieldFlags ) = 0;
 
@@ -798,15 +806,16 @@ namespace GN { namespace gfx
         //!
         //! \name Helper functions to update rendering context.
         //!
-        //! - See corresponding methods in RendererContext for usage of each method.
+        //! - See corresponding methods in RendererContext for detail usage.
         //! - Recommended call sequence is:
         //! <pre>
         //!     contextUpdateBegin();
         //!     ... // call context update methods here.
         //!     contextUpdateEnd();
         //! </pre>
-        //! - Call update method outside of contextUpdateBegin() and contextUpdateEnd() is allowed,
-        //!   but not recommented for performance reason.
+        //! - Calling update method outside of contextUpdateBegin() and
+        //!   contextUpdateEnd() will take effect immediatly, but is not
+        //!   recommented for performance reason.
         //!
         // ********************************************************************
 
@@ -867,7 +876,7 @@ namespace GN { namespace gfx
     protected:
 
         AutoInit<size_t,0> mNumPrims; //!< Number of primitives per frame.
-        AutoInit<size_t,0> mNumDraws; //!< Number of draws per frame.
+        AutoInit<size_t,0> mNumBatches; //!< Number of draws per frame.
 
     public :
 
@@ -884,13 +893,6 @@ namespace GN { namespace gfx
         //! call drawEnd() <b>if and only if</b> drawBegin() returns true.
         //!
         virtual void drawEnd() = 0;
-
-        //!
-        //! 本函数的功能类似于OpenGL中的glFinish()
-        //!
-        //! \note 必须在 drawBegin() 和 drawEnd() 之间调用
-        //!
-        virtual void drawFinish() = 0;
 
         //!
         //! 清屏操作
@@ -1117,14 +1119,14 @@ namespace GN { namespace gfx
         //!
         //! 返回上一次 drawEnd() 到现在 draw() / drawindexed() 的次数
         //!
-        size_t getNumDraws() const { return mNumDraws; }
+        size_t getNumBatches() const { return mNumBatches; }
 
         //!
         //! 返回上一次 drawEnd() 到现在平均每次 draw()/drawIndexed() 的原语数
         //!
-        size_t getNumPrimsPerDraw() const
+        size_t getNumPrimsPerBatch() const
         {
-            return 0 == mNumDraws ? 0 : mNumPrims / mNumDraws;
+            return 0 == mNumBatches ? 0 : mNumPrims / mNumBatches;
         }
 
         //@}

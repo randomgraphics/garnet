@@ -28,6 +28,7 @@
   - blender exporter/importer
   - in-game GUI system
     - font class
+    - textbox class
   - refine sigslot class to allow any type of functor
 
 - p2

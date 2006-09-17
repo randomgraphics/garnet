@@ -98,9 +98,6 @@ CONF_enableCg  = ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] )
 # copy to devkit
 CONF_xedeploy = ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] )
 
-# locale
-CONF_locale = ARGUMENTS.get( 'locale', CONF_defaultCmdArgs['locale'] )
-
 ################################################################################
 #
 # 局部于本文件的工具函数
@@ -221,7 +218,7 @@ def UTIL_newEnv( compiler, variant ):
     linkflags  = generate_empty_options()
 
     # 定制不同编译模式的编译选项
-    cppdefines['common']  += ['UNICODE','_UNICODE','GN_LOCALE=\\"%s\\"'%CONF_locale]
+    cppdefines['common']  += ['UNICODE','_UNICODE']
     cppdefines['debug']   += ['GN_BUILD_VARIANT=2']
     cppdefines['profile'] += ['GN_BUILD_VARIANT=1','NDEBUG']
     cppdefines['retail']  += ['GN_BUILD_VARIANT=0','NDEBUG']
@@ -1091,10 +1088,6 @@ HELP_opts.Add(
     'xedeploy',
     'Copy to Xenon devkit. Only effective when building Xenon binaries. (GN_BUILD_XEDEPLOY)',
     CONF_defaultCmdArgs['xedeploy'] )
-HELP_opts.Add(
-    'locale',
-    'Default locale. (GN_BUILD_LOCALE)',
-    CONF_defaultCmdArgs['locale'] )
 
 HELP_text = """
 Usage:
