@@ -15,7 +15,7 @@ static VtxFmtDesc sBuildXyzNormUv()
     vfd.addAttrib( 0, 12, VTXSEM_NORMAL, FMT_FLOAT3 );
     vfd.addAttrib( 0, 24, VTXSEM_TEX0, FMT_FLOAT2 );
     return vfd;
-};
+}
 
 static VtxFmtDesc sBuildXyzUv()
 {
@@ -23,14 +23,14 @@ static VtxFmtDesc sBuildXyzUv()
     vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT3 );
     vfd.addAttrib( 0, 12, VTXSEM_TEX0, FMT_FLOAT2 );
     return vfd;
-};
+}
 
 static VtxFmtDesc sBuildXyz()
 {
     VtxFmtDesc vfd;
     vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT3 );
     return vfd;
-};
+}
 
 static VtxFmtDesc sBuildXyzwUv()
 {
@@ -38,14 +38,14 @@ static VtxFmtDesc sBuildXyzwUv()
     vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT4 );
     vfd.addAttrib( 0, 16, VTXSEM_TEX0, FMT_FLOAT2 );
     return vfd;
-};
+}
 
 static VtxFmtDesc sBuildXyzw()
 {
     VtxFmtDesc vfd;
     vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT4 );
     return vfd;
-};
+}
 
 const VtxFmtDesc VtxFmtDesc::XYZ_NORM_UV = sBuildXyzNormUv();
 const VtxFmtDesc VtxFmtDesc::XYZ_UV = sBuildXyzUv();

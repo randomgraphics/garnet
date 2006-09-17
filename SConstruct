@@ -153,24 +153,22 @@ def UTIL_newEnv( compiler, variant ):
         return Environment()
 
     tools = ['default']
-    msvs_version = '7.1'
+    msvs_version = '8.0'
     msvs_platform = 'x86'
     icl_version = None
     icl_abi = 'ia32'
-    if 'xenon' == compiler.name:
+    if 'vc71' == compiler.name :
+        msvs_version = '7.1'
+    elif 'xenon' == compiler.name:
         tools = ['xenon']
-        msvs_version = '8.0'
         msvs_platform = 'Xbox 360'
     elif 'icl' == compiler.name :
         tools += ['intelc']
         if 'x64' == compiler.cpu :
             icl_abi = 'em64t'
-            msvs_version = '8.0'
             msvs_platform = 'x64'
-    elif 'vc80' == compiler.name :
-        msvs_version = '8.0'
-        if 'x64' == compiler.cpu :
-            msvs_platform = 'x64'
+    elif 'x64' == compiler.cpu :
+        msvs_platform = 'x64'
     env = Environment(
         tools = tools,
         MSVS_VERSION = msvs_version,
@@ -283,7 +281,7 @@ def UTIL_newEnv( compiler, variant ):
         linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
 
     elif 'icl' == env['CC']:
-        ccflags['common']  += ['/W4','/WX','/Qpchi-','/Zc:forScope']
+        ccflags['common']  += ['/W4','/WX','/Wcheck','/Qpchi-','/Zc:forScope']
         ccflags['debug']   += ['/MDd','/GR','/Ge','/traceback']
         ccflags['profile'] += ['/O2','/MD']
         ccflags['retail']  += ['/O2','/MD']

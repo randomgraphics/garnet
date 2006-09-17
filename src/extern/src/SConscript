@@ -11,7 +11,8 @@ if 'icl' == GN.compiler.name :
     unimportant_warnings = [
         '1572', # floating-point comparison
         ]
-    ccflags += ['/W3'] + ['/Qwd%s'%w for w in unimportant_warnings]
+    ccflags += ['/W2'] + ['/Qwd%s'%w for w in unimportant_warnings]
+    cppdefines += ['_CRT_SECURE_NO_DEPRECATE','_CRT_NONSTDC_NO_DEPRECATE']
 elif 'vc71' == GN.compiler.name:
     ccflags += ['/W3']
 elif 'vc80' == GN.compiler.name:
@@ -33,13 +34,13 @@ elif 'xenon' == GN.compiler.name:
 jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
 if 'gcc' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
-jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
+jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 
 common_sources = GN.glob( Split('expat/*.c freetype2/*.c lua/*.c pcre/*.c* png/*.c tinyxml/*.cpp zlib/*.c'), True )
 if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
 common_cluster = GN.newSourceCluster( common_sources )
 common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
-common_cluster.removeCompileFlags( CCFLAGS = ['/W4'] )
+common_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 
 # **********************
 # define source clusters

@@ -51,8 +51,6 @@
     - test: IDirect3DDevice9::UpdateTexture() when target is render target texture.
     - learn EXT_framebuffer_object, ARB_draw_buffer, ARB_pixel_buffer_object
     - shared uniform
-  - more sofisitcated log management: see log4cxx for example.
-    - runtime switchable GN_TRACE( level, msg, .... )
 
 - p3
   - new build system:
@@ -70,8 +68,6 @@
     - ...
   - runtime call-stack dump
   - hash map/table
-  - implement POSIX version of GN::path:glob()
-  - UT for path functions: resolve, glob
 
 ISSUES
 ======

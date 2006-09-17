@@ -315,7 +315,6 @@ namespace GN { namespace gfx
 
         virtual bool drawBegin();
         virtual void drawEnd();
-        virtual void drawFinish();
         virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrims,

@@ -80,7 +80,7 @@ static void sPrintToFile( FILE * fp, GN::Logger & logger, const GN::Logger::LogD
 {
     if( GN::Logger::LL_INFO == desc.level )
     {
-        ::fprintf( fp, "%s\n", msg );
+        ::fprintf( fp, "%s\n", msg.cptr() );
     }
     else 
     {
@@ -258,7 +258,7 @@ namespace GN
                 desc.line,
                 logger.getName().cptr(),
                 sLevel2Str(desc.level).cptr(),
-                msg );
+                msg.cptr() );
             ::OutputDebugStringA( buf );
 #endif
         }
@@ -457,4 +457,4 @@ namespace GN
         static LoggerContainer lc;
         return lc.getLogger( name );
     }
-};
+}

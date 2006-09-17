@@ -23,12 +23,9 @@ static void sCalcBoundingRect( GN::Recti & rc, const char * text, int x, int y )
     rc.h = 15;
     
     int w = 0;
-    char c;
 
     while( *text )
     {
-        c = *text;
-
         if( '\n' == *text )
         {
             rc.h += 14;
