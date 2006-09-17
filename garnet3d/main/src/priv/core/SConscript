@@ -5,7 +5,7 @@ sources = [
     'coreLog.cpp',
 ]
 
-cluster = GN.newSourceCluster( sources )
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 
 cluster.addCompileFlags( CPPDEFINES = ['_GN_CORE'] )
 

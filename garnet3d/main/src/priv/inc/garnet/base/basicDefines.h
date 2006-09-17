@@ -35,10 +35,12 @@
 #define GN_COMPILER "msvc"
 
 #elif defined(__ICL)
-#undef GN_MSVC
 #undef GN_ICL
-#define GN_MSVC 1                  // treat intel compiler as VC compiler
+#undef GN_MSVC
+#undef GN_MSVC8
 #define GN_ICL  1
+#define GN_MSVC 1                  // treat intel compiler as VC compiler
+#define GN_MSVC8 (_MSC_VER >= 1400)
 #define GN_COMPILER "icl"
 
 #elif defined(__BORLANDC__)

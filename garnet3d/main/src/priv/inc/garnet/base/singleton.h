@@ -9,7 +9,7 @@
 //!
 //! 实现单件类中的静态变量
 //!
-#define GN_IMPLEMENT_SINGLETON(T) template<> T * ::GN::Singleton< T >::msInstancePtr = 0;
+#define GN_IMPLEMENT_SINGLETON(T) template<> GN_EXPORT T * ::GN::Singleton< T >::msInstancePtr = 0;
 
 namespace GN
 {
