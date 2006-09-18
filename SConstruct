@@ -53,6 +53,7 @@ if 'mswin' == CONF_os:
     CONF_allCompilers.append( Compiler('icl','mswin','x86') )
     CONF_allCompilers.append( Compiler('icl','mswin','x64') )
     CONF_allCompilers.append( Compiler('icl','mswin','ia64') )
+    CONF_allCompilers.append( Compiler('mingw','mswin','x86') )
     if SCons.Tool.xenon.exists( LOCAL_env ): CONF_allCompilers.append( Compiler('xenon','xenon','ppc') )
 elif 'cygwin' == CONF_os:
     CONF_allCompilers.append( Compiler('gcc','cygwin','x86') )
@@ -169,6 +170,8 @@ def UTIL_newEnv( compiler, variant ):
             msvs_platform = 'x64'
     elif 'x64' == compiler.cpu :
         msvs_platform = 'x64'
+    elif 'mingw' == compiler.name :
+        tools = ['mingw']
     env = Environment(
         tools = tools,
         MSVS_VERSION = msvs_version,
@@ -307,6 +310,8 @@ def UTIL_newEnv( compiler, variant ):
         ccflags['stdbg']   += ['-g']
         ccflags['stprof']  += ['-O3']
         ccflags['stret']   += ['-O3']
+        if 'mingw' == compiler.name:
+            cppdefines['common'] += ['WINVER=0x500']
 
     else:
         UTIL_error( 'unknown compiler: %s'%env['CC'] )
@@ -364,6 +369,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # 是否支持D3D10
     # =============
     conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' )
+
+    # ===================
+    # 是否支持DirectInput
+    # ===================
+    conf['has_dinput'] = c.CheckCXXHeader( ['windows.h', 'dinput.h'] )
 
     # ==============
     # 是否支持XInput
@@ -1013,10 +1023,10 @@ for compiler, variants in ALL_targets.iteritems() :
 #
 ################################################################################
 
-if 'MSVSProject' in LOCAL_env['BUILDERS']:
-    for compiler, variants in ALL_targets.iteritems():
-        for variant, targets in variants.iteritems():
-            MSVS_env = UTIL_newEnv( compiler, variant )
+for compiler, variants in ALL_targets.iteritems():
+    for variant, targets in variants.iteritems():
+        MSVS_env = UTIL_newEnv( compiler, variant )
+        if 'MSVSProject' in MSVS_env['BUILDERS'] :
             for name, x in targets.iteritems():
                 if 'stlib' == x.type or 'dylib' == x.type or 'prog' == x.type :
                     SConscript(

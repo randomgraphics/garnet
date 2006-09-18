@@ -22,7 +22,7 @@
       - D3D: msaa
       - OGL: FBO
     - recreate OGL context, when monitor changed.
-  - code page convertor
+  - code page convertor and test application
     - may support convertion from/to utf8 be enough?
   - mesh class
   - blender exporter/importer

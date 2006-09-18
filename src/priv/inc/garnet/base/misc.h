@@ -400,16 +400,16 @@ namespace GN
         //!
         //! Basic auto pointer class. Can NOT be used in STL containers.
         //!
-        template<typename T, void(*RELEASE)(T*&)>
+        template<typename T, typename CLASS>
         class BaseAutoPtr : public NoCopy
         {
             T * mPtr;
 
-            typedef BaseAutoPtr<T,RELEASE> MyType;
+            typedef BaseAutoPtr<T,CLASS> MyType;
 
             void release()
             {
-                RELEASE(mPtr);
+                CLASS::sDoRelease(mPtr);
                 mPtr = 0;
             }
 
@@ -484,11 +484,12 @@ namespace GN
     //! Automatic X resource pointer
     //!
     template<typename T>
-    class AutoXPtr : public detail::BaseAutoPtr< T, &safeDelete<T> >
+    class AutoXPtr : public detail::BaseAutoPtr< T, AutoXPtr<T> >
     {
         typedef detail::BaseAutoPtr< T, &safeDelete<T> > ParentType;
+        friend class ParentType;
 
-        static void doRelease( T * p )
+        static void sDoRelease( T * p )
         {
             if( p ) XFree(p);
         }
@@ -506,11 +507,16 @@ namespace GN
     //! Automatic object pointer. Can NOT be used in STL containers.
     //!
     template<typename T>
-    class AutoObjPtr : public detail::BaseAutoPtr< T, &safeDelete<T> >
+    class AutoObjPtr : public detail::BaseAutoPtr< T, AutoObjPtr<T> >
     {
-        typedef detail::BaseAutoPtr< T, &safeDelete<T> > ParentType;
+        typedef detail::BaseAutoPtr< T, AutoObjPtr<T> > ParentType;
+#if GN_GCC
+        friend class detail::BaseAutoPtr< T, AutoObjPtr<T> >;
+#else
+        friend class ParentType;
+#endif
 
-        static void doRelease( T * p )
+        static void sDoRelease( T * p )
         {
             if( p ) delete p;
         }
@@ -527,11 +533,16 @@ namespace GN
     //! Automatic object array. Can NOT be used in STL containers.
     //!
     template<typename T>
-    class AutoObjArray : public detail::BaseAutoPtr< T, &safeDeleteArray<T> >
+    class AutoObjArray : public detail::BaseAutoPtr< T, AutoObjArray<T> >
     {
-        typedef detail::BaseAutoPtr< T, &safeDeleteArray<T> > ParentType;
+        typedef detail::BaseAutoPtr< T, AutoObjArray<T> > ParentType;
+#if GN_GCC
+        friend class detail::BaseAutoPtr< T, AutoObjArray<T> >;
+#else
+        friend class ParentType;
+#endif
 
-        static void doRelease( T * p )
+        static void sDoRelease( T * p )
         {
             if( p ) delete [] p;
         }
@@ -548,11 +559,16 @@ namespace GN
     //! Automatic C-style array created by heapAlloc. Can NOT be used in STL containers.
     //!
     template<typename T>
-    class AutoTypePtr : public detail::BaseAutoPtr< T, &safeHeapFree >
+    class AutoTypePtr : public detail::BaseAutoPtr< T, AutoTypePtr<T> >
     {
-        typedef detail::BaseAutoPtr< T, &safeHeapFree > ParentType;
+        typedef detail::BaseAutoPtr< T, AutoTypePtr<T> > ParentType;
+#if GN_GCC
+        friend class detail::BaseAutoPtr< T, AutoTypePtr<T> >;
+#else
+        friend class ParentType;
+#endif
 
-        static void doRelease( T * p )
+        static void sDoRelease( T * p )
         {
             if( p ) heapFree(p);
         }

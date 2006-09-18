@@ -1,7 +1,6 @@
 #include "pch.h"
+#if HAS_D3D9
 #include "garnet/GNd3d9.h"
-
-#if GN_MSWIN
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.d3d9ShaderUtils");
 

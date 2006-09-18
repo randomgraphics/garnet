@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "inputDInput.h"
 
-#if GN_MSWIN && !GN_XENON
+#ifdef HAS_DINPUT
 
 #if GN_MSVC
 #pragma comment(lib, "dxguid.lib")
@@ -405,4 +405,4 @@ bool GN::input::InputDInput::mouseInit()
     GN_UNGUARD;
 }
 
-#endif // GN_MSWIN
+#endif // HAS_DINPUT

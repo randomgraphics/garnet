@@ -225,7 +225,10 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
         if( 4 != sscanf(
             s.cptr(),
             " NumVertices=%lu NumFaces=%lu VertexFormat=%llu FaceNormal=%lu",
-            &numVerts, &numFaces, &vtxFmt, &faceNormal ) )
+            (unsigned long*)&numVerts,
+            (unsigned long*)&numFaces,
+            (unsigned long long*)&vtxFmt,
+            (unsigned long*)&faceNormal ) )
         {
             GN_ERROR(sLogger)( "invalid file header: %s", s.cptr() );
             return false;
@@ -300,7 +303,10 @@ bool GN::gfx::FatMesh::readFrom( File & fp )
             if( 7 != sscanf(
                 s.cptr(),
                 "%lu,%lu,%lu,%f,%f,%f,%d,",
-                &i0, &i1, &i2, &f.normal.x, &f.normal.y, &f.normal.z, &f.material ) )
+                (unsigned long*)&i0,
+                (unsigned long*)&i1,
+                (unsigned long*)&i2,
+                &f.normal.x, &f.normal.y, &f.normal.z, &f.material ) )
             {
                 GN_ERROR(sLogger)( "fail to parse face #%u", i );
                 return false;

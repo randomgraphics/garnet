@@ -66,7 +66,7 @@ namespace GN
         {
             // Invertable matrix is very rare, and normally means error,
             // so we write output a warning here.
-            GN_WARN( "Matrix is un-invertable!" );
+            GN_WARN(sLogger)( "Matrix is un-invertable!" );
             return identity();
         }
 
@@ -349,7 +349,7 @@ namespace GN
             {
                 // Invertible matrix is very rare, and normally means error,
                 // so we write output a warning here.
-                GN_WARN( "Matrix is un-invertable!" );
+                GN_WARN(sLogger)( "Matrix is un-invertable!" );
                 return identity();
             }
 

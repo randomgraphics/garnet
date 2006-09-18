@@ -13,7 +13,7 @@ GN::input::InputMsw::InputMsw()
 
     // setup key map
     #define GNINPUT_DEFINE_KEYCODE( name, dikey, scancode, vkeycode, xkeysym ) \
-        if( vkeycode > 0 ) mKeyMap[vkeycode] = name;
+        if( vkeycode > 0 ) mKeyMap[(unsigned int)vkeycode] = name;
     #include "garnet/input/keyCodeMeta.h"
     #undef  GNINPUT_DEFINE_KEYCODE
 }

@@ -10,4 +10,5 @@ sources = [
 ]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 if GN.conf['has_xinput'] : r.addCompileFlags( CPPDEFINES = ['HAS_XINPUT'] )
+if GN.conf['has_dinput'] : r.addCompileFlags( CPPDEFINES = ['HAS_DINPUT'] )
 Return( 'r' )

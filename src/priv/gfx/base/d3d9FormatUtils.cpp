@@ -1,7 +1,6 @@
 #include "pch.h"
+#ifdef HAS_D3D9
 #include "garnet/GNd3d9.h"
-
-#if GN_MSWIN
 
 //
 //

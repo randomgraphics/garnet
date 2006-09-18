@@ -67,7 +67,7 @@ GN::input::Input * GN::input::createInputSystem( InputApi api )
     {
         case API_NATIVE : return sCreateNativeInputSystem();
 
-#if GN_MSWIN && !GN_XENON
+#ifdef HAS_DINPUT
         case API_DINPUT :
         {
             AutoObjPtr<InputDInput> p( new InputDInput );

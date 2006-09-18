@@ -5,7 +5,7 @@ template < typename T >
 GN::Quaternion<T> & GN::Quaternion<T>::fromMatrix33( const Matrix33<T> & m )
 {
     ElementType Tr = m[0][0] + m[1][1] + m[2][2] + 1,fourD;
-    uint i,j,k;
+    int i,j,k;
 
     // w >= 0.5 ?
     if (Tr >= 1.0f)
