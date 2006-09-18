@@ -22,7 +22,9 @@
 #error XDK build 1881 or newer is required.
 #endif
 #elif GN_PC
-#define NOMINMAX //!< This is to disable windows min/max macros
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
@@ -88,8 +90,6 @@ struct PixPerfScopeEvent
 #define PIXPERF_SCOPE_EVENT( name ) PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), name )
 #define PIXPERF_SET_MARKER( name )  PIXPERF_SET_MARKER_EX( D3DCOLOR_ARGB(255,255,0,0), name )
 #define PIXPERF_FUNCTION_EVENT()    PIXPERF_SCOPE_EVENT_EX( D3DCOLOR_ARGB(255,255,0,0), GN_FUNCTION )
-
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

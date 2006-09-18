@@ -2,7 +2,9 @@
 #define __GN_BASE_USERCONFIG_H__
 // *****************************************************************************
 //! \file    userConfig.h
-//! \brief   User configuable compile switches
+//! \brief   User configuable compile switches.
+//!          Please modify this file directly or define these macros in your
+//!          build script to meet your own requirements.
 //! \author  chenlee (2005.7.24)
 // *****************************************************************************
 

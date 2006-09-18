@@ -55,12 +55,12 @@ extern GN::gfx::Renderer * createOGLRenderer();
 // -----------------------------------------------------------------------------
 static GN::gfx::RendererAPI sDetermineRendererAPI()
 {
-#if GN_XENON
+#if defined(HAS_D3D9)
     return GN::gfx::API_D3D9;
-#elif GN_MSWIN
-    return GN::gfx::API_D3D9;
-#else
+#elif defined(HAS_OGL)
     return GN::gfx::API_OGL;
+#else
+    return GN::gfx::API_FAKE;
 #endif
 }
 

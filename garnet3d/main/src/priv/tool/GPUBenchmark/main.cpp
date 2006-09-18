@@ -39,7 +39,7 @@ public:
     T getInstantValue() const
     {
         GN_ASSERT( mCount > 0 );
-        return mValues[(mCursor-1)%BUFFER_SIZE]
+        return mValues[(mCursor-1)%BUFFER_SIZE];
     }
 
     T getAverageValue() const
@@ -307,9 +307,11 @@ public:
 };
 
 #include "fillrate.inl" // pixel pipeline speed
+#ifdef HAS_D3D9
 #include "verticeThroughput.inl" // vertex pipeline speed
 #include "dynatex.inl" // dynamic texture bandwidth
 #include "batchSize.inl" // batch size test
+#endif
 
 // *****************************************************************************
 // Main benchmark application

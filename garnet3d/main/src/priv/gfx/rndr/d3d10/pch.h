@@ -10,7 +10,9 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
 
-#define NOMINMAX //!< This is to disable windows min/max macros
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #include <d3d10.h>
 #include <d3dx10.h>
@@ -46,8 +48,6 @@
 //! D3D10 error check routine
 //!
 #define GN_D3D10_CHECK_RV( func, rval ) GN_D3D10_CHECK_DO( func, return rval; )
-
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

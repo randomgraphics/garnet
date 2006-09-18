@@ -10,7 +10,6 @@
 #include "garnet/GNwin.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

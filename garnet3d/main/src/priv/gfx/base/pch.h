@@ -8,7 +8,6 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNgfx.h"
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

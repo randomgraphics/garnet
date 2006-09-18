@@ -14,11 +14,11 @@
 #if GN_XENON
 #include <xtl.h>
 #elif GN_MSWIN
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #endif
-
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

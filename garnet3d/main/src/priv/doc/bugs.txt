@@ -22,6 +22,8 @@ OPENNING
 - ATI depth texture doesn't work when backbuffer size is smaller then texture size (only happens when using debug DX runtime. So seems a DX bug)
   - 2006.5.25: upgrading ATI driver to 6.4 doesn't work.
 
+- GNut failures in mingw build.
+
 CLOSED
 ======
 
