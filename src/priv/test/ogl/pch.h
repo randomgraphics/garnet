@@ -12,13 +12,13 @@
 #include "garnet/GNapp.h"
 
 #if GN_MSWIN
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
 #include <glew.h>
-
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

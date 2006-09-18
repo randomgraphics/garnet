@@ -16,11 +16,11 @@
 #if GN_XENON
 #include <xtl.h>
 #elif GN_MSWIN
-#define NOMINMAX //!< This is to disable windows min/max macros
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #endif
-
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

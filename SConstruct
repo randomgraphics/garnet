@@ -127,14 +127,17 @@ def UTIL_error( msg ):
     print 'ERROR : %s'%msg
     print '===================================================================='
 
+#
 def UTIL_staticBuild( v ): return 'stdbg' == v or 'stprof' == v or 'stret' == v
 
+#
 def UTIL_buildRoot( compiler = None ) :
     if not compiler:
         return os.path.join( '#build.tmp', 'scons' )
     else:
         return os.path.join( '#build.tmp', 'scons', compiler.os, compiler.cpu, compiler.name )
 
+#
 def UTIL_buildDir( compiler, variant ) :
     if not isinstance( compiler, Compiler ):
         assert( isinstance(compiler,int) )
@@ -284,7 +287,7 @@ def UTIL_newEnv( compiler, variant ):
         linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
 
     elif 'icl' == env['CC']:
-        ccflags['common']  += ['/W4','/WX','/Wcheck','/Qpchi-','/Zc:forScope']
+        ccflags['common']  += ['/W3','/WX','/Wcheck','/Qpchi-','/Zc:forScope']
         ccflags['debug']   += ['/MDd','/GR','/Ge','/traceback']
         ccflags['profile'] += ['/O2','/MD']
         ccflags['retail']  += ['/O2','/MD']
@@ -368,7 +371,16 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # =============
     # 是否支持D3D10
     # =============
-    conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' )
+
+    # Detect Windows Vista
+    def isVista( env ):
+        if 'win32' != env['PLATFORM']: return False
+        stdout = os.popen( "ver" )
+        str = stdout.read()
+        stdout.close()
+        import string
+        return string.find( str, "Vista" ) >= 0
+    conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVista(env) or not UTIL_staticBuild( variant ) )
 
     # ===================
     # 是否支持DirectInput
@@ -705,8 +717,8 @@ for c in COLLECT_compilers:
 ################################################################################
 
 for c in ALL_conf:
-    GN.compiler = c[0];
-    GN.variant = c[1];
+    GN.compiler = c[0]
+    GN.variant = c[1]
     GN.conf = c[2]
     SConscript( 'SConscript', exports=['GN'], build_dir=UTIL_buildDir( GN.compiler, GN.variant ), duplicate=0 )
 
@@ -874,7 +886,7 @@ def BUILD_addDependencies( env, name, deps ):
 # does compiler produce manifest file?
 #
 def BUILD_handleManifest( env, target ):
-    if float(env.get('MSVS_VERSION',0)) >= 8.0 and not UTIL_staticBuild( BUILD_variant ):
+    if 'vc80' == BUILD_compiler.name and not UTIL_staticBuild( BUILD_variant ):
         manifest = File( '%s.manifest'%target[0] )
         env.SideEffect( manifest, target )
         target += [manifest]

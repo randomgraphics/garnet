@@ -11,7 +11,6 @@
 //#include "garnet/GNgui.h"
 #include "garnet/GNapp.h"
 #include "../util/gui/ceguiRenderer.h"
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h

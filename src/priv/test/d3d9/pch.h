@@ -15,15 +15,15 @@
 #if GN_XENON
 #include <xtl.h>
 #elif GN_MSWIN
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
 #include <d3d9.h>
 #include <d3dx9.h>
 #include <dxerr9.h>
-
-#include "garnet/base/pragma.h"
 
 // *****************************************************************************
 //                           End of pch.h
