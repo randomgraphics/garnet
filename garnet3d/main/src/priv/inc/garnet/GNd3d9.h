@@ -20,7 +20,9 @@
 #include <xgraphics.h>
 #include <xboxmath.h>
 #elif GN_PC
+#ifndef NOMINMAX
 #define NOMINMAX //!< This is to disable windows min/max macros
+#endif
 #include <windows.h>
 #endif
 

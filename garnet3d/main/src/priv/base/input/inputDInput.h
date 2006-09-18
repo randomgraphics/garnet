@@ -8,7 +8,10 @@
 
 #include "basicInputMsw.h"
 
-#if GN_MSWIN && !GN_XENON
+#ifdef HAS_DINPUT
+
+#include <dinput.h>
+#include <dxerr9.h>
 
 namespace GN { namespace input
 {
@@ -111,7 +114,7 @@ namespace GN { namespace input
     };
 }}
 
-#endif // GN_MSWIN
+#endif // HAS_DINPUT
 
 // *****************************************************************************
 //                           End of inputDInput.h

@@ -2,17 +2,17 @@
 #include "garnet/GNbase.h"
 
 #if GN_MSWIN
-#define SHLIB_LOAD( libName )          static_cast<void*>(LoadLibraryA(libName))
+#define SHLIB_LOAD( libName )          ((void*)LoadLibraryA(libName))
 #define SHLIB_FREE( lib )              (!!FreeLibrary(HMODULE(lib)))
-#define SHLIB_LOAD_SYMBOL( lib, symb ) static_cast<void*>(GetProcAddress(HMODULE(lib), symb))
+#define SHLIB_LOAD_SYMBOL( lib, symb ) ((void*)GetProcAddress(HMODULE(lib), symb))
 #define SHLIB_ERROR()                  ::GN::getOSErrorInfo()
 #define SHLIB_EXT                      ".dll"
 #elif GN_POSIX
 #include <dlfcn.h>
 #include <stdio.h>
-#define SHLIB_LOAD( libName )          static_cast<void*>(dlopen(libName, RTLD_NOW))
+#define SHLIB_LOAD( libName )          ((void*)dlopen(libName, RTLD_NOW))
 #define SHLIB_FREE( lib )              (!dlclose( lib ))
-#define SHLIB_LOAD_SYMBOL( lib, symb ) static_cast<void*>(dlsym(lib, symb))
+#define SHLIB_LOAD_SYMBOL( lib, symb ) ((void*)dlsym(lib, symb))
 #define SHLIB_ERROR()                  dlerror()
 #if GN_CYGWIN
 #define SHLIB_EXT                      ".dll"

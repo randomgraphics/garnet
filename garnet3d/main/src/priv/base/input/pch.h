@@ -13,10 +13,10 @@
 #if GN_XENON
 #include <xtl.h>
 #elif GN_MSWIN
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
-#include <dinput.h>
-#include <dxerr9.h>
 #include <zmouse.h>  // for WM_MOUSEWHEEL
 #elif GN_POSIX
 #include <X11/Xlib.h>

@@ -32,7 +32,7 @@ elif 'xenon' == GN.compiler.name:
 # define source clusters
 # **********************
 jpeg_cluster = GN.newSourceCluster( GN.glob( 'jpeg/*.c' ) )
-if 'gcc' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
+if 'gcc' == GN.compiler.name or 'mingw' == GN.compiler.name: jpeg_cluster.addCompileFlags( CCFLAGS = ['-Wno-main'] )
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 

@@ -1067,6 +1067,8 @@ namespace GN
     template< typename T >
     class Matrix33
     {
+        static Logger * sLogger;
+
         // ********************************
         //    public data members
         // ********************************
@@ -1402,6 +1404,8 @@ namespace GN
     Matrix33<T> Matrix33<T>::IDENTITY( 1,0,0,
                                        0,1,0,
                                        0,0,1 );
+    template < typename T >
+    Logger * Matrix33<T>::sLogger = getLogger("GN.base.Matrix44");
 
     //!
     //! 4x4 matrix ( row major )
@@ -1409,6 +1413,8 @@ namespace GN
     template < typename T >
     class Matrix44
     {
+        static Logger * sLogger;
+
         // ********************************
         //  public data members
         // ********************************
@@ -2004,7 +2010,7 @@ namespace GN
             T k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
 
             if( ((T)0) != k ) dst /= k;
-            else GN_WARN( "the vertex is transformed to infinite place" );
+            else GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
         }
         //!
         //! transform a 3-D point by this matrix
@@ -2060,6 +2066,8 @@ namespace GN
                                        0,1,0,0,
                                        0,0,1,0,
                                        0,0,0,1 );
+    template < typename T >
+    Logger * Matrix44<T>::sLogger = getLogger("GN.base.Matrix44");
 
     //!
     //! ËÄÔªÊý

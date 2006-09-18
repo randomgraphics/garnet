@@ -8,7 +8,7 @@
 
 #include <stddef.h>
 #include <wchar.h>
-#if GN_POSIX
+#if GN_GCC
 #include <stdint.h>
 #else
 #include "stdint.h"
