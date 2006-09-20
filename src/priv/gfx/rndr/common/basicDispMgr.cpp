@@ -136,7 +136,7 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMod
 
     if( (void*)1 == monitor )
     {
-        GN_WARN( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
+        GN_WARN(sLogger)( "No valid screen found. Use hard-coded display mode:: 640x480 32bits" );
         dm.width = 640;
         dm.height = 480;
         dm.depth = 32;

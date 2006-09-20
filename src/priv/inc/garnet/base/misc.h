@@ -486,8 +486,8 @@ namespace GN
     template<typename T>
     class AutoXPtr : public detail::BaseAutoPtr< T, AutoXPtr<T> >
     {
-        typedef detail::BaseAutoPtr< T, &safeDelete<T> > ParentType;
-        friend class ParentType;
+        typedef detail::BaseAutoPtr< T, AutoXPtr<T> > ParentType;
+        friend class detail::BaseAutoPtr< T, AutoXPtr<T> >;
 
         static void sDoRelease( T * p )
         {

@@ -215,8 +215,8 @@ public:
 
     void testCustomAllocator()
 	{
-#if GN_MINGW
-        GN_TODO( "StdAllocator<> does not pass MingW build." );
+#if GN_GCC
+        GN_TODO( "StdAllocator<> does not pass GCC build." );
 #else
         typedef std::vector<char,GN::StlAllocator<char> > CharArray;
         typedef std::vector<Test,GN::StlAllocator<GN::StrA> > TestArray;

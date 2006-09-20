@@ -218,7 +218,8 @@
         Status rr = (func);                                 \
         if( 0 == rr )                                       \
         {                                                   \
-            GN_ERROR( "XLib function %s failed: return(0x%X).", #func, rr );  \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.XLibError"); \
+            GN_ERROR(sLogger)( "XLib function %s failed: return(0x%X).", #func, rr );  \
             something                                       \
         }                                                   \
     } else void(0)

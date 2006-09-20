@@ -189,7 +189,7 @@ int main()
 
 int main()
 {
-    GN_INFO(sLogger)(sLogger)( "Not implemented on platform other than MSWIN." );
+    GN_INFO(sLogger)( "Not implemented on platform other than MSWIN." );
     return 0;
 }
 

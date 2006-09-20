@@ -50,6 +50,31 @@
 # define sg_strcmp      ::strcmp
 # define sg_stricmp     ::strcasecmp
 # define SOCHAR_T       char
+# ifdef __CYGWIN__
+    int sg_wcscmp( const wchar_t * s1, const wchar_t * s2 )
+    {
+        while( *s1 == *s2 )
+        {
+            if( *s1 == 0 ) return 0;
+            s1++;
+            s2++;
+        }
+        return *s1 - *s2;
+    }
+    int sg_wcsicmp( const wchar_t * s1, const wchar_t * s2 )
+    {
+        while( towlower(*s1) == towlower(*s2) )
+        {
+            if( *s1 == 0 ) return 0;
+            s1++;
+            s2++;
+        }
+        return towlower(*s1) - towlower(*s2);
+    }
+# else
+#   define sg_wcscmp     ::wcscmp
+#   define sg_wcsicmp    ::wcsicmp
+# endif
 #endif
 
 #include <string.h>
@@ -90,11 +115,11 @@ public:
     static wchar_t *strcpy(wchar_t *dst, const wchar_t *src)    { return ::wcscpy(dst, src); }
 
     static int strcmp(const char *s1, const char *s2)           { return sg_strcmp((const SOCHAR_T *)s1, (const SOCHAR_T *)s2); }
-    static int strcmp(const wchar_t *s1, const wchar_t *s2)     { return ::wcscmp(s1, s2); }
+    static int strcmp(const wchar_t *s1, const wchar_t *s2)     { return sg_wcscmp(s1, s2); }
 
     static int stricmp(const char *s1, const char *s2)          { return sg_stricmp((const SOCHAR_T *)s1, (const SOCHAR_T *)s2); }
 #if 1
-    static int stricmp(const wchar_t *s1, const wchar_t *s2)    { return ::wcsicmp(s1, s2); }
+    static int stricmp(const wchar_t *s1, const wchar_t *s2)    { return sg_wcsicmp(s1, s2); }
 #else
     static int stricmp(const wchar_t *s1, const wchar_t *s2)    { return ::wcscasecmp(s1, s2); }
 #endif // _WIN32
@@ -340,8 +365,8 @@ public:
             nFlags |= GLOB_NOCHECK;
         if (m_uiFlags & SG_GLOB_TILDE)
             nFlags |= GLOB_TILDE;
-        if (m_uiFlags & SG_GLOB_ONLYDIR)
-            nFlags |= GLOB_ONLYDIR;
+        //if (m_uiFlags & SG_GLOB_ONLYDIR)  // not supported by glob
+        //    nFlags |= GLOB_ONLYDIR;
         //if (m_uiFlags & SG_GLOB_ONLYFILE) // not supported by glob
         //    nFlags |= GLOB_ONLYFILE;
         //if (m_uiFlags & SG_GLOB_NODOT)    // not supported by glob

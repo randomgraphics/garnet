@@ -9,6 +9,8 @@ static const int INTERESTED_EVENTS = PointerMotionMask | ButtonMotionMask // | P
 
 static const int UNINTERESTED_EVENTS = PointerMotionHintMask;
 
+static GN::Logger * sLogger = GN::getLogger("GN.input.X11");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -76,7 +78,7 @@ bool GN::input::InputX11::attachToWindow( HandleType disp, HandleType win )
 
     if( !disp || !win )
     {
-        GN_ERROR( "Invalid display or window handle!" );
+        GN_ERROR(sLogger)( "Invalid display or window handle!" );
         return false;
     }
 
@@ -118,7 +120,7 @@ void GN::input::InputX11::processInputEvents()
 
     if( !mDisplay || !mWindow )
     {
-        GN_ERROR( "InputX11 is not initialized" );
+        GN_ERROR(sLogger)( "InputX11 is not initialized" );
         return;
     }
 
@@ -180,7 +182,7 @@ void GN::input::InputX11::getMousePosition( int & x, int & y ) const
 
     if( !mDisplay || !mWindow )
     {
-        GN_ERROR( "input system is not attached to a window!" );
+        GN_ERROR(sLogger)( "input system is not attached to a window!" );
         return;
     }
 
