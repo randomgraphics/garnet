@@ -40,6 +40,8 @@
 # define sg_strcpy      ::_mbscpy
 # define sg_strcmp      ::_mbscmp
 # define sg_stricmp     ::_mbsicmp
+# define sg_wcscmp      ::wcscmp
+# define sg_wcsicmp     ::wcsicmp
 # define SOCHAR_T       unsigned char
 #else
 # define __USE_GNU
