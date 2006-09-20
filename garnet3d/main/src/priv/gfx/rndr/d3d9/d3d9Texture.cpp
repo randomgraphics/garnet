@@ -307,7 +307,7 @@ bool GN::gfx::D3D9Texture::initFromFile( File & file )
         D3DXGetImageInfoFromFileInMemory( &buf[0], (UINT)sz, &info ),
         quit(); return selfOK(); );
 
-    LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
+    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
     TextureDesc texDesc;
 
@@ -483,7 +483,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     mD3DFormat = D3DFMT_UNKNOWN;
     if( FMT_DEFAULT == getDesc().format )
     {
-        mD3DFormat = ( TEXUSAGE_DEPTH & getDesc().usage ) ? sGetDefaultDepthTextureFormat( mRenderer ) : D3DFMT_A8R8G8B8;
+        mD3DFormat = ( TEXUSAGE_DEPTH & getDesc().usage ) ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8R8G8B8;
         if( D3DFMT_UNKNOWN == mD3DFormat )
         {
             GN_ERROR(sLogger)( "Fail to detect default texture format." );
@@ -505,7 +505,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     mD3DUsage = texUsage2D3DUsage( getDesc().usage );
 
     // check texture format compatibility
-    HRESULT hr = mRenderer.checkD3DDeviceFormat(
+    HRESULT hr = getRenderer().checkD3DDeviceFormat(
         mD3DUsage, texType2D3DResourceType(getDesc().type), mD3DFormat );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
@@ -784,7 +784,7 @@ void GN::gfx::D3D9Texture::unlock()
 #if !GN_XENON
     if( mLockedTexture != mD3DTexture )
     {
-        GN_DX9_CHECK( mRenderer.getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
+        GN_DX9_CHECK( getRenderer().getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
     }
 #endif
 
@@ -839,17 +839,17 @@ GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
 {
     GN_GUARD;
 
-    LPDIRECT3DDEVICE9 dev = mRenderer.getDevice();
+    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
     // make sure texture format is supported by current device
-    GN_ASSERT( D3D_OK == mRenderer.checkD3DDeviceFormat(
+    GN_ASSERT( D3D_OK == getRenderer().checkD3DDeviceFormat(
         d3dusage, texType2D3DResourceType(getDesc().type), d3dformat ) );
 
 #if !GN_XENON
     // evict managed resources first, if creating texture in default pool.
     if( D3DPOOL_DEFAULT == d3dpool )
     {
-        GN_DX9_CHECK_RV( mRenderer.getDevice()->EvictManagedResources(), 0 );
+        GN_DX9_CHECK_RV( dev->EvictManagedResources(), 0 );
     }
 #endif
 

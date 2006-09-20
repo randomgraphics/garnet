@@ -36,7 +36,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D9Texture( D3D9Renderer & r ) : D3D9Resource(r), mRenderer(r) { clear(); }
+        D3D9Texture( D3D9Renderer & r ) : D3D9Resource(r) { clear(); }
         virtual ~D3D9Texture() { quit(); }
         //@}
 
@@ -156,8 +156,6 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-
-        D3D9Renderer & mRenderer;
 
         //!
         //! D3D texture instance pointer

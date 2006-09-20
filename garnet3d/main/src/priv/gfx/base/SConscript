@@ -4,6 +4,7 @@ sources = [
     'createRenderer.cpp',
     'd3d9FormatUtils.cpp',
     'd3d9ShaderUtils.cpp',
+    'd3d10FormatUtils.cpp',
     'effect.cpp',
     'effectFromXml.cpp',
     'fakeRenderer.cpp',
