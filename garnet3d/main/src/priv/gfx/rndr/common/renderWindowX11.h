@@ -39,7 +39,7 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( HandleType display, HandleType parentWindow, uint32_t width, uint32_t height );
+        bool initInternalRenderWindow( HandleType display, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height );
 
         //!
         //! Delete render window

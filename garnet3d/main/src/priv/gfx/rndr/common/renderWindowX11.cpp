@@ -141,7 +141,7 @@ bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
-    HandleType display, HandleType parentWindow, uint32_t width, uint32_t height )
+    HandleType display, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height )
 {
     GN_GUARD;
 
@@ -168,10 +168,21 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
     }
     else
     {
-        GN_ASSERT( mDisplay && parentWindow );
+        GN_ASSERT( mDisplay && (parentWindow || monitor) );
 
-        // get screen number
-        int scr = getScreenNumberOfWindow( mDisplay, (Window)parentWindow );
+        int scr = -1;
+        if( parentWindow )
+        {
+            scr = getScreenNumberOfWindow( mDisplay, (Window)parentWindow );
+        }
+        else if( monitor )
+        {
+            scr = (int)monitor;
+        } 
+        else
+        {
+            GN_UNEXPECTED();
+        }
         if( scr < 0 ) return false;
 
         // Choose an appropriate visual

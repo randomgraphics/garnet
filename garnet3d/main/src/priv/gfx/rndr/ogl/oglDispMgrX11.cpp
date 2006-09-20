@@ -50,14 +50,14 @@ bool GN::gfx::OGLRenderer::dispDeviceCreate()
     mRenderContext = glXCreateContext( disp, &vi, 0, GL_FALSE );
     if( 0 == mRenderContext )
     {
-        GN_ERROR( "Fail to create GLX context." );
+        GN_ERROR(sLogger)( "Fail to create GLX context." );
         return false;
     }
 
     // make the context as current render context.
     if( !glXMakeCurrent( disp, win, mRenderContext ) )
     {
-        GN_ERROR( "glXMakeCurrent() failed." );
+        GN_ERROR(sLogger)( "glXMakeCurrent() failed." );
         return false;
     }
 
@@ -86,7 +86,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
     {
         if( !glXSwapIntervalSGI( getOptions().vsync ) )
         {
-            GN_WARN( "Fail to adjust SGI swap control" );
+            GN_WARN(sLogger)( "Fail to adjust SGI swap control" );
         }
     }
 
