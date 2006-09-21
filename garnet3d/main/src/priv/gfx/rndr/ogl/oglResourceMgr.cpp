@@ -137,6 +137,10 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                     return 0;
             }
 
+        case SHADER_GS:
+            GN_ERROR(sLogger)( "OpenGL does not support GeometryShader." );
+            return 0;
+
         default:
             GN_UNEXPECTED(); // program should not reach here
             GN_ERROR(sLogger)( "invalid shader type: %d", type );

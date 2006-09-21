@@ -19,6 +19,7 @@ namespace GN { namespace gfx
     {
         SHADER_VS,        //!< vertex shader
         SHADER_PS,        //!< pixel shader
+        SHADER_GS,        //!< geometry shader (D3D10 only)
         NUM_SHADER_TYPES  //!< number of available shader types
     };
 
@@ -552,7 +553,7 @@ namespace GN { namespace gfx
     inline const char *
     shaderType2Str( ShaderType type )
     {
-        static const char * sTable [] = { "VS", "PS" };
+        static const char * sTable [] = { "VS", "PS", "GS" };
         if( 0 <= type && type < NUM_SHADER_TYPES )
             return sTable[type];
         else
@@ -571,7 +572,7 @@ namespace GN { namespace gfx
     inline bool
     str2ShaderType( ShaderType & type, const char * str )
     {
-        static const char * sTable [] = { "VS", "PS" };
+        static const char * sTable [] = { "VS", "PS", "GS" };
         if( str )
         {
             for( int i = 0; i < 2; ++i )
