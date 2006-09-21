@@ -72,6 +72,9 @@
 ISSUES
 ======
 
+- Uniform interface for different APIs is too difficult, and maybe pointless.
+  How about a higher level abstraction: material/effect system?
+
 - Do we need embed buffer for short string?
 
 - Custom string class or std::string?
