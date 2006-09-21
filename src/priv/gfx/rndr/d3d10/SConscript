@@ -3,6 +3,7 @@ sources = [
     'd3d10DispMgr.cpp',
     'd3d10DrawMgr.cpp',
     'd3d10Renderer.cpp',
+    'd3d10Texture.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 GN.newTarget( 'shlib', 'GNrndrD3D10', [cluster], dependencies = ['GNrndrCommon'] )

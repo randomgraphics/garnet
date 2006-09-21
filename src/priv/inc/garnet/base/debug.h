@@ -207,6 +207,38 @@
 //!
 #define GN_DX9_CHECK_RV( func, rval ) GN_DX9_CHECK_DO( func, return rval; )
 
+//!
+//! DX9 error check routine
+//!
+#define GN_DX10_CHECK_DO( func, something )                                  \
+    if( true ) {                                                             \
+        HRESULT rr = func;                                                   \
+        if( FAILED(rr) )                                                     \
+        {                                                                    \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.DX10Error"); \
+            GN_ERROR(sLogger)( "D3D10 error : 0x%X", rr );                   \
+            something                                                        \
+        }                                                                    \
+    } else void(0)
+
+//!
+//! DX error check routine
+//!
+#if GN_DEBUG_BUILD
+#define GN_DX10_CHECK( func )         GN_DX10_CHECK_DO( func, )
+#else
+#define GN_DX10_CHECK( func )         func
+#endif
+
+//!
+//! DX error check routine
+//!
+#define GN_DX10_CHECK_R( func )        GN_DX10_CHECK_DO( func, return; )
+
+//!
+//! DX error check routine
+//!
+#define GN_DX10_CHECK_RV( func, rval ) GN_DX10_CHECK_DO( func, return rval; )
 
 #elif GN_POSIX
 
