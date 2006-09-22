@@ -1,3 +1,6 @@
+- 2006.9.22
+  - upgrade to version 0.8.0
+
 - 2006.9.2
   - UT for Str::findFirst/LastOf(...)
   - continue implementing new log system
@@ -57,7 +60,7 @@
   - call convension support to functor
   - switchable runtime assert behavior
 
-- Before 2006.3.38
+- Before 2006.3.28
   - Rewrite SCons script
   - sample: render to texture
   - import a GUI toolkit : FOX-TOOLKIT
