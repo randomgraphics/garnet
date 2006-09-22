@@ -1,0 +1,293 @@
+0.8.0 (2006.9.22)
+=================
+- added
+  - custom array template
+  - BMP image loader
+  - endian swap util functions
+  - str2Int() functions
+- refined
+  - user-supplied hints to shader creation
+  - call convension support to functor
+  - switchable runtime assert behavior
+  - new structure RenderContext to fully define states of renderer
+  - new quad rendering option: DQ_DEPTH_ENABLE
+  - log4j like Log system
+  - refine interface of File class
+  - simplify variant and registry class to make them more intuitive 
+  - refine build script
+- experimental
+  - D3D10 renderer (working in progress)
+  - FatMesh class: universal mesh class (working in progress)
+
+0.7.2a (2005.6.11)
+==================
+- refined
+  - reimplement autoscope using boost::bind, to fix immediate number bug.
+
+0.7.2 (2005.4.9)
+================
+
+- added
+  - load image from .PGN file
+  - new option to enable/disable auto-restore of desktop display mode, to
+    support multi-screen debugging.
+  - new option to enable/disable shadow-copy of vertex/index buffer
+  - full support of DirectX volume texture
+  - add default fullscreen mode: set fullscreen width and height to 0 to use
+    default fullscreen mode.
+- modified/improved
+  - improved support to variable sized font, such arial.
+  - simplified vertex declaration (previous vertex format) classes
+  - better implemented "NULL" geomblock instance.
+  - improved build script: build multiple variants by single command line.
+  - polish various tag<->string conversion routines (renderstates, render_i).
+- fixed
+  - freetype2 font vertical alignment is ok now.
+  - fix d3d device creation bug on card w/o hardwareTnL support.
+  - fix bugs of redendent device resetting when switching back from fullscreen mode.
+- removed
+  - N/A
+- experimental
+  - partial support of OpenGL 3D texture
+
+0.7.1a (2004.1.10)
+==================
+
+- reorgonize code into various namespaces: GN, GNcore, GNscene, GNapp
+
+0.7.1 (2004.1.8)
+================
+
+- added
+  - build-in jpeg and dds support, no more depends on DevIL
+  - OpenGL compressed texture support
+  - .X support to meshmaker
+  - RenderMonkey geometry import plugin
+  - new tool: meshviewer
+
+- modified/improved?
+  - pure text mesh desciption file
+  - non-index geometry (point sprites, for example)
+  - new color format definitions, more simple and intuitive
+  - simplified configuration file format
+  - improved template configration class
+  - upgrade to lua 5.1(work4) and GLEW v1.3.0
+  - improved string support on cygwin
+
+- fixed
+  - 2D texture filter problem (now exact match from texel to pixel)
+
+- removed
+  - remove unicode compilation and tag "GN_T" for simplicity
+
+- experimental
+  - draft unit test framework
+
+0.7.0a (2004.11.16)
+===================
+
+- added
+  - General
+    - 全新的以scons(www.scons.org)为基础的跨平台编译环境
+    - 新的app模块，方便用户建立自己的应用程序
+    - 整合glut，已经可以在linux下运行
+    - 支持命令行参数
+    - in-game performance profiler
+    - 用WTL替换掉MFC
+    - Null device implementation
+  - Graphics
+    - 支持运行时切换显示底层
+    - 支持D3D HLSL
+    - 支持OpenGL Shading Language 1.0
+    - 升级D3D版本到 9.0c october update 2004
+    - 支持 "render to texture"
+    - 支持多显示器
+    - 全新的surface format定义
+    - 通用的mipmap类（API无关）
+- fixed
+  - Fix bug of handling "control-under-mouse" in GUI module
+  - Fix bug of unproperly setting current vsh/psh pointer and
+    vsh/psh function table in rdx module
+  - Fix bug when loading effect from XML file.
+  - Fix inconsistent diffuse in im3drenderer
+- modified/improved
+  - General
+    - 全面支持unicode
+    - 全模版化的几何类型(vector,matrix,...)
+    - lua格式的系统配置文件
+    - 简化的log系统，更加直观，且支持文字属性设定
+    - 集成的文件和窗口系统
+    - integrate math module into types module
+    - Replace expat with TinyXML for ease of use
+    - improved signal/slot implementation: now support return value
+    - support "bad/null" resource instance, remove necessity of checking null resource pointer
+  - Graphics
+    - 简化的shader参数设置方式
+    - replace GLsdk with glew
+- experimental
+  - RenderMonkey的插件
+- removed
+  - tokenzier class (replaced by conterparts in boost)
+  - heightmap
+  - geomipmap based terrain
+  - FFT based water
+- issues
+  - compatbility with stlport is yet to verfied
+
+0.6.8 ( 2003-07-28 )
+====================
+
+- added :
+  - 对Programmable Pixel Shader的支持
+  - 对高级shader语言Cg的支持
+  - 新的effect系统以取代原先的FX类
+  - 基于XML的grapchis effect描述
+  - 对cubemap的支持
+  - 生成/读取/修改mipmap功能
+  - 新的vertex semantic : VERTSEM_FOGCOORD, VERTSEM_TANGENT, VERTSEM_BINORMAL，
+    用来支持tangent space的特效
+  - 对OpenGL VBO的支持
+  - 给render_i增加了一个device-lost-signal，以便外部程序
+    能够及时reload丢失的资源
+
+- fixed :
+  - GUI模块中处理输入焦点时的一个bug
+  - rsblock处理无效值以及处理多层贴图时的bug
+  - 修正了切换可编程和固定流水线时的bug
+
+- modified/improved :
+  - 取消了IBuffer和VBuffer的双缓冲机制（太费内存）
+  - 将矩阵改为 row-major 形式，因为programmable pipeline中通常都需
+    要输入行形式的矩阵。
+  - 简化frame的代码为只支持刚体变换（用quaternion来记录旋转操作）
+  - 在quadrender_c中增加了对2D图片的修正操作，以保证texel和pixel
+    的精确对应
+  - 取消了fontcache_c中的修正操作和字符间的隔离区，以增加一张贴图中可
+    容纳的字符数
+  - 改进了rsblock处理multi-texstage的方式
+
+- experimental
+ ( not well implemented, may change or being canceled in future version )
+  - rendering to texture
+  - heightmap
+  - geomipmap based terrain
+  - FFT based water
+
+0.6.7 ( 2003-04-14 )
+====================
+
+- 将工程文件升级到了VS.NET 2003版；
+
+- 对render模块做了较大的调整：
+  . 分离render模块中的modelview变换为独立的view和world变换
+  . 修改了vbuffer的语义：现在一个vbuffer类内包含了多个vertex stream
+  . 修改了vshader单元的实现，以方便支持Cg等高级语言
+  . 取消了独立的vertmap单元，现在vertmap是作为vshader的一个附属类
+  . 修改rsblock的实现方案，大幅提高了其执行效率（尤其是OpenGL版本）
+  . new renderer option : VSYNC
+  . 把primitve_t和vertex format类型和rsblock的基本定义都挪到了types模块；
+
+- 在types模块中增加了file_i类，作为基本的文件类型接口；所有读取文件
+  的操作都改为通过file_i类来实现，以方便将来使用虚拟文件系统；
+
+- 重新实现了mesh类，并整合入现有的资源系统中；
+
+- Misc Modifications
+  . 改用DevIL来读取图象文件；
+  . 实现了scene模块中负责三维变换的frame_c类
+  . camera的视点变换功能移交frame_c类完成
+  . 删除math模块中的euler类
+  . 修正了计算逆矩阵函数中的一个错误
+  . 将input_i::sig_char_press的参数改为wchar_t，以支持中文字符
+
+
+
+0.6.6 ( 2003-03-06 )
+====================
+
+从上次版本升级到现在已经很长时间了，期间garnet库已经有了很大的改变：
+
+- 主要变化
+  . 新增了特效类fx_c，统管所有物体的渲染，全面支持可编程流水线。
+  . 将rdx模块升级了DirectX 9.0；
+  . 增强了对中文的支持，现在可以全屏输出数千个字符而不严重降低
+    程序的性能（最多4096个）；
+  . 新增了两个专用渲染器：quadrender(四边形渲染器)和im3drender
+    （立即模式渲染器）；
+  . 增加了统一的资源管理系统，现在大部分的外部资源都已经整合到了这个
+    新系统中。
+
+- 模块的增减/调整/重命名
+  . 新增字体设备：fswin和fsft2
+  . 新增虚拟文件设备：vfansi
+  . 新模块：toolkits，来代替原先example包中的common库；
+  . 将utils模块合并到types模块中；
+  . 将geom3d模块改名为math模块；
+
+- misc
+  . 在rgl模块中增加了一个新的单元：Caps Manager，代替原先的glext单元
+  . 给config_c增加了用整数索引变量的功能（速度比直接用名字索引快得多）
+  . 将render单元的资源改成非CIF类，简化了系统的复杂度；
+  . 给camctrl_c类增加了插值功能，以获得顺滑的动画效果；
+  . 修改了定义顶点格式的方式（摒弃了原先的二维数组方式）；
+  . 修改了input单元输出键盘消息的方式，使得应用程序可以很容易的响应
+    诸如CTRL-Y,ALT-X之类的组合键； 同时，增加过滤操作，以修正不对称
+    的按键事件（比如连续两次发送同一个键的按下消息）。
+
+
+0.6.5 ( 2002-11-16 )
+===================
+- 用unreal风格的guard/unguard宏替换了大部分的try/catch block；
+- 用新的vertmap模块替代了目前的vshader模块；
+- replace simple camera class with CIF based "camera_i"；
+- 使用了新的引用计数机制；
+- 使用了http://sigslot.sf.net的signal/slot库来简化模块间的耦合性；
+- 将工程文件升级到了vc7/vc.net，以后将不再支持vc6；
+- 大幅度简化了CIF系统中不常用的功能，并且使用模板函数取代了大部分的
+  宏，使代码更加清晰易懂，且更安全；
+- 将render模块display子单元中窗口管理的部分独立成了一个新的模块：
+  . window模块，用来管理和窗口相关的事宜（如窗口消息处理等等〕，使得
+  . render模块的功能更清晰；
+- 新的功能模块：GUI模块，用来实现通用的用户界面（参见例子程序uidemo）。
+
+0.6.4 ( 2002-9-26 )
+===================
+- 简化了render模块的结构，将原先的多个子接口整合到了单一的render_i中；
+- 放弃原先句柄形式的显示资源，改用了基于CIF的指针资源；
+- 删除了render模块中的pshader类型，代之以新的rsblock(RenderStateBlock)；
+- 在rgl模块中采用了Intel GLsdk来管理opengl extension；
+- 在异常处理单元中增加了function guard系列宏，以增加可调试性；
+- 将cif类的版本号由全局变量改为静态成员函数，从而避免了名字冲突；
+
+0.6.3 ( 2002-8-28 )
+===================
+- 修改了render_i::draw_mgr_i的接口，以便于对Vertex(Index)Buffer的共享；
+- 修正了rdx模块中恢复丢失设备后VertexShader管理器无法还原的错误；
+- 在所有的动态模块中增加了对核心版本的检测；
+- 修改了系统事件的定义（详见comp/eventdef.h）；
+- bug fixes.
+
+0.6.2 ( 2002-6-27 )
+===================
+- 修改了render_i::transform_mgr_i的接口
+- 修改了camera_c的实现
+- 新函数CORE_get_version()
+
+0.6.1 ( 2002-6-5 )
+==================
+- 在新开发的CIF(Common Interface Framework)系统的支持下，重构了系统的plugin
+  机制，对原有的系统结构作了很大的调整。
+
+0.5.2a ( 2002-4-11 )
+==================
+- 将用户定制的部分（包括：主程序、user模块和节点库）从引擎中独立出来。
+
+0.5.2 ( 2002-3-7 )
+==================
+- 将font单元移出了render模块，成为一个新的节点类: fontnode_n
+
+0.5.1 ( 2002-3-6 )
+==================
+- 将顶点格式的定义从_vshader_mgr.h中移到了新的头文件_vertex_format.h中
+- 在vbuffer类中记录了顶点的格式
+- 彻底消除了font单元在不同API之间的差异
