@@ -338,7 +338,7 @@ def generate(env):
         env['AR']        = 'xilib'
         env['LINK']      = 'xilink'
         if float(env.get('MSVS_VERSION',0)) >= 8.0:
-            env.Append( LINKFLAGS = ['/MANIFEST', '/MANIFESTDEPENDENCY:dependency'] )
+            env.Append( LINKFLAGS = ['/MANIFEST'] )
         #env.Append( CCFLAGS = ['/QH'] )
         #env.Append( LINKFLAGS = ['/VERBOSE:LIB'] )
     else:

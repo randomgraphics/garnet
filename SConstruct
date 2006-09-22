@@ -886,7 +886,9 @@ def BUILD_addDependencies( env, name, deps ):
 # does compiler produce manifest file?
 #
 def BUILD_handleManifest( env, target ):
-    if 'vc80' == BUILD_compiler.name and not UTIL_staticBuild( BUILD_variant ):
+    if ( float(env.get('MSVS_VERSION',0)) >= 8.0
+       and ('cl' == env['CC'] or 'icl' == env['CC'] )
+       and not UTIL_staticBuild( BUILD_variant ) ) :
         manifest = File( '%s.manifest'%target[0] )
         env.SideEffect( manifest, target )
         target += [manifest]
