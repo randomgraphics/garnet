@@ -178,7 +178,7 @@ void GN::gfx::D3D9Renderer::contextDeviceDestroy()
 	if( mDevice )
 	{
 		for( uint32_t i = 0; i < getCaps(CAPS_MAX_TEXTURE_STAGES); ++i ) mDevice->SetTexture( i, 0 );
-		for( uint32_t i = 0; i < MAX_VERTEX_STREAMS; ++i ) mDevice->SetStreamSource( i, 0, 0, 0 );
+		for( uint32_t i = 0; i < MAX_VERTEX_ATTRIBUTES; ++i ) mDevice->SetStreamSource( i, 0, 0, 0 );
 		mDevice->SetIndices( 0 );
 		mDevice->SetVertexDeclaration( 0 );
 		mDevice->SetVertexShader( 0 );

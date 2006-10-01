@@ -16,6 +16,7 @@ sources = [
     'imagePNG.cpp',
     'imageTGA.cpp',
     'renderState.cpp',
+    # 'nes.cpp',
     'shape.cpp',
     'vertex.cpp',
 ]

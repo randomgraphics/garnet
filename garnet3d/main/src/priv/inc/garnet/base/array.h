@@ -67,7 +67,7 @@ namespace GN
 
         void doClone( const StackArray & other )
         {
-            copyElements( mElements, other.mElements, mCount );
+            copyElements( mElements, other.mElements, other.mCount );
             mCount = other.mCount;
         }
 
@@ -92,6 +92,12 @@ namespace GN
             {
                 mElements[i] = mElements[i+1];
             }
+        }
+
+        bool equal( const StackArray & other ) const
+        {
+            if( mCount != other.mCount ) return false;
+            return 0 == ::memcmp( mElements, other.mElements, sizeof(T)*mCount );
         }
 
     public:
@@ -136,6 +142,7 @@ namespace GN
         /** do nothing if position is invalid or array is full */
         void      insert( size_t position, const T & t ) { doInsert( position, t ); }
         void      resize( size_t count ) { if( count > N ) { GN_WARN(sLogger)("count is too large!"); count = N; } mCount = count; }
+        void      pushBack( const T & t ) { doInsert( size(), t ); }
         void      popBack() { if( mCount > 0 ) --mCount; }
         size_t    size() const { return mCount; }
         //@}
@@ -144,6 +151,8 @@ namespace GN
         //!
         //@{
         StackArray & operator=( const StackArray & other ) { doClone(other); return *this; }
+        bool         operator==( const StackArray & other ) const { return equal(other); }
+        bool         operator!=( const StackArray & other ) const { return !equal(other); }
         T          & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
         const T    & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         //@}
@@ -241,6 +250,12 @@ namespace GN
             }
         }
 
+        bool equal( const DynaArray & other ) const
+        {
+            if( mCount != other.mCount ) return false;
+            return 0 == ::memcmp( mElements, other.mElements, sizeof(T)*mCount );
+        }
+
     public:
 
         typedef T ElementType; //!< element type
@@ -298,6 +313,8 @@ namespace GN
         //!
         //@{
         DynaArray & operator=( const DynaArray & other ) { doClone(other); return *this; }
+        bool        operator==( const DynaArray & other ) const { return equal(other); }
+        bool        operator!=( const DynaArray & other ) const { return !equal(other); }
         T         & operator[]( size_t i ) { GN_ASSERT( i < mCount ); return mElements[i]; }
         const T   & operator[]( size_t i ) const { GN_ASSERT( i < mCount ); return mElements[i]; }
         //@}

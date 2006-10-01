@@ -204,7 +204,7 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void RendererContext::setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride )
     {
-        GN_ASSERT( index < (size_t)MAX_VERTEX_STREAMS );
+        GN_ASSERT( index < (size_t)MAX_VERTEX_ATTRIBUTES );
         if( !flags.vtxBufs || index >= numVtxBufs )
         {
             if( index >= numVtxBufs && NULL == buffer ) return;

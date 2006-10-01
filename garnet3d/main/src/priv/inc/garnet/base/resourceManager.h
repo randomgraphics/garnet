@@ -33,7 +33,7 @@ namespace GN
     }
 
     //!
-    //! Resource manager.
+    //! Resource manager. Used to do mapping among name and ID and instance.
     //!
     //! RES must support default constructor and assignment operation.
     //!
@@ -63,12 +63,12 @@ namespace GN
     //!   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
     //!     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
     //!
-    template<typename RES, bool SINGLETON=false>
-    class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,SINGLETON>,SINGLETON>::type
+    template<typename RES, typename HANDLE=uint32_t, bool SINGLETON=false>
+    class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,HANDLE,SINGLETON>,SINGLETON>::type
     {
     public:
 
-        typedef uint32_t HandleType; //!< resource Handle. 0 means invalid handle
+        typedef HANDLE HandleType; //!< resource Handle. 0 means invalid handle
 
         typedef RES ResType; //!< resource type
 
@@ -476,8 +476,6 @@ namespace GN
 
     private:
 
-        typedef ResourceManager<RES,SINGLETON> MyType;
-
         struct ResDesc
         {
             Creator creator;
@@ -634,7 +632,9 @@ namespace GN
         }
     };
 
-    template<typename RES, bool SINGLETON> GN::Logger * ResourceManager<RES,SINGLETON>::sLogger = getLogger("GN.base.ResourceManager");
+    template<typename RES, typename HANDLE, bool SINGLETON>
+    GN::Logger * ResourceManager<RES,HANDLE,SINGLETON>::sLogger = getLogger("GN.base.ResourceManager");
+
 }
 
 // *****************************************************************************

@@ -272,6 +272,67 @@ namespace GN
     void enableCRTMemoryCheck();
 
     //!
+    //! FOURCC structure
+    //!
+    union FOURCC
+    {
+        uint32_t      u32;   //!< FOURCC as unsigned 32-bit integer
+        int32_t       i32;   //!< FOURCC as 32-bit integer
+        char          c8[4]; //!< FOURCC as 4 characters
+        unsigned char u8[4]; //!< FOURCC as 4 unsigned characters
+
+        //!
+        //! conver to string
+        //!
+        const char * toStr() const
+        {
+            static char s[5];
+            s[0] = c8[0];
+            s[1] = c8[1];
+            s[2] = c8[2];
+            s[3] = c8[3];
+            s[4] = 0;
+            return s;
+        }
+
+        //!
+        //! convert from string
+        //!
+        void fromStr(const char * str )
+        {
+            u32 = 0;
+            if( str )
+            {
+                int i = 0;
+                while( *str && i < 4 )
+                {
+                    c8[i] = *str;
+                    ++str;
+                    ++i;
+                }
+            }
+        }
+
+        //!
+        //! Make FOURCC by 4 characters
+        //!
+        static FOURCC sMake( char c0, char c1, char c2, char c3 )
+        {
+            GN_CASSERT( 4 == sizeof(FOURCC) );
+            FOURCC r;
+            r.u32 = GN_MAKE_FOURCC( c0, c1, c2, c3 );
+            return r;
+        }
+
+        //! \name commonly used operators
+        //@{
+        bool operator ==( const FOURCC & rhs ) const { return u32 == rhs.u32; }
+        bool operator !=( const FOURCC & rhs ) const { return u32 == rhs.u32; }
+        bool operator < ( const FOURCC & rhs ) const { return u32 <  rhs.u32; }
+        //@}
+    };
+
+    //!
     //! Hard to explain in English, please see code by your self :)
     //!
     struct ScopeBool

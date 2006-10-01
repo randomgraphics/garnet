@@ -11,7 +11,7 @@ namespace GN
     //!
     //! Shared library class
     //!
-    class SharedLib
+    class SharedLib : public NoCopy
     {
         // ********************************
         // ctor/dtor
@@ -45,6 +45,11 @@ namespace GN
         //! \note All symbols of the library will be invalidated as well.
         //!
         void free();
+
+        //!
+        //! Get library handle
+        //!
+        void * getHandle() const { return mHandle; }
 
         //!
         //! Get pointer of specified symbol of the shared library.

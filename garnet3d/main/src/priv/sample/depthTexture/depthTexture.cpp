@@ -52,8 +52,8 @@ public:
 
         // create decl
         VtxFmtDesc fmt;
-        fmt.addAttrib( 0,  0, VTXSEM_COORD, FMT_FLOAT3 );
-        fmt.addAttrib( 0, 12, VTXSEM_NORMAL, FMT_FLOAT3 );
+        fmt.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT3 );
+        fmt.addAttrib( 0, 12, VTXSEM_NML0, FMT_FLOAT3 );
         fmt.addAttrib( 0, 24, VTXSEM_TEX0, FMT_FLOAT2 );
         mDecl = r.createVtxFmt( fmt );
         if( 0 == mDecl ) return false;
