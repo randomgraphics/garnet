@@ -37,6 +37,32 @@ GN::gfx::ImageDesc::getMipmap( size_t face, size_t level ) const
 //
 //
 // -----------------------------------------------------------------------------
+GN_INLINE GN::gfx::ImageType GN::gfx::ImageDesc::getImageType() const
+{
+    if( 0 == numLevels || 0 == numFaces ) return IMAGE_UNKNOWN;
+
+    const MipmapDesc & desc = getMipmap( 0, 0 );
+
+    if( 1 == numFaces )
+    {
+        if( 1 == desc.depth )
+        {
+            if( 1 == desc.height ) return IMAGE_1D;
+            else return IMAGE_2D;
+        }
+        else return IMAGE_3D;
+    }
+    else if( 6 == numFaces && 1 == desc.depth && desc.width == desc.height )
+    {
+        return IMAGE_CUBE;
+    }
+    else return IMAGE_UNKNOWN;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_INLINE size_t GN::gfx::ImageDesc::getTotalBytes() const
 {
     size_t nbytes = 0;

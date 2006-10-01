@@ -180,7 +180,7 @@ namespace GN { namespace gfx
             AutoRefArray<Texture,MAX_RENDER_TARGETS> colorBuffers;
             AutoRef<const Texture>                   depthBuffer;
             AutoRefArray<Texture,MAX_TEXTURE_STAGES> textures;
-            AutoRefArray<VtxBuf,MAX_VERTEX_STREAMS>  vtxBufs;
+            AutoRefArray<VtxBuf,MAX_VERTEX_ATTRIBUTES>  vtxBufs;
             AutoRef<const IdxBuf>                    idxBuf;
         };
 

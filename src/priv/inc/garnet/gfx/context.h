@@ -156,7 +156,7 @@ namespace GN { namespace gfx
         const Texture *       textures[MAX_TEXTURE_STAGES]; //!< texture list
         size_t                numTextures; //!< texture count
         VtxFmtHandle          vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
-        VtxBufDesc            vtxBufs[MAX_VERTEX_STREAMS]; //!< vertex buffers.
+        VtxBufDesc            vtxBufs[MAX_VERTEX_ATTRIBUTES]; //!< vertex buffers.
         size_t                numVtxBufs; //!< vertex buffer count.
         const IdxBuf *        idxBuf; //!< index buffer
 

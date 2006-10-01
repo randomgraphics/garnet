@@ -37,7 +37,7 @@ namespace GN { namespace gfx
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
-        void clear() {}
+        void clear() { mStreamBindings.clear(); mStateBindings.clear(); }
         //@}
 
         // ********************************
@@ -51,12 +51,17 @@ namespace GN { namespace gfx
         const VtxFmtDesc & getFormat() const { return mFormat; }
 
         //!
-        //! Bind the binding to device
+        //! Get vertex format descriptor
+        //!
+        size_t getNumStreams() const { return mStreamBindings.size(); }
+
+        //!
+        //! Bind the format to device
         //!
         void bind() const;
 
         //!
-        //! Bind the binding to device
+        //! Bind the buffer to device
         //!
         void bindBuffer( size_t index, const uint8_t * buf, size_t startVtx, size_t stride ) const;
 
@@ -65,12 +70,78 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        VtxFmtDesc mFormat;
+        struct AttribBindingInfo
+        {
+            const OGLVtxFmt * self;
+            size_t            offset;
+            size_t            texStage;
+            GLuint            attribute;
+            GLuint            format;
+            GLuint            components;
+            GLboolean         normalization;
+        };
+
+        typedef void (*FP_setOglVertexBuffer)( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+
+        struct AttribBinding
+        {
+            AttribBindingInfo     info;
+            FP_setOglVertexBuffer func;
+            void bind( const uint8_t * buf, size_t stride ) const
+            {
+                GN_ASSERT( func );
+                func( info, buf, stride );
+            }
+        };
+
+        typedef StackArray<AttribBinding,MAX_VERTEX_ATTRIBUTES> StreamBinding;
+
+        struct StateBindingInfo
+        {
+            const OGLVtxFmt * self;
+            size_t            texStage;
+            GLenum            semantic;
+            GLuint            attribute;
+        };
+
+        typedef void (*FP_setOglVertexState)( const StateBindingInfo & );
+
+        struct StateBinding
+        {
+            StateBindingInfo     info;
+            FP_setOglVertexState func;
+        };
+
+        VtxFmtDesc                                       mFormat;
+        StackArray<StreamBinding, MAX_VERTEX_ATTRIBUTES> mStreamBindings;
+        StackArray<StateBinding , MAX_VERTEX_ATTRIBUTES> mStateBindings;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        // stream binding utils
+        bool setupStreamBindings();
+        bool setupAttribBinding( AttribBinding &, const VtxFmtDesc::AttribDesc & );
+        static void sDummyStreamBinding( const AttribBindingInfo &, const uint8_t * , size_t ) {};
+        static void sSetVertexPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sSetNormalPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sSetColorPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sSetSecondaryColorPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sSetFogPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sSetTexCoordPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sSetVertexAttributePointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+
+        // state binding utils
+        bool setupStateBindings();
+        static void sDummyStateBinding( const StateBindingInfo & ) {}
+        static void sEnableClientState( const StateBindingInfo & info );
+        static void sDisableClientState( const StateBindingInfo & info );
+        static void sEnableVAA( const StateBindingInfo & info );
+        static void sDisableVAA( const StateBindingInfo & info );
+        static void sEnableTexArray( const StateBindingInfo & info );
+        static void sDisableTexArray( const StateBindingInfo & info );
     };
 }}
 

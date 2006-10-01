@@ -6,39 +6,7 @@ class Tag2StrTest : public CxxTest::TestSuite
 public:
     void testVertexSemantic()
     {
-        GN::gfx::VtxSem tag[] = {
-            #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) GN::gfx::VTXSEM_##tag,
-            #include "garnet/gfx/vertexSemanticMeta.h"
-            #undef GNGFX_DEFINE_VTXSEM
-        };
-        const char * str[] = {
-            #define GNGFX_DEFINE_VTXSEM( tag, d3decl, d3dindex, glname, glindex, cgname ) #tag,
-            #include "garnet/gfx/vertexSemanticMeta.h"
-            #undef GNGFX_DEFINE_VTXSEM
-        };
-
-        GN::StrA s;
-        GN::gfx::VtxSem t = GN::gfx::VTXSEM_INVALID;
-
-        for( int i = 0; i < GN::gfx::NUM_VTXSEMS; ++i )
-        {
-            TS_ASSERT( GN::gfx::vtxSem2Str(s,tag[i]) );
-            TS_ASSERT_EQUALS( str[i], s );
-
-            TS_ASSERT_EQUALS( str[i], GN::gfx::vtxSem2Str(tag[i]) );
-
-            TS_ASSERT( GN::gfx::str2VtxSem( t, str[i] ) );
-            TS_ASSERT_EQUALS( tag[i], t );
-
-            TS_ASSERT_EQUALS( tag[i], GN::gfx::str2VtxSem( str[i] ) );
-        }
-
-        TS_ASSERT( !GN::gfx::vtxSem2Str(s,GN::gfx::NUM_VTXSEMS) );
-        TS_ASSERT_EQUALS( "BAD_VTXSEM", GN::gfx::vtxSem2Str(GN::gfx::NUM_VTXSEMS) );
-        TS_ASSERT( !GN::gfx::str2VtxSem( t, "haha" ) );
-        TS_ASSERT( !GN::gfx::str2VtxSem( t, NULL ) );
-        TS_ASSERT_EQUALS( GN::gfx::VTXSEM_INVALID, GN::gfx::str2VtxSem( "haha" ) );
-        TS_ASSERT_EQUALS( GN::gfx::VTXSEM_INVALID, GN::gfx::str2VtxSem( NULL ) );
+        GN_UNIMPL_WARNING();
     }
 
     void testRenderState()

@@ -1,3 +1,13 @@
+- 2006.10.1
+  - merge changes in nes branch back to main tree
+
+- 2006.9.30
+  - continue working on new effect system...
+  - refine resource manager to allow template handle type
+  - refine FOURCC structure
+  - new method to class SharedLib to get library handle
+  - new method to class ImageDesc to determine image type (1D, 2D, cube and etc.)
+
 - 2006.9.22
   - upgrade to version 0.8.0
 

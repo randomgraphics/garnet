@@ -24,6 +24,7 @@ namespace GN
             mutable T value;
             bool      occupied;
 
+            Item() : occupied(true) {}
             Item( const T & v ) : value(v), occupied(true) {}
         };
 
@@ -98,7 +99,7 @@ namespace GN
         }
 
         //!
-        //! Add new item
+        //! Add new item with user define value
         //!
         HANDLE_TYPE add( const T & val )
         {
@@ -113,6 +114,26 @@ namespace GN
                 mFreeList.pop_back();
                 GN_ASSERT( !mItems[i].occupied );
                 mItems[i].value = val;
+                mItems[i].occupied = true;
+                return (HANDLE_TYPE)(i+1);
+            }
+        }
+
+        //!
+        //! Add new item, with undefined value
+        //!
+        HANDLE_TYPE newItem()
+        {
+            if( mFreeList.empty() )
+            {
+                mItems.resize( mItems.size() + 1 );
+                return (HANDLE_TYPE)mItems.size();
+            }
+            else
+            {
+                size_t i = mFreeList.back();
+                mFreeList.pop_back();
+                GN_ASSERT( !mItems[i].occupied );
                 mItems[i].occupied = true;
                 return (HANDLE_TYPE)(i+1);
             }

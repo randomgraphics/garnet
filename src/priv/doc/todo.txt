@@ -33,6 +33,7 @@
 
 - p2
   - UT
+    - array classes
     - LRU list in resource manager
     - make sure OGL resource creation/deletion do not affect renderer states
     - format conversion between ClrFmt and D3DFMT

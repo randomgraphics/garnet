@@ -77,7 +77,7 @@ static inline void sApplyVtxBuf(
     using namespace GN;
     using namespace GN::gfx;
 
-    for( size_t i = 0; i < vtxFmt.getFormat().numStreams; ++i )
+    for( size_t i = 0; i < vtxFmt.getNumStreams(); ++i )
     {
         const RendererContext::VtxBufDesc & vbd = vtxBufs[i];
 
@@ -259,7 +259,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
-        mVtxFmts[mContext.vtxFmt]->getFormat().numStreams <= mContext.numVtxBufs );
+        mVtxFmts[mContext.vtxFmt]->getNumStreams() <= mContext.numVtxBufs );
     sApplyVtxBuf(
         *mVtxFmts[mContext.vtxFmt],
         mContext.vtxBufs,
@@ -332,7 +332,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
-        mVtxFmts[mContext.vtxFmt]->getFormat().numStreams <= mContext.numVtxBufs );
+        mVtxFmts[mContext.vtxFmt]->getNumStreams() <= mContext.numVtxBufs );
     sApplyVtxBuf(
         *mVtxFmts[mContext.vtxFmt],
         mContext.vtxBufs,
@@ -388,7 +388,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
-        1 == mVtxFmts[mContext.vtxFmt]->getFormat().numStreams );
+        1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const uint8_t* )vertexData,
@@ -463,7 +463,7 @@ void GN::gfx::OGLRenderer::drawUp(
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
-        1 == mVtxFmts[mContext.vtxFmt]->getFormat().numStreams );
+        1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const uint8_t* )vertexData,

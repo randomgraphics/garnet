@@ -42,11 +42,36 @@ namespace GN
     };
 
     //!
+    //! File operation caps
+    //!
+    union FileOperationCaps
+    {
+        unsigned char u8; //!< File operation caps as unsigned char
+        signed char   i8; //!< File operation caps as char
+        struct
+        {
+            bool read      : 1; //!< support reading
+            bool write     : 1; //!< support writing
+            bool eof       : 1; //!< support EOF quering
+            bool seek      : 1; //!< support position seeking
+            bool tell      : 1; //!< support position querying
+            bool size      : 1; //!< support size querying
+            bool map       : 1; //!< support memory-mapping
+            bool _reserved : 1; //!< reserved.
+        };
+    };
+
+    //!
     //! basic file interface used throughout of the garnet system
     //!
     //! 用户实现该文件类时，不一定要实现下面的所有操作。
-    struct File
+    struct File : public NoCopy
     {
+        //!
+        //! Get file operation caps
+        //!
+        const FileOperationCaps & getCaps() const { return mCaps; }
+        
         //!
         //! 读取size个字节到buffer中
         //!
@@ -88,6 +113,11 @@ namespace GN
         virtual void * map( size_t offset, size_t length, bool readonly ) = 0;
 
         //!
+        //! unmap file content
+        //!
+        virtual void unmap() = 0;
+
+        //!
         //! return file name string
         //!
         const StrA & name() const { return mName; }
@@ -95,7 +125,7 @@ namespace GN
     protected :
 
         // ctor / dtor
-        File()          {}
+        File()          { mCaps.u8 = 0; }
         virtual ~File() {}
 
         //!
@@ -104,13 +134,24 @@ namespace GN
         void setName( const StrA & name ) { mName = name; }
 
         //!
+        //! Set operation caps
+        //!
+        void setCaps( const FileOperationCaps & caps ) { mCaps = caps; }
+
+        //!
+        //! Set operation caps
+        //!
+        void setCaps( int caps ) { mCaps.i8 = (signed char)caps; }
+
+        //!
         //! File logger
         //!
         static Logger * sLogger;
 
     private:
 
-        StrA mName;
+        StrA              mName;
+        FileOperationCaps mCaps;
     };
 
     //!
@@ -181,7 +222,11 @@ namespace GN
         //!
         //! constructor
         //!
-        StdFile( FILE * fp ) { setFile(fp); }
+        StdFile( FILE * fp )
+        {
+            setCaps( 0x3F ); // support all operations, except mapping
+            setFile(fp);
+        }
 
         //!
         //! get internal file pointer
@@ -201,7 +246,8 @@ namespace GN
         bool seek( int, FileSeekMode );
         size_t tell() const;
         size_t size() const;
-        void * map( size_t, size_t, bool ) { GN_ERROR(sLogger)( "StdFile: does not support map() operation!" ); return 0; }
+        void * map( size_t, size_t, bool ) { GN_ERROR(sLogger)( "StdFile: does not support memory mapping operation!" ); return 0; }
+        void unmap() { GN_ERROR(sLogger)( "StdFile: does not support memory mapping operation!" ); }
     };
 
     //!
@@ -264,7 +310,10 @@ namespace GN
             : mStart((uint8_t*)buf)
             , mPtr((uint8_t*)buf)
             , mSize(size)
-        { setName(name); }
+        {
+            setCaps( 0xFF ); // support all operations
+            setName(name);
+        }
         ~MemFile() {}
         //@}
 
@@ -290,6 +339,7 @@ namespace GN
             }
             return mStart + offset;
         }
+        void unmap() {}
         //@}
     };
 
@@ -306,7 +356,10 @@ namespace GN
         //!
         //! ctor
         //!
-        VectorFile() : mCursor(0) {}
+        VectorFile() : mCursor(0)
+        {
+            setCaps( 0xFF ); // support all operations
+        }
 
         //!
         //! dtor
@@ -330,6 +383,7 @@ namespace GN
             }
             return &mBuffer[offset];
         }
+        void unmap() {}
         //@}
     };
 

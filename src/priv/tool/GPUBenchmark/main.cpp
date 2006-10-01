@@ -92,7 +92,7 @@ struct ManyManyQuads
 
         // create vertex format
         VtxFmtDesc vfd;
-        vfd.addAttrib( 0, 0, VTXSEM_COORD, FMT_FLOAT3 );
+        vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
         vfd.addAttrib( 0, 12, VTXSEM_TEX0, FMT_FLOAT2 );
         vtxfmt = gRenderer.createVtxFmt( vfd );
         if( 0 == vtxfmt ) return false;

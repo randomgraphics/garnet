@@ -1,0 +1,5 @@
+ISSUES
+======
+
+- all most all effects need to render to both back buffer and texture.
+- how to adjust global rendering quality, such as AA and AF?

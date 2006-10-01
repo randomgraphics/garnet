@@ -258,6 +258,18 @@
 #define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 ) //!< join 4 symbols
 #define GN_JOIN_DIRECT(s1, s2)   s1##s2 //!< Auxillary macro used by GN_JOIN
 
+//!
+//! Make wide-char string
+//!
+#define GN_WSTR(X) GN_JOIN( L, X )
+
+//!
+//! Make FORCC code
+//!
+#define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3)                          \
+    ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
+    ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
+
 // *****************************************************************************
 //                           End of basicDefines.h
 // *****************************************************************************

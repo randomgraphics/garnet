@@ -878,6 +878,48 @@ namespace GN
     //!
     typedef Str<wchar_t> StrW;
 
+    //!
+    //! Fixed sized string that has no runtime memory allocation.
+    //!
+    template<size_t N, typename CHAR>
+    class StackStr
+    {
+        typedef CHAR CharType;
+
+        size_t mCount;    //!< How many charecters in the string, not including null end.
+        CHAR   mBuf[N+1]; //!< Pre-allocated string buffer
+
+        static size_t sValidateLength( size_t len ) { return len < N ? len : N; }
+
+    public:
+
+        //! \name ctor and dtor
+        //@{
+        StackStr() : mCount(0) { mBuf[0] = 0; }
+        StackStr( const CHAR * s, size_t l = 0 ) : mCount(l)
+        {
+            if( 0 == s )
+            {
+                mCount = 0;
+                mBuf[0] = 0;
+            }
+            else
+            {
+                if( 0 == l ) l = strLen( s );
+                memcpy( mBuf, s, sValidateLength(l) * sizeof(CHAR) );
+            }
+        }
+        StackStr( const StackStr & s ) : mCount( s.mCount )
+        {
+            memcpy( mBuf, s.mBuf, sizeof(CHAR)*s.mCount );
+        }
+        StackStr( const Str<CHAR> & s )
+        {
+            memcpy( mBuf, s.cptr(), sizeof(CHAR) * sValidateLength(s.size()) );
+        }
+        //@}
+    };
+
     //! \name string -> number conversion
     //@{
 
