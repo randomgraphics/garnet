@@ -575,7 +575,7 @@ namespace GN { namespace gfx
         static const char * sTable [] = { "VS", "PS", "GS" };
         if( str )
         {
-            for( int i = 0; i < 2; ++i )
+            for( int i = 0; i < 3; ++i )
             {
                 if( 0 == strCmp( str, sTable[i] ) )
                 {

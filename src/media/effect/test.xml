@@ -26,7 +26,7 @@
 		<rsb>...</rsb>
 		<technique name="t0">
 		    <rsb>...</rsb>
-		    <pass vs="sh1" ps="ffp"><!-- pass 0 -->
+		    <pass vs="sh1" ps="ffp" gs="ffp"><!-- pass 0 -->
 		        <rsb>...</rsb>
 		    </pass>
 		    <pass/><!-- pass 1 -->

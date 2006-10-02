@@ -103,6 +103,10 @@ public:
         ps0.textures[0] = "t0";
         ps0.textures[1] = "t1";
 
+        // create empty GS
+        EffectDesc::ShaderDesc & gs0 = desc.shaders["gs0"];
+        gs0.type = SHADER_GS;
+
         // create 1 technique
         EffectDesc::TechniqueDesc tech0;
         tech0.name = "t0";
@@ -110,6 +114,7 @@ public:
         EffectDesc::PassDesc & p0 = tech0.passes[0];
         p0.shaders[SHADER_VS] = "vs0";
         p0.shaders[SHADER_PS] = "ps0";
+        p0.shaders[SHADER_GS] = "gs0";
         desc.techniques.push_back( tech0 );
 
         // create another technique
@@ -119,6 +124,7 @@ public:
         EffectDesc::PassDesc & p1 = tech1.passes[0];
         p1.shaders[SHADER_VS] = "vs1";
         p1.shaders[SHADER_PS] = "ps0";
+        p1.shaders[SHADER_GS] = "gs0";
         desc.techniques.push_back( tech1 );
     }
 
