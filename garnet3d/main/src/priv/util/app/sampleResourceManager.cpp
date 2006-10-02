@@ -300,14 +300,16 @@ static bool sCreateNullEffect( Effect * & result, const StrA &, void * )
     EffectDesc desc;
     desc.shaders["vs"].type = SHADER_VS;
     desc.shaders["ps"].type = SHADER_PS;
+    desc.shaders["gs"].type = SHADER_GS;
     desc.techniques.resize(1);
     desc.techniques[0].name = "t0";
     desc.techniques[0].passes.resize(1);
     desc.techniques[0].passes[0].shaders[SHADER_VS] = "vs";
     desc.techniques[0].passes[0].shaders[SHADER_PS] = "ps";
+    desc.techniques[0].passes[0].shaders[SHADER_GS] = "gs";
 
     AutoObjPtr<Effect> eff( new Effect );
-    if( !eff->init( desc ) ) return false;
+    if( !eff->init( desc ) ) { GN_UNEXPECTED(); return false; }
 
     // success
     result = eff.detach();

@@ -85,6 +85,7 @@ END
         <!-- Fixed functional pipeline -->
         <shader name="fixvs" type="VS"/>
         <shader name="fixps" type="PS"/>
+        <shader name="fixgs" type="GS"/>
 
     </shaders>
 
@@ -94,13 +95,13 @@ END
             DEPTH_WRITE="0"
         />
         <technique name="d3d">
-            <pass vs="vs.1.1" ps="ps.1.1"/>
+            <pass vs="vs.1.1" ps="ps.1.1" gs="fixgs"/>
         </technique>
         <technique name="ogl">
-            <pass vs="arbvp1" ps="arbfp1"/>
+            <pass vs="arbvp1" ps="arbfp1" gs="fixgs"/>
         </technique>
         <technique name="ffp">
-            <pass vs="fixvs" ps="fixps"/>
+            <pass vs="fixvs" ps="fixps" gs="fixgs"/>
         </technique>
     </techniques>
 </effect>

@@ -166,16 +166,21 @@ public:
         TS_ASSERT_EQUALS( str, "PS" );
         TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::SHADER_VS ) );
         TS_ASSERT_EQUALS( str, "VS" );
+        TS_ASSERT( GN::gfx::shaderType2Str( str, GN::gfx::SHADER_GS ) );
+        TS_ASSERT_EQUALS( str, "GS" );
         TS_ASSERT( !GN::gfx::shaderType2Str( str, GN::gfx::NUM_SHADER_TYPES ) );
 
         TS_ASSERT_EQUALS( "PS", GN::gfx::shaderType2Str(GN::gfx::SHADER_PS) );
         TS_ASSERT_EQUALS( "VS", GN::gfx::shaderType2Str(GN::gfx::SHADER_VS) );
+        TS_ASSERT_EQUALS( "GS", GN::gfx::shaderType2Str(GN::gfx::SHADER_GS) );
         TS_ASSERT_EQUALS( "BAD_SHADER_TYPE", GN::gfx::shaderType2Str(GN::gfx::NUM_SHADER_TYPES) );
 
         TS_ASSERT( GN::gfx::str2ShaderType(type,"VS") );
         TS_ASSERT_EQUALS( type, GN::gfx::SHADER_VS );
         TS_ASSERT( GN::gfx::str2ShaderType(type,"PS") );
         TS_ASSERT_EQUALS( type, GN::gfx::SHADER_PS );
+        TS_ASSERT( GN::gfx::str2ShaderType(type,"GS") );
+        TS_ASSERT_EQUALS( type, GN::gfx::SHADER_GS );
         TS_ASSERT( !GN::gfx::str2ShaderType(type,NULL) );
         TS_ASSERT( !GN::gfx::str2ShaderType(type,"haha") );
     }

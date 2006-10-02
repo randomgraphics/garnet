@@ -17,15 +17,83 @@ struct D3D9VtxSemDesc
 };
 
 //!
-//! vertex semantic convert table
-//!
-static D3D9VtxSemDesc sVtxSem2D3D[GN::gfx::NUM_VTXSEMS] =
+//! convert vertex format to d3d-decl usage
+// -----------------------------------------------------------------------------
+static inline const D3D9VtxSemDesc * sVtxSem2D3D( GN::gfx::VtxSem sem )
 {
-    #define GNGFX_DEFINE_VTXSEM( tag, d3ddecl, d3dindex, glname, glindex, cgname ) \
-        { static_cast<D3DDECLUSAGE>(d3ddecl), d3dindex },
-    #include "garnet/gfx/vertexSemanticMeta.h"
-    #undef  GNGFX_DEFINE_VTXSEM
-};
+    using namespace GN;
+    using namespace GN::gfx;
+
+    static D3D9VtxSemDesc sDesc;
+    sDesc.index = 0;
+
+    switch( sem.u32 )
+    {
+        case GN_MAKE_FOURCC('P','O','S','0') :
+            sDesc.usage = D3DDECLUSAGE_POSITION;
+            break;
+
+        case GN_MAKE_FOURCC('W','G','H','T') :
+            sDesc.usage = D3DDECLUSAGE_BLENDWEIGHT;
+            break;
+
+        case GN_MAKE_FOURCC('N','M','L','0') :
+            sDesc.usage = D3DDECLUSAGE_NORMAL;
+            break;
+
+        case GN_MAKE_FOURCC('C','L','R','0') :
+            sDesc.usage = D3DDECLUSAGE_COLOR;
+            break;
+
+        case GN_MAKE_FOURCC('C','L','R','1') :
+            sDesc.usage = D3DDECLUSAGE_COLOR;
+            sDesc.index = 1;
+            break;
+
+        case GN_MAKE_FOURCC('F','O','G','0') :
+            sDesc.usage = D3DDECLUSAGE_FOG;
+            break;
+
+        case GN_MAKE_FOURCC('T','A','N','G') :
+            sDesc.usage = D3DDECLUSAGE_TANGENT;
+            break;
+
+        case GN_MAKE_FOURCC('B','N','M','L') :
+            sDesc.usage = D3DDECLUSAGE_BINORMAL;
+            break;
+
+        case GN_MAKE_FOURCC('T','E','X','0') :
+        case GN_MAKE_FOURCC('T','E','X','1') :
+        case GN_MAKE_FOURCC('T','E','X','2') :
+        case GN_MAKE_FOURCC('T','E','X','3') :
+        case GN_MAKE_FOURCC('T','E','X','4') :
+        case GN_MAKE_FOURCC('T','E','X','5') :
+        case GN_MAKE_FOURCC('T','E','X','6') :
+        case GN_MAKE_FOURCC('T','E','X','7') :
+        case GN_MAKE_FOURCC('T','E','X','8') :
+        case GN_MAKE_FOURCC('T','E','X','9') :
+            sDesc.usage = D3DDECLUSAGE_TEXCOORD;
+            sDesc.index = sem.u8[3] - VTXSEM_TEX0.u8[3];
+            break;
+
+        case GN_MAKE_FOURCC('T','E','X','A') :
+        case GN_MAKE_FOURCC('T','E','X','B') :
+        case GN_MAKE_FOURCC('T','E','X','C') :
+        case GN_MAKE_FOURCC('T','E','X','D') :
+        case GN_MAKE_FOURCC('T','E','X','E') :
+        case GN_MAKE_FOURCC('T','E','X','F') :
+            sDesc.usage = D3DDECLUSAGE_TEXCOORD;
+            sDesc.index = sem.u8[3] - VTXSEM_TEXA.u8[3] + 10;
+            break;
+
+        default :
+            GN_ERROR(sLogger)( "unsupport vertex semantic: %s", sem.toStr() );
+            return NULL;
+    };
+
+    // success
+    return &sDesc;
+}   
 
 //!
 //! convert vertex format to d3d-decl usage
@@ -109,12 +177,9 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
 
     elements.clear();
 
-    for( uint8_t i = 0; i < GN::gfx::NUM_VTXSEMS; ++i )
+    for( size_t i = 0; i < decl.attribs.size(); ++i )
     {
         const GN::gfx::VtxFmtDesc::AttribDesc & va = decl.attribs[i];
-
-        // ignore unused attribute
-        if ( !va.used ) continue;
 
         D3DVERTEXELEMENT9 elem;
 
@@ -128,8 +193,10 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
         elem.Method = D3DDECLMETHOD_DEFAULT;
 
         // set attrib semantic
-        elem.Usage      = (BYTE)sVtxSem2D3D[i].usage;
-        elem.UsageIndex = (BYTE)sVtxSem2D3D[i].index;
+        const D3D9VtxSemDesc * desc = sVtxSem2D3D( va.semantic );
+        if( !desc ) return false;
+        elem.Usage      = (BYTE) desc->usage;
+        elem.UsageIndex = desc->index;
 
         // set attrib format
 #if GN_XENON

@@ -154,7 +154,7 @@ bool GN::gfx::OGLVtxFmt::setupStreamBindings()
 bool GN::gfx::OGLVtxFmt::setupAttribBinding(
     AttribBinding & ab, const VtxFmtDesc::AttribDesc & desc )
 {
-    ab.func = &sDummyStreamBinding;
+    ab.func = NULL;
     ab.info.self = NULL;
     ab.info.offset = desc.offset;
     ab.info.texStage = 0;
@@ -171,6 +171,10 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
             {
                 ab.func = &sSetVertexAttributePointer;
                 ab.info.attribute = sWGHT_ATTRIB;
+            }
+            else
+            {
+                ab.func = &sDummyStreamBinding;
             }
             break;
 
@@ -192,6 +196,10 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
                 ab.func = &sSetVertexAttributePointer;
                 ab.info.attribute = sCLR1_ATTRIB;
             }
+            else
+            {
+                ab.func = &sDummyStreamBinding;
+            }
             break;
 
         case GN_MAKE_FOURCC('F','O','G','0') :
@@ -204,6 +212,10 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
                 ab.func = &sSetVertexAttributePointer;
                 ab.info.attribute = sFOG_ATTRIB;
             }
+            else
+            {
+                ab.func = &sDummyStreamBinding;
+            }
             break;
 
         case GN_MAKE_FOURCC('T','A','N','G') :
@@ -212,6 +224,10 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
                 ab.func = &sSetVertexAttributePointer;
                 ab.info.attribute = sTANG_ATTRIB;
             }
+            else
+            {
+                ab.func = &sDummyStreamBinding;
+            }
             break;
 
         case GN_MAKE_FOURCC('B','N','M','L') :
@@ -219,6 +235,10 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
             {
                 ab.func = &sSetVertexAttributePointer;
                 ab.info.attribute = sBNML_ATTRIB;
+            }
+            else
+            {
+                ab.func = &sDummyStreamBinding;
             }
             break;
 
@@ -291,6 +311,7 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
     }
 
     // success
+    GN_ASSERT( ab.func );
     return true;
 }
 
@@ -431,65 +452,65 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
     }
 
     // VTXSEM_NML0
-    mStateBindings[0].func = mFormat.findAttrib( VTXSEM_NML0 ) ? &sEnableClientState : &sDisableClientState;
-    mStateBindings[0].info.semantic = GL_NORMAL_ARRAY;
+    mStateBindings[2].func = mFormat.findAttrib( VTXSEM_NML0 ) ? &sEnableClientState : &sDisableClientState;
+    mStateBindings[2].info.semantic = GL_NORMAL_ARRAY;
 
     // VTXSEM_CLR0
-    mStateBindings[0].func = mFormat.findAttrib( VTXSEM_CLR0 ) ? &sEnableClientState : &sDisableClientState;
-    mStateBindings[0].info.semantic = GL_COLOR_ARRAY;
+    mStateBindings[3].func = mFormat.findAttrib( VTXSEM_CLR0 ) ? &sEnableClientState : &sDisableClientState;
+    mStateBindings[3].info.semantic = GL_COLOR_ARRAY;
 
     // VTXSEM_CLR1
     if( GLEW_EXT_secondary_color )
     {
-        mStateBindings[0].func = mFormat.findAttrib( VTXSEM_CLR1 ) ? &sEnableClientState : &sDisableClientState;
-        mStateBindings[0].info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
+        mStateBindings[4].func = mFormat.findAttrib( VTXSEM_CLR1 ) ? &sEnableClientState : &sDisableClientState;
+        mStateBindings[4].info.semantic = GL_SECONDARY_COLOR_ARRAY_EXT;
     }
     else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
     {
-        mStateBindings[1].func = mFormat.findAttrib( VTXSEM_WGHT ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[1].info.attribute = sCLR1_ATTRIB;
+        mStateBindings[4].func = mFormat.findAttrib( VTXSEM_WGHT ) ? &sEnableVAA : &sDisableVAA;;
+        mStateBindings[4].info.attribute = sCLR1_ATTRIB;
     }
     else
     {
-        mStateBindings[1].func = &sDummyStateBinding;
+        mStateBindings[4].func = &sDummyStateBinding;
     }
 
     // VTXSEM_FOG 
     if( GLEW_EXT_fog_coord )
     {
-        mStateBindings[0].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableClientState : &sDisableClientState;
-        mStateBindings[0].info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
+        mStateBindings[5].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableClientState : &sDisableClientState;
+        mStateBindings[5].info.semantic = GL_FOG_COORDINATE_ARRAY_EXT;
     }
     else if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
     {
-        mStateBindings[1].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[1].info.attribute = sFOG_ATTRIB;
+        mStateBindings[5].func = mFormat.findAttrib( VTXSEM_FOG ) ? &sEnableVAA : &sDisableVAA;;
+        mStateBindings[5].info.attribute = sFOG_ATTRIB;
     }
     else
     {
-        mStateBindings[1].func = &sDummyStateBinding;
+        mStateBindings[5].func = &sDummyStateBinding;
     }
 
     // VTXSEM_TANG
     if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
     {
-        mStateBindings[1].func = mFormat.findAttrib( VTXSEM_TANG ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[1].info.attribute = sTANG_ATTRIB;
+        mStateBindings[6].func = mFormat.findAttrib( VTXSEM_TANG ) ? &sEnableVAA : &sDisableVAA;;
+        mStateBindings[6].info.attribute = sTANG_ATTRIB;
     }
     else
     {
-        mStateBindings[1].func = &sDummyStateBinding;
+        mStateBindings[6].func = &sDummyStateBinding;
     }
 
     // VTXSEM_BNML
     if( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader )
     {
-        mStateBindings[1].func = mFormat.findAttrib( VTXSEM_BNML ) ? &sEnableVAA : &sDisableVAA;;
-        mStateBindings[1].info.attribute = sBNML_ATTRIB;
+        mStateBindings[7].func = mFormat.findAttrib( VTXSEM_BNML ) ? &sEnableVAA : &sDisableVAA;;
+        mStateBindings[7].info.attribute = sBNML_ATTRIB;
     }
     else
     {
-        mStateBindings[1].func = &sDummyStateBinding;
+        mStateBindings[7].func = &sDummyStateBinding;
     }
 
     // VTXSEM_TEXN
@@ -500,6 +521,14 @@ bool GN::gfx::OGLVtxFmt::setupStateBindings()
         mStateBindings[8+i].info.texStage = i;
         mStateBindings[8+i].info.semantic = GL_TEXTURE_COORD_ARRAY;
     }
+
+#if GN_DEBUG_BUILD
+    // fill invalid data
+    for( size_t i = 0; i < mStateBindings.size(); ++i )
+    {
+        GN_ASSERT( mStateBindings[i].func );
+    }
+#endif
 
     // success
     return true;

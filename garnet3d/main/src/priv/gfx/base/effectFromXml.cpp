@@ -412,13 +412,15 @@ static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, const
 {
     const char * vs = sGetShaderRef( desc, node, "vs", SHADER_VS );
     const char * ps = sGetShaderRef( desc, node, "ps", SHADER_PS );
-    if( !vs || !ps ) return;
+    const char * gs = sGetShaderRef( desc, node, "gs", SHADER_GS );
+    if( !vs || !ps || !gs ) return;
 
     td.passes.resize( td.passes.size() + 1 );
     EffectDesc::PassDesc & pd = td.passes.back();
 
     pd.shaders[SHADER_VS] = vs;
     pd.shaders[SHADER_PS] = ps;
+    pd.shaders[SHADER_GS] = gs;
 
     for( const XmlNode * n = node.child; n; n = n->sibling )
     {
