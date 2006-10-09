@@ -34,7 +34,7 @@ public:
     {
         DiskFile fp;
         if( !fp.open( mMeshName, "rb" ) ) return false;
-        if( !mFatMesh.readFrom( fp ) ) return false;
+        if( !mFatMesh.readFromFile( fp ) ) return false;
         return true;
     }
 
