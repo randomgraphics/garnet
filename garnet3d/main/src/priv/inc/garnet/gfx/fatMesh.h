@@ -130,6 +130,14 @@ namespace GN { namespace gfx
         //@}
     };
 
+    // Triangle face for fat mesh
+    struct FatFace
+    {
+        size_t i0, i1, i2; // vertice indices
+        Vector3f normal;   // face normal
+        int material;      // material ID.
+    };
+
     //!
     //! Universal mesh
     //!
@@ -153,13 +161,18 @@ namespace GN { namespace gfx
             clearOptimizationData();
         }
 
-        //! \name set vertices
+        //! \name vertices management
         //@{
         void setVertexFormat( const FatVtxFmt & fmt )
         {
             if( !fmt.valid() ) { GN_WARN(sLogger)( "invalid vertex format" ); return; }
             mVertexFormat = fmt;
         }
+        const FatVtxFmt & getVertexFormat() const { return mVertexFormat; }
+        const FatVtx * getVertices() const { return mVertices.cptr(); }
+        size_t getNumVertices() const { return mVertices.size(); }
+        FatVtx * beginVertices( size_t count ) { mVertices.resize( count ); return mVertices.cptr(); }
+        void endVertices() { clearOptimizationData(); }
         void newVertices( const FatVtx * verts, size_t count )
         {
             mVertices.append( verts, count );
@@ -192,39 +205,21 @@ namespace GN { namespace gfx
         void texcoord( size_t stage, const Vector4f & v ) { mTmpVtx.setTexcoord( stage, v ); }
         //@}
 
-        //! \name set faces
+        //! \name Face management
         //@{
-        void newFace( size_t i0, size_t i1, size_t i2, int material = 0 )
-        {
-            Face f;
-            f.i0 = i0; f.i1 = i1; f.i2 = i2;
-            f.material = material;
-            mFaces.append( f );
-            mHasFaceNormal = false;
-            clearOptimizationData();
-        }
-        void newFace( size_t i0, size_t i1, size_t i2, float nx, float ny, float nz, int material = 0 )
-        {
-            Face f;
-            f.i0 = i0; f.i1 = i1; f.i2 = i2;
-            f.normal.set( nx, ny, nz );
-            f.material = material;
-            mFaces.append( f );
-            clearOptimizationData();
-        }
-        void newFace( size_t i0, size_t i1, size_t i2, const Vector3f & normal, int material = 0 )
-        {
-            Face f;
-            f.i0 = i0; f.i1 = i1; f.i2 = i2;
-            f.normal = normal;
-            f.material = material;
-            mFaces.append( f );
-            clearOptimizationData();
-        }
+        const FatFace * getFaces() const { return mFaces.cptr(); }
+        size_t getNumFaces() const { return mFaces.size(); }
+        bool hasFaceNormal() const { return mHasFaceNormal; }
+        FatFace * beginFaces( size_t count );
+        void endFaces();
+        void newFace( const FatFace & f );
+        void newFace( size_t i0, size_t i1, size_t i2, int material = 0 ) { createNewFace( i0, i1, i2, 0, material ); }
+        void newFace( size_t i0, size_t i1, size_t i2, float nx, float ny, float nz, int material = 0 ) { Vector3f n(nx,ny,nz); createNewFace(i0,i1,i2,&n,material); }
+        void newFace( size_t i0, size_t i1, size_t i2, const Vector3f & normal, int material = 0 ) { createNewFace( i0, i1, i2, &normal, material ); }
         template< typename INDEX_TYPE >
         void newFaces( const INDEX_TYPE * indices, size_t faceCount, int material = 0 )
         {
-            Face f;
+            FatFace f;
             f.material = material;
             if( 0 == indices ) faceCount = 0;
             for( size_t i = 0; i < faceCount; ++i, indices += 3 )
@@ -243,6 +238,24 @@ namespace GN { namespace gfx
         }
         //@}
 
+        //! \name mesh loading and saving
+        //@{
+
+        //!
+        //! read from fatmesh file, support both binary and text format.
+        //!
+        bool readFromFile( File & );
+
+        //!
+        //! write mesh to file. See sample mesh files in tree details of mesh file format.
+        //!
+        //! \param mode
+        //!     must be 'B' (binary) or 'T' (text)
+        //!
+        bool writeToFile( File &, char mode ) const;
+
+        //@}
+
         //! \name optimization
         //@{
 
@@ -254,10 +267,10 @@ namespace GN { namespace gfx
             //! \name required fields
             //@{
             size_t maxPrimitivesInSingleDraw; //!< as is
-            bool vcache; //!< optimize for vcache.
-            bool strip;  //!< generate triangle strips.
-            bool useResetIndex; //!< use reset index to connect triangle strips (for Xenon)
-            bool use32BitIndex; //!< use 32-bit indices.
+            bool   vcache; //!< optimize for vcache.
+            bool   strip;  //!< generate triangle strips.
+            bool   useResetIndex; //!< use reset index to connect triangle strips (for Xenon)
+            bool   use32BitIndex; //!< use 32-bit indices.
             //@}
 
             //! \name optional fields
@@ -279,28 +292,7 @@ namespace GN { namespace gfx
         void draw( int material ); //!< note, this function is very inefficient. Do not use this in performance critical code.
         //@}
 
-        //! \name serialize
-        //@{
-        bool readFrom( File & );//!< read from fatmesh file, support both binary and text format.
-        bool readFromX( File & ); //!< read from D3D X mesh file.
-        //!
-        //! write mesh to file. See sample mesh files in tree details of mesh file format.
-        //!
-        //! \param mode
-        //!     must be 'B' (binary) or 'T' (text)
-        //!
-        bool writeTo( File &, char mode ) const;
-        //@}
-
     private:
-
-        // Triangle face
-        struct Face
-        {
-            size_t i0, i1, i2; // vertice indices
-            Vector3f normal;     // face normal
-            int material;        // material ID.
-        };
 
         struct FaceSegment
         {
@@ -317,19 +309,19 @@ namespace GN { namespace gfx
         };
 
         // raw mesh data
-        DynaArray<FatVtx> mVertices;
-        DynaArray<Face>   mFaces;
-        FatVtxFmt         mVertexFormat;
-        bool              mHasFaceNormal; //!< True means all faces have normal.
+        DynaArray<FatVtx>  mVertices;
+        DynaArray<FatFace> mFaces;
+        FatVtxFmt          mVertexFormat;
+        bool               mHasFaceNormal; //!< True means all faces have normal.
 
         // optimized mesh data
-        DynaArray<VtxSegment>  mVtxSegments; // optimized vertex segments.
+        DynaArray<VtxSegment>  mVtxSegments;  // optimized vertex segments.
         DynaArray<FaceSegment> mFaceSegments; // optimized face segments.
         bool                   mUse32BitIndex;
         bool                   mUseTriStrip;
 
         // misc.
-        FatVtx       mTmpVtx;
+        FatVtx    mTmpVtx;
         FatVtxFmt mTmpFmt;
 
         // Logger
@@ -343,11 +335,39 @@ namespace GN { namespace gfx
             mFaceSegments.clear();
         }
 
+        void createNewFace( size_t i0, size_t i1, size_t i2, const Vector3f * normal, int material )
+        {
+            GN_ASSERT( i0 >= 0 && i1 >= 0 && i2 >= 0 );
+            FatFace f;
+            f.i0 = i0; f.i1 = i1; f.i2 = i2;
+            if( normal )
+            {
+                f.normal = *normal;
+            }
+            else
+            {
+                mHasFaceNormal = false;
+            }
+            f.material = material;
+            mFaces.append( f );
+            clearOptimizationData();
+        }
+
         // Sort faces in specific vertex segment, by material ID. Store result into face segment array.
         void sortByMaterial( size_t vtxSegIdx, const DynaArray<size_t> & faces );
 
         inline void drawFaceSegment( size_t idx );
     };
+
+    //! \name mesh loading and saving from other formats
+    //@{
+
+    //!
+    //! read from D3D X mesh file.
+    //!
+    bool fatMeshFromX( FatMesh &, File & );
+
+    //@}
 }}
 
 // *****************************************************************************

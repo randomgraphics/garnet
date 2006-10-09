@@ -9,6 +9,7 @@ sources = [
     'effectFromXml.cpp',
     'fakeRenderer.cpp',
     'fatMesh.cpp',
+    'fatMeshLoader.cpp',
     'image.cpp',
     'imageBMP.cpp',
     'imageDDS.cpp',
