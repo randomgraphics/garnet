@@ -351,9 +351,11 @@ namespace GN { namespace gfx { namespace nes
         Impl * mImpl;
     public:
 
-        EffectSystem(); //!< default constructor
-
-        virtual ~EffectSystem(); //!< dtor
+        //! \name ctor and dtor
+        //@{
+        EffectSystem();
+        virtual ~EffectSystem();
+        //@}
 
         //! \name stream manager
         //@{
