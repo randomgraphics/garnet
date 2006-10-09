@@ -379,7 +379,7 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
         str = stdout.read()
         stdout.close()
         import string
-        return string.find( str, "Vista" ) >= 0
+        return string.find( str, "Version 6" ) >= 0
     conf['has_d3d10'] = c.CheckCXXHeader( 'd3d10.h' ) and ( isVista(env) or not UTIL_staticBuild( variant ) )
 
     # ===================
