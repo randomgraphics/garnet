@@ -490,10 +490,6 @@ public:
             mFirstFrame = true;
             if( !nextCase() ) postExitEvent();
         }
-        else if( input::KEY_XB360_X == ke.code )
-        {
-            postExitEvent();
-        }
 
         GN_UNGUARD_SLOW;
     }

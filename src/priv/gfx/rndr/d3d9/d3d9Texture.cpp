@@ -232,7 +232,7 @@ DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
 #if GN_XENON
     if( TEXUSAGE_AUTOGEN_MIPMAP & usage )
     {
-        GN_WARN( "Xenon does not support mipmap auto-generation!" );
+        GN_WARN(sLogger)( "Xenon does not support mipmap auto-generation!" );
     }
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
     d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_RENDERTARGET : 0;
