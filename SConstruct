@@ -235,7 +235,6 @@ def UTIL_newEnv( compiler, variant ):
         ccflags['common'] += ['/QVMX128']
         cppdefines['profile'] += ['PROFILE']
         cppdefines['stprof']  += ['PROFILE']
-        linkflags['common'] += ['/NODEFAULTLIB']
         libs['common']  += Split('xboxkrnl xbdm dxerr9')
         libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd libcmtd')
         libs['profile'] += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudioi xacti vcomp  libcmt')

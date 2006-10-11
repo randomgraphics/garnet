@@ -24,6 +24,8 @@ OPENNING
 
 - GNut failures in mingw build.
 
+- GNtestGfx produces E_OUTOFMEMORY error on Xenon platform.
+
 CLOSED
 ======
 

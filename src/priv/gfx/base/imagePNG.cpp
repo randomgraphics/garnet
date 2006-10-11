@@ -195,6 +195,17 @@ bool PNGReader::readImage( void * o_data )
         }
     }
 
+#if GN_PPC
+    // swap endian
+    // TODO: handle 16-bit image
+    for( uint32_t y = 0; y < mInfo->height; ++y )
+    {
+        uint32_t * p = (uint32_t*)rows[y];
+        GN::swapEndian8In32( p, p, mRowPitch / 4 );
+    }
+    
+#endif
+
     // success
     return true;
 
