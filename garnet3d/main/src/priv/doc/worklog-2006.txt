@@ -1,3 +1,6 @@
+- 2006.10.11
+  - Fix build breaks and D3D buffer locking problems on XDK Aug,06
+
 - 2006.10.1
   - merge changes in nes branch back to main tree
 

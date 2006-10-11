@@ -99,9 +99,10 @@ bool GN::app::SampleApp::onCheckCmdLine( int argc, const char * const argv[] )
 // -----------------------------------------------------------------------------
 void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
-    if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
-    if( input::KEY_R == ke.code && !ke.status.down ) reloadResources();
-    if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
+    if( input::KEY_XB360_X == ke.code && ke.status.down ) mDone = true;
+    else if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
+    else if( input::KEY_R == ke.code && !ke.status.down ) reloadResources();
+    else if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
     {
         GN::gfx::RendererOptions ro = gRenderer.getOptions();
         ro.fullscreen = !ro.fullscreen;

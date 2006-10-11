@@ -149,6 +149,13 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
     uint16_t * buf;
     if( mSysCopy.empty() )
     {
+#if GN_XENON
+        // Xenon does not support range locking on index buffer
+        GN_DX9_CHECK_DO(
+            mD3DIb->Lock( 0, 0, (void**)&buf, sLockFlags2D3D9( isDynamic(), flag ) ),
+            basicUnlock(); return 0; );
+        buf += startIdx;
+#else
         GN_DX9_CHECK_DO(
             mD3DIb->Lock(
                 (UINT)( startIdx<<1 ),
@@ -156,6 +163,7 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
                 (void**)&buf,
                 sLockFlags2D3D9( isDynamic(), flag ) ),
             basicUnlock(); return 0; );
+#endif
     }
     else
     {
@@ -196,12 +204,19 @@ void GN::gfx::D3D9IdxBuf::unlock()
         mLockNumIdx <<= 1; // now, numIdx is in bytes.
 
         // update d3d index buffer
+#if GN_XENON
+        // Xenon does not support range locking on index buffer
+        uint16_t * dst;
+        GN_DX9_CHECK_R( mD3DIb->Lock( 0, 0, (void**)&dst, sLockFlags2D3D9( isDynamic(), mLockFlag ) ) );
+        dst += mLockStartIdx;
+#else
         void * dst;
         GN_DX9_CHECK_R( mD3DIb->Lock(
             (UINT)( mLockStartIdx<<1 ),
             (UINT)( mLockNumIdx ),
             &dst,
             sLockFlags2D3D9( isDynamic(), mLockFlag ) ) );
+#endif
         ::memcpy( dst, &mSysCopy[mLockStartIdx], mLockNumIdx );
         mD3DIb->Unlock();
     }

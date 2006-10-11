@@ -195,6 +195,14 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
     void * buf;
     if ( mSysCopy.empty() )
     {
+#if GN_XENON
+        // Note: XDK does not support range locking on vertex buffer
+        uint8_t * u8buf;
+        GN_DX9_CHECK_DO(
+            mD3DVb->Lock( 0, 0, (void**)&u8buf, sLockFlags2D3D9(isDynamic(),flag) ),
+            basicUnlock(); return 0; );
+        buf = u8buf + offset;
+#else
         GN_DX9_CHECK_DO(
             mD3DVb->Lock(
                 (UINT)offset,
@@ -202,6 +210,7 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
                 &buf,
                 sLockFlags2D3D9(isDynamic(),flag) ),
             basicUnlock(); return 0; );
+#endif
     }
     else
     {
@@ -240,12 +249,19 @@ void GN::gfx::D3D9VtxBuf::unlock()
             (mLockOffset + mLockBytes) <= getSizeInBytes() );
 
         // update d3d buffer
+#if GN_XENON
+        // Note: XDK does not support range locking on vertex buffer
+        uint8_t * dst;
+        GN_DX9_CHECK_R( mD3DVb->Lock( 0, 0, (void**)&dst, sLockFlags2D3D9(isDynamic(),mLockFlag) ) );
+        dst += mLockOffset;
+#else
         void * dst;
         GN_DX9_CHECK_R( mD3DVb->Lock(
             (UINT)mLockOffset,
             (UINT)mLockBytes,
             &dst,
             sLockFlags2D3D9(isDynamic(),mLockFlag) ) );
+#endif
         ::memcpy( dst, &mSysCopy[mLockOffset], mLockBytes );
         mD3DVb->Unlock();
     }

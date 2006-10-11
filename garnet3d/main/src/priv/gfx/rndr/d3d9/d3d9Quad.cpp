@@ -167,8 +167,13 @@ void GN::gfx::D3D9Quad::drawQuads(
     // lock vertex buffer
     D3D9QuadVertex * vbData;
 #if GN_XENON
-    dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
-#endif
+    // 1. Xenon platform does not permit locking of currently binded vertex stream.
+    // 2. Xenon platform does not support range locking on vertex buffer.
+    dev->SetStreamSource( 0, 0, 0, 0 );
+    GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, 0 ) );
+    GN_CASSERT( QUAD_STRIDE == sizeof(D3D9QuadVertex) * 4 );
+    vbData += mNextQuad * 4;
+#else
     if( 0 == mNextQuad )
     {
         GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
@@ -180,6 +185,7 @@ void GN::gfx::D3D9Quad::drawQuads(
             (UINT)( QUAD_STRIDE * count ),
             (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
     }
+#endif
 
     // calculate vertex scale and offset
     float scaleX, offsetX;

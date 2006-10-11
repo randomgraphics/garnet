@@ -35,14 +35,14 @@
 // Unix glob functionality. On Unix we just use glob.
 #ifdef _WIN32
 # include <mbstring.h>
-# define sg_strchr      ::_mbschr
-# define sg_strlen      ::_mbslen
-# define sg_strcpy      ::_mbscpy
-# define sg_strcmp      ::_mbscmp
-# define sg_stricmp     ::_mbsicmp
+# define sg_strchr      ::strchr
+# define sg_strlen      ::strlen
+# define sg_strcpy      ::strcpy
+# define sg_strcmp      ::strcmp
+# define sg_stricmp     ::stricmp
 # define sg_wcscmp      ::wcscmp
 # define sg_wcsicmp     ::wcsicmp
-# define SOCHAR_T       unsigned char
+# define SOCHAR_T       char
 #else
 # define __USE_GNU
 # include <glob.h>
