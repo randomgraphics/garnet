@@ -182,7 +182,11 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
 
     // setup depth parameters
     d3dpp.AutoDepthStencilFormat = GN::gfx::DEFAULT_DEPTH_FORMAT;
+#if GN_XENON
+    d3dpp.EnableAutoDepthStencil = FALSE;
+#else
     d3dpp.EnableAutoDepthStencil = TRUE;
+#endif
     d3dpp.Flags                 |= D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
 
     // set display mode parameters

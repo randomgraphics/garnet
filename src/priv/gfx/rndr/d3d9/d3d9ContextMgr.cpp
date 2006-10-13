@@ -417,8 +417,11 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                     depthDesc.Height < rt0Desc.Height ||
                     forceRebind )
                 {
+                    // release old depth surface
+                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( NULL ) );
+                    mAutoDepth.clear();
+
                     // create new depth buffer
-                    LPDIRECT3DSURFACE9 newDepth;
                     GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
                         max(depthDesc.Width, rt0Desc.Width),
                         max(depthDesc.Height, rt0Desc.Height),
@@ -426,9 +429,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                         depthDesc.MultiSampleType,
                         depthDesc.MultiSampleQuality,
                         TRUE, // discardable depth buffer
-                        &newDepth, 0 ) );
-                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( newDepth ) );
-                    mAutoDepth.attach( newDepth );
+                        &mAutoDepth, 0 ) );
+                    GN_DX9_CHECK( mDevice->SetDepthStencilSurface( mAutoDepth ) );
                 }
             }
             else
