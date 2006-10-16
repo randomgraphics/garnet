@@ -106,39 +106,39 @@ public:
     }
 
     // ********************************
-    // stream manager
+    // buffer manager
     // ********************************
 public:
 
-    StreamId registerStream( Stream * stream )
+    BufferId registerBuffer( Buffer * buffer )
     {
-        if( mStreams.find( stream ) )
+        if( mBuffers.find( buffer ) )
         {
-            GN_WARN(sLogger)( "You're registering the same stream more than once." );
+            GN_WARN(sLogger)( "You're registering the same buffer more than once." );
         }
-        return mStreams.add( stream );
+        return mBuffers.add( buffer );
     }
 
-    Stream * removeStream( StreamId id )
+    Buffer * removeBuffer( BufferId id )
     {
-        Stream * s = getStream( id );
-        if( s ) mStreams.remove( id );
+        Buffer * s = getBuffer( id );
+        if( s ) mBuffers.remove( id );
         return s;
     }
 
-    void removeAllStreams()
+    void removeAllBuffers()
     {
-        mStreams.clear();
+        mBuffers.clear();
     }
 
-    Stream * getStream( StreamId id ) const
+    Buffer * getBuffer( BufferId id ) const
     {
-        if( !mStreams.validHandle( id ) )
+        if( !mBuffers.validHandle( id ) )
         {
-            GN_ERROR(sLogger)( "Invalid stream ID: '%d'.", id );
+            GN_ERROR(sLogger)( "Invalid buffer ID: '%d'.", id );
             return NULL;
         }
-        return mStreams.get( id );
+        return mBuffers.get( id );
     }
 
     // ********************************
@@ -257,10 +257,10 @@ public:
 GN::gfx::nes::EffectSystem::EffectSystem() : mImpl( new Impl ) {}
 GN::gfx::nes::EffectSystem::~EffectSystem() { delete mImpl; }
 
-GN::gfx::nes::StreamId GN::gfx::nes::EffectSystem::registerStream( Stream * stream ) { return mImpl->registerStream( stream ); }
-GN::gfx::nes::Stream * GN::gfx::nes::EffectSystem::removeStream( StreamId id ) { return mImpl->removeStream( id ); }
-void              GN::gfx::nes::EffectSystem::removeAllStreams() { mImpl->removeAllStreams(); }
-GN::gfx::nes::Stream * GN::gfx::nes::EffectSystem::getStream( StreamId id ) const { return mImpl->getStream( id ); }
+GN::gfx::nes::BufferId GN::gfx::nes::EffectSystem::registerBuffer( Buffer * buffer ) { return mImpl->registerBuffer( buffer ); }
+GN::gfx::nes::Buffer * GN::gfx::nes::EffectSystem::removeBuffer( BufferId id ) { return mImpl->removeBuffer( id ); }
+void              GN::gfx::nes::EffectSystem::removeAllBuffers() { mImpl->removeAllBuffers(); }
+GN::gfx::nes::Buffer * GN::gfx::nes::EffectSystem::getBuffer( BufferId id ) const { return mImpl->getBuffer( id ); }
 
 GN::gfx::nes::EffectId           GN::gfx::nes::EffectSystem::registerEffect( const EffectDesc & desc ) { return mImpl->registerEffect( desc ); }
 void                        GN::gfx::nes::EffectSystem::removeEffect( EffectId id ) { mImpl->removeEffect( id ); }

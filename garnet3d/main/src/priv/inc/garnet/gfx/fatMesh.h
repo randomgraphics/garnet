@@ -130,12 +130,17 @@ namespace GN { namespace gfx
         //@}
     };
 
-    // Triangle face for fat mesh
+    //!
+    //! Triangle face for fat mesh
+    //!
     struct FatFace
     {
-        size_t i0, i1, i2; // vertice indices
-        Vector3f normal;   // face normal
-        int material;      // material ID.
+        //! \name vertice indices
+        //@{
+        size_t i0, i1, i2;
+        //@}
+        Vector3f normal;   //!< face normal
+        int material;      //!< material ID.
     };
 
     //!
