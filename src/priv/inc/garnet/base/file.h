@@ -557,6 +557,21 @@ namespace GN
         }
 
         //!
+        //! Convert a path to relative path from and base dir.
+        //!
+        void getRelative( StrA & result, const StrA & path, const StrA & base );
+
+        //!
+        //! Convert a path to relative path from and base dir.
+        //!
+        inline StrA getRelative( const StrA & path, const StrA & base )
+        {
+            StrA ret;
+            getRelative( ret, path, base );
+            return ret;
+        }
+
+        //!
         //! 查找指定文件
         //!
         //! \param result     返回搜索结果
