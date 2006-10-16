@@ -19,7 +19,7 @@ namespace GN { namespace gfx { namespace nes
     //! \name resource ID types.
     //! \note Zeor is always invalid ID.
     //@{
-    typedef uint16_t StreamId;
+    typedef uint16_t BufferId;
     typedef uint16_t EffectId;
     //@}
 
@@ -87,36 +87,36 @@ namespace GN { namespace gfx { namespace nes
     };
 
     //!
-    //! Stream usage flags
+    //! Buffer usage flags
     //!
-    enum StreamUsage
+    enum BufferUsage
     {
-        SU_CPU_IMMUTABLE, //!< Input stream. Once the stream is created, it won't change any more.
-        SU_CPU_DEFAULT,   //!< Input stream. Like D3DUSAGE_STATIC.
-        SU_CPU_DYNAMIC,   //!< Input stream. Like D3DUSAGE_DYNAMIC.
-        SU_GPU,           //!< output stream. Use to return GPU generated data back to CPU.
-        NUM_STREAM_USAGES //!< number of stream usage flags.
+        BU_CPU_IMMUTABLE, //!< Input buffer. Once the stream is created, it won't change any more.
+        BU_CPU_DEFAULT,   //!< Input buffer. Like D3DUSAGE_STATIC.
+        BU_CPU_DYNAMIC,   //!< Input buffer. Like D3DUSAGE_DYNAMIC.
+        BU_GPU,           //!< output buffer. Use to return GPU generated data back to CPU.
+        NUM_STREAM_USAGES //!< number of buffer usage flags.
     };
 
     //!
-    //! Stream type
+    //! Buffer type
     //!
-    enum StreamType
+    enum BufferType
     {
-        ST_TEXTURE,      //!< texture stream
-        ST_VERTEX,       //!< vertex stream
-        ST_INDEX,        //!< index stream
-        NUM_STREAM_TYPES //!< number of stream types.
+        BT_TEXTURE,      //!< texture buffer
+        BT_VERTEX,       //!< vertex buffer
+        BT_INDEX,        //!< index buffer
+        NUM_STREAM_TYPES //!< number of buffer types.
     };
 
-    //! \name stream descriptor for specific resource 
+    //! \name buffer descriptor for specific resource 
     //@{
-    typedef ImageDesc  TextureStreamDesc; //!< texture stream descriptor
-    typedef VtxFmtDesc VertexStreamDesc; //!< vertex stream descriptor
+    typedef ImageDesc  TextureBufferDesc; //!< texture stream descriptor
+    typedef VtxFmtDesc VertexBufferDesc; //!< vertex stream descriptor
     //!
-    //! index stream descriptor
+    //! index buffer descriptor
     //!
-    struct IndexStreamDesc
+    struct IndexBufferDesc
     {
         PrimitiveType prim;   //!< primitive type
         size_t        numIdx; //!< number of indices
@@ -128,19 +128,19 @@ namespace GN { namespace gfx { namespace nes
     //@{
 
     //!
-    //! basic stream class
+    //! basic buffer class
     //!
-    class Stream : public NoCopy
+    class Buffer : public NoCopy
     {
-        StreamType  mType;
-        StreamUsage mUsage;
+        BufferType  mType;
+        BufferUsage mUsage;
 
     protected:
 
         //!
         //! ctor
         //!
-        Stream( StreamType t, StreamUsage u ) : mType( t ), mUsage(u)
+        Buffer( BufferType t, BufferUsage u ) : mType( t ), mUsage(u)
         {
             GN_ASSERT( 0 <= t && t <= NUM_STREAM_TYPES );
             GN_ASSERT( 0 <= u && u <= NUM_STREAM_USAGES );
@@ -151,35 +151,35 @@ namespace GN { namespace gfx { namespace nes
         //!
         //! get stream type
         //!
-        StreamType getType() const { return mType; }
+        BufferType getType() const { return mType; }
 
         //!
         //! get stream usage
         //!
-        StreamUsage getUsage() const { return mUsage; }
+        BufferUsage getUsage() const { return mUsage; }
     };
 
     //!
-    //! texture stream class
+    //! texture buffer class
     //!
-    class TextureStream : public Stream
+    class TextureBuffer : public Buffer
     {
     protected :
 
         //!
         //! ctor
         //!
-        TextureStream( StreamUsage u ) : Stream( ST_TEXTURE, u ) {}
+        TextureBuffer( BufferUsage u ) : Buffer( BT_TEXTURE, u ) {}
 
     public :
 
         //!
         //! get descriptor
         //!
-        virtual const TextureStreamDesc & getDesc() const = 0;
+        virtual const TextureBufferDesc & getDesc() const = 0;
 
         //!
-        //! copy stream content to somewhere
+        //! copy buffer content to somewhere
         //!
         virtual bool copyTo(
             void * dst,
@@ -190,51 +190,51 @@ namespace GN { namespace gfx { namespace nes
     };
 
     //!
-    //! vertex stream class
+    //! vertex buffer class
     //!
-    class VertexStream : public Stream
+    class VertexBuffer : public Buffer
     {
     protected :
 
         //!
         //! ctor
         //!
-        VertexStream( StreamUsage u ) : Stream( ST_VERTEX, u ) {}
+        VertexBuffer( BufferUsage u ) : Buffer( BT_VERTEX, u ) {}
 
     public :
 
         //!
         //! get descriptor
         //!
-        virtual const VertexStreamDesc & getDesc() const = 0;
+        virtual const VertexBufferDesc & getDesc() const = 0;
 
         //!
-        //! copy stream content to somewhere
+        //! copy buffer content to somewhere
         //!
         virtual bool copyTo( void * dst, size_t stream ) const = 0;
     };
 
     //!
-    //! index stream class
+    //! index buffer class
     //!
-    class IndexStream : public Stream
+    class IndexBuffer : public Buffer
     {
     protected :
 
         //!
         //! ctor
         //!
-        IndexStream( StreamUsage u ) : Stream( ST_INDEX, u ) {}
+        IndexBuffer( BufferUsage u ) : Buffer( BT_INDEX, u ) {}
 
     public :
 
         //!
         //! get descriptor
         //!
-        virtual const IndexStreamDesc & getDesc() const = 0;
+        virtual const IndexBufferDesc & getDesc() const = 0;
 
         //!
-        //! copy stream content to somewhere
+        //! copy buffer content to somewhere
         //!
         virtual bool copyTo( void * dst ) const = 0;
     };
@@ -328,16 +328,16 @@ namespace GN { namespace gfx { namespace nes
         //! \name rendering functions
         //@{
         virtual void begin( EffectId ) = 0; //!< called every frame to prepare for rendering. like glBegin()
-        virtual void setInputTextures( const StreamId *, size_t ) = 0;
-        virtual void setInputVertices( StreamId ) = 0;
-        virtual void setInputIndices( StreamId ) = 0;
+        virtual void setInputTextures( const BufferId *, size_t ) = 0;
+        virtual void setInputVertices( BufferId ) = 0;
+        virtual void setInputIndices( BufferId ) = 0;
         virtual void setInputIndices( PrimitiveType ) = 0;
         virtual void setInputConstants( const ConstData * const *, size_t ) = 0;
-        virtual void setOutputTextures( const StreamId *, size_t ) = 0;
-        virtual void setOutputVertices( StreamId ) = 0;
+        virtual void setOutputTextures( const BufferId *, size_t ) = 0;
+        virtual void setOutputVertices( BufferId ) = 0;
         virtual void draw( size_t startPrim = 0, size_t numPrims = 0 ) = 0;
-        virtual StreamId getOutputTexture( size_t ) = 0;
-        virtual StreamId getOutputVertices() = 0;
+        virtual BufferId getOutputTexture( size_t ) = 0;
+        virtual BufferId getOutputVertices() = 0;
         virtual void end() = 0; //!< called every frame to end rendering. like glEnd().
         //@}
     };
@@ -357,12 +357,12 @@ namespace GN { namespace gfx { namespace nes
         virtual ~EffectSystem();
         //@}
 
-        //! \name stream manager
+        //! \name buffer manager
         //@{
-        StreamId registerStream( Stream * stream );
-        Stream * removeStream( StreamId );
-        void     removeAllStreams();
-        Stream * getStream( StreamId ) const;
+        BufferId registerBuffer( Buffer * );
+        Buffer * removeBuffer( BufferId );
+        void     removeAllBuffers();
+        Buffer * getBuffer( BufferId ) const;
         //@}
 
         //! \name Effect manager
