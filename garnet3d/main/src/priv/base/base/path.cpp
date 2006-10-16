@@ -456,6 +456,77 @@ bool GN::path::resolve( StrA & result, const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::path::getRelative( StrA & result, const StrA & path, const StrA & base )
+{
+    GN_GUARD;
+
+    struct Local
+    {
+        StrA             input;
+        DynaArray<char>  buf;
+        DynaArray<char*> parts;
+
+        void split( const StrA & path )
+        {
+            parts.clear();
+            sNormalizePathSeparator( input, path );
+            buf.resize( input.size() + 1 );
+            memcpy( buf.cptr(), input.cptr(), input.size() + 1 );
+            parts.append( buf.cptr() );
+            for( size_t i = 0; i < buf.size() - 1; ++i )
+            {
+                if( PATH_SEPARATOR == buf[i] )
+                {
+                    buf[i] = 0;
+                    parts.append( buf.cptr() + i + 1 );
+                }
+            }
+        }
+    };
+
+    // shortcut for empty input strings.
+    if( path.empty() || base.empty() ) { sNormalizePathSeparator(result, path); return; }
+
+    // split input path into components by PATH_SEPARATOR.
+    Local p, b;
+    p.split( path );
+    b.split( base );
+
+    // find the commen prefix between path and base.
+    size_t n = min( p.parts.size(), b.parts.size() );
+    size_t i;
+    for( i = 0; i < n; ++i )
+    {
+        const char * s1 = p.parts[i];
+        const char * s2 = b.parts[i];
+#if GN_MSWIN
+        if( 0 != strCmpI( s1, s2 ) ) break;
+#else
+        if( 0 != strCmp( s1, s2 ) ) break;
+#endif
+    }
+    // here, "i" should point to the first different part.
+
+    // compose result path
+    result.clear();
+    if( i > 0 ) for( size_t j = i; j < b.parts.size(); ++j )
+    {
+        result.append( ".." );
+        result.append( PATH_SEPARATOR );
+    }
+    for( size_t j = i; j < p.parts.size(); ++j )
+    {
+        result.append( p.parts[j] );
+        result.append( PATH_SEPARATOR );
+    }
+    result.trimRight( PATH_SEPARATOR );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 std::vector<GN::StrA> &
 GN::path::glob(
     std::vector<StrA> & result,

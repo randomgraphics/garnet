@@ -162,4 +162,16 @@ public:
         TS_ASSERT_EQUALS( ".", GN::path::getExt("a.") );
         TS_ASSERT_EQUALS( "", GN::path::getExt("a") );
     }
+
+    void testToRelative()
+    {
+        using namespace GN::path;
+        TS_ASSERT_EQUALS( "..", getRelative( "a/b/c", "a\\b\\c\\d" ) );
+        TS_ASSERT_EQUALS( "", getRelative( "a/b/c", "a\\b\\c" ) );
+        TS_ASSERT_EQUALS( "c", getRelative( "a/b/c", "a\\b" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b"PSS"c", getRelative( "a/b/c", "" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b"PSS"c", getRelative( "a/b/c", "d/e" ) );
+        TS_ASSERT_EQUALS( "c", getRelative( "c:/a/b/c", "c:/a/b" ) );
+        TS_ASSERT_EQUALS( "c:"PSS"a"PSS"b", getRelative( "c:/a/b", "d:/a" ) );
+    }
 };
