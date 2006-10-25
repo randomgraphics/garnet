@@ -18,6 +18,8 @@ GN::Logger * GN::gfx::D3D9Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 // Global functions
 // *****************************************************************************
 
+bool gEnablePixPerf = true; // default is enabled
+
 #if GN_STATIC
 GN::gfx::Renderer *
 createD3D9Renderer()
@@ -28,6 +30,33 @@ GNgfxCreateRenderer()
 {
     GN_GUARD;
 
+    struct LOCAL
+    {
+        static bool sLookForNvPerfHUD()
+        {
+#if GN_XENON
+            return false;
+#else
+            GN::AutoComPtr<IDirect3D9> d3d;
+            d3d.attach( Direct3DCreate9(D3D_SDK_VERSION) );
+            if( !d3d ) return false;
+            UINT nAdapter = d3d->GetAdapterCount();
+            GN_ASSERT( nAdapter );
+            for( uint32_t i = 0; i < nAdapter; ++i )
+            {
+                D3DADAPTER_IDENTIFIER9 Identifier;
+                GN_DX9_CHECK( d3d->GetAdapterIdentifier( i, 0, &Identifier ) );
+                if( strstr(Identifier.Description,"NVPerfHUD") ) return true;
+            }
+            return false;
+#endif
+        }
+    };
+
+    // check for NVPerfHUD
+    gEnablePixPerf = !LOCAL::sLookForNvPerfHUD();
+
+    // create renderer
     GN::AutoObjPtr<GN::gfx::D3D9Renderer> p( new GN::gfx::D3D9Renderer );
     if( !p->init() ) return 0;
     return p.detach();
