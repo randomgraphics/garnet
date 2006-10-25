@@ -1,7 +1,7 @@
 macro GN_HFileHeader()
 {
-	// username is always chenlee
-	username = "chenlee"
+	// get username
+	username = cat( cat( GetEnv( "USERNAME" ), "\@" ), GetEnv("USERDOMAIN") )
 
 	hbuf = GetCurrentBuf()
 	fullpath = GetBufName( hbuf )
