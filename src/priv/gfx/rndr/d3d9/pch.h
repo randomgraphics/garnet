@@ -45,6 +45,8 @@ inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for 
 #endif
 #endif
 
+extern bool gEnablePixPerf; // global variable to switch on/off PIX perf calls.
+
 #if GN_RETAIL_BUILD // disable PIX tag in retail build.
 #define PIXPERF_BEGIN_EVENT_EX( color, name )
 #define PIXPERF_END_EVENT()
@@ -60,27 +62,27 @@ struct PixPerfScopeEvent
 {
     PixPerfScopeEvent( D3DCOLOR color, const char * name )
     {
-        PIXBeginNamedEvent( color, name );
+        if( gEnablePixPerf ) PIXBeginNamedEvent( color, name );
     }
     ~PixPerfScopeEvent()
     {
-        PIXEndNamedEvent();
+        if( gEnablePixPerf ) PIXEndNamedEvent();
     }
 };
 #else // GN_XENON
-#define PIXPERF_BEGIN_EVENT_EX( color, name )   D3DPERF_BeginEvent( color, GN_JOIN_DIRECT( L, name ) )
-#define PIXPERF_END_EVENT()                     D3DPERF_EndEvent()
-#define PIXPERF_SET_MARKER_EX( color, name )    D3DPERF_SetMarker( color, GN_JOIN_DIRECT( L, name ) )
+#define PIXPERF_BEGIN_EVENT_EX( color, name )   if( !gEnablePixPerf ) {} else D3DPERF_BeginEvent( color, GN_JOIN_DIRECT( L, name ) )
+#define PIXPERF_END_EVENT()                     if( !gEnablePixPerf ) {} else D3DPERF_EndEvent()
+#define PIXPERF_SET_MARKER_EX( color, name )    if( !gEnablePixPerf ) {} else D3DPERF_SetMarker( color, GN_JOIN_DIRECT( L, name ) )
 #define PIXPERF_SCOPE_EVENT_EX( color, name )   PixPerfScopeEvent __pixScopeEvent__( color, GN_JOIN_DIRECT( L, name ) )
 struct PixPerfScopeEvent
 {
     PixPerfScopeEvent( D3DCOLOR color, const wchar_t * name )
     {
-        D3DPERF_BeginEvent( color, name );
+        if( gEnablePixPerf ) D3DPERF_BeginEvent( color, name );
     }
     ~PixPerfScopeEvent()
     {
-        D3DPERF_EndEvent();
+        if( gEnablePixPerf ) D3DPERF_EndEvent();
     }
 };
 #endif // GN_XENON
