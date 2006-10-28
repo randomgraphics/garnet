@@ -278,6 +278,10 @@ bool GN::gfx::OGLRenderer::supportShader( const StrA & profile )
     else if( "glslps" == profile ) return GLEW_ARB_shader_objects &&
                                           GLEW_ARB_fragment_shader &&
                                           GLEW_ARB_shading_language_100;
+#ifdef HAS_CG_OGL
+    else if( "cgvs" == profile ) return CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
+    else if( "cgps" == profile ) return CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
+#endif
     else return false;
 
     GN_UNGUARD;

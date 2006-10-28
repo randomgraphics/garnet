@@ -573,6 +573,7 @@ namespace GN { namespace gfx
         //!     ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_x ps_3_0 xps
         //!     arbvp1, arbfp1,
         //!     glslvs, glslps,
+        //!     cgvs, cgps
         //!
         //! \note Profile tag is case sensitive.
         //!

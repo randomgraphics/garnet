@@ -41,6 +41,10 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
         return false;
     }
 
+#ifdef HAS_CG_D3D9
+    GN_DX9_CHECK_RV( cgD3D9SetDevice( getDevice() ), false );
+#endif
+
     mFont = new D3D9Font(*this);
     if( !mFont->init() ) return false;
 
@@ -125,6 +129,10 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
             ++i;
         }
     }
+
+#ifdef HAS_CG_D3D9
+    GN_DX9_CHECK_RV( cgD3D9SetDevice( NULL ), false );
+#endif
 
     GN_UNGUARD;
 }

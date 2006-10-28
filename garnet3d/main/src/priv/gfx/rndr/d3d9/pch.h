@@ -35,6 +35,11 @@
 #include <d3dx9.h>
 #include <dxerr9.h>
 
+#ifdef HAS_CG_D3D9
+#include <Cg/cg.h>
+#include <Cg/cgD3D9.h>
+#endif
+
 #if GN_XENON
 inline BOOL D3DXDebugMute( BOOL ) { return FALSE; } // Fake D3DXDebugMute() for Xenon
 #ifndef D3DLOCK_DISCARD
