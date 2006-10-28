@@ -364,7 +364,7 @@ namespace GN { namespace gfx
         inline void drawFaceSegment( size_t idx );
     };
 
-    //! \name mesh loading and saving from other formats
+    //! \name mesh loading from and saving to other formats
     //@{
 
     //!

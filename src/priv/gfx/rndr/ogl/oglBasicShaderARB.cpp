@@ -296,11 +296,33 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
                     GN_OGL_CHECK( glProgramLocalParameter4fvARB(
                         mTarget,
                         (GLuint)(desc.index+i),
-                        (const float * )&u.value.vector4s[0] ) );
+                        (const float * )u.value.vector4s[i] ) );
                 }
                 break;
 
             case UVT_MATRIX44 :
+                for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
+                {
+                    GLuint idx = desc.index + i * 4;
+                    GN_OGL_CHECK( glProgramLocalParameter4fvARB(
+                        mTarget,
+                        idx,
+                        (const float * )u.value.matrix44s[i][0] ) );
+                    GN_OGL_CHECK( glProgramLocalParameter4fvARB(
+                        mTarget,
+                        idx + 1,
+                        (const float * )u.value.matrix44s[i][1] ) );
+                    GN_OGL_CHECK( glProgramLocalParameter4fvARB(
+                        mTarget,
+                        idx + 2,
+                        (const float * )u.value.matrix44s[i][2] ) );
+                    GN_OGL_CHECK( glProgramLocalParameter4fvARB(
+                        mTarget,
+                        idx + 3,
+                        (const float * )u.value.matrix44s[i][3] ) );
+                }
+                break;
+
             case UVT_FLOAT :
             case UVT_BOOL :
             case UVT_INT :
