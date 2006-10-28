@@ -7,9 +7,13 @@ sources = [
     'basicRenderer.cpp',
     'basicResourceManager.cpp',
     'basicTexture.cpp',
+    'cgShader.cpp',
+    'charBitmap8x13.cpp',
     'renderWindowMsw.cpp',
     'renderWindowX11.cpp',
-    'charBitmap8x13.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
-GN.newTarget( 'stlib', 'GNrndrCommon', [cluster] )
+target = GN.newTarget( 'stlib', 'GNrndrCommon', [cluster] )
+if GN.conf['has_cg'] :
+    cluster.addCompileFlags( CPPDEFINES = ['HAS_CG=1'] )
+    target.externalDependencies += ['cg']

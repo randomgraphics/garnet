@@ -25,6 +25,11 @@
 #endif
 #include <GL/glu.h>
 
+#ifdef HAS_CG_OGL
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+#endif
+
 //!
 //! Automatically pop OGL attributes while out of scope.
 //!

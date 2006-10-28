@@ -355,7 +355,10 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # =================
     # 是否支持Cg shader
     # =================
-    conf['has_cg'] = CONF_enableCg and c.CheckCHeader('cg/cg.h')
+    if CONF_enableCg :
+        conf['has_cg']      = c.CheckLibWithHeader( 'cg', 'cg/cg.h', 'C' )
+        conf['has_cg_d3d9'] = c.CheckLibWithHeader( 'cgD3D9', ['cg/cg.h','cg/cgD3D9.h'], 'C' )
+        conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['cg/cg.h','cg/cgGL.h'], 'C' )
 
     # ==============
     # 是否支持OpenGL

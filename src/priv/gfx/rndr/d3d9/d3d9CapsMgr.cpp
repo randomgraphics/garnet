@@ -272,6 +272,9 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 #if GN_XENON
     else if( "xvs" == profile ) return true;
 #endif
+#ifdef HAS_CG_D3D9
+    else if( "cgvs" == profile ) return d3dcaps.VertexShaderVersion > 0;
+#endif
 
     // ps
     else if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,1);
@@ -283,8 +286,11 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 #if GN_XENON
     else if( "xps" == profile ) return true;
 #endif
+#ifdef HAS_CG_D3D9
+    else if( "cgps" == profile ) return d3dcaps.PixelShaderVersion > 0;
+#endif
 
-    // failed
+    // no shader support
     else return false;
 
     GN_UNGUARD;

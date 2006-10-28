@@ -42,6 +42,16 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
         return false;
     }
 
+#ifdef HAS_CG_OGL
+    // create Cg context
+    mCgContext = cgCreateContext();
+    if( !mCgContext )
+    {
+        GN_ERROR(sLogger)( "Fail to create Cg context!" );
+        return false;
+    }
+#endif
+
     // success
     return true;
 
@@ -65,6 +75,7 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
     }
     mVtxFmts.clear();
 
+    // check for non-released resources
     if( !mResourceList.empty() )
     {
         GN_ERROR(sLogger)( "All graphics resouces MUST be released, after recieving 'destroy' signal!" );
@@ -75,6 +86,15 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
             GN_ERROR(sLogger)( "0x%p", r );
         }
     }
+
+#ifdef HAS_CG_OGL
+    // destroy Cg context
+    if( mCgContext )
+    {
+        cgDestroyContext( mCgContext );
+        mCgContext = 0;
+    }
+#endif
 
     GN_UNGUARD;
 }

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "oglResource.h"
+#include "../common/cgShader.h"
 
 namespace GN { namespace gfx
 {
@@ -369,6 +370,77 @@ namespace GN { namespace gfx
         bool createProgram();
         StrA getProgramInfoLog( GLhandleARB program );
     };
+
+    // *************************************************************************
+    // Cg shader
+    // *************************************************************************
+
+#ifdef HAS_CG_OGL
+
+    //!
+    //! Basic Cg Shader class
+    //!
+    class OGLBasicShaderCg : public OGLBasicShader, public OGLResource, public StdClass
+    {
+        GN_DECLARE_STDCLASS( OGLBasicShaderCg, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        OGLBasicShaderCg( OGLRenderer & r, ShaderType t )
+            : OGLBasicShader( t, LANG_CG )
+            , OGLResource( r ) { clear(); }
+        virtual ~OGLBasicShaderCg() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const StrA & code );
+        void quit();
+        bool ok() const { return MyParent::ok(); }
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // from OGLBasicShader
+        // ********************************
+    public:
+
+        virtual void enable() const;
+        virtual void disable() const;
+        virtual void apply() const;
+        virtual void applyDirtyUniforms() const;
+
+        // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        CgShader mShader;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+    };
+
+#endif
+
 }}
 
 // *****************************************************************************
