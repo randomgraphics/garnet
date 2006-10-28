@@ -27,8 +27,7 @@ class Scene
         RendererContext rc;
         Vertex vb[24];
         uint16_t ib[36];
-
-        void clear() { ready = false; vs.clear(); ps.clear(); }
+        StrA pvwName;
 
         BoxContext()
         {
@@ -40,6 +39,119 @@ class Scene
                 vb[0].n, sizeof(Vertex),
                 ib, 0 );
         };
+
+        void clear() { ready = false; vs.clear(); ps.clear(); }
+
+        void create()
+        {
+            Renderer & r = gRenderer;
+
+            ready = false;
+            pvwName = "gPvw";
+
+            // create shaders for box rendering
+            if( r.supportShader( "vs_1_1" ) )
+            {
+                static const char * code =
+                    "uniform float4x4 gPvw; \n"
+                    "struct VSInput { float4 pos : POSITION; float3 nml : NORMAL; }; \n"
+                    "struct VSOutput { float4 pos : POSITION; float4 clr : COLOR0; }; \n"
+                    "VSOutput main( VSInput i ) \n"
+                    "{ \n"
+                    "   VSOutput o; \n"
+                    "   o.pos = mul( i.pos, gPvw ); \n"
+                    "   o.clr = float4( abs(i.nml), 1.0 ); \n"
+                    "   return o; \n"
+                    "}";
+                vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
+                if( !vs ) return;
+            }
+            else if( r.supportShader( "glslvs" ) )
+            {
+                static const char * code =
+                    "uniform mat4 gPvw; \n"
+                    "void main() \n"
+                    "{ \n"
+                    "   gl_Position = gPvw * gl_Vertex; \n"
+                    "   gl_FrontColor = vec4( abs(gl_Normal), 1.0 ); \n"
+                    "}";
+                vs.attach( r.createVS( LANG_OGL_GLSL, code ) );
+                if( !vs ) return;
+            }
+            else if( r.supportShader( "arbvp1" ) )
+            {
+                static const char * code =
+                    "!!ARBvp1.0                                    \n"
+                    "PARAM c[5] = { { 1 },                         \n"
+                    "                program.local[0..3] };        \n"
+                    "ABS result.color.xyz, vertex.normal;          \n"
+                    "DP4 result.position.w, vertex.position, c[4]; \n"
+                    "DP4 result.position.z, vertex.position, c[3]; \n"
+                    "DP4 result.position.y, vertex.position, c[2]; \n"
+                    "DP4 result.position.x, vertex.position, c[1]; \n"
+                    "MOV result.color.w, c[0].x;                   \n"
+                    "END";
+                vs.attach( r.createVS( LANG_OGL_ARB, code ) );
+                if( !vs ) return;
+                pvwName = "l0";
+            }
+            else return;
+
+            if( r.supportShader( "ps_1_1" ) )
+            {
+                static const char * code =
+                    "float4 main( float4 clr : COLOR0 ) : COLOR \n"
+                    "{ \n"
+                    "   return clr; \n"
+                    "}";
+                ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
+                if( !ps ) return;
+            }
+            else if( r.supportShader( "glslps" ) )
+            {
+                static const char * code =
+                    "void main() \n"
+                    "{ \n"
+                    "   gl_FragColor = gl_Color; \n"
+                    "}";
+                ps.attach( r.createPS( LANG_OGL_GLSL, code ) );
+                if( !ps ) return;
+            }
+            else if( r.supportShader( "arbfp1" ) )
+            {
+                static const char * code =
+                    "!!ARBfp1.0 \n"
+                    "MOV result.color, fragment.color; \n"
+                    "END";
+                ps.attach( r.createPS( LANG_OGL_ARB, code ) );
+                if( !ps ) return;
+            }
+            else return;
+
+            // create box vertex decl
+            vf = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
+            if( 0 == vf ) return;
+
+            // setup context
+            rc.resetToDefault();
+            //rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
+            rc.setShaders( vs, ps );
+            rc.setVtxFmt( vf );
+            ready = true;
+        }
+
+        void update( const Matrix44f & pvw )
+        {
+            if( vs ) vs->setUniformByNameM( pvwName, pvw );
+        }
+
+        void draw()
+        {
+            if( !ready ) return;
+            Renderer & r = gRenderer;
+            r.setContext( rc );
+            r.drawIndexedUp( TRIANGLE_LIST, 12, 24, vb, sizeof(Vertex), ib );
+        }
     } box;
 
     uint32_t tex0;
@@ -47,77 +159,6 @@ class Scene
     uint32_t eff0;
 
     Matrix44f world, view, proj;
-
-    void createBoxContext()
-    {
-        Renderer & r = gRenderer;
-
-        box.ready = false;
-
-        // create shaders for box rendering
-        if( r.supportShader( "vs_1_1" ) )
-        {
-            static const char * code =
-                "uniform float4x4 gPvw; \n"
-                "struct VSInput { float4 pos : POSITION; float3 nml : NORMAL; }; \n"
-                "struct VSOutput { float4 pos : POSITION; float4 clr : COLOR0; }; \n"
-                "VSOutput main( VSInput i ) \n"
-                "{ \n"
-                "   VSOutput o; \n"
-                "   o.pos = mul( i.pos, gPvw ); \n"
-                "   o.clr = float4( abs(i.nml), 1.0 ); \n"
-                "   return o; \n"
-                "}";
-            box.vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
-            if( !box.vs ) return;
-        }
-        else if( r.supportShader( "glslvs" ) )
-        {
-            static const char * code =
-                "uniform mat4 gPvw; \n"
-                "void main() \n"
-                "{ \n"
-                "   gl_Position = gPvw * gl_Vertex; \n"
-                "   gl_FrontColor = vec4( abs(gl_Normal), 1.0 ); \n"
-                "}";
-            box.vs.attach( r.createVS( LANG_OGL_GLSL, code ) );
-            if( !box.vs ) return;
-        }
-        else return;
-
-        if( r.supportShader( "ps_1_1" ) )
-        {
-            static const char * code =
-                "float4 main( float4 clr : COLOR0 ) : COLOR \n"
-                "{ \n"
-                "   return clr; \n"
-                "}";
-            box.ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
-            if( !box.ps ) return;
-        }
-        else if( r.supportShader( "glslps" ) )
-        {
-            static const char * code =
-                "void main() \n"
-                "{ \n"
-                "   gl_FragColor = gl_Color; \n"
-                "}";
-            box.ps.attach( r.createPS( LANG_OGL_GLSL, code ) );
-            if( !box.ps ) return;
-        }
-        else return;
-
-        // create box vertex decl
-        box.vf = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
-        if( 0 == box.vf ) return;
-
-        // setup context
-        box.rc.resetToDefault();
-        //box.rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-        box.rc.setShaders( box.vs, box.ps );
-        box.rc.setVtxFmt( box.vf );
-        box.ready = true;
-    }
 
 public:
 
@@ -143,9 +184,7 @@ public:
         {
             static const char * code =
                 "!!ARBfp1.0 \n"
-                "PARAM white = program.local[0]; \n"
-                "OUTPUT oClr = result.color; \n"
-                "MOV oClr, white; \n"
+                "MOV result.color, program.local[0]; \n"
                 "END";
             ps1.attach( r.createPS( LANG_OGL_ARB, code ) );
             if( !ps1 ) return false;
@@ -175,9 +214,19 @@ public:
             if( !ps2 ) return false;
             ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
         }
+        else if( r.supportShader( "arbfp1" ) )
+        {
+            static const char * code =
+                "!!ARBfp1.0 \n"
+                "MOV result.color, program.local[0]; \n"
+                "END";
+            ps2.attach( r.createPS( LANG_OGL_ARB, code ) );
+            if( !ps2 ) return false;
+            ps2->setUniformByNameV( "l0", Vector4f(1,0,0,1) );
+        }
 
         // create box rendering context
-        createBoxContext();
+        box.create();
 
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
@@ -210,10 +259,8 @@ public:
         angle += deg2rad(0.2f);
         world.rotateY( angle );
 
-        if( box.vs )
-        {
-            box.vs->setUniformByNameM( "gPvw", proj * view * world );
-        }
+        // update box matrix
+        box.update( proj * view * world );
 
         // update color
         static int r = 0; static int rr = 1;
@@ -249,7 +296,7 @@ public:
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0.0, 0.5, 0.5, 1.0 );
         }
 
-        //* quad 4
+        // quad 4
         Effect * eff = app.getResMgr().effects.getResource( eff0 );
         for( size_t i = 0; i < eff->getNumPasses(); ++i )
         {
@@ -257,14 +304,10 @@ public:
             eff->commitChanges();
             r.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
             eff->passEnd();
-        }//*/
+        }
 
-        //* draw solid box
-        if( box.ready )
-        {
-            r.setContext( box.rc );
-            r.drawIndexedUp( TRIANGLE_LIST, 12, 24, box.vb, sizeof(BoxContext::Vertex), box.ib );
-        }//*/
+        // draw box
+        box.draw();
 
         /* a wireframe box
         {
