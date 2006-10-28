@@ -134,18 +134,6 @@ void GN::gfx::OGLBasicShaderARB::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderARB::enable() const
-{
-    GN_GUARD_SLOW;
-
-    GN_OGL_CHECK( glEnable( mTarget ) );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::OGLBasicShaderARB::disable() const
 {
     GN_GUARD_SLOW;
@@ -161,6 +149,8 @@ void GN::gfx::OGLBasicShaderARB::disable() const
 void GN::gfx::OGLBasicShaderARB::apply() const
 {
     GN_GUARD_SLOW;
+
+    GN_OGL_CHECK( glEnable( mTarget ) );
 
     GN_ASSERT( glIsProgramARB(mProgram) );
     GN_OGL_CHECK( glBindProgramARB( mTarget, mProgram ) );

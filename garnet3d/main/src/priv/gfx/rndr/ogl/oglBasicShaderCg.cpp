@@ -49,14 +49,6 @@ void GN::gfx::OGLBasicShaderCg::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::enable() const
-{
-    GN_UNIMPL();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::OGLBasicShaderCg::disable() const
 {
     GN_UNIMPL();

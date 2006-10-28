@@ -312,7 +312,6 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
             if( newVtxShader && LANG_OGL_GLSL != newVtxShader->getLang() )
             {
                 const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newVtxShader);
-                sh->enable();
                 sh->apply();
             }
             else
@@ -359,7 +358,6 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
             if( newPxlShader && LANG_OGL_GLSL != newPxlShader->getLang() )
             {
                 const OGLBasicShader * sh = safeCast<const OGLBasicShader *>(newPxlShader);
-                sh->enable();
                 sh->apply();
             }
             else

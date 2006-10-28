@@ -17,12 +17,7 @@ namespace GN { namespace gfx
     struct OGLBasicShader : public Shader
     {
         //!
-        //! Enable shader profile
-        //!
-        virtual void enable() const = 0;
-
-        //!
-        //! Disable shader profile
+        //! Disable the shader
         //!
         virtual void disable() const = 0;
 
@@ -93,7 +88,6 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void enable() const;
         virtual void disable() const;
         virtual void apply() const;
         virtual void applyDirtyUniforms() const;
@@ -221,7 +215,6 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void enable() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
         virtual void disable() const;
         virtual void apply() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
         virtual void applyDirtyUniforms() const { GN_WARN(getLogger("GN.gfx.rndr.OGL"))( "this function should not be called!" ); }
@@ -414,7 +407,6 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void enable() const;
         virtual void disable() const;
         virtual void apply() const;
         virtual void applyDirtyUniforms() const;
