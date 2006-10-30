@@ -94,10 +94,10 @@ CONF_compiler = Compiler( ARGUMENTS.get('compiler', CONF_defaultCmdArgs['compile
                           ARGUMENTS.get('cpu', CONF_defaultCmdArgs['cpu'] ) )
 
 # 是否支持Cg语言.
-CONF_enableCg  = ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] )
+CONF_enableCg  = float( ARGUMENTS.get( 'cg', CONF_defaultCmdArgs['cg'] ) )
 
 # copy to devkit
-CONF_xedeploy = ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] )
+CONF_xedeploy = float( ARGUMENTS.get( 'xedeploy', CONF_defaultCmdArgs['xedeploy'] ) )
 
 ################################################################################
 #
@@ -359,6 +359,10 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
         conf['has_cg']      = c.CheckLibWithHeader( 'cg', 'cg/cg.h', 'C' )
         conf['has_cg_d3d9'] = c.CheckLibWithHeader( 'cgD3D9', ['cg/cg.h','cg/cgD3D9.h'], 'C' )
         conf['has_cg_ogl']  = c.CheckLibWithHeader( 'cgGL', ['cg/cg.h','cg/cgGL.h'], 'C' )
+    else:
+        conf['has_cg']      = 0
+        conf['has_cg_d3d9'] = 0
+        conf['has_cg_ogl']  = 0
 
     # ==============
     # 是否支持OpenGL
