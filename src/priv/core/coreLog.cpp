@@ -253,7 +253,7 @@ namespace GN
             strPrintf(
                 buf,
                 16384,
-                "%s(%d) : %s : %s\n",
+                "%s(%d) : name(%s), level(%s) : %s\n",
                 desc.file,
                 desc.line,
                 logger.getName().cptr(),
