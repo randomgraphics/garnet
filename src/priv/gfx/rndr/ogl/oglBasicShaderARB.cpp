@@ -293,7 +293,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
             case UVT_MATRIX44 :
                 for( size_t i = 0; i < u.value.matrix44s.size(); ++i )
                 {
-                    GLuint idx = desc.index + i * 4;
+                    GLuint idx = (GLuint)( desc.index + i * 4 );
                     GN_OGL_CHECK( glProgramLocalParameter4fvARB(
                         mTarget,
                         idx,
