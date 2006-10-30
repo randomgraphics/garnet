@@ -131,7 +131,7 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
     }
 
 #ifdef HAS_CG_D3D9
-    GN_DX9_CHECK_RV( cgD3D9SetDevice( NULL ), false );
+    GN_DX9_CHECK( cgD3D9SetDevice( NULL ) );
 #endif
 
     GN_UNGUARD;
