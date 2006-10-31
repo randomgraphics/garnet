@@ -425,7 +425,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     }
 
     // store texture properties
-    if( !setDesc( desc ) ) { quit(); return selfOK(); }
+    if( !setDesc( desc ) ) return failure();
 
     // determine gl texture type
     switch( getDesc().type )
@@ -438,7 +438,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
             if ( !GLEW_EXT_texture3D )
             {
                 GN_ERROR(sLogger)( "do not support 3D texture!" );
-                quit(); return selfOK();
+                return failure();
             }
             mOGLTarget = GL_TEXTURE_3D;
             break;
@@ -446,13 +446,13 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
             if ( !GLEW_ARB_texture_cube_map )
             {
                 GN_ERROR(sLogger)( "do not support CUBE texture!" );
-                quit(); return selfOK();
+                return failure();
             }
             mOGLTarget = GL_TEXTURE_CUBE_MAP_ARB;
             break;
         default :
             GN_ERROR(sLogger)( "invalid texture type!" );
-            quit(); return selfOK();
+            return failure();
     }
 
     // convert format to opengl paramaters
@@ -461,7 +461,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
                            mOGLType,
                            mOGLCompressed,
                            getDesc().format ) )
-    { quit(); return selfOK(); }
+        return failure();
 
     // create new opengl texture object
     const TextureDesc & desc = getDesc();
@@ -495,7 +495,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
             GN_UNEXPECTED();
             mOGLTexture = 0;
     }
-    if( 0 == mOGLTexture ) { quit(); return selfOK(); }
+    if( 0 == mOGLTexture ) return failure();
 
     // enable/disable mipmap autogeneration
     if( TEXTYPE_CUBE != getDesc().type && GLEW_SGIS_generate_mipmap )
@@ -540,11 +540,11 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     // call user-defined content loader
     if( !getLoader().empty() )
     {
-        if( !getLoader()( *this ) ) { quit(); return selfOK(); };
+        if( !getLoader()( *this ) ) return failure();;
     }
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

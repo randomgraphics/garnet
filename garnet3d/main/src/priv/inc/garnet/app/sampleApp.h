@@ -179,7 +179,7 @@ namespace GN { namespace app
         //@{
     public:
         SampleApp();
-        virtual ~SampleApp() {}
+        virtual ~SampleApp() { quit(); }
         //@}
 
         // ********************************

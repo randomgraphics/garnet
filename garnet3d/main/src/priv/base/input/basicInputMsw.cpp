@@ -20,15 +20,15 @@ bool GN::input::BasicInputMsw::init()
     GN_STDCLASS_INIT( GN::input::BasicInputMsw, () );
 
     // setup xinput function pointers
-    if( !setupXInputFunctionPointers() ) { quit(); return selfOK(); }
+    if( !setupXInputFunctionPointers() ) return failure();
 
     // initialize internal mouse position
     POINT pos;
-    GN_MSW_CHECK_DO( ::GetCursorPos( &pos ), quit(); return selfOK(); );
+    GN_MSW_CHECK_RV( ::GetCursorPos( &pos ), failure() );
     updateMousePosition( pos.x, pos.y, false );
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

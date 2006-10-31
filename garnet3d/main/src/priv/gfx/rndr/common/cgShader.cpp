@@ -41,14 +41,14 @@ bool GN::gfx::CgShader::init(
                 "\n",
                 cgGetLastListing(context) );
         }
-        quit(); return selfOK();
+        return failure();
     }
 
     // success
     mContext = context;
     mProfile = profile;
     mCode = code;
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

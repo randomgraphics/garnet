@@ -28,10 +28,10 @@ bool GN::input::InputDInput::init()
     GN_STDCLASS_INIT( GN::input::InputDInput, () );
 
     // init dinput stuff
-    if( !diInit() ) { quit(); return selfOK(); }
+    if( !diInit() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -155,7 +155,7 @@ bool GN::input::InputDInput::acquire()
 {
     GN_GUARD;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     mAcquired = false;
 

@@ -38,10 +38,10 @@ bool GN::gfx::D3D9Quad::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Quad, () );
 
-    if( !createResources() ) { quit(); return selfOK(); }
+    if( !createResources() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

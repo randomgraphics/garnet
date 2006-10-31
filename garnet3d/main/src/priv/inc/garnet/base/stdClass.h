@@ -13,11 +13,10 @@
 //! \param parent  待声明类的父类的名字
 //! \note 在所有基于stdclass类型的声明中使用这个宏
 //!
-//! 这个宏声明了两个别名：MySelf和MyParent，和标准私有函数： selfOK()
+//! 这个宏声明了两个别名：MySelf和MyParent
 //!
-#define GN_DECLARE_STDCLASS(self, parent)                           \
-            private : typedef self MySelf; typedef parent MyParent; \
-            private : bool selfOK() const { return MySelf::ok(); }
+#define GN_DECLARE_STDCLASS(self, parent) \
+            private : typedef self MySelf; typedef parent MyParent;
 
 
 //!
@@ -30,15 +29,19 @@
 //!
 //! 例如：GN_STDCLASS_INIT( myobject_c, (param1, param2) );
 //! 更多信息参见下面的例子
+#if GN_DEBUG_BUILD
+#define GN_STDCLASS_INIT( class_name, param_list )                               \
+    /* call parent's init() */                                                   \
+    if( !MyParent::init param_list ) return failure();                           \
+    preInit();                                                                   \
+    /* define sanity checker to ensure calling either failure() or success(). */ \
+    SanityChecker __GN_sc(*this);
+#else
 #define GN_STDCLASS_INIT( class_name, param_list )     \
-    /* check for twice init */                         \
-    if( selfOK() )                                     \
-    {                                                  \
-        GN_ERROR(getLogger("GN.base.StdClass"))( "u call init() twice!" ); \
-        quit(); return selfOK();                       \
-    }                                                  \
     /* call parent's init() */                         \
-    if( !MyParent::init param_list )  { quit(); return selfOK(); }
+    if( !MyParent::init param_list ) return failure(); \
+    preInit();
+#endif
 
 //!
 //! stdclass类型的标准退出过程
@@ -58,7 +61,7 @@ namespace GN
     //! \par
     //! 任何需要需要初始化/退出操作的类都应当从 StdClass 继承。
     //! \par
-    //! StdClass实现了标准的init/quit接口，这个接口包括七个标准函数：\n
+    //! StdClass实现了标准的init/quit接口，这个接口包括6个标准函数：\n
     //! - StdClass()  : 构造函数。
     //!   - 通过clear()将私有变量清零
     //!   - 一般情况下，除了 clear() 以外，构造函数中再不应包含其他代码，
@@ -67,8 +70,8 @@ namespace GN
     //! - ~StdClass() : 虚析构函数。
     //!   - 调用 quit() 释放资源。
     //! \n
-    //! - init()      : 实初始化函数。
-    //!   - 成功则返回1，否则返回0。
+    //! - init()      : 初始化函数。
+    //!   - 成功则返回true，否则返回false。
     //! \n
     //! - quit()      : 虚函数。
     //!   - 释放所有的资源，同时将私有变量清零（通过调用 clear() ）。
@@ -76,43 +79,12 @@ namespace GN
     //!   - quit() 函数应当可以被安全的、多次的调用，也就是说，
     //!   - 在释放资源时必须首先检查资源的有效性。
     //! \n
-    //! - ok()     : 公有虚函数。
+    //! - ok()        : 检测函数。
     //!   - 用来检查是否已经初始化过。成功调用 init() 后返回true，
     //!     调用 quit() 后返回false。
     //! \n
-    //! - selfOK() : 私有函数。
-    //!   - selfOK() 是 ok() 的“非虚”版本，强制调用本类的 ok() 函数。
-    //!   - 关于 selfOK() 的详细使用规则见下面的注解。
-    //! \n
     //! - clear()     : 私有函数。
     //!   - 用于将私有成员变量清零，被构造函数和 quit() 调用
-    //!
-    //! \note  selfOK() 是虚函数 ok() 的“非虚”版本，其功能是强制调用
-    //!        本类型的 ok() ，而不是象通常的虚函数那样根据实例的类型
-    //!        来调用相应的 ok() 。 selfOK() 是私有函数，只能在本类的成
-    //!        员函数中使用。 举个例子：
-    //! \code
-    //!    class A : public StdClass
-    //!    {
-    //!        GN_DECLARE_STDCLASS(A, StdClass);
-    //!    public:
-    //!        virtual bool ok() const { return 1; }
-    //!        bool test()             { return ok(); }
-    //!        bool test2()            { return selfOK(); }
-    //!    }
-    //!    class B : public A
-    //!    {
-    //!        GN_DECLARE_STDCLASS(B, A);
-    //!    public:
-    //!        virtual bool ok() const { return 0; }
-    //!    }
-    //!    A * a;
-    //!    B b;
-    //!    a = \&b;
-    //!    a->test();  // 由于a指向的是B类型的变量，所以按照
-    //!                // 虚函数的调用规则，将会调用B::ok()，所以返回0
-    //!    a->test2(); // 使用selfOk()宏后，强制调用A::ok()，返回1
-    //! \endcode
     //!
     class StdClass
     {
@@ -133,14 +105,13 @@ namespace GN
         //!
         bool init()
         {
-            if( selfOK() )
+            if( StdClass::ok() )
             {
                 GN_ERROR(getLogger("GN.base.StdClass"))( "u call init() twice!" );
-                quit(); return selfOK();
+                return failure();
             }
 
-            mOK = true;
-            return selfOK();
+            return success();
         }
 
         //!
@@ -151,26 +122,91 @@ namespace GN
         //!
         //! 是否初始化过？
         //!
-        virtual bool ok() const { return mOK; }
+        bool ok() const { return IS_SUCCESS == mOK; }
+
+    protected:
+
+#if GN_DEBUG_BUILD
+        //!
+        //! Sanity checker for calling either failure() or success() in init().
+        //!
+        class SanityChecker
+        {
+            //!
+            //! Boolean value to indicate whether failure() or success() is called.
+            //!
+            StdClass & theClass;
+
+        public:
+
+            //!
+            //! ctor.
+            //!
+            SanityChecker( StdClass & c ) : theClass(c)
+            {
+                GN_ASSERT( StdClass::IS_UNDEFINED == c.mOK );
+            }
+
+            //!
+            //! dtor. Check the boolean value.
+            //!
+            ~SanityChecker()
+            {
+                GN_ASSERT_EX(
+                    StdClass::IS_FAILURE == theClass.mOK || StdClass::IS_SUCCESS == theClass.mOK,
+                    "Neither failure() nor success() is called!" );
+            }
+        };
+#endif
+
+        //!
+        //! helper function called by macro GN_STDCLASS_INIT() to invalidate mOK.
+        //!
+        void preInit() { GN_ASSERT(IS_SUCCESS == mOK); mOK = IS_UNDEFINED; }
+
+        //!
+        //! helper function called in init() to indicate initialization failure.
+        //!
+        bool failure()
+        {
+            quit();
+            mOK = IS_FAILURE;
+            return false;
+        }
+
+        //!
+        //! helper function called in init() to indicate initialization success.
+        //!
+        bool success()
+        {
+            mOK = IS_SUCCESS;
+            return true;
+        }
 
     private :
 
-        //!
-        //! initialize data members
-        //!
-        void clear() { mOK = false; }
+        friend class SanityChecker;
 
         //!
-        //! private initialization check routine
+        //! initialization status
         //!
-        bool selfOK() const { return StdClass::ok(); }
+        enum InitStatus
+        {
+            IS_FAILURE   = 0, //!< init() failed.
+            IS_SUCCESS   = 1, //!< init() succedded.
+            IS_UNDEFINED = 2, //!< init() not called.
+        };
 
         //!
         //! initialization flag
         //!
-        bool mOK;
-    };
+        InitStatus mOK;
 
+        //!
+        //! initialize data members
+        //!
+        void clear() { mOK = IS_UNDEFINED; }
+    };
 }
 
 // *****************************************************************************

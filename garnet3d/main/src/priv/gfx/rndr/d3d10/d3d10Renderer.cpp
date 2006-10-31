@@ -50,14 +50,14 @@ bool GN::gfx::D3D10Renderer::init()
     GN_STDCLASS_INIT( GN::gfx::D3D10Renderer, () );
 
     // init sub-components
-    if( !dispInit()         ) { quit(); return selfOK(); }
-    if( !capsInit()         ) { quit(); return selfOK(); }
-    if( !resourceInit()     ) { quit(); return selfOK(); }
-    if( !contextInit()      ) { quit(); return selfOK(); }
-    if( !drawInit()         ) { quit(); return selfOK(); }
+    if( !dispInit()         ) return failure();
+    if( !capsInit()         ) return failure();
+    if( !resourceInit()     ) return failure();
+    if( !contextInit()      ) return failure();
+    if( !drawInit()         ) return failure();
 
     // successful
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

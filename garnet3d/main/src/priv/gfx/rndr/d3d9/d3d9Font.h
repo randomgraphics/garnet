@@ -34,7 +34,6 @@ namespace GN { namespace gfx {
     public:
         bool init();
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() { mTexture = 0; }
         //@}

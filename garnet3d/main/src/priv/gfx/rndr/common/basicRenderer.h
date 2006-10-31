@@ -54,14 +54,6 @@ namespace GN { namespace gfx
     public:
         bool init();
         void quit();
-        bool ok() const
-        {
-            return MyParent::ok()
-                && dispOk()
-                && resOk()
-                && contextOk()
-                && drawOk();
-        }
     private :
         void clear()
         {
@@ -83,7 +75,6 @@ namespace GN { namespace gfx
     private :
         bool dispInit() { return true; }
         void dispQuit() { mWindow.quit(); }
-        bool dispOk() const { return true; }
         void dispClear() {}
 
     protected:
@@ -137,7 +128,6 @@ namespace GN { namespace gfx
 
         bool resInit() { return true; }
         void resQuit() {}
-        bool resOk() const { return true; }
         void resClear() {}
 
         //@}
@@ -154,7 +144,6 @@ namespace GN { namespace gfx
 
         bool contextInit() { return true; }
         void contextQuit() {}
-        bool contextOk() const { return true; }
         void contextClear() { clearContextResources(); }
 
     protected:
@@ -203,7 +192,6 @@ namespace GN { namespace gfx
     private:
         bool drawInit()     { return true; }
         void drawQuit()     {}
-        bool drawOk() const { return true; }
         void drawClear()    { mNumPrims = 0; mNumBatches = 0; }
 
         //@}

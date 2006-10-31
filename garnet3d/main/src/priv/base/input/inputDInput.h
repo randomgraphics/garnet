@@ -40,14 +40,6 @@ namespace GN { namespace input
     public:
         bool init();
         void quit();
-        bool ok() const
-        {
-            return MyParent::ok()
-                && 0 != mLibrary
-                && 0 != mDInput
-                && 0 != mKeyboard
-                && 0 != mMouse;
-        }
     private:
         void clear()
         {

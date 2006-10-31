@@ -35,7 +35,6 @@ namespace GN { namespace gfx
     public:
         bool init( const VtxFmtDesc & );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() { mStreamBindings.clear(); mStateBindings.clear(); }
         //@}

@@ -47,9 +47,7 @@ namespace GN { namespace gfx
         //@{
     public:
         bool init( const TextureDesc & desc );
-        bool initFromFile( File & );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {

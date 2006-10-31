@@ -19,10 +19,10 @@ bool GN::gfx::D3D9VtxShaderHlsl::init( const StrA & code, const StrA & hints )
     // standard init procedure
     GN_STDCLASS_INIT( D3D9VtxShaderHlsl, () );
 
-    if( !createShader( code, hints ) || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !createShader( code, hints ) || !deviceRestore() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

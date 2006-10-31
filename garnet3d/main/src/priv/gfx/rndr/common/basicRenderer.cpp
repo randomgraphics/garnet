@@ -18,13 +18,13 @@ bool GN::gfx::BasicRenderer::init()
     GN_STDCLASS_INIT( BasicRenderer, () );
 
     // initialize sub-components one by one
-    if( !dispInit()    ) { quit(); return selfOK(); }
-    if( !resInit()     ) { quit(); return selfOK(); }
-    if( !contextInit() ) { quit(); return selfOK(); }
-    if( !drawInit()    ) { quit(); return selfOK(); }
+    if( !dispInit()    ) return failure();
+    if( !resInit()     ) return failure();
+    if( !contextInit() ) return failure();
+    if( !drawInit()    ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

@@ -64,16 +64,6 @@ namespace GN { namespace gfx
     public:
         bool init();
         void quit();
-        bool ok() const
-        {
-            return MyParent::ok()
-                && dispOK()
-                && capsOK()
-                && resourceOK()
-                && contextOK()
-                && drawOK();
-        }
-
     private:
         void clear()
         {
@@ -162,7 +152,6 @@ namespace GN { namespace gfx
     private :
         bool dispInit();
         void dispQuit();
-        bool dispOK() const { return 0 != mD3D; }
         void dispClear()
         {
             mDispOK = false;
@@ -227,7 +216,6 @@ namespace GN { namespace gfx
     private :
         bool capsInit() { return true; }
         void capsQuit() {}
-        bool capsOK() const { return true; }
         void capsClear() {}
 
         bool capsDeviceCreate();
@@ -281,7 +269,6 @@ namespace GN { namespace gfx
 
         bool resourceInit() { return true; }
         void resourceQuit() {}
-        bool resourceOK() const { return true; }
         void resourceClear() {}
         bool resourceDeviceCreate();
         bool resourceDeviceRestore();
@@ -327,7 +314,6 @@ namespace GN { namespace gfx
 
         bool contextInit() { return true; }
         void contextQuit() {}
-        bool contextOK() const { return true; }
         void contextClear() { mContext.resetToDefault(); }
         bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
@@ -447,7 +433,6 @@ namespace GN { namespace gfx
     private:
         bool drawInit() { return true; }
         void drawQuit() {}
-        bool drawOK() const { return true; }
         void drawClear()
         {
             mDrawBegan = false;

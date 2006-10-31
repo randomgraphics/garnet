@@ -436,7 +436,6 @@ namespace GN { namespace gfx {
         bool init( const EffectDesc & ); //!< initialize from descriptor
         bool init( const Effect & ); //!< Make effect clone
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() { mPassBegun = false; }
         //@}

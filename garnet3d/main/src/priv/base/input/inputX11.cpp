@@ -46,7 +46,7 @@ bool GN::input::InputX11::init()
     // Do custom init here
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

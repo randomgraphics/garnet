@@ -20,7 +20,7 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
     if( 0 == bytes )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     // store properties
@@ -31,11 +31,11 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
     // call user-defined content loader
     if( !getLoader().empty() )
     {
-        if( !getLoader()( *this ) ) { quit(); return selfOK(); }
+        if( !getLoader()( *this ) ) return failure();
     }
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -65,7 +65,7 @@ void GN::gfx::OGLVtxBufNormal::quit()
 void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     if( !basicLock( offset, bytes, flag ) ) return false;
     return &mBuffer[offset];
     GN_UNGUARD_SLOW;
@@ -77,7 +77,7 @@ void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t bytes, LockFlag fla
 void GN::gfx::OGLVtxBufNormal::unlock()
 {
     GN_GUARD_SLOW;
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     basicUnlock();
     GN_UNGUARD_SLOW;
 }

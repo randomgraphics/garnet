@@ -38,10 +38,10 @@ bool GN::gfx::D3D9Line::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D9Line, () );
 
-    if( !createDeclAndShaders() ) { quit(); return selfOK(); }
+    if( !createDeclAndShaders() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

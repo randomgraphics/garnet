@@ -125,10 +125,10 @@ bool GN::gfx::OGLFont::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLFont, () );
 
-    if( !createFont() ) { quit(); return selfOK(); }
+    if( !createFont() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

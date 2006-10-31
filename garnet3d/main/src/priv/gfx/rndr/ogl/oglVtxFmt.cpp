@@ -52,13 +52,10 @@ bool GN::gfx::OGLVtxFmt::init( const VtxFmtDesc & format )
 
     mFormat = format;
 
-    if( !setupStreamBindings() || !setupStateBindings() )
-    {
-        quit(); return selfOK();
-    }
+    if( !setupStreamBindings() || !setupStateBindings() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
