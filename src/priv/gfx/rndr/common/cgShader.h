@@ -8,7 +8,7 @@
 
 //! \name Cg error check macros
 //@{
-#define CG_CHECK_ERROR_DO( func, something )                                \
+#define GN_CG_CHECK_DO( func, something )                                   \
     if( true ) {                                                            \
         func;                                                               \
         CGerror error;                                                      \
@@ -20,12 +20,12 @@
             something                                                       \
         }                                                                   \
     } else void(0)
-#define CG_CHECK_ERROR_R( func )        CG_CHECK_ERROR_DO( func, return; )
-#define CG_CHECK_ERROR_RV( func, rval ) CG_CHECK_ERROR_DO( func, return rval; )
+#define GN_CG_CHECK_R( func )        GN_CG_CHECK_DO( func, return; )
+#define GN_CG_CHECK_RV( func, rval ) GN_CG_CHECK_DO( func, return rval; )
 #if GN_DEBUG_BUILD
-#define CG_CHECK_ERROR( func )          CG_CHECK_ERROR_DO( func, ; )
+#define GN_CG_CHECK( func )          GN_CG_CHECK_DO( func, ; )
 #else
-#define CG_CHECK_ERROR( func )          func
+#define GN_CG_CHECK( func )          func
 #endif
 //@}
 
@@ -89,7 +89,7 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
             CGparameter param;
-            CG_CHECK_ERROR_RV(
+            GN_CG_CHECK_RV(
                 param = cgGetNamedParameter( mProgram, name.cptr() ),
                 0 );
             return param;
@@ -103,7 +103,7 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
             const char * name;
-            CG_CHECK_ERROR_RV(
+            GN_CG_CHECK_RV(
                 name = cgGetParameterName( param ),
                 "" );
             return name;

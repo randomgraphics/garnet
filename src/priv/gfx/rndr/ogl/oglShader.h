@@ -383,9 +383,10 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        OGLBasicShaderCg( OGLRenderer & r, ShaderType t )
+        OGLBasicShaderCg( OGLRenderer & r, ShaderType t, CGGLenum profileClass )
             : OGLBasicShader( t, LANG_CG )
-            , OGLResource( r ) { clear(); }
+            , OGLResource( r )
+            , mProfileClass( profileClass ) { clear(); }
         virtual ~OGLBasicShaderCg() { quit(); }
         //@}
 
@@ -395,7 +396,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const StrA & code );
+        bool init( const StrA & code, const StrA & hints );
         void quit();
         bool ok() const { return MyParent::ok(); }
     private:
@@ -423,7 +424,8 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        CgShader mShader;
+        const CGGLenum mProfileClass;
+        CgShader       mShader;
 
         // ********************************
         // private functions
