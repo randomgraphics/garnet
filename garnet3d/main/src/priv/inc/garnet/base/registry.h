@@ -53,9 +53,14 @@ namespace GN
         typedef uint32_t ItemKey;
 
         //!
-        //! Constructor
+        //! Default constructor
         //!
         Registry() {}
+
+        //!
+        //! Construct from string. See importFromStr() for details of input string format.
+        //!
+        explicit Registry( const StrA & values ) { importFromStr(values); }
 
         //!
         //! Destructor

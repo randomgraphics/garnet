@@ -1,11 +1,14 @@
 #include "pch.h"
 #include "oglShader.h"
+#include "oglRenderer.h"
 
 #ifdef HAS_CG_OGL
 
 #if GN_MSVC
 #pragma warning(disable:4100)
 #endif
+
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -14,12 +17,33 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::init( const StrA & code )
+bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderCg, () );
+
+    // get the latest profile
+    CGprofile prof = cgGLGetLatestProfile( mProfileClass );
+    if( CG_PROFILE_UNKNOWN == prof )
+    {
+        GN_ERROR(sLogger)( "Fail to get the lastest profile!" );
+        quit(); return selfOK();
+    }
+
+    // parse hints
+    Registry reg( hints );
+    StrA entry = reg.gets( "entry", "main" );
+
+    // create the shader
+    if( !mShader.init( getRenderer().getCgContext(), prof, code, entry ) )
+    { quit(); return selfOK(); }
+
+    // load the program
+    GN_CG_CHECK_DO(
+        cgGLLoadProgram( mShader.getProgram() ),
+        quit(); return selfOK(); );
 
     // success
     return selfOK();
