@@ -31,7 +31,7 @@ bool GN::gfx::D3D9IdxBuf::init(
     if( 0 == numIdx )
     {
         GN_ERROR(sLogger)( "invalid buffer length!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     // store buffer parameters
@@ -39,10 +39,10 @@ bool GN::gfx::D3D9IdxBuf::init(
     setLoader( loader );
     if( sysCopy ) mSysCopy.resize( numIdx );
 
-    if( !deviceRestore() ) { quit(); return selfOK(); }
+    if( !deviceRestore() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -142,7 +142,7 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( !basicLock( startIdx, numIdx, flag ) ) return 0;
 
@@ -186,7 +186,7 @@ void GN::gfx::D3D9IdxBuf::unlock()
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( !basicUnlock() ) return;
 

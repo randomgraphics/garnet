@@ -27,7 +27,7 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
-    if( !init( argc, argv ) ) return -1;
+    if( !init( argc, argv ) ) { quit(); return -1; }
 
     mDone = false;
 
@@ -134,18 +134,18 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
-    if( !checkCmdLine(argc,argv) ) { quit(); return false; }
-    if( !initApp() ) { quit(); return false; }
+    if( !checkCmdLine(argc,argv) ) return false;
+    if( !initApp() ) return false;
     onDetermineInitParam( mInitParam );
-    if( !initRenderer() ) { quit(); return false; }
-    if( !initInput() ) { quit(); return false; }
+    if( !initRenderer() ) return false;
+    if( !initInput() ) return false;
 
     // success
     return true;
 
     // failed
     GN_UNGUARD_ALWAYS_NO_THROW;
-    quit(); return false;
+    return false;
 }
 
 //

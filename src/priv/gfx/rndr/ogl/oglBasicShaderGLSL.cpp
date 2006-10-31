@@ -42,10 +42,10 @@ bool GN::gfx::OGLBasicShaderGLSL::init( const StrA & code )
     // standard init procedure
     GN_STDCLASS_INIT( OGLBasicShaderGLSL, () );
 
-    if( !createShader( code ) ) { quit(); return selfOK(); }
+    if( !createShader( code ) ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

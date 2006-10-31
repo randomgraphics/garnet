@@ -37,7 +37,6 @@ namespace GN { namespace input
     public:
         bool init();
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {

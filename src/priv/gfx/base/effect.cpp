@@ -493,12 +493,12 @@ bool GN::gfx::Effect::init( const EffectDesc & d )
     if( !d.valid() )
     {
         GN_ERROR(sLogger)( "effect descriptor is invalid!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     mDesc = d;
 
-    if( !createEffect() ) { quit(); return selfOK(); }
+    if( !createEffect() ) return failure();
 
     GN_ASSERT( mTextures.items.size() == mTextures.names.size() );
     GN_ASSERT( mTextures.items.size() == mDesc.textures.size() );
@@ -511,7 +511,7 @@ bool GN::gfx::Effect::init( const EffectDesc & d )
     GN_ASSERT( mTechniques.items.size() == mTechniques.names.size() );
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

@@ -29,7 +29,7 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
     if( CG_PROFILE_UNKNOWN == prof )
     {
         GN_ERROR(sLogger)( "Fail to get the lastest profile!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     // parse hints
@@ -37,16 +37,13 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
     StrA entry = reg.gets( "entry", "main" );
 
     // create the shader
-    if( !mShader.init( getRenderer().getCgContext(), prof, code, entry ) )
-    { quit(); return selfOK(); }
+    if( !mShader.init( getRenderer().getCgContext(), prof, code, entry ) ) return failure();
 
     // load the program
-    GN_CG_CHECK_DO(
-        cgGLLoadProgram( mShader.getProgram() ),
-        quit(); return selfOK(); );
+    GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), failure() );
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

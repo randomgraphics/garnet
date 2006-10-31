@@ -268,174 +268,10 @@ bool GN::gfx::D3D9Texture::init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D9Texture, () );
 
     // create device data
-    if( !setDesc( desc ) || !deviceRestore() ) { quit(); return selfOK(); }
+    if( !setDesc( desc ) || !deviceRestore() ) return failure();
 
     // success
-    return selfOK();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-bool GN::gfx::D3D9Texture::initFromFile( File & file )
-{
-    GN_GUARD;
-
-    // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D9Texture, () );
-
-    GN_ASSERT( !mD3DTexture );
-
-    // check for empty file
-    if( 0 == file.size() )
-    {
-        GN_ERROR(sLogger)( "empty file!" );
-        quit(); return selfOK();
-    }
-
-    // read file contents
-    std::vector<uint8_t> buf;
-    buf.resize( file.size() );
-    size_t sz;
-    if( !file.read( &buf[0], buf.size(), &sz ) ) { quit(); return selfOK(); }
-
-    // get image info.
-    D3DXIMAGE_INFO info;
-    GN_DX9_CHECK_DO(
-        D3DXGetImageInfoFromFileInMemory( &buf[0], (UINT)sz, &info ),
-        quit(); return selfOK(); );
-
-    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
-
-    TextureDesc texDesc;
-
-    // load texture contents
-    if( D3DRTYPE_TEXTURE == info.ResourceType )
-    {
-        LPDIRECT3DTEXTURE9 tex;
-        GN_DX9_CHECK_DO(
-            D3DXCreateTextureFromFileInMemoryEx(
-                dev,
-                &buf[0], (UINT)sz,
-                D3DX_DEFAULT, D3DX_DEFAULT, // width, height
-                D3DX_DEFAULT, // miplevels
-                0, // usage
-                D3DFMT_UNKNOWN,
-                D3DPOOL_DEFAULT,
-                D3DX_DEFAULT, D3DX_DEFAULT, // filters
-                0, // colorkey
-                NULL, // source info
-                NULL, // palette
-                &tex ),
-            quit(); return selfOK(); );
-
-        D3DSURFACE_DESC desc;
-        GN_DX9_CHECK_DO(
-            tex->GetLevelDesc( 0, &desc ),
-            quit(); return selfOK(); );
-
-        mD3DTexture = tex;
-        mD3DFormat = desc.Format;
-
-        texDesc.type = TEXTYPE_2D;
-        texDesc.width = desc.Width;
-        texDesc.height = desc.Height;
-        texDesc.depth = 1;
-        texDesc.faces = 1;
-        texDesc.levels = tex->GetLevelCount();
-    }
-    else if( D3DRTYPE_VOLUMETEXTURE == info.ResourceType )
-    {
-        LPDIRECT3DVOLUMETEXTURE9 tex;
-        GN_DX9_CHECK_DO(
-            D3DXCreateVolumeTextureFromFileInMemoryEx(
-                dev,
-                &buf[0], (UINT)sz,
-                D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, // width, height and depth
-                D3DX_DEFAULT, // miplevels
-                0, // usage
-                D3DFMT_UNKNOWN,
-                D3DPOOL_DEFAULT,
-                D3DX_DEFAULT, D3DX_DEFAULT, // filters
-                0, // colorkey
-                NULL, // source info
-                NULL, // palette
-                &tex ),
-            quit(); return selfOK(); );
-
-        D3DVOLUME_DESC desc;
-        GN_DX9_CHECK_DO(
-            tex->GetLevelDesc( 0, &desc ),
-            quit(); return selfOK(); );
-
-        mD3DTexture = tex;
-        mD3DFormat = desc.Format;
-
-        texDesc.type = TEXTYPE_3D;
-        texDesc.width = desc.Width;
-        texDesc.height = desc.Height;
-        texDesc.depth = desc.Depth;
-        texDesc.faces = 1;
-        texDesc.levels = tex->GetLevelCount();
-    }
-    else if( D3DRTYPE_CUBETEXTURE == info.ResourceType )
-    {
-        LPDIRECT3DCUBETEXTURE9 tex;
-        GN_DX9_CHECK_DO(
-            D3DXCreateCubeTextureFromFileInMemoryEx(
-                dev, &buf[0], (UINT)sz,
-                D3DX_DEFAULT, // width
-                D3DX_DEFAULT, // miplevels
-                0, // usage
-                D3DFMT_UNKNOWN,
-                D3DPOOL_DEFAULT,
-                D3DX_DEFAULT, D3DX_DEFAULT, // filters
-                0, // colorkey
-                NULL, // source info
-                NULL, // palette
-                &tex ),
-            quit(); return selfOK(); );
-
-        D3DSURFACE_DESC desc;
-        GN_DX9_CHECK_DO(
-            tex->GetLevelDesc( 0, &desc ),
-            quit(); return selfOK(); );
-
-        mD3DTexture = tex;
-        mD3DFormat = desc.Format;
-
-        texDesc.type = TEXTYPE_CUBE;
-        texDesc.width = desc.Width;
-        texDesc.height = desc.Height;
-        texDesc.depth = 1;
-        texDesc.faces = 6;
-        texDesc.levels = tex->GetLevelCount();
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "unknown resource type!" );
-        quit(); return selfOK();
-    }
-
-    // store texture properties
-    texDesc.usage = 0;
-    texDesc.format = FMT_DEFAULT;
-    if( !setDesc( texDesc ) ) return false;
-
-    // setup mip size
-    for( size_t i = 0; i < getDesc().levels; ++i )
-    {
-        setMipSize( i, sGetMipSize( mD3DTexture, getDesc().type, i ) );
-    }
-
-    // setup other properites
-    mD3DUsage = 0;
-    mWritable = true;
-
-    // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -484,11 +320,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     if( FMT_DEFAULT == getDesc().format )
     {
         mD3DFormat = ( TEXUSAGE_DEPTH & getDesc().usage ) ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8R8G8B8;
-        if( D3DFMT_UNKNOWN == mD3DFormat )
-        {
-            GN_ERROR(sLogger)( "Fail to detect default texture format." );
-            return false;
-        }
+        if( D3DFMT_UNKNOWN == mD3DFormat ) return false;
         GN_TRACE(sLogger)( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
     }
     else
@@ -601,7 +433,7 @@ void GN::gfx::D3D9Texture::deviceDispose()
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D9Texture::setFilter( TexFilter min, TexFilter mag ) const
 {
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     sTexFilter2D3D( mD3DFilters[0], &mD3DFilters[2], min );
     sTexFilter2D3D( mD3DFilters[1], 0, mag );
 }

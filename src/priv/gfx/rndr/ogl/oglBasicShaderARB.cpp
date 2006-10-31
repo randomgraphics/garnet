@@ -97,10 +97,10 @@ bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
     GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderARB, () );
 
     // create shader
-    if( !createShader( code ) ) { quit(); return selfOK(); }
+    if( !createShader( code ) ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

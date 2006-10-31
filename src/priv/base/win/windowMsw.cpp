@@ -21,10 +21,10 @@ bool GN::win::WindowMsw::init( const WindowCreationParams & wcp )
     // standard init procedure
     GN_STDCLASS_INIT( GN::win::WindowMsw, () );
 
-    if( !createWindow( wcp ) ) { quit(); return selfOK(); }
+    if( !createWindow( wcp ) ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

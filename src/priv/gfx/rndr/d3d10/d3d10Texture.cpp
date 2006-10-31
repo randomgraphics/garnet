@@ -29,10 +29,10 @@ bool GN::gfx::D3D10Texture::init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D10Texture, () );
 
     // create device data
-    if( !setDesc( desc ) || !createTexture() || !createViews() ) { quit(); return selfOK(); }
+    if( !setDesc( desc ) || !createTexture() || !createViews() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -74,7 +74,7 @@ void GN::gfx::D3D10Texture::quit()
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D10Texture::setFilter( TexFilter min, TexFilter mag ) const
 {
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     GN_UNIMPL_WARNING();
 }
 
@@ -83,7 +83,7 @@ void GN::gfx::D3D10Texture::setFilter( TexFilter min, TexFilter mag ) const
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D10Texture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
 {
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     GN_UNIMPL_WARNING();
 }
 
@@ -97,7 +97,7 @@ bool GN::gfx::D3D10Texture::lock(
     const Boxi * area,
     LockFlag flag )
 {
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     GN_UNIMPL_WARNING();
     return false;
 }
@@ -107,7 +107,7 @@ bool GN::gfx::D3D10Texture::lock(
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D10Texture::unlock()
 {
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     GN_UNIMPL_WARNING();
 }
 
@@ -116,7 +116,7 @@ void GN::gfx::D3D10Texture::unlock()
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D10Texture::updateMipmap()
 {
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
     GN_UNIMPL_WARNING();
 }
 

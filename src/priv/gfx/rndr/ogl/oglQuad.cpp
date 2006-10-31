@@ -24,11 +24,11 @@ bool GN::gfx::OGLQuad::init()
     if( !mVtxBuf )
     {
         GN_ERROR(sLogger)( "out of memory!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -64,7 +64,7 @@ void GN::gfx::OGLQuad::drawQuads(
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( 0 == positions )
     {

@@ -35,7 +35,6 @@ namespace GN { namespace win
     public:
         bool init( const WindowCreationParams & );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() { mClassName.clear(); mModuleInstance = 0; mWindow = 0; }
         //@}

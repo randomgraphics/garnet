@@ -102,7 +102,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code );
         void quit();
-        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
         void clear() { mD3DShader = 0; }
         //@}
@@ -175,7 +174,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code );
         void quit();
-        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
         void clear() { mD3DShader = 0; }
         //@}
@@ -339,7 +337,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code, const StrA & hints );
         void quit();
-        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
         void clear() { mConstTable = 0; mD3DShader = 0; }
         //@}
@@ -408,7 +405,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code, const StrA & hints );
         void quit();
-        bool ok() const { return MyParent::ok() && mD3DShader; }
     private:
         void clear() { mConstTable = 0; mD3DShader = 0; }
         //@}

@@ -23,7 +23,7 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
     if( 0 == bytes )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     // store properties
@@ -37,10 +37,10 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
     mOGLUsage = dynamic ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
-    if( !createVBO() ) { quit(); return selfOK(); }
+    if( !createVBO() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -85,7 +85,7 @@ void * GN::gfx::OGLVtxBufVBO::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( !basicLock( offset, bytes, flag ) ) return false;
 
@@ -105,7 +105,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( !basicUnlock() ) return;
 

@@ -63,7 +63,7 @@ bool GN::gfx::D3D9Font::init()
     GN_STDCLASS_INIT( GN::gfx::D3D9Font, () );
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

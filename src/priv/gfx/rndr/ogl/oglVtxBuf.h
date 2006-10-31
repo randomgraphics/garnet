@@ -47,7 +47,6 @@ namespace GN { namespace gfx
     public:
         bool init( size_t bytes, bool dynamic );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() { mBuffer = 0; }
         //@}
@@ -102,7 +101,6 @@ namespace GN { namespace gfx
     public:
         bool init( size_t bytes, bool dynamic, bool sysCopy );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {

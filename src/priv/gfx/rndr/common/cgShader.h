@@ -3,7 +3,7 @@
 // *****************************************************************************
 //! \file    common/cgShader.h
 //! \brief   Common Cg shader class
-//! \author  chen@HOME-PC (2006.10.28)
+//! \author  chen@@HOME-PC (2006.10.28)
 // *****************************************************************************
 
 //! \name Cg error check macros
@@ -67,7 +67,6 @@ namespace GN { namespace gfx
             const StrA & entry,
             const char ** args = NULL );
         void quit();
-        bool ok() const { return MyParent::ok() && mProgram; }
     private:
         void clear() { mProgram = 0; }
         //@}

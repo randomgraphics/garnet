@@ -26,10 +26,10 @@ bool GN::gfx::OGLProgramGLSL::init( const OGLBasicShaderGLSL * vs, const OGLBasi
     if( vs ) mShaders.push_back( vs );
     if( ps ) mShaders.push_back( ps );
 
-    if( !createProgram() ) { quit(); return selfOK(); }
+    if( !createProgram() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }

@@ -76,17 +76,17 @@ bool GN::gfx::D3D9VtxBuf::init(
     if( 0 == bytes )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        quit(); return selfOK();
+        return failure();
     }
 
     setProperties( bytes, dynamic );
     setLoader( loader );
     if( sysCopy ) mSysCopy.resize( bytes );
 
-    if( !deviceRestore() ) { quit(); return selfOK(); }
+    if( !deviceRestore() ) return failure();
 
     // success
-    return selfOK();
+    return success();
 
     GN_UNGUARD;
 }
@@ -188,7 +188,7 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( !basicLock( offset, bytes, flag ) ) return false;
 
@@ -233,7 +233,7 @@ void GN::gfx::D3D9VtxBuf::unlock()
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( selfOK() );
+    GN_ASSERT( ok() );
 
     if( !basicUnlock() ) return;
 

@@ -72,7 +72,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {
@@ -202,7 +201,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear()
         {
@@ -319,7 +317,6 @@ namespace GN { namespace gfx
     public:
         bool init( const OGLBasicShaderGLSL * vs, const OGLBasicShaderGLSL * ps );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() { mProgram = 0; mShaders.clear(); }
         //@}
@@ -398,7 +395,6 @@ namespace GN { namespace gfx
     public:
         bool init( const StrA & code, const StrA & hints );
         void quit();
-        bool ok() const { return MyParent::ok(); }
     private:
         void clear() {}
         //@}
