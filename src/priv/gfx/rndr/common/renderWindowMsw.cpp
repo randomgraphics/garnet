@@ -118,9 +118,9 @@ void GN::gfx::RenderWindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_TRACE(sLogger)( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_TRACE(sLogger)( "Unregister window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cptr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -201,20 +201,20 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t 
     // check parent
     if( 0 != parent && !::IsWindow(parent) ) parent = 0;
 
-    mModuleInstance = (HINSTANCE)GetModuleHandleA(0);
+    mModuleInstance = (HINSTANCE)GetModuleHandleW(0);
     GN_ASSERT( 0 != mModuleInstance );
 
-    WNDCLASSEXA wcex;
+    WNDCLASSEXW wcex;
 
     // generate an unique window class name
     do
     {
-        mClassName.format( "GNgfxRenderWindow_%d", rand() );
-    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cptr(), &wcex ) );
+        mClassName.format( L"GNgfxRenderWindow_%d", rand() );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
-    GN_TRACE(sLogger)( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    GN_TRACE(sLogger)( "Register window class: %ls (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    wcex.cbSize         = sizeof(wcex);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
     wcex.cbClsExtra     = 0;
@@ -226,7 +226,7 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t 
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = mClassName.cptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-    if( 0 == ::RegisterClassExA(&wcex) )
+    if( 0 == ::RegisterClassExW(&wcex) )
     {
         GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
@@ -239,17 +239,17 @@ GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t 
     // get monitor's working area rectangle
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
-    GN_MSW_CHECK_RV( GetMonitorInfoA( monitor, &mi ), false );
+    GN_MSW_CHECK_RV( GetMonitorInfoW( monitor, &mi ), false );
 
     // calculate window size
     RECT rc = { 0, 0, width, height };
     ::AdjustWindowRectEx( &rc, style, 0, exStyle );
 
     // create window
-    mWindow = ::CreateWindowExA(
+    mWindow = ::CreateWindowExW(
         exStyle,
         mClassName.cptr(),
-        "", // no title
+        L"Garnet Render Window",
         style,
         mi.rcWork.left, mi.rcWork.top,
         rc.right - rc.left, rc.bottom - rc.top,

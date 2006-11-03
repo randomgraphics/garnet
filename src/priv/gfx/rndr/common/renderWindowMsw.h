@@ -201,7 +201,7 @@ namespace GN { namespace gfx
     private:
 
         HWND mWindow;
-        StrA mClassName;
+        StrW mClassName;
         HINSTANCE mModuleInstance;
         HHOOK mHook;
 
