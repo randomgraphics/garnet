@@ -421,12 +421,38 @@ namespace GN { namespace gfx
     private:
 
         const CGGLenum mProfileClass;
+        CGprofile      mProfile;
         CgShader       mShader;
 
         // ********************************
         // private functions
         // ********************************
     private:
+        inline void applyUniform( const Uniform & ) const;
+    };
+
+    //!
+    //! OGL Cg vertex shader.
+    //!
+    class OGLVtxShaderCg : public OGLBasicShaderCg
+    {
+    public:
+        //!
+        //! ctor
+        //!
+        OGLVtxShaderCg( OGLRenderer & r ) : OGLBasicShaderCg( r, SHADER_VS, CG_GL_VERTEX ) {}
+    };
+
+    //!
+    //! OGL Cg pixel shader.
+    //!
+    class OGLPxlShaderCg : public OGLBasicShaderCg
+    {
+    public:
+        //!
+        //! ctor
+        //!
+        OGLPxlShaderCg( OGLRenderer & r ) : OGLBasicShaderCg( r, SHADER_PS, CG_GL_FRAGMENT ) {}
     };
 
 #endif

@@ -36,13 +36,28 @@ bool GN::gfx::CgShader::init(
             GN_ERROR(sLogger)(
                 "\n\n"
                 "==================== Cg compile error ===============\n"
-                "%s"
+                "%s\n"
+                "-----------------------------------------------------\n"
+                "%s\n"
                 "=====================================================\n"
                 "\n",
+                code.cptr(),
                 cgGetLastListing(context) );
         }
         return failure();
     }
+
+    // show compile result
+    GN_TRACE(sLogger)(
+        "\n\n"
+        "==================== Cg compile success =================\n"
+        "%s\n"
+        "---------------------------------------------------------\n"
+        "%s\n"
+        "=========================================================\n"
+        "\n",
+        code.cptr(),
+        cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) );
 
     // success
     mContext = context;
