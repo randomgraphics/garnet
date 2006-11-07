@@ -73,27 +73,6 @@ static inline GN::StrA sLevel2Str( int level )
     }
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-static void sPrintToFile( FILE * fp, GN::Logger & logger, const GN::Logger::LogDesc & desc, const GN::StrA & msg )
-{
-    if( GN::Logger::LL_INFO == desc.level )
-    {
-        ::fprintf( fp, "%s\n", msg.cptr() );
-    }
-    else 
-    {
-        ::fprintf(
-            fp,
-            "%s(%d) : name(%s), level(%s) : %s\n",
-            desc.file, desc.line,
-            logger.getName().cptr(),
-            sLevel2Str(desc.level).cptr(),
-            msg.cptr() );
-    }
-}
-
 template<class T>
 class TreeNode
 {
@@ -209,7 +188,39 @@ namespace GN
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
-            sPrintToFile( desc.level < Logger::LL_INFO ? stderr : stdout, logger, desc, msg );
+            if( GN::Logger::LL_INFO == desc.level )
+            {
+                ::fprintf( stdout, "%s\n", msg.cptr() );
+            }
+            else 
+            {
+                ::fprintf(
+                    stderr,
+                    "%s(%d) : name(%s), level(%s) : %s\n",
+                    desc.file, desc.line,
+                    logger.getName().cptr(),
+                    sLevel2Str(desc.level).cptr(),
+                    msg.cptr() );
+            }
+        };
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
+        {
+            if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
+            ConsoleColor cc(desc.level);
+            if( GN::Logger::LL_INFO == desc.level )
+            {
+                ::fwprintf( stdout, L"%s\n", msg.cptr() );
+            }
+            else 
+            {
+                ::fwprintf(
+                    stderr,
+                    L"%S(%d) : name(%S), level(%S) : %s\n",
+                    desc.file, desc.line,
+                    logger.getName().cptr(),
+                    sLevel2Str(desc.level).cptr(),
+                    msg.cptr() );
+            }
         };
     };
 
@@ -218,27 +229,71 @@ namespace GN
     //!
     struct FileReceiver : public Logger::Receiver
     {
-        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
+        StrA mFileName;
+
+        struct AutoFile
         {
-#if GN_XENON
-            StrA fileName = "game:\\garnet3d.log";
-#else
-            StrA fileName = getEnv( "GN_LOG_FILENAME" );
-            if( fileName.empty() ) return;
-#endif
-            
-#if GN_MSVC8
             FILE * fp;
-            if( 0 == fopen_s( &fp, fileName.cptr(), "at" ) )
-#else
-            FILE * fp = fopen( fileName.cptr(), "at" );
-            if( fp )
-#endif
+            AutoFile( const StrA & name, const char * mode = "at" ) : fp(0)
             {
-                sPrintToFile( fp, logger, desc, msg );
-                fclose( fp );
+                if( name.empty() ) return;
+#if GN_MSVC8
+                if( 0 != ::fopen_s( &fp, name.cptr(), mode ) ) fp = 0;
+#else
+                fp = ::fopen( name.cptr(), mode );
+#endif
+            }
+            ~AutoFile()
+            {
+                if( fp ) ::fclose( fp );
             }
         };
+
+        FileReceiver()
+#if GN_XENON
+            : mFileName( "game:\\garnet3d.log.xml" )
+#else
+            : mFileName( getEnv("GN_LOG_FILENAME") )
+#endif
+        {
+            AutoFile af( mFileName, "wt" );
+            if( !af.fp ) return;
+            // TODO: convert log message to UTF-8
+            ::fprintf( af.fp, "<?xml version=\"1.0\" encoding=\"GB18030\" standalone=\"yes\"?><srlog>\n" );
+        }
+
+        ~FileReceiver()
+        {
+            AutoFile af( mFileName );
+            if( !af.fp ) return;
+            ::fprintf( af.fp, "</srlog>\n" );
+        }
+
+        template<typename CHAR> struct FormatSelector{};
+        template<> struct FormatSelector<char>
+        {
+            static const char * fmt() { return "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n"; }
+        };
+        template<> struct FormatSelector<wchar_t>
+        {
+            static const char * fmt() { return "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n"; }
+        };
+
+        template<typename CHAR>
+        void onLogTempl( Logger & logger, const Logger::LogDesc & desc, const Str<CHAR> & msg )
+        {
+            AutoFile af( mFileName );
+            if( !af.fp ) return;
+
+            ::fprintf( af.fp, FormatSelector<CHAR>::fmt(),
+                desc.file,
+                desc.line,
+                logger.getName().cptr(),
+                sLevel2Str(desc.level).cptr(),
+                msg.cptr() );
+        };
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg ) { onLogTempl( logger, desc, msg ); }
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg ) { onLogTempl( logger, desc, msg ); }
     };
 
     //!
@@ -260,6 +315,22 @@ namespace GN
                 sLevel2Str(desc.level).cptr(),
                 msg.cptr() );
             ::OutputDebugStringA( buf );
+#endif
+        }
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
+        {
+#if GN_MSWIN
+            wchar_t buf[16384];
+            strPrintf(
+                buf,
+                16384,
+                L"%S(%d) : name(%S), level(%S) : %s\n",
+                desc.file,
+                desc.line,
+                logger.getName().cptr(),
+                sLevel2Str(desc.level).cptr(),
+                msg.cptr() );
+            ::OutputDebugStringW( buf );
 #endif
         }
     };
@@ -298,6 +369,11 @@ namespace GN
             recursiveLog( *this, desc, msg );
         }
 
+        virtual void doLog( const LogDesc & desc, const StrW & msg )
+        {
+            recursiveLog( *this, desc, msg );
+        }
+
         virtual void addReceiver( Receiver * r )
         {
             if( 0 == r ) return;
@@ -318,7 +394,8 @@ namespace GN
         bool mInheritLevel;
         bool mInheritEnabled;
 
-        void recursiveLog( Logger & logger, const LogDesc & desc, const StrA & msg )
+        template<typename CHAR>
+        void recursiveLog( Logger & logger, const LogDesc & desc, const Str<CHAR> & msg )
         {
             // call parent's logging
             LoggerImpl * p = parent();
