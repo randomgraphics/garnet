@@ -1,5 +1,6 @@
 Import( 'GN' )
 sources = [
+    'd3d9BasicShaderCg.cpp',
     'd3d9CapsMgr.cpp',
     'd3d9ContextMgr.cpp',
     'd3d9DispMgr.cpp',

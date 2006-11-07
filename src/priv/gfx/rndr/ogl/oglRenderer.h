@@ -207,22 +207,11 @@ namespace GN { namespace gfx
         //!
         void removeGLSLShader( ShaderType, Shader * );
 
-#if HAS_CG_OGL
-        //!
-        //! get global Cg context
-        //!
-        CGcontext getCgContext() const { return mCgContext; }
-#endif
-
     private :
 
         bool resourceInit() { return true; }
         void resourceQuit() {}
-#if HAS_CG_OGL
-        void resourceClear() { mCgContext = 0; }
-#else
         void resourceClear() {}
-#endif
         bool resourceDeviceCreate();
         bool resourceDeviceRestore() { return true; }
         void resourceDeviceDispose() {}
@@ -254,9 +243,6 @@ namespace GN { namespace gfx
         GLSLProgramMap          mGLSLProgramMap;
         VtxFmtManager           mVtxFmts;
 
-#if HAS_CG_OGL
-        CGcontext mCgContext;
-#endif
         //@}
 
     // ************************************************************************
