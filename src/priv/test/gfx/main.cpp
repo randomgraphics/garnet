@@ -50,7 +50,7 @@ class Scene
             pvwName = "gPvw";
 
             // create shaders for box rendering
-            if( r.supportShader( "vs_1_1" ) )
+            if( r.supportShader( "cgvs" ) )
             {
                 static const char * code =
                     "uniform float4x4 gPvw; \n"
@@ -59,71 +59,23 @@ class Scene
                     "VSOutput main( VSInput i ) \n"
                     "{ \n"
                     "   VSOutput o; \n"
-                    "   o.pos = mul( i.pos, gPvw ); \n"
+                    "   o.pos = mul( gPvw, i.pos ); \n"
                     "   o.clr = float4( abs(i.nml), 1.0 ); \n"
                     "   return o; \n"
                     "}";
-                vs.attach( r.createVS( LANG_D3D_HLSL, code ) );
+                vs.attach( r.createVS( LANG_CG, code ) );
                 if( !vs ) return;
-            }
-            else if( r.supportShader( "glslvs" ) )
-            {
-                static const char * code =
-                    "uniform mat4 gPvw; \n"
-                    "void main() \n"
-                    "{ \n"
-                    "   gl_Position = gPvw * gl_Vertex; \n"
-                    "   gl_FrontColor = vec4( abs(gl_Normal), 1.0 ); \n"
-                    "}";
-                vs.attach( r.createVS( LANG_OGL_GLSL, code ) );
-                if( !vs ) return;
-            }
-            else if( r.supportShader( "arbvp1" ) )
-            {
-                static const char * code =
-                    "!!ARBvp1.0                                    \n"
-                    "PARAM c[5] = { { 1 },                         \n"
-                    "                program.local[0..3] };        \n"
-                    "ABS result.color.xyz, vertex.normal;          \n"
-                    "DP4 result.position.w, vertex.position, c[4]; \n"
-                    "DP4 result.position.z, vertex.position, c[3]; \n"
-                    "DP4 result.position.y, vertex.position, c[2]; \n"
-                    "DP4 result.position.x, vertex.position, c[1]; \n"
-                    "MOV result.color.w, c[0].x;                   \n"
-                    "END";
-                vs.attach( r.createVS( LANG_OGL_ARB, code ) );
-                if( !vs ) return;
-                pvwName = "l0";
             }
             else return;
 
-            if( r.supportShader( "ps_1_1" ) )
+            if( r.supportShader( "cgps" ) )
             {
                 static const char * code =
                     "float4 main( float4 clr : COLOR0 ) : COLOR \n"
                     "{ \n"
                     "   return clr; \n"
                     "}";
-                ps.attach( r.createPS( LANG_D3D_HLSL, code ) );
-                if( !ps ) return;
-            }
-            else if( r.supportShader( "glslps" ) )
-            {
-                static const char * code =
-                    "void main() \n"
-                    "{ \n"
-                    "   gl_FragColor = gl_Color; \n"
-                    "}";
-                ps.attach( r.createPS( LANG_OGL_GLSL, code ) );
-                if( !ps ) return;
-            }
-            else if( r.supportShader( "arbfp1" ) )
-            {
-                static const char * code =
-                    "!!ARBfp1.0 \n"
-                    "MOV result.color, fragment.color; \n"
-                    "END";
-                ps.attach( r.createPS( LANG_OGL_ARB, code ) );
+                ps.attach( r.createPS( LANG_CG, code ) );
                 if( !ps ) return;
             }
             else return;
