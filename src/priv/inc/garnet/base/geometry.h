@@ -388,28 +388,18 @@ namespace GN
         //@}
 
         // ********************************
-        //        operators
+        //! \name operators
         // ********************************
     public:
 
-        //!
-        //! Convert to T *
-        //!
+        //@{
+
         operator T *() { return &x; }
-        //!
-        //! Convert to const T *
-        //!
         operator const T *() const { return &x; }
-        //!
-        //! less operator
-        //!
         bool operator < ( const Vector3 & a ) const
         {
             return x < a.x || y < a.y || z < a.z;
         }
-        //!
-        //! Add a Vector3 to this one
-        //!
         Vector3 & operator += ( const Vector3 & v )
         {
             x += v.x;
@@ -417,9 +407,6 @@ namespace GN
             z += v.z;
             return *this;
         }
-        //!
-        //! Subtract a Vector3 from this one
-        //!
         Vector3 & operator -= ( const Vector3 & v )
         {
             x -= v.x;
@@ -427,9 +414,6 @@ namespace GN
             z -= v.z;
             return *this;
         }
-        //!
-        //! Multiply the Vector3 by a scalar
-        //!
         Vector3 &operator *= ( T f )
         {
             x *= f;
@@ -437,9 +421,6 @@ namespace GN
             z *= f;
             return *this;
         }
-        //!
-        //! Multiplied by another vector
-        //!
         Vector3 & operator *= ( const Vector3 & v )
         {
             x *= v.x;
@@ -447,9 +428,6 @@ namespace GN
             z *= v.z;
             return *this;
         }
-        //!
-        //! Divide the Vector3 by a scalar
-        //!
         Vector3 & operator /= ( T f )
         {
             GN_ASSERT( ((T)0.0) != f );
@@ -458,9 +436,6 @@ namespace GN
             z /= f;
             return *this;
         }
-        //!
-        //! Divided by another vector
-        //!
         Vector3 & operator /= ( const Vector3 & v )
         {
             GN_ASSERT( v.x != ((T)0.0) && v.y != ((T)0.0) && v.z != ((T)0.0) );
@@ -469,103 +444,68 @@ namespace GN
             z /= v.z;
             return *this;
         }
-        //!
-        //! Are these two Vector3's equal?
-        //!
         friend bool operator == ( const Vector3 & a, const Vector3 & b )
         {
             return((a.x == b.x) && (a.y == b.y) && (a.z == b.z));
         }
-        //!
-        //! Are these two Vector3's not equal?
-        //!
         friend bool operator != ( const Vector3 & a, const Vector3 & b )
         {
             return((a.x != b.x) || (a.y != b.y) || (a.z != b.z));
         }
-        //!
-        //! Negate a Vector3
-        //!
         friend Vector3 operator - ( const Vector3 & a )
         {
             return Vector3(-a.x, -a.y, -a.z);
         }
-        //!
-        //! Add two Vector3's
-        //!
         friend Vector3 operator + ( const Vector3 & a, const Vector3 & b )
         {
             Vector3 ret(a);
             ret += b;
             return ret;
         }
-        //!
-        //! Subtract one Vector3 from another
-        //!
         friend Vector3 operator - ( const Vector3 & a, const Vector3 & b )
         {
             Vector3 ret(a);
             ret -= b;
             return ret;
         }
-        //!
-        //! Multiply two vectors (not dot production!!!)
-        //!
         friend Vector3 operator * ( const Vector3 & a, const Vector3 & b )
         {
             return Vector3( a.x * b.x, a.y * b.y, a.z*b.z );
         }
-        //!
-        //! Multiply Vector3 by a scalar
-        //!
         friend Vector3 operator * ( const Vector3 & v, T f )
         {
             return Vector3(f * v.x, f * v.y, f * v.z);
         }
-        //!
-        //! Multiply Vector3 by a scalar
-        //!
         friend Vector3 operator * ( T f, const Vector3 & v )
         {
             return Vector3(f * v.x, f * v.y, f * v.z);
         }
-        //!
-        //! Divide Vector3 by a scalar
-        //!
         friend Vector3 operator / ( const Vector3 & v, T f )
         {
             return Vector3(v.x / f, v.y / f, v.z / f);
         }
-        //!
-        //! Divide by another vector
-        //!
         friend Vector3 operator / ( const Vector3 & a, const Vector3 & b )
         {
             return Vector3( a.x / b.x, a.y / b.y, a.z / b.z );
         }
 
+        //@}
+
         // ********************************
-        //       public functions
+        //! \name common operations
         // ********************************
     public:
 
-        //!
-        //! type conversion
-        //!
+        //@{
+
         const T * toPtr() const
         {
             return &x;
         }
-        //!
-        //! type conversion
-        //!
         T * toPtr()
         {
             return &x;
         }
-        //!
-        //! Set Values
-        //!
         Vector3 & set( T ix, T iy, T iz )
         {
             x = ix;
@@ -573,9 +513,6 @@ namespace GN
             z = iz;
             return *this;
         }
-        //!
-        //! Set Values
-        //!
         Vector3 & set( const Vector2<T> & ixy, T iz )
         {
             x = ixy.x;
@@ -583,47 +520,29 @@ namespace GN
             z = iz;
             return *this;
         }
-        //!
-        //! Get length of a Vector3
-        //!
         T length() const
         {
             return (T)sqrt(x*x + y*y + z*z);
         }
-        //!
-        //! Get squared length of a Vector3
-        //!
         T lengthSqr() const
         {
             return (x*x + y*y + z*z);
         }
-        //!
-        //! Does Vector3 equal (0, 0, 0)?
-        //!
         bool isZero() const
         {
             return((x == 0.0F) && (y == 0.0F) && (z == 0.0F));
         }
-        //!
-        //! Normalize a Vector3
-        //!
         Vector3 & normalize()
         {
 			sNormalize( *this, *this );
             return *this;
         }
-        //!
-        //! Normalize a Vector3
-        //!
         static Vector3 sNormalize( const Vector3 & v )
         {
             Vector3 r;
             sNormalize( r, v );
             return r;
         }
-        //!
-        //! Normalize a Vector3
-        //!
         static void sNormalize( Vector3 & o, const Vector3 & i )
         {
             T m = i.length();
@@ -642,34 +561,22 @@ namespace GN
 				o.z = ((T)0.0);
 			}
         }
-        //!
-        //! dot production
-        //!
         static T sDot( const Vector3 & v1, const Vector3 & v2 )
         {
             return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
         }
-        //!
-        //! get cross product of v1 and v2, and store the result into this one
-        //!
         static Vector3 sCross( const Vector3 & v1, const Vector3 & v2 )
         {
             return Vector3 ( v1.y * v2.z - v1.z * v2.y,
                              v1.z * v2.x - v1.x * v2.z,
                              v1.x * v2.y - v1.y * v2.x);
         }
-        //!
-        //! get cross product of v1 and v2, and store the result into o
-        //!
         static void sCross( Vector3 & o, const Vector3 & v1, const Vector3 & v2 )
         {
             o.set( v1.y * v2.z - v1.z * v2.y,
                    v1.z * v2.x - v1.x * v2.z,
                    v1.x * v2.y - v1.y * v2.x);
         }
-        //!
-        //! Get distance between two vectors
-        //!
         static T sDistance( const Vector3 & a, const Vector3 & b )
         {
             T x = a.x - b.x;
@@ -677,9 +584,6 @@ namespace GN
             T z = a.z - b.z;
             return (T)sqrt( x*x + y*y + z*z );
         }
-        //!
-        //! Get distance square between two vectors
-        //!
         static T sDistanceSqr( const Vector3 & a, const Vector3 & b )
         {
             T x = a.x - b.x;
@@ -687,6 +591,8 @@ namespace GN
             T z = a.z - b.z;
             return x*x + y*y + z*z;
         }
+
+        //@}
     };
 
     //!
@@ -766,28 +672,18 @@ namespace GN
         //@}
 
         // ********************************
-        //        operators
+        //! \name operators
         // ********************************
     public:
 
-        //!
-        //! Convert to T *
-        //!
+        //@{
+
         operator T *() { return &x; }
-        //!
-        //! Convert to const T *
-        //!
         operator const T *() const { return &x; }
-        //!
-        //! less operator
-        //!
         bool operator < ( const Vector4 & a ) const
         {
             return x < a.x || y < a.y || z < a.z || w < a.w;
         }
-        //!
-        //! Add a Vector4 to this one
-        //!
         Vector4 & operator += ( const Vector4 & v )
         {
             x += v.x;
@@ -796,9 +692,6 @@ namespace GN
             w += v.w;
             return *this;
         }
-        //!
-        //! Subtract a Vector4 from this one
-        //!
         Vector4 & operator -= ( const Vector4 & v )
         {
             x -= v.x;
@@ -807,9 +700,6 @@ namespace GN
             w -= v.w;
             return *this;
         }
-        //!
-        //! Multiply the Vector4 by a scalar
-        //!
         Vector4 & operator *= ( T f )
         {
             x *= f;
@@ -818,9 +708,6 @@ namespace GN
             w *= f;
             return *this;
         }
-        //!
-        //! Multiplied by another vector
-        //!
         Vector4 & operator *= ( const Vector4 & v )
         {
             x *= v.x;
@@ -829,9 +716,6 @@ namespace GN
             w *= v.w;
             return *this;
         }
-        //!
-        //! Divide the Vector4 by a scalar
-        //!
         Vector4 & operator /= ( T f )
         {
             GN_ASSERT( ((T)0.0) != f );
@@ -841,9 +725,6 @@ namespace GN
             w /= f;
             return *this;
         }
-        //!
-        //! Divided by another vector
-        //!
         Vector4 & operator /= ( const Vector4 & v )
         {
             GN_ASSERT( v.x != ((T)0.0) && v.y != ((T)0.0) && v.z != ((T)0.0) && v.w != ((T)0.0) );
@@ -853,105 +734,70 @@ namespace GN
             w /= v.w;
             return *this;
         }
-        //!
-        //! Are these two Vector4's equal?
-        //!
         friend bool operator == ( const Vector4 & a, const Vector4 & b )
         {
             return((a.x == b.x) && (a.y == b.y) &&
                 (a.z == b.z) && (a.w == b.w));
         }
-        //!
-        //! Are these two Vector4's not equal?
-        //!
         friend bool operator != ( const Vector4 & a, const Vector4 & b )
         {
             return((a.x != b.x) || (a.y != b.y) ||
                 (a.z != b.z) || (a.w != b.w));
         }
-        //!
-        //! Negate a Vector4
-        //!
         friend Vector4 operator - ( const Vector4 & a )
         {
             return Vector4(-a.x, -a.y, -a.z, -a.w);
         }
-        //!
-        //! Add two Vector4's
-        //!
         friend Vector4 operator + ( const Vector4 & a, const Vector4 & b )
         {
             Vector4 ret(a);
             ret += b;
             return ret;
         }
-        //!
-        //! Subtract one Vector4 from another
-        //!
         friend Vector4 operator - ( const Vector4 & a, const Vector4 & b )
         {
             Vector4 ret(a);
             ret -= b;
             return ret;
         }
-        //!
-        //! Multiply two vectors (not dot production!!!)
-        //!
         friend Vector4 operator * ( const Vector4 & a, const Vector4 & b )
         {
             return Vector4( a.x * b.x, a.y * b.y, a.z*b.z, a.w*b.w );
         }
-        //!
-        //! Multiply Vector4 by a scalar
-        //!
         friend Vector4 operator * ( const Vector4 & v, T f )
         {
             return Vector4(f * v.x, f * v.y, f * v.z, f * v.w);
         }
-        //!
-        //! Multiply Vector4 by a scalar
-        //!
         friend Vector4 operator * ( T f, const Vector4 & v )
         {
             return Vector4(f * v.x, f * v.y, f * v.z, f * v.w);
         }
-        //!
-        //! Divide Vector4 by a scalar
-        //!
         friend Vector4 operator / ( const Vector4 & v, T f )
         {
             return Vector4(v.x / f, v.y / f, v.z / f, v.w / f);
         }
-        //!
-        //! Divide by another vector
-        //!
         friend Vector4 operator / ( const Vector4 & a, const Vector4 & b )
         {
             return Vector4( a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w );
         }
 
+        //@}
+
         // ********************************
-        //        public functions
+        //! \name vector operations
         // ********************************
     public:
 
-        //!
-        //! type conversion
-        //!
+        //@{
+
         const T * toPtr() const
         {
             return &x;
         }
-        //!
-        //! type conversion
-        //!
         T * toPtr()
         {
             return &x;
         }
-        //!
-        //! Set Values
-        //!
         Vector4 & set( T ix, T iy, T iz, T iw )
         {
             x = ix;
@@ -960,9 +806,6 @@ namespace GN
             w = iw;
             return *this;
         }
-        //!
-        //! Set Values
-        //!
         Vector4 & set( const Vector2<T> & ixy, T iz, T iw )
         {
             x = ixy.x;
@@ -971,9 +814,6 @@ namespace GN
             w = iw;
             return *this;
         }
-        //!
-        //! Set Values
-        //!
         Vector4 & set( const Vector3<T> & ixyz, T iw )
         {
             x = ixyz.x;
@@ -982,40 +822,25 @@ namespace GN
             w = iw;
             return *this;
         }
-        //!
-        //! Get length of a Vector4
-        //!
         T length() const
         {
             return(T) sqrt(x*x + y*y + z*z + w*w);
         }
-        //!
-        //! Get squared length of a Vector4
-        //!
         T lengthSqr() const
         {
             return(x*x + y*y + z*z + w*w);
         }
-        //!
-        //! Normalize a Vector4
-        //!
         Vector4 & normalize()
         {
 			normalize( *this, *this );
             return *this;
         }
-        //!
-        //! Normalize a Vector4
-        //!
         static Vector4 sNormalize( const Vector4 & v )
         {
             Vector4 r;
             normalize( r, v );
             return r;
         }
-        //!
-        //! Normalize a Vector4
-        //!
         static void sNormalize( Vector4 & o, const Vector4 & i )
         {
             T m = i.length();
@@ -1036,29 +861,22 @@ namespace GN
 				o.w = ((T)0.0);
 			}
         }
-        //!
-        //! Convert to a 3D vector (divide by w)
-        //!
         Vector3<T> toVec3() const
         {
             Vector3<T> ret( x / w, y / w, z / w );
             return ret;
         }
-        //!
-        //! Convert to a 3D vector (divide by w)
-        //!
         Vector3<T> & toVec3( Vector3<T> & o ) const
         {
             o.set( x / w, y / w, z / w );
             return o;
         }
-        //!
-        //! dot production
-        //!
         static T sDot( const Vector4 & v1, const Vector4 & v2 )
         {
             return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
         }
+
+        //@}
     };
 
     //!
@@ -1120,27 +938,20 @@ namespace GN
         //@}
 
         // ********************************
-        //         operators
+        //! \name operators
         // ********************************
     public:
 
-        //!
-        //! type conversion
-        //!
+        //@{
+
         operator const Vector3<T> * () const
         {
             return rows;
         }
-        //!
-        //! type conversion
-        //!
         operator Vector3<T> * ()
         {
             return rows;
         }
-        //!
-        //! assignment
-        //!
         Matrix33 &operator = ( const Matrix33 & m )
         {
             if (this == &m) return *this;
@@ -1150,9 +961,6 @@ namespace GN
             rows[2] = m[2];
             return *this;
         }
-        //!
-        //! Add a Matrix33 to this one
-        //!
         Matrix33 & operator += ( const Matrix33 & m )
         {
             rows[0] += m[0];
@@ -1160,9 +968,6 @@ namespace GN
             rows[2] += m[2];
             return *this;
         }
-        //!
-        //! Subtract a Matrix33 from this one
-        //!
         Matrix33 & operator -= ( const Matrix33 & m )
         {
             rows[0] -= m[0];
@@ -1170,13 +975,7 @@ namespace GN
             rows[2] -= m[2];
             return *this;
         }
-        //!
-        //! Multiply the Matrix33 by another Matrix33
-        //!
         Matrix33<T> & operator *= ( const Matrix33<T> & m );
-        //!
-        //! Multiply the Matrix33 by a scalar
-        //!
         Matrix33 & operator *= ( T f )
         {
             rows[0] *= f;
@@ -1184,48 +983,32 @@ namespace GN
             rows[2] *= f;
             return *this;
         }
-        //!
-        //! Are these two Matrix33's equal?
-        //!
         friend bool operator == ( const Matrix33 & a, const Matrix33 & b )
         {
             return((a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]));
         }
-        //!
-        //! Are these two Matrix33's not equal?
-        //!
         friend bool operator != ( const Matrix33 & a, const Matrix33 & b )
         {
             return((a[0] != b[0]) || (a[1] != b[1]) || (a[2] != b[2]));
         }
-        //!
-        //! Add two Matrix33's
-        //!
         friend Matrix33 operator + ( const Matrix33 & a, const Matrix33 & b )
         {
             Matrix33 ret(a);
             ret += b;
             return ret;
         }
-        //!
-        //! Subtract one Matrix33 from another
-        //!
         friend Matrix33 operator - ( const Matrix33 & a, const Matrix33 & b )
         {
             Matrix33 ret(a);
             ret -= b;
             return ret;
         }
-        //!
-        //! Multiply Matrix33 by another Matrix33
-        //!
         friend Matrix33   operator * ( const Matrix33 & a, const Matrix33 & b )
         {
             Matrix33 ret(a);
             ret *= b;
             return ret;
         }
-
         ////! Multiply a row Vector3<T> by this matrix
         //friend Vector3<T> operator * ( const Vector3<T> & v, const Matrix33 & m )
         //{
@@ -1235,10 +1018,6 @@ namespace GN
         //    ret.z = v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2];
         //    return ret;
         //}
-
-        //!
-        //! Multiply this matrix by a colume vector
-        //!
         friend Vector3<T> operator * ( const Matrix33 & m, const Vector3<T> & v )
         {
             Vector3<T> ret;
@@ -1247,33 +1026,35 @@ namespace GN
             ret.z = Vector3<T>::dot( m[2], v );
             return ret;
         }
-        //!
-        //! Multiply Matrix33 by a scalar
-        //!
         friend Matrix33 operator * ( const Matrix33 & m, T f )
         {
             Matrix33 ret(m);
             ret *= f;
             return ret;
         }
-        //!
-        //! Multiply Matrix33 by a scalar
-        //!
         friend Matrix33 operator * ( T f, const Matrix33 & m )
         {
             Matrix33 ret(m);
             ret *= f;
             return ret;
         }
+        friend std::ostream & operator<<( std::ostream & o, const Matrix33 & m )
+        {
+            StrA s;
+            m.print( s );
+            o << s;
+            return o;
+        }
+
+        //@}
 
         // ********************************
-        //       public functions
+        //! \name matrix operations
         // ********************************
     public:
 
-        //!
-        //! 将本矩阵归一
-        //!
+        //@{
+
         Matrix33 & identity()
         {
             rows[0].set(1,0,0);
@@ -1281,9 +1062,6 @@ namespace GN
             rows[2].set(0,0,1);
             return *this;
         }
-        //!
-        //! 将本矩阵转置
-        //!
         Matrix33 & transpose()
         {
             detail::swap( rows[0][1], rows[1][0] );
@@ -1291,47 +1069,29 @@ namespace GN
             detail::swap( rows[1][2], rows[2][1] );
             return *this;
         }
-        //!
-        //! 求转置矩阵
-        //!
         static void sTranspose( Matrix33 & dst, const Matrix33 & src )
         {
             dst = src;
             dst.transpose();
         }
-        //!
-        //! 求转置矩阵
-        //!
         static Matrix33 sTranspose( const Matrix33 & src )
         {
             Matrix33 r(src);
             r.transpose();
             return r;
         }
-        //!
-        //! 将本矩阵置逆
-        //!
-        Matrix33 & invert();
-        //!
-        //! 求逆矩阵
-        //!
-        static void sInvert( Matrix33 & dst, const Matrix33 & src )
+        Matrix33 & inverse();
+        static void sInverse( Matrix33 & dst, const Matrix33 & src )
         {
             dst = src;
-            dst.invert();
+            dst.inverse();
         }
-        //!
-        //! 求逆矩阵
-        //!
-        static Matrix33 sInvert( const Matrix33 & src )
+        static Matrix33 sInverse( const Matrix33 & src )
         {
             Matrix33 r(src);
-            r.invert();
+            r.inverse();
             return r;
         }
-        //!
-        //! 缩放矩阵
-        //!
         Matrix33 & scale( const Vector3<T> & f )
         {
             identity();
@@ -1341,50 +1101,14 @@ namespace GN
             return *this;
         }
         //!
-        //! 求旋转矩阵
-        //!
-        //! \param angle Angle of rotation in radians
+        //! 求旋转矩阵. Angle is in radius
         //!
         Matrix33 & rotateX( T angle );
-        //!
-        //! 求旋转矩阵
-        //!
-        //! \param angle Angle of rotation in radians
-        //!
         Matrix33 & rotateY( T angle );
-        //!
-        //! 求旋转矩阵
-        //!
-        //! \param angle Angle of rotation in radians
-        //!
         Matrix33 & rotateZ( T angle );
-        //!
-        //! 求旋转矩阵
-        //!
-        //! \param v     Axis of rotation
-        //! \param angle Angle of rotation in radians
-        //!
         Matrix33 & rotate( const Vector3<T> & v, T angle );
-        //!
-        //! 求左手lookat矩阵
-        //!
-        //! \param forward  Forward vector
-        //! \param up       Up vector
-        //!
         Matrix33 & lookAtLh( const Vector3<T> & forward, const Vector3<T> & up );
-        //!
-        //! 求右手lookat矩阵
-        //!
-        //! \param forward  Forward vector
-        //! \param up       Up vector
-        //!
         Matrix33 & lookAtRh( const Vector3<T> & forward, const Vector3<T> & up );
-        //!
-        //! 求lookat矩阵
-        //!
-        //! \param forward  Forward vector
-        //! \param up       Up vector
-        //!
         Matrix33 & lookAt( const Vector3<T> & forward, const Vector3<T> & up )
         {
 #if GN_LEFT_HAND
@@ -1393,10 +1117,13 @@ namespace GN
             return lookAtRh( forward, up );
 #endif
         }
+
         //!
         //! 打印矩阵内容到字符串中, mainly for debug purpose.
         //!
         void print( StrA & ) const;
+
+        //@}
     };
 
     // static member
@@ -1481,27 +1208,20 @@ namespace GN
         //@}
 
         // ********************************
-        //          operators
+        //! \name operators
         // ********************************
     public:
 
-        //!
-        //! type conversion
-        //!
+        //@{
+
         operator const Vector4<T> * () const
         {
             return rows;
         }
-        //!
-        //! type conversion
-        //!
         operator Vector4<T> * ()
         {
             return rows;
         }
-        //!
-        //! Assign
-        //!
         Matrix44 & operator = ( const Matrix44 & m )
         {
             if (this == &m) return *this;
@@ -1511,9 +1231,6 @@ namespace GN
             rows[3] = m[3];
             return *this;
         }
-        //!
-        //! Assign a 3x3 matrix to the Matrix44
-        //!
         Matrix44 & operator = ( const Matrix33<T> & m )
         {
             rows[0].set( m[0], ((T)0.0) );
@@ -1522,9 +1239,6 @@ namespace GN
             rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
-        //!
-        //! Add a Matrix44 to this one
-        //!
         Matrix44 & operator += ( const Matrix44 & m )
         {
             rows[0] += m[0];
@@ -1533,9 +1247,6 @@ namespace GN
             rows[3] += m[3];
             return *this;
         }
-        //!
-        //! Subtract a Matrix44 from this one
-        //!
         Matrix44 & operator -= ( const Matrix44 & m )
         {
             rows[0] -= m[0];
@@ -1544,13 +1255,7 @@ namespace GN
             rows[3] -= m[3];
             return *this;
         }
-        //!
-        //! Multiply the Matrix44 by another Matrix44
-        //!
         Matrix44<T> & operator *= ( const Matrix44<T> & m );
-        //!
-        //! Multiply the Matrix44 by a scalar
-        //!
         Matrix44 & operator *= ( T f )
         {
             rows[0] *= f;
@@ -1559,25 +1264,16 @@ namespace GN
             rows[3] *= f;
             return *this;
         }
-        //!
-        //! Are these two Matrix44's equal?
-        //!
         friend bool operator == ( const Matrix44 & a, const Matrix44 & b )
         {
             return( (a[0] == b[0]) && (a[1] == b[1]) &&
                     (a[2] == b[2]) && (a[3] == b[3]) );
         }
-        //!
-        //! Are these two Matrix44's not equal?
-        //!
         friend bool operator != ( const Matrix44 & a, const Matrix44 & b )
         {
             return( (a[0] != b[0]) || (a[1] != b[1]) ||
                     (a[2] != b[2]) || (a[3] != b[3]) );
         }
-        //!
-        //! Add two Matrix44's
-        //!
         friend Matrix44
         operator + ( const Matrix44 & a, const Matrix44 & b )
         {
@@ -1585,9 +1281,6 @@ namespace GN
             ret += b;
             return ret;
         }
-        //!
-        //! Subtract one Matrix44 from another
-        //!
         friend Matrix44
         operator - ( const Matrix44 & a, const Matrix44 & b )
         {
@@ -1595,9 +1288,6 @@ namespace GN
             ret -= b;
             return ret;
         }
-        //!
-        //! Multiply Matrix44 by another Matrix44
-        //!
         friend Matrix44
         operator * ( const Matrix44 & a, const Matrix44 & b )
         {
@@ -1605,7 +1295,6 @@ namespace GN
             ret *= b;
             return ret;
         }
-
         ////! Multiply a row 4-D vector by this matrix
         //friend Vector4<T> operator * ( const Vector4<T> & v,
         //    const Matrix44 & m )
@@ -1617,10 +1306,6 @@ namespace GN
         //    ret.w = v.x * m[0][3] + v.y * m[1][3] + v.z * m[2][3] + v.w * m[3][3];
         //    return ret;
         //}
-
-        //!
-        //! Multiply this matrix by a column 4-D vector
-        //!
         friend Vector4<T>
         operator * ( const Matrix44 & m, const Vector4<T> & v )
         {
@@ -1631,33 +1316,35 @@ namespace GN
             ret.w = Vector4<T>::dot( m[3], v );
             return ret;
         }
-        //!
-        //! Multiply Matrix44 by a scalar
-        //!
         friend Matrix44 operator * ( const Matrix44 & m, T f )
         {
             Matrix44 ret(m);
             ret *= f;
             return ret;
         }
-        //!
-        //! Multiply Matrix44 by a scalar
-        //!
         friend Matrix44 operator * ( T f, const Matrix44 & m )
         {
             Matrix44 ret(m);
             ret *= f;
             return ret;
         }
+        friend std::ostream & operator<<( std::ostream & o, const Matrix44 & m )
+        {
+            StrA s;
+            m.print( s );
+            o << s;
+            return o;
+        }
+
+        //@}
 
         // ********************************
-        //       public functions
+        //! \name matrix operations
         // ********************************
     public:
 
-        //!
-        //! set the content of the matrix
-        //!
+        //@{
+
         Matrix44 & set( T _00, T _01, T _02, T _03,
                         T _10, T _11, T _12, T _13,
                         T _20, T _21, T _22, T _23,
@@ -1669,10 +1356,6 @@ namespace GN
             rows[3].set(_30,_31,_32,_33);
             return *this;
         }
-
-        //!
-        //! set the content of the matrix
-        //!
         Matrix44 & set( const Matrix33<T> & m33,
                         const Vector3<T> & col3 = Vector3<T>(0,0,0),
                         const Vector3<T> & row3 = Vector3<T>(0,0,0),
@@ -1684,9 +1367,6 @@ namespace GN
             rows[3].set( row3, _33 );
             return *this;
         }
-        //!
-        //! identity the matrix
-        //!
         Matrix44 & identity()
         {
             rows[0].set( ((T)1.0), ((T)0.0), ((T)0.0), ((T)0.0) );
@@ -1695,9 +1375,6 @@ namespace GN
             rows[3].set( ((T)0.0), ((T)0.0), ((T)0.0), ((T)1.0) );
             return *this;
         }
-        //!
-        //! 将本矩阵转置
-        //!
         Matrix44 & transpose()
         {
             detail::swap( rows[0][1], rows[1][0] );
@@ -1708,63 +1385,39 @@ namespace GN
             detail::swap( rows[2][3], rows[3][2] );
             return *this;
         }
-        //!
-        //! 求转置矩阵
-        //!
         static void sTranspose( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
             dst.transpose();
         }
-        //!
-        //! 求转置矩阵
-        //!
         static Matrix44 sTranspose( const Matrix44 & src )
         {
             Matrix44 r(src);
             r.transpose();
             return r;
         }
-        //!
-        //! 将本矩阵置逆
-        //!
-        Matrix44 & invert();
-        //!
-        //! 求逆矩阵
-        //!
-        static void sInvert( Matrix44 & dst, const Matrix44 & src )
+        Matrix44 & inverse();
+        static void sInverse( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
-            dst.invert();
+            dst.inverse();
         }
-        //!
-        //! 求逆矩阵
-        //!
-        static Matrix44 sInvert( const Matrix44 & src )
+        static Matrix44 sInverse( const Matrix44 & src )
         {
             Matrix44 r(src);
-            r.invert();
+            r.inverse();
             return r;
         }
-        //!
-        //! inverse and tranpose
-        //!
         Matrix44 & invtrans()
         {
-            invert();
+            inverse();
             transpose();
         }
-        //!
-        //! inverse and tranpose
-        //!
         static void sInvtrans( Matrix44 & dst, const Matrix44 & src )
         {
             dst = src;
             dst.invtrans();
         }
-        //!
-        //! inverse and tranpose
-        //!
         static Matrix44 sInvtrans( const Matrix44 & src )
         {
             Matrix44 r(src);
@@ -1772,38 +1425,12 @@ namespace GN
             return r;
         }
         //!
-        //! 求旋转矩阵
-        //!
-        //! \param angle Angle of rotation in radians
+        //! 求旋转矩阵. Angle is in radians.
         //!
         Matrix44 & rotateX( T angle );
-        //!
-        //! 求旋转矩阵
-        //!
-        //! \param angle Angle of rotation in radians
-        //!
         Matrix44 & rotateY( T angle );
-        //!
-        //! 求旋转矩阵
-        //!
-        //! \param angle Angle of rotation in radians
         Matrix44 & rotateZ( T angle );
-        //!
-        //! 求旋转矩阵
-        //!
-        //! \param v     Axis of rotation
-        //! \param angle Angle of rotation in radians
         Matrix44 & rotate( const Vector3<T> & v, T angle );
-        //!
-        //! 求平移矩阵
-        //!
-        //! This function will generate a translate matrix like this:\n
-        //! \n
-        //! 1, 0, 0, x   \n
-        //! 0, 1, 0, y   \n
-        //! 0, 0, 1, z   \n
-        //! 0, 0, 0, 1
-        //!
         Matrix44 & translate( T x, T y = (T)0, T z = (T)0 )
         {
             identity();
@@ -1812,47 +1439,20 @@ namespace GN
             rows[2][3] = z;
             return *this;
         }
-        //!
-        //! 求平移矩阵
-        //!
         Matrix44 & translate( const Vector3<T> & v )
         {
             return translate( v.x, v.y, v.z );
         }
-        //!
-        //! 求平移矩阵
-        //!
         Matrix44 & translate( const Vector2<T> & v )
         {
             return translate( v.x, v.y, (T)0 );
         }
-        //!
-        //! 求Lookat矩阵
-        //!
-        //! \param eye 视点坐标
-        //! \param to  目标点坐标
-        //! \param up  上向量
-        //!
         Matrix44 & lookAtLh( const Vector3<T> & eye,
                              const Vector3<T> & to,
                              const Vector3<T> & up );
-        //!
-        //! 求右手Lookat矩阵
-        //!
-        //! \param eye 视点坐标
-        //! \param to  目标点坐标
-        //! \param up  上向量
-        //!
         Matrix44 & lookAtRh( const Vector3<T> & eye,
                              const Vector3<T> & to,
                              const Vector3<T> & up );
-        //!
-        //! 求Lookat矩阵
-        //!
-        //! \param eye 视点坐标
-        //! \param to  目标点坐标
-        //! \param up  上向量
-        //!
         Matrix44 & lookAt( const Vector3<T> & eye,
                            const Vector3<T> & to,
                            const Vector3<T> & up )
@@ -1883,20 +1483,10 @@ namespace GN
                                T bottom, T top,
                                T znear, T zfar );
 
-        //!
-        //! 求右手正交投影矩阵
-        //!
-        //! \sa orthoOGLLh
-        //!
         Matrix44 & orthoOGLRh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
 
-        //!
-        //! 求正交投影矩阵
-        //!
-        //! \sa orthoOGLLh
-        //!
         Matrix44 & orthoOGL( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
@@ -1907,27 +1497,12 @@ namespace GN
             return orthoOGLRh( left, right, bottom, top, znear, zfar );
 #endif
         }
-        //!
-        //! 求左手正交投影矩阵
-        //!
-        //! \sa orthoOGLLh
-        //!
         Matrix44 & orthoD3DLh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
-        //!
-        //! 求右手正交投影矩阵
-        //!
-        //! \sa orthoOGLLh
-        //!
         Matrix44 & orthoD3DRh( T left, T right,
                                T bottom, T top,
                                T znear, T zfar );
-        //!
-        //! 求正交投影矩阵
-        //!
-        //! \sa orthoOGLLh
-        //!
         Matrix44 & orthoD3D( T left, T right,
                              T bottom, T top,
                              T znear, T zfar )
@@ -1949,18 +1524,8 @@ namespace GN
         //!
         Matrix44 & perspectiveOGLLh( T fovy, T ratio,
                                      T znear, T zfar );
-        //!
-        //! 求右手透视投影矩阵
-        //!
-        //! \sa perspectiveOGLLh
-        //!
         Matrix44 & perspectiveOGLRh( T fovy, T ratio,
                                      T znear, T zfar );
-        //!
-        //! 求透视投影矩阵
-        //!
-        //! \sa perspectiveOGLLh
-        //!
         Matrix44 & perspectiveOGL( T fovy, T ratio,
                                    T znear, T zfar )
         {
@@ -1970,25 +1535,10 @@ namespace GN
             return perspectiveOGLRh( fovy, ratio, znear, zfar );
 #endif
         }
-        //!
-        //! 求左手透视投影矩阵
-        //!
-        //! \sa perspectiveOGLLh
-        //!
         Matrix44 & perspectiveD3DLh( T fovy, T ratio,
                                      T znear, T zfar );
-        //!
-        //! 求右手透视投影矩阵
-        //!
-        //! \sa perspectiveOGLLh
-        //!
         Matrix44 & perspectiveD3DRh( T fovy, T ratio,
                                      T znear, T zfar );
-        //!
-        //! 求透视投影矩阵
-        //!
-        //! \sa perspectiveOGLLh
-        //!
         Matrix44 & perspectiveD3D( T fovy, T ratio,
                                    T znear, T zfar )
         {
@@ -1999,7 +1549,9 @@ namespace GN
 #endif
         }
         //!
-        //! transform a 3-D point by this matrix
+        //! transform a 3-D point by this matrix.
+        //!
+        //! This function treads input vector as (x, y, z, 1)
         //!
         void transformPoint( Vector3<T> & dst, const Vector3<T> & src ) const
         {
@@ -2012,9 +1564,6 @@ namespace GN
             if( ((T)0) != k ) dst /= k;
             else GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
         }
-        //!
-        //! transform a 3-D point by this matrix
-        //!
         Vector3<T> transformPoint( const Vector3<T> & src ) const
         {
 			Vector3<T> dst;
@@ -2024,8 +1573,8 @@ namespace GN
         //!
         //! transform a vector by this matrix
         //!
-        //! \note
-        //!     To transform an normal, you should use invtrans of the desired matrix.
+        //! This function treads input vector as (x, y, z, 0).
+        //! To transform an normal, you should use invtrans of the desired matrix.
         //!
         void transformVector( Vector3<T> & dst, const Vector3<T> & src ) const
         {
@@ -2033,31 +1582,16 @@ namespace GN
             dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z;
             dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z;
         }
-        //!
-        //! transform a vector by this matrix
-        //!
-        //! \note
-        //!     To transform an normal, you should use invtrans of the desired matrix.
-        //!
         Vector3<T> transformVector( const Vector3<T> & src ) const
         {
             Vector3<T> dst;
 			transformVector( dst, src );
             return dst;
         }
-        //!
-        //! 打印矩阵内容到字符串
-        //!
         void print( StrA & ) const;
-        //!
-        //! 打印矩阵内容到字符串
-        //!
-        StrA print() const
-        {
-			StrA s;
-			print(s);
-			return s;
-        }
+        StrA print() const { StrA s; print(s); return s; }
+
+        //@}
     };
 
     // static member
@@ -2239,9 +1773,9 @@ namespace GN
             return r;
         }
         //!
-        //! invert
+        //! inverse
         //!
-        Quaternion & invert()
+        Quaternion & inverse()
         {
             T l = getNormal();
 
@@ -2253,20 +1787,20 @@ namespace GN
             return *this;
         }
         //!
-        //! invert
+        //! inverse
         //!
         static void sinvert( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
-            dst.invert();
+            dst.inverse();
         }
         //!
-        //! invert
+        //! inverse
         //!
-        static Quaternion sInvert( const Quaternion & src )
+        static Quaternion sInverse( const Quaternion & src )
         {
             Quaternion r(src);
-            r.invert();
+            r.inverse();
             return r;
         }
         //!

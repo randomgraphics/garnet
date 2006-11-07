@@ -39,7 +39,7 @@ namespace GN
     // get inverse of a 3x3 matrix
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix33<T> & Matrix33<T>::invert()
+    Matrix33<T> & Matrix33<T>::inverse()
     {
 
         // Invert a 3x3 using cofactors.  This is about 8 times faster than
@@ -317,7 +317,7 @@ namespace GN
     // Invert the matrix
     // -------------------------------------------------------------------------
     template < typename T >
-    Matrix44<T> & Matrix44<T>::invert()
+    Matrix44<T> & Matrix44<T>::inverse()
     {
         Matrix44<T> a(*this);
         Matrix44<T>  & b = *this;
@@ -344,7 +344,7 @@ namespace GN
             }
 
             // Check if the matrix is invertible. If the max value here is 0, we
-            // can't invert.  Return identity.
+            // can't inverse.  Return identity.
             if (a[rowMax][c] == 0.0F)
             {
                 // Invertible matrix is very rare, and normally means error,
