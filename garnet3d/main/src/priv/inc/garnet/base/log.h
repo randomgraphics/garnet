@@ -123,6 +123,11 @@ namespace GN
             //! Do doLog
             //!
             void doLog( const char * fmt, ... );
+
+            //!
+            //! Do doLog (UNICODE)
+            //!
+            void doLog( const wchar_t * fmt, ... );
         };
 
         //!
@@ -136,9 +141,14 @@ namespace GN
             virtual ~Receiver() {}
 
             //!
-            //! deal with received doLog message
+            //! deal with incoming log message
             //!
             virtual void onLog( Logger &, const LogDesc &, const StrA & ) = 0;
+
+            //!
+            //! deal with incoming UNICODE log message
+            //!
+            virtual void onLog( Logger &, const LogDesc &, const StrW & ) = 0;
         };
 
         //!
@@ -147,9 +157,14 @@ namespace GN
         virtual ~Logger() {}
 
         //!
-        //! Do Log
+        //! Do log
         //!
         virtual void doLog( const LogDesc & desc, const StrA & msg ) = 0;
+
+        //!
+        //! Do log (UNICODE)
+        //!
+        virtual void doLog( const LogDesc & desc, const StrW & msg ) = 0;
 
         //!
         //! change logger level

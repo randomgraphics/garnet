@@ -13,3 +13,17 @@ void GN::Logger::LogHelper::doLog( const char * fmt, ... )
     va_end( arglist );
     mLogger->doLog( mDesc, s );
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::Logger::LogHelper::doLog( const wchar_t * fmt, ... )
+{
+    GN_ASSERT( mLogger );
+    StrW s;
+    va_list arglist;
+    va_start( arglist, fmt );
+    s.format( fmt, arglist );
+    va_end( arglist );
+    mLogger->doLog( mDesc, s );
+}
