@@ -1,3 +1,6 @@
+- 2006.11.8
+  - add support to Cg shaders
+
 - 2006.10.16
   - new path function to compose relative path.
 

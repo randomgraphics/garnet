@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "oglShader.h"
-#include "oglRenderer.h"
+#include "d3d9Shader.h"
+#include "d3d9Renderer.h"
 
-#ifdef HAS_CG_OGL
+#ifdef HAS_CG_D3D9
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -13,18 +13,29 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
+bool GN::gfx::D3D9BasicShaderCg::init( const StrA & code, const StrA & hints )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::OGLBasicShaderCg, () );
+    GN_STDCLASS_INIT( GN::gfx::D3D9BasicShaderCg, () );
 
     // get the latest profile
-    mProfile = cgGLGetLatestProfile( mProfileClass );
+    switch( getType() )
+    {
+        case SHADER_VS :
+            mProfile = cgD3D9GetLatestVertexProfile();
+            break;
+        case SHADER_PS :
+            mProfile = cgD3D9GetLatestPixelProfile();
+            break;
+        case SHADER_GS :
+            GN_ERROR(sLogger)( "D3D9 renderer does not support geometry shader." );
+            return false;
+    }
     if( CG_PROFILE_UNKNOWN == mProfile )
     {
-        GN_ERROR(sLogger)( "Fail to get the lastest profile!" );
+        GN_ERROR(sLogger)( "Fail to get the lastest shader profile!" );
         return failure();
     }
 
@@ -36,7 +47,11 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
     if( !mShader.init( getRenderer().getCgContext(), mProfile, code, entry ) ) return failure();
 
     // load the program
-    GN_CG_CHECK_RV( cgGLLoadProgram( mShader.getProgram() ), failure() );
+    DWORD asmFlags = D3DXSHADER_PACKMATRIX_ROWMAJOR;
+#if GN_DEBUG_BUILD
+    asmFlags |= D3DXSHADER_DEBUG;
+#endif
+    GN_DX9_CHECK_RV( cgD3D9LoadProgram( mShader.getProgram(), CG_FALSE, 0 ), failure() );
 
     // success
     return success();
@@ -47,9 +62,14 @@ bool GN::gfx::OGLBasicShaderCg::init( const StrA & code, const StrA & hints )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::quit()
+void GN::gfx::D3D9BasicShaderCg::quit()
 {
     GN_GUARD;
+
+    if( cgIsProgram( mShader.getProgram() ) )
+    {
+        GN_DX9_CHECK( cgD3D9UnloadProgram( mShader.getProgram() ) );
+    }
 
     mShader.quit();
 
@@ -60,32 +80,20 @@ void GN::gfx::OGLBasicShaderCg::quit()
 }
 
 // ****************************************************************************
-// from OGLBasicShader
+// from D3D9BasicShader
 // ****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::disable() const
-{
-    GN_GUARD_SLOW;
-    GN_ASSERT( ok() );
-    GN_CG_CHECK( cgGLDisableProfile( mProfile ) );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::apply() const
+void GN::gfx::D3D9BasicShaderCg::apply() const
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( ok() );
 
     // enable the shader
-    GN_CG_CHECK( cgGLEnableProfile( mProfile ) );
-    GN_CG_CHECK( cgGLBindProgram( mShader.getProgram() ) );
+    GN_DX9_CHECK( cgD3D9BindProgram( mShader.getProgram() ) );
 
     // apply ALL uniforms to D3D device
     uint32_t handle = getFirstUniform();
@@ -102,7 +110,7 @@ void GN::gfx::OGLBasicShaderCg::apply() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::applyDirtyUniforms() const
+void GN::gfx::D3D9BasicShaderCg::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
     const std::set<uint32_t> dirtySet = getDirtyUniforms();
@@ -122,7 +130,7 @@ void GN::gfx::OGLBasicShaderCg::applyDirtyUniforms() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderCg::queryDeviceUniform(
+bool GN::gfx::D3D9BasicShaderCg::queryDeviceUniform(
     const char * name, HandleType & userData ) const
 {
     GN_GUARD;
@@ -142,7 +150,7 @@ bool GN::gfx::OGLBasicShaderCg::queryDeviceUniform(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
+void GN::gfx::D3D9BasicShaderCg::applyUniform( const Uniform & u ) const
 {
     GN_GUARD_SLOW;
 
@@ -155,16 +163,16 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
         case UVT_VECTOR4 :
             if( 1 == u.value.vector4s.size() )
             {
-                GN_CG_CHECK( cgGLSetParameter4fv(
+                GN_DX9_CHECK( cgD3D9SetUniform(
                     param,
                     u.value.vector4s[0] ) );
             }
             else
             {
-                GN_CG_CHECK( cgGLSetParameterArray4f(
+                GN_DX9_CHECK( cgD3D9SetUniformArray(
                     param,
                     0,
-                    (long)u.value.vector4s.size(),
+                    (DWORD)u.value.vector4s.size(),
                     u.value.vector4s[0] ) );
             }
             break;
@@ -172,40 +180,40 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
         case UVT_MATRIX44 :
             if( 1 == u.value.matrix44s.size() )
             {
-                GN_CG_CHECK( cgGLSetMatrixParameterfr(
+                GN_DX9_CHECK( cgD3D9SetUniformMatrix(
                     param,
-                    u.value.matrix44s[0][0] ) );
+                    (const D3DXMATRIX*)&u.value.matrix44s[0] ) );
             }
             else
             {
-                GN_CG_CHECK( cgGLSetMatrixParameterArrayfr(
+                GN_DX9_CHECK( cgD3D9SetUniformMatrixArray(
                     param,
                     0,
-                    (long)u.value.matrix44s.size(),
-                    u.value.matrix44s[0][0] ) );
+                    (DWORD)u.value.matrix44s.size(),
+                    (const D3DXMATRIX*)&u.value.matrix44s[0] ) );
             }
             break;
 
         case UVT_FLOAT :
             if( 1 == u.value.floats.size() )
             {
-                GN_CG_CHECK( cgGLSetParameter1f(
+                GN_CG_CHECK( cgD3D9SetUniform(
                     param,
-                    u.value.floats[0] ) );
+                    &u.value.floats[0] ) );
             }
             else
             {
-                GN_CG_CHECK( cgGLSetParameterArray1f(
+                GN_CG_CHECK( cgD3D9SetUniformArray(
                     param,
                     0,
-                    (long)u.value.floats.size(),
+                    (DWORD)u.value.floats.size(),
                     &u.value.floats[0] ) );
             }
             break;
 
         case UVT_BOOL :
         case UVT_INT :
-            GN_ERROR(sLogger)( "OGL Cg shader does not support boolean and integer uniforms." );
+            GN_ERROR(sLogger)( "D3D9 Cg shader does not support boolean and integer uniforms." );
             break;
 
         default:

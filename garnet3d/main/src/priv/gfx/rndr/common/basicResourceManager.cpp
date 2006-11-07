@@ -1,6 +1,48 @@
 #include "pch.h"
 #include "basicRenderer.h"
 
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::BasicRenderer::resInit()
+{
+    GN_GUARD;
+
+#ifdef HAS_CG
+    // create Cg context
+    mCgContext = cgCreateContext();
+    if( !mCgContext )
+    {
+        GN_ERROR(sLogger)( "Fail to create Cg context!" );
+        return false;
+    }
+#endif
+
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::resQuit()
+{
+    GN_GUARD;
+
+#ifdef HAS_CG
+    // destroy Cg context
+    if( mCgContext )
+    {
+        cgDestroyContext( mCgContext );
+        mCgContext = 0;
+    }
+#endif
+
+    GN_UNGUARD;
+}
+
 //
 //
 // -----------------------------------------------------------------------------

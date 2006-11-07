@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "d3d9Resource.h"
+#include "../common/cgShader.h"
 
 namespace GN { namespace gfx
 {
@@ -446,6 +447,107 @@ namespace GN { namespace gfx
     private:
         bool createShader( const StrA &, const StrA & );
     };
+
+    // *************************************************************************
+    // Cg shader
+    // *************************************************************************
+
+#ifdef HAS_CG_D3D9
+
+    //!
+    //! Basic Cg Shader class
+    //!
+    class D3D9BasicShaderCg : public D3D9BasicShader, public D3D9Resource, public StdClass
+    {
+        GN_DECLARE_STDCLASS( D3D9BasicShaderCg, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D9BasicShaderCg( D3D9Renderer & r, ShaderType t )
+            : D3D9BasicShader( t, LANG_CG )
+            , D3D9Resource( r ) { clear(); }
+        virtual ~D3D9BasicShaderCg() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const StrA & code, const StrA & hints );
+        void quit();
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // from D3D9Resource
+        // ********************************
+    public:
+
+        bool deviceRestore() { return true; }
+        void deviceDispose() {}
+
+        // ********************************
+        // from D3D9BasicShader
+        // ********************************
+    public:
+
+        virtual void apply() const;
+        virtual void applyDirtyUniforms() const;
+
+        // ********************************
+        // from Shader
+        // ********************************
+    private:
+
+        virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const;
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        CGprofile mProfile;
+        CgShader  mShader;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+        inline void applyUniform( const Uniform & ) const;
+    };
+
+    //!
+    //! D3D9 Cg vertex shader.
+    //!
+    class D3D9VtxShaderCg : public D3D9BasicShaderCg
+    {
+    public:
+        //!
+        //! ctor
+        //!
+        D3D9VtxShaderCg( D3D9Renderer & r ) : D3D9BasicShaderCg( r, SHADER_VS ) {}
+    };
+
+    //!
+    //! D3D9 Cg pixel shader.
+    //!
+    class D3D9PxlShaderCg : public D3D9BasicShaderCg
+    {
+    public:
+        //!
+        //! ctor
+        //!
+        D3D9PxlShaderCg( D3D9Renderer & r ) : D3D9BasicShaderCg( r, SHADER_PS ) {}
+    };
+
+#endif
 }}
 
 // *****************************************************************************
