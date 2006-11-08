@@ -5,4 +5,10 @@ User Scenario
 - shader get vertex data from universal vertex buffer stored in main memory.
 - 2 draws use same shader. the 1st draw render to texture; the second draw 
   render to back buffer.
-- Adjust global quality parameter (like texture filtering), to increase overall rendering quality.
+- Adjust global quality parameter (like texture filtering), to increase overall
+  rendering quality.
+- user creates too many render targets that can't fit into hardware's local
+  memory (like EDRAM)
+  - may be resolved by lazy creation
+  - check CPU "register renaming" and "buffer renaming" in graphics driver for
+    more ideas.
