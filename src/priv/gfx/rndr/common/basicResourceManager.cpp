@@ -7,9 +7,8 @@
 // -----------------------------------------------------------------------------
 bool GN::gfx::BasicRenderer::resInit()
 {
-    GN_GUARD;
-
 #ifdef HAS_CG
+    GN_GUARD;
     // create Cg context
     mCgContext = cgCreateContext();
     if( !mCgContext )
@@ -17,11 +16,10 @@ bool GN::gfx::BasicRenderer::resInit()
         GN_ERROR(sLogger)( "Fail to create Cg context!" );
         return false;
     }
+    GN_UNGUARD;
 #endif
 
     return true;
-
-    GN_UNGUARD;
 }
 
 //
@@ -29,18 +27,18 @@ bool GN::gfx::BasicRenderer::resInit()
 // -----------------------------------------------------------------------------
 void GN::gfx::BasicRenderer::resQuit()
 {
+#ifdef HAS_CG
     GN_GUARD;
 
-#ifdef HAS_CG
     // destroy Cg context
     if( mCgContext )
     {
         cgDestroyContext( mCgContext );
         mCgContext = 0;
     }
-#endif
 
     GN_UNGUARD;
+#endif
 }
 
 //

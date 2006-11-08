@@ -107,17 +107,17 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                 case LANG_OGL_GLSL:
                 {
                     AutoRef<OGLVtxShaderGLSL> p( new OGLVtxShaderGLSL(*this) );
-                    if( !p->init( code ) ) return 0;
+                    if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#ifdef HAS_CG_OGL
                 case LANG_CG:
                 {
                     AutoRef<OGLVtxShaderCg> p( new OGLVtxShaderCg(*this) );
                     if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#endif
                 default:
                     GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
@@ -136,17 +136,17 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
                 case LANG_OGL_GLSL:
                 {
                     AutoRef<OGLPxlShaderGLSL> p( new OGLPxlShaderGLSL(*this) );
-                    if( !p->init( code ) ) return 0;
+                    if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#ifdef HAS_CG_OGL
                 case LANG_CG:
                 {
                     AutoRef<OGLPxlShaderCg> p( new OGLPxlShaderCg(*this) );
                     if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#endif
                 default:
                     GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;

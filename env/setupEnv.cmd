@@ -1,7 +1,6 @@
 @echo off
 goto :start
 
-
 REM ============
 REM sub routines
 REM ============
@@ -14,6 +13,11 @@ echo ========
 echo.
 goto :EOF
 
+:usage
+echo.
+echo Usage: setupEnv.cmd [/h^|/?] [vc80^|vc71^|icl^|mingw] [x86^|x64^|xenon] [debug^|profile^|retail^|stdbg^|stret^|stprof]
+echo.
+goto :EOF
 
 REM ====================
 REM begin of main script
@@ -22,6 +26,37 @@ REM ====================
 pushd %~dp0..
 set GARNET_ROOT=%cd%
 popd
+
+REM ============================
+REM setup garnet build parameers
+REM ============================
+:parse_cmdline
+if not "" == "%1" (
+		if "/?" == "%1" ( goto :usage
+		) else if /I "/h" == "%1" ( goto :usage
+        ) else if /I "vc80" == "%1" ( set GN_BUILD_COMPILER=vc80
+        ) else if /I "vc71" == "%1" ( set GN_BUILD_COMPILER=vc71
+        ) else if /I "icl" == "%1" ( set GN_BUILD_COMPILER=icl
+        ) else if /I "mingw" == "%1" ( set GN_BUILD_COMPILER=mingw
+        ) else if /I "x86" == "%1" ( set GN_BUILD_TARGET_CPU=x86
+        ) else if /I "x64" == "%1" ( set GN_BUILD_TARGET_CPU=x64
+        ) else if /I "debug" == "%1" ( set GN_BUILD_VARIANT=debug
+        ) else if /I "profile" == "%1" ( set GN_BUILD_VARIANT=profile
+        ) else if /I "retail" == "%1" ( set GN_BUILD_VARIANT=retail
+        ) else if /I "stdbg" == "%1" ( set GN_BUILD_VARIANT=stdbg
+        ) else if /I "stprof" == "%1" ( set GN_BUILD_VARIANT=stprof
+        ) else if /I "stret" == "%1" ( set GN_BUILD_VARIANT=stret
+        ) else if /I "xenon" == "%1" (
+                set GN_BUILD_COMPILER=xenon
+                set GN_BUILD_TARGET_OS=xenon
+                set GN_BUILD_TARGET_CPU=ppc
+                set GN_BUILD_VARIANT=stdbg
+        ) else (
+                call :warn Unknown parameter "%1".
+        )
+        shift
+        goto parse_cmdline
+)
 
 REM ============================
 REM setup garnet build parameers

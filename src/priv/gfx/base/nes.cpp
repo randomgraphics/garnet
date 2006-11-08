@@ -1,4 +1,6 @@
 #include "pch.h"
+/*
+
 #include "garnet/gfx/nes.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.EffectSystem");
@@ -271,3 +273,4 @@ GN::gfx::nes::Shader *           GN::gfx::nes::EffectSystem::getEffectShader( Ef
 bool GN::gfx::nes::EffectSystem::registerShaderDll( const StrA & dllName ) { return mImpl->registerShaderDll( dllName ); }
 bool GN::gfx::nes::EffectSystem::registerShader( Shader * s ) { return mImpl->registerShader( s ); }
 void GN::gfx::nes::EffectSystem::removeAllShaders() { return mImpl->removeAllShaders(); }
+//*/
