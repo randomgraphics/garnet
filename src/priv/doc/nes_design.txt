@@ -1,5 +1,8 @@
-ISSUES
-======
-
-- all most all effects need to render to both back buffer and texture.
-- how to adjust global rendering quality, such as AA and AF?
+User Scenario
+=============
+- one shader output a 2D texture that is used as input of another 3D texture.
+- one shader output a 2D texture that is used by many-many of other shaders.
+- shader get vertex data from universal vertex buffer stored in main memory.
+- 2 draws use same shader. the 1st draw render to texture; the second draw 
+  render to back buffer.
+- Adjust global quality parameter (like texture filtering), to increase overall rendering quality.

@@ -22,10 +22,11 @@ namespace GN { namespace gfx
 
         NUM_CLRFMTS,
 
-        // common alias
+        // common aliases
         FMT_INVALID     = NUM_CLRFMTS,
         FMT_UNKNOWN     = FMT_INVALID,
         FMT_DEFAULT     = FMT_INVALID,
+        FMT_DONTCARE    = FMT_INVALID,
 
         FMT_RGBA32      = FMT_RGBA_8_8_8_8_UNORM,
         FMT_BGRA32      = FMT_BGRA_8_8_8_8_UNORM,
