@@ -199,7 +199,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( const StrA & code );
+        bool init( const StrA & code, const StrA & hints );
         void quit();
     private:
         void clear()

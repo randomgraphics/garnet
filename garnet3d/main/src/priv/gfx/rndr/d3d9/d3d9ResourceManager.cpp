@@ -172,14 +172,14 @@ GN::gfx::D3D9Renderer::createShader(
                     if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#ifdef HAS_CG_D3D9
                 case LANG_CG:
                 {
                     AutoRef<D3D9VtxShaderCg> p( new D3D9VtxShaderCg(*this) );
                     if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#endif
                 default:
                     GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;
@@ -201,14 +201,14 @@ GN::gfx::D3D9Renderer::createShader(
                     if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#ifdef HAS_CG_D3D9
                 case LANG_CG:
                 {
                     AutoRef<D3D9PxlShaderCg> p( new D3D9PxlShaderCg(*this) );
                     if( !p->init( code, hints ) ) return 0;
                     return p.detach();
                 }
-
+#endif
                 default:
                     GN_ERROR(sLogger)( "unsupport shading language : %s", shadingLanguage2Str(lang) );
                     return 0;

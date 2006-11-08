@@ -105,11 +105,8 @@ bool GN::gfx::VtxFmtDesc::addAttrib(
 {
     // TODO: check input parameters
     attribs.resize( attribs.size() + 1 );
-    AttribDesc & a = attribs.back();
-    a.stream = (uint8_t)stream;
-    a.offset = (uint16_t)offset;
-    a.semantic = semantic;
-    a.format = format;
+    attribs.back().set( stream, offset, semantic, format );
+    
     GN_ASSERT( validate() );
     return true;
 }

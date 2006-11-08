@@ -16,6 +16,85 @@ namespace GN { namespace gfx
 
 namespace GN { namespace gfx { namespace nes
 {
+    //@{
+    typedef uint16_t EffectId;
+    struct EffectDesc
+    {
+    };
+    enum PxlBufType
+    {
+        PB_1D,        //!< 1D texture
+        PB_2D,        //!< 2D texture
+        PB_3D,        //!< 3D texture
+        PB_CUBE,      //!< Cube texture
+        PB_STACK,     //!< Stack texture
+        PB_NUM_TYPES, //!< number of pixel buffer types.
+    };
+    struct PxlBufDesc
+    {
+        PxlBufType type;      //!< texture type
+        uint32_t   width;     //!< basemap width
+        uint32_t   height;    //!< basemap height
+        uint32_t   depth;     //!< basemap depth
+        uint32_t   faces;     //!< face count. When used as parameter of Renderer::createTexture(),
+                              //!< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
+        uint32_t   levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
+                              //!< you may set it to 0 to create full mipmap tower (down to 1x1).
+        ClrFmt     format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
+                              //!< you may set it to FMT_DEFAULT. To use default texture format.
+        bool       tiled;     //!< tiled format. Ignored on platform other then Xenon. 
+    };
+    struct VtxBufDesc
+    {
+        VtxFmtDesc format; //!< vertex buffer format
+    };
+    struct IdxBufDesc
+    {
+        bool bit32; //!< If true, means it is 32-bits index buffer; else it is 16-bits.
+    };
+    struct Shader : public RefCounter
+    {
+    };
+    struct PxlBuf : public NoCopy
+    {
+        virtual const PxlBufDesc & getDesc() const = 0;
+    };
+    struct VtxBuf : public NoCopy
+    {
+        virtual const VtxBufDesc & getDesc() const = 0;
+        virtual void * map( size_t stream, size_t offset, size_t numVtx ) = 0;
+        virtual void unmap() = 0;
+    };
+    struct IdxBuf : public NoCopy
+    {
+        virtual const IdxBufDesc & getDesc() const = 0;
+        virtual void * map( size_t offset, size_t numIdx, bool useResetIndex = false, uint32_t resetIndex = 0 ) = 0;
+        virtual void unmap() = 0;
+    };
+    struct Buffer : public RefCounter
+    {
+        virtual PxlBuf * asPb() = 0;
+        virtual VtxBuf * asVb() = 0;
+        virtual IdxBuf * asIb() = 0;
+        virtual const PxlBuf * asPb() const = 0;
+        virtual const VtxBuf * asVb() const = 0;
+        virtual const IdxBuf * asIb() const = 0;
+    };
+    class Manager
+    {
+        EffectId getFirstEffect() const;
+        EffectId getNextEffect( EffectId ) const;
+        const EffectDesc & getEffectDesc( EffectId ) const;
+
+        Shader * createShader( EffectId );
+        Buffer * createBuffer(
+            const Shader * outputShader, const StrA & osName,
+            const Shader * inputShader, const StrA & isName,
+            const Buffer * const * reuseOneOfTheseBuffersIsPossible, size_t count );
+    };
+    //@}
+
+    /*
     //! \name resource ID types.
     //! \note Zeor is always invalid ID.
     //@{
@@ -381,6 +460,7 @@ namespace GN { namespace gfx { namespace nes
         void removeAllShaders();
         //@}
     };
+    //*/
 }}}
 
 // *****************************************************************************

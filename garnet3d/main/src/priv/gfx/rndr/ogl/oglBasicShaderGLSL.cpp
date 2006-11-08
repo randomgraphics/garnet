@@ -33,7 +33,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLBasicShaderGLSL::init( const StrA & code )
+bool GN::gfx::OGLBasicShaderGLSL::init( const StrA & code, const StrA & )
 {
     GN_GUARD;
 
