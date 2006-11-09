@@ -163,7 +163,7 @@ void GN::gfx::D3D9Font::drawText( const char * text, int x, int y, const Vector4
     // draw bounding rect of the text
     Recti rc;
     sCalcBoundingRect( rc, text, x, y );
-    r.draw2DSolidQuad( DQ_WINDOW_SPACE, rc.x, rc.y, rc.x+rc.w, rc.y+rc.h, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
+    r.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, rc.x, rc.y, rc.x+rc.w, rc.y+rc.h, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
 
     // bind texture, set texture filter
     dev->SetTexture( 0, mTexture );

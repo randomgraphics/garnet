@@ -142,7 +142,7 @@ public:
             {
                 e.passBegin( i );
                 e.commitChanges();
-                gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0.5, 0.5, 1.0, 1.0 );
+                gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0, 0.5, 0.5, 1.0, 1.0 );
                 e.passEnd();
             }
             gRenderer.drawEnd();

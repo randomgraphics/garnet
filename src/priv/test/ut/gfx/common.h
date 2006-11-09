@@ -97,9 +97,9 @@ struct GfxResources
             // draw to rt3
             r.setColorBuffer( 0, rt3 );
             r.setTexture( 0, rt1 );
-            r.draw2DTexturedQuad( 0, 0, 1, 0.5 );
+            r.draw2DTexturedQuad( 0, 0, 0, 1, 0.5 );
             r.setTexture( 0, rt2 );
-            r.draw2DTexturedQuad( 0, 0.5, 1, 1 );
+            r.draw2DTexturedQuad( 0, 0, 0.5, 1, 1 );
 
             // draw to screen
             r.setColorBuffer( 0, 0 );

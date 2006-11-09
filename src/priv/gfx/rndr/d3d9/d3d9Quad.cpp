@@ -214,49 +214,24 @@ void GN::gfx::D3D9Quad::drawQuads(
     }
 
     // fill vertex buffer
-    if( DQ_3D_POSITION & options )
+    for( size_t i = 0; i < count*4; ++i )
     {
-        for( size_t i = 0; i < count*4; ++i )
+        D3D9QuadVertex & v = vbData[i];
+        v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
+        positions = (const float*)( ((const uint8_t*)positions) + posStride );
+
+        if( texcoords )
         {
-            D3D9QuadVertex & v = vbData[i];
-            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
-            positions = (const float*)( ((const uint8_t*)positions) + posStride );
-
-            if( texcoords )
-            {
-                v.t.set( texcoords[0], texcoords[1] );
-                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-            }
-
-            if( colors )
-            {
-                v.c = *colors;
-                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
-            }
-            else v.c = 0xFFFFFFFF;
+            v.t.set( texcoords[0], texcoords[1] );
+            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
         }
-    }
-    else
-    {
-        for( size_t i = 0; i < count*4; ++i )
+
+        if( colors )
         {
-            D3D9QuadVertex & v = vbData[i];
-            v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, 0 );
-            positions = (const float*)( ((const uint8_t*)positions) + posStride );
-
-            if( texcoords )
-            {
-                v.t.set( texcoords[0], texcoords[1] );
-                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-            }
-
-            if( colors )
-            {
-                v.c = *colors;
-                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
-            }
-            else v.c = 0xFFFFFFFF;
+            v.c = *colors;
+            colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
         }
+        else v.c = 0xFFFFFFFF;
     }
 
     // unlock the buffer

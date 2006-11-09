@@ -164,7 +164,7 @@ void GN::gfx::OGLFont::drawText( const char * s, int x, int y, const Vector4f & 
     // draw bounding rect of the text
     Recti rc;
     sCalcBoundingRect( rc, s, x, y );
-    mRenderer.draw2DSolidQuad( DQ_WINDOW_SPACE, rc.x, rc.y, rc.x+rc.w, rc.y+rc.h, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
+    mRenderer.draw2DSolidQuad( DQ_WINDOW_SPACE, 0, rc.x, rc.y, rc.x+rc.w, rc.y+rc.h, ubyte4ToBGRA32( 0, 0, 0, 128 ) );
 
     // push attributes
     glPushAttrib(
