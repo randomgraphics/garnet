@@ -54,9 +54,9 @@ public:
         r.setColorBuffer( 0, 0 );
         r.clearScreen();
         r.setTexture( 0, mRt0 );
-        r.draw2DTexturedQuad( 0, 0.0, 0.0, 0.5, 1.0 );
+        r.draw2DTexturedQuad( 0, 0, 0.0, 0.0, 0.5, 1.0 );
         r.setTexture( 0, mRt1 );
-        r.draw2DTexturedQuad( 0, 0.5, 0.0, 1.0, 1.0 );//*/
+        r.draw2DTexturedQuad( 0, 0, 0.5, 0.0, 1.0, 1.0 );//*/
     }
 };
 

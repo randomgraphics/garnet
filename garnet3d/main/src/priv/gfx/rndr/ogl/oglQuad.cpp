@@ -102,51 +102,25 @@ void GN::gfx::OGLQuad::drawQuads(
 
     // fill vertex data
     GN_ASSERT( mVtxBuf );
-    if( DQ_3D_POSITION & options )
+    for( size_t i = 0; i < count*4; ++i )
     {
-        for( size_t i = 0; i < count*4; ++i )
+        QuadVertex & v = mVtxBuf[i];
+
+        v.p.set( positions[0], positions[1], positions[2] );
+        positions = (const float*)( ((const uint8_t*)positions) + posStride );
+
+        if( texcoords )
         {
-            QuadVertex & v = mVtxBuf[i];
-
-            v.p.set( positions[0], positions[1], positions[2] );
-            positions = (const float*)( ((const uint8_t*)positions) + posStride );
-
-            if( texcoords )
-            {
-                v.t.set( texcoords[0], texcoords[1] );
-                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-            }
-
-            if( colors )
-            {
-                v.c = BGRA2RGBA(*colors);
-                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
-            }
-            else v.c = 0xFFFFFFFF;
+            v.t.set( texcoords[0], texcoords[1] );
+            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
         }
-    }
-    else
-    {
-        for( size_t i = 0; i < count*4; ++i )
+
+        if( colors )
         {
-            QuadVertex & v = mVtxBuf[i];
-
-            v.p.set( positions[0], positions[1], 0 );
-            positions = (const float*)( ((const uint8_t*)positions) + posStride );
-
-            if( texcoords )
-            {
-                v.t.set( texcoords[0], texcoords[1] );
-                texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
-            }
-
-            if( colors )
-            {
-                v.c = BGRA2RGBA(*colors);
-                colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
-            }
-            else v.c = 0xFFFFFFFF;
+            v.c = BGRA2RGBA(*colors);
+            colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
         }
+        else v.c = 0xFFFFFFFF;
     }
 
     // determine attributes that need to be restored.

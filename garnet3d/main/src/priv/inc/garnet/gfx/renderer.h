@@ -283,11 +283,6 @@ namespace GN { namespace gfx
         DQ_WINDOW_SPACE = 1<<4,
 
         //!
-        //! Use 3-D position. Default is 2-D position
-        //!
-        DQ_3D_POSITION = 1<<5,
-
-        //!
         //! Disable blending. Default is enabled.
         //!
         DQ_OPAQUE = 1<<6,
@@ -974,8 +969,8 @@ namespace GN { namespace gfx
         //! \param options
         //!     渲染选项，详见 DrawQuadOptions。Set to 0 to use default options
         //! \param positions, posStride
-        //!     顶点坐标数据，由一系列的顶点组成。4个顶点表示一个矩形。
-        //!     选项 DQ_WINDOW_SPACE 和 DQ_3D_POSITION 会影响坐标的含义。
+        //!     顶点坐标数据，由一系列的3D顶点组成。4个顶点表示一个矩形。
+        //!     选项 DQ_WINDOW_SPACE 会影响坐标的含义。
         //!     Note "posStride" is stride of one vertex.
         //! \param texcoords, texStride
         //!     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
@@ -1014,6 +1009,7 @@ namespace GN { namespace gfx
         //!
         void draw2DTexturedQuad(
             BitField options,
+            double z = 0.0,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
         {
@@ -1025,21 +1021,22 @@ namespace GN { namespace gfx
             float v1 = (float)topV;
             float u2 = (float)rightU;
             float v2 = (float)bottomV;
+            float zz = (float)z;
 
-            Vector2f pos[4];
-            Vector2f tex[4];
+            Vector3f pos[4];
+            Vector3f tex[4];
 
-            pos[0].set( x1, y1 );
-            pos[1].set( x2, y1 );
-            pos[2].set( x2, y2 );
-            pos[3].set( x1, y2 );
+            pos[0].set( x1, y1, zz );
+            pos[1].set( x2, y1, zz );
+            pos[2].set( x2, y2, zz );
+            pos[3].set( x1, y2, zz );
 
-            tex[0].set( u1, v1 );
-            tex[1].set( u2, v1 );
-            tex[2].set( u2, v2 );
-            tex[3].set( u1, v2 );
+            tex[0].set( u1, v1, zz );
+            tex[1].set( u2, v1, zz );
+            tex[2].set( u2, v2, zz );
+            tex[3].set( u1, v2, zz );
 
-            drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), tex, sizeof(Vector2f), 0, 0, 1 );
+            drawQuads( options, pos, sizeof(Vector3f), tex, sizeof(Vector3f), 0, 0, 1 );
         }
 
         //!
@@ -1049,6 +1046,7 @@ namespace GN { namespace gfx
         //!
         void draw2DSolidQuad(
             BitField options,
+            double z,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             uint32_t color = 0xFFFFFFFF )
         {
@@ -1056,16 +1054,17 @@ namespace GN { namespace gfx
             float y1 = (float)top;
             float x2 = (float)right;
             float y2 = (float)bottom;
+            float zz = (float)z;
 
-            Vector2f pos[4];
-            pos[0].set( x1, y1 );
-            pos[1].set( x2, y1 );
-            pos[2].set( x2, y2 );
-            pos[3].set( x1, y2 );
+            Vector3f pos[4];
+            pos[0].set( x1, y1, zz );
+            pos[1].set( x2, y1, zz );
+            pos[2].set( x2, y2, zz );
+            pos[3].set( x1, y2, zz );
 
             uint32_t colors[] = { color, color, color, color };
 
-            drawQuads( options&(~DQ_3D_POSITION), pos, sizeof(Vector2f), 0, 0, colors, sizeof(uint32_t), 1 );
+            drawQuads( options, pos, sizeof(Vector3f), 0, 0, colors, sizeof(uint32_t), 1 );
         }
 
         //!
