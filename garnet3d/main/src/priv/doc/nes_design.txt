@@ -1,16 +1,16 @@
-User Scenario
-=============
+Resolved User Scenarios
+=======================
 - one shader output a 2D texture that is used as input of another shader that 
   requires 3D texture.
-- one shader output a cube texture that is used by other shaders as 6 
-  independent 2D textures.
 - one shader output a 2D texture that is used by many-many of other shaders.
-- shader get data from general CPU data buffer.
-  - read vertices from fat vertex buffer
-  - read DXT texture from uncompressed texture
-  - read cubemap from 6 2D textures
 - 2 draws use same shader. the 1st draw render to texture; the second draw 
-  render to back buffer.
+  to back buffer.
+
+Opened User Scenarios
+=====================
+- render to one face of a cube texture, one slice of a 3D texture, or one 
+  mipmap of a 2D texture.
+- separate depth and stencil buffer. (Does user really need such a scenario?)
 - Adjust global quality parameter (like texture filtering), to increase overall
   rendering quality.
 - user creates too many render targets that can't fit into hardware's local
@@ -18,3 +18,7 @@ User Scenario
   - may be resolved by lazy creation
   - check CPU "register renaming" and "buffer renaming" in graphics driver for
     more ideas.
+- shader get data from general CPU data buffer.
+  - read vertices from fat vertex buffer
+  - read DXT texture from uncompressed texture
+  - read cubemap from 6 2D textures
