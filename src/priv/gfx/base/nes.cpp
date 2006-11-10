@@ -1,276 +1,78 @@
 #include "pch.h"
-/*
-
 #include "garnet/gfx/nes.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.EffectSystem");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.NES");
 
 // *****************************************************************************
-// class GN::gfx::nes::EffectSystem::Impl
+// NES test code
 // *****************************************************************************
 
-//!
-//! Implementation class of effect system
-//!
-class GN::gfx::nes::EffectSystem::Impl
+using namespace GN;
+using namespace GN::gfx::nes;
+
+struct EffectItem
 {
-    struct Effect
-    {
-        EffectDesc desc;
-        Shader *   shader;
-    };
-
-    struct ShaderDll
-    {
-        typedef size_t   (*FP_getNumShaders)();
-        typedef Shader * (*FP_createShader)( size_t );
-
-        SharedLib        dll;
-        FP_getNumShaders getNumShaders;
-        FP_createShader  createShader;
-
-    public:
-
-        ShaderDll() : getNumShaders(0), createShader(0) {}
-
-        ~ShaderDll() { free(); }
-
-        bool load( const StrA & dllName )
-        {
-            GN_GUARD;
-
-            // load library
-            if( !dll.load( path::toNative( dllName ).cptr() ) ) return false;
-
-            // find symbol
-            getNumShaders = (FP_getNumShaders)dll.getSymbol( "GNgetNumShaders" );
-            createShader = (FP_createShader)dll.getSymbol( "GNcreateShader" );
-            if( !getNumShaders || !createShader ) return false;
-
-            // success
-            return true;
-
-            GN_UNGUARD;
-        }
-
-        void free()
-        {
-            getNumShaders = 0;
-            createShader = 0;
-            dll.free();
-        }
-    };
-
-    struct SameDllPtr
-    {
-        const ShaderDll * ref;
-        SameDllPtr( const ShaderDll * r ) : ref(r) {}
-        bool operator()( const ShaderDll * p )
-        {
-            GN_ASSERT( ref && p );
-            return ref == p || ref->dll.getHandle() == p->dll.getHandle();
-        }
-    };
-
-    HandleManager<Stream*,StreamId> mStreams;
-
-    HandleManager<Effect,EffectId>  mEffects;
-
-    DynaArray<ShaderDll*> mDlls;
-    DynaArray<Shader*>    mSharedShaders;
-    DynaArray<Shader*>    mStaticShaders;
-
-    bool mNeedRebuild;
-
-    //!
-    //! rebuild relationships between shaders and effects.
-    //!
-    void rebuild()
-    {
-        GN_UNIMPL();
-    }
-
-    // ********************************
-    // ctor/dtor
-    // ********************************
-
-public:
-
-    Impl() : mNeedRebuild(true) {}
-
-    virtual ~Impl() { reset(); }
-
-    void reset()
-    {
-        removeAllStreams();
-        removeAllEffects();
-        removeAllShaders();
-    }
-
-    // ********************************
-    // buffer manager
-    // ********************************
-public:
-
-    BufferId registerBuffer( Buffer * buffer )
-    {
-        if( mBuffers.find( buffer ) )
-        {
-            GN_WARN(sLogger)( "You're registering the same buffer more than once." );
-        }
-        return mBuffers.add( buffer );
-    }
-
-    Buffer * removeBuffer( BufferId id )
-    {
-        Buffer * s = getBuffer( id );
-        if( s ) mBuffers.remove( id );
-        return s;
-    }
-
-    void removeAllBuffers()
-    {
-        mBuffers.clear();
-    }
-
-    Buffer * getBuffer( BufferId id ) const
-    {
-        if( !mBuffers.validHandle( id ) )
-        {
-            GN_ERROR(sLogger)( "Invalid buffer ID: '%d'.", id );
-            return NULL;
-        }
-        return mBuffers.get( id );
-    }
-
-    // ********************************
-    // effect manager
-    // ********************************
-public:
-
-    EffectId registerEffect( const EffectDesc & desc )
-    {
-        GN_TODO( "make sure a valid effect descriptor before registering!" );
-        EffectId eid = mEffects.newItem();
-        if( 0 == eid ) return 0;
-
-        Effect & e = mEffects.get( eid );
-        e.desc = desc;
-        e.shader = 0;
-
-        mNeedRebuild = true;
-        return eid;
-    }
-
-    void removeEffect( EffectId id )
-    {
-        mEffects.remove( id );
-        mNeedRebuild = true;
-    }
-
-    void removeAllEffects()
-    {
-        mEffects.clear();
-        mNeedRebuild = true;
-    }
-
-    const EffectDesc * getEffectDesc( EffectId id ) const
-    {
-        if( !mEffects.validHandle( id ) )
-        {
-            GN_ERROR(sLogger)( "Invalid effect ID: %d.", id );
-            return 0;
-        }
-        return &mEffects[id].desc;
-    }
-
-    Shader * getEffectShader( EffectId id )
-    {
-        if( !mEffects.validHandle( id ) )
-        {
-            GN_ERROR(sLogger)( "Invalid effect ID: %d.", id );
-            return 0;
-        }
-        if( mNeedRebuild ) rebuild();
-        GN_ASSERT( !mNeedRebuild );
-        return mEffects[id].shader;
-    }
-
-    // ********************************
-    // shader manager
-    // ********************************
-public:
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    bool registerShaderDll( const StrA & dllName )
-    {
-        GN_GUARD;
-        
-        // load library
-        AutoObjPtr<ShaderDll> dll( new ShaderDll );
-        if( !dll->load( path::toNative( dllName ) ) ) return false;
-
-        // check redundant DLL
-        if( mDlls.end() != std::find_if( mDlls.begin(), mDlls.end(), SameDllPtr(dll) ) )
-            return true;
-
-        // success
-        mDlls.append( dll.detach() );
-        return true;
-
-        GN_UNGUARD;
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    bool registerShader( Shader * s )
-    {
-        if( 0 == s )
-        {
-            GN_ERROR(sLogger)( "NULL shader pointer!" );
-            return false;
-        }
-        if( mStaticShaders.end() != std::find( mStaticShaders.begin(), mStaticShaders.end(), s ) )
-            return true; // ignore redundant shader
-        mStaticShaders.append( s );
-        return true;
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    void removeAllShaders()
-    {
-        std::for_each( mSharedShaders.begin(), mSharedShaders.end(), &safeDelete<Shader> );
-        std::for_each( mDlls.begin(), mDlls.end(), &safeDelete<ShaderDll> );
-        mStaticShaders.clear();
-        mSharedShaders.clear();
-        mDlls.clear();
-    }
+    EffectId   id;
+    EffectDesc desc;
 };
 
-// *****************************************************************************
-//
-// *****************************************************************************
+static const EffectItem EFF_CLEAR;
+static const EffectItem EFF_PRESENT;
+static const EffectItem EFF_GENERATE_CUBE_MAP;
+static const EffectItem EFF_GENERATE_DEPTH_TEXTURE;
+static const EffectItem EFF_LIGHT_MAP;
+static const EffectItem EFF_DEPTH_BLUR;
 
-GN::gfx::nes::EffectSystem::EffectSystem() : mImpl( new Impl ) {}
-GN::gfx::nes::EffectSystem::~EffectSystem() { delete mImpl; }
+static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
+{
+    BufferCreationParameters bcp;
 
-GN::gfx::nes::BufferId GN::gfx::nes::EffectSystem::registerBuffer( Buffer * buffer ) { return mImpl->registerBuffer( buffer ); }
-GN::gfx::nes::Buffer * GN::gfx::nes::EffectSystem::removeBuffer( BufferId id ) { return mImpl->removeBuffer( id ); }
-void              GN::gfx::nes::EffectSystem::removeAllBuffers() { mImpl->removeAllBuffers(); }
-GN::gfx::nes::Buffer * GN::gfx::nes::EffectSystem::getBuffer( BufferId id ) const { return mImpl->getBuffer( id ); }
+    // create back buffer
+    bcp.type = BT_PXLBUF;
+    bcp.ca = CA_IMMUTABLE;
+    //bcp.pb = ...;
+    bcp.sysMem = 0;
+    bcp.bindToEffect( EFF_CLEAR, "color0_buffer" );
+    bcp.bindToEffect( EFF_PRESENT, "color_buffer" );
+    c = mgr.createBuffer( bcp );
+    if( !c ) return false;
 
-GN::gfx::nes::EffectId           GN::gfx::nes::EffectSystem::registerEffect( const EffectDesc & desc ) { return mImpl->registerEffect( desc ); }
-void                        GN::gfx::nes::EffectSystem::removeEffect( EffectId id ) { mImpl->removeEffect( id ); }
-void                        GN::gfx::nes::EffectSystem::removeAllEffects() { mImpl->removeAllEffects(); }
-const GN::gfx::nes::EffectDesc * GN::gfx::nes::EffectSystem::getEffectDesc( EffectId id ) const { return mImpl->getEffectDesc( id ); }
-GN::gfx::nes::Shader *           GN::gfx::nes::EffectSystem::getEffectShader( EffectId id ) const { return mImpl->getEffectShader( id ); }
+    // create default depth buffer
+    bcp.bindToEffect( EFF_CLEAR, "depth_buffer" );
+    z = mgr.createBuffer( bcp );
+    if( !z ) return false;
 
-bool GN::gfx::nes::EffectSystem::registerShaderDll( const StrA & dllName ) { return mImpl->registerShaderDll( dllName ); }
-bool GN::gfx::nes::EffectSystem::registerShader( Shader * s ) { return mImpl->registerShader( s ); }
-void GN::gfx::nes::EffectSystem::removeAllShaders() { return mImpl->removeAllShaders(); }
-//*/
+    // success
+    return true;
+}
+
+class TestScene
+{
+    static BufferId mBackBuffer;
+    static BufferId mZBuffer;
+
+public:
+
+    bool init( EffectManager & mgr )
+    {
+        // create backbuffer and z buffer
+        if( !sGenBackBuffers( mgr, mBackBuffer, mZBuffer ) ) return false;
+
+        // create cubemap 
+
+        // success
+        return true;
+    }
+
+    void draw( EffectManager & mgr )
+    {
+        DrawParameters cp;
+        cp.effect = EFF_CLEAR;
+        cp.buffers["color0_buffer"] = mBackBuffer;
+        cp.buffers["depth_buffer"] = mZBuffer;
+        //cp.buffers["stencil_buffer"] = mStencil;
+        cp.consts["color0_value"] = Vector2f(0,0,0,0);
+        cp.consts["depth_value"] = 1.0f;
+        mgr.draw( cp );
+    }
+};
