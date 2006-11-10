@@ -16,25 +16,34 @@ namespace GN { namespace gfx
 
 namespace GN { namespace gfx { namespace nes
 {
-    //@{
     typedef uint16_t EffectId;
-    struct EffectDesc
-    {
-    };
-    struct Shader : public RefCounter
-    {
-    };
-    enum BufferType
-    {
-        BT_PXLBUF,           //!< pixel buffer (texture)
-        BT_VTXBUF,           //!< vertex buffer
-        BT_IDXBUF,           //!< index buffer
-        BT_RAW,              //!< typeless raw data
-        BT_NUM_BUFFER_TYPES, //!< number of buffer types.
-    };
+    typedef uint16_t BufferId;
+    typedef uint16_t ConstId;
+
+    //!
+    //! buffer descriptor
+    //!
     struct BufferDesc
     {
-        BufferType type; //!< buffer type
+        enum BufferType
+        {
+            BT_PXLBUF,           //!< pixel buffer (texture)
+            BT_VTXBUF,           //!< vertex buffer
+            BT_IDXBUF,           //!< index buffer
+            BT_RAW,              //!< typeless raw data
+            BT_NUM_BUFFER_TYPES, //!< number of buffer types.
+        };
+
+        enum BufferUsage
+        {
+            BU_WRITE_INFREQUENTLY = 1,
+            BU_WRITE_FREQUENTLY   = 2,
+            BU_READ_BACK          = 4,
+        };
+
+        BufferType  type;  //!< buffer type
+        BitField    usage; //!< buffer usage. Combinations of BufferUsage flags.
+
         union
         {
             struct
@@ -44,21 +53,24 @@ namespace GN { namespace gfx { namespace nes
                 uint32_t depth;  //!< texture depth. 1 for 2D texture.
                 uint32_t count;  //!< texture count. 1 for single texture, 6 for cubemap, other values for texture array.
                 uint32_t levels; //!< mipmap levels.
-                ClrFmt   format; //!< pixel format.
+                ClrFmt   pxlfmt; //!< pixel format.
             } pb; //!< pixel buffer descriptor
 
             struct
             {
-                VtxFmtDesc format; //!< vertex buffer format
+                VtxFmtDesc format;   //!< vertex buffer format
+                uint32_t   capacity; //!< maximum number of vertices this buffer can hold.
             } vb; //!< vertex buffer descriptor
 
             struct
             {
-                bool bit32; //!< If true, means it is 32-bits index buffer; else it is 16-bits.
+                uint32_t capacity; //!< maximum number of indices this buffer can hold.
+                bool     bit32;    //!< If true, means it is 32-bits index buffer; else it is 16-bits.
             } ib; //!< index buffer descriptor
 
             struct
             {
+                uint32_t bytes; //!< bytes of the raw data.
             } raw; //!< raw buffer descriptor
         };
     };
@@ -67,6 +79,12 @@ namespace GN { namespace gfx { namespace nes
     //!
     struct BufferCreationParameters
     {
+        struct ShaderBindingInfo
+        {
+            EffectId effect;
+            StrA     port;
+        };
+
         //!
         //! buffer descriptor
         //!
@@ -79,51 +97,111 @@ namespace GN { namespace gfx { namespace nes
         size_t       sysMemSlicePitch;
         //@}
 
-        //! \name shader binding information
-        //@{
-        Shader * outputShader;
-        StrA     osName;
-        Shader * inputShader;
-        StrA     isName;
-        //@}
+        //!
+        //! shader binding information
+        //!
+        DynaArray<ShaderBindingInfo> bindingToTheseShaders;
 
-        //! \name reusing information
-        //@{
-        const Buffer * const * reuseOneOfTheseBuffersIfPossible;
-        size_t                 count;
-        //@}
+        //!
+        //! buffer reusing information
+        //!
+        DynaArray<BufferId> reuseOneOfTheseIfPossible;
     };
-    struct Buffer : public RefCounter
+    enum ConstType
     {
-        virtual BufferDesc & getDesc() const = 0; //!< get buffer descriptor
-
-        //! \name pixel buffer management
-        //@{
-        virtual void * 
-        //@}
+        CT_BOOL32,          //!< 32-bit boolean constant
+        CT_INT32,           //!< 32-bit integer constant
+        CT_FLOAT,           //!< 32-bit floating point constant
+        CT_VEC4,            //!< 4D float vector
+        CT_MAT44,           //!< 4x4 float matrix
+        CT_STRING,          //!< string
+        CT_RAW,             //!< raw bytes
+        NUM_CONSTANT_TYPES, //!< number of constant types
     };
+    //!
+    //! effect constant descriptor
+    //!
+    struct ConstDesc
+    {
+        ConstType type;  //!< type of values in constant.
+        uint16_t  count; //!< number of values in constant.
+    };
+    struct ConstCreationParameters
+    {
+        ConstDesc          desc;
+        DynaArray<ConstId> reuseOneOfTheseIfPossible;
+    };
+    struct EffectDesc
+    {
+        struct BufferPort : public BufferDesc
+        {
+            enum
+            {
+                INPUT  = 1,
+                OUTPUT = 2,
+                IO     = 3,
+            } io;
+        };
+        struct ConstPort
+        {
+            int type;
+            int count;
+            int defaultValue;
+        };
+        std::map<StrA,BufferPort> bufferPorts;
+    };
+    struct DrawParameters
+    {
+        EffectId                effect;
+        std::map<StrA,BufferId> buffers;
+        // constants
+    };
+
     class Manager
     {
     public:
 
         //! \name effect manager
         //@{
-        EffectId getFirstEffect() const;
-        EffectId getNextEffect( EffectId ) const;
+        EffectId           registerEffect( const EffectDesc & );
+        void               removeEffect( EffectId );
         const EffectDesc & getEffectDesc( EffectId ) const;
         //@}
 
-        //! \name shader manager
+        /*! \name shader manager
         //@{
-        Shader * createShader( EffectId );
-        //@}
+        struct Shader : public NoCopy
+        {
+        };
+        struct ShaderFactory : public NoCopy
+        {
+            virtual size_t   getNumShaders() const = 0;
+            virtual Shader * createShader( size_t index ) const = 0;
+            virtual void     deleteShader( Shader * );
+        };
+        bool registerShaderFactory( const ShaderFactory * );
+        void removeShaderFactory( const SahderFactory * );
+        //@}//**/
 
         //! \name buffer manager
         //@{
-        Buffer * createBuffer( const BufferCreationParameters & );
+        BufferId           createBuffer( const BufferCreationParameters & );
+        void               deleteBuffer( BufferId );
+        const BufferDesc & getBufferDesc( BufferId ) const;
         //@}
+
+        //! \name constant manager
+        //@{
+        ConstId           createConst( const ConstCreationParameters & );
+        void              deleteConst( ConstId );
+        const ConstDesc & getConstDesc( ConstId );
+        //@}
+
+        //!
+        //! do rendering
+        //!
+        void draw( const DrawParameters & );
     };
-    //@}
 
     /*
     //! \name resource ID types.

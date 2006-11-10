@@ -1,8 +1,14 @@
 User Scenario
 =============
-- one shader output a 2D texture that is used as input of another 3D texture.
+- one shader output a 2D texture that is used as input of another shader that 
+  requires 3D texture.
+- one shader output a cube texture that is used by other shaders as 6 
+  independent 2D textures.
 - one shader output a 2D texture that is used by many-many of other shaders.
-- shader get vertex data from universal vertex buffer stored in main memory.
+- shader get data from general CPU data buffer.
+  - read vertices from fat vertex buffer
+  - read DXT texture from uncompressed texture
+  - read cubemap from 6 2D textures
 - 2 draws use same shader. the 1st draw render to texture; the second draw 
   render to back buffer.
 - Adjust global quality parameter (like texture filtering), to increase overall
