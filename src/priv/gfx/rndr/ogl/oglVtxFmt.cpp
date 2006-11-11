@@ -128,7 +128,7 @@ bool GN::gfx::OGLVtxFmt::setupStreamBindings()
     GN_GUARD;
 
     mStreamBindings.resize( mFormat.calcNumStreams() );
-    for( size_t i = 0; i < mFormat.attribs.size(); ++i )
+    for( size_t i = 0; i < mFormat.count; ++i )
     {
         const VtxFmtDesc::AttribDesc & a = mFormat.attribs[i];
         GN_ASSERT( a.stream < mStreamBindings.size() );

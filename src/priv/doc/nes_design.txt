@@ -1,4 +1,9 @@
-Resolved User Scenarios
+OPEN ISSUES
+===========
+- Is it beneficial to group different types of constants into single buffer?
+  - Check D3D10 constant buffer for more ideas.
+
+RESOLVED USER SCENARIOS
 =======================
 - one shader output a 2D texture that is used as input of another shader that 
   requires 3D texture.
@@ -6,7 +11,7 @@ Resolved User Scenarios
 - 2 draws use same shader. the 1st draw render to texture; the second draw 
   to back buffer.
 
-Opened User Scenarios
+OPENED USER SCENARIOS
 =====================
 - render to one face of a cube texture, one slice of a 3D texture, or one 
   mipmap of a 2D texture.

@@ -68,7 +68,9 @@ struct GfxResources
 
         // create vertex bindings
         GN::gfx::VtxFmtDesc fmt1, fmt2;
+        fmt1.clear();
         fmt1.addAttrib( 0, 0, GN::gfx::VTXSEM_POS0, GN::gfx::FMT_FLOAT4 );
+        fmt2.clear();
         fmt2.addAttrib( 0, 0, GN::gfx::VTXSEM_POS0, GN::gfx::FMT_FLOAT2 );
         vtxFmt1 = r.createVtxFmt( fmt1 );
         vtxFmt2 = r.createVtxFmt( fmt2 );

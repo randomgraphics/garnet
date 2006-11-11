@@ -91,10 +91,7 @@ struct ManyManyQuads
         Renderer & r = gRenderer;
 
         // create vertex format
-        VtxFmtDesc vfd;
-        vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-        vfd.addAttrib( 0, 12, VTXSEM_TEX0, FMT_FLOAT2 );
-        vtxfmt = gRenderer.createVtxFmt( vfd );
+        vtxfmt = gRenderer.createVtxFmt( VtxFmtDesc::XYZ_UV );
         if( 0 == vtxfmt ) return false;
 
         // create vertex buffer

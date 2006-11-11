@@ -25,33 +25,32 @@ namespace GN { namespace gfx { namespace nes
     //@}
 
     //!
+    //! Buffer type
+    //!
+    enum BufferType
+    {
+        BT_PXLBUF,           //!< pixel buffer (texture)
+        BT_VTXBUF,           //!< vertex buffer
+        BT_IDXBUF,           //!< index buffer
+        BT_RAW,              //!< typeless raw data
+        BT_NUM_BUFFER_TYPES, //!< number of buffer types.
+    };
+
+    //!
+    //! CPU access flags
+    //!
+    enum CpuAccess
+    {
+        CA_IMMUTABLE          = 0,
+        CA_WRITE_INFREQUENTLY = 1,
+        CA_WRITE_FREQUENTLY   = 2,
+        CA_READ_BACK          = 4,
+    };
+    //!
     //! buffer descriptor
     //!
     struct BufferDesc
     {
-        //!
-        //! Buffer type
-        //!
-        enum BufferType
-        {
-            BT_PXLBUF,           //!< pixel buffer (texture)
-            BT_VTXBUF,           //!< vertex buffer
-            BT_IDXBUF,           //!< index buffer
-            BT_RAW,              //!< typeless raw data
-            BT_NUM_BUFFER_TYPES, //!< number of buffer types.
-        };
-
-        //!
-        //! CPU access flags
-        //!
-        enum CpuAccess
-        {
-            CA_IMMUTABLE          = 0,
-            CA_WRITE_INFREQUENTLY = 1,
-            CA_WRITE_FREQUENTLY   = 2,
-            CA_READ_BACK          = 4,
-        };
-
         BufferType  type;  //!< buffer type
         BitField    ca;    //!< CPU access flags. Combinations of CpuAccess flags.
 
@@ -115,7 +114,7 @@ namespace GN { namespace gfx { namespace nes
 
         void bindToEffect( EffectId eff, const StrA & port )
         {
-            bindingToTheseEffects.resive( bindingToTheseEffects.size() + 1 );
+            bindingToTheseEffects.resize( bindingToTheseEffects.size() + 1 );
             EffectBindingInfo & ebi = bindingToTheseEffects.back();
             ebi.effect = eff;
             ebi.port = port;
@@ -180,8 +179,8 @@ namespace GN { namespace gfx { namespace nes
 
         //! \name ctor and dtor
         //@{
-        Manager() {}
-        virtual ~Manager() {}
+        EffectManager() {}
+        virtual ~EffectManager() {}
         //@}
 
         //! \name effect manager
