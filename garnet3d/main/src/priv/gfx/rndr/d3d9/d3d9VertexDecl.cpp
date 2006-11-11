@@ -177,7 +177,7 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
 
     elements.clear();
 
-    for( size_t i = 0; i < decl.attribs.size(); ++i )
+    for( size_t i = 0; i < decl.count; ++i )
     {
         const GN::gfx::VtxFmtDesc::AttribDesc & va = decl.attribs[i];
 

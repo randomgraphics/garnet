@@ -32,13 +32,13 @@ static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
     bcp.ca = CA_IMMUTABLE;
     //bcp.pb = ...;
     bcp.sysMem = 0;
-    bcp.bindToEffect( EFF_CLEAR, "color0_buffer" );
-    bcp.bindToEffect( EFF_PRESENT, "color_buffer" );
+    bcp.bindToEffect( EFF_CLEAR.id, "color0_buffer" );
+    bcp.bindToEffect( EFF_PRESENT.id, "color_buffer" );
     c = mgr.createBuffer( bcp );
     if( !c ) return false;
 
     // create default depth buffer
-    bcp.bindToEffect( EFF_CLEAR, "depth_buffer" );
+    bcp.bindToEffect( EFF_CLEAR.id, "depth_buffer" );
     z = mgr.createBuffer( bcp );
     if( !z ) return false;
 
@@ -60,19 +60,22 @@ public:
 
         // create cubemap 
 
+        // create constants
+
         // success
         return true;
     }
 
     void draw( EffectManager & mgr )
     {
+        // do clear
         DrawParameters cp;
-        cp.effect = EFF_CLEAR;
+        cp.effect = EFF_CLEAR.id;
         cp.buffers["color0_buffer"] = mBackBuffer;
         cp.buffers["depth_buffer"] = mZBuffer;
         //cp.buffers["stencil_buffer"] = mStencil;
-        cp.consts["color0_value"] = Vector2f(0,0,0,0);
-        cp.consts["depth_value"] = 1.0f;
+        //cp.consts["color0_value"] = Vector2f(0,0,0,0);
+        //cp.consts["depth_value"] = 1.0f;
         mgr.draw( cp );
     }
 };

@@ -94,9 +94,7 @@ void GN::gfx::FatMesh::draw( int material )
     }
 
     // setup vertex format
-    VtxFmtDesc vfd;
-    vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-    gRenderer.setVtxFmt( gRenderer.createVtxFmt( vfd ) );
+    gRenderer.setVtxFmt( gRenderer.createVtxFmt( VtxFmtDesc::XYZ ) );
 
     for( size_t idx = 0; idx < mFaceSegments.size(); ++idx )
     {

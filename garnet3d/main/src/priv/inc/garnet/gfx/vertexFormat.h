@@ -76,7 +76,8 @@ namespace GN { namespace gfx
             }
         };
 
-        StackArray<AttribDesc,MAX_VERTEX_ATTRIBUTES> attribs; //!< vertex attribute descriptors.
+        AttribDesc attribs[MAX_VERTEX_ATTRIBUTES]; //!< vertex attribute list
+        size_t     count;                          //!< vertex attribute count
 
         //! \name commonly used vertex format descriptor constants
         //@{
@@ -88,14 +89,9 @@ namespace GN { namespace gfx
         //@}
 
         //!
-        //! Constructor
-        //!
-        VtxFmtDesc() { clear(); }
-
-        //!
         //! Clear to empty declarator.
         //!
-        void clear() { attribs.clear(); }
+        void clear() { count = 0; }
 
         //!
         //! Check validity the descriptor.

@@ -15,7 +15,7 @@ static Logger * sLogger = getLogger("GN.gfx.base.VertexFormatDesc");
 static VtxFmtDesc sBuildXyzNormUv()
 {
     VtxFmtDesc vfd;
-    vfd.attribs.resize( 3 );
+    vfd.count = 3;
     vfd.attribs[0].set( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
     vfd.attribs[1].set( 0, 12, VTXSEM_NML0, FMT_FLOAT3 );
     vfd.attribs[2].set( 0, 24, VTXSEM_TEX0, FMT_FLOAT2 );
@@ -28,7 +28,7 @@ static VtxFmtDesc sBuildXyzNormUv()
 static VtxFmtDesc sBuildXyzUv()
 {
     VtxFmtDesc vfd;
-    vfd.attribs.resize( 2 );
+    vfd.count = 2;
     vfd.attribs[0].set( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
     vfd.attribs[1].set( 0, 12, VTXSEM_TEX0, FMT_FLOAT2 );
     //vfd.streams.resize( 1 );
@@ -40,7 +40,7 @@ static VtxFmtDesc sBuildXyzUv()
 static VtxFmtDesc sBuildXyz()
 {
     VtxFmtDesc vfd;
-    vfd.attribs.resize( 1 );
+    vfd.count = 1;
     vfd.attribs[0].set( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
     //vfd.streams.resize( 1 );
     //vfd.streams[0].set( 12 );
@@ -51,7 +51,7 @@ static VtxFmtDesc sBuildXyz()
 static VtxFmtDesc sBuildXyzwUv()
 {
     VtxFmtDesc vfd;
-    vfd.attribs.resize( 2 );
+    vfd.count = 2;
     vfd.attribs[0].set( 0, 0, VTXSEM_POS0, FMT_FLOAT4 );
     vfd.attribs[1].set( 0, 16, VTXSEM_TEX0, FMT_FLOAT2 );
     //vfd.streams.resize( 1 );
@@ -63,7 +63,7 @@ static VtxFmtDesc sBuildXyzwUv()
 static VtxFmtDesc sBuildXyzw()
 {
     VtxFmtDesc vfd;
-    vfd.attribs.resize( 1 );
+    vfd.count = 1;
     vfd.attribs[0].set( 0, 0, VTXSEM_POS0, FMT_FLOAT4 );
     //vfd.streams.resize( 1 );
     //vfd.streams[0].set( 16 );
@@ -86,7 +86,7 @@ const VtxFmtDesc VtxFmtDesc::XYZW = sBuildXyzw();
 // -----------------------------------------------------------------------------
 bool GN::gfx::VtxFmtDesc::validate() const
 {
-    if( 0 == attribs.size() || attribs.size() > MAX_VERTEX_ATTRIBUTES )
+    if( 0 == count || count > MAX_VERTEX_ATTRIBUTES )
     {
         GN_ERROR(sLogger)( "numAttributes must be in range (0,MAX_VERTEX_ATTRIBUTES]." );
         return false;
@@ -103,10 +103,15 @@ bool GN::gfx::VtxFmtDesc::addAttrib(
     VtxSem semantic,
     ClrFmt format )
 {
+    if( count == MAX_VERTEX_ATTRIBUTES )
+    {
+        GN_ERROR(sLogger)( "Can't have more attributes." );
+        return false;
+    }
     // TODO: check input parameters
-    attribs.resize( attribs.size() + 1 );
-    attribs.back().set( stream, offset, semantic, format );
-    
+    attribs[count].set( stream, offset, semantic, format );
+    ++count;
+
     GN_ASSERT( validate() );
     return true;
 }
@@ -117,7 +122,7 @@ bool GN::gfx::VtxFmtDesc::addAttrib(
 const GN::gfx::VtxFmtDesc::AttribDesc *
 GN::gfx::VtxFmtDesc::findAttrib( VtxSem semantic ) const
 {
-    for( size_t i = 0; i < attribs.size(); ++i )
+    for( size_t i = 0; i < count; ++i )
     {
         if( attribs[i].semantic == semantic ) return &attribs[i];
     }
@@ -135,7 +140,7 @@ size_t GN::gfx::VtxFmtDesc::calcNumStreams()
         return 0;
     }
     size_t n = 0;
-    for( size_t i = 0; i < attribs.size(); ++i )
+    for( size_t i = 0; i < count; ++i )
     {
         const AttribDesc & a =  attribs[i];
         if( a.stream >= n ) n = a.stream + 1;
@@ -159,7 +164,7 @@ size_t GN::gfx::VtxFmtDesc::calcStreamStride( size_t idx )
         return 0;
     }
     size_t s = 0;
-    for( size_t i = 0; i < attribs.size(); ++i )
+    for( size_t i = 0; i < count; ++i )
     {
         const AttribDesc & a =  attribs[i];
         if( a.stream == idx ) s += getClrFmtDesc(a.format).bits / 8;

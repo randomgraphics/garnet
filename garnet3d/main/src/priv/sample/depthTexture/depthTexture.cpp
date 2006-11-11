@@ -51,11 +51,7 @@ public:
         mTex0 = mApp.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
 
         // create decl
-        VtxFmtDesc fmt;
-        fmt.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT3 );
-        fmt.addAttrib( 0, 12, VTXSEM_NML0, FMT_FLOAT3 );
-        fmt.addAttrib( 0, 24, VTXSEM_TEX0, FMT_FLOAT2 );
-        mDecl = r.createVtxFmt( fmt );
+        mDecl = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
         if( 0 == mDecl ) return false;
 
         // create box
