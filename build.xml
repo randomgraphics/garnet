@@ -1,0 +1,68 @@
+<project name="Garnet3D" default="compile" basedir=".">
+    <description>
+        Garnet3D game library
+    </description>
+
+    <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+
+    <!--
+        Define first level tasks
+    -->
+
+    <property name="src" location="src"/>
+    <property name="bld" location="build.tmp/ant"/>
+
+    <target name="init">
+        <tstamp/><!-- mark timestamp -->
+    </target>
+
+    <target name="compile" depends="init" description="compile sources">
+        <antcall target="loop_variants">
+            <param name="target" value="v_compile"/>
+        </antcall>
+    </target>
+
+    <target name="clean" description="clean up" >
+    </target>
+
+    <!--
+        Utilities
+    -->
+
+    <target name="loop_variants">
+        <for list="mswin,unix,xenon" param="platform">
+        <sequential>
+            <propertyregex property="platform" override="true" input="@{platform}" regexp=".*" select="\0"/>
+            <for list="x86,x64,ppc" param="cpu">
+            <sequential>
+            <propertyregex property="cpu" override="true" input="@{cpu}" regexp=".*" select="\0"/>
+                <for list="vc80,gcc" param="tool">
+                <sequential>
+                    <propertyregex property="tool" override="true" input="@{tool}" regexp=".*" select="\0"/>
+                    <for list="debug,profile,retail,stdbg,stprof,stret" param="flavor">
+                    <sequential>
+                        <propertyregex property="flavor" override="true" input="@{flavor}" regexp=".*" select="\0"/>
+                        <antcall target="${target}"/>
+                    </sequential>
+                    </for>
+                </sequential>
+                </for>
+            </sequential>
+            </for>
+        </sequential>
+        </for>
+    </target>
+
+    <!--
+        Define tasks for specific variant
+    -->
+    <target name="v_compile">
+        <echo message="variant=${platform}-${cpu}-${tool}-${flavor}"/>
+        <!--property name="blddir" location="${bld}/${platform}/${cpu}/${tool}/${variant}"/-->
+    </target>
+
+    <target name="v_clean">
+        <!--delete dir="${bld}"-->
+    </target>
+
+</project>
