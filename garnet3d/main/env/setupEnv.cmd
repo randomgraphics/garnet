@@ -58,6 +58,18 @@ if not "" == "%1" (
         goto parse_cmdline
 )
 
+REM =======================
+REM detect current CPU type
+REM =======================
+       if /I "amd64" == "%PROCESSOR_ARCHITECTURE%" ( set GN_CURRENT_CPU=x64
+) else if /I "amd64" == "%PROCESSOR_ARCHITEWOW64%" ( set GN_CURRENT_CPU=x64
+) else if /I "ia64" == "%PROCESSOR_ARCHITECTURE%" ( set GN_CURRENT_CPU=ia64
+) else if /I "x86" == "%PROCESSOR_ARCHITECTURE%" ( set GN_CURRENT_CPU=x86
+) else (
+    call :error Unknown CPU type!
+    goto :EOF
+)
+
 REM ============================
 REM setup garnet build parameers
 REM ============================
@@ -76,16 +88,36 @@ echo GN_BUILD_TARGET_OS = %GN_BUILD_TARGET_OS%
 echo GN_BUILD_TARGET_CPU = %GN_BUILD_TARGET_CPU%
 echo GN_BUILD_VARIANT = %GN_BUILD_VARIANT%
 
-REM ==========
-REM setup path
-REM ==========
-if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
-    set mypath=%GARNET_ROOT%\env\bin\mswin\x64;%GARNET_ROOT%\env\bin\mswin\x86
-) else (
-    set mypath=%GARNET_ROOT%\env\bin\mswin\x86
+REM =====================
+REM setup VS8 environment
+REM =====================
+if /I "vc80" == "%GN_BUILD_COMPILER%" (
+    REM
+    REM TODO: detect vs8 install path!
+    REM
+    set VS8_ROOT="C:\Program Files\Microsoft Visual Studio 8"
 )
-set PATH=%mypath%;%PATH%
-set mypath=
+
+if /I "vc80" == "%GN_BUILD_COMPILER%" (
+    if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
+        call %VS8_ROOT%\VC\vcvarsall.bat x86
+    ) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
+        if /I "x64" == "%GN_CURRENT_CPU%" (
+            call %VS8_ROOT%\VC\vcvarsall.bat amd64
+        ) else (
+            call %VS8_ROOT%\VC\vcvarsall.bat x86_amd64
+        )
+    ) else if /I "ia64" == "%GN_BUILD_TARGET_CPU%" (
+        if /I "ia64" == "%GN_CURRENT_CPU%" (
+            call %VS8_ROOT%\VC\vcvarsall.bat ia64
+        ) else (
+            call %VS8_ROOT%\VC\vcvarsall.bat x86_ia64
+        )
+    ) else (
+        call :error Unsupport target CPU type: %GN_BUILD_TARGET_CPU%.
+    )
+)
+
 
 REM =======================
 REM setup xenon environment
@@ -101,6 +133,17 @@ if "xenon" == "%GN_BUILD_COMPILER%" (
         popd
     )
 )
+
+REM =================
+REM setup custom path
+REM =================
+if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
+    set mypath=%GARNET_ROOT%\env\bin\mswin\x64;%GARNET_ROOT%\env\bin\mswin\x86
+) else (
+    set mypath=%GARNET_ROOT%\env\bin\mswin\x86
+)
+set PATH=%mypath%;%PATH%
+set mypath=
 
 REM ===========
 REM setup scons
@@ -134,13 +177,6 @@ alias test      "cd /d %GARNET_ROOT%\src\priv\test\$*"
 alias tool      "cd /d %GARNET_ROOT%\src\priv\tool$*"
 alias util      "cd /d %GARNET_ROOT%\src\priv\util$*"
 alias cb        "mkdir %GARNET_ROOT%\build.tmp\cmake&pushd %GARNET_ROOT%\build.tmp\cmake&cmake ..\..\src&popd"
-
-REM =====
-REM Misc.
-REM =====
-
-set INCLUDE=
-set LIBS=
 
 REM ====================
 REM Update console title
