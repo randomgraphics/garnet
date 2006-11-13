@@ -92,32 +92,53 @@ REM =====================
 REM setup VS8 environment
 REM =====================
 if /I "vc80" == "%GN_BUILD_COMPILER%" (
-    REM
-    REM TODO: detect vs8 install path!
-    REM
-    set VS8_ROOT="C:\Program Files\Microsoft Visual Studio 8"
+    if not "" == "%VS80COMNTOOLS%" (
+        set "VS8_SETENV=%VS80COMNTOOLS%..\..\VC\vcvarsall.bat"
+    ) else (
+        call :warn Environment variable VS80COMNTOOLS not found. Please install MSVS 2005.
+    )
 )
 
-if /I "vc80" == "%GN_BUILD_COMPILER%" (
+if not "" == "%VS8_SETENV%" (
     if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
-        call %VS8_ROOT%\VC\vcvarsall.bat x86
+        call "%VS8_SETENV%" x86
     ) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
         if /I "x64" == "%GN_CURRENT_CPU%" (
-            call %VS8_ROOT%\VC\vcvarsall.bat amd64
+            call "%VS8_SETENV%" amd64
         ) else (
-            call %VS8_ROOT%\VC\vcvarsall.bat x86_amd64
+            call "%VS8_SETENV%" x86_amd64
         )
     ) else if /I "ia64" == "%GN_BUILD_TARGET_CPU%" (
         if /I "ia64" == "%GN_CURRENT_CPU%" (
-            call %VS8_ROOT%\VC\vcvarsall.bat ia64
+            call "%VS8_SETENV%" ia64
         ) else (
-            call %VS8_ROOT%\VC\vcvarsall.bat x86_ia64
+            call "%VS8_SETENV%" x86_ia64
         )
     ) else (
         call :error Unsupport target CPU type: %GN_BUILD_TARGET_CPU%.
     )
+
+    set VS8_SETENV=
 )
 
+REM =========================
+REM setup directx environment
+REM =========================
+
+if not "" == "%DXSDK_DIR%" (
+    set "DXSDK_SETENV=%DXSDK_DIR%Utilities\Bin\dx_setenv.cmd"
+) else (
+    call :warn Environment variable DXSDK_DIR not found. Please install DirectX SDK.
+)
+
+if not "" == "%DXSDK_SETENV%" (
+    if /I "x86" == "%GN_BUILD_TARGET_CPU%" (
+        call "%DXSDK_SETENV%" x86
+    ) else if /I "x64" == "%GN_BUILD_TARGET_CPU%" (
+        call "%DXSDK_SETENV%" amd64
+    )
+    set DXSDK_SETENV=
+)
 
 REM =======================
 REM setup xenon environment
@@ -138,9 +159,9 @@ REM =================
 REM setup custom path
 REM =================
 if "AMD64" == "%PROCESSOR_ARCHITECTURE%" (
-    set mypath=%GARNET_ROOT%\env\bin\mswin\x64;%GARNET_ROOT%\env\bin\mswin\x86
+    set "mypath=%GARNET_ROOT%\env\bin\mswin\x64;%GARNET_ROOT%\env\bin\mswin\x86"
 ) else (
-    set mypath=%GARNET_ROOT%\env\bin\mswin\x86
+    set "mypath=%GARNET_ROOT%\env\bin\mswin\x86"
 )
 set PATH=%mypath%;%PATH%
 set mypath=
@@ -156,27 +177,11 @@ REM ===========
 REM setup alias
 REM ===========
 
-alias root      "cd /d %GARNET_ROOT%\$*"
-alias bin       "cd /d %GARNET_ROOT%\bin\$*"
-alias bld       "cd /d %GARNET_ROOT%\build.tmp\scons\%GN_BUILD_TARGET_OS%\%GN_BUILD_TARGET_CPU%\%GN_BUILD_COMPILER%\%GN_BUILD_VARIANT%\bin\$*"
-alias env       "cd /d %GARNET_ROOT%\env\$*"
-alias msvc      "cd /d %GARNET_ROOT%\msvc"
-alias src       "cd /d %GARNET_ROOT%\src\$*"
-alias extern    "cd /d %GARNET_ROOT%\src\extern\$*"
-alias media     "cd /d %GARNET_ROOT%\src\media\$*"
-alias priv      "cd /d %GARNET_ROOT%\src\priv\$*"
-alias base      "cd /d %GARNET_ROOT%\src\priv\base\$*"
-alias core      "cd /d %GARNET_ROOT%\src\priv\core\$*"
-alias doc       "cd /d %GARNET_ROOT%\src\priv\doc$*"
-alias inc       "cd /d %GARNET_ROOT%\src\priv\inc\garnet\$*"
-alias gfx       "cd /d %GARNET_ROOT%\src\priv\gfx\$*"
-alias rndr      "cd /d %GARNET_ROOT%\src\priv\gfx\rndr\$*"
-alias misc      "cd /d %GARNET_ROOT%\src\priv\misc$*"
-alias sample    "cd /d %GARNET_ROOT%\src\priv\sample\$*"
-alias test      "cd /d %GARNET_ROOT%\src\priv\test\$*"
-alias tool      "cd /d %GARNET_ROOT%\src\priv\tool$*"
-alias util      "cd /d %GARNET_ROOT%\src\priv\util$*"
-alias cb        "mkdir %GARNET_ROOT%\build.tmp\cmake&pushd %GARNET_ROOT%\build.tmp\cmake&cmake ..\..\src&popd"
+if exist "%GARNET_ROOT%\env\alias.txt" (
+	for /F "tokens=1*" %%i in (%GARNET_ROOT%\env\alias.txt) do alias %%i %%j
+) else (
+    call :warning "%GARNET_ROOT%\env\alias.txt" is missing.
+)
 
 REM ====================
 REM Update console title
