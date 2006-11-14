@@ -4,65 +4,136 @@
     </description>
 
     <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+    <typedef resource="cpptasks.types"/>
 
     <!--
-        Define first level tasks
+        Initialize build environment
     -->
-
-    <property name="src" location="src"/>
-    <property name="bld" location="build.tmp/ant"/>
-
     <target name="init">
-        <tstamp/><!-- mark timestamp -->
-    </target>
+        <!-- mark timestamp -->
+        <tstamp/>
 
-    <target name="compile" depends="init" description="compile sources">
-        <antcall target="loop_variants">
-            <param name="target" value="v_compile"/>
-        </antcall>
-    </target>
+        <!-- define public properties and their default values -->
+        <osfamily property="os.family"/>
+        <property name="platform" value="${os.family}"/>
+        <property name="arch" value="${os.arch}"/>
+        <condition property="toolset" value="vs8"><os family="windows"/></condition>
+        <condition property="toolset" value="gcc"><os family="unix"/></condition>
+        <property name="flavor" value="retail"/>
+        <property name="cg" value="true"/>
 
-    <target name="clean" description="clean up" >
-    </target>
+        <!-- TODO: check property values -->
 
-    <!--
-        Utilities
-    -->
+        <!-- display properties' value -->
+        <echo>
+platform = ${platform}
+arch     = ${arch}
+toolset  = ${toolset}
+flavor   = ${flavor}
+cg       = ${cg}
+        </echo>
 
-    <target name="loop_variants">
-        <for list="mswin,unix,xenon" param="platform">
-        <sequential>
-            <propertyregex property="platform" override="true" input="@{platform}" regexp=".*" select="\0"/>
-            <for list="x86,x64,ppc" param="cpu">
-            <sequential>
-            <propertyregex property="cpu" override="true" input="@{cpu}" regexp=".*" select="\0"/>
-                <for list="vc80,gcc" param="tool">
-                <sequential>
-                    <propertyregex property="tool" override="true" input="@{tool}" regexp=".*" select="\0"/>
-                    <for list="debug,profile,retail,stdbg,stprof,stret" param="flavor">
-                    <sequential>
-                        <propertyregex property="flavor" override="true" input="@{flavor}" regexp=".*" select="\0"/>
-                        <antcall target="${target}"/>
-                    </sequential>
-                    </for>
-                </sequential>
-                </for>
-            </sequential>
-            </for>
-        </sequential>
-        </for>
+        <!-- Import environment variables -->
+        <property environment="env"/>
     </target>
 
     <!--
-        Define tasks for specific variant
+        Check configurations
     -->
-    <target name="v_compile">
-        <echo message="variant=${platform}-${cpu}-${tool}-${flavor}"/>
-        <!--property name="blddir" location="${bld}/${platform}/${cpu}/${tool}/${variant}"/-->
+    <target name="config">
+
+        <condition property="has_d3d9" else="false">
+            <and>
+                <available file="d3d9.h" filepath="${env.INCLUDE}"/>
+                <available file="d3dx9.h" filepath="${env.INCLUDE}"/>
+                <available file="d3d9.lib" filepath="${env.LIB}"/>
+                <available file="d3dx9.lib" filepath="${env.LIB}"/>
+                <available file="d3dx9d.lib" filepath="${env.LIB}"/>
+            </and>
+        </condition>
+
+        <condition property="has_d3d10" else="false">
+            <!-- TODO: disable d3d10 on XP for static flavors -->
+            <and>
+                <available file="d3d10.h" filepath="${env.INCLUDE}"/>
+                <available file="d3dx10.h" filepath="${env.INCLUDE}"/>
+                <available file="d3dx10.lib" filepath="${env.LIB}"/>
+                <available file="d3dx10d.lib" filepath="${env.LIB}"/>
+            </and>
+        </condition>
+
+        <condition property="has_ogl" else="false">
+            <and>
+                <available file="GL/gl.h" filepath="${env.INCLUDE}"/>
+                <available file="GL/glu.h" filepath="${env.INCLUDE}"/>
+                <or>
+                    <and>
+                        <available file="opengl32.lib" filepath="${env.LIB}"/>
+                        <available file="glu32.lib" filepath="${env.LIB}"/>
+                    </and>
+                    <!-- TODO: check opengl libraries for unix system -->
+                </or>
+            </and>
+        </condition>
+
+        <condition property="has_cg" else="false">
+            <and>
+                <equals arg1="${cg}" arg2="true"/>
+                <available file="Cg/cg.h" filepath="${env.INCLUDE}"/>
+                <or>
+                    <available file="cg.lib" filepath="${env.LIB}"/>
+                    <!-- TODO: check Cg libraries on other platforms -->
+                </or>
+            </and>
+        </condition>
+
+        <condition property="has_cg_d3d9" else="false">
+            <and>
+                <equals arg1="${has_cg}" arg2="true"/>
+                <equals arg1="${has_d3d9}" arg2="true"/>
+                <available file="Cg/cgD3D9.h" filepath="${env.INCLUDE}"/>
+                <or>
+                    <available file="cgD3D9.lib" filepath="${env.LIB}"/>
+                    <!-- TODO: check Cg libraries on other platforms -->
+                </or>
+            </and>
+        </condition>
+
+        <condition property="has_cg_ogl" else="false">
+            <and>
+                <equals arg1="${has_cg}" arg2="true"/>
+                <equals arg1="${has_ogl}" arg2="true"/>
+                <available file="Cg/cgGL.h" filepath="${env.INCLUDE}"/>
+                <or>
+                    <available file="cgGL.lib" filepath="${env.LIB}"/>
+                    <!-- TODO: check Cg libraries on other platforms -->
+                </or>
+            </and>
+        </condition>
+
+        <!-- display property values -->
+        <echo>
+has_d3d9    = ${has_d3d9}
+has_d3d10   = ${has_d3d10}
+has_ogl     = ${has_ogl}
+has_cg      = ${has_cg}
+has_cg_d3d9 = ${has_cg_d3d9}
+has_cg_ogl  = ${has_cg_ogl}
+        </echo>
+
     </target>
 
-    <target name="v_clean">
-        <!--delete dir="${bld}"-->
+    <!--
+        Do compilation
+    -->
+    <target name="compile" depends="init,config">
+        <property name="src" location="src"/>
+        <property name="bld" location="build.tmp/ant"/>
     </target>
 
+    <!--
+        Do clean
+    -->
+    <target name="clean" depends="init">
+    </target>
 </project>
