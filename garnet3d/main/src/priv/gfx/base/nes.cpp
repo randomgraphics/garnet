@@ -58,7 +58,7 @@ public:
         // create backbuffer and z buffer
         if( !sGenBackBuffers( mgr, mBackBuffer, mZBuffer ) ) return false;
 
-        // create cubemap 
+        // create cubemap
 
         // create constants
 
@@ -68,14 +68,21 @@ public:
 
     void draw( EffectManager & mgr )
     {
-        // do clear
         DrawParameters cp;
+
+        // do clear
         cp.effect = EFF_CLEAR.id;
         cp.buffers["color0_buffer"] = mBackBuffer;
         cp.buffers["depth_buffer"] = mZBuffer;
         //cp.buffers["stencil_buffer"] = mStencil;
         //cp.consts["color0_value"] = Vector2f(0,0,0,0);
         //cp.consts["depth_value"] = 1.0f;
+        mgr.draw( cp );
+
+        // do present
+        cp.effect = EFF_PRESENT.id;
+        cp.buffers.clear();
+        cp.buffers["backbuffer"] = mBackBuffer;
         mgr.draw( cp );
     }
 };
