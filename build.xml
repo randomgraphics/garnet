@@ -73,8 +73,26 @@
 	============================================================================
 	-->
 
+	<macrodef name="msvc_compile">
+		<attribute name="if" default=""/>
+		<attribute name="objdir"/>
+		<attribute name="pch.header" default="pch.h"/>
+		<attribute name="pch.source" default="pch.cpp"/>
+		<sequential>
+			<mkdir dir="@{objdir}"/>
+			<var name="cmdargs" value="@{objdir}/cl.cmdargs.txt"/>
+			<!-- write command arguments to file -->
+			<echo message="/c /nologo" file="${cmdargs}"/>
+			<!-- call cl -->
+			<exec executable="cl">
+				<arg value="@${cmdargs}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
 	<target name="GNbase">
-		<mkdir dir="${bldroot}/GNbase"/>
+		<msvc_compile objdir="${bldroot}/GNbase/base">
+		</msvc_compile>
 	</target>
 
 	<!--
