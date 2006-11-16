@@ -40,6 +40,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNutil", "8.0\GNutil.vcproj
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNgfx", "8.0\GNgfx.vcproj", "{4292532B-90C4-44EA-8555-2C7B93DC1090}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GNtestXenonStackTexture", "8.0\GNtestXenonStackTexture.vcproj", "{D29E5514-1390-45FF-AF03-DEC311E6FE70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		debug|Win32 = debug|Win32
@@ -782,6 +784,30 @@ Global
 		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|x64.Build.0 = stret|x64
 		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|Xbox 360.ActiveCfg = stret|Xbox 360
 		{4292532B-90C4-44EA-8555-2C7B93DC1090}.stret|Xbox 360.Build.0 = stret|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.debug|Win32.ActiveCfg = debug|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.debug|x64.ActiveCfg = debug|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.debug|Xbox 360.ActiveCfg = debug|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.debug|Xbox 360.Build.0 = debug|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.profile|Win32.ActiveCfg = profile|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.profile|x64.ActiveCfg = profile|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.profile|Xbox 360.ActiveCfg = profile|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.profile|Xbox 360.Build.0 = profile|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.retail|Win32.ActiveCfg = retail|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.retail|x64.ActiveCfg = retail|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.retail|Xbox 360.ActiveCfg = retail|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.retail|Xbox 360.Build.0 = retail|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stdbg|Win32.ActiveCfg = stdbg|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stdbg|x64.ActiveCfg = stdbg|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stdbg|Xbox 360.ActiveCfg = stdbg|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stdbg|Xbox 360.Build.0 = stdbg|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stprof|Win32.ActiveCfg = stprof|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stprof|x64.ActiveCfg = stprof|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stprof|Xbox 360.ActiveCfg = stprof|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stprof|Xbox 360.Build.0 = stprof|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stret|Win32.ActiveCfg = stret|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stret|x64.ActiveCfg = stret|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stret|Xbox 360.ActiveCfg = stret|Xbox 360
+		{D29E5514-1390-45FF-AF03-DEC311E6FE70}.stret|Xbox 360.Build.0 = stret|Xbox 360
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
