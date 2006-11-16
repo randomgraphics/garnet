@@ -2,14 +2,24 @@
 #include "d3d9Renderer.h"
 #include "d3d9Resource.h"
 
-#if GN_MSVC && !GN_XENON
-#pragma comment(lib, "d3d9.lib") // D3D9 for PC has no d3d9d.lib
+#if GN_MSVC
 #pragma comment( lib, "dxerr9.lib" )
+#if GN_XENON
+#if GN_DEBUG_BUILD
+#pragma comment(lib, "d3d9d.lib")
+#pragma comment(lib, "d3dx9d.lib")
+#else // GN_DEBUG_BUILD
+#pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "d3dx9.lib")
+#endif // GN_DEBUG_BUILD
+#else // GN_XENON
+#pragma comment(lib, "d3d9.lib")
 #if GN_DEBUG_BUILD
 #pragma comment(lib, "d3dx9d.lib")
 #else
 #pragma comment(lib, "d3dx9.lib")
 #endif
+#endif // GN_XENON
 #endif // GN_MSVC
 
 GN::Logger * GN::gfx::D3D9Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
