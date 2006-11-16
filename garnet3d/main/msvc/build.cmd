@@ -11,12 +11,6 @@ for %%v in (debug profile retail stdbg stprof stret) do (
         call scons -U . variant=%%v compiler=vc80 os=mswin cpu=%%d -j1 --no-cache %*
     )
 
-    REM ====================================
-    REM Generate VS projects for VS.NET 2003
-    REM ====================================
-    echo call scons -U . variant=%%v compiler=vc71 os=mswin cpu=x86 -j1 --no-cache %*
-    call scons -U . variant=%%v compiler=vc71 os=mswin cpu=x86 -j1 --no-cache %*
-
     REM =================================
     REM Generate VS projects for XBox 360
     REM =================================
