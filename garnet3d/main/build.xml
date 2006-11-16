@@ -26,6 +26,7 @@
 	<!-- Define private variables (user should not override values of these properties -->
 	<property environment="env"/>
 	<property name="root" location="${basedir}"/>
+	<property name="privroot" location="src/priv"/>
 	<property name="bldroot" location="build.tmp/ant/${platform}/${arch}/${toolset}/${flavor}"/>
 	<condition property="is_debug">
 		<or>
@@ -73,27 +74,180 @@
 	============================================================================
 	-->
 
-	<macrodef name="msvc_compile">
+	<target name="GNbase.base">
+		<vc80_compile
+			objdir="${bldroot}/GNbase/base"
+			pch.source="${privroot}/base/base/pch.cpp"
+			>
+			<sources>
+				<fileset dir="${privroot}/base/base" includes="*.cpp" excludes="pch.cpp"/>
+			</sources>
+		</vc80_compile>
+	</target>
+
+	<target name="GNbase.input">
+		<vc80_compile
+			objdir="${bldroot}/GNbase/input"
+			pch.source="${privroot}/base/input/pch.cpp"
+			>
+			<sources>
+				<fileset dir="${privroot}/base/input" includes="*.cpp" excludes="pch.cpp"/>
+			</sources>
+		</vc80_compile>
+	</target>
+
+	<target name="GNbase.win">
+		<vc80_compile
+			objdir="${bldroot}/GNbase/win"
+			pch.source="${privroot}/base/win/pch.cpp"
+			>
+			<sources>
+				<fileset dir="${privroot}/base/win" includes="*.cpp" excludes="pch.cpp"/>
+			</sources>
+		</vc80_compile>
+	</target>
+
+	<target name="GNbase" depends="GNbase.base,GNbase.input,GNbase.win">
+		<vc80_lib
+			outdir="${bldroot}/GNbase"
+			target="GNbase"
+			>
+			<sources>
+				<fileset dir="${bldroot}/GNbase" includes="**/*.obj" excludes="**/pch.*"/>
+			</sources>
+		</vc80_lib>
+	</target>
+
+	<!--
+	============================================================================
+		MSVS 2005 compile/link tasks
+	============================================================================
+	-->
+
+	<macrodef name="vc80_compile">
 		<attribute name="if" default=""/>
 		<attribute name="objdir"/>
 		<attribute name="pch.header" default="pch.h"/>
-		<attribute name="pch.source" default="pch.cpp"/>
+		<attribute name="pch.source" default=""/>
+		<element name="sources"/>
 		<sequential>
 			<mkdir dir="@{objdir}"/>
-			<var name="cmdargs" value="@{objdir}/cl.cmdargs.txt"/>
-			<!-- write command arguments to file -->
-			<echo message="/c /nologo" file="${cmdargs}"/>
-			<!-- call cl -->
-			<exec executable="cl">
-				<arg value="@${cmdargs}"/>
+			<var name="clargs" value="@{objdir}\clargs.txt"/>
+			<!-- write CL arguments to file -->
+			<property name="priv.inc" location="${root}/src/priv/inc"/>
+			<property name="extern.inc" location="${root}/src/extern/inc"/>
+			<echo file="${clargs}">/c /nologo /EHsc
+/I "${priv.inc}"
+/I "${extern.inc}"
+/Zi
+/Fp"@{objdir}\pch.pch"
+</echo>
+			<!-- check for PCH options -->
+			<if>
+				<and>
+					<not><equals arg1="@{pch.header}" arg2=""/></not>
+					<not><equals arg1="@{pch.source}" arg2=""/></not>
+				</and>
+				<then>
+					<!-- compile PCH source -->
+					<exec executable="cl" dir="@{objdir}">
+						<arg value="@${clargs}"/>
+						<arg value="/Yc@{pch.header}"/>
+						<arg file="@{pch.source}"/>
+					</exec>
+					<!-- write PCH compile options -->
+					<echo append="true" file="${clargs}">/Yu"@{pch.header}"
+</echo>
+				</then>
+				<else>
+				</else>
+			</if>
+
+			<!-- write source files -->
+			<for trim="true" param="file" >
+				<sources/>
+				<sequential>
+					<echo append="true" file="${clargs}">@{file}
+</echo>
+				</sequential>
+			</for>
+			<!-- run CL -->
+			<exec executable="cl" dir="@{objdir}">
+				<arg value="@${clargs}"/>
 			</exec>
 		</sequential>
 	</macrodef>
 
-	<target name="GNbase">
-		<msvc_compile objdir="${bldroot}/GNbase/base">
-		</msvc_compile>
-	</target>
+	<macrodef name="vc80_lib">
+		<attribute name="if" default=""/>
+		<attribute name="outdir"/>
+		<attribute name="target"/>
+		<element name="sources"/>
+		<sequential>
+			<mkdir dir="@{outdir}"/>
+			<var name="libargs" value="@{outdir}\libargs.txt"/>
+
+			<!-- write LIB arguments to file -->
+			<echo file="${libargs}">/nologo
+/machine:${arch}
+/out:@{outdir}\@{target}.lib
+</echo>
+			<!-- write source files -->
+			<for trim="true" param="file" >
+				<sources/>
+				<sequential>
+					<echo append="true" file="${libargs}">@{file}
+</echo>
+				</sequential>
+			</for>
+
+			<!-- run LIB -->
+			<exec executable="lib" dir="@{outdir}">
+				<arg value="@${libargs}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="vc80_link">
+		<attribute name="if" default=""/>
+		<attribute name="outdir"/>
+		<attribute name="target"/>
+		<attribute name="type"/>
+		<element name="sources"/>
+		<sequential>
+			<mkdir dir="@{outdir}"/>
+			<var name="linkargs" value="@{outdir}\linkargs.txt"/>
+			<!-- determine link type -->
+			<switch value="@{type}">
+				<case value="shared">
+					<var name="ext" value=".dll"/>
+				</case>
+				<case value="exec">
+					<var name="ext" value=".exe"/>
+				</case>
+			</switch>
+
+			<!-- write LINK arguments to file -->
+			<echo file="${linkargs}">/nologo
+/debug
+/machine:${arch}
+/out:@{outdir}\@{target}${ext}
+</echo>
+			<!-- write source files -->
+			<for trim="true" param="file" >
+				<sources/>
+				<sequential>
+					<echo append="true" file="${linkargs}">@{file}
+</echo>
+				</sequential>
+			</for>
+
+			<!-- run LINK -->
+			<exec executable="link" dir="@{outdir}">
+				<arg value="@${linkargs}"/>
+			</exec>
+		</sequential>
+	</macrodef>
 
 	<!--
 	============================================================================
