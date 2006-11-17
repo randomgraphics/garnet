@@ -138,7 +138,7 @@ def _parse_msvc8_overrides(version,platform,suite):
     if not SCons.Util.can_read_reg:
         raise SCons.Errors.InternalError, "No Windows registry module was found"
 
-    s = ''
+    s = '\\VisualStudio\\'
     if suite == 'EXPRESS':
         s = '\\VCExpress\\'
 
@@ -287,7 +287,7 @@ def _get_msvc8_path(path, version, platform, suite):
     # first, look for a customization of the default values in the
     # registry: These are sometimes stored in the Local Settings area
     # for Visual Studio, in a file, so we have to parse it.
-    dirs = _parse_msvc8_overrides(version, platform, suite)
+    dirs = _parse_msvc7_overrides(version, platform)
 
     if dirs.has_key(path):
         p = dirs[path]
