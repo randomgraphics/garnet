@@ -1,1 +1,1 @@
-python %~dp0scons %*
+python -OO %~dp0scons %*

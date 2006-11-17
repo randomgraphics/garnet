@@ -3,7 +3,7 @@
 Defines the Option class and some standard value-checking functions.
 """
 
-__revision__ = "src\engine\SCons\Optik\option.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Optik/option.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 # Original Optik revision this is based on:
 __Optik_revision__ = "option.py,v 1.19.2.1 2002/07/23 01:51:14 gward Exp" 

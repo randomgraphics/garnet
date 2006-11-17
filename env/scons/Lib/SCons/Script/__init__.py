@@ -34,7 +34,7 @@ it goes here.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Script\__init__.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Script/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import time
 start_time = time.time()
@@ -245,7 +245,7 @@ def HelpFunction(text):
         help_text = help_text + text
 
 #
-# Will be set to 1 if we are reading a SConscript.
+# Will be non-zero if we are reading an SConscript file.
 sconscript_reading = 0
 
 #
@@ -281,6 +281,7 @@ GlobalDefaultEnvironmentFunctions = [
     #The Command() method is handled separately, below.
     'Depends',
     'Dir',
+    'NoClean',
     'Entry',
     'Execute',
     'File',

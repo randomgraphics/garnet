@@ -30,20 +30,23 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Platform\aix.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Platform/aix.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import os
 import string
 
 import posix
 
-def get_xlc(env, xlc, xlc_r, packages):
+def get_xlc(env, xlc=None, xlc_r=None, packages=[]):
     # Use the AIX package installer tool lslpp to figure out where a
     # given xl* compiler is installed and what version it is.
     xlcPath = None
     xlcVersion = None
 
-    xlc = env.get('CC', 'xlc')
+    if xlc is None:
+        xlc = env.get('CC', 'xlc')
+    if xlc_r is None:
+        xlc_r = xlc + '_r'
     for package in packages:
         cmd = "lslpp -fc " + package + " 2>/dev/null | egrep '" + xlc + "([^-_a-zA-Z0-9].*)?$'"
         line = os.popen(cmd).readline()

@@ -27,7 +27,7 @@ The Scanner package for the SCons software construction utility.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Scanner\__init__.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Scanner/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import re
 import string
@@ -125,12 +125,14 @@ class Base:
         which scanner should be used for a given Node. In the case of File
         nodes, for example, the 'skeys' would be file suffixes.
 
-        'path_function' - a function that takes one to three arguments
-        (a construction environment, optional directory, and optional
-        argument for this instance) and returns a tuple of the
-        directories that can be searched for implicit dependency files.
-        May also return a callable() which is called with no args and
-        returns the tuple (supporting Bindable class).
+        'path_function' - a function that takes four or five arguments
+        (a construction environment, Node for the directory containing
+        the SConscript file that defined the primary target, list of
+        target nodes, list of source nodes, and optional argument for
+        this instance) and returns a tuple of the directories that can
+        be searched for implicit dependency files.  May also return a
+        callable() which is called with no args and returns the tuple
+        (supporting Bindable class).
 
         'node_class' - the class of Nodes which this scan will return.
         If node_class is None, then this scanner will not enforce any

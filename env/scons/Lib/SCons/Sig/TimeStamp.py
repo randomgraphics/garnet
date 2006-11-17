@@ -28,7 +28,7 @@ utility.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Sig\TimeStamp.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/baseline/src/engine/SCons/Sig/TimeStamp.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 def current(new, old):
     """Return whether a new timestamp is up-to-date with

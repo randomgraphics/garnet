@@ -28,14 +28,15 @@ and user errors in SCons.
 
 """
 
-__revision__ = "src\engine\SCons\Errors.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Errors.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 
 
 class BuildError(Exception):
-    def __init__(self, node=None, errstr="Unknown error", *args):
+    def __init__(self, node=None, errstr="Unknown error", filename=None, *args):
         self.node = node
         self.errstr = errstr
+        self.filename = filename
         apply(Exception.__init__, (self,) + args)
 
 class InternalError(Exception):
@@ -53,3 +54,9 @@ class ExplicitExit(Exception):
         self.status = status
         apply(Exception.__init__, (self,) + args)
 
+class TaskmasterException(Exception):
+    def __init__(self, node=None, exc_info=(None, None, None), *args):
+        self.node = node
+        self.errstr = "Exception"
+        self.exc_info = exc_info
+        apply(Exception.__init__, (self,) + args)

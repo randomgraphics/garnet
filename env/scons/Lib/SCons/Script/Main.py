@@ -34,7 +34,7 @@ it goes here.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Script\Main.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Script/Main.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import os
 import os.path
@@ -45,7 +45,7 @@ import time
 import traceback
 
 # Strip the script directory from sys.path() so on case-insensitive
-# (WIN32) systems Python doesn't think that the "scons" script is the
+# (Windows) systems Python doesn't think that the "scons" script is the
 # "SCons" package.  Replace it with our own version directory so, if
 # if they're there, we pick up the right version of the build engine
 # modules.
@@ -138,16 +138,29 @@ class BuildTask(SCons.Taskmaster.Task):
             # see if the sys module has one.
             t, e = sys.exc_info()[:2]
 
+        def nodestring(n):
+            if not SCons.Util.is_List(n):
+                n = [ n ]
+            return string.join(map(str, n), ', ')
+
+        errfmt = "scons: *** [%s] %s\n"
+
         if t == SCons.Errors.BuildError:
-            fname = e.node
-            if SCons.Util.is_List(e.node):
-                fname = string.join(map(str, e.node), ', ')
-            sys.stderr.write("scons: *** [%s] %s\n" % (fname, e.errstr))
-            if e.errstr == 'Exception':
-                traceback.print_exception(e.args[0], e.args[1], e.args[2])
+            tname = nodestring(e.node)
+            errstr = e.errstr
+            if e.filename:
+                errstr = e.filename + ': ' + errstr
+            sys.stderr.write(errfmt % (tname, errstr))
+        elif t == SCons.Errors.TaskmasterException:
+            tname = nodestring(e.node)
+            sys.stderr.write(errfmt % (tname, e.errstr))
+            type, value, trace = e.exc_info
+            traceback.print_exception(type, value, trace)
         elif t == SCons.Errors.ExplicitExit:
             status = e.status
-            sys.stderr.write("scons: *** [%s] Explicit exit, status %s\n" % (e.node, e.status))
+            tname = nodestring(e.node)
+            errstr = 'Explicit exit, status %s' % status
+            sys.stderr.write(errfmt % (tname, errstr))
         else:
             if e is None:
                 e = t
@@ -224,7 +237,7 @@ class CleanTask(SCons.Taskmaster.Task):
 
     def show(self):
         target = self.targets[0]
-        if target.has_builder() or target.side_effect:
+        if (target.has_builder() or target.side_effect) and not target.noclean:
             for t in self.targets:
                 if not t.isdir():
                     display("Removed " + str(t))
@@ -235,7 +248,7 @@ class CleanTask(SCons.Taskmaster.Task):
 
     def remove(self):
         target = self.targets[0]
-        if target.has_builder() or target.side_effect:
+        if (target.has_builder() or target.side_effect) and not target.noclean:
             for t in self.targets:
                 try:
                     removed = t.remove()
@@ -575,29 +588,29 @@ def _create_path(plist):
             path = path + '/' + d
     return path
 
+def version_string(label, module):
+    fmt = "\t%s: v%s.%s, %s, by %s on %s\n"
+    return fmt % (label,
+                  module.__version__,
+                  module.__build__,
+                  module.__date__,
+                  module.__developer__,
+                  module.__buildsys__)
 
 class OptParser(OptionParser):
     def __init__(self):
         import __main__
-        import SCons
+
         parts = ["SCons by Steven Knight et al.:\n"]
         try:
-            parts.append("\tscript: v%s.%s, %s, by %s on %s\n" % (__main__.__version__,
-                                                                  __main__.__build__,
-                                                                  __main__.__date__,
-                                                                  __main__.__developer__,
-                                                                  __main__.__buildsys__))
+            parts.append(version_string("script", __main__))
         except KeyboardInterrupt:
             raise
         except:
-            # On win32 there is no scons.py, so there is no __main__.__version__,
-            # hence there is no script version.
+            # On Windows there is no scons.py, so there is no
+            # __main__.__version__, hence there is no script version.
             pass 
-        parts.append("\tengine: v%s.%s, %s, by %s on %s\n" % (SCons.__version__,
-                                                              SCons.__build__,
-                                                              SCons.__date__,
-                                                              SCons.__developer__,
-                                                              SCons.__buildsys__))
+        parts.append(version_string("engine", SCons))
         parts.append("Copyright (c) 2001, 2002, 2003, 2004 The SCons Foundation")
         OptionParser.__init__(self, version=string.join(parts, ''),
                               usage="usage: scons [OPTION] [TARGET] ...")
@@ -616,6 +629,10 @@ class OptParser(OptionParser):
         self.add_option('-C', '--directory', type="string", action = "append",
                         metavar="DIR",
                         help="Change to DIR before doing anything.")
+
+        self.add_option('--cache-debug', action="store",
+                        dest="cache_debug", metavar="FILE",
+                        help="Print CacheDir debug info to FILE.")
 
         self.add_option('--cache-disable', '--no-cache',
                         action="store_true", dest='cache_disable', default=0,
@@ -768,6 +785,10 @@ class OptParser(OptionParser):
         self.add_option('-s', '--silent', '--quiet', action="store_true",
                         default=0, help="Don't print commands.")
 
+        self.add_option('--taskmastertrace', action="store",
+                        dest="taskmastertrace_file", metavar="FILE",
+                        help="Trace Node evaluation to FILE.")
+
         self.add_option('-u', '--up', '--search-up', action="store_const",
                         dest="climb_up", default=0, const=1,
                         help="Search up directory tree for SConstruct,       "
@@ -880,7 +901,7 @@ class SConscriptSettableOptions:
 
     def get(self, name):
         if not self.settable.has_key(name):
-            raise SCons.Error.UserError, "This option is not settable from a SConscript file: %s"%name
+            raise SCons.Errors.UserError, "This option is not settable from a SConscript file: %s"%name
         if hasattr(self.options, name) and getattr(self.options, name) is not None:
             return getattr(self.options, name)
         else:
@@ -888,7 +909,7 @@ class SConscriptSettableOptions:
 
     def set(self, name, value):
         if not self.settable.has_key(name):
-            raise SCons.Error.UserError, "This option is not settable from a SConscript file: %s"%name
+            raise SCons.Errors.UserError, "This option is not settable from a SConscript file: %s"%name
 
         if name == 'num_jobs':
             try:
@@ -1031,6 +1052,9 @@ def _main(args, parser):
         display.set_mode(0)
     if options.silent:
         SCons.Action.print_actions = None
+
+    if options.cache_debug:
+        fs.CacheDebugEnable(options.cache_debug)
     if options.cache_disable:
         def disable(self): pass
         fs.CacheDir = disable
@@ -1229,7 +1253,13 @@ def _main(args, parser):
             return dependencies
 
     progress_display("scons: " + opening_message)
-    taskmaster = SCons.Taskmaster.Taskmaster(nodes, task_class, order)
+    if options.taskmastertrace_file == '-':
+        tmtrace = sys.stdout
+    elif options.taskmastertrace_file:
+        tmtrace = open(options.taskmastertrace_file, 'wb')
+    else:
+        tmtrace = None
+    taskmaster = SCons.Taskmaster.Taskmaster(nodes, task_class, order, tmtrace)
 
     nj = ssoptions.get('num_jobs')
     jobs = SCons.Job.Jobs(nj, taskmaster)
@@ -1268,8 +1298,21 @@ def _exec_main():
         import pdb
         pdb.Pdb().runcall(_main, args, parser)
     elif options.profile_file:
-        import profile
-        prof = profile.Profile()
+        from profile import Profile
+
+        # Some versions of Python 2.4 shipped a profiler that had the
+        # wrong 'c_exception' entry in its dispatch table.  Make sure
+        # we have the right one.  (This may put an unnecessary entry
+        # in the table in earlier versions of Python, but its presence
+        # shouldn't hurt anything).
+        try:
+            dispatch = Profile.dispatch
+        except AttributeError:
+            pass
+        else:
+            dispatch['c_exception'] = Profile.trace_dispatch_return
+
+        prof = Profile()
         try:
             prof.runcall(_main, args, parser)
         except SystemExit:

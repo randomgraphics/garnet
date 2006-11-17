@@ -27,7 +27,7 @@ customizable variables to an SCons build.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Options\__init__.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Options/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import os.path
 import string
@@ -76,6 +76,11 @@ class Options:
 
         self.options.append(option)
 
+    def keys(self):
+        """
+        Returns the keywords for the options
+        """
+        return map(lambda o: o.key, self.options)
 
     def Add(self, key, help="", default=None, validator=None, converter=None, **kw):
         """
@@ -99,7 +104,6 @@ class Options:
             raise SCons.Errors.UserError, "Illegal Options.Add() key `%s'" % str(key)
 
         self._do_add(key, help, default, validator, converter)
-
 
     def AddOptions(self, *optlist):
         """
@@ -238,7 +242,7 @@ class Options:
 
         return string.join(lines, '')
 
-    format = '\n    %s: %s\n        default: %s\n        actual: %s'
+    format = '\n%s: %s\n    default: %s\n    actual: %s\n'
 
     def FormatOptionHelpText(self, env, key, help, default, actual):
         return self.format % (key, help, default, actual)

@@ -27,7 +27,7 @@ Various utility functions go here.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Util.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Util.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import __builtin__
 import copy
@@ -48,6 +48,7 @@ DictType        = types.DictType
 InstanceType    = types.InstanceType
 ListType        = types.ListType
 StringType      = types.StringType
+TupleType       = types.TupleType
 
 try:
     from UserString import UserString
@@ -343,14 +344,15 @@ def print_tree(root, child_func, prune=0, showtags=0, margin=[0], visited={}):
     if showtags:
 
         if showtags == 2:
-            print ' E       = exists'
-            print '  R      = exists in repository only'
-            print '   b     = implicit builder'
-            print '   B     = explicit builder'
-            print '    S    = side effect'
-            print '     P   = precious'
-            print '      A  = always build'
-            print '       C = current'
+            print ' E        = exists'
+            print '  R       = exists in repository only'
+            print '   b      = implicit builder'
+            print '   B      = explicit builder'
+            print '    S     = side effect'
+            print '     P    = precious'
+            print '      A   = always build'
+            print '       C  = current'
+            print '        N = no clean'
             print ''
 
         tags = ['[']
@@ -362,6 +364,7 @@ def print_tree(root, child_func, prune=0, showtags=0, margin=[0], visited={}):
         tags.append(' P'[IDX(root.precious)])
         tags.append(' A'[IDX(root.always_build)])
         tags.append(' C'[IDX(root.current())])
+        tags.append(' N'[IDX(root.noclean)])
         tags.append(']')
 
     else:
@@ -422,6 +425,10 @@ def is_List(obj):
     return t is ListType \
         or (t is InstanceType and isinstance(obj, UserList))
 
+def is_Tuple(obj):
+    t = type(obj)
+    return t is TupleType
+
 if hasattr(types, 'UnicodeType'):
     def is_String(obj):
         t = type(obj)
@@ -437,7 +444,7 @@ else:
 
 
 def is_Scalar(e):
-    return is_String(e) or not is_List(e)
+    return is_String(e) or (not is_List(e) and not is_Tuple(e))
 
 def flatten(sequence, scalarp=is_Scalar, result=None):
     if result is None:
@@ -573,7 +580,7 @@ if sys.platform == 'win32':
             if string.lower(ext) == string.lower(file[-len(ext):]):
                 pathext = ['']
                 break
-        if not is_List(reject):
+        if not is_List(reject) and not is_Tuple(reject):
             reject = [reject]
         for dir in path:
             f = os.path.join(dir, file)
@@ -603,7 +610,7 @@ elif os.name == 'os2':
             if string.lower(ext) == string.lower(file[-len(ext):]):
                 pathext = ['']
                 break
-        if not is_List(reject):
+        if not is_List(reject) and not is_Tuple(reject):
             reject = [reject]
         for dir in path:
             f = os.path.join(dir, file)
@@ -627,7 +634,7 @@ else:
                 return None
         if is_String(path):
             path = string.split(path, os.pathsep)
-        if not is_List(reject):
+        if not is_List(reject) and not is_Tuple(reject):
             reject = [reject]
         for d in path:
             f = os.path.join(d, file)
@@ -666,11 +673,11 @@ def PrependPath(oldpath, newpath, sep = os.pathsep):
     orig = oldpath
     is_list = 1
     paths = orig
-    if not is_List(orig):
+    if not is_List(orig) and not is_Tuple(orig):
         paths = string.split(paths, sep)
         is_list = 0
 
-    if is_List(newpath):
+    if is_List(newpath) or is_Tuple(newpath):
         newpaths = newpath
     else:
         newpaths = string.split(newpath, sep)
@@ -709,11 +716,11 @@ def AppendPath(oldpath, newpath, sep = os.pathsep):
     orig = oldpath
     is_list = 1
     paths = orig
-    if not is_List(orig):
+    if not is_List(orig) and not is_Tuple(orig):
         paths = string.split(paths, sep)
         is_list = 0
 
-    if is_List(newpath):
+    if is_List(newpath) or is_Tuple(newpath):
         newpaths = newpath
     else:
         newpaths = string.split(newpath, sep)
@@ -740,7 +747,7 @@ def AppendPath(oldpath, newpath, sep = os.pathsep):
 if sys.platform == 'cygwin':
     def get_native_path(path):
         """Transforms an absolute path into a native path for the system.  In
-        Cygwin, this converts from a Cygwin path to a Win32 one."""
+        Cygwin, this converts from a Cygwin path to a Windows one."""
         return string.replace(os.popen('cygpath -w ' + path).read(), '\n', '')
 else:
     def get_native_path(path):
@@ -751,7 +758,7 @@ else:
 display = DisplayEngine()
 
 def Split(arg):
-    if is_List(arg):
+    if is_List(arg) or is_Tuple(arg):
         return arg
     elif is_String(arg):
         return string.split(arg)
@@ -865,7 +872,7 @@ class Selector(OrderedDict):
 
 if sys.platform == 'cygwin':
     # On Cygwin, os.path.normcase() lies, so just report back the
-    # fact that the underlying Win32 OS is case-insensitive.
+    # fact that the underlying Windows OS is case-insensitive.
     def case_sensitive_suffixes(s1, s2):
         return 0
 else:

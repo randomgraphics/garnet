@@ -36,7 +36,7 @@ tool definition.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\__init__.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import imp
 import sys
@@ -99,7 +99,17 @@ class Tool:
                     if file:
                         file.close()
             except ImportError, e:
-                pass
+                try:
+                    import zipimport
+                except ImportError:
+                    pass
+                else:
+                    for aPath in self.toolpath:
+                        try:
+                            importer = zipimport.zipimporter(aPath)
+                            return importer.load_module(self.name)
+                        except ImportError, e:
+                            pass
         finally:
             sys.path = oldpythonpath
 
@@ -109,14 +119,23 @@ class Tool:
         except KeyError:
             try:
                 smpath = sys.modules['SCons.Tool'].__path__
-                file, path, desc = imp.find_module(self.name, smpath)
                 try:
+                    file, path, desc = imp.find_module(self.name, smpath)
                     module = imp.load_module(full_name, file, path, desc)
                     setattr(SCons.Tool, self.name, module)
-                    return module
-                finally:
                     if file:
                         file.close()
+                    return module
+                except ImportError, e:
+                    try:
+                        import zipimport
+                        importer = zipimport.zipimporter( sys.modules['SCons.Tool'].__path__[0] )
+                        module = importer.load_module(full_name)
+                        setattr(SCons.Tool, self.name, module)
+                        return module
+                    except ImportError, e:
+                        m = "No tool named '%s': %s" % (self.name, e)
+                        raise SCons.Errors.UserError, m
             except ImportError, e:
                 m = "No tool named '%s': %s" % (self.name, e)
                 raise SCons.Errors.UserError, m
@@ -169,8 +188,12 @@ def createStaticLibBuilder(env):
     try:
         static_lib = env['BUILDERS']['StaticLibrary']
     except KeyError:
-        ar_action = SCons.Action.Action("$ARCOM", "$ARCOMSTR")
-        static_lib = SCons.Builder.Builder(action = ar_action,
+        action_list = [ SCons.Action.Action("$ARCOM", "$ARCOMSTR") ]
+        if env.Detect('ranlib'):
+            ranlib_action = SCons.Action.Action("$RANLIBCOM", "$RANLIBCOMSTR")
+            action_list.append(ranlib_action)
+
+        static_lib = SCons.Builder.Builder(action = action_list,
                                            emitter = '$LIBEMITTER',
                                            prefix = '$LIBPREFIX',
                                            suffix = '$LIBSUFFIX',
@@ -325,8 +348,8 @@ def tool_list(platform, env):
     if str(platform) == 'win32':
         "prefer Microsoft tools on Windows"
         linkers = ['mslink', 'gnulink', 'ilink', 'linkloc', 'ilink32' ]
-        c_compilers = ['msvc', 'mingw', 'gcc', 'intelc', 'icl', 'icc', 'cc', 'bcc32', 'xenon' ]
-        cxx_compilers = ['msvc', 'intelc', 'icc', 'g++', 'c++', 'bcc32', 'xenon' ]
+        c_compilers = ['msvc', 'mingw', 'gcc', 'intelc', 'icl', 'icc', 'cc', 'bcc32' ]
+        cxx_compilers = ['msvc', 'intelc', 'icc', 'g++', 'c++', 'bcc32' ]
         assemblers = ['masm', 'nasm', 'gas', '386asm' ]
         fortran_compilers = ['g77', 'ifl', 'cvf', 'f95', 'f90', 'fortran']
         ars = ['mslib', 'ar', 'tlib']
@@ -381,8 +404,8 @@ def tool_list(platform, env):
     else:
         "prefer GNU tools on all other platforms"
         linkers = ['gnulink', 'mslink', 'ilink']
-        c_compilers = ['gcc', 'msvc', 'intelc', 'icc', 'cc', 'xenon']
-        cxx_compilers = ['g++', 'msvc', 'intelc', 'icc', 'c++', 'xenon']
+        c_compilers = ['gcc', 'msvc', 'intelc', 'icc', 'cc']
+        cxx_compilers = ['g++', 'msvc', 'intelc', 'icc', 'c++']
         assemblers = ['gas', 'nasm', 'masm']
         fortran_compilers = ['f95', 'f90', 'g77', 'ifort', 'ifl', 'fortran']
         ars = ['ar', 'mslib']
@@ -401,7 +424,7 @@ def tool_list(platform, env):
         ar = None
     else:
         # Don't use g++ if the C compiler has built-in C++ support:
-        if c_compiler in ('msvc', 'intelc', 'icc', 'xenon'):
+        if c_compiler in ('msvc', 'intelc', 'icc'):
             cxx_compiler = None
         else:
             cxx_compiler = FindTool(cxx_compilers, env) or cxx_compilers[0]

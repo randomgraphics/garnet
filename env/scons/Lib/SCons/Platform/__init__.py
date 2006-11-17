@@ -21,7 +21,7 @@ their own platform definition.
 
 #
 # Copyright (c) 2001, 2002, 2003, 2004 The SCons Foundation
-#
+# 
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -42,7 +42,7 @@ their own platform definition.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Platform\__init__.py 0.96 2005/08/15 10:39:55 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Platform/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import imp
 import os
@@ -78,7 +78,7 @@ def platform_default():
             return 'darwin'
         else:
             return 'posix'
-    elif osname == 'os2':
+    elif os.name == 'os2':
         return 'os2'
     else:
         return sys.platform
@@ -98,12 +98,19 @@ def platform_module(name = platform_default()):
             try:
                 file, path, desc = imp.find_module(name,
                                         sys.modules['SCons.Platform'].__path__)
-                mod = imp.load_module(full_name, file, path, desc)
-                setattr(SCons.Platform, name, mod)
+                try:
+                    mod = imp.load_module(full_name, file, path, desc)
+                finally:
+                    if file:
+                        file.close()
             except ImportError:
-                raise SCons.Errors.UserError, "No platform named '%s'" % name
-            if file:
-                file.close()
+                try:
+                    import zipimport
+                    importer = zipimport.zipimporter( sys.modules['SCons.Platform'].__path__[0] )
+                    mod = importer.load_module(full_name)
+                except ImportError:
+                    raise SCons.Errors.UserError, "No platform named '%s'" % name
+            setattr(SCons.Platform, name, mod)
     return sys.modules[full_name]
 
 def DefaultToolList(platform, env):
@@ -117,7 +124,7 @@ class PlatformSpec:
 
     def __str__(self):
         return self.name
-
+        
 class TempFileMunge:
     """A callable class.  You can set an Environment variable to this,
     then call it with a string argument, then it will perform temporary
@@ -151,8 +158,8 @@ class TempFileMunge:
             return self.cmd
 
         # We do a normpath because mktemp() has what appears to be
-        # a bug in Win32 that will use a forward slash as a path
-        # delimiter.  Win32's link mistakes that for a command line
+        # a bug in Windows that will use a forward slash as a path
+        # delimiter.  Windows's link mistakes that for a command line
         # switch and barfs.
         #
         # We use the .lnk suffix for the benefit of the Phar Lap
@@ -170,8 +177,8 @@ class TempFileMunge:
             rm = env.Detect('rm') or 'del'
         else:
             # Don't use 'rm' if the shell is not sh, because rm won't
-            # work with the win32 shells (cmd.exe or command.com) or
-            # win32 path names.
+            # work with the Windows shells (cmd.exe or command.com) or
+            # Windows path names.
             rm = 'del'
 
         prefix = env.subst('$TEMPFILEPREFIX')
@@ -199,7 +206,7 @@ class TempFileMunge:
             print("Using tempfile "+native_tmp+" for command line:\n"+
                   str(cmd[0]) + " " + string.join(args," "))
         return [ cmd[0], prefix + native_tmp + '\n' + rm, native_tmp ]
-
+    
 def Platform(name = platform_default()):
     """Select a canned Platform specification.
     """

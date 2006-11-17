@@ -10,7 +10,7 @@ See http://optik.sourceforge.net/
 # Copyright (c) 2001 Gregory P. Ward.  All rights reserved.
 # See the README.txt distributed with Optik for licensing terms.
 
-__revision__ = "src\engine\SCons\Optik\__init__.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/baseline/src/engine/SCons/Optik/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 # Original Optik revision this is based on:
 __Optik_revision__ = "__init__.py,v 1.11 2002/04/11 19:17:34 gward Exp"

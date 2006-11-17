@@ -95,7 +95,7 @@ way for wrapping up the functions.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Action.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Action.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import dis
 import os
@@ -372,6 +372,16 @@ class CommandAction(_ActionAction):
         # Environment.subst_list() for substituting environment
         # variables.
         if __debug__: logInstanceCreation(self, 'Action.CommandAction')
+
+        if not cmdstr is None:
+            if callable(cmdstr):
+                args = (cmdstr,)+args
+            elif not SCons.Util.is_String(cmdstr):
+                raise SCons.Errors.UserError(\
+                    'Invalid command display variable type. ' \
+                    'You must either pass a string or a callback which ' \
+                    'accepts (target, source, env) as parameters.')
+
         apply(_ActionAction.__init__, (self,)+args, kw)
         if SCons.Util.is_List(cmd):
             if filter(SCons.Util.is_List, cmd):
@@ -405,7 +415,7 @@ class CommandAction(_ActionAction):
 
     def strfunction(self, target, source, env):
         if not self.cmdstr is None:
-            c = env.subst(self.cmdstr, 0, target, source)
+            c = env.subst(self.cmdstr, SCons.Subst.SUBST_RAW, target, source)
             if c:
                 return c
         cmd_list, ignore, silent = self.process(target, source, env)
@@ -492,6 +502,7 @@ class CommandGeneratorAction(ActionBase):
     def __init__(self, generator, *args, **kw):
         if __debug__: logInstanceCreation(self, 'Action.CommandGeneratorAction')
         self.generator = generator
+        self.gen_args = args
         self.gen_kw = kw
 
     def _generate(self, target, source, env, for_signature):
@@ -501,7 +512,7 @@ class CommandGeneratorAction(ActionBase):
             target = [target]
 
         ret = self.generator(target=target, source=source, env=env, for_signature=for_signature)
-        gen_cmd = apply(Action, (ret,), self.gen_kw)
+        gen_cmd = apply(Action, (ret,)+self.gen_args, self.gen_kw)
         if not gen_cmd:
             raise SCons.Errors.UserError("Object returned from command generator: %s cannot be used to create an Action." % repr(ret))
         return gen_cmd
@@ -559,6 +570,7 @@ class LazyAction(CommandGeneratorAction, CommandAction):
         if __debug__: logInstanceCreation(self, 'Action.LazyAction')
         apply(CommandAction.__init__, (self, '$'+var)+args, kw)
         self.var = SCons.Util.to_String(var)
+        self.gen_args = args
         self.gen_kw = kw
 
     def get_parent_class(self, env):
@@ -570,7 +582,7 @@ class LazyAction(CommandGeneratorAction, CommandAction):
     def _generate_cache(self, env):
         """__cacheable__"""
         c = env.get(self.var, '')
-        gen_cmd = apply(Action, (c,), self.gen_kw)
+        gen_cmd = apply(Action, (c,)+self.gen_args, self.gen_kw)
         if not gen_cmd:
             raise SCons.Errors.UserError("$%s value %s cannot be used to create an Action." % (self.var, repr(c)))
         return gen_cmd
@@ -599,11 +611,22 @@ if not SCons.Memoize.has_metaclass:
 class FunctionAction(_ActionAction):
     """Class for Python function actions."""
 
-    def __init__(self, execfunction, *args, **kw):
+    def __init__(self, execfunction, cmdstr=_null, *args, **kw):
         if __debug__: logInstanceCreation(self, 'Action.FunctionAction')
+
+        if not cmdstr is _null:
+            if callable(cmdstr):
+                args = (cmdstr,)+args
+            elif not (cmdstr is None or SCons.Util.is_String(cmdstr)):
+                raise SCons.Errors.UserError(\
+                    'Invalid function display variable type. ' \
+                    'You must either pass a string or a callback which ' \
+                    'accepts (target, source, env) as parameters.')
+
         self.execfunction = execfunction
         apply(_ActionAction.__init__, (self,)+args, kw)
         self.varlist = kw.get('varlist', [])
+        self.cmdstr = cmdstr
 
     def function_name(self):
         try:
@@ -615,6 +638,12 @@ class FunctionAction(_ActionAction):
                 return "unknown_python_function"
 
     def strfunction(self, target, source, env):
+        if self.cmdstr is None:
+            return None
+        if not self.cmdstr is _null:
+            c = env.subst(self.cmdstr, SCons.Subst.SUBST_RAW, target, source)
+            if c:
+                return c
         def array(a):
             def quote(s):
                 return '"' + str(s) + '"'
@@ -645,7 +674,15 @@ class FunctionAction(_ActionAction):
             result = self.execfunction(target=target, source=rsources, env=env)
         except EnvironmentError, e:
             # If an IOError/OSError happens, raise a BuildError.
-            raise SCons.Errors.BuildError(node=target, errstr=e.strerror)
+            # Report the name of the file or directory that caused the
+            # error, which might be different from the target being built
+            # (for example, failure to create the directory in which the
+            # target file will appear).
+            try: filename = e.filename
+            except AttributeError: filename = None
+            raise SCons.Errors.BuildError(node=target,
+                                          errstr=e.strerror,
+                                          filename=filename)
         return result
 
     def get_contents(self, target, source, env):
@@ -659,22 +696,33 @@ class FunctionAction(_ActionAction):
         So we remove the line number byte codes to prevent
         recompilations from moving a Python function.
         """
+        execfunction = self.execfunction
         try:
-            # "self.execfunction" is a function.
-            contents = str(self.execfunction.func_code.co_code)
+            # Test if execfunction is a function.
+            code = execfunction.func_code.co_code
         except AttributeError:
-            # "self.execfunction" is a callable object.
             try:
-                contents = str(self.execfunction.__call__.im_func.func_code.co_code)
+                # Test if execfunction is a method.
+                code = execfunction.im_func.func_code.co_code
             except AttributeError:
                 try:
-                    # See if execfunction will do the heavy lifting for us.
-                    gc = self.execfunction.get_contents
+                    # Test if execfunction is a callable object.
+                    code = execfunction.__call__.im_func.func_code.co_code
                 except AttributeError:
-                    # This is weird, just do the best we can.
-                    contents = str(self.execfunction)
+                    try:
+                        # See if execfunction will do the heavy lifting for us.
+                        gc = self.execfunction.get_contents
+                    except AttributeError:
+                        # This is weird, just do the best we can.
+                        contents = str(self.execfunction)
+                    else:
+                        contents = gc(target, source, env)
                 else:
-                    contents = gc(target, source, env)
+                    contents = str(code)
+            else:
+                contents = str(code)
+        else:
+            contents = str(code)
         contents = remove_set_lineno_codes(contents)
         return contents + env.subst(string.join(map(lambda v: '${'+v+'}',
                                                      self.varlist)))

@@ -102,9 +102,9 @@ enable-auto-props = yes
 *.dsw = svn:eol-style=CRLF
 *.sln = svn:eol-style=CRLF
 *.vcproj = svn:eol-style=CRLF
-*.cmd = svn:eol-style=CRLF;svn:executable
-*.py = svn:eol-style=native;svn:executable
-*.sh = svn:eol-style=native;svn:executable
+*.cmd = svn:eol-style=CRLF
+*.py = svn:eol-style=native
+*.sh = svn:eol-style=native
 *.txt = svn:eol-style=native
 *.xml = svn:eol-style=native
 *.bmp = svn:mime-type=image/bmp

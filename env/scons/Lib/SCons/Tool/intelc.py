@@ -32,14 +32,14 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\intelc.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/intelc.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import math, sys, os.path, glob, string, re
 
-is_win32 = sys.platform == 'win32'
+is_windows = sys.platform == 'win32'
 is_linux = sys.platform == 'linux2'
 
-if is_win32:
+if is_windows:
     import SCons.Tool.msvc
 elif is_linux:
     import SCons.Tool.gcc
@@ -71,41 +71,72 @@ def linux_ver_normalize(vstr):
     is greater than 60 it's an old-style number and otherwise new-style.
     Always returns an old-style float like 80 or 90 for compatibility with Windows.
     Shades of Y2K!"""
-    f = float(vstr)
-    if is_win32:
-        return f
+    # Check for version number like 9.1.026: return 91.026
+    m = re.match(r'([0-9]+)\.([0-9]+)\.([0-9]+)', vstr)
+    if m:
+        vmaj,vmin,build = m.groups()
+        return float(vmaj) * 10 + float(vmin) + float(build) / 1000.;
     else:
-        if f < 60: return f * 10.0
-        else: return f
+        f = float(vstr)
+        if is_windows:
+            return f
+        else:
+            if f < 60: return f * 10.0
+            else: return f
+
+def check_abi(abi):
+    """Check for valid ABI (application binary interface) name,
+    and map into canonical one"""
+    if not abi:
+        return None
+    abi = abi.lower()
+    # valid_abis maps input name to canonical name
+    if is_windows:
+        valid_abis = {'ia32'  : 'ia32',
+                      'x86'   : 'ia32',
+                      'ia64'  : 'ia64',
+                      'em64t' : 'ia32e',
+                      'amd64' : 'ia32e'}
+    if is_linux:
+        valid_abis = {'ia32'   : 'ia32',
+                      'x86'    : 'ia32',
+                      'x86_64' : 'x86_64',
+                      'em64t'  : 'x86_64',
+                      'amd64'  : 'x86_64'}
+    try:
+        abi = valid_abis[abi]
+    except KeyError:
+        raise SCons.Errors.UserError, \
+              "Intel compiler: Invalid ABI %s, valid values are %s"% \
+              (abi, valid_abis.keys())
+    return abi
 
 def vercmp(a, b):
     """Compare strings as floats,
     but Intel changed Linux naming convention at 9.0"""
     return cmp(linux_ver_normalize(b), linux_ver_normalize(a))
 
-def get_default_abi():
-    """ Return default api on current platform"""
-    if is_linux:
-        # Check if we are on 64-bit linux, default to 64 then.
-        uname_m = os.uname()[4]
-        if uname_m == 'x86_64':
-            return 'x86_64'
-        else:
-            return 'ia32'
+def get_version_from_list(v, vlist):
+    """See if we can match v (string) in vlist (list of strings)
+    Linux has to match in a fuzzy way."""
+    if is_windows:
+        # Simple case, just find it in the list
+        if v in vlist: return v
+        else: return None
     else:
-        if 'PROCESSOR_ARCHITEW6432' in os.environ:
-            if 'AMD64' == os.environ['PROCESSOR_ARCHITEW6432']:
-                return 'em64t'
-            else:
-                return 'ia64'
-        else:
-            return 'ia32'
+        # Fuzzy match: normalize version number first, but still return
+        # original non-normalized form.
+        fuzz = 0.001
+        for vi in vlist:
+            if math.fabs(linux_ver_normalize(vi) - linux_ver_normalize(v)) < fuzz:
+                return vi
+        # Not found
+        return None
 
 def get_intel_registry_value(valuename, version=None, abi=None):
     """
-    Return a value from the Intel compiler registry tree. (Win32 only)
+    Return a value from the Intel compiler registry tree. (Windows only)
     """
-
     # Open the key:
     K = 'Software\\Intel\\Compilers\\C++\\' + version + '\\'+abi.upper()
     try:
@@ -123,14 +154,16 @@ def get_intel_registry_value(valuename, version=None, abi=None):
               "%s\\%s was not found in the registry."%(K, value)
 
 
-def get_default_compiler_version( abi ):
-    """Returns the default (highest) compiler version of specif ABI. Return None if failed.
+def get_all_compiler_versions():
+    """Returns a sorted list of strings, like "70" or "80" or "9.0"
+    with most recent compiler version first.
     """
     versions=[]
-    if is_win32:
+    if is_windows:
         keyname = 'Software\\Intel\\Compilers\\C++'
         try:
-            k = SCons.Util.RegOpenKeyEx( SCons.Util.HKEY_LOCAL_MACHINE, keyname )
+            k = SCons.Util.RegOpenKeyEx(SCons.Util.HKEY_LOCAL_MACHINE,
+                                        keyname)
         except WindowsError:
             return []
         i = 0
@@ -144,15 +177,18 @@ def get_default_compiler_version( abi ):
                 # and then the install directory deleted or moved (rather
                 # than uninstalling properly), so the registry values
                 # are still there.
-                try:
-                    d = get_intel_registry_value('ProductDir', subkey, abi.upper() )
-                    if os.path.exists(d):
-                        versions.append(subkey)
-                    else:
-                        # Registry points to nonexistent dir.  Ignore this version.
-                        print "Ignoring "+str(get_intel_registry_value('ProductDir', subkey, abi.upper()))
-                except MissingRegistryError:
-                    pass;
+                ok = False
+                for try_abi in ('IA32', 'IA32e',  'IA64'):
+                    try:
+                        d = get_intel_registry_value('ProductDir', subkey, try_abi)
+                    except MissingRegistryError:
+                        continue  # not found in reg, keep going
+                    if os.path.exists(d): ok = True
+                if ok:
+                    versions.append(subkey)
+                else:
+                    # Registry points to nonexistent dir.  Ignore this version.
+                    print "Ignoring "+str(get_intel_registry_value('ProductDir', subkey, 'IA32'))
                 i = i + 1
         except EnvironmentError:
             # no more subkeys
@@ -165,13 +201,9 @@ def get_default_compiler_version( abi ):
             # Typical dir here is /opt/intel/cc/9.0 for IA32,
             # /opt/intel/cce/9.0 for EMT64 (AMD64)
             versions.append(re.search(r'([0-9.]+)$', d).group(1))
-
-    if 0 == len(versions): return None;
-
-    # found!
-    versions = uniquify(versions)
+    versions = uniquify(versions)       # remove dups
     versions.sort(vercmp)
-    return versions[0]
+    return versions
 
 def get_intel_compiler_top(version, abi):
     """
@@ -180,7 +212,7 @@ def get_intel_compiler_top(version, abi):
     The compiler will be in <top>/bin/icl.exe (icc on linux),
     the include dir is <top>/include, etc.
     """
-    if is_win32:
+    if is_windows:
         if not SCons.Util.can_read_reg:
             raise NoRegistryModuleError, "No Windows registry module was found"
         top = get_intel_registry_value('ProductDir', version, abi)
@@ -203,7 +235,7 @@ def get_intel_compiler_top(version, abi):
     return top
 
 
-def generate(env):
+def generate(env, version=None, abi=None, topdir=None, verbose=0):
     """Add Builders and construction variables for Intel C/C++ compiler
     to an Environment.
     args:
@@ -214,35 +246,58 @@ def generate(env):
                         If topdir is used, version and abi are ignored.
       verbose: (int)    if >0, prints compiler version used.
     """
-    if not (is_linux or is_win32):
+    if not (is_linux or is_windows):
         # can't handle this platform
         return
 
-    # determin the abi
-    abi = env.get( 'ICL_ABI', None )
-    if not abi :
-        abi = get_default_abi()
-        if not abi :
-            raise SCons.Errors.UserError, 'Fail to determine default Intel compiler ABI!';
+    if is_windows:
+        SCons.Tool.msvc.generate(env)
+    elif is_linux:
+        SCons.Tool.gcc.generate(env)
 
-    # determine version
-    version = env.get( 'ICL_VERSION', None )
+    # if version is unspecified, use latest
+    vlist = get_all_compiler_versions()
     if not version:
-        version = get_default_compiler_version( abi )
-        if not version:
-            raise SCons.Errors.UserError, 'Fail to find default Intel C++ compiler for ABI=%s'%(abi)
+        if vlist:
+            version = vlist[0]
+    else:
+        # User may have specified '90' but we need to get actual dirname '9.0'.
+        # get_version_from_list does that mapping.
+        v = get_version_from_list(version, vlist)
+        if not v:
+            raise SCons.Errors.UserError, \
+                  "Invalid Intel compiler version %s: "%version + \
+                  "installed versions are %s"%(', '.join(vlist))
+        version = v
 
-    # deterimin compiler root
-    topdir = get_intel_compiler_top(version, abi)
+    # if abi is unspecified, use ia32
+    # alternatives are ia64 for Itanium, or amd64 or em64t or x86_64 (all synonyms here)
+    abi = check_abi(abi)
+    if abi is None:
+        if is_linux:
+            # Check if we are on 64-bit linux, default to 64 then.
+            uname_m = os.uname()[4]
+            if uname_m == 'x86_64':
+                abi = 'x86_64'
+            else:
+                abi = 'ia32'
+        else:
+            # XXX: how would we do the same test on Windows?
+            abi = "ia32"
+
+    if version and not topdir:
+        try:
+            topdir = get_intel_compiler_top(version, abi)
+        except (SCons.Util.RegError, IntelCError):
+            topdir = None
 
     if not topdir:
-
         # Normally this is an error, but it might not be if the compiler is
         # on $PATH and the user is importing their env.
         class ICLTopDirWarning(SCons.Warnings.Warning):
             pass
         if is_linux and not env.Detect('icc') or \
-           is_win32 and not env.Detect('icl'):
+           is_windows and not env.Detect('icl'):
 
             SCons.Warnings.enableWarningClass(ICLTopDirWarning)
             SCons.Warnings.warn(ICLTopDirWarning,
@@ -256,55 +311,14 @@ def generate(env):
                                 "Can't find Intel compiler top dir for version='%s', abi='%s'"%
                                     (str(version), str(abi)))
 
-    else:
+    if topdir:
+        if verbose:
+            print "Intel C compiler: using version '%s' (%g), abi %s, in '%s'"%\
+                  (version, linux_ver_normalize(version),abi,topdir)
+            if is_linux:
+                # Show the actual compiler version by running the compiler.
+                os.system('%s/bin/icc --version'%topdir)
 
-        ## print compiler version
-        #print "Intel C compiler: using version '%s' (%g), abi %s, in '%s'"%\
-        #      (version, linux_ver_normalize(version),abi,topdir)
-        #if is_linux:
-        #    # Show the actual compiler version by running the compiler.
-        #    os.system('%s/bin/icc --version'%topdir)
-
-        if is_win32:
-            # setup Platform SDK
-            if 'ia32' == abi:
-                SCons.Tool.msvc.generate(env)
-            if 'em64t' == abi:
-                if float(env.get('MSVS_VERSION',0)) < 8.0:
-                    raise SCons.Errors.UserError, 'Intel compiler (version=%s, abi=%s) requires VS.NET 2005 or above'%(version,abi)
-                if env.get('MSVS_PLATFORM','') != 'x64':
-                    raise SCons.Errors.UserError, 'Intel compiler (version=%s, abi=%s) requires MSVS_PLATFORM to be set to "x64"'%(version,abi)
-                SCons.Tool.msvc.generate(env)
-                psroot = env.get( 'MSVS_PLATFORMSDK', None )
-                if not psroot:
-                    # TODO: try parse platform sdk directroy from icl enviroment batch file.
-                    psroot = "C:\\Program Files\\Microsoft Platform SDK"
-                    class DefaultPlatformSDKWarning(SCons.Warnings.Warning):
-                        pass
-                    SCons.Warnings.enableWarningClass( DefaultPlatformSDKWarning )
-                    SCons.Warnings.warn( DefaultPlatformSDKWarning, "Fail to detect Microsoft Platform SDK path (set env['MSVS_PLATFORMSDK'] please). Use default one: %s"%psroot )
-                paths = (
-                    ('INCLUDE', 'include'),
-                    ('INCLUDE', 'include\\crt'),
-                    ('INCLUDE', 'include\\crt\\sys'),
-                    ('INCLUDE', 'include\\mfc'),
-                    ('INCLUDE', 'include\\atl'),
-                    ('LIB', 'Lib\\AMD64'), # TODO: what about IA64?
-                    ('LIB', 'Lib\\AMD64\\atlmfc'), # TODO: IA64
-                    ('PATH', 'Bin\\Win64\\x86\\AMD64') ) # TODO: IA64
-                for p in paths:
-                    dir = os.path.join( psroot, p[1] )
-                    if not os.path.exists( dir ):
-                        raise SCons.Errors.UserError, \
-                            'Microsoft Platform SDK directory "%s" not found,' \
-                            'which is required by Intel compiler (version=%s, abi=%s)'%(dir,version,abi)
-                    env.PrependENVPath( p[0], dir )
-            elif 'ia64' == abi:
-                raise SCons.Errors.UserError, "Unsupport icl ABI : %s"%abi
-        elif is_linux:
-            SCons.Tool.gcc.generate(env)
-
-        # setup ICL paths
         env['INTEL_C_COMPILER_TOP'] = topdir
         if is_linux:
             paths={'INCLUDE'         : 'include',
@@ -313,7 +327,7 @@ def generate(env):
                    'LD_LIBRARY_PATH' : 'lib'}
             for p in paths:
                 env.PrependENVPath(p, os.path.join(topdir, paths[p]))
-        if is_win32:
+        if is_windows:
             #       env key    reg valname   default subdir of top
             paths=(('INCLUDE', 'IncludeDir', 'Include'),
                    ('LIB'    , 'LibDir',     'Lib'),
@@ -332,15 +346,10 @@ def generate(env):
                     env.PrependENVPath(p[0], string.split(path, os.pathsep))
                     # print "ICL %s: %s, final=%s"%(p[0], path, str(env['ENV'][p[0]]))
 
-    if is_win32:
+    if is_windows:
         env['CC']        = 'icl'
         env['CXX']       = 'icl'
-        env['AR']        = 'xilib'
         env['LINK']      = 'xilink'
-        if float(env.get('MSVS_VERSION',0)) >= 8.0:
-            env.Append( LINKFLAGS = ['/MANIFEST'] )
-        #env.Append( CCFLAGS = ['/QH'] )
-        #env.Append( LINKFLAGS = ['/VERBOSE:LIB'] )
     else:
         env['CC']        = 'icc'
         env['CXX']       = 'icpc'
@@ -355,7 +364,7 @@ def generate(env):
     if version:
         env['INTEL_C_COMPILER_VERSION']=linux_ver_normalize(version)
 
-    if is_win32:
+    if is_windows:
         # Look for license file dir
         # in system environment, registry, and default location.
         envlicdir = os.environ.get("INTEL_LICENSE_FILE", '')
@@ -386,7 +395,7 @@ def generate(env):
         env['ENV']['INTEL_LICENSE_FILE'] = licdir
 
 def exists(env):
-    if not (is_linux or is_win32):
+    if not (is_linux or is_windows):
         # can't handle this platform
         return 0
 
@@ -397,7 +406,7 @@ def exists(env):
     detected = versions is not None and len(versions) > 0
     if not detected:
         # try env.Detect, maybe that will work
-        if is_win32:
+        if is_windows:
             return env.Detect('icl')
         elif is_linux:
             return env.Detect('icc')

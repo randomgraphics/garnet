@@ -3,7 +3,7 @@
 Provides the OptionParser and Values classes.
 """
 
-__revision__ = "src\engine\SCons\Optik\option_parser.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Optik/option_parser.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 # Original Optik revision this is based on:
 __Optik_revision__ = "option_parser.py,v 1.38.2.1 2002/07/23 01:51:14 gward Exp"

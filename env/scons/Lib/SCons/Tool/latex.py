@@ -31,7 +31,7 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\latex.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/latex.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import SCons.Action
 import SCons.Defaults
@@ -40,7 +40,7 @@ import SCons.Util
 import SCons.Tool
 import SCons.Tool.tex
 
-LaTeXAction = SCons.Action.Action('$LATEXCOM', '$LATEXCOMSTR')
+LaTeXAction = None
 
 def LaTeXAuxFunction(target = None, source= None, env=None):
     SCons.Tool.tex.InternalLaTeXAuxAction( LaTeXAction, target, source, env )
@@ -49,19 +49,22 @@ LaTeXAuxAction = SCons.Action.Action(LaTeXAuxFunction, strfunction=None)
 
 def generate(env):
     """Add Builders and construction variables for LaTeX to an Environment."""
+    global LaTeXAction
+    if LaTeXAction is None:
+        LaTeXAction = SCons.Action.Action('$LATEXCOM', '$LATEXCOMSTR')
 
-    try:
-        bld = env['BUILDERS']['DVI']
-    except KeyError:
-        bld = SCons.Defaults.DVI()
-        env['BUILDERS']['DVI'] = bld
+    import dvi
+    dvi.generate(env)
 
+    bld = env['BUILDERS']['DVI']
     bld.add_action('.ltx', LaTeXAuxAction)
     bld.add_action('.latex', LaTeXAuxAction)
+    bld.add_emitter('.ltx', SCons.Tool.tex.tex_emitter)
+    bld.add_emitter('.latex', SCons.Tool.tex.tex_emitter)
 
     env['LATEX']        = 'latex'
     env['LATEXFLAGS']   = SCons.Util.CLVar('')
-    env['LATEXCOM']     = '$LATEX $LATEXFLAGS $SOURCES'
+    env['LATEXCOM']     = '$LATEX $LATEXFLAGS $SOURCE'
     env['LATEXRETRIES'] = 3
 
 def exists(env):

@@ -4,7 +4,7 @@ Import('GN env compiler variant name target')
 def toRelativePath( files ):
     return [ GN.relpath( File(x).srcnode().path, Dir(target_dir).srcnode().path ) for x in files ]
 def getMsvsPlatform( env ) :
-    p = env['MSVS_PLATFORM']
+    p = env['MSVS8_PLATFORM']
     if 'x86' == p : return 'Win32'
     else: return p
 

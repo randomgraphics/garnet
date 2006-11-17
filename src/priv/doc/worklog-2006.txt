@@ -1,3 +1,6 @@
+- 2006.11.17
+  - upgrade scons to 0.96.93
+
 - 2006.11.8
   - add support to Cg shaders
 

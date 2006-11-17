@@ -1,9 +1,6 @@
-"""SCons.Scanner.D
+"""SCons.Tool.pdf
 
-Scanner for the Digital Mars "D" programming language.
-
-Coded by Andy Friesen
-17 Nov 2003
+Common PDF Builder definition for various other Tool modules that use it.
 
 """
 
@@ -30,25 +27,31 @@ Coded by Andy Friesen
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Scanner/D.py 0.96.93.D001 2006/11/06 08:31:54 knight"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/pdf.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
-import string
+import SCons.Builder
+import SCons.Tool
 
-import SCons.Scanner
+PDFBuilder = None
 
-def DScanner():
-    """Return a prototype Scanner instance for scanning D source files"""
-    ds = D(name = "DScanner",
-           suffixes = '$DSUFFIXES',
-           path_variable = 'DPATH',
-           regex = 'import\s+([^\;]*)\;')
-    return ds
+def generate(env):
+    try:
+        bld = env['BUILDERS']['PDF']
+    except KeyError:
+        global PDFBuilder
+        if PDFBuilder is None:
+            PDFBuilder = SCons.Builder.Builder(action = {},
+                                               source_scanner = SCons.Tool.LaTeXScanner,
+                                               prefix = '$PDFPREFIX',
+                                               suffix = '$PDFSUFFIX',
+                                               emitter = {},
+                                               source_ext_match = None)
+        env['BUILDERS']['PDF'] = PDFBuilder
 
-class D(SCons.Scanner.Classic):
-    def find_include(self, include, source_dir, path):
-        if callable(path): path=path()
-        # translate dots (package separators) to slashes
-        inc = string.replace(include, '.', '/')
+    env['PDFPREFIX'] = ''
+    env['PDFSUFFIX'] = '.pdf'
 
-        i = SCons.Node.FS.find_file(inc + '.d', (source_dir,) + path)
-        return i, include
+def exists(env):
+    # This only puts a skeleton Builder in place, so if someone
+    # references this Tool directly, it's always "available."
+    return 1

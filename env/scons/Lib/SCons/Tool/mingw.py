@@ -31,7 +31,7 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\mingw.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/mingw.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import os
 import os.path
@@ -60,7 +60,7 @@ def shlib_generator(target, source, env, for_signature):
     implib = env.FindIxes(target, 'LIBPREFIX', 'LIBSUFFIX')
     if implib: cmd.append('-Wl,--out-implib,'+implib.get_string(for_signature))
 
-    def_target = env.FindIxes(target, 'WIN32DEFPREFIX', 'WIN32DEFSUFFIX')
+    def_target = env.FindIxes(target, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
     if def_target: cmd.append('-Wl,--output-def,'+def_target.get_string(for_signature))
 
     return [cmd]
@@ -84,12 +84,12 @@ def shlib_emitter(target, source, env):
     # or a def file source. There is no option to disable def file
     # target emitting, because I can't figure out why someone would ever
     # want to turn it off.
-    def_source = env.FindIxes(source, 'WIN32DEFPREFIX', 'WIN32DEFSUFFIX')
-    def_target = env.FindIxes(target, 'WIN32DEFPREFIX', 'WIN32DEFSUFFIX')
+    def_source = env.FindIxes(source, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
+    def_target = env.FindIxes(target, 'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX')
     if not def_source and not def_target:
         target.append(env.ReplaceIxes(dll,  
                                       'SHLIBPREFIX', 'SHLIBSUFFIX',
-                                      'WIN32DEFPREFIX', 'WIN32DEFSUFFIX'))
+                                      'WINDOWSDEFPREFIX', 'WINDOWSDEFSUFFIX'))
     
     return (target, source)
                          
@@ -118,7 +118,7 @@ def generate(env):
         
 
     # Most of mingw is the same as gcc and friends...
-    gnu_tools = ['gcc', 'g++', 'gnulink', 'ar', 'gas']
+    gnu_tools = ['gcc', 'g++', 'gnulink', 'ar', 'gas', 'm4']
     for tool in gnu_tools:
         SCons.Tool.Tool(tool)(env)
 
@@ -130,10 +130,13 @@ def generate(env):
     env['SHLINKFLAGS'] = SCons.Util.CLVar('$LINKFLAGS -shared')
     env['SHLINKCOM']   = shlib_action
     env.Append(SHLIBEMITTER = [shlib_emitter])
-    env['LINK'] = 'g++'
     env['AS'] = 'as'
+
     env['WIN32DEFPREFIX']        = ''
     env['WIN32DEFSUFFIX']        = '.def'
+    env['WINDOWSDEFPREFIX']      = '${WIN32DEFPREFIX}'
+    env['WINDOWSDEFSUFFIX']      = '${WIN32DEFSUFFIX}'
+
     env['SHOBJSUFFIX'] = '.o'
     env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME'] = 1
 
