@@ -181,7 +181,6 @@ def UTIL_newEnv( compiler, variant ):
         MSVS8_PLATFORM = msvs_platform,
         ICL_VERSION    = icl_version,
         ICL_ABI        = icl_abi )
-    print env['ENV']['INCLUDE']
     env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
 
     # setup builder for gcc precompiled header
