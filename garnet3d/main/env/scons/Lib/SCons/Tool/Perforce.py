@@ -31,7 +31,7 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\Perforce.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/Perforce.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import os
 
@@ -74,7 +74,7 @@ def generate(env):
     # Perforce seems to use the PWD environment variable rather than
     # calling getcwd() for itself, which is odd.  If no PWD variable
     # is present, p4 WILL call getcwd, but this seems to cause problems
-    # with good ol' Win32's tilde-mangling for long file names.
+    # with good ol' Windows's tilde-mangling for long file names.
     environ['PWD'] = env.Dir('#').get_abspath()
 
     for var in _import_env:

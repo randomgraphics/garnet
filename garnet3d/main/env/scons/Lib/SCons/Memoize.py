@@ -84,7 +84,7 @@ Some advantages:
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Memoize.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Memoize.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 #TBD: for pickling, should probably revert object to unclassed state...
 
@@ -798,9 +798,14 @@ else:
                 # Make sure filename has os.sep+'SCons'+os.sep so that
                 # SCons.Script.find_deepest_user_frame doesn't stop here
                 import inspect # It's OK, can't get here for Python < 2.1
+                filename = inspect.getsourcefile(_MeMoIZeR_superinit)
+                if not filename:
+                    # This file was compiled at a path name different from
+                    # how it's invoked now, so just make up something.
+                    filename = whoami('superinit', '???')
                 superinitcode = compile(
                     "lambda self, *args, **kw: MPI(self, cls, args, kw)",
-                    inspect.getsourcefile(_MeMoIZeR_superinit) or '<unknown>',
+                    filename,
                     "eval")
                 superinit = eval(superinitcode,
                                  {'cls':cls,

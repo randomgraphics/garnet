@@ -29,12 +29,13 @@ needed by most users.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Debug.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Debug.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
-
-# Recipe 14.10 from the Python Cookbook.
+import os
 import string
 import sys
+
+# Recipe 14.10 from the Python Cookbook.
 try:
     import weakref
 except ImportError:
@@ -98,8 +99,17 @@ else:
     try:
         import resource
     except ImportError:
-        def memory():
-            return 0
+        try:
+            import win32process
+            import win32api
+        except ImportError:
+            def memory():
+                return 0
+        else:
+            def memory():
+                process_handle = win32api.GetCurrentProcess()
+                memory_info = win32process.GetProcessMemoryInfo( process_handle )
+                return memory_info['PeakWorkingSetSize']
     else:
         def memory():
             res = resource.getrusage(resource.RUSAGE_SELF)
@@ -109,20 +119,22 @@ else:
 
 caller_dicts = {}
 
-def caller(back=0):
+def caller(*backlist):
     import traceback
-    tb = traceback.extract_stack(limit=3+back)
-    key = tb[1][:3]
-    try:
-        entry = caller_dicts[key]
-    except KeyError:
-        entry = caller_dicts[key] = {}
-    key = tb[0][:3]
-    try:
-        entry[key] = entry[key] + 1
-    except KeyError:
-        entry[key] = 1
-    return '%s:%d(%s)' % func_shorten(key)
+    if not backlist:
+        backlist = [0]
+    result = []
+    for back in backlist:
+        tb = traceback.extract_stack(limit=3+back)
+        key = tb[1][:3]
+        try:
+            entry = caller_dicts[key]
+        except KeyError:
+            entry = caller_dicts[key] = {}
+        key = tb[0][:3]
+        entry[key] = entry.get(key, 0) + 1
+        result.append('%s:%d(%s)' % func_shorten(key))
+    return result
 
 def dump_caller_counts(file=sys.stdout):
     keys = caller_dicts.keys()
@@ -142,6 +154,12 @@ shorten_list = [
     ( '/src/engine/SCons/',     1),
     ( '/usr/lib/python',        0),
 ]
+
+if os.sep != '/':
+   def platformize(t):
+       return (string.replace(t[0], '/', os.sep), t[1])
+   shorten_list = map(platformize, shorten_list)
+   del platformize
 
 def func_shorten(func_tuple):
     f = func_tuple[0]

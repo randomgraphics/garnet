@@ -31,30 +31,39 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\pdflatex.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/pdflatex.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import SCons.Action
-import SCons.Defaults
 import SCons.Util
+import SCons.Tool.pdf
 import SCons.Tool.tex
 
-PDFLaTeXAction = SCons.Action.Action('$PDFLATEXCOM', '$PDFLATEXCOMSTR')
+PDFLaTeXAction = None
 
 def PDFLaTeXAuxFunction(target = None, source= None, env=None):
     SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
 
-PDFLaTeXAuxAction = SCons.Action.Action(PDFLaTeXAuxFunction, strfunction=None)
+PDFLaTeXAuxAction = None
 
 def generate(env):
     """Add Builders and construction variables for pdflatex to an Environment."""
-    try:
-        bld = env['BUILDERS']['PDF']
-    except KeyError:
-        bld = SCons.Defaults.PDF()
-        env['BUILDERS']['PDF'] = bld
+    global PDFLaTeXAction
+    if PDFLaTeXAction is None:
+        PDFLaTeXAction = SCons.Action.Action('$PDFLATEXCOM', '$PDFLATEXCOMSTR')
 
+    global PDFLaTeXAuxAction
+    if PDFLaTeXAuxAction is None:
+        PDFLaTeXAuxAction = SCons.Action.Action(PDFLaTeXAuxFunction,
+                                                strfunction=None)
+
+    import pdf
+    pdf.generate(env)
+
+    bld = env['BUILDERS']['PDF']
     bld.add_action('.ltx', PDFLaTeXAuxAction)
     bld.add_action('.latex', PDFLaTeXAuxAction)
+    bld.add_emitter('.ltx', SCons.Tool.tex.tex_emitter)
+    bld.add_emitter('.latex', SCons.Tool.tex.tex_emitter)
 
     env['PDFLATEX']      = 'pdflatex'
     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')

@@ -31,10 +31,9 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\gs.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/gs.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import SCons.Action
-import SCons.Defaults
 import SCons.Platform
 import SCons.Util
 
@@ -48,17 +47,20 @@ elif platform == 'win32':
 else:
     gs = 'gs'
 
-GhostscriptAction = SCons.Action.Action('$GSCOM', '$GSCOMSTR')
+GhostscriptAction = None
 
 def generate(env):
     """Add Builders and construction variables for Ghostscript to an
     Environment."""
-    try:
-        bld = env['BUILDERS']['PDF']
-    except KeyError:
-        bld = SCons.Defaults.PDF()
-        env['BUILDERS']['PDF'] = bld
 
+    global GhostscriptAction
+    if GhostscriptAction is None:
+        GhostscriptAction = SCons.Action.Action('$GSCOM', '$GSCOMSTR')
+
+    import pdf
+    pdf.generate(env)
+
+    bld = env['BUILDERS']['PDF']
     bld.add_action('.ps', GhostscriptAction)
 
     env['GS']      = gs

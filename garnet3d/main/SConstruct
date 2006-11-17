@@ -176,12 +176,12 @@ def UTIL_newEnv( compiler, variant ):
     elif 'mingw' == compiler.name :
         tools = ['mingw']
     env = Environment(
-        tools = tools,
-        MSVS_VERSION = msvs_version,
-        MSVS_PLATFORM = msvs_platform,
-        ICL_VERSION = icl_version,
-        ICL_ABI = icl_abi )
-
+        tools          = tools,
+        MSVS_VERSION   = msvs_version,
+        MSVS8_PLATFORM = msvs_platform,
+        ICL_VERSION    = icl_version,
+        ICL_ABI        = icl_abi )
+    print env['ENV']['INCLUDE']
     env.SConsignFile( File( os.path.join( UTIL_buildRoot(), '.sconsign.dbm' ) ).path )
 
     # setup builder for gcc precompiled header

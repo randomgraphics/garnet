@@ -47,7 +47,7 @@ Usage example:
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Options\ListOption.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Options/ListOption.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 # Know Bug: This should behave like a Set-Type, but does not really,
 # since elements can occur twice.
@@ -65,7 +65,7 @@ class _ListOption(UserList.UserList):
         UserList.UserList.__init__(self, filter(None, initlist))
         self.allowedElems = allowedElems[:]
         self.allowedElems.sort()
-        
+
     def __cmp__(self, other):
         raise NotImplementedError
     def __eq__(self, other):
@@ -88,7 +88,7 @@ class _ListOption(UserList.UserList):
             return string.join(self, ',')
     def __repr__(self):
         return self.__str__()
-    
+
 def _converter(val, allowedElems, mapdict):
     """
     """

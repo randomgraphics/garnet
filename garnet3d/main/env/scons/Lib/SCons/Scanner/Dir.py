@@ -21,43 +21,79 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Scanner\Dir.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Scanner/Dir.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import string
 
 import SCons.Node.FS
 import SCons.Scanner
 
+def only_dirs(nodes):
+    is_Dir = lambda n: isinstance(n.disambiguate(), SCons.Node.FS.Dir)
+    return filter(is_Dir, nodes)
+
 def DirScanner(**kw):
     """Return a prototype Scanner instance for scanning
     directories for on-disk files"""
-    def only_dirs(nodes):
-        return filter(lambda n: isinstance(n.disambiguate(),
-                                SCons.Node.FS.Dir),
-                      nodes)
     kw['node_factory'] = SCons.Node.FS.Entry
     kw['recursive'] = only_dirs
-    ds = apply(SCons.Scanner.Base, (scan, "DirScanner"), kw)
-    return ds
+    return apply(SCons.Scanner.Base, (scan_on_disk, "DirScanner"), kw)
 
-skip_entry = {
-   '.' : 1,
-   '..' : 1,
-   '.sconsign' : 1,
-   '.sconsign.dblite' : 1,
-}
+def DirEntryScanner(**kw):
+    """Return a prototype Scanner instance for "scanning"
+    directory Nodes for their in-memory entries"""
+    kw['node_factory'] = SCons.Node.FS.Entry
+    kw['recursive'] = None
+    return apply(SCons.Scanner.Base, (scan_in_memory, "DirEntryScanner"), kw)
 
-def scan(node, env, path=()):
+skip_entry = {}
+
+skip_entry_list = [
+   '.',
+   '..',
+   '.sconsign',
+   # Used by the native dblite.py module.
+   '.sconsign.dblite',
+   # Used by dbm and dumbdbm.
+   '.sconsign.dir',
+   # Used by dbm.
+   '.sconsign.pag',
+   # Used by dumbdbm.
+   '.sconsign.dat',
+   '.sconsign.bak',
+   # Used by some dbm emulations using Berkeley DB.
+   '.sconsign.db',
+]
+
+for skip in skip_entry_list:
+    skip_entry[skip] = 1
+    skip_entry[SCons.Node.FS._my_normcase(skip)] = 1
+
+do_not_scan = lambda k: not skip_entry.has_key(k)
+
+def scan_on_disk(node, env, path=()):
     """
-    This scanner scans a directory for on-disk files and directories therein.
+    Scans a directory for on-disk files and directories therein.
+
+    Looking up the entries will add these to the in-memory Node tree
+    representation of the file system, so all we have to do is just
+    that and then call the in-memory scanning function.
     """
     try:
         flist = node.fs.listdir(node.abspath)
     except (IOError, OSError):
         return []
-    dont_scan = lambda k: not skip_entry.has_key(k)
-    flist = filter(dont_scan, flist)
-    flist.sort()
-    # Add ./ to the beginning of the file name so that if it begins with a
-    # '#' we don't look it up relative to the top-level directory.
-    return map(lambda f, node=node: node.Entry('./'+f), flist)
+    e = node.Entry
+    for f in  filter(do_not_scan, flist):
+        # Add ./ to the beginning of the file name so if it begins with a
+        # '#' we don't look it up relative to the top-level directory.
+        e('./' + f)
+    return scan_in_memory(node, env, path)
+
+def scan_in_memory(node, env, path=()):
+    """
+    "Scans" a Node.FS.Dir for its in-memory entries.
+    """
+    entry_list = filter(do_not_scan, node.entries.keys())
+    entry_list.sort()
+    return map(lambda n, e=node.entries: e[n], entry_list)

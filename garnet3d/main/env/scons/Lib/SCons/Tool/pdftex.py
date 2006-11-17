@@ -31,18 +31,17 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\pdftex.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/pdftex.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import SCons.Action
-import SCons.Defaults
 import SCons.Util
 import SCons.Tool.tex
 
-PDFTeXAction = SCons.Action.Action('$PDFTEXCOM', '$PDFTEXCOMSTR')
+PDFTeXAction = None
 
-# Define an action to build a latex file.  This action might be needed more
-# than once if we are dealing with labels and bibtex
-PDFLaTeXAction = SCons.Action.Action("$PDFLATEXCOM", "$PDFLATEXCOMSTR")
+# This action might be needed more than once if we are dealing with
+# labels and bibtex.
+PDFLaTeXAction = None
 
 def PDFLaTeXAuxAction(target = None, source= None, env=None):
     SCons.Tool.tex.InternalLaTeXAuxAction( PDFLaTeXAction, target, source, env )
@@ -57,18 +56,29 @@ def PDFTeXLaTeXFunction(target = None, source= None, env=None):
         PDFTeXAction(target,source,env)
     return 0
 
-PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction,
-                                     strfunction=None)
+PDFTeXLaTeXAction = None
 
 def generate(env):
     """Add Builders and construction variables for pdftex to an Environment."""
-    try:
-        bld = env['BUILDERS']['PDF']
-    except KeyError:
-        bld = SCons.Defaults.PDF()
-        env['BUILDERS']['PDF'] = bld
+    global PDFTeXAction
+    if PDFTeXAction is None:
+        PDFTeXAction = SCons.Action.Action('$PDFTEXCOM', '$PDFTEXCOMSTR')
 
+    global PDFLaTeXAction
+    if PDFLaTeXAction is None:
+        PDFLaTeXAction = SCons.Action.Action("$PDFLATEXCOM", "$PDFLATEXCOMSTR")
+
+    global PDFTeXLaTeXAction
+    if PDFTeXLaTeXAction is None:
+        PDFTeXLaTeXAction = SCons.Action.Action(PDFTeXLaTeXFunction,
+                                                strfunction=None)
+
+    import pdf
+    pdf.generate(env)
+
+    bld = env['BUILDERS']['PDF']
     bld.add_action('.tex', PDFTeXLaTeXAction)
+    bld.add_emitter('.tex', SCons.Tool.tex.tex_emitter)
 
     env['PDFTEX']      = 'pdftex'
     env['PDFTEXFLAGS'] = SCons.Util.CLVar('')
@@ -77,12 +87,12 @@ def generate(env):
     # Duplicate from latex.py.  If latex.py goes away, then this is still OK.
     env['PDFLATEX']      = 'pdflatex'
     env['PDFLATEXFLAGS'] = SCons.Util.CLVar('')
-    env['PDFLATEXCOM']   = '$PDFLATEX $PDFLATEXFLAGS $SOURCES'
+    env['PDFLATEXCOM']   = '$PDFLATEX $PDFLATEXFLAGS $SOURCE'
     env['LATEXRETRIES']  = 3
 
     env['BIBTEX']      = 'bibtex'
     env['BIBTEXFLAGS'] = SCons.Util.CLVar('')
-    env['BIBTEXCOM']   = '$BIBTEX $BIBTEXFLAGS $SOURCES'
+    env['BIBTEXCOM']   = '$BIBTEX $BIBTEXFLAGS ${SOURCE.base}'
 
 def exists(env):
     return env.Detect('pdftex')

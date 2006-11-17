@@ -24,17 +24,17 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\script\scons.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/script/scons.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
-__version__ = "0.96"
+__version__ = "0.96.93"
 
-__build__ = "0.96"
+__build__ = "D001"
 
-__buildsys__ = "msra-chenli"
+__buildsys__ = "roxbury"
 
-__date__ = "2005/10/08 11:12:05"
+__date__ = "2006/11/06 08:31:54"
 
-__developer__ = "chenli"
+__developer__ = "knight"
 
 import os
 import os.path

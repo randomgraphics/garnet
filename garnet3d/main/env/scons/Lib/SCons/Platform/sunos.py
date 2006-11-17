@@ -30,11 +30,15 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Platform\sunos.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Platform/sunos.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import posix
 
 def generate(env):
     posix.generate(env)
-    #Based on sunSparc 8:32bit   ARG_MAX=1048320 - 3000 for environment expansion
+    # Based on sunSparc 8:32bit
+    # ARG_MAX=1048320 - 3000 for environment expansion
     env['MAXLINELENGTH']  = 1045320
+    env['PKGINFO'] = 'pkginfo'
+    env['PKGCHK'] = '/usr/sbin/pkgchk'
+    env['ENV']['PATH'] = env['ENV']['PATH'] + ':/usr/ccs/bin'

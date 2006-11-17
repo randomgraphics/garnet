@@ -42,7 +42,7 @@ be able to depend on any other type of "thing."
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Node\__init__.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Node/__init__.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 
 
@@ -68,7 +68,6 @@ executing = 2
 up_to_date = 3
 executed = 4
 failed = 5
-stack = 6 # nodes that are in the current Taskmaster execution stack
 
 StateString = {
     0 : "0",
@@ -77,7 +76,6 @@ StateString = {
     3 : "up_to_date",
     4 : "executed",
     5 : "failed",
-    6 : "stack",
 }
 
 # controls whether implicit dependencies are cached:
@@ -97,15 +95,14 @@ Annotate = do_nothing
 
 # Classes for signature info for Nodes.
 
-class NodeInfo:
+class NodeInfoBase:
     """
-    A generic class for signature information for a Node.
+    The generic base class for signature information for a Node.
 
-    We actually expect that modules containing Node subclasses will also
-    subclass NodeInfo, to provide their own logic for dealing with their
-    own Node-specific signature information.
+    Node subclasses should subclass NodeInfoBase to provide their own
+    logic for dealing with their own Node-specific signature information.
     """
-    def __init__(self):
+    def __init__(self, node):
         """A null initializer so that subclasses have a superclass
         initialization method to call for future use.
         """
@@ -117,10 +114,26 @@ class NodeInfo:
     def merge(self, other):
         for key, val in other.__dict__.items():
             self.__dict__[key] = val
+    def prepare_dependencies(self):
+        pass
+    def format(self):
+        try:
+            field_list = self.field_list
+        except AttributeError:
+            field_list = self.__dict__.keys()
+            field_list.sort()
+        fields = []
+        for field in field_list:
+            try:
+                f = getattr(self, field)
+            except AttributeError:
+                f = None
+            fields.append(str(f))
+        return string.join(fields, " ")
 
-class BuildInfo:
+class BuildInfoBase:
     """
-    The generic build information for a Node.
+    The generic base clasee for build information for a Node.
 
     This is what gets stored in a .sconsign file for each target file.
     It contains a NodeInfo instance for this node (signature information
@@ -129,7 +142,7 @@ class BuildInfo:
     implicit dependencies, and action information.
     """
     def __init__(self, node):
-        self.ninfo = node.new_ninfo()
+        self.ninfo = node.NodeInfo(node)
         self.bsourcesigs = []
         self.bdependsigs = []
         self.bimplicitsigs = []
@@ -178,12 +191,15 @@ class Node:
         self.ignore = []        # dependencies to ignore
         self.ignore_dict = {}
         self.implicit = None    # implicit (scanned) dependencies (None means not scanned yet)
-        self.waiting_parents = []
+        self.waiting_parents = {}
+        self.waiting_s_e = {}
+        self.ref_count = 0
         self.wkids = None       # Kids yet to walk, when it's an array
 
         self.env = None
         self.state = no_state
         self.precious = None
+        self.noclean = 0
         self.always_build = None
         self.found_includes = {}
         self.includes = None
@@ -192,12 +208,15 @@ class Node:
         self.side_effects = [] # the side effects of building this target
         self.pre_actions = []
         self.post_actions = []
-        self.linked = 0 # is this node linked to the build directory? 
+        self.linked = 0 # is this node linked to the build directory?
 
         # Let the interface in which the build engine is embedded
         # annotate this Node with its own info (like a description of
         # what line in what file created the node, for example).
         Annotate(self)
+
+    def disambiguate(self):
+        return self
 
     def get_suffix(self):
         return ''
@@ -262,7 +281,7 @@ class Node:
         Returns true iff the node was successfully retrieved.
         """
         return 0
-        
+
     def build(self, **kw):
         """Actually build the node.
 
@@ -282,10 +301,10 @@ class Node:
 
         # Clear the implicit dependency caches of any Nodes
         # waiting for this Node to be built.
-        for parent in self.waiting_parents:
+        for parent in self.waiting_parents.keys():
             parent.implicit = None
             parent.del_binfo()
-        
+
         try:
             new = self.binfo
         except AttributeError:
@@ -297,7 +316,7 @@ class Node:
         # Reset this Node's cached state since it was just built and
         # various state has changed.
         self.clear()
-        
+
         if new:
             # It had build info, so it should be stored in the signature
             # cache.  However, if the build info included a content
@@ -309,18 +328,22 @@ class Node:
                 self.binfo = new
             self.store_info(self.binfo)
 
+    def add_to_waiting_s_e(self, node):
+        self.waiting_s_e[node] = 1
+
     def add_to_waiting_parents(self, node):
-        self.waiting_parents.append(node)
+        self.waiting_parents[node] = 1
 
     def call_for_all_waiting_parents(self, func):
         func(self)
-        for parent in self.waiting_parents:
+        for parent in self.waiting_parents.keys():
             parent.call_for_all_waiting_parents(func)
 
     def postprocess(self):
         """Clean up anything we don't need to hang onto after we've
         been built."""
         self.executor_cleanup()
+        self.waiting_parents = {}
 
     def clear(self):
         """Completely clear a Node of all its cached state (so that it
@@ -337,8 +360,6 @@ class Node:
         self.includes = None
         self.found_includes = {}
         self.implicit = None
-
-        self.waiting_parents = []
 
     def visited(self):
         """Called just after this node has been visited
@@ -442,7 +463,7 @@ class Node:
 
         # Give the scanner a chance to select a more specific scanner
         # for this Node.
-        scanner = scanner.select(self)
+        #scanner = scanner.select(self)
 
         nodes = [self]
         seen = {}
@@ -453,6 +474,7 @@ class Node:
             d = filter(lambda x, seen=seen: not seen.has_key(x),
                        n.get_found_includes(env, scanner, path))
             if d:
+                d = map(lambda N: N.disambiguate(), d)
                 deps.extend(d)
                 for n in d:
                     seen[n] = 1
@@ -460,8 +482,11 @@ class Node:
 
         return deps
 
-    def get_scanner(self, env, kw={}):
+    def get_env_scanner(self, env, kw={}):
         return env.get_scanner(self.scanner_key())
+
+    def get_target_scanner(self):
+        return self.builder.target_scanner
 
     def get_source_scanner(self, node):
         """Fetch the source scanner for the specified node
@@ -484,7 +509,7 @@ class Node:
             # The builder didn't have an explicit scanner, so go look up
             # a scanner from env['SCANNERS'] based on the node's scanner
             # key (usually the file extension).
-            scanner = self.get_scanner(self.get_build_env())
+            scanner = self.get_env_scanner(self.get_build_env())
         if scanner:
             scanner = scanner.select(node)
         return scanner
@@ -514,7 +539,7 @@ class Node:
         # Here's where we implement --implicit-cache.
         if implicit_cache and not implicit_deps_changed:
             implicit = self.get_stored_implicit()
-            if implicit:
+            if implicit is not None:
                 factory = build_env.get_factory(self.builder.source_factory)
                 nodes = []
                 for i in implicit:
@@ -549,12 +574,22 @@ class Node:
 
         # If there's a target scanner, have the executor scan the target
         # node itself and associated targets that might be built.
-        scanner = self.builder.target_scanner
+        scanner = self.get_target_scanner()
         if scanner:
             executor.scan_targets(scanner)
 
     def scanner_key(self):
         return None
+
+    def select_scanner(self, scanner):
+        """Selects a scanner for this Node.
+
+        This is a separate method so it can be overridden by Node
+        subclasses (specifically, Node.FS.Dir) that *must* use their
+        own Scanner and don't select one the Scanner.Selector that's
+        configured for the target.
+        """
+        return scanner.select(self)
 
     def env_set(self, env, safe=0):
         if safe and self.env:
@@ -564,6 +599,9 @@ class Node:
     #
     # SIGNATURE SUBSYSTEM
     #
+
+    NodeInfo = NodeInfoBase
+    BuildInfo = BuildInfoBase
 
     def calculator(self):
         import SCons.Defaults
@@ -591,10 +629,10 @@ class Node:
         return self.get_csig(calc)
 
     def new_ninfo(self):
-        return NodeInfo()
+        return self.NodeInfo(self)
 
     def new_binfo(self):
-        return BuildInfo(self)
+        return self.BuildInfo(self)
 
     def get_binfo(self):
         try:
@@ -708,6 +746,12 @@ class Node:
         """Set the Node's precious value."""
         self.precious = precious
 
+    def set_noclean(self, noclean = 1):
+        """Set the Node's noclean value."""
+        # Make sure noclean is an integer so the --debug=stree
+        # output in Util.py can use it as an index.
+        self.noclean = noclean and 1 or 0
+
     def set_always_build(self, always_build = 1):
         """Set the Node's always_build value."""
         self.always_build = always_build
@@ -716,7 +760,7 @@ class Node:
         """Does this node exists?"""
         # All node exist by default:
         return 1
-    
+
     def rexists(self):
         """Does this node exist locally or in a repositiory?"""
         # There are no repositories by default:
@@ -968,6 +1012,7 @@ class Node:
         old = self.get_stored_info()
         if old is None:
             return None
+        old.prepare_dependencies()
 
         def dictify(result, kids, sigs):
             for k, s in zip(kids, sigs):

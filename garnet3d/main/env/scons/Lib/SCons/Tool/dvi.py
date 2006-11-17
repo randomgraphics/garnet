@@ -1,10 +1,7 @@
-"""engine.SCons.Platform.hpux
+"""SCons.Tool.dvi
 
-Platform-specific initialization for HP-UX systems.
+Common DVI Builder definition for various other Tool modules that use it.
 
-There normally shouldn't be any need to import this module directly.  It
-will usually be imported through the generic SCons.Platform.Platform()
-selection method.
 """
 
 #
@@ -30,11 +27,32 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Platform/hpux.py 0.96.93.D001 2006/11/06 08:31:54 knight"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/dvi.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
-import posix
+import SCons.Builder
+import SCons.Tool
+
+DVIBuilder = None
 
 def generate(env):
-    posix.generate(env)
-    #Based on HP-UX11i: ARG_MAX=2048000 - 3000 for environment expansion
-    env['MAXLINELENGTH']  = 2045000
+    try:
+        bld = env['BUILDERS']['DVI']
+    except KeyError:
+        global DVIBuilder
+
+        if DVIBuilder is None:
+            # The suffix is hard-coded to '.dvi', not configurable via a
+            # construction variable like $DVISUFFIX, because the output
+            # file name is hard-coded within TeX.
+            DVIBuilder = SCons.Builder.Builder(action = {},
+                                               source_scanner = SCons.Tool.LaTeXScanner,
+                                               suffix = '.dvi',
+                                               emitter = {},
+                                               source_ext_match = None)
+
+        env['BUILDERS']['DVI'] = DVIBuilder
+
+def exists(env):
+    # This only puts a skeleton Builder in place, so if someone
+    # references this Tool directly, it's always "available."
+    return 1

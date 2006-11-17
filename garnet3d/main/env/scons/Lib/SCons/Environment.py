@@ -32,12 +32,13 @@ Environment
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Environment.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Environment.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 
 import copy
 import os
 import os.path
+import popen2
 import string
 from UserDict import UserDict
 
@@ -83,7 +84,11 @@ def installFunc(target, source, env):
     return install(target[0].path, source[0].path, env)
 
 def installString(target, source, env):
-    return env.subst(env['INSTALLSTR'], 0, target, source)
+    s = env.get('INSTALLSTR', '')
+    if callable(s):
+        return s(target[0].path, source[0].path, env)
+    else:
+        return env.subst_target_source(s, 0, target, source)
 
 installAction = SCons.Action.Action(installFunc, installString)
 
@@ -435,13 +440,41 @@ class SubstitutionEnvironment:
 
     subst_target_source = subst
 
+    def backtick(self, command):
+        try:
+            popen2.Popen3
+        except AttributeError:
+            (tochild, fromchild, childerr) = os.popen3(self.subst(command))
+            tochild.close()
+            err = childerr.read()
+            out = fromchild.read()
+            fromchild.close()
+            status = childerr.close()
+        else:
+            p = popen2.Popen3(command, 1)
+            p.tochild.close()
+            out = p.fromchild.read()
+            err = p.childerr.read()
+            status = p.wait()
+        if err:
+            import sys
+            sys.stderr.write(err)
+        if status:
+            try:
+                if os.WIFEXITED(status):
+                    status = os.WEXITSTATUS(status)
+            except AttributeError:
+                pass
+            raise OSError("'%s' exited %s" % (command, status))
+        return out
+
     def Override(self, overrides):
         """
         Produce a modified environment whose variables are overriden by
         the overrides dictionaries.  "overrides" is a dictionary that
         will override the variables of this environment.
 
-        This function is much more efficient than Copy() or creating
+        This function is much more efficient than Clone() or creating
         a new Environment because it doesn't copy the construction
         environment dictionary, it just wraps the underlying construction
         environment, and doesn't even create a wrapper object if there
@@ -457,6 +490,196 @@ class SubstitutionEnvironment:
             return env
         else:
             return self
+
+    def ParseFlags(self, *flags):
+        """
+        Parse the set of flags and return a dict with the flags placed
+        in the appropriate entry.  The flags are treated as a typical
+        set of command-line flags for a GNU-like toolchain and used to
+        populate the entries in the dict immediately below.  If one of
+        the flag strings begins with a bang (exclamation mark), it is
+        assumed to be a command and the rest of the string is executed;
+        the result of that evaluation is then added to the dict.
+        """
+        dict = {
+            'ASFLAGS'       : [],
+            'CCFLAGS'       : [],
+            'CPPDEFINES'    : [],
+            'CPPFLAGS'      : [],
+            'CPPPATH'       : [],
+            'FRAMEWORKPATH' : [],
+            'FRAMEWORKS'    : [],
+            'LIBPATH'       : [],
+            'LIBS'          : [],
+            'LINKFLAGS'     : [],
+            'RPATH'         : [],
+        }
+
+        # The use of the "me" parameter to provide our own name for
+        # recursion is an egregious hack to support Python 2.1 and before.
+        def do_parse(arg, me, self = self, dict = dict):
+            # if arg is a sequence, recurse with each element
+            if not arg:
+                return
+
+            if not SCons.Util.is_String(arg):
+                for t in arg: me(t, me)
+                return
+
+            # if arg is a command, execute it
+            if arg[0] == '!':
+                arg = self.backtick(arg[1:])
+
+            # utility function to deal with -D option
+            def append_define(name, dict = dict):
+                t = string.split(name, '=')
+                if len(t) == 1:
+                    dict['CPPDEFINES'].append(name)
+                else:
+                    dict['CPPDEFINES'].append([t[0], string.join(t[1:], '=')])
+
+            # Loop through the flags and add them to the appropriate option.
+            # This tries to strike a balance between checking for all possible
+            # flags and keeping the logic to a finite size, so it doesn't
+            # check for some that don't occur often.  It particular, if the
+            # flag is not known to occur in a config script and there's a way
+            # of passing the flag to the right place (by wrapping it in a -W
+            # flag, for example) we don't check for it.  Note that most
+            # preprocessor options are not handled, since unhandled options
+            # are placed in CCFLAGS, so unless the preprocessor is invoked
+            # separately, these flags will still get to the preprocessor.
+            # Other options not currently handled:
+            #  -iqoutedir      (preprocessor search path)
+            #  -u symbol       (linker undefined symbol)
+            #  -s              (linker strip files)
+            #  -static*        (linker static binding)
+            #  -shared*        (linker dynamic binding)
+            #  -symbolic       (linker global binding)
+            #  -R dir          (deprecated linker rpath)
+            # IBM compilers may also accept -qframeworkdir=foo
+    
+            params = string.split(arg)
+            append_next_arg_to = None   # for multi-word args
+            for arg in params:
+                if append_next_arg_to:
+                   if append_next_arg_to == 'CPPDEFINES':
+                       append_define(arg)
+                   elif append_next_arg_to == '-include':
+                       t = ('-include', self.fs.File(arg))
+                       dict['CCFLAGS'].append(t)
+                   elif append_next_arg_to == '-isysroot':
+                       t = ('-isysroot', arg)
+                       dict['CCFLAGS'].append(t)
+                       dict['LINKFLAGS'].append(t)
+                   elif append_next_arg_to == '-arch':
+                       t = ('-arch', arg)
+                       dict['CCFLAGS'].append(t)
+                       dict['LINKFLAGS'].append(t)
+                   else:
+                       dict[append_next_arg_to].append(arg)
+                   append_next_arg_to = None
+                elif not arg[0] in ['-', '+']:
+                    dict['LIBS'].append(self.fs.File(arg))
+                elif arg[:2] == '-L':
+                    if arg[2:]:
+                        dict['LIBPATH'].append(arg[2:])
+                    else:
+                        append_next_arg_to = 'LIBPATH'
+                elif arg[:2] == '-l':
+                    if arg[2:]:
+                        dict['LIBS'].append(arg[2:])
+                    else:
+                        append_next_arg_to = 'LIBS'
+                elif arg[:2] == '-I':
+                    if arg[2:]:
+                        dict['CPPPATH'].append(arg[2:])
+                    else:
+                        append_next_arg_to = 'CPPPATH'
+                elif arg[:4] == '-Wa,':
+                    dict['ASFLAGS'].append(arg[4:])
+                    dict['CCFLAGS'].append(arg)
+                elif arg[:4] == '-Wl,':
+                    if arg[:11] == '-Wl,-rpath=':
+                        dict['RPATH'].append(arg[11:])
+                    elif arg[:7] == '-Wl,-R,':
+                        dict['RPATH'].append(arg[7:])
+                    elif arg[:6] == '-Wl,-R':
+                        dict['RPATH'].append(arg[6:])
+                    else:
+                        dict['LINKFLAGS'].append(arg)
+                elif arg[:4] == '-Wp,':
+                    dict['CPPFLAGS'].append(arg)
+                elif arg[:2] == '-D':
+                    if arg[2:]:
+                        append_define(arg[2:])
+                    else:
+                        appencd_next_arg_to = 'CPPDEFINES'
+                elif arg == '-framework':
+                    append_next_arg_to = 'FRAMEWORKS'
+                elif arg[:14] == '-frameworkdir=':
+                    dict['FRAMEWORKPATH'].append(arg[14:])
+                elif arg[:2] == '-F':
+                    if arg[2:]:
+                        dict['FRAMEWORKPATH'].append(arg[2:])
+                    else:
+                        append_next_arg_to = 'FRAMEWORKPATH'
+                elif arg == '-mno-cygwin':
+                    dict['CCFLAGS'].append(arg)
+                    dict['LINKFLAGS'].append(arg)
+                elif arg == '-mwindows':
+                    dict['LINKFLAGS'].append(arg)
+                elif arg == '-pthread':
+                    dict['CCFLAGS'].append(arg)
+                    dict['LINKFLAGS'].append(arg)
+                elif arg[0] == '+':
+                    dict['CCFLAGS'].append(arg)
+                    dict['LINKFLAGS'].append(arg)
+                elif arg in ['-include', '-isysroot', '-arch']:
+                    append_next_arg_to = arg
+                else:
+                    dict['CCFLAGS'].append(arg)
+    
+        for arg in flags:
+            do_parse(arg, do_parse)
+        return dict
+
+    def MergeFlags(self, args, unique=1):
+        """
+        Merge the dict in args into the construction variables.  If args
+        is not a dict, it is converted into a dict using ParseFlags.
+        If unique is not set, the flags are appended rather than merged.
+        """
+
+        if not SCons.Util.is_Dict(args):
+            args = self.ParseFlags(args)
+        if not unique:
+            apply(self.Append, (), args)
+            return self
+        for key, value in args.items():
+            if value == '':
+                continue
+            try:
+                orig = self[key]
+            except KeyError:
+                orig = value
+            else:
+                if len(orig) == 0: orig = []
+                elif not SCons.Util.is_List(orig): orig = [orig]
+                orig = orig + value
+            t = []
+            if key[-4:] == 'PATH':
+                ### keep left-most occurence
+                for v in orig:
+                    if v not in t:
+                        t.append(v)
+            else:
+                ### keep right-most occurence
+                orig.reverse()
+                for v in orig:
+                    if v not in t:
+                        t.insert(0, v)
+            self[key] = t
+        return self
 
 class Base(SubstitutionEnvironment):
     """Base class for "real" construction Environments.  These are the
@@ -523,8 +746,19 @@ class Base(SubstitutionEnvironment):
         # environment before calling the tools, because they may use
         # some of them during initialization.
         apply(self.Replace, (), kw)
+        keys = kw.keys()
         if options:
+            keys = keys + options.keys()
             options.Update(self)
+
+        save = {}
+        for k in keys:
+            try:
+                save[k] = self._dict[k]
+            except KeyError:
+                # No value may have been set if they tried to pass in a
+                # reserved variable name like TARGETS.
+                pass
 
         if tools is None:
             tools = self._dict.get('TOOLS', None)
@@ -532,12 +766,11 @@ class Base(SubstitutionEnvironment):
                 tools = ['default']
         apply_tools(self, tools, toolpath)
 
-        # Now re-apply the passed-in variables and customizable options
+        # Now restore the passed-in variables and customized options
         # to the environment, since the values the user set explicitly
         # should override any values set by the tools.
-        apply(self.Replace, (), kw)
-        if options:
-            options.Update(self)
+        for key, val in save.items():
+            self._dict[key] = val
 
     #######################################################################
     # Utility methods that are primarily for internal use by SCons.
@@ -676,19 +909,19 @@ class Base(SubstitutionEnvironment):
                 self._dict[key] = val
             else:
                 try:
-                    # Most straightforward:  just try to add them
-                    # together.  This will work in most cases, when the
-                    # original and new values are of compatible types.
-                    self._dict[key] = orig + val
-                except TypeError:
+                    # Check if the original looks like a dictionary.
+                    # If it is, we can't just try adding the value because
+                    # dictionaries don't have __add__() methods, and
+                    # things like UserList will incorrectly coerce the
+                    # original dict to a list (which we don't want).
+                    update_dict = orig.update
+                except AttributeError:
                     try:
-                        # Try to update a dictionary value with another.
-                        # If orig isn't a dictionary, it won't have an
-                        # update() method; if val isn't a dictionary,
-                        # it won't have a keys() method.  Either way,
-                        # it's an AttributeError.
-                        orig.update(val)
-                    except AttributeError:
+                        # Most straightforward:  just try to add them
+                        # together.  This will work in most cases, when the
+                        # original and new values are of compatible types.
+                        self._dict[key] = orig + val
+                    except (KeyError, TypeError):
                         try:
                             # Check if the original is a list.
                             add_to_orig = orig.append
@@ -706,6 +939,17 @@ class Base(SubstitutionEnvironment):
                             # value to it (if there's a value to append).
                             if val:
                                 add_to_orig(val)
+                else:
+                    # The original looks like a dictionary, so update it
+                    # based on what we think the value looks like.
+                    if SCons.Util.is_List(val):
+                        for v in val:
+                            orig[v] = None
+                    else:
+                        try:
+                            update_dict(val)
+                        except (AttributeError, TypeError, ValueError):
+                            orig[val] = None
         self.scanner_map_delete(kw)
 
     def AppendENVPath(self, name, newpath, envname = 'ENV', sep = os.pathsep):
@@ -733,7 +977,7 @@ class Base(SubstitutionEnvironment):
         """
         kw = copy_non_reserved_keywords(kw)
         for key, val in kw.items():
-            if not self._dict.has_key(key) or not self._dict[key]:
+            if not self._dict.has_key(key) or self._dict[key] in ('', None):
                 self._dict[key] = val
             elif SCons.Util.is_Dict(self._dict[key]) and \
                  SCons.Util.is_Dict(val):
@@ -755,7 +999,7 @@ class Base(SubstitutionEnvironment):
                     self._dict[key] = self._dict[key] + val
         self.scanner_map_delete(kw)
 
-    def Copy(self, tools=[], toolpath=None, **kw):
+    def Clone(self, tools=[], toolpath=None, **kw):
         """Return a copy of a construction Environment.  The
         copy is like a Python "deep copy"--that is, independent
         copies are made recursively of each objects--except that
@@ -779,8 +1023,11 @@ class Base(SubstitutionEnvironment):
         for key, value in kw.items():
             new[key] = SCons.Subst.scons_subst_once(value, self, key)
         apply(clone.Replace, (), new)
-        if __debug__: logInstanceCreation(self, 'Environment.EnvironmentCopy')
+        if __debug__: logInstanceCreation(self, 'Environment.EnvironmentClone')
         return clone
+
+    def Copy(self, *args, **kw):
+        return apply(self.Clone, args, kw)
 
     def Detect(self, progs):
         """Return the first available program in progs.  __cacheable__
@@ -838,82 +1085,22 @@ class Base(SubstitutionEnvironment):
     def ParseConfig(self, command, function=None, unique=1):
         """
         Use the specified function to parse the output of the command
-        in order to modify the current environment. The 'command' can
+        in order to modify the current environment.  The 'command' can
         be a string or a list of strings representing a command and
-        it's arguments. 'Function' is an optional argument that takes
-        the environment and the output of the command. If no function is
-        specified, the output will be treated as the output of a typical
-        'X-config' command (i.e. gtk-config) and used to append to the
-        ASFLAGS, CCFLAGS, CPPFLAGS, CPPPATH, LIBPATH, LIBS, LINKFLAGS
-        and CCFLAGS variables.
+        its arguments.  'Function' is an optional argument that takes
+        the environment, the output of the command, and the unique flag.
+        If no function is specified, MergeFlags, which treats the output
+        as the result of a typical 'X-config' command (i.e. gtk-config),
+        will merge the output into the appropriate variables.
         """
-
-        # the default parse function
-        def parse_conf(env, output, fs=self.fs, unique=unique):
-            dict = {
-                'ASFLAGS'       : [],
-                'CCFLAGS'       : [],
-                'CPPFLAGS'      : [],
-                'CPPPATH'       : [],
-                'LIBPATH'       : [],
-                'LIBS'          : [],
-                'LINKFLAGS'     : [],
-            }
-    
-            params = string.split(output)
-            append_next_arg_to=''       # for multi-word args
-            for arg in params:
-                if append_next_arg_to:
-                    dict[append_next_arg_to].append(arg)
-                    append_next_arg_to = ''
-                elif arg[0] != '-':
-                    dict['LIBS'].append(fs.File(arg))
-                elif arg[:2] == '-L':
-                    if arg[2:]:
-                        dict['LIBPATH'].append(arg[2:])
-                    else:
-                        append_next_arg_to = 'LIBPATH'
-                elif arg[:2] == '-l':
-                    if arg[2:]:
-                        dict['LIBS'].append(arg[2:])
-                    else:
-                        append_next_arg_to = 'LIBS'
-                elif arg[:2] == '-I':
-                    if arg[2:]:
-                        dict['CPPPATH'].append(arg[2:])
-                    else:
-                        append_next_arg_to = 'CPPPATH'
-                elif arg[:4] == '-Wa,':
-                    dict['ASFLAGS'].append(arg)
-                elif arg[:4] == '-Wl,':
-                    dict['LINKFLAGS'].append(arg)
-                elif arg[:4] == '-Wp,':
-                    dict['CPPFLAGS'].append(arg)
-                elif arg == '-framework':
-                    dict['LINKFLAGS'].append(arg)
-                    append_next_arg_to='LINKFLAGS'
-                elif arg == '-mno-cygwin':
-                    dict['CCFLAGS'].append(arg)
-                    dict['LINKFLAGS'].append(arg)
-                elif arg == '-mwindows':
-                    dict['LINKFLAGS'].append(arg)
-                elif arg == '-pthread':
-                    dict['CCFLAGS'].append(arg)
-                    dict['LINKFLAGS'].append(arg)
-                else:
-                    dict['CCFLAGS'].append(arg)
-            if unique:
-                appender = env.AppendUnique
-            else:
-                appender = env.Append
-            apply(appender, (), dict)
-    
         if function is None:
+            def parse_conf(env, cmd, unique=unique):
+                return env.MergeFlags(cmd, unique)
             function = parse_conf
-        if type(command) is type([]):
+        if SCons.Util.is_List(command):
             command = string.join(command)
         command = self.subst(command)
-        return function(self, os.popen(command).read())
+        return function(self, self.backtick(command))
 
     def ParseDepends(self, filename, must_exist=None, only_one=0):
         """
@@ -975,19 +1162,19 @@ class Base(SubstitutionEnvironment):
                 self._dict[key] = val
             else:
                 try:
-                    # Most straightforward:  just try to add them
-                    # together.  This will work in most cases, when the
-                    # original and new values are of compatible types.
-                    self._dict[key] = val + orig
-                except TypeError:
+                    # Check if the original looks like a dictionary.
+                    # If it is, we can't just try adding the value because
+                    # dictionaries don't have __add__() methods, and
+                    # things like UserList will incorrectly coerce the
+                    # original dict to a list (which we don't want).
+                    update_dict = orig.update
+                except AttributeError:
                     try:
-                        # Try to update a dictionary value with another.
-                        # If orig isn't a dictionary, it won't have an
-                        # update() method; if val isn't a dictionary,
-                        # it won't have a keys() method.  Either way,
-                        # it's an AttributeError.
-                        orig.update(val)
-                    except AttributeError:
+                        # Most straightforward:  just try to add them
+                        # together.  This will work in most cases, when the
+                        # original and new values are of compatible types.
+                        self._dict[key] = val + orig
+                    except (KeyError, TypeError):
                         try:
                             # Check if the added value is a list.
                             add_to_val = val.append
@@ -1005,6 +1192,17 @@ class Base(SubstitutionEnvironment):
                             if orig:
                                 add_to_val(orig)
                             self._dict[key] = val
+                else:
+                    # The original looks like a dictionary, so update it
+                    # based on what we think the value looks like.
+                    if SCons.Util.is_List(val):
+                        for v in val:
+                            orig[v] = None
+                    else:
+                        try:
+                            update_dict(val)
+                        except (AttributeError, TypeError, ValueError):
+                            orig[val] = None
         self.scanner_map_delete(kw)
 
     def PrependENVPath(self, name, newpath, envname = 'ENV', sep = os.pathsep):
@@ -1032,7 +1230,7 @@ class Base(SubstitutionEnvironment):
         """
         kw = copy_non_reserved_keywords(kw)
         for key, val in kw.items():
-            if not self._dict.has_key(key) or not self._dict[key]:
+            if not self._dict.has_key(key) or self._dict[key] in ('', None):
                 self._dict[key] = val
             elif SCons.Util.is_Dict(self._dict[key]) and \
                  SCons.Util.is_Dict(val):
@@ -1137,7 +1335,11 @@ class Base(SubstitutionEnvironment):
     #######################################################################
 
     def Action(self, *args, **kw):
-        nargs = self.subst(args)
+        def subst_string(a, self=self):
+            if SCons.Util.is_String(a):
+                a = self.subst(a)
+            return a
+        nargs = map(subst_string, args)
         nkw = self.subst_kw(kw)
         return apply(SCons.Action.Action, nargs, nkw)
 
@@ -1263,6 +1465,7 @@ class Base(SubstitutionEnvironment):
         for an action."""
         bkw = {
             'action' : action,
+            'target_factory' : self.fs.Entry,
             'source_factory' : self.fs.Entry,
         }
         try: bkw['source_scanner'] = kw['source_scanner']
@@ -1283,6 +1486,15 @@ class Base(SubstitutionEnvironment):
         """
         """
         return apply(self.fs.Dir, (self.subst(name),) + args, kw)
+
+    def NoClean(self, *targets):
+        """Tags a target so that it will not be cleaned by -c"""
+        tlist = []
+        for t in targets:
+            tlist.extend(self.arg2nodes(t, self.fs.Entry))
+        for t in tlist:
+            t.set_noclean()
+        return tlist
 
     def Entry(self, name, *args, **kw):
         """
@@ -1331,25 +1543,37 @@ class Base(SubstitutionEnvironment):
         try:
             dnodes = self.arg2nodes(dir, self.fs.Dir)
         except TypeError:
-            raise SCons.Errors.UserError, "Target `%s' of Install() is a file, but should be a directory.  Perhaps you have the Install() arguments backwards?" % str(dir)
+            fmt = "Target `%s' of Install() is a file, but should be a directory.  Perhaps you have the Install() arguments backwards?"
+            raise SCons.Errors.UserError, fmt % str(dir)
         try:
-            sources = self.arg2nodes(source, self.fs.File)
+            sources = self.arg2nodes(source, self.fs.Entry)
         except TypeError:
             if SCons.Util.is_List(source):
-                raise SCons.Errors.UserError, "Source `%s' of Install() contains one or more non-files.  Install() source must be one or more files." % repr(map(str, source))
+                s = repr(map(str, source))
             else:
-                raise SCons.Errors.UserError, "Source `%s' of Install() is not a file.  Install() source must be one or more files." % str(source)
+                s = str(source)
+            fmt = "Source `%s' of Install() is neither a file nor a directory.  Install() source must be one or more files or directories"
+            raise SCons.Errors.UserError, fmt % s
         tgt = []
         for dnode in dnodes:
             for src in sources:
-                target = self.fs.File(src.name, dnode)
+                target = self.fs.Entry(src.name, dnode)
                 tgt.extend(InstallBuilder(self, target, src))
         return tgt
 
     def InstallAs(self, target, source):
         """Install sources as targets."""
-        sources = self.arg2nodes(source, self.fs.File)
-        targets = self.arg2nodes(target, self.fs.File)
+        sources = self.arg2nodes(source, self.fs.Entry)
+        targets = self.arg2nodes(target, self.fs.Entry)
+        if len(sources) != len(targets):
+            if not SCons.Util.is_List(target):
+                target = [target]
+            if not SCons.Util.is_List(source):
+                source = [source]
+            t = repr(map(str, target))
+            s = repr(map(str, source))
+            fmt = "Target (%s) and source (%s) lists of InstallAs() must be the same length."
+            raise SCons.Errors.UserError, fmt % (t, s)
         result = []
         for src, tgt in map(lambda x, y: (x, y), sources, targets):
             result.extend(InstallBuilder(self, tgt, src))
@@ -1459,10 +1683,10 @@ class Base(SubstitutionEnvironment):
         else:
             raise SCons.Errors.UserError, "Unknown target signature type '%s'"%type
 
-    def Value(self, value):
+    def Value(self, value, built_value=None):
         """
         """
-        return SCons.Node.Python.Value(value)
+        return SCons.Node.Python.Value(value, built_value)
 
 class OverrideEnvironment(Base):
     """A proxy that overrides variables in a wrapped construction

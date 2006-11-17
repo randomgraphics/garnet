@@ -32,7 +32,7 @@ from distutils.msvccompiler.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Defaults.py 0.96 2005/11/07 20:52:44 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Defaults.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 
 
@@ -109,6 +109,7 @@ ProgScan = SCons.Tool.ProgramScanner
 # should go.  Leave it here for now.
 import SCons.Scanner.Dir
 DirScanner = SCons.Scanner.Dir.DirScanner()
+DirEntryScanner = SCons.Scanner.Dir.DirEntryScanner()
 
 # Actions for common languages.
 CAction = SCons.Action.Action("$CCCOM", "$CCCOMSTR")
@@ -123,23 +124,6 @@ LinkAction = SCons.Action.Action("$LINKCOM", "$LINKCOMSTR")
 ShLinkAction = SCons.Action.Action("$SHLINKCOM", "$SHLINKCOMSTR")
 
 LdModuleLinkAction = SCons.Action.Action("$LDMODULECOM", "$LDMODULECOMSTR")
-
-def DVI():
-    """Common function to generate a DVI file Builder."""
-    return SCons.Builder.Builder(action = {},
-                                 source_scanner = LaTeXScan,
-                                 # The suffix is not configurable via a
-                                 # construction variable like $DVISUFFIX
-                                 # because the output file name is
-                                 # hard-coded within TeX.
-                                 suffix = '.dvi')
-
-def PDF():
-    """A function for generating the PDF Builder."""
-    return SCons.Builder.Builder(action = { },
-                                 source_scanner = LaTeXScan,
-                                 prefix = '$PDFPREFIX',
-                                 suffix = '$PDFSUFFIX')
 
 # Common tasks that we allow users to perform in platform-independent
 # ways by creating ActionFactory instances.
@@ -189,13 +173,33 @@ Touch = ActionFactory(touch_func,
                       lambda file: 'Touch("%s")' % file)
 
 # Internal utility functions
-def copyFunc(dest, source, env):
-    """Install a source file into a destination by copying it (and its
-    permission/mode bits)."""
-    shutil.copy2(source, dest)
-    st = os.stat(source)
-    os.chmod(dest, stat.S_IMODE(st[stat.ST_MODE]) | stat.S_IWRITE)
+def installFunc(dest, source, env):
+    """Install a source file or directory into a destination by copying,
+    (including copying permission/mode bits)."""
+
+    if os.path.isdir(source):
+        if os.path.exists(dest):
+            if not os.path.isdir(dest):
+                raise SCons.Errors.UserError, "cannot overwrite non-directory `%s' with a directory `%s'" % (str(dest), str(source))
+        else:
+            parent = os.path.split(dest)[0]
+            if not os.path.exists(parent):
+                os.makedirs(parent)
+        shutil.copytree(source, dest)
+    else:
+        shutil.copy2(source, dest)
+        st = os.stat(source)
+        os.chmod(dest, stat.S_IMODE(st[stat.ST_MODE]) | stat.S_IWRITE)
+
     return 0
+
+def installStr(dest, source, env):
+    source = str(source)
+    if os.path.isdir(source):
+        type = 'directory'
+    else:
+        type = 'file'
+    return 'Install %s: "%s" as "%s"' % (type, source, dest)
 
 def _concat(prefix, list, suffix, env, f=lambda x: x, target=None, source=None):
     """Creates a new list from 'list' by first interpolating each
@@ -350,17 +354,14 @@ ConstructionEnvironment = {
     'SCANNERS'      : [],
     'CONFIGUREDIR'  : '#/.sconf_temp',
     'CONFIGURELOG'  : '#/config.log',
-    'INSTALLSTR'    : 'Install file: "$SOURCE" as "$TARGET"',
     'CPPSUFFIXES'   : SCons.Tool.CSuffixes,
     'DSUFFIXES'     : SCons.Tool.DSuffixes,
-    'IDLSUFFIXES'   : SCons.Tool.IDLSuffixes,
-    'LATEXSUFFIXES' : SCons.Tool.LaTeXSuffixes,
-    'PDFPREFIX'     : '',
-    'PDFSUFFIX'     : '.pdf',
-    'PSPREFIX'      : '',
-    'PSSUFFIX'      : '.ps',
     'ENV'           : {},
-    'INSTALL'       : copyFunc,
+    'IDLSUFFIXES'   : SCons.Tool.IDLSuffixes,
+    'INSTALL'       : installFunc,
+    'INSTALLSTR'    : installStr,
+    '_installStr'   : installStr,
+    'LATEXSUFFIXES' : SCons.Tool.LaTeXSuffixes,
     '_concat'       : _concat,
     '_defines'      : _defines,
     '_stripixes'    : _stripixes,

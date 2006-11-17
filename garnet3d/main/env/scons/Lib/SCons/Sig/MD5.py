@@ -28,13 +28,13 @@ utility.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Sig\MD5.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Sig/MD5.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import imp
 import string
 
 # Force Python to load the builtin "md5" module.  If we do this with a
-# normal import statement, then case-insensitive systems (Win32) get
+# normal import statement, then case-insensitive systems (Windows) get
 # confused and thinks there's a case mismatch with *this* MD5.py module.
 file, name, desc = imp.find_module('md5')
 try:

@@ -31,7 +31,7 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\as.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/as.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import SCons.Defaults
 import SCons.Tool
@@ -52,11 +52,15 @@ def generate(env):
 
     for suffix in ASSuffixes:
         static_obj.add_action(suffix, SCons.Defaults.ASAction)
+        shared_obj.add_action(suffix, SCons.Defaults.ASAction)
         static_obj.add_emitter(suffix, SCons.Defaults.StaticObjectEmitter)
+        shared_obj.add_emitter(suffix, SCons.Defaults.SharedObjectEmitter)
 
     for suffix in ASPPSuffixes:
         static_obj.add_action(suffix, SCons.Defaults.ASPPAction)
+        shared_obj.add_action(suffix, SCons.Defaults.ASPPAction)
         static_obj.add_emitter(suffix, SCons.Defaults.StaticObjectEmitter)
+        shared_obj.add_emitter(suffix, SCons.Defaults.SharedObjectEmitter)
 
     env['AS']        = env.Detect(assemblers) or 'as'
     env['ASFLAGS']   = SCons.Util.CLVar('')

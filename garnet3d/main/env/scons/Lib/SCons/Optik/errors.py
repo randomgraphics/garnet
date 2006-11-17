@@ -3,7 +3,7 @@
 Exception classes used by Optik.
 """
 
-__revision__ = "src\engine\SCons\Optik\errors.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/baseline/src/engine/SCons/Optik/errors.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 # Original Optik revision this is based on:
 __Optik_revision__ = "errors.py,v 1.5 2002/02/13 23:29:47 gward Exp"

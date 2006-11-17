@@ -31,7 +31,7 @@ selection method.
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__revision__ = "src\engine\SCons\Tool\ar.py 0.96 2005/10/08 11:12:05 chenli"
+__revision__ = "/home/scons/scons/branch.0/branch.96/baseline/src/engine/SCons/Tool/ar.py 0.96.93.D001 2006/11/06 08:31:54 knight"
 
 import SCons.Defaults
 import SCons.Tool
@@ -42,18 +42,16 @@ def generate(env):
     """Add Builders and construction variables for ar to an Environment."""
     SCons.Tool.createStaticLibBuilder(env)
 
-    arcom = '$AR $ARFLAGS $TARGET $SOURCES'
-    ranlib = 'ranlib'
-    if env.Detect(ranlib):
-        arcom = arcom + '\n$RANLIB $RANLIBFLAGS $TARGET'
-
     env['AR']          = 'ar'
-    env['ARFLAGS']     = SCons.Util.CLVar('r')
-    env['RANLIB']      = ranlib
-    env['RANLIBFLAGS'] = SCons.Util.CLVar('')
-    env['ARCOM']       = arcom
+    env['ARFLAGS']     = SCons.Util.CLVar('rc')
+    env['ARCOM']       = '$AR $ARFLAGS $TARGET $SOURCES'
     env['LIBPREFIX']   = 'lib'
     env['LIBSUFFIX']   = '.a'
+
+    if env.Detect('ranlib'):
+        env['RANLIB']      = 'ranlib'
+        env['RANLIBFLAGS'] = SCons.Util.CLVar('')
+        env['RANLIBCOM']   = '$RANLIB $RANLIBFLAGS $TARGET'
 
 def exists(env):
     return env.Detect('ar')
