@@ -342,7 +342,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
         // define device behavior
         mBehavior = 0;
 #if !GN_XENON
-        if( ro.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) )
+        if( ( ro.software || !(D3DDEVCAPS_HWTRANSFORMANDLIGHT & caps.DevCaps) ) && !ro.pure )
         {
             mBehavior |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
         }

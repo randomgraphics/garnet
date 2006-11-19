@@ -195,6 +195,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         { 0, "-fs",    SO_NONE    },
         { 0, "-ref",   SO_NONE    },
         { 0, "-msaa",  SO_NONE    },
+        { 0, "-sw",    SO_NONE    },
         { 0, "-pure",  SO_NONE    },
         { 0, "-m",     SO_REQ_SEP }, // specify monitor index
         { 0, "-di",    SO_NONE    },
@@ -221,6 +222,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "    -fs                    : Use fullsreen mode.\n"
                     "    -ref                   : Use reference device.\n"
                     "    -msaa                  : Enable MSAA/FSAA.\n"
+                    "    -sw                    : Use software vertex processing. (D3D only)\n"
                     "    -pure                  : Use pure device (D3D only).\n"
                     "    -m [num]               : Specify monitor index. Default is 0.\n"
                     "    -di                    : Use direct input.\n"
@@ -234,6 +236,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
             else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;
             else if( 0 == strCmpI( a, "-msaa" ) ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
+            else if( 0 == strCmpI( a, "-sw" ) ) mInitParam.ro.software = true;
             else if( 0 == strCmpI( a, "-pure" ) ) mInitParam.ro.pure = true;
             else if( 0 == strCmpI( a, "-m" ) )
             {
