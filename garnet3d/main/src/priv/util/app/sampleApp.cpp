@@ -199,6 +199,9 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         { 0, "-pure",  SO_NONE    },
         { 0, "-m",     SO_REQ_SEP }, // specify monitor index
         { 0, "-di",    SO_NONE    },
+        { 0, "-le",    SO_REQ_SEP }, // enable logger
+        { 0, "-ld",    SO_REQ_SEP }, // diable logger
+        { 0, "-ll",    SO_REQ_SEP }, // set log level
         { 1, "-?",     SO_NONE    },
         { 1, "-h",     SO_NONE    },
         { 1, "--help", SO_NONE    },
@@ -226,6 +229,12 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "    -pure                  : Use pure device (D3D only).\n"
                     "    -m [num]               : Specify monitor index. Default is 0.\n"
                     "    -di                    : Use direct input.\n"
+                    "    -le [name]             : Enable specific logger.\n"
+                    "    -ld [name]             : Disable specific logger.\n"
+                    "    -ll [level]            : Set log level. Level is integer:\n"
+                    "                               positive : enable all log levels smaller then it.\n"
+                    "                               zero     : disable all levels.\n"
+                    "                               negative : enable only log level euqals (-level).\n"
                     , GN::path::baseName(argv[0]).cptr() );
                 return false;
             }
@@ -249,6 +258,20 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 mInitParam.ro.monitorHandle = win::getMonitorByIndex( idx );
             }
             else if( 0 == strCmpI( a, "-di") ) mInitParam.iapi = input::API_DINPUT;
+            else if( 0 == strCmpI( a, "-le") ) getLogger( so.OptionArg() )->setEnabled( true );
+            else if( 0 == strCmpI( a, "-ld") ) getLogger( so.OptionArg() )->setEnabled( false );
+            else if( 0 == strCmpI( a, "-ll") )
+            {
+                int32_t level;
+                if( str2Int32( level, so.OptionArg() ) )
+                {
+                    getLogger(0)->setLevel( level );
+                }
+                else
+                {
+                    GN_ERROR(sLogger)( "Log level must be integer." );
+                }
+            }
         }
         else
         {

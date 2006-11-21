@@ -505,7 +505,7 @@ namespace GN
             n.trim( '.' );
 
             // shortcut for root logger
-            if( n.empty() ) return &mRootLogger;
+            if( n.empty() || "ROOT" == n ) return &mRootLogger;
 
             // find for existing logger
             std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( n );

@@ -167,9 +167,14 @@ namespace GN
         virtual void doLog( const LogDesc & desc, const StrW & msg ) = 0;
 
         //!
-        //! change logger level
+        //! change logger level.
         //!
-        virtual void setLevel( int ) = 0;
+        //! \param level    Log level.
+        //!     - level>0 : output log message with level <= this value.
+        //!     - level=0 : muted
+        //!     - level<0 : output log messge with level == -(this value)
+        //!
+        virtual void setLevel( int level ) = 0;
 
         //!
         //! enable or disable this logger
@@ -203,7 +208,11 @@ namespace GN
         //!
         bool isOn( int level ) const
         {
-            return mEnabled && level <= mLevel;
+            GN_ASSERT( level > 0 );
+            return
+                mEnabled &&
+                0 != mLevel &&
+                ( level <= mLevel || level == -mLevel );
         }
 
         //!
@@ -211,7 +220,11 @@ namespace GN
         //!
         bool isOff( int level ) const
         {
-            return !mEnabled || level > mLevel;
+            GN_ASSERT( level > 0 );
+            return
+                !mEnabled ||
+                0 == mLevel ||
+                level > mLevel && level != -mLevel;
         }
 
         //!
