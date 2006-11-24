@@ -1,3 +1,14 @@
+OVERVIEW
+========
+The basic idea comes from the famous thread "material/shader system" on gamedev 
+forum:
+  - Each effect is a c++ class (bunch of code) that user don't know its 
+    implementation detail, which is similar to general stream processing unit. 
+  - Effect class accepts 2 kinds of inputs: 1) buffer, 2) const
+    - Buffer is a data storage that stores vertex and/or pixel data in GPU 
+      friendly format. User can access buffer data by various lock/unlock 
+      operations.
+
 OPEN ISSUES
 ===========
 - Is it beneficial to group different types of constants into single buffer?
@@ -13,6 +24,8 @@ RESOLVED USER SCENARIOS
 
 OPENED USER SCENARIOS
 =====================
+- generate cube texture then use it as environment map
+  - 
 - render to one face of a cube texture, one slice of a 3D texture, or one 
   mipmap of a 2D texture.
 - separate depth and stencil buffer. (Does user really need such a scenario?)
