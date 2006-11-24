@@ -22,6 +22,8 @@ Directory Structure
     - core         core library
     - doc          documenation
     - gfx          graphics libraries
+      -base        basic graphics library
+      -rndr        renderers
     - inc          public headers of garnet library.
     - misc         misc. files (normally not source code)
     - sample       sample applications.
