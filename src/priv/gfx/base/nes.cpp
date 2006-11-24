@@ -18,10 +18,12 @@ struct EffectItem
 
 static const EffectItem EFF_CLEAR;
 static const EffectItem EFF_PRESENT;
-static const EffectItem EFF_GENERATE_CUBE_MAP;
+
 static const EffectItem EFF_GENERATE_DEPTH_TEXTURE;
-static const EffectItem EFF_LIGHT_MAP;
 static const EffectItem EFF_DEPTH_BLUR;
+
+static const EffectItem EFF_GENERATE_CUBE_MAP;
+static const EffectItem EFF_ENV_REFL;
 
 static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
 {
@@ -48,8 +50,22 @@ static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
 
 class TestScene
 {
-    static BufferId mBackBuffer;
-    static BufferId mZBuffer;
+    BufferId mBackBuffer;
+    BufferId mZBuffer;
+    BufferId mCubemap;
+
+private:
+
+    bool genCubemap( EffectManager & mgr )
+    {
+        BufferCreationParameters bcp;
+
+        bcp.type = BT_PXLBUF;
+        bcp.ca = CA_IMMUTABLE;
+        bcp.sysMem = 0;
+
+        return true;
+    }
 
 public:
 
@@ -66,23 +82,61 @@ public:
         return true;
     }
 
-    void draw( EffectManager & mgr )
+    void cubemap( EffectManager & mgr )
     {
         DrawParameters cp;
 
-        // do clear
-        cp.effect = EFF_CLEAR.id;
-        cp.buffers["color0_buffer"] = mBackBuffer;
-        cp.buffers["depth_buffer"] = mZBuffer;
-        //cp.buffers["stencil_buffer"] = mStencil;
-        //cp.consts["color0_value"] = Vector2f(0,0,0,0);
-        //cp.consts["depth_value"] = 1.0f;
-        mgr.draw( cp );
+        cp.effect = EFF_GENERATE_CUBE_MAP.id;
+        cp.buffers["cubemap"] = mCubemap;
+        cp.consts["center"].setv3( x, y, z );
+        //cp.consts["quality"].set("hight");
 
-        // do present
+        mgr.draw( cp );
+    }
+
+    void renderReflection( EffectManager & mgr )
+    {
+        DrawParameters cp;
+        cp.effect = EFF_ENV_REFL.id;
+        cp.buffers["envmap"] = mCubemap;
+        cp.buffers["target0"] = mBackBuffer;
+        cp.buffers["depth"] = mZBuffer;
+        mgr.draw( cp );
+    }
+
+    void renderShadowVolume( EffectManager & mgr )
+    {
+        DrawParameters cp;
+        cp.effect = EFF_ENV_REFL.id;
+        cp.buffers["envmap"] = mCubemap;
+        cp.buffers["target0"] = mBackBuffer;
+        cp.buffers["depth"] = mZBuffer;
+        mgr.draw( cp );
+    }
+
+    void clear( EffectManager & mgr )
+    {
+        DrawParameters cp;
+
+        cp.effect = EFF_CLEAR.id;
+        cp.buffers["target0"] = mBackBuffer;
+        cp.buffers["depth"] = mZBuffer;
+        //cp.buffers["stencil"] = mStencil;
+        //cp.consts["target0_value"].setv(0,0,0,0);
+        //cp.consts["depth_value"].setf( 1.0f );
+        //cp.consts["stencil_value"].seti( 0 );
+
+        mgr.draw( cp );
+    }
+
+    void present( EffectManager & mgr )
+    {
+        DrawParameters cp;
+
         cp.effect = EFF_PRESENT.id;
         cp.buffers.clear();
         cp.buffers["backbuffer"] = mBackBuffer;
+
         mgr.draw( cp );
     }
 };
