@@ -61,7 +61,7 @@ namespace GN { namespace gfx { namespace nes
                 uint32_t width;  //!< texture width.
                 uint32_t height; //!< texture height.
                 uint32_t depth;  //!< texture depth. 1 for 2D texture.
-                uint32_t count;  //!< texture count. 1 for single texture, 6 for cubemap, other values for texture array.
+                uint32_t faces;  //!< texture faces. 1 for single texture, 6 for cubemap, other values for texture array.
                 uint32_t levels; //!< mipmap levels.
                 ClrFmt   pxlfmt; //!< pixel format.
             } pb; //!< pixel buffer descriptor
@@ -102,6 +102,14 @@ namespace GN { namespace gfx { namespace nes
         size_t       sysMemSlicePitch;
         //@}
 
+        //! \name sub buffer properties
+        //@{
+        BufferId parent; //!< parent buffer ID. Zero for top-level buffer.
+        size_t   level;  //!< mipmap level in parent buffer.
+        size_t   face;   //!< face index in parent buffer.
+        size_t   slice;  //!< slice index in parent buffer.
+        //@}
+
         //!
         //! effect binding information
         //!
@@ -112,6 +120,9 @@ namespace GN { namespace gfx { namespace nes
         //!
         DynaArray<BufferId> reuseOneOfTheseIfPossible;
 
+        //!
+        //! util function that creates binding to specific effect.
+        //!
         void bindToEffect( EffectId eff, const StrA & port )
         {
             bindingToTheseEffects.resize( bindingToTheseEffects.size() + 1 );
