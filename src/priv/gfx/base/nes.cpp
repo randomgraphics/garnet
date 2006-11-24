@@ -32,8 +32,8 @@ static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
     // create back buffer
     bcp.type = BT_PXLBUF;
     bcp.ca = CA_IMMUTABLE;
-    //bcp.pb = ...;
     bcp.sysMem = 0;
+    bcp.parent = 0;
     bcp.bindToEffect( EFF_CLEAR.id, "color0_buffer" );
     bcp.bindToEffect( EFF_PRESENT.id, "color_buffer" );
     c = mgr.createBuffer( bcp );
@@ -52,7 +52,9 @@ class TestScene
 {
     BufferId mBackBuffer;
     BufferId mZBuffer;
+
     BufferId mCubemap;
+    BufferId mCubeFaces[6];
 
 private:
 
@@ -63,6 +65,9 @@ private:
         bcp.type = BT_PXLBUF;
         bcp.ca = CA_IMMUTABLE;
         bcp.sysMem = 0;
+        bcp.parent = 0;
+        ...;
+        mCubemap = mgr.createBufer( bcp );
 
         return true;
     }
@@ -75,6 +80,7 @@ public:
         if( !sGenBackBuffers( mgr, mBackBuffer, mZBuffer ) ) return false;
 
         // create cubemap
+        if( !genCubemap( mgr ) ) return false;
 
         // create constants
 

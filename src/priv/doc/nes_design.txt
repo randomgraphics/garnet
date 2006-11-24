@@ -3,31 +3,36 @@ OVERVIEW
 The basic idea comes from the famous thread "material/shader system" on gamedev 
 forum:
   - Each effect is a c++ class (bunch of code) that user don't know its 
-    implementation detail, which is similar to general stream processing unit. 
+    implementation detail. It could be treated as general processing unit. 
   - Effect class accepts 2 kinds of inputs: 1) buffer, 2) const
-    - Buffer is a data storage that stores vertex and/or pixel data in GPU 
-      friendly format. User can access buffer data by various lock/unlock 
-      operations.
+    - Buffer stores vertex and pixel data.
+    - Buffer can hold both GPU and CPU data.
+    - Pixel buffer can havel sub buffers:
+      - Each mipmap of a top-level texture can be a independant sub texture
+        - sub textures can't have mipmaps.
+      - Each face of a cube texture can have a 2D texture.
+      - Each slice of a 3D texture can be a 2D texture.
+    - Consts are pure CPU data.
 
 OPEN ISSUES
 ===========
 - Is it beneficial to group different types of constants into single buffer?
   - Check D3D10 constant buffer for more ideas.
+- Is it possible to use meta data to describe interface of a effect class? Then 
+  use an script to generate the c++ class interface.
 
 RESOLVED USER SCENARIOS
 =======================
 - one shader output a 2D texture that is used as input of another shader that 
-  requires 3D texture.
+  requires 3D texture:
 - one shader output a 2D texture that is used by many-many of other shaders.
 - 2 draws use same shader. the 1st draw render to texture; the second draw 
   to back buffer.
+- render to one face of a cubemap, or one slice of a 3D texture, or one mipmap 
+  level of a 2D texture:
 
 OPENED USER SCENARIOS
 =====================
-- generate cube texture then use it as environment map
-  - 
-- render to one face of a cube texture, one slice of a 3D texture, or one 
-  mipmap of a 2D texture.
 - separate depth and stencil buffer. (Does user really need such a scenario?)
 - Adjust global quality parameter (like texture filtering), to increase overall
   rendering quality.
