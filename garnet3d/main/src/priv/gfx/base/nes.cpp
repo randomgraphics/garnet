@@ -10,20 +10,50 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.NES");
 using namespace GN;
 using namespace GN::gfx::nes;
 
-struct EffectItem
+static const EffectId EFF_CLEAR;
+static const EffectId EFF_PRESENT;
+static const EffectId EFF_DIFFUSE_TEX;
+static const EffectId EFF_GENERATE_DEPTH_TEXTURE;
+static const EffectId EFF_DEPTH_BLUR;
+static const EffectId EFF_ENV_REFL;
+
+namespace GN { namespace gfx { namespace nes { namespace stdeff
 {
-    EffectId   id;
-    EffectDesc desc;
-};
+    struct Clear : public Effect
+    {
+        Clear() : Effect(EFF_CLEAR) {}
 
-static const EffectItem EFF_CLEAR;
-static const EffectItem EFF_PRESENT;
+        static const EffectDesc & DESC;
 
-static const EffectItem EFF_GENERATE_DEPTH_TEXTURE;
-static const EffectItem EFF_DEPTH_BLUR;
+        BufferId target[4], depth, stencil;
+        Vector4f c;
+        float    z;
+        int      s;
+    };
 
-static const EffectItem EFF_GENERATE_CUBE_MAP;
-static const EffectItem EFF_ENV_REFL;
+    struct Present : public Effect
+    {
+        Present() : Effect(EFF_PRESENT) {}
+        static const EffectDesc & DESC;
+        BufferId backbuf;
+    };
+
+    struct DiffuseTex : public Effect
+    {
+        DiffuseTex : Effect( EFF_DIFFUSE_TEX ) {}
+        static const EffectDesc & DESC;
+        BufferId target, depth, tex;
+        Vector3f lightPos;
+    };
+
+    struct EnvReflection : public Effect
+    {
+        EnvReflection() : Effect(EFF_ENV_REFL) {}
+        static const EffectDesc & DESC;
+        BufferId env[6], target, depth;
+        Matrix33 proj, view, world;
+    };
+}}}}
 
 static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
 {
@@ -34,13 +64,13 @@ static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
     bcp.ca = CA_IMMUTABLE;
     bcp.sysMem = 0;
     bcp.parent = 0;
-    bcp.bindToEffect( EFF_CLEAR.id, "color0_buffer" );
-    bcp.bindToEffect( EFF_PRESENT.id, "color_buffer" );
+    bcp.bindToEffect( EFF_CLEAR, "target0" );
+    bcp.bindToEffect( EFF_PRESENT, "backbuffer" );
     c = mgr.createBuffer( bcp );
     if( !c ) return false;
 
     // create default depth buffer
-    bcp.bindToEffect( EFF_CLEAR.id, "depth_buffer" );
+    bcp.bindToEffect( EFF_CLEAR, "depth_buffer" );
     z = mgr.createBuffer( bcp );
     if( !z ) return false;
 
@@ -105,44 +135,27 @@ public:
         DrawParameters cp;
         cp.effect = EFF_ENV_REFL.id;
         cp.buffers["envmap"] = mCubemap;
-        cp.buffers["target0"] = mBackBuffer;
-        cp.buffers["depth"] = mZBuffer;
-        mgr.draw( cp );
-    }
-
-    void renderShadowVolume( EffectManager & mgr )
-    {
-        DrawParameters cp;
-        cp.effect = EFF_ENV_REFL.id;
-        cp.buffers["envmap"] = mCubemap;
-        cp.buffers["target0"] = mBackBuffer;
+        cp.buffers["target"] = mBackBuffer;
         cp.buffers["depth"] = mZBuffer;
         mgr.draw( cp );
     }
 
     void clear( EffectManager & mgr )
     {
-        DrawParameters cp;
-
-        cp.effect = EFF_CLEAR.id;
-        cp.buffers["target0"] = mBackBuffer;
-        cp.buffers["depth"] = mZBuffer;
-        //cp.buffers["stencil"] = mStencil;
-        //cp.consts["target0_value"].setv(0,0,0,0);
-        //cp.consts["depth_value"].setf( 1.0f );
-        //cp.consts["stencil_value"].seti( 0 );
-
-        mgr.draw( cp );
+        stdeff::Clear c;
+        c.target[0] = mBackBuffer;
+        c.depth = mZBuffer;
+        //c.stencil = mStencil;
+        c.c.set(0,0,0,0);
+        c.z = 1.0f;
+        c.s = 0;
+        mgr.draw( c );
     }
 
     void present( EffectManager & mgr )
     {
-        DrawParameters cp;
-
-        cp.effect = EFF_PRESENT.id;
-        cp.buffers.clear();
-        cp.buffers["backbuffer"] = mBackBuffer;
-
-        mgr.draw( cp );
+        stdeff::Present p;
+        p.backbuf = mBackBuffer;
+        mgr.draw( p );
     }
 };
