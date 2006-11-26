@@ -178,11 +178,13 @@ namespace GN { namespace gfx { namespace nes
         std::map<StrA,BufferPort> bufferPorts;
         std::map<StrA,ConstPort>  constPorts;
     };
-    struct DrawParameters
+    //!
+    //! basic effect interface
+    //!
+    struct Effect
     {
-        EffectId                effect;
-        std::map<StrA,BufferId> buffers;
-        std::map<StrA,ConstId>  consts;
+        const EffectId id;
+        Effect( EffectId id_ ) : id(id_) {}
     };
     class EffectManager
     {
@@ -233,7 +235,7 @@ namespace GN { namespace gfx { namespace nes
         //!
         //! do rendering
         //!
-        void draw( const DrawParameters & );
+        void draw( const Effect & );
     };
 
     /*
