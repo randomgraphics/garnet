@@ -23,7 +23,7 @@ namespace GN { namespace gfx { namespace nes { namespace stdeff
     {
         Clear() : Effect(EFF_CLEAR) {}
 
-        static const EffectDesc & DESC;
+        static const EffectDesc DESC;
 
         BufferId target[4], depth, stencil;
         Vector4f c;
@@ -34,14 +34,14 @@ namespace GN { namespace gfx { namespace nes { namespace stdeff
     struct Present : public Effect
     {
         Present() : Effect(EFF_PRESENT) {}
-        static const EffectDesc & DESC;
+        static const EffectDesc DESC;
         BufferId backbuf;
     };
 
     struct DiffuseTex : public Effect
     {
         DiffuseTex : Effect( EFF_DIFFUSE_TEX ) {}
-        static const EffectDesc & DESC;
+        static const EffectDesc DESC;
         BufferId target, depth, tex;
         Vector3f lightPos;
     };
@@ -49,7 +49,7 @@ namespace GN { namespace gfx { namespace nes { namespace stdeff
     struct EnvReflection : public Effect
     {
         EnvReflection() : Effect(EFF_ENV_REFL) {}
-        static const EffectDesc & DESC;
+        static const EffectDesc DESC;
         BufferId env[6], target, depth;
         Matrix33 proj, view, world;
     };
@@ -86,6 +86,16 @@ class TestScene
     BufferId mCubemap;
     BufferId mCubeFaces[6];
 
+    struct Camera
+    {
+        // ...
+    };
+
+    struct Object
+    {
+        virtual void draw( BufferId target, BufferId z, const Camera & c ) = 0;
+    };
+
 private:
 
     bool genCubemap( EffectManager & mgr )
@@ -118,26 +128,35 @@ public:
         return true;
     }
 
-    void cubemap( EffectManager & mgr )
+    void genCubemap(
+        EffectManager & mgr,
+        const Vector3f & center,
+        const Object * const * objects,
+        size_t count )
     {
-        DrawParameters cp;
+        Camera c;
+        BufferId depth = mgr.createBuffer( ... ); // create a temporary depth buffer
+        
+        for( int i = 0; i < 6; ++i )
+        {
+            // TODO: setup_camera( i, c );
+            for( size_t o = 0; o < count; ++o )
+            {
+                objects[o]->draw( mCubeFaces[i], depth, c );
+            }
+        }
 
-        cp.effect = EFF_GENERATE_CUBE_MAP.id;
-        cp.buffers["cubemap"] = mCubemap;
-        cp.consts["center"].setv3( x, y, z );
-        //cp.consts["quality"].set("hight");
-
-        mgr.draw( cp );
+        mgr.deleteBuffer( depth );
     }
 
     void renderReflection( EffectManager & mgr )
     {
-        DrawParameters cp;
-        cp.effect = EFF_ENV_REFL.id;
-        cp.buffers["envmap"] = mCubemap;
-        cp.buffers["target"] = mBackBuffer;
-        cp.buffers["depth"] = mZBuffer;
-        mgr.draw( cp );
+        stdeff::EnvReflection eff;
+        eff.target = mBackBuffer;
+        eff.depth = mZBuffer;
+        eff.env = mCubeFaces;
+        // ...
+        mgr.draw( eff );
     }
 
     void clear( EffectManager & mgr )
