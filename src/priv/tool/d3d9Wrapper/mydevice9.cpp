@@ -45,7 +45,7 @@ HRESULT MyDevice9::create(
     }
 
     // create device
-    GN_INFO(sLogger)( "create Direct3DDevice9 object: Adapter(%d), DeviceType(%d)", Adapter, DeviceType );
+    GN_TRACE(sLogger)( "create Direct3DDevice9 object: Adapter(%d), DeviceType(%d)", Adapter, DeviceType );
     return myd3d->obj()->CreateDevice( Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &mObject );
 
     GN_UNGUARD;

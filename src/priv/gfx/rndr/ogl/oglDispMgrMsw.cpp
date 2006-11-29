@@ -25,9 +25,9 @@ static int sChoosePixelFormat( HDC hdc )
     // flags that can not exist
     DWORD xxx_flags = PFD_NEED_PALETTE; // we're aiming for a RGB device
 
-    GN_INFO(sLogger)( "Enumerating pixelformats..." );
+    GN_TRACE(sLogger)( "Enumerating pixelformats..." );
     int num = DescribePixelFormat(hdc, 1, 0, 0);
-    GN_INFO(sLogger)( "%d pixelformats in total.", num );
+    GN_TRACE(sLogger)( "%d pixelformats in total.", num );
 
     int candidates[4] =
     {
@@ -153,7 +153,7 @@ static bool sSetupPixelFormat( HDC hdc )
     // choose pixel format
     int n = sChoosePixelFormat( hdc );
     if( 0 == n ) return false;
-    GN_INFO(sLogger)( "select pixelformat #%d.", n );
+    GN_TRACE(sLogger)( "select pixelformat #%d.", n );
 
     // Set the pixel format for the device context
     if (!SetPixelFormat(hdc, n, &pfd))
@@ -252,7 +252,7 @@ bool GN::gfx::OGLRenderer::dispDeviceRestore()
         GN_MSW_CHECK_RV( ::GetMonitorInfoA( hmonitor, &mi ), false );
 
         // move window to left-top of the monitor, and set it as TOPMOST window.
-        GN_INFO(sLogger)( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
+        GN_TRACE(sLogger)( "Move window to %d, %d", mi.rcWork.left,mi.rcWork.top );
         GN_MSW_CHECK( ::SetWindowPos(
             hwnd, HWND_TOPMOST,
             mi.rcWork.left, mi.rcWork.top,

@@ -265,7 +265,7 @@ namespace GN
         HandleType getResourceHandle( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
-            StringMap::const_iterator iter = mResNames.find( name );
+            typename StringMap::const_iterator iter = mResNames.find( name );
             if( mResNames.end() != iter ) return iter->second;
             if( autoAddNewName && ( !mNameChecker || mNameChecker(name) ) ) return addResource( name );
             return 0; // failed
@@ -301,7 +301,7 @@ namespace GN
 
             HandleType h;
             ResDesc * item;
-            StringMap::const_iterator ci = mResNames.find(name);
+            typename StringMap::const_iterator ci = mResNames.find(name);
             if( mResNames.end() != ci )
             {
                 if( !overrideExistingResource )
@@ -359,7 +359,7 @@ namespace GN
             GN_GUARD;
 
             // find the resource
-            StringMap::iterator iter = mResNames.find( name );
+            typename StringMap::iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
                 GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
@@ -413,7 +413,7 @@ namespace GN
         void disposeResourceByName( const StrA & name )
         {
             GN_GUARD;
-            StringMap::const_iterator iter = mResNames.find( name );
+            typename StringMap::const_iterator iter = mResNames.find( name );
             if( mResNames.end() == iter )
             {
                 GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );

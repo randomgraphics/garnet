@@ -5,8 +5,6 @@
 #include <sys/timeb.h>
 #endif
 
-#define USE_RTDSC 0
-
 // *****************************************************************************
 //                        local functions
 // *****************************************************************************
@@ -22,42 +20,16 @@ static GN::Clock::CycleType sGetSystemCycleFrequency()
 
     GN::Clock::CycleType r;
 
-#if USE_RTDSC
-
-    // 获得CPU的频率
-    //
-    // FIXME: timer may warp in this second
-    //
-    GN_INFO(sLogger)( "Clock : Evaluating CPU Frequency ......" );
-
-    GN::Clock::CycleType c1 = getSystemCycleCount();
-#if GN_MSWIN
-    Sleep(100);
-    GN::Clock::CycleType c2 = getSystemCycleCount();
-    r = (c2 - c1) * 10;
-#else
-    sleep(1);
-    GN::Clock::CycleType c2 = getSystemCycleCount();
-    r = (c2 - c1);
-#endif
-
-    GN_INFO(sLogger)( "Clock : OK! Current CPU Frequency is %d MHz!",
-        (uint32_t)(r / 1000000) ) );
-
-#else // !USE_RTDSC
-
 #if GN_MSWIN
     if( !QueryPerformanceFrequency((LARGE_INTEGER*)&r) )
     {
-        GN_INFO(sLogger)( "Current system do NOT support high-res "
+        GN_TRACE(sLogger)( "Current system do NOT support high-res "
             "performance counter, use getTickCount()!" );
         r = 1000;  // getTickCount()返回的是毫秒
     }
 #else
     r = 1000;
 #endif
-
-#endif // USE_RTDSC
 
     // success
     return r;
@@ -91,7 +63,7 @@ void GN::Clock::pause()
 {
     if (!mPaused)
     {
-        GN_INFO(sLogger)( "Timer pause!" );
+        GN_TRACE(sLogger)( "Timer pause!" );
         mPauseTime = getSystemCycleCount();
         mPaused = true;
     }
@@ -104,7 +76,7 @@ void GN::Clock::resume()
 {
     if (mPaused)
     {
-        GN_INFO(sLogger)( "Timer resume!" );
+        GN_TRACE(sLogger)( "Timer resume!" );
         mPauseElapsed += getSystemCycleCount() - mPauseTime;
         mPaused = false;
     }
@@ -120,36 +92,6 @@ void GN::Clock::resume()
 GN::Clock::CycleType GN::Clock::getSystemCycleCount() const
 {
     GN_GUARD_SLOW;
-
-#if USE_RTDSC
-
-    // Use the assembly instruction rdtsc, which gets the current
-    // cycle count (since the process started) and puts it in edx:eax.
-#if GN_MSVC
-    volatile union
-    {
-        int64_t i64;
-        struct {
-            int32_t lo32;
-            int32_t hi32;
-        };
-    } t;
-    __asm
-    {
-        rdtsc
-        mov t.lo32, eax
-        mov t.hi32, edx
-    }
-    return t.i64;
-#elif GN_GNUC
-    volatile int64_t r;
-    __asm__ __volatile__ ("rdtsc" : "=A" (r) );
-    return r;
-#else
-#error Unimplemented!
-#endif
-
-#else // !USE_RTDSC
 
 #if GN_MSWIN
     CycleType r;
@@ -169,8 +111,6 @@ GN::Clock::CycleType GN::Clock::getSystemCycleCount() const
 #else
 #error Unknown platform!
 #endif
-
-#endif // USE_RTDSC
 
     GN_UNGUARD_SLOW;
 }

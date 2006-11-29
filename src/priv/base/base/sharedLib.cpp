@@ -57,7 +57,7 @@ bool GN::SharedLib::load( const char * libName )
         return false;
     }
 
-    GN_INFO(sLogger)( "Load library '%s'.", filename.cptr() );
+    GN_TRACE(sLogger)( "Load library '%s'.", filename.cptr() );
 
     // success
     mFileName = filename;
@@ -77,7 +77,7 @@ void GN::SharedLib::free()
     {
         SHLIB_FREE( mHandle );
         mHandle = 0;
-        GN_INFO(sLogger)( "Unload library '%s'.", mFileName.cptr() );
+        GN_TRACE(sLogger)( "Unload library '%s'.", mFileName.cptr() );
     }
 
     GN_UNGUARD;

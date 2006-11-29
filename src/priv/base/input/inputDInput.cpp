@@ -163,7 +163,7 @@ bool GN::input::InputDInput::acquire()
     GN_DX9_CHECK_RV( mMouse->Acquire(), 0 );
 
     // success
-    GN_INFO(sLogger)( "Acquire DInput devices" );
+    GN_TRACE(sLogger)( "Acquire DInput devices" );
     mAcquired = true;
     return true;
 
@@ -179,7 +179,7 @@ bool GN::input::InputDInput::unacquire()
 
     mAcquired = false;
 
-    GN_INFO(sLogger)( "Unacquire DInput devices" );
+    GN_TRACE(sLogger)( "Unacquire DInput devices" );
     HRESULT rval;
     if( mKeyboard )
     {
