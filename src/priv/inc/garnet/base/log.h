@@ -41,10 +41,15 @@
 #define GN_INFO( logger )  GN_LOG( logger, GN::Logger::LL_INFO )
 
 //!
-//! output trace message
+//! output detail message
+//!
+#define GN_DETAIL( logger ) GN_LOG( logger, GN::Logger::LL_DETAIL )
+
+//!
+//! output debug message (only effective in debug build)
 //!
 #if GN_DEBUG_BUILD
-#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::LL_TRACE )
+#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::LL_DEBUG )
 #else
 #define GN_TRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
 #endif
@@ -63,11 +68,12 @@ namespace GN
         //!
         enum LogLevel
         {
-            LL_FATAL = 10,  //!< fatal error
-            LL_ERROR = 20,  //!< error
-            LL_WARN  = 30,  //!< warnning
-            LL_INFO  = 40,  //!< information
-            LL_TRACE = 100, //!< trace/debug
+            LL_FATAL  = 10,  //!< fatal error
+            LL_ERROR  = 20,  //!< error
+            LL_WARN   = 30,  //!< warnning
+            LL_INFO   = 40,  //!< information
+            LL_DETAIL = 50,  //!< detailed log that you want to disabled normally
+            LL_TRACE  = 200, //!< debugging (only available in debug build)
         };
 
         //!
