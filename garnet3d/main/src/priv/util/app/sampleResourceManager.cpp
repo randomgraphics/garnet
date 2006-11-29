@@ -47,7 +47,7 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_INFO(sLogger)( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_TRACE(sLogger)( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -158,7 +158,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_INFO(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_TRACE(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -333,7 +333,7 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_INFO(sLogger)( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_TRACE(sLogger)( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -423,7 +423,7 @@ GN::app::SampleResourceManager::sCreateTextureFromFile( const StrA & name )
         return 0;
     }
 
-    GN_INFO(sLogger)( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_TRACE(sLogger)( "Load texture '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -467,7 +467,7 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
         return 0;
     }
 
-    GN_INFO(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_TRACE(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;

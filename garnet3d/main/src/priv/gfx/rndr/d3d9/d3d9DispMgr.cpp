@@ -460,7 +460,7 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
 		mDevice->SetVertexShader(0);
 		mDevice->SetPixelShader(0);
 
-		GN_INFO(sLogger)(
+		GN_TRACE(sLogger)(
 			"\n"
 			"====== Dump unreleased D3D resources ========\n"
 			"	SwapChains: %d\n"

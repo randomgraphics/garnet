@@ -167,7 +167,7 @@ namespace GN { namespace win
             }
             else if( ::IsIconic( (HWND)window ) && blockWhileMinized )
             {
-                GN_INFO(sLogger)( "Wait for window messages..." );
+                GN_TRACE(sLogger)( "Wait for window messages..." );
                 ::WaitMessage();
             }
             else return; // Idle time

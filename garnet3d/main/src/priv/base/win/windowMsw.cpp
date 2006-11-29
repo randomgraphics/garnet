@@ -39,7 +39,7 @@ void GN::win::WindowMsw::quit()
     // destroy window
     if( ::IsWindow( mWindow ) )
     {
-        GN_INFO(sLogger)( "Destroy window (handle: 0x%X)", mWindow );
+        GN_TRACE(sLogger)( "Destroy window (handle: 0x%X)", mWindow );
         ::DestroyWindow( mWindow );
 
         // remove itself from instance map
@@ -50,9 +50,9 @@ void GN::win::WindowMsw::quit()
     // unregister window class
     if( !mClassName.empty() )
     {
-        GN_INFO(sLogger)( "Unregister window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+        GN_TRACE(sLogger)( "Unregister window class: %S (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
         GN_ASSERT( mModuleInstance );
-        GN_MSW_CHECK( ::UnregisterClassA( mClassName.cptr(), mModuleInstance ) );
+        GN_MSW_CHECK( ::UnregisterClassW( mClassName.cptr(), mModuleInstance ) );
         mClassName.clear();
     }
 
@@ -188,16 +188,16 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     mModuleInstance = (HINSTANCE)GetModuleHandleA(0);
     GN_ASSERT( 0 != mModuleInstance );
 
-    WNDCLASSEXA wcex;
+    WNDCLASSEXW wcex;
 
     // generate an unique window class name
     do
     {
-        mClassName.format( "GNwindowMsw_%d", rand() );
-    } while( ::GetClassInfoExA( mModuleInstance, mClassName.cptr(), &wcex ) );
+        mClassName.format( L"GNwindowMsw_%d", rand() );
+    } while( ::GetClassInfoExW( mModuleInstance, mClassName.cptr(), &wcex ) );
 
     // register window class
-    wcex.cbSize         = sizeof(WNDCLASSEX);
+    wcex.cbSize         = sizeof(WNDCLASSEXW);
     wcex.style          = CS_NOCLOSE;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
     wcex.cbClsExtra     = 0;
@@ -209,12 +209,12 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = mClassName.cptr();
     wcex.hIconSm        = LoadIcon(0, IDI_APPLICATION);
-    if( 0 == ::RegisterClassExA(&wcex) )
+    if( 0 == ::RegisterClassExW(&wcex) )
     {
         GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
         return false;
     }
-    GN_INFO(sLogger)( "Register window class: %s (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
+    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", mClassName.cptr(), mModuleInstance );
 
     // setup window style
     DWORD exStyle = parent ? WS_EX_TOOLWINDOW : 0;
@@ -237,10 +237,10 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
     ::AdjustWindowRectEx( &rc, style, 0, exStyle );
 
     // create window
-    mWindow = ::CreateWindowExA(
+    mWindow = ::CreateWindowExW(
         exStyle,
         mClassName.cptr(),
-        wcp.caption.cptr(),
+        mbs2wcs(wcp.caption).cptr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
         rc.right - rc.left, rc.bottom - rc.top,
@@ -253,7 +253,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
         GN_ERROR(sLogger)( "fail to create window, %s!", getOSErrorInfo() );
         return false;
     }
-    GN_INFO(sLogger)( "Create window (handle: 0x%X)", mWindow );
+    GN_TRACE(sLogger)( "Create window (handle: 0x%X)", mWindow );
 
     // add window handle to instance map
     GN_ASSERT(
@@ -289,7 +289,7 @@ GN::win::WindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GN_INFO(sLogger)( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_TRACE(sLogger)( "GN::win::WindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,WindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
 

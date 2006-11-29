@@ -209,13 +209,13 @@ namespace GN
             ConsoleColor cc(desc.level);
             if( GN::Logger::LL_INFO == desc.level )
             {
-                ::fwprintf( stdout, L"%s\n", msg.cptr() );
+                ::fprintf( stdout, "%S\n", msg.cptr() );
             }
             else 
             {
-                ::fwprintf(
+                ::fprintf(
                     stderr,
-                    L"%S(%d) : name(%S), level(%S) : %s\n",
+                    "%s(%d) : name(%s), level(%s) : %S\n",
                     desc.file, desc.line,
                     logger.getName().cptr(),
                     sLevel2Str(desc.level).cptr(),
@@ -269,31 +269,32 @@ namespace GN
             ::fprintf( af.fp, "</srlog>\n" );
         }
 
-        template<typename CHAR> struct FormatSelector{};
-        template<> struct FormatSelector<char>
-        {
-            static const char * fmt() { return "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n"; }
-        };
-        template<> struct FormatSelector<wchar_t>
-        {
-            static const char * fmt() { return "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n"; }
-        };
-
-        template<typename CHAR>
-        void onLogTempl( Logger & logger, const Logger::LogDesc & desc, const Str<CHAR> & msg )
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
         {
             AutoFile af( mFileName );
             if( !af.fp ) return;
 
-            ::fprintf( af.fp, FormatSelector<CHAR>::fmt(),
+            ::fprintf( af.fp,
+                "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%s]]></log>\n",
                 desc.file,
                 desc.line,
                 logger.getName().cptr(),
                 sLevel2Str(desc.level).cptr(),
                 msg.cptr() );
-        };
-        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg ) { onLogTempl( logger, desc, msg ); }
-        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg ) { onLogTempl( logger, desc, msg ); }
+        }
+        virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrW & msg )
+        {
+            AutoFile af( mFileName );
+            if( !af.fp ) return;
+
+            ::fprintf( af.fp,
+                "<log file=\"%s\" line=\"%d\" name=\"%s\" level=\"%s\"><![CDATA[%S]]></log>\n",
+                desc.file,
+                desc.line,
+                logger.getName().cptr(),
+                sLevel2Str(desc.level).cptr(),
+                msg.cptr() );
+        }
     };
 
     //!

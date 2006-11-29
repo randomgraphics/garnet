@@ -172,7 +172,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
     //MONITORINFOEXA mi;
     //mi.cbSize = sizeof(mi);
     //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-    //GN_INFO( "窗口所在的设备名：%s", mi.szDevice );
+    //GN_TRACE( "窗口所在的设备名：%s", mi.szDevice );
 
     // add window handle to instance map
     GN_ASSERT(
@@ -299,7 +299,7 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
 
         case WM_SIZE :
             {
-                //GN_INFO( "window resize to %dx%d", LOWORD(lp), HIWORD(lp) ) );
+                //GN_TRACE( "window resize to %dx%d", LOWORD(lp), HIWORD(lp) ) );
                 bool minimized = ( SIZE_MINIMIZED == wp );
                 if( !minimized && !mInsideSizeMove ) mSizeChanged = true;
             }
@@ -323,7 +323,7 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
         //MONITORINFOEXA mi;
         //mi.cbSize = sizeof(mi);
         //GN_MSW_CHECK( ::GetMonitorInfoA( mMonitor, &mi ) );
-        //GN_INFO( "窗口所在的设备名：%s", mi.szDevice );
+        //GN_TRACE( "窗口所在的设备名：%s", mi.szDevice );
     }
 
     // trigger the message signal
@@ -370,7 +370,7 @@ GN::gfx::RenderWindowMsw::staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARA
 {
     GN_GUARD;
 
-    //GN_INFO( "GN::gfx::RenderWindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_TRACE( "GN::gfx::RenderWindowMsw procedure: wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,RenderWindowMsw*>::const_iterator iter = msInstanceMap.find(wnd);
 
@@ -396,7 +396,7 @@ GN::gfx::RenderWindowMsw::staticHookProc( int code, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
 
-    //GN_INFO( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
+    //GN_TRACE( "wnd=0x%X, msg=%s", wnd, win::msg2str(msg) );
 
     std::map<void*,RenderWindowMsw*>::const_iterator iter =
         msInstanceMap.find( ((CWPSTRUCT*)lp)->hwnd );

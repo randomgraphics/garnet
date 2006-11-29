@@ -156,7 +156,9 @@ def UTIL_newEnv( compiler, variant ):
         assert( isinstance(variant,int) )
         return Environment( tools=[] )
 
-    tools = ['msvc','mslink','mslib','msvs']
+    if 'mswin' == CONF_os: tools = ['msvc','mslink','mslib','msvs']
+    else: tools = ['default']
+
     msvs_version = '8.0'
     msvs_platform = 'x86'
     icl_version = None

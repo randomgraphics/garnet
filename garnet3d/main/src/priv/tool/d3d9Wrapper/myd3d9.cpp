@@ -102,7 +102,7 @@ bool MyD3D9::create( UINT sdkVersion )
     if( !sLoadD3D9Dll() ) return false;
 
     GN_ASSERT( !mObject );
-    GN_INFO(sLogger)( "create Direct3D9 object" );
+    GN_TRACE(sLogger)( "create Direct3D9 object" );
     mObject = gDirect3DCreate9( sdkVersion );
     return !!mObject;
 

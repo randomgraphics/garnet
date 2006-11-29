@@ -20,6 +20,8 @@
 #define LIB_SUFF ".so"
 #endif
 
+extern bool gSkipRndr;
+
 struct GfxResources
 {
     GN::AutoRef<GN::gfx::Texture> tex1d, tex2d, tex3d, texcube, rt1, rt2, rt3;
@@ -133,6 +135,8 @@ struct TestScene : public GN::SlotBase
 
     bool create()
     {
+        if( gSkipRndr ) return true;
+
         destroy();
 
         // create resource
@@ -150,6 +154,7 @@ struct TestScene : public GN::SlotBase
 
     void draw()
     {
+        if( gSkipRndr ) return;
         TS_ASSERT( gRendererPtr && res );
         if( gRendererPtr && res ) res->draw();
     }
@@ -178,6 +183,8 @@ protected:
 
     void externalWindow()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 
@@ -214,6 +221,8 @@ protected:
 
     void changeOptions()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 
@@ -250,6 +259,8 @@ protected:
 
     void fullscreen()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 
@@ -273,6 +284,8 @@ protected:
 
     void defaultBackbufferSize()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 
@@ -293,6 +306,8 @@ protected:
 
     void renderStateBlock()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 
@@ -320,6 +335,8 @@ protected:
 
     void vtxBuf()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 
@@ -332,6 +349,8 @@ protected:
 
     void renderTarget()
     {
+        if( gSkipRndr ) return;
+
         using namespace GN;
         using namespace GN::gfx;
 

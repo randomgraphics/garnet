@@ -69,7 +69,7 @@ namespace GN { namespace win
         // ********************************
     private:
 
-        StrA mClassName;
+        StrW mClassName;
         HINSTANCE mModuleInstance;
         HWND mWindow;
 
