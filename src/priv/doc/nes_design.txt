@@ -16,6 +16,11 @@ forum:
 
 OPEN ISSUES
 ===========
+- Is effect ID compiled-time constant?
+  - yes: less flexible: hard to manage per-application effects
+  - no :
+    - error-prone: no fixed binding between effect type and ID.
+    - requires effect names to be unique.
 - Is it beneficial to group different types of constants into single buffer?
   - Check D3D10 constant buffer for more ideas.
 - Is it possible to use meta data to describe interface of a effect class? Then 
@@ -33,6 +38,9 @@ RESOLVED USER SCENARIOS
 
 OPENED USER SCENARIOS
 =====================
+- adjust effect behavior from outside, like:
+  - switch to double-depth mode for existing effects.
+  - 
 - separate depth and stencil buffer. (Does user really need such a scenario?)
 - Adjust global quality parameter (like texture filtering), to increase overall
   rendering quality.
