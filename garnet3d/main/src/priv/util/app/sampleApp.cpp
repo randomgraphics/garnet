@@ -235,6 +235,13 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "                               positive : enable all log levels smaller then it.\n"
                     "                               zero     : disable all levels.\n"
                     "                               negative : enable only log level euqals (-level).\n"
+                    "                             Normally used levels are:\n"
+                    "                               FATAL  = 10\n"
+                    "                               ERROR  = 20\n"
+                    "                               WARN   = 30\n"
+                    "                               INFO   = 40\n"
+                    "                               DETAIL = 50\n"
+                    "                               TRACE  = 100\n"
                     , GN::path::baseName(argv[0]).cptr() );
                 return false;
             }

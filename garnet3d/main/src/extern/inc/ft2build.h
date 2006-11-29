@@ -31,7 +31,7 @@
 #ifndef __FT2_BUILD_GENERIC_H__
 #define __FT2_BUILD_GENERIC_H__
 
-#if GN_DEBUG
+#if GN_DEBUG_BUILD
 #define FT_CONFIG_OPTIONS_H  <freetype/config/ftoption.debug.h>
 #else
 #define FT_CONFIG_OPTIONS_H  <freetype/config/ftoption.release.h>
