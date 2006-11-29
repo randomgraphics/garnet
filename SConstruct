@@ -3,7 +3,7 @@
 import os, os.path, re, fnmatch, SCons.Tool.xenon
 
 # enviroment use by local functions
-LOCAL_env = Environment()
+LOCAL_env = Environment( tools=[] )
 
 ################################################################################
 #
@@ -154,9 +154,9 @@ def UTIL_newEnv( compiler, variant ):
     if not isinstance( compiler, Compiler ):
         assert( isinstance(compiler,int) )
         assert( isinstance(variant,int) )
-        return Environment()
+        return Environment( tools=[] )
 
-    tools = ['default']
+    tools = ['msvc','mslink','mslib','msvs']
     msvs_version = '8.0'
     msvs_platform = 'x86'
     icl_version = None
@@ -1124,7 +1124,7 @@ Options:%s
 
 Targets:%s
 """ % (
-    HELP_opts.GenerateHelpText( Environment( options = HELP_opts ) ),
+    HELP_opts.GenerateHelpText( Environment( options = HELP_opts, tools=[] ) ),
     HELP_generateTargetList()
     )
 Help( HELP_text )
