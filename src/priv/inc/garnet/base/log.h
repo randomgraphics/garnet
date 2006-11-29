@@ -49,7 +49,7 @@
 //! output debug message (only effective in debug build)
 //!
 #if GN_DEBUG_BUILD
-#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::LL_DEBUG )
+#define GN_TRACE( logger ) GN_LOG( logger, GN::Logger::LL_TRACE )
 #else
 #define GN_TRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
 #endif
