@@ -55,29 +55,6 @@ namespace GN { namespace gfx { namespace nes { namespace stdeff
     };
 }}}}
 
-static bool sGenBackBuffers( EffectManager & mgr, BufferId & c, BufferId & z )
-{
-    BufferCreationParameters bcp;
-
-    // create back buffer
-    bcp.type = BT_PXLBUF;
-    bcp.ca = CA_IMMUTABLE;
-    bcp.sysMem = 0;
-    bcp.parent = 0;
-    bcp.bindToEffect( EFF_CLEAR, "target0" );
-    bcp.bindToEffect( EFF_PRESENT, "backbuffer" );
-    c = mgr.createBuffer( bcp );
-    if( !c ) return false;
-
-    // create default depth buffer
-    bcp.bindToEffect( EFF_CLEAR, "depth_buffer" );
-    z = mgr.createBuffer( bcp );
-    if( !z ) return false;
-
-    // success
-    return true;
-}
-
 class TestScene
 {
     BufferId mBackBuffer;
@@ -98,6 +75,29 @@ class TestScene
 
 private:
 
+    bool genBackBuffers( EffectManager & mgr )
+    {
+        BufferCreationParameters bcp;
+
+        // create back buffer
+        bcp.type = BT_PXLBUF;
+        bcp.ca = CA_IMMUTABLE;
+        bcp.sysMem = 0;
+        bcp.parent = 0;
+        bcp.bindToEffect( EFF_CLEAR, "target0" );
+        bcp.bindToEffect( EFF_PRESENT, "backbuffer" );
+        mBackBuffer = mgr.createBuffer( bcp );
+        if( !mBackBuffer ) return false;
+
+        // create default depth buffer
+        bcp.bindToEffect( EFF_CLEAR, "depth_buffer" );
+        mZBuffer = mgr.createBuffer( bcp );
+        if( !mZBuffer ) return false;
+
+        // success
+        return true;
+    }
+
     bool genCubemap( EffectManager & mgr )
     {
         BufferCreationParameters bcp;
@@ -106,8 +106,19 @@ private:
         bcp.ca = CA_IMMUTABLE;
         bcp.sysMem = 0;
         bcp.parent = 0;
-        ...;
         mCubemap = mgr.createBufer( bcp );
+        if( !mCubemap ) return false;
+
+        bcp.parent = mCubemap;
+        bcp.level = 0;
+        bcp.slice = 0;
+
+        for( unsigned int i = 0; i < 6; ++i )
+        {
+            bcp.face = i;
+            mCubeFaces[i] = mgr.createBuffer( bcp );
+            if( !mCubeFaces[i] ) return false;
+        }
 
         return true;
     }
@@ -117,7 +128,7 @@ public:
     bool init( EffectManager & mgr )
     {
         // create backbuffer and z buffer
-        if( !sGenBackBuffers( mgr, mBackBuffer, mZBuffer ) ) return false;
+        if( !genBackBuffers( mgr ) ) return false;
 
         // create cubemap
         if( !genCubemap( mgr ) ) return false;
