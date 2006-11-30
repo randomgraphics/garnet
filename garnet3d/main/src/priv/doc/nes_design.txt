@@ -14,17 +14,22 @@ forum:
       - Each slice of a 3D texture can be a 2D texture.
     - Consts are pure CPU data.
 
+RESOLVED ISSUES
+===============
+- Is effect ID compiled-time constant?
+  - yes
+  - pros:
+    - less error prone: can do compile time check.
+  - cons: runtime creation of new effect is impossible.
+
 OPEN ISSUES
 ===========
-- Is effect ID compiled-time constant?
-  - yes: less flexible: hard to manage per-application effects
-  - no :
-    - error-prone: no fixed binding between effect type and ID.
-    - requires effect names to be unique.
 - Is it beneficial to group different types of constants into single buffer?
   - Check D3D10 constant buffer for more ideas.
 - Is it possible to use meta data to describe interface of a effect class? Then 
   use an script to generate the c++ class interface.
+  - pros: not rely on complicate compiler tricks.
+  - cons: not easy for quick prototyping of new effects.
 
 RESOLVED USER SCENARIOS
 =======================
@@ -37,14 +42,15 @@ RESOLVED USER SCENARIOS
   level of a 2D texture:
 - adjust effect behavior from outside, like: switching existing effects to
   double-depth mode.
-  - this is a bad design. Effect should be self-contain.
+  - bad design. Effect should be self-contain.
 - separate depth and stencil buffer.
   - user won't need this in recent future.
+- Adjust global quality parameter (like texture filtering), to increase overall
+  rendering quality.
+  - bad design. effects should control quality by themselves.
 
 OPENED USER SCENARIOS
 =====================
-- Adjust global quality parameter (like texture filtering), to increase overall
-  rendering quality.
 - user creates too many render targets that can't fit into hardware's local
   memory (like EDRAM)
   - may be resolved by lazy creation
