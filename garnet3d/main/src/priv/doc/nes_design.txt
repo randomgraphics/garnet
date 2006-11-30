@@ -24,6 +24,10 @@ RESOLVED ISSUES
 
 OPEN ISSUES
 ===========
+- Is it possible to create multiple instances of single effect? Each instance 
+  holds everything it needs. like:
+  - create a shadow effect instance, it holds its own shadow map buffers.
+- Still need a better buffer management mechanism
 - Is it beneficial to group different types of constants into single buffer?
   - Check D3D10 constant buffer for more ideas.
 - Is it possible to use meta data to describe interface of a effect class? Then 
