@@ -16,6 +16,7 @@ static const EffectId EFF_DIFFUSE_TEX;
 static const EffectId EFF_GENERATE_DEPTH_TEXTURE;
 static const EffectId EFF_DEPTH_BLUR;
 static const EffectId EFF_ENV_REFL;
+static const EffectId EFF_SHADOW_MAP;
 
 namespace GN { namespace gfx { namespace nes { namespace stdeff
 {
@@ -52,6 +53,13 @@ namespace GN { namespace gfx { namespace nes { namespace stdeff
         static const EffectDesc DESC;
         BufferId env[6], target, depth;
         Matrix33 proj, view, world;
+    };
+
+    struct ShadowMap : public Effect
+    {
+        ShadowMap() : Effect(EFF_SHADOW_MAP) {}
+        BufferId castervb, casterib;
+        BufferId receivervb, receiverib;
     };
 }}}}
 
