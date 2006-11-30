@@ -35,13 +35,14 @@ RESOLVED USER SCENARIOS
   to back buffer.
 - render to one face of a cubemap, or one slice of a 3D texture, or one mipmap 
   level of a 2D texture:
+- adjust effect behavior from outside, like: switching existing effects to
+  double-depth mode.
+  - this is a bad design. Effect should be self-contain.
+- separate depth and stencil buffer.
+  - user won't need this in recent future.
 
 OPENED USER SCENARIOS
 =====================
-- adjust effect behavior from outside, like:
-  - switch to double-depth mode for existing effects.
-  - 
-- separate depth and stencil buffer. (Does user really need such a scenario?)
 - Adjust global quality parameter (like texture filtering), to increase overall
   rendering quality.
 - user creates too many render targets that can't fit into hardware's local
