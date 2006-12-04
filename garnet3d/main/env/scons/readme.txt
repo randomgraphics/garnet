@@ -1,3 +1,4 @@
-Scons cvs version (last sync: 2005-11-14).
-
-Add support to vs 2005 x64 compiler.
+2006-11-17
+==========
+- update to version 0.96.93
+- fix msvs path and performance problem
