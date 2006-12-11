@@ -226,6 +226,7 @@ namespace GN { namespace gfx
             {
                 const Shader * vs;
                 const Shader * ps;
+                const Shader * gs;
             };
 
             bool operator < ( const GLSLShaders & rhs ) const
