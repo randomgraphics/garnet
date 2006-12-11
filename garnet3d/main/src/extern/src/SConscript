@@ -28,6 +28,37 @@ elif 'vc80' == GN.compiler.name:
 elif 'xenon' == GN.compiler.name:
     cppdefines += ['NO_GETENV'] # Xenon platform does not support getenv()
 
+# ========================
+# generate configurations
+# ========================
+import os.path
+conf_env = GN.newEnv( GN.compiler, GN.variant )
+conf_env.Replace( CCFLAGS = Split( ccflags ) )
+conf_env.BuildDir( build_dir='#build.tmp', src_dir='#' )
+conf_dir = os.path.join( GN.buildDir( GN.compiler, GN.variant ), 'config', 'extern' )
+conf = conf_env.Configure(
+    conf_dir=conf_dir,
+    log_file=os.path.join(conf_dir,'config.log'),
+    config_h='extern_config.h' )
+
+# TODO: check byte order
+conf.CheckFunc( 'bcopy' )
+conf.CheckCHeader( 'dlfcn.h' )
+conf.CheckCHeader( 'fcntl.h' )
+conf.CheckFunc( 'getpagesize' )
+conf.CheckCHeader( 'inttypes.h' )
+conf.CheckFunc( 'memmove' )
+conf.CheckHeader( 'memory.h' )
+conf.CheckFunc( 'mmap' )
+conf.CheckCHeader( 'stdint.h' )
+conf.CheckCHeader( 'stdlib.h' )
+conf.CheckCHeader( 'strings.h' )
+conf.CheckCHeader( 'string.h' )
+conf.CheckCHeader( 'sys/stat.h' )
+conf.CheckCHeader( 'sys/types.h' )
+conf.CheckCHeader( 'unistd.h' )
+conf.Finish()
+
 # **********************
 # define source clusters
 # **********************
@@ -36,7 +67,7 @@ if 'gcc' == GN.compiler.name or 'mingw' == GN.compiler.name: jpeg_cluster.addCom
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 
-common_sources = GN.glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c'), True )
+common_sources = GN.glob( Split('expat/*.c') )# pcre/*.c* png/*.c zlib/*.c'), True )
 if 'mingw' != GN.compiler.name: common_sources += GN.glob( Split('freetype2/*.c lua/*.c tinyxml/*.cpp'), True )
 if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
 common_cluster = GN.newSourceCluster( common_sources )

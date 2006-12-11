@@ -455,6 +455,8 @@ class GarnetEnv :
         self.conf = {}
 
     # UTIL functions
+    def buildDir( self, compiler, variant ) : return UTIL_buildDir( compiler, variant )
+    def newEnv( self, compiler, variant ) : return UTIL_newEnv( compiler, variant )
     def trace( self, level, msg ): UTIL_trace( level, msg )
     def info( self, msg ): UTIL_info( msg )
     def warn( self, msg ): UTIL_warn( msg )
