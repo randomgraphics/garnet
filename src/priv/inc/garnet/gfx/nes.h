@@ -37,100 +37,83 @@ namespace GN { namespace gfx { namespace nes
     };
 
     //!
-    //! CPU access flags
+    //! Buffer usage flags
     //!
-    enum CpuAccess
+    enum BufferUsage
     {
-        CA_IMMUTABLE          = 0,
-        CA_WRITE_INFREQUENTLY = 1,
-        CA_WRITE_FREQUENTLY   = 2,
-        CA_READ_BACK          = 4,
+        BU_CPU_IMMUTABLE          = 0,
+        BU_CPU_WRITE_INFREQUENTLY = 1,
+        BU_CPU_WRITE_FREQUENTLY   = 2,
+        BU_CPU_READ               = 4,
+        BU_GPU_READ               = 0x10,
+        BU_GPU_WRITE              = 0x20,
+
+        BU_DEFAULT   = BU_CPU_WRITE_INFREQUENTLY | BU_GPU_READ,
+        BU_IMMUTABLE = BU_CPU_IMMUTABLE | BU_GPU_READ,
+        BU_RT        = BU_CPU_IMMUTABLE | BU_GPU_WRITE,
     };
+
+    //!
+    //! buffer format
+    //!
+    union BufferFormat
+    {
+        struct
+        {
+            uint32_t width;  //!< texture width.
+            uint32_t height; //!< texture height.
+            uint32_t depth;  //!< texture depth. 1 for 2D texture.
+            uint32_t faces;  //!< texture faces. 1 for single texture, 6 for cubemap, other values for texture array.
+            uint32_t levels; //!< mipmap levels.
+            ClrFmt   pxlfmt; //!< pixel format.
+        } pb; //!< pixel buffer descriptor
+
+        struct
+        {
+            VtxFmtDesc format;   //!< vertex buffer format
+            uint32_t   capacity; //!< maximum number of vertices this buffer can hold.
+        } vb; //!< vertex buffer descriptor
+
+        struct
+        {
+            uint32_t capacity; //!< maximum number of indices this buffer can hold.
+            bool     bit32;    //!< If true, means it is 32-bits index buffer; else it is 16-bits.
+        } ib; //!< index buffer descriptor
+
+        struct
+        {
+            uint32_t bytes; //!< bytes of the raw data.
+        } raw; //!< raw buffer descriptor
+    };
+    
     //!
     //! buffer descriptor
     //!
     struct BufferDesc
     {
-        BufferType  type;  //!< buffer type
-        BitField    ca;    //!< CPU access flags. Combinations of CpuAccess flags.
+        BufferId     parent; //!< parent buffer. 0 for top-level buffer.
+        uint32_t     level;  //!< mipmap level in parent buffer. ignored for top-level buffer.
+        uint32_t     face;   //!< face index in parent buffer. ignored for top-level buffer.
+        uint32_t     slice;  //!< slice index in parent buffer. ignored for top-level buffer.
 
-        union
-        {
-            struct
-            {
-                uint32_t width;  //!< texture width.
-                uint32_t height; //!< texture height.
-                uint32_t depth;  //!< texture depth. 1 for 2D texture.
-                uint32_t faces;  //!< texture faces. 1 for single texture, 6 for cubemap, other values for texture array.
-                uint32_t levels; //!< mipmap levels.
-                ClrFmt   pxlfmt; //!< pixel format.
-            } pb; //!< pixel buffer descriptor
-
-            struct
-            {
-                VtxFmtDesc format;   //!< vertex buffer format
-                uint32_t   capacity; //!< maximum number of vertices this buffer can hold.
-            } vb; //!< vertex buffer descriptor
-
-            struct
-            {
-                uint32_t capacity; //!< maximum number of indices this buffer can hold.
-                bool     bit32;    //!< If true, means it is 32-bits index buffer; else it is 16-bits.
-            } ib; //!< index buffer descriptor
-
-            struct
-            {
-                uint32_t bytes; //!< bytes of the raw data.
-            } raw; //!< raw buffer descriptor
-        };
+        BufferType   type;   //!< buffer type
+        BitField     usage;  //!< buffer usage. Combinations of BufferUsage flags.
+        BufferFormat format; //!< buffer format
     };
+
     //!
-    //! This is buffer creation parameters
+    //! buffer creation parameters
     //!
     struct BufferCreationParameters : public BufferDesc
     {
-        struct EffectBindingInfo
-        {
-            EffectId effect;
-            StrA     port;
-        };
-
         //! \name initial data.
         //@{
-        const void * sysMem;
-        size_t       sysMemRawPitch;
-        size_t       sysMemSlicePitch;
+        const void * initialData;
+        size_t       initialRawPitch;
+        size_t       initialSlicePitch;
         //@}
-
-        //! \name sub buffer properties
-        //@{
-        BufferId parent; //!< parent buffer ID. Zero for top-level buffer.
-        size_t   level;  //!< mipmap level in parent buffer.
-        size_t   face;   //!< face index in parent buffer.
-        size_t   slice;  //!< slice index in parent buffer.
-        //@}
-
-        //!
-        //! effect binding information
-        //!
-        DynaArray<EffectBindingInfo> bindingToTheseEffects;
-
-        //!
-        //! buffer reusing information
-        //!
-        DynaArray<BufferId> reuseOneOfTheseIfPossible;
-
-        //!
-        //! util function that creates binding to specific effect.
-        //!
-        void bindToEffect( EffectId eff, const StrA & port )
-        {
-            bindingToTheseEffects.resize( bindingToTheseEffects.size() + 1 );
-            EffectBindingInfo & ebi = bindingToTheseEffects.back();
-            ebi.effect = eff;
-            ebi.port = port;
-        }
     };
+
     //!
     //! effect constant type
     //!
