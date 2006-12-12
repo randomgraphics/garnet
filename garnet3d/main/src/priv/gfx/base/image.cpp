@@ -5,8 +5,8 @@
 
 #include "imageBMP.h"
 #include "imageDDS.h"
-#include "imageJPG.h"
 #include "imagePNG.h"
+#include "imageJPG.h"
 #include "imageTGA.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");

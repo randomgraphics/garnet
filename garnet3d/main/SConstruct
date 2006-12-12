@@ -28,11 +28,11 @@ if 'win32' == LOCAL_env['PLATFORM']:
 elif 'cygwin' == LOCAL_env['PLATFORM']:
     CONF_os = 'cygwin'
     CONF_cpu = 'x86'
-elif 'unix' == LOCAL_env['PLATFORM']:
-    CONF_os = 'unix'
+elif 'posix' == LOCAL_env['PLATFORM']:
+    CONF_os = 'posix'
     CONF_cpu = 'x86'
 else:
-    print 'FATAL: Unknown OS'
+    print 'FATAL: Unknown platform:', LOCAL_env['PLATFORM']
     Exit(-1)
 
 # 定义可用的编译器列表
@@ -58,8 +58,8 @@ if 'mswin' == CONF_os:
 elif 'cygwin' == CONF_os:
     CONF_allCompilers.append( Compiler('gcc','cygwin','x86') )
 else:
-    assert( 'unix' == CONF_os )
-    CONF_allCompilers.append( Compiler('gcc','unix','x86') )
+    assert( 'posix' == CONF_os )
+    CONF_allCompilers.append( Compiler('gcc','posix','x86') )
 
 # Get a compiler for specific target OS and CPU type.
 def CONF_getCompiler( os, cpu ):
@@ -869,12 +869,13 @@ def BUILD_toList( x ):
     else : return []
 
 def BUILD_addLib( env, name, lib, addSuffix ):
-    if not lib in env['LIBS']:
-        if addSuffix:
-            env.Prepend( LIBS = [lib+BUILD_getSuffix()] )
-        else:
-            env.Prepend( LIBS = [lib] )
-        GN.trace( 2, 'Add depends of %s : %s'%(name,lib) )
+    if 'gcc' != env['CC'] and lib in env['LIBS']:
+	return # ignore redundant libraries, if not GCC
+    if addSuffix:
+        env.Prepend( LIBS = [lib+BUILD_getSuffix()] )
+    else:
+        env.Prepend( LIBS = [lib] )
+    GN.trace( 2, 'Add depends of %s : %s'%(name,lib) )
 
 def BUILD_addExternalDependencies( env, name, deps ):
     for x in reversed(deps):
@@ -953,13 +954,11 @@ def BUILD_program( name, target ):
     if target.ignoreDefaultDependencies:
         stdlibs = []
     else:
-        stdlibs = Split('GNutil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfx GNcore GNbase GNextern')
+        stdlibs = Split('GNcore GNutil GNrndrD3D9 GNrndrD3D10 GNgfx GNrndrOGL GNgfx GNcore GNbase GNextern')
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
     GN.trace( 2, "Depends of %s : %s"%(name,env['LIBS']) )
-
-    if 'gcc' == env['CC']: env.Prepend( LIBS=['GNcore','GNbase'] )
 
     exeName = '%s%s%s%s'%(env['PROGPREFIX'],name,BUILD_getSuffix(),env['PROGSUFFIX'])
     prog = env.Program( os.path.join(str(target.path),exeName), objs )

@@ -44,7 +44,9 @@
 # define sg_wcsicmp     ::wcsicmp
 # define SOCHAR_T       char
 #else
-# define __USE_GNU
+# ifndef __USE_GNU
+#  define __USE_GNU
+# endif
 # include <glob.h>
 # define sg_strchr      ::strchr
 # define sg_strlen      ::strlen
@@ -52,7 +54,6 @@
 # define sg_strcmp      ::strcmp
 # define sg_stricmp     ::strcasecmp
 # define SOCHAR_T       char
-# ifdef __CYGWIN__
     int sg_wcscmp( const wchar_t * s1, const wchar_t * s2 )
     {
         while( *s1 == *s2 )
@@ -73,10 +74,6 @@
         }
         return towlower(*s1) - towlower(*s2);
     }
-# else
-#   define sg_wcscmp     ::wcscmp
-#   define sg_wcsicmp    ::wcsicmp
-# endif
 #endif
 
 #include <string.h>

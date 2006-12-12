@@ -38,7 +38,7 @@ namespace GN
             //!
             KEY_NONE = 0,
 
-            #include "input/keycodeMeta.h"
+            #include "input/keyCodeMeta.h"
 
             //!
             //! number of available keycodes
