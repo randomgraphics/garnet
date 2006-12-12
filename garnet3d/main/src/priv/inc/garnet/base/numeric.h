@@ -8,10 +8,10 @@
 
 #include <stddef.h>
 #include <wchar.h>
-#if GN_GCC
-#include <stdint.h>
-#else
+#if GN_MSVC
 #include "stdint.h"
+#else
+#include <stdint.h>
 #endif
 
 namespace GN

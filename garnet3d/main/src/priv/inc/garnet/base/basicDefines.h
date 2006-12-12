@@ -270,6 +270,17 @@
     ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
     ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
 
+//!
+//! Compile-time assert
+//!
+#define GN_CASSERT_EX( exp, msg ) struct GN_JOIN3(__GN_cassert_,msg,__LINE__){ int data[(exp)?1:-1]; }
+
+//!
+//! Compile-time assert
+//!
+#define GN_CASSERT( exp ) GN_CASSERT_EX( exp, _ )
+
+
 // *****************************************************************************
 //                           End of basicDefines.h
 // *****************************************************************************

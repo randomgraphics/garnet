@@ -89,16 +89,6 @@
 //!
 #define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: %s", msg ) );
 
-//!
-//! Compile-time assert
-//!
-#define GN_CASSERT_EX( exp, msg ) struct GN_JOIN(__GN_cassert_, GN_JOIN( msg,__LINE__)){ int data[(exp)?1:-1]; }
-
-//!
-//! Compile-time assert
-//!
-#define GN_CASSERT( exp ) GN_CASSERT_EX( exp, _ )
-
 // *****************************************************************************
 //! \name error check macros
 // *****************************************************************************
