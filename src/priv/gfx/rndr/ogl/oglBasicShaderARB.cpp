@@ -248,7 +248,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 
     UniformDesc desc;
 
-    desc.u32 = (uint32_t)u.userData;
+    desc.u32 = (uint32_t)(uintptr_t)u.userData;
 
     if( ENV_PARAMETER == desc.type )
     {
@@ -413,7 +413,7 @@ bool GN::gfx::OGLBasicShaderARB::queryDeviceUniform( const char * name, HandleTy
 
     // set user data
     desc.index = index;
-    userData = (HandleType)desc.u32;
+    userData = (HandleType)(uintptr_t)desc.u32;
 
     // success
     return true;
