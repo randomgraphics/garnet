@@ -282,7 +282,7 @@ bool GN::gfx::EffectDesc::CondExp::evaluate() const
 void GN::gfx::EffectDesc::CondExp::compose(
     OpCode op, const CondExp & c1, const CondExp & c2 )
 {
-    static Token sEmptyToken = { VALUEI, 1 };
+    static Token sEmptyToken = { VALUEI, { 1 } };
 
     const Token * t1, * t2;
     size_t n1, n2;
@@ -317,7 +317,7 @@ void GN::gfx::EffectDesc::CondExp::compose(
     }
     else
     {
-        Token t = { OPCODE, op };
+        Token t = { OPCODE, { op } };
         tokens.clear();
         tokens.push_back( t );
         tokens.insert( tokens.end(), t1, t1+n1 );

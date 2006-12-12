@@ -17,7 +17,7 @@
 #endif
 #include <windows.h>
 #elif GN_POSIX
-#include <X11/XLib.h>
+#include <X11/Xlib.h>
 #endif
 
 #include <exception>

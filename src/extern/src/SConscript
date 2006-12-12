@@ -67,12 +67,12 @@ if 'gcc' == GN.compiler.name or 'mingw' == GN.compiler.name: jpeg_cluster.addCom
 jpeg_cluster.addCompileFlags( CPPPATH=['jpeg'], CCFLAGS = ccflags, CPPDEFINES = cppdefines )
 jpeg_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
 
-common_sources = GN.glob( Split('expat/*.c') )# pcre/*.c* png/*.c zlib/*.c'), True )
+common_sources = GN.glob( Split('expat/*.c pcre/*.c* png/*.c zlib/*.c'), True )
 if 'mingw' != GN.compiler.name: common_sources += GN.glob( Split('freetype2/*.c lua/*.c tinyxml/*.cpp'), True )
 if GN.conf['has_ogl']: common_sources += GN.glob( 'glew/*.c' )
 common_cluster = GN.newSourceCluster( common_sources )
 common_cluster.addCompileFlags( CCFLAGS = ccflags, CPPDEFINES = cppdefines )
-common_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck'] )
+common_cluster.removeCompileFlags( CCFLAGS = ['/W4','/Wcheck','-Wall'] )
 
 # **********************
 # define source clusters

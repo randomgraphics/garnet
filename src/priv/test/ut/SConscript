@@ -21,3 +21,6 @@ Depends( cxxtest, 'cxxtestgen.py' )
 cluster = GN.newSourceCluster( [str(cxxtest[0]),'testCommon.cpp'] )
 if GN.conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
 GN.newTarget( 'prog', 'GNut', [cluster] )
+
+# disable signed compare with unsigned warning of GCC
+cluster.addCompileFlags( CCFLAGS=['-Wno-sign-compare'] )

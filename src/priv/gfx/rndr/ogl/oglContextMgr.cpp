@@ -288,7 +288,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
 
     if( 0 == newFlags.shaders ) return;
 
-	const Shader * glslVs = 0;
+    const Shader * glslVs = 0;
     const Shader * glslPs = 0;
 
     const Shader * oldVtxShader = mContext.shaders[SHADER_VS];
@@ -391,7 +391,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
     // handle GLSL shader and program in special way
     if( glslVs || glslPs )
     {
-        GLSLShaders key = { glslVs, glslPs };
+        GLSLShaders key = { { glslVs, glslPs, 0 } };
         GLSLProgramMap::const_iterator i = mGLSLProgramMap.find( key );
         if( mGLSLProgramMap.end() != i )
         {

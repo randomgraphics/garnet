@@ -941,7 +941,7 @@ namespace GN
     template<> inline bool str2Int<int64_t>( int64_t & i, const char * s ) { return str2Int64( i, s ); }
     template<> inline bool str2Int<uint64_t>( uint64_t & i, const char * s ) { return str2Uint64( i, s ); }
 
-#if !GN_MINGW
+#if !GN_MINGW and !GN_GCC
     template<> inline bool str2Int<int>( int & i, const char * s ) { return str2Int32( *(int32_t*)&i, s ); }
     template<> inline bool str2Int<unsigned int>( unsigned int & i, const char * s ) { return str2Uint32( *(uint32_t*)&i, s ); }
 #endif
