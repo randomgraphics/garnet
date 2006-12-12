@@ -23,4 +23,4 @@ if GN.conf['has_boost']: cluster.addCompileFlags( CPPDEFINES = ['HAS_BOOST'] )
 GN.newTarget( 'prog', 'GNut', [cluster] )
 
 # disable signed compare with unsigned warning of GCC
-cluster.addCompileFlags( CCFLAGS=['-Wno-sign-compare'] )
+if 'gcc' == GN.compiler.name: cluster.addCompileFlags( CCFLAGS=['-Wno-sign-compare'] )
