@@ -1115,7 +1115,7 @@ HELP_opts.Add(
     CONF_defaultCmdArgs['os'] )
 HELP_opts.Add(
     'cpu',
-    'Specify build target CPU type. Could be : one of (%s) or "all". (GN_BUILD_TARGET_OS)'%'...',
+    'Specify build target CPU type. Could be : one of (%s) or "all". (GN_BUILD_TARGET_CPU)'%'...',
     CONF_defaultCmdArgs['cpu'] )
 HELP_opts.Add(
     'variant',
