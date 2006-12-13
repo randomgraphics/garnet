@@ -177,7 +177,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
         }
         else if( monitor )
         {
-            scr = (int)monitor;
+            scr = (int)(intptr_t)monitor;
         } 
         else
         {

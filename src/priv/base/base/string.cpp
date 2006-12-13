@@ -115,7 +115,10 @@ bool GN::str2Uint32( uint32_t & i, const char * s )
 bool GN::str2Int64( int64_t & i, const char * s )
 {
     if( strEmpty(s) ) return false;
-    return 1 == sscanf( s, "%lli", &i );
+    long long int lli;
+    if( 1 != sscanf( s, "%lli", &lli ) ) return false;
+    i = lli;
+    return true;
 }
 
 //
@@ -124,7 +127,10 @@ bool GN::str2Int64( int64_t & i, const char * s )
 bool GN::str2Uint64( uint64_t & i, const char * s )
 {
     if( strEmpty(s) ) return false;
-    return 1 == sscanf( s, "%llu", &i );
+    unsigned long long int llu;
+    if( 1 != sscanf( s, "%llu", &llu ) ) return false;
+    i = llu;
+    return true;
 }
 
 //

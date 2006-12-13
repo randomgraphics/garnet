@@ -61,7 +61,7 @@ namespace GN { namespace gfx
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap() { GN_ERROR(getLogger("GN.gfx.rndr.OGL"))( "no implementation" ); }
-        virtual void * getAPIDependentData() const { return (void*)getOGLTexture(); }
+        virtual void * getAPIDependentData() const { return (void*)(uintptr_t)getOGLTexture(); }
 
         //@}
 

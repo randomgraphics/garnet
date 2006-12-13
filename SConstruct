@@ -877,13 +877,23 @@ def BUILD_addLib( env, name, lib, addSuffix ):
         env.Prepend( LIBS = [lib] )
     GN.trace( 2, 'Add depends of %s : %s'%(name,lib) )
 
+class ReverseIteratorProxy:
+    def __init__(self, sequence):
+        self.sequence = sequence
+    def __iter__(self):
+        length = len(self.sequence)
+        i = length
+        while i > 0:
+            i = i - 1
+            yield self.sequence[i]
+
 def BUILD_addExternalDependencies( env, name, deps ):
-    for x in reversed(deps):
+    for x in ReverseIteratorProxy(deps):
         BUILD_addLib( env, name, x, False )
 
 def BUILD_addDependencies( env, name, deps ):
     targets = ALL_targets[BUILD_compiler][BUILD_variant]
-    for x in reversed(deps):
+    for x in ReverseIteratorProxy(deps):
         if x in targets:
             BUILD_addExternalDependencies( env, name, BUILD_toList(targets[x].externalDependencies) )
             BUILD_addDependencies( env, name, BUILD_toList(targets[x].dependencies) )
@@ -1071,7 +1081,8 @@ for compiler, variants in ALL_targets.iteritems():
 ################################################################################
 
 def HELP_generateTargetList():
-    names = set()
+    import sets
+    names = sets.Set()
     maxlen = 0;
     for v in ALL_targets.itervalues():
         for t in v.itervalues():
