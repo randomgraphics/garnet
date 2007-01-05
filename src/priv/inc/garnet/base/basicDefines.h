@@ -137,7 +137,7 @@
 //! \def GN_CPU
 //! Indicate current CPU
 
-#if defined( _WIN64 ) || defined( WIN64 )
+#if defined( _WIN64 ) || defined( WIN64 ) || ( 64 == __WORDSIZE )
 #undef GN_X64
 #define GN_X64 1
 #define GN_CPU "x64"

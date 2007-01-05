@@ -13,16 +13,19 @@
 //! unsigned 8 bit integer
 //!
 typedef unsigned char UInt8;
+GN_CASSERT( sizeof(UInt8) == 1 );
 
 //!
 //! unsigned 16 bit integer
 //!
 typedef unsigned short UInt16;
+GN_CASSERT( sizeof(UInt16) == 2 );
 
 //!
 //! unsigned 32 bit integer
 //!
 typedef unsigned int UInt32;
+GN_CASSERT( sizeof(UInt32) == 4 );
 
 //!
 //! unsigned 64 bit integer
@@ -30,8 +33,9 @@ typedef unsigned int UInt32;
 #if GN_MSVC
 typedef unsigned __int64 UInt64;
 #else
-typedef uint64_t UInt64;
+typedef unsigned long long UInt64;
 #endif
+GN_CASSERT( sizeof(UInt64) == 8 );
 
 //!
 //! signed 8 bit integer
@@ -54,7 +58,7 @@ typedef signed int SInt32;
 #if GN_MSVC
 typedef signed __int64 SInt64;
 #else
-typedef int64_t SInt64;
+typedef signed long long SInt64;
 #endif
 
 //!
@@ -85,15 +89,22 @@ typedef UInt32 BitFields;
 //!
 //! unsigned integer type that can hold a pointer
 //!
-typedef uintptr_t UIntPtr;
+#if GN_X64
+typedef UInt64 UIntPtr;
+#else
+typedef UInt32 UIntPtr;
+#endif
+GN_CASSERT( sizeof(UIntPtr) == sizeof(void*) );
 
 //!
 //! signed integer type that can hold a pointer
 //!
-typedef intptr_t SIntPtr;
-
-GN_CASSERT_EX( sizeof(SIntPtr) == sizeof(void*), int_ptr_size_checker );
-GN_CASSERT_EX( sizeof(UIntPtr) == sizeof(void*), uint_ptr_size_checker );
+#if GN_X64
+typedef SInt64 SIntPtr;
+#else
+typedef SInt32 SIntPtr;
+#endif
+GN_CASSERT( sizeof(SIntPtr) == sizeof(void*) );
 
 // *****************************************************************************
 //                           End of numeric.h
