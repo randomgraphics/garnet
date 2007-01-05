@@ -141,7 +141,7 @@ bool GN::gfx::RenderWindowX11::initExternalRenderWindow(
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
-    HandleType display, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height )
+    HandleType display, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height )
 {
     GN_GUARD;
 
@@ -287,7 +287,7 @@ GN::HandleType GN::gfx::RenderWindowX11::getMonitor() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowX11::getClientSize( uint32_t & width, uint32_t & height ) const
+bool GN::gfx::RenderWindowX11::getClientSize( UInt32 & width, UInt32 & height ) const
 {
     GN_GUARD;
 
@@ -300,8 +300,8 @@ bool GN::gfx::RenderWindowX11::getClientSize( uint32_t & width, uint32_t & heigh
     XWindowAttributes attr;
     GN_X_CHECK_RV( XGetWindowAttributes( mDisplay, mWindow, &attr ), false );
 
-    width = (uint32_t)attr.width;
-    height = (uint32_t)attr.height;
+    width = (UInt32)attr.width;
+    height = (UInt32)attr.height;
 
     // success
     return true;

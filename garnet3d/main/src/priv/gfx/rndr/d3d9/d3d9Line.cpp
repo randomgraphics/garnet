@@ -6,7 +6,7 @@
 struct D3D9LineVertex
 {
     GN::Vector3f p;
-    uint32_t     c;
+    UInt32     c;
 };
 GN_CASSERT( sizeof(D3D9LineVertex) == 16 );
 
@@ -119,9 +119,9 @@ void GN::gfx::D3D9Line::deviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D9Line::drawLines(
-    BitField options,
+    BitFields options,
     const float * positions, size_t stride,
-    size_t count, uint32_t color,
+    size_t count, UInt32 color,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -147,7 +147,7 @@ void GN::gfx::D3D9Line::drawLines(
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
         drawLines( options, positions, stride, n, color, model, view, proj );
-        positions = (const float*)( ((const uint8_t*)positions) + n * stride * 2 );
+        positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }
 
@@ -202,7 +202,7 @@ void GN::gfx::D3D9Line::drawLines(
             D3D9LineVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
             v.c = color;
-            positions = (const float*)( ((const uint8_t*)positions) + stride );
+            positions = (const float*)( ((const UInt8*)positions) + stride );
         }
     }
     else
@@ -212,7 +212,7 @@ void GN::gfx::D3D9Line::drawLines(
             D3D9LineVertex & v = vbData[i];
             v.p.set( positions[0], positions[1], positions[2] );
             v.c = color;
-            positions = (const float*)( ((const uint8_t*)positions) + stride );
+            positions = (const float*)( ((const UInt8*)positions) + stride );
         }
     }
 

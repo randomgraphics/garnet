@@ -107,7 +107,7 @@ namespace GN { namespace gfx
 
         union UniformDesc
         {
-            uint32_t u32;
+            UInt32 u32;
             struct
             {
                 unsigned int type  : 2;  //one of ARBParameterType

@@ -254,7 +254,7 @@ GN_INLINE bool GN::gfx::RenderStateBlockDesc::isSet( RenderState type ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE int32_t GN::gfx::RenderStateBlockDesc::get( RenderState type ) const
+GN_INLINE SInt32 GN::gfx::RenderStateBlockDesc::get( RenderState type ) const
 {
     GN_ASSERT( 0 <= type && type < NUM_RENDER_STATES );
     GN_ASSERT( isSet( type ) );

@@ -71,15 +71,15 @@ namespace GN { namespace gfx {
 
             union
             {
-                int32_t opcode; //!< opcode
-                int32_t valueI; //!< integer value
+                SInt32 opcode; //!< opcode
+                SInt32 valueI; //!< integer value
                 char    valueS[MAX_STRLEN]; //!< string buffer
             };
 
             //!
             //! Set token as an opcode
             //!
-            void setOp( int32_t op )
+            void setOp( SInt32 op )
             {
                 GN_CASSERT( sizeof(Token) == 16 );
                 GN_ASSERT( 0 <= op && op < NUM_OPCODES );
@@ -90,7 +90,7 @@ namespace GN { namespace gfx {
             //!
             //! Set token as an integer value
             //!
-            void setI( int32_t i )
+            void setI( SInt32 i )
             {
                 type = VALUEI;
                 valueI = i;
@@ -133,7 +133,7 @@ namespace GN { namespace gfx {
             //!
             //! Construct from integer
             //!
-            CondExp( int32_t i )
+            CondExp( SInt32 i )
             {
                 tokens.resize(1);
                 tokens[0].setI( i );
@@ -267,7 +267,7 @@ namespace GN { namespace gfx {
             ShadingLanguage lang; //!< Shading language. Ignored if code is empty.
             StrA code; //!< Shader code. Empty means fixed functional pipeline.
             StrA hints; //!< Shader hints.
-            std::map<uint32_t,StrA> textures; //!< textures used by the shader. Key is texture stage, value is texture name.
+            std::map<UInt32,StrA> textures; //!< textures used by the shader. Key is texture stage, value is texture name.
             std::map<StrA,StrA>     uniforms; //!< uniforms used by the shader. Key is uniform binding, value is uniform name.
             CondExp prerequisites; //!< prerequisites of the shader.
         };
@@ -408,7 +408,7 @@ namespace GN { namespace gfx {
         }
     };
 
-    typedef uint32_t EffectItemID; //!< effect item (such as technique, uniform and texture) ID.
+    typedef UInt32 EffectItemID; //!< effect item (such as technique, uniform and texture) ID.
 
     //!
     //! Effect class
@@ -553,7 +553,7 @@ namespace GN { namespace gfx {
         struct TextureRefData
         {
             EffectItemID id; // texture ID that is referenced.
-            uint32_t     stage;
+            UInt32     stage;
         };
 
         struct ShaderRefData
@@ -574,8 +574,8 @@ namespace GN { namespace gfx {
             EffectItemID id; //!< uniform ID that is being referenced.
             union
             {
-                uint32_t shaderUniformHandle; //!< shader-specific uniform handle. Effective only when ffp is false.
-                int32_t  ffpType; //!< FFP uniform type. Effective only when ffp is true.
+                UInt32 shaderUniformHandle; //!< shader-specific uniform handle. Effective only when ffp is false.
+                SInt32  ffpType; //!< FFP uniform type. Effective only when ffp is true.
             };                
             bool ffp;     //!< is this binding to fixed functional pipeline? (determined by binding name)
         };
@@ -634,7 +634,7 @@ namespace GN { namespace gfx {
         NamedItemManager<ShaderData>    mShaders;
         NamedItemManager<TechniqueData> mTechniques;
         
-        mutable uint32_t mActiveTechnique;
+        mutable UInt32 mActiveTechnique;
         mutable bool     mPassBegun;
         mutable size_t   mActivePass;
 
@@ -648,7 +648,7 @@ namespace GN { namespace gfx {
         bool createEffect(); // called by init()
         bool createShader( ShaderData &, const StrA &, const EffectDesc::ShaderDesc & );
         bool createTechnique( TechniqueData &, const EffectDesc::TechniqueDesc & );
-        static void sSetFfpUniform( int32_t, const UniformData & );
+        static void sSetFfpUniform( SInt32, const UniformData & );
     };
 }}
 

@@ -141,7 +141,7 @@ namespace GN
             BlockHeader * prev; //!< point to previous block. NULL means head block.
             BlockHeader * next; //!< point to next block. NULL means last block.
             BlockHeader * nextFree; //!< point to next free block.
-            void * data() const { return (void*)( ((uint8_t*)this) + (size_t)&((BlockHeader*)NULL)->nextFree ); } //!< return pointer to data area.
+            void * data() const { return (void*)( ((UInt8*)this) + (size_t)&((BlockHeader*)NULL)->nextFree ); } //!< return pointer to data area.
         };
 
         const size_t DATA_OFFSET; //!< offset of data area to the head of block.
@@ -218,7 +218,7 @@ namespace GN
 
             GN_ASSERT( (size_t)p > DATA_OFFSET );
 
-            BlockHeader * b = (BlockHeader*)( ((uint8_t*)p) - DATA_OFFSET );
+            BlockHeader * b = (BlockHeader*)( ((UInt8*)p) - DATA_OFFSET );
 
             // TODO: check pattern at head of blcok. Make sure this is a valid memory block.
 

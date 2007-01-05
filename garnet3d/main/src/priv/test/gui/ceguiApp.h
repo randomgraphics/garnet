@@ -64,7 +64,7 @@ public:
                         "DefaultResourceProvider::load - " + filename + " does not exist");
                 }
 
-                AutoObjPtr<uint8_t> buffer( new uint8_t[fp.size()] );
+                AutoObjPtr<UInt8> buffer( new UInt8[fp.size()] );
                 if( !fp.read( buffer, fp.size(), NULL ) )
                 {
                     throw GenericException((utf8*)

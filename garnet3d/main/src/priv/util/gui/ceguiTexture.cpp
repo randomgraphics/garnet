@@ -88,10 +88,10 @@ bool CEGUI::GarnetTexture::reload()
         if( !tex->lock( tlr, 0, 0, 0, gfx::LOCK_DISCARD ) ) return false;
 
         // copy data
-        const uint8_t * src = (const uint8_t*)mMemBuffer;
+        const UInt8 * src = (const UInt8*)mMemBuffer;
         size_t srcPitch = mWidth * 4;
         GN_ASSERT( tlr.rowBytes >= srcPitch );
-        uint8_t * dst = (uint8_t*)tlr.data;
+        UInt8 * dst = (UInt8*)tlr.data;
         if( srcPitch == tlr.rowBytes )
         {
             memcpy( dst, src, srcPitch * mHeight );
@@ -122,7 +122,7 @@ bool CEGUI::GarnetTexture::reload()
         GN_TRACE(sLogger)( "Load GUI texture: name(%s), group(%s).", mFileName.c_str(), mFileName.c_str() );
 
         // load texture
-        MemFile<uint8_t> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.c_str() );
+        MemFile<UInt8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.c_str() );
         mGarnetTexture.attach( r.createTextureFromFile( mf ) );
         if( !mGarnetTexture ) return false;
 

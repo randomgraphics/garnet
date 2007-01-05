@@ -52,16 +52,16 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
     // read image data
     ImageReader reader;
     ImageDesc desc;
-    std::vector<uint8_t> buf;
+    std::vector<UInt8> buf;
     if( !reader.reset( file ) ) return 0;
     if( !reader.readHeader( desc ) ) return 0;
     buf.resize( desc.getTotalBytes() );
     if( !reader.readImage( &buf[0] ) ) return 0;
 
     // get image size
-    uint32_t w = desc.mipmaps[0].width;
-    uint32_t h = desc.mipmaps[0].height;
-    uint32_t d = desc.mipmaps[0].depth;
+    UInt32 w = desc.mipmaps[0].width;
+    UInt32 h = desc.mipmaps[0].height;
+    UInt32 d = desc.mipmaps[0].depth;
 
     // determine texture type, based on image demension
     TexType type;
@@ -107,7 +107,7 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
             m.slicePitch <= tlr.sliceBytes &&
             m.rowPitch <= tlr.rowBytes );
 
-        const uint8_t * mipData = &buf[0] + desc.getSliceOffset( f, l, 0 );
+        const UInt8 * mipData = &buf[0] + desc.getSliceOffset( f, l, 0 );
 
         if( m.slicePitch == tlr.sliceBytes )
         {
@@ -115,12 +115,12 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
         }
         else if( m.rowPitch == tlr.rowBytes )
         {
-            const uint8_t * src = mipData;
-            uint8_t * dst = (uint8_t*)tlr.data;
+            const UInt8 * src = mipData;
+            UInt8 * dst = (UInt8*)tlr.data;
             for( size_t z = 0; z < m.depth; ++z )
             {
                ASSERT_RANGE( src, m.slicePitch, mipData, m.levelPitch );
-               ASSERT_RANGE( dst, m.slicePitch, (uint8_t*)tlr.data, tlr.sliceBytes*p->getMipSize(l).z );
+               ASSERT_RANGE( dst, m.slicePitch, (UInt8*)tlr.data, tlr.sliceBytes*p->getMipSize(l).z );
                ::memcpy( dst, src, m.slicePitch );
                src += m.slicePitch;
                dst += tlr.sliceBytes;
@@ -130,12 +130,12 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
         {
             for( size_t z = 0; z < m.depth; ++z )
             {
-                const uint8_t * src = mipData + z * m.slicePitch;
-                uint8_t * dst = (uint8_t*)tlr.data + z * tlr.sliceBytes;
+                const UInt8 * src = mipData + z * m.slicePitch;
+                UInt8 * dst = (UInt8*)tlr.data + z * tlr.sliceBytes;
                 for( size_t y = 0; y < m.height; ++y )
                 {
                    ASSERT_RANGE( src, m.rowPitch, mipData, m.levelPitch );
-                   ASSERT_RANGE( dst, m.rowPitch, (uint8_t*)tlr.data, tlr.sliceBytes*p->getMipSize(l).z );
+                   ASSERT_RANGE( dst, m.rowPitch, (UInt8*)tlr.data, tlr.sliceBytes*p->getMipSize(l).z );
                    ::memcpy( dst, src, m.rowPitch );
                    src += m.rowPitch;
                    dst += tlr.rowBytes;

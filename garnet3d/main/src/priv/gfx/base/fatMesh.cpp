@@ -63,7 +63,7 @@ void GN::gfx::FatMesh::optimize( const OptimizeOptions & oo )
             for( size_t i = 0; i < fs.indices32.size(); ++i )
             {
                 GN_ASSERT( fs.indices32[i] <= 0xFFFF );
-                fs.indices16[i] = (uint16_t)fs.indices32[i];
+                fs.indices16[i] = (UInt16)fs.indices32[i];
             }
             fs.indices32.clear();
         }
@@ -152,9 +152,9 @@ void GN::gfx::FatMesh::sortByMaterial( size_t vtxSegIdx, const DynaArray<size_t>
             GN_ASSERT( f.i1 < 0xFFFFFFFF );
             GN_ASSERT( f.i2 < 0xFFFFFFFF );
 #endif
-            fs.indices32[faceIdx*3+0] = (uint32_t)( f.i0 - vs.start );
-            fs.indices32[faceIdx*3+1] = (uint32_t)( f.i1 - vs.start );
-            fs.indices32[faceIdx*3+2] = (uint32_t)( f.i2 - vs.start );
+            fs.indices32[faceIdx*3+0] = (UInt32)( f.i0 - vs.start );
+            fs.indices32[faceIdx*3+1] = (UInt32)( f.i1 - vs.start );
+            fs.indices32[faceIdx*3+2] = (UInt32)( f.i2 - vs.start );
         }
     }
 

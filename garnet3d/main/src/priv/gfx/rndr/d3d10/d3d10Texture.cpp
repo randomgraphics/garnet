@@ -242,7 +242,7 @@ bool GN::gfx::D3D10Texture::createTexture()
     {
         GN_TODO( "mipsize may be inacurate, if texture size is not 2^n." );
     }
-    Vector3<uint32_t> mipSize( desc.width, desc.height, desc.depth );
+    Vector3<UInt32> mipSize( desc.width, desc.height, desc.depth );
     for( size_t i = 0; i < getDesc().levels; ++i )
     {
         setMipSize( i, mipSize );

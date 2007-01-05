@@ -4,7 +4,7 @@
 // local functions
 // *****************************************************************************
 
-#define ENCODE_KEY(from,to) ( ((((int16_t)from) & 0xFF) << 8) | (((int16_t)to) & 0xFF) )
+#define ENCODE_KEY(from,to) ( ((((SInt16)from) & 0xFF) << 8) | (((SInt16)to) & 0xFF) )
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 

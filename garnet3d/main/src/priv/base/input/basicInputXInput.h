@@ -19,7 +19,7 @@ namespace GN { namespace input
     //!
     class BasicXInput : public BasicInput
     {
-        uint32_t mXInputPacketNumber;
+        UInt32 mXInputPacketNumber;
 
     protected:
 

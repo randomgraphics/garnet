@@ -34,8 +34,8 @@ namespace GN { namespace gfx
         float * positions, size_t posStride,
         float * texcoords, size_t texStride,
         float * normals, size_t normStride,
-        uint16_t * triList,
-        uint16_t * quadList );
+        UInt16 * triList,
+        UInt16 * quadList );
 }}
 
 // *****************************************************************************

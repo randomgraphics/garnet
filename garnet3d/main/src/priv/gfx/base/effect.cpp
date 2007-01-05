@@ -35,7 +35,7 @@ static inline bool sExist( const std::map<GN::StrA,T> & theMap, const GN::StrA &
 //
 //
 // -----------------------------------------------------------------------------
-static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
+static bool sIsFfpUniformType( const GN::StrA & name, SInt32 * type )
 {
     GN_GUARD;
 
@@ -49,9 +49,9 @@ static bool sIsFfpUniformType( const GN::StrA & name, int32_t * type )
         "FFP_MATERIAL_DIFFUSE",
         "FFP_MATERIAL_SPECULAR",
     };
-    static const int32_t n = (int32_t)GN_ARRAY_COUNT( sTable );
+    static const SInt32 n = (SInt32)GN_ARRAY_COUNT( sTable );
 
-    for( int32_t i = 0; i < n; ++i )
+    for( SInt32 i = 0; i < n; ++i )
     {
         if( sTable[i] == name )
         {
@@ -140,7 +140,7 @@ GN::gfx::EffectDesc::OpCode GN::gfx::EffectDesc::sStr2OpCode( const StrA & s )
 // -----------------------------------------------------------------------------
 static bool sCalc(
     GN::gfx::EffectDesc::Token & result,
-    int32_t op,
+    SInt32 op,
     const GN::gfx::EffectDesc::Token * s0,
     const GN::gfx::EffectDesc::Token * s1 )
 {
@@ -229,7 +229,7 @@ static bool sDoEval(
     if( GN::gfx::EffectDesc::OPCODE == p->type )
     {
         // store opcode
-        int32_t op = p->opcode;
+        SInt32 op = p->opcode;
         if( op < 0 || op >= GN::gfx::EffectDesc::NUM_OPCODES )
         {
             GN_ERROR(sLogger)( "invalid opcode : %d", op );
@@ -358,9 +358,9 @@ bool GN::gfx::EffectDesc::valid() const
         }
 
         // check texture referencing list
-        for( std::map<uint32_t,StrA>::const_iterator i = shader.textures.begin(); i != shader.textures.end(); ++i )
+        for( std::map<UInt32,StrA>::const_iterator i = shader.textures.begin(); i != shader.textures.end(); ++i )
         {
-            uint32_t stage = i->first;
+            UInt32 stage = i->first;
             const StrA & name = i->second;
 
             if( !sExist( textures, name ) )
@@ -601,10 +601,10 @@ bool GN::gfx::Effect::createEffect()
     //    for each shaders:
     //      if the shader is referencing the uniform:
     //        add this shader to the uniform's shader-referencing list
-    for( uint32_t hUniform = mUniforms.items.first(); hUniform != 0; hUniform = mUniforms.items.next(hUniform) )
+    for( UInt32 hUniform = mUniforms.items.first(); hUniform != 0; hUniform = mUniforms.items.next(hUniform) )
     {
         UniformData & ud = mUniforms.items[hUniform];
-        for( uint32_t hShader = mShaders.items.first(); hShader != 0; hShader = mShaders.items.next(hShader) )
+        for( UInt32 hShader = mShaders.items.first(); hShader != 0; hShader = mShaders.items.next(hShader) )
         {
             const ShaderData & sd = mShaders.items[hShader];
             for( size_t i = 0; i < sd.uniforms.size(); ++i )
@@ -688,7 +688,7 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
 
     // build texture referencing list
     data.textures.reserve( desc.textures.size() );
-    for( std::map<uint32_t,StrA>::const_iterator i = desc.textures.begin(); i != desc.textures.end(); ++i )
+    for( std::map<UInt32,StrA>::const_iterator i = desc.textures.begin(); i != desc.textures.end(); ++i )
     {
         TextureRefData trd;
         trd.stage = i->first;
@@ -791,7 +791,7 @@ bool GN::gfx::Effect::createTechnique( TechniqueData & data, const EffectDesc::T
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Effect::sSetFfpUniform( int32_t type, const UniformData & data )
+void GN::gfx::Effect::sSetFfpUniform( SInt32 type, const UniformData & data )
 {
     GN_GUARD;
 

@@ -30,7 +30,7 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
     setProperties( bytes, dynamic );
 
     // initialize system copy
-    mSysCopy = (uint8_t*)heapAlloc( bytes );
+    mSysCopy = (UInt8*)heapAlloc( bytes );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB

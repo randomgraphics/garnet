@@ -184,11 +184,11 @@ GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc,
 //
 //
 // -----------------------------------------------------------------------------
-uint32_t GN::gfx::OGLRenderer::createVtxFmt( const VtxFmtDesc & format )
+UInt32 GN::gfx::OGLRenderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
-    uint32_t h = mVtxFmts.findIf( EqualFormat(format) );
+    UInt32 h = mVtxFmts.findIf( EqualFormat(format) );
 
     if( 0 == h )
     {

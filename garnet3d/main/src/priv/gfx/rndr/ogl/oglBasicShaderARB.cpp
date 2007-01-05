@@ -156,7 +156,7 @@ void GN::gfx::OGLBasicShaderARB::apply() const
     GN_OGL_CHECK( glBindProgramARB( mTarget, mProgram ) );
 
     // apply ALL uniforms to D3D device
-    uint32_t handle = getFirstUniform();
+    UInt32 handle = getFirstUniform();
     while( handle )
     {
         applyUniform( getUniform( handle ) );
@@ -174,8 +174,8 @@ void GN::gfx::OGLBasicShaderARB::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
 
-    const std::set<uint32_t> dirtySet = getDirtyUniforms();
-    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    const std::set<UInt32> dirtySet = getDirtyUniforms();
+    std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         applyUniform( getUniform( *i ) );
@@ -248,7 +248,7 @@ inline void GN::gfx::OGLBasicShaderARB::applyUniform( const Uniform & u ) const
 
     UniformDesc desc;
 
-    desc.u32 = (uint32_t)(uintptr_t)u.userData;
+    desc.u32 = (UInt32)(uintptr_t)u.userData;
 
     if( ENV_PARAMETER == desc.type )
     {

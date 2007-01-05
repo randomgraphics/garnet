@@ -31,7 +31,7 @@ HRESULT MyDevice9::create(
     UINT nAdapter = myd3d->GetAdapterCount();
     GN_ASSERT( nAdapter );
     GN_TRACE(sLogger)( "Looking for NVPerfHUD adapter in all adapters: total(%d), d3d(0x%p).", nAdapter, myd3d );
-    for( uint32_t i = 0; i < nAdapter; ++i )
+    for( UInt32 i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX9_CHECK( myd3d->GetAdapterIdentifier( i, 0, &Identifier ) );

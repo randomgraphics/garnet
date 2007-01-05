@@ -98,7 +98,7 @@ void GN::gfx::OGLVtxFmt::bind() const
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::bindBuffer(
-    size_t index, const uint8_t * buf, size_t startVtx, size_t stride ) const
+    size_t index, const UInt8 * buf, size_t startVtx, size_t stride ) const
 {
     GN_GUARD_SLOW;
 
@@ -316,7 +316,7 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetVertexPointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_OGL_CHECK( glVertexPointer(
                     info.components,
@@ -329,7 +329,7 @@ void GN::gfx::OGLVtxFmt::sSetVertexPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetNormalPointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_OGL_CHECK( glNormalPointer(
                     info.format,
@@ -341,7 +341,7 @@ void GN::gfx::OGLVtxFmt::sSetNormalPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetColorPointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_OGL_CHECK( glColorPointer(
                     info.components,
@@ -354,7 +354,7 @@ void GN::gfx::OGLVtxFmt::sSetColorPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetSecondaryColorPointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_EXT_secondary_color );
     GN_OGL_CHECK( glSecondaryColorPointerEXT(
@@ -368,7 +368,7 @@ void GN::gfx::OGLVtxFmt::sSetSecondaryColorPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetFogPointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_EXT_fog_coord );
     GN_OGL_CHECK( glFogCoordPointerEXT(
@@ -381,7 +381,7 @@ void GN::gfx::OGLVtxFmt::sSetFogPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( info.self );
     OGLRenderer & r = info.self->getRenderer();
@@ -397,7 +397,7 @@ void GN::gfx::OGLVtxFmt::sSetTexCoordPointer(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::sSetVertexAttributePointer(
-    const AttribBindingInfo & info, const uint8_t * buf, size_t stride )
+    const AttribBindingInfo & info, const UInt8 * buf, size_t stride )
 {
     GN_ASSERT( GLEW_ARB_vertex_program || GLEW_ARB_vertex_shader );
     GN_ASSERT( 0 <= info.attribute && info.attribute < 16 );

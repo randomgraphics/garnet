@@ -49,7 +49,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag );
+        virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag );
         virtual void unlock();
 
         // ********************************
@@ -79,7 +79,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        std::vector<uint16_t>  mSysCopy;
+        std::vector<UInt16>  mSysCopy;
         LPDIRECT3DINDEXBUFFER9 mD3DIb;
 
         size_t   mLockStartIdx;

@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.app.SampleResourceManager");
 
 struct SampleRawData : public RawData
 {
-    std::vector<uint8_t> buffer;
+    std::vector<UInt8> buffer;
     SampleRawData( size_t sz ) : buffer(sz) {}
     virtual size_t size() const { GN_ASSERT(!buffer.empty()); return buffer.size(); }
     virtual void * data() const { GN_ASSERT(!buffer.empty()); return (void*)&buffer[0]; }
@@ -256,7 +256,7 @@ static bool sCreateNullTexture( Texture * & result, const StrA & name, void * )
     }
 
     AutoRef<Texture> tex( gRenderer.create1DTexture( 1 ) );
-    uint32_t * texData = (uint32_t*)tex->lock1D( 0, 0, 0, GN::gfx::LOCK_WO );
+    UInt32 * texData = (UInt32*)tex->lock1D( 0, 0, 0, GN::gfx::LOCK_WO );
     if( 0 == texData ) return false;
     //           A R G B
     *texData = 0xFF0000FF;

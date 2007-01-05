@@ -96,7 +96,7 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual uint32_t getCaps( RendererCaps c ) const
+        virtual UInt32 getCaps( RendererCaps c ) const
         {
             switch( c )
             {
@@ -111,7 +111,7 @@ namespace GN { namespace gfx
             };
         }
         virtual bool supportShader( const StrA & ) { return true; }
-        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return true; }
+        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const { return true; }
 
         //@}
 
@@ -137,7 +137,7 @@ namespace GN { namespace gfx
 
         class FakeTexture : public Texture
         {
-            std::vector<uint8_t> mBuffer;
+            std::vector<UInt8> mBuffer;
 
         public:
 
@@ -149,7 +149,7 @@ namespace GN { namespace gfx
                 mBuffer.resize( getDesc().width * getDesc().height * getDesc().depth * getClrFmtDesc(getDesc().format).bits / 8 );
                 for( size_t i = 0; i < getDesc().levels; ++i )
                 {
-                    Vector3<uint32_t> sz( getBaseSize() );
+                    Vector3<UInt32> sz( getBaseSize() );
                     sz.x >>= i; if( 0 == sz.x ) sz.x = 1;
                     sz.y >>= i; if( 0 == sz.y ) sz.y = 1;
                     sz.z >>= i; if( 0 == sz.z ) sz.z = 1;
@@ -179,7 +179,7 @@ namespace GN { namespace gfx
 
         class FakeVtxBuf : public VtxBuf
         {
-            std::vector<uint8_t> mBuffer;
+            std::vector<UInt8> mBuffer;
 
         public:
 
@@ -191,13 +191,13 @@ namespace GN { namespace gfx
 
         class FakeIdxBuf : public IdxBuf
         {
-            std::vector<uint16_t> mBuffer;
+            std::vector<UInt16> mBuffer;
 
         public:
 
             FakeIdxBuf( size_t numIdx ) { mBuffer.resize(numIdx); }
 
-            virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag ) { return &mBuffer[0]; }
+            virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag ) { return &mBuffer[0]; }
             virtual void unlock() {}
         };
 
@@ -220,7 +220,7 @@ namespace GN { namespace gfx
             if( !tex->init( desc ) ) return 0;
             return tex.detach();
         }
-        virtual uint32_t createVtxFmt( const VtxFmtDesc & ) { return 1; }
+        virtual UInt32 createVtxFmt( const VtxFmtDesc & ) { return 1; }
         virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader ) { return new FakeVtxBuf( bytes ); }
         virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader ) { return new FakeIdxBuf( numIdx ); }
 
@@ -252,7 +252,7 @@ namespace GN { namespace gfx
 
         virtual bool drawBegin() { return true; }
         virtual void drawEnd() {}
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags ) {}
+        virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags ) {}
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrim,
                                   size_t        startVtx,
@@ -268,21 +268,21 @@ namespace GN { namespace gfx
                              size_t           numVertices,
                              const void *     vertexData,
                              size_t           strideInBytes,
-                             const uint16_t * indexData ) {}
+                             const UInt16 * indexData ) {}
         virtual void drawUp( PrimitiveType prim,
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes ) {}
-        virtual void drawQuads( BitField options,
+        virtual void drawQuads( BitFields options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 const void * colors, size_t clrStride,
                                 size_t count ) {}
-        virtual void drawLines( BitField options,
+        virtual void drawLines( BitFields options,
                                 const void * positions,
                                 size_t stride,
                                 size_t count,
-                                uint32_t color,
+                                UInt32 color,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj ) {}

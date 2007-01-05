@@ -54,7 +54,7 @@ struct ColoredEffect : public BasicEffect
 //!
 class TestBatchSize : public BasicTestCase
 {
-    uint32_t BATCH_SIZE;
+    UInt32 BATCH_SIZE;
 
     StrA mInfo;
     AverageValue<float> mBatchesPerSecond;
@@ -72,7 +72,7 @@ class TestBatchSize : public BasicTestCase
 
 public:
 
-    TestBatchSize( app::SampleApp & app, const StrA & name, uint32_t initialBatchSize )
+    TestBatchSize( app::SampleApp & app, const StrA & name, UInt32 initialBatchSize )
         : BasicTestCase( app, name )
         , mGeometry( 1, 32768 ) // 65536 triangles
     {
@@ -80,7 +80,7 @@ public:
         BATCH_SIZE = ceilPowerOf2( initialBatchSize );
 
         // clamp to 8 to 32768
-        clamp<uint32_t>( BATCH_SIZE, 8, 32768 );
+        clamp<UInt32>( BATCH_SIZE, 8, 32768 );
     }
 
     bool BasicTestCase::create(void)
@@ -113,7 +113,7 @@ public:
 
     void BasicTestCase::update(void)
     {
-        uint32_t numBatches = (uint32_t)mGeometry.PRIM_COUNT / BATCH_SIZE;
+        UInt32 numBatches = (UInt32)mGeometry.PRIM_COUNT / BATCH_SIZE;
         float    batchesPerSec = getApp().getFps() * numBatches;
 
         mBatchesPerSecond.newValue( batchesPerSec );
@@ -142,10 +142,10 @@ public:
         r.setContext( mContext );
 
         // draw
-        uint32_t numBatches = (uint32_t)mGeometry.PRIM_COUNT / BATCH_SIZE;
-        uint32_t startPrim = 0;
+        UInt32 numBatches = (UInt32)mGeometry.PRIM_COUNT / BATCH_SIZE;
+        UInt32 startPrim = 0;
         static const Vector4f CLRS[2] = { Vector4f(1,0,0,1), Vector4f(0,1,0,1) };
-        for( uint32_t i = 0; i < numBatches; ++i, startPrim += BATCH_SIZE )
+        for( UInt32 i = 0; i < numBatches; ++i, startPrim += BATCH_SIZE )
         {
             dev->SetPixelShaderConstantF( 0, CLRS[i&1], 1 );
             mGeometry.drawPrimRange( startPrim, BATCH_SIZE );

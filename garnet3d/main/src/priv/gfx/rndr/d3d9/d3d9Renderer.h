@@ -126,7 +126,7 @@ namespace GN { namespace gfx
         //!
         //! Check resource format compability
         //!
-        HRESULT checkD3DDeviceFormat( uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const;
+        HRESULT checkD3DDeviceFormat( UInt32 usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const;
 
         //!
         //! D3D MSAA descriptor
@@ -194,7 +194,7 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( const StrA & );
-        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const;
+        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const;
 
         //!
         //! define API dependent caps
@@ -211,7 +211,7 @@ namespace GN { namespace gfx
         //!
         //! get D3D special caps
         //!
-        uint32_t getD3DCaps( D3DCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_D3D9CAPS ); return mD3DCaps[c]; }
+        UInt32 getD3DCaps( D3DCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_D3D9CAPS ); return mD3DCaps[c]; }
 
     private :
         bool capsInit() { return true; }
@@ -225,7 +225,7 @@ namespace GN { namespace gfx
 
     private :
 
-        uint32_t mD3DCaps[NUM_D3D9CAPS];
+        UInt32 mD3DCaps[NUM_D3D9CAPS];
 
         //@}
 
@@ -393,7 +393,7 @@ namespace GN { namespace gfx
     public: // from Renderer
         virtual bool drawBegin();
         virtual void drawEnd();
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags );
+        virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrims,
                                   size_t        startVtx,
@@ -409,21 +409,21 @@ namespace GN { namespace gfx
                              size_t           numVertices,
                              const void *     vertexData,
                              size_t           strideInBytes,
-                             const uint16_t * indexData );
+                             const UInt16 * indexData );
         virtual void drawUp( PrimitiveType prim,
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawQuads( BitField options,
+        virtual void drawQuads( BitFields options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 const void * colors, size_t clrStride,
                                 size_t count );
-        virtual void drawLines( BitField options,
+        virtual void drawLines( BitFields options,
                                 const void * positions,
                                 size_t stride,
                                 size_t count,
-                                uint32_t color,
+                                UInt32 color,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );

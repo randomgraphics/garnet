@@ -52,7 +52,7 @@ GNgfxCreateRenderer()
             if( !d3d ) return false;
             UINT nAdapter = d3d->GetAdapterCount();
             GN_ASSERT( nAdapter );
-            for( uint32_t i = 0; i < nAdapter; ++i )
+            for( UInt32 i = 0; i < nAdapter; ++i )
             {
                 D3DADAPTER_IDENTIFIER9 Identifier;
                 GN_DX9_CHECK( d3d->GetAdapterIdentifier( i, 0, &Identifier ) );

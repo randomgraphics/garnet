@@ -96,7 +96,7 @@ void GN::gfx::D3D9BasicShaderCg::apply() const
     GN_DX9_CHECK( cgD3D9BindProgram( mShader.getProgram() ) );
 
     // apply ALL uniforms to D3D device
-    uint32_t handle = getFirstUniform();
+    UInt32 handle = getFirstUniform();
     while( handle )
     {
         applyUniform( getUniform( handle ) );
@@ -113,8 +113,8 @@ void GN::gfx::D3D9BasicShaderCg::apply() const
 void GN::gfx::D3D9BasicShaderCg::applyDirtyUniforms() const
 {
     GN_GUARD_SLOW;
-    const std::set<uint32_t> dirtySet = getDirtyUniforms();
-    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    const std::set<UInt32> dirtySet = getDirtyUniforms();
+    std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         applyUniform( getUniform( *i ) );

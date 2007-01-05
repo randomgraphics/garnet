@@ -156,8 +156,8 @@ static void sParseTexref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const 
     const char * name = sGetAttrib( node, "name" );
     if( !name ) return sPostError( node, "no reference name" );
 
-    uint32_t stage = sGetIntAttrib( node, "stage", (uint32_t)-1 );
-    if( (uint32_t)-1 == stage ) return sPostError( node, "no stage" );
+    UInt32 stage = sGetIntAttrib( node, "stage", (UInt32)-1 );
+    if( (UInt32)-1 == stage ) return sPostError( node, "no stage" );
 
     const EffectDesc::TextureDesc * td = desc.findTexture( name );
     if( !td ) return sPostError( node, "Invalid texture reference" );

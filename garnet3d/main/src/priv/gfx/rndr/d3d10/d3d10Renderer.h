@@ -128,7 +128,7 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( const StrA & ) { return false; }
-        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const { return false; }
+        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const { return false; }
 
     private :
 
@@ -216,7 +216,7 @@ namespace GN { namespace gfx
     public: // from Renderer
         virtual bool drawBegin();
         virtual void drawEnd();
-        virtual void clearScreen( const Vector4f & c, float z, uint32_t s, BitField flags );
+        virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numPrims,
                                   size_t        startVtx,
@@ -232,21 +232,21 @@ namespace GN { namespace gfx
                              size_t           numVertices,
                              const void *     vertexData,
                              size_t           strideInBytes,
-                             const uint16_t * indexData ) {}
+                             const UInt16 * indexData ) {}
         virtual void drawUp( PrimitiveType prim,
                              size_t        numPrims,
                              const void *  vertexData,
                              size_t        strideInBytes ) {}
-        virtual void drawQuads( BitField options,
+        virtual void drawQuads( BitFields options,
                                 const void * positions, size_t posStride,
                                 const void * texcoords, size_t texStride,
                                 const void * colors, size_t clrStride,
                                 size_t count ) {}
-        virtual void drawLines( BitField options,
+        virtual void drawLines( BitFields options,
                                 const void * positions,
                                 size_t stride,
                                 size_t count,
-                                uint32_t color,
+                                UInt32 color,
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj ) {}

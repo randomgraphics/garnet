@@ -267,7 +267,7 @@ namespace GN
         //! \param fname File name
         //! \param flags File open flags
         //!
-        bool open( const StrA & fname, int32_t flags );
+        bool open( const StrA & fname, SInt32 flags );
 
         //!
         //! open a file
@@ -298,8 +298,8 @@ namespace GN
     template< typename T >
     class MemFile : public File
     {
-        uint8_t * mStart;
-        uint8_t * mPtr;
+        UInt8 * mStart;
+        UInt8 * mPtr;
         size_t    mSize;
 
     public:
@@ -307,8 +307,8 @@ namespace GN
         //! \name ctor/dtor
         //@{
         MemFile( T * buf = 0, size_t size = 0, const StrA & name = "" )
-            : mStart((uint8_t*)buf)
-            , mPtr((uint8_t*)buf)
+            : mStart((UInt8*)buf)
+            , mPtr((UInt8*)buf)
             , mSize(size)
         {
             setCaps( 0xFF ); // support all operations
@@ -348,7 +348,7 @@ namespace GN
     //!
     class VectorFile : public File
     {
-        std::vector<uint8_t> mBuffer;
+        std::vector<UInt8> mBuffer;
         size_t mCursor;
 
     public:

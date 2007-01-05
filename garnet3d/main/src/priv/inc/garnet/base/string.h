@@ -923,27 +923,27 @@ namespace GN
     //! \name string -> number conversion
     //@{
 
-    bool str2Int16( int16_t &, const char * );
-    bool str2Uint16( uint16_t &, const char * );
-    bool str2Int32( int32_t &, const char * );
-    bool str2Uint32( uint32_t &, const char * );
-    bool str2Int64( int64_t &, const char * );
-    bool str2Uint64( uint64_t &, const char * );
+    bool str2SInt16( SInt16 &, const char * );
+    bool str2UInt16( UInt16 &, const char * );
+    bool str2Int32( SInt32 &, const char * );
+    bool str2UInt32( UInt32 &, const char * );
+    bool str2SInt64( SInt64 &, const char * );
+    bool str2UInt64( UInt64 &, const char * );
     bool str2Float( float &, const char * );
     bool str2Double( double &, const char *  );
 
     template<typename T> bool str2Int( T & i, const char * s );
 
-    template<> inline bool str2Int<int16_t>( int16_t & i, const char * s ) { return str2Int16( i, s ); }
-    template<> inline bool str2Int<uint16_t>( uint16_t & i, const char * s ) { return str2Uint16( i, s ); }
-    template<> inline bool str2Int<int32_t>( int32_t & i, const char * s ) { return str2Int32( i, s ); }
-    template<> inline bool str2Int<uint32_t>( uint32_t & i, const char * s ) { return str2Uint32( i, s ); }
-    template<> inline bool str2Int<int64_t>( int64_t & i, const char * s ) { return str2Int64( i, s ); }
-    template<> inline bool str2Int<uint64_t>( uint64_t & i, const char * s ) { return str2Uint64( i, s ); }
+    template<> inline bool str2Int<SInt16>( SInt16 & i, const char * s ) { return str2SInt16( i, s ); }
+    template<> inline bool str2Int<UInt16>( UInt16 & i, const char * s ) { return str2UInt16( i, s ); }
+    template<> inline bool str2Int<SInt32>( SInt32 & i, const char * s ) { return str2Int32( i, s ); }
+    template<> inline bool str2Int<UInt32>( UInt32 & i, const char * s ) { return str2UInt32( i, s ); }
+    template<> inline bool str2Int<SInt64>( SInt64 & i, const char * s ) { return str2SInt64( i, s ); }
+    template<> inline bool str2Int<UInt64>( UInt64 & i, const char * s ) { return str2UInt64( i, s ); }
 
 #if 0
-    template<> inline bool str2Int<int>( int & i, const char * s ) { return str2Int32( *(int32_t*)&i, s ); }
-    template<> inline bool str2Int<unsigned int>( unsigned int & i, const char * s ) { return str2Uint32( *(uint32_t*)&i, s ); }
+    template<> inline bool str2Int<int>( int & i, const char * s ) { return str2Int32( *(SInt32*)&i, s ); }
+    template<> inline bool str2Int<unsigned int>( unsigned int & i, const char * s ) { return str2UInt32( *(UInt32*)&i, s ); }
 #endif
 
     template<typename T> T str2Int( const char * s, T defaultValue )

@@ -112,25 +112,25 @@ bool GN::gfx::D3D9Font::deviceRestore()
     // fill data
     size_t sliceBytes = lrc.Pitch * 256;
     memset( lrc.pBits, 0, sliceBytes );
-    for( uint32_t ch = 0; ch < 256; ++ch )
+    for( UInt32 ch = 0; ch < 256; ++ch )
     {
         const BitmapCharDesc * desc = gBitmapChars8x13[ch];
         GN_ASSERT( desc && desc->width <= 8 && desc->height <= 16 );
 
-        uint8_t * offset = ((uint8_t*)lrc.pBits) + (ch / 16) * lrc.Pitch * 16 + (ch % 16) * 8 * 2;
+        UInt8 * offset = ((UInt8*)lrc.pBits) + (ch / 16) * lrc.Pitch * 16 + (ch % 16) * 8 * 2;
 
-        Vector2<uint8_t> * ptr;
+        Vector2<UInt8> * ptr;
 
-        for( uint32_t y = 0; y < desc->height; ++y )
+        for( UInt32 y = 0; y < desc->height; ++y )
         {
-            ptr = (Vector2<uint8_t>*)( offset + (desc->height-y) * lrc.Pitch );
+            ptr = (Vector2<UInt8>*)( offset + (desc->height-y) * lrc.Pitch );
 
-            GN_ASSERT( (uint8_t*)lrc.pBits <= (uint8_t*)ptr );
-            GN_ASSERT( (uint8_t*)(ptr+8) <= ((uint8_t*)lrc.pBits + sliceBytes) );
+            GN_ASSERT( (UInt8*)lrc.pBits <= (UInt8*)ptr );
+            GN_ASSERT( (UInt8*)(ptr+8) <= ((UInt8*)lrc.pBits + sliceBytes) );
 
-            for( uint32_t x = 0; x < 8; ++x, ++ptr )
+            for( UInt32 x = 0; x < 8; ++x, ++ptr )
             {
-                uint8_t c = 255 * !!( desc->bitmap[y] & (1L<<(7-x)) );
+                UInt8 c = 255 * !!( desc->bitmap[y] & (1L<<(7-x)) );
                 ptr->x = c;
                 ptr->y = c;
             }
@@ -193,7 +193,7 @@ void GN::gfx::D3D9Font::drawText( const char * text, int x, int y, const Vector4
             }
             else
             {
-                const BitmapCharDesc * desc = gBitmapChars8x13[(uint8_t)*text];
+                const BitmapCharDesc * desc = gBitmapChars8x13[(UInt8)*text];
 
                 x1 = (float)xx;
                 y1 = (float)yy + (13 - desc->height) + desc->yorig;

@@ -16,8 +16,8 @@ static const int FONT_HEIGHT = 14;
 // -----------------------------------------------------------------------------
 static inline int sGetFontBitmapAdvance( char ch )
 {
-    const BitmapCharDesc * desc = gBitmapChars8x13[(uint8_t)ch];
-    return desc ? (uint32_t)desc->advance : 0;
+    const BitmapCharDesc * desc = gBitmapChars8x13[(UInt8)ch];
+    return desc ? (UInt32)desc->advance : 0;
 }
 
 //
@@ -30,7 +30,7 @@ static void sDrawFontBitmap( char ch )
     GLint swapbytes, lsbfirst, rowlength;
     GLint skiprows, skippixels, alignment;
 
-    const BitmapCharDesc * desc = gBitmapChars8x13[(uint8_t)ch];
+    const BitmapCharDesc * desc = gBitmapChars8x13[(UInt8)ch];
     if( desc )
     {
         /* Save current modes. */

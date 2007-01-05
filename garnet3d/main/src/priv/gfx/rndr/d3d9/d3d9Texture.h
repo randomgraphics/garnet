@@ -21,7 +21,7 @@ namespace GN { namespace gfx
     //!
     //! Convert texture usage to D3DUSAGE(s)
     //!
-    DWORD texUsage2D3DUsage( BitField );
+    DWORD texUsage2D3DUsage( BitFields );
 
     //!
     //! D3D texture

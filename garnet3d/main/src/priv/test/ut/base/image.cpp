@@ -2,8 +2,8 @@
 #include "garnet/GNgfx.h"
 #include <png.h>
 
-static uint8_t              gBuf[10000];
-static GN::MemFile<uint8_t> gFile(gBuf,10000,"a.png");
+static UInt8              gBuf[10000];
+static GN::MemFile<UInt8> gFile(gBuf,10000,"a.png");
 
 class ImageTest : public CxxTest::TestSuite
 {

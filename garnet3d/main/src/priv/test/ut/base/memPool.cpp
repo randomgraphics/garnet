@@ -26,7 +26,7 @@ namespace GN
         GN_CASSERT_EX( ALIGNMENT > 0 && 0==(ALIGNMENT&(ALIGNMENT-1)), alignment_must_be_power_of_two );
 
         typedef ObjectPool<T,N,ALIGNMENT,A> MyType;        
-        typedef typename A::template Rebind<uint8_t>::Other Allocator;
+        typedef typename A::template Rebind<UInt8>::Other Allocator;
         typedef TM ThreadingModel;
 
         struct Pool;
@@ -35,7 +35,7 @@ namespace GN
             union
             {
                 Item * nextFree;
-                uint8_t _reserved[sizeof(T)]; // make sure Item is large enough to hold one object.
+                UInt8 _reserved[sizeof(T)]; // make sure Item is large enough to hold one object.
             };
             Pool * pool;
             MyType * owner;
@@ -50,7 +50,7 @@ namespace GN
         struct Pool : public DoubleLinkedItem<Pool>
         {
             size_t count; // used items in this pool
-            uint8_t data[ITEM_SIZE*N];
+            UInt8 data[ITEM_SIZE*N];
 
             Item & getItem( size_t i )
             {
@@ -228,7 +228,7 @@ public:
 
     void testPlacementNew()
     {
-        uint8_t buf[sizeof(Test)*10];
+        UInt8 buf[sizeof(Test)*10];
         Test * a = new(buf) Test;
         TS_ASSERT_EQUALS( a, (Test*)buf );
         a->~Test();

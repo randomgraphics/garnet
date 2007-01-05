@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     //!
     union FatVtxFmt
     {
-        uint64_t u64; //!< all format flags as 64-bit integer.
+        UInt64 u64; //!< all format flags as 64-bit integer.
         struct
         {
             // byte 0
@@ -281,7 +281,7 @@ namespace GN { namespace gfx
             //! \name optional fields
             //!@{
             size_t   vcacheSize; //!< size of vcache. Ignored, if vcache is false.
-            uint32_t resetIndex; //!< reset index. Ignored, if useResetIndex is false.
+            UInt32 resetIndex; //!< reset index. Ignored, if useResetIndex is false.
             //!@}
         };
 
@@ -303,8 +303,8 @@ namespace GN { namespace gfx
         {
             int                 material;  // material ID
             size_t              vtxSegIdx; // index of vertex segment that this face segment belongs to.
-            DynaArray<uint32_t> indices32; // indices are based on start vertex of owner vertex segment.
-            DynaArray<uint16_t> indices16;
+            DynaArray<UInt32> indices32; // indices are based on start vertex of owner vertex segment.
+            DynaArray<UInt16> indices16;
         };
 
         struct VtxSegment

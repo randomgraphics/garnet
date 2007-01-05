@@ -8,7 +8,7 @@ class RenderToTexture : public GN::app::SampleApp
 {
     AutoRef<Texture> mRt0, mRt1;
 
-    uint32_t mTex0, mTex1;
+    UInt32 mTex0, mTex1;
 
 public:
 

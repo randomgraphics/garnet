@@ -48,42 +48,42 @@ namespace GN { namespace gfx
         //!
         //! Compile vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+        LPDIRECT3DVERTEXSHADER9 compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
         //!
         //! Compile vertex shader from file
         //!
-        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+        LPDIRECT3DVERTEXSHADER9 compileVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
         //!
         //! Assemble vertex shader from string
         //!
-        LPDIRECT3DVERTEXSHADER9 assembleVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0 );
+        LPDIRECT3DVERTEXSHADER9 assembleVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0 );
 
         //!
         //! Assemble vertex shader from file
         //!
-        LPDIRECT3DVERTEXSHADER9 assembleVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0 );
+        LPDIRECT3DVERTEXSHADER9 assembleVSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0 );
 
         //!
         //! Compile pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+        LPDIRECT3DPIXELSHADER9 compilePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
         //!
         //! Compile pixel shader from file
         //!
-        LPDIRECT3DPIXELSHADER9 compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
+        LPDIRECT3DPIXELSHADER9 compilePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0, const char * entryFunc = "main", const char * profile = 0, LPD3DXCONSTANTTABLE * constTable = 0 );
 
         //!
         //! Assemble pixel shader from string
         //!
-        LPDIRECT3DPIXELSHADER9 assemblePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, uint32_t flags = 0 );
+        LPDIRECT3DPIXELSHADER9 assemblePS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len = 0, UInt32 flags = 0 );
 
         //!
         //! Assemble pixel shader from file
         //!
-        LPDIRECT3DPIXELSHADER9 assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, uint32_t flags = 0 );
+        LPDIRECT3DPIXELSHADER9 assemblePSFromFile( LPDIRECT3DDEVICE9 dev, const char * file, UInt32 flags = 0 );
 
         //@}
 
@@ -129,13 +129,13 @@ namespace GN { namespace gfx
         //!
         //! Get backbuffer size
         //!
-        inline Vector2<uint32_t> getBackBufferSize( LPDIRECT3DDEVICE9 dev )
+        inline Vector2<UInt32> getBackBufferSize( LPDIRECT3DDEVICE9 dev )
         {
             GN_GUARD_SLOW;
             D3DSURFACE_DESC desc;
             return getBackBufferDesc( dev, desc )
-                ? Vector2<uint32_t>( desc.Width, desc.Height )
-                : Vector2<uint32_t>( 0, 0 );
+                ? Vector2<UInt32>( desc.Width, desc.Height )
+                : Vector2<UInt32>( 0, 0 );
             GN_UNGUARD_SLOW;
         }
 
@@ -156,13 +156,13 @@ namespace GN { namespace gfx
         //!
         //! Get depth buffer size
         //!
-        inline Vector2<uint32_t> getDepthStencilSize( LPDIRECT3DDEVICE9 dev )
+        inline Vector2<UInt32> getDepthStencilSize( LPDIRECT3DDEVICE9 dev )
         {
             GN_GUARD_SLOW;
             D3DSURFACE_DESC desc;
             return getDepthStencilDesc( dev, desc )
-                ? Vector2<uint32_t>( desc.Width, desc.Height )
-                : Vector2<uint32_t>( 0, 0 );
+                ? Vector2<UInt32>( desc.Width, desc.Height )
+                : Vector2<UInt32>( 0, 0 );
             GN_UNGUARD_SLOW;
         }
 

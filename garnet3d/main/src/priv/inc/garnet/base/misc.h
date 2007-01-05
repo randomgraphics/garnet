@@ -59,8 +59,8 @@ namespace GN
     GN_FORCE_INLINE void swapEndian8In32( void * dst, const void * src, size_t countInInt32 )
     {
         GN_ASSERT( dst && src );
-        uint32_t * d = (uint32_t*)dst;
-        const uint32_t * s = (const uint32_t*)src;
+        UInt32 * d = (UInt32*)dst;
+        const UInt32 * s = (const UInt32*)src;
         for( size_t i = 0; i < countInInt32; ++i, ++s, ++d )
         {
             *d = ( ((*s)         ) << 24 ) |
@@ -76,8 +76,8 @@ namespace GN
     GN_FORCE_INLINE void swapEndian16In32( void * dst, const void * src, size_t countInInt32 )
     {
         GN_ASSERT( dst && src );
-        uint32_t * d = (uint32_t*)dst;
-        const uint32_t * s = (const uint32_t*)src;
+        UInt32 * d = (UInt32*)dst;
+        const UInt32 * s = (const UInt32*)src;
         for( size_t i = 0; i < countInInt32; ++i, ++s, ++d )
         {
             *d = ( (*s) >> 16 ) |
@@ -91,8 +91,8 @@ namespace GN
     GN_FORCE_INLINE void swapEndian8In16( void * dst, const void * src, size_t countInInt16 )
     {
         GN_ASSERT( dst && src );
-        uint16_t * d = (uint16_t*)dst;
-        const uint16_t * s = (const uint16_t*)src;
+        UInt16 * d = (UInt16*)dst;
+        const UInt16 * s = (const UInt16*)src;
         for( size_t i = 0; i < countInInt16; ++i, ++s, ++d )
         {
             *d = ( (*s) >> 8 ) |
@@ -258,7 +258,7 @@ namespace GN
     //!
     //! Sleep calling thread
     //!
-    void sleep( uint32_t microSeconds );
+    void sleep( UInt32 microSeconds );
 
     //!
     //! enable CRT memory leak checking. Currently only work for MSVC compiler
@@ -270,8 +270,8 @@ namespace GN
     //!
     union FOURCC
     {
-        uint32_t      u32;   //!< FOURCC as unsigned 32-bit integer
-        int32_t       i32;   //!< FOURCC as 32-bit integer
+        UInt32      u32;   //!< FOURCC as unsigned 32-bit integer
+        SInt32       i32;   //!< FOURCC as 32-bit integer
         char          c8[4]; //!< FOURCC as 4 characters
         unsigned char u8[4]; //!< FOURCC as 4 unsigned characters
 

@@ -8,11 +8,11 @@
 #pragma pack(push,1)
 struct FatMeshDesc
 {
-    uint32_t numVtx;        // vertex count
-    uint32_t numFace;       // face count
-    uint64_t vtxFmt;        // vertex format
-    uint8_t  hasFaceNormal; // as is
-    uint8_t  reserved[3];   // reserved, must be zero
+    UInt32 numVtx;        // vertex count
+    UInt32 numFace;       // face count
+    UInt64 vtxFmt;        // vertex format
+    UInt8  hasFaceNormal; // as is
+    UInt8  reserved[3];   // reserved, must be zero
 };
 #pragma pack(pop)
 
@@ -117,8 +117,8 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
 
         // read file header
         if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read file header." ); return false; }
-        uint32_t numVerts, numFaces, faceNormal;
-        uint64_t vtxFmt;
+        UInt32 numVerts, numFaces, faceNormal;
+        UInt64 vtxFmt;
         if( 4 != sscanf(
             s.cptr(),
             " NumVertices=%lu NumFaces=%lu VertexFormat=%llu FaceNormal=%lu",
@@ -139,7 +139,7 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
 
         // read vertices
         mVertices.resize( numVerts );
-        for( uint32_t i = 0; i < numVerts; ++i )
+        for( UInt32 i = 0; i < numVerts; ++i )
         {
             FatVtx & v = mVertices[i];
 
@@ -189,9 +189,9 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
         if( !sReadLn( s, fp ) || FACE_HEADER != s ) { GN_ERROR(sLogger)( "fail to read face header." ); return false; }
 
         // read faces
-        uint32_t i0, i1, i2;
+        UInt32 i0, i1, i2;
         mFaces.resize( numFaces );
-        for( uint32_t i = 0; i < numFaces; ++i )
+        for( UInt32 i = 0; i < numFaces; ++i )
         {
             FatFace & f = mFaces[i];
 
@@ -235,10 +235,10 @@ bool GN::gfx::FatMesh::writeToFile( File & fp, char mode ) const
 
         // write mesh descriptor
         FatMeshDesc desc;
-        desc.numVtx = (uint32_t)mVertices.size();
-        desc.numFace = (uint32_t)mFaces.size();
+        desc.numVtx = (UInt32)mVertices.size();
+        desc.numFace = (UInt32)mFaces.size();
         desc.vtxFmt = mVertexFormat.u64;
-        desc.hasFaceNormal = (uint8_t)mHasFaceNormal;
+        desc.hasFaceNormal = (UInt8)mHasFaceNormal;
         desc.reserved[0] = desc.reserved[1] = desc.reserved[2] = 0;
         if( !fp.write( &desc, sizeof(desc), 0 ) ) { GN_ERROR(sLogger)( "fail to write mesh descriptor." ); return false; }
 

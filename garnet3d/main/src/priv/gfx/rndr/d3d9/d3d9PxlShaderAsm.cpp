@@ -62,7 +62,7 @@ void GN::gfx::D3D9PxlShaderAsm::apply() const
     GN_DX9_CHECK( dev->SetPixelShader( mD3DShader ) );
 
     // apply ALL uniforms to D3D device
-    uint32_t handle = getFirstUniform();
+    UInt32 handle = getFirstUniform();
     while( handle )
     {
         applyUniform( dev, getUniform( handle ) );
@@ -84,8 +84,8 @@ void GN::gfx::D3D9PxlShaderAsm::applyDirtyUniforms() const
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
-    const std::set<uint32_t> dirtySet = getDirtyUniforms();
-    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    const std::set<UInt32> dirtySet = getDirtyUniforms();
+    std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         applyUniform( dev, getUniform( *i ) );
@@ -117,7 +117,7 @@ bool GN::gfx::D3D9PxlShaderAsm::createShader( const StrA & code )
     // get shader function
     UINT sz;
     GN_DX9_CHECK_RV( mD3DShader->GetFunction( 0, &sz ), false );
-    AutoObjArray<uint8_t> func( new uint8_t[sz] );
+    AutoObjArray<UInt8> func( new UInt8[sz] );
     GN_DX9_CHECK_RV( mD3DShader->GetFunction( func, &sz ), false );
 
     // analyze uniforms
@@ -186,7 +186,7 @@ bool GN::gfx::D3D9PxlShaderAsm::queryDeviceUniform( const char * name, HandleTyp
     }
 
     // set user data
-    desc.index = (uint16_t)index;
+    desc.index = (UInt16)index;
     userData = (HandleType)desc.u32;
 
     // success
@@ -251,7 +251,7 @@ GN::gfx::D3D9PxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
 
     D3DAsmConstDesc desc;
 
-    desc.u32 = (uint32_t)u.userData;
+    desc.u32 = (UInt32)u.userData;
 
     switch( desc.type )
     {

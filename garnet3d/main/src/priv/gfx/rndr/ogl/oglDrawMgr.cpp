@@ -191,7 +191,7 @@ void GN::gfx::OGLRenderer::drawEnd()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::clearScreen(
-    const GN::Vector4f & c, float z, uint32_t s, BitField flags )
+    const GN::Vector4f & c, float z, UInt32 s, BitFields flags )
 {
     GN_GUARD_SLOW;
 
@@ -273,7 +273,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
     // Verify index buffer
     {
         OGLIdxBuf * testIb = const_cast<OGLIdxBuf*>(ib);
-        const uint16_t * idxData = testIb->lock( startIdx, numIdx, LOCK_RO );
+        const UInt16 * idxData = testIb->lock( startIdx, numIdx, LOCK_RO );
         for( size_t i = 0; i < numIdx; ++i, ++idxData )
         {
             GN_ASSERT( minVtxIdx <= *idxData && *idxData < (minVtxIdx+numVtx) );
@@ -371,7 +371,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     size_t           numVtx,
     const void *     vertexData,
     size_t           strideInBytes,
-    const uint16_t * indexData )
+    const UInt16 * indexData )
 {
     GN_GUARD_SLOW;
 
@@ -391,14 +391,14 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
-        (const uint8_t* )vertexData,
+        (const UInt8* )vertexData,
         0, // startVtx,
         strideInBytes );
 
 #if GN_DEBUG_BUILD
     // Verify index buffer
     {
-        const uint16_t * idxData = indexData;
+        const UInt16 * idxData = indexData;
         for( size_t i = 0; i < numIdx; ++i, ++idxData )
         {
             GN_ASSERT( *idxData < numVtx );
@@ -466,7 +466,7 @@ void GN::gfx::OGLRenderer::drawUp(
         1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
-        (const uint8_t* )vertexData,
+        (const UInt8* )vertexData,
         0, // startVtx,
         strideInBytes );
 
@@ -498,7 +498,7 @@ void GN::gfx::OGLRenderer::drawUp(
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawQuads(
-    BitField options,
+    BitFields options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
     const void * colors, size_t clrStride,
@@ -514,7 +514,7 @@ void GN::gfx::OGLRenderer::drawQuads(
         options,
         (const float*)positions, posStride,
         (const float*)texcoords, texStride,
-        (const uint32_t*)colors, clrStride,
+        (const UInt32*)colors, clrStride,
         count );
     GN_UNGUARD_SLOW;
 }
@@ -523,11 +523,11 @@ void GN::gfx::OGLRenderer::drawQuads(
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawLines(
-    BitField options,
+    BitFields options,
     const void * positions,
     size_t stride,
     size_t count,
-    uint32_t color,
+    UInt32 color,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )

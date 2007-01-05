@@ -40,7 +40,7 @@ void GN::calcBoundingBox( Boxf & result, const Vector3f * positions, size_t coun
     Vector3f vMin( positions[0] );
     Vector3f vMax( positions[0] );
 
-    const uint8_t * ptr = (const uint8_t *)positions;
+    const UInt8 * ptr = (const UInt8 *)positions;
 
     for( size_t i = 1; i < count; ++i, ptr += strideInBytes )
     {

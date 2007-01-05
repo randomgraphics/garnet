@@ -61,8 +61,8 @@ namespace GN { namespace gfx
                                //!< Could be one of standard semantics, or any user-defined value.
                                //!< Note that semantic must be unique in descriptor.
             ClrFmt   format;   //!< attribute format (FMT_XXX).
-            uint16_t offset;   //!< offset in stream.
-            uint8_t  stream;   //!< stream index.
+            UInt16 offset;   //!< offset in stream.
+            UInt8  stream;   //!< stream index.
 
             //!
             //! set values in attribute descriptor
@@ -71,8 +71,8 @@ namespace GN { namespace gfx
             {
                 semantic = sem_;
                 format   = fmt_;
-                stream   = (uint8_t)stream_;
-                offset   = (uint16_t)offset_;
+                stream   = (UInt8)stream_;
+                offset   = (UInt16)offset_;
             }
         };
 

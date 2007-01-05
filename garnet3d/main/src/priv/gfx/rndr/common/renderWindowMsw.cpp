@@ -53,7 +53,7 @@ bool GN::gfx::RenderWindowMsw::initExternalRenderWindow( HandleType, HandleType 
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::RenderWindowMsw::initInternalRenderWindow(
-    HandleType, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height )
+    HandleType, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height )
 {
     GN_GUARD;
 
@@ -130,7 +130,7 @@ void GN::gfx::RenderWindowMsw::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderWindowMsw::getClientSize( uint32_t & width, uint32_t & height ) const
+bool GN::gfx::RenderWindowMsw::getClientSize( UInt32 & width, UInt32 & height ) const
 {
     if( !::IsWindow(mWindow) )
     {
@@ -194,7 +194,7 @@ bool GN::gfx::RenderWindowMsw::postInit()
 //
 // -----------------------------------------------------------------------------
 bool
-GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, uint32_t width, uint32_t height )
+GN::gfx::RenderWindowMsw::createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height )
 {
     GN_GUARD;
 

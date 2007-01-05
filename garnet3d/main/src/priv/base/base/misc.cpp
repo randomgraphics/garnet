@@ -77,13 +77,13 @@ void GN::getEnv( StrA & result, const char * name )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleep( uint32_t microSeconds )
+void GN::sleep( UInt32 microSeconds )
 {
 #if GN_MSWIN
     ::Sleep( microSeconds );
 #elif GN_POSIX
-    uint32_t s = microSeconds / 1000;
-    uint32_t us = microSeconds % 1000;
+    UInt32 s = microSeconds / 1000;
+    UInt32 us = microSeconds % 1000;
     ::sleep( s );
     ::usleep( us );
 #else

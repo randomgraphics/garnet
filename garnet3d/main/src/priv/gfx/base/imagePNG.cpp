@@ -96,7 +96,7 @@ bool PNGReader::checkFormat( GN::File & fp )
 //
 // -----------------------------------------------------------------------------
 bool PNGReader::readHeader(
-    GN::gfx::ImageDesc & o_desc, const uint8_t * i_buf, size_t i_size )
+    GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size )
 {
     GN_GUARD;
 
@@ -130,13 +130,13 @@ bool PNGReader::readHeader(
     // check PNG format
     o_desc.format = s_get_png_clrfmt( mPng, mInfo );
     if ( GN::gfx::FMT_UNKNOWN == o_desc.format ) return false;
-    uint32_t bpp = GN::gfx::getClrFmtDesc(o_desc.format).bits;
+    UInt32 bpp = GN::gfx::getClrFmtDesc(o_desc.format).bits;
 
     // update o_desc
     o_desc.setFaceAndLevel( 1, 1 ); // 2D image
     GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
-    m.width         = (uint16_t)mInfo->width;
-    m.height        = (uint16_t)mInfo->height;
+    m.width         = (UInt16)mInfo->width;
+    m.height        = (UInt16)mInfo->height;
     m.depth         = 1;
     m.rowPitch      = mInfo->width * bpp / 8;
     m.slicePitch    = m.rowPitch * mInfo->height;
@@ -164,7 +164,7 @@ bool PNGReader::readImage( void * o_data )
     std::vector<png_bytep> rows;
     rows.resize( mInfo->height );
     png_bytep ptr = (png_bytep) o_data;
-    for( uint32_t y = 0; y < mInfo->height; ++y )
+    for( UInt32 y = 0; y < mInfo->height; ++y )
     {
         rows[y] = ptr;
         ptr += mRowPitch;
@@ -184,11 +184,11 @@ bool PNGReader::readImage( void * o_data )
     //
     if( PNG_COLOR_TYPE_RGB == mInfo->color_type && 16 == mInfo->bit_depth )
     {
-        for( uint32_t y = 0; y < mInfo->height; ++y )
+        for( UInt32 y = 0; y < mInfo->height; ++y )
         {
-            uint16_t * p = ((uint16_t*)rows[y]) + 3;
+            UInt16 * p = ((UInt16*)rows[y]) + 3;
 
-            for( uint32_t x = 0; x < mInfo->width; ++x, p+=4 )
+            for( UInt32 x = 0; x < mInfo->width; ++x, p+=4 )
             {
                 *p = 0xFFFF;
             }
@@ -198,9 +198,9 @@ bool PNGReader::readImage( void * o_data )
 #if GN_PPC
     // swap endian
     // TODO: handle 16-bit image
-    for( uint32_t y = 0; y < mInfo->height; ++y )
+    for( UInt32 y = 0; y < mInfo->height; ++y )
     {
-        uint32_t * p = (uint32_t*)rows[y];
+        UInt32 * p = (UInt32*)rows[y];
         GN::swapEndian8In32( p, p, mRowPitch / 4 );
     }
     

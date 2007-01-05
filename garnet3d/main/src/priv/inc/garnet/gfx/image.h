@@ -18,7 +18,7 @@ namespace GN { namespace gfx
     //!
     struct MipmapDesc
     {
-        uint32_t width,  //!< mipmap width in pixel
+        UInt32 width,  //!< mipmap width in pixel
                  height, //!< mipmap height in pixel
                  depth;  //!< mipmap depth in pixel
 
@@ -26,17 +26,17 @@ namespace GN { namespace gfx
         //! bytes of one row of texel. For DXT compressed texture, this
         //! is 1/4 of bytes of one "block row"
         //!
-        uint32_t rowPitch;
+        UInt32 rowPitch;
 
         //!
         //! bytes of one slice. Equals rowPitch * height
         //!
-        uint32_t slicePitch;
+        UInt32 slicePitch;
 
         //!
         //! total bytes of this mip level. Equals slicePitch * depth.
         //!
-        uint32_t levelPitch;
+        UInt32 levelPitch;
     };
 
     //!
@@ -64,8 +64,8 @@ namespace GN { namespace gfx
         //@{
 
         ClrFmt       format;    //!< color format
-        uint32_t     numFaces;  //!< number of image faces. 6 for cubemaps, 1 for others
-        uint32_t     numLevels; //!< number of avaliable mipmaps
+        UInt32     numFaces;  //!< number of image faces. 6 for cubemaps, 1 for others
+        UInt32     numLevels; //!< number of avaliable mipmaps
         MipmapDesc * mipmaps;   //!< mipmap array, face major. Mip data of face n, mips m is : mip[f*numFaces+m]
 
         //@}

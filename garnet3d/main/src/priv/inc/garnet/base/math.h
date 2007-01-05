@@ -52,7 +52,7 @@ namespace GN
     //!
     //! 检查n是否为2^n
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE bool isPowerOf2( uint32_t n )
+    GN_FORCE_INLINE bool isPowerOf2( UInt32 n )
     {
         return ( 0 == (n & (n - 1)) ) && ( 0 != n );
     }
@@ -60,7 +60,7 @@ namespace GN
     //!
     //! 返回不小于n的最小的2的整幂
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE uint32_t ceilPowerOf2( uint32_t n )
+    GN_FORCE_INLINE UInt32 ceilPowerOf2( UInt32 n )
     {
         n -= 1;
 
@@ -76,7 +76,7 @@ namespace GN
     //!
     //! 返回不大于n的最大的2的整幂
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE uint32_t floorPowerOf2( uint32_t n )
+    GN_FORCE_INLINE UInt32 floorPowerOf2( UInt32 n )
     {
         n |= n >> 16;
         n |= n >> 8;

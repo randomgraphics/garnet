@@ -43,24 +43,24 @@ namespace GN { namespace gfx
         ValueType valueType; //!< value type
         union
         {
-            int32_t defI; //!< default value as enumeration or integer
+            SInt32 defI; //!< default value as enumeration or integer
             float   defF; //!< default value
         };
         union
         {
-            int32_t minI; //!< min value as enumeration or integer
+            SInt32 minI; //!< min value as enumeration or integer
             float   minF; //!< min value is float
         };
         union
         {
-            int32_t maxI; //!< max value as enumeration or integer
+            SInt32 maxI; //!< max value as enumeration or integer
             float   maxF; //!< max value is float
         };
 
         //!
         //! Check render state value
         //!
-        bool checkValueI( int32_t ) const;
+        bool checkValueI( SInt32 ) const;
 
         //!
         //! Check render state value
@@ -244,11 +244,11 @@ namespace GN { namespace gfx
         enum
         {
             // flag that indicates a "complete" block
-            COMPLETE = ((uint32_t)-1) >> ( 32 - NUM_RENDER_STATES ),
+            COMPLETE = ((UInt32)-1) >> ( 32 - NUM_RENDER_STATES ),
         };
 
-        int32_t  mValues[NUM_RENDER_STATES]; // render state values
-        uint32_t mFlags; // Render state validality flag
+        SInt32  mValues[NUM_RENDER_STATES]; // render state values
+        UInt32 mFlags; // Render state validality flag
 
         //!
         //! Only used to construct static members.
@@ -325,7 +325,7 @@ namespace GN { namespace gfx
         //! get specific render state. Assert failure will
         //! be triggered, if flag of the render state is *not* set.
         //!
-        int32_t get( RenderState type ) const;
+        SInt32 get( RenderState type ) const;
 
         //!
         //! set specific render state
@@ -397,7 +397,7 @@ namespace GN { namespace gfx
 
         size_t            mNumStages;
         TextureStateValue mValues[MAX_TEXTURE_STAGES][NUM_TEXTURE_STATES]; // values
-        uint8_t           mFlags[MAX_TEXTURE_STAGES];
+        UInt8           mFlags[MAX_TEXTURE_STAGES];
 
         //!
         //! Only used to construct static data members.

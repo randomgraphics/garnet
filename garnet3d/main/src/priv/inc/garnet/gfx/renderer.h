@@ -100,7 +100,7 @@ namespace GN { namespace gfx
         //! is also not avaiable, default width 640 will be used.
         //! ȱʡΪ0.
         //!
-        uint32_t windowedWidth;
+        UInt32 windowedWidth;
 
         //!
         //! Backbuffer height for windowed mode. Ignored in fullscreen mode.
@@ -108,7 +108,7 @@ namespace GN { namespace gfx
         //! is also not avaiable, default height 480 will be used.
         //! ȱʡΪ0.
         //!
-        uint32_t windowedHeight;
+        UInt32 windowedHeight;
 
         //!
         //! Msaa type
@@ -184,10 +184,10 @@ namespace GN { namespace gfx
         HandleType displayHandle;    //!< Display handle. For X Window only.
         HandleType windowHandle;     //!< Render window handle
         HandleType monitorHandle;    //!< Monitor handle.
-        uint32_t width;              //!< Back buffer width
-        uint32_t height;             //!< Back buffer height
-        uint32_t depth;              //!< Back buffer depth
-        uint32_t refrate;            //!< Screen refresh rate
+        UInt32 width;              //!< Back buffer width
+        UInt32 height;             //!< Back buffer height
+        UInt32 depth;              //!< Back buffer depth
+        UInt32 refrate;            //!< Screen refresh rate
 
         //!
         //! equality operator
@@ -553,14 +553,14 @@ namespace GN { namespace gfx
 
     protected:
 
-        uint32_t mCaps[NUM_RENDERER_CAPS];
+        UInt32 mCaps[NUM_RENDERER_CAPS];
 
     public:
 
         //!
         //! Get render device caps
         //!
-        uint32_t getCaps( int32_t c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
+        UInt32 getCaps( SInt32 c ) const { GN_ASSERT( 0 <= c && c < NUM_RENDERER_CAPS ); return mCaps[c]; }
 
         //!
         //! Check renderer support to specific shader profile. Profile tag could be:
@@ -577,7 +577,7 @@ namespace GN { namespace gfx
         //!
         //! Test compability of specific texture format
         //!
-        virtual bool supportTextureFormat( TexType type, BitField usage, ClrFmt format ) const = 0;
+        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const = 0;
 
         //@}
 
@@ -648,11 +648,11 @@ namespace GN { namespace gfx
                        size_t   faces = 0,
                        size_t   levels = 0,
                        ClrFmt   format = FMT_DEFAULT,
-                       BitField usage = 0,
+                       BitFields usage = 0,
                        bool     tiled = false,
                        const TextureLoader & loader = TextureLoader() )
         {
-            TextureDesc desc = { type, (uint32_t)sx, (uint32_t)sy, (uint32_t)sz, (uint32_t)faces, (uint32_t)levels, format, usage, tiled };
+            TextureDesc desc = { type, (UInt32)sx, (UInt32)sy, (UInt32)sz, (UInt32)faces, (UInt32)levels, format, usage, tiled };
             return createTexture( desc, loader );
         }
 
@@ -663,7 +663,7 @@ namespace GN { namespace gfx
         create1DTexture( size_t   sx,
                          size_t   levels = 0,
                          ClrFmt   format = FMT_DEFAULT,
-                         BitField usage = 0,
+                         BitFields usage = 0,
                          bool     tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
@@ -677,7 +677,7 @@ namespace GN { namespace gfx
         create2DTexture( size_t   sx, size_t sy,
                          size_t   levels = 0,
                          ClrFmt   format = FMT_DEFAULT,
-                         BitField usage = 0,
+                         BitFields usage = 0,
                          bool     tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
@@ -691,7 +691,7 @@ namespace GN { namespace gfx
         create3DTexture( size_t   sx, size_t sy, size_t sz,
                          size_t   levels = 0,
                          ClrFmt   format = FMT_DEFAULT,
-                         BitField usage = 0,
+                         BitFields usage = 0,
                          bool     tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
@@ -705,7 +705,7 @@ namespace GN { namespace gfx
         createCubeTexture( size_t   sx,
                            size_t   levels = 0,
                            ClrFmt   format = FMT_DEFAULT,
-                           BitField usage = 0,
+                           BitFields usage = 0,
                            bool     tiled = false,
                            const TextureLoader & loader = TextureLoader() )
         {
@@ -840,7 +840,7 @@ namespace GN { namespace gfx
         inline void setVS( const Shader * s );
         inline void setPS( const Shader * s );
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
-        inline void setRenderState( RenderState state, int32_t value );
+        inline void setRenderState( RenderState state, SInt32 value );
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
         inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
         inline void setMsaa( MsaaType );
@@ -902,8 +902,8 @@ namespace GN { namespace gfx
         //!
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
-                     float z = 1.0f, uint32_t s = 0,
-                     BitField flags = CLEAR_ALL ) = 0;
+                     float z = 1.0f, UInt32 s = 0,
+                     BitFields flags = CLEAR_ALL ) = 0;
 
         //!
         //! Draw indexed primitives.
@@ -953,7 +953,7 @@ namespace GN { namespace gfx
                              size_t           numVertices,
                              const void *     vertexData,
                              size_t           strideInBytes,
-                             const uint16_t * indexData ) = 0;
+                             const UInt16 * indexData ) = 0;
 
         //!
         //! draw on-indexed primitives with user-defined data array
@@ -985,7 +985,7 @@ namespace GN { namespace gfx
         //!     Number of quads.
         //!
         virtual void drawQuads(
-            BitField options,
+            BitFields options,
             const void * positions, size_t posStride,
             const void * texcoords, size_t texStride,
             const void * colors, size_t clrStride,
@@ -995,7 +995,7 @@ namespace GN { namespace gfx
         //! Draw quads, with same stride for positions, texcoords and colors
         //!
         void drawQuads(
-            BitField options,
+            BitFields options,
             const void * positions, const void * texcoords, const void * colors, size_t stride,
             size_t count )
         {
@@ -1008,7 +1008,7 @@ namespace GN { namespace gfx
         //! \note This function may not very effecient.
         //!
         void draw2DTexturedQuad(
-            BitField options,
+            BitFields options,
             double z = 0.0,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
             double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
@@ -1045,10 +1045,10 @@ namespace GN { namespace gfx
         //! \note This function may not very effecient.
         //!
         void draw2DSolidQuad(
-            BitField options,
+            BitFields options,
             double z,
             double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
-            uint32_t color = 0xFFFFFFFF )
+            UInt32 color = 0xFFFFFFFF )
         {
             float x1 = (float)left;
             float y1 = (float)top;
@@ -1062,9 +1062,9 @@ namespace GN { namespace gfx
             pos[2].set( x2, y2, zz );
             pos[3].set( x1, y2, zz );
 
-            uint32_t colors[] = { color, color, color, color };
+            UInt32 colors[] = { color, color, color, color };
 
-            drawQuads( options, pos, sizeof(Vector3f), 0, 0, colors, sizeof(uint32_t), 1 );
+            drawQuads( options, pos, sizeof(Vector3f), 0, 0, colors, sizeof(UInt32), 1 );
         }
 
         //!
@@ -1085,11 +1085,11 @@ namespace GN { namespace gfx
         //!     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         //!
         virtual void drawLines(
-            BitField options,
+            BitFields options,
             const void * positions,
             size_t stride,
             size_t count,
-            uint32_t color,
+            UInt32 color,
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj ) = 0;
