@@ -4,7 +4,7 @@
 template<typename T> inline void
 GN::MemFile<T>::reset( T * buf, size_t size, const StrA & name )
 {
-    mStart = (uint8_t*)buf;
+    mStart = (UInt8*)buf;
     mPtr   = mStart;
     mSize  = size;
     setName( name );
@@ -109,8 +109,8 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 template<typename T> inline bool
 GN::MemFile<T>::seek( int offset, FileSeekMode origin )
 {
-    uint8_t * end = mStart + mSize;
-    uint8_t * ptr;
+    UInt8 * end = mStart + mSize;
+    UInt8 * ptr;
     if( FSEEK_CUR == origin )
     {
         ptr = mPtr + offset;

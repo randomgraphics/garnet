@@ -55,22 +55,22 @@ namespace GN { namespace gfx
     struct UniformValue
     {
         UniformValueType       type;      //!< value type
-        std::vector<int32_t>   bools;     //!< Boolean value
-        std::vector<int32_t>   ints;      //!< integer value
+        std::vector<SInt32>   bools;     //!< Boolean value
+        std::vector<SInt32>   ints;      //!< integer value
         std::vector<float>     floats;    //!< float value
         std::vector<Vector4f>  vector4s;  //!< vector value
         std::vector<Matrix44f> matrix44s; //!< matrix value
 
         //! \name set uniform value
         //@{
-        inline void setB( const int32_t *, size_t );
-        inline void setI( const int32_t *, size_t );
+        inline void setB( const SInt32 *, size_t );
+        inline void setI( const SInt32 *, size_t );
         inline void setF( const float *, size_t );
         inline void setV( const Vector4f *, size_t );
         inline void setM( const Matrix44f *, size_t );
 
-        inline void setB( int32_t v ) { setB( &v, 1 ); }
-        inline void setI( int32_t v ) { setI( &v, 1 ); }
+        inline void setB( SInt32 v ) { setB( &v, 1 ); }
+        inline void setI( SInt32 v ) { setI( &v, 1 ); }
         inline void setF( float v ) { setF( &v, 1 ); }
         inline void setV( const Vector4f & v ) { setV( &v, 1 ); }
         inline void setM( const Matrix44f & v ) { setM( &v, 1 ); }
@@ -102,25 +102,25 @@ namespace GN { namespace gfx
         //!
         //! Get handle of uniform variable
         //!
-        uint32_t getUniformHandle( const StrA & );
+        UInt32 getUniformHandle( const StrA & );
 
         //!
         //! \name Set value of uniform variable.
         //!
         //@{
-        void setUniform( uint32_t, const UniformValue & );
+        void setUniform( UInt32, const UniformValue & );
         
-        void setUniformB( uint32_t, const int32_t *, size_t );
-        void setUniformI( uint32_t, const int32_t *, size_t );
-        void setUniformF( uint32_t, const float *, size_t );
-        void setUniformV( uint32_t, const Vector4f *, size_t );
-        void setUniformM( uint32_t, const Matrix44f *, size_t ); //!< \note Matrix should be row major
+        void setUniformB( UInt32, const SInt32 *, size_t );
+        void setUniformI( UInt32, const SInt32 *, size_t );
+        void setUniformF( UInt32, const float *, size_t );
+        void setUniformV( UInt32, const Vector4f *, size_t );
+        void setUniformM( UInt32, const Matrix44f *, size_t ); //!< \note Matrix should be row major
 
-        void setUniformB( uint32_t, bool );
-        void setUniformI( uint32_t, int32_t );
-        void setUniformF( uint32_t, float );
-        void setUniformV( uint32_t, const Vector4f & );
-        void setUniformM( uint32_t, const Matrix44f & ); //!< \note Matrix should be row major
+        void setUniformB( UInt32, bool );
+        void setUniformI( UInt32, SInt32 );
+        void setUniformF( UInt32, float );
+        void setUniformV( UInt32, const Vector4f & );
+        void setUniformM( UInt32, const Matrix44f & ); //!< \note Matrix should be row major
         //@}
 
         //!
@@ -129,14 +129,14 @@ namespace GN { namespace gfx
         //@{
         void setUniformByName( const StrA &, const UniformValue & );
 
-        void setUniformByNameB( const StrA &, const int32_t *, size_t );
-        void setUniformByNameI( const StrA &, const int32_t *, size_t );
+        void setUniformByNameB( const StrA &, const SInt32 *, size_t );
+        void setUniformByNameI( const StrA &, const SInt32 *, size_t );
         void setUniformByNameF( const StrA &, const float *, size_t );
         void setUniformByNameV( const StrA &, const Vector4f *, size_t );
         void setUniformByNameM( const StrA &, const Matrix44f *, size_t );
 
         void setUniformByNameB( const StrA &, bool );
-        void setUniformByNameI( const StrA &, int32_t );
+        void setUniformByNameI( const StrA &, SInt32 );
         void setUniformByNameF( const StrA &, float );
         void setUniformByNameV( const StrA &, const Vector4f & );
         void setUniformByNameM( const StrA &, const Matrix44f & );
@@ -179,17 +179,17 @@ namespace GN { namespace gfx
         //!
         //! Get first unform handle. Use to iterate all uniforms.
         //!
-        uint32_t getFirstUniform() const { return mUniforms.first(); }
+        UInt32 getFirstUniform() const { return mUniforms.first(); }
 
         //!
         //! Get next unform handle. Use to iterate all uniforms.
         //!
-        uint32_t getNextUniform( uint32_t handle ) const { return mUniforms.next(handle); }
+        UInt32 getNextUniform( UInt32 handle ) const { return mUniforms.next(handle); }
 
         //!
         //! Get the uniform data structure
         //!
-        Uniform & getUniform( uint32_t handle )
+        Uniform & getUniform( UInt32 handle )
         {
             GN_ASSERT( mUniforms.validHandle(handle) );
             return mUniforms[handle];
@@ -198,7 +198,7 @@ namespace GN { namespace gfx
         //!
         //! Get the uniform data structure
         //!
-        const Uniform & getUniform( uint32_t handle ) const
+        const Uniform & getUniform( UInt32 handle ) const
         {
             GN_ASSERT( mUniforms.validHandle(handle) );
             return mUniforms[handle];
@@ -207,7 +207,7 @@ namespace GN { namespace gfx
         //!
         //! get list of dirty uniforms
         //!
-        const std::set<uint32_t> & getDirtyUniforms() const { return mDirtySet; }
+        const std::set<UInt32> & getDirtyUniforms() const { return mDirtySet; }
 
         //!
         //! clear dirty set
@@ -230,7 +230,7 @@ namespace GN { namespace gfx
         //!
         //! Add a new uniform to uniform list. Return handle of the uniform.
         //!
-        uint32_t addUniform( const StrA & name )
+        UInt32 addUniform( const StrA & name )
         {
             GN_GUARD;
 
@@ -254,7 +254,7 @@ namespace GN { namespace gfx
             u.value.type = (UniformValueType)0xbadbeef;
             u.userData = (HandleType)0xbadbeef;
 #endif
-            uint32_t h = mUniforms.add( u );
+            UInt32 h = mUniforms.add( u );
             mUniformNames[name] = h;
 
             // success
@@ -263,7 +263,7 @@ namespace GN { namespace gfx
             GN_UNGUARD;
         }
 
-        bool checkUniformHandle( uint32_t handle )
+        bool checkUniformHandle( UInt32 handle )
         {
             if( !mUniforms.validHandle( handle ) )
             {
@@ -277,9 +277,9 @@ namespace GN { namespace gfx
         ShaderType      mType; //!< shader type
         ShadingLanguage mLang; //!< shading language
 
-        HandleManager<Uniform,uint32_t> mUniforms;     //!< uniform handle manager
-        std::map<StrA,uint32_t>         mUniformNames; //!< uniform name -> uniform handle
-        mutable std::set<uint32_t>      mDirtySet;     //!< Store handle of dirty uniforms.
+        HandleManager<Uniform,UInt32> mUniforms;     //!< uniform handle manager
+        std::map<StrA,UInt32>         mUniformNames; //!< uniform name -> uniform handle
+        mutable std::set<UInt32>      mDirtySet;     //!< Store handle of dirty uniforms.
 
         StrA mName; //!< shader name ( debug purpose only )
     };
@@ -289,21 +289,21 @@ namespace GN { namespace gfx
     // *************************************************************************
 
     // -------------------------------------------------------------------------
-    inline void UniformValue::setB( const int32_t * values, size_t count )
+    inline void UniformValue::setB( const SInt32 * values, size_t count )
     {
         GN_GUARD_SLOW;
         type = UVT_BOOL;
         bools.resize( count );
-        if( count > 0 && values ) ::memcpy( &bools[0], values, count*sizeof(int32_t) );
+        if( count > 0 && values ) ::memcpy( &bools[0], values, count*sizeof(SInt32) );
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void UniformValue::setI( const int32_t * values, size_t count )
+    inline void UniformValue::setI( const SInt32 * values, size_t count )
     {
         GN_GUARD_SLOW;
         type = UVT_INT;
         ints.resize( count );
-        if( count > 0 && values ) ::memcpy( &ints[0], values, count*sizeof(int32_t) );
+        if( count > 0 && values ) ::memcpy( &ints[0], values, count*sizeof(SInt32) );
         GN_UNGUARD_SLOW;
     }
     // --
@@ -335,7 +335,7 @@ namespace GN { namespace gfx
     }
 
     // -------------------------------------------------------------------------
-    inline uint32_t Shader::getUniformHandle( const StrA & name )
+    inline UInt32 Shader::getUniformHandle( const StrA & name )
     {
         GN_GUARD_SLOW;
 
@@ -356,7 +356,7 @@ namespace GN { namespace gfx
         }
 
         // add new uniform
-        uint32_t handle = addUniform( name );
+        UInt32 handle = addUniform( name );
         if( 0 == handle ) return 0;
         Uniform & u = getUniform(handle);
         GN_ASSERT( u.name == name );
@@ -369,7 +369,7 @@ namespace GN { namespace gfx
     }
 
     // -------------------------------------------------------------------------
-    inline void Shader::setUniform( uint32_t handle, const UniformValue & value )
+    inline void Shader::setUniform( UInt32 handle, const UniformValue & value )
     {
         GN_GUARD_SLOW;
         if( !checkUniformHandle( handle ) ) return;
@@ -378,7 +378,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniformB( uint32_t handle, const int32_t * values, size_t count )
+    inline void Shader::setUniformB( UInt32 handle, const SInt32 * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !checkUniformHandle( handle ) ) return;
@@ -387,7 +387,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniformI( uint32_t handle, const int32_t * values, size_t count )
+    inline void Shader::setUniformI( UInt32 handle, const SInt32 * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !checkUniformHandle( handle ) ) return;
@@ -396,7 +396,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniformF( uint32_t handle, const float * values, size_t count )
+    inline void Shader::setUniformF( UInt32 handle, const float * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !checkUniformHandle( handle ) ) return;
@@ -405,7 +405,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniformV( uint32_t handle, const Vector4f * values, size_t count )
+    inline void Shader::setUniformV( UInt32 handle, const Vector4f * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !checkUniformHandle( handle ) ) return;
@@ -414,7 +414,7 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void Shader::setUniformM( uint32_t handle, const Matrix44f * values, size_t count )
+    inline void Shader::setUniformM( UInt32 handle, const Matrix44f * values, size_t count )
     {
         GN_GUARD_SLOW;
         if( !checkUniformHandle( handle ) ) return;
@@ -424,28 +424,28 @@ namespace GN { namespace gfx
     }
 
     // -------------------------------------------------------------------------
-    inline void Shader::setUniformB( uint32_t handle, bool value )
+    inline void Shader::setUniformB( UInt32 handle, bool value )
     {
-        int32_t i = value;
+        SInt32 i = value;
         setUniformB( handle, &i, 1 );
     }
     // --
-    inline void Shader::setUniformI( uint32_t handle, int32_t value )
+    inline void Shader::setUniformI( UInt32 handle, SInt32 value )
     {
         setUniformI( handle, &value, 1 );
     }
     // --
-    inline void Shader::setUniformF( uint32_t handle, float value )
+    inline void Shader::setUniformF( UInt32 handle, float value )
     {
         setUniformF( handle, &value, 1 );
     }
     // --
-    inline void Shader::setUniformV( uint32_t handle, const Vector4f & value )
+    inline void Shader::setUniformV( UInt32 handle, const Vector4f & value )
     {
         setUniformV( handle, &value, 1 );
     }
     // --
-    inline void Shader::setUniformM( uint32_t handle, const Matrix44f & value )
+    inline void Shader::setUniformM( UInt32 handle, const Matrix44f & value )
     {
         setUniformM( handle, &value, 1 );
     }
@@ -453,35 +453,35 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void  Shader::setUniformByNameB( const StrA & name, bool value )
     {
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformB( handle, value );
     }
     // --
-    inline void  Shader::setUniformByNameI( const StrA & name, int32_t value )
+    inline void  Shader::setUniformByNameI( const StrA & name, SInt32 value )
     {
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformI( handle, value );
     }
     // --
     inline void  Shader::setUniformByNameF( const StrA & name, float value )
     {
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformF( handle, value );
     }
     // --
     inline void  Shader::setUniformByNameV( const StrA & name, const Vector4f & value )
     {
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformV( handle, value );
     }
     // --
     inline void  Shader::setUniformByNameM( const StrA & name, const Matrix44f & value )
     {
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformM( handle, value );
     }
@@ -490,25 +490,25 @@ namespace GN { namespace gfx
     inline void Shader::setUniformByName( const StrA & name, const UniformValue & value )
     {
         GN_GUARD_SLOW;
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniform( handle, value );
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void  Shader::setUniformByNameB( const StrA & name, const int32_t * values, size_t count )
+    inline void  Shader::setUniformByNameB( const StrA & name, const SInt32 * values, size_t count )
     {
         GN_GUARD_SLOW;
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformB( handle, values, count );
         GN_UNGUARD_SLOW;
     }
     // --
-    inline void  Shader::setUniformByNameI( const StrA & name, const int32_t * values, size_t count )
+    inline void  Shader::setUniformByNameI( const StrA & name, const SInt32 * values, size_t count )
     {
         GN_GUARD_SLOW;
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformI( handle, values, count );
         GN_UNGUARD_SLOW;
@@ -517,7 +517,7 @@ namespace GN { namespace gfx
     inline void  Shader::setUniformByNameF( const StrA & name, const float * values, size_t count )
     {
         GN_GUARD_SLOW;
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformF( handle, values, count );
         GN_UNGUARD_SLOW;
@@ -526,7 +526,7 @@ namespace GN { namespace gfx
     inline void  Shader::setUniformByNameV( const StrA & name, const Vector4f * values, size_t count )
     {
         GN_GUARD_SLOW;
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformV( handle, values, count );
         GN_UNGUARD_SLOW;
@@ -535,7 +535,7 @@ namespace GN { namespace gfx
     inline void  Shader::setUniformByNameM( const StrA & name, const Matrix44f * values, size_t count )
     {
         GN_GUARD_SLOW;
-        uint32_t handle = getUniformHandle(name);
+        UInt32 handle = getUniformHandle(name);
         if( 0 == handle ) return;
         setUniformM( handle, values, count );
         GN_UNGUARD_SLOW;

@@ -50,8 +50,8 @@ bool GN::gfx::ImageDesc::valid() const
         }
 
         // check pitches
-        uint32_t w = m.width / fd.blockWidth;
-        uint32_t h = m.height / fd.blockHeight;
+        UInt32 w = m.width / fd.blockWidth;
+        UInt32 h = m.height / fd.blockHeight;
         if( 0 == w ) w = 1;
         if( 0 == h ) h = 1;
         if( m.rowPitch != w * fd.blockWidth * fd.blockHeight * fd.bits / 8 )
@@ -108,7 +108,7 @@ class GN::gfx::ImageReader::Impl
         DATA_READEN,
     };
 
-    std::vector<uint8_t> mSrc;
+    std::vector<UInt8> mSrc;
 
     BMPReader mBMPReader;
     DDSReader mDDSReader;

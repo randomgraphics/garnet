@@ -6,7 +6,7 @@
 struct D3D9QuadVertex
 {
     GN::Vector3f p;
-    uint32_t     c;
+    UInt32     c;
     GN::Vector2f t;
     float        _[2]; // padding to 32 bytes
 };
@@ -122,10 +122,10 @@ void GN::gfx::D3D9Quad::deviceDispose()
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D9Quad::drawQuads(
-    BitField options,
+    BitFields options,
     const float * positions, size_t posStride,
     const float * texcoords, size_t texStride,
-    const uint32_t * colors, size_t clrStride,
+    const UInt32 * colors, size_t clrStride,
     size_t count )
 {
     GN_GUARD_SLOW;
@@ -149,11 +149,11 @@ void GN::gfx::D3D9Quad::drawQuads(
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
         drawQuads( options, positions, posStride, texcoords, texStride, colors, clrStride, n );
-        positions = (const float*)( ((const uint8_t*)positions) + n * posStride * 4 );
+        positions = (const float*)( ((const UInt8*)positions) + n * posStride * 4 );
         if( texcoords )
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+            texcoords = (const float*)( ((const UInt8*)texcoords) + n * texStride * 4 );
         if( colors )
-            colors = (const uint32_t*)( ((const uint8_t*)colors) + n * clrStride * 4 );
+            colors = (const UInt32*)( ((const UInt8*)colors) + n * clrStride * 4 );
         count -= n;
     }
 
@@ -218,18 +218,18 @@ void GN::gfx::D3D9Quad::drawQuads(
     {
         D3D9QuadVertex & v = vbData[i];
         v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
-        positions = (const float*)( ((const uint8_t*)positions) + posStride );
+        positions = (const float*)( ((const UInt8*)positions) + posStride );
 
         if( texcoords )
         {
             v.t.set( texcoords[0], texcoords[1] );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            texcoords = (const float*)( ((const UInt8*)texcoords) + texStride );
         }
 
         if( colors )
         {
             v.c = *colors;
-            colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
+            colors = (const UInt32*)( ((const UInt8*)colors) + clrStride );
         }
         else v.c = 0xFFFFFFFF;
     }
@@ -399,7 +399,7 @@ bool GN::gfx::D3D9Quad::createResources()
     // create index buffer
     GN_DX9_CHECK_RV(
         dev->CreateIndexBuffer(
-            (UINT)( sizeof(uint16_t) * MAX_QUADS * 6 ),
+            (UINT)( sizeof(UInt16) * MAX_QUADS * 6 ),
             0, // usage
             D3DFMT_INDEX16,
             D3DPOOL_MANAGED,
@@ -407,9 +407,9 @@ bool GN::gfx::D3D9Quad::createResources()
         false );
 
     // fill index buffer
-    uint16_t * ibData;
+    UInt16 * ibData;
     GN_DX9_CHECK_RV( mIdxBuf->Lock( 0, 0, (void**)&ibData, 0 ), false );
-    for( uint16_t i = 0; i < MAX_QUADS; ++i )
+    for( UInt16 i = 0; i < MAX_QUADS; ++i )
     {
         ibData[i*6+0] = i*4+0;
         ibData[i*6+1] = i*4+1;

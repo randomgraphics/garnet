@@ -87,16 +87,16 @@ namespace GN { namespace gfx
     struct TextureDesc
     {
         TexType  type;      //!< texture type
-        uint32_t width;     //!< basemap width
-        uint32_t height;    //!< basemap height
-        uint32_t depth;     //!< basemap depth
-        uint32_t faces;     //!< face count. When used as parameter of Renderer::createTexture(),
+        UInt32 width;     //!< basemap width
+        UInt32 height;    //!< basemap height
+        UInt32 depth;     //!< basemap depth
+        UInt32 faces;     //!< face count. When used as parameter of Renderer::createTexture(),
                             //!< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        uint32_t levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
+        UInt32 levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
                             //!< you may set it to 0 to create full mipmap tower (down to 1x1).
         ClrFmt   format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
                             //!< you may set it to FMT_DEFAULT. To use default texture format.
-        BitField usage;     //!< usage
+        BitFields usage;     //!< usage
         bool     tiled;     //!< tiled format. Ignored on platform other then Xenon. 
     };
 
@@ -123,7 +123,7 @@ namespace GN { namespace gfx
         //!
         //! get size of base map
         //!
-        const Vector3<uint32_t> & getBaseSize() const { return *(const Vector3<uint32_t>*)&mDesc.width; }
+        const Vector3<UInt32> & getBaseSize() const { return *(const Vector3<UInt32>*)&mDesc.width; }
 
         //!
         //! get size of base map
@@ -131,7 +131,7 @@ namespace GN { namespace gfx
         template<typename T>
         void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            const Vector3<uint32_t> & baseSize = getBaseSize();
+            const Vector3<UInt32> & baseSize = getBaseSize();
             if( sx ) *sx = (T)baseSize.x;
             if( sy ) *sy = (T)baseSize.y;
             if( sz ) *sz = (T)baseSize.z;
@@ -140,7 +140,7 @@ namespace GN { namespace gfx
         //!
         //! get size of specific mip level
         //!
-        const Vector3<uint32_t> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
+        const Vector3<UInt32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
         //!
         //! get size of specific mip level
@@ -148,7 +148,7 @@ namespace GN { namespace gfx
         template<typename T>
         void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            const Vector3<uint32_t> & mipSize = getMipSize( level );
+            const Vector3<UInt32> & mipSize = getMipSize( level );
             if( sx ) *sx = (T)mipSize.x;
             if( sy ) *sy = (T)mipSize.y;
             if( sz ) *sz = (T)mipSize.z;
@@ -320,8 +320,8 @@ namespace GN { namespace gfx
             }
 
             // calculate maximum mipmap levels
-            uint32_t nx = 0, ny = 0, nz = 0;
-            uint32_t maxLevels;
+            UInt32 nx = 0, ny = 0, nz = 0;
+            UInt32 maxLevels;
 
             maxLevels = mDesc.width;
             while( maxLevels > 0 ) { maxLevels >>= 1; ++nx; }
@@ -354,7 +354,7 @@ namespace GN { namespace gfx
         //!
         //! setup mip size
         //!
-        void setMipSize( size_t level, const Vector3<uint32_t> & s )
+        void setMipSize( size_t level, const Vector3<UInt32> & s )
         {
             GN_ASSERT( level < mDesc.levels );
             mMipSize[level] = s;
@@ -367,7 +367,7 @@ namespace GN { namespace gfx
         void setMipSize( size_t level, T sx, T sy, T sz )
         {
             GN_ASSERT( level < mDesc.levels );
-            mMipSize[level].set( (uint32_t)sx, (uint32_t)sy, (uint32_t)sz );
+            mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
         }
 
         //!
@@ -378,7 +378,7 @@ namespace GN { namespace gfx
     private :
         TextureDesc   mDesc;   //!< descriptor
         TextureLoader mLoader; //!< content loader
-        std::vector< Vector3<uint32_t> > mMipSize; //!< mipmap size of each level
+        std::vector< Vector3<UInt32> > mMipSize; //!< mipmap size of each level
         StrA          mName; //!< texture name. Only for debug purpose.
     };
 

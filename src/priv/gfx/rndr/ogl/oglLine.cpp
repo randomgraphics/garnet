@@ -56,11 +56,11 @@ void GN::gfx::OGLLine::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLLine::drawLines(
-    BitField options,
+    BitFields options,
     const float * positions,
     size_t stride,
     size_t count,
-    uint32_t color,
+    UInt32 color,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -89,7 +89,7 @@ void GN::gfx::OGLLine::drawLines(
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
         drawLines( options, positions, stride, n, color, model, view, proj );
-        positions = (const float*)( ((const uint8_t*)positions) + n * stride * 2 );
+        positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }
 
@@ -107,7 +107,7 @@ void GN::gfx::OGLLine::drawLines(
     {
         mVtxBuf[i].p.set( positions[0], positions[1], positions[2] );
         mVtxBuf[i].c = color;
-        positions = (const float*)( ((const uint8_t*)positions) + stride );
+        positions = (const float*)( ((const UInt8*)positions) + stride );
     }
 
     // determine attributes that need to be restored.

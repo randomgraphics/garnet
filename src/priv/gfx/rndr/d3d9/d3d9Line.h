@@ -64,9 +64,9 @@ namespace GN { namespace gfx {
         //! \sa Renderer::drawLines
         //!
         void drawLines(
-            BitField options,
+            BitFields options,
             const float * positions, size_t stride,
-            size_t count, uint32_t color,
+            size_t count, UInt32 color,
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj );

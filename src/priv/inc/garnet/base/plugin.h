@@ -11,7 +11,7 @@ namespace GN
     //!
     //! Plugin type ID. "0" is invalid ID
     //!
-    typedef uint16_t PluginTypeID;
+    typedef UInt16 PluginTypeID;
 
     //!
     //! Plugin ID. "0" is invalid ID
@@ -20,11 +20,11 @@ namespace GN
     {
         union
         {
-            uint32_t u32; //!< Plugin ID as unsigned integer
+            UInt32 u32; //!< Plugin ID as unsigned integer
             struct
             {
                 PluginTypeID type; //!< Plugin type ID
-                uint16_t     name; //!< Plugin name ID
+                UInt16     name; //!< Plugin name ID
             };
         };
 
@@ -38,12 +38,12 @@ namespace GN
         //!
         //! construct from unsigned integer
         //!
-        PluginID( uint32_t u ) : u32(u) {}
+        PluginID( UInt32 u ) : u32(u) {}
 
         //!
         //! construct from type and name ID
         //!
-        PluginID( PluginTypeID t, uint16_t n ) : type(t), name(n) {}
+        PluginID( PluginTypeID t, UInt16 n ) : type(t), name(n) {}
 
         //!
         //! copy constructor
@@ -53,12 +53,12 @@ namespace GN
         //!
         //! Convert to unsigned integer
         //!
-        operator uint32_t &() { return u32; }
+        operator UInt32 &() { return u32; }
 
         //!
         //! Convert to unsigned integer
         //!
-        operator const uint32_t &() const { return u32; }
+        operator const UInt32 &() const { return u32; }
 
         //!
         //! Copy operator
@@ -364,7 +364,7 @@ namespace GN
         };
 
         typedef PluginTypeID TypeHandle;
-        typedef uint16_t     NameHandle;
+        typedef UInt16     NameHandle;
 
         HandleManager<TypeItem,TypeHandle> mTypes;
         HandleManager<NameItem,NameHandle> mNames;

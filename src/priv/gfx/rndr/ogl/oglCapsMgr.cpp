@@ -173,32 +173,32 @@ static void GLAPIENTRY sFake_glClientActiveTexture(GLenum) {}
 // ****************************************************************************
 
 //
-static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE()
+static UInt32 sCapsInit_MAX_2D_TEXTURE_SIZE()
 {
     GLint result = 0;
     GN_OGL_CHECK( glGetIntegerv( GL_MAX_TEXTURE_SIZE, &result ) );
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_CLIP_PLANES()
+static UInt32 sCapsInit_MAX_CLIP_PLANES()
 {
     GLint result = 0;
     GN_OGL_CHECK( glGetIntegerv( GL_MAX_CLIP_PLANES, &result ) );
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_RENDER_TARGETS()
+static UInt32 sCapsInit_MAX_RENDER_TARGETS()
 {
     // FIXME: this is only suit for glCopyTexImage, not real PBuffer texture
     return 1;
 }
 //
-static uint32_t sCapsInit_MAX_PRIMITIVES()
+static UInt32 sCapsInit_MAX_PRIMITIVES()
 {
     return 0x10000; // no more than 65536 elements in one DIP
 }
 //
-static uint32_t sCapsInit_MAX_TEXTURE_STAGES()
+static UInt32 sCapsInit_MAX_TEXTURE_STAGES()
 {
     if( GLEW_ARB_multitexture )
     {
@@ -290,7 +290,7 @@ bool GN::gfx::OGLRenderer::supportShader( const StrA & profile )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::supportTextureFormat( TexType, BitField, ClrFmt ) const
+bool GN::gfx::OGLRenderer::supportTextureFormat( TexType, BitFields, ClrFmt ) const
 {
     GN_UNIMPL_WARNING();
     return true;

@@ -67,10 +67,10 @@ namespace GN { namespace gfx {
         //! \sa Renderer::drawQuads
         //!
         void drawQuads(
-            BitField options,
+            BitFields options,
             const float * positions, size_t posStride,
             const float * texCoords, size_t texStride,
-            const uint32_t * colors, size_t clrStride,
+            const UInt32 * colors, size_t clrStride,
             size_t count );
 
         // ********************************

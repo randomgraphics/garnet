@@ -115,8 +115,8 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
 {
     GN_GUARD_SLOW;
 
-    const std::set<uint32_t> dirtySet = getDirtyUniforms();
-    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    const std::set<UInt32> dirtySet = getDirtyUniforms();
+    std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         const Uniform & u = getUniform( *i );

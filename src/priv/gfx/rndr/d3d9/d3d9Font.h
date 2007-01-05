@@ -65,9 +65,9 @@ namespace GN { namespace gfx {
         {
             float x, y; // position
             float u, v; // texcoord
-            uint32_t c; // color
+            UInt32 c; // color
 
-            void set( float x_, float y_, float u_, float v_, uint32_t c_ )
+            void set( float x_, float y_, float u_, float v_, UInt32 c_ )
             {
                 x = x_; y = y_; u = u_; v = v_; c = c_;
             }

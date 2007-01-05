@@ -117,7 +117,7 @@ namespace GN { namespace gfx
         //! \return
         //!     Return locked buffer pointer. NULL means failed.
         //!
-        virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag ) = 0;
+        virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag ) = 0;
 
         //!
         //! unlock the buffer

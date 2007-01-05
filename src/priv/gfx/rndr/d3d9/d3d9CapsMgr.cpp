@@ -8,30 +8,30 @@
 // *****************************************************************************
 
 //
-static uint32_t sCapsInit_MAX_2D_TEXTURE_SIZE( const D3DCAPS9 & d3dcaps )
+static UInt32 sCapsInit_MAX_2D_TEXTURE_SIZE( const D3DCAPS9 & d3dcaps )
 {
     // 选较小的值
-    uint32_t result = d3dcaps.MaxTextureHeight < d3dcaps.MaxTextureWidth ?
+    UInt32 result = d3dcaps.MaxTextureHeight < d3dcaps.MaxTextureWidth ?
         d3dcaps.MaxTextureHeight : d3dcaps.MaxTextureWidth ;
     return result;
 }
 //
-static uint32_t sCapsInit_MAX_CLIP_PLANES( const D3DCAPS9 & d3dcaps )
+static UInt32 sCapsInit_MAX_CLIP_PLANES( const D3DCAPS9 & d3dcaps )
 {
     return d3dcaps.MaxUserClipPlanes;
 }
 //
-static uint32_t sCapsInit_MAX_RENDER_TARGETS( const D3DCAPS9 & d3dcaps )
+static UInt32 sCapsInit_MAX_RENDER_TARGETS( const D3DCAPS9 & d3dcaps )
 {
     return d3dcaps.NumSimultaneousRTs;
 }
 //
-static uint32_t sCapsInit_MAX_PRIMITIVES( const D3DCAPS9 & d3dcaps )
+static UInt32 sCapsInit_MAX_PRIMITIVES( const D3DCAPS9 & d3dcaps )
 {
     return d3dcaps.MaxPrimitiveCount;
 }
 //
-static uint32_t sCapsInit_MAX_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
+static UInt32 sCapsInit_MAX_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
 {
 #if GN_XENON
     return 26;
@@ -43,17 +43,17 @@ static uint32_t sCapsInit_MAX_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
 #endif
 }
 //
-static uint32_t sD3D9CapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
+static UInt32 sD3D9CapsInit_CUBE_MAP( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DPTEXTURECAPS_CUBEMAP & d3dcaps.TextureCaps );
 }
 //
-static uint32_t sD3D9CapsInit_DOT3( const D3DCAPS9 & d3dcaps )
+static UInt32 sD3D9CapsInit_DOT3( const D3DCAPS9 & d3dcaps )
 {
     return 0 != ( D3DTEXOPCAPS_DOTPRODUCT3 & d3dcaps.TextureOpCaps );
 }
 //
-static uint32_t sD3D9CapsInit_MAX_FFP_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
+static UInt32 sD3D9CapsInit_MAX_FFP_TEXTURE_STAGES( const D3DCAPS9 & d3dcaps )
 {
     return d3dcaps.MaxTextureBlendStages;
 }
@@ -184,7 +184,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         devtype += "( Software )";
     }
 #endif
-    uint32_t vsVerMajor, vsVerMinor, psVerMajor, psVerMinor;
+    UInt32 vsVerMajor, vsVerMinor, psVerMajor, psVerMinor;
     vsVerMajor = (d3dcaps.VertexShaderVersion & 0xFF00) >> 8;
     vsVerMinor = d3dcaps.VertexShaderVersion & 0xFF;
     psVerMajor = (d3dcaps.PixelShaderVersion & 0xFF00) >> 8;
@@ -300,7 +300,7 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D9Renderer::supportTextureFormat(
-    TexType type, BitField usage, ClrFmt format ) const
+    TexType type, BitFields usage, ClrFmt format ) const
 {
     GN_GUARD;
 

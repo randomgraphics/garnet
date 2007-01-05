@@ -79,7 +79,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        std::vector<uint8_t>    mSysCopy;
+        std::vector<UInt8>    mSysCopy;
         LPDIRECT3DVERTEXBUFFER9 mD3DVb;
         size_t                  mLockOffset;
         size_t                  mLockBytes;

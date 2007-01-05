@@ -121,8 +121,8 @@ namespace GN { namespace gfx
     //!
     union ChannelDesc
     {
-        uint32_t u32; //!< channel description as unsigned 32-bit integer
-        int32_t  i32; //!< channel description as signed 32-bit integer
+        UInt32 u32; //!< channel description as unsigned 32-bit integer
+        SInt32  i32; //!< channel description as signed 32-bit integer
         struct
         {
             unsigned int shift   : 8; //!< channel shift
@@ -145,16 +145,16 @@ namespace GN { namespace gfx
     struct ClrFmtDesc
     {
         const char * name;          //!< format name
-        uint8_t      bits;          //!< bits per pixel
-        uint8_t      blockWidth;    //!< block width
+        UInt8      bits;          //!< bits per pixel
+        UInt8      blockWidth;    //!< block width
                                     //!< 1 for non-compressed format,
                                     //!< 4 for DXT format
-        uint8_t      blockHeight;   //!< block width
+        UInt8      blockHeight;   //!< block width
                                     //!< 1 for non-compressed format,
                                     //!< 4 for DXT format
         union
         {
-            uint32_t swizzle;       //!< Swizzle. Ignored for compressed format.
+            UInt32 swizzle;       //!< Swizzle. Ignored for compressed format.
             struct
             {
                 char swizzle_x;     //!< Swizzle X. One of 'R', 'G', 'B', 'A', '0' or '1'.
@@ -164,7 +164,7 @@ namespace GN { namespace gfx
             };
         };
 
-        uint8_t      numChannels;   //!< 0 means compressed format
+        UInt8      numChannels;   //!< 0 means compressed format
         ChannelDesc  channels[4];   //!< valid when numChannels > 0
     };
 
@@ -193,49 +193,49 @@ namespace GN { namespace gfx
     //!
     //! compose RGBA32 color value from 4 unsigned bytes.
     //!
-    GN_FORCE_INLINE uint32_t ubyte4ToRGBA32( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
+    GN_FORCE_INLINE UInt32 ubyte4ToRGBA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
     {
         return
-            ( (uint32_t)r <<  0 ) |
-            ( (uint32_t)g <<  8 ) |
-            ( (uint32_t)b << 16 ) |
-            ( (uint32_t)a << 24 );
+            ( (UInt32)r <<  0 ) |
+            ( (UInt32)g <<  8 ) |
+            ( (UInt32)b << 16 ) |
+            ( (UInt32)a << 24 );
     }
 
     //!
     //! compose BGRA32/D3DCOLOR color value from 4 unsigned bytes.
     //!
-    GN_FORCE_INLINE uint32_t ubyte4ToBGRA32( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
+    GN_FORCE_INLINE UInt32 ubyte4ToBGRA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
     {
         return
-            ( (uint32_t)b <<  0 ) |
-            ( (uint32_t)g <<  8 ) |
-            ( (uint32_t)r << 16 ) |
-            ( (uint32_t)a << 24 );
+            ( (UInt32)b <<  0 ) |
+            ( (UInt32)g <<  8 ) |
+            ( (UInt32)r << 16 ) |
+            ( (UInt32)a << 24 );
     }
 
     //!
     //! convert 4 floats to RGBA32
     //!
-    GN_FORCE_INLINE uint32_t float4ToRGBA32( const Vector4f & color )
+    GN_FORCE_INLINE UInt32 float4ToRGBA32( const Vector4f & color )
     {
         return
-            ( (uint32_t)(color.r*255.0f) <<  0 ) |
-            ( (uint32_t)(color.g*255.0f) <<  8 ) |
-            ( (uint32_t)(color.b*255.0f) << 16 ) |
-            ( (uint32_t)(color.a*255.0f) << 24 );
+            ( (UInt32)(color.r*255.0f) <<  0 ) |
+            ( (UInt32)(color.g*255.0f) <<  8 ) |
+            ( (UInt32)(color.b*255.0f) << 16 ) |
+            ( (UInt32)(color.a*255.0f) << 24 );
     }
 
     //!
     //! convert 4 floats to BGRA32
     //!
-    GN_FORCE_INLINE uint32_t float4ToBGRA32( const Vector4f & color )
+    GN_FORCE_INLINE UInt32 float4ToBGRA32( const Vector4f & color )
     {
         return
-            ( (uint32_t)(color.b*255.0f) <<  0 ) |
-            ( (uint32_t)(color.g*255.0f) <<  8 ) |
-            ( (uint32_t)(color.r*255.0f) << 16 ) |
-            ( (uint32_t)(color.a*255.0f) << 24 );
+            ( (UInt32)(color.b*255.0f) <<  0 ) |
+            ( (UInt32)(color.g*255.0f) <<  8 ) |
+            ( (UInt32)(color.r*255.0f) << 16 ) |
+            ( (UInt32)(color.a*255.0f) << 24 );
     }
 }}
 

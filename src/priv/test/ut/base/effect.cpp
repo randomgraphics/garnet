@@ -30,7 +30,7 @@ public:
         TS_ASSERT( emptyExp.evaluate() );
 
         // comparasion
-        EffectDesc::CondExp c0( (int32_t)0 );
+        EffectDesc::CondExp c0( (SInt32)0 );
         EffectDesc::CondExp c1( 1 );
         TS_ASSERT( (c0< c1).evaluate() );
         TS_ASSERT( (c0<=c1).evaluate() );

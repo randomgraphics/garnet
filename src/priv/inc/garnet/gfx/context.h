@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    typedef uint32_t VtxFmtHandle; //!< Vertex format handle
+    typedef UInt32 VtxFmtHandle; //!< Vertex format handle
 
     enum
     {
@@ -303,7 +303,7 @@ namespace GN { namespace gfx
         //!
         //! Set individual render state.
         //!
-        inline void setRenderState( RenderState state, int32_t value );
+        inline void setRenderState( RenderState state, SInt32 value );
 
         //!
         //! Set render target texture.

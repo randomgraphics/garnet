@@ -222,7 +222,7 @@ size_t GN::StdFile::size() const
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::DiskFile::open(  const StrA & filename, int32_t openmode )
+bool GN::DiskFile::open(  const StrA & filename, SInt32 openmode )
 {
     GN_GUARD;
 

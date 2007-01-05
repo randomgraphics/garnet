@@ -177,8 +177,8 @@ void GN::gfx::D3D9Renderer::contextDeviceDestroy()
     // unset resources used by D3D device.
 	if( mDevice )
 	{
-		for( uint32_t i = 0; i < getCaps(CAPS_MAX_TEXTURE_STAGES); ++i ) mDevice->SetTexture( i, 0 );
-		for( uint32_t i = 0; i < 16; ++i ) mDevice->SetStreamSource( i, 0, 0, 0 );
+		for( UInt32 i = 0; i < getCaps(CAPS_MAX_TEXTURE_STAGES); ++i ) mDevice->SetTexture( i, 0 );
+		for( UInt32 i = 0; i < 16; ++i ) mDevice->SetStreamSource( i, 0, 0, 0 );
 		mDevice->SetIndices( 0 );
 		mDevice->SetVertexDeclaration( 0 );
 		mDevice->SetVertexShader( 0 );
@@ -353,7 +353,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
         /*static const RendererContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
         const RendererContext::SurfaceDesc *newSurf, *oldSurf;
 
-        for( uint32_t i = 0; i < 4; ++i )
+        for( UInt32 i = 0; i < 4; ++i )
         {
             newSurf = (i >= newContext.numColorBuffers) ? &sNullSurface : &newContext.colorBuffers[i];
             oldSurf = (i >= mContext.numColorBuffers) ? &sNullSurface : &mContext.colorBuffers[i];
@@ -381,7 +381,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                 else
                 {
                     // setup RT based on RTT
-                    //const Vector3<uint32_t> & sz = newSurf->texture->getMipSize( newSurf->level );
+                    //const Vector3<UInt32> & sz = newSurf->texture->getMipSize( newSurf->level );
                     //setupRT( sz.x, sz.y, newSurf->texture->getDesc().format );
                 }
 
@@ -480,9 +480,9 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
         }
 
         // apply other color buffers
-        uint32_t maxCount = getCaps( CAPS_MAX_RENDER_TARGETS );
-        uint32_t count = min( (uint32_t)newContext.numColorBuffers, maxCount );
-        for( uint32_t i = 1; i < count; ++i )
+        UInt32 maxCount = getCaps( CAPS_MAX_RENDER_TARGETS );
+        UInt32 count = min( (UInt32)newContext.numColorBuffers, maxCount );
+        for( UInt32 i = 1; i < count; ++i )
         {
             newSurf = &newContext.colorBuffers[i];
             oldSurf = (i >= mContext.numColorBuffers) ? &sNullSurface : &mContext.colorBuffers[i];
@@ -506,7 +506,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
         }
 
         // disable unused color buffers
-        for( uint32_t i = count?count:1; i < maxCount; ++i )
+        for( UInt32 i = count?count:1; i < maxCount; ++i )
         {
             GN_DX9_CHECK( mDevice->SetRenderTarget( i, 0 ) );
         }
@@ -536,8 +536,8 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                     depthDesc.MultiSampleType != rt0Desc.MultiSampleType ||
                     depthDesc.MultiSampleQuality != rt0Desc.MultiSampleQuality )
                 {
-                    uint32_t w = max(depthDesc.Width, rt0Desc.Width);
-                    uint32_t h = max(depthDesc.Height, rt0Desc.Height);
+                    UInt32 w = max(depthDesc.Width, rt0Desc.Width);
+                    UInt32 h = max(depthDesc.Height, rt0Desc.Height);
                     mAutoDepth.clear();
                     GN_DX9_CHECK_R( mDevice->CreateDepthStencilSurface(
                         w,
@@ -708,11 +708,11 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextFfp(
     {
         const TextureStateBlockDesc & desc = newContext.tsb;
         DWORD d3dtsv;
-        uint32_t maxStages = getD3DCaps( D3D9CAPS_MAX_FFP_TEXTURE_STAGES );
-        uint32_t numStages = GN::min<uint32_t>( (uint32_t)desc.getNumStages(), maxStages );
-        for ( uint32_t i = 0; i < numStages; ++i )
+        UInt32 maxStages = getD3DCaps( D3D9CAPS_MAX_FFP_TEXTURE_STAGES );
+        UInt32 numStages = GN::min<UInt32>( (UInt32)desc.getNumStages(), maxStages );
+        for ( UInt32 i = 0; i < numStages; ++i )
         {
-            for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
+            for ( UInt32 j = 0; j < NUM_TEXTURE_STATES; ++j )
             {
                 if( desc.isSet( i, (TextureState)j ) )
                 {

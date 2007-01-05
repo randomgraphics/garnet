@@ -18,7 +18,7 @@ const GN::gfx::RenderStateDesc * GN::gfx::detail::sGenerateRenderStateDescriptor
 {
     struct Local
     {
-        static RenderStateDesc ctorENUM( const char * name, int32_t minVal, int32_t maxVal )
+        static RenderStateDesc ctorENUM( const char * name, SInt32 minVal, SInt32 maxVal )
         {
             RenderStateDesc desc;
             desc.name = name;
@@ -28,7 +28,7 @@ const GN::gfx::RenderStateDesc * GN::gfx::detail::sGenerateRenderStateDescriptor
             return desc;
         }
 
-        static RenderStateDesc ctorINT( const char * name, int32_t minVal, int32_t maxVal )
+        static RenderStateDesc ctorINT( const char * name, SInt32 minVal, SInt32 maxVal )
         {
             RenderStateDesc desc;
             desc.name = name;
@@ -62,7 +62,7 @@ const GN::gfx::RenderStateDesc * GN::gfx::detail::sGenerateRenderStateDescriptor
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::RenderStateDesc::checkValueI( int32_t vi ) const
+bool GN::gfx::RenderStateDesc::checkValueI( SInt32 vi ) const
 {
     switch( valueType )
     {
@@ -134,7 +134,7 @@ bool GN::gfx::RenderStateBlockDesc::valid() const
 
         const RenderStateDesc & d = getRenderStateDesc( (RenderState) i );
 
-        const int32_t & vi = mValues[i];
+        const SInt32 & vi = mValues[i];
         const float   & vf = *(float*)&mValues[i];
 
         switch( d.valueType )

@@ -138,7 +138,7 @@ void GN::gfx::D3D9IdxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
+UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
@@ -146,7 +146,7 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
 
     if( !basicLock( startIdx, numIdx, flag ) ) return 0;
 
-    uint16_t * buf;
+    UInt16 * buf;
     if( mSysCopy.empty() )
     {
 #if GN_XENON
@@ -174,7 +174,7 @@ uint16_t * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag f
     }
 
     // success
-    return (uint16_t*)buf;
+    return (UInt16*)buf;
 
     GN_UNGUARD_SLOW;
 }
@@ -206,7 +206,7 @@ void GN::gfx::D3D9IdxBuf::unlock()
         // update d3d index buffer
 #if GN_XENON
         // Xenon does not support range locking on index buffer
-        uint16_t * dst;
+        UInt16 * dst;
         GN_DX9_CHECK_R( mD3DIb->Lock( 0, 0, (void**)&dst, sLockFlags2D3D9( isDynamic(), mLockFlag ) ) );
         dst += mLockStartIdx;
 #else

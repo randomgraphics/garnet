@@ -47,7 +47,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual uint16_t * lock( size_t startIdx, size_t numIdx, LockFlag flag );
+        virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag );
         virtual void unlock() {}
 
         // ********************************
@@ -58,14 +58,14 @@ namespace GN { namespace gfx
         //!
         //! Get index data pointer
         //!
-        const uint16_t * getIdxData( size_t startIdx ) const { return mBuffer + startIdx; }
+        const UInt16 * getIdxData( size_t startIdx ) const { return mBuffer + startIdx; }
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        uint16_t * mBuffer;
+        UInt16 * mBuffer;
 
         static GN::Logger * sLogger;
 

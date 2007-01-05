@@ -37,7 +37,7 @@ void GN::gfx::D3D10Renderer::drawEnd()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Renderer::clearScreen(
-    const GN::Vector4f & c, float z, uint32_t s, BitField flags )
+    const GN::Vector4f & c, float z, UInt32 s, BitFields flags )
 {
     GN_GUARD_SLOW;
     GN_UNUSED_PARAM( z );

@@ -168,7 +168,7 @@ GN::gfx::ClrFmt GN::gfx::d3d9::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
 // -----------------------------------------------------------------------------
 D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt, bool tiled )
 {
-    int32_t d3dfmt;
+    SInt32 d3dfmt;
     switch( clrfmt )
     {
         // 128 bits

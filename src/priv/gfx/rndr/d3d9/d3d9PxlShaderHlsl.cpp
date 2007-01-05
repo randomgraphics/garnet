@@ -63,7 +63,7 @@ void GN::gfx::D3D9PxlShaderHlsl::apply() const
     GN_DX9_CHECK( dev->SetPixelShader( mD3DShader ) );
 
     // apply ALL uniforms to D3D device
-    uint32_t handle = getFirstUniform();
+    UInt32 handle = getFirstUniform();
     while( handle )
     {
         applyUniform( dev, mConstTable, getUniform( handle ) );
@@ -85,8 +85,8 @@ void GN::gfx::D3D9PxlShaderHlsl::applyDirtyUniforms() const
 
     LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
 
-    const std::set<uint32_t> dirtySet = getDirtyUniforms();
-    std::set<uint32_t>::const_iterator i, e = dirtySet.end();
+    const std::set<UInt32> dirtySet = getDirtyUniforms();
+    std::set<UInt32>::const_iterator i, e = dirtySet.end();
     for( i = dirtySet.begin(); i != e; ++i )
     {
         applyUniform( dev, mConstTable, getUniform( *i ) );
@@ -161,7 +161,7 @@ bool GN::gfx::D3D9PxlShaderHlsl::createShader( const StrA & code, const StrA & h
     if( 0 == mD3DShader ) return false;
 
     // update userdata of all uniforms
-    uint32_t handle = getFirstUniform();
+    UInt32 handle = getFirstUniform();
     while( handle )
     {
         Uniform & u = getUniform( handle );

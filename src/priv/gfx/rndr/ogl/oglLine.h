@@ -54,11 +54,11 @@ namespace GN { namespace gfx
         //! \sa Renderer::drawLines
         //!
         void drawLines(
-            BitField options,
+            BitFields options,
             const float * positions,
             size_t stride,
             size_t count,
-            uint32_t color,
+            UInt32 color,
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj );
@@ -72,7 +72,7 @@ namespace GN { namespace gfx
 
         struct LineVertex
         {
-            uint32_t c;
+            UInt32 c;
             Vector3f p;
         };
         GN_CASSERT( 16 == sizeof(LineVertex) );

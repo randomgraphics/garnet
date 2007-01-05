@@ -65,7 +65,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setRenderState( RenderState state, int32_t value )
+    inline void RendererContext::setRenderState( RenderState state, SInt32 value )
     {
         if( !flags.rsb || !rsb.isSet(state) || rsb.get(state) != value )
         {

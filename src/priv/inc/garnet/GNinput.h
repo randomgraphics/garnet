@@ -115,8 +115,8 @@ namespace GN
         //!
         union KeyStatus
         {
-            uint8_t u8;  //!< Key status as unsigned integer
-            int8_t  i8;  //!< Key status as signed integer
+            UInt8 u8;  //!< Key status as unsigned integer
+            SInt8  i8;  //!< Key status as signed integer
 
             struct
             {
@@ -156,15 +156,15 @@ namespace GN
         union KeyEvent
         {
             //! key event as unsigned 16bit integer
-            uint16_t u16;
+            UInt16 u16;
 
             //! key event as signed 16bit integer
-            int16_t  i16;
+            SInt16  i16;
 
             //! structured key states
             struct
             {
-                uint8_t   code;   //!< Key code
+                UInt8   code;   //!< Key code
                 KeyStatus status; //!< Key status
             };
 
@@ -173,7 +173,7 @@ namespace GN
             KeyEvent() {}
             KeyEvent( const KeyEvent & k ) : u16(k.u16) {}
             KeyEvent( KeyCode kc, KeyStatus ks )
-                : code( static_cast<uint8_t>(kc) ), status(ks)
+                : code( static_cast<UInt8>(kc) ), status(ks)
             { GN_ASSERT( kc < NUM_KEYS ); }
             //@}
 
@@ -201,7 +201,7 @@ namespace GN
             const KeyEvent & set( KeyCode kc, KeyStatus ks )
             {
                 GN_ASSERT( kc < NUM_KEYS );
-                code = static_cast<uint8_t>(kc);
+                code = static_cast<UInt8>(kc);
                 status = ks;
                 return *this;
             }

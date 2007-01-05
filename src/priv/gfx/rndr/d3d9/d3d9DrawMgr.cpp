@@ -87,7 +87,7 @@ void GN::gfx::D3D9Renderer::drawEnd()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::clearScreen(
-    const GN::Vector4f & c, float z, uint32_t s, BitField flags )
+    const GN::Vector4f & c, float z, UInt32 s, BitFields flags )
 {
     GN_GUARD_SLOW;
 
@@ -179,7 +179,7 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     size_t           numVertices,
     const void *     vertexData,
     size_t           strideInBytes,
-    const uint16_t * indexData )
+    const UInt16 * indexData )
 {
     GN_GUARD_SLOW;
 
@@ -259,7 +259,7 @@ void GN::gfx::D3D9Renderer::drawUp(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::drawQuads(
-    BitField options,
+    BitFields options,
     const void * positions, size_t posStride,
     const void * texcoords, size_t texStride,
     const void * colors, size_t clrStride,
@@ -272,7 +272,7 @@ void GN::gfx::D3D9Renderer::drawQuads(
         options,
         (const float*)positions, posStride,
         (const float*)texcoords, texStride,
-        (const uint32_t*)colors, clrStride,
+        (const UInt32*)colors, clrStride,
         count );
     PIXPERF_END_EVENT();
     GN_UNGUARD_SLOW;
@@ -282,11 +282,11 @@ void GN::gfx::D3D9Renderer::drawQuads(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::drawLines(
-    BitField options,
+    BitFields options,
     const void * positions,
     size_t stride,
     size_t count,
-    uint32_t color,
+    UInt32 color,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )

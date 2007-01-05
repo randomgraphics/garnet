@@ -680,7 +680,7 @@ bool GN::gfx::OGLTexture::lock(
     }
 
     // 分配缓冲区
-    mLockedBuffer = new uint8_t[mLockedBytes];
+    mLockedBuffer = new UInt8[mLockedBytes];
     GN_ASSERT( mLockedBuffer );
 
     // 如果不是只写锁定，则读取当前的贴图内容到缓冲区中

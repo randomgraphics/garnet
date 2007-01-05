@@ -197,7 +197,7 @@ void * GN::gfx::D3D9VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
     {
 #if GN_XENON
         // Note: XDK does not support range locking on vertex buffer
-        uint8_t * u8buf;
+        UInt8 * u8buf;
         GN_DX9_CHECK_DO(
             mD3DVb->Lock( 0, 0, (void**)&u8buf, sLockFlags2D3D9(isDynamic(),flag) ),
             basicUnlock(); return 0; );
@@ -251,7 +251,7 @@ void GN::gfx::D3D9VtxBuf::unlock()
         // update d3d buffer
 #if GN_XENON
         // Note: XDK does not support range locking on vertex buffer
-        uint8_t * dst;
+        UInt8 * dst;
         GN_DX9_CHECK_R( mD3DVb->Lock( 0, 0, (void**)&dst, sLockFlags2D3D9(isDynamic(),mLockFlag) ) );
         dst += mLockOffset;
 #else

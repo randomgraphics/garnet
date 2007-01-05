@@ -21,12 +21,12 @@ namespace GN
             Variant value;
         };
 
-        HandleManager<Item,uint32_t> mItems;
-        std::map<StrA,uint32_t> mNames;
+        HandleManager<Item,UInt32> mItems;
+        std::map<StrA,UInt32> mNames;
 
         static Logger * sLogger;
 
-        const Variant * getItemByKey( uint32_t key, const char * name, bool printError ) const
+        const Variant * getItemByKey( UInt32 key, const char * name, bool printError ) const
         {
             GN_GUARD_SLOW;
 
@@ -50,7 +50,7 @@ namespace GN
         //!
         //! Item key
         //!
-        typedef uint32_t ItemKey;
+        typedef UInt32 ItemKey;
 
         //!
         //! Default constructor
@@ -77,7 +77,7 @@ namespace GN
         //!
         ItemKey name2Key( const StrA & name ) const
         {
-            std::map<StrA,uint32_t>::const_iterator i = mNames.find(name);
+            std::map<StrA,UInt32>::const_iterator i = mNames.find(name);
             return ( mNames.end() == i ) ? 0 : (*i).second;
         }
 

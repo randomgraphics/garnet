@@ -10,7 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.BasicRenderer");
 //
 // -----------------------------------------------------------------------------
 static bool
-sGetClientSize( GN::HandleType disp, GN::HandleType win, uint32_t * width, uint32_t * height )
+sGetClientSize( GN::HandleType disp, GN::HandleType win, UInt32 * width, UInt32 * height )
 {
     GN_GUARD;
 
@@ -29,16 +29,16 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, uint32_t * width, uint3
     GN_UNUSED_PARAM( disp );
     RECT rc;
     GN_MSW_CHECK_RV( ::GetClientRect( (HWND)win, &rc ), false );
-    if( width ) *width = (uint32_t)(rc.right - rc.left);
-    if( height ) *height = (uint32_t)(rc.bottom - rc.top);
+    if( width ) *width = (UInt32)(rc.right - rc.left);
+    if( height ) *height = (UInt32)(rc.bottom - rc.top);
     return true;
 
 #elif GN_POSIX
 
     XWindowAttributes attr;
     GN_X_CHECK_RV( XGetWindowAttributes( (Display*)disp, (Window)win, &attr ), false );
-    if( width ) *width = (uint32_t)attr.width;
-    if( height ) *height = (uint32_t)attr.height;
+    if( width ) *width = (UInt32)attr.width;
+    if( height ) *height = (UInt32)attr.height;
     return true;
 
 #endif
@@ -124,8 +124,8 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMod
     GN_MSW_CHECK_RV( ::GetMonitorInfoA( (HMONITOR)monitor, &mi ), false );
     GN_MSW_CHECK_RV( ::EnumDisplaySettingsA( mi.szDevice, ENUM_CURRENT_SETTINGS, &windm ), false );
 
-    GN_ASSERT( (uint32_t) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
-    GN_ASSERT( (uint32_t) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
+    GN_ASSERT( (UInt32) ( mi.rcMonitor.right - mi.rcMonitor.left ) == windm.dmPelsWidth );
+    GN_ASSERT( (UInt32) (mi.rcMonitor.bottom - mi.rcMonitor.top ) == windm.dmPelsHeight );
 
     dm.width = windm.dmPelsWidth;
     dm.height = windm.dmPelsHeight;
@@ -166,8 +166,8 @@ static bool
 sDetermineWindowSize(
     const GN::gfx::RendererOptions & ro,
     const GN::gfx::DisplayMode & currentDisplayMode,
-    uint32_t & width,
-    uint32_t & height )
+    UInt32 & width,
+    UInt32 & height )
 {
     GN_GUARD;
 
@@ -228,7 +228,7 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
     }
     else
     {
-        uint32_t w, h;
+        UInt32 w, h;
         if( !sDetermineWindowSize( ro, dm, w, h ) ) return false;
         desc.width = ro.windowedWidth ? ro.windowedWidth : w;
         desc.height = ro.windowedHeight ? ro.windowedHeight : h;

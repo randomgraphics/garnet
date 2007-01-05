@@ -256,8 +256,8 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-pure" ) ) mInitParam.ro.pure = true;
             else if( 0 == strCmpI( a, "-m" ) )
             {
-                uint32_t idx;
-                if( !str2Uint32( idx, so.OptionArg() ) )
+                UInt32 idx;
+                if( !str2UInt32( idx, so.OptionArg() ) )
                 {
                     GN_ERROR(sLogger)( "monitor index must be integer." );
                     return false;
@@ -269,7 +269,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-ld") ) getLogger( so.OptionArg() )->setEnabled( false );
             else if( 0 == strCmpI( a, "-ll") )
             {
-                int32_t level;
+                SInt32 level;
                 if( str2Int32( level, so.OptionArg() ) )
                 {
                     getLogger(0)->setLevel( level );

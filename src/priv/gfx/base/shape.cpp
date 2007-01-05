@@ -9,8 +9,8 @@ void GN::gfx::createBox(
     float * positions, size_t posStride,
     float * texcoords, size_t texStride,
     float * normals, size_t normStride,
-    uint16_t * triList,
-    uint16_t * quadList )
+    UInt16 * triList,
+    UInt16 * quadList )
 {
     GN_GUARD;
 
@@ -41,7 +41,7 @@ void GN::gfx::createBox(
             Vector3f(  sx,  sy,  sz ),
             Vector3f( -sx,  sy,  sz ),
         };
-        #define VERTEX( index ) (*(Vector3f*)(((uint8_t*)positions) + posStride*index))
+        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)positions) + posStride*index))
 
         VERTEX( 0) = v[0];
         VERTEX( 1) = v[1];
@@ -85,7 +85,7 @@ void GN::gfx::createBox(
             Vector2f( 1, 1 ),
             Vector2f( 0, 1 ),
         };
-        #define VERTEX( index ) (*(Vector2f*)(((uint8_t*)texcoords) + texStride*index))
+        #define VERTEX( index ) (*(Vector2f*)(((UInt8*)texcoords) + texStride*index))
 
         VERTEX( 0) = v[0];
         VERTEX( 1) = v[1];
@@ -128,7 +128,7 @@ void GN::gfx::createBox(
         Vector3f ny = Vector3f(  0, -1,  0 );
         Vector3f pz = Vector3f(  0,  0,  1 );
         Vector3f nz = Vector3f(  0,  0, -1 );
-        #define VERTEX( index ) (*(Vector3f*)(((uint8_t*)normals) + normStride*index))
+        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)normals) + normStride*index))
 
         VERTEX( 0) = nz;
         VERTEX( 1) = nz;
@@ -165,7 +165,7 @@ void GN::gfx::createBox(
 
     if( triList )
     {
-        for( uint16_t i = 0; i < 6; ++i )
+        for( UInt16 i = 0; i < 6; ++i )
         {
 #if GN_LEFT_HAND
             triList[0] = i*4+0;
@@ -188,7 +188,7 @@ void GN::gfx::createBox(
 
     if( quadList )
     {
-        for( uint16_t i = 0; i < 6; ++i )
+        for( UInt16 i = 0; i < 6; ++i )
         {
 #if GN_LEFT_HAND
             quadList[0] = i*4+0;

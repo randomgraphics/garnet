@@ -76,7 +76,7 @@ GN::strVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list ar
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Int16( int16_t & i, const char * s )
+bool GN::str2SInt16( SInt16 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     return 1 == sscanf( s, "%hi", &i );
@@ -85,7 +85,7 @@ bool GN::str2Int16( int16_t & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Uint16( uint16_t & i, const char * s )
+bool GN::str2UInt16( UInt16 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     return 1 == sscanf( s, "%hu", &i );
@@ -94,7 +94,7 @@ bool GN::str2Uint16( uint16_t & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Int32( int32_t & i, const char * s )
+bool GN::str2Int32( SInt32 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     return 1 == sscanf( s, "%li", (long*)&i );
@@ -103,7 +103,7 @@ bool GN::str2Int32( int32_t & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Uint32( uint32_t & i, const char * s )
+bool GN::str2UInt32( UInt32 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     return 1 == sscanf( s, "%lu", (unsigned long*)&i );
@@ -112,7 +112,7 @@ bool GN::str2Uint32( uint32_t & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Int64( int64_t & i, const char * s )
+bool GN::str2SInt64( SInt64 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     long long int lli;
@@ -124,7 +124,7 @@ bool GN::str2Int64( int64_t & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Uint64( uint64_t & i, const char * s )
+bool GN::str2UInt64( UInt64 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     unsigned long long int llu;

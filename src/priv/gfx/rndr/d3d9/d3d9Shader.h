@@ -58,12 +58,12 @@ namespace GN { namespace gfx
             //!
             //! shader constant descriptor as uint32
             //!
-            uint32_t u32;
+            UInt32 u32;
 
             struct
             {
-                uint16_t type;  //!< should be one of CONST_F, CONST_I, CONST_B
-                uint16_t index; //!< const index.
+                UInt16 type;  //!< should be one of CONST_F, CONST_I, CONST_B
+                UInt16 index; //!< const index.
             };
         };
 

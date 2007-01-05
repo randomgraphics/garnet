@@ -39,7 +39,7 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( HandleType disp, HandleType parent, HandleType monitor, uint32_t width, uint32_t height )
+        bool initInternalRenderWindow( HandleType disp, HandleType parent, HandleType monitor, UInt32 width, UInt32 height )
         {
             mWidth = width;
             mHeight = height;
@@ -69,7 +69,7 @@ namespace GN { namespace gfx
         //!
         //! Get client size
         //!
-        bool getClientSize( uint32_t & width, uint32_t & height ) const
+        bool getClientSize( UInt32 & width, UInt32 & height ) const
         { width = mWidth; height = mHeight; return true; }
 
         //!
@@ -91,7 +91,7 @@ namespace GN { namespace gfx
         // private variables
         // ********************************
     private:
-        uint32_t mWidth, mHeight;
+        UInt32 mWidth, mHeight;
     };
 
     //!
@@ -141,7 +141,7 @@ namespace GN { namespace gfx
         //!
         //! (re)initialize render window to use internal widow.
         //!
-        bool initInternalRenderWindow( HandleType dispUnused, HandleType parentWindow, HandleType monitor, uint32_t width, uint32_t height );
+        bool initInternalRenderWindow( HandleType dispUnused, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
 
         //!
         //! Delete render window
@@ -166,7 +166,7 @@ namespace GN { namespace gfx
         //!
         //! Get client size
         //!
-        bool getClientSize( uint32_t & width, uint32_t & height ) const;
+        bool getClientSize( UInt32 & width, UInt32 & height ) const;
 
         //!
         //! Get window size change flag.
@@ -220,7 +220,7 @@ namespace GN { namespace gfx
     private:
 
         bool postInit();
-        bool createWindow( HWND parent, HMONITOR monitor, uint32_t width, uint32_t height );
+        bool createWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 height );
         void handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         LRESULT windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );
         static LRESULT CALLBACK staticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp );

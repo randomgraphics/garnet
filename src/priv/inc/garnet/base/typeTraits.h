@@ -44,14 +44,14 @@ namespace GN
         };
 
         template<typename T> struct GetNumberSign {};
-        template<> struct GetNumberSign<int8_t>{ static const bool value = true; };
-        template<> struct GetNumberSign<uint8_t>{ static const bool value = false; };
-        template<> struct GetNumberSign<int16_t>{ static const bool value = true; };
-        template<> struct GetNumberSign<uint16_t>{ static const bool value = false; };
-        template<> struct GetNumberSign<int32_t>{ static const bool value = true; };
-        template<> struct GetNumberSign<uint32_t>{ static const bool value = false; };
-        template<> struct GetNumberSign<int64_t>{ static const bool value = true; };
-        template<> struct GetNumberSign<uint64_t>{ static const bool value = false; };
+        template<> struct GetNumberSign<SInt8>{ static const bool value = true; };
+        template<> struct GetNumberSign<UInt8>{ static const bool value = false; };
+        template<> struct GetNumberSign<SInt16>{ static const bool value = true; };
+        template<> struct GetNumberSign<UInt16>{ static const bool value = false; };
+        template<> struct GetNumberSign<SInt32>{ static const bool value = true; };
+        template<> struct GetNumberSign<UInt32>{ static const bool value = false; };
+        template<> struct GetNumberSign<SInt64>{ static const bool value = true; };
+        template<> struct GetNumberSign<UInt64>{ static const bool value = false; };
         template<> struct GetNumberSign<float>{ static const bool value = true; };
         template<> struct GetNumberSign<double>{ static const bool value = true; };
     }

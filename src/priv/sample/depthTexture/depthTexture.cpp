@@ -18,13 +18,13 @@ class Scene
     VtxFmtHandle mDecl;
 
     BoxVert mBoxVerts[24];
-    uint16_t mBoxIndices[36];
+    UInt16 mBoxIndices[36];
 
     Matrix44f mWorld, mView, mProj;
 
-    uint32_t mTex0;
+    UInt32 mTex0;
 
-    uint32_t mVs, mPs;
+    UInt32 mVs, mPs;
 
 public:
 
@@ -36,8 +36,8 @@ public:
     {
         Renderer & r = gRenderer;
 
-        uint32_t w = 1024;
-        uint32_t h = 1024;
+        UInt32 w = 1024;
+        UInt32 h = 1024;
 
         // create color texture
         mColor.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );

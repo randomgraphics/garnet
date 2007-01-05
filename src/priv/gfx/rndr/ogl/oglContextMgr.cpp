@@ -79,8 +79,8 @@ sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
     const OGLTexture * tex = safeCast<const OGLTexture*>(surf.texture);
 
     // get texture size
-    uint32_t sx, sy;
-    tex->getMipSize<uint32_t>( surf.level, &sx, &sy );
+    UInt32 sx, sy;
+    tex->getMipSize<UInt32>( surf.level, &sx, &sy );
 
     // copy framebuffer to current (old) render target texture
     GLint currentTexID;
@@ -493,7 +493,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
     //const GLfloat * ambi = r.fastget_ambient();
     //const GLfloat * spec = r.fastget_specular();
     //const GLfloat * emis = r.fastget_emission();
-    //uint32_t            shin = r.fastget_shininess();
+    //UInt32            shin = r.fastget_shininess();
 
     //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE  , diff ) );
     //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT  , ambi ) );
@@ -518,9 +518,9 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargetsAndViewport(
     bool rebindViewport = false;
     if( newFlags.colorBuffers )
     {
-        uint32_t count = min( (uint32_t)newContext.numColorBuffers, getCaps( CAPS_MAX_RENDER_TARGETS ) );
+        UInt32 count = min( (UInt32)newContext.numColorBuffers, getCaps( CAPS_MAX_RENDER_TARGETS ) );
         if( 0 == count ) count = 1;
-        for( uint32_t i = 0; i < count; ++i )
+        for( UInt32 i = 0; i < count; ++i )
         {
             const RendererContext::SurfaceDesc * oldSurface = i < mContext.numColorBuffers ? &mContext.colorBuffers[i] : 0;
             const RendererContext::SurfaceDesc * newSurface = i < newContext.numColorBuffers ? &newContext.colorBuffers[i] : 0;
@@ -537,11 +537,11 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargetsAndViewport(
                 // update render target size
                 if( 0 == i )
                 {
-                    uint32_t oldw = mColorBufferWidth;
-                    uint32_t oldh = mColorBufferHeight;
+                    UInt32 oldw = mColorBufferWidth;
+                    UInt32 oldh = mColorBufferHeight;
                     if( newSurface && newSurface->texture )
                     {
-                        newSurface->texture->getMipSize<uint32_t>( newSurface->level, &mColorBufferWidth, &mColorBufferHeight );
+                        newSurface->texture->getMipSize<UInt32>( newSurface->level, &mColorBufferWidth, &mColorBufferHeight );
                     }
                     else
                     {
@@ -666,17 +666,17 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
 
         TextureStateValue tsv;
 
-        uint32_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
-        uint32_t numStages = GN::min<uint32_t>( (uint32_t)newDesc.getNumStages(), maxStages );
+        UInt32 maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
+        UInt32 numStages = GN::min<UInt32>( (UInt32)newDesc.getNumStages(), maxStages );
 
         // apply all TSSs to API
-        for ( uint32_t i = 0; i < numStages; ++i )
+        for ( UInt32 i = 0; i < numStages; ++i )
         {
             chooseTextureStage( i );
 
             if( GLEW_ARB_texture_env_combine )
             {
-                for ( uint32_t j = 0; j < NUM_TEXTURE_STATES; ++j )
+                for ( UInt32 j = 0; j < NUM_TEXTURE_STATES; ++j )
                 {
                     if( newDesc.isSet( i, (TextureState)j ) )
                     {
@@ -721,7 +721,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextFfp(
             }
         }
         // disabled remaining stages
-        for( uint32_t i = numStages; i < maxStages; ++i )
+        for( UInt32 i = numStages; i < maxStages; ++i )
         {
             disableTextureStage( i );
         }

@@ -12,10 +12,10 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
         ClrFmtDesc table[NUM_CLRFMTS+1];
 
         #define MAKE_FOURCC_INT(ch0, ch1, ch2, ch3) \
-                ((uint32_t)(uint8_t)(ch0) |         \
-                ((uint32_t)(uint8_t)(ch1) << 8) |   \
-                ((uint32_t)(uint8_t)(ch2) << 16) |  \
-                ((uint32_t)(uint8_t)(ch3) << 24 ))
+                ((UInt32)(UInt8)(ch0) |         \
+                ((UInt32)(UInt8)(ch1) << 8) |   \
+                ((UInt32)(UInt8)(ch2) << 16) |  \
+                ((UInt32)(UInt8)(ch3) << 24 ))
 
         #define SWIZZLE(x,y,z,w) MAKE_FOURCC_INT( *#x, *#y, *#z, *#w )
 
@@ -60,7 +60,7 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
         //! fourcc handler
         //!
         static inline void
-        handleFourcc( ClrFmtDesc & desc, uint32_t fourcc )
+        handleFourcc( ClrFmtDesc & desc, UInt32 fourcc )
         {
 
             switch( fourcc )

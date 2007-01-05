@@ -62,7 +62,7 @@ namespace GN { namespace gfx
         //!
         //! Bind the buffer to device
         //!
-        void bindBuffer( size_t index, const uint8_t * buf, size_t startVtx, size_t stride ) const;
+        void bindBuffer( size_t index, const UInt8 * buf, size_t startVtx, size_t stride ) const;
 
         // ********************************
         // private variables
@@ -80,13 +80,13 @@ namespace GN { namespace gfx
             GLboolean         normalization;
         };
 
-        typedef void (*FP_setOglVertexBuffer)( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        typedef void (*FP_setOglVertexBuffer)( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
 
         struct AttribBinding
         {
             AttribBindingInfo     info;
             FP_setOglVertexBuffer func;
-            void bind( const uint8_t * buf, size_t stride ) const
+            void bind( const UInt8 * buf, size_t stride ) const
             {
                 GN_ASSERT( func );
                 func( info, buf, stride );
@@ -123,14 +123,14 @@ namespace GN { namespace gfx
         // stream binding utils
         bool setupStreamBindings();
         bool setupAttribBinding( AttribBinding &, const VtxFmtDesc::AttribDesc & );
-        static void sDummyStreamBinding( const AttribBindingInfo &, const uint8_t * , size_t ) {};
-        static void sSetVertexPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
-        static void sSetNormalPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
-        static void sSetColorPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
-        static void sSetSecondaryColorPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
-        static void sSetFogPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
-        static void sSetTexCoordPointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
-        static void sSetVertexAttributePointer( const AttribBindingInfo &, const uint8_t * buf, size_t stride );
+        static void sDummyStreamBinding( const AttribBindingInfo &, const UInt8 * , size_t ) {};
+        static void sSetVertexPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetNormalPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetColorPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetSecondaryColorPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetFogPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetTexCoordPointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
+        static void sSetVertexAttributePointer( const AttribBindingInfo &, const UInt8 * buf, size_t stride );
 
         // state binding utils
         bool setupStateBindings();

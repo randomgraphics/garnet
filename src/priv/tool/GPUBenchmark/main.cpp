@@ -72,7 +72,7 @@ struct ManyManyQuads
     const size_t INDEX_COUNT;
     const PrimitiveType PRIM_TYPE;
 
-    uint32_t        vtxfmt;
+    UInt32        vtxfmt;
     AutoRef<VtxBuf> vtxbuf;
     AutoRef<IdxBuf> idxbuf;
 
@@ -112,7 +112,7 @@ struct ManyManyQuads
         // create index buffer
         idxbuf.attach( r.createIdxBuf( INDEX_COUNT ) );
         if( !idxbuf ) return false;
-        uint16_t * idxptr = idxbuf->lock( 0, 0, LOCK_DISCARD );
+        UInt16 * idxptr = idxbuf->lock( 0, 0, LOCK_DISCARD );
         if( 0 == idxptr ) return false;
         for( size_t i = 0; i < QUAD_COUNT; ++i )
         {
@@ -144,20 +144,20 @@ struct ManyManyQuads
             r.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
     }
 
-    void drawPrimRange( uint32_t startPrim, uint32_t numPrims )
+    void drawPrimRange( UInt32 startPrim, UInt32 numPrims )
     {
         GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numPrims) <= PRIM_COUNT );
-        uint32_t startIdx = startPrim * 3;
+        UInt32 startIdx = startPrim * 3;
         Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
             r.drawIndexed( PRIM_TYPE, numPrims, 0, 0, VTX_COUNT, startIdx );
     }
 
-    void drawQuadRange( uint32_t startQuad, uint32_t numQuads )
+    void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
     {
         GN_ASSERT( startQuad < QUAD_COUNT && (startQuad+numQuads) <= QUAD_COUNT );
-        uint32_t primCount = numQuads * 2;
-        uint32_t startIdx = startQuad * 6;
+        UInt32 primCount = numQuads * 2;
+        UInt32 startIdx = startQuad * 6;
         Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
             r.drawIndexed( PRIM_TYPE, primCount, 0, 0, VTX_COUNT, startIdx );
@@ -231,9 +231,9 @@ struct SolidEffect : public BasicEffect
 
 struct TexturedEffect : public BasicEffect
 {
-    uint32_t mCount;
+    UInt32 mCount;
     
-    TexturedEffect( uint32_t count ) : mCount(count) {}
+    TexturedEffect( UInt32 count ) : mCount(count) {}
 
     bool create()
     {
@@ -396,7 +396,7 @@ public:
         mTestCases.push_back( cd );//*/
 
         /*
-        uint32_t texSize = 1024;
+        UInt32 texSize = 1024;
         while( texSize >= 8 )
         {
             cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, texSize );
@@ -407,7 +407,7 @@ public:
         //*/
 
         /*
-        static uint32_t batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
+        static UInt32 batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
         for( size_t i = 0; i < GN_ARRAY_COUNT(batchSizes); ++i )
         {
             cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );

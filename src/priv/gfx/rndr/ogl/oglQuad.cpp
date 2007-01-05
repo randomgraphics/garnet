@@ -56,10 +56,10 @@ void GN::gfx::OGLQuad::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLQuad::drawQuads(
-    BitField options,
+    BitFields options,
     const float * positions, size_t posStride,
     const float * texcoords, size_t texStride,
-    const uint32_t * colors, size_t clrStride,
+    const UInt32 * colors, size_t clrStride,
     size_t count )
 {
     GN_GUARD_SLOW;
@@ -86,11 +86,11 @@ void GN::gfx::OGLQuad::drawQuads(
         size_t n = MAX_QUADS - mNextQuad;
         GN_ASSERT( n > 0 );
         drawQuads( options, positions, posStride, texcoords, texStride, colors, clrStride, n );
-        positions = (const float*)( ((const uint8_t*)positions) + n * posStride * 4 );
+        positions = (const float*)( ((const UInt8*)positions) + n * posStride * 4 );
         if( texcoords )
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + n * texStride * 4 );
+            texcoords = (const float*)( ((const UInt8*)texcoords) + n * texStride * 4 );
         if( colors )
-            colors = (const uint32_t*)( ((const uint8_t*)colors) + n * clrStride * 4 );
+            colors = (const UInt32*)( ((const UInt8*)colors) + n * clrStride * 4 );
         count -= n;
     }
 
@@ -107,18 +107,18 @@ void GN::gfx::OGLQuad::drawQuads(
         QuadVertex & v = mVtxBuf[i];
 
         v.p.set( positions[0], positions[1], positions[2] );
-        positions = (const float*)( ((const uint8_t*)positions) + posStride );
+        positions = (const float*)( ((const UInt8*)positions) + posStride );
 
         if( texcoords )
         {
             v.t.set( texcoords[0], texcoords[1] );
-            texcoords = (const float*)( ((const uint8_t*)texcoords) + texStride );
+            texcoords = (const float*)( ((const UInt8*)texcoords) + texStride );
         }
 
         if( colors )
         {
             v.c = BGRA2RGBA(*colors);
-            colors = (const uint32_t*)( ((const uint8_t*)colors) + clrStride );
+            colors = (const UInt32*)( ((const UInt8*)colors) + clrStride );
         }
         else v.c = 0xFFFFFFFF;
     }

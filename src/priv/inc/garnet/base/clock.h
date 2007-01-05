@@ -31,7 +31,7 @@ namespace GN
         //!
         //! Clock cycle type
         //!
-        typedef int64_t CycleType;
+        typedef SInt64 CycleType;
 
         //!
         //! 获得当前时间计数

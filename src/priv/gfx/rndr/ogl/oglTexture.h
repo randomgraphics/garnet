@@ -172,7 +172,7 @@ namespace GN { namespace gfx
         size_t      mLockedLevel;
         Boxi        mLockedArea;
         LockFlag    mLockedFlag;
-        uint8_t *   mLockedBuffer;
+        UInt8 *   mLockedBuffer;
         size_t      mLockedBytes;
         //@}
 

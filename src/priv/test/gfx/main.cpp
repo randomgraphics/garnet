@@ -26,7 +26,7 @@ class Scene
         VtxFmtHandle vf;
         RendererContext rc;
         Vertex vb[24];
-        uint16_t ib[36];
+        UInt16 ib[36];
         StrA pvwName;
 
         BoxContext()
@@ -106,9 +106,9 @@ class Scene
         }
     } box;
 
-    uint32_t tex0;
+    UInt32 tex0;
 
-    uint32_t eff0;
+    UInt32 eff0;
 
     Matrix44f world, view, proj;
 

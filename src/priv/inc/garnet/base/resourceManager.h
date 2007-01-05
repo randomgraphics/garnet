@@ -63,7 +63,7 @@ namespace GN
     //!   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
     //!     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
     //!
-    template<typename RES, typename HANDLE=uint32_t, bool SINGLETON=false>
+    template<typename RES, typename HANDLE=UInt32, bool SINGLETON=false>
     class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,HANDLE,SINGLETON>,SINGLETON>::type
     {
     public:

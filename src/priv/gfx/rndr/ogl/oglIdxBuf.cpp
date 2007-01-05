@@ -26,7 +26,7 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
 
     setProperties( numIdx, dynamic );
 
-    mBuffer = (uint16_t*) heapAlloc( numIdx * 2 );
+    mBuffer = (UInt16*) heapAlloc( numIdx * 2 );
 
     // call user-defined content loader
     if( !getLoader().empty() && !getLoader()(*this) ) return failure();
@@ -59,7 +59,7 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-uint16_t * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
+UInt16 * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
 {
     GN_GUARD_SLOW;
     GN_ASSERT( ok() );

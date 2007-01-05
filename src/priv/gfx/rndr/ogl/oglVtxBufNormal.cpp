@@ -26,7 +26,7 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
     // store properties
     setProperties( bytes, dynamic );
 
-    mBuffer = (uint8_t*)heapAlloc( bytes );
+    mBuffer = (UInt8*)heapAlloc( bytes );
 
     // call user-defined content loader
     if( !getLoader().empty() )

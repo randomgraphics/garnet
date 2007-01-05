@@ -116,7 +116,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setRenderState( RenderState state, int32_t value )
+    inline void Renderer::setRenderState( RenderState state, SInt32 value )
     {
         _GNGFX_CONTEXT_UPDATE( setRenderState( state, value ) );
     }

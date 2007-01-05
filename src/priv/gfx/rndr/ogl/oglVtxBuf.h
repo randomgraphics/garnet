@@ -19,7 +19,7 @@ namespace GN { namespace gfx
         //!
         //! 返回指向顶点数据的指针
         //!
-        virtual const uint8_t * getVtxData() const = 0;
+        virtual const UInt8 * getVtxData() const = 0;
     };
 
     //!
@@ -64,14 +64,14 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        const uint8_t * getVtxData() const { return mBuffer; }
+        const UInt8 * getVtxData() const { return mBuffer; }
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        uint8_t * mBuffer;
+        UInt8 * mBuffer;
 
         static Logger * sLogger;
     };
@@ -122,7 +122,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        const uint8_t * getVtxData() const
+        const UInt8 * getVtxData() const
         {
             GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
             return 0;
@@ -133,7 +133,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        uint8_t * mSysCopy;
+        UInt8 * mSysCopy;
         GLuint    mOGLVertexBufferObject;
         GLenum    mOGLUsage;
         size_t    mLockOffset; //!< bytes from buffer start to locked start.

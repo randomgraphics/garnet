@@ -153,14 +153,14 @@ static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
 //
 //
 // ----------------------------------------------------------------------------
-static GN::Vector3<uint32_t> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexType type, size_t level )
+static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexType type, size_t level )
 {
     GN_GUARD_SLOW;
 
     using namespace GN;
     using namespace GN::gfx;
 
-    Vector3<uint32_t> sz;
+    Vector3<UInt32> sz;
 
     if( TEXTYPE_3D == type )
     {
@@ -225,7 +225,7 @@ D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
 //!
 //! Convert texture usage to D3DUSAGE(s)
 //!
-DWORD GN::gfx::texUsage2D3DUsage( BitField usage )
+DWORD GN::gfx::texUsage2D3DUsage( BitFields usage )
 {
     DWORD d3dUsage  = 0;
     
@@ -351,7 +351,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     GN_DX9_CHECK_RV(hr, false );
 
     // create texture instance
-    const Vector3<uint32_t> & sz = getBaseSize();
+    const Vector3<UInt32> & sz = getBaseSize();
     mD3DTexture = newD3DTexture(
         getDesc().type,
         sz.x, sz.y, sz.z,

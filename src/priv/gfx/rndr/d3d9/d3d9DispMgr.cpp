@@ -286,7 +286,7 @@ bool GN::gfx::D3D9Renderer::dispDeviceCreate()
 	// Look for nvidia adapter
     UINT nAdapter = mD3D->GetAdapterCount();
     GN_ASSERT( nAdapter );
-    for( uint32_t i = 0; i < nAdapter; ++i )
+    for( UInt32 i = 0; i < nAdapter; ++i )
     {
         D3DADAPTER_IDENTIFIER9 Identifier;
         GN_DX9_CHECK( mD3D->GetAdapterIdentifier( i, 0, &Identifier ) );
@@ -491,7 +491,7 @@ void GN::gfx::D3D9Renderer::dispDeviceDestroy()
 //
 // -----------------------------------------------------------------------------
 HRESULT GN::gfx::D3D9Renderer::checkD3DDeviceFormat(
-    uint32_t usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const
+    UInt32 usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const
 {
 #if GN_XENON
     // no need to do this check on Xenon platform.

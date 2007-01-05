@@ -70,11 +70,11 @@ namespace CEGUI
         struct QuadVertex
         {
             float x, y, z, u, v;
-            uint32_t bgra;
+            UInt32 bgra;
             union
             {
                 const Texture * tex;
-                uint64_t _reserved; // padding to 32 bytes.
+                UInt64 _reserved; // padding to 32 bytes.
             };
         };
         GN_CASSERT( sizeof(QuadVertex) == 32 );
