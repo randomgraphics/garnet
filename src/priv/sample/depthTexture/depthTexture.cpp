@@ -117,7 +117,7 @@ public:
 
         // render to depth texture
         r.contextUpdateBegin();
-            r.setShaders( 0, 0 );
+            r.setShaders( 0, 0, 0 );
             r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
             r.setColorBuffer( 0, mColor );
             r.setDepthBuffer( mDepth );
@@ -133,7 +133,7 @@ public:
         r.setTexture( 0, mDepth );
         if( mVs && mPs )
         {
-            rm.bindShaderHandles( r, mVs, mPs );
+            rm.bindShaderHandles( r, mVs, mPs, 0 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_OPAQUE );
         }
         else

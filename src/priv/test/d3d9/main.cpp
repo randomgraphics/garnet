@@ -118,8 +118,8 @@ public:
         // restore renderer states.
         RendererContext::FieldFlags ff;
         ff.u32 = 0;
-        ff.vtxShaderBit();
-        ff.pxlShaderBit();
+        ff.setShaderBit( SHADER_VS );
+        ff.setShaderBit( SHADER_PS );
         r.rebindContext( ff );
     }
 };

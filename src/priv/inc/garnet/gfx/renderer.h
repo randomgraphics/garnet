@@ -835,10 +835,10 @@ namespace GN { namespace gfx
         inline void contextUpdateEnd();
 
         inline void setShader( ShaderType type, const Shader * shader );
-        inline void setShaders( const Shader * const shaders[] );
-        inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
+        inline void setShaders( const Shader * vs, const Shader * ps, const Shader * gs );
         inline void setVS( const Shader * s );
         inline void setPS( const Shader * s );
+        inline void setGS( const Shader * s );
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
         inline void setRenderState( RenderState state, SInt32 value );
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );

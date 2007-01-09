@@ -87,7 +87,7 @@ class Scene
             // setup context
             rc.resetToDefault();
             //rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-            rc.setShaders( vs, ps );
+            rc.setShaders( vs, ps, 0 );
             rc.setVtxFmt( vf );
             ready = true;
         }
@@ -237,14 +237,14 @@ public:
         // quad 2
         if( ps1 )
         {
-            r.setShaders( 0, ps1 );
+            r.setShaders( 0, ps1, 0 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0, 0.5, 0.0, 1.0, 0.5 );
         }
 
         // quad 3
         if( ps2 )
         {
-            r.setShaders( 0, ps2 );
+            r.setShaders( 0, ps2, 0 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0, 0.0, 0.5, 0.5, 1.0 );
         }
 

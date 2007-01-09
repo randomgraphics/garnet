@@ -52,13 +52,12 @@ namespace GN { namespace gfx
             struct
             {
                 // byte 0 (general states)
-                unsigned int shaders            : 2; //!< one bit for each shader type
+                unsigned int shaders            : 3; //!< one bit for each shader type
                 unsigned int rsb                : 1; //!< render state block
                 unsigned int colorBuffers       : 1; //!< render target textures
                 unsigned int depthBuffer        : 1; //!< depth texture
                 unsigned int msaa               : 1; //!< MSAA for RTT
                 unsigned int viewport           : 1; //!< viewport
-                unsigned int                    : 1; //!< reserved
                 // byte 1 (fixed functional pipeline states)
                 unsigned int world              : 1; //!< world transformation
                 unsigned int view               : 1; //!< view transformation
@@ -81,8 +80,9 @@ namespace GN { namespace gfx
             //! \name helper functions to access shader bits
             //@{
             bool shaderBit( int type ) const { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); return 0 != ( shaders & (1<<type) ); }
-            bool vtxShaderBit() const { return 0 != ( shaders & (1<<SHADER_VS) ); }
-            bool pxlShaderBit() const { return 0 != ( shaders & (1<<SHADER_PS) ); }
+            bool vsBit() const { return 0 != ( shaders & (1<<SHADER_VS) ); }
+            bool psBit() const { return 0 != ( shaders & (1<<SHADER_PS) ); }
+            bool gsBit() const { return 0 != ( shaders & (1<<SHADER_GS) ); }
             void setShaderBit( int type ) { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); shaders |= 1 << type; }
             //@}
         };
@@ -276,14 +276,9 @@ namespace GN { namespace gfx
         inline void setShader( ShaderType type, const Shader * shader );
 
         //!
-        //! Set a list of shaders. The list must have at least NUM_SHADER_TYPES elements.
-        //!
-        inline void setShaders( const Shader * const shaders[] );
-
-        //!
         //! Set shaders. Set to NULL to use fixed pipeline.
         //!
-        inline void setShaders( const Shader * vtxShader, const Shader * pxlShader );
+        inline void setShaders( const Shader * vs, const Shader * ps, const Shader * gs );
 
         //!
         //! Set vertex shader. Set to NULL to use fixed pipeline.
@@ -294,6 +289,11 @@ namespace GN { namespace gfx
         //! Set pixel shader. Set to NULL to use fixed pipeline.
         //!
         inline void setPS( const Shader * s );
+
+        //!
+        //! Set geometry shader. Set to NULL to use fixed pipeline.
+        //!
+        inline void setGS( const Shader * s );
 
         //!
         //! Set render state block.

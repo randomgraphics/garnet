@@ -138,9 +138,9 @@ namespace GN { namespace app
         //!
         //! bind shader handles to renderer
         //!
-        void bindShaderHandles( gfx::Renderer & r, UInt32 vs, UInt32 ps )
+        void bindShaderHandles( gfx::Renderer & r, UInt32 vs, UInt32 ps, UInt32 gs )
         {
-            r.setShaders( shaders.getResource(vs), shaders.getResource(ps) );
+            r.setShaders( shaders.getResource(vs), shaders.getResource(ps), shaders.getResource(gs) );
         }
 
         //!
