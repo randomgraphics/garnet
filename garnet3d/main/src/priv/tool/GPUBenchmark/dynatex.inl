@@ -245,7 +245,7 @@ public:
 
         // update context
         mContext.clearToNull();
-        mContext.setShaders( mEffect.vs, mEffect.ps );
+        mContext.setShaders( mEffect.vs, mEffect.ps, 0 );
         //mContext.setRenderState( RS_DEPTH_TEST, 0 );
         //mContext.setRenderState( RS_DEPTH_WRITE, 0 );
         mContext.setVtxFmt( mGeometry.vtxfmt );

@@ -212,7 +212,7 @@ public:
 
         // initialize context
         mContext.clearToNull();
-        mContext.setShaders( mEffect.vs, mEffect.ps );
+        mContext.setShaders( mEffect.vs, mEffect.ps, 0 );
         //mContext.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
 
         // initialize camera

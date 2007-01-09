@@ -549,7 +549,7 @@ void GN::gfx::OGLRenderer::drawDebugText( const char * s, int x, int y, const Ve
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mDrawBegan && mFont );
-    setShaders( 0, 0 ); // disable programmable pipeline
+    setShaders( 0, 0, 0 ); // disable programmable pipeline
     mFont->drawText( s, x, y, c );
     GN_UNGUARD_SLOW;
 }

@@ -9,8 +9,8 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline Shader *
     Renderer::createVS( ShadingLanguage lang,
-                               const StrA &    code,
-                               const StrA &    hints )
+                        const StrA &    code,
+                        const StrA &    hints )
     {
         GN_GUARD;
         return createShader( SHADER_VS, lang, code, hints );
@@ -22,8 +22,8 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline Shader *
     Renderer::createPS( ShadingLanguage lang,
-                               const StrA &    code,
-                               const StrA &    hints )
+                        const StrA &    code,
+                        const StrA &    hints )
     {
         GN_GUARD;
         return createShader( SHADER_PS, lang, code, hints );
@@ -76,17 +76,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setShaders( const Shader * const shaders[] )
+    inline void Renderer::setShaders( const Shader * vs, const Shader * ps, const Shader * gs )
     {
-        _GNGFX_CONTEXT_UPDATE( setShaders( shaders ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void Renderer::setShaders( const Shader * vtxShader, const Shader * pxlShader )
-    {
-        _GNGFX_CONTEXT_UPDATE( setShaders( vtxShader, pxlShader ) );
+        _GNGFX_CONTEXT_UPDATE( setShaders( vs, ps, gs ) );
     }
 
     //
@@ -103,6 +95,14 @@ namespace GN { namespace gfx
     inline void Renderer::setPS( const Shader * s )
     {
         _GNGFX_CONTEXT_UPDATE( setPS( s ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setGS( const Shader * s )
+    {
+        _GNGFX_CONTEXT_UPDATE( setGS( s ) );
     }
 
     //

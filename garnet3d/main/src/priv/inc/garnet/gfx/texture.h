@@ -86,18 +86,18 @@ namespace GN { namespace gfx
     //!
     struct TextureDesc
     {
-        TexType  type;      //!< texture type
-        UInt32 width;     //!< basemap width
-        UInt32 height;    //!< basemap height
-        UInt32 depth;     //!< basemap depth
-        UInt32 faces;     //!< face count. When used as parameter of Renderer::createTexture(),
-                            //!< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        UInt32 levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
-                            //!< you may set it to 0 to create full mipmap tower (down to 1x1).
-        ClrFmt   format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
-                            //!< you may set it to FMT_DEFAULT. To use default texture format.
+        TexType   type;      //!< texture type
+        UInt32    width;     //!< basemap width
+        UInt32    height;    //!< basemap height
+        UInt32    depth;     //!< basemap depth
+        UInt32    faces;     //!< face count. When used as parameter of Renderer::createTexture(),
+                             //!< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
+        UInt32    levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
+                             //!< you may set it to 0 to create full mipmap tower (down to 1x1).
+        ClrFmt    format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
+                             //!< you may set it to FMT_DEFAULT. To use default texture format.
         BitFields usage;     //!< usage
-        bool     tiled;     //!< tiled format. Ignored on platform other then Xenon. 
+        bool      tiled;     //!< tiled format. Ignored on platform other then Xenon. 
     };
 
     //!
