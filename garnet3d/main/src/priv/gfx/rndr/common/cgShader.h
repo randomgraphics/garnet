@@ -1,12 +1,12 @@
 #ifndef __GN_GFX_CGSHADER_H__
 #define __GN_GFX_CGSHADER_H__
 // *****************************************************************************
-//! \file    common/cgShader.h
-//! \brief   Common Cg shader class
-//! \author  chen@@HOME-PC (2006.10.28)
+/// \file    common/cgShader.h
+/// \brief   Common Cg shader class
+/// \author  chen@@HOME-PC (2006.10.28)
 // *****************************************************************************
 
-//! \name Cg error check macros
+/// \name Cg error check macros
 //@{
 #define GN_CG_CHECK_DO( func, something )                                   \
     if( true ) {                                                            \
@@ -37,9 +37,9 @@ namespace GN { namespace gfx
     // Cg shader
     // *************************************************************************
     
-    //!
-    //! Cg Shader class
-    //!
+    ///
+    /// Cg Shader class
+    ///
     class CgShader : public StdClass
     {
         GN_DECLARE_STDCLASS( CgShader, StdClass );
@@ -76,14 +76,14 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! get program handle
-        //!
+        ///
+        /// get program handle
+        ///
         CGprogram getProgram() const { return mProgram; }
 
-        //!
-        //! get uniform handle
-        //!
+        ///
+        /// get uniform handle
+        ///
         CGparameter getUniformHandle( const StrA & name ) const
         {
             GN_GUARD_SLOW;
@@ -95,9 +95,9 @@ namespace GN { namespace gfx
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! get uniform name
-        //!
+        ///
+        /// get uniform name
+        ///
         StrA getUniformName( CGparameter param ) const
         {
             GN_GUARD_SLOW;

@@ -1,102 +1,102 @@
 #ifndef __GN_BASE_PLUGIN_H__
 #define __GN_BASE_PLUGIN_H__
 // *****************************************************************************
-//! \file    plugin.h
-//! \brief   general plugin manager
-//! \author  chenlee (2005.7.23)
+/// \file    plugin.h
+/// \brief   general plugin manager
+/// \author  chenlee (2005.7.23)
 // *****************************************************************************
 
 namespace GN
 {
-    //!
-    //! Plugin type ID. "0" is invalid ID
-    //!
+    ///
+    /// Plugin type ID. "0" is invalid ID
+    ///
     typedef UInt16 PluginTypeID;
 
-    //!
-    //! Plugin ID. "0" is invalid ID
-    //!
+    ///
+    /// Plugin ID. "0" is invalid ID
+    ///
     struct PluginID
     {
         union
         {
-            UInt32 u32; //!< Plugin ID as unsigned integer
+            UInt32 u32; ///< Plugin ID as unsigned integer
             struct
             {
-                PluginTypeID type; //!< Plugin type ID
-                UInt16     name; //!< Plugin name ID
+                PluginTypeID type; ///< Plugin type ID
+                UInt16     name; ///< Plugin name ID
             };
         };
 
-        static PluginID INVALID; //!< invalid ID
+        static PluginID INVALID; ///< invalid ID
 
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         PluginID() {}
 
-        //!
-        //! construct from unsigned integer
-        //!
+        ///
+        /// construct from unsigned integer
+        ///
         PluginID( UInt32 u ) : u32(u) {}
 
-        //!
-        //! construct from type and name ID
-        //!
+        ///
+        /// construct from type and name ID
+        ///
         PluginID( PluginTypeID t, UInt16 n ) : type(t), name(n) {}
 
-        //!
-        //! copy constructor
-        //!
+        ///
+        /// copy constructor
+        ///
         PluginID( const PluginID & id ) : u32(id.u32) {}
 
-        //!
-        //! Convert to unsigned integer
-        //!
+        ///
+        /// Convert to unsigned integer
+        ///
         operator UInt32 &() { return u32; }
 
-        //!
-        //! Convert to unsigned integer
-        //!
+        ///
+        /// Convert to unsigned integer
+        ///
         operator const UInt32 &() const { return u32; }
 
-        //!
-        //! Copy operator
-        //!
+        ///
+        /// Copy operator
+        ///
         PluginID & operator = ( const PluginID & rhs )
         {
             u32 = rhs.u32;
             return *this;
         }
 
-        //!
-        //! Less operator
-        //!
+        ///
+        /// Less operator
+        ///
         bool operator < ( const PluginID & rhs ) const
         {
             return u32 < rhs.u32;
         }
 
-        //!
-        //! Equality operator
-        //!
+        ///
+        /// Equality operator
+        ///
         bool operator == ( const PluginID & rhs ) const
         {
             return u32 == rhs.u32;
         }
 
-        //!
-        //! Equality operator
-        //!
+        ///
+        /// Equality operator
+        ///
         bool operator != ( const PluginID & rhs ) const
         {
             return u32 != rhs.u32;
         }
     };
 
-    //!
-    //! Basic plugin class
-    //!
+    ///
+    /// Basic plugin class
+    ///
     class PluginBase
     {
         PluginID mID;
@@ -105,25 +105,25 @@ namespace GN
 
     public:
 
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         PluginBase() {}
 
-        //!
-        //! Virtual destructor
-        //!
+        ///
+        /// Virtual destructor
+        ///
         virtual ~PluginBase() {}
 
-        //!
-        //! Get ID of the plugin
-        //!
+        ///
+        /// Get ID of the plugin
+        ///
         PluginID getID() const { return mID; }
     };
 
-    //!
-    //! Plugin factory class
-    //!
+    ///
+    /// Plugin factory class
+    ///
     class PluginFactory
     {
         typedef PluginBase* (*FactoryFuncPtr)( void * );
@@ -132,29 +132,29 @@ namespace GN
         FactoryFunctor mFunc;
 
     public:
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         PluginFactory() {}
 
-        //!
-        //! Construct from functor
-        //!
+        ///
+        /// Construct from functor
+        ///
         PluginFactory( const FactoryFunctor & func ) : mFunc(func) {}
 
-        //!
-        //! Construct from free function pointer
-        //!
+        ///
+        /// Construct from free function pointer
+        ///
         PluginFactory( const FactoryFuncPtr & func ) { mFunc.bind(func); }
 
-        //!
-        //! Is NULL factory or not?
-        //!
+        ///
+        /// Is NULL factory or not?
+        ///
         bool empty() const { return mFunc.empty(); }
 
-        //!
-        //! Call operator
-        //!
+        ///
+        /// Call operator
+        ///
         PluginBase * operator()( void * param ) const
         {
             GN_ASSERT( !mFunc.empty() );
@@ -162,9 +162,9 @@ namespace GN
         }
     };
 
-    //!
-    //! Plugin Manager
-    //!
+    ///
+    /// Plugin Manager
+    ///
     class PluginManager : public Singleton<PluginManager>
     {
         // ********************************
@@ -178,87 +178,87 @@ namespace GN
         //@}
 
         // ********************************
-        //! \name Plugin Management
+        /// \name Plugin Management
         // ********************************
 
         //@{
     public:
 
-        //!
-        //! Reset to initial status (clear all plugins)
-        //!
+        ///
+        /// Reset to initial status (clear all plugins)
+        ///
         void reset();
 
-        //!
-        //! Get number of plugins in manager
-        //!
+        ///
+        /// Get number of plugins in manager
+        ///
         size_t size() const { return mPlugins.size(); }
 
-        //!
-        //! Retrieve specific plugin's type ID by its name.
-        //!
+        ///
+        /// Retrieve specific plugin's type ID by its name.
+        ///
         GN_INLINE PluginTypeID getPluginTypeID( const StrA & ) const;
 
-        //!
-        //! Get specific plugin's type name
-        //!
+        ///
+        /// Get specific plugin's type name
+        ///
         const StrA & getPluginTypeName( PluginTypeID ) const;
 
-        //!
-        //! Get specific plugin's type description
-        //!
+        ///
+        /// Get specific plugin's type description
+        ///
         const StrA & getPluginTypeDesc( PluginTypeID ) const;
 
-        //!
-        //! Retrieve plugin ID by its type-ID and name
-        //!
+        ///
+        /// Retrieve plugin ID by its type-ID and name
+        ///
         PluginID getPluginID( PluginTypeID type, const StrA & name ) const;
 
-        //!
-        //! Retrieve plugin ID by its type and name
-        //!
+        ///
+        /// Retrieve plugin ID by its type and name
+        ///
         PluginID getPluginID( const StrA & type, const StrA & name ) const
         {
             return getPluginID( getPluginTypeID(type), name );
         }
 
-        //!
-        //! Valid plugin ID or not?
-        //!
+        ///
+        /// Valid plugin ID or not?
+        ///
         bool validID( PluginID ) const;
 
-        //!
-        //! Get specific plugin's name
-        //!
+        ///
+        /// Get specific plugin's name
+        ///
         const StrA & getPluginName( PluginID ) const;
 
-        //!
-        //! Get specific plugin's description
-        //!
+        ///
+        /// Get specific plugin's description
+        ///
         const StrA & getPluginDesc( PluginID ) const;
 
-        //!
-        //! Register new plugin type. Return 0 if failed.
-        //!
+        ///
+        /// Register new plugin type. Return 0 if failed.
+        ///
         PluginTypeID registerPluginType( const StrA & type, const StrA & desc );
 
-        //!
-        //! Remove existing plugin type. This will also remove
-        //! all plugins of this type.
-        //!
+        ///
+        /// Remove existing plugin type. This will also remove
+        /// all plugins of this type.
+        ///
         void removePluginType( PluginTypeID );
 
-        //!
-        //! Remove existing plugin type by its name
-        //!
+        ///
+        /// Remove existing plugin type by its name
+        ///
         void removePluginType( const StrA & type )
         {
             removePluginType( getPluginTypeID( type ) );
         }
 
-        //!
-        //! Register a new plugin class
-        //!
+        ///
+        /// Register a new plugin class
+        ///
         PluginID registerPlugin(
             PluginTypeID type,
             const StrA & name,
@@ -266,9 +266,9 @@ namespace GN
             const PluginFactory & factory,
             bool overrideExistingPlugin = false );
 
-        //!
-        //! Register a new plugin class
-        //!
+        ///
+        /// Register a new plugin class
+        ///
         PluginID registerPlugin(
             const StrA & type,
             const StrA & name,
@@ -281,31 +281,31 @@ namespace GN
                 name, desc, factory, overrideExistingPlugin );
         }
 
-        //!
-        //! Remove one existing plugin
-        //!
+        ///
+        /// Remove one existing plugin
+        ///
         void removePlugin( PluginID );
 
-        //!
-        //! Remove one existing plugin
-        //!
+        ///
+        /// Remove one existing plugin
+        ///
         void removePlugin( const StrA & type, const StrA & name )
         {
             removePlugin( getPluginID( type, name ) );
         }
 
-        //!
-        //! Create new instance of specific plugin
-        //!
+        ///
+        /// Create new instance of specific plugin
+        ///
         template<typename T>
         T * createInstance( PluginID id, void * param = 0 ) const
         {
             return safeCast<T*>(doInstanceCreation( id, param ));
         }
 
-        //!
-        //! Create new instance of specific plugin
-        //!
+        ///
+        /// Create new instance of specific plugin
+        ///
         template<typename T>
         T * createInstance(
             const StrA & type,
@@ -318,20 +318,20 @@ namespace GN
         //@}
 
         // ********************************
-        //!\name plugin library management
+        ///\name plugin library management
         // ********************************
 
         //@{
     public:
 
-        //!
-        //! Not implemented
-        //!
+        ///
+        /// Not implemented
+        ///
         void importPluginLibrary( const StrA & libraryPath );
 
-        //!
-        //! Not implemented
-        //!
+        ///
+        /// Not implemented
+        ///
         void removePluginLibrary( const StrA & libraryPath );
 
         //@}

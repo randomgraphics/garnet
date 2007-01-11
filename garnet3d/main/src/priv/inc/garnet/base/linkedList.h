@@ -1,41 +1,41 @@
 #ifndef __GN_BASE_LINKEDLIST_H__
 #define __GN_BASE_LINKEDLIST_H__
 // *****************************************************************************
-//! \file    base/linkedList.h
-//! \brief   Templates of double-linked list container
-//! \author  chenlee (2006.3.24)
+/// \file    base/linkedList.h
+/// \brief   Templates of double-linked list container
+/// \author  chenlee (2006.3.24)
 // *****************************************************************************
 
 namespace GN
 {
-    //!
-    //! Templates of double-linked list item
-    //!
+    ///
+    /// Templates of double-linked list item
+    ///
     template<class T>
     struct DoubleLinkedItem
     {
-        T * prev; //!< pointer to previous item
-        T * next; //!< pointer to next item
-        void * owner; //!< pointer to the double-linked-list that this item belongs to.
+        T * prev; ///< pointer to previous item
+        T * next; ///< pointer to next item
+        void * owner; ///< pointer to the double-linked-list that this item belongs to.
     };
 
-    //!
-    //! Templates of double-linked list container
-    //!
+    ///
+    /// Templates of double-linked list container
+    ///
     template<class T>
     class DoubleLinkedList
     {
     public:
 
-        typedef DoubleLinkedItem<T> ItemType; //!< type of linked item
+        typedef DoubleLinkedItem<T> ItemType; ///< type of linked item
 
-        //! \name ctor and dtor
+        /// \name ctor and dtor
         //@{
         DoubleLinkedList() : mHead(0), mTail(0) {}
         virtual ~DoubleLinkedList() {}
         //@}
 
-        //! \name list operations
+        /// \name list operations
         //@{
         void       append( ItemType * newItem ) { insertAfter( mTail, newItem ); }
         bool       empty() const { return 0 == mCount; };
@@ -103,33 +103,33 @@ namespace GN
         }
     };
 
-    //!
-    //! Templates of single-linked list item
-    //!
+    ///
+    /// Templates of single-linked list item
+    ///
     template<class T>
     struct SingleLinkedItem
     {
-        T * next; //!< pointer to next item
-        void * owner; //!< pointer to the single-linked-list that this item belongs to.
+        T * next; ///< pointer to next item
+        void * owner; ///< pointer to the single-linked-list that this item belongs to.
     };
 
-    //!
-    //! Templates of double-linked list container
-    //!
+    ///
+    /// Templates of double-linked list container
+    ///
     template<class T>
     class SingleLinkedList
     {
     public:
 
-        typedef SingleLinkedList<T> ItemType; //!< type of linked item
+        typedef SingleLinkedList<T> ItemType; ///< type of linked item
 
-        //! \name ctor and dtor
+        /// \name ctor and dtor
         //@{
         SingleLinkedList() : mHead(0), mTail(0) {}
         virtual ~SingleLinkedList() {}
         //@}
 
-        //! \name list operations
+        /// \name list operations
         //@{
         void       append( ItemType * newItem ) { insertAfter( tail(), newItem ); }
         ItemType * head() const { return mHead; }

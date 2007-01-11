@@ -8,8 +8,8 @@ GN::Logger * GN::gfx::D3D9VtxBuf::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 // Local functions
 // *****************************************************************************
 
-//!
-//! convert garnet buffer usage flags to D3D9 flags
+///
+/// convert garnet buffer usage flags to D3D9 flags
 // ----------------------------------------------------------------------------
 DWORD sBufUsage2D3D9( bool dynamic )
 {
@@ -20,8 +20,8 @@ DWORD sBufUsage2D3D9( bool dynamic )
     return d3dUsage;
 }
 
-//!
-//! convert garnet buffer lock flags to D3D9 flags
+///
+/// convert garnet buffer lock flags to D3D9 flags
 // ----------------------------------------------------------------------------
 DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag flag )
 {

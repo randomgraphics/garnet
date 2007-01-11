@@ -1,27 +1,27 @@
 #ifndef __GN_BASE_PROFILER_H__
 #define __GN_BASE_PROFILER_H__
 // *****************************************************************************
-//! \file    profiler.h
-//! \brief   light-weight profiler
-//! \author  chenlee (2005.8.4)
+/// \file    profiler.h
+/// \brief   light-weight profiler
+/// \author  chenlee (2005.8.4)
 // *****************************************************************************
 
 #include <limits>
 #include <map>
 
-//! \name prof macros
+/// \name prof macros
 //@{
 #ifdef GN_PROFILE_BUILD
-//!
-//! start a profile timer
-//!
+///
+/// start a profile timer
+///
 #define GN_PROF(name) ::GN::core::ScopeTimer GN_JOIN(__prof_,name)( #name )
-//!
-//! stop a previously defined profile timer
-//!
-//! Normally, you don't need to use this macro, because profile timer
-//! will stop automatically when out of its life scope.
-//!
+///
+/// stop a previously defined profile timer
+///
+/// Normally, you don't need to use this macro, because profile timer
+/// will stop automatically when out of its life scope.
+///
 #define GN_PROF_END(name) GN_JOIN(__prof_,name).end()
 #else
 #define GN_PROF(name)
@@ -31,9 +31,9 @@
 
 namespace GN
 {
-    //!
-    //! Profiler Manager
-    //!
+    ///
+    /// Profiler Manager
+    ///
     class ProfilerManager : public Singleton<ProfilerManager>
     {
         // ********************************
@@ -51,24 +51,24 @@ namespace GN
         // ********************************
     public:
 
-        //!
-        //! reset profiler, clear all timers
-        //!
+        ///
+        /// reset profiler, clear all timers
+        ///
         void reset() { mTimers.clear(); mClock.reset(); }
 
-        //!
-        //! print profile result to string
-        //!
+        ///
+        /// print profile result to string
+        ///
         void toString( StrA & ) const;
 
-        //!
-        //! print profile result to string
-        //!
+        ///
+        /// print profile result to string
+        ///
         StrA toString() { StrA str; toString(str); return str; }
 
-        //!
-        //! start a profile timer
-        //!
+        ///
+        /// start a profile timer
+        ///
         void startTimer( const char * name )
         {
             GN_GUARD_SLOW;
@@ -76,9 +76,9 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! stop a profile timer
-        //!
+        ///
+        /// stop a profile timer
+        ///
         void stopTimer( const char * name )
         {
             GN_GUARD_SLOW;
@@ -91,9 +91,9 @@ namespace GN
         // ********************************
     private:
 
-        //!
-        //! private timer structure
-        //!
+        ///
+        /// private timer structure
+        ///
         struct TimerDesc
         {
             double count, timesum, timemin, timemax, timestart;
@@ -133,35 +133,35 @@ namespace GN
     private:
     };
 
-    //!
-    //! scope timer
-    //!
+    ///
+    /// scope timer
+    ///
     class ScopeTimer
     {
         const char * mName;
 
     public :
 
-        //!
-        //! start the timer
-        //!
+        ///
+        /// start the timer
+        ///
         ScopeTimer( const char * name ) : mName(name)
         {
             GN_ASSERT( name );
             ProfilerManager::sGetInstance().startTimer(name);
         }
 
-        //!
-        //! end the timer
-        //!
+        ///
+        /// end the timer
+        ///
         ~ScopeTimer()
         {
             stop();
         }
 
-        //!
-        //! end the timer manually
-        //!
+        ///
+        /// end the timer manually
+        ///
         void stop()
         {
             if( mName )

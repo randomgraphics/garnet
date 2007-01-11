@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D10_D3D10RENDERER_H__
 #define __GN_GFXD3D10_D3D10RENDERER_H__
 // *****************************************************************************
-//! \file    d3d10Renderer.h
-//! \brief   D3D10 renderer class
-//! \author  chenlee (2005.10.2)
+/// \file    d3d10Renderer.h
+/// \brief   D3D10 renderer class
+/// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
@@ -12,9 +12,9 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! D3D10 renderer class
-    //!
+    ///
+    /// D3D10 renderer class
+    ///
     class D3D10Renderer : public BasicRenderer
     {
         GN_DECLARE_STDCLASS(D3D10Renderer, BasicRenderer);
@@ -53,7 +53,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Device Manager
+    /// \name                     Device Manager
     //
     // ************************************************************************
 
@@ -68,16 +68,16 @@ namespace GN { namespace gfx
         bool deviceCreate();
         void deviceDestroy();
 
-        //!
-        //! if true, then we are inside function changeOptions().
-        //!
+        ///
+        /// if true, then we are inside function changeOptions().
+        ///
         bool mDeviceChanging;
 
         //@}
 
     // ************************************************************************
     //
-    //! \name                     Display Manager
+    /// \name                     Display Manager
     //
     // ************************************************************************
 
@@ -119,7 +119,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                 Capability Manager
+    /// \name                 Capability Manager
     //
     // ************************************************************************
 
@@ -146,7 +146,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Resource Manager
+    /// \name                     Resource Manager
     //
     // ************************************************************************
 
@@ -178,7 +178,7 @@ namespace GN { namespace gfx
 
     // ********************************************************************
     //
-    //! \name Context manager
+    /// \name Context manager
     //
     // ********************************************************************
 
@@ -207,7 +207,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Drawing Manager
+    /// \name                     Drawing Manager
     //
     // ************************************************************************
 
@@ -268,7 +268,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Misc. utilities
+        /// \name Misc. utilities
         //
         // ********************************************************************
 

@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D9_D3D9SHADER_H__
 #define __GN_GFXD3D9_D3D9SHADER_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9Shader.h
-//! \brief   D3D shader classes
-//! \author  chenlee (2005.11.26)
+/// \file    d3d9/d3d9Shader.h
+/// \brief   D3D shader classes
+/// \author  chenlee (2005.11.26)
 // *****************************************************************************
 
 #include "d3d9Resource.h"
@@ -11,26 +11,26 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! Basic D3D9 shader class
-    //!
+    ///
+    /// Basic D3D9 shader class
+    ///
     struct D3D9BasicShader : public Shader
     {
-        //!
-        //! Apply shader as well as shader constants to D3D device
-        //!
+        ///
+        /// Apply shader as well as shader constants to D3D device
+        ///
         virtual void apply() const = 0;
 
-        //!
-        //! Apply only dirty uniforms to D3D device
-        //!
+        ///
+        /// Apply only dirty uniforms to D3D device
+        ///
         virtual void applyDirtyUniforms() const = 0;
 
     protected:
 
-        //!
-        //! protected ctor
-        //!
+        ///
+        /// protected ctor
+        ///
         D3D9BasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
     };
 
@@ -38,46 +38,46 @@ namespace GN { namespace gfx
     // ASM shaders
     // *************************************************************************
 
-    //!
-    //! Basic D3D9 asm shader class
-    //!
+    ///
+    /// Basic D3D9 asm shader class
+    ///
     struct D3D9ShaderAsm : public D3D9BasicShader
     {
         enum
         {
-            CONST_F = 1, //!< float const
-            CONST_I = 2, //!< integer const
-            CONST_B = 3, //!< bool const
+            CONST_F = 1, ///< float const
+            CONST_I = 2, ///< integer const
+            CONST_B = 3, ///< bool const
         };
 
-        //!
-        //! Asm shader constant descriptor
-        //!
+        ///
+        /// Asm shader constant descriptor
+        ///
         union D3DAsmConstDesc
         {
-            //!
-            //! shader constant descriptor as uint32
-            //!
+            ///
+            /// shader constant descriptor as uint32
+            ///
             UInt32 u32;
 
             struct
             {
-                UInt16 type;  //!< should be one of CONST_F, CONST_I, CONST_B
-                UInt16 index; //!< const index.
+                UInt16 type;  ///< should be one of CONST_F, CONST_I, CONST_B
+                UInt16 index; ///< const index.
             };
         };
 
     protected:
 
-        //!
-        //! protected ctor
-        //!
+        ///
+        /// protected ctor
+        ///
         D3D9ShaderAsm( ShaderType type) : D3D9BasicShader(type,LANG_D3D_ASM) {}
     };
 
-    //!
-    //! D3D9 asm vertex shader class
-    //!
+    ///
+    /// D3D9 asm vertex shader class
+    ///
     class D3D9VtxShaderAsm : public D3D9ShaderAsm, public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9VtxShaderAsm, StdClass );
@@ -147,9 +147,9 @@ namespace GN { namespace gfx
         GN_INLINE void applyUniform( LPDIRECT3DDEVICE9, const Uniform & ) const;
     };
 
-    //!
-    //! D3D9 asm pixel shader class
-    //!
+    ///
+    /// D3D9 asm pixel shader class
+    ///
     class D3D9PxlShaderAsm : public D3D9ShaderAsm, public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9PxlShaderAsm, StdClass );
@@ -223,26 +223,26 @@ namespace GN { namespace gfx
     // HLSL shaders
     // *************************************************************************
 
-    //!
-    //! Basic D3D9 HLSL shader class
-    //!
+    ///
+    /// Basic D3D9 HLSL shader class
+    ///
     class D3D9ShaderHlsl : public D3D9BasicShader
     {
     protected:
 
-        //!
-        //! shader creation hints structure
-        //!
+        ///
+        /// shader creation hints structure
+        ///
         struct CreationHints
         {
-            StrA entry;  //!< entry function
-            StrA target; //!< shader profile
-            bool sm3;    //!< favor shader model 3.0
-            bool optimize; //!< enable shader optimization, default is on.
+            StrA entry;  ///< entry function
+            StrA target; ///< shader profile
+            bool sm3;    ///< favor shader model 3.0
+            bool optimize; ///< enable shader optimization, default is on.
 
-            //!
-            //! Setup hints from string.
-            //!
+            ///
+            /// Setup hints from string.
+            ///
             void fromStr( const StrA & s )
             {
                 Registry r;
@@ -254,14 +254,14 @@ namespace GN { namespace gfx
             }
         };
 
-        //!
-        //! protected ctor
-        //!
+        ///
+        /// protected ctor
+        ///
         D3D9ShaderHlsl( ShaderType type ) : D3D9BasicShader(type,LANG_D3D_ASM) {}
 
-        //!
-        //! apply uniform to D3D device
-        //!
+        ///
+        /// apply uniform to D3D device
+        ///
         void applyUniform( LPDIRECT3DDEVICE9 dev, LPD3DXCONSTANTTABLE table, const Uniform & u ) const
         {
             GN_GUARD_SLOW;
@@ -310,9 +310,9 @@ namespace GN { namespace gfx
         }
     };
 
-    //!
-    //! D3D9 HLSL vertex shader class
-    //!
+    ///
+    /// D3D9 HLSL vertex shader class
+    ///
     class D3D9VtxShaderHlsl : public D3D9ShaderHlsl, public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9VtxShaderHlsl, StdClass );
@@ -378,9 +378,9 @@ namespace GN { namespace gfx
         bool createShader( const StrA &, const StrA & );
     };
 
-    //!
-    //! D3D9 HLSL pixel shader class
-    //!
+    ///
+    /// D3D9 HLSL pixel shader class
+    ///
     class D3D9PxlShaderHlsl : public D3D9ShaderHlsl, public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9PxlShaderHlsl, StdClass );
@@ -454,9 +454,9 @@ namespace GN { namespace gfx
 
 #ifdef HAS_CG_D3D9
 
-    //!
-    //! Basic Cg Shader class
-    //!
+    ///
+    /// Basic Cg Shader class
+    ///
     class D3D9BasicShaderCg : public D3D9BasicShader, public D3D9Resource, public StdClass
     {
         GN_DECLARE_STDCLASS( D3D9BasicShaderCg, StdClass );
@@ -523,27 +523,27 @@ namespace GN { namespace gfx
         inline void applyUniform( const Uniform & ) const;
     };
 
-    //!
-    //! D3D9 Cg vertex shader.
-    //!
+    ///
+    /// D3D9 Cg vertex shader.
+    ///
     class D3D9VtxShaderCg : public D3D9BasicShaderCg
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         D3D9VtxShaderCg( D3D9Renderer & r ) : D3D9BasicShaderCg( r, SHADER_VS ) {}
     };
 
-    //!
-    //! D3D9 Cg pixel shader.
-    //!
+    ///
+    /// D3D9 Cg pixel shader.
+    ///
     class D3D9PxlShaderCg : public D3D9BasicShaderCg
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         D3D9PxlShaderCg( D3D9Renderer & r ) : D3D9BasicShaderCg( r, SHADER_PS ) {}
     };
 

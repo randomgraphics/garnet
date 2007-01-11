@@ -1,3 +1,3 @@
-//! \cond NEVER
+/// \cond NEVER
 
-//! \endcond
+/// \endcond

@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_SHADER_H__
 #define __GN_GFX_SHADER_H__
 // *****************************************************************************
-//! \file    shader.h
-//! \brief   Vertex and pixel shader interface
-//! \author  chenlee (2005.9.30)
+/// \file    shader.h
+/// \brief   Vertex and pixel shader interface
+/// \author  chenlee (2005.9.30)
 // *****************************************************************************
 
 #include <vector>
@@ -12,56 +12,56 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! shader type
-    //!
+    ///
+    /// shader type
+    ///
     enum ShaderType
     {
-        SHADER_VS,        //!< vertex shader
-        SHADER_PS,        //!< pixel shader
-        SHADER_GS,        //!< geometry shader (D3D10 only)
-        NUM_SHADER_TYPES  //!< number of available shader types
+        SHADER_VS,        ///< vertex shader
+        SHADER_PS,        ///< pixel shader
+        SHADER_GS,        ///< geometry shader (D3D10 only)
+        NUM_SHADER_TYPES  ///< number of available shader types
     };
 
-    //!
-    //! shader language type
-    //!
+    ///
+    /// shader language type
+    ///
     enum ShadingLanguage
     {
-        LANG_OGL_ARB,          //!< OpenGL ARB shader
-        LANG_OGL_GLSL,         //!< OpenGL shading language
-        LANG_D3D_ASM,          //!< DirectX ASM shader
-        LANG_D3D_HLSL,         //!< DirectX high level shading language
-        LANG_CG,               //!< Nvidia Cg
-        NUM_SHADING_LANGUAGES  //!< number of available languages
+        LANG_OGL_ARB,          ///< OpenGL ARB shader
+        LANG_OGL_GLSL,         ///< OpenGL shading language
+        LANG_D3D_ASM,          ///< DirectX ASM shader
+        LANG_D3D_HLSL,         ///< DirectX high level shading language
+        LANG_CG,               ///< Nvidia Cg
+        NUM_SHADING_LANGUAGES  ///< number of available languages
     };
 
-    //!
-    //! Uniform value type
-    //!
+    ///
+    /// Uniform value type
+    ///
     enum UniformValueType
     {
-        UVT_BOOL,     //!< boolean
-        UVT_INT,      //!< signed integer (32-bit)
-        UVT_FLOAT,    //!< single precision floating point
-        UVT_VECTOR4,  //!< 4 floats
-        UVT_MATRIX44, //!< 4x4 row major matrix
-        NUM_UNIFORM_VALUE_TYPES, //!< number of avaliable types.
+        UVT_BOOL,     ///< boolean
+        UVT_INT,      ///< signed integer (32-bit)
+        UVT_FLOAT,    ///< single precision floating point
+        UVT_VECTOR4,  ///< 4 floats
+        UVT_MATRIX44, ///< 4x4 row major matrix
+        NUM_UNIFORM_VALUE_TYPES, ///< number of avaliable types.
     };
 
-    //!
-    //! Uniform value structure
-    //!
+    ///
+    /// Uniform value structure
+    ///
     struct UniformValue
     {
-        UniformValueType       type;      //!< value type
-        std::vector<SInt32>   bools;     //!< Boolean value
-        std::vector<SInt32>   ints;      //!< integer value
-        std::vector<float>     floats;    //!< float value
-        std::vector<Vector4f>  vector4s;  //!< vector value
-        std::vector<Matrix44f> matrix44s; //!< matrix value
+        UniformValueType       type;      ///< value type
+        std::vector<SInt32>   bools;     ///< Boolean value
+        std::vector<SInt32>   ints;      ///< integer value
+        std::vector<float>     floats;    ///< float value
+        std::vector<Vector4f>  vector4s;  ///< vector value
+        std::vector<Matrix44f> matrix44s; ///< matrix value
 
-        //! \name set uniform value
+        /// \name set uniform value
         //@{
         inline void setB( const SInt32 *, size_t );
         inline void setI( const SInt32 *, size_t );
@@ -77,36 +77,36 @@ namespace GN { namespace gfx
         //@}
 
 #if GN_DEBUG_BUILD
-        //!
-        //! ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
-        //!
+        ///
+        /// ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
+        ///
         UniformValue() : type(NUM_UNIFORM_VALUE_TYPES) {}
 #endif
     };
 
-    //!
-    //! General shader interface
-    //!
+    ///
+    /// General shader interface
+    ///
     struct Shader : public RefCounter
     {
-        //!
-        //! get shader type
-        //!
+        ///
+        /// get shader type
+        ///
         ShaderType getType() const { return mType; }
 
-        //!
-        //! get shading language
-        //!
+        ///
+        /// get shading language
+        ///
         ShadingLanguage getLang() const { return mLang; }
 
-        //!
-        //! Get handle of uniform variable
-        //!
+        ///
+        /// Get handle of uniform variable
+        ///
         UInt32 getUniformHandle( const StrA & );
 
-        //!
-        //! \name Set value of uniform variable.
-        //!
+        ///
+        /// \name Set value of uniform variable.
+        ///
         //@{
         void setUniform( UInt32, const UniformValue & );
         
@@ -114,18 +114,18 @@ namespace GN { namespace gfx
         void setUniformI( UInt32, const SInt32 *, size_t );
         void setUniformF( UInt32, const float *, size_t );
         void setUniformV( UInt32, const Vector4f *, size_t );
-        void setUniformM( UInt32, const Matrix44f *, size_t ); //!< \note Matrix should be row major
+        void setUniformM( UInt32, const Matrix44f *, size_t ); ///< \note Matrix should be row major
 
         void setUniformB( UInt32, bool );
         void setUniformI( UInt32, SInt32 );
         void setUniformF( UInt32, float );
         void setUniformV( UInt32, const Vector4f & );
-        void setUniformM( UInt32, const Matrix44f & ); //!< \note Matrix should be row major
+        void setUniformM( UInt32, const Matrix44f & ); ///< \note Matrix should be row major
         //@}
 
-        //!
-        //! \name Set uniform variable by name
-        //!
+        ///
+        /// \name Set uniform variable by name
+        ///
         //@{
         void setUniformByName( const StrA &, const UniformValue & );
 
@@ -142,9 +142,9 @@ namespace GN { namespace gfx
         void setUniformByNameM( const StrA &, const Matrix44f & );
         //@}
 
-        //! \name get reference to shader name.
-        //!
-        //! Name field is for debug purpose only, it is not used by garnet library. Set it to any value you want.
+        /// \name get reference to shader name.
+        ///
+        /// Name field is for debug purpose only, it is not used by garnet library. Set it to any value you want.
         //@{
         const StrA & name() const { return mName; }
         StrA & name() { return mName; }
@@ -152,12 +152,12 @@ namespace GN { namespace gfx
 
     protected :
 
-        //!
-        //! protected constructor
-        //!
-        //! \param type     Shader type
-        //! \param lang     Shading language
-        //!
+        ///
+        /// protected constructor
+        ///
+        /// \param type     Shader type
+        /// \param lang     Shading language
+        ///
         Shader( ShaderType type, ShadingLanguage lang )
             : mType(type)
             , mLang(lang)
@@ -166,70 +166,70 @@ namespace GN { namespace gfx
             GN_ASSERT( 0 <= lang && lang < NUM_SHADING_LANGUAGES );
         }
 
-        //!
-        //! Uniform structure
-        //!
+        ///
+        /// Uniform structure
+        ///
         struct Uniform
         {
-            StrA         name;     //!< uniform name
-            UniformValue value;    //!< uniform value
-            HandleType   userData; //!< User-defined data
+            StrA         name;     ///< uniform name
+            UniformValue value;    ///< uniform value
+            HandleType   userData; ///< User-defined data
         };
 
-        //!
-        //! Get first unform handle. Use to iterate all uniforms.
-        //!
+        ///
+        /// Get first unform handle. Use to iterate all uniforms.
+        ///
         UInt32 getFirstUniform() const { return mUniforms.first(); }
 
-        //!
-        //! Get next unform handle. Use to iterate all uniforms.
-        //!
+        ///
+        /// Get next unform handle. Use to iterate all uniforms.
+        ///
         UInt32 getNextUniform( UInt32 handle ) const { return mUniforms.next(handle); }
 
-        //!
-        //! Get the uniform data structure
-        //!
+        ///
+        /// Get the uniform data structure
+        ///
         Uniform & getUniform( UInt32 handle )
         {
             GN_ASSERT( mUniforms.validHandle(handle) );
             return mUniforms[handle];
         }
 
-        //!
-        //! Get the uniform data structure
-        //!
+        ///
+        /// Get the uniform data structure
+        ///
         const Uniform & getUniform( UInt32 handle ) const
         {
             GN_ASSERT( mUniforms.validHandle(handle) );
             return mUniforms[handle];
         }
 
-        //!
-        //! get list of dirty uniforms
-        //!
+        ///
+        /// get list of dirty uniforms
+        ///
         const std::set<UInt32> & getDirtyUniforms() const { return mDirtySet; }
 
-        //!
-        //! clear dirty set
-        //!
+        ///
+        /// clear dirty set
+        ///
         void clearDirtySet() const { mDirtySet.clear(); }
 
     private:
 
-        //!
-        //! Query device-dependent uniform data
-        //!
-        //! \param name
-        //!     uniform name
-        //! \param userData
-        //!     Return user-defined uniform data that will be stored in Uniform::userData.
-        //!     Ignored if set to NULL.
-        //!
+        ///
+        /// Query device-dependent uniform data
+        ///
+        /// \param name
+        ///     uniform name
+        /// \param userData
+        ///     Return user-defined uniform data that will be stored in Uniform::userData.
+        ///     Ignored if set to NULL.
+        ///
         virtual bool queryDeviceUniform( const char * name, HandleType & userData ) const = 0;
 
-        //!
-        //! Add a new uniform to uniform list. Return handle of the uniform.
-        //!
+        ///
+        /// Add a new uniform to uniform list. Return handle of the uniform.
+        ///
         UInt32 addUniform( const StrA & name )
         {
             GN_GUARD;
@@ -274,14 +274,14 @@ namespace GN { namespace gfx
             return true;
         }
 
-        ShaderType      mType; //!< shader type
-        ShadingLanguage mLang; //!< shading language
+        ShaderType      mType; ///< shader type
+        ShadingLanguage mLang; ///< shading language
 
-        HandleManager<Uniform,UInt32> mUniforms;     //!< uniform handle manager
-        std::map<StrA,UInt32>         mUniformNames; //!< uniform name -> uniform handle
-        mutable std::set<UInt32>      mDirtySet;     //!< Store handle of dirty uniforms.
+        HandleManager<Uniform,UInt32> mUniforms;     ///< uniform handle manager
+        std::map<StrA,UInt32>         mUniformNames; ///< uniform name -> uniform handle
+        mutable std::set<UInt32>      mDirtySet;     ///< Store handle of dirty uniforms.
 
-        StrA mName; //!< shader name ( debug purpose only )
+        StrA mName; ///< shader name ( debug purpose only )
     };
 
     // *************************************************************************
@@ -545,8 +545,8 @@ namespace GN { namespace gfx
     // Util functions
     // *************************************************************************
 
-    //!
-    //! \name convert between shader usage tags to string
+    ///
+    /// \name convert between shader usage tags to string
     //@{
 
     // -------------------------------------------------------------------------

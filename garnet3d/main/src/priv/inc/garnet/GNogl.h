@@ -1,9 +1,9 @@
 #ifndef __GN_GNOGL_GNOGL_H__
 #define __GN_GNOGL_GNOGL_H__
 // *****************************************************************************
-//! \file    GNogl.h
-//! \brief   Public interface for opengl module (collection of OGL utils).
-//! \author  chenlee (2005.8.26)
+/// \file    GNogl.h
+/// \brief   Public interface for opengl module (collection of OGL utils).
+/// \author  chenlee (2005.8.26)
 // *****************************************************************************
 
 #if !GN_XENON
@@ -19,14 +19,14 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! Namespace for ogl module
-    //!
+    ///
+    /// Namespace for ogl module
+    ///
     namespace ogl
     {
-        //!
-        //! Get OpenGL error string
-        //!
+        ///
+        /// Get OpenGL error string
+        ///
         inline const char * getGLErrorInfo( GLenum errCode )
         {
             static StrA sErrInfo;

@@ -1,14 +1,14 @@
 #ifndef __GN_BASE_TYPETRAITS_H__
 #define __GN_BASE_TYPETRAITS_H__
 // *****************************************************************************
-//! \file    typeTraits.h
-//! \brief   Type traits templates
-//! \author  chenlee (2005.8.2)
+/// \file    typeTraits.h
+/// \brief   Type traits templates
+/// \author  chenlee (2005.8.2)
 // *****************************************************************************
 
 namespace GN
 {
-    //! \cond NEVER
+    /// \cond NEVER
     namespace detail
     {
         template <typename T>
@@ -55,81 +55,81 @@ namespace GN
         template<> struct GetNumberSign<float>{ static const bool value = true; };
         template<> struct GetNumberSign<double>{ static const bool value = true; };
     }
-    //! \endcond
+    /// \endcond
 
-    //!
-    //! Is same type or not?
-    //!
+    ///
+    /// Is same type or not?
+    ///
     template <typename T1, typename T2>
     struct IsSameType
     {
-        static const bool value = false; //!< 如题.
+        static const bool value = false; ///< 如题.
     };
 
-    //!
-    //! Is same type or not?
-    //!
+    ///
+    /// Is same type or not?
+    ///
     template <typename T>
     struct IsSameType<T,T>
     {
-        static const bool value = true; //!< 如题.
+        static const bool value = true; ///< 如题.
     };
 
-    //!
-    //! Test constness
-    //!
+    ///
+    /// Test constness
+    ///
     template <typename T>
     struct IsConst
     {
-        static const bool value = false; //!< 如题.
+        static const bool value = false; ///< 如题.
     };
 
-    //!
-    //! Test constness
-    //!
+    ///
+    /// Test constness
+    ///
     template <typename T>
     struct IsConst<const T>
     {
-        static const bool value = true; //!< 如题.
+        static const bool value = true; ///< 如题.
     };
 
-    //!
-    //! Is class type or not?
-    //!
+    ///
+    /// Is class type or not?
+    ///
     template <typename T>
     struct IsClass
     {
-        static const bool value = detail::IsClassHelper<T>::value; //!< 如题.
+        static const bool value = detail::IsClassHelper<T>::value; ///< 如题.
     };
 
-    //!
-    //! Can type 'FROM' convert to type 'TO'
-    //!
+    ///
+    /// Can type 'FROM' convert to type 'TO'
+    ///
     template <typename FROM, typename TO>
     struct IsConvertible
     {
-        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; //!< 如题.
+        static const bool value = detail::IsConvertibleHelper<FROM,TO>::value; ///< 如题.
     };
 
-    //!
-    //! Is class D derived from class B?
-    //!
+    ///
+    /// Is class D derived from class B?
+    ///
     template <typename B, typename D>
     struct IsBaseAndDerived
     {
-        //!
-        //! 如题.
-        //!
+        ///
+        /// 如题.
+        ///
         static const bool value =
             IsClass<B>::value && IsClass<D>::value && IsConvertible<D,B>::value;
     };
 
-    //!
-    //! Integer type based on signed/unsigned and bit-width
-    //!
+    ///
+    /// Integer type based on signed/unsigned and bit-width
+    ///
     template<typename T> struct SignedType
     {
-        static const bool value = detail::GetNumberSign<T>::value; //!< is signed or not?
+        static const bool value = detail::GetNumberSign<T>::value; ///< is signed or not?
     };
 }
 

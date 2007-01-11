@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D9_D3D9IDXBUF_H__
 #define __GN_GFXD3D9_D3D9IDXBUF_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9IdxBuf.h
-//! \brief   D3D index buffer class
-//! \author  chenlee (2005.11.21)
+/// \file    d3d9/d3d9IdxBuf.h
+/// \brief   D3D index buffer class
+/// \author  chenlee (2005.11.21)
 // *****************************************************************************
 
 #include "d3d9Resource.h"
@@ -11,9 +11,9 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! D3D index buffer class.
-    //!
+    ///
+    /// D3D index buffer class.
+    ///
     class D3D9IdxBuf : public BasicIdxBuf, public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9IdxBuf, StdClass );
@@ -65,9 +65,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Return pointer of D3D index buffer
-        //!
+        ///
+        /// Return pointer of D3D index buffer
+        ///
         LPDIRECT3DINDEXBUFFER9 getD3DIb() const
         {
             GN_ASSERT( mD3DIb );

@@ -1,18 +1,18 @@
 #ifndef __GN_GFXOGL_OGLFONT_H__
 #define __GN_GFXOGL_OGLFONT_H__
 // *****************************************************************************
-//! \file    ogl/oglFont.h
-//! \brief   OGL font renderer
-//! \author  chenlee (2005.12.8)
+/// \file    ogl/oglFont.h
+/// \brief   OGL font renderer
+/// \author  chenlee (2005.12.8)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
     class OGLRenderer;
 
-    //!
-    //! OGL Font renderer.
-    //!
+    ///
+    /// OGL Font renderer.
+    ///
     class OGLFont : public StdClass
     {
          GN_DECLARE_STDCLASS( OGLFont, StdClass );
@@ -47,11 +47,11 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Draw unicode string
-        //!
-        //! \sa Renderer::drawDebugText()
-        //!
+        ///
+        /// Draw unicode string
+        ///
+        /// \sa Renderer::drawDebugText()
+        ///
         void drawText( const char * s, int x, int y, const Vector4f & c );
 
         // ********************************

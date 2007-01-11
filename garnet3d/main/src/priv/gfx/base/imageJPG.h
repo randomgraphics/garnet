@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_IMAGEJPG_H__
 #define __GN_GFX_IMAGEJPG_H__
 // *****************************************************************************
-//! \file    imageJPG.h
-//! \brief   Jpeg image reader
-//! \author  chenlee (2005.6.2)
+/// \file    imageJPG.h
+/// \brief   Jpeg image reader
+/// \author  chenlee (2005.6.2)
 // *****************************************************************************
 
 extern "C"
@@ -13,9 +13,9 @@ extern "C"
 }
 #include <setjmp.h>
 
-//!
-//! custom jpeg error handler
-//!
+///
+/// custom jpeg error handler
+///
 class JpegErrorHandler : public jpeg_error_mgr
 {
     jmp_buf * mJumpBuf;
@@ -23,9 +23,9 @@ class JpegErrorHandler : public jpeg_error_mgr
     static void sErrorExit( j_common_ptr cinfo );
 
 public:
-    //!
-    //! Construct JPEG error handler
-    //!
+    ///
+    /// Construct JPEG error handler
+    ///
     JpegErrorHandler( jmp_buf * buf ) : mJumpBuf(buf)
     {
         GN_ASSERT( buf );
@@ -34,9 +34,9 @@ public:
     }
 };
 
-//!
-//! custom jpeg source manager
-//!
+///
+/// custom jpeg source manager
+///
 class JpegDataSource : public jpeg_source_mgr
 {
     const UInt8 * mStart;
@@ -77,9 +77,9 @@ class JpegDataSource : public jpeg_source_mgr
 
 public:
 
-    //!
-    //! Initialize JPEG data source
-    //!
+    ///
+    /// Initialize JPEG data source
+    ///
     void init( const JOCTET * i_buf, size_t i_size )
     {
         GN_ASSERT( i_buf && i_size );
@@ -99,9 +99,9 @@ public:
     }
 };
 
-//!
-//! jpeg image reader
-//!
+///
+/// jpeg image reader
+///
 class JPGReader
 {
     jmp_buf                 mJumpBuf;
@@ -111,36 +111,36 @@ class JPGReader
 
 public:
 
-    //!
-    //! constructor
-    //!
+    ///
+    /// constructor
+    ///
     JPGReader() : mErr(&mJumpBuf)
     {
         memset( &mCInfo, 0, sizeof(mCInfo) );
     }
 
-    //!
-    //! destructor
-    //!
+    ///
+    /// destructor
+    ///
     ~JPGReader()
     {
         jpeg_destroy_decompress(&mCInfo);
     }
 
-    //!
-    //! Check file format. Return true if the file is JPEG file
-    //!
+    ///
+    /// Check file format. Return true if the file is JPEG file
+    ///
     bool checkFormat( GN::File & );
 
-    //!
-    //! read JPEG header
-    //!
+    ///
+    /// read JPEG header
+    ///
     bool readHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
-    //!
-    //! read JPEG image
-    //!
+    ///
+    /// read JPEG image
+    ///
     bool readImage( void * o_data );
 };
 // *****************************************************************************

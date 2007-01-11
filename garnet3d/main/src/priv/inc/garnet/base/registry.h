@@ -1,18 +1,18 @@
 #ifndef __GN_BASE_REGISTRY_H__
 #define __GN_BASE_REGISTRY_H__
 // *****************************************************************************
-//! \file    registry.h
-//! \brief   tree-like registry structure.
-//! \author  chenlee (2005.6.15)
+/// \file    registry.h
+/// \brief   tree-like registry structure.
+/// \author  chenlee (2005.6.15)
 // *****************************************************************************
 
 #include <map>
 
 namespace GN
 {
-    //!
-    //! 注册表类型.
-    //!
+    ///
+    /// 注册表类型.
+    ///
     class Registry
     {
         struct Item
@@ -47,65 +47,65 @@ namespace GN
 
     public:
 
-        //!
-        //! Item key
-        //!
+        ///
+        /// Item key
+        ///
         typedef UInt32 ItemKey;
 
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         Registry() {}
 
-        //!
-        //! Construct from string. See importFromStr() for details of input string format.
-        //!
+        ///
+        /// Construct from string. See importFromStr() for details of input string format.
+        ///
         explicit Registry( const StrA & values ) { importFromStr(values); }
 
-        //!
-        //! Destructor
-        //!
+        ///
+        /// Destructor
+        ///
         ~Registry() {}
 
-        //!
-        //! Clear to empty registry.
-        //!
+        ///
+        /// Clear to empty registry.
+        ///
         void clear() { mItems.clear(); mNames.clear(); }
 
-        //!
-        //! Get item key by name
-        //!
+        ///
+        /// Get item key by name
+        ///
         ItemKey name2Key( const StrA & name ) const
         {
             std::map<StrA,UInt32>::const_iterator i = mNames.find(name);
             return ( mNames.end() == i ) ? 0 : (*i).second;
         }
 
-        //!
-        //! Get item name by key. Return empty string for non-existed key
-        //!
+        ///
+        /// Get item name by key. Return empty string for non-existed key
+        ///
         const StrA & key2Name( ItemKey key ) const
         {
             return mItems.validHandle( key ) ? mItems[key].name : StrA::EMPTYSTR;
         }
 
-        //! set registry value by name
+        /// set registry value by name
         //@{
         ItemKey set( const StrA & name, const Variant & value, bool override = true );
         ItemKey sets( const StrA & name, const StrA & value, bool override = true ) { return set( name, value, override ); }
         //@}
 
-        //! get registry value by key
+        /// get registry value by key
         //@{
         const Variant * get( ItemKey key ) const { return getItemByKey( key, 0, true ); }
         //@}
 
-        //! get registry value by name
+        /// get registry value by name
         //@{
         const Variant * get( const StrA & name ) const { return getItemByKey( name2Key(name), name.cptr(), true ); }
         //@}
 
-        //! get registry value with default value, by key
+        /// get registry value with default value, by key
         //@{
         const Variant & get( ItemKey key, const Variant & defval ) const
         {
@@ -114,7 +114,7 @@ namespace GN
         }
         //@}
 
-        //! get registry value with default value, by name
+        /// get registry value with default value, by name
         //@{
         const Variant & get( const StrA & name, const Variant & defval ) const
         {
@@ -158,20 +158,20 @@ namespace GN
         }
         //@}
 
-        //!
-        //! get key of first item
-        //!
+        ///
+        /// get key of first item
+        ///
         ItemKey getFirstItem() const { return mItems.first(); }
 
-        //!
-        //! get key of next item
-        //!
+        ///
+        /// get key of next item
+        ///
         ItemKey getNextItem( ItemKey key ) const { return mItems.next( key ); }
 
-        //!
-        //! Import registry from string.
-        //! Import string must be in format of: "name1=value1\nname2=value2\n..."
-        //!
+        ///
+        /// Import registry from string.
+        /// Import string must be in format of: "name1=value1\nname2=value2\n..."
+        ///
         void importFromStr( const StrA & );
     };
 }

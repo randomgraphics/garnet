@@ -1,24 +1,24 @@
 #ifndef __GN_BASE_HANDLE_H__
 #define __GN_BASE_HANDLE_H__
 // *****************************************************************************
-//! \file    handle.h
-//! \brief   Handle manager
-//! \author  chenlee (2005.7.25)
+/// \file    handle.h
+/// \brief   Handle manager
+/// \author  chenlee (2005.7.25)
 // *****************************************************************************
 
 #include <vector>
 
 namespace GN
 {
-    //!
-    //! Handle Manager
-    //!
+    ///
+    /// Handle Manager
+    ///
     template<typename T, typename HANDLE_TYPE = size_t >
     class HandleManager
     {
-        //!
-        //! Handle item used internally by manager
-        //!
+        ///
+        /// Handle item used internally by manager
+        ///
         struct Item
         {
             mutable T value;
@@ -33,44 +33,44 @@ namespace GN
 
     public:
 
-        //!
-        //! clear all handles
-        //!
+        ///
+        /// clear all handles
+        ///
         void clear()
         {
             mItems.clear();
             mFreeList.clear();
         }
 
-        //!
-        //! Get number of handles
-        //!
+        ///
+        /// Get number of handles
+        ///
         size_t size() const
         {
             return mItems.size() - mFreeList.size();
         }
 
-        //!
-        //! Is the manager empty or not.
-        //!
+        ///
+        /// Is the manager empty or not.
+        ///
         bool empty() const
         {
             return mItems.size() == mFreeList.size();
         }
 
-        //!
-        //! get current capacity
-        //!
+        ///
+        /// get current capacity
+        ///
         size_t capacity() const { return mItems.capacity(); }
 
-        //!
-        //! set capacity
-        //!
+        ///
+        /// set capacity
+        ///
         void reserve( size_t n ) { mItems.reserve(n); mFreeList.reserve(n); }
 
-        //!
-        //! return first handle
-        //!
+        ///
+        /// return first handle
+        ///
         HANDLE_TYPE first() const
         {
             if( empty() ) return (HANDLE_TYPE)0;
@@ -83,9 +83,9 @@ namespace GN
             return (HANDLE_TYPE)(idx+1);
         }
 
-        //!
-        //! return next handle
-        //!
+        ///
+        /// return next handle
+        ///
         HANDLE_TYPE next( HANDLE_TYPE h ) const
         {
             if( !validHandle(h) ) return (HANDLE_TYPE)0;
@@ -98,9 +98,9 @@ namespace GN
             return idx < mItems.size() ? (HANDLE_TYPE)(idx+1) : (HANDLE_TYPE)0;
         }
 
-        //!
-        //! Add new item with user define value
-        //!
+        ///
+        /// Add new item with user define value
+        ///
         HANDLE_TYPE add( const T & val )
         {
             if( mFreeList.empty() )
@@ -119,9 +119,9 @@ namespace GN
             }
         }
 
-        //!
-        //! Add new item, with undefined value
-        //!
+        ///
+        /// Add new item, with undefined value
+        ///
         HANDLE_TYPE newItem()
         {
             if( mFreeList.empty() )
@@ -139,9 +139,9 @@ namespace GN
             }
         }
 
-        //!
-        //! Remove item from manager
-        //!
+        ///
+        /// Remove item from manager
+        ///
         void remove( HANDLE_TYPE h )
         {
             if( !validHandle(h) )
@@ -155,9 +155,9 @@ namespace GN
             }
         }
 
-        //!
-        //! Find specific item (always return first found)
-        //!
+        ///
+        /// Find specific item (always return first found)
+        ///
         HANDLE_TYPE find( const T & val ) const
         {
             for( size_t i = 0; i < mItems.size(); ++i )
@@ -168,9 +168,9 @@ namespace GN
             return (HANDLE_TYPE)0; // not found
         }
 
-        //!
-        //! Find specific item (always return first found)
-        //!
+        ///
+        /// Find specific item (always return first found)
+        ///
         template<typename FUNC>
         HANDLE_TYPE findIf( const FUNC & fp ) const
         {
@@ -182,26 +182,26 @@ namespace GN
             return (HANDLE_TYPE)0; // not found
         }
 
-        //!
-        //! Is valid handle or not?
-        //!
+        ///
+        /// Is valid handle or not?
+        ///
         bool validHandle( HANDLE_TYPE h ) const
         {
             return 0 != h && h <= mItems.size() && mItems[h-1].occupied;
         }
 
-        //!
-        //! Get item from manager. Handle must be valid.
-        //!
+        ///
+        /// Get item from manager. Handle must be valid.
+        ///
         T & get( HANDLE_TYPE h ) const
         {
             GN_ASSERT( validHandle(h) );
             return mItems[h-1].value;
         }
 
-        //!
-        //! Get item from manager. Handle must be valid.
-        //!
+        ///
+        /// Get item from manager. Handle must be valid.
+        ///
         T & operator[]( HANDLE_TYPE h ) const { return get(h); }
     };
 }

@@ -1,18 +1,18 @@
 // *****************************************************************************
-//! \file    pragma.h
-//! \brief   Define global compiler pragma
-//! \author  chenlee (2005.7.28)
-//!
-//! Compiler like msvc and icl have bugs when dealing with pragmas in
-//! precompiled header. Sometimes pragma defined in PCH loose their effects.
-//!
-//! To overcome this, all pragmas are collected into a separate header, which
-//! can be included DIRECTLY in source file.
-//!
-//! \note
-//!     No include protection here.
-//!     This file is mean to be included multiple times.
-//!
+/// \file    pragma.h
+/// \brief   Define global compiler pragma
+/// \author  chenlee (2005.7.28)
+///
+/// Compiler like msvc and icl have bugs when dealing with pragmas in
+/// precompiled header. Sometimes pragma defined in PCH loose their effects.
+///
+/// To overcome this, all pragmas are collected into a separate header, which
+/// can be included DIRECTLY in source file.
+///
+/// \note
+///     No include protection here.
+///     This file is mean to be included multiple times.
+///
 // *****************************************************************************
 
 #if !defined(GN_MSVC)

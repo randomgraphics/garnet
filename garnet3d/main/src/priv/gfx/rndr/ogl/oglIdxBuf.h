@@ -1,18 +1,18 @@
 #ifndef __GN_GFXOGL_OGLIDXBUF_H__
 #define __GN_GFXOGL_OGLIDXBUF_H__
 // *****************************************************************************
-//! \file    ogl/oglIdxBuf.h
-//! \brief   OGL index buffer class
-//! \author  chenlee (2005.11.21)
+/// \file    ogl/oglIdxBuf.h
+/// \brief   OGL index buffer class
+/// \author  chenlee (2005.11.21)
 // *****************************************************************************
 
 #include "../common/basicBuffer.h"
 
 namespace GN { namespace gfx
 {
-    //!
-    //! OGL index buffer class
-    //!
+    ///
+    /// OGL index buffer class
+    ///
     class OGLIdxBuf : public BasicIdxBuf, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLIdxBuf, StdClass );
@@ -55,9 +55,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Get index data pointer
-        //!
+        ///
+        /// Get index data pointer
+        ///
         const UInt16 * getIdxData( size_t startIdx ) const { return mBuffer + startIdx; }
 
         // ********************************

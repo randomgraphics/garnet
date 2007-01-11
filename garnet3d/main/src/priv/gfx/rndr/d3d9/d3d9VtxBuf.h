@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D9_D3D9VTXBUF_H__
 #define __GN_GFXD3D9_D3D9VTXBUF_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9VtxBuf.h
-//! \brief   D3D vertex buffer class
-//! \author  chenlee (2005.11.20)
+/// \file    d3d9/d3d9VtxBuf.h
+/// \brief   D3D vertex buffer class
+/// \author  chenlee (2005.11.20)
 // *****************************************************************************
 
 #include "d3d9Resource.h"
@@ -11,9 +11,9 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! D3D vertex buffer class.
-    //!
+    ///
+    /// D3D vertex buffer class.
+    ///
     class D3D9VtxBuf : public BasicVtxBuf, public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9VtxBuf, StdClass );
@@ -65,9 +65,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Return pointer of D3D vertex buffer
-        //!
+        ///
+        /// Return pointer of D3D vertex buffer
+        ///
         LPDIRECT3DVERTEXBUFFER9 getD3DVb() const
         {
             GN_ASSERT( mD3DVb );

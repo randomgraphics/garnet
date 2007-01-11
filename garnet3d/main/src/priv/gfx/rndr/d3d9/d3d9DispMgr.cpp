@@ -149,8 +149,8 @@ static D3DFORMAT sDetermineBackBufferFormat(
 #endif
 }
 
-//!
-//! 根据显示模式和option设定present parameters
+///
+/// 根据显示模式和option设定present parameters
 // ------------------------------------------------------------------------
 static bool
 sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,

@@ -1,4 +1,4 @@
-//! \cond NEVER
+/// \cond NEVER
 
 // *****************************************************************************
 // RenderStateDescriptor
@@ -316,4 +316,4 @@ GN_INLINE void GN::gfx::TextureStateBlockDesc::set(
     mFlags[stage] |= 1 << type;
 }
 
-//! \endcond
+/// \endcond

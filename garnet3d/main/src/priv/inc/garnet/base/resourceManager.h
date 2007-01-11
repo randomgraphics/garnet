@@ -1,86 +1,86 @@
 #ifndef __GN_BASE_RESOURCEMANAGER_H__
 #define __GN_BASE_RESOURCEMANAGER_H__
 // *****************************************************************************
-//! \file    resourceManager.h
-//! \brief   general resource manager: map name to instance
-//! \author  chenlee (2005.8.17)
+/// \file    resourceManager.h
+/// \brief   general resource manager: map name to instance
+/// \author  chenlee (2005.8.17)
 // *****************************************************************************
 
 namespace GN
 {
     namespace detail
     {
-        //!
-        //! Singleton selector
-        //!
+        ///
+        /// Singleton selector
+        ///
         template<class C, int>
         struct SingletonSelector
         {
-            typedef Singleton<C> type; //!< singleton type
+            typedef Singleton<C> type; ///< singleton type
         };
 
-        //!
-        //! Singleton selector
-        //!
+        ///
+        /// Singleton selector
+        ///
         template<class C>
         struct SingletonSelector<C,0>
         {
-            //!
-            //! non-singleton type
-            //!
+            ///
+            /// non-singleton type
+            ///
             struct type {};
         };
     }
 
-    //!
-    //! Resource manager. Used to do mapping among name and ID and instance.
-    //!
-    //! RES must support default constructor and assignment operation.
-    //!
-    //! 资源管理器使用4个回调函数来管理资源的创建和删除: 
-    //! - Creator: 创建函数
-    //!   - 用来创建资源实例. 管理器有一个全局的创建函数, 供所有的资源使用. 同时, 每个资源
-    //!     也可以拥有自己特定的创建函数.
-    //! - Deletor: 删除函数
-    //!   - 用来删除资源实例. 管理器有且仅有一个全局的删除函数, 供所有资源使用.
-    //! - Nullor: 空函数
-    //!   - 当资源创建失败(Creator返回null)时, 管理器会调用Nullor来创建一个所谓的"空"对象,
-    //!     用来替代那个失败的资源.
-    //!   - 和Creator类似, 管理器有一个全局的空函数, 供所有资源使用. 同时, 每个资源也可以有
-    //!     自己特定的空函数.
-    //!   - 使用空对象的目的就是: 保证资源管理器总是会返回有效的资源实例. 这样在使用者的代码中
-    //!     就可以避免如下的代码:
-    //!         MyResource * ptr = myResourceMgr.getResource( theHandle );
-    //!         if( ptr )
-    //!             do_something_normal();
-    //!         else
-    //!             report_error();
-    //!   - 空对象应尽量容易引起使用者的注意, 且不会引起程序崩溃.
-    //!     - 比如可以用纯红色的1x1贴图作为空贴图, 用一个大方块作为空mesh.
-    //! - NameChecker: 名字检查函数
-    //!   - 当用户试图用名字引用一个不存在的资源时, 管理器会调用NameCheker来检查这个名字的有效性,
-    //!     并把有效的名字自动加入资源管理器中(参见getResourceHandle()的代码).
-    //!   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
-    //!     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
-    //!
+    ///
+    /// Resource manager. Used to do mapping among name and ID and instance.
+    ///
+    /// RES must support default constructor and assignment operation.
+    ///
+    /// 资源管理器使用4个回调函数来管理资源的创建和删除: 
+    /// - Creator: 创建函数
+    ///   - 用来创建资源实例. 管理器有一个全局的创建函数, 供所有的资源使用. 同时, 每个资源
+    ///     也可以拥有自己特定的创建函数.
+    /// - Deletor: 删除函数
+    ///   - 用来删除资源实例. 管理器有且仅有一个全局的删除函数, 供所有资源使用.
+    /// - Nullor: 空函数
+    ///   - 当资源创建失败(Creator返回null)时, 管理器会调用Nullor来创建一个所谓的"空"对象,
+    ///     用来替代那个失败的资源.
+    ///   - 和Creator类似, 管理器有一个全局的空函数, 供所有资源使用. 同时, 每个资源也可以有
+    ///     自己特定的空函数.
+    ///   - 使用空对象的目的就是: 保证资源管理器总是会返回有效的资源实例. 这样在使用者的代码中
+    ///     就可以避免如下的代码:
+    ///         MyResource * ptr = myResourceMgr.getResource( theHandle );
+    ///         if( ptr )
+    ///             do_something_normal();
+    ///         else
+    ///             report_error();
+    ///   - 空对象应尽量容易引起使用者的注意, 且不会引起程序崩溃.
+    ///     - 比如可以用纯红色的1x1贴图作为空贴图, 用一个大方块作为空mesh.
+    /// - NameChecker: 名字检查函数
+    ///   - 当用户试图用名字引用一个不存在的资源时, 管理器会调用NameCheker来检查这个名字的有效性,
+    ///     并把有效的名字自动加入资源管理器中(参见getResourceHandle()的代码).
+    ///   - 一个常用的NameChecker就是检查该名字是否对应一个有效的磁盘文件. 这样, 当用户试图访问一个
+    ///     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
+    ///
     template<typename RES, typename HANDLE=UInt32, bool SINGLETON=false>
     class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,HANDLE,SINGLETON>,SINGLETON>::type
     {
     public:
 
-        typedef HANDLE HandleType; //!< resource Handle. 0 means invalid handle
+        typedef HANDLE HandleType; ///< resource Handle. 0 means invalid handle
 
-        typedef RES ResType; //!< resource type
+        typedef RES ResType; ///< resource type
 
-        typedef Delegate3<bool,RES&,const StrA &,void*> Creator; //!< Resource creation functor
+        typedef Delegate3<bool,RES&,const StrA &,void*> Creator; ///< Resource creation functor
 
-        typedef Delegate2<void,RES&,void*> Deletor; //!< Resource deletion functor
+        typedef Delegate2<void,RES&,void*> Deletor; ///< Resource deletion functor
 
-        typedef Delegate1<bool,const StrA&> NameChecker; //!< Resource name checker.
+        typedef Delegate1<bool,const StrA&> NameChecker; ///< Resource name checker.
 
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         ResourceManager(
             const Creator & creator = Creator(),
             const Deletor & deletor = Deletor(),
@@ -98,19 +98,19 @@ namespace GN
             mLRUTail.next = NULL;
         }
 
-        //!
-        //! Default destructor
-        //!
+        ///
+        /// Default destructor
+        ///
         ~ResourceManager() { clear(); }
 
-        //!
-        //! Get global creator.
-        //!
+        ///
+        /// Get global creator.
+        ///
         const Creator & getCreator() const { return mCreator; }
 
-        //!
-        //! Get global resource deletor.
-        //!
+        ///
+        /// Get global resource deletor.
+        ///
         const Deletor & getDeletor() const
         {
             if( !empty() )
@@ -120,43 +120,43 @@ namespace GN
             return mDeletor;
         }
 
-        //!
-        //! Get global NULL instance creator
-        //!
+        ///
+        /// Get global NULL instance creator
+        ///
         const Creator & getNullor() const { return mNullor; }
 
-        //!
-        //! Get global resource name checker
-        //!
+        ///
+        /// Get global resource name checker
+        ///
         const NameChecker & getNameChecker() const { return mNameChecker; }
 
-        //!
-        //! Set global creator
-        //!
+        ///
+        /// Set global creator
+        ///
         void setCreator( const Creator & c ) { mCreator = c; }
 
-        //!
-        //! Set global NULL instance creator
-        //!
+        ///
+        /// Set global NULL instance creator
+        ///
         void setNullor( const Creator & n )
         {
             deleteNullInstance();
             mNullor = n;
         }
 
-        //!
-        //! Set global deletor
-        //!
+        ///
+        /// Set global deletor
+        ///
         void setDeletor( const Deletor & d ) { mDeletor = d; }
 
-        //!
-        //! Set global resource name checker
-        //!
+        ///
+        /// Set global resource name checker
+        ///
         void setNameChecker( const NameChecker & s ) { mNameChecker = s; }
 
-        //!
-        //! Clear all resources.
-        //!
+        ///
+        /// Clear all resources.
+        ///
         void clear()
         {
             GN_GUARD;
@@ -180,28 +180,28 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Is resource manager empty or not?
-        //!
+        ///
+        /// Is resource manager empty or not?
+        ///
         bool empty() const
         {
             GN_ASSERT( mResHandles.size() == mResNames.size() );
             return mResHandles.empty() && NULL == mNullInstance;
         }
 
-        //!
-        //! Return true for valid resource handle
-        //!
+        ///
+        /// Return true for valid resource handle
+        ///
         bool validResourceHandle( HandleType h ) const { return mResHandles.validHandle( h ); }
 
-        //!
-        //! Return true for valid resource name
-        //!
+        ///
+        /// Return true for valid resource name
+        ///
         bool validResourceName( const StrA & n ) const { return mResNames.end() != mResNames.find( n ); }
 
-        //!
-        //! Get resource by handle.
-        //!
+        ///
+        /// Get resource by handle.
+        ///
         bool getResource( RES & result, HandleType handle )
         {
             GN_GUARD_SLOW;
@@ -209,11 +209,11 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! Get resource by handle.
-        //!
-        //! If failed, return default constructed resource instance.
-        //!
+        ///
+        /// Get resource by handle.
+        ///
+        /// If failed, return default constructed resource instance.
+        ///
         RES getResource( HandleType handle )
         {
             GN_GUARD_SLOW;
@@ -223,11 +223,11 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! Get resource by name
-        //!
-        //! \sa getResourceHandle()
-        //!
+        ///
+        /// Get resource by name
+        ///
+        /// \sa getResourceHandle()
+        ///
         bool getResource( RES & result, const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
@@ -236,13 +236,13 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! Get resource by name.
-        //!
-        //! If failed, return default constructed resource instance.
-        //!
-        //! \sa getResourceHandle()
-        //!
+        ///
+        /// Get resource by name.
+        ///
+        /// If failed, return default constructed resource instance.
+        ///
+        /// \sa getResourceHandle()
+        ///
         RES getResource( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
@@ -252,16 +252,16 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! Get resource handle
-        //!
-        //! \param name
-        //!     User specified resource name.
-        //! \param autoAddNewName
-        //!     - If true, when the resource name that is not in manager currently but pass name-checker,
-        //!       it'll be add to manager automatically, and a valid handle will be return.
-        //!     - If false, return 0 for non-exist resource name.
-        //!
+        ///
+        /// Get resource handle
+        ///
+        /// \param name
+        ///     User specified resource name.
+        /// \param autoAddNewName
+        ///     - If true, when the resource name that is not in manager currently but pass name-checker,
+        ///       it'll be add to manager automatically, and a valid handle will be return.
+        ///     - If false, return 0 for non-exist resource name.
+        ///
         HandleType getResourceHandle( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
@@ -272,9 +272,9 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! Get resource name
-        //!
+        ///
+        /// Get resource name
+        ///
         const StrA & getResourceName( HandleType handle ) const
         {
             GN_GUARD_SLOW;
@@ -287,9 +287,9 @@ namespace GN
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! Add new resource item to manager
-        //!
+        ///
+        /// Add new resource item to manager
+        ///
         HandleType addResource(
             const StrA & name,
             void * userData = 0,
@@ -338,9 +338,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Remove resource from manager
-        //!
+        ///
+        /// Remove resource from manager
+        ///
         void removeResourceByHandle( HandleType handle )
         {
             GN_GUARD;
@@ -351,9 +351,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Remove resource from manager (unimplemented)
-        //!
+        ///
+        /// Remove resource from manager (unimplemented)
+        ///
         void removeResourceByName( const StrA & name )
         {
             GN_GUARD;
@@ -392,9 +392,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Dispose specific resource
-        //!
+        ///
+        /// Dispose specific resource
+        ///
         void disposeResourceByHandle( HandleType h )
         {
             GN_GUARD;
@@ -407,9 +407,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Dispose specific resource
-        //!
+        ///
+        /// Dispose specific resource
+        ///
         void disposeResourceByName( const StrA & name )
         {
             GN_GUARD;
@@ -423,9 +423,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Release all resource instances. But keep resource manager itself unchanged.
-        //!
+        ///
+        /// Release all resource instances. But keep resource manager itself unchanged.
+        ///
         void disposeAll()
         {
             GN_GUARD;
@@ -439,9 +439,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Preload all resources
-        //!
+        ///
+        /// Preload all resources
+        ///
         bool preload()
         {
             GN_GUARD;
@@ -456,9 +456,9 @@ namespace GN
             GN_UNGUARD;
         }
 
-        //!
-        //! Set user data for specfic resource
-        //!
+        ///
+        /// Set user data for specfic resource
+        ///
         void setUserData( HandleType h, void * data )
         {
             if( !validResourceHandle(h) )

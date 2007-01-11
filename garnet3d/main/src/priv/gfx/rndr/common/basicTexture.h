@@ -1,20 +1,20 @@
 #ifndef __GN_GFXCOMMON_BASICTEXTURE_H__
 #define __GN_GFXCOMMON_BASICTEXTURE_H__
 // *****************************************************************************
-//! \file    basicTexture.h
-//! \brief   贴图基类
-//! \author  chenlee (2005.10.1)
+/// \file    basicTexture.h
+/// \brief   贴图基类
+/// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    //!
-    //! 贴图类的基类
-    //!
+    ///
+    /// 贴图类的基类
+    ///
     class BasicTexture : public Texture
     {
         // ********************************
-        //! \name constructor
+        /// \name constructor
         // ********************************
 
         //@{
@@ -27,9 +27,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! texture is being locked or not.
-        //!
+        ///
+        /// texture is being locked or not.
+        ///
         bool isLocked() const { return mLocked; }
 
         // ********************************
@@ -37,12 +37,12 @@ namespace GN { namespace gfx
         // ********************************
     protected:
 
-        //!
-        //! Basic lock operation. Each lock function must call this function first,
-        //! to ensure the lock operation is valid.
-        //!
-        //! This function will also clip lock area to ensure it is not out of texture size.
-        //!
+        ///
+        /// Basic lock operation. Each lock function must call this function first,
+        /// to ensure the lock operation is valid.
+        ///
+        /// This function will also clip lock area to ensure it is not out of texture size.
+        ///
         bool basicLock( size_t face, size_t level, const Boxi * area, LockFlag flag, Boxi & clippedArea )
         {
             if( isLocked() )
@@ -99,9 +99,9 @@ namespace GN { namespace gfx
             return true;
         }
 
-        //!
-        //! Basic unlock operation. Should be called in pair with baseLock().
-        //!
+        ///
+        /// Basic unlock operation. Should be called in pair with baseLock().
+        ///
         bool basicUnlock()
         {
             if( isLocked() )
@@ -121,9 +121,9 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        //!
-        //! 贴图的锁定标志
-        //!
+        ///
+        /// 贴图的锁定标志
+        ///
         bool mLocked;
 
         static Logger * sLogger;

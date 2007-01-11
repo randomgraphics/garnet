@@ -1,9 +1,9 @@
 #ifndef __GN_BASE_STRING_H__
 #define __GN_BASE_STRING_H__
 // *****************************************************************************
-//! \file    string.h
-//! \brief   custom string implementation
-//! \author  chenlee (2005.4.17)
+/// \file    string.h
+/// \brief   custom string implementation
+/// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
 #include <stdarg.h>
@@ -12,11 +12,11 @@
 
 namespace GN
 {
-    //!
-    //! Get string length.
-    //!
-    //! if maxLen > 0, then return min(maxLen,realLength).
-    //!
+    ///
+    /// Get string length.
+    ///
+    /// if maxLen > 0, then return min(maxLen,realLength).
+    ///
     template<typename CHAR>
     inline size_t strLen( const CHAR * s, size_t maxLen = 0 )
     {
@@ -41,9 +41,9 @@ namespace GN
         return l;
     }
 
-    //!
-    //! string comparison (case sensitive)
-    //!
+    ///
+    /// string comparison (case sensitive)
+    ///
     template<typename CHAR>
     inline int strCmp( const CHAR * s1, const CHAR * s2 )
     {
@@ -62,9 +62,9 @@ namespace GN
         return 0;
     }
 
-    //!
-    //! string comparison (case insensitive)
-    //!
+    ///
+    /// string comparison (case insensitive)
+    ///
     template<typename CHAR>
     inline int strCmpI( const CHAR * s1, const CHAR * s2 )
     {
@@ -88,19 +88,19 @@ namespace GN
         return 0;
     }
 
-    //!
-    //! check for empty string, including NULL.
-    //!
+    ///
+    /// check for empty string, including NULL.
+    ///
     template<typename CHAR>
     inline bool strEmpty( const CHAR * s )
     {
         return 0 == s || 0 == s[0];
     }
 
-    //!
-    //! safe sprintf. This function always outputs null-terminated string,
-    //! like StringCchPrintf(...)
-    //!
+    ///
+    /// safe sprintf. This function always outputs null-terminated string,
+    /// like StringCchPrintf(...)
+    ///
     void
     strPrintf(
         char *       buf,
@@ -108,10 +108,10 @@ namespace GN
         const char * fmt,
         ... );
 
-    //!
-    //! safe sprintf. This function always outputs null-terminated string,
-    //! like StringCchPrintf(...)
-    //!
+    ///
+    /// safe sprintf. This function always outputs null-terminated string,
+    /// like StringCchPrintf(...)
+    ///
     void
     strPrintf(
         wchar_t *       buf,
@@ -119,10 +119,10 @@ namespace GN
         const wchar_t * fmt,
         ... );
 
-    //!
-    //! safe sprintf. This function always outputs null-terminated string,
-    //! like StringCchPrintf(...)
-    //!
+    ///
+    /// safe sprintf. This function always outputs null-terminated string,
+    /// like StringCchPrintf(...)
+    ///
     void
     strVarPrintf(
         char *       buf,
@@ -130,9 +130,9 @@ namespace GN
         const char * fmt,
         va_list      args );
 
-    //!
-    //! printf-like format string (wide-char)
-    //!
+    ///
+    /// printf-like format string (wide-char)
+    ///
     void
     strVarPrintf(
         wchar_t *       buf,
@@ -140,52 +140,52 @@ namespace GN
         const wchar_t * fmt,
         va_list         args );
 
-    //!
-    //! Custom string class
-    //!
+    ///
+    /// Custom string class
+    ///
     template<typename CHAR, typename ALLOCATOR = StandardAllocator<CHAR> >
     class Str
     {
         typedef CHAR CharType;
         typedef ALLOCATOR AllocatorType;
 
-        CharType * mPtr;   //!< string buffer pointer.
-        size_t     mCount; //!< How many charecters in the string, not including null end.
-        size_t     mCaps;  //!< How many characters can we hold, not including null end?
+        CharType * mPtr;   ///< string buffer pointer.
+        size_t     mCount; ///< How many charecters in the string, not including null end.
+        size_t     mCaps;  ///< How many characters can we hold, not including null end?
 
     public:
 
-        //!
-        //! Instance of empty string
-        //!
+        ///
+        /// Instance of empty string
+        ///
         static Str EMPTYSTR;
 
-        //!
-        //! indicate serach failure.
-        //!
+        ///
+        /// indicate serach failure.
+        ///
         static const size_t NOT_FOUND = (size_t)-1;
 
-        //!
-        //! default constructor
-        //!
+        ///
+        /// default constructor
+        ///
         Str() : mCount(0), mCaps(0)
         {
             mPtr = alloc(mCaps);
             mPtr[0] = 0;
         }
 
-        //!
-        //! copy constructor
-        //!
+        ///
+        /// copy constructor
+        ///
         Str( const Str & s ) : mCount(s.mCount), mCaps(calcCaps(s.mCount))
         {
             mPtr = alloc(mCaps);
             ::memcpy( mPtr, s.mPtr, (mCount+1)*sizeof(CharType) );
         }
 
-        //!
-        //! copy constructor from c-style string
-        //!
+        ///
+        /// copy constructor from c-style string
+        ///
         Str( const CharType * s, size_t l = 0 )
         {
             if ( 0 == s )
@@ -206,17 +206,17 @@ namespace GN
             }
         }
 
-        //!
-        //! destructor
-        //!
+        ///
+        /// destructor
+        ///
         ~Str()
         {
             dealloc( mPtr, mCaps );
         }
 
-        //!
-        //! append to this string
-        //!
+        ///
+        /// append to this string
+        ///
         void append( const CharType * s, size_t l = 0 )
         {
             if ( 0 == s ) return;
@@ -227,9 +227,9 @@ namespace GN
             mPtr[mCount] = 0;
         }
 
-        //!
-        //! append to this string
-        //!
+        ///
+        /// append to this string
+        ///
         void append( const Str & s )
         {
             if( s.empty() ) return;
@@ -240,9 +240,9 @@ namespace GN
             mPtr[mCount] = 0;
         }
 
-        //!
-        //! append to this string
-        //!
+        ///
+        /// append to this string
+        ///
         void append( CharType ch )
         {
             if ( 0 == ch ) return;
@@ -252,9 +252,9 @@ namespace GN
             mPtr[mCount] = 0;
         }
 
-        //!
-        //! assign value to string class
-        //!
+        ///
+        /// assign value to string class
+        ///
         void assign( const CharType * s, size_t l = 0 )
         {
             if ( 0 == s )
@@ -272,55 +272,55 @@ namespace GN
             }
         }
 
-        //!
-        //! begin iterator(1)
-        //!
+        ///
+        /// begin iterator(1)
+        ///
         CharType * begin() { return mPtr; }
 
-        //!
-        //! begin iterator(2)
-        //!
+        ///
+        /// begin iterator(2)
+        ///
         const CharType * begin() const { return mPtr; }
 
-        //!
-        //! Clear to empty string
-        //!
+        ///
+        /// Clear to empty string
+        ///
         void clear()
         {
             mPtr[0] = 0;
             mCount = 0;
         }
 
-        //!
-        //! return c-style const char pointer
-        //!
+        ///
+        /// return c-style const char pointer
+        ///
         const CharType * cptr() const { return mPtr; }
 
-        //!
-        //! empty string or not?
-        //!
+        ///
+        /// empty string or not?
+        ///
         bool empty() const { return 0 == mCount; }
 
-        //!
-        //! begin iterator(1)
-        //!
+        ///
+        /// begin iterator(1)
+        ///
         CharType * end() { return mPtr+mCount; }
 
-        //!
-        //! begin iterator(2)
-        //!
+        ///
+        /// begin iterator(2)
+        ///
         const CharType * end() const { return mPtr+mCount; }
 
-        //!
-        //! Searches through a string for the first character that matches any elements in user specified string
-        //!
-        //! \param s
-        //!     User specified search pattern
-        //! \param offset, count
-        //!     Range of the search. (count==0) means to the end of input string.
-        //! \return
-        //!     Return index of the character of first occurance or NOT_FOUND.
-        //!
+        ///
+        /// Searches through a string for the first character that matches any elements in user specified string
+        ///
+        /// \param s
+        ///     User specified search pattern
+        /// \param offset, count
+        ///     Range of the search. (count==0) means to the end of input string.
+        /// \return
+        ///     Return index of the character of first occurance or NOT_FOUND.
+        ///
         size_t findFirstOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
@@ -339,9 +339,9 @@ namespace GN
             return NOT_FOUND;
         }
 
-        //!
-        //! Searches through a string for the first character that not any elements of user specifed string.
-        //!
+        ///
+        /// Searches through a string for the first character that not any elements of user specifed string.
+        ///
         size_t findFirstNotOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
@@ -360,9 +360,9 @@ namespace GN
             return NOT_FOUND;
         }
 
-        //!
-        //! Searches through a string for the first character that matches users predication
-        //!
+        ///
+        /// Searches through a string for the first character that matches users predication
+        ///
         template<typename PRED>
         size_t findFirstOf( const PRED & pred, size_t offset = 0, size_t count = 0 ) const
         {
@@ -378,9 +378,9 @@ namespace GN
             return NOT_FOUND;
         }
 
-        //!
-        //! Searches through a string for the last character that matches any elements in user specified string
-        //!
+        ///
+        /// Searches through a string for the last character that matches any elements in user specified string
+        ///
         size_t findLastOf( const CharType * s, size_t offset = 0, size_t count = 0 ) const
         {
             if( 0 == s || 0 == *s ) return NOT_FOUND;
@@ -400,14 +400,14 @@ namespace GN
             return NOT_FOUND;
         }
 
-        //!
-        //! get first character of the string. If string is empty, return 0.
-        //!
+        ///
+        /// get first character of the string. If string is empty, return 0.
+        ///
         CharType first() const { return mPtr[0]; }
 
-        //!
-        //! printf-like string formatting
-        //!
+        ///
+        /// printf-like string formatting
+        ///
         const CharType * format( const CharType * fmt, ... )
         {
             va_list arglist;
@@ -417,9 +417,9 @@ namespace GN
             return mPtr;
         }
 
-        //!
-        //! printf-like string formatting(2)
-        //!
+        ///
+        /// printf-like string formatting(2)
+        ///
         const CharType * format( const CharType * fmt, va_list args )
         {
             if( strEmpty(fmt) )
@@ -436,14 +436,14 @@ namespace GN
             return mPtr;
         }
 
-        //!
-        //! get string caps
-        //!
+        ///
+        /// get string caps
+        ///
         size_t getCaps() const { return mCaps; }
 
-        //!
-        //! Insert a character at specific position
-        //!
+        ///
+        /// Insert a character at specific position
+        ///
         void insert( size_t pos, CharType ch )
         {
             if( 0 == ch ) return;
@@ -463,14 +463,14 @@ namespace GN
             }
         }
 
-        //!
-        //! get last character of the string. If string is empty, return 0.
-        //!
+        ///
+        /// get last character of the string. If string is empty, return 0.
+        ///
         CharType last() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
 
-        //!
-        //! Replace specific character with another
-        //!
+        ///
+        /// Replace specific character with another
+        ///
         void replace( CharType from, CharType to )
         {
             CharType * p = mPtr;
@@ -480,9 +480,9 @@ namespace GN
             }
         }
 
-        //!
-        //! set string caps
-        //!
+        ///
+        /// set string caps
+        ///
         void setCaps( size_t newCaps )
         {
             if ( mCaps >= newCaps ) return;
@@ -494,14 +494,14 @@ namespace GN
             mPtr = newPtr;
         }
 
-        //!
-        //! return string length in character, not including ending zero
-        //!
+        ///
+        /// return string length in character, not including ending zero
+        ///
         size_t size() const { return mCount; }
 
-        //!
-        //! Get sub string. (0==length) means to the end of original string.
-        //!
+        ///
+        /// Get sub string. (0==length) means to the end of original string.
+        ///
         void subString( Str & result, size_t offset, size_t length ) const
         {
             if( offset >= mCount ) { result.clear(); return; }
@@ -510,9 +510,9 @@ namespace GN
             result.assign( mPtr+offset, length );
         }
 
-        //!
-        //! Return sub string
-        //!
+        ///
+        /// Return sub string
+        ///
         Str subString( size_t offset, size_t length ) const
         {
             Str ret;
@@ -520,23 +520,23 @@ namespace GN
             return ret;
         }
 
-        //!
-        //! convert to STL string(1)
+        ///
+        /// convert to STL string(1)
         void toSTL( std::basic_string<CharType> & s ) const
         {
             s.assign( mPtr, mCount );
         }
 
-        //!
-        //! convert to STL string(2)
+        ///
+        /// convert to STL string(2)
         std::basic_string<CharType> toSTL() const
         {
             return std::basic_string<CharType>(mPtr,mCount);
         }
 
-        //!
-        //! Trim characters for both side
-        //!
+        ///
+        /// Trim characters for both side
+        ///
         void trim( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
@@ -545,14 +545,14 @@ namespace GN
             trimLeft( ch, len );
         }
 
-        //!
-        //! Trim characters for both side
-        //!
+        ///
+        /// Trim characters for both side
+        ///
         void trim( CharType ch ) { trim( &ch, 1 ); }
 
-        //!
-        //! Trim left characters
-        //!
+        ///
+        /// Trim left characters
+        ///
         void trimLeft( const CharType * ch, size_t len = 0 )
         {
             if( 0 == ch ) return;
@@ -582,14 +582,14 @@ namespace GN
             mPtr[mCount] = 0;
         }
 
-        //!
-        //! Trim left characters
-        //!
+        ///
+        /// Trim left characters
+        ///
         void trimLeft( CharType ch ) { trimLeft( &ch, 1 ); }
 
-        //!
-        //! Trim right characters
-        //!
+        ///
+        /// Trim right characters
+        ///
         void trimRight( const CharType * ch, size_t len = 0 )
         {
             if( 0 == mCount ) return;
@@ -615,14 +615,14 @@ namespace GN
             mCount = p - mPtr + 1;
         }
 
-        //!
-        //! Trim right characters
-        //!
+        ///
+        /// Trim right characters
+        ///
         void trimRight( CharType ch ) { trimRight( &ch, 1 ); }
 
-        //!
-        //! Trim right characters until meet the predication condition.
-        //!
+        ///
+        /// Trim right characters until meet the predication condition.
+        ///
         template<typename PRED>
         void trimRightUntil( const PRED & pred )
         {
@@ -636,146 +636,146 @@ namespace GN
             mCount = p - mPtr + 1;
         }
 
-        //!
-        //! indexing operator
-        //!
+        ///
+        /// indexing operator
+        ///
         CharType & operator [] ( size_t i ) { GN_ASSERT( i <= mCount  ); return mPtr[i]; }
 
-        //!
-        //! constant indexing operator
-        //!
+        ///
+        /// constant indexing operator
+        ///
         const CharType & operator [] ( size_t i ) const { GN_ASSERT( i <= mCount  ); return mPtr[i]; }
 
-        //!
-        //! assign operator
-        //!
+        ///
+        /// assign operator
+        ///
         Str & operator = ( const Str & s )
         {
             assign( s.mPtr, s.mCount );
             return *this;
         }
 
-        //!
-        //! assign operator
-        //!
+        ///
+        /// assign operator
+        ///
         Str & operator = ( const CharType * s )
         {
             assign( s, strLen<CharType>(s) );
             return *this;
         }
 
-        //!
-        //! += operator (1)
-        //!
+        ///
+        /// += operator (1)
+        ///
         Str & operator += ( const Str & s )
         {
             append( s );
             return *this;
         }
 
-        //!
-        //! += operator (2)
-        //!
+        ///
+        /// += operator (2)
+        ///
         Str & operator += ( const CharType * s )
         {
             append( s, 0 );
             return *this;
         }
 
-        //!
-        //! += operator (3)
-        //!
+        ///
+        /// += operator (3)
+        ///
         Str & operator += ( CharType ch )
         {
             append( ch );
             return *this;
         }
 
-        //!
-        //! += operator (4)
-        //!
+        ///
+        /// += operator (4)
+        ///
         Str & operator += ( std::basic_string<CharType> & s )
         {
             append( s.c_str(), 0 );
             return *this;
         }
 
-        //!
-        //! equality operator(1)
-        //!
+        ///
+        /// equality operator(1)
+        ///
         friend bool operator == ( const CharType * s1, const Str & s2 )
         {
             return 0 == strCmp( s1, s2.mPtr );
         }
 
-        //!
-        //! equality operator(2)
-        //!
+        ///
+        /// equality operator(2)
+        ///
         friend bool operator == ( const Str & s1, const CharType * s2 )
         {
             return 0 == strCmp( s1.mPtr, s2 );
         }
 
-        //!
-        //! equality operator(3)
-        //!
+        ///
+        /// equality operator(3)
+        ///
         friend bool operator == ( const Str & s1, const Str & s2 )
         {
             return 0 == strCmp( s1.mPtr, s2.mPtr );
         }
 
-        //!
-        //! unequality operator(1)
-        //!
+        ///
+        /// unequality operator(1)
+        ///
         friend bool operator != ( const CharType * s1, const Str & s2 )
         {
             return 0 != strCmp( s1, s2.mPtr );
         }
 
-        //!
-        //! unequality operator(2)
-        //!
+        ///
+        /// unequality operator(2)
+        ///
         friend bool operator != ( const Str & s1, const CharType * s2 )
         {
             return 0 != strCmp( s1.mPtr, s2 );
         }
 
-        //!
-        //! unequality operator(3)
-        //!
+        ///
+        /// unequality operator(3)
+        ///
         friend bool operator != ( const Str & s1, const Str & s2 )
         {
             return 0 != strCmp( s1.mPtr, s2.mPtr );
         }
 
-        //!
-        //! less operator(1)
-        //!
+        ///
+        /// less operator(1)
+        ///
         friend bool operator < ( const CharType * s1, const Str & s2 )
         {
             return -1 == strCmp( s1, s2.mPtr );
         }
 
-        //!
-        //! less operator(2)
-        //!
+        ///
+        /// less operator(2)
+        ///
         friend bool operator < ( const Str & s1, const CharType * s2 )
         {
             return -1 == strCmp( s1.mPtr, s2 );
         }
 
-        //!
-        //! less operator(3)
-        //!
+        ///
+        /// less operator(3)
+        ///
         friend bool operator < ( const Str & s1, const Str & s2 )
         {
             return -1 == strCmp( s1.mPtr, s2.mPtr );
         }
 
 
-        //!
-        //! concatnate operator(1)
-        //!
+        ///
+        /// concatnate operator(1)
+        ///
         friend Str operator + ( const CharType * s1, const Str & s2 )
         {
             Str r(s1);
@@ -783,9 +783,9 @@ namespace GN
             return r;
         }
 
-        //!
-        //! concatnate operator(2)
-        //!
+        ///
+        /// concatnate operator(2)
+        ///
         friend Str operator + ( const Str & s1, const CharType * s2 )
         {
             Str r(s1);
@@ -793,9 +793,9 @@ namespace GN
             return r;
         }
 
-        //!
-        //! concatnate operator(3)
-        //!
+        ///
+        /// concatnate operator(3)
+        ///
         friend Str operator + ( const Str & s1, const Str & s2 )
         {
             Str r(s1);
@@ -803,9 +803,9 @@ namespace GN
             return r;
         }
 
-        //!
-        //! concatnate operator(4)
-        //!
+        ///
+        /// concatnate operator(4)
+        ///
         friend Str operator + ( const Str & s1, const std::basic_string<CharType> & s2 )
         {
             Str r(s1);
@@ -813,9 +813,9 @@ namespace GN
             return r;
         }
 
-        //!
-        //! concatnate operator(5)
-        //!
+        ///
+        /// concatnate operator(5)
+        ///
         friend Str operator + ( const std::basic_string<CharType> & s1, const Str & s2 )
         {
             Str r(s2);
@@ -823,9 +823,9 @@ namespace GN
             return r;
         }
 
-        //!
-        //! Output to ostream
-        //!
+        ///
+        /// Output to ostream
+        ///
         friend std::ostream & operator << ( std::ostream & os, const Str & str )
         {
             os << str.cptr();
@@ -868,32 +868,32 @@ namespace GN
     // Implement static data member
     template <typename CHAR, typename ALLOC> Str<CHAR,ALLOC> Str<CHAR,ALLOC>::EMPTYSTR;
 
-    //!
-    //! multi-byte string class
-    //!
+    ///
+    /// multi-byte string class
+    ///
     typedef Str<char> StrA;
 
-    //!
-    //! wide-char string class
-    //!
+    ///
+    /// wide-char string class
+    ///
     typedef Str<wchar_t> StrW;
 
-    //!
-    //! Fixed sized string that has no runtime memory allocation.
-    //!
+    ///
+    /// Fixed sized string that has no runtime memory allocation.
+    ///
     template<size_t N, typename CHAR>
     class StackStr
     {
         typedef CHAR CharType;
 
-        size_t mCount;    //!< How many charecters in the string, not including null end.
-        CHAR   mBuf[N+1]; //!< Pre-allocated string buffer
+        size_t mCount;    ///< How many charecters in the string, not including null end.
+        CHAR   mBuf[N+1]; ///< Pre-allocated string buffer
 
         static size_t sValidateLength( size_t len ) { return len < N ? len : N; }
 
     public:
 
-        //! \name ctor and dtor
+        /// \name ctor and dtor
         //@{
         StackStr() : mCount(0) { mBuf[0] = 0; }
         StackStr( const CHAR * s, size_t l = 0 ) : mCount(l)
@@ -920,7 +920,7 @@ namespace GN
         //@}
     };
 
-    //! \name string -> number conversion
+    /// \name string -> number conversion
     //@{
 
     bool str2SInt16( SInt16 &, const char * );
@@ -955,22 +955,22 @@ namespace GN
             return defaultValue;
     }
 
-    //!
-    //! Convert string to float array. String should be in format like:
-    //!    float1, float2, float3, ...
-    //! or:
-    //!    float1 float2 float3 ...
-    //!
-    //! \return
-    //!     Return count of floating filled into target buffer.
-    //!
+    ///
+    /// Convert string to float array. String should be in format like:
+    ///    float1, float2, float3, ...
+    /// or:
+    ///    float1 float2 float3 ...
+    ///
+    /// \return
+    ///     Return count of floating filled into target buffer.
+    ///
     size_t str2Floats( float * buffer, size_t count, const char * str, size_t stringLength = 0 );
 
     //@}
 
-    //!
-    //! printf-like string format function
-    //!
+    ///
+    /// printf-like string format function
+    ///
     inline StrA strFormat( const char * fmt, ... )
     {
         StrA s;
@@ -981,9 +981,9 @@ namespace GN
         return s;
     }
 
-    //!
-    //! printf-like string format function (wide-char version)
-    //!
+    ///
+    /// printf-like string format function (wide-char version)
+    ///
     inline StrW strFormat( const wchar_t * fmt, ... )
     {
         StrW s;

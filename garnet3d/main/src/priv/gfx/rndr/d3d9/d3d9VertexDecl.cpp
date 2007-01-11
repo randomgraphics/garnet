@@ -7,17 +7,17 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 // local functions
 // *****************************************************************************
 
-//!
-//! d3d vertex semantic structure
-//!
+///
+/// d3d vertex semantic structure
+///
 struct D3D9VtxSemDesc
 {
-    D3DDECLUSAGE usage; //!< D3D vertex usage
-    BYTE         index; //!< register index
+    D3DDECLUSAGE usage; ///< D3D vertex usage
+    BYTE         index; ///< register index
 };
 
-//!
-//! convert vertex format to d3d-decl usage
+///
+/// convert vertex format to d3d-decl usage
 // -----------------------------------------------------------------------------
 static inline const D3D9VtxSemDesc * sVtxSem2D3D( GN::gfx::VtxSem sem )
 {
@@ -95,8 +95,8 @@ static inline const D3D9VtxSemDesc * sVtxSem2D3D( GN::gfx::VtxSem sem )
     return &sDesc;
 }   
 
-//!
-//! convert vertex format to d3d-decl usage
+///
+/// convert vertex format to d3d-decl usage
 // -----------------------------------------------------------------------------
 static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
 {
@@ -158,8 +158,8 @@ static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
     }
 }
 
-//!
-//! element sorting function
+///
+/// element sorting function
 // -----------------------------------------------------------------------------
 static bool
 sSortByOffset( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
@@ -167,8 +167,8 @@ sSortByOffset( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
     return a.Offset < b.Offset;
 }
 
-//!
-//! convert vertdecl structure to a D3D vertex declaration array
+///
+/// convert vertdecl structure to a D3D vertex declaration array
 // -----------------------------------------------------------------------------
 static bool
 sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::VtxFmtDesc & decl )

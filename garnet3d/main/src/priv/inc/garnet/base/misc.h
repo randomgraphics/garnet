@@ -1,15 +1,15 @@
 #ifndef __GN_BASE_MISC_H__
 #define __GN_BASE_MISC_H__
 // *****************************************************************************
-//! \file    base/misc.h
-//! \brief   misc functions and types
-//! \author  chenlee (2005.5.4)
+/// \file    base/misc.h
+/// \brief   misc functions and types
+/// \author  chenlee (2005.5.4)
 // *****************************************************************************
 
-//!
-//! Execute only limited times during the entir life of the
-//! application, no matter how many time it is called.
-//!
+///
+/// Execute only limited times during the entir life of the
+/// application, no matter how many time it is called.
+///
 #define GN_DO_LIMITED_TIMES(n,X)      \
     if (true)                         \
     {                                 \
@@ -21,41 +21,41 @@
         }                             \
     } else void(0)
 
-//!
-//! Do something only once. 通常用来在内层循环中输出一些调试和错误信息。
-//!
+///
+/// Do something only once. 通常用来在内层循环中输出一些调试和错误信息。
+///
 #define GN_DO_ONCE(X) GN_DO_LIMITED_TIMES(1,X)
 
-//!
-//! "Use" unused parameter (to avoid compiler warnings)
-//!
+///
+/// "Use" unused parameter (to avoid compiler warnings)
+///
 #define GN_UNUSED_PARAM(X) ((void)(X))
 
-//!
-//! Get element count of C-style array
-//!
+///
+/// Get element count of C-style array
+///
 #define GN_ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 
 namespace GN
 {
-    //!
-    //! General handle type
-    //!
+    ///
+    /// General handle type
+    ///
     typedef const void * HandleType;
 
-    //!
-    //! min
-    //!
+    ///
+    /// min
+    ///
     template<typename T> inline const T & min( const T & a, const T & b ) { return a < b ? a : b; }
 
-    //!
-    //! max
-    //!
+    ///
+    /// max
+    ///
     template<typename T> inline const T & max( const T & a, const T & b ) { return a > b ? a : b; }
 
-    //!
-    //! Swap endian. Do "in-place" swap, if dst == src.
-    //!
+    ///
+    /// Swap endian. Do "in-place" swap, if dst == src.
+    ///
     GN_FORCE_INLINE void swapEndian8In32( void * dst, const void * src, size_t countInInt32 )
     {
         GN_ASSERT( dst && src );
@@ -70,9 +70,9 @@ namespace GN
         }
     }
 
-    //!
-    //! Swap endian. Do "in-place" swap, if dst == src.
-    //!
+    ///
+    /// Swap endian. Do "in-place" swap, if dst == src.
+    ///
     GN_FORCE_INLINE void swapEndian16In32( void * dst, const void * src, size_t countInInt32 )
     {
         GN_ASSERT( dst && src );
@@ -85,9 +85,9 @@ namespace GN
         }
     }
 
-    //!
-    //! Swap endian. Do "in-place" swap, if dst == src.
-    //!
+    ///
+    /// Swap endian. Do "in-place" swap, if dst == src.
+    ///
     GN_FORCE_INLINE void swapEndian8In16( void * dst, const void * src, size_t countInInt16 )
     {
         GN_ASSERT( dst && src );
@@ -100,10 +100,10 @@ namespace GN
         }
     }
 
-    //!
-    //! type cast function
-    //!
-    //! perform dynamic cast in debug build, and static cast in release build.
+    ///
+    /// type cast function
+    ///
+    /// perform dynamic cast in debug build, and static cast in release build.
     // ------------------------------------------------------------------------
     template < class TO, class FROM >
     GN_FORCE_INLINE TO safeCast( FROM from )
@@ -116,8 +116,8 @@ namespace GN
     #endif
     }
 
-    //!
-    //! vector to pointer
+    ///
+    /// vector to pointer
     // ------------------------------------------------------------------------
     template < typename T >
     GN_FORCE_INLINE T * vec2ptr( std::vector<T> & vec )
@@ -125,8 +125,8 @@ namespace GN
         return vec.empty() ? 0 : &vec[0];
     }
 
-    //!
-    //! vector to pointer
+    ///
+    /// vector to pointer
     // ------------------------------------------------------------------------
     template < typename T >
     GN_FORCE_INLINE const T * vec2ptr( const std::vector<T> & vec )
@@ -134,8 +134,8 @@ namespace GN
         return vec.empty() ? 0 : &vec[0];
     }
 
-    //!
-    //! 将value限定在[vmin, vmax]区间内
+    ///
+    /// 将value限定在[vmin, vmax]区间内
     // ------------------------------------------------------------------------
     template < typename T >
     inline void clamp( T & value, const T & vmin, const T & vmax )
@@ -143,8 +143,8 @@ namespace GN
         value = vmin > value ? vmin : vmax < value ? vmax : value;
     }
 
-    //!
-    //! general safe deallocation routine
+    ///
+    /// general safe deallocation routine
     // ------------------------------------------------------------------------
     template < typename T, typename DEALLOC_FUNC >
     GN_FORCE_INLINE void safeDealloc( T * & ptr )
@@ -156,8 +156,8 @@ namespace GN
         }
     }
 
-    //!
-    //! free a C-style heap pointer
+    ///
+    /// free a C-style heap pointer
     // ------------------------------------------------------------------------
     template < typename T >
     GN_FORCE_INLINE void safeHeapFree( T * & ptr )
@@ -169,8 +169,8 @@ namespace GN
         }
     }
 
-    //!
-    //! delete one object
+    ///
+    /// delete one object
     // ------------------------------------------------------------------------
     template < typename T >
     GN_FORCE_INLINE void safeDelete( T * & ptr )
@@ -182,8 +182,8 @@ namespace GN
         }
     }
 
-    //!
-    //! delete object array
+    ///
+    /// delete object array
     // ------------------------------------------------------------------------
     template < typename T >
     GN_FORCE_INLINE void safeDeleteArray( T * & ptr )
@@ -195,9 +195,9 @@ namespace GN
         }
     }
 
-    //!
-    //! Safe release COM interface
-    //!
+    ///
+    /// Safe release COM interface
+    ///
     template < typename T >
     GN_FORCE_INLINE void safeRelease( T * & ptr )
     {
@@ -208,9 +208,9 @@ namespace GN
         }
     }
 
-    //!
-    //! Safe release RefCounter class
-    //!
+    ///
+    /// Safe release RefCounter class
+    ///
     template < typename T >
     GN_FORCE_INLINE void safeDecref( T * & ptr )
     {
@@ -221,20 +221,20 @@ namespace GN
         }
     }
 
-    //!
-    //! Set environment variable. Set value to empty or NULL to delete
-    //! that environment variable.
-    //!
+    ///
+    /// Set environment variable. Set value to empty or NULL to delete
+    /// that environment variable.
+    ///
     void putEnv( const char * name, const char * value );
 
-    //!
-    //! Get environment variable.
-    //!
+    ///
+    /// Get environment variable.
+    ///
     void getEnv( StrA & result, const char * name );
 
-    //!
-    //! Get environment variable.
-    //!
+    ///
+    /// Get environment variable.
+    ///
     inline StrA getEnv( const char * name )
     {
         StrA result;
@@ -242,10 +242,10 @@ namespace GN
         return result;
     }
 
-    //!
-    //! Get environment variable as boolean variable. Return true only when the variable
-    //! exists and the value is "1" or "yes".
-    //!
+    ///
+    /// Get environment variable as boolean variable. Return true only when the variable
+    /// exists and the value is "1" or "yes".
+    ///
     inline bool getEnvBoolean( const char * name )
     {
         StrA result;
@@ -255,29 +255,29 @@ namespace GN
                0 == strCmpI( "true", result.cptr() );
     }
 
-    //!
-    //! Sleep calling thread
-    //!
+    ///
+    /// Sleep calling thread
+    ///
     void sleep( UInt32 microSeconds );
 
-    //!
-    //! enable CRT memory leak checking. Currently only work for MSVC compiler
-    //!
+    ///
+    /// enable CRT memory leak checking. Currently only work for MSVC compiler
+    ///
     void enableCRTMemoryCheck();
 
-    //!
-    //! FOURCC structure
-    //!
+    ///
+    /// FOURCC structure
+    ///
     union FOURCC
     {
-        UInt32      u32;   //!< FOURCC as unsigned 32-bit integer
-        SInt32       i32;   //!< FOURCC as 32-bit integer
-        char          c8[4]; //!< FOURCC as 4 characters
-        unsigned char u8[4]; //!< FOURCC as 4 unsigned characters
+        UInt32      u32;   ///< FOURCC as unsigned 32-bit integer
+        SInt32       i32;   ///< FOURCC as 32-bit integer
+        char          c8[4]; ///< FOURCC as 4 characters
+        unsigned char u8[4]; ///< FOURCC as 4 unsigned characters
 
-        //!
-        //! conver to string
-        //!
+        ///
+        /// conver to string
+        ///
         const char * toStr() const
         {
             static char s[5];
@@ -289,9 +289,9 @@ namespace GN
             return s;
         }
 
-        //!
-        //! convert from string
-        //!
+        ///
+        /// convert from string
+        ///
         void fromStr(const char * str )
         {
             u32 = 0;
@@ -307,9 +307,9 @@ namespace GN
             }
         }
 
-        //!
-        //! Make FOURCC by 4 characters
-        //!
+        ///
+        /// Make FOURCC by 4 characters
+        ///
         static FOURCC sMake( char c0, char c1, char c2, char c3 )
         {
             GN_CASSERT( 4 == sizeof(FOURCC) );
@@ -318,7 +318,7 @@ namespace GN
             return r;
         }
 
-        //! \name commonly used operators
+        /// \name commonly used operators
         //@{
         bool operator ==( const FOURCC & rhs ) const { return u32 == rhs.u32; }
         bool operator !=( const FOURCC & rhs ) const { return u32 == rhs.u32; }
@@ -326,46 +326,46 @@ namespace GN
         //@}
     };
 
-    //!
-    //! Hard to explain in English, please see code by your self :)
-    //!
+    ///
+    /// Hard to explain in English, please see code by your self :)
+    ///
     struct ScopeBool
     {
-        bool & mValue; //!< Reference to the boolean variable.
+        bool & mValue; ///< Reference to the boolean variable.
 
-        //!
-        //! Ctor
-        //!
+        ///
+        /// Ctor
+        ///
         ScopeBool( bool & v ) : mValue(v) { mValue = true; }
 
-        //!
-        //! Dtor
-        //!
+        ///
+        /// Dtor
+        ///
         ~ScopeBool() { mValue = false; }
     };
 
-    //!
-    //! Hard to explain in English, please see code by your self :)
-    //!
+    ///
+    /// Hard to explain in English, please see code by your self :)
+    ///
     template<typename T>
     struct ScopeInteger
     {
-        T & mValue; //!< Reference to the integer variable.
+        T & mValue; ///< Reference to the integer variable.
 
-        //!
-        //! Ctor
-        //!
+        ///
+        /// Ctor
+        ///
         ScopeInteger( T & v ) : mValue(v) { ++mValue; }
 
-        //!
-        //! Dtor
-        //!
+        ///
+        /// Dtor
+        ///
         ~ScopeInteger() { --mValue; }
     };
 
-    //!
-    //! Automatically execute a function at the end of life scope
-    //!
+    ///
+    /// Automatically execute a function at the end of life scope
+    ///
     template<class FUNCTOR>
     class AutoScope
     {
@@ -374,25 +374,25 @@ namespace GN
 
     public:
 
-        //!
-        //! Ctor
-        //!
+        ///
+        /// Ctor
+        ///
         AutoScope( const FUNCTOR & func ) : mFunc(func), mDismissed(false) {}
 
-        //!
-        //! Dtor
-        //!
+        ///
+        /// Dtor
+        ///
         ~AutoScope() { if( !mDismissed ) mFunc(); }
 
-        //!
-        //! Tell AutoScope to _NOT_ run the function by the end of life scope.
-        //!
+        ///
+        /// Tell AutoScope to _NOT_ run the function by the end of life scope.
+        ///
         void dismiss() { mDismissed = true; }
     };
 
-    //!
-    //! Data type with automatic-initialization.
-    //!
+    ///
+    /// Data type with automatic-initialization.
+    ///
     template<typename T, T DEFAULT_VALUE>
     class AutoInit
     {
@@ -400,50 +400,50 @@ namespace GN
 
     public:
 
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         AutoInit() : mValue(DEFAULT_VALUE) {}
 
-        //!
-        //! Construct from T
-        //!
+        ///
+        /// Construct from T
+        ///
         AutoInit( const T & value ) : mValue(value) {}
 
-        //!
-        //! get internal value
-        //!
+        ///
+        /// get internal value
+        ///
         T & value() { return mValue; }
 
-        //!
-        //! get internal value
-        //!
+        ///
+        /// get internal value
+        ///
         const T & value() const { return mValue; }
 
-        //!
-        //! Convert to T
-        //!
+        ///
+        /// Convert to T
+        ///
         operator T & () { return mValue; }
 
-        //!
-        //! Convert to constant T
-        //!
+        ///
+        /// Convert to constant T
+        ///
         operator const T & () const { return mValue; }
     };
 
-    //!
-    //! Disable copy semantic of all descendants.
-    //!
+    ///
+    /// Disable copy semantic of all descendants.
+    ///
     class NoCopy
     {
     protected:
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         NoCopy() {}
-        //!
-        //! Destructor
-        //!
+        ///
+        /// Destructor
+        ///
         virtual ~NoCopy() {}
     private:  // emphasize the following members are private
         NoCopy( const NoCopy & );
@@ -452,9 +452,9 @@ namespace GN
 
     namespace detail
     {
-        //!
-        //! Basic auto pointer class. Can NOT be used in STL containers.
-        //!
+        ///
+        /// Basic auto pointer class. Can NOT be used in STL containers.
+        ///
         template<typename T, typename CLASS>
         class BaseAutoPtr : public NoCopy
         {
@@ -470,34 +470,34 @@ namespace GN
 
         public:
 
-            //!
-            //! Construct from C-style
-            //!
+            ///
+            /// Construct from C-style
+            ///
             explicit BaseAutoPtr( T * p ) throw() : mPtr(p) {}
 
-            //!
-            //! Destructor
-            //!
+            ///
+            /// Destructor
+            ///
             ~BaseAutoPtr() { release(); }
 
-            //!
-            //! Is pointer empty or not.
-            //!
+            ///
+            /// Is pointer empty or not.
+            ///
             bool empty() const { return 0 == mPtr; }
 
-            //!
-            //! Get internal pointer
-            //!
+            ///
+            /// Get internal pointer
+            ///
             T * get() const { return mPtr; }
 
-            //!
-            //! clear internal pointer. Same as attach(0)
-            //!
+            ///
+            /// clear internal pointer. Same as attach(0)
+            ///
             void clear() { if( mPtr ) release(), mPtr = 0; }
 
-            //!
-            //! attach to new pointer (release the old one)
-            //!
+            ///
+            /// attach to new pointer (release the old one)
+            ///
             void attach( T * p )
             {
                 if( p != mPtr )
@@ -507,9 +507,9 @@ namespace GN
                 }
             }
 
-            //!
-            //! Release ownership of private pointer
-            //!
+            ///
+            /// Release ownership of private pointer
+            ///
             T * detach() throw()
             {
                 T * tmp = mPtr;
@@ -517,27 +517,27 @@ namespace GN
                 return tmp;
             }
 
-            //!
-            //! Convert to T *
-            //!
+            ///
+            /// Convert to T *
+            ///
             operator T*() const { return mPtr; }
 
-            //!
-            //! dereference operator
-            //!
+            ///
+            /// dereference operator
+            ///
             T & operator*() const { GN_ASSERT( mPtr ); return *mPtr; }
 
-            //!
-            //! arrow operator
-            //!
+            ///
+            /// arrow operator
+            ///
             T * operator->() const { return mPtr; }
         };
     }
 
 #if GN_POSIX
-    //!
-    //! Automatic X resource pointer
-    //!
+    ///
+    /// Automatic X resource pointer
+    ///
     template<typename T>
     class AutoXPtr : public detail::BaseAutoPtr< T, AutoXPtr<T> >
     {
@@ -551,16 +551,16 @@ namespace GN
 
     public:
 
-        //!
-        //! Construct from C-style pointer
-        //!
+        ///
+        /// Construct from C-style pointer
+        ///
         explicit AutoXPtr( T * p = 0 ) throw() : ParentType(p) {}
     };
 #endif
 
-    //!
-    //! Automatic object pointer. Can NOT be used in STL containers.
-    //!
+    ///
+    /// Automatic object pointer. Can NOT be used in STL containers.
+    ///
     template<typename T>
     class AutoObjPtr : public detail::BaseAutoPtr< T, AutoObjPtr<T> >
     {
@@ -578,15 +578,15 @@ namespace GN
 
     public:
 
-        //!
-        //! Construct from C-style pointer
-        //!
+        ///
+        /// Construct from C-style pointer
+        ///
         explicit AutoObjPtr( T * p = 0 ) throw() : ParentType(p) {}
     };
 
-    //!
-    //! Automatic object array. Can NOT be used in STL containers.
-    //!
+    ///
+    /// Automatic object array. Can NOT be used in STL containers.
+    ///
     template<typename T>
     class AutoObjArray : public detail::BaseAutoPtr< T, AutoObjArray<T> >
     {
@@ -604,15 +604,15 @@ namespace GN
 
     public:
 
-        //!
-        //! Construct from C-style pointer
-        //!
+        ///
+        /// Construct from C-style pointer
+        ///
         explicit AutoObjArray( T * p = 0 ) throw() : ParentType(p) {}
     };
 
-    //!
-    //! Automatic C-style array created by heapAlloc. Can NOT be used in STL containers.
-    //!
+    ///
+    /// Automatic C-style array created by heapAlloc. Can NOT be used in STL containers.
+    ///
     template<typename T>
     class AutoTypePtr : public detail::BaseAutoPtr< T, AutoTypePtr<T> >
     {
@@ -630,126 +630,126 @@ namespace GN
 
     public:
 
-        //!
-        //! Construct from C-style pointer
-        //!
+        ///
+        /// Construct from C-style pointer
+        ///
         explicit AutoTypePtr( T * p = 0 ) throw() : ParentType(p) {}
     };
 
-    //!
-    //! Automatic COM pointer class. CAN be used in STL containers.
-    //!
+    ///
+    /// Automatic COM pointer class. CAN be used in STL containers.
+    ///
     template <class T>
     class AutoComPtr
     {
         T * mPtr;
     public:
 
-        //!
-        //! Default constructor
-        //!
+        ///
+        /// Default constructor
+        ///
         AutoComPtr() throw() : mPtr(0) {}
 
-        //!
-        //! Copy constructor
-        //!
+        ///
+        /// Copy constructor
+        ///
         AutoComPtr( const AutoComPtr & other ) throw() : mPtr(other.mPtr)
         {
             if( mPtr ) mPtr->AddRef();
         }
 
-        //!
-        //! Destructor
-        //!
+        ///
+        /// Destructor
+        ///
         ~AutoComPtr() throw()
         {
             if (mPtr) mPtr->Release();
         }
 
-        //!
-        //! Assignment operator
-        //!
+        ///
+        /// Assignment operator
+        ///
         AutoComPtr & operator=( const AutoComPtr & rhs )
         {
             set( rhs.mPtr );
             return *this;
         }
 
-        //!
-        //! Convert to T *
-        //!
+        ///
+        /// Convert to T *
+        ///
         operator T*() const throw()
         {
             return mPtr;
         }
 
-        //!
-        //! dereference operator
-        //!
+        ///
+        /// dereference operator
+        ///
         T & operator*() const throw()
         {
             GN_ASSERT( mPtr );
             return *mPtr;
         }
 
-        //!
-        //! Get address of pointer.
-        //!
-        //! The assert on operator& usually indicates a bug.  If this is really
-        //! what is needed, however, take the address of the mPtr member explicitly.
-        //!
+        ///
+        /// Get address of pointer.
+        ///
+        /// The assert on operator& usually indicates a bug.  If this is really
+        /// what is needed, however, take the address of the mPtr member explicitly.
+        ///
         T ** operator&() throw()
         {
             GN_ASSERT(mPtr==NULL);
             return &mPtr;
         }
 
-        //!
-        //! self explain.
-        //!
+        ///
+        /// self explain.
+        ///
         T * operator->() const throw()
         {
             GN_ASSERT( mPtr );
             return mPtr;
         }
 
-        //!
-        //! NOT operator
-        //!
+        ///
+        /// NOT operator
+        ///
         bool operator!() const throw()
         {
             return mPtr == NULL;
         }
 
-        //!
-        //! LESS operator
-        //!
+        ///
+        /// LESS operator
+        ///
         bool operator<( T * pT ) const throw()
         {
             return mPtr < pT;
         }
 
-        //!
-        //! EQ operator
-        //!
+        ///
+        /// EQ operator
+        ///
         bool operator==( T * pT ) const throw()
         {
             return mPtr == pT;
         }
 
-        //!
-        //! Is empty pointer?
-        //!
+        ///
+        /// Is empty pointer?
+        ///
         bool empty() const { return 0 == mPtr; }
 
-        //!
-        //! Clear to empty. Same as set(NULL).
-        //!
+        ///
+        /// Clear to empty. Same as set(NULL).
+        ///
         void clear() { if( mPtr ) mPtr->Release(); mPtr = 0; }
 
-        //!
-        //! Release existing interface, then hold new interface
-        //!
+        ///
+        /// Release existing interface, then hold new interface
+        ///
         void set( T * p ) throw()
         {
             if( p ) p->AddRef();
@@ -757,18 +757,18 @@ namespace GN
             mPtr = p;
         }
 
-        //!
-        //! Attach to an existing interface (does not AddRef)
-        //!
+        ///
+        /// Attach to an existing interface (does not AddRef)
+        ///
         void attach( T * p2 ) throw()
         {
             if (mPtr) mPtr->Release();
             mPtr = p2;
         }
 
-        //!
-        //! Detach the interface (does not Release)
-        //!
+        ///
+        /// Detach the interface (does not Release)
+        ///
         T * detach() throw()
         {
             T * pt = mPtr;

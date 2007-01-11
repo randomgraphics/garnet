@@ -1,9 +1,9 @@
 #ifndef __GN_INPUT_DIINPUT_H__
 #define __GN_INPUT_DIINPUT_H__
 // *****************************************************************************
-//! \file    inputDInput.h
-//! \brief   使用DirectInput的输入模块
-//! \author  chenlee (2005.10.29)
+/// \file    inputDInput.h
+/// \brief   使用DirectInput的输入模块
+/// \author  chenlee (2005.10.29)
 // *****************************************************************************
 
 #include "basicInputMsw.h"
@@ -15,9 +15,9 @@
 
 namespace GN { namespace input
 {
-    //!
-    //! 使用DirectInput的输入系统
-    //!
+    ///
+    /// 使用DirectInput的输入系统
+    ///
     class InputDInput : public BasicInputMsw
     {
          GN_DECLARE_STDCLASS( InputDInput, BasicInputMsw );

@@ -773,9 +773,9 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
         }
     }
 
-    //!
-    //! bind vertex buffers
-    //!
+    ///
+    /// bind vertex buffers
+    ///
     if( newFlags.vtxBufs )
     {
         for( UINT i = 0; i < newContext.numVtxBufs; ++i )

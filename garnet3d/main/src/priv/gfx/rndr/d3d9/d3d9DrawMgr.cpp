@@ -23,7 +23,7 @@ static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
 };
 
 //
-//! convert Vector4f to D3COLOR
+/// convert Vector4f to D3COLOR
 // ------------------------------------------------------------------------
 static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 {

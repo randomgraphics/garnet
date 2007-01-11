@@ -1,35 +1,35 @@
 #ifndef __GN_GFXCOMMON_BASICRENDERER_H__
 #define __GN_GFXCOMMON_BASICRENDERER_H__
 // *****************************************************************************
-//! \file    basicRenderer.h
-//! \brief   Basic renderer class
-//! \author  chenlee (2005.10.1)
+/// \file    basicRenderer.h
+/// \brief   Basic renderer class
+/// \author  chenlee (2005.10.1)
 // *****************************************************************************
 
 #include "renderWindowMsw.h"
 #include "renderWindowX11.h"
 
-//!
-//! trace the call sequence of device reset/recreate
-//!
+///
+/// trace the call sequence of device reset/recreate
+///
 #define _GNGFX_DEVICE_TRACE()  //GN_TRACE( GN_FUNCTION_NAME )
 
 namespace GN { namespace gfx
 {
-    //!
-    //! Device-dependent render state block
-    //!
+    ///
+    /// Device-dependent render state block
+    ///
     struct DeviceRenderStateBlock : public RefCounter
     {
-        //!
-        //! Apply render states to render device
-        //!
+        ///
+        /// Apply render states to render device
+        ///
         virtual void apply() const = 0;
     };
 
-    //!
-    //! basic renderer class
-    //!
+    ///
+    /// basic renderer class
+    ///
     class BasicRenderer : public Renderer, public StdClass
     {
         GN_DECLARE_STDCLASS( BasicRenderer, StdClass );
@@ -66,7 +66,7 @@ namespace GN { namespace gfx
 
         // *****************************************************************************
         //
-        //! \name                   Display Manager
+        /// \name                   Display Manager
         //
         // *****************************************************************************
 
@@ -79,32 +79,32 @@ namespace GN { namespace gfx
 
     protected:
 
-        //!
-        //! Called by sub-classes to initialize display descriptor
-        //! based on device settings.
-        //!
+        ///
+        /// Called by sub-classes to initialize display descriptor
+        /// based on device settings.
+        ///
         bool processUserOptions( const RendererOptions & );
 
-        //!
-        //! Called by sub class to respond to render window resizing/moving
-        //!
+        ///
+        /// Called by sub class to respond to render window resizing/moving
+        ///
         bool handleRenderWindowSizeMove();
 
 #if GN_MSWIN
     protected:
-        RenderWindowMsw mWindow;  //!< Render window instance.
+        RenderWindowMsw mWindow;  ///< Render window instance.
     private:
-        WinProp         mWinProp; //!< Render window properites.
+        WinProp         mWinProp; ///< Render window properites.
 #elif GN_POSIX
     private:
-        RenderWindowX11 mWindow;  //!< Render window instance
+        RenderWindowX11 mWindow;  ///< Render window instance
 #endif
 
         //@}
 
         // *****************************************************************************
         //
-        //! \name                   Caps Manager
+        /// \name                   Caps Manager
         //
         // *****************************************************************************
 
@@ -114,7 +114,7 @@ namespace GN { namespace gfx
 
         // *****************************************************************************
         //
-        //! \name                   Resource Manager
+        /// \name                   Resource Manager
         //
         // *****************************************************************************
 
@@ -127,9 +127,9 @@ namespace GN { namespace gfx
     public :
 
 #if HAS_CG
-        //!
-        //! get global Cg context
-        //!
+        ///
+        /// get global Cg context
+        ///
         CGcontext getCgContext() const { return mCgContext; }
 #endif
 
@@ -150,7 +150,7 @@ namespace GN { namespace gfx
 
         // *****************************************************************************
         //
-        //! \name                   Context Manager
+        /// \name                   Context Manager
         //
         // *****************************************************************************
 
@@ -164,7 +164,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        void holdContextResources( const RendererContext & ); //!< hold reference to resources in context state
+        void holdContextResources( const RendererContext & ); ///< hold reference to resources in context state
         void clearContextResources();
 
     private:
@@ -199,7 +199,7 @@ namespace GN { namespace gfx
 
         // *****************************************************************************
         //
-        //! \name                   Draw Manager
+        /// \name                   Draw Manager
         //
         // *****************************************************************************
 

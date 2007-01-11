@@ -1,9 +1,9 @@
 using namespace GN;
 using namespace GN::gfx;
 
-//!
-//! Fillrate benchmarking application
-//!
+///
+/// Fillrate benchmarking application
+///
 class TestFillrate : public BasicTestCase
 {
     ManyManyQuads mGeometry;

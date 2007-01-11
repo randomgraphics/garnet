@@ -30,18 +30,18 @@
 #include <Cg/cgGL.h>
 #endif
 
-//!
-//! Automatically pop OGL attributes while out of scope.
-//!
+///
+/// Automatically pop OGL attributes while out of scope.
+///
 class OGLAutoAttribStack
 {
     GLuint mBits;
     GLuint mClientBits;
 
 public:
-    //!
-    //! Ctor
-    //!
+    ///
+    /// Ctor
+    ///
     OGLAutoAttribStack( GLuint bits = GL_ALL_ATTRIB_BITS, GLuint clientBits = GL_CLIENT_ALL_ATTRIB_BITS )
         : mBits( bits ), mClientBits( clientBits )
     {
@@ -55,9 +55,9 @@ public:
         }
     }
 
-    //!
-    //! Dtor
-    //!
+    ///
+    /// Dtor
+    ///
     ~OGLAutoAttribStack()
     {
         if( mBits )

@@ -2,8 +2,8 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.oglInfo");
 
-//!
-//! Split a string into token list
+///
+/// Split a string into token list
 // ------------------------------------------------------------------------
 static void
 sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
@@ -24,8 +24,8 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
     }
 }
 
-//!
-//! initialize opengl extension
+///
+/// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
 bool sGetOGLExtensions( HDC hdc, std::vector<GN::StrA> & result )

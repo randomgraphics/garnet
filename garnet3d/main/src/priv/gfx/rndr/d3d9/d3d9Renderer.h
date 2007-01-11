@@ -1,15 +1,15 @@
 #ifndef __GN_GFXD3D9_D3D9RENDERER_H__
 #define __GN_GFXD3D9_D3D9RENDERER_H__
 // *****************************************************************************
-//! \file    d3d9Renderer.h
-//! \brief   D3D9 renderer class
-//! \author  chenlee (2005.10.2)
+/// \file    d3d9Renderer.h
+/// \brief   D3D9 renderer class
+/// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
 
-//! \def GNGFX_D3D9CAPS
-//! Define D3D special caps.
+/// \def GNGFX_D3D9CAPS
+/// Define D3D special caps.
 
 namespace GN { namespace gfx
 {
@@ -19,27 +19,27 @@ namespace GN { namespace gfx
     class D3D9Quad;
     class D3D9Line;
 
-    //!
-    //! D3D9 vertex buffer declaration descriptor
-    //!
+    ///
+    /// D3D9 vertex buffer declaration descriptor
+    ///
     struct D3D9VtxDeclDesc
     {
-        VtxFmtDesc                              format; //!< vertex format
-        AutoComPtr<IDirect3DVertexDeclaration9> decl;   //!< D3D decl
+        VtxFmtDesc                              format; ///< vertex format
+        AutoComPtr<IDirect3DVertexDeclaration9> decl;   ///< D3D decl
     };
 
-    //!
-    //! Default depth surface format
-    //!
+    ///
+    /// Default depth surface format
+    ///
 #if GN_XENON
     static const D3DFORMAT DEFAULT_DEPTH_FORMAT = D3DFMT_D24FS8;
 #else
     static const D3DFORMAT DEFAULT_DEPTH_FORMAT = D3DFMT_D24S8;
 #endif
 
-    //!
-    //! D3D9 renderer class
-    //!
+    ///
+    /// D3D9 renderer class
+    ///
     class D3D9Renderer : public BasicRenderer
     {
         GN_DECLARE_STDCLASS(D3D9Renderer, BasicRenderer);
@@ -78,7 +78,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Device Manager
+    /// \name                     Device Manager
     //
     // ************************************************************************
 
@@ -94,13 +94,13 @@ namespace GN { namespace gfx
         void deviceDispose();
         void deviceDestroy();
 
-        bool mDeviceChanging; //! if true, then we are inside function changeOptions().
+        bool mDeviceChanging; /// if true, then we are inside function changeOptions().
 
         //@}
 
     // ************************************************************************
     //
-    //! \name                     Display Manager
+    /// \name                     Display Manager
     //
     // ************************************************************************
 
@@ -123,25 +123,25 @@ namespace GN { namespace gfx
         UINT                          getBehavior() const { return mBehavior; }
         const D3DPRESENT_PARAMETERS & getPresentParameters() const { return mPresentParameters; }
 
-        //!
-        //! Check resource format compability
-        //!
+        ///
+        /// Check resource format compability
+        ///
         HRESULT checkD3DDeviceFormat( UInt32 usage, D3DRESOURCETYPE rtype, D3DFORMAT format ) const;
 
-        //!
-        //! D3D MSAA descriptor
-        //!
+        ///
+        /// D3D MSAA descriptor
+        ///
         struct D3DMsaaDesc
         {
-            D3DMULTISAMPLE_TYPE type;    //!< D3D MSAA type
-            DWORD               quality; //!< D3D MSAA quality
+            D3DMULTISAMPLE_TYPE type;    ///< D3D MSAA type
+            DWORD               quality; ///< D3D MSAA quality
         };
 
-        //!
-        //! Check render target MSAA compability.
-        //!
-        //! Return value is a array that has NUM_MSAA_TYPES elements, to descript how MSAA qualities are mapped to D3D.
-        //!
+        ///
+        /// Check render target MSAA compability.
+        ///
+        /// Return value is a array that has NUM_MSAA_TYPES elements, to descript how MSAA qualities are mapped to D3D.
+        ///
         const D3DMsaaDesc * getMsaaDesc( D3DFORMAT format )
         {
             MsaaDescTable::const_iterator i = mMsaaDescTable.find( format );
@@ -169,8 +169,8 @@ namespace GN { namespace gfx
 
     private :
 
-        bool                    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
-        bool                    mDeviceRecreation; //!< only true between dispDeviceCreate() and dispDeviceRestore()
+        bool                    mDispOK; ///< true between dispDeviceRestore() and dispDeviceDispose()
+        bool                    mDeviceRecreation; ///< only true between dispDeviceCreate() and dispDeviceRestore()
         UINT                    mAdapter;
         D3DDEVTYPE              mDeviceType;
         UINT                    mBehavior;
@@ -185,7 +185,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                 Capability Manager
+    /// \name                 Capability Manager
     //
     // ************************************************************************
 
@@ -196,9 +196,9 @@ namespace GN { namespace gfx
         virtual bool supportShader( const StrA & );
         virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const;
 
-        //!
-        //! define API dependent caps
-        //!
+        ///
+        /// define API dependent caps
+        ///
         enum D3DCaps
         {
             #define GNGFX_D3D9CAPS(X) D3D9CAPS_##X,
@@ -208,9 +208,9 @@ namespace GN { namespace gfx
             D3D9CAPS_INVALID,
         };
 
-        //!
-        //! get D3D special caps
-        //!
+        ///
+        /// get D3D special caps
+        ///
         UInt32 getD3DCaps( D3DCaps c ) const { GN_ASSERT( 0 <= c && c < NUM_D3D9CAPS ); return mD3DCaps[c]; }
 
     private :
@@ -231,7 +231,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Resource Manager
+    /// \name                     Resource Manager
     //
     // ************************************************************************
 
@@ -247,19 +247,19 @@ namespace GN { namespace gfx
 
     public :
 
-        //!
-        //! Insert resource into resource list. Can be only called by
-        //! constructor of D3D9Resource.
-        //!
+        ///
+        /// Insert resource into resource list. Can be only called by
+        /// constructor of D3D9Resource.
+        ///
         void insertResource( D3D9Resource * p )
         {
             mResourceList.push_back(p);
         }
 
-        //!
-        //! Remove resource from resource list. Can be only called by
-        //! destructor of D3D9Resource.
-        //!
+        ///
+        /// Remove resource from resource list. Can be only called by
+        /// destructor of D3D9Resource.
+        ///
         void removeResource( D3D9Resource * p )
         {
             mResourceList.remove(p);
@@ -285,7 +285,7 @@ namespace GN { namespace gfx
 
     // ********************************************************************
     //
-    //! \name Context manager
+    /// \name Context manager
     //
     // ********************************************************************
 
@@ -384,7 +384,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Drawing Manager
+    /// \name                     Drawing Manager
     //
     // ************************************************************************
 
@@ -459,7 +459,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Misc. utilities
+        /// \name Misc. utilities
         //
         // ********************************************************************
 

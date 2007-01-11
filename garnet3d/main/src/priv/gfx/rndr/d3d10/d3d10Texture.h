@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D10_D3D10TEXTURE_H__
 #define __GN_GFXD3D10_D3D10TEXTURE_H__
 // *****************************************************************************
-//! \file    d3d10Texture.h
-//! \brief   D3D 10 texture class
-//! \author  chenlee (2006.09.20)
+/// \file    d3d10Texture.h
+/// \brief   D3D 10 texture class
+/// \author  chenlee (2006.09.20)
 // *****************************************************************************
 
 #include "../common/basicTexture.h"
@@ -12,9 +12,9 @@ namespace GN { namespace gfx
 {
     class D3D10Renderer;
 
-    //!
-    //! D3D texture
-    //!
+    ///
+    /// D3D texture
+    ///
     class D3D10Texture : public BasicTexture, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D10Texture, StdClass );
@@ -78,14 +78,14 @@ namespace GN { namespace gfx
 
         D3D10Renderer & mRenderer;
 
-        D3D10Tex mD3DTexture; //!< resource instance
+        D3D10Tex mD3DTexture; ///< resource instance
 
-        ID3D10ShaderResourceView * mSRView; //!< view as shader resource
-        ID3D10ShaderResourceView * mRTView; //!< view as render target
+        ID3D10ShaderResourceView * mSRView; ///< view as shader resource
+        ID3D10ShaderResourceView * mRTView; ///< view as render target
 
-        //!
-        //! \name locking related variables
-        //!
+        ///
+        /// \name locking related variables
+        ///
         //@{
         D3D10Tex mLockedTexture;
         LockFlag mLockedFlag;

@@ -106,9 +106,9 @@ macro GN_StdClassDecl()
 
 	SetBufSelText( hbuf, "" )
 
-	InsBufLine( hbuf,  currentLine+ 0, "//!" )
-	InsBufLine( hbuf,  currentLine+ 1, "//! " )
-	InsBufLine( hbuf,  currentLine+ 2, "//!" )
+	InsBufLine( hbuf,  currentLine+ 0, "///" )
+	InsBufLine( hbuf,  currentLine+ 1, "/// " )
+	InsBufLine( hbuf,  currentLine+ 2, "///" )
 	InsBufLine( hbuf,  currentLine+ 3, "class @className@ : public @parentName@" )
 	InsBufLine( hbuf,  currentLine+ 4, "{" )
 	InsBufLine( hbuf,  currentLine+ 5, "    GN_DECLARE_STDCLASS( @className@, @parentName@ );" )

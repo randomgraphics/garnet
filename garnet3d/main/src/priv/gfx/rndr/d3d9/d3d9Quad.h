@@ -1,17 +1,17 @@
 #ifndef __GN_GFXD3D9_D3D9QUAD_H__
 #define __GN_GFXD3D9_D3D9QUAD_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9Quad.h
-//! \brief   D3D9 quad renderer class
-//! \author  chenlee (2005.12.2)
+/// \file    d3d9/d3d9Quad.h
+/// \brief   D3D9 quad renderer class
+/// \author  chenlee (2005.12.2)
 // *****************************************************************************
 
 #include "d3d9Resource.h"
 
 namespace GN { namespace gfx {
-    //!
-    //! Class for rendering quad(s) on screen
-    //!
+    ///
+    /// Class for rendering quad(s) on screen
+    ///
     class D3D9Quad : public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9Quad, StdClass );
@@ -61,11 +61,11 @@ namespace GN { namespace gfx {
         // ********************************
     public:
 
-        //!
-        //! Draw quads on screen
-        //!
-        //! \sa Renderer::drawQuads
-        //!
+        ///
+        /// Draw quads on screen
+        ///
+        /// \sa Renderer::drawQuads
+        ///
         void drawQuads(
             BitFields options,
             const float * positions, size_t posStride,
@@ -90,7 +90,7 @@ namespace GN { namespace gfx {
 
         enum
         {
-            MAX_QUADS = 4096 //!< maxinum number of quads vertex and index buffer can hold.
+            MAX_QUADS = 4096 ///< maxinum number of quads vertex and index buffer can hold.
         };
 
         // ********************************

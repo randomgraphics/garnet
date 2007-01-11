@@ -1,16 +1,16 @@
 #ifndef __GN_BASE_SHAREDLIB_H__
 #define __GN_BASE_SHAREDLIB_H__
 // *****************************************************************************
-//! \file    sharedLib.h
-//! \brief   Shared library utilities
-//! \author  chenlee (2005.10.4)
+/// \file    sharedLib.h
+/// \brief   Shared library utilities
+/// \author  chenlee (2005.10.4)
 // *****************************************************************************
 
 namespace GN
 {
-    //!
-    //! Shared library class
-    //!
+    ///
+    /// Shared library class
+    ///
     class SharedLib : public NoCopy
     {
         // ********************************
@@ -28,32 +28,32 @@ namespace GN
         // ********************************
     public:
 
-        //!
-        //! Load shared library.
-        //!
-        //! \param libName
-        //!     If the libName has no extension. A platform dependent extension
-        //!     will be appended to libName: ".dll" on Windows, ".so" on linux.
-        //!     However, libName can include a trailing point character (.) to
-        //!     indicate that the library name has no extension.
-        //!
+        ///
+        /// Load shared library.
+        ///
+        /// \param libName
+        ///     If the libName has no extension. A platform dependent extension
+        ///     will be appended to libName: ".dll" on Windows, ".so" on linux.
+        ///     However, libName can include a trailing point character (.) to
+        ///     indicate that the library name has no extension.
+        ///
         bool load( const char * libName );
 
-        //!
-        //! Free the library.
-        //!
-        //! \note All symbols of the library will be invalidated as well.
-        //!
+        ///
+        /// Free the library.
+        ///
+        /// \note All symbols of the library will be invalidated as well.
+        ///
         void free();
 
-        //!
-        //! Get library handle
-        //!
+        ///
+        /// Get library handle
+        ///
         void * getHandle() const { return mHandle; }
 
-        //!
-        //! Get pointer of specified symbol of the shared library.
-        //!
+        ///
+        /// Get pointer of specified symbol of the shared library.
+        ///
         void * getSymbol( const char * symbol );
 
         // ********************************

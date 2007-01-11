@@ -1,18 +1,18 @@
 #ifndef __GN_GFX_RENDERWINDOWMSW_H__
 #define __GN_GFX_RENDERWINDOWMSW_H__
 // *****************************************************************************
-//! \file    renderWindowMsw.h
-//! \brief   Render window class on NT platform
-//! \author  chenlee (2005.10.4)
+/// \file    renderWindowMsw.h
+/// \brief   Render window class on NT platform
+/// \author  chenlee (2005.10.4)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
 #if GN_XENON
 
-    //!
-    //! Render window class on Xenon platform
-    //!
+    ///
+    /// Render window class on Xenon platform
+    ///
     class RenderWindowMsw
     {
         // ********************************
@@ -31,14 +31,14 @@ namespace GN { namespace gfx
 
     public:
 
-        //!
-        //! (re)initialize render window to use external window
-        //!
+        ///
+        /// (re)initialize render window to use external window
+        ///
         bool initExternalRenderWindow( HandleType disp, HandleType window ) { return true; }
 
-        //!
-        //! (re)initialize render window to use internal widow.
-        //!
+        ///
+        /// (re)initialize render window to use internal widow.
+        ///
         bool initInternalRenderWindow( HandleType disp, HandleType parent, HandleType monitor, UInt32 width, UInt32 height )
         {
             mWidth = width;
@@ -46,45 +46,45 @@ namespace GN { namespace gfx
             return true;
         }
 
-        //!
-        //! Delete render window
-        //!
+        ///
+        /// Delete render window
+        ///
         void quit() { mWidth = 0; mHeight = 0; }
 
-        //!
-        //! Get display handle. For compability to X Window class, no use.
-        //!
+        ///
+        /// Get display handle. For compability to X Window class, no use.
+        ///
         HandleType getDisplay() const { return 0; }
 
-        //!
-        //! Get window handle
-        //!
+        ///
+        /// Get window handle
+        ///
         HWND getWindow() const { return (HWND)1; }
 
-        //!
-        //! Get monitor handle
-        //!
+        ///
+        /// Get monitor handle
+        ///
         HMONITOR getMonitor() const { return (HMONITOR)1; }
 
-        //!
-        //! Get client size
-        //!
+        ///
+        /// Get client size
+        ///
         bool getClientSize( UInt32 & width, UInt32 & height ) const
         { width = mWidth; height = mHeight; return true; }
 
-        //!
-        //! Get window size change flag.
-        //!
+        ///
+        /// Get window size change flag.
+        ///
         bool getSizeChangeFlag( bool = true ) { return false; }
 
-        //!
-        //! This is hook functor.
-        //!
+        ///
+        /// This is hook functor.
+        ///
         typedef Delegate4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
 
-        //!
-        //! This signal will be triggered, whenever the windows receive a message.
-        //!
+        ///
+        /// This signal will be triggered, whenever the windows receive a message.
+        ///
         Signal4<void,HWND,UINT,WPARAM,LPARAM> sigMessage;
 
         // ********************************
@@ -94,27 +94,27 @@ namespace GN { namespace gfx
         UInt32 mWidth, mHeight;
     };
 
-    //!
-    //! Window properties containor (for compability to PC, no use at all)
-    //!
+    ///
+    /// Window properties containor (for compability to PC, no use at all)
+    ///
     struct WinProp
     {
-        //!
-        //! save window properties
-        //!
+        ///
+        /// save window properties
+        ///
         bool save( HWND ) { return true; }
 
-        //!
-        //! Restore previously stored properites
-        //!
+        ///
+        /// Restore previously stored properites
+        ///
         void restore() {}
     };
 
 #elif GN_MSWIN
 
-    //!
-    //! Render window class on Windows (PC) platform
-    //!
+    ///
+    /// Render window class on Windows (PC) platform
+    ///
     class RenderWindowMsw
     {
         // ********************************
@@ -133,47 +133,47 @@ namespace GN { namespace gfx
 
     public:
 
-        //!
-        //! (re)initialize render window to use external window
-        //!
+        ///
+        /// (re)initialize render window to use external window
+        ///
         bool initExternalRenderWindow( HandleType dispUnused, HandleType externalWindow );
 
-        //!
-        //! (re)initialize render window to use internal widow.
-        //!
+        ///
+        /// (re)initialize render window to use internal widow.
+        ///
         bool initInternalRenderWindow( HandleType dispUnused, HandleType parentWindow, HandleType monitor, UInt32 width, UInt32 height );
 
-        //!
-        //! Delete render window
-        //!
+        ///
+        /// Delete render window
+        ///
         void quit();
 
-        //!
-        //! Get display handle. For compability to X Window class, no use.
-        //!
+        ///
+        /// Get display handle. For compability to X Window class, no use.
+        ///
         HandleType getDisplay() const { return 0; }
 
-        //!
-        //! Get window handle
-        //!
+        ///
+        /// Get window handle
+        ///
         HWND getWindow() const { return mWindow; }
 
-        //!
-        //! Get monitor handle
-        //!
+        ///
+        /// Get monitor handle
+        ///
         HMONITOR getMonitor() const { return mMonitor; }
 
-        //!
-        //! Get client size
-        //!
+        ///
+        /// Get client size
+        ///
         bool getClientSize( UInt32 & width, UInt32 & height ) const;
 
-        //!
-        //! Get window size change flag.
-        //!
-        //! \param autoReset
-        //!     If true, automatically clear the flag.
-        //!
+        ///
+        /// Get window size change flag.
+        ///
+        /// \param autoReset
+        ///     If true, automatically clear the flag.
+        ///
         bool getSizeChangeFlag( bool autoReset = true )
         {
             if( autoReset )
@@ -185,14 +185,14 @@ namespace GN { namespace gfx
             else return mSizeChanged;
         }
 
-        //!
-        //! This is hook functor.
-        //!
+        ///
+        /// This is hook functor.
+        ///
         typedef Delegate4<void,HWND,UINT,WPARAM,LPARAM> MsgHook;
 
-        //!
-        //! This signal will be triggered, whenever the windows receive a message.
-        //!
+        ///
+        /// This signal will be triggered, whenever the windows receive a message.
+        ///
         Signal4<void,HWND,UINT,WPARAM,LPARAM> sigMessage;
 
         // ********************************
@@ -228,9 +228,9 @@ namespace GN { namespace gfx
 
     };
 
-    //!
-    //! Window properties containor.
-    //!
+    ///
+    /// Window properties containor.
+    ///
     class WinProp
     {
         HWND  mWindow;
@@ -243,24 +243,24 @@ namespace GN { namespace gfx
 
     public:
 
-        //!
-        //! Ctor
-        //!
+        ///
+        /// Ctor
+        ///
         WinProp() : mWindow(0) {}
 
-        //!
-        //! Dtor
-        //!
+        ///
+        /// Dtor
+        ///
         ~WinProp() { restore(); }
 
-        //!
-        //! save window properties
-        //!
+        ///
+        /// save window properties
+        ///
         bool save( HWND hwnd );
 
-        //!
-        //! Restore previously stored properites
-        //!
+        ///
+        /// Restore previously stored properites
+        ///
         void restore();
     };
 #endif

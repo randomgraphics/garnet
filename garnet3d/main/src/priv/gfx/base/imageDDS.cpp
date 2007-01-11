@@ -15,9 +15,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
             ((UInt32)(UInt8)(ch3) << 24 ))
 #endif /* defined(MAKE_FOURCC) */
 
-//!
-//! DDS format flags
-//!
+///
+/// DDS format flags
+///
 enum DdsFlag
 {
     DDS_DDPF_SIZE               = sizeof(DDPixelFormat)                 ,
@@ -65,9 +65,9 @@ enum DdsFlag
     DDS_FOURCC_CxV8U8           = 117                            ,
 };
 
-//!
-//! \note this struct should be synchronized with color format definition
-//!
+///
+/// \note this struct should be synchronized with color format definition
+///
 static struct DdpfDesc
 {
     GN::gfx::ClrFmt    clrfmt;
@@ -127,8 +127,8 @@ static struct DdpfDesc
 // local functions
 // *****************************************************************************
 
-//!
-//! return image face count
+///
+/// return image face count
 // -----------------------------------------------------------------------------
 static size_t sGetImageFaceCount( const DDSFileHeader & header )
 {
@@ -157,8 +157,8 @@ static size_t sGetImageFaceCount( const DDSFileHeader & header )
     }
 }
 
-//!
-//! return image depth
+///
+/// return image depth
 // -----------------------------------------------------------------------------
 static UInt32 sGetImageDepth( const DDSFileHeader & header )
 {
@@ -166,7 +166,7 @@ static UInt32 sGetImageDepth( const DDSFileHeader & header )
 }
 
 //
-//! \brief return FMT_INVAID if falied
+/// \brief return FMT_INVAID if falied
 // -----------------------------------------------------------------------------
 static GN::gfx::ClrFmt getImageFormat( const DDPixelFormat & ddpf )
 {
