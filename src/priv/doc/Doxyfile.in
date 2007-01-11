@@ -18,7 +18,10 @@ HHC_LOCATION           = "$HHC_LOCATION"
 GENERATE_TREEVIEW      = YES
 GENERATE_LATEX         = NO
 MACRO_EXPANSION        = YES
-PREDEFINED             = GN_MSWIN GN_POSIX GN_CASSERT GN_CASSERT_EX \
+PREDEFINED             = GN_MSWIN \
+                         GN_POSIX \
+                         GN_CASSERT(X)="" \
+                         GN_CASSERT_EX(X,Y)="" \
                          THIS THIS_ \
                          STDMETHODCALLTYPE \
                          STDMETHOD(X)="virtual HRESULT X" \

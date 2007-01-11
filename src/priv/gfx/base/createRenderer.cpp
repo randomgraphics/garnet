@@ -68,6 +68,8 @@ static GN::gfx::RendererAPI sDetermineRendererAPI()
 // public functions
 // *************************************************************************
 
+const GN::gfx::RenderTargetDesc GN::gfx::RenderTargetDesc::DRAW_TO_BACK_BUFFER = { 0 };
+
 //
 //
 // -------------------------------------------------------------------------

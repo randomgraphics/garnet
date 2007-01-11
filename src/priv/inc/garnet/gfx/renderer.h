@@ -221,66 +221,6 @@ namespace GN { namespace gfx
         CAPS_INVALID
     };
 
-    struct RenderTargetTexture
-    {
-        const Texture * texture; ///< render target
-        size_t          face;    ///< cubemap face. Must be zero for non-cube/stack texture.
-        size_t          level;   ///< mipmap level
-        size_t          slice;   ///< slice index. Must be zero for non 3D texture.
-
-        ///
-        /// equality check
-        ///
-        bool operator==( const RenderTargetTexture & rhs ) const
-        {
-            if( texture != rhs.texture ) return false;
-            if( NULL == texture ) return true; // ignore remaining parameters, if texture is NULL.
-            return face == rhs.face && level == rhs.level && slice == rhs.slice;
-        }
-
-        ///
-        /// equality check
-        ///
-        bool operator!=( const RenderTargetTexture & rhs ) const
-        {
-            if( texture != rhs.texture ) return true;
-            if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
-            return face != rhs.face || level != rhs.level || slice != rhs.slice;
-        }
-    };
-
-    ///
-    /// render target description
-    ///
-    struct RenderTargetDesc
-    {
-        unsigned int count :  5; ///< color buffer count. 0 means draw to back buffer.
-        unsigned int depth :  1; ///< has z buffer or not. Ignored when draw to back buffer.
-        unsigned int aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
-        unsigned int _     :  7; ///< reserved.
-        RenderTargetTexture cbuffers[MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
-        RenderTargetTexture zbuffer; ///< z buffer description. Ignored when draw to back buffer.
-
-        ///
-        /// equality check
-        ///
-        bool operator==( const RenderTargetDesc & rhs ) const
-        {
-            if( count != rhs.count ) return false;
-            if( 0 == count ) return true;
-            if( depth != rhs.depth ) return false;
-            if( aa != rhs.aa ) return false;
-            for( UInt i = 0; i < count; ++i ) if( cbuffers[i] != rhs.cbuffers[i] ) return false;
-            if( depth && zbuffer != rhs.zbuffer ) return false;
-            return true;
-        }
-
-        ///
-        /// equality check
-        ///
-        bool operator!=( const RenderTargetDesc & rhs ) const { return !( *this == rhs ); }
-    };
-
     ///
     /// 清屏标志
     ///
@@ -675,13 +615,13 @@ namespace GN { namespace gfx
         createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints = "" ) = 0;
 
         ///
-        /// Create vetex shader. Parameter 'entry' will be ignored for low-level shading language.
+        /// Create vetex shader.
         ///
         Shader *
         createVS( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
 
         ///
-        /// Create pixel shader. Parameter 'entry' will be ignored for low-level shading language.
+        /// Create pixel shader.
         ///
         Shader *
         createPS( ShadingLanguage lang, const StrA & code, const StrA & hints = "" );
@@ -703,13 +643,13 @@ namespace GN { namespace gfx
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        createTexture( TexType  type,
-                       size_t   sx, size_t sy, size_t sz,
-                       size_t   faces = 0,
-                       size_t   levels = 0,
-                       ClrFmt   format = FMT_DEFAULT,
+        createTexture( TexType   type,
+                       size_t    sx, size_t sy, size_t sz,
+                       size_t    faces = 0,
+                       size_t    levels = 0,
+                       ClrFmt    format = FMT_DEFAULT,
                        BitFields usage = 0,
-                       bool     tiled = false,
+                       bool      tiled = false,
                        const TextureLoader & loader = TextureLoader() )
         {
             TextureDesc desc = { type, (UInt32)sx, (UInt32)sy, (UInt32)sz, (UInt32)faces, (UInt32)levels, format, usage, tiled };
@@ -720,11 +660,11 @@ namespace GN { namespace gfx
         /// Create 1D texture
         ///
         Texture *
-        create1DTexture( size_t   sx,
-                         size_t   levels = 0,
-                         ClrFmt   format = FMT_DEFAULT,
+        create1DTexture( size_t    sx,
+                         size_t    levels = 0,
+                         ClrFmt    format = FMT_DEFAULT,
                          BitFields usage = 0,
-                         bool     tiled = false,
+                         bool      tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
             return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, tiled, loader );
@@ -734,11 +674,11 @@ namespace GN { namespace gfx
         /// Create 2D texture
         ///
         Texture *
-        create2DTexture( size_t   sx, size_t sy,
-                         size_t   levels = 0,
-                         ClrFmt   format = FMT_DEFAULT,
+        create2DTexture( size_t    sx, size_t sy,
+                         size_t    levels = 0,
+                         ClrFmt    format = FMT_DEFAULT,
                          BitFields usage = 0,
-                         bool     tiled = false,
+                         bool      tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
             return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, tiled, loader );
@@ -748,11 +688,11 @@ namespace GN { namespace gfx
         /// Create 3D texture
         ///
         Texture *
-        create3DTexture( size_t   sx, size_t sy, size_t sz,
-                         size_t   levels = 0,
-                         ClrFmt   format = FMT_DEFAULT,
+        create3DTexture( size_t    sx, size_t sy, size_t sz,
+                         size_t    levels = 0,
+                         ClrFmt    format = FMT_DEFAULT,
                          BitFields usage = 0,
-                         bool     tiled = false,
+                         bool      tiled = false,
                          const TextureLoader & loader = TextureLoader() )
         {
             return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, tiled, loader );
@@ -762,11 +702,11 @@ namespace GN { namespace gfx
         /// Create CUBE texture
         ///
         Texture *
-        createCubeTexture( size_t   sx,
-                           size_t   levels = 0,
-                           ClrFmt   format = FMT_DEFAULT,
+        createCubeTexture( size_t    sx,
+                           size_t    levels = 0,
+                           ClrFmt    format = FMT_DEFAULT,
                            BitFields usage = 0,
-                           bool     tiled = false,
+                           bool      tiled = false,
                            const TextureLoader & loader = TextureLoader() )
         {
             return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, tiled, loader );
@@ -901,9 +841,7 @@ namespace GN { namespace gfx
         inline void setGS( const Shader * s );
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
         inline void setRenderState( RenderState state, SInt32 value );
-        inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
-        inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
-        inline void setMsaa( MsaaType );
+        inline void setRenderTargets( const RenderTargetDesc & );
         inline void setViewport( const Rectf & );
         inline void setViewport( float left, float top, float width, float height );
 
@@ -931,7 +869,7 @@ namespace GN { namespace gfx
 
     protected:
 
-        AutoInit<size_t,0> mNumPrims; ///< Number of primitives per frame.
+        AutoInit<size_t,0> mNumPrims;   ///< Number of primitives per frame.
         AutoInit<size_t,0> mNumBatches; ///< Number of draws per frame.
 
     public :
@@ -958,7 +896,7 @@ namespace GN { namespace gfx
         /// \param z     深度值
         /// \param s     模板值
         ///
-        /// \note Can be called outside of drawBegin()/drawEnd() scope.
+        /// \note Must be called btween drawBegin() and drawEnd().
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
@@ -1065,8 +1003,6 @@ namespace GN { namespace gfx
         ///
         /// Draw single 2D textured quad.
         ///
-        /// \note This function may not very effecient.
-        ///
         void draw2DTexturedQuad(
             BitFields options,
             double z = 0.0,
@@ -1101,8 +1037,6 @@ namespace GN { namespace gfx
 
         ///
         /// Draw single 2D solid quad.
-        ///
-        /// \note This function may not very effecient.
         ///
         void draw2DSolidQuad(
             BitFields options,
@@ -1253,7 +1187,7 @@ namespace GN { namespace gfx
         ///
         /// Get parameter check flag.
         ///
-        bool isParameterCheckEnabled() const { return mEnableParameterCheck; }
+        bool parameterCheckEnabled() const { return mEnableParameterCheck; }
 
         ///
         /// Dump current renderer state to string. For debug purpose only.

@@ -3,6 +3,7 @@
 #if !GN_ENABLE_INLINE
 #include "d3d9ContextMgr.inl"
 #endif
+#include "d3d9RenderTargetMgr.h"
 #include "d3d9Shader.h"
 #include "d3d9Texture.h"
 #include "d3d9VertexDecl.h"
@@ -122,6 +123,17 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
 
     _GNGFX_DEVICE_TRACE();
 
+    // initialize render target manager
+    GN_ASSERT( 0 == mRTMgr );
+#if GN_XENON
+    mRTMgr = new D3D9RTMgrXenon( *this );
+#elif GN_PC
+    mRTMgr = new D3D9RTMgrPC( *this );
+#else
+#error Unsupport platform!
+#endif
+    if( !mRTMgr->init() ) return false;
+
     // initialize all render/texture/sampler states
     for( int i = 0; i < MAX_D3D_RENDER_STATES; ++i ) mRenderStates[i].clear();
     for( int s = 0; s < MAX_TEXTURE_STAGES; ++s )
@@ -131,11 +143,6 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
         for( int i = 0; i < MAX_D3D_TEXTURE_STATES; ++i ) mTextureStates[s][i].clear();
     setD3DRenderState( D3DRS_COLORVERTEX, 1 ); // always enable color vertex
 #endif
-
-    // get default color and depth buffer
-    GN_DX9_CHECK_RV( mDevice->GetRenderTarget( 0, &mAutoColor0 ), false );
-    mDevice->GetDepthStencilSurface( &mAutoDepth );
-    GN_ASSERT( mAutoColor0 ); // depth buffer might not be avaliable.
 
     // rebind context
     bindContext( mContext, mContext.flags, true );
@@ -155,12 +162,7 @@ void GN::gfx::D3D9Renderer::contextDeviceDispose()
 
     _GNGFX_DEVICE_TRACE();
 
-	if( mDevice ) mDevice->SetDepthStencilSurface( 0 );
-
-    mAutoColor0.clear();
-    mAutoDepth.clear();
-
-    for( int i = 0; i < MAX_RENDER_TARGETS; ++i ) mRenderTargets[i].clear();
+    safeDelete( mRTMgr );
 
     GN_UNGUARD;
 }
@@ -257,16 +259,18 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContext(
     //
     // Parameter check
     //
-    if( isParameterCheckEnabled() )
+    if( parameterCheckEnabled() )
     {
         // TODO: verify data in new context
         // TODO: make sure all fields in current context are valid.
     }
 
     if( newFlags.state ) bindContextState( newContext, newFlags, forceRebind );
+
 #if !GN_XENON
     if( newFlags.ffp ) bindContextFfp( newContext, newFlags, forceRebind );
 #endif
+
     if( newFlags.data ) bindContextData( newContext, newFlags, forceRebind );
 
     GN_UNGUARD_SLOW;
@@ -333,12 +337,44 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     // bind render targets
     //
-    bindContextRenderTargetsAndViewport( newContext, newFlags, forceRebind );
+    bool needRebindViewport = false;
+    if( newFlags.renderTargets )
+    {
+        mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceRebind, needRebindViewport );
+    }
+
+    // bind viewport
+    if( newFlags.viewport )
+    {
+        if( needRebindViewport || newContext.viewport != mContext.viewport || forceRebind )
+        {
+            float l = newContext.viewport.x;
+            float t = newContext.viewport.y;
+            float r = l + newContext.viewport.w;
+            float b = t + newContext.viewport.h;
+
+            // clamp viewport in valid range
+            clamp<float>( l, 0.0f, 1.0f );
+            clamp<float>( b, 0.0f, 1.0f );
+            clamp<float>( r, 0.0f, 1.0f );
+            clamp<float>( t, 0.0f, 1.0f );
+
+            sSetupViewport( mDevice, l , t, r, b );
+        }
+    }
+    else if( needRebindViewport )
+    {
+        float l = mContext.viewport.x;
+        float t = mContext.viewport.y;
+        float r = l + mContext.viewport.w;
+        float b = t + mContext.viewport.h;
+        sSetupViewport( mDevice, l, t, r, b );
+    }
 
     GN_UNGUARD_SLOW;
 }
 
-//
+/*
 //
 // -----------------------------------------------------------------------------
 GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
@@ -351,7 +387,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
 #if GN_XENON
 	if( newFlags.colorBuffers )
     {
-        /*static const RendererContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
+        static const RendererContext::SurfaceDesc sNullSurface = { 0, 0, 0, 0 };
         const RendererContext::SurfaceDesc *newSurf, *oldSurf;
 
         for( UInt32 i = 0; i < 4; ++i )
@@ -387,7 +423,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
                 }
 
             }
-        }*/
+        }
 
         // setup default render targets
         GN_DX9_CHECK( mDevice->SetRenderTarget( 0, mAutoColor0 ) );
@@ -615,7 +651,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextRenderTargetsAndViewport(
             sSetupViewport( mDevice, l , t, r, b );
         }
     }
-}
+}*/
 
 //
 //

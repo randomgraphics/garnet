@@ -182,8 +182,8 @@ namespace GN { namespace gfx
         struct ResourceHolder
         {
             AutoRefArray<Shader,NUM_SHADER_TYPES>      shaders;
-            AutoRefArray<Texture,MAX_RENDER_TARGETS>   colorBuffers;
-            AutoRef<const Texture>                     depthBuffer;
+            AutoRefArray<Texture,MAX_RENDER_TARGETS>   cbuffers;
+            AutoRef<const Texture>                     zbuffer;
             AutoRefArray<Texture,MAX_TEXTURE_STAGES>   textures;
             AutoRefArray<VtxBuf,MAX_VERTEX_ATTRIBUTES> vtxBufs;
             AutoRef<const IdxBuf>                      idxBuf;

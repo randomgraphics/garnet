@@ -90,7 +90,7 @@ struct GfxResources
 
         if( r.drawBegin() )
         {
-            // draw to rt1
+            /* draw to rt1
             r.setColorBuffer( 0, rt1 );
             r.clearScreen( GN::Vector4f(1,0,0,1) ); // clear to red
 
@@ -110,7 +110,7 @@ struct GfxResources
             r.clearScreen( GN::Vector4f(0,1,0,1) ); // clear to green
             r.setTexture( 0, rt3 );
             r.setRenderStateBlock( rsb1 );
-            r.setRenderStateBlock( rsb2 );
+            r.setRenderStateBlock( rsb2 );*/
 
             // draw end
             r.drawEnd();

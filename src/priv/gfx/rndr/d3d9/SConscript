@@ -12,6 +12,8 @@ sources = [
     'd3d9PxlShaderHlsl.cpp',
     'd3d9Quad.cpp',
     'd3d9Renderer.cpp',
+    'd3d9RenderTargetMgrPC.cpp',
+    'd3d9RenderTargetMgrXenon.cpp',
     'd3d9Resource.cpp',
     'd3d9ResourceManager.cpp',
     'd3d9Texture.cpp',
