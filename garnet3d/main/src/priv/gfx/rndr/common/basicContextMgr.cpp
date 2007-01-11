@@ -21,18 +21,17 @@ void GN::gfx::BasicRenderer::holdContextResources( const RendererContext & conte
         if( context.flags.shaderBit(i) ) mResourceHolder.shaders.data[i].set( context.shaders[i] );
     }
 
-    if( context.flags.colorBuffers )
+    if( context.flags.renderTargets )
     {
+        const RenderTargetDesc & rtd = context.renderTargets;
+        
         UPDATE_AUTOREF_ARRAY(
-            mResourceHolder.colorBuffers,
-            context.numColorBuffers,
-            context.colorBuffers,
+            mResourceHolder.cbuffers,
+            rtd.count,
+            rtd.cbuffers,
             .texture );
-    }
 
-    if( context.flags.depthBuffer )
-    {
-        mResourceHolder.depthBuffer.set( context.depthBuffer.texture );
+        mResourceHolder.zbuffer.set( rtd.zbuffer.texture );
     }
 
     if( context.flags.textures )
@@ -64,8 +63,8 @@ void GN::gfx::BasicRenderer::clearContextResources()
 {
     GN_GUARD;
     mResourceHolder.shaders.clear();
-    mResourceHolder.colorBuffers.clear();
-    mResourceHolder.depthBuffer.clear();
+    mResourceHolder.cbuffers.clear();
+    mResourceHolder.zbuffer.clear();
     mResourceHolder.textures.clear();
     mResourceHolder.vtxBufs.clear();
     mResourceHolder.idxBuf.clear();

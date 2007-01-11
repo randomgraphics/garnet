@@ -14,7 +14,8 @@
 namespace GN { namespace gfx
 {
     class D3D9Resource; // Forward declaration of D3D9Resource.
-
+    class D3D9RTMgrPC;
+    class D3D9RTMgrXenon;
     class D3D9Font;
     class D3D9Quad;
     class D3D9Line;
@@ -116,8 +117,9 @@ namespace GN { namespace gfx
         //
         // Access to D3D interfaces
         //
-        IDirect3D9                  * getD3D() const { GN_ASSERT(mD3D); return mD3D; }
-        IDirect3DDevice9            * getDevice() const { GN_ASSERT(mDevice); return mDevice; }
+        IDirect3D9                  * getD3D() const { return mD3D; }
+        IDirect3DDevice9            * getDevice() const { return mDevice; }
+        IDirect3DDevice9            & getDeviceRef() const { GN_ASSERT(mDevice); return *mDevice; }
         UINT                          getAdapter() const { return mAdapter; }
         D3DDEVTYPE                    getDeviceType() const { return mDeviceType; }
         UINT                          getBehavior() const { return mBehavior; }
@@ -314,7 +316,7 @@ namespace GN { namespace gfx
 
         bool contextInit() { return true; }
         void contextQuit() {}
-        void contextClear() { mContext.resetToDefault(); }
+        void contextClear() { mContext.resetToDefault(); mRTMgr = 0; }
         bool contextDeviceCreate() { return true; }
         bool contextDeviceRestore();
         void contextDeviceDispose();
@@ -376,9 +378,11 @@ namespace GN { namespace gfx
 
         RendererContext mContext;
 
-        AutoComPtr<IDirect3DSurface9> mAutoColor0, mAutoDepth;
-
-        AutoComPtr<IDirect3DSurface9> mRenderTargets[MAX_RENDER_TARGETS];
+#if GN_XENON
+        D3D9RTMgrXenon * mRTMgr;
+#elif GN_PC
+        D3D9RTMgrPC    * mRTMgr;
+#endif
 
         //@}
 

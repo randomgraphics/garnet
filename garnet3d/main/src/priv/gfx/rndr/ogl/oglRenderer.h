@@ -15,6 +15,7 @@ namespace GN { namespace gfx
     class OGLFont;
     class OGLQuad;
     class OGLLine;
+    class OGLBasicRTMgr;
 
     ///
     /// OGL renderer class
@@ -286,7 +287,7 @@ namespace GN { namespace gfx
     private:
 
         RendererContext mContext;
-        UInt32 mColorBufferWidth, mColorBufferHeight; // current render target size
+        OGLBasicRTMgr * mRTMgr;
 
         //@}
 

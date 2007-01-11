@@ -109,7 +109,6 @@ namespace GN
     GN_FORCE_INLINE TO safeCast( FROM from )
     {
     #if GN_DEBUG_BUILD && ( !GN_MSVC || defined(_CPPRTTI) )
-        GN_ASSERT( 0 == from || dynamic_cast<TO>(from) );
         return dynamic_cast<TO>(from);
     #else
         return static_cast<TO>(from);

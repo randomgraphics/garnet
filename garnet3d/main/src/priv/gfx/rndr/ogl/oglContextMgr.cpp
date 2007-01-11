@@ -3,6 +3,7 @@
 #if !GN_ENABLE_INLINE
 #include "oglContextMgr.inl"
 #endif
+#include "oglRenderTargetMgr.h"
 #include "oglShader.h"
 #include "oglTexture.h"
 #include "oglVtxFmt.h"
@@ -65,74 +66,6 @@ static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
     #undef GNGFX_DEFINE_TSV
 };
 
-//
-//
-// ------------------------------------------------------------------------
-static GN_INLINE void
-sCopyFrameBufferTo( const GN::gfx::RendererContext::SurfaceDesc & surf )
-{
-    using namespace GN;
-    using namespace GN::gfx;
-    
-    GN_ASSERT( surf.texture );
-
-    const OGLTexture * tex = safeCast<const OGLTexture*>(surf.texture);
-
-    // get texture size
-    UInt32 sx, sy;
-    tex->getMipSize<UInt32>( surf.level, &sx, &sy );
-
-    // copy framebuffer to current (old) render target texture
-    GLint currentTexID;
-    switch( tex->getDesc().type )
-    {
-        case TEXTYPE_CUBE :
-            GN_ASSERT( sx == sy );
-            GN_OGL_CHECK(
-                glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &currentTexID ) );
-            GN_OGL_CHECK(
-                glBindTexture( GL_TEXTURE_CUBE_MAP_ARB,
-                    tex->getOGLTexture() ) );
-            GN_OGL_CHECK(
-                glCopyTexSubImage2D(
-                    OGLTexture::sCubeface2OGL( surf.face ), 0,
-                    0, 0, 0, 0, sx, sx ) );
-            GN_OGL_CHECK(
-                glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, currentTexID ) );
-            break;
-
-        case TEXTYPE_2D :
-            GN_OGL_CHECK(
-                glGetIntegerv( GL_TEXTURE_BINDING_2D, &currentTexID ) );
-            GN_OGL_CHECK(
-                glBindTexture( GL_TEXTURE_2D,
-                    tex->getOGLTexture() ) );
-            GN_OGL_CHECK(
-                glCopyTexSubImage2D( GL_TEXTURE_2D, 0,
-                    0, 0, 0, 0, sx, sy ) );
-            GN_OGL_CHECK(
-                glBindTexture( GL_TEXTURE_2D, currentTexID ) );
-            break;
-
-        case TEXTYPE_1D :
-            GN_ASSERT( 1 == sy );
-            GN_OGL_CHECK(
-                glGetIntegerv( GL_TEXTURE_BINDING_1D, &currentTexID ) );
-            GN_OGL_CHECK(
-                glBindTexture( GL_TEXTURE_1D,
-                    tex->getOGLTexture() ) );
-            GN_OGL_CHECK(
-                glCopyTexSubImage1D( GL_TEXTURE_1D, 0, 0, 0, 0, sx ) );
-            GN_OGL_CHECK(
-                glBindTexture( GL_TEXTURE_1D, currentTexID ) );
-            break;
-
-        default:
-            GN_ERROR(sLogger)( "invalid texture type!" );
-            return;
-    }
-}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -144,6 +77,7 @@ void GN::gfx::OGLRenderer::contextClear()
 {
     _GNGFX_DEVICE_TRACE();
     mContext.resetToDefault();
+    mRTMgr = 0;
 }
 
 //
@@ -162,6 +96,11 @@ bool GN::gfx::OGLRenderer::contextDeviceRestore()
 {
     _GNGFX_DEVICE_TRACE();
 
+    // create render target manager
+    GN_ASSERT( 0 == mRTMgr );
+    mRTMgr = new OGLRTMgrCopyFrame( *this );
+    if( !mRTMgr->init() ) return false;
+
     // rebind context
     bindContext( mContext, mContext.flags, true );
 
@@ -174,6 +113,8 @@ bool GN::gfx::OGLRenderer::contextDeviceRestore()
 void GN::gfx::OGLRenderer::contextDeviceDispose()
 {
     _GNGFX_DEVICE_TRACE();
+
+    safeDelete( mRTMgr );
 }
 
 //
@@ -256,7 +197,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
     //
     // Parameter check
     //
-    if( isParameterCheckEnabled() )
+    if( parameterCheckEnabled() )
     {
         // TODO: verify data in new context
         // TODO: make sure all fields in current context are valid.
@@ -264,9 +205,40 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
 
     if( newFlags.state )
     {
-        bindContextShaders( newContext, newFlags, forceRebind );
-        bindContextRenderStates( newContext, newFlags, forceRebind );
-        bindContextRenderTargetsAndViewport( newContext, newFlags, forceRebind );
+        if( newFlags.shaders ) bindContextShaders( newContext, newFlags, forceRebind );
+
+        if( newFlags.rsb ) bindContextRenderStates( newContext, newFlags, forceRebind );
+
+        // bind render targets
+        bool rebindViewport = false;
+        if( newFlags.renderTargets )
+        {
+            mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceRebind, rebindViewport );
+        }
+
+        // bind viewport
+        if( newFlags.viewport )
+        {
+            if( rebindViewport || newContext.viewport != mContext.viewport || forceRebind )
+            {
+                UInt32 rtw, rth;
+                mRTMgr->getRTSize( rtw, rth );
+                GLint x = (GLint)( newContext.viewport.x * rtw );
+                GLint y = (GLint)( newContext.viewport.y * rth );
+                GLsizei w = (GLsizei)( newContext.viewport.w * rtw );
+                GLsizei h = (GLsizei)( newContext.viewport.h * rth );
+                GN_OGL_CHECK( glViewport( x, y, w, h ) );
+            }
+        } else if( rebindViewport )
+        {
+            UInt32 rtw, rth;
+            mRTMgr->getRTSize( rtw, rth );
+            GLint x = (GLint)( mContext.viewport.x * rtw );
+            GLint y = (GLint)( mContext.viewport.y * rth );
+            GLsizei w = (GLsizei)( mContext.viewport.w * rtw );
+            GLsizei h = (GLsizei)( mContext.viewport.h * rth );
+            GN_OGL_CHECK( glViewport( x, y, w, h ) );
+        }
     }
 #if !GN_XENON
     if( newFlags.ffp ) bindContextFfp( newContext, newFlags, forceRebind );
@@ -286,7 +258,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
 {
     GN_GUARD_SLOW;
 
-    if( 0 == newFlags.shaders ) return;
+    GN_ASSERT( newFlags.shaders );
 
     const Shader * glslVs = 0;
     const Shader * glslPs = 0;
@@ -424,7 +396,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
 {
     GN_GUARD_SLOW;
 
-    if( 0 == newFlags.rsb ) return;
+    GN_ASSERT( newFlags.rsb );
 
     GN_ASSERT( newContext.rsb.valid() );
 
@@ -500,95 +472,6 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
     //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR , spec ) );
     //GN_OGL_CHECK( glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION , emis ) );
     //GN_OGL_CHECK( glMateriali ( GL_FRONT_AND_BACK, GL_SHININESS, shin ) );
-
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderTargetsAndViewport(
-    const RendererContext & newContext,
-    RendererContext::FieldFlags newFlags,
-    bool forceRebind )
-{
-    GN_GUARD_SLOW;
-
-    // bind color buffers
-    bool rebindViewport = false;
-    if( newFlags.colorBuffers )
-    {
-        UInt32 count = min( (UInt32)newContext.numColorBuffers, getCaps( CAPS_MAX_RENDER_TARGETS ) );
-        if( 0 == count ) count = 1;
-        for( UInt32 i = 0; i < count; ++i )
-        {
-            const RendererContext::SurfaceDesc * oldSurface = i < mContext.numColorBuffers ? &mContext.colorBuffers[i] : 0;
-            const RendererContext::SurfaceDesc * newSurface = i < newContext.numColorBuffers ? &newContext.colorBuffers[i] : 0;
-
-            if( forceRebind || // if "force" rebinding, then do it.
-                oldSurface != newSurface && // if oldSurface and newSurface are both NULL, then do nothing.
-                // program reaches here, means at least one surface is _NOT_ null. So if one of them is NULL
-                // or content of the two surfaces are different, we have to do the binding.
-                ( NULL == oldSurface || NULL == newSurface || *oldSurface != *newSurface ) )
-            {
-                // Do copy only when oldSurface points to a texture.
-                if( oldSurface && oldSurface->texture ) sCopyFrameBufferTo( *oldSurface );
-
-                // update render target size
-                if( 0 == i )
-                {
-                    UInt32 oldw = mColorBufferWidth;
-                    UInt32 oldh = mColorBufferHeight;
-                    if( newSurface && newSurface->texture )
-                    {
-                        newSurface->texture->getMipSize<UInt32>( newSurface->level, &mColorBufferWidth, &mColorBufferHeight );
-                    }
-                    else
-                    {
-                        // use default back buffer size
-                        mColorBufferWidth = getDispDesc().width;
-                        mColorBufferHeight = getDispDesc().height;
-                    }
-
-                    rebindViewport = ( oldw != mColorBufferWidth || oldh != mColorBufferHeight );
-                }
-            }
-        }
-    }
-
-    // bind depth buffer
-    if( newFlags.depthBuffer )
-    {
-        const RendererContext::SurfaceDesc & oldSurface = mContext.depthBuffer;
-        const RendererContext::SurfaceDesc & newSurface = newContext.depthBuffer;
-
-        if( oldSurface.texture && ( oldSurface != newSurface || forceRebind ) )
-        {
-            sCopyFrameBufferTo( oldSurface );
-        }
-    }
-
-    // bind viewport
-    if( newFlags.viewport )
-    {
-        if( rebindViewport || newContext.viewport != mContext.viewport || forceRebind )
-        {
-            GLint x = (GLint)( newContext.viewport.x * mColorBufferWidth );
-            GLint y = (GLint)( newContext.viewport.y * mColorBufferHeight );
-            GLsizei w = (GLsizei)( newContext.viewport.w * mColorBufferWidth );
-            GLsizei h = (GLsizei)( newContext.viewport.h * mColorBufferHeight );
-            GN_OGL_CHECK( glViewport( x, y, w, h ) );
-        }
-    } else if( rebindViewport )
-    {
-        GLint x = (GLint)( mContext.viewport.x * mColorBufferWidth );
-        GLint y = (GLint)( mContext.viewport.y * mColorBufferHeight );
-        GLsizei w = (GLsizei)( mContext.viewport.w * mColorBufferWidth );
-        GLsizei h = (GLsizei)( mContext.viewport.h * mColorBufferHeight );
-        GN_OGL_CHECK( glViewport( x, y, w, h ) );
-    }
-
-    GN_OGL_CHECK( ; );
 
     GN_UNGUARD_SLOW;
 }

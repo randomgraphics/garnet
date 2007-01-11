@@ -124,25 +124,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setColorBuffer( size_t index, const Texture * texture, size_t face, size_t level, size_t slice )
+    inline void Renderer::setRenderTargets( const RenderTargetDesc & desc )
     {
-        _GNGFX_CONTEXT_UPDATE( setColorBuffer( index, texture, face, level, slice ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void Renderer::setDepthBuffer( const Texture * texture, size_t face, size_t level, size_t slice )
-    {
-        _GNGFX_CONTEXT_UPDATE( setDepthBuffer( texture, face, level, slice ) );
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline void Renderer::setMsaa( MsaaType type )
-    {
-        _GNGFX_CONTEXT_UPDATE( setMsaa( type ) );
+        _GNGFX_CONTEXT_UPDATE( setRenderTargets( desc ) );
     }
 
     //
