@@ -1,15 +1,15 @@
 #ifndef __GN_BASE_EXCEPTION_H__
 #define __GN_BASE_EXCEPTION_H__
 // *****************************************************************************
-//! \file    exception.h
-//! \brief   exception class and handleing
-//! \author  chenlee (2005.4.17)
+/// \file    exception.h
+/// \brief   exception class and handleing
+/// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
 #include <exception>
 
 // *****************************************************************************
-//! \name                  exception macro/class
+/// \name                  exception macro/class
 // *****************************************************************************
 
 //@{
@@ -22,33 +22,33 @@
 #define GN_CATCH(X) catch(X)
 #endif
 
-//!
-//! <b>ALWAYS</b> use this macro when throwing a exception
-//!
+///
+/// <b>ALWAYS</b> use this macro when throwing a exception
+///
 #define GN_THROW( msg ) \
     throw GN::Exception( msg, GN_FUNCTION, __FILE__, __LINE__ )
 
-//!
-//! Throw a custom exception class
-//!
+///
+/// Throw a custom exception class
+///
 #define GN_THROW_EX( exp ) \
     throw exp
 
 namespace GN
 {
-    //!
-    //! custom exception class
-    //!
+    ///
+    /// custom exception class
+    ///
     struct Exception
     {
-        const char * msg;  //!< exception message
-        const char * func; //!< location of the exception
-        const char * file; //!< location of the exception
-        int          line; //!< location of the exception
+        const char * msg;  ///< exception message
+        const char * func; ///< location of the exception
+        const char * file; ///< location of the exception
+        int          line; ///< location of the exception
 
-        //!
-        //! constructor
-        //!
+        ///
+        /// constructor
+        ///
         Exception(
             const char * imsg,
             const char * ifunc,
@@ -56,15 +56,15 @@ namespace GN
             int          iline ) throw()
             : msg(imsg), func(ifunc), file(ifile), line(iline) {}
 
-        //!
-        //! copy constructor
-        //!
+        ///
+        /// copy constructor
+        ///
         Exception( const GN::Exception & e ) throw()
             : msg(e.msg), func(e.func), file(e.file), line(e.line) {}
 
-        //!
-        //! assignment
-        //!
+        ///
+        /// assignment
+        ///
         Exception & operator = ( const GN::Exception & e ) throw()
         {
             msg = e.msg;
@@ -75,9 +75,9 @@ namespace GN
         }
     };
 
-    //!
-    //! exception handler
-    //!
+    ///
+    /// exception handler
+    ///
     inline void exceptionHandler(
         const char * msg,
         const char * func,
@@ -87,9 +87,9 @@ namespace GN
         GN_LOG_EX( getLogger("GN.base.exception"), Logger::LL_FATAL, func, file, line )( msg );
     }
 
-    //!
-    //! exception handler
-    //!
+    ///
+    /// exception handler
+    ///
     inline void exceptionHandler( const Exception & e )
     {
         exceptionHandler( e.msg, e.func, e.file, e.line );
@@ -101,7 +101,7 @@ namespace GN
 
 // *****************************************************************************
 //
-//! \name                      function guard macros
+/// \name                      function guard macros
 //
 //
 // Usage:
@@ -134,9 +134,9 @@ namespace GN
 
 //@{
 
-//!
-//! unguard macro
-//!
+///
+/// unguard macro
+///
 #define GN_UNGUARD_ALWAYS_DO( something )                                   \
     } GN_CATCH( const GN::Exception & e ) {                                 \
         GN::exceptionHandler( e );                                          \

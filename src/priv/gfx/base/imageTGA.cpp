@@ -7,20 +7,20 @@
 #pragma pack(push,1)
 struct TGA_HEADER
 {
-    UInt8  identsize;          //!< size of ID field that follows 18 UInt8 header (0 usually)
-    UInt8  colourmaptype;      //!< type of colour map 0=none, 1=has palette
-    UInt8  imagetype;          //!< type of image 0=none,1=indexed,2=rgb,3=grey,(9,10,11,32,33)=rle packed
+    UInt8  identsize;          ///< size of ID field that follows 18 UInt8 header (0 usually)
+    UInt8  colourmaptype;      ///< type of colour map 0=none, 1=has palette
+    UInt8  imagetype;          ///< type of image 0=none,1=indexed,2=rgb,3=grey,(9,10,11,32,33)=rle packed
 
-    UInt16 colourmapstart;     //!< first colour map entry in palette
-    UInt16 colourmaplength;    //!< number of colours in palette
-    UInt8  colourmapbits;      //!< number of bits per palette entry 15,16,24,32
+    UInt16 colourmapstart;     ///< first colour map entry in palette
+    UInt16 colourmaplength;    ///< number of colours in palette
+    UInt8  colourmapbits;      ///< number of bits per palette entry 15,16,24,32
 
-    UInt16 xstart;             //!< image x origin
-    UInt16 ystart;             //!< image y origin
-    UInt16 width;              //!< image width in pixels
-    UInt16 height;             //!< image height in pixels
-    UInt8  bits;               //!< image bits per pixel 8,16,24,32
-    UInt8  descriptor;         //!< image descriptor bits (vh flip bits)
+    UInt16 xstart;             ///< image x origin
+    UInt16 ystart;             ///< image y origin
+    UInt16 width;              ///< image width in pixels
+    UInt16 height;             ///< image height in pixels
+    UInt8  bits;               ///< image bits per pixel 8,16,24,32
+    UInt8  descriptor;         ///< image descriptor bits (vh flip bits)
 };
 #pragma pack(pop)
 GN_CASSERT( sizeof(TGA_HEADER) == 18 );

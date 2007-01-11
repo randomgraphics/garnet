@@ -294,9 +294,9 @@ public:
     }
 };
 
-//!
-//! GFX module test application
-//!
+///
+/// GFX module test application
+///
 class GfxTestApp : public app::SampleApp
 {
     Scene * mScene;

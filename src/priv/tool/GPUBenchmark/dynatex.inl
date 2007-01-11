@@ -3,9 +3,9 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::gfx::d3d9;
 
-//!
-//! Texture bandwidth benchmarking application
-//!
+///
+/// Texture bandwidth benchmarking application
+///
 class TestTextureBandwidth : public BasicTestCase
 {
     const ClrFmt   TEX_FORMAT;

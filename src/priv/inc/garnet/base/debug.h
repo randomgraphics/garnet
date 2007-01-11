@@ -1,14 +1,14 @@
 #ifndef __GN_BASE_DEBUG_H__
 #define __GN_BASE_DEBUG_H__
 // *****************************************************************************
-//! \file    debug.h
-//! \brief   debug functions and macros
-//! \author  chenlee (2005.4.17)
+/// \file    debug.h
+/// \brief   debug functions and macros
+/// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
-//!
-//! 调试器断点
-//!
+///
+/// 调试器断点
+///
 #if GN_X86
 #if GN_GCC
 #define GN_DEBUG_BREAK() asm("int $3")
@@ -21,9 +21,9 @@
 #define GN_DEBUG_BREAK() ::GN::debugBreak()
 #endif
 
-//!
-//! Assert failture
-//!
+///
+/// Assert failture
+///
 #define GN_ASSERT_FAILURE( desc )                                \
     {                                                            \
         static bool sIgnoreFromNowOn = false;                    \
@@ -32,65 +32,65 @@
         { GN_DEBUG_BREAK(); }                                    \
     }
 
-//!
-//! Perform runtime assert.
-//!
-//! This macro will perform assertion in all builds, in case you want assert in
-//! release build. Normally, you don't need this.
-//!
+///
+/// Perform runtime assert.
+///
+/// This macro will perform assertion in all builds, in case you want assert in
+/// release build. Normally, you don't need this.
+///
 #define GN_DO_ASSERT( exp, desc ) if( !(exp) ) GN_ASSERT_FAILURE(desc) else void(0)
 
 
-//!
-//! Assert macro with description
-//!
+///
+/// Assert macro with description
+///
 #if GN_DEBUG_BUILD
 #define GN_ASSERT_EX( exp, desc ) GN_DO_ASSERT( exp, desc )
 #else
 #define GN_ASSERT_EX( exp, desc ) void(0)
 #endif
 
-//!
-//! Verification macro with description
-//!
+///
+/// Verification macro with description
+///
 #if GN_DEBUG_BUILD
 #define GN_VERIFY_EX GN_ASSERT_EX
 #else
 #define GN_VERIFY_EX( exp, desc ) (exp)
 #endif
 
-//!
-//! assert macro
-//!
+///
+/// assert macro
+///
 #define GN_ASSERT( exp ) GN_ASSERT_EX( exp, #exp )
 
-//!
-//! verify macro
-//!
+///
+/// verify macro
+///
 #define GN_VERIFY( exp ) GN_VERIFY_EX( exp, #exp )
 
-//!
-//! Meet unexpected value
-//!
+///
+/// Meet unexpected value
+///
 #define GN_UNEXPECTED() GN_ASSERT_FAILURE( "Unexpected value or behaviour" )
 
-//!
-//! Assert for unimplemented functionality
-//!
+///
+/// Assert for unimplemented functionality
+///
 #define GN_UNIMPL() GN_ASSERT_FAILURE( "Unimplemented!" )
 
-//!
-//! Output a warning message for unimplemented functionality
-//!
+///
+/// Output a warning message for unimplemented functionality
+///
 #define GN_UNIMPL_WARNING() GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.unimpl"))( "Function %s is not implmented yet.", GN_FUNCTION ) );
 
-//!
-//! Output a todo message.
-//!
+///
+/// Output a todo message.
+///
 #define GN_TODO(msg) GN_DO_ONCE( GN_WARN(GN::getLogger("GN.base.todo"))( "TODO: %s", msg ) );
 
 // *****************************************************************************
-//! \name error check macros
+/// \name error check macros
 // *****************************************************************************
 
 //@{
@@ -126,9 +126,9 @@
 
 #if GN_MSWIN
 
-//!
-//! check return value of Windows function (general version)
-//!
+///
+/// check return value of Windows function (general version)
+///
 #define GN_MSW_CHECK_DO( func, something )                                   \
     if( true ) {                                                             \
         intptr_t rr = (intptr_t)(func);                                      \
@@ -141,28 +141,28 @@
         }                                                                    \
     } else void(0)
 
-//!
-//! check return value of Windows function
-//!
+///
+/// check return value of Windows function
+///
 #if GN_DEBUG_BUILD
 #define GN_MSW_CHECK( func ) GN_MSW_CHECK_DO( func, void(0); )
 #else
 #define GN_MSW_CHECK( func )      func
 #endif
 
-//!
-//! check return value of Windows function, return if failed
-//!
+///
+/// check return value of Windows function, return if failed
+///
 #define GN_MSW_CHECK_R( func ) GN_MSW_CHECK_DO( func, return; )
 
-//!
-//! check return value of Windows function, return if failed
-//!
+///
+/// check return value of Windows function, return if failed
+///
 #define GN_MSW_CHECK_RV( func, rval ) GN_MSW_CHECK_DO( func, return rval; )
 
-//!
-//! DX9 error check routine
-//!
+///
+/// DX9 error check routine
+///
 #ifdef D3DCOMPILE_USEVOIDS
 #define GN_DX9_CHECK_DO( func, something ) func
 #else
@@ -178,28 +178,28 @@
     } else void(0)
 #endif // D3DCOMPILE_USEVOIDS
 
-//!
-//! DX error check routine
-//!
+///
+/// DX error check routine
+///
 #if GN_DEBUG_BUILD
 #define GN_DX9_CHECK( func )         GN_DX9_CHECK_DO( func, )
 #else
 #define GN_DX9_CHECK( func )         func
 #endif
 
-//!
-//! DX error check routine
-//!
+///
+/// DX error check routine
+///
 #define GN_DX9_CHECK_R( func )        GN_DX9_CHECK_DO( func, return; )
 
-//!
-//! DX error check routine
-//!
+///
+/// DX error check routine
+///
 #define GN_DX9_CHECK_RV( func, rval ) GN_DX9_CHECK_DO( func, return rval; )
 
-//!
-//! DX9 error check routine
-//!
+///
+/// DX9 error check routine
+///
 #define GN_DX10_CHECK_DO( func, something )                                  \
     if( true ) {                                                             \
         HRESULT rr = func;                                                   \
@@ -211,30 +211,30 @@
         }                                                                    \
     } else void(0)
 
-//!
-//! DX error check routine
-//!
+///
+/// DX error check routine
+///
 #if GN_DEBUG_BUILD
 #define GN_DX10_CHECK( func )         GN_DX10_CHECK_DO( func, )
 #else
 #define GN_DX10_CHECK( func )         func
 #endif
 
-//!
-//! DX error check routine
-//!
+///
+/// DX error check routine
+///
 #define GN_DX10_CHECK_R( func )        GN_DX10_CHECK_DO( func, return; )
 
-//!
-//! DX error check routine
-//!
+///
+/// DX error check routine
+///
 #define GN_DX10_CHECK_RV( func, rval ) GN_DX10_CHECK_DO( func, return rval; )
 
 #elif GN_POSIX
 
-//!
-//! check return value of XLib function (general version)
-//!
+///
+/// check return value of XLib function (general version)
+///
 #define GN_X_CHECK_DO( func, something )                    \
     if( true ) {                                            \
         Status rr = (func);                                 \
@@ -246,23 +246,23 @@
         }                                                   \
     } else void(0)
 
-//!
-//! check return value of XLib function
-//!
+///
+/// check return value of XLib function
+///
 #if GN_DEBUG_BUILD
 #define GN_X_CHECK( func ) GN_X_CHECK_DO( func, void(0); )
 #else
 #define GN_X_CHECK( func ) func
 #endif
 
-//!
-//! check return value of XLib function, return if failed
-//!
+///
+/// check return value of XLib function, return if failed
+///
 #define GN_X_CHECK_R( func ) GN_X_CHECK_DO( func, return; )
 
-//!
-//! check return value of XLib function, return if failed
-//!
+///
+/// check return value of XLib function, return if failed
+///
 #define GN_X_CHECK_RV( func, rval ) GN_X_CHECK_DO( func, return rval; )
 
 #endif
@@ -272,30 +272,30 @@
 namespace GN
 {
     // ************************************************************************
-    //! \name                       Debug functions
+    /// \name                       Debug functions
     // ************************************************************************
 
     //@{
 
     enum RuntimeAssertBehavior
     {
-        RAB_ASK_USER,       //!< Ask user how to respond assert failure. This is default behavior
-        RAB_BREAK_ALWAYS,   //!< Always break into debugger.
-        RAB_LOG_ONLY,       //!< Ignore assert failure, output log message only.
-        RAB_SILENCE,        //!< Silence ignore assert failure. No break, No message.
+        RAB_ASK_USER,       ///< Ask user how to respond assert failure. This is default behavior
+        RAB_BREAK_ALWAYS,   ///< Always break into debugger.
+        RAB_LOG_ONLY,       ///< Ignore assert failure, output log message only.
+        RAB_SILENCE,        ///< Silence ignore assert failure. No break, No message.
     };
 
-    //!
-    //! Change runtime assert behavior. Default is RAB_ASK_USER.
-    //!
-    //! \return
-    //!     Return old behavior.
-    //!
+    ///
+    /// Change runtime assert behavior. Default is RAB_ASK_USER.
+    ///
+    /// \return
+    ///     Return old behavior.
+    ///
     RuntimeAssertBehavior setRuntimeAssertBehavior( RuntimeAssertBehavior );
 
-    //!
-    //! break into debugger ( ASCII version )
-    //!
+    ///
+    /// break into debugger ( ASCII version )
+    ///
     bool
     assertFunc(
         const char * msg,
@@ -304,16 +304,16 @@ namespace GN
         bool *       ignore ) throw();
 
 #if !GN_X86
-	//!
-	//! Debug break function
-	//!
+	///
+	/// Debug break function
+	///
 	void debugBreak();
 #endif
 
 #ifdef GN_MSWIN
-    //!
-    //! get OS error info (Windows specific)
-    //!
+    ///
+    /// get OS error info (Windows specific)
+    ///
     const char * getOSErrorInfo() throw();
 #endif
 

@@ -1,18 +1,18 @@
 #ifndef __GN_WIN_WINDOWMSW_H__
 #define __GN_WIN_WINDOWMSW_H__
 // *****************************************************************************
-//! \file    win/windowMsw.h
-//! \brief   Window class on MS Windows
-//! \author  chenlee (2006.2.23)
+/// \file    win/windowMsw.h
+/// \brief   Window class on MS Windows
+/// \author  chenlee (2006.2.23)
 // *****************************************************************************
 
 #if GN_MSWIN && !GN_XENON
 
 namespace GN { namespace win
 {
-    //!
-    //! Window class on MS Windows
-    //!
+    ///
+    /// Window class on MS Windows
+    ///
     class WindowMsw : public Window, public StdClass
     {
          GN_DECLARE_STDCLASS( WindowMsw, StdClass );

@@ -2,9 +2,9 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.test.input");
 
-//!
-//! input module test application
-//!
+///
+/// input module test application
+///
 class InputTest
 {
     GN::AutoObjPtr<GN::win::Window> mWin;
@@ -95,19 +95,19 @@ class InputTest
 
 public:
 
-    //!
-    //! Default constructor
-    //!
+    ///
+    /// Default constructor
+    ///
     InputTest() {}
 
-    //!
-    //! Destructor
-    //!
+    ///
+    /// Destructor
+    ///
     ~InputTest() { quit(); }
 
-    //!
-    //! Initialize test application
-    //!
+    ///
+    /// Initialize test application
+    ///
     bool init( const char * api )
     {
         if( !createWindow() || !createInput(api) ) return false;
@@ -118,18 +118,18 @@ public:
         return true;
     }
 
-    //!
-    //! Quit test application
-    //!
+    ///
+    /// Quit test application
+    ///
     void quit()
     {
         mInput.clear();
         mWin.clear();
     }
 
-    //!
-    //! Run test application
-    //!
+    ///
+    /// Run test application
+    ///
     int run()
     {
         if( !mInput )
@@ -148,9 +148,9 @@ public:
     }
 };
 
-//!
-//! Print usage
-//!
+///
+/// Print usage
+///
 void usage( const char * appName )
 {
     printf(
@@ -162,9 +162,9 @@ void usage( const char * appName )
         appName );
 }
 
-//!
-//! Main entry point
-//!
+///
+/// Main entry point
+///
 int main( int argc, const char * argv[] )
 {
     const char * module;

@@ -1,57 +1,57 @@
 #ifndef __GN_GFX_TEXTURE_H__
 #define __GN_GFX_TEXTURE_H__
 // *****************************************************************************
-//! \file    texture.h
-//! \brief   Texture interface
-//! \author  chenlee (2005.9.30)
+/// \file    texture.h
+/// \brief   Texture interface
+/// \author  chenlee (2005.9.30)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    //!
-    //! 贴图类型
-    //!
+    ///
+    /// 贴图类型
+    ///
     enum TexType
     {
-        TEXTYPE_1D,    //!< 1D texture
-        TEXTYPE_2D,    //!< 2D texture
-        TEXTYPE_3D,    //!< 3D texture
-        TEXTYPE_CUBE,  //!< Cube texture
-        TEXTYPE_STACK, //!< Stack texture
-        NUM_TEXTYPES   //!< Number of avaliable texture types.
+        TEXTYPE_1D,    ///< 1D texture
+        TEXTYPE_2D,    ///< 2D texture
+        TEXTYPE_3D,    ///< 3D texture
+        TEXTYPE_CUBE,  ///< Cube texture
+        TEXTYPE_STACK, ///< Stack texture
+        NUM_TEXTYPES   ///< Number of avaliable texture types.
     };
 
-    //!
-    //! Texture usage.
-    //!
+    ///
+    /// Texture usage.
+    ///
     enum TextureUsage
     {
-        TEXUSAGE_DYNAMIC        = 1<<0, //!< dynamic texture
-        TEXUSAGE_AUTOGEN_MIPMAP = 1<<1, //!< texture that can auto-generate mipmaps
-        TEXUSAGE_RENDER_TARGET  = 1<<2, //!< render target texture
-        TEXUSAGE_DEPTH          = 1<<3, //!< depth texture
-        TEXUSAGE_READBACK       = 1<<4, //!< Normally, read data from texture is extremly slow.
-                                        //!< Use this flag to increase reading speed, in exchange for rendering speed.
-                                        //!< Use this flag when you really need it.
+        TEXUSAGE_DYNAMIC        = 1<<0, ///< dynamic texture
+        TEXUSAGE_AUTOGEN_MIPMAP = 1<<1, ///< texture that can auto-generate mipmaps
+        TEXUSAGE_RENDER_TARGET  = 1<<2, ///< render target texture
+        TEXUSAGE_DEPTH          = 1<<3, ///< depth texture
+        TEXUSAGE_READBACK       = 1<<4, ///< Normally, read data from texture is extremly slow.
+                                        ///< Use this flag to increase reading speed, in exchange for rendering speed.
+                                        ///< Use this flag when you really need it.
     };
 
-    //!
-    //! 贴图过滤器
-    //!
+    ///
+    /// 贴图过滤器
+    ///
     enum TexFilter
     {
-        TEXFILTER_NEAREST,      //!< nearest
-        TEXFILTER_LINEAR,       //!< linear
-        TEXFILTER_N_MIP_N,      //!< NEAREST_MIPMAP_NEAREST
-        TEXFILTER_N_MIP_L,      //!< NEAREST_MIPMAP_LINEAR
-        TEXFILTER_L_MIP_N,      //!< LINEAR_MIPMAP_NEAREST
-        TEXFILTER_L_MIP_L,      //!< LINEAR_MIPMAP_LINEAR
+        TEXFILTER_NEAREST,      ///< nearest
+        TEXFILTER_LINEAR,       ///< linear
+        TEXFILTER_N_MIP_N,      ///< NEAREST_MIPMAP_NEAREST
+        TEXFILTER_N_MIP_L,      ///< NEAREST_MIPMAP_LINEAR
+        TEXFILTER_L_MIP_N,      ///< LINEAR_MIPMAP_NEAREST
+        TEXFILTER_L_MIP_L,      ///< LINEAR_MIPMAP_LINEAR
         NUM_TEXFILTERS
     };
 
-    //!
-    //! 贴图Wrap Mode
-    //!
+    ///
+    /// 贴图Wrap Mode
+    ///
     enum TexWrap
     {
         TEXWRAP_REPEAT,
@@ -60,74 +60,74 @@ namespace GN { namespace gfx
         NUM_TEXWRAPS
     };
 
-    //!
-    //! cube texture face
-    //!
+    ///
+    /// cube texture face
+    ///
     enum CubeFace
     {
-        CUBEFACE_PX = 0, //!< positive X
-        CUBEFACE_NX, //!< negative X
-        CUBEFACE_PY, //!< positive Y
-        CUBEFACE_NY, //!< negative Y
-        CUBEFACE_PZ, //!< positive Z
-        CUBEFACE_NZ, //!< negative Z
+        CUBEFACE_PX = 0, ///< positive X
+        CUBEFACE_NX, ///< negative X
+        CUBEFACE_PY, ///< positive Y
+        CUBEFACE_NY, ///< negative Y
+        CUBEFACE_PZ, ///< positive Z
+        CUBEFACE_NZ, ///< negative Z
         NUM_CUBEFACES
     };
 
     struct Texture;
 
-    //!
-    //! Texture content loader
-    //!
+    ///
+    /// Texture content loader
+    ///
     typedef Delegate1<bool,Texture&> TextureLoader;
 
-    //!
-    //! Texture descriptor
-    //!
+    ///
+    /// Texture descriptor
+    ///
     struct TextureDesc
     {
-        TexType   type;      //!< texture type
-        UInt32    width;     //!< basemap width
-        UInt32    height;    //!< basemap height
-        UInt32    depth;     //!< basemap depth
-        UInt32    faces;     //!< face count. When used as parameter of Renderer::createTexture(),
-                             //!< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
-        UInt32    levels;    //!< mipmap level count. When used as parameter of Renderer::createTexture(),
-                             //!< you may set it to 0 to create full mipmap tower (down to 1x1).
-        ClrFmt    format;    //!< pixel format. When used as parameter of Renderer::createTexture(),
-                             //!< you may set it to FMT_DEFAULT. To use default texture format.
-        BitFields usage;     //!< usage
-        bool      tiled;     //!< tiled format. Ignored on platform other then Xenon. 
+        TexType   type;      ///< texture type
+        UInt32    width;     ///< basemap width
+        UInt32    height;    ///< basemap height
+        UInt32    depth;     ///< basemap depth
+        UInt32    faces;     ///< face count. When used as parameter of Renderer::createTexture(),
+                             ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
+        UInt32    levels;    ///< mipmap level count. When used as parameter of Renderer::createTexture(),
+                             ///< you may set it to 0 to create full mipmap tower (down to 1x1).
+        ClrFmt    format;    ///< pixel format. When used as parameter of Renderer::createTexture(),
+                             ///< you may set it to FMT_DEFAULT. To use default texture format.
+        BitFields usage;     ///< usage
+        bool      tiled;     ///< tiled format. Ignored on platform other then Xenon. 
     };
 
-    //!
-    //! 贴图锁定的返回结果
-    //!
+    ///
+    /// 贴图锁定的返回结果
+    ///
     struct TexLockedResult
     {
-        size_t rowBytes;   //!< bytes per line
-        size_t sliceBytes; //!< bytes per slice
-        void * data;       //!< 指向被锁定图象的第一个字节
+        size_t rowBytes;   ///< bytes per line
+        size_t sliceBytes; ///< bytes per slice
+        void * data;       ///< 指向被锁定图象的第一个字节
     };
 
-    //!
-    //! 贴图对象
-    //!
+    ///
+    /// 贴图对象
+    ///
     struct Texture : public RefCounter
     {
-        //!
-        //! Get texture descriptor
-        //!
+        ///
+        /// Get texture descriptor
+        ///
         const TextureDesc & getDesc() const { return mDesc; }
 
-        //!
-        //! get size of base map
-        //!
+        ///
+        /// get size of base map
+        ///
         const Vector3<UInt32> & getBaseSize() const { return *(const Vector3<UInt32>*)&mDesc.width; }
 
-        //!
-        //! get size of base map
-        //!
+        ///
+        /// get size of base map
+        ///
         template<typename T>
         void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
@@ -137,14 +137,14 @@ namespace GN { namespace gfx
             if( sz ) *sz = (T)baseSize.z;
         }
 
-        //!
-        //! get size of specific mip level
-        //!
+        ///
+        /// get size of specific mip level
+        ///
         const Vector3<UInt32> & getMipSize( size_t level ) const { GN_ASSERT( level < mDesc.levels ); return mMipSize[level]; }
 
-        //!
-        //! get size of specific mip level
-        //!
+        ///
+        /// get size of specific mip level
+        ///
         template<typename T>
         void getMipSize( size_t level, T * sx, T * sy = 0, T * sz = 0 ) const
         {
@@ -154,41 +154,41 @@ namespace GN { namespace gfx
             if( sz ) *sz = (T)mipSize.z;
         }
 
-        //!
-        //! set texture filters
-        //!
-        //! \note default is [linear, linear]
-        //!
+        ///
+        /// set texture filters
+        ///
+        /// \note default is [linear, linear]
+        ///
         virtual void setFilter( TexFilter min, TexFilter mag ) const = 0;
 
-        //!
-        //! set texture address mode
-        //!
-        //! \note default is TEXWRAP_REPEAT
-        //!
+        ///
+        /// set texture address mode
+        ///
+        /// \note default is TEXWRAP_REPEAT
+        ///
         virtual void setWrap( TexWrap s,
                               TexWrap t = TEXWRAP_REPEAT,
                               TexWrap r = TEXWRAP_REPEAT ) const = 0;
 
-        //!
-        //! Set content loader
-        //!
+        ///
+        /// Set content loader
+        ///
         void setLoader( const TextureLoader & loader ) { mLoader = loader; }
 
-        //! \name lock/unlock functions
+        /// \name lock/unlock functions
         //@{
 
-        //!
-        //! Lock specific level of the texture. Can be used to all kind of texture.
-        //!
-        //! \param result   return locking result
-        //! \param face     Specify face you want to lock.
-        //! \param level    Specify mipmap level you want to lock.
-        //! \param area     Specify locking area in the mipmap. Null means whole level.
-        //! \param flag     Locking flag. See LockFlag for details.
-        //!
-        //! \return         Return false, if locking failed.
-        //!
+        ///
+        /// Lock specific level of the texture. Can be used to all kind of texture.
+        ///
+        /// \param result   return locking result
+        /// \param face     Specify face you want to lock.
+        /// \param level    Specify mipmap level you want to lock.
+        /// \param area     Specify locking area in the mipmap. Null means whole level.
+        /// \param flag     Locking flag. See LockFlag for details.
+        ///
+        /// \return         Return false, if locking failed.
+        ///
         virtual bool lock(
             TexLockedResult & result,
             size_t face,
@@ -196,9 +196,9 @@ namespace GN { namespace gfx
             const Boxi * area,
             LockFlag flag ) = 0;
 
-        //!
-        //! lock a 1D texture.
-        //!
+        ///
+        /// lock a 1D texture.
+        ///
         void * lock1D( size_t level, size_t offset, size_t length, LockFlag flag )
         {
             GN_ASSERT( TEXTYPE_1D == getDesc().type );
@@ -214,32 +214,32 @@ namespace GN { namespace gfx
             return result.data;
         }
 
-        //!
-        //! unlock previous lock
-        //!
+        ///
+        /// unlock previous lock
+        ///
         virtual void unlock() = 0;
 
         //@}
 
-        //! \name misc. functions
+        /// \name misc. functions
         //@{
 
-        //!
-        //! update contents of sub-mipmap-levels based on level 0
-        //!
+        ///
+        /// update contents of sub-mipmap-levels based on level 0
+        ///
         virtual void updateMipmap() = 0;
 
-        //!
-        //! Get low-level device handle of the texture. LPDIRECT3DBASETEXTURE9 for
-        //! DirectX; name of texture object(GLuint) for OpenGL.
-        //!
+        ///
+        /// Get low-level device handle of the texture. LPDIRECT3DBASETEXTURE9 for
+        /// DirectX; name of texture object(GLuint) for OpenGL.
+        ///
         virtual void * getAPIDependentData() const = 0;
 
         //@}
 
-        //! \name get reference to shader name.
-        //!
-        //! Name field is for debug purpose only, it is not used by garnet library. Set it to any value you want.
+        /// \name get reference to shader name.
+        ///
+        /// Name field is for debug purpose only, it is not used by garnet library. Set it to any value you want.
         //@{
         const StrA & name() const { return mName; }
         StrA & name() { return mName; }
@@ -247,10 +247,10 @@ namespace GN { namespace gfx
 
     protected :
 
-        //!
-        //! Set texture descriptor. Subclass must call this function to set 
-        //! all texture properities to valid value.
-        //!
+        ///
+        /// Set texture descriptor. Subclass must call this function to set 
+        /// all texture properities to valid value.
+        ///
         bool setDesc( const TextureDesc & desc )
         {
             static Logger * sLogger = getLogger("GN.gfx.Texture");
@@ -351,18 +351,18 @@ namespace GN { namespace gfx
             return true;
         }
 
-        //!
-        //! setup mip size
-        //!
+        ///
+        /// setup mip size
+        ///
         void setMipSize( size_t level, const Vector3<UInt32> & s )
         {
             GN_ASSERT( level < mDesc.levels );
             mMipSize[level] = s;
         }
 
-        //!
-        //! setup mip size
-        //!
+        ///
+        /// setup mip size
+        ///
         template<typename T>
         void setMipSize( size_t level, T sx, T sy, T sz )
         {
@@ -370,19 +370,19 @@ namespace GN { namespace gfx
             mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
         }
 
-        //!
-        //! Get content loader
-        //!
+        ///
+        /// Get content loader
+        ///
         const TextureLoader & getLoader() const { return mLoader; }
 
     private :
-        TextureDesc   mDesc;   //!< descriptor
-        TextureLoader mLoader; //!< content loader
-        std::vector< Vector3<UInt32> > mMipSize; //!< mipmap size of each level
-        StrA          mName; //!< texture name. Only for debug purpose.
+        TextureDesc   mDesc;   ///< descriptor
+        TextureLoader mLoader; ///< content loader
+        std::vector< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
+        StrA          mName; ///< texture name. Only for debug purpose.
     };
 
-    //! \name convert between texture tags and string
+    /// \name convert between texture tags and string
     //@{
 
     //

@@ -1,9 +1,9 @@
 #ifndef __GN_INPUT_INPUTXENON_H__
 #define __GN_INPUT_INPUTXENON_H__
 // *****************************************************************************
-//! \file    input/inputXenon.h
-//! \brief   Input device for Xenon
-//! \author  chenlee (2006.3.13)
+/// \file    input/inputXenon.h
+/// \brief   Input device for Xenon
+/// \author  chenlee (2006.3.13)
 // *****************************************************************************
 
 #if GN_XENON
@@ -15,9 +15,9 @@ namespace GN { namespace input
     class InputXenon : public BasicXInput
     {
     public:
-        //!
-        //! Ctor
-        //!
+        ///
+        /// Ctor
+        ///
         InputXenon()
         {
             mXInputGetState = &XInputGetState;

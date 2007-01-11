@@ -1,32 +1,32 @@
 #ifndef __GN_BASE_BASICDEFINES_H__
 #define __GN_BASE_BASICDEFINES_H__
 // *****************************************************************************
-//! \file    basicDefines.h
-//! \brief   Basic defines and types
-//! \author  chenlee (2005.7.24)
+/// \file    basicDefines.h
+/// \brief   Basic defines and types
+/// \author  chenlee (2005.7.24)
 // *****************************************************************************
 
 // *****************************************************************************
 // 辨识编译模式
 // *****************************************************************************
 
-#define GN_RETAIL_BUILD (0 == GN_BUILD_VARIANT)  //!< retail build
-#define GN_PROFILE_BUILD (1 == GN_BUILD_VARIANT) //!< profile bulild
-#define GN_DEBUG_BUILD (2 == GN_BUILD_VARIANT)   //!< debug build
+#define GN_RETAIL_BUILD (0 == GN_BUILD_VARIANT)  ///< retail build
+#define GN_PROFILE_BUILD (1 == GN_BUILD_VARIANT) ///< profile bulild
+#define GN_DEBUG_BUILD (2 == GN_BUILD_VARIANT)   ///< debug build
 
 // *****************************************************************************
 // 辨识编译器
 // *****************************************************************************
 
-#define GN_MSVC  0 //!< If 1, means current compiler is msvc (or icl)
-#define GN_MSVC8 0 //!< If 1, means current compiler is msvc 8.x
-#define GN_ICL   0 //!< If 1, means current compiler is intel c++ compiler
-#define GN_MINGW 0 //!< If 1, means current compiler is MingW
-#define GN_GCC   0 //!< If 1, means current compierl is gcc/g++
-#define GN_BCB   0 //!< If 1, means current compierl is boland c++ compiler
+#define GN_MSVC  0 ///< If 1, means current compiler is msvc (or icl)
+#define GN_MSVC8 0 ///< If 1, means current compiler is msvc 8.x
+#define GN_ICL   0 ///< If 1, means current compiler is intel c++ compiler
+#define GN_MINGW 0 ///< If 1, means current compiler is MingW
+#define GN_GCC   0 ///< If 1, means current compierl is gcc/g++
+#define GN_BCB   0 ///< If 1, means current compierl is boland c++ compiler
 
-//! \def GN_COMPILER
-//! Indicate current compiler
+/// \def GN_COMPILER
+/// Indicate current compiler
 
 #if defined(_MSC_VER) && !defined(__ICL)
 #undef GN_MSVC
@@ -70,12 +70,12 @@
 // 辨识操作系统
 // *****************************************************************************
 
-#define GN_MSWIN  0 //!< If 1, means current platform is Windows serias
-#define GN_CYGWIN 0 //!< If 1, means current platform is Cygwin
-#define GN_POSIX  0 //!< If 1, means current platform is POSIX compatible, such as Cygwin
+#define GN_MSWIN  0 ///< If 1, means current platform is Windows serias
+#define GN_CYGWIN 0 ///< If 1, means current platform is Cygwin
+#define GN_POSIX  0 ///< If 1, means current platform is POSIX compatible, such as Cygwin
 
-//! \def GN_OS
-//! Indicate current OS
+/// \def GN_OS
+/// Indicate current OS
 
 #if defined( _WIN32 )      // Windows
 // Windows platform
@@ -103,12 +103,12 @@
 // 辨识系统平台
 // *****************************************************************************
 
-#define GN_PC 0    //!< PC
-#define GN_XBOX1 0 //!< Xbox
-#define GN_XENON 0 //!< Xbox 360
+#define GN_PC 0    ///< PC
+#define GN_XBOX1 0 ///< Xbox
+#define GN_XENON 0 ///< Xbox 360
 
-//! \def GN_SYSTEM
-//! Indicate current system
+/// \def GN_SYSTEM
+/// Indicate current system
 
 #ifdef _XBOX_VER
 #if _XBOX_VER >= 200
@@ -130,12 +130,12 @@
 // 辨识CPU
 // *****************************************************************************
 
-#define GN_X86 0 //!< 32-bit x86
-#define GN_X64 0 //!< 64-bit amd64
-#define GN_PPC 0 //!< power pc
+#define GN_X86 0 ///< 32-bit x86
+#define GN_X64 0 ///< 64-bit amd64
+#define GN_PPC 0 ///< power pc
 
-//! \def GN_CPU
-//! Indicate current CPU
+/// \def GN_CPU
+/// Indicate current CPU
 
 #if defined( _WIN64 ) || defined( WIN64 ) || ( 64 == __WORDSIZE )
 #undef GN_X64
@@ -155,18 +155,18 @@
 // 定义函数和变量声明
 // *****************************************************************************
 
-//!
-//! force inline macro
-//!
+///
+/// force inline macro
+///
 #if GN_MSVC
 #define GN_FORCE_INLINE   __forceinline
 #else
 #define GN_FORCE_INLINE   inline
 #endif
 
-//!
-//! automatic inline macro
-//!
+///
+/// automatic inline macro
+///
 #if GN_ENABLE_INLINE
 #define GN_INLINE       inline
 #else
@@ -175,11 +175,11 @@
 
 // Export/Import function/variable tag
 
-//! \def GN_EXPORT
-//! Export function tag
+/// \def GN_EXPORT
+/// Export function tag
 
-//! \def GN_IMPORT
-//! Import function tag
+/// \def GN_IMPORT
+/// Import function tag
 
 #if GN_MSVC && !GN_STATIC
 #define GN_EXPORT       __declspec(dllexport)
@@ -189,9 +189,9 @@
 #define GN_EXPORT
 #endif
 
-//!
-//! Public/global function/variable tag
-//!
+///
+/// Public/global function/variable tag
+///
 #if defined(_GN_CORE)
 #define GN_PUBLIC   GN_EXPORT // Only core module exports symbols
 #else
@@ -199,7 +199,7 @@
 #endif
 
 // *****************************************************************************
-//! \name Call Convension
+/// \name Call Convension
 // *****************************************************************************
 
 //@{
@@ -242,9 +242,9 @@
 // Misc.
 // *****************************************************************************
 
-//!
-//! 函数名称
-//!
+///
+/// 函数名称
+///
 #if GN_MSVC
 #define GN_FUNCTION          __FUNCTION__
 #elif defined( GN_GNUC )
@@ -253,31 +253,31 @@
 #define GN_FUNCTION          ""
 #endif
 
-#define GN_JOIN(s1, s2)          GN_JOIN_DIRECT(s1, s2) //!< join 2 symbols
-#define GN_JOIN3(s1, s2, s3)     GN_JOIN( GN_JOIN( s1, s2 ), s3 ) //!< join 3 symbols
-#define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 ) //!< join 4 symbols
-#define GN_JOIN_DIRECT(s1, s2)   s1##s2 //!< Auxillary macro used by GN_JOIN
+#define GN_JOIN(s1, s2)          GN_JOIN_DIRECT(s1, s2) ///< join 2 symbols
+#define GN_JOIN3(s1, s2, s3)     GN_JOIN( GN_JOIN( s1, s2 ), s3 ) ///< join 3 symbols
+#define GN_JOIN4(s1, s2, s3, s4) GN_JOIN( GN_JOIN3( s1, s2, s3 ), s4 ) ///< join 4 symbols
+#define GN_JOIN_DIRECT(s1, s2)   s1##s2 ///< Auxillary macro used by GN_JOIN
 
-//!
-//! Make wide-char string
-//!
+///
+/// Make wide-char string
+///
 #define GN_WSTR(X) GN_JOIN( L, X )
 
-//!
-//! Make FORCC code
-//!
+///
+/// Make FORCC code
+///
 #define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3)                          \
     ((UInt32)(UInt8)(ch0) | ((UInt32)(UInt8)(ch1) << 8) |   \
     ((UInt32)(UInt8)(ch2) << 16) | ((UInt32)(UInt8)(ch3) << 24 ))
 
-//!
-//! Compile-time assert
-//!
+///
+/// Compile-time assert
+///
 #define GN_CASSERT_EX( exp, msg ) struct GN_JOIN3(__GN_cassert_,msg,__LINE__){ int data[(exp)?1:-1]; }
 
-//!
-//! Compile-time assert
-//!
+///
+/// Compile-time assert
+///
 #define GN_CASSERT( exp ) GN_CASSERT_EX( exp, _ )
 
 

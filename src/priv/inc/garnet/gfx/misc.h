@@ -1,66 +1,66 @@
 #ifndef __GN_GFX_MISC_H__
 #define __GN_GFX_MISC_H__
 // *****************************************************************************
-//! \file    gfx/misc.h
-//! \brief   misc. types and functions of GFX module
-//! \author  chenlee (2005.9.30)
+/// \file    gfx/misc.h
+/// \brief   misc. types and functions of GFX module
+/// \author  chenlee (2005.9.30)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    //!
-    //! Display mode structure
-    //!
+    ///
+    /// Display mode structure
+    ///
     struct DisplayMode
     {
-        UInt32 width;   //!< Screen width. Zero means using current screen width. Default value is zero.
-        UInt32 height;  //!< Screen height. Zero means using current screen height. Defualt value is zero.
-        UInt32 depth;   //!< Color depth. Zero means using current color depth. Default value is zero.
-        UInt32 refrate; //!< Referesh rate. Zero means using adapter default rate. Default value is zero.
+        UInt32 width;   ///< Screen width. Zero means using current screen width. Default value is zero.
+        UInt32 height;  ///< Screen height. Zero means using current screen height. Defualt value is zero.
+        UInt32 depth;   ///< Color depth. Zero means using current color depth. Default value is zero.
+        UInt32 refrate; ///< Referesh rate. Zero means using adapter default rate. Default value is zero.
 
-        //!
-        //! Set display mode parameters
-        //!
+        ///
+        /// Set display mode parameters
+        ///
         void set( UInt32 w, UInt32 h, UInt32 d, UInt32 r )
         {
             width = w; height = h; depth = d; refrate = r;
         }
     };
 
-    //!
-    //! 锁定标志
-    //!
+    ///
+    /// 锁定标志
+    ///
     enum LockFlag
     {
-        LOCK_RW,           //!< read-write lock, the slowest one.
-        LOCK_RO,           //!< read-only lock.
-        LOCK_WO,           //!< write-only lock
-        LOCK_DISCARD,      //!< write-only lock, discard old value.
-        LOCK_NO_OVERWRITE, //!< write-only lock, promise not to modify any section of the buffer being used.
-        NUM_LOCK_FLAGS     //!< number of lock flags.
+        LOCK_RW,           ///< read-write lock, the slowest one.
+        LOCK_RO,           ///< read-only lock.
+        LOCK_WO,           ///< write-only lock
+        LOCK_DISCARD,      ///< write-only lock, discard old value.
+        LOCK_NO_OVERWRITE, ///< write-only lock, promise not to modify any section of the buffer being used.
+        NUM_LOCK_FLAGS     ///< number of lock flags.
     };
 
-    //!
-    //! 绘图原语
-    //!
+    ///
+    /// 绘图原语
+    ///
     enum PrimitiveType
     {
-        POINT_LIST,     //!< point list
-        LINE_LIST,      //!< line list
-        LINE_STRIP,     //!< line strip
-        TRIANGLE_LIST,  //!< triangle list
-        TRIANGLE_STRIP, //!< triangle strip
-        QUAD_LIST     , //!< quad list. D3D9 does not support this primitive.
-        RECT_LIST     , //!< rect list. This is xenon special primitive.
-        NUM_PRIMITIVES  //!< number of available primitive types
+        POINT_LIST,     ///< point list
+        LINE_LIST,      ///< line list
+        LINE_STRIP,     ///< line strip
+        TRIANGLE_LIST,  ///< triangle list
+        TRIANGLE_STRIP, ///< triangle strip
+        QUAD_LIST     , ///< quad list. D3D9 does not support this primitive.
+        RECT_LIST     , ///< rect list. This is xenon special primitive.
+        NUM_PRIMITIVES  ///< number of available primitive types
     };
 
-    //! \name Primitive utils
+    /// \name Primitive utils
     //@{
 
-    //!
-    //! convert primitive type to string
-    //!
+    ///
+    /// convert primitive type to string
+    ///
     inline StrA primitiveType2Str( PrimitiveType pt )
     {
         GN_GUARD_SLOW;
@@ -78,9 +78,9 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
 
-    //!
-    //! convert string to primitive
-    //!
+    ///
+    /// convert string to primitive
+    ///
     inline PrimitiveType str2PrimitiveType( const StrA & str )
     {
         GN_GUARD_SLOW;
@@ -101,13 +101,13 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
 
-    //!
-    //! calculate primitive count from vertex count
-    //!
-    //! \param pt       rendering primitive
-    //! \param numvert  vertex count
-    //! \return         primitive count
-    //!
+    ///
+    /// calculate primitive count from vertex count
+    ///
+    /// \param pt       rendering primitive
+    /// \param numvert  vertex count
+    /// \return         primitive count
+    ///
     inline size_t calcPrimitiveCount( PrimitiveType pt, size_t numvert )
     {
         GN_GUARD_SLOW;
@@ -131,13 +131,13 @@ namespace GN { namespace gfx
         GN_UNGUARD_SLOW;
     }
 
-    //!
-    //! calculate vertex count from primitive count
-    //!
-    //! \param pt       rendering primitive
-    //! \param numprim  primitive count
-    //! \return         vertex count
-    //!
+    ///
+    /// calculate vertex count from primitive count
+    ///
+    /// \param pt       rendering primitive
+    /// \param numprim  primitive count
+    /// \return         vertex count
+    ///
     inline size_t calcVertexCount( PrimitiveType pt, size_t numprim )
     {
         GN_GUARD_SLOW;

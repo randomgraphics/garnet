@@ -50,8 +50,8 @@ sGetClientSize( GN::HandleType disp, GN::HandleType win, UInt32 * width, UInt32 
 // local function
 // ****************************************************************************
 
-//!
-//! Determine monitor handle that render window should stay in.
+///
+/// Determine monitor handle that render window should stay in.
 // ----------------------------------------------------------------------------
 static GN::HandleType
 sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
@@ -83,8 +83,8 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
     else return ro.monitorHandle;
 }
 
-//!
-//! get current display mode
+///
+/// get current display mode
 // ----------------------------------------------------------------------------
 static bool
 sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMode & dm )
@@ -159,8 +159,8 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMod
     GN_UNGUARD;
 }
 
-//!
-//! Determine render window size
+///
+/// Determine render window size
 // ----------------------------------------------------------------------------
 static bool
 sDetermineWindowSize(

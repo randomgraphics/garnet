@@ -1,9 +1,9 @@
 #ifndef __GN_GUI_CEGUIRENDERER_H__
 #define __GN_GUI_CEGUIRENDERER_H__
 // *****************************************************************************
-//! \file    gui/ceguiRenderer.h
-//! \brief   cegui renderer
-//! \author  chenlee (2006.2.25)
+/// \file    gui/ceguiRenderer.h
+/// \brief   cegui renderer
+/// \author  chenlee (2006.2.25)
 // *****************************************************************************
 
 #ifdef HAS_CEGUI
@@ -14,9 +14,9 @@ namespace CEGUI
 {
     class GarnetTexture;
 
-    //!
-    //! CEGUI renderer adapter for garnet platform
-    //!
+    ///
+    /// CEGUI renderer adapter for garnet platform
+    ///
     class GarnetRenderer : public Renderer
     {
         // ********************************

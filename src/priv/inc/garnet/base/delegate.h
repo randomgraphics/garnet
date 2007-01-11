@@ -1,7 +1,7 @@
 // *****************************************************************************
-//! \file    delegate.h
-//! \brief   delegate class
-//! \author  chenlee (2005.5.14)
+/// \file    delegate.h
+/// \brief   delegate class
+/// \author  chenlee (2005.5.14)
 // *****************************************************************************
 #ifdef GN_DELEGATE_TEMPL_N
 
@@ -299,9 +299,9 @@ namespace GN
         DEFINE_FTRPTRCLOSURE( , const );
     }
 
-    //!
-    //! General functor class
-    //!
+    ///
+    /// General functor class
+    ///
     template<typename R PARAM_COMMA PARAM_TEMPLS>
     class DELEGATE_NAME
     {
@@ -315,32 +315,32 @@ namespace GN
 
     public:
 
-        //!
-        //! default constructor
-        //!
+        ///
+        /// default constructor
+        ///
         DELEGATE_NAME() : mClosure(0) {}
 
-        //!
-        //! copy constructor
-        //!
+        ///
+        /// copy constructor
+        ///
         DELEGATE_NAME( const MyType & other )
             : mClosure(other.mClosure)
         {
             if( mClosure ) mClosure->addref();
         }
 
-        //!
-        //! construct from free function
-        //!
+        ///
+        /// construct from free function
+        ///
         DELEGATE_NAME( R(*f)(PARAM_TYPES) )
             : mClosure(0)
         {
             bind( f );
         }
 
-        //!
-        //! destructor
-        //!
+        ///
+        /// destructor
+        ///
         ~DELEGATE_NAME() { clear(); }
 
 #define BIND_TO_FREEFUNC( CALL_CONVENSION, DUMMY )                                                                 \
@@ -355,7 +355,7 @@ namespace GN
             mClosure = new detail::FREECLOSURE_NAME(CALL_CONVENSION,DUMMY)<R PARAM_COMMA PARAM_TYPES>( f );        \
         }
 
-        //! \name Bind to free(static) function
+        /// \name Bind to free(static) function
         //@{
 #if GN_HAS_FASTCALL
         BIND_TO_FREEFUNC( GN_FASTCALL, )
@@ -381,7 +381,7 @@ namespace GN
             mClosure = new detail::MEMCLOSURE_NAME(CALL_CONVENSION,CONSTNESS)<X, R PARAM_COMMA PARAM_TYPES>(x,f); \
         }
 
-        //! \name Bind to member function
+        /// \name Bind to member function
         //@{
 #if GN_HAS_FASTCALL
         BIND_TO_MEMFUNC( GN_FASTCALL, )
@@ -401,9 +401,9 @@ namespace GN
 #endif
         //@}
 
-        //!
-        //! bind to functor
-        //!
+        ///
+        /// bind to functor
+        ///
         template<class X>
         inline void bind( const X & x )
         {
@@ -424,45 +424,45 @@ namespace GN
             mClosure = new detail::FTRPTRCLOSURE_NAME(DUMMY,CONSTNESS)<X, R PARAM_COMMA PARAM_TYPES>(x); \
         }
 
-        //! \name Bind to pointer of functor
+        /// \name Bind to pointer of functor
         //@{
         BIND_TO_FUNCTORPTR( , )
         BIND_TO_FUNCTORPTR( , const )
         //@}
 
-        //!
-        //! clear the functor
-        //!
+        ///
+        /// clear the functor
+        ///
         void clear()
         {
             if( mClosure ) mClosure->release(), mClosure = 0;
         }
 
-        //!
-        //! Check emptiness of the functor
-        //!
+        ///
+        /// Check emptiness of the functor
+        ///
         bool empty() const
         {
             return 0 == mClosure;
         }
 
-        //!
-        //! Convert to boolean
-        //!
+        ///
+        /// Convert to boolean
+        ///
         operator bool() const { return 0 != mClosure; }
 
-        //!
-        //! call embbed function pointer
-        //!
+        ///
+        /// call embbed function pointer
+        ///
         R operator()( PARAM_LIST ) const
         {
             GN_ASSERT( !empty() );
             return mClosure->run( PARAM_VALUES );
         }
 
-        //!
-        //! copy operator
-        //!
+        ///
+        /// copy operator
+        ///
         MyType & operator=( const MyType & other )
         {
             if( mClosure ) mClosure->release();
@@ -471,9 +471,9 @@ namespace GN
             return *this;
         }
 
-        //!
-        //! check equality
-        //!
+        ///
+        /// check equality
+        ///
         bool operator==( const MyType & rhs ) const
         {
             if ( 0 == mClosure )
@@ -490,9 +490,9 @@ namespace GN
             }
         }
 
-        //!
-        //! check equality
-        //!
+        ///
+        /// check equality
+        ///
         bool operator!=( const MyType & rhs ) const
         {
             if ( 0 == mClosure )
@@ -509,9 +509,9 @@ namespace GN
             }
         }
 
-        //!
-        //! check equality
-        //!
+        ///
+        /// check equality
+        ///
         bool operator<( const MyType & rhs ) const
         {
             if ( 0 == mClosure )
@@ -528,9 +528,9 @@ namespace GN
             }
         }
 
-        //!
-        //! check equality
-        //!
+        ///
+        /// check equality
+        ///
         bool operator>( const MyType & rhs ) const
         {
             if ( 0 == mClosure )
@@ -560,7 +560,7 @@ namespace GN
         return fn;                                        \
     }                                                     \
 
-    //! \name make free functor
+    /// \name make free functor
     //@{
 #if GN_HAS_FASTCALL
     MAKE_FREEDELEGATE( GN_FASTCALL, )
@@ -584,7 +584,7 @@ namespace GN
         return fn;                                                                    \
     }
 
-    //! \name make member functor
+    /// \name make member functor
     //@{
 #if GN_HAS_FASTCALL
     MAKE_MEMDELEGATE( GN_FASTCALL, )
@@ -674,29 +674,29 @@ namespace GN
 #undef GN_DELEGATE_TEMPL_N
 
 #elif !defined(__GN_BASE_DELEGATE_H__)
-#define __GN_BASE_DELEGATE_H__ //!< Including protector for delegate.h
+#define __GN_BASE_DELEGATE_H__ ///< Including protector for delegate.h
 
 namespace GN
 {
     namespace detail
     {
-        //!
-        //! Private type indicating functor type
-        //!
+        ///
+        /// Private type indicating functor type
+        ///
         enum ClosureType
         {
-            FREE_FUNC,      //!< Normal global/static function
-            MEM_FUNC,       //!< non-const member function
-            CONST_MEM_FUNC, //!< const member function
-            FUNCTOR_FUNC,   //!< functor
-            FTRPTR_FUNC,    //!< pointer to functor
+            FREE_FUNC,      ///< Normal global/static function
+            MEM_FUNC,       ///< non-const member function
+            CONST_MEM_FUNC, ///< const member function
+            FUNCTOR_FUNC,   ///< functor
+            FTRPTR_FUNC,    ///< pointer to functor
         };
     }
 }
 
-//!
-//! Delegate parameter count
-//!
+///
+/// Delegate parameter count
+///
 #define GN_DELEGATE_TEMPL_N 0
 #include "delegate.h"
 

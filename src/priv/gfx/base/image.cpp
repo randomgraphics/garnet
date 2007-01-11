@@ -79,14 +79,14 @@ bool GN::gfx::ImageDesc::valid() const
 // imgreade_c::Impl
 // *****************************************************************************
 
-//!
-//! implementation class of image reader
-//!
+///
+/// implementation class of image reader
+///
 class GN::gfx::ImageReader::Impl
 {
-    //!
-    //! file format tag
-    //!
+    ///
+    /// file format tag
+    ///
     enum FileFormat
     {
         UNKNOWN = 0,
@@ -97,9 +97,9 @@ class GN::gfx::ImageReader::Impl
         TGA,
     };
 
-    //!
-    //! image reader state
-    //!
+    ///
+    /// image reader state
+    ///
     enum ReaderState
     {
         INVALID = 0,
@@ -122,14 +122,14 @@ class GN::gfx::ImageReader::Impl
 
 public:
 
-    //!
-    //! default ctor
-    //!
+    ///
+    /// default ctor
+    ///
     Impl() : mFileFormat(UNKNOWN), mState(INVALID) {}
 
-    //!
-    //! reset image reader
-    //!
+    ///
+    /// reset image reader
+    ///
     bool reset( File & i_file )
     {
         GN_GUARD;
@@ -167,9 +167,9 @@ public:
         GN_UNGUARD;
     }
 
-    //!
-    //! read image header
-    //!
+    ///
+    /// read image header
+    ///
     bool readHeader( ImageDesc & o_desc )
     {
         GN_GUARD;
@@ -208,9 +208,9 @@ public:
         GN_UNGUARD;
     }
 
-    //!
-    //! read image data
-    //!
+    ///
+    /// read image data
+    ///
     bool readImage( void * o_data )
     {
         GN_GUARD;

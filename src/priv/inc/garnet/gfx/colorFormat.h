@@ -1,19 +1,19 @@
 #ifndef __GN_GFX_COLORFORMAT_H__
 #define __GN_GFX_COLORFORMAT_H__
 // *****************************************************************************
-//! \file    colorFormat.h
-//! \brief   Color format definition
-//! \author  chenlee (2005.11.13)
+/// \file    colorFormat.h
+/// \brief   Color format definition
+/// \author  chenlee (2005.11.13)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    //! \def GN_COLOR_FORMAT
-    //! Define color format
+    /// \def GN_COLOR_FORMAT
+    /// Define color format
 
-    //!
-    //! color format
-    //!
+    ///
+    /// color format
+    ///
     enum ClrFmt
     {
         #define GN_COLOR_FORMAT( format, bits, channels ) FMT_##format,
@@ -104,9 +104,9 @@ namespace GN { namespace gfx
         FMT_UDHEN3N     = FMT_RGB_10_11_11_UNORM,
     };
 
-    //!
-    //! color type
-    //!
+    ///
+    /// color type
+    ///
     enum ColorType
     {
         TYPE_UNORM,
@@ -116,68 +116,68 @@ namespace GN { namespace gfx
         TYPE_SINT,
     };
 
-    //!
-    //! color channel descriptor
-    //!
+    ///
+    /// color channel descriptor
+    ///
     union ChannelDesc
     {
-        UInt32 u32; //!< channel description as unsigned 32-bit integer
-        SInt32  i32; //!< channel description as signed 32-bit integer
+        UInt32 u32; ///< channel description as unsigned 32-bit integer
+        SInt32  i32; ///< channel description as signed 32-bit integer
         struct
         {
-            unsigned int shift   : 8; //!< channel shift
-            unsigned int bits    : 8; //!< channel bits
-            unsigned int type    : 3; //!< channel data type
-            unsigned int         : 5; //!< reserved
-            unsigned int         : 8; //!< reserved
+            unsigned int shift   : 8; ///< channel shift
+            unsigned int bits    : 8; ///< channel bits
+            unsigned int type    : 3; ///< channel data type
+            unsigned int         : 5; ///< reserved
+            unsigned int         : 8; ///< reserved
         };
 
-        //!
-        //! equalty operator
-        //!
+        ///
+        /// equalty operator
+        ///
         bool operator == ( const ChannelDesc & rhs ) const
         { return u32 == rhs.u32; }
     };
 
-    //!
-    //! color format descriptor
-    //!
+    ///
+    /// color format descriptor
+    ///
     struct ClrFmtDesc
     {
-        const char * name;          //!< format name
-        UInt8      bits;          //!< bits per pixel
-        UInt8      blockWidth;    //!< block width
-                                    //!< 1 for non-compressed format,
-                                    //!< 4 for DXT format
-        UInt8      blockHeight;   //!< block width
-                                    //!< 1 for non-compressed format,
-                                    //!< 4 for DXT format
+        const char * name;          ///< format name
+        UInt8      bits;          ///< bits per pixel
+        UInt8      blockWidth;    ///< block width
+                                    ///< 1 for non-compressed format,
+                                    ///< 4 for DXT format
+        UInt8      blockHeight;   ///< block width
+                                    ///< 1 for non-compressed format,
+                                    ///< 4 for DXT format
         union
         {
-            UInt32 swizzle;       //!< Swizzle. Ignored for compressed format.
+            UInt32 swizzle;       ///< Swizzle. Ignored for compressed format.
             struct
             {
-                char swizzle_x;     //!< Swizzle X. One of 'R', 'G', 'B', 'A', '0' or '1'.
-                char swizzle_y;     //!< Swizzle Y.
-                char swizzle_z;     //!< Swizzle Z.
-                char swizzle_w;     //!< Swizzle W.
+                char swizzle_x;     ///< Swizzle X. One of 'R', 'G', 'B', 'A', '0' or '1'.
+                char swizzle_y;     ///< Swizzle Y.
+                char swizzle_z;     ///< Swizzle Z.
+                char swizzle_w;     ///< Swizzle W.
             };
         };
 
-        UInt8      numChannels;   //!< 0 means compressed format
-        ChannelDesc  channels[4];   //!< valid when numChannels > 0
+        UInt8      numChannels;   ///< 0 means compressed format
+        ChannelDesc  channels[4];   ///< valid when numChannels > 0
     };
 
-    //! \cond NEVER
+    /// \cond NEVER
     namespace detail
     {
         const ClrFmtDesc * sGenerateClrFmtDescTable();
     }
-    //! \endcond
+    /// \endcond
 
-    //!
-    //! get format description
-    //!
+    ///
+    /// get format description
+    ///
     inline const ClrFmtDesc & getClrFmtDesc( ClrFmt fmt )
     {
         static const ClrFmtDesc * const sTable = detail::sGenerateClrFmtDescTable();
@@ -185,14 +185,14 @@ namespace GN { namespace gfx
         else return sTable[FMT_INVALID];
     }
 
-    //!
-    //! convert color format tag to string
-    //!
+    ///
+    /// convert color format tag to string
+    ///
     inline const char * clrFmt2Str( ClrFmt fmt ) { return getClrFmtDesc(fmt).name; }
 
-    //!
-    //! compose RGBA32 color value from 4 unsigned bytes.
-    //!
+    ///
+    /// compose RGBA32 color value from 4 unsigned bytes.
+    ///
     GN_FORCE_INLINE UInt32 ubyte4ToRGBA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
     {
         return
@@ -202,9 +202,9 @@ namespace GN { namespace gfx
             ( (UInt32)a << 24 );
     }
 
-    //!
-    //! compose BGRA32/D3DCOLOR color value from 4 unsigned bytes.
-    //!
+    ///
+    /// compose BGRA32/D3DCOLOR color value from 4 unsigned bytes.
+    ///
     GN_FORCE_INLINE UInt32 ubyte4ToBGRA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
     {
         return
@@ -214,9 +214,9 @@ namespace GN { namespace gfx
             ( (UInt32)a << 24 );
     }
 
-    //!
-    //! convert 4 floats to RGBA32
-    //!
+    ///
+    /// convert 4 floats to RGBA32
+    ///
     GN_FORCE_INLINE UInt32 float4ToRGBA32( const Vector4f & color )
     {
         return
@@ -226,9 +226,9 @@ namespace GN { namespace gfx
             ( (UInt32)(color.a*255.0f) << 24 );
     }
 
-    //!
-    //! convert 4 floats to BGRA32
-    //!
+    ///
+    /// convert 4 floats to BGRA32
+    ///
     GN_FORCE_INLINE UInt32 float4ToBGRA32( const Vector4f & color )
     {
         return

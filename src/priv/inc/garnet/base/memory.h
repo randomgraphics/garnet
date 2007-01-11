@@ -1,14 +1,14 @@
 #ifndef __GN_BASE_MEMORY_H__
 #define __GN_BASE_MEMORY_H__
 // *****************************************************************************
-//! \file    memory.h
-//! \brief   Basic memory management routines
-//! \author  chenlee (2005.7.23)
+/// \file    memory.h
+/// \brief   Basic memory management routines
+/// \author  chenlee (2005.7.23)
 // *****************************************************************************
 
 #include <new>
 
-//! \name macro to exception throw
+/// \name macro to exception throw
 //@{
 #if GN_GCC
 #define GN_THROW_BADALLOC() throw(std::bad_alloc)
@@ -21,19 +21,19 @@
 
 namespace GN
 {
-    //!
-    //! Allocate memory from heap. Can cross DLL boundary.
-    //!
+    ///
+    /// Allocate memory from heap. Can cross DLL boundary.
+    ///
     GN_PUBLIC void * heapAlloc( size_t sizeInBytes );
 
-    //!
-    //! Re-allocate memory from heap. Can cross DLL boundary.
-    //!
+    ///
+    /// Re-allocate memory from heap. Can cross DLL boundary.
+    ///
     GN_PUBLIC void * heapRealloc( void *, size_t sizeInBytes );
 
-    //!
-    //! Free heap-allocated memory. Can cross DLL boundary.
-    //!
+    ///
+    /// Free heap-allocated memory. Can cross DLL boundary.
+    ///
     GN_PUBLIC void heapFree( void * );
 }
 
@@ -42,7 +42,7 @@ namespace GN
 #pragma warning(disable:522) // inline function is declared after being used.
 #endif
 
-//! \name overloaded global new and delete operators
+/// \name overloaded global new and delete operators
 //@{
 // TODO: more standard conforming implementation.
 inline void * operator new( size_t s ) GN_THROW_BADALLOC() { return ::GN::heapAlloc( s ); }

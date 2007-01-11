@@ -90,9 +90,9 @@ public:
     T * prevBrother() const { return mPrevBrother; }
     T * nextBrother() const { return mNextBrother; }
 
-    //!
-    //! set parent
-    //!
+    ///
+    /// set parent
+    ///
     void setParent( T * newParent )
     {
         if( 0 == newParent )
@@ -179,9 +179,9 @@ public:
 
 namespace GN
 {
-    //!
-    //! Log to console
-    //!
+    ///
+    /// Log to console
+    ///
     struct ConsoleReceiver : public Logger::Receiver
     {
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
@@ -224,9 +224,9 @@ namespace GN
         };
     };
 
-    //!
-    //! Log to disk file
-    //!
+    ///
+    /// Log to disk file
+    ///
     struct FileReceiver : public Logger::Receiver
     {
         StrA mFileName;
@@ -297,9 +297,9 @@ namespace GN
         }
     };
 
-    //!
-    //! Log to debugger
-    //!
+    ///
+    /// Log to debugger
+    ///
     class DebugReceiver : public Logger::Receiver
     {
         virtual void onLog( Logger & logger, const Logger::LogDesc & desc, const StrA & msg )
@@ -336,9 +336,9 @@ namespace GN
         }
     };
 
-    //!
-    //! Logger implementation class
-    //!
+    ///
+    /// Logger implementation class
+    ///
     class LoggerImpl : public Logger, public TreeNode<LoggerImpl>
     {
     public:
@@ -432,9 +432,9 @@ namespace GN
         }
     };
 
-    //!
-    //! Log container
-    //!
+    ///
+    /// Log container
+    ///
     class LoggerContainer
     {
         ConsoleReceiver mCr;

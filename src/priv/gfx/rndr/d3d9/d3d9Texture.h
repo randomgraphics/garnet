@@ -1,9 +1,9 @@
 #ifndef __GN_GFXD3D9_D3D9TEXTURE_H__
 #define __GN_GFXD3D9_D3D9TEXTURE_H__
 // *****************************************************************************
-//! \file    d3d9Texture.h
-//! \brief   D3D texture class
-//! \author  chenlee (2005.11.5)
+/// \file    d3d9Texture.h
+/// \brief   D3D texture class
+/// \author  chenlee (2005.11.5)
 // *****************************************************************************
 
 #include "../common/basicTexture.h"
@@ -13,19 +13,19 @@ namespace GN { namespace gfx
 {
     class D3D9Renderer;
 
-    //!
-    //! Convert texture type to D3DRESOURCETYPE
-    //!
+    ///
+    /// Convert texture type to D3DRESOURCETYPE
+    ///
     D3DRESOURCETYPE texType2D3DResourceType( TexType );
 
-    //!
-    //! Convert texture usage to D3DUSAGE(s)
-    //!
+    ///
+    /// Convert texture usage to D3DUSAGE(s)
+    ///
     DWORD texUsage2D3DUsage( BitFields );
 
-    //!
-    //! D3D texture
-    //!
+    ///
+    /// D3D texture
+    ///
     class D3D9Texture : public BasicTexture, public StdClass, public D3D9Resource
     {
          GN_DECLARE_STDCLASS( D3D9Texture, StdClass );
@@ -88,9 +88,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Bind myself to specific stage
-        //!
+        ///
+        /// Bind myself to specific stage
+        ///
         void bind( UINT stage ) const
         {
             D3D9Renderer & r = getRenderer();
@@ -106,11 +106,11 @@ namespace GN { namespace gfx
             r.setD3DSamplerState( stage, D3DSAMP_ADDRESSW, mD3DWraps[2] );
         }
 
-        //!
-        //! get D3D surface. Can _NOT_ be used on 3D texture.
-        //!
-        //! \note Do not foget to release the returned surface after using it.
-        //!
+        ///
+        /// get D3D surface. Can _NOT_ be used on 3D texture.
+        ///
+        /// \note Do not foget to release the returned surface after using it.
+        ///
         LPDIRECT3DSURFACE9 getSurface( size_t face, size_t level ) const
         {
             GN_GUARD_SLOW;
@@ -155,44 +155,44 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        //!
-        //! D3D texture instance pointer
-        //!
+        ///
+        /// D3D texture instance pointer
+        ///
         IDirect3DBaseTexture9 * mD3DTexture;
 
-        //!
-        //! shadow copy in system memory
-        //!
+        ///
+        /// shadow copy in system memory
+        ///
         IDirect3DBaseTexture9 * mShadowCopy;
 
-        //!
-        //! temporary copy in system memory for lock operation
-        //!
+        ///
+        /// temporary copy in system memory for lock operation
+        ///
         IDirect3DBaseTexture9 * mLockCopy;
 
-        //!
-        //! D3D texture parameters
-        //!
+        ///
+        /// D3D texture parameters
+        ///
         //@{
         D3DFORMAT mD3DFormat;
         DWORD mD3DUsage;
         //@}
 
-        bool mWritable;  //!< Is the D3D texture writable?
+        bool mWritable;  ///< Is the D3D texture writable?
 
-        //!
-        //! D3D filters( min, mag, mip )
-        //!
+        ///
+        /// D3D filters( min, mag, mip )
+        ///
         mutable D3DTEXTUREFILTERTYPE mD3DFilters[3];
 
-        //!
-        //! texture wrapping modes
-        //!
+        ///
+        /// texture wrapping modes
+        ///
         mutable D3DTEXTUREADDRESS mD3DWraps[3];
 
-        //!
-        //! \name locking related variables
-        //!
+        ///
+        /// \name locking related variables
+        ///
         //@{
         IDirect3DBaseTexture9 * mLockedTexture;
         LockFlag mLockedFlag;
@@ -207,9 +207,9 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        //!
-        //! convert garnet cube face to D3D tag
-        //!
+        ///
+        /// convert garnet cube face to D3D tag
+        ///
         static D3DCUBEMAP_FACES sCubeFace2D3D( size_t face )
         {
             static D3DCUBEMAP_FACES sTable[ NUM_CUBEFACES ] =
@@ -225,9 +225,9 @@ namespace GN { namespace gfx
             return sTable[face];
         }
 
-        //!
-        //! create instance of D3D texture
-        //!
+        ///
+        /// create instance of D3D texture
+        ///
         LPDIRECT3DBASETEXTURE9
         newD3DTexture( TexType   type,
                        size_t    width,

@@ -11,8 +11,8 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.base.Clock");
 
-//!
-//! 获得计数器的主频
+///
+/// 获得计数器的主频
 // -----------------------------------------------------------------------------
 static GN::Clock::CycleType sGetSystemCycleFrequency()
 {

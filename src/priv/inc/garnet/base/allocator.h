@@ -1,20 +1,20 @@
 #ifndef __GN_BASE_ALLOCATOR_H__
 #define __GN_BASE_ALLOCATOR_H__
 // *****************************************************************************
-//! \file    allocator.h
-//! \brief   Common allocator classes
-//! \author  chenlee (2006.5.31)
+/// \file    allocator.h
+/// \brief   Common allocator classes
+/// \author  chenlee (2006.5.31)
 // *****************************************************************************
 
 namespace GN
 {
-    //!
-    //! STL compilant allocator that use garnet heap memory management routines.
-    //!
+    ///
+    /// STL compilant allocator that use garnet heap memory management routines.
+    ///
     template<typename T>
     class StlAllocator
     {
-        //! \cond NEVER
+        /// \cond NEVER
     public:
         typedef T                  value_type;
         typedef size_t             size_type;
@@ -80,42 +80,42 @@ namespace GN
             size_type count = (size_t)(-1) / sizeof(T);
             return ( 0 < count ? count : 1 );
         }
-        //! \endcond
+        /// \endcond
     };
 
-    //!
-    //! Standard allocator using global new and delete operator.
-    //!
-    //! Follow interface of this class, when defining customized allocator.
-    //!
+    ///
+    /// Standard allocator using global new and delete operator.
+    ///
+    /// Follow interface of this class, when defining customized allocator.
+    ///
     template<class T>
     class StandardAllocator
     {
     public:
 
-        //!
-        //! Rebind to other type
-        //!
+        ///
+        /// Rebind to other type
+        ///
         template<class T2>
         struct Rebind
         {
-            //!
-            //! allocator class suitable for class T2.
-            //!
+            ///
+            /// allocator class suitable for class T2.
+            ///
             typedef StlAllocator<T2> Other;
         };
 
-        //!
-        //! do allocation, call constructor(s) as well.
-        //!
+        ///
+        /// do allocation, call constructor(s) as well.
+        ///
         static T * sAlloc( size_t count )
         {
             return new T[count];
         }
 
-        //!
-        //! do deallocation, call destructor(s) as well.
-        //!
+        ///
+        /// do deallocation, call destructor(s) as well.
+        ///
         static void sDealloc( T * p, size_t count )
         {
             ((void)(count)); // unused parameter
@@ -123,38 +123,38 @@ namespace GN
         }
     };
 
-    //!
-    //! Fixed sized memory allocator
-    //!
+    ///
+    /// Fixed sized memory allocator
+    ///
     class FixedSizedMemoryAllocator
     {
     protected:
 
         // TODO: use big chunk of memory to increase performance and memory locality.
 
-        //!
-        //! Memory block header
-        //!
+        ///
+        /// Memory block header
+        ///
         struct BlockHeader
         {
             // TODO: addd some checking pattern at head of block.
-            BlockHeader * prev; //!< point to previous block. NULL means head block.
-            BlockHeader * next; //!< point to next block. NULL means last block.
-            BlockHeader * nextFree; //!< point to next free block.
-            void * data() const { return (void*)( ((UInt8*)this) + (size_t)&((BlockHeader*)NULL)->nextFree ); } //!< return pointer to data area.
+            BlockHeader * prev; ///< point to previous block. NULL means head block.
+            BlockHeader * next; ///< point to next block. NULL means last block.
+            BlockHeader * nextFree; ///< point to next free block.
+            void * data() const { return (void*)( ((UInt8*)this) + (size_t)&((BlockHeader*)NULL)->nextFree ); } ///< return pointer to data area.
         };
 
-        const size_t DATA_OFFSET; //!< offset of data area to the head of block.
-        const size_t BLOCK_SIZE; //!< block size in bytes.
+        const size_t DATA_OFFSET; ///< offset of data area to the head of block.
+        const size_t BLOCK_SIZE; ///< block size in bytes.
 
-        BlockHeader * mAllBlocks; //!< point to first block
-        BlockHeader * mFreeList; //!< point to first free block
+        BlockHeader * mAllBlocks; ///< point to first block
+        BlockHeader * mFreeList; ///< point to first free block
 
     public:
 
-        //!
-        //! Default ctor.
-        //!
+        ///
+        /// Default ctor.
+        ///
         FixedSizedMemoryAllocator( size_t itemSize )
             : DATA_OFFSET( (size_t)&((BlockHeader*)NULL)->nextFree )
             , BLOCK_SIZE( (itemSize + DATA_OFFSET) > sizeof(BlockHeader)
@@ -166,9 +166,9 @@ namespace GN
             GN_ASSERT( BLOCK_SIZE >= sizeof(BlockHeader) && BLOCK_SIZE >= (DATA_OFFSET+itemSize) );
         }
 
-        //!
-        //! Default ctor.
-        //!
+        ///
+        /// Default ctor.
+        ///
         ~FixedSizedMemoryAllocator()
         {
             BlockHeader * p = mAllBlocks;
@@ -180,9 +180,9 @@ namespace GN
             }
         }
 
-        //!
-        //! Allocate raw memory for one block
-        //!
+        ///
+        /// Allocate raw memory for one block
+        ///
         void * alloc()
         {
             BlockHeader * p;
@@ -209,9 +209,9 @@ namespace GN
             return p->data();
         }
 
-        //!
-        //! Deallocate
-        //!
+        ///
+        /// Deallocate
+        ///
         void dealloc( void * p )
         {
             if( 0 == p ) return;
@@ -227,9 +227,9 @@ namespace GN
             mFreeList = b;
         }
 
-        //!
-        //! Shrink the allocator, free all unused blocks
-        //!
+        ///
+        /// Shrink the allocator, free all unused blocks
+        ///
         void shrink()
         {
             BlockHeader * p;
@@ -255,22 +255,22 @@ namespace GN
         }
     };
 
-    //!
-    //! Fixed sized object allocator
-    //!
+    ///
+    /// Fixed sized object allocator
+    ///
     template<typename T>
     class FixedSizedObjectAllocator : public FixedSizedMemoryAllocator
     {
     public:
 
-        //!
-        //! Default ctor
-        //!
+        ///
+        /// Default ctor
+        ///
         FixedSizedObjectAllocator() : FixedSizedMemoryAllocator( sizeof(T) ) {}
 
-        //!
-        //! Default ctor.
-        //!
+        ///
+        /// Default ctor.
+        ///
         ~FixedSizedObjectAllocator()
         {
             shrink();

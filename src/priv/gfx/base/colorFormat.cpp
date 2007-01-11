@@ -56,9 +56,9 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
             pdesc->numChannels = 0; \
             handleFourcc( *pdesc, MAKE_FOURCC_INT(*#c0, *#c1, *#c2, *#c3) );
 
-        //!
-        //! fourcc handler
-        //!
+        ///
+        /// fourcc handler
+        ///
         static inline void
         handleFourcc( ClrFmtDesc & desc, UInt32 fourcc )
         {
@@ -81,9 +81,9 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
             }
         }
 
-        //!
-        //! setup channel properties
-        //!
+        ///
+        /// setup channel properties
+        ///
         static inline void
         setupChannel(
             ChannelDesc & ch, unsigned int shift, unsigned int bits, unsigned int type )
@@ -93,9 +93,9 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
             ch.type = type;
         }
 
-        //!
-        //! constructor
-        //!
+        ///
+        /// constructor
+        ///
         ClrDescGenerator()
         {
             // clear description table

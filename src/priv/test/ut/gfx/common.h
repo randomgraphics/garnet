@@ -10,7 +10,7 @@
 #include "garnet/GNgfx.h"
 #include "garnet/GNwin.h"
 
-//! \cond
+/// \cond
 
 #if GN_MSWIN || GN_CYGWIN
 #define LIB_PREF ""
@@ -372,7 +372,7 @@ protected:
     }
 };
 
-//! \endcond
+/// \endcond
 
 // *****************************************************************************
 //                           End of common.h

@@ -1,21 +1,21 @@
 #ifndef __GN_D3DWRAPPER_MYD3D9_H__
 #define __GN_D3DWRAPPER_MYD3D9_H__
 // *****************************************************************************
-//! \file    d3d9Wrapper/myd3d9.h
-//! \brief   IDirect3D9 wrapper
-//! \author  chenlee (2006.6.24)
+/// \file    d3d9Wrapper/myd3d9.h
+/// \brief   IDirect3D9 wrapper
+/// \author  chenlee (2006.6.24)
 // *****************************************************************************
 
-//!
-//! IDirect3D9 wrapper
-//!
+///
+/// IDirect3D9 wrapper
+///
 class MyD3D9 : public BasicInterface<IDirect3D9>
 {
 public:
 
-    bool create( UINT sdkVersion ); //!< create D3D object
+    bool create( UINT sdkVersion ); ///< create D3D object
 
-    //! \name IDirect3D9 methods
+    /// \name IDirect3D9 methods
     //@{
     HRESULT  STDMETHODCALLTYPE RegisterSoftwareDevice(void* pInitializeFunction) { return obj()->RegisterSoftwareDevice( pInitializeFunction ); }
     UINT     STDMETHODCALLTYPE GetAdapterCount() { return obj()->GetAdapterCount(); }

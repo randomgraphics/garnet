@@ -1,17 +1,17 @@
 #ifndef __GN_BASE_ARRAY_H__
 #define __GN_BASE_ARRAY_H__
 // *****************************************************************************
-//! \file    base/array.h
-//! \brief   Common array (vector) class
-//! \author  chenlee (2006.5.31)
+/// \file    base/array.h
+/// \brief   Common array (vector) class
+/// \author  chenlee (2006.5.31)
 // *****************************************************************************
 
 namespace GN
 {
-    //!
-    //! Fixed sized array, which always has N elements.
-    //! Behaves like C-style array, but with bound check in debug build.
-    //!
+    ///
+    /// Fixed sized array, which always has N elements.
+    /// Behaves like C-style array, but with bound check in debug build.
+    ///
     template<class T, size_t N>
     class FixedArray
     {
@@ -19,35 +19,35 @@ namespace GN
 
     public:
 
-        typedef T ElementType; //!< element type
+        typedef T ElementType; ///< element type
 
-        static const size_t MAX_SIZE = N; //!< maximum size
+        static const size_t MAX_SIZE = N; ///< maximum size
 
-        //!
-        //! convert to C pointer
-        //!
+        ///
+        /// convert to C pointer
+        ///
         const T* cptr() const { return mElements; }
 
-        //!
-        //! convert to C pointer
-        //!
+        ///
+        /// convert to C pointer
+        ///
         T* cptr() { return mElements; }
 
-        //!
-        //! at operator
-        //!
+        ///
+        /// at operator
+        ///
         T & operator[]( size_t i ) { GN_ASSERT( i < N ); return mElements[i]; }
 
-        //!
-        //! at operator
-        //!
+        ///
+        /// at operator
+        ///
         const T & operator[]( size_t i ) const { GN_ASSERT( i < N ); return mElements[i]; }
     };
 
-    //!
-    //! Fixed size array with supporting to common array operations
-    //! like push, pop, insert, remove and etc.
-    //!
+    ///
+    /// Fixed size array with supporting to common array operations
+    /// like push, pop, insert, remove and etc.
+    ///
     template<class T, size_t N>
     class StackArray
     {
@@ -102,27 +102,27 @@ namespace GN
 
     public:
 
-        typedef T ElementType; //!< element type
+        typedef T ElementType; ///< element type
 
-        static const size_t MAX_SIZE = N; //!< maximum size
+        static const size_t MAX_SIZE = N; ///< maximum size
 
-        //!
-        //! default constructor
-        //!
+        ///
+        /// default constructor
+        ///
         StackArray() : mCount(0) {}
 
-        //!
-        //! constructor with user-defined count.
-        //!
+        ///
+        /// constructor with user-defined count.
+        ///
         explicit StackArray( size_t count ) : mCount(count) {}
 
-        //!
-        //! copy constructor
-        //!
+        ///
+        /// copy constructor
+        ///
         StackArray( const StackArray & other ) { doClone( other ); }
 
-        //! \name Common array operations.
-        //!
+        /// \name Common array operations.
+        ///
         //@{
         void      append( const T & t ) { doInsert( mCount, t ); }
         const T & back() const { GN_ASSERT( mCount > 0 ); return mElements[mCount-1]; }
@@ -147,8 +147,8 @@ namespace GN
         size_t    size() const { return mCount; }
         //@}
 
-        //! \name common operators
-        //!
+        /// \name common operators
+        ///
         //@{
         StackArray & operator=( const StackArray & other ) { doClone(other); return *this; }
         bool         operator==( const StackArray & other ) const { return equal(other); }
@@ -160,9 +160,9 @@ namespace GN
 
     template<class T, size_t N> Logger * StackArray<T,N>::sLogger = getLogger("GN.base.StackArray");
 
-    //!
-    //! Resizeable array.
-    //!
+    ///
+    /// Resizeable array.
+    ///
     template<class T, class ALLOCATOR = StandardAllocator<T> >
     class DynaArray
     {
@@ -258,31 +258,31 @@ namespace GN
 
     public:
 
-        typedef T ElementType; //!< element type
-        typedef ALLOCATOR AllocatorType; //!< allocator type
+        typedef T ElementType; ///< element type
+        typedef ALLOCATOR AllocatorType; ///< allocator type
 
-        //!
-        //! default constructor
-        //!
+        ///
+        /// default constructor
+        ///
         DynaArray() : mElements(0), mCount(0), mCapacity(0) {}
 
-        //!
-        //! constructor with user-defined count.
-        //!
+        ///
+        /// constructor with user-defined count.
+        ///
         explicit DynaArray( size_t count ) : mElements(0), mCount(0), mCapacity(0) { resize( count ); }
 
-        //!
-        //! copy constructor
-        //!
+        ///
+        /// copy constructor
+        ///
         DynaArray( const DynaArray & other ) : mElements(0), mCount(0), mCapacity(0) { doClone( other ); }
 
-        //!
-        //! destructor
-        //!
+        ///
+        /// destructor
+        ///
         ~DynaArray() { dealloc(); }
 
-        //! \name Common array operations.
-        //!
+        /// \name Common array operations.
+        ///
         //@{
         void      append( const T & t ) { resize( mCount + 1 ); back() = t; }
         void      append( const T * p, size_t count ) { doAppend( p, count ); }
@@ -309,8 +309,8 @@ namespace GN
         size_t    size() const { return mCount; }
         //@}
 
-        //! \name common operators
-        //!
+        /// \name common operators
+        ///
         //@{
         DynaArray & operator=( const DynaArray & other ) { doClone(other); return *this; }
         bool        operator==( const DynaArray & other ) const { return equal(other); }

@@ -1,9 +1,9 @@
 #ifndef __GN_GFX_OGLRENDERER_H__
 #define __GN_GFX_OGLRENDERER_H__
 // *****************************************************************************
-//! \file    oglRenderer.h
-//! \brief   OGL renderer class
-//! \author  chenlee (2005.10.2)
+/// \file    oglRenderer.h
+/// \brief   OGL renderer class
+/// \author  chenlee (2005.10.2)
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
@@ -16,9 +16,9 @@ namespace GN { namespace gfx
     class OGLQuad;
     class OGLLine;
 
-    //!
-    //! OGL renderer class
-    //!
+    ///
+    /// OGL renderer class
+    ///
     class OGLRenderer : public BasicRenderer
     {
         GN_DECLARE_STDCLASS(OGLRenderer, BasicRenderer);
@@ -57,7 +57,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Device Manager
+    /// \name                     Device Manager
     //
     // ************************************************************************
 
@@ -76,16 +76,16 @@ namespace GN { namespace gfx
 
     private:
 
-        //!
-        //! if true, then we are inside function changeOptions().
-        //!
+        ///
+        /// if true, then we are inside function changeOptions().
+        ///
         bool mDeviceChanging;
 
         //@}
 
     // ************************************************************************
     //
-    //! \name                     Display Manager
+    /// \name                     Display Manager
     //
     // ************************************************************************
 
@@ -119,7 +119,7 @@ namespace GN { namespace gfx
 
     private :
 
-        bool    mDispOK; //!< true between dispDeviceRestore() and dispDeviceDispose()
+        bool    mDispOK; ///< true between dispDeviceRestore() and dispDeviceDispose()
         HDC     mDeviceContext;
         HGLRC   mRenderContext;
         bool    mDisplayModeActivated;
@@ -148,7 +148,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                 Capability Manager
+    /// \name                 Capability Manager
     //
     // ************************************************************************
 
@@ -173,7 +173,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Resource Manager
+    /// \name                     Resource Manager
     //
     // ************************************************************************
 
@@ -189,22 +189,22 @@ namespace GN { namespace gfx
 
     public:
 
-        //!
-        //! Insert resource into resource list. Can be only called by
-        //! constructor of OGLResource.
-        //!
+        ///
+        /// Insert resource into resource list. Can be only called by
+        /// constructor of OGLResource.
+        ///
         void insertResource( OGLResource * p ) { mResourceList.push_back(p); }
 
-        //!
-        //! Remove resource from resource list. Can be only called by
-        //! destructor of OGLResource.
-        //!
+        ///
+        /// Remove resource from resource list. Can be only called by
+        /// destructor of OGLResource.
+        ///
         void removeResource( OGLResource * p ) { mResourceList.remove(p); }
 
-        //!
-        //! Inform OGL renderer that GLSL shader is deleted, to give OGL renderer a chance
-        //! to adjust GLSL program map. Only called by GLSL shader class.
-        //!
+        ///
+        /// Inform OGL renderer that GLSL shader is deleted, to give OGL renderer a chance
+        /// to adjust GLSL program map. Only called by GLSL shader class.
+        ///
         void removeGLSLShader( ShaderType, Shader * );
 
     private :
@@ -248,7 +248,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                   Context Manager
+    /// \name                   Context Manager
     //
     // ************************************************************************
 
@@ -262,9 +262,9 @@ namespace GN { namespace gfx
 
     public:
 
-        void chooseClientTextureStage( size_t ) const; //!< Choose one stage as client active texture stage.
-        void chooseTextureStage( size_t ) const; //!< Choose one texture stage as active stage
-        void disableTextureStage( size_t ) const; //!< Disable one texture stage
+        void chooseClientTextureStage( size_t ) const; ///< Choose one stage as client active texture stage.
+        void chooseTextureStage( size_t ) const; ///< Choose one texture stage as active stage
+        void disableTextureStage( size_t ) const; ///< Disable one texture stage
 
     private:
 
@@ -292,7 +292,7 @@ namespace GN { namespace gfx
 
     // ************************************************************************
     //
-    //! \name                     Drawing Manager
+    /// \name                     Drawing Manager
     //
     // ************************************************************************
 
@@ -366,7 +366,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Misc. utilities
+        /// \name Misc. utilities
         //
         // ********************************************************************
 

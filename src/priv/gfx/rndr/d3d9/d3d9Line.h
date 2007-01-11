@@ -1,17 +1,17 @@
 #ifndef __GN_GFXD3D9_D3D9LINE_H__
 #define __GN_GFXD3D9_D3D9LINE_H__
 // *****************************************************************************
-//! \file    d3d9/d3d9Line.h
-//! \brief   D3D9 line renderer class
-//! \author  chenlee (2005.12.2)
+/// \file    d3d9/d3d9Line.h
+/// \brief   D3D9 line renderer class
+/// \author  chenlee (2005.12.2)
 // *****************************************************************************
 
 #include "d3d9Resource.h"
 
 namespace GN { namespace gfx {
-    //!
-    //! D3D line renderer
-    //!
+    ///
+    /// D3D line renderer
+    ///
     class D3D9Line : public D3D9Resource, public StdClass
     {
          GN_DECLARE_STDCLASS( D3D9Line, StdClass );
@@ -58,11 +58,11 @@ namespace GN { namespace gfx {
         // ********************************
     public:
 
-        //!
-        //! Draw lines on screen
-        //!
-        //! \sa Renderer::drawLines
-        //!
+        ///
+        /// Draw lines on screen
+        ///
+        /// \sa Renderer::drawLines
+        ///
         void drawLines(
             BitFields options,
             const float * positions, size_t stride,
@@ -78,7 +78,7 @@ namespace GN { namespace gfx {
 
         enum
         {
-            MAX_LINES = 4096 //!< maxinum number of lines vertex and index buffer can hold.
+            MAX_LINES = 4096 ///< maxinum number of lines vertex and index buffer can hold.
         };
 
         LPDIRECT3DVERTEXDECLARATION9 mDecl;

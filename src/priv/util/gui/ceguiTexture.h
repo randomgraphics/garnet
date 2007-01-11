@@ -1,9 +1,9 @@
 #ifndef __GN_GUI_CEGUITEXTURE_H__
 #define __GN_GUI_CEGUITEXTURE_H__
 // *****************************************************************************
-//! \file    gui/ceguiTexture.h
-//! \brief   CEGUI texture class
-//! \author  chenlee (2006.2.25)
+/// \file    gui/ceguiTexture.h
+/// \brief   CEGUI texture class
+/// \author  chenlee (2006.2.25)
 // *****************************************************************************
 
 #ifdef HAS_CEGUI
@@ -12,9 +12,9 @@
 
 namespace CEGUI
 {    
-    //!
-    //! CEGUI Texture adapter 
-    //!
+    ///
+    /// CEGUI Texture adapter 
+    ///
     class GarnetTexture : public Texture
     {
         // ********************************
@@ -46,19 +46,19 @@ namespace CEGUI
 
    public:
 
-        //!
-        //! reload the content
-        //!
+        ///
+        /// reload the content
+        ///
         bool reload();
 
-        //!
-        //! dispose the content
-        //!
+        ///
+        /// dispose the content
+        ///
         void dispose() { mGarnetTexture.clear(); }
 
-        //!
-        //! Get internal texture handle
-        //!
+        ///
+        /// Get internal texture handle
+        ///
         GN::gfx::Texture * getGarnetTexture() const { return mGarnetTexture; }
 
         // ********************************

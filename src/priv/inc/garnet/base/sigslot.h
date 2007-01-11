@@ -1,7 +1,7 @@
 // *****************************************************************************
-//! \file    sigslot.h
-//! \brief   signal slot implementation
-//! \author  chenlee (2005.5.6)
+/// \file    sigslot.h
+/// \brief   signal slot implementation
+/// \author  chenlee (2005.5.6)
 // *****************************************************************************
 #ifdef GN_SIGSLOT_TEMPL_N
 
@@ -77,9 +77,9 @@
 
 namespace GN
 {
-    //!
-    //! template signal class
-    //!
+    ///
+    /// template signal class
+    ///
     template<typename R PARAM_COMMA PARAM_TEMPLS>
     class SIGNAL_NAME : public detail::SignalBase
     {
@@ -334,7 +334,7 @@ namespace GN
 #undef GN_SIGSLOT_TEMPL_N
 
 #elif !defined(__GN_BASE_SIGSLOT_H__)
-#define __GN_BASE_SIGSLOT_H__ //!< Include protector
+#define __GN_BASE_SIGSLOT_H__ ///< Include protector
 
 #include <list>
 #include <algorithm>
@@ -345,9 +345,9 @@ namespace GN
 
     namespace detail
     {
-        //!
-        //! Base signal class
-        //!
+        ///
+        /// Base signal class
+        ///
         class SignalBase
         {
             friend class GN::SlotBase;
@@ -363,10 +363,10 @@ namespace GN
         };
     }
 
-    //!
-    //! Base slot class. Derive your class from this, if you want automatic
-    //! management of connections between signal and slot.
-    //!
+    ///
+    /// Base slot class. Derive your class from this, if you want automatic
+    /// management of connections between signal and slot.
+    ///
     class SlotBase
     {
     protected:
@@ -404,9 +404,9 @@ namespace GN
     }
 }
 
-//!
-//! Signal/Slot parameter count
-//!
+///
+/// Signal/Slot parameter count
+///
 #define GN_SIGSLOT_TEMPL_N 0
 #include "sigslot.h"
 

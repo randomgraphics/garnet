@@ -203,9 +203,9 @@ static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::Tex
 //  public utils
 // ****************************************************************************
 
-//!
-//! Convert texture type to D3DRESOURCETYPE
-//!
+///
+/// Convert texture type to D3DRESOURCETYPE
+///
 D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
 {
     switch( type )
@@ -222,9 +222,9 @@ D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
     }
 }
 
-//!
-//! Convert texture usage to D3DUSAGE(s)
-//!
+///
+/// Convert texture usage to D3DUSAGE(s)
+///
 DWORD GN::gfx::texUsage2D3DUsage( BitFields usage )
 {
     DWORD d3dUsage  = 0;
@@ -296,9 +296,9 @@ void GN::gfx::D3D9Texture::quit()
 // ****************************************************************************
 
 //
-//! \note During device resetting, we have to recreate all textures, including
-//!       those in managed pool. Because backbuffer format might be changed.
-//!       And we have re-check the compability of texture format.
+/// \note During device resetting, we have to recreate all textures, including
+///       those in managed pool. Because backbuffer format might be changed.
+///       And we have re-check the compability of texture format.
 // ----------------------------------------------------------------------------
 bool GN::gfx::D3D9Texture::deviceRestore()
 {

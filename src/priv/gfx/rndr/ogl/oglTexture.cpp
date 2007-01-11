@@ -9,36 +9,36 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // local var/types/functions
 // *****************************************************************************
 
-//!
-//! Automatically delete OGL textures while out of scope.
-//!
+///
+/// Automatically delete OGL textures while out of scope.
+///
 class AutoDeleteTexture
 {
     GLuint mTex;
 
 public:
 
-    //!
-    //! Ctor
-    //!
+    ///
+    /// Ctor
+    ///
     AutoDeleteTexture( GLuint tex ) : mTex(tex) {}
 
-    //!
-    //! Dtor
-    //!
+    ///
+    /// Dtor
+    ///
     ~AutoDeleteTexture()
     {
         if( mTex ) glDeleteTextures( 1, &mTex );
     }
 
-    //!
-    //! Dismiss the auto-deletetion
-    //!
+    ///
+    /// Dismiss the auto-deletetion
+    ///
     void dismiss() { mTex = 0; }
 };
 
-//!
-//! map filter type to opengl constant
+///
+/// map filter type to opengl constant
 // -----------------------------------------------------------------------------
 static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
 {
@@ -55,8 +55,8 @@ static GN_INLINE GLenum sTexFilter2OGL( GN::gfx::TexFilter f )
     }
 }
 
-//!
-//! map wrap mode to opengl constant
+///
+/// map wrap mode to opengl constant
 // -----------------------------------------------------------------------------
 static GN_INLINE GLenum sTexWrap2OGL( GN::gfx::TexWrap w )
 {
@@ -81,8 +81,8 @@ static GN_INLINE GLenum sTexWrap2OGL( GN::gfx::TexWrap w )
     }
 }
 
-//!
-//! convert garnet color format to OpenGL format
+///
+/// convert garnet color format to OpenGL format
 // -----------------------------------------------------------------------------
 static GN_INLINE bool sColorFormat2OGL(
     GLint & gl_internalformat,
@@ -271,8 +271,8 @@ static GN_INLINE bool sColorFormat2OGL(
     return false;
 }
 
-//!
-//! generate 2D mipmaps
+///
+/// generate 2D mipmaps
 // ------------------------------------------------------------------------
 static bool sGen2DMipmap( GLenum target,
                           GLsizei width, GLsizei height,

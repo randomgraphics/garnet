@@ -9,9 +9,9 @@ namespace GN { namespace win
     // Fake Window
     // *************************************************************************
 
-    //!
-    //! Fake window class
-    //!
+    ///
+    /// Fake window class
+    ///
     class FakeWindow : public Window
     {
         // ********************************

@@ -1,28 +1,28 @@
 #ifndef __GN_BASE_VARIANT_H__
 #define __GN_BASE_VARIANT_H__
 // *****************************************************************************
-//! \file    base/variant.h
-//! \brief   General multi-type variables
-//! \author  chenlee (2006.2.7)
+/// \file    base/variant.h
+/// \brief   General multi-type variables
+/// \author  chenlee (2006.2.7)
 // *****************************************************************************
 
 namespace GN
 {
-    //!
-    //! General variant class
-    //!
-    //! \note
-    //! - boolean value can be translated to stirng value "0" or "1"
-    //! - string value like "yes", "true", "on" and "1" can be translate to boolean value "true" (case insensitive)
-    //! - string value like "no", "false", "off" and "0" can be translate to boolean value "false" (case insensitive)
-    //!
+    ///
+    /// General variant class
+    ///
+    /// \note
+    /// - boolean value can be translated to stirng value "0" or "1"
+    /// - string value like "yes", "true", "on" and "1" can be translate to boolean value "true" (case insensitive)
+    /// - string value like "no", "false", "off" and "0" can be translate to boolean value "false" (case insensitive)
+    ///
     class Variant
     {
         StrA mValue;
 
     public:
 
-        //! \name constructors
+        /// \name constructors
         //@{
         Variant() {}
         Variant( const StrA & s ) { sets( s ); }
@@ -34,7 +34,7 @@ namespace GN
         Variant( const Matrix44f & m ) { setm( m ); }
         //@}
 
-        //! \name set variable value
+        /// \name set variable value
         //@{
         void sets( const StrA & s ) { mValue = s; }
         void setb( bool b );
@@ -45,7 +45,7 @@ namespace GN
         void setm( const Matrix44f & m );
         //@}
 
-        //! \name Get variable value. Return false for incompatible type.
+        /// \name Get variable value. Return false for incompatible type.
         //@{
         const StrA & gets() const { return mValue; }
         bool getb( bool & b ) const;
@@ -56,7 +56,7 @@ namespace GN
         bool getm( Matrix44f & m ) const;
         //@}
 
-        //! \name Get variable value. Return default value for incompatible type.
+        /// \name Get variable value. Return default value for incompatible type.
         //@{
         bool      getdb( bool defval ) const { bool r; if( getb(r) ) return r; else return defval; }
         int       getdi( int defval ) const { int r; if( geti(r) ) return r; else return defval; }

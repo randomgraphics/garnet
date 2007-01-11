@@ -17,9 +17,9 @@
 #include <d3d10.h>
 #include <d3dx10.h>
 
-//!
-//! D3D10 error check routine
-//!
+///
+/// D3D10 error check routine
+///
 #define GN_D3D10_CHECK_DO( func, something )                \
     if( true ) {                                            \
         HRESULT rr = func;                                  \
@@ -30,23 +30,23 @@
         }                                                   \
     } else void(0)
 
-//!
-//! D3D10 error check routine
-//!
+///
+/// D3D10 error check routine
+///
 #if GN_DEBUG_BUILD
 #define GN_D3D10_CHECK( func )         GN_D3D10_CHECK_DO( func, )
 #else
 #define GN_D3D10_CHECK( func )         func
 #endif
 
-//!
-//! D3D10 error check routine
-//!
+///
+/// D3D10 error check routine
+///
 #define GN_D3D10_CHECK_R( func )        GN_D3D10_CHECK_DO( func, return; )
 
-//!
-//! D3D10 error check routine
-//!
+///
+/// D3D10 error check routine
+///
 #define GN_D3D10_CHECK_RV( func, rval ) GN_D3D10_CHECK_DO( func, return rval; )
 
 // *****************************************************************************

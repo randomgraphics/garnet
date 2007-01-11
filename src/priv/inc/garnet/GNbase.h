@@ -1,19 +1,19 @@
 #ifndef __GN_BASE_GNBASE_H__
 #define __GN_BASE_GNBASE_H__
 // *****************************************************************************
-//! \file    GNbase.h
-//! \brief   General header of base module
-//! \author  chenlee(2005.4.10)
+/// \file    GNbase.h
+/// \brief   General header of base module
+/// \author  chenlee(2005.4.10)
 // *****************************************************************************
 
-//!
-//! namespace for garnet library
-//!
+///
+/// namespace for garnet library
+///
 namespace GN
 {
-    //!
-    //! Implementation details of garnet library
-    //!
+    ///
+    /// Implementation details of garnet library
+    ///
     namespace detail {}
 }
 

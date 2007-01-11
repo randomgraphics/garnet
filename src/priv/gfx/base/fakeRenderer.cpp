@@ -12,7 +12,7 @@ namespace GN { namespace gfx
     {
         // ********************************************************************
         //
-        //! \name Ctor / dtor
+        /// \name Ctor / dtor
         //
         // ********************************************************************
 
@@ -20,14 +20,14 @@ namespace GN { namespace gfx
 
     public:
 
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         FakeRenderer() {}
 
-        //!
-        //! dtor
-        //!
+        ///
+        /// dtor
+        ///
         ~FakeRenderer()
         {
             if( mInitialized )
@@ -41,7 +41,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Device Manager
+        /// \name Device Manager
         //
         // ********************************************************************
 
@@ -68,12 +68,12 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Display Manager
-        //! \note
-        //!     We provide two functions to get API specific rendering context:
-        //!     - Sometime, you want to run some API specific codes,
-        //!       for debug, test or any other purpose.
-        //!     - You may use these functions to detect the current API
+        /// \name Display Manager
+        /// \note
+        ///     We provide two functions to get API specific rendering context:
+        ///     - Sometime, you want to run some API specific codes,
+        ///       for debug, test or any other purpose.
+        ///     - You may use these functions to detect the current API
         //
         // ********************************************************************
 
@@ -88,7 +88,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Capabilities Manager
+        /// \name Capabilities Manager
         //
         // ********************************************************************
 
@@ -117,7 +117,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name resource Manager
+        /// \name resource Manager
         //
         // ********************************************************************
 
@@ -228,7 +228,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Context manager
+        /// \name Context manager
         //
         // ********************************************************************
 
@@ -242,7 +242,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Drawing Manager
+        /// \name Drawing Manager
         //
         // ********************************************************************
 
@@ -292,7 +292,7 @@ namespace GN { namespace gfx
 
         // ********************************************************************
         //
-        //! \name Misc. utilities
+        /// \name Misc. utilities
         //
         // ********************************************************************
 

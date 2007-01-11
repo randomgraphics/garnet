@@ -2,18 +2,18 @@
 
 namespace GN
 {
-    //!
-    //! Threading model
-    //!
+    ///
+    /// Threading model
+    ///
     struct SingleThreadingModel
     {
         struct SyncLock {};
         struct AutoLock {};
     };
     
-    //!
-    //! object pool
-    //!
+    ///
+    /// object pool
+    ///
     template<
         class  T,
         size_t N         = 256,
@@ -193,7 +193,7 @@ namespace GN
         T * alloc() { return doAlloc(); }
         void dealloc( T * p ) { doDealloc( p ); }
         void freeAll() { doFreeAll(); }
-        void recycle() { doRecycle(); } //!< Free unused memory as much as possible.
+        void recycle() { doRecycle(); } ///< Free unused memory as much as possible.
         size_t getItemCount() const;
         size_t getMemoryFootprint() const;
         //@}

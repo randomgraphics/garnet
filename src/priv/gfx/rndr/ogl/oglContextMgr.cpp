@@ -15,9 +15,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // local function
 // *****************************************************************************
 
-//!
-//! render state value map
-//!
+///
+/// render state value map
+///
 static GLenum sRsv2OGL[GN::gfx::NUM_RENDER_STATE_VALUES] =
 {
     #define GNGFX_DEFINE_RSV( tag, d3dval, glval ) glval,
@@ -28,26 +28,26 @@ static GLenum sRsv2OGL[GN::gfx::NUM_RENDER_STATE_VALUES] =
 // Individual RS/TSS functions
 #include "oglRenderState.inl"
 
-//!
-//! opengl texture operation structure
-//!
+///
+/// opengl texture operation structure
+///
 struct OGLTextureState
 {
-    GLenum op1; //!< OpenGL texture opcode 1
-    GLenum op2; //!< OpenGL texture opcode 2
+    GLenum op1; ///< OpenGL texture opcode 1
+    GLenum op2; ///< OpenGL texture opcode 2
 };
 
-//!
-//! opengl texture stage state value structure
+///
+/// opengl texture stage state value structure
 struct OGLTextureStateValue
 {
-    GLuint val1; //!< OpenGL texture opvalue 1
-    GLuint val2; //!< OpenGL texture opvalue 2
+    GLuint val1; ///< OpenGL texture opvalue 1
+    GLuint val2; ///< OpenGL texture opvalue 2
 };
 
-//!
-//! opengl texture stage state operation map
-//!
+///
+/// opengl texture stage state operation map
+///
 static OGLTextureState sTs2OGL[GN::gfx::NUM_TEXTURE_STATES] =
 {
     #define GNGFX_DEFINE_TS( tag, defval0, d3dval, glname1, glname2 ) { glname1, glname2 },
@@ -55,9 +55,9 @@ static OGLTextureState sTs2OGL[GN::gfx::NUM_TEXTURE_STATES] =
     #undef GNGFX_DEFINE_TS
 };
 
-//!
-//! opengl texture stage state value map
-//!
+///
+/// opengl texture stage state value map
+///
 static OGLTextureStateValue sTsv2OGL[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
 {
     #define GNGFX_DEFINE_TSV( tag, d3dval, glval1, glval2 ) { glval1, glval2 },

@@ -6,9 +6,9 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.createRenderer");
 
-//!
-//! Function prototype to create instance of renderer.
-//!
+///
+/// Function prototype to create instance of renderer.
+///
 typedef GN::gfx::Renderer * (*CreateRendererFunc)();
 
 //

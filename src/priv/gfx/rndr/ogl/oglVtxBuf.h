@@ -1,9 +1,9 @@
 #ifndef __GN_GFXOGL_OGLVTXBUF_H__
 #define __GN_GFXOGL_OGLVTXBUF_H__
 // *****************************************************************************
-//! \file    ogl/oglVtxBuf.h
-//! \brief   OGL vertex buffer classes
-//! \author  chenlee (2005.11.21)
+/// \file    ogl/oglVtxBuf.h
+/// \brief   OGL vertex buffer classes
+/// \author  chenlee (2005.11.21)
 // *****************************************************************************
 
 #include "oglResource.h"
@@ -11,20 +11,20 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! Basic OGL vertex buffer class
-    //!
+    ///
+    /// Basic OGL vertex buffer class
+    ///
     struct OGLBasicVtxBuf : public BasicVtxBuf
     {
-        //!
-        //! 返回指向顶点数据的指针
-        //!
+        ///
+        /// 返回指向顶点数据的指针
+        ///
         virtual const UInt8 * getVtxData() const = 0;
     };
 
-    //!
-    //! Normal OGL vertex buffer class
-    //!
+    ///
+    /// Normal OGL vertex buffer class
+    ///
     class OGLVtxBufNormal : public OGLBasicVtxBuf, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLVtxBufNormal, StdClass );
@@ -76,9 +76,9 @@ namespace GN { namespace gfx
         static Logger * sLogger;
     };
 
-    //!
-    //! Vertex buffer that use GL_ARB_vertex_buffer_object.
-    //!
+    ///
+    /// Vertex buffer that use GL_ARB_vertex_buffer_object.
+    ///
     class OGLVtxBufVBO : public OGLBasicVtxBuf, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLVtxBufVBO, StdClass );
@@ -136,7 +136,7 @@ namespace GN { namespace gfx
         UInt8 * mSysCopy;
         GLuint    mOGLVertexBufferObject;
         GLenum    mOGLUsage;
-        size_t    mLockOffset; //!< bytes from buffer start to locked start.
+        size_t    mLockOffset; ///< bytes from buffer start to locked start.
         size_t    mLockBytes;
         LockFlag  mLockFlag;
 

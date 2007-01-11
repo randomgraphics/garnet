@@ -1,83 +1,83 @@
 #ifndef _GN_GFX_CONTEXT_H__
 #define _GN_GFX_CONTEXT_H__
 // *****************************************************************************
-//! \file    context.h
-//! \brief   Rendering context
-//! \author  chenlee (2005.9.30)
+/// \file    context.h
+/// \brief   Rendering context
+/// \author  chenlee (2005.9.30)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    typedef UInt32 VtxFmtHandle; //!< Vertex format handle
+    typedef UInt32 VtxFmtHandle; ///< Vertex format handle
 
     enum
     {
-        MAX_RENDER_TARGETS = 4 //!< We support 4 render targets at most.
+        MAX_RENDER_TARGETS = 4 ///< We support 4 render targets at most.
     };
 
-    //!
-    //! Msaa type
-    //!
+    ///
+    /// Msaa type
+    ///
     enum MsaaType
     {
-        MSAA_NONE,   //!< No MSAA
-        MSAA_LOW,    //!< low quality MSAA
-        MSAA_MEDIUM, //!< medium quality MSAA
-        MSAA_HIGH,   //!< high quality MSAA
-        MSAA_ULTRA,  //!< ultra quality MSAA
-        NUM_MSAA_TYPES, //!< number of MSAA types
+        MSAA_NONE,   ///< No MSAA
+        MSAA_LOW,    ///< low quality MSAA
+        MSAA_MEDIUM, ///< medium quality MSAA
+        MSAA_HIGH,   ///< high quality MSAA
+        MSAA_ULTRA,  ///< ultra quality MSAA
+        NUM_MSAA_TYPES, ///< number of MSAA types
     };
 
-    //!
-    //! Renderer context state. Completely define how rendering would be done
-    //!
+    ///
+    /// Renderer context state. Completely define how rendering would be done
+    ///
     struct RendererContext
     {
-        //!
-        //! Context flag structure.
-        //! Zero means that field is undefined, and should be ignored.
-        //!
+        ///
+        /// Context flag structure.
+        /// Zero means that field is undefined, and should be ignored.
+        ///
         union FieldFlags
         {
-            unsigned int u32; //!< all flags as uint32
+            unsigned int u32; ///< all flags as uint32
 
             struct
             {
-                unsigned char state;    //!< frequently used states
-                unsigned char ffp;      //!< fixed function pipeline states
-                unsigned char data;     //!< rendering data flags
-                unsigned char reserved; //!< reserved for future use.
+                unsigned char state;    ///< frequently used states
+                unsigned char ffp;      ///< fixed function pipeline states
+                unsigned char data;     ///< rendering data flags
+                unsigned char reserved; ///< reserved for future use.
             };
 
             struct
             {
                 // byte 0 (general states)
-                unsigned int shaders            : 3; //!< one bit for each shader type
-                unsigned int rsb                : 1; //!< render state block
-                unsigned int colorBuffers       : 1; //!< render target textures
-                unsigned int depthBuffer        : 1; //!< depth texture
-                unsigned int msaa               : 1; //!< MSAA for RTT
-                unsigned int viewport           : 1; //!< viewport
+                unsigned int shaders            : 3; ///< one bit for each shader type
+                unsigned int rsb                : 1; ///< render state block
+                unsigned int colorBuffers       : 1; ///< render target textures
+                unsigned int depthBuffer        : 1; ///< depth texture
+                unsigned int msaa               : 1; ///< MSAA for RTT
+                unsigned int viewport           : 1; ///< viewport
                 // byte 1 (fixed functional pipeline states)
-                unsigned int world              : 1; //!< world transformation
-                unsigned int view               : 1; //!< view transformation
-                unsigned int proj               : 1; //!< projection transformation
-                unsigned int light0Pos          : 1; //!< light 0 position
-                unsigned int light0Diffuse      : 1; //!< light 0 diffuse
-                unsigned int materialDiffuse    : 1; //!< material diffues color
-                unsigned int materialSpecular   : 1; //!< material specular color
-                unsigned int tsb                : 1; //!< texture state block
+                unsigned int world              : 1; ///< world transformation
+                unsigned int view               : 1; ///< view transformation
+                unsigned int proj               : 1; ///< projection transformation
+                unsigned int light0Pos          : 1; ///< light 0 position
+                unsigned int light0Diffuse      : 1; ///< light 0 diffuse
+                unsigned int materialDiffuse    : 1; ///< material diffues color
+                unsigned int materialSpecular   : 1; ///< material specular color
+                unsigned int tsb                : 1; ///< texture state block
                 // byte 2 (graphics resources)
-                unsigned int textures           : 1; //!< textures
-                unsigned int vtxFmt             : 1; //!< vertex format
-                unsigned int vtxBufs            : 1; //!< vertex buffers
-                unsigned int idxBuf             : 1; //!< index buffer
-                unsigned int                    : 4; //!< reserved
+                unsigned int textures           : 1; ///< textures
+                unsigned int vtxFmt             : 1; ///< vertex format
+                unsigned int vtxBufs            : 1; ///< vertex buffers
+                unsigned int idxBuf             : 1; ///< index buffer
+                unsigned int                    : 4; ///< reserved
                 // byte 3 (reserved)
-                unsigned int                    : 8; //!< reserved
+                unsigned int                    : 8; ///< reserved
             };
 
-            //! \name helper functions to access shader bits
+            /// \name helper functions to access shader bits
             //@{
             bool shaderBit( int type ) const { GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES ); return 0 != ( shaders & (1<<type) ); }
             bool vsBit() const { return 0 != ( shaders & (1<<SHADER_VS) ); }
@@ -87,19 +87,19 @@ namespace GN { namespace gfx
             //@}
         };
 
-        //!
-        //! Render target surface descriptor
-        //!
+        ///
+        /// Render target surface descriptor
+        ///
         struct SurfaceDesc
         {
-            const Texture * texture; //!< render target
-            size_t          face;    //!< cubemap face. Must be zero for non-cube/stack texture.
-            size_t          level;   //!< mipmap level
-            size_t          slice;   //!< slice index. Must be zero for 3D texture.
+            const Texture * texture; ///< render target
+            size_t          face;    ///< cubemap face. Must be zero for non-cube/stack texture.
+            size_t          level;   ///< mipmap level
+            size_t          slice;   ///< slice index. Must be zero for 3D texture.
 
-            //!
-            //! equality check
-            //!
+            ///
+            /// equality check
+            ///
             bool operator==( const SurfaceDesc & rhs ) const
             {
                 if( texture != rhs.texture ) return false;
@@ -107,9 +107,9 @@ namespace GN { namespace gfx
                 return face == rhs.face && level == rhs.level && slice == rhs.slice;
             }
 
-            //!
-            //! equality check
-            //!
+            ///
+            /// equality check
+            ///
             bool operator!=( const SurfaceDesc & rhs ) const
             {
                 if( texture != rhs.texture ) return true;
@@ -118,51 +118,51 @@ namespace GN { namespace gfx
             }
         };
 
-        //!
-        //! Vertex buffer binding descriptor
-        //!
+        ///
+        /// Vertex buffer binding descriptor
+        ///
         struct VtxBufDesc
         {
-            const VtxBuf * buffer; //!< buffer pointer
-            size_t         stride; //!< buffer stride
+            const VtxBuf * buffer; ///< buffer pointer
+            size_t         stride; ///< buffer stride
         };
 
         // context flags
-        FieldFlags            flags; //!< field flags
+        FieldFlags            flags; ///< field flags
 
         // general states
-        const Shader *        shaders[NUM_SHADER_TYPES]; //!< shaders
-        RenderStateBlockDesc  rsb; //!< render state block.
-        SurfaceDesc           colorBuffers[MAX_RENDER_TARGETS]; //!< color buffers
-        size_t                numColorBuffers;  //!< number of color buffers. Set to 0 to render to back buffer.
-        SurfaceDesc           depthBuffer; //!< depth surface.
-        MsaaType              msaa; //!< MSAA type for RTT. Not effective, if rendering to back buffer
-        Rectf                 viewport; //!< Viewport. Note that viewport is relative to current render target size.
-                                        //!< For example, viewport [0,0,1,1] means the whole render target.
+        const Shader *        shaders[NUM_SHADER_TYPES]; ///< shaders
+        RenderStateBlockDesc  rsb; ///< render state block.
+        SurfaceDesc           colorBuffers[MAX_RENDER_TARGETS]; ///< color buffers
+        size_t                numColorBuffers;  ///< number of color buffers. Set to 0 to render to back buffer.
+        SurfaceDesc           depthBuffer; ///< depth surface.
+        MsaaType              msaa; ///< MSAA type for RTT. Not effective, if rendering to back buffer
+        Rectf                 viewport; ///< Viewport. Note that viewport is relative to current render target size.
+                                        ///< For example, viewport [0,0,1,1] means the whole render target.
 
         // fixed functional vertex pipeline states
-        Matrix44f             world, //!< world transformation
-                              view, //!< view transformation
-                              proj; //!< projection transformation
-        Vector4f              light0Pos, //!< light0 position
-                              light0Diffuse, //!< light0 diffuse color
-                              materialDiffuse, //!< diffuse material color
-                              materialSpecular; //!< specular material color
+        Matrix44f             world, ///< world transformation
+                              view, ///< view transformation
+                              proj; ///< projection transformation
+        Vector4f              light0Pos, ///< light0 position
+                              light0Diffuse, ///< light0 diffuse color
+                              materialDiffuse, ///< diffuse material color
+                              materialSpecular; ///< specular material color
 
         // fixed functional pixel pipeline states
-        TextureStateBlockDesc tsb; //!< texture state block
+        TextureStateBlockDesc tsb; ///< texture state block
 
         // graphics resources
-        const Texture *       textures[MAX_TEXTURE_STAGES]; //!< texture list
-        size_t                numTextures; //!< texture count
-        VtxFmtHandle          vtxFmt; //!< vertex format handle. 0 means no vertex data at all.
-        VtxBufDesc            vtxBufs[MAX_VERTEX_ATTRIBUTES]; //!< vertex buffers.
-        size_t                numVtxBufs; //!< vertex buffer count.
-        const IdxBuf *        idxBuf; //!< index buffer
+        const Texture *       textures[MAX_TEXTURE_STAGES]; ///< texture list
+        size_t                numTextures; ///< texture count
+        VtxFmtHandle          vtxFmt; ///< vertex format handle. 0 means no vertex data at all.
+        VtxBufDesc            vtxBufs[MAX_VERTEX_ATTRIBUTES]; ///< vertex buffers.
+        size_t                numVtxBufs; ///< vertex buffer count.
+        const IdxBuf *        idxBuf; ///< index buffer
 
-        //!
-        //! Clear to null context, all fields are unused/undefined.
-        //!
+        ///
+        /// Clear to null context, all fields are unused/undefined.
+        ///
         void clearToNull()
         {
 #if GN_DEBUG_BUILD
@@ -177,9 +177,9 @@ namespace GN { namespace gfx
             numVtxBufs = 0;
         }
 
-        //!
-        //! Reset to default context.
-        //!
+        ///
+        /// Reset to default context.
+        ///
         void resetToDefault()
         {
 #if GN_DEBUG_BUILD
@@ -209,9 +209,9 @@ namespace GN { namespace gfx
             idxBuf = 0;
         }
 
-        //!
-        //! Merge incoming context into current one.
-        //!
+        ///
+        /// Merge incoming context into current one.
+        ///
         void mergeWith( const RendererContext & another )
         {
             if( another.flags.state )
@@ -262,134 +262,134 @@ namespace GN { namespace gfx
             flags.u32 |= another.flags.u32;
         }
 
-        //!
-        //! \name Helper functions to set single state.
-        //!
-        //! These functions are recommended over directly accessing of data member,
-        //! Because these functions can update fieid flags as well.
-        //!
+        ///
+        /// \name Helper functions to set single state.
+        ///
+        /// These functions are recommended over directly accessing of data member,
+        /// Because these functions can update fieid flags as well.
+        ///
         //@{
 
-        //!
-        //! Set a shader. Set NULL to use fixed pipeline.
-        //!
+        ///
+        /// Set a shader. Set NULL to use fixed pipeline.
+        ///
         inline void setShader( ShaderType type, const Shader * shader );
 
-        //!
-        //! Set shaders. Set to NULL to use fixed pipeline.
-        //!
+        ///
+        /// Set shaders. Set to NULL to use fixed pipeline.
+        ///
         inline void setShaders( const Shader * vs, const Shader * ps, const Shader * gs );
 
-        //!
-        //! Set vertex shader. Set to NULL to use fixed pipeline.
-        //!
+        ///
+        /// Set vertex shader. Set to NULL to use fixed pipeline.
+        ///
         inline void setVS( const Shader * s );
 
-        //!
-        //! Set pixel shader. Set to NULL to use fixed pipeline.
-        //!
+        ///
+        /// Set pixel shader. Set to NULL to use fixed pipeline.
+        ///
         inline void setPS( const Shader * s );
 
-        //!
-        //! Set geometry shader. Set to NULL to use fixed pipeline.
-        //!
+        ///
+        /// Set geometry shader. Set to NULL to use fixed pipeline.
+        ///
         inline void setGS( const Shader * s );
 
-        //!
-        //! Set render state block.
-        //!
+        ///
+        /// Set render state block.
+        ///
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
 
-        //!
-        //! Set individual render state.
-        //!
+        ///
+        /// Set individual render state.
+        ///
         inline void setRenderState( RenderState state, SInt32 value );
 
-        //!
-        //! Set render target texture.
-        //!
-        //! \param index
-        //!     Render target index. Must be in range [0,MAX_RENDERT_TARGETS)
-        //! \param texture
-        //!     Render target texture pointer. Set to NULL to disable this and all render targets
-        //!     with larger index. Set index 0 to NULL to render to back buffer.
-        //! \param face, level, slice
-        //!     Surface in texture. Ignored if texture is NULL.
-        //!
+        ///
+        /// Set render target texture.
+        ///
+        /// \param index
+        ///     Render target index. Must be in range [0,MAX_RENDERT_TARGETS)
+        /// \param texture
+        ///     Render target texture pointer. Set to NULL to disable this and all render targets
+        ///     with larger index. Set index 0 to NULL to render to back buffer.
+        /// \param face, level, slice
+        ///     Surface in texture. Ignored if texture is NULL.
+        ///
         inline void setColorBuffer( size_t index, const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
 
-        //!
-        //! Set depth buffer
-        //!
+        ///
+        /// Set depth buffer
+        ///
         inline void setDepthBuffer( const Texture * texture, size_t face = 0, size_t level = 0, size_t slice = 0 );
 
-        //!
-        //! Set render target MSAA type
-        //!
+        ///
+        /// Set render target MSAA type
+        ///
         inline void setMsaa( MsaaType );
 
-        //!
-        //! Set viewport.
-        //!
+        ///
+        /// Set viewport.
+        ///
         inline void setViewport( const Rectf & );
 
-        //!
-        //! Set viewport.
-        //!
+        ///
+        /// Set viewport.
+        ///
         inline void setViewport( float left, float top, float width, float height );
 
-        //!
-        //! Set world matrix
-        //!
+        ///
+        /// Set world matrix
+        ///
         inline void setWorld( const Matrix44f & value ) { flags.world = 1; world = value; }
 
-        //!
-        //! Set view matrix
-        //!
+        ///
+        /// Set view matrix
+        ///
         inline void setView( const Matrix44f & value ) { flags.view = 1; view = value; }
 
-        //!
-        //! Set proj matrix
-        //!
+        ///
+        /// Set proj matrix
+        ///
         inline void setProj( const Matrix44f & value ) { flags.proj = 1; proj = value; }
 
-        //!
-        //! Set texture stage state block.
-        //!
+        ///
+        /// Set texture stage state block.
+        ///
         inline void setTextureStateBlock( const TextureStateBlockDesc & );
 
-        //!
-        //! Set texture stage state.
-        //!
+        ///
+        /// Set texture stage state.
+        ///
         inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
 
-        //!
-        //! Set a texture.
-        //!
+        ///
+        /// Set a texture.
+        ///
         inline void setTexture( size_t stage, const Texture * tex );
 
-        //!
-        //! set textures, from stage[start] to stage[start+numtex-1].
-        //!
-        //! \param texlist texture list
-        //! \param start   start stage
-        //! \param count   number of textures
-        //!
+        ///
+        /// set textures, from stage[start] to stage[start+numtex-1].
+        ///
+        /// \param texlist texture list
+        /// \param start   start stage
+        /// \param count   number of textures
+        ///
         inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
 
-        //!
-        //! Set vertex format.
-        //!
+        ///
+        /// Set vertex format.
+        ///
         inline void setVtxFmt( VtxFmtHandle );
 
-        //!
-        //! Set vertex buffer
-        //!
+        ///
+        /// Set vertex buffer
+        ///
         inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
 
-        //!
-        //! Set index buffer.
-        //!
+        ///
+        /// Set index buffer.
+        ///
         inline void setIdxBuf( const IdxBuf * );
 
         //@}

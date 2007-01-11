@@ -1,18 +1,18 @@
 #ifndef __GN_GFXOGL_OGLLINE_H__
 #define __GN_GFXOGL_OGLLINE_H__
 // *****************************************************************************
-//! \file    ogl/oglLine.h
-//! \brief   OGL line renderer
-//! \author  chenlee (2005.12.7)
+/// \file    ogl/oglLine.h
+/// \brief   OGL line renderer
+/// \author  chenlee (2005.12.7)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
     class OGLRenderer;
     
-    //!
-    //! OGL line renderer
-    //!
+    ///
+    /// OGL line renderer
+    ///
     class OGLLine : public StdClass
     {
         GN_DECLARE_STDCLASS( OGLLine, StdClass );
@@ -48,11 +48,11 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Draw lines on screen
-        //!
-        //! \sa Renderer::drawLines
-        //!
+        ///
+        /// Draw lines on screen
+        ///
+        /// \sa Renderer::drawLines
+        ///
         void drawLines(
             BitFields options,
             const float * positions,

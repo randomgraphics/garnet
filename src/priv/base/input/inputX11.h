@@ -1,9 +1,9 @@
 #ifndef __GN_INPUT_INPUTX11_H__
 #define __GN_INPUT_INPUTX11_H__
 // *****************************************************************************
-//! \file    inputX11.h
-//! \brief   Input system on X11 platform
-//! \author  chenlee (2005.11.10)
+/// \file    inputX11.h
+/// \brief   Input system on X11 platform
+/// \author  chenlee (2005.11.10)
 // *****************************************************************************
 
 #if GN_POSIX
@@ -13,9 +13,9 @@
 
 namespace GN { namespace input
 {
-    //!
-    //! Input system on X11 platform
-    //!
+    ///
+    /// Input system on X11 platform
+    ///
     class InputX11 : public BasicInput, public StdClass
     {
          GN_DECLARE_STDCLASS( InputX11, StdClass );
@@ -70,7 +70,7 @@ namespace GN { namespace input
 
         enum { MAX_SCAN_CODE = 0x300 };
 
-        KeyCode mKeyMap[MAX_SCAN_CODE]; //!< scancode to garnet keycode
+        KeyCode mKeyMap[MAX_SCAN_CODE]; ///< scancode to garnet keycode
 
         // ********************************
         // private functions

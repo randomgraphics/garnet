@@ -1,16 +1,16 @@
 #ifndef __GN_D3D9WRAPPER_MYDEVICE9_H__
 #define __GN_D3D9WRAPPER_MYDEVICE9_H__
 // *****************************************************************************
-//! \file    d3d9Wrapper/mydevice9.h
-//! \brief   IDirect3DDevice9 wrapper
-//! \author  chenlee (2006.6.24)
+/// \file    d3d9Wrapper/mydevice9.h
+/// \brief   IDirect3DDevice9 wrapper
+/// \author  chenlee (2006.6.24)
 // *****************************************************************************
 
 class MyD3D9;
 
-//!
-//! IDirect3DDevice9 wrapper
-//!
+///
+/// IDirect3DDevice9 wrapper
+///
 class MyDevice9 : public BasicInterface<IDirect3DDevice9>
 {
     MyD3D9 * mD3D9;
@@ -19,14 +19,14 @@ class MyDevice9 : public BasicInterface<IDirect3DDevice9>
 
 public:
 
-    //!
-    //! ctor
-    //!
+    ///
+    /// ctor
+    ///
     MyDevice9() : mD3D9(0) {}
 
-    //!
-    //! create D3D device object
-    //!
+    ///
+    /// create D3D device object
+    ///
     HRESULT create(
         MyD3D9 * d3d,
         UINT Adapter,
@@ -35,7 +35,7 @@ public:
         DWORD BehaviorFlags,
         D3DPRESENT_PARAMETERS* pPresentationParameters );
 
-    //! \name IDirect3DDevice methods
+    /// \name IDirect3DDevice methods
     //@{
     STDMETHOD(TestCooperativeLevel)(THIS) { return obj()->TestCooperativeLevel(); }
     STDMETHOD_(UINT, GetAvailableTextureMem)(THIS) { return obj()->GetAvailableTextureMem(); }

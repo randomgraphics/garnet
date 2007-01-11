@@ -1,73 +1,73 @@
 #ifndef __GN_GFX_FATMESH_H__
 #define __GN_GFX_FATMESH_H__
 // *****************************************************************************
-//! \file    gfx/fatMesh.h
-//! \brief   Universal mesh class
-//! \author  chenlee (2006.6.29)
+/// \file    gfx/fatMesh.h
+/// \brief   Universal mesh class
+/// \author  chenlee (2006.6.29)
 // *****************************************************************************
 
 namespace GN { namespace gfx
 {
-    //!
-    //! Universal vertex format
-    //!
+    ///
+    /// Universal vertex format
+    ///
     union FatVtxFmt
     {
-        UInt64 u64; //!< all format flags as 64-bit integer.
+        UInt64 u64; ///< all format flags as 64-bit integer.
         struct
         {
             // byte 0
-            unsigned int pos      :  3; //!< number of position coordinates, 0-4
-            unsigned int weight   :  3; //!< number of weights, 0-4
-            unsigned int normal   :  1; //!< has normal
-            unsigned int diffuse  :  1; //!< has diffuse
+            unsigned int pos      :  3; ///< number of position coordinates, 0-4
+            unsigned int weight   :  3; ///< number of weights, 0-4
+            unsigned int normal   :  1; ///< has normal
+            unsigned int diffuse  :  1; ///< has diffuse
             // byte 1
-            unsigned int specular :  1; //!< has specular
-            unsigned int fog      :  1; //!< has fog
-            unsigned int tangent  :  1; //!< has tangent
-            unsigned int binormal :  1; //!< has binormal
-            unsigned int          :  4; //!< reserved
+            unsigned int specular :  1; ///< has specular
+            unsigned int fog      :  1; ///< has fog
+            unsigned int tangent  :  1; ///< has tangent
+            unsigned int binormal :  1; ///< has binormal
+            unsigned int          :  4; ///< reserved
             // byte 2
-            unsigned int texcoord :  5; //!< number of texture coordinates, 0-16
-            unsigned int          :  3; //!< reserved
+            unsigned int texcoord :  5; ///< number of texture coordinates, 0-16
+            unsigned int          :  3; ///< reserved
             // byte 3 (reserved)
-            unsigned int          :  8; //!< reserved
+            unsigned int          :  8; ///< reserved
             // byte 4,5,6,7
-            unsigned int texMasks : 32; //!< channel masks, 2 bits for one texture.
-                                        //!< 00 - 1 channel, 01 - 2 channels, 02 - 3 channels, 03 - 4 channels
+            unsigned int texMasks : 32; ///< channel masks, 2 bits for one texture.
+                                        ///< 00 - 1 channel, 01 - 2 channels, 02 - 3 channels, 03 - 4 channels
         };
 
-        //!
-        //! make sure vertex format is valid.
-        //!
+        ///
+        /// make sure vertex format is valid.
+        ///
         bool valid() const
         {
             return pos <= 4 && weight <= 4 && texcoord <= 16;
         }
 
-        //!
-        //! equality
-        //!
+        ///
+        /// equality
+        ///
         bool operator == ( const FatVtxFmt & rhs ) const { return u64 == rhs.u64; }
 
-        //!
-        //! equality
-        //!
+        ///
+        /// equality
+        ///
         bool operator != ( const FatVtxFmt & rhs ) const { return u64 != rhs.u64; }
 
-        //!
-        //! clear vertex format
-        //!
+        ///
+        /// clear vertex format
+        ///
         void clear() { GN_CASSERT( 8 == sizeof(FatVtxFmt) ); u64 = 0; }
 
-        //!
-        //! parse vertex format from string.
-        //!
+        ///
+        /// parse vertex format from string.
+        ///
         bool fromStr( const char * str, size_t len = 0 );
 
-        //!
-        //! set texture channel mask
-        //!
+        ///
+        /// set texture channel mask
+        ///
         void setTexChannelMask( size_t stage, size_t channels )
         {
             if( stage >= 8 )
@@ -86,9 +86,9 @@ namespace GN { namespace gfx
             texMasks |= bits<<shift;
         }
 
-        //!
-        //! get channel count of specific texture stage. Return 0 if the stage is not available.
-        //!
+        ///
+        /// get channel count of specific texture stage. Return 0 if the stage is not available.
+        ///
         unsigned int getTexChannelCount( size_t stage ) const
         {
             if( stage >= texcoord ) return 0;
@@ -96,23 +96,23 @@ namespace GN { namespace gfx
         }
     };
 
-    //!
-    //! Universal vertex that can hold almost any kind of vertex data
-    //!
+    ///
+    /// Universal vertex that can hold almost any kind of vertex data
+    ///
     struct FatVtx
     {
-        Vector4f   pos;         //!< position
-        Vector4f   weight;      //!< weights, for vertex blending or skinning
-        Vector3f   normal;      //!< normal
-        Vector4f   diffuse;     //!< diffuse color
-        Vector4f   specular;    //!< specular
-        float      fog;         //!< fog cooridnate
-        Vector3f   tangent;     //!< tangent
-        Vector3f   binormal;    //!< binormal
-        Vector4f   texcoord[8]; //!< texture coordinates
+        Vector4f   pos;         ///< position
+        Vector4f   weight;      ///< weights, for vertex blending or skinning
+        Vector3f   normal;      ///< normal
+        Vector4f   diffuse;     ///< diffuse color
+        Vector4f   specular;    ///< specular
+        float      fog;         ///< fog cooridnate
+        Vector3f   tangent;     ///< tangent
+        Vector3f   binormal;    ///< binormal
+        Vector4f   texcoord[8]; ///< texture coordinates
 
-        //!
-        //! \name set texture coordinates.
+        ///
+        /// \name set texture coordinates.
         //@{
         void setTexcoord( size_t stage, float s, float t = .0f, float r = .0f, float q = .0f )
         {
@@ -130,34 +130,34 @@ namespace GN { namespace gfx
         //@}
     };
 
-    //!
-    //! Triangle face for fat mesh
-    //!
+    ///
+    /// Triangle face for fat mesh
+    ///
     struct FatFace
     {
-        //! \name vertice indices
+        /// \name vertice indices
         //@{
         size_t i0, i1, i2;
         //@}
-        Vector3f normal;   //!< face normal
-        int material;      //!< material ID.
+        Vector3f normal;   ///< face normal
+        int material;      ///< material ID.
     };
 
-    //!
-    //! Universal mesh
-    //!
+    ///
+    /// Universal mesh
+    ///
     class FatMesh
     {
     public:
 
-        //! \name ctor and dtor
+        /// \name ctor and dtor
         //@{
         FatMesh() { mHasFaceNormal = true; }
         //@}
 
-        //!
-        //! clear to empty
-        //!
+        ///
+        /// clear to empty
+        ///
         void clear()
         {
             mVertices.clear();
@@ -166,7 +166,7 @@ namespace GN { namespace gfx
             clearOptimizationData();
         }
 
-        //! \name vertices management
+        /// \name vertices management
         //@{
         void setVertexFormat( const FatVtxFmt & fmt )
         {
@@ -210,7 +210,7 @@ namespace GN { namespace gfx
         void texcoord( size_t stage, const Vector4f & v ) { mTmpVtx.setTexcoord( stage, v ); }
         //@}
 
-        //! \name Face management
+        /// \name Face management
         //@{
         const FatFace * getFaces() const { return mFaces.cptr(); }
         size_t getNumFaces() const { return mFaces.size(); }
@@ -243,58 +243,58 @@ namespace GN { namespace gfx
         }
         //@}
 
-        //! \name mesh loading and saving
+        /// \name mesh loading and saving
         //@{
 
-        //!
-        //! read from fatmesh file, support both binary and text format.
-        //!
+        ///
+        /// read from fatmesh file, support both binary and text format.
+        ///
         bool readFromFile( File & );
 
-        //!
-        //! write mesh to file. See sample mesh files in tree details of mesh file format.
-        //!
-        //! \param mode
-        //!     must be 'B' (binary) or 'T' (text)
-        //!
+        ///
+        /// write mesh to file. See sample mesh files in tree details of mesh file format.
+        ///
+        /// \param mode
+        ///     must be 'B' (binary) or 'T' (text)
+        ///
         bool writeToFile( File &, char mode ) const;
 
         //@}
 
-        //! \name optimization
+        /// \name optimization
         //@{
 
-        //!
-        //! optimization options
-        //!
+        ///
+        /// optimization options
+        ///
         struct OptimizeOptions
         {
-            //! \name required fields
+            /// \name required fields
             //@{
-            size_t maxPrimitivesInSingleDraw; //!< as is
-            bool   vcache; //!< optimize for vcache.
-            bool   strip;  //!< generate triangle strips.
-            bool   useResetIndex; //!< use reset index to connect triangle strips (for Xenon)
-            bool   use32BitIndex; //!< use 32-bit indices.
+            size_t maxPrimitivesInSingleDraw; ///< as is
+            bool   vcache; ///< optimize for vcache.
+            bool   strip;  ///< generate triangle strips.
+            bool   useResetIndex; ///< use reset index to connect triangle strips (for Xenon)
+            bool   use32BitIndex; ///< use 32-bit indices.
             //@}
 
-            //! \name optional fields
-            //!@{
-            size_t   vcacheSize; //!< size of vcache. Ignored, if vcache is false.
-            UInt32 resetIndex; //!< reset index. Ignored, if useResetIndex is false.
-            //!@}
+            /// \name optional fields
+            ///@{
+            size_t   vcacheSize; ///< size of vcache. Ignored, if vcache is false.
+            UInt32 resetIndex; ///< reset index. Ignored, if useResetIndex is false.
+            ///@}
         };
 
-        //!
-        //! In-place optimization.
-        //!
+        ///
+        /// In-place optimization.
+        ///
         void optimize( const OptimizeOptions & );
 
         //@}
 
-        //! \name rendering
+        /// \name rendering
         //@{
-        void draw( int material ); //!< note, this function is very inefficient. Do not use this in performance critical code.
+        void draw( int material ); ///< note, this function is very inefficient. Do not use this in performance critical code.
         //@}
 
     private:
@@ -317,7 +317,7 @@ namespace GN { namespace gfx
         DynaArray<FatVtx>  mVertices;
         DynaArray<FatFace> mFaces;
         FatVtxFmt          mVertexFormat;
-        bool               mHasFaceNormal; //!< True means all faces have normal.
+        bool               mHasFaceNormal; ///< True means all faces have normal.
 
         // optimized mesh data
         DynaArray<VtxSegment>  mVtxSegments;  // optimized vertex segments.
@@ -364,12 +364,12 @@ namespace GN { namespace gfx
         inline void drawFaceSegment( size_t idx );
     };
 
-    //! \name mesh loading from and saving to other formats
+    /// \name mesh loading from and saving to other formats
     //@{
 
-    //!
-    //! read from D3D X mesh file.
-    //!
+    ///
+    /// read from D3D X mesh file.
+    ///
     bool fatMeshFromX( FatMesh &, File & );
 
     //@}

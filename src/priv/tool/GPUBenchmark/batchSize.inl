@@ -47,11 +47,11 @@ struct ColoredEffect : public BasicEffect
     }
 };
 
-//!
-//! Batch Size Tests. See how driver performance changes along with batch size.
-//!
-//! This test will draw quads
-//!
+///
+/// Batch Size Tests. See how driver performance changes along with batch size.
+///
+/// This test will draw quads
+///
 class TestBatchSize : public BasicTestCase
 {
     UInt32 BATCH_SIZE;

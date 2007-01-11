@@ -1,9 +1,9 @@
 #ifndef __GN_GFXOGL_OGLSHADER_H__
 #define __GN_GFXOGL_OGLSHADER_H__
 // *****************************************************************************
-//! \file    ogl/oglShader.h
-//! \brief   OGL shader classes
-//! \author  chenlee (2005.12.6)
+/// \file    ogl/oglShader.h
+/// \brief   OGL shader classes
+/// \author  chenlee (2005.12.6)
 // *****************************************************************************
 
 #include "oglResource.h"
@@ -11,31 +11,31 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! OGL basic shader class
-    //!
+    ///
+    /// OGL basic shader class
+    ///
     struct OGLBasicShader : public Shader
     {
-        //!
-        //! Disable the shader
-        //!
+        ///
+        /// Disable the shader
+        ///
         virtual void disable() const = 0;
 
-        //!
-        //! Apply shader as well as shader constants to OpenGL
-        //!
+        ///
+        /// Apply shader as well as shader constants to OpenGL
+        ///
         virtual void apply() const = 0;
 
-        //!
-        //! Apply only dirty uniforms to OpenGL
-        //!
+        ///
+        /// Apply only dirty uniforms to OpenGL
+        ///
         virtual void applyDirtyUniforms() const = 0;
 
     protected:
 
-        //!
-        //! protected ctor
-        //!
+        ///
+        /// protected ctor
+        ///
         OGLBasicShader( ShaderType type, ShadingLanguage lang ) : Shader(type,lang) {}
     };
 
@@ -43,9 +43,9 @@ namespace GN { namespace gfx
     // ARB shader
     // *************************************************************************
 
-    //!
-    //! OGL Basic ARB shader
-    //!
+    ///
+    /// OGL Basic ARB shader
+    ///
     class OGLBasicShaderARB : public OGLBasicShader, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLBasicShaderARB, StdClass );
@@ -145,27 +145,27 @@ namespace GN { namespace gfx
         }
     };
 
-    //!
-    //! OGL ARB vertex shader.
-    //!
+    ///
+    /// OGL ARB vertex shader.
+    ///
     class OGLVtxShaderARB : public OGLBasicShaderARB
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         OGLVtxShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, SHADER_VS ) {}
     };
 
-    //!
-    //! OGL ARB pixel shader.
-    //!
+    ///
+    /// OGL ARB pixel shader.
+    ///
     class OGLPxlShaderARB : public OGLBasicShaderARB
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         OGLPxlShaderARB( OGLRenderer & r ) : OGLBasicShaderARB( r, SHADER_PS ) {}
     };
 
@@ -173,9 +173,9 @@ namespace GN { namespace gfx
     // GLSL shader
     // *************************************************************************
 
-    //!
-    //! Basic OGL GLSL shader class
-    //!
+    ///
+    /// Basic OGL GLSL shader class
+    ///
     class OGLBasicShaderGLSL : public OGLBasicShader, public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLBasicShaderGLSL, StdClass );
@@ -229,14 +229,14 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Get OGL shader handle
-        //!
+        ///
+        /// Get OGL shader handle
+        ///
         GLhandleARB getHandleARB() const { return mHandle; }
 
-        //!
-        //! Apply dirty uniforms to render context
-        //!
+        ///
+        /// Apply dirty uniforms to render context
+        ///
         void applyDirtyUniforms( GLhandleARB program ) const;
 
         // ********************************
@@ -268,33 +268,33 @@ namespace GN { namespace gfx
 
     };
 
-    //!
-    //! OGL GLSL vertex shader.
-    //!
+    ///
+    /// OGL GLSL vertex shader.
+    ///
     class OGLVtxShaderGLSL : public OGLBasicShaderGLSL
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         OGLVtxShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, SHADER_VS ) {}
     };
 
-    //!
-    //! OGL GLSL pixel shader.
-    //!
+    ///
+    /// OGL GLSL pixel shader.
+    ///
     class OGLPxlShaderGLSL : public OGLBasicShaderGLSL
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         OGLPxlShaderGLSL( OGLRenderer & r ) : OGLBasicShaderGLSL( r, SHADER_PS ) {}
     };
 
-    //!
-    //! GLSL program class
-    //!
+    ///
+    /// GLSL program class
+    ///
     class OGLProgramGLSL : public StdClass
     {
          GN_DECLARE_STDCLASS( OGLProgramGLSL, StdClass );
@@ -326,9 +326,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! apply GLSL program, as well as dirty uniforms, to rendering context.
-        //!
+        ///
+        /// apply GLSL program, as well as dirty uniforms, to rendering context.
+        ///
         void apply() const
         {
             GN_GUARD_SLOW;
@@ -367,9 +367,9 @@ namespace GN { namespace gfx
 
 #ifdef HAS_CG_OGL
 
-    //!
-    //! Basic Cg Shader class
-    //!
+    ///
+    /// Basic Cg Shader class
+    ///
     class OGLBasicShaderCg : public OGLBasicShader, public OGLResource, public StdClass
     {
         GN_DECLARE_STDCLASS( OGLBasicShaderCg, StdClass );
@@ -431,27 +431,27 @@ namespace GN { namespace gfx
         inline void applyUniform( const Uniform & ) const;
     };
 
-    //!
-    //! OGL Cg vertex shader.
-    //!
+    ///
+    /// OGL Cg vertex shader.
+    ///
     class OGLVtxShaderCg : public OGLBasicShaderCg
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         OGLVtxShaderCg( OGLRenderer & r ) : OGLBasicShaderCg( r, SHADER_VS, CG_GL_VERTEX ) {}
     };
 
-    //!
-    //! OGL Cg pixel shader.
-    //!
+    ///
+    /// OGL Cg pixel shader.
+    ///
     class OGLPxlShaderCg : public OGLBasicShaderCg
     {
     public:
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         OGLPxlShaderCg( OGLRenderer & r ) : OGLBasicShaderCg( r, SHADER_PS, CG_GL_FRAGMENT ) {}
     };
 

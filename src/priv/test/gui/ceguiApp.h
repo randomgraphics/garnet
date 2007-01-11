@@ -1,9 +1,9 @@
 #ifndef __GN_TEST_CEGUIAPP_H__
 #define __GN_TEST_CEGUIAPP_H__
 // *****************************************************************************
-//! \file    gui/ceguiApp.h
-//! \brief   CEGUI test application
-//! \author  chenlee (2006.2.25)
+/// \file    gui/ceguiApp.h
+/// \brief   CEGUI test application
+/// \author  chenlee (2006.2.25)
 // *****************************************************************************
 
 // Link to CEGUI libraries
@@ -18,14 +18,14 @@
 
 using namespace GN;
 
-//!
-//! CEGUI test application
-//!
+///
+/// CEGUI test application
+///
 class GuiTest : public GN::app::SampleApp
 {
 public:
 
-    //! \name from SampleApp
+    /// \name from SampleApp
     //@{
 
     bool onAppInit()

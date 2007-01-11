@@ -1,18 +1,18 @@
 #ifndef __GN_GFXOGL_OGLVTXFMT_H__
 #define __GN_GFXOGL_OGLVTXFMT_H__
 // *****************************************************************************
-//! \file    ogl/oglVtxFmt.h
-//! \brief   OGL vertex binding class
-//! \author  chenlee (2005.11.21)
+/// \file    ogl/oglVtxFmt.h
+/// \brief   OGL vertex binding class
+/// \author  chenlee (2005.11.21)
 // *****************************************************************************
 
 #include "oglResource.h"
 
 namespace GN { namespace gfx
 {
-    //!
-    //! OGL vertex binding class
-    //!
+    ///
+    /// OGL vertex binding class
+    ///
     class OGLVtxFmt : public OGLResource, public StdClass
     {
          GN_DECLARE_STDCLASS( OGLVtxFmt, StdClass );
@@ -44,24 +44,24 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! Get vertex format descriptor
-        //!
+        ///
+        /// Get vertex format descriptor
+        ///
         const VtxFmtDesc & getFormat() const { return mFormat; }
 
-        //!
-        //! Get vertex format descriptor
-        //!
+        ///
+        /// Get vertex format descriptor
+        ///
         size_t getNumStreams() const { return mStreamBindings.size(); }
 
-        //!
-        //! Bind the format to device
-        //!
+        ///
+        /// Bind the format to device
+        ///
         void bind() const;
 
-        //!
-        //! Bind the buffer to device
-        //!
+        ///
+        /// Bind the buffer to device
+        ///
         void bindBuffer( size_t index, const UInt8 * buf, size_t startVtx, size_t stride ) const;
 
         // ********************************

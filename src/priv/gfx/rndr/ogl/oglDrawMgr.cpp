@@ -14,7 +14,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // *****************************************************************************
 
 //
-//! \brief translate garnet primitive to OpenGL primitive
+/// \brief translate garnet primitive to OpenGL primitive
 // ------------------------------------------------------------------------
 static GN_INLINE
 bool sPrimitiveType2OGL( GLenum                 & oglPrim,

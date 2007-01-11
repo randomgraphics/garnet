@@ -1,9 +1,9 @@
 #ifndef __GN_INPUT_BASICINPUTXINPUT_H__
 #define __GN_INPUT_BASICINPUTXINPUT_H__
 // *****************************************************************************
-//! \file    input/basicInputXInput.h
-//! \brief   Basic XInput class
-//! \author  chenlee (2006.3.13)
+/// \file    input/basicInputXInput.h
+/// \brief   Basic XInput class
+/// \author  chenlee (2006.3.13)
 // *****************************************************************************
 
 #include "basicInput.h"
@@ -14,22 +14,22 @@
 
 namespace GN { namespace input
 {
-    //!
-    //! Basic XInput system for MS Windows and Xenon.
-    //!
+    ///
+    /// Basic XInput system for MS Windows and Xenon.
+    ///
     class BasicXInput : public BasicInput
     {
         UInt32 mXInputPacketNumber;
 
     protected:
 
-        void * mXInputGetState; //!< function pointer to "XInputGetState"
+        void * mXInputGetState; ///< function pointer to "XInputGetState"
 
     public:
 
-        //!
-        //! Constructor
-        //!
+        ///
+        /// Constructor
+        ///
         BasicXInput() : mXInputPacketNumber(0), mXInputGetState(0) {}
 
         //

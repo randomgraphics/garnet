@@ -8,8 +8,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // local types/variables/functions
 // ****************************************************************************
 
-//!
-//! Split a string into token list
+///
+/// Split a string into token list
 // ------------------------------------------------------------------------
 static void
 sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
@@ -30,16 +30,16 @@ sGetTokens( std::vector<GN::StrA> & tokens, const char * str )
     }
 }
 
-//!
-//! function use to determine a extension is supported or not
+///
+/// function use to determine a extension is supported or not
 // ------------------------------------------------------------------------
 static GN_INLINE bool
 sFindExtension( const std::vector<GN::StrA> & glexts, const char * ext )
 {
     return glexts.end() != std::find( glexts.begin(), glexts.end(), ext );
 }
-//!
-//! Check required extensions
+///
+/// Check required extensions
 // ------------------------------------------------------------------------
 static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
 {
@@ -65,8 +65,8 @@ static bool sCheckRequiredExtensions( const std::vector<GN::StrA> & extensions )
     return !fail;
 }
 
-//!
-//! initialize opengl extension
+///
+/// initialize opengl extension
 // ------------------------------------------------------------------------
 #if GN_MSWIN
 static bool sGetOGLExtensions( HDC hdc, std::vector<GN::StrA> & result )
@@ -101,8 +101,8 @@ static bool sGetOGLExtensions( Display * disp, std::vector<GN::StrA> & result )
     GN_UNGUARD;
 }
 
-//!
-//! output GL implementation info.
+///
+/// output GL implementation info.
 // ------------------------------------------------------------------------
 static void sOutputOGLInfo( GN::HandleType disp, const std::vector<GN::StrA> & glexts )
 {

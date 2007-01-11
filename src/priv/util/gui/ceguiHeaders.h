@@ -1,9 +1,9 @@
 #ifndef __GN_GUI_CEGUIHEADERS_H__
 #define __GN_GUI_CEGUIHEADERS_H__
 // *****************************************************************************
-//! \file    gui/ceguiHeaders.h
-//! \brief   CEGUI header wrappers, to disable compiler warnings
-//! \author  chenlee (2006.2.25)
+/// \file    gui/ceguiHeaders.h
+/// \brief   CEGUI header wrappers, to disable compiler warnings
+/// \author  chenlee (2006.2.25)
 // *****************************************************************************
 
 #ifdef HAS_CEGUI

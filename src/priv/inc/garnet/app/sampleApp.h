@@ -1,9 +1,9 @@
 #ifndef __GN_APP_SAMPLEAPP_H__
 #define __GN_APP_SAMPLEAPP_H__
 // *****************************************************************************
-//! \file    app/sampleApp.h
-//! \brief   Sample application framework
-//! \author  chenlee (2006.1.7)
+/// \file    app/sampleApp.h
+/// \brief   Sample application framework
+/// \author  chenlee (2006.1.7)
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
@@ -12,9 +12,9 @@
 
 namespace GN { namespace app
 {
-    //!
-    //! Simple FPS counter
-    //!
+    ///
+    /// Simple FPS counter
+    ///
     class FpsCounter
     {
         GN::Clock mClock;
@@ -27,19 +27,19 @@ namespace GN { namespace app
 
     public:
 
-        //!
-        //! Constructor
-        //!
+        ///
+        /// Constructor
+        ///
         FpsCounter() { reset(); }
 
-        //!
-        //! Get time
-        //!
+        ///
+        /// Get time
+        ///
         double getCurrentTime() const { return mCurrentTime; }
 
-        //!
-        //! reset the counter
-        //!
+        ///
+        /// reset the counter
+        ///
         void reset()
         {
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
@@ -50,9 +50,9 @@ namespace GN { namespace app
             mBeforeFirstUpdate = true;
         }
 
-        //!
-        //! Update the counter
-        //!
+        ///
+        /// Update the counter
+        ///
         void onFrame()
         {
             mCurrentTime = mClock.getTimeD();
@@ -73,87 +73,87 @@ namespace GN { namespace app
             }
         }
 
-        //!
-        //! Get FPS value
-        //!
+        ///
+        /// Get FPS value
+        ///
         float getFps() const { return mFpsValue; }
 
-        //!
-        //! Get FPS string
-        //!
+        ///
+        /// Get FPS string
+        ///
         const char * getFpsString() const { return mFpsString.cptr(); }
     };
 
-    //!
-    //! Represent raw data block
-    //!
+    ///
+    /// Represent raw data block
+    ///
     struct RawData : public NoCopy
     {
-        //!
-        //! get data size
-        //!
+        ///
+        /// get data size
+        ///
         virtual size_t size() const = 0;
 
-        //!
-        //! get data pointer
-        //!
+        ///
+        /// get data pointer
+        ///
         virtual void * data() const = 0;
     };
 
-    //!
-    //! Resource manager class used by sample application
-    //!
+    ///
+    /// Resource manager class used by sample application
+    ///
     struct SampleResourceManager
     {
-        ResourceManager<RawData*> rawData;  //!< raw data manager
-        ResourceManager<gfx::Shader*> shaders; //!< shader manager
-        ResourceManager<gfx::Texture*> textures; //!< texture manager
-        ResourceManager<gfx::Effect*> effects; //!< effect manager
+        ResourceManager<RawData*> rawData;  ///< raw data manager
+        ResourceManager<gfx::Shader*> shaders; ///< shader manager
+        ResourceManager<gfx::Texture*> textures; ///< texture manager
+        ResourceManager<gfx::Effect*> effects; ///< effect manager
 
-        //!
-        //! Search resource by name. Return full path of the resource file. Return empty string if not found.
-        //!
+        ///
+        /// Search resource by name. Return full path of the resource file. Return empty string if not found.
+        ///
         static GN::StrA sSearchResourceFile( const StrA & name );
 
-        //!
-        //! Create texture from file
-        //!
+        ///
+        /// Create texture from file
+        ///
         static gfx::Texture * sCreateTextureFromFile( const StrA & );
 
-        //!
-        //! Create shader from file
-        //!
+        ///
+        /// Create shader from file
+        ///
         static gfx::Shader * sCreateShaderFromFile( gfx::ShaderType type, gfx::ShadingLanguage lang, const StrA & name, const StrA & hints="" );
 
-        //!
-        //! ctor
-        //!
+        ///
+        /// ctor
+        ///
         SampleResourceManager();
 
-        //!
-        //! dtor
-        //!
+        ///
+        /// dtor
+        ///
         ~SampleResourceManager();
 
-        //!
-        //! bind shader handles to renderer
-        //!
+        ///
+        /// bind shader handles to renderer
+        ///
         void bindShaderHandles( gfx::Renderer & r, UInt32 vs, UInt32 ps, UInt32 gs )
         {
             r.setShaders( shaders.getResource(vs), shaders.getResource(ps), shaders.getResource(gs) );
         }
 
-        //!
-        //! bind texture handle to renderer
-        //!
+        ///
+        /// bind texture handle to renderer
+        ///
         void bindTextureHandle( gfx::Renderer & r, size_t stage, UInt32 tex )
         {
             r.setTexture( stage, textures.getResource(tex) );
         }
 
-        //!
-        //! dispose all resources
-        //!
+        ///
+        /// dispose all resources
+        ///
         void disposeAll()
         {
             rawData.disposeAll();
@@ -167,9 +167,9 @@ namespace GN { namespace app
         void onRendererDestroy();
     };
 
-    //!
-    //! Sample application framework
-    //!
+    ///
+    /// Sample application framework
+    ///
     class SampleApp : public SlotBase
     {
         // ********************************
@@ -189,24 +189,24 @@ namespace GN { namespace app
 
         //@{
 
-        //!
-        //! application initialization structure
-        //!
+        ///
+        /// application initialization structure
+        ///
         struct InitParam
         {
-            gfx::RendererAPI rapi;   //!< renderer API
-            gfx::RendererOptions ro; //!< renderer options
-            input::InputApi iapi;    //!< input API
+            gfx::RendererAPI rapi;   ///< renderer API
+            gfx::RendererOptions ro; ///< renderer options
+            input::InputApi iapi;    ///< input API
         };
 
-        static float UPDATE_INTERVAL; //!< Time interval for calling onUpdate(), in seconds.
+        static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
 
         virtual int  run( int argc, const char * const argv[] );
-        //!
-        //! \note
-        //!     - argv[0] is always application name
-        //!     - only non-standard/unknown argument will be send to this function.
-        //!
+        ///
+        /// \note
+        ///     - argv[0] is always application name
+        ///     - only non-standard/unknown argument will be send to this function.
+        ///
         virtual bool onCheckCmdLine( int argc, const char * const argv[] );
         virtual bool onAppInit() { return true; }
         virtual void onAppQuit() {}
@@ -221,49 +221,49 @@ namespace GN { namespace app
         virtual void onCharPress( wchar_t ) {}
         virtual void onAxisMove( input::Axis, int ) {}
 
-        //!
-        //! Return seconds since application starts
-        //!
+        ///
+        /// Return seconds since application starts
+        ///
         double getCurrentTime() const { return mFps.getCurrentTime(); }
 
-        //!
-        //! Return seconds of last frame
-        //!
+        ///
+        /// Return seconds of last frame
+        ///
         double getLastFrameTime() const { return mLastFrameTime; }
 
-        //!
-        //! Return time since last update
-        //!
+        ///
+        /// Return time since last update
+        ///
         double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
-        //!
-        //! Force reloading of all resources
-        //!
+        ///
+        /// Force reloading of all resources
+        ///
         void reloadResources() { mResMgr.disposeAll(); }
 
-        //!
-        //! post exit event. Application will exit at next frame.
-        //!
+        ///
+        /// post exit event. Application will exit at next frame.
+        ///
         void postExitEvent() { mDone = true; }
 
-        //!
-        //! switch renderer API
-        //!
+        ///
+        /// switch renderer API
+        ///
         bool switchRenderer();
 
-		//!
-		//! show HUD or not?
-		//!
+		///
+		/// show HUD or not?
+		///
 		void showHUD( bool show ) { mShowHUD = show; }
 
-        //!
-        //! get resource managare instance
-        //!
+        ///
+        /// get resource managare instance
+        ///
         SampleResourceManager & getResMgr() { return mResMgr; }
 
-        //!
-        //! get the FPS
-        //!
+        ///
+        /// get the FPS
+        ///
         float getFps() const { return mFps.getFps(); }
 
         //@}

@@ -1,15 +1,15 @@
 #ifndef __GN_GFX_IMAGEBMP_H__
 #define __GN_GFX_IMAGEBMP_H__
 // *****************************************************************************
-//! \file    imageBMP.h
-//! \brief   BMP image reader
-//! \author  chenlee (2005.6.2)
+/// \file    imageBMP.h
+/// \brief   BMP image reader
+/// \author  chenlee (2005.6.2)
 // *****************************************************************************
 
 
-//!
-//! BMP image reader.
-//!
+///
+/// BMP image reader.
+///
 class BMPReader
 {
     template<typename T>
@@ -88,30 +88,30 @@ class BMPReader
 
 public:
 
-    //!
-    //! constructor
-    //!
+    ///
+    /// constructor
+    ///
     BMPReader() : mImageSrc(0) {}
 
-    //!
-    //! destructor
-    //!
+    ///
+    /// destructor
+    ///
     ~BMPReader() {}
 
-    //!
-    //! Check file format. Return true if the file is BMP file
-    //!
+    ///
+    /// Check file format. Return true if the file is BMP file
+    ///
     bool checkFormat( GN::File & );
 
-    //!
-    //! read BMP header
-    //!
+    ///
+    /// read BMP header
+    ///
     bool readHeader(
         GN::gfx::ImageDesc & o_desc, const UInt8 * i_buf, size_t i_size );
 
-    //!
-    //! read BMP image
-    //!
+    ///
+    /// read BMP image
+    ///
     bool readImage( void * o_data ) const;
 };
 

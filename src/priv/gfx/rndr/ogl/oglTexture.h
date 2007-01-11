@@ -1,9 +1,9 @@
 #ifndef __GN_GFXOGL_OGLTEXTURE_H__
 #define __GN_GFXOGL_OGLTEXTURE_H__
 // *****************************************************************************
-//! \file    ogl/oglTexture.h
-//! \brief   OpenGL texture class
-//! \author  chenlee (2005.11.13)
+/// \file    ogl/oglTexture.h
+/// \brief   OpenGL texture class
+/// \author  chenlee (2005.11.13)
 // *****************************************************************************
 
 #include "../common/basicTexture.h"
@@ -12,9 +12,9 @@
 
 namespace GN { namespace gfx
 {
-    //!
-    //! OGL texture class
-    //!
+    ///
+    /// OGL texture class
+    ///
     class OGLTexture : public BasicTexture,
                        public OGLResource,
                        public StdClass
@@ -50,7 +50,7 @@ namespace GN { namespace gfx
         //@}
 
         // ********************************
-        //! \name from Texture
+        /// \name from Texture
         // ********************************
     public:
 
@@ -70,9 +70,9 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        //!
-        //! bind to current texture stage
-        //!
+        ///
+        /// bind to current texture stage
+        ///
         void bind() const
         {
             GN_GUARD_SLOW;
@@ -109,18 +109,18 @@ namespace GN { namespace gfx
             GN_UNGUARD_SLOW;
         }
 
-        //!
-        //! \name get GL texture parameters
-        //!
+        ///
+        /// \name get GL texture parameters
+        ///
         //@{
         GLenum getOGLTarget()  const { return mOGLTarget; }
         GLuint getOGLTexture() const { return mOGLTexture; }
         GLint  getOGLInternalFormat() const { return mOGLInternalFormat; }
         //@}
 
-        //!
-        //! convert cubemap face to GL tag
-        //!
+        ///
+        /// convert cubemap face to GL tag
+        ///
         static GLenum sCubeface2OGL( size_t face )
         {
             GLenum sTable[NUM_CUBEFACES] =
@@ -141,19 +141,19 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        //!
-        //! opengl texture target
-        //!
+        ///
+        /// opengl texture target
+        ///
         GLenum mOGLTarget;
 
-        //!
-        //! opengl texture handle
-        //!
+        ///
+        /// opengl texture handle
+        ///
         GLuint mOGLTexture;
 
-        //!
-        //! \name opengl texture parameters
-        //!
+        ///
+        /// \name opengl texture parameters
+        ///
         //@{
         GLint  mOGLInternalFormat;
         GLuint mOGLFormat, mOGLType;
@@ -161,12 +161,12 @@ namespace GN { namespace gfx
         //@}
 
         mutable bool   mFilterAndWrapDirty;
-        mutable GLenum mOGLFilters[2]; //! filters (min,mag)
-        mutable GLenum mOGLWraps[3];   //! address modes (s,t,r)
+        mutable GLenum mOGLFilters[2]; /// filters (min,mag)
+        mutable GLenum mOGLWraps[3];   /// address modes (s,t,r)
 
-        //!
-        //! \name 2D locking related variables
-        //!
+        ///
+        /// \name 2D locking related variables
+        ///
         //@{
         GLenum      mLockedTarget;
         size_t      mLockedLevel;
