@@ -40,23 +40,23 @@ public:
 
         // draw to RT0
         rm.bindTextureHandle( r, 0, mTex0 );
-        r.setColorBuffer( 0, mRt0 );
+        r.setDrawToTexture( 1, mRt0 );
         r.clearScreen();
         r.draw2DTexturedQuad( 0 );
 
         // draw to RT1
         rm.bindTextureHandle( r, 0, mTex1 );
-        r.setColorBuffer( 0, mRt1 );
+        r.setDrawToTexture( 1, mRt1 );
         r.clearScreen();
         r.draw2DTexturedQuad( 0 );
 
         // draw 2 RTs to screen
-        r.setColorBuffer( 0, 0 );
+        r.setDrawToBackBuf();
         r.clearScreen();
         r.setTexture( 0, mRt0 );
         r.draw2DTexturedQuad( 0, 0, 0.0, 0.0, 0.5, 1.0 );
         r.setTexture( 0, mRt1 );
-        r.draw2DTexturedQuad( 0, 0, 0.5, 0.0, 1.0, 1.0 );//*/
+        r.draw2DTexturedQuad( 0, 0, 0.5, 0.0, 1.0, 1.0 );
     }
 };
 

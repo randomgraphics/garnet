@@ -81,7 +81,33 @@ namespace GN { namespace gfx
     inline void RendererContext::setRenderTargets( const RenderTargetDesc & desc )
     {
         GN_ASSERT( desc.valid() );
-        renderTargets = desc;
+        _GNGFX_CONTEXT_UPDATE( renderTargets, renderTargets, desc );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void RendererContext::setDrawToBackBuf()
+    {
+        setRenderTargets( RenderTargetDesc::DRAW_TO_BACK_BUFFER );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void RendererContext::setDrawToTexture(
+            UInt32 count,
+            const Texture * rt0,
+            const Texture * rt1,
+            const Texture * rt2,
+            const Texture * rt3,
+            const Texture * z,
+            MsaaType aa )
+
+    {
+        RenderTargetDesc desc;
+        desc.drawToBaseMap( count, rt0, rt1, rt2, rt3, z, aa );
+        setRenderTargets( desc );
     }
 
     //

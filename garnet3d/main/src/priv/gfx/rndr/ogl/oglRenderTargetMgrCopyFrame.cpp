@@ -13,7 +13,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 // -----------------------------------------------------------------------------
 static GN_INLINE void
-sCopyFrameBufferTo( const GN::gfx::RenderToTexture & rtt )
+sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 {
     using namespace GN;
     using namespace GN::gfx;
@@ -92,6 +92,9 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( oldDesc.valid() );
+    GN_ASSERT( newDesc.valid() );
+
     needRebindViewport = false;
 
     // bind color buffers
@@ -99,8 +102,8 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
     if( 0 == count ) count = 1;
     for( UInt32 i = 0; i < count; ++i )
     {
-        const RenderToTexture * oldc = i < oldDesc.count ? &oldDesc.cbuffers[i] : 0;
-        const RenderToTexture * newc = i < newDesc.count ? &newDesc.cbuffers[i] : 0;
+        const RenderTargetTexture * oldc = i < oldDesc.count ? &oldDesc.cbuffers[i] : 0;
+        const RenderTargetTexture * newc = i < newDesc.count ? &newDesc.cbuffers[i] : 0;
 
         if( forceRebind || // if "force" rebinding, then do it.
             oldc != newc && // if oldc and newc are both NULL, then do nothing.
@@ -108,8 +111,11 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
             // or content of the two surfaces are different, we have to do the binding.
             ( NULL == oldc || NULL == newc || *oldc != *newc ) )
         {
-            // Do copy only when oldc points to a texture.
-            if( oldc && oldc->texture ) sCopyFrameBufferTo( *oldc );
+            if( oldc )
+            {
+                GN_ASSERT( oldc->texture );
+                sCopyFrameBufferTo( *oldc );
+            }
 
             // update render target size
             if( 0 == i )
@@ -133,8 +139,8 @@ void GN::gfx::OGLRTMgrCopyFrame::bind(
     }
 
     // bind depth buffer
-    const RenderToTexture & oldz = oldDesc.zbuffer;
-    const RenderToTexture & newz = newDesc.zbuffer;
+    const RenderTargetTexture & oldz = oldDesc.zbuffer;
+    const RenderTargetTexture & newz = newDesc.zbuffer;
     if( oldz.texture && ( oldz != newz || forceRebind ) )
     {
         sCopyFrameBufferTo( oldz );
