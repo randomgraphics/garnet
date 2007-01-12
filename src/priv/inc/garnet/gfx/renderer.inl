@@ -132,6 +132,29 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
+    void Renderer::setDrawToBackBuf()
+    {
+        _GNGFX_CONTEXT_UPDATE( setDrawToBackBuf() );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    void Renderer::setDrawToTexture(
+        UInt32 count,
+        const Texture * rt0,
+        const Texture * rt1,
+        const Texture * rt2,
+        const Texture * rt3,
+        const Texture * z,
+        MsaaType aa )
+    {
+        _GNGFX_CONTEXT_UPDATE( setDrawToTexture( count, rt0, rt1, rt2, rt3, z, aa ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     inline void Renderer::setViewport( const Rectf & viewport )
     {
         _GNGFX_CONTEXT_UPDATE( setViewport( viewport ) );

@@ -50,7 +50,8 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// implement render target by copying data from frame buffer. No extension required.
+    /// implement render target by copying data from frame buffer.
+    /// No extension required, but only supports single RT texture.
     ///
     class OGLRTMgrCopyFrame : public OGLBasicRTMgr
     {

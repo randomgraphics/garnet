@@ -31,7 +31,7 @@ namespace GN { namespace gfx
     ///
     /// describe a render target texture
     ///
-    struct RenderToTexture
+    struct RenderTargetTexture
     {
         const Texture * texture; ///< render target texture
         size_t          face;    ///< cubemap face. Must be zero for non-cube/stack texture.
@@ -41,7 +41,7 @@ namespace GN { namespace gfx
         ///
         /// equality check
         ///
-        bool operator==( const RenderToTexture & rhs ) const
+        bool operator==( const RenderTargetTexture & rhs ) const
         {
             if( texture != rhs.texture ) return false;
             if( NULL == texture ) return true; // ignore remaining parameters, if texture is NULL.
@@ -51,7 +51,7 @@ namespace GN { namespace gfx
         ///
         /// equality check
         ///
-        bool operator!=( const RenderToTexture & rhs ) const
+        bool operator!=( const RenderTargetTexture & rhs ) const
         {
             if( texture != rhs.texture ) return true;
             if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
@@ -65,13 +65,59 @@ namespace GN { namespace gfx
     struct RenderTargetDesc
     {
         unsigned int count :  5; ///< color buffer count. 0 means draw to back buffer.
-        unsigned int depth :  1; ///< has z buffer or not. Ignored when draw to back buffer.
         unsigned int aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
-        unsigned int _     :  7; ///< reserved.
-        RenderToTexture cbuffers[MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
-        RenderToTexture zbuffer; ///< z buffer description. Ignored when draw to back buffer.
+        RenderTargetTexture cbuffers[MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
+        RenderTargetTexture zbuffer; ///< z buffer description. Set zbuffer.texture to NULL to use auto-zbuffer.
 
-        static const RenderTargetDesc DRAW_TO_BACK_BUFFER; ///< const descriptor that draws to back buffer.
+        ///
+        /// const descriptor that draws to back buffer.
+        ///
+        static const RenderTargetDesc DRAW_TO_BACK_BUFFER;
+
+        ///
+        /// set color buffer
+        ///
+        void setcbuf( UInt32 index, const Texture * tex, UInt32 level = 0, UInt32 face = 0, UInt32 slice = 0 )
+        {
+            GN_ASSERT( index < MAX_RENDER_TARGETS );
+            cbuffers[index].texture = tex;
+            cbuffers[index].face = level;
+            cbuffers[index].level = face;
+            cbuffers[index].slice = slice;
+        }
+
+        //
+        // set z buffer
+        //
+        void setzbuf( const Texture * tex, UInt32 level = 0, UInt32 face = 0, UInt32 slice = 0 )
+        {
+            zbuffer.texture = tex;
+            zbuffer.level = level;
+            zbuffer.face = face;
+            zbuffer.slice = slice;
+        }
+
+        ///
+        /// draw to base map of texture(s)
+        ///
+        void drawToBaseMap(
+            UInt32 count_,
+            const Texture * rt0,
+            const Texture * rt1 = 0,
+            const Texture * rt2 = 0,
+            const Texture * rt3 = 0,
+            const Texture * z = 0,
+            MsaaType aa_ = MSAA_NONE )
+        {
+            count = count_;
+            aa = aa_;
+            setcbuf( 0, rt0 );
+            setcbuf( 1, rt1 );
+            setcbuf( 2, rt2 );
+            setcbuf( 3, rt3 );
+            setzbuf( z );
+        }
+        //@}
 
         ///
         /// validality check
@@ -91,10 +137,9 @@ namespace GN { namespace gfx
             if( this == &rhs ) return true;
             if( count != rhs.count ) return false;
             if( 0 == count ) return true;
-            if( depth != rhs.depth ) return false;
             if( aa != rhs.aa ) return false;
             for( UInt i = 0; i < count; ++i ) if( cbuffers[i] != rhs.cbuffers[i] ) return false;
-            if( depth && zbuffer != rhs.zbuffer ) return false;
+            if( zbuffer != rhs.zbuffer ) return false;
             return true;
         }
 
@@ -338,9 +383,26 @@ namespace GN { namespace gfx
         inline void setRenderState( RenderState state, SInt32 value );
 
         ///
-        /// Set render target texture.
+        /// Set render target textures.
         ///
         inline void setRenderTargets( const RenderTargetDesc & );
+
+        ///
+        /// Set draw to back buffer.
+        ///
+        void setDrawToBackBuf();
+
+        ///
+        /// Set draw to texture(s)
+        ///
+        void setDrawToTexture(
+            UInt32 count_,
+            const Texture * rt0,
+            const Texture * rt1 = 0,
+            const Texture * rt2 = 0,
+            const Texture * rt3 = 0,
+            const Texture * z = 0,
+            MsaaType aa_ = MSAA_NONE );
 
         ///
         /// Set viewport.

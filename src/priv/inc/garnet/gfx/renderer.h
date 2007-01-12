@@ -842,6 +842,8 @@ namespace GN { namespace gfx
         inline void setRenderStateBlock( const RenderStateBlockDesc & );
         inline void setRenderState( RenderState state, SInt32 value );
         inline void setRenderTargets( const RenderTargetDesc & );
+        inline void setDrawToBackBuf();
+        inline void setDrawToTexture( UInt32 count, const Texture * rt0, const Texture * rt1=0, const Texture * rt2=0, const Texture * rt3=0, const Texture * z=0, MsaaType aa=MSAA_NONE );
         inline void setViewport( const Rectf & );
         inline void setViewport( float left, float top, float width, float height );
 

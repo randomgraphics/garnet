@@ -119,8 +119,7 @@ public:
         r.contextUpdateBegin();
             r.setShaders( 0, 0, 0 );
             r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-            r.setColorBuffer( 0, mColor );
-            r.setDepthBuffer( mDepth );
+            r.setDrawToTexture( 1, mColor, 0, 0, 0, mDepth );
             r.setWorld( mWorld ); r.setView( mView ); r.setProj( mProj );
             rm.bindTextureHandle( r, 0, mTex0 );
             r.setVtxFmt( mDecl );
@@ -128,8 +127,8 @@ public:
         r.clearScreen();
         r.drawIndexedUp( TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
 
-        r.setColorBuffer( 0, 0 );
-        r.setDepthBuffer( 0 );
+        // render depth texture to screen
+        r.setDrawToBackBuf();
         r.setTexture( 0, mDepth );
         if( mVs && mPs )
         {
