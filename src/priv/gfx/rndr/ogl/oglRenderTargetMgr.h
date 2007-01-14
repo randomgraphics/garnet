@@ -85,7 +85,55 @@ namespace GN { namespace gfx
 
         void clear() { mWidth = 0; mHeight = 0; }
         void quit() { clear(); }
+    };
 
+    //
+    // render target manager using FBO extension
+    //
+    class OGLRTMgrFBO : public OGLBasicRTMgr
+    {
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        OGLRTMgrFBO( OGLRenderer & r ) : OGLBasicRTMgr(r) { clear(); }
+        virtual ~OGLRTMgrFBO() { quit(); }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        ///
+        /// check where FBO is usable or not.
+        ///
+        bool usable() const
+        {
+            return GLEW_EXT_framebuffer_object && GLEW_ARB_draw_buffers;
+        };
+
+        virtual bool init();
+        virtual void bind( const RenderTargetDesc &, const RenderTargetDesc &, bool, bool &);
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        GLuint mFbo;
+        GLuint mAutoZ;
+        Vector2<UInt32> mAutoZSize;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
+
+        void quit();
+        void clear() { mFbo = 0; mAutoZ = 0; mAutoZSize.set(0,0); }
     };
 }}
 
