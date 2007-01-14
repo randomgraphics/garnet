@@ -217,19 +217,21 @@ size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
 {
     StrW wcs;
     mbs2wcs( wcs, i, is );
+
+    size_t n = wcs.size() + 1;
+
     if( o )
     {
-        if( os > wcs.size() )
+        if( os > n )
         {
-            memcpy( o, wcs.cptr(), sizeof(wchar_t)*wcs.size() );
-            o[wcs.size()] = 0;
-            return wcs.size();
+            memcpy( o, wcs.cptr(), n );
+            GN_ASSERT( 0 == o[n-1] );
+            return n;
         }
         else if( os > 0 )
         {
-            --os;
-            memcpy( o, wcs.cptr(), sizeof(wchar_t)*os );
-            o[os] = 0;
+            memcpy( o, wcs.cptr(), sizeof(wchar_t) * (os-1) );
+            o[os-1] = 0;
             return os;
         }
         else
@@ -239,7 +241,7 @@ size_t GN::mbs2wcs( wchar_t * o, size_t os, const char * i, size_t is )
     }
     else
     {
-        return wcs.size();
+        return n;
     }
 }
 

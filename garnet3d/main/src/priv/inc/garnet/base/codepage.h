@@ -34,9 +34,10 @@ namespace GN
     ///
     /// convert multi-byte string to wide char string.
     ///
-    /// Normally, it returns number of wide characters written into output buffer, not including the null terminator.
-    /// If output wide-char buffer is NULL, it returns required size of wide-char buffer size in words, not including the null terminator.
+    /// Normally, it returns number of wide characters written into output buffer, including the null terminator.
+    /// If output wide-char buffer is NULL, it returns required size of wide-char buffer size in words, including the null terminator.
     /// If anything goes wrong, it'll return 0.
+    ///
     /// Note that ouput string is always null-terminated.
     ///
     /// \param obuf

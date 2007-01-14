@@ -15,6 +15,7 @@ sources = [
     'oglQuad.cpp',
     'oglRenderer.cpp',
     'oglRenderTargetMgrCopyFrame.cpp',
+    'oglRenderTargetMgrFBO.cpp',
     'oglResource.cpp',
     'oglResourceMgr.cpp',
     'oglTexture.cpp',
