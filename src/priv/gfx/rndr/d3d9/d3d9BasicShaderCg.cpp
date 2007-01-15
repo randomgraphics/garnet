@@ -47,11 +47,11 @@ bool GN::gfx::D3D9BasicShaderCg::init( const StrA & code, const StrA & hints )
     if( !mShader.init( getRenderer().getCgContext(), mProfile, code, entry ) ) return failure();
 
     // load the program
-    DWORD asmFlags = D3DXSHADER_PACKMATRIX_ROWMAJOR;
+    DWORD asmFlags = 0;
 #if GN_DEBUG_BUILD
     asmFlags |= D3DXSHADER_DEBUG;
 #endif
-    GN_DX9_CHECK_RV( cgD3D9LoadProgram( mShader.getProgram(), CG_FALSE, 0 ), failure() );
+    GN_DX9_CHECK_RV( cgD3D9LoadProgram( mShader.getProgram(), CG_FALSE, asmFlags ), failure() );
 
     // success
     return success();
@@ -221,7 +221,7 @@ void GN::gfx::D3D9BasicShaderCg::applyUniform( const Uniform & u ) const
            GN_UNEXPECTED();
     }
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 #endif

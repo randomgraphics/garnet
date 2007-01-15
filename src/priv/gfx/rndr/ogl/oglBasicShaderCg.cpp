@@ -213,7 +213,7 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
            GN_UNEXPECTED();
     }
 
-    GN_UNGUARD;
+    GN_UNGUARD_SLOW;
 }
 
 #endif
