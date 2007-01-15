@@ -98,10 +98,6 @@ void GN::gfx::D3D9Renderer::resourceDeviceDispose()
         ++i;
     }
 
-#ifdef HAS_CG_D3D9
-    GN_DX9_CHECK( cgD3D9SetDevice(0) );
-#endif
-
     GN_UNGUARD;
 }
 

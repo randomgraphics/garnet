@@ -11,6 +11,7 @@ OPENNING
 - GNtestGfx:
   - black screen on vista when using OGL.
   - PNG picture load bug on Xbox 360.
+  - use uniform before setting value, after OGL device restore.
 
 - GNsampleRenderToTexture:
   - black screen on cygwin.
