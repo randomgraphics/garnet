@@ -110,7 +110,7 @@ namespace GN { namespace gfx
         ///
         /// check where FBO is usable or not.
         ///
-        bool usable() const
+        static bool usable()
         {
             return GLEW_EXT_framebuffer_object && GLEW_ARB_draw_buffers;
         };

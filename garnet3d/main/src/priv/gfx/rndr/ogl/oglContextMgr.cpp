@@ -98,7 +98,14 @@ bool GN::gfx::OGLRenderer::contextDeviceRestore()
 
     // create render target manager
     GN_ASSERT( 0 == mRTMgr );
-    mRTMgr = new OGLRTMgrCopyFrame( *this );
+    if( OGLRTMgrFBO::usable() )
+    {
+        mRTMgr = new OGLRTMgrFBO( *this );
+    }
+    else
+    {
+        mRTMgr = new OGLRTMgrCopyFrame( *this );
+    }
     if( !mRTMgr->init() ) return false;
 
     // rebind context

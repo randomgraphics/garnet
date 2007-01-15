@@ -31,7 +31,7 @@ static inline void sAttachRTT2FBO( GLenum fbo, const GN::gfx::RenderTargetTextur
                 attachpoint,
                 GL_TEXTURE_1D,
                 tex->getOGLTexture(),
-                rtt.level ) );
+                (GLint)rtt.level ) );
             break;
 
         case TEXTYPE_2D :
@@ -40,7 +40,7 @@ static inline void sAttachRTT2FBO( GLenum fbo, const GN::gfx::RenderTargetTextur
                 attachpoint,
                 GL_TEXTURE_2D,
                 tex->getOGLTexture(),
-                rtt.level ) );
+                (GLint)rtt.level ) );
             break;
 
         case TEXTYPE_3D :
@@ -49,17 +49,17 @@ static inline void sAttachRTT2FBO( GLenum fbo, const GN::gfx::RenderTargetTextur
                 attachpoint,
                 GL_TEXTURE_2D,
                 tex->getOGLTexture(),
-                rtt.level,
-                rtt.slice ) );
+                (GLint)rtt.level,
+                (GLint)rtt.slice ) );
             break;
 
         case TEXTYPE_CUBE :
             GN_OGL_CHECK( glFramebufferTexture2DEXT(
                 GL_FRAMEBUFFER_EXT,
                 attachpoint,
-                GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + rtt.face,
+                (GLenum)( GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + rtt.face ),
                 tex->getOGLTexture(),
-                rtt.level ) );
+                (GLint)rtt.level ) );
             break;
 
         default :
