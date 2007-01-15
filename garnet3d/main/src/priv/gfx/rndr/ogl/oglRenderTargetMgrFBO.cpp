@@ -12,12 +12,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-static inline void sAttachRTT2FBO( GLenum fbo, const GN::gfx::RenderTargetTexture & rtt, GLenum attachpoint )
+static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLenum attachpoint )
 {
     using namespace GN;
     using namespace GN::gfx;
-
-    GN_ASSERT( fbo );
 
     GN_ASSERT( rtt.texture );
 
@@ -83,9 +81,6 @@ bool GN::gfx::OGLRTMgrFBO::init()
     // create frame buffer object
     GN_OGL_CHECK_RV( glGenFramebuffersEXT( 1, &mFbo ), false );
 
-    // bind this frame buffer object
-    GN_OGL_CHECK_RV( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mFbo ), false );
-
     // success
     return true;
 }
@@ -97,6 +92,7 @@ void GN::gfx::OGLRTMgrFBO::quit()
 {
     if( mAutoZ )
     {
+        GN_OGL_CHECK( glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, 0 ) );
         GN_OGL_CHECK( glDeleteRenderbuffersEXT( 1, &mAutoZ ) );
         mAutoZ = 0;
     }
@@ -126,6 +122,9 @@ void GN::gfx::OGLRTMgrFBO::bind(
 {
     GN_GUARD_SLOW;
 
+    // make sure no OGL errors before this function
+    GN_OGL_CHECK( ; );
+
     GN_UNUSED_PARAM( oldDesc );
     GN_UNUSED_PARAM( forceRebind );
 
@@ -135,57 +134,94 @@ void GN::gfx::OGLRTMgrFBO::bind(
     needRebindViewport = false;
 
     // special case for render to back buffer
+    if( 0 == newDesc.count && 0 == newDesc.zbuffer.texture )
+    {
+        if( oldDesc.count > 0 || oldDesc.zbuffer.texture || forceRebind )
+        {
+            // unbind FBO, render to back buffer
+            GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ) );
+            GN_OGL_CHECK( glDrawBuffer( GL_BACK ) );
+
+            // update render target size
+            UInt32 oldw = mWidth, oldh = mHeight;
+            mWidth = mRenderer.getDispDesc().width;
+            mHeight = mRenderer.getDispDesc().height;
+
+            // rebind viewport, if render target size changes.
+            needRebindViewport = oldw != mWidth || oldh != mHeight;
+        }
+        return;
+    }
+
+    // bind FBO, if last context is "render-to-back-buffer"
+    if( 0 == oldDesc.count && 0 == oldDesc.zbuffer.texture )
+    {
+        GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mFbo ) );
+    }
+
+    // store old RT size
+    UInt32 oldw = mWidth, oldh = mHeight;
+
     if( 0 == newDesc.count )
     {
-        // render to back buffer
-        GN_OGL_CHECK( glDrawBuffer( GL_BACK ) );
+        // render to depth texture only. So take depth texture size as render target size.
+        GN_ASSERT( newDesc.zbuffer.texture );
+        newDesc.zbuffer.texture->getMipSize<UInt32>( newDesc.cbuffers[0].level, &mWidth, &mHeight );
 
-        // get back buffer size
-        mWidth = mRenderer.getDispDesc().width;
-        mHeight = mRenderer.getDispDesc().height;
+        if( oldDesc.count > 0 )
+        {
+            GN_OGL_CHECK( glDrawBuffer( GL_NONE ) );
+        }
     }
     else
     {
-        // render to texture(s)
-        static GLenum buffers[] =
-        {
-            GL_COLOR_ATTACHMENT0_EXT,
-            GL_COLOR_ATTACHMENT1_EXT,
-            GL_COLOR_ATTACHMENT2_EXT,
-            GL_COLOR_ATTACHMENT3_EXT,
-            GL_COLOR_ATTACHMENT4_EXT,
-            GL_COLOR_ATTACHMENT5_EXT,
-            GL_COLOR_ATTACHMENT6_EXT,
-            GL_COLOR_ATTACHMENT7_EXT,
-            GL_COLOR_ATTACHMENT8_EXT,
-            GL_COLOR_ATTACHMENT9_EXT,
-            GL_COLOR_ATTACHMENT10_EXT,
-            GL_COLOR_ATTACHMENT11_EXT,
-            GL_COLOR_ATTACHMENT12_EXT,
-            GL_COLOR_ATTACHMENT13_EXT,
-            GL_COLOR_ATTACHMENT14_EXT,
-            GL_COLOR_ATTACHMENT15_EXT,
-        };
-        GN_ASSERT( newDesc.count <= 16 );
-        GN_OGL_CHECK( glDrawBuffersARB( newDesc.count, buffers ) );
-
-        // get render target size
+        // take color buffer 0 size as render target size.
         GN_ASSERT( newDesc.cbuffers[0].texture );
         newDesc.cbuffers[0].texture->getMipSize<UInt32>( newDesc.cbuffers[0].level, &mWidth, &mHeight );
+
+        if( oldDesc.count != newDesc.count )
+        {
+            static GLenum buffers[] =
+            {
+                GL_COLOR_ATTACHMENT0_EXT,
+                GL_COLOR_ATTACHMENT1_EXT,
+                GL_COLOR_ATTACHMENT2_EXT,
+                GL_COLOR_ATTACHMENT3_EXT,
+                GL_COLOR_ATTACHMENT4_EXT,
+                GL_COLOR_ATTACHMENT5_EXT,
+                GL_COLOR_ATTACHMENT6_EXT,
+                GL_COLOR_ATTACHMENT7_EXT,
+                GL_COLOR_ATTACHMENT8_EXT,
+                GL_COLOR_ATTACHMENT9_EXT,
+                GL_COLOR_ATTACHMENT10_EXT,
+                GL_COLOR_ATTACHMENT11_EXT,
+                GL_COLOR_ATTACHMENT12_EXT,
+                GL_COLOR_ATTACHMENT13_EXT,
+                GL_COLOR_ATTACHMENT14_EXT,
+                GL_COLOR_ATTACHMENT15_EXT,
+            };
+            GN_ASSERT( newDesc.count <= 16 );
+            GN_OGL_CHECK( glDrawBuffersARB( newDesc.count, buffers ) );
+        }
     }
 
+    // rebind viewport, if render target size changes.
+    needRebindViewport = oldw != mWidth || oldh != mHeight;
+
     // bind color buffers
-    for( GLenum i = (0==newDesc.count)?1:0; i < newDesc.count; ++i )
+    for( GLenum i = 0; i < newDesc.count; ++i )
     {
-        sAttachRTT2FBO( mFbo, newDesc.cbuffers[i], GL_COLOR_ATTACHMENT0_EXT + i );
-        needRebindViewport = true;
+        sAttachRTT2FBO( newDesc.cbuffers[i], GL_COLOR_ATTACHMENT0_EXT + i );
     }
 
     // bind depth buffer
     if( newDesc.zbuffer.texture )
     {
         // attach depth texture to FBO
-        sAttachRTT2FBO( mFbo, newDesc.zbuffer, GL_DEPTH_ATTACHMENT_EXT );
+        if( newDesc.zbuffer.texture != oldDesc.zbuffer.texture || forceRebind )
+        {
+            sAttachRTT2FBO( newDesc.zbuffer, GL_DEPTH_ATTACHMENT_EXT );
+        }
     }
     else
     {
@@ -201,14 +237,20 @@ void GN::gfx::OGLRTMgrFBO::bind(
                 GN_ERROR(sLogger)( L"fail to generate automatic z buffer" );
                 return; );
 
+            // update size of auto z buffer
+            mAutoZSize.set( mWidth, mHeight );
+
             // initialize new z buffer
             // TODO: choose appropriate depth format
             GN_OGL_CHECK( glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, mAutoZ ) );
             GN_OGL_CHECK( glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, mWidth, mHeight ) );
-        }
 
-        // attach auto z buffer to FBO
-        GN_OGL_CHECK( glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mAutoZ ) );
+            GN_OGL_CHECK( glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mAutoZ ) );
+        }
+        else if( oldDesc.zbuffer.texture || forceRebind )
+        {
+            GN_OGL_CHECK( glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mAutoZ ) );
+        }
     }
 
     GN_OGL_CHECK( ; );

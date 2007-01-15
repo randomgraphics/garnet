@@ -214,7 +214,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContext(
     {
         if( newFlags.shaders ) bindContextShaders( newContext, newFlags, forceRebind );
 
-        if( newFlags.rsb ) bindContextRenderStates( newContext, newFlags, forceRebind );
+        if( newFlags.rsb ) bindContextRenderStates( newContext, forceRebind );
 
         // bind render targets
         bool rebindViewport = false;
@@ -398,12 +398,9 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextShaders(
 // -----------------------------------------------------------------------------
 GN_INLINE void GN::gfx::OGLRenderer::bindContextRenderStates(
     const RendererContext & newContext,
-    RendererContext::FieldFlags newFlags,
     bool forceRebind )
 {
     GN_GUARD_SLOW;
-
-    GN_ASSERT( newFlags.rsb );
 
     GN_ASSERT( newContext.rsb.valid() );
 
