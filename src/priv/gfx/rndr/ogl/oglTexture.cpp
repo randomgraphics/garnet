@@ -416,7 +416,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     {
         if( TEXUSAGE_DEPTH == desc.usage )
         {
-            desc.format = FMT_D_32; // default depth format
+            desc.format = FMT_D_16; // default depth format
         }
         else
         {

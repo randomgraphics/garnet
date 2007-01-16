@@ -167,8 +167,7 @@ void GN::gfx::OGLRTMgrFBO::bind(
         // render to depth texture only. So take depth texture size as render target size.
         GN_ASSERT( newDesc.zbuffer.texture );
         newDesc.zbuffer.texture->getMipSize<UInt32>( newDesc.cbuffers[0].level, &mWidth, &mHeight );
-
-        if( oldDesc.count > 0 )
+        if( oldDesc.count > 0 || 0 == oldDesc.zbuffer.texture )
         {
             GN_OGL_CHECK( glDrawBuffer( GL_NONE ) );
         }
@@ -256,7 +255,10 @@ void GN::gfx::OGLRTMgrFBO::bind(
     GN_OGL_CHECK( ; );
 
     // verify completness of frame buffer
-    GN_ASSERT( GL_FRAMEBUFFER_COMPLETE_EXT == glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT) );
+#if GN_DEBUG_BUILD
+    GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+    GN_ASSERT( GL_FRAMEBUFFER_COMPLETE_EXT == status );
+#endif
 
     GN_UNGUARD_SLOW;
 }

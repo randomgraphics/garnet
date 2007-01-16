@@ -140,7 +140,10 @@ namespace GN { namespace app
         ///
         void bindShaderHandles( gfx::Renderer & r, UInt32 vs, UInt32 ps, UInt32 gs )
         {
-            r.setShaders( shaders.getResource(vs), shaders.getResource(ps), shaders.getResource(gs) );
+            r.setShaders(
+                vs?shaders.getResource(vs):0,
+                ps?shaders.getResource(ps):0,
+                gs?shaders.getResource(gs):0 );
         }
 
         ///
@@ -148,7 +151,7 @@ namespace GN { namespace app
         ///
         void bindTextureHandle( gfx::Renderer & r, size_t stage, UInt32 tex )
         {
-            r.setTexture( stage, textures.getResource(tex) );
+            r.setTexture( stage, tex?textures.getResource(tex):0 );
         }
 
         ///
