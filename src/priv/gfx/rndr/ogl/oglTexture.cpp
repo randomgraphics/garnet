@@ -200,9 +200,9 @@ static GN_INLINE bool sColorFormat2OGL(
                 GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
                 return false;
             }
-            gl_internalformat  = GL_DEPTH_COMPONENT16_ARB;
+            gl_internalformat  = GL_DEPTH_COMPONENT;
             gl_format          = GL_DEPTH_COMPONENT;
-            gl_type            = GL_FLOAT;
+            gl_type            = GL_UNSIGNED_SHORT;
             return true;
 
         case GN::gfx::FMT_D_24 :
@@ -211,9 +211,9 @@ static GN_INLINE bool sColorFormat2OGL(
                 GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
                 return false;
             }
-            gl_internalformat  = GL_DEPTH_COMPONENT24_ARB;
+            gl_internalformat  = GL_DEPTH_COMPONENT;
             gl_format          = GL_DEPTH_COMPONENT;
-            gl_type            = GL_FLOAT;
+            gl_type            = GL_UNSIGNED_INT;
             return true;
 
         case GN::gfx::FMT_D_32 :
@@ -222,9 +222,9 @@ static GN_INLINE bool sColorFormat2OGL(
                 GN_ERROR(sLogger)( "does not support GL_ARB_depth_texture." );
                 return false;
             }
-            gl_internalformat  = GL_DEPTH_COMPONENT32_ARB;
+            gl_internalformat  = GL_DEPTH_COMPONENT;
             gl_format          = GL_DEPTH_COMPONENT;
-            gl_type            = GL_FLOAT;
+            gl_type            = GL_UNSIGNED_INT;
             return true;
 
         case GN::gfx::FMT_DXT1 :
@@ -416,7 +416,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     {
         if( TEXUSAGE_DEPTH == desc.usage )
         {
-            desc.format = FMT_D_16; // default depth format
+            desc.format = FMT_D_32; // default depth format
         }
         else
         {
