@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.3.8)
 // *****************************************************************************
 
-#include "GNbase.h"
+#include "GNcore.h"
 
 namespace GN
 {
@@ -15,6 +15,8 @@ namespace GN
     ///
     namespace util {}
 }
+
+#include "util/camera.h"
 
 // *****************************************************************************
 //                           End of GNutil.h
