@@ -20,7 +20,7 @@
     - set sampling parameters (such as filters wrapping) at binding time
     - render target management
       - D3D: msaa
-      - OGL: FBO
+      - OGL: FBO with AA
     - recreate OGL context, when monitor changed.
   - code page convertor and test application
     - may support convertion from/to utf8 be enough?
