@@ -20,7 +20,9 @@ class Scene
     BoxVert mBoxVerts[24];
     UInt16 mBoxIndices[36];
 
-    Matrix44f mWorld, mView, mProj;
+    util::ArcBall mArcBall;
+
+    Matrix44f mModel, mView, mProj;
 
     UInt32 mTex0;
 
@@ -63,8 +65,11 @@ public:
             &mBoxVerts[0].nx, sizeof(BoxVert),
             mBoxIndices, 0 );
 
+        // initialize arcball
+        mArcBall.setMouseMoveWindow( 0, 0, r.getDispDesc().width, r.getDispDesc().height );
+
         // initialize matrices
-        mWorld.identity();
+        mModel.identity();
         mView.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
         r.composePerspectiveMatrix( mProj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
@@ -89,25 +94,34 @@ public:
         mDepth.clear();
     }
 
-    AutoInit<bool,true> mAnimate;
-
     void onKeyPress( input::KeyEvent key )
     {
-        if( input::KEY_SPACEBAR == key.code && key.status.down )
+        if( input::KEY_MOUSEBTN_0 == key.code )
         {
-            mAnimate = !mAnimate;
+            if( key.status.down )
+            {
+                int x, y;
+                gInput.getMousePosition( x, y );
+                mArcBall.onMouseButtonDown( x, y );
+            }
+            else
+            {
+                mArcBall.onMouseButtonUp();
+            }
         }
+    }
+
+    void onAxisMove()
+    {
+        int x, y;
+        gInput.getMousePosition( x, y );
+        mArcBall.onMouseMove( x, y );
     }
 
     void update()
     {
-        // update mWorld matrix
-        static float angle = 0.0f;
-        if( mAnimate )
-        {
-            angle += deg2rad(0.2f);
-            mWorld.rotateY( angle );
-        }
+        // update model matrix
+        mModel.set( mArcBall.getRotationMatrix() );
     }
 
     void render()
@@ -120,7 +134,7 @@ public:
             r.setShaders( 0, 0, 0 );
             r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
             r.setDrawToTexture( 1, mColor, 0, 0, 0, mDepth );
-            r.setWorld( mWorld ); r.setView( mView ); r.setProj( mProj );
+            r.setWorld( mModel ); r.setView( mView ); r.setProj( mProj );
             rm.bindTextureHandle( r, 0, mTex0 );
             r.setVtxFmt( mDecl );
         r.contextUpdateEnd();
@@ -170,6 +184,12 @@ public:
     {
         GN::app::SampleApp::onKeyPress( key );
         mScene->onKeyPress( key );
+    }
+
+    void onAxisMove( input::Axis a, int d )
+    {
+        GN::app::SampleApp::onAxisMove( a, d );
+        mScene->onAxisMove();
     }
 
     void onRender()
