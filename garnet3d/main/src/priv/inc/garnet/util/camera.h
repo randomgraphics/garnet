@@ -11,41 +11,64 @@
 namespace GN { namespace util
 {
     ///
-    /// Camera that normally used to manipulate a 3D model.
+    /// Arcball that normally used to view a 3D model.
     ///
     class ArcBall
     {
-        Vector3f   mCenter;
-        Vector3f   mDistance;
-        Quaternion mOrientation;
+        Quaternionf       mQuat; // orientation
+        mutable Matrix33f mRotation;
+
+        Vector2i          mWindowCenter;
+        Vector2i          mWindowHalfSize;
+
+        Quaternionf       mQuatBase;
+        Vector3f          mMoveBase;
+        Matrix33f         mRotBase;
+        bool              mMoving;
 
     public:
+
+        ///
+        /// ctor
+        ///
+        ArcBall();
 
         /// \name set camera properties
         //@{
 
-        void setTargetPosition( const Vector3f & ); ///< initial is (0,0,0)
-        void setViewDistance( float ); ///< initial is 1.0
-        void setFov( float ); ///< set vertical view angle in radian. initial is PI/2.
-        void setRatio( float ); ///< set screen ratio (width/height). Initial is 4/3
-        void setMouseMoveRect( int x, int y, int w, int h ); ///< set the mouse moving range of the arcball. Initial is (0,0,1,1)
+        ///
+        /// set the mouse moving range of the arcball. X is left-ward, Y is down-ward.
+        ///
+        /// Initial is (-1,-1,2,2)
+        ///
+        void setMouseMoveWindow( int l, int t, int w, int h )
+        {
+            mWindowHalfSize.set( w / 2, h / 2 );
+            mWindowCenter.set( l + mWindowHalfSize.x, t + mWindowHalfSize.y );
+        }
+
+        void setRotation( const Quaternionf & q ) { mQuat = q; }
 
         //@}
 
-        /// \name manipulate the camera
+        /// \name get camera properties
         //@{
 
-        void zoom( float distance );
-        void rotate( const Quaternion & );
+        const Matrix33f & getRotationMatrix() const
+        {
+            mQuat.toMatrix33( mRotation );
+            return mRotation;
+        }
 
         //@}
+
 
         /// \name mouse action handler
         //@{
 
-        void onMouseMove( int x, int y, int z );
-        void onMouseButtonDown( int x, int y, int z );
-        void onMouseButtonUp( int x, int y, int z );
+        void onMouseMove( int x, int y );
+        void onMouseButtonDown( int x, int y );
+        void onMouseButtonUp();
 
         //@}
     };

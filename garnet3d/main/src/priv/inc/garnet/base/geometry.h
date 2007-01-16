@@ -1666,13 +1666,7 @@ namespace GN
         ///
         Quaternion & operator *= ( const Quaternion & q )
         {
-            Quaternion q1 = *this;
-            Quaternion q2 = q;
-
-            w = q1.w * q2.w - Vector3<T>::dot( q1.v, q2.v );
-            v = Vector3<T>::cross( q1.v, q2.v );
-            v += q1.w * q2.v + q2.w * q1.v;
-
+            *this = (*this) * q;
             return *this;
         }
         ///
@@ -1682,8 +1676,8 @@ namespace GN
         operator * ( const Quaternion & q1, const Quaternion & q2 )
         {
             Quaternion result;
-            result.w = q1.w * q2.w - Vector3<T>::dot( q1.v, q2.v );
-            result.v = Vector3<T>::cross( q1.v, q2.v );
+            result.w = q1.w * q2.w - Vector3<T>::sDot( q1.v, q2.v );
+            result.v = Vector3<T>::sCross( q1.v, q2.v );
             result.v += q1.w * q2.v + q2.w * q1.v;
             return result;
         }
@@ -1789,7 +1783,7 @@ namespace GN
         ///
         /// inverse
         ///
-        static void sinvert( Quaternion & dst, const Quaternion & src )
+        static void sInvert( Quaternion & dst, const Quaternion & src )
         {
             dst = src;
             dst.inverse();
@@ -1825,13 +1819,9 @@ namespace GN
         ///
         Quaternion & fromArc( const Vector3<T> & v1, const Vector3<T> & v2 )
         {
-            // make sure v1 and v2 are unit vector
-            GN_ASSERT( abs( ((T)1.0) - v1.length() ) < (T)0.0001 &&
-                       abs( ((T)1.0) - v2.length() ) < (T)0.0001 );
-
-            T  d = dot( v1, v2 );
+            T  d = Vector3<T>::sDot( v1, v2 );
             T  s = (T)sqrt( ( 1 + d ) * 2 );
-            Vector3<T> c = cross( v1, v2 );
+            Vector3<T> c = Vector3<T>::sCross( v1, v2 );
 
             v.x = c.x / s;
             v.y = c.y / s;
@@ -2502,6 +2492,9 @@ namespace GN
     typedef Matrix44<float>     Matrix44f;
     typedef Matrix44<double>    Matrix44d;
     typedef Matrix44<int>       Matrix44i;
+
+    typedef Quaternion<float>   Quaternionf;
+    typedef Quaternion<double>  Quaterniond;
 
     typedef Plane3<float>       Plane3f;
     typedef Plane3<double>      Plane3d;
