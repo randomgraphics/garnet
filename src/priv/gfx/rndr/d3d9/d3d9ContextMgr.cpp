@@ -133,13 +133,8 @@ bool GN::gfx::D3D9Renderer::contextDeviceRestore()
 #endif
     if( !mRTMgr->init() ) return false;
 
-    // initialize all render/texture/sampler states
-    for( int i = 0; i < MAX_D3D_RENDER_STATES; ++i ) mRenderStates[i].clear();
-    for( int s = 0; s < MAX_TEXTURE_STAGES; ++s )
-        for( int i = 0; i < MAX_D3D_SAMPLER_STATES; ++i ) mSamplerStates[s][i].clear();
+    // initialize render/texture/sampler states
 #if !GN_XENON
-    for( int s = 0; s < MAX_TEXTURE_STAGES; ++s )
-        for( int i = 0; i < MAX_D3D_TEXTURE_STATES; ++i ) mTextureStates[s][i].clear();
     setD3DRenderState( D3DRS_COLORVERTEX, 1 ); // always enable color vertex
 #endif
 
