@@ -1412,6 +1412,7 @@ namespace GN
         {
             inverse();
             transpose();
+            return *this;
         }
         static void sInvtrans( Matrix44 & dst, const Matrix44 & src )
         {
@@ -1555,14 +1556,23 @@ namespace GN
         ///
         void transformPoint( Vector3<T> & dst, const Vector3<T> & src ) const
         {
-            dst.x = rows[0].x * src.x + rows[0].y * src.y + rows[0].z * src.z + rows[0].w;
-            dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z + rows[1].w;
-            dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z + rows[2].w;
+            if( &dst == &src )
+            {
+                Vector3<T> tmp;
+                transformPoint( tmp, src );
+                dst = tmp;
+            }
+            else
+            {
+                dst.x = rows[0].x * src.x + rows[0].y * src.y + rows[0].z * src.z + rows[0].w;
+                dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z + rows[1].w;
+                dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z + rows[2].w;
 
-            T k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
+                T k = rows[3].x*src.x + rows[3].y*src.y + rows[3].z*src.z + rows[3].w;
 
-            if( ((T)0) != k ) dst /= k;
-            else GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
+                if( ((T)0) != k ) dst /= k;
+                else GN_WARN(sLogger)( "the vertex is transformed to infinite place" );
+            }
         }
         Vector3<T> transformPoint( const Vector3<T> & src ) const
         {
@@ -1578,9 +1588,18 @@ namespace GN
         ///
         void transformVector( Vector3<T> & dst, const Vector3<T> & src ) const
         {
-            dst.x = rows[0].x * src.x + rows[0].y * src.y + rows[0].z * src.z;
-            dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z;
-            dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z;
+            if( &dst == &src )
+            {
+                Vector3<T> tmp;
+                transformVector( tmp, src );
+                dst = tmp;
+            }
+            else
+            {
+                dst.x = rows[0].x * src.x + rows[0].y * src.y + rows[0].z * src.z;
+                dst.y = rows[1].x * src.x + rows[1].y * src.y + rows[1].z * src.z;
+                dst.z = rows[2].x * src.x + rows[2].y * src.y + rows[2].z * src.z;
+            }
         }
         Vector3<T> transformVector( const Vector3<T> & src ) const
         {

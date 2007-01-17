@@ -86,9 +86,9 @@ namespace GN { namespace gfx
             cbuffers[index].slice = slice;
         }
 
-        //
-        // set z buffer
-        //
+        ///
+        /// set z buffer
+        ///
         void setzbuf( const Texture * tex, UInt32 level = 0, UInt32 face = 0, UInt32 slice = 0 )
         {
             zbuffer.texture = tex;

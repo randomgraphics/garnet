@@ -15,25 +15,41 @@ namespace GN { namespace util
     ///
     class ArcBall
     {
-        Quaternionf       mQuat; // orientation
-        mutable Matrix33f mRotation;
+        Quaternionf mQuat;
+        Matrix44f   mRotation;
 
-        Vector2i          mWindowCenter;
-        Vector2i          mWindowHalfSize;
+        Matrix44f   mTransView;
+        Vector2i    mWindowCenter;
+        Vector2i    mWindowHalfSize;
+        float       mHandness; ///< -1 for left-hand, 1 for left-hand
 
-        Quaternionf       mQuatBase;
-        Vector3f          mMoveBase;
-        Matrix33f         mRotBase;
-        bool              mMoving;
+        Quaternionf mQuatBase;
+        Vector3f    mMoveBase;
+        bool        mMoving;
 
     public:
 
         ///
+        /// arcball handness
+        ///
+        enum Handness
+        {
+            LEFT_HAND  = 1, ///< left-hand arcball
+            RIGHT_HAND = 2, ///< right-hand arcball
+        };
+
+        ///
         /// ctor
         ///
-        ArcBall();
+#if GN_LEFT_HAND
+        ArcBall( Handness h = LEFT_HAND );
+#else
+        ArcBall( Handness h = RIGHT_HAND );
+#endif
 
         /// \name set camera properties
+        ///
+        /// \note Changing properties during arcball moving may produce undefined result.
         //@{
 
         ///
@@ -49,19 +65,20 @@ namespace GN { namespace util
 
         void setRotation( const Quaternionf & q ) { mQuat = q; }
 
-        //@}
-
-        /// \name get camera properties
-        //@{
-
-        const Matrix33f & getRotationMatrix() const
+        void setViewMatrix( const Matrix44f & v )
         {
-            mQuat.toMatrix33( mRotation );
-            return mRotation;
+            // note: trans(view) = invtrans( inv(view) )
+            mTransView = Matrix44f::sTranspose( v );
         }
 
+        void setHandness( Handness h ) { mHandness = (LEFT_HAND==h) ? -1.0f : 1.0f ; }
+
         //@}
 
+        ///
+        /// get rotation matrix
+        ///
+        const Matrix44f & getRotationMatrix() const { return mRotation; }
 
         /// \name mouse action handler
         //@{
