@@ -9,6 +9,7 @@
 #include "garnet/GNbase.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
+#include "garnet/GNutil.h"
 #include "garnet/GNd3d9.h"
 #include "garnet/GNapp.h"
 

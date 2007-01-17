@@ -302,14 +302,9 @@ namespace GN { namespace gfx
     public:
 
         void setD3DRenderState( D3DRENDERSTATETYPE, DWORD );
-        DWORD getD3DRenderState( D3DRENDERSTATETYPE );
-
         void setD3DSamplerState( UINT, D3DSAMPLERSTATETYPE, DWORD );
-        DWORD getD3DSamplerState( UINT, D3DSAMPLERSTATETYPE );
-
 #if !GN_XENON
         void setD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE, DWORD );
-        DWORD getD3DTextureState( UINT, D3DTEXTURESTAGESTATETYPE );
 #endif
 
     private :
@@ -348,33 +343,6 @@ namespace GN { namespace gfx
             bool forceRebind );
 
     private:
-
-        template<typename T>
-        struct StateValue
-        {
-            T    value;
-            bool initialized;
-            void clear() { initialized = false; }
-        };
-
-        enum
-        {
-#if GN_XENON
-            // Note: Xenon has no texture states
-            MAX_D3D_RENDER_STATES  = D3DRS_MAX,
-            MAX_D3D_SAMPLER_STATES = D3DSAMP_MAX,
-#else
-            MAX_D3D_RENDER_STATES  = 256,
-            MAX_D3D_SAMPLER_STATES = 16,
-            MAX_D3D_TEXTURE_STATES = 32,
-#endif
-        };
-
-        StateValue<DWORD> mRenderStates[MAX_D3D_RENDER_STATES];
-        StateValue<DWORD> mSamplerStates[MAX_TEXTURE_STAGES][MAX_D3D_SAMPLER_STATES];
-#if !GN_XENON
-        StateValue<DWORD> mTextureStates[MAX_TEXTURE_STAGES][MAX_D3D_TEXTURE_STATES];
-#endif
 
         RendererContext mContext;
 

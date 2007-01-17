@@ -25,9 +25,9 @@ static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y 
         result.x = x;
         result.y = y;
 #if GN_LEFT_HAND
-    result.z = sqrt( 1.0f - k );
-#else
     result.z = -sqrt( 1.0f - k );
+#else
+    result.z = sqrt( 1.0f - k );
 #endif
     }
 }
@@ -62,7 +62,7 @@ void GN::util::ArcBall::onMouseMove( int x, int y )
     sWindowPosition2UnitVector( v, fx, fy );
 
     Quaternionf q;
-    q.fromArc( v, mMoveBase );
+    q.fromArc( mMoveBase, v );
 
     mQuat = q * mQuatBase;
 }
