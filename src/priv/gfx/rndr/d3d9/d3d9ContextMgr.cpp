@@ -321,11 +321,27 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
     //
     if( newFlags.rsb )
     {
-        GN_ASSERT( newContext.rsb.valid() );
-        #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-            if( newContext.rsb.isSet(RS_##tag) ) sSet_##tag( *this, newContext.rsb.get(RS_##tag) );
-        #include "garnet/gfx/renderStateMeta.h"
-        #undef GNGFX_DEFINE_RS
+        const RenderStateBlockDesc & newrsb = newContext.rsb;
+        GN_ASSERT( newrsb.valid() );
+
+        if( forceRebind )
+        {
+            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
+                if( newrsb.isSet(RS_##tag) ) sSet_##tag( *this, newrsb.get(RS_##tag) );
+            #include "garnet/gfx/renderStateMeta.h"
+            #undef GNGFX_DEFINE_RS
+        }
+        else
+        {
+            const RenderStateBlockDesc & oldrsb = mContext.rsb;
+
+            #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
+                GN_ASSERT( oldrsb.isSet( RS_##tag ) ); \
+                if( newrsb.isSet(RS_##tag) && newrsb.get(RS_##tag) != oldrsb.get(RS_##tag) ) \
+                    sSet_##tag( *this, newrsb.get(RS_##tag) );
+            #include "garnet/gfx/renderStateMeta.h"
+            #undef GNGFX_DEFINE_RS
+        }
     }
 
     //

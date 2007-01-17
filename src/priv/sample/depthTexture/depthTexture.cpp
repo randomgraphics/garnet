@@ -65,13 +65,14 @@ public:
             &mBoxVerts[0].nx, sizeof(BoxVert),
             mBoxIndices, 0 );
 
-        // initialize arcball
-        mArcBall.setMouseMoveWindow( 0, 0, r.getDispDesc().width, r.getDispDesc().height );
-
         // initialize matrices
         mModel.identity();
         mView.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
         r.composePerspectiveMatrix( mProj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+
+        // initialize arcball
+        mArcBall.setMouseMoveWindow( 0, 0, r.getDispDesc().width, r.getDispDesc().height );
+        mArcBall.setViewMatrix( mView );
 
         // try create shaders
         mVs = mPs = 0;
@@ -116,12 +117,11 @@ public:
         int x, y;
         gInput.getMousePosition( x, y );
         mArcBall.onMouseMove( x, y );
+        mModel = mArcBall.getRotationMatrix();
     }
 
     void update()
     {
-        // update model matrix
-        mModel.set( mArcBall.getRotationMatrix() );
     }
 
     void render()

@@ -13,7 +13,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::setD3DRenderState(
         GN_DX9_CHECK( mDevice->GetRenderState( type, &old ) );
         if( old != value )
         {
-            GN_DX9_CHECK( mDevice->GetRenderState( type, &value ) );
+            GN_DX9_CHECK( mDevice->SetRenderState( type, value ) );
         }
     }
     else
