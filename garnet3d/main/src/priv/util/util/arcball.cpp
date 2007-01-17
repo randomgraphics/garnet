@@ -10,25 +10,25 @@ static GN::Logger * sLogger = GN::getLogger("GN.util.ArcBall");
 ///
 /// convert window position to unit sphere vector.
 ///
-static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y )
+/// \param hand
+///     -1 : left hand
+///      1 : right hand
+///
+static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y, float hand )
 {
     float k = x*x + y*y;
     if( k > 1.0f )
     {
         k = 1.0f / k;
         result.x = x * k;
-        result.y = y * k;
+        result.y = -y * k;
         result.z = 0.0f;
     }
     else
     {
         result.x = x;
-        result.y = y;
-#if GN_LEFT_HAND
-    result.z = -sqrt( 1.0f - k );
-#else
-    result.z = sqrt( 1.0f - k );
-#endif
+        result.y = -y;
+        result.z = hand * sqrt( 1.0f - k );
     }
 }
 
@@ -39,11 +39,13 @@ static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y 
 //
 //
 // -----------------------------------------------------------------------------
-GN::util::ArcBall::ArcBall()
+GN::util::ArcBall::ArcBall( Handness h )
     : mQuat( Quaternionf::IDENTITY )
-    , mRotation( Matrix33f::IDENTITY )
+    , mRotation( Matrix44f::IDENTITY )
+    , mTransView( Matrix44f::IDENTITY )
     , mWindowCenter( 0, 0 )
     , mWindowHalfSize( 1, 1 )
+    , mHandness( LEFT_HAND == h ? -1.0f : 1.0f )
     , mMoving( false )
 {
 }
@@ -57,14 +59,18 @@ void GN::util::ArcBall::onMouseMove( int x, int y )
 
     float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
     float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
-    //GN_TRACE(sLogger)( "x=%f y=%f", fx, fy );
+
     Vector3f v;
-    sWindowPosition2UnitVector( v, fx, fy );
+    sWindowPosition2UnitVector( v, fx, fy, mHandness );
+    v = mTransView.transformVector( v );
 
     Quaternionf q;
     q.fromArc( mMoveBase, v );
-
     mQuat = q * mQuatBase;
+
+    Matrix33f m33;
+    mQuat.toMatrix33( m33 );
+    mRotation.set( m33 );
 }
 
 //
@@ -76,7 +82,10 @@ void GN::util::ArcBall::onMouseButtonDown( int x, int y )
 
     float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
     float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
-    sWindowPosition2UnitVector( mMoveBase, fx, fy );
+
+    sWindowPosition2UnitVector( mMoveBase, fx, fy, mHandness );
+
+    mMoveBase = mTransView.transformVector( mMoveBase );
 
     mQuatBase = mQuat;
 }

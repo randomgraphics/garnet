@@ -87,9 +87,9 @@ namespace GN { namespace gfx
         void quit() { clear(); }
     };
 
-    //
-    // render target manager using FBO extension
-    //
+    ///
+    /// render target manager using FBO extension
+    ///
     class OGLRTMgrFBO : public OGLBasicRTMgr
     {
         // ********************************
