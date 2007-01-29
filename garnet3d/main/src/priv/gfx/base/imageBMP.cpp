@@ -87,7 +87,7 @@ bool BMPReader::readHeader(
 	o_desc.setFaceAndLevel( 1, 1 ); // 2D image
     GN::gfx::MipmapDesc & m = o_desc.getMipmap( 0, 0 );
     m.width      = mHeader.infoHeader.width;
-    m.height     = mHeader.infoHeader.height;
+    m.height     = abs( mHeader.infoHeader.height );
     m.depth      = 1;
     m.rowPitch   = m.width * mOutputBytesPerPixel;
     m.slicePitch = m.rowPitch * m.height;
@@ -118,58 +118,116 @@ bool BMPReader::readImage( void * o_data ) const
 
     const UInt8 * src = mImageSrc;
     size_t width = (size_t)mHeader.infoHeader.width;
-    size_t height = (size_t)mHeader.infoHeader.height;
+    size_t height = (size_t)abs(mHeader.infoHeader.height);
     size_t srcPitch = ( width * mHeader.infoHeader.bitCount / 8 + 3 ) & ~3; // align to 4 bytes.
     size_t dstPitch = width * mOutputBytesPerPixel;
-    UInt8 * dst = (UInt8*)o_data + dstPitch * ( height - 1 );
+    bool topdown = mHeader.infoHeader.height < 0;
+    UInt8 * dst = topdown ? ( (UInt8*)o_data ) : ( (UInt8*)o_data + dstPitch * ( height - 1 ) );
 
     switch( mHeader.infoHeader.bitCount )
     {
         case 16:
-            for( size_t y = 0; y < height; ++y )
+            if( topdown )
             {
+                for( size_t y = 0; y < height; ++y )
+                {
 #if GN_PPC
-                GN::swapEndian8In16( dst, src, width );
+                    GN::swapEndian8In16( dst, src, width );
 #else
-                memcpy( dst, src, width * 2 );
+                    memcpy( dst, src, width * 2 );
 #endif
-                src += srcPitch;
-                dst -= dstPitch;
+                    src += srcPitch;
+                    dst += dstPitch;
+                }
+            }
+            else
+            {
+                for( size_t y = 0; y < height; ++y )
+                {
+#if GN_PPC
+                    GN::swapEndian8In16( dst, src, width );
+#else
+                    memcpy( dst, src, width * 2 );
+#endif
+                    src += srcPitch;
+                    dst -= dstPitch;
+                }
             }
             break;
 
         case 24:
-            for( size_t y = 0; y < height; ++y )
+            if( topdown )
             {
-                const UInt8 * s = src;
-                UInt8 * d = dst;
-                for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
+                for( size_t y = 0; y < height; ++y )
                 {
+                    const UInt8 * s = src;
+                    UInt8 * d = dst;
+                    for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
+                    {
 #if GN_PPC
-                    d[1] = s[2];
-                    d[2] = s[1];
-                    d[3] = s[0];
+                        d[1] = s[2];
+                        d[2] = s[1];
+                        d[3] = s[0];
 #else
-                    d[0] = s[0];
-                    d[1] = s[1];
-                    d[2] = s[2];
+                        d[0] = s[0];
+                        d[1] = s[1];
+                        d[2] = s[2];
 #endif
+                    }
+                    src += srcPitch;
+                    dst += dstPitch; 
                 }
-                src += srcPitch;
-                dst -= dstPitch; 
+            }
+            else
+            {
+                for( size_t y = 0; y < height; ++y )
+                {
+                    const UInt8 * s = src;
+                    UInt8 * d = dst;
+                    for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
+                    {
+#if GN_PPC
+                        d[1] = s[2];
+                        d[2] = s[1];
+                        d[3] = s[0];
+#else
+                        d[0] = s[0];
+                        d[1] = s[1];
+                        d[2] = s[2];
+#endif
+                    }
+                    src += srcPitch;
+                    dst -= dstPitch; 
+                }
             }
             break;
 
         case 32:
-            for( size_t y = 0; y < height; ++y )
+            if( topdown )
             {
+                for( size_t y = 0; y < height; ++y )
+                {
 #if GN_PPC
-                GN::swapEndian8In32( dst, src, width );
+                    GN::swapEndian8In32( dst, src, width );
 #else
-                memcpy( dst, src, width * 4 );
+                    memcpy( dst, src, width * 4 );
 #endif
-                src += srcPitch;
-                dst -= dstPitch; 
+                    src += srcPitch;
+                    dst += dstPitch; 
+                }
+            }
+            else
+            {
+                for( size_t y = 0; y < height; ++y )
+                {
+#if GN_PPC
+                    GN::swapEndian8In32( dst, src, width );
+#else
+                    memcpy( dst, src, width * 4 );
+#endif
+                    src += srcPitch;
+                    dst -= dstPitch; 
+                }
             }
             break;
 

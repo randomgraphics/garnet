@@ -11,14 +11,14 @@
 namespace GN { namespace util
 {
     ///
-    /// Arcball that normally used to view a 3D model.
+    /// Arcball that normally used to rotate a 3D model.
     ///
     class ArcBall
     {
         Quaternionf mQuat;
         Matrix44f   mRotation;
 
-        Matrix44f   mTransView;
+        Matrix44f   mTransView; //< trans(view), that is invtrans( inv(view) ). Used to transform vector from view space to model space.
         Vector2i    mWindowCenter;
         Vector2i    mWindowHalfSize;
         float       mHandness; ///< -1 for left-hand, 1 for left-hand
@@ -47,7 +47,7 @@ namespace GN { namespace util
         ArcBall( Handness h = RIGHT_HAND );
 #endif
 
-        /// \name set camera properties
+        /// \name set arcball properties
         ///
         /// \note Changing properties during arcball moving may produce undefined result.
         //@{
@@ -65,11 +65,7 @@ namespace GN { namespace util
 
         void setRotation( const Quaternionf & q ) { mQuat = q; }
 
-        void setViewMatrix( const Matrix44f & v )
-        {
-            // note: trans(view) = invtrans( inv(view) )
-            mTransView = Matrix44f::sTranspose( v );
-        }
+        void setViewMatrix( const Matrix44f & v ) { mTransView = Matrix44f::sTranspose( v ); }
 
         void setHandness( Handness h ) { mHandness = (LEFT_HAND==h) ? -1.0f : 1.0f ; }
 
