@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+	<parameters>
+		<uniform name="pvw"/>
+		<texture name="cube"/>
+	</parameters>
+
+	<!--
+	============================================================================
+		Shaders
+	============================================================================
+	-->
+
+	<shaders>
+		<!-- D3D HLSL shaders -->
+		<shader name="d3dvs" type="VS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="vs_1_1"/>
+				</token>
+			</prerequisites>
+			<uniref binding="c0" name="pvw"/>
+			<code lang="D3D_HLSL" hints="...">
+<![CDATA[
+uniform float4 pvw : register(c0);
+void main(
+	in  float4 ipos : POSITION0,
+	out float4 opos : POSITION0,
+	out float3 otex : TEXCOORD0 )
+{
+	opos = mul( pvw, ipos );
+	otex = sign( ipos.xyz );
+}
+]]>
+			</code>
+		</shader>
+
+		<shader name="d3dps" type="PS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="ps_1_1"/>
+				</token>
+			</prerequisites>
+			<uniref binding="c0" name="color"/>
+			<code lang="D3D_HLSL" hints="...">
+<![CDATA[
+sampler s0 : register(s0);
+float4 main( in float3 itex : TEXCOORD0 )
+{
+	return texCUBE( s0, itex );
+}
+]]>
+			</code>
+		</shader>
+
+		<!-- TODO: OpenGL ARB program -->
+
+		<!-- fixed pipeline -->
+		<shader name="fixgs" type="GS"/>
+
+	</shaders>
+
+	<!--
+	============================================================================
+		Techniques
+	============================================================================
+	-->
+
+	<techniques>
+		<technique name="d3d">
+			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+		</technique>
+	</techniques>
+</effect>
