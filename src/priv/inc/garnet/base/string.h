@@ -469,6 +469,18 @@ namespace GN
         CharType last() const { return mCount>0 ? mPtr[mCount-1] : (CharType)0; }
 
         ///
+        /// pop last charater
+        ///
+        void popback()
+        {
+            if( mCount > 0 )
+            {
+                --mCount;
+                mPtr[mCount] = 0;
+            }
+        }
+
+        ///
         /// Replace specific character with another
         ///
         void replace( CharType from, CharType to )
@@ -478,6 +490,18 @@ namespace GN
             {
                 if( from == *p ) *p = to;
             }
+        }
+
+        ///
+        /// remove specific charactor at specific location
+        ///
+        void remove( size_t pos )
+        {
+            for( size_t i = pos; i < mCount; ++i )
+            {
+                mPtr[i] = mPtr[i+1];
+            }
+            --mCount;
         }
 
         ///

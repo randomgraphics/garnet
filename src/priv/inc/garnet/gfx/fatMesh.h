@@ -280,7 +280,7 @@ namespace GN { namespace gfx
 
             /// \name optional fields
             ///@{
-            size_t   vcacheSize; ///< size of vcache. Ignored, if vcache is false.
+            UInt32 vcacheSize; ///< size of vcache. Ignored, if vcache is false.
             UInt32 resetIndex; ///< reset index. Ignored, if useResetIndex is false.
             ///@}
         };
@@ -301,8 +301,8 @@ namespace GN { namespace gfx
 
         struct FaceSegment
         {
-            int                 material;  // material ID
-            size_t              vtxSegIdx; // index of vertex segment that this face segment belongs to.
+            int               material;  // material ID
+            size_t            vtxSegIdx; // index of vertex segment that this face segment belongs to.
             DynaArray<UInt32> indices32; // indices are based on start vertex of owner vertex segment.
             DynaArray<UInt16> indices16;
         };

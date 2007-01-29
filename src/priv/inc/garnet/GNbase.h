@@ -69,6 +69,7 @@ namespace GN
 
 // file system
 #include "base/file.h"
+#include "base/path.h"
 
 // math library
 #include "base/math.h"

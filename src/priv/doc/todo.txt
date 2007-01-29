@@ -1,5 +1,10 @@
 - 程序中标注TODO的地方
 
+- more todo:
+  - OO path solution: root object
+  - effect referencing
+  - renderable object: composed with fatmesh, effect and textures
+
 - to make a simple game, like terris clone:
   - load effect/shader from xml file
     - almost done. need UT.
