@@ -1150,6 +1150,38 @@ namespace GN { namespace gfx
         /// to compose projection matrix.
         ///
         Matrix44f &
+        composePerspectiveMatrixLh( Matrix44f & result,
+                                    float fovy,
+                                    float ratio,
+                                    float znear,
+                                    float zfar ) const
+        {
+            return getD3DDevice()
+                ? result.perspectiveD3DLh( fovy, ratio, znear, zfar )
+                : result.perspectiveOGLLh( fovy, ratio, znear, zfar );
+        }
+
+        ///
+        /// This function is provided because different API has different ways
+        /// to compose projection matrix.
+        ///
+        Matrix44f &
+        composePerspectiveMatrixRh( Matrix44f & result,
+                                    float fovy,
+                                    float ratio,
+                                    float znear,
+                                    float zfar ) const
+        {
+            return getD3DDevice()
+                ? result.perspectiveD3DRh( fovy, ratio, znear, zfar )
+                : result.perspectiveOGLRh( fovy, ratio, znear, zfar );
+        }
+
+        ///
+        /// This function is provided because different API has different ways
+        /// to compose projection matrix.
+        ///
+        Matrix44f &
         composePerspectiveMatrix( Matrix44f & result,
                                   float fovy,
                                   float ratio,

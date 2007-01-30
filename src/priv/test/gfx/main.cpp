@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "garnet/gfx/effect.h"
+#include "garnet/gfx/renderable.h"
 
 using namespace GN;
 using namespace GN::gfx;
@@ -12,103 +13,11 @@ class Scene
     
     AutoRef<Shader> ps1, ps2;
 
-    struct BoxContext
-    {
-        struct Vertex
-        {
-            float x, y, z;
-            float n[3];
-            float u, v;
-        };
-
-        bool ready;
-        AutoRef<Shader> vs, ps;
-        VtxFmtHandle vf;
-        RendererContext rc;
-        Vertex vb[24];
-        UInt16 ib[36];
-        StrA pvwName;
-
-        BoxContext()
-        {
-            static const float E = 160.0f;
-            createBox(
-                E, E, E,
-                &vb[0].x, sizeof(Vertex),
-                &vb[0].u, sizeof(Vertex),
-                vb[0].n, sizeof(Vertex),
-                ib, 0 );
-        };
-
-        void clear() { ready = false; vs.clear(); ps.clear(); }
-
-        void create()
-        {
-            Renderer & r = gRenderer;
-
-            ready = false;
-            pvwName = "gPvw";
-
-            // create shaders for box rendering
-            if( r.supportShader( "cgvs" ) )
-            {
-                static const char * code =
-                    "uniform float4x4 gPvw; \n"
-                    "struct VSInput { float4 pos : POSITION; float3 nml : NORMAL; }; \n"
-                    "struct VSOutput { float4 pos : POSITION; float4 clr : COLOR0; }; \n"
-                    "VSOutput main( VSInput i ) \n"
-                    "{ \n"
-                    "   VSOutput o; \n"
-                    "   o.pos = mul( gPvw, i.pos ); \n"
-                    "   o.clr = float4( abs(i.nml), 1.0 ); \n"
-                    "   return o; \n"
-                    "}";
-                vs.attach( r.createVS( LANG_CG, code ) );
-                if( !vs ) return;
-            }
-            else return;
-
-            if( r.supportShader( "cgps" ) )
-            {
-                static const char * code =
-                    "float4 main( float4 clr : COLOR0 ) : COLOR \n"
-                    "{ \n"
-                    "   return clr; \n"
-                    "}";
-                ps.attach( r.createPS( LANG_CG, code ) );
-                if( !ps ) return;
-            }
-            else return;
-
-            // create box vertex decl
-            vf = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
-            if( 0 == vf ) return;
-
-            // setup context
-            rc.resetToDefault();
-            //rc.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-            rc.setShaders( vs, ps, 0 );
-            rc.setVtxFmt( vf );
-            ready = true;
-        }
-
-        void update( const Matrix44f & pvw )
-        {
-            if( vs ) vs->setUniformByNameM( pvwName, pvw );
-        }
-
-        void draw()
-        {
-            if( !ready ) return;
-            Renderer & r = gRenderer;
-            r.setContext( rc );
-            r.drawIndexedUp( TRIANGLE_LIST, 12, 24, vb, sizeof(Vertex), ib );
-        }
-    } box;
-
     UInt32 tex0;
 
     UInt32 eff0;
+
+    Renderable box;
 
     Matrix44f world, view, proj;
 
@@ -177,8 +86,15 @@ public:
             ps2->setUniformByNameV( "l0", Vector4f(1,0,0,1) );
         }
 
-        // create box rendering context
-        box.create();
+        app::SampleResourceManager &  rm = app.getResMgr();
+
+        // create box
+        RenderableDesc boxdesc;
+        boxdesc.subsets.resize( 1 );
+        boxdesc.subsets[0].effect = "effect/cube.xml";
+        boxdesc.subsets[0].mesh   = "mesh/cube.fatmesh";
+        //boxdesc.subsets[0].textures["cube"] = "texture/cube1.dds";
+        if( !box.init( boxdesc, &rm.meshes, &rm.effects, &rm.textures ) ) return false;
 
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
@@ -190,8 +106,8 @@ public:
 
         // initialize matrices
         world.identity();
-        view.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gRenderer.composePerspectiveMatrix( proj, 1.0f, 4.0f/3.0f, 1.0f, 1000.0f );
+        view.lookAtRh( Vector3f(3,3,3), Vector3f(0,0,0), Vector3f(0,1,0) );
+        gRenderer.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, 1.0f, 10.0f );
 
         // success
         return true;
@@ -201,7 +117,7 @@ public:
     {
         ps1.clear();
 		ps2.clear();
-        box.clear();
+        box.quit();
     }
 
     void update()
@@ -212,7 +128,12 @@ public:
         world.rotateY( angle );
 
         // update box matrix
-        box.update( proj * view * world );
+        if( box.ok() )
+        {
+            Effect * eff = app.getResMgr().effects.getResource( box.getEffectHandle( 0 ) );
+            GN_ASSERT( eff );
+            eff->setUniformByName( "pvw", proj * view * world );
+        }
 
         // update color
         static int r = 0; static int rr = 1;
@@ -259,7 +180,10 @@ public:
         }
 
         // draw box
-        box.draw();
+        if( box.ok() )
+        {
+            box.draw();
+        }
 
         /* a wireframe box
         {

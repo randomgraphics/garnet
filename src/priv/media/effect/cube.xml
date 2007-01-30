@@ -19,10 +19,10 @@
 					<token type="values" value="vs_1_1"/>
 				</token>
 			</prerequisites>
-			<uniref binding="c0" name="pvw"/>
+			<uniref binding="pvw" name="pvw"/>
 			<code lang="D3D_HLSL" hints="...">
 <![CDATA[
-uniform float4 pvw : register(c0);
+uniform float4x4 pvw : register(c0);
 void main(
 	in  float4 ipos : POSITION0,
 	out float4 opos : POSITION0,
@@ -41,13 +41,12 @@ void main(
 					<token type="values" value="ps_1_1"/>
 				</token>
 			</prerequisites>
-			<uniref binding="c0" name="color"/>
 			<code lang="D3D_HLSL" hints="...">
 <![CDATA[
 sampler s0 : register(s0);
-float4 main( in float3 itex : TEXCOORD0 )
+float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 {
-	return texCUBE( s0, itex );
+	return float4( itex, 1 ); // texCUBE( s0, itex );
 }
 ]]>
 			</code>
