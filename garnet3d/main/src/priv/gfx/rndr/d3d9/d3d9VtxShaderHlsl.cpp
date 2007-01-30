@@ -150,11 +150,14 @@ bool GN::gfx::D3D9VtxShaderHlsl::createShader( const StrA & code, const StrA & h
     if( !ch.sm3 && ( 0 == strCmpI( "vs_3_0", target ) || ( 0 == strCmpI( "vs.3.0", target ) ) ) )
         target = "vs_2_a";
 
+    DWORD flags = D3DXSHADER_PACKMATRIX_ROWMAJOR;
+    if( !ch.optimize ) flags |= D3DXSHADER_SKIPOPTIMIZATION;
+
     mD3DShader = d3d9::compileVS(
         getRenderer().getDevice(),
         code.cptr(),
         code.size(),
-        ch.optimize ? 0 : D3DXSHADER_SKIPOPTIMIZATION, // flags
+        flags,
         ch.entry.cptr(),
         target,
         &mConstTable );

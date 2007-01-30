@@ -319,7 +319,7 @@ static bool sCreateNullEffect( Effect * & result, const StrA &, void * )
 }
 
 //
-// Load empty effect from file
+// Load effect from file
 // -----------------------------------------------------------------------------
 static bool sCreateEffect( Effect * & result, const StrA & name, void * )
 {
@@ -362,6 +362,67 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
 //
 // -----------------------------------------------------------------------------
 static void sDeleteEffect( Effect * & ptr, void * )
+{
+    GN::safeDelete( ptr );
+}
+
+// *****************************************************************************
+// mesh loading functions
+// *****************************************************************************
+
+//
+// Create empty mesh
+// -----------------------------------------------------------------------------
+static bool sCreateNullMesh( FatMesh * & result, const StrA &, void * )
+{
+    GN_GUARD;
+
+    result = new FatMesh;
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+// Load effect from file
+// -----------------------------------------------------------------------------
+static bool sCreateMesh( FatMesh * & result, const StrA & name, void * )
+{
+    GN_GUARD;
+
+    // get resouce path
+    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    if( path.empty() )
+    {
+        GN_ERROR(sLogger)( "Mesh '%s' creation failed: path not found.", name.cptr() );
+        return false;
+    }
+
+    GN_TRACE(sLogger)( "Load mesh '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+
+    // open file
+    DiskFile fp;
+    if( !fp.open( path, "rt" ) )
+    {
+        GN_ERROR(sLogger)( "Mesh '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        return false;
+    }
+
+    // create effect instance
+    AutoObjPtr<FatMesh> mesh( new FatMesh );
+    if( !mesh->readFromFile( fp ) ) return false;
+
+    // success
+    result = mesh.detach();
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteMesh( FatMesh * & ptr, void * )
 {
     GN::safeDelete( ptr );
 }
@@ -502,10 +563,6 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
 //
 //
 // -----------------------------------------------------------------------------
-
-//
-//
-// -----------------------------------------------------------------------------
 GN::app::SampleResourceManager::SampleResourceManager()
 {
     shaders.setCreator( &sCreateShader );
@@ -519,6 +576,10 @@ GN::app::SampleResourceManager::SampleResourceManager()
     effects.setCreator( &sCreateEffect );
     effects.setDeletor( &sDeleteEffect );
     effects.setNullor( &sCreateNullEffect );
+
+    meshes.setCreator( &sCreateMesh );
+    meshes.setDeletor( &sDeleteMesh );
+    meshes.setNullor( &sCreateNullMesh );
 
     rawData.setCreator( &sCreateRawData );
     rawData.setDeletor( &sDeleteRawData );
@@ -545,6 +606,7 @@ void GN::app::SampleResourceManager::onRendererDispose()
 {
     effects.disposeAll();
     textures.disposeAll();
+    meshes.disposeAll();
 }
 
 //

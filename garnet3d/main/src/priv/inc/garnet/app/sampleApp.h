@@ -8,6 +8,7 @@
 
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
+#include "garnet/gfx/fatmesh.h"
 #include "garnet/GNinput.h"
 
 namespace GN { namespace app
@@ -105,10 +106,11 @@ namespace GN { namespace app
     ///
     struct SampleResourceManager
     {
-        ResourceManager<RawData*> rawData;  ///< raw data manager
         ResourceManager<gfx::Shader*> shaders; ///< shader manager
         ResourceManager<gfx::Texture*> textures; ///< texture manager
         ResourceManager<gfx::Effect*> effects; ///< effect manager
+        ResourceManager<gfx::FatMesh*> meshes; ///< mesh manager
+        ResourceManager<RawData*> rawData;  ///< raw data manager
 
         ///
         /// Search resource by name. Return full path of the resource file. Return empty string if not found.

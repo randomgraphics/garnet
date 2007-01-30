@@ -55,11 +55,20 @@ namespace GN { namespace gfx
     struct UniformValue
     {
         UniformValueType       type;      ///< value type
-        std::vector<SInt32>   bools;     ///< Boolean value
-        std::vector<SInt32>   ints;      ///< integer value
+        std::vector<SInt32>    bools;     ///< Boolean value
+        std::vector<SInt32>    ints;      ///< integer value
         std::vector<float>     floats;    ///< float value
         std::vector<Vector4f>  vector4s;  ///< vector value
         std::vector<Matrix44f> matrix44s; ///< matrix value
+
+        ///
+        /// construct uniform value from a matrix
+        ///
+        UniformValue( const Matrix44f & m )
+            : type( UVT_MATRIX44 )
+        {
+            matrix44s.push_back( m );
+        }
 
         /// \name set uniform value
         //@{
@@ -78,7 +87,7 @@ namespace GN { namespace gfx
 
 #if GN_DEBUG_BUILD
         ///
-        /// ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
+        /// default ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
         ///
         UniformValue() : type(NUM_UNIFORM_VALUE_TYPES) {}
 #endif

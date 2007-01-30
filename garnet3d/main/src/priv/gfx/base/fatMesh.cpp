@@ -87,7 +87,7 @@ void GN::gfx::FatMesh::draw( int material )
         OptimizeOptions oo;
         oo.maxPrimitivesInSingleDraw = 0xFFFF;
         oo.vcache = false;
-        oo.strip = true;
+        oo.strip = false; // strip optimization is not implemented yet.
         oo.useResetIndex = false;
         oo.use32BitIndex = false;
         optimize( oo );

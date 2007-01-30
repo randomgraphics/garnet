@@ -295,7 +295,7 @@ namespace GN { namespace gfx
 
                 case UVT_MATRIX44:
                     if( !u.value.matrix44s.empty() )
-                        GN_DX9_CHECK( table->SetMatrixTransposeArray( dev, h, (const D3DXMATRIX*)&u.value.matrix44s[0], (UINT)u.value.matrix44s.size() ) );
+                        GN_DX9_CHECK( table->SetVectorArray( dev, h, (const D3DXVECTOR4*)&u.value.matrix44s[0], (UINT)u.value.matrix44s.size()*4 ) );
                     break;
 
                 default:
