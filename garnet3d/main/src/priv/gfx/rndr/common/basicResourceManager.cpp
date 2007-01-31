@@ -47,7 +47,7 @@ void GN::gfx::BasicRenderer::resQuit()
 GN::gfx::Texture *
 GN::gfx::BasicRenderer::createTextureFromFile( File & file )
 {
-    GN_GUARD;
+    GN_GUARD_ALWAYS;
 
     // read image data
     ImageReader reader;
@@ -149,5 +149,5 @@ GN::gfx::BasicRenderer::createTextureFromFile( File & file )
     // success
     return p.detach();
 
-    GN_UNGUARD;
+    GN_UNGUARD_ALWAYS_DO( return 0; );
 }

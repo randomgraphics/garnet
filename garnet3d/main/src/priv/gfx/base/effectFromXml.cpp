@@ -153,16 +153,16 @@ static void sParseParameters( EffectDesc & desc, const XmlNode & root )
 // -----------------------------------------------------------------------------
 static void sParseTexref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
-    const char * name = sGetAttrib( node, "name" );
-    if( !name ) return sPostError( node, "no reference name" );
+    const char * ref = sGetAttrib( node, "ref" );
+    if( !ref ) return sPostError( node, "attribute 'ref' not found." );
 
     UInt32 stage = sGetIntAttrib( node, "stage", (UInt32)-1 );
-    if( (UInt32)-1 == stage ) return sPostError( node, "no stage" );
+    if( (UInt32)-1 == stage ) return sPostError( node, "attribute 'stage' not found." );
 
-    const EffectDesc::TextureDesc * td = desc.findTexture( name );
-    if( !td ) return sPostError( node, "Invalid texture reference" );
+    const EffectDesc::TextureDesc * td = desc.findTexture( ref );
+    if( !td ) return sPostError( node, GN::strFormat( "Invalid texture reference to '%s'", ref ) );
 
-    sd.textures[stage] = name;
+    sd.textures[stage] = ref;
 }
 
 //
@@ -170,16 +170,16 @@ static void sParseTexref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const 
 // -----------------------------------------------------------------------------
 static void sParseUniref( EffectDesc & desc, EffectDesc::ShaderDesc & sd, const XmlElement & node )
 {
-    const char * name = sGetAttrib( node, "name" );
-    if( !name ) return sPostError( node, "no reference name" );
+    const char * ref = sGetAttrib( node, "ref" );
+    if( !ref ) return sPostError( node, "attribute 'ref' not found" );
 
     const char * binding = sGetAttrib( node, "binding" );
-    if( !binding ) return sPostError( node, "no binding" );
+    if( !binding ) return sPostError( node, "attribute 'binding' not found" );
 
-    const EffectDesc::UniformDesc * ud = desc.findUniform( name );
-    if( !ud ) return sPostError( node, "Invalid uniform reference" );
+    const EffectDesc::UniformDesc * ud = desc.findUniform( ref );
+    if( !ud ) return sPostError( node, GN::strFormat("Invalid uniform reference to '%s'", ref ) );
 
-    sd.uniforms[binding] = name;
+    sd.uniforms[binding] = ref;
 }
 
 //

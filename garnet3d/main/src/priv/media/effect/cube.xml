@@ -19,7 +19,7 @@
 					<token type="values" value="vs_1_1"/>
 				</token>
 			</prerequisites>
-			<uniref binding="pvw" name="pvw"/>
+			<uniref ref="pvw" binding="pvw"/>
 			<code lang="D3D_HLSL" hints="...">
 <![CDATA[
 uniform float4x4 pvw : register(c0);
@@ -41,12 +41,13 @@ void main(
 					<token type="values" value="ps_1_1"/>
 				</token>
 			</prerequisites>
+			<texref ref="cube" stage="0"/>
 			<code lang="D3D_HLSL" hints="...">
 <![CDATA[
 sampler s0 : register(s0);
 float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 {
-	return float4( itex, 1 ); // texCUBE( s0, itex );
+	return texCUBE( s0, itex );
 }
 ]]>
 			</code>
@@ -66,6 +67,9 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 	-->
 
 	<techniques>
+        <!--rsb
+            CULL_MODE="CULL_NONE"
+        /-->
 		<technique name="d3d">
 			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
 		</technique>

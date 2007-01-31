@@ -52,14 +52,17 @@ bool GN::gfx::Renderable::init(
         ss.textures.reserve( sd.textures.size() );
         for( std::map<StrA,StrA>::const_iterator t = sd.textures.begin(); t != sd.textures.end(); ++t )
         {
-            TexItem ti = {
-                eff->getTextureID( t->first ),
-                texmgr->getResourceHandle( t->second )
+            TexItem ti;
+            ti.id = eff->getTextureID( t->first );
+            if( 0 == ti.id )
+            {
+                GN_WARN(sLogger)("ignore unused texture '%s'", t->first.cptr() );
+            }
+            else
+            {
+                ti.handle = texmgr->getResourceHandle( t->second );
+                ss.textures.push_back( ti );
             };
-
-            if( 0 == ti.id || 0 == ti.handle ) return failure();
-
-            ss.textures.push_back( ti );
         }
     }
 
