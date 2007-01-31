@@ -20,7 +20,7 @@
                     <token type="values" value="vs_1_1"/>
                 </token>
             </prerequisites>
-            <uniref binding="c0" name="pvw"/>
+            <uniref binding="c0" ref="pvw"/>
             <code lang="D3D_ASM" hints="...">
 <![CDATA[
 vs.1.1
@@ -36,7 +36,7 @@ m4x4 oPos, v0, c0
                     <token type="values" value="ps_1_1"/>
                 </token>
             </prerequisites>
-            <uniref binding="c0" name="color"/>
+            <uniref binding="c0" ref="color"/>
             <code lang="D3D_ASM">
 <![CDATA[
 ps.1.1
@@ -52,7 +52,7 @@ mov r0, c0
                     <token type="values" value="arbvp1"/>
                 </token>
             </prerequisites>
-            <uniref binding="m0" name="pvw"/>
+            <uniref binding="m0" ref="pvw"/>
             <code lang="OGL_ARB">
 <![CDATA[
 !!ARBvp1.0
@@ -72,7 +72,7 @@ END
                     <token type="values" value="arbfp1"/>
                 </token>
             </prerequisites>
-            <uniref binding="l0" name="color"/>
+            <uniref binding="l0" ref="color"/>
             <code lang="OGL_ARB">
 <![CDATA[
 !!ARBfp1.0

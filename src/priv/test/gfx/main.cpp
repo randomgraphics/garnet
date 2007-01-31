@@ -4,12 +4,14 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::app;
+using namespace GN::util;
 
 bool gAnimation = true;
 
 class Scene
 {
-    GN::app::SampleApp & app;
+    SampleApp & app;
     
     AutoRef<Shader> ps1, ps2;
 
@@ -21,9 +23,11 @@ class Scene
 
     Matrix44f world, view, proj;
 
+    ArcBall arcball;
+
 public:
 
-    Scene( GN::app::SampleApp & a ) : app(a) {}
+    Scene( SampleApp & a ) : app(a) {}
 
     ~Scene() { quit(); }
 
@@ -86,14 +90,14 @@ public:
             ps2->setUniformByNameV( "l0", Vector4f(1,0,0,1) );
         }
 
-        app::SampleResourceManager &  rm = app.getResMgr();
+        SampleResourceManager &  rm = app.getResMgr();
 
         // create box
         RenderableDesc boxdesc;
         boxdesc.subsets.resize( 1 );
         boxdesc.subsets[0].effect = "effect/cube.xml";
         boxdesc.subsets[0].mesh   = "mesh/cube.fatmesh";
-        //boxdesc.subsets[0].textures["cube"] = "texture/cube1.dds";
+        boxdesc.subsets[0].textures["cube"] = "texture/cube1.dds";
         if( !box.init( boxdesc, &rm.meshes, &rm.effects, &rm.textures ) ) return false;
 
         // get texture handle
@@ -109,6 +113,12 @@ public:
         view.lookAtRh( Vector3f(3,3,3), Vector3f(0,0,0), Vector3f(0,1,0) );
         gRenderer.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, 1.0f, 10.0f );
 
+        // initialize arcball.
+        arcball.setHandness( util::ArcBall::RIGHT_HAND );
+        arcball.setViewMatrix( view );
+        const DispDesc & dd = gRenderer.getDispDesc();
+        arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
+
         // success
         return true;
     }
@@ -120,19 +130,40 @@ public:
         box.quit();
     }
 
+    void onKeyPress( input::KeyEvent key )
+    {
+        if( input::KEY_MOUSEBTN_0 == key.code )
+        {
+            if( key.status.down )
+            {
+                int x, y;
+                gInput.getMousePosition( x, y );
+                arcball.onMouseButtonDown( x, y );
+            }
+            else
+            {
+                arcball.onMouseButtonUp();
+            }
+        }
+    }
+
+    void onAxisMove( input::Axis, int )
+    {
+        int x, y;
+        gInput.getMousePosition( x, y );
+        arcball.onMouseMove( x, y );
+    }
+
     void update()
     {
-        // update world matrix
-        static float angle = 0.0f;
-        angle += deg2rad(0.2f);
-        world.rotateY( angle );
-
         // update box matrix
         if( box.ok() )
         {
+            world = arcball.getRotationMatrix();
+            Matrix44f pvw = proj * view * world;
             Effect * eff = app.getResMgr().effects.getResource( box.getEffectHandle( 0 ) );
             GN_ASSERT( eff );
-            eff->setUniformByName( "pvw", proj * view * world );
+            eff->setUniformByName( "pvw", pvw );
         }
 
         // update color
@@ -221,7 +252,7 @@ public:
 ///
 /// GFX module test application
 ///
-class GfxTestApp : public app::SampleApp
+class GfxTestApp : public SampleApp
 {
     Scene * mScene;
 public:
@@ -241,13 +272,13 @@ public:
 
     void onKeyPress( input::KeyEvent ke )
     {
-        app::SampleApp::onKeyPress( ke );
+        SampleApp::onKeyPress( ke );
+        mScene->onKeyPress( ke );
+    }
 
-        // toggle animation
-        if( input::KEY_SPACEBAR == ke.code && ke.status.down )
-        {
-            gAnimation = !gAnimation;
-        }
+    void onAxisMove( input::Axis a, int d )
+    {
+        mScene->onAxisMove( a, d );
     }
 
     void onUpdate()

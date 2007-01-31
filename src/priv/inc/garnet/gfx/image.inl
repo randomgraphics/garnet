@@ -21,7 +21,7 @@ GN_INLINE GN::gfx::MipmapDesc &
 GN::gfx::ImageDesc::getMipmap( size_t face, size_t level )
 {
     GN_ASSERT( mipmaps && face < numFaces && level < numLevels );
-    return mipmaps[face*numFaces+level];
+    return mipmaps[face*numLevels+level];
 }
 
 //
@@ -31,7 +31,7 @@ GN_INLINE const GN::gfx::MipmapDesc &
 GN::gfx::ImageDesc::getMipmap( size_t face, size_t level ) const
 {
     GN_ASSERT( mipmaps && face < numFaces && level < numLevels );
-    return mipmaps[face*numFaces+level];
+    return mipmaps[face*numLevels+level];
 }
 
 //
@@ -65,12 +65,7 @@ GN_INLINE GN::gfx::ImageType GN::gfx::ImageDesc::getImageType() const
 // -----------------------------------------------------------------------------
 GN_INLINE size_t GN::gfx::ImageDesc::getTotalBytes() const
 {
-    size_t nbytes = 0;
-    for( size_t l = 0; l < numLevels; ++l )
-    {
-        nbytes += getLevelBytes( l );
-    }
-    return nbytes * numFaces;
+    return getFaceBytes() * numFaces;
 }
 
 //
