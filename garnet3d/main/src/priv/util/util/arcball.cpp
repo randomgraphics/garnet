@@ -53,7 +53,24 @@ GN::util::ArcBall::ArcBall( Handness h )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onMouseMove( int x, int y )
+void GN::util::ArcBall::beginDrag( int x, int y )
+{
+    mMoving = true;
+
+    float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
+    float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
+
+    sWindowPosition2UnitVector( mMoveBase, fx, fy, mHandness );
+
+    mMoveBase = mTransView.transformVector( mMoveBase );
+
+    mQuatBase = mQuat;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::onDrag( int x, int y )
 {
     if( !mMoving ) return;
 
@@ -76,24 +93,7 @@ void GN::util::ArcBall::onMouseMove( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onMouseButtonDown( int x, int y )
-{
-    mMoving = true;
-
-    float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
-    float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
-
-    sWindowPosition2UnitVector( mMoveBase, fx, fy, mHandness );
-
-    mMoveBase = mTransView.transformVector( mMoveBase );
-
-    mQuatBase = mQuat;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::util::ArcBall::onMouseButtonUp()
+void GN::util::ArcBall::endDrag()
 {
     mMoving = false;
 }
