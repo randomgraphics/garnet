@@ -71,17 +71,26 @@ namespace GN { namespace util
 
         //@}
 
-        ///
-        /// get rotation matrix
-        ///
+        /// \name get arcball properties
+        //@{
+
+        const Vector2i & getWindowCenter() const { return mWindowCenter; }
+
         const Matrix44f & getRotationMatrix() const { return mRotation; }
+
+        //@}
 
         /// \name mouse action handler
         //@{
 
-        void onMouseMove( int x, int y );
-        void onMouseButtonDown( int x, int y );
-        void onMouseButtonUp();
+        void beginDrag( int x, int y );
+        void beginDrag( const Vector2i & pos ) { beginDrag( pos.x, pos.y ); }
+        void onDrag( int x, int y );
+        void endDrag();
+
+        void onMouseMove( int x, int y ) { beginDrag( x, y ); }
+        void onMouseButtonDown( int x, int y ) { onDrag( x, y ); }
+        void onMouseButtonUp() { endDrag(); }
 
         //@}
     };
