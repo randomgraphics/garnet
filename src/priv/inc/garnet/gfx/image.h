@@ -19,8 +19,8 @@ namespace GN { namespace gfx
     struct MipmapDesc
     {
         UInt32 width,  ///< mipmap width in pixel
-                 height, ///< mipmap height in pixel
-                 depth;  ///< mipmap depth in pixel
+               height, ///< mipmap height in pixel
+               depth;  ///< mipmap depth in pixel
 
         ///
         /// bytes of one row of texel. For DXT compressed texture, this
