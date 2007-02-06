@@ -99,9 +99,9 @@ public:
 
         D3DVERTEXELEMENT9 format[] = 
         {
-            { 0,  0, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_POSITION, 0 },
-            { 0, 12, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_NORMAL, 0 },
-            { 0, 24, D3DDECLTYPE_FLOAT2, 0, D3DDECLUSAGE_TEXCOORD, 0 },
+            { 0,  0, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_TEXCOORD, 0 },
+            { 0, 12, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_TEXCOORD, 1 },
+            { 0, 24, D3DDECLTYPE_FLOAT2, 0, D3DDECLUSAGE_TEXCOORD, 2 },
             D3DDECL_END()
         };
         GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( format, &decl ), false );
@@ -110,8 +110,8 @@ public:
             "uniform float4x4 gPvw : register(c0);    \n"
             "struct vsi                               \n"
             "{                                        \n"
-            "    float4 pos : POSITION;               \n"
-            "    float3 nml : NORMAL;                 \n"
+            "    float4 pos : TEXCOORD0;              \n"
+            "    float3 nml : TEXCOORD1;              \n"
             "    float2 uv  : TEXCOORD0;              \n"
             "};                                       \n"
             "struct vso                               \n"
