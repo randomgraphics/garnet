@@ -53,7 +53,7 @@ class DDSReader
     GN::gfx::ImageDesc mImgDesc;
 
     const UInt8 * mSrc;
-    size_t          mSize;
+    size_t        mSize;
 
 public:
 

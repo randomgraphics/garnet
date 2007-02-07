@@ -85,12 +85,12 @@ namespace GN { namespace util
 
         void beginDrag( int x, int y );
         void beginDrag( const Vector2i & pos ) { beginDrag( pos.x, pos.y ); }
-        void onDrag( int x, int y );
         void endDrag();
+        void onDrag( int x, int y );
 
-        void onMouseMove( int x, int y ) { beginDrag( x, y ); }
-        void onMouseButtonDown( int x, int y ) { onDrag( x, y ); }
+        void onMouseButtonDown( int x, int y ) { beginDrag( x, y ); }
         void onMouseButtonUp() { endDrag(); }
+        void onMouseMove( int x, int y ) { onDrag( x, y ); }
 
         //@}
     };

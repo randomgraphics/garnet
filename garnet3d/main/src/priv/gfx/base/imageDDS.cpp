@@ -8,7 +8,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 // *****************************************************************************
 
 #ifndef MAKE_FOURCC
-#define MAKE_FOURCC(ch0, ch1, ch2, ch3)         \
+#define MAKE_FOURCC(ch0, ch1, ch2, ch3)     \
             ((UInt32)(UInt8)(ch0) |         \
             ((UInt32)(UInt8)(ch1) << 8) |   \
             ((UInt32)(UInt8)(ch2) << 16) |  \
@@ -20,7 +20,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image");
 ///
 enum DdsFlag
 {
-    DDS_DDPF_SIZE               = sizeof(DDPixelFormat)                 ,
+    DDS_DDPF_SIZE               = sizeof(DDPixelFormat)          ,
     DDS_DDPF_ALPHAPIXELS        = 0x00000001                     ,
     DDS_DDPF_ALPHA              = 0x00000002                     ,
     DDS_DDPF_FOURCC             = 0x00000004                     ,
