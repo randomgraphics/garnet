@@ -57,10 +57,10 @@ namespace GN { namespace gfx
         ///
         struct AttribDesc
         {
-            VtxSem   semantic; ///< FORCC encoded attribute sementic.
-                               ///< Could be one of standard semantics, or any user-defined value.
-                               ///< Note that semantic must be unique in descriptor.
-            ClrFmt   format;   ///< attribute format (FMT_XXX).
+            VtxSem semantic; ///< FORCC encoded attribute sementic.
+                             ///< Could be one of standard semantics, or any user-defined value.
+                             ///< Note that semantic must be unique in descriptor.
+            ClrFmt format;   ///< attribute format (FMT_XXX).
             UInt16 offset;   ///< offset in stream.
             UInt8  stream;   ///< stream index.
 
