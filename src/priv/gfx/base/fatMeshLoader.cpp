@@ -91,9 +91,9 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
         // read mesh descriptor
         if( !fp.read( &desc, sizeof(desc), &readen ) || sizeof(desc) != readen )
         { GN_ERROR(sLogger)( "fail to read mesh descriptor." ); return false; }
-        mVertexFormat.u64 = desc.vtxFmt;
+        mFatFmt.u64 = desc.vtxFmt;
         mHasFaceNormal = !!desc.hasFaceNormal;
-        if( !mVertexFormat.valid() ) { GN_ERROR(sLogger)( "invalid vertex format." ); return false; }
+        if( !mFatFmt.valid() ) { GN_ERROR(sLogger)( "invalid vertex format." ); return false; }
 
         // read vertices
         mVertices.resize( desc.numVtx );
@@ -130,7 +130,7 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
             GN_ERROR(sLogger)( "invalid file header: %s", s.cptr() );
             return false;
         }
-        mVertexFormat.u64 = vtxFmt;
+        mFatFmt.u64 = vtxFmt;
         mHasFaceNormal = !!faceNormal;
 
         // read vertex header
@@ -237,7 +237,7 @@ bool GN::gfx::FatMesh::writeToFile( File & fp, char mode ) const
         FatMeshDesc desc;
         desc.numVtx = (UInt32)mVertices.size();
         desc.numFace = (UInt32)mFaces.size();
-        desc.vtxFmt = mVertexFormat.u64;
+        desc.vtxFmt = mFatFmt.u64;
         desc.hasFaceNormal = (UInt8)mHasFaceNormal;
         desc.reserved[0] = desc.reserved[1] = desc.reserved[2] = 0;
         if( !fp.write( &desc, sizeof(desc), 0 ) ) { GN_ERROR(sLogger)( "fail to write mesh descriptor." ); return false; }
@@ -260,7 +260,7 @@ bool GN::gfx::FatMesh::writeToFile( File & fp, char mode ) const
             TXT_TAG,
             mVertices.size(),
             mFaces.size(),
-            mVertexFormat.u64,
+            mFatFmt.u64,
             mHasFaceNormal ? 1 : 0 );
         if( !fp.write( s.cptr(), s.size(), 0 ) )
         {

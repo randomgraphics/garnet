@@ -1023,7 +1023,7 @@ for compiler, variants in ALL_targets.iteritems() :
         # build additional dependencies:
         shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
-        samples = Split('GNsampleRenderToTexture GNsampleDepthTexture')
+        samples = Split('GNsampleDepthTexture GNsampleDolphin GNsampleRenderToCube GNsampleRenderToTexture')
         tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshViewer GNtoolOGLInfo')
         progs = tests + samples + tools
         def getTargets( n ):

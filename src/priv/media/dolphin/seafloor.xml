@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+	<parameters>
+		<uniform name="pvw"/>
+		<texture name="seafloor"/>
+		<texture name="caustic"/>
+	</parameters>
+
+	<!--
+	============================================================================
+		Shaders
+	============================================================================
+	-->
+
+	<shaders>
+		<!-- Cg shaders -->
+		<shader name="cgvs" type="VS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="vs_1_1"/>
+				</token>
+			</prerequisites>
+			<uniref ref="pvw" binding="pvw"/>
+			<code lang="CG" hints="...">
+<![CDATA[
+uniform float4x4 pvw;
+void main(
+	in  float4 ipos : POSITION0,
+	in  float3 inml : NORMAL0,
+	in  float2 itex : TEXCOORD0,
+	out float4 opos : POSITION,
+	out float4 oclr : COLOR0,
+	out float2 otex : TEXCOORD0 )
+{
+	opos = mul( pvw, ipos );
+	oclr = 1;
+	otex = itex;
+}
+]]>
+			</code>
+		</shader>
+
+		<shader name="cgps" type="PS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="ps_1_1"/>
+				</token>
+			</prerequisites>
+			<texref ref="seafloor" stage="0"/>
+			<texref ref="caustic" stage="1"/>
+			<code lang="CG" hints="...">
+<![CDATA[
+sampler s0 : register(s0); // seafloor
+sampler s1 : register(s1); // caustic
+float4 main( in float2 itex : TEXCOORD0 ) : COLOR0
+{
+	return tex2D( s0, itex );
+}
+]]>
+			</code>
+		</shader>
+
+		<!-- fixed pipeline -->
+		<shader name="fixgs" type="GS"/>
+
+	</shaders>
+
+	<!--
+	============================================================================
+		Techniques
+	============================================================================
+	-->
+
+	<techniques>
+        <rsb
+			CULL_MODE="CULL_CCW"
+		/>
+		<technique name="cg">
+			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
+		</technique>
+	</techniques>
+</effect>

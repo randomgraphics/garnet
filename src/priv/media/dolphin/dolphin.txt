@@ -1,0 +1,7 @@
+numvertices=284
+numfaces=564
+streamformat={
+	float3 pos;
+	float3 normal;
+	float2 tex0;
+}

@@ -171,9 +171,9 @@ namespace GN { namespace gfx
         void setVertexFormat( const FatVtxFmt & fmt )
         {
             if( !fmt.valid() ) { GN_WARN(sLogger)( "invalid vertex format" ); return; }
-            mVertexFormat = fmt;
+            mFatFmt = fmt;
         }
-        const FatVtxFmt & getVertexFormat() const { return mVertexFormat; }
+        const FatVtxFmt & getVertexFormat() const { return mFatFmt; }
         const FatVtx * getVertices() const { return mVertices.cptr(); }
         size_t getNumVertices() const { return mVertices.size(); }
         FatVtx * beginVertices( size_t count ) { mVertices.resize( count ); return mVertices.cptr(); }
@@ -316,7 +316,8 @@ namespace GN { namespace gfx
         // raw mesh data
         DynaArray<FatVtx>  mVertices;
         DynaArray<FatFace> mFaces;
-        FatVtxFmt          mVertexFormat;
+        FatVtxFmt          mFatFmt;
+        VtxFmtHandle       mVtxFmt; // this is the vertex format handle for rendering
         bool               mHasFaceNormal; ///< True means all faces have normal.
 
         // optimized mesh data
@@ -338,6 +339,7 @@ namespace GN { namespace gfx
         {
             mVtxSegments.clear();
             mFaceSegments.clear();
+            mVtxFmt = 0;
         }
 
         void createNewFace( size_t i0, size_t i1, size_t i2, const Vector3f * normal, int material )

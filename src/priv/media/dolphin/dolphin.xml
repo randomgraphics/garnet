@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+	<parameters>
+		<uniform name="pvw"/>
+		<unoform name="weight"/>
+		<texture name="skin"/>
+		<texture name="caustic"/>
+	</parameters>
+
+	<!--
+	============================================================================
+		Shaders
+	============================================================================
+	-->
+
+	<shaders>
+		<!-- Cg shaders -->
+		<shader name="cgvs" type="VS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="vs_1_1"/>
+				</token>
+			</prerequisites>
+			<uniref ref="pvw" binding="pvw"/>
+			<!--uniref ref="weight" binding="weight"/-->
+			<code lang="CG" hints="...">
+<![CDATA[
+uniform float4x4 pvw;
+struct Vertex
+{
+	float4 pos0 : POSITION0;
+	float3 nml0 : NORMAL0;
+	float2 tex0 : TEXCOORD0;
+	float4 pos1 : TEXCOORD1;
+	float3 nml1 : TEXCOORD2;
+	float4 pos2 : TEXCOORD3;
+	float3 nml2 : TEXCOORD4;
+};
+void main(
+	in Vertex v,
+	out float4 opos : POSITION,
+	out float3 onml : TEXCOORD1,
+	out float2 otex : TEXCOORD0 )
+{
+
+	opos = mul( pvw, v.pos0 );
+	onml = v.nml0;
+	otex = v.tex0;
+}
+]]>
+			</code>
+		</shader>
+
+		<shader name="cgps" type="PS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="ps_1_1"/>
+				</token>
+			</prerequisites>
+			<texref ref="skin" stage="0"/>
+			<texref ref="caustic" stage="1"/>
+			<code lang="CG" hints="...">
+<![CDATA[
+sampler s0 : register(s0); // skin
+sampler s1 : register(s1); // caustic
+float4 main( in float2 itex : TEXCOORD0 ) : COLOR0
+{
+	return tex2D( s0, itex );
+}
+]]>
+			</code>
+		</shader>
+
+		<!-- fixed pipeline -->
+		<shader name="fixgs" type="GS"/>
+
+	</shaders>
+
+	<!--
+	============================================================================
+		Techniques
+	============================================================================
+	-->
+
+	<techniques>
+        <rsb
+			CULL_MODE="CULL_NONE"
+		/>
+		<technique name="cg">
+			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
+		</technique>
+	</techniques>
+</effect>
