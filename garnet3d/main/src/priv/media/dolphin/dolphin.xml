@@ -34,7 +34,7 @@ uniform float4x4 g_matWorldView      ;  // world-view matrix
 struct VSOUT
 {
     float4 vPosition         : POSITION;
-    float2 vLightAndFog      : COLOR0;     // COLOR0.x = light, COLOR0.y = fog
+    float4 vMisc             : TEXCOORD0;     // x = light, y = fog, zw = opos.zw
     float2 vBaseTexCoords    : TEXCOORD1;
     float2 vCausticTexCoords : TEXCOORD2;
 };
@@ -77,8 +77,9 @@ VSOUT ShadeDolphinVertex(
 	// Compress output values
 	VSOUT  Output;
 	Output.vPosition         = vOutputPosition;
-	Output.vLightAndFog.x    = fLightValue;
-	Output.vLightAndFog.y    = fFogValue;
+	Output.vMisc.x           = fLightValue;
+	Output.vMisc.y           = fFogValue;
+	Output.vMisc.zw          = vOutputPosition.zw;
 	Output.vBaseTexCoords    = vBaseTexCoords;
 	Output.vCausticTexCoords = vCausticTexCoords;
 	return Output;
@@ -100,7 +101,7 @@ VSOUT ShadeDolphinVertex(
 
 struct VSOUT
 {
-    float2 vLightAndFog      : COLOR0;     // COLOR0.x = light, COLOR0.y = fog
+    float4 vMisc             : TEXCOORD0; // x = light, y = fog, zw = pos.zw
     float2 vBaseTexCoords    : TEXCOORD1;
     float2 vCausticTexCoords : TEXCOORD2;
 };
@@ -108,14 +109,17 @@ struct VSOUT
 sampler   DiffuseSampler  : register(s0);
 sampler   CausticsSampler : register(s1);
 
-float4 main( VSOUT Input ) : COLOR0
+void main(
+	VSOUT Input,
+	out float4 oC0 : COLOR0,
+	out float4 oC1 : COLOR1 )
 {
 	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
 	const float4 g_vAmbient  = { 0.25f, 0.25f, 0.25f, 0.25f };
 
     // Decompress input values
-    float3 vLightColor       = Input.vLightAndFog.xxx;
-    float  fFogValue         = Input.vLightAndFog.y;
+    float3 vLightColor       = Input.vMisc.xxx;
+    float  fFogValue         = Input.vMisc.y;
     float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
     float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
 
@@ -128,7 +132,10 @@ float4 main( VSOUT Input ) : COLOR0
     float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
     
     // Return color blended with fog
-    return lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+    oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+
+    // Return depth to the second render target
+    oC1 = Input.vMisc.z / Input.vMisc.w;
 }
 ]]>
 			</code>

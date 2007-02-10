@@ -188,7 +188,8 @@ public:
         scale.identity(); scale *= 0.01f; scale[3][3] = 1.0f;
         rotate1.rotateZ( -cosf(fKickFreq)/6 );
         rotate2.rotateY( fPhase );
-        trans.translate( -5.0f*sinf(fPhase), sinf(fKickFreq)/2, 10.0f-10.0f*cosf(fPhase) );
+        float radius = 5;
+        trans.translate( -radius*sinf(fPhase), sinf(fKickFreq)/2, (2*radius)-(2*radius)*cosf(fPhase) );
         Matrix44f world = trans * rotate2 * rotate1 * scale;
 
         // calculate vertex blending weights
@@ -268,6 +269,9 @@ class Dolphin : public GN::app::SampleApp
 
     Matrix44f world, view, proj;
 
+    AutoRef<Texture> rt[2];
+    RenderTargetDesc rtdesc;
+
 public:
 
     Dolphin() : scene(0)
@@ -276,7 +280,7 @@ public:
         time = .0f;
         swimming = true;
 
-        Vector3f eye(0,0,-5.0f);
+        Vector3f eye(0,0,-2.0f);
         Vector3f at(0,0,0);
         Vector3f up(0,1,0);
         view.lookAtLh( eye, at, up );
@@ -288,9 +292,23 @@ public:
     {
         Renderer & r = gRenderer;
 
-        float aspect = (float)r.getDispDesc().width / r.getDispDesc().height;
+        UInt32 width = 1024;
+        UInt32 height = 720;
+
+        float aspect = (float)width / height;
         r.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
 
+        // create render targets
+        rt[0].attach( r.create2DTexture( width, height, 1, FMT_FLOAT16_4, TEXUSAGE_RENDER_TARGET ) );
+        rt[1].attach( r.create2DTexture( width, height, 1, FMT_RG_32_32_FLOAT, TEXUSAGE_RENDER_TARGET ) );
+
+        rtdesc.count = 2;
+        rtdesc.aa = MSAA_NONE;
+        rtdesc.setcbuf( 0, rt[0] );
+        rtdesc.setcbuf( 1, rt[1] );
+        rtdesc.setzbuf( 0 ); // use automatic z buffer.
+
+        // create scene
         scene = new Scene(*this);
         return scene->create();
     }
@@ -298,6 +316,8 @@ public:
     void onRendererDispose()
     {
         safeDelete( scene );
+        rt[0].clear();
+        rt[1].clear();
     }
 
     void onKeyPress( input::KeyEvent key )
@@ -320,7 +340,17 @@ public:
     void onRender()
     {
         GN_ASSERT( scene );
+
+        Renderer & r = gRenderer;
+
+        // draw to textures
+        r.setRenderTargets( rtdesc );
         scene->render();
+
+        // draw texture to screen
+        r.setRenderTargets( RenderTargetDesc::DRAW_TO_BACK_BUFFER );
+        r.setTexture( 0, rt[0] );
+        r.draw2DTexturedQuad( 0 );
     }
 };
 

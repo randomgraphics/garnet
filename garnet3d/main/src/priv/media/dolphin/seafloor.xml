@@ -34,7 +34,7 @@ uniform float4   caustic;
 struct VSOUT
 {
     float4 vPosition         : POSITION;
-    float2 vLightAndFog      : COLOR0;     // COLOR0.x = light, COLOR0.y = fog
+    float4 vMisc             : TEXCOORD0; // x = light, y = fog, zw = pos.zw
     float2 vBaseTexCoords    : TEXCOORD1;
     float2 vCausticTexCoords : TEXCOORD2;
 };
@@ -65,8 +65,9 @@ VSOUT main(
 	// Compress output values
 	VSOUT o;
 	o.vPosition         = opos;
-	o.vLightAndFog.x    = fLightValue;
-	o.vLightAndFog.y    = fFogValue;
+	o.vMisc.x           = fLightValue;
+	o.vMisc.y           = fFogValue;
+	o.vMisc.zw          = opos.zw;
 	o.vBaseTexCoords    = itex;
 	o.vCausticTexCoords = vCausticTexCoords;
 	return o;
@@ -88,7 +89,7 @@ VSOUT main(
 
 struct VSOUT
 {
-    float2 vLightAndFog      : COLOR0;     // COLOR0.x = light, COLOR0.y = fog
+    float4 vMisc             : TEXCOORD0;     // COLOR0.x = light, COLOR0.y = fog
     float2 vBaseTexCoords    : TEXCOORD1;
     float2 vCausticTexCoords : TEXCOORD2;
 };
@@ -96,14 +97,17 @@ struct VSOUT
 sampler   DiffuseSampler  : register(s0);
 sampler   CausticsSampler : register(s1);
 
-float4 main( VSOUT Input ) : COLOR
+void main(
+	VSOUT Input,
+	out float4 oC0 : COLOR0,
+	out float4 oC1 : COLOR1 )
 {
 	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
 	const float4 g_vAmbient  = { 0.25f, 0.25f, 0.25f, 0.25f };
 
     // Decompress input values
-    float3 vLightColor       = Input.vLightAndFog.xxx;
-    float  fFogValue         = Input.vLightAndFog.y;
+    float3 vLightColor       = Input.vMisc.xxx;
+    float  fFogValue         = Input.vMisc.y;
     float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
     float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
 
@@ -116,7 +120,10 @@ float4 main( VSOUT Input ) : COLOR
     float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
     
     // Return color blended with fog
-    return lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+    oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+
+    // Write depth to 2nd render target
+    oC1 = Input.vMisc.z / Input.vMisc.w;
 }
 ]]>
 			</code>
