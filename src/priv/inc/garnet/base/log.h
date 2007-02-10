@@ -245,7 +245,7 @@ namespace GN
         ///
         Logger( const StrA & name ) : mName(name) {}
 
-        int  mLevel; ///< doLog level
+        int  mLevel;   ///< doLog level
         bool mEnabled; ///< logger enabled or not.
 
     private:
@@ -257,6 +257,9 @@ namespace GN
 
     ///
     /// Get logger by name. Set name to NULL or empty string to get root logger.
+    ///
+    /// \param name
+    ///     Logger name (case insensitive)
     ///
     GN_PUBLIC Logger * getLogger( const char * name );
 

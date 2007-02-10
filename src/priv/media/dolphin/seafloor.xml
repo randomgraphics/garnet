@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <effect>
 	<parameters>
-		<uniform name="pvw"/>
-		<texture name="seafloor"/>
-		<texture name="caustic"/>
+		<uniform name="view" type="MATRIX44"/>   <!-- view matrix -->
+		<uniform name="proj" type="MATRIX44"/>   <!-- projection matrix -->
+		<uniform name="caustic" type="VECTOR4"/> <!-- caustic coordinate (scale_x, scale_y, offset_x, offset_y) -->
+		<texture name="seafloor"/>               <!-- seafloor texture -->
+		<texture name="caustic"/>                <!-- caustic texture -->
 	</parameters>
 
 	<!--
@@ -14,33 +16,66 @@
 
 	<shaders>
 		<!-- Cg shaders -->
-		<shader name="cgvs" type="VS">
+		<shader name="d3dvs" type="VS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">
 					<token type="values" value="vs_1_1"/>
 				</token>
 			</prerequisites>
-			<uniref ref="pvw" binding="pvw"/>
-			<code lang="CG" hints="...">
+			<uniref ref="view" binding="view"/>
+			<uniref ref="proj" binding="proj"/>
+			<uniref ref="caustic" binding="caustic"/>
+			<code lang="D3D_HLSL" hints="...">
 <![CDATA[
-uniform float4x4 pvw;
-void main(
+uniform float4x4 view;
+uniform float4x4 proj;
+uniform float4   caustic;
+
+struct VSOUT
+{
+    float4 vPosition         : POSITION;
+    float2 vLightAndFog      : COLOR0;     // COLOR0.x = light, COLOR0.y = fog
+    float2 vBaseTexCoords    : TEXCOORD1;
+    float2 vCausticTexCoords : TEXCOORD2;
+};
+
+VSOUT main(
 	in  float4 ipos : POSITION0,
 	in  float3 inml : NORMAL0,
-	in  float2 itex : TEXCOORD0,
-	out float4 opos : POSITION,
-	out float4 oclr : COLOR0,
-	out float2 otex : TEXCOORD0 )
+	in  float2 itex : TEXCOORD0 )
 {
-	opos = mul( pvw, ipos );
-	oclr = 1;
-	otex = itex;
+	const float4 lightdir = { 0, 1, 0, 0 };
+	const float4 fogrange = { 0.5,50.0, 1.0/(50.0-1.0), 0 }; // ( x, fog_end, (1/(fog_end-fog_start)), x )
+
+	// Transform to view space (world matrix is identity)
+	float4 vpos = mul( view, ipos );
+
+	// Transform to projection space
+	float4 opos =  mul( proj, vpos );
+
+	// Lighting calculation
+	float fLightValue = max( dot( inml, lightdir ), 0 );
+
+	// Generate water caustic tex coords from vertex xz position
+	float2 vCausticTexCoords = caustic.xy * vpos.xz + caustic.zw;
+
+	// Fog calculation:
+	float fFogValue = clamp( (fogrange.y - vpos.z) * fogrange.z, 0, 1 );
+
+	// Compress output values
+	VSOUT o;
+	o.vPosition         = opos;
+	o.vLightAndFog.x    = fLightValue;
+	o.vLightAndFog.y    = fFogValue;
+	o.vBaseTexCoords    = itex;
+	o.vCausticTexCoords = vCausticTexCoords;
+	return o;
 }
 ]]>
 			</code>
 		</shader>
 
-		<shader name="cgps" type="PS">
+		<shader name="d3dps" type="PS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">
 					<token type="values" value="ps_1_1"/>
@@ -48,13 +83,40 @@ void main(
 			</prerequisites>
 			<texref ref="seafloor" stage="0"/>
 			<texref ref="caustic" stage="1"/>
-			<code lang="CG" hints="...">
+			<code lang="D3D_HLSL" hints="...">
 <![CDATA[
-sampler s0 : register(s0); // seafloor
-sampler s1 : register(s1); // caustic
-float4 main( in float2 itex : TEXCOORD0 ) : COLOR0
+
+struct VSOUT
 {
-	return tex2D( s0, itex );
+    float2 vLightAndFog      : COLOR0;     // COLOR0.x = light, COLOR0.y = fog
+    float2 vBaseTexCoords    : TEXCOORD1;
+    float2 vCausticTexCoords : TEXCOORD2;
+};
+
+sampler   DiffuseSampler  : register(s0);
+sampler   CausticsSampler : register(s1);
+
+float4 main( VSOUT Input ) : COLOR
+{
+	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
+	const float4 g_vAmbient  = { 0.25f, 0.25f, 0.25f, 0.25f };
+
+    // Decompress input values
+    float3 vLightColor       = Input.vLightAndFog.xxx;
+    float  fFogValue         = Input.vLightAndFog.y;
+    float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
+    float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
+
+    // Fetch from the textures
+    float4 vDiffuse  = tex2D( DiffuseSampler,  vBaseTexCoords );
+    float4 vCaustics = tex2D( CausticsSampler, vCausticTexCoords );
+
+    // Combine lighting, base texture and water caustics texture
+    float4 PixelColor0 = vDiffuse  * float4( vLightColor + g_vAmbient, 1 );
+    float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
+    
+    // Return color blended with fog
+    return lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
 }
 ]]>
 			</code>
@@ -73,10 +135,10 @@ float4 main( in float2 itex : TEXCOORD0 ) : COLOR0
 
 	<techniques>
         <rsb
-			CULL_MODE="CULL_CCW"
+			CULL_MODE="CULL_NONE"
 		/>
-		<technique name="cg">
-			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
+		<technique name="d3d">
+			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
 		</technique>
 	</techniques>
 </effect>
