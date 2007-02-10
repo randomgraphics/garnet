@@ -194,6 +194,8 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         { 0, "-d3d10", SO_NONE    },
         { 0, "-ogl",   SO_NONE    },
         { 0, "-fake",  SO_NONE    },
+        { 0, "-ww",    SO_REQ_SEP }, // window width
+        { 0, "-wh",    SO_REQ_SEP }, // window height
         { 0, "-fs",    SO_NONE    },
         { 0, "-ref",   SO_NONE    },
         { 0, "-msaa",  SO_NONE    },
@@ -224,6 +226,8 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "Options : (options are case-insensitive)\n"
                     "    -h, -?, --help         : Show help screen.\n"
                     "    -d3d9/d3d10/ogl/fake   : Select rendering API.\n"
+                    "    -ww                    : Windows width. Default is 640.\n"
+                    "    -wh                    : Windows width. Default is 480.\n"
                     "    -fs                    : Use fullsreen mode.\n"
                     "    -ref                   : Use reference device.\n"
                     "    -msaa                  : Enable MSAA/FSAA.\n"
@@ -250,6 +254,30 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
             else if( 0 == strCmpI( a, "-d3d10" ) ) mInitParam.rapi = gfx::API_D3D10;
             else if( 0 == strCmpI( a, "-ogl" ) ) mInitParam.rapi = gfx::API_OGL;
+            else if( 0 == strCmpI( a, "-ww" ) )
+            {
+                UInt32 i;
+                if( !str2UInt32( i, so.OptionArg() ) )
+                {
+                    GN_ERROR(sLogger)( "invalid windows width." );
+                }
+                else
+                {
+                    mInitParam.ro.windowedWidth = i;
+                }
+            }
+            else if( 0 == strCmpI( a, "-wh" ) )
+            {
+                UInt32 i;
+                if( !str2UInt32( i, so.OptionArg() ) )
+                {
+                    GN_ERROR(sLogger)( "invalid windows height." );
+                }
+                else
+                {
+                    mInitParam.ro.windowedHeight = i;
+                }
+            }
             else if( 0 == strCmpI( a, "-fs" ) ) mInitParam.ro.fullscreen = true;
             else if( 0 == strCmpI( a, "-ref" ) ) mInitParam.ro.reference = true;
             else if( 0 == strCmpI( a, "-fake" ) ) mInitParam.rapi = gfx::API_FAKE;

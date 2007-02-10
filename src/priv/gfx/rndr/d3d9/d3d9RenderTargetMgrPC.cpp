@@ -115,7 +115,7 @@ void GN::gfx::D3D9RTMgrPC::bind(
             AutoComPtr<IDirect3DSurface9> surf;
             surf.attach( tex->getSurface( newSurf->face, newSurf->level ) );
             GN_ASSERT( surf );
-            GN_DX9_CHECK( dev.SetRenderTarget( 0, surf ) );
+            GN_DX9_CHECK( dev.SetRenderTarget( i, surf ) );
         }
     }
 
