@@ -62,6 +62,11 @@ namespace GN { namespace gfx
         std::vector<Matrix44f> matrix44s; ///< matrix value
 
         ///
+        /// default ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
+        ///
+        UniformValue() : type(NUM_UNIFORM_VALUE_TYPES) {}
+
+        ///
         /// construct uniform value from a 4-D vector
         ///
         UniformValue( const Vector4f & v )
@@ -93,13 +98,6 @@ namespace GN { namespace gfx
         inline void setV( const Vector4f & v ) { setV( &v, 1 ); }
         inline void setM( const Matrix44f & v ) { setM( &v, 1 ); }
         //@}
-
-#if GN_DEBUG_BUILD
-        ///
-        /// default ctor: set type to invalid value, to make sure setX(...) happens before getting uniform value.
-        ///
-        UniformValue() : type(NUM_UNIFORM_VALUE_TYPES) {}
-#endif
     };
 
     ///
