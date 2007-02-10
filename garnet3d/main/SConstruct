@@ -262,13 +262,13 @@ def UTIL_newEnv( compiler, variant ):
 
         cxxflags['common']  += ['/EHs']
 
-        ccflags['common']  += ['/W4','/WX']
-        ccflags['debug']   += ['/GR','/RTCscu']
-        ccflags['profile'] += ['/O2']
-        ccflags['retail']  += ['/O2','/GL']
-        ccflags['stdbg']   += ['/MTd','/GR']
-        ccflags['stprof']  += ['/MT','/O2']
-        ccflags['stret']   += ['/MT','/O2','/GL']
+        ccflags['common']  += ['/W4', '/WX', '/Ot', '/Oi'] # favor speed, enable intrinsic functions.
+        ccflags['debug']   += ['/GR', '/RTCscu']
+        ccflags['profile'] += ['/Ox'] # maximum optimization.
+        ccflags['retail']  += ['/Ox', '/GL']
+        ccflags['stdbg']   += ['/MTd', '/GR']
+        ccflags['stprof']  += ['/MT', '/Ox']
+        ccflags['stret']   += ['/MT', '/Ox', '/GL']
         if 'xenon' == compiler.os:
             ccflags['debug']   += ['/MTd']
             ccflags['profile'] += ['/MT']
