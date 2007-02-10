@@ -94,7 +94,7 @@ bool GN::str2UInt16( UInt16 & i, const char * s )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::str2Int32( SInt32 & i, const char * s )
+bool GN::str2SInt32( SInt32 & i, const char * s )
 {
     if( strEmpty(s) ) return false;
     return 1 == sscanf( s, "%li", (long*)&i );

@@ -62,6 +62,15 @@ namespace GN { namespace gfx
         std::vector<Matrix44f> matrix44s; ///< matrix value
 
         ///
+        /// construct uniform value from a 4-D vector
+        ///
+        UniformValue( const Vector4f & v )
+            : type( UVT_VECTOR4  )
+        {
+            vector4s.push_back( v );
+        }
+
+        ///
         /// construct uniform value from a matrix
         ///
         UniformValue( const Matrix44f & m )

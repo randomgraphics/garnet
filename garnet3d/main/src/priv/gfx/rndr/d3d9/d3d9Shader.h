@@ -299,12 +299,9 @@ namespace GN { namespace gfx
                     break;
 
                 default:
-                    // Program should not reach here.
-                    {
-                        static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
-                        GN_ERROR(sLogger)( "invalid uniform type!" );
-                    }
-                    GN_UNEXPECTED();
+                    GN_ERROR(GN::getLogger("GN.gfx.rndr.D3D9"))( "unitialized/invalid uniform!" );
+                    break;
+
             }
             GN_UNGUARD_SLOW;
         }

@@ -156,20 +156,14 @@ namespace GN { namespace gfx
     inline void RendererContext::setTexture( size_t stage, const Texture * tex )
     {
         GN_ASSERT( stage < (size_t)MAX_TEXTURE_STAGES );
-        if( !flags.textures || stage >= numTextures )
+
+        flags.textures = 1;
+
+        textures[stage] = tex;
+
+        if( stage >= numTextures )
         {
-            if( stage >= numTextures && NULL == tex ) return;
-            textures[stage] = tex;
             numTextures = stage + 1;
-            flags.textures = 1;
-        }
-        else if( NULL == tex )
-        {
-            numTextures = stage;
-        }
-        else
-        {
-            textures[stage] = tex;
         }
     }
 

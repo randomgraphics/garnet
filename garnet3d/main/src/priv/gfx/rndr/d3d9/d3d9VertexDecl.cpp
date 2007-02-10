@@ -159,11 +159,13 @@ static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
 }
 
 ///
-/// element sorting function
+/// element sorting function, first by stream, then by offset.
 // -----------------------------------------------------------------------------
 static bool
-sSortByOffset( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
+sElementSorting( const D3DVERTEXELEMENT9 & a, const D3DVERTEXELEMENT9 & b )
 {
+	if( a.Stream < b.Stream ) return true;
+	if( a.Stream > b.Stream ) return false;
     return a.Offset < b.Offset;
 }
 
@@ -210,7 +212,7 @@ sVtxFmtDesc2D3DDecl( std::vector<D3DVERTEXELEMENT9> & elements, const GN::gfx::V
     }
 
     // sort elements by offset
-    std::sort( elements.begin(), elements.end(), &sSortByOffset );
+    std::sort( elements.begin(), elements.end(), &sElementSorting );
 
     // end tag
     D3DVERTEXELEMENT9 endtag = D3DDECL_END();

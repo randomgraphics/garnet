@@ -472,16 +472,26 @@ namespace GN
             }
         }
 
+		struct CaseInsensitiveMatch
+		{
+			const StrA & mName;
+
+			CaseInsensitiveMatch( const StrA & name ) : mName(name)
+			{
+			}
+
+			inline bool operator()( const std::map<StrA,LoggerImpl*>::value_type & i )
+			{
+				return 0 == strCmpI( mName.cptr(), i.first.cptr() );
+			}
+		};
+
     public:
 
         LoggerContainer() : mRootLogger("ROOT")
         {
             // config root logger
-#if GN_DEBUG_BUILD
-            mRootLogger.setLevel( Logger::LL_TRACE );
-#else
             mRootLogger.setLevel( Logger::LL_INFO );
-#endif
             mRootLogger.setEnabled( true );
             mRootLogger.addReceiver( &mCr );
             mRootLogger.addReceiver( &mFr );
@@ -490,12 +500,10 @@ namespace GN
 
         ~LoggerContainer()
         {
-#if GN_DEBUG_BUILD
             static Logger * sLogger = getLogger("GN.core.LoggerContainer");
             StrA loggerTree;
             printLoggerTree( loggerTree, 0, mRootLogger );
-            GN_TRACE(sLogger)( "\n%s", loggerTree.cptr() );
-#endif
+            GN_DETAIL(sLogger)( "\n%s", loggerTree.cptr() );
             std::for_each( mLoggers.begin(), mLoggers.end(), &sDeleteLogger );
         }
 
@@ -506,10 +514,13 @@ namespace GN
             n.trim( '.' );
 
             // shortcut for root logger
-            if( n.empty() || "ROOT" == n ) return &mRootLogger;
+            if( n.empty() || 0 == strCmpI( "ROOT", n.cptr() ) ) return &mRootLogger;
 
             // find for existing logger
-            std::map<StrA,LoggerImpl*>::const_iterator i = mLoggers.find( n );
+            std::map<StrA,LoggerImpl*>::const_iterator i = std::find_if(
+				mLoggers.begin(),
+				mLoggers.end(),
+				CaseInsensitiveMatch(n) );
             if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return i->second; }
 
             // not found. create new one.

@@ -31,6 +31,7 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 
     mDone = false;
 
+    bool firstframe = true;
     double elapsedUpdateTime;
     double lastUpdateTime = mFps.getCurrentTime();
 
@@ -45,14 +46,15 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 
         // call update in fixed interval
         elapsedUpdateTime = mFps.getCurrentTime() - lastUpdateTime;
-        if( elapsedUpdateTime > UPDATE_INTERVAL )
+        if( elapsedUpdateTime > UPDATE_INTERVAL || firstframe )
         {
-            int count = (int)( elapsedUpdateTime / UPDATE_INTERVAL );
+            int count = firstframe ? 1 : (int)( elapsedUpdateTime / UPDATE_INTERVAL );
             static const int MAX_COUNT = (int)( 1.0f / UPDATE_INTERVAL );
             if( count > MAX_COUNT ) count = MAX_COUNT; // make easy of long time debug break.
             for( int i = 0; i < count; ++i )
                 onUpdate();
             lastUpdateTime += UPDATE_INTERVAL * count;
+            firstframe = false;
         }
 
         // do render
@@ -231,17 +233,17 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "    -di                    : Use direct input.\n"
                     "    -le [name]             : Enable specific logger.\n"
                     "    -ld [name]             : Disable specific logger.\n"
-                    "    -ll [level]            : Set log level. Level is integer:\n"
+                    "    -ll [name:level]       : Set log level for specific logger. Level is integer:\n"
                     "                               positive : enable all log levels smaller then it.\n"
                     "                               zero     : disable all levels.\n"
-                    "                               negative : enable only log level euqals (-level).\n"
+                    "                               negative : enable specific log level only (-level).\n"
                     "                             Normally used levels are:\n"
                     "                               FATAL  = 10\n"
                     "                               ERROR  = 20\n"
                     "                               WARN   = 30\n"
                     "                               INFO   = 40\n"
                     "                               DETAIL = 50\n"
-                    "                               TRACE  = 100\n"
+                    "                               TRACE  = 200\n"
                     , GN::path::baseName(argv[0]).cptr() );
                 return false;
             }
@@ -269,14 +271,17 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-ld") ) getLogger( so.OptionArg() )->setEnabled( false );
             else if( 0 == strCmpI( a, "-ll") )
             {
-                SInt32 level;
-                if( str2Int32( level, so.OptionArg() ) )
+                char * name;
+                int    level;
+                char * leveltok;
+                name = ::strtok_s( so.OptionArg(), ":", &leveltok );
+                if ( name && str2SInt32( level, leveltok ) )
                 {
-                    getLogger(0)->setLevel( level );
+                    getLogger( name )->setLevel( level );
                 }
                 else
                 {
-                    GN_ERROR(sLogger)( "Log level must be integer." );
+                    GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
                 }
             }
         }

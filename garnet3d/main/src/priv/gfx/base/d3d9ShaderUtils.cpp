@@ -40,6 +40,38 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
 //
 //
 // -----------------------------------------------------------------------------
+static void sPrintShaderCompileInfo( const char * hlsl, ID3DXBuffer * bin )
+{
+    GN_GUARD;
+
+    GN_ASSERT( hlsl && bin );
+
+    using namespace GN;
+
+    // get ASM code
+    AutoComPtr<ID3DXBuffer> asm_;
+
+    D3DXDisassembleShader(
+        (const DWORD*)bin->GetBufferPointer(),
+        false,
+        NULL,
+        &asm_ );
+
+    GN_TRACE(sLogger)(
+        "\n================== Shader compile success ===============\n"
+        "%s\n"
+        "\n---------------------------------------------------------\n"
+        "%s\n"
+        "\n=========================================================\n",
+        hlsl,
+        asm_->GetBufferPointer() );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::compileVS( LPDIRECT3DDEVICE9 dev, const char * code, size_t len, UInt32 flags, const char * entry, const char * profile, LPD3DXCONSTANTTABLE * constTable )
 {
     GN_GUARD;
@@ -63,6 +95,9 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::compileVS( LPDIRECT3DDEVICE9 dev, const c
         sPrintShaderCompileError( hr, code, err );
         return 0;
     }
+
+    // print compile info
+    sPrintShaderCompileInfo( code, bin );
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
@@ -104,6 +139,9 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::compileVSFromFile( LPDIRECT3DDEVICE9 dev,
         sPrintShaderCompileError( hr, file, err );
         return 0;
     }
+
+    // print compile info
+    sPrintShaderCompileInfo( file, bin );
 
     // Create shader
     LPDIRECT3DVERTEXSHADER9 result;
@@ -230,6 +268,9 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::compilePS( LPDIRECT3DDEVICE9 dev, const ch
         return 0;
     };
 
+    // print compile info
+    sPrintShaderCompileInfo( code, bin );
+
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;
     GN_DX9_CHECK_RV(
@@ -270,6 +311,9 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::compilePSFromFile( LPDIRECT3DDEVICE9 dev, 
         sPrintShaderCompileError( hr, file, err );
         return 0;
     };
+
+    // print compile info
+    sPrintShaderCompileInfo( file, bin );
 
     // Create shader
     LPDIRECT3DPIXELSHADER9 result;

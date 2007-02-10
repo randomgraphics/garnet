@@ -11,7 +11,7 @@ static const UInt32 SEAFLOOR_FACES    = 2830;
 
 static const UInt32 VERTEX_STRIDE     = 32;
 
-static const Vector4f WATER_COLOR( 0.0f, 0.0f, 0.25f, 0.5f );
+static const Vector4f WATER_COLOR( 0.0f, 0.25f, 0.5f, 1.0f );
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.dolphin");
 
@@ -134,10 +134,10 @@ public:
         vfd.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT3 );
         vfd.addAttrib( 0, 12, VTXSEM_NML0, FMT_FLOAT3 );
         vfd.addAttrib( 0, 24, VTXSEM_TEX0, FMT_FLOAT2 );
-        //vfd.addAttrib( 1,  0, VTXSEM_TEX1, FMT_FLOAT3 ); // pos1
-        //vfd.addAttrib( 1, 12, VTXSEM_TEX2, FMT_FLOAT3 ); // nrm1
-        //vfd.addAttrib( 2,  0, VTXSEM_TEX3, FMT_FLOAT3 ); // pos2
-        //vfd.addAttrib( 2, 12, VTXSEM_TEX4, FMT_FLOAT3 ); // tex2
+        vfd.addAttrib( 1,  0, VTXSEM_TEX1, FMT_FLOAT3 ); // pos1
+        vfd.addAttrib( 1, 12, VTXSEM_TEX2, FMT_FLOAT3 ); // nrm1
+        vfd.addAttrib( 2,  0, VTXSEM_TEX3, FMT_FLOAT3 ); // pos2
+        vfd.addAttrib( 2, 12, VTXSEM_TEX4, FMT_FLOAT3 ); // tex2
         mDolphinDecl = gRenderer.createVtxFmt( vfd );
         if( 0 == mDolphinDecl ) return false;
 
@@ -151,33 +151,70 @@ public:
         mDolphinEff = rm.effects.getResourceHandle( "dolphin/dolphin.xml" );
         if( 0 == mDolphinEff ) return false;
 
-        // initialize effect
+        // initiate constant effect parameters
         Effect * eff;
         eff = rm.effects.getResource( mSeafloorEff );
         eff->setTextureByName( "seafloor", mSeafloor );
-        eff->setUniformByName( "pvw", Matrix44f::IDENTITY );
-        eff->setTextureByName( "caustic", 0 );
-        //eff = rm.effects.getResource( mDolphinEff );
-        //eff->setTextureByName( "skin", mDolphinSkin );
+        eff = rm.effects.getResource( mDolphinEff );
+        eff->setTextureByName( "skin", mDolphinSkin );
 
         // success
         return true;
     }
 
-#pragma warning(disable:4100)
-    void update(
-        UInt32 caustic,
-        const Matrix44f & world,
-        const Matrix44f & view,
-        const Matrix44f & proj )
+    void update( float time, const Matrix44f & view, const Matrix44f & proj )
     {
-
         GN::app::SampleResourceManager & rm = mApp.getResMgr();
         Effect * eff;
 
+        // update caustic parameters
+        Vector4f caustics( 0.05f, 0.05f, sinf(time)/8, cosf(time)/10 );
+        UInt32 causticTex = ((UInt32)(time*32))%32;
+
+        // update seafloor effect parameters
         eff = rm.effects.getResource( mSeafloorEff );
-        eff->setUniformByName( "pvw", proj * view * world ); // seafloor world matrix is always identity.
-        eff->setTextureByName( "caustic", mCaustics[caustic] );
+        eff->setUniformByName( "view", view );
+        eff->setUniformByName( "proj", proj );
+        eff->setUniformByName( "caustic", caustics );
+        eff->setTextureByName( "caustic", mCaustics[causticTex] );
+
+        // Animation attributes for the dolphin
+        float fKickFreq    = 2*time;
+        float fPhase       = time/3;
+        float fBlendWeight = sinf( fKickFreq );
+
+        // Move dolphin in a circle
+        Matrix44f scale, trans, rotate1, rotate2;
+        scale.identity(); scale *= 0.01f; scale[3][3] = 1.0f;
+        rotate1.rotateZ( -cosf(fKickFreq)/6 );
+        rotate2.rotateY( fPhase );
+        trans.translate( -5.0f*sinf(fPhase), sinf(fKickFreq)/2, 10.0f-10.0f*cosf(fPhase) );
+        Matrix44f world = trans * rotate2 * rotate1 * scale;
+
+        // calculate vertex blending weights
+        float fWeight1;
+        float fWeight2;
+        float fWeight3;
+        if( fBlendWeight > 0.0f )
+        {
+            fWeight1 = fabsf(fBlendWeight);
+            fWeight2 = 1.0f - fabsf(fBlendWeight);
+            fWeight3 = 0.0f;
+        }
+        else
+        {
+            fWeight1 = 0.0f;
+            fWeight2 = 1.0f - fabsf(fBlendWeight);
+            fWeight3 = fabsf(fBlendWeight);
+        }
+        Vector4f vWeight( fWeight1, fWeight2, fWeight3, 0.0f );
+
+        // update dolphin effect parameters
+        eff = rm.effects.getResource( mDolphinEff );
+        eff->setUniformByName( "weights", vWeight );
+        eff->setUniformByName( "viewworld", view * world );
+        eff->setUniformByName( "pvw", proj * view * world );
+        eff->setTextureByName( "caustic", mCaustics[causticTex] );
     }
 
     void render()
@@ -189,9 +226,9 @@ public:
 
         // render seafloor
         r.contextUpdateBegin();
+            r.setVtxFmt( mSeafloorDecl );
             r.setVtxBuf( 0, mSeafloorVb, VERTEX_STRIDE );
             r.setIdxBuf( mSeafloorIb );
-            r.setVtxFmt( mSeafloorDecl );
         r.contextUpdateEnd();
         GN::app::SampleResourceManager & rm = mApp.getResMgr();
         Effect * eff = rm.effects.getResource( mSeafloorEff );
@@ -203,21 +240,22 @@ public:
             eff->passEnd();
         }
 
-        /* render dolphin
-        r.setVtxBuf( 0, mDolphinVb[0], VERTEX_STRIDE );
-        r.setVtxBuf( 1, mDolphinVb[1], VERTEX_STRIDE );
-        r.setVtxBuf( 2, mDolphinVb[2], VERTEX_STRIDE );
-        r.setIdxBuf( mDolphinIb );
+        // render dolphin
+        r.contextUpdateBegin();
+            r.setVtxFmt( mDolphinDecl );
+            r.setVtxBuf( 0, mDolphinVb[0], VERTEX_STRIDE );
+            r.setVtxBuf( 1, mDolphinVb[1], VERTEX_STRIDE );
+            r.setVtxBuf( 2, mDolphinVb[2], VERTEX_STRIDE );
+            r.setIdxBuf( mDolphinIb );
+        r.contextUpdateEnd();
         eff = rm.effects.getResource( mDolphinEff );
-        eff->setTextureByName( "skin", mDolphinSkin );
-        eff->setTextureByName( "caustic", mCaustics[caustic] );
         for( size_t i = 0; i < eff->getNumPasses(); ++i )
         {
             eff->passBegin( i );
             eff->commitChanges();
             r.drawIndexed( TRIANGLE_LIST, DOLPHIN_FACES, 0, 0, DOLPHIN_VERTICES, 0 );
             eff->passEnd();
-        }*/
+        }
     }
 };
 
@@ -225,8 +263,8 @@ class Dolphin : public GN::app::SampleApp
 {
     Scene * scene;
 
-    UInt32 currentCaustic;
-    bool   swimming;
+    float time;
+    bool swimming;
 
     Matrix44f world, view, proj;
 
@@ -235,7 +273,7 @@ public:
     Dolphin() : scene(0)
     {
         // initialize 
-        currentCaustic = 0;
+        time = .0f;
         swimming = true;
 
         Vector3f eye(0,0,-5.0f);
@@ -274,13 +312,14 @@ public:
 
     void onUpdate()
     {
-        scene->update( currentCaustic, world, view, proj );
+        if( swimming ) time += 1.0f/60.0f;
+        Matrix44f pvw = proj * view;
+        scene->update( time, view, pvw );
     }
 
     void onRender()
     {
         GN_ASSERT( scene );
-
         scene->render();
     }
 };

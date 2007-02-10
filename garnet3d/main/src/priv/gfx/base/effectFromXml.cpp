@@ -109,6 +109,8 @@ static void sParseUniform( EffectDesc & desc, const XmlElement & node )
     EffectDesc::UniformDesc & ud = desc.uniforms[n];
     ud.hasDefaultValue = false;
 
+    // TODO: parse uniform type
+
     // parse uniform value
     const XmlElement * e = node.child ? node.child->toElement() : NULL;
     if( !e ) return;
@@ -144,7 +146,7 @@ static void sParseParameters( EffectDesc & desc, const XmlNode & root )
 
         if( "texture" == e->name ) sParseTexture( desc, *e );
         else if( "uniform" == e->name ) sParseUniform( desc, *e );
-        else sPostError( *e, "Unknown parameter. Ignored" );
+        else sPostError( *e, strFormat( "Unknown parameter '%s'. Ignored", e->name.cptr() ) );
     }
 }
 
@@ -214,7 +216,7 @@ static bool sParseConditionToken( EffectDesc::ShaderDesc & sd, const XmlElement 
     else if( "valuei" == type )
     {
         t.type = EffectDesc::VALUEI;
-        if( !str2Int32( t.valueI, value.cptr() ) )
+        if( !str2SInt32( t.valueI, value.cptr() ) )
         {
             sPostError( node, strFormat( "invalid integer: %s", value.cptr() ) );
             return false;
