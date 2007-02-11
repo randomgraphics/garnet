@@ -1,0 +1,8 @@
+<xml version="1.0" standalone="yes">
+	<renderable>
+		<subset>
+			<mesh ref="media::mesh/cube.mesh">
+			<effect ref="media::mesh/cube.xml"/>
+		</subset>
+	</renderable>
+</xml>

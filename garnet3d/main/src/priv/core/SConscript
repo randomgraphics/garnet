@@ -3,6 +3,7 @@ Import( 'GN' )
 sources = [
     'core.cpp',
     'coreLog.cpp',
+	'filesys.cpp'
 ]
 
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

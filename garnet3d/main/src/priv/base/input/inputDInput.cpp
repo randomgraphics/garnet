@@ -286,8 +286,6 @@ void GN::input::InputDInput::pollMouse()
 // ----------------------------------------------------------------------------
 void GN::input::InputDInput::buildKeyMap()
 {
-    GN_GUARD;
-
     // clear all field to KEY_NONE
     memset( mKeyMap, KEY_NONE, sizeof(mKeyMap) );
 
@@ -296,8 +294,6 @@ void GN::input::InputDInput::buildKeyMap()
         if( dikey > 0 ) mKeyMap[dikey] = name;
     #include "garnet/input/keyCodeMeta.h"
     #undef  GNINPUT_DEFINE_KEYCODE
-
-    GN_UNGUARD;
 }
 
 //

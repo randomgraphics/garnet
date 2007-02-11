@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.6.5)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
+#include "garnet/GNcore.h"
 #include "cxxtest/TestSuite.h"
 
 #if GN_XENON

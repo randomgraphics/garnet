@@ -248,7 +248,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "                               INFO   = 40\n"
                     "                               DETAIL = 50\n"
                     "                               TRACE  = 200\n"
-                    , GN::path::baseName(argv[0]).cptr() );
+                    , baseName(argv[0]).cptr() );
                 return false;
             }
             else if( 0 == strCmpI( a, "-d3d9" ) ) mInitParam.rapi = gfx::API_D3D9;
