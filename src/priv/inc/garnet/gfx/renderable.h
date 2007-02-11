@@ -28,8 +28,11 @@ namespace GN { namespace gfx
     ///
     struct RenderableDesc
     {
-        std::vector<RenderableSubsetDesc> subsets;
+        std::vector<RenderableSubsetDesc> subsets; ///< subset array
 
+        ///
+        /// clear the descriptor
+        ///
         void clear() { subsets.clear(); }
     };
 
@@ -74,6 +77,8 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        //@{
+
         size_t getSubsetCount() const { return mSubsets.size(); }
 
         UInt32 getEffectHandle( size_t subset ) const { GN_ASSERT( subset < mSubsets.size() ); return mSubsets[subset].effect; }
@@ -81,6 +86,8 @@ namespace GN { namespace gfx
         void draw() const { for( size_t i = 0; i < mSubsets.size(); ++i ) { drawSubset( i ); } }
 
         void drawSubset( size_t i ) const;
+
+        //@}
 
         // ********************************
         // private variables

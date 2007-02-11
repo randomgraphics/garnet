@@ -21,48 +21,51 @@ public:
 
     void testToNative()
     {
-        TS_ASSERT_EQUALS( PSS, GN::path::toNative("/") );
-        TS_ASSERT_EQUALS( PSS, GN::path::toNative("\\") );
+        using namespace GN::fs;
+        TS_ASSERT_EQUALS( PSS, toNative("/") );
+        TS_ASSERT_EQUALS( PSS, toNative("\\") );
 
-        TS_ASSERT_EQUALS( PSS"a"PSS"b", GN::path::toNative("/a//b/") );
-        TS_ASSERT_EQUALS( PSS"a"PSS"b", GN::path::toNative("\\a\\\\b\\") );
+        TS_ASSERT_EQUALS( PSS"a"PSS"b", toNative("/a//b/") );
+        TS_ASSERT_EQUALS( PSS"a"PSS"b", toNative("\\a\\\\b\\") );
 
-        TS_ASSERT_EQUALS( "a:"PSS"b", GN::path::toNative("a:b") );
-        TS_ASSERT_EQUALS( "a:"PSS"b", GN::path::toNative("a:b") );
+        TS_ASSERT_EQUALS( "a:"PSS"b", toNative("a:b") );
+        TS_ASSERT_EQUALS( "a:"PSS"b", toNative("a:b") );
 
-        TS_ASSERT_EQUALS( "a:"PSS, GN::path::toNative("a:") );
-        TS_ASSERT_EQUALS( "a:"PSS, GN::path::toNative("a:/") );
-        TS_ASSERT_EQUALS( "a:"PSS, GN::path::toNative("a:\\") );
+        TS_ASSERT_EQUALS( "a:"PSS, toNative("a:") );
+        TS_ASSERT_EQUALS( "a:"PSS, toNative("a:/") );
+        TS_ASSERT_EQUALS( "a:"PSS, toNative("a:\\") );
 
-        TS_ASSERT_EQUALS( "a"PSS":", GN::path::toNative("a/:") );
-        TS_ASSERT_EQUALS( "a"PSS":", GN::path::toNative("a\\:") );
+        TS_ASSERT_EQUALS( "a"PSS":", toNative("a/:") );
+        TS_ASSERT_EQUALS( "a"PSS":", toNative("a\\:") );
     }
 
     void testJoin()
     {
-        TS_ASSERT_EQUALS( "", GN::path::join( "", "" ) );
-        TS_ASSERT_EQUALS( "a", GN::path::join( "", "a" ) );
-        TS_ASSERT_EQUALS( "a", GN::path::join( "a", "" ) );
-        TS_ASSERT_EQUALS( "a", GN::path::join( "", "a", "" ) );
-        TS_ASSERT_EQUALS( "a"PSS"b", GN::path::join( "a", "b" ) );
-        TS_ASSERT_EQUALS( "a"PSS"b", GN::path::join( "", "a", "", "b", "" ) );
-        TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", GN::path::join( "\\a\\", "\\b\\", "\\c\\" ) );
-        TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", GN::path::join( "/a/", "/b/", "/c/" ) );
+        using namespace GN;
+        TS_ASSERT_EQUALS( "", joinPath( "", "" ) );
+        TS_ASSERT_EQUALS( "a", joinPath( "", "a" ) );
+        TS_ASSERT_EQUALS( "a", joinPath( "a", "" ) );
+        TS_ASSERT_EQUALS( "a", joinPath( "", "a", "" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b", joinPath( "a", "b" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b", joinPath( "", "a", "", "b", "" ) );
+        TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", joinPath( "\\a\\", "\\b\\", "\\c\\" ) );
+        TS_ASSERT_EQUALS( PSS"a"PSS"b"PSS"c", joinPath( "/a/", "/b/", "/c/" ) );
     }
 
     void testPrefix()
     {
-        GN::StrA s[3] ={
-            GN::path::toNative("app:"),
-            GN::path::toNative("startup:"),
-            GN::path::toNative("pwd:")
+        using namespace GN;
+        using namespace GN::fs;
+
+        StrA s[2] ={
+            toNative("app::"),
+            toNative("startup::"),
         };
 
         GN_INFO(sLogger)( "appDir = %s", s[0].cptr() );
         GN_INFO(sLogger)( "startup = %s", s[1].cptr() );
-        GN_INFO(sLogger)( "pwd = %s", s[2].cptr() );
 
-        for( size_t i = 0; i < 3; ++i )
+        for( size_t i = 0; i < 2; ++i )
         {
             TS_ASSERT( !s[i].empty() );
             if( s[i].size() > 1 )
@@ -78,100 +81,83 @@ public:
 
     void testExist()
     {
-        TS_ASSERT( GN::path::exist("/") );
-        TS_ASSERT( !GN::path::exist("haha,heihei,hoho,huhu,mama,papa") );
-        TS_ASSERT( GN::path::exist("SConstruct") );
+        using namespace GN::fs;
+        TS_ASSERT( exist("/") );
+        TS_ASSERT( !exist("haha,heihei,hoho,huhu,mama,papa") );
+        TS_ASSERT( exist("SConstruct") );
 
-        TS_ASSERT( GN::path::exist("startup:\\SConstruct") );
-        TS_ASSERT( GN::path::exist("startup:/SConstruct") );
-        TS_ASSERT( GN::path::exist("startup:SConstruct") );
+        TS_ASSERT( exist("startup::\\SConstruct") );
+        TS_ASSERT( exist("startup::/SConstruct") );
+        TS_ASSERT( exist("startup::SConstruct") );
 
-        TS_ASSERT( GN::path::exist("app:GNut"APPEXT) );
-        TS_ASSERT( GN::path::exist("app:/GNut"APPEXT) );
-        TS_ASSERT( GN::path::exist("app:\\GNut"APPEXT) );
-
-        TS_ASSERT( GN::path::exist("pwd:") );
-        TS_ASSERT( GN::path::exist("pwd:/") );
-        TS_ASSERT( GN::path::exist("pwd:\\") );
+        TS_ASSERT( exist("app::GNut"APPEXT) );
+        TS_ASSERT( exist("app::/GNut"APPEXT) );
+        TS_ASSERT( exist("app::\\GNut"APPEXT) );
     }
 
     void testIsDir()
     {
-        TS_ASSERT( GN::path::isDir("/") );
+        using namespace GN::fs;
+        TS_ASSERT( isDir("/") );
 
-        TS_ASSERT( GN::path::isDir("startup:") );
-        TS_ASSERT( GN::path::isDir("startup:/") );
-        TS_ASSERT( GN::path::isDir("startup:\\") );
+        TS_ASSERT( isDir("startup::") );
+        TS_ASSERT( isDir("startup::/") );
+        TS_ASSERT( isDir("startup::\\") );
 
-        TS_ASSERT( GN::path::isDir("app:") );
-        TS_ASSERT( GN::path::isDir("app:/") );
-        TS_ASSERT( GN::path::isDir("app:\\") );
+        TS_ASSERT( isDir("app::") );
+        TS_ASSERT( isDir("app::/") );
+        TS_ASSERT( isDir("app::\\") );
 
-        TS_ASSERT( GN::path::isDir("pwd:") );
-        TS_ASSERT( GN::path::isDir("pwd:/") );
-        TS_ASSERT( GN::path::isDir("pwd:\\") );
-
-        TS_ASSERT( !GN::path::isDir("haha,heihei,hoho,huhu,mama,papa") );
+        TS_ASSERT( !isDir("haha,heihei,hoho,huhu,mama,papa") );
     }
 
     void testIsFile()
     {
-        TS_ASSERT( GN::path::isFile("startup:\\SConstruct") );
-        TS_ASSERT( GN::path::isFile("app:GNut"APPEXT) );
-        TS_ASSERT( !GN::path::isFile("startup:") );
-        TS_ASSERT( !GN::path::isFile("app:") );
-        TS_ASSERT( !GN::path::isFile("pwd:") );
-        TS_ASSERT( !GN::path::isFile("haha,heihei,hoho,huhu,mama,papa") );
-    }
-
-    void testIsAbsPath()
-    {
-        using namespace GN;
-        using namespace GN::path;
-        TS_ASSERT( isRelPath("") );
-        TS_ASSERT( isRelPath("a/a") );
-        TS_ASSERT( isRelPath("a/a:") );
-        TS_ASSERT( isAbsPath("/") );
-        TS_ASSERT( isAbsPath("/a") );
-        TS_ASSERT( isAbsPath("c:a") );
-        TS_ASSERT( isAbsPath("c:/a") );
+        using namespace GN::fs;
+        TS_ASSERT( isFile("startup::\\SConstruct") );
+        TS_ASSERT( isFile("app::GNut"APPEXT) );
+        TS_ASSERT( !isFile("startup::") );
+        TS_ASSERT( !isFile("app::") );
+        TS_ASSERT( !isFile("haha,heihei,hoho,huhu,mama,papa") );
     }
 
     void testGetParent()
     {
-        TS_ASSERT_EQUALS( "a", GN::path::getParent("a/b") );
-        TS_ASSERT_EQUALS( "a", GN::path::getParent("a/b/") );
-        TS_ASSERT_EQUALS( PSS, GN::path::getParent("/a") );
-        TS_ASSERT_EQUALS( PSS, GN::path::getParent("/a/") );
-        TS_ASSERT_EQUALS( "", GN::path::getParent("a") );
-        TS_ASSERT_EQUALS( "", GN::path::getParent("a/") );
-        TS_ASSERT_EQUALS( PSS, GN::path::getParent("/") );
-        TS_ASSERT_EQUALS( "", GN::path::getParent("") );
-        TS_ASSERT_EQUALS( "startup:"PSS"a", GN::path::getParent("startup:a/b") );
-        TS_ASSERT_EQUALS( "startup:"PSS, GN::path::getParent("startup:/a") );
-        TS_ASSERT_EQUALS( "startup:"PSS, GN::path::getParent("startup:a") );
-        TS_ASSERT_EQUALS( "startup:"PSS, GN::path::getParent("startup:/") );
-        TS_ASSERT_EQUALS( "startup:"PSS, GN::path::getParent("startup:") );
+        using namespace GN;
+        TS_ASSERT_EQUALS( "a", parentPath("a/b") );
+        TS_ASSERT_EQUALS( "a", parentPath("a/b/") );
+        TS_ASSERT_EQUALS( PSS, parentPath("/a") );
+        TS_ASSERT_EQUALS( PSS, parentPath("/a/") );
+        TS_ASSERT_EQUALS( "", parentPath("a") );
+        TS_ASSERT_EQUALS( "", parentPath("a/") );
+        TS_ASSERT_EQUALS( PSS, parentPath("/") );
+        TS_ASSERT_EQUALS( "", parentPath("") );
+        TS_ASSERT_EQUALS( "startup::"PSS"a", parentPath("startup::a/b") );
+        TS_ASSERT_EQUALS( "startup::"PSS, parentPath("startup::/a") );
+        TS_ASSERT_EQUALS( "startup::"PSS, parentPath("startup::a") );
+        TS_ASSERT_EQUALS( "startup::"PSS, parentPath("startup::/") );
+        TS_ASSERT_EQUALS( "startup::"PSS, parentPath("startup::") );
     }
 
     void testGetExt()
     {
-        TS_ASSERT_EQUALS( ".c", GN::path::getExt("a.b.c") );
-        TS_ASSERT_EQUALS( ".c", GN::path::getExt("a.c") );
-        TS_ASSERT_EQUALS( ".c", GN::path::getExt(".c") );
-        TS_ASSERT_EQUALS( ".", GN::path::getExt("a.") );
-        TS_ASSERT_EQUALS( "", GN::path::getExt("a") );
+        using namespace GN;
+        TS_ASSERT_EQUALS( ".c", extName("a.b.c") );
+        TS_ASSERT_EQUALS( ".c", extName("a.c") );
+        TS_ASSERT_EQUALS( ".c", extName(".c") );
+        TS_ASSERT_EQUALS( ".", extName("a.") );
+        TS_ASSERT_EQUALS( "", extName("a") );
     }
 
     void testToRelative()
     {
-        using namespace GN::path;
-        TS_ASSERT_EQUALS( "..", getRelative( "a/b/c", "a\\b\\c\\d" ) );
-        TS_ASSERT_EQUALS( "", getRelative( "a/b/c", "a\\b\\c" ) );
-        TS_ASSERT_EQUALS( "c", getRelative( "a/b/c", "a\\b" ) );
-        TS_ASSERT_EQUALS( "a"PSS"b"PSS"c", getRelative( "a/b/c", "" ) );
-        TS_ASSERT_EQUALS( "a"PSS"b"PSS"c", getRelative( "a/b/c", "d/e" ) );
-        TS_ASSERT_EQUALS( "c", getRelative( "c:/a/b/c", "c:/a/b" ) );
-        TS_ASSERT_EQUALS( "c:"PSS"a"PSS"b", getRelative( "c:/a/b", "d:/a" ) );
+        using namespace GN;
+        TS_ASSERT_EQUALS( "..", relPath( "a/b/c", "a\\b\\c\\d" ) );
+        TS_ASSERT_EQUALS( "", relPath( "a/b/c", "a\\b\\c" ) );
+        TS_ASSERT_EQUALS( "c", relPath( "a/b/c", "a\\b" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b"PSS"c", relPath( "a/b/c", "" ) );
+        TS_ASSERT_EQUALS( "a"PSS"b"PSS"c", relPath( "a/b/c", "d/e" ) );
+        TS_ASSERT_EQUALS( "c", relPath( "c:/a/b/c", "c:/a/b" ) );
+        TS_ASSERT_EQUALS( "c:"PSS"a"PSS"b", relPath( "c:/a/b", "d:/a" ) );
     }
 };

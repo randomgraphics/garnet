@@ -438,22 +438,23 @@ GN::StrA GN::app::SampleResourceManager::sSearchResourceFile( const StrA & name 
 {
     GN_GUARD;
 
-    if( path::isFile( name ) ) return name;
-
-    if( path::isAbsPath(name) ) return StrA::EMPTYSTR;
+    if( fs::isFile( name ) ) return name;
 
     StrA fullPath;
 
-#define CHECK_PATH( X ) do { fullPath = path::join X ; if( path::isFile( fullPath ) ) return path::toNative(fullPath); } while(0)
+#define CHECK_PATH( X ) do { fullPath = joinPath X ; if( fs::isFile( fullPath ) ) return fs::toNative(fullPath); } while(0)
 
     // search in startup directory
-    CHECK_PATH( ("startup:", name) );
-    CHECK_PATH( ("startup:/media", name) );
+    CHECK_PATH( ("startup", name) );
+    CHECK_PATH( ("startup::media", name) );
 
     // search in application directory
-    CHECK_PATH( ("app:", name ) );
-    CHECK_PATH( ( "app:/media", name ) );
-    CHECK_PATH( ( "app:../media", name ) );
+    CHECK_PATH( ("app::", name ) );
+    CHECK_PATH( ( "app::media", name ) );
+    CHECK_PATH( ( "app::../media", name ) );
+
+    // search in native file system
+    CHECK_PATH( ("native::", name ) );
 
     // resource not found.
     return StrA::EMPTYSTR;

@@ -44,10 +44,10 @@ bool GN::SharedLib::load( const char * libName )
 
     // Handle libName
     StrA filename;
-    if( path::getExt(libName).empty() )
-        filename = path::toNative( StrA(libName) + SHLIB_EXT );
+    if( extName(libName).empty() )
+        filename = StrA(libName) + SHLIB_EXT;
     else
-        filename = path::toNative( libName );
+        filename = libName;
 
     // load library
     mHandle = SHLIB_LOAD( filename.cptr() );
