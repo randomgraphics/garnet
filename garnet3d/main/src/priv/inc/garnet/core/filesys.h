@@ -44,7 +44,7 @@ namespace GN { namespace fs
         ///     - convert path separators to platform specific format.
         ///     - Remove redundant path separators, such as "c:\\path\" will be
         ///       convert to "c:\path".
-        ///   - covert relative path to absolute path
+        ///   - covert to full path name
         ///   - Resolve embbed environment variable, like this:
         ///     "${windir}/system32" -> "c:\\windows\\system32"
         ///
@@ -86,7 +86,9 @@ namespace GN { namespace fs
     ///     - "app::"     : mapping to application's executable directory
     ///     - "startup::" : mapping to application's startup directory
     ///
-    /// Note that if empty name will be also mapped to "native::" file system.
+    /// \note
+    //      - Empty name will be also mapped to "native::" file system.
+    //      - file system name must be end with "::"
     ///
     //@{
     GN_EXPORT bool registerFileSystem( const StrA & name, FileSystem * fs );

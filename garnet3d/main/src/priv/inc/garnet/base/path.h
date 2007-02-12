@@ -123,6 +123,26 @@ namespace GN
     /// root and child are separated by "::"
     ///
     void splitPath( const StrA & path, StrA & root, StrA & child );
+
+    ///
+    /// get current working directory
+    ///
+    void getCurrentDir( StrA & );
+
+    ///
+    /// get current working directory
+    ///
+    inline StrA getCurrentDir() { StrA s; getCurrentDir(s); return s; }
+
+    ///
+    /// get current driver (for Windows only, return empty string on *nix system)
+    ///
+    void getCurrentDrive( StrA & );
+
+    ///
+    /// get current driver (for Windows only, return empty string on *nix system)
+    ///
+    inline StrA getCurrentDrive() { StrA s; getCurrentDrive(s); return s; }
 }
 
 // *****************************************************************************
