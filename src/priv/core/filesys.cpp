@@ -17,7 +17,6 @@
 #pragma comment( lib, "shlwapi.lib" )
 #endif
 #endif
-#include <direct.h>
 #elif GN_POSIX
 #include <dirent.h>
 #include <unistd.h>
@@ -36,6 +35,18 @@ static Logger * sLogger = getLogger("GN.core.fs::FileSystem");
 //
 //
 // -----------------------------------------------------------------------------
+static bool sNativeExist( const StrA & path )
+{
+    if( isDir(path) ) return true;
+    FILE * fp = fopen( path.cptr(), "r" );
+    if( 0 == fp ) return false;
+    fclose( fp );
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
     DIR * d = opendir( path.cptr() );
@@ -49,19 +60,7 @@ static bool sNativeIsDir( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeIsFile( const StrA & path )
 {
-    return sNativeExist( path ) && !sNativeIsFile( path );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static bool sNativeExist( const StrA & path )
-{
-    if( isDir(path) ) return true;
-    FILE * fp = fopen( path.cptr(), "r" );
-    if( 0 == fp ) return false;
-    fclose( fp );
-    return true;
+    return sNativeExist( path ) && !sNativeIsDir( path );
 }
 
 #endif
@@ -75,60 +74,17 @@ static bool sNativeExist( const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsDir( const StrA & path )
+static bool sNativeExist( const StrA & path )
 {
-#if GN_MSWIN
-#if GN_PC
-    return !!::PathIsDirectoryA( path.cptr() );
-#else
-    WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
-    if( INVALID_HANDLE_VALUE == fh )
-    {
-        return false;
-    }
-    else
-    {
-        ::FindClose( fh );
-        return !!(FILE_ATTRIBUTE_DIRECTORY & wfd.dwFileAttributes);
-    }
-#endif
-#else
-    DIR * d = opendir( path.cptr() );
-    if( 0 == d ) return false;
-    closedir( d );
-    return true;
-#endif
+    return !!::PathFileExistsA( path.cptr() );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeExist( const StrA & path )
+static bool sNativeIsDir( const StrA & path )
 {
-#if GN_MSWIN
-#if GN_PC
-    return !!::PathFileExistsA( path.cptr() );
-#else
-    WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
-    if( INVALID_HANDLE_VALUE == fh )
-    {
-        return false;
-    }
-    else
-    {
-        ::FindClose( fh );
-        return true;
-    }
-#endif
-#else
-    if( sNativeIsDir(path) ) return true;
-    FILE * fp = fopen( path.cptr(), "r" );
-    if( 0 == fp ) return false;
-    fclose( fp );
-    return true;
-#endif
+    return !!::PathIsDirectoryA( path.cptr() );
 }
 
 //
@@ -136,7 +92,7 @@ static bool sNativeExist( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeIsFile( const StrA & path )
 {
-    return sNativeExist( path ) && !sNativeIsFile( path );
+    return sNativeExist( path ) && !sNativeIsDir( path );
 }
 
 #endif
@@ -150,6 +106,24 @@ static bool sNativeIsFile( const StrA & path )
 //
 //
 // -----------------------------------------------------------------------------
+static bool sNativeExist( const StrA & path )
+{
+    WIN32_FIND_DATAA wfd;
+    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
+    if( INVALID_HANDLE_VALUE == fh )
+    {
+        return false;
+    }
+    else
+    {
+        ::FindClose( fh );
+        return true;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sNativeIsDir( const StrA & path )
 {
     WIN32_FIND_DATAA wfd;
@@ -170,25 +144,7 @@ static bool sNativeIsDir( const StrA & path )
 // -----------------------------------------------------------------------------
 static bool sNativeIsFile( const StrA & path )
 {
-    return sNativeExist( path ) && !sNativeIsFile( path );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static bool sNativeExist( const StrA & path )
-{
-    WIN32_FIND_DATAA wfd;
-    HANDLE fh = ::FindFirstFileA( path.cptr(), &wfd );
-    if( INVALID_HANDLE_VALUE == fh )
-    {
-        return false;
-    }
-    else
-    {
-        ::FindClose( fh );
-        return true;
-    }
+    return sNativeExist( path ) && !sNativeIsDir( path );
 }
 
 #endif
@@ -415,25 +371,10 @@ class StartupFileSystem : public fs::FileSystem
 
 public:
 
-    StartupFileSystem( NativeFileSystem & nfs ) : mNativeFs( nfs )
+    StartupFileSystem( NativeFileSystem & nfs )
+        : mNativeFs( nfs )
+        , mRootDir( getCurrentDir() )
     {
-#if GN_XENON
-        return "game:";
-#elif GN_MSWIN
-        char buf[MAX_PATH+1];
-        _getcwd( buf, MAX_PATH );
-        buf[MAX_PATH] = 0;
-        mRootDir = buf;
-        mRootDir.trimRight( '\\' );
-#elif GN_POSIX
-        char buf[PATH_MAX+1];
-        getcwd( buf, PATH_MAX );
-        buf[PATH_MAX] = 0;
-        mRootDir = buf;
-        mRootDir.trimRight( '/' );
-#else
-#error Unknown platform!
-#endif
     }
 
     bool exist( const StrA & path )
@@ -474,6 +415,28 @@ public:
 };
 
 // *****************************************************************************
+// fake file system object
+// *****************************************************************************
+
+class FakeFileSystem : public fs::FileSystem
+{
+public:
+
+    FakeFileSystem()
+    {
+    }
+
+    bool exist( const StrA & ) { return false; }
+    bool isDir( const StrA & ) { return false; }
+    bool isFile( const StrA & ) { return false; }
+    void toNative( StrA & result, const StrA & path ) { result = path; }
+    std::vector<StrA> & glob( std::vector<StrA> & result, const StrA &, const StrA &, bool, bool )
+    {
+        return result;
+    }
+};
+
+// *****************************************************************************
 // File system container
 // *****************************************************************************
 
@@ -484,6 +447,7 @@ struct FileSystemContainer
 
     Container mFileSystems;
 
+    FakeFileSystem    mFakeFs;
     NativeFileSystem  mNativeFs;
     AppFileSystem     mAppFs;
     StartupFileSystem mStartupFs;
@@ -493,9 +457,9 @@ struct FileSystemContainer
         , mStartupFs( mNativeFs )
     {
         // register default file systems
-        registerFs( "native", &mNativeFs );
-        registerFs( "app", &mAppFs );
-        registerFs( "startup", &mStartupFs );
+        registerFs( "native::", &mNativeFs );
+        registerFs( "app::", &mAppFs );
+        registerFs( "startup::", &mStartupFs );
     }
 
     ~FileSystemContainer()
@@ -540,7 +504,7 @@ struct FileSystemContainer
     {
         if( name.empty() ) return &mNativeFs;
         Container::const_iterator i = mFileSystems.find( name );
-        return ( mFileSystems.end() != i ) ? i->second : NULL;
+        return ( mFileSystems.end() != i ) ? i->second : &mFakeFs;
     }
 };
 

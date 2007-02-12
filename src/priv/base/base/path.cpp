@@ -35,11 +35,14 @@ void GN::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
     }
 
     // remove trailing separators.
-    tmp.trimRight( '/' );
-    if( tmp.empty() ) tmp.append( '/' );
+    if( !tmp.empty() )
+    {
+        tmp.trimRight( '/' );
+        if( tmp.empty() ) tmp.append( '/' );
+    }
 
     // make sure no pending path separator
-    GN_ASSERT( tmp.empty() || 1 == tmp.size() || '/' != tmp[0] );
+    GN_ASSERT( tmp.empty() || 1 == tmp.size() || '/' != tmp.last() );
 
     // success
     result = tmp;
@@ -50,9 +53,15 @@ void GN::normalizePathSeparator( GN::StrA & result, const GN::StrA & path )
 // -----------------------------------------------------------------------------
 void GN::parentPath( StrA & result, const StrA & path )
 {
-    normalizePathSeparator( result, path );
-    result.trimRight( '/' );
-    if( result.size() > 1 ) result.popback();
+    struct Local
+    {
+        static bool isPathSeparator( char ch ) { return '/' == ch; }
+    };
+    StrA root, child;
+    splitPath( path, root, child );
+    child.trimRightUntil( Local::isPathSeparator );
+    if( child.size() > 1 ) child.popback();
+    result = root + child;
 }
 
 //
@@ -204,32 +213,90 @@ void GN::joinPath2(
 // -----------------------------------------------------------------------------
 void GN::splitPath( const StrA & path, StrA & root, StrA & child )
 {
-    StrA tmp;
-    normalizePathSeparator( tmp, path );
-
     root.clear();
     child.clear();
 
-    if( tmp.empty() ) return;
+    if( path.empty() ) return;
+    
+    StrA tmpChild;
 
     size_t i = 0;
-    size_t n = tmp.size() - 1;
+    size_t n = path.size() - 1;
+    bool hasroot = false;
     while( i < n )
     {
-        char ch1 = tmp[i];
-        char ch2 = tmp[i+1];
+        char ch1 = path[i];
+        char ch2 = path[i+1];
 
         if( '/' == ch1 )
         {
-            root = "";
-            child = path;
-            return;
+            // found "/" first, no root
+            break;
         }
         else if( ':' == ch1 && ':' == ch2 )
         {
             // found!
             path.subString( root, 0, i+2 );
-            path.subString( child, i+2, 0 );
+            path.subString( tmpChild, i+2, 0 );
+            hasroot = true;
+            break;
         }
+
+        ++i;
     }
+
+    if( hasroot )
+    {
+        normalizePathSeparator( child, tmpChild );
+    }
+    else
+    {
+        normalizePathSeparator( child, path );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::getCurrentDir( StrA & result )
+{
+#if GN_XENON
+    result = "game:";
+#elif GN_MSWIN
+    char buf[MAX_PATH+1];
+    char full[MAX_PATH+1];
+    GetCurrentDirectoryA( MAX_PATH, buf );
+    GetFullPathNameA( buf, MAX_PATH, full, 0 );
+    result = full;
+    result.trimRight( '/' );
+#elif GN_POSIX
+    char buf[PATH_MAX+1];
+    getcwd( buf, PATH_MAX );
+    buf[PATH_MAX] = 0;
+    result = buf;
+    result.trimRight( '/' );
+#else
+#error Unknown platform!
+#endif
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::getCurrentDrive( StrA & result )
+{
+#if GN_XENON
+    result = "";
+#elif GN_MSWIN
+    char buf[MAX_PATH+1];
+    char full[MAX_PATH+1];
+    GetCurrentDirectoryA( MAX_PATH, buf );
+    GetFullPathNameA( buf, MAX_PATH, full, 0 );
+    GN_ASSERT( ':' == full[1] );
+    result.assign( full, 2 );
+#elif GN_POSIX
+    return "";
+#else
+#error Unknown platform!
+#endif
 }
