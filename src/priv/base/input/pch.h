@@ -7,7 +7,6 @@
 // *****************************************************************************
 
 #include "garnet/GNbase.h"
-#include "garnet/GNcore.h"
 #include "garnet/GNinput.h"
 
 #if GN_XENON

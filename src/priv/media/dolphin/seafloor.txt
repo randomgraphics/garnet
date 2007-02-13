@@ -1,7 +1,0 @@
-numvertices=1490
-numfaces=2830
-streamformat={
-	float3 pos;
-	float3 normal;
-	float2 tex0;
-}

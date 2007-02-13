@@ -122,11 +122,17 @@ namespace GN
         ///
         const StrA & name() const { return mName; }
 
+        ///
+        /// dtor
+        ///
+        virtual ~File() {}
+
     protected :
 
-        // ctor / dtor
-        File()          { mCaps.u8 = 0; }
-        virtual ~File() {}
+        ///
+        /// protected ctor
+        ///
+        File() { mCaps.u8 = 0; }
 
         ///
         /// Set file name

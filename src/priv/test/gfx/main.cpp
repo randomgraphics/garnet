@@ -98,7 +98,7 @@ public:
         boxdesc.subsets[0].effect = "effect/cube.xml";
         boxdesc.subsets[0].mesh   = "mesh/cube.fatmesh";
         boxdesc.subsets[0].textures["cube"] = "texture/cube1.dds";
-        if( !box.init( boxdesc, &rm.meshes, &rm.effects, &rm.textures ) ) return false;
+        if( !box.init( boxdesc, &rm.fatMeshes, &rm.effects, &rm.textures ) ) return false;
 
         // get texture handle
         tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );

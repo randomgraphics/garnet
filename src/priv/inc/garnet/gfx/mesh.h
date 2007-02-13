@@ -38,12 +38,19 @@ namespace GN { namespace gfx
         //@}
 
         ///
-        /// clear to empty
+        /// clear to empty mesh
         ///
         void clear()
         {
+            vtxfmt = 0;
             vtxbufs.clear();
             idxbuf.clear();
+            primType = POINT_LIST;
+            primCount = 0;
+            startVtx = 0;
+            minVtxIdx = 0;
+            numVtx = 0;
+            startIdx = 0;
         }
 
         ///
@@ -55,6 +62,17 @@ namespace GN { namespace gfx
             for( size_t i = 0; i < vtxbufs.size(); ++i )
                 context.setVtxBuf( i, vtxbufs[i].buffer, vtxbufs[i].offset, vtxbufs[i].stride );
             if( idxbuf ) context.setIdxBuf( idxbuf );
+        }
+
+        ///
+        /// update renderer context
+        ///
+        void updateContext( Renderer & r ) const
+        {
+            r.setVtxFmt( vtxfmt );
+            for( size_t i = 0; i < vtxbufs.size(); ++i )
+                r.setVtxBuf( i, vtxbufs[i].buffer, vtxbufs[i].offset, vtxbufs[i].stride );
+            if( idxbuf ) r.setIdxBuf( idxbuf );
         }
 
         ///
@@ -76,6 +94,11 @@ namespace GN { namespace gfx
         /// load from XML
         ///
         bool loadFromXml( const XmlNode * rootnode, const StrA & meshdir, Renderer & r );
+
+        ///
+        /// load from XML file
+        ///
+        bool loadFromXmlFile( File &, const StrA & meshdir, Renderer & r );
     };
 }}
 
