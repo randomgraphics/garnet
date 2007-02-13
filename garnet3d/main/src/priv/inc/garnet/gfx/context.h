@@ -213,7 +213,8 @@ namespace GN { namespace gfx
         struct VtxBufDesc
         {
             const VtxBuf * buffer; ///< buffer pointer
-            size_t         stride; ///< buffer stride
+            size_t         offset; ///< byte offset of the first vertex in buffer.
+            size_t         stride; ///< vertex stride in bytes
         };
 
         // context flags
@@ -461,7 +462,7 @@ namespace GN { namespace gfx
         ///
         /// Set vertex buffer
         ///
-        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t offset, size_t stride );
 
         ///
         /// Set index buffer.

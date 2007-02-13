@@ -98,15 +98,13 @@ void GN::gfx::OGLVtxFmt::bind() const
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::OGLVtxFmt::bindBuffer(
-    size_t index, const UInt8 * buf, size_t startVtx, size_t stride ) const
+    size_t index, const UInt8 * buf, size_t stride ) const
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( index < mStreamBindings.size() );
 
     const StreamBinding & sb = mStreamBindings[index];
-
-    buf += stride * startVtx;
 
     for( size_t i = 0; i < sb.size(); ++i )
     {
