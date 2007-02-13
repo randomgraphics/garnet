@@ -189,13 +189,14 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride )
+    inline void RendererContext::setVtxBuf( size_t index, const VtxBuf * buffer, size_t offset, size_t stride )
     {
         GN_ASSERT( index < (size_t)MAX_VERTEX_ATTRIBUTES );
         if( !flags.vtxBufs || index >= numVtxBufs )
         {
             if( index >= numVtxBufs && NULL == buffer ) return;
             vtxBufs[index].buffer = buffer;
+            vtxBufs[index].offset = offset;
             vtxBufs[index].stride = stride;
             numVtxBufs = index + 1;
             flags.vtxBufs = 1;
@@ -207,6 +208,7 @@ namespace GN { namespace gfx
         else
         {
             vtxBufs[index].buffer = buffer;
+            vtxBufs[index].offset = offset;
             vtxBufs[index].stride = stride;
         }
     }

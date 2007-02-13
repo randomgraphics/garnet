@@ -235,9 +235,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride )
+    inline void Renderer::setVtxBuf( size_t index, const VtxBuf * buffer, size_t offset, size_t stride )
     {
-        _GNGFX_CONTEXT_UPDATE( setVtxBuf( index, buffer, stride ) );
+        _GNGFX_CONTEXT_UPDATE( setVtxBuf( index, buffer, offset, stride ) );
     }
 
     //

@@ -62,7 +62,7 @@ namespace GN { namespace gfx
         ///
         /// Bind the buffer to device
         ///
-        void bindBuffer( size_t index, const UInt8 * buf, size_t startVtx, size_t stride ) const;
+        void bindBuffer( size_t index, const UInt8 * buf, size_t stride ) const;
 
         // ********************************
         // private variables

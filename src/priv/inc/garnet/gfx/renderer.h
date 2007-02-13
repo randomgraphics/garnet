@@ -856,7 +856,7 @@ namespace GN { namespace gfx
         inline void setTexture( size_t stage, const Texture * tex );
         inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
         inline void setVtxFmt( VtxFmtHandle );
-        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t stride );
+        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t offset, size_t stride );
         inline void setIdxBuf( const IdxBuf * );
 
         //@}

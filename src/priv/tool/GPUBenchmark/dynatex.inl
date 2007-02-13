@@ -249,7 +249,7 @@ public:
         //mContext.setRenderState( RS_DEPTH_TEST, 0 );
         //mContext.setRenderState( RS_DEPTH_WRITE, 0 );
         mContext.setVtxFmt( mGeometry.vtxfmt );
-        mContext.setVtxBuf( 0, mGeometry.vtxbuf, sizeof(ManyManyQuads::Vertex) );
+        mContext.setVtxBuf( 0, mGeometry.vtxbuf, 0, sizeof(ManyManyQuads::Vertex) );
         mContext.setIdxBuf( mGeometry.idxbuf );
 
         // success

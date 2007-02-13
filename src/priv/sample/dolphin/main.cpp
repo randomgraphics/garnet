@@ -228,7 +228,7 @@ public:
         // render seafloor
         r.contextUpdateBegin();
             r.setVtxFmt( mSeafloorDecl );
-            r.setVtxBuf( 0, mSeafloorVb, VERTEX_STRIDE );
+            r.setVtxBuf( 0, mSeafloorVb, 0, VERTEX_STRIDE );
             r.setIdxBuf( mSeafloorIb );
         r.contextUpdateEnd();
         GN::app::SampleResourceManager & rm = mApp.getResMgr();
@@ -244,9 +244,9 @@ public:
         // render dolphin
         r.contextUpdateBegin();
             r.setVtxFmt( mDolphinDecl );
-            r.setVtxBuf( 0, mDolphinVb[0], VERTEX_STRIDE );
-            r.setVtxBuf( 1, mDolphinVb[1], VERTEX_STRIDE );
-            r.setVtxBuf( 2, mDolphinVb[2], VERTEX_STRIDE );
+            r.setVtxBuf( 0, mDolphinVb[0], 0, VERTEX_STRIDE );
+            r.setVtxBuf( 1, mDolphinVb[1], 0, VERTEX_STRIDE );
+            r.setVtxBuf( 2, mDolphinVb[2], 0, VERTEX_STRIDE );
             r.setIdxBuf( mDolphinIb );
         r.contextUpdateEnd();
         eff = rm.effects.getResource( mDolphinEff );

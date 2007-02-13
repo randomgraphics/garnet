@@ -674,7 +674,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
                 GN_DX9_CHECK( mDevice->SetStreamSource(
                     i,
                     safeCast<const D3D9VtxBuf*>(vb.buffer)->getD3DVb(),
-                    0,
+                    (UINT)vb.offset,
                     (UINT)vb.stride ) );
             }
         }

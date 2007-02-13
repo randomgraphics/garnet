@@ -1,26 +1,29 @@
 - 程序中标注TODO的地方
 
-- more todo:
-  - OO path solution: root object
-  - effect referencing
-  - renderable object: composed with fatmesh, effect and textures
-
 - to make a simple game, like terris clone:
-  - load effect/shader from xml file
-    - almost done. need UT.
+  - load effect/shader from xml file: done
   - load mesh
   - simple GUI
   - task manager/coordinator
 
 - p1
+  - refactor high-level texture/effect/mesh resource management
+    - on the top: the renderable class
+      - consist of effect, meshs, textures and uniforms.
+      - rendering code should be as simple as calling renderable::draw()
+    - resource ID is used only by renderable class, all other classes should use
+      pointer directly.
+    - support uniform sharing: think about DX10 constant buffer.
+    - support template and referencing in effect and renderable XML file.
+    - support external shader file in effect XML definition.
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net
-  - multi-thread wrapper for platform-independency
   - try multi-thread architect
+    - multi-thread wrapper for platform-independency
     - separate sim() and render() loop
     - File loader in another thread.
-  - GFX system
+  - GFX renderer
     - double-check matrix major confusion.
     - set sampling parameters (such as filters wrapping) at binding time
     - render target management
@@ -37,6 +40,7 @@
   - refine sigslot class to allow any type of functor
 
 - p2
+  - skin mesh test case: porting DXSDK sample.
   - UT
     - array classes
     - LRU list in resource manager

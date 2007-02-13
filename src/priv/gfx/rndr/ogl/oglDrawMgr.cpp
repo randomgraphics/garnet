@@ -81,11 +81,14 @@ static inline void sApplyVtxBuf(
     {
         const RendererContext::VtxBufDesc & vbd = vtxBufs[i];
 
-        vtxFmt.bindBuffer(
-            i,
-            vbd.buffer ? safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData() : 0,
-            startVtx,
-            vbd.stride );
+        if( vbd.buffer )
+        {
+            const UInt8 * data = safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData();
+            vtxFmt.bindBuffer(
+                i,
+                data + vbd.offset + startVtx * vbd.stride,
+                vbd.stride );
+        }
     }
 
     GN_UNGUARD_SLOW;
@@ -392,7 +395,6 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const UInt8* )vertexData,
-        0, // startVtx,
         strideInBytes );
 
 #if GN_DEBUG_BUILD
@@ -467,7 +469,6 @@ void GN::gfx::OGLRenderer::drawUp(
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const UInt8* )vertexData,
-        0, // startVtx,
         strideInBytes );
 
     if( GLEW_EXT_compiled_vertex_array )
