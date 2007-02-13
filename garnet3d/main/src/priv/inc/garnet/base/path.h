@@ -75,7 +75,6 @@ namespace GN
     ///
     inline StrA dirName( const StrA & path ) { return parentPath( path ); }
 
-
     ///
     /// Convert a path to relative path from a base dir.
     ///
@@ -118,11 +117,11 @@ namespace GN
     }
 
     ///
-    /// split path to 2 parts: root and child.
+    /// split path to 2 parts: fs and local path
     ///
-    /// root and child are separated by "::"
+    /// fs and local path are separated by "::"
     ///
-    void splitPath( const StrA & path, StrA & root, StrA & child );
+    void splitPath( const StrA & path, StrA & fs, StrA & local );
 
     ///
     /// get current working directory

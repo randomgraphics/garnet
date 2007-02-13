@@ -57,22 +57,22 @@ namespace GN { namespace gfx
         ///
         struct AttribDesc
         {
+            UInt8  stream;   ///< stream index.
+            UInt16 offset;   ///< offset in stream.
             VtxSem semantic; ///< FORCC encoded attribute sementic.
                              ///< Could be one of standard semantics, or any user-defined value.
                              ///< Note that semantic must be unique in descriptor.
             ClrFmt format;   ///< attribute format (FMT_XXX).
-            UInt16 offset;   ///< offset in stream.
-            UInt8  stream;   ///< stream index.
 
             ///
             /// set values in attribute descriptor
             ///
             void set( size_t stream_, size_t offset_, VtxSem sem_, ClrFmt fmt_ )
             {
-                semantic = sem_;
-                format   = fmt_;
                 stream   = (UInt8)stream_;
                 offset   = (UInt16)offset_;
+                semantic = sem_;
+                format   = fmt_;
             }
         };
 
@@ -130,6 +130,11 @@ namespace GN { namespace gfx
         /// Calculate stream stride
         ///
         size_t calcStreamStride( size_t );
+
+        ///
+        /// load vertex format from XML
+        ///
+        bool loadFromXml( const XmlNode * root );
 
         ///
         /// µÈÖµÅÐ¶Ï

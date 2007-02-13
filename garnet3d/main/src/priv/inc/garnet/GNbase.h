@@ -97,6 +97,9 @@ namespace GN
 // light-weight performance profiler
 #include "base/profiler.h"
 
+// XML parser
+#include "base/xml.h"
+
 // *****************************************************************************
 //                           END of GNbase.h
 // *****************************************************************************

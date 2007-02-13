@@ -171,3 +171,132 @@ size_t GN::gfx::VtxFmtDesc::calcStreamStride( size_t idx )
     }
     return s;
 }
+
+// *****************************************************************************
+// XML loader
+// *****************************************************************************
+
+/*
+
+    XML definition is like this:
+
+    <xml version="1.0" standalone="yes">
+    <vtxfmt>
+    	<attrib
+    		stream   = "0"
+    		offset   = "0"
+    		semantic = "POS0"
+    		format   = "FMT_FLOAT3"
+    	/>
+    	<attrib
+    		stream   = "0"
+    		offset   = "12"
+    		semantic = "NRML"
+    		format   = "FMT_FLOAT3"
+    	/>
+    	<attrib
+    		stream   = "0"
+    		offset   = "24"
+    		semantic = "TEX0"
+    		format   = "FMT_FLOAT2"
+    	/>
+    </vtxfmt>
+    </xml>
+*/
+
+//
+// post error message
+// -----------------------------------------------------------------------------
+static void sPostError( const XmlNode & node, const StrA & msg )
+{
+    GN_UNUSED_PARAM( node );
+    GN_ERROR(sLogger)( "%s", msg.cptr() );
+}
+
+//
+// get integer value of specific attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static bool sGetIntAttrib( const XmlElement & node, const char * attribName, T & result )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if ( !a || !str2Int<T>( result, a->value.cptr() ) )
+    {
+        sPostError( node, strFormat( "attribute '%s' is missing!" ) );
+        return false;
+    }
+
+    // success
+    return true;
+}
+
+//
+// parse vertex attribute
+// -----------------------------------------------------------------------------
+static bool sParseAttribute( VtxFmtDesc & desc, const XmlElement & node )
+{
+    size_t stream;
+    size_t offset;
+    VtxSem semantic;
+    ClrFmt format;
+
+    // stream
+    if( !sGetIntAttrib( node, "stream", stream ) ) return false;
+
+    // offset
+    if( !sGetIntAttrib( node, "offset", offset ) ) return false;
+
+    // semantic
+    const XmlAttrib * a = node.findAttrib( "semantic" );
+    if( !a ) { sPostError( node, "semantic is missing" ); return false; }
+    if( 4 != a->value.size() )
+    {
+        sPostError( node, "semantic must be FOURCC." );
+        return false;
+    }
+    semantic.fromStr( a->value.cptr() );
+
+    // format
+    a = node.findAttrib( "format" );
+    if( !a ) { sPostError( node, "format is missing" ); return false; }
+    format = str2ClrFmt( a->name );
+    if( FMT_INVALID == format )
+    {
+        sPostError( node, strFormat( "invalid format : %s", a->name.cptr() ) );
+        return false;
+    }
+
+    return desc.addAttrib( stream, offset, semantic, format );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::VtxFmtDesc::loadFromXml( const XmlNode * root )
+{
+    if( 0 == root )
+    {
+        GN_ERROR(sLogger)( "NULL parameter!" );
+        return false;
+    }
+
+    const XmlElement * e = root->toElement();
+    if( 0 == e || e->name != "vtxfmt" )
+    {
+        GN_ERROR(sLogger)( "root node must be \"<vtxfmt>\"." );
+        return false;
+    }
+
+    clear();
+
+    for( const XmlNode * n = e->child; n; n = n->sibling )
+    {
+        e = n->toElement();
+        if( !e ) continue;
+
+        if( "attrib" == e->name ) sParseAttribute( *this, *e );
+        else sPostError( *e, strFormat( "Unknown node '%s'. Ignored", e->name.cptr() ) );
+    }
+
+    return true;
+}

@@ -63,6 +63,14 @@ static bool sNativeIsFile( const StrA & path )
     return sNativeExist( path ) && !sNativeIsDir( path );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static bool sIsAbsPath( const StrA & path )
+{
+    return !path.empty() && '/' == path[0];
+}
+
 #endif
 
 // *****************************************************************************
@@ -93,6 +101,16 @@ static bool sNativeIsDir( const StrA & path )
 static bool sNativeIsFile( const StrA & path )
 {
     return sNativeExist( path ) && !sNativeIsDir( path );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sIsAbsPath( const StrA & path )
+{
+    return
+        ( path.size() > 0 && '/' == path[0] ) ||
+        ( path.size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] )
 }
 
 #endif
@@ -147,6 +165,17 @@ static bool sNativeIsFile( const StrA & path )
     return sNativeExist( path ) && !sNativeIsDir( path );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static bool sIsAbsPath( const StrA & path )
+{
+    return
+        ( path.size() > 0 && '/' == path[0] ) ||
+        ( path.size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] ) ||
+        ( path.size() > 4 && "game:" == path.subString( 0, 5 ) );
+}
+
 #endif
 
 // *****************************************************************************
@@ -170,6 +199,11 @@ public:
     bool isFile( const StrA & path )
     {
         return sNativeIsFile( fs::FileSystem::toNative( path ) );
+    }
+
+    bool isAbsPath( const StrA & path )
+    {
+        return sIsAbsPath( path );
     }
 
     void toNative( StrA & result, const StrA & path )
@@ -235,6 +269,13 @@ public:
 
         GN_UNGUARD;
     }
+
+     File * openFile( const StrA & name, const StrA & mode )
+     {
+        AutoObjPtr<File> fp( new DiskFile );
+        if( !fp->open( name, mode ) ) return false;
+        return fp.detach();
+     }
 
 private:
 
@@ -338,6 +379,11 @@ public:
         return mNativeFs.isFile( joinPath( mRootDir, path ) );
     }
 
+    bool isAbsPath( const StrA & path )
+    {
+        return !path.empty() && '/' == path[0];
+    }
+
     void toNative( StrA & result, const StrA & path )
     {
         mNativeFs.toNative( result, joinPath( mRootDir, path ) );
@@ -358,6 +404,11 @@ public:
             recursive,
             useRegex );
     }
+
+     File * openFile( const StrA & path, const StrA & mode )
+     {
+        return mNativeFs.openFile( joinPath( mRootDir, path ), mode );
+     }
 };
 
 // *****************************************************************************
@@ -392,6 +443,11 @@ public:
         return mNativeFs.isFile( joinPath( mRootDir, path ) );
     }
 
+    bool isAbsPath( const StrA & path )
+    {
+        return !path.empty() && '/' == path[0];
+    }
+
     void toNative( StrA & result, const StrA & path )
     {
         mNativeFs.toNative( result, joinPath( mRootDir, path ) );
@@ -412,6 +468,11 @@ public:
             recursive,
             useRegex );
     }
+
+     File * openFile( const StrA & path, const StrA & mode )
+     {
+        return mNativeFs.openFile( joinPath( mRootDir, path ), mode );
+     }
 };
 
 // *****************************************************************************
@@ -518,6 +579,37 @@ FileSystemContainer & sGetFileSystemContainer()
 // Public functions
 // *****************************************************************************
 
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
+{
+    // shortcut for empty path
+    if( base.empty() || relpath.empty() )
+    {
+        result = relpath;
+        return;
+    }
+
+    StrA basefs, basec, relfs, relc;
+    splitPath( base, basefs, basec );
+    splitPath( relpath, relfs, relc );
+
+    if( basefs != relfs )
+    {
+        result = relpath;
+        return;
+    }
+
+    if( getFileSystem(relfs)->isAbsPath(relc) )
+    {
+        result = relpath;
+        return;
+    }
+
+    joinPath( result, base, relpath );
+}
 
 //
 //

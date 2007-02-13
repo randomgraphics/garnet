@@ -19,7 +19,7 @@ namespace GN
 namespace GN { namespace fs
 {
     ///
-    /// root path class
+    /// Abstract file system class
     ///
     struct FileSystem : public NoCopy
     {
@@ -37,6 +37,11 @@ namespace GN { namespace fs
         /// if the path points to a file
         ///
         virtual bool isFile( const StrA & path ) = 0;
+
+        ///
+        /// if the path is absolute path
+        ///
+        virtual bool isAbsPath( const StrA & path ) = 0;
 
         ///
         /// Conver path to platform native format.
@@ -77,12 +82,17 @@ namespace GN { namespace fs
             const StrA & pattern,
             bool         recursive,
             bool         useRegex ) = 0;
+
+        ///
+        /// open file. Note that meaning of mode is identical with standard fopen().
+        ///
+        virtual File * openFile( const StrA & path, const StrA & mode ) = 0;
     };
 
     /// \name managing file system objects
     ///
     /// there are 3 default file system objects:
-    ///     - "native::"  : mapping to root of native file system.
+    ///     - "native::"  : mapping to sys of native file system.
     ///     - "app::"     : mapping to application's executable directory
     ///     - "startup::" : mapping to application's startup directory
     ///
@@ -101,37 +111,51 @@ namespace GN { namespace fs
 
     inline bool exist( const StrA & path )
     {
-        StrA root, child;
-        splitPath( path, root, child );
-        return getFileSystem(root)->exist( child );
+        StrA sys, child;
+        splitPath( path, sys, child );
+        return getFileSystem(sys)->exist( child );
     }
 
     inline bool isDir( const StrA & path )
     {
-        StrA root, child;
-        splitPath( path, root, child );
-        return getFileSystem(root)->isDir( child );
+        StrA sys, child;
+        splitPath( path, sys, child );
+        return getFileSystem(sys)->isDir( child );
     }
 
     inline bool isFile( const StrA & path )
     {
-        StrA root, child;
-        splitPath( path, root, child );
-        return getFileSystem(root)->isFile( child );
+        StrA sys, child;
+        splitPath( path, sys, child );
+        return getFileSystem(sys)->isFile( child );
     }
 
     inline void toNative( StrA & result, const StrA & path )
     {
-        StrA root, child;
-        splitPath( path, root, child );
-        getFileSystem(root)->toNative( result, child );
+        StrA sys, child;
+        splitPath( path, sys, child );
+        getFileSystem(sys)->toNative( result, child );
     }
 
     inline StrA toNative( const StrA & path )
     {
-        StrA root, child;
-        splitPath( path, root, child );
-        return getFileSystem(root)->toNative( child );
+        StrA sys, child;
+        splitPath( path, sys, child );
+        return getFileSystem(sys)->toNative( child );
+    }
+
+    inline bool isAbsPath( const StrA & path )
+    {
+        StrA sys, child;
+        splitPath( path, sys, child );
+        return getFileSystem(sys)->isAbsPath( child );
+    }
+
+    inline File * openFile( const StrA & path, const StrA & mode )
+    {
+        StrA sys, child;
+        splitPath( path, sys, child );
+        return getFileSystem(sys)->openFile( child, mode );
     }
 
     inline std::vector<StrA> & glob(
@@ -141,15 +165,35 @@ namespace GN { namespace fs
         bool         recursive,
         bool         useRegex )
     {
-        StrA root, child;
-        splitPath( dirName, root, child );
-        return getFileSystem(root)->glob(
+        StrA sys, child;
+        splitPath( dirName, sys, child );
+        return getFileSystem(sys)->glob(
             result,
             child,
             pattern,
             recursive,
             useRegex );
     }
+
+    ///
+    /// resolve relative path to absolute path.
+    ///
+    /// Note that resolve will copy original relpath to result, if any of these is true:
+    ///     - base and/or relpath are empty
+    ///     - base and relpath belongs to different file system.
+    ///     - relpath is already an absolute path, like "c:/haha.txt".
+    ///
+    void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
+
+    ///
+    /// resolve relative path to absolute path.
+    ///
+    inline StrA resolvePath( const StrA & base, const StrA & relpath );
+    {
+        StrA r;
+        resolvePath( r, base, relpath );
+        return r;
+    };
 }}
 
 // *****************************************************************************

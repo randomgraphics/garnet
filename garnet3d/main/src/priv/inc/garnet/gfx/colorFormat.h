@@ -191,6 +191,18 @@ namespace GN { namespace gfx
     inline const char * clrFmt2Str( ClrFmt fmt ) { return getClrFmtDesc(fmt).name; }
 
     ///
+    /// convert string to color format tag. Return FMT_INVALID, if failed.
+    ///
+    inline ClrFmt str2ClrFmt( const StrA & s )
+    {
+        for( size_t i = 0; i <= NUM_CLRFMTS; ++i )
+        {
+            if( getClrFmtDesc( (ClrFmt)i ).name == s ) return (ClrFmt) i;
+        }
+        return FMT_INVALID;
+    }
+
+    ///
     /// compose RGBA32 color value from 4 unsigned bytes.
     ///
     GN_FORCE_INLINE UInt32 ubyte4ToRGBA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
