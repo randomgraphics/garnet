@@ -192,8 +192,8 @@ namespace GN
         template<class T> struct PooledNode : public T {};
         struct PooledAttrib : public XmlAttrib {};
 
-        std::vector<XmlNode*> mNodes;
-        std::vector<PooledAttrib*> mAttribs;
+        std::vector<XmlNode*>     mNodes;
+        std::vector<PooledAttrib> mAttribs;
 
     public:
 
@@ -223,6 +223,11 @@ namespace GN
         bool writeToFile( File & file, const XmlNode & root, bool compact );
 
         ///
+        /// These 2 methhods are for internal use only. Do _NOT_ use it in your own code.
+        ///
+        //@{
+
+        ///
         /// Create new node. Nodes are created in pooled memory. No need
         /// to release them. They will be release automatically, when the
         /// XML processer is destroied or releaseNodesAndAttribs() is called.
@@ -234,6 +239,10 @@ namespace GN
         /// just like XmlNode. 
         ///
         XmlAttrib * createAttrib();
+
+        //@}
+
+    private:
 
         ///
         /// Release all attributes and nodes

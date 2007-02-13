@@ -524,9 +524,8 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
 // -----------------------------------------------------------------------------
 GN::XmlAttrib * GN::XmlDocument::createAttrib()
 {
-    PooledAttrib * p = new PooledAttrib;
-    mAttribs.push_back( p );
-    return p;
+    mAttribs.resize( mAttribs.size() + 1 );
+    return &mAttribs.back();
 }
 
 //
@@ -539,7 +538,6 @@ void GN::XmlDocument::releaseAllNodesAndAttribs()
     for( size_t i = 0; i < mNodes.size(); ++i ) delete mNodes[i];
     mNodes.clear();
 
-    for( size_t i = 0; i < mAttribs.size(); ++i ) delete mAttribs[i];
     mAttribs.clear();
 
     GN_UNGUARD;
