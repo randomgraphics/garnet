@@ -364,7 +364,7 @@ namespace GN
         /// Searches through a string for the first character that matches users predication
         ///
         template<typename PRED>
-        size_t findFirstOf( const PRED & pred, size_t offset = 0, size_t count = 0 ) const
+        size_t findFirstOf( PRED pred, size_t offset = 0, size_t count = 0 ) const
         {
             if( offset >= mCount ) return NOT_FOUND;
             if( 0 == count ) count = mCount;
@@ -648,7 +648,7 @@ namespace GN
         /// Trim right characters until meet the predication condition.
         ///
         template<typename PRED>
-        void trimRightUntil( const PRED & pred )
+        void trimRightUntil( PRED pred )
         {
             if( 0 == mCount ) return;
             CharType * p = mPtr + mCount - 1;

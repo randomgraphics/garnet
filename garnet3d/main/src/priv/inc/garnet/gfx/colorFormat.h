@@ -122,7 +122,7 @@ namespace GN { namespace gfx
     union ChannelDesc
     {
         UInt32 u32; ///< channel description as unsigned 32-bit integer
-        SInt32  i32; ///< channel description as signed 32-bit integer
+        SInt32 i32; ///< channel description as signed 32-bit integer
         struct
         {
             unsigned int shift   : 8; ///< channel shift
@@ -145,16 +145,16 @@ namespace GN { namespace gfx
     struct ClrFmtDesc
     {
         const char * name;          ///< format name
-        UInt8      bits;          ///< bits per pixel
-        UInt8      blockWidth;    ///< block width
+        UInt8        bits;          ///< bits per pixel
+        UInt8        blockWidth;    ///< block width
                                     ///< 1 for non-compressed format,
                                     ///< 4 for DXT format
-        UInt8      blockHeight;   ///< block width
+        UInt8        blockHeight;   ///< block width
                                     ///< 1 for non-compressed format,
                                     ///< 4 for DXT format
         union
         {
-            UInt32 swizzle;       ///< Swizzle. Ignored for compressed format.
+            UInt32   swizzle;       ///< Swizzle. Ignored for compressed format.
             struct
             {
                 char swizzle_x;     ///< Swizzle X. One of 'R', 'G', 'B', 'A', '0' or '1'.
@@ -164,14 +164,14 @@ namespace GN { namespace gfx
             };
         };
 
-        UInt8      numChannels;   ///< 0 means compressed format
+        UInt8        numChannels;   ///< 0 means compressed format
         ChannelDesc  channels[4];   ///< valid when numChannels > 0
     };
 
     /// \cond NEVER
     namespace detail
     {
-        const ClrFmtDesc * sGenerateClrFmtDescTable();
+        const ClrFmtDesc * generateClrFmtDescTable();
     }
     /// \endcond
 
@@ -180,7 +180,7 @@ namespace GN { namespace gfx
     ///
     inline const ClrFmtDesc & getClrFmtDesc( ClrFmt fmt )
     {
-        static const ClrFmtDesc * const sTable = detail::sGenerateClrFmtDescTable();
+        static const ClrFmtDesc * const sTable = detail::generateClrFmtDescTable();
         if( 0 <= fmt && fmt <= NUM_CLRFMTS ) return sTable[fmt];
         else return sTable[FMT_INVALID];
     }
@@ -193,14 +193,7 @@ namespace GN { namespace gfx
     ///
     /// convert string to color format tag. Return FMT_INVALID, if failed.
     ///
-    inline ClrFmt str2ClrFmt( const StrA & s )
-    {
-        for( size_t i = 0; i <= NUM_CLRFMTS; ++i )
-        {
-            if( getClrFmtDesc( (ClrFmt)i ).name == s ) return (ClrFmt) i;
-        }
-        return FMT_INVALID;
-    }
+    ClrFmt str2ClrFmt( const StrA & );
 
     ///
     /// compose RGBA32 color value from 4 unsigned bytes.

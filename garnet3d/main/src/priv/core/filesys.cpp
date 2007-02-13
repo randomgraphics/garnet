@@ -110,7 +110,7 @@ static bool sIsAbsPath( const StrA & path )
 {
     return
         ( path.size() > 0 && '/' == path[0] ) ||
-        ( path.size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] )
+        ( path.size() > 1 && ( 'a' <= path[0] && path[0] <= 'z' || 'A' <= path[0] && path[0] <= 'Z' ) && ':' == path[1] );
 }
 
 #endif
@@ -272,8 +272,10 @@ public:
 
      File * openFile( const StrA & name, const StrA & mode )
      {
-        AutoObjPtr<File> fp( new DiskFile );
-        if( !fp->open( name, mode ) ) return false;
+        StrA nativeName;
+        toNative( nativeName, name );
+        AutoObjPtr<DiskFile> fp( new DiskFile );
+        if( !fp->open( nativeName, mode ) ) return false;
         return fp.detach();
      }
 
@@ -491,10 +493,12 @@ public:
     bool isDir( const StrA & ) { return false; }
     bool isFile( const StrA & ) { return false; }
     void toNative( StrA & result, const StrA & path ) { result = path; }
+    bool isAbsPath( const StrA & ) { return true; }
     std::vector<StrA> & glob( std::vector<StrA> & result, const StrA &, const StrA &, bool, bool )
     {
         return result;
     }
+    File * openFile( const StrA &, const StrA & ) { return 0; }
 };
 
 // *****************************************************************************
@@ -579,11 +583,34 @@ FileSystemContainer & sGetFileSystemContainer()
 // Public functions
 // *****************************************************************************
 
+//
+//
+// -----------------------------------------------------------------------------
+GN_EXPORT bool fs::registerFileSystem( const StrA & name, FileSystem * root )
+{
+    return sGetFileSystemContainer().registerFs( name, root );
+}
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
+GN_EXPORT void fs::UnregisterFileSystem( const StrA & name )
+{
+    sGetFileSystemContainer().UnregisterFs( name );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_EXPORT fs::FileSystem * fs::getFileSystem( const StrA & name )
+{
+    return sGetFileSystemContainer().getFs( name );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
 {
     // shortcut for empty path
     if( base.empty() || relpath.empty() )
@@ -608,29 +635,5 @@ void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath
         return;
     }
 
-    joinPath( result, base, relpath );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_EXPORT bool fs::registerFileSystem( const StrA & name, FileSystem * root )
-{
-    return sGetFileSystemContainer().registerFs( name, root );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_EXPORT void fs::UnregisterFileSystem( const StrA & name )
-{
-    sGetFileSystemContainer().UnregisterFs( name );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN_EXPORT fs::FileSystem * fs::getFileSystem( const StrA & name )
-{
-    return sGetFileSystemContainer().getFs( name );
+    joinPath2( result, base, relpath );
 }

@@ -106,7 +106,27 @@ namespace GN { namespace fs
     GN_EXPORT FileSystem * getFileSystem( const StrA & name );
     //@}
 
-    /// \name path utilities. See FileSystem methods for details.
+    ///
+    /// resolve relative path to absolute path.
+    ///
+    /// Note that resolve will copy original relpath to result, if any of these is true:
+    ///     - base and/or relpath are empty
+    ///     - base and relpath belongs to different file system.
+    ///     - relpath is already an absolute path, like "c:/haha.txt".
+    ///
+    GN_EXPORT void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
+
+    ///
+    /// resolve relative path to absolute path.
+    ///
+    inline StrA resolvePath( const StrA & base, const StrA & relpath )
+    {
+        StrA r;
+        resolvePath( r, base, relpath );
+        return r;
+    };
+
+    /// \name FileSystem method wrappers. See FileSystem methods for details.
     //@{
 
     inline bool exist( const StrA & path )
@@ -175,25 +195,7 @@ namespace GN { namespace fs
             useRegex );
     }
 
-    ///
-    /// resolve relative path to absolute path.
-    ///
-    /// Note that resolve will copy original relpath to result, if any of these is true:
-    ///     - base and/or relpath are empty
-    ///     - base and relpath belongs to different file system.
-    ///     - relpath is already an absolute path, like "c:/haha.txt".
-    ///
-    void resolvePath( StrA & result, const StrA & base, const StrA & relpath );
-
-    ///
-    /// resolve relative path to absolute path.
-    ///
-    inline StrA resolvePath( const StrA & base, const StrA & relpath );
-    {
-        StrA r;
-        resolvePath( r, base, relpath );
-        return r;
-    };
+    //@}
 }}
 
 // *****************************************************************************

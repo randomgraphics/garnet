@@ -1,9 +1,13 @@
 #include "pch.h"
 
+// *****************************************************************************
+// public functions
+// *****************************************************************************
+
 //
 //
-// -------------------------------------------------------------------------
-const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
+// -----------------------------------------------------------------------------
+const GN::gfx::ClrFmtDesc * GN::gfx::detail::generateClrFmtDescTable()
 {
     GN_GUARD;
 
@@ -123,4 +127,101 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::sGenerateClrFmtDescTable()
     return sGenerator.table;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ClrFmt GN::gfx::str2ClrFmt( const StrA & s )
+{
+    for( size_t i = 0; i <= NUM_CLRFMTS; ++i )
+    {
+        if( getClrFmtDesc( (ClrFmt)i ).name == s ) return (ClrFmt) i;
+    }
+
+    // handle format alias
+#define CHECK_ALIAS( X ) if( #X == s ) return X;
+
+    CHECK_ALIAS( FMT_RGBA32 );
+    CHECK_ALIAS( FMT_BGRA32 );
+    CHECK_ALIAS( FMT_D3DCOLOR );
+
+    CHECK_ALIAS( FMT_DXT_FIRST );
+    CHECK_ALIAS( FMT_DXT_LAST );
+
+    CHECK_ALIAS( FMT_FLOAT4 );
+    CHECK_ALIAS( FMT_FLOAT3 );
+    CHECK_ALIAS( FMT_FLOAT2 );
+    CHECK_ALIAS( FMT_FLOAT1 );
+
+    CHECK_ALIAS( FMT_FLOAT16_4 );
+    CHECK_ALIAS( FMT_FLOAT16_2 );
+
+    CHECK_ALIAS( FMT_INT4 );
+    CHECK_ALIAS( FMT_INT2 );
+    CHECK_ALIAS( FMT_INT1 );
+
+    CHECK_ALIAS( FMT_INT4N );
+    CHECK_ALIAS( FMT_INT2N );
+    CHECK_ALIAS( FMT_INT1N );
+
+    CHECK_ALIAS( FMT_UINT4 );
+    CHECK_ALIAS( FMT_UINT2 );
+    CHECK_ALIAS( FMT_UINT1 );
+
+    CHECK_ALIAS( FMT_UINT4N );
+    CHECK_ALIAS( FMT_UINT2N );
+    CHECK_ALIAS( FMT_UINT1N );
+
+    CHECK_ALIAS( FMT_SHORT4 );
+    CHECK_ALIAS( FMT_SHORT2 );
+
+    CHECK_ALIAS( FMT_SHORT4N );
+    CHECK_ALIAS( FMT_SHORT2N );
+
+    CHECK_ALIAS( FMT_USHORT4 );
+    CHECK_ALIAS( FMT_USHORT2 );
+
+    CHECK_ALIAS( FMT_USHORT4N );
+    CHECK_ALIAS( FMT_USHORT2N );
+
+    CHECK_ALIAS( FMT_BYTE4 );
+    CHECK_ALIAS( FMT_BYTE4N );
+
+    CHECK_ALIAS( FMT_UBYTE4 );
+    CHECK_ALIAS( FMT_UBYTE4N );
+
+    CHECK_ALIAS( FMT_DEC4 );
+    CHECK_ALIAS( FMT_DEC3 );
+    CHECK_ALIAS( FMT_DEC4N );
+    CHECK_ALIAS( FMT_DEC3N );
+
+    CHECK_ALIAS( FMT_UDEC4 );
+    CHECK_ALIAS( FMT_UDEC3 );
+    CHECK_ALIAS( FMT_UDEC4N );
+    CHECK_ALIAS( FMT_UDEC3N );
+
+    CHECK_ALIAS( FMT_HEND4 );
+    CHECK_ALIAS( FMT_HEND3 );
+    CHECK_ALIAS( FMT_HEND4N );
+    CHECK_ALIAS( FMT_HEND3N );
+
+    CHECK_ALIAS( FMT_UHEND4 );
+    CHECK_ALIAS( FMT_UHEND3 );
+    CHECK_ALIAS( FMT_UHEND4N );
+    CHECK_ALIAS( FMT_UHEND3N );
+
+    CHECK_ALIAS( FMT_DHEN4 );
+    CHECK_ALIAS( FMT_DHEN3 );
+    CHECK_ALIAS( FMT_DHEN4N );
+    CHECK_ALIAS( FMT_DHEN3N );
+
+    CHECK_ALIAS( FMT_UDHEN4 );
+    CHECK_ALIAS( FMT_UDHEN3 );
+    CHECK_ALIAS( FMT_UDHEN4N );
+    CHECK_ALIAS( FMT_UDHEN3N );
+
+#undef CHECK_ALIAS
+
+    return FMT_INVALID;
 }

@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="yes"?>
+<mesh
+	primType  = "TRIANGLE_LIST"
+	primCount = "564"
+	startVtx  = "0"
+	minVtxIdx = "0"
+	numVtx    = "284"
+	startIdx  = "0"
+	>
+
+	<vtxfmt>
+		<attrib stream = "0" offset =  "0" semantic = "POS0" format = "FMT_FLOAT3"/>
+		<attrib stream = "0" offset = "12" semantic = "NML0" format = "FMT_FLOAT3"/>
+		<attrib stream = "0" offset = "24" semantic = "TEX0" format = "FMT_FLOAT2"/>
+		<attrib stream = "1" offset =  "0" semantic = "TEX1" format = "FMT_FLOAT3"/>
+		<attrib stream = "1" offset = "12" semantic = "TEX2" format = "FMT_FLOAT3"/>
+		<attrib stream = "2" offset =  "0" semantic = "TEX3" format = "FMT_FLOAT3"/>
+		<attrib stream = "2" offset = "12" semantic = "TEX4" format = "FMT_FLOAT3"/>
+	</vtxfmt>
+	
+	<vtxbuf stream = "0" offset = "0" stride = "32" ref="dolphin_1.vb"/>
+	<vtxbuf stream = "1" offset = "0" stride = "32" ref="dolphin_2.vb"/>
+	<vtxbuf stream = "2" offset = "0" stride = "32" ref="dolphin_3.vb"/>
+
+	<idxbuf ref="dolphin.ib"/>
+</mesh>
