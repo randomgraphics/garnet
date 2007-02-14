@@ -11,12 +11,9 @@ class Scene
 {
     GN::app::SampleApp & mApp;
     
-    AutoRef<Texture> mDolphinSkin;
-    AutoRef<Texture> mSeafloorTex;
     AutoRef<Texture> mCaustics[32];
 
-    UInt32 mDolphinMesh, mSeafloorMesh;
-    UInt32 mDolphinEff, mSeafloorEff;
+    UInt32 mDolphin, mSeafloor;
 
 public:
 
@@ -35,31 +32,15 @@ public:
     {
         GN::app::SampleResourceManager & rm = mApp.getResMgr();
         
-        // load mesh
-        mDolphinMesh = rm.meshes.getResourceHandle( "dolphin/dolphin.mesh.xml" );
-        mSeafloorMesh = rm.meshes.getResourceHandle( "dolphin/seafloor.mesh.xml" );
-        if( !mDolphinMesh || !mSeafloorMesh ) return false;
-
-        // load textures
-        if( !loadtex( mDolphinSkin, "dolphin/dolphin.bmp" ) ) return false;
-        if( !loadtex( mSeafloorTex, "dolphin/seafloor.bmp" ) ) return false;
+        // load caustic textures
         for( int i = 0; i < 32; ++i )
         {
-            if( !loadtex( mCaustics[i], strFormat( "dolphin/caust%02d.tga", i ) ) ) return false;
+            if( !loadtex( mCaustics[i], strFormat( "media::dolphin/caust%02d.tga", i ) ) ) return false;
         }
 
-        // load effect
-        mSeafloorEff = rm.effects.getResourceHandle( "dolphin/seafloor.xml" );
-        if( 0 == mSeafloorEff ) return false;
-        mDolphinEff = rm.effects.getResourceHandle( "dolphin/dolphin.xml" );
-        if( 0 == mDolphinEff ) return false;
-
-        // initiate constant effect parameters
-        Effect * eff;
-        eff = rm.effects.getResource( mSeafloorEff );
-        eff->setTextureByName( "seafloor", mSeafloorTex );
-        eff = rm.effects.getResource( mDolphinEff );
-        eff->setTextureByName( "skin", mDolphinSkin );
+        // load dolphin and seafloor
+        mDolphin = rm.renderables.getResourceHandle( "media::dolphin/dolphin.renderable.xml" );
+        mSeafloor = rm.renderables.getResourceHandle( "media::dolphin/seafloor.renderable.xml" );
 
         // success
         return true;
@@ -75,11 +56,15 @@ public:
         UInt32 causticTex = ((UInt32)(time*32))%32;
 
         // update seafloor effect parameters
-        eff = rm.effects.getResource( mSeafloorEff );
-        eff->setUniformByName( "view", view );
-        eff->setUniformByName( "proj", proj );
-        eff->setUniformByName( "caustic", caustics );
-        eff->setTextureByName( "caustic", mCaustics[causticTex] );
+        Renderable * seafloor = rm.renderables.getResource( mSeafloor );
+        if( !seafloor->subsets.empty() )
+        {
+            eff = seafloor->subsets[0].effect.get();
+            eff->setUniformByName( "view", view );
+            eff->setUniformByName( "proj", proj );
+            eff->setUniformByName( "caustic", caustics );
+            seafloor->subsets[0].textures[1].tex = mCaustics[causticTex];
+        }
 
         // Animation attributes for the dolphin
         float fKickFreq    = 2*time;
@@ -114,11 +99,15 @@ public:
         Vector4f vWeight( fWeight1, fWeight2, fWeight3, 0.0f );
 
         // update dolphin effect parameters
-        eff = rm.effects.getResource( mDolphinEff );
-        eff->setUniformByName( "weights", vWeight );
-        eff->setUniformByName( "viewworld", view * world );
-        eff->setUniformByName( "pvw", proj * view * world );
-        eff->setTextureByName( "caustic", mCaustics[causticTex] );
+        Renderable * dolphin = rm.renderables.getResource( mDolphin );
+        if( dolphin->subsets.size() > 0 )
+        {
+            eff = dolphin->subsets[0].effect.get();
+            eff->setUniformByName( "weights", vWeight );
+            eff->setUniformByName( "viewworld", view * world );
+            eff->setUniformByName( "pvw", proj * view * world );
+            dolphin->subsets[0].textures[1].tex = mCaustics[causticTex];
+        }
     }
 
     void render()
@@ -127,38 +116,11 @@ public:
 
         GN::app::SampleResourceManager & rm = mApp.getResMgr();
 
-        // clear screen
         r.clearScreen( WATER_COLOR );
 
-        Mesh * m;
+        rm.renderables.getResource( mSeafloor )->draw();
 
-        // render seafloor
-        m = rm.meshes.getResource( mSeafloorMesh );
-        r.contextUpdateBegin();
-        m->updateContext( r );
-        r.contextUpdateEnd();
-        Effect * eff = rm.effects.getResource( mSeafloorEff );
-        for( size_t i = 0; i < eff->getNumPasses(); ++i )
-        {
-            eff->passBegin( i );
-            eff->commitChanges();
-            m->draw( r );
-            eff->passEnd();
-        }
-
-        // render dolphin
-        m = rm.meshes.getResource( mDolphinMesh );
-        r.contextUpdateBegin();
-        m->updateContext( r );
-        r.contextUpdateEnd();
-        eff = rm.effects.getResource( mDolphinEff );
-        for( size_t i = 0; i < eff->getNumPasses(); ++i )
-        {
-            eff->passBegin( i );
-            eff->commitChanges();
-            m->draw( r );
-            eff->passEnd();
-        }
+        rm.renderables.getResource( mDolphin )->draw();
     }
 };
 

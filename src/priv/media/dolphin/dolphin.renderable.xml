@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="yes"?>
+<renderable>
+	<subset>
+		<mesh ref="dolphin.mesh.xml"/>
+		<effect ref="dolphin.effect.xml"/>
+		<texture id="skin" ref="dolphin.bmp"/>
+		<texture id="caustic"/>
+	</subset>
+</renderable>

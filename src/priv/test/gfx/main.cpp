@@ -19,7 +19,7 @@ class Scene
 
     UInt32 eff0;
 
-    Renderable box;
+    UInt32 box;
 
     Matrix44f world, view, proj;
 
@@ -90,23 +90,16 @@ public:
             ps2->setUniformByNameV( "l0", Vector4f(1,0,0,1) );
         }
 
-        SampleResourceManager &  rm = app.getResMgr();
+        SampleResourceManager & rm = app.getResMgr();
 
-        // create box
-        RenderableDesc boxdesc;
-        boxdesc.subsets.resize( 1 );
-        boxdesc.subsets[0].effect = "effect/cube.xml";
-        boxdesc.subsets[0].mesh   = "mesh/cube.fatmesh";
-        boxdesc.subsets[0].textures["cube"] = "texture/cube1.dds";
-        if( !box.init( boxdesc, &rm.fatMeshes, &rm.effects, &rm.textures ) ) return false;
+        // load box
+        box = rm.renderables.getResourceHandle( "media::renderable/cube1.xml" );
 
-        // get texture handle
-        tex0 = app.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
-        if( !tex0 ) return false;
+        // load texture
+        tex0 = rm.textures.getResourceHandle( "media::texture/rabit.png" );
 
-        // create the effect
-        eff0 = app.getResMgr().effects.getResourceHandle( "effect/sprite.xml" );
-        if( !eff0 ) return false;
+        // load effect
+        eff0 = rm.effects.getResourceHandle( "media::effect/sprite.xml" );
 
         // initialize matrices
         world.identity();
@@ -127,7 +120,6 @@ public:
     {
         ps1.clear();
 		ps2.clear();
-        box.quit();
     }
 
     void onKeyPress( input::KeyEvent key )
@@ -157,13 +149,15 @@ public:
     void update()
     {
         // update box matrix
-        if( box.ok() )
+        Renderable * rbox = app.getResMgr().renderables.getResource( box );
+        GN_ASSERT( rbox );
+
+        world = arcball.getRotationMatrix();
+        Matrix44f pvw = proj * view * world;
+
+        if( !rbox->subsets.empty() )
         {
-            world = arcball.getRotationMatrix();
-            Matrix44f pvw = proj * view * world;
-            Effect * eff = app.getResMgr().effects.getResource( box.getEffectHandle( 0 ) );
-            GN_ASSERT( eff );
-            eff->setUniformByName( "pvw", pvw );
+            rbox->subsets[0].effect->setUniformByName( "pvw", pvw );
         }
 
         // update color
@@ -211,10 +205,7 @@ public:
         }
 
         // draw box
-        if( box.ok() )
-        {
-            box.draw();
-        }
+        app.getResMgr().renderables.getResource(box)->draw();
 
         /* a wireframe box
         {

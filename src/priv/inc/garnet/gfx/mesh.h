@@ -22,7 +22,7 @@ namespace GN { namespace gfx
     /// Mesh class, the atomic geometry chunk in garnet rendering system that
     /// can be renderer by single DIP().
     ///
-    struct Mesh
+    struct Mesh : public RefCounter
     {
         /// \name mesh data
         //@{

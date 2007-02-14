@@ -1,3 +1,7 @@
 - 2007.2.13
   - new OO style path and file system
   - new mesh class, as well as XML loader
+
+- 2007.2.14
+  - new class: Renderable, which is the top level graphics object that can be 
+    drawed to screen (composed by effect, mesh and textures)
