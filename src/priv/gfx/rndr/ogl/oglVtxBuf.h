@@ -64,7 +64,11 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        const UInt8 * getVtxData() const { return mBuffer; }
+        const UInt8 * getVtxData() const
+        {
+            GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
+            return mBuffer;
+        }
 
         // ********************************
         // private variables
