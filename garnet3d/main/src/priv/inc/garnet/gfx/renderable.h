@@ -8,117 +8,80 @@
 
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
-#include "garnet/gfx/fatmesh.h"
+#include "garnet/gfx/mesh.h"
 #include <map>
 
 namespace GN { namespace gfx
 {
     ///
-    /// renderable subset descriptor (single mesh and effect pair)
-    ///
-    struct RenderableSubsetDesc
-    {
-        StrA                effect;   ///< effect name
-        StrA                mesh;     ///< mesh name
-        std::map<StrA,StrA> textures; ///< textures. Key is texture ID in effect; value is texture resource name.
-    };
-
-    ///
-    /// renderable descriptor
-    ///
-    struct RenderableDesc
-    {
-        std::vector<RenderableSubsetDesc> subsets; ///< subset array
-
-        ///
-        /// clear the descriptor
-        ///
-        void clear() { subsets.clear(); }
-    };
-
-    ///
     /// basic renderable class
     ///
-    class Renderable : public StdClass
+    struct Renderable
     {
-        GN_DECLARE_STDCLASS( Renderable, StdClass );
-
-        // ********************************
-        // ctor/dtor
-        // ********************************
-
-        //@{
-    public:
-        Renderable()          { clear(); }
-        virtual ~Renderable() { quit(); }
-        //@}
-
-        // ********************************
-        // from StdClass
-        // ********************************
-
-        //@{
-    public:
-        bool init(
-                const RenderableDesc &,
-                ResourceManager<gfx::FatMesh*> *,
-                ResourceManager<gfx::Effect*> *,
-                ResourceManager<gfx::Texture*> * );
-        void quit();
-    private:
-        void clear()
-        {
-            mDesc.clear();
-        }
-        //@}
-
-        // ********************************
-        // public functions
-        // ********************************
-    public:
-
-        //@{
-
-        size_t getSubsetCount() const { return mSubsets.size(); }
-
-        UInt32 getEffectHandle( size_t subset ) const { GN_ASSERT( subset < mSubsets.size() ); return mSubsets[subset].effect; }
-
-        void draw() const { for( size_t i = 0; i < mSubsets.size(); ++i ) { drawSubset( i ); } }
-
-        void drawSubset( size_t i ) const;
-
-        //@}
-
-        // ********************************
-        // private variables
-        // ********************************
-    private:
-
         struct TexItem
         {
-            EffectItemID id;
-            UInt32       handle;
+            EffectItemID     id;
+            AutoRef<Texture> tex;
         };
 
         struct Subset
         {
-            UInt32 effect;
-            UInt32 mesh;
+            AutoRef<Effect>      effect;
+            AutoRef<Mesh>        mesh;
             std::vector<TexItem> textures;
         };
 
-        RenderableDesc mDesc;
+        std::vector<Subset> subsets;
+        
+    public:
 
-        std::vector<Subset> mSubsets;
+        ///
+        /// clear to empty
+        ///
+        void clear() { subsets.clear(); }
 
-        ResourceManager<gfx::FatMesh*> * mMeshMgr;
-        ResourceManager<gfx::Effect*>  * mEffectMgr;
-        ResourceManager<gfx::Texture*> * mTextureMgr;
+        ///
+        /// draw specific subset
+        ///
+        void drawSubset( size_t i ) const;
 
-        // ********************************
-        // private functions
-        // ********************************
-    private:
+        ///
+        /// draw the whole renderable object
+        ///
+        void draw() const
+        {
+            for( size_t i = 0; i < subsets.size(); ++i )
+            {
+                drawSubset( i );
+            }
+        }
+
+        ///
+        /// load from XML.
+        ///
+        /// \param root
+        ///     Root XML node that contains definition of the renderable object.
+        /// \param basedir
+        ///     Base resource directory. All relative subresource path will be resolved based on it.
+        /// \param meshmgr, effmgr, texmgr
+        ///     Subresoruce managers
+        ///
+        bool loadFromXml(
+                const XmlNode                  * root,
+                const StrA                     & basedir,
+                ResourceManager<gfx::Mesh*>    & meshmgr,
+                ResourceManager<gfx::Effect*>  & effmgr,
+                ResourceManager<gfx::Texture*> & texmgr );
+
+        ///
+        /// load from XML file
+        ///
+        bool loadFromXmlFile(
+                File                           & fp,
+                const StrA                     & basedir,
+                ResourceManager<gfx::Mesh*>    & meshmgr,
+                ResourceManager<gfx::Effect*>  & effmgr,
+                ResourceManager<gfx::Texture*> & texmgr );
     };
 }}
 

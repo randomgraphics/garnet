@@ -80,7 +80,7 @@ struct DenseMesh
         }
 
         // search media file
-        StrA filename = app::SampleResourceManager::sSearchResourceFile( "mesh\\knot.x" );
+        StrA filename = app::SampleResourceManager::sGetNativeResourceFileName( "mesh\\knot.x" );
         if( filename.empty() )
         {
             GN_ERROR(sLogger)( "mesh file not found!" );

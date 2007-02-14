@@ -21,7 +21,7 @@ public:
             const char * a = argv[i];
             if( '-' != *a )
             {
-                mMeshName = app::SampleResourceManager::sSearchResourceFile( a );
+                mMeshName = app::SampleResourceManager::sGetNativeResourceFileName( a );
                 if( mMeshName.empty() ) { GN_ERROR(sLogger)( "mesh file '%s' not found.", a ); return false; }
                 break;
             }

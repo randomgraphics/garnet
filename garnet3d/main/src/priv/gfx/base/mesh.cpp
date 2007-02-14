@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "garnet/gfx/mesh.h"
+#include <pcrecpp.h>
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.Mesh");
 
@@ -48,12 +49,12 @@ static bool sGetOptionalBoolAttrib( const XmlElement & node, const char * attrib
 //
 // get string value of specific attribute
 // -----------------------------------------------------------------------------
-static bool sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & result )
+static bool sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & result, bool silence = false )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
     if ( !a )
     {
-        sPostError( node, strFormat( "attribute '%s' is missing!" ) );
+        if( !silence ) sPostError( node, strFormat( "attribute '%s' is missing!" ) );
         return false;
     }
     else
@@ -81,27 +82,13 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
     		...
     	</vtxfmt>
     	
-    	<vtxbuf
-    		stream  = "0"
-    		offset  = "0"
-    		stride  = "32"
-    		dynamic = "true" // optional, default is false.
-    		syscopy = "true" // optional, default is false.
-    		ref="vb0.bin"
-    	/>
+    	<vtxbuf>
+    		...
+    	</vtxbuf>
 
-    	<vtxbuf
-    		stream = "1"
-    		offset = "100"
-    		stride = "16"
-    		ref    = "vb1.bin"
-    	/>
-
-    	<idxbuf
-    		dynamic = "true" // optional, default is false.
-    		syscopy = "true" // optional, default is false.
-    		ref="ib0.bin"
-    	/> <!-- this is optional -->
+    	<idxbuf> <!-- this is optional -->
+    		...
+    	</idxbuf>
     </mesh>
 */
 
@@ -121,7 +108,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
     const XmlElement * e = root->toElement();
     if( 0 == e || "mesh" != e->name )
     {
-        GN_ERROR(sLogger)( "root node must be \"<mesh>\"." );
+        sPostError( *e, "root node must be \"<mesh>\"." );
         return false;
     }
 
@@ -153,7 +140,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
     XmlNode * vfnode = e->findChildElement( "vtxfmt" );
     if( !vfnode )
     {
-        GN_ERROR(sLogger)( "No valid vertex format definition found!" );
+        sPostError( *e, "No valid vertex format definition found!" );
         return false;
     }
     VtxFmtDesc vfd;
@@ -176,7 +163,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             if( !sGetIntAttrib( *e, "stream", stream ) ) return false;
             if( stream >= numStreams )
             {
-                GN_ERROR(sLogger)( "stream index (%d) is too large.", stream );
+                sPostError( *e, strFormat( "stream index (%d) is too large.", stream ) );
                 return false;
             }
 
@@ -191,27 +178,74 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             bool dynamic = sGetOptionalBoolAttrib( *e, "dynamic", false );
             bool syscopy = sGetOptionalBoolAttrib( *e, "syscopy", false );
 
-            // get vb file name
-            StrA ref;
-            if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
-            ref = fs::resolvePath( meshdir, ref );
-
-            // open vb file
-            AutoObjPtr<File> fp( fs::openFile( ref, "rb" ) );
-            if( fp.empty() ) return false;
-
             // create new VB
             size_t bytes = vb.stride * numVtx;
             vb.buffer.attach( r.createVtxBuf( bytes, dynamic, syscopy ) );
             if( vb.buffer.empty() ) return false;
 
             // lock vb
-            void * dst = vb.buffer->lock( 0, 0, LOCK_WO );
+            UInt8 * dst = (UInt8*)vb.buffer->lock( 0, 0, LOCK_WO );
             if( 0 == dst ) return false;
             AutoBufferUnlocker<VtxBuf> unlocker( vb.buffer );
+ 
+            StrA ref;
+            if( sGetStringAttrib( *e, "ref", ref, true ) )
+            {
+                // read mesh from external file
 
-            // read data into vb
-            if( !fp->read( dst, bytes, 0 ) ) return false;
+                ref = fs::resolvePath( meshdir, ref );
+
+                // open vb file
+                AutoObjPtr<File> fp( fs::openFile( ref, "rb" ) );
+                if( fp.empty() ) return false;
+
+                // read data into vb
+                if( !fp->read( dst, bytes, 0 ) ) return false;
+            }
+            else
+            {
+                // read embbed vertex buffer. Now can only support floating data.
+                size_t numFloats = 0;
+                for( int i = 0; i < vfd.count; ++i )
+                {
+                    switch( vfd.attribs[i].format )
+                    {
+                        case FMT_FLOAT1 : numFloats += 1; break;
+                        case FMT_FLOAT2 : numFloats += 2; break;
+                        case FMT_FLOAT3 : numFloats += 3; break;
+                        case FMT_FLOAT4 : numFloats += 4; break;
+                        default:
+                            sPostError( *e, "Emmbed vertex buffer can't have data other then floats." );
+                            return false;
+                    }
+                }
+
+                // float array that can hold one vertex data
+                DynaArray<float> vertex;
+                vertex.resize( numFloats );
+
+                // define pattern for "," separated float array.
+                static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
+
+                // parse vertex data
+                pcrecpp::StringPiece text( e->text.cptr(), (int)e->text.size() );
+                std::string substring;
+                for( size_t i = 0; i < numVtx; ++i, dst += vb.stride )
+                {
+                    for( size_t j = 0; j < numFloats; ++j )
+                    {
+                        if( !re.Consume( &text, &substring ) ||
+                            !str2Float( vertex[j], substring.c_str() ) )
+                        {
+                            sPostError( *e, strFormat( "vertex %dst has invalid data", i ) );
+                            return false;
+                        }
+                    }
+
+                    // copy to vertex buffer
+                    memcpy( dst, vertex.cptr(), vertex.size()*sizeof(float) );
+                 }
+            }
         }
 
         // load index buffer
@@ -221,32 +255,51 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             bool dynamic = sGetOptionalBoolAttrib( *e, "dynamic", false );
             bool syscopy = sGetOptionalBoolAttrib( *e, "syscopy", false );
 
-            // get ib file name
-            StrA ref;
-            if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
-            ref = fs::resolvePath( meshdir, ref );
-
-            // open ib file
-            AutoObjPtr<File> fp( fs::openFile( ref, "rb" ) );
-            if( fp.empty() ) return false;
-
             // create new ib
-            size_t bytes = calcVertexCount( primType, primCount ) * 2; // 16-bit index buffer
+            size_t numidx = calcVertexCount( primType, primCount );
+            size_t bytes = numidx * 2; // 16-bit index buffer
             idxbuf.attach( r.createIdxBuf( bytes, dynamic, syscopy ) );
             if( idxbuf.empty() ) return false;
 
             // lock ib
-            void * dst = idxbuf->lock( 0, 0, LOCK_WO );
+            UInt16 * dst = (UInt16*)idxbuf->lock( 0, 0, LOCK_WO );
             if( 0 == dst ) return false;
             AutoBufferUnlocker<IdxBuf> unlocker( idxbuf );
 
-            // read data into ib
-            if( !fp->read( dst, bytes, 0 ) ) return false;
+            // get ib file name
+            StrA ref;
+            if( sGetStringAttrib( *e, "ref", ref, true ) )
+            {
+                // read external ib adata
+                ref = fs::resolvePath( meshdir, ref );
+
+                AutoObjPtr<File> fp( fs::openFile( ref, "rb" ) );
+                if( fp.empty() ) return false;
+
+                if( !fp->read( dst, bytes, 0 ) ) return false;
+            }
+            else
+            {
+                // read embedded ib data
+                static pcrecpp::RE re( "\\s*([0-9]+)\\s*,?\\s*" );
+
+                pcrecpp::StringPiece text( e->text.cptr(), (int)e->text.size() );
+                std::string substring;
+                for( size_t i = 0; i < numidx; ++i, ++dst )
+                {
+                    if( !re.Consume( &text, &substring ) ||
+                        !str2UInt16( *dst, substring.c_str() ) )
+                    {
+                        sPostError( *e, strFormat( "index %d has invalid data", i ) );
+                        return false;
+                    }
+                }
+            }
         }
 
         else if( "vtxfmt" != e->name )
         {
-            GN_ERROR(sLogger)( "Ignore unknown node '%s'.", e->name.cptr() );
+            sPostError( *e, strFormat( "Ignore unknown node '%s'.", e->name.cptr() ) );
         }
     }
 
@@ -270,10 +323,11 @@ bool GN::gfx::Mesh::loadFromXmlFile( File & fp, const StrA & meshdir, Renderer &
     if( !doc.parse( xpr, fp ) )
     {
         GN_ERROR(sLogger)(
-            "Fail to read XML file:\n"
+            "Fail to read XML file (%s):\n"
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
+            fp.name().cptr(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.cptr() );

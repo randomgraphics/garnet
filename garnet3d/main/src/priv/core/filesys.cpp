@@ -533,9 +533,15 @@ struct FileSystemContainer
 
     bool registerFs( const StrA & name, fs::FileSystem * fs )
     {
+        // check name
         if( name.empty() )
         {
             GN_ERROR(sLogger)( "File system name can't be empty!" );
+            return false;
+        }
+        if( name.size() < 3 || ':' != name[name.size()-1] || ':' != name[name.size()-2] )
+        {
+            GN_ERROR(sLogger)( "File system name must be in format like \"your_fs_name::\"!" );
             return false;
         }
 

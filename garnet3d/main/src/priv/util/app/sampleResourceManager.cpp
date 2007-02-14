@@ -40,10 +40,10 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
     GN_GUARD;
 
     // get resource path
-    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sGetNativeResourceFileName( name );
     if( path.empty() )
     {
-        GN_ERROR(sLogger)( "Raw resource '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Raw resource '%s' creation failed: file not found.", name.cptr() );
         return false;
     }
 
@@ -151,10 +151,10 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
     }
 
     // get resouce path
-    path = SampleResourceManager::sSearchResourceFile( path );
+    path = SampleResourceManager::sGetNativeResourceFileName( path );
     if( path.empty() )
     {
-        GN_ERROR(sLogger)( "Shader '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: file not found.", name.cptr() );
         return false;
     }
 
@@ -326,10 +326,10 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
     GN_GUARD;
 
     // get resouce path
-    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sGetNativeResourceFileName( name );
     if( path.empty() )
     {
-        GN_ERROR(sLogger)( "Effect '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Effect '%s' creation failed: file not found.", name.cptr() );
         return false;
     }
 
@@ -363,68 +363,7 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
 // -----------------------------------------------------------------------------
 static void sDeleteEffect( Effect * & ptr, void * )
 {
-    GN::safeDelete( ptr );
-}
-
-// *****************************************************************************
-// fatmesh loading functions
-// *****************************************************************************
-
-//
-// Create empty mesh
-// -----------------------------------------------------------------------------
-static bool sCreateNullFatMesh( FatMesh * & result, const StrA &, void * )
-{
-    GN_GUARD;
-
-    result = new FatMesh;
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-// Load FatMesh from file
-// -----------------------------------------------------------------------------
-static bool sCreateFatMesh( FatMesh * & result, const StrA & name, void * )
-{
-    GN_GUARD;
-
-    // get resouce path
-    StrA path = SampleResourceManager::sSearchResourceFile( name );
-    if( path.empty() )
-    {
-        GN_ERROR(sLogger)( "Fat mesh '%s' creation failed: path not found.", name.cptr() );
-        return false;
-    }
-
-    GN_TRACE(sLogger)( "Load fat mesh '%s' from file '%s'.", name.cptr(), path.cptr() ); 
-
-    // open file
-    DiskFile fp;
-    if( !fp.open( path, "rt" ) )
-    {
-        GN_ERROR(sLogger)( "Fat mesh '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
-        return false;
-    }
-
-    // create effect instance
-    AutoObjPtr<FatMesh> mesh( new FatMesh );
-    if( !mesh->readFromFile( fp ) ) return false;
-
-    // success
-    result = mesh.detach();
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static void sDeleteFatMesh( FatMesh * & ptr, void * )
-{
-    GN::safeDelete( ptr );
+    GN::safeDecref( ptr );
 }
 
 // *****************************************************************************
@@ -453,10 +392,10 @@ static bool sCreateMesh( Mesh * & result, const StrA & name, void * )
     GN_GUARD;
 
     // get resouce path
-    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sGetNativeResourceFileName( name );
     if( path.empty() )
     {
-        GN_ERROR(sLogger)( "Mesh '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Mesh '%s' creation failed: file not found.", name.cptr() );
         return false;
     }
 
@@ -489,8 +428,175 @@ static bool sCreateMesh( Mesh * & result, const StrA & name, void * )
 // -----------------------------------------------------------------------------
 static void sDeleteMesh( Mesh * & ptr, void * )
 {
+    GN::safeDecref( ptr );
+}
+
+// *****************************************************************************
+// renderable loading functions
+// *****************************************************************************
+
+//
+// Create empty rendreable
+// -----------------------------------------------------------------------------
+static bool sCreateNullRenderable( Renderable * & result, const StrA &, void * )
+{
+    GN_GUARD;
+
+    result = new Renderable;
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+// Load Renderable from file
+// -----------------------------------------------------------------------------
+static SampleResourceManager * sResMgr = NULL;
+static bool sCreateRenderable( Renderable * & result, const StrA & name, void * )
+{
+    GN_GUARD;
+
+    GN_ASSERT( sResMgr );
+
+    // get resouce path
+    StrA path = SampleResourceManager::sGetNativeResourceFileName( name );
+    if( path.empty() )
+    {
+        GN_ERROR(sLogger)( "rendreable '%s' creation failed: file not found.", name.cptr() );
+        return false;
+    }
+
+    GN_TRACE(sLogger)( "Load rendreable '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+
+    // open file
+    DiskFile fp;
+    if( !fp.open( path, "rt" ) )
+    {
+        GN_ERROR(sLogger)( "rendreable '%s' creation failed: can't open file '%s'.", name.cptr(), path.cptr() );
+        return false;
+    }
+
+    // get base directory
+    StrA basedir = dirName( path );
+
+    // create renderable instance
+    AutoObjPtr<Renderable> rendreable( new Renderable );
+    if( !rendreable->loadFromXmlFile(
+        fp,
+        basedir,
+        sResMgr->meshes,
+        sResMgr->effects,
+        sResMgr->textures ) ) return false;
+
+    // success
+    result = rendreable.detach();
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteRenderable( Renderable * & ptr, void * )
+{
     GN::safeDelete( ptr );
 }
+
+// *****************************************************************************
+// Media file system, handle file path prefixed with "media::"
+// *****************************************************************************
+
+class MediaFileSystem : public fs::FileSystem
+{
+    std::vector<StrA> mRoots;
+
+    const StrA * findRoot( const StrA & path )
+    {
+        for( size_t i = 0; i < mRoots.size(); ++i )
+        {
+            if( fs::exist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
+        }
+        return 0;
+    }
+
+public:    
+
+    MediaFileSystem()
+    {
+#if GN_XENON
+        mRoots.push_back( "game:\media" );
+        mRoots.push_back( "game:" );
+#endif
+        mRoots.push_back( "startup::" );
+        mRoots.push_back( "startup::media" );
+        mRoots.push_back( "app::" );
+        mRoots.push_back( "app::media" );
+        mRoots.push_back( "app::../media" );
+    }
+
+    bool exist( const StrA & path )
+    {
+        return 0 != findRoot( path );
+    }
+
+    bool isDir( const StrA & path  )
+    {
+        const StrA * root = findRoot( path );
+        if( !root ) return false;
+        return fs::isDir( joinPath( *root, path ) );
+    }
+
+    bool isFile( const StrA & path )
+    {
+        const StrA * root = findRoot( path );
+        if( !root ) return false;
+        return fs::isFile( joinPath( *root, path ) );
+    }
+
+    bool isAbsPath( const StrA & path )
+    {
+        return !path.empty() && '/' == path[0];
+    }
+
+    void toNative( StrA & result, const StrA & path )
+    {
+        result.clear();
+        const StrA * root = findRoot( path );
+        if( !root ) return;
+        fs::toNative( result, joinPath( *root, path ) );
+    }
+
+    std::vector<StrA> &
+    glob(
+        std::vector<StrA> & result,
+        const StrA & dirName,
+        const StrA & pattern,
+        bool         recursive,
+        bool         useRegex )
+    {
+        const StrA * root = findRoot( dirName );
+        if( !root ) return result;
+
+        return fs::glob(
+            result,
+            joinPath( *root, dirName ),
+            pattern,
+            recursive,
+            useRegex );
+    }
+
+     File * openFile( const StrA & path, const StrA & mode )
+     {
+        const StrA * root = findRoot( path );
+        if( !root )
+        {
+            GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
+            return 0;
+        }
+        return fs::openFile( joinPath( *root, path ), mode );
+     }
+};
 
 // *****************************************************************************
 // SampleResourceManager
@@ -499,30 +605,13 @@ static void sDeleteMesh( Mesh * & ptr, void * )
 //
 //
 // -----------------------------------------------------------------------------
-GN::StrA GN::app::SampleResourceManager::sSearchResourceFile( const StrA & name )
+GN::StrA GN::app::SampleResourceManager::sGetNativeResourceFileName( const StrA & name )
 {
     GN_GUARD;
 
-    if( fs::isFile( name ) ) return name;
+    if( !fs::isFile( name ) ) return StrA::EMPTYSTR;
 
-    StrA fullPath;
-
-#define CHECK_PATH( X ) do { fullPath = joinPath X ; if( fs::isFile( fullPath ) ) return fs::toNative(fullPath); } while(0)
-
-    // search in startup directory
-    CHECK_PATH( ("startup", name) );
-    CHECK_PATH( ("startup::media", name) );
-
-    // search in application directory
-    CHECK_PATH( ("app::", name ) );
-    CHECK_PATH( ( "app::media", name ) );
-    CHECK_PATH( ( "app::../media", name ) );
-
-    // search in native file system
-    CHECK_PATH( ("native::", name ) );
-
-    // resource not found.
-    return StrA::EMPTYSTR;
+    return fs::toNative( name );    
 
     GN_UNGUARD;
 }
@@ -543,10 +632,10 @@ GN::app::SampleResourceManager::sCreateTextureFromFile( const StrA & name )
     }
 
     // get resource path
-    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sGetNativeResourceFileName( name );
     if( path.empty() )
     {
-        GN_ERROR(sLogger)( "Texture '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Texture '%s' creation failed: file not found.", name.cptr() );
         return 0;
     }
 
@@ -587,10 +676,10 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
     }
 
     // get resource path
-    StrA path = SampleResourceManager::sSearchResourceFile( name );
+    StrA path = SampleResourceManager::sGetNativeResourceFileName( name );
     if( path.empty() )
     {
-        GN_ERROR(sLogger)( "Shader '%s' creation failed: path not found.", name.cptr() );
+        GN_ERROR(sLogger)( "Shader '%s' creation failed: file not found.", name.cptr() );
         return 0;
     }
 
@@ -630,7 +719,13 @@ GN::app::SampleResourceManager::sCreateShaderFromFile(
 //
 // -----------------------------------------------------------------------------
 GN::app::SampleResourceManager::SampleResourceManager()
+    : mMediaFileSys( new MediaFileSystem )
 {
+    GN_ASSERT( NULL == sResMgr );
+    sResMgr = this;
+
+    fs::registerFileSystem( "media::", mMediaFileSys );
+
     shaders.setCreator( &sCreateShader );
     shaders.setDeletor( &sDeleteShader );
     shaders.setNullor( &sCreateNullShader );
@@ -643,13 +738,13 @@ GN::app::SampleResourceManager::SampleResourceManager()
     effects.setDeletor( &sDeleteEffect );
     effects.setNullor( &sCreateNullEffect );
 
-    fatMeshes.setCreator( &sCreateFatMesh );
-    fatMeshes.setDeletor( &sDeleteFatMesh );
-    fatMeshes.setNullor( &sCreateNullFatMesh );
-
     meshes.setCreator( &sCreateMesh );
     meshes.setDeletor( &sDeleteMesh );
     meshes.setNullor( &sCreateNullMesh );
+
+    renderables.setCreator( &sCreateRenderable );
+    renderables.setDeletor( &sDeleteRenderable );
+    renderables.setNullor( &sCreateNullRenderable );
 
     rawData.setCreator( &sCreateRawData );
     rawData.setDeletor( &sDeleteRawData );
@@ -664,9 +759,14 @@ GN::app::SampleResourceManager::SampleResourceManager()
 // -----------------------------------------------------------------------------
 GN::app::SampleResourceManager::~SampleResourceManager()
 {
+    GN_ASSERT( this == sResMgr );
+    sResMgr = NULL;
+
     Renderer::sSigDispose.disconnect( this );
     Renderer::sSigDestroy.disconnect( this );
     disposeAll();
+
+    safeDelete( mMediaFileSys );
 }
 
 //
@@ -674,9 +774,9 @@ GN::app::SampleResourceManager::~SampleResourceManager()
 // -----------------------------------------------------------------------------
 void GN::app::SampleResourceManager::onRendererDispose()
 {
+    renderables.disposeAll();
     effects.disposeAll();
     textures.disposeAll();
-    fatMeshes.disposeAll();
     meshes.disposeAll();
 }
 

@@ -8,8 +8,8 @@
 
 #include "garnet/GNgfx.h"
 #include "garnet/gfx/effect.h"
-#include "garnet/gfx/fatmesh.h"
 #include "garnet/gfx/mesh.h"
+#include "garnet/gfx/renderable.h"
 #include "garnet/GNinput.h"
 
 namespace GN { namespace app
@@ -107,17 +107,17 @@ namespace GN { namespace app
     ///
     struct SampleResourceManager
     {
-        ResourceManager<gfx::Shader*>  shaders;   ///< shader manager
-        ResourceManager<gfx::Texture*> textures;  ///< texture manager
-        ResourceManager<gfx::Effect*>  effects;   ///< effect manager
-        ResourceManager<gfx::Mesh*>    meshes;    ///< mesh manager
-        ResourceManager<gfx::FatMesh*> fatMeshes; ///< fatmesh manager (depreciated)
-        ResourceManager<RawData*>      rawData;   ///< raw data manager
+        ResourceManager<gfx::Shader*>     shaders;     ///< shader manager
+        ResourceManager<gfx::Texture*>    textures;    ///< texture manager
+        ResourceManager<gfx::Effect*>     effects;     ///< effect manager
+        ResourceManager<gfx::Mesh*>       meshes;      ///< mesh manager
+        ResourceManager<gfx::Renderable*> renderables; ///< renderable manager.
+        ResourceManager<RawData*>         rawData;     ///< raw data manager
 
         ///
-        /// Search resource by name. Return full path of the resource file. Return empty string if not found.
+        /// return native resource file name. Return empty string if file does not exist.
         ///
-        static GN::StrA sSearchResourceFile( const StrA & name );
+        static GN::StrA sGetNativeResourceFileName( const StrA & name );
 
         ///
         /// Create texture from file
@@ -167,13 +167,15 @@ namespace GN { namespace app
             textures.disposeAll();
             effects.disposeAll();
             meshes.disposeAll();
-            fatMeshes.disposeAll();
+            renderables.disposeAll();
             rawData.disposeAll();
         }
 
     private:
         void onRendererDispose();
         void onRendererDestroy();
+
+        fs::FileSystem * mMediaFileSys;
     };
 
     ///

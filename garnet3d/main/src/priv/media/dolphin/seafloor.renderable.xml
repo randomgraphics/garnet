@@ -1,0 +1,27 @@
+<?xml version="1.0" standalone="yes"?>
+<renderable>
+	<subset>
+		<mesh
+			primType  = "TRIANGLE_LIST"
+			primCount = "2830"
+			startVtx  = "0"
+			minVtxIdx = "0"
+			numVtx    = "1490"
+			startIdx  = "0"
+			>
+
+			<vtxfmt>
+				<attrib stream = "0" offset =  "0" semantic = "POS0" format = "FMT_FLOAT3"/>
+				<attrib stream = "0" offset = "12" semantic = "NML0" format = "FMT_FLOAT3"/>
+				<attrib stream = "0" offset = "24" semantic = "TEX0" format = "FMT_FLOAT2"/>
+			</vtxfmt>
+			
+			<vtxbuf stream = "0" offset = "0" stride = "32" ref="seafloor.vb"/>
+
+			<idxbuf ref="seafloor.ib"/>
+		</mesh>
+		<effect ref="seafloor.effect.xml"/>
+		<texture id="seafloor" ref="seafloor.bmp"/>
+		<texture id="caustic"/>
+	</subset>
+</renderable>

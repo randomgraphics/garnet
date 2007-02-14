@@ -413,7 +413,7 @@ namespace GN { namespace gfx {
     ///
     /// Effect class
     ///
-    class Effect : public StdClass
+    class Effect : public StdClass, public RefCounter
     {
         GN_DECLARE_STDCLASS( Effect, StdClass );
 
@@ -437,7 +437,7 @@ namespace GN { namespace gfx {
         bool init( const Effect & ); ///< Make effect clone
         void quit();
     private:
-        void clear() { mPassBegun = false; }
+        void clear() { mPassBegun = false; mContextUpdateBegun = false; }
         //@}
 
         // ********************************
@@ -480,11 +480,20 @@ namespace GN { namespace gfx {
         /// end the rendering pass.
         /// Must be called between drawBegin() and drawEnd(), and after passBegin().
         ///
-        void passEnd() const { GN_ASSERT(mPassBegun); mPassBegun = false; }
+        void passEnd() const
+        {
+            if( mContextUpdateBegun )
+            {
+                gRenderer.contextUpdateEnd();
+                mContextUpdateBegun = false;
+            }
+            GN_ASSERT( mPassBegun );
+            mPassBegun = false;
+        }
 
         ///
         /// Commit modified uniforms and textures to renderer.
-        /// Must be called between passBegin() and passEnd().
+        /// Can be called only between passBegin() and passEnd().
         ///
         void commitChanges() const;
 
@@ -634,9 +643,10 @@ namespace GN { namespace gfx {
         NamedItemManager<ShaderData>    mShaders;
         NamedItemManager<TechniqueData> mTechniques;
         
+        mutable size_t mActivePass;
         mutable UInt32 mActiveTechnique;
-        mutable bool     mPassBegun;
-        mutable size_t   mActivePass;
+        mutable bool   mPassBegun;
+        mutable bool   mContextUpdateBegun;
 
         static Logger * sLogger;
 
