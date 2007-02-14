@@ -308,7 +308,7 @@ static bool sCreateNullEffect( Effect * & result, const StrA &, void * )
     desc.techniques[0].passes[0].shaders[SHADER_PS] = "ps";
     desc.techniques[0].passes[0].shaders[SHADER_GS] = "gs";
 
-    AutoObjPtr<Effect> eff( new Effect );
+    AutoRef<Effect> eff( new Effect );
     if( !eff->init( desc ) ) { GN_UNEXPECTED(); return false; }
 
     // success
@@ -348,7 +348,7 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
     if( !desc.fromXml( fp ) ) return false;
 
     // create effect instance
-    AutoObjPtr<Effect> eff( new Effect );
+    AutoRef<Effect> eff( new Effect );
     if( !eff->init( desc ) ) return false;
 
     // success
@@ -413,7 +413,7 @@ static bool sCreateMesh( Mesh * & result, const StrA & name, void * )
     StrA meshdir = dirName( path );
 
     // create mesh instance
-    AutoObjPtr<Mesh> mesh( new Mesh );
+    AutoRef<Mesh> mesh( new Mesh );
     if( !mesh->loadFromXmlFile( *fp, meshdir, gRenderer ) ) return false;
 
     // success
@@ -480,7 +480,7 @@ static bool sCreateRenderable( Renderable * & result, const StrA & name, void * 
     StrA basedir = dirName( path );
 
     // create renderable instance
-    AutoObjPtr<Renderable> rendreable( new Renderable );
+    AutoRef<Renderable> rendreable( new Renderable );
     if( !rendreable->loadFromXmlFile(
         fp,
         basedir,
@@ -500,7 +500,7 @@ static bool sCreateRenderable( Renderable * & result, const StrA & name, void * 
 // -----------------------------------------------------------------------------
 static void sDeleteRenderable( Renderable * & ptr, void * )
 {
-    GN::safeDelete( ptr );
+    GN::safeDecref( ptr );
 }
 
 // *****************************************************************************
