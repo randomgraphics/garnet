@@ -16,7 +16,7 @@ namespace GN { namespace gfx
     ///
     /// basic renderable class
     ///
-    struct Renderable
+    struct Renderable : public RefCounter
     {
         struct TexItem
         {

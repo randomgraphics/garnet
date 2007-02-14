@@ -206,7 +206,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             {
                 // read embbed vertex buffer. Now can only support floating data.
                 size_t numFloats = 0;
-                for( int i = 0; i < vfd.count; ++i )
+                for( size_t i = 0; i < vfd.count; ++i )
                 {
                     switch( vfd.attribs[i].format )
                     {
