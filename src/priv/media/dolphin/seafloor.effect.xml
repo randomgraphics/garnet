@@ -16,16 +16,16 @@
 
 	<shaders>
 		<!-- Cg shaders -->
-		<shader name="d3dvs" type="VS">
+		<shader name="cgvs" type="VS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="vs_1_1"/>
+					<token type="values" value="cgvs"/>
 				</token>
 			</prerequisites>
 			<uniref ref="view" binding="view"/>
 			<uniref ref="proj" binding="proj"/>
 			<uniref ref="caustic" binding="caustic"/>
-			<code lang="D3D_HLSL" hints="...">
+			<code lang="CG" hints="...">
 <![CDATA[
 uniform float4x4 view;
 uniform float4x4 proj;
@@ -76,15 +76,15 @@ VSOUT main(
 			</code>
 		</shader>
 
-		<shader name="d3dps" type="PS">
+		<shader name="cgps" type="PS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="ps_1_1"/>
+					<token type="values" value="cgps"/>
 				</token>
 			</prerequisites>
 			<texref ref="seafloor" stage="0"/>
 			<texref ref="caustic" stage="1"/>
-			<code lang="D3D_HLSL" hints="...">
+			<code lang="CG" hints="...">
 <![CDATA[
 
 struct VSOUT
@@ -144,8 +144,8 @@ void main(
         <rsb
 			CULL_MODE="CULL_NONE"
 		/>
-		<technique name="d3d">
-			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+		<technique name="cg">
+			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
 		</technique>
 	</techniques>
 </effect>

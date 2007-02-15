@@ -94,6 +94,50 @@ static GN_INLINE bool sColorFormat2OGL(
     gl_compressed = false;
     switch( clrfmt )
     {
+        case GN::gfx::FMT_RGBA_32_32_32_32_FLOAT:
+            if( !GLEW_ARB_texture_float )
+            {
+                GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
+                return false;
+            }
+            gl_internalformat = GL_RGBA32F_ARB;
+            gl_format         = GL_RGBA;
+            gl_type           = GL_FLOAT;
+            return true;
+
+        case GN::gfx::FMT_RG_32_32_FLOAT:
+            if( !GLEW_ARB_texture_float )
+            {
+                GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
+                return false;
+            }
+            gl_internalformat = GL_LUMINANCE_ALPHA32F_ARB;
+            gl_format         = GL_RGBA;
+            gl_type           = GL_FLOAT;
+            return true;
+
+        case GN::gfx::FMT_RGBA_16_16_16_16_FLOAT:
+            if( !GLEW_ARB_texture_float )
+            {
+                GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
+                return false;
+            }
+            gl_internalformat = GL_RGBA16F_ARB;
+            gl_format         = GL_RGBA;
+            gl_type           = GL_FLOAT;
+            return true;
+
+        case GN::gfx::FMT_RG_16_16_FLOAT:
+            if( !GLEW_ARB_texture_float )
+            {
+                GN_WARN(sLogger)( "current hardware do not support floating point texture format!" );
+                return false;
+            }
+            gl_internalformat = GL_LUMINANCE_ALPHA16F_ARB;
+            gl_format         = GL_RGBA;
+            gl_type           = GL_FLOAT;
+            return true;
+        
         case GN::gfx::FMT_RGBA_16_16_16_16_UNORM:
             gl_internalformat  = GL_RGBA16;
             gl_format          = GL_RGBA;

@@ -16,16 +16,16 @@
 
 	<shaders>
 		<!-- Cg shaders -->
-		<shader name="d3dvs" type="VS">
+		<shader name="cgvs" type="VS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="vs_1_1"/>
+					<token type="values" value="cgvs"/>
 				</token>
 			</prerequisites>
 			<uniref ref="pvw"       binding="g_matWorldViewProj"/>
 			<uniref ref="viewworld" binding="g_matWorldView"/>
 			<uniref ref="weights"   binding="g_vBlendWeights"/>
-			<code lang="D3D_HLSL" hints="entry=ShadeDolphinVertex">
+			<code lang="CG" hints="">
 <![CDATA[
 uniform float3   g_vBlendWeights     ;  // ( fWeight1, fWeight2, fWeight3, 0 )
 uniform float4x4 g_matWorldViewProj  ;  // world-view-projection matrix
@@ -39,7 +39,7 @@ struct VSOUT
     float2 vCausticTexCoords : TEXCOORD2;
 };
 
-VSOUT ShadeDolphinVertex(
+VSOUT main(
 	const float3 vPosition0     : POSITION0,
 	const float3 vNormal0       : NORMAL0,
 	const float2 vBaseTexCoords : TEXCOORD0,
@@ -88,15 +88,15 @@ VSOUT ShadeDolphinVertex(
 			</code>
 		</shader>
 
-		<shader name="d3dps" type="PS">
+		<shader name="cgps" type="PS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">
-					<token type="values" value="ps_1_1"/>
+					<token type="values" value="cgps"/>
 				</token>
 			</prerequisites>
 			<texref ref="skin" stage="0"/>
 			<texref ref="caustic" stage="1"/>
-			<code lang="D3D_HLSL" hints="...">
+			<code lang="CG" hints="...">
 <![CDATA[
 
 struct VSOUT
@@ -156,8 +156,8 @@ void main(
         <rsb
 			CULL_MODE="CULL_NONE"
 		/>
-		<technique name="d3d">
-			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+		<technique name="cg">
+			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
 		</technique>
 	</techniques>
 </effect>
