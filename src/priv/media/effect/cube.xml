@@ -24,8 +24,8 @@
 <![CDATA[
 uniform float4x4 pvw : register(c0);
 void main(
-	in  float4 ipos : POSITION0,
-	out float4 opos : POSITION0,
+	in  float4 ipos : POSITION,
+	out float4 opos : POSITION,
 	out float3 otex : TEXCOORD0 )
 {
 	opos = mul( pvw, ipos );
@@ -53,7 +53,46 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
 			</code>
 		</shader>
 
-		<!-- TODO: OpenGL ARB program -->
+		<!-- Cg shaders -->
+		<shader name="cgvs" type="VS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="cgvs"/>
+				</token>
+			</prerequisites>
+			<uniref ref="pvw" binding="pvw"/>
+			<code lang="CG" hints="...">
+<![CDATA[
+uniform float4x4 pvw : register(c0);
+void main(
+	in  float4 ipos : POSITION,
+	out float4 opos : POSITION,
+	out float3 otex : TEXCOORD0 )
+{
+	opos = mul( pvw, ipos );
+	otex = clamp( ipos.xyz, -1, 1 ); // Note: here we can't use sign(), because Cg 1.5 has bug when compile sign() to D3D vs_3_0 shader.
+}
+]]>
+			</code>
+		</shader>
+
+		<shader name="cgps" type="PS">
+			<prerequisites>
+				<token type="opcode" value="CHECK_SHADER_PROFILE">
+					<token type="values" value="cgps"/>
+				</token>
+			</prerequisites>
+			<texref ref="cube" stage="0"/>
+			<code lang="CG" hints="...">
+<![CDATA[
+sampler s0 : register(s0);
+float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
+{
+	return texCUBE( s0, itex );
+}
+]]>
+			</code>
+		</shader>
 
 		<!-- fixed pipeline -->
 		<shader name="fixgs" type="GS"/>
@@ -70,8 +109,11 @@ float4 main( in float3 itex : TEXCOORD0 ) : COLOR0
         <!--rsb
             CULL_MODE="CULL_NONE"
         /-->
-		<technique name="d3d">
+		<!--<technique name="d3d">
 			<pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+		</technique>-->
+		<technique name="cg">
+			<pass vs="cgvs" ps="cgps" gs="fixgs"/>
 		</technique>
 	</techniques>
 </effect>

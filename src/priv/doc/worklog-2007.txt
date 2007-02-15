@@ -1,7 +1,12 @@
-- 2007.2.13
-  - new OO style path and file system
-  - new mesh class, as well as XML loader
+- 2007.2.15
+  - OGL renderer bug fix: should disable programmable pipeline when renderging quads
+  - cube effect bug fix: avoid using function sign(), because Cg 1.5 has bugs 
+    when dealing with it.
 
 - 2007.2.14
   - new class: Renderable, which is the top level graphics object that can be 
     drawed to screen (composed by effect, mesh and textures)
+
+- 2007.2.13
+  - new OO style path and file system
+  - new mesh class, as well as XML loader

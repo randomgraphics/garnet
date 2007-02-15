@@ -128,7 +128,7 @@ void GN::gfx::OGLQuad::drawQuads(
     if( !(DQ_USE_CURRENT_RS & options ) )
         attribs |= GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT | GL_DEPTH_BITS | GL_ENABLE_BIT;
     if( !(DQ_USE_CURRENT_VS & options ) )
-        attribs |= GL_TRANSFORM_BIT;
+        attribs |= GL_TRANSFORM_BIT | GL_ENABLE_BIT;
     if( !(DQ_USE_CURRENT_PS & options ) )
         attribs |= GL_ENABLE_BIT;
 
@@ -166,6 +166,18 @@ void GN::gfx::OGLQuad::drawQuads(
     // apply vertex shader
     if( !( DQ_USE_CURRENT_VS & options ) )
     {
+        // disable ARB program
+        if( GLEW_ARB_vertex_program )
+        {
+            glDisable( GL_VERTEX_PROGRAM_ARB );
+        }
+
+        // disable NV program
+        if( GLEW_NV_vertex_program )
+        {
+            glDisable( GL_VERTEX_PROGRAM_NV );
+        }
+
         // setup OGL matrices
         if( DQ_WINDOW_SPACE & options )
         {
@@ -198,6 +210,18 @@ void GN::gfx::OGLQuad::drawQuads(
 
     if( !( DQ_USE_CURRENT_PS & options ) )
     {
+        // disable ARB program
+        if( GLEW_ARB_fragment_program )
+        {
+            glDisable( GL_FRAGMENT_PROGRAM_ARB );
+        }
+
+        // disable NV program
+        if( GLEW_NV_vertex_program )
+        {
+            glDisable( GL_FRAGMENT_PROGRAM_NV );
+        }
+
         glDisable( GL_LIGHTING );
         mRenderer.chooseTextureStage( 0 );
         GN_OGL_CHECK( glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,  GL_MODULATE ) );
@@ -207,6 +231,7 @@ void GN::gfx::OGLQuad::drawQuads(
     GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
 
     // apply vertex binding
+    mRenderer.chooseClientTextureStage( 0 );
     GN_OGL_CHECK( glInterleavedArrays( GL_T2F_C4UB_V3F, sizeof(QuadVertex), mVtxBuf ) );
 
     // do draw

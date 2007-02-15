@@ -3,7 +3,7 @@
 
 #ifdef HAS_CG
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.cgShader");
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -46,6 +46,8 @@ bool GN::gfx::CgShader::init(
         }
         return failure();
     }
+
+    GN_TRACE(sLogger)( "create Cg shader with profile: %s", cgGetProfileString( mProfile ) );
 
     // show compile result
     GN_TRACE(sLogger)(
