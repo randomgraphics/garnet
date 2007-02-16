@@ -177,7 +177,10 @@ void GN::gfx::OGLFont::drawText( const char * s, int x, int y, const Vector4f & 
     glDepthMask(0);
     glDisable(GL_LIGHTING);
     glDisable(GL_FOG);
-    mRenderer.disableTextureStage( 0 );
+    for( size_t i = 0; i < mRenderer.getCaps(CAPS_MAX_TEXTURE_STAGES); ++i )
+    {
+        mRenderer.disableTextureStage( i );
+    }
     glColor4fv( c );
 
     // set transform
