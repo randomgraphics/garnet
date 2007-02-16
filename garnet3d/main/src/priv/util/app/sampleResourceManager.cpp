@@ -47,7 +47,7 @@ static bool sCreateRawData( RawData * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load raw resource '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -158,7 +158,7 @@ static bool sCreateShader( Shader * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load shader '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -329,7 +329,7 @@ static bool sCreateEffect( Effect * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load Effect '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;
@@ -395,7 +395,7 @@ static bool sCreateMesh( Mesh * & result, const StrA & name, void * )
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load mesh '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load mesh '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     AutoObjPtr<File> fp( fs::openFile( path, "rt" ) );
@@ -462,7 +462,7 @@ static bool sCreateRenderable( Renderable * & result, const StrA & name, void * 
         return false;
     }
 
-    GN_TRACE(sLogger)( "Load rendreable '%s' from file '%s'.", name.cptr(), path.cptr() ); 
+    GN_INFO(sLogger)( "Load rendreable '%s' from file '%s'.", name.cptr(), path.cptr() ); 
 
     // open file
     DiskFile fp;

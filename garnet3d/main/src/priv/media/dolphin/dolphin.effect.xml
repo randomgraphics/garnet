@@ -15,7 +15,9 @@
 	-->
 
 	<shaders>
+
 		<!-- Cg shaders -->
+
 		<shader name="cgvs" type="VS">
 			<prerequisites>
 				<token type="opcode" value="CHECK_SHADER_PROFILE">

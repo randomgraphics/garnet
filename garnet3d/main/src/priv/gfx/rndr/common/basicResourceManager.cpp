@@ -5,7 +5,7 @@
 /// local Cg error handler
 ///
 #ifdef HAS_CG
-static void sCgErrorHandler( CGcontext ctx, CGerror err, void * appdata )
+static void sCgErrorHandler( CGcontext ctx, CGerror err, void * )
 {
     static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.cg");
 
@@ -27,7 +27,7 @@ bool GN::gfx::BasicRenderer::resInit()
     GN_GUARD;
 
     // set Cg error hanlder
-    cgSetErrorHandler(...);
+    cgSetErrorHandler( &sCgErrorHandler, 0 );
 
     // create Cg context
     mCgContext = cgCreateContext();

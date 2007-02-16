@@ -3,7 +3,7 @@
 
 #ifdef HAS_CG
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.cgShader");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.cg");
 
 // *****************************************************************************
 // Initialize and shutdown
