@@ -45,8 +45,8 @@ VSOUT main(
 	const float2 vBaseTexCoords : TEXCOORD0,
 	const float3 vPosition1     : TEXCOORD1,
 	const float3 vNormal1       : TEXCOORD2,
-	const float3 vPosition2     : TEXCOORD3,
-	const float3 vNormal2       : TEXCOORD4 )
+	const float3 vPosition2     : TANGENT,
+	const float3 vNormal2       : BINORMAL )
 {
 	const   float4   g_vZero = {0,0,0,0};
 	const   float4   g_vConstants = { 1, 0.5, 0, 0 };

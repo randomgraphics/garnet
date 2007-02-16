@@ -8,11 +8,11 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 // Local classes and functions
 // *****************************************************************************
 
-static const GLuint sWGHT_ATTRIB = 1;
-static const GLuint sCLR1_ATTRIB = 4;
-static const GLuint sFOG_ATTRIB  = 5;
-static const GLuint sTANG_ATTRIB = 6;
-static const GLuint sBNML_ATTRIB = 7;
+static const GLuint sWGHT_ATTRIB =  1;
+static const GLuint sCLR1_ATTRIB =  4;
+static const GLuint sFOG_ATTRIB  =  5;
+static const GLuint sTANG_ATTRIB = 14;
+static const GLuint sBNML_ATTRIB = 15;
 
 //
 // Compose VTXSEM_TEXn tag based on texture stage.

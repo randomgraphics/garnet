@@ -14,8 +14,8 @@
 		<attrib stream = "0" offset = "24" semantic = "TEX0" format = "FMT_FLOAT2"/>
 		<attrib stream = "1" offset =  "0" semantic = "TEX1" format = "FMT_FLOAT3"/>
 		<attrib stream = "1" offset = "12" semantic = "TEX2" format = "FMT_FLOAT3"/>
-		<attrib stream = "2" offset =  "0" semantic = "TEX3" format = "FMT_FLOAT3"/>
-		<attrib stream = "2" offset = "12" semantic = "TEX4" format = "FMT_FLOAT3"/>
+		<attrib stream = "2" offset =  "0" semantic = "TANG" format = "FMT_FLOAT3"/>
+		<attrib stream = "2" offset = "12" semantic = "BNML" format = "FMT_FLOAT3"/>
 	</vtxfmt>
 	
 	<vtxbuf stream = "0" offset = "0" stride = "32" ref="dolphin_1.vb"/>
