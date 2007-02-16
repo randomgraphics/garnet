@@ -645,7 +645,25 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
         }
     }
 
-    // Note: vertex and index buffers are handled in draw manager
+    //
+    // check if we need to bind vertex buffers
+    //
+    mNeedRebindVtxBufs = 0;
+    if( newFlags.vtxBufs )
+    {
+        for( UINT i = 0; i < newContext.numVtxBufs; ++i )
+        {
+            const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
+            if( vb != mContext.vtxBufs[i] || forceRebind )
+            {
+                mNeedRebindVtxBufs |= 1 << i;
+            }
+        }
+    }
+
+    //
+    // Note: index buffer is binded by draw manager
+    //
 
     //
     // bind textures

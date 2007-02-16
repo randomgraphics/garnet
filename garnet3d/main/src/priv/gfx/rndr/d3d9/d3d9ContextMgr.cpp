@@ -668,7 +668,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
         for( UINT i = 0; i < newContext.numVtxBufs; ++i )
         {
             const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
-            if( vb.buffer != mContext.vtxBufs[i].buffer || forceRebind )
+            if( vb != mContext.vtxBufs[i] || forceRebind )
             {
                 GN_ASSERT( vb.buffer );
                 GN_DX9_CHECK( mDevice->SetStreamSource(

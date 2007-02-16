@@ -287,6 +287,7 @@ namespace GN { namespace gfx
 
         RendererContext mContext;
         OGLBasicRTMgr * mRTMgr;
+        UInt32 mNeedRebindVtxBufs; // each bit represent a vertex stream.
 
         //@}
 
@@ -348,6 +349,7 @@ namespace GN { namespace gfx
             mFont = 0;
             mQuad = 0;
             mLine = 0;
+            mCurrentStartVtx = (size_t)-1;
         }
 
         bool drawDeviceCreate();
@@ -355,12 +357,18 @@ namespace GN { namespace gfx
         void drawDeviceDispose() {}
         void drawDeviceDestroy();
 
+        inline void applyVtxBuf(
+            const GN::gfx::OGLVtxFmt & vtxFmt,
+            const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
+            size_t startVtx );
+
     private:
 
         bool mDrawBegan;
         OGLFont * mFont;
         OGLQuad * mQuad;
         OGLLine * mLine;
+        size_t mCurrentStartVtx;
 
         //@}
 
