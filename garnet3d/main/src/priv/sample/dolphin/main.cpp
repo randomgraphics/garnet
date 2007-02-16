@@ -205,16 +205,16 @@ public:
     {
         GN_ASSERT( scene );
 
-        Renderer & r = gRenderer;
+        //Renderer & r = gRenderer;
 
         // draw to textures
-        r.setRenderTargets( rtdesc );
+        //r.setRenderTargets( rtdesc );
         scene->render();
 
         // draw texture to screen
-        r.setRenderTargets( RenderTargetDesc::DRAW_TO_BACK_BUFFER );
-        r.setTexture( 0, rt[0] );
-        r.draw2DTexturedQuad( 0 );
+        //r.setRenderTargets( RenderTargetDesc::DRAW_TO_BACK_BUFFER );
+        //r.setTexture( 0, rt[0] );
+        //r.draw2DTexturedQuad( 0 );
     }
 };
 
