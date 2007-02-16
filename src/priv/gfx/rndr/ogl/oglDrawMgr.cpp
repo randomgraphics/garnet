@@ -64,36 +64,6 @@ bool sPrimitiveType2OGL( GLenum                 & oglPrim,
     return true;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-static inline void sApplyVtxBuf(
-    const GN::gfx::OGLVtxFmt & vtxFmt,
-    const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
-    size_t startVtx )
-{
-    GN_GUARD_SLOW;
-
-    using namespace GN;
-    using namespace GN::gfx;
-
-    for( size_t i = 0; i < vtxFmt.getNumStreams(); ++i )
-    {
-        const RendererContext::VtxBufDesc & vbd = vtxBufs[i];
-
-        if( vbd.buffer )
-        {
-            const UInt8 * data = safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData();
-            vtxFmt.bindBuffer(
-                i,
-                data + vbd.offset + startVtx * vbd.stride,
-                vbd.stride );
-        }
-    }
-
-    GN_UNGUARD_SLOW;
-}
-
 // *****************************************************************************
 // device management
 // *****************************************************************************
@@ -263,7 +233,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
         mVtxFmts[mContext.vtxFmt]->getNumStreams() <= mContext.numVtxBufs );
-    sApplyVtxBuf(
+    applyVtxBuf(
         *mVtxFmts[mContext.vtxFmt],
         mContext.vtxBufs,
         startVtx );
@@ -336,7 +306,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numPrims, size_t sta
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
         mVtxFmts[mContext.vtxFmt]->getNumStreams() <= mContext.numVtxBufs );
-    sApplyVtxBuf(
+    applyVtxBuf(
         *mVtxFmts[mContext.vtxFmt],
         mContext.vtxBufs,
         startVtx );
@@ -387,7 +357,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrims ),
         "Fail to map primitive!" );
 
-    // bind vertex buffer based on current startVtx
+    // bind immediate vertex buffer
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
@@ -396,6 +366,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         0, // stream index
         (const UInt8* )vertexData,
         strideInBytes );
+    mNeedRebindVtxBufs |= 1;
 
 #if GN_DEBUG_BUILD
     // Verify index buffer
@@ -461,7 +432,7 @@ void GN::gfx::OGLRenderer::drawUp(
         sPrimitiveType2OGL( oglPrim, numIdx, prim, numPrims ),
         "Fail to map primitive!" );
 
-    // bind vertex buffer based on current startVtx
+    // bind immeidate vertex buffer
     GN_ASSERT(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
@@ -470,6 +441,7 @@ void GN::gfx::OGLRenderer::drawUp(
         0, // stream index
         (const UInt8* )vertexData,
         strideInBytes );
+    mNeedRebindVtxBufs |= 1;
 
     if( GLEW_EXT_compiled_vertex_array )
     {
@@ -552,5 +524,46 @@ void GN::gfx::OGLRenderer::drawDebugText( const char * s, int x, int y, const Ve
     GN_ASSERT( mDrawBegan && mFont );
     setShaders( 0, 0, 0 ); // disable programmable pipeline
     mFont->drawText( s, x, y, c );
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::gfx::OGLRenderer::applyVtxBuf(
+    const GN::gfx::OGLVtxFmt & vtxFmt,
+    const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
+    size_t startVtx )
+{
+    GN_GUARD_SLOW;
+
+    bool forceRebind = startVtx != mCurrentStartVtx;
+
+    for( size_t i = 0; i < vtxFmt.getNumStreams(); ++i )
+    {
+        if( forceRebind || ( mNeedRebindVtxBufs & (1<<i) ) )
+        {
+            const RendererContext::VtxBufDesc & vbd = vtxBufs[i];
+            if( vbd.buffer )
+            {
+                const UInt8 * data = safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData();
+                vtxFmt.bindBuffer(
+                    i,
+                    data + vbd.offset + startVtx * vbd.stride,
+                    vbd.stride );
+            }
+        }
+    }
+
+    // update current vertex offset
+    mCurrentStartVtx = startVtx;
+
+    // clear rebind flag
+    mNeedRebindVtxBufs = 0;
+
     GN_UNGUARD_SLOW;
 }

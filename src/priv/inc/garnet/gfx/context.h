@@ -215,6 +215,22 @@ namespace GN { namespace gfx
             const VtxBuf * buffer; ///< buffer pointer
             size_t         offset; ///< byte offset of the first vertex in buffer.
             size_t         stride; ///< vertex stride in bytes
+
+            ///
+            /// equality check
+            ///
+            bool operator==( const VtxBufDesc & rhs ) const
+            {
+                return buffer == rhs.buffer && offset == rhs.offset && stride == rhs.stride;
+            }
+
+            ///
+            /// equality check
+            ///
+            bool operator!=( const VtxBufDesc & rhs ) const
+            {
+                return buffer != rhs.buffer || offset != rhs.offset || stride != rhs.stride;
+            }
         };
 
         // context flags
