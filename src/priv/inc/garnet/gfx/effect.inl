@@ -191,7 +191,7 @@ GN_INLINE GN::gfx::EffectItemID GN::gfx::Effect::getUniformID( const StrA & name
 {
     GN_GUARD_SLOW;
     EffectItemID id = mUniforms.find( name );
-    if( 0 == id ) GN_ERROR(sLogger)( "invalid uniform name: %s", name.cptr() );
+    if( 0 == id ) GN_ERROR(getLogger("GN.gfx.base.Effect.invalidParam"))( "invalid uniform name: %s", name.cptr() );
     return id;
     GN_UNGUARD_SLOW;
 }
@@ -205,7 +205,7 @@ GN_INLINE void GN::gfx::Effect::setUniform( EffectItemID id, const UniformValue 
 
     if( !mUniforms.items.validHandle(id) )
     {
-        GN_ERROR(sLogger)( "invalid uniform id: %d", id );
+        GN_ERROR(getLogger("GN.gfx.base.Effect.invalidParam"))( "invalid uniform id: %d", id );
         return;
     }
 
@@ -251,7 +251,7 @@ GN_INLINE GN::gfx::EffectItemID GN::gfx::Effect::getTextureID( const StrA & name
 {
     GN_GUARD_SLOW;
     EffectItemID id = mTextures.find( name );
-    if( 0 == id ) GN_ERROR(sLogger)( "invalid texture name: %s", name.cptr() );
+    if( 0 == id ) GN_ERROR(getLogger("GN.gfx.base.Effect.invalidParam"))( "invalid texture name: %s", name.cptr() );
     return id;
     GN_UNGUARD_SLOW;
 }
@@ -265,7 +265,7 @@ GN_INLINE void GN::gfx::Effect::setTexture( EffectItemID id, const Texture * tex
 
     if( !mTextures.items.validHandle(id) )
     {
-        GN_ERROR(sLogger)( "invalid texture id: %d", id );
+        GN_ERROR(getLogger("GN.gfx.base.Effect.invalidParam"))( "invalid texture id: %d", id );
         return;
     }
 

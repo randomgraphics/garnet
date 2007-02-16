@@ -44,7 +44,7 @@ VSOUT main(
 	in  float3 inml : NORMAL0,
 	in  float2 itex : TEXCOORD0 )
 {
-	const float4 lightdir = { 0, 1, 0, 0 };
+	const float3 lightdir = { 0, 1, 0 };
 	const float4 fogrange = { 0.5,50.0, 1.0/(50.0-1.0), 0 }; // ( x, fog_end, (1/(fog_end-fog_start)), x )
 
 	// Transform to view space (world matrix is identity)
@@ -103,7 +103,7 @@ void main(
 	out float4 oC1 : COLOR1 )
 {
 	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
-	const float4 g_vAmbient  = { 0.25f, 0.25f, 0.25f, 0.25f };
+	const float3 g_vAmbient  = { 0.25f, 0.25f, 0.25f };
 
     // Decompress input values
     float3 vLightColor       = Input.vMisc.xxx;
