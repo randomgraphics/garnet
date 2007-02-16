@@ -57,6 +57,8 @@ namespace GN
     ///             report_error();
     ///   - 空对象应尽量容易引起使用者的注意, 且不会引起程序崩溃.
     ///     - 比如可以用纯红色的1x1贴图作为空贴图, 用一个大方块作为空mesh.
+    /// - NameResolver:
+    ///   - Need detail explaination here.
     /// - NameChecker: 名字检查函数
     ///   - 当用户试图用名字引用一个不存在的资源时, 管理器会调用NameCheker来检查这个名字的有效性,
     ///     并把有效的名字自动加入资源管理器中(参见getResourceHandle()的代码).
@@ -76,6 +78,8 @@ namespace GN
 
         typedef Delegate2<void,RES&,void*> Deletor; ///< Resource deletion functor
 
+        typedef Delegate2<void,StrA&,const StrA&> NameResolver; ///< Resource name resolver.
+
         typedef Delegate1<bool,const StrA&> NameChecker; ///< Resource name checker.
 
         ///
@@ -85,10 +89,12 @@ namespace GN
             const Creator & creator = Creator(),
             const Deletor & deletor = Deletor(),
             const Creator & nullor = Creator(),
+            const NameResolver & resolver = NameResolver(),
             const NameChecker & checker = NameChecker() )
             : mCreator(creator)
             , mDeletor(deletor)
             , mNullor(nullor)
+            , mNameResolver(resolver)
             , mNameChecker(checker)
             , mNullInstance(0)
         {
@@ -126,6 +132,11 @@ namespace GN
         const Creator & getNullor() const { return mNullor; }
 
         ///
+        /// Get global resource name resolver
+        ///
+        const NameResolver & getNameResolver() const { return mNameResolver; }
+
+        ///
         /// Get global resource name checker
         ///
         const NameChecker & getNameChecker() const { return mNameChecker; }
@@ -148,6 +159,11 @@ namespace GN
         /// Set global deletor
         ///
         void setDeletor( const Deletor & d ) { mDeletor = d; }
+
+        ///
+        /// Set global resource name resolver
+        ///
+        void setNameResolver( const NameResolver & s ) { mNameResolver = s; }
 
         ///
         /// Set global resource name checker
@@ -197,7 +213,11 @@ namespace GN
         ///
         /// Return true for valid resource name
         ///
-        bool validResourceName( const StrA & n ) const { return mResNames.end() != mResNames.find( n ); }
+        bool validResourceName( const StrA & n ) const
+        {
+            StrA realname;
+            return mResNames.end() != mResNames.find( resolveName(realname,n) );
+        }
 
         ///
         /// Get resource by handle.
@@ -231,8 +251,9 @@ namespace GN
         bool getResource( RES & result, const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
-            HandleType h = getResourceHandle( name, autoAddNewName );
-            return getResourceImpl( result, h, name.cptr() );
+            StrA realname;
+            HandleType h = getResourceHandle( resolveName(realname,name), autoAddNewName );
+            return getResourceImpl( result, h, realname.cptr() );
             GN_UNGUARD_SLOW;
         }
 
@@ -247,7 +268,8 @@ namespace GN
         {
             GN_GUARD_SLOW;
             RES res;
-            if( getResource( res, name, autoAddNewName ) ) return res;
+            StrA realname;
+            if( getResource( res, resolveName(realname,name), autoAddNewName ) ) return res;
             else return RES();
             GN_UNGUARD_SLOW;
         }
@@ -265,9 +287,10 @@ namespace GN
         HandleType getResourceHandle( const StrA & name, bool autoAddNewName = true )
         {
             GN_GUARD_SLOW;
-            typename StringMap::const_iterator iter = mResNames.find( name );
+            StrA realname;
+            typename StringMap::const_iterator iter = mResNames.find( resolveName(realname,name) );
             if( mResNames.end() != iter ) return iter->second;
-            if( autoAddNewName && ( !mNameChecker || mNameChecker(name) ) ) return addResource( name );
+            if( autoAddNewName && ( !mNameChecker || mNameChecker(realname) ) ) return addResource( realname );
             return 0; // failed
             GN_UNGUARD_SLOW;
         }
@@ -301,12 +324,13 @@ namespace GN
 
             HandleType h;
             ResDesc * item;
-            typename StringMap::const_iterator ci = mResNames.find(name);
+            StrA realname;
+            typename StringMap::const_iterator ci = mResNames.find( resolveName(realname,name) );
             if( mResNames.end() != ci )
             {
                 if( !overrideExistingResource )
                 {
-                    GN_ERROR(sLogger)( "resource '%s' already exist!", name.cptr() );
+                    GN_ERROR(sLogger)( "resource '%s' already exist!", realname.cptr() );
                     return 0;
                 }
                 GN_ASSERT( mResHandles.validHandle(ci->second) );
@@ -324,13 +348,13 @@ namespace GN
                     delete item;
                     return 0;
                 }
-                mResNames[name] = h;
+                mResNames[realname] = h;
             }
             GN_ASSERT( mResNames.size() == mResHandles.size() );
             GN_ASSERT( mResHandles.validHandle(h) && item );
             item->creator = creator;
             item->nullor = nullor;
-            item->name = name;
+            item->name = realname;
             item->userData = userData;
             item->disposed = true;
             return h;
@@ -359,10 +383,11 @@ namespace GN
             GN_GUARD;
 
             // find the resource
-            typename StringMap::iterator iter = mResNames.find( name );
+            StrA realname;
+            typename StringMap::iterator iter = mResNames.find( resolveName(realname,name) );
             if( mResNames.end() == iter )
             {
-                GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", realname.cptr() );
                 return;
             }
 
@@ -413,10 +438,11 @@ namespace GN
         void disposeResourceByName( const StrA & name )
         {
             GN_GUARD;
-            typename StringMap::const_iterator iter = mResNames.find( name );
+            StrA realname;
+            typename StringMap::const_iterator iter = mResNames.find( resolveName(realname,name) );
             if( mResNames.end() == iter )
             {
-                GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
+                GN_ERROR(sLogger)( "invalid resource name: %s", realname.cptr() );
                 return;
             }
             disposeResourceByHandle( iter->second );
@@ -505,6 +531,7 @@ namespace GN
         Creator      mCreator;
         Deletor      mDeletor;
         Creator      mNullor; // Use to create default "NULL" instance.
+        NameResolver mNameResolver;
         NameChecker  mNameChecker;
 
         RES   * mNullInstance;
@@ -517,6 +544,13 @@ namespace GN
         // *****************************
 
     private:
+
+        StrA & resolveName( StrA & out, const StrA & in ) const
+        {
+            if( mNameResolver ) mNameResolver( out, in );
+            else out = in;
+            return out;
+        }
 
         bool getResourceImpl( RES & res, HandleType handle, const char * name )
         {

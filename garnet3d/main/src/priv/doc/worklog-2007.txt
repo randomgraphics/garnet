@@ -1,3 +1,7 @@
+- 2007.2.16
+  - support alias in resource manager: now single resource instance may have 
+    several different names/alias.
+
 - 2007.2.15
   - OGL renderer bug fix: should disable programmable pipeline when renderging quads
   - cube effect bug fix: avoid using function sign(), because Cg 1.5 has bugs 

@@ -14,6 +14,7 @@ class Scene
     AutoRef<Texture> mCaustics[32];
 
     UInt32 mDolphin, mSeafloor;
+    UInt32 mDolphinEff, mSeafloorEff;
 
 public:
 
@@ -42,6 +43,10 @@ public:
         mDolphin = rm.renderables.getResourceHandle( "media::dolphin/dolphin.renderable.xml" );
         mSeafloor = rm.renderables.getResourceHandle( "media::dolphin/seafloor.renderable.xml" );
 
+        // load dolphin and seafloor effects
+        mDolphinEff = rm.effects.getResourceHandle( "media::dolphin/dolphin.effect.xml" );
+        mSeafloorEff = rm.effects.getResourceHandle( "media::dolphin/seafloor.effect.xml" );
+
         // success
         return true;
     }
@@ -59,7 +64,8 @@ public:
         Renderable * seafloor = rm.renderables.getResource( mSeafloor );
         if( !seafloor->subsets.empty() )
         {
-            eff = seafloor->subsets[0].effect.get();
+            eff = rm.effects.getResource( mSeafloorEff );
+            GN_ASSERT( seafloor->subsets[0].effect.get() == eff );
             eff->setUniformByName( "view", view );
             eff->setUniformByName( "proj", proj );
             eff->setUniformByName( "caustic", caustics );
@@ -102,7 +108,8 @@ public:
         Renderable * dolphin = rm.renderables.getResource( mDolphin );
         if( dolphin->subsets.size() > 0 )
         {
-            eff = dolphin->subsets[0].effect.get();
+            eff = rm.effects.getResource( mDolphinEff );
+            GN_ASSERT( dolphin->subsets[0].effect.get() == eff );
             eff->setUniformByName( "weights", vWeight );
             eff->setUniformByName( "viewworld", view * world );
             eff->setUniformByName( "pvw", proj * view * world );

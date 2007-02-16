@@ -8,7 +8,26 @@ using namespace GN::app;
 static GN::Logger * sLogger = GN::getLogger("GN.app.SampleResourceManager");
 
 // *****************************************************************************
-// local raw data loader
+// Resource name resolver
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sResolveResourceName( StrA & out, const StrA & in )
+{
+    if( fs::isFile(in) )
+    {
+        fs::toNative( out, in );
+    }
+    else
+    {
+        out = in;
+    }
+}
+
+// *****************************************************************************
+// raw data loader
 // *****************************************************************************
 
 struct SampleRawData : public RawData
@@ -725,26 +744,32 @@ GN::app::SampleResourceManager::SampleResourceManager()
     shaders.setCreator( &sCreateShader );
     shaders.setDeletor( &sDeleteShader );
     shaders.setNullor( &sCreateNullShader );
+    shaders.setNameResolver( &sResolveResourceName );
 
     textures.setCreator( &sCreateTexture );
     textures.setDeletor( &sDeleteTexture );
     textures.setNullor( &sCreateNullTexture );
+    textures.setNameResolver( &sResolveResourceName );
 
     effects.setCreator( &sCreateEffect );
     effects.setDeletor( &sDeleteEffect );
     effects.setNullor( &sCreateNullEffect );
+    effects.setNameResolver( &sResolveResourceName );
 
     meshes.setCreator( &sCreateMesh );
     meshes.setDeletor( &sDeleteMesh );
     meshes.setNullor( &sCreateNullMesh );
+    meshes.setNameResolver( &sResolveResourceName );
 
     renderables.setCreator( &sCreateRenderable );
     renderables.setDeletor( &sDeleteRenderable );
     renderables.setNullor( &sCreateNullRenderable );
+    renderables.setNameResolver( &sResolveResourceName );
 
     rawData.setCreator( &sCreateRawData );
     rawData.setDeletor( &sDeleteRawData );
     rawData.setNullor( &sCreateNullRawData );
+    rawData.setNameResolver( &sResolveResourceName );
 
     Renderer::sSigDispose.connect( this, &SampleResourceManager::onRendererDispose );
     Renderer::sSigDestroy.connect( this, &SampleResourceManager::onRendererDestroy );
