@@ -11,8 +11,7 @@
     - on the top: the renderable class
       - consist of effect, meshs, textures and uniforms.
       - rendering code should be as simple as calling renderable::draw()
-    - resource ID is used only by renderable class, all other classes should use
-      pointer directly.
+    - resource ID used only on loading, all other places use pointer directly.
     - support uniform sharing: think about DX10 constant buffer.
     - support template and referencing in effect and renderable XML file.
     - support external shader file in effect XML definition.
