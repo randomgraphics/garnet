@@ -1,3 +1,5 @@
+- 2007.2.17
+  - new module: Scene with design doc
 - 2007.2.16
   - support alias in resource manager: now single resource instance may have 
     several different names/alias.

@@ -2,6 +2,7 @@ top level loop
 ==============
 
     thread 0:
+    handle object management and update
     while(1)
     {
         for( all_objects )
@@ -10,7 +11,8 @@ top level loop
         }
     }
 
-    thread 1:
+    rendering thread (:
+    handle tasks that need to access rendering device.
     while(1)
     {
         for( all_visible_objects )
@@ -29,18 +31,22 @@ FEATURE LIST
       . for save and load
 . object -> name
     . uniqname or not?
+. object -> typeid (rtti)
+    . how?
 . scene save and load
+    . requires ID and typeid
 . multiple cameras
 . multiple threads
     . one thread for object management
         . check visible objects
         ...
     . one thread for rendering
-        . do blinding loop of rendering all visible objects
+        . do blinding rendering of all visible objects
         ...
 . dynamic scene object management (multi-threads safe)
-  . allow adding new object during runtime.
-  . allowing runtime object deletion?
+  . allow runtime insertion.
+  . allowing runtime object dispose.
+    . based on LRU table.
     . need carefully design to avoid too much locks.
   . object IDs will never be deleted and reused.
   . several object list:
@@ -54,4 +60,3 @@ ISSUES
 . do we need unique object name?
   . pros: can ref other objects by name, in definition file.
   . cons: too retrict. I like arbitry name.
-. 
