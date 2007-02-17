@@ -1,0 +1,57 @@
+top level loop
+==============
+
+    thread 0:
+    while(1)
+    {
+        for( all_objects )
+        {
+            obj->update(); // in fixed time step, 1/60s for example.
+        }
+    }
+
+    thread 1:
+    while(1)
+    {
+        for( all_visible_objects )
+        {
+            obj->draw();
+        }
+    }
+
+
+FEATURE LIST
+============
+
+. ID <-> object
+    . 1-1 mapping
+    . why we need this?
+      . for save and load
+. object -> name
+    . uniqname or not?
+. scene save and load
+. multiple cameras
+. multiple threads
+    . one thread for object management
+        . check visible objects
+        ...
+    . one thread for rendering
+        . do blinding loop of rendering all visible objects
+        ...
+. dynamic scene object management (multi-threads safe)
+  . allow adding new object during runtime.
+  . allowing runtime object deletion?
+    . need carefully design to avoid too much locks.
+  . object IDs will never be deleted and reused.
+  . several object list:
+    . ready-to-use list
+    . prepare-to-dispose list
+    . prepare-to-load list
+
+ISSUES
+======
+
+. do we need unique object name?
+  . pros: can ref other objects by name, in definition file.
+  . cons: too retrict. I like arbitry name.
+. 
