@@ -95,9 +95,9 @@ namespace GN { namespace scene
     public:
 
         ///
-        /// draw the whole scene to screen
+        /// update the scene
         ///
-        void draw();
+        void update();
 
         // ********************************
         // private variables
