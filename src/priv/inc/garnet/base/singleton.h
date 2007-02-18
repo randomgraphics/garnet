@@ -7,19 +7,19 @@
 // *****************************************************************************
 
 ///
-/// 实现单件类中的静态变量
+/// 实现跨模块单件中的静态变量
 ///
-#define GN_IMPLEMENT_SINGLETON(T) template<> GN_EXPORT T * ::GN::Singleton< T >::msInstancePtr = 0;
+#define GN_IMPLEMENT_CROSS_DLL_SINGLETON(T) template<> GN_EXPORT T * ::GN::CrossDllSingleton< T >::msInstancePtr = 0;
 
 namespace GN
 {
     ///
-    /// 单件类.
+    /// 用于模块内部使用的单件类，无法跨DLL使用。
     ///
     template<typename T>
     class Singleton
     {
-        static GN_PUBLIC T * msInstancePtr; ///< 指向singleton的实例
+        static T * msInstancePtr; ///< 指向singleton的实例
 
     public:
 
@@ -30,8 +30,8 @@ namespace GN
         {
             GN_ASSERT( 0 == msInstancePtr );
             // This is code 64-bit compatible?
-            size_t offset = (const char *)(T*)1 - (const char *)(Singleton<T>*)(T*)1;
-            msInstancePtr = (T*)( ((const char *)this)+offset );
+            size_t offset = (size_t)(T*)1 - (size_t)(Singleton<T>*)(T*)1;
+            msInstancePtr = (T*)((size_t)this+offset);
         }
 
         ///
@@ -50,31 +50,33 @@ namespace GN
         static T * sGetInstancePtr() { return msInstancePtr; }
     };
 
+    template<typename T> T * Singleton<T>::msInstancePtr = 0;
+
     ///
-    /// 用于局部使用的单件类，无法跨DLL使用。
+    /// Singleton class that can used cross DLL boundary.
     ///
     template<typename T>
-    class LocalSingleton
+    class CrossDllSingleton
     {
-        static T * msInstancePtr; ///< 指向singleton的实例
+        static GN_PUBLIC T * msInstancePtr; ///< 指向singleton的实例
 
     public:
 
         ///
         /// Constructor
         ///
-        LocalSingleton()
+        CrossDllSingleton()
         {
             GN_ASSERT( 0 == msInstancePtr );
             // This is code 64-bit compatible?
-            size_t offset = (size_t)(T*)1 - (size_t)(LocalSingleton<T>*)(T*)1;
-            msInstancePtr = (T*)((size_t)this+offset);
+            size_t offset = (const char *)(T*)1 - (const char *)(CrossDllSingleton<T>*)(T*)1;
+            msInstancePtr = (T*)( ((const char *)this)+offset );
         }
 
         ///
         /// Destructor
         ///
-        virtual ~LocalSingleton() { GN_ASSERT(msInstancePtr); msInstancePtr = 0; }
+        virtual ~CrossDllSingleton() { GN_ASSERT(msInstancePtr); msInstancePtr = 0; }
 
         ///
         /// Get the instance
@@ -87,7 +89,6 @@ namespace GN
         static T * sGetInstancePtr() { return msInstancePtr; }
     };
 
-    template<typename T> T * LocalSingleton<T>::msInstancePtr = 0;
 }
 
 // *****************************************************************************

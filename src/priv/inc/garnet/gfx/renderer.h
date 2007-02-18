@@ -378,7 +378,7 @@ namespace GN { namespace gfx
     ///
     /// \nosubgrouping
     ///
-    struct Renderer : public Singleton<Renderer>, public NoCopy
+    struct Renderer : public CrossDllSingleton<Renderer>, public NoCopy
     {
         // ********************************************************************
         ///

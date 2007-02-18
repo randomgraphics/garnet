@@ -165,7 +165,7 @@ namespace GN
     ///
     /// Plugin Manager
     ///
-    class PluginManager : public Singleton<PluginManager>
+    class PluginManager : public CrossDllSingleton<PluginManager>
     {
         // ********************************
         // ctor/dtor

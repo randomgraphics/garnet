@@ -4,10 +4,10 @@
 #include "garnet/GNinput.h"
 
 // implement global singletons
-GN_IMPLEMENT_SINGLETON( GN::PluginManager )
-GN_IMPLEMENT_SINGLETON( GN::ProfilerManager )
-GN_IMPLEMENT_SINGLETON( GN::input::Input )
-GN_IMPLEMENT_SINGLETON( GN::gfx::Renderer )
+GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::PluginManager )
+GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::ProfilerManager )
+GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
+GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::gfx::Renderer )
 
 // implement static renderer data members
 GN_IMPLEMENT_RENDERER_STATIC_MEMBERS()

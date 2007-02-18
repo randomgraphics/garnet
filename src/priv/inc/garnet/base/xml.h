@@ -11,6 +11,7 @@ namespace GN
     struct XmlCdata;
     struct XmlElement;
     struct XmlComment;
+    class  XmlDocument;
 
     ///
     /// XML attribute class
@@ -47,6 +48,7 @@ namespace GN
     ///
     struct XmlNode
     {
+        XmlDocument     & doc;     ///< reference to the owner document
         const XmlNodeType type;    ///< node type. can't be modified.
         XmlNode         * parent;  ///< pointer to parent node
         XmlNode         * sibling; ///< pointer to next brother node
@@ -92,7 +94,7 @@ namespace GN
         ///
         /// protected ctor to prevent user from creatiing this class.
         ///
-        XmlNode( XmlNodeType t ) : type(t) { GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES ); }
+        XmlNode( XmlDocument & d, XmlNodeType t ) : doc(d), type(t) { GN_ASSERT( 0 <= t && t < NUM_XML_NODE_TYPES ); }
     };
 
     ///
@@ -107,7 +109,7 @@ namespace GN
         ///
         /// protected ctor to prevent user from creatiing this class.
         ///
-        XmlCdata() : XmlNode(XML_CDATA) {}
+        XmlCdata( XmlDocument & d ) : XmlNode(d,XML_CDATA) {}
     };
 
     ///
@@ -122,7 +124,7 @@ namespace GN
         ///
         /// protected ctor to prevent user from creatiing this class.
         ///
-        XmlComment() : XmlNode(XML_COMMENT) {}
+        XmlComment( XmlDocument & d ) : XmlNode(d,XML_COMMENT) {}
     };
 
     ///
@@ -169,7 +171,7 @@ namespace GN
         ///
         /// protected ctor to prevent user from creatiing this class.
         ///
-        XmlElement() : XmlNode(XML_ELEMENT) {}
+        XmlElement( XmlDocument & d ) : XmlNode(d,XML_ELEMENT) {}
     };
 
     ///
@@ -189,7 +191,10 @@ namespace GN
     class XmlDocument
     {
         // T must be one of XML node class
-        template<class T> struct PooledNode : public T {};
+        template<class T> struct PooledNode : public T
+        {
+            PooledNode( XmlDocument & d ) : T(d) {}
+        };
         struct PooledAttrib : public XmlAttrib {};
 
         std::vector<XmlNode*>     mNodes;

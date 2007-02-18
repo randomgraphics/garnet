@@ -1,5 +1,8 @@
-top level loop
-==============
+. NOT BE TOO GENERAILIZED!
+
+
+main loop
+=========
 
     thread 0:
     handle object management and update
@@ -21,42 +24,62 @@ top level loop
         }
     }
 
-
 FEATURE LIST
 ============
 
-. ID <-> object
-    . 1-1 mapping
-    . why we need this?
-      . for save and load
-. object -> name
-    . uniqname or not?
-. object -> typeid (rtti)
-    . how?
-. scene save and load
-    . requires ID and typeid
+. All object are subclass of SceneNode, which has unique ID and name
+. The class of the object has unique type ID.
+	. Can we use C++ inherited RTTI?
+. Whold world can be load from and save to a XML file.
+	. requires object ID and type ID.
 . multiple cameras
+	. to support mirrors, maybe
 . multiple threads
-    . one thread for object management
-        . check visible objects
-        ...
-    . one thread for rendering
-        . do blinding rendering of all visible objects
-        ...
+	. one thread for object management
+		. check visible objects
+			...
+	. one thread for rendering
+		. do blinding rendering of all visible objects
+			...
 . dynamic scene object management (multi-threads safe)
-  . allow runtime insertion.
-  . allowing runtime object dispose.
-    . based on LRU table.
-    . need carefully design to avoid too much locks.
-  . object IDs will never be deleted and reused.
-  . several object list:
-    . ready-to-use list
-    . prepare-to-dispose list
-    . prepare-to-load list
+	. allow runtime insertion.
+	. allowing runtime object dispose.
+		. based on LRU table.
+		. need carefully design to avoid too much locks.
+	. object IDs will never be deleted and reused.
+	. several object list:
+		. ready-to-use list
+		. prepare-to-dispose list
+		. prepare-to-load list
+
+main components
+===============
+
+. world
+  . sky
+  . terrain
+  . river
+  . building
+  . plants
+. actors
+  . characters
+  . particles
+  . projectiles
+. weather
+  . wind
+  . rain
+  . snow
 
 ISSUES
 ======
 
-. do we need unique object name?
-  . pros: can ref other objects by name, in definition file.
-  . cons: too retrict. I like arbitry name.
+. who's responsible of node creation?
+	. by scene loader
+		. load node from file:
+			. create node instance based on its type name
+			. call LoadFrom...() of the node
+		. or load node
+		. quick prototyping will be hard.
+	. user can't create node instance directly.
+. who's responsible of node deletion?
+	. TBD
