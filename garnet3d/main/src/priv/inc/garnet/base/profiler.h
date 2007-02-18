@@ -34,7 +34,7 @@ namespace GN
     ///
     /// Profiler Manager
     ///
-    class ProfilerManager : public Singleton<ProfilerManager>
+    class ProfilerManager : public CrossDllSingleton<ProfilerManager>
     {
         // ********************************
         // ctor/dtor

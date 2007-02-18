@@ -510,9 +510,9 @@ GN::XmlNode * GN::XmlDocument::createNode( XmlNodeType type )
     XmlNode * p;
     switch( type )
     {
-        case XML_CDATA   : p = new PooledNode<XmlCdata>; break;
-        case XML_COMMENT : p = new PooledNode<XmlComment>; break;
-        case XML_ELEMENT : p = new PooledNode<XmlElement>; break;
+        case XML_CDATA   : p = new PooledNode<XmlCdata>(*this); break;
+        case XML_COMMENT : p = new PooledNode<XmlComment>(*this); break;
+        case XML_ELEMENT : p = new PooledNode<XmlElement>(*this); break;
         default          : GN_ERROR(sLogger)( "invalid node type : %d", type ); return NULL;
     }
     mNodes.push_back( p );

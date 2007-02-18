@@ -210,7 +210,7 @@ namespace GN
         ///
         /// main interface of input module (singleton)
         ///
-        struct Input : public Singleton<Input>, public NoCopy
+        struct Input : public CrossDllSingleton<Input>, public NoCopy
         {
             // ************************************************************************
             //      main interface functions
