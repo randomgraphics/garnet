@@ -1,15 +1,12 @@
-#ifndef __GN_GNOGL_GNOGL_H__
-#define __GN_GNOGL_GNOGL_H__
+#ifndef __GN_GFX_OGLUTILS_H__
+#define __GN_GFX_OGLUTILS_H__
 // *****************************************************************************
-/// \file    GNogl.h
+/// \file    gfx/oglutils.h
 /// \brief   Public interface for opengl module (collection of OGL utils).
 /// \author  chenlee (2005.8.26)
 // *****************************************************************************
 
 #if !GN_XENON
-
-#include "GNbase.h"
-#include "GNgfx.h"
 
 #if GN_MSWIN
 #include <windows.h>
@@ -39,6 +36,6 @@ namespace GN { namespace gfx
 #endif
 
 // *****************************************************************************
-//                           End of GnGL.h
+//                           End of gfx/oglutils.h
 // *****************************************************************************
-#endif // __GN_GNOGL_GNOGL_H__
+#endif // __GN_GFX_OGLUTILS_H__

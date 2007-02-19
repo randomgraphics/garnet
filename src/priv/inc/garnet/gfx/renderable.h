@@ -6,9 +6,6 @@
 //! \author  chenli@@FAREAST (2007.1.30)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
-#include "garnet/gfx/effect.h"
-#include "garnet/gfx/mesh.h"
 #include <map>
 
 namespace GN { namespace gfx

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
 #include "d3d9Texture.h"
-#include "garnet/GNd3d9.h"
 
 // *****************************************************************************
 // local functions that initialize individual capability

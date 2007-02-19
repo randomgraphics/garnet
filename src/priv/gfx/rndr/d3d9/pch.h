@@ -6,9 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
-#include "garnet/GNcore.h"
-#include "garnet/GNgfx.h"
+#include "../rndr.h"
 
 #if GN_DEBUG_BUILD
 #define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"

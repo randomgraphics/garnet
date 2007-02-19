@@ -2,7 +2,6 @@
 #include "d3d9Renderer.h"
 #include "d3d9RenderTargetMgr.h"
 #include "d3d9Texture.h"
-#include "garnet/GNd3d9.h"
 
 #if GN_XENON
 

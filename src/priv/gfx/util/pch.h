@@ -1,30 +1,18 @@
+#ifndef __GN_PCH_H__
+#define __GN_PCH_H__
 // *****************************************************************************
 // \file    pch.h
 // \brief   PCH header
-// \author  chenlee (2005.10.1)
+// \author  chenlee (2005.11.11)
 // *****************************************************************************
 
-#include "../rndr.h"
-
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#elif GN_POSIX
-#include <X11/Xlib.h>
-#endif
-
-#ifdef HAS_CG
-#include <Cg/cg.h>
-#endif
-
-#include <exception>
-#include <malloc.h>
-#include <stdlib.h>
+#include "../rndr/rndr.h"
+#include "garnet/gfx/effect.h"
+#include "garnet/gfx/mesh.h"
+#include "garnet/gfx/fatMesh.h"
+#include "garnet/gfx/renderable.h"
 
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************
+#endif // __GN_PCH_H__

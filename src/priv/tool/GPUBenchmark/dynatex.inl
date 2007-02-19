@@ -1,4 +1,3 @@
-#include "garnet/GNd3d9.h"
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::gfx::d3d9;

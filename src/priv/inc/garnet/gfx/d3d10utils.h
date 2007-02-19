@@ -1,13 +1,10 @@
-#ifndef __GN_GND3D10_H__
-#define __GN_GND3D10_H__
+#ifndef __GN_GFX_D3D10UTILS_H__
+#define __GN_GFX_D3D10UTILS_H__
 // *****************************************************************************
-/// \file    GNd3d10.h
+/// \file    gfx/d3d10utils.h
 /// \brief   Public interface for D3D10 module (collection of common D3D utils).
 /// \author  chenlee (2006.9.20)
 // *****************************************************************************
-
-#include "GNbase.h"
-#include "GNgfx.h"
 
 #if GN_MSWIN && !GN_XENON
 
@@ -155,6 +152,6 @@ namespace GN { namespace gfx
 #endif // GN_MSWIN
 
 // *****************************************************************************
-//                           End of GNd3d10.h
+//                           End of gfx/d3d10utils.h
 // *****************************************************************************
-#endif // __GN_D3DAPP_GND3D_H__
+#endif // __GN_GFX_D3D10UTILS_H__

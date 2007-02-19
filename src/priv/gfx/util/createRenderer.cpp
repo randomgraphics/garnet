@@ -65,18 +65,6 @@ static GN::gfx::RendererAPI sDetermineRendererAPI()
 }
 
 // *************************************************************************
-// implement static data member of RenderTargetDesc
-// *************************************************************************
-
-static GN::gfx::RenderTargetDesc sMakeDefaultRTD()
-{
-    GN::gfx::RenderTargetDesc rtd;
-    memset( &rtd, 0, sizeof(rtd) );
-    return rtd;
-}
-const GN::gfx::RenderTargetDesc GN::gfx::RenderTargetDesc::DRAW_TO_BACK_BUFFER = sMakeDefaultRTD();
-
-// *************************************************************************
 // public functions
 // *************************************************************************
 
