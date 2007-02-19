@@ -7,9 +7,6 @@
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
-#include "garnet/gfx/effect.h"
-#include "garnet/gfx/mesh.h"
-#include "garnet/gfx/renderable.h"
 #include "garnet/GNinput.h"
 
 namespace GN { namespace app

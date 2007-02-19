@@ -1,13 +1,10 @@
-#ifndef __GN_GND3D9_H__
-#define __GN_GND3D9_H__
+#ifndef __GN_GFX_D3D9UTILS_H__
+#define __GN_GFX_D3D9UTILS_H__
 // *****************************************************************************
-/// \file    GNd3d9.h
+/// \file    gfx/d3d9utils.h
 /// \brief   Public interface for d3d module (collection of common D3D utils).
 /// \author  chenlee (2005.8.11)
 // *****************************************************************************
-
-#include "GNbase.h"
-#include "GNgfx.h"
 
 #if GN_MSWIN
 
@@ -173,6 +170,6 @@ namespace GN { namespace gfx
 #endif // GN_MSWIN
 
 // *****************************************************************************
-//                           End of GNd3d9.h
+//                           End of gfx/d3d9utils.h
 // *****************************************************************************
 #endif // __GN_D3DAPP_GND3D_H__

@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/gfx/fatMesh.h"
 
 using namespace GN;
 using namespace GN::gfx;

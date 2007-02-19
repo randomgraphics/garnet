@@ -1,5 +1,3 @@
-#ifndef __GN_PCH_H__
-#define __GN_PCH_H__
 // *****************************************************************************
 // \file    pch.h
 // \brief   PCH header
@@ -7,9 +5,23 @@
 // *****************************************************************************
 
 #include "garnet/GNcore.h"
-#include "garnet/GNgfx.h"
 
-// *****************************************************************************
-//                           End of pch.h
-// *****************************************************************************
-#endif // __GN_PCH_H__
+namespace GN
+{
+    namespace gfx
+    {
+        namespace detail
+        {
+        }
+    }
+}
+
+#include "garnet/gfx/colorFormat.h"
+#include "garnet/gfx/image.h"
+#include "garnet/gfx/renderState.h"
+#include "garnet/gfx/vertexFormat.h"
+#include "garnet/gfx/shape.h"
+#include "garnet/gfx/misc.h"
+#include "garnet/gfx/d3d9utils.h"
+#include "garnet/gfx/d3d10utils.h"
+#include "garnet/gfx/oglutils.h"

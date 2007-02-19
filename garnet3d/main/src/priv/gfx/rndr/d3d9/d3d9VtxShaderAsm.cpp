@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d9Shader.h"
 #include "d3d9Renderer.h"
-#include "garnet/GNd3d9.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 

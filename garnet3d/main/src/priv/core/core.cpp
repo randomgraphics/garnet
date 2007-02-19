@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "garnet/GNcore.h"
-#include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
+#include "../gfx/rndr/rndr.h"
 
 // implement global singletons
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::PluginManager )

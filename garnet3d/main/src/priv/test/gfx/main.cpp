@@ -1,6 +1,4 @@
 #include "pch.h"
-#include "garnet/gfx/effect.h"
-#include "garnet/gfx/renderable.h"
 
 using namespace GN;
 using namespace GN::gfx;

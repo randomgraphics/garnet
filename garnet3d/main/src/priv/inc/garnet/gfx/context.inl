@@ -89,7 +89,9 @@ namespace GN { namespace gfx
     // -------------------------------------------------------------------------
     inline void RendererContext::setDrawToBackBuf()
     {
-        setRenderTargets( RenderTargetDesc::DRAW_TO_BACK_BUFFER );
+        RenderTargetDesc rtd;
+        rtd.drawToBackbuffer();
+        setRenderTargets( rtd );
     }
 
     //

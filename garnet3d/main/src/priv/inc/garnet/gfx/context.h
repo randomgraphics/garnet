@@ -70,11 +70,6 @@ namespace GN { namespace gfx
         RenderTargetTexture zbuffer; ///< z buffer description. Set zbuffer.texture to NULL to use auto-zbuffer.
 
         ///
-        /// const descriptor that draws to back buffer.
-        ///
-        static const RenderTargetDesc DRAW_TO_BACK_BUFFER;
-
-        ///
         /// set color buffer
         ///
         void setcbuf( UInt32 index, const Texture * tex, UInt32 level = 0, UInt32 face = 0, UInt32 slice = 0 )
@@ -95,6 +90,14 @@ namespace GN { namespace gfx
             zbuffer.level = level;
             zbuffer.face = face;
             zbuffer.slice = slice;
+        }
+
+        ///
+        /// set descriptor as "draw-to-backbuffer"
+        ///
+        void drawToBackbuffer()
+        {
+            memset( this, 0, sizeof(*this) );
         }
 
         ///
@@ -291,7 +294,7 @@ namespace GN { namespace gfx
             flags.u32 = 0xFFFFFFFF; // set all flags to true.
             for( int i = 0; i < NUM_SHADER_TYPES; ++i ) shaders[i] = 0;
             rsb.resetToDefault();
-            renderTargets = RenderTargetDesc::DRAW_TO_BACK_BUFFER;
+            renderTargets.drawToBackbuffer();
             viewport.set( 0.0f, 0.0f, 1.0f, 1.0f );
 
             world.identity();

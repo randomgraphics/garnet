@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "d3d9Quad.h"
 #include "d3d9Renderer.h"
-#include "garnet/GNd3d9.h"
 
 struct D3D9QuadVertex
 {

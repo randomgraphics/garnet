@@ -1,6 +1,5 @@
 #include "pch.h"
 #ifdef HAS_D3D10
-#include "garnet/GNd3d10.h"
 
 //
 //

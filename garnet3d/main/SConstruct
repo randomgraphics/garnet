@@ -925,7 +925,7 @@ def BUILD_dynamicLib( name, target ):
     stdlibs = []
     if not target.ignoreDefaultDependencies:
         if 'GNcore' != name :
-            stdlibs += ['GNgfx','GNcore']
+            stdlibs += ['GNgfxBase','GNcore']
         stdlibs += ['GNbase','GNextern']
 
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
@@ -964,7 +964,7 @@ def BUILD_program( name, target ):
     if target.ignoreDefaultDependencies:
         stdlibs = []
     else:
-        stdlibs = Split('GNcore GNutil GNrndrD3D9 GNrndrD3D10 GNgfx GNrndrOGL GNgfx GNcore GNbase GNextern')
+        stdlibs = Split('GNcore GNutil GNgfxUtil GNrndrD3D9 GNrndrD3D10 GNrndrOGL GNgfxBase GNcore GNbase GNextern')
 
     BUILD_addDependencies( env, name, BUILD_toList(target.dependencies) + stdlibs )
     BUILD_addExternalDependencies( env, name, BUILD_toList(target.externalDependencies) )
