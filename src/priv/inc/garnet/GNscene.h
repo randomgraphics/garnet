@@ -50,7 +50,7 @@ namespace GN { namespace scene
         SceneNode( Scene & s );
 
         ///
-        /// constructor, with automatic generated id.
+        /// constructor, with predefined id.
         ///
         SceneNode( Scene & s, NodeId id );
 
@@ -80,38 +80,6 @@ namespace GN { namespace scene
         /// get unique node name
         ///
         const StrA & getName() const;
-
-        //@}
-
-        // *********************************************************************
-        /// \name node location
-        // *********************************************************************
-
-        //@{
-
-    public:
-
-        const Vector3 &    getPosition() const { return mPosition; }
-        void               setPosition( const Vector3 & );
-
-        const Quaternion & getOrientation() const { return mOrientation; }
-        void               setOrientation( const Quaternion & );
-
-        const Matrix44f &  getWorldMatrix() const { if( mRebuildWorldMatrix ) rebuildWorldMatrix(); return mWorldMatrix; }
-        const Matrix44f &  getInvWorldMatrix() const { if( mRebuildWorldMatrix ) rebuildWorldMatrix(); return mInvWorldMatrix; }
-
-    private:
-
-        Vector3f          mPosition;
-        Vector3f          mOrientation;
-
-        mutable Matrix44f mWorldMatrix;
-        mutable Matrix44f mInvWorldMatrix;
-        mutable bool      mRebuildWorldMatrix;
-
-    private:
-
-        virtual void rebuildWorldMatrix() const;
 
         //@}
 
@@ -176,11 +144,37 @@ namespace GN { namespace scene
     };
 
     ///
-    /// Solid renderable object
+    /// represents a object that has position and orientation.
+    ///
+    class Placeable
+    {
+        Vector3f          mPosition;
+        Quaternionf       mOrientation;
+        mutable Matrix44f mWorldMatrix;
+        mutable Matrix44f mInvWorldMatrix;
+        mutable bool      mRebuildWorldMatrix;
+
+        void rebuildWorldMatrix() const;
+
+    public:
+
+        const Vector3 &     getPosition() const { return mPosition; }
+        void                setPosition( const Vector3 & );
+
+        const Quaternionf & getOrientation() const { return mOrientation; }
+        void                setOrientation( const Quaternionf & );
+
+        const Matrix44f &   getWorldMatrix() const { if( mRebuildWorldMatrix ) rebuildWorldMatrix(); return mWorldMatrix; }
+        const Matrix44f &   getInvWorldMatrix() const { if( mRebuildWorldMatrix ) rebuildWorldMatrix(); return mInvWorldMatrix; }
+    };
+
+    ///
+    /// Solid object
     ///
     class Solid : public SceneNode
     {
-        UInt32 renderable;
+        UInt32    mRenderable;
+        Placeable mLocation;
 
     public:
 
@@ -197,6 +191,22 @@ namespace GN { namespace scene
 
         //@}
 
+        // *********************************************************************
+        /// \name solid location
+        // *********************************************************************
+
+        //@{
+
+        const Vector3 &     getPosition() const { return mLocation.getPosition(); }
+        void                setPosition( const Vector3 & p ) { mLocation.setPosition( p ); }
+
+        const Quaternionf & getOrientation() const { return mLocation.getOrientation(); }
+        void                setOrientation( const Quaternionf & q ) { mLocation.setOrientation(); }
+
+        const Matrix44f &   getWorldMatrix() const { return mLocation.getWorldMatrix(); }
+
+        //@}
+
 
         // *********************************************************************
         /// \name from SceneNode
@@ -205,7 +215,7 @@ namespace GN { namespace scene
         //@{
 
         virtual void frameUpdate() {}
-        virtual void draw() {}
+        virtual void draw();
 
         //@}
 
@@ -214,8 +224,12 @@ namespace GN { namespace scene
     ///
     /// scene camera
     ///
-    class Camera : public SceneNode
+    class Camera
     {
+        Placeable mLocation;
+        Rectf     mViewport;
+        Matrix44f mProjMatrix;
+
     public:
 
         // *********************************************************************
@@ -227,7 +241,7 @@ namespace GN { namespace scene
         ///
         /// ctor
         ///
-        Camera( Scene & s ) : SceneNode(s) {}
+        Camera( Scene & s ) : Solid(s) {}
 
         //@}
 
@@ -243,37 +257,27 @@ namespace GN { namespace scene
         //@}
 
         // *********************************************************************
-        /// \name camera specific properties
+        /// \name solid location
         // *********************************************************************
 
         //@{
 
-    public:
+        const Vector3 &     getPosition() const { return mLocation.getPosition(); }
+        void                setPosition( const Vector3 & p ) { mLocation.setPosition( p ); }
 
-        const Matrix44f &  getViewMatrix() const { return getInvWorldMatrix(); }
-        const Matrix44f &  getInvViewMatrix() const { return getWorldMatrix(); }
+        const Quaternionf & getOrientation() const { return mLocation.getOrientation(); }
+        void                setOrientation( const Quaternionf & q ) { mLocation.setOrientation(); }
 
-        const Rectf &      getViewport() const;
-        void               setViewport( const Rectf & );
+        const Matrix44f &   getViewMatrix() const { return getInvWorldMatrix(); }
+        const Matrix44f &   getInvViewMatrix() const { return getWorldMatrix(); }
 
-        const Matrix44f &  getProjMatrix() const;
-        void               setProjMatrix( const Matrix44f & );
+        const Rectf &       getViewport() const;
+        void                setViewport( const Rectf & );
+
+        const Matrix44f &   getProjMatrix() const;
+        void                setProjMatrix( const Matrix44f & );
 
         //@}
-    };
-
-    ///
-    /// camera contoller
-    ///
-    class CameraContoller : public SceneNode
-    {
-    };
-
-    ///
-    /// Terrain object
-    ///
-    class Terrain : public SceneNode
-    {
     };
 
     ///
@@ -307,7 +311,26 @@ namespace GN { namespace scene
         //@}
 
         // ********************************
-        // node instance management
+        // camera management
+        // ********************************
+
+        //@{
+
+    public:
+
+        ///
+        /// return active camera
+        ///
+        const Camera & getActiveCamera() const { return mCamera; }
+
+    private:
+
+        Camera mCamera;
+
+        //@}
+
+        // ********************************
+        // scene object instance management
         // ********************************
     public:
 
@@ -316,6 +339,7 @@ namespace GN { namespace scene
         // These functions are called automatically by ctor/dtor of SceneNode.
         // Do not call them in your own code.
         NodeId addNode( SceneNode * );
+        void   removeNode( NodeId );
 
     private:
 
@@ -326,7 +350,7 @@ namespace GN { namespace scene
 
     ///
     /// scene resource manager. This is singleton.
-    ///    
+    ///
     class SceneResourceManager : public StdClass, public Singleton
     {
         GN_DECLARE_STDCLASS( SceneResourceManager, StdClass );
@@ -418,7 +442,12 @@ namespace GN { namespace scene
     private:
     };
 
+    /// \name scene module utilities
+    //@{
+
     bool loadSceneFromFile( Scene & s, const StrA & filename );
+
+    //@}
 }}
 
 // *****************************************************************************

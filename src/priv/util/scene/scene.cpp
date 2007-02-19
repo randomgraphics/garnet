@@ -18,7 +18,7 @@ GN::scene::Scene::Scene()
 // -----------------------------------------------------------------------------
 GN::scene::Scene::~Scene()
 {
-    clear();
+    mNodes.clear();
 }
 
 // *****************************************************************************
@@ -28,19 +28,7 @@ GN::scene::Scene::~Scene()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Scene::clear()
-{
-    for( size_t i = 0; i < mNodes.clear(); ++i )
-    {
-        safeDelete( mNodes[i] );
-    }
-    mNodes.clear();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::Scene::update()
+void GN::scene::Scene::frameUpdate()
 {
 }
 
@@ -57,18 +45,19 @@ static void samplecode()
     using namespace GN;
     using namespace GN::scene;
 
-    Scene s;
+    SceneRenderer        r;
+    SceneResourceManager rm;
+    Scene                s;
 
-    SceneRenderer r;
+    if( !r.init() ) return;
+    if( !rm.init() ) return;
 
     loadSceneFromFile( s, "media:/scene1/scene.xml" );
 
-    if( r.init() ) return;
-
     // main rendering loop
-    while( 1 )
+    while( notquit() )
     {
-        s.update();
+        s.frameUpdate();
     }
 
     // end application

@@ -43,7 +43,7 @@ FEATURE LIST
 			...
 . dynamic scene object management (multi-threads safe)
 	. allow runtime insertion.
-	. allowing runtime object dispose.
+	. allow runtime object dispose.
 		. based on LRU table.
 		. need carefully design to avoid too much locks.
 	. object IDs will never be deleted and reused.
