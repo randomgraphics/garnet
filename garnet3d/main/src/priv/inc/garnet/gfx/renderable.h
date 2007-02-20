@@ -23,35 +23,24 @@ namespace GN { namespace gfx
 
         struct Subset
         {
-            AutoRef<Effect>      effect;
             AutoRef<Mesh>        mesh;
             std::vector<TexItem> textures;
         };
 
         std::vector<Subset> subsets;
+        AutoRef<Effect>     effect;
         
     public:
 
         ///
         /// clear to empty
         ///
-        void clear() { subsets.clear(); }
-
-        ///
-        /// draw specific subset
-        ///
-        void drawSubset( size_t i ) const;
+        void clear() { subsets.clear(); effect.clear(); }
 
         ///
         /// draw the whole renderable object
         ///
-        void draw() const
-        {
-            for( size_t i = 0; i < subsets.size(); ++i )
-            {
-                drawSubset( i );
-            }
-        }
+        void draw() const;
 
         ///
         /// load from XML.

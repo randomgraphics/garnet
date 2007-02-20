@@ -30,11 +30,11 @@ static const StrA & sGetStringAttrib( const XmlElement & node, const char * attr
 //
 // -----------------------------------------------------------------------------
 static bool sLoadSubset(
+    Effect                         * effect,
     Renderable::Subset             & ss,
     const XmlElement               & node,
     const StrA                     & basedir,
     ResourceManager<gfx::Mesh*>    & meshmgr,
-    ResourceManager<gfx::Effect*>  & effmgr,
     ResourceManager<gfx::Texture*> & texmgr )
 {
     // load mesh
@@ -62,30 +62,6 @@ static bool sLoadSubset(
         return false;
     }
 
-    // load effect
-    e = node.findChildElement( "effect" );
-    if( e )
-    {
-        const StrA & ref = sGetStringAttrib( *e, "ref" );
-        if( ref.empty() )
-        {
-            // do not support embedded effect, yet.
-            GN_ERROR(sLogger)( "ref attribute of effect node is required." );
-            return false;
-        }
-        else
-        {
-            // external effect
-            ss.effect.set( effmgr.getResource( fs::resolvePath( basedir, ref ) ) );
-            GN_ASSERT( ss.effect );
-        }
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "effect node is missing" );
-        return false;
-    }
-
     // load textures
     for( XmlNode * c = node.child; c; c = c->sibling )
     {
@@ -105,7 +81,7 @@ static bool sLoadSubset(
                 GN_ERROR(sLogger)( "id attribute of texture node is missing." );
                 return false;
             }
-            ti.id = ss.effect->getTextureID( id );
+            ti.id = effect->getTextureID( id );
             if( 0 == ti.id )
             {
                 GN_DETAIL(sLogger)( "ignore unreferenced texture '%s'.", id.cptr() );
@@ -138,34 +114,37 @@ static bool sLoadSubset(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Renderable::drawSubset( size_t i ) const
+void GN::gfx::Renderable::draw() const
 {
-    GN_GUARD_SLOW;
+    GN_ASSERT( effect );
 
-    GN_ASSERT( i < subsets.size() );
+    Renderer & r = gRenderer;
 
-    const Subset & ss = subsets[i];
-
-    GN_ASSERT( ss.effect && ss.mesh );
-
-    // bind textures
-    for( size_t i = 0; i < ss.textures.size(); ++i )
+    for( size_t i = 0; i < effect->getNumPasses(); ++i )
     {
-        const TexItem & ti = ss.textures[i];
-        ss.effect->setTexture( ti.id, ti.tex );
-    }
+        effect->passBegin( i );
 
-    // draw
-    for( size_t i = 0; i < ss.effect->getNumPasses(); ++i )
-    {
-        ss.effect->passBegin( i );
-        ss.mesh->updateContext( gRenderer );
-        ss.effect->commitChanges();
-        ss.mesh->draw( gRenderer );
-        ss.effect->passEnd();
-    }
+        for( size_t i = 0; i < subsets.size(); ++i )
+        {
+            const Subset & ss = subsets[i];
 
-    GN_UNGUARD_SLOW;
+            // bind textures
+            for( size_t i = 0; i < ss.textures.size(); ++i )
+            {
+                const TexItem & ti = ss.textures[i];
+                effect->setTexture( ti.id, ti.tex );
+            }
+
+            // bind mesh
+            ss.mesh->updateContext( r );
+
+            effect->commitChanges();
+
+            ss.mesh->draw( r );
+        }
+
+        effect->passEnd();
+    }
 }
 
 //
@@ -196,6 +175,31 @@ bool GN::gfx::Renderable::loadFromXml(
     // clear to empty
     clear();
 
+    // load effect
+    e = e->findChildElement( "effect" );
+    if( e )
+    {
+        const StrA & ref = sGetStringAttrib( *e, "ref" );
+        if( ref.empty() )
+        {
+            // do not support embedded effect, yet.
+            GN_ERROR(sLogger)( "ref attribute of effect node is required." );
+            return false;
+        }
+        else
+        {
+            // external effect
+            effect.set( effmgr.getResource( fs::resolvePath( basedir, ref ) ) );
+            GN_ASSERT( effect );
+        }
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "effect node is missing" );
+        return false;
+    }
+
+    // load subsets
     for( XmlNode * c = root->child; c; c = c->sibling )
     {
         e = c->toElement();
@@ -204,13 +208,13 @@ bool GN::gfx::Renderable::loadFromXml(
         if( "subset" == e->name )
         {
             subsets.resize( subsets.size() + 1 );
-            if( !sLoadSubset( subsets.back(), *e, basedir, meshmgr, effmgr, texmgr ) )
+            if( !sLoadSubset( effect, subsets.back(), *e, basedir, meshmgr, texmgr ) )
             {
                 // pop out problematic subset, then continue.
                 subsets.pop_back();
             }
         }
-        else
+        else if( "effect" != e->name )
         {
             GN_ERROR(sLogger)( "Ignore unknown node '%s'.", e->name.cptr() );
         }

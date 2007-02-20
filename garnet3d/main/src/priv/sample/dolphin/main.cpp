@@ -65,7 +65,7 @@ public:
         if( !seafloor->subsets.empty() )
         {
             eff = rm.effects.getResource( mSeafloorEff );
-            GN_ASSERT( seafloor->subsets[0].effect.get() == eff );
+            GN_ASSERT( seafloor->effect.get() == eff );
             eff->setUniformByName( "view", view );
             eff->setUniformByName( "proj", proj );
             eff->setUniformByName( "caustic", caustics );
@@ -109,7 +109,7 @@ public:
         if( dolphin->subsets.size() > 0 )
         {
             eff = rm.effects.getResource( mDolphinEff );
-            GN_ASSERT( dolphin->subsets[0].effect.get() == eff );
+            GN_ASSERT( dolphin->effect.get() == eff );
             eff->setUniformByName( "weights", vWeight );
             eff->setUniformByName( "viewworld", view * world );
             eff->setUniformByName( "pvw", proj * view * world );

@@ -1,5 +1,6 @@
 <?xml version="1.0" standalone="yes"?>
 <renderable>
+	<effect ref="seafloor.effect.xml"/>
 	<subset>
 		<mesh
 			primType  = "TRIANGLE_LIST"
@@ -20,7 +21,6 @@
 
 			<idxbuf ref="seafloor.ib"/>
 		</mesh>
-		<effect ref="seafloor.effect.xml"/>
 		<texture id="seafloor" ref="seafloor.bmp"/>
 		<texture id="caustic"/>
 	</subset>
