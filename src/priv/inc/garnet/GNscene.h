@@ -20,8 +20,13 @@ namespace GN
     }
 }
 
+#include "scene/resource.h"
+#include "scene/drawable.h"
+
 namespace GN { namespace scene
 {
+/*
+
     class Scene; // forward declaration
 
     typedef UInt32 NodeId; ///< scene node ID
@@ -448,6 +453,7 @@ namespace GN { namespace scene
     bool loadSceneFromFile( Scene & s, const StrA & filename );
 
     //@}
+*/
 }}
 
 // *****************************************************************************

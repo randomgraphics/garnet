@@ -545,7 +545,21 @@ namespace GN
         }
 
         ///
+        /// convert to all lower case
+        ///
+        void toLower()
+        {
+            CHAR * p = mPtr;
+            CHAR * e = mPtr + mCount;
+            for( ; p < e; ++p )
+            {
+                if( 'A' <= *p && *p <= 'Z' ) *p = (*p) - 'A' + 'a';
+            }
+        }
+
+        ///
         /// convert to STL string(1)
+        ///
         void toSTL( std::basic_string<CharType> & s ) const
         {
             s.assign( mPtr, mCount );
@@ -553,9 +567,23 @@ namespace GN
 
         ///
         /// convert to STL string(2)
+        ///
         std::basic_string<CharType> toSTL() const
         {
             return std::basic_string<CharType>(mPtr,mCount);
+        }
+
+        ///
+        /// convert to all upper case
+        ///
+        void toUpper()
+        {
+            CHAR * p = mPtr;
+            CHAR * e = mPtr + mCount;
+            for( ; p < e; ++p )
+            {
+                if( 'a' <= *p && *p <= 'z' ) *p = (*p) - 'a' + 'A';
+            }
         }
 
         ///

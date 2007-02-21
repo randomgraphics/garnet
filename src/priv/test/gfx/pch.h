@@ -11,8 +11,10 @@
 #include "garnet/GNwin.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
+#include "garnet/GNscene.h"
 #include "garnet/GNutil.h"
 #include "garnet/GNapp.h"
+
 
 // *****************************************************************************
 //                           End of pch.h

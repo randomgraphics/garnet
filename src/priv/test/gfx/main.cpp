@@ -88,16 +88,16 @@ public:
             ps2->setUniformByNameV( "l0", Vector4f(1,0,0,1) );
         }
 
-        SampleResourceManager & rm = app.getResMgr();
+        scene::ResourceManager & rm = gSceneResMgr;
 
         // load box
-        box = rm.renderables.getResourceHandle( "media::renderable/cube1.xml" );
+        box = 0;//rm.getResourceId( "media::renderable/cube1.xml" );
 
         // load texture
-        tex0 = rm.textures.getResourceHandle( "media::texture/rabit.png" );
+        tex0 = rm.getResourceId( "media::texture/rabit.png" );
 
         // load effect
-        eff0 = rm.effects.getResourceHandle( "media::effect/sprite.xml" );
+        eff0 = rm.getResourceId( "media::effect/sprite.xml" );
 
         // initialize matrices
         world.identity();
@@ -146,8 +146,10 @@ public:
 
     void update()
     {
-        // update box matrix
-        Renderable * rbox = app.getResMgr().renderables.getResource( box );
+        scene::ResourceManager & rm = gSceneResMgr;
+
+        /* update box matrix
+        Renderable * rbox = gSceneResMgr.getResource( box );
         GN_ASSERT( rbox );
 
         world = arcball.getRotationMatrix();
@@ -156,7 +158,7 @@ public:
         if( !rbox->subsets.empty() )
         {
             rbox->subsets[0].effect->setUniformByName( "pvw", pvw );
-        }
+        }*/
 
         // update color
         static int r = 0; static int rr = 1;
@@ -167,15 +169,16 @@ public:
         b += bb; if( 0 == b || 255 == b ) bb = -bb;
         GN::gfx::UniformValue u;
         u.setV( GN::Vector4f( r/255.0f, g/255.0f, b/255.0f, 1.0f ) );
-        app.getResMgr().effects.getResource(eff0)->setUniformByName( "color", u );
+        rm.getResourceT<Effect>(eff0)->setUniformByName( "color", u );
     }
 
     void draw()
     {
         Renderer & r = gRenderer;
+        scene::ResourceManager & rm = gSceneResMgr;
 
         // quad 1
-        r.setTexture( 0, app.getResMgr().textures.getResource(tex0) );
+        r.setTexture( 0, rm.getResourceT<Texture>(tex0) );
         r.draw2DTexturedQuad( DQ_UPDATE_DEPTH, 0, 0, 0, 0.5, 0.5 );
 
         // quad 2
@@ -193,7 +196,7 @@ public:
         }
 
         // quad 4
-        Effect * eff = app.getResMgr().effects.getResource( eff0 );
+        Effect * eff = rm.getResourceT<Effect>( eff0 );
         for( size_t i = 0; i < eff->getNumPasses(); ++i )
         {
             eff->passBegin( i );
@@ -203,7 +206,7 @@ public:
         }
 
         // draw box
-        app.getResMgr().renderables.getResource(box)->draw();
+        //gSceneResMgr.getResource(box)->draw();
 
         /* a wireframe box
         {

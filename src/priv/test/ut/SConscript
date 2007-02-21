@@ -5,6 +5,7 @@ import sys
 # build case list
 cases = []
 cases += GN.glob( 'base/*.cpp' )
+cases += GN.glob( 'scene/*.cpp' )
 if GN.conf['has_ogl']: cases += ['gfx/ogl.cpp']
 if GN.conf['has_d3d9']: cases += ['gfx/d3d9.cpp']
 
