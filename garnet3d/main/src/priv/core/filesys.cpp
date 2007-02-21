@@ -478,6 +478,101 @@ public:
 };
 
 // *****************************************************************************
+// Media file system, handle file path prefixed with "media::"
+// *****************************************************************************
+
+class MediaFileSystem : public fs::FileSystem
+{
+    std::vector<StrA> mRoots;
+
+    const StrA * findRoot( const StrA & path )
+    {
+        for( size_t i = 0; i < mRoots.size(); ++i )
+        {
+            if( fs::exist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
+        }
+        return 0;
+    }
+
+public:    
+
+    MediaFileSystem()
+    {
+#if GN_XENON
+        mRoots.push_back( "game:\media" );
+        mRoots.push_back( "game:" );
+#endif
+        mRoots.push_back( "startup::" );
+        mRoots.push_back( "startup::media" );
+        mRoots.push_back( "app::" );
+        mRoots.push_back( "app::media" );
+        mRoots.push_back( "app::../media" );
+    }
+
+    bool exist( const StrA & path )
+    {
+        return 0 != findRoot( path );
+    }
+
+    bool isDir( const StrA & path  )
+    {
+        const StrA * root = findRoot( path );
+        if( !root ) return false;
+        return fs::isDir( joinPath( *root, path ) );
+    }
+
+    bool isFile( const StrA & path )
+    {
+        const StrA * root = findRoot( path );
+        if( !root ) return false;
+        return fs::isFile( joinPath( *root, path ) );
+    }
+
+    bool isAbsPath( const StrA & path )
+    {
+        return !path.empty() && '/' == path[0];
+    }
+
+    void toNative( StrA & result, const StrA & path )
+    {
+        result.clear();
+        const StrA * root = findRoot( path );
+        if( !root ) return;
+        fs::toNative( result, joinPath( *root, path ) );
+    }
+
+    std::vector<StrA> &
+    glob(
+        std::vector<StrA> & result,
+        const StrA & dirName,
+        const StrA & pattern,
+        bool         recursive,
+        bool         useRegex )
+    {
+        const StrA * root = findRoot( dirName );
+        if( !root ) return result;
+
+        return fs::glob(
+            result,
+            joinPath( *root, dirName ),
+            pattern,
+            recursive,
+            useRegex );
+    }
+
+     File * openFile( const StrA & path, const StrA & mode )
+     {
+        const StrA * root = findRoot( path );
+        if( !root )
+        {
+            GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
+            return 0;
+        }
+        return fs::openFile( joinPath( *root, path ), mode );
+     }
+};
+
+// *****************************************************************************
 // fake file system object
 // *****************************************************************************
 
@@ -516,6 +611,7 @@ struct FileSystemContainer
     NativeFileSystem  mNativeFs;
     AppFileSystem     mAppFs;
     StartupFileSystem mStartupFs;
+    MediaFileSystem   mMediaFs;
 
     FileSystemContainer()
         : mAppFs( mNativeFs )
@@ -525,6 +621,7 @@ struct FileSystemContainer
         registerFs( "native::", &mNativeFs );
         registerFs( "app::", &mAppFs );
         registerFs( "startup::", &mStartupFs );
+        registerFs( "media::", &mMediaFs );
     }
 
     ~FileSystemContainer()

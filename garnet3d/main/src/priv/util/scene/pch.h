@@ -1,5 +1,3 @@
-#ifndef __GN_PCH_H__
-#define __GN_PCH_H__
 // *****************************************************************************
 // \file    common/pch.h
 // \brief   PCH header
@@ -11,8 +9,8 @@
 #include "garnet/GNgfx.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNwin.h"
+#include "garnet/GNscene.h"
 
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************
-#endif // __GN_PCH_H__

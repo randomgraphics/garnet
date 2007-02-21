@@ -91,14 +91,15 @@ namespace GN { namespace fs
 
     /// \name managing file system objects
     ///
-    /// there are 3 default file system objects:
+    /// there are 4 default file system objects:
     ///     - "native::"  : mapping to sys of native file system.
     ///     - "app::"     : mapping to application's executable directory
     ///     - "startup::" : mapping to application's startup directory
+    ///     - "media::"   : mapping to startup::, startup::media, app::, app::media, app::..\media
     ///
     /// \note
-    //      - Empty name will be also mapped to "native::" file system.
     //      - file system name must be end with "::"
+    //      - if register same file system multiple times, only the last one is effective.
     ///
     //@{
     GN_EXPORT bool registerFileSystem( const StrA & name, FileSystem * fs );

@@ -100,82 +100,6 @@ namespace GN { namespace app
     };
 
     ///
-    /// Resource manager class used by sample application
-    ///
-    struct SampleResourceManager
-    {
-        ResourceManager<gfx::Shader*>     shaders;     ///< shader manager
-        ResourceManager<gfx::Texture*>    textures;    ///< texture manager
-        ResourceManager<gfx::Effect*>     effects;     ///< effect manager
-        ResourceManager<gfx::Mesh*>       meshes;      ///< mesh manager
-        ResourceManager<gfx::Renderable*> renderables; ///< renderable manager.
-        ResourceManager<RawData*>         rawData;     ///< raw data manager
-
-        ///
-        /// return native resource file name. Return empty string if file does not exist.
-        ///
-        static GN::StrA sGetNativeResourceFileName( const StrA & name );
-
-        ///
-        /// Create texture from file
-        ///
-        static gfx::Texture * sCreateTextureFromFile( const StrA & );
-
-        ///
-        /// Create shader from file
-        ///
-        static gfx::Shader * sCreateShaderFromFile( gfx::ShaderType type, gfx::ShadingLanguage lang, const StrA & name, const StrA & hints="" );
-
-        ///
-        /// ctor
-        ///
-        SampleResourceManager();
-
-        ///
-        /// dtor
-        ///
-        ~SampleResourceManager();
-
-        ///
-        /// bind shader handles to renderer
-        ///
-        void bindShaderHandles( gfx::Renderer & r, UInt32 vs, UInt32 ps, UInt32 gs )
-        {
-            r.setShaders(
-                vs?shaders.getResource(vs):0,
-                ps?shaders.getResource(ps):0,
-                gs?shaders.getResource(gs):0 );
-        }
-
-        ///
-        /// bind texture handle to renderer
-        ///
-        void bindTextureHandle( gfx::Renderer & r, size_t stage, UInt32 tex )
-        {
-            r.setTexture( stage, tex?textures.getResource(tex):0 );
-        }
-
-        ///
-        /// dispose all resources
-        ///
-        void disposeAll()
-        {
-            shaders.disposeAll();
-            textures.disposeAll();
-            effects.disposeAll();
-            meshes.disposeAll();
-            renderables.disposeAll();
-            rawData.disposeAll();
-        }
-
-    private:
-        void onRendererDispose();
-        void onRendererDestroy();
-
-        fs::FileSystem * mMediaFileSys;
-    };
-
-    ///
     /// Sample application framework
     ///
     class SampleApp : public SlotBase
@@ -245,11 +169,6 @@ namespace GN { namespace app
         double getTimeSinceLastUpdate() const { return mTimeSinceLastUpdate; }
 
         ///
-        /// Force reloading of all resources
-        ///
-        void reloadResources() { mResMgr.disposeAll(); }
-
-        ///
         /// post exit event. Application will exit at next frame.
         ///
         void postExitEvent() { mDone = true; }
@@ -265,11 +184,6 @@ namespace GN { namespace app
 		void showHUD( bool show ) { mShowHUD = show; }
 
         ///
-        /// get resource managare instance
-        ///
-        SampleResourceManager & getResMgr() { return mResMgr; }
-
-        ///
         /// get the FPS
         ///
         float getFps() const { return mFps.getFps(); }
@@ -282,8 +196,6 @@ namespace GN { namespace app
     private:
 
         InitParam mInitParam;
-
-        SampleResourceManager mResMgr;
 
         // time stuff
         bool mShowHUD;

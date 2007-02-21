@@ -103,7 +103,7 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_XB360_X == ke.code && ke.status.down ) mDone = true;
     else if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
-    else if( input::KEY_R == ke.code && !ke.status.down ) reloadResources();
+    else if( input::KEY_R == ke.code && !ke.status.down ) gSceneResMgr.disposeAll();
     else if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
     {
         GN::gfx::RendererOptions ro = gRenderer.getOptions();
@@ -136,6 +136,9 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
+    // create global resource manager instance
+    new scene::ResourceManager;
+
     if( !checkCmdLine(argc,argv) ) return false;
     if( !initApp() ) return false;
     onDetermineInitParam( mInitParam );
@@ -160,6 +163,9 @@ void GN::app::SampleApp::quit()
     quitRenderer();
     quitInput();
     quitApp();
+
+    // delete global resource manager instance
+    delete scene::ResourceManager::sGetInstancePtr();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
