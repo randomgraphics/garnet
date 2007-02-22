@@ -277,6 +277,9 @@ GN::gfx::D3D9PxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_INT:
                     GN_ERROR(sLogger)( "Setting integer or boolean value to float shader register does not work." );
                     break;
+
+                default :
+                    GN_ERROR(sLogger)( "invalid uniform type." );
             }
             break;
 
@@ -295,6 +298,9 @@ GN::gfx::D3D9PxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_BOOL:
                     GN_ERROR(sLogger)( "integer register accepts only integer value." );
                     break;
+
+                default :
+                    GN_ERROR(sLogger)( "invalid uniform type." );
             }
             break;
 
@@ -313,6 +319,9 @@ GN::gfx::D3D9PxlShaderAsm::applyUniform( LPDIRECT3DDEVICE9 dev, const Uniform & 
                 case UVT_INT:
                     GN_ERROR(sLogger)( "Bool register accepts only boolean value." );
                     break;
+
+                default :
+                    GN_ERROR(sLogger)( "invalid uniform type." );
             }
             break;
 

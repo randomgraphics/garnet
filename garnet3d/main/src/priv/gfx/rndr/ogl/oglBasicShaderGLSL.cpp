@@ -169,8 +169,7 @@ void GN::gfx::OGLBasicShaderGLSL::applyDirtyUniforms( GLhandleARB program ) cons
                     break;
 
                 default:
-                   // program should not reach here.
-                   GN_UNEXPECTED();
+                    GN_ERROR(sLogger)( "invalid uniform type." );
             }
         }
         else
