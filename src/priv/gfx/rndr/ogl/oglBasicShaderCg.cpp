@@ -209,8 +209,7 @@ void GN::gfx::OGLBasicShaderCg::applyUniform( const Uniform & u ) const
             break;
 
         default:
-           // program should not reach here.
-           GN_UNEXPECTED();
+            GN_ERROR(sLogger)( "invalid uniform type." );
     }
 
     GN_UNGUARD_SLOW;
