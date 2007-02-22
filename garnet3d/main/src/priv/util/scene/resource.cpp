@@ -20,11 +20,11 @@ static bool sIsTexture( const StrA & name )
     GN::extName( ext, name );
     ext.toUpper();
 
-    return ".BMP" == name
-        || ".DDS" == name
-        || ".JPG" == name
-        || ".PNG" == name
-        || ".TGA" == name;
+    return ".BMP" == ext
+        || ".DDS" == ext
+        || ".JPG" == ext
+        || ".PNG" == ext
+        || ".TGA" == ext;
 }
 
 //
@@ -57,8 +57,8 @@ static const StrA & sGetResourceType( const StrA & name )
     static const StrA & mesh("mesh");
     
     if( sIsTexture( name ) ) return texture;
-    if( sIsXml( name, "effect" ) ) return effect;
-    if( sIsXml( name, "mesh" ) ) return mesh;
+    if( sIsXml( name, effect ) ) return effect;
+    if( sIsXml( name, mesh ) ) return mesh;
     return StrA::EMPTYSTR;
 }
 
@@ -223,9 +223,9 @@ GN::scene::ResourceManager::ResourceManager()
     mLRUTail.prev = &mLRUHead;
     mLRUTail.next = 0;
 
-    registerResourceType( "texture", &sCreateTexture, &sDeleteResource );
-    registerResourceType( "effect" , &sCreateEffect , &sDeleteResource );
-    registerResourceType( "mesh"   , &sCreateMesh   , &sDeleteResource );
+    registerResourceType( "texture" , &sCreateTexture , &sDeleteResource );
+    registerResourceType( "effect"  , &sCreateEffect  , &sDeleteResource );
+    registerResourceType( "mesh"    , &sCreateMesh    , &sDeleteResource );
 
     Renderer::sSigDispose.connect( this, &ResourceManager::onRendererDispose );
 
@@ -448,6 +448,58 @@ void GN::scene::ResourceManager::disposeAll()
 //
 //
 // -----------------------------------------------------------------------------
+GN::scene::BaseResource *
+GN::scene::ResourceManager::getResourceImpl( ResourceId id )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( validId(id) );
+
+    ResourceDesc * desc = mResources[id];
+    GN_ASSERT( desc );
+
+    if( desc->disposed )
+    {
+        // get resource type descriptor
+        GN_ASSERT( desc->type < mResourceTypes.size() );
+        const ResourceTypeDesc & rtd = mResourceTypes[desc->type];
+        GN_ASSERT( rtd.creator && rtd.deletor );
+
+        // recreate the resource
+        GN_INFO(sLogger)( "Load %s '%s'", rtd.type.cptr(), desc->name.cptr() );
+        desc->data = rtd.creator( desc->name );
+
+        // receation failed, fallback to null resource
+        if( !desc->data )
+        {
+            // create null resource instance
+            GN_INFO(sLogger)( "Fallback to null instance for %s '%s'", rtd.type.cptr(), desc->name.cptr() );
+            desc->data = rtd.creator( StrA::EMPTYSTR );
+        }
+
+        desc->disposed = false;
+    }
+
+    // move desc to head of LRU list.
+    GN_ASSERT( desc->prev );
+    GN_ASSERT( desc->next );
+    ResourceDesc * prev = desc->prev;
+    ResourceDesc * next = desc->next;
+    prev->next = desc->next;
+    next->prev = desc->prev;
+    desc->next = mLRUHead.next;
+    desc->next->prev = desc;
+    mLRUHead.next = desc;
+
+    // success
+    return desc->data;
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::scene::ResourceManager::resolveName( StrA & out, const StrA & in ) const
 {
     if( fs::isFile(in) )
@@ -479,7 +531,7 @@ void GN::scene::addResourceDirectory( const StrA & path, bool recursive )
 {
     // glob all files
     std::vector<StrA> filenames;
-    fs::glob( filenames, path, "*.", recursive, false );
+    fs::glob( filenames, path, "*.*", recursive, false );
 
     ResourceManager & rm = ResourceManager::sGetInstance();
 

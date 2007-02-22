@@ -4,6 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
 using namespace GN::util;
+using namespace GN::scene;
 
 bool gAnimation = true;
 
@@ -17,7 +18,7 @@ class Scene
 
     UInt32 eff0;
 
-    UInt32 box;
+    Drawable box;
 
     Matrix44f world, view, proj;
 
@@ -91,13 +92,15 @@ public:
         scene::ResourceManager & rm = gSceneResMgr;
 
         // load box
-        box = 0;//rm.getResourceId( "media::renderable/cube1.xml" );
+        if( !box.loadFromXmlFile( "media::drawable/cube1.xml" ) ) return false;
 
         // load texture
         tex0 = rm.getResourceId( "media::texture/rabit.png" );
+        if( 0 == tex0 ) return false;
 
         // load effect
         eff0 = rm.getResourceId( "media::effect/sprite.xml" );
+        if( 0 == eff0 ) return false;
 
         // initialize matrices
         world.identity();
@@ -148,17 +151,10 @@ public:
     {
         scene::ResourceManager & rm = gSceneResMgr;
 
-        /* update box matrix
-        Renderable * rbox = gSceneResMgr.getResource( box );
-        GN_ASSERT( rbox );
-
+        // update box matrix
         world = arcball.getRotationMatrix();
         Matrix44f pvw = proj * view * world;
-
-        if( !rbox->subsets.empty() )
-        {
-            rbox->subsets[0].effect->setUniformByName( "pvw", pvw );
-        }*/
+        box.uniforms[0].value = pvw;
 
         // update color
         static int r = 0; static int rr = 1;
@@ -206,7 +202,7 @@ public:
         }
 
         // draw box
-        //gSceneResMgr.getResource(box)->draw();
+        box.draw();
 
         /* a wireframe box
         {

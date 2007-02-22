@@ -253,13 +253,13 @@ public:
 
         if( !exist(dirName) )
         {
-            GN_WARN(sLogger)( "'%s' does not exist!", dirName.cptr() );
+            GN_TRACE(sLogger)( "'%s' does not exist!", dirName.cptr() );
             return result;
         }
 
         if( !isDir(dirName) )
         {
-            GN_WARN(sLogger)( "'%s' is not directory!", dirName.cptr() );
+            GN_TRACE(sLogger)( "'%s' is not directory!", dirName.cptr() );
             return result;
         }
 
@@ -500,11 +500,8 @@ public:
     {
 #if GN_XENON
         mRoots.push_back( "game:\media" );
-        mRoots.push_back( "game:" );
 #endif
-        mRoots.push_back( "startup::" );
         mRoots.push_back( "startup::media" );
-        mRoots.push_back( "app::" );
         mRoots.push_back( "app::media" );
         mRoots.push_back( "app::../media" );
     }
@@ -549,15 +546,44 @@ public:
         bool         recursive,
         bool         useRegex )
     {
-        const StrA * root = findRoot( dirName );
-        if( !root ) return result;
+        if( dirName.empty() )
+        {
+            for( size_t i = 0; i < mRoots.size(); ++i )
+            {
+                const StrA & root = mRoots[i];
 
-        return fs::glob(
-            result,
-            joinPath( *root, dirName ),
-            pattern,
-            recursive,
-            useRegex );
+                std::vector<StrA> tmp;
+
+                fs::glob(
+                    tmp,
+                    joinPath( root, dirName ),
+                    pattern,
+                    recursive,
+                    useRegex );
+
+                for( size_t i = 0; i < tmp.size(); ++i )
+                {
+                    if( result.end() == std::find( result.begin(), result.end(), tmp[i] ) )
+                    {
+                        result.push_back( tmp[i] );
+                    }
+                }
+            }
+        }
+        else
+        {
+            const StrA * root = findRoot( dirName );
+            if( !root ) return result;
+
+            fs::glob(
+                result,
+                joinPath( *root, dirName ),
+                pattern,
+                recursive,
+                useRegex );
+        }
+
+        return result;
     }
 
      File * openFile( const StrA & path, const StrA & mode )
@@ -726,7 +752,7 @@ GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA
     splitPath( base, basefs, basec );
     splitPath( relpath, relfs, relc );
 
-    if( basefs != relfs )
+    if( !relfs.empty() && basefs != relfs )
     {
         result = relpath;
         return;
@@ -738,5 +764,5 @@ GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA
         return;
     }
 
-    joinPath2( result, base, relpath );
+    joinPath2( result, base, relc );
 }

@@ -55,7 +55,6 @@ namespace GN
 #include "gfx/effect.h"
 #include "gfx/mesh.h"
 #include "gfx/fatMesh.h"
-#include "gfx/renderable.h"
 
 // *****************************************************************************
 //                         END of GNgfx.h

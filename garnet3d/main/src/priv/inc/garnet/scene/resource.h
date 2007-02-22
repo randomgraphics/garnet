@@ -66,8 +66,8 @@ namespace GN { namespace scene
         void           disposeResource( const StrA & name ) { disposeResource( getResourceId(name) ); }
         void           disposeResource( ResourceId );
         void           disposeAll();
-        BaseResource * getResource( ResourceId id ) { return getResourceImpl( id, 0 ); }
-        BaseResource * getResource( const StrA & name ) { return getResourceImpl( getResourceId(name), name.cptr() ); }
+        BaseResource * getResource( ResourceId id );
+        BaseResource * getResource( const StrA & name );
         ResourceId     getResourceId( const StrA & name ) const;
         const StrA &   getResourceName( ResourceId ) const;
         bool           validId( ResourceId id ) const { return mResources.validHandle( id ); }
@@ -129,7 +129,7 @@ namespace GN { namespace scene
         // *********************************************************************
     private :
 
-        BaseResource * getResourceImpl( ResourceId, const char * );
+        BaseResource * getResourceImpl( ResourceId );
         void resolveName( StrA & out, const StrA & in ) const;
         void onRendererDispose();
     };

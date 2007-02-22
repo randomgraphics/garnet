@@ -33,7 +33,7 @@ namespace GN
     }
 
     ///
-    /// Resource manager. Used to do mapping among name and ID and instance.
+    /// Resource manager template. Used to do mapping among name and ID and instance.
     ///
     /// RES must support default constructor and assignment operation.
     ///
@@ -66,7 +66,7 @@ namespace GN
     ///     不在资源管理器内, 但存在于磁盘上的资源时, 该资源就会被自动加入资源管理器.
     ///
     template<typename RES, typename HANDLE=UInt32, bool SINGLETON=false>
-    class ResourceManager : public detail::SingletonSelector<ResourceManager<RES,HANDLE,SINGLETON>,SINGLETON>::type
+    class ResourceManagerTempl : public detail::SingletonSelector<ResourceManagerTempl<RES,HANDLE,SINGLETON>,SINGLETON>::type
     {
     public:
 
@@ -85,7 +85,7 @@ namespace GN
         ///
         /// Default constructor
         ///
-        ResourceManager(
+        ResourceManagerTempl(
             const Creator & creator = Creator(),
             const Deletor & deletor = Deletor(),
             const Creator & nullor = Creator(),
@@ -107,7 +107,7 @@ namespace GN
         ///
         /// Default destructor
         ///
-        ~ResourceManager() { clear(); }
+        ~ResourceManagerTempl() { clear(); }
 
         ///
         /// Get global creator.
@@ -667,7 +667,7 @@ namespace GN
     };
 
     template<typename RES, typename HANDLE, bool SINGLETON>
-    GN::Logger * ResourceManager<RES,HANDLE,SINGLETON>::sLogger = getLogger("GN.base.ResourceManager");
+    GN::Logger * ResourceManagerTempl<RES,HANDLE,SINGLETON>::sLogger = getLogger("GN.base.ResourceManagerTempl");
 
 }
 

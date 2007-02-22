@@ -143,7 +143,7 @@ namespace GN
         ///
         /// find specific attribute of element
         ///
-        XmlAttrib * findAttrib( const char * name ) const
+        XmlAttrib * findAttrib( const StrA & name ) const
         {
             for( XmlAttrib * a = attrib; a; a = a->next )
             {
@@ -155,7 +155,7 @@ namespace GN
         ///
         /// find specific child of element
         ///
-        XmlElement * findChildElement( const char * name ) const
+        XmlElement * findChildElement( const StrA & name ) const
         {
             for( XmlNode * n = child; n; n = n->sibling )
             {
