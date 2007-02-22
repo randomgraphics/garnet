@@ -1,7 +1,7 @@
 #include "../testCommon.h"
 #include "garnet/GNscene.h"
 
-class ResourceManagerTest : public CxxTest::TestSuite
+class SceneResourceManagerTest : public CxxTest::TestSuite
 {
     typedef GN::scene::ResourceManager ResMgr;
 

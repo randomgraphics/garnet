@@ -8,6 +8,31 @@ namespace GN { namespace gfx
     //
     // -------------------------------------------------------------------------
     inline Shader *
+    Renderer::createShaderFromFile( ShaderType type,
+                                    ShadingLanguage lang,
+                                    const StrA & filename,
+                                    const StrA & hints )
+    {
+        GN_GUARD;
+
+        // open file
+        AutoObjPtr<File> fp( fs::openFile( filename , "rt" ) );
+        if( !fp ) return 0;
+
+        // read file content
+        std::vector<char> code;
+        code.resize( fp->size() + 1 );
+        if( !fp->read( &code[0], fp->size(), 0 ) ) return false;
+
+        // create shader
+        return createShader( type, lang, &code[0], hints );
+        GN_UNGUARD;
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline Shader *
     Renderer::createVS( ShadingLanguage lang,
                         const StrA &    code,
                         const StrA &    hints )
@@ -132,7 +157,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void Renderer::setDrawToBackBuf()
+    inline void Renderer::setDrawToBackBuf()
     {
         _GNGFX_CONTEXT_UPDATE( setDrawToBackBuf() );
     }
@@ -140,7 +165,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    void Renderer::setDrawToTexture(
+    inline void Renderer::setDrawToTextures(
         UInt32 count,
         const Texture * rt0,
         const Texture * rt1,
@@ -149,7 +174,20 @@ namespace GN { namespace gfx
         const Texture * z,
         MsaaType aa )
     {
-        _GNGFX_CONTEXT_UPDATE( setDrawToTexture( count, rt0, rt1, rt2, rt3, z, aa ) );
+        _GNGFX_CONTEXT_UPDATE( setDrawToTextures( count, rt0, rt1, rt2, rt3, z, aa ) );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void Renderer::setDrawToTextureWithoutDepth(
+            const Texture * tex,
+            UInt32 level,
+            UInt32 face,
+            UInt32 slice,
+            MsaaType aa_ )
+    {
+        _GNGFX_CONTEXT_UPDATE( setDrawToTextureWithoutDepth( tex, level, face, slice, aa_ ) );
     }
 
     //

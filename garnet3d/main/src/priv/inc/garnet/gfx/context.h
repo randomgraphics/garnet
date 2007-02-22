@@ -415,13 +415,23 @@ namespace GN { namespace gfx
         ///
         /// Set draw to texture(s)
         ///
-        void setDrawToTexture(
+        void setDrawToTextures(
             UInt32 count_,
             const Texture * rt0,
             const Texture * rt1 = 0,
             const Texture * rt2 = 0,
             const Texture * rt3 = 0,
             const Texture * z = 0,
+            MsaaType aa_ = MSAA_NONE );
+
+        ///
+        /// Set draw to texture(s)
+        ///
+        void setDrawToTextureWithoutDepth(
+            const Texture * tex,
+            UInt32 level = 0,
+            UInt32 face = 0,
+            UInt32 slice = 0,
             MsaaType aa_ = MSAA_NONE );
 
         ///

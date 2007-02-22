@@ -95,7 +95,7 @@ namespace GN { namespace fs
     ///     - "native::"  : mapping to sys of native file system.
     ///     - "app::"     : mapping to application's executable directory
     ///     - "startup::" : mapping to application's startup directory
-    ///     - "media::"   : mapping to startup::media, media::media and app::..\media
+    ///     - "media::"   : mapping to startup::media, media::media and app::../media
     ///
     /// \note
     //      - file system name must be end with "::"

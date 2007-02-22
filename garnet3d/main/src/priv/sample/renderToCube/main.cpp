@@ -3,6 +3,7 @@
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
+using namespace GN::scene;
 
 class RenderToTexture : public GN::app::SampleApp
 {
@@ -13,12 +14,9 @@ class RenderToTexture : public GN::app::SampleApp
         float t[2];
     };
 
-    UInt32 mFaces1[6], mFaces2[6];
+    ResourceId mFaces1[6], mFaces2[6];
 
     AutoRef<Texture> mCube;
-
-    RendererContext mDrawToCube;
-    RendererContext mDrawCubeToScreen;
 
     Matrix44f world, view, proj, pvw;
 
@@ -44,38 +42,33 @@ public:
         proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 10.0f, 1000.0f );
         arcball.setHandness( util::ArcBall::RIGHT_HAND );
         arcball.setViewMatrix( view );
+
+        return true;
     }
 
     bool onRendererCreate()
     {
         Renderer & r = gRenderer;
-        SampleResourceManager & rm = getResMgr();
+        ResourceManager & rm = gSceneResMgr;
 
         // create cube map
         mCube.attach( r.createCubeTexture( 256, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
 
         // load 2D faces
-        char * name = "texture/cube1/1.bmp";
-        for( int i = 0; i < 6; ++i )
+        StrA name( "media::/texture/cube1/1.bmp" );
+        for( char i = 0; i < 6; ++i )
         {
-            name[12] = '1' + i;
-            mFaces1[i] = rm.textures.getResourceHandle( name );
+            name[22] = '1' + i;
+            mFaces1[i] = rm.getResourceId( name );
+            if( 0 == mFaces1[i] ) return false;
         }
-        name = "textures/cube2/a.bmp";
-        for( int i = 0; i < 6; ++i )
+        name = "media::/texture/cube2/a.bmp";
+        for( char i = 0; i < 6; ++i )
         {
-            name[12] = 'a' + i;
-            mFaces2[i] = rm.textures.getResourceHandle( name );
+            name[22] = 'a' + i;
+            mFaces2[i] = rm.getResourceId( name );
+            if( 0 == mFaces2[i] ) return false;
         }
-
-        // initialize renderer context
-        mDrawToCube.resetToDefault();
-        mDrawToCube.flags.renderTargets = 1;
-        mDrawToCube.renderTargets.count = 1;
-        mDrawToCube.renderTargets.aa = 0;
-        mDrawToCube.renderTargets.setcbuf( 0, mCube );
-
-        mDrawCubeToScreen.resetToDefault();
 
         // initial arcball window
         const DispDesc & dd = r.getDispDesc();
@@ -98,20 +91,18 @@ public:
     void drawCube( const UInt32 * faces )
     {
         Renderer & r = gRenderer;
-        SampleResourceManager & rm = getResMgr();
+        ResourceManager & rm = gSceneResMgr;
 
         // draw to cube
-        mDrawToCube.setTexture( 0, faces[i] );
         for( int i = 0; i < 6; ++i )
         {
-            mDrawToCube.renderTargets.cbuffers[0].face = i;
-            r.setContext( mDrawToCube );
+            r.setTexture( 0, rm.getResourceT<Texture>( faces[i] ) );
+            r.setDrawToTextureWithoutDepth( mCube, 0, i );
             r.draw2DTexturedQuad( 0 );
         }
 
         // draw cube to screen
-        mDrawCubeToScreen.setTexture( 0, rm.textures.getResource( mCube ) );
-        r.setContext( mDrawCubeToScreen );
+        r.setDrawToBackBuf();
         r.clearScreen();
         r.drawIndexedUp(
             TRIANGLE_LIST,

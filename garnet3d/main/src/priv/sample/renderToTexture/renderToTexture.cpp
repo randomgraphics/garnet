@@ -3,26 +3,28 @@
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
+using namespace GN::scene;
 
 class RenderToTexture : public GN::app::SampleApp
 {
     AutoRef<Texture> mRt0, mRt1;
 
-    UInt32 mTex0, mTex1;
+    ResourceId mTex0, mTex1;
 
 public:
 
     bool onRendererCreate()
     {
         Renderer & r = gRenderer;
-        SampleResourceManager & rm = getResMgr();
-        
+        ResourceManager & rm = gSceneResMgr;
+
         mRt0.attach( r.create2DTexture( 256, 256, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
         mRt1.attach( r.create2DTexture( 256, 256, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
         if( mRt0.empty() || mRt1.empty() ) return false;
 
-        mTex0 = rm.textures.getResourceHandle( "texture/rabit.png" );
-        mTex1 = rm.textures.getResourceHandle( "texture/earth.jpg" );
+        mTex0 = rm.getResourceId( "media::texture/rabit.png" );
+        mTex1 = rm.getResourceId( "media::texture/earth.jpg" );
+        if( 0 == mTex0 || 0 == mTex1 ) return false;
 
         return true;
     }
@@ -36,17 +38,17 @@ public:
     void onRender()
     {
         Renderer & r = gRenderer;
-        SampleResourceManager & rm = getResMgr();
+        ResourceManager & rm = gSceneResMgr;
 
         // draw to RT0
-        rm.bindTextureHandle( r, 0, mTex0 );
-        r.setDrawToTexture( 1, mRt0 );
+        r.setTexture( 0, rm.getResourceT<Texture>( mTex0 ) );
+        r.setDrawToTextures( 1, mRt0 );
         r.clearScreen();
         r.draw2DTexturedQuad( 0 );
 
         // draw to RT1
-        rm.bindTextureHandle( r, 0, mTex1 );
-        r.setDrawToTexture( 1, mRt1 );
+        r.setTexture( 0, rm.getResourceT<Texture>( mTex1 ) );
+        r.setDrawToTextures( 1, mRt1 );
         r.clearScreen();
         r.draw2DTexturedQuad( 0 );
 
