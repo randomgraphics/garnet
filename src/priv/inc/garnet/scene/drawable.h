@@ -8,19 +8,29 @@
 
 namespace GN { namespace scene
 {
+    ///
+    /// drawable object.
+    ///
     struct Drawable
     {
+        ///
+        /// texture item
+        ///
         struct TexItem
         {
-            gfx::EffectItemID binding;
-            ResourceId        texid;
+            gfx::EffectItemID binding; ///< effect item ID that this texture is binding to.
+            ResourceId        texid;   ///< texture resource ID.
         };
 
+        ///
+        /// uniform item
+        ///
         struct UniItem
         {
-            gfx::EffectItemID binding;
-            gfx::UniformValue value;
+            gfx::EffectItemID binding; ///< effect item ID that this uniform is binding to.
+            gfx::UniformValue value;   ///< uniform value.
         };
+        //@}
         
         //@{
         ResourceId           effect;

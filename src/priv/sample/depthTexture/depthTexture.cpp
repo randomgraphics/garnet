@@ -2,6 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::scene;
 
 class Scene
 {
@@ -24,9 +25,9 @@ class Scene
 
     Matrix44f mModel, mView, mProj;
 
-    UInt32 mTex0;
+    ResourceId mTex0;
 
-    UInt32 mVs, mPs;
+    AutoRef<Shader> mVs, mPs;
 
 public:
 
@@ -50,7 +51,7 @@ public:
         if( mDepth.empty() ) return false;
 
         // create texture
-        mTex0 = mApp.getResMgr().textures.getResourceHandle( "texture/rabit.png" );
+        mTex0 = gSceneResMgr.getResourceId( "media::/texture/rabit.png" );
 
         // create decl
         mDecl = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
@@ -75,14 +76,15 @@ public:
         mArcBall.setViewMatrix( mView );
 
         // try create shaders
-        mVs = mPs = 0;
         if( r.supportShader( "vs_1_1" ) )
         {
-            mVs = mApp.getResMgr().shaders.getResourceHandle( "depthTexture/d3dVs.txt" );
+            mVs.attach( r.createShaderFromFile( SHADER_VS, LANG_D3D_HLSL, "media::depthTexture/d3dVs.txt" ) );
+            if( mVs.empty() ) return false;
         }
         if( r.supportShader( "ps_1_1" ) )
         {
-            mPs = mApp.getResMgr().shaders.getResourceHandle( "depthTexture/d3dPs.txt" );
+            mPs.attach( r.createShaderFromFile( SHADER_PS, LANG_D3D_HLSL, "media::depthTexture/d3dPs.txt" ) );
+            if( !mPs ) return false;
         }
 
         // success
@@ -93,6 +95,8 @@ public:
     {
         mColor.clear();
         mDepth.clear();
+        mVs.clear();
+        mPs.clear();
     }
 
     void onKeyPress( input::KeyEvent key )
@@ -127,15 +131,15 @@ public:
     void render()
     {
         Renderer & r = gRenderer;
-        GN::app::SampleResourceManager & rm = mApp.getResMgr();
+        ResourceManager & rm = gSceneResMgr;
 
         // render to depth texture
         r.contextUpdateBegin();
             r.setShaders( 0, 0, 0 );
             r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-            r.setDrawToTexture( 1, mColor, 0, 0, 0, mDepth );
+            r.setDrawToTextures( 1, mColor, 0, 0, 0, mDepth );
             r.setWorld( mModel ); r.setView( mView ); r.setProj( mProj );
-            rm.bindTextureHandle( r, 0, mTex0 );
+            r.setTexture( 0, rm.getResourceT<Texture>( mTex0 ) );
             r.setVtxFmt( mDecl );
         r.contextUpdateEnd();
         r.clearScreen();
@@ -146,7 +150,7 @@ public:
         r.setTexture( 0, mDepth );
         if( mVs && mPs )
         {
-            rm.bindShaderHandles( r, mVs, mPs, 0 );
+            r.setShaders( mVs, mPs, 0 );
             r.draw2DTexturedQuad( DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_OPAQUE );
         }
         else

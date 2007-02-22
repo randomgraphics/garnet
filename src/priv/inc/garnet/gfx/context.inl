@@ -97,7 +97,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setDrawToTexture(
+    inline void RendererContext::setDrawToTextures(
             UInt32 count,
             const Texture * rt0,
             const Texture * rt1,
@@ -109,6 +109,24 @@ namespace GN { namespace gfx
     {
         RenderTargetDesc desc;
         desc.drawToBaseMap( count, rt0, rt1, rt2, rt3, z, aa );
+        setRenderTargets( desc );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    inline void RendererContext::setDrawToTextureWithoutDepth(
+            const Texture * tex,
+            UInt32 level,
+            UInt32 face,
+            UInt32 slice,
+            MsaaType aa_ )
+    {
+        RenderTargetDesc desc;
+        desc.count = 1;
+        desc.aa = aa_;
+        desc.setcbuf( 0, tex, level, face, slice );
+        desc.setzbuf( 0 );
         setRenderTargets( desc );
     }
 

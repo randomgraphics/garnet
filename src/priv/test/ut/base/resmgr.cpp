@@ -1,6 +1,6 @@
 #include "../testCommon.h"
 
-typedef GN::ResourceManager<int> ResMgr;
+typedef GN::ResourceManagerTempl<int> ResMgr;
 
 bool defCreator( int & res, const GN::StrA & name, void * )
 {
@@ -23,7 +23,7 @@ void defDeletor( int &, void* )
     // do nothing
 }
 
-class ResourceManagerTest : public CxxTest::TestSuite
+class BaseResourceManagerTemplTest : public CxxTest::TestSuite
 {
 public:
 

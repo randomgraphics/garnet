@@ -615,6 +615,12 @@ namespace GN { namespace gfx
         createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints = "" ) = 0;
 
         ///
+        /// create shader from file
+        ///
+        Shader *
+        createShaderFromFile( ShaderType type, ShadingLanguage lang, const StrA & filename, const StrA & hints = "" );
+
+        ///
         /// Create vetex shader.
         ///
         Shader *
@@ -843,7 +849,8 @@ namespace GN { namespace gfx
         inline void setRenderState( RenderState state, SInt32 value );
         inline void setRenderTargets( const RenderTargetDesc & );
         inline void setDrawToBackBuf();
-        inline void setDrawToTexture( UInt32 count, const Texture * rt0, const Texture * rt1=0, const Texture * rt2=0, const Texture * rt3=0, const Texture * z=0, MsaaType aa=MSAA_NONE );
+        inline void setDrawToTextures( UInt32 count, const Texture * rt0, const Texture * rt1=0, const Texture * rt2=0, const Texture * rt3=0, const Texture * z=0, MsaaType aa=MSAA_NONE );
+        inline void setDrawToTextureWithoutDepth( const Texture * tex, UInt32 level = 0, UInt32 face = 0, UInt32 slice = 0, MsaaType aa_ = MSAA_NONE );
         inline void setViewport( const Rectf & );
         inline void setViewport( float left, float top, float width, float height );
 

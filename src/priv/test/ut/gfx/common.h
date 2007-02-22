@@ -91,15 +91,15 @@ struct GfxResources
         if( r.drawBegin() )
         {
             // draw to rt1
-            r.setDrawToTexture( 1, rt1 );
+            r.setDrawToTextures( 1, rt1 );
             r.clearScreen( GN::Vector4f(1,0,0,1) ); // clear to red
 
             // draw to rt2
-            r.setDrawToTexture( 1, rt2 );
+            r.setDrawToTextures( 1, rt2 );
             r.clearScreen( GN::Vector4f(0,0,1,1) ); // clear to blue
 
             // draw to rt3
-            r.setDrawToTexture( 1, rt3 );
+            r.setDrawToTextures( 1, rt3 );
             r.setTexture( 0, rt1 );
             r.draw2DTexturedQuad( 0, 0, 0, 1, 0.5 );
             r.setTexture( 0, rt2 );
