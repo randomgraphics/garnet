@@ -78,60 +78,13 @@ static void sParseTexture( EffectDesc & desc, const XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sParseFloats( float * buffer, size_t count, const XmlElement & node )
-{
-    if( node.text.empty() )
-    {
-        sPostError( node, "missing text" );
-        return false;
-    }
-
-    size_t n = str2Floats( buffer, count, node.text.cptr() );
-
-    if( n < count )
-    {
-        sPostError( node, strFormat( "invalid floating number at index %d", n ) );
-        return false;
-    }
-
-    // success
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static void sParseUniform( EffectDesc & desc, const XmlElement & node )
 {
     const char * n = sGetItemName( node, "uniform" );
     if( !n ) return;
 
     EffectDesc::UniformDesc & ud = desc.uniforms[n];
-    ud.hasDefaultValue = false;
-
-    // TODO: parse uniform type
-
-    // parse uniform value
-    const XmlElement * e = node.child ? node.child->toElement() : NULL;
-    if( !e ) return;
-    if( "matrix44" == e->name )
-    {
-        Matrix44f m;
-        if( sParseFloats( m[0], 16, *e ) )
-        {
-            ud.hasDefaultValue = true;
-            ud.defaultValue.setM( m );
-        }
-    }
-    else if( "vector4" == e->name )
-    {
-        Vector4f v;
-        if( sParseFloats( v, 4, *e ) )
-        {
-            ud.hasDefaultValue = true;
-            ud.defaultValue.setV( v );
-        }
-    }
+    ud.hasDefaultValue = ud.defaultValue.loadFromXmlNode( node );
 }
 
 //
