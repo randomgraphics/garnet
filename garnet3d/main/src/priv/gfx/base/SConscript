@@ -13,6 +13,7 @@ sources = [
     'renderState.cpp',
     #'nes.cpp',
     'shape.cpp',
+    'uniform.cpp',
     'vertex.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

@@ -36,6 +36,7 @@ namespace GN
 #include "gfx/image.h"
 #include "gfx/renderState.h"
 #include "gfx/vertexFormat.h"
+#include "gfx/uniform.h"
 #include "gfx/shape.h"
 #include "gfx/misc.h"
 #include "gfx/d3d9utils.h"

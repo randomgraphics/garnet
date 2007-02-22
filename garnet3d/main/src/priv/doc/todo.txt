@@ -7,14 +7,9 @@
   - task manager/coordinator
 
 - p1
-  - refactor high-level texture/effect/mesh resource management
-    - on the top: the renderable class
-      - consist of effect, meshs, textures and uniforms.
-      - rendering code should be as simple as calling renderable::draw()
-    - resource ID used only on loading, all other places use pointer directly.
-    - support uniform sharing: think about DX10 constant buffer.
-    - support template and referencing in effect and renderable XML file.
-    - support external shader file in effect XML definition.
+  - Drawable optimization:
+  	- try use string to reference uniforms and textures.
+  	- load uniform type and default value from XML.
   - memory pool class is not looking good
     - when call dtor and when not?
     - see others pool implementation on net

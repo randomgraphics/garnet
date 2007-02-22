@@ -2,13 +2,11 @@
 <effect>
     <parameters>
         <uniform name="color"/>
-        <uniform name="pvw">
-            <matrix44>
-                2,  0,  0, -1,
-                0, -2,  0,  1,
-                0,  0,  1,  0,
-                0,  0,  0,  1
-            </matrix44>
+        <uniform name="pvw" type="MATRIX44" count="1">
+            2,  0,  0, -1,
+            0, -2,  0,  1,
+            0,  0,  1,  0,
+            0,  0,  0,  1
         </uniform>
     </parameters>
     <shaders>
