@@ -214,28 +214,12 @@ namespace GN
         size_t                mCount;
         std::vector<HashItem> mValues;
     };
-
-    template<typename CHAR>
-    size_t strHash( const Str<CHAR> & s )
-    {
-        unsigned long hash = 5381;
-
-        const CHAR * p = s.cptr();
-
-        int c;
-        while( c = *p++ )
-        {
-            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-        }
-
-        return hash;
-    }
-
-    typedef HashMap< StrA, int, strHash<char> > StrHashMap;
 }
 
 class StrHashTest : public CxxTest::TestSuite
 {
+    typedef GN::HashMap< GN::StrA, int, GN::strHash<char> > StrHashMap;
+
 public:
 
     void testEmptyMap()

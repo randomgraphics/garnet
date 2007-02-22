@@ -1021,6 +1021,25 @@ namespace GN
     //@}
 
     ///
+    /// string hash function
+    ///
+    template<typename CHAR>
+    inline size_t strHash( const Str<CHAR> & s )
+    {
+        unsigned long hash = 5381;
+
+        const CHAR * p = s.cptr();
+
+        int c;
+        while( c = *p++ )
+        {
+            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+        }
+
+        return hash;
+    }
+
+    ///
     /// printf-like string format function
     ///
     inline StrA strFormat( const char * fmt, ... )
