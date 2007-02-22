@@ -1,0 +1,10 @@
+<?xml version="1.0" standalone="yes"?>
+<drawable>
+	<effect ref="seafloor.effect.xml"/>
+	<mesh ref="seafloor.mesh.xml"/>
+	<texture binding="seafloor" ref="seafloor.bmp"/>
+	<texture binding="caustic"/>
+	<uniform binding="view"/>
+	<uniform binding="proj"/>
+	<uniform binding="caustic"/>
+</drawable>

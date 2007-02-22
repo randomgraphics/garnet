@@ -7,7 +7,6 @@ sources = [
     'fatMesh.cpp',
     'fatMeshLoader.cpp',
     'mesh.cpp',
-    'renderable.cpp',
     #'nes.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

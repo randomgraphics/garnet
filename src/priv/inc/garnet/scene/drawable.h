@@ -10,12 +10,35 @@ namespace GN { namespace scene
 {
     struct Drawable
     {
+        struct TexItem
+        {
+            gfx::EffectItemID binding;
+            ResourceId        texid;
+        };
+
+        struct UniItem
+        {
+            gfx::EffectItemID binding;
+            gfx::UniformValue value;
+        };
+        
         //@{
-        UInt32                                        effect;
-        UInt32                                        mesh;
-        std::map<gfx::EffectItemID,UInt32>            textures;
-        std::map<gfx::EffectItemID,gfx::UniformValue> uniforms;
+        ResourceId           effect;
+        ResourceId           mesh;
+        std::vector<TexItem> textures;
+        std::vector<UniItem> uniforms;
         //@}
+
+        ///
+        /// clear to empty
+        ///
+        void clear()
+        {
+            effect = 0;
+            mesh = 0;
+            textures.clear();
+            uniforms.clear();
+        }
 
         ///
         /// load drawable from XML
@@ -27,10 +50,21 @@ namespace GN { namespace scene
         ///
         bool loadFromXmlFile( File & fp, const StrA & basedir );
 
+        ///
+        /// load drawable from XML file
+        ///
+        bool loadFromXmlFile( const StrA & filename );
+
+        ///
+        /// set uniform value by name
+        ///
+
         //@{
 
         void draw()
         {
+            if( 0 == effect || 0 == mesh ) return;
+            
             ResourceManager & rm = ResourceManager::sGetInstance();
             gfx::Effect * eff = rm.getResourceT<gfx::Effect>( effect );
             GN_ASSERT( eff );
@@ -45,6 +79,8 @@ namespace GN { namespace scene
 
         void drawPass()
         {
+            if( 0 == effect || 0 == mesh ) return;
+
             ResourceManager & rm = ResourceManager::sGetInstance();
             gfx::Renderer   & r  = gRenderer;
 
@@ -52,10 +88,12 @@ namespace GN { namespace scene
             GN_ASSERT( eff );
     
             // bind textures
-            //std::for_each( textures.begin(), textures.end(), ... );
+            BindTexture bt(eff);
+            std::for_each( textures.begin(), textures.end(), bt );
 
             // bind uniforms
-            //std::for_each( uniforms.begin(), uniforms.end(), ... );
+            BindUniform bu(eff);
+            std::for_each( uniforms.begin(), uniforms.end(), bu );
 
             // bind mesh
             gfx::Mesh * m = rm.getResourceT<gfx::Mesh>( mesh );
@@ -70,6 +108,30 @@ namespace GN { namespace scene
         }
 
         //@}
+
+    private:
+
+        struct BindTexture
+        {
+            gfx::Effect * eff;
+            BindTexture( gfx::Effect * eff_ ) : eff(eff_) {}
+            void operator()( const TexItem & ti ) const
+            {
+                eff->setTexture(
+                    ti.binding,
+                    gSceneResMgr.getResourceT<gfx::Texture>(ti.texid) );
+            }
+        };
+
+        struct BindUniform
+        {
+            gfx::Effect * eff;
+            BindUniform( gfx::Effect * eff_ ) : eff(eff_) {}
+            void operator()( const UniItem & ui ) const
+            {
+                eff->setUniform( ui.binding, ui.value );
+            }
+        };
     };
 }}
 

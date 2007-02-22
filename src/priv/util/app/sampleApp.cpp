@@ -136,10 +136,12 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 {
     GN_GUARD_ALWAYS;
 
+    if( !checkCmdLine(argc,argv) ) return false;
+
     // create global resource manager instance
     new scene::ResourceManager;
+    scene::addResourceDirectory( "media::" );
 
-    if( !checkCmdLine(argc,argv) ) return false;
     if( !initApp() ) return false;
     onDetermineInitParam( mInitParam );
     if( !initRenderer() ) return false;
