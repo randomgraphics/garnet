@@ -95,9 +95,9 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
     if( 0 == effptr ) return false;
 
     // load textures and uniforms
-    for( XmlNode * c = eroot->child; c; c = c->sibling )
+    for( const XmlNode * c = eroot->child; c; c = c->sibling )
     {
-        XmlElement * e = c->toElement();
+        const XmlElement * e = c->toElement();
         if( !e ) continue;
 
         if( "texture" == e->name )
@@ -128,8 +128,7 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
             }
 
             // add to texture array
-            textures.resize( textures.size() + 1 );
-            TexItem & ti = textures.back();
+            TexItem & ti = textures[bindingstr];
             ti.binding = binding;
             ti.texid = id;
         }
@@ -149,12 +148,10 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
                 return false;
             }
 
-            // TODO: load uniform value
-
             // add to uniform array
-            uniforms.resize( uniforms.size() + 1 );
-            UniItem & ui = uniforms.back();
+            UniItem & ui = uniforms[bindingstr];
             ui.binding = binding;
+            ui.value.loadFromXmlNode( *e );
         }
         else if( "effect" != e->name && "mesh" != e->name )
         {
