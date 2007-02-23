@@ -36,7 +36,8 @@ namespace GN
     template<
         class  KEY,
         class  VALUE,
-        size_t(*HASH_FUNC)( const KEY & ) >
+        size_t(*HASH_FUNC)( const KEY & ),
+        size_t LOAD_FACTOR = 2 >
     class HashMap
     {
     public:
@@ -52,6 +53,75 @@ namespace GN
 
         //@}
 
+        ///
+        /// hash map iterator class
+        ///
+        class Iterator
+        {
+            HashMap * mMap;
+            size_t    mIdx1;
+            size_t    mIdx2;
+
+        public:
+
+            ///
+            /// ctor
+            ///
+            Iterator( const HashMap * m, size_t i1, size_t i2 )
+                : mMap(m), mIdx1(i1), mIdx2(i2)
+            {}
+
+            /// \name operators
+            //@{
+
+            VALUE & operator->()
+            {
+                GN_ASSERT( mIdx1 < mMap->mValues.size() );
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
+
+                mMap->mValues[mIdx1].values[mIdx2];
+            }
+
+            const VALUE & operator->() const
+            {
+            }
+
+            bool operator!=( const Iterator & rhs ) const
+            {
+                return &mMap != &rhs.mMap
+                    || mIdx1 != rhs.mIdx1
+                    || mIdx2 != rhs.mIdx2;
+            }
+
+            bool operator<( const Iterator & rhs ) const
+            {
+                if( mMap != rhs.mMap ) return mMap < rhs.mMap;
+                if( mIdx1 != rhs.mIdx1 ) return mIdx1 < rhs.mIdx1;
+                return mIdx2 < rhs.mIdx2;
+            }
+
+            Iterator & operator++()
+            {
+                GN_ASSERT( mIdx1 < mMap->mValues.size() );
+                GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
+
+                HashMap::HashItem & hi = mMap->mValues[mIdx1];
+
+                ++mIdx2;
+                if( mIdx2 < hi.values.size() ) return *this;
+
+                ++mIdx1;
+                mIdx2 = 0;
+                return *this;
+            }
+
+            //@}
+        };
+
+        ///
+        /// constant iterator class
+        ///
+        typedef const Iterator ConstIterator;
 
         /// \name hash map operations
         //@{
@@ -118,7 +188,7 @@ namespace GN
             // insert new value
             hi.values.push_back( PairType(key,value) );
             ++mCount;
-            if( mCount > (N*2) && (mPrimIndex+1) < GN_ARRAY_COUNT(PRIMARY_ARRAY) )
+            if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(PRIMARY_ARRAY) )
             {
                 ++mPrimIndex;
                 mValues.resize( PRIMARY_ARRAY[mPrimIndex] );
@@ -191,7 +261,7 @@ namespace GN
             // not found, insert new value
             hi.values.push_back( PairType(key,VALUE()) );
             ++mCount;
-            if( mCount > (N*2) && (mPrimIndex+1) < GN_ARRAY_COUNT(PRIMARY_ARRAY) )
+            if( mCount > (N*LOAD_FACTOR) && (mPrimIndex+1) < GN_ARRAY_COUNT(PRIMARY_ARRAY) )
             {
                 ++mPrimIndex;
                 mValues.resize( PRIMARY_ARRAY[mPrimIndex] );
