@@ -24,9 +24,9 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
     if( !ro.multithread ) flags |= D3D10_CREATE_DEVICE_SINGLETHREADED;
 
     // setup swap chain descriptor
+    GN_CASSERT( D3D10_SDK_VERSION >= 28 );
     DXGI_SWAP_CHAIN_DESC sd;
     ::memset( &sd, 0, sizeof(sd) );
-#if D3D10_SDK_VERSION >= 28
     sd.BufferCount = 1;
     sd.BufferDesc.Width = dd.width;
     sd.BufferDesc.Height = dd.height;
@@ -34,15 +34,6 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
     sd.BufferDesc.RefreshRate.Numerator = 60;
     sd.BufferDesc.RefreshRate.Denominator = 1;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-#else
-    sd.BackBufferCount = 1;
-    sd.BackBufferDesc.Width = dd.width;
-    sd.BackBufferDesc.Height = dd.height;
-    sd.BackBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BackBufferDesc.RefreshRate.Numerator = 60;
-    sd.BackBufferDesc.RefreshRate.Denominator = 1;
-    sd.BackBufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-#endif
     sd.OutputWindow = (HWND)dd.windowHandle;
     sd.SampleDesc.Count = 1;
     sd.SampleDesc.Quality = 0;
