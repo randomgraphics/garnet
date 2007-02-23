@@ -268,14 +268,13 @@ UInt32 GN::gfx::D3D9Renderer::createVtxFmt( const VtxFmtDesc & format )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf(
-    size_t bytes, bool dynamic, bool sysCopy )
+GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D9VtxBuf> buf( new D3D9VtxBuf(*this) );
 
-    if( !buf->init( bytes, dynamic, sysCopy ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
     return buf.detach();
 
@@ -285,14 +284,13 @@ GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D9Renderer::createIdxBuf(
-    size_t numIdx, bool dynamic, bool sysCopy )
+GN::gfx::IdxBuf * GN::gfx::D3D9Renderer::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D9IdxBuf> buf( new D3D9IdxBuf(*this) );
 
-    if( !buf->init( numIdx, dynamic, sysCopy ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
     return buf.detach();
 

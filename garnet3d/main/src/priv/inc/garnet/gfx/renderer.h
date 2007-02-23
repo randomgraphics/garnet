@@ -721,39 +721,52 @@ namespace GN { namespace gfx
         ///
         /// Create new vertex buffer
         ///
-        /// \param bytes
-        ///     Size of vertex buffer in bytes.
-        /// \param dynamic
-        ///     Dynamic or static vertex buffer.
-        /// \param sysCopy
-        ///     has system copy or not
-        /// \param loader
-        ///     Optional content loader.
+        virtual VtxBuf *
+        createVtxBuf( const VtxBufDesc & ) = 0;
+
+        ///
+        /// Create new vertex buffer
         ///
         virtual VtxBuf *
-        createVtxBuf( size_t bytes,
-                      bool   dynamic = false,
-                      bool   sysCopy = true ) = 0;
+        createVtxBuf( size_t bytes, bool dynamic = false, bool readback = false )
+        {
+            VtxBufDesc desc;
+            desc.bytes = (UInt32)bytes;
+            desc.dynamic = dynamic;
+            desc.readback = readback;
+            return createVtxBuf( desc );
+        }
+
+        ///
+        /// Create new dynamic vertex buffer
+        ///
+        VtxBuf *
+        createDynamicVtxBuf( size_t bytes ) { return createVtxBuf( bytes, true, false ); }
 
         ///
         /// Create new index buffer
         ///
-        /// \param numIdx
-        ///     number of indices
-        /// \param dynamic
-        ///     Dynamic or static vertex buffer.
-        /// \param sysCopy
-        ///     has system copy or not
-        /// \param loader
-        ///     Optional content loader.
-        ///
-        /// \note
-        ///     每个索引固定占用16bit
-        ///
         virtual IdxBuf *
-        createIdxBuf( size_t numIdx,
-                      bool   dynamic = false,
-                      bool   sysCopy = true ) = 0;
+        createIdxBuf( const IdxBufDesc & desc ) = 0;
+
+        ///
+        /// Create new index buffer
+        ///
+        IdxBuf *
+        createIdxBuf( size_t numidx, bool dynamic, bool readback )
+        {
+            IdxBufDesc desc;
+            desc.numidx = (UInt32)numidx;
+            desc.dynamic = dynamic;
+            desc.readback = readback;
+            return createIdxBuf( desc );
+        }
+
+        ///
+        /// Create new dynamic index buffer
+        ///
+        IdxBuf *
+        createDynamicIdxBuf( size_t numidx ) { return createIdxBuf( numidx, true, false ); }
 
         //@}
 

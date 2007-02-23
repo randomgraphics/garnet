@@ -10,7 +10,7 @@ GN::Logger * GN::gfx::OGLIdxBuf::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
+bool GN::gfx::OGLIdxBuf::init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -18,15 +18,15 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
     GN_STDCLASS_INIT( GN::gfx::OGLIdxBuf, () );
 
     // check parameter
-    if( 0 == numIdx )
+    if( 0 == desc.numidx )
     {
         GN_ERROR(sLogger)( "invalid buffer length!" );
         return failure();
     }
 
-    setProperties( numIdx, dynamic );
+    setDesc( desc );
 
-    mBuffer = (UInt16*) heapAlloc( numIdx * 2 );
+    mBuffer = (UInt16*) heapAlloc( desc.numidx * 2 );
 
     // success
     return success();
@@ -56,11 +56,11 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
+UInt16 * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t numidx, LockFlag flag )
 {
     GN_GUARD_SLOW;
     GN_ASSERT( ok() );
-    if( !basicLock( startIdx, numIdx, flag ) ) return 0;
+    if( !basicLock( startIdx, numidx, flag ) ) return 0;
     return mBuffer + startIdx;
     GN_UNGUARD_SLOW
 }

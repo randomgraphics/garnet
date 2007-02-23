@@ -183,8 +183,7 @@ UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf(
-    size_t bytes, bool dynamic, bool sysCopy )
+GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf( const VtxBufDesc & desc )
 {
     return 0;
     /*
@@ -202,8 +201,7 @@ GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf(
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::IdxBuf * GN::gfx::D3D10Renderer::createIdxBuf(
-    size_t numIdx, bool dynamic, bool sysCopy )
+GN::gfx::IdxBuf * GN::gfx::D3D10Renderer::createIdxBuf( const IdxBufDesc & desc )
 {
     return 0;
     /*

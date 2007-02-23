@@ -6,8 +6,6 @@
 /// \author  chenlee (2006.3.8)
 // *****************************************************************************
 
-#include "garnet/gfx/buffer.h"
-
 namespace GN { namespace gfx
 {
     ///
@@ -53,7 +51,9 @@ namespace GN { namespace gfx
                 return false;
             }
 
-            if( offset >= getSizeInBytes() )
+            const VtxBufDesc & desc = getDesc();
+
+            if( offset >= desc.bytes )
             {
                 GN_ERROR(sLogger)( "offset is beyond the end of vertex buffer!" );
                 return false;
@@ -66,8 +66,8 @@ namespace GN { namespace gfx
             }
 
             // adjust offset and bytes
-            if( 0 == bytes ) bytes = getSizeInBytes();
-            if( offset + bytes > getSizeInBytes() ) bytes = getSizeInBytes() - offset;
+            if( 0 == bytes ) bytes = desc.bytes;
+            if( offset + bytes > desc.bytes ) bytes = desc.bytes - offset;
 
             // success            
             mLocked = true;
@@ -152,7 +152,9 @@ namespace GN { namespace gfx
                 return false;
             }
 
-            if( startIdx >= getNumIdx() )
+            const IdxBufDesc & desc = getDesc();
+
+            if( startIdx >= desc.numidx )
             {
                 GN_ERROR(sLogger)( "startIdx is beyond the end of index buffer!" );
                 return false;
@@ -165,8 +167,8 @@ namespace GN { namespace gfx
             }
 
             // adjust startIdx and numIdx
-            if( 0 == numIdx ) numIdx = getNumIdx();
-            if( startIdx + numIdx > getNumIdx() ) numIdx = getNumIdx() - startIdx;
+            if( 0 == numIdx ) numIdx = desc.numidx;
+            if( startIdx + numIdx > desc.numidx ) numIdx = desc.numidx - startIdx;
 
             // success            
             mLocked = true;

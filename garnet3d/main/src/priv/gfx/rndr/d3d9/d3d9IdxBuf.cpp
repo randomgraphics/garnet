@@ -19,8 +19,7 @@ extern DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag lock );
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9IdxBuf::init(
-    size_t numIdx, bool dynamic, bool sysCopy )
+bool GN::gfx::D3D9IdxBuf::init( const IdxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -28,15 +27,15 @@ bool GN::gfx::D3D9IdxBuf::init(
     GN_STDCLASS_INIT( GN::gfx::D3D9IdxBuf, () );
 
     // check parameter
-    if( 0 == numIdx )
+    if( 0 == desc.numidx )
     {
         GN_ERROR(sLogger)( "invalid buffer length!" );
         return failure();
     }
 
     // store buffer parameters
-    setProperties( numIdx, dynamic );
-    if( sysCopy ) mSysCopy.resize( numIdx );
+    setDesc( desc );
+    if( !desc.dynamic && desc.readback ) mSysCopy.resize( desc.numidx );
 
     if( !deviceRestore() ) return failure();
 
@@ -81,25 +80,18 @@ bool GN::gfx::D3D9IdxBuf::deviceRestore()
     GN_DX9_CHECK_RV( dev->EvictManagedResources(), 0 );
 #endif
 
+    const IdxBufDesc & desc = getDesc();
+
     // create d3d ibuffer
     GN_DX9_CHECK_RV(
         dev->CreateIndexBuffer(
-            (UINT)( getNumIdx() * 2 ),
-            sBufUsage2D3D9( isDynamic() ),
+            desc.numidx * 2,
+            sBufUsage2D3D9( desc.dynamic ),
             D3DFMT_INDEX16,
             D3DPOOL_DEFAULT,
             &mD3DIb,
             0 ),
         false );
-
-    if( !mSysCopy.empty() )
-    {
-        // copy data from system copy to D3D buffer
-        void * dst;
-        GN_DX9_CHECK_RV( mD3DIb->Lock( 0, 0, &dst, 0 ), false );
-        ::memcpy( dst, &mSysCopy[0], mSysCopy.size()*2 );
-        mD3DIb->Unlock();
-    }
 
     // success
     return true;
@@ -132,13 +124,13 @@ void GN::gfx::D3D9IdxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag flag )
+UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numidx, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( ok() );
 
-    if( !basicLock( startIdx, numIdx, flag ) ) return 0;
+    if( !basicLock( startIdx, numidx, flag ) ) return 0;
 
     UInt16 * buf;
     if( mSysCopy.empty() )
@@ -146,23 +138,23 @@ UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numIdx, LockFlag fla
 #if GN_XENON
         // Xenon does not support range locking on index buffer
         GN_DX9_CHECK_DO(
-            mD3DIb->Lock( 0, 0, (void**)&buf, sLockFlags2D3D9( isDynamic(), flag ) ),
+            mD3DIb->Lock( 0, 0, (void**)&buf, sLockFlags2D3D9( getDesc().dynamic, flag ) ),
             basicUnlock(); return 0; );
         buf += startIdx;
 #else
         GN_DX9_CHECK_DO(
             mD3DIb->Lock(
                 (UINT)( startIdx<<1 ),
-                (UINT)( numIdx<<1 ),
+                (UINT)( numidx<<1 ),
                 (void**)&buf,
-                sLockFlags2D3D9( isDynamic(), flag ) ),
+                sLockFlags2D3D9( getDesc().dynamic, flag ) ),
             basicUnlock(); return 0; );
 #endif
     }
     else
     {
         mLockStartIdx = startIdx;
-        mLockNumIdx   = numIdx;
+        mLockNumIdx   = numidx;
         mLockFlag     = flag;
         buf = &mSysCopy[startIdx];
     }
@@ -190,18 +182,20 @@ void GN::gfx::D3D9IdxBuf::unlock()
     }
     else if( LOCK_RO != mLockFlag )
     {
+        const IdxBufDesc & desc = getDesc();
+        
         GN_ASSERT(
-            mLockStartIdx < getNumIdx() &&
+            mLockStartIdx < desc.numidx &&
             0 < mLockNumIdx &&
-            (mLockStartIdx + mLockNumIdx) <= getNumIdx() );
+            (mLockStartIdx + mLockNumIdx) <= desc.numidx );
 
-        mLockNumIdx <<= 1; // now, numIdx is in bytes.
+        mLockNumIdx <<= 1; // now, numidx is in bytes.
 
         // update d3d index buffer
 #if GN_XENON
         // Xenon does not support range locking on index buffer
         UInt16 * dst;
-        GN_DX9_CHECK_R( mD3DIb->Lock( 0, 0, (void**)&dst, sLockFlags2D3D9( isDynamic(), mLockFlag ) ) );
+        GN_DX9_CHECK_R( mD3DIb->Lock( 0, 0, (void**)&dst, sLockFlags2D3D9( desc.dynamic, mLockFlag ) ) );
         dst += mLockStartIdx;
 #else
         void * dst;
@@ -209,7 +203,7 @@ void GN::gfx::D3D9IdxBuf::unlock()
             (UINT)( mLockStartIdx<<1 ),
             (UINT)( mLockNumIdx ),
             &dst,
-            sLockFlags2D3D9( isDynamic(), mLockFlag ) ) );
+            sLockFlags2D3D9( desc.dynamic, mLockFlag ) ) );
 #endif
         ::memcpy( dst, &mSysCopy[mLockStartIdx], mLockNumIdx );
         mD3DIb->Unlock();

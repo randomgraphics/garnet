@@ -45,8 +45,7 @@ namespace GN
 
 // Abstract renderer interfaces.
 #include "gfx/shader.h"
-#include "gfx/texture.h"
-#include "gfx/buffer.h"
+#include "gfx/surface.h"
 #include "gfx/context.h"
 #include "gfx/renderer.h"
 

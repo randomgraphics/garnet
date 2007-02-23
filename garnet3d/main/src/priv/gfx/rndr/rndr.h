@@ -1,6 +1,5 @@
 #include "../base/pch.h"
 #include "garnet/gfx/shader.h"
-#include "garnet/gfx/texture.h"
-#include "garnet/gfx/buffer.h"
+#include "garnet/gfx/surface.h"
 #include "garnet/gfx/context.h"
 #include "garnet/gfx/renderer.h"

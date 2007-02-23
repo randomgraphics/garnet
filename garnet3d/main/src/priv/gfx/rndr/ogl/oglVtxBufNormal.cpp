@@ -10,23 +10,23 @@ GN::Logger * GN::gfx::OGLVtxBufNormal::sLogger = GN::getLogger("GN.gfx.rndr.OGL"
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
+bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( OGLVtxBufNormal, () );
 
-    if( 0 == bytes )
+    if( 0 == desc.bytes )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         return failure();
     }
 
-    // store properties
-    setProperties( bytes, dynamic );
+    // store descriptor
+    setDesc( desc );
 
-    mBuffer = (UInt8*)heapAlloc( bytes );
+    mBuffer = (UInt8*)heapAlloc( desc.bytes );
 
     // success
     return success();

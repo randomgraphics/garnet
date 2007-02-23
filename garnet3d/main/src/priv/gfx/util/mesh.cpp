@@ -176,11 +176,11 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
 
             // get optional vb properties
             bool dynamic = sGetOptionalBoolAttrib( *e, "dynamic", false );
-            bool syscopy = sGetOptionalBoolAttrib( *e, "syscopy", false );
+            bool readback = sGetOptionalBoolAttrib( *e, "readback", false );
 
             // create new VB
             size_t bytes = vb.stride * numVtx;
-            vb.buffer.attach( r.createVtxBuf( bytes, dynamic, syscopy ) );
+            vb.buffer.attach( r.createVtxBuf( bytes, dynamic, readback ) );
             if( vb.buffer.empty() ) return false;
 
             // lock vb
@@ -253,12 +253,12 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
         {
             // get optional vb properties
             bool dynamic = sGetOptionalBoolAttrib( *e, "dynamic", false );
-            bool syscopy = sGetOptionalBoolAttrib( *e, "syscopy", false );
+            bool readback = sGetOptionalBoolAttrib( *e, "readback", false );
 
             // create new ib
             size_t numidx = calcVertexCount( primType, primCount );
             size_t bytes = numidx * 2; // 16-bit index buffer
-            idxbuf.attach( r.createIdxBuf( bytes, dynamic, syscopy ) );
+            idxbuf.attach( r.createIdxBuf( bytes, dynamic, readback ) );
             if( idxbuf.empty() ) return false;
 
             // lock ib
