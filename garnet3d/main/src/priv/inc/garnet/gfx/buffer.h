@@ -8,19 +8,6 @@
 
 namespace GN { namespace gfx
 {
-    struct VtxBuf;
-    struct IdxBuf;
-
-    ///
-    /// Vertex buffer content loader
-    ///
-    typedef Delegate1<bool,VtxBuf&> VtxBufLoader;
-
-    ///
-    /// Index buffer content loader
-    ///
-    typedef Delegate1<bool,IdxBuf&> IdxBufLoader;
-
     ///
     /// Vertex buffer interface.
     ///
@@ -35,11 +22,6 @@ namespace GN { namespace gfx
         /// Get buffer usage
         ///
         bool isDynamic() const { return mDynamic; }
-
-        ///
-        /// Set content loader
-        ///
-        void setLoader( const VtxBufLoader & loader ) { mLoader = loader; }
 
         ///
         /// Lock vertex buffer
@@ -72,16 +54,10 @@ namespace GN { namespace gfx
             mDynamic = dynamic;
         }
 
-        ///
-        /// Get content loader
-        ///
-        const VtxBufLoader & getLoader() const { return mLoader; }
-
     private:
 
         size_t       mSize;    ///< Buffer size in bytes
         bool         mDynamic; ///< Buffer usage
-        VtxBufLoader mLoader;  ///< Content loader
     };
 
     ///
@@ -98,11 +74,6 @@ namespace GN { namespace gfx
         /// Get buffer usage
         ///
         bool isDynamic() const { return mDynamic; }
-
-        ///
-        /// Set content loader
-        ///
-        void setLoader( const IdxBufLoader & loader ) { mLoader = loader; }
 
         ///
         /// lock the buffer
@@ -135,16 +106,10 @@ namespace GN { namespace gfx
             mDynamic = dynamic;
         }
 
-        ///
-        /// Get content loader
-        ///
-        const IdxBufLoader & getLoader() const { return mLoader; }
-
     private:
 
         size_t       mNumIdx;  ///< Index count
         bool         mDynamic; ///< Buffer usage
-        IdxBufLoader mLoader;  ///< Content loader
     };
 
     ///

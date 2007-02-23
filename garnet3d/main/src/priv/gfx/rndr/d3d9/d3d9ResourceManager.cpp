@@ -227,13 +227,11 @@ GN::gfx::D3D9Renderer::createShader(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D9Renderer::createTexture( const TextureDesc & desc,
-                                     const TextureLoader & loader )
+GN::gfx::D3D9Renderer::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D9Texture> p( new D3D9Texture(*this) );
-    p->setLoader( loader );
     if( !p->init( desc ) ) return 0;
     return p.detach();
 
@@ -271,13 +269,13 @@ UInt32 GN::gfx::D3D9Renderer::createVtxFmt( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf(
-    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
+    size_t bytes, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
     AutoRef<D3D9VtxBuf> buf( new D3D9VtxBuf(*this) );
 
-    if( !buf->init( bytes, dynamic, sysCopy, loader ) ) return 0;
+    if( !buf->init( bytes, dynamic, sysCopy ) ) return 0;
 
     return buf.detach();
 
@@ -288,13 +286,13 @@ GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf * GN::gfx::D3D9Renderer::createIdxBuf(
-    size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
+    size_t numIdx, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
     AutoRef<D3D9IdxBuf> buf( new D3D9IdxBuf(*this) );
 
-    if( !buf->init( numIdx, dynamic, sysCopy, loader ) ) return 0;
+    if( !buf->init( numIdx, dynamic, sysCopy ) ) return 0;
 
     return buf.detach();
 

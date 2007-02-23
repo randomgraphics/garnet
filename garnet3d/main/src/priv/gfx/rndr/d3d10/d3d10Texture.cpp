@@ -250,9 +250,6 @@ bool GN::gfx::D3D10Texture::createTexture()
         if( mipSize.z > 1 ) mipSize.z >>= 1;
     }
 
-    // call user-defined content loader
-    if( !getLoader().empty() && !getLoader()( *this ) ) return false;
-
     // success
     return true;
 

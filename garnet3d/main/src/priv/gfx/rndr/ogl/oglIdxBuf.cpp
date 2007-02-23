@@ -28,9 +28,6 @@ bool GN::gfx::OGLIdxBuf::init( size_t numIdx, bool dynamic )
 
     mBuffer = (UInt16*) heapAlloc( numIdx * 2 );
 
-    // call user-defined content loader
-    if( !getLoader().empty() && !getLoader()(*this) ) return failure();
-
     // success
     return success();
 

@@ -65,8 +65,7 @@ DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag flag )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D9VtxBuf::init(
-    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
+bool GN::gfx::D3D9VtxBuf::init( size_t bytes, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
@@ -80,7 +79,6 @@ bool GN::gfx::D3D9VtxBuf::init(
     }
 
     setProperties( bytes, dynamic );
-    setLoader( loader );
     if( sysCopy ) mSysCopy.resize( bytes );
 
     if( !deviceRestore() ) return failure();
@@ -139,12 +137,7 @@ bool GN::gfx::D3D9VtxBuf::deviceRestore()
             0 ),
         false );
 
-    if( !getLoader().empty() )
-    {
-        // call user-defined loader
-        if( !getLoader()( *this ) ) return false;
-    }
-    else if( !mSysCopy.empty() )
+    if( !mSysCopy.empty() )
     {
         // copy data from system copy
         void * dst;

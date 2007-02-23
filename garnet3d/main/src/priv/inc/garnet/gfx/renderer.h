@@ -420,8 +420,8 @@ namespace GN { namespace gfx
         /// last dispose, and ready to use.
         ///
         /// (Re)load content of graphics resources.
-        /// - Only lockable resources (texture, vertex/index buffer) that have
-        ///   neither system-copy nor content loader need content reloading.
+        /// - Lockable resources like texture, vertex buffer and index buffer,
+        ///   need content reloading.
         /// - No need to reload shaders, render state blocks and VtxFmtHandle.
         ///
         static GN_PUBLIC Signal0<bool> sSigRestore;
@@ -637,7 +637,7 @@ namespace GN { namespace gfx
         /// See TextureDesc for detail explaination of each fields in descriptor.
         ///
         virtual Texture *
-        createTexture( const TextureDesc & desc, const TextureLoader & loader = TextureLoader() ) = 0;
+        createTexture( const TextureDesc & desc ) = 0;
 
         ///
         /// Load texture from file
@@ -655,11 +655,10 @@ namespace GN { namespace gfx
                        size_t    levels = 0,
                        ClrFmt    format = FMT_DEFAULT,
                        BitFields usage = 0,
-                       bool      tiled = false,
-                       const TextureLoader & loader = TextureLoader() )
+                       bool      tiled = false )
         {
             TextureDesc desc = { type, (UInt32)sx, (UInt32)sy, (UInt32)sz, (UInt32)faces, (UInt32)levels, format, usage, tiled };
-            return createTexture( desc, loader );
+            return createTexture( desc );
         }
 
         ///
@@ -670,10 +669,9 @@ namespace GN { namespace gfx
                          size_t    levels = 0,
                          ClrFmt    format = FMT_DEFAULT,
                          BitFields usage = 0,
-                         bool      tiled = false,
-                         const TextureLoader & loader = TextureLoader() )
+                         bool      tiled = false )
         {
-            return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, tiled, loader );
+            return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, tiled );
         }
 
         ///
@@ -684,10 +682,9 @@ namespace GN { namespace gfx
                          size_t    levels = 0,
                          ClrFmt    format = FMT_DEFAULT,
                          BitFields usage = 0,
-                         bool      tiled = false,
-                         const TextureLoader & loader = TextureLoader() )
+                         bool      tiled = false )
         {
-            return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, tiled, loader );
+            return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, tiled );
         }
 
         ///
@@ -698,10 +695,9 @@ namespace GN { namespace gfx
                          size_t    levels = 0,
                          ClrFmt    format = FMT_DEFAULT,
                          BitFields usage = 0,
-                         bool      tiled = false,
-                         const TextureLoader & loader = TextureLoader() )
+                         bool      tiled = false )
         {
-            return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, tiled, loader );
+            return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, tiled );
         }
 
         ///
@@ -712,10 +708,9 @@ namespace GN { namespace gfx
                            size_t    levels = 0,
                            ClrFmt    format = FMT_DEFAULT,
                            BitFields usage = 0,
-                           bool      tiled = false,
-                           const TextureLoader & loader = TextureLoader() )
+                           bool      tiled = false )
         {
-            return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, tiled, loader );
+            return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, tiled );
         }
 
         ///
@@ -738,8 +733,7 @@ namespace GN { namespace gfx
         virtual VtxBuf *
         createVtxBuf( size_t bytes,
                       bool   dynamic = false,
-                      bool   sysCopy = true,
-                      const  VtxBufLoader & loader = VtxBufLoader() ) = 0;
+                      bool   sysCopy = true ) = 0;
 
         ///
         /// Create new index buffer
@@ -759,8 +753,7 @@ namespace GN { namespace gfx
         virtual IdxBuf *
         createIdxBuf( size_t numIdx,
                       bool   dynamic = false,
-                      bool   sysCopy = true,
-                      const  IdxBufLoader & loader = IdxBufLoader() ) = 0;
+                      bool   sysCopy = true ) = 0;
 
         //@}
 

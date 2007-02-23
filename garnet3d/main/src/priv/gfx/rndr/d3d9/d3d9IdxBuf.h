@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
+        bool init( size_t numIdx, bool dynamic, bool sysCopy );
         void quit();
     private:
         void clear()
