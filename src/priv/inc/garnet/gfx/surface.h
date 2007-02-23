@@ -1,9 +1,9 @@
-#ifndef __GN_GFX_TEXTURE_H__
-#define __GN_GFX_TEXTURE_H__
+#ifndef __GN_GFX_SURFACE_H__
+#define __GN_GFX_SURFACE_H__
 // *****************************************************************************
-/// \file    texture.h
-/// \brief   Texture interface
-/// \author  chenlee (2005.9.30)
+//! \file    gfx/surface.h
+//! \brief   Graphics surface classes, include texture, vtxbuf and idxbuf
+//! \author  chen@@CHENLI-HOMEPC (2007.2.23)
 // *****************************************************************************
 
 namespace GN { namespace gfx
@@ -75,6 +75,19 @@ namespace GN { namespace gfx
     };
 
     ///
+    /// 锁定标志
+    ///
+    enum LockFlag
+    {
+        LOCK_RW,           ///< read-write lock, the slowest one.
+        LOCK_RO,           ///< read-only lock.
+        LOCK_WO,           ///< write-only lock
+        LOCK_DISCARD,      ///< write-only lock, discard old value.
+        LOCK_NO_OVERWRITE, ///< write-only lock, promise not to modify any section of the buffer being used.
+        NUM_LOCK_FLAGS     ///< number of lock flags.
+    };
+
+    ///
     /// Texture descriptor
     ///
     struct TextureDesc
@@ -92,6 +105,28 @@ namespace GN { namespace gfx
         BitFields usage;     ///< usage
         bool      tiled;     ///< tiled format. Ignored on platform other then Xenon. 
     };
+
+    ///
+    /// vertex buffer descriptor
+    ///
+    struct VtxBufDesc
+    {
+        UInt32 bytes;
+        bool   dynamic;
+        bool   readback;
+    };
+    GN_CASSERT( sizeof(VtxBufDesc) == 8 );
+
+    ///
+    /// vertex buffer descriptor
+    ///
+    struct IdxBufDesc
+    {
+        UInt32 numidx;
+        bool   dynamic;
+        bool   readback;
+    };
+    GN_CASSERT( sizeof(IdxBufDesc) == 8 );
 
     ///
     /// 贴图锁定的返回结果
@@ -530,9 +565,123 @@ namespace GN { namespace gfx
     }
 
     //@}
+
+    ///
+    /// Vertex buffer interface.
+    ///
+    struct VtxBuf : public RefCounter
+    {
+        ///
+        /// get vertex buffer descriptor
+        ///
+        const VtxBufDesc & getDesc() const { return mDesc; }
+
+        ///
+        /// Lock vertex buffer
+        ///
+        /// \param offset
+        ///     offset in bytes of lock range.
+        /// \param bytes
+        ///     bytes of lock range. '0' means to the end of the buffer.
+        /// \param flag
+        ///     Locking flags, see LockFlag.
+        ///     Note that LOCK_RW and LOCK_RO can only be used for buffers with system copy
+        /// \return
+        ///     Return locked buffer pointer. NULL means failed.
+        ///
+        virtual void * lock( size_t offset, size_t bytes, LockFlag flag ) = 0;
+
+        ///
+        /// Unlock specific stream
+        ///
+        virtual void unlock() = 0;
+
+    protected:
+
+        ///
+        /// Set buffer properties
+        ///
+        void setDesc( const VtxBufDesc & desc )
+        {
+            GN_ASSERT( desc.bytes > 0 );
+            mDesc = desc;
+        }
+
+    private:
+
+        VtxBufDesc mDesc; ///< Buffer descriptor
+    };
+
+    ///
+    /// Index Buffer
+    ///
+    struct IdxBuf : public RefCounter
+    {
+        ///
+        /// Get descriptor
+        ///
+        const IdxBufDesc & getDesc() const { return mDesc; }
+
+        ///
+        /// lock the buffer
+        ///
+        /// \param startIdx
+        ///     first index of this locking
+        /// \param numidx
+        ///     index count of this locking, '0' means to the end of the buffer.
+        /// \param flag
+        ///     Locking flags, see LockFlag.
+        ///     Note that LOCK_RW and LOCK_RO can only be used for buffers with system copy
+        /// \return
+        ///     Return locked buffer pointer. NULL means failed.
+        ///
+        virtual UInt16 * lock( size_t startIdx, size_t numidx, LockFlag flag ) = 0;
+
+        ///
+        /// unlock the buffer
+        ///
+        virtual void unlock() = 0;
+
+    protected:
+
+        ///
+        /// Set buffer properties
+        ///
+        void setDesc( const IdxBufDesc & desc )
+        {
+            GN_ASSERT( desc.numidx > 0 );
+            mDesc = desc;
+        }
+
+    private:
+
+        IdxBufDesc mDesc;
+    };
+
+    ///
+    /// Unlock the buffer automatically, before going out of life scope.
+    ///
+    template<class BUFFER>
+    class AutoBufferUnlocker
+    {
+        BUFFER * mBuf;
+
+    public:
+
+        ///
+        /// Ctor
+        ///
+        AutoBufferUnlocker( BUFFER * buf ) : mBuf(buf) {}
+
+        ///
+        /// Dtor
+        ///
+        ~AutoBufferUnlocker() { if(mBuf) mBuf->unlock(); }
+    };
 }}
 
+
 // *****************************************************************************
-//                           End of texture.h
+//                           End of surface.h
 // *****************************************************************************
-#endif // __GN_GFX_TEXTURE_H__
+#endif // __GN_GFX_SURFACE_H__

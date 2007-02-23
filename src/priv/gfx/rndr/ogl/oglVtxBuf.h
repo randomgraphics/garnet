@@ -45,7 +45,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, bool dynamic );
+        bool init( const VtxBufDesc & desc );
         void quit();
     private:
         void clear() { mBuffer = 0; }
@@ -103,7 +103,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( size_t bytes, bool dynamic, bool sysCopy );
+        bool init( const VtxBufDesc & desc );
         void quit();
     private:
         void clear()

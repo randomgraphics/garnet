@@ -28,19 +28,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// 锁定标志
-    ///
-    enum LockFlag
-    {
-        LOCK_RW,           ///< read-write lock, the slowest one.
-        LOCK_RO,           ///< read-only lock.
-        LOCK_WO,           ///< write-only lock
-        LOCK_DISCARD,      ///< write-only lock, discard old value.
-        LOCK_NO_OVERWRITE, ///< write-only lock, promise not to modify any section of the buffer being used.
-        NUM_LOCK_FLAGS     ///< number of lock flags.
-    };
-
-    ///
     /// 绘图原语
     ///
     enum PrimitiveType

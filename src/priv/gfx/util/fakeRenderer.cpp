@@ -221,8 +221,8 @@ namespace GN { namespace gfx
             return tex.detach();
         }
         virtual UInt32 createVtxFmt( const VtxFmtDesc & ) { return 1; }
-        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy ) { return new FakeVtxBuf( bytes ); }
-        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy ) { return new FakeIdxBuf( numIdx ); }
+        virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc ) { return new FakeVtxBuf( desc.bytes ); }
+        virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc ) { return new FakeIdxBuf( desc.numidx ); }
 
         //@}
 

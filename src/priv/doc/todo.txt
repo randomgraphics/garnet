@@ -34,6 +34,7 @@
   - refine sigslot class to allow any type of functor
 
 - p2
+  - smart enum class
   - skin mesh test case: porting DXSDK sample.
   - UT
     - array classes

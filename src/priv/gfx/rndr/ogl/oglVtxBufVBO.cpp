@@ -11,7 +11,7 @@ GN::Logger * GN::gfx::OGLVtxBufVBO::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
+bool GN::gfx::OGLVtxBufVBO::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
@@ -20,21 +20,21 @@ bool GN::gfx::OGLVtxBufVBO::init( size_t bytes, bool dynamic, bool /*sysCopy*/ )
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::OGLVtxBufVBO, () );
 
-    if( 0 == bytes )
+    if( 0 == desc.bytes )
     {
         GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
         return failure();
     }
 
     // store properties
-    setProperties( bytes, dynamic );
+    setDesc( desc );
 
     // initialize system copy
-    mSysCopy = (UInt8*)heapAlloc( bytes );
+    mSysCopy = (UInt8*)heapAlloc( desc.bytes );
 
     // determine buffer usage
     // TODO: try GL_STREAM_DRAW_ARB
-    mOGLUsage = dynamic ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
+    mOGLUsage = desc.dynamic ? GL_DYNAMIC_DRAW_ARB : GL_STATIC_DRAW_ARB;
 
     // initialize device data
     if( !createVBO() ) return failure();
@@ -112,11 +112,13 @@ void GN::gfx::OGLVtxBufVBO::unlock()
     if( LOCK_RO != mLockFlag )
     {
         OGLAutoAttribStack autoAttribStack( 0, GL_CLIENT_VERTEX_ARRAY_BIT );
-        
+
+        const VtxBufDesc & desc = getDesc();
+
         GN_ASSERT(
-            mLockOffset < getSizeInBytes() &&
+            mLockOffset < desc.bytes &&
             0 < mLockBytes &&
-            (mLockOffset + mLockBytes) <= getSizeInBytes() );
+            (mLockOffset + mLockBytes) <= desc.bytes );
 
         // bind as active buffer
         GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, mOGLVertexBufferObject ) );
@@ -126,7 +128,7 @@ void GN::gfx::OGLVtxBufVBO::unlock()
         {
             GN_OGL_CHECK( glBufferDataARB(
                 GL_ARRAY_BUFFER_ARB,
-                getSizeInBytes(),
+                desc.bytes,
                 0,
                 mOGLUsage ) );
         }
@@ -176,7 +178,7 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
     GN_OGL_CHECK_RV(
         glBufferDataARB(
             GL_ARRAY_BUFFER_ARB,
-            getSizeInBytes(),
+            getDesc().bytes,
             mSysCopy,
             mOGLUsage ),
         false );

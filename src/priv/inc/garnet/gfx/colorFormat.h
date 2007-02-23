@@ -103,6 +103,7 @@ namespace GN { namespace gfx
         FMT_UDHEN4N     = FMT_RGB_10_11_11_UNORM,
         FMT_UDHEN3N     = FMT_RGB_10_11_11_UNORM,
     };
+    GN_CASSERT( NUM_CLRFMTS <= 255 ); // ensure that color format can be hold in single byte.
 
     ///
     /// color type
