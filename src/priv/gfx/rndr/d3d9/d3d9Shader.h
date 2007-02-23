@@ -257,7 +257,7 @@ namespace GN { namespace gfx
         ///
         /// protected ctor
         ///
-        D3D9ShaderHlsl( ShaderType type ) : D3D9BasicShader(type,LANG_D3D_ASM) {}
+        D3D9ShaderHlsl( ShaderType type ) : D3D9BasicShader(type,LANG_D3D_HLSL) {}
 
         ///
         /// apply uniform to D3D device

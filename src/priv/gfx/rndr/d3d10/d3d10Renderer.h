@@ -12,6 +12,9 @@
 
 namespace GN { namespace gfx
 {
+    // Forward declarations
+    class D3D10Resource;
+
     ///
     /// D3D10 renderer class
     ///
@@ -127,8 +130,8 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual bool supportShader( const StrA & ) { return false; }
-        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const { return false; }
+        virtual bool supportShader( const StrA & );
+        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const;
 
     private :
 
@@ -137,7 +140,7 @@ namespace GN { namespace gfx
         bool capsOK() const { return true; }
         void capsClear() {}
 
-        bool capsDeviceCreate() { return true; }
+        bool capsDeviceCreate();
         void capsDeviceDestroy() {}
 
     private :
@@ -154,13 +157,31 @@ namespace GN { namespace gfx
 
     public :
 
-        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints ) { return 0; }
-        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader ) { return 0; }
-        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) { return 0; }
-        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader ) { return 0; }
-        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader ) { return 0; }
+        virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints );
+        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader );
+        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
+        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader );
+        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader );
 
     public :
+
+        ///
+        /// Insert resource into resource list. Can be only called by
+        /// constructor of D3D9Resource.
+        ///
+        void insertResource( D3D10Resource * p )
+        {
+            mResourceList.push_back(p);
+        }
+
+        ///
+        /// Remove resource from resource list. Can be only called by
+        /// destructor of D3D9Resource.
+        ///
+        void removeResource( D3D10Resource * p )
+        {
+            mResourceList.remove(p);
+        }
 
     private:
 
@@ -168,10 +189,12 @@ namespace GN { namespace gfx
         void resourceQuit() {}
         bool resourceOK() const { return true; }
         void resourceClear() {}
-        bool resourceDeviceCreate() { return true; }
-        void resourceDeviceDestroy() {}
+        bool resourceDeviceCreate();
+        void resourceDeviceDestroy();
 
     private :
+
+        std::list<D3D10Resource*> mResourceList;
 
         //@}
 
