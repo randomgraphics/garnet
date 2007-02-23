@@ -74,13 +74,6 @@ namespace GN { namespace gfx
         NUM_CUBEFACES
     };
 
-    struct Texture;
-
-    ///
-    /// Texture content loader
-    ///
-    typedef Delegate1<bool,Texture&> TextureLoader;
-
     ///
     /// Texture descriptor
     ///
@@ -169,11 +162,6 @@ namespace GN { namespace gfx
         virtual void setWrap( TexWrap s,
                               TexWrap t = TEXWRAP_REPEAT,
                               TexWrap r = TEXWRAP_REPEAT ) const = 0;
-
-        ///
-        /// Set content loader
-        ///
-        void setLoader( const TextureLoader & loader ) { mLoader = loader; }
 
         /// \name lock/unlock functions
         //@{
@@ -370,16 +358,10 @@ namespace GN { namespace gfx
             mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
         }
 
-        ///
-        /// Get content loader
-        ///
-        const TextureLoader & getLoader() const { return mLoader; }
-
     private :
-        TextureDesc   mDesc;   ///< descriptor
-        TextureLoader mLoader; ///< content loader
+        TextureDesc                    mDesc;    ///< descriptor
         std::vector< Vector3<UInt32> > mMipSize; ///< mipmap size of each level
-        StrA          mName; ///< texture name. Only for debug purpose.
+        StrA                           mName;    ///< texture name. Only for debug purpose.
     };
 
     /// \name convert between texture tags and string

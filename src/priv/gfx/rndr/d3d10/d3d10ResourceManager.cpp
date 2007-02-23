@@ -139,13 +139,11 @@ GN::gfx::D3D10Renderer::createShader(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc,
-                                       const TextureLoader & loader )
+GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<D3D10Texture> p( new D3D10Texture(*this) );
-    p->setLoader( loader );
     if( !p->init( desc ) ) return 0;
     return p.detach();
 
@@ -186,7 +184,7 @@ UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf(
-    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
+    size_t bytes, bool dynamic, bool sysCopy )
 {
     return 0;
     /*
@@ -205,7 +203,7 @@ GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf(
 //
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf * GN::gfx::D3D10Renderer::createIdxBuf(
-    size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
+    size_t numIdx, bool dynamic, bool sysCopy )
 {
     return 0;
     /*

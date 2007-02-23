@@ -389,12 +389,6 @@ bool GN::gfx::D3D9Texture::deviceRestore()
              &&  (mD3DUsage & D3DUSAGE_DYNAMIC);
 #endif
 
-    // call user-defined content loader
-    if( !getLoader().empty() )
-    {
-        if( !getLoader()( *this ) ) return false;
-    }
-
     // success
     return true;
 

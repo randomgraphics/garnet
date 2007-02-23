@@ -181,12 +181,6 @@ bool GN::gfx::OGLVtxBufVBO::createVBO()
             mOGLUsage ),
         false );
 
-    // call user-defined content loader
-    if( !getLoader().empty() )
-    {
-        if( !getLoader()( *this ) ) return false;
-    }
-
     // success
     ad.dismiss();
     return true;

@@ -207,7 +207,7 @@ namespace GN { namespace gfx
         {
             return new FakeShader( type, lang, code, hints );
         }
-        virtual Texture * createTexture( const TextureDesc & desc, const TextureLoader & loader )
+        virtual Texture * createTexture( const TextureDesc & desc )
         {
             AutoRef<FakeTexture> tex( new FakeTexture );
             if( !tex->init( desc ) ) return 0;
@@ -221,8 +221,8 @@ namespace GN { namespace gfx
             return tex.detach();
         }
         virtual UInt32 createVtxFmt( const VtxFmtDesc & ) { return 1; }
-        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader ) { return new FakeVtxBuf( bytes ); }
-        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader ) { return new FakeIdxBuf( numIdx ); }
+        virtual VtxBuf * createVtxBuf( size_t bytes, bool dynamic, bool sysCopy ) { return new FakeVtxBuf( bytes ); }
+        virtual IdxBuf * createIdxBuf( size_t numIdx, bool dynamic, bool sysCopy ) { return new FakeIdxBuf( numIdx ); }
 
         //@}
 

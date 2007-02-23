@@ -168,13 +168,11 @@ GN::gfx::OGLRenderer::createShader( ShaderType type, ShadingLanguage lang, const
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc,
-                                     const TextureLoader & loader )
+GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
     AutoRef<OGLTexture> p( new OGLTexture(*this) );
-    p->setLoader( loader );
     if( !p->init( desc ) ) return 0;
     return p.detach();
 
@@ -209,22 +207,19 @@ UInt32 GN::gfx::OGLRenderer::createVtxFmt( const VtxFmtDesc & format )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf *
-GN::gfx::OGLRenderer::createVtxBuf(
-    size_t bytes, bool dynamic, bool sysCopy, const VtxBufLoader & loader )
+GN::gfx::OGLRenderer::createVtxBuf( size_t bytes, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
     if( GLEW_ARB_vertex_buffer_object )
     {
         AutoRef<OGLVtxBufVBO> p( new OGLVtxBufVBO(*this) );
-        p->setLoader( loader );
         if( !p->init( bytes, dynamic, sysCopy ) ) return 0;
         return p.detach();
     }
     else
     {
         AutoRef<OGLVtxBufNormal> p( new OGLVtxBufNormal );
-        p->setLoader( loader );
         if( !p->init( bytes, dynamic ) ) return 0;
         return p.detach();
     }
@@ -237,12 +232,11 @@ GN::gfx::OGLRenderer::createVtxBuf(
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf *
 GN::gfx::OGLRenderer::createIdxBuf(
-    size_t numIdx, bool dynamic, bool /*sysCopy*/, const IdxBufLoader & loader )
+    size_t numIdx, bool dynamic, bool /*sysCopy*/ )
 {
     GN_GUARD;
 
     AutoRef<OGLIdxBuf> p( new OGLIdxBuf );
-    p->setLoader( loader );
     if( !p->init( numIdx, dynamic ) ) return 0;
 
     return p.detach();

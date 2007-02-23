@@ -28,12 +28,6 @@ bool GN::gfx::OGLVtxBufNormal::init( size_t bytes, bool dynamic )
 
     mBuffer = (UInt8*)heapAlloc( bytes );
 
-    // call user-defined content loader
-    if( !getLoader().empty() )
-    {
-        if( !getLoader()( *this ) ) return failure();
-    }
-
     // success
     return success();
 

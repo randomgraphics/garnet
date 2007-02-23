@@ -20,7 +20,7 @@ extern DWORD sLockFlags2D3D9( bool dynamic, GN::gfx::LockFlag lock );
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D9IdxBuf::init(
-    size_t numIdx, bool dynamic, bool sysCopy, const IdxBufLoader & loader )
+    size_t numIdx, bool dynamic, bool sysCopy )
 {
     GN_GUARD;
 
@@ -36,7 +36,6 @@ bool GN::gfx::D3D9IdxBuf::init(
 
     // store buffer parameters
     setProperties( numIdx, dynamic );
-    setLoader( loader );
     if( sysCopy ) mSysCopy.resize( numIdx );
 
     if( !deviceRestore() ) return failure();
@@ -93,12 +92,7 @@ bool GN::gfx::D3D9IdxBuf::deviceRestore()
             0 ),
         false );
 
-    if( !getLoader().empty() )
-    {
-        // call user-defined loader
-        if( !getLoader()( *this ) ) return false;
-    }
-    else if( !mSysCopy.empty() )
+    if( !mSysCopy.empty() )
     {
         // copy data from system copy to D3D buffer
         void * dst;

@@ -581,12 +581,6 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
         GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, GL_REPEAT ) );
     }
 
-    // call user-defined content loader
-    if( !getLoader().empty() )
-    {
-        if( !getLoader()( *this ) ) return failure();;
-    }
-
     // success
     return success();
 
