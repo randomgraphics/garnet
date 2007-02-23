@@ -47,10 +47,10 @@ public:
         UInt32 causticTex = ((UInt32)(time*32))%32;
 
         // update seafloor effect parameters
-        mSeafloor.uniforms[0].value = view;
-        mSeafloor.uniforms[1].value = proj;
-        mSeafloor.uniforms[2].value = caustics;
-        mSeafloor.textures[1].texid = mCaustics[causticTex];
+        mSeafloor.uniforms["view"].value = view;
+        mSeafloor.uniforms["proj"].value = proj;
+        mSeafloor.uniforms["caustic"].value = caustics;
+        mSeafloor.textures["caustic"].texid = mCaustics[causticTex];
 
         // Animation attributes for the dolphin
         float fKickFreq    = 2*time;
@@ -85,10 +85,10 @@ public:
         Vector4f vWeight( fWeight1, fWeight2, fWeight3, 0.0f );
 
         // update dolphin effect parameters
-        mDolphin.uniforms[0].value = proj * view * world;
-        mDolphin.uniforms[1].value = view * world;
-        mDolphin.uniforms[2].value = vWeight;
-        mDolphin.textures[1].texid = mCaustics[causticTex];
+        mDolphin.uniforms["pvw"].value = proj * view * world;
+        mDolphin.uniforms["viewworld"].value = view * world;
+        mDolphin.uniforms["weights"].value = vWeight;
+        mDolphin.textures["caustic"].texid = mCaustics[causticTex];
     }
 
     void render()

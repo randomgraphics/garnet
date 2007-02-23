@@ -154,7 +154,7 @@ public:
         // update box matrix
         world = arcball.getRotationMatrix();
         Matrix44f pvw = proj * view * world;
-        box.uniforms[0].value = pvw;
+        box.uniforms["pvw"].value = pvw;
 
         // update color
         static int r = 0; static int rr = 1;

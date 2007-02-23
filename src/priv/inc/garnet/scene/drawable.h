@@ -6,6 +6,8 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.2.21)
 // *****************************************************************************
 
+#include <map>
+
 namespace GN { namespace scene
 {
     ///
@@ -33,10 +35,10 @@ namespace GN { namespace scene
         //@}
         
         //@{
-        ResourceId           effect;
-        ResourceId           mesh;
-        std::vector<TexItem> textures;
-        std::vector<UniItem> uniforms;
+        ResourceId             effect;
+        ResourceId             mesh;
+        std::map<StrA,TexItem> textures;
+        std::map<StrA,UniItem> uniforms;
         //@}
 
         ///
@@ -125,11 +127,11 @@ namespace GN { namespace scene
         {
             gfx::Effect * eff;
             BindTexture( gfx::Effect * eff_ ) : eff(eff_) {}
-            void operator()( const TexItem & ti ) const
+            void operator()( const std::pair<StrA,TexItem> & i ) const
             {
                 eff->setTexture(
-                    ti.binding,
-                    gSceneResMgr.getResourceT<gfx::Texture>(ti.texid) );
+                    i.second.binding,
+                    gSceneResMgr.getResourceT<gfx::Texture>(i.second.texid) );
             }
         };
 
@@ -137,9 +139,9 @@ namespace GN { namespace scene
         {
             gfx::Effect * eff;
             BindUniform( gfx::Effect * eff_ ) : eff(eff_) {}
-            void operator()( const UniItem & ui ) const
+            void operator()( const std::pair<StrA,UniItem> & i ) const
             {
-                eff->setUniform( ui.binding, ui.value );
+                eff->setUniform( i.second.binding, i.second.value );
             }
         };
     };
