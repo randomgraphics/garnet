@@ -2,7 +2,7 @@
 #include "oglVtxBuf.h"
 #include "oglRenderer.h"
 
-GN::Logger * GN::gfx::OGLVtxBufVBO::sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
 // *****************************************************************************
 // Initialize and shutdown

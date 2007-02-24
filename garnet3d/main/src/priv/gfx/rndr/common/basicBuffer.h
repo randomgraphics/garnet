@@ -47,6 +47,7 @@ namespace GN { namespace gfx
         {
             if( isLocked() )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
@@ -55,12 +56,14 @@ namespace GN { namespace gfx
 
             if( offset >= desc.bytes )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "offset is beyond the end of vertex buffer!" );
                 return false;
             }
 
             if( flag >= NUM_LOCK_FLAGS )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "invalid lock flag: %d!", flag );
                 return false;
             }
@@ -86,6 +89,7 @@ namespace GN { namespace gfx
             }
             else
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicVtxBuffer");
                 GN_ERROR(sLogger)( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
@@ -100,8 +104,6 @@ namespace GN { namespace gfx
         /// 锁定标志
         ///
         bool mLocked;
-
-        static Logger * sLogger;
 
         // ********************************
         //  private functions
@@ -148,6 +150,7 @@ namespace GN { namespace gfx
         {
             if( isLocked() )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "dupilcate lock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
@@ -156,12 +159,14 @@ namespace GN { namespace gfx
 
             if( startIdx >= desc.numidx )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "startIdx is beyond the end of index buffer!" );
                 return false;
             }
 
             if( flag >= NUM_LOCK_FLAGS )
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "invalid lock flag: %d!", flag );
                 return false;
             }
@@ -187,6 +192,7 @@ namespace GN { namespace gfx
             }
             else
             {
+                static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
                 GN_ERROR(sLogger)( "dupilcate unlock! lock/unlock() must be called accordinglly!" );
                 return false;
             }
@@ -201,8 +207,6 @@ namespace GN { namespace gfx
         /// 锁定标志
         ///
         bool mLocked;
-
-        static Logger * sLogger;
 
         // ********************************
         //  private functions

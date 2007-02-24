@@ -67,8 +67,6 @@ namespace GN { namespace gfx
 
         UInt16 * mBuffer;
 
-        static GN::Logger * sLogger;
-
         // ********************************
         // private functions
         // ********************************

@@ -1,7 +1,12 @@
 #include "pch.h"
-#include "oglVtxBuf.h"
+#include "d3d10Buffer.h"
+#include "d3d10Renderer.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
+GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.VtxBuf");
+
+// *****************************************************************************
+// Local functions
+// *****************************************************************************
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -10,23 +15,14 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
+bool GN::gfx::D3D10VtxBuf::init( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( OGLVtxBufNormal, () );
+    GN_STDCLASS_INIT( D3D10VtxBuf, (desc.bytes,desc.dynamic,desc.readback) );
 
-    if( 0 == desc.bytes )
-    {
-        GN_ERROR(sLogger)( "Vertex buffer size can't be zero!" );
-        return failure();
-    }
-
-    // store descriptor
     setDesc( desc );
-
-    mBuffer = (UInt8*)heapAlloc( desc.bytes );
 
     // success
     return success();
@@ -37,11 +33,15 @@ bool GN::gfx::OGLVtxBufNormal::init( const VtxBufDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::quit()
+void GN::gfx::D3D10VtxBuf::quit()
 {
     GN_GUARD;
 
-    safeHeapFree( mBuffer );
+    if( isLocked() )
+    {
+        unlock();
+        GN_ERROR(sLogger)( "call unlock() before u dispose the index buffer!" );
+    }
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -56,22 +56,33 @@ void GN::gfx::OGLVtxBufNormal::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void * GN::gfx::OGLVtxBufNormal::lock( size_t offset, size_t bytes, LockFlag flag )
+void * GN::gfx::D3D10VtxBuf::lock( size_t offset, size_t bytes, LockFlag flag )
 {
     GN_GUARD_SLOW;
+
     GN_ASSERT( ok() );
+
     if( !basicLock( offset, bytes, flag ) ) return false;
-    return &mBuffer[offset];
+
+    GN_ASSERT( ok() );
+
+    return d3dlock( offset, bytes, flag );
+
     GN_UNGUARD_SLOW;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::OGLVtxBufNormal::unlock()
+void GN::gfx::D3D10VtxBuf::unlock()
 {
     GN_GUARD_SLOW;
+
     GN_ASSERT( ok() );
-    basicUnlock();
+
+    if( !basicUnlock() ) return;
+
+    d3dunlock();
+
     GN_UNGUARD_SLOW;
 }

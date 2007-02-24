@@ -12,11 +12,11 @@
 namespace GN { namespace gfx
 {
     ///
-    /// D3D index buffer class.
+    /// D3D buffer class
     ///
-    class D3D10IdxBuf : public BasicIdxBuf, public D3D10Resource, public StdClass
+    class D3D10Buffer : public D3D10Resource, public StdClass
     {
-         GN_DECLARE_STDCLASS( D3D10IdxBuf, StdClass );
+        GN_DECLARE_STDCLASS( D3D10Buffer, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -24,7 +24,124 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        D3D10IdxBuf( D3D10Renderer & r ) : D3D10Resource(r) { clear(); }
+        D3D10Buffer( D3D10Renderer & r ) : D3D10Resource(r) { clear(); }
+        virtual ~D3D10Buffer() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( UInt32 bytes, bool dynamic, bool readback );
+        void quit();
+    private:
+        void clear()
+        {
+            mD3DBuffer = 0;
+        }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        void * d3dlock( size_t offset, size_t bytes, LockFlag flag );
+        void d3dunlock();
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        ID3D10Buffer * mD3DBuffer;
+        UInt32         mBytes;
+        bool           mDynamic;
+        bool           mReadback;
+
+        DynaArray<UInt8>  mLockBuffer;
+        size_t            mLockOffset;
+        size_t            mLockBytes;
+        LockFlag          mLockFlag;
+        bool              mSysCopy;
+
+        // ********************************
+        // private function
+        // ********************************
+    private:
+
+        bool createBuffer();
+    };
+
+    ///
+    /// D3D vertex buffer class.
+    ///
+    class D3D10VtxBuf : public BasicVtxBuf, public D3D10Buffer
+    {
+         GN_DECLARE_STDCLASS( D3D10VtxBuf, D3D10Buffer );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D10VtxBuf( D3D10Renderer & r ) : D3D10Buffer(r) { clear(); }
+        virtual ~D3D10VtxBuf() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( const VtxBufDesc & desc );
+        void quit();
+    private:
+        void clear() {}
+        //@}
+
+        // ********************************
+        // from VtxBuf
+        // ********************************
+    public:
+
+        virtual void * lock( size_t offset, size_t bytes, LockFlag flag );
+        virtual void unlock();
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        // ********************************
+        // private function
+        // ********************************
+    private:
+    };
+
+    ///
+    /// D3D index buffer class.
+    ///
+    class D3D10IdxBuf : public BasicIdxBuf, public D3D10Buffer
+    {
+        GN_DECLARE_STDCLASS( D3D10IdxBuf, D3D10Buffer );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        D3D10IdxBuf( D3D10Renderer & r ) : D3D10Buffer(r) { clear(); }
         virtual ~D3D10IdxBuf() { quit(); }
         //@}
 
@@ -37,10 +154,7 @@ namespace GN { namespace gfx
         bool init( const IdxBufDesc & desc );
         void quit();
     private:
-        void clear()
-        {
-            mD3DIdxBuf = 0;
-        }
+        void clear() {}
         //@}
 
         // ********************************
@@ -56,40 +170,19 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        ///
-        /// Return pointer of D3D index buffer
-        ///
-        ID3D10Buffer * getD3DIb() const
-        {
-            GN_ASSERT( mD3DIdxBuf );
-            return mD3DIdxBuf;
-        }
-
         // ********************************
         // private variables
         // ********************************
     private:
 
-        ID3D10Buffer * mD3DIdxBuf;
-
-        DynaArray<UInt16> mLockBuffer;
-        size_t            mLockStartIdx;
-        size_t            mLockNumIdx;
-        LockFlag          mLockFlag;
-        bool              mSysCopy;
-
-        static Logger * sLogger;
-
         // ********************************
         // private function
         // ********************************
     private:
-
-        bool createBuffer();
     };
 
     ///
-    /// convert garnet buffer lock flags to D3D9 mapping flag
+    /// convert garnet buffer lock flags to D3D10 mapping flag
     // ----------------------------------------------------------------------------
     inline D3D10_MAP lockFlags2D3D10( LockFlag lock )
     {
