@@ -84,8 +84,6 @@ namespace GN { namespace gfx
         size_t                  mLockOffset;
         size_t                  mLockBytes;
         LockFlag                mLockFlag;
-
-        static Logger * sLogger;
     };
 }}
 

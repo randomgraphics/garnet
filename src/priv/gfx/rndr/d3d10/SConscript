@@ -1,5 +1,6 @@
 Import( 'GN' )
 sources = [
+	'd3d10Buffer.cpp',
 	'd3d10CapsMgr.cpp',
     'd3d10DispMgr.cpp',
     'd3d10DrawMgr.cpp',
@@ -11,6 +12,7 @@ sources = [
     'd3d10ResourceManager.cpp',
     'd3d10ShaderHlsl.cpp',
     'd3d10Texture.cpp',
+    'd3d10VtxBuf.cpp',
     'd3d10VtxShaderHlsl.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

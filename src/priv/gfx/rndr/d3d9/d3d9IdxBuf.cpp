@@ -2,7 +2,7 @@
 #include "d3d9IdxBuf.h"
 #include "d3d9Renderer.h"
 
-GN::Logger * GN::gfx::D3D9IdxBuf::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 
 // *****************************************************************************
 // Local functions
