@@ -219,18 +219,33 @@ namespace GN { namespace gfx
 
     public:
 
-        virtual void setContext( const RendererContext & newContext ) {}
-        virtual void rebindContext( RendererContext::FieldFlags ) {}
-        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const { return mContext.rsb; }
+        virtual void setContext( const RendererContext & newContext );
+        virtual void rebindContext( RendererContext::FieldFlags );
+        virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const;
 
     private :
 
         bool contextInit() { return true; }
         void contextQuit() {}
         bool contextOK() const { return true; }
-        void contextClear() {}
-        bool contextDeviceCreate() { return true; }
-        void contextDeviceDestroy() {}
+        void contextClear() { mContext.resetToDefault(); }
+        bool contextDeviceCreate();
+        void contextDeviceDestroy();
+
+        GN_INLINE void bindContext(
+            const RendererContext & newContext,
+            RendererContext::FieldFlags newFlag,
+            bool forceRebind );
+
+        GN_INLINE void bindContextState(
+            const RendererContext & newContext,
+            RendererContext::FieldFlags newFlag,
+            bool forceRebind );
+
+        GN_INLINE void bindContextData(
+            const RendererContext & newContext,
+            RendererContext::FieldFlags newFlag,
+            bool forceRebind );
 
     private:
 

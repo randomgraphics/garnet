@@ -28,7 +28,7 @@ GN::Logger * GN::gfx::D3D9Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 // Global functions
 // *****************************************************************************
 
-bool gEnablePixPerf = true; // default is enabled
+bool gD3D9EnablePixPerf = true; // default is enabled
 
 #if GN_STATIC
 GN::gfx::Renderer *
@@ -64,7 +64,7 @@ GNgfxCreateRenderer()
     };
 
     // check for NVPerfHUD
-    gEnablePixPerf = !LOCAL::sLookForNvPerfHUD();
+    gD3D9EnablePixPerf = !LOCAL::sLookForNvPerfHUD();
 
     // create renderer
     GN::AutoObjPtr<GN::gfx::D3D9Renderer> p( new GN::gfx::D3D9Renderer );

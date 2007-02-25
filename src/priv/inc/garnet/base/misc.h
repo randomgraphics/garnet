@@ -650,6 +650,11 @@ namespace GN
         AutoComPtr() throw() : mPtr(0) {}
 
         ///
+        /// Construct from normal pointer
+        ///
+        explicit AutoComPtr( T * p ) throw() : mPtr(p) {}
+
+        ///
         /// Copy constructor
         ///
         AutoComPtr( const AutoComPtr & other ) throw() : mPtr(other.mPtr)

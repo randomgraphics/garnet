@@ -40,7 +40,7 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
     sd.Windowed = !ro.fullscreen;
 
     // create device
-    GN_D3D10_CHECK_RV(
+    GN_DX10_CHECK_RV(
         D3D10CreateDeviceAndSwapChain(
             mAdapter,
             ro.reference ? D3D10_DRIVER_TYPE_REFERENCE : D3D10_DRIVER_TYPE_HARDWARE,
@@ -55,11 +55,11 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
     // initialize render target view
     AutoComPtr<ID3D10Texture2D> backBuffer;
 #if D3D10_SDK_VERSION >= 28
-    GN_D3D10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
+    GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
 #else
-    GN_D3D10_CHECK_RV( mSwapChain->GetBackBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
+    GN_DX10_CHECK_RV( mSwapChain->GetBackBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
 #endif
-    GN_D3D10_CHECK_RV( mDevice->CreateRenderTargetView( backBuffer, NULL, &mRTView ), false );
+    GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( backBuffer, NULL, &mRTView ), false );
     mDevice->OMSetRenderTargets( 1, &mRTView, NULL );
 
     // setup viewport
