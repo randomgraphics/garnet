@@ -5,6 +5,28 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.cg");
 
+static GN::StrA sAddLineCount( const GN::StrA & in )
+{
+    using namespace GN;
+
+    GN::StrA out( "    1: " );
+
+    int line = 1;
+    for( const char * s = in.cptr(); *s; ++s )
+    {
+        if( '\n' == *s )
+        {
+            out.append( strFormat( "\n%5d: ", ++line ) );
+        }
+        else
+        {
+            out.append( *s );
+        }
+    }
+
+    return out;
+}
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -41,8 +63,8 @@ bool GN::gfx::CgShader::init(
                 "%s\n"
                 "=====================================================\n"
                 "\n",
-                code.cptr(),
-                cgGetLastListing(context) );
+                sAddLineCount( code ).cptr(),
+                sAddLineCount( cgGetLastListing(context) ).cptr() );
         }
         return failure();
     }
@@ -58,8 +80,8 @@ bool GN::gfx::CgShader::init(
         "%s\n"
         "=========================================================\n"
         "\n",
-        code.cptr(),
-        cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) );
+        sAddLineCount( code ).cptr(),
+        sAddLineCount( cgGetProgramString( mProgram, CG_COMPILED_PROGRAM ) ).cptr() );
 
     // success
     mContext = context;
