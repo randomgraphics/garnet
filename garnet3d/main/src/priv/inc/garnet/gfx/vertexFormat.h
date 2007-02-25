@@ -141,7 +141,7 @@ namespace GN { namespace gfx
         ///
         bool operator == ( const VtxFmtDesc & rhs ) const
         {
-            if( !count != rhs.count ) return false;
+            if( count != rhs.count ) return false;
             return 0 == memcmp( attribs, rhs.attribs, sizeof(AttribDesc)*count );
         }
     };
