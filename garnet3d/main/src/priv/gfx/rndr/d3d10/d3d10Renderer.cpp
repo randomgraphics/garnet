@@ -18,6 +18,8 @@ GN::Logger * GN::gfx::D3D10Renderer::sLogger = GN::getLogger("GN.gfx.rndr.D3D10"
 // Global functions
 // *****************************************************************************
 
+bool gD3D10EnablePixPerf = true; // default is enabled
+
 #if GN_STATIC
 GN::gfx::Renderer *
 createD3D10Renderer()

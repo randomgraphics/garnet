@@ -2,7 +2,7 @@
 #include "d3d10Renderer.h"
 #include "d3d10Shader.h"
 #include "d3d10Texture.h"
-//#include "d3d10VertexDecl.h"
+#include "d3d10VtxLayout.h"
 #include "d3d10Buffer.h"
 //#include "d3d10Font.h"
 //#include "d3d10Quad.h"
@@ -11,6 +11,16 @@
 // *****************************************************************************
 // local functions
 // *****************************************************************************
+
+//
+// Functor to compare vertex format
+//
+struct EqualFormat
+{
+    const GN::gfx::VtxFmtDesc & format;
+    EqualFormat( const GN::gfx::VtxFmtDesc & f ) : format(f) {}
+    bool operator()( const GN::gfx::D3D10VtxLayoutDesc & layout ) const { return format == layout.format; }
+};
 
 // *****************************************************************************
 // init/shutdown
@@ -154,7 +164,6 @@ GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
 // -----------------------------------------------------------------------------
 UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 {
-    return 0;/*
     GN_GUARD;
 
     UInt32 h = mVtxFmts.findIf( EqualFormat(format) );
@@ -164,7 +173,7 @@ UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
         // create new vertex decl
         D3D10VtxLayoutDesc layout;
         layout.format = format;
-        layout.layout.attach( createD3D10VertexLayout( mDevice, format ) );
+        layout.layout.attach( createD3D10VtxLayout( mDevice, format ) );
         if( !layout.layout ) return 0;
         h = mVtxFmts.add( layout );
     }
@@ -172,7 +181,7 @@ UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
     // success
     return h;
 
-    GN_UNGUARD;*/
+    GN_UNGUARD;
 }
 
 
