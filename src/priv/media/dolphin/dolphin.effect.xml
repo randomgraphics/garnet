@@ -119,25 +119,25 @@ void main(
 	const float4 g_vFogColor = { 0.0f, 0.25f, 0.5f, 1.0f };
 	const float4 g_vAmbient  = { 0.25f, 0.25f, 0.25f, 0.25f };
 
-    // Decompress input values
-    float3 vLightColor       = Input.vMisc.xxx;
-    float  fFogValue         = Input.vMisc.y;
-    float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
-    float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
+	// Decompress input values
+	float3 vLightColor       = Input.vMisc.xxx;
+	float  fFogValue         = Input.vMisc.y;
+	float2 vBaseTexCoords    = Input.vBaseTexCoords.xy;
+	float2 vCausticTexCoords = Input.vCausticTexCoords.xy;
 
-    // Fetch from the textures
-    float4 vDiffuse  = tex2D( DiffuseSampler,  vBaseTexCoords );
-    float4 vCaustics = tex2D( CausticsSampler, vCausticTexCoords );
+	// Fetch from the textures
+	float4 vDiffuse  = tex2D( DiffuseSampler,  vBaseTexCoords );
+	float4 vCaustics = tex2D( CausticsSampler, vCausticTexCoords );
 
-    // Combine lighting, base texture and water caustics texture
-    float4 PixelColor0 = vDiffuse  * float4( vLightColor + g_vAmbient, 1 );
-    float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
-    
-    // Return color blended with fog
-    oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+	// Combine lighting, base texture and water caustics texture
+	float4 PixelColor0 = vDiffuse  * float4( vLightColor + g_vAmbient.xyz, 1 );
+	float4 PixelColor1 = vCaustics * float4( vLightColor, 1 );
 
-    // Return depth to the second render target
-    oC1 = Input.vMisc.z / Input.vMisc.w;
+	// Return color blended with fog
+	oC0 = lerp( g_vFogColor, PixelColor0 + PixelColor1, fFogValue );
+
+	// Return depth to the second render target
+	oC1 = Input.vMisc.z / Input.vMisc.w;
 }
 ]]>
 			</code>
