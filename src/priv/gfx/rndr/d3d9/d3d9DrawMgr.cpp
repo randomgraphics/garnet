@@ -107,34 +107,34 @@ void GN::gfx::D3D9Renderer::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::drawIndexed(
     PrimitiveType prim,
-    size_t        numPrims,
-    size_t        startVtx,
-    size_t        minVtxIdx,
-    size_t        numVtx,
-    size_t        startIdx )
+    size_t        numprim,
+    size_t        startvtx,
+    size_t        minvtxidx,
+    size_t        numvtx,
+    size_t        startidx )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
 
     //
-    // make sure numPrims is not too large
+    // make sure numprim is not too large
     //
-    GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX9_CHECK(
         mDevice->DrawIndexedPrimitive(
             sPrimMap[prim],     // primitive type
-            (UINT)startVtx ,     // start vertex
-            (UINT)minVtxIdx,    // min vertex index
-            (UINT)numVtx,       // num of vertices
-            (UINT)startIdx,     // base index
-            (UINT)numPrims ) ); // primitive count
+            (UINT)startvtx ,     // start vertex
+            (UINT)minvtxidx,    // min vertex index
+            (UINT)numvtx,       // num of vertices
+            (UINT)startidx,     // base index
+            (UINT)numprim ) ); // primitive count
 
     // success
-    mNumPrims += numPrims;
+    mNumPrims += numprim;
     ++mNumBatches;
 
     GN_UNGUARD_SLOW;
@@ -144,27 +144,27 @@ void GN::gfx::D3D9Renderer::drawIndexed(
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::draw(
-    PrimitiveType prim, size_t numPrims, size_t startVtx )
+    PrimitiveType prim, size_t numprim, size_t startvtx )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
 
     //
-    // make sure numPrims is not too large
+    // make sure numprim is not too large
     //
-    GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // draw indexed primitives
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX9_CHECK(
         mDevice->DrawPrimitive(
             sPrimMap[prim],     // primitive type
-            (UINT)startVtx,      // start vertex
-            (UINT)numPrims ) ); // primitive count
+            (UINT)startvtx,      // start vertex
+            (UINT)numprim ) ); // primitive count
 
     // success
-    mNumPrims += numPrims;
+    mNumPrims += numprim;
     ++mNumBatches;
 
     GN_UNGUARD_SLOW;
@@ -175,8 +175,8 @@ void GN::gfx::D3D9Renderer::draw(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::drawIndexedUp(
     PrimitiveType    prim,
-    size_t           numPrims,
-    size_t           numVertices,
+    size_t           numprim,
+    size_t           numvtx,
     const void *     vertexData,
     size_t           strideInBytes,
     const UInt16 * indexData )
@@ -186,9 +186,9 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     PIXPERF_FUNCTION_EVENT();
 
     //
-    // make sure numPrims is not too large
+    // make sure numprim is not too large
     //
-    GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -200,8 +200,8 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
         mDevice->DrawIndexedPrimitiveUP(
             sPrimMap[prim],
             0, // MinVertexIndex
-            (UINT)numVertices,
-            (UINT)numPrims,
+            (UINT)numvtx,
+            (UINT)numprim,
             indexData,
             D3DFMT_INDEX16,
             vertexData,
@@ -212,7 +212,7 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     GN_DX9_CHECK( mDevice->SetIndices( ib ) );
 
     // success
-    mNumPrims += numPrims;
+    mNumPrims += numprim;
     ++mNumBatches;
 
     GN_UNGUARD_SLOW;
@@ -223,16 +223,16 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::drawUp(
     PrimitiveType prim,
-    size_t        numPrims,
+    size_t        numprim,
     const void *  vertexData,
     size_t        strideInBytes )
 {
     GN_GUARD_SLOW;
 
     //
-    // make sure numPrims is not too large
+    // make sure numprim is not too large
     //
-    GN_ASSERT_EX( numPrims <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
+    GN_ASSERT_EX( numprim <= getCaps(CAPS_MAX_PRIMITIVES), "too many primitives!" );
 
     // store vertex and index buffer
     AutoComPtr<IDirect3DVertexBuffer9> vb; UINT vbOffset; UINT vbStride;
@@ -241,7 +241,7 @@ void GN::gfx::D3D9Renderer::drawUp(
     // do draw
     GN_DX9_CHECK( mDevice->DrawPrimitiveUP(
         sPrimMap[prim],
-        (UINT)numPrims,
+        (UINT)numprim,
         vertexData,
         (UINT)strideInBytes ) );
 
@@ -249,7 +249,7 @@ void GN::gfx::D3D9Renderer::drawUp(
     GN_DX9_CHECK( mDevice->SetStreamSource( 0, vb, vbOffset, vbStride ) );
 
     // success
-    mNumPrims += numPrims;
+    mNumPrims += numprim;
     ++mNumBatches;
 
     GN_UNGUARD_SLOW;

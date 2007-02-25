@@ -753,7 +753,7 @@ namespace GN { namespace gfx
         /// Create new index buffer
         ///
         IdxBuf *
-        createIdxBuf( size_t numidx, bool dynamic, bool readback )
+        createIdxBuf( size_t numidx, bool dynamic = false, bool readback = false )
         {
             IdxBufDesc desc;
             desc.numidx = (UInt32)numidx;
@@ -923,56 +923,56 @@ namespace GN { namespace gfx
         ///
         /// \param prim
         ///     primititive type
-        /// \param numPrims
+        /// \param numprim
         ///     number of primitives
-        /// \param startVtx
+        /// \param startvtx
         ///     vertex index into vertex buffer that index "0" will be refering to.
-        /// \param minVtxIdx, numVtx
-        ///     define effective range in vertex buffer, starting from startVtx.
-        /// \param startIdx
+        /// \param minvtxidx, numvtx
+        ///     define effective range in vertex buffer, starting from startvtx.
+        /// \param startidx
         ///     index into index buffer of the first index
         ///
         /// \note 必须在 drawBegin() 和 drawEnd() 之间调用
         ///
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numPrims,
-                                  size_t        startVtx,
-                                  size_t        minVtxIdx,
-                                  size_t        numVtx,
-                                  size_t        startIdx ) = 0;
+                                  size_t        numprim,
+                                  size_t        startvtx,
+                                  size_t        minvtxidx,
+                                  size_t        numvtx,
+                                  size_t        startidx ) = 0;
 
         ///
         /// Draw non-indexed primitives.
         ///
         /// \param prim
         ///     primititive type
-        /// \param numPrims
+        /// \param numprim
         ///     number of primitives
-        /// \param startVtx
+        /// \param startvtx
         ///     index into vertex buffer of the first vertex.
         ///
         /// \note 必须在 drawBegin() 和 drawEnd() 之间调用
         ///
         virtual void draw( PrimitiveType prim,
-                           size_t        numPrims,
-                           size_t        startVtx ) = 0;
+                           size_t        numprim,
+                           size_t        startvtx ) = 0;
 
         ///
         /// draw on-indexed primitives with user-defined data array
         ///
         virtual void drawIndexedUp(
-                             PrimitiveType    prim,
-                             size_t           numPrims,
-                             size_t           numVertices,
-                             const void *     vertexData,
-                             size_t           strideInBytes,
+                             PrimitiveType  prim,
+                             size_t         numprim,
+                             size_t         numvtx,
+                             const void *   vertexData,
+                             size_t         strideInBytes,
                              const UInt16 * indexData ) = 0;
 
         ///
         /// draw on-indexed primitives with user-defined data array
         ///
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numPrims,
+                             size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes ) = 0;
 

@@ -57,15 +57,15 @@ void GN::gfx::D3D10IdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::D3D10IdxBuf::lock( size_t startIdx, size_t numidx, LockFlag flag )
+UInt16 * GN::gfx::D3D10IdxBuf::lock( size_t startidx, size_t numidx, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( ok() );
 
-    if( !basicLock( startIdx, numidx, flag ) ) return 0;
+    if( !basicLock( startidx, numidx, flag ) ) return 0;
 
-    return (UInt16*)d3dlock( startIdx*2, numidx*2, flag );
+    return (UInt16*)d3dlock( startidx*2, numidx*2, flag );
 
     GN_UNGUARD_SLOW;
 }

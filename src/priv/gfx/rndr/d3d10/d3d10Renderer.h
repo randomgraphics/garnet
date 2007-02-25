@@ -16,6 +16,15 @@ namespace GN { namespace gfx
     class D3D10Resource;
 
     ///
+    /// D3D9 vertex buffer layout descriptor
+    ///
+    struct D3D10VtxLayoutDesc
+    {
+        VtxFmtDesc                    format; ///< vertex format
+        AutoComPtr<ID3D10InputLayout> layout; ///< D3D layout
+    };
+
+    ///
     /// D3D10 renderer class
     ///
     class D3D10Renderer : public BasicRenderer
@@ -195,6 +204,7 @@ namespace GN { namespace gfx
     private :
 
         std::list<D3D10Resource*> mResourceList;
+        HandleManager<D3D10VtxLayoutDesc,VtxFmtHandle> mVtxFmts;
 
         //@}
 
@@ -241,23 +251,23 @@ namespace GN { namespace gfx
         virtual void drawEnd();
         virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numPrims,
-                                  size_t        startVtx,
-                                  size_t        minVtxIdx,
-                                  size_t        numVtx,
-                                  size_t        startIdx ) {}
+                                  size_t        numprim,
+                                  size_t        startvtx,
+                                  size_t        minvtxidx,
+                                  size_t        numvtx,
+                                  size_t        startidx ) {}
         virtual void draw( PrimitiveType prim,
-                           size_t        numPrims,
-                           size_t        startVtx ) {}
+                           size_t        numprim,
+                           size_t        startvtx ) {}
         virtual void drawIndexedUp(
                              PrimitiveType    prim,
-                             size_t           numPrims,
-                             size_t           numVertices,
+                             size_t           numprim,
+                             size_t           numvtx,
                              const void *     vertexData,
                              size_t           strideInBytes,
                              const UInt16 * indexData ) {}
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numPrims,
+                             size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes ) {}
         virtual void drawQuads( BitFields options,

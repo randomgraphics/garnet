@@ -96,8 +96,8 @@ void * GN::gfx::D3D10Buffer::d3dlock( size_t offset, size_t bytes, LockFlag flag
     }
 
     // success
-    mLockOffset = offset;
-    mLockBytes  = bytes;
+    mLockOffset = (UInt32)offset;
+    mLockBytes  = (UInt32)bytes;
     mLockFlag   = flag;
     return buf;
 

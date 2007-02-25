@@ -31,10 +31,10 @@ namespace GN { namespace gfx
         AutoRef<IdxBuf>       idxbuf;
         PrimitiveType         primType;
         UInt32                primCount;
-        UInt32                startVtx;
-        UInt32                minVtxIdx;
-        UInt32                numVtx;
-        UInt32                startIdx;
+        UInt32                startvtx;
+        UInt32                minvtxidx;
+        UInt32                numvtx;
+        UInt32                startidx;
         //@}
 
         ///
@@ -47,10 +47,10 @@ namespace GN { namespace gfx
             idxbuf.clear();
             primType = POINT_LIST;
             primCount = 0;
-            startVtx = 0;
-            minVtxIdx = 0;
-            numVtx = 0;
-            startIdx = 0;
+            startvtx = 0;
+            minvtxidx = 0;
+            numvtx = 0;
+            startidx = 0;
         }
 
         ///
@@ -82,11 +82,11 @@ namespace GN { namespace gfx
         {
             if( idxbuf )
             {
-                r.drawIndexed( primType, primCount, startVtx, minVtxIdx, numVtx, startIdx );
+                r.drawIndexed( primType, primCount, startvtx, minvtxidx, numvtx, startidx );
             }
             else
             {
-                r.draw( primType, primCount, startVtx );
+                r.draw( primType, primCount, startvtx );
             }
         }
 

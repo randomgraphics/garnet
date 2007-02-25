@@ -305,23 +305,23 @@ namespace GN { namespace gfx
         virtual void drawEnd();
         virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
-                                  size_t        numPrims,
-                                  size_t        startVtx,
-                                  size_t        minVtxIdx,
-                                  size_t        numVtx,
-                                  size_t        startIdx );
+                                  size_t        numprim,
+                                  size_t        startvtx,
+                                  size_t        minvtxidx,
+                                  size_t        numvtx,
+                                  size_t        startidx );
         virtual void draw( PrimitiveType prim,
-                           size_t        numPrims,
-                           size_t        startVtx );
+                           size_t        numprim,
+                           size_t        startvtx );
         virtual void drawIndexedUp(
                              PrimitiveType    prim,
-                             size_t           numPrims,
-                             size_t           numVertices,
+                             size_t           numprim,
+                             size_t           numvtx,
                              const void *     vertexData,
                              size_t           strideInBytes,
                              const UInt16 * indexData );
         virtual void drawUp( PrimitiveType prim,
-                             size_t        numPrims,
+                             size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes );
         virtual void drawQuads( BitFields options,
@@ -360,7 +360,7 @@ namespace GN { namespace gfx
         inline void applyVtxBuf(
             const GN::gfx::OGLVtxFmt & vtxFmt,
             const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
-            size_t startVtx );
+            size_t startvtx );
 
     private:
 

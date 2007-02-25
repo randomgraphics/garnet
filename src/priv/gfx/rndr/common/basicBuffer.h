@@ -146,7 +146,7 @@ namespace GN { namespace gfx
         ///
         /// This function will also clip numiIdx into valid range.
         ///
-        bool basicLock( size_t startIdx, size_t & numIdx, LockFlag flag )
+        bool basicLock( size_t startidx, size_t & numidx, LockFlag flag )
         {
             if( isLocked() )
             {
@@ -157,10 +157,10 @@ namespace GN { namespace gfx
 
             const IdxBufDesc & desc = getDesc();
 
-            if( startIdx >= desc.numidx )
+            if( startidx >= desc.numidx )
             {
                 static Logger * sLogger = getLogger("GN.gfx.rndr.common.BasicIdxBuffer");
-                GN_ERROR(sLogger)( "startIdx is beyond the end of index buffer!" );
+                GN_ERROR(sLogger)( "startidx is beyond the end of index buffer!" );
                 return false;
             }
 
@@ -171,9 +171,9 @@ namespace GN { namespace gfx
                 return false;
             }
 
-            // adjust startIdx and numIdx
-            if( 0 == numIdx ) numIdx = desc.numidx;
-            if( startIdx + numIdx > desc.numidx ) numIdx = desc.numidx - startIdx;
+            // adjust startidx and numidx
+            if( 0 == numidx ) numidx = desc.numidx;
+            if( startidx + numidx > desc.numidx ) numidx = desc.numidx - startidx;
 
             // success            
             mLocked = true;

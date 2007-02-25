@@ -277,7 +277,7 @@ bool GN::gfx::D3D10ShaderHlsl::compileShader( const StrA & code, const StrA & hi
 
     // create constant buffers
     ID3D10Device * dev = getRenderer().getDevice();
-    for( size_t i = 0; i < desc.ConstantBuffers; ++i )
+    for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = mReflection->GetConstantBufferByIndex( i );
         GN_ASSERT( cb );

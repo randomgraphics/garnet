@@ -2,10 +2,10 @@
 <mesh
 	primType  = "TRIANGLE_LIST"
 	primCount = "12"
-	startVtx  = "0"
-	minVtxIdx = "0"
-	numVtx    = "8"
-	startIdx  = "0"
+	startvtx  = "0"
+	minvtxidx = "0"
+	numvtx    = "8"
+	startidx  = "0"
 	>
 
 	<vtxfmt>
