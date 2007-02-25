@@ -139,7 +139,11 @@ namespace GN { namespace gfx
         ///
         /// µ»÷µ≈–∂œ
         ///
-        bool operator == ( const VtxFmtDesc & rhs ) const { return attribs == rhs.attribs; }
+        bool operator == ( const VtxFmtDesc & rhs ) const
+        {
+            if( !count != rhs.count ) return false;
+            return 0 == memcmp( attribs, rhs.attribs, sizeof(AttribDesc)*count );
+        }
     };
 }}
 

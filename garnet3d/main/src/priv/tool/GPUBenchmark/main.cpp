@@ -144,23 +144,23 @@ struct ManyManyQuads
             r.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
     }
 
-    void drawPrimRange( UInt32 startPrim, UInt32 numPrims )
+    void drawPrimRange( UInt32 startPrim, UInt32 numprim )
     {
-        GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numPrims) <= PRIM_COUNT );
-        UInt32 startIdx = startPrim * 3;
+        GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numprim) <= PRIM_COUNT );
+        UInt32 startidx = startPrim * 3;
         Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            r.drawIndexed( PRIM_TYPE, numPrims, 0, 0, VTX_COUNT, startIdx );
+            r.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 
     void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
     {
         GN_ASSERT( startQuad < QUAD_COUNT && (startQuad+numQuads) <= QUAD_COUNT );
         UInt32 primCount = numQuads * 2;
-        UInt32 startIdx = startQuad * 6;
+        UInt32 startidx = startQuad * 6;
         Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            r.drawIndexed( PRIM_TYPE, primCount, 0, 0, VTX_COUNT, startIdx );
+            r.drawIndexed( PRIM_TYPE, primCount, 0, 0, VTX_COUNT, startidx );
     }
 };
 

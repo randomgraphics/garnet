@@ -111,9 +111,9 @@ namespace GN { namespace gfx
     ///
     struct VtxBufDesc
     {
-        UInt32 bytes;
-        bool   dynamic;
-        bool   readback;
+        UInt32 bytes;    ///< number of bytes in the buffer
+        bool   dynamic;  ///< dynamic buffer.
+        bool   readback; ///< can read data back from buffer.
     };
     GN_CASSERT( sizeof(VtxBufDesc) == 8 );
 
@@ -122,9 +122,9 @@ namespace GN { namespace gfx
     ///
     struct IdxBufDesc
     {
-        UInt32 numidx;
-        bool   dynamic;
-        bool   readback;
+        UInt32 numidx;   ///< number of indices in index buffer
+        bool   dynamic;  ///< dynamic buffer.
+        bool   readback; ///< can read data back from buffer.
     };
     GN_CASSERT( sizeof(IdxBufDesc) == 8 );
 
@@ -625,7 +625,7 @@ namespace GN { namespace gfx
         ///
         /// lock the buffer
         ///
-        /// \param startIdx
+        /// \param startidx
         ///     first index of this locking
         /// \param numidx
         ///     index count of this locking, '0' means to the end of the buffer.
@@ -635,7 +635,7 @@ namespace GN { namespace gfx
         /// \return
         ///     Return locked buffer pointer. NULL means failed.
         ///
-        virtual UInt16 * lock( size_t startIdx, size_t numidx, LockFlag flag ) = 0;
+        virtual UInt16 * lock( size_t startidx, size_t numidx, LockFlag flag ) = 0;
 
         ///
         /// unlock the buffer

@@ -1,8 +1,8 @@
-#ifndef __GN_GFXD3D10_D3D10IDXBUF_H__
-#define __GN_GFXD3D10_D3D10IDXBUF_H__
+#ifndef __GN_GFXD3D10_D3D10BUFFER_H__
+#define __GN_GFXD3D10_D3D10BUFFER_H__
 // *****************************************************************************
-/// \file    d3d10/d3d10IdxBuf.h
-/// \brief   D3D index buffer class
+/// \file    d3d10/d3d10Buffer.h
+/// \brief   D3D10 buffer classes
 /// \author  chenlee (2005.11.21)
 // *****************************************************************************
 
@@ -48,8 +48,12 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        //@{
+
         void * d3dlock( size_t offset, size_t bytes, LockFlag flag );
         void d3dunlock();
+
+        //@}
 
         // ********************************
         // private variables
@@ -62,8 +66,8 @@ namespace GN { namespace gfx
         bool           mReadback;
 
         DynaArray<UInt8>  mLockBuffer;
-        size_t            mLockOffset;
-        size_t            mLockBytes;
+        UInt32            mLockOffset;
+        UInt32            mLockBytes;
         LockFlag          mLockFlag;
         bool              mSysCopy;
 
@@ -162,7 +166,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag );
+        virtual UInt16 * lock( size_t startidx, size_t numidx, LockFlag flag );
         virtual void unlock();
 
         // ********************************
@@ -205,6 +209,6 @@ namespace GN { namespace gfx
 }}
 
 // *****************************************************************************
-//                           End of d3d10IdxBuf.h
+//                           End of d3d10Buffer.h
 // *****************************************************************************
-#endif // __GN_GFXD3D10_D3D10IDXBUF_H__
+#endif // __GN_GFXD3D10_D3D10BUFFER_H__

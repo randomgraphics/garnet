@@ -49,7 +49,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag );
+        virtual UInt16 * lock( size_t startidx, size_t numidx, LockFlag flag );
         virtual void unlock();
 
         // ********************************

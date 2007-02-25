@@ -8,7 +8,7 @@
 #pragma pack(push,1)
 struct FatMeshDesc
 {
-    UInt32 numVtx;        // vertex count
+    UInt32 numvtx;        // vertex count
     UInt32 numFace;       // face count
     UInt64 vtxFmt;        // vertex format
     UInt8  hasFaceNormal; // as is
@@ -96,7 +96,7 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
         if( !mFatFmt.valid() ) { GN_ERROR(sLogger)( "invalid vertex format." ); return false; }
 
         // read vertices
-        mVertices.resize( desc.numVtx );
+        mVertices.resize( desc.numvtx );
         if( !fp.read( mVertices.cptr(), sizeof(FatVtx)*mVertices.size(), &readen ) ||
             readen != sizeof(FatVtx)*mVertices.size() )
         { GN_ERROR(sLogger)( "fail to read vertices." ); return false; }
@@ -235,7 +235,7 @@ bool GN::gfx::FatMesh::writeToFile( File & fp, char mode ) const
 
         // write mesh descriptor
         FatMeshDesc desc;
-        desc.numVtx = (UInt32)mVertices.size();
+        desc.numvtx = (UInt32)mVertices.size();
         desc.numFace = (UInt32)mFaces.size();
         desc.vtxFmt = mFatFmt.u64;
         desc.hasFaceNormal = (UInt8)mHasFaceNormal;

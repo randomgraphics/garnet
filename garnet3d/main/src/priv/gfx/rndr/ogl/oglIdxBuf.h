@@ -47,7 +47,7 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual UInt16 * lock( size_t startIdx, size_t numIdx, LockFlag flag );
+        virtual UInt16 * lock( size_t startidx, size_t numidx, LockFlag flag );
         virtual void unlock() { basicUnlock(); }
 
         // ********************************
@@ -58,7 +58,7 @@ namespace GN { namespace gfx
         ///
         /// Get index data pointer
         ///
-        const UInt16 * getIdxData( size_t startIdx ) const { return mBuffer + startIdx; }
+        const UInt16 * getIdxData( size_t startidx ) const { return mBuffer + startidx; }
 
         // ********************************
         // private variables

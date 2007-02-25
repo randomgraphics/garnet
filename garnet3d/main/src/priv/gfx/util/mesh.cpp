@@ -72,10 +72,10 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
     <mesh
     	primType  = "TRIANGLE_LIST"
     	primCount = "100"
-    	startVtx  = "0"
-    	minVtxIdx = "0"
-    	numVtx    = "30"
-    	startIdx  = "0"
+    	startvtx  = "0"
+    	minvtxidx = "0"
+    	numvtx    = "30"
+    	startidx  = "0"
     	>
 
     	<vtxfmt>
@@ -125,16 +125,16 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
     if( !sGetIntAttrib( *e, "primCount", primCount ) ) return false;
 
     // get start vertex index
-    if( !sGetIntAttrib( *e, "startVtx", startVtx ) ) return false;
+    if( !sGetIntAttrib( *e, "startvtx", startvtx ) ) return false;
 
     // get minimal vertex index
-    if( !sGetIntAttrib( *e, "minVtxIdx", minVtxIdx ) ) return false;
+    if( !sGetIntAttrib( *e, "minvtxidx", minvtxidx ) ) return false;
 
     // get vertex count
-    if( !sGetIntAttrib( *e, "numVtx", numVtx ) ) return false;
+    if( !sGetIntAttrib( *e, "numvtx", numvtx ) ) return false;
 
     // get start index
-    if( !sGetIntAttrib( *e, "startIdx", startIdx ) ) return false;
+    if( !sGetIntAttrib( *e, "startidx", startidx ) ) return false;
 
     // load vertex format
     XmlNode * vfnode = e->findChildElement( "vtxfmt" );
@@ -179,7 +179,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             bool readback = sGetOptionalBoolAttrib( *e, "readback", false );
 
             // create new VB
-            size_t bytes = vb.stride * numVtx;
+            size_t bytes = vb.stride * numvtx;
             vb.buffer.attach( r.createVtxBuf( bytes, dynamic, readback ) );
             if( vb.buffer.empty() ) return false;
 
@@ -230,7 +230,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
                 // parse vertex data
                 pcrecpp::StringPiece text( e->text.cptr(), (int)e->text.size() );
                 std::string substring;
-                for( size_t i = 0; i < numVtx; ++i, dst += vb.stride )
+                for( size_t i = 0; i < numvtx; ++i, dst += vb.stride )
                 {
                     for( size_t j = 0; j < numFloats; ++j )
                     {

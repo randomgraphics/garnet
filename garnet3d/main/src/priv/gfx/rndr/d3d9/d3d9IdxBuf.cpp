@@ -124,13 +124,13 @@ void GN::gfx::D3D9IdxBuf::deviceDispose()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numidx, LockFlag flag )
+UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startidx, size_t numidx, LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     GN_ASSERT( ok() );
 
-    if( !basicLock( startIdx, numidx, flag ) ) return 0;
+    if( !basicLock( startidx, numidx, flag ) ) return 0;
 
     UInt16 * buf;
     if( mSysCopy.empty() )
@@ -140,11 +140,11 @@ UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numidx, LockFlag fla
         GN_DX9_CHECK_DO(
             mD3DIb->Lock( 0, 0, (void**)&buf, sLockFlags2D3D9( getDesc().dynamic, flag ) ),
             basicUnlock(); return 0; );
-        buf += startIdx;
+        buf += startidx;
 #else
         GN_DX9_CHECK_DO(
             mD3DIb->Lock(
-                (UINT)( startIdx<<1 ),
+                (UINT)( startidx<<1 ),
                 (UINT)( numidx<<1 ),
                 (void**)&buf,
                 sLockFlags2D3D9( getDesc().dynamic, flag ) ),
@@ -153,10 +153,10 @@ UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startIdx, size_t numidx, LockFlag fla
     }
     else
     {
-        mLockStartIdx = startIdx;
+        mLockStartIdx = startidx;
         mLockNumIdx   = numidx;
         mLockFlag     = flag;
-        buf = &mSysCopy[startIdx];
+        buf = &mSysCopy[startidx];
     }
 
     // success

@@ -56,11 +56,11 @@ void GN::gfx::OGLIdxBuf::quit()
 //
 //
 // -----------------------------------------------------------------------------
-UInt16 * GN::gfx::OGLIdxBuf::lock( size_t startIdx, size_t numidx, LockFlag flag )
+UInt16 * GN::gfx::OGLIdxBuf::lock( size_t startidx, size_t numidx, LockFlag flag )
 {
     GN_GUARD_SLOW;
     GN_ASSERT( ok() );
-    if( !basicLock( startIdx, numidx, flag ) ) return 0;
-    return mBuffer + startIdx;
+    if( !basicLock( startidx, numidx, flag ) ) return 0;
+    return mBuffer + startidx;
     GN_UNGUARD_SLOW
 }

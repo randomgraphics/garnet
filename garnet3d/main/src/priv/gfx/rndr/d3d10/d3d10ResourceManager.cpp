@@ -3,8 +3,7 @@
 #include "d3d10Shader.h"
 #include "d3d10Texture.h"
 //#include "d3d10VertexDecl.h"
-//#include "d3d10VtxBuf.h"
-//#include "d3d10IdxBuf.h"
+#include "d3d10Buffer.h"
 //#include "d3d10Font.h"
 //#include "d3d10Quad.h"
 //#include "d3d10Line.h"
@@ -155,8 +154,7 @@ GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
 // -----------------------------------------------------------------------------
 UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 {
-    return 0;
-    /*
+    return 0;/*
     GN_GUARD;
 
     UInt32 h = mVtxFmts.findIf( EqualFormat(format) );
@@ -164,19 +162,17 @@ UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
     if( 0 == h )
     {
         // create new vertex decl
-        D3D10VtxDeclDesc vbd;
-        vbd.format = format;
-        vbd.decl.attach( createD3D10VertexDecl( mDevice, format ) );
-        if( !vbd.decl ) return 0;
-
-        h = mVtxFmts.add( vbd );
+        D3D10VtxLayoutDesc layout;
+        layout.format = format;
+        layout.layout.attach( createD3D10VertexLayout( mDevice, format ) );
+        if( !layout.layout ) return 0;
+        h = mVtxFmts.add( layout );
     }
 
     // success
     return h;
 
-    GN_UNGUARD;
-    */
+    GN_UNGUARD;*/
 }
 
 
@@ -185,17 +181,15 @@ UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 // -----------------------------------------------------------------------------
 GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf( const VtxBufDesc & desc )
 {
-    return 0;
-    /*
     GN_GUARD;
 
     AutoRef<D3D10VtxBuf> buf( new D3D10VtxBuf(*this) );
 
-    if( !buf->init( bytes, dynamic, sysCopy, loader ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
     return buf.detach();
 
-    GN_UNGUARD;*/
+    GN_UNGUARD;
 }
 
 //
@@ -203,17 +197,15 @@ GN::gfx::VtxBuf * GN::gfx::D3D10Renderer::createVtxBuf( const VtxBufDesc & desc 
 // -----------------------------------------------------------------------------
 GN::gfx::IdxBuf * GN::gfx::D3D10Renderer::createIdxBuf( const IdxBufDesc & desc )
 {
-    return 0;
-    /*
     GN_GUARD;
 
     AutoRef<D3D10IdxBuf> buf( new D3D10IdxBuf(*this) );
 
-    if( !buf->init( numIdx, dynamic, sysCopy, loader ) ) return 0;
+    if( !buf->init( desc ) ) return 0;
 
     return buf.detach();
 
-    GN_UNGUARD;*/
+    GN_UNGUARD;
 }
 
 // *****************************************************************************
