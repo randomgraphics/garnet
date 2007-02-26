@@ -69,13 +69,18 @@ void GN::gfx::D3D10RTMgr::bind(
 
     if( forceRebind || oldDesc != newDesc )
     {
+        Vector2<UInt32> newsize;
+
         if( 0 == newDesc.count )
         {
             mNumColors = 1;
             mColors[0] = mAutoColor0;
+            const DispDesc & dd = mRenderer.getDispDesc();
+            newsize.set( dd.width, dd.height );
         }
         else
         {
+            GN_ASSERT( newDesc.count <= GN_ARRAY_COUNT(mColors) );
             mNumColors = newDesc.count;
             for( UInt32 i = 0; i < newDesc.count; ++i )
             {
@@ -83,6 +88,9 @@ void GN::gfx::D3D10RTMgr::bind(
                 mColors[i] = 0;
                 GN_UNIMPL();
             }
+
+            GN_ASSERT( newDesc.cbuffers[0].texture );
+            newDesc.cbuffers[0].texture->getMipSize( newDesc.cbuffers[0].level, &newsize.x, &newsize.y );
         }
 
         if( newDesc.zbuffer.texture )
@@ -96,6 +104,12 @@ void GN::gfx::D3D10RTMgr::bind(
         }
 
         mRenderer.getDevice()->OMSetRenderTargets( mNumColors, mColors, mDepth );
+
+        if( newsize != mRenderTargetSize )
+        {
+            needRebindViewport = true;
+            mRenderTargetSize = newsize;
+        }
     }
 
     GN_UNGUARD_SLOW;

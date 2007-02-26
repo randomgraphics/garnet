@@ -87,7 +87,7 @@ void GN::gfx::D3D9Renderer::drawEnd()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::clearScreen(
-    const GN::Vector4f & c, float z, UInt32 s, BitFields flags )
+    const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_GUARD_SLOW;
 

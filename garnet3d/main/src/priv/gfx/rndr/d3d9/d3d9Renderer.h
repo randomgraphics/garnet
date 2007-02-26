@@ -360,7 +360,7 @@ namespace GN { namespace gfx
     public: // from Renderer
         virtual bool drawBegin();
         virtual void drawEnd();
-        virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags );
+        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numprim,
                                   size_t        startvtx,

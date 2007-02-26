@@ -915,7 +915,7 @@ namespace GN { namespace gfx
         ///
         virtual void
         clearScreen( const Vector4f & c = Vector4f(0,0,0,1),
-                     float z = 1.0f, UInt32 s = 0,
+                     float z = 1.0f, UInt8 s = 0,
                      BitFields flags = CLEAR_ALL ) = 0;
 
         ///
