@@ -69,7 +69,7 @@ static DWORD sTextureStateValue2D3D[GN::gfx::NUM_TEXTURE_STATE_VALUES] =
     #undef GNGFX_DEFINE_TSV
 };
 
-static GN_INLINE void sSetupViewport( LPDIRECT3DDEVICE9 dev, float l, float t, float r, float b )
+static GN_INLINE void sSetupD3D9Viewport( LPDIRECT3DDEVICE9 dev, float l, float t, float r, float b )
 {
     GN_ASSERT(
         0.0f <= l && l <= 1.0f &&
@@ -369,7 +369,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
             clamp<float>( r, 0.0f, 1.0f );
             clamp<float>( t, 0.0f, 1.0f );
 
-            sSetupViewport( mDevice, l , t, r, b );
+            sSetupD3D9Viewport( mDevice, l , t, r, b );
         }
     }
     else if( needRebindViewport )
@@ -378,7 +378,7 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextState(
         float t = mContext.viewport.y;
         float r = l + mContext.viewport.w;
         float b = t + mContext.viewport.h;
-        sSetupViewport( mDevice, l, t, r, b );
+        sSetupD3D9Viewport( mDevice, l, t, r, b );
     }
 
     GN_UNGUARD_SLOW;

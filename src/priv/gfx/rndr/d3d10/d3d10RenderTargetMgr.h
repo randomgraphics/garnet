@@ -72,6 +72,11 @@ namespace GN { namespace gfx
         ///
         ID3D10DepthStencilView * getDepthStencilView() const { return mDepth; }
 
+        ///
+        /// get render target size in pixels
+        ///
+        const Vector2<UInt32> getRenderTargetSize() const { return mRenderTargetSize; }
+
         // ********************************
         // private variables
         // ********************************
@@ -82,9 +87,11 @@ namespace GN { namespace gfx
         AutoComPtr<ID3D10RenderTargetView> mAutoColor0;
         AutoComPtr<ID3D10DepthStencilView> mAutoDepth;
 
-        ID3D10RenderTargetView * mColors[16];
+        ID3D10RenderTargetView * mColors[8];
         ID3D10DepthStencilView * mDepth;
         UInt32                   mNumColors;
+
+        Vector2<UInt32>          mRenderTargetSize;
 
         // ********************************
         // private functions

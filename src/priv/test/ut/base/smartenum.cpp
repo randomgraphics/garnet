@@ -37,14 +37,16 @@ namespace GN
     };
 }
 
-GN::EnumItemDesc<MyEnumHaha> MyEnumDesc[] =
+enum MyEnumHaha { E1, E2, E3 };
+
+typedef GN::SmartEnum< MyEnumHaha > MyEnum;
+
+GN::EnumItemDesc<MyEnumHaha> MyEnum::mProp[] =
 {
     { E1, "E1", "enum1" },
     { E2, "E2", "enum2" },
     { E3, "E3", "enum3" },
-};
-
-typedef GN::SmartEnum< MyEnumHaha > MyEnum;
+};    
 
 class SmartEnumTest : public CxxTest::TestSuite
 {

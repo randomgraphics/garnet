@@ -10,6 +10,46 @@
 // local functions
 // *****************************************************************************
 
+//
+//
+// -----------------------------------------------------------------------------
+static GN_INLINE void sSetupD3D10Viewport(
+    ID3D10Device * dev,
+    const GN::Vector2<UInt32> & rtsize, // render target size
+    float l, float t, float r, float b )
+{
+    GN_ASSERT(
+        0.0f <= l && l <= 1.0f &&
+        0.0f <= t && t <= 1.0f &&
+        0.0f <= r && r <= 1.0f &&
+        0.0f <= b && b <= 1.0f &&
+        l <= r && t <= b );
+
+    float w = r - l;
+    float h = b - t;
+
+    D3D10_VIEWPORT d3dvp = {
+        (INT)l * rtsize.x,
+        (INT)t * rtsize.y,
+        (UINT)w * rtsize.x,
+        (UINT)h * rtsize.y,
+        0.0f,
+        1.0f,
+    };
+
+    // update D3D viewport
+    dev->RSSetViewports( 1, &d3dvp );
+
+    // update D3D scissors
+    D3D10_RECT rc = {
+        (long)( d3dvp.TopLeftX ),
+        (long)( d3dvp.TopLeftY ),
+        (long)( d3dvp.TopLeftX+d3dvp.Width ),
+        (long)( d3dvp.TopLeftY+d3dvp.Height ),
+    };
+    dev->RSSetScissorRects( 1, &rc );
+}
+
 // *****************************************************************************
 // init/shutdown
 // *****************************************************************************
@@ -44,23 +84,6 @@ void GN::gfx::D3D10Renderer::contextDeviceDestroy()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
-
-    /* unset resources used by D3D device.
-	if( mDevice )
-	{
-		for( UInt32 i = 0; i < getCaps(CAPS_MAX_TEXTURE_STAGES); ++i )
-        {
-            mDevice->SetTexture( i, 0 );
-		}
-		for( UInt32 i = 0; i < 16; ++i )
-        {
-            mDevice->SetStreamSource( i, 0, 0, 0 );
-		}
-		mDevice->SetIndices( 0 );
-		mDevice->SetVertexDeclaration( 0 );
-		mDevice->SetVertexShader( 0 );
-		mDevice->SetPixelShader( 0 );
-	}*/
 
     mContext.resetToDefault();
 
@@ -232,7 +255,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
         mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceRebind, needRebindViewport );
     }
 
-    /* bind viewport
+    // bind viewport
     if( newFlags.viewport )
     {
         if( needRebindViewport || newContext.viewport != mContext.viewport || forceRebind )
@@ -248,7 +271,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
             clamp<float>( r, 0.0f, 1.0f );
             clamp<float>( t, 0.0f, 1.0f );
 
-            sSetupViewport( mDevice, l , t, r, b );
+            sSetupD3D10Viewport( mDevice, mRTMgr->getRenderTargetSize(), l , t, r, b );
         }
     }
     else if( needRebindViewport )
@@ -257,8 +280,8 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
         float t = mContext.viewport.y;
         float r = l + mContext.viewport.w;
         float b = t + mContext.viewport.h;
-        sSetupViewport( mDevice, l, t, r, b );
-    }*/
+        sSetupD3D10Viewport( mDevice, mRTMgr->getRenderTargetSize(), l, t, r, b );
+    }
 
     GN_UNGUARD_SLOW;
 }

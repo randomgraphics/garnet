@@ -216,8 +216,8 @@ namespace GN { namespace gfx
         struct VtxBufDesc
         {
             const VtxBuf * buffer; ///< buffer pointer
-            size_t         offset; ///< byte offset of the first vertex in buffer.
-            size_t         stride; ///< vertex stride in bytes
+            UInt32         offset; ///< byte offset of the first vertex in buffer.
+            UInt32         stride; ///< vertex stride in bytes
 
             ///
             /// equality check
@@ -260,10 +260,10 @@ namespace GN { namespace gfx
 
         // graphics resources
         const Texture *       textures[MAX_TEXTURE_STAGES]; ///< texture list
-        size_t                numTextures; ///< texture count
+        UInt32                numTextures; ///< texture count
         VtxFmtHandle          vtxFmt; ///< vertex format handle. 0 means no vertex data at all.
         VtxBufDesc            vtxBufs[MAX_VERTEX_ATTRIBUTES]; ///< vertex buffers.
-        size_t                numVtxBufs; ///< vertex buffer count.
+        UInt32                numVtxBufs; ///< vertex buffer count.
         const IdxBuf *        idxBuf; ///< index buffer
 
         ///
