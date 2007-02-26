@@ -7,6 +7,7 @@
   - task manager/coordinator
 
 - p1
+  - render state block redesign: using packed bit fields.
   - Drawable optimization:
   	- try use string to reference uniforms and textures.
   	- load uniform type and default value from XML.
