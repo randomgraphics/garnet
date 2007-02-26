@@ -42,7 +42,6 @@ namespace GN { namespace gfx
         {
             mD3DTexture.res = 0;
             mSRView = 0;
-            mRTView = 0;
         }
         //@}
 
@@ -63,10 +62,22 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
+        ///
+        /// get render target view of specific surface
+        ///
+        ID3D10RenderTargetView * getRTView( UInt32 face, UInt32 level, UInt32 slice );
+
         // ********************************
         // private variables
         // ********************************
     private:
+
+        struct SubResource
+        {
+            unsigned int face;
+            unsigned int level;
+            unsigned int slice;
+        };
 
         union D3D10Tex
         {
@@ -81,7 +92,8 @@ namespace GN { namespace gfx
         D3D10Tex mD3DTexture; ///< resource instance
 
         ID3D10ShaderResourceView * mSRView; ///< view as shader resource
-        ID3D10ShaderResourceView * mRTView; ///< view as render target
+
+        std::map<SubResource,AutoComPtr<ID3D10RenderTargetView> > mRTViews; ///< render target views
 
         ///
         /// \name locking related variables
@@ -100,7 +112,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
         bool createTexture();
-        bool createViews();
+        bool createDefaultViews();
     };
 }}
 

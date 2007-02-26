@@ -50,6 +50,8 @@ namespace GN { namespace gfx
 
         //@{
 
+        ID3D10Buffer * getD3DBuffer() const { GN_ASSERT(mD3DBuffer); return mD3DBuffer; }
+
         void * d3dlock( size_t offset, size_t bytes, LockFlag flag );
         void d3dunlock();
 

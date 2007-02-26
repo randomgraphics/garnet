@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "d3d10Renderer.h"
+#include "d3d10RenderTargetMgr.h"
 
 // *****************************************************************************
 // interface functions
@@ -32,12 +33,26 @@ void GN::gfx::D3D10Renderer::drawEnd()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D10Renderer::clearScreen(
-    const GN::Vector4f & c, float z, UInt32 s, BitFields flags )
+    const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_GUARD_SLOW;
-    GN_UNUSED_PARAM( z );
-    GN_UNUSED_PARAM( s );
-    GN_UNUSED_PARAM( flags );
-    mDevice->ClearRenderTargetView( mRTView, c );
+
+    if( CLEAR_C & flags )
+    {
+        for( UInt32 i = 0; i < mRTMgr->getRenderTargetCount(); ++i )
+        {
+            mDevice->ClearRenderTargetView( mRTMgr->getRenderTargetView(i), c );
+        }
+    }
+
+    UInt32 d3dflag = 0;
+    if( CLEAR_Z ) d3dflag |= D3D10_CLEAR_DEPTH;
+    if( CLEAR_S ) d3dflag |= D3D10_CLEAR_STENCIL;
+
+    if( d3dflag )
+    {
+        mDevice->ClearDepthStencilView( mRTMgr->getDepthStencilView(), d3dflag, z, s );
+    }
+
     GN_UNGUARD_SLOW;
 }

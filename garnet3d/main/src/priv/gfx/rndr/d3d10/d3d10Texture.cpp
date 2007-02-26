@@ -28,7 +28,7 @@ bool GN::gfx::D3D10Texture::init( const TextureDesc & desc )
     GN_STDCLASS_INIT( GN::gfx::D3D10Texture, () );
 
     // create device data
-    if( !setDesc( desc ) || !createTexture() || !createViews() ) return failure();
+    if( !setDesc( desc ) || !createTexture() || !createDefaultViews() ) return failure();
 
     // success
     return success();
@@ -51,7 +51,7 @@ void GN::gfx::D3D10Texture::quit()
     }
 
     safeRelease( mSRView );
-    safeRelease( mRTView );
+    mRTViews.clear();
     safeRelease( mD3DTexture.res );
 
     // standard quit procedure
@@ -259,7 +259,7 @@ bool GN::gfx::D3D10Texture::createTexture()
 //
 //
 // ----------------------------------------------------------------------------
-bool GN::gfx::D3D10Texture::createViews()
+bool GN::gfx::D3D10Texture::createDefaultViews()
 {
     GN_ASSERT( mD3DTexture.res );
     GN_UNIMPL_WARNING();
