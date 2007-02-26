@@ -52,29 +52,12 @@ bool GN::gfx::D3D10Renderer::dispDeviceCreate()
             &mDevice ),
         false );
 
-    // initialize render target view
-    AutoComPtr<ID3D10Texture2D> backBuffer;
-#if D3D10_SDK_VERSION >= 28
-    GN_DX10_CHECK_RV( mSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
-#else
-    GN_DX10_CHECK_RV( mSwapChain->GetBackBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), false );
-#endif
-    GN_DX10_CHECK_RV( mDevice->CreateRenderTargetView( backBuffer, NULL, &mRTView ), false );
-    mDevice->OMSetRenderTargets( 1, &mRTView, NULL );
-
-    // setup viewport
+    // setup default viewport
     D3D10_VIEWPORT vp;
-#if D3D10_SDK_VERSION >= 28
     vp.TopLeftX = 0;
     vp.TopLeftY = 0;
     vp.Width = dd.width;
     vp.Height = dd.height;
-#else
-    vp.TopLeftX = 0.0f;
-    vp.TopLeftY = 0.0f;
-    vp.Width = (float)dd.width;
-    vp.Height = (float)dd.height;
-#endif
     vp.MinDepth = 0.0f;
     vp.MaxDepth = 1.0f;
     mDevice->RSSetViewports( 1, &vp );
@@ -94,7 +77,6 @@ void GN::gfx::D3D10Renderer::dispDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    safeRelease( mRTView );
     safeRelease( mSwapChain );
     safeRelease( mDevice );
     safeRelease( mAdapter );

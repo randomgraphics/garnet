@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "d3d10Renderer.h"
-//#include "d3d10RenderTargetMgr.h"
+#include "d3d10RenderTargetMgr.h"
 #include "d3d10Shader.h"
 #include "d3d10Texture.h"
 #include "d3d10VtxLayout.h"
@@ -22,6 +22,10 @@ bool GN::gfx::D3D10Renderer::contextDeviceCreate()
     GN_GUARD;
 
     _GNGFX_DEVICE_TRACE();
+
+    // create render target manager
+    mRTMgr = new D3D10RTMgr( *this );
+    if( !mRTMgr->init() ) return false;
 
     // bind default context
     bindContext( mContext, mContext.flags, true );
@@ -61,6 +65,8 @@ void GN::gfx::D3D10Renderer::contextDeviceDestroy()
     mContext.resetToDefault();
 
 	clearContextResources();
+
+    safeDelete( mRTMgr );
 
     GN_UNGUARD;
 }
@@ -217,7 +223,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
         }*/
     }
 
-    /*
+    //
     // bind render targets
     //
     bool needRebindViewport = false;
@@ -226,7 +232,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
         mRTMgr->bind( mContext.renderTargets, newContext.renderTargets, forceRebind, needRebindViewport );
     }
 
-    // bind viewport
+    /* bind viewport
     if( newFlags.viewport )
     {
         if( needRebindViewport || newContext.viewport != mContext.viewport || forceRebind )
@@ -291,22 +297,29 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
     ///
     if( newFlags.vtxBufs )
     {
-        /*static const ID3D10ShaderResourceView * vb[16];
+        ID3D10Buffer * buf[16];
+        UINT           stride[16];
+        UINT           offset[16];
+
         GN_ASSERT( newContext.numVtxBufs <= 16 );
 
+        bool bind = false;
         for( UINT i = 0; i < newContext.numVtxBufs; ++i )
         {
             const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
             if( vb != mContext.vtxBufs[i] || forceRebind )
             {
-                GN_ASSERT( vb.buffer );
-                mDevice->VSSetShaderResources(
-                    i,
-                    safeCast<const D3D10VtxBuf*>(vb.buffer)->getD3DVb(),
-                    (UINT)vb.offset,
-                    (UINT)vb.stride ) );
+                bind      = true;
+                buf[i]    = safeCast<const D3D10VtxBuf*>(vb.buffer)->getD3DBuffer();
+                stride[i] = vb.stride;
+                offset[i] = vb.offset;
             }
-        }*/
+        }
+
+        if( bind )
+        {
+            mDevice->IASetVertexBuffers( 0, newContext.numVtxBufs, buf, stride, offset );
+        }
     }
 
     //
@@ -315,9 +328,10 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
     if( newFlags.idxBuf &&
       ( newContext.idxBuf != mContext.idxBuf || forceRebind ) )
     {
-        //GN_DX9_CHECK( mDevice->SetIndices( newContext.idxBuf
-        //    ? safeCast<const D3D10IdxBuf*>(newContext.idxBuf)->getD3DIb()
-        //    : 0 ) );
+        mDevice->IASetIndexBuffer(
+            newContext.idxBuf ? safeCast<const D3D10IdxBuf*>(newContext.idxBuf)->getD3DBuffer() : 0,
+            DXGI_FORMAT_R16_UINT,
+            0 );
     }
 
     //

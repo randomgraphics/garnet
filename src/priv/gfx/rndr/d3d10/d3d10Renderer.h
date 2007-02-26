@@ -14,6 +14,7 @@ namespace GN { namespace gfx
 {
     // Forward declarations
     class D3D10Resource;
+    class D3D10RTMgr;
 
     ///
     /// D3D9 vertex buffer layout descriptor
@@ -102,7 +103,8 @@ namespace GN { namespace gfx
 
     public :
 
-        ID3D10Device * getDevice() const { return mDevice; }
+        ID3D10Device   * getDevice() const { return mDevice; }
+        IDXGISwapChain * getSwapChain() const { return mSwapChain; }
 
     private :
 
@@ -114,7 +116,6 @@ namespace GN { namespace gfx
             mAdapter = 0;
             mDevice = 0;
             mSwapChain = 0;
-            mRTView = 0;
         }
 
         bool dispDeviceCreate();
@@ -125,7 +126,6 @@ namespace GN { namespace gfx
         IDXGIAdapter   * mAdapter;
         ID3D10Device   * mDevice;
         IDXGISwapChain * mSwapChain;
-        ID3D10RenderTargetView * mRTView;
 
         //@}
 
@@ -228,7 +228,7 @@ namespace GN { namespace gfx
         bool contextInit() { return true; }
         void contextQuit() {}
         bool contextOK() const { return true; }
-        void contextClear() { mContext.resetToDefault(); }
+        void contextClear() { mContext.resetToDefault(); mRTMgr = 0; }
         bool contextDeviceCreate();
         void contextDeviceDestroy();
 
@@ -251,6 +251,8 @@ namespace GN { namespace gfx
 
         RendererContext mContext;
 
+        D3D10RTMgr * mRTMgr;
+
         //@}
 
     // ************************************************************************
@@ -264,7 +266,7 @@ namespace GN { namespace gfx
     public: // from Renderer
         virtual bool drawBegin();
         virtual void drawEnd();
-        virtual void clearScreen( const Vector4f & c, float z, UInt32 s, BitFields flags );
+        virtual void clearScreen( const Vector4f & c, float z, UInt8 s, BitFields flags );
         virtual void drawIndexed( PrimitiveType prim,
                                   size_t        numprim,
                                   size_t        startvtx,
