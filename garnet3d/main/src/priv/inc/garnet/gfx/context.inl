@@ -183,7 +183,7 @@ namespace GN { namespace gfx
 
         if( stage >= numTextures )
         {
-            numTextures = stage + 1;
+            numTextures = (UInt32)( stage + 1 );
         }
     }
 
@@ -216,20 +216,20 @@ namespace GN { namespace gfx
         {
             if( index >= numVtxBufs && NULL == buffer ) return;
             vtxBufs[index].buffer = buffer;
-            vtxBufs[index].offset = offset;
-            vtxBufs[index].stride = stride;
-            numVtxBufs = index + 1;
+            vtxBufs[index].offset = (UInt32)offset;
+            vtxBufs[index].stride = (UInt32)stride;
+            numVtxBufs = (UInt32)( index + 1 );
             flags.vtxBufs = 1;
         }
         else if( NULL == buffer )
         {
-            numVtxBufs = index;
+            numVtxBufs = (UInt32)index;
         }
         else
         {
             vtxBufs[index].buffer = buffer;
-            vtxBufs[index].offset = offset;
-            vtxBufs[index].stride = stride;
+            vtxBufs[index].offset = (UInt32)offset;
+            vtxBufs[index].stride = (UInt32)stride;
         }
     }
 
