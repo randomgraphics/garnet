@@ -670,11 +670,11 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     //
     if( newFlags.textures )
     {
-        size_t maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
+        UInt32 maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
 
-        size_t numtex = min( maxStages, newContext.numTextures );
+        UInt32 numtex = min( maxStages, newContext.numTextures );
 
-        size_t i;
+        UInt32 i;
         for ( i = 0; i < numtex; ++i )
         {
             // if null handle, then disable this texture stage
