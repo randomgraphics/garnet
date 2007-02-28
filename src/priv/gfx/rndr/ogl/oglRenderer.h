@@ -250,7 +250,7 @@ namespace GN { namespace gfx
         typedef HandleManager<OGLVtxFmt*,VtxFmtHandle> VtxFmtManager;
 
 #if HAS_CG
-        CGcontext mCgContext;
+        CgContextWrapper mCgContext;
 #endif
         std::list<OGLResource*> mResourceList;
         GLSLProgramMap          mGLSLProgramMap;
