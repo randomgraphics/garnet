@@ -19,7 +19,7 @@ public:
     void onDetermineInitParam( InitParam & ip )
     {
         ip.rapi = API_D3D10;
-        ip.ro.reference = true;
+        //ip.ro.reference = true;
     }
 
     bool onRendererCreate()

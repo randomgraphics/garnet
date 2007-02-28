@@ -36,7 +36,15 @@ namespace GN { namespace gfx
         bool init();
         void quit();
     private:
-        void clear() { memset(mColors, 0, sizeof(mColors) ); mDepth = 0; mNumColors = 0; }
+        void clear()
+        {
+            mAutoColor0 = 0;
+            mAutoDepthTexture = 0;
+            mAutoDepth = 0;
+            memset(mColors, 0, sizeof(mColors) );
+            mDepth = 0;
+            mNumColors = 0;
+        }
         //@}
 
         // ********************************
@@ -84,8 +92,9 @@ namespace GN { namespace gfx
 
         D3D10Renderer & mRenderer;
 
-        AutoComPtr<ID3D10RenderTargetView> mAutoColor0;
-        AutoComPtr<ID3D10DepthStencilView> mAutoDepth;
+        ID3D10RenderTargetView * mAutoColor0;
+        ID3D10Texture2D *        mAutoDepthTexture;
+        ID3D10DepthStencilView * mAutoDepth;
 
         ID3D10RenderTargetView * mColors[8];
         ID3D10DepthStencilView * mDepth;

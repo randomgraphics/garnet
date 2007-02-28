@@ -15,7 +15,7 @@
         const char * str = cgGetLastErrorString( &error );                  \
         if( str )                                                           \
         {                                                                   \
-            static GN::Logger * sLogger = GN::getLogger("GN.gfx.Cg");       \
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.cg");  \
             GN_ERROR(sLogger)( "Cg error : %s", str );                      \
             something                                                       \
         }                                                                   \
@@ -32,6 +32,66 @@
 namespace GN { namespace gfx
 {
 #ifdef HAS_CG
+
+    // *************************************************************************
+    // Cg context
+    // *************************************************************************
+
+    ///
+    /// Cg context wrapper class
+    ///
+    class CgContextWrapper
+    {
+        CGcontext mContext;
+
+        static void sCgErrorHandler( CGcontext ctx, CGerror err, void * )
+        {
+            static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.cg");
+
+            GN_ERROR(sLogger)( "Cg error: %s", cgGetErrorString(err) );
+            const char * listing = cgGetLastListing(ctx);
+            if( listing )
+            {
+                GN_ERROR(sLogger)( "Last listing = %s", listing );
+            }
+        }
+
+    public:
+
+        ///
+        /// create Cg context
+        ///
+        CgContextWrapper() : mContext(0)
+        {
+            // set Cg error hanlder
+            cgSetErrorHandler( &sCgErrorHandler, 0 );
+
+            // create Cg context
+            mContext = cgCreateContext();
+            if( !mContext )
+            {
+                static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.cg");
+                GN_FATAL(sLogger)( "Fail to create Cg context!" );
+            }
+        }
+
+        ///
+        /// destroy Cg context
+        ///
+        ~CgContextWrapper()
+        {
+            if( mContext ) cgDestroyContext( mContext );
+        }
+
+        ///
+        /// cast to CGcontext type
+        ///
+        operator CGcontext() const
+        {
+            GN_ASSERT( mContext );
+            return mContext;
+        }
+    };
 
     // *************************************************************************
     // Cg shader
