@@ -288,7 +288,7 @@ namespace GN { namespace gfx
     private :
 
 #if HAS_CG
-        CGcontext mCgContext;
+        CgContextWrapper mCgContext;
 #endif
 
         std::list<D3D9Resource*> mResourceList;
