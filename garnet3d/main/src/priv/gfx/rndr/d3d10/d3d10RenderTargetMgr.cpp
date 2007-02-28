@@ -19,14 +19,39 @@ bool GN::gfx::D3D10RTMgr::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::gfx::D3D10RTMgr, () );
 
-    // create default color view
+    ID3D10Device * dev = mRenderer.getDevice();
+
+    // create default rener target view
     AutoComPtr<ID3D10Texture2D> backBuffer;
     GN_DX10_CHECK_RV( mRenderer.getSwapChain()->GetBuffer( 0, __uuidof( ID3D10Texture2D ), (void**)&backBuffer ), failure() );
-    GN_DX10_CHECK_RV( mRenderer.getDevice()->CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
+    GN_DX10_CHECK_RV( dev->CreateRenderTargetView( backBuffer, NULL, &mAutoColor0 ), failure() );
     GN_ASSERT( mAutoColor0 );
 
-    // get default depth view
-    mRenderer.getDevice()->OMGetRenderTargets( 0, 0, &mAutoDepth );
+    // create depth texture
+    const DispDesc & dd = mRenderer.getDispDesc();
+    D3D10_TEXTURE2D_DESC td;
+    td.Width              = dd.width;
+    td.Height             = dd.height;
+    td.MipLevels          = 1;
+    td.ArraySize          = 1;
+    td.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    td.SampleDesc.Count   = 1;
+    td.SampleDesc.Quality = 0;
+    td.Usage              = D3D10_USAGE_DEFAULT;
+    td.BindFlags          = D3D10_BIND_DEPTH_STENCIL;
+    td.CPUAccessFlags     = 0;
+    td.MiscFlags          = 0;
+    GN_DX10_CHECK_RV( dev->CreateTexture2D( &td, NULL, &mAutoDepthTexture ), failure() );
+
+    // create depth stencil view
+    D3D10_DEPTH_STENCIL_VIEW_DESC dsvd;
+    dsvd.Format             = td.Format;
+    dsvd.ViewDimension      = D3D10_DSV_DIMENSION_TEXTURE2D;
+    dsvd.Texture2D.MipSlice = 0;
+    GN_DX10_CHECK_RV( dev->CreateDepthStencilView( mAutoDepthTexture, &dsvd, &mAutoDepth ), failure() );
+
+    // bind these views to device.
+    dev->OMSetRenderTargets( 1, &mAutoColor0, mAutoDepth );
 
     // success
     return success();
@@ -41,8 +66,9 @@ void GN::gfx::D3D10RTMgr::quit()
 {
     GN_GUARD;
 
-    mAutoColor0.clear();
-    mAutoDepth.clear();
+    safeRelease( mAutoColor0 );
+    safeRelease( mAutoDepthTexture );
+    safeRelease( mAutoDepth );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();

@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "../common/basicRenderer.h"
+#include "../common/cgShader.h"
 
 /// \def GNGFX_D3D9CAPS
 /// Define D3D special caps.
@@ -249,6 +250,13 @@ namespace GN { namespace gfx
 
     public :
 
+#if HAS_CG
+        ///
+        /// get global Cg context
+        ///
+        CGcontext getCgContext() const { return mCgContext; }
+#endif
+
         ///
         /// Insert resource into resource list. Can be only called by
         /// constructor of D3D9Resource.
@@ -278,6 +286,10 @@ namespace GN { namespace gfx
         void resourceDeviceDestroy();
 
     private :
+
+#if HAS_CG
+        CGcontext mCgContext;
+#endif
 
         std::list<D3D9Resource*> mResourceList;
         HandleManager<D3D9VtxDeclDesc,VtxFmtHandle> mVtxFmts;

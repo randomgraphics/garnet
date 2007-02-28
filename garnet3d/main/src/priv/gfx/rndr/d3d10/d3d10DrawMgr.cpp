@@ -53,17 +53,17 @@ void GN::gfx::D3D10Renderer::clearScreen(
     {
         for( UInt32 i = 0; i < mRTMgr->getRenderTargetCount(); ++i )
         {
-            mDevice->ClearRenderTargetView( mRTMgr->getRenderTargetView(i), c );
+            mDevice->ClearRenderTargetView( mRTMgr->getRenderTargetView( i ) , c );
         }
     }
 
+    ID3D10DepthStencilView * dsview = mRTMgr->getDepthStencilView();
     UInt32 d3dflag = 0;
     if( CLEAR_Z ) d3dflag |= D3D10_CLEAR_DEPTH;
     if( CLEAR_S ) d3dflag |= D3D10_CLEAR_STENCIL;
-
-    if( d3dflag )
+    if( d3dflag && dsview )
     {
-        mDevice->ClearDepthStencilView( mRTMgr->getDepthStencilView(), d3dflag, z, s );
+        mDevice->ClearDepthStencilView( dsview, d3dflag, z, s );
     }
 
     GN_UNGUARD_SLOW;

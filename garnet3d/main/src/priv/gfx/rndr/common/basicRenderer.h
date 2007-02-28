@@ -124,28 +124,12 @@ namespace GN { namespace gfx
 
         virtual Texture * createTextureFromFile( File & );
 
-    public :
-
-#if HAS_CG
-        ///
-        /// get global Cg context
-        ///
-        CGcontext getCgContext() const { return mCgContext; }
-#endif
-
     private:
 
-        bool resInit();
-        void resQuit();
-#if HAS_CG
-        void resClear() { mCgContext = 0; }
-#else
+        bool resInit() { return true; }
+        void resQuit() {}
         void resClear() {}
-#endif
 
-#if HAS_CG
-        CGcontext mCgContext;
-#endif
         //@}
 
         // *****************************************************************************
@@ -160,7 +144,7 @@ namespace GN { namespace gfx
 
         bool contextInit() { return true; }
         void contextQuit() {}
-        void contextClear() { clearContextResources(); }
+        void contextClear() {}
 
     protected:
 

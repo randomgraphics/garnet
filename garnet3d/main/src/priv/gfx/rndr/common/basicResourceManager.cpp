@@ -1,67 +1,6 @@
 #include "pch.h"
 #include "basicRenderer.h"
 
-///
-/// local Cg error handler
-///
-#ifdef HAS_CG
-static void sCgErrorHandler( CGcontext ctx, CGerror err, void * )
-{
-    static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.common.cg");
-
-    GN_ERROR(sLogger)( "Cg error: %s", cgGetErrorString(err) );
-    const char * listing = cgGetLastListing(ctx);
-    if( listing )
-    {
-        GN_ERROR(sLogger)( "Last listing = %s", listing );
-    }
-}
-#endif
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::BasicRenderer::resInit()
-{
-#ifdef HAS_CG
-    GN_GUARD;
-
-    // set Cg error hanlder
-    cgSetErrorHandler( &sCgErrorHandler, 0 );
-
-    // create Cg context
-    mCgContext = cgCreateContext();
-    if( !mCgContext )
-    {
-        GN_ERROR(sLogger)( "Fail to create Cg context!" );
-        return false;
-    }
-
-    GN_UNGUARD;
-#endif
-
-    return true;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::BasicRenderer::resQuit()
-{
-#ifdef HAS_CG
-    GN_GUARD;
-
-    // destroy Cg context
-    if( mCgContext )
-    {
-        cgDestroyContext( mCgContext );
-        mCgContext = 0;
-    }
-
-    GN_UNGUARD;
-#endif
-}
-
 //
 //
 // -----------------------------------------------------------------------------
