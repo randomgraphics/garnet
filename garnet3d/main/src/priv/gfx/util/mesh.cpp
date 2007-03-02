@@ -70,8 +70,8 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
 
 /*
     <mesh
-    	primType  = "TRIANGLE_LIST"
-    	primCount = "100"
+    	primtype  = "TRIANGLE_LIST"
+    	numprim   = "100"
     	startvtx  = "0"
     	minvtxidx = "0"
     	numvtx    = "30"
@@ -117,12 +117,12 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
 
     // get primitive type
     StrA s;
-    if( !sGetStringAttrib( *e, "primType", s ) ) return false;
-    primType = str2PrimitiveType( s );
-    if( primType >= NUM_PRIMITIVES ) return false;
+    if( !sGetStringAttrib( *e, "primtype", s ) ) return false;
+    primtype = str2PrimitiveType( s );
+    if( primtype >= NUM_PRIMITIVES ) return false;
 
     // get primitive count
-    if( !sGetIntAttrib( *e, "primCount", primCount ) ) return false;
+    if( !sGetIntAttrib( *e, "numprim", numprim ) ) return false;
 
     // get start vertex index
     if( !sGetIntAttrib( *e, "startvtx", startvtx ) ) return false;
@@ -256,7 +256,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             bool readback = sGetOptionalBoolAttrib( *e, "readback", false );
 
             // create new ib
-            size_t numidx = calcVertexCount( primType, primCount );
+            size_t numidx = calcVertexCount( primtype, numprim );
             size_t bytes = numidx * 2; // 16-bit index buffer
             idxbuf.attach( r.createIdxBuf( bytes, dynamic, readback ) );
             if( idxbuf.empty() ) return false;
@@ -346,17 +346,62 @@ bool GN::gfx::Mesh::loadFromXmlFile( File & fp, const StrA & meshdir, Renderer &
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::generateCubeMesh( Mesh & mesh, float edgeLength, bool texcoord, bool normal )
+bool GN::gfx::generateCubeMesh( Mesh & mesh, float edgeLength )
 {
     GN_GUARD;
 
     // clear to empty
     mesh.clear();
 
-    // create vertex format 
-    GN_UNUSED_PARAM( edgeLength );
-    GN_UNUSED_PARAM( texcoord );
-    GN_UNUSED_PARAM( normal );
+    Renderer & r = gRenderer;
+
+    // create vertex format
+    mesh.vtxfmt = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
+    if( 0 == mesh.vtxfmt ) return false;
+
+    struct CubeVertex
+    {
+        float p[3];
+        float n[3];
+        float t[2];
+    };
+    GN_CASSERT( sizeof(CubeVertex) == 32 );
+
+    // create vertex buffer
+    mesh.vtxbufs.resize( 1 );
+    mesh.vtxbufs[0].buffer.attach( r.createVtxBuf( 72*sizeof(float) ) );
+    if( !mesh.vtxbufs[0].buffer ) return false;
+    mesh.vtxbufs[0].offset = 0;
+    mesh.vtxbufs[0].stride = sizeof(CubeVertex);
+
+    // create index buffer
+    mesh.idxbuf.attach( r.createIdxBuf( 36 * sizeof(UInt16) ) );
+    if( !mesh.idxbuf ) return false;
+
+    // lock the buffers
+    CubeVertex * vb = (CubeVertex*)mesh.vtxbufs[0].buffer->lock( 0, 0, LOCK_DISCARD );
+    if( 0 == vb ) return false;
+    AutoBufferUnlocker<VtxBuf> vbunlocker( mesh.vtxbufs[0].buffer );
+
+    UInt16 * ib = mesh.idxbuf->lock( 0, 0, LOCK_DISCARD );
+    if( 0 == ib ) return false;
+    AutoBufferUnlocker<IdxBuf> ibunlocker( mesh.idxbuf );
+
+    // fill mesh data
+    createBox(
+        edgeLength, edgeLength, edgeLength,
+        vb->p, sizeof(CubeVertex),
+        vb->t, sizeof(CubeVertex),
+        vb->n, sizeof(CubeVertex),
+        ib, 0 );
+
+    // set draw parameters
+    mesh.primtype = TRIANGLE_LIST;
+    mesh.numprim = 12;
+    mesh.startvtx = 0;
+    mesh.minvtxidx = 0;
+    mesh.numvtx = 24;
+    mesh.startidx = 0;
 
     // success
     return true;

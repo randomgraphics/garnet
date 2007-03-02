@@ -29,8 +29,8 @@ namespace GN { namespace gfx
         VtxFmtHandle          vtxfmt;
         DynaArray<MeshVtxBuf> vtxbufs;
         AutoRef<IdxBuf>       idxbuf;
-        PrimitiveType         primType;
-        UInt32                primCount;
+        PrimitiveType         primtype;
+        UInt32                numprim;
         UInt32                startvtx;
         UInt32                minvtxidx;
         UInt32                numvtx;
@@ -45,8 +45,8 @@ namespace GN { namespace gfx
             vtxfmt = 0;
             vtxbufs.clear();
             idxbuf.clear();
-            primType = POINT_LIST;
-            primCount = 0;
+            primtype = POINT_LIST;
+            numprim = 0;
             startvtx = 0;
             minvtxidx = 0;
             numvtx = 0;
@@ -82,11 +82,11 @@ namespace GN { namespace gfx
         {
             if( idxbuf )
             {
-                r.drawIndexed( primType, primCount, startvtx, minvtxidx, numvtx, startidx );
+                r.drawIndexed( primtype, numprim, startvtx, minvtxidx, numvtx, startidx );
             }
             else
             {
-                r.draw( primType, primCount, startvtx );
+                r.draw( primtype, numprim, startvtx );
             }
         }
 
@@ -102,9 +102,9 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Generate a cube mesh
+    /// Generate a cube mesh, with texcoord and normal
     ///
-    bool generateCubeMesh( Mesh & mesh, float edgeLength, bool texcoord, bool normal );
+    bool generateCubeMesh( Mesh & mesh, float edgeLength );
 }}
 
 // *****************************************************************************

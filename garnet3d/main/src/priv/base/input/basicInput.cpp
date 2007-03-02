@@ -36,7 +36,7 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
     mKeyboardStatus[code] = k.status;
 
     // 触发按键信号
-    sigKeyPress( k );
+    sSigKeyPress( k );
 
     GN_UNGUARD;
 }
@@ -52,7 +52,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
     {
         // ASCII character
         //GN_TRACE( "Char press: %s", StrA(&ch,1).cptr() );
-        sigCharPress( ch );
+        sSigCharPress( ch );
     }
     else if( mHalfWideChar )
     {
@@ -61,7 +61,7 @@ void GN::input::BasicInput::triggerCharPress( char ch )
         mbs2wcs( wch, 2, mHalfBytes, 2 );
 
         //GN_TRACE( "Char press: %s", StrA(mHalfBytes,2).cptr() );
-        sigCharPress( wch[0] );
+        sSigCharPress( wch[0] );
 
         // 清除“半字符”标志
         mHalfWideChar = false;

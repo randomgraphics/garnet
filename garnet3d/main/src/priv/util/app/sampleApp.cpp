@@ -440,6 +440,11 @@ bool GN::app::SampleApp::initInput()
 {
     GN_GUARD;
 
+    // connect to input signals
+    GN::input::Input::sSigKeyPress.connect( this, &SampleApp::onKeyPress );
+    GN::input::Input::sSigCharPress.connect( this, &SampleApp::onCharPress );
+    GN::input::Input::sSigAxisMove.connect( this, &SampleApp::onAxisMove );
+
     // release old input system
     quitInput();
 
@@ -452,11 +457,6 @@ bool GN::app::SampleApp::initInput()
         const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
         if( !input->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
     }
-
-    // connect to input signals
-    input->sigKeyPress.connect( this, &SampleApp::onKeyPress );
-    input->sigCharPress.connect( this, &SampleApp::onCharPress );
-    input->sigAxisMove.connect( this, &SampleApp::onAxisMove );
 
     // success
     return true;
