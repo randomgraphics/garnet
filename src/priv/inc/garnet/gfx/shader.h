@@ -130,6 +130,11 @@ namespace GN { namespace gfx
         ///
         /// Get first unform handle. Use to iterate all uniforms.
         ///
+        size_t getNumUniforms() const { return mUniforms.size(); }
+
+        ///
+        /// Get first unform handle. Use to iterate all uniforms.
+        ///
         UInt32 getFirstUniform() const { return mUniforms.first(); }
 
         ///

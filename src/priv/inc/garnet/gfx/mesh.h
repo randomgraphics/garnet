@@ -100,6 +100,11 @@ namespace GN { namespace gfx
         ///
         bool loadFromXmlFile( File &, const StrA & meshdir, Renderer & r );
     };
+
+    ///
+    /// Generate a cube mesh
+    ///
+    bool generateCubeMesh( Mesh & mesh, float edgeLength, bool texcoord, bool normal );
 }}
 
 // *****************************************************************************

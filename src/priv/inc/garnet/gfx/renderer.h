@@ -565,7 +565,9 @@ namespace GN { namespace gfx
         ///
         /// Check renderer support to specific shader profile. Profile tag could be:
         ///     vs_1_1 vs_2_0 vs_2_x vs_3_0 xvs
-        ///     ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_x ps_3_0 xps
+        ///     ps_1_1 ps_1_2 ps_1_3 ps_1_4 ps_2_0 ps_2_x ps_3_0
+        ///     ps_4_0 vs_4_0
+        ///     xps
         ///     arbvp1, arbfp1,
         ///     glslvs, glslps,
         ///     cgvs, cgps

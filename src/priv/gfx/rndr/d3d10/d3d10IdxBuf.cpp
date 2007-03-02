@@ -20,7 +20,7 @@ bool GN::gfx::D3D10IdxBuf::init( const IdxBufDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( GN::gfx::D3D10IdxBuf, (desc.numidx*2, desc.dynamic, desc.readback) );
+    GN_STDCLASS_INIT( GN::gfx::D3D10IdxBuf, (desc.numidx*2, desc.dynamic, desc.readback, D3D10_BIND_INDEX_BUFFER) );
 
     // store buffer parameters
     setDesc( desc );

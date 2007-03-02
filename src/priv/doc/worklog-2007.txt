@@ -1,3 +1,7 @@
+- 2007.3.2
+  - now d3d10 renderer is kind of usable: can render geometry, but no texture 
+    yet.
+
 - 2007.2.22
   - new classes in scene moduel:
     - Drawable: replacing old Renderable class in GFX module

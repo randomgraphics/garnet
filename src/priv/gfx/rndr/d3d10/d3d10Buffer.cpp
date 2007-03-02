@@ -15,7 +15,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.Buffer");
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool dynamic, bool readback )
+bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool dynamic, bool readback, UInt32 bindFlags )
 {
     GN_GUARD;
 
@@ -34,7 +34,7 @@ bool GN::gfx::D3D10Buffer::init( UInt32 bytes, bool dynamic, bool readback )
     mReadback = readback;
 
     // create D3D buffer
-    if( !createBuffer() ) return failure();
+    if( !createBuffer( bindFlags ) ) return failure();
 
     // create system copy
     mSysCopy = !dynamic && readback;
@@ -117,7 +117,7 @@ void GN::gfx::D3D10Buffer::d3dunlock()
     {
         if( LOCK_RO != mLockFlag )
         {
-            D3D10_BOX box = { mLockOffset, 0, 0, mLockOffset+mLockBytes, 0, 0 };
+            D3D10_BOX box = { mLockOffset, 0, 0, mLockOffset+mLockBytes, 1, 1 };
 
             // update d3d index buffer
             getDevice()->UpdateSubresource(
@@ -140,7 +140,7 @@ void GN::gfx::D3D10Buffer::d3dunlock()
             0 < mLockBytes &&
             (mLockOffset + mLockBytes) <= mBytes );
 
-        D3D10_BOX box = { mLockOffset, 0, 0, mLockOffset+mLockBytes, 0, 0 };
+        D3D10_BOX box = { mLockOffset, 0, 0, mLockOffset+mLockBytes, 1, 1 };
 
         // update d3d index buffer
         getDevice()->UpdateSubresource(
@@ -162,7 +162,7 @@ void GN::gfx::D3D10Buffer::d3dunlock()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::D3D10Buffer::createBuffer()
+bool GN::gfx::D3D10Buffer::createBuffer( UInt32 bindFlags )
 {
     GN_GUARD;
 
@@ -173,7 +173,7 @@ bool GN::gfx::D3D10Buffer::createBuffer()
     D3D10_BUFFER_DESC d3ddesc;
     d3ddesc.ByteWidth = mBytes;
     d3ddesc.Usage = mDynamic ? D3D10_USAGE_DYNAMIC : D3D10_USAGE_DEFAULT ;
-    d3ddesc.BindFlags = D3D10_BIND_INDEX_BUFFER;
+    d3ddesc.BindFlags = bindFlags;
     d3ddesc.CPUAccessFlags = mDynamic ? D3D10_CPU_ACCESS_WRITE : 0;
     d3ddesc.MiscFlags = 0;
 

@@ -20,7 +20,7 @@ bool GN::gfx::D3D10VtxBuf::init( const VtxBufDesc & desc )
     GN_GUARD;
 
     // standard init procedure
-    GN_STDCLASS_INIT( D3D10VtxBuf, (desc.bytes,desc.dynamic,desc.readback) );
+    GN_STDCLASS_INIT( D3D10VtxBuf, (desc.bytes,desc.dynamic,desc.readback,D3D10_BIND_VERTEX_BUFFER) );
 
     setDesc( desc );
 

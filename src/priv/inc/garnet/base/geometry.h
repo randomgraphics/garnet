@@ -1123,6 +1123,11 @@ namespace GN
         ///
         void print( StrA & ) const;
 
+        ///
+        /// print to string
+        ///
+        StrA print() const { StrA s; print(s); return s; }
+
         //@}
     };
 
