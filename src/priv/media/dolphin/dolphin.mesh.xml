@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="yes"?>
 <mesh
-	primType  = "TRIANGLE_LIST"
-	primCount = "564"
+	primtype  = "TRIANGLE_LIST"
+	numprim   = "564"
 	startvtx  = "0"
 	minvtxidx = "0"
 	numvtx    = "284"

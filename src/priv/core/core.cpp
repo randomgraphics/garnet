@@ -9,8 +9,9 @@ GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::ProfilerManager )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::gfx::Renderer )
 
-// implement static renderer data members
+// implement static data members
 GN_IMPLEMENT_RENDERER_STATIC_MEMBERS()
+GN_IMPLEMENT_INPUT_STATIC_MEMBERS()
 
 namespace GN
 {

@@ -53,6 +53,24 @@ GN::util::ArcBall::ArcBall( Handness h )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::util::ArcBall::connectToInput()
+{
+    GN::input::Input::sSigKeyPress.connect( this, &ArcBall::onKeyPress );
+    GN::input::Input::sSigAxisMove.connect( this, &ArcBall::onAxisMove );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::disconnectFromInput()
+{
+    GN::input::Input::sSigKeyPress.disconnect( this );
+    GN::input::Input::sSigAxisMove.disconnect( this );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::util::ArcBall::beginDrag( int x, int y )
 {
     mMoving = true;
@@ -98,4 +116,38 @@ void GN::util::ArcBall::onDrag( int x, int y )
 void GN::util::ArcBall::endDrag()
 {
     mMoving = false;
+}
+
+// *****************************************************************************
+// private methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
+{
+    if( input::KEY_MOUSEBTN_0 == key.code )
+    {
+        if( key.status.down )
+        {
+            int x, y;
+            gInput.getMousePosition( x, y );
+            onMouseButtonDown( x, y );
+        }
+        else
+        {
+            onMouseButtonUp();
+        }
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::onAxisMove( input::Axis, int )
+{
+    int x, y;
+    gInput.getMousePosition( x, y );
+    onMouseMove( x, y );
 }

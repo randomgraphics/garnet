@@ -18,21 +18,22 @@ static const char * vs_code =
 "struct vsi                                 \n"
 "{                                          \n"
 "    float4 pos : POSITION;                 \n"
-"    //float3 nml : NORMAL;                 \n"
-"    //float2 uv  : TEXCOORD0;              \n"
+"    float3 nml : NORMAL;                   \n"
+"    float2 uv  : TEXCOORD0;                \n"
 "};                                         \n"
 "struct vso                                 \n"
 "{                                          \n"
 "    float4 pos : POSITION;                 \n"
 "    float4 clr : COLOR0;                   \n"
+"    float2 uv  : TEXCOORD0;                \n"
 "};                                         \n"
 "vso main( vsi i )                          \n"
 "{                                          \n"
 "    vso o;                                 \n"
 "    o.pos = mul( gPvw, i.pos );            \n"
-"    //float3 n = 2*abs(i.nml) + i.nml;     \n"
-"    o.clr = 1;//float4( n/3.0, 1.0 );      \n"
-"    //o.uv = i.uv;                         \n"
+"    float3 n = 2*abs(i.nml) + i.nml;       \n"
+"    o.clr = float4( n/3.0, 1.0 );          \n"
+"    o.uv = i.uv;                           \n"
 "    return o;                              \n"
 "};";
 
@@ -50,9 +51,7 @@ static const char * ps_code =
 class MyApp : public SampleApp
 {
     AutoRef<Shader> vs, ps;
-
-    UInt32 mesh;
-
+    AutoRef<Mesh> mesh;
     Matrix44f world, view, proj;
     util::ArcBall arcball;
 
@@ -67,10 +66,11 @@ public:
     bool onAppInit()
     {
         world.identity();
-        view.translate( 0, 0, -3 );
+        view.translate( 0, 0, -4 );
         proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 1.0f, 100.0f );
         arcball.setHandness( util::ArcBall::RIGHT_HAND );
         arcball.setViewMatrix( view );
+        arcball.connectToInput();
 
         return true;
     }
@@ -78,7 +78,6 @@ public:
     bool onRendererCreate()
     {
         Renderer & r = gRenderer;
-        ResourceManager & rm = gSceneResMgr;
 
         // load shaders
         vs.attach( r.createVS( LANG_D3D_HLSL, vs_code ) );
@@ -86,8 +85,8 @@ public:
         if( !vs || !ps ) return false;
 
         // load cube mesh
-        mesh = rm.getResourceId( "media::mesh/cube.xml" );
-        if( 0 == mesh ) return false;
+        mesh.attach( new Mesh );
+        if( !generateCubeMesh( *mesh, 2 ) ) return false;
 
         // initial arcball window
         const DispDesc & dd = gRenderer.getDispDesc();
@@ -101,31 +100,7 @@ public:
     {
         vs.clear();
         ps.clear();
-    }
-
-    void onKeyPress( input::KeyEvent key )
-    {
-        GN::app::SampleApp::onKeyPress( key );
-        if( input::KEY_MOUSEBTN_0 == key.code )
-        {
-            if( key.status.down )
-            {
-                int x, y;
-                gInput.getMousePosition( x, y );
-                arcball.onMouseButtonDown( x, y );
-            }
-            else
-            {
-                arcball.onMouseButtonUp();
-            }
-        }
-    }
-
-    void onAxisMove( input::Axis, int )
-    {
-        int x, y;
-        gInput.getMousePosition( x, y );
-        arcball.onMouseMove( x, y );
+        mesh.clear();
     }
 
     void onUpdate()
@@ -138,14 +113,12 @@ public:
     void onRender()
     {
         Renderer & r = gRenderer;
-        ResourceManager & rm = gSceneResMgr;
 
-        r.clearScreen( Vector4f(1,0,0,1) );
+        r.clearScreen( Vector4f(0,0,0,1) );
 
         r.setShaders( vs, ps, 0 );
-        Mesh * m = rm.getResourceT<Mesh>( mesh );
-        m->updateContext( r );
-        m->draw( r );
+        mesh->updateContext( r );
+        mesh->draw( r );
     }
 };
 

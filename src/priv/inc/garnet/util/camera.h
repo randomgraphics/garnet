@@ -13,7 +13,7 @@ namespace GN { namespace util
     ///
     /// Arcball that normally used to rotate a 3D model.
     ///
-    class ArcBall
+    class ArcBall : public SlotBase
     {
         Quaternionf mQuat;
         Matrix44f   mRotation;
@@ -83,6 +83,9 @@ namespace GN { namespace util
         /// \name mouse action handler
         //@{
 
+        void connectToInput();
+        void disconnectFromInput();
+
         void beginDrag( int x, int y );
         void beginDrag( const Vector2i & pos ) { beginDrag( pos.x, pos.y ); }
         void endDrag();
@@ -93,6 +96,11 @@ namespace GN { namespace util
         void onMouseMove( int x, int y ) { onDrag( x, y ); }
 
         //@}
+
+    private:
+
+        void onKeyPress( input::KeyEvent );
+        void onAxisMove( input::Axis, int );
     };
 }}
 

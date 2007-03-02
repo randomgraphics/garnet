@@ -156,11 +156,11 @@ struct ManyManyQuads
     void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
     {
         GN_ASSERT( startQuad < QUAD_COUNT && (startQuad+numQuads) <= QUAD_COUNT );
-        UInt32 primCount = numQuads * 2;
+        UInt32 numprim = numQuads * 2;
         UInt32 startidx = startQuad * 6;
         Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            r.drawIndexed( PRIM_TYPE, primCount, 0, 0, VTX_COUNT, startidx );
+            r.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 };
 
