@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ceguiTexture.h"
+#include "garnet/GNscene.h"
 
 #ifdef HAS_CEGUI
 
@@ -71,15 +72,13 @@ bool CEGUI::GarnetTexture::reload()
 
     using namespace GN;
 
-    gfx::Renderer & r = gRenderer;
-
     if( mMemBuffer )
     {
         // dispose old texture
         dispose();
 
         // create the texture
-        AutoRef<gfx::Texture> tex( r.create2DTexture( mWidth, mHeight, 1, gfx::FMT_BGRA32 ) );
+        AutoRef<gfx::Texture> tex( gRenderer.create2DTexture( mWidth, mHeight, 1, gfx::FMT_BGRA32 ) );
         if( tex.empty() ) return false;
 
         // copy data from memory buffer
@@ -123,7 +122,7 @@ bool CEGUI::GarnetTexture::reload()
 
         // load texture
         MemFile<UInt8> mf( rdc.getDataPtr(), rdc.getSize(), mFileName.c_str() );
-        mGarnetTexture.attach( r.createTextureFromFile( mf ) );
+        mGarnetTexture.attach( scene::createTextureFromFile( mf ) );
         if( !mGarnetTexture ) return false;
 
         // update texture size
