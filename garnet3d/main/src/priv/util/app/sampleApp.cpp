@@ -307,17 +307,25 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-ld") ) getLogger( so.OptionArg() )->setEnabled( false );
             else if( 0 == strCmpI( a, "-ll") )
             {
-                char * name;
-                int    level;
-                char * leveltok;
-                name = ::strtok_s( so.OptionArg(), ":", &leveltok );
-                if ( name && str2SInt32( level, leveltok ) )
+                StrA   o( so.OptionArg() );
+                size_t k = o.findFirstOf( ":" );
+                if( StrA::NOT_FOUND == k )
                 {
-                    getLogger( name )->setLevel( level );
+                    GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
                 }
                 else
                 {
-                    GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
+                    StrA name( o.subString( 0, k ) );
+                    StrA leveltok( o.subString( k, 0 ) );
+                    int level;
+                    if( !name.empty() && str2SInt32( level, leveltok.cptr() ) )
+                    {
+                        getLogger( name.cptr() )->setLevel( level );
+                    }
+                    else
+                    {
+                        GN_ERROR(sLogger)( "Log level must be in format of 'name:level'" );
+                    }
                 }
             }
         }

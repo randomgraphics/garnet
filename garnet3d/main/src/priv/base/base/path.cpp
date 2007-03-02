@@ -286,7 +286,7 @@ void GN::getCurrentDir( StrA & result )
 void GN::getCurrentDrive( StrA & result )
 {
 #if GN_XENON
-    result = "";
+    result.clear();
 #elif GN_MSWIN
     char buf[MAX_PATH+1];
     char full[MAX_PATH+1];
@@ -295,7 +295,7 @@ void GN::getCurrentDrive( StrA & result )
     GN_ASSERT( ':' == full[1] );
     result.assign( full, 2 );
 #elif GN_POSIX
-    return "";
+    result.clear();
 #else
 #error Unknown platform!
 #endif

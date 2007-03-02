@@ -12,12 +12,12 @@ using namespace GN::scene;
 //
 // get string value of specific attribute
 // -----------------------------------------------------------------------------
-static const StrA & sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & default = StrA::EMPTYSTR )
+static const StrA & sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & defval = StrA::EMPTYSTR )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
     if ( !a )
     {
-        return default;
+        return defval;
     }
     else
     {

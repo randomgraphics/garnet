@@ -35,23 +35,23 @@ static Logger * sLogger = getLogger("GN.core.fs::FileSystem");
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeExist( const StrA & path )
+static bool sNativeIsDir( const StrA & path )
 {
-    if( isDir(path) ) return true;
-    FILE * fp = fopen( path.cptr(), "r" );
-    if( 0 == fp ) return false;
-    fclose( fp );
+    DIR * d = opendir( path.cptr() );
+    if( 0 == d ) return false;
+    closedir( d );
     return true;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sNativeIsDir( const StrA & path )
+static bool sNativeExist( const StrA & path )
 {
-    DIR * d = opendir( path.cptr() );
-    if( 0 == d ) return false;
-    closedir( d );
+    if( sNativeIsDir(path) ) return true;
+    FILE * fp = fopen( path.cptr(), "r" );
+    if( 0 == fp ) return false;
+    fclose( fp );
     return true;
 }
 
@@ -350,9 +350,9 @@ public:
         GN_MSW_CHECK( GetModuleFileNameA(0,buf,MAX_PATH) );
         mRootDir = parentPath( buf );
 #elif GN_POSIX
-        char linkName[MAX_PATH+1];
-        char realPath[MAX_PATH+1];
-        strPrintf( linkName, MAX_PATH, "/proc/%d/exe", getpid() );
+        char linkName[PATH_MAX+1];
+        char realPath[PATH_MAX+1];
+        strPrintf( linkName, PATH_MAX, "/proc/%d/exe", getpid() );
         if( 0 == realpath( linkName, realPath) )
         {
             GN_ERROR(sLogger)( "Fail to get real path of file '%s'.", linkName );

@@ -651,7 +651,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     mNeedRebindVtxBufs = 0;
     if( newFlags.vtxBufs )
     {
-        for( UINT i = 0; i < newContext.numVtxBufs; ++i )
+        for( UInt32 i = 0; i < newContext.numVtxBufs; ++i )
         {
             const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
             if( vb != mContext.vtxBufs[i] || forceRebind )
