@@ -6,7 +6,7 @@
 //! \author  chenli@@FAREAST (2007.1.16)
 // *****************************************************************************
 
-#include "GNinput.h"
+#include "garnet/GNinput.h"
 
 namespace GN { namespace util
 {

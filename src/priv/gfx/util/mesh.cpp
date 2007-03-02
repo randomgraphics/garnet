@@ -36,10 +36,10 @@ static bool sGetIntAttrib( const XmlElement & node, const char * attribName, T &
 //
 // get integer value of specific attribute
 // -----------------------------------------------------------------------------
-static bool sGetOptionalBoolAttrib( const XmlElement & node, const char * attribName, bool default )
+static bool sGetOptionalBoolAttrib( const XmlElement & node, const char * attribName, bool defval )
 {
     const XmlAttrib * a = node.findAttrib( attribName );
-    if( !a ) return default;
+    if( !a ) return defval;
 
     return 0 == strCmpI( "yes", a->name.cptr() )
         || 0 == strCmpI( "true", a->name.cptr() )

@@ -18,14 +18,14 @@ using namespace GN;
 // get integer value of specific attribute
 // -----------------------------------------------------------------------------
 template<typename T>
-static T sGetIntAttrib( const XmlElement & node, const char * attribName, T default )
+static T sGetIntAttrib( const XmlElement & node, const char * attribName, T defval )
 {
     T result;
     const XmlAttrib * a = node.findAttrib( attribName );
     if ( !a || !str2Int<T>( result, a->value.cptr() ) )
     {
         GN_TRACE(sLogger)( "attribute '%s' is missing!", attribName );
-        return default;
+        return defval;
     }
     else
     {
