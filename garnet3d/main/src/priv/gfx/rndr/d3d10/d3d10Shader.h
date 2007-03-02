@@ -148,6 +148,8 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
 
+            if( 0 == getNumUniforms() ) return;
+
             // apply all uniform
             UInt32 handle = getFirstUniform();
             while( handle )
@@ -188,12 +190,13 @@ namespace GN { namespace gfx
         };
         GN_CASSERT( sizeof(UniformUserData) == 4 );
 
-        const char *                 mProfile;
-        ID3D10Blob *                 mBinary;      ///< shader binary
-        ID3D10ShaderReflection *     mReflection;  ///< shader reflection
-        StackArray<ID3D10Buffer*,16> mConstBufs;   ///< constant buffers
+        const char *                            mProfile;
+        ID3D10Blob *                            mBinary;      ///< shader binary
+        ID3D10ShaderReflection *                mReflection;  ///< shader reflection
+        StackArray<ID3D10Buffer*,16>            mConstBufs;   ///< constant buffers
+        mutable StackArray<DynaArray<UInt8>,16> mConstCopies; ///< constant buffers
 
-        SetConstantBuffers          mSetConstantBuffers;
+        SetConstantBuffers         mSetConstantBuffers;
 
         // ********************************
         // private functions

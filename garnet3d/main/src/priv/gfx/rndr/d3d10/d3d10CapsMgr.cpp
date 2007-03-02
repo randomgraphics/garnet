@@ -167,6 +167,7 @@ bool GN::gfx::D3D10Renderer::supportShader( const StrA & profile )
     if( "vs_1_1" == profile ) return true;
     else if( "vs_2_0" == profile ) return true;
     else if( "vs_3_0" == profile ) return true;
+    else if( "vs_4_0" == profile ) return true;
 #if GN_XENON
     else if( "xvs" == profile ) return true;
 #endif
@@ -181,6 +182,7 @@ bool GN::gfx::D3D10Renderer::supportShader( const StrA & profile )
     else if( "ps_1_4" == profile ) return true;
     else if( "ps_2_0" == profile ) return true;
     else if( "ps_3_0" == profile ) return true;
+    else if( "ps_4_0" == profile ) return true;
 #if GN_XENON
     else if( "xps" == profile ) return true;
 #endif

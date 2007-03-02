@@ -9,20 +9,19 @@
 #include "garnet/GNbase.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNgfx.h"
+#include "garnet/GNscene.h"
+#include "garnet/GNinput.h"
 #include "garnet/GNapp.h"
 
-#if GN_XENON
-#include <xtl.h>
-#elif GN_MSWIN
+#if GN_MSWIN
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
 #endif
 
-#include <d3d9.h>
-#include <d3dx9.h>
-#include <dxerr9.h>
+#include <d3d10.h>
+#include <d3dx10.h>
 
 // *****************************************************************************
 //                           End of pch.h

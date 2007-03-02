@@ -42,6 +42,7 @@ void GN::gfx::D3D10ShaderHlsl::quit()
         mConstBufs[i]->Release();
     }
     mConstBufs.clear();
+    mConstCopies.clear();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -101,26 +102,21 @@ bool GN::gfx::D3D10ShaderHlsl::queryDeviceUniform( const char * name, HandleType
         GN_ASSERT( cb );
 
         ID3D10ShaderReflectionVariable * var = cb->GetVariableByName( name );
+        D3D10_SHADER_VARIABLE_DESC vardesc;
 
-        if( var )
-        {
-            D3D10_SHADER_VARIABLE_DESC vardesc;
+        if( !var || FAILED( var->GetDesc( &vardesc ) ) ) continue;
 
-            var->GetDesc( &vardesc );
+        // variable found!
+        GN_ASSERT( 0 == (vardesc.StartOffset % 4) );
+        GN_ASSERT( 0 == (vardesc.Size % 4) );
+        UniformUserData uud;
+        uud.bufidx   = i;
+        uud.offsetdw = vardesc.StartOffset / 4;
+        uud.sizedw   = vardesc.Size / 4;
+        userData = (HandleType)uud.u32;
 
-            GN_ASSERT( 0 == (vardesc.StartOffset % 4) );
-            GN_ASSERT( 0 == (vardesc.Size % 4) );
-
-            UniformUserData uud;
-            uud.bufidx   = i;
-            uud.offsetdw = vardesc.StartOffset / 4;
-            uud.sizedw   = vardesc.Size / 4;
-
-            userData = (HandleType)uud.u32;
-
-            // success
-            return true;
-        }
+        // success
+        return true;
     }
 
     // variable not found
@@ -197,20 +193,32 @@ void GN::gfx::D3D10ShaderHlsl::applyUniform( const Uniform & u ) const
 
     if( 0 == src ) return;
 
-    // copy data to constant buffer
-
     GN_ASSERT( uud.bufidx < mConstBufs.size() );
     ID3D10Buffer * cb = mConstBufs[uud.bufidx];
+    DynaArray<UInt8> & syscopy = mConstCopies[uud.bufidx];
+
+    // copy data to system copy
+    memcpy( &syscopy[uud.offsetdw*4], src, uud.sizedw * 4 );
+
+    /* then copy to D3D constant buffer
+    getDevice()->UpdateSubresource(
+        cb,
+        0, // sub resource
+        0, // box
+        syscopy.cptr(),
+        0,   // row pitch
+        0 ); // slice pitch
+
+    /*/
     UInt32 * data;
-    if( FAILED( cb->Map( D3D10_MAP_WRITE, 0, (void**)&data ) ) )
+    if( FAILED( cb->Map( D3D10_MAP_WRITE_DISCARD, 0, (void**)&data ) ) )
     {
         GN_ERROR(sLogger)( "fail to map constant buffer." );
         return;
     }
-
-    memcpy( data + uud.offsetdw, src, uud.sizedw * 4 );
-
+    memcpy( data, syscopy.cptr(), syscopy.size() );
     cb->Unmap();
+    //*/
 
     GN_UNGUARD_SLOW;
 }
@@ -230,8 +238,8 @@ bool GN::gfx::D3D10ShaderHlsl::compileShader( const StrA & code, const StrA & hi
     ch.fromStr( hints );
 
     // determine compile flags
-    DWORD flags = D3DXSHADER_PACKMATRIX_ROWMAJOR;
-    if( !ch.optimize ) flags |= D3DXSHADER_SKIPOPTIMIZATION;
+    DWORD flags = D3D10_SHADER_PACK_MATRIX_ROW_MAJOR | D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY;
+    if( !ch.optimize ) flags |= D3D10_SHADER_SKIP_OPTIMIZATION;
 
     // compile shader
     AutoComPtr<ID3D10Blob> err;
@@ -277,6 +285,7 @@ bool GN::gfx::D3D10ShaderHlsl::compileShader( const StrA & code, const StrA & hi
 
     // create constant buffers
     ID3D10Device * dev = getRenderer().getDevice();
+    GN_ASSERT( desc.ConstantBuffers <= 16 );
     for( UInt32 i = 0; i < desc.ConstantBuffers; ++i )
     {
         ID3D10ShaderReflectionConstantBuffer * cb = mReflection->GetConstantBufferByIndex( i );
@@ -294,18 +303,20 @@ bool GN::gfx::D3D10ShaderHlsl::compileShader( const StrA & code, const StrA & hi
         bufdesc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
         bufdesc.MiscFlags = 0;
         GN_DX10_CHECK_RV( dev->CreateBuffer( &bufdesc, NULL, &buf ), false );
-
         mConstBufs.append( buf );
+
+        mConstCopies.resize( mConstCopies.size() + 1 );
+        mConstCopies.back().resize( cbdesc.Size );
     }
 
-    // update userdata of all uniforms
+    /* update userdata of all uniforms
     UInt32 handle = getFirstUniform();
     while( handle )
     {
         Uniform & u = getUniform( handle );
         if( !queryDeviceUniform( u.name.cptr(), u.userData ) ) return false;
         handle = getNextUniform( handle );
-    }
+    }*/
 
     // success
     return true;

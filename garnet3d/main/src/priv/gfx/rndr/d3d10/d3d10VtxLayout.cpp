@@ -124,12 +124,21 @@ sVtxFmt2InputLayout(
 
         // set attrib format
         elem.Format = d3d10::clrFmt2DxgiFormat( va.format );
+        if( DXGI_FORMAT_UNKNOWN == elem.Format )
+        {
+            GN_ERROR(sLogger)( "Unknown element format: %s", clrFmt2Str(va.format) );
+            return false;
+        }
 
         // set stream index
         elem.InputSlot = va.stream;
 
         // set attrib offset
         elem.AlignedByteOffset = va.offset;
+
+        // instancing attributes
+        elem.InputSlotClass = D3D10_INPUT_PER_VERTEX_DATA;
+        elem.InstanceDataStepRate = 0;
 
         // add to element array
         elements.push_back( elem );
@@ -165,7 +174,7 @@ sVtxFmt2ShaderBinary( const GN::gfx::VtxFmtDesc & vtxfmt )
         code += strFormat( "    float4 attr%d : %s%d;\n", i, desc->name, desc->index );
     }
 
-    code += "}; float4 main( VS_INPUT in ) : POSITION { return float(0,0,0,1); }";
+    code += "}; float4 main( VS_INPUT nouse ) : POSITION { return float4(0,0,0,1); }";
 
     // compile shader
     AutoComPtr<ID3D10Blob> bin, err;

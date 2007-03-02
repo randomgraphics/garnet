@@ -65,7 +65,7 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
 }
 
 // *****************************************************************************
-// public functions
+// public methods
 // *****************************************************************************
 
 /*
@@ -335,6 +335,31 @@ bool GN::gfx::Mesh::loadFromXmlFile( File & fp, const StrA & meshdir, Renderer &
     }
 
     return loadFromXml( xpr.root, meshdir, r );
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// global functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::generateCubeMesh( Mesh & mesh, float edgeLength, bool texcoord, bool normal )
+{
+    GN_GUARD;
+
+    // clear to empty
+    mesh.clear();
+
+    // create vertex format 
+    GN_UNUSED_PARAM( edgeLength );
+    GN_UNUSED_PARAM( texcoord );
+    GN_UNUSED_PARAM( normal );
+
+    // success
+    return true;
 
     GN_UNGUARD;
 }

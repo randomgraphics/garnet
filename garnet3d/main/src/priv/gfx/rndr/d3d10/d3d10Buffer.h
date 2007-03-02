@@ -34,7 +34,7 @@ namespace GN { namespace gfx
 
         //@{
     public:
-        bool init( UInt32 bytes, bool dynamic, bool readback );
+        bool init( UInt32 bytes, bool dynamic, bool readback, UInt32 bindFlags );
         void quit();
     private:
         void clear()
@@ -78,7 +78,7 @@ namespace GN { namespace gfx
         // ********************************
     private:
 
-        bool createBuffer();
+        bool createBuffer( UInt32 bindFlags );
     };
 
     ///

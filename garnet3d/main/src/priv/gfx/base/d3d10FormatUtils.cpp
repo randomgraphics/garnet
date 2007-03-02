@@ -212,6 +212,9 @@ DXGI_FORMAT GN::gfx::d3d10::clrFmt2DxgiFormat( ClrFmt clrfmt )
         // 128 bits
         case FMT_RGBA_32_32_32_32_FLOAT : dxgifmt = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
 
+        // 96 bits
+        case FMT_RGB_32_32_32_FLOAT     : dxgifmt = DXGI_FORMAT_R32G32B32_FLOAT; break;
+
         // 64 bits
         case FMT_RGBA_16_16_16_16_FLOAT : dxgifmt = DXGI_FORMAT_R16G16B16A16_FLOAT; break;
         case FMT_RGBA_16_16_16_16_UNORM : dxgifmt = DXGI_FORMAT_R16G16B16A16_UNORM; break;

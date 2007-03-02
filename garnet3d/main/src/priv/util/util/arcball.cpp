@@ -88,6 +88,8 @@ void GN::util::ArcBall::onDrag( int x, int y )
     Matrix33f m33;
     mQuat.toMatrix33( m33 );
     mRotation.set( m33 );
+
+    GN_TRACE(sLogger)( "\n%s", m33.print().cptr() );
 }
 
 //
