@@ -112,6 +112,7 @@ public:
         arcball.setViewMatrix( view );
         const DispDesc & dd = gRenderer.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
+        arcball.connectToInput();
 
         // success
         return true;
@@ -121,30 +122,6 @@ public:
     {
         ps1.clear();
 		ps2.clear();
-    }
-
-    void onKeyPress( input::KeyEvent key )
-    {
-        if( input::KEY_MOUSEBTN_0 == key.code )
-        {
-            if( key.status.down )
-            {
-                int x, y;
-                gInput.getMousePosition( x, y );
-                arcball.onMouseButtonDown( x, y );
-            }
-            else
-            {
-                arcball.onMouseButtonUp();
-            }
-        }
-    }
-
-    void onAxisMove( input::Axis, int )
-    {
-        int x, y;
-        gInput.getMousePosition( x, y );
-        arcball.onMouseMove( x, y );
     }
 
     void update()
@@ -256,17 +233,6 @@ public:
     void onRendererDestroy()
     {
         safeDelete(mScene);
-    }
-
-    void onKeyPress( input::KeyEvent ke )
-    {
-        SampleApp::onKeyPress( ke );
-        mScene->onKeyPress( ke );
-    }
-
-    void onAxisMove( input::Axis a, int d )
-    {
-        mScene->onAxisMove( a, d );
     }
 
     void onUpdate()
