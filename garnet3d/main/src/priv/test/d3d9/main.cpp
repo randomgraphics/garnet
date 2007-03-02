@@ -79,6 +79,7 @@ public:
         arcball.setHandness( util::ArcBall::LEFT_HAND );
         arcball.setViewMatrix( view );
 #endif
+        arcball.connectToInput();
 
         return true;
     }
@@ -157,31 +158,6 @@ public:
         decl.clear();
         vs.clear();
         ps.clear();
-    }
-
-    void onKeyPress( input::KeyEvent key )
-    {
-        GN::app::SampleApp::onKeyPress( key );
-        if( input::KEY_MOUSEBTN_0 == key.code )
-        {
-            if( key.status.down )
-            {
-                int x, y;
-                gInput.getMousePosition( x, y );
-                arcball.onMouseButtonDown( x, y );
-            }
-            else
-            {
-                arcball.onMouseButtonUp();
-            }
-        }
-    }
-
-    void onAxisMove( input::Axis, int )
-    {
-        int x, y;
-        gInput.getMousePosition( x, y );
-        arcball.onMouseMove( x, y );
     }
 
     void onUpdate()
