@@ -642,12 +642,6 @@ namespace GN { namespace gfx
         createTexture( const TextureDesc & desc ) = 0;
 
         ///
-        /// Load texture from file
-        ///
-        virtual Texture *
-        createTextureFromFile( File & file ) = 0;
-
-        ///
         /// Create new texture, with individual creation parameters.
         ///
         Texture *

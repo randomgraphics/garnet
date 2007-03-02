@@ -120,10 +120,6 @@ namespace GN { namespace gfx
 
         //@{
 
-    public :
-
-        virtual Texture * createTextureFromFile( File & );
-
     private:
 
         bool resInit() { return true; }

@@ -213,13 +213,6 @@ namespace GN { namespace gfx
             if( !tex->init( desc ) ) return 0;
             return tex.detach();
         }
-        virtual Texture * createTextureFromFile( File & )
-        {
-            TextureDesc desc = { TEXTYPE_2D, 256, 256, 1, 1, 1, FMT_D3DCOLOR, 0 };
-            AutoRef<FakeTexture> tex( new FakeTexture );
-            if( !tex->init( desc ) ) return 0;
-            return tex.detach();
-        }
         virtual UInt32 createVtxFmt( const VtxFmtDesc & ) { return 1; }
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc ) { return new FakeVtxBuf( desc.bytes ); }
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc ) { return new FakeIdxBuf( desc.numidx ); }

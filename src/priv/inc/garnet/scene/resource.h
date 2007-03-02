@@ -138,6 +138,11 @@ namespace GN { namespace scene
     /// add files under specific directory into resource manager.
     ///
     void addResourceDirectory( const StrA & path, bool recursive = true );
+
+    ///
+    /// load texture from file stream
+    ///
+    gfx::Texture * createTextureFromFile( File & );
 }}
 
 #include "resource.inl"
