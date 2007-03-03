@@ -12,7 +12,7 @@ namespace GN { namespace gfx
 
     enum
     {
-        MAX_RENDER_TARGETS = 4 ///< We support 4 render targets at most.
+        MAX_RENDER_TARGETS = 8 ///< We support 8 render targets at most.
     };
 
     ///
@@ -34,9 +34,9 @@ namespace GN { namespace gfx
     struct RenderTargetTexture
     {
         const Texture * texture; ///< render target texture
-        size_t          face;    ///< cubemap face. Must be zero for non-cube/stack texture.
-        size_t          level;   ///< mipmap level
-        size_t          slice;   ///< slice index. Must be zero for non 3D texture.
+        unsigned int face  : 14; ///< cubemap face. Must be zero for non-cube/stack texture.
+        unsigned int slice : 14; ///< slice index. Must be zero for non 3D texture.
+        unsigned int level :  4; ///< mipmap level
 
         ///
         /// equality check
@@ -64,10 +64,10 @@ namespace GN { namespace gfx
     ///
     struct RenderTargetDesc
     {
-        unsigned int count :  5; ///< color buffer count. 0 means draw to back buffer.
-        unsigned int aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
         RenderTargetTexture cbuffers[MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
         RenderTargetTexture zbuffer; ///< z buffer description. Set zbuffer.texture to NULL to use auto-zbuffer.
+        unsigned int count :  5; ///< color buffer count. 0 means draw to back buffer.
+        unsigned int aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
 
         ///
         /// set color buffer
@@ -246,17 +246,15 @@ namespace GN { namespace gfx
         Rectf                 viewport; ///< Viewport. Note that viewport is relative to current render target size.
                                         ///< For example, viewport [0,0,1,1] means the whole render target.
 
-        // fixed functional vertex pipeline states
-        Matrix44f             world, ///< world transformation
-                              view, ///< view transformation
-                              proj; ///< projection transformation
-        Vector4f              light0Pos, ///< light0 position
-                              light0Diffuse, ///< light0 diffuse color
-                              materialDiffuse, ///< diffuse material color
+        // fixed functional pipeline states
+        Matrix44f             world,            ///< world transformation
+                              view,             ///< view transformation
+                              proj;             ///< projection transformation
+        Vector4f              light0Pos,        ///< light0 position
+                              light0Diffuse,    ///< light0 diffuse color
+                              materialDiffuse,  ///< diffuse material color
                               materialSpecular; ///< specular material color
-
-        // fixed functional pixel pipeline states
-        TextureStateBlockDesc tsb; ///< texture state block
+        TextureStateBlockDesc tsb;              ///< texture state block
 
         // graphics resources
         const Texture *       textures[MAX_TEXTURE_STAGES]; ///< texture list

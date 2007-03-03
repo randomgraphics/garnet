@@ -79,8 +79,10 @@ public:
         Texture * rt = rm.getResourceT<Texture>( cubemap );
         for( int i = 0; i < 6; ++i )
         {
+            r.contextUpdateBegin();
             r.setTexture( 0, rm.getResourceT<Texture>( faces[i] ) );
             r.setDrawToTextureWithoutDepth( rt, 0, i );
+            r.contextUpdateEnd();
             r.draw2DTexturedQuad( 0 );
         }
 
