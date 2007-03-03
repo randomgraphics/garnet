@@ -200,7 +200,7 @@ bool GN::gfx::D3D10Renderer::supportShader( const StrA & profile )
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D10Renderer::supportTextureFormat(
-    TexType type, BitFields usage, ClrFmt format ) const
+    TexDim type, BitFields usage, ClrFmt format ) const
 {
     DXGI_FORMAT d3dfmt = d3d10::clrFmt2DxgiFormat( format );
     if( DXGI_FORMAT_UNKNOWN == d3dfmt ) return false;

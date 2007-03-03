@@ -29,9 +29,9 @@ class InputTest
         if( !mInput || !mInput->attachToWindow( 0, mWin->getWindowHandle() ) ) return false;
 
         // connect to input signals
-        mInput->sigKeyPress.connect( this, &InputTest::onKeyPress );
-        mInput->sigCharPress.connect( this, &InputTest::onCharPress );
-        mInput->sigAxisMove.connect( this, &InputTest::onAxisMove );
+        GN::input::Input::sSigKeyPress.connect( this, &InputTest::onKeyPress );
+        GN::input::Input::sSigCharPress.connect( this, &InputTest::onCharPress );
+        GN::input::Input::sSigAxisMove.connect( this, &InputTest::onAxisMove );
 
         return true;
     }

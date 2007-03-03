@@ -290,7 +290,7 @@ bool GN::gfx::OGLRenderer::supportShader( const StrA & profile )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::OGLRenderer::supportTextureFormat( TexType, BitFields, ClrFmt ) const
+bool GN::gfx::OGLRenderer::supportTextureFormat( TexDim, BitFields, ClrFmt ) const
 {
     GN_UNIMPL_WARNING();
     return true;

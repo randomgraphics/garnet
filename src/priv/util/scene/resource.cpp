@@ -14,22 +14,6 @@ GN::Logger * GN::scene::ResourceManager::sLogger = GN::getLogger("GN.scene.Resou
 //
 //
 // -----------------------------------------------------------------------------
-static bool sIsTexture( const StrA & name )
-{
-    StrA ext;
-    GN::extName( ext, name );
-    ext.toUpper();
-
-    return ".BMP" == ext
-        || ".DDS" == ext
-        || ".JPG" == ext
-        || ".PNG" == ext
-        || ".TGA" == ext;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static bool sIsXml( const StrA & name, const StrA & root )
 {
     if( !fs::isFile( name ) ) return false;
@@ -45,6 +29,24 @@ static bool sIsXml( const StrA & name, const StrA & root )
     XmlElement * e = xpr.root->toElement();
 
     return e && root == e->name;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sIsTexture( const StrA & name )
+{
+    if( sIsXml( name, "texture" ) ) return true;
+
+    StrA ext;
+    GN::extName( ext, name );
+    ext.toUpper();
+
+    return ".BMP" == ext
+        || ".DDS" == ext
+        || ".JPG" == ext
+        || ".PNG" == ext
+        || ".TGA" == ext;
 }
 
 //
@@ -67,11 +69,145 @@ static const StrA & sGetResourceType( const StrA & name )
 // *****************************************************************************
 
 //
+// get integer value of specific attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static bool sGetIntAttrib( const XmlElement & node, const char * attribName, T & result, bool silence = false )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if ( !a || !str2Int<T>( result, a->value.cptr() ) )
+    {
+        if( !silence ) GN_ERROR(sLogger)( "attribute '%s' is missing!", attribName );
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+//
+// get string value of specific attribute
+// -----------------------------------------------------------------------------
+static bool sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & result, bool silence = false )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if ( !a )
+    {
+        if( !silence ) GN_ERROR(sLogger)( "attribute '%s' is missing!", attribName );
+        return false;
+    }
+    else
+    {
+        result = a->value;
+        return true;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sParseTexDescFromXml(
+    gfx::TextureDesc & desc, File & fp, const StrA & /*dirname*/ )
+{
+    GN_GUARD;
+
+    XmlDocument doc;
+    XmlParseResult xpr;
+    if( !doc.parse( xpr, fp ) )
+    {
+        GN_ERROR(sLogger)(
+            "Fail to read XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            fp.name().cptr(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
+        return false;
+    }
+
+    // check root node
+    if( 0 == xpr.root )
+    {
+        GN_ERROR(sLogger)( "NULL parameter!" );
+        return false;
+    }
+    const XmlElement * e = xpr.root->toElement();
+    if( 0 == e || "texture" != e->name )
+    {
+        GN_ERROR(sLogger)( "root node must be \"<texture>\"." );
+        return false;
+    }
+
+    StrA s;
+
+    // get texture dimension
+    if( !sGetStringAttrib( *e, "dim", s ) ) return false;
+    if( !str2TexDim( desc.dim, s.cptr() ) )
+    {
+        GN_ERROR(sLogger)( "invalid texture dimension: %s", s.cptr() );
+        return false;
+    }
+
+    // get texture size
+    if( !sGetIntAttrib( *e, "faces" , desc.faces  ) ) return false;
+    if( !sGetIntAttrib( *e, "width" , desc.width  ) ) return false;
+    if( !sGetIntAttrib( *e, "height", desc.height ) ) return false;
+    if( !sGetIntAttrib( *e, "depth" , desc.depth  ) ) return false;
+    if( !sGetIntAttrib( *e, "levels", desc.levels ) ) return false;
+
+    // get texture format, optional, default is FMT_DEFAULT
+    if( sGetStringAttrib( *e, "format", s, true ) )
+    {
+        if( !str2ClrFmt( desc.format, s ) )
+        {
+            GN_ERROR(sLogger)( "invalid texture format: %s", s.cptr() );
+            return false;
+        }
+    }
+    else
+    {
+        desc.format = FMT_DEFAULT;
+    }
+
+    // get texture usage (optional, default is zero)
+    if( !sGetIntAttrib( *e, "usage", desc.usage, true ) ) desc.usage = 0;
+
+    // tiled or not
+    desc.tiled = (TEXUSAGE_RENDER_TARGET & desc.usage) ||
+                 (TEXUSAGE_DEPTH & desc.usage);
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+static gfx::Texture * sCreateTextureFromXml( File & fp, const StrA & dirname )
+{
+    GN_GUARD;
+
+    gfx::TextureDesc desc;
+    if( !sParseTexDescFromXml( desc, fp, dirname ) ) return false;
+    return gRenderer.createTexture( desc );
+
+    GN_UNGUARD;
+}
+
+//
 //
 // -----------------------------------------------------------------------------
 static GN::scene::BaseResource * sCreateTexture( const StrA & name )
 {
     GN_GUARD;
+
+    using namespace GN;
 
     // check for global renderer
     if( 0 == gRendererPtr )
@@ -94,16 +230,33 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
     }
     else
     {
-        // open file
-        AutoObjPtr<File> fp( fs::openFile( name, "rb" ) );
-        if( !fp )
+        StrA ext = extName(name);
+        if( 0 == strCmpI( ".xml", ext.cptr() ) )
         {
-            GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
-            return 0;
-        }
+            // open file
+            AutoObjPtr<File> fp( fs::openFile( name, "rt" ) );
+            if( !fp )
+            {
+                GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
+                return 0;
+            }
 
-        // create texture instance
-        result = createTextureFromFile( *fp );
+            // parse texture definition
+            result = sCreateTextureFromXml( *fp, dirName(name) );
+        }
+        else
+        {
+            // open texture file
+            AutoObjPtr<File> fp( fs::openFile( name, "rb" ) );
+            if( !fp )
+            {
+                GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
+                return 0;
+            }
+
+            // create texture instance
+            result = createTextureFromFile( *fp, 0 );
+        }
     }
 
 #if !GN_RETAIL_BUILD
@@ -555,7 +708,7 @@ void GN::scene::addResourceDirectory( const StrA & path, bool recursive )
 //
 // -----------------------------------------------------------------------------
 GN::gfx::Texture *
-GN::scene::createTextureFromFile( File & file )
+GN::scene::createTextureFromFile( File & file, BitFields usage )
 {
     GN_GUARD_ALWAYS;
 
@@ -575,29 +728,29 @@ GN::scene::createTextureFromFile( File & file )
     UInt32 h = desc.mipmaps[0].height;
     UInt32 d = desc.mipmaps[0].depth;
 
-    // determine texture type, based on image demension
-    TexType type;
+    // determine texture dimension, based on image demension
+    TexDim dim;
     if( 1 == desc.numFaces )
     {
-        type = 1 == d ? TEXTYPE_2D : TEXTYPE_3D;
+        dim = 1 == d ? TEXDIM_2D : TEXDIM_3D;
     }
     else if( 6 == desc.numFaces && w == h && 1 == d )
     {
-        type = TEXTYPE_CUBE;
+        dim = TEXDIM_CUBE;
     }
     else if( 1 == d )
     {
         GN_ASSERT( desc.numFaces > 1 );
-        type = TEXTYPE_STACK;
+        dim = TEXDIM_STACK;
     }
     else
     {
-        GN_ERROR(sLogger)( "Can't determine texture type for image: face(%d), width(%d), height(%d), depth:%d)." );
+        GN_ERROR(sLogger)( "Can't determine texture dimension for image: face(%d), width(%d), height(%d), depth:%d)." );
         return 0;
     }
 
     // create texture instance
-    AutoRef<Texture> p( gRenderer.createTexture(type,w,h,d,desc.numFaces,desc.numLevels,desc.format,0 ) );
+    AutoRef<Texture> p( gRenderer.createTexture(dim,w,h,d,desc.numFaces,desc.numLevels,desc.format, usage ) );
     if( !p ) return 0;
 
 #define ASSERT_RANGE( x, l, s, e ) GN_ASSERT( (s) <= (x) && ((x)+(l)) <= ((s)+(e)) )

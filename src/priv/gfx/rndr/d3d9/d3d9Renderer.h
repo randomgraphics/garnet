@@ -197,7 +197,7 @@ namespace GN { namespace gfx
     public :
 
         virtual bool supportShader( const StrA & );
-        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const;
+        virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const;
 
         ///
         /// define API dependent caps

@@ -24,7 +24,7 @@ static bool sGetIntAttrib( const XmlElement & node, const char * attribName, T &
     const XmlAttrib * a = node.findAttrib( attribName );
     if ( !a || !str2Int<T>( result, a->value.cptr() ) )
     {
-        sPostError( node, strFormat( "attribute '%s' is missing!" ) );
+        sPostError( node, strFormat( "attribute '%s' is missing!", attribName ) );
         return false;
     }
     else
@@ -54,7 +54,7 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
     const XmlAttrib * a = node.findAttrib( attribName );
     if ( !a )
     {
-        if( !silence ) sPostError( node, strFormat( "attribute '%s' is missing!" ) );
+        if( !silence ) sPostError( node, strFormat( "attribute '%s' is missing!", attribName ) );
         return false;
     }
     else

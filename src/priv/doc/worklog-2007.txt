@@ -1,3 +1,8 @@
+- 2007.3.3
+  - now support create texture from xml file
+  - rename TEXTYPE_XXX to TEXDIM_XXX
+  - implement sample: renderToCube
+
 - 2007.3.2
   - now d3d10 renderer is kind of usable: can render geometry, but no texture 
     yet.

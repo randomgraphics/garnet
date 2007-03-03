@@ -111,7 +111,7 @@ namespace GN { namespace gfx
             };
         }
         virtual bool supportShader( const StrA & ) { return true; }
-        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const { return true; }
+        virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const { return true; }
 
         //@}
 

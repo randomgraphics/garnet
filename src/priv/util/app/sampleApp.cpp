@@ -316,7 +316,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                 else
                 {
                     StrA name( o.subString( 0, k ) );
-                    StrA leveltok( o.subString( k, 0 ) );
+                    StrA leveltok( o.subString( k+1, 0 ) );
                     int level;
                     if( !name.empty() && str2SInt32( level, leveltok.cptr() ) )
                     {

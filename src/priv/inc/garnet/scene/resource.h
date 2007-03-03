@@ -142,7 +142,7 @@ namespace GN { namespace scene
     ///
     /// load texture from file stream
     ///
-    gfx::Texture * createTextureFromFile( File & );
+    gfx::Texture * createTextureFromFile( File & fp, BitFields usage = 0 );
 }}
 
 #include "resource.inl"

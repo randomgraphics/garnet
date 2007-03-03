@@ -76,8 +76,8 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( index < MAX_RENDER_TARGETS );
             cbuffers[index].texture = tex;
-            cbuffers[index].face = level;
-            cbuffers[index].level = face;
+            cbuffers[index].face = face;
+            cbuffers[index].level = level;
             cbuffers[index].slice = slice;
         }
 

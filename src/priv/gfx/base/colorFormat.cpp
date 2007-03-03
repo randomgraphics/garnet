@@ -132,15 +132,23 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::generateClrFmtDescTable()
 //
 //
 // -----------------------------------------------------------------------------
-GN::gfx::ClrFmt GN::gfx::str2ClrFmt( const StrA & s )
+bool GN::gfx::str2ClrFmt( ClrFmt & fmt, const StrA & s )
 {
     for( size_t i = 0; i <= NUM_CLRFMTS; ++i )
     {
-        if( getClrFmtDesc( (ClrFmt)i ).name == s ) return (ClrFmt) i;
+        if( getClrFmtDesc( (ClrFmt)i ).name == s )
+        {
+            fmt = (ClrFmt)i;
+            return true;
+        }
     }
 
     // handle format alias
-#define CHECK_ALIAS( X ) if( #X == s ) return X;
+#define CHECK_ALIAS( X ) if( #X == s ) { fmt = X; return true; }
+
+    CHECK_ALIAS( FMT_UNKNOWN );
+    CHECK_ALIAS( FMT_DEFAULT );
+    CHECK_ALIAS( FMT_DONTCARE );
 
     CHECK_ALIAS( FMT_RGBA32 );
     CHECK_ALIAS( FMT_BGRA32 );
@@ -223,5 +231,6 @@ GN::gfx::ClrFmt GN::gfx::str2ClrFmt( const StrA & s )
 
 #undef CHECK_ALIAS
 
-    return FMT_INVALID;
+    // failed
+    return false;
 }
