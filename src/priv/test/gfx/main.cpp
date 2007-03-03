@@ -18,7 +18,7 @@ class Scene
 
     UInt32 eff0;
 
-    Drawable box;
+    Drawable box, quad;
 
     Matrix44f world, view, proj;
 
@@ -94,6 +94,9 @@ public:
         // load box
         if( !box.loadFromXmlFile( "media::drawable/cube1.xml" ) ) return false;
 
+        // load quad
+        if( !quad.loadFromXmlFile( "media::drawable/screen_aligned_textured_quad.xml" ) ) return false;
+
         // load texture
         tex0 = rm.getResourceId( "media::texture/rabit.png" );
         if( 0 == tex0 ) return false;
@@ -151,8 +154,11 @@ public:
         scene::ResourceManager & rm = gSceneResMgr;
 
         // quad 1
-        r.setTexture( 0, rm.getResourceT<Texture>(tex0) );
-        r.draw2DTexturedQuad( DQ_UPDATE_DEPTH, 0, 0, 0, 0.5, 0.5 );
+        //r.setTexture( 0, rm.getResourceT<Texture>(tex0) );
+        //r.draw2DTexturedQuad( DQ_UPDATE_DEPTH, 0, 0, 0, 0.5, 0.5 );
+        quad.textures["tex"].texid = tex0;
+        quad.uniforms["rect"].value.setV( Vector4f(0, 0, 0.5f, 0.5f) );
+        quad.draw();
 
         // quad 2
         if( ps1 )
