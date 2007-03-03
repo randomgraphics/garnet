@@ -3,4 +3,5 @@
 	<effect ref="media::/effect/cube.xml"/>
 	<mesh ref="../mesh/cube.xml"/>
 	<uniform binding="pvw"/>
+	<texture binding="cube" ref="../texture/cube1.dds"/>
 </drawable>

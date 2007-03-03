@@ -558,16 +558,39 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     for( size_t i = 0; i < getDesc().levels; ++i )
     {
         GLint sx, sy, sz;
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
-        GN_OGL_CHECK( glGetTexLevelParameteriv(
-            GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_HEIGHT, &sy ) );
-        if( TEXTYPE_3D == getDesc().type )
+        switch( getDesc().type )
         {
-            GN_OGL_CHECK( glGetTexLevelParameteriv(
-                GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_DEPTH_EXT, &sz ) );
+            case TEXTYPE_1D :
+            case TEXTYPE_2D :
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_HEIGHT, &sy ) );
+                sz = 1;
+                break;
+
+            case TEXTYPE_3D :
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_HEIGHT, &sy ) );
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_DEPTH_EXT, &sz ) );
+                break;
+
+            case TEXTYPE_CUBE :
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
+                GN_OGL_CHECK( glGetTexLevelParameteriv(
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, (GLint)i, GL_TEXTURE_HEIGHT, &sy ) );
+                sz = 1;
+                break;
+
+            default:
+                GN_UNEXPECTED();
+                return failure();
         }
-        else sz = 1;
+
         setMipSize( i, sx, sy, sz );
     }
 

@@ -619,7 +619,7 @@ GN::scene::createTextureFromFile( File & file )
             m.slicePitch <= tlr.sliceBytes &&
             m.rowPitch <= tlr.rowBytes );
 
-        const UInt8 * mipData = &buf[0] + desc.getSliceOffset( f, l, 0 );
+        const UInt8 * mipData = &buf[0] + desc.getLevelOffset( f, l );
 
         if( m.slicePitch == tlr.sliceBytes )
         {

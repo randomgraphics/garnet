@@ -315,37 +315,39 @@ bool DDSReader::readHeader(
 
     // grok mipmaps
     mImgDesc.setFaceAndLevel( faces, levels );
-    for( size_t f = 0; f < mImgDesc.numFaces; ++f )
     for( size_t l = 0; l < mImgDesc.numLevels; ++l )
     {
-        GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
-
-        m.width = width;
-        m.height = height;
-        m.depth = depth;
-
-        switch( mImgDesc.format )
+        for( size_t f = 0; f < mImgDesc.numFaces; ++f )
         {
-            case GN::gfx::FMT_DXT1:
-                m.rowPitch = ((m.width + 3) >> 2) * 2;
-                m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
-                break;
+            GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
 
-		    case GN::gfx::FMT_DXT2:
-		    case GN::gfx::FMT_DXT3:
-            case GN::gfx::FMT_DXT4:
-		    case GN::gfx::FMT_DXT5:
-                m.rowPitch = ((m.width + 3) >> 2) * 4;
-                m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
-                break;
+            m.width = width;
+            m.height = height;
+            m.depth = depth;
 
-            default:
-                m.rowPitch = bits * m.width / 8;
-                m.slicePitch = m.rowPitch * m.height;
-                break;
+            switch( mImgDesc.format )
+            {
+                case GN::gfx::FMT_DXT1:
+                    m.rowPitch = ((m.width + 3) >> 2) * 2;
+                    m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
+                    break;
+
+    		    case GN::gfx::FMT_DXT2:
+    		    case GN::gfx::FMT_DXT3:
+                case GN::gfx::FMT_DXT4:
+    		    case GN::gfx::FMT_DXT5:
+                    m.rowPitch = ((m.width + 3) >> 2) * 4;
+                    m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
+                    break;
+
+                default:
+                    m.rowPitch = bits * m.width / 8;
+                    m.slicePitch = m.rowPitch * m.height;
+                    break;
+            }
+
+            m.levelPitch = m.slicePitch * m.depth;
         }
-
-        m.levelPitch = m.slicePitch * m.depth;
 
         if( width > 1 ) width >>= 1;
         if( height > 1 ) height >>= 1;
