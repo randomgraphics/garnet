@@ -307,7 +307,7 @@ static void sParseShaders( EffectDesc & desc, const XmlElement & node )
 static void sParseRsb( RenderStateBlockDesc & rsb, const XmlElement & node )
 {
     RenderState rs;
-    RenderStateValue rsv;
+    int rsv;
     for( const XmlAttrib * a = node.attrib; a; a = a->next )
     {
         if( !str2RenderState( rs, a->name.cptr() ) )
@@ -321,7 +321,18 @@ static void sParseRsb( RenderStateBlockDesc & rsb, const XmlElement & node )
         switch( rsdesc.valueType )
         {
             case RenderStateDesc::VT_ENUM:
-                if( !str2RenderStateValue( rsv, a->value.cptr() ) )
+                if( !str2RenderStateValue( (RenderStateValue&)rsv, a->value.cptr() ) )
+                {
+                    sPostError( node, strFormat(
+                        "invalid render state value: %s (for render state %s)",
+                        a->value.cptr(), a->name.cptr() ) );
+                    continue;
+                }
+                rsb.set( rs, rsv );
+                break;
+
+            case RenderStateDesc::VT_INT :
+                if( !str2Int( rsv, a->value.cptr() ) )
                 {
                     sPostError( node, strFormat(
                         "invalid render state value: %s (for render state %s)",
