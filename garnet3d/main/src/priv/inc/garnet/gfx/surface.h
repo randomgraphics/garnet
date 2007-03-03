@@ -8,6 +8,12 @@
 
 namespace GN { namespace gfx
 {
+    enum
+    {
+        MAX_TEXTURE_SIZE          = 16384, ///< max texture size (2^14)
+        MAX_TEXTURE_MIPMAP_LEVELS = 15,
+    };
+
     ///
     /// ÌùÍ¼ÀàÐÍ
     ///
