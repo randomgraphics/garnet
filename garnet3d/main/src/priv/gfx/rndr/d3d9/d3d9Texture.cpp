@@ -360,9 +360,10 @@ bool GN::gfx::D3D9Texture::deviceRestore()
         D3DPOOL_DEFAULT );
     if( 0 == mD3DTexture ) return false;
 
-    // create shadow copy (Note: Xenon texture has no need of shadow copy)
+    // create shadow copy for both read-back and static textures
+    // Note: Xenon texture has no need of shadow copy
 #if !GN_XENON
-    if( TEXUSAGE_READBACK & getDesc().usage )
+    if( (TEXUSAGE_READBACK & getDesc().usage) || !(D3DUSAGE_DYNAMIC & mD3DUsage) )
     {
         mShadowCopy = newD3DTexture(
             getDesc().type,
@@ -379,15 +380,6 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     {
         setMipSize( i, sGetMipSize( mD3DTexture, getDesc().type, i ) );
     }
-
-    // setup misc. flag
-#if GN_XENON
-    mWritable = true; // Xenon texture is always writeable.
-#else
-    mWritable = !(mD3DUsage & D3DUSAGE_RENDERTARGET)
-             && !(mD3DUsage & D3DUSAGE_DEPTHSTENCIL)
-             &&  (mD3DUsage & D3DUSAGE_DYNAMIC);
-#endif
 
     // success
     return true;
@@ -408,8 +400,6 @@ void GN::gfx::D3D9Texture::deviceDispose()
         GN_WARN(sLogger)( "You are destroying a locked texture!" );
         unlock();
     }
-
-    GN_ASSERT( !mLockCopy );
 
     safeRelease( mD3DTexture );
     safeRelease( mShadowCopy );
@@ -458,44 +448,24 @@ bool GN::gfx::D3D9Texture::lock(
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
     AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
 
+    // Note: On Xenon, always lock target texture directly
+    LPDIRECT3DBASETEXTURE9 lockedtex;
     DWORD lockedUsage;
-#if GN_XENON
-    // On Xenon, always lock target texture directly
-    mLockedTexture = mD3DTexture;
-    lockedUsage = mD3DUsage;
-#else
+#if !GN_XENON
     if( mShadowCopy )
     {
-        mLockedTexture = mShadowCopy;
-        lockedUsage = 0;
-    }
-    else if( LOCK_RO == flag || LOCK_RW == flag || !mWritable )
-    {
-        // create temporary surface for read-lock of non-shadowed texture,
-        // or write-lock of non-writable texture.
-        GN_ASSERT( !mLockCopy );
-        size_t sx, sy, sz;
-        getBaseSize( &sx, &sy, &sz );
-        mLockCopy = newD3DTexture(
-            getDesc().type,
-            sx, sy, sz,
-            getDesc().levels,
-            0,
-            mD3DFormat,
-            D3DPOOL_SYSTEMMEM );
-        if( 0 == mLockCopy ) return false;
-        mLockedTexture = mLockCopy;
+        lockedtex = mShadowCopy;
         lockedUsage = 0;
     }
     else
+#endif
     {
-        mLockedTexture = mD3DTexture;
+        lockedtex = mD3DTexture;
         lockedUsage = mD3DUsage;
     }
-#endif
 
     // determine lock flag
-    DWORD d3dLockFlag = sLockFlag2D3D( lockedUsage, flag );
+    DWORD lockedFlag = sLockFlag2D3D( lockedUsage, flag );
 
     switch( getDesc().type )
     {
@@ -509,8 +479,8 @@ bool GN::gfx::D3D9Texture::lock(
             rc.bottom = clippedArea.y + clippedArea.h;
 
             D3DLOCKED_RECT lrc;
-            GN_DX9_CHECK_RV( static_cast<LPDIRECT3DTEXTURE9>(mLockedTexture)->LockRect(
-                (UINT)level, &lrc, &rc, d3dLockFlag ), false );
+            GN_DX9_CHECK_RV( static_cast<LPDIRECT3DTEXTURE9>(lockedtex)->LockRect(
+                (UINT)level, &lrc, &rc, lockedFlag ), false );
 
             result.rowBytes = lrc.Pitch;
             result.sliceBytes = lrc.Pitch * clippedArea.h;
@@ -529,8 +499,8 @@ bool GN::gfx::D3D9Texture::lock(
             box.Back = clippedArea.z + clippedArea.d;
 
             D3DLOCKED_BOX lb;
-            GN_DX9_CHECK_RV( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mLockedTexture)->LockBox(
-                (UINT)level, &lb, &box, d3dLockFlag ), false );
+            GN_DX9_CHECK_RV( static_cast<LPDIRECT3DVOLUMETEXTURE9>(lockedtex)->LockBox(
+                (UINT)level, &lb, &box, lockedFlag ), false );
 
             result.rowBytes = lb.RowPitch;
             result.sliceBytes = lb.SlicePitch;
@@ -549,8 +519,8 @@ bool GN::gfx::D3D9Texture::lock(
             GN_ASSERT( face < 6 );
 
             D3DLOCKED_RECT lrc;
-            GN_DX9_CHECK_RV( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->LockRect(
-                sCubeFace2D3D(face), (UINT)level, &lrc, &rc, d3dLockFlag ), false );
+            GN_DX9_CHECK_RV( static_cast<LPDIRECT3DCUBETEXTURE9>(lockedtex)->LockRect(
+                sCubeFace2D3D(face), (UINT)level, &lrc, &rc, lockedFlag ), false );
 
             result.rowBytes = lrc.Pitch;
             result.sliceBytes = lrc.Pitch * clippedArea.h;
@@ -583,33 +553,28 @@ void GN::gfx::D3D9Texture::unlock()
 
     if( !basicUnlock() ) return;
 
-    GN_ASSERT( mLockedTexture );
-
     // unlock texture
+    LPDIRECT3DBASETEXTURE9 lockedtex = mShadowCopy ? mShadowCopy : mD3DTexture;
     if( TEXTYPE_1D == getDesc().type || TEXTYPE_2D == getDesc().type )
     {
-        GN_DX9_CHECK( static_cast<LPDIRECT3DTEXTURE9>(mLockedTexture)->UnlockRect( (UINT)mLockedLevel ) );
+        GN_DX9_CHECK( static_cast<LPDIRECT3DTEXTURE9>(lockedtex)->UnlockRect( (UINT)mLockedLevel ) );
     }
     else if( TEXTYPE_3D == getDesc().type )
     {
-        GN_DX9_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(mLockedTexture)->UnlockBox( (UINT)mLockedLevel ) );
+        GN_DX9_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(lockedtex)->UnlockBox( (UINT)mLockedLevel ) );
     }
     else if( TEXTYPE_CUBE == getDesc().type )
     {
-        GN_DX9_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(mLockedTexture)->UnlockRect( sCubeFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
+        GN_DX9_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(lockedtex)->UnlockRect( sCubeFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
 
-    if( LOCK_RO == mLockedFlag || mLockedTexture == mD3DTexture )
+    // copy data from lockedtex to mD3DTexture
+#if GN_XENON
+    GN_ASSERT( lockedtex == mD3DTexture );
+#else
+    if( mShadowCopy && LOCK_RO != mLockedFlag )
     {
-        safeRelease( mLockCopy );
-        return;
-    }
-
-    // copy data from mLockedTexture to mD3DTexture
-#if !GN_XENON
-    if( mLockedTexture != mD3DTexture )
-    {
-        GN_DX9_CHECK( getRenderer().getDevice()->UpdateTexture( mLockedTexture, mD3DTexture ) );
+        GN_DX9_CHECK( getRenderer().getDevice()->UpdateTexture( mShadowCopy, mD3DTexture ) );
     }
 #endif
 
@@ -620,9 +585,6 @@ void GN::gfx::D3D9Texture::unlock()
     //char fname[100];
     //sprintf( fname, "tex_%d.dds", i );
     //GN_DX9_CHECK( D3DXSaveTextureToFileA( fname, D3DXIFF_DDS, mD3DTexture, 0 ) );
-
-    // release mLockCopy
-    safeRelease( mLockCopy );
 
     GN_UNGUARD_SLOW;
 }

@@ -53,7 +53,6 @@ namespace GN { namespace gfx
         {
             mD3DTexture = 0;
             mShadowCopy = 0;
-            mLockCopy = 0;
             mD3DFilters[0] =
             mD3DFilters[1] = D3DTEXF_LINEAR;
             mD3DFilters[2] = D3DTEXF_NONE;
@@ -166,11 +165,6 @@ namespace GN { namespace gfx
         IDirect3DBaseTexture9 * mShadowCopy;
 
         ///
-        /// temporary copy in system memory for lock operation
-        ///
-        IDirect3DBaseTexture9 * mLockCopy;
-
-        ///
         /// D3D texture parameters
         ///
         //@{
@@ -194,10 +188,9 @@ namespace GN { namespace gfx
         /// \name locking related variables
         ///
         //@{
-        IDirect3DBaseTexture9 * mLockedTexture;
         LockFlag mLockedFlag;
-        size_t mLockedFace;
-        size_t mLockedLevel;
+        size_t   mLockedFace;
+        size_t   mLockedLevel;
         //@}
 
         static Logger * sLogger;
