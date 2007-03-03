@@ -182,11 +182,11 @@ bool GN::gfx::D3D10Texture::createTexture()
     // determine misc flags
     UINT mf = 0;
     if( TEXUSAGE_AUTOGEN_MIPMAP & desc.usage ) mf |= D3D10_RESOURCE_MISC_GENERATE_MIPS;
-    if( TEXTYPE_CUBE == desc.type ) mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
+    if( TEXDIM_CUBE == desc.type ) mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
 
     // create texture instance
     ID3D10Device * dev = mRenderer.getDevice();
-    if( TEXTYPE_1D == desc.type )
+    if( TEXDIM_1D == desc.type )
     {
         D3D10_TEXTURE1D_DESC desc1d;
         desc1d.Width = desc.width;
@@ -199,7 +199,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc1d.MiscFlags = mf;
         GN_DX10_CHECK_RV( dev->CreateTexture1D( &desc1d, 0, &mD3DTexture.tex1d ), false );
     }
-    else if( TEXTYPE_2D == desc.type || TEXTYPE_CUBE == desc.type )
+    else if( TEXDIM_2D == desc.type || TEXDIM_CUBE == desc.type )
     {
         D3D10_TEXTURE2D_DESC desc2d;
         desc2d.Width = desc.width;
@@ -215,7 +215,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc2d.MiscFlags = mf;
         GN_DX10_CHECK_RV( dev->CreateTexture2D( &desc2d, 0, &mD3DTexture.tex2d ), false );
     }
-    else if( TEXTYPE_3D == desc.type )
+    else if( TEXDIM_3D == desc.type )
     {
         D3D10_TEXTURE3D_DESC desc3d;
         desc3d.Width = desc.width;

@@ -299,7 +299,7 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D9Renderer::supportTextureFormat(
-    TexType type, BitFields usage, ClrFmt format ) const
+    TexDim type, BitFields usage, ClrFmt format ) const
 {
     GN_GUARD;
 

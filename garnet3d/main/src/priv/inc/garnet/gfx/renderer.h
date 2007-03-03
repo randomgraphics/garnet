@@ -579,7 +579,7 @@ namespace GN { namespace gfx
         ///
         /// Test compability of specific texture format
         ///
-        virtual bool supportTextureFormat( TexType type, BitFields usage, ClrFmt format ) const = 0;
+        virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const = 0;
 
         //@}
 
@@ -645,7 +645,7 @@ namespace GN { namespace gfx
         /// Create new texture, with individual creation parameters.
         ///
         Texture *
-        createTexture( TexType   type,
+        createTexture( TexDim    dim,
                        size_t    sx, size_t sy, size_t sz,
                        size_t    faces = 0,
                        size_t    levels = 0,
@@ -653,7 +653,7 @@ namespace GN { namespace gfx
                        BitFields usage = 0,
                        bool      tiled = false )
         {
-            TextureDesc desc = { type, (UInt32)sx, (UInt32)sy, (UInt32)sz, (UInt32)faces, (UInt32)levels, format, usage, tiled };
+            TextureDesc desc = { dim, (UInt32)sx, (UInt32)sy, (UInt32)sz, (UInt32)faces, (UInt32)levels, format, usage, tiled };
             return createTexture( desc );
         }
 
@@ -667,7 +667,7 @@ namespace GN { namespace gfx
                          BitFields usage = 0,
                          bool      tiled = false )
         {
-            return createTexture( TEXTYPE_1D, sx, 0, 0, 1, levels, format, usage, tiled );
+            return createTexture( TEXDIM_1D, sx, 0, 0, 1, levels, format, usage, tiled );
         }
 
         ///
@@ -680,7 +680,7 @@ namespace GN { namespace gfx
                          BitFields usage = 0,
                          bool      tiled = false )
         {
-            return createTexture( TEXTYPE_2D, sx, sy, 0, 1, levels, format, usage, tiled );
+            return createTexture( TEXDIM_2D, sx, sy, 0, 1, levels, format, usage, tiled );
         }
 
         ///
@@ -693,7 +693,7 @@ namespace GN { namespace gfx
                          BitFields usage = 0,
                          bool      tiled = false )
         {
-            return createTexture( TEXTYPE_3D, sx, sy, sz, 1, levels, format, usage, tiled );
+            return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usage, tiled );
         }
 
         ///
@@ -706,7 +706,7 @@ namespace GN { namespace gfx
                            BitFields usage = 0,
                            bool      tiled = false )
         {
-            return createTexture( TEXTYPE_CUBE, sx, 0, 0, 6, levels, format, usage, tiled );
+            return createTexture( TEXDIM_CUBE, sx, 0, 0, 6, levels, format, usage, tiled );
         }
 
         ///

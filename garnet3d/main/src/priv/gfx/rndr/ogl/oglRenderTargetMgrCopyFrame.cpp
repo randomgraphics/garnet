@@ -28,9 +28,9 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
 
     // copy framebuffer to current (old) render target texture
     GLint currentTexID;
-    switch( tex->getDesc().type )
+    switch( tex->getDesc().dim )
     {
-        case TEXTYPE_CUBE :
+        case TEXDIM_CUBE :
             GN_ASSERT( sx == sy );
             GN_OGL_CHECK(
                 glGetIntegerv( GL_TEXTURE_BINDING_CUBE_MAP_ARB, &currentTexID ) );
@@ -45,7 +45,7 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
                 glBindTexture( GL_TEXTURE_CUBE_MAP_ARB, currentTexID ) );
             break;
 
-        case TEXTYPE_2D :
+        case TEXDIM_2D :
             GN_OGL_CHECK(
                 glGetIntegerv( GL_TEXTURE_BINDING_2D, &currentTexID ) );
             GN_OGL_CHECK(
@@ -58,7 +58,7 @@ sCopyFrameBufferTo( const GN::gfx::RenderTargetTexture & rtt )
                 glBindTexture( GL_TEXTURE_2D, currentTexID ) );
             break;
 
-        case TEXTYPE_1D :
+        case TEXDIM_1D :
             GN_ASSERT( 1 == sy );
             GN_OGL_CHECK(
                 glGetIntegerv( GL_TEXTURE_BINDING_1D, &currentTexID ) );

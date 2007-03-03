@@ -472,13 +472,13 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     if( !setDesc( desc ) ) return failure();
 
     // determine gl texture type
-    switch( getDesc().type )
+    switch( getDesc().dim )
     {
-        case TEXTYPE_1D   :
-        case TEXTYPE_2D   :
+        case TEXDIM_1D   :
+        case TEXDIM_2D   :
             mOGLTarget = GL_TEXTURE_2D;
             break;
-        case TEXTYPE_3D   :
+        case TEXDIM_3D   :
             if ( !GLEW_EXT_texture3D )
             {
                 GN_ERROR(sLogger)( "do not support 3D texture!" );
@@ -486,7 +486,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
             }
             mOGLTarget = GL_TEXTURE_3D;
             break;
-        case TEXTYPE_CUBE :
+        case TEXDIM_CUBE :
             if ( !GLEW_ARB_texture_cube_map )
             {
                 GN_ERROR(sLogger)( "do not support CUBE texture!" );
@@ -509,28 +509,28 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
 
     // create new opengl texture object
     const TextureDesc & desc = getDesc();
-    switch( getDesc().type )
+    switch( getDesc().dim )
     {
-        case TEXTYPE_1D :
-        case TEXTYPE_2D :
+        case TEXDIM_1D :
+        case TEXDIM_2D :
             mOGLTexture = sNew2DTexture(
                 mOGLInternalFormat, desc.width, desc.height, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
-        case TEXTYPE_3D :
+        case TEXDIM_3D :
             mOGLTexture = sNew3DTexture(
                 mOGLInternalFormat, desc.width, desc.height, desc.depth, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
-        case TEXTYPE_CUBE :
+        case TEXDIM_CUBE :
             mOGLTexture = sNewCubeTexture(
                 mOGLInternalFormat, desc.width, desc.levels,
                 mOGLFormat, mOGLType );
             break;
 
-        case TEXTYPE_STACK :
+        case TEXDIM_STACK :
             GN_ERROR(sLogger)( "OpenGL does not support STACK texture." );
             mOGLTexture = 0;
             break;
@@ -542,7 +542,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     if( 0 == mOGLTexture ) return failure();
 
     // enable/disable mipmap autogeneration
-    if( TEXTYPE_CUBE != getDesc().type && GLEW_SGIS_generate_mipmap )
+    if( TEXDIM_CUBE != getDesc().dim && GLEW_SGIS_generate_mipmap )
     {
         if( TEXUSAGE_AUTOGEN_MIPMAP & desc.usage )
         {
@@ -558,10 +558,10 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     for( size_t i = 0; i < getDesc().levels; ++i )
     {
         GLint sx, sy, sz;
-        switch( getDesc().type )
+        switch( getDesc().dim )
         {
-            case TEXTYPE_1D :
-            case TEXTYPE_2D :
+            case TEXDIM_1D :
+            case TEXDIM_2D :
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
                     GL_TEXTURE_2D, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
@@ -569,7 +569,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
                 sz = 1;
                 break;
 
-            case TEXTYPE_3D :
+            case TEXDIM_3D :
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
                     GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
@@ -578,7 +578,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
                     GL_TEXTURE_3D_EXT, (GLint)i, GL_TEXTURE_DEPTH_EXT, &sz ) );
                 break;
 
-            case TEXTYPE_CUBE :
+            case TEXDIM_CUBE :
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
                     GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, (GLint)i, GL_TEXTURE_WIDTH, &sx ) );
                 GN_OGL_CHECK( glGetTexLevelParameteriv(
@@ -677,7 +677,7 @@ void GN::gfx::OGLTexture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
         mFilterAndWrapDirty = true;
     }
 
-    if( TEXTYPE_3D == getDesc().type && mOGLWraps[2] != glr )
+    if( TEXDIM_3D == getDesc().dim && mOGLWraps[2] != glr )
     {
         mOGLWraps[2] = glr;
         mFilterAndWrapDirty = true;
@@ -751,7 +751,7 @@ bool GN::gfx::OGLTexture::lock(
     }
 
     // success
-    mLockedTarget  = TEXTYPE_CUBE == getDesc().type ? OGLTexture::sCubeface2OGL(face) : mOGLTarget;
+    mLockedTarget  = TEXDIM_CUBE == getDesc().dim ? OGLTexture::sCubeface2OGL(face) : mOGLTarget;
     mLockedLevel   = level;
     mLockedFlag    = flag;
     result.data    = mLockedBuffer;
@@ -782,7 +782,7 @@ void GN::gfx::OGLTexture::unlock()
 
     GN_ASSERT( mLockedBuffer );
 
-    if( TEXTYPE_3D == getDesc().type )
+    if( TEXDIM_3D == getDesc().dim )
     {
         GN_UNIMPL_WARNING();
     }

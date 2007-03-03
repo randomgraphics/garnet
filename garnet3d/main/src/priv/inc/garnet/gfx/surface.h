@@ -11,14 +11,14 @@ namespace GN { namespace gfx
     ///
     /// Ã˘Õº¿‡–Õ
     ///
-    enum TexType
+    enum TexDim
     {
-        TEXTYPE_1D,    ///< 1D texture
-        TEXTYPE_2D,    ///< 2D texture
-        TEXTYPE_3D,    ///< 3D texture
-        TEXTYPE_CUBE,  ///< Cube texture
-        TEXTYPE_STACK, ///< Stack texture
-        NUM_TEXTYPES   ///< Number of avaliable texture types.
+        TEXDIM_1D,    ///< 1D texture
+        TEXDIM_2D,    ///< 2D texture
+        TEXDIM_3D,    ///< 3D texture
+        TEXDIM_CUBE,  ///< Cube texture
+        TEXDIM_STACK, ///< Stack texture
+        NUM_TEXDIMS   ///< Number of avaliable texture types.
     };
 
     ///
@@ -92,7 +92,7 @@ namespace GN { namespace gfx
     ///
     struct TextureDesc
     {
-        TexType   type;      ///< texture type
+        TexDim    dim;       ///< texture dimension
         UInt32    width;     ///< basemap width
         UInt32    height;    ///< basemap height
         UInt32    depth;     ///< basemap depth
@@ -224,7 +224,7 @@ namespace GN { namespace gfx
         ///
         void * lock1D( size_t level, size_t offset, size_t length, LockFlag flag )
         {
-            GN_ASSERT( TEXTYPE_1D == getDesc().type );
+            GN_ASSERT( TEXDIM_1D == getDesc().dim );
             TexLockedResult result;
             Boxi area;
             area.x = (int)offset;
@@ -280,38 +280,38 @@ namespace GN { namespace gfx
             
             mDesc = desc;
 
-            // check type
-            if( mDesc.type < 0 || mDesc.type >= NUM_TEXTYPES )
+            // check dim
+            if( mDesc.dim < 0 || mDesc.dim >= NUM_TEXDIMS )
             {
-                GN_ERROR(sLogger)( "invalid texture type!" );
+                GN_ERROR(sLogger)( "invalid texture dimension!" );
                 return false;
             }
 
             // check texture size
-            switch( mDesc.type )
+            switch( mDesc.dim )
             {
-                case TEXTYPE_1D :
+                case TEXDIM_1D :
                 {
                     mDesc.height = 1;
                     mDesc.depth = 1;
                     break;
                 }
 
-                case TEXTYPE_CUBE :
+                case TEXDIM_CUBE :
                 {
                     mDesc.height = mDesc.width;
                     mDesc.depth = 1;
                     break;
                 }
 
-                case TEXTYPE_2D :
-                case TEXTYPE_STACK :
+                case TEXDIM_2D :
+                case TEXDIM_STACK :
                 {
                     mDesc.depth = 1;
                     break;
                 }
 
-                case TEXTYPE_3D :
+                case TEXDIM_3D :
                 {
                     // do nothing
                     break;
@@ -321,7 +321,7 @@ namespace GN { namespace gfx
             }
 
             // check face count
-            if( TEXTYPE_CUBE == mDesc.type )
+            if( TEXDIM_CUBE == mDesc.dim )
             {
                 if( 0 != mDesc.faces && 6 != mDesc.faces )
                 {
@@ -329,7 +329,7 @@ namespace GN { namespace gfx
                 }
                 mDesc.faces = 6;
             }
-            else if( TEXTYPE_STACK == mDesc.type )
+            else if( TEXDIM_STACK == mDesc.dim )
             {
                 if( 0 == mDesc.faces ) mDesc.faces = 1;
             }
@@ -406,12 +406,12 @@ namespace GN { namespace gfx
     //
     // -------------------------------------------------------------------------
     inline bool
-    texType2Str( StrA & str, TexType textype )
+    texDim2Str( StrA & str, TexDim textype )
     {
         static const char * sTable [] =
         { "1D", "2D", "3D", "CUBE", "STACK" };
 
-        if( 0 <= textype && textype < NUM_TEXTYPES )
+        if( 0 <= textype && textype < NUM_TEXDIMS )
         {
             str = sTable[textype];
             return true;
@@ -420,31 +420,31 @@ namespace GN { namespace gfx
     }
     //
     inline const char *
-    texType2Str( TexType textype )
+    texDim2Str( TexDim textype )
     {
         static const char * sTable [] =
         { "1D", "2D", "3D", "CUBE", "STACK" };
 
-        if( 0 <= textype && textype < NUM_TEXTYPES )
+        if( 0 <= textype && textype < NUM_TEXDIMS )
         {
             return sTable[textype];
         }
-        else return "BAD_TEXTURE_TYPE";
+        else return "BAD_TEXDIM";
     }
     //
     inline bool
-    str2TexType( TexType & value, const char * name )
+    str2TexDim( TexDim & value, const char * name )
     {
         static const char * sTable[] =
         { "1D", "2D", "3D", "CUBE", "STACK" };
 
         if( name )
         {
-            for( int i = 0; i < NUM_TEXTYPES; ++i )
+            for( int i = 0; i < NUM_TEXDIMS; ++i )
             {
                 if( 0 == ::strcmp(sTable[i],name) )
                 {
-                    value = static_cast<TexType>(i);
+                    value = static_cast<TexDim>(i);
                     return true;
                 }
             }

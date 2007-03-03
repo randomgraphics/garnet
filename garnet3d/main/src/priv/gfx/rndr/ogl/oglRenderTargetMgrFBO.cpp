@@ -21,9 +21,9 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
 
     const OGLTexture * tex = safeCast<const OGLTexture*>( rtt.texture );
 
-    switch( tex->getDesc().type )
+    switch( tex->getDesc().dim )
     {
-        case TEXTYPE_1D :
+        case TEXDIM_1D :
             GN_OGL_CHECK( glFramebufferTexture1DEXT(
                 GL_FRAMEBUFFER_EXT,
                 attachpoint,
@@ -32,7 +32,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
                 (GLint)rtt.level ) );
             break;
 
-        case TEXTYPE_2D :
+        case TEXDIM_2D :
             GN_OGL_CHECK( glFramebufferTexture2DEXT(
                 GL_FRAMEBUFFER_EXT,
                 attachpoint,
@@ -41,7 +41,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
                 (GLint)rtt.level ) );
             break;
 
-        case TEXTYPE_3D :
+        case TEXDIM_3D :
             GN_OGL_CHECK( glFramebufferTexture3DEXT(
                 GL_FRAMEBUFFER_EXT,
                 attachpoint,
@@ -51,7 +51,7 @@ static inline void sAttachRTT2FBO( const GN::gfx::RenderTargetTexture & rtt, GLe
                 (GLint)rtt.slice ) );
             break;
 
-        case TEXTYPE_CUBE :
+        case TEXDIM_CUBE :
             GN_OGL_CHECK( glFramebufferTexture2DEXT(
                 GL_FRAMEBUFFER_EXT,
                 attachpoint,

@@ -16,7 +16,7 @@ namespace GN { namespace gfx
     ///
     /// Convert texture type to D3DRESOURCETYPE
     ///
-    D3DRESOURCETYPE texType2D3DResourceType( TexType );
+    D3DRESOURCETYPE texType2D3DResourceType( TexDim );
 
     ///
     /// Convert texture usage to D3DUSAGE(s)
@@ -118,24 +118,24 @@ namespace GN { namespace gfx
 
             LPDIRECT3DSURFACE9 surf;
 
-            switch( getDesc().type )
+            switch( getDesc().dim )
             {
-                case TEXTYPE_1D:
-                case TEXTYPE_2D:
+                case TEXDIM_1D:
+                case TEXDIM_2D:
                     {
                         LPDIRECT3DTEXTURE9 tex2D = static_cast<LPDIRECT3DTEXTURE9>( mD3DTexture );
                         GN_DX9_CHECK_RV( tex2D->GetSurfaceLevel( (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 
-                case TEXTYPE_CUBE:
+                case TEXDIM_CUBE:
                     {
                         LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( mD3DTexture );
                         GN_DX9_CHECK_RV( texCube->GetCubeMapSurface( sCubeFace2D3D(face), (DWORD)level, &surf ), 0 );
                     }
                     return surf;
 
-                case TEXTYPE_3D:
+                case TEXDIM_3D:
                     GN_ERROR(sLogger)( "Can't get surface from 3D texture." );
                     return 0;
 
@@ -222,7 +222,7 @@ namespace GN { namespace gfx
         /// create instance of D3D texture
         ///
         LPDIRECT3DBASETEXTURE9
-        newD3DTexture( TexType   type,
+        newD3DTexture( TexDim   type,
                        size_t    width,
                        size_t    height,
                        size_t    depth,

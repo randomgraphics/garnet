@@ -221,11 +221,11 @@ public:
 
     void testTexType()
     {
-        GN::gfx::TexType tag[] = {
-            GN::gfx::TEXTYPE_1D,
-            GN::gfx::TEXTYPE_2D,
-            GN::gfx::TEXTYPE_3D,
-            GN::gfx::TEXTYPE_CUBE,
+        GN::gfx::TexDim tag[] = {
+            GN::gfx::TEXDIM_1D,
+            GN::gfx::TEXDIM_2D,
+            GN::gfx::TEXDIM_3D,
+            GN::gfx::TEXDIM_CUBE,
         };
         const char * str[] = {
             "1D",
@@ -235,23 +235,23 @@ public:
         };
 
         GN::StrA         s;
-        GN::gfx::TexType t = GN::gfx::NUM_TEXTYPES;
+        GN::gfx::TexDim t = GN::gfx::NUM_TEXDIMS;
 
         for( int i = 0; i < 4; ++i )
         {
-            TS_ASSERT( GN::gfx::texType2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::texDim2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::gfx::texType2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::texDim2Str(tag[i]) );
 
-            TS_ASSERT( GN::gfx::str2TexType( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2TexDim( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
         }
 
-        TS_ASSERT( !GN::gfx::texType2Str(s,GN::gfx::NUM_TEXTYPES) );
-        TS_ASSERT_EQUALS( "BAD_TEXTURE_TYPE", GN::gfx::texType2Str(GN::gfx::NUM_TEXTYPES) );
-        TS_ASSERT( !GN::gfx::str2TexType( t, "haha" ) );
-        TS_ASSERT( !GN::gfx::str2TexType( t, NULL ) );
+        TS_ASSERT( !GN::gfx::texDim2Str(s,GN::gfx::NUM_TEXDIMS) );
+        TS_ASSERT_EQUALS( "BAD_TEXDIM", GN::gfx::texDim2Str(GN::gfx::NUM_TEXDIMS) );
+        TS_ASSERT( !GN::gfx::str2TexDim( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2TexDim( t, NULL ) );
     }
 
     void testTexFilter()

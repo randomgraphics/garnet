@@ -77,16 +77,16 @@ namespace GN { namespace gfx
         {
             GN_GUARD_SLOW;
 
-            switch( getDesc().type )
+            switch( getDesc().dim )
             {
-                case TEXTYPE_1D   :
-                case TEXTYPE_2D   :
+                case TEXDIM_1D   :
+                case TEXDIM_2D   :
                     if( GLEW_EXT_texture3D )
                         glDisable( GL_TEXTURE_3D_EXT );
-                case TEXTYPE_3D   :
+                case TEXDIM_3D   :
                     if( GLEW_ARB_texture_cube_map )
                         glDisable( GL_TEXTURE_CUBE_MAP_ARB );
-                case TEXTYPE_CUBE :
+                case TEXDIM_CUBE :
                     break;
                 default :
                     GN_ASSERT_EX( 0, "invalid texture type!" );
@@ -100,7 +100,7 @@ namespace GN { namespace gfx
                 GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_MAG_FILTER, mOGLFilters[1] ) );
                 GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_S, mOGLWraps[0] ) );
                 GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_T, mOGLWraps[1] ) );
-                if( TEXTYPE_3D == getDesc().type )
+                if( TEXDIM_3D == getDesc().dim )
                 {
                     GN_OGL_CHECK( glTexParameteri( mOGLTarget, GL_TEXTURE_WRAP_R, mOGLWraps[2] ) );
                 }

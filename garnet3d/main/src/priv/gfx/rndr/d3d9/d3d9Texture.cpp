@@ -152,7 +152,7 @@ static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
 //
 //
 // ----------------------------------------------------------------------------
-static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexType type, size_t level )
+static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexDim type, size_t level )
 {
     GN_GUARD_SLOW;
 
@@ -161,7 +161,7 @@ static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::Tex
 
     Vector3<UInt32> sz;
 
-    if( TEXTYPE_3D == type )
+    if( TEXDIM_3D == type )
     {
         LPDIRECT3DVOLUMETEXTURE9 tex3D = static_cast<LPDIRECT3DVOLUMETEXTURE9>( tex );
 
@@ -176,7 +176,7 @@ static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::Tex
     {
         D3DSURFACE_DESC desc;
 
-        if( TEXTYPE_CUBE == type )
+        if( TEXDIM_CUBE == type )
         {
             LPDIRECT3DCUBETEXTURE9 texCube = static_cast<LPDIRECT3DCUBETEXTURE9>( tex );
             GN_DX9_CHECK( texCube->GetLevelDesc( (UINT)level, &desc ) );
@@ -205,14 +205,14 @@ static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::Tex
 ///
 /// Convert texture type to D3DRESOURCETYPE
 ///
-D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexType type )
+D3DRESOURCETYPE GN::gfx::texType2D3DResourceType( TexDim type )
 {
     switch( type )
     {
-        case TEXTYPE_1D   :
-        case TEXTYPE_2D   : return D3DRTYPE_TEXTURE;
-        case TEXTYPE_3D   : return D3DRTYPE_VOLUMETEXTURE;
-        case TEXTYPE_CUBE : return D3DRTYPE_CUBETEXTURE;
+        case TEXDIM_1D   :
+        case TEXDIM_2D   : return D3DRTYPE_TEXTURE;
+        case TEXDIM_3D   : return D3DRTYPE_VOLUMETEXTURE;
+        case TEXDIM_CUBE : return D3DRTYPE_CUBETEXTURE;
 
         default:
             // failed
@@ -337,7 +337,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
 
     // check texture format compatibility
     HRESULT hr = getRenderer().checkD3DDeviceFormat(
-        mD3DUsage, texType2D3DResourceType(getDesc().type), mD3DFormat );
+        mD3DUsage, texType2D3DResourceType(getDesc().dim), mD3DFormat );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
@@ -352,7 +352,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     // create texture instance
     const Vector3<UInt32> & sz = getBaseSize();
     mD3DTexture = newD3DTexture(
-        getDesc().type,
+        getDesc().dim,
         sz.x, sz.y, sz.z,
         getDesc().levels,
         mD3DUsage,
@@ -366,7 +366,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     if( (TEXUSAGE_READBACK & getDesc().usage) || !(D3DUSAGE_DYNAMIC & mD3DUsage) )
     {
         mShadowCopy = newD3DTexture(
-            getDesc().type,
+            getDesc().dim,
             sz.x, sz.y, sz.z,
             getDesc().levels,
             0,
@@ -378,7 +378,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     // setup mip size
     for( size_t i = 0; i < getDesc().levels; ++i )
     {
-        setMipSize( i, sGetMipSize( mD3DTexture, getDesc().type, i ) );
+        setMipSize( i, sGetMipSize( mD3DTexture, getDesc().dim, i ) );
     }
 
     // success
@@ -467,10 +467,10 @@ bool GN::gfx::D3D9Texture::lock(
     // determine lock flag
     DWORD lockedFlag = sLockFlag2D3D( lockedUsage, flag );
 
-    switch( getDesc().type )
+    switch( getDesc().dim )
     {
-        case TEXTYPE_1D:
-        case TEXTYPE_2D:
+        case TEXDIM_1D:
+        case TEXDIM_2D:
         {
             RECT rc;
             rc.left = clippedArea.x;
@@ -488,7 +488,7 @@ bool GN::gfx::D3D9Texture::lock(
             break;
         }
 
-        case TEXTYPE_3D:
+        case TEXDIM_3D:
         {
             D3DBOX box;
             box.Left = clippedArea.x;
@@ -508,7 +508,7 @@ bool GN::gfx::D3D9Texture::lock(
             break;
         }
 
-        case TEXTYPE_CUBE:
+        case TEXDIM_CUBE:
         {
             RECT rc;
             rc.left = clippedArea.x;
@@ -555,15 +555,15 @@ void GN::gfx::D3D9Texture::unlock()
 
     // unlock texture
     LPDIRECT3DBASETEXTURE9 lockedtex = mShadowCopy ? mShadowCopy : mD3DTexture;
-    if( TEXTYPE_1D == getDesc().type || TEXTYPE_2D == getDesc().type )
+    if( TEXDIM_1D == getDesc().dim || TEXDIM_2D == getDesc().dim )
     {
         GN_DX9_CHECK( static_cast<LPDIRECT3DTEXTURE9>(lockedtex)->UnlockRect( (UINT)mLockedLevel ) );
     }
-    else if( TEXTYPE_3D == getDesc().type )
+    else if( TEXDIM_3D == getDesc().dim )
     {
         GN_DX9_CHECK( static_cast<LPDIRECT3DVOLUMETEXTURE9>(lockedtex)->UnlockBox( (UINT)mLockedLevel ) );
     }
-    else if( TEXTYPE_CUBE == getDesc().type )
+    else if( TEXDIM_CUBE == getDesc().dim )
     {
         GN_DX9_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(lockedtex)->UnlockRect( sCubeFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
@@ -615,7 +615,7 @@ void GN::gfx::D3D9Texture::updateMipmap()
 //
 // ----------------------------------------------------------------------------
 LPDIRECT3DBASETEXTURE9
-GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
+GN::gfx::D3D9Texture::newD3DTexture( TexDim   type,
                                     size_t    width,
                                     size_t    height,
                                     size_t    depth,
@@ -630,7 +630,7 @@ GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
 
     // make sure texture format is supported by current device
     GN_ASSERT( D3D_OK == getRenderer().checkD3DDeviceFormat(
-        d3dusage, texType2D3DResourceType(getDesc().type), d3dformat ) );
+        d3dusage, texType2D3DResourceType(getDesc().dim), d3dformat ) );
 
 #if !GN_XENON
     // evict managed resources first, if creating texture in default pool.
@@ -641,7 +641,7 @@ GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
 #endif
 
     // create new texture
-    if( TEXTYPE_1D == type || TEXTYPE_2D == type )
+    if( TEXDIM_1D == type || TEXDIM_2D == type )
     {
         LPDIRECT3DTEXTURE9 result;
         GN_DX9_CHECK_RV(
@@ -652,7 +652,7 @@ GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
             0 );
         return result;
     }
-    else if( TEXTYPE_3D == type )
+    else if( TEXDIM_3D == type )
     {
         LPDIRECT3DVOLUMETEXTURE9 result;
         GN_DX9_CHECK_RV(
@@ -663,7 +663,7 @@ GN::gfx::D3D9Texture::newD3DTexture( TexType   type,
             0 );
         return result;
     }
-    else if( TEXTYPE_CUBE == type )
+    else if( TEXDIM_CUBE == type )
     {
         GN_ASSERT( width == height );
         LPDIRECT3DCUBETEXTURE9 result;
