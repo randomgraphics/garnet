@@ -458,7 +458,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     // determine pixelformat
     if( FMT_DEFAULT == desc.format )
     {
-        if( TEXUSAGE_DEPTH == desc.usage )
+        if( desc.usage.depthstencil )
         {
             desc.format = FMT_D_32; // default depth format
         }
@@ -544,7 +544,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
     // enable/disable mipmap autogeneration
     if( TEXDIM_CUBE != getDesc().dim && GLEW_SGIS_generate_mipmap )
     {
-        if( TEXUSAGE_AUTOGEN_MIPMAP & desc.usage )
+        if( desc.usage.automip )
         {
             GN_OGL_CHECK( glTexParameteri( mOGLTarget,GL_GENERATE_MIPMAP_SGIS, GL_TRUE) );
         }

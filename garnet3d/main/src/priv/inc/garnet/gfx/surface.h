@@ -39,6 +39,7 @@ namespace GN { namespace gfx
         TEXUSAGE_READBACK       = 1<<4, ///< Normally, read data from texture is extremly slow.
                                         ///< Use this flag to increase reading speed, in exchange for rendering speed.
                                         ///< Use this flag when you really need it.
+        TEXUSAGE_TILED          = 1<<5, ///< tile texture (ignored on platform other then Xenon)
     };
 
     ///
@@ -108,8 +109,26 @@ namespace GN { namespace gfx
                              ///< you may set it to 0 to create full mipmap tower (down to 1x1).
         ClrFmt    format;    ///< pixel format. When used as parameter of Renderer::createTexture(),
                              ///< you may set it to FMT_DEFAULT. To use default texture format.
-        BitFields usage;     ///< usage
-        bool      tiled;     ///< tiled format. Ignored on platform other then Xenon. 
+
+        //
+        // get basemap size
+        //
+        const Vector3<UInt32> & size() const { return *(Vector3<UInt32>*)&width; }
+
+        union
+        {
+            UInt32 u32;     ///< usage bits as unsigned integer
+            struct
+            {
+                unsigned int dynamic      :  1; ///< See TEXUSAGE_DYNAMIC
+                unsigned int automip      :  1; ///< See TEXUSAGE_AUTOGEN_MIPMAP
+                unsigned int rendertarget :  1; ///< See TEXUSAGE_RENDER_TARGET
+                unsigned int depthstencil :  1; ///< See TEXUSAGE_DEPTH
+                unsigned int readback     :  1; ///< See TEXUSAGE_READBACK
+                unsigned int tiled        :  1; ///< See TEXUSAGE_TILED
+                unsigned int _            : 26; ///< reserved
+            };
+        } usage;
     };
 
     ///
@@ -157,7 +176,7 @@ namespace GN { namespace gfx
         ///
         /// get size of base map
         ///
-        const Vector3<UInt32> & getBaseSize() const { return *(const Vector3<UInt32>*)&mDesc.width; }
+        const Vector3<UInt32> & getBaseSize() const { return mDesc.size(); }
 
         ///
         /// get size of base map
@@ -165,10 +184,9 @@ namespace GN { namespace gfx
         template<typename T>
         void getBaseSize( T * sx, T * sy = 0, T * sz = 0 ) const
         {
-            const Vector3<UInt32> & baseSize = getBaseSize();
-            if( sx ) *sx = (T)baseSize.x;
-            if( sy ) *sy = (T)baseSize.y;
-            if( sz ) *sz = (T)baseSize.z;
+            if( sx ) *sx = (T)mDesc.width;
+            if( sy ) *sy = (T)mDesc.height;
+            if( sz ) *sz = (T)mDesc.depth;
         }
 
         ///
@@ -385,8 +403,7 @@ namespace GN { namespace gfx
         ///
         void setMipSize( size_t level, const Vector3<UInt32> & s )
         {
-            GN_ASSERT( level < mDesc.levels );
-            mMipSize[level] = s;
+            setMipSize( level, s.x, s.y, s.z );
         }
 
         ///
@@ -396,6 +413,10 @@ namespace GN { namespace gfx
         void setMipSize( size_t level, T sx, T sy, T sz )
         {
             GN_ASSERT( level < mDesc.levels );
+            GN_ASSERT( level > 0 ||
+                sx == (T)mDesc.width &&
+                sy == (T)mDesc.height &&
+                sz == (T)mDesc.depth );
             mMipSize[level].set( (UInt32)sx, (UInt32)sy, (UInt32)sz );
         }
 

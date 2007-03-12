@@ -50,7 +50,7 @@ public:
         // create texture
         for( UInt i = 0; i < mInitTexCount; ++i )
         {
-            mTextures[i].attach( r.create2DTexture( 2, 2, 1, FMT_D3DCOLOR, 0, true ) );
+            mTextures[i].attach( r.create2DTexture( 2, 2, 1, FMT_D3DCOLOR, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
             TexLockedResult tlr;
             mTextures[i]->lock( tlr, 0, 0, 0, LOCK_DISCARD );

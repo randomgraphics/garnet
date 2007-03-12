@@ -87,6 +87,26 @@ static bool sGetIntAttrib( const XmlElement & node, const char * attribName, T &
 }
 
 //
+// get integer value of specific attribute
+// -----------------------------------------------------------------------------
+static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defval = false )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a )
+    {
+        return defval;
+    }
+    else
+    {
+        StrA value(a->value);
+        value.toLower();
+        return "1" == value
+            || "yes" == value
+            || "true" == value;
+    }
+}
+
+//
 // get string value of specific attribute
 // -----------------------------------------------------------------------------
 static bool sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & result, bool silence = false )
@@ -172,12 +192,14 @@ static bool sParseTexDescFromXml(
         desc.format = FMT_DEFAULT;
     }
 
-    // get texture usage (optional, default is zero)
-    if( !sGetIntAttrib( *e, "usage", desc.usage, true ) ) desc.usage = 0;
-
-    // tiled or not
-    desc.tiled = (TEXUSAGE_RENDER_TARGET & desc.usage) ||
-                 (TEXUSAGE_DEPTH & desc.usage);
+    // get texture usages
+    desc.usage.u32          = 0;
+    desc.usage.dynamic      = sGetBoolAttrib( *e, "dynamic" );
+    desc.usage.automip      = sGetBoolAttrib( *e, "automip" );
+    desc.usage.rendertarget = sGetBoolAttrib( *e, "rendertarget" );
+    desc.usage.depthstencil = sGetBoolAttrib( *e, "depthstencil" );
+    desc.usage.readback     = sGetBoolAttrib( *e, "readback" );
+    desc.usage.tiled        = sGetBoolAttrib( *e, "tiled" );
 
     // success
     return true;

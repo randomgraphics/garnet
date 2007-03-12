@@ -73,7 +73,7 @@ namespace GN { namespace gfx
             }
 
             // get texture size
-            Vector3<UInt32> sz = getMipSize( level );
+            const Vector3<UInt32> & sz = getMipSize( level );
 
             // make sure lock area is valid
             if( area )
