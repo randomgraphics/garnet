@@ -297,7 +297,7 @@ void GN::gfx::D3D9Texture::quit()
 //
 /// \note During device resetting, we have to recreate all textures, including
 ///       those in managed pool. Because backbuffer format might be changed.
-///       And we have re-check the compability of texture format.
+///       And we have to re-check the compability of texture format.
 // ----------------------------------------------------------------------------
 bool GN::gfx::D3D9Texture::deviceRestore()
 {
@@ -306,38 +306,47 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     GN_ASSERT( !mD3DTexture );
 
 #if GN_XENON
-    // handle tileness
-    TextureDesc modifiedDesc = getDesc();
-    modifiedDesc.tiled = modifiedDesc.tiled
-              || (TEXUSAGE_RENDER_TARGET & modifiedDesc.usage)
-              || (TEXUSAGE_DEPTH & modifiedDesc.usage);
-    setDesc( modifiedDesc );
+    // rendertarget and depth texture requires tiled format.
+    if( ( getDesc().usage.rendertarget || getDesc().usage.depthstencil ) && !getDesc().usage.tiled )
+    {
+        GN_TRACE(sLogger)( "Force tiled texture" );
+        TextureDesc modifiedDesc = getDesc();
+        modifiedDesc.usage.tiled = true;
+        setDesc( modifiedDesc );
+    }
 #endif
+
+    const TextureDesc & desc = getDesc();
 
     // determine texture format
     mD3DFormat = D3DFMT_UNKNOWN;
-    if( FMT_DEFAULT == getDesc().format )
+    if( FMT_DEFAULT == desc.format )
     {
-        mD3DFormat = ( TEXUSAGE_DEPTH & getDesc().usage ) ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8R8G8B8;
+        mD3DFormat = desc.usage.depthstencil ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8R8G8B8;
         if( D3DFMT_UNKNOWN == mD3DFormat ) return false;
         GN_TRACE(sLogger)( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
     }
     else
     {
-        mD3DFormat = d3d9::clrFmt2D3DFormat( getDesc().format, getDesc().tiled );
+        mD3DFormat = d3d9::clrFmt2D3DFormat( desc.format, desc.usage.tiled );
         if( D3DFMT_UNKNOWN == mD3DFormat )
         {
-            GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(getDesc().format) );
+            GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(desc.format) );
             return false;
         }
     }
 
     // determine D3D usage
-    mD3DUsage = texUsage2D3DUsage( getDesc().usage );
+    mD3DUsage = texUsage2D3DUsage( desc.usage.u32 );
+    if( desc.usage.depthstencil )
+    {
+        GN_WARN(sLogger)( "depth texture does not support autogen-mipmap" );
+        mD3DUsage &= !D3DUSAGE_AUTOGENMIPMAP;
+    }
 
     // check texture format compatibility
     HRESULT hr = getRenderer().checkD3DDeviceFormat(
-        mD3DUsage, texType2D3DResourceType(getDesc().dim), mD3DFormat );
+        mD3DUsage, texType2D3DResourceType(desc.dim), mD3DFormat );
 #if !GN_XENON
     if( D3DOK_NOAUTOGEN == hr )
     {
@@ -350,25 +359,24 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     GN_DX9_CHECK_RV(hr, false );
 
     // create texture instance
-    const Vector3<UInt32> & sz = getBaseSize();
     mD3DTexture = newD3DTexture(
-        getDesc().dim,
-        sz.x, sz.y, sz.z,
-        getDesc().levels,
+        desc.dim,
+        desc.width, desc.height, desc.depth,
+        desc.levels,
         mD3DUsage,
         mD3DFormat,
         D3DPOOL_DEFAULT );
     if( 0 == mD3DTexture ) return false;
 
     // create shadow copy for both read-back and static textures
-    // Note: Xenon texture has no need of shadow copy
+    // Note: Xenon texture does not need shadow copy
 #if !GN_XENON
-    if( (TEXUSAGE_READBACK & getDesc().usage) || !(D3DUSAGE_DYNAMIC & mD3DUsage) )
+    if( desc.usage.readback || !desc.usage.dynamic )
     {
         mShadowCopy = newD3DTexture(
-            getDesc().dim,
-            sz.x, sz.y, sz.z,
-            getDesc().levels,
+            desc.dim,
+            desc.width, desc.height, desc.depth,
+            desc.levels,
             0,
             mD3DFormat,
             D3DPOOL_SYSTEMMEM );
@@ -376,9 +384,9 @@ bool GN::gfx::D3D9Texture::deviceRestore()
 #endif
 
     // setup mip size
-    for( size_t i = 0; i < getDesc().levels; ++i )
+    for( size_t i = 0; i < desc.levels; ++i )
     {
-        setMipSize( i, sGetMipSize( mD3DTexture, getDesc().dim, i ) );
+        setMipSize( i, sGetMipSize( mD3DTexture, desc.dim, i ) );
     }
 
     // success
@@ -616,13 +624,13 @@ void GN::gfx::D3D9Texture::updateMipmap()
 // ----------------------------------------------------------------------------
 LPDIRECT3DBASETEXTURE9
 GN::gfx::D3D9Texture::newD3DTexture( TexDim   type,
-                                    size_t    width,
-                                    size_t    height,
-                                    size_t    depth,
-                                    size_t    levels,
-                                    DWORD     d3dusage,
-                                    D3DFORMAT d3dformat,
-                                    D3DPOOL   d3dpool )
+                                     size_t    width,
+                                     size_t    height,
+                                     size_t    depth,
+                                     size_t    levels,
+                                     DWORD     d3dusage,
+                                     D3DFORMAT d3dformat,
+                                     D3DPOOL   d3dpool )
 {
     GN_GUARD;
 

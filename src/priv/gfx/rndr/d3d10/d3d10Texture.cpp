@@ -138,7 +138,7 @@ bool GN::gfx::D3D10Texture::createTexture()
     DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
     if( FMT_DEFAULT == desc.format )
     {
-        format = ( TEXUSAGE_DEPTH & desc.usage )
+        format = desc.usage.depthstencil
             ? DXGI_FORMAT_D32_FLOAT // TODO: is this correct depth texture format?
             : DXGI_FORMAT_B8G8R8A8_UNORM;
         if( DXGI_FORMAT_UNKNOWN == format )
@@ -160,33 +160,33 @@ bool GN::gfx::D3D10Texture::createTexture()
 
     // determine usage
     D3D10_USAGE usage;
-    if( TEXUSAGE_DYNAMIC & desc.usage ) usage = D3D10_USAGE_DYNAMIC;
+    if( desc.usage.dynamic ) usage = D3D10_USAGE_DYNAMIC;
     else usage = D3D10_USAGE_DEFAULT;
 
     // determin bind flags
     UINT bf = D3D10_BIND_SHADER_RESOURCE;
-    if( TEXUSAGE_DEPTH & desc.usage )
+    if( desc.usage.depthstencil )
     {
         bf |= D3D10_BIND_DEPTH_STENCIL;
     }
-    else if( TEXUSAGE_RENDER_TARGET & desc.usage )
+    else if( desc.usage.rendertarget )
     {
         bf |= D3D10_BIND_RENDER_TARGET;
     }
 
     // determine CPU access flags
     UINT caf = 0;
-    if( 0 == ((TEXUSAGE_RENDER_TARGET|TEXUSAGE_DEPTH) & desc.usage) ) caf |= D3D10_CPU_ACCESS_WRITE;
-    if( TEXUSAGE_READBACK & desc.usage ) caf |= D3D10_CPU_ACCESS_READ;
+    if( !desc.usage.rendertarget && !desc.usage.depthstencil ) caf |= D3D10_CPU_ACCESS_WRITE;
+    if( desc.usage.readback ) caf |= D3D10_CPU_ACCESS_READ;
 
     // determine misc flags
     UINT mf = 0;
-    if( TEXUSAGE_AUTOGEN_MIPMAP & desc.usage ) mf |= D3D10_RESOURCE_MISC_GENERATE_MIPS;
-    if( TEXDIM_CUBE == desc.type ) mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
+    if( desc.usage.automip ) mf |= D3D10_RESOURCE_MISC_GENERATE_MIPS;
+    if( TEXDIM_CUBE == desc.dim ) mf |= D3D10_RESOURCE_MISC_TEXTURECUBE;
 
     // create texture instance
     ID3D10Device * dev = mRenderer.getDevice();
-    if( TEXDIM_1D == desc.type )
+    if( TEXDIM_1D == desc.dim )
     {
         D3D10_TEXTURE1D_DESC desc1d;
         desc1d.Width = desc.width;
@@ -199,7 +199,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc1d.MiscFlags = mf;
         GN_DX10_CHECK_RV( dev->CreateTexture1D( &desc1d, 0, &mD3DTexture.tex1d ), false );
     }
-    else if( TEXDIM_2D == desc.type || TEXDIM_CUBE == desc.type )
+    else if( TEXDIM_2D == desc.dim || TEXDIM_CUBE == desc.dim )
     {
         D3D10_TEXTURE2D_DESC desc2d;
         desc2d.Width = desc.width;
@@ -215,7 +215,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc2d.MiscFlags = mf;
         GN_DX10_CHECK_RV( dev->CreateTexture2D( &desc2d, 0, &mD3DTexture.tex2d ), false );
     }
-    else if( TEXDIM_3D == desc.type )
+    else if( TEXDIM_3D == desc.dim )
     {
         D3D10_TEXTURE3D_DESC desc3d;
         desc3d.Width = desc.width;
@@ -231,8 +231,8 @@ bool GN::gfx::D3D10Texture::createTexture()
     }
     else
     {
+        GN_ERROR(sLogger)( "Invalid texture dimension: %d", desc.dim );
         GN_UNEXPECTED();
-        GN_ERROR(sLogger)( "Invalid texture type: %d", desc.type );
         return false;
     }
 

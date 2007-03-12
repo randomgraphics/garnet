@@ -1,12 +1,17 @@
 <?xml version="1.0" standalone="yes"?>
-<!-- usage "4" means it is a render target. See surface.h for definitions of texture usages. -->
 <texture
-	dim    = "CUBE"
-	faces  = "6"
-	width  = "512"
-	height = "512"
-	depth  = "1"
-	levels = "1"
-	format = "FMT_DEFAULT"
-	usage  = "4"
+	dim          = "CUBE"
+	faces        = "6"
+	width        = "512"
+	height       = "512"
+	depth        = "1"
+	levels       = "1"
+	format       = "FMT_DEFAULT"
+
+	dynamic      = "0"
+	automip      = "1"
+	rendertarget = "1"
+	depthstencil = "0"
+	readback     = "0"
+	tiled        = "0"
 />

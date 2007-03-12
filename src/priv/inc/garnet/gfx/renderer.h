@@ -20,7 +20,7 @@
 /// Implement static renderer data members
 ///
 #define GN_IMPLEMENT_RENDERER_STATIC_MEMBERS() \
-    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigCreate; \
+    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigCreate;  \
     GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigRestore; \
     GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDispose; \
     GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDestroy; \
@@ -650,10 +650,16 @@ namespace GN { namespace gfx
                        size_t    faces = 0,
                        size_t    levels = 0,
                        ClrFmt    format = FMT_DEFAULT,
-                       BitFields usage = 0,
-                       bool      tiled = false )
+                       BitFields usage = 0 )
         {
-            TextureDesc desc = { dim, (UInt32)sx, (UInt32)sy, (UInt32)sz, (UInt32)faces, (UInt32)levels, format, usage, tiled };
+            TextureDesc desc =
+            {
+                dim,
+                (UInt32)sx, (UInt32)sy, (UInt32)sz,
+                (UInt32)faces, (UInt32)levels,
+                format,
+                { usage }
+            };
             return createTexture( desc );
         }
 
@@ -664,10 +670,9 @@ namespace GN { namespace gfx
         create1DTexture( size_t    sx,
                          size_t    levels = 0,
                          ClrFmt    format = FMT_DEFAULT,
-                         BitFields usage = 0,
-                         bool      tiled = false )
+                         BitFields usage = 0 )
         {
-            return createTexture( TEXDIM_1D, sx, 0, 0, 1, levels, format, usage, tiled );
+            return createTexture( TEXDIM_1D, sx, 0, 0, 1, levels, format, usage );
         }
 
         ///
@@ -677,10 +682,9 @@ namespace GN { namespace gfx
         create2DTexture( size_t    sx, size_t sy,
                          size_t    levels = 0,
                          ClrFmt    format = FMT_DEFAULT,
-                         BitFields usage = 0,
-                         bool      tiled = false )
+                         BitFields usage = 0 )
         {
-            return createTexture( TEXDIM_2D, sx, sy, 0, 1, levels, format, usage, tiled );
+            return createTexture( TEXDIM_2D, sx, sy, 0, 1, levels, format, usage );
         }
 
         ///
@@ -690,10 +694,9 @@ namespace GN { namespace gfx
         create3DTexture( size_t    sx, size_t sy, size_t sz,
                          size_t    levels = 0,
                          ClrFmt    format = FMT_DEFAULT,
-                         BitFields usage = 0,
-                         bool      tiled = false )
+                         BitFields usage = 0 )
         {
-            return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usage, tiled );
+            return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usage );
         }
 
         ///
@@ -703,10 +706,9 @@ namespace GN { namespace gfx
         createCubeTexture( size_t    sx,
                            size_t    levels = 0,
                            ClrFmt    format = FMT_DEFAULT,
-                           BitFields usage = 0,
-                           bool      tiled = false )
+                           BitFields usage = 0 )
         {
-            return createTexture( TEXDIM_CUBE, sx, 0, 0, 6, levels, format, usage, tiled );
+            return createTexture( TEXDIM_CUBE, sx, 0, 0, 6, levels, format, usage );
         }
 
         ///
