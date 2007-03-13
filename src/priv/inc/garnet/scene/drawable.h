@@ -39,6 +39,7 @@ namespace GN { namespace scene
         ResourceId             mesh;
         std::map<StrA,TexItem> textures;
         std::map<StrA,UniItem> uniforms;
+        gfx::RendererContext   context;
         //@}
 
         ///
@@ -50,6 +51,7 @@ namespace GN { namespace scene
             mesh = 0;
             textures.clear();
             uniforms.clear();
+            context.clearToNull();
         }
 
         ///
@@ -76,14 +78,14 @@ namespace GN { namespace scene
         void draw()
         {
             if( 0 == effect || 0 == mesh ) return;
-            
+
             ResourceManager & rm = ResourceManager::sGetInstance();
             gfx::Effect * eff = rm.getResourceT<gfx::Effect>( effect );
             GN_ASSERT( eff );
 
             for( size_t i = 0; i < eff->getNumPasses(); ++i )
             {
-                eff->passBegin( i );
+                eff->passBegin( context, i );
                 drawPass();
                 eff->passEnd();
             }
@@ -94,7 +96,6 @@ namespace GN { namespace scene
             if( 0 == effect || 0 == mesh ) return;
 
             ResourceManager & rm = ResourceManager::sGetInstance();
-            gfx::Renderer   & r  = gRenderer;
 
             gfx::Effect * eff = rm.getResourceT<gfx::Effect>( effect );
             GN_ASSERT( eff );
@@ -110,13 +111,16 @@ namespace GN { namespace scene
             // bind mesh
             gfx::Mesh * m = rm.getResourceT<gfx::Mesh>( mesh );
             GN_ASSERT( m );
-            m->updateContext( r );
+            m->updateContext( context );
 
             // commit changes
             eff->commitChanges();
 
+            // apply context to renderer
+            gRenderer.setContext( context );
+
             // do draw
-            m->draw( r );
+            m->draw();
         }
 
         //@}

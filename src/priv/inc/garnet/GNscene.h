@@ -22,6 +22,7 @@ namespace GN
 
 #include "scene/resource.h"
 #include "scene/drawable.h"
+#include "scene/quad.h"
 
 namespace GN { namespace scene
 {

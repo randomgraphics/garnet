@@ -791,11 +791,10 @@ bool GN::gfx::Effect::createTechnique( TechniqueData & data, const EffectDesc::T
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::Effect::sSetFfpUniform( SInt32 type, const UniformData & data )
+void GN::gfx::Effect::sSetFfpUniform(
+    RendererContext & ctx, SInt32 type, const UniformData & data )
 {
     GN_GUARD;
-
-    Renderer & r = gRenderer;
 
     const UniformValue & value = data.value;
 
@@ -805,7 +804,7 @@ void GN::gfx::Effect::sSetFfpUniform( SInt32 type, const UniformData & data )
             if( UVT_MATRIX44 == type )
             {
                 GN_ASSERT( !value.matrix44s.empty() );
-                r.setWorld( value.matrix44s[0] );
+                ctx.setWorld( value.matrix44s[0] );
             }
             else
             {
@@ -817,7 +816,7 @@ void GN::gfx::Effect::sSetFfpUniform( SInt32 type, const UniformData & data )
             if( UVT_MATRIX44 == type )
             {
                 GN_ASSERT( !value.matrix44s.empty() );
-                r.setView( value.matrix44s[0] );
+                ctx.setView( value.matrix44s[0] );
             }
             else
             {
@@ -829,7 +828,7 @@ void GN::gfx::Effect::sSetFfpUniform( SInt32 type, const UniformData & data )
             if( UVT_MATRIX44 == type )
             {
                 GN_ASSERT( !value.matrix44s.empty() );
-                r.setProj( value.matrix44s[0] );
+                ctx.setProj( value.matrix44s[0] );
             }
             else
             {

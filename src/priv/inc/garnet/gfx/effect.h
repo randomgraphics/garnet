@@ -437,7 +437,7 @@ namespace GN { namespace gfx {
         bool init( const Effect & ); ///< Make effect clone
         void quit();
     private:
-        void clear() { mPassBegun = false; mContextUpdateBegun = false; }
+        void clear() { mPassBegun = false; mActiveContext = NULL; }
         //@}
 
         // ********************************
@@ -445,21 +445,22 @@ namespace GN { namespace gfx {
         ///
         /// Standard call sequence:
         /// <pre>
-        ///     set_common_uniforms_and_textures();
-        ///     size_t numPasses = myEffect->getNumPasses() )
+        ///     RendererContext ctx;
+        ///     set_common_uniforms_and_textures( ctx );
+        ///     size_t numPasses = myEffect->getNumPasses();
         ///     for( size_t i = 0; i < numPasses; ++i )
         ///     {
-        ///         myEffect->passBegin( i );
+        ///         myEffect->passBegin( ctx, i );
         ///         for_each_mesh
         ///         {
-        ///             set_mesh_specific_uniforms_textures();
-        ///             set_mesh_vertex_and_index_buffers();
+        ///             set_mesh_specific_uniforms_and_textures( ctx );
+        ///             set_mesh_vertex_and_index_buffers( ctx );
         ///             myEffect->commitChanges();
-        ///             draw_the_mesh();
+        ///             gRenderer.setContext( ctx );
+        ///             gRenderer.drawIndexed( ... );
         ///         }
         ///         myEffect->passEnd();
         ///     }
-        ///     myEffect->drawEnd();
         /// </pre>
         // ********************************
     public:
@@ -472,23 +473,19 @@ namespace GN { namespace gfx {
         size_t getNumPasses() const;
 
         ///
-        /// apply render state of specific pass.
+        /// apply render state of specific pass to renderer context.
         ///
-        void passBegin( size_t ) const;
+        void passBegin( RendererContext &, size_t ) const;
 
         ///
         /// end the rendering pass.
-        /// Must be called between drawBegin() and drawEnd(), and after passBegin().
+        /// Must be called pair with passBegin().
         ///
         void passEnd() const
         {
-            if( mContextUpdateBegun )
-            {
-                gRenderer.contextUpdateEnd();
-                mContextUpdateBegun = false;
-            }
             GN_ASSERT( mPassBegun );
             mPassBegun = false;
+            mActiveContext = NULL;
         }
 
         ///
@@ -642,11 +639,11 @@ namespace GN { namespace gfx {
         NamedItemManager<UniformData>   mUniforms;
         NamedItemManager<ShaderData>    mShaders;
         NamedItemManager<TechniqueData> mTechniques;
-        
+
+        mutable RendererContext * mActiveContext;
         mutable size_t mActivePass;
         mutable UInt32 mActiveTechnique;
         mutable bool   mPassBegun;
-        mutable bool   mContextUpdateBegun;
 
         static Logger * sLogger;
 
@@ -658,7 +655,7 @@ namespace GN { namespace gfx {
         bool createEffect(); // called by init()
         bool createShader( ShaderData &, const StrA &, const EffectDesc::ShaderDesc & );
         bool createTechnique( TechniqueData &, const EffectDesc::TechniqueDesc & );
-        static void sSetFfpUniform( SInt32, const UniformData & );
+        static void sSetFfpUniform( RendererContext &, SInt32, const UniformData & );
     };
 }}
 

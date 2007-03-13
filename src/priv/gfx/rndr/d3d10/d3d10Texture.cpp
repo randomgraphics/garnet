@@ -237,12 +237,8 @@ bool GN::gfx::D3D10Texture::createTexture()
     }
 
     // calculate mipmap sizes
-    if( !isPowerOf2(desc.width) || !isPowerOf2(desc.height) || !isPowerOf2(desc.depth) )
-    {
-        GN_TODO( "mipsize may be inacurate, if texture size is not 2^n." );
-    }
     Vector3<UInt32> mipSize( desc.width, desc.height, desc.depth );
-    for( size_t i = 0; i < getDesc().levels; ++i )
+    for( size_t i = 0; i < desc.levels; ++i )
     {
         setMipSize( i, mipSize );
         if( mipSize.x > 1 ) mipSize.x >>= 1;

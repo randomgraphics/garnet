@@ -175,11 +175,14 @@ public:
         }
 
         // quad 4
+        RendererContext ctx;
+        ctx.clearToNull();
         Effect * eff = rm.getResourceT<Effect>( eff0 );
         for( size_t i = 0; i < eff->getNumPasses(); ++i )
         {
-            eff->passBegin( i );
+            eff->passBegin( ctx, i );
             eff->commitChanges();
+            r.setContext( ctx );
             r.draw2DTexturedQuad( DQ_USE_CURRENT, 0, 0.5, 0.5, 1.0, 1.0 );
             eff->passEnd();
         }
