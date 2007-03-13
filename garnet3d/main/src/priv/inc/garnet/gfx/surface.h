@@ -110,9 +110,9 @@ namespace GN { namespace gfx
         ClrFmt    format;    ///< pixel format. When used as parameter of Renderer::createTexture(),
                              ///< you may set it to FMT_DEFAULT. To use default texture format.
 
-        //
-        // get basemap size
-        //
+        ///
+        /// get basemap size
+        ///
         const Vector3<UInt32> & size() const { return *(Vector3<UInt32>*)&width; }
 
         union
@@ -128,7 +128,7 @@ namespace GN { namespace gfx
                 unsigned int tiled        :  1; ///< See TEXUSAGE_TILED
                 unsigned int _            : 26; ///< reserved
             };
-        } usage;
+        } usage; ///< texture usage
     };
 
     ///

@@ -14,12 +14,14 @@ GN_INLINE size_t GN::gfx::Effect::getNumPasses() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::gfx::Effect::passBegin( size_t passIdx ) const
+GN_INLINE void GN::gfx::Effect::passBegin(
+    RendererContext & ctx, size_t passIdx ) const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( !mPassBegun && !mContextUpdateBegun );
+    GN_ASSERT( !mPassBegun );
     mPassBegun = true;
+    mActiveContext = &ctx;
     mActivePass = passIdx;
 
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
@@ -27,12 +29,8 @@ GN_INLINE void GN::gfx::Effect::passBegin( size_t passIdx ) const
 
     const PassData & p = t.passes[mActivePass];
 
-    Renderer & r = gRenderer;
-
     // update renderer context
-    mContextUpdateBegun = true;
-    r.contextUpdateBegin();
-    r.setRenderStateBlock( p.rsb );
+    ctx.setRenderStateBlock( p.rsb );
     for( size_t i = 0; i < NUM_SHADER_TYPES; ++i )
     {
         GN_ASSERT( mShaders.items.validHandle( p.shaders[i] ) );
@@ -40,7 +38,7 @@ GN_INLINE void GN::gfx::Effect::passBegin( size_t passIdx ) const
         ShaderData & sd = mShaders.items[p.shaders[i]];
 
         // bind shader
-        r.setShader( (ShaderType)i, sd.value );
+        ctx.setShader( (ShaderType)i, sd.value );
 
         // apply texture/sampler properties
         for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
@@ -48,7 +46,7 @@ GN_INLINE void GN::gfx::Effect::passBegin( size_t passIdx ) const
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            gRenderer.setTexture( trd.stage, td.value );
+            ctx.setTexture( trd.stage, td.value );
         }
 
         // apply dirty uniforms
@@ -59,7 +57,7 @@ GN_INLINE void GN::gfx::Effect::passBegin( size_t passIdx ) const
             const UniformData & ud = mUniforms.items[urd.id];
             if( urd.ffp )
             {
-                sSetFfpUniform( urd.ffpType, ud );
+                sSetFfpUniform( ctx, urd.ffpType, ud );
             }
             else
             {
@@ -80,14 +78,14 @@ GN_INLINE void GN::gfx::Effect::commitChanges() const
 {
     GN_GUARD_SLOW;
 
-    GN_ASSERT( mPassBegun && mContextUpdateBegun );
+    GN_ASSERT( mPassBegun && mActiveContext );
 
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
     TechniqueData & t = mTechniques.items[mActiveTechnique];
 
     const PassData & p = t.passes[mActivePass];
 
-    // apply uniforms and textures
+    // for each shader
     for( size_t iShader = 0; iShader < NUM_SHADER_TYPES; ++iShader )
     {
         GN_ASSERT( mShaders.items.validHandle( p.shaders[iShader] ) );
@@ -102,7 +100,7 @@ GN_INLINE void GN::gfx::Effect::commitChanges() const
             const UniformData & ud = mUniforms.items[urd.id];
             if( urd.ffp )
             {
-                sSetFfpUniform( urd.ffpType, ud );
+                sSetFfpUniform( *mActiveContext, urd.ffpType, ud );
             }
             else
             {
@@ -112,9 +110,6 @@ GN_INLINE void GN::gfx::Effect::commitChanges() const
         }
         sd.dirtyUniforms.clear();
     }
-
-    mContextUpdateBegun = false;
-    gRenderer.contextUpdateEnd();
 
     GN_UNGUARD_SLOW;
 }

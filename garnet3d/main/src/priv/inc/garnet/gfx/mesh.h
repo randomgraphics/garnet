@@ -67,8 +67,9 @@ namespace GN { namespace gfx
         ///
         /// update renderer context
         ///
-        void updateContext( Renderer & r ) const
+        void updateContext() const
         {
+            Renderer & r = gRenderer;
             r.setVtxFmt( vtxfmt );
             for( size_t i = 0; i < vtxbufs.size(); ++i )
                 r.setVtxBuf( i, vtxbufs[i].buffer, vtxbufs[i].offset, vtxbufs[i].stride );
@@ -78,8 +79,9 @@ namespace GN { namespace gfx
         ///
         /// draw the mesh
         ///
-        void draw( Renderer & r ) const
+        void draw() const
         {
+            Renderer & r = gRenderer;
             if( idxbuf )
             {
                 r.drawIndexed( primtype, numprim, startvtx, minvtxidx, numvtx, startidx );

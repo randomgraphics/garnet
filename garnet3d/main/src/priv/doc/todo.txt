@@ -2,7 +2,7 @@
 
 - to make a simple game, like terris clone:
   - load effect/shader from xml file: done
-  - load mesh
+  - load mesh: done
   - simple GUI
   - task manager/coordinator
 

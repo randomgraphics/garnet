@@ -117,8 +117,8 @@ public:
         r.clearScreen( Vector4f(0,0,0,1) );
 
         r.setShaders( vs, ps, 0 );
-        mesh->updateContext( r );
-        mesh->draw( r );
+        mesh->updateContext();
+        mesh->draw();
     }
 };
 
