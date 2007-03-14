@@ -181,10 +181,10 @@ bool GN::gfx::D3D10Renderer::deviceCreate()
 
     // trigger signals
     GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device create." );
-    if( !sSigCreate() ) return false;
+    if( !gSigRendererCreate() ) return false;
 
     GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device restore." );
-    if( !sSigRestore() ) return false;
+    if( !gSigRendererRestore() ) return false;
 
     // success
     return true;
@@ -204,10 +204,10 @@ void GN::gfx::D3D10Renderer::deviceDestroy()
     if( mDevice )
     {
         GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device dispose." );
-        sSigDispose();
+        gSigRendererDispose();
 
         GN_TRACE(sLogger)( "GFX SIGNAL: D3D10 device destroy." );
-        sSigDestroy();
+        gSigRendererDestroy();
     }
 
     drawDeviceDestroy();

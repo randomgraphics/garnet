@@ -41,24 +41,20 @@ public:
         ResourceManager & rm = gSceneResMgr;
 
         // draw to RT0
-        r.setTexture( 0, rm.getResourceT<Texture>( mTex0 ) );
         r.setDrawToTextures( 1, mRt0 );
         r.clearScreen();
-        r.draw2DTexturedQuad( 0 );
+        gQuadRenderer.drawSingleTexturedQuad( rm.getResourceT<Texture>( mTex0 ),  0 );
 
         // draw to RT1
-        r.setTexture( 0, rm.getResourceT<Texture>( mTex1 ) );
         r.setDrawToTextures( 1, mRt1 );
         r.clearScreen();
-        r.draw2DTexturedQuad( 0 );
+        gQuadRenderer.drawSingleTexturedQuad( rm.getResourceT<Texture>( mTex1 ),  0 );
 
         // draw 2 RTs to screen
         r.setDrawToBackBuf();
         r.clearScreen();
-        r.setTexture( 0, mRt0 );
-        r.draw2DTexturedQuad( 0, 0, 0.0, 0.0, 0.5, 1.0 );
-        r.setTexture( 0, mRt1 );
-        r.draw2DTexturedQuad( 0, 0, 0.5, 0.0, 1.0, 1.0 );
+        gQuadRenderer.drawSingleTexturedQuad( mRt0, 0, 0, 0.0, 0.0, 0.5, 1.0 );
+        gQuadRenderer.drawSingleTexturedQuad( mRt1, 0, 0, 0.5, 0.0, 1.0, 1.0 );
     }
 };
 

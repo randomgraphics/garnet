@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
 	'drawable.cpp',
+	'quad.cpp',
 	'resource.cpp',
 	]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

@@ -380,6 +380,11 @@ bool GN::gfx::D3D9Texture::deviceRestore()
             0,
             mD3DFormat,
             D3DPOOL_SYSTEMMEM );
+        if( !mShadowCopy )
+        {
+            GN_ERROR(sLogger)( "fail to create shadow copy of the texture." );
+            return false;
+        }
     }
 #endif
 

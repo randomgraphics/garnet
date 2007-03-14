@@ -402,7 +402,7 @@ GN::scene::ResourceManager::ResourceManager()
     registerResourceType( "effect"  , &sCreateEffect  , &sDeleteResource );
     registerResourceType( "mesh"    , &sCreateMesh    , &sDeleteResource );
 
-    Renderer::sSigDispose.connect( this, &ResourceManager::onRendererDispose );
+    gSigRendererDispose.connect( this, &ResourceManager::onRendererDispose );
 
     GN_UNGUARD;
 }
@@ -414,7 +414,7 @@ GN::scene::ResourceManager::~ResourceManager()
 {
     GN_GUARD;
 
-    Renderer::sSigDispose.disconnect( this );
+    gSigRendererDispose.disconnect( this );
 
     for( ResourceId id = mResources.first(); id; id = mResources.next( id ) )
     {
@@ -838,4 +838,3 @@ GN::scene::createTextureFromFile( File & file, BitFields usage )
 
     GN_UNGUARD_ALWAYS_DO( return 0; );
 }
-

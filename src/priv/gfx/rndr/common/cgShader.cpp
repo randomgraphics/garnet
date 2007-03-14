@@ -9,14 +9,14 @@ static GN::StrA sAddLineCount( const GN::StrA & in )
 {
     using namespace GN;
 
-    GN::StrA out( "    1: " );
+    GN::StrA out( "(  1) : " );
 
     int line = 1;
     for( const char * s = in.cptr(); *s; ++s )
     {
         if( '\n' == *s )
         {
-            out.append( strFormat( "\n%5d: ", ++line ) );
+            out.append( strFormat( "\n(%3d) : ", ++line ) );
         }
         else
         {
@@ -64,7 +64,7 @@ bool GN::gfx::CgShader::init(
                 "=====================================================\n"
                 "\n",
                 sAddLineCount( code ).cptr(),
-                sAddLineCount( cgGetLastListing(context) ).cptr() );
+                cgGetLastListing(context) );
         }
         return failure();
     }

@@ -12,13 +12,11 @@ class Scene
 {
     SampleApp & app;
     
-    AutoRef<Shader> ps1, ps2;
-
     UInt32 tex0;
 
     UInt32 eff0;
 
-    Drawable box, quad;
+    Drawable box;
 
     Matrix44f world, view, proj;
 
@@ -32,70 +30,10 @@ public:
 
     bool init()
     {
-        Renderer & r = gRenderer;
-
-        // create pixel shaders
-        if( r.supportShader( "ps_1_1" ) )
-        {
-            static const char * code =
-                "ps_1_1\n"
-                "mov r0, c0";
-            ps1.attach( r.createPS( LANG_D3D_ASM, code ) );
-            if( !ps1 ) return false;
-            ps1->setUniformByNameV( "c0", Vector4f(0,1,0,1) );
-        }
-        else if( r.supportShader( "arbfp1" ) )
-        {
-            static const char * code =
-                "!!ARBfp1.0 \n"
-                "MOV result.color, program.local[0]; \n"
-                "END";
-            ps1.attach( r.createPS( LANG_OGL_ARB, code ) );
-            if( !ps1 ) return false;
-            ps1->setUniformByNameV( "l0", Vector4f(0,1,0,1) );
-        }
-        if( r.supportShader( "ps_1_1" ) )
-        {
-            static const char * code =
-                "float4 diffuse; \n"
-                "float4 psMain() : COLOR0 \n"
-                "{ \n"
-                "   return diffuse; \n"
-                "} \n";
-            ps2.attach( r.createPS( LANG_D3D_HLSL, code, "entry=psMain sm30=false" ) );
-            if( !ps2 ) return false;
-            ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
-        }
-        else if( r.supportShader( "glslps" ) )
-        {
-            static const char * code =
-                "uniform vec4 diffuse; \n"
-                "void main() \n"
-                "{ \n"
-                "   gl_FragColor = diffuse; \n"
-                "} \n";
-            ps2.attach( r.createPS( LANG_OGL_GLSL, code ) );
-            if( !ps2 ) return false;
-            ps2->setUniformByNameV( "diffuse", Vector4f(1,0,0,1) );
-        }
-        else if( r.supportShader( "arbfp1" ) )
-        {
-            static const char * code =
-                "!!ARBfp1.0 \n"
-                "MOV result.color, program.local[0]; \n"
-                "END";
-            ps2.attach( r.createPS( LANG_OGL_ARB, code ) );
-            if( !ps2 ) return false;
-            ps2->setUniformByNameV( "l0", Vector4f(1,0,0,1) );
-        }
-
         scene::ResourceManager & rm = gSceneResMgr;
 
         // load box
         if( !box.loadFromXmlFile( "media::drawable/cube1.xml" ) ) return false;
-
-        // load quad
-        if( !quad.loadFromXmlFile( "media::drawable/screen_aligned_textured_quad.xml" ) ) return false;
 
         // load texture
         tex0 = rm.getResourceId( "media::texture/rabit.png" );
@@ -123,8 +61,6 @@ public:
 
     void quit()
     {
-        ps1.clear();
-		ps2.clear();
     }
 
     void update()
@@ -154,25 +90,15 @@ public:
         scene::ResourceManager & rm = gSceneResMgr;
 
         // quad 1
-        //r.setTexture( 0, rm.getResourceT<Texture>(tex0) );
-        //r.draw2DTexturedQuad( DQ_UPDATE_DEPTH, 0, 0, 0, 0.5, 0.5 );
-        quad.textures["tex"].texid = tex0;
-        quad.uniforms["rect"].value.setV( Vector4f(0, 0, 0.5f, 0.5f) );
-        quad.draw();
+        gQuadRenderer.drawBegin( rm.getResourceT<Texture>(tex0), QuadRenderer::OPT_DEPTH_WRITE );
+        gQuadRenderer.drawTextured( 0, 0, 0, 0.5f, 0.5f );
+        gQuadRenderer.drawEnd();
 
-        // quad 2
-        if( ps1 )
-        {
-            r.setShaders( 0, ps1, 0 );
-            r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0, 0.5, 0.0, 1.0, 0.5 );
-        }
-
-        // quad 3
-        if( ps2 )
-        {
-            r.setShaders( 0, ps2, 0 );
-            r.draw2DTexturedQuad( DQ_USE_CURRENT_PS, 0, 0.0, 0.5, 0.5, 1.0 );
-        }
+        // quad 2,3
+        gQuadRenderer.drawSolidBegin();
+        gQuadRenderer.drawSolid( ubyte4ToBGRA32(0,255,0,255), 0, 0.5, 0.0, 1.0, 0.5 );
+        gQuadRenderer.drawSolid( ubyte4ToBGRA32(255,0,0,255), 0, 0.0, 0.5, 0.5, 1.0 );
+        gQuadRenderer.drawEnd();
 
         // quad 4
         RendererContext ctx;
@@ -183,7 +109,7 @@ public:
             eff->passBegin( ctx, i );
             eff->commitChanges();
             r.setContext( ctx );
-            r.draw2DTexturedQuad( DQ_USE_CURRENT, 0, 0.5, 0.5, 1.0, 1.0 );
+            gQuadRenderer.drawSingleTexturedQuad( 0, QuadRenderer::OPT_USER_CONTEXT, 0, 0.5, 0.5, 1.0, 1.0 );
             eff->passEnd();
         }
 

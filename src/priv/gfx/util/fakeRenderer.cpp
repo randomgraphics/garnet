@@ -32,8 +32,8 @@ namespace GN { namespace gfx
         {
             if( mInitialized )
             {
-                sSigDispose();
-                sSigDestroy();
+                gSigRendererDispose();
+                gSigRendererDestroy();
             }
         }
 
@@ -55,7 +55,7 @@ namespace GN { namespace gfx
             if( !mInitialized )
             {
                 mInitialized = true;
-                if( !sSigCreate() || !sSigRestore() ) return false;
+                if( !gSigRendererCreate() || !gSigRendererRestore() ) return false;
             }
             return true;
         }

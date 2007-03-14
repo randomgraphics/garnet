@@ -285,7 +285,7 @@ GN::gfx::RenderWindowMsw::handleMessage( HWND wnd, UINT msg, WPARAM wp, LPARAM l
     {
         case WM_CLOSE:
             // do not close the window. just trigger the signal
-            Renderer::sSigWindowClosing();
+            gSigRendererWindowClosing();
             break;
 
         case WM_ENTERSIZEMOVE :

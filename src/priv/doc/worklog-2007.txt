@@ -1,3 +1,7 @@
+- 2007.3.13
+  - quad renderer
+  - move renderer signals out of renderer class
+
 - 2007.3.3
   - now support create texture from xml file
   - rename TEXTYPE_XXX to TEXDIM_XXX
