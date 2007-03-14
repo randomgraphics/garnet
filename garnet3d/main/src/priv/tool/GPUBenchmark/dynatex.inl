@@ -336,8 +336,7 @@ public:
         r.rebindContext( ff );
 
         // draw text
-        static const Vector4f RED(1,0,0,1);
-        r.drawDebugText( mInfo.cptr(), 0, 100, RED );
+        scene::gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_BGRA32(0,0,255,255) );
     }
 
     StrA printResult()

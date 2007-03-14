@@ -30,6 +30,7 @@ GN::scene::QuadRenderer::QuadRenderer()
 // -----------------------------------------------------------------------------
 GN::scene::QuadRenderer::~QuadRenderer()
 {
+    // Note: classes that inherited from SlotBase can disconnect from signals automaticlly.
 }
 
 // *****************************************************************************

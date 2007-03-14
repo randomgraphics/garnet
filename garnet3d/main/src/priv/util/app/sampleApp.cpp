@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "garnet/GNapp.h"
+#include "garnet/GNscene.h"
 #define SO_ASSERT GN_ASSERT
 #include <SimpleOpt.h>
 
@@ -491,12 +492,9 @@ void GN::app::SampleApp::drawHUD()
 {
     GN_GUARD_SLOW;
 
-    using namespace GN::gfx;
-
     if( mShowHUD )
     {
-        Renderer & r = gRenderer;
-        r.drawDebugText( mFps.getFpsString(), 0, 0 );
+        scene::gAsciiFont.drawText( mFps.getFpsString(), 0, 0 );
     }
 
     GN_UNGUARD_SLOW;

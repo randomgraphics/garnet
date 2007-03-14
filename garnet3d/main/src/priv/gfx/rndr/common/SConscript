@@ -7,7 +7,6 @@ sources = [
     'basicRenderer.cpp',
     'basicTexture.cpp',
     'cgShader.cpp',
-    'charBitmap8x13.cpp',
     'renderWindowMsw.cpp',
     'renderWindowX11.cpp',
 ]

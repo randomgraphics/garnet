@@ -1,5 +1,7 @@
 Import( 'GN' )
 sources = [
+	'asciifont.cpp',
+	'charBitmap8x13.cpp',
 	'drawable.cpp',
 	'quad.cpp',
 	'resource.cpp',

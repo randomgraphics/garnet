@@ -190,7 +190,7 @@ public:
         int x = 1, y = 1;
         gInput.getMousePosition( x, y );
         mousePos.format( "Mouse: %d, %d", x, y );
-        r.drawDebugText( mousePos.cptr(), 0, 100 );//*/
+        gAsciiFont.drawText( mousePos.cptr(), 0, 100 );
     }
 };
 

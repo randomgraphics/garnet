@@ -326,8 +326,7 @@ public:
         mGeometry.draw();
 
         // draw statistics
-        static const Vector4f RED(1,0,0,1);
-        r.drawDebugText( mThroughputStr.cptr(), 0, 100, RED );
+        scene::gAsciiFont.drawText( mThroughputStr.cptr(), 0, 100, GN_BGRA32(0,0,255,255) );
     }
 
     StrA printResult()

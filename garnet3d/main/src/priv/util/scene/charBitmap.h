@@ -1,7 +1,7 @@
-#ifndef __GN_GFX_CHARBITMAP_H__
-#define __GN_GFX_CHARBITMAP_H__
+#ifndef __GN_SCENE_CHARBITMAP_H__
+#define __GN_SCENE_CHARBITMAP_H__
 // *****************************************************************************
-/// \file    common/charBitmap.h
+/// \file    scene/charBitmap.h
 /// \brief   Bitmap font image
 /// \author  chenlee (2006.5.26)
 // *****************************************************************************
@@ -23,4 +23,4 @@ extern const BitmapCharDesc * const gBitmapChars8x13[]; ///< 8x13 ASCII bitmaps.
 // *****************************************************************************
 //                           End of charBitmap.h
 // *****************************************************************************
-#endif // __GN_GFX_CHARBITMAP_H__
+#endif // __GN_SCENE_CHARBITMAP_H__
