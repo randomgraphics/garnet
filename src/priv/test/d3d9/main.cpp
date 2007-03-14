@@ -169,6 +169,13 @@ public:
 
     void onRender()
     {
+        Renderer & r = gRenderer;
+
+        // reset to default context
+        RendererContext ctx;
+        ctx.resetToDefault();
+        r.setContext( ctx );
+
         dev->Clear( 0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0, 1.0f, 0 );
 
         // set render state
@@ -195,7 +202,7 @@ public:
         ff.setShaderBit( SHADER_PS );
         ff.vtxFmt = 1;
         ff.rsb = 1;
-        gRenderer.rebindContext( ff );
+        r.rebindContext( ff );
     }
 };
 int main( int argc, const char * argv[] )
