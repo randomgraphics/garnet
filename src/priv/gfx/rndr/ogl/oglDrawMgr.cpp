@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "oglRenderer.h"
-#include "oglFont.h"
-#include "oglQuad.h"
 #include "oglLine.h"
 #include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
@@ -77,16 +75,6 @@ bool GN::gfx::OGLRenderer::drawDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
-    // create font renderer
-    GN_ASSERT( !mFont );
-    mFont = new OGLFont(*this);
-    if( !mFont->init() ) return false;
-
-    // create quad renderer
-    GN_ASSERT( !mQuad );
-    mQuad = new OGLQuad(*this);
-    if( !mQuad->init() ) return false;
-
     // create line renderer
     GN_ASSERT( !mLine );
     mLine = new OGLLine(*this);
@@ -107,8 +95,6 @@ void GN::gfx::OGLRenderer::drawDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    safeDelete( mFont );
-    safeDelete( mQuad );
     safeDelete( mLine );
 
     GN_UNGUARD
@@ -470,31 +456,6 @@ void GN::gfx::OGLRenderer::drawUp(
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawQuads(
-    BitFields options,
-    const void * positions, size_t posStride,
-    const void * texcoords, size_t texStride,
-    const void * colors, size_t clrStride,
-    size_t count )
-{
-    GN_GUARD_SLOW;
-    GN_ASSERT( mDrawBegan && mQuad );
-    contextUpdateBegin();
-    if( !(DQ_USE_CURRENT_VS & options) ) setVS( 0 );
-    if( !(DQ_USE_CURRENT_PS & options) ) setPS( 0 );
-    contextUpdateEnd();
-    mQuad->drawQuads(
-        options,
-        (const float*)positions, posStride,
-        (const float*)texcoords, texStride,
-        (const UInt32*)colors, clrStride,
-        count );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
 void GN::gfx::OGLRenderer::drawLines(
     BitFields options,
     const void * positions,
@@ -506,24 +467,12 @@ void GN::gfx::OGLRenderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
-    GN_ASSERT( mDrawBegan && mQuad );
+    GN_ASSERT( mDrawBegan && mLine );
     contextUpdateBegin();
     if( !(DL_USE_CURRENT_VS & options) ) setVS( 0 );
     if( !(DL_USE_CURRENT_PS & options) ) setPS( 0 );
     contextUpdateEnd();
     mLine->drawLines( options, (const float*)positions, stride, count, color, model, view, proj );
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::OGLRenderer::drawDebugText( const char * s, int x, int y, const Vector4f & c )
-{
-    GN_GUARD_SLOW;
-    GN_ASSERT( mDrawBegan && mFont );
-    setShaders( 0, 0, 0 ); // disable programmable pipeline
-    mFont->drawText( s, x, y, c );
     GN_UNGUARD_SLOW;
 }
 

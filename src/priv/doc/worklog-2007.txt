@@ -1,4 +1,5 @@
 - 2007.3.13
+  - font renderer
   - quad renderer
   - move renderer signals out of renderer class
 

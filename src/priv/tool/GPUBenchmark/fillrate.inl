@@ -141,8 +141,7 @@ public:
         r.setContext( mContext );
         mGeometry.draw();
 
-        static const Vector4f RED(1,0,0,1);
-        r.drawDebugText( mFillrateStr.cptr(), 0, 100, RED );
+        scene::gAsciiFont.drawText( mFillrateStr.cptr(), 0, 100, GN_BGRA32(0,0,255,255) );
     }
 
     StrA printResult()

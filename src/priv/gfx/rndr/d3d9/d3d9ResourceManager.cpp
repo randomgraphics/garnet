@@ -5,8 +5,6 @@
 #include "d3d9VertexDecl.h"
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
-#include "d3d9Font.h"
-#include "d3d9Quad.h"
 #include "d3d9Line.h"
 
 // *****************************************************************************
@@ -44,12 +42,6 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
 #ifdef HAS_CG_D3D9
     GN_DX9_CHECK_RV( cgD3D9SetDevice( getDevice() ), false );
 #endif
-
-    mFont = new D3D9Font(*this);
-    if( !mFont->init() ) return false;
-
-    mQuad = new D3D9Quad(*this);
-    if( !mQuad->init() ) return false;
 
     mLine = new D3D9Line(*this);
     if( !mLine->init() ) return false;
@@ -110,8 +102,6 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
 
     _GNGFX_DEVICE_TRACE();
 
-    safeDelete( mFont );
-    safeDelete( mQuad );
     safeDelete( mLine );
 
     // release vertex formats

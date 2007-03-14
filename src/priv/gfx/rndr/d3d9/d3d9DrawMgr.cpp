@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
-#include "d3d9Font.h"
-#include "d3d9Quad.h"
 #include "d3d9Line.h"
 #include "d3d9IdxBuf.h"
 
@@ -258,29 +256,6 @@ void GN::gfx::D3D9Renderer::drawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawQuads(
-    BitFields options,
-    const void * positions, size_t posStride,
-    const void * texcoords, size_t texStride,
-    const void * colors, size_t clrStride,
-    size_t count )
-{
-    GN_GUARD_SLOW;
-    PIXPERF_FUNCTION_EVENT();
-    GN_ASSERT( mDrawBegan && mQuad );
-    mQuad->drawQuads(
-        options,
-        (const float*)positions, posStride,
-        (const float*)texcoords, texStride,
-        (const UInt32*)colors, clrStride,
-        count );
-    PIXPERF_END_EVENT();
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::drawLines(
     BitFields options,
     const void * positions,
@@ -300,22 +275,6 @@ void GN::gfx::D3D9Renderer::drawLines(
         count, color,
         model, view, proj );
     PIXPERF_END_EVENT();
-    GN_UNGUARD_SLOW;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D9Renderer::drawDebugText(
-    const char * text, int x, int y, const Vector4f & color )
-{
-    GN_GUARD_SLOW;
-
-    PIXPERF_FUNCTION_EVENT();
-
-    GN_ASSERT( mDrawBegan && mFont );
-    mFont->drawText( text, x, y, color );
-
     GN_UNGUARD_SLOW;
 }
 

@@ -126,19 +126,6 @@ void GN::gfx::D3D10Renderer::drawUp(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::drawQuads(
-    BitFields options,
-    const void * positions, size_t posStride,
-    const void * texcoords, size_t texStride,
-    const void * colors, size_t clrStride,
-    size_t count )
-{
-}
-
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::gfx::D3D10Renderer::drawLines(
     BitFields options,
     const void * positions,
@@ -148,13 +135,5 @@ void GN::gfx::D3D10Renderer::drawLines(
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
-{
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::gfx::D3D10Renderer::drawDebugText(
-    const char * text, int x, int y, const Vector4f & color )
 {
 }

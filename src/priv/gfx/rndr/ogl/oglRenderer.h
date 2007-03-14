@@ -13,8 +13,6 @@ namespace GN { namespace gfx
 {
     struct OGLResource;
     class OGLVtxFmt;
-    class OGLFont;
-    class OGLQuad;
     class OGLLine;
     class OGLBasicRTMgr;
 
@@ -335,11 +333,6 @@ namespace GN { namespace gfx
                              size_t        numprim,
                              const void *  vertexData,
                              size_t        strideInBytes );
-        virtual void drawQuads( BitFields options,
-                                const void * positions, size_t posStride,
-                                const void * texcoords, size_t texStride,
-                                const void * colors, size_t clrStride,
-                                size_t count );
         virtual void drawLines( BitFields options,
                                 const void * positions,
                                 size_t stride,
@@ -348,7 +341,6 @@ namespace GN { namespace gfx
                                 const Matrix44f & model,
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
-        virtual void drawDebugText( const char * text, int x, int y, const Vector4f & color );
 
     private:
 
@@ -357,8 +349,6 @@ namespace GN { namespace gfx
         void drawClear()
         {
             mDrawBegan = false;
-            mFont = 0;
-            mQuad = 0;
             mLine = 0;
             mCurrentStartVtx = (size_t)-1;
         }
@@ -376,8 +366,6 @@ namespace GN { namespace gfx
     private:
 
         bool mDrawBegan;
-        OGLFont * mFont;
-        OGLQuad * mQuad;
         OGLLine * mLine;
         size_t mCurrentStartVtx;
 

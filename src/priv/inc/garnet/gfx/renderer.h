@@ -308,78 +308,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Options for Renderer::drawQuads
-    ///
-    enum DrawQuadOptions
-    {
-        ///
-        /// 使用当前的渲染状态。
-        ///
-        /// By default, Renderer::drawQuads() will use a special render state block that
-        /// suites for transparent quads:
-        ///   - enable blending
-        ///   - enable depth testing
-        ///   - disable depth writing
-        ///
-        DQ_USE_CURRENT_RS = 1<<0,
-
-        ///
-        /// 使用当前的Vertex Shader。
-        ///
-        /// - 缺省情况下，Renderer::drawQuads() 会使用一个内置的vertex shader
-        /// - 自定义的vertex shader应接受一组2D空间坐标和一组2D贴图坐标。
-        ///
-        DQ_USE_CURRENT_VS = 1<<1,
-
-        ///
-        /// 使用当前的Pixel Shader。
-        ///
-        /// 缺省情况下，Renderer::drawQuads() 会使用一个内置的Pixel Shader，直接直接输出
-        /// 第0层贴图的颜色。
-        ///
-        DQ_USE_CURRENT_PS = 1<<2,
-
-        ///
-        /// 使用当前的Texture states.
-        ///
-        /// Effective only when using fixed function pipeline.
-        ///
-        DQ_USE_CURRENT_TS = 1<<3,
-
-        ///
-        /// position in window (post-transformed) space:
-        /// (0,0) for left-up corner, (width,height) for right-bottom corner.
-        ///
-        /// By default, quad positios are in screen space. That is:
-        /// (0,0) for left-up of the screen, and (1,1) for right-bottom of the screen)
-        ///
-        /// \note This option is meaningful only when DQ_USE_CURRENT_VS is _NOT_ set.
-        ///
-        DQ_WINDOW_SPACE = 1<<4,
-
-        ///
-        /// Disable blending. Default is enabled.
-        ///
-        DQ_OPAQUE = 1<<6,
-
-        ///
-        /// Enable depth write. Default is disabled.
-        /// Note thtat this option will implicitly enable DQ_DEPTH_ENABLE.
-        ///
-        DQ_UPDATE_DEPTH = 1<<7,
-
-        ///
-        /// Enable depth test. Default is disabled.
-        ///
-        DQ_DEPTH_ENABLE = 1<<8,
-
-        ///
-        /// 上述 DQ_USE_CURRENT_XX 的集合
-        ///
-        DQ_USE_CURRENT = DQ_USE_CURRENT_RS | DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_USE_CURRENT_TS
-    };
-
-    ///
     /// Options for Renderer::drawLines
     ///
     enum DrawLineOptions
@@ -974,71 +902,6 @@ namespace GN { namespace gfx
                              size_t        strideInBytes ) = 0;
 
         ///
-        /// Draw quads
-        ///
-        /// \param options
-        ///     渲染选项，详见 DrawQuadOptions。Set to 0 to use default options
-        /// \param positions, posStride
-        ///     顶点坐标数据，由一系列的3D顶点组成。4个顶点表示一个矩形。
-        ///     选项 DQ_WINDOW_SPACE 会影响坐标的含义。
-        ///     Note "posStride" is stride of one vertex.
-        /// \param texcoords, texStride
-        ///     贴图坐标数组，由一系列的2D顶点组成。4个顶点表示一个矩形。
-        ///     Note "texStride" is stride of one vertex.
-        ///     Specify texcoords to NULL, if you want non-textured quad.
-        ///     texStride is be ignored in this case.
-        /// \param colors, clrStride
-        ///     顶点颜色数组，由一系列的BGRA32颜色值组成。4个顶点表示一个矩形。
-        ///     Note "clrStride" is stride of one vertex.
-        ///     Set colors to NULL, to specify pure white for all vertices.
-        /// \param count
-        ///     Number of quads.
-        ///
-        virtual void drawQuads(
-            BitFields options,
-            const void * positions, size_t posStride,
-            const void * texcoords, size_t texStride,
-            const void * colors, size_t clrStride,
-            size_t count ) = 0;
-
-        ///
-        /// Draw quads, with same stride for positions, texcoords and colors
-        ///
-        void drawQuads(
-            BitFields options,
-            const void * positions, const void * texcoords, const void * colors, size_t stride,
-            size_t count )
-        {
-            drawQuads( options, positions, stride, texcoords, stride, colors, stride, count );
-        }
-
-        ///
-        /// Draw single 2D solid quad.
-        ///
-        void draw2DSolidQuad(
-            BitFields options,
-            double z,
-            double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
-            UInt32 color = 0xFFFFFFFF )
-        {
-            float x1 = (float)left;
-            float y1 = (float)top;
-            float x2 = (float)right;
-            float y2 = (float)bottom;
-            float zz = (float)z;
-
-            Vector3f pos[4];
-            pos[0].set( x1, y1, zz );
-            pos[1].set( x2, y1, zz );
-            pos[2].set( x2, y2, zz );
-            pos[3].set( x1, y2, zz );
-
-            UInt32 colors[] = { color, color, color, color };
-
-            drawQuads( options, pos, sizeof(Vector3f), 0, 0, colors, sizeof(UInt32), 1 );
-        }
-
-        ///
         /// Draw line segments
         ///
         /// \param options
@@ -1064,23 +927,6 @@ namespace GN { namespace gfx
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj ) = 0;
-
-        ///
-        /// 在屏幕上指定的位置绘制2D字符串.
-        ///
-        /// - 目前只接受英文字符，但运行速度较慢，主要为测试而用。
-        ///   文字的高度固定为14个象素，宽度为8个象素。
-        /// - 必须在 drawBegin() 和 drawEnd() 之间调用
-        ///
-        /// \param text  待绘制度字符串
-        /// \param x, y  第一个字符左上角的窗口坐标
-        ///              - 屏幕左上角为(0,0)，右下角为(width,height)
-        ///              - 被绘制的字符串的坐标位置以第一个字符的左上角为准。
-        /// \param color 文字颜色
-        ///
-        virtual void
-        drawDebugText( const char * text, int x, int y,
-                       const Vector4f & color = Vector4f(1,1,1,1) ) = 0;
 
         ///
         /// 返回上一次 drawEnd() 到现在所绘制的原语的个数
