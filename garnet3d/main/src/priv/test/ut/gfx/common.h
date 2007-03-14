@@ -9,6 +9,7 @@
 #include "../testCommon.h"
 #include "garnet/GNgfx.h"
 #include "garnet/GNwin.h"
+#include "garnet/GNscene.h"
 
 /// \cond
 
@@ -86,6 +87,7 @@ struct GfxResources
 
     void draw()
     {
+        using namespace GN::scene;
         GN::gfx::Renderer & r = gRenderer;
 
         if( r.drawBegin() )
@@ -100,10 +102,8 @@ struct GfxResources
 
             // draw to rt3
             r.setDrawToTextures( 1, rt3 );
-            r.setTexture( 0, rt1 );
-            r.draw2DTexturedQuad( 0, 0, 0, 1, 0.5 );
-            r.setTexture( 0, rt2 );
-            r.draw2DTexturedQuad( 0, 0, 0.5, 1, 1 );
+            gQuadRenderer.drawSingleTexturedQuad( rt1, 0, 0, 0, 1, 0.5 );
+            gQuadRenderer.drawSingleTexturedQuad( rt2, 0, 0, 0.5, 1, 1 );
 
             // draw to screen
             r.setDrawToBackBuf();
@@ -127,8 +127,8 @@ struct TestScene : public GN::SlotBase
     {
         using namespace GN;
         using namespace GN::gfx;
-        Renderer::sSigCreate.connect( this, &TestScene::create );
-        Renderer::sSigDestroy.connect( this, &TestScene::destroy );
+        gSigRendererCreate.connect( this, &TestScene::create );
+        gSigRendererDestroy.connect( this, &TestScene::destroy );
     }
 
     ~TestScene() { destroy(); }

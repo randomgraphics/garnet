@@ -1030,10 +1030,10 @@ namespace GN
 
         const CHAR * p = s.cptr();
 
-        int c;
-        while( c = *p++ )
+        while( *p )
         {
-            hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+            hash = ((hash << 5) + hash) + *p; /* hash * 33 + c */
+            ++p;
         }
 
         return hash;

@@ -16,18 +16,93 @@
 ///
 #define gRendererPtr (::GN::gfx::Renderer::sGetInstancePtr())
 
-///
-/// Implement static renderer data members
-///
-#define GN_IMPLEMENT_RENDERER_STATIC_MEMBERS() \
-    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigCreate;  \
-    GN_PUBLIC ::GN::Signal0<bool> GN::gfx::Renderer::sSigRestore; \
-    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDispose; \
-    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigDestroy; \
-    GN_PUBLIC ::GN::Signal0<void> GN::gfx::Renderer::sSigWindowClosing;
+/// \name aliases for global renderer signals
+//@{
+#define gSigRendererCreate        (GN::gfx::getSigRendererCreate())
+#define gSigRendererRestore       (GN::gfx::getSigRendererRestore())
+#define gSigRendererDispose       (GN::gfx::getSigRendererDispose())
+#define gSigRendererDestroy       (GN::gfx::getSigRendererDestroy())
+#define gSigRendererWindowClosing (GN::gfx::getSigRendererWindowClosing())
+//@}
 
 namespace GN { namespace gfx
 {
+    // ********************************************************************
+    ///
+    /// \name Renderer Signals
+    ///
+    /// - 信号可以被多次触发，且一定是严格按照如下的顺序：
+    ///   <pre>
+    ///                         +---------+
+    ///                        \|/        |
+    ///                         '         |
+    ///   (start)-->create-->restore-->dispose-->destroy-->(end)
+    ///               .                             |
+    ///              /|\                            |
+    ///               +-----------------------------+
+    ///   </pre>
+    /// - create发生后, 必定会紧随着发生一个restore
+    /// - 收到create/restore信号说明渲染器ready to use。
+    /// - 收到destroy信号后，渲染器的context会被重置为缺省值。
+    /// - 这些信号的标准使用方法如下：
+    ///   - 收到create信号后, 创建所有图形资源。
+    ///   - 收到restore信号后，填充图形资源的内容，如从磁盘读取贴图和模型。
+    ///     - 应尽量避免在此创建新的资源，因为这个信号在程序生命期中有可能
+    ///       被多次触发。
+    ///     - 如必须在这里创建图形资源，则这些资源应在收到dispose信号后释放
+    ///   - 收到dispose信号后，应释放在restore信号中创建的资源。
+    ///   - 收到destroy信号后，删除所有的图形资源
+    ///
+    // ********************************************************************
+
+    //@{
+
+    ///
+    /// D3D/OGL device creation signal
+    ///
+    GN_PUBLIC Signal0<bool> & getSigRendererCreate();
+
+    ///
+    /// Triggered after renderer is created or restored successfully from
+    /// last dispose, and ready to use.
+    ///
+    /// (Re)load content of graphics resources.
+    /// - Lockable resources like texture, vertex buffer and index buffer,
+    ///   need content reloading.
+    /// - No need to reload shaders, render state blocks and VtxFmtHandle.
+    ///
+    GN_PUBLIC Signal0<bool> & getSigRendererRestore();
+
+    ///
+    /// D3D/OGL device dispose signal
+    ///
+    GN_PUBLIC Signal0<void> & getSigRendererDispose();
+
+    ///
+    /// D3D/OGL device destroy signal
+    ///
+    GN_PUBLIC Signal0<void> & getSigRendererDestroy();
+
+    ///
+    /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
+    ///
+    /// This signal is useful when you want your application to quit when
+    /// user click close button or press ALT-F4, while using internal
+    /// render window.
+    /// \par
+    /// Note that if you igore this sigal, _NOTHING_ will happen. Internal
+    /// render window will _NOT_ be closed. You can only close the internal
+    /// render window by delete the renderer.
+    /// \par
+    /// When using external render window, this signall will be triggered
+    /// as well, to make renderer behavior consistent. But normally, you
+    /// should have external window messages handled already somewhere else
+    /// in your code. So you may safely ignore this signal.
+    ///
+    GN_PUBLIC Signal0<void> & getSigRendererWindowClosing();
+
+    //@}
+
     ///
     /// Renderer option structure.
     ///
@@ -381,82 +456,6 @@ namespace GN { namespace gfx
     struct Renderer : public CrossDllSingleton<Renderer>, public NoCopy
     {
         // ********************************************************************
-        ///
-        /// \name Renderer Signals
-        ///
-        /// - 信号可以被多次触发，且一定是严格按照如下的顺序：
-        ///   <pre>
-        ///                         +---------+
-        ///                        \|/        |
-        ///                         '         |
-        ///   (start)-->create-->restore-->dispose-->destroy-->(end)
-        ///               .                             |
-        ///              /|\                            |
-        ///               +-----------------------------+
-        ///   </pre>
-        /// - create发生后, 必定会紧随着发生一个restore
-        /// - 收到create/restore信号说明渲染器ready to use。
-        /// - 收到destroy信号后，渲染器的context会被重置为缺省值。
-        /// - 这些信号的标准使用方法如下：
-        ///   - 收到create信号后, 创建所有图形资源。
-        ///   - 收到restore信号后，填充图形资源的内容，如从磁盘读取贴图和模型。
-        ///     - 应尽量避免在此创建新的资源，因为这个信号在程序生命期中有可能
-        ///       被多次触发。
-        ///     - 如必须在这里创建图形资源，则这些资源应在收到dispose信号后释放
-        ///   - 收到dispose信号后，应释放在restore信号中创建的资源。
-        ///   - 收到destroy信号后，删除所有的图形资源
-        ///
-        // ********************************************************************
-
-        //@{
-
-        ///
-        /// D3D/OGL device creation signal
-        ///
-        static GN_PUBLIC Signal0<bool> sSigCreate;
-
-        ///
-        /// Triggered after renderer is created or restored successfully from
-        /// last dispose, and ready to use.
-        ///
-        /// (Re)load content of graphics resources.
-        /// - Lockable resources like texture, vertex buffer and index buffer,
-        ///   need content reloading.
-        /// - No need to reload shaders, render state blocks and VtxFmtHandle.
-        ///
-        static GN_PUBLIC Signal0<bool> sSigRestore;
-
-        ///
-        /// D3D/OGL device dispose signal
-        ///
-        static GN_PUBLIC Signal0<void> sSigDispose;
-
-        ///
-        /// D3D/OGL device destroy signal
-        ///
-        static GN_PUBLIC Signal0<void> sSigDestroy;
-
-        ///
-        /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
-        ///
-        /// This signal is useful when you want your application to quit when
-        /// user click close button or press ALT-F4, while using internal
-        /// render window.
-        /// \par
-        /// Note that if you igore this sigal, _NOTHING_ will happen. Internal
-        /// render window will _NOT_ be closed. You can only close the internal
-        /// render window by delete the renderer.
-        /// \par
-        /// When using external render window, this signall will be triggered
-        /// as well, to make renderer behavior consistent. But normally, you
-        /// should have external window messages handled already somewhere else
-        /// in your code. So you may safely ignore this signal.
-        ///
-        static GN_PUBLIC Signal0<void> sSigWindowClosing;
-
-        //@}
-
-        // ********************************************************************
         //
         /// \name Device Manager
         //
@@ -486,7 +485,7 @@ namespace GN { namespace gfx
         ///     force a full device recreation
         /// \note
         ///     - You must call this function at least once, to make renderer usable.
-        ///     - This function may trigger sSigRestore and/or sSigDispose.
+        ///     - This function may trigger gSigRendererRestore and/or gSigRendererDispose.
         ///
         virtual bool changeOptions( const RendererOptions & ro, bool forceDeviceRecreation = false ) = 0;
 
@@ -924,7 +923,7 @@ namespace GN { namespace gfx
         /// \param numprim
         ///     number of primitives
         /// \param startvtx
-        ///     vertex index into vertex buffer that index "0" will be refering to.
+        ///     vertex index into vertex buffer that index "0" refers to.
         /// \param minvtxidx, numvtx
         ///     define effective range in vertex buffer, starting from startvtx.
         /// \param startidx
@@ -1011,41 +1010,6 @@ namespace GN { namespace gfx
             size_t count )
         {
             drawQuads( options, positions, stride, texcoords, stride, colors, stride, count );
-        }
-
-        ///
-        /// Draw single 2D textured quad.
-        ///
-        void draw2DTexturedQuad(
-            BitFields options,
-            double z = 0.0,
-            double left = 0.0, double top = 0.0, double right = 1.0, double bottom = 1.0,
-            double leftU = 0.0, double topV = 0.0, double rightU = 1.0, double bottomV = 1.0 )
-        {
-            float x1 = (float)left;
-            float y1 = (float)top;
-            float x2 = (float)right;
-            float y2 = (float)bottom;
-            float u1 = (float)leftU;
-            float v1 = (float)topV;
-            float u2 = (float)rightU;
-            float v2 = (float)bottomV;
-            float zz = (float)z;
-
-            Vector3f pos[4];
-            Vector3f tex[4];
-
-            pos[0].set( x1, y1, zz );
-            pos[1].set( x2, y1, zz );
-            pos[2].set( x2, y2, zz );
-            pos[3].set( x1, y2, zz );
-
-            tex[0].set( u1, v1, zz );
-            tex[1].set( u2, v1, zz );
-            tex[2].set( u2, v2, zz );
-            tex[3].set( u1, v2, zz );
-
-            drawQuads( options, pos, sizeof(Vector3f), tex, sizeof(Vector3f), 0, 0, 1 );
         }
 
         ///

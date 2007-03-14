@@ -384,11 +384,11 @@ bool GN::app::SampleApp::initRenderer()
     GN_GUARD;
 
     // connect to renderer signals
-    GN::gfx::Renderer::sSigCreate.connect( this, &SampleApp::onRendererCreate );
-    GN::gfx::Renderer::sSigRestore.connect( this, &SampleApp::onRendererRestore );
-    GN::gfx::Renderer::sSigDispose.connect( this, &SampleApp::onRendererDispose );
-    GN::gfx::Renderer::sSigDestroy.connect( this, &SampleApp::onRendererDestroy );
-    GN::gfx::Renderer::sSigWindowClosing.connect( this, &SampleApp::postExitEvent );
+    gSigRendererCreate.connect( this, &SampleApp::onRendererCreate );
+    gSigRendererRestore.connect( this, &SampleApp::onRendererRestore );
+    gSigRendererDispose.connect( this, &SampleApp::onRendererDispose );
+    gSigRendererDestroy.connect( this, &SampleApp::onRendererDestroy );
+    gSigRendererWindowClosing.connect( this, &SampleApp::postExitEvent );
 
     // create renderer
     return recreateRenderer();
@@ -407,11 +407,11 @@ void GN::app::SampleApp::quitRenderer()
     GN::gfx::deleteRenderer();
 
     // disconnect to renderer signals
-    GN::gfx::Renderer::sSigDestroy.disconnect( this );
-    GN::gfx::Renderer::sSigDispose.disconnect( this );
-    GN::gfx::Renderer::sSigRestore.disconnect( this );
-    GN::gfx::Renderer::sSigCreate.disconnect( this );
-    GN::gfx::Renderer::sSigWindowClosing.disconnect( this );
+    gSigRendererDestroy.disconnect( this );
+    gSigRendererDispose.disconnect( this );
+    gSigRendererRestore.disconnect( this );
+    gSigRendererCreate.disconnect( this );
+    gSigRendererWindowClosing.disconnect( this );
 
     GN_UNGUARD;
 }

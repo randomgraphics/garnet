@@ -27,13 +27,13 @@ namespace CEGUI
     public:
         GarnetRenderer() : mQueueEnabled(true)
         {
-            GN::gfx::Renderer::sSigRestore.connect( this, &GarnetRenderer::onRendererRestore );
-            GN::gfx::Renderer::sSigDispose.connect( this, &GarnetRenderer::onRendererDispose );
+            GN::gfx::gSigRendererRestore.connect( this, &GarnetRenderer::onRendererRestore );
+            GN::gfx::gSigRendererDispose.connect( this, &GarnetRenderer::onRendererDispose );
         }
         virtual ~GarnetRenderer()
         {
-            GN::gfx::Renderer::sSigRestore.disconnect( this );
-            GN::gfx::Renderer::sSigDispose.disconnect( this );
+            GN::gfx::gSigRendererRestore.disconnect( this );
+            GN::gfx::gSigRendererDispose.disconnect( this );
             destroyAllTextures();
         }
         //@}

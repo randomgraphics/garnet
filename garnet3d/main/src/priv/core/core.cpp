@@ -10,7 +10,6 @@ GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::gfx::Renderer )
 
 // implement static data members
-GN_IMPLEMENT_RENDERER_STATIC_MEMBERS()
 GN_IMPLEMENT_INPUT_STATIC_MEMBERS()
 
 namespace GN
@@ -59,4 +58,13 @@ namespace GN
         ::free( ptr );
         //#endif
     }
+
+    namespace gfx
+    {
+        GN_PUBLIC Signal0<bool> & getSigRendererCreate() { static Signal0<bool> s; return s; }
+        GN_PUBLIC Signal0<bool> & getSigRendererRestore() { static Signal0<bool> s; return s; }
+        GN_PUBLIC Signal0<void> & getSigRendererDispose() { static Signal0<void> s; return s; }
+        GN_PUBLIC Signal0<void> & getSigRendererDestroy() { static Signal0<void> s; return s; }
+        GN_PUBLIC Signal0<void> & getSigRendererWindowClosing() { static Signal0<void> s; return s; }
+    };
 }

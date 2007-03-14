@@ -147,16 +147,9 @@ public:
 
         // render depth texture to screen
         r.setDrawToBackBuf();
-        r.setTexture( 0, mDepth );
-        if( mVs && mPs )
-        {
-            r.setShaders( mVs, mPs, 0 );
-            r.draw2DTexturedQuad( DQ_USE_CURRENT_VS | DQ_USE_CURRENT_PS | DQ_OPAQUE );
-        }
-        else
-        {
-            r.draw2DTexturedQuad( DQ_OPAQUE );
-        }
+        gQuadRenderer.drawSingleTexturedQuad( mDepth, QuadRenderer::OPT_OPAQUE );
+        //r.setTexture( 0, mDepth );
+        //r.draw2DTexturedQuad( DQ_OPAQUE );
     }
 };
 

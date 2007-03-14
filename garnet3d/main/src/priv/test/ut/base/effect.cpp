@@ -1,6 +1,6 @@
 #include "../testCommon.h"
 #include "garnet/GNgfx.h"
-#include "garnet/gfx/effect.h"
+#include "garnet/GNscene.h"
 
 class EffectTest : public CxxTest::TestSuite
 {
@@ -138,11 +138,14 @@ public:
         gRenderer.clearScreen();
         if( gRenderer.drawBegin() )
         {
+            RendererContext ctx;
+            ctx.clearToNull();
             for( size_t i = 0; i < e.getNumPasses(); ++i )
             {
-                e.passBegin( i );
+                e.passBegin( ctx, i );
                 e.commitChanges();
-                gRenderer.draw2DTexturedQuad( DQ_USE_CURRENT, 0, 0.5, 0.5, 1.0, 1.0 );
+                gRenderer.setContext( ctx );
+                scene::gQuadRenderer.drawSingleSolidQuad( 0xFFFFFFFF, 0 );
                 e.passEnd();
             }
             gRenderer.drawEnd();
