@@ -54,6 +54,17 @@ namespace GN { namespace win
     // Public functions
     // *************************************************************************
 
+    const WindowCreationParams WCP_APPLICATION_WINDOW =
+    {
+        StrA("Garnet Application"),
+        0,     // no parent
+        0, 0,  // default size
+        true,  // border
+        true,  // titlebar
+        false, // topmost
+        true,  // has close box
+    };
+
     const WindowCreationParams WCP_WINDOWED_RENDER_WINDOW =
     {
         StrA("Garnet Application"),
@@ -62,6 +73,7 @@ namespace GN { namespace win
         true, // border
         true, // titlebar
         false, // topmost
+        false, // no close box
     };
 
     const WindowCreationParams WCP_FULLSCREEN_RENDER_WINDOW =
@@ -72,6 +84,7 @@ namespace GN { namespace win
         false, // border
         false, // titlebar
         true, // topmost
+        false, // no close box
     };
 
     //

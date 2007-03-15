@@ -169,6 +169,25 @@ void GN::win::WindowMsw::repaint()
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::win::WindowMsw::run()
+{
+    GN_GUARD_ALWAYS;
+
+    GN_ASSERT( ::IsWindow( mWindow ) );
+
+    MSG msg;
+    while( ::GetMessage(&msg, NULL, 0, 0 ) )
+    {
+        ::TranslateMessage( &msg );
+        ::DispatchMessage(&msg);
+    }
+
+    GN_UNGUARD_ALWAYS;
+}
+
 // *****************************************************************************
 // Private methods
 // *****************************************************************************
@@ -198,7 +217,7 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
 
     // register window class
     wcex.cbSize         = sizeof(WNDCLASSEXW);
-    wcex.style          = CS_NOCLOSE;
+    wcex.style          = wcp.closebox ? 0 : CS_NOCLOSE;
     wcex.lpfnWndProc    = (WNDPROC)&staticWindowProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
@@ -243,7 +262,8 @@ bool GN::win::WindowMsw::createWindow( const WindowCreationParams & wcp )
         mbs2wcs(wcp.caption).cptr(),
         style,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        rc.right - rc.left, rc.bottom - rc.top,
+        wcp.clientWidth ? (rc.right - rc.left) : CW_USEDEFAULT,
+        wcp.clientHeight ? (rc.bottom - rc.top) : CW_USEDEFAULT,
         parent,
         0, // no menu
         mModuleInstance,
@@ -274,6 +294,15 @@ LRESULT
 GN::win::WindowMsw::windowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
 {
     GN_GUARD;
+
+    switch (msg)
+    {
+        case WM_CLOSE :
+            ::PostQuitMessage(0);
+            return 0;
+
+        default: ; // do nothing
+    }
 
     // call default procedure
     return ::DefWindowProc( wnd, msg, wp, lp );
