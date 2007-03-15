@@ -78,14 +78,22 @@ namespace GN
         ///
         struct WindowCreationParams
         {
-            StrA caption; ///< window title text.
-            WindowHandle parent; ///< Parent window
-            size_t clientWidth;  ///< client width. 0 means default width
-            size_t clientHeight; ///< client height. 0 means default height
-            bool hasBorder; ///< has border or not
-            bool hasTitleBar; ///< has title bar or not
-            bool topMost; ///< top-most(always on top) or not
+            StrA         caption;      ///< window title text.
+            WindowHandle parent;       ///< Parent window
+            size_t       clientWidth;  ///< client width. 0 means default width
+            size_t       clientHeight; ///< client height. 0 means default height
+            bool         hasBorder;    ///< has border or not
+            bool         hasTitleBar;  ///< has title bar or not
+            bool         topMost;      ///< top-most(always on top) or not
+            bool         closebox;     ///< close box is enabled.
         };
+
+        ///
+        /// Default parameters to create main application window.
+        ///
+        /// border, title, no parent, default size
+        ///
+        extern const WindowCreationParams WCP_APPLICATION_WINDOW;
 
         ///
         /// Default parameters to create main render window.

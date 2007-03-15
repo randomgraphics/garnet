@@ -56,7 +56,7 @@ namespace GN { namespace win
         void moveTo( int, int );
         void resize( size_t, size_t );
         void repaint();
-        void run() { GN_UNIMPL_WARNING(); }
+        void run();
         void runWhileEvents() { processWindowMessages(mWindow,false); }
         void stepOneEvent() { GN_UNIMPL_WARNING(); }
         void attachEventHandler( const StrA &, const WindowEventHandler & ) { GN_UNIMPL_WARNING(); }
