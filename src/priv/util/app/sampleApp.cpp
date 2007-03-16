@@ -254,6 +254,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
                     "    -msaa                  : Enable MSAA/FSAA.\n"
                     "    -sw                    : Use software vertex processing. (D3D only)\n"
                     "    -pure                  : Use pure device (D3D only).\n"
+                    "    -vsync                 : Enale vsync.\n"
                     "    -m [num]               : Specify monitor index. Default is 0.\n"
                     "    -di                    : Use direct input.\n"
                     "    -le [name]             : Enable specific logger.\n"
@@ -305,6 +306,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
             else if( 0 == strCmpI( a, "-msaa" ) ) mInitParam.ro.msaa = GN::gfx::MSAA_ULTRA;
             else if( 0 == strCmpI( a, "-sw" ) ) mInitParam.ro.software = true;
             else if( 0 == strCmpI( a, "-pure" ) ) mInitParam.ro.pure = true;
+            else if( 0 == strCmpI( a, "-vsync" ) ) mInitParam.ro.vsync = true;
             else if( 0 == strCmpI( a, "-m" ) )
             {
                 UInt32 idx;
