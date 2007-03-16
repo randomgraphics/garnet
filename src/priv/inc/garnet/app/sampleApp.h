@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GNgfx.h"
+#include "garnet/GNscene.h"
 #include "garnet/GNinput.h"
 
 namespace GN { namespace app
@@ -18,7 +19,8 @@ namespace GN { namespace app
     {
         GN::Clock mClock;
         float     mFpsValue;
-        StrA      mFpsString;
+        StrW      mFormatString;
+        StrW      mFpsString;
         size_t    mFrameCounter;
         double    mLastFrameTime;
         double    mCurrentTime;
@@ -29,7 +31,7 @@ namespace GN { namespace app
         ///
         /// Constructor
         ///
-        FpsCounter() { reset(); }
+        FpsCounter( const wchar_t * format = L"FPS: %.2f" ) : mFormatString(format) { reset(); }
 
         ///
         /// Get time
@@ -42,7 +44,7 @@ namespace GN { namespace app
         void reset()
         {
             mFpsValue = 60.0f; // ensure non-zero FPS for the very first frame.
-            mFpsString = "FPS: 0.00";
+            mFpsString.format( mFormatString.cptr(), 0 );
             mFrameCounter = 0;
             mCurrentTime = mClock.getTimeD();
             mLastFrameTime = mCurrentTime - 1.0f/60.0f;
@@ -61,14 +63,14 @@ namespace GN { namespace app
             {
                 mBeforeFirstUpdate = false;
                 mFpsValue = (float)( mFrameCounter / duration );
-                mFpsString.format( "FPS: %.2f", mFpsValue );
+                mFpsString.format( mFormatString.cptr(), mFpsValue );
                 mLastFrameTime = mCurrentTime;
                 mFrameCounter = 0;
             }
             else if( mBeforeFirstUpdate )
             {
                 mFpsValue = (float)( (mCurrentTime - mLastFrameTime) / mFrameCounter );
-                mFpsString.format( "FPS: %.2f", mFpsValue );
+                mFpsString.format( mFormatString.cptr(), mFpsValue );
             }
         }
 
@@ -80,7 +82,7 @@ namespace GN { namespace app
         ///
         /// Get FPS string
         ///
-        const char * getFpsString() const { return mFpsString.cptr(); }
+        const StrW & getFpsString() const { return mFpsString; }
     };
 
     ///
@@ -126,9 +128,10 @@ namespace GN { namespace app
         ///
         struct InitParam
         {
-            gfx::RendererAPI rapi;   ///< renderer API
-            gfx::RendererOptions ro; ///< renderer options
-            input::InputApi iapi;    ///< input API
+            gfx::RendererAPI     rapi; ///< renderer API
+            gfx::RendererOptions ro;   ///< renderer options
+            input::InputApi      iapi; ///< input API
+            scene::FontFaceDesc  ffd;  ///< default font face descriptor
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.
@@ -188,6 +191,11 @@ namespace GN { namespace app
         ///
         float getFps() const { return mFps.getFps(); }
 
+        ///
+        /// get font renderer
+        ///
+        scene::BitmapFontRenderer & getFontRenderer() { return mFontRenderer; }
+
         //@}
 
         // ********************************
@@ -199,9 +207,12 @@ namespace GN { namespace app
 
         // time stuff
         bool mShowHUD;
+        bool mShowHelp;
         FpsCounter mFps;
         double mLastFrameTime;
         double mTimeSinceLastUpdate;
+
+        scene::BitmapFontRenderer mFontRenderer;
 
         bool mDone; // exit flag
 
@@ -220,6 +231,8 @@ namespace GN { namespace app
         bool recreateRenderer();
         bool initInput();
         void quitInput();
+        bool initFont();
+        void quitFont();
         void drawHUD();
     };
 }}

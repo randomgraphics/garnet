@@ -97,9 +97,8 @@ namespace GN
         virtual bool seek( int /*offset*/, FileSeekMode /*origin*/ ) = 0;
 
         ///
-        /// 返回当前文件读写游标的位置. Return 0 if something goes wrong.
+        /// 返回当前文件读写游标的位置. Return -1 if something goes wrong.
         ///
-        /// \return
         virtual size_t tell() const = 0;
 
         ///

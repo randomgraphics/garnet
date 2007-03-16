@@ -16,9 +16,9 @@ GN::Logger * GN::scene::ResourceManager::sLogger = GN::getLogger("GN.scene.Resou
 // -----------------------------------------------------------------------------
 static bool sIsXml( const StrA & name, const StrA & root )
 {
-    if( !fs::isFile( name ) ) return false;
+    if( !core::isFile( name ) ) return false;
 
-    AutoObjPtr<File> fp( fs::openFile( name, "rt" ) );
+    AutoObjPtr<File> fp( core::openFile( name, "rt" ) );
     if( !fp ) return false;
 
     XmlDocument doc;
@@ -256,7 +256,7 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
         if( 0 == strCmpI( ".xml", ext.cptr() ) )
         {
             // open file
-            AutoObjPtr<File> fp( fs::openFile( name, "rt" ) );
+            AutoObjPtr<File> fp( core::openFile( name, "rt" ) );
             if( !fp )
             {
                 GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
@@ -269,7 +269,7 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
         else
         {
             // open texture file
-            AutoObjPtr<File> fp( fs::openFile( name, "rb" ) );
+            AutoObjPtr<File> fp( core::openFile( name, "rb" ) );
             if( !fp )
             {
                 GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
@@ -311,7 +311,7 @@ static GN::scene::BaseResource * sCreateEffect( const StrA & name )
     else
     {
         // open file
-        AutoObjPtr<File> fp( fs::openFile( name, "rt" ) );
+        AutoObjPtr<File> fp( core::openFile( name, "rt" ) );
         if( !fp )
         {
             GN_ERROR(sLogger)( "Fail to open effect file '%s'.", name.cptr() );
@@ -349,7 +349,7 @@ static GN::scene::BaseResource * sCreateMesh( const StrA & name )
     else
     {
         // open file
-        AutoObjPtr<File> fp( fs::openFile( name, "rt" ) );
+        AutoObjPtr<File> fp( core::openFile( name, "rt" ) );
         if( !fp )
         {
             GN_ERROR(sLogger)( "Mesh '%s' creation failed.", name.cptr() );
@@ -437,9 +437,9 @@ GN::StrA GN::scene::ResourceManager::sGetNativeResourceFileName( const StrA & na
 {
     GN_GUARD;
 
-    if( !fs::isFile( name ) ) return StrA::EMPTYSTR;
+    if( !core::isFile( name ) ) return StrA::EMPTYSTR;
 
-    return fs::toNative( name );    
+    return core::toNative( name );    
 
     GN_UNGUARD;
 }
@@ -677,9 +677,9 @@ GN::scene::ResourceManager::getResourceImpl( ResourceId id )
 // -----------------------------------------------------------------------------
 void GN::scene::ResourceManager::resolveName( StrA & out, const StrA & in ) const
 {
-    if( fs::isFile(in) )
+    if( core::isFile(in) )
     {
-        fs::toNative( out, in );
+        core::toNative( out, in );
     }
     else
     {
@@ -706,7 +706,7 @@ void GN::scene::addResourceDirectory( const StrA & path, bool recursive )
 {
     // glob all files
     std::vector<StrA> filenames;
-    fs::glob( filenames, path, "*.*", recursive, false );
+    core::glob( filenames, path, "*.*", recursive, false );
 
     ResourceManager & rm = ResourceManager::sGetInstance();
 

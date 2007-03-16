@@ -1,5 +1,9 @@
+- 2007.3.16
+  - true type font renderer
+  - move file system classes and function into core namespace
+
 - 2007.3.13
-  - font renderer
+  - ascii font renderer
   - quad renderer
   - move renderer signals out of renderer class
 

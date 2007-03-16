@@ -9,8 +9,7 @@
 #include "garnet/GNbase.h"
 #include "garnet/GNcore.h"
 #include "garnet/GNwin.h"
-
-#include <ft2build.h>
+#include "garnet/GNscene.h"
 
 #if GN_XENON
 #include <xtl.h>

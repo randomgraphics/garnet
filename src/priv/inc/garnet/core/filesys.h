@@ -6,17 +6,7 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.1.29)
 // *****************************************************************************
 
-namespace GN
-{
-    ///
-    /// namespace for garnet file system
-    ///
-    namespace fs
-    {
-    }
-}
-
-namespace GN { namespace fs
+namespace GN { namespace core
 {
     ///
     /// Abstract file system class
@@ -91,11 +81,12 @@ namespace GN { namespace fs
 
     /// \name managing file system objects
     ///
-    /// there are 4 default file system objects:
+    /// there are several default file system objects:
     ///     - "native::"  : mapping to sys of native file system.
     ///     - "app::"     : mapping to application's executable directory
     ///     - "startup::" : mapping to application's startup directory
     ///     - "media::"   : mapping to startup::media, media::media and app::../media
+    ///     - "font::"    : mappint to media::/font, and ${WINDIR}/fonts on Windows platform.
     ///
     /// \note
     //      - file system name must be end with "::"

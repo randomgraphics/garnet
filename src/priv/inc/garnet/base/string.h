@@ -412,7 +412,7 @@ namespace GN
         {
             va_list arglist;
             va_start( arglist, fmt );
-            format( fmt, arglist );
+            formatv( fmt, arglist );
             va_end( arglist );
             return mPtr;
         }
@@ -420,7 +420,7 @@ namespace GN
         ///
         /// printf-like string formatting(2)
         ///
-        const CharType * format( const CharType * fmt, va_list args )
+        const CharType * formatv( const CharType * fmt, va_list args )
         {
             if( strEmpty(fmt) )
             {
@@ -1047,7 +1047,7 @@ namespace GN
         StrA s;
         va_list arglist;
         va_start( arglist, fmt );
-        s.format( fmt, arglist );
+        s.formatv( fmt, arglist );
         va_end( arglist );
         return s;
     }
@@ -1060,7 +1060,7 @@ namespace GN
         StrW s;
         va_list arglist;
         va_start( arglist, fmt );
-        s.format( fmt, arglist );
+        s.formatv( fmt, arglist );
         va_end( arglist );
         return s;
     }

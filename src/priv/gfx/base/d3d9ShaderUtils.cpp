@@ -126,7 +126,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::compileVSFromFile( LPDIRECT3DDEVICE9 dev,
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            GN::fs::toNative(file).cptr(),
+            core::toNative(file).cptr(),
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetVertexShaderProfile( dev ) : profile,
@@ -216,7 +216,7 @@ LPDIRECT3DVERTEXSHADER9 GN::gfx::d3d9::assembleVSFromFile( LPDIRECT3DDEVICE9 dev
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            GN::fs::toNative(file).cptr(),
+            core::toNative(file).cptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,
@@ -298,7 +298,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::compilePSFromFile( LPDIRECT3DDEVICE9 dev, 
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXCompileShaderFromFileA(
-            GN::fs::toNative(file).cptr(),
+            core::toNative(file).cptr(),
             NULL, NULL, // no macros, no includes,
             entry,
             strEmpty(profile) ? D3DXGetPixelShaderProfile( dev ) : profile,
@@ -388,7 +388,7 @@ LPDIRECT3DPIXELSHADER9 GN::gfx::d3d9::assemblePSFromFile( LPDIRECT3DDEVICE9 dev,
     AutoComPtr<ID3DXBuffer> err;
     HRESULT hr;
     if( FAILED(hr = D3DXAssembleShaderFromFileA(
-            GN::fs::toNative(file).cptr(),
+            core::toNative(file).cptr(),
             NULL, NULL, // no macros, no includes,
             sRefineFlags(flags),
             &bin,

@@ -186,11 +186,11 @@ public:
         mScene->draw();
 
         // draw mouse position on screen
-        StrA mousePos;
+        StrW mousePos;
         int x = 1, y = 1;
         gInput.getMousePosition( x, y );
-        mousePos.format( "Mouse: %d, %d", x, y );
-        gAsciiFont.drawText( mousePos.cptr(), 0, 100 );
+        mousePos.format( L"ЪѓБъзјБъ: %d, %d", x, y );
+        getFontRenderer().drawText( mousePos.cptr(), 0, 100 );
     }
 };
 

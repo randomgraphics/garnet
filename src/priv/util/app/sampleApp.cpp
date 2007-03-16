@@ -15,7 +15,10 @@ static GN::Logger * sLogger = GN::getLogger("GN.app.SampleApp");
 //
 //
 // -----------------------------------------------------------------------------
-GN::app::SampleApp::SampleApp() : mShowHUD(true)
+GN::app::SampleApp::SampleApp()
+    : mShowHUD(true)
+    , mShowHelp(false)
+    , mFps( L"FPS: %.2f\n(Press F1 for help)" )
 {
     enableCRTMemoryCheck();
     mFps.reset();
@@ -111,6 +114,10 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
         ro.fullscreen = !ro.fullscreen;
         if( !gRenderer.changeOptions(ro) ) postExitEvent();
     }
+    else if( input::KEY_F1 == ke.code && !ke.status.down )
+    {
+        mShowHelp = !mShowHelp;
+    }
 }
 
 //
@@ -147,6 +154,7 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
     onDetermineInitParam( mInitParam );
     if( !initRenderer() ) return false;
     if( !initInput() ) return false;
+    if( !initFont() ) return false;
 
     // success
     return true;
@@ -165,6 +173,7 @@ void GN::app::SampleApp::quit()
 
     quitRenderer();
     quitInput();
+    quitFont();
     quitApp();
 
     // delete global resource manager instance
@@ -194,6 +203,9 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ro.windowedWidth = 640;
     mInitParam.ro.windowedHeight = 480;
     mInitParam.iapi = input::API_NATIVE;
+    mInitParam.ffd.fontname = "font::/simsun.ttc";
+    mInitParam.ffd.width = 16;
+    mInitParam.ffd.height = 16;
 
     DynaArray<const char*> unknownArgs;
     unknownArgs.append( argv[0] );
@@ -488,13 +500,50 @@ void GN::app::SampleApp::quitInput()
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::app::SampleApp::initFont()
+{
+    GN_GUARD;
+
+    return mFontRenderer.init( mInitParam.ffd );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::app::SampleApp::quitFont()
+{
+    GN_GUARD;
+
+    mFontRenderer.quit();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::app::SampleApp::drawHUD()
 {
     GN_GUARD_SLOW;
 
     if( mShowHUD )
     {
-        scene::gAsciiFont.drawText( mFps.getFpsString(), 0, 0 );
+        if( mShowHelp )
+        {
+            static const wchar_t * help =
+                L"ESC            : ÍË³ö\n"
+                L"XB360 button X : ÍË³ö\n"
+                L"R              : reload all resources\n"
+                L"ALT+ENTER      : ÇÐ»»È«ÆÁÄ£Ê½\n"
+                L"F1             : ÇÐ»»°ïÖúÆÁÄ»";
+            mFontRenderer.drawText( help, 0, 0 );
+        }
+        else
+        {
+            mFontRenderer.drawText( mFps.getFpsString().cptr(), 0, 0 );
+        }
     }
 
     GN_UNGUARD_SLOW;

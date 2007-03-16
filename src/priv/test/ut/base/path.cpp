@@ -22,7 +22,7 @@ public:
     void testToNative()
     {
         using namespace GN;
-        using namespace GN::fs;
+        using namespace GN::core;
 
         StrA pwd = toNative( getCurrentDir() );
         StrA d = getCurrentDrive();
@@ -65,7 +65,7 @@ public:
     void testPrefix()
     {
         using namespace GN;
-        using namespace GN::fs;
+        using namespace GN::core;
 
         StrA s[2] ={
             toNative("app::"),
@@ -91,7 +91,7 @@ public:
 
     void testExist()
     {
-        using namespace GN::fs;
+        using namespace GN::core;
         TS_ASSERT( exist("/") );
         TS_ASSERT( !exist("haha,heihei,hoho,huhu,mama,papa") );
         TS_ASSERT( exist("SConstruct") );
@@ -107,7 +107,7 @@ public:
 
     void testIsDir()
     {
-        using namespace GN::fs;
+        using namespace GN::core;
         TS_ASSERT( isDir("/") );
 
         TS_ASSERT( isDir("startup::") );
@@ -123,7 +123,7 @@ public:
 
     void testIsFile()
     {
-        using namespace GN::fs;
+        using namespace GN::core;
         TS_ASSERT( isFile("startup::\\SConstruct") );
         TS_ASSERT( isFile("app::GNut"APPEXT) );
         TS_ASSERT( !isFile("startup::") );

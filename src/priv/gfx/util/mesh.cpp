@@ -186,17 +186,17 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             // lock vb
             UInt8 * dst = (UInt8*)vb.buffer->lock( 0, 0, LOCK_WO );
             if( 0 == dst ) return false;
-            AutoBufferUnlocker<VtxBuf> unlocker( vb.buffer );
+            AutoSurfaceUnlocker<VtxBuf> unlocker( vb.buffer );
  
             StrA ref;
             if( sGetStringAttrib( *e, "ref", ref, true ) )
             {
                 // read mesh from external file
 
-                ref = fs::resolvePath( meshdir, ref );
+                ref = core::resolvePath( meshdir, ref );
 
                 // open vb file
-                AutoObjPtr<File> fp( fs::openFile( ref, "rb" ) );
+                AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
                 if( fp.empty() ) return false;
 
                 // read data into vb
@@ -264,16 +264,16 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             // lock ib
             UInt16 * dst = (UInt16*)idxbuf->lock( 0, 0, LOCK_WO );
             if( 0 == dst ) return false;
-            AutoBufferUnlocker<IdxBuf> unlocker( idxbuf );
+            AutoSurfaceUnlocker<IdxBuf> unlocker( idxbuf );
 
             // get ib file name
             StrA ref;
             if( sGetStringAttrib( *e, "ref", ref, true ) )
             {
                 // read external ib adata
-                ref = fs::resolvePath( meshdir, ref );
+                ref = core::resolvePath( meshdir, ref );
 
-                AutoObjPtr<File> fp( fs::openFile( ref, "rb" ) );
+                AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
                 if( fp.empty() ) return false;
 
                 if( !fp->read( dst, bytes, 0 ) ) return false;
@@ -381,11 +381,11 @@ bool GN::gfx::generateCubeMesh( Mesh & mesh, float edgeLength )
     // lock the buffers
     CubeVertex * vb = (CubeVertex*)mesh.vtxbufs[0].buffer->lock( 0, 0, LOCK_DISCARD );
     if( 0 == vb ) return false;
-    AutoBufferUnlocker<VtxBuf> vbunlocker( mesh.vtxbufs[0].buffer );
+    AutoSurfaceUnlocker<VtxBuf> vbunlocker( mesh.vtxbufs[0].buffer );
 
     UInt16 * ib = mesh.idxbuf->lock( 0, 0, LOCK_DISCARD );
     if( 0 == ib ) return false;
-    AutoBufferUnlocker<IdxBuf> ibunlocker( mesh.idxbuf );
+    AutoSurfaceUnlocker<IdxBuf> ibunlocker( mesh.idxbuf );
 
     // fill mesh data
     createBox(

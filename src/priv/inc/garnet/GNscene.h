@@ -20,10 +20,10 @@ namespace GN
     }
 }
 
-#include "scene/resource.h"
-#include "scene/drawable.h"
 #include "scene/quad.h"
 #include "scene/font.h"
+#include "scene/resource.h"
+#include "scene/drawable.h"
 
 // *****************************************************************************
 //                           End of GNscene.h

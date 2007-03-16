@@ -24,7 +24,7 @@
 
 using namespace GN;
 
-static Logger * sLogger = getLogger("GN.core.fs::FileSystem");
+static Logger * sLogger = getLogger("GN.core::FileSystem");
 
 // *****************************************************************************
 // local functions for posix platform
@@ -182,23 +182,23 @@ static bool sIsAbsPath( const StrA & path )
 // "native::/" root object
 // *****************************************************************************
 
-class NativeFileSystem : public fs::FileSystem
+class NativeFileSystem : public core::FileSystem
 {
 public:
 
     bool exist( const StrA & path )
     {
-        return sNativeExist( fs::FileSystem::toNative( path ) );
+        return sNativeExist( core::FileSystem::toNative( path ) );
     }
 
     bool isDir( const StrA & path  )
     {
-        return sNativeIsDir( fs::FileSystem::toNative( path ) );
+        return sNativeIsDir( core::FileSystem::toNative( path ) );
     }
 
     bool isFile( const StrA & path )
     {
-        return sNativeIsFile( fs::FileSystem::toNative( path ) );
+        return sNativeIsFile( core::FileSystem::toNative( path ) );
     }
 
     bool isAbsPath( const StrA & path )
@@ -297,7 +297,7 @@ private:
         // validate dirName
         GN_ASSERT( exist(dirName) && isDir(dirName) );
 
-        StrA curDir = fs::FileSystem::toNative( dirName );
+        StrA curDir = core::FileSystem::toNative( dirName );
 
         // search in sub-directories
         if( recursive )
@@ -334,7 +334,7 @@ private:
 // "app::/" root object
 // *****************************************************************************
 
-class AppFileSystem : public fs::FileSystem
+class AppFileSystem : public core::FileSystem
 {
     NativeFileSystem & mNativeFs;
     StrA               mRootDir;
@@ -417,7 +417,7 @@ public:
 // "startup::/" file system object
 // *****************************************************************************
 
-class StartupFileSystem : public fs::FileSystem
+class StartupFileSystem : public core::FileSystem
 {
     NativeFileSystem & mNativeFs;
     StrA               mRootDir;
@@ -478,10 +478,10 @@ public:
 };
 
 // *****************************************************************************
-// Media file system, handle file path prefixed with "media::"
+// File system that has multiple root directory
 // *****************************************************************************
 
-class MediaFileSystem : public fs::FileSystem
+class MultiRootsFileSystem : public core::FileSystem
 {
     std::vector<StrA> mRoots;
 
@@ -489,22 +489,18 @@ class MediaFileSystem : public fs::FileSystem
     {
         for( size_t i = 0; i < mRoots.size(); ++i )
         {
-            if( fs::exist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
+            if( core::exist( joinPath( mRoots[i], path ) ) ) return &mRoots[i];
         }
         return 0;
     }
 
 public:    
 
-    MediaFileSystem()
+    MultiRootsFileSystem()
     {
-#if GN_XENON
-        mRoots.push_back( "game:\media" );
-#endif
-        mRoots.push_back( "startup::media" );
-        mRoots.push_back( "app::media" );
-        mRoots.push_back( "app::../media" );
     }
+
+    void addRoot( const StrA & root ) { mRoots.push_back( root ); }
 
     bool exist( const StrA & path )
     {
@@ -515,14 +511,14 @@ public:
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return fs::isDir( joinPath( *root, path ) );
+        return core::isDir( joinPath( *root, path ) );
     }
 
     bool isFile( const StrA & path )
     {
         const StrA * root = findRoot( path );
         if( !root ) return false;
-        return fs::isFile( joinPath( *root, path ) );
+        return core::isFile( joinPath( *root, path ) );
     }
 
     bool isAbsPath( const StrA & path )
@@ -535,7 +531,7 @@ public:
         result.clear();
         const StrA * root = findRoot( path );
         if( !root ) return;
-        fs::toNative( result, joinPath( *root, path ) );
+        core::toNative( result, joinPath( *root, path ) );
     }
 
     std::vector<StrA> &
@@ -554,7 +550,7 @@ public:
 
                 std::vector<StrA> tmp;
 
-                fs::glob(
+                core::glob(
                     tmp,
                     joinPath( root, dirName ),
                     pattern,
@@ -575,7 +571,7 @@ public:
             const StrA * root = findRoot( dirName );
             if( !root ) return result;
 
-            fs::glob(
+            core::glob(
                 result,
                 joinPath( *root, dirName ),
                 pattern,
@@ -594,15 +590,53 @@ public:
             GN_ERROR(sLogger)( "file '%s' not found!", path.cptr() );
             return 0;
         }
-        return fs::openFile( joinPath( *root, path ), mode );
+        return core::openFile( joinPath( *root, path ), mode );
      }
+};
+
+// *****************************************************************************
+// Media file system, handle file path prefixed with "media::"
+// *****************************************************************************
+
+class MediaFileSystem : public MultiRootsFileSystem
+{
+public:    
+
+    MediaFileSystem()
+    {
+#if GN_XENON
+        addRoot( "game:\media" );
+#endif
+        addRoot( "startup::media" );
+        addRoot( "app::media" );
+        addRoot( "app::../media" );
+    }
+};
+
+// *****************************************************************************
+// Font file system, handle file path prefixed with "font::"
+// *****************************************************************************
+
+class FontFileSystem : public MultiRootsFileSystem
+{
+public:    
+
+    FontFileSystem()
+    {
+        addRoot( "media::\font" );
+#if GN_MSWIN && !GN_XENON
+        char windir[MAX_PATH+1];
+        GetWindowsDirectoryA( windir, MAX_PATH );
+        addRoot( joinPath( windir, "fonts" ) );
+#endif
+    }
 };
 
 // *****************************************************************************
 // fake file system object
 // *****************************************************************************
 
-class FakeFileSystem : public fs::FileSystem
+class FakeFileSystem : public core::FileSystem
 {
 public:
 
@@ -629,7 +663,7 @@ public:
 
 struct FileSystemContainer
 {
-    typedef std::map<StrA,fs::FileSystem*> Container;
+    typedef std::map<StrA,core::FileSystem*> Container;
 
     Container mFileSystems;
 
@@ -638,6 +672,7 @@ struct FileSystemContainer
     AppFileSystem     mAppFs;
     StartupFileSystem mStartupFs;
     MediaFileSystem   mMediaFs;
+    FontFileSystem    mFontFs;
 
     FileSystemContainer()
         : mAppFs( mNativeFs )
@@ -648,13 +683,14 @@ struct FileSystemContainer
         registerFs( "app::", &mAppFs );
         registerFs( "startup::", &mStartupFs );
         registerFs( "media::", &mMediaFs );
+        registerFs( "font::", &mFontFs );
     }
 
     ~FileSystemContainer()
     {
     }
 
-    bool registerFs( const StrA & name, fs::FileSystem * fs )
+    bool registerFs( const StrA & name, core::FileSystem * fs )
     {
         // check name
         if( name.empty() )
@@ -694,7 +730,7 @@ struct FileSystemContainer
         }
     }
 
-    fs::FileSystem * getFs( const StrA & name )
+    core::FileSystem * getFs( const StrA & name )
     {
         if( name.empty() ) return &mNativeFs;
         Container::const_iterator i = mFileSystems.find( name );
@@ -715,7 +751,7 @@ FileSystemContainer & sGetFileSystemContainer()
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT bool fs::registerFileSystem( const StrA & name, FileSystem * root )
+GN_EXPORT bool core::registerFileSystem( const StrA & name, FileSystem * root )
 {
     return sGetFileSystemContainer().registerFs( name, root );
 }
@@ -723,7 +759,7 @@ GN_EXPORT bool fs::registerFileSystem( const StrA & name, FileSystem * root )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT void fs::UnregisterFileSystem( const StrA & name )
+GN_EXPORT void core::UnregisterFileSystem( const StrA & name )
 {
     sGetFileSystemContainer().UnregisterFs( name );
 }
@@ -731,7 +767,7 @@ GN_EXPORT void fs::UnregisterFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT fs::FileSystem * fs::getFileSystem( const StrA & name )
+GN_EXPORT core::FileSystem * core::getFileSystem( const StrA & name )
 {
     return sGetFileSystemContainer().getFs( name );
 }
@@ -739,7 +775,7 @@ GN_EXPORT fs::FileSystem * fs::getFileSystem( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_EXPORT void GN::fs::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
+GN_EXPORT void GN::core::resolvePath( StrA & result, const StrA & base, const StrA & relpath )
 {
     // shortcut for empty path
     if( base.empty() || relpath.empty() )
