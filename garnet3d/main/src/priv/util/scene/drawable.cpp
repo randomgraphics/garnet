@@ -49,7 +49,7 @@ static ResourceId sLoadReference(
 
     ResourceManager & rm = gSceneResMgr;
 
-    ResourceId id = rm.getResourceId( fs::resolvePath( basedir, ref ) );
+    ResourceId id = rm.getResourceId( core::resolvePath( basedir, ref ) );
     if( 0 == id )
     {
         GN_ERROR(sLogger)( "Invalid referencing to %s '%s'.", name.cptr(), ref.cptr() );
@@ -202,7 +202,7 @@ bool GN::scene::Drawable::loadFromXmlFile( const StrA & filename )
 
     GN_INFO(sLogger)( "Load drawable from '%s'", filename.cptr() );
 
-    AutoObjPtr<File> fp( fs::openFile( filename, "rt" ) );
+    AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
     if( !fp ) return false;
 
     StrA basedir = dirName( filename );

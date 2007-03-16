@@ -16,7 +16,7 @@ namespace GN { namespace gfx
         GN_GUARD;
 
         // open file
-        AutoObjPtr<File> fp( fs::openFile( filename , "rt" ) );
+        AutoObjPtr<File> fp( core::openFile( filename , "rt" ) );
         if( !fp ) return 0;
 
         // read file content

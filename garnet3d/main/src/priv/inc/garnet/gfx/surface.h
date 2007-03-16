@@ -686,24 +686,24 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Unlock the buffer automatically, before going out of life scope.
+    /// Unlock the surface automatically, before going out of life scope.
     ///
-    template<class BUFFER>
-    class AutoBufferUnlocker
+    template<class SURFACE>
+    class AutoSurfaceUnlocker
     {
-        BUFFER * mBuf;
+        SURFACE * mSurface;
 
     public:
 
         ///
         /// Ctor
         ///
-        AutoBufferUnlocker( BUFFER * buf ) : mBuf(buf) {}
+        AutoSurfaceUnlocker( SURFACE * surf ) : mSurface(surf) {}
 
         ///
         /// Dtor
         ///
-        ~AutoBufferUnlocker() { if(mBuf) mBuf->unlock(); }
+        ~AutoSurfaceUnlocker() { if(mSurface) mSurface->unlock(); }
     };
 }}
 

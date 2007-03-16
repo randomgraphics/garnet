@@ -155,15 +155,14 @@ size_t GN::StdFile::tell() const
     if( 0 == mFile )
     {
         GN_ERROR(sLogger)( "NULL file pointer!" );
-        return 0;
+        return (size_t)-1;
     }
 
     size_t r = ::ftell( mFile );
 
-    if( size_t(-1) == r )
+    if( (size_t)-1 == r )
     {
         GN_ERROR(sLogger)( "%s : ftell() failed!", name().cptr() );
-        return 0;
     }
 
     return r;

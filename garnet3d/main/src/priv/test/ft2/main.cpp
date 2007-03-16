@@ -1,5 +1,8 @@
 #include "pch.h"
 
+using namespace GN;
+using namespace GN::scene;
+
 #pragma warning(disable:4309)
 #pragma warning(disable:4018)
 #pragma warning(disable:4100)
@@ -10,12 +13,6 @@
 #include <gl\gl.h>
 #include <gl\glu.h>
 #include <gl\glut.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <freetype/freetype.h>
-#include <freetype/ftglyph.h>
-
-#include <imdebug.h>
 
 #define MAX_NO_TEXTURES 1
 
@@ -43,41 +40,30 @@ public:
 		m_Height = 0;
 	}
 }g_TexID[65536];
+
 class xFreeTypeLib
 {
-    FT_Library m_FT2Lib;
-	FT_Face    m_FT_Face;
+    AutoRef<FontFace> mFace;
+	int m_w;
+	int m_h;
 
-	int   m_w;
-	int   m_h;
 public:
+
 	xFreeTypeLib()
 	{
-		if (FT_Init_FreeType( &m_FT2Lib) ) 
-			exit(0);
 	}
 
-	void load(const char* font_file , int _w , int _h)
+	void load( const char * font_file , int _w , int _h )
 	{
 		//加载一个字体,取默认的Face,一般为Regualer
-		if (FT_New_Face( m_FT2Lib, font_file, 0, &m_FT_Face )) 
-			exit(0);
-		//FT_Select_Charmap(m_FT_Face, FT_ENCODING_UNICODE);
-
-        for( FT_Int i = 0; i < m_FT_Face->num_fixed_sizes; ++i )
-        {
-            const FT_Bitmap_Size & sz = m_FT_Face->available_sizes[i];
-            printf( "fixed size %d : %d x %d\n", i, sz.width, sz.height );
-        }
+        FontFaceDesc ffd;
+        ffd.fontname = font_file;
+        ffd.width = (size_t)_w;
+        ffd.height = (size_t)_h;
+        mFace.attach( createFont( ffd ) );
+        if( !mFace ) exit(-1);
 
 		m_w = _w ; m_h = _h;
-
-		FT_Set_Pixel_Sizes(m_FT_Face,m_w, m_h);
-		//FT_Set_Char_Size(
-		//    m_FT_Face,
-		//    m_w * 64,
-		//    m_h * 64,
-		//    72, 72 );
 	}
 
 	GLuint loadChar(wchar_t ch)
@@ -85,34 +71,24 @@ public:
 		if(g_TexID[ch].m_texID)
 			return g_TexID[ch].m_texID;
 
-		if(FT_Load_Char(m_FT_Face, ch, FT_LOAD_RENDER|FT_LOAD_MONOCHROME) )
-		//if(FT_Load_Char(m_FT_Face, ch, FT_LOAD_RENDER) )
-		{
-			return 0;
-		}
-
         xCharTexture& charTex = g_TexID[ch];
 		
 		//取道位图数据
-		FT_GlyphSlot  slot = m_FT_Face->glyph;
-		FT_Bitmap & bitmap = slot->bitmap;
+		FontBitmap fbm;
+        if( !mFace->loadFontBitmap( fbm, ch ) ) exit(-1);
 
         //imdebug( "lum b=8 w=%d h=%d %p", bitmap.width, bitmap.rows, bitmap.buffer );
 
 		//把位图数据拷贝自己定义的数据区里.这样旧可以画到需要的东西上面了。
-		int width  =  bitmap.width;
-		int height =  bitmap.rows;
-
-		m_FT_Face->size->metrics.y_ppem;
-		m_FT_Face->glyph->metrics.horiAdvance;
-
+		int width  =  fbm.width;
+		int height =  fbm.height;
 
 		charTex.m_Width = width;
 		charTex.m_Height = height;
-		charTex.m_adv_x = slot->advance.x / 64.0f;
-		charTex.m_adv_y = slot->advance.y / 64.0f;
-		charTex.m_delta_x = (float)slot->bitmap_left;
-		charTex.m_delta_y = (float)slot->bitmap_top - height;
+		charTex.m_adv_x = fbm.advx;
+		charTex.m_adv_y = fbm.advy;
+		charTex.m_delta_x = fbm.offx;
+		charTex.m_delta_y = fbm.offy;
 		glGenTextures(1,&charTex.m_texID);
         glBindTexture(GL_TEXTURE_2D,charTex.m_texID);
 		char* pBuf = new char[width * height * 4];
@@ -123,20 +99,7 @@ public:
 				pBuf[(4*i + (height - j - 1) * width * 4)  ] = 0xff;
 				pBuf[(4*i + (height - j - 1) * width * 4)+1] = 0xff;
 				pBuf[(4*i + (height - j - 1) * width * 4)+2] = 0xff;
-
-                if( FT_PIXEL_MODE_MONO == bitmap.pixel_mode )
-                {
-                    int k1 = i / 8 + abs(bitmap.pitch) * j;
-                    int k2 = 7 - i % 8;
-    				char _vl =  bitmap.buffer[k1] >> k2;
-    				pBuf[(4*i + (height - j - 1) * width * 4)+3] = _vl & 0x1 ? 0xFF : 0;
-                }
-                else
-                {
-                    int k = i + abs(bitmap.pitch) * j;
-    				char _vl =  bitmap.buffer[k];
-    				pBuf[(4*i + (height - j - 1) * width * 4)+3] = _vl;
-                }
+				pBuf[(4*i + (height - j - 1) * width * 4)+3] = fbm.buffer[ i+j*width];
 			}
 		}
 
@@ -198,7 +161,7 @@ void drawText(wchar_t* _strText,int x , int y, int maxW , int h)
 		int h = pCharTex->m_Height;
 
 		int ch_x = sx + pCharTex->m_delta_x;
-		int ch_y = sy - h - pCharTex->m_delta_y;
+		int ch_y = sy - h + pCharTex->m_delta_y;
 
 		if(maxH < h) maxH = h;
 		glBegin ( GL_QUADS );
@@ -218,7 +181,7 @@ void drawText(wchar_t* _strText,int x , int y, int maxW , int h)
 
 }
 
-static const char * font_face   = "simsun.ttc";
+static const char * font_face   = "font::/simsun.ttc";
 static int          font_width  = 16;
 static int          font_height = 16;
 void init(void)
@@ -297,6 +260,7 @@ void arrow_keys ( int a_keys, int x, int y )  // Create Special Function (requir
 
 int main ( int argc, char** argv )   // Create Main Function For Bringing It All Together
 {
+    enableCRTMemoryCheck();
     if( argc > 3 )
     {
         font_face = argv[1];
@@ -304,31 +268,18 @@ int main ( int argc, char** argv )   // Create Main Function For Bringing It All
         font_height = GN::str2Int( argv[3], font_height );
     }
 
-  glutInit            ( &argc, argv ); // Erm Just Write It =)
-  glutInitDisplayMode ( GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA ); // Display Mode
-  glutInitWindowPosition (0,0);
-  glutInitWindowSize  ( 500, 500 ); // If glutFullScreen wasn't called this is the window size
-  glutCreateWindow    ( "NeHe Lesson 6- Ported by Rustad" ); // Window Title (argv[0] for current directory as title)
-  init();
-  //glutFullScreen      ( );          // Put Into Full Screen
-  glutDisplayFunc     ( display );  // Matching Earlier Functions To Their Counterparts
-  glutReshapeFunc     ( reshape );
-  glutKeyboardFunc    ( keyboard );
-  glutSpecialFunc     ( arrow_keys );
-  glutIdleFunc			 ( display );
-  glutMainLoop        ( );          // Initialize The Main Loop
-  return 1;
+    glutInit            ( &argc, argv ); // Erm Just Write It =)
+    glutInitDisplayMode ( GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA ); // Display Mode
+    glutInitWindowPosition (0,0);
+    glutInitWindowSize  ( 500, 500 ); // If glutFullScreen wasn't called this is the window size
+    glutCreateWindow    ( "NeHe Lesson 6- Ported by Rustad" ); // Window Title (argv[0] for current directory as title)
+    init();
+    //glutFullScreen      ( );          // Put Into Full Screen
+    glutDisplayFunc     ( display );  // Matching Earlier Functions To Their Counterparts
+    glutReshapeFunc     ( reshape );
+    glutKeyboardFunc    ( keyboard );
+    glutSpecialFunc     ( arrow_keys );
+    glutIdleFunc			 ( display );
+    glutMainLoop        ( );          // Initialize The Main Loop
+    return 1;
 }
-
-
-/*
-using namespace GN;
-using namespace GN::win;
-
-int main()
-{
-    AutoObjPtr<Window> win( createWindow(WCP_APPLICATION_WINDOW) );
-    if( !win ) return -1;
-    win->show();
-    return win->run();
-}*/
