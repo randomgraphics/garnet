@@ -94,8 +94,15 @@ void GN::extName( StrA & result, const StrA & path )
 // -----------------------------------------------------------------------------
 void GN::baseName( StrA & result, const StrA & path )
 {
-    GN_UNIMPL_WARNING();
-    result = path;
+    StrA dir, ext;
+
+    dirName( dir, path );
+    extName( ext, path );
+
+    size_t n1 = dir.size() ? dir.size()+1 : 0;
+    size_t n2 = path.size() - n1 - ext.size();
+
+    result.assign( path.cptr() + n1, n2 );
 }
 
 //
