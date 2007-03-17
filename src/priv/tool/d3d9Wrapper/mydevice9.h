@@ -51,7 +51,7 @@ public:
     STDMETHOD(GetSwapChain)(THIS_ UINT iSwapChain,IDirect3DSwapChain9** pSwapChain) { return obj()->GetSwapChain( iSwapChain, pSwapChain ); }
     STDMETHOD_(UINT, GetNumberOfSwapChains)(THIS) { return obj()->GetNumberOfSwapChains(); }
     STDMETHOD(Reset)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters) { return obj()->Reset( pPresentationParameters ); }
-    STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion) { return obj()->Present( pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion ); }
+    STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA* pDirtyRegion);
     STDMETHOD(GetBackBuffer)(THIS_ UINT iSwapChain,UINT iBackBuffer,D3DBACKBUFFER_TYPE Type,IDirect3DSurface9** ppBackBuffer) { return obj()->GetBackBuffer( iSwapChain, iBackBuffer, Type, ppBackBuffer ); }
     STDMETHOD(GetRasterStatus)(THIS_ UINT iSwapChain,D3DRASTER_STATUS* pRasterStatus ) { return obj()->GetRasterStatus( iSwapChain, pRasterStatus ); }
     STDMETHOD(SetDialogBoxMode)(THIS_ BOOL bEnableDialogs) { return obj()->SetDialogBoxMode( bEnableDialogs ); }
