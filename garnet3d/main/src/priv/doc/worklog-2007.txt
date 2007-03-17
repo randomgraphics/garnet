@@ -1,3 +1,6 @@
+- 2007.3.17
+  - implement vertex buffer proxy in D3D9 wrapper DLL.
+
 - 2007.3.16
   - true type font renderer
   - move file system classes and function into core namespace

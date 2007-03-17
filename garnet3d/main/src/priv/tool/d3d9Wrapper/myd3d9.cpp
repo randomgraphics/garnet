@@ -4,9 +4,10 @@
 
 #if GN_MSVC
 #pragma comment(lib, "dxerr9.lib")
+#pragma comment(lib, "dxguid.lib")
 #endif
 
-static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9Wrapper");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyD3D9");
 
 // *****************************************************************************
 // Local function Pointers
@@ -101,10 +102,10 @@ bool MyD3D9::create( UINT sdkVersion )
 
     if( !sLoadD3D9Dll() ) return false;
 
-    GN_ASSERT( !mObject );
+    GN_ASSERT( !mRealObject );
     GN_TRACE(sLogger)( "create Direct3D9 object" );
-    mObject = gDirect3DCreate9( sdkVersion );
-    return !!mObject;
+    mRealObject = gDirect3DCreate9( sdkVersion );
+    return !!mRealObject;
 
     GN_UNGUARD;
 }
