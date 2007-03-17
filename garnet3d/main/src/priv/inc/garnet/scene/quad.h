@@ -33,7 +33,7 @@ namespace GN { namespace scene
             AutoRef<gfx::VtxBuf> vb[NUM_VTXBUFS];
             AutoRef<gfx::IdxBuf> ib;
             AutoRef<gfx::Shader> vs;
-            AutoRef<gfx::Shader> pstex;
+            AutoRef<gfx::Shader> pstexed;
             AutoRef<gfx::Shader> pssolid;
         };
 

@@ -33,12 +33,16 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
 // interface functions
 // *****************************************************************************
 
+static const bool mFakeDraw = false;
+
 //
 //
 // -----------------------------------------------------------------------------
 bool GN::gfx::D3D9Renderer::drawBegin()
 {
     GN_GUARD_SLOW;
+
+    if( mFakeDraw ) return true;
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -71,6 +75,8 @@ void GN::gfx::D3D9Renderer::drawEnd()
 {
     GN_GUARD_SLOW;
 
+    if( mFakeDraw ) return;
+
     PIXPERF_FUNCTION_EVENT();
 
     GN_ASSERT( mDrawBegan );
@@ -88,6 +94,8 @@ void GN::gfx::D3D9Renderer::clearScreen(
     const GN::Vector4f & c, float z, UInt8 s, BitFields flags )
 {
     GN_GUARD_SLOW;
+
+    if( mFakeDraw ) return;
 
     // build d3d clear flag
     int d3dflag = (flags & CLEAR_C ? D3DCLEAR_TARGET : 0)
@@ -112,6 +120,8 @@ void GN::gfx::D3D9Renderer::drawIndexed(
     size_t        startidx )
 {
     GN_GUARD_SLOW;
+
+    if( mFakeDraw ) return;
 
     GN_ASSERT( mDrawBegan );
 
@@ -145,6 +155,8 @@ void GN::gfx::D3D9Renderer::draw(
     PrimitiveType prim, size_t numprim, size_t startvtx )
 {
     GN_GUARD_SLOW;
+
+    if( mFakeDraw ) return;
 
     GN_ASSERT( mDrawBegan );
 
@@ -180,6 +192,8 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     const UInt16 * indexData )
 {
     GN_GUARD_SLOW;
+
+    if( mFakeDraw ) return;
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -227,6 +241,8 @@ void GN::gfx::D3D9Renderer::drawUp(
 {
     GN_GUARD_SLOW;
 
+    if( mFakeDraw ) return;
+
     //
     // make sure numprim is not too large
     //
@@ -267,6 +283,9 @@ void GN::gfx::D3D9Renderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
+
+    if( mFakeDraw ) return;
+
     PIXPERF_FUNCTION_EVENT();
     GN_ASSERT( mDrawBegan && mLine );
     mLine->drawLines(
@@ -275,6 +294,7 @@ void GN::gfx::D3D9Renderer::drawLines(
         count, color,
         model, view, proj );
     PIXPERF_END_EVENT();
+
     GN_UNGUARD_SLOW;
 }
 

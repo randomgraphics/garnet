@@ -41,9 +41,8 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 
     while( !mDone )
     {
-        // process user input
+        // process windows messages
         GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
-        gInput.processInputEvents();
 
         // update time stuff
         mFps.onFrame();
@@ -52,6 +51,9 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
         elapsedUpdateTime = mFps.getCurrentTime() - lastUpdateTime;
         if( elapsedUpdateTime > UPDATE_INTERVAL || firstframe )
         {
+            // process user input
+            gInput.processInputEvents();
+
             int count = firstframe ? 1 : (int)( elapsedUpdateTime / UPDATE_INTERVAL );
             static const int MAX_COUNT = (int)( 1.0f / UPDATE_INTERVAL );
             if( count > MAX_COUNT ) count = MAX_COUNT; // make easy of long time debug break.
