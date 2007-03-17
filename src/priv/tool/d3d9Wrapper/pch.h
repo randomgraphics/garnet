@@ -20,44 +20,6 @@
 #include <dxerr9.h>
 #endif
 
-template<class T>
-class BasicInterface : public T
-{
-protected:
-
-    T *   mObject;
-    ULONG mRefCounter;
-
-    virtual ~BasicInterface() {}
-
-public:
-
-    BasicInterface() : mObject(0), mRefCounter(1) {}
-
-    T * obj() const { GN_ASSERT(mObject); return mObject; }
-
-    /*** IUnknown methods ***/
-    HRESULT STDMETHODCALLTYPE QueryInterface( const IID & riid, void** ppvObj )
-    {
-        GN_ASSERT( mObject );
-        return mObject->QueryInterface( riid, ppvObj );
-    }
-    ULONG STDMETHODCALLTYPE AddRef()
-    {
-        ++mRefCounter;
-        mObject->AddRef();
-        return mRefCounter;
-    }
-    ULONG STDMETHODCALLTYPE Release()
-    {
-        ULONG c = --mRefCounter;
-        GN_ASSERT( mObject );
-        mObject->Release();
-        if( 0 == c ) delete this;
-        return c;
-    }
-};
-
 // *****************************************************************************
 //                           End of pch.h
 // *****************************************************************************

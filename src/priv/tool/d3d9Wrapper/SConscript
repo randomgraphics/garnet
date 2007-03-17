@@ -2,7 +2,9 @@ Import( 'GN' )
 
 sources = [
     'myd3d9.cpp',
+	'mydev_vtxbuf.cpp',
     'mydevice9.cpp',
+    'myvtxbuf9.cpp',
 ]
 
 cluster = GN.newSourceCluster( sources )

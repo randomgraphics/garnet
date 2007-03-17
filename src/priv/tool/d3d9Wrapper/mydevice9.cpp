@@ -2,11 +2,19 @@
 #include "mydevice9.h"
 #include "myd3d9.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.d3d9Wrapper");
+static GN::Logger * sLogger = GN::getLogger("GN.tool.d3d9wrapper.MyDevice9");
 
 // *****************************************************************************
 // MyDevice9
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+MyDevice9::~MyDevice9()
+{
+    GN::safeRelease( mD3D9 );
+}
 
 //
 //
@@ -46,9 +54,58 @@ HRESULT MyDevice9::create(
 
     // create device
     GN_TRACE(sLogger)( "create Direct3DDevice9 object: Adapter(%d), DeviceType(%d)", Adapter, DeviceType );
-    return myd3d->obj()->CreateDevice( Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &mObject );
+    HRESULT hr = myd3d->realobj()->CreateDevice( Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &mRealObject );
+    if( FAILED(hr) ) return hr;
+
+    // store device caps for future use
+    realobj()->GetDeviceCaps( &mCaps );
+
+    GN_ASSERT( mCaps.MaxStreams <= GN_ARRAY_COUNT(mVtxBufs) );
+
+    // success
+    return D3D_OK;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+ULONG MyDevice9::Release()
+{
+    ULONG c = BasicInterface<IDirect3DDevice9>::Release();
+
+    if( c > 0 )
+    {
+        UInt32 r = 0;
+        
+        // calculate number of streams in device
+        for( UInt32 i = 0; i < mCaps.MaxStreams; ++i )
+        {
+            if( mVtxBufs[i].stream ) ++r;
+        }
+
+        if( c == r )
+        {
+            // This means that NO ONE is referencing the device,
+            // other then resources that are currently binding to it.
+            // So it is time to unbind all resources, and delete
+            // device instance as well.
+
+            // unbind vertex buffers
+            for( UInt32 i = 0; i < mCaps.MaxStreams; ++i )
+            {
+                if( mVtxBufs[i].stream )
+                {
+                    SetStreamSource( i, 0, 0, 0 );
+                }
+            }
+
+            // Note: when program reaches here, the device instance should be deleted already.
+        }
+    }
+
+    return c;
 }
 
 //
@@ -75,7 +132,7 @@ HRESULT MyDevice9::Present(
     HWND hDestWindowOverride,
     CONST RGNDATA* pDirtyRegion)
 {
-    /* calculate FPS
+    // calculate FPS
     static DWORD last = GetTickCount();
     static DWORD count = 0;
     DWORD now = GetTickCount();
@@ -85,7 +142,7 @@ HRESULT MyDevice9::Present(
         printf( "FPS = %.2f\n", (float)count / ( now - last ) * 1000 );
         count = 0;
         last = now;
-    }*/
+    }
 
-    return obj()->Present( pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion );
+    return realobj()->Present( pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion );
 }
