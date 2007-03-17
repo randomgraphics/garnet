@@ -64,7 +64,7 @@ void GN::scene::QuadRenderer::drawBegin( gfx::Texture * tex, BitFields options )
     else
     {
         mContext.setVS( mMesh.vs );
-        mContext.setPS( tex ? mMesh.pstex : mMesh.pssolid );
+        mContext.setPS( tex ? mMesh.pstexed : mMesh.pssolid );
 
         if( OPT_OPAQUE & options )
         {
@@ -152,30 +152,48 @@ bool GN::scene::QuadRenderer::onRendererRestore()
     mMesh.ib->unlock();
 
     // create vs
-    if( r.supportShader( "cgvs" ) )
+
+    static const char * hlsl_vs =
+        "struct VSOUT                       \n"
+        "{                                  \n"
+        "   float4 pos : POSITION;          \n"
+        "   float4 clr : COLOR0;            \n"
+        "   float2 tex : TEXCOORD0;         \n"
+        "};                                 \n"
+        "VSOUT main(                        \n"
+        "   in float4 pos : POSITION,       \n"
+        "   in float4 clr : COLOR0,         \n"
+        "   in float2 tex : TEXCOORD0 )     \n"
+        "{                                  \n"
+        "   VSOUT o;                        \n"
+        "   o.pos.x = pos.x *  2.0 - 1.0;   \n"
+        "   o.pos.y = pos.y * -2.0 + 1.0;   \n"
+        "   o.pos.zw = pos.zw;              \n"
+        "   o.clr = clr;                    \n"
+        "   o.tex = tex;                    \n"
+        "   return o;                       \n"
+        "}";
+
+    if( r.supportShader( "vs_1_1" ) )
+    {
+        mMesh.vs.attach( r.createVS( LANG_D3D_HLSL, hlsl_vs ) );
+    }
+    else if( r.supportShader( "arbvp1" ) )
     {
         static const char * code =
-            "struct VSOUT                       \n"
-            "{                                  \n"
-            "   float4 pos : POSITION;          \n"
-            "   float4 clr : COLOR0;            \n"
-            "   float2 tex : TEXCOORD0;         \n"
-            "};                                 \n"
-            "VSOUT main(                        \n"
-            "   in float4 pos : POSITION,       \n"
-            "   in float4 clr : COLOR0,         \n"
-            "   in float2 tex : TEXCOORD0 )     \n"
-            "{                                  \n"
-            "   VSOUT o;                        \n"
-            "   o.pos.x = pos.x *  2.0 - 1.0;   \n"
-            "   o.pos.y = pos.y * -2.0 + 1.0;   \n"
-            "   o.pos.zw = pos.zw;              \n"
-            "   o.clr = clr;                    \n"
-            "   o.tex = tex;                    \n"
-            "   return o;                       \n"
-            "}";
-
-        mMesh.vs.attach( r.createVS( LANG_CG, code ) );
+            "!!ARBvp1.0                                         \n"
+            "PARAM c = { -2, 1, 2 };                            \n"
+            "MOV result.color, vertex.color;                    \n"
+            "MOV result.position.zw, vertex.position;           \n"
+            "MOV result.texcoord[0].xy, vertex.texcoord[0];     \n"
+            "MAD result.position.y, vertex.position, c.x, c.y;  \n"
+            "MAD result.position.x, vertex.position, c.z, -c.y; \n"
+            "END";
+        mMesh.vs.attach( r.createVS( LANG_OGL_ARB, code ) );
+    }
+    else if( r.supportShader( "cgvs" ) )
+    {
+        mMesh.vs.attach( r.createVS( LANG_CG, hlsl_vs ) );
     }
     else
     {
@@ -185,43 +203,63 @@ bool GN::scene::QuadRenderer::onRendererRestore()
     if( !mMesh.vs ) return false;
 
     // create ps
-    if( r.supportShader( "cgps" ) )
+
+    static const char * hlsl_pstexed =
+        "struct VSOUT                       \n"
+        "{                                  \n"
+        "   float4 pos : POSITION;          \n"
+        "   float4 clr : COLOR0;            \n"
+        "   float2 tex : TEXCOORD0;         \n"
+        "};                                 \n"
+        "sampler s0 : register(s0);         \n"
+        "float4 main( VSOUT i ) : COLOR     \n"
+        "{                                  \n"
+        "   return tex2D( s0, i.tex );      \n"
+        "}";
+
+    static const char * hlsl_pssolid =
+        "struct VSOUT                       \n"
+        "{                                  \n"
+        "   float4 pos : POSITION;          \n"
+        "   float4 clr : COLOR0;            \n"
+        "   float2 tex : TEXCOORD0;         \n"
+        "};                                 \n"
+        "float4 main( VSOUT i ) : COLOR     \n"
+        "{                                  \n"
+        "   return i.clr;                   \n"
+        "}";
+
+    if( r.supportShader( "ps_1_1" ) )
     {
-        static const char * code1 =
-            "struct VSOUT                       \n"
-            "{                                  \n"
-            "   float4 pos : POSITION;          \n"
-            "   float4 clr : COLOR0;            \n"
-            "   float2 tex : TEXCOORD0;         \n"
-            "};                                 \n"
-            "sampler s0 : register(s0);         \n"
-            "float4 main( VSOUT i ) : COLOR     \n"
-            "{                                  \n"
-            "   return tex2D( s0, i.tex );      \n"
-            "}";
+        mMesh.pstexed.attach( r.createPS( LANG_D3D_HLSL, hlsl_pstexed ) );
+        mMesh.pssolid.attach( r.createPS( LANG_D3D_HLSL, hlsl_pssolid ) );
+    }
+    else if( r.supportShader( "arbfp1" ) )
+    {
+        static const char * texed =
+            "!!ARBfp1.0                                              \n"
+            "TEX result.color, fragment.texcoord[0], texture[0], 2D; \n"
+            "END";
 
-        mMesh.pstex.attach( r.createPS( LANG_CG, code1 ) );
+        static const char * solid =
+            "!!ARBfp1.0                                \n"
+            "MOV result.color, fragment.color.primary; \n"
+            "END";
 
-        static const char * code2 =
-            "struct VSOUT                       \n"
-            "{                                  \n"
-            "   float4 pos : POSITION;          \n"
-            "   float4 clr : COLOR0;            \n"
-            "   float2 tex : TEXCOORD0;         \n"
-            "};                                 \n"
-            "float4 main( VSOUT i ) : COLOR     \n"
-            "{                                  \n"
-            "   return i.clr;                   \n"
-            "}";
-
-        mMesh.pssolid.attach( r.createPS( LANG_CG, code2 ) );
+        mMesh.pstexed.attach( r.createPS( LANG_OGL_ARB, texed ) );
+        mMesh.pssolid.attach( r.createPS( LANG_OGL_ARB, solid ) );
+    }
+    else if( r.supportShader( "cgps" ) )
+    {
+        mMesh.pstexed.attach( r.createPS( LANG_CG, hlsl_pstexed ) );
+        mMesh.pssolid.attach( r.createPS( LANG_CG, hlsl_pssolid ) );
     }
     else
     {
         GN_ERROR(sLogger)( "current hardware does not support pixel shader" );
         return false;
     }
-    if( !mMesh.pstex || !mMesh.pssolid ) return false;
+    if( !mMesh.pstexed || !mMesh.pssolid ) return false;
 
     // create vertex format handle
     VtxFmtDesc vfd;
@@ -251,7 +289,7 @@ void GN::scene::QuadRenderer::onRendererDispose()
     for( int i = 0; i < NUM_VTXBUFS; ++i ) mMesh.vb[i].clear();
     mMesh.ib.clear();
     mMesh.vs.clear();
-    mMesh.pstex.clear();
+    mMesh.pstexed.clear();
     mMesh.pssolid.clear();
 
     GN_UNGUARD;

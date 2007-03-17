@@ -66,6 +66,8 @@ namespace GN { namespace app
                 mFpsString.format( mFormatString.cptr(), mFpsValue );
                 mLastFrameTime = mCurrentTime;
                 mFrameCounter = 0;
+                static Logger * sLogger = getLogger("GN.app.fps");
+                GN_DETAIL(sLogger)( "FPS : %.2f", mFpsValue );
             }
             else if( mBeforeFirstUpdate )
             {
