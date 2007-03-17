@@ -65,3 +65,27 @@ HRESULT MyDevice9::GetDirect3D( IDirect3D9 ** ppD3D9 )
     *ppD3D9 = mD3D9;
     return D3D_OK;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+HRESULT MyDevice9::Present(
+    THIS_ CONST RECT* pSourceRect,
+    CONST RECT* pDestRect,
+    HWND hDestWindowOverride,
+    CONST RGNDATA* pDirtyRegion)
+{
+    /* calculate FPS
+    static DWORD last = GetTickCount();
+    static DWORD count = 0;
+    DWORD now = GetTickCount();
+    ++count;
+    if( now - last > 1000 )
+    {
+        printf( "FPS = %.2f\n", (float)count / ( now - last ) * 1000 );
+        count = 0;
+        last = now;
+    }*/
+
+    return obj()->Present( pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion );
+}
