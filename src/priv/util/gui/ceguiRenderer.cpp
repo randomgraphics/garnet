@@ -253,13 +253,17 @@ void CEGUI::GarnetRenderer::onRendererDispose()
 //
 //
 // -----------------------------------------------------------------------------
-inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t count )
+inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc *, size_t )
 {
+/*
     GN_GUARD_SLOW;
 
-    GN::gfx::Renderer & r = gRenderer;
+    GN::scene::QuadRenderer & qr = GN::scene::gQuadRenderer;
 
     const QuadDesc * start = quads;
+
+    qr.drawBegin(
+        start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
 
     while( count > 0 )
     {
@@ -273,6 +277,7 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
         GN_ASSERT( quads > start );
 
         // set texture
+        qr.drawSolid
         r.setTexture(
             0,
             start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
@@ -304,6 +309,7 @@ inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t cou
     }
 
     GN_UNGUARD_SLOW;
+*/
 }
 
 #endif
