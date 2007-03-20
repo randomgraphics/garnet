@@ -55,6 +55,9 @@ public:
         DWORD BehaviorFlags,
         D3DPRESENT_PARAMETERS* pPresentationParameters );
 
+    ///
+    /// Device release is special ...
+    ///
     ULONG STDMETHODCALLTYPE Release();
 
     /// \name IDirect3DDevice methods

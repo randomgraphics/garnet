@@ -55,8 +55,8 @@ GN::util::ArcBall::ArcBall( Handness h )
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::connectToInput()
 {
-    GN::input::Input::sSigKeyPress.connect( this, &ArcBall::onKeyPress );
-    GN::input::Input::sSigAxisMove.connect( this, &ArcBall::onAxisMove );
+    gSigKeyPress.connect( this, &ArcBall::onKeyPress );
+    gSigAxisMove.connect( this, &ArcBall::onAxisMove );
 }
 
 //
@@ -64,8 +64,8 @@ void GN::util::ArcBall::connectToInput()
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::disconnectFromInput()
 {
-    GN::input::Input::sSigKeyPress.disconnect( this );
-    GN::input::Input::sSigAxisMove.disconnect( this );
+    gSigKeyPress.disconnect( this );
+    gSigAxisMove.disconnect( this );
 }
 
 //

@@ -89,6 +89,9 @@ namespace GN { namespace scene
         UInt32 height;
     };
 
+    ///
+    /// font quality
+    ///
     enum FontFaceQuality
     {
         FFQ_MONOCHROM,   // default quality, suitable for small size font.

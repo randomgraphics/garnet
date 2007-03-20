@@ -67,7 +67,7 @@ namespace GN { namespace input
         {
             GN_ASSERT( 0 <= axis && axis < NUM_AXISES );
             mAxisStatus[axis] += distance;
-            sSigAxisMove(axis,distance);
+            gSigAxisMove(axis,distance);
         }
         void triggerAxisMoveAbs( Axis axis, int value, int deadZone )
         {
@@ -80,7 +80,7 @@ namespace GN { namespace input
             {
                 int old = mAxisStatus[axis];
                 mAxisStatus[axis] = value;
-                sSigAxisMove(axis, value - old );
+                gSigAxisMove(axis, value - old );
             }
         }
         //@}

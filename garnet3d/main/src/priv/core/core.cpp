@@ -9,9 +9,6 @@ GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::ProfilerManager )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::gfx::Renderer )
 
-// implement static data members
-GN_IMPLEMENT_INPUT_STATIC_MEMBERS()
-
 namespace GN
 {
     // Global runtime assert behavior flag.
@@ -57,6 +54,13 @@ namespace GN
         //#else
         ::free( ptr );
         //#endif
+    }
+
+    namespace input
+    {
+        GN_PUBLIC Signal1<void,KeyEvent> & getSigKeyPress() { static Signal1<void,KeyEvent> s; return s; }
+        GN_PUBLIC Signal1<void,wchar_t>  & getSigCharPress() { static Signal1<void,wchar_t> s; return s; }
+        GN_PUBLIC Signal2<void,Axis,int> & getSigAxisMove() { static Signal2<void,Axis,int> s; return s; }
     }
 
     namespace gfx
