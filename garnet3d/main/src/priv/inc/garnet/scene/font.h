@@ -131,12 +131,12 @@ namespace GN { namespace scene
     ///
     struct TextDesc
     {
-        const wchar_t * text;
-        size_t          len;
-        float           x;
-        float           y;
-        float           z;
-        UInt32          bgra;
+        const wchar_t * text;       ///< text string
+        size_t          len;        ///< text lengh. Set to 0 for NULL-terminated string.
+        float           x;          ///< position of top-left corner of the first character
+        float           y;          ///< position of top-left corner of the first character
+        float           z;          ///< position of top-left corner of the first character
+        UInt32          bgra;       ///< text color in B-G-R-A format.
         bool            background; ///< draw background
         bool            kerning;    ///< enable text kerning
     };
