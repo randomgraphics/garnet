@@ -214,9 +214,6 @@ void GN::scene::BitmapFontRenderer::purge()
 //                       private functions
 // *****************************************************************************
 
-#include <imdebug.h>
-
-//
 //
 // -----------------------------------------------------------------------------
 inline const GN::scene::BitmapFontRenderer::FontSlot *

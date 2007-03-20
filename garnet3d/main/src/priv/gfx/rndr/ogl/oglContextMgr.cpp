@@ -10,8 +10,6 @@
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
 
-static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
-
 // *****************************************************************************
 // local function
 // *****************************************************************************
