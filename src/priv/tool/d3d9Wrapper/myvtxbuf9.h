@@ -10,6 +10,9 @@
 
 using namespace GN;
 
+///
+/// D3D9 vertex buffer wrapper
+///
 class MyVtxBuf9 : public BasicResource<IDirect3DVertexBuffer9>
 {
     typedef BasicResource<IDirect3DVertexBuffer9> ParentType;

@@ -466,9 +466,9 @@ bool GN::app::SampleApp::initInput()
     GN_GUARD;
 
     // connect to input signals
-    GN::input::Input::sSigKeyPress.connect( this, &SampleApp::onKeyPress );
-    GN::input::Input::sSigCharPress.connect( this, &SampleApp::onCharPress );
-    GN::input::Input::sSigAxisMove.connect( this, &SampleApp::onAxisMove );
+    gSigKeyPress.connect( this, &SampleApp::onKeyPress );
+    gSigCharPress.connect( this, &SampleApp::onCharPress );
+    gSigAxisMove.connect( this, &SampleApp::onAxisMove );
 
     // release old input system
     quitInput();
