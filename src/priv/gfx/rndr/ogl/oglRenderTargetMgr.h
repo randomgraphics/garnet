@@ -30,6 +30,11 @@ namespace GN { namespace gfx
     public:
 
         ///
+        /// dtor
+        ///
+        virtual ~OGLBasicRTMgr() {}
+
+        ///
         /// initialize
         ///
         virtual bool init() = 0;

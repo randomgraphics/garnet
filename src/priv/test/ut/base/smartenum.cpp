@@ -41,25 +41,25 @@ enum MyEnumHaha { E1, E2, E3 };
 
 typedef GN::SmartEnum< MyEnumHaha > MyEnum;
 
-GN::EnumItemDesc<MyEnumHaha> MyEnum::mProp[] =
-{
-    { E1, "E1", "enum1" },
-    { E2, "E2", "enum2" },
-    { E3, "E3", "enum3" },
-};    
+//GN::EnumItemDesc<MyEnumHaha> MyEnum::mProp[] =
+//{
+//    { E1, "E1", "enum1" },
+//    { E2, "E2", "enum2" },
+//    { E3, "E3", "enum3" },
+//};    
 
 class SmartEnumTest : public CxxTest::TestSuite
 {
 public:
     void test1()
     {
-        MyEnum e;
+        //MyEnum e;
 
-        e = E1;
+        //e = E1;
         //e = E2;
         //e = E3;
 
-        MyEnum::toStr(E1);
+        //MyEnum::toStr(E1);
         //e.fromStr( "E1" );
         //e = MyEnum::sGetAt(0);
     }

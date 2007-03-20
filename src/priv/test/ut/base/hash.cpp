@@ -105,7 +105,7 @@ namespace GN
                 GN_ASSERT( mIdx1 < mMap->mValues.size() );
                 GN_ASSERT( mIdx2 < mMap->mValues[mIdx1].size() );
 
-                HashMap::HashItem & hi = mMap->mValues[mIdx1];
+                typename HashMap::HashItem & hi = mMap->mValues[mIdx1];
 
                 ++mIdx2;
                 if( mIdx2 < hi.values.size() ) return *this;
@@ -147,7 +147,7 @@ namespace GN
             const HashItem & hi = mValues[k];
 
             for(
-                std::vector<PairType>::const_iterator i = hi.values.begin();
+                typename std::vector<PairType>::const_iterator i = hi.values.begin();
                 i != hi.values.end();
                 ++i )
             {
@@ -174,7 +174,7 @@ namespace GN
             HashItem & hi = mValues[k];
 
             for(
-                std::vector<PairType>::iterator i = hi.values.begin();
+                typename std::vector<PairType>::iterator i = hi.values.begin();
                 i != hi.values.end();
                 ++i )
             {
@@ -208,7 +208,7 @@ namespace GN
             HashItem & hi = mValues[k];
 
             for(
-                std::vector<PairType>::iterator i = hi.values.begin();
+                typename std::vector<PairType>::iterator i = hi.values.begin();
                 i != hi.values.end();
                 ++i )
             {
@@ -246,7 +246,7 @@ namespace GN
             HashItem & hi = mValues[k];
 
             for(
-                std::vector<PairType>::iterator i = hi.values.begin();
+                typename std::vector<PairType>::iterator i = hi.values.begin();
                 i != hi.values.end();
                 ++i )
             {
