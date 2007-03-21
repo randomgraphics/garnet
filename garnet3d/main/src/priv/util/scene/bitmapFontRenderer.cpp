@@ -215,8 +215,26 @@ void GN::scene::BitmapFontRenderer::purge()
 // *****************************************************************************
 
 //
+//
 // -----------------------------------------------------------------------------
 inline const GN::scene::BitmapFontRenderer::FontSlot *
+GN::scene::BitmapFontRenderer::getSlot( wchar_t ch )
+{
+    // find font slot in slotmap
+    std::map<wchar_t,size_t>::iterator iter = mSlotMap.find(ch);
+    if( iter != mSlotMap.end() )
+    {
+        // found!
+        return &mFontSlots[iter->second];
+    }
+
+    return createSlot( ch );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::scene::BitmapFontRenderer::FontSlot *
 GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
 {
     GN_GUARD_SLOW;
@@ -324,19 +342,19 @@ GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::BitmapFontRenderer::slotInit( size_t fontw, size_t fonth )
+bool GN::scene::BitmapFontRenderer::slotInit( UInt16 fontw, UInt16 fonth )
 {
     GN_GUARD;
 
-    size_t rectw = fontw + 0;
-    size_t recth = fonth + 0;
+    UInt32 rectw = fontw + 0;
+    UInt32 recth = fonth + 0;
 
     // query maximum texture size
-    size_t max_size = gRenderer.getCaps( CAPS_MAX_2D_TEXTURE_SIZE );
+    UInt32 max_size = gRenderer.getCaps( CAPS_MAX_2D_TEXTURE_SIZE );
 
     // calculate texture size
-    size_t texw = ceilPowerOf2(rectw*32);
-    size_t texh = ceilPowerOf2(recth*32);
+    UInt32 texw = ceilPowerOf2(rectw*32);
+    UInt32 texh = ceilPowerOf2(recth*32);
     if( texw > max_size || texh > max_size )
     {
         // use smaller texture
@@ -355,16 +373,17 @@ bool GN::scene::BitmapFontRenderer::slotInit( size_t fontw, size_t fonth )
     int x = 0, y = 0;
     float u = 0.0f, v = 0.0f;
     FontSlot * slot = mFontSlots;
-    int numcols = texw / rectw; int numrows = texh / recth;
-    int numtex = (MAX_SLOTS-1) / (numcols * numrows) + 1;
+    UInt32 numcols = texw / rectw;
+    UInt32 numrows = texh / recth;
+    UInt32 numtex = (MAX_SLOTS-1) / (numcols * numrows) + 1;
     FontSlot * end = &mFontSlots[MAX_SLOTS];
-    for( int itex = 0; itex < numtex; ++itex )
+    for( UInt32 itex = 0; itex < numtex; ++itex )
     {
         u = 0.0f; x = 0;
-        for( int icol = 0; icol < numcols; ++icol )
+        for( UInt32 icol = 0; icol < numcols; ++icol )
         {
             v = 0.0f; y = 0;
-            for( int irow = 0; irow < numrows; ++irow )
+            for( UInt32 irow = 0; irow < numrows; ++irow )
             {
                 // setup slot
                 slot->texidx = itex;

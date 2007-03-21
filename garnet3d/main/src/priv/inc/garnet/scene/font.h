@@ -81,12 +81,12 @@ namespace GN { namespace scene
         ///
         /// This value can be used to position characters in fixed-width mannter.
         ///
-        UInt32 width;
+        UInt16 width;
 
         ///
         /// get character height (minimal line step) in pixel
         ///
-        UInt32 height;
+        UInt16 height;
     };
 
     ///
@@ -283,24 +283,24 @@ namespace GN { namespace scene
         };
 
         // font face data
-        AutoRef<FontFace>       mFont;
+        AutoRef<FontFace>        mFont;
 
         // font texture list
-        AutoRef<gfx::Texture>   mTextures[MAX_TEXTURES];
-        size_t                  mNumTextures;
+        AutoRef<gfx::Texture>    mTextures[MAX_TEXTURES];
+        size_t                   mNumTextures;
 
         // texture size
-        size_t                  mTexWidth;
-        size_t                  mTexHeight;
+        size_t                   mTexWidth;
+        size_t                   mTexHeight;
 
         // font slot
-        size_t                  mNumSlots; // number of used slots
-        FontSlot              * mFontSlots;
-        std::map<wchar_t,int>   mSlotMap;  // map that convert charcode to slot index
+        size_t                   mNumSlots; // number of used slots
+        FontSlot               * mFontSlots;
+        std::map<wchar_t,size_t> mSlotMap;  // map that convert charcode to slot index
 
         // texture list
-        CharInfo                mCharList[MAX_TEXTURES][MAX_TEXT_LENGTH];
-        size_t                  mNumChars[MAX_TEXTURES];
+        CharInfo                 mCharList[MAX_TEXTURES][MAX_TEXT_LENGTH];
+        size_t                   mNumChars[MAX_TEXTURES];
 
         // ********************************
         // private functions
@@ -312,18 +312,7 @@ namespace GN { namespace scene
         ///
         /// \return Return null, if failed.
         ///
-        const FontSlot * getSlot( wchar_t ch )
-        {
-            // find font slot in slotmap
-            std::map<wchar_t,int>::iterator iter = mSlotMap.find(ch);
-            if( iter != mSlotMap.end() )
-            {
-                // found!
-                return &mFontSlots[iter->second];
-            }
-
-            return createSlot( ch );
-        }
+        inline const FontSlot * getSlot( wchar_t ch );
 
         ///
         /// create slot of specific character
@@ -335,7 +324,7 @@ namespace GN { namespace scene
         ///
         /// initialize font slots.
         ///
-        bool slotInit( size_t fontw, size_t fonth );
+        bool slotInit( UInt16 fontw, UInt16 fonth );
     };
 }}
 
