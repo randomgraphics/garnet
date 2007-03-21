@@ -165,8 +165,8 @@ bool FontFaceFt2::init( const FontFaceDesc & desc )
 
     // initialize FT2 stream
     mStream.base               = 0;
-    mStream.size               = fp->size();
-    mStream.pos                = fp->tell();
+    mStream.size               = (FT_ULong)fp->size();
+    mStream.pos                = (FT_ULong)fp->tell();
     mStream.descriptor.pointer = fp;
     mStream.read               = sReadStream;
     mStream.close              = sCloseStream;
@@ -264,7 +264,7 @@ bool FontFaceFt2::loadFontBitmap( FontBitmap & result, wchar_t ch, FontFaceQuali
                 for( size_t i = 0; i < width; ++i )
                 {
                     size_t k1 = i / 8 + pitch * j;
-                    int    k2 = 7 - i % 8;
+                    size_t k2 = 7 - i % 8;
                     UInt8 _vl = (UInt8)( bitmap.buffer[k1] >> k2 );
                     buf[i + j * width] = _vl & 0x1 ? 0xFF : 0;
                 }
@@ -284,7 +284,7 @@ bool FontFaceFt2::loadFontBitmap( FontBitmap & result, wchar_t ch, FontFaceQuali
     result.height = height;
     result.buffer = mBitmapBuffer.cptr();
     result.offx   = slot->bitmap_left;
-    result.offy   = height - slot->bitmap_top;
+    result.offy   = (int)( height - slot->bitmap_top );
     result.advx   = slot->advance.x / 64;
     result.advy   = slot->advance.y / 64;
 
