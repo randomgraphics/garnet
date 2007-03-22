@@ -37,7 +37,7 @@ public:
 
         // load 2D faces
         StrA name = "media::/texture/cube2/a.bmp";
-        for( char i = 0; i < 6; ++i )
+        for( unsigned char i = 0; i < 6; ++i )
         {
             name[22] = 'a' + i;
             faces[i] = rm.getResourceId( name );

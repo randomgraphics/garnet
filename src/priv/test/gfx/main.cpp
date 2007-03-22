@@ -189,7 +189,7 @@ public:
         StrW mousePos;
         int x = 1, y = 1;
         gInput.getMousePosition( x, y );
-        mousePos.format( L"ЪѓБъзјБъ: %d, %d", x, y );
+        mousePos.format( L"Mouse Position : %d, %d", x, y );
         getFontRenderer().drawText( mousePos.cptr(), 0, 100 );
     }
 };

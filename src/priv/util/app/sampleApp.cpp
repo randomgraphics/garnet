@@ -536,13 +536,13 @@ void GN::app::SampleApp::drawHUD()
     {
         if( mShowHelp )
         {
-            static const wchar_t * help =
-                L"ESC            : 退出\n"
-                L"XB360 button X : 退出\n"
-                L"R              : reload all resources\n"
-                L"ALT+ENTER      : 切换全屏模式\n"
-                L"F1             : 切换帮助屏幕";
-            mFontRenderer.drawText( help, 0, 0 );
+            static const StrW help( mbs2wcs(
+                "ESC            : 退出\n"
+                "XB360 button X : 退出\n"
+                "R              : reload all resources\n"
+                "ALT+ENTER      : 切换全屏模式\n"
+                "F1             : 切换帮助屏幕" ) );
+            mFontRenderer.drawText( help.cptr(), 0, 0 );
         }
         else
         {
