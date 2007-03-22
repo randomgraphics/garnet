@@ -3,16 +3,16 @@
 using namespace GN;
 using namespace GN::scene;
 
+#if GN_MSVC
 #pragma warning(disable:4309)
 #pragma warning(disable:4018)
 #pragma warning(disable:4100)
 #pragma warning(disable:4505)
-
 #include <windows.h>
+#endif
+
 #include <stdio.h>
-#include <gl\gl.h>
-#include <gl\glu.h>
-#include <gl\glut.h>
+#include <GL/glut.h>
 
 #define MAX_NO_TEXTURES 1
 
@@ -124,25 +124,26 @@ xCharTexture* getTextChar(wchar_t ch)
 }
 
 
-wchar_t g_UnicodeString[]=
-    L"文件格式：\n"
-    L"若不明确就标为未知\n"
-    L"表演者：	若不明确就标为未知\n"
-    L"专辑：		若不明确就标为未知\n"
-    L"持续时间：01:01:00超过1小时；\n"
-    L"09:09不足小时；00:09不足1分钟\n"
-    L"   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
-    L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
-    L"   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
-    L"   glEnable(GL_BLEND);\n"
-    L"   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" ;
+GN::StrW g_text( GN::mbs2wcs(
+    "文件格式：\n"
+    "若不明确就标为未知\n"
+    "表演者：	若不明确就标为未知\n"
+    "专辑：		若不明确就标为未知\n"
+    "持续时间：01:01:00超过1小时；\n"
+    "09:09不足小时；00:09不足1分钟\n"
+    "   glBindTexture(GL_TEXTURE_2D,pCharTex->m_texID);\n"
+    "   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );\n"
+    "   glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );\n"
+    "   glEnable(GL_BLEND);\n"
+    "   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);" ) ) ;
+const wchar_t * g_UnicodeString = g_text.cptr();
 
-void drawText(wchar_t* _strText,int x , int y, int maxW , int h)
+void drawText(const wchar_t* _strText,int x , int y, int maxW , int h)
 {
 	int sx = x;
 	int sy = y;
 	int maxH = h;
-	for(int i = 0 ; i < wcslen(_strText) ; i ++)
+	for(int i = 0 ; i < (int)wcslen(_strText) ; i ++)
 	{
 		
 		if(_strText[i] =='\n')
