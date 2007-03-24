@@ -56,7 +56,7 @@ namespace GN
     inline StrA extName( const StrA & path ) { StrA ret; extName(ret,path); return ret; }
 
     ///
-    /// get basename of a path
+    /// get basename of a path (no directory, no extension)
     ///
     void baseName( StrA & result, const StrA & path );
 

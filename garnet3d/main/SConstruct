@@ -409,6 +409,11 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
     # ==========
     conf['has_cegui'] = c.CheckCXXHeader( 'CEGUI.h' )
 
+    # ===========
+    # ¼ì²é maxsdk
+    # ===========
+    conf['has_maxsdk'] = c.CheckCHeader( ['max.h','maxapi.h','maxversion.h'] )
+
     # =====================
     # Copy to devkit or not
     # =====================
@@ -1024,7 +1029,7 @@ for compiler, variants in ALL_targets.iteritems() :
         shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
         tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
         samples = Split('GNsampleDepthTexture GNsampleDolphin GNsampleRenderToCube GNsampleRenderToTexture')
-        tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshViewer GNtoolOGLInfo')
+        tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshConverter GNtoolMeshViewer GNtoolOGLInfo')
         progs = tests + samples + tools
         def getTargets( n ):
             if n in targets : return targets[n].targets

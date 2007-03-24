@@ -1,0 +1,29 @@
+#ifndef __GN_MESHCONVERTER_CONVERT_H__
+#define __GN_MESHCONVERTER_CONVERT_H__
+// *****************************************************************************
+//! \file    meshViewer/convert.h
+//! \brief   Common header of mesh converter
+//! \author  chen@@CHENLI-HOMEPC (2007.3.24)
+// *****************************************************************************
+
+namespace GN
+{
+    ///
+    /// mesh convert options
+    ///
+    struct ConvertOptions
+    {
+        StrA inputFileName;  ///< input file name (full path)
+        StrA outputFileName; ///< output file name (full path)
+    };
+
+    ///
+    /// convert from wavefront obj file
+    ///
+    bool obj2mesh( const ConvertOptions & );
+}
+
+// *****************************************************************************
+//                           End of convert.h
+// *****************************************************************************
+#endif // __GN_MESHCONVERTER_CONVERT_H__
