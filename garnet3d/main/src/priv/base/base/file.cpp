@@ -37,9 +37,15 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
         return false;
     }
 
+    if( eof() )
+    {
+        if( readen ) *readen = 0;
+        return false;
+    }
+
     size_t r = ::fread( buffer, 1, size, mFile );
 
-    if ( (size_t)-1 == r )
+    if( (size_t)-1 == r )
     {
         GN_ERROR(sLogger)( "%s : fread() failed!", name().cptr() );
         return false;
