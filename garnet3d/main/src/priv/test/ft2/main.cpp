@@ -7,6 +7,7 @@ using namespace GN::scene;
 #pragma warning(disable:4309)
 #pragma warning(disable:4018)
 #pragma warning(disable:4100)
+#pragma warning(disable:4267)
 #pragma warning(disable:4505)
 #include <windows.h>
 #endif
