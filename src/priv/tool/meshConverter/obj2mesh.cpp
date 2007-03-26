@@ -105,7 +105,8 @@ public:
 static bool sReadLine( File & fp, StrA & line )
 {
     char ch;
-    while( fp.read( &ch, 1, 0 ) && '\n' != ch )
+    size_t readen;
+    while( fp.read( &ch, 1, &readen ) && readen > 0 && '\n' != ch )
     {
         line.append( ch );
     }

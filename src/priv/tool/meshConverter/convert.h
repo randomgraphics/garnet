@@ -21,6 +21,11 @@ namespace GN
     /// convert from wavefront obj file
     ///
     bool obj2mesh( const ConvertOptions & );
+
+    ///
+    /// convert from 3dsmax ASE file
+    ///
+    bool ase2mesh( const ConvertOptions & );
 }
 
 // *****************************************************************************

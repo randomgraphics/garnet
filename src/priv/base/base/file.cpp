@@ -39,8 +39,9 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 
     if( eof() )
     {
+        GN_DETAIL(sLogger)( "Already reach the end of the file." );
         if( readen ) *readen = 0;
-        return false;
+        return true;
     }
 
     size_t r = ::fread( buffer, 1, size, mFile );
