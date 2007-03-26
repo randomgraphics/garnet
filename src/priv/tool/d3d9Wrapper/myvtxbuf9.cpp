@@ -41,7 +41,7 @@ HRESULT MyVtxBuf9::Lock( UINT OffsetToLock, UINT SizeToLock, VOID ** ppbData, DW
     }
 
     mLockOffset = OffsetToLock;
-    mLockBytes  = ( 0 == SizeToLock && 0 == OffsetToLock ) ? mSysCopy.size() : SizeToLock;
+    mLockBytes  = ( 0 == SizeToLock && 0 == OffsetToLock ) ? (UINT)mSysCopy.size() : SizeToLock;
     mLockFlags  = Flags;
 
     *ppbData = mSysCopy.cptr() + mLockOffset;

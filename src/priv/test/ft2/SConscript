@@ -1,4 +1,6 @@
 Import( 'GN' )
-cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
-t = GN.newTarget( 'prog', 'GNtestFt2', [cluster] )
-t.externalDependencies = ['glut']
+
+if GN.conf['has_glut'] :
+    cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
+    t = GN.newTarget( 'prog', 'GNtestFt2', [cluster] )
+    t.externalDependencies = [ GN.conf['glut'] ]

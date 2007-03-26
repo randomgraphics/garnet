@@ -414,6 +414,18 @@ def UTIL_checkConfig( conf, confDir, compiler, variant ):
 	# ===========
 	conf['has_maxsdk'] = c.CheckCHeader( ['max.h','maxapi.h','maxversion.h'] )
 
+	# =========
+	# ¼ì²é GLUT
+	# =========
+	if c.CheckLibWithHeader( 'glut', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
+	    conf['has_glut'] = True
+	    conf['glut'] = 'glut'
+	elif c.CheckLibWithHeader( 'glut32', 'GL/glut.h', 'C', 'glutInit(0,0);' ) :
+	    conf['has_glut'] = True
+	    conf['glut'] = 'glut32'
+	else :
+	    conf['has_glut'] = None
+
 	# =====================
 	# Copy to devkit or not
 	# =====================
