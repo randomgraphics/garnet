@@ -213,32 +213,40 @@ public:
         // normalize path separators
         normalizePathSeparator( tmp, path );
 
-        // convert path separators to native format
 #if GN_MSWIN
+        // convert path separators to native format
         for( size_t i = 0; i < tmp.size(); ++i )
         {
             if( '/' == tmp[i] ) tmp[i] = '\\';
         }
-#endif
-
         // convert to full path
-#if GN_MSWIN
         char absPath[MAX_PATH+1];
         if( 0 == _fullpath( absPath, tmp.cptr(), MAX_PATH ) )
-#else
-        char absPath[PATH_MAX+1];
-        if( 0 == realpath( tmp.cptr(), absPath ) )
-#endif
         {
             GN_ERROR(sLogger)( "invalid path '%s'.", path.cptr() );
             result.clear();
             return;
         }
+        result = absPath;
+#else
+        if( !tmp.empty() && '/' != tmp[0] )
+        {
+            char cwd[PATH_MAX+1];
+            if( 0 == getcwd( cwd, PATH_MAX ) )
+            {
+                GN_ERROR(sLogger)( "getcwd() failed!" );
+                result.clear();
+                return;
+            }
+            joinPath2( result, cwd, tmp );
+        }
+        else
+        {
+            result = tmp;
+        }
+#endif
 
         // TODO: resolve embbed environments
-
-        // done
-        result = absPath;
     }
 
     std::vector<StrA> &
@@ -310,8 +318,8 @@ private:
             int c = sg.FileCount();
             for( int i = 0; i < c; ++i, ++dirs )
             {
-                p = joinPath( curDir, *dirs );
-                recursiveFind( result, p, pattern, recursive, useRegex );
+                //p = joinPath( curDir, *dirs );
+                recursiveFind( result, *dirs, pattern, recursive, useRegex );
             }
         }
 
