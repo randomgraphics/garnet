@@ -99,7 +99,13 @@ struct AseFile
         return true;
     }
 
-    const char * next()
+    bool err( const StrA & msg )
+    {
+        GN_ERROR(sLogger)( "line %d : %s", line, msg.cptr() );
+        return false;
+    }
+
+    const char * next( const char * expectedValue = 0 )
     {
         if( 0 == str || 0 == *str ) return 0;
 
@@ -125,6 +131,13 @@ struct AseFile
 
             if( 0 != *str ) *str = 0, ++str; // point to start of next token
 
+            if( expectedValue && 0 != strCmp( expectedValue, r ) )
+            {
+                err( strFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
+                return 0;
+            }
+
+            // success
             return r;
 
         }
@@ -141,6 +154,12 @@ struct AseFile
 
             if( 0 != *str ) *str = 0, ++str; // point to start of next token
 
+            if( expectedValue && 0 != strCmp( expectedValue, r ) )
+            {
+                err( strFormat( "expect '%s', but found '%s'.", expectedValue, r ) );
+                return 0;
+            }
+
             return r;
         }
     }
@@ -148,14 +167,24 @@ struct AseFile
     ///
     /// skip until meet specific token
     ///
-    bool skipUntil( const char * endtoken )
+    bool skipUntil( const char * endtoken, bool inside_current_block = true )
     {
         const char * token;
+        int level = 0;
         for(;;)
         {
             token = next();
 
+            if( 0 == strCmp( "{", token ) ) ++level;
+            else if( 0 == strCmp( "}", token ) ) --level;
+
             if( 0 == strCmp( endtoken, token ) ) return true;
+
+            if( inside_current_block && level < 0 )
+            {
+                GN_ERROR(sLogger)( "token '%s' not found inside current block!", endtoken );
+                return false;
+            }
 
             if( 0 == token )
             {
@@ -168,30 +197,30 @@ struct AseFile
     //
     //
     // -----------------------------------------------------------------------------
-    bool getf( float & result )
+    bool getf( float & result, bool inside_current_block = true  )
     {
         const char * token = next();
-        return str2Float( result, token );
+        return str2Float( result, token, inside_current_block );
     }
 
     //
     //
     // -----------------------------------------------------------------------------
     template<typename INT_TYPE>
-    bool geti( INT_TYPE & result )
+    bool geti( INT_TYPE & result, bool inside_current_block = true  )
     {
         const char * token = next();
-        return str2Int<INT_TYPE>( result, token );
+        return str2Int<INT_TYPE>( result, token, inside_current_block );
     }
 
     //
     //
     // -----------------------------------------------------------------------------
     template<typename INT_TYPE>
-    INT_TYPE getid( INT_TYPE defval )
+    INT_TYPE getid( INT_TYPE defval, bool inside_current_block = true  )
     {
         INT_TYPE result;
-        return geti( result ) ? result : defval;
+        return geti( result, inside_current_block ) ? result : defval;
     }
 };
 
@@ -214,8 +243,32 @@ static bool sReadMaterials( AseScene & scene, AseFile & ase )
     UInt32 matcount;
     if( !ase.geti( matcount ) ) return false;
 
-    GN_UNIMPL();
-    GN_UNUSED_PARAM( scene );
+    scene.materials.resize( matcount );
+
+    // read materials one by one
+    for( UInt32 i = 0; i < matcount; ++i )
+    {
+        if( !strCmp( "*MATERIAL", ase.next() ) || i != ase.geti( matcount ) )
+        {
+            return ase.err( "invalid material header!" );
+        }
+
+        if( !ase.next( "{" ) ) return false;
+
+        AseStandardMaterial & m = scene.materials[i];
+
+        // get material name
+        if( !ase.next( "*MATERIAL_NAME" ) ) return false;
+        m.name = ase.next();
+        if( !m.name ) return ase.err( "fail to get material name!" );
+
+        // get material class
+        if( !ase.next( "*MATERIAL_CLASS" ) ) return err( "material class is missing!" );
+        if( !ase.next( "Standard" ) ) return ase.err( "only support standard material class!" );
+
+        // next material
+        if( !ase.skipUntil( "}" ) ) return false;
+    }
 
     // success
     return true;
