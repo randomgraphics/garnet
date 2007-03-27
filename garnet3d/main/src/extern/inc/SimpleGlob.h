@@ -364,8 +364,8 @@ public:
             nFlags |= GLOB_NOCHECK;
         if (m_uiFlags & SG_GLOB_TILDE)
             nFlags |= GLOB_TILDE;
-        //if (m_uiFlags & SG_GLOB_ONLYDIR)  // not supported by glob
-        //    nFlags |= GLOB_ONLYDIR;
+        if (m_uiFlags & SG_GLOB_ONLYDIR)  // not supported by glob
+            nFlags |= GLOB_ONLYDIR;
         //if (m_uiFlags & SG_GLOB_ONLYFILE) // not supported by glob
         //    nFlags |= GLOB_ONLYFILE;
         //if (m_uiFlags & SG_GLOB_NODOT)    // not supported by glob

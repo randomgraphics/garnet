@@ -18,7 +18,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.base.Variant");
 void GN::Variant::setb( bool b ) { mValue = b ? "1" : "0"; }
 void GN::Variant::seti( int i ) { mValue.format( "%d", i ); }
 void GN::Variant::setf( float f ) { mValue.format( "%f", f ); }
-void GN::Variant::setp( void * p ) { mValue.format( "%p", p ); }
+void GN::Variant::setp( void * p ) { if( 0 == p ) mValue = "0"; else mValue.format( "%p", p ); }
 void GN::Variant::setv( const Vector4f & v ) { mValue.format( "%f,%f,%f,%f", v.x, v.y, v.z, v.w ); }
 void GN::Variant::setm( const Matrix44f & m )
 {

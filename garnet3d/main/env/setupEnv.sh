@@ -1,4 +1,11 @@
 # ===========
+# setup common variables
+# ===========
+GN_BUILD_TARGET_OS=posix
+GN_BUILD_TARGET_CPU=x86
+GN_BUILD_COMPILER=gcc
+
+# ===========
 # setup scons
 # ===========
 echo SCons Directory : ${GARNET_ROOT}/env/scons
@@ -11,6 +18,7 @@ export PATH SCONS_LIB_DIR
 # ===========
 
 alias gnroot="cd ${GARNET_ROOT}/"
+alias gnbld="cd ${GARNET_ROOT}/build.tmp/scons/${GN_BUILD_TARGET_OS}/${GN_BUILD_TARGET_CPU}/${GN_BUILD_COMPILER}/${GN_BUILD_VARIANT}/bin/"
 alias gnsrc="cd ${GARNET_ROOT}/src/"
 alias gnpriv="cd ${GARNET_ROOT}/src/priv/"
 alias gnbase="cd ${GARNET_ROOT}/src/priv/base/"
