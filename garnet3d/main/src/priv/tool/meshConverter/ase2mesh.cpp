@@ -164,10 +164,60 @@ struct AseFile
         }
     }
 
+    const char * readline( const char * expectedValue )
+    {
+        if( 0 == str || 0 == *str )
+        {
+            if( expectedValue )
+            {
+                err( strFormat( "expect line \"%s\", but already reach the end of file.", expectedValue ) );
+            }
+            return 0;
+        }
+
+        while( ' ' == *str || '\t' == *str ) ++str;
+
+        const char * r = str;
+
+        while( 0 != *str && '\n' != *str ) ++str;
+
+        if( '\n' == *str ) *str = 0, ++str, ++line;
+
+        if( expectedValue && 0 != strCmp( expectedValue, r ) )
+        {
+            err( strFormat( "expect line \"%s\", but meet \"%s\".", expectedValue, r ) );
+            return 0;
+        }
+
+        return r;
+    }
+
+    enum ScanOptionEnum
+    {
+        IN_CURRENT_AND_CHILD_BLOCKS = 0,
+        //IN_CURRENT_BLOCK          = 1,
+        IN_ALL_BLOCKS               = 2,
+        SILENCE                     = 0x4,
+    };
+
+    union ScanOption
+    {
+        UInt32 u32;
+
+        struct
+        {
+            unsigned int scope   : 2;
+            unsigned int silence : 1;
+            unsigned int _       : 29; ///< reserved
+        };
+
+        ScanOption( BitFields bits ) : u32(bits) {}
+    };
+
     ///
     /// skip until meet specific token
     ///
-    bool skipUntil( const char * endtoken, bool inside_current_block = true )
+    bool skipUntil( const char * endtoken, ScanOption option = 0 )
     {
         const char * token;
         int level = 0;
@@ -180,15 +230,17 @@ struct AseFile
 
             if( 0 == strCmp( endtoken, token ) ) return true;
 
-            if( inside_current_block && level < 0 )
+            if( IN_CURRENT_AND_CHILD_BLOCKS == option.scope && level < 0 )
             {
-                GN_ERROR(sLogger)( "token '%s' not found inside current block!", endtoken );
+                if( !option.silence )
+                    err( strFormat( "token '%s' not found inside current block!", endtoken ) );
                 return false;
             }
 
             if( 0 == token )
             {
-                GN_ERROR(sLogger)( "token '%s' not found!", endtoken );
+                if( !option.silence )
+                    err( strFormat( "token '%s' not found!", endtoken ) );
                 return false;
             }
         }
@@ -197,30 +249,30 @@ struct AseFile
     //
     //
     // -----------------------------------------------------------------------------
-    bool getf( float & result, bool inside_current_block = true  )
+    bool getf( float & result, ScanOption option = 0  )
     {
         const char * token = next();
-        return str2Float( result, token, inside_current_block );
+        return str2Float( result, token, option );
     }
 
     //
     //
     // -----------------------------------------------------------------------------
     template<typename INT_TYPE>
-    bool geti( INT_TYPE & result, bool inside_current_block = true  )
+    bool geti( INT_TYPE & result, ScanOption option = 0  )
     {
         const char * token = next();
-        return str2Int<INT_TYPE>( result, token, inside_current_block );
+        return str2Int<INT_TYPE>( result, token, option );
     }
 
     //
     //
     // -----------------------------------------------------------------------------
     template<typename INT_TYPE>
-    INT_TYPE getid( INT_TYPE defval, bool inside_current_block = true  )
+    INT_TYPE getid( INT_TYPE defval, ScanOption option = 0  )
     {
         INT_TYPE result;
-        return geti( result, inside_current_block ) ? result : defval;
+        return geti( result, option ) ? result : defval;
     }
 };
 
@@ -265,6 +317,14 @@ static bool sReadMaterials( AseScene & scene, AseFile & ase )
         // get material class
         if( !ase.next( "*MATERIAL_CLASS" ) ) return err( "material class is missing!" );
         if( !ase.next( "Standard" ) ) return ase.err( "only support standard material class!" );
+
+        // get diffuse map
+        if( ase.skipUntil( "*MAP_DIFFUSE", AseFile::SILENCE ) )
+        {
+            if( !ase.next( "{" ) ) return false;
+
+            if( !ase.skipUntil( "}" ) ) return false;
+        }
 
         // next material
         if( !ase.skipUntil( "}" ) ) return false;
