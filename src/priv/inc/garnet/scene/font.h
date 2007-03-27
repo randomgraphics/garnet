@@ -295,11 +295,11 @@ namespace GN { namespace scene
 
         // font slot
         size_t                   mNumSlots; // number of used slots
-        FontSlot               * mFontSlots;
+        FontSlot *               mFontSlots;
         std::map<wchar_t,size_t> mSlotMap;  // map that convert charcode to slot index
 
         // texture list
-        CharInfo                 mCharList[MAX_TEXTURES][MAX_TEXT_LENGTH];
+        CharInfo *               mCharList[MAX_TEXTURES];
         size_t                   mNumChars[MAX_TEXTURES];
 
         // ********************************

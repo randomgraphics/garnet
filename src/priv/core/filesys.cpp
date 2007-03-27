@@ -318,8 +318,8 @@ private:
             int c = sg.FileCount();
             for( int i = 0; i < c; ++i, ++dirs )
             {
-                //p = joinPath( curDir, *dirs );
-                recursiveFind( result, *dirs, pattern, recursive, useRegex );
+                core::resolvePath( p, curDir, *dirs );
+                recursiveFind( result, p, pattern, recursive, useRegex );
             }
         }
 
