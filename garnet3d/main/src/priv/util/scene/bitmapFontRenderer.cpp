@@ -21,6 +21,12 @@ bool GN::scene::BitmapFontRenderer::init( const FontFaceDesc & ffd )
     // create slot map array
     mFontSlots = new FontSlot[MAX_SLOTS];
 
+    // create character list
+    for( int i = 0; i < MAX_TEXTURES; ++i )
+    {
+        mCharList[i] = new CharInfo[MAX_TEXT_LENGTH];
+    }
+
     // attach to renderer signals
     gSigRendererDispose.connect( this, &BitmapFontRenderer::purge );
 
@@ -53,6 +59,12 @@ void GN::scene::BitmapFontRenderer::quit()
 
     // delete font map array
     safeDeleteArray( mFontSlots );
+
+    // delete character array
+    for( int i = 0; i < MAX_TEXTURES; ++i )
+    {
+        safeDeleteArray( mCharList[i] );
+    }
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
