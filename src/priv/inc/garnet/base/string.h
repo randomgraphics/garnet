@@ -20,9 +20,9 @@ namespace GN
     template<typename CHAR>
     inline size_t strLen( const CHAR * s, size_t maxLen = 0 )
     {
-        if ( 0 == s ) return 0;
+        if( 0 == s ) return 0;
         size_t l = 0;
-        if ( maxLen > 0 )
+        if( maxLen > 0 )
         {
             while( 0 != *s && l < maxLen )
             {
@@ -47,18 +47,42 @@ namespace GN
     template<typename CHAR>
     inline int strCmp( const CHAR * s1, const CHAR * s2 )
     {
-        if ( s1 == s2 ) return 0;
-        if ( 0 == s1 ) return -1;
-        if ( 0 == s2 ) return 1;
+        if( s1 == s2 ) return 0;
+        if( 0 == s1 ) return -1;
+        if( 0 == s2 ) return 1;
         while( *s1 && *s2 )
         {
-            if ( *s1 < *s2 ) return -1;
-            if ( *s1 > *s2 ) return 1;
+            if( *s1 < *s2 ) return -1;
+            if( *s1 > *s2 ) return 1;
             ++s1;
             ++s2;
         }
-        if ( 0 != *s1 ) return 1;
-        if ( 0 != *s2 ) return -1;
+        if( 0 != *s1 ) return 1;
+        if( 0 != *s2 ) return -1;
+        return 0;
+    }
+
+    ///
+    /// string comparison, case sensitive, with limited length
+    ///
+    template<typename CHAR>
+    inline int strCmp( const CHAR * s1, const CHAR * s2, size_t maxLength )
+    {
+        if( s1 == s2 ) return 0;
+        if( 0 == s1 ) return -1;
+        if( 0 == s2 ) return 1;
+        size_t len = 0;
+        while( *s1 && *s2 && len < maxLength )
+        {
+            if( *s1 < *s2 ) return -1;
+            if( *s1 > *s2 ) return 1;
+            ++s1;
+            ++s2;
+            ++len;
+        }
+        if( len == maxLength ) return 0;
+        if( 0 != *s1 ) return 1;
+        if( 0 != *s2 ) return -1;
         return 0;
     }
 
@@ -68,23 +92,23 @@ namespace GN
     template<typename CHAR>
     inline int strCmpI( const CHAR * s1, const CHAR * s2 )
     {
-        if ( s1 == s2 ) return 0;
-        if ( 0 == s1 ) return -1;
-        if ( 0 == s2 ) return 1;
+        if( s1 == s2 ) return 0;
+        if( 0 == s1 ) return -1;
+        if( 0 == s2 ) return 1;
         int a, b;
         while( *s1 && *s2 )
         {
             a = (int)*s1;
             b = (int)*s2;
-            if ( 'a' <= a && a <= 'z' ) a += 'A'-'a';
-            if ( 'a' <= b && b <= 'z' ) b += 'A'-'a';
-            if ( a < b ) return -1;
-            if ( a > b ) return 1;
+            if( 'a' <= a && a <= 'z' ) a += 'A'-'a';
+            if( 'a' <= b && b <= 'z' ) b += 'A'-'a';
+            if( a < b ) return -1;
+            if( a > b ) return 1;
             ++s1;
             ++s2;
         }
-        if ( 0 != *s1 ) return 1;
-        if ( 0 != *s2 ) return -1;
+        if( 0 != *s1 ) return 1;
+        if( 0 != *s2 ) return -1;
         return 0;
     }
 
@@ -188,7 +212,7 @@ namespace GN
         ///
         Str( const CharType * s, size_t l = 0 )
         {
-            if ( 0 == s )
+            if( 0 == s )
             {
                 mCaps = 0;
                 mCount = 0;
@@ -219,7 +243,7 @@ namespace GN
         ///
         void append( const CharType * s, size_t l = 0 )
         {
-            if ( 0 == s ) return;
+            if( 0 == s ) return;
             l = strLen<CharType>(s,l);
             setCaps( mCount + l );
             ::memcpy( mPtr+mCount, s, l*sizeof(CharType) );
@@ -245,7 +269,7 @@ namespace GN
         ///
         void append( CharType ch )
         {
-            if ( 0 == ch ) return;
+            if( 0 == ch ) return;
             setCaps( mCount + 1 );
             mPtr[mCount] = ch;
             ++mCount;
@@ -257,7 +281,7 @@ namespace GN
         ///
         void assign( const CharType * s, size_t l = 0 )
         {
-            if ( 0 == s )
+            if( 0 == s )
             {
                 mPtr[0] = 0;
                 mCount = 0;
@@ -509,7 +533,7 @@ namespace GN
         ///
         void setCaps( size_t newCaps )
         {
-            if ( mCaps >= newCaps ) return;
+            if( mCaps >= newCaps ) return;
             size_t oldCaps = mCaps;
             mCaps = calcCaps( newCaps );
             CharType * newPtr = alloc( mCaps );
