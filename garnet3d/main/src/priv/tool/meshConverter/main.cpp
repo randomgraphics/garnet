@@ -26,8 +26,8 @@ int main( int argc, const char * argv[] )
     ConvertOptions co;
     if( !sParseCmdLine( co, argc, argv ) ) return -1;
 
-    // convert from obj to mesh
-    if( !obj2mesh( co ) ) return -1;
+    // convert from 3dsmax ASE file
+    if( !ase2mesh( co ) ) return -1;
 
     // success
     GN_INFO(sLogger)( "Convertion Done!" );

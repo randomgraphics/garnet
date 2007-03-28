@@ -303,6 +303,12 @@ public:
         TS_ASSERT_EQUALS(  1, GN::strCmp(L"abc",L"ABC") );
         TS_ASSERT_EQUALS( -1, GN::strCmp(L"abc",L"abcd") );
 
+        TS_ASSERT_EQUALS(  0, GN::strCmp( s1.cptr(), s2.cptr(), 0 ) );
+        TS_ASSERT_EQUALS(  0, GN::strCmp( s1.cptr(), s2.cptr(), 1 ) );
+        TS_ASSERT_EQUALS( -1, GN::strCmp( s1.cptr(), s2.cptr(), 2 ) );
+        TS_ASSERT_EQUALS(  0, GN::strCmp( s4.cptr(), s5.cptr(), 4 ) );
+        TS_ASSERT_EQUALS( -1, GN::strCmp( s4.cptr(), s5.cptr(), 5 ) );
+
         TS_ASSERT( -1 == GN::strCmpI<wchar_t>( 0, s1.cptr() ) );
         TS_ASSERT( 1 == GN::strCmpI<wchar_t>( s1.cptr(), 0 ) );
         TS_ASSERT( 1 == GN::strCmpI( s5.cptr(), s3.cptr() ) );
