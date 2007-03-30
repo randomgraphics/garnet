@@ -9,9 +9,22 @@ using namespace GN;
 
 struct AseMap
 {
-    StrA  name;
-    StrA  class_;
-    StrA  bitmap;
+    StrA     name;
+    StrA     class_;
+    int      subno;
+    float    amount;
+    StrA     bitmap;
+    StrA     type;
+    Vector2f offset;
+    Vector2f tiling;
+    float    angle;
+    float    blur;
+    float    blur_offset;
+    float    noise_amt;
+    float    noise_size;
+    int      noise_level;
+    float    noise_phase;
+    StrA     filter;
 };
 
 struct AseMaterial
@@ -22,6 +35,12 @@ struct AseMaterial
     float         shine;
     float         shinestrength;
     float         transparency;
+    float         wiresize;
+    StrA          shading;
+    float         xp_falloff;
+    float         selfillum;
+    StrA          falloff;
+    StrA          xp_type;
     AseMap        mapdiff;
     AseMap        mapbump;
     UInt32        numsub;
@@ -62,9 +81,15 @@ struct AseMesh
     //@}
 };
 
+struct AseNode
+{
+    StrA parent;
+    StrA name;
+};
+
 struct AseGeoObject
 {
-    StrA    name;
+    AseNode node;
     AseMesh mesh;
     UInt32  matid; ///< material ID into global material array
 };
@@ -253,6 +278,15 @@ struct AseFile
     }
 
     //
+    // True, if next token is a node (begin with '*')
+    // -----------------------------------------------------------------------------
+    bool nextIsNode()
+    {
+        skipWhiteSpaces();
+        return '*' == *str;
+    }
+
+    //
     //
     // -----------------------------------------------------------------------------
     bool skipNode( ScanOption option = 0 )
@@ -331,6 +365,25 @@ struct AseFile
     }
 
     //
+    // Note: symbol is a word w/o quotes and spaces.
+    // -----------------------------------------------------------------------------
+    bool readSymbol( StrA & result, ScanOption option = 0  )
+    {
+        const char * s = next( 0, option );
+        if( 0 == s ) return false;
+        if( 'a' <= *s && *s <= 'z' || 'A' <= *s && *s <= 'Z' || '_' == *s )
+        {
+            result = s;
+            return true;
+        }
+        else
+        {
+            err( strFormat( "Expect a symbol (start with [_a-zA-Z]), but met: %s", s ) );
+            return false;
+        }
+    }
+
+    //
     //
     // -----------------------------------------------------------------------------
     bool readFloat( float & result, ScanOption option = 0  )
@@ -400,6 +453,115 @@ struct AseFile
 //
 //
 // -----------------------------------------------------------------------------
+static bool sReadMap( AseMap & m, AseFile & ase )
+{
+    GN_GUARD;
+
+    if( !ase.readBlockStart() ) return false;
+
+    const char * token;
+
+    while( 0 != ( token = ase.next() ) )
+    {
+        if( 0 == strCmp( token, "*MAP_NAME" ) )
+        {
+            if( !ase.readString( m.name ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MAP_CLASS" ) )
+        {
+            if( !ase.readString( m.class_ ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MAP_SUBNO" ) )
+        {
+            if( !ase.readInt( m.subno ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MAP_AMOUNT" ) )
+        {
+            if( !ase.readFloat( m.amount ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*BITMAP" ) )
+        {
+            if( !ase.readString( m.bitmap ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MAP_TYPE" ) )
+        {
+            if( !ase.readSymbol( m.type ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_U_OFFSET" ) )
+        {
+            if( !ase.readFloat( m.offset.u ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_V_OFFSET" ) )
+        {
+            if( !ase.readFloat( m.offset.v ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_U_TILING" ) )
+        {
+            if( !ase.readFloat( m.tiling.u ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_V_TILING" ) )
+        {
+            if( !ase.readFloat( m.tiling.v ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_ANGLE" ) )
+        {
+            if( !ase.readFloat( m.angle ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_BLUR" ) )
+        {
+            if( !ase.readFloat( m.blur ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_BLUR_OFFSET" ) )
+        {
+            if( !ase.readFloat( m.blur_offset ) ) return false;
+        }
+        // Note: this is 3dsmax ASE exporter bug. Should be MAP_NOISE_AMT
+        else if( 0 == strCmp( token, "*UVW_NOUSE_AMT" ) )
+        {
+            if( !ase.readFloat( m.noise_amt ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_NOISE_SIZE" ) )
+        {
+            if( !ase.readFloat( m.noise_size ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_NOISE_LEVEL" ) )
+        {
+            if( !ase.readInt( m.noise_level ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*UVW_NOISE_PHASE" ) )
+        {
+            if( !ase.readFloat( m.noise_phase ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*BITMAP_FILTER" ) )
+        {
+            if( !ase.readSymbol( m.filter ) ) return false;
+        }
+        else if( '*' == *token )
+        {
+            ase.info( strFormat( "skip node %s", token ) );
+            if( !ase.skipNode() ) return false;
+        }
+        else if( 0 == strCmp( token, "}" ) )
+        {
+            // end of the block
+            return true;
+        }
+        else
+        {
+            ase.err( strFormat( "expecting node or close-brace, but met '%s'!", token ).cptr() );
+            return false;
+        }
+    }
+
+    // something wrong
+    ase.err( "fail to get next token!" );
+    return false;
+
+    GN_UNGUARD;
+}
+//
+//
+// -----------------------------------------------------------------------------
 static bool sReadMaterial( AseMaterial & m, AseFile & ase )
 {
     GN_GUARD;
@@ -444,6 +606,47 @@ static bool sReadMaterial( AseMaterial & m, AseFile & ase )
         {
             if( !ase.readFloat( m.transparency ) ) return false;
         }
+        else if( 0 == strCmp( token, "*MATERIAL_WIRESIZE" ) )
+        {
+            if( !ase.readFloat( m.wiresize ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MATERIAL_SHADING" ) )
+        {
+            if( !ase.readSymbol( m.shading ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MATERIAL_XP_FALLOFF" ) )
+        {
+            if( !ase.readFloat( m.xp_falloff ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MATERIAL_SELFILLUM" ) )
+        {
+            if( !ase.readFloat( m.selfillum ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MATERIAL_FALLOFF" ) )
+        {
+            if( !ase.readSymbol( m.falloff ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MATERIAL_XP_TYPE" ) )
+        {
+            if( !ase.readSymbol( m.xp_type ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*MAP_", 5 ) )
+        {
+            const char * map = token + 5;
+            if( 0 == strCmp( map, "DIFFUSE" ) )
+            {
+                if( !sReadMap( m.mapdiff, ase ) ) return false;
+            }
+            else if( 0 == strCmp( map, "BUMP" ) )
+            {
+                if( !sReadMap( m.mapbump, ase ) ) return false;
+            }
+            else
+            {
+                ase.info( strFormat( "skip unsupport map %s", token ) );
+                if( !ase.skipNode() ) return false;
+            }
+        }
         else if( 0 == strCmp( token, "*NUMSUBMTLS" ) )
         {
             UInt32 count;
@@ -487,6 +690,8 @@ static bool sReadMaterials( AseScene & scene, AseFile & ase )
 {
     GN_GUARD;
 
+    ase.info( "Read materials ..." );
+
     if( !ase.readBlockStart() ) return false;
 
     // read material count
@@ -522,112 +727,132 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
 
     if( !ase.readBlockStart() ) return false;
 
-    // node name
-    if( !ase.next( "*NODE_NAME" ) ) return false;
-    o.name = ase.readString();
-    if( o.name.empty() ) return false;
-
-    // skip *NODE_TM by now
-    if( !ase.next( "*NODE_TM" ) ) return false;
-    if( !ase.skipNode() ) return false;
-
-    AseMesh & m = o.mesh;
-
-    // read *MESH
-    if( !ase.next( "*MESH" ) ) return false;
-    if( !ase.readBlockStart() ) return false;
-
-    if( !ase.next( "*TIMEVALUE" ) || !ase.readInt( m.timevalue ) ) return false;
-
-    UInt32 numvert, numface;
-    if( !ase.next( "*MESH_NUMVERTEX" ) || !ase.readInt( numvert ) ) return false;
-    if( !ase.next( "*MESH_NUMFACES" ) || !ase.readInt( numface ) ) return false;
-
-    m.positions.resize( numvert );
-    m.faces.resize( numface );
-
-    // read vertices
-    if( !ase.next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numvert; ++i )
-    {
-        if( !ase.readIndexedVector3Node( "*MESH_VERTEX", i, m.positions[i] ) ) return false;
-    }
-    if( !ase.readBlockEnd() ) return false;
-
-    // read faces
-    if( !ase.next( "*MESH_FACE_LIST" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numface; ++i )
-    {
-        AseFace & f = m.faces[i];
-        int dummy;
-        if( !ase.next( "*MESH_FACE" ) ) return false;
-        if( !ase.next( strFormat( "%d:", i ).cptr() ) ) return false;
-        if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
-        if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
-        if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
-        if( !ase.next( "AB:" ) || !ase.readInt( dummy ) ) return false;
-        if( !ase.next( "BC:" ) || !ase.readInt( dummy ) ) return false;
-        if( !ase.next( "CA:" ) || !ase.readInt( dummy ) ) return false;
-        if( !ase.next( "*MESH_SMOOTHING" ) || !ase.readInt( f.s ) ) return false;
-        if( !ase.next( "*MESH_MTLID" ) || !ase.readInt( f.m ) ) return false;
-    }
-    if( !ase.readBlockEnd() ) return false;
-
-    // read texcoords
-    UInt numtexcoord;
-    if( !ase.next( "*MESH_NUMTVERTEX" ) || !ase.readInt( numtexcoord ) ) return false;
-    m.texcoords.resize( numtexcoord );
-
-    if( !ase.next( "*MESH_TVERTLIST" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numtexcoord; ++i )
-    {
-        if( !ase.readIndexedVector3Node( "*MESH_TVERT", i, m.texcoords[i] ) ) return false;
-    }
-    if( !ase.readBlockEnd() ) return false;
-
-    // read tface list
-    if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( strFormat( "%d", numface ).cptr() ) ) return false;
-    if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numface; ++i )
-    {
-        AseFace & f = m.faces[i];
-        if( !ase.next( "*MESH_TFACE" ) ) return false;
-        if( !ase.next( strFormat( "%d", i ).cptr() ) ) return false;
-        if( !ase.readInt( f.t[0] ) ) return false;
-        if( !ase.readInt( f.t[1] ) ) return false;
-        if( !ase.readInt( f.t[2] ) ) return false;
-    }
-    if( !ase.readBlockEnd() ) return false;
-
-    // skip vertex colors
-    UInt numcolor;
-    if( !ase.next( "*MESH_NUMCVERTEX" ) || !ase.readInt( numcolor ) ) return false;
-    if( numcolor > 0 )
-    {
-        if( !ase.next( "*MESH_CVERTLIST" ) ) return false;
-        if( !ase.skipNode() ) return false;
-    }
-
-    // read normals
-    if( !ase.next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
-    for( UInt32 i = 0; i < numface; ++i )
-    {
-        AseFace & f = m.faces[i];
-        if( !ase.readIndexedVector3Node( "*MESH_FACENORMAL", i, f.fn ) ) return false;
-        if( !ase.readIndexedVector3Node( "*MESH_VERTEXNORMAL", f.v[0], f.vn[0] ) ) return false;
-        if( !ase.readIndexedVector3Node( "*MESH_VERTEXNORMAL", f.v[1], f.vn[1] ) ) return false;
-        if( !ase.readIndexedVector3Node( "*MESH_VERTEXNORMAL", f.v[2], f.vn[2] ) ) return false;
-    }
-    if( !ase.readBlockEnd() ) return false;
-
-    // end of mesh block
-    if( !ase.readBlockEnd() ) return false;
-
-    // read remaining nodes in geomobject block
     const char * token;
-    while( 0 != (token = ase.next() ) )
+    while( 0 != ( token = ase.next() ) )
     {
-        if( 0 == strCmp( token, "*MATERIAL_REF" ) )
+        if( 0 == strCmp( token, "*NODE_NAME" ) )
+        {
+            o.node.name = ase.readString();
+            if( o.node.name.empty() )
+            {
+                ase.err( "Node name can't be empty!" );
+                return false;
+            }
+            ase.info( strFormat( "read geometry object '%s' ...", o.node.name ) );
+        }
+        else if( 0 == strCmp( token, "*NODE_PARENT" ) )
+        {
+            o.node.parent = ase.readString();
+        }
+        else if( 0 == strCmp( token, "*NODE_TM" ) )
+        {
+            // skip *NODE_TM by now
+            if( !ase.skipNode() ) return false;
+        }
+        else if( 0 == strCmp( token, "*MESH" ) )
+        {
+            AseMesh & m = o.mesh;
+
+            if( !ase.readBlockStart() ) return false;
+
+            if( !ase.next( "*TIMEVALUE" ) || !ase.readInt( m.timevalue ) ) return false;
+
+            UInt32 numvert, numface;
+            if( !ase.next( "*MESH_NUMVERTEX" ) || !ase.readInt( numvert ) ) return false;
+            if( !ase.next( "*MESH_NUMFACES" ) || !ase.readInt( numface ) ) return false;
+
+            m.positions.resize( numvert );
+            m.faces.resize( numface );
+
+            // read vertices
+            if( !ase.next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
+            for( UInt32 i = 0; i < numvert; ++i )
+            {
+                if( !ase.readIndexedVector3Node( "*MESH_VERTEX", i, m.positions[i] ) ) return false;
+            }
+            if( !ase.readBlockEnd() ) return false;
+
+            // read faces
+            if( !ase.next( "*MESH_FACE_LIST" ) || !ase.readBlockStart() ) return false;
+            for( UInt32 i = 0; i < numface; ++i )
+            {
+                AseFace & f = m.faces[i];
+                int dummy;
+                if( !ase.next( "*MESH_FACE" ) ) return false;
+                if( !ase.next( strFormat( "%d:", i ).cptr() ) ) return false;
+                if( !ase.next( "A:" ) || !ase.readInt( f.v[0] ) ) return false;
+                if( !ase.next( "B:" ) || !ase.readInt( f.v[1] ) ) return false;
+                if( !ase.next( "C:" ) || !ase.readInt( f.v[2] ) ) return false;
+                if( !ase.next( "AB:" ) || !ase.readInt( dummy ) ) return false;
+                if( !ase.next( "BC:" ) || !ase.readInt( dummy ) ) return false;
+                if( !ase.next( "CA:" ) || !ase.readInt( dummy ) ) return false;
+                if( !ase.next( "*MESH_SMOOTHING" ) ) return false;
+                if( !ase.nextIsNode() )
+                {
+                    // then next must be smooth group ID
+                    if( !ase.readInt( f.s ) ) return false;
+                }
+                else
+                {
+                    f.s = 0;
+                }
+                if( !ase.next( "*MESH_MTLID" ) || !ase.readInt( f.m ) ) return false;
+            }
+            if( !ase.readBlockEnd() ) return false;
+
+            // read texcoords
+            UInt numtexcoord;
+            if( !ase.next( "*MESH_NUMTVERTEX" ) || !ase.readInt( numtexcoord ) ) return false;
+            m.texcoords.resize( numtexcoord );
+            if( numtexcoord > 0 )
+            {
+                if( !ase.next( "*MESH_TVERTLIST" ) || !ase.readBlockStart() ) return false;
+                for( UInt32 i = 0; i < numtexcoord; ++i )
+                {
+                    if( !ase.readIndexedVector3Node( "*MESH_TVERT", i, m.texcoords[i] ) ) return false;
+                }
+                if( !ase.readBlockEnd() ) return false;
+
+                // read tface list
+                if( !ase.next( "*MESH_NUMTVFACES" ) || !ase.next( strFormat( "%d", numface ).cptr() ) ) return false;
+                if( !ase.next( "*MESH_TFACELIST" ) || !ase.readBlockStart() ) return false;
+                for( UInt32 i = 0; i < numface; ++i )
+                {
+                    AseFace & f = m.faces[i];
+                    if( !ase.next( "*MESH_TFACE" ) ) return false;
+                    if( !ase.next( strFormat( "%d", i ).cptr() ) ) return false;
+                    if( !ase.readInt( f.t[0] ) ) return false;
+                    if( !ase.readInt( f.t[1] ) ) return false;
+                    if( !ase.readInt( f.t[2] ) ) return false;
+                }
+                if( !ase.readBlockEnd() ) return false;
+            }
+
+            // skip vertex colors
+            UInt numcolor;
+            if( !ase.next( "*MESH_NUMCVERTEX" ) || !ase.readInt( numcolor ) ) return false;
+            if( numcolor > 0 )
+            {
+                if( !ase.next( "*MESH_CVERTLIST" ) ) return false;
+                if( !ase.skipNode() ) return false;
+            }
+
+            // read normals
+            if( !ase.next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
+            for( UInt32 i = 0; i < numface; ++i )
+            {
+                AseFace & f = m.faces[i];
+                if( !ase.readIndexedVector3Node( "*MESH_FACENORMAL", i, f.fn ) ) return false;
+                if( !ase.readIndexedVector3Node( "*MESH_VERTEXNORMAL", f.v[0], f.vn[0] ) ) return false;
+                if( !ase.readIndexedVector3Node( "*MESH_VERTEXNORMAL", f.v[1], f.vn[1] ) ) return false;
+                if( !ase.readIndexedVector3Node( "*MESH_VERTEXNORMAL", f.v[2], f.vn[2] ) ) return false;
+            }
+            if( !ase.readBlockEnd() ) return false;
+
+            // end of mesh block
+            if( !ase.readBlockEnd() ) return false;
+        }
+        else if( 0 == strCmp( token, "*MATERIAL_REF" ) )
         {
             if( !ase.readInt( o.matid ) ) return false;
             if( o.matid >= scene.materials.size() )
@@ -653,8 +878,9 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
         }
     }
 
-    // done
-    return ase.readBlockEnd();
+    // something wrong!
+    ase.err( "Fail to get next node!" );
+    return false;
 
     GN_UNGUARD;
 }
