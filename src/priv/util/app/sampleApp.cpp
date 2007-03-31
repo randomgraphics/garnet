@@ -150,7 +150,6 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 
     // create global resource manager instance
     new scene::ResourceManager;
-    scene::addResourceDirectory( "media::" );
 
     if( !initApp() ) return false;
     onDetermineInitParam( mInitParam );

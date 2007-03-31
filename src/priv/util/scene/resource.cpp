@@ -49,21 +49,6 @@ static bool sIsTexture( const StrA & name )
         || ".TGA" == ext;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-static const StrA & sGetResourceType( const StrA & name )
-{
-    static const StrA & texture("texture");
-    static const StrA & effect("effect");
-    static const StrA & mesh("mesh");
-    
-    if( sIsTexture( name ) ) return texture;
-    if( sIsXml( name, effect ) ) return effect;
-    if( sIsXml( name, mesh ) ) return mesh;
-    return StrA::EMPTYSTR;
-}
-
 // *****************************************************************************
 // local resource manipulators
 // *****************************************************************************
@@ -690,6 +675,21 @@ void GN::scene::ResourceManager::resolveName( StrA & out, const StrA & in ) cons
 //
 //
 // -----------------------------------------------------------------------------
+GN::StrA GN::scene::ResourceManager::determineResourceType( const StrA & name ) const
+{
+    static const StrA & texture("texture");
+    static const StrA & effect("effect");
+    static const StrA & mesh("mesh");
+    
+    if( sIsTexture( name ) ) return texture;
+    if( sIsXml( name, effect ) ) return effect;
+    if( sIsXml( name, mesh ) ) return mesh;
+    return StrA::EMPTYSTR;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::scene::ResourceManager::onRendererDispose()
 {
     disposeAll();
@@ -698,33 +698,6 @@ void GN::scene::ResourceManager::onRendererDispose()
 // *****************************************************************************
 // global public functions
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::addResourceDirectory( const StrA & path, bool recursive )
-{
-    // glob all files
-    std::vector<StrA> filenames;
-    core::glob( filenames, path, "*.*", recursive, false );
-
-    ResourceManager & rm = ResourceManager::sGetInstance();
-
-    for( size_t i = 0; i < filenames.size(); ++i )
-    {
-        const StrA & name = filenames[i];
-
-        const StrA & type = sGetResourceType( name );
-
-        if( type.empty() )
-        {
-            GN_TRACE(sLogger)( "ignore unclassified file: %s", name.cptr() );
-            continue;
-        }
-
-        rm.addResource( name, type );
-    }
-}
 
 //
 //

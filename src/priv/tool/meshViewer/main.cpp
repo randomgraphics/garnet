@@ -2,14 +2,16 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::scene;
 using namespace GN::input;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
 
 class MeshViewerApp : public app::SampleApp
 {
-    StrA    mMeshName;
-    FatMesh mFatMesh;
+    StrA mObjName;
+
+    Drawable mObj;
 
 public:
 
@@ -20,8 +22,7 @@ public:
             const char * a = argv[i];
             if( '-' != *a )
             {
-                mMeshName = app::SampleResourceManager::sGetNativeResourceFileName( a );
-                if( mMeshName.empty() ) { GN_ERROR(sLogger)( "mesh file '%s' not found.", a ); return false; }
+                mObjName = a;
                 break;
             }
             else GN_WARN(sLogger)( "unknown command line argument: %s", a );
@@ -31,9 +32,11 @@ public:
 
     bool onAppInit()
     {
-        DiskFile fp;
-        if( !fp.open( mMeshName, "rb" ) ) return false;
-        if( !mFatMesh.readFromFile( fp ) ) return false;
+        return mObj.loadFromXmlFile( mObjName );
+    }
+
+    bool onRendererRestore()
+    {
         return true;
     }
 
@@ -61,7 +64,8 @@ public:
     {
         Renderer & r = gRenderer;
         r.clearScreen();
-        mFatMesh.draw( 0 );
+
+        mObj.draw();
     }
 };
 

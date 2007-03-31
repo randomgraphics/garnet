@@ -30,7 +30,7 @@ GN::scene::ResourceManager::getResource( const StrA & name )
 //
 // -----------------------------------------------------------------------------
 inline GN::scene::ResourceId
-GN::scene::ResourceManager::getResourceId( const StrA & name ) const
+GN::scene::ResourceManager::getResourceId( const StrA & name )
 {
     StrA realname;
 
@@ -40,13 +40,21 @@ GN::scene::ResourceManager::getResourceId( const StrA & name ) const
 
     if( mResourceNames.end() == i )
     {
-        GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
-        return 0;
-    }
+        StrA type = determineResourceType( realname );
+        if( type.empty() )
+        {
+            GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
+            return 0;
+        }
 
-    // success
-    GN_ASSERT( validId( i->second ) );
-    return i->second;
+        return addResource( realname, type );
+    }
+    else
+    {
+        // success
+        GN_ASSERT( validId( i->second ) );
+        return i->second;
+    }
 }
 
 //

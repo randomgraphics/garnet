@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+    <parameters>
+        <uniform name="pvw" type="MATRIX44" count="1"/>
+        <uniform name="view" type="MATRIX44" count="1" desc="view matrix"/>
+        <uniform name="lightpos" type="VECTOR4" count="1" desc="light position in world space"/>
+        <uniform name="diffuse" type="VECTOR4" count="1"/>
+        <texture name="texdiff"/>
+        <texture name="texbump"/>
+    </parameters>
+    <shaders>
+
+        <!-- D3D shaders -->
+
+        <shader name="d3dvs" type="VS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="vs_1_1"/>
+                </token>
+            </prerequisites>
+            <uniref binding="pvw" ref="pvw"/>
+            <uniref binding="lightpos" ref="lightpos"/>
+            <code lang="D3D_HLSL" hints="...">
+<![CDATA[
+struct vsinput
+{
+	float4 pos : POSITION;
+	float3 nrm : NORMAL;
+	float2 tex : TEXCOORD0;
+};
+struct vsoutput
+{
+	float4 pos  : POSITION;
+	float4 nrm  : TEXCOORD0; // xyz: normal in object space;          w : texcoord.u
+	float4 lpos : TEXCOORD1; // xyz: light direction in object space; w : texcoord.v
+};
+uniform float4x4 pvw;
+uniform float4   lightpos; // light position in world space
+vsoutput main( vsinput vi )
+{
+	vsoutput vo;
+
+	// get light direction in object space
+	float3 lightpos_os = mul( view, lightpos );
+	float3 lightdir_os = lightpos_os - pos.xyz;
+
+	vo.pos      = mul( pvw, vi.pos );
+	vo.nrm.xyz  = vi.nrm;
+	vo.nrm.w    = vi.tex.x;
+	vo.lpos.xyz = lightdir_os;
+	vo.lpos.w   = vi.tex.y;
+
+	return vo;
+}
+]]>
+            </code>
+        </shader>
+
+        <shader name="d3dps" type="PS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="ps_1_4"/>
+                </token>
+            </prerequisites>
+            <texref binding="texdiff" ref="texdiff"/>
+            <code lang="D3D_HLSL">
+<![CDATA[
+struct vsoutput
+{
+	float4 nrm  : TEXCOORD0; // xyz: normal in object space;          w: texcoord.u
+	float4 lpos : TEXCOORD1; // xyz: light position in object space; w : texcoord.v
+};
+sampler texdiff : register(s0);
+float4 main( vsoutput vi ) : COLOR0
+{
+	float lighting = dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) );
+
+	float4 tex = tex2D( texdiff, float2( vi.nrm.w, vi.lpos.w ) );
+
+	return tex * lighting;
+}
+]]>
+            </code>
+        </shader>
+
+        <!-- Fixed functional pipeline -->
+        <shader name="fixvs" type="VS"/>
+        <shader name="fixps" type="PS"/>
+        <shader name="fixgs" type="GS"/>
+
+    </shaders>
+
+    <techniques>
+        <technique name="d3d">
+            <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+        </technique>
+        <technique name="ffp">
+            <pass vs="fixvs" ps="fixps" gs="fixgs"/>
+        </technique>
+    </techniques>
+</effect>
