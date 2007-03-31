@@ -68,7 +68,7 @@ namespace GN { namespace scene
         void           disposeAll();
         BaseResource * getResource( ResourceId id );
         BaseResource * getResource( const StrA & name );
-        ResourceId     getResourceId( const StrA & name ) const;
+        ResourceId     getResourceId( const StrA & name );
         const StrA &   getResourceName( ResourceId ) const;
         bool           validId( ResourceId id ) const { return mResources.validHandle( id ); }
 
@@ -130,14 +130,10 @@ namespace GN { namespace scene
     private :
 
         BaseResource * getResourceImpl( ResourceId );
+        StrA determineResourceType( const StrA & name ) const;
         void resolveName( StrA & out, const StrA & in ) const;
         void onRendererDispose();
     };
-
-    ///
-    /// add files under specific directory into resource manager.
-    ///
-    void addResourceDirectory( const StrA & path, bool recursive = true );
 
     ///
     /// load texture from file stream
