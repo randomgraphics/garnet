@@ -49,7 +49,7 @@ public:
         if( 0 == cubemap ) return false;
 
         // load box
-        if( !box.loadFromXmlFile( "media::drawable/cube1.xml" ) ) return false;
+        if( !loadFromXmlFile( box, "media::drawable/cube1.xml" ) ) return false;
         box.textures["cube"].texid = cubemap;
 
         // initial arcball window

@@ -907,8 +907,8 @@ namespace GN { namespace gfx
         /// \param options
         ///     渲染选项，详见 DrawLineOptions。Set to 0 to use default options
         /// \param positions
-        ///     顶点坐标数据，由一系列的顶点组成。2个顶点表示一个矩形。
-        ///     选项 DQ_WINDOW_SPACE 和 DQ_3D_POSITION 会影响坐标的含义。
+        ///     顶点坐标数据，由一系列的3D顶点组成。2个顶点表示一条线段。
+        ///     选项 DL_WINDOW_SPACE会影响坐标的含义。
         /// \param stride
         ///     stride of one vertex.
         /// \param count

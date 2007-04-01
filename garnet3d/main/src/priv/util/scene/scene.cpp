@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/GNscene.h"
 
 // *****************************************************************************
 // ctor / dtor
@@ -18,48 +17,12 @@ GN::scene::Scene::Scene()
 // -----------------------------------------------------------------------------
 GN::scene::Scene::~Scene()
 {
-    mNodes.clear();
 }
-
-// *****************************************************************************
-// misc.
-// *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Scene::frameUpdate()
+void GN::scene::Scene::clear()
 {
-}
-
-// *****************************************************************************
-// object instance management
-// *****************************************************************************
-
-// *****************************************************************************
-// sample code
-// *****************************************************************************
-
-static void samplecode()
-{
-    using namespace GN;
-    using namespace GN::scene;
-
-    SceneRenderer        r;
-    SceneResourceManager rm;
-    Scene                s;
-
-    if( !r.init() ) return;
-    if( !rm.init() ) return;
-
-    loadSceneFromFile( s, "media:/scene1/scene.xml" );
-
-    // main rendering loop
-    while( notquit() )
-    {
-        s.frameUpdate();
-    }
-
-    // end application
-    r.waitForIdle();
+    mLight0.position.set( 100, 0, 0 );
 }

@@ -1706,6 +1706,16 @@ namespace GN
             return result;
         }
 
+        friend bool operator == ( const Quaternion & a, const Quaternion & b )
+        {
+            return a.w == b.w && a.v == b.v;
+        }
+
+        friend bool operator != ( const Quaternion & a, const Quaternion & b )
+        {
+            return a.w != b.w || a.v != b.v;
+        }
+
     private :
 
         ///
@@ -2357,6 +2367,21 @@ namespace GN
         /// return box center
         ///
         void center( PointType & out ) const { out = pos() + size() / (T)2.0; }
+
+        ///
+        /// return the maximum axis. 0 for W, 1 for H, 2 for D.
+        ///
+        int theLongestAxis() const
+        {
+            if( w < h )
+            {
+                return h < d ? 3 : 2;
+            }
+            else
+            {
+                return w < d ? 3 : 1;
+            }
+        }
 
         ///
         /// from two points

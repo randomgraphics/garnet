@@ -121,6 +121,16 @@ GN_INLINE void GN::gfx::Effect::commitChanges() const
 //
 //
 // -----------------------------------------------------------------------------
+GN_INLINE bool GN::gfx::Effect::hasTechnique( const StrA & name, EffectItemID * id ) const
+{
+    EffectItemID i = mTechniques.find( name );
+    if( id ) *id = i;
+    return 0 != i;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_INLINE GN::gfx::EffectItemID GN::gfx::Effect::getTechniqueID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
@@ -182,6 +192,16 @@ GN_INLINE void GN::gfx::Effect::setActiveTechniqueByName( const StrA & name ) co
 //
 //
 // -----------------------------------------------------------------------------
+GN_INLINE bool GN::gfx::Effect::hasUniform( const StrA & name, EffectItemID * id ) const
+{
+    EffectItemID i = mUniforms.find( name );
+    if( id ) *id = i;
+    return 0 != i;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN_INLINE GN::gfx::EffectItemID GN::gfx::Effect::getUniformID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
@@ -238,6 +258,17 @@ GN_INLINE void GN::gfx::Effect::setUniformByName( const StrA & name, const Unifo
 // *****************************************************************************
 // texture management
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN_INLINE bool GN::gfx::Effect::hasTexture( const StrA & name, EffectItemID * id ) const
+{
+    EffectItemID i = mTextures.find( name );
+    if( id ) *id = i;
+    return 0 != i;
+}
+
 
 //
 //

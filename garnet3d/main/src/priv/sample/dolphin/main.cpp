@@ -33,8 +33,8 @@ public:
         }
 
         // load dolphin and seafloor
-        if( !mDolphin.loadFromXmlFile( "media::dolphin/dolphin.drawable.xml" ) ) return false;
-        if( !mSeafloor.loadFromXmlFile( "media::dolphin/seafloor.drawable.xml" ) ) return false;
+        if( !loadFromXmlFile( mDolphin, "media::dolphin/dolphin.drawable.xml" ) ) return false;
+        if( !loadFromXmlFile( mSeafloor, "media::dolphin/seafloor.drawable.xml" ) ) return false;
 
         // success
         return true;

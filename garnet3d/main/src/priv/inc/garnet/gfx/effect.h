@@ -332,17 +332,12 @@ namespace GN { namespace gfx {
         ///
         /// setup the descriptor from XML string
         ///
-        bool fromXml( const char * str, size_t size = 0 );
-
-        ///
-        /// setup the descriptor from XML string
-        ///
-        bool fromXml( File & );
+        bool loadFromXmlNode( const XmlNode & root, const StrA & basedir );
 
         ///
         /// write the descriptor to file
         ///
-        void toXml( File & );
+        void saveToXmlFile( File & );
 
         ///
         /// Find uniform by name. Return NULL if not found.
@@ -503,6 +498,8 @@ namespace GN { namespace gfx {
 
         //@{
 
+        bool hasTechnique( const StrA & name, EffectItemID * id ) const;
+
         ///
         /// get technique ID
         ///
@@ -527,6 +524,7 @@ namespace GN { namespace gfx {
     public:
 
         //@{
+        bool hasUniform( const StrA & name, EffectItemID * id ) const;
         EffectItemID getUniformID( const StrA & ) const;
         void setUniform( EffectItemID, const UniformValue & ) const;
         void setUniformByName( const StrA &, const UniformValue & ) const;
@@ -540,6 +538,7 @@ namespace GN { namespace gfx {
     public:
 
         //@{
+        bool hasTexture( const StrA & name, EffectItemID * id ) const;
         EffectItemID getTextureID( const StrA & ) const;
         void setTexture( EffectItemID, const Texture * ) const;
         void setTextureByName( const StrA &, const Texture * ) const;

@@ -3,7 +3,7 @@
     <parameters>
         <uniform name="pvw" type="MATRIX44" count="1"/>
         <uniform name="view" type="MATRIX44" count="1" desc="view matrix"/>
-        <uniform name="lightpos" type="VECTOR4" count="1" desc="light position in world space"/>
+        <uniform name="light0_pos" type="VECTOR4" count="1" desc="light position in world space"/>
         <uniform name="diffuse" type="VECTOR4" count="1"/>
         <texture name="texdiff"/>
         <texture name="texbump"/>
@@ -19,7 +19,8 @@
                 </token>
             </prerequisites>
             <uniref binding="pvw" ref="pvw"/>
-            <uniref binding="lightpos" ref="lightpos"/>
+            <uniref binding="view" ref="view"/>
+            <uniref binding="light0_pos" ref="light0_pos"/>
             <code lang="D3D_HLSL" hints="...">
 <![CDATA[
 struct vsinput
@@ -35,14 +36,15 @@ struct vsoutput
 	float4 lpos : TEXCOORD1; // xyz: light direction in object space; w : texcoord.v
 };
 uniform float4x4 pvw;
-uniform float4   lightpos; // light position in world space
+uniform float4x4 view;
+uniform float4   light0_pos; // light position in world space
 vsoutput main( vsinput vi )
 {
 	vsoutput vo;
 
 	// get light direction in object space
-	float3 lightpos_os = mul( view, lightpos );
-	float3 lightdir_os = lightpos_os - pos.xyz;
+	float3 lightpos_os = mul( view, light0_pos );
+	float3 lightdir_os = lightpos_os - vi.pos.xyz;
 
 	vo.pos      = mul( pvw, vi.pos );
 	vo.nrm.xyz  = vi.nrm;
@@ -62,7 +64,7 @@ vsoutput main( vsinput vi )
                     <token type="values" value="ps_1_4"/>
                 </token>
             </prerequisites>
-            <texref binding="texdiff" ref="texdiff"/>
+            <texref stage="0" ref="texdiff"/>
             <code lang="D3D_HLSL">
 <![CDATA[
 struct vsoutput

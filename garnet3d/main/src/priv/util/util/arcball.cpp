@@ -41,7 +41,8 @@ static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y,
 // -----------------------------------------------------------------------------
 GN::util::ArcBall::ArcBall( Handness h )
     : mQuat( Quaternionf::IDENTITY )
-    , mRotation( Matrix44f::IDENTITY )
+    , mRotation3x3( Matrix33f::IDENTITY )
+    , mRotation4x4( Matrix44f::IDENTITY )
     , mTransView( Matrix44f::IDENTITY )
     , mWindowCenter( 0, 0 )
     , mWindowHalfSize( 1, 1 )
@@ -103,11 +104,10 @@ void GN::util::ArcBall::onDrag( int x, int y )
     q.fromArc( mMoveBase, v );
     mQuat = q * mQuatBase;
 
-    Matrix33f m33;
-    mQuat.toMatrix33( m33 );
-    mRotation.set( m33 );
+    mQuat.toMatrix33( mRotation3x3 );
+    mRotation4x4.set( mRotation3x3 );
 
-    GN_TRACE(sLogger)( "\n%s", m33.print().cptr() );
+    GN_TRACE(sLogger)( "\n%s", mRotation3x3.print().cptr() );
 }
 
 //

@@ -295,17 +295,9 @@ static GN::scene::BaseResource * sCreateEffect( const StrA & name )
     }
     else
     {
-        // open file
-        AutoObjPtr<File> fp( core::openFile( name, "rt" ) );
-        if( !fp )
-        {
-            GN_ERROR(sLogger)( "Fail to open effect file '%s'.", name.cptr() );
-            return 0;
-        }
-
-        // parse XML file
+        // load effect descriptor
         EffectDesc desc;
-        if( !desc.fromXml( *fp ) ) return 0;
+        if( !loadFromXmlFile( desc, name ) ) return false;
 
         // create effect instance
         AutoRef<Effect> eff( new Effect );
@@ -333,20 +325,12 @@ static GN::scene::BaseResource * sCreateMesh( const StrA & name )
     }
     else
     {
-        // open file
-        AutoObjPtr<File> fp( core::openFile( name, "rt" ) );
-        if( !fp )
-        {
-            GN_ERROR(sLogger)( "Mesh '%s' creation failed.", name.cptr() );
-            return 0;
-        }
-
         // get mesh directory
         StrA meshdir = dirName( name );
 
         // create mesh instance
         AutoRef<Mesh> mesh( new Mesh );
-        if( !mesh->loadFromXmlFile( *fp, meshdir, gRenderer ) ) return 0;
+        if( !loadFromXmlFile( *mesh, name ) ) return 0;
 
         // success
         return mesh.detach();

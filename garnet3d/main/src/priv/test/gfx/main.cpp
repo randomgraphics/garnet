@@ -33,7 +33,7 @@ public:
         scene::ResourceManager & rm = gSceneResMgr;
 
         // load box
-        if( !box.loadFromXmlFile( "media::drawable/cube1.xml" ) ) return false;
+        if( !loadFromXmlFile( box, "media::drawable/cube1.xml" ) ) return false;
 
         // load texture
         tex0 = rm.getResourceId( "media::texture/rabit.png" );
