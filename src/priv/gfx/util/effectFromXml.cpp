@@ -444,16 +444,20 @@ static void sParseTechniques( EffectDesc & desc, const XmlElement & node )
     }
 }
 
+// *****************************************************************************
+// public functions
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-static bool sDoParse( EffectDesc & desc, const XmlNode * root )
+bool GN::gfx::EffectDesc::loadFromXmlNode( const XmlNode & root, const StrA & )
 {
-    desc.clear();
+    GN_GUARD;
 
-    if( 0 == root ) return true; // empty effect
+    clear();
 
-    const XmlElement * e = root->toElement();
+    const XmlElement * e = root.toElement();
 
     if( 0 == e ||e->name != "effect" )
     {
@@ -466,74 +470,13 @@ static bool sDoParse( EffectDesc & desc, const XmlNode * root )
         e = n->toElement();
         if( !e ) continue;
 
-        if( "parameters" == e->name ) sParseParameters( desc, *e );
-        else if( "shaders" == e->name ) sParseShaders( desc, *e );
-        else if( "techniques" == e->name ) sParseTechniques( desc, *e );
+        if( "parameters" == e->name ) sParseParameters( *this, *e );
+        else if( "shaders" == e->name ) sParseShaders( *this, *e );
+        else if( "techniques" == e->name ) sParseTechniques( *this, *e );
         else sPostError( *e, "Unknown node. Ignored" );
     }
 
     return true;
-}
-
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::fromXml( const char * str, size_t size )
-{
-    GN_GUARD;
-
-    XmlDocument doc;
-
-    XmlParseResult xpr;
-
-    if( !doc.parse( xpr, str, size ) )
-    {
-        GN_ERROR(sLogger)(
-            "Fail to read XML string:\n"
-            "    line   : %d\n"
-            "    column : %d\n"
-            "    error  : %s",
-            xpr.errLine,
-            xpr.errColumn,
-            xpr.errInfo.cptr() );
-        return false;
-    }
-
-    return sDoParse( *this, xpr.root );
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::fromXml( File & fp )
-{
-    GN_GUARD;
-
-    XmlDocument doc;
-
-    XmlParseResult xpr;
-
-    if( !doc.parse( xpr, fp ) )
-    {
-        GN_ERROR(sLogger)(
-            "Fail to read XML file %s:\n"
-            "    line   : %d\n"
-            "    column : %d\n"
-            "    error  : %s",
-            fp.name().cptr(),
-            xpr.errLine,
-            xpr.errColumn,
-            xpr.errInfo.cptr() );
-        return false;
-    }
-
-    return sDoParse( *this, xpr.root );
 
     GN_UNGUARD;
 }

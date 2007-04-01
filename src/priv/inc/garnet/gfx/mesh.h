@@ -95,12 +95,7 @@ namespace GN { namespace gfx
         ///
         /// load from XML
         ///
-        bool loadFromXml( const XmlNode * rootnode, const StrA & meshdir, Renderer & r );
-
-        ///
-        /// load from XML file
-        ///
-        bool loadFromXmlFile( File &, const StrA & meshdir, Renderer & r );
+        bool loadFromXmlNode( const XmlNode & root, const StrA & basedir );
     };
 
     ///

@@ -16,7 +16,8 @@ namespace GN { namespace util
     class ArcBall : public SlotBase
     {
         Quaternionf mQuat;
-        Matrix44f   mRotation;
+        Matrix33f   mRotation3x3;
+        Matrix44f   mRotation4x4;
 
         Matrix44f   mTransView; //< trans(view), that is invtrans( inv(view) ). Used to transform vector from view space to model space.
         Vector2i    mWindowCenter;
@@ -76,7 +77,11 @@ namespace GN { namespace util
 
         const Vector2i & getWindowCenter() const { return mWindowCenter; }
 
-        const Matrix44f & getRotationMatrix() const { return mRotation; }
+        const Quaternionf & getRotation() const { return mQuat; }
+
+        const Matrix33f & getRotationMatrix33() const { return mRotation3x3; }
+
+        const Matrix44f & getRotationMatrix44() const { return mRotation4x4; }
 
         //@}
 

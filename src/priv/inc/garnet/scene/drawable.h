@@ -55,19 +55,14 @@ namespace GN { namespace scene
         }
 
         ///
+        /// is empty drawable or not
+        ///
+        bool empty() const { return 0 == effect || 0 == mesh; }
+
+        ///
         /// load drawable from XML
         ///
         bool loadFromXmlNode( const XmlNode & node, const StrA & basedir );
-
-        ///
-        /// load drawable from XML file
-        ///
-        bool loadFromXmlFile( File & fp, const StrA & basedir );
-
-        ///
-        /// load drawable from XML file
-        ///
-        bool loadFromXmlFile( const StrA & filename );
 
         ///
         /// set uniform value by name

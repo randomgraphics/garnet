@@ -24,6 +24,8 @@ namespace GN
 #include "scene/font.h"
 #include "scene/resource.h"
 #include "scene/drawable.h"
+#include "scene/scene.h"
+#include "scene/util.h"
 
 // *****************************************************************************
 //                           End of GNscene.h

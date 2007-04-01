@@ -95,17 +95,14 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Renderer & r )
+bool GN::gfx::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & basedir )
 {
     GN_GUARD;
 
+    Renderer & r = gRenderer;
+
     // check root node
-    if( 0 == root )
-    {
-        GN_ERROR(sLogger)( "NULL parameter!" );
-        return false;
-    }
-    const XmlElement * e = root->toElement();
+    const XmlElement * e = root.toElement();
     if( 0 == e || "mesh" != e->name )
     {
         sPostError( *e, "root node must be \"<mesh>\"." );
@@ -150,7 +147,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
 
     // handle child elements
     size_t numStreams = vfd.calcNumStreams();
-    for( XmlNode * c = root->child; c; c = c->sibling )
+    for( XmlNode * c = root.child; c; c = c->sibling )
     {
         e = c->toElement();
         if( !e ) continue;
@@ -193,7 +190,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             {
                 // read mesh from external file
 
-                ref = core::resolvePath( meshdir, ref );
+                ref = core::resolvePath( basedir, ref );
 
                 // open vb file
                 AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
@@ -271,7 +268,7 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
             if( sGetStringAttrib( *e, "ref", ref, true ) )
             {
                 // read external ib adata
-                ref = core::resolvePath( meshdir, ref );
+                ref = core::resolvePath( basedir, ref );
 
                 AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
                 if( fp.empty() ) return false;
@@ -305,36 +302,6 @@ bool GN::gfx::Mesh::loadFromXml( const XmlNode * root, const StrA & meshdir, Ren
 
     // success
     return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::gfx::Mesh::loadFromXmlFile( File & fp, const StrA & meshdir, Renderer & r )
-{
-    GN_GUARD;
-
-    XmlDocument doc;
-
-    XmlParseResult xpr;
-
-    if( !doc.parse( xpr, fp ) )
-    {
-        GN_ERROR(sLogger)(
-            "Fail to read XML file (%s):\n"
-            "    line   : %d\n"
-            "    column : %d\n"
-            "    error  : %s",
-            fp.name().cptr(),
-            xpr.errLine,
-            xpr.errColumn,
-            xpr.errInfo.cptr() );
-        return false;
-    }
-
-    return loadFromXml( xpr.root, meshdir, r );
 
     GN_UNGUARD;
 }

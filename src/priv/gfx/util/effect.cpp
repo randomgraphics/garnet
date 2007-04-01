@@ -472,7 +472,7 @@ bool GN::gfx::EffectDesc::valid() const
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::EffectDesc::toXml( File & )
+void GN::gfx::EffectDesc::saveToXmlFile( File & )
 {
 }
 

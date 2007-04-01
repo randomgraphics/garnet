@@ -226,6 +226,7 @@ void GN::gfx::D3D9Line::drawLines(
     if( !( DL_USE_CURRENT_RS & options ) )
     {
         cf.rsb = 1;
+        r.setD3DRenderState( D3DRS_ALPHATESTENABLE, FALSE );
         r.setD3DRenderState( D3DRS_ALPHABLENDENABLE, FALSE );
         r.setD3DRenderState( D3DRS_ZWRITEENABLE, TRUE );
         r.setD3DRenderState( D3DRS_ZENABLE, TRUE );
