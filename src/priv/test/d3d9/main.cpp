@@ -162,7 +162,7 @@ public:
 
     void onUpdate()
     {
-        world = arcball.getRotationMatrix();
+        world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
         dev->SetVertexShaderConstantF( 0, (const float*)&pvw, 4 );
     }
