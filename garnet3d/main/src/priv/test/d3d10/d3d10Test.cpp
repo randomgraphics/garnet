@@ -105,7 +105,7 @@ public:
 
     void onUpdate()
     {
-        world = arcball.getRotationMatrix();
+        world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
         vs->setUniformByName( "gPvw", pvw );
     }

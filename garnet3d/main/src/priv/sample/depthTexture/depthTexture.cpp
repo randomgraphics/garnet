@@ -4,7 +4,7 @@ using namespace GN;
 using namespace GN::gfx;
 using namespace GN::scene;
 
-class Scene
+class TestScene
 {
     GN::app::SampleApp & mApp;
     
@@ -31,9 +31,9 @@ class Scene
 
 public:
 
-    Scene( GN::app::SampleApp & app ) : mApp(app) {}
+    TestScene( GN::app::SampleApp & app ) : mApp(app) {}
 
-    ~Scene() { destroy(); }
+    ~TestScene() { destroy(); }
 
     bool create()
     {
@@ -121,7 +121,7 @@ public:
         int x, y;
         gInput.getMousePosition( x, y );
         mArcBall.onMouseMove( x, y );
-        mModel = mArcBall.getRotationMatrix();
+        mModel = mArcBall.getRotationMatrix44();
     }
 
     void update()
@@ -155,7 +155,7 @@ public:
 
 class DepthTexture : public GN::app::SampleApp
 {
-    Scene * mScene;
+    TestScene * mScene;
 
 public:
 
@@ -163,7 +163,7 @@ public:
 
     bool onRendererCreate()
     {
-        mScene = new Scene(*this);
+        mScene = new TestScene(*this);
         return mScene->create();
     }
 

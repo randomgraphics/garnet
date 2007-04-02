@@ -65,7 +65,7 @@ public:
 
     void onUpdate()
     {
-        world = arcball.getRotationMatrix();
+        world = arcball.getRotationMatrix44();
         pvw = proj * view * world;
         box.uniforms["pvw"].value = pvw;
     }

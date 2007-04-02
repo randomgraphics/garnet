@@ -8,7 +8,7 @@ static const Vector4f WATER_COLOR( 0.0f, 0.25f, 0.5f, 1.0f );
 
 static GN::Logger * sLogger = GN::getLogger("GN.sample.dolphin");
 
-class Scene
+class TestScene
 {
     GN::app::SampleApp & mApp;
     
@@ -18,9 +18,9 @@ class Scene
 
 public:
 
-    Scene( GN::app::SampleApp & app ) : mApp(app) {}
+    TestScene( GN::app::SampleApp & app ) : mApp(app) {}
 
-    ~Scene() { }
+    ~TestScene() { }
 
     bool create()
     {
@@ -104,7 +104,7 @@ public:
 
 class Dolphin : public GN::app::SampleApp
 {
-    Scene * scene;
+    TestScene * scene;
 
     float time;
     bool swimming;
@@ -151,7 +151,7 @@ public:
         rtdesc.setzbuf( 0 ); // use automatic z buffer.
 
         // create scene
-        scene = new Scene(*this);
+        scene = new TestScene(*this);
         return scene->create();
     }
 
