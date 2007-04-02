@@ -1243,27 +1243,29 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                 StrA vbname   = basename + ".vb";
                 StrA ibname   = basename + ".ib";
 
-                struct MeshVertex { float p[3]; float n[3]; float t[2]; };
+                struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
 
                 // write VB
-                AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
-                if( !fvb ) return false;
+                DynaArray<MeshVertex> memvb( r.vbcount );
                 for( size_t vi = 0; vi < r.vbcount; ++vi )
                 {
                     const VertexSelector & vs = vb[r.vboffset+vi];
                     const AseVertex & v = o.mesh.vertices[vs.p];
-                    const Vector3f  & n = v.n[vs.n];
-                    const Vector3f  & t = v.t[vs.t];
-
-                    if( !fvb->write( &v, sizeof(float)*3, 0 ) ||
-                        !fvb->write( &n, sizeof(float)*3, 0 ) ||
-                        !fvb->write( &t, sizeof(float)*2, 0 ) )
-                    {
-                        GN_ERROR(sLogger)( "fail to write vertex %d", vi );
-                        return false;
-                    }
+                    memvb[i].p = v.p;
+                    memvb[i].n = v.n[vs.n];
+                    memvb[i].t = v.t[vs.t];
+                }
+                AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
+                if( !fvb || !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), 0 ) )
+                {
+                    GN_ERROR(sLogger)( "fail to write vertex %d", vi );
+                    return false;
                 }
                 fvb.clear();
+
+                // calculcate bounding bbox
+                Spheref bs;
+                calcBoundingBox( bbox, memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
 
                 // write IB
                 AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
@@ -1299,6 +1301,8 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     "	startidx  = \"0\"\n"
                     "	>\n"
                     "\n"
+                    "   <bbox x=\"%f\" y=\"%f\" z=\"%f\" w=\"%f\" h=\"%f\" d=\"%f\"/>\n"
+                    "\n"
                     "	<vtxfmt>\n"
                     "		<attrib stream = \"0\" offset =  \"0\" semantic = \"POS0\" format = \"FMT_FLOAT3\"/>\n"
                     "		<attrib stream = \"0\" offset = \"12\" semantic = \"NML0\" format = \"FMT_FLOAT3\"/>\n"
@@ -1311,6 +1315,7 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     "</mesh>\n",
                     r.ibcount / 3,
                     r.vbcount,
+                    bbox.x, bbox.y, bbox.z, bbox.w, bbox.h, bbox.d,
                     relPath( vbname, outdir ).cptr(),
                     relPath( ibname, outdir ).cptr() );
                 AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
