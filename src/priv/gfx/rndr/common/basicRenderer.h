@@ -75,7 +75,12 @@ namespace GN { namespace gfx
     private :
         bool dispInit() { return true; }
         void dispQuit() { mWindow.quit(); }
-        void dispClear() {}
+        void dispClear()
+        {
+#if GN_POSIX
+            mDefaultDisplay = 0;
+#endif
+        }
 
     protected:
 
@@ -97,6 +102,7 @@ namespace GN { namespace gfx
         WinProp         mWinProp; ///< Render window properites.
 #elif GN_POSIX
     private:
+        HandleType      mDefaultDisplay;
         RenderWindowX11 mWindow;  ///< Render window instance
 #endif
 

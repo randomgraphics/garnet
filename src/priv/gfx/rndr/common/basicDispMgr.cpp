@@ -77,7 +77,12 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
         GN_ASSERT( monitor );
         return monitor;
 #else
-        return (GN::HandleType)1; // magic value, means invalid screen.
+        Display * disp = ro.displayHandle ? (Display*)ro.displayHandle : ((GN::gfx::BasicRenderer&)gRenderer).getDefaultDisp();
+        GN_ASSERT( disp );
+        XWindowAttributes attr;
+        GN_X_CHECK_RV( XGetWindowAttributes( disp, 0, &attr ), NULL );
+        GN_ASSERT( attr.screen );
+        return (GN::HandleType)attr.screen;
 #endif
     }
     else return ro.monitorHandle;
@@ -199,6 +204,51 @@ sDetermineWindowSize(
 }
 
 // ****************************************************************************
+// init / quit
+// ****************************************************************************
+
+//
+//
+// ----------------------------------------------------------------------------
+bool GN::gfx::BasicRenderer::dispInit()
+{
+#if GN_POSIX
+
+    // open default display
+    StrA dispStr = getEnv("DISPLAY");
+    mDefaultDisplay = XOpenDisplay( dispStr.cptr() );
+    if( 0 == mDefaultDisplay )
+    {
+        GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.cptr() );
+        return false;
+    }
+
+#endif
+
+    // success
+    return true;
+}
+
+//
+//
+// ----------------------------------------------------------------------------
+void GN::gfx::BasicRenderer::dispQuit()
+{
+    mWindow.quit();
+
+#if GN_POSIX
+
+    // close default display
+    if( mDefaultDisplay )
+    {
+        XCloseDisplay( mDefaultDisplay );
+        mDefaultDisplay = 0;
+    }
+
+#endif
+}
+
+// ****************************************************************************
 // protected functions
 // ****************************************************************************
 
@@ -237,10 +287,9 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
     }
     GN_ASSERT( desc.width && desc.height && desc.depth );
 
-    // (Re)Initialize render window
 #if GN_MSWIN
+
     if( getOptions().fullscreen && !ro.fullscreen ) mWinProp.restore();
-#endif
     if( ro.useExternalWindow )
     {
         if( !mWindow.initExternalRenderWindow( ro.displayHandle, ro.renderWindow ) ) return false;
@@ -249,14 +298,29 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
     {
         if( !mWindow.initInternalRenderWindow( ro.displayHandle, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
-#if GN_MSWIN
     if( !ro.fullscreen && !mWinProp.save( mWindow.getWindow() ) ) return false;
-#endif
     desc.displayHandle = mWindow.getDisplay();
     desc.windowHandle = mWindow.getWindow();
-#if GN_POSIX
+
+#elif GN_POSIX
+
+    HandleType disp = ( 0 == ro.displayHandle ) ? mDefaultDisplay : ro.displayHandle;
+    GN_ASSERT( disp );
+
+    if( ro.useExternalWindow )
+    {
+        if( !mWindow.initExternalRenderWindow( disp, ro.renderWindow ) ) return false;
+    }
+    else
+    {
+        if( !mWindow.initInternalRenderWindow( disp, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
+    }
+    desc.disp = disp;
+    desc.windowHandle = mWindow.getWindow();
     GN_ASSERT( desc.displayHandle );
+
 #endif
+
     GN_ASSERT_EX(
         desc.windowHandle && desc.monitorHandle,
         strFormat( "win(0x%X), monitor(0x%X)", desc.windowHandle, desc.monitorHandle ).cptr() );
