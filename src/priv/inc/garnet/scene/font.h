@@ -175,8 +175,9 @@ namespace GN { namespace scene
             mNumTextures = 0;
             mFontSlots = 0;
             mFont.clear();
-            for ( size_t i = 0; i < MAX_TEXTURES; ++i )
+            for( size_t i = 0; i < MAX_TEXTURES; ++i )
             {
+                mCharList[i] = 0;
                 mNumChars[i] = 0;
             }
         }

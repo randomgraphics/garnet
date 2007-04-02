@@ -187,7 +187,7 @@ bool GN::gfx::RenderWindowX11::initInternalRenderWindow(
         if( scr < 0 ) return false;
 
         // Choose an appropriate visual
-        static int attributeList[] = { GLX_RGBA, GLX_DOUBLEBUFFER };
+        static int attributeList[] = { GLX_RGBA, GLX_DOUBLEBUFFER, None };
         AutoXPtr<XVisualInfo> vi( glXChooseVisual( mDisplay, scr, attributeList ) );
         if( 0 == vi )
         {

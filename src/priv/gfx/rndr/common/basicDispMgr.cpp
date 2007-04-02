@@ -77,12 +77,11 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
         GN_ASSERT( monitor );
         return monitor;
 #else
-        Display * disp = ro.displayHandle ? (Display*)ro.displayHandle : ((GN::gfx::BasicRenderer&)gRenderer).getDefaultDisp();
+        Display * disp = ro.displayHandle ? (Display*)ro.displayHandle : ((GN::gfx::BasicRenderer&)gRenderer).getDefaultDisplay();
         GN_ASSERT( disp );
-        XWindowAttributes attr;
-        GN_X_CHECK_RV( XGetWindowAttributes( disp, 0, &attr ), NULL );
-        GN_ASSERT( attr.screen );
-        return (GN::HandleType)attr.screen;
+        Screen * scr = DefaultScreenOfDisplay( disp );
+        GN_ASSERT( scr );
+        return (GN::HandleType)scr;
 #endif
     }
     else return ro.monitorHandle;
@@ -315,7 +314,7 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
     {
         if( !mWindow.initInternalRenderWindow( disp, ro.parentWindow, desc.monitorHandle, desc.width, desc.height ) ) return false;
     }
-    desc.disp = disp;
+    desc.displayHandle = disp;
     desc.windowHandle = mWindow.getWindow();
     GN_ASSERT( desc.displayHandle );
 

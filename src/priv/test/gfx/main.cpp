@@ -8,7 +8,7 @@ using namespace GN::scene;
 
 bool gAnimation = true;
 
-class Scene
+class TestScene
 {
     SampleApp & app;
     
@@ -24,9 +24,9 @@ class Scene
 
 public:
 
-    Scene( SampleApp & a ) : app(a) {}
+    TestScene( SampleApp & a ) : app(a) {}
 
-    ~Scene() { quit(); }
+    ~TestScene() { quit(); }
 
     bool init()
     {
@@ -68,7 +68,7 @@ public:
         scene::ResourceManager & rm = gSceneResMgr;
 
         // update box matrix
-        world = arcball.getRotationMatrix();
+        world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
         box.uniforms["pvw"].value = pvw;
 
@@ -154,14 +154,14 @@ public:
 ///
 class GfxTestApp : public SampleApp
 {
-    Scene * mScene;
+    TestScene * mScene;
 public:
 
     GfxTestApp() : mScene(0) {}
 
     bool onRendererCreate()
     {
-        mScene = new Scene(*this);
+        mScene = new TestScene(*this);
         return mScene->init();
     }
 

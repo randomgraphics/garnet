@@ -668,6 +668,9 @@ GN::StrA GN::scene::ResourceManager::determineResourceType( const StrA & name ) 
     if( sIsTexture( name ) ) return texture;
     if( sIsXml( name, effect ) ) return effect;
     if( sIsXml( name, mesh ) ) return mesh;
+
+    // failed
+    GN_ERROR(sLogger)( "Cannot detect resource type: %s", name.cptr() );
     return StrA::EMPTYSTR;
 }
 
