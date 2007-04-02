@@ -10,6 +10,23 @@ using namespace GN::scene;
 // local functions
 // *****************************************************************************
 
+//
+// get integer value of specific attribute
+// -----------------------------------------------------------------------------
+static bool sGetFloatAttrib( const XmlElement & node, const char * attribName, float & result )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if ( !a || !str2Float( result, a->value.cptr() ) )
+    {
+        GN_ERROR(sLogger)( "attribute '%s' is missing, or invalid float!", attribName );
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 // *****************************************************************************
 // ctor / dtor
 // *****************************************************************************
@@ -67,11 +84,19 @@ void GN::scene::Actor::setRotation( const Quaternionf & q )
 }
 
 //
-// 
+//
 // -----------------------------------------------------------------------------
 void GN::scene::Actor::setDrawable( const Drawable & d )
 {
     mDrawable = d;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::Actor::setBoundingSphere( const Spheref & s )
+{
+    mBoundingSphere = s;
 }
 
 //
@@ -84,6 +109,8 @@ void GN::scene::Actor::clear()
     mPosition.set( 0, 0, 0 );
     mRotation.identity();
     mLocal2Parent.identity();
+    mBoundingSphere.center.set( 0, 0, 0 );
+    mBoundingSphere.radius = 1.0f;
 
     mDirtyFlags = 0;
 }
@@ -91,11 +118,70 @@ void GN::scene::Actor::clear()
 //
 // 
 // -----------------------------------------------------------------------------
-bool GN::scene::Actor::loadFromXmlNode( const XmlNode & node, const StrA & basedir )
+bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & basedir )
 {
-    GN_UNUSED_PARAM( node );
-    GN_UNUSED_PARAM( basedir );
-    return false;
+    GN_GUARD;
+
+    // check root node
+    const XmlElement * eroot = root.toElement();
+    if( 0 == eroot || "actor" != eroot->name )
+    {
+        GN_ERROR(sLogger)( "root node must be \"<actor>\"." );
+        return false;
+    }
+
+    // clear to empty
+    clear();
+
+    bool hasbs = false;
+    bool hasdraw = true;
+    for( const XmlNode * c = eroot->child; c; c = c->sibling )
+    {
+        const XmlElement * e = c->toElement();
+        if( !e ) continue;
+
+        if( "transform" == e->name )
+        {
+            // TODO: load transform
+        }
+        else if( "bsphere" == e->name )
+        {
+            Spheref s;
+            if( !sGetFloatAttrib( *e, "x", s.center.x ) ) return false;
+            if( !sGetFloatAttrib( *e, "y", s.center.y ) ) return false;
+            if( !sGetFloatAttrib( *e, "z", s.center.z ) ) return false;
+            if( !sGetFloatAttrib( *e, "r", s.radius ) ) return false;
+            setBoundingSphere( s );
+            hasbs = true;
+        }
+        else if( "drawable" == e->name )
+        {
+            Drawable d;
+            if( !d.loadFromXmlNode( *e, basedir ) ) return false;
+            setDrawable( d );
+            hasdraw = true;
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Ignore unknown node '%s'.", e->name.cptr() );
+        }
+    }
+
+    if( !hasbs )
+    {
+        GN_WARN(sLogger)( "No bounding sphere." );
+    }
+
+    if( !hasdraw )
+    {
+        GN_ERROR(sLogger)( "No drawable." );
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
 }
 
 //
@@ -109,18 +195,19 @@ void GN::scene::Actor::draw()
 
     EffectItemID id;
 
+    const Matrix44f & world = getLocal2Parent();
+
     if( e->hasUniform( "pvw", &id ) )
     {
-        const Matrix44f & world = getLocal2Parent();
-
         Matrix44f pvw = mScene.getProj() * mScene.getView() * world;
         
         e->setUniform( id, pvw );
     }
 
-    if( e->hasUniform( "view", &id ) )
+    if( e->hasUniform( "invworld", &id ) )
     {
-        e->setUniform( id, mScene.getView() );
+        Matrix44f invworld = Matrix44f::sInverse( world );
+        e->setUniform( id, invworld );
     }
 
     if( e->hasUniform( "light0_pos", &id ) )
@@ -142,9 +229,14 @@ void GN::scene::Actor::calcTransform()
 {
     GN_ASSERT( mTransformDirty );
 
-    Matrix33f m33;
-    mRotation.toMatrix33( m33 );
-    mLocal2Parent.set( m33, mPosition );
+    Matrix33f r33;
+    Matrix44f r44, t44;
+
+    mRotation.toMatrix33( r33 );
+    r44.set( r33 );
+    t44.translate( mPosition );
+
+    mLocal2Parent = r44 * t44;
 
     mTransformDirty = false;
 }

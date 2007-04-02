@@ -1,3 +1,7 @@
+- 2007.4.2
+  - mesh converter now supports ASE file
+  - new tool: mesh viewer
+
 - 2007.3.17
   - implement vertex buffer proxy in D3D9 wrapper DLL.
 

@@ -1233,15 +1233,15 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
             {
                 const FaceRange & r = ranges[ri];
                 
-                StrA basename = strFormat( "%s_%s_c%02d_r%02d",
+                StrA basename  = strFormat( "%s_%s_c%02d_r%02d",
                                             name.cptr(),
                                             o.node.name.cptr(),
                                             ci,
                                             ri );
-                StrA drawname = basename + ".drawable.xml";
-                StrA meshname = basename + ".mesh.xml";
-                StrA vbname   = basename + ".vb";
-                StrA ibname   = basename + ".ib";
+                StrA actorname = basename + ".actor.xml";
+                StrA meshname  = basename + ".mesh.xml";
+                StrA vbname    = basename + ".vb";
+                StrA ibname    = basename + ".ib";
 
                 struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
 
@@ -1251,21 +1251,21 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                 {
                     const VertexSelector & vs = vb[r.vboffset+vi];
                     const AseVertex & v = o.mesh.vertices[vs.p];
-                    memvb[i].p = v.p;
-                    memvb[i].n = v.n[vs.n];
-                    memvb[i].t = v.t[vs.t];
+                    memvb[vi].p = v.p;
+                    memvb[vi].n = v.n[vs.n];
+                    memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
                 }
                 AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
                 if( !fvb || !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), 0 ) )
                 {
-                    GN_ERROR(sLogger)( "fail to write vertex %d", vi );
+                    GN_ERROR(sLogger)( "fail to write vertex buffer." );
                     return false;
                 }
                 fvb.clear();
 
                 // calculcate bounding bbox
                 Spheref bs;
-                calcBoundingBox( bbox, memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
+                calcBoundingSphere( bs, (Vector3f*)memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
 
                 // write IB
                 AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
@@ -1301,8 +1301,6 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     "	startidx  = \"0\"\n"
                     "	>\n"
                     "\n"
-                    "   <bbox x=\"%f\" y=\"%f\" z=\"%f\" w=\"%f\" h=\"%f\" d=\"%f\"/>\n"
-                    "\n"
                     "	<vtxfmt>\n"
                     "		<attrib stream = \"0\" offset =  \"0\" semantic = \"POS0\" format = \"FMT_FLOAT3\"/>\n"
                     "		<attrib stream = \"0\" offset = \"12\" semantic = \"NML0\" format = \"FMT_FLOAT3\"/>\n"
@@ -1315,30 +1313,34 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     "</mesh>\n",
                     r.ibcount / 3,
                     r.vbcount,
-                    bbox.x, bbox.y, bbox.z, bbox.w, bbox.h, bbox.d,
                     relPath( vbname, outdir ).cptr(),
                     relPath( ibname, outdir ).cptr() );
                 AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
                 if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
 
-                // write drawable xml
-                StrA drawxml;
-                drawxml.format(
+                // write actor xml
+                StrA actorxml;
+                actorxml.format(
                     "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-                    "<drawable>\n"
-                    "	<effect ref=\"media::/effect/%s.xml\"/>\n"
-                    "	<mesh ref=\"%s\"/>\n"
-                    "	<texture binding=\"texdiff\" ref=\"%s\"/>\n"
-                    "	<texture binding=\"texbump\" ref=\"%s\"/>\n"
-                    "	<uniform binding=\"diffuse\" type=\"VECTOR4\" count=\"1\">%f, %f, %f, 1.0f</uniform>\n"
-                    "</drawable>\n",
-                    mtl.mapdiff.bitmap.empty() ? "diffuse_textured" : "bump_textured",
+                    "<actor>\n"
+                    "	<transform/>\n"
+                    "	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n"
+                    "	<drawable>\n"
+                    "		<effect ref=\"media::/effect/%s.xml\"/>\n"
+                    "		<mesh ref=\"%s\"/>\n"
+                    "		<texture binding=\"texdiff\" ref=\"%s\"/>\n"
+                    "		<texture binding=\"texbump\" ref=\"%s\"/>\n"
+                    "		<uniform binding=\"diffuse\" type=\"VECTOR4\" count=\"1\">%f, %f, %f, 1.0f</uniform>\n"
+                    "	</drawable>\n"
+                    "</actor>",
+                    bs.center.x, bs.center.y, bs.center.z, bs.radius,
+                    mtl.mapbump.bitmap.empty() ? "diffuse_textured" : "bump_textured",
                     relPath( meshname, outdir ).cptr(),
                     mtl.mapdiff.bitmap.empty() ? "texture://purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
                     relPath( mtl.mapbump.bitmap, outdir ).cptr(),
                     mtl.diffuse.x, mtl.diffuse.y, mtl.diffuse.z );
-                AutoObjPtr<File> draw( core::openFile( drawname, "wt" ) );
-                if( !draw || !draw->write( drawxml.cptr(), drawxml.size(), 0 ) ) return false;
+                AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
+                if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
             }
         }
     }
