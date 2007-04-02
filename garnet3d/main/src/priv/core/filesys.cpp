@@ -613,7 +613,7 @@ public:
     MediaFileSystem()
     {
 #if GN_XENON
-        addRoot( "game:\media" );
+        addRoot( "game:/media" );
 #endif
         addRoot( "startup::media" );
         addRoot( "app::media" );
@@ -631,7 +631,7 @@ public:
 
     FontFileSystem()
     {
-        addRoot( "media::\font" );
+        addRoot( "media::font" );
 #if GN_MSWIN && !GN_XENON
         char windir[MAX_PATH+1];
         GetWindowsDirectoryA( windir, MAX_PATH );

@@ -66,7 +66,10 @@ namespace GN { namespace gfx
 
         const UInt8 * getVtxData() const
         {
-            GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
+            if( GLEW_ARB_vertex_buffer_object )
+            {
+                GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
+            }
             return mBuffer;
         }
 
