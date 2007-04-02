@@ -25,6 +25,7 @@ namespace GN
 #include "scene/resource.h"
 #include "scene/drawable.h"
 #include "scene/scene.h"
+#include "scene/actor.h"
 #include "scene/util.h"
 
 // *****************************************************************************

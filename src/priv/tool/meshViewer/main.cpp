@@ -18,7 +18,7 @@ class MeshViewerApp : public app::SampleApp
 
     float mRadius; // distance from camera to object
 
-    Matrix44f mProj, mView, mWorld;
+    Matrix44f mProj, mView;
 
     void updateRadius()
     {
@@ -59,13 +59,10 @@ public:
             firstTime = false;
 
             // initialize actor
-            Drawable d;
-            if( loadFromXmlFile( d, mObjName ) )
-            {
-                mActor.setDrawable( d );
-            }
+            loadFromXmlFile( mActor, mObjName );
 
-            mRadius = 1.0f;
+            // update camera stuff
+            mRadius = mActor.getBoundingSphere().radius * 2.0f;
             updateRadius();
 
             // initialize mArcBall
@@ -96,8 +93,8 @@ public:
 
     void onUpdate()
     {
+        mActor.setPosition( -mActor.getBoundingSphere().center );
         mActor.setRotation( mArcBall.getRotation() );
-        mWorld = mArcBall.getRotationMatrix44();
     }
 
     void onRender()
@@ -109,9 +106,10 @@ public:
         static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
         static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
-        r.drawLines( 0, X, 3*sizeof(float), 1, 0xFFFF0000, mWorld, mView, mProj );
-        r.drawLines( 0, Y, 3*sizeof(float), 1, 0xFF00FF00, mWorld, mView, mProj );
-        r.drawLines( 0, Z, 3*sizeof(float), 1, 0xFF0000FF, mWorld, mView, mProj );
+        const Matrix44f & world = mArcBall.getRotationMatrix44();
+        r.drawLines( 0, X, 3*sizeof(float), 1, 0xFFFF0000, world, mView, mProj );
+        r.drawLines( 0, Y, 3*sizeof(float), 1, 0xFF00FF00, world, mView, mProj );
+        r.drawLines( 0, Z, 3*sizeof(float), 1, 0xFF0000FF, world, mView, mProj );
 
         mActor.draw();
 

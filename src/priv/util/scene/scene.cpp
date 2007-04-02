@@ -24,5 +24,5 @@ GN::scene::Scene::~Scene()
 // -----------------------------------------------------------------------------
 void GN::scene::Scene::clear()
 {
-    mLight0.position.set( 100, 0, 0 );
+    mLight0.position.set( 0, 10000.0f, 0 );
 }

@@ -5,15 +5,26 @@ using namespace GN;
 
 static void sPrintHelp( const char * appname )
 {
-    printf( "Usage: %s [inputfile] [outputfile]\n", appname );
+    printf( "Usage: %s [inputfile] <outputfile>\n", appname );
 }
 
 static bool sParseCmdLine( ConvertOptions & co, int argc, const char * argv[] )
 {
-    if( argc < 3 ) { sPrintHelp( argv[0] ); return false; }
+    if( argc < 2 ) { sPrintHelp( argv[0] ); return false; }
 
     co.inputFileName = argv[1];
-    co.outputFileName = argv[2];
+
+    if( argc > 2 )
+    {
+        co.outputFileName = argv[2];
+    }
+    else
+    {
+        joinPath2(
+            co.outputFileName,
+            dirName(co.inputFileName),
+            baseName(co.inputFileName) );
+    }
 
     return true;
 }
