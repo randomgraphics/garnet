@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "renderWindowX11.h"
+#include "basicRenderer.h"
 
 #if GN_POSIX
 
@@ -262,12 +263,8 @@ void GN::gfx::RenderWindowX11::quit()
         mWindow = 0;
     }
 
-    // close display
-    if( mDisplay && !mUseExternalDisplay )
-    {
-        XCloseDisplay( mDisplay );
-        mDisplay = 0;
-    }
+    // clear display
+    mDisplay = 0;
 
     GN_UNGUARD;
 }
@@ -320,13 +317,10 @@ bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
 {
     GN_GUARD;
 
-    // reuse previous display if:
-    // - mDisplay is valid, and
-    //   - currently using internal display and new display is zero, or
-    //   - currently using external display and new display equals old one.
-    if( mDisplay &&
-        ( !mUseExternalDisplay && 0 == display ||
-          mUseExternalDisplay && display == mDisplay ) )
+    GN_ASSERT( display );
+
+    // reuse previous display if possible
+    if( display == mDisplay )
     {
         return true;
     }
@@ -336,30 +330,15 @@ bool GN::gfx::RenderWindowX11::initDisplay( HandleType display )
 
     GN_ASSERT( 0 == mDisplay );
 
-    if( 0 != display )
-    {
-        mUseExternalDisplay = true;
-        mDisplay = (Display*)display;
-    }
-    else
-    {
-        mUseExternalDisplay = false;
-        StrA dispStr = getEnv("DISPLAY");
-        mDisplay = XOpenDisplay( dispStr.cptr() );
-        if( 0 == mDisplay )
-        {
-            GN_ERROR(sLogger)( "Fail to open display '%s'.", dispStr.cptr() );
-            return false;
-        }
+    mDisplay = (Display*)display;
 
 #if GN_DEBUG_BUILD
-        // Trun on synchronous behavior for debug build.
-        XSynchronize( mDisplay, true );
+    // Trun on synchronous behavior for debug build.
+    XSynchronize( mDisplay, true );
 #endif
 
-        // update error handler
-        XSetErrorHandler( &sXErrorHandler );
-    }
+    // update error handler
+    XSetErrorHandler( &sXErrorHandler );
 
     // success
     return true;

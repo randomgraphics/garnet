@@ -15,10 +15,9 @@ namespace GN { namespace gfx
     ///
     class RenderWindowX11
     {
-        bool mUseExternalDisplay;
-        bool mUseExternalWindow;
-        Display * mDisplay;
-        Window    mWindow;
+        bool            mUseExternalWindow;
+        Display       * mDisplay;
+        Window          mWindow;
 
         //@{
     public:
