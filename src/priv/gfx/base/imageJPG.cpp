@@ -28,16 +28,19 @@ bool JPGReader::checkFormat( GN::File & fp )
 {
     GN_GUARD;
 
-    char buf[5];
+    char buf[11];
 
-    if( !fp.seek( 6, GN::FSEEK_SET ) ) return false;
+    if( !fp.seek( 0, GN::FSEEK_SET ) ) return false;
 
     size_t sz;
-    if( !fp.read( buf, 4, &sz ) || 4 != sz ) return false;
+    if( !fp.read( buf, 11, &sz ) || 11 != sz ) return false;
 
-    buf[4] = 0;
+    buf[10] = 0;
 
-    return 0 == GN::strCmp( buf, "JFIF" );
+    return
+        0xFF == (unsigned char)buf[0] &&
+        0xD8 == (unsigned char)buf[1] &&
+        ( 0 == GN::strCmp( buf+6, "JFIF" ) || 0 == GN::strCmp( buf+6, "Exif" ) );
 
     GN_UNGUARD;
 }

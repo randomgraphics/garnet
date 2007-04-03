@@ -839,6 +839,9 @@ static bool sReadMesh( AseMesh & m, AseFile & ase )
         {
             if( !ase.readIndexedVector3Node( "*MESH_TVERT", i, texcoords[i] ) ) return false;
 
+            // Y axis has be to reversed.
+            texcoords[i].y = 1.0f - texcoords[i].y;
+
             // NOTE: currently, we only supports 2D texcoord
             texcoords[i].z = .0f;
         }
@@ -1336,7 +1339,7 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     bs.center.x, bs.center.y, bs.center.z, bs.radius,
                     mtl.mapbump.bitmap.empty() ? "diffuse_textured" : "bump_textured",
                     relPath( meshname, outdir ).cptr(),
-                    mtl.mapdiff.bitmap.empty() ? "texture://purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
+                    mtl.mapdiff.bitmap.empty() ? "media::/texture/purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
                     relPath( mtl.mapbump.bitmap, outdir ).cptr(),
                     mtl.diffuse.x, mtl.diffuse.y, mtl.diffuse.z );
                 AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
