@@ -23,10 +23,7 @@ class MeshViewerApp : public app::SampleApp
     void updateRadius()
     {
         mView.lookAtRh( Vector3f(0,0,mRadius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        if( gRendererPtr )
-        {
-            gRenderer.composePerspectiveMatrixRh( mProj, 1.0f, 4.0f/3.0f, mRadius / 100.0f, mRadius * 2.0f );
-        }
+        gRenderer.composePerspectiveMatrixRh( mProj, 1.0f, 4.0f/3.0f, mRadius / 100.0f, mRadius * 2.0f );
         mScene.setView( mView );
         mScene.setProj( mProj );
         mScene.light(0).position.set( 0, 0, mRadius ); // head light: same location as camera.
