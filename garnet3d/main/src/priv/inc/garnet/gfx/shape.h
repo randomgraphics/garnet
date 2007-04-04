@@ -15,10 +15,16 @@ namespace GN { namespace gfx
     ///     Specify box size
     /// \param positions, posStride
     ///     Return box positions. Must be large enough to hold at least 24*3=72 floats.
-    ///     Can't be NULL.
+    ///     Can _NOT_ be NULL.
     /// \param texcoords, texStride
     ///     Return texture coordinates. Must be large enough to hold at least 24*2=48 floats.
-    ///     Can be NULL if you do not need texture cooridnates.
+    ///     Can be NULL if you do not need it.
+    /// \param tangents, tangStride
+    ///     Return tangent vectors. Must be large enough to hold at least 24*3=72 floats.
+    ///     Can be NULL if you do not need it.
+    /// \param binormals, n2Stride
+    ///     Return binormal coordinates. Must be large enough to hold at least 24*3=72 floats.
+    ///     Can be NULL if you do not need it.
     /// \param normals, normStride
     ///     Return vertex normals. Must be large enough to hold at least 24*3=72 floats.
     ///     Can be NULL if you do not need normals.
@@ -34,6 +40,8 @@ namespace GN { namespace gfx
         float * positions, size_t posStride,
         float * texcoords, size_t texStride,
         float * normals, size_t normStride,
+        float * tangents, size_t tangStride,
+        float * binormals, size_t n2Stride,
         UInt16 * triList,
         UInt16 * quadList );
 }}

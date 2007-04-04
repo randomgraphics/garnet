@@ -119,8 +119,12 @@ struct AseMesh
 
 struct AseNode
 {
-    StrA parent;
-    StrA name;
+    StrA     parent;
+    StrA     name;
+    Vector3f pos;
+    Vector3f rotaxis;
+    float    rotangle;
+    Vector3f scale;
 };
 
 struct AseGeoObject
@@ -915,6 +919,53 @@ static bool sReadMesh( AseMesh & m, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
+static bool sReadNode( AseNode & n, AseFile & ase )
+{
+    GN_GUARD;
+
+    if( !ase.readBlockStart() ) return false;
+
+    const char * token;
+    while( 0 != ( token = ase.next() ) )
+    {
+        if( 0 == strCmp( "*TM_POS", token ) )
+        {
+            if( !ase.readVector3( n.pos ) ) return false;
+        }
+        else if( 0 == strCmp( "*TM_ROTAXIS", token ) )
+        {
+            if( !ase.readVector3( n.rotaxis ) ) return false;
+        }
+        else if( 0 == strCmp( "*TM_ROTANGLE", token ) )
+        {
+            if( !ase.readFloat( n.rotangle ) ) return false;
+        }
+        else if( 0 == strCmp( "*TM_SCALE", token ) )
+        {
+            if( !ase.readVector3( n.scale ) ) return false;
+        }
+        else if( '*' == *token )
+        {
+            ase.info( strFormat( "skip node %s", token ) );
+            if( !ase.skipNode() ) return false;
+        }
+        else if( 0 == strCmp( token, "}" ) )
+        {
+            // end of the block. done.
+            return true;
+        }
+    }
+
+    // something wrong!
+    ase.err( "Fail to get next node!" );
+    return false;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sReadGeomObject( AseScene & scene, AseFile & ase )
 {
     GN_GUARD;
@@ -943,8 +994,7 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
         }
         else if( 0 == strCmp( token, "*NODE_TM" ) )
         {
-            // skip *NODE_TM by now
-            if( !ase.skipNode() ) return false;
+            if( !sReadNode( o.node, ase ) ) return false;
         }
         else if( 0 == strCmp( token, "*MESH" ) )
         {
@@ -1200,6 +1250,13 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
     {
         const AseGeoObject & o = scene.objects[oi];
 
+        // compose actor xml header
+        StrA actorxml(
+            "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
+            "<actor>\n" );
+
+        Boxf actorbbox( 0, 0, 0, 0, 0, 0 ); // store bounding box of the whole actor.
+
         for( size_t ci = 0; ci < o.mesh.chunks.size(); ++ci )
         {
             GN_INFO(sLogger)( "Write object '%s', chunk %d...", o.node.name.cptr(), ci );
@@ -1267,8 +1324,9 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                 fvb.clear();
 
                 // calculcate bounding bbox
-                Spheref bs;
-                calcBoundingSphere( bs, (Vector3f*)memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
+                Boxf bbox;
+                calcBoundingBox( bbox, (Vector3f*)memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
+                Boxf::sGetUnion( actorbbox, actorbbox, bbox );
 
                 // write IB
                 AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
@@ -1321,31 +1379,50 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                 AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
                 if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
 
-                // write actor xml
-                StrA actorxml;
-                actorxml.format(
-                    "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-                    "<actor>\n"
-                    "	<transform/>\n"
-                    "	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n"
+                // compose actor xml
+                actorxml += strFormat(
                     "	<drawable>\n"
                     "		<effect ref=\"media::/effect/%s.xml\"/>\n"
                     "		<mesh ref=\"%s\"/>\n"
                     "		<texture binding=\"texdiff\" ref=\"%s\"/>\n"
                     "		<texture binding=\"texbump\" ref=\"%s\"/>\n"
                     "		<uniform binding=\"diffuse\" type=\"VECTOR4\" count=\"1\">%f, %f, %f, 1.0f</uniform>\n"
-                    "	</drawable>\n"
-                    "</actor>",
-                    bs.center.x, bs.center.y, bs.center.z, bs.radius,
+                    "	</drawable>\n",
                     mtl.mapbump.bitmap.empty() ? "diffuse_textured" : "bump_textured",
                     relPath( meshname, outdir ).cptr(),
                     mtl.mapdiff.bitmap.empty() ? "media::/texture/purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
                     relPath( mtl.mapbump.bitmap, outdir ).cptr(),
                     mtl.diffuse.x, mtl.diffuse.y, mtl.diffuse.z );
-                AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
-                if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
             }
         }
+
+        // calculate bounding sphere
+        Vector3f center = actorbbox.center();
+        float    radius = sqrtf( actorbbox.w * actorbbox.w + actorbbox.h * actorbbox.h + actorbbox.d * actorbbox.d ) / 2.0f;
+
+        // compose rotation quaternion
+        Quaternionf quat;
+        // TODO: make sure the unit of angle is match.
+        quat.fromRotation( o.node.rotaxis, o.node.rotangle );
+
+        // compose actor xml tailer
+        actorxml += strFormat(
+            "	<position x=\"%f\" y=\"%f\" z=\"%f\" desc=\"position in parent space, 3D vector\"/>\n"
+            "	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
+            "	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
+            "	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n"
+            "</actor>",
+            o.node.pos.x, o.node.pos.y, o.node.pos.z,
+            center.x, center.y, center.z,
+            quat.v.x, quat.v.y, quat.v.z, quat.w,
+            center.x, center.y, center.z, radius );
+
+        // actor name
+        StrA actorname = strFormat(
+            "%s_%s.actor.xml",
+            name.cptr(), o.node.name.cptr() );
+        AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
+        if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
     }
 
     // success

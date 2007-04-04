@@ -9,10 +9,17 @@ void GN::gfx::createBox(
     float * positions, size_t posStride,
     float * texcoords, size_t texStride,
     float * normals, size_t normStride,
+    float * tangents, size_t tangStride,
+    float * binormals, size_t n2Stride,
     UInt16 * triList,
     UInt16 * quadList )
 {
     GN_GUARD;
+
+    GN_UNUSED_PARAM( tangents );
+    GN_UNUSED_PARAM( tangStride );
+    GN_UNUSED_PARAM( binormals );
+    GN_UNUSED_PARAM( n2Stride );
 
     //
     // Construct a box like this:

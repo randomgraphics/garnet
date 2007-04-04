@@ -102,9 +102,30 @@ void GN::scene::Actor::setRotation( const Quaternionf & q )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Actor::setDrawable( const Drawable & d )
+void GN::scene::Actor::setNumDrawables( size_t n )
 {
-    mDrawable = d;
+    mDrawables.resize( n );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::Actor::setDrawable( size_t idx, const Drawable & d )
+{
+    if( idx >= mDrawables.size() )
+    {
+        GN_ERROR(sLogger)( "invalid drawable index!" );
+        return;
+    }
+    mDrawables[idx] = d;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::Actor::addDrawable( const Drawable & d )
+{
+    mDrawables.append( d );
 }
 
 //
@@ -120,7 +141,7 @@ void GN::scene::Actor::setBoundingSphere( const Spheref & s )
 // -----------------------------------------------------------------------------
 void GN::scene::Actor::clear()
 {
-    mDrawable.clear();
+    mDrawables.clear();
 
     mPosition.set( 0, 0, 0 );
     mPivot.set( 0, 0, 0 );
@@ -151,7 +172,6 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
     clear();
 
     bool hasbs = false;
-    bool hasdraw = true;
     for( const XmlNode * c = eroot->child; c; c = c->sibling )
     {
         const XmlElement * e = c->toElement();
@@ -161,6 +181,14 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         {
             // TODO: load transform
         }
+        else if( "position" == e->name )
+        {
+            Vector3f p;
+            if( !sGetFloatAttrib( *e, "x", p.x ) ) return false;
+            if( !sGetFloatAttrib( *e, "y", p.y ) ) return false;
+            if( !sGetFloatAttrib( *e, "z", p.z ) ) return false;
+            setPosition( p );
+        }
         else if( "pivot" == e->name )
         {
             Vector3f p;
@@ -168,6 +196,15 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
             if( !sGetFloatAttrib( *e, "y", p.y ) ) return false;
             if( !sGetFloatAttrib( *e, "z", p.z ) ) return false;
             setPivot( p );
+        }
+        else if( "rotation" == e->name )
+        {
+            Quaternionf q;
+            if( !sGetFloatAttrib( *e, "nx", q.v.x ) ) return false;
+            if( !sGetFloatAttrib( *e, "ny", q.v.y ) ) return false;
+            if( !sGetFloatAttrib( *e, "nz", q.v.z ) ) return false;
+            if( !sGetFloatAttrib( *e, "d",  q.w ) ) return false;
+            setRotation( q );
         }
         else if( "bsphere" == e->name )
         {
@@ -183,8 +220,7 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         {
             Drawable d;
             if( !d.loadFromXmlNode( *e, basedir ) ) return false;
-            setDrawable( d );
-            hasdraw = true;
+            addDrawable( d );
         }
         else
         {
@@ -195,12 +231,6 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
     if( !hasbs )
     {
         GN_WARN(sLogger)( "No bounding sphere." );
-    }
-
-    if( !hasdraw )
-    {
-        GN_ERROR(sLogger)( "No drawable." );
-        return false;
     }
 
     // success
@@ -214,33 +244,40 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
 // -----------------------------------------------------------------------------
 void GN::scene::Actor::draw()
 {
-    if( mDrawable.empty() ) return;
-
-    Effect * e = gSceneResMgr.getResourceT<Effect>( mDrawable.effect );
+    const Matrix44f & world = getLocal2Parent();
 
     EffectItemID id;
 
-    const Matrix44f & world = getLocal2Parent();
+    Effect * e;
 
-    if( e->hasUniform( "pvw", &id ) )
+    // TODO: sort drawable by effect.
+
+    for( size_t i = 0; i < mDrawables.size(); ++i )
     {
-        Matrix44f pvw = mScene.getProj() * mScene.getView() * world;
-        
-        e->setUniform( id, pvw );
-    }
+        Drawable & d = mDrawables[i];
 
-    if( e->hasUniform( "invworld", &id ) )
-    {
-        Matrix44f invworld = Matrix44f::sInverse( world );
-        e->setUniform( id, invworld );
-    }
+        e = gSceneResMgr.getResourceT<Effect>( d.effect );
 
-    if( e->hasUniform( "light0_pos", &id ) )
-    {
-        e->setUniform( id, Vector4f( mScene.light(0).position, 1.0f ) );
-    }
+        if( e->hasUniform( "pvw", &id ) )
+        {
+            Matrix44f pvw = mScene.getProj() * mScene.getView() * world;
+            
+            e->setUniform( id, pvw );
+        }
 
-    mDrawable.draw();
+        if( e->hasUniform( "invworld", &id ) )
+        {
+            Matrix44f invworld = Matrix44f::sInverse( world );
+            e->setUniform( id, invworld );
+        }
+
+        if( e->hasUniform( "light0_pos", &id ) )
+        {
+            e->setUniform( id, Vector4f( mScene.light(0).position, 1.0f ) );
+        }
+
+        d.draw();
+    }
 }
 
 // *****************************************************************************

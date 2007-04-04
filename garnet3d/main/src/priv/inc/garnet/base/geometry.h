@@ -2280,6 +2280,12 @@ namespace GN
         ///
         Box() {}
         ///
+        /// construct from position and size
+        ///
+        Box( T x_, T y_, T z_, T w_, T h_, T d_ )
+            : x(x_), y(y_), z(z_) , w(w_), h(h_), d(d_)
+        {}
+        ///
         /// construct from 2 points
         ///
         Box( const PointType & v1, const PointType & v2 )
@@ -2432,15 +2438,30 @@ namespace GN
                 && b.z <= v.z && v.z < (b.z+b.d);
         }
         ///
-        /// get union of two boxes
+        /// get union of two boxes. Note that empty boxe are ignored.
         ///
         static void sGetUnion( Box & result, const Box & b1, const Box & b2 )
         {
-            Box a(b1), b(b2);
-            a.normalize();
-            b.normalize();
-            result.pos() = min( b1.pos(), b2.pos() );
-            result.size() = max( b1.pos+b1.size(), b2.pos+b2.size() ) - result.pos();
+            if( 0 == b1.w || 0 == b1.h || 0 == b1.d )
+            {
+                result = b2;
+            }
+            else if( 0 == b2.w || 0 == b2.h || 0 == b2.d )
+            {
+                result = b1;
+            }
+            else
+            {
+                Box a(b1), b(b2);
+                a.normalize();
+                b.normalize();
+                result.x = min( a.x, b.x );
+                result.y = min( a.y, b.y );
+                result.z = min( a.z, b.z );
+                result.w = max( a.x+a.w, b.x+b.w ) - result.x;
+                result.h = max( a.y+a.h, b.y+b.h ) - result.y;
+                result.d = max( a.z+a.d, b.z+b.d ) - result.z;
+            }
         }
     };
 
