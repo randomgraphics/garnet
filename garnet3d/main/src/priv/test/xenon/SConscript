@@ -1,3 +1,6 @@
 Import( 'GN' )
 if 'xenon' == GN.compiler.os:
-    SConscript( dirs=['stackTexture'] )
+    SConscript( dirs=[
+        'negativeZRange',
+        'stackTexture',
+        ] )

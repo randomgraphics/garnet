@@ -7,6 +7,7 @@
   - task manager/coordinator
 
 - p1
+  - color format BGRA32 is depreciated in D3D10, consider removing it out of garnet code base.
   - render state block redesign: using packed bit fields.
   - Drawable optimization:
   	- using hashed string map to reference uniforms and textures.

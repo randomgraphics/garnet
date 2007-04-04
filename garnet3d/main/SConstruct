@@ -1038,10 +1038,40 @@ for compiler, variants in ALL_targets.iteritems() :
 				name, compiler, variant, x.type, x.path, [str(t) for t in x.targets] ) )
 
 		# build additional dependencies:
-		shlibs = Split('GNcore GNrndrD3D9 GNrndrD3D10 GNrndrOGL')
-		tests = Split('GNtestD3D9 GNtestD3D10 GNtestFt2 GNtestGfx GNtestGui GNtestInput GNtestOGL GNtestPcre GNtestXml GNut')
-		samples = Split('GNsampleDepthTexture GNsampleDolphin GNsampleRenderToCube GNsampleRenderToTexture')
-		tools = Split('GNtoolD3D9Wrapper GNtoolGPUBenchmark GNtoolMeshConverter GNtoolMeshViewer GNtoolOGLInfo')
+		shlibs = [
+		    'GNcore',
+		    'GNrndrD3D9',
+		    'GNrndrD3D10',
+		    'GNrndrOGL',
+		    ]
+		tests = [
+		    'GNtestD3D9',
+		    'GNtestD3D10',
+		    'GNtestFt2',
+		    'GNtestGfx',
+		    'GNtestGui',
+		    'GNtestInput',
+		    'GNtestOGL',
+		    'GNtestPcre',
+		    'GNtext',
+		    'GNtestXenonNegativeZRange',
+		    'GNtestXenonStackTexture',
+		    'GNtestXml',
+		    'GNut',
+		    ]
+		samples = [
+		    'GNsampleDepthTexture',
+		    'GNsampleDolphin',
+		    'GNsampleRenderToCube',
+		    'GNsampleRenderToTexture',
+		    ]
+		tools = [
+		    'GNtoolD3D9Wrapper',
+		    'GNtoolGPUBenchmark',
+		    'GNtoolMeshConverter',
+		    'GNtoolMeshViewer',
+		    'GNtoolOGLInfo',
+		    ]
 		progs = tests + samples + tools
 		def getTargets( n ):
 			if n in targets : return targets[n].targets
