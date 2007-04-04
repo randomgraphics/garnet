@@ -337,12 +337,14 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     }
 
     // determine D3D usage
+#if !GN_XENON
     mD3DUsage = texUsage2D3DUsage( desc.usage.u32 );
     if( desc.usage.depthstencil )
     {
         GN_WARN(sLogger)( "depth texture does not support autogen-mipmap" );
         mD3DUsage &= !D3DUSAGE_AUTOGENMIPMAP;
     }
+#endif
 
     // check texture format compatibility
     HRESULT hr = getRenderer().checkD3DDeviceFormat(

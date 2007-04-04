@@ -213,7 +213,12 @@ public:
         // normalize path separators
         normalizePathSeparator( tmp, path );
 
-#if GN_MSWIN
+#if GN_XENON
+
+        // currently do nothing
+        result = path;
+
+#elif GN_MSWIN
         // convert path separators to native format
         for( size_t i = 0; i < tmp.size(); ++i )
         {

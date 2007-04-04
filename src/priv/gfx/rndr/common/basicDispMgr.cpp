@@ -58,7 +58,9 @@ sDetermineMonitorHandle( const GN::gfx::RendererOptions & ro )
 {
     if( 0 == ro.monitorHandle )
     {
-#if GN_MSWIN && !GN_XENON
+#if GN_XENON
+        return (GN::HandleType)1;
+#elif GN_MSWIN
         HMONITOR monitor;
         if( !::IsWindow( (HWND)ro.parentWindow ) )
         {
@@ -101,20 +103,12 @@ sGetCurrentDisplayMode( const GN::gfx::RendererOptions & ro, GN::gfx::DisplayMod
 
 #if GN_XENON
 
-    if( (void*)1 == monitor )
-    {
-        XVIDEO_MODE xvm;
-        XGetVideoMode( &xvm );
-        dm.width = xvm.dwDisplayWidth;
-        dm.height = xvm.dwDisplayHeight;
-        dm.depth = 32;
-        dm.refrate = 0;
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Can't specify monitor handle on Xenon platform." );
-        return false;
-    }
+    XVIDEO_MODE xvm;
+    XGetVideoMode( &xvm );
+    dm.width = xvm.dwDisplayWidth;
+    dm.height = xvm.dwDisplayHeight;
+    dm.depth = 32;
+    dm.refrate = 0;
 
 #elif GN_MSWIN
 

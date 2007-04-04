@@ -336,7 +336,7 @@ bool GN::gfx::generateCubeMesh( Mesh & mesh, float edgeLength )
 
     // create vertex buffer
     mesh.vtxbufs.resize( 1 );
-    mesh.vtxbufs[0].buffer.attach( r.createVtxBuf( 72*sizeof(float) ) );
+    mesh.vtxbufs[0].buffer.attach( r.createVtxBuf( 24*sizeof(CubeVertex) ) );
     if( !mesh.vtxbufs[0].buffer ) return false;
     mesh.vtxbufs[0].offset = 0;
     mesh.vtxbufs[0].stride = sizeof(CubeVertex);

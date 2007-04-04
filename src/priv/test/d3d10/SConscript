@@ -1,4 +1,4 @@
 Import( 'GN' )
 if GN.conf['has_d3d10']:
-    cluster = GN.newSourceCluster( ['d3d10Test.cpp'], 'pch.h', 'pch.cpp' )
+    cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
     GN.newTarget( 'prog', 'GNtestD3D10', [cluster] )
