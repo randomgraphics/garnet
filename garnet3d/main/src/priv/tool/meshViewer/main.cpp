@@ -57,6 +57,8 @@ public:
 
             // initialize actor
             loadFromXmlFile( mActor, mObjName );
+            mActor.setPivot( mActor.getBoundingSphere().center );
+            mActor.setPosition( -mActor.getBoundingSphere().center );
 
             // update camera stuff
             mRadius = mActor.getBoundingSphere().radius * 2.0f;
@@ -90,7 +92,6 @@ public:
 
     void onUpdate()
     {
-        mActor.setPosition( -mActor.getBoundingSphere().center );
         mActor.setRotation( mArcBall.getRotation() );
     }
 

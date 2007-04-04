@@ -158,7 +158,7 @@ size_t GN::str2Floats( float * buffer, size_t count, const char * str, size_t st
 {
     if( strEmpty(str) ) return 0;
 
-    static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
+    static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)f?\\s*,?\\s*" );
 
     if( 0 == stringLength ) stringLength = strLen( str );
     pcrecpp::StringPiece text( str, (int)stringLength );

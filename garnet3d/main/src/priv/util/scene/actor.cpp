@@ -70,6 +70,22 @@ void GN::scene::Actor::setPosition( const Vector3f & p )
 //
 // 
 // -----------------------------------------------------------------------------
+void GN::scene::Actor::setPivot( const Vector3f & p )
+{
+    if( p != mPivot )
+    {
+        mPivot = p;
+        mTransformDirty = true;
+    }
+    else
+    {
+        GN_TRACE(sLogger)( "redundant pivot update." );
+    }
+}
+
+//
+// 
+// -----------------------------------------------------------------------------
 void GN::scene::Actor::setRotation( const Quaternionf & q )
 {
     if( q != mRotation )
@@ -107,6 +123,7 @@ void GN::scene::Actor::clear()
     mDrawable.clear();
 
     mPosition.set( 0, 0, 0 );
+    mPivot.set( 0, 0, 0 );
     mRotation.identity();
     mLocal2Parent.identity();
     mBoundingSphere.center.set( 0, 0, 0 );
@@ -143,6 +160,14 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         if( "transform" == e->name )
         {
             // TODO: load transform
+        }
+        else if( "pivot" == e->name )
+        {
+            Vector3f p;
+            if( !sGetFloatAttrib( *e, "x", p.x ) ) return false;
+            if( !sGetFloatAttrib( *e, "y", p.y ) ) return false;
+            if( !sGetFloatAttrib( *e, "z", p.z ) ) return false;
+            setPivot( p );
         }
         else if( "bsphere" == e->name )
         {
@@ -229,14 +254,16 @@ void GN::scene::Actor::calcTransform()
 {
     GN_ASSERT( mTransformDirty );
 
-    Matrix33f r33;
-    Matrix44f r44, t44;
+    Matrix33f r3;
+    Matrix44f r4, t1, t2;
 
-    mRotation.toMatrix33( r33 );
-    r44.set( r33 );
-    t44.translate( mPosition );
+    mRotation.toMatrix33( r3 );
+    r4.set( r3 );
 
-    mLocal2Parent = r44 * t44;
+    t1.translate( mPosition + mPivot );
+    t2.translate( -mPivot );
+
+    mLocal2Parent =  t1 * r4 * t2;
 
     mTransformDirty = false;
 }

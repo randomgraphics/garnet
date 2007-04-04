@@ -16,7 +16,8 @@ class TestScene
 
     UInt32 eff0;
 
-    Drawable box;
+    Scene scene;
+    Actor box;
 
     Matrix44f world, view, proj;
 
@@ -24,7 +25,7 @@ class TestScene
 
 public:
 
-    TestScene( SampleApp & a ) : app(a) {}
+    TestScene( SampleApp & a ) : app(a), box(scene) {}
 
     ~TestScene() { quit(); }
 
@@ -33,7 +34,7 @@ public:
         scene::ResourceManager & rm = gSceneResMgr;
 
         // load box
-        if( !loadFromXmlFile( box, "media::drawable/cube1.xml" ) ) return false;
+        if( !loadFromXmlFile( box, "media::cube/cube.actor.xml" ) ) return false;
 
         // load texture
         tex0 = rm.getResourceId( "media::texture/rabit.png" );
@@ -44,9 +45,10 @@ public:
         if( 0 == eff0 ) return false;
 
         // initialize matrices
+        float r = box.getBoundingSphere().radius * 1.0f;
         world.identity();
-        view.lookAtRh( Vector3f(3,3,3), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gRenderer.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, 1.0f, 10.0f );
+        view.lookAtRh( Vector3f(r,r,r), Vector3f(0,0,0), Vector3f(0,1,0) );
+        gRenderer.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, r/100.0f, r*10.0f );
 
         // initialize arcball.
         arcball.setHandness( util::ArcBall::RIGHT_HAND );
@@ -54,6 +56,10 @@ public:
         const DispDesc & dd = gRenderer.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
         arcball.connectToInput();
+
+        // initialize scene
+        scene.setProj( proj );
+        scene.setView( view );
 
         // success
         return true;
@@ -67,10 +73,8 @@ public:
     {
         scene::ResourceManager & rm = gSceneResMgr;
 
-        // update box matrix
-        world = arcball.getRotationMatrix44();
-        Matrix44f pvw = proj * view * world;
-        box.uniforms["pvw"].value = pvw;
+        // update box rotation
+        box.setRotation( arcball.getRotation() );
 
         // update color
         static int r = 0; static int rr = 1;
