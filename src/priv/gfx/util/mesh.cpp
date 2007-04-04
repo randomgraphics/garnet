@@ -360,6 +360,8 @@ bool GN::gfx::generateCubeMesh( Mesh & mesh, float edgeLength )
         vb->p, sizeof(CubeVertex),
         vb->t, sizeof(CubeVertex),
         vb->n, sizeof(CubeVertex),
+        0, 0, // tangent
+        0, 0, // binormal
         ib, 0 );
 
     // set draw parameters

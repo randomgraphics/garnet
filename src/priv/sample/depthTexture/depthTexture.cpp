@@ -64,6 +64,8 @@ public:
             &mBoxVerts[0].x, sizeof(BoxVert),
             &mBoxVerts[0].u, sizeof(BoxVert),
             &mBoxVerts[0].nx, sizeof(BoxVert),
+            0, 0, // tangent
+            0, 0, // binormal
             mBoxIndices, 0 );
 
         // initialize matrices

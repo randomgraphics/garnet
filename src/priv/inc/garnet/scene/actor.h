@@ -45,8 +45,22 @@ namespace GN { namespace scene
 
         void doDtor()
         {
+            // detach from parent
             setParent( 0, 0 );
-            GN_UNIMPL();
+            GN_ASSERT( 0 == mParent );
+            GN_ASSERT( 0 == mPrev );
+            GN_ASSERT( 0 == mNext );
+
+            // remove all children
+            TreeNode<T> * c1 = mChild, * c2;
+            while( c1 )
+            {
+                c2 = c1->mNext;
+                c1->setParent( 0, 0 );
+                c1 = c2;
+            }
+
+            GN_ASSERT( 0 == mChild );
         }
 
         ///
@@ -102,11 +116,52 @@ namespace GN { namespace scene
             {
                 // detach from old parent
                 setParent( 0, 0 );
+
+                // attach to new parent
+                mParent = newParent;
+                if( newPrev )
+                {
+                    TreeNode<T> * c =  newParent->mChild;
+                    while( c )
+                    {
+                        c = c->mNext;
+                        if( c == newPrev )
+                        {
+                            mPrev = newPrev;
+                            mNext = newPrev->mNext;
+                            if( mNext ) mNext->mPrev = this;
+                            newPrev->mNext = this;
+                            break;
+                        }
+                    }
+                    if( 0 == c )
+                    {
+                        static Logger * sLogger = getLogger("GN.scene.TreeNode");
+                        GN_ERROR(sLogger)( "newPrev is not direct child of newParent!" );
+                        GN_UNEXPECTED();
+                    }
+                }
+                else
+                {
+                    mPrev = 0;
+                    mNext = newParent->mChild;
+                    newParent->mChild = this;
+                    if( mNext ) mNext->mPrev = this;
+                }
             }
             else
             {
-                GN_UNIMPL();
-            }
+                if( mParent->mChild == this ) mParent->mChild = mNext;
+
+                TreeNode<T> * p = mPrev, * n = mNext;
+
+                if( p ) p->mNext = n;
+                if( n ) n->mPrev = p;
+
+                mParent = 0;
+                mPrev = 0;
+                mNext = 0;
+             }
         }
     };
 
@@ -115,24 +170,24 @@ namespace GN { namespace scene
     ///
     class Actor
     {
-        Scene         & mScene;
+        Scene             & mScene;
 
-        TreeNode<Actor> mNode;
+        TreeNode<Actor>     mNode;
 
-        Drawable        mDrawable;
+        DynaArray<Drawable> mDrawables;
 
-        Vector3f        mPosition;       ///< position in parent space
-        Vector3f        mPivot;          ///< origin of rotation, in local space.
-        Quaternionf     mRotation;       ///< rotation in parent space
-        Matrix44f       mLocal2Parent;   ///< local->parent space transformation
-        Matrix44f       mParent2Local;   ///< parent->local space transformation
-        Matrix44f       mLocal2Root;     ///< local->root space transformation
-        Matrix44f       mRoot2Local;     ///< root->local transformation
-        Spheref         mBoundingSphere; ///< bounding sphere.
+        Vector3f            mPosition;       ///< position in parent space
+        Vector3f            mPivot;          ///< origin of rotation, in local space.
+        Quaternionf         mRotation;       ///< rotation in parent space
+        Matrix44f           mLocal2Parent;   ///< local->parent space transformation
+        Matrix44f           mParent2Local;   ///< parent->local space transformation
+        Matrix44f           mLocal2Root;     ///< local->root space transformation
+        Matrix44f           mRoot2Local;     ///< root->local transformation
+        Spheref             mBoundingSphere; ///< bounding sphere.
 
         union
         {
-            UInt32     mDirtyFlags;
+            UInt32          mDirtyFlags; ///< all dirty flags as one integer
             struct
             {
                 unsigned int mTransformDirty :  1;
@@ -151,27 +206,26 @@ namespace GN { namespace scene
 
         //@{
 
+        void setNumDrawables( size_t );
+        void setDrawable( size_t, const Drawable & );
+        void addDrawable( const Drawable & );
         void setParent( Actor * newParent, Actor * newPrev = 0 );
-
         void setPosition( const Vector3f & );
         void setPivot( const Vector3f & );
         void setRotation( const Quaternionf & );
-
-        void setDrawable( const Drawable & );
         void setBoundingSphere( const Spheref & );
 
+        size_t              getNumDrawables() const { return mDrawables.size(); }
+        const Drawable    & getDrawable( size_t i ) const { return mDrawables[i]; }
         Actor             * getParent() const { return (Actor*)((UInt8*)mNode.getParent() - GN_FIELD_OFFSET(Actor,mNode)); }
         Actor             * getPrev() const  { return (Actor*)((UInt8*)mNode.getPrev() - GN_FIELD_OFFSET(Actor,mNode)); }
         Actor             * getNext() const  { return (Actor*)((UInt8*)mNode.getNext() - GN_FIELD_OFFSET(Actor,mNode)); }
         Actor             * getChild() const  { return (Actor*)((UInt8*)mNode.getChild() - GN_FIELD_OFFSET(Actor,mNode)); }
-
         const Vector3f    & getPosition() const { return mPosition; }
         const Vector3f    & getPivot() const { return mPivot; }
         const Quaternionf & getRotation() const { return mRotation; }
         const Matrix44f   & getLocal2Parent() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Parent; }
         const Matrix44f   & getLocal2Root() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Root; }
-
-        const Drawable    & getDrawable() const { return mDrawable; }
         const Spheref     & getBoundingSphere() const { return mBoundingSphere; }
 
         //@}

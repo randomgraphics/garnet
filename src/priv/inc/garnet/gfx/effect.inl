@@ -92,6 +92,15 @@ GN_INLINE void GN::gfx::Effect::commitChanges() const
 
         ShaderData & sd = mShaders.items[p.shaders[iShader]];
 
+        // apply texture/sampler properties
+        for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
+        {
+            const TextureRefData & trd = sd.textures[iTexture];
+            GN_ASSERT( mTextures.items.validHandle(trd.id) );
+            const TextureData & td = mTextures.items[trd.id];
+            mActiveContext->setTexture( trd.stage, td.value );
+        }
+
         // apply dirty uniforms again, in case user may change uniforms between passBegin() and commitChanges()
         for( size_t iUniform = 0; iUniform < sd.dirtyUniforms.size(); ++iUniform )
         {

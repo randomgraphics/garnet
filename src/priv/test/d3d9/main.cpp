@@ -65,6 +65,8 @@ public:
             vb[0].p, sizeof(Vertex),
             vb[0].t, sizeof(Vertex),
             vb[0].n, sizeof(Vertex),
+            0, 0, // tangent
+            0, 0, // binormal
             ib, 0 );
 
         world.identity();
