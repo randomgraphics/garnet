@@ -122,7 +122,8 @@ namespace GN { namespace scene
         Drawable        mDrawable;
 
         Vector3f        mPosition;       ///< position in parent space
-        Quaternionf     mRotation;       ///< orientation in parent space
+        Vector3f        mPivot;          ///< origin of rotation, in local space.
+        Quaternionf     mRotation;       ///< rotation in parent space
         Matrix44f       mLocal2Parent;   ///< local->parent space transformation
         Matrix44f       mParent2Local;   ///< parent->local space transformation
         Matrix44f       mLocal2Root;     ///< local->root space transformation
@@ -151,8 +152,11 @@ namespace GN { namespace scene
         //@{
 
         void setParent( Actor * newParent, Actor * newPrev = 0 );
+
         void setPosition( const Vector3f & );
+        void setPivot( const Vector3f & );
         void setRotation( const Quaternionf & );
+
         void setDrawable( const Drawable & );
         void setBoundingSphere( const Spheref & );
 
@@ -160,8 +164,13 @@ namespace GN { namespace scene
         Actor             * getPrev() const  { return (Actor*)((UInt8*)mNode.getPrev() - GN_FIELD_OFFSET(Actor,mNode)); }
         Actor             * getNext() const  { return (Actor*)((UInt8*)mNode.getNext() - GN_FIELD_OFFSET(Actor,mNode)); }
         Actor             * getChild() const  { return (Actor*)((UInt8*)mNode.getChild() - GN_FIELD_OFFSET(Actor,mNode)); }
+
+        const Vector3f    & getPosition() const { return mPosition; }
+        const Vector3f    & getPivot() const { return mPivot; }
+        const Quaternionf & getRotation() const { return mRotation; }
         const Matrix44f   & getLocal2Parent() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Parent; }
         const Matrix44f   & getLocal2Root() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Root; }
+
         const Drawable    & getDrawable() const { return mDrawable; }
         const Spheref     & getBoundingSphere() const { return mBoundingSphere; }
 
