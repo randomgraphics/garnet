@@ -119,12 +119,13 @@ struct AseMesh
 
 struct AseNode
 {
-    StrA     parent;
-    StrA     name;
-    Vector3f pos;
-    Vector3f rotaxis;
-    float    rotangle;
-    Vector3f scale;
+    StrA      parent;
+    StrA      name;
+    Matrix44f transform;
+    Vector3f  pos;
+    Vector3f  rotaxis;
+    float     rotangle;
+    Vector3f  scale;
 };
 
 struct AseGeoObject
@@ -780,7 +781,7 @@ static bool sReadMaterials( AseScene & scene, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
-static bool sReadMesh( AseMesh & m, AseFile & ase )
+static bool sReadMesh( AseMesh & m, const Matrix44f & transform, AseFile & ase )
 {
     GN_GUARD;
 
@@ -799,6 +800,7 @@ static bool sReadMesh( AseMesh & m, AseFile & ase )
     if( !ase.next( "*MESH_VERTEX_LIST" ) || !ase.readBlockStart() ) return false;
     for( UInt32 i = 0; i < numvert; ++i )
     {
+        // Note: vertex position in ASE file is post-transformed.
         if( !ase.readIndexedVector3Node( "*MESH_VERTEX", i, m.vertices[i].p ) ) return false;
     }
     if( !ase.readBlockEnd() ) return false;
@@ -876,6 +878,25 @@ static bool sReadMesh( AseMesh & m, AseFile & ase )
         }
         if( !ase.readBlockEnd() ) return false;
     }
+    else
+    {
+        GN_WARN(sLogger)( "Current mesh has no texcoord information. We'll have to fake it..." );
+
+        Vector3f zero(0,0,0);
+
+        for( UInt32 i = 0; i < m.vertices.size(); ++i )
+        {
+            m.vertices[i].addTexcoord( zero );
+        }
+
+        for( UInt32 i = 0; i < m.faces.size(); ++i )
+        {
+            AseFace & f = m.faces[i];
+            f.t[0] = 0;
+            f.t[1] = 0;
+            f.t[2] = 0;
+        }
+    }
 
     // skip vertex colors
     UInt numcolor;
@@ -888,6 +909,7 @@ static bool sReadMesh( AseMesh & m, AseFile & ase )
 
     // read normals
     if( !ase.next( "*MESH_NORMALS" ) || !ase.readBlockStart() ) return false;
+    Matrix44f it = Matrix44f::sInvtrans( transform ); // use to transform normal
     for( UInt32 i = 0; i < numface; ++i )
     {
         AseFace & f = m.faces[i];
@@ -905,7 +927,7 @@ static bool sReadMesh( AseMesh & m, AseFile & ase )
             Vector3f n;
             if( !ase.readVector3( n ) ) return false;
 
-            f.vn[i] = v.addNormal( n );
+            f.vn[i] = v.addNormal( it.transformVector( n ) );
         }
     }
     if( !ase.readBlockEnd() ) return false;
@@ -925,10 +947,45 @@ static bool sReadNode( AseNode & n, AseFile & ase )
 
     if( !ase.readBlockStart() ) return false;
 
+    n.transform.identity();
+
     const char * token;
     while( 0 != ( token = ase.next() ) )
     {
-        if( 0 == strCmp( "*TM_POS", token ) )
+        if( 0 ) {}
+        else if( 0 == strCmp( "*TM_ROW0", token ) )
+        {
+            Vector3f v;
+            if( !ase.readVector3( v ) ) return false;
+            n.transform[0][0] = v.x;
+            n.transform[1][0] = v.y;
+            n.transform[2][0] = v.z;
+        }
+        else if( 0 == strCmp( "*TM_ROW1", token ) )
+        {
+            Vector3f v;
+            if( !ase.readVector3( v ) ) return false;
+            n.transform[0][1] = v.x;
+            n.transform[1][1] = v.y;
+            n.transform[2][1] = v.z;
+        }
+        else if( 0 == strCmp( "*TM_ROW2", token ) )
+        {
+            Vector3f v;
+            if( !ase.readVector3( v ) ) return false;
+            n.transform[0][2] = v.x;
+            n.transform[1][2] = v.y;
+            n.transform[2][2] = v.z;
+        }
+        else if( 0 == strCmp( "*TM_ROW3", token ) )
+        {
+            Vector3f v;
+            if( !ase.readVector3( v ) ) return false;
+            n.transform[0][3] = v.x;
+            n.transform[1][3] = v.y;
+            n.transform[2][3] = v.z;
+        }
+        else if( 0 == strCmp( "*TM_POS", token ) )
         {
             if( !ase.readVector3( n.pos ) ) return false;
         }
@@ -998,7 +1055,7 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
         }
         else if( 0 == strCmp( token, "*MESH" ) )
         {
-            if( !sReadMesh( o.mesh, ase ) ) return false;
+            if( !sReadMesh( o.mesh, o.node.transform, ase ) ) return false;
         }
         else if( 0 == strCmp( token, "*MATERIAL_REF" ) )
         {
