@@ -64,31 +64,74 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
     }
 }
 
+static inline UInt32 swap8in32( UInt32 i )
+{
+    union Haha
+    {
+        UInt32 u32;
+        struct
+        {
+            UInt8 a, b, c, d;
+        };
+    };
+
+    Haha h;
+
+    h.u32 = i;
+
+    UInt8 tmp;
+    tmp = h.a; h.a = h.d; h.d = tmp;
+    tmp = h.b; h.b = h.c; h.c = h.b;
+
+    return h.u32;
+};
+
+static inline UInt16 swap8in16( UInt16 i )
+{
+    union Haha
+    {
+        UInt16 u16;
+        struct
+        {
+            UInt8 a, b;
+        };
+    };
+
+    Haha h;
+
+    h.u16 = i;
+
+    UInt8 tmp;
+    tmp = h.a; h.a = h.b; h.b = tmp;
+
+    return h.u16;
+};
+
 // *****************************************************************************
 // public methods
 // *****************************************************************************
 
 /*
     <mesh
-    	primtype  = "TRIANGLE_LIST"
-    	numprim   = "100"
-    	startvtx  = "0"
-    	minvtxidx = "0"
-    	numvtx    = "30"
-    	startidx  = "0"
-    	>
+        primtype  = "TRIANGLE_LIST"
+        numprim   = "100"
+        startvtx  = "0"
+        minvtxidx = "0"
+        numvtx    = "30"
+        startidx  = "0"
+        >
 
-    	<vtxfmt>
-    		...
-    	</vtxfmt>
-    	
-    	<vtxbuf>
-    		...
-    	</vtxbuf>
+        <vtxfmt>
+            ...
+        </vtxfmt>
+        
+        <vtxbuf>
+            ...
+        </vtxbuf>
 
-    	<idxbuf> <!-- this is optional -->
-    		...
-    	</idxbuf>
+        <idxbuf> <!-- this is optional -->
+            ...
+        </idxbuf>
     </mesh>
 */
 
@@ -196,8 +239,20 @@ bool GN::gfx::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & basedir 
                 AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
                 if( fp.empty() ) return false;
 
-                // read data into vb
-                if( !fp->read( dst, bytes, 0 ) ) return false;
+                // read file into temporary buffer
+                DynaArray<UInt32> buf( ( bytes + 3 ) / 4 );
+                if( !fp->read( buf.cptr(), bytes, 0 ) ) return false;
+
+#if GN_PPC
+                // endian swap
+                for( size_t i = 0; i < buf.size(); ++i )
+                {
+                    buf[i] = swap8in32( buf[i] );
+                }
+#endif
+                
+                // copy data into vb
+                memcpy( dst, buf.cptr(), bytes );
             }
             else
             {
@@ -273,7 +328,18 @@ bool GN::gfx::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & basedir 
                 AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
                 if( fp.empty() ) return false;
 
-                if( !fp->read( dst, bytes, 0 ) ) return false;
+                DynaArray<UInt16> buf( ( bytes + 1 ) / 2 );
+                if( !fp->read( buf.cptr(), bytes, 0 ) ) return false;
+
+#if GN_PPC
+                // endian swap
+                for( size_t i = 0; i < buf.size(); ++i )
+                {
+                    buf[i] = swap8in16( buf[i] );
+                }
+#endif
+
+                memcpy( dst, buf.cptr(), bytes );
             }
             else
             {

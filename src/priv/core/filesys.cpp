@@ -215,8 +215,14 @@ public:
 
 #if GN_XENON
 
+        // convert path separators to native format
+        for( size_t i = 0; i < tmp.size(); ++i )
+        {
+            if( '/' == tmp[i] ) tmp[i] = '\\';
+        }
+
         // currently do nothing
-        result = path;
+        result = tmp;
 
 #elif GN_MSWIN
         // convert path separators to native format

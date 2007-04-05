@@ -236,6 +236,8 @@ def UTIL_newEnv( compiler, variant ):
 		ccflags['common'] += ['/QVMX128']
 		cppdefines['profile'] += ['PROFILE']
 		cppdefines['stprof']  += ['PROFILE']
+		linkflags['profile'] += ['/NODEFAULTLIB:xapilib.lib']
+		linkflags['stprof'] += ['/NODEFAULTLIB:xapilib.lib']
 		libs['common']  += Split('xboxkrnl xbdm dxerr9')
 		libs['debug']   += Split('xapilibd d3d9d d3dx9d xgraphicsd xnetd xaudiod xactd vcompd libcmtd')
 		libs['profile'] += Split('xapilibi d3d9i d3dx9  xgraphics  xnet  xaudioi xacti vcomp  libcmt')
@@ -281,8 +283,8 @@ def UTIL_newEnv( compiler, variant ):
 		if float(env['MSVS_VERSION']) >= 8.0:
 			linkflags['common'] += ['/NODEFAULTLIB:libcp.lib']
 		linkflags['common']  += ['/FIXED:NO', '/DEBUGTYPE:CV,FIXUP'] # this is for vtune and magellan to do instrumentation
-		linkflags['profile'] += ['/OPT:REF','/LTCG:STATUS']
-		linkflags['stprof']  += ['/OPT:REF','/LTCG:STATUS']
+		linkflags['profile'] += ['/OPT:REF']
+		linkflags['stprof']  += ['/OPT:REF']
 		linkflags['retail']  += ['/OPT:REF','/LTCG:STATUS']
 		linkflags['stret']   += ['/OPT:REF','/LTCG:STATUS']
 

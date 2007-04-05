@@ -196,6 +196,9 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.rapi = gfx::API_D3D9;
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.iapi = input::API_NATIVE;
+    mInitParam.ffd.fontname = "font::/simsun.ttc";
+    mInitParam.ffd.width = 16;
+    mInitParam.ffd.height = 16;
     if( !onCheckCmdLine( argc, argv ) ) return false;
 #else
     // setup default parameters

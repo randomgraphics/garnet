@@ -93,6 +93,14 @@ namespace GN
             AXIS_XB360_THUMB_RY,      ///< xb360 right thumb Y
 
             NUM_AXISES, ///< number of axises.
+
+            /// \name some aliases
+            //@{
+            AXIS_MOUSE_FIRST = AXIS_MOUSE_X,
+            AXIS_MOUSE_LAST  = AXIS_MOUSE_WHEEL_1,
+            AXIS_XB360_FIRST = AXIS_XB360_LEFT_TRIGGER,
+            AXIS_XB360_LAST  = AXIS_XB360_THUMB_RY,
+            //@}
         };
 
         // TODO: joystick support
