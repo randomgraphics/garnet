@@ -191,6 +191,8 @@ namespace GN { namespace gfx
         LockFlag mLockedFlag;
         size_t   mLockedFace;
         size_t   mLockedLevel;
+        bool     mLockedNeedRebind; // for Xenon only, to unbind/rebind texture to device before/after lock
+        UInt32   mLockedRebindStage;
         //@}
 
         static Logger * sLogger;

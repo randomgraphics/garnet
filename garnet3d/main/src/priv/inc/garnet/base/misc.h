@@ -269,8 +269,8 @@ namespace GN
     ///
     union FOURCC
     {
-        UInt32      u32;   ///< FOURCC as unsigned 32-bit integer
-        SInt32       i32;   ///< FOURCC as 32-bit integer
+        UInt32        u32;   ///< FOURCC as unsigned 32-bit integer
+        SInt32        i32;   ///< FOURCC as 32-bit integer
         char          c8[4]; ///< FOURCC as 4 characters
         unsigned char u8[4]; ///< FOURCC as 4 unsigned characters
 

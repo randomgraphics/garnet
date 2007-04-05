@@ -45,6 +45,11 @@ public:
             }
             else GN_WARN(sLogger)( "unknown command line argument: %s", a );
         }
+        if( mObjName.empty() )
+        {
+            mObjName = "media::/cube/cube.actor.xml";
+            GN_INFO(sLogger)( "no object specified in comment line. Using default one: %s", mObjName.cptr() );
+        }
         return true;
     }
 
@@ -92,6 +97,11 @@ public:
 
     void onUpdate()
     {
+        const int * axises = gInput.getAxisStatus();
+        mArcBall.rotate(
+            (float)axises[input::AXIS_XB360_THUMB_LX] /  2000.0f,
+            (float)axises[input::AXIS_XB360_THUMB_LY] / -2000.0f );
+
         mActor.setRotation( mArcBall.getRotation() );
     }
 

@@ -102,6 +102,7 @@ void GN::enableCRTMemoryCheck()
     tmpDbgFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
     tmpDbgFlag |= _CRTDBG_LEAK_CHECK_DF;
     _CrtSetDbgFlag(tmpDbgFlag);
+    //_CrtSetBreakAlloc(1104);
 }
 #else
 void GN::enableCRTMemoryCheck() {}

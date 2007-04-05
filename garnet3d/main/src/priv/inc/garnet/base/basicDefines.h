@@ -266,9 +266,17 @@
 ///
 /// Make FORCC code
 ///
-#define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3)                          \
+#if GN_PPC
+// big endian
+#define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3)                  \
+    ((UInt32)(UInt8)(ch3) | ((UInt32)(UInt8)(ch2) << 8) |   \
+    ((UInt32)(UInt8)(ch1) << 16) | ((UInt32)(UInt8)(ch0) << 24 ))
+#else
+// little endian
+#define GN_MAKE_FOURCC(ch0, ch1, ch2, ch3)                  \
     ((UInt32)(UInt8)(ch0) | ((UInt32)(UInt8)(ch1) << 8) |   \
     ((UInt32)(UInt8)(ch2) << 16) | ((UInt32)(UInt8)(ch3) << 24 ))
+#endif
 
 ///
 /// Compile-time assert

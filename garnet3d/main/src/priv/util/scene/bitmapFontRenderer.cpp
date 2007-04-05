@@ -321,6 +321,19 @@ GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
 
         for( size_t x = 0; x < slotw; ++x, d += 4 )
         {
+#if GN_PPC
+            d[3] = 0xFF;
+            d[2] = 0xFF;
+            d[1] = 0xFF;
+            if( x < fbm.width && y >= margin_y )
+            {
+                d[0] = fbm.buffer[x + (y-margin_y) * fbm.width];
+            }
+            else
+            {
+                d[0] = 0;
+            }
+#else
             d[0] = 0xFF;
             d[1] = 0xFF;
             d[2] = 0xFF;
@@ -332,7 +345,8 @@ GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
             {
                 d[3] = 0;
             }
-        }
+#endif
+		}
 
         dst += tlr.rowBytes;
     }

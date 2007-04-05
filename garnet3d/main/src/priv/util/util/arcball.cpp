@@ -54,6 +54,30 @@ GN::util::ArcBall::ArcBall( Handness h )
 //
 //
 // -----------------------------------------------------------------------------
+void GN::util::ArcBall::rotate( float dx, float dy )
+{
+    if( .0f == dx && .0f == dy ) return;
+
+    dx /= mWindowHalfSize.x;
+    dy /= mWindowHalfSize.y;
+
+    Vector3f v1, v2;
+    sWindowPosition2UnitVector( v1, 0, 0, mHandness );
+    sWindowPosition2UnitVector( v2, dx, dy, mHandness );
+    v1 = mTransView.transformVector( v1 );
+    v2 = mTransView.transformVector( v2 );
+
+    Quaternionf q;
+    q.fromArc( v1, v2 );
+    mQuat = q * mQuat;
+
+    mQuat.toMatrix33( mRotation3x3 );
+    mRotation4x4.set( mRotation3x3 );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::util::ArcBall::connectToInput()
 {
     gSigKeyPress.connect( this, &ArcBall::onKeyPress );

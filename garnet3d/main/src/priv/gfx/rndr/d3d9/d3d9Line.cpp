@@ -170,7 +170,9 @@ void GN::gfx::D3D9Line::drawLines(
     D3D9LineVertex * vbData;
 #if GN_XENON
     dev->SetStreamSource( 0, 0, 0, 0 ); // Xenon platform does not permit locking of currently binded vertex stream.
-#endif
+    GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
+    vbData += mNextLine * ( LINE_STRIDE / sizeof(D3D9LineVertex) );
+#else
     if( 0 == mNextLine )
     {
         GN_DX9_CHECK_R( mVtxBuf->Lock( 0, 0, (void**)&vbData, D3DLOCK_DISCARD ) );
@@ -182,6 +184,7 @@ void GN::gfx::D3D9Line::drawLines(
             (UINT)( sizeof(D3D9LineVertex)*vertexCount ),
             (void**)&vbData, D3DLOCK_NOOVERWRITE ) );
     }
+#endif
 
     if( (DL_WINDOW_SPACE & options) &&
        !(DL_USE_CURRENT_VS & options) )

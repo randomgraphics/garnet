@@ -463,7 +463,7 @@ bool GN::gfx::D3D9Texture::lock(
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
     AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
 
-    // Note: On Xenon, always lock target texture directly
+	// Note: On Xenon, always lock target texture directly
     LPDIRECT3DBASETEXTURE9 lockedtex;
     DWORD lockedUsage;
 #if !GN_XENON
@@ -478,6 +478,31 @@ bool GN::gfx::D3D9Texture::lock(
         lockedtex = mD3DTexture;
         lockedUsage = mD3DUsage;
     }
+
+	// Note: On Xenon, resource has to be unset from device before locking
+#if GN_XENON
+    LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
+    mLockedNeedRebind = !!lockedtex->IsSet( dev );
+    if( mLockedNeedRebind )
+    {
+        mLockedRebindStage = 0;
+        UInt32 numstages = getRenderer().getCaps( CAPS_MAX_TEXTURE_STAGES );
+        while( mLockedRebindStage < numstages )
+        {
+            AutoComPtr<IDirect3DBaseTexture9> tex;
+            dev->GetTexture( mLockedRebindStage, &tex );
+            if( tex == lockedtex ) break; // found!
+            ++mLockedRebindStage;
+        }
+        if( mLockedRebindStage == numstages )
+        {
+            GN_ERROR(sLogger)( "texture is set to device, but not found in device's texture list. Shit happens!" );
+            GN_UNEXPECTED();
+            return false;
+        }
+        dev->SetTexture( mLockedRebindStage, 0 );
+    }
+#endif
 
     // determine lock flag
     DWORD lockedFlag = sLockFlag2D3D( lockedUsage, flag );
@@ -590,6 +615,14 @@ void GN::gfx::D3D9Texture::unlock()
     if( mShadowCopy && LOCK_RO != mLockedFlag )
     {
         GN_DX9_CHECK( getRenderer().getDevice()->UpdateTexture( mShadowCopy, mD3DTexture ) );
+    }
+#endif
+
+#if GN_XENON
+    if( mLockedNeedRebind )
+    {
+        LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
+        dev->SetTexture( mLockedRebindStage, lockedtex );
     }
 #endif
 
