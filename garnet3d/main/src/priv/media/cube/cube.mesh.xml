@@ -11,10 +11,11 @@
 	<vtxfmt>
 		<attrib stream="0" offset= "0" semantic="POS0" format="FMT_FLOAT3"/>
 		<attrib stream="0" offset="12" semantic="NML0" format="FMT_FLOAT3"/>
-		<attrib stream="0" offset="24" semantic="TEX0" format="FMT_FLOAT2"/>
+		<attrib stream="0" offset="24" semantic="TANG" format="FMT_FLOAT3"/>
+		<attrib stream="0" offset="36" semantic="TEX0" format="FMT_FLOAT2"/>
 	</vtxfmt>
 
-	<vtxbuf stream="0" offset="0" stride="32" ref="cube.vb"/>
+	<vtxbuf stream="0" offset="0" stride="64" ref="cube.vb.bin"/>
 
-	<idxbuf ref="cube.ib"/>
+	<idxbuf ref="cube.ib.bin"/>
 </mesh>

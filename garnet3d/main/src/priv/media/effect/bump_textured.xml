@@ -5,8 +5,8 @@
         <uniform name="invworld" type="MATRIX44" count="1" desc="inverse world matrix"/>
         <uniform name="light0_pos" type="VECTOR4" count="1" desc="light position in world space"/>
         <uniform name="diffuse" type="VECTOR4" count="1"/>
-        <texture name="texdiff"/>
-        <texture name="texbump"/>
+        <texture name="texdiff" desc="diffuse map"/>
+        <texture name="texnormal" desc="normal map"/>
     </parameters>
     <shaders>
 
@@ -65,7 +65,7 @@ vsoutput main( vsinput vi )
                 </token>
             </prerequisites>
             <texref stage="0" ref="texdiff"/>
-            <texref stage="1" ref="texbump"/>
+            <texref stage="1" ref="texnormal"/>
             <code lang="D3D_HLSL">
 <![CDATA[
 struct vsoutput
@@ -74,7 +74,7 @@ struct vsoutput
 	float4 lpos : TEXCOORD1; // xyz: light position in object space; w : texcoord.v
 };
 sampler texdiff : register(s0);
-sampler texbump : register(s1);
+sampler texnormal : register(s1);
 float4 main( vsoutput vi ) : COLOR0
 {
 	float diffuse = clamp( dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) ), 0, 1 );

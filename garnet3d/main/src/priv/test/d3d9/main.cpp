@@ -38,9 +38,11 @@ class MyApp : public SampleApp
 {
     struct Vertex
     {
-        float p[3];
-        float n[3];
-        float t[2];
+        float pos[3];
+        float nml[3];
+        float tan[3];
+        float tex[2];
+        float ___[5]; // padding to 16 floats
     };
 
     LPDIRECT3DDEVICE9 dev;
@@ -59,15 +61,29 @@ class MyApp : public SampleApp
 public:
     bool onAppInit()
     {
-        static const float E = 150.0f;
+        static const float E = 100.0f;
         createBox(
             E, E, E,
-            vb[0].p, sizeof(Vertex),
-            vb[0].t, sizeof(Vertex),
-            vb[0].n, sizeof(Vertex),
-            0, 0, // tangent
+            vb[0].pos, sizeof(Vertex),
+            vb[0].tex, sizeof(Vertex),
+            vb[0].nml, sizeof(Vertex),
+            vb[0].tan, sizeof(Vertex),
             0, 0, // binormal
             ib, 0 );
+
+        /*char tag[2] = { 'G','N' };
+        UInt16 endian = 0x0201;
+        DiskFile fp;
+        fp.open( "cube.vb.bin", "wb" );
+        fp.write( &tag, 2, 0 );
+        fp.write( &endian, 2, 0 );
+        fp.write( vb, sizeof(vb), 0 );
+        fp.close();
+        fp.open( "cube.ib.bin", "wb" );
+        fp.write( &tag, 2, 0 );
+        fp.write( &endian, 2, 0 );
+        fp.write( ib, sizeof(ib), 0 );
+        fp.close();*/
 
         world.identity();
 #if 1
@@ -104,7 +120,7 @@ public:
         {
             { 0,  0, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_TEXCOORD, 0 },
             { 0, 12, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_TEXCOORD, 1 },
-            { 0, 24, D3DDECLTYPE_FLOAT2, 0, D3DDECLUSAGE_TEXCOORD, 2 },
+            { 0, 36, D3DDECLTYPE_FLOAT2, 0, D3DDECLUSAGE_TEXCOORD, 2 },
             D3DDECL_END()
         };
         GN_DX9_CHECK_RV( dev->CreateVertexDeclaration( format, &decl ), false );

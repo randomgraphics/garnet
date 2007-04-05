@@ -1,3 +1,9 @@
+- 2007.4.5
+  - generate tangent vectors in createBox()
+  - add endian swap defines and routines
+  - handle endianess in binary mesh saving/loading
+  - remove unused/obsolete media files
+
 - 2007.4.2
   - mesh converter now supports ASE file
   - new tool: mesh viewer

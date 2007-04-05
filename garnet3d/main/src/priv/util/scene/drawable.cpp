@@ -109,28 +109,31 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
                 GN_ERROR(sLogger)( "missing texture binding attribute." );
                 return false;
             }
-            gfx::EffectItemID binding = effptr->getTextureID( bindingstr );
-            if( 0 == binding )
+            gfx::EffectItemID binding;
+            if( effptr->hasTexture( bindingstr, &binding ) )
             {
-                GN_DETAIL(sLogger)( "invalid texture binding '%s'.", bindingstr.cptr() );
-                return false;
-            }
+                GN_ASSERT( binding );
 
-            ResourceId id;
-            if( e->findAttrib( "ref" ) )
-            {
-                id = sLoadReference( *eroot, basedir, "texture" );
-                if( 0 == id ) continue;
+                ResourceId id;
+                if( e->findAttrib( "ref" ) )
+                {
+                    id = sLoadReference( *eroot, basedir, "texture" );
+                    if( 0 == id ) continue;
+                }
+                else
+                {
+                    id = 0;
+                }
+
+                // add to texture array
+                TexItem & ti = textures[bindingstr];
+                ti.binding = binding;
+                ti.texid = id;
             }
             else
             {
-                id = 0;
+                GN_WARN(sLogger)( "ignore non-exist texture binding '%s'.", bindingstr.cptr() );
             }
-
-            // add to texture array
-            TexItem & ti = textures[bindingstr];
-            ti.binding = binding;
-            ti.texid = id;
         }
         else if( "uniform" == e->name )
         {
@@ -141,21 +144,25 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
                 GN_ERROR(sLogger)( "missing uniform binding attribute." );
                 return false;
             }
-            gfx::EffectItemID binding = effptr->getUniformID( bindingstr );
-            if( 0 == binding )
-            {
-                GN_DETAIL(sLogger)( "invalid uniform binding '%s'.", bindingstr.cptr() );
-                return false;
-            }
 
-            // add to uniform array
-            UniItem & ui = uniforms[bindingstr];
-            ui.binding = binding;
-            ui.value.loadFromXmlNode( *e );
+            gfx::EffectItemID binding;
+            if( effptr->hasUniform( bindingstr, &binding ) )
+            {
+                GN_ASSERT( binding );
+
+                // add to uniform array
+                UniItem & ui = uniforms[bindingstr];
+                ui.binding = binding;
+                ui.value.loadFromXmlNode( *e );
+            }
+            else
+            {
+                GN_WARN(sLogger)( "ignore non-exist uniform binding '%s'.", bindingstr.cptr() );
+            }
         }
         else if( "effect" != e->name && "mesh" != e->name )
         {
-            GN_ERROR(sLogger)( "Ignore unknown node '%s'.", e->name.cptr() );
+            GN_WARN(sLogger)( "Ignore unknown node '%s'.", e->name.cptr() );
         }
     }
 

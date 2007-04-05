@@ -64,47 +64,10 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
     }
 }
 
-static inline UInt32 swap8in32( UInt32 i )
+struct BinFileHeader
 {
-    union Haha
-    {
-        UInt32 u32;
-        struct
-        {
-            UInt8 a, b, c, d;
-        };
-    };
-
-    Haha h;
-
-    h.u32 = i;
-
-    UInt8 tmp;
-    tmp = h.a; h.a = h.d; h.d = tmp;
-    tmp = h.b; h.b = h.c; h.c = h.b;
-
-    return h.u32;
-};
-
-static inline UInt16 swap8in16( UInt16 i )
-{
-    union Haha
-    {
-        UInt16 u16;
-        struct
-        {
-            UInt8 a, b;
-        };
-    };
-
-    Haha h;
-
-    h.u16 = i;
-
-    UInt8 tmp;
-    tmp = h.a; h.a = h.b; h.b = tmp;
-
-    return h.u16;
+    char   tag[2]; // 'G','N'
+    UInt16 endian; // 0x0201
 };
 
 // *****************************************************************************
@@ -227,76 +190,42 @@ bool GN::gfx::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & basedir 
             UInt8 * dst = (UInt8*)vb.buffer->lock( 0, 0, LOCK_WO );
             if( 0 == dst ) return false;
             AutoSurfaceUnlocker<VtxBuf> unlocker( vb.buffer );
- 
+
+            // get vb file name
             StrA ref;
-            if( sGetStringAttrib( *e, "ref", ref, true ) )
+            if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
+            ref = core::resolvePath( basedir, ref );
+
+            // open vb file
+            AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
+            if( fp.empty() ) return false;
+
+            // read binary file header
+            size_t readen;
+            BinFileHeader header;
+            GN_CASSERT( sizeof(BinFileHeader) == 4 );
+            if( !fp->read( &header, sizeof(BinFileHeader), &readen ) ||
+                4 != readen ||
+                'G' != header.tag[0] ||
+                'N' != header.tag[1] )
             {
-                // read mesh from external file
+                GN_ERROR(sLogger)( "%s is not a valid garnet binary file!", ref.cptr() );
+                return false;
+            }
 
-                ref = core::resolvePath( basedir, ref );
-
-                // open vb file
-                AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
-                if( fp.empty() ) return false;
-
-                // read file into temporary buffer
-                DynaArray<UInt32> buf( ( bytes + 3 ) / 4 );
-                if( !fp->read( buf.cptr(), bytes, 0 ) ) return false;
-
-#if GN_PPC
-                // endian swap
-                for( size_t i = 0; i < buf.size(); ++i )
-                {
-                    buf[i] = swap8in32( buf[i] );
-                }
-#endif
-                
-                // copy data into vb
-                memcpy( dst, buf.cptr(), bytes );
+            // read data
+            if( header.endian == 0x0201 )
+            {
+                if( !fp->read( dst, bytes, &readen ) || bytes != readen ) return false;
             }
             else
             {
-                // read embbed vertex buffer. Now can only support floating data.
-                size_t numFloats = 0;
-                for( size_t i = 0; i < vfd.count; ++i )
-                {
-                    switch( vfd.attribs[i].format )
-                    {
-                        case FMT_FLOAT1 : numFloats += 1; break;
-                        case FMT_FLOAT2 : numFloats += 2; break;
-                        case FMT_FLOAT3 : numFloats += 3; break;
-                        case FMT_FLOAT4 : numFloats += 4; break;
-                        default:
-                            sPostError( *e, "Emmbed vertex buffer can't have data other then floats." );
-                            return false;
-                    }
-                }
+                // read vertex data into temporary buffer
+                DynaArray<UInt32> buf( ( bytes + 3 ) / 4 );
+                if( !fp->read( buf.cptr(), bytes, &readen ) || bytes != readen ) return false;
 
-                // float array that can hold one vertex data
-                DynaArray<float> vertex;
-                vertex.resize( numFloats );
-
-                // define pattern for "," separated float array.
-                static pcrecpp::RE re( "\\s*([+-]?\\s*([0-9]+(\\.[0-9]*)?|[0-9]*\\.[0-9]+)([eE][+-]?[0-9]+)?)\\s*,?\\s*" );
-
-                // parse vertex data
-                pcrecpp::StringPiece text( e->text.cptr(), (int)e->text.size() );
-                std::string substring;
-                for( size_t i = 0; i < numvtx; ++i, dst += vb.stride )
-                {
-                    for( size_t j = 0; j < numFloats; ++j )
-                    {
-                        if( !re.Consume( &text, &substring ) ||
-                            !str2Float( vertex[j], substring.c_str() ) )
-                        {
-                            sPostError( *e, strFormat( "vertex %dst has invalid data", i ) );
-                            return false;
-                        }
-                    }
-
-                    // copy to vertex buffer
-                    memcpy( dst, vertex.cptr(), vertex.size()*sizeof(float) );
-                 }
+                // endian swap
+                swap8in32( (UInt32*)dst, buf.cptr(), buf.size() );
             }
         }
 
@@ -320,43 +249,39 @@ bool GN::gfx::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & basedir 
 
             // get ib file name
             StrA ref;
-            if( sGetStringAttrib( *e, "ref", ref, true ) )
+            if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
+            ref = core::resolvePath( basedir, ref );
+
+            // open ib file
+            AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
+            if( fp.empty() ) return false;
+
+            // read binary file header
+            size_t readen;
+            BinFileHeader header;
+            GN_CASSERT( sizeof(BinFileHeader) == 4 );
+            if( !fp->read( &header, sizeof(BinFileHeader), &readen ) ||
+                4 != readen ||
+                'G' != header.tag[0] ||
+                'N' != header.tag[1] )
             {
-                // read external ib adata
-                ref = core::resolvePath( basedir, ref );
+                GN_ERROR(sLogger)( "%s is not a valid garnet binary file!", ref.cptr() );
+                return false;
+            }
 
-                AutoObjPtr<File> fp( core::openFile( ref, "rb" ) );
-                if( fp.empty() ) return false;
-
-                DynaArray<UInt16> buf( ( bytes + 1 ) / 2 );
-                if( !fp->read( buf.cptr(), bytes, 0 ) ) return false;
-
-#if GN_PPC
-                // endian swap
-                for( size_t i = 0; i < buf.size(); ++i )
-                {
-                    buf[i] = swap8in16( buf[i] );
-                }
-#endif
-
-                memcpy( dst, buf.cptr(), bytes );
+            // read data
+            if( header.endian == 0x0201 )
+            {
+                if( !fp->read( dst, bytes, &readen ) || bytes != readen ) return false;
             }
             else
             {
-                // read embedded ib data
-                static pcrecpp::RE re( "\\s*([0-9]+)\\s*,?\\s*" );
+                // read vertex data into temporary buffer
+                DynaArray<UInt16> buf( ( bytes + 1 ) / 2 );
+                if( !fp->read( buf.cptr(), bytes, &readen ) || bytes != readen ) return false;
 
-                pcrecpp::StringPiece text( e->text.cptr(), (int)e->text.size() );
-                std::string substring;
-                for( size_t i = 0; i < numidx; ++i, ++dst )
-                {
-                    if( !re.Consume( &text, &substring ) ||
-                        !str2UInt16( *dst, substring.c_str() ) )
-                    {
-                        sPostError( *e, strFormat( "index %d has invalid data", i ) );
-                        return false;
-                    }
-                }
+                // endian swap
+                swap8in16( dst, buf.cptr(), buf.size() );
             }
         }
 
