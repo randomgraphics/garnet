@@ -1139,6 +1139,53 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
 //
 //
 // -----------------------------------------------------------------------------
+static bool sReadGroup( AseScene & scene, AseFile & ase )
+{
+    GN_GUARD;
+
+    if( !ase.readBlockStart() ) return false;
+
+    const char * token;
+
+    while( 0 != ( token = ase.next() ) )
+    {
+        if( 0 ) {}
+        //else if( 0 == strCmp( token, "*SCENE" ) )
+        //{
+        //    ...
+        //}
+        else if( 0 == strCmp( token, "*GEOMOBJECT" ) )
+        {
+            if( !sReadGeomObject( scene, ase ) ) return false;
+        }
+        else if( '*' == *token )
+        {
+            ase.info( strFormat( "skip node %s", token ) );
+            if( !ase.skipNode() ) return false;
+        }
+        else if( 0 == strCmp( token, "}" ) )
+        {
+            // end of the block.
+            return true;
+        }
+        else
+        {
+            ase.err( strFormat( "expecting node token, but met '%s'.", token ) );
+            return false;
+        }
+    }
+
+    // something wrong!
+    ase.err( "Fail to get next node!" );
+    return false;
+
+    GN_UNGUARD;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
 static bool sReadAse( AseScene & scene, const StrA & filename )
 {
     GN_GUARD;
@@ -1166,6 +1213,11 @@ static bool sReadAse( AseScene & scene, const StrA & filename )
         else if( 0 == strCmp( token, "*MATERIAL_LIST" ) )
         {
             if( !sReadMaterials( scene, ase ) ) return false;
+        }
+        else if( 0 == strCmp( token, "*GROUP" ) )
+        {
+            if( !ase.readString() ) return false; // skip group name
+            if( !sReadGroup( scene, ase ) ) return false;
         }
         else if( 0 == strCmp( token, "*GEOMOBJECT" ) )
         {
