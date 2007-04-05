@@ -313,7 +313,10 @@ namespace GN
         {
             GN_CASSERT( 4 == sizeof(FOURCC) );
             FOURCC r;
-            r.u32 = GN_MAKE_FOURCC( c0, c1, c2, c3 );
+            r.c8[0] = c0;
+            r.c8[1] = c1;
+            r.c8[2] = c2;
+            r.c8[3] = c3;
             return r;
         }
 

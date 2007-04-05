@@ -16,11 +16,6 @@ void GN::gfx::createBox(
 {
     GN_GUARD;
 
-    GN_UNUSED_PARAM( tangents );
-    GN_UNUSED_PARAM( tangStride );
-    GN_UNUSED_PARAM( binormals );
-    GN_UNUSED_PARAM( n2Stride );
-
     //
     // Construct a box like this:
     //
@@ -170,25 +165,102 @@ void GN::gfx::createBox(
         #undef VERTEX
     }
 
+    if( tangents )
+    {
+        Vector3f px = Vector3f(  1,  0,  0 );
+        Vector3f nx = Vector3f( -1,  0,  0 );
+        Vector3f py = Vector3f(  0,  1,  0 );
+        Vector3f ny = Vector3f(  0, -1,  0 );
+        Vector3f pz = Vector3f(  0,  0,  1 );
+        Vector3f nz = Vector3f(  0,  0, -1 );
+        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)tangents) + tangStride*index))
+
+        VERTEX( 0) = px;
+        VERTEX( 1) = px;
+        VERTEX( 2) = px;
+        VERTEX( 3) = px;
+
+        VERTEX( 4) = pz;
+        VERTEX( 5) = pz;
+        VERTEX( 6) = pz;
+        VERTEX( 7) = pz;
+
+        VERTEX( 8) = pz;
+        VERTEX( 9) = pz;
+        VERTEX(10) = pz;
+        VERTEX(11) = pz;
+
+        VERTEX(12) = pz;
+        VERTEX(13) = pz;
+        VERTEX(14) = pz;
+        VERTEX(15) = pz;
+
+        VERTEX(16) = pz;
+        VERTEX(17) = pz;
+        VERTEX(18) = pz;
+        VERTEX(19) = pz;
+
+        VERTEX(20) = px;
+        VERTEX(21) = px;
+        VERTEX(22) = px;
+        VERTEX(23) = px;
+
+        #undef VERTEX
+    }
+
+    if( binormals )
+    {
+        Vector3f px = Vector3f(  1,  0,  0 );
+        Vector3f nx = Vector3f( -1,  0,  0 );
+        Vector3f py = Vector3f(  0,  1,  0 );
+        Vector3f ny = Vector3f(  0, -1,  0 );
+        Vector3f pz = Vector3f(  0,  0,  1 );
+        Vector3f nz = Vector3f(  0,  0, -1 );
+        #define VERTEX( index ) (*(Vector3f*)(((UInt8*)binormals) + n2Stride*index))
+
+        VERTEX( 0) = py;
+        VERTEX( 1) = py;
+        VERTEX( 2) = py;
+        VERTEX( 3) = py;
+
+        VERTEX( 4) = px;
+        VERTEX( 5) = px;
+        VERTEX( 6) = px;
+        VERTEX( 7) = px;
+
+        VERTEX( 8) = py;
+        VERTEX( 9) = py;
+        VERTEX(10) = py;
+        VERTEX(11) = py;
+
+        VERTEX(12) = nx;
+        VERTEX(13) = nx;
+        VERTEX(14) = nx;
+        VERTEX(15) = nx;
+
+        VERTEX(16) = ny;
+        VERTEX(17) = ny;
+        VERTEX(18) = ny;
+        VERTEX(19) = ny;
+
+        VERTEX(20) = ny;
+        VERTEX(21) = ny;
+        VERTEX(22) = ny;
+        VERTEX(23) = ny;
+
+        #undef VERTEX
+    }
+
     if( triList )
     {
         for( UInt16 i = 0; i < 6; ++i )
         {
-#if GN_LEFT_HAND
-            triList[0] = i*4+0;
-            triList[1] = i*4+1;
-            triList[2] = i*4+2;
-            triList[3] = i*4+0;
-            triList[4] = i*4+2;
-            triList[5] = i*4+3;
-#else
             triList[0] = i*4+2;
             triList[1] = i*4+1;
             triList[2] = i*4+0;
             triList[3] = i*4+3;
             triList[4] = i*4+2;
             triList[5] = i*4+0;
-#endif
             triList += 6;
         }
     }
@@ -197,17 +269,10 @@ void GN::gfx::createBox(
     {
         for( UInt16 i = 0; i < 6; ++i )
         {
-#if GN_LEFT_HAND
-            quadList[0] = i*4+0;
-            quadList[1] = i*4+1;
-            quadList[2] = i*4+2;
-            quadList[3] = i*4+3;
-#else
             quadList[0] = i*4+3;
             quadList[1] = i*4+2;
             quadList[2] = i*4+1;
             quadList[3] = i*4+0;
-#endif
             quadList += 4;
         }
     }

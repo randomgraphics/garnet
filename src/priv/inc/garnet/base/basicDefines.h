@@ -152,6 +152,22 @@
 #endif
 
 // *****************************************************************************
+// 辨识endian
+// *****************************************************************************
+
+#if defined(__LITTLE_ENDIAN__) || defined(__BIG_ENDIAN__)
+#define GN_LITTLE_ENDIAN defined(__LITTLE_ENDIAN__) ///< true on little endian machine
+#define GN_BIT_ENDIAN    defined(__BIG_ENDIAN__)    ///< true on big endian machine
+#else
+#define GN_LITTLE_ENDIAN  ( GN_X64 || GN_X86 ) ///< true on little endian machine
+#define GN_BIG_ENDIAN     GN_PPC               ///< true on big endian machine
+#endif
+
+#if !( GN_LITTLE_ENDIAN ^ GN_BIG_ENDIAN )
+#error Compile time endian detection failed!
+#endif
+
+// *****************************************************************************
 // 定义函数和变量声明
 // *****************************************************************************
 

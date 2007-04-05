@@ -46,7 +46,7 @@ namespace GN { namespace scene
     {
         GN_GUARD;
 
-        GN_TRACE(getLogger( "GN.scene.util" ))( "Load from file '%s'", filename.cptr() );
+        GN_INFO(getLogger( "GN.scene.util" ))( "Load '%s'", filename.cptr() );
 
         AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
         if( !fp ) return false;

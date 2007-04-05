@@ -1305,6 +1305,17 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
 
                 struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
 
+                size_t written;
+
+                struct BinHeader
+                {
+                    char   tag[2];
+                    UInt16 endian;
+                };
+                GN_CASSERT( 4 == sizeof(BinHeader) );
+
+                const BinHeader header = { {'G', 'N'}, 0x0201 };
+
                 // write VB
                 DynaArray<MeshVertex> memvb( r.vbcount );
                 for( size_t vi = 0; vi < r.vbcount; ++vi )
@@ -1316,7 +1327,11 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
                 }
                 AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
-                if( !fvb || !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), 0 ) )
+                if( !fvb ||
+                    !fvb->write( &header, sizeof(header), &written ) ||
+                    written != sizeof(header) ||
+                    !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), &written ) ||
+                    written != sizeof(MeshVertex)*memvb.size() )
                 {
                     GN_ERROR(sLogger)( "fail to write vertex buffer." );
                     return false;
@@ -1331,6 +1346,12 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                 // write IB
                 AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
                 if( !fib ) return false;
+                if( !fib->write( &header, sizeof(header), &written ) ||
+                    sizeof(header) != written )
+                {
+                    GN_ERROR(sLogger)( "fail to write IB header." );
+                    return false;
+                }
                 for( size_t ii = 0; ii < r.ibcount; ++ii )
                 {
                     UInt32 idx32 = ib[r.iboffset + ii];
@@ -1340,7 +1361,8 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
 
                     UInt16 idx16 = (UInt16)( idx32 - r.vboffset );
 
-                    if( !fib->write( &idx16, sizeof(idx16), 0 ) )
+                    if( !fib->write( &idx16, sizeof(idx16), &written ) ||
+                        2 != written )
                     {
                         GN_ERROR(sLogger)( "fail to write index %d", ii );
                         return false;

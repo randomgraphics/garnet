@@ -7,7 +7,8 @@
 		<effect ref="media::/effect/diffuse_textured.xml"/>
 		<mesh ref="cube.mesh.xml"/>
 		<texture binding="texdiff" ref="media::/texture/rockwall.jpg"/>
-		<texture binding="texbump" ref=""/>
+		<texture binding="texheight" ref="media::/texture/rockwall_height.jpg"/>
+		<texture binding="texnormal" ref="media::/texture/rockwall_normal.jpg"/>
 		<uniform binding="diffuse" type="VECTOR4" count="1">1.0f, 1.0f, 1.0f, 1.0f</uniform>
 	</drawable>
 </actor>

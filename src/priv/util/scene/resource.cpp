@@ -216,6 +216,8 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
 
     using namespace GN;
 
+    GN_INFO(sLogger)( "Load '%s'", name.cptr() );
+
     // check for global renderer
     if( 0 == gRendererPtr )
     {
@@ -610,7 +612,6 @@ GN::scene::ResourceManager::getResourceImpl( ResourceId id )
         GN_ASSERT( rtd.creator && rtd.deletor );
 
         // recreate the resource
-        GN_INFO(sLogger)( "Load %s '%s'", rtd.type.cptr(), desc->name.cptr() );
         desc->data = rtd.creator( desc->name );
 
         // receation failed, fallback to null resource

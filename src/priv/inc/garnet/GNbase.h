@@ -29,6 +29,9 @@ namespace GN
 // standard numeric types
 #include "base/numeric.h"
 
+// endian routine
+#include "base/endian.h"
+
 // type traits
 #include "base/typeTraits.h"
 

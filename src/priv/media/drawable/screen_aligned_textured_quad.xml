@@ -1,7 +1,0 @@
-<?xml version="1.0" standalone="yes"?>
-<drawable>
-	<effect ref="media::/effect/screen_aligned_textured_quad.xml"/>
-	<mesh ref="../mesh/quad.xml"/>
-	<texture binding="tex"/>
-	<uniform binding="rect"/>
-</drawable>
