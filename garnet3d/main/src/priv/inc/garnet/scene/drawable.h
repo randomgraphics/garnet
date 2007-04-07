@@ -128,6 +128,7 @@ namespace GN { namespace scene
             BindTexture( gfx::Effect * eff_ ) : eff(eff_) {}
             void operator()( const std::pair<StrA,TexItem> & i ) const
             {
+                GN_ASSERT( i.second.binding );
                 eff->setTexture(
                     i.second.binding,
                     gSceneResMgr.getResourceT<gfx::Texture>(i.second.texid) );
@@ -140,6 +141,7 @@ namespace GN { namespace scene
             BindUniform( gfx::Effect * eff_ ) : eff(eff_) {}
             void operator()( const std::pair<StrA,UniItem> & i ) const
             {
+                GN_ASSERT( i.second.binding );
                 eff->setUniform( i.second.binding, i.second.value );
             }
         };
