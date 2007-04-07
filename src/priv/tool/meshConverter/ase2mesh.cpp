@@ -1516,10 +1516,10 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
                     "		<effect ref=\"media::/effect/%s.xml\"/>\n"
                     "		<mesh ref=\"%s\"/>\n"
                     "		<texture binding=\"texdiff\" ref=\"%s\"/>\n"
-                    "		<texture binding=\"texbump\" ref=\"%s\"/>\n"
+                    "		<texture binding=\"texheight\" ref=\"%s\"/>\n"
                     "		<uniform binding=\"diffuse\" type=\"VECTOR4\" count=\"1\">%f, %f, %f, 1.0f</uniform>\n"
                     "	</drawable>\n",
-                    mtl.mapbump.bitmap.empty() ? "diffuse_textured" : "bump_textured",
+                    "diffuse_textured",
                     relPath( meshname, outdir ).cptr(),
                     mtl.mapdiff.bitmap.empty() ? "media::/texture/purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
                     relPath( mtl.mapbump.bitmap, outdir ).cptr(),

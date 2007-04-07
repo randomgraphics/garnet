@@ -727,11 +727,11 @@ bool GN::gfx::Effect::createShader( ShaderData & data, const StrA & name, const 
 
             if( 0 == urd.shaderUniformHandle )
             {
-                GN_ERROR(sLogger)( "Uniform(%s)到Shader(%s)的绑定(%s)无效.",
+                GN_ERROR(sLogger)( "Uniform(%s)到Shader(%s)的绑定(%s)无效. Ignored.",
                     uniName.cptr(),
                     name.cptr(),
                     uniBinding.cptr() );
-                return false;
+                continue;
             }
         }
 

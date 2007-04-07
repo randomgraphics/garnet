@@ -112,11 +112,11 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
 //
 //
 // -----------------------------------------------------------------------------
-static bool sParseTexDescFromXml(
-    gfx::TextureDesc & desc, File & fp, const StrA & /*dirname*/ )
+static gfx::Texture * sCreateTextureFromXml( File & fp, const StrA & dirname )
 {
     GN_GUARD;
 
+    // parse texture definition
     XmlDocument doc;
     XmlParseResult xpr;
     if( !doc.parse( xpr, fp ) )
@@ -146,36 +146,7 @@ static bool sParseTexDescFromXml(
         return false;
     }
 
-    StrA s;
-
-    // get texture dimension
-    if( !sGetStringAttrib( *e, "dim", s ) ) return false;
-    if( !str2TexDim( desc.dim, s.cptr() ) )
-    {
-        GN_ERROR(sLogger)( "invalid texture dimension: %s", s.cptr() );
-        return false;
-    }
-
-    // get texture size
-    if( !sGetIntAttrib( *e, "faces" , desc.faces  ) ) return false;
-    if( !sGetIntAttrib( *e, "width" , desc.width  ) ) return false;
-    if( !sGetIntAttrib( *e, "height", desc.height ) ) return false;
-    if( !sGetIntAttrib( *e, "depth" , desc.depth  ) ) return false;
-    if( !sGetIntAttrib( *e, "levels", desc.levels ) ) return false;
-
-    // get texture format, optional, default is FMT_DEFAULT
-    if( sGetStringAttrib( *e, "format", s, true ) )
-    {
-        if( !str2ClrFmt( desc.format, s ) )
-        {
-            GN_ERROR(sLogger)( "invalid texture format: %s", s.cptr() );
-            return false;
-        }
-    }
-    else
-    {
-        desc.format = FMT_DEFAULT;
-    }
+    gfx::TextureDesc desc;
 
     // get texture usages
     desc.usage.u32          = 0;
@@ -186,23 +157,50 @@ static bool sParseTexDescFromXml(
     desc.usage.readback     = sGetBoolAttrib( *e, "readback" );
     desc.usage.tiled        = sGetBoolAttrib( *e, "tiled" );
 
-    // success
-    return true;
+    const XmlAttrib * ref = e->findAttrib( "ref" );
+    if( ref )
+    {
+        StrA texname;
+        core::resolvePath( texname, dirname, ref->value );
+        AutoObjPtr<File> texfile( core::openFile( texname, "rb" ) );
+        if( !texfile ) return 0;
+        return createTextureFromFile( *texfile, desc.usage.u32 );
+    }
+    else
+    {
+        StrA s;
 
-    GN_UNGUARD;
-}
+        // get texture dimension
+        if( !sGetStringAttrib( *e, "dim", s ) ) return false;
+        if( !str2TexDim( desc.dim, s.cptr() ) )
+        {
+            GN_ERROR(sLogger)( "invalid texture dimension: %s", s.cptr() );
+            return false;
+        }
 
+        // get texture size
+        if( !sGetIntAttrib( *e, "faces" , desc.faces  ) ) return false;
+        if( !sGetIntAttrib( *e, "width" , desc.width  ) ) return false;
+        if( !sGetIntAttrib( *e, "height", desc.height ) ) return false;
+        if( !sGetIntAttrib( *e, "depth" , desc.depth  ) ) return false;
+        if( !sGetIntAttrib( *e, "levels", desc.levels ) ) return false;
 
-//
-//
-// -----------------------------------------------------------------------------
-static gfx::Texture * sCreateTextureFromXml( File & fp, const StrA & dirname )
-{
-    GN_GUARD;
+        // get texture format, optional, default is FMT_DEFAULT
+        if( sGetStringAttrib( *e, "format", s, true ) )
+        {
+            if( !str2ClrFmt( desc.format, s ) )
+            {
+                GN_ERROR(sLogger)( "invalid texture format: %s", s.cptr() );
+                return false;
+            }
+        }
+        else
+        {
+            desc.format = FMT_DEFAULT;
+        }
 
-    gfx::TextureDesc desc;
-    if( !sParseTexDescFromXml( desc, fp, dirname ) ) return false;
-    return gRenderer.createTexture( desc );
+        return gRenderer.createTexture( desc );
+    }
 
     GN_UNGUARD;
 }
@@ -660,7 +658,7 @@ void GN::scene::ResourceManager::resolveName( StrA & out, const StrA & in ) cons
 //
 //
 // -----------------------------------------------------------------------------
-GN::StrA GN::scene::ResourceManager::determineResourceType( const StrA & name ) const
+const GN::StrA & GN::scene::ResourceManager::determineResourceType( const StrA & name ) const
 {
     static const StrA & texture("texture");
     static const StrA & effect("effect");

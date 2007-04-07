@@ -226,6 +226,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
         { 0, "-msaa",  SO_NONE    },
         { 0, "-sw",    SO_NONE    },
         { 0, "-pure",  SO_NONE    },
+        { 0, "-vsync", SO_NONE    },
         { 0, "-m",     SO_REQ_SEP }, // specify monitor index
         { 0, "-di",    SO_NONE    },
         { 0, "-le",    SO_REQ_SEP }, // enable logger

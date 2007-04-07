@@ -6,6 +6,31 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.d3d9ShaderUtils");
 //
 //
 // -----------------------------------------------------------------------------
+static GN::StrA sAddLineCount( const GN::StrA & in )
+{
+    using namespace GN;
+
+    GN::StrA out( "(  1) : " );
+
+    int line = 1;
+    for( const char * s = in.cptr(); *s; ++s )
+    {
+        if( '\n' == *s )
+        {
+            out.append( strFormat( "\n(%3d) : ", ++line ) );
+        }
+        else
+        {
+            out.append( *s );
+        }
+    }
+
+    return out;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 static UInt32 sRefineFlags( UInt32 flags )
 {
 #if GN_DEBUG_BUILD
@@ -29,7 +54,7 @@ static void sPrintShaderCompileError( HRESULT hr, const char * code, LPD3DXBUFFE
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        code ? code : "Shader code: <EMPTY>",
+        code ? sAddLineCount(code).cptr() : "Shader code: <EMPTY>",
         hr, DXGetErrorDescription9A(hr),
         err ? (const char*)err->GetBufferPointer() : "Error: <EMPTY>" );
 

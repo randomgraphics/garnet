@@ -130,7 +130,7 @@ namespace GN { namespace scene
     private :
 
         BaseResource * getResourceImpl( ResourceId );
-        StrA determineResourceType( const StrA & name ) const;
+        const StrA & determineResourceType( const StrA & name ) const;
         void resolveName( StrA & out, const StrA & in ) const;
         void onRendererDispose();
     };

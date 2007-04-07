@@ -28,22 +28,12 @@ static const StrA & sGetStringAttrib( const XmlElement & node, const char * attr
 //
 //
 // -----------------------------------------------------------------------------
-static ResourceId sLoadReference(
-    const XmlElement & node,
-    const StrA & basedir,
-    const StrA & name )
+static ResourceId sLoadRefAttrib( const XmlElement & node, const StrA & basedir, bool optional = false )
 {
-    const XmlElement * e = node.findChildElement( name );
-    if( !e )
-    {
-        GN_ERROR(sLogger)( "%s node is missing", name.cptr() );
-        return 0;
-    }
-
-    const StrA & ref = sGetStringAttrib( *e, "ref" );
+    const StrA & ref = sGetStringAttrib( node, "ref" );
     if( ref.empty() )
     {
-        GN_ERROR(sLogger)( "ref attribute of %s node is missing.", name.cptr() );
+        if( !optional ) GN_ERROR(sLogger)( "ref attribute of %s node is missing.", node.name.cptr() );
         return 0;
     }
 
@@ -52,12 +42,31 @@ static ResourceId sLoadReference(
     ResourceId id = rm.getResourceId( core::resolvePath( basedir, ref ) );
     if( 0 == id )
     {
-        GN_ERROR(sLogger)( "Invalid referencing to %s '%s'.", name.cptr(), ref.cptr() );
+        GN_ERROR(sLogger)( "Invalid referencing to %s '%s'.", node.name.cptr(), ref.cptr() );
         return 0;
     }
 
     // sucess
     return id;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static ResourceId sLoadRefElement(
+    const XmlElement & node,
+    const StrA & basedir,
+    const StrA & name )
+{
+    const XmlElement * e = node.findChildElement( name );
+
+    if( !e )
+    {
+        GN_ERROR(sLogger)( "%s node is missing", name.cptr() );
+        return 0;
+    }
+
+    return sLoadRefAttrib( *e, basedir );
 }
 
 // *****************************************************************************
@@ -85,11 +94,11 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
     ResourceManager & rm = gSceneResMgr;
 
     // load mesh
-    mesh = sLoadReference( *eroot, basedir, "mesh" );
+    mesh = sLoadRefElement( *eroot, basedir, "mesh" );
     if( 0 == mesh ) return false;
 
     // load effect
-    effect = sLoadReference( *eroot, basedir, "effect" );
+    effect = sLoadRefElement( *eroot, basedir, "effect" );
     if( 0 == effect ) return false;
     gfx::Effect * effptr = rm.getResourceT<gfx::Effect>( effect );
     if( 0 == effptr ) return false;
@@ -114,21 +123,14 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
             {
                 GN_ASSERT( binding );
 
-                ResourceId id;
-                if( e->findAttrib( "ref" ) )
+                ResourceId id = sLoadRefAttrib( *e, basedir, true );
+                if( id )
                 {
-                    id = sLoadReference( *eroot, basedir, "texture" );
-                    if( 0 == id ) continue;
+                    // add to texture array
+                    TexItem & ti = textures[bindingstr];
+                    ti.binding = binding;
+                    ti.texid = id;
                 }
-                else
-                {
-                    id = 0;
-                }
-
-                // add to texture array
-                TexItem & ti = textures[bindingstr];
-                ti.binding = binding;
-                ti.texid = id;
             }
             else
             {
