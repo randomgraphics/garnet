@@ -217,10 +217,10 @@ namespace GN { namespace scene
 
         size_t              getNumDrawables() const { return mDrawables.size(); }
         const Drawable    & getDrawable( size_t i ) const { return mDrawables[i]; }
-        Actor             * getParent() const { return (Actor*)((UInt8*)mNode.getParent() - GN_FIELD_OFFSET(Actor,mNode)); }
-        Actor             * getPrev() const  { return (Actor*)((UInt8*)mNode.getPrev() - GN_FIELD_OFFSET(Actor,mNode)); }
-        Actor             * getNext() const  { return (Actor*)((UInt8*)mNode.getNext() - GN_FIELD_OFFSET(Actor,mNode)); }
-        Actor             * getChild() const  { return (Actor*)((UInt8*)mNode.getChild() - GN_FIELD_OFFSET(Actor,mNode)); }
+        Actor             * getParent() const { return node2actor( mNode.getParent() ); }
+        Actor             * getPrev() const  { return node2actor( mNode.getPrev() ); }
+        Actor             * getNext() const  { return node2actor( mNode.getNext() ); }
+        Actor             * getChild() const  { return node2actor( mNode.getChild() ); }
         const Vector3f    & getPosition() const { return mPosition; }
         const Vector3f    & getPivot() const { return mPivot; }
         const Quaternionf & getRotation() const { return mRotation; }
@@ -241,8 +241,20 @@ namespace GN { namespace scene
     private:
 
         void calcTransform();
+
+        static inline Actor * node2actor( TreeNode<Actor> * n )
+        {
+            return n ? (Actor*)((UInt8*)n - GN_FIELD_OFFSET(Actor,mNode)) : 0;
+        }
+
+        static inline TreeNode<Actor> * actor2node( Actor * a )
+        {
+            return a ? (TreeNode<Actor>*)((UInt8*)a + GN_FIELD_OFFSET(Actor,mNode)) : 0;
+        }
     };
 }}
+
+#include "actor.inl"
 
 // *****************************************************************************
 //                           End of actor.h

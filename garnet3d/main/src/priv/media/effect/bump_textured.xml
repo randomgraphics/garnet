@@ -19,38 +19,33 @@
                 </token>
             </prerequisites>
             <uniref binding="pvw" ref="pvw"/>
-            <uniref binding="invworld" ref="invworld"/>
-            <uniref binding="light0_pos" ref="light0_pos"/>
             <code lang="D3D_HLSL" hints="...">
 <![CDATA[
 struct vsinput
 {
 	float4 pos : POSITION;
 	float3 nrm : NORMAL;
+	float3 tan : TANGENT;
 	float2 tex : TEXCOORD0;
 };
 struct vsoutput
 {
-	float4 pos  : POSITION;
-	float4 nrm  : TEXCOORD0; // xyz: normal in object space;          w : texcoord.u
-	float4 lpos : TEXCOORD1; // xyz: light direction in object space; w : texcoord.v
+	float4 hpos : POSITION;
+	float4 nrm  : TEXCOORD0; // xyz: normal in object space;  w : texcoord.u
+	float4 tan  : TEXCOORD1; // xyz: tangent in object space; w : texcoord.v
+	float3 opos : TEXCOORD2; // xyz: position in object space
 };
 uniform float4x4 pvw;
-uniform float4x4 invworld;
-uniform float4   light0_pos; // light position in world space
 vsoutput main( vsinput vi )
 {
 	vsoutput vo;
 
-	// get light direction in object space
-	float3 lightpos_os = mul( invworld, light0_pos );
-	float3 lightdir_os = lightpos_os - vi.pos.xyz;
-
-	vo.pos      = mul( pvw, vi.pos );
+	vo.hpos     = mul( pvw, vi.pos );
 	vo.nrm.xyz  = vi.nrm;
 	vo.nrm.w    = vi.tex.x;
-	vo.lpos.xyz = lightdir_os;
-	vo.lpos.w   = vi.tex.y;
+	vo.tan.xyz  = vi.tan;
+	vo.tan.w    = vi.tex.y;
+	vo.opos     = vi.pos.xyz;
 
 	return vo;
 }
@@ -64,25 +59,148 @@ vsoutput main( vsinput vi )
                     <token type="values" value="ps_1_4"/>
                 </token>
             </prerequisites>
+            <uniref binding="invworld" ref="invworld"/>
+            <uniref binding="light0_pos" ref="light0_pos"/>
             <texref stage="0" ref="texdiff"/>
             <texref stage="1" ref="texnormal"/>
             <code lang="D3D_HLSL">
 <![CDATA[
 struct vsoutput
 {
-	float4 nrm  : TEXCOORD0; // xyz: normal in object space;          w: texcoord.u
-	float4 lpos : TEXCOORD1; // xyz: light position in object space; w : texcoord.v
+	float4 nrm : TEXCOORD0; // xyz: normal in object space;  w : texcoord.u
+	float4 tan : TEXCOORD1; // xyz: tangent in object space; w : texcoord.v
+	float3 pos : TEXCOORD2; // xyz: position in object space
 };
+uniform float4x4 invworld;
+uniform float4   light0_pos; // light position in world space
 sampler texdiff : register(s0);
 sampler texnormal : register(s1);
 float4 main( vsoutput vi ) : COLOR0
 {
-	float diffuse = clamp( dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) ), 0, 1 );
-	float lighting = diffuse + 0.2;
+	// compose tangent space matrix ( object space -> tangent space )
+	float3 T = normalize( vi.tan.xyz );
+	float3 N = normalize( vi.nrm.xyz );
+	float3 N2 = cross( T, N );
+	float3x3 obj2tan = { T, N2, N };
+		//float4( T, 0 ),
+		//float4( N2, 0 ),
+		//float4( N, 0 ),
+		//float4( 0, 0, 0, 1 ) };
 
-	float4 tex = tex2D( texdiff, float2( vi.nrm.w, vi.lpos.w ) );
+	// get light direction in tangent space
+	float3 lightpos_os = mul( invworld, light0_pos );
+	float3 lightdir_os = lightpos_os - vi.pos.xyz;
+	float3 lightdir_ts = normalize( mul( obj2tan, lightdir_os ) );
 
-	return tex * lighting;
+	float2 uv = { vi.nrm.w, vi.tan.w };
+
+	// get normal from normal map
+	float3 normal = tex2D( texnormal, uv ).xyz * 2 - 1;
+
+	// do diffuse lighting
+	float diffuse = clamp( dot( normal, lightdir_ts ), 0, 1 ) + 0.02;
+
+	float4 tex = tex2D( texdiff, uv );
+
+	return tex * diffuse;
+}
+]]>
+            </code>
+        </shader>
+
+        <!-- Cg shaders -->
+
+        <shader name="cgvs" type="VS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="cgvs"/>
+                </token>
+            </prerequisites>
+            <uniref binding="pvw" ref="pvw"/>
+            <code lang="CG" hints="...">
+<![CDATA[
+struct vsinput
+{
+	float4 pos : POSITION;
+	float3 nrm : NORMAL;
+	float3 tan : TANGENT;
+	float2 tex : TEXCOORD0;
+};
+struct vsoutput
+{
+	float4 hpos : POSITION;
+	float4 nrm  : TEXCOORD0; // xyz: normal in object space;  w : texcoord.u
+	float4 tan  : TEXCOORD1; // xyz: tangent in object space; w : texcoord.v
+	float3 opos : TEXCOORD2; // xyz: position in object space
+};
+uniform float4x4 pvw;
+vsoutput main( vsinput vi )
+{
+	vsoutput vo;
+
+	vo.hpos     = mul( pvw, vi.pos );
+	vo.nrm.xyz  = vi.nrm;
+	vo.nrm.w    = vi.tex.x;
+	vo.tan.xyz  = vi.tan;
+	vo.tan.w    = vi.tex.y;
+	vo.opos     = vi.pos.xyz;
+
+	return vo;
+}
+]]>
+            </code>
+        </shader>
+
+        <shader name="cgps" type="PS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="cgps"/>
+                </token>
+            </prerequisites>
+            <uniref binding="invworld" ref="invworld"/>
+            <uniref binding="light0_pos" ref="light0_pos"/>
+            <texref stage="0" ref="texdiff"/>
+            <texref stage="1" ref="texnormal"/>
+            <code lang="CG">
+<![CDATA[
+struct vsoutput
+{
+	float4 nrm : TEXCOORD0; // xyz: normal in object space;  w : texcoord.u
+	float4 tan : TEXCOORD1; // xyz: tangent in object space; w : texcoord.v
+	float3 pos : TEXCOORD2; // xyz: position in object space
+};
+uniform float4x4 invworld;
+uniform float4   light0_pos; // light position in world space
+sampler texdiff : register(s0);
+sampler texnormal : register(s1);
+float4 main( vsoutput vi ) : COLOR0
+{
+	// compose tangent space matrix ( object space -> tangent space )
+	float3 T = normalize( vi.tan.xyz );
+	float3 N = normalize( vi.nrm.xyz );
+	float3 N2 = cross( T, N );
+	float3x3 obj2tan = { T, N2, N };
+		//float4( T, 0 ),
+		//float4( N2, 0 ),
+		//float4( N, 0 ),
+		//float4( 0, 0, 0, 1 ) };
+
+	// get light direction in tangent space
+	float3 lightpos_os = mul( invworld, light0_pos );
+	float3 lightdir_os = lightpos_os - vi.pos.xyz;
+	float3 lightdir_ts = normalize( mul( obj2tan, lightdir_os ) );
+
+	float2 uv = { vi.nrm.w, vi.tan.w };
+
+	// get normal from normal map
+	float3 normal = tex2D( texnormal, uv ).xyz * 2 - 1;
+
+	// do diffuse lighting
+	float diffuse = clamp( dot( normal, lightdir_ts ), 0, 1 ) + 0.02;
+
+	float4 tex = tex2D( texdiff, uv );
+
+	return tex * diffuse;
 }
 ]]>
             </code>
@@ -98,6 +216,12 @@ float4 main( vsoutput vi ) : COLOR0
     <techniques>
         <technique name="d3d">
             <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+        </technique>
+        <technique name="cg">
+        	<rsb
+        		CULL_MODE="CULL_NONE"
+        	/>
+            <pass vs="cgvs" ps="cgps" gs="fixgs"/>
         </technique>
         <technique name="ffp">
             <pass vs="fixvs" ps="fixps" gs="fixgs"/>

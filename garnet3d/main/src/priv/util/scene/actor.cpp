@@ -301,6 +301,19 @@ void GN::scene::Actor::calcTransform()
     t2.translate( -mPivot );
 
     mLocal2Parent =  t1 * r4 * t2;
+    mParent2Local = Matrix44f::sInverse( mLocal2Parent );
+
+    Actor * p = getParent();
+    if( p )
+    {
+        mLocal2Root = p->getLocal2Root() * mLocal2Parent;
+        mRoot2Local = Matrix44f::sInverse( mLocal2Root );
+    }
+    else
+    {
+        mLocal2Root = mLocal2Parent;
+        mRoot2Local = mParent2Local;
+    }
 
     mTransformDirty = false;
 }

@@ -294,7 +294,8 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
             ab.info.normalization = false;
             break;
 
-        case GN::gfx::FMT_D3DCOLOR :;
+        case GN::gfx::FMT_D3DCOLOR :
+            GN_DO_ONCE( GN_ERROR(sLogger)( "Here is an BGRA->RGBA bug." ) );
             ab.info.format = GL_UNSIGNED_BYTE;
             ab.info.components = 4;
             ab.info.normalization = true;

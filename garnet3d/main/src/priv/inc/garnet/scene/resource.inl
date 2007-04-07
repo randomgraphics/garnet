@@ -40,7 +40,7 @@ GN::scene::ResourceManager::getResourceId( const StrA & name )
 
     if( mResourceNames.end() == i )
     {
-        StrA type = determineResourceType( realname );
+        const StrA & type = determineResourceType( realname );
         if( type.empty() )
         {
             GN_ERROR(sLogger)( "invalid resource name: %s", name.cptr() );
