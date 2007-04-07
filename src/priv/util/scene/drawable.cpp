@@ -124,13 +124,11 @@ bool GN::scene::Drawable::loadFromXmlNode( const XmlNode & root, const StrA & ba
                 GN_ASSERT( binding );
 
                 ResourceId id = sLoadRefAttrib( *e, basedir, true );
-                if( id )
-                {
-                    // add to texture array
-                    TexItem & ti = textures[bindingstr];
-                    ti.binding = binding;
-                    ti.texid = id;
-                }
+
+                // add to texture array
+                TexItem & ti = textures[bindingstr];
+                ti.binding = binding;
+                ti.texid = id;
             }
             else
             {
