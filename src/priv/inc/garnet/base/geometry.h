@@ -1706,11 +1706,17 @@ namespace GN
             return result;
         }
 
+        ///
+        /// equality
+        ///
         friend bool operator == ( const Quaternion & a, const Quaternion & b )
         {
             return a.w == b.w && a.v == b.v;
         }
 
+        ///
+        /// equality
+        ///
         friend bool operator != ( const Quaternion & a, const Quaternion & b )
         {
             return a.w != b.w || a.v != b.v;
