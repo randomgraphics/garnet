@@ -1,3 +1,11 @@
+- 2007.4.8
+  - add portable threading interface
+    - why not use exising portable framework (like apr, boost, wxWidgets, Qt and etc...):
+      - They are too huge and complex. Only tiny part of the  functionalies they provide
+        are truly useful for us, like portable threading and network.
+      - As a game library, portablity should also include game consoles, like 
+        xbox and ps2/3. But those frameworks are for PC only.
+
 - 2007.4.5
   - generate tangent vectors in createBox()
   - add endian swap defines and routines
