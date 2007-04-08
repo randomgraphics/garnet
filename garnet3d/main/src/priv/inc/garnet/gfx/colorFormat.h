@@ -30,7 +30,6 @@ namespace GN { namespace gfx
 
         FMT_RGBA32      = FMT_RGBA_8_8_8_8_UNORM,
         FMT_BGRA32      = FMT_BGRA_8_8_8_8_UNORM,
-        FMT_D3DCOLOR    = FMT_BGRA_8_8_8_8_UNORM,
 
         FMT_DXT_FIRST   = FMT_DXT1,
         FMT_DXT_LAST    = FMT_DXT5,
@@ -206,10 +205,10 @@ namespace GN { namespace gfx
         return fmt;
     }
 
+    /*//
+    /// compose RGBA32 from 4 unsigned bytes.
     ///
-    /// compose RGBA32 color value from 4 unsigned bytes.
-    ///
-    GN_FORCE_INLINE UInt32 ubyte4ToRGBA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
+    GN_FORCE_INLINE UInt32 rgba32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
     {
         return
             ( (UInt32)r <<  0 ) |
@@ -219,50 +218,35 @@ namespace GN { namespace gfx
     }
 
     ///
-    /// compose BGRA32/D3DCOLOR color value from 4 unsigned bytes.
+    /// compose RGBA32 from 4 floats
     ///
-    GN_FORCE_INLINE UInt32 ubyte4ToBGRA32( UInt8 r, UInt8 g, UInt8 b, UInt8 a )
-    {
-        return
-            ( (UInt32)b <<  0 ) |
-            ( (UInt32)g <<  8 ) |
-            ( (UInt32)r << 16 ) |
-            ( (UInt32)a << 24 );
-    }
-
-    ///
-    /// convert 4 floats to RGBA32
-    ///
-    GN_FORCE_INLINE UInt32 float4ToRGBA32( const Vector4f & color )
+    GN_FORCE_INLINE UInt32 rgba32( const Vector4f & color )
     {
         return
             ( (UInt32)(color.r*255.0f) <<  0 ) |
             ( (UInt32)(color.g*255.0f) <<  8 ) |
             ( (UInt32)(color.b*255.0f) << 16 ) |
             ( (UInt32)(color.a*255.0f) << 24 );
-    }
-
-    ///
-    /// convert 4 floats to BGRA32
-    ///
-    GN_FORCE_INLINE UInt32 float4ToBGRA32( const Vector4f & color )
-    {
-        return
-            ( (UInt32)(color.b*255.0f) <<  0 ) |
-            ( (UInt32)(color.g*255.0f) <<  8 ) |
-            ( (UInt32)(color.r*255.0f) << 16 ) |
-            ( (UInt32)(color.a*255.0f) << 24 );
-    }
+    }*/
 }}
+
+///
+/// compose RGBA32 color constant
+///
+#define GN_RGBA32( r, g, b, a )   \
+        ( ( (UInt32)(r) <<  0 ) | \
+          ( (UInt32)(g) <<  8 ) | \
+          ( (UInt32)(b) << 16 ) | \
+          ( (UInt32)(a) << 24 ) )
 
 ///
 /// compose BGRA32 color constant
 ///
-#define GN_BGRA32( b, g, r, a )   \
-        ( ( (UInt32)b <<  0 ) | \
-          ( (UInt32)g <<  8 ) | \
-          ( (UInt32)r << 16 ) | \
-          ( (UInt32)a << 24 ) )
+#define GN_BGRA32( r, g, b, a )   \
+        ( ( (UInt32)(b) <<  0 ) | \
+          ( (UInt32)(g) <<  8 ) | \
+          ( (UInt32)(r) << 16 ) | \
+          ( (UInt32)(a) << 24 ) )
 
 // *****************************************************************************
 //                           End of colorFormat.h

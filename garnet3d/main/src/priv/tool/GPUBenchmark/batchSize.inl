@@ -152,7 +152,7 @@ public:
         }
 
         // draw text
-        gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_BGRA32(0,0,255,255) );
+        gAsciiFont.drawText( mInfo.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     void BasicTestCase::onkey( GN::input::KeyEvent key )

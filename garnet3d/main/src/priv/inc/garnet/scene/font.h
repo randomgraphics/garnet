@@ -25,7 +25,7 @@ namespace GN { namespace scene
         ///
         /// Draw ASCII string. [0,0] is left top corner of the screen.
         ///
-        void drawText( const char * text, int x, int y, UInt32 bgra = 0xFFFFFFFF );
+        void drawText( const char * text, int x, int y, UInt32 rgba = 0xFFFFFFFF );
 
         // ********************************
         // private variables
@@ -139,7 +139,7 @@ namespace GN { namespace scene
         float           x;          ///< position of top-left corner of the first character
         float           y;          ///< position of top-left corner of the first character
         float           z;          ///< position of top-left corner of the first character
-        UInt32          bgra;       ///< text color in B-G-R-A format.
+        UInt32          rgba;       ///< text color in R-G-B-A format.
         bool            background; ///< draw background
         bool            kerning;    ///< enable text kerning
     };
@@ -209,7 +209,7 @@ namespace GN { namespace scene
             td.x = x;
             td.y = y;
             td.z = 0;
-            td.bgra = 0xFFFFFFFF;
+            td.rgba = 0xFFFFFFFF;
             td.background = true;
             drawText( td );
         }

@@ -107,7 +107,6 @@ static inline D3DDECLTYPE sClrFmt2D3D( GN::gfx::ClrFmt fmt )
         case GN::gfx::FMT_FLOAT2    : return D3DDECLTYPE_FLOAT2;
         case GN::gfx::FMT_FLOAT3    : return D3DDECLTYPE_FLOAT3;
         case GN::gfx::FMT_FLOAT4    : return D3DDECLTYPE_FLOAT4;
-        case GN::gfx::FMT_D3DCOLOR  : return D3DDECLTYPE_D3DCOLOR;
         case GN::gfx::FMT_SHORT2    : return D3DDECLTYPE_SHORT2;
         case GN::gfx::FMT_UBYTE4N   : return D3DDECLTYPE_UBYTE4N;
         case GN::gfx::FMT_SHORT2N   : return D3DDECLTYPE_SHORT2N;

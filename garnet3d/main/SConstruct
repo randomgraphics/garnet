@@ -1047,11 +1047,11 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNrndrOGL',
 		    ]
 		tests = [
+		    'GNtestCegui',
 		    'GNtestD3D9',
 		    'GNtestD3D10',
 		    'GNtestFt2',
 		    'GNtestGfx',
-		    'GNtestGui',
 		    'GNtestInput',
 		    'GNtestOGL',
 		    'GNtestPcre',

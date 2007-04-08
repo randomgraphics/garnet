@@ -1,20 +1,10 @@
 #ifndef __GN_TEST_CEGUIAPP_H__
 #define __GN_TEST_CEGUIAPP_H__
 // *****************************************************************************
-/// \file    gui/ceguiApp.h
+/// \file    cegui/ceguiApp.h
 /// \brief   CEGUI test application
 /// \author  chenlee (2006.2.25)
 // *****************************************************************************
-
-// Link to CEGUI libraries
-#if GN_MSVC
-#if GN_DEBUG_BUILD && CEGUI_LOAD_MODULE_APPEND_SUFFIX_FOR_DEBUG
-#define LIBNAME( X ) X CEGUI_LOAD_MODULE_DEBUG_SUFFIX ".lib"
-#else
-#define LIBNAME( X ) X ".lib"
-#endif
-#pragma comment( lib, LIBNAME( "CEGUIBase" ) ) 
-#endif
 
 using namespace GN;
 
@@ -55,7 +45,7 @@ public:
                 }
 
                 StrA name;
-                name.format( "c:/devel/cegui/datafiles/%s", filename.c_str() );
+                name.format( "d:/software/green/cegui/datafiles/%s", filename.c_str() );
 
                 DiskFile fp;
                 if( !fp.open( name, "rb" ) )

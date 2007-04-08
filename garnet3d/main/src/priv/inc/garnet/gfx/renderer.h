@@ -913,8 +913,8 @@ namespace GN { namespace gfx
         ///     stride of one vertex.
         /// \param count
         ///     Number of line segments (note: _NOT_ number of points)
-        /// \param color
-        ///     line color. in FMT_BGRA32 format.
+        /// \param rgba
+        ///     line color, in R-G-B-A format.
         /// \param model, view, proj
         ///     Transformation matrices. Ignored when using DL_WINDOW_SPACE.
         ///
@@ -923,7 +923,7 @@ namespace GN { namespace gfx
             const void * positions,
             size_t stride,
             size_t count,
-            UInt32 color,
+            UInt32 rgba,
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj ) = 0;

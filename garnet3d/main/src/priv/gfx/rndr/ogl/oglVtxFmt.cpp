@@ -270,39 +270,38 @@ bool GN::gfx::OGLVtxFmt::setupAttribBinding(
 
     switch ( desc.format )
     {
-        case GN::gfx::FMT_FLOAT1 :
+        case FMT_FLOAT1 :
             ab.info.format = GL_FLOAT;
             ab.info.components = 1;
             ab.info.normalization = false;
             break;
 
-        case GN::gfx::FMT_FLOAT2 :
+        case FMT_FLOAT2 :
             ab.info.format = GL_FLOAT;
             ab.info.components = 2;
             ab.info.normalization = false;
             break;
 
-        case GN::gfx::FMT_FLOAT3 :
+        case FMT_FLOAT3 :
             ab.info.format = GL_FLOAT;
             ab.info.components = 3;
             ab.info.normalization = false;
             break;
 
-        case GN::gfx::FMT_FLOAT4 :
+        case FMT_FLOAT4 :
             ab.info.format = GL_FLOAT;
             ab.info.components = 4;
             ab.info.normalization = false;
             break;
 
-        case GN::gfx::FMT_D3DCOLOR :
-            GN_DO_ONCE( GN_ERROR(sLogger)( "Here is an BGRA->RGBA bug." ) );
+        case FMT_RGBA32 :
             ab.info.format = GL_UNSIGNED_BYTE;
             ab.info.components = 4;
             ab.info.normalization = true;
             break;
 
         default:
-            GN_ERROR(sLogger)( "unsupport color format: %d", desc.format );
+            GN_ERROR(sLogger)( "unsupport color format: %s", clrFmt2Str(desc.format) );
             return false;
     }
 

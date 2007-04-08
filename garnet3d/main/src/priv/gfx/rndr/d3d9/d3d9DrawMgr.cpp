@@ -277,7 +277,7 @@ void GN::gfx::D3D9Renderer::drawLines(
     const void * positions,
     size_t stride,
     size_t count,
-    UInt32 color,
+    UInt32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -291,7 +291,7 @@ void GN::gfx::D3D9Renderer::drawLines(
     mLine->drawLines(
         options,
         (const float*)positions, stride,
-        count, color,
+        count, rgba,
         model, view, proj );
     PIXPERF_END_EVENT();
 

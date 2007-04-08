@@ -16,7 +16,7 @@ namespace GN { namespace scene
         struct QuadVertex
         {
             GN::Vector3f pos;
-            UInt32       clr; // color in B-G-R-A format
+            UInt32       clr; // color in R-G-B-A format
             GN::Vector2f tex;
             float        _[2]; // padding to 32 bytes
         };
@@ -120,7 +120,7 @@ namespace GN { namespace scene
         /// Note that [0,0] is upper left corner of the screen.
         ///
         void drawSolid(
-            UInt32 bgra = 0xFFFFFFFF,
+            UInt32 rgba = 0xFFFFFFFF,
             float z     = 0.0f,
             float x1    = 0.0f,
             float y1    = 0.0f,
@@ -140,16 +140,16 @@ namespace GN { namespace scene
             // fill vertex buffer
 
             mNextVtx[0].pos.set( x1, y1, z );
-            mNextVtx[0].clr = bgra;
+            mNextVtx[0].clr = rgba;
 
             mNextVtx[1].pos.set( x1, y2, z );
-            mNextVtx[1].clr = bgra;
+            mNextVtx[1].clr = rgba;
 
             mNextVtx[2].pos.set( x2, y2, z );
-            mNextVtx[2].clr = bgra;
+            mNextVtx[2].clr = rgba;
 
             mNextVtx[3].pos.set( x2, y1, z );
-            mNextVtx[3].clr = bgra;
+            mNextVtx[3].clr = rgba;
 
             // prepare for next quad
             mNextVtx += 4;
@@ -180,7 +180,7 @@ namespace GN { namespace scene
         }
 
         void drawSingleSolidQuad(
-            UInt32    color, // color in B-G-R-A format
+            UInt32    rgba, // color in R-G-B-A format
             BitFields options,
             float z  = 0.0f,
             float x1 = 0.0f,
@@ -189,7 +189,7 @@ namespace GN { namespace scene
             float y2 = 1.0f )
         {
             drawBegin( 0, options );
-            drawSolid( color, z, x1, y1, x2, y2 );
+            drawSolid( rgba, z, x1, y1, x2, y2 );
             drawEnd();
         }
 

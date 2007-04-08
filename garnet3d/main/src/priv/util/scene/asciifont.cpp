@@ -93,7 +93,7 @@ void GN::scene::AsciiFont::drawText( const char * text, int x, int y, UInt32 )
     Recti rc;
     sCalcBoundingRect( rc, text, x, y );
     qr.drawSingleSolidQuad(
-        ubyte4ToBGRA32( 0, 0, 0, 128 ),
+        GN_RGBA32( 0, 0, 0, 128 ),
         0, // option
         0, // z
         (float)( rc.x ) * sx,

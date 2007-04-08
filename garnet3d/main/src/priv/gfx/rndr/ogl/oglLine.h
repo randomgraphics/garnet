@@ -58,7 +58,7 @@ namespace GN { namespace gfx
             const float * positions,
             size_t stride,
             size_t count,
-            UInt32 color,
+            UInt32 rgba,
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj );

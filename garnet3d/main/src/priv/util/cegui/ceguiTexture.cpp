@@ -4,7 +4,7 @@
 
 #ifdef HAS_CEGUI
 
-static GN::Logger * sLogger = GN::getLogger("GN.util.gui");
+static GN::Logger * sLogger = GN::getLogger("GN.util.cegui");
 
 // *****************************************************************************
 // from Renderer

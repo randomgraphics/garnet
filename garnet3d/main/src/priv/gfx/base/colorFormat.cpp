@@ -152,7 +152,6 @@ bool GN::gfx::str2ClrFmt( ClrFmt & fmt, const StrA & s )
 
     CHECK_ALIAS( FMT_RGBA32 );
     CHECK_ALIAS( FMT_BGRA32 );
-    CHECK_ALIAS( FMT_D3DCOLOR );
 
     CHECK_ALIAS( FMT_DXT_FIRST );
     CHECK_ALIAS( FMT_DXT_LAST );

@@ -6,12 +6,7 @@
 
 // link to CEGUI libraries
 #if GN_MSVC
-#if GN_DEBUG_BUILD && defined(CEGUI_LOAD_MODULE_APPEND_SUFFIX_FOR_DEBUG)
-#define LIBNAME(X) X CEGUI_LOAD_MODULE_DEBUG_SUFFIX ".lib"
-#else
-#define LIBNAME(X) X ".lib"
-#endif
-#pragma comment( lib, LIBNAME( "CEGUIbase" ) )
+#pragma comment( lib, "CEGUIbase.lib" )
 #endif
 
 // *****************************************************************************
@@ -31,27 +26,29 @@ void CEGUI::GarnetRenderer::addQuad(
 {
     GN_GUARD_SLOW;
 
-    float x0 = dest_rect.d_left;
-    float y0 = dest_rect.d_top;
-    float x1 = dest_rect.d_right;
-    float y1 = dest_rect.d_bottom;
+    // get screen size
+    const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+
+    float x0 = dest_rect.d_left / dd.width;
+    float y0 = dest_rect.d_top / dd.height;
+    float x1 = dest_rect.d_right / dd.width;
+    float y1 = dest_rect.d_bottom / dd.height;
     float u0 = texture_rect.d_left;
     float v0 = texture_rect.d_top;
     float u1 = texture_rect.d_right;
     float v1 = texture_rect.d_bottom;
-    UInt32 c0 = colours.d_top_left.getARGB();
-    UInt32 c1 = colours.d_top_right.getARGB();
-    UInt32 c2 = colours.d_bottom_right.getARGB();
-    UInt32 c3 = colours.d_bottom_left.getARGB();
+    UInt32 cx0 = colours.d_top_left.getARGB();
+    UInt32 cx1 = colours.d_top_right.getARGB();
+    UInt32 cy0 = colours.d_bottom_right.getARGB();
+    UInt32 cy1 = colours.d_bottom_left.getARGB();
 
     QuadDesc qd =
     {
-        {
-            { x0, y0, z, u0, v0, c0, tex },
-            { x1, y0, z, u1, v0, c1, tex },
-            { x1, y1, z, u1, v1, c2, tex },
-            { x0, y1, z, u0, v1, c3, tex },
-        }
+        (const GarnetTexture*)tex,
+        z,
+        x0 , y0 , x1 , y1 ,
+        u0 , v0 , u1 , v1 ,
+        cx0, cx1, cy0, cy1
     };
     if( mQueueEnabled ) mQuads.push_back( qd );
     else drawQuads( &qd, 1 );
@@ -253,63 +250,39 @@ void CEGUI::GarnetRenderer::onRendererDispose()
 //
 //
 // -----------------------------------------------------------------------------
-inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc *, size_t )
+inline void CEGUI::GarnetRenderer::drawQuads( const QuadDesc * quads, size_t count )
 {
-/*
     GN_GUARD_SLOW;
 
     GN::scene::QuadRenderer & qr = GN::scene::gQuadRenderer;
+    const QuadDesc * q   = quads;
+    const QuadDesc * end = quads + count;
 
-    const QuadDesc * start = quads;
+    const GarnetTexture * tex = q->tex;
 
-    qr.drawBegin(
-        start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
+    qr.drawBegin( tex ? tex->getGarnetTexture() : 0 );
 
-    while( count > 0 )
+    for( ; q <= end; ++q )
     {
-        if( quads->vertices[0].tex == start->vertices[0].tex )
+        if( q == end || q->tex != tex )
         {
-            ++quads;
-            --count;
-            continue;
+            // switch texture
+            qr.drawEnd();
+
+            if( q < end )
+            {
+                qr.drawBegin( q->tex ? q->tex->getGarnetTexture() : 0 );
+            }
+            else break;
         }
 
-        GN_ASSERT( quads > start );
-
-        // set texture
-        qr.drawSolid
-        r.setTexture(
-            0,
-            start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
-
-        // draw quads from start to quads (they have same texture)
-        r.drawQuads(
-            GN::gfx::DQ_WINDOW_SPACE,
-            &start->vertices[0].x, sizeof(QuadVertex),
-            &start->vertices[0].u, sizeof(QuadVertex),
-            &start->vertices[0].bgra, sizeof(QuadVertex),
-            quads - start );
-
-        start = quads;
-    }
-
-    // draw remaining quads
-    if( quads > start )
-    {
-        r.setTexture(
-            0,
-            start->vertices[0].tex ? ((const GarnetTexture *)start->vertices[0].tex)->getGarnetTexture() : 0 );
-
-        r.drawQuads(
-            GN::gfx::DQ_WINDOW_SPACE,
-            &start->vertices[0].x, sizeof(QuadVertex),
-            &start->vertices[0].u, sizeof(QuadVertex),
-            &start->vertices[0].bgra, sizeof(QuadVertex),
-            quads - start );
+        qr.drawTextured(
+            q->z,
+            q->x0, q->y0, q->x1, q->y1,
+            q->u0, q->v0, q->u1, q->v1 );
     }
 
     GN_UNGUARD_SLOW;
-*/
 }
 
 #endif
