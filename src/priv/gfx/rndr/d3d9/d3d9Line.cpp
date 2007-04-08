@@ -120,7 +120,7 @@ void GN::gfx::D3D9Line::deviceDispose()
 void GN::gfx::D3D9Line::drawLines(
     BitFields options,
     const float * positions, size_t stride,
-    size_t count, UInt32 color,
+    size_t count, UInt32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -145,7 +145,7 @@ void GN::gfx::D3D9Line::drawLines(
     {
         size_t n = MAX_LINES - mNextLine;
         GN_ASSERT( n > 0 );
-        drawLines( options, positions, stride, n, color, model, view, proj );
+        drawLines( options, positions, stride, n, rgba, model, view, proj );
         positions = (const float*)( ((const UInt8*)positions) + n * stride * 2 );
         count -= n;
     }
@@ -186,6 +186,12 @@ void GN::gfx::D3D9Line::drawLines(
     }
 #endif
 
+    UInt32 bgra =
+          ( (rgba)&0xFF000000) |
+          (((rgba)&0x00FF0000)>>16) |
+          ( (rgba)&0x0000FF00) |
+          (((rgba)&0x000000FF)<<16);
+
     if( (DL_WINDOW_SPACE & options) &&
        !(DL_USE_CURRENT_VS & options) )
     {
@@ -203,7 +209,7 @@ void GN::gfx::D3D9Line::drawLines(
         {
             D3D9LineVertex & v = vbData[i];
             v.p.set( positions[0]*scaleX+offsetX, positions[1]*scaleY+offsetY, positions[2] );
-            v.c = color;
+            v.c = bgra;
             positions = (const float*)( ((const UInt8*)positions) + stride );
         }
     }
@@ -213,7 +219,7 @@ void GN::gfx::D3D9Line::drawLines(
         {
             D3D9LineVertex & v = vbData[i];
             v.p.set( positions[0], positions[1], positions[2] );
-            v.c = color;
+            v.c = bgra;
             positions = (const float*)( ((const UInt8*)positions) + stride );
         }
     }

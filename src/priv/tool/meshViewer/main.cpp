@@ -115,9 +115,9 @@ public:
         static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
         const Matrix44f & world = mArcBall.getRotationMatrix44();
-        r.drawLines( 0, X, 3*sizeof(float), 1, 0xFFFF0000, world, mView, mProj );
-        r.drawLines( 0, Y, 3*sizeof(float), 1, 0xFF00FF00, world, mView, mProj );
-        r.drawLines( 0, Z, 3*sizeof(float), 1, 0xFF0000FF, world, mView, mProj );
+        r.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), world, mView, mProj );
+        r.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), world, mView, mProj );
+        r.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), world, mView, mProj );
 
         mActor.draw();
 

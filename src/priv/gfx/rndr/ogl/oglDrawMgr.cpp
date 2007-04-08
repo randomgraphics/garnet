@@ -461,7 +461,7 @@ void GN::gfx::OGLRenderer::drawLines(
     const void * positions,
     size_t stride,
     size_t count,
-    UInt32 color,
+    UInt32 rgba,
     const Matrix44f & model,
     const Matrix44f & view,
     const Matrix44f & proj )
@@ -472,7 +472,7 @@ void GN::gfx::OGLRenderer::drawLines(
     if( !(DL_USE_CURRENT_VS & options) ) setVS( 0 );
     if( !(DL_USE_CURRENT_PS & options) ) setPS( 0 );
     contextUpdateEnd();
-    mLine->drawLines( options, (const float*)positions, stride, count, color, model, view, proj );
+    mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
     GN_UNGUARD_SLOW;
 }
 

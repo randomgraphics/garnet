@@ -1,7 +1,7 @@
 #ifndef __GN_GUI_CEGUITEXTURE_H__
 #define __GN_GUI_CEGUITEXTURE_H__
 // *****************************************************************************
-/// \file    gui/ceguiTexture.h
+/// \file    cegui/ceguiTexture.h
 /// \brief   CEGUI texture class
 /// \author  chenlee (2006.2.25)
 // *****************************************************************************

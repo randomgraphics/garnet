@@ -100,8 +100,8 @@ public:
 
         // quad 2,3
         gQuadRenderer.drawSolidBegin();
-        gQuadRenderer.drawSolid( ubyte4ToBGRA32(0,255,0,255), 0, 0.5, 0.0, 1.0, 0.5 );
-        gQuadRenderer.drawSolid( ubyte4ToBGRA32(255,0,0,255), 0, 0.0, 0.5, 0.5, 1.0 );
+        gQuadRenderer.drawSolid( GN_RGBA32(0,255,0,255), 0, 0.5, 0.0, 1.0, 0.5 );
+        gQuadRenderer.drawSolid( GN_RGBA32(255,0,0,255), 0, 0.0, 0.5, 0.5, 1.0 );
         gQuadRenderer.drawEnd();
 
         // quad 4
@@ -147,7 +147,7 @@ public:
                 lines,
                 sizeof(float)*3,
                 count,
-                ubyte4ToBGRA32(255,255,0,255),
+                GN_RGBA(255,255,0,255),
                 world, view, proj );
         }//*/
     }

@@ -265,7 +265,7 @@ bool GN::scene::QuadRenderer::onRendererRestore()
     VtxFmtDesc vfd;
     vfd.clear();
     vfd.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT3 );
-    vfd.addAttrib( 0, 12, VTXSEM_CLR0, FMT_BGRA32 );
+    vfd.addAttrib( 0, 12, VTXSEM_CLR0, FMT_RGBA32 );
     vfd.addAttrib( 0, 16, VTXSEM_TEX0, FMT_FLOAT2 );
     VtxFmtHandle vfh = r.createVtxFmt( vfd );
     if( 0 == vfh ) return false;

@@ -1,7 +1,7 @@
 #ifndef __GN_GUI_CEGUIRENDERER_H__
 #define __GN_GUI_CEGUIRENDERER_H__
 // *****************************************************************************
-/// \file    gui/ceguiRenderer.h
+/// \file    cegui/ceguiRenderer.h
 /// \brief   cegui renderer
 /// \author  chenlee (2006.2.25)
 // *****************************************************************************
@@ -67,21 +67,22 @@ namespace CEGUI
         // ********************************
     private:
 
-        struct QuadVertex
-        {
-            float x, y, z, u, v;
-            UInt32 bgra;
-            union
-            {
-                const Texture * tex;
-                UInt64 _reserved; // padding to 32 bytes.
-            };
-        };
-        GN_CASSERT( sizeof(QuadVertex) == 32 );
-
         struct QuadDesc
         {
-            QuadVertex vertices[4];
+            const GarnetTexture * tex;
+            float  z;
+            float  x0;
+            float  y0;
+            float  x1;
+            float  y1;
+            float  u0;
+            float  v0;
+            float  u1;
+            float  v1;
+            UInt32 cx0;
+            UInt32 cx1;
+            UInt32 cy0;
+            UInt32 cy1;
         };
 
         bool mQueueEnabled;

@@ -1,4 +1,4 @@
 Import( 'GN' )
 cluster = GN.newSourceCluster( ['main.cpp'], 'pch.h', 'pch.cpp' )
 if GN.conf['has_cegui']: cluster.addCompileFlags( CPPDEFINES = ['HAS_CEGUI'] )
-GN.newTarget( 'prog', 'GNtestGui', [cluster] )
+GN.newTarget( 'prog', 'GNtestCegui', [cluster] )

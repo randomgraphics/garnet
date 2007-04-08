@@ -156,7 +156,7 @@ void GN::scene::BitmapFontRenderer::drawText( const TextDesc & td )
     if( td.background )
     {
         qr.drawSingleSolidQuad(
-            ubyte4ToBGRA32( 0, 0, 0, 128 ),
+            GN_RGBA32( 0, 0, 0, 128 ),
             0, // option
             td.z,
             ( bbox.x ) * scalex,
@@ -321,7 +321,7 @@ GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
 
         for( size_t x = 0; x < slotw; ++x, d += 4 )
         {
-#if GN_PPC
+#if GN_BIG_ENDIAN
             d[3] = 0xFF;
             d[2] = 0xFF;
             d[1] = 0xFF;
