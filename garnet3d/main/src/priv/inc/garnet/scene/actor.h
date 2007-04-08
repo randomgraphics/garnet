@@ -6,9 +6,6 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.4.1)
 // *****************************************************************************
 
-#define GN_FIELD_OFFSET( class_, field ) \
-    ( (size_t)(UIntPtr) &( ((class_*)(void*)(0))->field ) )
-
 namespace GN { namespace scene
 {
     ///

@@ -10,6 +10,9 @@
 
 class MyDevice9;
 
+///
+/// Wrapper of IDirect3DBaseResource9
+///
 template<class T>
 class BasicResource : public BasicInterface<T>
 {
