@@ -77,7 +77,7 @@ namespace GN { namespace gfx
 
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const TexLockArea * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap();
         virtual void * getAPIDependentData() const { return mD3DTexture; }
@@ -169,10 +169,11 @@ namespace GN { namespace gfx
         ///
         //@{
         D3DFORMAT mD3DFormat;
-        DWORD mD3DUsage;
+        DWORD     mD3DUsage;
         //@}
 
         bool mWritable;  ///< Is the D3D texture writable?
+        bool mIsRGBA;    ///< R-G-B-A is special
 
         ///
         /// D3D filters( min, mag, mip )
@@ -193,6 +194,8 @@ namespace GN { namespace gfx
         size_t   mLockedLevel;
         bool     mLockedNeedRebind; // for Xenon only, to unbind/rebind texture to device before/after lock
         UInt32   mLockedRebindStage;
+        TexLockArea     mLockedArea;
+        TexLockedResult mLockedResult;
         //@}
 
         static Logger * sLogger;

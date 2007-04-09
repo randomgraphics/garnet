@@ -336,6 +336,18 @@ bool GN::gfx::D3D9Texture::deviceRestore()
         }
     }
 
+    // special case for R-G-B-A texture
+    if( D3DFMT_A8B8G8R8 == mD3DFormat )
+    {
+        mD3DFormat = D3DFMT_A8R8G8B8;
+        mIsRGBA = true;
+    }
+    else if( D3DFMT_X8R8G8B8 == mD3DFormat )
+    {
+        mD3DFormat = D3DFMT_X8R8G8B8;
+        mIsRGBA = true;
+    }
+
     // determine D3D usage
 #if !GN_XENON
     mD3DUsage = texUsage2D3DUsage( desc.usage.u32 );
@@ -373,7 +385,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     // create shadow copy for both read-back and static textures
     // Note: Xenon texture does not need shadow copy
 #if !GN_XENON
-    if( desc.usage.readback || !desc.usage.dynamic )
+    if( mIsRGBA || desc.usage.readback || !desc.usage.dynamic )
     {
         mShadowCopy = newD3DTexture(
             desc.dim,
@@ -453,13 +465,13 @@ bool GN::gfx::D3D9Texture::lock(
     TexLockedResult & result,
     size_t face,
     size_t level,
-    const Boxi * area,
+    const TexLockArea * area,
     LockFlag flag )
 {
     GN_GUARD_SLOW;
 
     // call basic lock
-    Boxi clippedArea;
+    TexLockArea clippedArea;
     if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
     AutoScope< Delegate0<bool> > basicUnlocker( makeDelegate(this,&D3D9Texture::basicUnlock) );
 
@@ -513,10 +525,10 @@ bool GN::gfx::D3D9Texture::lock(
         case TEXDIM_2D:
         {
             RECT rc;
-            rc.left = clippedArea.x;
-            rc.top = clippedArea.y;
-            rc.right = clippedArea.x + clippedArea.w;
-            rc.bottom = clippedArea.y + clippedArea.h;
+            rc.left   = (int)clippedArea.x;
+            rc.top    = (int)clippedArea.y;
+            rc.right  = (int)( clippedArea.x + clippedArea.w );
+            rc.bottom = (int)( clippedArea.y + clippedArea.h );
 
             D3DLOCKED_RECT lrc;
             GN_DX9_CHECK_RV( static_cast<LPDIRECT3DTEXTURE9>(lockedtex)->LockRect(
@@ -531,12 +543,12 @@ bool GN::gfx::D3D9Texture::lock(
         case TEXDIM_3D:
         {
             D3DBOX box;
-            box.Left = clippedArea.x;
-            box.Top = clippedArea.y;
-            box.Front = clippedArea.z;
-            box.Right = clippedArea.x + clippedArea.w;
-            box.Bottom = clippedArea.y + clippedArea.h;
-            box.Back = clippedArea.z + clippedArea.d;
+            box.Left   = (int)clippedArea.x;
+            box.Top    = (int)clippedArea.y;
+            box.Front  = (int)clippedArea.z;
+            box.Right  = (int)( clippedArea.x + clippedArea.w );
+            box.Bottom = (int)( clippedArea.y + clippedArea.h );
+            box.Back   = (int)( clippedArea.z + clippedArea.d );
 
             D3DLOCKED_BOX lb;
             GN_DX9_CHECK_RV( static_cast<LPDIRECT3DVOLUMETEXTURE9>(lockedtex)->LockBox(
@@ -551,10 +563,10 @@ bool GN::gfx::D3D9Texture::lock(
         case TEXDIM_CUBE:
         {
             RECT rc;
-            rc.left = clippedArea.x;
-            rc.top = clippedArea.y;
-            rc.right = clippedArea.x + clippedArea.w;
-            rc.bottom = clippedArea.y + clippedArea.h;
+            rc.left   = (int)clippedArea.x;
+            rc.top    = (int)clippedArea.y;
+            rc.right  = (int)( clippedArea.x + clippedArea.w );
+            rc.bottom = (int)( clippedArea.y + clippedArea.h );
 
             GN_ASSERT( face < 6 );
 
@@ -575,9 +587,11 @@ bool GN::gfx::D3D9Texture::lock(
     }
 
     // success
-    mLockedFlag = flag;
-    mLockedFace = face;
-    mLockedLevel = level;
+    mLockedFlag   = flag;
+    mLockedFace   = face;
+    mLockedLevel  = level;
+    mLockedArea   = clippedArea;
+    mLockedResult = result;
     basicUnlocker.dismiss();
     return true;
 
@@ -592,6 +606,35 @@ void GN::gfx::D3D9Texture::unlock()
     GN_GUARD_SLOW;
 
     if( !basicUnlock() ) return;
+
+    // handle R-G-B-A texture
+    if( mIsRGBA && LOCK_RO != mLockedFlag )
+    {
+        // convert from R-G-B-A to B-G-R-A
+        GN_ASSERT( mShadowCopy );
+        GN_ASSERT( mLockedResult.data );
+        GN_ASSERT( 0 == (mLockedResult.rowBytes % 4) );
+        Vector4<UInt8> * p = (Vector4<UInt8>*)mLockedResult.data;
+        size_t w = mLockedResult.rowBytes / 4;
+        size_t h = mLockedResult.sliceBytes / mLockedResult.rowBytes;
+        GN_ASSERT( w >= mLockedArea.w && h >= mLockedArea.h );
+        UInt8 tmp;
+        for( size_t z = 0; z < mLockedArea.d; ++z )
+        {
+            for( size_t y = 0; y < mLockedArea.h; ++y )
+            {
+                for( size_t x = 0; x < mLockedArea.w; ++x, ++p )
+                {
+                    // swap R and B
+                    tmp = p->r;
+                    p->r = p->b;
+                    p->b = tmp;
+                }
+                p += (w - mLockedArea.w );
+            }
+            p += w * ( h - mLockedArea.h );
+        }
+    }
 
     // unlock texture
     LPDIRECT3DBASETEXTURE9 lockedtex = mShadowCopy ? mShadowCopy : mD3DTexture;
@@ -608,22 +651,24 @@ void GN::gfx::D3D9Texture::unlock()
         GN_DX9_CHECK( static_cast<LPDIRECT3DCUBETEXTURE9>(lockedtex)->UnlockRect( sCubeFace2D3D(mLockedFace), (UINT)mLockedLevel ) );
     }
 
-    // copy data from lockedtex to mD3DTexture
 #if GN_XENON
-    GN_ASSERT( lockedtex == mD3DTexture );
-#else
-    if( mShadowCopy && LOCK_RO != mLockedFlag )
-    {
-        GN_DX9_CHECK( getRenderer().getDevice()->UpdateTexture( mShadowCopy, mD3DTexture ) );
-    }
-#endif
 
-#if GN_XENON
+    GN_ASSERT( lockedtex == mD3DTexture );
+
     if( mLockedNeedRebind )
     {
         LPDIRECT3DDEVICE9 dev = getRenderer().getDevice();
         dev->SetTexture( mLockedRebindStage, lockedtex );
     }
+
+#else
+
+    // copy data from lockedtex to mD3DTexture
+    if( mShadowCopy && LOCK_RO != mLockedFlag )
+    {
+        GN_DX9_CHECK( getRenderer().getDevice()->UpdateTexture( mShadowCopy, mD3DTexture ) );
+    }
+
 #endif
 
     //

@@ -48,8 +48,7 @@ s_get_png_clrfmt( png_struct * png, const png_info * info )
         case PNG_COLOR_TYPE_RGB_ALPHA:
             switch( info->bit_depth )
             {
-                case 8  : png_set_bgr( png );
-                          return GN::gfx::FMT_BGRA_8_8_8_8_UNORM;
+                case 8  : return GN::gfx::FMT_RGBA_8_8_8_8_UNORM;
                 case 16 : return GN::gfx::FMT_RGBA_16_16_16_16_UNORM;
                 default :
                     GN_ERROR(sLogger)( "unsupport color depth %d", info->bit_depth );

@@ -181,6 +181,8 @@ D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt, bool tiled )
         // 32 bits
         case FMT_BGRA_8_8_8_8_UNORM     : d3dfmt = D3DFMT_A8R8G8B8; break;
         case FMT_BGRX_8_8_8_8_UNORM     : d3dfmt = D3DFMT_X8R8G8B8; break;
+        case FMT_RGBA_8_8_8_8_UNORM     : d3dfmt = D3DFMT_A8B8G8R8; break;
+        case FMT_RGBX_8_8_8_8_UNORM     : d3dfmt = D3DFMT_X8B8G8R8; break;
         case FMT_RG_16_16_FLOAT         : d3dfmt = D3DFMT_G16R16F; break;
         case FMT_RG_16_16_UNORM         : d3dfmt = D3DFMT_G16R16; break;
         case FMT_R_32_FLOAT             : d3dfmt = D3DFMT_R32F; break;

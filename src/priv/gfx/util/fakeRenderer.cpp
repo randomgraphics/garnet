@@ -163,7 +163,7 @@ namespace GN { namespace gfx
                 TexLockedResult & result,
                 size_t face,
                 size_t level,
-                const Boxi * area,
+                const TexLockArea * area,
                 LockFlag flag )
             {
                 result.data = &mBuffer[0];

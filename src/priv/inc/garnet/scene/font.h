@@ -245,7 +245,7 @@ namespace GN { namespace scene
             ///
             /// texture index
             ///
-            size_t texidx;
+            UInt8 texidx;
 
             ///
             /// offset value ( in pixel unit )
@@ -265,7 +265,7 @@ namespace GN { namespace scene
             ///
             /// texture square( in pixel unit )
             ///
-            int x1, y1, x2, y2;
+            UInt16 x1, y1, x2, y2;
         };
 
         // private constants

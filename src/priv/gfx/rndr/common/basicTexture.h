@@ -43,7 +43,7 @@ namespace GN { namespace gfx
         ///
         /// This function will also clip lock area to ensure it is not out of texture size.
         ///
-        bool basicLock( size_t face, size_t level, const Boxi * area, LockFlag flag, Boxi & clippedArea )
+        bool basicLock( size_t face, size_t level, const TexLockArea * area, LockFlag flag, TexLockArea & clippedArea )
         {
             if( isLocked() )
             {
@@ -134,7 +134,7 @@ namespace GN { namespace gfx
     private:
 
         static inline bool
-        sAdjustOffsetAndRange( int & offset, int & length, int maxLength )
+        sAdjustOffsetAndRange( size_t & offset, size_t & length, size_t maxLength )
         {
             if( offset >= maxLength )
             {

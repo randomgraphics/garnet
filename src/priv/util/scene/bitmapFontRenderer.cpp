@@ -279,7 +279,7 @@ GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
     if( tex.empty() )
     {
         // create new texture
-        tex.attach( gRenderer.create2DTexture( mTexWidth, mTexHeight, 1, FMT_BGRA32 ) );
+        tex.attach( gRenderer.create2DTexture( mTexWidth, mTexHeight, 1, FMT_RGBA32 ) );
         if( tex.empty() )
         {
             GN_ERROR(sLogger)( "fail to create font texture!" );
@@ -300,7 +300,9 @@ GN::scene::BitmapFontRenderer::createSlot( wchar_t ch )
 
     // lock texture
     GN_ASSERT( slot.x2 > slot.x1 && slot.y2 > slot.y1 );
-    Boxi area( Vector3i(slot.x1, slot.y1, 0), Vector3i(slot.x2, slot.y2, 1) );
+    TexLockArea area(
+        Vector3<size_t>(slot.x1, slot.y1, 0),
+        Vector3<size_t>(slot.x2, slot.y2, 1) );
     TexLockedResult tlr;
     if( !tex->lock( tlr, 0, 0, &area, LOCK_WO ) )
     {
@@ -372,8 +374,8 @@ bool GN::scene::BitmapFontRenderer::slotInit( UInt16 fontw, UInt16 fonth )
 {
     GN_GUARD;
 
-    UInt32 rectw = fontw + 0;
-    UInt32 recth = fonth + 0;
+    UInt16 rectw = fontw + 0;
+    UInt16 recth = fonth + 0;
 
     // query maximum texture size
     UInt32 max_size = gRenderer.getCaps( CAPS_MAX_2D_TEXTURE_SIZE );
@@ -396,7 +398,7 @@ bool GN::scene::BitmapFontRenderer::slotInit( UInt16 fontw, UInt16 fonth )
     // initialize font slots
     float stepu = float(rectw) / texw;
     float stepv = float(recth) / texh;
-    int x = 0, y = 0;
+    UInt16 x = 0, y = 0;
     float u = 0.0f, v = 0.0f;
     FontSlot * slot = mFontSlots;
     UInt32 numcols = texw / rectw;
@@ -412,7 +414,8 @@ bool GN::scene::BitmapFontRenderer::slotInit( UInt16 fontw, UInt16 fonth )
             for( UInt32 irow = 0; irow < numrows; ++irow )
             {
                 // setup slot
-                slot->texidx = itex;
+                GN_ASSERT( itex < 256 );
+                slot->texidx = (UInt8)itex;
                 slot->u1 = u;
                 slot->v1 = v;
                 slot->u2 = u + float(fontw)/texw;
@@ -423,7 +426,7 @@ bool GN::scene::BitmapFontRenderer::slotInit( UInt16 fontw, UInt16 fonth )
                 slot->y2 = y + fonth;
 
                 // next row
-                v += stepv; y += recth;
+                v += stepv; y = y + recth;
 
                 // next slot
                 ++slot;
@@ -433,7 +436,7 @@ bool GN::scene::BitmapFontRenderer::slotInit( UInt16 fontw, UInt16 fonth )
             }
 
             // next column
-            u += stepu; x += rectw;
+            u += stepu; x = x + rectw;
         }
     }
 

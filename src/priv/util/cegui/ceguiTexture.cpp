@@ -46,7 +46,19 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
 		GN_THROW_EX( RendererException(
             "Failed to load texture from memory: D3D Texture creation failed." ) );
     }
-    ::memcpy( mMemBuffer, buffPtr, buffWidth * buffHeight * 4 );
+
+    // convert B-G-R-A to R-G-B-A
+    const GN::Vector4<UInt8> * src = (const GN::Vector4<UInt8>*) bufferPtr;
+    GN::Vector4<UInt8>       * dst = (GN::Vector4<UInt8> *)mMemBuffer;
+    size_t                       n = buffWidth * buffHeight;
+    for( size_t i = 0; i < n; ++src, ++dst )
+    {
+        dst->x = src->z;
+        dst->y = src->y;
+        dst->z = src->x;
+        dst->w = src->w;
+    }
+
     mWidth = (ushort)buffWidth;
     mHeight = (ushort)buffHeight;
 
@@ -78,7 +90,7 @@ bool CEGUI::GarnetTexture::reload()
         dispose();
 
         // create the texture
-        AutoRef<gfx::Texture> tex( gRenderer.create2DTexture( mWidth, mHeight, 1, gfx::FMT_BGRA32 ) );
+        AutoRef<gfx::Texture> tex( gRenderer.create2DTexture( mWidth, mHeight, 1, gfx::FMT_RGBA32 ) );
         if( tex.empty() ) return false;
 
         // copy data from memory buffer

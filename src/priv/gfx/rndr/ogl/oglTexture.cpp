@@ -693,7 +693,7 @@ bool GN::gfx::OGLTexture::lock(
     TexLockedResult & result,
     size_t face,
     size_t level,
-    const Boxi * area,
+    const TexLockArea * area,
     LockFlag flag )
 {
     GN_GUARD_SLOW;
@@ -795,8 +795,8 @@ void GN::gfx::OGLTexture::unlock()
             {
                 GN_OGL_CHECK( glCompressedTexSubImage2DARB(
                     mLockedTarget, (GLint)mLockedLevel,
-                    mLockedArea.x, mLockedArea.y,
-                    mLockedArea.w, mLockedArea.h,
+                    (GLsizei)mLockedArea.x, (GLsizei)mLockedArea.y,
+                    (GLsizei)mLockedArea.w, (GLsizei)mLockedArea.h,
                     mOGLInternalFormat,
                     (GLsizei)mLockedBytes, mLockedBuffer ) );
             }
@@ -809,8 +809,8 @@ void GN::gfx::OGLTexture::unlock()
         {
             GN_OGL_CHECK( glTexSubImage2D(
                 mLockedTarget, (GLint)mLockedLevel,
-                mLockedArea.x, mLockedArea.y,
-                mLockedArea.w, mLockedArea.h,
+                (GLsizei)mLockedArea.x, (GLsizei)mLockedArea.y,
+                (GLsizei)mLockedArea.w, (GLsizei)mLockedArea.h,
                 mOGLFormat, mOGLType, mLockedBuffer ) );
         }
     }
