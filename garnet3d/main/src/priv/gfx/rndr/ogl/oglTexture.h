@@ -58,7 +58,7 @@ namespace GN { namespace gfx
 
         virtual void setFilter( TexFilter, TexFilter ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const TexLockArea * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap() { GN_ERROR(getLogger("GN.gfx.rndr.OGL"))( "no implementation" ); }
         virtual void * getAPIDependentData() const { return (void*)(uintptr_t)getOGLTexture(); }
@@ -170,9 +170,9 @@ namespace GN { namespace gfx
         //@{
         GLenum      mLockedTarget;
         size_t      mLockedLevel;
-        Boxi        mLockedArea;
+        TexLockArea mLockedArea;
         LockFlag    mLockedFlag;
-        UInt8 *   mLockedBuffer;
+        UInt8 *     mLockedBuffer;
         size_t      mLockedBytes;
         //@}
 

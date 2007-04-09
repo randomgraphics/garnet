@@ -52,7 +52,7 @@ namespace GN { namespace gfx
 
         virtual void setFilter( TexFilter min, TexFilter mag ) const;
         virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
-        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const Boxi * area, LockFlag flag );
+        virtual bool lock( TexLockedResult & result, size_t face, size_t level, const TexLockArea * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap();
         virtual void * getAPIDependentData() const { return mD3DTexture.res; }
@@ -101,8 +101,9 @@ namespace GN { namespace gfx
         //@{
         D3D10Tex mLockedTexture;
         LockFlag mLockedFlag;
-        size_t mLockedFace;
-        size_t mLockedLevel;
+        size_t   mLockedFace;
+        size_t   mLockedLevel;
+        DynaArray<UInt8> mLockedBuffer;
         //@}
 
         static Logger * sLogger;

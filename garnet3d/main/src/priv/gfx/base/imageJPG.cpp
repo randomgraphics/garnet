@@ -186,14 +186,14 @@ bool JPGReader::readImage( void * o_data )
             for( size_t x = 0; x < width; ++x )
             {
 #if GN_XENON
-                dst[3] = src[2];
+                dst[3] = src[0];
                 dst[2] = src[1];
-                dst[1] = src[0];
+                dst[1] = src[2];
                 dst[0] = 0xFF;
 #else
-                dst[0] = src[2];
+                dst[0] = src[0];
                 dst[1] = src[1];
-                dst[2] = src[0];
+                dst[2] = src[2];
                 dst[3] = 0xFF;
 #endif
                 src += 3;

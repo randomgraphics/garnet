@@ -93,12 +93,25 @@ bool GN::gfx::D3D10Texture::lock(
     TexLockedResult & result,
     size_t face,
     size_t level,
-    const Boxi * area,
+    const TexLockArea * area,
     LockFlag flag )
 {
     GN_ASSERT( ok() );
-    GN_UNIMPL_WARNING();
-    return false;
+
+    TexLockArea clippedArea;
+    if( !basicLock( face, level, area, flag, clippedArea ) ) return false;
+
+    const TextureDesc & desc = getDesc();
+
+    // create temporary buffer
+    size_t rowbytes = getMipSize(level).x * getClrFmtDesc(desc.format).bits / 8;
+    size_t slicebytes = rowbytes * getMipSize(level).y;
+    mLockedBuffer.resize( slicebytes * getMipSize(level).z );
+    result.data = mLockedBuffer.cptr();
+    result.rowBytes = rowbytes;
+    result.sliceBytes = slicebytes;
+
+    return true;
 }
 
 //
@@ -107,7 +120,8 @@ bool GN::gfx::D3D10Texture::lock(
 void GN::gfx::D3D10Texture::unlock()
 {
     GN_ASSERT( ok() );
-    GN_UNIMPL_WARNING();
+    basicUnlock();
+    //GN_UNIMPL_WARNING();
 }
 
 //
@@ -176,8 +190,11 @@ bool GN::gfx::D3D10Texture::createTexture()
 
     // determine CPU access flags
     UINT caf = 0;
-    if( !desc.usage.rendertarget && !desc.usage.depthstencil ) caf |= D3D10_CPU_ACCESS_WRITE;
-    if( desc.usage.readback ) caf |= D3D10_CPU_ACCESS_READ;
+    if( D3D10_USAGE_DEFAULT != usage )
+    {
+        if( !desc.usage.rendertarget && !desc.usage.depthstencil ) caf |= D3D10_CPU_ACCESS_WRITE;
+        if( desc.usage.readback ) caf |= D3D10_CPU_ACCESS_READ;
+    }
 
     // determine misc flags
     UINT mf = 0;
@@ -207,7 +224,7 @@ bool GN::gfx::D3D10Texture::createTexture()
         desc2d.MipLevels = desc.levels;
         desc2d.ArraySize = desc.faces;
         desc2d.Format = format;
-        desc2d.SampleDesc.Count = 0;
+        desc2d.SampleDesc.Count = 1;
         desc2d.SampleDesc.Quality = 0;
         desc2d.Usage = usage;
         desc2d.BindFlags = bf;

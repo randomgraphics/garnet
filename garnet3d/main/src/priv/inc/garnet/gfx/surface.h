@@ -154,6 +154,11 @@ namespace GN { namespace gfx
     GN_CASSERT( sizeof(IdxBufDesc) == 8 );
 
     ///
+    /// texture lock area
+    ///
+    typedef Box<size_t> TexLockArea;
+
+    ///
     /// 贴图锁定的返回结果
     ///
     struct TexLockedResult
@@ -240,7 +245,7 @@ namespace GN { namespace gfx
             TexLockedResult & result,
             size_t face,
             size_t level,
-            const Boxi * area,
+            const TexLockArea * area,
             LockFlag flag ) = 0;
 
         ///
@@ -250,7 +255,7 @@ namespace GN { namespace gfx
         {
             GN_ASSERT( TEXDIM_1D == getDesc().dim );
             TexLockedResult result;
-            Boxi area;
+            TexLockArea area;
             area.x = (int)offset;
             area.y = 0;
             area.z = 0;
