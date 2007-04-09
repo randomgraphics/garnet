@@ -12,6 +12,7 @@ sources = [
 	'plugin.cpp',
 	'profiler.cpp',
 	'registry.cpp',
+	'semaphoremsw.cpp',
 	'sharedLib.cpp',
 	'string.cpp',
 	'threadmsw.cpp',
