@@ -7,35 +7,29 @@
   - task manager/coordinator
 
 - p1
-  - color format BGRA32 is depreciated in D3D10, consider removing it out of garnet code base.
-  - render state block redesign: using packed bit fields.
-  - Drawable optimization:
-  	- using hashed string map to reference uniforms and textures.
-  	- load uniform type and default value from XML.
-  - memory pool class is not looking good
-    - when call dtor and when not?
-    - see others pool implementation on net
-  - try multi-thread architect
-    - multi-thread wrapper for platform-independency
-    - separate sim() and render() loop
-    - File loader in another thread.
+  - multi-thread architect
+    - game thread: major game logic thread
+    - render thread: the only thread that touches rendering device.
+    - resource loading thread(s)
+    - configuable resource cache with limited video memory footprint.
+  - treat all surfaces as parameter of shader, like uniforms
   - GFX renderer
-    - double-check matrix major confusion.
     - set sampling parameters (such as filters wrapping) at binding time
     - render target management
       - D3D: msaa
       - OGL: FBO with AA
-    - recreate OGL context, when monitor changed.
-  - code page convertor and test application
-    - may support convertion from/to utf8 be enough?
-  - mesh class
-  - blender exporter/importer
+
+- p2
+  - render state block redesign: using packed bit fields.
+  - memory pool class is not looking good
+    - when call dtor and when not?
+    - see others pool implementation on net
+  - Drawable optimization:
+  	- using hashed string map to reference uniforms and textures.
   - in-game GUI system
     - font class
     - textbox class
   - refine sigslot class to allow any type of functor
-
-- p2
   - smart enum class
   - skin mesh test case: porting DXSDK sample.
   - UT
@@ -43,8 +37,9 @@
     - LRU list in resource manager
     - make sure OGL resource creation/deletion do not affect renderer states
     - format conversion between ClrFmt and D3DFMT
-  - memory-mapped file.
+  - memory-mapped IO.
   - GFX system
+    - recreate OGL context, when monitor changed.
     - queryXXX(....)
     - support using "c0" as uniform name of D3D HLSL shader.
     - consider remove drawBegin() and drawEnd()
@@ -60,6 +55,9 @@
     - shared uniform
 
 - p3
+  - code page convertor and test application
+    - may support convertion from/to utf8 be enough?
+  - blender exporter/importer
   - new build system:
     - two steps:
       - compiler configuration script, called by setupEnv.cmd/setupEnv.sh
