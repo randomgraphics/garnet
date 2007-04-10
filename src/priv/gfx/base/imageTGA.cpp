@@ -36,6 +36,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.base.image.TGA");
 // -----------------------------------------------------------------------------
 static inline void sCopyPixel5551( const UInt8 * src, size_t srcStride, UInt8 * dst, size_t dstStride, size_t count )
 {
+    GN_DO_ONCE( GN_WARN(sLogger)( "TGA 5551 image has BGRA->RGBA bug!" ) );
     const UInt16 * s;
     UInt16 * d;
     for( size_t i = 0; i < count; ++i )
@@ -55,10 +56,17 @@ static inline void sCopyPixel888( const UInt8 * src, size_t srcStride, UInt8 * d
 {
     for( size_t i = 0; i < count; ++i )
     {
-        dst[0] = src[0];
+#if GN_BIG_ENDIAN
+        dst[3] = src[2];
+        dst[2] = src[1];
+        dst[1] = src[0];
+        dst[0] = 0xFF;
+#else
+        dst[0] = src[2];
         dst[1] = src[1];
-        dst[2] = src[2];
+        dst[2] = src[0];
         dst[3] = 0xFF;
+#endif
         src += srcStride;
         dst += dstStride;
     }
@@ -69,13 +77,19 @@ static inline void sCopyPixel888( const UInt8 * src, size_t srcStride, UInt8 * d
 // -----------------------------------------------------------------------------
 static inline void sCopyPixel8888( const UInt8 * src, size_t srcStride, UInt8 * dst, size_t dstStride, size_t count )
 {
-    const UInt32 * s;
-    UInt32 * d;
     for( size_t i = 0; i < count; ++i )
     {
-		s = (const UInt32*)src;
-		d = (UInt32*)dst;
-		*d = *s;
+#if GN_BIG_ENDIAN
+        dst[3] = src[2];
+        dst[2] = src[1];
+        dst[1] = src[0];
+        dst[0] = src[3];
+#else
+        dst[0] = src[2];
+        dst[1] = src[1];
+        dst[2] = src[0];
+        dst[3] = src[3];
+#endif
         src += srcStride;
         dst += dstStride;
     }
@@ -249,8 +263,8 @@ bool TGAReader::readHeader(
         switch( header.bits )
         {
             case 16 : o_desc.format = GN::gfx::FMT_BGRA_5_5_5_1_UNORM; mOutputBytesPerPixel = 2; break;
-            case 24 : o_desc.format = GN::gfx::FMT_BGRA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
-            case 32 : o_desc.format = GN::gfx::FMT_BGRA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+            case 24 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+            case 32 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
             default :
                 GN_ERROR(sLogger)( "unsupport/invalid RGB image bits: %d.", header.bits );
                 return false;
