@@ -48,10 +48,10 @@ void CEGUI::GarnetTexture::loadFromMemory(const void* buffPtr, uint buffWidth, u
     }
 
     // convert B-G-R-A to R-G-B-A
-    const GN::Vector4<UInt8> * src = (const GN::Vector4<UInt8>*) bufferPtr;
+    const GN::Vector4<UInt8> * src = (const GN::Vector4<UInt8>*)buffPtr;
     GN::Vector4<UInt8>       * dst = (GN::Vector4<UInt8> *)mMemBuffer;
     size_t                       n = buffWidth * buffHeight;
-    for( size_t i = 0; i < n; ++src, ++dst )
+    for( size_t i = 0; i < n; ++i, ++src, ++dst )
     {
         dst->x = src->z;
         dst->y = src->y;
@@ -99,7 +99,7 @@ bool CEGUI::GarnetTexture::reload()
         if( !tex->lock( tlr, 0, 0, 0, gfx::LOCK_DISCARD ) ) return false;
 
         // copy data
-        const UInt8 * src = (const UInt8*)mMemBuffer;
+        const Vector4<UInt8> * src = (const Vector4<UInt8>*)mMemBuffer;
         size_t srcPitch = mWidth * 4;
         GN_ASSERT( tlr.rowBytes >= srcPitch );
         UInt8 * dst = (UInt8*)tlr.data;
