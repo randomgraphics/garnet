@@ -22,8 +22,8 @@ public:
     bool onAppInit()
     {
         world.identity();
-        view.translate( 0, 0, -3 );
-        proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 1.0f, 10.0f );
+        view.translate( 0, 0, -200 );
+        proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 100.0f, 1000.0f );
         arcball.setHandness( util::ArcBall::RIGHT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();
@@ -49,7 +49,7 @@ public:
         if( 0 == cubemap ) return false;
 
         // load box
-        if( !loadFromXmlFile( box, "media::drawable/cube1.xml" ) ) return false;
+        if( !loadFromXmlFile( box, "media::cube/cube_on_cube.drawable.xml" ) ) return false;
         box.textures["cube"].texid = cubemap;
 
         // initial arcball window
