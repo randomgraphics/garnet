@@ -3,12 +3,10 @@ OPENNING
 
 - GfxOGLTest::testChangeUserOptions: assert failure on NVIDIA 7800GTX
 
-- Startup of GFXOGL module sometimes very slow:
-  - pin down to the 1st call to opengl function in oglWinDisp.cpp
-  - It seems caused by remote symbol loading
-
 - Render target image is up-side-down in OGL, comparing with D3D.
   - See GNsampleRenderToTexture for an example.
+
+- Normalling mapping of media::/cube/cube.actor.xml is incorrect on OGL.
 
 - GNtestGfx:
   - black screen on vista when using OGL.
@@ -18,9 +16,11 @@ OPENNING
 - GNsampleRenderToTexture:
   - black screen on cygwin.
 
-- When using OpenGL API and non-power-of-two render target texture, ATI x1000 card runs very very slow. Check it!
+- GNsampleDepthTexture:
+  - black screen expect the first frame.
+  - OK when HUD rendering in sampleapp is disable. 
 
-- Quad renderer is slow on HP notebook with intel graphics chip.
+- When using OpenGL API and non-power-of-two render target texture, ATI x1000 card runs very very slow. Check it!
 
 - ATI depth texture doesn't work when backbuffer size is smaller then texture size (only happens when using debug DX runtime. So seems a DX bug)
   - 2006.5.25: upgrading ATI driver to 6.4 doesn't work.

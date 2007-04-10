@@ -7,17 +7,17 @@
   - task manager/coordinator
 
 - p1
+  - store non-default values only in renderer context.
   - multi-thread architect
     - game thread: major game logic thread
     - render thread: the only thread that touches rendering device.
     - resource loading thread(s)
     - configuable resource cache with limited video memory footprint.
   - treat all surfaces as parameter of shader, like uniforms
-  - GFX renderer
-    - set sampling parameters (such as filters wrapping) at binding time
-    - render target management
-      - D3D: msaa
-      - OGL: FBO with AA
+  - set sampling parameters (such as filters wrapping) at binding time
+  - render target management
+    - D3D: msaa
+    - OGL: FBO with AA
 
 - p2
   - render state block redesign: using packed bit fields.
