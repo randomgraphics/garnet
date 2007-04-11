@@ -418,6 +418,11 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
         1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
+    if( GLEW_ARB_vertex_buffer_object )
+    {
+        // disable VBO
+        GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
+    }
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const UInt8* )vertexData,
@@ -495,6 +500,11 @@ void GN::gfx::OGLRenderer::drawUp(
         mVtxFmts.validHandle(mContext.vtxFmt) &&
         mVtxFmts[mContext.vtxFmt] &&
         1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
+    if( GLEW_ARB_vertex_buffer_object )
+    {
+        // disable VBO
+        GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
+    }
     mVtxFmts[mContext.vtxFmt]->bindBuffer(
         0, // stream index
         (const UInt8* )vertexData,

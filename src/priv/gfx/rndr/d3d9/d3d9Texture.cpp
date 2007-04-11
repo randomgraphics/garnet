@@ -347,6 +347,10 @@ bool GN::gfx::D3D9Texture::deviceRestore()
         mD3DFormat = D3DFMT_X8R8G8B8;
         mIsRGBA = true;
     }
+    else
+    {
+        mIsRGBA = false;
+    }
 
     // determine D3D usage
 #if !GN_XENON
