@@ -11,8 +11,12 @@
 ///
 #if GN_ENABLE_LOG
 #define GN_LOG_EX( logger, level, func, file, line ) if( logger->isOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line ).doLog
+#define GN_LOG_BEGIN(logger,level) if( logger->isOn( level ) ) {
+#define GN_LOG_END()               }
 #else
 #define GN_LOG_EX( logger, level, func, file, line ) if( 1 ) {} else GN::Logger::sFakeLog
+#define GN_LOG_BEGIN(logger,level) if(0) {
+#define GN_LOG_END()               }
 #endif
 
 ///
@@ -53,6 +57,12 @@
 #else
 #define GN_TRACE( logger ) if( 1 ) {} else ::GN::Logger::sFakeLog
 #endif
+
+/// begin/end of a code block to output trace messages
+//@{
+#define GN_TRACE_BEGIN( logger ) GN_LOG_BEGIN( logger, GN::Logger::LL_TRACE )
+#define GN_TRACE_END()           GN_LOG_END()
+//@}
 
 namespace GN
 {

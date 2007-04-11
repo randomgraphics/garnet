@@ -10,6 +10,7 @@
 #include "garnet/GNcore.h"
 #include "garnet/GNwin.h"
 #include "garnet/GNgfx.h"
+#include "garnet/GNscene.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNapp.h"
 

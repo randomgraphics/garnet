@@ -29,6 +29,8 @@ class TestScene
 
     AutoRef<Shader> mVs, mPs;
 
+    RendererContext mCtx;
+
 public:
 
     TestScene( GN::app::SampleApp & app ) : mApp(app) {}
@@ -39,8 +41,8 @@ public:
     {
         Renderer & r = gRenderer;
 
-        UInt32 w = 1024;
-        UInt32 h = 1024;
+        UInt32 w = 100;
+        UInt32 h = 100;
 
         // create color texture
         mColor.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
@@ -48,7 +50,7 @@ public:
 
         // create depth texture
         mDepth.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
-        if( mDepth.empty() ) return false;
+        //if( mDepth.empty() ) return false;
 
         // create texture
         mTex0 = gSceneResMgr.getResourceId( "media::/texture/rabit.png" );
@@ -89,6 +91,14 @@ public:
             if( !mPs ) return false;
         }
 
+        // initialize context
+        mCtx.resetToDefault();
+        mCtx.setShaders( 0, 0, 0 );
+        mCtx.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
+        mCtx.setDrawToTextures( 1, mColor, 0, 0, 0, mDepth );
+        mCtx.setTexture( 0, gSceneResMgr.getResourceT<Texture>( mTex0 ) );
+        mCtx.setVtxFmt( mDecl );
+
         // success
         return true;
     }
@@ -128,30 +138,23 @@ public:
 
     void update()
     {
+        mCtx.setWorld( mModel );
+        mCtx.setView( mView );
+        mCtx.setProj( mProj );
     }
 
     void render()
     {
         Renderer & r = gRenderer;
-        ResourceManager & rm = gSceneResMgr;
 
         // render to depth texture
-        r.contextUpdateBegin();
-            r.setShaders( 0, 0, 0 );
-            r.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-            r.setDrawToTextures( 1, mColor, 0, 0, 0, mDepth );
-            r.setWorld( mModel ); r.setView( mView ); r.setProj( mProj );
-            r.setTexture( 0, rm.getResourceT<Texture>( mTex0 ) );
-            r.setVtxFmt( mDecl );
-        r.contextUpdateEnd();
+        r.setContext( mCtx );
         r.clearScreen();
         r.drawIndexedUp( TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
 
         // render depth texture to screen
         r.setDrawToBackBuf();
-        gQuadRenderer.drawSingleTexturedQuad( mDepth, QuadRenderer::OPT_OPAQUE );
-        //r.setTexture( 0, mDepth );
-        //r.draw2DTexturedQuad( DQ_OPAQUE );
+        gQuadRenderer.drawSingleTexturedQuad( mDepth ? mDepth : mColor, QuadRenderer::OPT_OPAQUE );
     }
 };
 
@@ -163,13 +166,13 @@ public:
 
     DepthTexture() : mScene(0) {}
 
-    bool onRendererCreate()
+    bool onRendererRestore()
     {
         mScene = new TestScene(*this);
         return mScene->create();
     }
 
-    void onRendererDestroy()
+    void onRendererDispose()
     {
         safeDelete( mScene );
     }

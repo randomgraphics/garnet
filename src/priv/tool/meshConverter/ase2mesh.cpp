@@ -128,7 +128,7 @@ struct AseNode
     Vector3f  scale;
 };
 
-struct AseGeoObject
+struct AseGeoObject : public GN::scene::TreeNode<AseGeoObject>
 {
     AseNode node;
     AseMesh mesh;
@@ -1234,6 +1234,8 @@ static bool sReadAse( AseScene & scene, const StrA & filename )
             return false;
         }
     }
+
+    // analyse node hiearachy
 
     // success
     return true;

@@ -76,8 +76,8 @@ bool BMPReader::readHeader(
     switch( mHeader.infoHeader.bitCount )
     {
         case 16 : o_desc.format = GN::gfx::FMT_BGRX_5_5_5_1_UNORM; mOutputBytesPerPixel = 2; break;
-        case 24 : o_desc.format = GN::gfx::FMT_BGRX_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
-        case 32 : o_desc.format = GN::gfx::FMT_BGRX_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+        case 24 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
+        case 32 : o_desc.format = GN::gfx::FMT_RGBA_8_8_8_8_UNORM; mOutputBytesPerPixel = 4; break;
         default :
             GN_ERROR(sLogger)( "unsupport/invalid RGB image bits: %d.", mHeader.infoHeader.bitCount );
             return false;
@@ -165,13 +165,13 @@ bool BMPReader::readImage( void * o_data ) const
                     for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
                     {
 #if GN_PPC
-                        d[1] = s[2];
+                        d[3] = s[2];
                         d[2] = s[1];
-                        d[3] = s[0];
+                        d[1] = s[0];
 #else
-                        d[0] = s[0];
+                        d[0] = s[2];
                         d[1] = s[1];
-                        d[2] = s[2];
+                        d[2] = s[0];
 #endif
                     }
                     src += srcPitch;
@@ -187,13 +187,15 @@ bool BMPReader::readImage( void * o_data ) const
                     for( size_t x = 0; x < width; ++x, s+=3, d+=4 )
                     {
 #if GN_PPC
-                        d[1] = s[2];
+                        d[3] = s[2];
                         d[2] = s[1];
-                        d[3] = s[0];
+                        d[1] = s[0];
+                        d[0] = 0xFF;
 #else
-                        d[0] = s[0];
+                        d[0] = s[2];
                         d[1] = s[1];
-                        d[2] = s[2];
+                        d[2] = s[0];
+                        d[3] = 0xFF;
 #endif
                     }
                     src += srcPitch;
@@ -207,10 +209,18 @@ bool BMPReader::readImage( void * o_data ) const
             {
                 for( size_t y = 0; y < height; ++y )
                 {
+                    const UInt8 * s = src;
+                    UInt8 * d = dst;
 #if GN_PPC
-                    GN::swapEndian8In32( dst, src, width );
+                    d[3] = s[2];
+                    d[2] = s[1];
+                    d[1] = s[0];
+                    d[0] = s[3];
 #else
-                    memcpy( dst, src, width * 4 );
+                    d[0] = s[2];
+                    d[1] = s[1];
+                    d[2] = s[0];
+                    d[3] = s[3];
 #endif
                     src += srcPitch;
                     dst += dstPitch; 
@@ -220,10 +230,18 @@ bool BMPReader::readImage( void * o_data ) const
             {
                 for( size_t y = 0; y < height; ++y )
                 {
+                    const UInt8 * s = src;
+                    UInt8 * d = dst;
 #if GN_PPC
-                    GN::swapEndian8In32( dst, src, width );
+                    d[3] = s[2];
+                    d[2] = s[1];
+                    d[1] = s[0];
+                    d[0] = s[3];
 #else
-                    memcpy( dst, src, width * 4 );
+                    d[0] = s[2];
+                    d[1] = s[1];
+                    d[2] = s[0];
+                    d[3] = s[3];
 #endif
                     src += srcPitch;
                     dst -= dstPitch; 

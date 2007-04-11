@@ -35,7 +35,7 @@ namespace GN { namespace scene
         TreeNode<T> *  getPrev() const { return mPrev; }
         TreeNode<T> *  getNext() const { return mNext; }
         TreeNode<T> *  getChild() const { return mChild; }
-        void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newPrev, newParent ); }
+        void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newParent, newPrev ); }
         //@}
 
     private:
