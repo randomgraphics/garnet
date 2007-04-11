@@ -26,16 +26,20 @@ namespace GN { namespace scene
 
         //@{
         TreeNode() : mParent(0), mPrev(0), mNext(0), mChild(0) {}
-        ~TreeNode() { doDtor(); }
+        virtual ~TreeNode() { doDtor(); }
         //@}
 
         //@{
-
         TreeNode<T> *  getParent() const { return mParent; }
         TreeNode<T> *  getPrev() const { return mPrev; }
         TreeNode<T> *  getNext() const { return mNext; }
         TreeNode<T> *  getChild() const { return mChild; }
         void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newParent, newPrev ); }
+        //@}
+
+        //@{
+        bool isDescendant( const TreeNode<T> * p ) const { return doIsDescendant( p ); }
+        size_t calcChildrenCount() const { return doCalcChildrenCount(); }
         //@}
 
     private:
@@ -67,7 +71,7 @@ namespace GN { namespace scene
         /// 2. Cannot be this
         /// 3. Cannot be in child tree.
         ///
-        bool checkParent( TreeNode<T> * p ) const
+        bool checkParent( const TreeNode<T> * p ) const
         {
             if( this == p )
             {
@@ -75,11 +79,17 @@ namespace GN { namespace scene
                 GN_ERROR(sLogger)( "can't set itself as parent" );
                 return false;
             }
+            if( isDescendant( p ) )
+            {
+                static Logger * sLogger = getLogger("GN.scene.TreeNode");
+                GN_ERROR(sLogger)( "can't descendant as parent" );
+                return false;
+            }
             // TODO: traverse child tree to make sure 'p' is not in it.
             return true;
         }
 
-        bool checkPrev( TreeNode<T> * parent, TreeNode<T> * prev ) const
+        bool checkPrev( const TreeNode<T> * parent, const TreeNode<T> * prev ) const
         {
             if( 0 == parent ) return true; // prev will be ignored, if parent is NULL.
 
@@ -160,6 +170,136 @@ namespace GN { namespace scene
                 mNext = 0;
              }
         }
+
+        bool doIsDescendant( const TreeNode<T> * p ) const
+        {
+            for( TreeNode<T> * c = mChild; c; c = c->mNext )
+            {
+                if( p == c ) return true;
+                if( c->doIsDescendant( p ) ) return true;
+            }
+            return false;
+        }
+
+        size_t doCalcChildrenCount() const
+        {
+            size_t n = 0;
+            for( TreeNode<T> * c = mChild; c; c = c->mNext )
+            {
+                n += c->doCalcChildrenCount() + 1;
+            }
+            return n;
+        }
+    };
+
+    //
+    // traverse tree structure in pre-order
+    //
+    template<class T>
+    class TreeTraversePreOrder
+    {
+        T * mFirstNode;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        TreeTraversePreOrder( T * root )
+        {
+            GN_ASSERT( root );
+            mFirstNode = root;
+        }
+
+        //@{
+
+        T * first() const { return mFirstNode; }
+
+        T * next( T * current, int * level = 0 ) const
+        {
+            GN_ASSERT( current );
+
+            // if( has child ) next is child
+            T * n = safeCast<T*>( current->getChild() );
+            if( n )
+            {
+                if( level ) ++(*level);
+                return n;
+            }
+
+            // if( has brother ) next is brother
+            n = safeCast<T*>( current->getNext() );
+            if( n ) return n;
+
+            // check parent
+            T * p = safeCast<T*>( current->getParent() );
+            while( p )
+            {
+                // if( parent has next ) next is parent's next
+                n = safeCast<T*>( p->getNext() );
+                if( n )
+                {
+                    if( level ) --(*level);
+                    return n;
+                }
+
+                // loop one level up
+                p = safeCast<T*>( p->getParent() );
+            }
+
+            // if( no parent ) done.
+            return 0;
+        }
+
+        //@}
+    };
+
+    //
+    // traverse tree structure in post-order
+    //
+    template<class T>
+    class TreeTraversePostOrder
+    {
+        T * mFirstNode;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        TreeTraversePostOrder( T * root )
+        {
+            GN_ASSERT( root );
+            T * c;
+            while( NULL != ( c = safeCast<T*>( root->getChild() ) ) ) root = c;
+            mFirstNode = root;
+            GN_ASSERT( root );
+        }
+
+        //@{
+
+        T * first() const { return mFirstNode; }
+
+        T * next( T * current ) const
+        {
+            GN_ASSERT( current );
+
+            T * n = safeCast<T*>( current->getNext() );
+
+            if( n )
+            {
+                T * c;
+                while( NULL != ( c = safeCast<T*>( n->getChild() ) ) ) n = c;
+                GN_ASSERT( n );
+                return n;
+            }
+            else
+            {
+                return safeCast<T*>( current->getParent() );
+            }
+        }
+
+        //@}
     };
 
     ///
