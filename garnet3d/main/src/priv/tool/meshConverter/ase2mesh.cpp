@@ -113,7 +113,8 @@ struct AseMesh
     //@}
 
     //@{
-    DynaArray<AseFaceChunk> chunks; // faces sorted by material
+    DynaArray<AseFaceChunk> chunks; ///< faces sorted by material
+    Boxf                    bbox;   ///< bounding box of the mesh itself
     //@}
 };
 
@@ -126,6 +127,7 @@ struct AseNode
     Vector3f  rotaxis;
     float     rotangle;
     Vector3f  scale;
+    Boxf      bbox;   ///< bounding box of the node itself and its descendants.
 };
 
 struct AseGeoObject : public GN::scene::TreeNode<AseGeoObject>
@@ -139,13 +141,20 @@ struct AseScene
 {
     DynaArray<AseMaterial>  materials;
     DynaArray<AseGeoObject> objects;
+    AseGeoObject            root; ///< root object
 
-    const AseMaterial & getChunkMaterial( UInt32 oid, UInt32 cid ) const
+    AseGeoObject * findObj( const StrA & name )
     {
-        GN_ASSERT( oid < objects.size() );
+        if( name.empty() ) return &root;
+        for( AseGeoObject * o = objects.begin(); o != objects.end(); ++o )
+        {
+            if( name == o->node.name ) return o;
+        }
+        return 0;
+    }
 
-        const AseGeoObject & o = objects[oid];
-
+    const AseMaterial & getChunkMaterial( const AseGeoObject & o, UInt32 cid ) const
+    {
         GN_ASSERT( cid < o.mesh.chunks.size() );
 
         if( "Multi/Sub-Object" == materials[o.matid].class_ )
@@ -805,6 +814,16 @@ static bool sReadMesh( AseMesh & m, const Matrix44f & transform, AseFile & ase )
     }
     if( !ase.readBlockEnd() ) return false;
 
+    // calculate mesh bounding box
+    if( m.vertices.size() > 0 )
+    {
+        calcBoundingBox( m.bbox, &m.vertices[0].p, m.vertices.size(), sizeof(AseVertex) );
+    }
+    else
+    {
+        m.bbox.x = m.bbox.y = m.bbox.z = m.bbox.w = m.bbox.h = m.bbox.d = .0f;
+    }
+
     // read faces
     if( !ase.next( "*MESH_FACE_LIST" ) || !ase.readBlockStart() ) return false;
     for( UInt32 i = 0; i < numface; ++i )
@@ -1182,7 +1201,6 @@ static bool sReadGroup( AseScene & scene, AseFile & ase )
     GN_UNGUARD;
 }
 
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -1235,12 +1253,99 @@ static bool sReadAse( AseScene & scene, const StrA & filename )
         }
     }
 
-    // analyse node hiearachy
-
     // success
     return true;
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sBuildNodeTree( AseScene & scene )
+{
+    GN_INFO(sLogger)( "\nBuild node tree..." );
+    
+    // build node tree
+    for( size_t i = 0; i < scene.objects.size(); ++i )
+    {
+        AseGeoObject & o = scene.objects[i];
+
+        AseGeoObject * p = scene.findObj( o.node.parent );
+
+        if( 0 == p )
+        {
+            GN_ERROR(sLogger)( "Object %s has invalid parent: %s",
+                o.node.name.cptr(), o.node.parent.cptr() );
+            return false;
+        }
+
+        o.setParent( p, 0 );
+    }
+
+    // make sure all objects are linked into the tree.
+    GN_ASSERT_EX(
+        scene.root.calcChildrenCount() == scene.objects.size(),
+        strFormat( "numchildren=%d, numobjects=%d",
+            scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
+
+    // setup root node
+    scene.root.node.name = "root";
+    scene.root.mesh.bbox.size().set( 0, 0, 0 );
+
+    // calculate bounding box for each node, in post order
+    scene::TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
+
+    AseGeoObject * n = ttpost.first();
+    GN_ASSERT( 0 == n->getChild() );
+
+    while( n )
+    {
+        // copy mesh bbox to node
+        n->node.bbox = n->mesh.bbox;
+
+        // then merge with all childrens' bbox
+        AseGeoObject * c = safeCast<AseGeoObject*>( n->getChild() );
+        while( c )
+        {
+            Boxf::sGetUnion( n->node.bbox, n->node.bbox, c->node.bbox );
+
+            c = safeCast<AseGeoObject*>( c->getNext() );
+        }
+
+        // next node
+        n = ttpost.next( n );
+    }
+
+    // print node tree
+    scene::TreeTraversePreOrder<AseGeoObject> ttpre( &scene.root );
+    n = ttpre.first();
+    int level = 0;
+    while( n )
+    {
+        StrA s;
+
+        for( int i = 0; i < level; ++i ) s += '-';
+        s += strFormat(
+            "%s : bbox_pos(%f,%f,%f), bbox_size(%f,%f,%f)",
+            n->node.name.cptr(),
+            n->node.bbox.pos().x,
+            n->node.bbox.pos().y,
+            n->node.bbox.pos().z,
+            n->node.bbox.size().x,
+            n->node.bbox.size().y,
+            n->node.bbox.size().z );
+
+        GN_INFO(sLogger)( s.cptr() );
+
+        // next node
+        n = ttpre.next( n, &level );
+    }
+
+    GN_INFO(sLogger)( "" );
+
+    // success
+    return true;
 }
 
 // *****************************************************************************
@@ -1350,6 +1455,224 @@ static void reorgMeshFor16bitsIndex(
     GN_UNGUARD;
 }
 
+/*
+//
+// -----------------------------------------------------------------------------
+static bool sWriteNode(
+    const AseScene & scene,
+    const AseGeoObject & o,
+    int ident,
+    const StrA & name )
+{
+    GN_GUARD;
+
+    // compose ident string
+    StrA identstr;
+    for( int i = 0; i < ident; ++i ) identstr += '\t';
+
+    // compose actor xml header
+    StrA actorxml;
+    actorxml.format( "%s<actor>\n", identstr.cptr() );
+
+    Boxf actorbbox( 0, 0, 0, 0, 0, 0 ); // store bounding box of the whole actor.
+
+    for( size_t ci = 0; ci < o.mesh.chunks.size(); ++ci )
+    {
+        GN_INFO(sLogger)( "Write object '%s', chunk %d...", o.node.name.cptr(), ci );
+
+        const AseFaceChunk & c = o.mesh.chunks[ci];
+
+        const AseMaterial & mtl = scene.getChunkMaterial( o, ci );
+
+        // build vertex and index array
+        VertexBuffer      vb;
+        DynaArray<UInt32> ib; // indices into vb
+        VertexSelector    vs;
+        for( size_t fi = 0; fi < c.faces.size(); ++fi )
+        {
+            const AseFace & f = o.mesh.faces[c.faces[fi]];
+
+            for( size_t fi = 0; fi < 3; ++fi )
+            {
+                vs.p = f.v[fi];
+                vs.t = f.t[fi];
+                vs.n = f.vn[fi];
+
+                UInt32 idx = vb.add( vs );
+
+                ib.append( idx );
+            }
+        }
+
+        // split vertex and index array, if they are too large
+        DynaArray<FaceRange> ranges;
+        reorgMeshFor16bitsIndex( ranges, vb, ib );
+
+        for( size_t ri = 0; ri < ranges.size(); ++ri )
+        {
+            const FaceRange & r = ranges[ri];
+            
+            StrA basename  = strFormat( "%s_%s_c%02d_r%02d",
+                                        name.cptr(),
+                                        o.node.name.cptr(),
+                                        ci,
+                                        ri );
+            StrA actorname = basename + ".actor.xml";
+            StrA meshname  = basename + ".mesh.xml";
+            StrA vbname    = basename + ".vb";
+            StrA ibname    = basename + ".ib";
+
+            struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
+
+            size_t written;
+
+            struct BinHeader
+            {
+                char   tag[2];
+                UInt16 endian;
+            };
+            GN_CASSERT( 4 == sizeof(BinHeader) );
+
+            const BinHeader header = { {'G', 'N'}, 0x0201 };
+
+            // write VB
+            DynaArray<MeshVertex> memvb( r.vbcount );
+            for( size_t vi = 0; vi < r.vbcount; ++vi )
+            {
+                const VertexSelector & vs = vb[r.vboffset+vi];
+                const AseVertex & v = o.mesh.vertices[vs.p];
+                memvb[vi].p = v.p;
+                memvb[vi].n = v.n[vs.n];
+                memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
+            }
+            AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
+            if( !fvb ||
+                !fvb->write( &header, sizeof(header), &written ) ||
+                written != sizeof(header) ||
+                !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), &written ) ||
+                written != sizeof(MeshVertex)*memvb.size() )
+            {
+                GN_ERROR(sLogger)( "fail to write vertex buffer." );
+                return false;
+            }
+            fvb.clear();
+
+            // calculcate bounding bbox
+            Boxf bbox;
+            calcBoundingBox( bbox, (Vector3f*)memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
+            Boxf::sGetUnion( actorbbox, actorbbox, bbox );
+
+            // write IB
+            AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
+            if( !fib ) return false;
+            if( !fib->write( &header, sizeof(header), &written ) ||
+                sizeof(header) != written )
+            {
+                GN_ERROR(sLogger)( "fail to write IB header." );
+                return false;
+            }
+            for( size_t ii = 0; ii < r.ibcount; ++ii )
+            {
+                UInt32 idx32 = ib[r.iboffset + ii];
+
+                GN_ASSERT( r.vboffset <= idx32 && idx32 < (r.vboffset+r.vbcount) );
+                GN_ASSERT( r.vbcount < 0x10000 );
+
+                UInt16 idx16 = (UInt16)( idx32 - r.vboffset );
+
+                if( !fib->write( &idx16, sizeof(idx16), &written ) ||
+                    2 != written )
+                {
+                    GN_ERROR(sLogger)( "fail to write index %d", ii );
+                    return false;
+                }
+            }
+            fib.clear();
+
+            // write mesh xml
+            StrA outdir = dirName( meshname );
+            StrA meshxml;
+            meshxml.format(
+                "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
+                "<mesh\n"
+                "	primtype  = \"TRIANGLE_LIST\"\n"
+                "	numprim   = \"%d\"\n"
+                "	startvtx  = \"0\"\n"
+                "	minvtxidx = \"0\"\n"
+                "	numvtx    = \"%d\"\n"
+                "	startidx  = \"0\"\n"
+                "	>\n"
+                "\n"
+                "	<vtxfmt>\n"
+                "		<attrib stream = \"0\" offset =  \"0\" semantic = \"POS0\" format = \"FMT_FLOAT3\"/>\n"
+                "		<attrib stream = \"0\" offset = \"12\" semantic = \"NML0\" format = \"FMT_FLOAT3\"/>\n"
+                "		<attrib stream = \"0\" offset = \"24\" semantic = \"TEX0\" format = \"FMT_FLOAT2\"/>\n"
+                "	</vtxfmt>\n"
+                "	\n"
+                "	<vtxbuf stream = \"0\" offset = \"0\" stride = \"32\" ref=\"%s\"/>\n"
+                "\n"
+                "	<idxbuf ref=\"%s\"/>\n"
+                "</mesh>\n",
+                r.ibcount / 3,
+                r.vbcount,
+                relPath( vbname, outdir ).cptr(),
+                relPath( ibname, outdir ).cptr() );
+            AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
+            if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
+
+            // compose actor xml
+            actorxml += strFormat(
+                "%s	<drawable>\n"
+                "%s		<effect ref=\"media::/effect/%s.xml\"/>\n"
+                "%s		<mesh ref=\"%s\"/>\n"
+                "%s		<texture binding=\"texdiff\" ref=\"%s\"/>\n"
+                "%s		<texture binding=\"texheight\" ref=\"%s\"/>\n"
+                "%s		<uniform binding=\"diffuse\" type=\"VECTOR4\" count=\"1\">%f, %f, %f, 1.0f</uniform>\n"
+                "%s	</drawable>\n",
+                identstr.cptr(),
+                identstr.cptr(), "diffuse_textured",
+                identstr.cptr(), relPath( meshname, outdir ).cptr(),
+                identstr.cptr(), mtl.mapdiff.bitmap.empty() ? "media::/texture/purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
+                identstr.cptr(), relPath( mtl.mapbump.bitmap, outdir ).cptr(),
+                identstr.cptr(),mtl.diffuse.x, mtl.diffuse.y, mtl.diffuse.z,
+                identstr.cptr() );
+        }
+    }
+
+    // calculate bounding sphere
+    Vector3f center = actorbbox.center();
+    float    radius = sqrtf( actorbbox.w * actorbbox.w + actorbbox.h * actorbbox.h + actorbbox.d * actorbbox.d ) / 2.0f;
+
+    // compose rotation quaternion
+    Quaternionf quat;
+    // TODO: make sure the unit of angle is match.
+    quat.fromRotation( o.node.rotaxis, o.node.rotangle );
+
+    // compose actor xml tailer
+    actorxml += strFormat(
+        "	<position x=\"%f\" y=\"%f\" z=\"%f\" desc=\"position in parent space, 3D vector\"/>\n"
+        "	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
+        "	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
+        "	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n"
+        "</actor>",
+        o.node.pos.x, o.node.pos.y, o.node.pos.z,
+        center.x, center.y, center.z,
+        quat.v.x, quat.v.y, quat.v.z, quat.w,
+        center.x, center.y, center.z, radius );
+
+    // actor name
+    StrA actorname = strFormat(
+        "%s_%s.actor.xml",
+        name.cptr(), o.node.name.cptr() );
+    AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
+    if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}*/
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -1374,7 +1697,7 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
 
             const AseFaceChunk & c = o.mesh.chunks[ci];
 
-            const AseMaterial & mtl = scene.getChunkMaterial( oi, ci );
+            const AseMaterial & mtl = scene.getChunkMaterial( o, ci );
 
             // build vertex and index array
             VertexBuffer      vb;
@@ -1581,6 +1904,8 @@ bool GN::ase2mesh( const ConvertOptions & co )
     AseScene s;
 
     if( !sReadAse( s, co.inputFileName ) ) return false;
+
+    if( !sBuildNodeTree( s ) ) return false;
 
     if( !sWriteScene( s, co.outputFileName ) ) return false;
 
