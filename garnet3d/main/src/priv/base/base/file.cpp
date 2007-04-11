@@ -11,8 +11,6 @@ static FILE * sOpenFile( const char * filename, const char * mode )
 #endif
 }
 
-GN::Logger * GN::File::sLogger = GN::getLogger("GN.base.File");
-
 // *****************************************************************************
 //                   implementation of StdFile
 // *****************************************************************************
@@ -27,19 +25,19 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
     // check parameter(s)
     if( 0 == buffer && 0 != size )
     {
-        GN_ERROR(sLogger)( "invalid parameter(s)!" );
+        GN_ERROR(myLogger())( "invalid parameter(s)!" );
         return false;
     }
 
     if( 0 == mFile )
     {
-        GN_ERROR(sLogger)( "NULL file pointer!" );
+        GN_ERROR(myLogger())( "NULL file pointer!" );
         return false;
     }
 
     if( eof() )
     {
-        GN_DETAIL(sLogger)( "Already reach the end of the file." );
+        GN_DETAIL(myLogger())( "Already reach the end of the file." );
         if( readen ) *readen = 0;
         return true;
     }
@@ -48,7 +46,7 @@ bool GN::StdFile::read( void * buffer, size_t size, size_t * readen )
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : fread() failed!", name().cptr() );
+        GN_ERROR(myLogger())( "%s : fread() failed!", name().cptr() );
         return false;
     }
 
@@ -69,20 +67,20 @@ bool GN::StdFile::write( const void * buffer, size_t size, size_t * written )
     // check parameter(s)
     if( 0 == buffer && 0 != size )
     {
-        GN_ERROR(sLogger)( "invalid parameter(s)!" );
+        GN_ERROR(myLogger())( "invalid parameter(s)!" );
         return false;
     }
 
     if( 0 == mFile )
     {
-        GN_ERROR(sLogger)( "NULL file pointer!" );
+        GN_ERROR(myLogger())( "NULL file pointer!" );
         return false;
     }
 
     size_t r = ::fwrite( buffer, 1, size, mFile );
     if ( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s: fwrite() failed!", name().cptr() );
+        GN_ERROR(myLogger())( "%s: fwrite() failed!", name().cptr() );
         return false;
     }
 
@@ -102,7 +100,7 @@ bool GN::StdFile::eof() const
 
     if( 0 == mFile )
     {
-        GN_ERROR(sLogger)( "NULL file pointer!" );
+        GN_ERROR(myLogger())( "NULL file pointer!" );
         return true;
     }
 
@@ -130,19 +128,19 @@ bool GN::StdFile::seek( int offset, FileSeekMode origin )
     // check parameter
     if( origin >= NUM_FSEEKS )
     {
-        GN_ERROR(sLogger)( "%s: invalid seek origin!", name().cptr() );
+        GN_ERROR(myLogger())( "%s: invalid seek origin!", name().cptr() );
         return false;
     }
 
     if( 0 == mFile )
     {
-        GN_ERROR(sLogger)( "NULL file pointer!" );
+        GN_ERROR(myLogger())( "NULL file pointer!" );
         return false;
     }
 
     if( 0 != ::fseek( mFile, offset, seek_table[origin] ) )
     {
-        GN_ERROR(sLogger)( "%s : fseek() failed!", name().cptr() );
+        GN_ERROR(myLogger())( "%s : fseek() failed!", name().cptr() );
         return false;
     }
 
@@ -161,7 +159,7 @@ size_t GN::StdFile::tell() const
 
     if( 0 == mFile )
     {
-        GN_ERROR(sLogger)( "NULL file pointer!" );
+        GN_ERROR(myLogger())( "NULL file pointer!" );
         return (size_t)-1;
     }
 
@@ -169,7 +167,7 @@ size_t GN::StdFile::tell() const
 
     if( (size_t)-1 == r )
     {
-        GN_ERROR(sLogger)( "%s : ftell() failed!", name().cptr() );
+        GN_ERROR(myLogger())( "%s : ftell() failed!", name().cptr() );
     }
 
     return r;
@@ -186,7 +184,7 @@ size_t GN::StdFile::size() const
 
     if( 0 == mFile )
     {
-        GN_ERROR(sLogger)( "NULL file pointer!" );
+        GN_ERROR(myLogger())( "NULL file pointer!" );
         return 0;
     }
 
@@ -194,14 +192,14 @@ size_t GN::StdFile::size() const
     long oldPos = ::ftell( mFile );
     if( -1 == oldPos )
     {
-        GN_ERROR(sLogger)( "%s : fail to get current file position!", name().cptr() );
+        GN_ERROR(myLogger())( "%s : fail to get current file position!", name().cptr() );
         return 0;
     }
 
     // seek to the end of the file
     if( 0 == ::fseek( mFile, SEEK_END, 0 ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to seek to the end of file!", name().cptr() );
+        GN_ERROR(myLogger())( "%s : fail to seek to the end of file!", name().cptr() );
         return 0;
     }
 
@@ -211,7 +209,7 @@ size_t GN::StdFile::size() const
     // restore file position
     if( 0 == ::fseek( mFile, SEEK_SET, oldPos ) )
     {
-        GN_ERROR(sLogger)( "%s : fail to restore file position!", name().cptr() );
+        GN_ERROR(myLogger())( "%s : fail to restore file position!", name().cptr() );
         return 0;
     }
 
@@ -270,7 +268,7 @@ bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
     // check parameter(s)
     if( filename.empty() )
     {
-        GN_ERROR(sLogger)( "empty filename!" );
+        GN_ERROR(myLogger())( "empty filename!" );
         close(); return false;
     }
 
@@ -278,7 +276,7 @@ bool GN::DiskFile::open( const StrA & filename, const StrA & mode )
     FILE * fp = sOpenFile( filename.cptr(), mode.cptr() );
     if( 0 == fp )
     {
-        GN_ERROR(sLogger)( "fail to open file '%s' with mode '%s'!",
+        GN_ERROR(myLogger())( "fail to open file '%s' with mode '%s'!",
             filename.cptr(), mode.cptr() );
         close(); return false;
     }

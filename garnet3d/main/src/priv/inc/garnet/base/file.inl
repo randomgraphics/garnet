@@ -28,14 +28,14 @@ GN::MemFile<T>::read( void * buf, size_t size, size_t * readen )
     // check parameter
     if( 0 == buf )
     {
-        GN_ERROR(sLogger)( "null output buf!" );
+        GN_ERROR(myLogger())( "null output buf!" );
         return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
-        GN_ERROR(sLogger)( "null file!" );
+        GN_ERROR(myLogger())( "null file!" );
         return false;
     }
 
@@ -76,14 +76,14 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
     // check parameter
     if( 0 == buf )
     {
-        GN_ERROR(sLogger)( "null input buf!" );
+        GN_ERROR(myLogger())( "null input buf!" );
         return false;
     }
 
     // check for null file
     if( 0 == mPtr )
     {
-        GN_ERROR(sLogger)( "null file!" );
+        GN_ERROR(myLogger())( "null file!" );
         return false;
     }
 
@@ -125,13 +125,13 @@ GN::MemFile<T>::seek( int offset, FileSeekMode origin )
     }
     else
     {
-        GN_ERROR(sLogger)( "invalid seek origin!" );
+        GN_ERROR(myLogger())( "invalid seek origin!" );
         return false;
     }
 
     if( ptr < mStart || ptr > end )
     {
-        GN_ERROR(sLogger)( "out of range" );
+        GN_ERROR(myLogger())( "out of range" );
         return false;
     }
     mPtr = ptr;
@@ -156,7 +156,7 @@ inline bool GN::VectorFile::read( void * buf, size_t size, size_t * readen )
 
     if( 0 == buf )
     {
-        GN_ERROR(sLogger)( "null output buffer!" );
+        GN_ERROR(myLogger())( "null output buffer!" );
         return false;
     }
 
@@ -184,7 +184,7 @@ inline bool GN::VectorFile::write( const void * buf, size_t size, size_t * writt
 
     if( 0 == buf )
     {
-        GN_ERROR(sLogger)( "null output buffer!" );
+        GN_ERROR(myLogger())( "null output buffer!" );
         return false;
     }
 
@@ -223,13 +223,13 @@ inline bool GN::VectorFile::seek( int offset, FileSeekMode origin )
     }
     else
     {
-        GN_ERROR(sLogger)( "invalid seek origin!" );
+        GN_ERROR(myLogger())( "invalid seek origin!" );
         return false;
     }
 
     if( cur > mBuffer.size() )
     {
-        GN_ERROR(sLogger)( "out of range" );
+        GN_ERROR(myLogger())( "out of range" );
         return false;
     }
     mCursor = cur;

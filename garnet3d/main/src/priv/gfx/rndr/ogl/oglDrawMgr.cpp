@@ -8,8 +8,70 @@
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.OGL");
 
 // *****************************************************************************
+// context dumper
+// *****************************************************************************
+
+/*
+struct CtxDumper
+{
+    bool         enabled;
+    GN::DiskFile fp;
+
+    CtxDumper() : enabled(true)
+    {
+        if( enabled )
+        {
+            fp.open( "GNcontext.xml", "wt" );
+        }
+
+        dump( "<?xml version=\"1.0\" standalone=\"yes\"?>" );
+    }
+
+    void dump( const char * fmt, ... )
+    {
+        using namespace GN;
+
+        if( fp )
+        {
+            StrA s;
+
+            va_list arglist;
+            va_start( arglist, fmt );
+            s.formatv( fmt, arglist );
+            va_end( arglist );
+
+            fprintf( fp, "%s\n", s.cptr() );
+        }
+    }
+};
+static CtxDumper sCtxDumper;
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDumpRendererContext( const GN::gfx::RendererContext & ctx, size_t frame )
+{
+    using namespace GN;
+    using namespace GN::gfx;
+
+    sCtxDumper.dump( "<RendererContext frame=\"%d\">", frame );
+    sCtxDumper.dump(
+        "    <flags\n"
+        "        u32 = \"0x%X\"\n"
+        "    />",
+        ctx.flags.u32 );
+    sCtxDumper.dump( "</RendererContext>" );
+}
+
+#define DUMP_CONTEXT() if(sCtxDumper.enabled) sDumpRendererContext( mContext, mFrameCounter );
+/*/
+#define DUMP_CONTEXT()
+//*/
+
+// *****************************************************************************
 // local functions
 // *****************************************************************************
+
 
 //
 /// \brief translate garnet primitive to OpenGL primitive
@@ -143,6 +205,8 @@ void GN::gfx::OGLRenderer::drawEnd()
     glXSwapBuffers( (Display*)dd.displayHandle, (Window)dd.windowHandle );
 #endif
 
+    ++mFrameCounter;
+
     GN_UNGUARD_SLOW;
 }
 
@@ -206,6 +270,8 @@ void GN::gfx::OGLRenderer::drawIndexed(
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
+
+    DUMP_CONTEXT();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -280,6 +346,8 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
 
     GN_ASSERT( mDrawBegan );
 
+    DUMP_CONTEXT();
+
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
     size_t  numidx;
@@ -335,6 +403,8 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     GN_GUARD_SLOW;
 
     GN_ASSERT( mDrawBegan );
+
+    DUMP_CONTEXT();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -411,6 +481,8 @@ void GN::gfx::OGLRenderer::drawUp(
 
     GN_ASSERT( mDrawBegan );
 
+    DUMP_CONTEXT();
+
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
     size_t  numidx;
@@ -472,6 +544,7 @@ void GN::gfx::OGLRenderer::drawLines(
     if( !(DL_USE_CURRENT_VS & options) ) setVS( 0 );
     if( !(DL_USE_CURRENT_PS & options) ) setPS( 0 );
     contextUpdateEnd();
+    DUMP_CONTEXT();
     mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
     GN_UNGUARD_SLOW;
 }

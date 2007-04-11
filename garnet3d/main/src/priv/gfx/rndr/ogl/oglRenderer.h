@@ -351,6 +351,7 @@ namespace GN { namespace gfx
             mDrawBegan = false;
             mLine = 0;
             mCurrentStartVtx = (size_t)-1;
+            mFrameCounter = 0;
         }
 
         bool drawDeviceCreate();
@@ -368,6 +369,7 @@ namespace GN { namespace gfx
         bool mDrawBegan;
         OGLLine * mLine;
         size_t mCurrentStartVtx;
+        size_t mFrameCounter;
 
         //@}
 
