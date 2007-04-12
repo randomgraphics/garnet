@@ -322,7 +322,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     mD3DFormat = D3DFMT_UNKNOWN;
     if( FMT_DEFAULT == desc.format )
     {
-        mD3DFormat = desc.usage.depthstencil ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8R8G8B8;
+        mD3DFormat = desc.usage.depthstencil ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8B8G8R8;
         if( D3DFMT_UNKNOWN == mD3DFormat ) return false;
         GN_TRACE(sLogger)( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
     }

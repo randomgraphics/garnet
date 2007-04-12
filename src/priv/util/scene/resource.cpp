@@ -110,6 +110,20 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
 }
 
 //
+// Create a 1x2 pure blue texture as fallback.
+// -----------------------------------------------------------------------------
+static gfx::Texture * sCreateNullTexture()
+{
+    AutoRef<Texture> tex( gRenderer.create1DTexture( 1 ) );
+    UInt32 * texData = (UInt32*)tex->lock1D( 0, 0, 0, GN::gfx::LOCK_WO );
+    if( 0 == texData ) return 0;
+    //           A B G R
+    *texData = 0xFFFF0000;
+    tex->unlock();
+    return tex.detach();
+}
+
+//
 //
 // -----------------------------------------------------------------------------
 static gfx::Texture * sCreateTextureFromXml( File & fp, const StrA & dirname )
@@ -226,14 +240,7 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
     Texture * result;
     if( name.empty() )
     {
-        // Create a 1x1 pure blue texture.
-        AutoRef<Texture> tex( gRenderer.create1DTexture( 1 ) );
-        UInt32 * texData = (UInt32*)tex->lock1D( 0, 0, 0, GN::gfx::LOCK_WO );
-        if( 0 == texData ) return 0;
-        //           A R G B
-        *texData = 0xFF0000FF;
-        tex->unlock();
-        result = tex.detach();
+        result = sCreateNullTexture();
     }
     else
     {
@@ -245,11 +252,13 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
             if( !fp )
             {
                 GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
-                return 0;
+                result = sCreateNullTexture();
             }
-
-            // parse texture definition
-            result = sCreateTextureFromXml( *fp, dirName(name) );
+            else
+            {
+                // parse texture definition
+                result = sCreateTextureFromXml( *fp, dirName(name) );
+            }
         }
         else
         {
@@ -258,11 +267,13 @@ static GN::scene::BaseResource * sCreateTexture( const StrA & name )
             if( !fp )
             {
                 GN_ERROR(sLogger)( "Fail to open texture file '%s'.", name.cptr() );
-                return 0;
+                result = sCreateNullTexture();
             }
-
-            // create texture instance
-            result = createTextureFromFile( *fp, 0 );
+            else
+            {
+                // create texture instance
+                result = createTextureFromFile( *fp, 0 );
+            }
         }
     }
 

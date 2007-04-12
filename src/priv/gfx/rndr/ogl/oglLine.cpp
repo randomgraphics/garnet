@@ -166,6 +166,12 @@ void GN::gfx::OGLLine::drawLines(
         glDisable( GL_LIGHTING );
     }
 
+    // disable VBO
+    if( GLEW_ARB_vertex_buffer_object )
+    {
+        GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
+    }
+
     // apply vertex binding
     GN_OGL_CHECK( glInterleavedArrays( GL_C4UB_V3F, sizeof(LineVertex), mVtxBuf ) );
 

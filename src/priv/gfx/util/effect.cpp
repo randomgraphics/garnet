@@ -651,6 +651,7 @@ bool GN::gfx::Effect::createEffect()
 
     // setup active technique
     mActiveTechnique = mTechniques.items.first();
+    GN_TRACE(sLogger)( "Using technique '%s'.", mTechniques.items[mActiveTechnique].name.cptr() );
 
     // success
     return true;
