@@ -59,7 +59,7 @@ void GN::scene::Actor::setPosition( const Vector3f & p )
     if( p != mPosition )
     {
         mPosition = p;
-        mTransformDirty = true;
+        dirtyTransform();
     }
     else
     {
@@ -75,7 +75,7 @@ void GN::scene::Actor::setPivot( const Vector3f & p )
     if( p != mPivot )
     {
         mPivot = p;
-        mTransformDirty = true;
+        dirtyTransform();
     }
     else
     {
@@ -91,7 +91,7 @@ void GN::scene::Actor::setRotation( const Quaternionf & q )
     if( q != mRotation )
     {
         mRotation = q;
-        mTransformDirty = true;
+        dirtyTransform();
     }
     else
     {
@@ -222,6 +222,10 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
             if( !d.loadFromXmlNode( *e, basedir ) ) return false;
             addDrawable( d );
         }
+        else if( "actor" == e->name )
+        {
+            // ignore sub actors.
+        }
         else
         {
             GN_ERROR(sLogger)( "Ignore unknown node '%s'.", e->name.cptr() );
@@ -244,7 +248,7 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
 // -----------------------------------------------------------------------------
 void GN::scene::Actor::draw()
 {
-    const Matrix44f & world = getLocal2Parent();
+    const Matrix44f & world = getLocal2Root();
 
     EffectItemID id;
 
@@ -278,11 +282,37 @@ void GN::scene::Actor::draw()
 
         d.draw();
     }
+
+    // draw children
+    Actor * c = getChild();
+    while( c )
+    {
+        c->draw();
+        c = c->getNext();
+    }
 }
 
 // *****************************************************************************
 // private functions
 // *****************************************************************************
+
+//
+// 
+// -----------------------------------------------------------------------------
+void GN::scene::Actor::dirtyTransform()
+{
+    if( mTransformDirty ) return;
+
+    mTransformDirty = true;
+
+    // dirty all children
+    Actor * c = getChild();
+    while( c )
+    {
+        c->dirtyTransform();
+        c = c->getNext();
+    }
+}
 
 //
 // 

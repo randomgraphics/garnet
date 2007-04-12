@@ -36,6 +36,8 @@ namespace GN { namespace scene
         Vector3f position; ///< light position in world space
     };
 
+    class Actor;
+
     ///
     /// Scene
     ///
@@ -51,6 +53,13 @@ namespace GN { namespace scene
 
         void clear();
 
+        //@}
+
+        /// \name actor factory
+        //@{
+        Actor * loadActorHiearachyFromXmlNode( const XmlNode & node, const StrA & basedir );
+        Actor * loadActorHiearachyFromXmlFile( const StrA & filename );
+        void    releaseActorHiearacy( Actor * );
         //@}
 
         //@{

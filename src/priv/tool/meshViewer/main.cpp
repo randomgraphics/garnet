@@ -10,10 +10,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
 
 class MeshViewerApp : public app::SampleApp
 {
-    StrA mObjName;
-
-    Scene mScene;
-    Actor mActor;
+    StrA    mFileName;
+    Scene   mScene;
+    Actor * mActor;
     ArcBall mArcBall;
 
     float mRadius; // distance from camera to object
@@ -31,7 +30,7 @@ class MeshViewerApp : public app::SampleApp
 
 public:
 
-    MeshViewerApp() : mActor( mScene ) {}
+    MeshViewerApp() : mActor(0) {}
 
     bool onCheckCmdLine( int argc, const char * const argv[] )
     {
@@ -40,15 +39,15 @@ public:
             const char * a = argv[i];
             if( '-' != *a )
             {
-                mObjName = a;
+                mFileName = a;
                 break;
             }
             else GN_WARN(sLogger)( "unknown command line argument: %s", a );
         }
-        if( mObjName.empty() )
+        if( mFileName.empty() )
         {
-            mObjName = "media::/cube/cube.actor.xml";
-            GN_INFO(sLogger)( "no object specified in comment line. Using default one: %s", mObjName.cptr() );
+            mFileName = "media::/cube/cube.actor.xml";
+            GN_INFO(sLogger)( "no object specified in comment line. Using default one: %s", mFileName.cptr() );
         }
         return true;
     }
@@ -60,13 +59,16 @@ public:
         {
             firstTime = false;
 
-            // initialize actor
-            loadFromXmlFile( mActor, mObjName );
-            mActor.setPivot( mActor.getBoundingSphere().center );
-            mActor.setPosition( -mActor.getBoundingSphere().center );
+            // (re)load actor
+            mScene.releaseActorHiearacy( mActor );
+            mActor = mScene.loadActorHiearachyFromXmlFile( mFileName );
+            if( 0 == mActor ) return false;
+
+            mActor->setPivot( mActor->getBoundingSphere().center );
+            mActor->setPosition( -mActor->getBoundingSphere().center );
 
             // update camera stuff
-            mRadius = mActor.getBoundingSphere().radius * 2.0f;
+            mRadius = mActor->getBoundingSphere().radius * 2.0f;
             updateRadius();
 
             // initialize mArcBall
@@ -80,6 +82,11 @@ public:
         mArcBall.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
         return true;
+    }
+
+    void onRendererDispose()
+    {
+        mScene.releaseActorHiearacy( mActor );
     }
 
     void onAxisMove( Axis a, int d )
@@ -102,7 +109,7 @@ public:
             (float)axises[input::AXIS_XB360_THUMB_LX] /  2000.0f,
             (float)axises[input::AXIS_XB360_THUMB_LY] / -2000.0f );
 
-        mActor.setRotation( mArcBall.getRotation() );
+        mActor->setRotation( mArcBall.getRotation() );
     }
 
     void onRender()
@@ -119,7 +126,7 @@ public:
         r.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), world, mView, mProj );
         r.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), world, mView, mProj );
 
-        mActor.draw();
+        mActor->draw();
 
 #if 0
         // draw matrices onto screen
