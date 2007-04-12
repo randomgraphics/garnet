@@ -197,8 +197,8 @@ namespace GN
         };
         struct PooledAttrib : public XmlAttrib {};
 
-        std::vector<XmlNode*>     mNodes;
-        std::vector<PooledAttrib> mAttribs;
+        std::vector<XmlNode*>      mNodes;
+        std::vector<PooledAttrib*> mAttribs;
 
     public:
 
