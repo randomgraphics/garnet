@@ -1,3 +1,8 @@
+- 2007.4.13
+  - support loading specific object in actor file
+  - add translation mode to arcball
+  - refine mouse control of mesh viewer
+
 - 2007.4.8
   - add portable threading interface
     - why not use exising portable framework (like apr, boost, wxWidgets, Qt and etc...):

@@ -1324,7 +1324,7 @@ static bool sBuildNodeTree( AseScene & scene )
         {
             Boxf::sGetUnion( n->node.bbox, n->node.bbox, c->node.bbox );
 
-            c = safeCast<AseGeoObject*>( c->getNext() );
+            c = safeCast<AseGeoObject*>( c->getNextSibling() );
         }
 
         // next node
@@ -1655,11 +1655,11 @@ static bool sWriteNode(
 
     // compose other actor properties
     xml += strFormat(
-        "%s	<position x=\"%f\" y=\"%f\" z=\"%f\" desc=\"position in parent space, 3D vector\"/>\n"
+        "%s	<position x=\"0.0\" y=\"0.0\" z=\"0.0\" desc=\"position in parent space, 3D vector\"/>\n"
         "%s	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
         "%s	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
         "%s	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n",
-        identstr.cptr(), o.node.pos.x, o.node.pos.y, o.node.pos.z,
+        identstr.cptr(), //o.node.pos.x, o.node.pos.y, o.node.pos.z,
         identstr.cptr(), center.x, center.y, center.z,
         identstr.cptr(), quat.v.x, quat.v.y, quat.v.z, quat.w,
         identstr.cptr(), center.x, center.y, center.z, radius );
@@ -1669,7 +1669,7 @@ static bool sWriteNode(
     while( c )
     {
         sWriteNode( xml, scene, *c, ident+1, name );
-        c = safeCast<AseGeoObject*>( c->getNext() );
+        c = safeCast<AseGeoObject*>( c->getNextSibling() );
     }
 
     // write actor tail

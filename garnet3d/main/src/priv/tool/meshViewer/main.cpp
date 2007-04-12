@@ -10,22 +10,32 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.meshViewer");
 
 class MeshViewerApp : public app::SampleApp
 {
-    StrA    mFileName;
-    Scene   mScene;
-    Actor * mActor;
-    ArcBall mArcBall;
+    StrA      mFileName;
+    StrA      mObjName;
+    Scene     mScene;
+    Actor *   mActor;
+    ArcBall   mArcBall;
 
-    float mRadius; // distance from camera to object
+    float     mRadius; // distance from camera to object
 
     Matrix44f mProj, mView;
 
     void updateRadius()
     {
+        Renderer & r = gRenderer;
+
+        const DispDesc & dd = r.getDispDesc();
+
         mView.lookAtRh( Vector3f(0,0,mRadius), Vector3f(0,0,0), Vector3f(0,1,0) );
-        gRenderer.composePerspectiveMatrixRh( mProj, 1.0f, 4.0f/3.0f, mRadius / 100.0f, mRadius * 2.0f );
+        r.composePerspectiveMatrixRh( mProj, 1.0f, (float)dd.width/dd.height, mRadius / 100.0f, mRadius * 2.0f );
         mScene.setView( mView );
         mScene.setProj( mProj );
         mScene.light(0).position.set( 0, 0, mRadius ); // head light: same location as camera.
+        mArcBall.setViewMatrix( mView );
+
+        // calculate move speed
+        float h = tan( 0.5f ) * mRadius * 2.0f;
+        mArcBall.setTranslationSpeed( h / dd.height );
     }
 
 public:
@@ -34,13 +44,14 @@ public:
 
     bool onCheckCmdLine( int argc, const char * const argv[] )
     {
+        bool isFileName = true;
         for( int i = 1; i < argc; ++i )
         {
             const char * a = argv[i];
             if( '-' != *a )
             {
-                mFileName = a;
-                break;
+                if( isFileName ) mFileName = a, isFileName = false;
+                else mObjName = a;
             }
             else GN_WARN(sLogger)( "unknown command line argument: %s", a );
         }
@@ -49,19 +60,17 @@ public:
             mFileName = "media::/cube/cube.actor.xml";
             GN_INFO(sLogger)( "no object specified in comment line. Using default one: %s", mFileName.cptr() );
         }
+        if( mObjName.empty() ) mObjName = "root";
         return true;
     }
 
     bool onRendererRestore()
     {
-        static bool firstTime = true;
-        if( firstTime )
+        if( !mActor )
         {
-            firstTime = false;
-
             // (re)load actor
             mScene.releaseActorHiearacy( mActor );
-            mActor = mScene.loadActorHiearachyFromXmlFile( mFileName );
+            mActor = mScene.loadActorHiearachyFromXmlFile( mFileName, mObjName );
             if( 0 == mActor ) return false;
 
             mActor->setPivot( mActor->getBoundingSphere().center );
@@ -87,6 +96,7 @@ public:
     void onRendererDispose()
     {
         mScene.releaseActorHiearacy( mActor );
+        mActor = 0;
     }
 
     void onAxisMove( Axis a, int d )
@@ -109,6 +119,9 @@ public:
             (float)axises[input::AXIS_XB360_THUMB_LX] /  2000.0f,
             (float)axises[input::AXIS_XB360_THUMB_LY] / -2000.0f );
 
+        Vector3f pos = mArcBall.getTranslation();
+        mActor->setPosition( pos );
+        mActor->setPivot( -pos );
         mActor->setRotation( mArcBall.getRotation() );
     }
 

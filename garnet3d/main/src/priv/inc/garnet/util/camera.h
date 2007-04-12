@@ -15,17 +15,23 @@ namespace GN { namespace util
     ///
     class ArcBall : public SlotBase
     {
+        Vector3f    mTranslation;
         Quaternionf mQuat;
         Matrix33f   mRotation3x3;
         Matrix44f   mRotation4x4;
 
-        Matrix44f   mTransView; //< trans(view), that is invtrans( inv(view) ). Used to transform vector from view space to model space.
+        Matrix44f   mTransView; //< trans(view), that is invtrans( inv(view) ). Used to transform vector from view space to world space.
         Vector2i    mWindowCenter;
         Vector2i    mWindowHalfSize;
         float       mHandness; ///< -1 for left-hand, 1 for left-hand
 
         Quaternionf mQuatBase;
-        Vector3f    mMoveBase;
+        Vector3f    mRollBase;
+        bool        mRolling;
+
+        Vector3f    mTranslationBase;
+        Vector2i    mMoveBase;
+        float       mMoveSpeed;
         bool        mMoving;
 
     public:
@@ -82,6 +88,8 @@ namespace GN { namespace util
 
         const Vector2i & getWindowCenter() const { return mWindowCenter; }
 
+        const Vector3f & getTranslation() const { return mTranslation; }
+
         const Quaternionf & getRotation() const { return mQuat; }
 
         const Matrix33f & getRotationMatrix33() const { return mRotation3x3; }
@@ -96,14 +104,17 @@ namespace GN { namespace util
         void connectToInput();
         void disconnectFromInput();
 
-        void beginDrag( int x, int y );
-        void beginDrag( const Vector2i & pos ) { beginDrag( pos.x, pos.y ); }
-        void endDrag();
-        void onDrag( int x, int y );
+        void setTranslationSpeed( float s ) { mMoveSpeed = s; }
 
-        void onMouseButtonDown( int x, int y ) { beginDrag( x, y ); }
-        void onMouseButtonUp() { endDrag(); }
-        void onMouseMove( int x, int y ) { onDrag( x, y ); }
+        void beginRotation( int x, int y );
+        void beginRotation( const Vector2i & pos ) { beginRotation( pos.x, pos.y ); }
+        void endRotation();
+        void onRotation( int x, int y );
+
+        void beginTranslation( int x, int y );
+        void beginTranslation( const Vector2i & pos ) { beginTranslation( pos.x, pos.y ); }
+        void endTranslation();
+        void onTranslation( int x, int y );
 
         //@}
 

@@ -54,6 +54,13 @@ namespace GN
         XmlNode         * sibling; ///< pointer to next brother node
         XmlNode         * child;   ///< pointer to first child
 
+        /// \name method required by traversal class
+        //@{
+        XmlNode * getParent() const { return parent; }
+        XmlNode * getNextSibling() const { return sibling; }
+        XmlNode * getChild() const { return child; }
+        //@}
+
         ///
         /// conver to cdata node
         ///

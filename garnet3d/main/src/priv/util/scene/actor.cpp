@@ -171,6 +171,11 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         return false;
     }
 
+    GN_LOG_BEGIN( sLogger, Logger::LL_INFO );
+    const XmlAttrib * nodename = eroot->findAttrib( "name" );
+    GN_INFO(sLogger)( "Load actor '%s'", nodename ? nodename->value.cptr() : "unnamed" );
+    GN_LOG_END();
+
     // clear to empty
     clear();
 
@@ -291,7 +296,7 @@ void GN::scene::Actor::draw()
     while( c )
     {
         c->draw();
-        c = c->getNext();
+        c = c->getNextSibling();
     }
 }
 
@@ -313,7 +318,7 @@ void GN::scene::Actor::dirtyTransform()
     while( c )
     {
         c->dirtyTransform();
-        c = c->getNext();
+        c = c->getNextSibling();
     }
 }
 
