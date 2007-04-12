@@ -125,7 +125,7 @@ struct AseNode
     Matrix44f transform;
     Vector3f  pos;
     Vector3f  rotaxis;
-    float     rotangle;
+    float     rotangle; // rotation angle in radian
     Vector3f  scale;
     Boxf      bbox;   ///< bounding box of the node itself and its descendants.
 };
@@ -1265,7 +1265,16 @@ static bool sReadAse( AseScene & scene, const StrA & filename )
 static bool sBuildNodeTree( AseScene & scene )
 {
     GN_INFO(sLogger)( "\nBuild node tree..." );
-    
+
+    // setup root node
+    scene.root.node.name = "root";
+    scene.root.node.pos.set( 0, 0, 0 );
+    scene.root.node.rotaxis.set( 0, 0, 1 );
+    scene.root.node.rotangle = 0;
+    scene.root.node.scale.set( 1, 1, 1 );
+    scene.root.node.transform.identity();
+    scene.root.mesh.bbox.size().set( 0, 0, 0 );
+
     // build node tree
     for( size_t i = 0; i < scene.objects.size(); ++i )
     {
@@ -1288,10 +1297,6 @@ static bool sBuildNodeTree( AseScene & scene )
         scene.root.calcChildrenCount() == scene.objects.size(),
         strFormat( "numchildren=%d, numobjects=%d",
             scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
-
-    // setup root node
-    scene.root.node.name = "root";
-    scene.root.mesh.bbox.size().set( 0, 0, 0 );
 
     // calculate bounding box for each node, in post order
     scene::TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
@@ -1455,10 +1460,11 @@ static void reorgMeshFor16bitsIndex(
     GN_UNGUARD;
 }
 
-/*
+//
 //
 // -----------------------------------------------------------------------------
 static bool sWriteNode(
+    StrA & xml,
     const AseScene & scene,
     const AseGeoObject & o,
     int ident,
@@ -1471,10 +1477,7 @@ static bool sWriteNode(
     for( int i = 0; i < ident; ++i ) identstr += '\t';
 
     // compose actor xml header
-    StrA actorxml;
-    actorxml.format( "%s<actor>\n", identstr.cptr() );
-
-    Boxf actorbbox( 0, 0, 0, 0, 0, 0 ); // store bounding box of the whole actor.
+    xml += strFormat( "%s<actor name=\"%s\">\n", identstr.cptr(), o.node.name );
 
     for( size_t ci = 0; ci < o.mesh.chunks.size(); ++ci )
     {
@@ -1517,7 +1520,6 @@ static bool sWriteNode(
                                         o.node.name.cptr(),
                                         ci,
                                         ri );
-            StrA actorname = basename + ".actor.xml";
             StrA meshname  = basename + ".mesh.xml";
             StrA vbname    = basename + ".vb";
             StrA ibname    = basename + ".ib";
@@ -1556,11 +1558,6 @@ static bool sWriteNode(
                 return false;
             }
             fvb.clear();
-
-            // calculcate bounding bbox
-            Boxf bbox;
-            calcBoundingBox( bbox, (Vector3f*)memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
-            Boxf::sGetUnion( actorbbox, actorbbox, bbox );
 
             // write IB
             AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
@@ -1621,7 +1618,7 @@ static bool sWriteNode(
             if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
 
             // compose actor xml
-            actorxml += strFormat(
+            xml += strFormat(
                 "%s	<drawable>\n"
                 "%s		<effect ref=\"media::/effect/%s.xml\"/>\n"
                 "%s		<mesh ref=\"%s\"/>\n"
@@ -1640,38 +1637,40 @@ static bool sWriteNode(
     }
 
     // calculate bounding sphere
-    Vector3f center = actorbbox.center();
-    float    radius = sqrtf( actorbbox.w * actorbbox.w + actorbbox.h * actorbbox.h + actorbbox.d * actorbbox.d ) / 2.0f;
+    Vector3f center = o.node.bbox.center();
+    float    radius = sqrtf( o.node.bbox.w * o.node.bbox.w + o.node.bbox.h * o.node.bbox.h + o.node.bbox.d * o.node.bbox.d ) / 2.0f;
 
     // compose rotation quaternion
     Quaternionf quat;
-    // TODO: make sure the unit of angle is match.
     quat.fromRotation( o.node.rotaxis, o.node.rotangle );
 
-    // compose actor xml tailer
-    actorxml += strFormat(
-        "	<position x=\"%f\" y=\"%f\" z=\"%f\" desc=\"position in parent space, 3D vector\"/>\n"
-        "	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
-        "	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
-        "	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n"
-        "</actor>",
-        o.node.pos.x, o.node.pos.y, o.node.pos.z,
-        center.x, center.y, center.z,
-        quat.v.x, quat.v.y, quat.v.z, quat.w,
-        center.x, center.y, center.z, radius );
+    // compose other actor properties
+    xml += strFormat(
+        "%s	<position x=\"%f\" y=\"%f\" z=\"%f\" desc=\"position in parent space, 3D vector\"/>\n"
+        "%s	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
+        "%s	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
+        "%s	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n",
+        identstr.cptr(), o.node.pos.x, o.node.pos.y, o.node.pos.z,
+        identstr.cptr(), center.x, center.y, center.z,
+        identstr.cptr(), quat.v.x, quat.v.y, quat.v.z, quat.w,
+        identstr.cptr(), center.x, center.y, center.z, radius );
 
-    // actor name
-    StrA actorname = strFormat(
-        "%s_%s.actor.xml",
-        name.cptr(), o.node.name.cptr() );
-    AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
-    if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
+    // write sub nodes
+    const AseGeoObject * c = safeCast<AseGeoObject*>( o.getChild() );
+    while( c )
+    {
+        sWriteNode( xml, scene, *c, ident+1, name );
+        c = safeCast<AseGeoObject*>( c->getNext() );
+    }
+
+    // write actor tail
+    xml += strFormat( "%s</actor>\n", identstr.cptr() );
 
     // success
     return true;
 
     GN_UNGUARD;
-}*/
+}
 
 //
 //
@@ -1680,206 +1679,14 @@ static bool sWriteScene( const AseScene & scene, const StrA & name )
 {
     GN_GUARD;
 
-    for( size_t oi = 0; oi < scene.objects.size(); ++oi )
-    {
-        const AseGeoObject & o = scene.objects[oi];
+    StrA actorxml( "<?xml version=\"1.0\" standalone=\"yes\"?>\n" );
 
-        // compose actor xml header
-        StrA actorxml(
-            "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-            "<actor>\n" );
+    sWriteNode( actorxml, scene, scene.root, 0, name );
 
-        Boxf actorbbox( 0, 0, 0, 0, 0, 0 ); // store bounding box of the whole actor.
-
-        for( size_t ci = 0; ci < o.mesh.chunks.size(); ++ci )
-        {
-            GN_INFO(sLogger)( "Write object '%s', chunk %d...", o.node.name.cptr(), ci );
-
-            const AseFaceChunk & c = o.mesh.chunks[ci];
-
-            const AseMaterial & mtl = scene.getChunkMaterial( o, ci );
-
-            // build vertex and index array
-            VertexBuffer      vb;
-            DynaArray<UInt32> ib; // indices into vb
-            VertexSelector    vs;
-            for( size_t fi = 0; fi < c.faces.size(); ++fi )
-            {
-                const AseFace & f = o.mesh.faces[c.faces[fi]];
-
-                for( size_t fi = 0; fi < 3; ++fi )
-                {
-                    vs.p = f.v[fi];
-                    vs.t = f.t[fi];
-                    vs.n = f.vn[fi];
-
-                    UInt32 idx = vb.add( vs );
-
-                    ib.append( idx );
-                }
-            }
-
-            // split vertex and index array, if they are too large
-            DynaArray<FaceRange> ranges;
-            reorgMeshFor16bitsIndex( ranges, vb, ib );
-
-            for( size_t ri = 0; ri < ranges.size(); ++ri )
-            {
-                const FaceRange & r = ranges[ri];
-                
-                StrA basename  = strFormat( "%s_%s_c%02d_r%02d",
-                                            name.cptr(),
-                                            o.node.name.cptr(),
-                                            ci,
-                                            ri );
-                StrA actorname = basename + ".actor.xml";
-                StrA meshname  = basename + ".mesh.xml";
-                StrA vbname    = basename + ".vb";
-                StrA ibname    = basename + ".ib";
-
-                struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
-
-                size_t written;
-
-                struct BinHeader
-                {
-                    char   tag[2];
-                    UInt16 endian;
-                };
-                GN_CASSERT( 4 == sizeof(BinHeader) );
-
-                const BinHeader header = { {'G', 'N'}, 0x0201 };
-
-                // write VB
-                DynaArray<MeshVertex> memvb( r.vbcount );
-                for( size_t vi = 0; vi < r.vbcount; ++vi )
-                {
-                    const VertexSelector & vs = vb[r.vboffset+vi];
-                    const AseVertex & v = o.mesh.vertices[vs.p];
-                    memvb[vi].p = v.p;
-                    memvb[vi].n = v.n[vs.n];
-                    memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
-                }
-                AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
-                if( !fvb ||
-                    !fvb->write( &header, sizeof(header), &written ) ||
-                    written != sizeof(header) ||
-                    !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), &written ) ||
-                    written != sizeof(MeshVertex)*memvb.size() )
-                {
-                    GN_ERROR(sLogger)( "fail to write vertex buffer." );
-                    return false;
-                }
-                fvb.clear();
-
-                // calculcate bounding bbox
-                Boxf bbox;
-                calcBoundingBox( bbox, (Vector3f*)memvb.cptr(), r.vbcount, sizeof(MeshVertex) );
-                Boxf::sGetUnion( actorbbox, actorbbox, bbox );
-
-                // write IB
-                AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
-                if( !fib ) return false;
-                if( !fib->write( &header, sizeof(header), &written ) ||
-                    sizeof(header) != written )
-                {
-                    GN_ERROR(sLogger)( "fail to write IB header." );
-                    return false;
-                }
-                for( size_t ii = 0; ii < r.ibcount; ++ii )
-                {
-                    UInt32 idx32 = ib[r.iboffset + ii];
-
-                    GN_ASSERT( r.vboffset <= idx32 && idx32 < (r.vboffset+r.vbcount) );
-                    GN_ASSERT( r.vbcount < 0x10000 );
-
-                    UInt16 idx16 = (UInt16)( idx32 - r.vboffset );
-
-                    if( !fib->write( &idx16, sizeof(idx16), &written ) ||
-                        2 != written )
-                    {
-                        GN_ERROR(sLogger)( "fail to write index %d", ii );
-                        return false;
-                    }
-                }
-                fib.clear();
-
-                // write mesh xml
-                StrA outdir = dirName( meshname );
-                StrA meshxml;
-                meshxml.format(
-                    "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-                    "<mesh\n"
-                    "	primtype  = \"TRIANGLE_LIST\"\n"
-                    "	numprim   = \"%d\"\n"
-                    "	startvtx  = \"0\"\n"
-                    "	minvtxidx = \"0\"\n"
-                    "	numvtx    = \"%d\"\n"
-                    "	startidx  = \"0\"\n"
-                    "	>\n"
-                    "\n"
-                    "	<vtxfmt>\n"
-                    "		<attrib stream = \"0\" offset =  \"0\" semantic = \"POS0\" format = \"FMT_FLOAT3\"/>\n"
-                    "		<attrib stream = \"0\" offset = \"12\" semantic = \"NML0\" format = \"FMT_FLOAT3\"/>\n"
-                    "		<attrib stream = \"0\" offset = \"24\" semantic = \"TEX0\" format = \"FMT_FLOAT2\"/>\n"
-                    "	</vtxfmt>\n"
-                    "	\n"
-                    "	<vtxbuf stream = \"0\" offset = \"0\" stride = \"32\" ref=\"%s\"/>\n"
-                    "\n"
-                    "	<idxbuf ref=\"%s\"/>\n"
-                    "</mesh>\n",
-                    r.ibcount / 3,
-                    r.vbcount,
-                    relPath( vbname, outdir ).cptr(),
-                    relPath( ibname, outdir ).cptr() );
-                AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
-                if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
-
-                // compose actor xml
-                actorxml += strFormat(
-                    "	<drawable>\n"
-                    "		<effect ref=\"media::/effect/%s.xml\"/>\n"
-                    "		<mesh ref=\"%s\"/>\n"
-                    "		<texture binding=\"texdiff\" ref=\"%s\"/>\n"
-                    "		<texture binding=\"texheight\" ref=\"%s\"/>\n"
-                    "		<uniform binding=\"diffuse\" type=\"VECTOR4\" count=\"1\">%f, %f, %f, 1.0f</uniform>\n"
-                    "	</drawable>\n",
-                    "diffuse_textured",
-                    relPath( meshname, outdir ).cptr(),
-                    mtl.mapdiff.bitmap.empty() ? "media::/texture/purewhite.bmp" : relPath( mtl.mapdiff.bitmap, outdir ).cptr(),
-                    relPath( mtl.mapbump.bitmap, outdir ).cptr(),
-                    mtl.diffuse.x, mtl.diffuse.y, mtl.diffuse.z );
-            }
-        }
-
-        // calculate bounding sphere
-        Vector3f center = actorbbox.center();
-        float    radius = sqrtf( actorbbox.w * actorbbox.w + actorbbox.h * actorbbox.h + actorbbox.d * actorbbox.d ) / 2.0f;
-
-        // compose rotation quaternion
-        Quaternionf quat;
-        // TODO: make sure the unit of angle is match.
-        quat.fromRotation( o.node.rotaxis, o.node.rotangle );
-
-        // compose actor xml tailer
-        actorxml += strFormat(
-            "	<position x=\"%f\" y=\"%f\" z=\"%f\" desc=\"position in parent space, 3D vector\"/>\n"
-            "	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
-            "	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
-            "	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n"
-            "</actor>",
-            o.node.pos.x, o.node.pos.y, o.node.pos.z,
-            center.x, center.y, center.z,
-            quat.v.x, quat.v.y, quat.v.z, quat.w,
-            center.x, center.y, center.z, radius );
-
-        // actor name
-        StrA actorname = strFormat(
-            "%s_%s.actor.xml",
-            name.cptr(), o.node.name.cptr() );
-        AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
-        if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
-    }
+    // write actor file
+    StrA actorname = strFormat( "%s.actor.xml", name.cptr() );
+    AutoObjPtr<File> actor( core::openFile( actorname, "wt" ) );
+    if( !actor || !actor->write( actorxml.cptr(), actorxml.size(), 0 ) ) return false;
 
     // success
     return true;

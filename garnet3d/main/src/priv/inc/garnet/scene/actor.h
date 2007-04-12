@@ -377,6 +377,8 @@ namespace GN { namespace scene
 
     private:
 
+        void dirtyTransform(); // mark transformation as dirty;
+
         void calcTransform();
 
         static inline Actor * node2actor( TreeNode<Actor> * n )
