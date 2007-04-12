@@ -40,13 +40,16 @@ static void sWindowPosition2UnitVector( GN::Vector3f & result, float x, float y,
 //
 // -----------------------------------------------------------------------------
 GN::util::ArcBall::ArcBall( Handness h )
-    : mQuat( Quaternionf::IDENTITY )
+    : mTranslation( 0, 0, 0 )
+    , mQuat( Quaternionf::IDENTITY )
     , mRotation3x3( Matrix33f::IDENTITY )
     , mRotation4x4( Matrix44f::IDENTITY )
     , mTransView( Matrix44f::IDENTITY )
     , mWindowCenter( 0, 0 )
     , mWindowHalfSize( 1, 1 )
     , mHandness( LEFT_HAND == h ? -1.0f : 1.0f )
+    , mRolling( false )
+    , mMoveSpeed( 1.0f )
     , mMoving( false )
 {
 }
@@ -96,16 +99,16 @@ void GN::util::ArcBall::disconnectFromInput()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::beginDrag( int x, int y )
+void GN::util::ArcBall::beginRotation( int x, int y )
 {
-    mMoving = true;
+    mRolling = true;
 
     float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
     float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
 
-    sWindowPosition2UnitVector( mMoveBase, fx, fy, mHandness );
+    sWindowPosition2UnitVector( mRollBase, fx, fy, mHandness );
 
-    mMoveBase = mTransView.transformVector( mMoveBase );
+    mRollBase = mTransView.transformVector( mRollBase );
 
     mQuatBase = mQuat;
 }
@@ -113,9 +116,17 @@ void GN::util::ArcBall::beginDrag( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::onDrag( int x, int y )
+void GN::util::ArcBall::endRotation()
 {
-    if( !mMoving ) return;
+    mRolling = false;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::onRotation( int x, int y )
+{
+    if( !mRolling ) return;
 
     float fx = (float)(x - mWindowCenter.x) / mWindowHalfSize.x;
     float fy = (float)(y - mWindowCenter.y) / mWindowHalfSize.y;
@@ -125,7 +136,7 @@ void GN::util::ArcBall::onDrag( int x, int y )
     v = mTransView.transformVector( v );
 
     Quaternionf q;
-    q.fromArc( mMoveBase, v );
+    q.fromArc( mRollBase, v );
     mQuat = q * mQuatBase;
 
     mQuat.toMatrix33( mRotation3x3 );
@@ -137,10 +148,39 @@ void GN::util::ArcBall::onDrag( int x, int y )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::util::ArcBall::endDrag()
+void GN::util::ArcBall::beginTranslation( int x, int y )
+{
+    mMoving = true;
+    mTranslationBase = mTranslation;
+    mMoveBase.set( x, y );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::endTranslation()
 {
     mMoving = false;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::util::ArcBall::onTranslation( int x, int y )
+{
+    if( !mMoving ) return;
+
+    Vector3f v( (float)( x - mMoveBase.x ), (float)( mMoveBase.y - y ), 0 );
+
+    Matrix44f transWorld; // invtrans( inv(world) ), transform vector from world space to object space
+    transWorld = Matrix44f::sTranspose( mRotation4x4 );
+
+    v = mTransView.transformVector( v * mMoveSpeed ); // view space -> world space
+    v = transWorld.transformVector( v ); // world space -> model space
+
+    mTranslation = mTranslationBase + v;
+}
+
 
 // *****************************************************************************
 // private methods
@@ -157,11 +197,24 @@ void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
         {
             int x, y;
             gInput.getMousePosition( x, y );
-            onMouseButtonDown( x, y );
+            beginRotation( x, y );
         }
         else
         {
-            onMouseButtonUp();
+            endRotation();
+        }
+    }
+    else if( input::KEY_MOUSEBTN_1 == key.code )
+    {
+        if( key.status.down )
+        {
+            int x, y;
+            gInput.getMousePosition( x, y );
+            beginTranslation( x, y );
+        }
+        else
+        {
+            endTranslation();
         }
     }
 }
@@ -171,7 +224,11 @@ void GN::util::ArcBall::onKeyPress( input::KeyEvent key )
 // -----------------------------------------------------------------------------
 void GN::util::ArcBall::onAxisMove( input::Axis, int )
 {
+    if( !mMoving && !mRolling ) return;
+
     int x, y;
     gInput.getMousePosition( x, y );
-    onMouseMove( x, y );
+
+    onTranslation( x, y );
+    onRotation( x, y );
 }

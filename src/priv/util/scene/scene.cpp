@@ -1,5 +1,7 @@
 #include "pch.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.scene.Scene");
+
 // *****************************************************************************
 // ctor / dtor
 // *****************************************************************************
@@ -45,12 +47,8 @@ GN::scene::Scene::loadActorHiearachyFromXmlNode( const XmlNode & node, const Str
     {
         if( c->toElement() && "actor" == c->toElement()->name )
         {
-            AutoObjPtr<Actor> node( new Actor(*this) );
-
-            if( node->loadFromXmlNode( *c, basedir ) )
-            {
-                node.detach()->setParent( root, 0 );
-            }
+            Actor * node = loadActorHiearachyFromXmlNode( *c, basedir );
+            if( node ) node->setParent( root, 0 );
         }
 
         c = c->sibling;
@@ -66,9 +64,11 @@ GN::scene::Scene::loadActorHiearachyFromXmlNode( const XmlNode & node, const Str
 //
 // -----------------------------------------------------------------------------
 GN::scene::Actor *
-GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename )
+GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const StrA & objname )
 {
     GN_GUARD;
+
+    GN_INFO(sLogger)( "Load actor '%s' from file '%s'", objname.cptr(), filename.cptr() );
 
     AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
     if( !fp ) return false;
@@ -93,7 +93,27 @@ GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename )
     }
     GN_ASSERT( xpr.root );
 
-    return loadActorHiearachyFromXmlNode( *xpr.root, basedir );
+    // search a actor element with name equals "objname"
+    TreeTraversePreOrder<XmlNode> tt(xpr.root);
+    XmlNode * n = tt.first();
+    while( n )
+    {
+        XmlElement * e = n->toElement();
+        if( e &&  "actor" == e->name )
+        {
+            XmlAttrib  * a = e->findAttrib("name");
+
+            if( a && objname == a->value )
+            {
+                // found!
+                return loadActorHiearachyFromXmlNode( *n, basedir );
+            }
+        }
+        n = tt.next( n );
+    }
+
+    GN_ERROR(sLogger)( "object named '%s' not found in file %s", objname.cptr(), filename.cptr() );
+    return false;
 
     GN_UNGUARD;
 }

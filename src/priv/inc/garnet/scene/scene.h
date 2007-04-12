@@ -58,7 +58,7 @@ namespace GN { namespace scene
         /// \name actor factory
         //@{
         Actor * loadActorHiearachyFromXmlNode( const XmlNode & node, const StrA & basedir );
-        Actor * loadActorHiearachyFromXmlFile( const StrA & filename );
+        Actor * loadActorHiearachyFromXmlFile( const StrA & filename, const StrA & objname );
         void    releaseActorHiearacy( Actor * );
         //@}
 

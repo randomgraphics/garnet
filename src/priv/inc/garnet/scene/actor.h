@@ -31,8 +31,8 @@ namespace GN { namespace scene
 
         //@{
         TreeNode<T> *  getParent() const { return mParent; }
-        TreeNode<T> *  getPrev() const { return mPrev; }
-        TreeNode<T> *  getNext() const { return mNext; }
+        TreeNode<T> *  getPrevSibling() const { return mPrev; }
+        TreeNode<T> *  getNextSibling() const { return mNext; }
         TreeNode<T> *  getChild() const { return mChild; }
         void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newParent, newPrev ); }
         //@}
@@ -228,7 +228,7 @@ namespace GN { namespace scene
             }
 
             // if( has brother ) next is brother
-            n = safeCast<T*>( current->getNext() );
+            n = safeCast<T*>( current->getNextSibling() );
             if( n ) return n;
 
             // check parent
@@ -236,7 +236,7 @@ namespace GN { namespace scene
             while( p )
             {
                 // if( parent has next ) next is parent's next
-                n = safeCast<T*>( p->getNext() );
+                n = safeCast<T*>( p->getNextSibling() );
                 if( n )
                 {
                     if( level ) --(*level);
@@ -284,7 +284,7 @@ namespace GN { namespace scene
         {
             GN_ASSERT( current );
 
-            T * n = safeCast<T*>( current->getNext() );
+            T * n = safeCast<T*>( current->getNextSibling() );
 
             if( n )
             {
@@ -355,8 +355,8 @@ namespace GN { namespace scene
         size_t              getNumDrawables() const { return mDrawables.size(); }
         const Drawable    & getDrawable( size_t i ) const { return mDrawables[i]; }
         Actor             * getParent() const { return node2actor( mNode.getParent() ); }
-        Actor             * getPrev() const  { return node2actor( mNode.getPrev() ); }
-        Actor             * getNext() const  { return node2actor( mNode.getNext() ); }
+        Actor             * getPrevSibling() const  { return node2actor( mNode.getPrevSibling() ); }
+        Actor             * getNextSibling() const  { return node2actor( mNode.getNextSibling() ); }
         Actor             * getChild() const  { return node2actor( mNode.getChild() ); }
         const Vector3f    & getPosition() const { return mPosition; }
         const Vector3f    & getPivot() const { return mPivot; }
