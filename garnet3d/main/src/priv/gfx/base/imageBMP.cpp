@@ -168,10 +168,12 @@ bool BMPReader::readImage( void * o_data ) const
                         d[3] = s[2];
                         d[2] = s[1];
                         d[1] = s[0];
+                        d[0] = 0xFF;
 #else
                         d[0] = s[2];
                         d[1] = s[1];
                         d[2] = s[0];
+                        d[2] = 0xFF;
 #endif
                     }
                     src += srcPitch;
@@ -211,17 +213,20 @@ bool BMPReader::readImage( void * o_data ) const
                 {
                     const UInt8 * s = src;
                     UInt8 * d = dst;
+                    for( size_t x = 0; x < width; ++x, s+=4, d+=4 )
+                    {
 #if GN_PPC
-                    d[3] = s[2];
-                    d[2] = s[1];
-                    d[1] = s[0];
-                    d[0] = s[3];
+                        d[3] = s[2];
+                        d[2] = s[1];
+                        d[1] = s[0];
+                        d[0] = s[3];
 #else
-                    d[0] = s[2];
-                    d[1] = s[1];
-                    d[2] = s[0];
-                    d[3] = s[3];
+                        d[0] = s[2];
+                        d[1] = s[1];
+                        d[2] = s[0];
+                        d[3] = s[3];
 #endif
+                    }
                     src += srcPitch;
                     dst += dstPitch; 
                 }
@@ -232,17 +237,20 @@ bool BMPReader::readImage( void * o_data ) const
                 {
                     const UInt8 * s = src;
                     UInt8 * d = dst;
+                    for( size_t x = 0; x < width; ++x, s+=4, d+=4 )
+                    {
 #if GN_PPC
-                    d[3] = s[2];
-                    d[2] = s[1];
-                    d[1] = s[0];
-                    d[0] = s[3];
+                        d[3] = s[2];
+                        d[2] = s[1];
+                        d[1] = s[0];
+                        d[0] = s[3];
 #else
-                    d[0] = s[2];
-                    d[1] = s[1];
-                    d[2] = s[0];
-                    d[3] = s[3];
+                        d[0] = s[2];
+                        d[1] = s[1];
+                        d[2] = s[0];
+                        d[3] = s[3];
 #endif
+                    }
                     src += srcPitch;
                     dst -= dstPitch; 
                 }
