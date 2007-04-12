@@ -1051,6 +1051,8 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
 
     if( !ase.readBlockStart() ) return false;
 
+    bool hasMaterial = false;
+
     const char * token;
     while( 0 != ( token = ase.next() ) )
     {
@@ -1084,6 +1086,7 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
                 ase.err( "material ID is out of range!" );
                 return false;
             }
+            hasMaterial = true;
         }
         else if( '*' == *token )
         {
@@ -1095,6 +1098,12 @@ static bool sReadGeomObject( AseScene & scene, AseFile & ase )
             // end of the block. do some post processing.
 
             AseMesh & m = o.mesh;
+
+            if( !hasMaterial )
+            {
+                ase.warn( strFormat( "object '%s' has no material. Using default one.", o.node.name.cptr() ) );
+                o.matid = 0;
+            }
 
             AseMaterial & mtl = scene.materials[o.matid];
 

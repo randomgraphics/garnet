@@ -464,7 +464,7 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
         }
         else
         {
-            desc.format = FMT_BGRA_8_8_8_8_UNORM; // default color format
+            desc.format = FMT_RGBA_8_8_8_8_UNORM; // default color format
         }
     }
 

@@ -147,6 +147,9 @@ void GN::scene::Actor::clear()
     mPivot.set( 0, 0, 0 );
     mRotation.identity();
     mLocal2Parent.identity();
+    mParent2Local.identity();
+    mLocal2Root.identity();
+    mRoot2Local.identity();
     mBoundingSphere.center.set( 0, 0, 0 );
     mBoundingSphere.radius = 1.0f;
 
