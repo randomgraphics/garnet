@@ -132,7 +132,7 @@ GN::gfx::VtxFmtDesc::findAttrib( VtxSem semantic ) const
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::VtxFmtDesc::calcNumStreams()
+size_t GN::gfx::VtxFmtDesc::calcNumStreams() const
 {
     if( !validate() )
     {
@@ -151,7 +151,7 @@ size_t GN::gfx::VtxFmtDesc::calcNumStreams()
 //
 //
 // -----------------------------------------------------------------------------
-size_t GN::gfx::VtxFmtDesc::calcStreamStride( size_t idx )
+size_t GN::gfx::VtxFmtDesc::calcStreamStride( size_t idx ) const
 {
     if( !validate() )
     {

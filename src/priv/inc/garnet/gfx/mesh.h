@@ -9,6 +9,50 @@
 namespace GN { namespace gfx
 {
     ///
+    /// mesh binary header
+    ///
+    struct MeshBinaryHeader
+    {
+        //@{
+        PrimitiveType         primtype;
+        UInt32                numprim;
+        UInt32                startvtx;
+        UInt32                minvtxidx;
+        UInt32                numvtx;
+        UInt32                startidx;
+        VtxFmtDesc            vtxfmt;
+        //@}
+    };
+    GN_CASSERT( sizeof(MeshBinaryHeader) == 6 * 4 + sizeof(VtxFmtDesc) );
+
+    ///
+    /// mesh vertex buffer header
+    ///
+    struct MeshVtxBufBinaryHeader
+    {
+        //@{
+        UInt32 offset;
+        UInt16 stride;
+        UInt8  dynamic;
+        UInt8  readback;
+        //@}
+    };
+    GN_CASSERT( sizeof(MeshVtxBufBinaryHeader) == 8 );
+
+    ///
+    /// mesh index buffer header
+    ///
+    struct MeshIdxBufBinaryHeader
+    {
+        //@{
+        UInt8  dynamic;
+        UInt8  readback;
+        UInt16 reserved;
+        //@}
+    };
+    GN_CASSERT( sizeof(MeshIdxBufBinaryHeader) == 4 );
+
+    ///
     /// vertex buffer descriptor used by mesh class
     ///
     struct MeshVtxBuf
@@ -96,6 +140,11 @@ namespace GN { namespace gfx
         /// load from XML
         ///
         bool loadFromXmlNode( const XmlNode & root, const StrA & basedir );
+
+        ///
+        /// load from binary stream
+        ///
+        bool loadFromBinaryStream( File & );
     };
 
     ///

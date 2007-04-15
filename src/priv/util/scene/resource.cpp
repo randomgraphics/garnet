@@ -49,6 +49,29 @@ static bool sIsTexture( const StrA & name )
         || ".TGA" == ext;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static bool sIsMesh( const StrA & name )
+{
+    if( sIsXml( name, "mesh" ) ) return true;
+
+    struct ChunkHeader
+    {
+        char   tag[22];
+        UInt16 endian;
+        UInt64 bytes;
+    } header;
+
+    AutoObjPtr<File> fp( core::openFile( name, "rb" ) );
+
+    if( !fp || !fp->read( &header, sizeof(header), 0 ) ) return false;
+
+    static const char MESH_TAG[] = { "GARNET MESH" };
+
+    return 0 == strCmp( MESH_TAG, header.tag, sizeof(MESH_TAG)-1 );
+}
+
 // *****************************************************************************
 // local resource manipulators
 // *****************************************************************************
@@ -336,12 +359,30 @@ static GN::scene::BaseResource * sCreateMesh( const StrA & name )
     }
     else
     {
-        // get mesh directory
-        StrA meshdir = dirName( name );
+        GN_INFO(getLogger( "GN.scene.util" ))( "Load '%s'", name.cptr() );
 
-        // create mesh instance
+        // open mesh file
+        AutoObjPtr<File> fp( core::openFile( name, "rb" ) );
+        if( !fp ) return false;
+
+        // read file header
+        static const char bintag[] = { "GARNET MESH" };
+        StackArray<char,sizeof(bintag)> buf;
+        if( !fp->read( buf.cptr(), sizeof(bintag), 0 ) ) return 0;
+        if( !fp->seek( -(int)sizeof(bintag), FSEEK_CUR ) ) return 0;
+
         AutoRef<Mesh> mesh( new Mesh );
-        if( !loadFromXmlFile( *mesh, name ) ) return 0;
+
+        if( 0 == strCmp( bintag, buf.cptr(), sizeof(bintag)-1 ) )
+        {
+            // load as mesh binary
+            if( !mesh->loadFromBinaryStream( *fp ) ) return 0;
+        }
+        else
+        {
+            // load as XML
+            if( !loadFromXmlFile( *mesh, *fp, dirName(name) ) ) return 0;
+        }
 
         // success
         return mesh.detach();
@@ -676,8 +717,8 @@ const GN::StrA & GN::scene::ResourceManager::determineResourceType( const StrA &
     static const StrA & mesh("mesh");
     
     if( sIsTexture( name ) ) return texture;
+    if( sIsMesh( name ) ) return mesh;
     if( sIsXml( name, effect ) ) return effect;
-    if( sIsXml( name, mesh ) ) return mesh;
 
     // failed
     GN_ERROR(sLogger)( "Cannot detect resource type: %s", name.cptr() );

@@ -70,6 +70,8 @@ namespace GN { namespace util
             mWindowCenter.set( l + mWindowHalfSize.x, t + mWindowHalfSize.y );
         }
 
+        void setTranslation( const Vector3f & t ) { mTranslation = t; }
+
         void setRotation( const Quaternionf & q ) { mQuat = q; }
 
         void setViewMatrix( const Matrix44f & v ) { mTransView = Matrix44f::sTranspose( v ); }

@@ -69,6 +69,7 @@ namespace GN { namespace gfx
             ///
             void set( size_t stream_, size_t offset_, VtxSem sem_, ClrFmt fmt_ )
             {
+                GN_CASSERT( sizeof(AttribDesc) == 12 );
                 stream   = (UInt8)stream_;
                 offset   = (UInt16)offset_;
                 semantic = sem_;
@@ -77,7 +78,7 @@ namespace GN { namespace gfx
         };
 
         AttribDesc attribs[MAX_VERTEX_ATTRIBUTES]; ///< vertex attribute list
-        size_t     count;                          ///< vertex attribute count
+        UInt32     count;                          ///< vertex attribute count
 
         /// \name commonly used vertex format descriptor constants
         //@{
@@ -124,12 +125,12 @@ namespace GN { namespace gfx
         ///
         /// Calculate number of streams
         ///
-        size_t calcNumStreams();
+        size_t calcNumStreams() const;
 
         ///
         /// Calculate stream stride
         ///
-        size_t calcStreamStride( size_t );
+        size_t calcStreamStride( size_t ) const;
 
         ///
         /// load vertex format from XML
@@ -145,6 +146,7 @@ namespace GN { namespace gfx
             return 0 == memcmp( attribs, rhs.attribs, sizeof(AttribDesc)*count );
         }
     };
+    GN_CASSERT( sizeof(VtxFmtDesc) == 12*MAX_VERTEX_ATTRIBUTES+4 );
 }}
 
 #if GN_ENABLE_INLINE

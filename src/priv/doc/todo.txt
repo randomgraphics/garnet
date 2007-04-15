@@ -1,23 +1,14 @@
 - 程序中标注TODO的地方
 
-- to make a simple game, like terris clone:
-  - load effect/shader from xml file: done
-  - load mesh: done
-  - simple GUI
-  - task manager/coordinator
-
 - p1
   - store non-default values only in renderer context.
   - multi-thread architect
-    - game thread: major game logic thread
+    - configuable resource cache with limited video memory footprint.
+    - update thread: major game logic thread
     - render thread: the only thread that touches rendering device.
     - resource loading thread(s)
-    - configuable resource cache with limited video memory footprint.
   - treat all surfaces as parameter of shader, like uniforms
-  - set sampling parameters (such as filters wrapping) at binding time
-  - render target management
-    - D3D: msaa
-    - OGL: FBO with AA
+  - shared uniform
 
 - p2
   - render state block redesign: using packed bit fields.
@@ -26,46 +17,30 @@
     - see others pool implementation on net
   - Drawable optimization:
   	- using hashed string map to reference uniforms and textures.
-  - in-game GUI system
-    - font class
-    - textbox class
   - refine sigslot class to allow any type of functor
   - smart enum class
   - skin mesh test case: porting DXSDK sample.
-  - UT
     - array classes
     - LRU list in resource manager
-    - make sure OGL resource creation/deletion do not affect renderer states
     - format conversion between ClrFmt and D3DFMT
   - memory-mapped IO.
   - GFX system
+    - render target management
+     - D3D: msaa
+      - OGL: FBO with AA
+    - set sampling parameters (such as filters wrapping) at binding time
     - recreate OGL context, when monitor changed.
     - queryXXX(....)
     - support using "c0" as uniform name of D3D HLSL shader.
     - consider remove drawBegin() and drawEnd()
-    - renderer state dump system
     - add support to OGL FSAA
-    - Cg shader
-    - consider removing syscopy from vertex/index buffer
-      - remove sys-copy of VBO.
-    - Why D3D quad renderer is so slow, comparing with CEGUI sample application.
     - support render-to-texture on xenon (including depth texture)
     - test: IDirect3DDevice9::UpdateTexture() when target is render target texture.
-    - learn EXT_framebuffer_object, ARB_draw_buffer, ARB_pixel_buffer_object
-    - shared uniform
 
 - p3
   - code page convertor and test application
     - may support convertion from/to utf8 be enough?
   - blender exporter/importer
-  - new build system:
-    - two steps:
-      - compiler configuration script, called by setupEnv.cmd/setupEnv.sh
-      - build script
-  - support to multiple joysticks.
-  - image format conversion
-  - try implementing a ray tracer
-  - check doxygen errors and warnings.
   - Custom sscanf(...)
   - cross-platform window util functions:
     - set window title
@@ -73,6 +48,28 @@
     - ...
   - runtime call-stack dump
   - hash map/table
+  - in game GUI:
+  - debug variable registry
+    - debug variable viewer and modifier
+  - renderer state dump system
+    - OGL dumper has priority (for D3D,we can use PIX)
+    - need a elegant way to switch on/off the dummper
+    - depends on debug variable registry
+  - COLLADA loader
+  - ASE loader
+    - save texture to target directory
+    - convert height map to normal map
+  - make sure OGL resource creation/deletion do not affect renderer states
+    - depends on renderer state dumper
+
+- more
+  - new build system:
+    - two steps:
+      - compiler configuration script, called by setupEnv.cmd/setupEnv.sh
+      - build script
+  - support to multiple joysticks.
+  - image format conversion
+  - try implementing a ray tracer
 
 ISSUES
 ======
@@ -89,11 +86,6 @@ ISSUES
     - std::char_trait<wchar_t> is not well supported on cygwin.
 
 - TinyXml or Expat w/ DOM wrapper?
-  - OPEN.
-    - TinyXml:
-      - easy to use (DOM)
-      - no format output to string buffer
-    - Expat
-      - may faster then TinyXml
-      - need a wrapper to make it easy to use
-      - no xml output support
+  - RESOLVED: expat.
+    - expat is faster.
+    - custom DOM wrapper fits our requirement better, and is pretty easy to implement.
