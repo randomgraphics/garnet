@@ -309,7 +309,7 @@ bool DDSReader::readHeader(
     bool hasMipmap = ( DDS_DDSD_MIPMAPCOUNT & mHeader.flags )
                   && ( DDS_CAPS_MIPMAP & mHeader.caps )
                   && ( DDS_CAPS_COMPLEX & mHeader.caps );
-    UInt8 bits = GN::gfx::getClrFmtDesc(mImgDesc.format).bits;
+    const GN::gfx::ClrFmtDesc & cfd = GN::gfx::getClrFmtDesc(mImgDesc.format);
     size_t levels = hasMipmap ? mHeader.mipCount : 1;
     if( 0 == levels ) levels = 1;
 
@@ -321,27 +321,27 @@ bool DDSReader::readHeader(
         {
             GN::gfx::MipmapDesc & m = mImgDesc.getMipmap( f, l );
 
-            m.width = width;
+            m.width  = width;
             m.height = height;
-            m.depth = depth;
+            m.depth  = depth;
 
             switch( mImgDesc.format )
             {
                 case GN::gfx::FMT_DXT1:
-                    m.rowPitch = ((m.width + 3) >> 2) * 2;
-                    m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
+                    m.rowPitch = ((m.width + 3) & 0xFFFFFFFC) * 2;
+                    m.slicePitch = m.rowPitch * ((m.height + 3) & 0xFFFFFFFC) / 4;
                     break;
 
     		    case GN::gfx::FMT_DXT2:
     		    case GN::gfx::FMT_DXT3:
                 case GN::gfx::FMT_DXT4:
     		    case GN::gfx::FMT_DXT5:
-                    m.rowPitch = ((m.width + 3) >> 2) * 4;
-                    m.slicePitch = m.rowPitch * ((m.height + 3) >> 2) * 4;
+                    m.rowPitch = ((m.width + 3) & 0xFFFFFFFC) * 4;
+                    m.slicePitch = m.rowPitch * ((m.height + 3) & 0xFFFFFFFC) / 4;
                     break;
 
                 default:
-                    m.rowPitch = bits * m.width / 8;
+                    m.rowPitch = cfd.bits * m.width / 8;
                     m.slicePitch = m.rowPitch * m.height;
                     break;
             }

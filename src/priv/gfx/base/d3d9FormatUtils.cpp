@@ -200,6 +200,8 @@ D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt, bool tiled )
         // compressed formats
         case FMT_DXT1                   : d3dfmt = D3DFMT_DXT1; break;
         case FMT_DXT2                   : d3dfmt = D3DFMT_DXT2; break;
+        case FMT_DXT3                   : d3dfmt = D3DFMT_DXT3; break;
+        case FMT_DXT5                   : d3dfmt = D3DFMT_DXT5; break;
 
         // depth formats
         case FMT_D_16                   : d3dfmt = D3DFMT_D16; break;

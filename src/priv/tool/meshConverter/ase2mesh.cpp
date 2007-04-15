@@ -1294,9 +1294,9 @@ static bool sBuildNodeTree( AseScene & scene )
 
         if( 0 == p )
         {
-            GN_ERROR(sLogger)( "Object %s has invalid parent: %s",
+            GN_ERROR(sLogger)( "Object %s has invalid parent: %s. Replace it with \"root\".",
                 o.node.name.cptr(), o.node.parent.cptr() );
-            return false;
+            p = &scene.root;
         }
 
         o.setParent( p, 0 );
