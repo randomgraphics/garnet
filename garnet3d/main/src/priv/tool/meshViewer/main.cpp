@@ -73,9 +73,6 @@ public:
             mActor = mScene.loadActorHiearachyFromXmlFile( mFileName, mObjName );
             if( 0 == mActor ) return false;
 
-            mActor->setPivot( mActor->getBoundingSphere().center );
-            mActor->setPosition( -mActor->getBoundingSphere().center );
-
             // update camera stuff
             mRadius = mActor->getBoundingSphere().radius * 2.0f;
             updateRadius();
@@ -84,8 +81,9 @@ public:
             mArcBall.setHandness( util::ArcBall::RIGHT_HAND );
             mArcBall.setViewMatrix( mView );
             mArcBall.connectToInput();
+            mArcBall.setTranslation( -mActor->getBoundingSphere().center );
         }
-        
+
         // update arcball window
         const DispDesc & dd = gRenderer.getDispDesc();
         mArcBall.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );

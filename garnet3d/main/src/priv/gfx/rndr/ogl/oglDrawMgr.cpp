@@ -63,9 +63,9 @@ static void sDumpRendererContext( const GN::gfx::RendererContext & ctx, size_t f
     sCtxDumper.dump( "</RendererContext>" );
 }
 
-#define DUMP_CONTEXT() if(sCtxDumper.enabled) sDumpRendererContext( mContext, mFrameCounter );
+#define DUMP_STATE() if(sCtxDumper.enabled) sDumpRendererContext( mContext, mFrameCounter );
 /*/
-#define DUMP_CONTEXT()
+#define DUMP_STATE()
 //*/
 
 // *****************************************************************************
@@ -206,6 +206,7 @@ void GN::gfx::OGLRenderer::drawEnd()
 #endif
 
     ++mFrameCounter;
+    mDrawCounter = 0;
 
     GN_UNGUARD_SLOW;
 }
@@ -271,7 +272,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     GN_ASSERT( mDrawBegan );
 
-    DUMP_CONTEXT();
+    DUMP_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -333,6 +334,7 @@ void GN::gfx::OGLRenderer::drawIndexed(
     // success
     mNumPrims += numprim;
     ++mNumBatches;
+    ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
 }
@@ -346,7 +348,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
 
     GN_ASSERT( mDrawBegan );
 
-    DUMP_CONTEXT();
+    DUMP_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -385,6 +387,7 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
     // success
     mNumPrims += numprim;
     ++mNumBatches;
+    ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
 }
@@ -404,7 +407,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 
     GN_ASSERT( mDrawBegan );
 
-    DUMP_CONTEXT();
+    DUMP_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -469,6 +472,7 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
     // success
     mNumPrims += numprim;
     ++mNumBatches;
+    ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
 }
@@ -486,7 +490,7 @@ void GN::gfx::OGLRenderer::drawUp(
 
     GN_ASSERT( mDrawBegan );
 
-    DUMP_CONTEXT();
+    DUMP_STATE();
 
     // map custom primitive to opengl primitive
     GLenum  oglPrim;
@@ -531,6 +535,7 @@ void GN::gfx::OGLRenderer::drawUp(
     // success
     mNumPrims += numprim;
     ++mNumBatches;
+    ++mDrawCounter;
 
     GN_UNGUARD_SLOW;
 }
@@ -549,13 +554,20 @@ void GN::gfx::OGLRenderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
+
     GN_ASSERT( mDrawBegan && mLine );
+
     contextUpdateBegin();
     if( !(DL_USE_CURRENT_VS & options) ) setVS( 0 );
     if( !(DL_USE_CURRENT_PS & options) ) setPS( 0 );
     contextUpdateEnd();
-    DUMP_CONTEXT();
+
+    DUMP_STATE();
+
     mLine->drawLines( options, (const float*)positions, stride, count, rgba, model, view, proj );
+
+    ++mDrawCounter;
+
     GN_UNGUARD_SLOW;
 }
 

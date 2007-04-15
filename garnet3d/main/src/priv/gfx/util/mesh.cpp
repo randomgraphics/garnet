@@ -297,6 +297,141 @@ bool GN::gfx::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & basedir 
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::gfx::Mesh::loadFromBinaryStream( File & fp )
+{
+    GN_GUARD;
+
+    size_t readen;
+
+    // read chunk header
+    struct ChunkHeader
+    {
+        char   tag[22]; // up to 22 characters to idenity chunk type
+        UInt16 endian;  // 0x0201 means little endian; else, big endian
+        UInt64 bytes;   // chunk size in bytes, not including this header.
+    } header;
+    if( !fp.read( &header, sizeof(header), &readen ) || readen != sizeof(header) )
+    {
+        GN_ERROR(sLogger)( "fail to read binary chunk header!" );
+        return false;
+    }
+
+    // verify chunk header
+    static const char MESH_TAG[] = {"GARNET MESH V0.1"};
+    if( 0 != strCmp( header.tag, MESH_TAG, sizeof(MESH_TAG) ) )
+    {
+        GN_ERROR(sLogger)( "Not a mesh chunk!" );
+        return false;
+    }
+
+    // read data into temporary buffer (TODO: no need for memory mapped file).
+    DynaArray<UInt8> buf( (size_t)header.bytes );
+    if( !fp.read( buf.cptr(), buf.size(), &readen ) || readen != buf.size() )
+    {
+        GN_ERROR(sLogger)( "Fail to read mesh data." );
+        return false;
+    }
+
+    const UInt8 * ptr = buf.cptr();
+    const UInt8 * end = ptr + buf.size();
+    Renderer & r = gRenderer;
+
+    // get mesh binary header
+    const MeshBinaryHeader * mbh = (const MeshBinaryHeader *)ptr;
+    ptr += sizeof(MeshBinaryHeader);
+    if( ptr > end )
+    {
+        GN_ERROR(sLogger)( "Corrupt mesh header." );
+        return false;
+    }
+
+    // create vertex format
+    vtxfmt = r.createVtxFmt( mbh->vtxfmt );
+    if( 0 == vtxfmt ) return false;
+
+    // store other fields
+    primtype  = mbh->primtype;
+    numprim   = mbh->numprim;
+    startvtx  = mbh->startvtx;
+    minvtxidx = mbh->minvtxidx;
+    numvtx    = mbh->numvtx;
+    startidx  = mbh->startidx;
+
+    // create vertex buffers
+    size_t numStreams = mbh->vtxfmt.calcNumStreams();
+    vtxbufs.resize( numStreams );
+    for( size_t i = 0; i < numStreams; ++i )
+    {
+        const MeshVtxBufBinaryHeader * mvbbh = (const MeshVtxBufBinaryHeader *)ptr;
+        ptr += sizeof(MeshVtxBufBinaryHeader);
+        if( ptr > end )
+        {
+            GN_ERROR(sLogger)( "fail to read vertex buffer %d", i );
+            return false;
+        }
+
+        MeshVtxBuf & vb = vtxbufs[i];
+        vb.offset = mvbbh->offset;
+        vb.stride = mvbbh->stride;
+
+        // calculate vb size
+        size_t bytes = numvtx * vb.stride;
+        if( (ptr+bytes) > end )
+        {
+            GN_ERROR(sLogger)( "fail to read vertex buffer %d", i );
+            return false;
+        }
+
+        // create new VB
+        vb.buffer.attach( r.createVtxBuf( bytes, !!mvbbh->dynamic, !!mvbbh->readback ) );
+        if( vb.buffer.empty() ) return false;
+
+        // fill data
+        UInt8 * dst = (UInt8*)vb.buffer->lock( 0, 0, LOCK_WO );
+        if( 0 == dst ) return false;
+        AutoSurfaceUnlocker<VtxBuf> unlocker( vb.buffer );
+        memcpy( dst, ptr, bytes );
+        ptr += bytes;
+        GN_ASSERT( ptr <= end );
+    }
+
+    // check index buffer header
+    const MeshIdxBufBinaryHeader * mibbh = (const MeshIdxBufBinaryHeader*)ptr;
+    ptr += sizeof(MeshIdxBufBinaryHeader);
+    if( ptr > end )
+    {
+        GN_ERROR(sLogger)( "fail to read index buffer header." );
+        return false;
+    }
+
+    // calculate index buffer size
+    size_t numidx = calcVertexCount( primtype, numprim );
+    size_t bytes  = numidx * 2; // 16-bit index buffer
+    if( (ptr+bytes) > end )
+    {
+        GN_ERROR(sLogger)( "fail to read index buffer data." );
+        return false;
+    }
+
+    // create index buffer
+    idxbuf.attach( r.createIdxBuf( bytes, !!mibbh->dynamic, !!mibbh->readback ) );
+    if( idxbuf.empty() ) return false;
+
+    // fill index buffer
+    UInt16 * dst = (UInt16*)idxbuf->lock( 0, 0, LOCK_WO );
+    if( 0 == dst ) return false;
+    AutoSurfaceUnlocker<IdxBuf> unlocker( idxbuf );
+    memcpy( dst, ptr, bytes );
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
 // *****************************************************************************
 // global functions
 // *****************************************************************************

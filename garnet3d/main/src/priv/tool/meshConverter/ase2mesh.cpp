@@ -2,6 +2,7 @@
 #include "convert.h"
 
 using namespace GN;
+using namespace GN::gfx;
 
 // *****************************************************************************
 // ASE loader
@@ -1469,6 +1470,201 @@ static void reorgMeshFor16bitsIndex(
     GN_UNGUARD;
 }
 
+static bool sWriteMeshChunkXml(
+    const AseGeoObject      & o,
+    const VertexBuffer      & vb,
+    const DynaArray<UInt32> & ib,
+    const FaceRange         & r,
+    const StrA              & basename )
+{
+    GN_GUARD;
+
+    StrA meshname  = basename + ".mesh.xml";
+    StrA vbname    = basename + ".vb";
+    StrA ibname    = basename + ".ib";
+
+    struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
+
+    size_t written;
+
+    struct BinHeader
+    {
+        char   tag[2];
+        UInt16 endian;
+    };
+    GN_CASSERT( 4 == sizeof(BinHeader) );
+
+    const BinHeader header = { {'G', 'N'}, 0x0201 };
+
+    // write VB
+    DynaArray<MeshVertex> memvb( r.vbcount );
+    for( size_t vi = 0; vi < r.vbcount; ++vi )
+    {
+        const VertexSelector & vs = vb[r.vboffset+vi];
+        const AseVertex & v = o.mesh.vertices[vs.p];
+        memvb[vi].p = v.p;
+        memvb[vi].n = v.n[vs.n];
+        memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
+    }
+    AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
+    if( !fvb ||
+        !fvb->write( &header, sizeof(header), &written ) ||
+        written != sizeof(header) ||
+        !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), &written ) ||
+        written != sizeof(MeshVertex)*memvb.size() )
+    {
+        GN_ERROR(sLogger)( "fail to write vertex buffer." );
+        return false;
+    }
+    fvb.clear();
+
+    // write IB
+    AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
+    if( !fib ) return false;
+    if( !fib->write( &header, sizeof(header), &written ) ||
+        sizeof(header) != written )
+    {
+        GN_ERROR(sLogger)( "fail to write IB header." );
+        return false;
+    }
+    for( size_t ii = 0; ii < r.ibcount; ++ii )
+    {
+        UInt32 idx32 = ib[r.iboffset + ii];
+
+        GN_ASSERT( r.vboffset <= idx32 && idx32 < (r.vboffset+r.vbcount) );
+        GN_ASSERT( r.vbcount < 0x10000 );
+
+        UInt16 idx16 = (UInt16)( idx32 - r.vboffset );
+
+        if( !fib->write( &idx16, sizeof(idx16), &written ) ||
+            2 != written )
+        {
+            GN_ERROR(sLogger)( "fail to write index %d", ii );
+            return false;
+        }
+    }
+    fib.clear();
+
+    // write mesh xml
+    StrA outdir = dirName( meshname );
+    StrA meshxml;
+    meshxml.format(
+        "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
+        "<mesh\n"
+        "	primtype  = \"TRIANGLE_LIST\"\n"
+        "	numprim   = \"%d\"\n"
+        "	startvtx  = \"0\"\n"
+        "	minvtxidx = \"0\"\n"
+        "	numvtx    = \"%d\"\n"
+        "	startidx  = \"0\"\n"
+        "	>\n"
+        "\n"
+        "	<vtxfmt>\n"
+        "		<attrib stream = \"0\" offset =  \"0\" semantic = \"POS0\" format = \"FMT_FLOAT3\"/>\n"
+        "		<attrib stream = \"0\" offset = \"12\" semantic = \"NML0\" format = \"FMT_FLOAT3\"/>\n"
+        "		<attrib stream = \"0\" offset = \"24\" semantic = \"TEX0\" format = \"FMT_FLOAT2\"/>\n"
+        "	</vtxfmt>\n"
+        "	\n"
+        "	<vtxbuf stream = \"0\" offset = \"0\" stride = \"32\" ref=\"%s\"/>\n"
+        "\n"
+        "	<idxbuf ref=\"%s\"/>\n"
+        "</mesh>\n",
+        r.ibcount / 3,
+        r.vbcount,
+        relPath( vbname, outdir ).cptr(),
+        relPath( ibname, outdir ).cptr() );
+    AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
+    if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sWriteMeshChunkBinary(
+    const AseGeoObject      & o,
+    const VertexBuffer      & vb,
+    const DynaArray<UInt32> & ib,
+    const FaceRange         & r,
+    const StrA              & name )
+{
+    GN_GUARD;
+
+    struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
+
+    // calculate mesh bytes
+    size_t totalBytes =
+        sizeof(MeshBinaryHeader) +
+        sizeof(MeshVtxBufBinaryHeader) +
+        sizeof(MeshVertex)*r.vbcount +
+        sizeof(MeshIdxBufBinaryHeader) +
+        sizeof(UInt16)*r.ibcount;
+
+    // define chunk header
+    struct ChunkHeader
+    {
+        char   tag[22]; // up to 22 characters to idenity chunk type
+        UInt16 endian; 
+        UInt64 bytes;   // chunk size in bytes, not including this header.
+    };
+    const ChunkHeader chunkheader = { {"GARNET MESH V0.1"}, 0x0201, totalBytes };
+
+    // create mesh file
+    AutoObjPtr<File> fp( core::openFile( name, "wb" ) );
+    if( !fp ) return false;
+
+    // write chunk header
+    if( !fp->write( &chunkheader, sizeof(chunkheader), 0 ) ) return false;
+
+    // write mesh header
+    MeshBinaryHeader mbh = { TRIANGLE_LIST, r.ibcount / 3, 0, 0, r.vbcount, 0, VtxFmtDesc::XYZ_NORM_UV };
+    if( !fp->write( &mbh, sizeof(mbh), 0 ) ) return false;
+
+    // write VB header
+    MeshVtxBufBinaryHeader mvbbh = { 0, sizeof(MeshVertex), 0, 0 };
+    if( !fp->write( &mvbbh, sizeof(mvbbh), 0 ) ) return false;
+
+    // write VB
+    DynaArray<MeshVertex> memvb( r.vbcount );
+    for( size_t vi = 0; vi < r.vbcount; ++vi )
+    {
+        const VertexSelector & vs = vb[r.vboffset+vi];
+        const AseVertex & v = o.mesh.vertices[vs.p];
+        memvb[vi].p = v.p;
+        memvb[vi].n = v.n[vs.n];
+        memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
+    }
+    if( !fp->write( memvb.cptr(), r.vbcount * sizeof(MeshVertex), 0 ) ) return false;
+
+    // write IB header
+    MeshIdxBufBinaryHeader mibbh = { 0, 0, 0 };
+    if( !fp->write( &mibbh, sizeof(mibbh), 0 ) ) return false;
+
+    // write IB
+    DynaArray<UInt16> memib( r.ibcount );
+    for( size_t ii = 0; ii < r.ibcount; ++ii )
+    {
+        UInt32 idx32 = ib[r.iboffset + ii];
+
+        GN_ASSERT( r.vboffset <= idx32 && idx32 < (r.vboffset+r.vbcount) );
+        GN_ASSERT( r.vbcount < 0x10000 );
+
+        UInt16 idx16 = (UInt16)( idx32 - r.vboffset );
+
+        memib[ii] = idx16;
+    }
+    if( !fp->write( memib.cptr(), r.ibcount * sizeof(UInt16), 0 ) ) return false;
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -1522,111 +1718,32 @@ static bool sWriteNode(
 
         for( size_t ri = 0; ri < ranges.size(); ++ri )
         {
-            const FaceRange & r = ranges[ri];
-            
-            StrA basename  = strFormat( "%s_%s_c%02d_r%02d",
-                                        name.cptr(),
-                                        o.node.name.cptr(),
-                                        ci,
-                                        ri );
-            StrA meshname  = basename + ".mesh.xml";
-            StrA vbname    = basename + ".vb";
-            StrA ibname    = basename + ".ib";
+            StrA meshname;
 
-            struct MeshVertex { Vector3f p; Vector3f n; Vector2f t; };
-
-            size_t written;
-
-            struct BinHeader
+            if( 1 )
             {
-                char   tag[2];
-                UInt16 endian;
-            };
-            GN_CASSERT( 4 == sizeof(BinHeader) );
-
-            const BinHeader header = { {'G', 'N'}, 0x0201 };
-
-            // write VB
-            DynaArray<MeshVertex> memvb( r.vbcount );
-            for( size_t vi = 0; vi < r.vbcount; ++vi )
-            {
-                const VertexSelector & vs = vb[r.vboffset+vi];
-                const AseVertex & v = o.mesh.vertices[vs.p];
-                memvb[vi].p = v.p;
-                memvb[vi].n = v.n[vs.n];
-                memvb[vi].t = Vector2f( v.t[vs.t].x, v.t[vs.t].y );
+                // write chunk binary
+                meshname = strFormat( "%s_%s_c%02d_r%02d.mesh.bin",
+                            name.cptr(),
+                            o.node.name.cptr(),
+                            ci,
+                            ri );
+                sWriteMeshChunkBinary( o, vb, ib, ranges[ri], meshname );
             }
-            AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
-            if( !fvb ||
-                !fvb->write( &header, sizeof(header), &written ) ||
-                written != sizeof(header) ||
-                !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), &written ) ||
-                written != sizeof(MeshVertex)*memvb.size() )
+            else
             {
-                GN_ERROR(sLogger)( "fail to write vertex buffer." );
-                return false;
+                // write chunk XML
+                StrA basename  = strFormat( "%s_%s_c%02d_r%02d",
+                                            name.cptr(),
+                                            o.node.name.cptr(),
+                                            ci,
+                                            ri );
+                meshname  = basename + ".mesh.xml";
+                sWriteMeshChunkXml( o, vb, ib, ranges[ri], basename );
             }
-            fvb.clear();
-
-            // write IB
-            AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
-            if( !fib ) return false;
-            if( !fib->write( &header, sizeof(header), &written ) ||
-                sizeof(header) != written )
-            {
-                GN_ERROR(sLogger)( "fail to write IB header." );
-                return false;
-            }
-            for( size_t ii = 0; ii < r.ibcount; ++ii )
-            {
-                UInt32 idx32 = ib[r.iboffset + ii];
-
-                GN_ASSERT( r.vboffset <= idx32 && idx32 < (r.vboffset+r.vbcount) );
-                GN_ASSERT( r.vbcount < 0x10000 );
-
-                UInt16 idx16 = (UInt16)( idx32 - r.vboffset );
-
-                if( !fib->write( &idx16, sizeof(idx16), &written ) ||
-                    2 != written )
-                {
-                    GN_ERROR(sLogger)( "fail to write index %d", ii );
-                    return false;
-                }
-            }
-            fib.clear();
-
-            // write mesh xml
-            StrA outdir = dirName( meshname );
-            StrA meshxml;
-            meshxml.format(
-                "<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-                "<mesh\n"
-                "	primtype  = \"TRIANGLE_LIST\"\n"
-                "	numprim   = \"%d\"\n"
-                "	startvtx  = \"0\"\n"
-                "	minvtxidx = \"0\"\n"
-                "	numvtx    = \"%d\"\n"
-                "	startidx  = \"0\"\n"
-                "	>\n"
-                "\n"
-                "	<vtxfmt>\n"
-                "		<attrib stream = \"0\" offset =  \"0\" semantic = \"POS0\" format = \"FMT_FLOAT3\"/>\n"
-                "		<attrib stream = \"0\" offset = \"12\" semantic = \"NML0\" format = \"FMT_FLOAT3\"/>\n"
-                "		<attrib stream = \"0\" offset = \"24\" semantic = \"TEX0\" format = \"FMT_FLOAT2\"/>\n"
-                "	</vtxfmt>\n"
-                "	\n"
-                "	<vtxbuf stream = \"0\" offset = \"0\" stride = \"32\" ref=\"%s\"/>\n"
-                "\n"
-                "	<idxbuf ref=\"%s\"/>\n"
-                "</mesh>\n",
-                r.ibcount / 3,
-                r.vbcount,
-                relPath( vbname, outdir ).cptr(),
-                relPath( ibname, outdir ).cptr() );
-            AutoObjPtr<File> mesh( core::openFile( meshname, "wt" ) );
-            if( !mesh || !mesh->write( meshxml.cptr(), meshxml.size(), 0 ) ) return false;
 
             // compose actor xml
+            StrA outdir = dirName( meshname );
             xml += strFormat(
                 "%s	<drawable>\n"
                 "%s		<effect ref=\"media::/effect/%s.xml\"/>\n"
@@ -1650,18 +1767,18 @@ static bool sWriteNode(
     float    radius = sqrtf( o.node.bbox.w * o.node.bbox.w + o.node.bbox.h * o.node.bbox.h + o.node.bbox.d * o.node.bbox.d ) / 2.0f;
 
     // compose rotation quaternion
-    Quaternionf quat;
-    quat.fromRotation( o.node.rotaxis, o.node.rotangle );
+    //Quaternionf quat;
+    //quat.fromRotation( o.node.rotaxis, o.node.rotangle );
 
     // compose other actor properties
     xml += strFormat(
         "%s	<position x=\"0.0\" y=\"0.0\" z=\"0.0\" desc=\"position in parent space, 3D vector\"/>\n"
         "%s	<pivot x=\"%f\" y=\"%f\" z=\"%f\" desc=\"center of rotation in local space, 3D vector\"/>\n"
-        "%s	<rotation nx=\"%f\" ny=\"%f\" nz=\"%f\" d=\"%f\" desc=\"rotation in parent space, quaternion\"/>\n"
+        "%s	<rotation nx=\"0.0\" ny=\"0.0\" nz=\"0.0\" d=\"1.0\" desc=\"rotation in parent space, quaternion\"/>\n"
         "%s	<bsphere x=\"%f\" y=\"%f\" z=\"%f\" r=\"%f\"/>\n",
         identstr.cptr(), //o.node.pos.x, o.node.pos.y, o.node.pos.z,
         identstr.cptr(), center.x, center.y, center.z,
-        identstr.cptr(), quat.v.x, quat.v.y, quat.v.z, quat.w,
+        identstr.cptr(), //quat.v.x, quat.v.y, quat.v.z, quat.w,
         identstr.cptr(), center.x, center.y, center.z, radius );
 
     // write sub nodes
