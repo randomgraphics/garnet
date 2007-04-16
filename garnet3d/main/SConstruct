@@ -1068,6 +1068,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNsampleRenderToTexture',
 		    ]
 		tools = [
+		    'GNtoolD3D9DumpViewer',
 		    'GNtoolD3D9Wrapper',
 		    'GNtoolGPUBenchmark',
 		    'GNtoolMeshConverter',

@@ -374,20 +374,6 @@ namespace GN { namespace gfx
         size_t mDrawCounter;
 
         //@}
-
-        // ********************************************************************
-        //
-        /// \name Misc. utilities
-        //
-        // ********************************************************************
-
-        //@{
-
-    public:
-
-        void dumpCurrentState( StrA & ) const {}
-
-        //@}
     };
 }}
 
