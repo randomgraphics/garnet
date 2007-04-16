@@ -3,7 +3,9 @@
 #include "d3d9Line.h"
 #include "d3d9IdxBuf.h"
 
-// static primitive map
+///
+/// static primitive map
+///
 static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
 {
     D3DPT_POINTLIST,
@@ -20,7 +22,7 @@ static D3DPRIMITIVETYPE sPrimMap[GN::gfx::NUM_PRIMITIVES] =
 #endif
 };
 
-//
+///
 /// convert Vector4f to D3COLOR
 // ------------------------------------------------------------------------
 static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
@@ -28,6 +30,8 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
     D3DCOLOR dc = D3DCOLOR_COLORVALUE(c.r, c.g, c.b, c.a);
     return dc;
 }
+
+#define DUMP_STATE() //if( 2 == mFrameCounter ) GN::gfx::dumpD3D9States(); else void(0)
 
 // *****************************************************************************
 // interface functions
@@ -63,6 +67,7 @@ bool GN::gfx::D3D9Renderer::drawBegin()
     mDrawBegan = true;
     mNumPrims = 0;
     mNumBatches = 0;
+    mDrawCounter = 0;
     return true;
 
     GN_UNGUARD_SLOW;
@@ -83,6 +88,8 @@ void GN::gfx::D3D9Renderer::drawEnd()
     mDrawBegan = false;
     GN_DX9_CHECK( mDevice->EndScene() );
     GN_DX9_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
+
+    ++mFrameCounter;
 
     GN_UNGUARD_SLOW;
 }
@@ -121,6 +128,10 @@ void GN::gfx::D3D9Renderer::drawIndexed(
 {
     GN_GUARD_SLOW;
 
+    DUMP_STATE();
+
+    ++mDrawCounter;
+
     if( mFakeDraw ) return;
 
     GN_ASSERT( mDrawBegan );
@@ -155,6 +166,10 @@ void GN::gfx::D3D9Renderer::draw(
     PrimitiveType prim, size_t numprim, size_t startvtx )
 {
     GN_GUARD_SLOW;
+
+    DUMP_STATE();
+
+    ++mDrawCounter;
 
     if( mFakeDraw ) return;
 
@@ -192,6 +207,10 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     const UInt16 * indexData )
 {
     GN_GUARD_SLOW;
+
+    DUMP_STATE();
+
+    ++mDrawCounter;
 
     if( mFakeDraw ) return;
 
@@ -241,6 +260,10 @@ void GN::gfx::D3D9Renderer::drawUp(
 {
     GN_GUARD_SLOW;
 
+    DUMP_STATE();
+
+    ++mDrawCounter;
+
     if( mFakeDraw ) return;
 
     //
@@ -283,6 +306,10 @@ void GN::gfx::D3D9Renderer::drawLines(
     const Matrix44f & proj )
 {
     GN_GUARD_SLOW;
+
+    DUMP_STATE();
+
+    ++mDrawCounter;
 
     if( mFakeDraw ) return;
 

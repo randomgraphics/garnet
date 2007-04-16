@@ -13,7 +13,11 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D9");
 // ----------------------------------------------------------------------------
 DWORD sBufUsage2D3D9( bool dynamic )
 {
+#if GN_DEBUG_BUILD
+    DWORD d3dUsage = 0;
+#else
     DWORD d3dUsage = D3DUSAGE_WRITEONLY;
+#endif
 
     if( dynamic ) d3dUsage |= D3DUSAGE_DYNAMIC;
 

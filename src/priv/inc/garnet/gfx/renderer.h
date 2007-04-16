@@ -1044,11 +1044,6 @@ namespace GN { namespace gfx
         ///
         bool parameterCheckEnabled() const { return mEnableParameterCheck; }
 
-        ///
-        /// Dump current renderer state to string. For debug purpose only.
-        ///
-        virtual void dumpCurrentState( StrA & ) const = 0;
-
         //@}
 
         // ********************************************************************

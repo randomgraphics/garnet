@@ -299,7 +299,6 @@ namespace GN { namespace gfx
                                                 float height,
                                                 float znear,
                                                 float zfar ) const { return Matrix44f::IDENTITY; }
-        void dumpCurrentState( StrA & ) const {}
 
         //@}
 

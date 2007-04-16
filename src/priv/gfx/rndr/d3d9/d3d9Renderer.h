@@ -400,6 +400,9 @@ namespace GN { namespace gfx
                                 const Matrix44f & view,
                                 const Matrix44f & proj );
 
+        size_t getFrameCounter() const { return mFrameCounter; }
+        size_t getDrawCounter() const { return mDrawCounter; }
+
         // private functions
     private:
         bool drawInit() { return true; }
@@ -408,6 +411,8 @@ namespace GN { namespace gfx
         {
             mDrawBegan = false;
             mLine = 0;
+            mFrameCounter = 0;
+            mDrawCounter = 0;
         }
 
         bool drawDeviceCreate() { return true; }
@@ -422,20 +427,16 @@ namespace GN { namespace gfx
         bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
         D3D9Line * mLine; // Line renderer
 
-        //@}
-
-        // ********************************************************************
-        //
-        /// \name Misc. utilities
-        //
-        // ********************************************************************
-
-        //@{
-
-        virtual void dumpCurrentState( StrA & ) const {}
+        size_t mFrameCounter;
+        size_t mDrawCounter;
 
         //@}
     };
+
+    ///
+    /// dump D3D9 device states
+    ///
+    void dumpD3D9States();
 }}
 
 #if GN_ENABLE_INLINE
