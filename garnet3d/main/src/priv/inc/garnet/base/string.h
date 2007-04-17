@@ -999,6 +999,8 @@ namespace GN
     /// \name string -> number conversion
     //@{
 
+    bool str2SInt8( SInt8 &, const char * );
+    bool str2UInt8( UInt8 &, const char * );
     bool str2SInt16( SInt16 &, const char * );
     bool str2UInt16( UInt16 &, const char * );
     bool str2SInt32( SInt32 &, const char * );
@@ -1008,8 +1010,14 @@ namespace GN
     bool str2Float( float &, const char * );
     bool str2Double( double &, const char *  );
 
-    template<typename T> bool str2Int( T & i, const char * s );
+    template<typename T> bool str2Int( T & i, const char * s )
+    {
+        GN_CASSERT_EX( 0, "Compiler should never reach here!" );
+        return false;
+    }
 
+    template<> inline bool str2Int<SInt8>( SInt8 & i, const char * s ) { return str2SInt8( i, s ); }
+    template<> inline bool str2Int<UInt8>( UInt8 & i, const char * s ) { return str2UInt8( i, s ); }
     template<> inline bool str2Int<SInt16>( SInt16 & i, const char * s ) { return str2SInt16( i, s ); }
     template<> inline bool str2Int<UInt16>( UInt16 & i, const char * s ) { return str2UInt16( i, s ); }
     template<> inline bool str2Int<SInt32>( SInt32 & i, const char * s ) { return str2SInt32( i, s ); }
@@ -1030,6 +1038,10 @@ namespace GN
         else
             return defaultValue;
     }
+
+    template<typename T> bool str2Number( T & i, const char * s ) { return str2Int<T>( i, s ); }
+    template<> inline bool str2Number<float>( float & i, const char * s ) { return str2Float( i, s ); }
+    template<> inline bool str2Number<double>( double & i, const char * s ) { return str2Double( i, s ); }
 
     ///
     /// Convert string to float array. String should be in format like:

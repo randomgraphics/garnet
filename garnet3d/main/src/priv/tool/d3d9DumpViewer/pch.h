@@ -8,6 +8,7 @@
 
 #include "garnet/GNbase.h"
 #include "garnet/GNcore.h"
+#include "garnet/GNscene.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX

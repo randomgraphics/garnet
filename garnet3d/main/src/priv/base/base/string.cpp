@@ -76,6 +76,31 @@ GN::strVarPrintf( wchar_t * buf, size_t bufSize, const wchar_t * fmt, va_list ar
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::str2SInt8( SInt8 & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    int ii;
+    if( 1 != sscanf( s, "%i", &ii ) ) return false;
+    i = (SInt8)ii;
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::str2UInt8( UInt8 & i, const char * s )
+{
+    if( strEmpty(s) ) return false;
+    unsigned int ii;
+    if( 1 != sscanf( s, "%u", &ii ) ) return false;
+    i = (UInt8)ii;
+    return true;
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::str2SInt16( SInt16 & i, const char * s )
 {
     if( strEmpty(s) ) return false;

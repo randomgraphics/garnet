@@ -62,6 +62,11 @@ namespace GN
         //@}
 
         ///
+        /// return location of this node in the document (unimplemented)
+        ///
+        const char * getLocation() const { return ""; }
+
+        ///
         /// conver to cdata node
         ///
         XmlCdata * toCdata() { return XML_CDATA == type ? (XmlCdata*)this : 0; }

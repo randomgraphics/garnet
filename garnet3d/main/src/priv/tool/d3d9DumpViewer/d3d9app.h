@@ -84,6 +84,8 @@ namespace GN { namespace gfx { namespace d3d9
         D3D9Application();
         ~D3D9Application();
 
+        IDirect3DDevice9 & d3d9dev() const { GN_ASSERT( mDevice ); return *mDevice; }
+
         int run( const D3D9AppOption * = 0 );
 
         bool changeOption( const D3D9AppOption & );
