@@ -49,12 +49,12 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     HINSTANCE module = (HINSTANCE)GetModuleHandleW(0);
     GN_ASSERT( 0 != module );
 
-    WNDCLASSEXA wcex;
+    WNDCLASSEXW wcex;
 
-    const char * classname = "d3dapp_mainwindow";
+    const wchar_t * classname = L"d3dapp_mainwindow";
 
     // register window class
-    GN_TRACE(sLogger)( "Register window class: %s (module handle: 0x%X)", classname, module );
+    GN_TRACE(sLogger)( "Register window class: %S (module handle: 0x%X)", classname, module );
     wcex.cbSize         = sizeof(wcex);
     wcex.style          = 0;
     wcex.lpfnWndProc    = (WNDPROC)&sStaticWindowProc;
@@ -67,7 +67,7 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     wcex.lpszMenuName   = 0;
     wcex.lpszClassName  = classname;
     wcex.hIconSm        = LoadIcon( 0, IDI_APPLICATION );
-    if( 0 == ::RegisterClassExA(&wcex) )
+    if( 0 == ::RegisterClassExW(&wcex) )
     {
         GN_ERROR(sLogger)( "fail to register window class, %s!", getOSErrorInfo() );
         return 0;
@@ -87,10 +87,10 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     ::AdjustWindowRectEx( &rc, style, 0, exStyle );
 
     // create window
-    HWND hwnd = ::CreateWindowExA(
+    HWND hwnd = ::CreateWindowExW(
         exStyle,
         classname,
-        "D3DApp",
+        L"D3DApp",
         style,
         mi.rcWork.left, mi.rcWork.top,
         rc.right - rc.left, rc.bottom - rc.top,
@@ -111,6 +111,41 @@ static HWND sCreateWindow( HWND parent, HMONITOR monitor, UInt32 width, UInt32 h
     // success
     return hwnd;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sAdjustWindow( HWND window, UInt32 width, UInt32 height, bool fullscreen )
+{
+    DWORD style = fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW;
+    style |= WS_VISIBLE;
+
+    // modify render window style
+    SetWindowLong( window, GWL_STYLE, style );
+
+    // calculate boundary size
+    RECT rc = { 0, 0, width, height };
+    GN_MSW_CHECK_RV(
+        ::AdjustWindowRectEx(
+            &rc,
+            style,
+            0,
+            ::GetWindowLongA( window, GWL_EXSTYLE ) ),
+        false );
+
+    // resize the window
+    GN_MSW_CHECK_RV(
+        ::SetWindowPos(
+            window, HWND_TOP,
+            0, 0, // position, ignored.
+            rc.right-rc.left, rc.bottom-rc.top, // size
+            SWP_NOMOVE ),
+        false );
+
+    // success
+    return true;
+}
+
 
 static void sDestroyWindow( HWND hwnd )
 {
@@ -274,7 +309,7 @@ bool GN::gfx::d3d9::D3D9Application::init()
 
     // success
     mRunning = true;
-    return true;
+    return onInit();
 }
 
 //
@@ -363,10 +398,15 @@ bool GN::gfx::d3d9::D3D9Application::createDevice()
 // -----------------------------------------------------------------------------
 bool GN::gfx::d3d9::D3D9Application::restoreDevice()
 {
+    GN_ASSERT( mWindow );
     GN_ASSERT( mDevice );
 
-    //if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
-    //GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
+    UInt32 w = mOption.fullscreen ? mOption.dm.width : mOption.windowedWidth;
+    UInt32 h = mOption.fullscreen ? mOption.dm.height : mOption.windowedHeight;
+    sAdjustWindow( mWindow, w, h, mOption.fullscreen );
+
+    if( !sSetupD3dpp( mPresentParameters, mWindow, *mD3D, mAdapter, mDeviceType, mOption ) ) return false;
+    GN_DX9_CHECK_RV( mDevice->Reset( &mPresentParameters ), false );
 
     // success
     return onRestore();

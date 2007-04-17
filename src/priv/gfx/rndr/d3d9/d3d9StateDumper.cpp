@@ -26,7 +26,7 @@ struct DumpFile
 		fprintf(
 			fp,
 			"<?xml version=\"1.0\" standalone=\"yes\"?>\n"
-			"<D3D9StateDump frame=\"%d\" count=\"%d\">\n",
+			"<D3D9StateDump frame=\"%d\" draw=\"%d\">\n",
 			r.getFrameCounter(),
 			r.getDrawCounter() );
 	}
@@ -112,33 +112,27 @@ static void sDumpConsts(
 	const int   * cb, size_t nb )
 {
 	// float conts
-	fprintf( fp, "\t\t<float count=\"%d\"><!-- ignore zero registers -->\n", nf );
+	fprintf( fp, "\t\t<float>\n" );
 	for( size_t i = 0; i < nf; ++i )
 	{
-		if( 0 != cf[i*4+0] ||
-			0 != cf[i*4+1] ||
-			0 != cf[i*4+2] ||
-			0 != cf[i*4+3] )
-		{
-			fprintf(
-				fp,
-				"\t\t\t%03d %f %f %f %f\n",
-				i,
-				cf[i*4+0],
-				cf[i*4+1],
-				cf[i*4+2],
-				cf[i*4+3] );
-		}
+		fprintf(
+			fp,
+			"\t\t\t<f index=\"%03d\" x=\"%f\" y=\"%f\" z=\"%f\" w=\"%f\"/>\n",
+			i,
+			cf[i*4+0],
+			cf[i*4+1],
+			cf[i*4+2],
+			cf[i*4+3] );
 	}
 	fprintf( fp, "\t\t</float>\n" );
 
 	// size_t conts
-	fprintf( fp, "\t\t<int count=\"%d\">\n", ni );
+	fprintf( fp, "\t\t<int>\n" );
 	for( size_t i = 0; i < ni; ++i )
 	{
 		fprintf(
 			fp,
-			"\t\t\t%03d %d %d %d %d\n",
+			"\t\t\t<i index=\"%03d\" x=\"%d\" y=\"%d\" z=\"%d\" w=\"%d\"/>\n",
 			i,
 			ci[i*4+0],
 			ci[i*4+1],
@@ -148,12 +142,12 @@ static void sDumpConsts(
 	fprintf( fp, "\t\t</int>\n" );
 
 	// boolean count
-	fprintf( fp, "\t\t<bool count=\"%d\">\n", nb );
+	fprintf( fp, "\t\t<bool>\n" );
 	for( size_t i = 0; i < nb; ++i )
 	{
 		fprintf(
 			fp,
-			"\t\t\t%03d %d\n",
+			"\t\t\t<b index=\"%03d\" x=\"%d\"/>\n",
 			i,
 			cb[i] );
 	}
@@ -175,9 +169,9 @@ static void sDumpVsConsts( FILE * fp )
 	dev->GetVertexShaderConstantI( 0, consti, 16 );
 	dev->GetVertexShaderConstantB( 0, constb, 16 );
 
-	fprintf( fp, "\t<VsConsts>\n" );
+	fprintf( fp, "\t<vsc>\n" );
 	sDumpConsts( fp, constf, 256, consti, 16, constb, 16 );
-	fprintf( fp, "\t</VsConsts>\n" );
+	fprintf( fp, "\t</vsc>\n" );
 }
 
 
@@ -196,9 +190,9 @@ static void sDumpPsConsts( FILE * fp )
 	dev->GetPixelShaderConstantI( 0, consti, 16 );
 	dev->GetPixelShaderConstantB( 0, constb, 16 );
 
-	fprintf( fp, "\t<PsConsts>\n" );
+	fprintf( fp, "\t<psc>\n" );
 	sDumpConsts( fp, constf, 224, consti, 16, constb, 16 );
-	fprintf( fp, "\t</PsConsts>\n" );
+	fprintf( fp, "\t</psc>\n" );
 }
 
 //
@@ -217,7 +211,7 @@ static void sDumpVtxDecl( FILE * fp )
 
 	decl->GetDeclaration( elements, &count );
 
-	fprintf( fp, "\t<VtxDecl count=\"%d\">\n", count );
+	fprintf( fp, "\t<vtxdecl count=\"%d\">\n", count );
 	for( UINT i = 0; i < count; ++i )
 	{
 		const D3DVERTEXELEMENT9 & e = elements[i];
@@ -226,7 +220,7 @@ static void sDumpVtxDecl( FILE * fp )
 			"\t\t<element stream=\"%d\" offset=\"%d\" type=\"%d\" method=\"%d\" usage=\"%d\" index=\"%d\"/>\n",
 			e.Stream, e.Offset, e.Type, e.Method, e.Usage, e.UsageIndex );
 	}
-	fprintf( fp, "\t</VtxDecl>\n" );
+	fprintf( fp, "\t</vtxdecl>\n" );
 }
 
 //
@@ -317,7 +311,8 @@ void sDumpIdxBuf( FILE * fp )
 
 		ib->Unlock();
 
-		fprintf( fp, "\t<idxbuf basevtx=\"%d\" bytes=\"%u\" ref=\"%s\"/>\n", 0, desc.Size, fname );
+		fprintf( fp, "\t<idxbuf format=\"%d\" basevtx=\"%d\" bytes=\"%u\" ref=\"%s\"/>\n",
+            desc.Format, 0, desc.Size, fname );
 	}
 	else
 	{
@@ -350,6 +345,43 @@ static void sDumpTextures( FILE * fp )
 			fprintf( fp, "\t<texture stage=\"%d\" ref=\"%s\"/>\n", i, fname );
 		}
 	}
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDumpRenderTargets( FILE * fp )
+{
+	LPDIRECT3DDEVICE9 dev = GET_DEVICE();
+
+    for( DWORD i = 0; i < 4; ++i )
+    {
+        AutoComPtr<IDirect3DSurface9> rt;
+
+        dev->GetRenderTarget( i, &rt );
+
+        if( rt )
+        {
+            D3DSURFACE_DESC desc;
+            rt->GetDesc( &desc );
+
+            fprintf( fp,
+                "\t<rendertarget stage=\"%d\" width=\"%d\" height=\"%d\" format=\"%d\" msaa=\"%d\" quality=\"%d\"/>\n",
+                i, desc.Width, desc.Height, desc.Format, desc.MultiSampleType, desc.MultiSampleQuality );
+        }
+    }
+
+    AutoComPtr<IDirect3DSurface9> ds;
+    dev->GetDepthStencilSurface( &ds );
+    if( ds )
+    {
+        D3DSURFACE_DESC desc;
+        ds->GetDesc( &desc );
+
+        fprintf( fp,
+            "\t<depthstencil width=\"%d\" height=\"%d\" format=\"%d\" msaa=\"%d\" quality=\"%d\"/>\n",
+            desc.Width, desc.Height, desc.Format, desc.MultiSampleType, desc.MultiSampleQuality );
+    }
 }
 
 //
@@ -482,24 +514,24 @@ static void sDumpRenderStates( FILE * fp )
 	};
 
 	// print render states
-	fprintf( fp, "\t<rs>\n" );
+	fprintf( fp, "\t<renderstates>\n" );
 	DWORD value;
 	for( size_t i = 0; i < sizeof(rstypes)/sizeof(rstypes[0]); ++i )
 	{
-		dev->GetRenderState( (D3DRENDERSTATETYPE)i, &value );
-		fprintf( fp, "\t\t%u %u\n", i, value );
+		dev->GetRenderState( rstypes[i], &value );
+		fprintf( fp, "\t\t<rs type=\"%u\" value=\"%u\"/>\n", rstypes[i], value );
 	}
-	fprintf( fp, "\t</rs>\n" );
+	fprintf( fp, "\t</renderstates>\n" );
 
 	// print sampler states
-	fprintf( fp, "\t<ss>\n" );
+	fprintf( fp, "\t<samplerstates stagecount=\"16\">\n" );
 	for( DWORD s = 0; s < 16; ++s )
 	for( size_t i = 0; i < sizeof(sstypes)/sizeof(sstypes[0]); ++i )
 	{
-		dev->GetSamplerState( s, (D3DSAMPLERSTATETYPE)i, &value );
-		fprintf( fp, "\t\t%u %u %u\n", s, i, value );
+		dev->GetSamplerState( s, sstypes[i], &value );
+		fprintf( fp, "\t\t<ss stage=\"%u\" type=\"%u\" value=\"%u\"/>\n", s, sstypes[i], value );
 	}
-	fprintf( fp, "\t</ss>\n" );
+	fprintf( fp, "\t</samplerstates>\n" );
 
 	// scissor rect
 	RECT scissor;
@@ -540,6 +572,8 @@ void GN::gfx::dumpD3D9States()
 	sDumpVtxBufs( file );
 	sDumpIdxBuf( file );
 	sDumpTextures( file );
+
+	sDumpRenderTargets( file );
 
 	sDumpRenderStates( file );
 }
