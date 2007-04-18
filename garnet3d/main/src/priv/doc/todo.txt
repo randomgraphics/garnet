@@ -53,8 +53,6 @@
     - debug variable viewer and modifier
   - renderer state dump system
     - OGL dumper has priority (for D3D,we can use PIX)
-    - need a elegant way to switch on/off the dummper
-    - depends on debug variable registry
   - COLLADA loader
   - ASE loader
     - save texture to target directory
