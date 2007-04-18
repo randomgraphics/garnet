@@ -413,6 +413,8 @@ namespace GN { namespace gfx
             mLine = 0;
             mFrameCounter = 0;
             mDrawCounter = 0;
+            mDumpNextFrame = false;
+            mDumpThisFrame = false;
         }
 
         bool drawDeviceCreate() { return true; }
@@ -424,19 +426,51 @@ namespace GN { namespace gfx
 
     private:
 
-        bool mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
-        D3D9Line * mLine; // Line renderer
+        bool       mDrawBegan; // True, if and only if between drawBegin() and drawEnd().
+        D3D9Line * mLine;      // Line renderer
 
-        size_t mFrameCounter;
-        size_t mDrawCounter;
+        size_t     mFrameCounter;
+        size_t     mDrawCounter;
+
+        bool       mDumpNextFrame;
+        bool       mDumpThisFrame;
+        size_t     mDumpStart;
+        size_t     mDumpEnd;
+
+        //@}
+
+        // ********************************************************************
+        //
+        /// \name Misc. utilities
+        //
+        // ********************************************************************
+
+        //@{
+
+    public:
+
+        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches );
 
         //@}
     };
 
-    ///
-    /// dump D3D9 device states
-    ///
-    void dumpD3D9States();
+    /// \name dump D3D9 device states
+    //@{
+
+    void dumpD3D9Draw(
+        D3DPRIMITIVETYPE prim,
+        UINT basevtx,
+        UINT numprim );
+
+    void dumpD3D9DrawIndexed(
+        D3DPRIMITIVETYPE prim,
+        UINT basevtx,
+        UINT minvtxidx,
+        UINT numvtx,
+        UINT startidx,
+        UINT numprim );
+
+    //@}
 }}
 
 #if GN_ENABLE_INLINE

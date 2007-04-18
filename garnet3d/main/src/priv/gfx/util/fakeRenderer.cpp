@@ -300,6 +300,12 @@ namespace GN { namespace gfx
                                                 float znear,
                                                 float zfar ) const { return Matrix44f::IDENTITY; }
 
+
+        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+        {
+            // do nothing
+        }
+
         //@}
 
     };

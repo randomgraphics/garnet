@@ -1044,6 +1044,18 @@ namespace GN { namespace gfx
         ///
         bool parameterCheckEnabled() const { return mEnableParameterCheck; }
 
+        ///
+        /// dump device states of the next frame.
+        ///
+        /// \param startBatchIndex, numBatches
+        ///     Specify range of the dump. Set (0,0) to dump the whole frame.
+        ///
+        /// \note
+        ///     Dump data format is renderer dependent.
+        ///     Check document of specific renderer implementation for details.
+        ///
+        virtual void dumpNextFrame( size_t startBatchIndex = 0, size_t numBatches = 0 ) = 0;
+
         //@}
 
         // ********************************************************************
