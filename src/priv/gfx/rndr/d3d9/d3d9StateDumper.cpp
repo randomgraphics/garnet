@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "d3d9Renderer.h"
 
+#if !GN_XENON
+
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.d3d9.statedumper");
 
 using namespace GN;
@@ -18,7 +20,7 @@ struct DumpFile
         GN::gfx::D3D9Renderer & r = GET_RENDERER();
 
 		char fname[_MAX_PATH];
-		sprintf_s( fname, "d3d9statedump_frame(%05d)_draw(%04d).xml",
+		sprintf_s( fname, "d3d9statedump_frame(%08d)_draw(%04d).xml",
             r.getFrameCounter(), r.getDrawCounter() );
 
 		if( !fp.open( fname, "wt" ) ) return;
@@ -267,7 +269,7 @@ void sDumpVtxBufs( FILE * fp )
 			if( S_OK == vb->Lock( 0, 0, (void**)&data, D3DLOCK_READONLY ) )
 			{
 				char fname[_MAX_PATH];
-				sprintf_s( fname, "d3d9statedump_frame(%05d)_draw(%04d)_vtxbuf(%02d).bin",
+				sprintf_s( fname, "d3d9statedump_frame(%08d)_draw(%04d)_vtxbuf(%02d).bin",
                     r.getFrameCounter(), r.getDrawCounter(), i );
 				sDumpBinary( fname, data, desc.Size );
 
@@ -305,7 +307,7 @@ void sDumpIdxBuf( FILE * fp )
 	if( S_OK == ib->Lock( 0, 0, (void**)&data, D3DLOCK_READONLY ) )
 	{
 		char fname[_MAX_PATH];
-		sprintf_s( fname, "d3d9statedump_frame(%05d)_draw(%04d)_idxbuf.bin",
+		sprintf_s( fname, "d3d9statedump_frame(%08d)_draw(%04d)_idxbuf.bin",
             r.getFrameCounter(), r.getDrawCounter() );
 		sDumpBinary( fname, data, desc.Size );
 
@@ -338,8 +340,8 @@ static void sDumpTextures( FILE * fp )
 
 		if( tex )
 		{
-            sprintf_s( fname, "d3d9statedump_frame(%05d)_draw(%04d)_texture(%02d).dds",
-            r.getFrameCounter(), r.getDrawCounter(), i );
+            sprintf_s( fname, "d3d9statedump_frame(%08d)_draw(%04d)_texture(%02d).dds",
+                r.getFrameCounter(), r.getDrawCounter(), i );
 			D3DXSaveTextureToFileA( fname, D3DXIFF_DDS, tex, 0 );
 
 			fprintf( fp, "\t<texture stage=\"%d\" ref=\"%s\"/>\n", i, fname );
@@ -352,7 +354,10 @@ static void sDumpTextures( FILE * fp )
 // -----------------------------------------------------------------------------
 static void sDumpRenderTargets( FILE * fp )
 {
+    D3D9Renderer & r = GET_RENDERER();
 	LPDIRECT3DDEVICE9 dev = GET_DEVICE();
+
+    StrA fname;
 
     for( DWORD i = 0; i < 4; ++i )
     {
@@ -365,9 +370,13 @@ static void sDumpRenderTargets( FILE * fp )
             D3DSURFACE_DESC desc;
             rt->GetDesc( &desc );
 
+            fname.format( "d3d9statedump_frame(%08d)_draw(%04d)_rendertarget(%02d).dds",
+                r.getFrameCounter(), r.getDrawCounter(), i );
+			D3DXSaveSurfaceToFileA( fname.cptr(), D3DXIFF_DDS, rt, 0, 0 );
+
             fprintf( fp,
-                "\t<rendertarget stage=\"%d\" width=\"%d\" height=\"%d\" format=\"%d\" msaa=\"%d\" quality=\"%d\"/>\n",
-                i, desc.Width, desc.Height, desc.Format, desc.MultiSampleType, desc.MultiSampleQuality );
+                "\t<rendertarget stage=\"%d\" width=\"%d\" height=\"%d\" format=\"%d\" msaa=\"%d\" quality=\"%d\" ref=\"%s\"/>\n",
+                i, desc.Width, desc.Height, desc.Format, desc.MultiSampleType, desc.MultiSampleQuality, fname.cptr() );
         }
     }
 
@@ -379,7 +388,7 @@ static void sDumpRenderTargets( FILE * fp )
         ds->GetDesc( &desc );
 
         fprintf( fp,
-            "\t<depthstencil width=\"%d\" height=\"%d\" format=\"%d\" msaa=\"%d\" quality=\"%d\"/>\n",
+            "\t<depthstencil width=\"%d\" height=\"%d\" format=\"%d\" msaa=\"%d\" quality=\"%d\" ref=\"none\"/>\n",
             desc.Width, desc.Height, desc.Format, desc.MultiSampleType, desc.MultiSampleQuality );
     }
 }
@@ -550,6 +559,26 @@ static void sDumpRenderStates( FILE * fp )
 		vp.X, vp.Y, vp.Width, vp.Height, vp.MinZ, vp.MaxZ );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+static void sDumpD3D9States( FILE * fp )
+{
+	sDumpVs( fp );
+	sDumpVsConsts( fp );
+	sDumpPs( fp );
+	sDumpPsConsts( fp );
+
+	sDumpVtxDecl( fp );
+	sDumpVtxBufs( fp );
+	sDumpIdxBuf( fp );
+	sDumpTextures( fp );
+
+	sDumpRenderTargets( fp );
+
+	sDumpRenderStates( fp );
+}
+
 // *****************************************************************************
 // public function
 // *****************************************************************************
@@ -557,23 +586,62 @@ static void sDumpRenderStates( FILE * fp )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx::dumpD3D9States()
+void GN::gfx::dumpD3D9Draw(
+    D3DPRIMITIVETYPE prim,
+    UINT basevtx,
+    UINT numprim )
 {
 	DumpFile file;
 
 	if( !file.fp ) return;
 
-	sDumpVs( file );
-	sDumpVsConsts( file );
-	sDumpPs( file );
-	sDumpPsConsts( file );
+    fprintf(
+        file.fp,
+        "\t<draw prim=\"%d\" basevtx=\"%d\" minidx=\"%d\" numvtx=\"%d\" startidx=\"%d\" numprim=\"%d\"/>\n",
+        prim, basevtx, numprim );
 
-	sDumpVtxDecl( file );
-	sDumpVtxBufs( file );
-	sDumpIdxBuf( file );
-	sDumpTextures( file );
-
-	sDumpRenderTargets( file );
-
-	sDumpRenderStates( file );
+    sDumpD3D9States( file.fp );
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::dumpD3D9DrawIndexed(
+    D3DPRIMITIVETYPE prim,
+    UINT basevtx,
+    UINT minvtxidx,
+    UINT numvtx,
+    UINT startidx,
+    UINT numprim )
+{
+	DumpFile file;
+
+	if( !file.fp ) return;
+
+    fprintf(
+        file.fp,
+        "\t<drawindexed prim=\"%d\" basevtx=\"%d\" minidx=\"%d\" numvtx=\"%d\" startidx=\"%d\" numprim=\"%d\"/>\n",
+        prim, basevtx, minvtxidx, numvtx, startidx, numprim );
+
+    sDumpD3D9States( file.fp );
+}
+
+#else
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::dumpD3D9Draw( D3DPRIMITIVETYPE, UINT, UINT )
+{
+    // do nothing. We use PIX.
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::dumpD3D9DrawIndexed( D3DPRIMITIVETYPE, UINT, UINT, UINT, UINT, UINT )
+{
+    // do nothing. We use PIX.
+}
+
+#endif

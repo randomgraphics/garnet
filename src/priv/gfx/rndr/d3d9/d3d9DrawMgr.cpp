@@ -31,7 +31,16 @@ static GN_INLINE D3DCOLOR sRgba2D3DCOLOR( const GN::Vector4f & c )
     return dc;
 }
 
-#define DUMP_STATE() //if( 2 == mFrameCounter ) GN::gfx::dumpD3D9States(); else void(0)
+#if GN_RETAIL_BUILD
+#define DUMP_STATE(X)   // disable dump in retail build
+#else
+#define DUMP_STATE(X) \
+    if( mDumpThisFrame && \
+        ( mDumpStart <= mDrawCounter && mDrawCounter < mDumpEnd || \
+          0 == mDumpStart && 0 == mDumpEnd ) ) \
+    { X; } \
+    else void(0)
+#endif
 
 // *****************************************************************************
 // interface functions
@@ -63,11 +72,21 @@ bool GN::gfx::D3D9Renderer::drawBegin()
     // begin scene
     GN_DX9_CHECK_RV( mDevice->BeginScene(), 0 );
 
-    // success
+    // update per-frame data
     mDrawBegan = true;
     mNumPrims = 0;
     mNumBatches = 0;
     mDrawCounter = 0;
+
+#if !GN_RETAIL_BUILD
+    if( mDumpNextFrame )
+    {
+        mDumpNextFrame = false;
+        mDumpThisFrame = true;
+    }
+#endif
+
+    // success
     return true;
 
     GN_UNGUARD_SLOW;
@@ -90,6 +109,10 @@ void GN::gfx::D3D9Renderer::drawEnd()
     GN_DX9_CHECK( mDevice->Present( 0, 0, 0, 0 ) );
 
     ++mFrameCounter;
+
+#if !GN_RETAIL_BUILD
+    mDumpThisFrame = false;
+#endif
 
     GN_UNGUARD_SLOW;
 }
@@ -128,7 +151,13 @@ void GN::gfx::D3D9Renderer::drawIndexed(
 {
     GN_GUARD_SLOW;
 
-    DUMP_STATE();
+    DUMP_STATE( dumpD3D9DrawIndexed(
+        sPrimMap[prim],
+        (UINT)startvtx,
+        (UINT)minvtxidx,
+        (UINT)numvtx,
+        (UINT)startidx,
+        (UINT)numprim ) );
 
     ++mDrawCounter;
 
@@ -145,11 +174,11 @@ void GN::gfx::D3D9Renderer::drawIndexed(
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX9_CHECK(
         mDevice->DrawIndexedPrimitive(
-            sPrimMap[prim],     // primitive type
-            (UINT)startvtx ,     // start vertex
-            (UINT)minvtxidx,    // min vertex index
-            (UINT)numvtx,       // num of vertices
-            (UINT)startidx,     // base index
+            sPrimMap[prim],    // primitive type
+            (UINT)startvtx,    // start vertex
+            (UINT)minvtxidx,   // min vertex index
+            (UINT)numvtx,      // num of vertices
+            (UINT)startidx,    // base index
             (UINT)numprim ) ); // primitive count
 
     // success
@@ -167,7 +196,10 @@ void GN::gfx::D3D9Renderer::draw(
 {
     GN_GUARD_SLOW;
 
-    DUMP_STATE();
+    DUMP_STATE( dumpD3D9Draw(
+        sPrimMap[prim],
+        (UINT)startvtx,
+        (UINT)numprim ) );
 
     ++mDrawCounter;
 
@@ -184,8 +216,8 @@ void GN::gfx::D3D9Renderer::draw(
     GN_ASSERT( prim < NUM_PRIMITIVES );
     GN_DX9_CHECK(
         mDevice->DrawPrimitive(
-            sPrimMap[prim],     // primitive type
-            (UINT)startvtx,      // start vertex
+            sPrimMap[prim],    // primitive type
+            (UINT)startvtx,    // start vertex
             (UINT)numprim ) ); // primitive count
 
     // success
@@ -208,7 +240,7 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
 {
     GN_GUARD_SLOW;
 
-    DUMP_STATE();
+    // TODO: dump state
 
     ++mDrawCounter;
 
@@ -260,7 +292,7 @@ void GN::gfx::D3D9Renderer::drawUp(
 {
     GN_GUARD_SLOW;
 
-    DUMP_STATE();
+    // TODO: dump state
 
     ++mDrawCounter;
 
@@ -307,7 +339,7 @@ void GN::gfx::D3D9Renderer::drawLines(
 {
     GN_GUARD_SLOW;
 
-    DUMP_STATE();
+    // TODO: dump state
 
     ++mDrawCounter;
 
@@ -323,6 +355,16 @@ void GN::gfx::D3D9Renderer::drawLines(
     PIXPERF_END_EVENT();
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx::D3D9Renderer::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+{
+    mDumpNextFrame = true;
+    mDumpStart = startBatchIndex;
+    mDumpEnd   = startBatchIndex + numBatches;
 }
 
 // *****************************************************************************

@@ -309,6 +309,24 @@ namespace GN { namespace gfx
     private:
 
         //@}
+
+        // ********************************************************************
+        //
+        /// \name Misc. utilities
+        //
+        // ********************************************************************
+
+        //@{
+
+    public:
+
+        virtual void dumpNextFrame( size_t startBatchIndex, size_t numBatches )
+        {
+            GN_UNUSED_PARAM( startBatchIndex );
+            GN_UNUSED_PARAM( numBatches );
+        }
+
+        //@}
     };
 }}
 
