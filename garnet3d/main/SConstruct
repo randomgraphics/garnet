@@ -262,7 +262,7 @@ def UTIL_newEnv( compiler, variant ):
 		cppdefines['debug']   += ['_DEBUG']
 		cppdefines['stdbg']   += ['_DEBUG']
 
-		cxxflags['common']  += ['/EHs']
+		cxxflags['common']  += ['/EHa']
 
 		ccflags['common']  += ['/W4', '/WX', '/Ot', '/Oi'] # favor speed, enable intrinsic functions.
 		ccflags['debug']   += ['/GR', '/RTCscu']

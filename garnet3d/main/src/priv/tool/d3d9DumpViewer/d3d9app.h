@@ -10,6 +10,26 @@
 
 namespace GN { namespace gfx { namespace d3d9
 {
+    ///
+    /// scoped PIX event
+    ///
+    struct PixPerfScopeEvent
+    {
+        //@{
+        PixPerfScopeEvent( D3DCOLOR color, const wchar_t * name )
+        {
+            D3DPERF_BeginEvent( color, name );
+        }
+        ~PixPerfScopeEvent()
+        {
+            D3DPERF_EndEvent();
+        }
+        //@}
+    };
+
+    ///
+    /// D3D9 application framework
+    ///
     struct D3D9AppOption
     {
         ///
@@ -96,7 +116,7 @@ namespace GN { namespace gfx { namespace d3d9
 
         //@{
 
-        virtual bool onInit() { return true; }
+        virtual bool onInit( D3D9AppOption & ) { return true; }
         virtual bool onCreate() { return true; }
         virtual bool onRestore() { return true; }
         virtual void onDispose() {}
