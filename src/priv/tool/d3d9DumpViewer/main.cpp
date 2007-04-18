@@ -4,6 +4,12 @@
 using namespace GN;
 using namespace GN::gfx;
 
+///
+/// define to non-zero to render directly into back buffer;
+/// else, render to offscreen render target, then copy to back buffer.
+///
+#define RENDER_TO_BACKBUF 0
+
 static GN::Logger * sLogger = GN::getLogger("GN.tool.D3D9DumpViewer");
 
 static StrA sDumpFileName;
@@ -56,7 +62,9 @@ struct D3D9RtDump
     UInt32 format;
     UInt32 msaa;
     UInt32 quality;
+    StrA   ref;
     AutoComPtr<IDirect3DSurface9> surf;
+    AutoComPtr<IDirect3DSurface9> syscopy;
 };
 
 struct D3D9RsDump
@@ -65,18 +73,53 @@ struct D3D9RsDump
     UInt32 value;
 };
 
+struct D3D9OperationDump
+{
+    bool    indexed;
+
+    UInt32  prim;
+    UInt32  numprim;
+    UInt32  basevtx;
+
+    // for indexed draw only
+    UInt32  minvtxidx;
+    UInt32  numvtx;
+    UInt32  startidx;
+
+    void draw( IDirect3DDevice9 & dev )
+    {
+        if( indexed )
+        {
+            dev.DrawIndexedPrimitive(
+                (D3DPRIMITIVETYPE) prim,
+                basevtx,
+                minvtxidx,
+                numvtx,
+                startidx,
+                numprim );
+        }
+        else
+        {
+            dev.DrawPrimitive(
+                (D3DPRIMITIVETYPE) prim,
+                basevtx,
+                numprim );
+        }
+    }
+};
+
 struct D3D9StateDump
 {
     //@{
 
     D3D9VsDump        vs;
-    Vector4f          vsconstf[256];
-    Vector4i          vsconsti[16];
+    float             vsconstf[256][4];
+    int               vsconsti[16][4];
     int               vsconstb[16];
 
     D3D9PsDump        ps;
-    Vector4f          psconstf[224];
-    Vector4i          psconsti[16];
+    float             psconstf[224][4];
+    int               psconsti[16][4];
     int               psconstb[16];
 
     D3D9VtxDeclDump   vtxdecl;
@@ -98,6 +141,8 @@ struct D3D9StateDump
     D3DVIEWPORT9      viewport;
 
     RECT              scissorrect;
+
+    D3D9OperationDump operation;
 
     //@}
 
@@ -160,7 +205,7 @@ struct D3D9StateDump
 
             size_t bytes = fp->size();
 
-            GN_DX9_CHECK_RV( dev.CreateVertexBuffer( bytes, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &vtxbufs[i].vb, 0 ), false );
+            GN_DX9_CHECK_RV( dev.CreateVertexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &vtxbufs[i].vb, 0 ), false );
 
             void * vertices;
             GN_DX9_CHECK_RV( vbd.vb->Lock( 0, 0, &vertices, 0 ), false );
@@ -180,7 +225,7 @@ struct D3D9StateDump
 
             size_t bytes = fp->size();
 
-            GN_DX9_CHECK_RV( dev.CreateIndexBuffer( bytes, D3DUSAGE_WRITEONLY, (D3DFORMAT)idxbuf.format, D3DPOOL_DEFAULT, &idxbuf.ib, 0 ), false );
+            GN_DX9_CHECK_RV( dev.CreateIndexBuffer( (UINT32)bytes, D3DUSAGE_WRITEONLY, (D3DFORMAT)idxbuf.format, D3DPOOL_DEFAULT, &idxbuf.ib, 0 ), false );
 
             void * indices;
             GN_DX9_CHECK_RV( idxbuf.ib->Lock( 0, 0, &indices, 0 ), false );
@@ -237,16 +282,27 @@ struct D3D9StateDump
             D3D9RtDump & rtd = rendertargets[i];
             if( !rtd.inuse ) continue;
 
-            GN_DX9_CHECK_RV(
-                dev.CreateRenderTarget(
-                    rtd.width,
-                    rtd.height,
-                    (D3DFORMAT)rtd.format,
-                    (D3DMULTISAMPLE_TYPE)rtd.msaa,
-                    rtd.quality,
-                    0, // non-lockable
-                    &rtd.surf, 0 ),
-                false );
+#if RENDER_TO_BACKBUF
+            if( 0 == i )
+            {
+                GN_DX9_CHECK_RV(
+                    dev.GetRenderTarget( 0, &rtd.surf ),
+                    false );
+            }
+#endif
+            else
+            {
+                GN_DX9_CHECK_RV(
+                    dev.CreateRenderTarget(
+                        rtd.width,
+                        rtd.height,
+                        (D3DFORMAT)rtd.format,
+                        (D3DMULTISAMPLE_TYPE)rtd.msaa,
+                        rtd.quality,
+                        0, // non-lockable
+                        &rtd.surf, 0 ),
+                    false );
+            }
         }
 
         // ds
@@ -276,19 +332,33 @@ struct D3D9StateDump
         for( int i = 0; i < GN_ARRAY_COUNT(vtxbufs); ++i ) vtxbufs[i].vb.clear();
         idxbuf.ib.clear();
         for( int i = 0; i < GN_ARRAY_COUNT(textures); ++i ) textures[i].tex.clear();
-        for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i ) rendertargets[i].surf.clear();
+        for( int i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+        {
+            rendertargets[i].surf.clear();
+            rendertargets[i].syscopy.clear();
+        }
         depthstencil.surf.clear();
     }
 
     void bind( IDirect3DDevice9 & dev ) const
     {
+        d3d9::PixPerfScopeEvent pixevent( 0, L"Bind" );
+
         // vs
         dev.SetVertexShader( vs.vs );
 
         // vsc
+        dev.SetVertexShaderConstantF( 0, vsconstf[0], GN_ARRAY_COUNT(vsconstf) );
+        dev.SetVertexShaderConstantI( 0, vsconsti[0], GN_ARRAY_COUNT(vsconsti) );
+        dev.SetVertexShaderConstantB( 0, vsconstb, GN_ARRAY_COUNT(vsconstb) );
 
         // ps
         dev.SetPixelShader( ps.ps );
+
+        // psc
+        dev.SetPixelShaderConstantF( 0, psconstf[0], GN_ARRAY_COUNT(psconstf) );
+        dev.SetPixelShaderConstantI( 0, psconsti[0], GN_ARRAY_COUNT(psconsti) );
+        dev.SetPixelShaderConstantB( 0, psconstb, GN_ARRAY_COUNT(psconstb) );
 
         // psc
 
@@ -348,7 +418,24 @@ struct D3D9StateDump
         dev.SetScissorRect( &scissorrect );
     }
 
-    bool loadFromXmlNode( const XmlNode & root, const StrA & /*basedir*/ )
+    void draw( IDirect3DDevice9 & dev )
+    {
+        // load RT data
+        {
+            d3d9::PixPerfScopeEvent pixevent( 0, L"Load RT data" );
+            for( UInt32 i = 0; i < GN_ARRAY_COUNT(rendertargets); ++i )
+            {
+                D3D9RtDump & rtd = rendertargets[i];
+                if( !rtd.inuse ) continue;
+
+                GN_DX9_CHECK( D3DXLoadSurfaceFromFileA( rtd.surf, 0, 0, rtd.ref.cptr(), 0, D3DX_FILTER_NONE, 0, 0 ) );
+            }
+        }
+
+        operation.draw( dev );
+    }
+
+    bool loadFromXmlNode( const XmlNode & root, const StrA & basedir )
     {
         // check root name
         const XmlElement * e = root.toElement();
@@ -393,23 +480,23 @@ struct D3D9StateDump
             }
             else if( "vtxbuf" == e->name )
             {
-                if( !loadVtxBuf( *e ) ) return false;
+                if( !loadVtxBuf( *e, basedir ) ) return false;
             }
             else if( "idxbuf" == e->name )
             {
-                if( !loadIdxBuf( *e ) ) return false;
+                if( !loadIdxBuf( *e, basedir ) ) return false;
             }
             else if( "texture" == e->name )
             {
-                if( !loadTexture( *e ) ) return false;
+                if( !loadTexture( *e, basedir ) ) return false;
             }
             else if( "rendertarget" == e->name )
             {
-                if( !loadRenderTarget( *e ) ) return false;
+                if( !loadRenderTarget( *e, basedir ) ) return false;
             }
             else if( "depthstencil" == e->name )
             {
-                if( !loadDepthStencil( *e ) ) return false;
+                if( !loadDepthStencil( *e, basedir ) ) return false;
             }
             else if( "renderstates" == e->name )
             {
@@ -434,6 +521,29 @@ struct D3D9StateDump
                 if( !sGetNumbericAttr( *e, "t", (SInt32&)scissorrect.top ) ) return false;
                 if( !sGetNumbericAttr( *e, "r", (SInt32&)scissorrect.right ) ) return false;
                 if( !sGetNumbericAttr( *e, "b", (SInt32&)scissorrect.bottom ) ) return false;
+            }
+            else if( "drawindexed" == e->name )
+            {
+                operation.indexed = true;
+                if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumbericAttr( *e, "basevtx", operation.basevtx ) ) return false;
+                if( !sGetNumbericAttr( *e, "minidx", operation.minvtxidx ) ) return false;
+                if( !sGetNumbericAttr( *e, "numvtx", operation.numvtx ) ) return false;
+                if( !sGetNumbericAttr( *e, "startidx", operation.startidx ) ) return false;
+                if( !sGetNumbericAttr( *e, "numprim", operation.numprim ) ) return false;
+            }
+            else if( "draw" == e->name )
+            {
+                operation.indexed = false;
+                if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumbericAttr( *e, "basevtx", operation.basevtx ) ) return false;
+                if( !sGetNumbericAttr( *e, "numprim", operation.numprim ) ) return false;
+            }
+            else if( "operation" == e->name )
+            {
+                operation.indexed = true;
+                if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
+                if( !sGetNumbericAttr( *e, "startvtx", operation.basevtx ) ) return false;
             }
             else
             {
@@ -479,7 +589,7 @@ private:
         }
     }
 
-    static bool sGetRefString( const XmlElement & node, StrA & result )
+    static bool sGetRefString( const XmlElement & node, const StrA & basedir, StrA & result )
     {
         const XmlAttrib * a = node.findAttrib( "ref" );
         if ( !a )
@@ -488,13 +598,14 @@ private:
             return false;
         }
 
-        if( !core::isFile( a->value ) )
+        result = core::resolvePath( basedir, a->value );
+
+        if( !core::isFile( result ) )
         {
-            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), a->value.cptr() );
+            GN_WARN(sLogger)("%s : invalid reference :  %s!", node.getLocation(), result.cptr() );
         }
 
         // success
-        result = a->value;
         return true;
     }
 
@@ -627,7 +738,7 @@ private:
         return true;
     }
 
-    bool loadVtxBuf( const XmlElement & node )
+    bool loadVtxBuf( const XmlElement & node, const StrA & basedir )
     {
         size_t stream;
         if( !sGetNumbericAttr( node, "stream", stream ) ) return false;
@@ -641,20 +752,20 @@ private:
 
         if( !sGetNumbericAttr( node, "offset", vb.offset ) ) return false;
         if( !sGetNumbericAttr( node, "stride", vb.stride ) ) return false;
-        if( !sGetRefString( node, vb.ref ) ) return false;
+        if( !sGetRefString( node, basedir, vb.ref ) ) return false;
 
         return true;
     }
 
-    bool loadIdxBuf( const XmlElement & node )
+    bool loadIdxBuf( const XmlElement & node, const StrA & basedir )
     {
         if( !sGetNumbericAttr( node, "format", idxbuf.format ) ) return false;
         if( !sGetNumbericAttr( node, "basevtx", idxbuf.basevtx ) ) return false;
-        if( !sGetRefString( node, idxbuf.ref ) ) return false;
+        if( !sGetRefString( node, basedir, idxbuf.ref ) ) return false;
         return true;
     }
 
-    bool loadTexture( const XmlElement & node )
+    bool loadTexture( const XmlElement & node, const StrA & basedir )
     {
         size_t stage;
         if( !sGetNumbericAttr( node, "stage", stage ) ) return false;
@@ -666,12 +777,12 @@ private:
 
         D3D9TextureDump & t = textures[stage];
 
-        if( !sGetRefString( node, t.ref ) ) return false;
+        if( !sGetRefString( node, basedir, t.ref ) ) return false;
 
         return true;
     }
 
-    bool loadRenderTarget( const XmlElement & node )
+    bool loadRenderTarget( const XmlElement & node, const StrA & basedir )
     {
         size_t stage;
         if( !sGetNumbericAttr( node, "stage", stage ) ) return false;
@@ -688,18 +799,20 @@ private:
         if( !sGetNumbericAttr( node, "format", rt.format ) ) return false;
         if( !sGetNumbericAttr( node, "msaa", rt.msaa ) ) return false;
         if( !sGetNumbericAttr( node, "quality", rt.quality ) ) return false;
+        if( !sGetRefString( node, basedir, rt.ref ) ) return false;
 
         rt.inuse = true;
         return true;
     }
 
-    bool loadDepthStencil( const XmlElement & node )
+    bool loadDepthStencil( const XmlElement & node, const StrA & basedir )
     {
         if( !sGetNumbericAttr( node, "width", depthstencil.width ) ) return false;
         if( !sGetNumbericAttr( node, "height", depthstencil.height ) ) return false;
         if( !sGetNumbericAttr( node, "format", depthstencil.format ) ) return false;
         if( !sGetNumbericAttr( node, "msaa", depthstencil.msaa ) ) return false;
         if( !sGetNumbericAttr( node, "quality", depthstencil.quality ) ) return false;
+        if( !sGetRefString( node, basedir, depthstencil.ref ) ) return false;
 
         depthstencil.inuse = true;
         return true;
@@ -781,33 +894,76 @@ struct D3D9StateResource
 class MyApp : public GN::gfx::d3d9::D3D9Application
 {
     D3D9StateDump mState;
+    AutoComPtr<IDirect3DSurface9> mBackBuf;
 
 protected:
 
-    bool onInit()
+    bool onInit( d3d9::D3D9AppOption & o )
     {
         mState.clear();
+        if( !scene::loadFromXmlFile( mState, sDumpFileName ) ) return false;
 
-        return scene::loadFromXmlFile( mState, sDumpFileName );
+#if RENDER_TO_BACKBUF
+        o.windowedWidth  = mState.rendertargets[0].width;
+        o.windowedHeight = mState.rendertargets[0].height;
+#else
+        o.windowedWidth  = mState.viewport.Width;
+        o.windowedHeight = mState.viewport.Height;
+#endif
+
+        // success
+        return true;
     }
 
     bool onRestore()
     {
         if( !mState.onRestore( d3d9dev() ) ) return false;
-        mState.bind( d3d9dev() );
+        d3d9dev().GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &mBackBuf );
         return true;
     }
 
     void onDispose()
     {
         mState.onDispose();
+        mBackBuf.clear();
     }
 
     void onDraw()
     {
         IDirect3DDevice9 & dev = d3d9dev();
 
-        dev.Clear( 0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0, 1.0f, 0 );
+        // clear back buffer
+        dev.SetRenderTarget( 0, mBackBuf );
+        dev.SetRenderTarget( 1, 0 );
+        dev.SetRenderTarget( 2, 0 );
+        dev.SetRenderTarget( 3, 0 );
+        dev.SetDepthStencilSurface( 0 );
+        dev.Clear( 0, 0, D3DCLEAR_TARGET, 0, 1.0f, 0 );
+
+        if( D3D_OK == dev.BeginScene() )
+        {
+            mState.bind( d3d9dev() );
+            mState.draw( dev );
+
+#if !RENDER_TO_BACKBUF
+            // copy RT0 content to backbuffer
+            RECT srcrc = {
+                (int)mState.viewport.X,
+                (int)mState.viewport.Y,
+                (int)( mState.viewport.X + mState.viewport.Width ),
+                (int)( mState.viewport.Y + mState.viewport.Height ),
+            };
+            RECT dstrc = {
+                0,
+                0,
+                (int)mState.viewport.Width,
+                (int)mState.viewport.Height,
+            };
+            dev.StretchRect( mState.rendertargets[0].surf, &srcrc, mBackBuf, &dstrc, D3DTEXF_NONE );
+#endif
+
+            dev.EndScene();
+        }
 
         dev.Present( 0, 0, 0, 0 );
     }

@@ -30,6 +30,9 @@ sStaticWindowProc( HWND wnd, UINT msg, WPARAM wp, LPARAM lp )
             ::PostQuitMessage(0);
             return 0;
 
+        case WM_ERASEBKGND:
+            return 0;
+
         default: ; // do nothing
     }
 
@@ -228,44 +231,46 @@ GN::gfx::d3d9::D3D9Application::~D3D9Application()
 // -----------------------------------------------------------------------------
 int GN::gfx::d3d9::D3D9Application::run( const D3D9AppOption * )
 {
-    __try
+    GN_GUARD_ALWAYS;
+
+    if( !init() ) { quit(); return -1; }
+
+    if( !changeOption(mOption) ) { quit(); return -1; }
+
+    // message loop 
+    MSG msg;
+    while( true )
     {
-        if( !init() ) return -1;
-
-        if( !changeOption(mOption) ) return -1;
-
-        // message loop 
-        MSG msg;
-        while( true )
+        if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
         {
-            if( ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) )
+            if( WM_QUIT == msg.message )
             {
-                if( WM_QUIT == msg.message )
-                {
-                    return 0;
-                }
-                ::TranslateMessage( &msg );
-                ::DispatchMessage(&msg);
+                quit();
+                return 0;
             }
-            else if( ::IsIconic( mWindow ) )
-            {
-                GN_TRACE(sLogger)( "Wait for window messages..." );
-                ::WaitMessage();
-            }
-            else
-            {
-                // Idle time, do rendering and update
-                onDraw();
-            }
+            ::TranslateMessage( &msg );
+            ::DispatchMessage(&msg);
         }
+        else if( ::IsIconic( mWindow ) )
+        {
+            GN_TRACE(sLogger)( "Wait for window messages..." );
+            ::WaitMessage();
+        }
+        else
+        {
+            // Idle time, do rendering and update
+            onDraw();
+        }
+    }
 
-        // done
-        return 0;
-    }
-    __finally
-    {
-        quit();
-    }
+    // done
+    quit();
+    return 0;
+
+    GN_UNGUARD_ALWAYS_NO_THROW;
+
+    quit();
+    return -1;
 }
 
 //
@@ -309,7 +314,7 @@ bool GN::gfx::d3d9::D3D9Application::init()
 
     // success
     mRunning = true;
-    return onInit();
+    return onInit( mOption );
 }
 
 //
@@ -334,6 +339,8 @@ void GN::gfx::d3d9::D3D9Application::quit()
 // -----------------------------------------------------------------------------
 bool GN::gfx::d3d9::D3D9Application::createDevice()
 {
+    PixPerfScopeEvent pixevent( 0, L"Create" );
+
     GN_ASSERT( IsWindow(mWindow) );
     GN_ASSERT( 0 == mDevice );
 
@@ -398,6 +405,8 @@ bool GN::gfx::d3d9::D3D9Application::createDevice()
 // -----------------------------------------------------------------------------
 bool GN::gfx::d3d9::D3D9Application::restoreDevice()
 {
+    PixPerfScopeEvent pixevent( 0, L"Restore" );
+
     GN_ASSERT( mWindow );
     GN_ASSERT( mDevice );
 
