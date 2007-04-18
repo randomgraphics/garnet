@@ -342,7 +342,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
         mD3DFormat = D3DFMT_A8R8G8B8;
         mIsRGBA = true;
     }
-    else if( D3DFMT_X8R8G8B8 == mD3DFormat )
+    else if( D3DFMT_X8B8G8R8 == mD3DFormat )
     {
         mD3DFormat = D3DFMT_X8R8G8B8;
         mIsRGBA = true;

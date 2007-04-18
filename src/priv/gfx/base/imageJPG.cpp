@@ -79,7 +79,7 @@ bool JPGReader::readHeader(
     if( JCS_GRAYSCALE != mCInfo.jpeg_color_space )
     {
         // force RGB output, if not gray-scale image
-        o_desc.format = GN::gfx::FMT_BGRX_8_8_8_8_UNORM;
+        o_desc.format = GN::gfx::FMT_RGBX_8_8_8_8_UNORM;
         bpp = 4;
     }
     else

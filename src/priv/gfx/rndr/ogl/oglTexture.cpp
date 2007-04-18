@@ -162,6 +162,12 @@ static GN_INLINE bool sColorFormat2OGL(
             gl_type            = GL_UNSIGNED_BYTE;
             return true;
 
+        case GN::gfx::FMT_RGBX_8_8_8_8_UNORM :
+            gl_internalformat  = GL_RGB8;
+            gl_format          = GL_RGBA;
+            gl_type            = GL_UNSIGNED_BYTE;
+            return true;
+
         case GN::gfx::FMT_BGRX_8_8_8_8_UNORM :
             gl_internalformat  = GL_RGB8;
             gl_format          = GL_BGRA_EXT;
