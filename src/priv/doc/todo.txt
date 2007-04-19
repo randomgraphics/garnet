@@ -20,9 +20,6 @@
   - refine sigslot class to allow any type of functor
   - smart enum class
   - skin mesh test case: porting DXSDK sample.
-    - array classes
-    - LRU list in resource manager
-    - format conversion between ClrFmt and D3DFMT
   - memory-mapped IO.
   - GFX system
     - render target management
@@ -72,7 +69,7 @@
 ISSUES
 ======
 
-- Uniform interface for different APIs is too difficult, and maybe pointless.
+- Unified interface for different APIs is too difficult, and maybe pointless.
   How about a higher level abstraction: material/effect system?
 
 - Do we need embed buffer for short string?
