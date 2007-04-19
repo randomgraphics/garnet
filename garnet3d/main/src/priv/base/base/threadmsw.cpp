@@ -3,6 +3,8 @@
 
 #if GN_MSWIN
 
+#include <process.h>
+
 static GN::Logger * sLogger = GN::getLogger("GN.base.Thread");
 
 using namespace GN;
@@ -88,13 +90,13 @@ public:
         mParam.userparam = param;
         mPriority = priority;
 
-        mHandle = ::CreateThread(
+        mHandle = (HANDLE)_beginthreadex(
             0, // security
             0, // default stack size
             &sProcDispatcher,
             &mParam,
             initialSuspended ? CREATE_SUSPENDED : 0,
-            &mId );
+            (unsigned int*)&mId );
         GN_MSW_CHECK_RV( mHandle, failure() );
 
         // success
@@ -106,6 +108,12 @@ public:
     void quit()
     {
         GN_GUARD;
+
+        // wait for thread termination
+        waitForTermination( INFINITE_TIME, 0 );
+
+        // close thread handle
+        CloseHandle( mHandle );
 
         // standard quit procedure
         GN_STDCLASS_QUIT();
@@ -207,8 +215,8 @@ private:
     ThreadParam     mParam;
     ThreadPriority  mPriority;
 
-    HANDLE mHandle;
-    DWORD  mId;
+    HANDLE          mHandle;
+    DWORD           mId;
 
     // ********************************
     // private functions
@@ -218,7 +226,7 @@ private:
     ///
     /// thread procedure dispather
     ///
-    static DWORD WINAPI sProcDispatcher( void * parameter )
+    static unsigned int __stdcall sProcDispatcher( void * parameter )
     {
         GN_ASSERT( parameter );
 
