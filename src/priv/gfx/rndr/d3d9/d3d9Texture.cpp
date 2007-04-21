@@ -229,12 +229,14 @@ DWORD GN::gfx::texUsage2D3DUsage( BitFields usage )
     DWORD d3dUsage  = 0;
     
 #if GN_XENON
+
     if( TEXUSAGE_AUTOGEN_MIPMAP & usage )
     {
         GN_WARN(sLogger)( "Xenon does not support mipmap auto-generation!" );
     }
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
     d3dUsage |= TEXUSAGE_DEPTH & usage ? D3DUSAGE_RENDERTARGET : 0;
+
 #else
 
     d3dUsage |= TEXUSAGE_RENDER_TARGET & usage ? D3DUSAGE_RENDERTARGET : 0;
@@ -355,10 +357,10 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     // determine D3D usage
 #if !GN_XENON
     mD3DUsage = texUsage2D3DUsage( desc.usage.u32 );
-    if( desc.usage.depthstencil )
+    if( desc.usage.depthstencil && desc.usage.automip )
     {
         GN_WARN(sLogger)( "depth texture does not support autogen-mipmap" );
-        mD3DUsage &= !D3DUSAGE_AUTOGENMIPMAP;
+        mD3DUsage &= ~D3DUSAGE_AUTOGENMIPMAP;
     }
 #endif
 
@@ -389,7 +391,7 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     // create shadow copy for both read-back and static textures
     // Note: Xenon texture does not need shadow copy
 #if !GN_XENON
-    if( mIsRGBA || desc.usage.readback || !desc.usage.dynamic )
+    if( (mIsRGBA || desc.usage.readback || !desc.usage.dynamic) && !desc.usage.depthstencil )
     {
         mShadowCopy = newD3DTexture(
             desc.dim,
