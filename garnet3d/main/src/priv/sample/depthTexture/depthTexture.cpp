@@ -33,7 +33,10 @@ class TestScene
 
 public:
 
-    TestScene( GN::app::SampleApp & app ) : mApp(app) {}
+    TestScene( GN::app::SampleApp & app ) : mApp(app)
+    {
+        mArcBall.connectToInput();
+    }
 
     ~TestScene() { destroy(); }
 
@@ -111,33 +114,9 @@ public:
         mPs.clear();
     }
 
-    void onKeyPress( input::KeyEvent key )
-    {
-        if( input::KEY_MOUSEBTN_0 == key.code )
-        {
-            if( key.status.down )
-            {
-                int x, y;
-                gInput.getMousePosition( x, y );
-                mArcBall.onMouseButtonDown( x, y );
-            }
-            else
-            {
-                mArcBall.onMouseButtonUp();
-            }
-        }
-    }
-
-    void onAxisMove()
-    {
-        int x, y;
-        gInput.getMousePosition( x, y );
-        mArcBall.onMouseMove( x, y );
-        mModel = mArcBall.getRotationMatrix44();
-    }
-
     void update()
     {
+        mModel = mArcBall.getRotationMatrix44();
         mCtx.setWorld( mModel );
         mCtx.setView( mView );
         mCtx.setProj( mProj );
@@ -180,18 +159,6 @@ public:
     void onUpdate()
     {
         mScene->update();
-    }
-
-    void onKeyPress( input::KeyEvent key )
-    {
-        GN::app::SampleApp::onKeyPress( key );
-        mScene->onKeyPress( key );
-    }
-
-    void onAxisMove( input::Axis a, int d )
-    {
-        GN::app::SampleApp::onAxisMove( a, d );
-        mScene->onAxisMove();
     }
 
     void onRender()
