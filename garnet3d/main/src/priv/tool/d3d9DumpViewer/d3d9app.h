@@ -95,6 +95,9 @@ namespace GN { namespace gfx { namespace d3d9
         UInt32 windowedHeight;
     };
 
+    ///
+    /// D3D9 application framework
+    ///
     class D3D9Application
     {
     public:

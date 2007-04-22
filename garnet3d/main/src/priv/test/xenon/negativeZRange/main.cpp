@@ -24,7 +24,7 @@ public:
         updateRadius();
 
         // initialize mArcBall
-        mArcBall.setHandness( util::ArcBall::RIGHT_HAND );
+        mArcBall.setHandness( util::RIGHT_HAND );
         mArcBall.setViewMatrix( mView );
         mArcBall.connectToInput();
 

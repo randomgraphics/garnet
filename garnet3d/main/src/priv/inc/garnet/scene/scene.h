@@ -59,7 +59,6 @@ namespace GN { namespace scene
         //@{
         Actor * loadActorHiearachyFromXmlNode( const XmlNode & node, const StrA & basedir );
         Actor * loadActorHiearachyFromXmlFile( const StrA & filename, const StrA & objname );
-        void    releaseActorHiearacy( Actor * );
         //@}
 
         //@{
@@ -79,6 +78,11 @@ namespace GN { namespace scene
         Matrix44f mProj, mView;
         Light     mLight0;
     };
+
+    //@{
+    void releaseActorHiearacy( Actor * );
+    Actor * cloneActorHiearacy( const Actor * );
+    //@}
 }}
 
 // *****************************************************************************

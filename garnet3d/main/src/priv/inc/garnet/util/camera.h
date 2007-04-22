@@ -19,10 +19,10 @@ namespace GN { namespace util
         RIGHT_HAND = 2, ///< right-hand
     };
 
-    //
-    // 线性插值器
-    //
-    template < class T >
+    ///
+    /// 线性插值器
+    ///
+    template <class T>
     class LinearInterpolator
     {
     public:

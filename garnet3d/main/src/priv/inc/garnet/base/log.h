@@ -6,18 +6,18 @@
 /// \author  chenlee (2005.4.17)
 // *****************************************************************************
 
-///
-/// General doLog macro, with user specified source code location
-///
+/// General log macros, with user specified source code location
+//@{
 #if GN_ENABLE_LOG
 #define GN_LOG_EX( logger, level, func, file, line ) if( logger->isOff( level ) ) {} else GN::Logger::LogHelper( logger, level, func, file, line ).doLog
-#define GN_LOG_BEGIN(logger,level) if( logger->isOn( level ) ) {
-#define GN_LOG_END()               }
+#define GN_LOG_BEGIN( logger, level )                if( logger->isOn( level ) ) {
+#define GN_LOG_END()                                 }
 #else
 #define GN_LOG_EX( logger, level, func, file, line ) if( 1 ) {} else GN::Logger::sFakeLog
-#define GN_LOG_BEGIN(logger,level) if(0) {
-#define GN_LOG_END()               }
+#define GN_LOG_BEGIN( logger, level )                if(0) {
+#define GN_LOG_END()                                 }
 #endif
+//@}
 
 ///
 /// General doLog macro, with automatic source code location

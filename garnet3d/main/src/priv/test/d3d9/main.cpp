@@ -89,7 +89,7 @@ public:
 #if 1
         view.translate( 0, 0, -300 );
         proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 10.0f, 1000.0f );
-        arcball.setHandness( util::ArcBall::RIGHT_HAND );
+        arcball.setHandness( util::RIGHT_HAND );
         arcball.setViewMatrix( view );
 #else
         view.translate( 0, 0, 300 );

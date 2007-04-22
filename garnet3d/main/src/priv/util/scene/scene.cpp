@@ -29,6 +29,10 @@ void GN::scene::Scene::clear()
     mLight0.position.set( 0, 10000.0f, 0 );
 }
 
+// *****************************************************************************
+// public functions
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -94,8 +98,7 @@ GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const St
     GN_ASSERT( xpr.root );
 
     // search a actor element with name equals "objname"
-    TreeTraversePreOrder<XmlNode> tt(xpr.root);
-    XmlNode * n = tt.first();
+    XmlNode * n = xpr.root;
     while( n )
     {
         XmlElement * e = n->toElement();
@@ -109,7 +112,7 @@ GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const St
                 return loadActorHiearachyFromXmlNode( *n, basedir );
             }
         }
-        n = tt.next( n );
+        n = traverseTreePreOrder( n );
     }
 
     GN_ERROR(sLogger)( "object named '%s' not found in file %s", objname.cptr(), filename.cptr() );
@@ -118,21 +121,54 @@ GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const St
     GN_UNGUARD;
 }
 
+// *****************************************************************************
+// global functions
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::Scene::releaseActorHiearacy( Actor * root )
+void GN::scene::releaseActorHiearacy( Actor * root )
 {
     if( !root ) return;
 
-    TreeTraversePostOrder<Actor> tt( root );
-
-    Actor * a1 = tt.first(), * a2;
+    Actor * a1 = root, * a2;
 
     while( a1 )
     {
-        a2 = tt.next( a1 );
+        a2 = traverseTreeInPostOrder( a1 );
         delete a1;
         a1 = a2;
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::scene::Actor * GN::scene::cloneActorHiearacy( const Actor * root )
+{
+    if( !root )
+    {
+        GN_ERROR(sLogger)( "NULL root!" );
+        return 0;
+    }
+
+    Actor * r = new Actor( root->getScene() );
+    root->copyto( *r );
+
+    for( const Actor * a = root->getLastChild(); a; a = a->getPrevSibling() )
+    {
+        Actor * c = cloneActorHiearacy( a );
+        if( 0 == c )
+        {
+            releaseActorHiearacy(r);
+            return 0;
+        }
+
+        GN_ASSERT( 0 == c->getParent() );
+
+        c->setParent( r );
+    }
+
+    return r;
 }

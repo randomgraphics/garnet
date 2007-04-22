@@ -58,7 +58,7 @@ namespace GN
         //@{
         XmlNode * getParent() const { return parent; }
         XmlNode * getNextSibling() const { return sibling; }
-        XmlNode * getChild() const { return child; }
+        XmlNode * getFirstChild() const { return child; }
         //@}
 
         ///

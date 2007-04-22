@@ -13,8 +13,12 @@ namespace GN { namespace scene
     ///
     /// drawable object.
     ///
-    struct Drawable
+    class Drawable
     {
+        gfx::RendererContext context;
+
+    public:
+
         ///
         /// texture item
         ///
@@ -39,7 +43,6 @@ namespace GN { namespace scene
         ResourceId             mesh;
         std::map<StrA,TexItem> textures;
         std::map<StrA,UniItem> uniforms;
-        gfx::RendererContext   context;
         //@}
 
         ///
@@ -64,9 +67,11 @@ namespace GN { namespace scene
         ///
         bool loadFromXmlNode( const XmlNode & node, const StrA & basedir );
 
-        ///
-        /// set uniform value by name
-        ///
+        //@{
+
+        bool hasUniform( const StrA & name ) const { return uniforms.end() != uniforms.find( name ); }
+
+        //@}
 
         //@{
 
