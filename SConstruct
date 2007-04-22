@@ -1066,6 +1066,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNsampleDolphin',
 		    'GNsampleRenderToCube',
 		    'GNsampleRenderToTexture',
+		    'GNsampleShadowMap',
 		    ]
 		tools = [
 		    'GNtoolD3D9DumpViewer',

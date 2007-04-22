@@ -75,7 +75,7 @@ struct vsoutput
 sampler texdiff : register(s0);
 float4 main( vsoutput vi ) : COLOR0
 {
-	float lighting = dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) );
+	float lighting = 0.1 + clamp( dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) ), 0, 1 );
 
 	float4 tex = tex2D( texdiff, float2( vi.nrm.w, vi.lpos.w ) );
 
@@ -150,7 +150,7 @@ struct vsoutput
 sampler texdiff : register(s0);
 float4 main( vsoutput vi ) : COLOR0
 {
-	float lighting = dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) );
+	float lighting = 0.1 + clamp( dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) ), 0, 1 );
 
 	float4 tex = tex2D( texdiff, float2( vi.nrm.w, vi.lpos.w ) );
 

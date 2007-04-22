@@ -418,7 +418,7 @@ struct AseFile
 
         // trim quota
         ++token;
-        GN_ASSERT( (token+3) <= str );
+        GN_ASSERT( (token+2) <= str );
         GN_ASSERT( '"' == token[str-token-2] );
         token[str-token-2] = 0;
  

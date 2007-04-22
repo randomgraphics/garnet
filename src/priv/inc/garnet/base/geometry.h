@@ -1009,21 +1009,20 @@ namespace GN
             ret *= b;
             return ret;
         }
-        ///// Multiply a row Vector3<T> by this matrix
-        //friend Vector3<T> operator * ( const Vector3<T> & v, const Matrix33 & m )
-        //{
-        //    Vector3<T> ret;
-        //    ret.x = v.x * m[0][0] + v.y * m[1][0] + v.z * m[2][0];
-        //    ret.y = v.x * m[0][1] + v.y * m[1][1] + v.z * m[2][1];
-        //    ret.z = v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2];
-        //    return ret;
-        //}
+        friend Vector3<T> operator * ( const Vector3<T> & v, const Matrix33 & m )
+        {
+            Vector3<T> ret;
+            ret.x = v.x * m[0][0] + v.y * m[1][0] + v.z * m[2][0];
+            ret.y = v.x * m[0][1] + v.y * m[1][1] + v.z * m[2][1];
+            ret.z = v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2];
+            return ret;
+        }
         friend Vector3<T> operator * ( const Matrix33 & m, const Vector3<T> & v )
         {
             Vector3<T> ret;
-            ret.x = Vector3<T>::dot( m[0], v );
-            ret.y = Vector3<T>::dot( m[1], v );
-            ret.z = Vector3<T>::dot( m[2], v );
+            ret.x = Vector3<T>::sDot( m[0], v );
+            ret.y = Vector3<T>::sDot( m[1], v );
+            ret.z = Vector3<T>::sDot( m[2], v );
             return ret;
         }
         friend Matrix33 operator * ( const Matrix33 & m, T f )

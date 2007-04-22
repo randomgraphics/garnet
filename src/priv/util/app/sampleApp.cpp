@@ -110,7 +110,7 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
     if( input::KEY_XB360_X == ke.code && ke.status.down ) mDone = true;
     else if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
     else if( input::KEY_R == ke.code && !ke.status.down ) gSceneResMgr.disposeAll();
-    else if( input::KEY_D == ke.code && !ke.status.down ) gRenderer.dumpNextFrame();
+    else if( input::KEY_F == ke.code && !ke.status.down ) gRenderer.dumpNextFrame();
     else if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
     {
         GN::gfx::RendererOptions ro = gRenderer.getOptions();
@@ -544,7 +544,7 @@ void GN::app::SampleApp::drawHUD()
                 L"ESC            : ÍË³ö\n"
                 L"XB360 button X : ÍË³ö\n"
                 L"R              : reload all resources\n"
-                L"D              : dump next frame\n"
+                L"F              : dump next frame\n"
                 L"ALT+ENTER      : ÇÐ»»È«ÆÁÄ£Ê½\n"
                 L"F1             : ÇÐ»»°ïÖúÆÁÄ»";
             mFontRenderer.drawText( help, 0, 0 );

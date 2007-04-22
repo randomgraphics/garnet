@@ -1,1 +1,1 @@
-SConscript( dirs=Split('depthTexture dolphin renderToCube renderToTexture') )
+SConscript( dirs=Split('depthTexture dolphin renderToCube renderToTexture shadowmap') )
