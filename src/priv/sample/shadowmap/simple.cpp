@@ -61,8 +61,8 @@ void GN::SimpleShadowMap::quit()
 
     mShadowMap.clear();
 
-    mScene.releaseActorHiearacy( mShadowProjectors );
-    mScene.releaseActorHiearacy( mShadowReceivers );
+    releaseActorHiearacy( mShadowProjectors );
+    releaseActorHiearacy( mShadowReceivers );
     mShadowProjectors = 0;
     mShadowReceivers = 0;
 
@@ -93,7 +93,19 @@ void GN::SimpleShadowMap::clear()
 void GN::SimpleShadowMap::update()
 {
     mCamera.update( app::SampleApp::UPDATE_INTERVAL );
+
     mScene.setView( mCamera.getViewMatrix() );
+
+    // update projection matrix
+    const Spheref & bs = mShadowProjectors->getBoundingSphere();
+    float d = mCamera.getPosition().length();
+    float n_min = bs.radius / 10.0f;
+    float n = d - bs.radius;
+    float f = d + bs.radius;
+    if( n < n_min ) n = n_min;
+    Matrix44f proj;
+    gRenderer.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, n, f );
+    mScene.setProj( proj );
 }
 
 //
@@ -133,5 +145,34 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
     mShadowProjectors = mScene.loadActorHiearachyFromXmlFile( name, "root" );
     if( 0 == mShadowProjectors ) return false;
 
+    // place actor to screen center
+    Quaternionf r;
+    r.fromRotation( Vector3f(1,0,0), -GN_HALF_PI );;
+    mShadowProjectors->setRotation( r );
+    mShadowProjectors->setPosition( -mShadowProjectors->getBoundingSphere().center );
+
+    // load depth only effect
+    ResourceId effid = gSceneResMgr.getResourceId( "media::/effect/depth_only.xml" );
+    if( 0 == effid ) return false;
+    Effect * eff = gSceneResMgr.getResourceT<Effect>( effid );
+    if( 0 == eff ) return false;
+
+    for( Actor * a = mShadowProjectors; a; a = traverseTreePreOrder( a ) )
+    {
+        for( size_t i = 0; i < a->getNumDrawables(); ++i )
+        {
+            Drawable d = a->getDrawable( i );
+            d.effect = effid;
+            d.textures.clear();
+            d.uniforms.clear();
+            d.uniforms["pvw"].binding = eff->getUniformID( "pvw" );
+            a->setDrawable( i, d );
+        }
+    }
+
+    // create shadow receivers
+    mShadowReceivers = cloneActorHiearacy( mShadowProjectors );
+
+    // success
     return true;
 }

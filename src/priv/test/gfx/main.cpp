@@ -51,7 +51,7 @@ public:
         gRenderer.composePerspectiveMatrixRh( proj, 1.0f, 4.0f/3.0f, r/100.0f, r*10.0f );
 
         // initialize arcball.
-        arcball.setHandness( util::ArcBall::RIGHT_HAND );
+        arcball.setHandness( util::RIGHT_HAND );
         arcball.setViewMatrix( view );
         const DispDesc & dd = gRenderer.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );

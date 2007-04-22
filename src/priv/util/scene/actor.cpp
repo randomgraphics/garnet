@@ -159,6 +159,31 @@ void GN::scene::Actor::clear()
 //
 // 
 // -----------------------------------------------------------------------------
+void GN::scene::Actor::copyto( Actor & a ) const
+{
+    if( &a.mScene != &mScene )
+    {
+        GN_ERROR(sLogger)( "Clone target can not belong to different scene!" );
+        return;
+    }
+
+    // Note: leave mNode untouched
+
+    a.mDrawables = mDrawables;
+    a.mPosition = mPosition;
+    a.mPivot = mPivot;
+    a.mRotation = mRotation;
+    a.mLocal2Parent = mLocal2Parent;
+    a.mParent2Local = mParent2Local;
+    a.mLocal2Root = mLocal2Root;
+    a.mRoot2Local = mRoot2Local;
+    a.mBoundingSphere = mBoundingSphere;
+    a.mDirtyFlags = mDirtyFlags;
+}
+
+//
+// 
+// -----------------------------------------------------------------------------
 bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & basedir )
 {
     GN_GUARD;
@@ -270,20 +295,33 @@ void GN::scene::Actor::draw()
 
         e = gSceneResMgr.getResourceT<Effect>( d.effect );
 
-        if( e->hasUniform( "pvw", &id ) )
+        if( d.hasUniform( "pvw" ) )
         {
             Matrix44f pvw = mScene.getProj() * mScene.getView() * world;
-            
+            d.uniforms["pvw"].value = pvw;
+        }
+        else if( e->hasUniform( "pvw", &id ) )
+        {
+            Matrix44f pvw = mScene.getProj() * mScene.getView() * world;
             e->setUniform( id, pvw );
         }
 
-        if( e->hasUniform( "invworld", &id ) )
+        if( d.hasUniform( "invworld" ) )
+        {
+            Matrix44f invworld = Matrix44f::sInverse( world );
+            d.uniforms["invworld"].value = invworld;
+        }
+        else if( e->hasUniform( "invworld", &id ) )
         {
             Matrix44f invworld = Matrix44f::sInverse( world );
             e->setUniform( id, invworld );
         }
 
-        if( e->hasUniform( "light0_pos", &id ) )
+        if( d.hasUniform( "light0_pos" ) )
+        {
+            d.uniforms["light0_pos"].value = Vector4f( mScene.light(0).position, 1.0f );
+        }
+        else if( e->hasUniform( "light0_pos", &id ) )
         {
             e->setUniform( id, Vector4f( mScene.light(0).position, 1.0f ) );
         }
@@ -292,7 +330,7 @@ void GN::scene::Actor::draw()
     }
 
     // draw children
-    Actor * c = getChild();
+    Actor * c = getFirstChild();
     while( c )
     {
         c->draw();
@@ -314,7 +352,7 @@ void GN::scene::Actor::dirtyTransform()
     mTransformDirty = true;
 
     // dirty all children
-    Actor * c = getChild();
+    Actor * c = getFirstChild();
     while( c )
     {
         c->dirtyTransform();

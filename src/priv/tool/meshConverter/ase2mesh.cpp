@@ -1309,18 +1309,15 @@ static bool sBuildNodeTree( AseScene & scene )
             scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
 
     // calculate bounding box for each node, in post order
-    scene::TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
-
-    AseGeoObject * n = ttpost.first();
-    GN_ASSERT( 0 == n->getChild() );
-
+    AseGeoObject * n = &scene.root;
+    GN_ASSERT( 0 == n->getFirstChild() );
     while( n )
     {
         // copy mesh bbox to node
         n->node.bbox = n->mesh.bbox;
 
         // then merge with all childrens' bbox
-        AseGeoObject * c = safeCast<AseGeoObject*>( n->getChild() );
+        AseGeoObject * c = safeCast<AseGeoObject*>( n->getFirstChild() );
         while( c )
         {
             Boxf::sGetUnion( n->node.bbox, n->node.bbox, c->node.bbox );
@@ -1329,12 +1326,11 @@ static bool sBuildNodeTree( AseScene & scene )
         }
 
         // next node
-        n = ttpost.next( n );
+        n = scene::traverseTreeInPostOrder( n );
     }
 
-    // print node tree
-    scene::TreeTraversePreOrder<AseGeoObject> ttpre( &scene.root );
-    n = ttpre.first();
+    // print node tree, in pre-order
+    n = &scene.root;
     int level = 0;
     while( n )
     {
@@ -1354,7 +1350,7 @@ static bool sBuildNodeTree( AseScene & scene )
         GN_INFO(sLogger)( s.cptr() );
 
         // next node
-        n = ttpre.next( n, &level );
+        n = scene::traverseTreePreOrder( n, &level );
     }
 
     GN_INFO(sLogger)( "" );
@@ -1782,7 +1778,7 @@ static bool sWriteNode(
         identstr.cptr(), center.x, center.y, center.z, radius );
 
     // write sub nodes
-    const AseGeoObject * c = safeCast<AseGeoObject*>( o.getChild() );
+    const AseGeoObject * c = safeCast<AseGeoObject*>( o.getFirstChild() );
     while( c )
     {
         sWriteNode( xml, scene, *c, ident+1, name );

@@ -69,7 +69,7 @@ public:
         if( !mActor )
         {
             // (re)load actor
-            mScene.releaseActorHiearacy( mActor );
+            releaseActorHiearacy( mActor );
             mActor = mScene.loadActorHiearachyFromXmlFile( mFileName, mObjName );
             if( 0 == mActor ) return false;
 
@@ -78,7 +78,7 @@ public:
             updateRadius();
 
             // initialize mArcBall
-            mArcBall.setHandness( util::ArcBall::RIGHT_HAND );
+            mArcBall.setHandness( util::RIGHT_HAND );
             mArcBall.setViewMatrix( mView );
             mArcBall.connectToInput();
             mArcBall.setTranslation( -mActor->getBoundingSphere().center );
@@ -93,7 +93,7 @@ public:
 
     void onRendererDispose()
     {
-        mScene.releaseActorHiearacy( mActor );
+        releaseActorHiearacy( mActor );
         mActor = 0;
     }
 

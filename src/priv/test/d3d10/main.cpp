@@ -68,7 +68,7 @@ public:
         world.identity();
         view.translate( 0, 0, -4 );
         proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 1.0f, 100.0f );
-        arcball.setHandness( util::ArcBall::RIGHT_HAND );
+        arcball.setHandness( util::RIGHT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();
 

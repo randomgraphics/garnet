@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+	<!-- Disable color output, write depth buffer only -->
+    <parameters>
+        <uniform name="pvw" type="MATRIX44" count="1"/>
+    </parameters>
+    <shaders>
+
+        <!-- D3D shaders -->
+
+        <shader name="d3dvs" type="VS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="vs_1_1"/>
+                </token>
+            </prerequisites>
+            <uniref binding="pvw" ref="pvw"/>
+            <code lang="D3D_HLSL" hints="...">
+<![CDATA[
+struct vsinput
+{
+	float4 pos : POSITION;
+};
+struct vsoutput
+{
+	float4 pos   : POSITION;
+	float2 depth : TEXCOORD0;
+};
+uniform float4x4 pvw;
+vsoutput main( vsinput vi )
+{
+	vsoutput vo;
+	vo.pos   = mul( pvw, vi.pos );
+	vo.depth = vo.pos.zw;
+	return vo;
+}
+]]>
+            </code>
+        </shader>
+
+        <shader name="d3dps" type="PS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="ps_1_1"/>
+                </token>
+            </prerequisites>
+            <code lang="D3D_HLSL">
+<![CDATA[
+float4 main( in float2 depth : TEXCOORD0 ) : COLOR0 { return depth.x/depth.y; }
+]]>
+            </code>
+        </shader>
+
+        <!-- Cg shaders -->
+
+        <shader name="cgvs" type="VS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="cgvs"/>
+                </token>
+            </prerequisites>
+            <uniref binding="pvw" ref="pvw"/>
+            <code lang="CG" hints="...">
+<![CDATA[
+struct vsinput
+{
+	float4 pos : POSITION;
+};
+struct vsoutput
+{
+	float4 pos   : POSITION;
+	float2 depth : TEXCOORD0;
+};
+uniform float4x4 pvw;
+vsoutput main( vsinput vi )
+{
+	vsoutput vo;
+	vo.pos   = mul( pvw, vi.pos );
+	vo.depth = vo.pos.zw;
+	return vo;
+}
+]]>
+            </code>
+        </shader>
+
+        <shader name="cgps" type="PS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="cgps"/>
+                </token>
+            </prerequisites>
+            <code lang="CG">
+<![CDATA[
+float4 main( in float2 depth : TEXCOORD0 ) : COLOR0 { return depth.x/depth.y; }
+]]>
+            </code>
+        </shader>
+
+        <!-- Fixed functional pipeline -->
+        <shader name="fixvs" type="VS"/>
+        <shader name="fixps" type="PS"/>
+        <shader name="fixgs" type="GS"/>
+
+    </shaders>
+
+    <techniques>
+        <technique name="d3d">
+            <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+        </technique>
+        <technique name="cg">
+            <pass vs="cgvs" ps="cgps" gs="fixgs"/>
+        </technique>
+        <technique name="ffp">
+            <pass vs="fixvs" ps="fixps" gs="fixgs"/>
+        </technique>
+    </techniques>
+</effect>
