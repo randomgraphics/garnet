@@ -80,6 +80,7 @@ namespace GN
         ///
         enum Axis
         {
+            AXIS_NONE,          ///< ...
             AXIS_MOUSE_X,       ///< mouse X
             AXIS_MOUSE_Y,       ///< mouse Y
             AXIS_MOUSE_WHEEL_0, ///< mouse wheel 0
@@ -131,7 +132,7 @@ namespace GN
         union KeyStatus
         {
             UInt8 u8;  ///< Key status as unsigned integer
-            SInt8  i8;  ///< Key status as signed integer
+            SInt8 i8;  ///< Key status as signed integer
 
             struct
             {
@@ -269,6 +270,15 @@ namespace GN
             /// Return keyboard status indexed by KeyCode.
             ///
             virtual const KeyStatus * getKeyboardStatus() const = 0;
+
+            ///
+            /// Get status of specific key
+            ///
+            const KeyStatus & getKeyStatus( KeyCode k ) const
+            {
+                GN_ASSERT( 0 <= k && k < NUM_KEYS );
+                return getKeyboardStatus()[k];
+            }
 
             ///
             /// Return absolute value of all axises.
