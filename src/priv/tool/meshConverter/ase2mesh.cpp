@@ -1309,8 +1309,11 @@ static bool sBuildNodeTree( AseScene & scene )
             scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
 
     // calculate bounding box for each node, in post order
-    AseGeoObject * n = &scene.root;
+    scene::TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
+
+    AseGeoObject * n = ttpost.first();
     GN_ASSERT( 0 == n->getFirstChild() );
+
     while( n )
     {
         // copy mesh bbox to node
@@ -1326,11 +1329,12 @@ static bool sBuildNodeTree( AseScene & scene )
         }
 
         // next node
-        n = scene::traverseTreeInPostOrder( n );
+        n = ttpost.next( n );
     }
 
-    // print node tree, in pre-order
-    n = &scene.root;
+    // print node tree
+    scene::TreeTraversePreOrder<AseGeoObject> ttpre( &scene.root );
+    n = ttpre.first();
     int level = 0;
     while( n )
     {
@@ -1350,7 +1354,7 @@ static bool sBuildNodeTree( AseScene & scene )
         GN_INFO(sLogger)( s.cptr() );
 
         // next node
-        n = scene::traverseTreePreOrder( n, &level );
+        n = ttpre.next( n, &level );
     }
 
     GN_INFO(sLogger)( "" );

@@ -104,6 +104,10 @@ float4 main( in float2 depth : TEXCOORD0 ) : COLOR0 { return depth.x/depth.y; }
     </shaders>
 
     <techniques>
+    	<rsb
+    		COLOR0_WRITE = "0"
+    		CULL_MODE    = "CULL_NONE"
+    	/>
         <technique name="d3d">
             <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
         </technique>
