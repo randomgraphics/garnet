@@ -98,7 +98,8 @@ GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const St
     GN_ASSERT( xpr.root );
 
     // search a actor element with name equals "objname"
-    XmlNode * n = xpr.root;
+    TreeTraversePreOrder<XmlNode> tt(xpr.root);
+    XmlNode * n = tt.first();
     while( n )
     {
         XmlElement * e = n->toElement();
@@ -112,7 +113,7 @@ GN::scene::Scene::loadActorHiearachyFromXmlFile( const StrA & filename, const St
                 return loadActorHiearachyFromXmlNode( *n, basedir );
             }
         }
-        n = traverseTreePreOrder( n );
+        n = tt.next( n );
     }
 
     GN_ERROR(sLogger)( "object named '%s' not found in file %s", objname.cptr(), filename.cptr() );
@@ -132,11 +133,13 @@ void GN::scene::releaseActorHiearacy( Actor * root )
 {
     if( !root ) return;
 
-    Actor * a1 = root, * a2;
+    TreeTraversePostOrder<Actor> tt( root );
+
+    Actor * a1 = tt.first(), * a2;
 
     while( a1 )
     {
-        a2 = traverseTreeInPostOrder( a1 );
+        a2 = tt.next( a1 );
         delete a1;
         a1 = a2;
     }

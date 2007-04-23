@@ -1,0 +1,17 @@
+<?xml version="1.0" standalone="yes"?>
+<texture
+	dim          = "2D"
+	faces        = "1"
+	width        = "1024"
+	height       = "1024"
+	depth        = "1"
+	levels       = "1"
+	format       = "FMT_R_32_FLOAT"
+
+	dynamic      = "0"
+	automip      = "0"
+	rendertarget = "1"
+	depthstencil = "0"
+	readback     = "0"
+	tiled        = "1"
+/>

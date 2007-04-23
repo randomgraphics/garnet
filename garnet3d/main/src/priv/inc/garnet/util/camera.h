@@ -268,7 +268,7 @@ namespace GN { namespace util
         //@{
 
         void setMoveSpeed( float s ) { mMoveSpeed = s; } // default is 1.0 (unit/s)
-        void setRotateSpeed( float s ) { mRotateSpeed = s; } // default is PI/2  (radian/s)
+        void setRotateSpeed( float s ) { mRotateSpeed = s; } // default is PI/4  (radian/s)
         void setAxisSensitivity( float s ) { mAxisSensitivity = s; } // default is 0.01 (unit/axis)
         void setTargetPosition( float x, float y, float z ) { setTargetPosition( Vector3f(x,y,z) ); }
         void setTargetPosition( const Vector3f & );

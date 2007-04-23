@@ -196,13 +196,117 @@ namespace GN { namespace scene
     /// traverse tree structure in pre-order
     ///
     template<class T>
-    inline T * traverseTreePreOrder( T * current, int * level = 0 );
+    class TreeTraversePreOrder
+    {
+        T * mFirstNode;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        TreeTraversePreOrder( T * root )
+        {
+            GN_ASSERT( root );
+            mFirstNode = root;
+        }
+
+        //@{
+
+        void reset( T * root )
+        {
+            GN_ASSERT( root );
+            mFirstNode = root;
+        }
+
+        T * first() const { return mFirstNode; }
+
+        T * next( T * current, int * level = 0 ) const
+        {
+            GN_ASSERT( current );
+
+            // if( has child ) next is child
+            T * n = safeCast<T*>( current->getFirstChild() );
+            if( n )
+            {
+                if( level ) ++(*level);
+                return n;
+            }
+
+            // if( has brother ) next is brother
+            n = safeCast<T*>( current->getNextSibling() );
+            if( n ) return n;
+
+            // check parent
+            T * p = safeCast<T*>( current->getParent() );
+            while( p )
+            {
+                // if( parent has next ) next is parent's next
+                n = safeCast<T*>( p->getNextSibling() );
+                if( n )
+                {
+                    if( level ) --(*level);
+                    return n;
+                }
+
+                // loop one level up
+                p = safeCast<T*>( p->getParent() );
+            }
+
+            // if( no parent ) done.
+            return 0;
+        }
+
+        //@}
+    };
 
     ///
     /// traverse tree structure in post-order
     ///
     template<class T>
-    inline T * traverseTreeInPostOrder( T * current );
+    class TreeTraversePostOrder
+    {
+        T * mFirstNode;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        TreeTraversePostOrder( T * root )
+        {
+            GN_ASSERT( root );
+            T * c;
+            while( NULL != ( c = safeCast<T*>( root->getFirstChild() ) ) ) root = c;
+            mFirstNode = root;
+            GN_ASSERT( root );
+        }
+
+        //@{
+
+        T * first() const { return mFirstNode; }
+
+        T * next( T * current ) const
+        {
+            GN_ASSERT( current );
+
+            T * n = safeCast<T*>( current->getNextSibling() );
+
+            if( n )
+            {
+                T * c;
+                while( NULL != ( c = safeCast<T*>( n->getFirstChild() ) ) ) n = c;
+                GN_ASSERT( n );
+                return n;
+            }
+            else
+            {
+                return safeCast<T*>( current->getParent() );
+            }
+        }
+
+        //@}
+    };
 
     ///
     /// actor is the basic/atomic item that you can put into virtual scene.

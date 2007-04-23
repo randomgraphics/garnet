@@ -62,12 +62,14 @@ namespace GN
         // ********************************
     private:
 
-        Vector2<UInt32> mShadowMapSize;
-
-        AutoRef<Texture> mColorMap;
-        AutoRef<Texture> mShadowMap;
+        UInt32 mColorMap;
+        UInt32 mShadowMap;
 
         FirstPersonCamera mCamera;
+
+        Matrix44f mProj;
+        Matrix44f mLightProj;
+        Matrix44f mLightView;
 
         Scene mScene;
 

@@ -3,6 +3,8 @@
 	<!-- Shadow mapping -->
     <parameters>
         <uniform name="pvw" type="MATRIX44" count="1"/>
+        <uniform name="invworld" type="MATRIX44" count="1" desc="inverse world matrix"/>
+        <uniform name="light0_pos" type="VECTOR4" count="1" desc="light position in world space"/>
         <uniform name="light0_pvw" type="MATRIX44" count="1"/> <!-- transform from object space to light space -->
         <texture name="shadowmap"/>
     </parameters>
@@ -17,26 +19,42 @@
                 </token>
             </prerequisites>
             <uniref binding="pvw" ref="pvw"/>
+            <uniref binding="invworld" ref="invworld"/>
+            <uniref binding="light0_pos" ref="light0_pos"/>
             <uniref binding="light0_pvw" ref="light0_pvw"/>
             <code lang="D3D_HLSL" hints="...">
 <![CDATA[
 struct vsinput
 {
 	float4 pos : POSITION;
+	float3 nrm : NORMAL;
+	float2 tex : TEXCOORD0;
 };
 struct vsoutput
 {
-	float4 pos  : POSITION;
-    float4 tex  : TEXCOORD0;
+	float4 pos    : POSITION;
+    float4 shadow : TEXCOORD0;
+	float4 nrm    : TEXCOORD1; // xyz: normal in object space;          w : texcoord.u
+	float4 lpos   : TEXCOORD2; // xyz: light direction in object space; w : texcoord.v
 };
 uniform float4x4 pvw;
+uniform float4x4 invworld;
+uniform float4   light0_pos; // light position in world space
 uniform float4x4 light0_pvw;
 vsoutput main( vsinput vi )
 {
 	vsoutput vo;
+
+	// get light direction in object space
+	float3 lightpos_os = mul( invworld, light0_pos );
+	float3 lightdir_os = lightpos_os - vi.pos.xyz;
     
-	vo.pos = mul( pvw, vi.pos );
-	vo.tex = mul( light0_pvw, vi.pos );
+	vo.pos    = mul( pvw, vi.pos );
+	vo.shadow = mul( light0_pvw, vi.pos );
+	vo.nrm.xyz  = vi.nrm;
+	vo.nrm.w    = vi.tex.x;
+	vo.lpos.xyz = lightdir_os;
+	vo.lpos.w   = vi.tex.y;
 
 	return vo;
 }
@@ -55,13 +73,16 @@ vsoutput main( vsinput vi )
 <![CDATA[
 struct vsoutput
 {
-	float4 tex : TEXCOORD0; // shadow texture cooridnate
+	float4 shadow : TEXCOORD0; // shadow texture cooridnate
+	float4 nrm    : TEXCOORD1; // xyz: normal in object space;         w : texcoord.u
+	float4 lpos   : TEXCOORD2; // xyz: light position in object space; w : texcoord.v
 };
 sampler shadowmap : register(s0);
 float4 main( vsoutput vi ) : COLOR0
 {
-	float shadow = tex2D( shadowmap, vi.tex );
-	return shadow;
+	float shadow = tex2Dproj( shadowmap, vi.shadow );
+	float lighting = 0.1 + clamp( dot( normalize(vi.nrm.xyz), normalize(vi.lpos.xyz) ), 0, 1 );
+	return shadow * lighting;
 }
 ]]>
             </code>
