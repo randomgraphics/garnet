@@ -64,7 +64,8 @@ namespace GN
 
         Vector2<UInt32> mShadowMapSize;
 
-        AutoRef<Texture> mShadowMap; // store distance to light
+        AutoRef<Texture> mColorMap;
+        AutoRef<Texture> mShadowMap;
 
         FirstPersonCamera mCamera;
 

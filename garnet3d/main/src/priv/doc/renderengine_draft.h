@@ -18,6 +18,45 @@ namespace GN { namespace scene
         void allocResource(...);
     };
 
+    struct ResourceRequest
+    {
+        int resourceid;
+        int lowestlod;
+        int targetlod;
+    };
+
+    struct DrawRequest
+    {
+        ...;
+    };
+
+    void GameThread()
+    {
+        void setup_resource_request( ResourceRequest & );
+        int submit_resourece_request( const ResourceRequest & ); // return resource fence
+        void setup_draw_request( DrawRequest & );
+
+        int submit_draw_request( const DrawRequest &, int resource_fence ) // return draw fence
+        {
+            // add draw request and resource fence to draw request list.
+        }
+
+        void switch_frame_buffer() // call at the end of a frame
+        {
+            // wait for end of rendering of last frame
+            // submit draw request list of this frame.
+            // switch draw request list pointer.
+        }
+    }
+
+    void ResourceThread()
+    {
+    }
+
+    void RenderingThread()
+    {
+    }
+
     ///
     /// Rendering backend that handles all operations touching rendering device.
     ///
