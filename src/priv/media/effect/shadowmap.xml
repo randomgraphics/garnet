@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<effect>
+	<!-- Shadow mapping -->
+    <parameters>
+        <uniform name="pvw" type="MATRIX44" count="1"/>
+        <uniform name="light0_pvw" type="MATRIX44" count="1"/> <!-- transform from object space to light space -->
+        <texture name="shadowmap"/>
+    </parameters>
+    <shaders>
+
+        <!-- D3D shaders -->
+
+        <shader name="d3dvs" type="VS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="vs_1_1"/>
+                </token>
+            </prerequisites>
+            <uniref binding="pvw" ref="pvw"/>
+            <uniref binding="light0_pvw" ref="light0_pvw"/>
+            <code lang="D3D_HLSL" hints="...">
+<![CDATA[
+struct vsinput
+{
+	float4 pos : POSITION;
+};
+struct vsoutput
+{
+	float4 pos  : POSITION;
+    float4 tex  : TEXCOORD0;
+};
+uniform float4x4 pvw;
+uniform float4x4 light0_pvw;
+vsoutput main( vsinput vi )
+{
+	vsoutput vo;
+    
+	vo.pos = mul( pvw, vi.pos );
+	vo.tex = mul( light0_pvw, vi.pos );
+
+	return vo;
+}
+]]>
+            </code>
+        </shader>
+
+        <shader name="d3dps" type="PS">
+            <prerequisites>
+                <token type="opcode" value="CHECK_SHADER_PROFILE">
+                    <token type="values" value="ps_1_1"/>
+                </token>
+            </prerequisites>
+            <texref stage="0" ref="shadowmap"/>
+            <code lang="D3D_HLSL">
+<![CDATA[
+struct vsoutput
+{
+	float4 tex : TEXCOORD0; // shadow texture cooridnate
+};
+sampler shadowmap : register(s0);
+float4 main( vsoutput vi ) : COLOR0
+{
+	float shadow = tex2D( shadowmap, vi.tex );
+	return shadow;
+}
+]]>
+            </code>
+        </shader>
+
+        <!-- Fixed functional pipeline -->
+        <shader name="fixvs" type="VS"/>
+        <shader name="fixps" type="PS"/>
+        <shader name="fixgs" type="GS"/>
+
+    </shaders>
+
+    <techniques>
+        <technique name="d3d">
+            <pass vs="d3dvs" ps="d3dps" gs="fixgs"/>
+        </technique>
+        <technique name="ffp">
+            <pass vs="fixvs" ps="fixps" gs="fixgs"/>
+        </technique>
+    </techniques>
+</effect>
