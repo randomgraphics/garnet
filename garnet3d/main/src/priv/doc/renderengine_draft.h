@@ -8,27 +8,142 @@
 
 namespace GN { namespace scene
 {
+    struct ShaderResourceDesc
+    {
+        gfx::ShaderType      type;
+        gfx::ShadingLanguage lang;
+        const StrA &         code;
+        const StrA &         hints;
+    };
+
+    struct TextureResourceDesc
+    {
+        gfx::TextureDesc desc;
+        gfx::ImageDesc * initialData;
+    };
+
+    struct VtxBufResourceDesc
+    {
+        gfx::VtxBufDesc desc;
+        const void *    initialData;
+    };
+
+    struct IdxBufResourceDesc
+    {
+        gfx::IdxBufDesc desc;
+        const void *    initialData;
+    };
+
+    struct GraphicsResourceDesc
+    {
+        int                 type;
+        ShaderResourceDesc  sd;
+        TextureResourceDesc td;
+        VtxBufResourceDesc  vd;
+        IdxBufResourceDesc  id;
+    };
+
+    class GraphicsResource
+    {
+        int                mType;
+        union
+        {
+            gfx::Shader  * mShader;
+            gfx::Texture * mTexture;
+            gfx::VtxBuf  * mVtxBuf;
+            gfx::IdxBuf  * mIdxBuf;
+        };
+
+    public:
+
+        gfx::Shader  * shader();
+        gfx::Texture * tex();
+        gfx::VtxBuf  * vb();
+        gfx::IdxBuf  * ib();
+    };
+
+    typedef int GraphicsResourceId;
+
     ///
-    /// Resource cache
+    /// Graphics Resource cache
     ///
-    class ResourceCache
+    class GraphicsResourceCache
     {
     public:
 
-        void allocResource(...);
+        ///
+        /// ctor
+        ///
+        GraphicsResourceCache( UInt32 maxtexbytes, UInt32 maxmeshbytes );
+
+        /// you can create as many as graphics resources as you want. But the resource is 
+        /// useable only between realize() and unrealize().
+        //@{
+        GraphicsResourceId createResource( const GraphicsResoureDesc & );
+        void               freeResource( GraphicsResourceId );
+        bool               realizeResource( GraphicsResourceId, bool * needreloadData );
+        void               unrealizeResource( GraphicsResourceId );
+        GraphicsResource * getResourceById( GraphicsResourceId );
+        //@}
     };
 
+    extern GraphicsResourceCache gGraphicsResourceCache;
+
+    ///
+    /// ...
+    ///
+    typedef bool (*ResourceLoader)( GraphicsResourceId id, int lod );
+
+    ///
+    /// ...
+    ///
     struct ResourceRequest
     {
-        int resourceid;
-        int lowestlod;
-        int targetlod;
+        //@{
+        GraphicsResourceId resourceid;
+        int                lowestlod;
+        int                targetlod;
+        ResourceLoader     loader;
+        //@}
     };
 
+    ///
+    /// ...
+    ///
+    void ResourceThread()
+    {
+        while( !queue.empty() )
+        {
+            const ResourceRequest & rr = queue.pophead();
+            bool reload;
+            if( gGraphicsResourceCache.realizeResource( rr.resourceid, &reload ) && reload )
+            {
+                rr.loader( rr.resourceid, rr.targetlod );
+            }
+        }
+    }
+
+    ///
+    /// ...
+    ///
     struct DrawRequest
     {
-        ...;
+        int resourceRequest;
     };
+
+    ///
+    /// ...
+    ///
+    void RenderingThread()
+    {
+        while( !queue.empty() )
+        {
+            const DrawRequest & dr = queue.pophead();
+            wait_for_complete( dr.resourceRequest );
+            do_rendering( dr );
+            unrealize_all_resources( dr.resourceRequest );
+        }
+    }
 
     void GameThread()
     {
@@ -47,14 +162,6 @@ namespace GN { namespace scene
             // submit draw request list of this frame.
             // switch draw request list pointer.
         }
-    }
-
-    void ResourceThread()
-    {
-    }
-
-    void RenderingThread()
-    {
     }
 
     ///
