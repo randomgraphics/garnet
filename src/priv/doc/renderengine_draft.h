@@ -1,12 +1,12 @@
-#ifndef __GN_SCENE_RENDERENGINE_H__
-#define __GN_SCENE_RENDERENGINE_H__
+#ifndef __GN_ENGINE_RENDERENGINE_H__
+#define __GN_ENGINE_RENDERENGINE_H__
 // *****************************************************************************
-//! \file    scene/renderEngine.h
+//! \file    engine/renderEngine.h
 //! \brief   interface of render engine
 //! \author  chenli@@FAREAST (2007.4.13)
 // *****************************************************************************
 
-namespace GN { namespace scene
+namespace GN { namespace engine
 {
     struct ShaderResourceDesc
     {
@@ -43,29 +43,30 @@ namespace GN { namespace scene
         IdxBufResourceDesc  id;
     };
 
-    class GraphicsResource
+    enum GraphicsResourceState
     {
-        int                mType;
+        GRS_READY,
+        GRS_DEREALIZED,
+    };
+
+    struct GraphicsResource
+    {
+        int draw_fence; ///< last used by this draw
+        int state;
+        int type;
         union
         {
-            gfx::Shader  * mShader;
-            gfx::Texture * mTexture;
-            gfx::VtxBuf  * mVtxBuf;
-            gfx::IdxBuf  * mIdxBuf;
+            gfx::Shader  * shader;
+            gfx::Texture * texture;
+            gfx::VtxBuf  * vtxBuf;
+            gfx::IdxBuf  * idxBuf;
         };
-
-    public:
-
-        gfx::Shader  * shader();
-        gfx::Texture * tex();
-        gfx::VtxBuf  * vb();
-        gfx::IdxBuf  * ib();
     };
 
     typedef int GraphicsResourceId;
 
     ///
-    /// Graphics Resource cache
+    /// Graphics Resource cache (owned by 
     ///
     class GraphicsResourceCache
     {
@@ -76,35 +77,68 @@ namespace GN { namespace scene
         ///
         GraphicsResourceCache( UInt32 maxtexbytes, UInt32 maxmeshbytes );
 
-        /// you can create as many as graphics resources as you want. But the resource is 
-        /// useable only between realize() and unrealize().
+        ///
+        /// you can create as many as graphics resources as you want. But only limited
+        /// number of resources can be realized at any given time. The resource is
+        /// useable only between realizeResource() and derealizeResource().
+        ///
+        /// note that only realizeResource() and derealizeResource() touch rendering device.
+        ///
         //@{
         GraphicsResourceId createResource( const GraphicsResoureDesc & );
         void               freeResource( GraphicsResourceId );
-        bool               realizeResource( GraphicsResourceId, bool * needreloadData );
-        void               unrealizeResource( GraphicsResourceId );
         GraphicsResource * getResourceById( GraphicsResourceId );
+        bool               realizeResource( GraphicsResourceId, bool * needreloadData );
+        void               derealizeResource( GraphicsResourceId );
         //@}
     };
 
     extern GraphicsResourceCache gGraphicsResourceCache;
 
     ///
-    /// ...
+    /// Graphics resource loader
     ///
-    typedef bool (*ResourceLoader)( GraphicsResourceId id, int lod );
+    struct GraphicsResourceLoader : public NoCopy
+    {
+        bool load( void * & data, size_t & bytes, int lod ) = 0;  ///< load from external/slow storage (disk, cdrom, network)
+
+        bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int lod ) = 0; ///< decompress or other process to prepare to copy to graphics resource.
+
+        bool populate( GraphicsResource & gfxres, const void * data, size_t bytes, int lod ) = 0;
+    };
 
     ///
     /// ...
     ///
-    struct ResourceRequest
+    struct SingleGraphicsResourceRequest
     {
         //@{
-        GraphicsResourceId resourceid;
-        int                lowestlod;
-        int                targetlod;
-        ResourceLoader     loader;
+        int                      wait_for_draw_fence; ///< resource update must be after this draw fence
+        GraphicsResourceId       resourceid;
+        int                      lowestlod; ///< ignored for derealize operation.
+        int                      targetlod; ///< ignored for derealize operation.
+        GraphicsResourceLoader * loader; ///< ignored for derealize operation.
         //@}
+    };
+
+    ///
+    /// type of operations
+    ///
+    enum GraphicsResourceOperation
+    {
+        OP_LOAD,       ///< load from disk
+        OP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
+        OP_POPULATE,   ///< copy data to graphics resource
+        OP_LOCK,       ///< lock the graphics resource, realize those derealized as well, need touch rendering device.
+        OP_UNLOCK,     ///< unlock the graphics resource, need touch rendering device.
+        OP_DEREALIZE,  ///< derealize the resource.
+    };
+
+    struct BatchedGraphicsResourceRequestHeader
+    {
+        int                       resource_fence;
+        GraphicsResourceOperation op;
+        UInt32                    count;
     };
 
     ///
@@ -128,41 +162,144 @@ namespace GN { namespace scene
     ///
     struct DrawRequest
     {
-        int resourceRequest;
+        int                draw_fence;
+
+        //@{
+        GraphicsResourceId resources[MAX_RESOURCE_PER_DRAW];
+        UInt32             numres;
+        //@}
+ 
+        //@{
+        gfx::PrimitiveType primtype;
+        UInt32             numprim;
+        UInt32             startvtx;
+        UInt32             minvtxidx;
+        UInt32             numvtx;
+        UInt32             startidx;
+        //@}
     };
 
     ///
     /// ...
     ///
-    void RenderingThread()
+    class RenderingThread
     {
-        while( !queue.empty() )
+        void render_loop()
         {
-            const DrawRequest & dr = queue.pophead();
-            wait_for_complete( dr.resourceRequest );
-            do_rendering( dr );
-            unrealize_all_resources( dr.resourceRequest );
-        }
-    }
+            while( !end_of_game() )
+            {
+                size_t count;
+                const DrawRequest * requests = get_draw_request_buffer( &count ); // this function will block rendering thread, until draw request buffer is ready or game is about to exit.
+                for( size_t i = 0; i < count; ++i )
+                {
+                    // resource request has priority
+                    handle_all_resource_requests();
 
-    void GameThread()
+                    const DrawRequest & dr = requests[i];
+
+                    wait_for_all_resoures_ready( dr );
+
+                    do_rendering( dr );
+
+                    update_draw_fence( dr.draw_fence );
+                }
+            }
+        }
+    };
+
+    class GameThread
     {
-        void setup_resource_request( ResourceRequest & );
-        int submit_resourece_request( const ResourceRequest & ); // return resource fence
-        void setup_draw_request( DrawRequest & );
-
-        int submit_draw_request( const DrawRequest &, int resource_fence ) // return draw fence
+        void game_loop()
         {
-            // add draw request and resource fence to draw request list.
+        	frame_begin();
+
+            compose_and_submit_resource_request( 1 );
+            compose_and_submit_draw_request( 1 );
+
+            compose_and_submit_resource_request( 2 );
+            compose_and_submit_draw_request( 2 );
+
+            ...
+
+            compose_and_submit_resource_request( n );
+            compose_and_submit_draw_request( n );
+
+        	frame_end();
         }
 
-        void switch_frame_buffer() // call at the end of a frame
+        void compose_and_submit_resource_request( int draw_fence )
         {
-            // wait for end of rendering of last frame
-            // submit draw request list of this frame.
-            // switch draw request list pointer.
+            std::vector<SingleGraphicsResourceRequest*> to_be_loaded;
+            std::vector<SingleGraphicsResourceRequest*> to_be_realized;
+            std::vector<SingleGraphicsResourceRequest*> to_be_derealized;
+
+            const GraphicsResourceId * resources;
+            UInt32 count;
+            get_resources_used_by_draw( &resources, &count, draw_fence );
+            const GraphicsResourceId * end = resources + count;
+
+            for( ; resources < end; ++resources )
+            {
+                GraphicsResourceId newres = *resources;
+
+                if( resource_is_derealized( newres ) )
+                {
+                    while( there_is_no_enough_room_to_hold_resource( newres ) )
+                    {
+                        GraphicsResourceId oldres = get_the_appropriate_resource_to_be_derealized();
+
+                        mark_as_derealized( oldres );
+
+                        add_to_list( to_be_derealized, oldres );
+                    }
+
+                    mark_as_realized( newres );
+                }
+
+                add_to_list( to_be_loaded, newres );
+
+                update_resource_draw_fence( newres, draw_fence );
+            }
+
+            if( !to_be_derealized.empty() )
+            {
+                // Note: we could submit this request to rendering thread directly,
+                // because derealize is a purly rendering device task. But we need
+                // resource thread to serialize the requests, so that "derealize" always
+                // happens before "load".
+                submit_resource_request_to_resource_thread(
+                    OP_DEREALIZE,
+                    to_be_derealized );
+            }
+
+            if( !to_be_loaded.empty() )
+            {
+                submit_resource_request_to_resource_thread(
+                    OP_LOAD,
+                    to_be_loaded );
+            }
         }
-    }
+
+        void compose_and_submit_draw_request( int draw_fence )
+        {
+            DrawRequest dr;
+            dr.draw_fence = draw_fence;
+            ...;
+            add_draw_request_to_draw_request_buffer( dr );
+        }
+
+        void frame_begin()
+        {
+            // currently, do nothing
+        }
+
+        void frame_end()
+        {
+            wait_for_rendering_of_last_frame();
+            submit_draw_request_buffer_of_this_frame();
+            switch_draw_request_buffer_pointer();
+        }
+    };
 
     ///
     /// Rendering backend that handles all operations touching rendering device.
@@ -176,7 +313,7 @@ namespace GN { namespace scene
 
         // reset rendering engine.
         // all resources must be deleted, before calling this function.
-        void reset( const gfx::RendererOptions &, gfx::RendererAPI = gfx::API_AUTO );
+        void resetRenderer( const gfx::RendererOptions &, gfx::RendererAPI = gfx::API_AUTO );
 
         // fence
         UInt32 getCurrentFence();
@@ -226,4 +363,4 @@ namespace GN { namespace scene
 // *****************************************************************************
 //                           End of renderEngine.h
 // *****************************************************************************
-#endif // __GN_SCENE_RENDERENGINE_H__
+#endif // __GN_ENGINE_RENDERENGINE_H__

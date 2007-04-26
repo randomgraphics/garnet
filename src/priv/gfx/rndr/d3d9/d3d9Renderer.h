@@ -459,12 +459,12 @@ namespace GN { namespace gfx
 
     void dumpD3D9Draw(
         D3DPRIMITIVETYPE prim,
-        UINT basevtx,
+        UINT startvtx,
         UINT numprim );
 
     void dumpD3D9DrawIndexed(
         D3DPRIMITIVETYPE prim,
-        UINT basevtx,
+        UINT startvtx,
         UINT minvtxidx,
         UINT numvtx,
         UINT startidx,

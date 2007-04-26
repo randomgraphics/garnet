@@ -313,7 +313,7 @@ void sDumpIdxBuf( FILE * fp )
 
 		ib->Unlock();
 
-		fprintf( fp, "\t<idxbuf format=\"%d\" basevtx=\"%d\" bytes=\"%u\" ref=\"%s\"/>\n",
+		fprintf( fp, "\t<idxbuf format=\"%d\" startvtx=\"%d\" bytes=\"%u\" ref=\"%s\"/>\n",
             desc.Format, 0, desc.Size, fname );
 	}
 	else
@@ -588,7 +588,7 @@ static void sDumpD3D9States( FILE * fp )
 // -----------------------------------------------------------------------------
 void GN::gfx::dumpD3D9Draw(
     D3DPRIMITIVETYPE prim,
-    UINT basevtx,
+    UINT startvtx,
     UINT numprim )
 {
 	DumpFile file;
@@ -597,8 +597,8 @@ void GN::gfx::dumpD3D9Draw(
 
     fprintf(
         file.fp,
-        "\t<draw prim=\"%d\" basevtx=\"%d\" minidx=\"%d\" numvtx=\"%d\" startidx=\"%d\" numprim=\"%d\"/>\n",
-        prim, basevtx, numprim );
+        "\t<draw prim=\"%d\" startvtx=\"%d\" minidx=\"%d\" numvtx=\"%d\" startidx=\"%d\" numprim=\"%d\"/>\n",
+        prim, startvtx, numprim );
 
     sDumpD3D9States( file.fp );
 }
@@ -608,7 +608,7 @@ void GN::gfx::dumpD3D9Draw(
 // -----------------------------------------------------------------------------
 void GN::gfx::dumpD3D9DrawIndexed(
     D3DPRIMITIVETYPE prim,
-    UINT basevtx,
+    UINT startvtx,
     UINT minvtxidx,
     UINT numvtx,
     UINT startidx,
@@ -620,8 +620,8 @@ void GN::gfx::dumpD3D9DrawIndexed(
 
     fprintf(
         file.fp,
-        "\t<drawindexed prim=\"%d\" basevtx=\"%d\" minidx=\"%d\" numvtx=\"%d\" startidx=\"%d\" numprim=\"%d\"/>\n",
-        prim, basevtx, minvtxidx, numvtx, startidx, numprim );
+        "\t<drawindexed prim=\"%d\" startvtx=\"%d\" minidx=\"%d\" numvtx=\"%d\" startidx=\"%d\" numprim=\"%d\"/>\n",
+        prim, startvtx, minvtxidx, numvtx, startidx, numprim );
 
     sDumpD3D9States( file.fp );
 }

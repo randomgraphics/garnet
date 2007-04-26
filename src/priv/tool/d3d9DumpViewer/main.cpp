@@ -43,7 +43,7 @@ struct D3D9VtxBufDump
 struct D3D9IdxBufDump
 {
     UInt32 format;
-    UInt32 basevtx;
+    UInt32 startvtx;
     StrA   ref;
     AutoComPtr<IDirect3DIndexBuffer9> ib;
 };
@@ -79,7 +79,7 @@ struct D3D9OperationDump
 
     UInt32  prim;
     UInt32  numprim;
-    UInt32  basevtx;
+    UInt32  startvtx;
 
     // for indexed draw only
     UInt32  minvtxidx;
@@ -92,7 +92,7 @@ struct D3D9OperationDump
         {
             dev.DrawIndexedPrimitive(
                 (D3DPRIMITIVETYPE) prim,
-                basevtx,
+                startvtx,
                 minvtxidx,
                 numvtx,
                 startidx,
@@ -102,7 +102,7 @@ struct D3D9OperationDump
         {
             dev.DrawPrimitive(
                 (D3DPRIMITIVETYPE) prim,
-                basevtx,
+                startvtx,
                 numprim );
         }
     }
@@ -526,7 +526,7 @@ struct D3D9StateDump
             {
                 operation.indexed = true;
                 if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
-                if( !sGetNumbericAttr( *e, "basevtx", operation.basevtx ) ) return false;
+                if( !sGetNumbericAttr( *e, "startvtx", operation.startvtx ) ) return false;
                 if( !sGetNumbericAttr( *e, "minidx", operation.minvtxidx ) ) return false;
                 if( !sGetNumbericAttr( *e, "numvtx", operation.numvtx ) ) return false;
                 if( !sGetNumbericAttr( *e, "startidx", operation.startidx ) ) return false;
@@ -536,14 +536,14 @@ struct D3D9StateDump
             {
                 operation.indexed = false;
                 if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
-                if( !sGetNumbericAttr( *e, "basevtx", operation.basevtx ) ) return false;
+                if( !sGetNumbericAttr( *e, "startvtx", operation.startvtx ) ) return false;
                 if( !sGetNumbericAttr( *e, "numprim", operation.numprim ) ) return false;
             }
             else if( "operation" == e->name )
             {
                 operation.indexed = true;
                 if( !sGetNumbericAttr( *e, "prim", operation.prim ) ) return false;
-                if( !sGetNumbericAttr( *e, "startvtx", operation.basevtx ) ) return false;
+                if( !sGetNumbericAttr( *e, "startvtx", operation.startvtx ) ) return false;
             }
             else
             {
@@ -760,7 +760,7 @@ private:
     bool loadIdxBuf( const XmlElement & node, const StrA & basedir )
     {
         if( !sGetNumbericAttr( node, "format", idxbuf.format ) ) return false;
-        if( !sGetNumbericAttr( node, "basevtx", idxbuf.basevtx ) ) return false;
+        if( !sGetNumbericAttr( node, "startvtx", idxbuf.startvtx ) ) return false;
         if( !sGetRefString( node, basedir, idxbuf.ref ) ) return false;
         return true;
     }
