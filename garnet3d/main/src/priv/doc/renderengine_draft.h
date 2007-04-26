@@ -46,14 +46,15 @@ namespace GN { namespace engine
     enum GraphicsResourceState
     {
         GRS_READY,
-        GRS_DEREALIZED,
+        GRS_DISPOSED,
     };
 
     struct GraphicsResource
     {
         int draw_fence; ///< last used by this draw
-        int state;
+        int state;      ///< One of GraphicsResourceState, used by game thread only
         int type;
+        int lod;        ///< current LOD. Definition of LOD is resource/application dependent.
         union
         {
             gfx::Shader  * shader;
@@ -80,16 +81,16 @@ namespace GN { namespace engine
         ///
         /// you can create as many as graphics resources as you want. But only limited
         /// number of resources can be realized at any given time. The resource is
-        /// useable only between realizeResource() and derealizeResource().
+        /// useable only between realizeResource() and disposeResource().
         ///
-        /// note that only realizeResource() and derealizeResource() touch rendering device.
+        /// note that only realizeResource() and disposeResource() touch rendering device.
         ///
         //@{
         GraphicsResourceId createResource( const GraphicsResoureDesc & );
         void               freeResource( GraphicsResourceId );
         GraphicsResource * getResourceById( GraphicsResourceId );
         bool               realizeResource( GraphicsResourceId, bool * needreloadData );
-        void               derealizeResource( GraphicsResourceId );
+        void               disposeResource( GraphicsResourceId );
         //@}
     };
 
@@ -104,21 +105,7 @@ namespace GN { namespace engine
 
         bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int lod ) = 0; ///< decompress or other process to prepare to copy to graphics resource.
 
-        bool populate( GraphicsResource & gfxres, const void * data, size_t bytes, int lod ) = 0;
-    };
-
-    ///
-    /// ...
-    ///
-    struct SingleGraphicsResourceRequest
-    {
-        //@{
-        int                      wait_for_draw_fence; ///< resource update must be after this draw fence
-        GraphicsResourceId       resourceid;
-        int                      lowestlod; ///< ignored for derealize operation.
-        int                      targetlod; ///< ignored for derealize operation.
-        GraphicsResourceLoader * loader; ///< ignored for derealize operation.
-        //@}
+        bool copy( GraphicsResource & gfxres, const void * data, size_t bytes, int lod ) = 0;
     };
 
     ///
@@ -126,36 +113,98 @@ namespace GN { namespace engine
     ///
     enum GraphicsResourceOperation
     {
-        OP_LOAD,       ///< load from disk
+        OP_LOAD,       ///< load from disk. Handled by IO tread.
+
+        OP_COPY,       ///< copy data to graphics resource. Handled by IO thread.
+
         OP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
-        OP_POPULATE,   ///< copy data to graphics resource
-        OP_LOCK,       ///< lock the graphics resource, realize those derealized as well, need touch rendering device.
+                       ///< Handled by processing thread.
+
+        /// these operations are handled by rendering thread
+        //@{
+        OP_LOCK,       ///< lock the graphics resource, realize those disposed as well, need touch rendering device.
         OP_UNLOCK,     ///< unlock the graphics resource, need touch rendering device.
-        OP_DEREALIZE,  ///< derealize the resource.
+        OP_DISPOSE,    ///< dispose the resource.
+        //@}
     };
 
-    struct BatchedGraphicsResourceRequestHeader
+    struct GraphicsResourceRequestFence
     {
-        int                       resource_fence;
-        GraphicsResourceOperation op;
-        UInt32                    count;
+        int number_of_pending_resources;
     };
 
     ///
     /// ...
     ///
-    void ResourceThread()
+    struct GraphicsResourceRequest
     {
-        while( !queue.empty() )
+        //@{
+        int                       resource_fence;      ///< resource fence ID
+        int                       wait_for_draw_fence; ///< resource update must be happend after this draw fence
+        GraphicsResourceOperation op;         ///< requested operation
+        GraphicsResourceId        resourceid; ///< target resource
+        int                       targetlod;  ///< ignored for dispose operation.
+        GraphicsResourceLoader  * loader;     ///< ignored for dispose operation.
+        //@}
+    };
+
+    ///
+    /// there are several queues in resource thread.
+    ///
+    class ResourceThreads
+    {
+        fifo<GraphicsResourceRequest*> copy_queue;
+        fifo<GraphicsResourceRequest*> load_queue;
+        fifp<GraphicsResourceRequest*> process_queue;
+
+        void copy_loop()
         {
-            const ResourceRequest & rr = queue.pophead();
-            bool reload;
-            if( gGraphicsResourceCache.realizeResource( rr.resourceid, &reload ) && reload )
+            while( !end_of_game() )
             {
-                rr.loader( rr.resourceid, rr.targetlod );
+                if( has_copy_request() )
+                {
+                    GraphicsResourceRequest * r = get_one_copy_requests();
+                    copy_resource( r );
+                    r->op = OP_UNLOCK;
+                    submit_to_rendering_thread( r );
+                }
+                else
+                {
+                    wait_until_copy_queue_is_not_empty_or_game_is_about_to_exit();
+                }
             }
         }
-    }
+
+        void load_loop()
+        {
+            while( !end_of_game() )
+            {
+                // block until queue is not empty, or game is about to exit.
+                GraphicsResourceRequest * r = get_one_load_request();
+
+                if( r )
+                {
+                    load_resource( r );
+                    submit_to_one_of_processing_threads( r );
+                }
+            }
+        }
+
+        void process_loop
+        {
+            while( !end_of_game() )
+            {
+                GraphicsResourceRequest * r = get_one_process_request();
+
+                if( r )
+                {
+                    proces_resource( r );
+                    r->op = OP_LOCK;
+                    submit_to_rendering_thread( r );
+                }
+            }
+        }
+    };
 
     ///
     /// ...
@@ -163,6 +212,7 @@ namespace GN { namespace engine
     struct DrawRequest
     {
         int                draw_fence;
+        int                resource_fence; ///< this draw must wait for completion of thisresource fence.
 
         //@{
         GraphicsResourceId resources[MAX_RESOURCE_PER_DRAW];
@@ -184,24 +234,35 @@ namespace GN { namespace engine
     ///
     class RenderingThread
     {
+        void handle_all_resource_requests()
+        {
+            // TODO: notify somebody that resource request is done, after execution of OP_UNLOCK.
+        }
+
         void render_loop()
         {
             while( !end_of_game() )
             {
                 size_t count;
-                const DrawRequest * requests = get_draw_request_buffer( &count ); // this function will block rendering thread, until draw request buffer is ready or game is about to exit.
-                for( size_t i = 0; i < count; ++i )
+                // block until draw request buffer is not empty or game is about to exit.
+                const DrawRequest * requests = get_draw_request_buffer( &count );
+                for( size_t i = 0; i < count; )
                 {
                     // resource request has priority
                     handle_all_resource_requests();
 
                     const DrawRequest & dr = requests[i];
 
-                    wait_for_all_resoures_ready( dr );
-
-                    do_rendering( dr );
-
-                    update_draw_fence( dr.draw_fence );
+                    if( is_resource_fence_done( dr.resource_fence ) )
+                    {
+                        do_rendering( dr );
+                        update_draw_fence( dr.draw_fence );
+                        ++i;
+                    }
+                    else
+                    {
+                        sleep_a_short_while();
+                    }
                 }
             }
         }
@@ -213,25 +274,26 @@ namespace GN { namespace engine
         {
         	frame_begin();
 
-            compose_and_submit_resource_request( 1 );
-            compose_and_submit_draw_request( 1 );
+            int resource_fence;
 
-            compose_and_submit_resource_request( 2 );
-            compose_and_submit_draw_request( 2 );
+            resource_fence = compose_and_submit_resource_request( 1 );
+            compose_and_submit_draw_request( 1, resource_fence );
+
+            resource_fence = compose_and_submit_resource_request( 2 );
+            compose_and_submit_draw_request( 2, resource_fence );
 
             ...
 
-            compose_and_submit_resource_request( n );
-            compose_and_submit_draw_request( n );
+            resource_fence = compose_and_submit_resource_request( n );
+            compose_and_submit_draw_request( n, resource_fence );
 
         	frame_end();
         }
 
-        void compose_and_submit_resource_request( int draw_fence )
+        int compose_and_submit_resource_request( int draw_fence ) // return resource update fence ID
         {
-            std::vector<SingleGraphicsResourceRequest*> to_be_loaded;
-            std::vector<SingleGraphicsResourceRequest*> to_be_realized;
-            std::vector<SingleGraphicsResourceRequest*> to_be_derealized;
+            std::vector<GraphicsResourceRequest*> to_be_loaded;
+            std::vector<GraphicsResourceRequest*> to_be_disposed;
 
             const GraphicsResourceId * resources;
             UInt32 count;
@@ -242,48 +304,57 @@ namespace GN { namespace engine
             {
                 GraphicsResourceId newres = *resources;
 
-                if( resource_is_derealized( newres ) )
+                if( resource_is_disposed( newres ) )
                 {
                     while( there_is_no_enough_room_to_hold_resource( newres ) )
                     {
-                        GraphicsResourceId oldres = get_the_appropriate_resource_to_be_derealized();
+                        GraphicsResourceId oldres = get_the_appropriate_resource_to_be_disposed();
 
-                        mark_as_derealized( oldres );
+                        mark_as_disposed( oldres );
 
-                        add_to_list( to_be_derealized, oldres );
+                        add_to_list( to_be_disposed, oldres );
                     }
 
-                    mark_as_realized( newres );
+                    mark_as_ready( newres );
                 }
 
-                add_to_list( to_be_loaded, newres );
-
-                update_resource_draw_fence( newres, draw_fence );
+                if( need_to_update( newres ) )
+                {
+                    add_to_list( to_be_loaded, newres );
+                    update_resource_draw_fence( newres, draw_fence );
+                }
             }
 
-            if( !to_be_derealized.empty() )
+            if( !to_be_disposed.empty() )
             {
-                // Note: we could submit this request to rendering thread directly,
-                // because derealize is a purly rendering device task. But we need
-                // resource thread to serialize the requests, so that "derealize" always
-                // happens before "load".
-                submit_resource_request_to_resource_thread(
-                    OP_DEREALIZE,
-                    to_be_derealized );
+                submit_resource_request_to_rendering_thread(
+                    OP_DISPOSE,
+                    to_be_disposed );
             }
 
             if( !to_be_loaded.empty() )
             {
-                submit_resource_request_to_resource_thread(
+                return submit_resource_request_to_resource_thread(
                     OP_LOAD,
                     to_be_loaded );
             }
+            else
+            {
+                return 0;
+            }
         }
 
-        void compose_and_submit_draw_request( int draw_fence )
+        int submit_resource_request_to_resource_thread(
+            GraphicsResourceOperation op,
+            const std::vector<GraphicsResourceRequest*> & requests ) // return resource fence
+        {
+        }
+
+        void compose_and_submit_draw_request( int draw_fence, int resource_fence )
         {
             DrawRequest dr;
             dr.draw_fence = draw_fence;
+            dr.resource_fence = resource_fence;
             ...;
             add_draw_request_to_draw_request_buffer( dr );
         }
