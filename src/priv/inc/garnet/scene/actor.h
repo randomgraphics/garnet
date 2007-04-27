@@ -6,7 +6,7 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.4.1)
 // *****************************************************************************
 
-namespace GN { namespace scene
+namespace GN
 {
     ///
     /// general tree structure
@@ -30,10 +30,10 @@ namespace GN { namespace scene
         //@}
 
         //@{
-        TreeNode<T> *  getParent() const { return mParent; }
-        TreeNode<T> *  getPrevSibling() const { return mPrev; }
-        TreeNode<T> *  getNextSibling() const { return mNext; }
-        TreeNode<T> *  getFirstChild() const { return mChild; }
+        TreeNode<T> * getParent() const { return mParent; }
+        TreeNode<T> * getPrevSibling() const { return mPrev; }
+        TreeNode<T> * getNextSibling() const { return mNext; }
+        TreeNode<T> * getFirstChild() const { return mChild; }
         void setParent( TreeNode<T> * newParent, TreeNode<T> * newPrev ) { doSetParent( newParent, newPrev ); }
         //@}
 
@@ -307,7 +307,10 @@ namespace GN { namespace scene
 
         //@}
     };
+}
 
+namespace GN { namespace scene
+{
     ///
     /// actor is the basic/atomic item that you can put into virtual scene.
     ///

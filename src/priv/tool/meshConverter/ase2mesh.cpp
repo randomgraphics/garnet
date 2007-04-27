@@ -131,7 +131,7 @@ struct AseNode
     Boxf      bbox;   ///< bounding box of the node itself and its descendants.
 };
 
-struct AseGeoObject : public GN::scene::TreeNode<AseGeoObject>
+struct AseGeoObject : public GN::TreeNode<AseGeoObject>
 {
     AseNode node;
     AseMesh mesh;
@@ -1309,7 +1309,7 @@ static bool sBuildNodeTree( AseScene & scene )
             scene.root.calcChildrenCount(), scene.objects.size() ).cptr() );
 
     // calculate bounding box for each node, in post order
-    scene::TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
+    TreeTraversePostOrder<AseGeoObject> ttpost( &scene.root );
 
     AseGeoObject * n = ttpost.first();
     GN_ASSERT( 0 == n->getFirstChild() );
@@ -1333,7 +1333,7 @@ static bool sBuildNodeTree( AseScene & scene )
     }
 
     // print node tree
-    scene::TreeTraversePreOrder<AseGeoObject> ttpre( &scene.root );
+    TreeTraversePreOrder<AseGeoObject> ttpre( &scene.root );
     n = ttpre.first();
     int level = 0;
     while( n )

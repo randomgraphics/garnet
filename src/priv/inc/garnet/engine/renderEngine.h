@@ -75,12 +75,28 @@ namespace GN { namespace engine
     };
 
     ///
+    /// graphics resource type
+    ///
+    enum GraphicsResourceType
+    {
+        //@{
+        GRT_SHADER,
+        GRT_TEXTURE,
+        GRT_VTXBUF,
+        GRT_IDXBUF,
+        GRT_CONSTBUF,
+        NUM_GRAPHICS_RESOURCE_TYPES,
+        GRT_INVALID = NUM_GRAPHICS_RESOURCE_TYPES,
+        //@}
+    };
+
+    ///
     /// ...
     ///
     struct GraphicsResourceCreationParameter
     {
         //@{
-        int                       type;
+        GraphicsResourceType      type;
         ShaderCreationParameters  sd;
         TextureCreationParameters td;
         VtxBufCreationParameters  vd;
@@ -89,12 +105,18 @@ namespace GN { namespace engine
     };
 
     ///
+    /// graphics resource ID. 0 is invalid ID.
+    ///
+    typedef UInt32 GraphicsResourceId;
+
+    ///
     /// ...
     ///
-    struct GraphicsResource
+    struct GraphicsResource : public NoCopy
     {
-        int type;  ///< resource type. shader, texture, vb, ib, const.
-        int lod;   ///< current LOD. Definition of LOD is resource/application dependent.
+        const GraphicsResourceId   id;   ///< resource id
+        const GraphicsResourceType type; ///< resource type. shader, texture, vb, ib, const.
+        int                        lod;  ///< current LOD. Definition of LOD is resource/application dependent.
         union
         {
             //@{
@@ -105,12 +127,21 @@ namespace GN { namespace engine
             gfx::ConstBuf * constbuf; ///< ...
             //@}
         };
-    };
 
-    ///
-    /// graphics resource ID. 0 is invalid ID.
-    ///
-    typedef UInt32 GraphicsResourceId;
+    protected:
+
+        ///
+        /// protected constructor
+        ///
+        GraphicsResource( GraphicsResourceId id_, GraphicsResourceType type_ )
+            : id(id_), type(type_), lod(0)
+        {}
+
+        ///
+        /// protected destructor
+        ///
+        ~GraphicsResource() {}
+    };
 
     ///
     /// Application defined graphics resource loader.
@@ -255,9 +286,9 @@ namespace GN { namespace engine
         //@}
 
         //@{
-        void   incPendingResource() { atomInc32( &pendingResources ); }
-        void   decPendingResource() { GN_ASSERT( getPendingResource() > 0 ); atomDec32( &pendingResources ); }
-        SInt32 getPendingResource() const { return atomRead32( &pendingResources ); }
+        void   incPendingResourceCount() { atomInc32( &pendingResources ); }
+        void   decPendingResourceCount() { GN_ASSERT( getPendingResourceCount() > 0 ); atomDec32( &pendingResources ); }
+        SInt32 getPendingResourceCount() const { return atomRead32( &pendingResources ); }
         //@}
     };
 
@@ -351,8 +382,8 @@ namespace GN { namespace engine
         ///
         //@{
 
-        GraphicsResourceId alloc( const GraphicsResourceCreationParameter & );
-        void               free( GraphicsResourceId );
+        GraphicsResourceId allocres( const GraphicsResourceCreationParameter & );
+        void               freeres( GraphicsResourceId );
         GraphicsResource * id2res( GraphicsResourceId );
 
         //@}
