@@ -16,7 +16,9 @@ namespace GN
     {
         T * prev; ///< pointer to previous item
         T * next; ///< pointer to next item
+#if GN_DEBUG_BUILD
         void * owner; ///< pointer to the double-linked-list that this item belongs to.
+#endif
     };
 
     ///
@@ -67,7 +69,9 @@ namespace GN
 
             newItem->prev = prev;
             newItem->next = next;
+#if GN_DEBUG_BUILD
             newItem->owner = this;
+#endif
             if( prev ) prev->next = newItem;
             if( next ) next->prev = newItem;
 
@@ -83,7 +87,9 @@ namespace GN
 
             newItem->prev = prev;
             newItem->next = next;
+#if GN_DEBUG_BUILD
             newItem->owner = this;
+#endif
             if( prev ) prev->next = newItem;
             if( next ) next->prev = newItem;
 
@@ -92,12 +98,16 @@ namespace GN
 
         void doRemove( ItemType * item )
         {
+#if GN_DEBUG_BUILD
             GN_ASSERT( item && this == item->owner );
+#endif
             ItemType * prev = item->prev;
             ItemType * next = item->next;
             if( prev ) prev->next = next;
             if( next ) next->prev = prev;
+#if GN_DEBUG_BUILD
             item->owner = NULL;
+#endif
             if( item == mHead ) mHead = item->next;
             if( item == mTail ) mTail = item->prev;
         }
@@ -110,7 +120,9 @@ namespace GN
     struct SingleLinkedItem
     {
         T * next; ///< pointer to next item
+#if GN_DEBUG_BUILD
         void * owner; ///< pointer to the single-linked-list that this item belongs to.
+#endif
     };
 
     ///
@@ -160,7 +172,9 @@ namespace GN
             {
                 newItem->next = NULL;
             }
+#if GN_DEBUG_BUILD
             newItem->owner = this;
+#endif
             if( mTail == where ) mTail = newItem;
         }
 
@@ -168,7 +182,9 @@ namespace GN
         {
             if( item )
             {
+#if GN_DEBUG_BUILD
                 GN_ASSERT( this == item->owner );
+#endif
                 ItemType * next = item->next;
                 if( next )
                 {

@@ -50,6 +50,14 @@
 #define GN_ASSERT_EX( exp, desc ) void(0)
 #endif
 
+//@{
+#if GN_DEBUG_BUILD
+#define GN_ASSERT_ENABLED 1
+#else
+#define GN_ASSERT_ENABLED 0
+#endif
+//@}
+
 ///
 /// Verification macro with description
 ///

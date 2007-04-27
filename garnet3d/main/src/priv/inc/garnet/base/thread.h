@@ -121,7 +121,7 @@ namespace GN
     /// \name atomic operations
     //@{
 
-    SInt32 atomRead32( SInt32 volatile * ); ///< atomic 32-bit read
+    SInt32 atomRead32( const SInt32 volatile * ); ///< atomic 32-bit read
     SInt32 atomWrite32( SInt32 volatile * ); ///< atomic 32-bit write
     SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
     SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value

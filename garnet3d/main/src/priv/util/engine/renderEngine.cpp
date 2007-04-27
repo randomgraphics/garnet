@@ -1,5 +1,9 @@
 #include "pch.h"
-#include "rescache.h"
+#include "resourceCache.h"
+#include "drawThread.h"
+#include "resourceThread.h"
+
+#pragma warning(disable:4100)
 
 // *****************************************************************************
 // local functions
@@ -9,21 +13,28 @@
 //
 // -----------------------------------------------------------------------------
 
-// *****************************************************************************
+ // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & )
+bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
 {
     GN_GUARD;
 
     // standard init procedure
     GN_STDCLASS_INIT( GN::engine::RenderEngine, () );
 
-    // Do custom init here
+    // create sub components
+    mGfxResCache = new GraphicsResourceCache( p.maxtexbytes, p.maxmeshbytes );
+
+    mDrawThread = new DrawThread;
+    if( !mDrawThread->init() ) return failure();
+
+    mResourceThread = new ResourceThread;
+    if( !mResourceThread->init() ) return failure();
 
     // success
     return success();
@@ -37,6 +48,10 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & )
 void GN::engine::RenderEngine::quit()
 {
     GN_GUARD;
+
+    safeDelete( mResourceThread );
+    safeDelete( mDrawThread );
+    safeDelete( mGfxResCache );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -67,6 +82,9 @@ void GN::engine::RenderEngine::frameEnd()
 // -----------------------------------------------------------------------------
 GN::engine::DrawRequest & GN::engine::RenderEngine::newDrawRequest()
 {
+    static DrawRequest dr;
+    GN_UNIMPL();
+    return dr;
 }
 
 //
@@ -80,46 +98,75 @@ void GN::engine::RenderEngine::composeAndSubmitResourceRequest(
     GraphicsResourceLoader  * loader,
     bool                      forceReload )
 {
-    const GraphicsResource * res = id2res( resourceid );
+    GraphicsResourceItem * res = mGfxResCache->id2ptr( resourceid );
     if( 0 == res ) return;
+    GN_ASSERT( res->id == resourceid );
 
-    GraphicsResourceRequest * to_be_disposed = 0;
+    const GraphicsResourceItem * to_be_disposed = 0;
 
     if( GRS_DISPOSED == res->state )
     {
-        to_be_disposed = mGfxResCache.makeRoomForResource( resourceid, dr.fence );
-        /*
-        while( there_is_no_enough_room_to_hold_resource( newres ) )
+        to_be_disposed = mGfxResCache->makeRoomForResource( resourceid, dr.fence );
+
+        if( GN_ASSERT_ENABLED )
         {
-            GraphicsResourceId oldres = get_the_appropriate_resource_to_be_disposed();
-
-            mark_as_disposed( oldres );
-
-            add_to_list( to_be_disposed, oldres );
+            for( const GraphicsResourceItem * p = to_be_disposed; p; p = p->nextItemToDispose )
+            {
+                GN_ASSERT( GRS_DISPOSED == p->state );
+                GN_ASSERT( p->fence < dr.fence );
+            }
         }
-        */
 
-        res->state = GRS_REALIZED;
+        mGfxResCache->mark_as_realized_and_recently_used( resourceid );
 
         forceReload = true;
     }
 
-    res->draw_fence = dr.fence;
+    res->fence = dr.fence;
 
-    if( !to_be_disposed.empty() )
+    if( to_be_disposed )
     {
-        //submit_resource_request_to_rendering_thread(
-        //    OP_DISPOSE,
-        //    to_be_disposed );
+        mDrawThread->dispose( to_be_disposed );
     }
 
     if( forceReload )
     {
-        dr.incPendingResource();
-        //submit_resource_request_to_resource_thread(
-        //    OP_LOAD,
-        //    to_be_loaded );
+        dr.incPendingResourceCount();
+
+        GN_ASSERT( dr.getPendingResourceCount() > 0 );
+
+        mResourceThread->loadResource( resourceid );
     }
+}
+
+// *****************************************************************************
+// cache functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResourceId
+GN::engine::RenderEngine::allocres( const GraphicsResourceCreationParameter & param )
+{
+    return mGfxResCache->alloc( param );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::freeres( GraphicsResourceId id )
+{
+    return mGfxResCache->free( id );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::id2res( GraphicsResourceId id )
+{
+    return mGfxResCache->id2ptr( id );
 }
 
 // *****************************************************************************
