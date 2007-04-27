@@ -1,7 +1,7 @@
 #ifndef __GN_ENGINE_RENDERENGINE_H__
 #define __GN_ENGINE_RENDERENGINE_H__
 // *****************************************************************************
-//! \file    engine/renderEngine.h
+//! \file    doc/renderEngine_draft.h
 //! \brief   interface of render engine
 //! \author  chenli@@FAREAST (2007.4.13)
 // *****************************************************************************
@@ -128,19 +128,14 @@ namespace GN { namespace engine
         //@}
     };
 
-    struct GraphicsResourceRequestFence
-    {
-        int number_of_pending_resources;
-    };
-
     ///
     /// ...
     ///
     struct GraphicsResourceRequest
     {
         //@{
-        int                       resource_fence;      ///< resource fence ID
-        int                       wait_for_draw_fence; ///< resource update must be happend after this draw fence
+        int                       wait_for_draw_fence; ///< the request must be happend after this draw fence
+        volatile int            * pending_resources;   ///< when this request is done. It'll decrease value pointed by this pointer.
         GraphicsResourceOperation op;         ///< requested operation
         GraphicsResourceId        resourceid; ///< target resource
         int                       targetlod;  ///< ignored for dispose operation.
@@ -212,21 +207,10 @@ namespace GN { namespace engine
     struct DrawRequest
     {
         int                draw_fence;
-        int                resource_fence; ///< this draw must wait for completion of thisresource fence.
+        volatile int       pending_resources; ///< number of resources that has to be updated before this draw happend.
 
-        //@{
-        GraphicsResourceId resources[MAX_RESOURCE_PER_DRAW];
-        UInt32             numres;
-        //@}
- 
-        //@{
-        gfx::PrimitiveType primtype;
-        UInt32             numprim;
-        UInt32             startvtx;
-        UInt32             minvtxidx;
-        UInt32             numvtx;
-        UInt32             startidx;
-        //@}
+        // other fields to describe the draw action.
+        ...
     };
 
     ///
@@ -236,7 +220,35 @@ namespace GN { namespace engine
     {
         void handle_all_resource_requests()
         {
-            // TODO: notify somebody that resource request is done, after execution of OP_UNLOCK.
+            if( not_resource_queue_empty() )
+            {
+                for_each( resource in queue )
+                {
+                    if( the_draw_fence_of_the_resource_is_not_past() )
+                    {
+                        leave_it_in_queue();
+                    }
+                    else
+                    {
+                        switch( resource.operation )
+                        {
+                            OP_LOCK :
+                                lock_resource();
+                                break;
+
+                            OP_UNLOCK:
+                                unlock_resource();
+                                dcrease_pending_resource_number();
+                                break;
+
+                            default:
+                                unexpected();
+                        }
+
+                        remove_resource_from_queue();
+                    }
+                }
+            }
         }
 
         void render_loop()
@@ -253,7 +265,7 @@ namespace GN { namespace engine
 
                     const DrawRequest & dr = requests[i];
 
-                    if( is_resource_fence_done( dr.resource_fence ) )
+                    if( 0 == dr.pending_resource )
                     {
                         do_rendering( dr );
                         update_draw_fence( dr.draw_fence );
@@ -261,7 +273,7 @@ namespace GN { namespace engine
                     }
                     else
                     {
-                        sleep_a_short_while();
+                        sleep_a_short_while(); // or busy loop.
                     }
                 }
             }
@@ -270,34 +282,44 @@ namespace GN { namespace engine
 
     class GameThread
     {
+        struct Entity
+        {
+            std::vector<GraphicsResourceId> resources; ///< resources used by this draw
+            ...; // other data
+
+            void fill_draw_request( DrawRequest & dq )
+            {
+                // ...
+            };
+        };
+
+        std::vector<Entity> entities;
+
         void game_loop()
         {
         	frame_begin();
 
-            int resource_fence;
-
-            resource_fence = compose_and_submit_resource_request( 1 );
-            compose_and_submit_draw_request( 1, resource_fence );
-
-            resource_fence = compose_and_submit_resource_request( 2 );
-            compose_and_submit_draw_request( 2, resource_fence );
-
-            ...
-
-            resource_fence = compose_and_submit_resource_request( n );
-            compose_and_submit_draw_request( n, resource_fence );
+            for_each( entities.begin(), entities.end(), draw_entity );
 
         	frame_end();
         }
 
-        int compose_and_submit_resource_request( int draw_fence ) // return resource update fence ID
+        void draw_entity( Entity & e )
+        {
+            // note:  alloc_draw_request() will assign a fence value to dq.draw_fence
+            DrawRequest & dq = alloc_new_draw_request_in_draw_request_buffer();
+            compose_and_submit_resource_request( e, dq );
+            fill_entity_specific_data_into_draw_request( e ); 
+        }
+
+        void compose_and_submit_resource_request( Entity & e, DrawRequest & dq )
         {
             std::vector<GraphicsResourceRequest*> to_be_loaded;
             std::vector<GraphicsResourceRequest*> to_be_disposed;
 
             const GraphicsResourceId * resources;
             UInt32 count;
-            get_resources_used_by_draw( &resources, &count, draw_fence );
+            get_resources_used_by_entity( &resources, &count, e );
             const GraphicsResourceId * end = resources + count;
 
             for( ; resources < end; ++resources )
@@ -334,29 +356,15 @@ namespace GN { namespace engine
 
             if( !to_be_loaded.empty() )
             {
-                return submit_resource_request_to_resource_thread(
+                dq.pending_resources = to_be_loaded.size();
+                submit_resource_request_to_resource_thread(
                     OP_LOAD,
                     to_be_loaded );
             }
             else
             {
-                return 0;
+                dq.pending_resource = 0;
             }
-        }
-
-        int submit_resource_request_to_resource_thread(
-            GraphicsResourceOperation op,
-            const std::vector<GraphicsResourceRequest*> & requests ) // return resource fence
-        {
-        }
-
-        void compose_and_submit_draw_request( int draw_fence, int resource_fence )
-        {
-            DrawRequest dr;
-            dr.draw_fence = draw_fence;
-            dr.resource_fence = resource_fence;
-            ...;
-            add_draw_request_to_draw_request_buffer( dr );
         }
 
         void frame_begin()
@@ -390,10 +398,10 @@ namespace GN { namespace engine
         UInt32 getCurrentFence();
 
         // resource management
-        void           deleteShader( result, gfx::Shader * );
-        void           deleteTexture( gfx::Texture * );
-        void           deleteVtxBuf( gfx::VtxBuf * );
-        void           deleteIdxBuf( gfx::IdxBuf * );
+        void deleteShader( result, gfx::Shader * );
+        void deleteTexture( gfx::Texture * );
+        void deleteVtxBuf( gfx::VtxBuf * );
+        void deleteIdxBuf( gfx::IdxBuf * );
 
         // sync operations
         void waitForIdle();          ///< wait until all submitted async command are executed
@@ -432,6 +440,6 @@ namespace GN { namespace engine
 }}
 
 // *****************************************************************************
-//                           End of renderEngine.h
+//                           End of renderEngine_draft.h
 // *****************************************************************************
 #endif // __GN_ENGINE_RENDERENGINE_H__

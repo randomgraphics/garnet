@@ -110,21 +110,31 @@ namespace GN
 
     void sleepCurrentThread( float seconds );
 
-    // Thread * getCurrentThread();
+    ///
+    /// Generate a thread object that represents the calling thread.
+    /// Note that delete the pointer returned by this function won't stop running of the thread.
+    ///
+    Thread * generateCurrentThreadObject();
 
     //@}
 
-    /*// \name atomic operations
+    /// \name atomic operations
     //@{
 
-    atomread32(...);
-    atomwrite32(...);
-    atominc32(...);
-    atomdec32(...);
-    atomxchg32(...);
-    atomcx32(...);
+    SInt32 atomRead32( SInt32 volatile * ); ///< atomic 32-bit read
+    SInt32 atomWrite32( SInt32 volatile * ); ///< atomic 32-bit write
+    SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
+    SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
+    SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
 
-    //@}*/
+    ///
+    /// if initial value of "dest" equals "cmp", then do exchange; else, do nothing.
+    ///
+    /// \return
+    ///     Always return initial value of "dest".
+    ///
+    SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
+    //@}
 }
 
 // *****************************************************************************
