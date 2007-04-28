@@ -65,7 +65,7 @@ namespace GN { namespace engine
         ///
         /// ctor
         ///
-        GraphicsResourceCache( UInt32 maxtexbytes, UInt32 maxmeshbytes );
+        GraphicsResourceCache( UInt32 maxTexBytes, UInt32 maxMeshBytes );
 
         //@}
 
