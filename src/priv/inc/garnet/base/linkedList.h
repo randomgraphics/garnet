@@ -29,7 +29,7 @@ namespace GN
     {
     public:
 
-        typedef DoubleLinkedItem<T> ItemType; ///< type of linked item
+        typedef T ItemType; ///< type of linked item
 
         /// \name ctor and dtor
         //@{
@@ -133,7 +133,7 @@ namespace GN
     {
     public:
 
-        typedef SingleLinkedList<T> ItemType; ///< type of linked item
+        typedef T ItemType; ///< type of linked item
 
         /// \name ctor and dtor
         //@{

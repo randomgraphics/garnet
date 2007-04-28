@@ -163,18 +163,18 @@ namespace GN { namespace engine
     ///
     enum GraphicsResourceOperation
     {
-        OP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
+        GROP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
 
-        OP_COPY,       ///< copy data to graphics resource. Handled by copy thread.
+        GROP_COPY,       ///< copy data to graphics resource. Handled by copy thread.
 
-        OP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
-                       ///< Handled by processing thread.
+        GROP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
+                         ///< Handled by processing thread.
 
         /// these operations are handled by rendering thread
         //@{
-        OP_LOCK,       ///< lock the graphics resource, realize those disposed as well.
-        OP_UNLOCK,     ///< unlock the graphics resource.
-        OP_DISPOSE,    ///< dispose the resource.
+        GROP_LOCK,       ///< lock the graphics resource, realize those disposed as well.
+        GROP_UNLOCK,     ///< unlock the graphics resource.
+        GROP_DISPOSE,    ///< dispose the resource.
         //@}
     };
 
@@ -186,37 +186,19 @@ namespace GN { namespace engine
     ///
     /// ...
     ///
-    struct GraphicsResourceLoadingCommand
+    struct GraphicsResourceCommand
     {
         //@{
         GraphicsResourceOperation op;               ///< requested operation. Any operation, except OP_DISPOSE.
+        GraphicsResourceId        resourceId;       ///< target resource
+
+        // below parameters will be ignored, for OP_DISPOSE.
+
         FenceId                   waitForDrawFence; ///< the request must be happend after this draw fence
         volatile UInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
-        GraphicsResourceId        resourceId;       ///< target resource
         int                       targetLod;        ///< ...
         GraphicsResourceLoader  * loader;           ///< ...
         //@}
-    };
-
-    ///
-    /// resource dispose request. Handled by rendering thread.
-    ///
-    struct GraphicsResourceDisposingCommand
-    {
-        //@{
-        GraphicsResourceOperation op;    ///< Must be OP_DISPOSE.
-        UInt32                    count; ///< number of resources to be disposed.
-        //@}
-
-        ///
-        /// ...
-        ///
-        const GraphicsResourceId & resource( UInt32 i ) const
-        {
-            const UInt8 * p = (const UInt8*)this;
-            p = p + sizeof(*this) + sizeof(GraphicsResourceId) * i;
-            return *(const GraphicsResourceId *)p;
-        }
     };
 
     ///
@@ -288,7 +270,7 @@ namespace GN { namespace engine
         //@{
         void   incPendingResourceCount() { atomInc32( &pendingResources ); }
         void   decPendingResourceCount() { GN_ASSERT( getPendingResourceCount() > 0 ); atomDec32( &pendingResources ); }
-        SInt32 getPendingResourceCount() const { return atomRead32( &pendingResources ); }
+        SInt32 getPendingResourceCount() const { return atomGet32(&pendingResources); }
         //@}
     };
 
