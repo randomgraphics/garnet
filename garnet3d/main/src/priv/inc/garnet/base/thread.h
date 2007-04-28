@@ -161,8 +161,10 @@ namespace GN
     /// \name atomic operations
     //@{
 
-    SInt32 atomInc32( SInt32 volatile * );        ///< return incremented value
-    SInt32 atomDec32( SInt32 volatile * );        ///< return decremented value
+    SInt32 atomGet32( const SInt32 volatile * );
+    void   atomSet32( SInt32 volatile *, SInt32 );
+    SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
+    SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
     SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
 
     ///

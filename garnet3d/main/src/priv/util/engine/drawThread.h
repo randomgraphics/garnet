@@ -39,6 +39,7 @@ namespace GN { namespace engine
         void clear()
         {
             mDoSomething = 0;
+            mDrawBufferEmpty = 0;
             mDrawBufferNotFull = 0;
             mDrawThread = 0;
         }
@@ -49,10 +50,16 @@ namespace GN { namespace engine
         // ********************************
     public:
 
+        //@{
+
         ///
-        /// wait for draw thread idle
+        /// wait for draw thread idle: all submitted draw commands are executed
         ///
-        void waitForIdle() const;
+        void waitForIdle( float time ) const { if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time ); }
+
+        //@}
+
+        //@{
 
         ///
         /// start of a frame
@@ -67,17 +74,20 @@ namespace GN { namespace engine
         ///
         /// alloc new draw command in draw buffer
         ///
-        DrawCommand & newDrawCommand();
+        inline DrawCommand & newDrawCommand();
+
+        //@}
+
+        /// resource requests. Might be called anytime, anywhere.
+        ///
+        //@{
+
+        inline void submitResourceCommand( const GraphicsResourceCommand & );
 
         ///
         /// submit resource dispose commands to draw thread
         ///
-        void dispose( const GraphicsResourceItem * disposeList );
-
-        ///
-        /// ...
-        ///
-        void submitSingleResourceCommand( GraphicsResourceOperation op, GraphicsResourceId );
+        inline void dispose( const GraphicsResourceItem * disposeList );
 
         //@}
 
@@ -85,6 +95,12 @@ namespace GN { namespace engine
         // private variables
         // ********************************
     private:
+
+        // TODO: use pooled memory to avoid runtime heap operation
+        struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
+        {
+            GraphicsResourceCommand command;
+        };
 
         struct DrawBuffer
         {
@@ -112,18 +128,21 @@ namespace GN { namespace engine
         };
 
         // actions
-        volatile SInt32 mQuitThread;
-        volatile SInt32 mResetRenderer;
-        SyncEvent     * mDoSomething;
+        volatile bool mQuitDrawThread;
+        volatile bool mResetRenderer;
+        SyncEvent   * mDoSomething;
 
         // data to handle resource commands
-        Mutex           mResourceMutex;
+        DoubleLinkedList<ResourceCommandItem> mResourceCommands;
+        Mutex                                 mResourceMutex;
 
         // data to handle draw commands
         DrawBuffer      mDrawBuffers[DRAW_BUFFER_COUNT];
         volatile SInt32 mReadingIndex;
         volatile SInt32 mWritingIndex;
+        FenceId         mDrawFence; // means that draws before or equal this fence is done.
         Mutex           mDrawBufferMutex;
+        SyncEvent     * mDrawBufferEmpty;
         Semaphore     * mDrawBufferNotFull;
         //Semaphore     * mDrawBufferNotEmpty;
 
@@ -134,9 +153,15 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        void submitDrawBuffer();
+        bool drawBufferEmpty() const { return atomGet32(&mReadingIndex) == atomGet32(&mWritingIndex); }
 
+        void   submitDrawBuffer(); // called by any threads other than draw thead.
+
+        // methods runs in thread thread
         UInt32 threadProc( void * );
+        void   handleDrawCommands();
+        void   handleResourceCommands();
+        void   doDraw( const DrawCommand & );
     };
 }}
 
