@@ -13,7 +13,7 @@
 //
 // -----------------------------------------------------------------------------
 
- // *****************************************************************************
+// *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
 
@@ -28,10 +28,10 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     GN_STDCLASS_INIT( GN::engine::RenderEngine, () );
 
     // create sub components
-    mGfxResCache = new GraphicsResourceCache( p.maxtexbytes, p.maxmeshbytes );
+    mGfxResCache = new GraphicsResourceCache( p.maxTexBytes, p.maxMeshBytes );
 
     mDrawThread = new DrawThread;
-    if( !mDrawThread->init() ) return failure();
+    if( !mDrawThread->init(p.maxDrawCommandBufferBytes) ) return failure();
 
     mResourceThread = new ResourceThread;
     if( !mResourceThread->init() ) return failure();
@@ -68,6 +68,7 @@ void GN::engine::RenderEngine::quit()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::frameBegin()
 {
+    return mDrawThread->frameBegin();
 }
 
 //
@@ -75,23 +76,22 @@ void GN::engine::RenderEngine::frameBegin()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::frameEnd()
 {
+    return mDrawThread->frameEnd();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::DrawRequest & GN::engine::RenderEngine::newDrawRequest()
+GN::engine::DrawCommand & GN::engine::RenderEngine::newDrawCommand()
 {
-    static DrawRequest dr;
-    GN_UNIMPL();
-    return dr;
+    return mDrawThread->newDrawCommand();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::composeAndSubmitResourceRequest(
-    DrawRequest &             dr,
+void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
+    DrawCommand &             dr,
     GraphicsResourceOperation op,
     GraphicsResourceId        resourceid,
     int                       lod,

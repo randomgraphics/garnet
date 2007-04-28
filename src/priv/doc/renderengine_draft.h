@@ -76,7 +76,7 @@ namespace GN { namespace engine
         ///
         /// ctor
         ///
-        GraphicsResourceCache( UInt32 maxtexbytes, UInt32 maxmeshbytes );
+        GraphicsResourceCache( UInt32 maxTexBytes, UInt32 maxMeshBytes );
 
         ///
         /// you can create as many as graphics resources as you want. But only limited
@@ -131,7 +131,7 @@ namespace GN { namespace engine
     ///
     /// ...
     ///
-    struct GraphicsResourceRequest
+    struct GraphicsResourceCommand
     {
         //@{
         int                       wait_for_draw_fence; ///< the request must be happend after this draw fence
@@ -148,9 +148,9 @@ namespace GN { namespace engine
     ///
     class ResourceThreads
     {
-        fifo<GraphicsResourceRequest*> copy_queue;
-        fifo<GraphicsResourceRequest*> load_queue;
-        fifp<GraphicsResourceRequest*> process_queue;
+        fifo<GraphicsResourceCommand*> copy_queue;
+        fifo<GraphicsResourceCommand*> load_queue;
+        fifp<GraphicsResourceCommand*> process_queue;
 
         void copy_loop()
         {
@@ -158,7 +158,7 @@ namespace GN { namespace engine
             {
                 if( has_copy_request() )
                 {
-                    GraphicsResourceRequest * r = get_one_copy_requests();
+                    GraphicsResourceCommand * r = get_one_copy_requests();
                     copy_resource( r );
                     r->op = OP_UNLOCK;
                     submit_to_rendering_thread( r );
@@ -175,7 +175,7 @@ namespace GN { namespace engine
             while( !end_of_game() )
             {
                 // block until queue is not empty, or game is about to exit.
-                GraphicsResourceRequest * r = get_one_load_request();
+                GraphicsResourceCommand * r = get_one_load_request();
 
                 if( r )
                 {
@@ -189,7 +189,7 @@ namespace GN { namespace engine
         {
             while( !end_of_game() )
             {
-                GraphicsResourceRequest * r = get_one_process_request();
+                GraphicsResourceCommand * r = get_one_process_request();
 
                 if( r )
                 {
@@ -204,7 +204,7 @@ namespace GN { namespace engine
     ///
     /// ...
     ///
-    struct DrawRequest
+    struct DrawCommand
     {
         int                draw_fence;
         volatile int       pending_resources; ///< number of resources that has to be updated before this draw happend.
@@ -257,13 +257,13 @@ namespace GN { namespace engine
             {
                 size_t count;
                 // block until draw request buffer is not empty or game is about to exit.
-                const DrawRequest * requests = get_draw_request_buffer( &count );
+                const DrawCommand * requests = get_draw_request_buffer( &count );
                 for( size_t i = 0; i < count; )
                 {
                     // resource request has priority
                     handle_all_resource_requests();
 
-                    const DrawRequest & dr = requests[i];
+                    const DrawCommand & dr = requests[i];
 
                     if( 0 == dr.pending_resource )
                     {
@@ -287,7 +287,7 @@ namespace GN { namespace engine
             std::vector<GraphicsResourceId> resources; ///< resources used by this draw
             ...; // other data
 
-            void fill_draw_request( DrawRequest & dq )
+            void fill_draw_request( DrawCommand & dq )
             {
                 // ...
             };
@@ -307,15 +307,15 @@ namespace GN { namespace engine
         void draw_entity( Entity & e )
         {
             // note:  alloc_draw_request() will assign a fence value to dq.draw_fence
-            DrawRequest & dq = alloc_new_draw_request_in_draw_request_buffer();
+            DrawCommand & dq = alloc_new_draw_request_in_draw_request_buffer();
             compose_and_submit_resource_request( e, dq );
             fill_entity_specific_data_into_draw_request( e ); 
         }
 
-        void compose_and_submit_resource_request( Entity & e, DrawRequest & dq )
+        void compose_and_submit_resource_request( Entity & e, DrawCommand & dq )
         {
-            std::vector<GraphicsResourceRequest*> to_be_loaded;
-            std::vector<GraphicsResourceRequest*> to_be_disposed;
+            std::vector<GraphicsResourceCommand*> to_be_loaded;
+            std::vector<GraphicsResourceCommand*> to_be_disposed;
 
             const GraphicsResourceId * resources;
             UInt32 count;

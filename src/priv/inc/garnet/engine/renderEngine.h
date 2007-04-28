@@ -186,7 +186,7 @@ namespace GN { namespace engine
     ///
     /// ...
     ///
-    struct GraphicsResourceLoadingRequest
+    struct GraphicsResourceLoadingCommand
     {
         //@{
         GraphicsResourceOperation op;               ///< requested operation. Any operation, except OP_DISPOSE.
@@ -201,7 +201,7 @@ namespace GN { namespace engine
     ///
     /// resource dispose request. Handled by rendering thread.
     ///
-    struct GraphicsResourceDisposingRequest
+    struct GraphicsResourceDisposingCommand
     {
         //@{
         GraphicsResourceOperation op;    ///< Must be OP_DISPOSE.
@@ -265,7 +265,7 @@ namespace GN { namespace engine
     ///
     /// ...
     ///
-    struct DrawRequest
+    struct DrawCommand
     {
     private:
 
@@ -298,8 +298,9 @@ namespace GN { namespace engine
     struct RenderEngineInitParameters
     {
         //@{
-        UInt32 maxtexbytes;
-        UInt32 maxmeshbytes;
+        UInt32 maxTexBytes;
+        UInt32 maxMeshBytes;
+        UInt32 maxDrawCommandBufferBytes;
         //@}
     };
 
@@ -355,10 +356,10 @@ namespace GN { namespace engine
         /// Must called between frameBegin() and frameEnd(). And the returned reference
         /// to draw request object will be invalidated after frameEnd().
         ///
-        DrawRequest & newDrawRequest();
+        DrawCommand & newDrawCommand();
 
-        void composeAndSubmitResourceRequest(
-            DrawRequest &             dr,
+        void composeAndSubmitResourceCommand(
+            DrawCommand &             dr,
             GraphicsResourceOperation op,
             GraphicsResourceId        resource,
             int                       lod,
