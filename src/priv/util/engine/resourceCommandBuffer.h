@@ -57,6 +57,11 @@ namespace GN { namespace engine
         ///
         bool get( GraphicsResourceCommand & cmd );
 
+        ///
+        /// post quit event. wake up any threads that are blocked by get()
+        ///
+        void postQuitEvent() { mQuit = true; mBufferNotEmpty->signal(); }
+
         //@}
 
     private:
@@ -70,6 +75,8 @@ namespace GN { namespace engine
         // data to handle resource commands
         DoubleLinkedList<ResourceCommandItem> mCommands;
         mutable Mutex                         mMutex;
+        SyncEvent *                           mBufferNotEmpty;
+        volatile bool                         mQuit;
 
     private:
 
@@ -99,7 +106,13 @@ namespace GN { namespace engine
 //
 // -----------------------------------------------------------------------------
 inline GN::engine::ResourceCommandBuffer::ResourceCommandBuffer()
+    : mBufferNotEmpty( createSyncEvent( false, false ) ) // initial unsignaled, manual reset
+    , mQuit( false )
 {
+    if( 0 == mBufferNotEmpty )
+    {
+        GN_UNEXPECTED();
+    }
 }
 
 //
@@ -107,6 +120,8 @@ inline GN::engine::ResourceCommandBuffer::ResourceCommandBuffer()
 // -----------------------------------------------------------------------------
 inline GN::engine::ResourceCommandBuffer::~ResourceCommandBuffer()
 {
+    clear();
+    safeDelete( mBufferNotEmpty );
 }
 
 //
@@ -129,6 +144,8 @@ inline void GN::engine::ResourceCommandBuffer::clear()
     }
 
     GN_ASSERT( mCommands.empty() );
+
+    mBufferNotEmpty->unsignal();
 
     mMutex.unlock();
 }
@@ -168,6 +185,7 @@ inline void GN::engine::ResourceCommandBuffer::submit(
     // append to resource command list
     mMutex.lock();
     mCommands.append( item.detach() );
+    mBufferNotEmpty->signal();
     mMutex.unlock();
 }
 
@@ -175,32 +193,36 @@ inline void GN::engine::ResourceCommandBuffer::submit(
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::engine::ResourceCommandBuffer::peekAndRemove( GraphicsResourceCommand & cmd, FenceId currentDrawFence )
+GN::engine::ResourceCommandBuffer::get( GraphicsResourceCommand & cmd )
 {
+    mBufferNotEmpty->wait();
+    if( mQuit ) return false;
     mMutex.lock();
 
+    // handle multiple simutaneously consumers
+    while( mCommands.empty() )
+    {
+        mMutex.unlock();
+        if( mQuit ) return false;
+        mBufferNotEmpty->wait();
+        mMutex.lock();
+    }
+
     ResourceCommandItem * item = mCommands.head();
+    GN_ASSERT( item );
 
-    while( item && item->command.waitForDrawFence > currentDrawFence ) item = item->next;
+    mCommands.remove( item );
 
-    if( item )
-    {
-        cmd = item->command;
+    cmd = item->command;
 
-        mCommands.remove( item );
+    // TODO: use memory pool
+    delete item;
 
-        // TODO: use memory pool
-        delete item;
+    if( mCommands.empty() ) mBufferNotEmpty->unsignal();
 
-        mMutex.unlock();
+    mMutex.unlock();
 
-        return true;
-    }
-    else
-    {
-        mMutex.unlock();
-        return false;
-    }
+    return true;
 }
 
 // *****************************************************************************
