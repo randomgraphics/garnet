@@ -6,8 +6,10 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.4.27)
 // *****************************************************************************
 
+#include "resourceCommandBuffer.h"
+
 namespace GN { namespace engine
-{    
+{
     ///
     /// Asyncronized resource loader.
     ///
@@ -44,7 +46,7 @@ namespace GN { namespace engine
 
         //@{
 
-        void loadResource( GraphicsResourceId );
+        void submitResourceCommand( const GraphicsResourceCommand & );
 
         //@}
 
@@ -52,6 +54,10 @@ namespace GN { namespace engine
         // private variables
         // ********************************
     private:
+
+        ResourceCommandBuffer mLoadList;
+        ResourceCommandBuffer mDecompressList;
+        ResourceCommandBuffer mCopyList;
 
         // ********************************
         // private functions
