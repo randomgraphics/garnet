@@ -9,7 +9,7 @@
 namespace GN { namespace engine
 {
     ///
-    /// resource command buffer class.
+    /// resource command buffer class1, used by resource threads
     ///
     /// - submit() could be called any time, any where.
     ///
@@ -20,6 +20,16 @@ namespace GN { namespace engine
     public:
 
         //@{
+
+        ///
+        /// ctor
+        ///
+        ResourceCommandBuffer();
+
+        ///
+        /// dtor
+        ///
+        ~ResourceCommandBuffer();
 
         ///
         /// clear the buffer
@@ -42,10 +52,10 @@ namespace GN { namespace engine
         inline void submit( const GraphicsResourceCommand & );
 
         ///
-        /// get first command in the buffer that meets fence requirement, and remove it from the buffer.
+        /// get first command in the buffer, and remove it from the buffer.
         /// return false, if there's no such command in buffer.
         ///
-        bool get( GraphicsResourceCommand & cmd, FenceId currentDrawFence );
+        bool get( GraphicsResourceCommand & cmd );
 
         //@}
 
@@ -58,8 +68,8 @@ namespace GN { namespace engine
         };
 
         // data to handle resource commands
-        DoubleLinkedList<ResourceCommandItem> mResourceCommands;
-        mutable Mutex                         mResourceMutex;
+        DoubleLinkedList<ResourceCommandItem> mCommands;
+        mutable Mutex                         mMutex;
 
     private:
 
@@ -88,25 +98,39 @@ namespace GN { namespace engine
 //
 //
 // -----------------------------------------------------------------------------
+inline GN::engine::ResourceCommandBuffer::ResourceCommandBuffer()
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline GN::engine::ResourceCommandBuffer::~ResourceCommandBuffer()
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 inline void GN::engine::ResourceCommandBuffer::clear()
 {
-    mResourceMutex.lock();
+    mMutex.lock();
 
-    ResourceCommandItem * i1 = mResourceCommands.head(), * i2;
+    ResourceCommandItem * i1 = mCommands.head(), * i2;
     while( i1 )
     {
         i2 = i1->next;
 
-        mResourceCommands.remove( i1 );
+        mCommands.remove( i1 );
 
         delete i1;
 
         i1 = i2;
     }
 
-    GN_ASSERT( mResourceCommands.empty() );
+    GN_ASSERT( mCommands.empty() );
 
-    mResourceMutex.unlock();
+    mMutex.unlock();
 }
 
 //
@@ -114,9 +138,9 @@ inline void GN::engine::ResourceCommandBuffer::clear()
 // -----------------------------------------------------------------------------
 inline size_t GN::engine::ResourceCommandBuffer::size() const
 {
-    mResourceMutex.lock();
-    size_t n = mResourceCommands.size();
-    mResourceMutex.unlock();
+    mMutex.lock();
+    size_t n = mCommands.size();
+    mMutex.unlock();
     return n;
 }
 
@@ -125,10 +149,10 @@ inline size_t GN::engine::ResourceCommandBuffer::size() const
 // -----------------------------------------------------------------------------
 inline bool GN::engine::ResourceCommandBuffer::empty() const
 {
-    mResourceMutex.lock();
-    ResourceCommandItem * item = mResourceCommands.head();
-    mResourceMutex.unlock();
-    return 0 != item;
+    mMutex.lock();
+    bool b = mCommands.empty();
+    mMutex.unlock();
+    return b;
 }
 
 //
@@ -142,39 +166,39 @@ inline void GN::engine::ResourceCommandBuffer::submit(
     item->command = command;
 
     // append to resource command list
-    mResourceMutex.lock();
-    mResourceCommands.append( item.detach() );
-    mResourceMutex.unlock();
+    mMutex.lock();
+    mCommands.append( item.detach() );
+    mMutex.unlock();
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::engine::ResourceCommandBuffer::get( GraphicsResourceCommand & cmd, FenceId currentDrawFence )
+GN::engine::ResourceCommandBuffer::peekAndRemove( GraphicsResourceCommand & cmd, FenceId currentDrawFence )
 {
-    mResourceMutex.lock();
+    mMutex.lock();
 
-    ResourceCommandItem * item = mResourceCommands.head();
+    ResourceCommandItem * item = mCommands.head();
 
-    while( item && ( GROP_DISPOSE == item->command.op || item->command.waitForDrawFence > currentDrawFence ) ) item = item->next;
+    while( item && item->command.waitForDrawFence > currentDrawFence ) item = item->next;
 
     if( item )
     {
         cmd = item->command;
 
-        mResourceCommands.remove( item );
+        mCommands.remove( item );
 
         // TODO: use memory pool
         delete item;
 
-        mResourceMutex.unlock();
+        mMutex.unlock();
 
         return true;
     }
     else
     {
-        mResourceMutex.unlock();
+        mMutex.unlock();
         return false;
     }
 }

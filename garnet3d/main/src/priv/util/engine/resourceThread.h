@@ -55,9 +55,20 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        ResourceCommandBuffer mLoadList;
-        ResourceCommandBuffer mDecompressList;
-        ResourceCommandBuffer mCopyList;
+        struct SubThread
+        {
+            ResourceCommandBuffer commands;
+            Thread *              thread;
+
+            SubThread() : thread(0) {}
+
+            bool init();
+            void quit();
+        };
+
+        SubThread mLoador;       // do IO
+        SubThread mDecompressor; // do decompress
+        SubThread mPopulator;    // do copy
 
         // ********************************
         // private functions
@@ -65,6 +76,8 @@ namespace GN { namespace engine
     private:
     };
 }}
+
+#include "resourceThread.inl"
 
 // *****************************************************************************
 //                           End of resourceThread.h

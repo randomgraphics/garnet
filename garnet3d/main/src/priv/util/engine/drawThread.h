@@ -6,7 +6,6 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.4.27)
 // *****************************************************************************
 
-#include "resourceCommandBuffer.h"
 #include "resourceCache.h"
 
 namespace GN { namespace engine
@@ -92,6 +91,12 @@ namespace GN { namespace engine
         // ********************************
     private:
 
+        // TODO: use pooled memory to avoid runtime heap operation
+        struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
+        {
+            GraphicsResourceCommand command;
+        };
+
         struct DrawBuffer
         {
             UInt8 * buffer;
@@ -123,7 +128,8 @@ namespace GN { namespace engine
         SyncEvent   * mDoSomething;
 
         // data to handle resource commands
-        ResourceCommandBuffer mResourceCommands;
+        DoubleLinkedList<ResourceCommandItem> mResourceCommands;
+        Mutex                                 mResourceMutex;
 
         // data to handle draw commands
         DrawBuffer      mDrawBuffers[DRAW_BUFFER_COUNT];

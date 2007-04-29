@@ -86,7 +86,20 @@ void GN::engine::RenderEngine::DrawThread::quit()
     if( !mResourceCommands.empty() )
     {
         GN_WARN(sLogger)( "DrawThread shut down: drop %d unhandled resource commands.", mResourceCommands.size() );
-        mResourceCommands.clear();
+
+        ResourceCommandItem * i1 = mResourceCommands.head(), * i2;
+        while( i1 )
+        {
+            i2 = i1->next;
+
+            mResourceCommands.remove( i1 );
+
+            delete i1;
+
+            i1 = i2;
+        }
+
+        GN_ASSERT( mResourceCommands.empty() );
     }
 
     // standard quit procedure
@@ -235,33 +248,53 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 {
-    GraphicsResourceCommand cmd;
+    mResourceMutex.lock();
+    ResourceCommandItem * item = mResourceCommands.head();
+    mResourceMutex.unlock();
 
-    while( !mQuitDrawThread && mResourceCommands.get( cmd, mDrawFence ) )
+    ResourceCommandItem * prev;
+
+    while( item && !mQuitDrawThread )
     {
-        GN_ASSERT( GROP_DISPOSE == cmd.op || cmd.waitForDrawFence < mDrawFence );
-
-        switch( cmd.op )
+        // process the resource command
+        if( item->command.waitForDrawFence < mDrawFence )
         {
-            case GROP_LOAD :
-                GN_UNIMPL();
-                break;
+            switch( item->command.op )
+            {
+                case GROP_LOCK :
+                    GN_UNIMPL();
+                    break;
 
-            case GROP_LOCK :
-                GN_UNIMPL();
-                break;
+                case GROP_UNLOCK :
+                    GN_UNIMPL();
+                    break;
 
-            case GROP_UNLOCK :
-                GN_UNIMPL();
-                break;
+                case GROP_DISPOSE :
+                    GN_UNIMPL();
+                    break;
 
-            case GROP_DISPOSE :
-                GN_UNIMPL();
-                break;
+                default:
+                    GN_UNEXPECTED();
+                    break;
+            }
 
-            default:
-                GN_UNEXPECTED();
-                break;
+            // remove it from resource command buffer
+            mResourceMutex.lock();
+            prev = item;
+            item = item->next;
+            mResourceCommands.remove( prev );
+            mResourceMutex.unlock();
+
+            // then delete it
+            // TODO: memory pool
+            delete prev;
+        }
+        else
+        {
+            // leave it in buffer, continue search.
+            mResourceMutex.lock();
+            item = item->next;
+            mResourceMutex.unlock();
         }
     }
 }
