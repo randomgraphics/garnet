@@ -62,7 +62,9 @@ namespace GN { namespace engine
 
             SubThread() : thread(0) {}
 
-            bool init();
+            ~SubThread() { quit(); }
+
+            bool init( const ThreadProcedure & proc );
             void quit();
         };
 
@@ -74,6 +76,12 @@ namespace GN { namespace engine
         // private functions
         // ********************************
     private:
+
+        // thread procedures
+        UInt32 load( void * );
+        UInt32 decompress( void * );
+        UInt32 populate( void * );
+
     };
 }}
 
