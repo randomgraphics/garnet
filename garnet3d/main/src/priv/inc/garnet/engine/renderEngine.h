@@ -195,7 +195,7 @@ namespace GN { namespace engine
         // below parameters will be ignored, for OP_DISPOSE.
 
         FenceId                   waitForDrawFence; ///< the request must be happend after this draw fence
-        volatile UInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
+        volatile SInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
         int                       targetLod;        ///< ...
         GraphicsResourceLoader  * loader;           ///< ...
         //@}
@@ -271,6 +271,7 @@ namespace GN { namespace engine
         void   incPendingResourceCount() { atomInc32( &pendingResources ); }
         void   decPendingResourceCount() { GN_ASSERT( getPendingResourceCount() > 0 ); atomDec32( &pendingResources ); }
         SInt32 getPendingResourceCount() const { return atomGet32(&pendingResources); }
+        void   attachResourceCommand( GraphicsResourceCommand & cmd ) { cmd.pendingResources = &pendingResources; }
         //@}
     };
 
@@ -348,7 +349,7 @@ namespace GN { namespace engine
             GraphicsResourceLoader  * loader,
             //void                    * parameters,   // loader parameters
             //size_t                    bytes,        // loader parameter bytes
-            bool                      forceReload ); // force resource reload
+            bool                      reload ); // force resource reload
         //@}
 
         // ********************************

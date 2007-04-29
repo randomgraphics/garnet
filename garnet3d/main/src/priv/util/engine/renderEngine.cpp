@@ -96,7 +96,7 @@ void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
     GraphicsResourceId        resourceid,
     int                       lod,
     GraphicsResourceLoader  * loader,
-    bool                      forceReload )
+    bool                      reload )
 {
     GraphicsResourceItem * res = mGfxResCache->id2ptr( resourceid );
     if( 0 == res ) return;
@@ -119,23 +119,40 @@ void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
 
         mGfxResCache->mark_as_realized_and_recently_used( resourceid );
 
-        forceReload = true;
+        reload = true;
     }
 
     res->fence = dr.fence;
 
     if( to_be_disposed )
     {
-        mDrawThread->dispose( to_be_disposed );
+        GraphicsResourceCommand cmd;
+        cmd.op = GROP_DISPOSE;
+        while( to_be_disposed )
+        {
+            cmd.waitForDrawFence = to_be_disposed->fence;
+            cmd.resourceId = to_be_disposed->id;
+            mDrawThread->submitResourceCommand( cmd );
+            to_be_disposed = to_be_disposed->nextItemToDispose;
+        }
     }
 
-    if( forceReload )
+    if( reload )
     {
         dr.incPendingResourceCount();
 
         GN_ASSERT( dr.getPendingResourceCount() > 0 );
 
-        mResourceThread->loadResource( resourceid );
+        GraphicsResourceCommand cmd = {
+            GROP_LOAD,
+            resourceid,
+            dr.fence,
+            0,
+            lod,
+            loader
+        };
+        dr.attachResourceCommand( cmd );
+        mResourceThread->submitResourceCommand( cmd );
     }
 }
 

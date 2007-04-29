@@ -31,28 +31,5 @@ GN::engine::RenderEngine::DrawThread::newDrawCommand()
 inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
      const GraphicsResourceCommand & command )
 {
-    // allocate new resource command item
-    AutoObjPtr<ResourceCommandItem> item( new ResourceCommandItem );
-    item->command = command;
-
-    // append to resource command list
-    mResourceMutex.lock();
-    mResourceCommands.append( item.detach() );
-    mResourceMutex.unlock();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::DrawThread::dispose(
-    const GraphicsResourceItem * disposeList )
-{
-    GraphicsResourceCommand cmd;
-    cmd.op = GROP_DISPOSE;
-    while( disposeList )
-    {
-        cmd.resourceId = disposeList->id;
-        submitResourceCommand( cmd );
-        disposeList = disposeList->nextItemToDispose;
-    }
+    mResourceCommands.submit( command );
 }

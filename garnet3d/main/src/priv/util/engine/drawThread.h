@@ -6,6 +6,7 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.4.27)
 // *****************************************************************************
 
+#include "resourceCommandBuffer.h"
 #include "resourceCache.h"
 
 namespace GN { namespace engine
@@ -84,23 +85,12 @@ namespace GN { namespace engine
 
         inline void submitResourceCommand( const GraphicsResourceCommand & );
 
-        ///
-        /// submit resource dispose commands to draw thread
-        ///
-        inline void dispose( const GraphicsResourceItem * disposeList );
-
         //@}
 
         // ********************************
         // private variables
         // ********************************
     private:
-
-        // TODO: use pooled memory to avoid runtime heap operation
-        struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
-        {
-            GraphicsResourceCommand command;
-        };
 
         struct DrawBuffer
         {
@@ -133,8 +123,7 @@ namespace GN { namespace engine
         SyncEvent   * mDoSomething;
 
         // data to handle resource commands
-        DoubleLinkedList<ResourceCommandItem> mResourceCommands;
-        Mutex                                 mResourceMutex;
+        ResourceCommandBuffer mResourceCommands;
 
         // data to handle draw commands
         DrawBuffer      mDrawBuffers[DRAW_BUFFER_COUNT];
