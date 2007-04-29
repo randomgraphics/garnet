@@ -189,12 +189,9 @@ namespace GN { namespace engine
     struct GraphicsResourceCommand
     {
         //@{
-        GraphicsResourceOperation op;               ///< requested operation. Any operation, except OP_DISPOSE.
+        GraphicsResourceOperation op;               ///< requested operation.
         GraphicsResourceId        resourceId;       ///< target resource
-
-        // below parameters will be ignored, for OP_DISPOSE.
-
-        FenceId                   waitForDrawFence; ///< the request must be happend after this draw fence
+        FenceId                   waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
         volatile SInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
         int                       targetLod;        ///< ...
         GraphicsResourceLoader  * loader;           ///< ...

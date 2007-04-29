@@ -70,7 +70,6 @@ namespace GN
         virtual void unsignal( int index ) = 0;
         virtual void wait( int index, float seconds = INFINITE_TIME ) = 0;
         virtual int  waitAny( float seconds = INFINITE_TIME ) = 0; ///< return index of the event that is signaled, or -1 when timeout.
-        virtual void waitAll( float seconds = INFINITE_TIME ) = 0;
         //@}
     };
 

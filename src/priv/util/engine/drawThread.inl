@@ -31,5 +31,12 @@ GN::engine::RenderEngine::DrawThread::newDrawCommand()
 inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
      const GraphicsResourceCommand & command )
 {
-    mResourceCommands.submit( command );
+    // allocate new resource command item
+    AutoObjPtr<ResourceCommandItem> item( new ResourceCommandItem );
+    item->command = command;
+
+    // append to resource command list
+    mResourceMutex.lock();
+    mResourceCommands.append( item.detach() );
+    mResourceMutex.unlock();
 }
