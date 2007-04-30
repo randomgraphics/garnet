@@ -40,6 +40,15 @@ namespace GN
 
     public:
 
+        ///
+        ///
+        ///
+        template <typename T>
+        struct VolatileType
+        {
+            typedef volatile T type; ///< ...
+        };
+
         //@{
         Mutex();
         ~Mutex();
@@ -49,6 +58,41 @@ namespace GN
         bool trylock();
         void lock();
         void unlock();
+        //@}
+    };
+
+    ///
+    /// this is a "fake" mutex to ease using mutex in template
+    ///
+    struct SingleThreadMutex
+    {
+        ///
+        ///
+        ///
+        template <typename T>
+        struct VolatileType
+        {
+            typedef T type; ///< ...
+        };
+
+        //@{
+        bool trylock() { return true; }
+        void lock()    {}
+        void unlock()  {}
+        //@}
+    };
+
+    ///
+    /// auto mutex
+    ///
+    template< class M = Mutex >
+    class ScopeMutex
+    {
+        M & mMutex;
+    public:
+        //@{
+        ScopeMutex( M & m ) : mMutex(m) { mMutex.lock(); }
+        ~ScopeMutex() { mMutex.unlock(); }
         //@}
     };
 
@@ -155,16 +199,21 @@ namespace GN
     ///
     Thread * generateCurrentThreadObject();
 
+    ///
+    /// ...
+    ///
+    inline void memoryBarrier();
+
     //@}
 
     /// \name atomic operations
     //@{
 
-    SInt32 atomGet32( const SInt32 volatile * );
-    void   atomSet32( SInt32 volatile *, SInt32 );
-    SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
-    SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
-    SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
+    inline SInt32 atomGet32( const SInt32 volatile * );
+    inline void   atomSet32( SInt32 volatile *, SInt32 );
+    inline SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
+    inline SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
+    inline SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
 
     ///
     /// if initial value of "dest" equals "cmp", then do exchange; else, do nothing.
@@ -172,9 +221,15 @@ namespace GN
     /// \return
     ///     Always return initial value of "dest".
     ///
-    SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
+    inline SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
     //@}
 }
+
+#if GN_MSWIN
+#include "threadmsw.inl"
+#else
+#error unimpl
+#endif
 
 // *****************************************************************************
 //                           End of thread.h

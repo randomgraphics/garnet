@@ -6,8 +6,6 @@
 //! \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
-#include "garnet/base/thread.h"
-
 namespace GN { namespace gfx
 {
     ///
@@ -147,9 +145,12 @@ namespace GN { namespace engine
     /// Application defined graphics resource loader.
     ///
     /// Details about concurrency:
-    ///  - load() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///  - copy() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///  - decompress() and freebuf() could be called concurrently with any methods.
+    ///  - If the loader is assigned to only one resource, then all methods will be called in seralized way.
+    ///    You don't need to worry racing condition at all.
+    //   - If the loader is assigned to multiple resources, then:
+    ///    - load() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///    - copy() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///    - decompress() and freebuf() could be called concurrently with any methods.
     ///
     /// So, to achieve maximum performance, it is advised to avoid using sync objects as much as possible.
     /// The possible implementation could be:
@@ -157,7 +158,7 @@ namespace GN { namespace engine
     ///  - do not modify any states in decompress(). So it can be safely called anytime anywhere, w/o using sync objects.
     ///  - Seems that freebuf() has to be protected by sync object, to achieve thread safety.
     ///
-    struct GraphicsResourceLoader : public NoCopy
+    struct GraphicsResourceLoader : public RefCounter
     {
         ///
         /// load from external/slow storage (disk, cdrom, network)
@@ -206,12 +207,12 @@ namespace GN { namespace engine
     struct GraphicsResourceCommand
     {
         //@{
-        GraphicsResourceOperation op;               ///< requested operation.
-        GraphicsResourceId        resourceId;       ///< target resource
-        FenceId                   waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
-        int                       targetLod;        ///< ...
-        GraphicsResourceLoader  * loader;           ///< ...
-        volatile SInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
+        GraphicsResourceOperation             op;               ///< requested operation.
+        GraphicsResourceId                    resourceId;       ///< target resource
+        FenceId                               waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
+        int                                   targetLod;        ///< ...
+        AutoRef<GraphicsResourceLoader,Mutex> loader;           ///< ...
+        volatile SInt32                     * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
         //@}
 
         //@{
@@ -326,7 +327,7 @@ namespace GN { namespace engine
     private:
         void clear()
         {
-            mGfxResCache = 0;
+            mResourceCache = 0;
             mDrawThread = 0;
             mResourceThread = 0;
         }
@@ -343,12 +344,12 @@ namespace GN { namespace engine
         ///
         /// reset rendering device.
         ///
-        void resetRenderer( const gfx::RendererOptions & );
+        bool resetRenderer( gfx::RendererAPI, const gfx::RendererOptions & );
 
         ///
         /// get display properties
         ///
-        const gfx::DispDecs & getDispDesc() const;
+        const gfx::DispDesc & getDispDesc() const;
 
         //@}
 
@@ -402,15 +403,28 @@ namespace GN { namespace engine
         //@}
 
         // ********************************
-        // private variables
+        /// \name sub component accessor
         // ********************************
-    private:
+    public:
+
+        //@{
 
         class GraphicsResourceCache;
         class DrawThread;
         class ResourceThread;
 
-        GraphicsResourceCache * mGfxResCache;
+        GraphicsResourceCache & resourceCache()  { GN_ASSERT(mResourceCache); return *mResourceCache; }
+        DrawThread            & drawThread()     { GN_ASSERT(mDrawThread); return *mDrawThread; }
+        ResourceThread        & resourceThread() { GN_ASSERT(mResourceThread); return *mResourceThread; } 
+
+        //@}
+
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        GraphicsResourceCache * mResourceCache;
         DrawThread            * mDrawThread;
         ResourceThread        * mResourceThread;
 

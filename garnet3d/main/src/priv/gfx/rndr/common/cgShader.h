@@ -63,6 +63,23 @@ namespace GN { namespace gfx
         ///
         CgContextWrapper() : mContext(0)
         {
+        }
+
+        ///
+        /// destroy Cg context
+        ///
+        ~CgContextWrapper()
+        {
+            quit();
+        }
+
+        ///
+        /// initiate the context
+        ///
+        bool init()
+        {
+            GN_ASSERT( 0 == mContext );
+
             // set Cg error hanlder
             cgSetErrorHandler( &sCgErrorHandler, 0 );
 
@@ -72,13 +89,16 @@ namespace GN { namespace gfx
             {
                 static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.cg");
                 GN_FATAL(sLogger)( "Fail to create Cg context!" );
+                return false;
             }
+
+            return true;
         }
 
         ///
-        /// destroy Cg context
+        /// close the Cg context
         ///
-        ~CgContextWrapper()
+        void quit()
         {
             if( mContext ) cgDestroyContext( mContext );
         }

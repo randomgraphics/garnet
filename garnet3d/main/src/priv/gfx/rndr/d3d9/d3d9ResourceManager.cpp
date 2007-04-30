@@ -40,6 +40,7 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
     }
 
 #ifdef HAS_CG_D3D9
+    if( !mCgContext.init() ) return false;
     GN_DX9_CHECK_RV( cgD3D9SetDevice( getDevice() ), false );
 #endif
 
@@ -122,6 +123,7 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
 
 #ifdef HAS_CG_D3D9
     GN_DX9_CHECK( cgD3D9SetDevice( NULL ) );
+    mCgContext.quit();
 #endif
 
     GN_UNGUARD;

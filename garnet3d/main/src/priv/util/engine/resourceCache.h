@@ -10,6 +10,8 @@
 
 namespace GN { namespace engine
 {
+    class RenderEngine;
+
     ///
     /// ...
     ///
@@ -27,7 +29,7 @@ namespace GN { namespace engine
     struct GraphicsResourceItem : public GraphicsResource, public DoubleLinkedItem<GraphicsResourceItem>
     {
         ///
-        /// Should be one of GraphicsResourceState.
+        /// One of GraphicsResourceState.
         ///
         /// Note that neither GraphicsResourceCache::realize() nor GraphicsResourceCache::dispose() will change resource state.
         ///
@@ -65,7 +67,7 @@ namespace GN { namespace engine
         ///
         /// ctor
         ///
-        GraphicsResourceCache( UInt32 maxTexBytes, UInt32 maxMeshBytes );
+        GraphicsResourceCache( RenderEngine & engine, UInt32 maxTexBytes, UInt32 maxMeshBytes );
 
         //@}
 
@@ -98,16 +100,19 @@ namespace GN { namespace engine
 
         //@}
 
-        /// these 2 methods are called by draw thread to create and release graphics resource.
+        /// these methods are called by draw thread to create and delete renderer dependent data in graphics resource.
         //@{
-        bool realize( GraphicsResourceId, bool * needReload );
-        void dispose( GraphicsResourceId );
+        bool createDeviceData( GraphicsResourceId );
+        void deleteDeviceData( GraphicsResourceId );
+        void deleteAllDeviceData();
         //@}
 
     private:
 
         typedef HandleManager<GraphicsResourceItem*,GraphicsResourceId> ResourceHandleManager;
         typedef DoubleLinkedList<GraphicsResourceItem> ResourceLRUList;
+
+        RenderEngine & engine;
 
         ResourceHandleManager mResources;
         ResourceLRUList       mLRUList;
