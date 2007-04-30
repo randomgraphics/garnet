@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "drawThread.h"
+#include "garnet/GNinput.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
 
@@ -25,13 +26,14 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
 
     // create events and semaphores
     mDoSomething = createSyncEvent( false, true ); // initial unsignaled, auto reset
+    mResetRendererComplete = createSyncEvent( false, true ); // initial unsignaled, auto reset
     mDrawBufferEmpty = createSyncEvent( true, false ); // initial signaled, manual reset
     mDrawBufferNotFull  = createSemaphore( DRAW_BUFFER_COUNT, DRAW_BUFFER_COUNT, "DrawThread.DrawBufferNotFull" );
     if( !mDoSomething || !mDrawBufferEmpty || !mDrawBufferNotFull ) return failure();
 
     // initial other data
-    mQuitDrawThread = false;
-    mResetRenderer = false;
+    mActionQuit = false;
+    mActionReset = false;
     mReadingIndex = 0;
     mWritingIndex = 0;
     mDrawFence = 0;
@@ -62,7 +64,7 @@ void GN::engine::RenderEngine::DrawThread::quit()
     if( mDrawThread )
     {
         // tell draw thread to exit
-        mQuitDrawThread = true;
+        mActionQuit = true;
         mDoSomething->signal();
 
         // wait for end of draw thread
@@ -73,6 +75,7 @@ void GN::engine::RenderEngine::DrawThread::quit()
 
     // delete sync objects
     safeDelete( mDoSomething );
+    safeDelete( mResetRendererComplete );
     safeDelete( mDrawBufferEmpty );
     safeDelete( mDrawBufferNotFull );
 
@@ -115,8 +118,18 @@ void GN::engine::RenderEngine::DrawThread::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::resetRenderer( const gfx::RendererOptions & ro )
+bool GN::engine::RenderEngine::DrawThread::resetRenderer(
+     gfx::RendererAPI api,
+     const gfx::RendererOptions & ro )
 {
+    mActionReset = true;
+    mRendererApi = api;
+    mRendererOptions = ro;
+    mDoSomething->signal();
+
+    if( !mResetRendererComplete->wait() ) return false;
+
+    return mResetSuccess;
 }
 
 //
@@ -168,20 +181,22 @@ void GN::engine::RenderEngine::DrawThread::submitDrawBuffer()
 // -----------------------------------------------------------------------------
 UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 {
-    while( !mQuitDrawThread )
+    while( !mActionQuit )
     {
         // wait for something to do
         mDoSomething->wait();
 
-        if( mQuitDrawThread )
+        if( mActionQuit )
         {
+            mActionQuit = false;
             break;
         }
 
-        if( mResetRenderer )
+        if( mActionReset )
         {
-            // TODO: reset rendering device
-            GN_UNIMPL();
+            mActionReset = false;
+            mResetSuccess = doDeviceReset();
+            mResetRendererComplete->signal();
         }
 
         handleResourceCommands();
@@ -223,12 +238,12 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 
         const DrawCommand * last = (const DrawCommand*)db.next;
 
-        while( command < last && !mQuitDrawThread )
+        while( command < last && !mActionQuit )
         {
             // resource command has priority
             handleResourceCommands();
 
-            if( 0 == command->getPendingResourceCount() ) )
+            if( 0 == command->getPendingResourceCount() )
             {
                 // all resources are ready. do it!
                 doDraw( *command );
@@ -261,7 +276,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
     ResourceCommandItem * prev;
 
-    while( item && !mQuitDrawThread )
+    while( item && !mActionQuit )
     {
         // process the resource command
         if( item->command.waitForDrawFence < mDrawFence )
@@ -289,7 +304,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             }
 
             // the resource command is done. Free it.
-            prev->command.loader->freebuf( prev->bufdata, prev->bufbytes );
+            prev->command.loader->freebuf( prev->data, prev->bytes );
             prev->command.decPendingResourceCount();
             ResourceCommandItem::free( prev );
         }
@@ -301,6 +316,36 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             mResourceMutex.unlock();
         }
     }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
+{
+    GN_GUARD;
+
+    // delete all device data in resource cache
+    mEngine.resourceCache().deleteAllDeviceData();
+
+    // (re)create renderer
+    GN::gfx::Renderer * r = gfx::createRenderer( mRendererApi );
+    if( NULL == r ) return false;
+    if( !r->changeOptions( mRendererOptions ) ) return false;
+
+    mDispDesc = r->getDispDesc();
+
+    // reattach input window
+    if( gInputPtr && !gInput.attachToWindow( mDispDesc.displayHandle, mDispDesc.windowHandle ) )
+    {
+        return false;
+    }
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+    
 }
 
 //

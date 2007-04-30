@@ -45,11 +45,21 @@ namespace GN
 // string types
 #include "base/string.h"
 
+// misc.
+#include "base/misc.h"
+
 // log functions and macros
 #include "base/log.h"
 
 // exceptions
 #include "base/exception.h"
+
+// delegate & callback
+#include "base/delegate.h"
+#include "base/sigslot.h"
+
+// thread routines
+#include "base/thread.h"
 
 // single/double linked list
 #include "base/linkedList.h"
@@ -64,7 +74,6 @@ namespace GN
 #include "base/handle.h"
 
 // misc.
-#include "base/misc.h"
 #include "base/refCounter.h"
 #include "base/stdClass.h"
 #include "base/singleton.h"
@@ -77,10 +86,6 @@ namespace GN
 // math library
 #include "base/math.h"
 #include "base/geometry.h"
-
-// delegate & callback
-#include "base/delegate.h"
-#include "base/sigslot.h"
 
 // variant class
 #include "base/variant.h"

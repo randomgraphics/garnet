@@ -11,6 +11,8 @@
 
 namespace GN { namespace engine
 {
+    class RenderEngine;
+
     ///
     /// Asyncronized rendering thread
     ///    
@@ -24,7 +26,7 @@ namespace GN { namespace engine
 
         //@{
     public:
-        DrawThread()          { clear(); }
+        DrawThread( RenderEngine & engine ) : mEngine(engine) { clear(); }
         virtual ~DrawThread() { quit(); }
         //@}
 
@@ -40,6 +42,7 @@ namespace GN { namespace engine
         void clear()
         {
             mDoSomething = 0;
+            mResetRendererComplete = 0;
             mDrawBufferEmpty = 0;
             mDrawBufferNotFull = 0;
             mDrawThread = 0;
@@ -52,8 +55,8 @@ namespace GN { namespace engine
     public:
 
         //@{
-        void resetRenderer( const gfx::RendererOptions & );
-        const gfx::DispDecs & getDispDesc() const { return mDispDesc; }
+        bool resetRenderer( gfx::RendererAPI, const gfx::RendererOptions & );
+        const gfx::DispDesc & getDispDesc() const { return mDispDesc; }
         //@}
 
         //@{
@@ -61,7 +64,7 @@ namespace GN { namespace engine
         ///
         /// wait for draw thread idle: all submitted draw commands are executed
         ///
-        void waitForIdle( float time ) const { if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time ); }
+        void waitForIdle( float time = INFINITE_TIME ) const { if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time ); }
 
         //@}
 
@@ -122,14 +125,19 @@ namespace GN { namespace engine
             DRAW_BUFFER_COUNT = 2, // must be 2^N, to avoid % operation.
         };
 
+        RenderEngine & mEngine;
+
         // actions
-        volatile bool mQuitDrawThread;
-        volatile bool mResetRenderer;
+        volatile bool mActionQuit;
+        volatile bool mActionReset;
         SyncEvent   * mDoSomething;
 
         // data to handle renderer device
-        gfx::RendererOptions mRendererOptions;
-        gfx::DispDesc        mDispDesc;
+        volatile gfx::RendererAPI     mRendererApi;
+        gfx::RendererOptions          mRendererOptions;
+        gfx::DispDesc                 mDispDesc;
+        volatile bool                 mResetSuccess;
+        SyncEvent *                   mResetRendererComplete;
 
         // data to handle resource commands
         DoubleLinkedList<ResourceCommandItem> mResourceCommands;
@@ -160,6 +168,7 @@ namespace GN { namespace engine
         UInt32 threadProc( void * );
         void   handleDrawCommands();
         void   handleResourceCommands();
+        bool   doDeviceReset();
         void   doDraw( const DrawCommand & );
     };
 }}

@@ -30,21 +30,23 @@ namespace GN
         ///
         /// increase reference counter
         ///
-        void incref() const  throw() { ++mRef; }
+        void incref() const  throw() { atomInc32(&mRef); }
 
         ///
         /// decrease reference counter, delete the object, if reference count reaches zero.
         ///
         void decref() const
         {
-            GN_ASSERT( mRef>0 );
-            if( 0 == --mRef ) delete this;
+            if( 0 == atomDec32( &mRef ) )
+            {
+                delete this;
+            }
         }
 
         ///
         /// get current reference counter value
         ///
-        int  getref() const throw() { return mRef; }
+        SInt32 getref() const throw() { return atomGet32(&mRef); }
 
         // ********************************
         /// \name protective ctor/dtor
@@ -78,30 +80,26 @@ namespace GN
         // ********************************
     private:
 
-        // Make this class NoCopy.
-        RefCounter( const RefCounter& );
-        const RefCounter& operator=( const RefCounter& );
-
         ///
         /// reference counter
         ///
-        mutable int mRef;
+        mutable SInt32 mRef;
     };
 
     ///
     /// 和 RefCounter 配合使用的自动指针类
     ///
-    template <class X> class AutoRef
+    template <class X, class MUTEX=SingleThreadMutex> class AutoRef
     {
         ///
         /// pointer to class X
         ///
-        typedef  X * XPTR;
+        typedef X * XPTR;
 
         ///
         /// reference to class X
         ///
-        typedef  X & XREF;
+        typedef X & XREF;
 
     private:
 
@@ -112,7 +110,7 @@ namespace GN
         ///
         /// Instance of empty reference pointer
         ///
-        static AutoRef<X> EMPTYPTR;
+        static AutoRef<X,MUTEX> EMPTYPTR;
 
         ///
         /// construct from a normal pointer
@@ -130,8 +128,8 @@ namespace GN
         ///
         /// copy constructor
         ///
-        template <class Y>
-        AutoRef( const AutoRef<Y> & p ) throw() : mPtr( p )
+        template <class Y,class MUTEX2>
+        AutoRef( const AutoRef<Y,MUTEX2> & p ) throw() : mPtr( p )
         {
             if(mPtr) mPtr->incref();
         }
@@ -156,8 +154,8 @@ namespace GN
         ///
         /// 赋值语句
         ///
-        template <class Y>
-        AutoRef & operator = ( const AutoRef<Y> & rhs )
+        template <class Y,class MUTEX2>
+        AutoRef & operator = ( const AutoRef<Y,MUTEX2> & rhs )
         {
             set( rhs );
             return *this;
@@ -198,7 +196,9 @@ namespace GN
         bool operator !() const throw() { return !mPtr; }
 
         ///
-        /// dereference operator
+        /// dereference operator.
+        ///
+        /// TODO: is this thread safe?
         ///
         XREF operator *() const throw()  { GN_ASSERT(mPtr); return *mPtr; }
 
@@ -221,9 +221,25 @@ namespace GN
         XPTR const * addr() const throw() { return &mPtr; }
 
         ///
+        /// return true if no pointer is currently being hold
+        ///
+        bool empty() const throw()
+        {
+            return 0 == mPtr;
+        }
+
+        ///
         /// Clear to empty. Same as set(NULL).
         ///
-        void clear() { if( mPtr ) mPtr->decref(); mPtr = 0; }
+        void clear()
+        {
+            MUTEX m;
+            m.lock();
+
+            if( mPtr ) mPtr->decref(); mPtr = 0;
+
+            m.unlock();
+        }
 
         ///
         /// set new pointer data
@@ -233,19 +249,15 @@ namespace GN
         ///
         void set( XPTR p )
         {
+            MUTEX m;
+            m.lock();
+
             if( p ) p->incref();
             if( mPtr ) mPtr->decref();
             mPtr = p;
-        }
 
-        ///
-        /// return true if no pointer is currently being hold
-        ///
-        bool empty() const throw()
-        {
-            return 0 == mPtr;
+            m.unlock();
         }
-
 
         ///
         /// acquire ownership of a XPTR
@@ -254,8 +266,15 @@ namespace GN
         ///
         void attach( XPTR ptr )
         {
-            clear();
+            if( ptr == mPtr ) return;
+
+            MUTEX m;
+            m.lock();
+
+            if( mPtr ) mPtr->decref();
             mPtr = ptr;
+
+            m.unlock();
         }
 
         ///
@@ -265,13 +284,19 @@ namespace GN
         ///
         XPTR detach() throw()
         {
+            MUTEX m;
+            m.lock();
+
             XPTR tmp = mPtr;
             mPtr = 0;
+
+            m.unlock();
+
             return tmp;
         }
     };
 
-    template<typename X> AutoRef<X> AutoRef<X>::EMPTYPTR;
+    template<typename X,typename M> AutoRef<X,M> AutoRef<X,M>::EMPTYPTR;
 }
 
 // *****************************************************************************

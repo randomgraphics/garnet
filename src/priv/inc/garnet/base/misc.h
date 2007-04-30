@@ -6,6 +6,8 @@
 /// \author  chenlee (2005.5.4)
 // *****************************************************************************
 
+#include <vector>
+
 ///
 /// Execute only limited times during the entir life of the
 /// application, no matter how many time it is called.

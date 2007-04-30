@@ -125,12 +125,12 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
     {
         GN_ASSERT( GROP_DECOMPRESS == item->command.op );
         GN_ASSERT( item->command.loader );
-        void * oldbuf = item->data;
+        void * olddata = item->data;
         size_t oldbytes = item->bytes;
-        if( item->command.loader->decompress( item->data, item->bytes, oldbuf, oldbytes, item->command.targetLod ) )
+        if( item->command.loader->decompress( item->data, item->bytes, olddata, oldbytes, item->command.targetLod ) )
         {
             // decompress done, delete loaded data, push to draw thread for copy
-            item->command.loader->freebug( oldbuf, oldbytes );
+            item->command.loader->freebuf( olddata, oldbytes );
 
             // decompress success. push it to draw thread for copy
             item->command.op = GROP_COPY;
@@ -140,7 +140,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
         else
         {
             // load failure. delete loaded data buffer, and delete the resource command item.
-            item->command.loader->freebug( oldbuf, oldbytes );
+            item->command.loader->freebuf( olddata, oldbytes );
             item->command.decPendingResourceCount();
             ResourceCommandItem::free( item );
         }

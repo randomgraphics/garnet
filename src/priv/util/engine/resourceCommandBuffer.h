@@ -18,8 +18,8 @@ namespace GN { namespace engine
 
         GraphicsResourceCommand command;
 
-        void * bufdata;  ///< temporary data buffer used by loader
-        size_t bufbytes; ///< size of temporary data buffer.
+        void * data;  ///< temporary data buffer used by loader
+        size_t bytes; ///< size of temporary data buffer.
 
         //@}
 
@@ -30,7 +30,7 @@ namespace GN { namespace engine
 
     private:
 
-        ResourceCommandItem() : bufdata(0xbadbeef), bufbytes(0xbeefbad) {}
+        ResourceCommandItem() : data((void*)0xbadbeef), bytes(0xbeefbad) {}
         ~ResourceCommandItem() {}
     };
 

@@ -10,6 +10,8 @@
 
 namespace GN { namespace engine
 {
+    class RenderEngine;
+
     ///
     /// Asyncronized resource loader.
     ///
@@ -23,7 +25,7 @@ namespace GN { namespace engine
 
         //@{
     public:
-        ResourceThread()          { clear(); }
+        ResourceThread( RenderEngine & engine ) : mEngine(engine) { clear(); }
         virtual ~ResourceThread() { quit(); }
         //@}
 
@@ -69,6 +71,8 @@ namespace GN { namespace engine
             bool init( const ThreadProcedure & proc, const char * name );
             void quit();
         };
+
+        RenderEngine & mEngine;
 
         SubThread mLoador;       // do IO
         SubThread mDecompressor; // do decompress
