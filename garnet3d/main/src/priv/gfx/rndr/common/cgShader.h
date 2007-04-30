@@ -100,7 +100,11 @@ namespace GN { namespace gfx
         ///
         void quit()
         {
-            if( mContext ) cgDestroyContext( mContext );
+            if( mContext )
+            {
+                cgDestroyContext( mContext );
+            }
+            cgSetErrorHandler( 0, 0 );
         }
 
         ///
