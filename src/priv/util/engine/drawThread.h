@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "resourceCache.h"
+#include "resourceCommandBuffer.h"
 
 namespace GN { namespace engine
 {
@@ -82,7 +83,7 @@ namespace GN { namespace engine
         ///
         //@{
 
-        inline void submitResourceCommand( const GraphicsResourceCommand & );
+        inline void submitResourceCommand( ResourceCommandItem * item );
 
         //@}
 
@@ -90,12 +91,6 @@ namespace GN { namespace engine
         // private variables
         // ********************************
     private:
-
-        // TODO: use pooled memory to avoid runtime heap operation
-        struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
-        {
-            GraphicsResourceCommand command;
-        };
 
         struct DrawBuffer
         {

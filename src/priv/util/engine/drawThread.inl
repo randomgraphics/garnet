@@ -29,14 +29,10 @@ GN::engine::RenderEngine::DrawThread::newDrawCommand()
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
-     const GraphicsResourceCommand & command )
+    ResourceCommandItem * item  )
 {
-    // allocate new resource command item
-    AutoObjPtr<ResourceCommandItem> item( new ResourceCommandItem );
-    item->command = command;
-
-    // append to resource command list
+    GN_ASSERT( item );
     mResourceMutex.lock();
-    mResourceCommands.append( item.detach() );
+    mResourceCommands.append( item );
     mResourceMutex.unlock();
 }

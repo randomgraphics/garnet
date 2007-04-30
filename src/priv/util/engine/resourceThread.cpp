@@ -88,22 +88,24 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
     GN_ASSERT( param );
     ResourceCommandBuffer * commands = (ResourceCommandBuffer*)param;
 
-    GraphicsResourceCommand cmd;
+    ResourceCommandItem * item;
 
-    while( commands->get(cmd) )
+    while( NULL != ( item = commands->get() ) )
     {
-        GN_ASSERT( GROP_LOAD == cmd.op );
-        GN_ASSERT( cmd.loader );
+        GN_ASSERT( GROP_LOAD == item->command.op );
+        GN_ASSERT( item->command.loader );
         void * data;
         size_t bytes;
-        cmd.loader->load( data, bytes, cmd.targetLod );
+        item->command.loader->load( data, bytes, item->command.targetLod );
     }
+
+    return 0;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
+UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * )
 {
     return 0;
 }
@@ -111,7 +113,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine::RenderEngine::ResourceThread::populate( void * param )
+UInt32 GN::engine::RenderEngine::ResourceThread::populate( void * )
 {
     return 0;
 }
