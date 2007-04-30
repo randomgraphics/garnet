@@ -94,9 +94,18 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
     {
         GN_ASSERT( GROP_LOAD == item->command.op );
         GN_ASSERT( item->command.loader );
-        void * data;
-        size_t bytes;
-        item->command.loader->load( data, bytes, item->command.targetLod );
+        if( item->command.loader->load( item->data, item->bytes, item->command.targetLod ) )
+        {
+            // load success. push it to decompress thread
+            item->command.op = GROP_DECOMPRESS;
+            submitResourceCommand( item );
+        }
+        else
+        {
+            // load failure. delete the resource command item.
+            item->command.decPendingResourceCount();
+            ResourceCommandItem::free( item );
+        }
     }
 
     return 0;
@@ -105,15 +114,37 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * )
+UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
 {
-    return 0;
-}
+    GN_ASSERT( param );
+    ResourceCommandBuffer * commands = (ResourceCommandBuffer*)param;
 
-//
-//
-// -----------------------------------------------------------------------------
-UInt32 GN::engine::RenderEngine::ResourceThread::populate( void * )
-{
+    ResourceCommandItem * item;
+
+    while( NULL != ( item = commands->get() ) )
+    {
+        GN_ASSERT( GROP_DECOMPRESS == item->command.op );
+        GN_ASSERT( item->command.loader );
+        void * oldbuf = item->data;
+        size_t oldbytes = item->bytes;
+        if( item->command.loader->decompress( item->data, item->bytes, oldbuf, oldbytes, item->command.targetLod ) )
+        {
+            // decompress done, delete loaded data, push to draw thread for copy
+            item->command.loader->freebug( oldbuf, oldbytes );
+
+            // decompress success. push it to draw thread for copy
+            item->command.op = GROP_COPY;
+            // DrawThread::submitResourceCommand( item );
+            GN_UNIMPL();
+        }
+        else
+        {
+            // load failure. delete loaded data buffer, and delete the resource command item.
+            item->command.loader->freebug( oldbuf, oldbytes );
+            item->command.decPendingResourceCount();
+            ResourceCommandItem::free( item );
+        }
+    }
+
     return 0;
 }

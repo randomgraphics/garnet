@@ -15,10 +15,6 @@ void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
             mDecompressor.commands.submit( item );
             break;
 
-        case GROP_COPY:
-            mPopulator.commands.submit( item );
-            break;
-
         default:
             GN_UNEXPECTED();
             break;

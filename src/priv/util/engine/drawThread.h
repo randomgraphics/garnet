@@ -52,6 +52,11 @@ namespace GN { namespace engine
     public:
 
         //@{
+        void resetRenderer( const gfx::RendererOptions & );
+        const gfx::DispDecs & getDispDesc() const { return mDispDesc; }
+        //@}
+
+        //@{
 
         ///
         /// wait for draw thread idle: all submitted draw commands are executed
@@ -121,6 +126,10 @@ namespace GN { namespace engine
         volatile bool mQuitDrawThread;
         volatile bool mResetRenderer;
         SyncEvent   * mDoSomething;
+
+        // data to handle renderer device
+        gfx::RendererOptions mRendererOptions;
+        gfx::DispDesc        mDispDesc;
 
         // data to handle resource commands
         DoubleLinkedList<ResourceCommandItem> mResourceCommands;

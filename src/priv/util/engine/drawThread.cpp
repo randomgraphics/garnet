@@ -115,6 +115,13 @@ void GN::engine::RenderEngine::DrawThread::quit()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::resetRenderer( const gfx::RendererOptions & ro )
+{
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::frameBegin()
 {
     // currently do nothing
@@ -221,7 +228,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             // resource command has priority
             handleResourceCommands();
 
-            if( 0 == command->getPendingResourceCount() )
+            if( 0 == command->getPendingResourceCount() ) )
             {
                 // all resources are ready. do it!
                 doDraw( *command );
@@ -268,18 +275,12 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
             switch( prev->command.op )
             {
-                case GROP_LOCK :
+                case GROP_COPY :
                     GN_UNIMPL();
-                    break;
-
-                case GROP_UNLOCK :
-                    GN_UNIMPL();
-                    ResourceCommandItem::free( prev );
                     break;
 
                 case GROP_DISPOSE :
                     GN_UNIMPL();
-                    ResourceCommandItem::free( prev );
                     break;
 
                 default:
@@ -287,6 +288,10 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                     break;
             }
 
+            // the resource command is done. Free it.
+            prev->command.loader->freebuf( prev->bufdata, prev->bufbytes );
+            prev->command.decPendingResourceCount();
+            ResourceCommandItem::free( prev );
         }
         else
         {

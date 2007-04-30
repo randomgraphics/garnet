@@ -75,8 +75,6 @@ namespace GN { namespace engine
         GraphicsResourceId     alloc( const GraphicsResourceCreationParameter & );
         void                   free( GraphicsResourceId );
         GraphicsResourceItem * id2ptr( GraphicsResourceId );
-        bool                   realize( GraphicsResourceId, bool * needReload );
-        void                   dispose( GraphicsResourceId );
         //@}
 
         ///
@@ -98,6 +96,12 @@ namespace GN { namespace engine
         ///
         GraphicsResourceItem * makeRoomForResource( GraphicsResourceId, FenceId );
 
+        //@}
+
+        /// these 2 methods are called by draw thread to create and release graphics resource.
+        //@{
+        bool realize( GraphicsResourceId, bool * needReload );
+        void dispose( GraphicsResourceId );
         //@}
 
     private:

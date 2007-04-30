@@ -60,6 +60,30 @@ void GN::engine::RenderEngine::quit()
 }
 
 // *****************************************************************************
+// renderer management
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::resetRenderer( const gfx::RendererOptions & ro )
+{
+    // make sure that all resource and draw commands are executed.
+    mResourceThread->waitForIdle();
+    mDrawThread->waitForIdle();
+
+    // dispose all resources
+
+    // reset the renderer
+    mDrawThread->resetRenderer( ro );
+}
+
+const GN::gfx::DispDecs & GN::engine::RenderEngine::getDispDesc() const
+{
+    return mDrawThread->getRendererDispDesc();
+}
+
+// *****************************************************************************
 // draw request management
 // *****************************************************************************
 
@@ -90,7 +114,7 @@ GN::engine::DrawCommand & GN::engine::RenderEngine::newDrawCommand()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
+void GN::engine::RenderEngine::submitResourceCommand(
     DrawCommand &             dr,
     GraphicsResourceOperation op,
     GraphicsResourceId        resourceid,
@@ -141,7 +165,6 @@ void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
     if( reload )
     {
         dr.incPendingResourceCount();
-
         GN_ASSERT( dr.getPendingResourceCount() > 0 );
 
         ResourceCommandItem * item = ResourceCommandItem::alloc();
@@ -151,7 +174,7 @@ void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
         item->command.waitForDrawFence = dr.fence;
         item->command.targetLod = lod;
         item->command.loader = loader;
-        dr.attachResourceCommand( item->command );
+        item->command.pendingResources = &dr.pendingResources;
         mResourceThread->submitResourceCommand( item );
     }
 }
