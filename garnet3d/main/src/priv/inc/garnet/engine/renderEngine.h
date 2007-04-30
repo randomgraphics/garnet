@@ -146,16 +146,38 @@ namespace GN { namespace engine
     ///
     /// Application defined graphics resource loader.
     ///
-    /// - load() and copy() will be used in seralized way. There's no need to be thread safe for these 2 methods.
-    /// - decompress() might be called simutaneously, only when the loader is attached to multiple resources that the same time.
+    /// Details about concurrency:
+    ///  - load() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///  - copy() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///  - decompress() and freebuf() could be called concurrently with any methods.
+    ///
+    /// So, to achieve maximum performance, it is advised to avoid using sync objects as much as possible.
+    /// The possible implementation could be:
+    ///  - keep data used by each method separated. So they won't mess with each other, when called concurrently.
+    ///  - do not modify any states in decompress(). So it can be safely called anytime anywhere, w/o using sync objects.
+    ///  - Seems that freebuf() has to be protected by sync object, to achieve thread safety.
     ///
     struct GraphicsResourceLoader : public NoCopy
     {
-        virtual bool load( void * & data, size_t & bytes, int lod ) = 0;  ///< load from external/slow storage (disk, cdrom, network)
+        ///
+        /// load from external/slow storage (disk, cdrom, network)
+        ///
+        virtual bool load( void * & outbuf, size_t & outbytes, int lod ) = 0;
 
-        virtual bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int lod ) = 0; ///< decompress or other process to prepare to copy to graphics resource.
+        ///
+        /// decompress or do other process to prepare for copy to graphics resource.
+        ///
+        virtual bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int lod ) = 0;
 
-        virtual bool copy( GraphicsResource & gfxres, const void * data, size_t bytes, int lod ) = 0;
+        ///
+        /// copy data to graphics resource
+        ///
+        virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int lod ) = 0;
+
+        ///
+        /// free data buffer returned by load() and decompress()
+        ///
+        virtual void freebuf( void * inbuf, size_t inbytes );
     };
 
     ///
@@ -166,15 +188,11 @@ namespace GN { namespace engine
         GROP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
 
         GROP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
-                         ///< Handled by processing thread.
+                         ///< Handled by decompress thread.
 
-        GROP_LOCK,       ///< lock the graphics resource, realize those disposed as well.
+        GROP_COPY,       ///< copy data to graphics resource. Handled by draw thread.
 
-        GROP_COPY,       ///< copy data to graphics resource. Handled by copy thread.
-
-        GROP_UNLOCK,     ///< unlock the graphics resource.
-
-        GROP_DISPOSE,    ///< dispose the resource. make it available for reuse or delete.
+        GROP_DISPOSE,    ///< dispose the resource. Handled by draw thread
     };
 
     ///
@@ -194,6 +212,10 @@ namespace GN { namespace engine
         int                       targetLod;        ///< ...
         GraphicsResourceLoader  * loader;           ///< ...
         volatile SInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
+        //@}
+
+        //@{
+        void decPendingResourceCount() { GN_ASSERT( atomGet32(pendingResources) > 0 ); atomDec32( pendingResources ); }
         //@}
     };
 
@@ -245,12 +267,6 @@ namespace GN { namespace engine
     ///
     struct DrawCommand
     {
-    private:
-
-        volatile SInt32    pendingResources; ///< number of resources that has to be updated before this draw happens.
-
-    public:
-
         FenceId            fence;            ///< fence ID of this draw
         DrawContext        context;          ///< context ID
 
@@ -261,13 +277,12 @@ namespace GN { namespace engine
         UInt32             minvtxidx;
         UInt32             numvtx;
         UInt32             startidx;
+        volatile SInt32    pendingResources; ///< number of resources that has to be updated before this draw happens.
         //@}
 
         //@{
         void   incPendingResourceCount() { atomInc32( &pendingResources ); }
-        void   decPendingResourceCount() { GN_ASSERT( getPendingResourceCount() > 0 ); atomDec32( &pendingResources ); }
         SInt32 getPendingResourceCount() const { return atomGet32(&pendingResources); }
-        void   attachResourceCommand( GraphicsResourceCommand & cmd ) { cmd.pendingResources = &pendingResources; }
         //@}
     };
 
@@ -318,6 +333,26 @@ namespace GN { namespace engine
         //@}
 
         // ********************************
+        /// \name rendering device management
+        ///
+        // ********************************
+    public:
+
+        //@{
+
+        ///
+        /// reset rendering device.
+        ///
+        void resetRenderer( const gfx::RendererOptions & );
+
+        ///
+        /// get display properties
+        ///
+        const gfx::DispDecs & getDispDesc() const;
+
+        //@}
+
+        // ********************************
         /// \name draw request management. Normally called by game update thread.
         ///
         /// 1. There should be no more than one threads that call these functions at the same time.
@@ -337,14 +372,12 @@ namespace GN { namespace engine
         ///
         DrawCommand & newDrawCommand();
 
-        void composeAndSubmitResourceCommand(
+        void submitResourceCommand(
             DrawCommand &             dr,
             GraphicsResourceOperation op,
             GraphicsResourceId        resource,
             int                       lod,
             GraphicsResourceLoader  * loader,
-            //void                    * parameters,   // loader parameters
-            //size_t                    bytes,        // loader parameter bytes
             bool                      reload ); // force resource reload
         //@}
 

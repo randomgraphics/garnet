@@ -15,7 +15,12 @@ namespace GN { namespace engine
     struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
     {
         //@{
+
         GraphicsResourceCommand command;
+
+        void * bufdata;  ///< temporary data buffer used by loader
+        size_t bufbytes; ///< size of temporary data buffer.
+
         //@}
 
         //@{
@@ -25,7 +30,7 @@ namespace GN { namespace engine
 
     private:
 
-        ResourceCommandItem()  {}
+        ResourceCommandItem() : bufdata(0xbadbeef), bufbytes(0xbeefbad) {}
         ~ResourceCommandItem() {}
     };
 

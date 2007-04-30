@@ -46,6 +46,8 @@ namespace GN { namespace engine
 
         //@{
 
+        void waitForIdle();
+
         void submitResourceCommand( ResourceCommandItem * item );
 
         //@}
@@ -70,7 +72,6 @@ namespace GN { namespace engine
 
         SubThread mLoador;       // do IO
         SubThread mDecompressor; // do decompress
-        SubThread mPopulator;    // do copy
 
         // ********************************
         // private functions
@@ -80,8 +81,6 @@ namespace GN { namespace engine
         // thread procedures
         UInt32 load( void * );
         UInt32 decompress( void * );
-        UInt32 populate( void * );
-
     };
 }}
 
