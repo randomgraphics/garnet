@@ -46,7 +46,7 @@ namespace GN { namespace engine
 
         //@{
 
-        void submitResourceCommand( const GraphicsResourceCommand & );
+        void submitResourceCommand( ResourceCommandItem * item );
 
         //@}
 
@@ -64,7 +64,7 @@ namespace GN { namespace engine
 
             ~SubThread() { quit(); }
 
-            bool init( const ThreadProcedure & proc );
+            bool init( const ThreadProcedure & proc, const char * name );
             void quit();
         };
 

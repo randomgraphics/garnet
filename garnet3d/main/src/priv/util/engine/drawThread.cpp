@@ -94,7 +94,7 @@ void GN::engine::RenderEngine::DrawThread::quit()
 
             mResourceCommands.remove( i1 );
 
-            delete i1;
+            ResourceCommandItem::free( i1 );
 
             i1 = i2;
         }
@@ -259,25 +259,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
         // process the resource command
         if( item->command.waitForDrawFence < mDrawFence )
         {
-            switch( item->command.op )
-            {
-                case GROP_LOCK :
-                    GN_UNIMPL();
-                    break;
-
-                case GROP_UNLOCK :
-                    GN_UNIMPL();
-                    break;
-
-                case GROP_DISPOSE :
-                    GN_UNIMPL();
-                    break;
-
-                default:
-                    GN_UNEXPECTED();
-                    break;
-            }
-
             // remove it from resource command buffer
             mResourceMutex.lock();
             prev = item;
@@ -285,9 +266,27 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             mResourceCommands.remove( prev );
             mResourceMutex.unlock();
 
-            // then delete it
-            // TODO: memory pool
-            delete prev;
+            switch( prev->command.op )
+            {
+                case GROP_LOCK :
+                    GN_UNIMPL();
+                    break;
+
+                case GROP_UNLOCK :
+                    GN_UNIMPL();
+                    ResourceCommandItem::free( prev );
+                    break;
+
+                case GROP_DISPOSE :
+                    GN_UNIMPL();
+                    ResourceCommandItem::free( prev );
+                    break;
+
+                default:
+                    GN_UNEXPECTED();
+                    break;
+            }
+
         }
         else
         {

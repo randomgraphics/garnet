@@ -9,6 +9,27 @@
 namespace GN { namespace engine
 {
     ///
+    /// basic resource command item class. all resource commands must sub-classed from this.
+    ///
+    // TODO: use pooled memory to avoid runtime heap operation
+    struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
+    {
+        //@{
+        GraphicsResourceCommand command;
+        //@}
+
+        //@{
+        static ResourceCommandItem * alloc() { return new ResourceCommandItem; }
+        static void free( ResourceCommandItem * p ) { delete p; }
+        //@}
+
+    private:
+
+        ResourceCommandItem()  {}
+        ~ResourceCommandItem() {}
+    };
+
+    ///
     /// resource command buffer class1, used by resource threads
     ///
     /// - submit() could be called any time, any where.
@@ -49,13 +70,14 @@ namespace GN { namespace engine
         ///
         /// submit resource requests.
         ///
-        inline void submit( const GraphicsResourceCommand & );
+        inline void submit( ResourceCommandItem * );
 
         ///
         /// get first command in the buffer, and remove it from the buffer.
-        /// return false, if there's no such command in buffer.
+        /// Block caller until buffer is not empty.
+        /// return NULL, if received quit event.
         ///
-        bool get( GraphicsResourceCommand & cmd );
+        ResourceCommandItem * get();
 
         ///
         /// post quit event. wake up any threads that are blocked by get()
@@ -65,12 +87,6 @@ namespace GN { namespace engine
         //@}
 
     private:
-
-        // TODO: use pooled memory to avoid runtime heap operation
-        struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
-        {
-            GraphicsResourceCommand command;
-        };
 
         // data to handle resource commands
         DoubleLinkedList<ResourceCommandItem> mCommands;
@@ -138,7 +154,7 @@ inline void GN::engine::ResourceCommandBuffer::clear()
 
         mCommands.remove( i1 );
 
-        delete i1;
+        ResourceCommandItem::free( i1 );
 
         i1 = i2;
     }
@@ -176,15 +192,13 @@ inline bool GN::engine::ResourceCommandBuffer::empty() const
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::ResourceCommandBuffer::submit(
-     const GraphicsResourceCommand & command )
+     ResourceCommandItem * item )
 {
-    // allocate new resource command item
-    AutoObjPtr<ResourceCommandItem> item( new ResourceCommandItem );
-    item->command = command;
+    GN_ASSERT( item );
 
     // append to resource command list
     mMutex.lock();
-    mCommands.append( item.detach() );
+    mCommands.append( item );
     mBufferNotEmpty->signal();
     mMutex.unlock();
 }
@@ -192,18 +206,18 @@ inline void GN::engine::ResourceCommandBuffer::submit(
 //
 //
 // -----------------------------------------------------------------------------
-inline bool
-GN::engine::ResourceCommandBuffer::get( GraphicsResourceCommand & cmd )
+inline GN::engine::ResourceCommandItem *
+GN::engine::ResourceCommandBuffer::get()
 {
     mBufferNotEmpty->wait();
-    if( mQuit ) return false;
+    if( mQuit ) return NULL;
     mMutex.lock();
 
     // handle multiple simutaneously consumers
     while( mCommands.empty() )
     {
         mMutex.unlock();
-        if( mQuit ) return false;
+        if( mQuit ) return NULL;
         mBufferNotEmpty->wait();
         mMutex.lock();
     }
@@ -213,16 +227,11 @@ GN::engine::ResourceCommandBuffer::get( GraphicsResourceCommand & cmd )
 
     mCommands.remove( item );
 
-    cmd = item->command;
-
-    // TODO: use memory pool
-    delete item;
-
     if( mCommands.empty() ) mBufferNotEmpty->unsignal();
 
     mMutex.unlock();
 
-    return true;
+    return item;
 }
 
 // *****************************************************************************

@@ -2,20 +2,21 @@
 //
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
-    const GraphicsResourceCommand & cmd )
+    ResourceCommandItem * item )
 {
-    switch( cmd.op )
+    GN_ASSERT( item );
+    switch( item->command.op )
     {
         case GROP_LOAD:
-            mLoador.commands.submit( cmd );
+            mLoador.commands.submit( item );
             break;
 
         case GROP_DECOMPRESS:
-            mDecompressor.commands.submit( cmd );
+            mDecompressor.commands.submit( item );
             break;
 
         case GROP_COPY:
-            mPopulator.commands.submit( cmd );
+            mPopulator.commands.submit( item );
             break;
 
         default:

@@ -126,13 +126,14 @@ void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
 
     if( to_be_disposed )
     {
-        GraphicsResourceCommand cmd;
-        cmd.op = GROP_DISPOSE;
+        ResourceCommandItem * item = ResourceCommandItem::alloc();
+        if( 0 == item ) return;
+        item->command.op = GROP_DISPOSE;
         while( to_be_disposed )
         {
-            cmd.waitForDrawFence = to_be_disposed->fence;
-            cmd.resourceId = to_be_disposed->id;
-            mDrawThread->submitResourceCommand( cmd );
+            item->command.waitForDrawFence = to_be_disposed->fence;
+            item->command.resourceId = to_be_disposed->id;
+            mDrawThread->submitResourceCommand( item );
             to_be_disposed = to_be_disposed->nextItemToDispose;
         }
     }
@@ -143,16 +144,15 @@ void GN::engine::RenderEngine::composeAndSubmitResourceCommand(
 
         GN_ASSERT( dr.getPendingResourceCount() > 0 );
 
-        GraphicsResourceCommand cmd = {
-            GROP_LOAD,
-            resourceid,
-            dr.fence,
-            0,
-            lod,
-            loader
-        };
-        dr.attachResourceCommand( cmd );
-        mResourceThread->submitResourceCommand( cmd );
+        ResourceCommandItem * item = ResourceCommandItem::alloc();
+        if( 0 == item ) return;
+        item->command.op = GROP_LOAD;
+        item->command.resourceId = resourceid;
+        item->command.waitForDrawFence = dr.fence;
+        item->command.targetLod = lod;
+        item->command.loader = loader;
+        dr.attachResourceCommand( item->command );
+        mResourceThread->submitResourceCommand( item );
     }
 }
 
