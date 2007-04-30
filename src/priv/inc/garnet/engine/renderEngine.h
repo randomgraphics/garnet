@@ -159,23 +159,22 @@ namespace GN { namespace engine
     };
 
     ///
-    /// ...
+    /// resource operations will happens in strict order as the enum itself.
     ///
     enum GraphicsResourceOperation
     {
         GROP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
 
-        GROP_COPY,       ///< copy data to graphics resource. Handled by copy thread.
-
         GROP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
                          ///< Handled by processing thread.
 
-        /// these operations are handled by rendering thread
-        //@{
         GROP_LOCK,       ///< lock the graphics resource, realize those disposed as well.
+
+        GROP_COPY,       ///< copy data to graphics resource. Handled by copy thread.
+
         GROP_UNLOCK,     ///< unlock the graphics resource.
-        GROP_DISPOSE,    ///< dispose the resource.
-        //@}
+
+        GROP_DISPOSE,    ///< dispose the resource. make it available for reuse or delete.
     };
 
     ///
@@ -192,9 +191,9 @@ namespace GN { namespace engine
         GraphicsResourceOperation op;               ///< requested operation.
         GraphicsResourceId        resourceId;       ///< target resource
         FenceId                   waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
-        volatile SInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
         int                       targetLod;        ///< ...
         GraphicsResourceLoader  * loader;           ///< ...
+        volatile SInt32         * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
         //@}
     };
 
