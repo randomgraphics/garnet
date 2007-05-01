@@ -77,6 +77,9 @@ bool GN::engine::RenderEngine::resetRenderer(
     return mDrawThread->resetRenderer( api, ro );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
 const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 {
     return mDrawThread->getDispDesc();

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "drawThread.h"
 #include "garnet/GNinput.h"
+#include "garnet/GNwin.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
 
@@ -28,7 +29,7 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDoSomething = createSyncEvent( false, true ); // initial unsignaled, auto reset
     mResetRendererComplete = createSyncEvent( false, true ); // initial unsignaled, auto reset
     mDrawBufferEmpty = createSyncEvent( true, false ); // initial signaled, manual reset
-    mDrawBufferNotFull  = createSemaphore( DRAW_BUFFER_COUNT, DRAW_BUFFER_COUNT, "DrawThread.DrawBufferNotFull" );
+    mDrawBufferNotFull  = createSemaphore( DRAW_BUFFER_COUNT-1, DRAW_BUFFER_COUNT-1, "DrawThread.DrawBufferNotFull" );
     if( !mDoSomething || !mDrawBufferEmpty || !mDrawBufferNotFull ) return failure();
 
     // initial other data
@@ -88,7 +89,7 @@ void GN::engine::RenderEngine::DrawThread::quit()
     // delete all pending resource commands
     if( !mResourceCommands.empty() )
     {
-        GN_WARN(sLogger)( "DrawThread shut down: drop %d unhandled resource commands.", mResourceCommands.size() );
+        GN_WARN(sLogger)( "DrawThread shut down: drop unhandled resource commands." );
 
         ResourceCommandItem * i1 = mResourceCommands.head(), * i2;
         while( i1 )
@@ -137,7 +138,8 @@ bool GN::engine::RenderEngine::DrawThread::resetRenderer(
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::frameBegin()
 {
-    // currently do nothing
+    // process windows messages
+    GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
 }
 
 //
@@ -214,9 +216,13 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
         }
     }
 
+    // dispose all resources
+    mEngine.resourceCache().deleteAllDeviceData();
+
+    // delete Renderer
+    GN::gfx::deleteRenderer();
+
     // quit thread
-    mDrawBufferNotFull->wake(); // wake threads that are waiting for draw command submission
-    mDrawBufferEmpty->signal(); // wake up threads that are waiting for idle.
     return 0;
 }
 
@@ -351,6 +357,23 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::DrawThread::doDraw( const DrawCommand & )
+void GN::engine::RenderEngine::DrawThread::doDraw( const DrawCommand & cmd )
 {
+    gfx::Renderer & r = gRenderer;
+
+    switch( cmd.action )
+    {
+        case 0 : // clear
+            r.clearScreen( cmd.clear.color(), cmd.clear.z, cmd.clear.s, cmd.clear.flags );
+            break;
+
+        case 1 : // draw
+            break;
+
+        case 2 : // drawindexed
+            break;
+
+        default :
+            GN_UNEXPECTED();
+    }
 }

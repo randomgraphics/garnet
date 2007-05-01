@@ -1,7 +1,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
+inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
     ResourceCommandItem * item )
 {
     GN_ASSERT( item );
