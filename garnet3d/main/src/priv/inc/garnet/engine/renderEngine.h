@@ -145,12 +145,9 @@ namespace GN { namespace engine
     /// Application defined graphics resource loader.
     ///
     /// Details about concurrency:
-    ///  - If the loader is assigned to only one resource, then all methods will be called in seralized way.
-    ///    You don't need to worry racing condition at all.
-    //   - If the loader is assigned to multiple resources, then:
-    ///    - load() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///    - copy() won't be called concurrently with itself, but might be called concurrently with other methods
-    ///    - decompress() and freebuf() could be called concurrently with any methods.
+    ///  - load() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///  - copy() won't be called concurrently with itself, but might be called concurrently with other methods
+    ///  - decompress() and freebuf() could be called concurrently with any methods.
     ///
     /// So, to achieve maximum performance, it is advised to avoid using sync objects as much as possible.
     /// The possible implementation could be:
@@ -269,40 +266,45 @@ namespace GN { namespace engine
     struct DrawCommand
     {
         FenceId            fence;            ///< fence ID of this draw
-        DrawContext        context;          ///< context ID
-
         volatile SInt32    pendingResources; ///< number of resources that has to be updated before this draw happens.
-
-        int                action; ///< 0: clear, 1: draw, 2: drawindexed
+        int                action;           ///< 0: bindcontext, 1: clear, 2: draw, 3: drawindexed
 
         //@{
         union
         {
+            DrawContext context; ///< draw context
+
             struct
             {
+                //@{
                 float            r, g, b, a;
                 float            z;
                 UInt8            s;
                 BitFields        flags;
                 Vector4f       & color() { return *(Vector4f*)&r; }
                 const Vector4f & color() const { return *(Vector4f*)&r; }
+                //@}
             } clear; ///< clear parameters
 
             struct
             {
+                //@{
                 gfx::PrimitiveType primtype;
                 UInt32             numprim;
                 UInt32             startvtx;
+                //@}
             } draw; ///< draw parameters
 
             struct
             {
+                //@{
                 gfx::PrimitiveType primtype;
                 UInt32             numprim;
                 UInt32             startvtx;
                 UInt32             minvtxidx;
                 UInt32             numvtx;
                 UInt32             startidx;
+                //@}
             } drawindexed; ///< drawindexed parameters
         };
         //@}
@@ -326,8 +328,12 @@ namespace GN { namespace engine
     };
 
     ///
-    /// major render engine interface
-    ///    
+    /// major render engine interface.
+    ///
+    /// \notes
+    /// - render engine is _NOT_ thread safe.
+    /// - all the methods, except explicitly stated, must be called in serialized way.
+    ///
     class RenderEngine : public StdClass
     {
         GN_DECLARE_STDCLASS( RenderEngine, StdClass );
@@ -380,20 +386,20 @@ namespace GN { namespace engine
         //@}
 
         // ********************************
-        /// \name draw request management. Normally called by game update thread.
-        ///
-        /// 1. There should be no more than one threads that call these functions at the same time.
-        /// 2. All methods in this section must be called in the thread that calls frameBegin().
-        ///
+        /// \name draw request management.
         // ********************************
     public:
 
         //@{
 
         void frameBegin();
+        void setContext( gfx::RendererContext & context );
+        void clearScreen( ... );
+        void draw( ... );
+        void drawindexed( ... );
         void frameEnd();
 
-        ///
+        /*
         /// Must called between frameBegin() and frameEnd(). And the returned reference
         /// to draw request object will be invalidated after frameEnd().
         ///
@@ -401,11 +407,12 @@ namespace GN { namespace engine
 
         void submitResourceCommand(
             DrawCommand &             dr,
-            GraphicsResourceOperation op,
             GraphicsResourceId        resource,
             int                       lod,
             GraphicsResourceLoader  * loader,
             bool                      reload ); // force resource reload
+        */
+
         //@}
 
         // ********************************
@@ -425,6 +432,9 @@ namespace GN { namespace engine
         GraphicsResourceId allocres( const GraphicsResourceCreationParameter & );
         void               freeres( GraphicsResourceId );
         GraphicsResource * id2res( GraphicsResourceId );
+        void               updateres( GraphicsResourceId       resource,
+                                      int                      lod,
+                                      GraphicsResourceLoader * loader );
 
         //@}
 
@@ -433,6 +443,9 @@ namespace GN { namespace engine
         // ********************************
     public:
 
+        ///
+        /// These sub-component are used internally by render engine
+        ///
         //@{
 
         class GraphicsResourceCache;
