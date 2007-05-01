@@ -118,7 +118,6 @@ GN::engine::DrawCommand & GN::engine::RenderEngine::newDrawCommand()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::submitResourceCommand(
     DrawCommand &             dr,
-    GraphicsResourceOperation op,
     GraphicsResourceId        resourceid,
     int                       lod,
     GraphicsResourceLoader  * loader,
