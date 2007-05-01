@@ -163,6 +163,11 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
         case WM_MOUSEWHEEL :
             triggerAxisMove( AXIS_MOUSE_WHEEL_0, (short)HIWORD(wp)/10 );
             break;
+
+        case WM_DESTROY :
+            // detach from the window
+            removeWindowHooks();
+            break;
     }
 
     GN_UNGUARD;

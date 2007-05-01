@@ -160,8 +160,6 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        bool drawBufferEmpty() const { return atomGet32(&mReadingIndex) == atomGet32(&mWritingIndex); }
-
         void submitDrawBuffer(); // called by any threads other than draw thead.
 
         // methods runs in thread thread
