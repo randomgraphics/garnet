@@ -75,6 +75,9 @@ void GN::engine::RenderEngine::ResourceThread::quit()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::ResourceThread::waitForIdle()
+{
+}
 
 // *****************************************************************************
 // private functions

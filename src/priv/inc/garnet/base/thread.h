@@ -97,6 +97,18 @@ namespace GN
     };
 
     ///
+    /// sync event
+    ///
+    struct SyncEvent : public NoCopy
+    {
+        //@{
+        virtual void signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
+        virtual void unsignal() = 0; ///< unsignal the event, block any threads that wait for it.
+        virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
+        //@}
+    };
+
+    ///
     /// sync event group.
     ///
     /// Represents at most 32 single sync events, indexed from 0 to 31.
@@ -118,25 +130,12 @@ namespace GN
     };
 
     ///
-    /// sync event
-    ///
-    struct SyncEvent : public NoCopy
-    {
-        //@{
-        virtual void signal() = 0;   ///< signal the event, wake one thread that is waiting for it.
-        virtual void unsignal() = 0; ///< unsignal the event, block any threads that wait for it.
-        virtual bool autoreset() const = 0; ///< true means that wait() function will unsignal the event automatically, after waking up one waiting thread.
-        virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< return true means the event is signaled; return false means timeout.
-        //@}
-    };
-
-    ///
     /// Abstract semaphore interface
     ///    
     struct Semaphore : public NoCopy
     {
         virtual bool wait( float seconds = INFINITE_TIME ) = 0; ///< block calling thread, until the semaphore is available. return false means timeout.
-        virtual void wake() = 0; ///< wake up one thread that is waiting for this semaphore.
+        virtual void wake( size_t count = 1 ) = 0; ///< wake up specified number of threads that is waiting for this semaphore.
 
         /// \name aliases for P/V operations
         //@{

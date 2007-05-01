@@ -34,5 +34,6 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
     GN_ASSERT( item );
     mResourceMutex.lock();
     mResourceCommands.append( item );
+    mDoSomething->signal();
     mResourceMutex.unlock();
 }

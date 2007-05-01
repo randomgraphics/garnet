@@ -69,6 +69,11 @@ namespace GN { namespace engine
         ///
         GraphicsResourceCache( RenderEngine & engine, UInt32 maxTexBytes, UInt32 maxMeshBytes );
 
+        ///
+        /// dtor
+        ///
+        ~GraphicsResourceCache();
+
         //@}
 
         ///
@@ -112,7 +117,7 @@ namespace GN { namespace engine
         typedef HandleManager<GraphicsResourceItem*,GraphicsResourceId> ResourceHandleManager;
         typedef DoubleLinkedList<GraphicsResourceItem> ResourceLRUList;
 
-        RenderEngine & engine;
+        RenderEngine & mEngine;
 
         ResourceHandleManager mResources;
         ResourceLRUList       mLRUList;

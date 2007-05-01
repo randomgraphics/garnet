@@ -271,14 +271,40 @@ namespace GN { namespace engine
         FenceId            fence;            ///< fence ID of this draw
         DrawContext        context;          ///< context ID
 
-        //@{
-        gfx::PrimitiveType primtype;
-        UInt32             numprim;
-        UInt32             startvtx;
-        UInt32             minvtxidx;
-        UInt32             numvtx;
-        UInt32             startidx;
         volatile SInt32    pendingResources; ///< number of resources that has to be updated before this draw happens.
+
+        int                action; ///< 0: clear, 1: draw, 2: drawindexed
+
+        //@{
+        union
+        {
+            struct
+            {
+                float            r, g, b, a;
+                float            z;
+                UInt8            s;
+                BitFields        flags;
+                Vector4f       & color() { return *(Vector4f*)&r; }
+                const Vector4f & color() const { return *(Vector4f*)&r; }
+            } clear; ///< clear parameters
+
+            struct
+            {
+                gfx::PrimitiveType primtype;
+                UInt32             numprim;
+                UInt32             startvtx;
+            } draw; ///< draw parameters
+
+            struct
+            {
+                gfx::PrimitiveType primtype;
+                UInt32             numprim;
+                UInt32             startvtx;
+                UInt32             minvtxidx;
+                UInt32             numvtx;
+                UInt32             startidx;
+            } drawindexed; ///< drawindexed parameters
+        };
         //@}
 
         //@{
@@ -293,8 +319,8 @@ namespace GN { namespace engine
     struct RenderEngineInitParameters
     {
         //@{
-        UInt32 maxTexBytes;
-        UInt32 maxMeshBytes;
+        UInt32 maxTexBytes;   ///< zero for default value: 3/4 of total video memory
+        UInt32 maxMeshBytes;  ///< zero for default value: 1/4 of total video memory
         UInt32 maxDrawCommandBufferBytes;
         //@}
     };

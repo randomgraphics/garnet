@@ -40,19 +40,17 @@ namespace GN
         /// \name list operations
         //@{
         void       append( ItemType * newItem ) { insertAfter( mTail, newItem ); }
-        bool       empty() const { return 0 == mCount; };
+        bool       empty() const { return 0 == mHead; };
         ItemType * head() const { return mHead; }
         void       insertAfter( ItemType * where, ItemType * newItem ) { doInsertAfter( where, newItem ); }
         void       insertBefore( ItemType * where, ItemType * newItem ) { doInsertBefore( where, newItem ); }
         void       remove( ItemType * item ) { doRemove( item ); }
-        size_t     size() const { return mCount; }
         ItemType * tail() const { return mTail; }
         //@}
 
     private:
 
         ItemType *mHead, *mTail;
-        size_t mCount;
 
     private:
 

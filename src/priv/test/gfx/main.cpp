@@ -1,5 +1,5 @@
 #include "pch.h"
-
+#if 0
 using namespace GN;
 using namespace GN::gfx;
 using namespace GN::app;
@@ -203,3 +203,51 @@ int main( int argc, const char * argv[] )
     GfxTestApp app;
     return app.run( argc, argv );
 }
+
+#else
+
+#include "garnet/GNengine.h"
+using namespace GN;
+using namespace GN::gfx;
+using namespace GN::engine;
+
+void run( RenderEngine & engine )
+{
+    while( 1 )
+    {
+        engine.frameBegin();
+
+        // clear screen
+        {
+            DrawCommand & dr = engine.newDrawCommand();
+            dr.pendingResources = 0;
+            dr.action = 0; // clear
+            dr.clear.color().set( 0, 0, 1, 1 );
+            dr.clear.z = 0;
+            dr.clear.s = 0;
+            dr.clear.flags = CLEAR_ALL;
+        }
+
+        engine.frameEnd();
+    }
+}
+
+int main()
+{
+    RenderEngine engine;
+
+    RenderEngineInitParameters reip = { 0, 0, 4*1024*1024 };
+
+    RendererOptions ro;
+
+    if( !engine.init(reip) ) return -1;
+
+    if( !engine.resetRenderer( API_D3D9, ro ) ) return -1;
+
+    run( engine );
+
+    // success
+    return 0;
+}
+
+#endif

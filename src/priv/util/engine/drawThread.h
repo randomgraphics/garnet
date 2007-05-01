@@ -162,7 +162,7 @@ namespace GN { namespace engine
 
         bool drawBufferEmpty() const { return atomGet32(&mReadingIndex) == atomGet32(&mWritingIndex); }
 
-        void   submitDrawBuffer(); // called by any threads other than draw thead.
+        void submitDrawBuffer(); // called by any threads other than draw thead.
 
         // methods runs in thread thread
         UInt32 threadProc( void * );

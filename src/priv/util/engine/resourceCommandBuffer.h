@@ -63,11 +63,6 @@ namespace GN { namespace engine
         void clear();
 
         ///
-        /// return command count in the buffer
-        ///
-        size_t size() const;
-
-        ///
         /// is empty or not
         ///
         bool empty() const;
@@ -169,17 +164,6 @@ inline void GN::engine::ResourceCommandBuffer::clear()
     mBufferNotEmpty->unsignal();
 
     mMutex.unlock();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-inline size_t GN::engine::ResourceCommandBuffer::size() const
-{
-    mMutex.lock();
-    size_t n = mCommands.size();
-    mMutex.unlock();
-    return n;
 }
 
 //
