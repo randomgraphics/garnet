@@ -267,13 +267,13 @@ namespace GN { namespace engine
     {
         FenceId            fence;            ///< fence ID of this draw
         volatile SInt32    pendingResources; ///< number of resources that has to be updated before this draw happens.
-        int                action;           ///< 0: bindcontext, 1: clear, 2: draw, 3: drawindexed
+        int                action;           ///< 0: setcontext, 1: clear, 2: draw, 3: drawindexed
+
+        DrawContext context; ///< draw context, for setcontext action only
 
         //@{
         union
         {
-            DrawContext context; ///< draw context
-
             struct
             {
                 //@{
@@ -393,16 +393,22 @@ namespace GN { namespace engine
         //@{
 
         void frameBegin();
-        void setContext( gfx::RendererContext & context );
-        void clearScreen( ... );
-        void draw( ... );
-        void drawindexed( ... );
         void frameEnd();
 
-        /*
-        /// Must called between frameBegin() and frameEnd(). And the returned reference
-        /// to draw request object will be invalidated after frameEnd().
-        ///
+        // below commands must called in between of frameBegin() and frameEnd().
+
+        void setContext( gfx::RendererContext & context );
+
+        void clearScreen(
+            const Vector4f & c = Vector4f(0,0,0,1),
+            float z = 1.0f, UInt8 s = 0,
+            BitFields flags = gfx::CLEAR_ALL );
+
+        void draw( ... );
+        void drawindexed( ... );
+
+    private:
+
         DrawCommand & newDrawCommand();
 
         void submitResourceCommand(
@@ -411,7 +417,6 @@ namespace GN { namespace engine
             int                       lod,
             GraphicsResourceLoader  * loader,
             bool                      reload ); // force resource reload
-        */
 
         //@}
 
@@ -420,21 +425,21 @@ namespace GN { namespace engine
         // ********************************
     public:
 
-        ///
-        /// these calls are not thead safe:
-        ///
-        /// - alloc() and free() must be called in serialized way.
-        /// - id2res() won't change cache states. So it can be called simutaneously with itself,
-        ///   but still need to be synced with alloc() and free().
+        /// alloc() and free() will stall rendering process. So do not
+        /// call them frequently in hot path.
         ///
         //@{
 
         GraphicsResourceId allocres( const GraphicsResourceCreationParameter & );
         void               freeres( GraphicsResourceId );
         GraphicsResource * id2res( GraphicsResourceId );
-        void               updateres( GraphicsResourceId       resource,
-                                      int                      lod,
-                                      GraphicsResourceLoader * loader );
+
+        ///
+        /// after calling this function, reference counte of the loader will increase one.
+        ///
+        void updateres( GraphicsResourceId       resource,
+                        int                      lod,
+                        GraphicsResourceLoader * loader );
 
         //@}
 

@@ -208,6 +208,7 @@ int main( int argc, const char * argv[] )
 
 #include "garnet/GNengine.h"
 using namespace GN;
+using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
 
@@ -215,25 +216,38 @@ void run( RenderEngine & engine )
 {
     while( 1 )
     {
+        gInput.processInputEvents();
+
+        if( gInput.getKeyStatus( KEY_ESCAPE ).down )
+        {
+            break;
+        }
+        
         engine.frameBegin();
 
-        // clear screen
-        {
-            DrawCommand & dr = engine.newDrawCommand();
-            dr.pendingResources = 0;
-            dr.action = 0; // clear
-            dr.clear.color().set( 0, 0, 1, 1 );
-            dr.clear.z = 0;
-            dr.clear.s = 0;
-            dr.clear.flags = CLEAR_ALL;
-        }
+        engine.clearScreen();
 
         engine.frameEnd();
     }
 }
 
+struct InputInitiator
+{
+    InputInitiator()
+    {
+        createInputSystem( API_NATIVE );
+    }
+
+    ~InputInitiator()
+    {
+        if( gInputPtr ) delete gInputPtr;
+    }
+};
+
 int main()
 {
+    InputInitiator input;
+
     RenderEngine engine;
 
     RenderEngineInitParameters reip = { 0, 0, 4*1024*1024 };
@@ -245,6 +259,8 @@ int main()
     if( !engine.resetRenderer( API_D3D9, ro ) ) return -1;
 
     run( engine );
+
+    
 
     // success
     return 0;

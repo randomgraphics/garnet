@@ -138,8 +138,7 @@ bool GN::engine::RenderEngine::DrawThread::resetRenderer(
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::frameBegin()
 {
-    // process windows messages
-    GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
+    // do nothing
 }
 
 //
@@ -203,14 +202,19 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 
         handleResourceCommands();
 
-        while( !drawBufferEmpty() )
+        mDrawBufferMutex.lock();
+        bool empty = mReadingIndex == mWritingIndex;
+        mDrawBufferMutex.unlock();
+
+        while( !empty )
         {
             handleDrawCommands();
 
             // Note that this is the only place that updates reading pointer
             mDrawBufferMutex.lock();
     		mReadingIndex = ( mReadingIndex + 1 ) & (DRAW_BUFFER_COUNT-1);
-            if( mReadingIndex == mWritingIndex ) mDrawBufferEmpty->signal(); // wake up thread waiting for idle.
+            empty = mReadingIndex == mWritingIndex;
+            if( empty ) mDrawBufferEmpty->signal(); // wake up thread waiting for idle.
             mDrawBufferMutex.unlock();
             mDrawBufferNotFull->wake(); // wake up threads that are waiting for draw command submission.
         }
@@ -231,10 +235,10 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 {
-    // make sure reading and writing operate on differnent buffer
-    GN_ASSERT( !drawBufferEmpty() );
-
     gfx::Renderer & r = gRenderer;
+
+    // process windows messages
+    GN::win::processWindowMessages( r.getDispDesc().windowHandle, true );
 
     if( r.drawBegin() )
     {

@@ -108,6 +108,23 @@ void GN::engine::RenderEngine::frameEnd()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::clearScreen(
+    const Vector4f & c,
+    float z, UInt8 s,
+    BitFields flags )
+{
+    DrawCommand & dr = newDrawCommand();
+    dr.pendingResources = 0;
+    dr.action = 0; // clear
+    dr.clear.color() = c;
+    dr.clear.z = z;
+    dr.clear.s = s;
+    dr.clear.flags = flags;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::engine::DrawCommand & GN::engine::RenderEngine::newDrawCommand()
 {
     return mDrawThread->newDrawCommand();
