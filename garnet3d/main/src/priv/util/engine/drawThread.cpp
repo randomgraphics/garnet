@@ -91,14 +91,14 @@ void GN::engine::RenderEngine::DrawThread::quit()
     {
         GN_WARN(sLogger)( "DrawThread shut down: drop unhandled resource commands." );
 
-        ResourceCommandItem * i1 = mResourceCommands.head(), * i2;
+        ResourceCommand * i1 = mResourceCommands.head(), * i2;
         while( i1 )
         {
             i2 = i1->next;
 
             mResourceCommands.remove( i1 );
 
-            ResourceCommandItem::free( i1 );
+            ResourceCommand::free( i1 );
 
             i1 = i2;
         }
@@ -305,31 +305,31 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 {
     mResourceMutex.lock();
-    ResourceCommandItem * item = mResourceCommands.head();
+    ResourceCommand * cmd = mResourceCommands.head();
     mResourceMutex.unlock();
 
-    ResourceCommandItem * prev;
+    ResourceCommand * prev;
 
-    while( item && !mActionQuit )
+    while( cmd && !mActionQuit )
     {
         // process the resource command
-        if( item->command.mustAfterThisFence <= mDrawFence )
+        if( cmd->mustAfterThisFence <= mDrawFence )
         {
             // remove it from resource command buffer
             mResourceMutex.lock();
-            prev = item;
-            item = item->next;
+            prev = cmd;
+            cmd = cmd->next;
             mResourceCommands.remove( prev );
             mResourceMutex.unlock();
 
-            GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( prev->command.resourceId );
+            GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( prev->resourceId );
 
             // update resource's complete fence
-            res->lastCompletedFence = prev->command.submittedAtThisFence;
+            res->lastCompletedFence = prev->submittedAtThisFence;
 
             if( prev->noerr )
             {
-                switch( prev->command.op )
+                switch( prev->op )
                 {
                     case GROP_COPY :
                         GN_UNIMPL();
@@ -346,14 +346,14 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             }
 
             // the resource command is done. Free it.
-            prev->command.loader->freebuf( prev->data, prev->bytes );
-            ResourceCommandItem::free( prev );
+            prev->loader->freebuf( prev->data, prev->bytes );
+            ResourceCommand::free( prev );
         }
         else
         {
             // leave it in buffer, continue search.
             mResourceMutex.lock();
-            item = item->next;
+            cmd = cmd->next;
             mResourceMutex.unlock();
         }
     }

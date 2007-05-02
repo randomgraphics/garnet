@@ -2,17 +2,17 @@
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
-    ResourceCommandItem * item )
+    ResourceCommand * cmd )
 {
-    GN_ASSERT( item );
-    switch( item->command.op )
+    GN_ASSERT( cmd );
+    switch( cmd->op )
     {
         case GROP_LOAD:
-            mLoador.commands.submit( item );
+            mLoador.commands.submit( cmd );
             break;
 
         case GROP_DECOMPRESS:
-            mDecompressor.commands.submit( item );
+            mDecompressor.commands.submit( cmd );
             break;
 
         default:

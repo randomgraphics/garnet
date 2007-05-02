@@ -324,7 +324,7 @@ namespace GN { namespace engine
 
     // forward declarations
     struct DrawCommand;
-    struct ResourceCommandItem;
+    struct ResourceCommand;
 
     ///
     /// major render engine interface.
