@@ -6,165 +6,86 @@
 //! \author  chenli@@FAREAST (2007.4.27)
 // *****************************************************************************
 
-#include "garnet/base/linkedlist.h"
+#include "resourceItem.h"
 
 namespace GN { namespace engine
 {
     class RenderEngine;
 
     ///
-    /// ...
-    ///
-    enum GraphicsResourceState
-    {
-        //@{
-        GRS_REALIZED,
-        GRS_DISPOSED,
-        //@}
-    };
-
-    ///
-    /// graphics resource item
-    ///
-    struct GraphicsResourceItem : public GraphicsResource, public DoubleLinkedItem<GraphicsResourceItem>
-    {
-        ///
-        /// all these values are accessed in render engine thread only.
-        ///
-        //@{
-
-        ///
-        /// One of GraphicsResourceState.
-        ///
-        /// Note that neither GraphicsResourceCache::realize() nor GraphicsResourceCache::dispose() will change resource state.
-        ///
-        GraphicsResourceState state;
-
-        ///
-        /// the loader used by the lasted update command.
-        ///
-        AutoRef<GraphicsResourceLoader,Mutex> lastSubmittedLoader;
-
-        ///
-        /// the LOD level used by the last update command.
-        ///
-        /// \note Don't confuse this with GraphicsResource::lod.
-        ///
-        int lastSubmittedLod;
-
-        ///
-        /// the fence of the lastest update command.
-        ///
-        FenceId lastSubmissionFence;
-
-        ///
-        /// last used/referenced at this fence.
-        ///
-        FenceId lastReferenceFence;
-
-        ///
-        /// this is used to store dispose resource list returned by makeRoomFromResource()
-        ///
-        GraphicsResourceItem * nextItemToDispose;
-
-        //@}
-
-        //@{
-
-        ///
-        /// When resource update is complete. Draw thread will copy the submission fence
-        /// value in the resource request to here, which means that the resource request
-        /// submitted at this fence is done.
-        ///
-        /// \note
-        ///     - This value should be less or equal then lastSubmission all the time.
-        ///
-        FenceId lastCompletedFence;
-
-        //@}
-
-        ///
-        /// ctor
-        ///
-        GraphicsResourceItem( GraphicsResourceId i, GraphicsResourceType t )
-            : GraphicsResource( i, t )
-            , lastSubmittedLod( 0 )
-            , lastSubmissionFence( 0 )
-            , lastReferenceFence( 0 )
-            , lastCompletedFence( 0 )
-        {}
-    };
-
-    ///
     /// Graphics resource reusable cache. This class is <b>_NOT_</b> thread safe, to ensure maxinum performance.
     ///
-    /// Be sure to syncornize your calls into the cache.
-    ///
-    class RenderEngine::GraphicsResourceCache
+    class RenderEngine::GraphicsResourceCache : public StdClass
     {
+        GN_DECLARE_STDCLASS( GraphicsResourceCache, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
+
+        //@{
+    public:
+        GraphicsResourceCache( RenderEngine & engine ) : mEngine(engine) { clear(); }
+        virtual ~GraphicsResourceCache() { quit(); }
+        //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+    private:
+        void clear()
+        {
+        }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
     public:
 
+        /// these methods, except id2ptr(), are not thread safe, thus must be called in serialzed way.
+        ///
         //@{
-
-        ///
-        /// ctor
-        ///
-        GraphicsResourceCache( RenderEngine & engine, UInt32 maxTexBytes, UInt32 maxMeshBytes );
-
-        ///
-        /// dtor
-        ///
-        ~GraphicsResourceCache();
-
-        //@}
-
-        ///
-        /// these methods manage resource instances, but do not touch resource state.
-        //@{
-        GraphicsResourceId     alloc( const GraphicsResourceCreationParameter & );
+        GraphicsResourceId     alloc( const GraphicsResourceDesc & );
         void                   free( GraphicsResourceId );
-        GraphicsResourceItem * id2ptr( GraphicsResourceId );
+        GraphicsResourceItem * id2ptr( GraphicsResourceId ) const;
+        GraphicsResourceId     first() const;
+        GraphicsResourceId     next( GraphicsResourceId ) const;
         //@}
 
-        ///
-        /// these methods operators on resource LRU list and resource state.
-        //@{
-
-        ///
-        /// mark the resource as realized. Adjust total realized bytes and LRU list as well.
-        ///
-        void mark_as_realized_and_recently_used( GraphicsResourceId );
-
-        ///
-        /// This function will lookup in resource cache, in reverse order of LRU list,
-        /// for items that are:
-        /// - in GRS_REALIZED state.
-        /// - available at user specified draw fence.
-        ///
-        /// Each found item will be marked to as GRS_DISPOSED, then returned in result list.
-        ///
-        GraphicsResourceItem * makeRoomForResource( GraphicsResourceId, FenceId );
-
-        //@}
-
-        /// these methods are called by draw thread to create and delete renderer dependent data in graphics resource.
+        /// These methods are called by draw thread to create and delete renderer dependent data in graphics resource.
+        /// they may happens concurrently with above methods.
         //@{
         bool createDeviceData( GraphicsResourceId );
         void deleteDeviceData( GraphicsResourceId );
-        void deleteAllDeviceData();
         //@}
 
+        // ********************************
+        // private variables
+        // ********************************
+    private:
+
+        // ********************************
+        // private functions
+        // ********************************
     private:
 
         typedef HandleManager<GraphicsResourceItem*,GraphicsResourceId> ResourceHandleManager;
-        typedef DoubleLinkedList<GraphicsResourceItem> ResourceLRUList;
 
         RenderEngine & mEngine;
 
+        // handle -> ptr
         ResourceHandleManager mResources;
-        ResourceLRUList       mLRUList;
+        mutable SpinLoop      mResourceMutex;
     };
 }}
+
+#include "resourceCache.inl"
 
 // *****************************************************************************
 //                           End of resourceCache.h

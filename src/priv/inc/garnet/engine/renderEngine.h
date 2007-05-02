@@ -11,7 +11,7 @@ namespace GN { namespace gfx
     ///
     /// fake const buffer class
     ///
-    struct ConstBuf : public NoCopy
+    struct ConstBuf : public RefCounter
     {
     };
 }}
@@ -21,50 +21,18 @@ namespace GN { namespace engine
     ///
     /// shader resourece descriptor
     ///
-    struct ShaderCreationParameters
+    struct ShaderDesc
     {
-        //@{
-        gfx::ShaderType      type;
-        gfx::ShadingLanguage lang;
-        StrA                 code;
-        StrA                 hints;
-        //@}
+        gfx::ShaderType      type;  ///< shader type
+        gfx::ShadingLanguage lang;  ///< shading language
+        StrA                 code;  ///< shader code
+        StrA                 hints; ///< shader creation hints
     };
 
     ///
     /// ...
     ///
-    struct TextureCreationParameters
-    {
-        //@{
-        gfx::TextureDesc desc;
-        //@}
-    };
-
-    ///
-    /// ...
-    ///
-    struct VtxBufCreationParameters
-    {
-        //@{
-        gfx::VtxBufDesc desc;
-        //@}
-    };
-
-    ///
-    /// ...
-    ///
-    struct IdxBufCreationParameters
-    {
-        //@{
-        gfx::IdxBufDesc desc;
-        //@}
-    };
-
-    ///
-    /// ...
-    ///
-    struct ConstBufCreationParameters
+    struct ConstBufDesc
     {
         //@{
         int type;  ///< vector4, int4, bool, matrix44
@@ -89,16 +57,17 @@ namespace GN { namespace engine
     };
 
     ///
-    /// ...
+    /// graphics resource descriptor
     ///
-    struct GraphicsResourceCreationParameter
+    struct GraphicsResourceDesc
     {
         //@{
-        GraphicsResourceType      type;
-        ShaderCreationParameters  sd;
-        TextureCreationParameters td;
-        VtxBufCreationParameters  vd;
-        IdxBufCreationParameters  id;
+        GraphicsResourceType type;
+        ShaderDesc           sd;
+        gfx::TextureDesc     td;
+        gfx::VtxBufDesc      vd;
+        gfx::IdxBufDesc      id;
+        ConstBufDesc         cd;
         //@}
     };
 
@@ -117,7 +86,7 @@ namespace GN { namespace engine
     struct GraphicsResource : public NoCopy
     {
         const GraphicsResourceId   id;   ///< resource id
-        const GraphicsResourceType type; ///< resource type. shader, texture, vb, ib, const.
+        const GraphicsResourceDesc desc; ///< resource descriptor
         union
         {
             //@{
@@ -134,8 +103,8 @@ namespace GN { namespace engine
         ///
         /// protected constructor
         ///
-        GraphicsResource( GraphicsResourceId id_, GraphicsResourceType type_ )
-            : id(id_), type(type_)
+        GraphicsResource( GraphicsResourceId id_, const GraphicsResourceDesc & desc_ )
+            : id(id_), desc(desc_), shader(0)
         {}
 
         ///
@@ -179,85 +148,6 @@ namespace GN { namespace engine
         /// free data buffer returned by load() and decompress()
         ///
         virtual void freebuf( void * inbuf, size_t inbytes );
-    };
-
-    ///
-    /// resource operations will happens in strict order as the enum itself.
-    ///
-    enum GraphicsResourceOperation
-    {
-        GROP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
-
-        GROP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
-                         ///< Handled by decompress thread.
-
-        GROP_COPY,       ///< copy data to graphics resource. Handled by draw thread.
-
-        GROP_DISPOSE,    ///< dispose the resource. Handled by draw thread
-    };
-
-    ///
-    /// fence ID type
-    ///
-    class FenceId
-    {
-        int value;
-
-    public:
-
-        ///
-        /// ctor
-        ///
-        FenceId() {}
-
-        ///
-        /// ctor
-        ///
-        explicit FenceId( int value_ ) : value(value_) {}
-
-        //@{
-        bool operator <  ( const FenceId & rhs ) const { return rhs.value - value >  0; }
-        bool operator <= ( const FenceId & rhs ) const { return rhs.value - value >= 0; }
-        bool operator >  ( const FenceId & rhs ) const { return value - rhs.value >  0; }
-        bool operator >= ( const FenceId & rhs ) const { return value - rhs.value >= 0; }
-        bool operator == ( const FenceId & rhs ) const { return value == rhs.value; }
-        bool operator != ( const FenceId & rhs ) const { return value != rhs.value; }
-
-        FenceId & operator = ( const FenceId & rhs ) { value = rhs.value; return *this; }
-        FenceId & operator = ( int value_ ) { value = value_; return *this; }
-
-        ///
-        /// prefix increment
-        ///
-        FenceId & operator++()
-        {
-            ++value;
-            return *this;
-        }
-
-        ///
-        /// postfie increament
-        ///
-        FenceId operator++(int)
-        {
-            FenceId r(*this);
-            ++value;
-            return r;
-        }
-
-        //@}
-    };
-
-    ///
-    /// ...
-    ///
-    struct RenderEngineInitParameters
-    {
-        //@{
-        UInt32 maxTexBytes;   ///< zero for default value: 3/4 of total video memory
-        UInt32 maxMeshBytes;  ///< zero for default value: 1/4 of total video memory
-        UInt32 maxDrawCommandBufferBytes;
-        //@}
     };
 
     ///
@@ -322,9 +212,17 @@ namespace GN { namespace engine
         gfx::VtxFmtDesc           vtxfmt;                           ///< vertex format.
     };
 
-    // forward declarations
-    struct DrawCommand;
-    struct ResourceCommand;
+    ///
+    /// ...
+    ///
+    struct RenderEngineInitParameters
+    {
+        //@{
+        UInt32 maxTexBytes;   ///< zero for default value: 3/4 of total video memory
+        UInt32 maxMeshBytes;  ///< zero for default value: 1/4 of total video memory
+        UInt32 maxDrawCommandBufferBytes;
+        //@}
+    };
 
     ///
     /// major render engine interface.
@@ -358,7 +256,6 @@ namespace GN { namespace engine
     private:
         void clear()
         {
-            mFence = 0;
             mResourceCache = 0;
             mDrawThread = 0;
             mResourceThread = 0;
@@ -382,6 +279,16 @@ namespace GN { namespace engine
         /// get display properties
         ///
         const gfx::DispDesc & getDispDesc() const;
+
+        ///
+        /// get total video meory size in bytes
+        ///
+        size_t getTotalVideoMemorySize() const;
+
+        ///
+        /// set cache capacity
+        ///
+        void setResourceCacheCapacity( size_t maxTexBytes, size_t maxMeshBytes );
 
         //@}
 
@@ -411,12 +318,7 @@ namespace GN { namespace engine
 
     private:
 
-        ///
-        /// Called by various draw commands, to ensure that disposed resources are reloaded.
-        ///
-        inline void reloadDisposedResource( GraphicsResourceId id );
-
-        inline void useResource( GraphicsResourceId id, DrawCommand & dr );
+        inline void prepareResource( GraphicsResourceId id );
 
         // ********************************
         /// \name resource commands
@@ -428,18 +330,18 @@ namespace GN { namespace engine
         ///
         //@{
 
-        GraphicsResourceId allocres( const GraphicsResourceCreationParameter & );
-        void               freeres( GraphicsResourceId );
-        GraphicsResource * id2res( GraphicsResourceId );
+        GraphicsResourceId allocResource( const GraphicsResourceDesc & );
+        void               freeResource( GraphicsResourceId );
+        GraphicsResource * getResourceById( GraphicsResourceId );
 
         ///
         /// \note
         ///     Render engine will hold a reference to the loader. So users can
         ///     safely release their own refernence to the loader.
         ///
-        void updateres( GraphicsResourceId       resource,
-                        int                      lod,
-                        GraphicsResourceLoader * loader );
+        void updateResource( GraphicsResourceId       resource,
+                             int                      lod,
+                             GraphicsResourceLoader * loader );
 
         //@}
 
@@ -454,12 +356,16 @@ namespace GN { namespace engine
         //@{
 
         class GraphicsResourceCache;
+        class ResourceLRU;
         class DrawThread;
         class ResourceThread;
+        class FenceManager;
 
         GraphicsResourceCache & resourceCache()  { GN_ASSERT(mResourceCache); return *mResourceCache; }
+        ResourceLRU           & resourceLRU()    { GN_ASSERT(mResourceLRU); return *mResourceLRU; }
         DrawThread            & drawThread()     { GN_ASSERT(mDrawThread); return *mDrawThread; }
         ResourceThread        & resourceThread() { GN_ASSERT(mResourceThread); return *mResourceThread; } 
+        FenceManager          & fenceManager()   { GN_ASSERT(mFenceManager); return *mFenceManager; } 
 
         //@}
 
@@ -469,10 +375,10 @@ namespace GN { namespace engine
     private:
 
         GraphicsResourceCache * mResourceCache;
+        ResourceLRU           * mResourceLRU;
         DrawThread            * mDrawThread;
         ResourceThread        * mResourceThread;
-
-        FenceId mFence; // this is used to identify the submitted draw and resource commands.
+        FenceManager          * mFenceManager;
 
         // ********************************
         // private functions

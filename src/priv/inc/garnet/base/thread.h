@@ -13,26 +13,56 @@ namespace GN
     ///
     extern const float INFINITE_TIME; // = 1.0e38f;
 
+    /// \name atomic operations
+    //@{
+
+    inline SInt32 atomGet32( const SInt32 volatile * );
+    inline void   atomSet32( SInt32 volatile *, SInt32 );
+    inline SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
+    inline SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
+    inline SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
+
     ///
-    /// thread priority
+    /// if initial value of "dest" equals "cmp", then do exchange; else, do nothing.
     ///
-    enum ThreadPriority
+    /// \return
+    ///     Always return initial value of "dest".
+    ///
+    inline SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
+    //@}
+
+    ///
+    /// Spinloop lock
+    ///
+    class SpinLoop
     {
-        TP_REALTIME,  ///< The highest priority, for time-critical task only.
-        TP_HIGH,      ///< high priority
-        TP_NORMAL,    ///< normal priority, suitable for most of application.
-        TP_LOW,       ///< low priority
-        TP_IDLE,      ///< The lowest priority
-        NUM_THREAD_PRIORITIES, ///< number of thread priorities
+        volatile SInt32 mLock;
+
+    public:
+
+        ///
+        ///
+        ///
+        template <typename T>
+        struct VolatileType
+        {
+            typedef volatile T type; ///< ...
+        };
+
+        //@{
+        SpinLoop() : mLock(0) {}
+        ~SpinLoop() {}
+        //@}
+
+        //@{
+        bool trylock() { return 0 == atomCmpXchg32( &mLock, 1, 0 ); }
+        void lock() { while( 0 != atomCmpXchg32( &mLock, 1, 0 ) ); }
+        void unlock() { atomSet32( &mLock, 0 ); }
+        //@}
     };
 
     ///
-    /// thread procedure functor
-    ///
-    typedef Delegate1<UInt32,void*> ThreadProcedure;
-
-    ///
-    /// Mutex lock, the lightest sync object.
+    /// Mutex lock.
     ///
     class Mutex
     {
@@ -145,6 +175,24 @@ namespace GN
     };
 
     ///
+    /// thread priority
+    ///
+    enum ThreadPriority
+    {
+        TP_REALTIME,  ///< The highest priority, for time-critical task only.
+        TP_HIGH,      ///< high priority
+        TP_NORMAL,    ///< normal priority, suitable for most of application.
+        TP_LOW,       ///< low priority
+        TP_IDLE,      ///< The lowest priority
+        NUM_THREAD_PRIORITIES, ///< number of thread priorities
+    };
+
+    ///
+    /// thread procedure functor
+    ///
+    typedef Delegate1<UInt32,void*> ThreadProcedure;
+
+    ///
     /// abstract thread interface
     ///
     struct Thread : public NoCopy
@@ -203,24 +251,6 @@ namespace GN
     ///
     inline void memoryBarrier();
 
-    //@}
-
-    /// \name atomic operations
-    //@{
-
-    inline SInt32 atomGet32( const SInt32 volatile * );
-    inline void   atomSet32( SInt32 volatile *, SInt32 );
-    inline SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
-    inline SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
-    inline SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
-
-    ///
-    /// if initial value of "dest" equals "cmp", then do exchange; else, do nothing.
-    ///
-    /// \return
-    ///     Always return initial value of "dest".
-    ///
-    inline SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
     //@}
 }
 

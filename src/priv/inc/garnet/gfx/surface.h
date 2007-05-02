@@ -129,6 +129,104 @@ namespace GN { namespace gfx
                 unsigned int _            : 26; ///< reserved
             };
         } usage; ///< texture usage
+
+        //
+        // validate texture descriptor
+        //
+        bool validate()
+        {
+            static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+
+            // check dim
+            if( dim < 0 || dim >= NUM_TEXDIMS )
+            {
+                GN_ERROR(sLogger)( "invalid texture dimension!" );
+                return false;
+            }
+
+            // check texture size
+            switch( dim )
+            {
+                case TEXDIM_1D :
+                {
+                    height = 1;
+                    depth = 1;
+                    break;
+                }
+
+                case TEXDIM_CUBE :
+                {
+                    height = width;
+                    depth = 1;
+                    break;
+                }
+
+                case TEXDIM_2D :
+                case TEXDIM_STACK :
+                {
+                    depth = 1;
+                    break;
+                }
+
+                case TEXDIM_3D :
+                {
+                    // do nothing
+                    break;
+                }
+
+                default : GN_UNEXPECTED();
+            }
+
+            // check face count
+            if( TEXDIM_CUBE == dim )
+            {
+                if( 0 != faces && 6 != faces )
+                {
+                    GN_WARN(sLogger)( "Cubemap must have 6 faces." );
+                }
+                faces = 6;
+            }
+            else if( TEXDIM_STACK == dim )
+            {
+                if( 0 == faces ) faces = 1;
+            }
+            else
+            {
+                if( 0 != faces && 1 != faces )
+                {
+                    GN_WARN(sLogger)( "Texture other then cube/stack texture can have only 1 face." );
+                }
+                faces = 1;
+            }
+
+            // calculate maximum mipmap levels
+            UInt32 nx = 0, ny = 0, nz = 0;
+            UInt32 maxLevels;
+
+            maxLevels = width;
+            while( maxLevels > 0 ) { maxLevels >>= 1; ++nx; }
+
+            maxLevels = height;
+            while( maxLevels > 0 ) { maxLevels >>= 1; ++ny; }
+
+            maxLevels = depth;
+            while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
+
+            maxLevels = max( max(nx, ny), nz );
+
+            levels = ( 0 == levels ) ? maxLevels : min( maxLevels, levels );
+
+            // check format
+            if( ( format < 0 || format >= NUM_CLRFMTS ) &&
+                FMT_DEFAULT != format )
+            {
+                GN_ERROR(sLogger)( "invalid texture format: %s", clrFmt2Str(format) );
+                return false;
+            }
+
+            // success
+            return true;
+        }
     };
 
     ///
@@ -305,101 +403,13 @@ namespace GN { namespace gfx
         ///
         bool setDesc( const TextureDesc & desc )
         {
-            static Logger * sLogger = getLogger("GN.gfx.Texture");
-            
             mDesc = desc;
 
-            // check dim
-            if( mDesc.dim < 0 || mDesc.dim >= NUM_TEXDIMS )
-            {
-                GN_ERROR(sLogger)( "invalid texture dimension!" );
-                return false;
-            }
-
-            // check texture size
-            switch( mDesc.dim )
-            {
-                case TEXDIM_1D :
-                {
-                    mDesc.height = 1;
-                    mDesc.depth = 1;
-                    break;
-                }
-
-                case TEXDIM_CUBE :
-                {
-                    mDesc.height = mDesc.width;
-                    mDesc.depth = 1;
-                    break;
-                }
-
-                case TEXDIM_2D :
-                case TEXDIM_STACK :
-                {
-                    mDesc.depth = 1;
-                    break;
-                }
-
-                case TEXDIM_3D :
-                {
-                    // do nothing
-                    break;
-                }
-
-                default : GN_UNEXPECTED();
-            }
-
-            // check face count
-            if( TEXDIM_CUBE == mDesc.dim )
-            {
-                if( 0 != mDesc.faces && 6 != mDesc.faces )
-                {
-                    GN_WARN(sLogger)( "Cubemap must have 6 mDesc.faces." );
-                }
-                mDesc.faces = 6;
-            }
-            else if( TEXDIM_STACK == mDesc.dim )
-            {
-                if( 0 == mDesc.faces ) mDesc.faces = 1;
-            }
-            else
-            {
-                if( 0 != mDesc.faces && 1 != mDesc.faces )
-                {
-                    GN_WARN(sLogger)( "Texture other then cube/stack texture can have only 1 face." );
-                }
-                mDesc.faces = 1;
-            }
-
-            // calculate maximum mipmap levels
-            UInt32 nx = 0, ny = 0, nz = 0;
-            UInt32 maxLevels;
-
-            maxLevels = mDesc.width;
-            while( maxLevels > 0 ) { maxLevels >>= 1; ++nx; }
-
-            maxLevels = mDesc.height;
-            while( maxLevels > 0 ) { maxLevels >>= 1; ++ny; }
-
-            maxLevels = mDesc.depth;
-            while( maxLevels > 0 ) { maxLevels >>= 1; ++nz; }
-
-            maxLevels = max( max(nx, ny), nz );
-
-            mDesc.levels = ( 0 == mDesc.levels ) ? maxLevels : min( maxLevels, mDesc.levels );
+            if( !mDesc.validate() ) return false;
 
             // allocate mipmap size array
             mMipSize.resize( mDesc.levels );
 
-            // check format
-            if( ( mDesc.format < 0 || mDesc.format >= NUM_CLRFMTS ) &&
-                FMT_DEFAULT != mDesc.format )
-            {
-                GN_ERROR(sLogger)( "invalid texture format: %s", clrFmt2Str(mDesc.format) );
-                return false;
-            }
-
-            // success
             return true;
         }
 

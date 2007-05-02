@@ -67,6 +67,11 @@ namespace GN { namespace engine
         ///
         void waitForIdle( float time = INFINITE_TIME ) const { if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time ); }
 
+        ///
+        /// get current draw fence
+        ///
+        FenceId getCurrentDrawFence() const { return mDrawFence; }
+
         //@}
 
         //@{
