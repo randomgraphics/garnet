@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "resourceThread.h"
+#include "drawThread.h"
 
 // *****************************************************************************
 // SubThread class
@@ -97,18 +98,12 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
     {
         GN_ASSERT( GROP_LOAD == item->command.op );
         GN_ASSERT( item->command.loader );
-        if( item->command.loader->load( item->data, item->bytes, item->command.targetLod ) )
-        {
-            // load success. push it to decompress thread
-            item->command.op = GROP_DECOMPRESS;
-            submitResourceCommand( item );
-        }
-        else
-        {
-            // load failure. delete the resource command item.
-            item->command.decPendingResourceCount();
-            ResourceCommandItem::free( item );
-        }
+
+        item->noerr = item->command.loader->load( item->data, item->bytes, item->command.targetLod );
+
+        // load done. push it to decompress thread
+        item->command.op = GROP_DECOMPRESS;
+        submitResourceCommand( item );
     }
 
     return 0;
@@ -130,23 +125,18 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
         GN_ASSERT( item->command.loader );
         void * olddata = item->data;
         size_t oldbytes = item->bytes;
-        if( item->command.loader->decompress( item->data, item->bytes, olddata, oldbytes, item->command.targetLod ) )
-        {
-            // decompress done, delete loaded data, push to draw thread for copy
-            item->command.loader->freebuf( olddata, oldbytes );
 
-            // decompress success. push it to draw thread for copy
-            item->command.op = GROP_COPY;
-            // DrawThread::submitResourceCommand( item );
-            GN_UNIMPL();
-        }
-        else
-        {
-            // load failure. delete loaded data buffer, and delete the resource command item.
-            item->command.loader->freebuf( olddata, oldbytes );
-            item->command.decPendingResourceCount();
-            ResourceCommandItem::free( item );
-        }
+        item->noerr = item->command.loader->decompress( item->data, item->bytes, olddata, oldbytes, item->command.targetLod );
+
+        // decompress done, delete loaded data,
+        item->command.loader->freebuf( olddata, oldbytes );
+
+        // push it to draw thread for copy
+        // TODO: What happens, if there's multiple decompress threads, which means that 
+        // TODO: resource commands submitted in later in render engine may submit to
+        // TODO: draw thread earlier.
+        item->command.op = GROP_COPY;
+        mEngine.drawThread().submitResourceCommand( item );
     }
 
     return 0;

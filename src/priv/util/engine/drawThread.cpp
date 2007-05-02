@@ -244,16 +244,40 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
     {
         DrawBuffer & db = mDrawBuffers[mReadingIndex];
 
-        const DrawCommand * command = (const DrawCommand*)db.buffer;
+        DrawCommand * command = (DrawCommand*)db.buffer;
 
-        const DrawCommand * last = (const DrawCommand*)db.next;
+        DrawCommand * last = (DrawCommand*)db.next;
 
         while( command < last && !mActionQuit )
         {
             // resource command has priority
             handleResourceCommands();
 
-            if( 0 == command->getPendingResourceCount() )
+            // update command's resource waiting list
+            int count = (int)command->resourceWaitingCount;
+            GN_ASSERT( count >= 0 );
+            for( int i = count - 1; i >= 0; --i )
+            {
+                DrawCommand::ResourceWaitingItem & wi = command->resourceWaitingList[i];
+                GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( wi.id );
+                if( res->lastCompletedFence >= wi.waitForUpdate )
+                {
+                    // remove from waiting list
+                    if( (i+1) < count )
+                    {
+                        memcpy(
+                            &command->resourceWaitingList[i],
+                            &command->resourceWaitingList[i+1],
+                            count - ( i + 1 ) );
+                    }
+                    GN_ASSERT( count > 0 );
+                    --count;
+                }
+            }
+            GN_ASSERT( count >= 0 );
+            command->resourceWaitingCount = (UInt32)count;
+
+            if( 0 == command->resourceWaitingCount )
             {
                 // all resources are ready. do it!
                 doDraw( *command );
@@ -289,7 +313,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
     while( item && !mActionQuit )
     {
         // process the resource command
-        if( item->command.waitForDrawFence < mDrawFence )
+        if( item->command.mustAfterThisFence <= mDrawFence )
         {
             // remove it from resource command buffer
             mResourceMutex.lock();
@@ -298,24 +322,31 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             mResourceCommands.remove( prev );
             mResourceMutex.unlock();
 
-            switch( prev->command.op )
+            GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( prev->command.resourceId );
+
+            // update resource's complete fence
+            res->lastCompletedFence = prev->command.submittedAtThisFence;
+
+            if( prev->noerr )
             {
-                case GROP_COPY :
-                    GN_UNIMPL();
-                    break;
+                switch( prev->command.op )
+                {
+                    case GROP_COPY :
+                        GN_UNIMPL();
+                        break;
 
-                case GROP_DISPOSE :
-                    GN_UNIMPL();
-                    break;
+                    case GROP_DISPOSE :
+                        GN_UNIMPL();
+                        break;
 
-                default:
-                    GN_UNEXPECTED();
-                    break;
+                    default:
+                        GN_UNEXPECTED();
+                        break;
+                }
             }
 
             // the resource command is done. Free it.
             prev->command.loader->freebuf( prev->data, prev->bytes );
-            prev->command.decPendingResourceCount();
             ResourceCommandItem::free( prev );
         }
         else
@@ -365,16 +396,19 @@ void GN::engine::RenderEngine::DrawThread::doDraw( const DrawCommand & cmd )
 {
     gfx::Renderer & r = gRenderer;
 
-    switch( cmd.action )
+    switch( cmd.type )
     {
-        case 0 : // clear
+        case DCT_DRAW_INDEXED :
+            break;
+
+        case DCT_SET_CONTEXT :
+            break;
+
+        case DCT_DRAW :
+            break;
+
+        case DCT_CLEAR:
             r.clearScreen( cmd.clear.color(), cmd.clear.z, cmd.clear.s, cmd.clear.flags );
-            break;
-
-        case 1 : // draw
-            break;
-
-        case 2 : // drawindexed
             break;
 
         default :
