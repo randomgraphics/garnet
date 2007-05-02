@@ -108,13 +108,16 @@ namespace GN { namespace engine
     typedef UInt32 GraphicsResourceId;
 
     ///
-    /// ...
+    /// Graphics resource class.
+    ///
+    /// \note
+    ///     Do not read/write data member of this class, unless in
+    ///     GraphicsResourceLoader class.
     ///
     struct GraphicsResource : public NoCopy
     {
         const GraphicsResourceId   id;   ///< resource id
         const GraphicsResourceType type; ///< resource type. shader, texture, vb, ib, const.
-        int                        lod;  ///< current LOD. Definition of LOD is resource/application dependent.
         union
         {
             //@{
@@ -201,19 +204,12 @@ namespace GN { namespace engine
     ///
     /// ...
     ///
-    struct GraphicsResourceCommand
+    struct RenderEngineInitParameters
     {
         //@{
-        GraphicsResourceOperation             op;               ///< requested operation.
-        GraphicsResourceId                    resourceId;       ///< target resource
-        FenceId                               waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
-        int                                   targetLod;        ///< ...
-        AutoRef<GraphicsResourceLoader,Mutex> loader;           ///< ...
-        volatile SInt32                     * pendingResources; ///< when this request is done. It'll decrease value pointed by this pointer.
-        //@}
-
-        //@{
-        void decPendingResourceCount() { GN_ASSERT( atomGet32(pendingResources) > 0 ); atomDec32( pendingResources ); }
+        UInt32 maxTexBytes;   ///< zero for default value: 3/4 of total video memory
+        UInt32 maxMeshBytes;  ///< zero for default value: 1/4 of total video memory
+        UInt32 maxDrawCommandBufferBytes;
         //@}
     };
 
@@ -241,91 +237,46 @@ namespace GN { namespace engine
         };
 
         ///
-        /// shader resource list
+        /// shader descriptor
         ///
-        struct ShaderResourceList
+        struct ShaderDesc
         {
-            ShaderResource resources[64]; ///< resource list
-            UInt32         count;         ///< resource count
+            GraphicsResourceId shader;        ///< shader itself.
+            ShaderResource     resources[64]; ///< resource list. Each shader can reference at most 64 resources at any time.
+            UInt32             count;         ///< resource count
         };
 
-        // states
-        GraphicsResourceId        shaders[gfx::NUM_SHADER_TYPES]; ///< shaders
-        gfx::RenderStateBlockDesc rsb;                            ///< render state block.
-        gfx::RenderTargetDesc     renderTargets;                  ///< render target descriptor
-        Rectf                     viewport;                       ///< Viewport. [0,0,1,1] means whole render target.
-        gfx::VtxFmtHandle         vtxfmt;                         ///< vertex format handle. 0 means no vertex data at all.
-
-        // resources
-        ShaderResourceList        resources[gfx::NUM_SHADER_TYPES]; ///< each shader has an resource list.
-    };
-
-    ///
-    /// ...
-    ///
-    struct DrawCommand
-    {
-        FenceId            fence;            ///< fence ID of this draw
-        volatile SInt32    pendingResources; ///< number of resources that has to be updated before this draw happens.
-        int                action;           ///< 0: setcontext, 1: clear, 2: draw, 3: drawindexed
-
-        DrawContext context; ///< draw context, for setcontext action only
-
-        //@{
-        union
+        ///
+        /// ...
+        ///
+        struct RenderTargetTexture
         {
-            struct
-            {
-                //@{
-                float            r, g, b, a;
-                float            z;
-                UInt8            s;
-                BitFields        flags;
-                Vector4f       & color() { return *(Vector4f*)&r; }
-                const Vector4f & color() const { return *(Vector4f*)&r; }
-                //@}
-            } clear; ///< clear parameters
-
-            struct
-            {
-                //@{
-                gfx::PrimitiveType primtype;
-                UInt32             numprim;
-                UInt32             startvtx;
-                //@}
-            } draw; ///< draw parameters
-
-            struct
-            {
-                //@{
-                gfx::PrimitiveType primtype;
-                UInt32             numprim;
-                UInt32             startvtx;
-                UInt32             minvtxidx;
-                UInt32             numvtx;
-                UInt32             startidx;
-                //@}
-            } drawindexed; ///< drawindexed parameters
+            GraphicsResourceId texture;    ///< render target texture
+            unsigned int       face  : 14; ///< cubemap face. Must be zero for non-cube/stack texture.
+            unsigned int       slice : 14; ///< slice index. Must be zero for non 3D texture.
+            unsigned int       level :  4; ///< mipmap level
         };
-        //@}
 
-        //@{
-        void   incPendingResourceCount() { atomInc32( &pendingResources ); }
-        SInt32 getPendingResourceCount() const { return atomGet32(&pendingResources); }
-        //@}
+        ///
+        /// ...
+        ///
+        struct RenderTargetDesc
+        {
+            RenderTargetTexture cbuffers[MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
+            RenderTargetTexture zbuffer; ///< z buffer description. Set zbuffer.texture to NULL to use auto-zbuffer.
+            unsigned int        count :  5; ///< color buffer count. 0 means draw to back buffer.
+            unsigned int        aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
+        };
+
+        ShaderDesc                shaders[gfx::NUM_SHADER_TYPES];   ///< shaders and their resouces
+        RenderTargetDesc          renderTargets;                    ///< render target descriptor
+        Rectf                     viewport;                         ///< Viewport. [0,0,1,1] means whole render target.
+        gfx::RenderStateBlockDesc rsb;                              ///< render state block.
+        gfx::VtxFmtDesc           vtxfmt;                           ///< vertex format.
     };
 
-    ///
-    /// ...
-    ///
-    struct RenderEngineInitParameters
-    {
-        //@{
-        UInt32 maxTexBytes;   ///< zero for default value: 3/4 of total video memory
-        UInt32 maxMeshBytes;  ///< zero for default value: 1/4 of total video memory
-        UInt32 maxDrawCommandBufferBytes;
-        //@}
-    };
+    // forward declarations
+    struct DrawCommand;
 
     ///
     /// major render engine interface.
@@ -397,7 +348,7 @@ namespace GN { namespace engine
 
         // below commands must called in between of frameBegin() and frameEnd().
 
-        void setContext( gfx::RendererContext & context );
+        void setContext( const DrawContext & context );
 
         void clearScreen(
             const Vector4f & c = Vector4f(0,0,0,1),
@@ -407,21 +358,18 @@ namespace GN { namespace engine
         void draw( ... );
         void drawindexed( ... );
 
-    private:
-
-        DrawCommand & newDrawCommand();
-
-        void submitResourceCommand(
-            DrawCommand &             dr,
-            GraphicsResourceId        resource,
-            int                       lod,
-            GraphicsResourceLoader  * loader,
-            bool                      reload ); // force resource reload
-
         //@}
 
+    private:
+
+        ///
+        /// Called by various draw commands, to ensure that the resource
+        /// is usable for specific draw command.
+        ///
+        void ensureUsableResource( GraphicsResourceId id, DrawCommand & dr );
+
         // ********************************
-        /// \name reusable graphics resource cache
+        /// \name resource commands
         // ********************************
     public:
 
@@ -435,13 +383,24 @@ namespace GN { namespace engine
         GraphicsResource * id2res( GraphicsResourceId );
 
         ///
-        /// after calling this function, reference counte of the loader will increase one.
+        /// \note
+        ///     Render engine will hold a reference to the loader. So users can
+        ///     safely release their own refernence to the loader.
         ///
         void updateres( GraphicsResourceId       resource,
                         int                      lod,
                         GraphicsResourceLoader * loader );
 
         //@}
+
+    private:
+
+        void loadResource(
+            FenceId                   fence,
+            GraphicsResourceId        resource,
+            int                       lod,
+            GraphicsResourceLoader  * loader,
+            bool                      reload ); // force resource reload
 
         // ********************************
         /// \name sub component accessor
@@ -471,6 +430,8 @@ namespace GN { namespace engine
         GraphicsResourceCache * mResourceCache;
         DrawThread            * mDrawThread;
         ResourceThread        * mResourceThread;
+
+        FenceId mSubmitFence; // this is used to identify the submitted draw and resource commands.
 
         // ********************************
         // private functions

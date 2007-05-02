@@ -8,6 +8,7 @@
 
 #include "resourceCache.h"
 #include "resourceCommandBuffer.h"
+#include "drawCommand.h"
 
 namespace GN { namespace engine
 {
@@ -147,7 +148,7 @@ namespace GN { namespace engine
         DrawBuffer      mDrawBuffers[DRAW_BUFFER_COUNT];
         volatile SInt32 mReadingIndex;
         volatile SInt32 mWritingIndex;
-        FenceId         mDrawFence; // means that draws before or equal this fence is done.
+        FenceId         mDrawFence;   // means that draws before or equal this fence are done.
         Mutex           mDrawBufferMutex;
         SyncEvent     * mDrawBufferEmpty;
         Semaphore     * mDrawBufferNotFull;

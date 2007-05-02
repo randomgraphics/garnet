@@ -29,6 +29,11 @@ namespace GN { namespace engine
     struct GraphicsResourceItem : public GraphicsResource, public DoubleLinkedItem<GraphicsResourceItem>
     {
         ///
+        /// all these values should be accessed in render engine thread only.
+        ///
+        //@{
+
+        ///
         /// One of GraphicsResourceState.
         ///
         /// Note that neither GraphicsResourceCache::realize() nor GraphicsResourceCache::dispose() will change resource state.
@@ -36,14 +41,33 @@ namespace GN { namespace engine
         GraphicsResourceState state;
 
         ///
-        /// means that the resource will be available to update and/or dispose, after this draw fence.
+        /// the loader used by the lasted update command.
         ///
-        FenceId fence;
+        AutoRef<GraphicsResourceLoader,Mutex> updateLoader;
+
+        ///
+        /// the LOD level used by the last update command.
+        ///
+        /// \note Don't confuse this with GraphicsResource::lod.
+        ///
+        int updateLod;
+
+        ///
+        /// the fence of the lastest update command.
+        ///
+        FenceId updateFence;
+
+        ///
+        /// last used/referenced at this fence.
+        ///
+        FenceId referenceFence;
 
         ///
         /// this is used to store dispose resource list returned by makeRoomFromResource()
         ///
         GraphicsResourceItem * nextItemToDispose;
+
+        //@}
 
         ///
         /// ctor

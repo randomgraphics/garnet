@@ -9,7 +9,21 @@
 namespace GN { namespace engine
 {
     ///
-    /// basic resource command item class. all resource commands must sub-classed from this.
+    /// ...
+    ///
+    struct GraphicsResourceCommand
+    {
+        //@{
+        GraphicsResourceOperation             op;               ///< requested operation.
+        GraphicsResourceId                    resourceId;       ///< target resource
+        FenceId                               waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
+        int                                   targetLod;        ///< ignored by GROP_DISPOSE
+        AutoRef<GraphicsResourceLoader,Mutex> loader;           ///< ignored by GROP_DISPOSE
+        //@}
+    };
+
+    ///
+    /// basic resource command item class.
     ///
     // TODO: use pooled memory to avoid runtime heap operation
     struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
