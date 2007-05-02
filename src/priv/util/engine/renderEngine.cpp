@@ -9,10 +9,6 @@
 // local functions
 // *****************************************************************************
 
-//
-//
-// -----------------------------------------------------------------------------
-
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -35,6 +31,9 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
 
     mResourceThread = new ResourceThread( *this );
     if( !mResourceThread->init() ) return failure();
+
+    // initialize other data
+    mSubmitFence = 0;
 
     // success
     return success();
@@ -108,14 +107,36 @@ void GN::engine::RenderEngine::frameEnd()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::setContext( const DrawContext & context )
+{
+    DrawCommand & dr = mDrawThread->newDrawCommand();
+    dr.type = DCT_SET_CONTEXT;
+    dr.fence = mSubmitFence++;
+    dr.context = context;
+    dr.resourceWaitingCount = 0;
+
+    for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
+    {
+        if( context.shader[i].shader )
+        {
+            ensureUsableResource( context.shader[i], dr.fence );
+        }
+    }
+
+    // TODO: associate other resources as well
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::clearScreen(
     const Vector4f & c,
     float z, UInt8 s,
     BitFields flags )
 {
-    DrawCommand & dr = newDrawCommand();
-    dr.pendingResources = 0;
-    dr.action = 0; // clear
+    DrawCommand & dr = mDrawThread->newDrawCommand();
+    dr.type = DCT_CLEAR;
+    dr.fence = mSubmitFence++;
     dr.clear.color() = c;
     dr.clear.z = z;
     dr.clear.s = s;
@@ -125,80 +146,45 @@ void GN::engine::RenderEngine::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::DrawCommand & GN::engine::RenderEngine::newDrawCommand()
+bool GN::engine::RenderEngine::ensureUsableResource(
+    GraphicsResourceId id,
+    FenceId fence )
 {
-    return mDrawThread->newDrawCommand();
-}
+    GN_ASSERT( 0 != id );
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::submitResourceCommand(
-    DrawCommand &             dr,
-    GraphicsResourceId        resourceid,
-    int                       lod,
-    GraphicsResourceLoader  * loader,
-    bool                      reload )
-{
-    GraphicsResourceItem * res = mResourceCache->id2ptr( resourceid );
-    if( 0 == res ) return;
-    GN_ASSERT( res->id == resourceid );
+    GraphicsResourceItem * res = mResourceCache->id2ptr(id);
+    GN_ASSERT( res );
 
-    const GraphicsResourceItem * to_be_disposed = 0;
+    bool wait = false;
+
+    if( res->updateFence > res->referenceFence )
+    {
+        // The resource is updated at lease once, after being used.
+        // Now it is used again. So this draw must wait
+        // the last update to complete.
+        wait = true;
+    }
 
     if( GRS_DISPOSED == res->state )
     {
-        to_be_disposed = mResourceCache->makeRoomForResource( resourceid, dr.fence );
+        // the resource is disposed. we have to reload it,
+        // using it's current loader and lod
+        loadResource( fence, id, res->updateLod, res->updateLoader );
 
-        if( GN_ASSERT_ENABLED )
-        {
-            for( const GraphicsResourceItem * p = to_be_disposed; p; p = p->nextItemToDispose )
-            {
-                GN_ASSERT( GRS_DISPOSED == p->state );
-                GN_ASSERT( p->fence < dr.fence );
-            }
-        }
-
-        mResourceCache->mark_as_realized_and_recently_used( resourceid );
-
-        reload = true;
+        res->updateFence = fence;
+        wait = true;
     }
 
-    res->fence = dr.fence;
+    // update reference fence
+    GN_ASSERT( res->updateFence <= fence );
+    res->referenceFence = fence;
 
-    if( to_be_disposed )
-    {
-        ResourceCommandItem * item = ResourceCommandItem::alloc();
-        if( 0 == item ) return;
-        item->command.op = GROP_DISPOSE;
-        while( to_be_disposed )
-        {
-            item->command.waitForDrawFence = to_be_disposed->fence;
-            item->command.resourceId = to_be_disposed->id;
-            mDrawThread->submitResourceCommand( item );
-            to_be_disposed = to_be_disposed->nextItemToDispose;
-        }
-    }
-
-    if( reload )
-    {
-        dr.incPendingResourceCount();
-        GN_ASSERT( dr.getPendingResourceCount() > 0 );
-
-        ResourceCommandItem * item = ResourceCommandItem::alloc();
-        if( 0 == item ) return;
-        item->command.op = GROP_LOAD;
-        item->command.resourceId = resourceid;
-        item->command.waitForDrawFence = dr.fence;
-        item->command.targetLod = lod;
-        item->command.loader.attach( loader );
-        item->command.pendingResources = &dr.pendingResources;
-        mResourceThread->submitResourceCommand( item );
-    }
+    return wait;
 }
 
+
 // *****************************************************************************
-// cache functions
+// resource commands
 // *****************************************************************************
 
 //
@@ -227,10 +213,67 @@ GN::engine::RenderEngine::id2res( GraphicsResourceId id )
     return mResourceCache->id2ptr( id );
 }
 
-// *****************************************************************************
-// private functions
-// *****************************************************************************
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::updateres(
+    GraphicsResourceId       id,
+    int                      lod,
+    GraphicsResourceLoader * loader )
+{
+}
 
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::loadResource(
+    FenceId                   fence,
+    GraphicsResourceId        id,
+    int                       lod,
+    GraphicsResourceLoader  * loader )
+{
+    GN_TODO( "what happend, if a resource is updated seveval times, may or may not at same fence, before using." );
+
+    // get resource item
+    GraphicsResourceItem * res = mResourceCache->id2ptr( id );
+    if( 0 == res ) return;
+    GN_ASSERT( res->id == id );
+
+    // update the update fence
+    res->updateFence = fence;
+
+    // check if the resource is disposed.
+    const GraphicsResourceItem * to_be_disposed = 0;
+    if( GRS_DISPOSED == res->state )
+    {
+        to_be_disposed = mResourceCache->makeRoomForResource( id, fence );
+        mResourceCache->mark_as_realized_and_recently_used( id );
+    }
+
+    // submit dispose commands
+    if( to_be_disposed )
+    {
+        ResourceCommandItem * item = ResourceCommandItem::alloc();
+        if( 0 == item ) return;
+        item->command.op = GROP_DISPOSE;
+        while( to_be_disposed )
+        {
+            item->command.resourceId = to_be_disposed->id;
+            item->command.waitForDrawFence = to_be_disposed->referenceFence;
+            mDrawThread->submitResourceCommand( item );
+            to_be_disposed = to_be_disposed->nextItemToDispose;
+        }
+    }
+
+    // submit load command
+    ResourceCommandItem * item = ResourceCommandItem::alloc();
+    if( 0 == item ) return;
+    item->command.op = GROP_LOAD;
+    item->command.resourceId = id;
+    item->command.waitForDrawFence = res->referenceFence;
+    item->command.targetLod = lod;
+    item->command.loader.attach( loader );
+    mResourceThread->submitResourceCommand( item );
+}
+
+
