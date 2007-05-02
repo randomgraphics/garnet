@@ -1,13 +1,52 @@
 #include "pch.h"
 #include "resourceCache.h"
+#include "resourceLRU.h"
 #include "drawThread.h"
 #include "resourceThread.h"
+#include "fenceManager.h"
 
 #pragma warning(disable:4100)
 
 // *****************************************************************************
 // local functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static inline void sUpdateWaitingListAndReferenceFence(
+    GN::engine::RenderEngine::GraphicsResourceCache & cache,
+    GN::engine::GraphicsResourceId id,
+    GN::engine::DrawCommand & dr )
+{
+    using namespace GN::engine;
+
+    if( 0 == id ) return;
+
+    GN::engine::GraphicsResourceItem * res = cache.id2ptr( id );
+
+    if( 0 == res ) return;
+
+    GN_ASSERT( GRS_REALIZED == res->state );
+
+    // reference and update can't happen at same fence.
+    GN_ASSERT( res->lastReferenceFence != res->lastSubmissionFence );
+
+    // resource is updated after being used. Now it is being used again.
+    // so we have to wait for completion of the update.
+    if( res->lastSubmissionFence > res->lastReferenceFence )
+    {
+        dr.resourceWaitingList[dr.resourceWaitingCount].id = id;
+        dr.resourceWaitingList[dr.resourceWaitingCount].waitForUpdate = res->lastSubmissionFence;
+        dr.resourceWaitingCount++;
+    }
+
+    // note: this should be the only place to update lastReferenceFence
+    res->lastReferenceFence = dr.fence;
+
+    GN_ASSERT( res->lastReferenceFence != res->lastSubmissionFence );
+}
+
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -24,16 +63,19 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     GN_STDCLASS_INIT( GN::engine::RenderEngine, () );
 
     // create sub components
-    mResourceCache = new GraphicsResourceCache( *this, p.maxTexBytes, p.maxMeshBytes );
+    mFenceManager = new FenceManager( *this );
+
+    mResourceCache = new GraphicsResourceCache( *this );
+    if( !mResourceCache->init() ) return failure();
+
+    mResourceLRU = new ResourceLRU( *this );
+    if( !mResourceLRU->init( p.maxTexBytes, p.maxMeshBytes ) ) return failure();
 
     mDrawThread = new DrawThread( *this );
     if( !mDrawThread->init(p.maxDrawCommandBufferBytes) ) return failure();
 
     mResourceThread = new ResourceThread( *this );
     if( !mResourceThread->init() ) return failure();
-
-    // initialize other data
-    mFence = 0;
 
     // success
     return success();
@@ -48,9 +90,19 @@ void GN::engine::RenderEngine::quit()
 {
     GN_GUARD;
 
+    // dispose all resources
+    if( ok() )
+    {
+        mResourceLRU->disposeAll();
+        mResourceThread->waitForIdle();
+        mDrawThread->waitForIdle();
+    }
+
     safeDelete( mResourceThread );
     safeDelete( mDrawThread );
+    safeDelete( mResourceLRU );
     safeDelete( mResourceCache );
+    safeDelete( mFenceManager );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -69,10 +121,12 @@ bool GN::engine::RenderEngine::resetRenderer(
     gfx::RendererAPI api,
     const gfx::RendererOptions & ro )
 {
-    // make sure that all resource and draw commands are executed.
+    // dispose all resources
+    mResourceLRU->disposeAll();
     mResourceThread->waitForIdle();
     mDrawThread->waitForIdle();
 
+    // then reset the renderer
     return mDrawThread->resetRenderer( api, ro );
 }
 
@@ -112,21 +166,23 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
     // make sure all resources referenced in contex is ready to use.
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
     {
-        reloadDisposedResource( context.shaders[i].shader );
+        prepareResource( context.shaders[i].shader );
     }
     // TODO: associate other resources as well
 
     // create new draw command
-    DrawCommand & dr = mDrawThread->newDrawCommand();
+    DrawCommand & dr = mFenceManager->submitDrawCommand();
     dr.type = DCT_SET_CONTEXT;
-    dr.fence = mFence++;
     dr.context = context;
     dr.resourceWaitingCount = 0;
 
     // update reference fence of resources in the context
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
     {
-        useResource( context.shaders[i].shader, dr );
+        sUpdateWaitingListAndReferenceFence(
+            *mResourceCache,
+            context.shaders[i].shader,
+            dr );
     }
 }
 
@@ -138,9 +194,8 @@ void GN::engine::RenderEngine::clearScreen(
     float z, UInt8 s,
     BitFields flags )
 {
-    DrawCommand & dr = mDrawThread->newDrawCommand();
+    DrawCommand & dr = mFenceManager->submitDrawCommand();
     dr.type = DCT_CLEAR;
-    dr.fence = mFence++;
     dr.resourceWaitingCount = 0;
     dr.clear.color() = c;
     dr.clear.z = z;
@@ -151,53 +206,27 @@ void GN::engine::RenderEngine::clearScreen(
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::reloadDisposedResource( GraphicsResourceId id )
+inline void GN::engine::RenderEngine::prepareResource( GraphicsResourceId id )
 {
     if( 0 == id ) return;
 
     GraphicsResourceItem * res = mResourceCache->id2ptr(id);
-    GN_ASSERT( res );
+    if( 0 == res ) return;
 
-    if( GRS_DISPOSED == res->state )
+    bool reload;
+
+    mResourceLRU->realize( id, &reload );
+
+    if( reload )
     {
-        // the resource is disposed. we have to reload it,
-        // using it's current loader and lod
+        // reload using it's current loader and lod
         GN_ASSERT( res->lastSubmittedLod > 0 );
         GN_ASSERT( res->lastSubmittedLoader );
-        updateres( id, res->lastSubmittedLod, res->lastSubmittedLoader );
-
-        GN_ASSERT( res->lastSubmissionFence > res->lastReferenceFence );
+        mFenceManager->submitResourceLoadingCommand(
+            id,
+            res->lastSubmittedLod,
+            res->lastSubmittedLoader );
     }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-inline void GN::engine::RenderEngine::useResource( GraphicsResourceId id, DrawCommand & dr )
-{
-    if( 0 == id ) return;
-
-    GraphicsResourceItem * res = mResourceCache->id2ptr(id);
-
-    GN_ASSERT( res );
-
-    GN_ASSERT( GRS_REALIZED == res->state );
-
-    // reference and update can't happen at same fence.
-    GN_ASSERT( res->lastReferenceFence != res->lastSubmissionFence );
-
-    // resource is updated after being used. Now it is being used again.
-    // so we have to wait for completion of the update.
-    if( res->lastSubmissionFence > res->lastReferenceFence )
-    {
-        dr.resourceWaitingList[dr.resourceWaitingCount].id = id;
-        dr.resourceWaitingList[dr.resourceWaitingCount].waitForUpdate = res->lastSubmissionFence;
-        dr.resourceWaitingCount++;
-    }
-
-    res->lastReferenceFence = dr.fence;
-
-    GN_ASSERT( res->lastReferenceFence != res->lastSubmissionFence );
 }
 
 // *****************************************************************************
@@ -208,16 +237,20 @@ inline void GN::engine::RenderEngine::useResource( GraphicsResourceId id, DrawCo
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResourceId
-GN::engine::RenderEngine::allocres( const GraphicsResourceCreationParameter & param )
+GN::engine::RenderEngine::allocResource( const GraphicsResourceDesc & desc )
 {
-    return mResourceCache->alloc( param );
+    GraphicsResourceId id = mResourceCache->alloc( desc );
+    if( 0 == id ) return 0;
+    mResourceLRU->insert( id );
+    return id;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::freeres( GraphicsResourceId id )
+void GN::engine::RenderEngine::freeResource( GraphicsResourceId id )
 {
+    mResourceLRU->remove( id );
     return mResourceCache->free( id );
 }
 
@@ -225,7 +258,7 @@ void GN::engine::RenderEngine::freeres( GraphicsResourceId id )
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource *
-GN::engine::RenderEngine::id2res( GraphicsResourceId id )
+GN::engine::RenderEngine::getResourceById( GraphicsResourceId id )
 {
     return mResourceCache->id2ptr( id );
 }
@@ -233,58 +266,11 @@ GN::engine::RenderEngine::id2res( GraphicsResourceId id )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::updateres(
+void GN::engine::RenderEngine::updateResource(
     GraphicsResourceId       id,
     int                      lod,
     GraphicsResourceLoader * loader )
 {
-    // check parameters
-    GN_ASSERT( lod > 0 );
-    GN_ASSERT( loader );
-
-    // get resource item
-    GraphicsResourceItem * res = mResourceCache->id2ptr( id );
-    if( 0 == res ) return;
-    GN_ASSERT( res->id == id );
-
-    // check if the resource is disposed.
-    GraphicsResourceItem * to_be_disposed = 0;
-    if( GRS_DISPOSED == res->state )
-    {
-        to_be_disposed = mResourceCache->makeRoomForResource( id, mFence );
-        mResourceCache->mark_as_realized_and_recently_used( id );
-    }
-
-    // submit dispose commands
-    if( to_be_disposed )
-    {
-        ResourceCommand * cmd = ResourceCommand::alloc();
-        if( 0 == cmd ) return;
-        cmd->noerr = true;
-        cmd->op = GROP_DISPOSE;
-        while( to_be_disposed )
-        {
-            cmd->resourceId = to_be_disposed->id;
-            cmd->mustAfterThisFence = to_be_disposed->lastReferenceFence;
-            cmd->submittedAtThisFence = mFence;
-            to_be_disposed->lastSubmissionFence = mFence++;
-            mDrawThread->submitResourceCommand( cmd );
-            to_be_disposed = to_be_disposed->nextItemToDispose;
-        }
-    }
-
-    // submit load command
-    ResourceCommand * cmd = ResourceCommand::alloc();
-    if( 0 == cmd ) return;
-    cmd->noerr = true;
-    cmd->op = GROP_LOAD;
-    cmd->resourceId = id;
-    cmd->targetLod = lod;
-    cmd->loader.attach( loader );
-    cmd->mustAfterThisFence = res->lastReferenceFence;
-    cmd->submittedAtThisFence = mFence;
-    res->lastSubmissionFence = mFence++;
-    res->lastSubmittedLoader.attach( loader );
-    res->lastSubmittedLod = lod;
-    mResourceThread->submitResourceCommand( cmd );
+    mResourceLRU->realize( id, 0 );
+    mFenceManager->submitResourceLoadingCommand( id, lod, loader );
 }

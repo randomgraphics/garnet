@@ -1,0 +1,5 @@
+- delete a currently in-process resource
+- change renderer options during rendering
+
+
+

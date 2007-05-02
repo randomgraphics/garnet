@@ -6,8 +6,25 @@
 //! \author  chenli@@FAREAST (2007.4.29)
 // *****************************************************************************
 
+#include "fence.h"
+
 namespace GN { namespace engine
 {
+    ///
+    /// resource operations will happens in strict order as the enum itself.
+    ///
+    enum GraphicsResourceOperation
+    {
+        GROP_LOAD,       ///< load from external/slow/remote storage. Handled by IO tread.
+
+        GROP_DECOMPRESS, ///< do decompress or other process to prepare to copy to graphics resource.
+                         ///< Handled by decompress thread.
+
+        GROP_COPY,       ///< copy data to graphics resource. Handled by draw thread.
+
+        GROP_DISPOSE,    ///< dispose the resource. Handled by draw thread
+    };
+
     ///
     /// basic resource command item class.
     ///

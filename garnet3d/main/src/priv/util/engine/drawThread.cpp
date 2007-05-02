@@ -220,9 +220,6 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
         }
     }
 
-    // dispose all resources
-    mEngine.resourceCache().deleteAllDeviceData();
-
     // delete Renderer
     GN::gfx::deleteRenderer();
 
@@ -365,9 +362,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
 {
     GN_GUARD;
-
-    // delete all device data in resource cache
-    mEngine.resourceCache().deleteAllDeviceData();
 
     // (re)create renderer
     GN::gfx::Renderer * r = gfx::createRenderer( mRendererApi );
