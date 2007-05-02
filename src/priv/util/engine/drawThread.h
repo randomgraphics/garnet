@@ -92,7 +92,7 @@ namespace GN { namespace engine
         ///
         //@{
 
-        inline void submitResourceCommand( ResourceCommandItem * item );
+        inline void submitResourceCommand( ResourceCommand * item );
 
         //@}
 
@@ -141,7 +141,7 @@ namespace GN { namespace engine
         SyncEvent *                   mResetRendererComplete;
 
         // data to handle resource commands
-        DoubleLinkedList<ResourceCommandItem> mResourceCommands;
+        DoubleLinkedList<ResourceCommand> mResourceCommands;
         Mutex                                 mResourceMutex;
 
         // data to handle draw commands

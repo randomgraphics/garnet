@@ -258,33 +258,33 @@ void GN::engine::RenderEngine::updateres(
     // submit dispose commands
     if( to_be_disposed )
     {
-        ResourceCommandItem * item = ResourceCommandItem::alloc();
-        if( 0 == item ) return;
-        item->noerr = true;
-        item->command.op = GROP_DISPOSE;
+        ResourceCommand * cmd = ResourceCommand::alloc();
+        if( 0 == cmd ) return;
+        cmd->noerr = true;
+        cmd->op = GROP_DISPOSE;
         while( to_be_disposed )
         {
-            item->command.resourceId = to_be_disposed->id;
-            item->command.mustAfterThisFence = to_be_disposed->lastReferenceFence;
-            item->command.submittedAtThisFence = mFence;
+            cmd->resourceId = to_be_disposed->id;
+            cmd->mustAfterThisFence = to_be_disposed->lastReferenceFence;
+            cmd->submittedAtThisFence = mFence;
             to_be_disposed->lastSubmissionFence = mFence++;
-            mDrawThread->submitResourceCommand( item );
+            mDrawThread->submitResourceCommand( cmd );
             to_be_disposed = to_be_disposed->nextItemToDispose;
         }
     }
 
     // submit load command
-    ResourceCommandItem * item = ResourceCommandItem::alloc();
-    if( 0 == item ) return;
-    item->noerr = true;
-    item->command.op = GROP_LOAD;
-    item->command.resourceId = id;
-    item->command.targetLod = lod;
-    item->command.loader.attach( loader );
-    item->command.mustAfterThisFence = res->lastReferenceFence;
-    item->command.submittedAtThisFence = mFence;
+    ResourceCommand * cmd = ResourceCommand::alloc();
+    if( 0 == cmd ) return;
+    cmd->noerr = true;
+    cmd->op = GROP_LOAD;
+    cmd->resourceId = id;
+    cmd->targetLod = lod;
+    cmd->loader.attach( loader );
+    cmd->mustAfterThisFence = res->lastReferenceFence;
+    cmd->submittedAtThisFence = mFence;
     res->lastSubmissionFence = mFence++;
     res->lastSubmittedLoader.attach( loader );
     res->lastSubmittedLod = lod;
-    mResourceThread->submitResourceCommand( item );
+    mResourceThread->submitResourceCommand( cmd );
 }

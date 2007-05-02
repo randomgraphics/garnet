@@ -29,7 +29,7 @@ GN::engine::RenderEngine::DrawThread::newDrawCommand()
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
-    ResourceCommandItem * item  )
+    ResourceCommand * item  )
 {
     GN_ASSERT( item );
     mResourceMutex.lock();

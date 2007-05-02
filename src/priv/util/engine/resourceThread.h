@@ -50,7 +50,7 @@ namespace GN { namespace engine
 
         void waitForIdle();
 
-        void submitResourceCommand( ResourceCommandItem * item );
+        void submitResourceCommand( ResourceCommand * item );
 
         //@}
 
