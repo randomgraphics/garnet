@@ -32,7 +32,7 @@ namespace GN { namespace engine
             ///
             /// maximum resources used per context
             ///
-            MAX_RESOURCES_PER_CONTEXT = 64 * gfx::NUM_SHADER_TYPES + gfx::MAX_RENDER_TARGETS + 1;
+            MAX_RESOURCES_PER_CONTEXT = 64 * gfx::NUM_SHADER_TYPES + gfx::MAX_RENDER_TARGETS + 1
         };
 
         ///
@@ -57,8 +57,10 @@ namespace GN { namespace engine
 
         DrawContext     context; ///< draw context
 
+        //@{
         ResourceWaitingItem resourceWaitingList[MAX_RESOURCES_PER_CONTEXT];
         UInt32              resourceWaitingCount;
+        //@}
 
         //@{
         union
@@ -96,11 +98,6 @@ namespace GN { namespace engine
                 //@}
             } drawindexed; ///< drawindexed parameters
         };
-        //@}
-
-        //@{
-        void   incPendingResourceCount() { atomInc32( &pendingResources ); }
-        SInt32 getPendingResourceCount() const { return atomGet32(&pendingResources); }
         //@}
     };
 }}

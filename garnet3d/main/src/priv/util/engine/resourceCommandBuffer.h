@@ -14,11 +14,12 @@ namespace GN { namespace engine
     struct GraphicsResourceCommand
     {
         //@{
-        GraphicsResourceOperation             op;               ///< requested operation.
-        GraphicsResourceId                    resourceId;       ///< target resource
-        FenceId                               waitForDrawFence; ///< the request must be happend after this draw fence. For lock/unlock/dispose only.
-        int                                   targetLod;        ///< ignored by GROP_DISPOSE
-        AutoRef<GraphicsResourceLoader,Mutex> loader;           ///< ignored by GROP_DISPOSE
+        GraphicsResourceOperation             op;                   ///< requested operation.
+        GraphicsResourceId                    resourceId;           ///< target resource
+        int                                   targetLod;            ///< ignored by GROP_DISPOSE
+        AutoRef<GraphicsResourceLoader,Mutex> loader;               ///< ignored by GROP_DISPOSE
+        FenceId                               mustAfterThisFence;   ///< the request must happens after this draw fence. For lock/unlock/dispose only.
+        FenceId                               submittedAtThisFence; ///< the request is submitted at this fence.
         //@}
     };
 
@@ -29,6 +30,8 @@ namespace GN { namespace engine
     struct ResourceCommandItem : public DoubleLinkedItem<ResourceCommandItem>
     {
         //@{
+
+        bool noerr; ///< true means this request has no error
 
         GraphicsResourceCommand command;
 

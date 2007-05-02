@@ -135,7 +135,7 @@ namespace GN { namespace engine
         /// protected constructor
         ///
         GraphicsResource( GraphicsResourceId id_, GraphicsResourceType type_ )
-            : id(id_), type(type_), lod(0)
+            : id(id_), type(type_)
         {}
 
         ///
@@ -199,7 +199,54 @@ namespace GN { namespace engine
     ///
     /// fence ID type
     ///
-    typedef int FenceId;
+    class FenceId
+    {
+        int value;
+
+    public:
+
+        ///
+        /// ctor
+        ///
+        FenceId() {}
+
+        ///
+        /// ctor
+        ///
+        explicit FenceId( int value_ ) : value(value_) {}
+
+        //@{
+        bool operator <  ( const FenceId & rhs ) const { return rhs.value - value >  0; }
+        bool operator <= ( const FenceId & rhs ) const { return rhs.value - value >= 0; }
+        bool operator >  ( const FenceId & rhs ) const { return value - rhs.value >  0; }
+        bool operator >= ( const FenceId & rhs ) const { return value - rhs.value >= 0; }
+        bool operator == ( const FenceId & rhs ) const { return value == rhs.value; }
+        bool operator != ( const FenceId & rhs ) const { return value != rhs.value; }
+
+        FenceId & operator = ( const FenceId & rhs ) { value = rhs.value; return *this; }
+        FenceId & operator = ( int value_ ) { value = value_; return *this; }
+
+        ///
+        /// prefix increment
+        ///
+        FenceId & operator++()
+        {
+            ++value;
+            return *this;
+        }
+
+        ///
+        /// postfie increament
+        ///
+        FenceId operator++(int)
+        {
+            FenceId r(*this);
+            ++value;
+            return r;
+        }
+
+        //@}
+    };
 
     ///
     /// ...
@@ -262,7 +309,7 @@ namespace GN { namespace engine
         ///
         struct RenderTargetDesc
         {
-            RenderTargetTexture cbuffers[MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
+            RenderTargetTexture cbuffers[gfx::MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
             RenderTargetTexture zbuffer; ///< z buffer description. Set zbuffer.texture to NULL to use auto-zbuffer.
             unsigned int        count :  5; ///< color buffer count. 0 means draw to back buffer.
             unsigned int        aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
@@ -277,6 +324,7 @@ namespace GN { namespace engine
 
     // forward declarations
     struct DrawCommand;
+    struct ResourceCommandItem;
 
     ///
     /// major render engine interface.
@@ -310,6 +358,7 @@ namespace GN { namespace engine
     private:
         void clear()
         {
+            mFence = 0;
             mResourceCache = 0;
             mDrawThread = 0;
             mResourceThread = 0;
@@ -363,10 +412,11 @@ namespace GN { namespace engine
     private:
 
         ///
-        /// Called by various draw commands, to ensure that the resource
-        /// is usable for specific draw command.
+        /// Called by various draw commands, to ensure that disposed resources are reloaded.
         ///
-        void ensureUsableResource( GraphicsResourceId id, DrawCommand & dr );
+        inline void reloadDisposedResource( GraphicsResourceId id );
+
+        inline void useResource( GraphicsResourceId id, DrawCommand & dr );
 
         // ********************************
         /// \name resource commands
@@ -392,15 +442,6 @@ namespace GN { namespace engine
                         GraphicsResourceLoader * loader );
 
         //@}
-
-    private:
-
-        void loadResource(
-            FenceId                   fence,
-            GraphicsResourceId        resource,
-            int                       lod,
-            GraphicsResourceLoader  * loader,
-            bool                      reload ); // force resource reload
 
         // ********************************
         /// \name sub component accessor
@@ -431,7 +472,7 @@ namespace GN { namespace engine
         DrawThread            * mDrawThread;
         ResourceThread        * mResourceThread;
 
-        FenceId mSubmitFence; // this is used to identify the submitted draw and resource commands.
+        FenceId mFence; // this is used to identify the submitted draw and resource commands.
 
         // ********************************
         // private functions

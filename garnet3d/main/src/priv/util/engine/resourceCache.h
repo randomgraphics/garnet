@@ -29,7 +29,7 @@ namespace GN { namespace engine
     struct GraphicsResourceItem : public GraphicsResource, public DoubleLinkedItem<GraphicsResourceItem>
     {
         ///
-        /// all these values should be accessed in render engine thread only.
+        /// all these values are accessed in render engine thread only.
         ///
         //@{
 
@@ -43,24 +43,24 @@ namespace GN { namespace engine
         ///
         /// the loader used by the lasted update command.
         ///
-        AutoRef<GraphicsResourceLoader,Mutex> updateLoader;
+        AutoRef<GraphicsResourceLoader,Mutex> lastSubmittedLoader;
 
         ///
         /// the LOD level used by the last update command.
         ///
         /// \note Don't confuse this with GraphicsResource::lod.
         ///
-        int updateLod;
+        int lastSubmittedLod;
 
         ///
         /// the fence of the lastest update command.
         ///
-        FenceId updateFence;
+        FenceId lastSubmissionFence;
 
         ///
         /// last used/referenced at this fence.
         ///
-        FenceId referenceFence;
+        FenceId lastReferenceFence;
 
         ///
         /// this is used to store dispose resource list returned by makeRoomFromResource()
@@ -69,11 +69,29 @@ namespace GN { namespace engine
 
         //@}
 
+        //@{
+
+        ///
+        /// When resource update is complete. Draw thread will copy the submission fence
+        /// value in the resource request to here, which means that the resource request
+        /// submitted at this fence is done.
+        ///
+        /// \note
+        ///     - This value should be less or equal then lastSubmission all the time.
+        ///
+        FenceId lastCompletedFence;
+
+        //@}
+
         ///
         /// ctor
         ///
         GraphicsResourceItem( GraphicsResourceId i, GraphicsResourceType t )
             : GraphicsResource( i, t )
+            , lastSubmittedLod( 0 )
+            , lastSubmissionFence( 0 )
+            , lastReferenceFence( 0 )
+            , lastCompletedFence( 0 )
         {}
     };
 
