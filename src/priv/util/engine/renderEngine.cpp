@@ -17,7 +17,7 @@
 static inline void sUpdateWaitingListAndReferenceFence(
     GN::engine::RenderEngine::GraphicsResourceCache & cache,
     GN::engine::GraphicsResourceId id,
-    GN::engine::DrawCommand & dr )
+    GN::engine::DrawCommandHeader & dr )
 {
     using namespace GN::engine;
 
@@ -171,10 +171,8 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
     // TODO: associate other resources as well
 
     // create new draw command
-    DrawCommand & dr = mFenceManager->submitDrawCommand();
-    dr.type = DCT_SET_CONTEXT;
-    dr.context = context;
-    dr.resourceWaitingCount = 0;
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand1( DCT_SET_CONTEXT, context );
+    if( 0 == dr ) return;
 
     // update reference fence of resources in the context
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
@@ -182,9 +180,26 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
         sUpdateWaitingListAndReferenceFence(
             *mResourceCache,
             context.shaders[i].shader,
-            dr );
+            *dr );
     }
 }
+
+/*
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::updateShaderUniforms(
+    GraphicsResourceId        shader,
+    const StrA              & uniformName,
+    const gfx::UniformValue & value )
+{
+    DrawCommand & dr = mFenceManager->submitDrawCommand();
+    dr.type = DCT_SET_UNIFORM;
+    dr.resourceWaitingCount = 0;
+    dr.clear.color() = c;
+    dr.clear.z = z;
+    dr.clear.s = s;
+    dr.clear.flags = flags;
+}*/
 
 //
 //
@@ -194,13 +209,7 @@ void GN::engine::RenderEngine::clearScreen(
     float z, UInt8 s,
     BitFields flags )
 {
-    DrawCommand & dr = mFenceManager->submitDrawCommand();
-    dr.type = DCT_CLEAR;
-    dr.resourceWaitingCount = 0;
-    dr.clear.color() = c;
-    dr.clear.z = z;
-    dr.clear.s = s;
-    dr.clear.flags = flags;
+    mDrawThread->submitDrawCommand4( DCT_CLEAR, c, z, s, flags );
 }
 
 //
@@ -222,7 +231,7 @@ inline void GN::engine::RenderEngine::prepareResource( GraphicsResourceId id )
         // reload using it's current loader and lod
         GN_ASSERT( res->lastSubmittedLod > 0 );
         GN_ASSERT( res->lastSubmittedLoader );
-        mFenceManager->submitResourceLoadingCommand(
+        mResourceThread->submitResourceLoadingCommand(
             id,
             res->lastSubmittedLod,
             res->lastSubmittedLoader );
@@ -272,5 +281,5 @@ void GN::engine::RenderEngine::updateResource(
     GraphicsResourceLoader * loader )
 {
     mResourceLRU->realize( id, 0 );
-    mFenceManager->submitResourceLoadingCommand( id, lod, loader );
+    mResourceThread->submitResourceLoadingCommand( id, lod, loader );
 }

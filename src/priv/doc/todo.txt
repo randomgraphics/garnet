@@ -2,12 +2,15 @@
 
 - p1
   - store non-default values only in renderer context.
-  - multi-thread architect
-    - configuable resource cache with limited video memory footprint.
-    - update thread: major game logic thread
-    - render thread: the only thread that touches rendering device.
-    - resource loading thread(s)
-  - treat all surfaces as parameter of shader, like uniforms
+  - render engine todo:
+    - todo
+      - treat all resources as parameter of shader
+      - constant buffer
+    - done
+      - configuable resource cache with limited video memory footprint.
+      - update thread: major game logic thread
+      - render thread: the only thread that touches rendering device.
+      - resource loading thread(s)
   - shared uniform
 
 - p2

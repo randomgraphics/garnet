@@ -15,6 +15,7 @@ namespace GN { namespace engine
     {
         //@{
         DCT_SET_CONTEXT,
+        DCT_SET_UNIFORM,
         DCT_CLEAR,
         DCT_DRAW,
         DCT_DRAW_INDEXED,
@@ -23,18 +24,15 @@ namespace GN { namespace engine
     };
 
     ///
+    /// function prototype to handle draw commands
     ///
-    ///
-    struct DrawCommand
-    {
-        enum
-        {
-            ///
-            /// maximum resources used per context
-            ///
-            MAX_RESOURCES_PER_CONTEXT = 64 * gfx::NUM_SHADER_TYPES + gfx::MAX_RENDER_TARGETS + 1
-        };
+    typedef void (*DrawFunction)( const void * param, size_t paramBytes );
 
+    ///
+    /// ...
+    ///
+    struct DrawCommandHeader
+    {
         ///
         /// ...
         ///
@@ -51,16 +49,65 @@ namespace GN { namespace engine
             FenceId waitForUpdate;
         };
 
-        DrawCommandType type;    ///< see DrawCommandType for details.
+        enum
+        {
+            ///
+            /// maximum resources used per context
+            ///
+            MAX_RESOURCES_PER_CONTEXT = 64 * gfx::NUM_SHADER_TYPES + gfx::MAX_RENDER_TARGETS + 1
+        };
 
-        FenceId         fence;   ///< fence ID of this draw
+        ///
+        /// bytes of the command, including this header
+        ///
+        UInt32 bytes;
 
-        DrawContext     context; ///< draw context
+        ///
+        /// fence ID of this draw
+        ///
+        FenceId fence;
+
+        ///
+        /// function pointer that handles the command.
+        ///
+        DrawFunction func;
 
         //@{
         ResourceWaitingItem resourceWaitingList[MAX_RESOURCES_PER_CONTEXT];
         UInt32              resourceWaitingCount;
         //@}
+
+        ///
+        /// return pointer to parameter array
+        ///
+        void * param() const
+        {
+            return (void*)( this + 1 );
+        }
+
+        ///
+        /// return pointer to next command
+        ///
+        DrawCommandHeader * next() const
+        {
+            return (DrawCommandHeader*)( ((UInt8*)this) + bytes );
+        }
+    };
+
+    /*
+    /// ...
+    ///
+    struct DrawCommand
+    {
+        DrawCommandType type;    ///< see DrawCommandType for details.
+
+
+        //@{
+        ResourceWaitingItem resourceWaitingList[MAX_RESOURCES_PER_CONTEXT];
+        UInt32              resourceWaitingCount;
+        //@}
+
+        DrawContext     context; ///< draw context, for DCT_SET_CONTEXT only
 
         //@{
         union
@@ -99,7 +146,7 @@ namespace GN { namespace engine
             } drawindexed; ///< drawindexed parameters
         };
         //@}
-    };
+    };*/
 }}
 
 // *****************************************************************************

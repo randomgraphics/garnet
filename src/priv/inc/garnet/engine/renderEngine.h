@@ -306,6 +306,11 @@ namespace GN { namespace engine
 
         void setContext( const DrawContext & context );
 
+        void updateShaderUniforms(
+            GraphicsResourceId        shader,
+            const StrA              & uniformName,
+            const gfx::UniformValue & value );
+
         void clearScreen(
             const Vector4f & c = Vector4f(0,0,0,1),
             float z = 1.0f, UInt8 s = 0,

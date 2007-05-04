@@ -6,6 +6,50 @@
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
 
 // *****************************************************************************
+// draw command functions
+// *****************************************************************************
+
+namespace GN { namespace engine
+{
+    void FUNC_SET_CONTEXT( const void *, size_t )
+    {
+    }
+
+    void FUNC_SET_UNIFORM( const void *, size_t )
+    {
+    }
+
+    void FUNC_CLEAR( const void * param, size_t bytes )
+    {
+        #pragma pack(push,1)
+        struct Param
+        {
+            Vector4f color;
+            float    z;
+            UInt8    s;
+            UInt32   flags;
+        };
+        #pragma pack(pop)
+
+        GN_ASSERT( param );
+        GN_ASSERT( sizeof(Param) <= bytes );
+        const Param * p = (Param*)param;
+
+        gfx::Renderer & r = gRenderer;
+
+        r.clearScreen( p->color, p->z, p->s, p->flags );
+    }
+
+    void FUNC_DRAW( const void *, size_t )
+    {
+    }
+
+    void FUNC_DRAW_INDEXED( const void *, size_t )
+    {
+    }
+}};
+
+// *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
 
@@ -18,6 +62,14 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
 
     // standard init procedure
     GN_STDCLASS_INIT( DrawThread, () );
+
+    // initialize draw function pointers
+    memset( mDrawFunctions, 0, sizeof(mDrawFunctions) );
+    mDrawFunctions[DCT_SET_CONTEXT]  = &FUNC_SET_CONTEXT;
+    mDrawFunctions[DCT_SET_UNIFORM]  = &FUNC_SET_UNIFORM;
+    mDrawFunctions[DCT_CLEAR]        = &FUNC_CLEAR;
+    mDrawFunctions[DCT_DRAW]         = &FUNC_DRAW;
+    mDrawFunctions[DCT_DRAW_INDEXED] = &FUNC_DRAW_INDEXED;
 
     // initialize draw buffers
     for( int i = 0; i < DRAW_BUFFER_COUNT; ++i )
@@ -241,11 +293,11 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
     {
         DrawBuffer & db = mDrawBuffers[mReadingIndex];
 
-        DrawCommand * command = (DrawCommand*)db.buffer;
+        DrawCommandHeader * command = (DrawCommandHeader*)db.buffer;
 
-        DrawCommand * last = (DrawCommand*)db.next;
+        DrawCommandHeader * end = (DrawCommandHeader*)db.next;
 
-        while( command < last && !mActionQuit )
+        while( command < end && !mActionQuit )
         {
             // resource command has priority
             handleResourceCommands();
@@ -255,7 +307,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             GN_ASSERT( count >= 0 );
             for( int i = count - 1; i >= 0; --i )
             {
-                DrawCommand::ResourceWaitingItem & wi = command->resourceWaitingList[i];
+                DrawCommandHeader::ResourceWaitingItem & wi = command->resourceWaitingList[i];
                 GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( wi.id );
                 if( res->lastCompletedFence >= wi.waitForUpdate )
                 {
@@ -277,13 +329,15 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             if( 0 == command->resourceWaitingCount )
             {
                 // all resources are ready. do it!
-                doDraw( *command );
+                GN_ASSERT( command->func );
+                command->func( command->param(), command->bytes - sizeof(DrawCommandHeader) );
 
                 // update draw fence
                 mDrawFence = command->fence;
 
                 // next command
-                ++command;
+                command = command->next();
+                GN_ASSERT( command <= end );
             }
             else
             {
@@ -381,31 +435,4 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
 
     GN_UNGUARD;
     
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::DrawThread::doDraw( const DrawCommand & cmd )
-{
-    gfx::Renderer & r = gRenderer;
-
-    switch( cmd.type )
-    {
-        case DCT_DRAW_INDEXED :
-            break;
-
-        case DCT_SET_CONTEXT :
-            break;
-
-        case DCT_DRAW :
-            break;
-
-        case DCT_CLEAR:
-            r.clearScreen( cmd.clear.color(), cmd.clear.z, cmd.clear.s, cmd.clear.flags );
-            break;
-
-        default :
-            GN_UNEXPECTED();
-    }
 }
