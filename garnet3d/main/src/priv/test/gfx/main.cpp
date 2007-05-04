@@ -212,22 +212,37 @@ using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
 
+bool init( RenderEngine & )
+{
+    return true;
+}
+
+void quit()
+{
+}
+
 void run( RenderEngine & engine )
 {
-    while( 1 )
+    __try
     {
-        gInput.processInputEvents();
-
-        if( gInput.getKeyStatus( KEY_ESCAPE ).down )
+        while( 1 )
         {
-            break;
+            gInput.processInputEvents();
+
+            if( gInput.getKeyStatus( KEY_ESCAPE ).down )
+            {
+                break;
+            }
+            
+            engine.frameBegin();
+
+            engine.clearScreen( Vector4f(0,0,1,0) );
+
+            engine.frameEnd();
         }
-        
-        engine.frameBegin();
-
-        engine.clearScreen();
-
-        engine.frameEnd();
+    }
+    __finally
+    {
     }
 }
 
@@ -250,7 +265,8 @@ int main()
 
     RenderEngine engine;
 
-    RenderEngineInitParameters reip = { 0, 0, 4*1024*1024 };
+    UInt32 MB = 1024 * 1024;
+    RenderEngineInitParameters reip = { 32*MB, 32*MB, 4*MB };
 
     RendererOptions ro;
 

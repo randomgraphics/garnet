@@ -6,7 +6,9 @@
 //! \author  chen@@CHENLI-HOMEPC (2007.4.27)
 // *****************************************************************************
 
+#include "resourceCache.h"
 #include "resourceCommandBuffer.h"
+#include "fenceManager.h"
 
 namespace GN { namespace engine
 {
@@ -50,9 +52,16 @@ namespace GN { namespace engine
 
         void waitForIdle();
 
-        void submitResourceCommand( ResourceCommand * item );
+        inline void submitResourceLoadingCommand(
+            GraphicsResourceId       id,
+            int                      lod,
+            GraphicsResourceLoader * loader );
 
         //@}
+
+    private:
+
+        inline void submitResourceCommand( ResourceCommand * item );
 
         // ********************************
         // private variables

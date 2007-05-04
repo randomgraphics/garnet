@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "resourceLRU.h"
 #include "resourceCache.h"
-#include "fenceManager.h"
+#include "drawThread.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -200,5 +200,5 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
             GN_UNEXPECTED();
     }
 
-    mEngine.fenceManager().submitResourceDisposingCommand( id );
+    mEngine.drawThread().submitResourceDisposingCommand( id );
 }
