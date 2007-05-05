@@ -383,6 +383,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 switch( prev->op )
                 {
                     case GROP_COPY :
+                        GN_INFO(sLogger)( "Copy %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
                         GN_UNIMPL();
                         break;
 

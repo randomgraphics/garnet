@@ -8,7 +8,7 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
     switch( cmd->op )
     {
         case GROP_LOAD:
-            mLoador.commands.submit( cmd );
+            mLoader.commands.submit( cmd );
             break;
 
         case GROP_DECOMPRESS:
@@ -30,7 +30,6 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingComma
     GraphicsResourceLoader * loader )
 {
     // check parameters
-    GN_ASSERT( lod > 0 );
     GN_ASSERT( loader );
 
     // get resource item

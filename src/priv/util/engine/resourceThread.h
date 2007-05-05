@@ -83,7 +83,7 @@ namespace GN { namespace engine
 
         RenderEngine & mEngine;
 
-        SubThread mLoador;       // do IO
+        SubThread mLoader;       // do IO
         SubThread mDecompressor; // do decompress
 
         // ********************************

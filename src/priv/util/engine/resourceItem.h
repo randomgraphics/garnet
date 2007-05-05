@@ -97,14 +97,15 @@ namespace GN { namespace engine
         GraphicsResourceItem(
                 GraphicsResourceId id_,
                 const GraphicsResourceDesc & desc_,
-                size_t bytes_ )
+                size_t bytes_,
+                FenceId fence )
             : GraphicsResource( id_, desc_ )
             , bytes( bytes_ )
             , state( GRS_DISPOSED )
             , lastSubmittedLod( 0 )
-            , lastSubmissionFence( 0 )
-            , lastReferenceFence( 0 )
-            , lastCompletedFence( 0 )
+            , lastSubmissionFence( fence )
+            , lastReferenceFence( fence )
+            , lastCompletedFence( fence )
         {}
     };
 }}

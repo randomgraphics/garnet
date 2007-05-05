@@ -2,6 +2,8 @@
 #include "resourceThread.h"
 #include "drawThread.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceThread");
+
 // *****************************************************************************
 // SubThread class
 // *****************************************************************************
@@ -48,7 +50,15 @@ bool GN::engine::RenderEngine::ResourceThread::init()
     // standard init procedure
     GN_STDCLASS_INIT( ResourceThread, () );
 
-    // Do custom init here
+    if( !mLoader.init(
+            makeDelegate( this, &ResourceThread::load ),
+            "Loading thread" ) )
+        return failure();
+
+    if( !mDecompressor.init(
+            makeDelegate( this, &ResourceThread::decompress ),
+            "Decompressing thread" ) )
+        return failure();
 
     // success
     return success();
@@ -62,6 +72,9 @@ bool GN::engine::RenderEngine::ResourceThread::init()
 void GN::engine::RenderEngine::ResourceThread::quit()
 {
     GN_GUARD;
+
+    mLoader.quit();
+    mDecompressor.quit();
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -99,6 +112,8 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
         GN_ASSERT( GROP_LOAD == cmd->op );
         GN_ASSERT( cmd->loader );
 
+        GN_INFO(sLogger)( "Load %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
+
         cmd->noerr = cmd->loader->load( cmd->data, cmd->bytes, cmd->targetLod );
 
         // load done. push it to decompress thread
@@ -125,6 +140,8 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
         GN_ASSERT( cmd->loader );
         void * olddata = cmd->data;
         size_t oldbytes = cmd->bytes;
+
+        GN_INFO(sLogger)( "Decompress %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
 
         cmd->noerr = cmd->loader->decompress( cmd->data, cmd->bytes, olddata, oldbytes, cmd->targetLod );
 

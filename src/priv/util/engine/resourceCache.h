@@ -54,6 +54,7 @@ namespace GN { namespace engine
         GraphicsResourceId     alloc( const GraphicsResourceDesc & );
         void                   free( GraphicsResourceId );
         GraphicsResourceItem * id2ptr( GraphicsResourceId ) const;
+        StrA                   id2name( GraphicsResourceId ) const; // for debug and log
         GraphicsResourceId     first() const;
         GraphicsResourceId     next( GraphicsResourceId ) const;
         //@}

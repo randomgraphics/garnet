@@ -114,7 +114,8 @@ GN::engine::RenderEngine::GraphicsResourceCache::alloc(
 
     GraphicsResourceId id = mResources.newItem();
 
-    GraphicsResourceItem * item = new GraphicsResourceItem( id, desc, bytes );
+    GraphicsResourceItem * item = new GraphicsResourceItem( id, desc, bytes, mEngine.fenceManager().getAndIncFence() );
+    item->prev = item->next = 0;
 
     mResources[id] = item;
 
@@ -144,6 +145,16 @@ void GN::engine::RenderEngine::GraphicsResourceCache::free( GraphicsResourceId i
     delete item;
 
     mResourceMutex.unlock();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::StrA GN::engine::RenderEngine::GraphicsResourceCache::id2name( GraphicsResourceId id ) const
+{
+    GraphicsResourceItem * item = id2ptr( id );
+    if( 0 == item ) return "INVALID_RESOURCE";
+    else return item->desc.name;
 }
 
 //
