@@ -23,10 +23,11 @@ namespace GN { namespace engine
     ///
     struct ShaderDesc
     {
-        gfx::ShaderType      type;  ///< shader type
-        gfx::ShadingLanguage lang;  ///< shading language
-        StrA                 code;  ///< shader code
-        StrA                 hints; ///< shader creation hints
+        gfx::ShaderType      type;   ///< shader type
+        gfx::ShadingLanguage lang;   ///< shading language
+        StrA                 code;   ///< shader code
+        StrA                 hints;  ///< shader creation hints
+        gfx::VtxFmtDesc      vtxfmt; ///< vertex format descriptor
     };
 
     ///
@@ -62,6 +63,7 @@ namespace GN { namespace engine
     struct GraphicsResourceDesc
     {
         //@{
+        StrA                 name; ///< this field is for log and debug. you may set it to any value.
         GraphicsResourceType type;
         ShaderDesc           sd;
         gfx::TextureDesc     td;
@@ -147,7 +149,7 @@ namespace GN { namespace engine
         ///
         /// free data buffer returned by load() and decompress()
         ///
-        virtual void freebuf( void * inbuf, size_t inbytes );
+        virtual void freebuf( void * inbuf, size_t inbytes ) = 0;
     };
 
     ///
@@ -209,7 +211,6 @@ namespace GN { namespace engine
         RenderTargetDesc          renderTargets;                    ///< render target descriptor
         Rectf                     viewport;                         ///< Viewport. [0,0,1,1] means whole render target.
         gfx::RenderStateBlockDesc rsb;                              ///< render state block.
-        gfx::VtxFmtDesc           vtxfmt;                           ///< vertex format.
     };
 
     ///
@@ -310,6 +311,18 @@ namespace GN { namespace engine
             GraphicsResourceId        shader,
             const StrA              & uniformName,
             const gfx::UniformValue & value );
+
+        /*void updateVtxBuf(
+            GraphicsResourceId,
+            UInt32 offset,
+            UInt32 bytes,
+            const void * data );
+
+        void updateIdxBuf(
+            GraphicsResourceId,
+            UInt32 startidx,
+            UInt32 numidx,
+            const void * data );*/
 
         void clearScreen(
             const Vector4f & c = Vector4f(0,0,0,1),

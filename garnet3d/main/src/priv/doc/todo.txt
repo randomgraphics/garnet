@@ -4,6 +4,7 @@
   - store non-default values only in renderer context.
   - render engine todo:
     - todo
+      - merge vtxfmt and vertex shader
       - treat all resources as parameter of shader
       - constant buffer
     - done
