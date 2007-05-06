@@ -13,6 +13,7 @@ sources = [
 	'registry.cpp',
 	'sharedLib.cpp',
 	'string.cpp',
+	'syncmsw.cpp',
 	'threadmsw.cpp',
 	'variant.cpp',
 	'xml.cpp',

@@ -112,6 +112,7 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
     mResourceMutex.lock();
     mResourceCommands.append( item );
     mDoSomething->signal();
+    mResourceCommandEmpty = false;
     mResourceMutex.unlock();
 }
 

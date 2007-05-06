@@ -114,7 +114,7 @@ GN::engine::RenderEngine::GraphicsResourceCache::alloc(
 
     GraphicsResourceId id = mResources.newItem();
 
-    GraphicsResourceItem * item = new GraphicsResourceItem( id, desc, bytes, mEngine.fenceManager().getAndIncFence() );
+    GraphicsResourceItem * item = new GraphicsResourceItem( id, desc, bytes );
     item->prev = item->next = 0;
 
     mResources[id] = item;

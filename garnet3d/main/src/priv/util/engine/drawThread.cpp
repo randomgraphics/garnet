@@ -285,6 +285,17 @@ bool GN::engine::RenderEngine::DrawThread::resetRenderer(
 //
 //
 // -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::DrawThread::waitForIdle( float time ) const
+{
+    if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time );
+
+    while( !mResourceCommandEmpty )
+        sleepCurrentThread( 0 );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::frameBegin()
 {
     // do nothing
@@ -468,6 +479,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             prev = cmd;
             cmd = cmd->next;
             mResourceCommands.remove( prev );
+            if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
             mResourceMutex.unlock();
 
             GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( prev->resourceId );

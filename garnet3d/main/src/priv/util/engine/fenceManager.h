@@ -33,7 +33,7 @@ namespace GN { namespace engine
         ///
         FenceId getAndIncFence()
         {
-            return mFence++;
+            return ++mFence;
         }
 
         //@}

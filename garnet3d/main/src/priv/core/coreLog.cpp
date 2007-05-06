@@ -343,7 +343,11 @@ namespace GN
     {
     public:
 
-        LoggerImpl( const StrA & name ) : Logger(name), mInheritLevel(true), mInheritEnabled(true) {}
+        LoggerImpl( const StrA & name, Mutex & mutex )
+            : Logger(name)
+            , mGlobalMutex( mutex )
+            , mInheritLevel(true)
+            , mInheritEnabled(true) {}
 
         void reapplyAttributes()
         {
@@ -355,41 +359,53 @@ namespace GN
 
         virtual void setLevel( int level )
         {
+            ScopeMutex<Mutex> m(mGlobalMutex);
             recursiveUpdateLevel( level );
             mInheritLevel = false;
         }
 
         virtual void setEnabled( bool enabled )
         {
+            ScopeMutex<Mutex> m(mGlobalMutex);
             recursiveUpdateEnabled( enabled );
             mInheritEnabled = false;
         }
 
         virtual void doLog( const LogDesc & desc, const StrA & msg )
         {
+            ScopeMutex<Mutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
         virtual void doLog( const LogDesc & desc, const StrW & msg )
         {
+            ScopeMutex<Mutex> m(mGlobalMutex);
             recursiveLog( *this, desc, msg );
         }
 
         virtual void addReceiver( Receiver * r )
         {
+            ScopeMutex<Mutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.insert( r );
         }
 
         virtual void removeReceiver( Receiver * r )
         {
+            ScopeMutex<Mutex> m(mGlobalMutex);
             if( 0 == r ) return;
             mReceivers.erase( r );
         }
 
-        virtual void removeAllReceivers() { mReceivers.clear(); }
+        virtual void removeAllReceivers()
+        {
+            ScopeMutex<Mutex> m(mGlobalMutex);
+            mReceivers.clear();
+        }
 
     private:
+
+        Mutex & mGlobalMutex;
 
         std::set<Receiver*> mReceivers;
         bool mInheritLevel;
@@ -440,7 +456,8 @@ namespace GN
         ConsoleReceiver mCr;
         FileReceiver    mFr;
         DebugReceiver   mDr;
-        LoggerImpl mRootLogger;
+        LoggerImpl      mRootLogger;
+        Mutex           mMutex;
 
         std::map<StrA,LoggerImpl*> mLoggers;
 
@@ -509,6 +526,8 @@ namespace GN
 
         LoggerImpl * getLogger( const char * name )
         {
+            ScopeMutex<Mutex> m( mMutex );
+
             // trip leading and trailing dots
             StrA n(name);
             n.trim( '.' );
@@ -524,7 +543,7 @@ namespace GN
             if( mLoggers.end() != i ) { GN_ASSERT( i->second ); return i->second; }
 
             // not found. create new one.
-            AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n) );
+            AutoObjPtr<LoggerImpl> newLogger( new LoggerImpl(n,mMutex) );
             mLoggers[n] = newLogger.get();
 
             // update logger tree
@@ -537,12 +556,14 @@ namespace GN
             return newLogger.detach();
         }
     };
+    LoggerContainer * msInstancePtr = 0;
 
     //
     // Implement global log function.
     // -------------------------------------------------------------------------
     GN_PUBLIC Logger * getLogger( const char * name )
     {
+        // WARNING: this function is not thread-safe!
         static LoggerContainer lc;
         return lc.getLogger( name );
     }
