@@ -63,7 +63,7 @@ public:
 
     //@{
 public:
-    bool init(
+    bool create(
         const ThreadProcedure & proc,
         void * param,
         ThreadPriority priority,
@@ -97,6 +97,27 @@ public:
         GN_MSW_CHECK_RV( mHandle, failure() );
 
         // success
+        mAttached = false;
+        return success();
+
+        GN_UNGUARD;
+    }
+
+    bool attach()
+    {
+        GN_GUARD;
+
+        // standard init procedure
+        GN_STDCLASS_INIT( ThreadMsw, () );
+
+        mHandle = GetCurrentThread();
+        mId = GetCurrentThreadId();
+
+        // TODO: get real priority value, then convert to TP_XXX enums.
+        mPriority = TP_NORMAL;
+
+        // success
+        mAttached = false;
         return success();
 
         GN_UNGUARD;
@@ -106,11 +127,14 @@ public:
     {
         GN_GUARD;
 
-        // wait for thread termination
-        waitForTermination( INFINITE_TIME, 0 );
+        if( !mAttached && mHandle )
+        {
+            // wait for thread termination
+            waitForTermination( INFINITE_TIME, 0 );
 
-        // close thread handle
-        CloseHandle( mHandle );
+            // close thread handle
+            CloseHandle( mHandle );
+        }
 
         // standard quit procedure
         GN_STDCLASS_QUIT();
@@ -121,6 +145,7 @@ public:
 private:
     void clear()
     {
+        mAttached = false;
         mHandle = 0;
         mId = 0;
     }
@@ -215,6 +240,8 @@ private:
     HANDLE          mHandle;
     DWORD           mId;
 
+    bool            mAttached;
+
     // ********************************
     // private functions
     // ********************************
@@ -255,7 +282,7 @@ GN::createThread(
 
     AutoObjPtr<ThreadMsw> s( new ThreadMsw );
 
-    if( !s->init( proc, param, priority, initialSuspended, name ) ) return 0;
+    if( !s->create( proc, param, priority, initialSuspended, name ) ) return 0;
 
     return s.detach();
 
@@ -268,6 +295,22 @@ GN::createThread(
 void GN::sleepCurrentThread( float seconds )
 {
    ::Sleep( sec2usec( seconds ) );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+Thread * GN::generateCurrentThreadObject()
+{
+    GN_GUARD;
+
+    AutoObjPtr<ThreadMsw> s( new ThreadMsw );
+
+    if( !s->attach() ) return 0;
+
+    return s.detach();
+
+    GN_UNGUARD;
 }
 
 #endif
