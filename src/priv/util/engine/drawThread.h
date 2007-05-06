@@ -88,14 +88,23 @@ namespace GN { namespace engine
         ///
         void frameEnd();
 
+        // alloc new draw command, fill the header, but leave parameter array uninitialized.
+        DrawCommandHeader * submitDrawCommand( DrawCommandType type, size_t parameterBytes );
+
         template<typename T1>
         DrawCommandHeader * submitDrawCommand1( DrawCommandType type, const T1 & a1 );
 
         template<typename T1, typename T2>
         DrawCommandHeader * submitDrawCommand2( DrawCommandType type, const T1 & a1, const T2 & a2 );
 
+        template<typename T1, typename T2, typename T3>
+        DrawCommandHeader * submitDrawCommand3( DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3 );
+
         template<typename T1, typename T2, typename T3, typename T4>
         DrawCommandHeader * submitDrawCommand4( DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3, const T4 & a4 );
+
+        template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+        DrawCommandHeader * submitDrawCommand6( DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3, const T4 & a4, const T5 & a5, const T6 & a6 );
 
         //@}
 
@@ -185,8 +194,6 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        DrawCommandHeader * submitDrawCommand( DrawCommandType type, size_t parameterBytes );
-
         void submitDrawBuffer(); // called by any threads other than draw thead.
 
         // methods runs in draw thread
@@ -194,7 +201,6 @@ namespace GN { namespace engine
         void   handleDrawCommands();
         void   handleResourceCommands();
         bool   doDeviceReset();
-        void   doResourceCopy( ResourceCommand & cmd );
     };
 }}
 

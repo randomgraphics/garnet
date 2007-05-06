@@ -92,6 +92,7 @@ namespace GN { namespace engine
         union
         {
             //@{
+            void          * data;     ///< ...
             gfx::Shader   * shader;   ///< ...
             gfx::Texture  * texture;  ///< ...
             gfx::VtxBuf   * vtxbuf;   ///< ...
@@ -106,7 +107,7 @@ namespace GN { namespace engine
         /// protected constructor
         ///
         GraphicsResource( GraphicsResourceId id_, const GraphicsResourceDesc & desc_ )
-            : id(id_), desc(desc_), shader(0)
+            : id(id_), desc(desc_), data(0)
         {}
 
         ///
@@ -153,65 +154,10 @@ namespace GN { namespace engine
     };
 
     ///
-    /// ...
+    /// \note
+    ///     - all resource pointers here must store graphics resource ID, instead of data pointer.
     ///
-    struct DrawContext
-    {
-        ///
-        /// single shader resource descriptor
-        ///
-        struct ShaderResource
-        {
-            int                binding;  ///< binding slot to the shader
-            GraphicsResourceId resource; ///< resource id.
-
-            union
-            {
-                struct
-                {
-                    UInt32     offset; ///< byte offset of the first vertex in buffer.
-                    UInt32     stride; ///< vertex stride in bytes
-                } vb; ///< vertex buffer properties
-            };
-        };
-
-        ///
-        /// shader descriptor
-        ///
-        struct ShaderDesc
-        {
-            GraphicsResourceId shader;        ///< shader itself.
-            ShaderResource     resources[64]; ///< resource list. Each shader can reference at most 64 resources at any time.
-            UInt32             count;         ///< resource count
-        };
-
-        ///
-        /// ...
-        ///
-        struct RenderTargetTexture
-        {
-            GraphicsResourceId texture;    ///< render target texture
-            unsigned int       face  : 14; ///< cubemap face. Must be zero for non-cube/stack texture.
-            unsigned int       slice : 14; ///< slice index. Must be zero for non 3D texture.
-            unsigned int       level :  4; ///< mipmap level
-        };
-
-        ///
-        /// ...
-        ///
-        struct RenderTargetDesc
-        {
-            RenderTargetTexture cbuffers[gfx::MAX_RENDER_TARGETS]; ///< color buffer descriptions. Ignored when draw to back buffer.
-            RenderTargetTexture zbuffer; ///< z buffer description. Set zbuffer.texture to NULL to use auto-zbuffer.
-            unsigned int        count :  5; ///< color buffer count. 0 means draw to back buffer.
-            unsigned int        aa    :  3; ///< anti-alias type. One of MsaaType. Ignored when draw to back buffer.
-        };
-
-        ShaderDesc                shaders[gfx::NUM_SHADER_TYPES];   ///< shaders and their resouces
-        RenderTargetDesc          renderTargets;                    ///< render target descriptor
-        Rectf                     viewport;                         ///< Viewport. [0,0,1,1] means whole render target.
-        gfx::RenderStateBlockDesc rsb;                              ///< render state block.
-    };
+    typedef gfx::RendererContext DrawContext;
 
     ///
     /// ...
@@ -307,30 +253,26 @@ namespace GN { namespace engine
 
         void setContext( const DrawContext & context );
 
-        void updateShaderUniforms(
+        void setShaderUniform(
             GraphicsResourceId        shader,
             const StrA              & uniformName,
             const gfx::UniformValue & value );
-
-        /*void updateVtxBuf(
-            GraphicsResourceId,
-            UInt32 offset,
-            UInt32 bytes,
-            const void * data );
-
-        void updateIdxBuf(
-            GraphicsResourceId,
-            UInt32 startidx,
-            UInt32 numidx,
-            const void * data );*/
 
         void clearScreen(
             const Vector4f & c = Vector4f(0,0,0,1),
             float z = 1.0f, UInt8 s = 0,
             BitFields flags = gfx::CLEAR_ALL );
 
-        void draw( ... );
-        void drawindexed( ... );
+        void drawIndexed( SInt32 prim,
+                          UInt32 numprim,
+                          UInt32 startvtx,
+                          UInt32 minvtxidx,
+                          UInt32 numvtx,
+                          UInt32 startidx );
+
+        void draw( SInt32 prim,
+                   UInt32 numprim,
+                   UInt32 startvtx );
 
         //@}
 

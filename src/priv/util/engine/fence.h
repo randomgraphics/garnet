@@ -21,18 +21,18 @@ namespace GN { namespace engine
         {
             if( 0 == v1 )
             {
-                if( 0 == v2 ) return 0;
-                else return -1;
+                if( 0 == v2 ) return 0; // v1 == v2 == 0
+                else return -1;         // v1 == 0, v2 !=0, so v1 < v2
             }
             else
             {
-                if( 0 == v2 ) return 1;
+                if( 0 == v2 ) return 1; // v2==0, v1 !=0, so v1 > v2
                 else
                 {
                     int d = v2 - v1;
-                    if( d > 0 ) return 1;
-                    if( d < 0 ) return -1;
-                    return 0;
+                    if( d > 0 ) return -1; // v1 <  v2
+                    if( d < 0 ) return  1; // v2 >  v2
+                    return 0;              // v1 == v2
                 }
             }
         }
