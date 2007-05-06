@@ -45,12 +45,12 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingComma
     cmd->op                   = GROP_LOAD;
     cmd->resourceId           = id;
     cmd->targetLod            = lod;
-    cmd->loader.attach( loader );
+    cmd->loader.set( loader );
     cmd->mustAfterThisFence   = res->lastReferenceFence;
     cmd->submittedAtThisFence = fence;
 
     res->lastSubmissionFence = fence;
-    res->lastSubmittedLoader.attach( loader );
+    res->lastSubmittedLoader.set( loader );
     res->lastSubmittedLod    = lod;
 
     GN_ASSERT( res->lastSubmissionFence > res->lastReferenceFence );

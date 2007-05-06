@@ -157,59 +157,6 @@ GN::StrA GN::engine::RenderEngine::GraphicsResourceCache::id2name( GraphicsResou
     else return item->desc.name;
 }
 
-//
-//
-// -----------------------------------------------------------------------------
-bool GN::engine::RenderEngine::GraphicsResourceCache::createDeviceData( GraphicsResourceId )
-{
-    return false;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::GraphicsResourceCache::deleteDeviceData( GraphicsResourceId id )
-{
-    GraphicsResourceItem * item = id2ptr( id );
-    GN_ASSERT( item );
-
-    switch( item->desc.type )
-    {
-        case GRT_SHADER :
-            GN_ASSERT( item->shader );
-            item->shader->decref();
-            item->shader = 0;
-            break;
-
-        case GRT_TEXTURE:
-            GN_ASSERT( item->texture );
-            item->texture->decref();
-            item->texture = 0;
-            break;
-
-        case GRT_VTXBUF :
-            GN_ASSERT( item->vtxbuf );
-            item->vtxbuf->decref();
-            item->vtxbuf = 0;
-            break;
-
-        case GRT_IDXBUF :
-            GN_ASSERT( item->idxbuf );
-            item->idxbuf->decref();
-            item->idxbuf = 0;
-            break;
-
-        case GRT_CONSTBUF :
-            GN_ASSERT( item->constbuf );
-            item->constbuf->decref();
-            item->constbuf = 0;
-            break;
-
-        default:
-            GN_UNEXPECTED();
-    }
-}
-
 // *****************************************************************************
 // private functions
 // *****************************************************************************

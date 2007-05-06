@@ -114,6 +114,7 @@ namespace GN { namespace engine
         DoubleLinkedList<ResourceCommand> mCommands;
         mutable Mutex                     mMutex;
         SyncEvent *                       mBufferNotEmpty;
+        volatile bool                     mEmpty;
         volatile bool                     mQuit;
     };
 }}
@@ -127,6 +128,7 @@ namespace GN { namespace engine
 // -----------------------------------------------------------------------------
 inline GN::engine::ResourceCommandBuffer::ResourceCommandBuffer()
     : mBufferNotEmpty( createSyncEvent( false, false ) ) // initial unsignaled, manual reset
+    , mEmpty( true )
     , mQuit( false )
 {
     if( 0 == mBufferNotEmpty )
@@ -175,10 +177,7 @@ inline void GN::engine::ResourceCommandBuffer::clear()
 // -----------------------------------------------------------------------------
 inline bool GN::engine::ResourceCommandBuffer::empty() const
 {
-    mMutex.lock();
-    bool b = mCommands.empty();
-    mMutex.unlock();
-    return b;
+    return mEmpty;
 }
 
 //
@@ -193,6 +192,7 @@ inline void GN::engine::ResourceCommandBuffer::submit(
     mMutex.lock();
     mCommands.append( item );
     mBufferNotEmpty->signal();
+    mEmpty = false;
     mMutex.unlock();
 }
 
@@ -220,7 +220,11 @@ GN::engine::ResourceCommandBuffer::get()
 
     mCommands.remove( cmd );
 
-    if( mCommands.empty() ) mBufferNotEmpty->unsignal();
+    if( mCommands.empty() )
+    {
+        mBufferNotEmpty->unsignal();
+        mEmpty = true;
+    }
 
     mMutex.unlock();
 
