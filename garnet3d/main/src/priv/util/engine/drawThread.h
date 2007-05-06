@@ -192,6 +192,7 @@ namespace GN { namespace engine
         void   handleDrawCommands();
         void   handleResourceCommands();
         bool   doDeviceReset();
+        void   doResourceCopy( ResourceCommand & cmd );
     };
 }}
 

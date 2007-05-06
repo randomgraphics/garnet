@@ -59,13 +59,6 @@ namespace GN { namespace engine
         GraphicsResourceId     next( GraphicsResourceId ) const;
         //@}
 
-        /// These methods are called by draw thread to create and delete renderer dependent data in graphics resource.
-        /// they may happens concurrently with above methods.
-        //@{
-        bool createDeviceData( GraphicsResourceId );
-        void deleteDeviceData( GraphicsResourceId );
-        //@}
-
         // ********************************
         // private variables
         // ********************************

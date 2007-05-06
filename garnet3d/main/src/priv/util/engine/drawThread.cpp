@@ -6,6 +6,103 @@
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
 
 // *****************************************************************************
+// local functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sCreateDeviceData( GN::engine::GraphicsResource & res )
+{
+    using namespace GN::engine;
+    using namespace GN::gfx;
+
+    Renderer & r = gRenderer;
+
+    switch( res.desc.type )
+    {
+        case GRT_SHADER :
+            GN_ASSERT( 0 == res.shader );
+            res.shader = r.createShader( res.desc.sd.type, res.desc.sd.lang, res.desc.sd.code, res.desc.sd.hints );
+            if( 0 == res.shader ) return false;
+            break;
+
+        case GRT_TEXTURE:
+            GN_ASSERT( 0 == res.texture );
+            res.texture = r.createTexture( res.desc.td );
+            if( 0 == res.texture ) return false;
+            break;
+
+        case GRT_VTXBUF :
+            GN_ASSERT( 0 == res.vtxbuf );
+            res.vtxbuf = r.createVtxBuf( res.desc.vd );
+            if( 0 == res.vtxbuf ) return false;
+            break;
+
+        case GRT_IDXBUF :
+            GN_ASSERT( 0 == res.idxbuf );
+            res.idxbuf = r.createIdxBuf( res.desc.id );
+            if( 0 == res.idxbuf ) return false;
+            break;
+
+        case GRT_CONSTBUF :
+            GN_UNIMPL();
+            return false;
+
+        default:
+            GN_UNEXPECTED();
+            return false;
+    }
+
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
+{
+    using namespace GN::engine;
+
+    switch( res.desc.type )
+    {
+        case GRT_SHADER :
+            GN_ASSERT( res.shader );
+            res.shader->decref();
+            res.shader = 0;
+            break;
+
+        case GRT_TEXTURE:
+            GN_ASSERT( res.texture );
+            res.texture->decref();
+            res.texture = 0;
+            break;
+
+        case GRT_VTXBUF :
+            GN_ASSERT( res.vtxbuf );
+            res.vtxbuf->decref();
+            res.vtxbuf = 0;
+            break;
+
+        case GRT_IDXBUF :
+            GN_ASSERT( res.idxbuf );
+            res.idxbuf->decref();
+            res.idxbuf = 0;
+            break;
+
+        case GRT_CONSTBUF :
+            GN_ASSERT( res.constbuf );
+            res.constbuf->decref();
+            res.constbuf = 0;
+            break;
+
+        default:
+            GN_UNEXPECTED();
+    }
+}
+
+
+// *****************************************************************************
 // draw command functions
 // *****************************************************************************
 
@@ -383,12 +480,14 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 switch( prev->op )
                 {
                     case GROP_COPY :
-                        GN_INFO(sLogger)( "Copy %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
-                        GN_UNIMPL();
+                        doResourceCopy( *prev );
+                        prev->loader->freebuf( prev->data, prev->bytes );
+                        prev->loader.clear();
                         break;
 
                     case GROP_DISPOSE :
-                        GN_UNIMPL();
+                        GN_INFO(sLogger)( "Dispose %s", res->desc.name.cptr() );
+                        sDeleteDeviceData( *res );
                         break;
 
                     default:
@@ -398,7 +497,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             }
 
             // the resource command is done. Free it.
-            prev->loader->freebuf( prev->data, prev->bytes );
             ResourceCommand::free( prev );
         }
         else
@@ -435,5 +533,28 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
     return true;
 
     GN_UNGUARD;
-    
+}
+
+void GN::engine::RenderEngine::DrawThread::doResourceCopy( ResourceCommand & cmd )
+{
+    GN_GUARD;
+
+    GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( cmd.resourceId );
+    GN_ASSERT( res );
+
+    if( 0 == res->shader )
+    {
+        GN_INFO(sLogger)( "Create %s", res->desc.name.cptr() );
+        if( !sCreateDeviceData( *res ) )
+        {
+            cmd.noerr = false;
+            return;
+        }
+    }
+
+    GN_ASSERT( cmd.loader );
+    GN_INFO(sLogger)( "Copy %s", res->desc.name.cptr() );
+    cmd.noerr = cmd.loader->copy( *res, cmd.data, cmd.bytes, cmd.targetLod );
+
+    GN_UNGUARD;
 }

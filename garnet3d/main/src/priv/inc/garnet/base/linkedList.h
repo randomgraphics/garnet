@@ -16,7 +16,7 @@ namespace GN
     {
         T * prev; ///< pointer to previous item
         T * next; ///< pointer to next item
-#if GN_DEBUG_BUILD
+#if GN_ASSERT_ENABLED
         void * owner; ///< pointer to the double-linked-list that this item belongs to.
 #endif
     };
@@ -62,48 +62,96 @@ namespace GN
         {
             GN_ASSERT( newItem && where != newItem );
 
-            ItemType * prev = where;
-            ItemType * next = where ? where->next : NULL;
+            if( NULL == mHead )
+            {
+                // this is the first item
+                GN_ASSERT( NULL == where );
+                mHead = newItem;
+                mTail = newItem;
+                newItem->prev = NULL;
+                newItem->next = NULL;
+            }
+            else
+            {
+                GN_ASSERT( where );
+                GN_ASSERT( where->owner == this );
 
-            newItem->prev = prev;
-            newItem->next = next;
-#if GN_DEBUG_BUILD
+                ItemType * prev = where;
+                ItemType * next = where->next;
+
+                newItem->prev = prev;
+                newItem->next = next;
+
+                prev->next = newItem;
+                if( next )
+                {
+                    GN_ASSERT( mTail != where );
+                    next->prev = newItem;
+                }
+                else
+                {
+                    GN_ASSERT( mTail == where );
+                    mTail = newItem;
+                }
+            }
+
+#if GN_ASSERT_ENABLED
             newItem->owner = this;
 #endif
-            if( prev ) prev->next = newItem;
-            if( next ) next->prev = newItem;
-
-            if( mTail == where ) mTail = newItem;
         }
 
         void doInsertBefore( ItemType * where, ItemType * newItem )
         {
             GN_ASSERT( newItem && where != newItem );
 
-            ItemType * prev = where ? where->prev : NULL;
-            ItemType * next = where;
+            if( NULL == mHead )
+            {
+                // this is the first item
+                GN_ASSERT( 0 == where );
+                mHead = newItem;
+                mTail = newItem;
+                newItem->prev = NULL;
+                newItem->next = NULL;
+            }
+            else
+            {
+                GN_ASSERT( where );
+                GN_ASSERT( where->owner == this );
 
-            newItem->prev = prev;
-            newItem->next = next;
-#if GN_DEBUG_BUILD
+                ItemType * prev = where->prev;
+                ItemType * next = where;
+
+                newItem->prev = prev;
+                newItem->next = next;
+
+                if( prev )
+                {
+                    GN_ASSERT( mHead != where );
+                    prev->next = newItem;
+                }
+                else
+                {
+                    GN_ASSERT( mHead == where );
+                    mHead = newItem;
+                }
+
+                next->prev = newItem;
+            }
+
+#if GN_ASSERT_ENABLED
             newItem->owner = this;
 #endif
-            if( prev ) prev->next = newItem;
-            if( next ) next->prev = newItem;
-
-            if( mHead == where ) mHead = newItem;
         }
 
         void doRemove( ItemType * item )
         {
-#if GN_DEBUG_BUILD
             GN_ASSERT( item && this == item->owner );
-#endif
+
             ItemType * prev = item->prev;
             ItemType * next = item->next;
             if( prev ) prev->next = next;
             if( next ) next->prev = prev;
-#if GN_DEBUG_BUILD
+#if GN_ASSERT_ENABLED
             item->owner = NULL;
 #endif
             if( item == mHead ) mHead = item->next;
@@ -118,7 +166,7 @@ namespace GN
     struct SingleLinkedItem
     {
         T * next; ///< pointer to next item
-#if GN_DEBUG_BUILD
+#if GN_ASSERT_ENABLED
         void * owner; ///< pointer to the single-linked-list that this item belongs to.
 #endif
     };
@@ -170,7 +218,7 @@ namespace GN
             {
                 newItem->next = NULL;
             }
-#if GN_DEBUG_BUILD
+#if GN_ASSERT_ENABLED
             newItem->owner = this;
 #endif
             if( mTail == where ) mTail = newItem;
@@ -180,9 +228,8 @@ namespace GN
         {
             if( item )
             {
-#if GN_DEBUG_BUILD
                 GN_ASSERT( this == item->owner );
-#endif
+
                 ItemType * next = item->next;
                 if( next )
                 {
