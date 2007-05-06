@@ -48,11 +48,6 @@ namespace GN
         ///
         virtual bool waitForTermination( float seconds = INFINITE_TIME, UInt32 * threadProcReturnValue = 0 ) = 0;
 
-        ///
-        /// signal of thread termination
-        ///
-        Signal0<void> sigTermination;
-
         //@}
     };
 

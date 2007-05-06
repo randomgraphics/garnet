@@ -505,7 +505,7 @@ namespace GN
 
     public:
 
-        LoggerContainer() : mRootLogger("ROOT")
+        LoggerContainer() : mRootLogger("ROOT",mMutex)
         {
             // config root logger
             mRootLogger.setLevel( Logger::LL_INFO );
