@@ -101,22 +101,125 @@ static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
     }
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+template<typename T>
+static void sResolveResourceId(
+    GN::engine::RenderEngine & engine,
+    const T * & data )
+{
+    using namespace GN::engine;
 
+    if( 0 == data ) return;
+
+    GraphicsResourceId id = (GraphicsResourceId)data;
+
+    GraphicsResourceItem * res = engine.resourceCache().id2ptr( id );
+    GN_ASSERT( res );
+
+    GN_ASSERT( res->data );
+    data = (const T*)res->data;
+}
 // *****************************************************************************
 // draw command functions
 // *****************************************************************************
 
 namespace GN { namespace engine
 {
-    void FUNC_SET_CONTEXT( const void *, size_t )
+    void DRAWFUNC_SET_CONTEXT( RenderEngine & engine, const void * param, size_t bytes )
     {
+        using namespace GN::gfx;
+
+        GN_ASSERT( param && bytes == align<size_t>( sizeof(DrawContext), 4 ) );
+
+        DrawContext * context = (DrawContext*)param;
+
+        // convert ID to resource pointer
+        for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
+        {
+            if( context->flags.shaderBit( i ) ) sResolveResourceId( engine, context->shaders[i] );
+        }
+        if( context->flags.renderTargets )
+        {
+            for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+            {
+                sResolveResourceId( engine, context->renderTargets.cbuffers[i].texture );
+            }
+            sResolveResourceId( engine, context->renderTargets.zbuffer.texture );
+        }
+        if( context->flags.textures )
+        {
+            for( unsigned int i = 0; i < context->numTextures; ++i )
+            {
+                sResolveResourceId( engine, context->textures[i] );
+            }
+        }
+        if( context->flags.vtxBufs )
+        {
+            for( unsigned int i = 0; i < context->numVtxBufs; ++i )
+            {
+                sResolveResourceId( engine, context->vtxBufs[i].buffer );
+            }
+        }
+        if( context->flags.idxBuf )
+        {
+            sResolveResourceId( engine, context->idxBuf );
+        }
+
+        gRenderer.setContext( *context );
     }
 
-    void FUNC_SET_UNIFORM( const void *, size_t )
+    void DRAWFUNC_SET_UNIFORM( RenderEngine & engine, const void * param, size_t bytes )
     {
+        using namespace gfx;
+
+        struct ParamHeader
+        {
+            GraphicsResourceId shader;
+            char               uniname[32];
+            SInt32             unitype;
+        };
+
+        GN_ASSERT( param );
+
+        const ParamHeader * header = (const ParamHeader*)param;
+
+        const void * data = header + 1;
+
+        bytes = bytes - sizeof(ParamHeader);
+
+        // compose uniform value
+        UniformValue unival;
+        unival.type = (UniformValueType)header->unitype;
+        switch( unival.type )
+        {
+            case UVT_BOOL:
+            case UVT_FLOAT:
+            case UVT_INT :
+            case UVT_VECTOR4:
+                GN_UNIMPL();
+                break;
+
+            case UVT_MATRIX44:
+                unival.matrix44s.resize( bytes / sizeof(Matrix44f) );
+                memcpy( &unival.matrix44s[0], data, bytes );
+                break;
+
+            default:
+                GN_UNEXPECTED();
+                break;
+        }
+
+        // get shader pointer
+        GraphicsResource * res = engine.resourceCache().id2ptr(header->shader);
+        GN_ASSERT( res && GRT_SHADER == res->desc.type && res->shader );
+
+        // set shader uniform
+        res->shader->setUniformByName( header->uniname, unival );
     }
 
-    void FUNC_CLEAR( const void * param, size_t bytes )
+    void DRAWFUNC_CLEAR( RenderEngine &, const void * param, size_t bytes )
     {
         #pragma pack(push,1)
         struct Param
@@ -129,7 +232,7 @@ namespace GN { namespace engine
         #pragma pack(pop)
 
         GN_ASSERT( param );
-        GN_ASSERT( sizeof(Param) <= bytes );
+        GN_ASSERT( align<size_t>( sizeof(Param), 4 ) == bytes );
         const Param * p = (Param*)param;
 
         gfx::Renderer & r = gRenderer;
@@ -137,14 +240,99 @@ namespace GN { namespace engine
         r.clearScreen( p->color, p->z, p->s, p->flags );
     }
 
-    void FUNC_DRAW( const void *, size_t )
+    void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t bytes )
     {
+        struct Param
+        {
+            SInt32 prim;
+            UInt32 numprim;
+            UInt32 startvtx;
+        };
+
+        GN_ASSERT( param && sizeof(Param) == bytes );
+
+        const Param * p = (const Param*)param;
+
+        gfx::Renderer & r = gRenderer;
+
+        r.draw( (gfx::PrimitiveType)p->prim, p->numprim, p->startvtx );
     }
 
-    void FUNC_DRAW_INDEXED( const void *, size_t )
+    void DRAWFUNC_DRAW_INDEXED( RenderEngine &, const void * param, size_t bytes )
     {
+        struct Param
+        {
+            SInt32 prim;
+            UInt32 numprim;
+            UInt32 startvtx;
+            UInt32 minvtxidx;
+            UInt32 numvtx;
+            UInt32 startidx;
+        };
+        GN_ASSERT( param && sizeof(Param) == bytes );
+
+        const Param * p = (const Param*)param;
+
+        gfx::Renderer & r = gRenderer;
+
+        r.drawIndexed(
+            (gfx::PrimitiveType)p->prim,
+            p->numprim,
+            p->startvtx,
+            p->minvtxidx,
+            p->numvtx,
+            p->startidx );
     }
 }};
+
+// *****************************************************************************
+// draw command functions
+// *****************************************************************************
+
+namespace GN { namespace engine
+{
+    void RESFUNC_COPY( RenderEngine & engine,  ResourceCommand & cmd )
+    {
+        GN_GUARD;
+
+        GraphicsResourceItem * res = engine.resourceCache().id2ptr( cmd.resourceId );
+        GN_ASSERT( res );
+
+        if( 0 == res->shader )
+        {
+            GN_INFO(sLogger)( "Create %s", res->desc.name.cptr() );
+            if( !sCreateDeviceData( *res ) )
+            {
+                cmd.noerr = false;
+                return;
+            }
+        }
+
+        GN_ASSERT( cmd.loader );
+        GN_INFO(sLogger)( "Copy %s", res->desc.name.cptr() );
+        cmd.noerr = cmd.loader->copy( *res, cmd.data, cmd.bytes, cmd.targetLod );
+
+        // free data buffer and loder
+        cmd.loader->freebuf( cmd.data, cmd.bytes );
+        cmd.loader.clear();
+
+        GN_UNGUARD;
+    }
+
+    void RESFUNC_DISPOSE( RenderEngine & engine,  ResourceCommand & cmd )
+    {
+        GN_GUARD;
+
+        GraphicsResourceItem * res = engine.resourceCache().id2ptr( cmd.resourceId );
+        GN_ASSERT( res );
+
+        GN_INFO(sLogger)( "Dispose %s", res->desc.name.cptr() );
+
+        sDeleteDeviceData( *res );
+
+        GN_UNGUARD;
+    }
+}}
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -162,11 +350,11 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
 
     // initialize draw function pointers
     memset( mDrawFunctions, 0, sizeof(mDrawFunctions) );
-    mDrawFunctions[DCT_SET_CONTEXT]  = &FUNC_SET_CONTEXT;
-    mDrawFunctions[DCT_SET_UNIFORM]  = &FUNC_SET_UNIFORM;
-    mDrawFunctions[DCT_CLEAR]        = &FUNC_CLEAR;
-    mDrawFunctions[DCT_DRAW]         = &FUNC_DRAW;
-    mDrawFunctions[DCT_DRAW_INDEXED] = &FUNC_DRAW_INDEXED;
+    mDrawFunctions[DCT_SET_CONTEXT]  = &DRAWFUNC_SET_CONTEXT;
+    mDrawFunctions[DCT_SET_UNIFORM]  = &DRAWFUNC_SET_UNIFORM;
+    mDrawFunctions[DCT_CLEAR]        = &DRAWFUNC_CLEAR;
+    mDrawFunctions[DCT_DRAW]         = &DRAWFUNC_DRAW;
+    mDrawFunctions[DCT_DRAW_INDEXED] = &DRAWFUNC_DRAW_INDEXED;
 
     // initialize draw buffers
     for( int i = 0; i < DRAW_BUFFER_COUNT; ++i )
@@ -438,7 +626,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             {
                 // all resources are ready. do it!
                 GN_ASSERT( command->func );
-                command->func( command->param(), command->bytes - sizeof(DrawCommandHeader) );
+                command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
 
                 // update draw fence
                 mDrawFence = command->fence;
@@ -492,14 +680,11 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 switch( prev->op )
                 {
                     case GROP_COPY :
-                        doResourceCopy( *prev );
-                        prev->loader->freebuf( prev->data, prev->bytes );
-                        prev->loader.clear();
+                        RESFUNC_COPY( mEngine, *prev );
                         break;
 
                     case GROP_DISPOSE :
-                        GN_INFO(sLogger)( "Dispose %s", res->desc.name.cptr() );
-                        sDeleteDeviceData( *res );
+                        RESFUNC_DISPOSE( mEngine, *prev );
                         break;
 
                     default:
@@ -543,30 +728,6 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
 
     // success
     return true;
-
-    GN_UNGUARD;
-}
-
-void GN::engine::RenderEngine::DrawThread::doResourceCopy( ResourceCommand & cmd )
-{
-    GN_GUARD;
-
-    GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( cmd.resourceId );
-    GN_ASSERT( res );
-
-    if( 0 == res->shader )
-    {
-        GN_INFO(sLogger)( "Create %s", res->desc.name.cptr() );
-        if( !sCreateDeviceData( *res ) )
-        {
-            cmd.noerr = false;
-            return;
-        }
-    }
-
-    GN_ASSERT( cmd.loader );
-    GN_INFO(sLogger)( "Copy %s", res->desc.name.cptr() );
-    cmd.noerr = cmd.loader->copy( *res, cmd.data, cmd.bytes, cmd.targetLod );
 
     GN_UNGUARD;
 }

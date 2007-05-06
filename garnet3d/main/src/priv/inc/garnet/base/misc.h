@@ -151,6 +151,16 @@ namespace GN
     }
 
     ///
+    /// align numeric value. The alignment must be 2^N.
+    // ------------------------------------------------------------------------
+    template< typename T >
+    inline T align( const T & value, const T & alignment )
+    {
+        GN_ASSERT( isPowerOf2( alignment ) );
+        return ( value + (alignment-1) ) & ~(alignment-1);
+    }
+
+    ///
     /// general safe deallocation routine
     // ------------------------------------------------------------------------
     template < typename T, typename DEALLOC_FUNC >

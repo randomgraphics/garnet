@@ -5,7 +5,7 @@
 #include "resourceThread.h"
 #include "fenceManager.h"
 
-#pragma warning(disable:4100)
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 
 // *****************************************************************************
 // local functions
@@ -166,9 +166,34 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
     // make sure all resources referenced in contex is ready to use.
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
     {
-        prepareResource( context.shaders[i].shader );
+        if( context.flags.shaderBit( i ) ) prepareResource( (GraphicsResourceId)context.shaders[i] );
     }
-    // TODO: associate other resources as well
+    if( context.flags.renderTargets )
+    {
+        for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+        {
+            prepareResource( (GraphicsResourceId)context.renderTargets.cbuffers[i].texture );
+        }
+        prepareResource( (GraphicsResourceId)context.renderTargets.zbuffer.texture );
+    }
+    if( context.flags.textures )
+    {
+        for( unsigned int i = 0; i < context.numTextures; ++i )
+        {
+            prepareResource( (GraphicsResourceId)context.textures[i] );
+        }
+    }
+    if( context.flags.vtxBufs )
+    {
+        for( unsigned int i = 0; i < context.numVtxBufs; ++i )
+        {
+            prepareResource( (GraphicsResourceId)context.vtxBufs[i].buffer );
+        }
+    }
+    if( context.flags.idxBuf )
+    {
+        prepareResource( (GraphicsResourceId)context.idxBuf );
+    }
 
     // create new draw command
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand1( DCT_SET_CONTEXT, context );
@@ -177,29 +202,118 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
     // update reference fence of resources in the context
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
     {
+        if( context.flags.shaderBit( i ) )
+        {
+            sUpdateWaitingListAndReferenceFence(
+                *mResourceCache,
+                (GraphicsResourceId)context.shaders[i],
+                *dr );
+        }
+    }
+    if( context.flags.renderTargets )
+    {
+        for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+        {
+            sUpdateWaitingListAndReferenceFence(
+                *mResourceCache,
+                (GraphicsResourceId)context.renderTargets.cbuffers[i].texture,
+                *dr );
+        }
         sUpdateWaitingListAndReferenceFence(
             *mResourceCache,
-            context.shaders[i].shader,
+            (GraphicsResourceId)context.renderTargets.zbuffer.texture,
+            *dr );
+    }
+    if( context.flags.textures )
+    {
+        for( unsigned int i = 0; i < context.numTextures; ++i )
+        {
+            sUpdateWaitingListAndReferenceFence(
+                *mResourceCache,
+                (GraphicsResourceId)context.textures[i],
+                *dr );
+        }
+    }
+    if( context.flags.vtxBufs )
+    {
+        for( unsigned int i = 0; i < context.numVtxBufs; ++i )
+        {
+            sUpdateWaitingListAndReferenceFence(
+                *mResourceCache,
+                (GraphicsResourceId)context.vtxBufs[i].buffer,
+                *dr );
+        }
+    }
+    if( context.flags.idxBuf )
+    {
+        sUpdateWaitingListAndReferenceFence(
+            *mResourceCache,
+            (GraphicsResourceId)context.idxBuf,
             *dr );
     }
 }
 
-/*
+//
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::updateShaderUniforms(
+void GN::engine::RenderEngine::setShaderUniform(
     GraphicsResourceId        shader,
     const StrA              & uniformName,
     const gfx::UniformValue & value )
 {
-    DrawCommand & dr = mFenceManager->submitDrawCommand();
-    dr.type = DCT_SET_UNIFORM;
-    dr.resourceWaitingCount = 0;
-    dr.clear.color() = c;
-    dr.clear.z = z;
-    dr.clear.s = s;
-    dr.clear.flags = flags;
-}*/
+    // make sure the shader is ready to use.
+    prepareResource( shader );
+
+    // get uniform data buffer
+    const void * data;
+    size_t bytes;
+    switch( value.type )
+    {
+        case gfx::UVT_MATRIX44 :
+            data = &value.matrix44s[0];
+            bytes = value.matrix44s.size() * sizeof(Matrix44f);
+            break;
+
+        case gfx::UVT_BOOL :
+        case gfx::UVT_INT :
+        case gfx::UVT_FLOAT :
+        case gfx::UVT_VECTOR4 :
+            GN_UNIMPL();
+            data = 0;
+            bytes = 0;
+            break;
+
+        default:
+            GN_ERROR(sLogger)( "invalid uniform value!" );
+            return;
+    }
+
+    struct ParamHeader
+    {
+        GraphicsResourceId shader;
+        char               uniname[32];
+        SInt32             unitype;
+    } header;
+
+    header.shader = shader;
+    memcpy( header.uniname, uniformName.cptr(), 32 );
+    header.uniname[31] = 0;
+    header.unitype = value.type;
+
+    // create new draw command
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand( DCT_SET_UNIFORM, sizeof(ParamHeader) + bytes );
+    if( 0 == dr ) return;
+    ParamHeader * h = (ParamHeader*)dr->param();
+    *h = header;
+    ++h;
+    memcpy( h, data, bytes );
+
+    // setup draw command and resource relationship
+    sUpdateWaitingListAndReferenceFence(
+        *mResourceCache,
+        shader,
+        *dr );
+}
 
 //
 //
@@ -210,6 +324,25 @@ void GN::engine::RenderEngine::clearScreen(
     BitFields flags )
 {
     mDrawThread->submitDrawCommand4( DCT_CLEAR, c, z, s, flags );
+}
+
+void GN::engine::RenderEngine::drawIndexed(
+    SInt32 prim,
+    UInt32 numprim,
+    UInt32 startvtx,
+    UInt32 minvtxidx,
+    UInt32 numvtx,
+    UInt32 startidx )
+{
+    mDrawThread->submitDrawCommand6( DCT_DRAW_INDEXED, prim, numprim, startvtx, minvtxidx, numvtx, startidx );
+}
+
+void GN::engine::RenderEngine::draw(
+    SInt32 prim,
+    UInt32 numprim,
+    UInt32 startvtx )
+{
+    mDrawThread->submitDrawCommand3( DCT_DRAW, prim, numprim, startvtx );
 }
 
 //
@@ -229,7 +362,6 @@ inline void GN::engine::RenderEngine::prepareResource( GraphicsResourceId id )
     if( reload )
     {
         // reload using it's current loader and lod
-        GN_ASSERT( res->lastSubmittedLod > 0 );
         GN_ASSERT( res->lastSubmittedLoader );
         mResourceThread->submitResourceLoadingCommand(
             id,

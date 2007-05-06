@@ -26,7 +26,7 @@ namespace GN { namespace engine
     ///
     /// function prototype to handle draw commands
     ///
-    typedef void (*DrawFunction)( const void * param, size_t paramBytes );
+    typedef void (*DrawFunction)( RenderEngine & engine, const void * param, size_t paramBytes );
 
     ///
     /// ...

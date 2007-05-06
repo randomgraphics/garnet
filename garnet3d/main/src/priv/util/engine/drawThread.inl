@@ -10,8 +10,8 @@ GN::engine::RenderEngine::DrawThread::submitDrawCommand(
 
     DrawBuffer & db = mDrawBuffers[mWritingIndex];
 
-    size_t commandBytes = sizeof(DrawCommandHeader) + parameterBytes;
-    commandBytes = ( commandBytes + 3 ) & ~3; // DWORD aligned.
+    // DWORD aligned command size
+    size_t commandBytes = align<size_t>( sizeof(DrawCommandHeader) + parameterBytes, 4 );
 
     if( db.rooms() < commandBytes )
     {
@@ -78,6 +78,30 @@ GN::engine::RenderEngine::DrawThread::submitDrawCommand2(
 //
 //
 // -----------------------------------------------------------------------------
+template<typename T1, typename T2, typename T3>
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand3(
+    DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3 )
+{
+    DrawCommandHeader * header = submitDrawCommand(
+        type, sizeof(T1)+sizeof(T2)+sizeof(T3) );
+
+    if( header )
+    {
+        T1 * p1 = (T1*)header->param();
+        *p1 = a1;
+        T2 * p2 = (T2*)( p1 + 1 );
+        *p2 = a2;
+        T3 * p3 = (T3*)( p2 + 1 );
+        *p3 = a3;
+    }
+
+    return header;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 template<typename T1, typename T2, typename T3, typename T4>
 inline GN::engine::DrawCommandHeader *
 GN::engine::RenderEngine::DrawThread::submitDrawCommand4(
@@ -100,6 +124,37 @@ GN::engine::RenderEngine::DrawThread::submitDrawCommand4(
 
     return header;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+inline GN::engine::DrawCommandHeader *
+GN::engine::RenderEngine::DrawThread::submitDrawCommand6(
+    DrawCommandType type, const T1 & a1, const T2 & a2, const T3 & a3, const T4 & a4, const T5 & a5, const T6 & a6 )
+{
+    DrawCommandHeader * header = submitDrawCommand(
+        type, sizeof(T1)+sizeof(T2)+sizeof(T3)+sizeof(T4)+sizeof(T5)+sizeof(T6) );
+
+    if( header )
+    {
+        T1 * p1 = (T1*)header->param();
+        *p1 = a1;
+        T2 * p2 = (T2*)( p1 + 1 );
+        *p2 = a2;
+        T3 * p3 = (T3*)( p2 + 1 );
+        *p3 = a3;
+        T4 * p4 = (T4*)( p3 + 1 );
+        *p4 = a4;
+        T5 * p5 = (T5*)( p4 + 1 );
+        *p5 = a5;
+        T6 * p6 = (T6*)( p5 + 1 );
+        *p6 = a6;
+    }
+
+    return header;
+}
+
 
 //
 //

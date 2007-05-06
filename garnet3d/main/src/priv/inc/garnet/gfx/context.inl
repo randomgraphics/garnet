@@ -13,7 +13,7 @@ namespace GN { namespace gfx
     inline void RendererContext::setShader( ShaderType type, const Shader * shader )
     {
         GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES );
-        GN_ASSERT( !shader || type == shader->getType() );
+        //GN_ASSERT( !shader || type == shader->getType() );
         if( !flags.shaderBit(type) || shaders[type] != shader )
         {
             flags.shaders |= 1<<type;

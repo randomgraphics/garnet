@@ -214,7 +214,7 @@ using namespace GN::engine;
 
 struct Vertex
 {
-    Vector4f pos;
+    Vector3f pos;
 };
 
 class ShaderLoader : public GraphicsResourceLoader
@@ -258,9 +258,9 @@ public:
     {
         GN_ASSERT( 0 == inbuf && 0 == inbytes );
         Vertex * data = new Vertex[3];
-        data[0].pos.set( 0, 0, 0, 0 );
-        data[0].pos.set( 1, 0, 0, 0 );
-        data[0].pos.set( 1, 1, 0, 0 );
+        data[0].pos.set( 0, 0, 0 );
+        data[1].pos.set( 1, 0, 0 );
+        data[2].pos.set( 1, 1, 0 );
         outbuf = data;
         outbytes = sizeof(Vertex) * 3;
         return true;
@@ -297,8 +297,8 @@ public:
         GN_ASSERT( 0 == inbuf && 0 == inbytes );
         UInt16 * data = new UInt16[3];
         data[0] = 0;
-        data[0] = 1;
-        data[0] = 2;
+        data[1] = 1;
+        data[2] = 2;
         outbuf = data;
         outbytes = sizeof(UInt16) * 3;
         return true;
@@ -321,6 +321,7 @@ public:
 };
 
 GraphicsResourceId vs, vb, ib;
+VtxFmtHandle       vf;
 
 const char * vscode =
     "uniform float4x4 pvw;\n"
@@ -331,6 +332,13 @@ const char * vscode =
 
 bool init( RenderEngine & engine )
 {
+    // create vertex format handle
+    VtxFmtDesc vfd;
+    vfd.clear();
+    vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
+    vf = gRenderer.createVtxFmt( vfd );
+    if( 0 == vf ) return false;
+
     // create vertex shader
     GraphicsResourceDesc vsdesc;
     vsdesc.name = "vs1";
@@ -339,9 +347,11 @@ bool init( RenderEngine & engine )
     vsdesc.sd.lang = LANG_D3D_HLSL;
     vsdesc.sd.code = vscode;
     vsdesc.sd.vtxfmt.clear();
-    vsdesc.sd.vtxfmt.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT4 );
+    vsdesc.sd.vtxfmt.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
     vs = engine.allocResource( vsdesc );
     if( 0 == vs ) return 0;
+    AutoRef<ShaderLoader> vsloader( new ShaderLoader );
+    engine.updateResource( vs, 0, vsloader );
 
     // create vertex buffer
     GraphicsResourceDesc vbdesc;
@@ -374,6 +384,24 @@ void quit()
 {
 }
 
+void draw( RenderEngine & engine )
+{
+    DrawContext ctx;
+    ctx.resetToDefault();
+    ctx.setVS( (const Shader*)vs );
+    ctx.setVtxBuf( 0, (const VtxBuf *)vb, 0, sizeof(Vertex) );
+    ctx.setIdxBuf( (const IdxBuf*)ib );
+    ctx.setVtxFmt( vf );
+
+    engine.setContext( ctx );
+
+    Matrix44f m44;
+    m44.identity();
+    engine.setShaderUniform( vs, "pvw", m44 );
+
+    engine.drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
+}
+
 void run( RenderEngine & engine )
 {
     __try
@@ -391,6 +419,8 @@ void run( RenderEngine & engine )
             engine.frameBegin();
 
             engine.clearScreen( Vector4f(0,0,1,0) );
+
+            draw( engine );
 
             engine.frameEnd();
         }
