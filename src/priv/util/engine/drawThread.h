@@ -45,6 +45,7 @@ namespace GN { namespace engine
         {
             mDoSomething = 0;
             mResetRendererComplete = 0;
+            mResourceCommandEmpty = true;
             mDrawBufferEmpty = 0;
             mDrawBufferNotFull = 0;
             mDrawThread = 0;
@@ -66,7 +67,7 @@ namespace GN { namespace engine
         ///
         /// wait for draw thread idle: all submitted draw commands are executed
         ///
-        void waitForIdle( float time = INFINITE_TIME ) const { if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time ); }
+        void waitForIdle( float time = INFINITE_TIME ) const;
 
         ///
         /// get current draw fence
@@ -164,6 +165,7 @@ namespace GN { namespace engine
         // data to handle resource commands
         DoubleLinkedList<ResourceCommand> mResourceCommands;
         Mutex                             mResourceMutex;
+        volatile bool                     mResourceCommandEmpty;
 
         // data to handle draw commands
         DrawFunction    mDrawFunctions[NUM_DRAW_COMMAND_TYPES];

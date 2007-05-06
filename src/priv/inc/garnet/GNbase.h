@@ -48,6 +48,9 @@ namespace GN
 // misc.
 #include "base/misc.h"
 
+// basic sync. primitives
+#include "base/sync.h"
+
 // log functions and macros
 #include "base/log.h"
 
@@ -57,9 +60,6 @@ namespace GN
 // delegate & callback
 #include "base/delegate.h"
 #include "base/sigslot.h"
-
-// thread routines
-#include "base/thread.h"
 
 // single/double linked list
 #include "base/linkedList.h"
@@ -107,6 +107,9 @@ namespace GN
 
 // XML parser
 #include "base/xml.h"
+
+// thread routines
+#include "base/thread.h"
 
 // *****************************************************************************
 //                           END of GNbase.h

@@ -9,11 +9,33 @@
 namespace GN { namespace engine
 {
     ///
-    /// fence ID type
+    /// Fence ID type.
+    ///
+    /// \note 0 is reserved as initial fence, which is smaller then any other fences.
     ///
     class FenceId
     {
         int value;
+
+        static inline int sCompare( int v1, int v2 )
+        {
+            if( 0 == v1 )
+            {
+                if( 0 == v2 ) return 0;
+                else return -1;
+            }
+            else
+            {
+                if( 0 == v2 ) return 1;
+                else
+                {
+                    int d = v2 - v1;
+                    if( d > 0 ) return 1;
+                    if( d < 0 ) return -1;
+                    return 0;
+                }
+            }
+        }
 
     public:
 
@@ -25,20 +47,29 @@ namespace GN { namespace engine
         ///
         /// ctor
         ///
-        explicit FenceId( int value_ ) : value(value_) {}
+        FenceId( const FenceId & f ) : value( f.value )
+        {
+        }
+
+        ///
+        /// ctor
+        ///
+        explicit FenceId( int value_ ) : value( value_ )
+        {
+        }
 
         //@{
-        bool operator <  ( const FenceId & rhs ) const { return rhs.value - value >  0; }
-        bool operator <= ( const FenceId & rhs ) const { return rhs.value - value >= 0; }
-        bool operator >  ( const FenceId & rhs ) const { return value - rhs.value >  0; }
-        bool operator >= ( const FenceId & rhs ) const { return value - rhs.value >= 0; }
+        bool operator <  ( const FenceId & rhs ) const { return -1 == sCompare( value, rhs.value ); }
+        bool operator <= ( const FenceId & rhs ) const { return  1 != sCompare( value, rhs.value ); }
+        bool operator >  ( const FenceId & rhs ) const { return  1 == sCompare( value, rhs.value ); }
+        bool operator >= ( const FenceId & rhs ) const { return -1 != sCompare( value, rhs.value ); }
         bool operator == ( const FenceId & rhs ) const { return value == rhs.value; }
         bool operator != ( const FenceId & rhs ) const { return value != rhs.value; }
 
-        bool operator <  ( volatile const FenceId & rhs ) volatile const { return rhs.value - value >  0; }
-        bool operator <= ( volatile const FenceId & rhs ) volatile const { return rhs.value - value >= 0; }
-        bool operator >  ( volatile const FenceId & rhs ) volatile const { return value - rhs.value >  0; }
-        bool operator >= ( volatile const FenceId & rhs ) volatile const { return value - rhs.value >= 0; }
+        bool operator <  ( volatile const FenceId & rhs ) volatile const { return -1 == sCompare( value, rhs.value ); }
+        bool operator <= ( volatile const FenceId & rhs ) volatile const { return  1 != sCompare( value, rhs.value ); }
+        bool operator >  ( volatile const FenceId & rhs ) volatile const { return  1 == sCompare( value, rhs.value ); }
+        bool operator >= ( volatile const FenceId & rhs ) volatile const { return -1 != sCompare( value, rhs.value ); }
         bool operator == ( volatile const FenceId & rhs ) volatile const { return value == rhs.value; }
         bool operator != ( volatile const FenceId & rhs ) volatile const { return value != rhs.value; }
 
@@ -54,6 +85,7 @@ namespace GN { namespace engine
         FenceId & operator++()
         {
             ++value;
+            if( 0 == value ) ++value;
             return *this;
         }
 
@@ -64,6 +96,7 @@ namespace GN { namespace engine
         {
             FenceId r(*this);
             ++value;
+            if( 0 == value ) ++value;
             return r;
         }
 
