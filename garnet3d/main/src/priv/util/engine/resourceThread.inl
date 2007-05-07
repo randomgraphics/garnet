@@ -41,13 +41,14 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingComma
 
     ResourceCommand * cmd = ResourceCommand::alloc();
     if( 0 == cmd ) return;
-    cmd->noerr                = true;
-    cmd->op                   = GROP_LOAD;
-    cmd->resourceId           = id;
-    cmd->targetLod            = lod;
+    cmd->noerr                      = true;
+    cmd->op                         = GROP_LOAD;
+    cmd->resourceId                 = id;
+    cmd->targetLod                  = lod;
     cmd->loader.set( loader );
-    cmd->mustAfterThisFence   = res->lastReferenceFence;
-    cmd->submittedAtThisFence = fence;
+    cmd->mustAfterThisDrawFence     = res->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = res->lastSubmissionFence;
+    cmd->submittedAtThisFence       = fence;
 
     res->lastSubmissionFence = fence;
     res->lastSubmittedLoader.set( loader );

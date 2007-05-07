@@ -9,6 +9,16 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread")
 // local functions
 // *****************************************************************************
 
+#define DUMP_COMMANDS 1
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDumpCommandText( const GN::StrA & s )
+{
+    GN_INFO(sLogger)( "%s", s.cptr() );
+}
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -157,6 +167,11 @@ namespace GN { namespace engine
         }
 
         gRenderer.setContext( *context );
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( GN_FUNCTION );
+        }
     }
 
     void DRAWFUNC_SET_UNIFORM( RenderEngine & engine, const void * param, size_t bytes )
@@ -213,6 +228,11 @@ namespace GN { namespace engine
         {
             GN_ERROR(sLogger)( "Null shader instance: id=%d.", header->shader );
         }
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( GN_FUNCTION );
+        }
     }
 
     void DRAWFUNC_CLEAR( RenderEngine &, const void * param, size_t bytes )
@@ -234,6 +254,11 @@ namespace GN { namespace engine
         gfx::Renderer & r = gRenderer;
 
         r.clearScreen( p->color, p->z, p->s, p->flags );
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( GN_FUNCTION );
+        }
     }
 
     void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t bytes )
@@ -252,6 +277,11 @@ namespace GN { namespace engine
         gfx::Renderer & r = gRenderer;
 
         r.draw( (gfx::PrimitiveType)p->prim, p->numprim, p->startvtx );
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( GN_FUNCTION );
+        }
     }
 
     void DRAWFUNC_DRAW_INDEXED( RenderEngine &, const void * param, size_t bytes )
@@ -278,6 +308,11 @@ namespace GN { namespace engine
             p->minvtxidx,
             p->numvtx,
             p->startidx );
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( GN_FUNCTION );
+        }
     }
 }};
 
@@ -287,7 +322,7 @@ namespace GN { namespace engine
 
 namespace GN { namespace engine
 {
-    void RESFUNC_COPY( RenderEngine & engine,  ResourceCommand & cmd )
+    void RESFUNC_COPY( RenderEngine & engine, ResourceCommand & cmd )
     {
         GN_GUARD;
 
@@ -296,7 +331,10 @@ namespace GN { namespace engine
 
         if( 0 == res->shader )
         {
-            GN_INFO(sLogger)( "Create %s", res->desc.name.cptr() );
+            if( DUMP_COMMANDS )
+            {
+                sDumpCommandText( strFormat( "Create resource: %s", res->desc.name.cptr() ) );
+            }
             if( !sCreateDeviceData( *res ) )
             {
                 cmd.noerr = false;
@@ -308,8 +346,12 @@ namespace GN { namespace engine
             }
         }
 
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( strFormat( "Load resource: %s", res->desc.name.cptr() ) );
+        }
+
         GN_ASSERT( cmd.loader );
-        GN_INFO(sLogger)( "Copy %s", res->desc.name.cptr() );
         cmd.noerr = cmd.loader->copy( *res, cmd.data, cmd.bytes, cmd.targetLod );
 
         // free data buffer and loder
@@ -319,16 +361,19 @@ namespace GN { namespace engine
         GN_UNGUARD;
     }
 
-    void RESFUNC_DISPOSE( RenderEngine & engine,  ResourceCommand & cmd )
+    void RESFUNC_DISPOSE( RenderEngine & engine, ResourceCommand & cmd )
     {
         GN_GUARD;
 
         GraphicsResourceItem * res = engine.resourceCache().id2ptr( cmd.resourceId );
         GN_ASSERT( res );
 
-        GN_INFO(sLogger)( "Dispose %s", res->desc.name.cptr() );
-
         sDeleteDeviceData( *res );
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( strFormat( "Dispose resource: %s", res->desc.name.cptr() ) );
+        }
 
         GN_UNGUARD;
     }
@@ -659,8 +704,11 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
     while( cmd && !mActionQuit )
     {
+        GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( cmd->resourceId );
+
         // process the resource command
-        if( cmd->mustAfterThisFence <= mDrawFence )
+        if( cmd->mustAfterThisDrawFence <= mDrawFence &&
+            cmd->mustAfterThisResourceFence <= res->lastCompletedFence )
         {
             // remove it from resource command buffer
             mResourceMutex.lock();
@@ -669,8 +717,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             mResourceCommands.remove( prev );
             if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
             mResourceMutex.unlock();
-
-            GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( prev->resourceId );
 
             // update resource's complete fence
             res->lastCompletedFence = prev->submittedAtThisFence;

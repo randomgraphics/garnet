@@ -187,13 +187,14 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposingCommand
 
     FenceId fence = mEngine.fenceManager().getAndIncFence();
 
-    cmd->noerr                = true;
-    cmd->op                   = GROP_DISPOSE;
-    cmd->resourceId           = id;
-    cmd->mustAfterThisFence   = res->lastReferenceFence;
-    cmd->submittedAtThisFence = fence;
+    cmd->noerr                      = true;
+    cmd->op                         = GROP_DISPOSE;
+    cmd->resourceId                 = id;
+    cmd->mustAfterThisDrawFence     = res->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = res->lastSubmissionFence;
+    cmd->submittedAtThisFence       = fence;
 
-    res->lastSubmissionFence  = fence;
+    res->lastSubmissionFence = fence;
 
     submitResourceCommand( cmd );
 }

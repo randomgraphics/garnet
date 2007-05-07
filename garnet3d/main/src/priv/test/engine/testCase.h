@@ -38,6 +38,87 @@ public:
     //@}
 };
 
+class ShaderLoader : public GraphicsResourceLoader
+{
+public:
+    virtual bool load( void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    bool decompress( void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GraphicsResource &, const void * , size_t, int )
+    {
+        return true;
+    }
+
+    virtual void freebuf( void *, size_t )
+    {
+    }
+};
+
+class BasicVtxBufLoader : public GraphicsResourceLoader
+{
+public:
+    virtual bool load( void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
+    {
+        VtxBuf * vb = gfxres.vtxbuf;
+        void * data = vb->lock( 0, 0, LOCK_DISCARD );
+        if( 0 == data ) return false;
+        memcpy( data, inbuf, inbytes );
+        vb->unlock();
+        return true;
+    }
+
+    virtual void freebuf( void * inbuf, size_t )
+    {
+        safeDeleteArray( inbuf );
+    }
+};
+
+class BasicIdxBufLoader : public GraphicsResourceLoader
+{
+public:
+    virtual bool load( void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
+    {
+        IdxBuf * ib = gfxres.idxbuf;
+        void * data = ib->lock( 0, 0, LOCK_DISCARD );
+        if( 0 == data ) return false;
+        memcpy( data, inbuf, inbytes );
+        ib->unlock();
+        return true;
+    }
+
+    virtual void freebuf( void * inbuf, size_t )
+    {
+        safeDeleteArray( inbuf );
+    }
+};
+
+
+
 // *****************************************************************************
 //                           End of testCase.h
 // *****************************************************************************
