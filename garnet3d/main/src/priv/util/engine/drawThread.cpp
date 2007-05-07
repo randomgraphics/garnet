@@ -67,33 +67,23 @@ static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
     switch( res.desc.type )
     {
         case GRT_SHADER :
-            GN_ASSERT( res.shader );
-            res.shader->decref();
-            res.shader = 0;
+            safeDecref( res.shader );
             break;
 
         case GRT_TEXTURE:
-            GN_ASSERT( res.texture );
-            res.texture->decref();
-            res.texture = 0;
+            safeDecref( res.texture );
             break;
 
         case GRT_VTXBUF :
-            GN_ASSERT( res.vtxbuf );
-            res.vtxbuf->decref();
-            res.vtxbuf = 0;
+            safeDecref( res.vtxbuf );
             break;
 
         case GRT_IDXBUF :
-            GN_ASSERT( res.idxbuf );
-            res.idxbuf->decref();
-            res.idxbuf = 0;
+            safeDecref( res.idxbuf );
             break;
 
         case GRT_CONSTBUF :
-            GN_ASSERT( res.constbuf );
-            res.constbuf->decref();
-            res.constbuf = 0;
+            safeDecref( res.constbuf );
             break;
 
         default:
@@ -118,7 +108,6 @@ static void sResolveResourceId(
     GraphicsResourceItem * res = engine.resourceCache().id2ptr( id );
     GN_ASSERT( res );
 
-    GN_ASSERT( res->data );
     data = (const T*)res->data;
 }
 // *****************************************************************************
@@ -213,10 +202,17 @@ namespace GN { namespace engine
 
         // get shader pointer
         GraphicsResource * res = engine.resourceCache().id2ptr(header->shader);
-        GN_ASSERT( res && GRT_SHADER == res->desc.type && res->shader );
+        GN_ASSERT( res && GRT_SHADER == res->desc.type );
 
-        // set shader uniform
-        res->shader->setUniformByName( header->uniname, unival );
+        if( res->shader )
+        {
+            // set shader uniform
+            res->shader->setUniformByName( header->uniname, unival );
+        }
+        else
+        {
+            GN_ERROR(sLogger)( "Null shader instance: id=%d.", header->shader );
+        }
     }
 
     void DRAWFUNC_CLEAR( RenderEngine &, const void * param, size_t bytes )
@@ -304,6 +300,10 @@ namespace GN { namespace engine
             if( !sCreateDeviceData( *res ) )
             {
                 cmd.noerr = false;
+
+                // free data buffer and loder
+                cmd.loader->freebuf( cmd.data, cmd.bytes );
+                cmd.loader.clear();
                 return;
             }
         }

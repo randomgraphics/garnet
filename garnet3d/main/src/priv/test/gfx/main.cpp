@@ -320,14 +320,17 @@ public:
     }
 };
 
-GraphicsResourceId vs, vb, ib;
+GraphicsResourceId vs, ps, vb, ib;
 VtxFmtHandle       vf;
 
 const char * vscode =
     "uniform float4x4 pvw;\n"
-    "float4 main( in float4 ipos: POSITION ) : POSITION \n"
+    "void main( in float4 ipos : POSITION, \n"
+    "          out float4 opos : POSITION, \n"
+    "          out float4 oclr : COLOR0 ) \n"
     "{ \n"
-    "    return mul( pvw, ipos ); \n"
+    "    opos = mul( pvw, ipos ); \n"
+    "    oclr = 1; \n"
     "}";
 
 bool init( RenderEngine & engine )
