@@ -249,7 +249,7 @@ namespace GN { namespace engine
         void frameBegin();
         void frameEnd();
 
-        // below commands must called in between of frameBegin() and frameEnd().
+        // below commands must called between frameBegin() and frameEnd().
 
         void setContext( const DrawContext & context );
 
@@ -276,10 +276,6 @@ namespace GN { namespace engine
 
         //@}
 
-    private:
-
-        inline void prepareResource( GraphicsResourceId id );
-
         // ********************************
         /// \name resource commands
         // ********************************
@@ -294,10 +290,13 @@ namespace GN { namespace engine
         void               freeResource( GraphicsResourceId );
         GraphicsResource * getResourceById( GraphicsResourceId );
 
+        void disposeResource( GraphicsResourceId );
+        void disposeAllResources();
+
         ///
         /// \note
         ///     Render engine will hold a reference to the loader. So users can
-        ///     safely release their own refernence to the loader.
+        ///     safely release their own reference to the loader.
         ///
         void updateResource( GraphicsResourceId       resource,
                              int                      lod,
@@ -339,6 +338,8 @@ namespace GN { namespace engine
         DrawThread            * mDrawThread;
         ResourceThread        * mResourceThread;
         FenceManager          * mFenceManager;
+
+        DrawContext mDrawContext;
 
         // ********************************
         // private functions

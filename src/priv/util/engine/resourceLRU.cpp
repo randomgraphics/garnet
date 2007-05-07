@@ -142,33 +142,6 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceId id, bool
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::disposeAll()
-{
-    for( GraphicsResourceId id = mEngine.resourceCache().first();
-         id;
-         id = mEngine.resourceCache().next( id ) )
-    {
-        dispose( id );
-    }
-}
-
-// *****************************************************************************
-// private functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
-{
-    GN_ASSERT( item );
-    mLRUList.remove( item );
-    mLRUList.insertBefore( mLRUList.head(), item );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
 {
     GraphicsResourceItem * item = mEngine.resourceCache().id2ptr( id );
@@ -201,4 +174,31 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
     }
 
     mEngine.drawThread().submitResourceDisposingCommand( id );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::ResourceLRU::disposeAll()
+{
+    for( GraphicsResourceId id = mEngine.resourceCache().first();
+         id;
+         id = mEngine.resourceCache().next( id ) )
+    {
+        dispose( id );
+    }
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
+{
+    GN_ASSERT( item );
+    mLRUList.remove( item );
+    mLRUList.insertBefore( mLRUList.head(), item );
 }

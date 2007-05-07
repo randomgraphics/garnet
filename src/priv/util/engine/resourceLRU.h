@@ -49,6 +49,7 @@ namespace GN { namespace engine
         void insert( GraphicsResourceId );
         void remove( GraphicsResourceId );
         void realize( GraphicsResourceId, bool * needReload ); 
+        void dispose( GraphicsResourceId );
         void disposeAll();
 
         // ********************************
@@ -74,7 +75,6 @@ namespace GN { namespace engine
     private:
 
         void markAsRecentlyUsed( GraphicsResourceItem * item );
-        void dispose( GraphicsResourceId );
     };
 }}
 // *****************************************************************************

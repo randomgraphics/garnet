@@ -11,43 +11,9 @@ struct Vertex
     Vector3f pos;
 };
 
-class ShaderLoader : public GraphicsResourceLoader
+class VtxBufLoader : public BasicVtxBufLoader
 {
 public:
-    virtual bool load( void * & outbuf, size_t & outbytes, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
-    bool decompress( void * & outbuf, size_t & outbytes, const void *, size_t, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
-    virtual bool copy( GraphicsResource &, const void * , size_t, int )
-    {
-        return true;
-    }
-
-    virtual void freebuf( void *, size_t )
-    {
-    }
-};
-
-class VtxBufLoader : public GraphicsResourceLoader
-{
-public:
-    virtual bool load( void * & outbuf, size_t & outbytes, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
     bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int )
     {
         GN_ASSERT( 0 == inbuf && 0 == inbytes );
@@ -59,33 +25,11 @@ public:
         outbytes = sizeof(Vertex) * 3;
         return true;
     }
-
-    virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
-    {
-        VtxBuf * vb = gfxres.vtxbuf;
-        void * data = vb->lock( 0, 0, LOCK_DISCARD );
-        if( 0 == data ) return false;
-        memcpy( data, inbuf, inbytes );
-        vb->unlock();
-        return true;
-    }
-
-    virtual void freebuf( void * inbuf, size_t )
-    {
-        safeDeleteArray( inbuf );
-    }
 };
 
-class IdxBufLoader : public GraphicsResourceLoader
+class IdxBufLoader : public BasicIdxBufLoader
 {
 public:
-    virtual bool load( void * & outbuf, size_t & outbytes, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
     bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int )
     {
         GN_ASSERT( 0 == inbuf && 0 == inbytes );
@@ -96,21 +40,6 @@ public:
         outbuf = data;
         outbytes = sizeof(UInt16) * 3;
         return true;
-    }
-
-    virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
-    {
-        IdxBuf * ib = gfxres.idxbuf;
-        void * data = ib->lock( 0, 0, LOCK_DISCARD );
-        if( 0 == data ) return false;
-        memcpy( data, inbuf, inbytes );
-        ib->unlock();
-        return true;
-    }
-
-    virtual void freebuf( void * inbuf, size_t )
-    {
-        safeDeleteArray( inbuf );
     }
 };
 
@@ -126,6 +55,8 @@ const char * vscode =
 
 bool TestTriangle::init()
 {
+    RenderEngine & e = engine();
+
     // create vertex format handle
     VtxFmtDesc vfd;
     vfd.clear();
@@ -142,10 +73,10 @@ bool TestTriangle::init()
     vsdesc.sd.code = vscode;
     vsdesc.sd.vtxfmt.clear();
     vsdesc.sd.vtxfmt.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-    vs = engine().allocResource( vsdesc );
+    vs = e.allocResource( vsdesc );
     if( 0 == vs ) return 0;
     AutoRef<ShaderLoader> vsloader( new ShaderLoader );
-    engine().updateResource( vs, 0, vsloader );
+    e.updateResource( vs, 0, vsloader );
 
     // create vertex buffer
     GraphicsResourceDesc vbdesc;
@@ -154,10 +85,10 @@ bool TestTriangle::init()
     vbdesc.vd.bytes = 3 * sizeof(Vertex);
     vbdesc.vd.dynamic = false;
     vbdesc.vd.readback = false;
-    vb = engine().allocResource( vbdesc );
+    vb = e.allocResource( vbdesc );
     if( 0 == vb ) return false;
     AutoRef<VtxBufLoader> vbloader( new VtxBufLoader );
-    engine().updateResource( vb, 0, vbloader );
+    e.updateResource( vb, 0, vbloader );
 
     // create index buffer
     GraphicsResourceDesc ibdesc;
@@ -166,10 +97,10 @@ bool TestTriangle::init()
     ibdesc.id.numidx = 3;
     ibdesc.id.dynamic = false;
     ibdesc.id.readback = false;
-    ib = engine().allocResource( ibdesc );
+    ib = e.allocResource( ibdesc );
     if( 0 == ib ) return false;
     AutoRef<IdxBufLoader> ibloader( new IdxBufLoader );
-    engine().updateResource( ib, 0, ibloader );
+    e.updateResource( ib, 0, ibloader );
 
     return true;
 }
@@ -180,6 +111,12 @@ void TestTriangle::quit()
 
 void TestTriangle::draw()
 {
+    RenderEngine & e = engine();
+
+    e.disposeAllResources();
+    //e.disposeResource( vb );
+    //e.disposeResource( ib );
+
     DrawContext ctx;
     ctx.resetToDefault();
     ctx.setVS( (const Shader*)vs );
@@ -187,11 +124,11 @@ void TestTriangle::draw()
     ctx.setIdxBuf( (const IdxBuf*)ib );
     ctx.setVtxFmt( vf );
 
-    engine().setContext( ctx );
+    e.setContext( ctx );
 
     Matrix44f m44;
     m44.identity();
-    engine().setShaderUniform( vs, "pvw", m44 );
+    e.setShaderUniform( vs, "pvw", m44 );
 
-    engine().drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
+    e.drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
 }

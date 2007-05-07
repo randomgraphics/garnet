@@ -33,15 +33,16 @@ namespace GN { namespace engine
     {
         //@{
 
-        bool                                  noerr;                ///< true means this request has no error
-        GraphicsResourceOperation             op;                   ///< requested operation.
-        GraphicsResourceId                    resourceId;           ///< target resource
-        int                                   targetLod;            ///< ignored by GROP_DISPOSE
-        AutoRef<GraphicsResourceLoader,Mutex> loader;               ///< ignored by GROP_DISPOSE
-        FenceId                               mustAfterThisFence;   ///< the request must happens after this draw fence. For lock/unlock/dispose only.
-        FenceId                               submittedAtThisFence; ///< the request is submitted at this fence.
-        void *                                data;                 ///< temporary data buffer used by loader
-        size_t                                bytes;                ///< size of temporary data buffer.
+        bool                                  noerr;                      ///< true means this request has no error
+        GraphicsResourceOperation             op;                         ///< requested operation.
+        GraphicsResourceId                    resourceId;                 ///< target resource
+        int                                   targetLod;                  ///< ignored by GROP_DISPOSE
+        AutoRef<GraphicsResourceLoader,Mutex> loader;                     ///< ignored by GROP_DISPOSE
+        FenceId                               mustAfterThisDrawFence;     ///< the request must happens after this draw fence. For copy/dispose only.
+        FenceId                               mustAfterThisResourceFence; ///< the request must happens after this resource fence. For copy/dispose only
+        FenceId                               submittedAtThisFence;       ///< the request is submitted at this fence.
+        void *                                data;                       ///< temporary data buffer used by loader
+        size_t                                bytes;                      ///< size of temporary data buffer.
 
         //@}
 
