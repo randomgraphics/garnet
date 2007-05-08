@@ -13,6 +13,9 @@ using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
 
+///
+/// ...
+///
 class TestCase
 {
     RenderEngine & mEngine;
@@ -38,17 +41,20 @@ public:
     //@}
 };
 
-class ShaderLoader : public GraphicsResourceLoader
+///
+/// ...
+///
+class DummyLoader : public GraphicsResourceLoader
 {
 public:
-    virtual bool load( void * & outbuf, size_t & outbytes, int )
+    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
     {
         outbuf = 0;
         outbytes = 0;
         return true;
     }
 
-    bool decompress( void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
     {
         outbuf = 0;
         outbytes = 0;
@@ -65,10 +71,14 @@ public:
     }
 };
 
+///
+/// ...
+///
 class BasicVtxBufLoader : public GraphicsResourceLoader
 {
 public:
-    virtual bool load( void * & outbuf, size_t & outbytes, int )
+
+    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
     {
         outbuf = 0;
         outbytes = 0;
@@ -91,10 +101,13 @@ public:
     }
 };
 
+///
+/// ...
+///
 class BasicIdxBufLoader : public GraphicsResourceLoader
 {
 public:
-    virtual bool load( void * & outbuf, size_t & outbytes, int )
+    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
     {
         outbuf = 0;
         outbytes = 0;

@@ -116,7 +116,11 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
 
         //GN_INFO(sLogger)( "Load %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
 
-        cmd->noerr = cmd->loader->load( cmd->data, cmd->bytes, cmd->targetLod );
+        cmd->noerr = cmd->loader->load(
+            mEngine.resourceCache().id2ptr(cmd->resourceId)->desc,
+            cmd->data,
+            cmd->bytes,
+            cmd->targetLod );
 
         // load done. push it to decompress thread
         cmd->op = GROP_DECOMPRESS;
@@ -138,17 +142,26 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
 
     while( NULL != ( cmd = commands->get() ) )
     {
-        GN_ASSERT( GROP_DECOMPRESS == cmd->op );
-        GN_ASSERT( cmd->loader );
-        void * olddata = cmd->data;
-        size_t oldbytes = cmd->bytes;
+        if( cmd->noerr )
+        {
+            GN_ASSERT( GROP_DECOMPRESS == cmd->op );
+            GN_ASSERT( cmd->loader );
+            void * olddata = cmd->data;
+            size_t oldbytes = cmd->bytes;
 
-        //GN_INFO(sLogger)( "Decompress %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
+            //GN_INFO(sLogger)( "Decompress %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
 
-        cmd->noerr = cmd->loader->decompress( cmd->data, cmd->bytes, olddata, oldbytes, cmd->targetLod );
+            cmd->noerr = cmd->loader->decompress(
+                mEngine.resourceCache().id2ptr(cmd->resourceId)->desc,
+                cmd->data,
+                cmd->bytes,
+                olddata,
+                oldbytes,
+                cmd->targetLod );
 
-        // decompress done, delete loaded data,
-        cmd->loader->freebuf( olddata, oldbytes );
+            // decompress done, delete loaded data,
+            cmd->loader->freebuf( olddata, oldbytes );
+        }
 
         // push it to draw thread for copy
         // TODO: What happens, if there's multiple decompress threads, which means that 

@@ -35,8 +35,10 @@ static size_t sEstimateResourceSize( const GN::engine::GraphicsResourceDesc & de
 
     switch( desc.type )
     {
-        case GRT_SHADER :
-            return 1; // we assume that shader take no video memory
+        case GRT_SHADER   :
+        case GRT_CONSTBUF :
+        case GRT_VTXFMT   :
+            return 1; // we assume that these resources won't take video memory
 
         case GRT_TEXTURE :
             return sEstimateTextureSize( desc.td );
@@ -57,10 +59,10 @@ static size_t sEstimateResourceSize( const GN::engine::GraphicsResourceDesc & de
             }
             return desc.id.numidx * 2;
 
-        case GRT_CONSTBUF :
-            return 1;
+        default :
+            GN_UNEXPECTED();
+            return 0;
     }
-    return 0;
 }
 
 // *****************************************************************************

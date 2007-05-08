@@ -27,7 +27,6 @@ namespace GN { namespace engine
         gfx::ShadingLanguage lang;   ///< shading language
         StrA                 code;   ///< shader code
         StrA                 hints;  ///< shader creation hints
-        gfx::VtxFmtDesc      vtxfmt; ///< vertex format descriptor
     };
 
     ///
@@ -52,6 +51,7 @@ namespace GN { namespace engine
         GRT_VTXBUF,
         GRT_IDXBUF,
         GRT_CONSTBUF,
+        GRT_VTXFMT,
         NUM_GRAPHICS_RESOURCE_TYPES,
         GRT_INVALID = NUM_GRAPHICS_RESOURCE_TYPES,
         //@}
@@ -70,6 +70,8 @@ namespace GN { namespace engine
         gfx::VtxBufDesc      vd;
         gfx::IdxBufDesc      id;
         ConstBufDesc         cd;
+        gfx::VtxFmtDesc      fd;
+        DynaArray<UInt8>     userdata; ///< unchangable during life time of the resource.
         //@}
     };
 
@@ -92,12 +94,13 @@ namespace GN { namespace engine
         union
         {
             //@{
-            void          * data;     ///< ...
-            gfx::Shader   * shader;   ///< ...
-            gfx::Texture  * texture;  ///< ...
-            gfx::VtxBuf   * vtxbuf;   ///< ...
-            gfx::IdxBuf   * idxbuf;   ///< ...
-            gfx::ConstBuf * constbuf; ///< ...
+            void            * data;     ///< ...
+            gfx::Shader     * shader;   ///< ...
+            gfx::Texture    * texture;  ///< ...
+            gfx::VtxBuf     * vtxbuf;   ///< ...
+            gfx::IdxBuf     * idxbuf;   ///< ...
+            gfx::ConstBuf   * constbuf; ///< ...
+            gfx::VtxFmtHandle vtxfmt;   ///< ...
             //@}
         };
 
@@ -135,12 +138,12 @@ namespace GN { namespace engine
         ///
         /// load from external/slow storage (disk, cdrom, network)
         ///
-        virtual bool load( void * & outbuf, size_t & outbytes, int lod ) = 0;
+        virtual bool load( const GraphicsResourceDesc & desc, void * & outbuf, size_t & outbytes, int lod ) = 0;
 
         ///
         /// decompress or do other process to prepare for copy to graphics resource.
         ///
-        virtual bool decompress( void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int lod ) = 0;
+        virtual bool decompress( const GraphicsResourceDesc & desc, void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int lod ) = 0;
 
         ///
         /// copy data to graphics resource
@@ -211,7 +214,6 @@ namespace GN { namespace engine
 
         // ********************************
         /// \name rendering device management
-        ///
         // ********************************
     public:
 

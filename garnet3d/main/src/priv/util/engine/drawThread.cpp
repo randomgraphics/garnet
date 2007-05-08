@@ -59,6 +59,12 @@ static bool sCreateDeviceData( GN::engine::GraphicsResource & res )
             GN_UNIMPL();
             return false;
 
+        case GRT_VTXFMT :
+            GN_ASSERT( 0 == res.vtxfmt );
+            res.vtxfmt = r.createVtxFmt( res.desc.fd );
+            if( 0 == res.vtxfmt ) return false;
+            break;
+
         default:
             GN_UNEXPECTED();
             return false;
@@ -96,6 +102,10 @@ static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
             safeDecref( res.constbuf );
             break;
 
+        case GRT_VTXFMT :
+            res.vtxfmt = 0;
+            break;
+
         default:
             GN_UNEXPECTED();
     }
@@ -107,7 +117,7 @@ static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
 template<typename T>
 static void sResolveResourceId(
     GN::engine::RenderEngine & engine,
-    const T * & data )
+    T & data )
 {
     using namespace GN::engine;
 
@@ -118,7 +128,7 @@ static void sResolveResourceId(
     GraphicsResourceItem * res = engine.resourceCache().id2ptr( id );
     GN_ASSERT( res );
 
-    data = (const T*)res->data;
+    data = (T)res->data;
 }
 // *****************************************************************************
 // draw command functions
@@ -146,6 +156,10 @@ namespace GN { namespace engine
                 sResolveResourceId( engine, context->renderTargets.cbuffers[i].texture );
             }
             sResolveResourceId( engine, context->renderTargets.zbuffer.texture );
+        }
+        if( context->flags.vtxFmt )
+        {
+            sResolveResourceId( engine, context->vtxFmt );
         }
         if( context->flags.textures )
         {
