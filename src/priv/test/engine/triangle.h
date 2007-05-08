@@ -8,8 +8,7 @@ using namespace GN::engine;
 
 class TestTriangle : public TestCase
 {
-    GraphicsResourceId vs, ps, vb, ib;
-    VtxFmtHandle       vf;
+    GraphicsResourceId vf, vs, ps, vb, ib;
 
 public:
 

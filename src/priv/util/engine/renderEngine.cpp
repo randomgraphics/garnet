@@ -63,6 +63,10 @@ static inline void sPrepareContextResources(
         }
         sPrepareResource( engine, (GraphicsResourceId)context.renderTargets.zbuffer.texture );
     }
+    if( context.flags.vtxFmt )
+    {
+        sPrepareResource( engine, (GraphicsResourceId)context.vtxFmt );
+    }
     if( context.flags.textures )
     {
         for( unsigned int i = 0; i < context.numTextures; ++i )
@@ -153,6 +157,13 @@ static void sSetupDrawCommandWaitingList(
         sSetupWaitingListAndReferenceFence(
             cache,
             (GraphicsResourceId)context.renderTargets.zbuffer.texture,
+            dr );
+    }
+    if( context.flags.vtxFmt )
+    {
+        sSetupWaitingListAndReferenceFence(
+            cache,
+            (GraphicsResourceId)context.vtxFmt,
             dr );
     }
     if( context.flags.textures )

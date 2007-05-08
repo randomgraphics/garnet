@@ -113,6 +113,7 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceId id, bool
 
         case GRT_SHADER :
         case GRT_CONSTBUF :
+        case GRT_VTXFMT :
             // do nothing
             break;
 
@@ -166,6 +167,7 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
 
         case GRT_SHADER :
         case GRT_CONSTBUF :
+        case GRT_VTXFMT :
             // do nothing
             break;
 
