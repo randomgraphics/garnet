@@ -9,7 +9,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread")
 // local functions
 // *****************************************************************************
 
-#define DUMP_COMMANDS 1
+#define DUMP_COMMANDS 0
 
 //
 //
@@ -632,6 +632,11 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 
     if( r.drawBegin() )
     {
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( "Frame BEGIN" );
+        }
+
         DrawBuffer & db = mDrawBuffers[mReadingIndex];
 
         DrawCommandHeader * command = (DrawCommandHeader*)db.buffer;
@@ -688,6 +693,11 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
         }
 
         r.drawEnd();
+
+        if( DUMP_COMMANDS )
+        {
+            sDumpCommandText( "Frame END" );
+        }
     }
 }
 

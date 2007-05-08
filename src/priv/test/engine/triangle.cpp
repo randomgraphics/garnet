@@ -113,22 +113,23 @@ void TestTriangle::draw()
 {
     RenderEngine & e = engine();
 
+    // dispose all
     e.disposeAllResources();
-    //e.disposeResource( vb );
-    //e.disposeResource( ib );
 
+    // set uniform
+    Matrix44f m44;
+    m44.identity();
+    e.setShaderUniform( vs, "pvw", m44 );
+
+    // bind context
     DrawContext ctx;
     ctx.resetToDefault();
     ctx.setVS( (const Shader*)vs );
     ctx.setVtxBuf( 0, (const VtxBuf *)vb, 0, sizeof(Vertex) );
     ctx.setIdxBuf( (const IdxBuf*)ib );
     ctx.setVtxFmt( vf );
-
     e.setContext( ctx );
 
-    Matrix44f m44;
-    m44.identity();
-    e.setShaderUniform( vs, "pvw", m44 );
-
+    // do draw
     e.drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
 }
