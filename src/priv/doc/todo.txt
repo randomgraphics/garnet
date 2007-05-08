@@ -10,8 +10,13 @@
     - done
       - configuable resource cache with limited video memory footprint.
       - update thread: major game logic thread
-      - render thread: the only thread that touches rendering device.
+      - render thread: the only thread that touches rendering device
       - resource loading thread(s)
+    - issues:
+      - dispose shader will invalidate dirty uniforms. So if a shader is 
+        disposed after SET_UNIFORM and before SET_CONTEXT, its uniform value 
+        will lost.
+        - possible solution: use independent constant buffer
   - shared uniform
 
 - p2
