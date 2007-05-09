@@ -35,7 +35,7 @@ namespace GN { namespace engine
 
         //@{
     public:
-        bool init( UInt32 maxTexBytes, UInt32 maxMeshBytes );
+        bool init( size_t maxTexBytes, size_t maxMeshBytes );
         void quit();
     private:
         void clear() {}
@@ -64,10 +64,10 @@ namespace GN { namespace engine
         ResourceLRUList mLRUList;
 
         // size management
-        UInt32 mMaxTexBytes;
-        UInt32 mMaxMeshBytes;
-        UInt32 mRealizedTexBytes;
-        UInt32 mRealizedMeshBytes;
+        size_t mMaxTexBytes;
+        size_t mMaxMeshBytes;
+        size_t mRealizedTexBytes;
+        size_t mRealizedMeshBytes;
 
         // ********************************
         // private functions

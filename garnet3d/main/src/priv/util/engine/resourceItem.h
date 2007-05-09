@@ -30,7 +30,7 @@ namespace GN { namespace engine
         ///
         /// estimated resource size in bytes.
         ///
-        const UInt32 bytes;
+        const size_t bytes;
 
         /// managed by LRU manager, which runs in render engine's thread.
         ///
