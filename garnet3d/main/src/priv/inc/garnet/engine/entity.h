@@ -8,6 +8,160 @@
 
 namespace GN
 {
+    template< class T, class H>
+    class NamedHandleManager
+    {
+        typedef std::map<StrA,H> NameMap;
+
+        struct NamedItem
+        {
+            T    data;
+            StrA name;
+
+            NamedItem( const T & d, const StrA & n ) : data(d), name(n) {}
+
+            NamedItem( const StrA & n ) : name(n) {}
+        };
+
+        NameMap                    mNames; // name -> handle
+        HandleManager<NamedItem,H> mItems; // handle -> name/data
+
+    public:
+
+        //@{
+
+        ///
+        /// clear all handles
+        ///
+        void clear()
+        {
+            mItems.clear();
+            mNames.clear();
+        }
+
+        ///
+        /// Get number of handles
+        ///
+        size_t size() const
+        {
+            GN_ASSERT( mItems.size() == mNames.size() );
+            return mItems.size();
+        }
+
+        ///
+        /// Is the manager empty or not.
+        ///
+        bool empty() const
+        {
+            GN_ASSERT( mItems.size() == mNames.size() );
+            return mItems.empty();
+        }
+
+        ///
+        /// return first handle
+        ///
+        H first() const { return mItems.first(); }
+
+        ///
+        /// return next handle
+        ///
+        H next( H h ) const { return mItems.next(); }
+
+        ///
+        /// name must be unique.
+        ///
+        H add( const StrA & name )
+        {
+            if( mNames.end() != mNames.find( name ) )
+            {
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
+                return 0;
+            }
+
+            H h = mItems.add( NamedItem(name) );
+            if( 0 == h ) return 0;
+
+            mNames.insert( std::make_pair(name,h) );
+
+            return h;
+        }
+
+        ///
+        /// name must be unique.
+        ///
+        H add( const StrA & name, const T & data )
+        {
+            if( mNames.end() != mNames.find( name ) )
+            {
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
+                return 0;
+            }
+
+            H h = mItems.add( NamedItem(name,data) );
+            if( 0 == h ) return 0;
+
+            mNames.insert( std::make_pair(name,h) );
+
+            return h;
+        }
+
+        void remove( H h )
+        {
+            if( !validHandle( h ) )
+            {
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid handle: %d.", h );
+                return;
+            }
+
+            NamedItem & item = mItems[h];
+
+            mNames.erase( item.name );
+
+            mItems.remove( h );
+        }
+
+        void remove( const StrA & name )
+        {
+            if( !validName( name ) )
+            {
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid name: %s.", name.cptr() );
+                return;
+            }
+
+            H h( mNames[name] );
+
+            mNames.erase( name );
+            mItems.remove( h );
+        }
+
+        bool validHandle( H h ) const
+        {
+            return mItems.validHandle( h );
+        }
+
+        bool validName( const StrA & name ) const
+        {
+            return mNames.end() != mNames.find( name );
+        }
+
+        T & get( H h ) const
+        {
+            return mItems.get( h );
+        }
+
+        T & get( const StrA & name ) const
+        {
+            GN_ASSERT( validName(name) );
+            NameMap::const_iterator i = mNames.find( name );
+            return mItems.get( i->second );
+        }
+
+        T & operator[]( H h ) const { return get(h); }
+
+        T & operator[]( const StrA & name ) const { return get(name); }
+
+        //@}
+    };
 };
 
 namespace GN { namespace engine
@@ -24,6 +178,9 @@ namespace GN { namespace engine
 
     class EntityManager;
 
+    ///
+    /// Entity structure
+    ///
     struct Entity : public NoCopy
     {
         EntityManager    & manager;
@@ -33,6 +190,7 @@ namespace GN { namespace engine
 
     protected:
 
+        //@{
         Entity( EntityManager & m, EntityId i, EntityTypeId t, const StrA & n )
             : manager(m)
             , id(i)
@@ -41,8 +199,12 @@ namespace GN { namespace engine
         {}
 
         ~Entity() {}
+        //@}
     };
 
+    ///
+    /// templated entity structure
+    ///
     template<class T>
     struct EntityT : public Entity
     {
@@ -57,6 +219,9 @@ namespace GN { namespace engine
         ~EntityT() {}
     };
 
+    ///
+    /// entity manager
+    ///
     class EntityManager
     {
     public:
@@ -109,115 +274,14 @@ namespace GN { namespace engine
             DoubleLinkedList<Entity*> mItems;
         };
 
-        template< class T, class H>
-        class NamedHandelManager
-        {
-            typedef std::map<StrA,H> NameMap;
-
-            struct NamedItem
-            {
-                T    data;
-                StrA name;
-
-                NamedItem( const T & d, const StrA & n ) : data(d), name(n) {}
-
-                NamedItem( const StrA & n ) : name(n) {}
-            };
-
-            NameMap                    mNames; // name -> handle
-            HandleManager<NamedItem,H> mItems; // handle -> name/data
-
-        public:
-
-            //@{
-
-            ///
-            /// name must be unique.
-            ///
-            H add( const StrA & name )
-            {
-                if( mNames.end() != mNames.find( name ) )
-                {
-                    GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
-                    return 0;
-                }
-
-                H h = mItems.add( NamedItem(name) );
-                if( 0 == h ) return 0;
-
-                mNames.insert( std::make_pair(name,h) );
-
-                return h;
-            }
-
-            ///
-            /// name must be unique.
-            ///
-            H add( const StrA & name, const T & data )
-            {
-                if( mNames.end() != mNames.find( name ) )
-                {
-                    GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "name '%s' is not unique.", name.cptr() );
-                    return 0;
-                }
-
-                H h = mItems.add( NamedItem(name,data) );
-                if( 0 == h ) return 0;
-
-                mNames.insert( std::make_pair(name,h) );
-
-                return h;
-            }
-
-            void remove( H h )
-            {
-                if( !validHandle( h ) )
-                {
-                    GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid handle: %d.", h );
-                    return;
-                }
-            }
-
-            void remove( const StrA & name )
-            {
-            }
-
-            bool validHandle( H h ) const
-            {
-                return mItems.validHandle( h );
-            }
-
-            bool validName( const StrA & name ) const
-            {
-                return mNames.end() != mNames.find( name );
-            }
-
-            T & get( H h ) const
-            {
-                return mItems.get( h );
-            }
-
-            T & get( const StrA & name ) const
-            {
-                GN_ASSERT( validName(name) );
-                NameMap::const_iterator i = mNames.find( name );
-                return mItems.get( i->second );
-            }
-
-            T & operator[]( H h ) const { return get(h); }
-
-            T & operator[]( const StrA & name ) const { return get(name); }
-
-            //@}
-        };
-
-        static Logger                            * sLogger;
-        HandleManager<Entity*,EntityId>            mEntities;
-        HandleManager<EntityTypeItem,EntityTypeId> mTypes;
+        static Logger                                 * sLogger;
+        NamedHandleManager<Entity*,EntityId>            mEntities;
+        NamedHandleManager<EntityTypeItem,EntityTypeId> mTypes;
     };
 }}
 
 #include "entity.inl"
+
 
 // *****************************************************************************
 //                           End of entity.h
