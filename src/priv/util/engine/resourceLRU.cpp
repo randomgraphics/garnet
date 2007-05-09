@@ -10,7 +10,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::RenderEngine::ResourceLRU::init( UInt32 maxTexBytes, UInt32 maxMeshBytes )
+bool GN::engine::RenderEngine::ResourceLRU::init( size_t maxTexBytes, size_t maxMeshBytes )
 {
     GN_GUARD;
 

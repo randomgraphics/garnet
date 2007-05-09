@@ -52,7 +52,8 @@ namespace GN
     ///
     /// ¼ì²énÊÇ·ñÎª2^n
     // ------------------------------------------------------------------------
-    GN_FORCE_INLINE bool isPowerOf2( UInt32 n )
+    template<typename T>
+    GN_FORCE_INLINE bool isPowerOf2( T n )
     {
         return ( 0 == (n & (n - 1)) ) && ( 0 != n );
     }
