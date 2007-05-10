@@ -1,42 +1,50 @@
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine::GraphicsResourceItem *
-GN::engine::RenderEngine::GraphicsResourceCache::id2ptr( GraphicsResourceId id ) const
+inline bool
+GN::engine::RenderEngine::GraphicsResourceCache::check( GraphicsResourceItem * item ) const
 {
     mResourceMutex.lock();
 
-    if( !mResources.validHandle( id ) )
+    if( 0 == item )
     {
         mResourceMutex.unlock();
         static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
-        GN_ERROR(sLogger)( "invalid resource ID: %d", id );
-        return 0;
+        GN_ERROR(sLogger)( "invalid graphics resource pointer" );
+        return false;
     }
 
-    GraphicsResourceItem * item = mResources[id];
-
-    GN_ASSERT( item );
+    if( !mResources.validHandle( item->id ) ||
+        mResources[item->id] != item )
+    {
+        mResourceMutex.unlock();
+        static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
+        GN_ERROR(sLogger)( "invalid graphics resource pointer" );
+        return false;
+    }
 
     mResourceMutex.unlock();
 
-    return item;
+    return true;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine::GraphicsResourceId
+inline GN::engine::GraphicsResourceItem *
 GN::engine::RenderEngine::GraphicsResourceCache::first() const
 {
-    return mResources.first();
+    UInt32 id = mResources.first();
+    return id ? mResources[id] : 0;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-inline GN::engine::GraphicsResourceId
-GN::engine::RenderEngine::GraphicsResourceCache::next( GraphicsResourceId id ) const
+inline GN::engine::GraphicsResourceItem *
+GN::engine::RenderEngine::GraphicsResourceCache::next( GraphicsResourceItem * item ) const
 {
-    return mResources.next( id );
+    GN_ASSERT( check( item ) );
+    UInt32 nextid = mResources.next( item->id );
+    return nextid ? mResources[nextid] : 0;
 }

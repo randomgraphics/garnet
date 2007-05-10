@@ -51,12 +51,11 @@ namespace GN { namespace engine
         /// these methods, except id2ptr(), are not thread safe, thus must be called in serialzed way.
         ///
         //@{
-        GraphicsResourceId     alloc( const GraphicsResourceDesc & );
-        void                   free( GraphicsResourceId );
-        GraphicsResourceItem * id2ptr( GraphicsResourceId ) const;
-        StrA                   id2name( GraphicsResourceId ) const; // for debug and log
-        GraphicsResourceId     first() const;
-        GraphicsResourceId     next( GraphicsResourceId ) const;
+        GraphicsResourceItem * alloc( const GraphicsResourceDesc & );
+        void                   free( GraphicsResourceItem * );
+        bool                   check( GraphicsResourceItem * ) const;
+        GraphicsResourceItem * first() const;
+        GraphicsResourceItem * next( GraphicsResourceItem * ) const;
         //@}
 
         // ********************************
@@ -69,11 +68,9 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        typedef HandleManager<GraphicsResourceItem*,GraphicsResourceId> ResourceHandleManager;
+        typedef HandleManager<GraphicsResourceItem*,UInt32> ResourceHandleManager;
 
-        RenderEngine & mEngine;
-
-        // handle -> ptr
+        RenderEngine        & mEngine;
         ResourceHandleManager mResources;
         mutable SpinLoop      mResourceMutex;
     };

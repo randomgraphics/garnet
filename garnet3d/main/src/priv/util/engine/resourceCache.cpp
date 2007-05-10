@@ -105,7 +105,7 @@ void GN::engine::RenderEngine::GraphicsResourceCache::quit()
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::GraphicsResourceId
+GN::engine::GraphicsResourceItem *
 GN::engine::RenderEngine::GraphicsResourceCache::alloc(
     const GraphicsResourceDesc & desc )
 {
@@ -114,7 +114,7 @@ GN::engine::RenderEngine::GraphicsResourceCache::alloc(
 
     mResourceMutex.lock();
 
-    GraphicsResourceId id = mResources.newItem();
+    UInt32 id = mResources.newItem();
 
     GraphicsResourceItem * item = new GraphicsResourceItem( id, desc, bytes );
     item->prev = item->next = 0;
@@ -123,16 +123,17 @@ GN::engine::RenderEngine::GraphicsResourceCache::alloc(
 
     mResourceMutex.unlock();
 
-    return id;
+    return item;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::GraphicsResourceCache::free( GraphicsResourceId id )
+void GN::engine::RenderEngine::GraphicsResourceCache::free( GraphicsResourceItem * item )
 {
-    GraphicsResourceItem * item = id2ptr( id );
     if( 0 == item ) return;
+
+    GN_ASSERT( check( item ) );
 
     // wait until the resouce is not used any more
     while( mEngine.drawThread().getCurrentDrawFence() < item->lastReferenceFence
@@ -143,20 +144,10 @@ void GN::engine::RenderEngine::GraphicsResourceCache::free( GraphicsResourceId i
 
     mResourceMutex.lock();
 
-    mResources.remove( id );
+    mResources.remove( item->id );
     delete item;
 
     mResourceMutex.unlock();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::StrA GN::engine::RenderEngine::GraphicsResourceCache::id2name( GraphicsResourceId id ) const
-{
-    GraphicsResourceItem * item = id2ptr( id );
-    if( 0 == item ) return "INVALID_RESOURCE";
-    else return item->desc.name;
 }
 
 // *****************************************************************************

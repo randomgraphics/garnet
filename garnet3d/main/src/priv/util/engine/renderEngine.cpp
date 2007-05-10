@@ -16,27 +16,26 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 // -----------------------------------------------------------------------------
 static inline void sPrepareResource(
     GN::engine::RenderEngine & engine,
-    GN::engine::GraphicsResourceId id )
+    GN::engine::GraphicsResourceItem * item )
 {
     using namespace GN::engine;
 
-    if( 0 == id ) return;
+    if( 0 == item ) return;
 
-    GraphicsResourceItem * res = engine.resourceCache().id2ptr(id);
-    if( 0 == res ) return;
+    if( !engine.resourceCache().check(item) ) return;
 
     bool reload;
 
-    engine.resourceLRU().realize( id, &reload );
+    engine.resourceLRU().realize( item, &reload );
 
     if( reload )
     {
         // reload using it's current loader and lod
-        GN_ASSERT( res->lastSubmittedLoader );
+        GN_ASSERT( item->lastSubmittedLoader );
         engine.resourceThread().submitResourceLoadingCommand(
-            id,
-            res->lastSubmittedLod,
-            res->lastSubmittedLoader );
+            item,
+            item->lastSubmittedLod,
+            item->lastSubmittedLoader );
     }
 }
 
@@ -53,37 +52,37 @@ static inline void sPrepareContextResources(
     // make sure all resources referenced in contex is ready to use.
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
     {
-        if( context.flags.shaderBit( i ) ) sPrepareResource( engine, (GraphicsResourceId)context.shaders[i] );
+        if( context.flags.shaderBit( i ) ) sPrepareResource( engine, (GraphicsResourceItem*)context.shaders[i] );
     }
     if( context.flags.renderTargets )
     {
         for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
         {
-            sPrepareResource( engine, (GraphicsResourceId)context.renderTargets.cbuffers[i].texture );
+            sPrepareResource( engine, (GraphicsResourceItem*)context.renderTargets.cbuffers[i].texture );
         }
-        sPrepareResource( engine, (GraphicsResourceId)context.renderTargets.zbuffer.texture );
+        sPrepareResource( engine, (GraphicsResourceItem*)context.renderTargets.zbuffer.texture );
     }
     if( context.flags.vtxFmt )
     {
-        sPrepareResource( engine, (GraphicsResourceId)context.vtxFmt );
+        sPrepareResource( engine, (GraphicsResourceItem*)context.vtxFmt );
     }
     if( context.flags.textures )
     {
         for( unsigned int i = 0; i < context.numTextures; ++i )
         {
-            sPrepareResource( engine, (GraphicsResourceId)context.textures[i] );
+            sPrepareResource( engine, (GraphicsResourceItem*)context.textures[i] );
         }
     }
     if( context.flags.vtxBufs )
     {
         for( unsigned int i = 0; i < context.numVtxBufs; ++i )
         {
-            sPrepareResource( engine, (GraphicsResourceId)context.vtxBufs[i].buffer );
+            sPrepareResource( engine, (GraphicsResourceItem*)context.vtxBufs[i].buffer );
         }
     }
     if( context.flags.idxBuf )
     {
-        sPrepareResource( engine, (GraphicsResourceId)context.idxBuf );
+        sPrepareResource( engine, (GraphicsResourceItem*)context.idxBuf );
     }
 }
 
@@ -92,35 +91,33 @@ static inline void sPrepareContextResources(
 // -----------------------------------------------------------------------------
 static inline void sSetupWaitingListAndReferenceFence(
     GN::engine::RenderEngine::GraphicsResourceCache & cache,
-    GN::engine::GraphicsResourceId id,
+    GN::engine::GraphicsResourceItem * item,
     GN::engine::DrawCommandHeader & dr )
 {
     using namespace GN::engine;
 
-    if( 0 == id ) return;
+    if( 0 == item ) return;
 
-    GN::engine::GraphicsResourceItem * res = cache.id2ptr( id );
+    if( !cache.check( item ) ) return;
 
-    if( 0 == res ) return;
-
-    GN_ASSERT( GRS_REALIZED == res->state );
+    GN_ASSERT( GRS_REALIZED == item->state );
 
     // reference and update can't happen at same fence.
-    GN_ASSERT( res->lastReferenceFence != res->lastSubmissionFence );
+    GN_ASSERT( item->lastReferenceFence != item->lastSubmissionFence );
 
     // resource is updated after being used. Now it is being used again.
     // so we have to wait for completion of the update.
-    if( res->lastSubmissionFence > res->lastReferenceFence )
+    if( item->lastSubmissionFence > item->lastReferenceFence )
     {
-        dr.resourceWaitingList[dr.resourceWaitingCount].id = id;
-        dr.resourceWaitingList[dr.resourceWaitingCount].waitForUpdate = res->lastSubmissionFence;
+        dr.resourceWaitingList[dr.resourceWaitingCount].resource = item;
+        dr.resourceWaitingList[dr.resourceWaitingCount].waitForUpdate = item->lastSubmissionFence;
         dr.resourceWaitingCount++;
     }
 
     // note: this should be the only place to update lastReferenceFence
-    res->lastReferenceFence = dr.fence;
+    item->lastReferenceFence = dr.fence;
 
-    GN_ASSERT( res->lastReferenceFence != res->lastSubmissionFence );
+    GN_ASSERT( item->lastReferenceFence != item->lastSubmissionFence );
 }
 
 //
@@ -141,7 +138,7 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceId)context.shaders[i],
+                (GraphicsResourceItem*)context.shaders[i],
                 dr );
         }
     }
@@ -151,19 +148,19 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceId)context.renderTargets.cbuffers[i].texture,
+                (GraphicsResourceItem*)context.renderTargets.cbuffers[i].texture,
                 dr );
         }
         sSetupWaitingListAndReferenceFence(
             cache,
-            (GraphicsResourceId)context.renderTargets.zbuffer.texture,
+            (GraphicsResourceItem*)context.renderTargets.zbuffer.texture,
             dr );
     }
     if( context.flags.vtxFmt )
     {
         sSetupWaitingListAndReferenceFence(
             cache,
-            (GraphicsResourceId)context.vtxFmt,
+            (GraphicsResourceItem*)context.vtxFmt,
             dr );
     }
     if( context.flags.textures )
@@ -172,7 +169,7 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceId)context.textures[i],
+                (GraphicsResourceItem*)context.textures[i],
                 dr );
         }
     }
@@ -182,7 +179,7 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceId)context.vtxBufs[i].buffer,
+                (GraphicsResourceItem*)context.vtxBufs[i].buffer,
                 dr );
         }
     }
@@ -190,7 +187,7 @@ static void sSetupDrawCommandWaitingList(
     {
         sSetupWaitingListAndReferenceFence(
             cache,
-            (GraphicsResourceId)context.idxBuf,
+            (GraphicsResourceItem*)context.idxBuf,
             dr );
     }
 }
@@ -327,12 +324,16 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
 //
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::setShaderUniform(
-    GraphicsResourceId        shader,
+    GraphicsResource        * shader,
     const StrA              & uniformName,
     const gfx::UniformValue & value )
 {
-    // make sure the shader is ready to use.
-    sPrepareResource( *this, shader );
+    GraphicsResourceItem * item = (GraphicsResourceItem*)shader;
+
+    if( !mResourceCache->check( item ) ) return;
+
+    // make sure the item is ready to use.
+    sPrepareResource( *this, item );
 
     // get uniform data buffer
     const void * data;
@@ -360,12 +361,12 @@ void GN::engine::RenderEngine::setShaderUniform(
 
     struct ParamHeader
     {
-        GraphicsResourceId shader;
-        char               uniname[32];
-        SInt32             unitype;
+        GraphicsResourceItem * shader;
+        char                   uniname[32];
+        SInt32                 unitype;
     } header;
 
-    header.shader = shader;
+    header.shader = item;
     memcpy( header.uniname, uniformName.cptr(), 32 );
     header.uniname[31] = 0;
     header.unitype = value.type;
@@ -381,7 +382,7 @@ void GN::engine::RenderEngine::setShaderUniform(
     // setup draw command and resource relationship
     sSetupWaitingListAndReferenceFence(
         *mResourceCache,
-        shader,
+        item,
         *dr );
 }
 
@@ -431,39 +432,39 @@ void GN::engine::RenderEngine::draw(
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::GraphicsResourceId
+GN::engine::GraphicsResource *
 GN::engine::RenderEngine::allocResource( const GraphicsResourceDesc & desc )
 {
-    GraphicsResourceId id = mResourceCache->alloc( desc );
-    if( 0 == id ) return 0;
-    mResourceLRU->insert( id );
-    return id;
+    GraphicsResourceItem * item = mResourceCache->alloc( desc );
+    if( 0 == item ) return 0;
+    mResourceLRU->insert( item );
+    return item;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::freeResource( GraphicsResourceId id )
+void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 {
-    mResourceLRU->remove( id );
-    return mResourceCache->free( id );
+    GraphicsResourceItem * item = (GraphicsResourceItem*)res;
+
+    if( !mResourceCache->check( item ) ) return;
+
+    mResourceLRU->remove( item );
+
+    return mResourceCache->free( item );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::GraphicsResource *
-GN::engine::RenderEngine::getResourceById( GraphicsResourceId id )
+void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
-    return mResourceCache->id2ptr( id );
-}
+    GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::disposeResource( GraphicsResourceId id )
-{
-    mResourceLRU->dispose( id );
+    if( !mResourceCache->check( item ) ) return;
+
+    mResourceLRU->dispose( item );
 }
 
 //
@@ -478,10 +479,15 @@ void GN::engine::RenderEngine::disposeAllResources()
 //
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::updateResource(
-    GraphicsResourceId       id,
+    GraphicsResource       * res,
     int                      lod,
     GraphicsResourceLoader * loader )
 {
-    mResourceLRU->realize( id, 0 );
-    mResourceThread->submitResourceLoadingCommand( id, lod, loader );
+    GraphicsResourceItem * item = (GraphicsResourceItem*)res;
+
+    if( !mResourceCache->check( item ) ) return;
+
+    mResourceLRU->realize( item, 0 );
+
+    mResourceThread->submitResourceLoadingCommand( item, lod, loader );
 }

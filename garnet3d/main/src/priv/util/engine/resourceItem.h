@@ -28,6 +28,11 @@ namespace GN { namespace engine
     struct GraphicsResourceItem : public GraphicsResource, public DoubleLinkedItem<GraphicsResourceItem>
     {
         ///
+        /// resource id
+        ///
+        const UInt32 id;
+
+        ///
         /// estimated resource size in bytes.
         ///
         const size_t bytes;
@@ -95,10 +100,11 @@ namespace GN { namespace engine
         /// ctor
         ///
         GraphicsResourceItem(
-                GraphicsResourceId id_,
+                UInt32 id_,
                 const GraphicsResourceDesc & desc_,
                 size_t bytes_ )
-            : GraphicsResource( id_, desc_ )
+            : GraphicsResource( desc_ )
+            , id( id_ )
             , bytes( bytes_ )
             , state( GRS_DISPOSED )
             , lastSubmittedLod( 0 )

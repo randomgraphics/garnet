@@ -41,7 +41,7 @@ namespace GN { namespace engine
             ///
             /// ...
             ///
-            GraphicsResourceId id;
+            GraphicsResourceItem * resource;
 
             ///
             /// the draw must wait for resource update that happens at this fence.

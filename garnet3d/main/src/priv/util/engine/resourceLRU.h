@@ -46,10 +46,10 @@ namespace GN { namespace engine
         // ********************************
     public:
 
-        void insert( GraphicsResourceId );
-        void remove( GraphicsResourceId );
-        void realize( GraphicsResourceId, bool * needReload ); 
-        void dispose( GraphicsResourceId );
+        void insert( GraphicsResourceItem * );
+        void remove( GraphicsResourceItem * );
+        void realize( GraphicsResourceItem *, bool * needReload ); 
+        void dispose( GraphicsResourceItem * );
         void disposeAll();
 
         // ********************************

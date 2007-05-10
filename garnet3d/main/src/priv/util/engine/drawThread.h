@@ -114,7 +114,7 @@ namespace GN { namespace engine
 
         inline void submitResourceCommand( ResourceCommand * item );
 
-        inline void submitResourceDisposingCommand( GraphicsResourceId id );
+        inline void submitResourceDisposingCommand( GraphicsResourceItem * item );
 
         //@}
 
