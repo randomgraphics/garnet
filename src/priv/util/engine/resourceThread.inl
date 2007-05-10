@@ -25,17 +25,13 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceCommand(
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingCommand(
-    GraphicsResourceId       id,
+    GraphicsResourceItem   * item,
     int                      lod,
     GraphicsResourceLoader * loader )
 {
     // check parameters
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
     GN_ASSERT( loader );
-
-    // get resource item
-    GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( id );
-    GN_ASSERT( res );
-    GN_ASSERT( res->id == id );
 
     FenceId fence = mEngine.fenceManager().getAndIncFence();
 
@@ -43,18 +39,18 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingComma
     if( 0 == cmd ) return;
     cmd->noerr                      = true;
     cmd->op                         = GROP_LOAD;
-    cmd->resourceId                 = id;
+    cmd->resource                   = item;
     cmd->targetLod                  = lod;
     cmd->loader.set( loader );
-    cmd->mustAfterThisDrawFence     = res->lastReferenceFence;
-    cmd->mustAfterThisResourceFence = res->lastSubmissionFence;
+    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
 
-    res->lastSubmissionFence = fence;
-    res->lastSubmittedLoader.set( loader );
-    res->lastSubmittedLod    = lod;
+    item->lastSubmissionFence = fence;
+    item->lastSubmittedLoader.set( loader );
+    item->lastSubmittedLod    = lod;
 
-    GN_ASSERT( res->lastSubmissionFence > res->lastReferenceFence );
+    GN_ASSERT( item->lastSubmissionFence > item->lastReferenceFence );
 
     submitResourceCommand( cmd );
 }

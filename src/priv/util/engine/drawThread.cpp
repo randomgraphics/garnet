@@ -123,12 +123,11 @@ static void sResolveResourceId(
 
     if( 0 == data ) return;
 
-    GraphicsResourceId id = (GraphicsResourceId)data;
+    GraphicsResourceItem * item = (GraphicsResourceItem*)data;
 
-    GraphicsResourceItem * res = engine.resourceCache().id2ptr( id );
-    GN_ASSERT( res );
+    GN_ASSERT( engine.resourceCache().check( item ) );
 
-    data = (T)res->data;
+    data = (T)item->data;
 }
 // *****************************************************************************
 // draw command functions
@@ -194,9 +193,9 @@ namespace GN { namespace engine
 
         struct ParamHeader
         {
-            GraphicsResourceId shader;
-            char               uniname[32];
-            SInt32             unitype;
+            GraphicsResourceItem * shader;
+            char                   uniname[32];
+            SInt32                 unitype;
         };
 
         GN_ASSERT( param );
@@ -230,17 +229,17 @@ namespace GN { namespace engine
         }
 
         // get shader pointer
-        GraphicsResource * res = engine.resourceCache().id2ptr(header->shader);
-        GN_ASSERT( res && GRT_SHADER == res->desc.type );
+        GN_ASSERT( engine.resourceCache().check( header->shader ) );
+        GN_ASSERT( header->shader && GRT_SHADER == header->shader->desc.type );
 
-        if( res->shader )
+        if( header->shader->shader )
         {
             // set shader uniform
-            res->shader->setUniformByName( header->uniname, unival );
+            header->shader->shader->setUniformByName( header->uniname, unival );
         }
         else
         {
-            GN_ERROR(sLogger)( "Null shader instance: id=%d.", header->shader );
+            GN_ERROR(sLogger)( "Set uniform for null shader is not allowed." );
         }
 
         if( DUMP_COMMANDS )
@@ -340,16 +339,15 @@ namespace GN { namespace engine
     {
         GN_GUARD;
 
-        GraphicsResourceItem * res = engine.resourceCache().id2ptr( cmd.resourceId );
-        GN_ASSERT( res );
+        GN_ASSERT( engine.resourceCache().check( cmd.resource ) );
 
-        if( 0 == res->shader )
+        if( 0 == cmd.resource->shader )
         {
             if( DUMP_COMMANDS )
             {
-                sDumpCommandText( strFormat( "Create resource: %s", res->desc.name.cptr() ) );
+                sDumpCommandText( strFormat( "Create resource: %s", cmd.resource->desc.name.cptr() ) );
             }
-            if( !sCreateDeviceData( *res ) )
+            if( !sCreateDeviceData( *cmd.resource ) )
             {
                 cmd.noerr = false;
 
@@ -362,11 +360,11 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( strFormat( "Load resource: %s", res->desc.name.cptr() ) );
+            sDumpCommandText( strFormat( "Load resource: %s", cmd.resource->desc.name.cptr() ) );
         }
 
         GN_ASSERT( cmd.loader );
-        cmd.noerr = cmd.loader->copy( *res, cmd.data, cmd.bytes, cmd.targetLod );
+        cmd.noerr = cmd.loader->copy( *cmd.resource, cmd.data, cmd.bytes, cmd.targetLod );
 
         // free data buffer and loder
         cmd.loader->freebuf( cmd.data, cmd.bytes );
@@ -379,14 +377,13 @@ namespace GN { namespace engine
     {
         GN_GUARD;
 
-        GraphicsResourceItem * res = engine.resourceCache().id2ptr( cmd.resourceId );
-        GN_ASSERT( res );
+        GN_ASSERT( engine.resourceCache().check( cmd.resource ) );
 
-        sDeleteDeviceData( *res );
+        sDeleteDeviceData( *cmd.resource );
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( strFormat( "Dispose resource: %s", res->desc.name.cptr() ) );
+            sDumpCommandText( strFormat( "Dispose resource: %s", cmd.resource->desc.name.cptr() ) );
         }
 
         GN_UNGUARD;
@@ -668,8 +665,8 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             for( int i = count - 1; i >= 0; --i )
             {
                 DrawCommandHeader::ResourceWaitingItem & wi = command->resourceWaitingList[i];
-                GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( wi.id );
-                if( res->lastCompletedFence >= wi.waitForUpdate )
+                GN_ASSERT( mEngine.resourceCache().check( wi.resource ) );
+                if( wi.resource->lastCompletedFence >= wi.waitForUpdate )
                 {
                     // remove from waiting list
                     if( (i+1) < count )
@@ -728,11 +725,11 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
     while( cmd && !mActionQuit )
     {
-        GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( cmd->resourceId );
+        GN_ASSERT( mEngine.resourceCache().check( cmd->resource ) );
 
         // process the resource command
         if( cmd->mustAfterThisDrawFence <= mDrawFence &&
-            cmd->mustAfterThisResourceFence <= res->lastCompletedFence )
+            cmd->mustAfterThisResourceFence <= cmd->resource->lastCompletedFence )
         {
             // remove it from resource command buffer
             mResourceMutex.lock();
@@ -743,7 +740,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             mResourceMutex.unlock();
 
             // update resource's complete fence
-            res->lastCompletedFence = prev->submittedAtThisFence;
+            prev->resource->lastCompletedFence = prev->submittedAtThisFence;
 
             if( prev->noerr )
             {

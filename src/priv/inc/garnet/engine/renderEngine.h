@@ -76,11 +76,6 @@ namespace GN { namespace engine
     };
 
     ///
-    /// graphics resource ID. 0 is invalid ID.
-    ///
-    typedef UInt32 GraphicsResourceId;
-
-    ///
     /// Graphics resource class.
     ///
     /// \note
@@ -89,7 +84,6 @@ namespace GN { namespace engine
     ///
     struct GraphicsResource : public NoCopy
     {
-        const GraphicsResourceId   id;   ///< resource id
         const GraphicsResourceDesc desc; ///< resource descriptor
         union
         {
@@ -109,8 +103,8 @@ namespace GN { namespace engine
         ///
         /// protected constructor
         ///
-        GraphicsResource( GraphicsResourceId id_, const GraphicsResourceDesc & desc_ )
-            : id(id_), desc(desc_), data(0)
+        GraphicsResource( const GraphicsResourceDesc & desc_ )
+            : desc(desc_), data(0)
         {}
 
         ///
@@ -148,7 +142,7 @@ namespace GN { namespace engine
         ///
         /// copy data to graphics resource
         ///
-        virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int lod ) = 0;
+        virtual bool copy( GraphicsResource & res, const void * inbuf, size_t inbytes, int lod ) = 0;
 
         ///
         /// free data buffer returned by load() and decompress()
@@ -158,7 +152,7 @@ namespace GN { namespace engine
 
     ///
     /// \note
-    ///     - all resource pointers here must store graphics resource ID, instead of data pointer.
+    ///     - all resource pointers here store graphics resource pointer.
     ///
     typedef gfx::RendererContext DrawContext;
 
@@ -256,7 +250,7 @@ namespace GN { namespace engine
         void setContext( const DrawContext & context );
 
         void setShaderUniform(
-            GraphicsResourceId        shader,
+            GraphicsResource        * shader,
             const StrA              & uniformName,
             const gfx::UniformValue & value );
 
@@ -288,11 +282,10 @@ namespace GN { namespace engine
         ///
         //@{
 
-        GraphicsResourceId allocResource( const GraphicsResourceDesc & );
-        void               freeResource( GraphicsResourceId );
-        GraphicsResource * getResourceById( GraphicsResourceId );
+        GraphicsResource * allocResource( const GraphicsResourceDesc & );
+        void               freeResource( GraphicsResource * );
 
-        void disposeResource( GraphicsResourceId );
+        void disposeResource( GraphicsResource * );
         void disposeAllResources();
 
         ///
@@ -300,7 +293,7 @@ namespace GN { namespace engine
         ///     Render engine will hold a reference to the loader. So users can
         ///     safely release their own reference to the loader.
         ///
-        void updateResource( GraphicsResourceId       resource,
+        void updateResource( GraphicsResource       * resource,
                              int                      lod,
                              GraphicsResourceLoader * loader );
 

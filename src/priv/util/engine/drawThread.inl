@@ -175,12 +175,10 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceCommand(
 //
 // -----------------------------------------------------------------------------
 inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposingCommand(
-    GraphicsResourceId id )
+    GraphicsResourceItem * item )
 {
-    GraphicsResourceItem * res = mEngine.resourceCache().id2ptr( id );
-    GN_ASSERT( res );
-    GN_ASSERT( res->id == id );
-    GN_ASSERT( GRS_DISPOSED == res->state );
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
+    GN_ASSERT( GRS_DISPOSED == item->state );
 
     ResourceCommand * cmd = ResourceCommand::alloc();
     if( 0 == cmd ) return;
@@ -189,12 +187,12 @@ inline void GN::engine::RenderEngine::DrawThread::submitResourceDisposingCommand
 
     cmd->noerr                      = true;
     cmd->op                         = GROP_DISPOSE;
-    cmd->resourceId                 = id;
-    cmd->mustAfterThisDrawFence     = res->lastReferenceFence;
-    cmd->mustAfterThisResourceFence = res->lastSubmissionFence;
+    cmd->resource                   = item;
+    cmd->mustAfterThisDrawFence     = item->lastReferenceFence;
+    cmd->mustAfterThisResourceFence = item->lastSubmissionFence;
     cmd->submittedAtThisFence       = fence;
 
-    res->lastSubmissionFence = fence;
+    item->lastSubmissionFence = fence;
 
     submitResourceCommand( cmd );
 }

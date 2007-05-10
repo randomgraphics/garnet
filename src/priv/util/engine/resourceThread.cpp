@@ -117,7 +117,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
         //GN_INFO(sLogger)( "Load %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
 
         cmd->noerr = cmd->loader->load(
-            mEngine.resourceCache().id2ptr(cmd->resourceId)->desc,
+            cmd->resource->desc,
             cmd->data,
             cmd->bytes,
             cmd->targetLod );
@@ -152,7 +152,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
             //GN_INFO(sLogger)( "Decompress %s", mEngine.resourceCache().id2name(cmd->resourceId).cptr() );
 
             cmd->noerr = cmd->loader->decompress(
-                mEngine.resourceCache().id2ptr(cmd->resourceId)->desc,
+                cmd->resource->desc,
                 cmd->data,
                 cmd->bytes,
                 olddata,

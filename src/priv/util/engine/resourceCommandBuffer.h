@@ -35,7 +35,7 @@ namespace GN { namespace engine
 
         bool                                  noerr;                      ///< true means this request has no error
         GraphicsResourceOperation             op;                         ///< requested operation.
-        GraphicsResourceId                    resourceId;                 ///< target resource
+        GraphicsResourceItem *                resource;                   ///< target resource
         int                                   targetLod;                  ///< ignored by GROP_DISPOSE
         AutoRef<GraphicsResourceLoader,Mutex> loader;                     ///< ignored by GROP_DISPOSE
         FenceId                               mustAfterThisDrawFence;     ///< the request must happens after this draw fence. For copy/dispose only.

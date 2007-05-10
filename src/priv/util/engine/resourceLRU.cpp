@@ -49,11 +49,9 @@ void GN::engine::RenderEngine::ResourceLRU::quit()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::insert( GraphicsResourceId id )
+void GN::engine::RenderEngine::ResourceLRU::insert( GraphicsResourceItem * item )
 {
-    GraphicsResourceItem * item = mEngine.resourceCache().id2ptr( id );
-    GN_ASSERT( item );
-    GN_ASSERT( item->id == id );
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
 
     GN_ASSERT( 0 == item->next && 0 == item->prev );
 
@@ -63,24 +61,18 @@ void GN::engine::RenderEngine::ResourceLRU::insert( GraphicsResourceId id )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::remove( GraphicsResourceId id )
+void GN::engine::RenderEngine::ResourceLRU::remove( GraphicsResourceItem * item )
 {
-    GraphicsResourceItem * item = mEngine.resourceCache().id2ptr( id );
-    GN_ASSERT( item );
-    GN_ASSERT( item->id == id );
-
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
     mLRUList.remove( item );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceId id, bool * needReload )
+void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item, bool * needReload )
 {
-    // get resource item
-    GraphicsResourceItem * item = mEngine.resourceCache().id2ptr( id );
-    GN_ASSERT( item );
-    GN_ASSERT( item->id == id );
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
 
     // mark as recently used.
     markAsRecentlyUsed( item );
@@ -143,10 +135,9 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceId id, bool
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
+void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item )
 {
-    GraphicsResourceItem * item = mEngine.resourceCache().id2ptr( id );
-    GN_ASSERT( item );
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
 
     if( GRS_DISPOSED == item->state ) return;
 
@@ -175,7 +166,7 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
             GN_UNEXPECTED();
     }
 
-    mEngine.drawThread().submitResourceDisposingCommand( id );
+    mEngine.drawThread().submitResourceDisposingCommand( item );
 }
 
 //
@@ -183,11 +174,11 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceId id )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::ResourceLRU::disposeAll()
 {
-    for( GraphicsResourceId id = mEngine.resourceCache().first();
-         id;
-         id = mEngine.resourceCache().next( id ) )
+    for( GraphicsResourceItem * item = mEngine.resourceCache().first();
+         item;
+         item = mEngine.resourceCache().next( item ) )
     {
-        dispose( id );
+        dispose( item );
     }
 }
 
@@ -200,7 +191,7 @@ void GN::engine::RenderEngine::ResourceLRU::disposeAll()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
 {
-    GN_ASSERT( item );
+    GN_ASSERT( mEngine.resourceCache().check( item ) );
     mLRUList.remove( item );
     mLRUList.insertBefore( mLRUList.head(), item );
 }
