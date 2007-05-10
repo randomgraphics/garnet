@@ -8,7 +8,7 @@
 
 namespace GN { namespace gfx
 {
-    typedef UInt32 VtxFmtHandle; ///< Vertex format handle
+    typedef UIntPtr VtxFmtHandle; ///< Vertex format handle
 
     enum
     {
