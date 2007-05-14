@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE size_t GN::engine::Effect::getNumPasses() const
+inline size_t GN::engine::Effect::getNumPasses() const
 {
     GN_GUARD_SLOW;
     GN_ASSERT( mTechniques.items.validHandle(mActiveTechnique) );
@@ -14,7 +14,7 @@ GN_INLINE size_t GN::engine::Effect::getNumPasses() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::passBegin(
+inline void GN::engine::Effect::passBegin(
     DrawContext & ctx, size_t passIdx ) const
 {
     GN_GUARD_SLOW;
@@ -46,7 +46,7 @@ GN_INLINE void GN::engine::Effect::passBegin(
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            ctx.setTexture( trd.stage, (const gfx::Texture*)td.value );
+            ctx.setTexture( trd.stage, (const gfx::Texture*)entity2Texture(td.value) );
         }
 
         // apply dirty uniforms
@@ -73,7 +73,7 @@ GN_INLINE void GN::engine::Effect::passBegin(
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::commitChanges() const
+inline void GN::engine::Effect::commitChanges() const
 {
     GN_GUARD_SLOW;
 
@@ -97,7 +97,7 @@ GN_INLINE void GN::engine::Effect::commitChanges() const
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            mActiveContext->setTexture( trd.stage, (const gfx::Texture*)td.value );
+            mActiveContext->setTexture( trd.stage, (const gfx::Texture*)entity2Texture(td.value) );
         }
 
         // apply dirty uniforms again, in case user may change uniforms between passBegin() and commitChanges()
@@ -128,7 +128,7 @@ GN_INLINE void GN::engine::Effect::commitChanges() const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE bool GN::engine::Effect::hasTechnique( const StrA & name, EffectItemID * id ) const
+inline bool GN::engine::Effect::hasTechnique( const StrA & name, EffectItemID * id ) const
 {
     EffectItemID i = mTechniques.find( name );
     if( id ) *id = i;
@@ -138,7 +138,7 @@ GN_INLINE bool GN::engine::Effect::hasTechnique( const StrA & name, EffectItemID
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::engine::EffectItemID GN::engine::Effect::getTechniqueID( const StrA & name ) const
+inline GN::engine::EffectItemID GN::engine::Effect::getTechniqueID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = mTechniques.find( name );
@@ -150,7 +150,7 @@ GN_INLINE GN::engine::EffectItemID GN::engine::Effect::getTechniqueID( const Str
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::setActiveTechnique( EffectItemID id ) const
+inline void GN::engine::Effect::setActiveTechnique( EffectItemID id ) const
 {
     GN_GUARD_SLOW;
 
@@ -182,7 +182,7 @@ GN_INLINE void GN::engine::Effect::setActiveTechnique( EffectItemID id ) const
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::setActiveTechniqueByName( const StrA & name ) const
+inline void GN::engine::Effect::setActiveTechniqueByName( const StrA & name ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = getTechniqueID( name );
@@ -199,7 +199,7 @@ GN_INLINE void GN::engine::Effect::setActiveTechniqueByName( const StrA & name )
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE bool GN::engine::Effect::hasUniform( const StrA & name, EffectItemID * id ) const
+inline bool GN::engine::Effect::hasUniform( const StrA & name, EffectItemID * id ) const
 {
     EffectItemID i = mUniforms.find( name );
     if( id ) *id = i;
@@ -209,7 +209,7 @@ GN_INLINE bool GN::engine::Effect::hasUniform( const StrA & name, EffectItemID *
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::engine::EffectItemID GN::engine::Effect::getUniformID( const StrA & name ) const
+inline GN::engine::EffectItemID GN::engine::Effect::getUniformID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = mUniforms.find( name );
@@ -221,7 +221,7 @@ GN_INLINE GN::engine::EffectItemID GN::engine::Effect::getUniformID( const StrA 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::setUniform( EffectItemID id, const gfx::UniformValue & value ) const
+inline void GN::engine::Effect::setUniform( EffectItemID id, const gfx::UniformValue & value ) const
 {
     GN_GUARD_SLOW;
 
@@ -253,7 +253,7 @@ GN_INLINE void GN::engine::Effect::setUniform( EffectItemID id, const gfx::Unifo
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::setUniformByName( const StrA & name, const gfx::UniformValue & value ) const
+inline void GN::engine::Effect::setUniformByName( const StrA & name, const gfx::UniformValue & value ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = getUniformID( name );
@@ -269,7 +269,7 @@ GN_INLINE void GN::engine::Effect::setUniformByName( const StrA & name, const gf
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE bool GN::engine::Effect::hasTexture( const StrA & name, EffectItemID * id ) const
+inline bool GN::engine::Effect::hasTexture( const StrA & name, EffectItemID * id ) const
 {
     EffectItemID i = mTextures.find( name );
     if( id ) *id = i;
@@ -280,7 +280,7 @@ GN_INLINE bool GN::engine::Effect::hasTexture( const StrA & name, EffectItemID *
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE GN::engine::EffectItemID GN::engine::Effect::getTextureID( const StrA & name ) const
+inline GN::engine::EffectItemID GN::engine::Effect::getTextureID( const StrA & name ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = mTextures.find( name );
@@ -292,7 +292,7 @@ GN_INLINE GN::engine::EffectItemID GN::engine::Effect::getTextureID( const StrA 
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::setTexture( EffectItemID id, EntityId tex ) const
+inline void GN::engine::Effect::setTexture( EffectItemID id, Entity * tex ) const
 {
     GN_GUARD_SLOW;
 
@@ -310,7 +310,7 @@ GN_INLINE void GN::engine::Effect::setTexture( EffectItemID id, EntityId tex ) c
 //
 //
 // -----------------------------------------------------------------------------
-GN_INLINE void GN::engine::Effect::setTextureByName( const StrA & name, EntityId tex ) const
+inline void GN::engine::Effect::setTextureByName( const StrA & name, Entity * tex ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = getTextureID( name );

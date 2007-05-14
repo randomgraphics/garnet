@@ -458,6 +458,15 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 //
 //
 // -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::checkResource( GraphicsResource * res )
+{
+    GraphicsResourceItem * item = (GraphicsResourceItem*)res;
+    return mResourceCache->check( item );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;

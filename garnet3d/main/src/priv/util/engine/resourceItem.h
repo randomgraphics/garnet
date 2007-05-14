@@ -100,10 +100,11 @@ namespace GN { namespace engine
         /// ctor
         ///
         GraphicsResourceItem(
+                RenderEngine & engine_,
                 UInt32 id_,
                 const GraphicsResourceDesc & desc_,
                 size_t bytes_ )
-            : GraphicsResource( desc_ )
+            : GraphicsResource( engine_, desc_ )
             , id( id_ )
             , bytes( bytes_ )
             , state( GRS_DISPOSED )

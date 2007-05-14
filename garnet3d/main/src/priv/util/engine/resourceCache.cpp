@@ -116,7 +116,7 @@ GN::engine::RenderEngine::GraphicsResourceCache::alloc(
 
     UInt32 id = mResources.newItem();
 
-    GraphicsResourceItem * item = new GraphicsResourceItem( id, desc, bytes );
+    GraphicsResourceItem * item = new GraphicsResourceItem( mEngine, id, desc, bytes );
     item->prev = item->next = 0;
 
     mResources[id] = item;

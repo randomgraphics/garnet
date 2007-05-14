@@ -15,18 +15,19 @@ namespace GN { namespace engine
     ///
     class Drawable
     {
-        EntityManager & em;
         DrawContext     context;
 
     public:
+
+        ///
 
         ///
         /// texture item
         ///
         struct TexItem
         {
-            EffectItemID       binding;  ///< effect item ID that this texture is binding to.
-            EntityId           textures; ///< texture entity ID
+            EffectItemID       binding; ///< effect item ID that this texture is binding to.
+            Entity *           texture; ///< texture entity ID
         };
 
         ///
@@ -40,8 +41,8 @@ namespace GN { namespace engine
         //@}
 
         //@{
-        EntityId               effect;
-        EntityId               mesh;
+        Entity *               effect;
+        Entity *               mesh;
         std::map<StrA,TexItem> textures;
         std::map<StrA,UniItem> uniforms;
         //@}
@@ -95,7 +96,7 @@ namespace GN { namespace engine
         {
             if( 0 == effect || 0 == mesh ) return;
 
-            Effect * eff = entity2Effect<Effect*>( effect );
+            Effect * eff = entity2Object<Effect*>( effect );
             GN_ASSERT( eff );
     
             // bind textures
@@ -107,7 +108,7 @@ namespace GN { namespace engine
             std::for_each( uniforms.begin(), uniforms.end(), bu );
 
             // bind mesh
-            Mesh * m = entity2Mesh( mesh );
+            Mesh * m = entity2Object<Mesh*>( mesh );
             GN_ASSERT( m );
             m->updateContext( context );
 
@@ -127,21 +128,19 @@ namespace GN { namespace engine
 
         struct BindTexture
         {
-            gfx::Effect * eff;
-            BindTexture( gfx::Effect * eff_ ) : eff(eff_) {}
+            Effect * eff;
+            BindTexture( Effect * eff_ ) : eff(eff_) {}
             void operator()( const std::pair<StrA,TexItem> & i ) const
             {
                 GN_ASSERT( i.second.binding );
-                eff->setTexture(
-                    i.second.binding,
-                    entity2Texture<GraphicsResourceId>(i.second.texid) );
+                eff->setTexture( i.second.binding, i.second.texture );
             }
         };
 
         struct BindUniform
         {
-            gfx::Effect * eff;
-            BindUniform( gfx::Effect * eff_ ) : eff(eff_) {}
+            Effect * eff;
+            BindUniform( Effect * eff_ ) : eff(eff_) {}
             void operator()( const std::pair<StrA,UniItem> & i ) const
             {
                 GN_ASSERT( i.second.binding );

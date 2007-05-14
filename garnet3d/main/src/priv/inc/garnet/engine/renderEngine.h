@@ -57,6 +57,8 @@ namespace GN { namespace engine
         //@}
     };
 
+    class RenderEngine;
+
     ///
     /// graphics resource descriptor
     ///
@@ -84,7 +86,8 @@ namespace GN { namespace engine
     ///
     struct GraphicsResource : public NoCopy
     {
-        const GraphicsResourceDesc desc; ///< resource descriptor
+        RenderEngine             & engine; ///< reference to the engine that created this resource.
+        const GraphicsResourceDesc desc;   ///< resource descriptor
         union
         {
             //@{
@@ -103,8 +106,8 @@ namespace GN { namespace engine
         ///
         /// protected constructor
         ///
-        GraphicsResource( const GraphicsResourceDesc & desc_ )
-            : desc(desc_), data(0)
+        GraphicsResource( RenderEngine & engine_, const GraphicsResourceDesc & desc_ )
+            : engine(engine_), desc(desc_), data(0)
         {}
 
         ///
@@ -284,6 +287,7 @@ namespace GN { namespace engine
 
         GraphicsResource * allocResource( const GraphicsResourceDesc & );
         void               freeResource( GraphicsResource * );
+        bool               checkResource( GraphicsResource * );
 
         void disposeResource( GraphicsResource * );
         void disposeAllResources();

@@ -12,27 +12,30 @@ namespace GN { namespace engine
 
     EntityTypeId getTextureEntityType( EntityManager & em );
 
-    GraphicsResourceId entity2Texture( EntityId );
+    ///
+    /// same as entity2Object<GraphicsResource*>(...), only with more validality checks.
+    ///
+    GraphicsResource * entity2Texture( const Entity * );
 
     ///
     /// try find exising texture entity named "filename", if not found, create new one.
     ///
-    EntityId loadTexture( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * loadTextureEntity( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
     /// create new texture entity. name must be unique.
     ///
-    EntityId createTexture( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::TextureDesc & desc );
+    Entity * createTextureEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::TextureDesc & desc );
 
     ///
     /// ..
     ///
-    void deleteTextureEntity( EntityManager & em, EntityId );
+    void deleteTextureEntity( Entity * );
 
     ///
     /// ..
     ///
-    void deleteAllTextureEntities( EntityManager & em );
+    void deleteAllTextureEntitys( EntityManager & em );
 
     //@}
 }}
