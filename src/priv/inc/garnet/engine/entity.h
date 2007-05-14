@@ -8,36 +8,33 @@
 
 namespace GN
 {
-    template< class T>
+    template< class T, class H>
     class NamedHandleManager
     {
-        typedef std::map<StrA,size_t> NameMap;
+        typedef std::map<StrA,H> NameMap;
 
         struct NamedItem
         {
             NamedHandleManager & mgr;
-            const size_t         id;
+            const H              handle;
             const StrA           name;
             T                    data;
 
-            NamedItem( NamedHandleManager & m, size_t i, const StrA & n, const T & d )
-                : mgr(m), id(i), name(n), data(d) {}
+            NamedItem( NamedHandleManager & m, H h, const StrA & n, const T & d )
+                : mgr(m), handle(h), name(n), data(d) {}
 
-            NamedItem( NamedHandleManager & m, size_t i, const StrA & n ) 
-                : mgr(m), id(i), name(n) {}
+            NamedItem( NamedHandleManager & m, H h, const StrA & n ) 
+                : mgr(m), handle(h), name(n) {}
         };
 
-        NameMap                          mNames; // name -> handle
-        HandleManager<NamedItem*,size_t> mItems; // handle -> name/data
+        NameMap                     mNames; // name -> handle
+        HandleManager<NamedItem*,H> mItems; // handle -> name/data
 
     public:
 
-        ///
-        /// public handle type
-        ///
-        typedef NamedItem * ItemHandle;
-
         //@{
+
+        typedef typename H ItemHandle;
 
         ///
         /// clear all handles
@@ -73,22 +70,17 @@ namespace GN
         ///
         /// return first handle
         ///
-        ItemHandle first() const { return mItems[mItems.first()]; }
+        H first() const { return mItems.first(); }
 
         ///
         /// return next handle
         ///
-        ItemHandle next( ItemHandle h ) const
-        {
-            GN_ASSERT( validHandle( h ) );
-            size_t n = mItems.next( h->id );
-            return n ? mItems[n] : 0;
-        }
+        H next( H h ) const { return mItems.next( h ); }
 
         ///
         /// name must be unique.
         ///
-        ItemHandle add( const StrA & name )
+        H add( const StrA & name )
         {
             if( mNames.end() != mNames.find( name ) )
             {
@@ -96,20 +88,20 @@ namespace GN
                 return 0;
             }
 
-            size_t id = mItems.newItem();
-            if( 0 == id ) return 0;
+            H handle = mItems.newItem();
+            if( 0 == handle ) return 0;
 
-            AutoObjPtr<NamedItem> item( new NamedItem(*this,id,name) );
+            AutoObjPtr<NamedItem> item( new NamedItem(*this,handle,name) );
 
-            mNames.insert( std::make_pair(name,id) );
+            mNames.insert( std::make_pair(name,handle) );
 
-            return item.detach();
+            return handle;
         }
 
         ///
         /// name must be unique.
         ///
-        ItemHandle add( const StrA & name, const T & data )
+        H add( const StrA & name, const T & data )
         {
             if( mNames.end() != mNames.find( name ) )
             {
@@ -117,29 +109,30 @@ namespace GN
                 return 0;
             }
 
-            size_t id = mItems.newItem();
-            if( 0 == id ) return 0;
+            size_t handle = mItems.newItem();
+            if( 0 == handle ) return 0;
 
-            AutoObjPtr<NamedItem> item( new NamedItem(*this,id,name,data) );
+            AutoObjPtr<NamedItem> item( new NamedItem(*this,handle,name,data) );
 
-            mNames.insert( std::make_pair(name,id) );
+            mNames.insert( std::make_pair(name,handle) );
 
-            return item.detach();
+            return handle;
         }
 
-        void remove( ItemHandle h )
+        void remove( H h )
         {
             if( !validHandle( h ) )
             {
-                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid handle: %d.", h );
+                GN_ERROR(getLogger("GN.base.NamedHandleManager"))( "invalid handle : %d.", h );
                 return;
             }
 
-            NamedItem * item = mItems[h->id];
+            NamedItem * item = mItems[h];
+            GN_ASSERT( item && item->handle == h );
 
             mNames.erase( item->name );
 
-            mItems.remove( item->id );
+            mItems.remove( item->handle );
 
             delete item;
         }
@@ -152,33 +145,25 @@ namespace GN
                 return;
             }
 
-            size_t id = mNames[name];
+            size_t handle = mNames[name];
 
-            NamedItem * item = mItems[id];
+            NamedItem * item = mItems[handle];
 
             mNames.erase( name );
 
-            mItems.remove( id );
+            mItems.remove( handle );
 
             delete item;
         }
 
-        bool validHandle( ItemHandle h ) const
-        {
-            if( 0 == h ) return 0;
-            return this == &h->mgr && mItems.validHandle( h->id ) && mItems[h->id] == h;
-        }
+        bool validHandle( const H h ) const { return mItems.validHandle( h ); }
 
         bool validName( const StrA & name ) const
         {
             return mNames.end() != mNames.find( name );
         }
 
-        T & get( ItemHandle h ) const
-        {
-            GN_ASSERT( validHandle( h ) );
-            return h->data;
-        }
+        T & get( H h ) const { return mItems[h]; }
 
         T & get( const StrA & name ) const
         {
@@ -187,7 +172,7 @@ namespace GN
             return mItems[mItems.get( i->second )]->data;
         }
 
-        T & operator[]( ItemHandle h ) const { return get(h); }
+        T & operator[]( H h ) const { return get(h); }
 
         T & operator[]( const StrA & name ) const { return get(name); }
 
@@ -210,19 +195,21 @@ namespace GN { namespace engine
     struct Entity : public NoCopy
     {
         EntityManager    & manager;
-        const EntityTypeId type;
         const StrA         name;
+        const EntityTypeId type;
+        const UIntPtr      id; ///< this is used internally by Entity manager to identify the entity.
 
     protected:
 
         //@{
-        Entity( EntityManager & m, EntityTypeId t, const StrA & n )
+        Entity( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
             : manager(m)
-            , type(t)
             , name(n)
+            , type(t)
+            , id(i)
         {}
 
-        ~Entity() {}
+        virtual ~Entity() {}
         //@}
     };
 
@@ -236,15 +223,19 @@ namespace GN { namespace engine
 
     protected:
 
-        EntityT( EntityManager & m, EntityTypeId t, const StrA & n )
-            : Entity( m, t, n )
+        //@{
+
+        EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
+            : Entity( m, t, n, i )
         {}
 
-        EntityT( EntityManager & m, EntityTypeId t, const StrA & n, const T & d )
-            : Entity( m, t, n ), data(d)
+        EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
+            : Entity( m, t, n, i ), data(d)
         {}
 
         ~EntityT() {}
+
+        //@}
     };
 
     ///
@@ -265,48 +256,88 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// name should be unique
+        /// create new entity type. Name should be unique
         ///
         EntityTypeId createEntityType( const StrA & name );
 
         ///
-        /// add new entity. name must be unique.
+        /// create new entity. Name must be unique.
         ///
         template<class T>
-        EntityT<T> * newEntity( EntityTypeId type, const T & data, const StrA & name );
+        EntityT<T> * newEntity( EntityTypeId type, const StrA & name, const T & data );
 
-        ///
-        /// delete specific entity
-        ///
+        // delete
+        void eraseEntity( Entity * );
         void eraseEntityByName( const StrA & name );
 
+        // get
         Entity * getEntityByName( const StrA & name ) const;
+        EntityTypeId getEntityTypeByName( const StrA & name ) const;
 
-        // iteration
-        Entity * getFirst() const;
-        Entity * getFirst( Entity * ) const;
-        Entity * getNext( Entity * ) const;
-        Entity * getNextWithSameType( Entity * ) const;
+        // iterate
+        Entity * getFirstEntity() const;
+        Entity * getFirstEntity( EntityTypeId ) const;
+
+        Entity * getNextEntity( const Entity * );
+        Entity * getNextEntityWithSameType( const Entity * );
+
+        EntityTypeId getFirstEntityType() const;
+        EntityTypeId getNextEntityType( EntityTypeId ) const;
 
         //@}
 
     private:
 
-        NamedHandleManager<Entity*> mEntities;
+        static Logger * sLogger;
+
+        template<typename T>
+        struct EntityItem : public EntityT<T>
+        {
+            EntityItem( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
+                : EntityT( m, t, n, i )
+            {}
+
+            EntityItem( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
+                : EntityT( m, t, n, i ), data(d)
+            {}
+        };
+
+        struct EntityCategory
+        {
+            HandleManager<Entity*,UIntPtr> entities;
+        };
+
+        NamedHandleManager<EntityCategory,EntityTypeId> mEntityTypes; // type -> category
+        std::map<StrA,Entity*>                          mEntityNames; // name -> entity
     };
 
     //@{
 
     ///
-    /// convert entity to the object that it represents.
+    /// convert entity to the object that it represents. Return 'nil' object for invalid entity.
     ///
     template< class T>
-    T entity2Object( const Entity * );
+    const T & entity2Object( const Entity * e, const T & nil )
+    {
+        if( 0 == e ) return nil;
+        const EntityT<T> * et = safeCast<const EntityT<T>*>(e);
+        if( 0 == et )
+        {
+            static Logger * sLogger = getLogger("GN.engine.Entity");
+            GN_ERROR(sLogger)( "incorrect entity type" );
+            return nil;
+        }
+        return et->data;
+    }
 
     ///
     /// delete specific entity
     ///
     void eraseEntity( Entity * );
+
+    // interation
+    Entity * getNextEntity( const Entity * );
+    Entity * getNextEntityWithSameType( const Entity * );
 
     //@}
 }}

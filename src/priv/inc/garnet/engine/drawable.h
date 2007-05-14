@@ -81,7 +81,7 @@ namespace GN { namespace engine
         {
             if( 0 == effect || 0 == mesh ) return;
 
-            Effect * eff = entity2Object<Effect*>( effect );
+            Effect * eff = entity2Object<Effect*>( effect, 0 );
             GN_ASSERT( eff );
 
             for( size_t i = 0; i < eff->getNumPasses(); ++i )
@@ -96,7 +96,7 @@ namespace GN { namespace engine
         {
             if( 0 == effect || 0 == mesh ) return;
 
-            Effect * eff = entity2Object<Effect*>( effect );
+            Effect * eff = entity2Object<Effect*>( effect, 0 );
             GN_ASSERT( eff );
     
             // bind textures
@@ -108,7 +108,7 @@ namespace GN { namespace engine
             std::for_each( uniforms.begin(), uniforms.end(), bu );
 
             // bind mesh
-            Mesh * m = entity2Object<Mesh*>( mesh );
+            Mesh * m = entity2Object<Mesh*>( mesh, 0 );
             GN_ASSERT( m );
             m->updateContext( context );
 
