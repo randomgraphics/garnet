@@ -261,7 +261,7 @@ namespace GN { namespace gfx
     ///
     struct TexLockedResult
     {
-        size_t rowBytes;   ///< bytes per line
+        size_t rowBytes;   ///< bytes per scanline (for DXT texture, it is 1/4 of one texel row)
         size_t sliceBytes; ///< bytes per slice
         void * data;       ///< 指向被锁定图象的第一个字节
     };
@@ -358,8 +358,8 @@ namespace GN { namespace gfx
             area.y = 0;
             area.z = 0;
             area.w = (int)length;
-            area.h = 0;
-            area.d = 0;
+            area.h = 1;
+            area.d = 1;
             if( !lock( result, 0, level, &area, flag ) ) return 0;
             return result.data;
         }

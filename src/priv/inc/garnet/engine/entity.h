@@ -163,7 +163,7 @@ namespace GN
             return mNames.end() != mNames.find( name );
         }
 
-        T & get( H h ) const { return mItems[h]; }
+        T & get( H h ) const { return mItems[h]->data; }
 
         T & get( const StrA & name ) const
         {
@@ -226,11 +226,11 @@ namespace GN { namespace engine
         //@{
 
         EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
-            : Entity( m, t, n, i )
+            : Entity( m, n, t, i )
         {}
 
         EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
-            : Entity( m, t, n, i ), data(d)
+            : Entity( m, n, t, i ), data(d)
         {}
 
         ~EntityT() {}
@@ -264,15 +264,15 @@ namespace GN { namespace engine
         /// create new entity. Name must be unique.
         ///
         template<class T>
-        EntityT<T> * newEntity( EntityTypeId type, const StrA & name, const T & data );
+        EntityT<T> * createEntity( EntityTypeId type, const StrA & name, const T & data );
 
         // delete
         void eraseEntity( Entity * );
         void eraseEntityByName( const StrA & name );
 
         // get
-        Entity * getEntityByName( const StrA & name ) const;
-        EntityTypeId getEntityTypeByName( const StrA & name ) const;
+        Entity * getEntityByName( const StrA & name, bool silence = false ) const;
+        EntityTypeId getEntityTypeByName( const StrA & name, bool silence = false ) const;
 
         // iterate
         Entity * getFirstEntity() const;
@@ -294,11 +294,11 @@ namespace GN { namespace engine
         struct EntityItem : public EntityT<T>
         {
             EntityItem( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
-                : EntityT( m, t, n, i )
+                : EntityT( m, n, t, i )
             {}
 
             EntityItem( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
-                : EntityT( m, t, n, i ), data(d)
+                : EntityT( m, n, t, i, d )
             {}
         };
 

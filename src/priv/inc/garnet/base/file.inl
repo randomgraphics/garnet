@@ -63,8 +63,11 @@ GN::MemFile<T>::write( const void * buf, size_t size, size_t * written )
 {
     GN_GUARD;
 
-    // T can't be a constant type
-    GN_CASSERT( !IsConst<T>::value );
+    if( IsConst<T>::value )
+    {
+        GN_ERROR(myLogger())( "cannot write to constant buffer!" );
+        return false;
+    }
 
     // check for no-op
     if( 0 == size )
