@@ -18,7 +18,10 @@ namespace GN { namespace engine
     Entity * loadTextureEntity( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
-    /// create new texture entity. name must be unique.
+    /// create new texture entity (content of the texture is leaving undefined)
+    ///
+    /// \return
+    ///     Return NULL, if entity with this name does exist already.
     ///
     Entity * createTextureEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::TextureDesc & desc );
 
