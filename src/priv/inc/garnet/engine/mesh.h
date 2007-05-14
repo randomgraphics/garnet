@@ -13,7 +13,7 @@ namespace GN { namespace engine
     ///
     struct MeshVtxBuf
     {
-        GraphicsResourceId buffer; ///< buffer ID
+        GraphicsResource * buffer; ///< buffer pointer
         size_t             offset; ///< offset (in bytes) of the first vertex
         size_t             stride; ///< vertex stride in bytes.
     };
@@ -27,9 +27,9 @@ namespace GN { namespace engine
         /// \name mesh data
         //@{
         RenderEngine &        engine;
-        GraphicsResourceId    vtxfmt;
+        GraphicsResource *    vtxfmt;
         DynaArray<MeshVtxBuf> vtxbufs;
-        GraphicsResourceId    idxbuf;
+        GraphicsResource *    idxbuf;
         gfx::PrimitiveType    primtype;
         UInt32                numprim;
         UInt32                startvtx;
@@ -64,13 +64,16 @@ namespace GN { namespace engine
         ///
         void updateContext( DrawContext & context ) const
         {
+            GN_ASSERT( engine.checkResource( vtxfmt ) );
             context.setVtxFmt( (gfx::VtxFmtHandle)vtxfmt );
             for( size_t i = 0; i < vtxbufs.size(); ++i )
             {
+                GN_ASSERT( engine.checkResource( vtxbufs[i].buffer ) );
                 context.setVtxBuf( i, (const gfx::VtxBuf *)vtxbufs[i].buffer, vtxbufs[i].offset, vtxbufs[i].stride );
             }
             if( idxbuf )
             {
+                GN_ASSERT( engine.checkResource( idxbuf ) );
                 context.setIdxBuf( (const gfx::IdxBuf*)idxbuf );
             }
         }
@@ -82,6 +85,7 @@ namespace GN { namespace engine
         {
             if( idxbuf )
             {
+                GN_ASSERT( engine.checkResource( idxbuf ) );
                 engine.drawIndexed( primtype, numprim, startvtx, minvtxidx, numvtx, startidx );
             }
             else
@@ -105,22 +109,20 @@ namespace GN { namespace engine
 
     EntityTypeId getMeshEntityType( EntityManager & em );
 
-    Mesh * entity2Mesh( EntityId );
-
     ///
     /// try find exising texture entity named "filename", if not found, create new one.
     ///
-    EntityId loadMesh( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * loadMesh( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
     /// Generate a cube mesh, with texcoord and normal
     ///
-    EntityId generateCubeMesh( EntityManager& em, RenderEngine & re, const StrA & name, float edgeLength );
+    Entity * generateCubeMesh( EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength );
 
     ///
     /// ..
     ///
-    void deleteMeshEntity( EntityManager & em, EntityId );
+    void deleteMeshEntity( Entity * );
 
     ///
     /// ..

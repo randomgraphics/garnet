@@ -14,7 +14,8 @@ GN::engine::RenderEngine::GraphicsResourceCache::check( GraphicsResourceItem * i
         return false;
     }
 
-    if( !mResources.validHandle( item->id ) ||
+    if( &mEngine != &item->engine ||
+        !mResources.validHandle( item->id ) ||
         mResources[item->id] != item )
     {
         mResourceMutex.unlock();

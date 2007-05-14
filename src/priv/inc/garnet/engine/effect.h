@@ -540,8 +540,8 @@ namespace GN { namespace engine {
         //@{
         bool hasTexture( const StrA & name, EffectItemID * id ) const;
         EffectItemID getTextureID( const StrA & ) const;
-        void setTexture( EffectItemID, EntityId ) const;
-        void setTextureByName( const StrA &, EntityId ) const;
+        void setTexture( EffectItemID, Entity * ) const;
+        void setTextureByName( const StrA &, Entity * ) const;
         //@}
 
         // ********************************
@@ -552,7 +552,7 @@ namespace GN { namespace engine {
         struct TextureData
         {
             StrA     name;  // texture name
-            EntityId value;
+            Entity * value;
         };
 
         struct TextureRefData
@@ -585,7 +585,7 @@ namespace GN { namespace engine {
         struct ShaderData
         {
             StrA                        name;
-            GraphicsResourceId          value;
+            GraphicsResource *          value;
             std::vector<TextureRefData> textures;      // texture referencing list.
             std::vector<UniformRefData> uniforms;      // uniform referencing list.
             std::vector<size_t>         dirtyUniforms; // dirty uniform list. Each item is a index into ShaderData::uniforms
@@ -660,22 +660,25 @@ namespace GN { namespace engine {
 
     EntityTypeId getEffectEntityType( EntityManager & em );
 
-    Effect * entity2Effect( EntityId );
+    ///
+    /// try find exising effect entity named "filename", if not found, create new one.
+    ///
+    Entity * loadEffectEntity( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
-    /// try find exising texture entity named "filename", if not found, create new one.
+    /// create new effect entity. name must be unique.
     ///
-    EntityId loadEffect( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * createEffectEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::EffectDesc & desc );
 
     ///
     /// ..
     ///
-    void deleteEffectEntity( EntityManager & em, EntityId );
+    void deleteEffectEntity( Entity * );
 
     ///
     /// ..
     ///
-    void deleteAllEffectEntities( EntityManager & em );
+    void deleteAllEffectEntitys( EntityManager & em );
 
     //@}
 }}

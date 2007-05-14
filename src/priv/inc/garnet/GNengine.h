@@ -19,10 +19,12 @@ namespace GN
     }
 }
 
-#include "engine/entity.h"
 #include "engine/renderEngine.h"
+#include "engine/entity.h"
 #include "engine/mesh.h"
+#include "engine/texture.h"
 #include "engine/effect.h"
+#include "engine/drawable.h"
 
 // *****************************************************************************
 //                           End of GNengine.h

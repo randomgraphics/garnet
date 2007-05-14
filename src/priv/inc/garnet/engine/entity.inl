@@ -1,15 +1,13 @@
 //
 //
 // -----------------------------------------------------------------------------
-//template<class T>
-inline GN::engine::EntityId
+template<class T>
+inline GN::engine::EntityT<T> *
 GN::engine::EntityManager::newEntity( EntityTypeId type, const T & data, const StrA & name )
 {
-    if( 0 == mTypes.validHandle( type ) )
-    {
-        GN_ERROR(sLogger)( "invalid entity type: %d", type );
-        return 0;
-    }
-
-    
+    GN_UNUSED_PARAM( type );
+    GN_UNUSED_PARAM( data );
+    GN_UNUSED_PARAM( name );
+    GN_UNIMPL();
+    return 0;
 }

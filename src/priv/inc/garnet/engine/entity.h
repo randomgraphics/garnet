@@ -8,25 +8,34 @@
 
 namespace GN
 {
-    template< class T, class H>
+    template< class T>
     class NamedHandleManager
     {
-        typedef std::map<StrA,H> NameMap;
+        typedef std::map<StrA,size_t> NameMap;
 
         struct NamedItem
         {
-            T    data;
-            StrA name;
+            NamedHandleManager & mgr;
+            const size_t         id;
+            const StrA           name;
+            T                    data;
 
-            NamedItem( const T & d, const StrA & n ) : data(d), name(n) {}
+            NamedItem( NamedHandleManager & m, size_t i, const StrA & n, const T & d )
+                : mgr(m), id(i), name(n), data(d) {}
 
-            NamedItem( const StrA & n ) : name(n) {}
+            NamedItem( NamedHandleManager & m, size_t i, const StrA & n ) 
+                : mgr(m), id(i), name(n) {}
         };
 
-        NameMap                    mNames; // name -> handle
-        HandleManager<NamedItem,H> mItems; // handle -> name/data
+        NameMap                          mNames; // name -> handle
+        HandleManager<NamedItem*,size_t> mItems; // handle -> name/data
 
     public:
+
+        ///
+        /// public handle type
+        ///
+        typedef NamedItem * ItemHandle;
 
         //@{
 
@@ -35,6 +44,10 @@ namespace GN
         ///
         void clear()
         {
+            for( size_t i = mItems.first(); i != 0; i = mItems.next( i ) )
+            {
+                delete mItems[i];
+            }
             mItems.clear();
             mNames.clear();
         }
@@ -60,17 +73,22 @@ namespace GN
         ///
         /// return first handle
         ///
-        H first() const { return mItems.first(); }
+        ItemHandle first() const { return mItems[mItems.first()]; }
 
         ///
         /// return next handle
         ///
-        H next( H h ) const { return mItems.next(); }
+        ItemHandle next( ItemHandle h ) const
+        {
+            GN_ASSERT( validHandle( h ) );
+            size_t n = mItems.next( h->id );
+            return n ? mItems[n] : 0;
+        }
 
         ///
         /// name must be unique.
         ///
-        H add( const StrA & name )
+        ItemHandle add( const StrA & name )
         {
             if( mNames.end() != mNames.find( name ) )
             {
@@ -78,18 +96,20 @@ namespace GN
                 return 0;
             }
 
-            H h = mItems.add( NamedItem(name) );
-            if( 0 == h ) return 0;
+            size_t id = mItems.newItem();
+            if( 0 == id ) return 0;
 
-            mNames.insert( std::make_pair(name,h) );
+            AutoObjPtr<NamedItem> item( new NamedItem(*this,id,name) );
 
-            return h;
+            mNames.insert( std::make_pair(name,id) );
+
+            return item.detach();
         }
 
         ///
         /// name must be unique.
         ///
-        H add( const StrA & name, const T & data )
+        ItemHandle add( const StrA & name, const T & data )
         {
             if( mNames.end() != mNames.find( name ) )
             {
@@ -97,15 +117,17 @@ namespace GN
                 return 0;
             }
 
-            H h = mItems.add( NamedItem(name,data) );
-            if( 0 == h ) return 0;
+            size_t id = mItems.newItem();
+            if( 0 == id ) return 0;
 
-            mNames.insert( std::make_pair(name,h) );
+            AutoObjPtr<NamedItem> item( new NamedItem(*this,id,name,data) );
 
-            return h;
+            mNames.insert( std::make_pair(name,id) );
+
+            return item.detach();
         }
 
-        void remove( H h )
+        void remove( ItemHandle h )
         {
             if( !validHandle( h ) )
             {
@@ -113,11 +135,13 @@ namespace GN
                 return;
             }
 
-            NamedItem & item = mItems[h];
+            NamedItem * item = mItems[h->id];
 
-            mNames.erase( item.name );
+            mNames.erase( item->name );
 
-            mItems.remove( h );
+            mItems.remove( item->id );
+
+            delete item;
         }
 
         void remove( const StrA & name )
@@ -128,15 +152,21 @@ namespace GN
                 return;
             }
 
-            H h( mNames[name] );
+            size_t id = mNames[name];
+
+            NamedItem * item = mItems[id];
 
             mNames.erase( name );
-            mItems.remove( h );
+
+            mItems.remove( id );
+
+            delete item;
         }
 
-        bool validHandle( H h ) const
+        bool validHandle( ItemHandle h ) const
         {
-            return mItems.validHandle( h );
+            if( 0 == h ) return 0;
+            return this == &h->mgr && mItems.validHandle( h->id ) && mItems[h->id] == h;
         }
 
         bool validName( const StrA & name ) const
@@ -144,19 +174,20 @@ namespace GN
             return mNames.end() != mNames.find( name );
         }
 
-        T & get( H h ) const
+        T & get( ItemHandle h ) const
         {
-            return mItems.get( h );
+            GN_ASSERT( validHandle( h ) );
+            return h->data;
         }
 
         T & get( const StrA & name ) const
         {
             GN_ASSERT( validName(name) );
             NameMap::const_iterator i = mNames.find( name );
-            return mItems.get( i->second );
+            return mItems[mItems.get( i->second )]->data;
         }
 
-        T & operator[]( H h ) const { return get(h); }
+        T & operator[]( ItemHandle h ) const { return get(h); }
 
         T & operator[]( const StrA & name ) const { return get(name); }
 
@@ -167,11 +198,6 @@ namespace GN
 namespace GN { namespace engine
 {
     ///
-    /// entity ID
-    ///
-    typedef UInt32 EntityId;
-
-    ///
     /// entity type ID.
     ///
     typedef UInt32 EntityTypeId;
@@ -179,21 +205,19 @@ namespace GN { namespace engine
     class EntityManager;
 
     ///
-    /// Entity structure
+    /// Basic entity structure
     ///
     struct Entity : public NoCopy
     {
         EntityManager    & manager;
-        const EntityId     id;
         const EntityTypeId type;
         const StrA         name;
 
     protected:
 
         //@{
-        Entity( EntityManager & m, EntityId i, EntityTypeId t, const StrA & n )
+        Entity( EntityManager & m, EntityTypeId t, const StrA & n )
             : manager(m)
-            , id(i)
             , type(t)
             , name(n)
         {}
@@ -212,8 +236,12 @@ namespace GN { namespace engine
 
     protected:
 
-        EntityT( EntityManager & m, EntityId i, EntityTypeId t, const StrA & n )
-            : Entity( m, i, t, n )
+        EntityT( EntityManager & m, EntityTypeId t, const StrA & n )
+            : Entity( m, t, n )
+        {}
+
+        EntityT( EntityManager & m, EntityTypeId t, const StrA & n, const T & d )
+            : Entity( m, t, n ), data(d)
         {}
 
         ~EntityT() {}
@@ -245,43 +273,45 @@ namespace GN { namespace engine
         /// add new entity. name must be unique.
         ///
         template<class T>
-        EntityId newEntity( EntityTypeId type, const T & data, const StrA & name );
+        EntityT<T> * newEntity( EntityTypeId type, const T & data, const StrA & name );
 
-        void removeEntity( EntityId );
-        void removeEntity( const StrA & name );
+        ///
+        /// delete specific entity
+        ///
+        void eraseEntityByName( const StrA & name );
 
-        Entity * getEntity( EntityId );
-        Entity * getEntity( const StrA & name );
-        EntityId getEntityId( const StrA & name );
+        Entity * getEntityByName( const StrA & name ) const;
 
         // iteration
-        EntityId getFirst() const;
-        EntityId getFirst( EntityTypeId ) const;
-        EntityId getNext( EntityId ) const;
-        EntityId getNextWithSameType( EntityId ) const;
+        Entity * getFirst() const;
+        Entity * getFirst( Entity * ) const;
+        Entity * getNext( Entity * ) const;
+        Entity * getNextWithSameType( Entity * ) const;
 
-        //@]
+        //@}
 
     private:
 
-        template<class T>
-        struct EntityItem : public EntityT<T>, public DoubleLinkedItem<Entity*>
-        {
-        };
-
-        struct EntityTypeItem
-        {
-            DoubleLinkedList<Entity*> mItems;
-        };
-
-        static Logger                                 * sLogger;
-        NamedHandleManager<Entity*,EntityId>            mEntities;
-        NamedHandleManager<EntityTypeItem,EntityTypeId> mTypes;
+        NamedHandleManager<Entity*> mEntities;
     };
+
+    //@{
+
+    ///
+    /// convert entity to the object that it represents.
+    ///
+    template< class T>
+    T entity2Object( const Entity * );
+
+    ///
+    /// delete specific entity
+    ///
+    void eraseEntity( Entity * );
+
+    //@}
 }}
 
 #include "entity.inl"
-
 
 // *****************************************************************************
 //                           End of entity.h
