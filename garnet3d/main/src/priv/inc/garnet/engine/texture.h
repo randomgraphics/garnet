@@ -13,11 +13,6 @@ namespace GN { namespace engine
     EntityTypeId getTextureEntityType( EntityManager & em );
 
     ///
-    /// same as entity2Object<GraphicsResource*>(...), only with more validality checks.
-    ///
-    GraphicsResource * entity2Texture( const Entity * );
-
-    ///
     /// try find exising texture entity named "filename", if not found, create new one.
     ///
     Entity * loadTextureEntity( EntityManager & em, RenderEngine & re, const StrA & filename );

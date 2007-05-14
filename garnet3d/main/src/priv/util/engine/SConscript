@@ -8,6 +8,7 @@ sources = [
 	'resourceCache.cpp',
 	'resourceLRU.cpp',
 	'resourceThread.cpp',
+	'texture.cpp',
 	]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )
