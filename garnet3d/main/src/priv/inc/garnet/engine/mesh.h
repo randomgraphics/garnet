@@ -9,6 +9,50 @@
 namespace GN { namespace engine
 {
     ///
+    /// mesh binary header
+    ///
+    struct MeshBinaryHeader
+    {
+        //@{
+        gfx::PrimitiveType    primtype;
+        UInt32                numprim;
+        UInt32                startvtx;
+        UInt32                minvtxidx;
+        UInt32                numvtx;
+        UInt32                startidx;
+        gfx::VtxFmtDesc       vtxfmt;
+        //@}
+    };
+    GN_CASSERT( sizeof(MeshBinaryHeader) == 6 * 4 + sizeof(gfx::VtxFmtDesc) );
+
+    ///
+    /// mesh vertex buffer header
+    ///
+    struct MeshVtxBufBinaryHeader
+    {
+        //@{
+        UInt32 offset;
+        UInt16 stride;
+        UInt8  dynamic;
+        UInt8  readback;
+        //@}
+    };
+    GN_CASSERT( sizeof(MeshVtxBufBinaryHeader) == 8 );
+
+    ///
+    /// mesh index buffer header
+    ///
+    struct MeshIdxBufBinaryHeader
+    {
+        //@{
+        UInt8  dynamic;
+        UInt8  readback;
+        UInt16 reserved;
+        //@}
+    };
+    GN_CASSERT( sizeof(MeshIdxBufBinaryHeader) == 4 );
+
+    ///
     /// vertex buffer descriptor used by mesh class
     ///
     struct MeshVtxBuf
@@ -103,6 +147,11 @@ namespace GN { namespace engine
         /// load from binary stream
         ///
         bool loadFromBinaryStream( File & );
+
+        ///
+        /// load mesh from file, support both XML and bin format
+        ///
+        bool loadFromFile( const StrA & filename );
     };
 
     //@{
@@ -110,22 +159,22 @@ namespace GN { namespace engine
     EntityTypeId getMeshEntityType( EntityManager & em );
 
     ///
-    /// try find exising texture entity named "filename", if not found, create new one.
+    /// try find exising entity named "filename", if not found, create new one.
     ///
-    Entity * loadMesh( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * loadMeshEntityFromFile( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
     /// Generate a cube mesh, with texcoord and normal
     ///
-    Entity * generateCubeMesh( EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength );
+    Entity * generateCubeMeshEntity( EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength );
 
     ///
-    /// ..
+    /// delete mesh entity
     ///
     void deleteMeshEntity( Entity * );
 
     ///
-    /// ..
+    /// delete all mesh entities
     ///
     void deleteAllMeshEntities( EntityManager & em );
 

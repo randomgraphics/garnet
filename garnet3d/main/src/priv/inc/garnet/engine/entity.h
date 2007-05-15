@@ -8,6 +8,9 @@
 
 namespace GN
 {
+    ///
+    /// expension to HandleManager class, that object can be referenced by both handle and name.
+    ///
     template< class T, class H>
     class NamedHandleManager
     {
@@ -194,10 +197,13 @@ namespace GN { namespace engine
     ///
     struct Entity : public NoCopy
     {
+        /// entity properties
+        //@{
         EntityManager    & manager;
         const StrA         name;
         const EntityTypeId type;
         const UIntPtr      id; ///< this is used internally by Entity manager to identify the entity.
+        //@}
 
     protected:
 
@@ -219,7 +225,7 @@ namespace GN { namespace engine
     template<class T>
     struct EntityT : public Entity
     {
-        T data;
+        T data; ///< TBD
 
     protected:
 
@@ -247,9 +253,9 @@ namespace GN { namespace engine
 
         //@{
 
-        EntityManager();
+        EntityManager() {}
 
-        ~EntityManager();
+        ~EntityManager() {}
 
         //@}
 

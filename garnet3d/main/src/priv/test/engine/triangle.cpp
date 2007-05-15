@@ -55,7 +55,7 @@ const char * vscode =
 
 bool TestTriangle::init()
 {
-    RenderEngine & e = engine();
+    RenderEngine & re = renderEngine();
 
     AutoRef<DummyLoader> dummyloader( new DummyLoader );
 
@@ -66,9 +66,9 @@ bool TestTriangle::init()
     desc.type = GRT_VTXFMT;
     desc.fd.clear();
     desc.fd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-    vf = e.allocResource( desc );
+    vf = re.allocResource( desc );
     if( 0 == vf ) return false;
-    e.updateResource( vf, 0, dummyloader );
+    re.updateResource( vf, 0, dummyloader );
 
     // create vertex shader
     desc.name = "vs1";
@@ -76,9 +76,9 @@ bool TestTriangle::init()
     desc.sd.type = SHADER_VS;
     desc.sd.lang = LANG_D3D_HLSL;
     desc.sd.code = vscode;
-    vs = e.allocResource( desc );
+    vs = re.allocResource( desc );
     if( 0 == vs ) return 0;
-    e.updateResource( vs, 0, dummyloader );
+    re.updateResource( vs, 0, dummyloader );
 
     // create vertex buffer
     desc.name = "vb1";
@@ -86,10 +86,10 @@ bool TestTriangle::init()
     desc.vd.bytes = 3 * sizeof(Vertex);
     desc.vd.dynamic = false;
     desc.vd.readback = false;
-    vb = e.allocResource( desc );
+    vb = re.allocResource( desc );
     if( 0 == vb ) return false;
     AutoRef<VtxBufLoader> vbloader( new VtxBufLoader );
-    e.updateResource( vb, 0, vbloader );
+    re.updateResource( vb, 0, vbloader );
 
     // create index buffer
     desc.name = "ib1";
@@ -97,10 +97,10 @@ bool TestTriangle::init()
     desc.id.numidx = 3;
     desc.id.dynamic = false;
     desc.id.readback = false;
-    ib = e.allocResource( desc );
+    ib = re.allocResource( desc );
     if( 0 == ib ) return false;
     AutoRef<IdxBufLoader> ibloader( new IdxBufLoader );
-    e.updateResource( ib, 0, ibloader );
+    re.updateResource( ib, 0, ibloader );
 
     // success
     return true;
@@ -112,15 +112,15 @@ void TestTriangle::quit()
 
 void TestTriangle::draw()
 {
-    RenderEngine & e = engine();
+    RenderEngine & re = renderEngine();
 
     // dispose all
-    e.disposeAllResources();
+    re.disposeAllResources();
 
     // set uniform
     Matrix44f m44;
     m44.identity();
-    e.setShaderUniform( vs, "pvw", m44 );
+    re.setShaderUniform( vs, "pvw", m44 );
 
     // bind context
     DrawContext ctx;
@@ -129,8 +129,8 @@ void TestTriangle::draw()
     ctx.setVtxBuf( 0, (const VtxBuf *)vb, 0, sizeof(Vertex) );
     ctx.setIdxBuf( (const IdxBuf*)ib );
     ctx.setVtxFmt( (VtxFmtHandle)vf );
-    e.setContext( ctx );
+    re.setContext( ctx );
 
     // do draw
-    e.drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
+    re.drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
 }

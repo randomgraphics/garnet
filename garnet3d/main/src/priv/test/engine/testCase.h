@@ -14,23 +14,29 @@ using namespace GN::gfx;
 using namespace GN::engine;
 
 ///
-/// ...
+/// coming soon ...
 ///
 class TestCase
 {
-    RenderEngine & mEngine;
+    EntityManager & mEntityManager;
+    RenderEngine & mRenderEngine;
 
 public:
 
     ///
     /// ctor
     ///
-    TestCase( RenderEngine & engine ) : mEngine( engine ) {}
+    TestCase( EntityManager & em, RenderEngine & re ) : mEntityManager(em), mRenderEngine( re ) {}
 
     ///
     /// get engine reference
     ///
-    RenderEngine & engine() const { return mEngine; }
+    RenderEngine & renderEngine() const { return mRenderEngine; }
+
+    ///
+    /// get entity manager
+    ///
+    EntityManager & entityManager() const { return mEntityManager; }
 
     //@{
 
@@ -42,7 +48,7 @@ public:
 };
 
 ///
-/// ...
+/// coming soon ...
 ///
 class DummyLoader : public GraphicsResourceLoader
 {
@@ -72,7 +78,7 @@ public:
 };
 
 ///
-/// ...
+/// coming soon ...
 ///
 class BasicVtxBufLoader : public GraphicsResourceLoader
 {
@@ -102,7 +108,7 @@ public:
 };
 
 ///
-/// ...
+/// coming soon ...
 ///
 class BasicIdxBufLoader : public GraphicsResourceLoader
 {

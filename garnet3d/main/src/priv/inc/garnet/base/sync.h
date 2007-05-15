@@ -16,8 +16,8 @@ namespace GN
     /// \name atomic operations
     //@{
 
-    inline SInt32 atomGet32( const SInt32 volatile * );
-    inline void   atomSet32( SInt32 volatile *, SInt32 );
+    inline SInt32 atomGet32( const SInt32 volatile * ); ///< get 32bit integer value.
+    inline void   atomSet32( SInt32 volatile *, SInt32 ); ///< set 32bit integer value.
     inline SInt32 atomInc32( SInt32 volatile * ); ///< return incremented value
     inline SInt32 atomDec32( SInt32 volatile * ); ///< return decremented value
     inline SInt32 atomXchg32( SInt32 volatile * dest, SInt32 xchg ); ///< return initial value of the destination.
@@ -31,7 +31,7 @@ namespace GN
     inline SInt32 atomCmpXchg32( SInt32 volatile * dest, SInt32 xchg, SInt32 cmp );
 
     ///
-    /// ...
+    /// memory barrier. currently implemented on MS Windows platform only.
     ///
     inline void memoryBarrier();
 
@@ -47,7 +47,7 @@ namespace GN
     public:
 
         ///
-        ///
+        /// volatile type traits
         ///
         template <typename T>
         struct VolatileType
@@ -77,7 +77,7 @@ namespace GN
     public:
 
         ///
-        ///
+        /// volatile type traits
         ///
         template <typename T>
         struct VolatileType
@@ -103,7 +103,7 @@ namespace GN
     struct SingleThreadMutex
     {
         ///
-        ///
+        /// volatile type traits
         ///
         template <typename T>
         struct VolatileType
