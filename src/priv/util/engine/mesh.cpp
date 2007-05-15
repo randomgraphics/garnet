@@ -4,6 +4,7 @@
 static GN::Logger * sLogger = GN::getLogger("GN.engine.Mesh");
 
 using namespace GN;
+using namespace GN::gfx;
 
 // *****************************************************************************
 // local classes and functions
@@ -77,6 +78,7 @@ GN_CASSERT( sizeof(BinFileHeader) == 4 );
 class BinFileLoader : public GN::engine::GraphicsResourceLoader
 {
     const StrA & mFileName;
+    const size_t mDataOffset;
     const size_t mDataBytes;
 
 public:
@@ -84,7 +86,7 @@ public:
     ///
     /// ctor
     ///
-    BinFileLoader( const StrA & filename, size_t bytes ) : mFileName(filename), mDataBytes(bytes)
+    BinFileLoader( const StrA & filename, size_t offset, size_t bytes ) : mFileName(filename), mDataOffset(offset), mDataBytes(bytes)
     {
     }
 
@@ -100,6 +102,7 @@ public:
         if( buf.empty() ) return false;
 
         // read file
+        if( !fp->seek( mDataOffset, FSEEK_SET ) ) return false;
         size_t readen;
         if( !fp->read( buf, bytes, &readen ) || bytes != readen ) return false;
 
@@ -159,7 +162,7 @@ public:
     ///
     /// ctor
     ///
-    VtxBufLoader( const StrA & filename, size_t bytes ) : BinFileLoader(filename,bytes) {}
+    VtxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
@@ -180,7 +183,7 @@ public:
     ///
     /// ctor
     ///
-    IdxBufLoader( const StrA & filename, size_t bytes ) : BinFileLoader(filename,bytes) {}
+    IdxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
@@ -318,7 +321,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             if( 0 == vb.buffer ) return false;
 
             // load vb content
-            AutoRef<VtxBufLoader> loader( new VtxBufLoader( ref, grd.vd.bytes ) );
+            AutoRef<VtxBufLoader> loader( new VtxBufLoader( ref, 0, grd.vd.bytes ) );
             engine.updateResource( vb.buffer, 0, loader );
         }
 
@@ -339,7 +342,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
 
             // load ib content
             size_t bytes = grd.id.numidx * 2; // 16-bit index buffer
-            AutoRef<IdxBufLoader> loader( new IdxBufLoader( ref, bytes ) );
+            AutoRef<IdxBufLoader> loader( new IdxBufLoader( ref, 0, bytes ) );
             engine.updateResource( idxbuf, 0, loader );
         }
 
@@ -385,45 +388,39 @@ bool GN::engine::Mesh::loadFromBinaryStream( const StrA & meshname, File & fp )
         return false;
     }
 
-    // read data into temporary buffer (TODO: no need for memory mapped file).
-    DynaArray<UInt8> buf( (size_t)header.bytes );
-    if( !fp.read( buf.cptr(), buf.size(), &readen ) || readen != buf.size() )
+    size_t readen;
+
+    // read mesh binary header
+    MeshBinaryHeader mbh;
+    if( !fp.read( &mbh, sizeof(mbh), &readen ) || readen != sizeof(mbh) )
     {
-        GN_ERROR(sLogger)( "Fail to read mesh data." );
+        GN_ERROR(sLogger)( "Fail to read mesh header." );
         return false;
     }
+    header.bytes -= sizeof(mbh);
 
-    const UInt8 * ptr = buf.cptr();
-    const UInt8 * end = ptr + buf.size();
-    Renderer & r = gRenderer;
+    GraphicsResourceDesc grd;
 
-    // get mesh binary header
-    const MeshBinaryHeader * mbh = (const MeshBinaryHeader *)ptr;
-    ptr += sizeof(MeshBinaryHeader);
-    if( ptr > end )
-    {
-        GN_ERROR(sLogger)( "Corrupt mesh header." );
-        return false;
-    }
-
-    // create vertex format
-    vtxfmt = r.createVtxFmt( mbh->vtxfmt );
+    // load vertex format
+    grd.type = GRT_VTXFMT;
+    grd.fd = mbh.vtxfmt;
+    vtxfmt = engine.allocResource( grd );
     if( 0 == vtxfmt ) return false;
 
     // store other fields
-    primtype  = mbh->primtype;
-    numprim   = mbh->numprim;
-    startvtx  = mbh->startvtx;
-    minvtxidx = mbh->minvtxidx;
-    numvtx    = mbh->numvtx;
-    startidx  = mbh->startidx;
+    primtype  = mbh.primtype;
+    numprim   = mbh.numprim;
+    startvtx  = mbh.startvtx;
+    minvtxidx = mbh.minvtxidx;
+    numvtx    = mbh.numvtx;
+    startidx  = mbh.startidx;
 
     // create vertex buffers
     size_t numStreams = mbh->vtxfmt.calcNumStreams();
     vtxbufs.resize( numStreams );
     for( size_t i = 0; i < numStreams; ++i )
     {
-        const MeshVtxBufBinaryHeader * mvbbh = (const MeshVtxBufBinaryHeader *)ptr;
+        MeshVtxBufBinaryHeader * mvbbh = (const MeshVtxBufBinaryHeader *)ptr;
         ptr += sizeof(MeshVtxBufBinaryHeader);
         if( ptr > end )
         {
@@ -490,9 +487,121 @@ bool GN::engine::Mesh::loadFromBinaryStream( const StrA & meshname, File & fp )
     GN_UNGUARD;
 }*/
 
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::Mesh::loadFromFile( const StrA & filename )
+{
+    GN_GUARD;
+
+    // open mesh file
+    AutoObjPtr<File> fp( core::openFile( filename, "rb" ) );
+    if( !fp ) return false;
+
+    // read file header
+    static const char bintag[] = { "GARNET MESH" };
+    StackArray<char,sizeof(bintag)> buf;
+    if( !fp->read( buf.cptr(), sizeof(bintag), 0 ) ) return 0;
+
+    if( 0 == strCmp( bintag, buf.cptr(), sizeof(bintag)-1 ) )
+    {
+        // load as mesh binary
+        //if( !mesh->loadFromBinaryStream( *fp ) ) return 0;
+        GN_UNIMPL();
+        return false;
+    }
+    else
+    {
+        AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+        if( !fp ) return false;
+
+        StrA basedir = dirName( filename );
+
+        XmlDocument doc;
+        XmlParseResult xpr;
+        if( !doc.parse( xpr, *fp ) )
+        {
+            GN_ERROR(sLogger)(
+                "Fail to parse XML file (%s):\n"
+                "    line   : %d\n"
+                "    column : %d\n"
+                "    error  : %s",
+                filename.cptr(),
+                xpr.errLine,
+                xpr.errColumn,
+                xpr.errInfo.cptr() );
+            return false;
+        }
+        GN_ASSERT( xpr.root );
+        return loadFromXmlNode( *xpr.root, basedir );
+    }
+
+    GN_UNGUARD;
+}
+
 // *****************************************************************************
 // global functions
 // *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::EntityTypeId GN::engine::getMeshEntityType( EntityManager & em )
+{
+    static EntityTypeId type = em.createEntityType( "mesh" );
+    return type;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::Entity * GN::engine::loadMeshEntityFromFile(
+    EntityManager & em, RenderEngine & re, const StrA & filename )
+{
+    GN_TODO( "convert filename to absolute/full path" );
+
+    // check if the entity exists already
+    Entity * e = em.getEntityByName( filename, true );
+    if( e ) return e;
+
+    // load mesh
+    AutoObjPtr<Mesh> mesh( new Mesh(re) );
+    if( !mesh->loadFromFile( filename ) ) return 0;
+
+    // success
+    return em.createEntity( getMeshEntityType(em), filename, mesh.get() );
+}
+
+/*
+//
+// -----------------------------------------------------------------------------
+GN::engine::Entity * GN::engine::generateCubeMeshEntity(
+    EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength )
+{
+}*/
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::deleteMeshEntity( Entity * e )
+{
+    if( 0 == e ) return;
+
+    Mesh * object = entity2Object<Mesh*>( e, 0 );
+    if( 0 == object ) return;
+
+    delete object;
+
+    e->manager.eraseEntity( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::deleteAllMeshEntities( EntityManager & )
+{
+    GN_UNIMPL();
+}
 
 /*
 //

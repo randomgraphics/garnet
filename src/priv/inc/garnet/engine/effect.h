@@ -671,12 +671,12 @@ namespace GN { namespace engine {
     Entity * createEffectEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::EffectDesc & desc );
 
     ///
-    /// ..
+    /// delete effect entity, as well as corresponding effect object
     ///
     void deleteEffectEntity( Entity * );
 
     ///
-    /// ..
+    /// delete all effect entities.
     ///
     void deleteAllEffectEntitys( EntityManager & em );
 

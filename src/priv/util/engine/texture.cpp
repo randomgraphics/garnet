@@ -250,8 +250,16 @@ GN::engine::Entity * GN::engine::createTextureEntity(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::deleteTextureEntity( Entity * )
+void GN::engine::deleteTextureEntity( Entity * e )
 {
+    if( 0 == e ) return;
+
+    GraphicsResource * tex = entity2Object<GraphicsResource*>( e, 0 );
+    if( 0 == tex ) return;
+
+    tex->engine.freeResource( tex );
+
+    e->manager.eraseEntity( e );
 }
 
 //
@@ -259,4 +267,5 @@ void GN::engine::deleteTextureEntity( Entity * )
 // -----------------------------------------------------------------------------
 void GN::engine::deleteAllTextureEntitys( EntityManager & )
 {
+    GN_UNIMPL();
 }

@@ -6,7 +6,7 @@ using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
 
-void runcase( RenderEngine & engine, TestCase & c )
+void runcase( RenderEngine & re, TestCase & c )
 {
     while( 1 )
     {
@@ -17,21 +17,21 @@ void runcase( RenderEngine & engine, TestCase & c )
             break;
         }
         
-        engine.frameBegin();
+        re.frameBegin();
 
-        engine.clearScreen( Vector4f(0,0,1,0) );
+        re.clearScreen( Vector4f(0,0,1,0) );
 
         c.draw();
 
-        engine.frameEnd();
+        re.frameEnd();
     }
 }
 
-void run( RenderEngine & engine )
+void run( EntityManager & em, RenderEngine & re )
 {
     TestCase * cases[] =
     {
-        new TestTriangle(engine),
+        new TestTriangle(em,re),
     };
 
     for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
@@ -41,7 +41,7 @@ void run( RenderEngine & engine )
 
         if( c->init() )
         {
-            runcase( engine, *c );
+            runcase( re, *c );
         }
 
         c->quit();
@@ -67,18 +67,19 @@ int main()
 {
     InputInitiator input;
 
-    RenderEngine engine;
+    EntityManager em;
+    RenderEngine  re;
 
     UInt32 MB = 1024 * 1024;
     RenderEngineInitParameters reip = { 32*MB, 32*MB, 4*MB };
 
     RendererOptions ro;
 
-    if( !engine.init(reip) ) return -1;
+    if( !re.init(reip) ) return -1;
 
-    if( !engine.resetRenderer( API_D3D9, ro ) ) return -1;
+    if( !re.resetRenderer( API_D3D9, ro ) ) return -1;
 
-    run( engine );
+    run( em, re );
 
     // success
     return 0;

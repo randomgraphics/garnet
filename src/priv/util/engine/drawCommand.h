@@ -29,17 +29,17 @@ namespace GN { namespace engine
     typedef void (*DrawFunction)( RenderEngine & engine, const void * param, size_t paramBytes );
 
     ///
-    /// ...
+    /// TBD
     ///
     struct DrawCommandHeader
     {
         ///
-        /// ...
+        /// TBD
         ///
         struct ResourceWaitingItem
         {
             ///
-            /// ...
+            /// TBD
             ///
             GraphicsResourceItem * resource;
 
@@ -95,7 +95,7 @@ namespace GN { namespace engine
     };
 
     /*
-    /// ...
+    /// TBD
     ///
     struct DrawCommand
     {

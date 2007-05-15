@@ -130,9 +130,9 @@ namespace GN { namespace gfx
             };
         } usage; ///< texture usage
 
-        //
-        // validate texture descriptor
-        //
+        ///
+        /// validate texture descriptor
+        ///
         bool validate()
         {
             static Logger * sLogger = getLogger("GN.gfx.TextureDesc");

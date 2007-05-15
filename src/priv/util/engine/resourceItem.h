@@ -12,7 +12,7 @@
 namespace GN { namespace engine
 {
     ///
-    /// ...
+    /// TBD
     ///
     enum GraphicsResourceState
     {

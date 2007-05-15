@@ -26,12 +26,12 @@ namespace GN { namespace engine
     Entity * createTextureEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::TextureDesc & desc );
 
     ///
-    /// ..
+    /// delete single texture entity.
     ///
     void deleteTextureEntity( Entity * );
 
     ///
-    /// ..
+    /// delete all texture entities.
     ///
     void deleteAllTextureEntitys( EntityManager & em );
 
