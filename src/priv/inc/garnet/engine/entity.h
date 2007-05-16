@@ -159,11 +159,29 @@ namespace GN
             delete item;
         }
 
-        bool validHandle( const H h ) const { return mItems.validHandle( h ); }
+        bool validHandle( H h ) const { return mItems.validHandle( h ); }
 
-        bool validName( const StrA & name ) const
+        bool validName( const StrA & name ) const { return mNames.end() != mNames.find( name ); }
+
+        H name2handle( const StrA & name ) const
         {
-            return mNames.end() != mNames.find( name );
+            NameMap::const_iterator i = mNames.find( name );
+            if( mNames.end() == i )
+            {
+                return (H)0;
+            }
+            else
+            {
+                return i->second;
+            }
+        }
+
+        StrA handle2name( H h ) const
+        {
+            if( !mItems.validHandle( h ) )
+                return StrA::EMPTYSTR;
+            else
+                return mItems[h]->name;
         }
 
         T & get( H h ) const { return mItems[h]->data; }
@@ -253,9 +271,9 @@ namespace GN { namespace engine
 
         //@{
 
-        EntityManager() {}
+        EntityManager();
 
-        ~EntityManager() {}
+        ~EntityManager();
 
         //@}
 
@@ -273,8 +291,12 @@ namespace GN { namespace engine
         EntityT<T> * createEntity( EntityTypeId type, const StrA & name, const T & data );
 
         // delete
-        void eraseEntity( Entity * );
+        void eraseEntity( const Entity * );
         void eraseEntityByName( const StrA & name );
+
+        // check
+        bool checkEntityType( EntityTypeId, bool silence = false ) const;
+        bool checkEntity( const Entity *, bool silence = false ) const;
 
         // get
         Entity * getEntityByName( const StrA & name, bool silence = false ) const;
@@ -296,14 +318,19 @@ namespace GN { namespace engine
 
         static Logger * sLogger;
 
-        template<typename T>
-        struct EntityItem : public EntityT<T>
+        struct EntityDeletor
         {
-            EntityItem( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
+            virtual ~EntityDeletor() {}
+        };
+
+        template<typename T>
+        struct EntityItemT : public EntityT<T>, public EntityDeletor
+        {
+            EntityItemT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
                 : EntityT( m, n, t, i )
             {}
 
-            EntityItem( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
+            EntityItemT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
                 : EntityT( m, n, t, i, d )
             {}
         };
@@ -323,18 +350,7 @@ namespace GN { namespace engine
     /// convert entity to the object that it represents. Return 'nil' object for invalid entity.
     ///
     template< class T>
-    const T & entity2Object( const Entity * e, const T & nil )
-    {
-        if( 0 == e ) return nil;
-        const EntityT<T> * et = safeCast<const EntityT<T>*>(e);
-        if( 0 == et )
-        {
-            static Logger * sLogger = getLogger("GN.engine.Entity");
-            GN_ERROR(sLogger)( "incorrect entity type" );
-            return nil;
-        }
-        return et->data;
-    }
+    const T & entity2Object( const Entity * e, const T & nil );
 
     ///
     /// delete specific entity

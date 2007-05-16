@@ -3,6 +3,7 @@ sources = [
 	'drawThread.cpp',
 	'effect.cpp',
 	'effectFromXml.cpp',
+	'entity.cpp',
 	'mesh.cpp',
 	'renderEngine.cpp',
 	'resourceCache.cpp',

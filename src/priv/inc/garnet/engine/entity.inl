@@ -22,7 +22,7 @@ GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, c
     UIntPtr id = ec.entities.newItem();
 
     // create new entity
-    EntityItem<T> * e = new (std::nothrow) EntityItem<T>( *this, name, type, id, data );
+    EntityItemT<T> * e = new (std::nothrow) EntityItemT<T>( *this, name, type, id, data );
     if( 0 == e )
     {
         GN_ERROR(sLogger)( "out of memory!" );
@@ -35,4 +35,58 @@ GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, c
 
     // success
     return e;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+template< class T>
+inline const T & GN::engine::entity2Object( const Entity * e, const T & nil )
+{
+    if( 0 == e ) return nil;
+    const EntityT<T> * et = safeCast<const EntityT<T>*>(e);
+    if( 0 == et )
+    {
+        static Logger * sLogger = getLogger("GN.engine.Entity");
+        GN_ERROR(sLogger)( "incorrect entity type" );
+        return nil;
+    }
+    return et->data;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::engine::eraseEntity( Entity * e )
+{
+    if( 0 == e ) return;
+    e->manager.eraseEntity( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline GN::engine::Entity * GN::engine::getNextEntity( const Entity * e )
+{
+    if( 0 == e )
+    {
+        static Logger * sLogger = getLogger("GN.engine.Entity");
+        GN_ERROR(sLogger)( "NULL argument" );
+        return 0;
+    }
+    return e->manager.getNextEntity( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline GN::engine::Entity * GN::engine::getNextEntityWithSameType( const Entity * e )
+{
+    if( 0 == e )
+    {
+        static Logger * sLogger = getLogger("GN.engine.Entity");
+        GN_ERROR(sLogger)( "NULL argument" );
+        return 0;
+    }
+    return e->manager.getNextEntityWithSameType( e );
 }
