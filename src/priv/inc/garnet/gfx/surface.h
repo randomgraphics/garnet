@@ -131,15 +131,57 @@ namespace GN { namespace gfx
         } usage; ///< texture usage
 
         ///
+        /// compose texture descriptor from image descriptor
+        ///
+        bool fromImageDesc( const ImageDesc & id )
+        {
+            // get image size
+            UInt32 w = id.mipmaps[0].width;
+            UInt32 h = id.mipmaps[0].height;
+            UInt32 d = id.mipmaps[0].depth;
+
+            // determine texture dimension, based on image demension
+            if( 1 == id.numFaces )
+            {
+                dim = 1 == d ? TEXDIM_2D : TEXDIM_3D;
+            }
+            else if( 6 == id.numFaces && w == h && 1 == d )
+            {
+                dim = TEXDIM_CUBE;
+            }
+            else if( 1 == d )
+            {
+                GN_ASSERT( id.numFaces > 1 );
+                dim = TEXDIM_STACK;
+            }
+            else
+            {
+                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
+                GN_ERROR(sLogger)( "Can't determine texture dimension for image: face(%d), width(%d), height(%d), depth:%d)." );
+                return false;
+            }
+
+            width     = w;
+            height    = h;
+            depth     = d;
+            faces     = id.numFaces;
+            levels    = id.numLevels;
+            format    = id.format;
+            usage.u32 = 0;
+
+            return validate();
+        }
+
+
+        ///
         /// validate texture descriptor
         ///
         bool validate()
         {
-            static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
-
             // check dim
             if( dim < 0 || dim >= NUM_TEXDIMS )
             {
+                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture dimension!" );
                 return false;
             }
@@ -182,6 +224,7 @@ namespace GN { namespace gfx
             {
                 if( 0 != faces && 6 != faces )
                 {
+                    static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                     GN_WARN(sLogger)( "Cubemap must have 6 faces." );
                 }
                 faces = 6;
@@ -194,6 +237,7 @@ namespace GN { namespace gfx
             {
                 if( 0 != faces && 1 != faces )
                 {
+                    static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                     GN_WARN(sLogger)( "Texture other then cube/stack texture can have only 1 face." );
                 }
                 faces = 1;
@@ -220,6 +264,7 @@ namespace GN { namespace gfx
             if( ( format < 0 || format >= NUM_CLRFMTS ) &&
                 FMT_DEFAULT != format )
             {
+                static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", clrFmt2Str(format) );
                 return false;
             }
