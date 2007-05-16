@@ -11,6 +11,8 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread")
 
 #define DUMP_COMMANDS 0
 
+#define DRAW_THREAD_ACTION(X)
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -614,6 +616,9 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
         {
             handleDrawCommands();
 
+            // handle resource command again
+            handleResourceCommands();
+
             // Note that this is the only place that updates reading pointer
             mDrawBufferMutex.lock();
     		mReadingIndex = ( mReadingIndex + 1 ) & (DRAW_BUFFER_COUNT-1);
@@ -674,7 +679,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
                         memcpy(
                             &command->resourceWaitingList[i],
                             &command->resourceWaitingList[i+1],
-                            count - ( i + 1 ) );
+                            sizeof(wi) * (count - ( i + 1 )) );
                     }
                     GN_ASSERT( count > 0 );
                     --count;
@@ -686,6 +691,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             if( 0 == command->resourceWaitingCount )
             {
                 // all resources are ready. do it!
+                DRAW_THREAD_ACTION( strFormat( "run draw command %d\n", command->fence ) );
                 GN_ASSERT( command->func );
                 command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
 
@@ -699,6 +705,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             else
             {
                 // sleep for a while, then repeat current command
+                DRAW_THREAD_ACTION( strFormat( "postpone draw command %d: wait for resources...\n", command->fence ) );
                 sleepCurrentThread( 0 );
             }
         }
@@ -717,60 +724,74 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 {
-    mResourceMutex.lock();
-    ResourceCommand * cmd = mResourceCommands.head();
-    mResourceMutex.unlock();
-
-    ResourceCommand * prev;
-
-    while( cmd && !mActionQuit )
+    bool loopAgain;
+    do
     {
-        GN_ASSERT( mEngine.resourceCache().check( cmd->resource ) );
+        loopAgain = false;
 
-        // process the resource command
-        if( cmd->mustAfterThisDrawFence <= mDrawFence &&
-            cmd->mustAfterThisResourceFence <= cmd->resource->lastCompletedFence )
+        mResourceMutex.lock();
+        ResourceCommand * cmd = mResourceCommands.head();
+        mResourceMutex.unlock();
+
+        ResourceCommand * prev;
+
+        while( cmd && !mActionQuit )
         {
-            // remove it from resource command buffer
-            mResourceMutex.lock();
-            prev = cmd;
-            cmd = cmd->next;
-            mResourceCommands.remove( prev );
-            if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
-            mResourceMutex.unlock();
+            GN_ASSERT( mEngine.resourceCache().check( cmd->resource ) );
 
-            // update resource's complete fence
-            prev->resource->lastCompletedFence = prev->submittedAtThisFence;
-
-            if( prev->noerr )
+            // process the resource command
+            if( cmd->mustAfterThisDrawFence <= mDrawFence &&
+                cmd->mustAfterThisResourceFence <= cmd->resource->lastCompletedFence )
             {
-                switch( prev->op )
+                DRAW_THREAD_ACTION( strFormat( "run resource command %d\n", cmd->submittedAtThisFence ) );
+
+                // remove it from resource command buffer
+                mResourceMutex.lock();
+                prev = cmd;
+                cmd = cmd->next;
+                mResourceCommands.remove( prev );
+                if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
+                mResourceMutex.unlock();
+
+                // update resource's complete fence
+                prev->resource->lastCompletedFence = prev->submittedAtThisFence;
+
+                if( prev->noerr )
                 {
-                    case GROP_COPY :
-                        RESFUNC_COPY( mEngine, *prev );
-                        break;
+                    switch( prev->op )
+                    {
+                        case GROP_COPY :
+                            RESFUNC_COPY( mEngine, *prev );
+                            break;
 
-                    case GROP_DISPOSE :
-                        RESFUNC_DISPOSE( mEngine, *prev );
-                        break;
+                        case GROP_DISPOSE :
+                            RESFUNC_DISPOSE( mEngine, *prev );
+                            break;
 
-                    default:
-                        GN_UNEXPECTED();
-                        break;
+                        default:
+                            GN_UNEXPECTED();
+                            break;
+                    }
                 }
-            }
 
-            // the resource command is done. Free it.
-            ResourceCommand::free( prev );
+                // the resource command is done. Free it.
+                ResourceCommand::free( prev );
+
+                loopAgain = true;
+            }
+            else
+            {
+                // leave it in buffer, continue search.
+                DRAW_THREAD_ACTION( strFormat( "skip resource command %d : wait for draw fence %d and resource fence %d\n",
+                    cmd->submittedAtThisFence,
+                    cmd->mustAfterThisDrawFence,
+                    cmd->mustAfterThisResourceFence ) );
+                mResourceMutex.lock();
+                cmd = cmd->next;
+                mResourceMutex.unlock();
+            }
         }
-        else
-        {
-            // leave it in buffer, continue search.
-            mResourceMutex.lock();
-            cmd = cmd->next;
-            mResourceMutex.unlock();
-        }
-    }
+    }while( loopAgain );
 }
 
 //

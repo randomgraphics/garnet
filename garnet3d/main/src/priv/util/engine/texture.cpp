@@ -49,10 +49,11 @@ public:
 
         if( !ir.readHeader( id ) ) return false;
 
-        size_t mipcount = id.numFaces*id.numLevels;
-
         // create temporary buffer
-        size_t bytes = id.getTotalBytes() + sizeof(ImageDesc) + sizeof(MipmapDesc) * mipcount;
+        size_t mipcount = id.numFaces*id.numLevels;
+        size_t imgbytes = id.getTotalBytes();
+        size_t mipbytes = sizeof(MipmapDesc) * mipcount;
+        size_t bytes = imgbytes + sizeof(ImageDesc) + mipbytes;
         AutoTypePtr<UInt8> buf( new UInt8[bytes] );
 
         // fill header of output buffer
@@ -60,6 +61,7 @@ public:
         MipmapDesc * outmips = (MipmapDesc*)(outdesc+1);
         UInt8      * data    = (UInt8*)(outmips+mipcount);
         memcpy( outdesc, &id, sizeof(ImageDesc) );
+        memcpy( outmips, id.mipmaps, mipbytes );
         outdesc->mipmaps = outmips;
 
         // read image data
@@ -77,10 +79,11 @@ public:
         GN_ASSERT( tex );
 
         const ImageDesc  * indesc = (ImageDesc*)inbuf;
+        size_t           imgbytes = indesc->getTotalBytes();
         size_t             offset = sizeof(ImageDesc) + sizeof(MipmapDesc) * indesc->numFaces * indesc->numLevels;
         const UInt8      * data   = (const UInt8*)inbuf + offset;
 
-        if( offset + indesc->getTotalBytes() > inbytes )
+        if( offset + imgbytes > inbytes )
         {
             GN_ERROR(sLogger)( "input buffer is incomplete!" );
             return false;
@@ -123,47 +126,6 @@ public:
     }
 };
 
-//
-//
-// -----------------------------------------------------------------------------
-static bool imageDesc2TextureDesc( TextureDesc & td, const ImageDesc & id )
-{
-    // get image size
-    UInt32 w = id.mipmaps[0].width;
-    UInt32 h = id.mipmaps[0].height;
-    UInt32 d = id.mipmaps[0].depth;
-
-    // determine texture dimension, based on image demension
-    if( 1 == id.numFaces )
-    {
-        td.dim = 1 == d ? TEXDIM_2D : TEXDIM_3D;
-    }
-    else if( 6 == id.numFaces && w == h && 1 == d )
-    {
-        td.dim = TEXDIM_CUBE;
-    }
-    else if( 1 == d )
-    {
-        GN_ASSERT( id.numFaces > 1 );
-        td.dim = TEXDIM_STACK;
-    }
-    else
-    {
-        GN_ERROR(sLogger)( "Can't determine texture dimension for image: face(%d), width(%d), height(%d), depth:%d)." );
-        return false;
-    }
-
-    td.width     = w;
-    td.height    = h;
-    td.depth     = d;
-    td.faces     = id.numFaces;
-    td.levels    = id.numLevels;
-    td.format    = id.format;
-    td.usage.u32 = 0;
-
-    return td.validate();
-}
-
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -205,14 +167,14 @@ GN::engine::Entity * GN::engine::loadTextureEntity(
     // initialize resource descriptor
     GraphicsResourceDesc grd;
     grd.type = GRT_TEXTURE;
-    if( !imageDesc2TextureDesc( grd.td, id ) ) return 0;
+    if( !grd.td.fromImageDesc( id ) ) return 0;
 
     // create the resource
     GraphicsResource * res = re.allocResource( grd );
     if( 0 == res ) return 0;
 
     // do load
-    AutoObjPtr<TextureLoader> loader( new TextureLoader(filename) );
+    AutoRef<TextureLoader> loader( new TextureLoader(filename) );
     re.updateResource( res, 0, loader );
 
     // success
