@@ -73,7 +73,7 @@ struct ManyManyQuads
     const size_t INDEX_COUNT;
     const PrimitiveType PRIM_TYPE;
 
-    UInt32        vtxfmt;
+    VtxFmtHandle    vtxfmt;
     AutoRef<VtxBuf> vtxbuf;
     AutoRef<IdxBuf> idxbuf;
 

@@ -102,7 +102,7 @@ public:
         if( buf.empty() ) return false;
 
         // read file
-        if( !fp->seek( mDataOffset, FSEEK_SET ) ) return false;
+        if( !fp->seek( (int)mDataOffset, FSEEK_SET ) ) return false;
         size_t readen;
         if( !fp->read( buf, bytes, &readen ) || bytes != readen ) return false;
 
@@ -314,7 +314,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             grd.type = GRT_VTXBUF;
             grd.vd.dynamic  = sGetOptionalBoolAttrib( *e, "dynamic", false );
             grd.vd.readback = sGetOptionalBoolAttrib( *e, "readback", false );
-            grd.vd.bytes = vb.stride * numvtx;
+            grd.vd.bytes = (UInt32)(vb.stride * numvtx);
 
             // create vb
             vb.buffer = engine.allocResource( grd );
@@ -338,7 +338,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             grd.type = GRT_IDXBUF;
             grd.id.dynamic  = sGetOptionalBoolAttrib( *e, "dynamic", false );
             grd.id.readback = sGetOptionalBoolAttrib( *e, "readback", false );
-            grd.id.numidx = gfx::calcVertexCount( primtype, numprim );
+            grd.id.numidx = (UInt32)gfx::calcVertexCount( primtype, numprim );
 
             // load ib content
             size_t bytes = grd.id.numidx * 2; // 16-bit index buffer
