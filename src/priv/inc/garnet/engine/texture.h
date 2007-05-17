@@ -33,7 +33,7 @@ namespace GN { namespace engine
     ///
     /// delete all texture entities.
     ///
-    void deleteAllTextureEntitys( EntityManager & em );
+    void deleteAllTextureEntities( EntityManager & em );
 
     //@}
 }}

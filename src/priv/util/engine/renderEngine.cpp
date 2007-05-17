@@ -367,7 +367,7 @@ void GN::engine::RenderEngine::setShaderUniform(
     } header;
 
     header.shader = item;
-    memcpy( header.uniname, uniformName.cptr(), std::min<size_t>(uniformName.size(),32) );
+    memcpy( header.uniname, uniformName.cptr(), std::min<size_t>(uniformName.size()+1,32) );
     header.uniname[31] = 0;
     header.unitype = value.type;
 
