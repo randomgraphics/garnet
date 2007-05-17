@@ -553,6 +553,8 @@ namespace GN { namespace engine {
         {
             StrA     name;  // texture name
             Entity * value;
+
+            TextureData() : value(0) {}
         };
 
         struct TextureRefData
@@ -589,6 +591,8 @@ namespace GN { namespace engine {
             std::vector<TextureRefData> textures;      // texture referencing list.
             std::vector<UniformRefData> uniforms;      // uniform referencing list.
             std::vector<size_t>         dirtyUniforms; // dirty uniform list. Each item is a index into ShaderData::uniforms
+
+            ShaderData() : value(0) {}
         };
 
         struct PassData
@@ -663,22 +667,12 @@ namespace GN { namespace engine {
     ///
     /// try find exising effect entity named "filename", if not found, create new one.
     ///
-    Entity * loadEffectEntity( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * loadEffectEntityFromFile( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
     /// create new effect entity. name must be unique.
     ///
     Entity * createEffectEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::EffectDesc & desc );
-
-    ///
-    /// delete effect entity, as well as corresponding effect object
-    ///
-    void deleteEffectEntity( Entity * );
-
-    ///
-    /// delete all effect entities.
-    ///
-    void deleteAllEffectEntitys( EntityManager & em );
 
     //@}
 }}

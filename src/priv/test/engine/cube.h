@@ -8,7 +8,7 @@ using namespace GN::engine;
 ///
 class TestCube : public TestCase
 {
-    GraphicsResource * vs, * ps;
+    engine::Effect     eff;
     Entity           * tex, * mesh;
 
 public:
@@ -17,8 +17,7 @@ public:
 
     TestCube( EntityManager & em, RenderEngine & re )
         : TestCase( em, re )
-        , vs( 0 )
-        , ps( 0 )
+        , eff(re)
         , tex( 0 )
         , mesh( 0 )
     {

@@ -475,40 +475,6 @@ void GN::engine::EffectDesc::saveToXmlFile( File & )
 }
 
 // *****************************************************************************
-// resouce loaders
-// *****************************************************************************
-
-///
-/// for shader and vtxfmt
-///
-class DummyLoader : public GraphicsResourceLoader
-{
-public:
-    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
-    bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
-    virtual bool copy( GraphicsResource &, const void * , size_t, int )
-    {
-        return true;
-    }
-
-    virtual void freebuf( void *, size_t )
-    {
-    }
-};
-
-// *****************************************************************************
 // Effect class
 // *****************************************************************************
 
@@ -711,22 +677,12 @@ bool GN::engine::Effect::createShader( ShaderData & data, const StrA & name, con
     // create shaders instance
     if( 0 == data.value && !desc.code.empty() )
     {
-        GraphicsResourceDesc grd;
-        grd.name = name;
-        grd.type = GRT_SHADER;
-        grd.sd.type = desc.type;
-        grd.sd.lang = desc.lang;
-        grd.sd.code = desc.code;
-        grd.sd.hints = desc.hints;
-        data.value = mEngine.allocResource( grd );
+        data.value = engine::createShader( mEngine, desc.type, desc.lang, desc.code, desc.hints );
         if( 0 == data.value )
         {
             GN_ERROR(sLogger)( "Fail to create shader '%s'.", name.cptr() );
             return false;
         }
-
-        AutoRef<DummyLoader> loader( new DummyLoader );
-        mEngine.updateResource( data.value, 0, loader );
     }
 
     // build texture referencing list

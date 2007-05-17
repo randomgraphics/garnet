@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "garnet/gfx/effect.h"
 #include "garnet/base/xml.h"
 
 // *****************************************************************************
@@ -7,7 +6,7 @@
 // *****************************************************************************
 
 using namespace GN;
-using namespace GN::gfx;
+using namespace GN::engine;
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.Effect");
 
@@ -304,8 +303,10 @@ static void sParseShaders( EffectDesc & desc, const XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-static void sParseRsb( RenderStateBlockDesc & rsb, const XmlElement & node )
+static void sParseRsb( gfx::RenderStateBlockDesc & rsb, const XmlElement & node )
 {
+    using namespace GN::gfx;
+
     RenderState rs;
     int rsv;
     for( const XmlAttrib * a = node.attrib; a; a = a->next )
@@ -354,7 +355,7 @@ static const char * sGetShaderRef(
     EffectDesc & desc,
     const XmlElement & node,
     const char * attribName,
-    ShaderType type )
+    gfx::ShaderType type )
 {
     const char * ref = sGetAttrib( node, attribName );
     if( !ref )
@@ -376,17 +377,17 @@ static const char * sGetShaderRef(
 // -----------------------------------------------------------------------------
 static void sParsePass( EffectDesc & desc, EffectDesc::TechniqueDesc & td, const XmlElement & node )
 {
-    const char * vs = sGetShaderRef( desc, node, "vs", SHADER_VS );
-    const char * ps = sGetShaderRef( desc, node, "ps", SHADER_PS );
-    const char * gs = sGetShaderRef( desc, node, "gs", SHADER_GS );
+    const char * vs = sGetShaderRef( desc, node, "vs", gfx::SHADER_VS );
+    const char * ps = sGetShaderRef( desc, node, "ps", gfx::SHADER_PS );
+    const char * gs = sGetShaderRef( desc, node, "gs", gfx::SHADER_GS );
     if( !vs || !ps || !gs ) return;
 
     td.passes.resize( td.passes.size() + 1 );
     EffectDesc::PassDesc & pd = td.passes.back();
 
-    pd.shaders[SHADER_VS] = vs;
-    pd.shaders[SHADER_PS] = ps;
-    pd.shaders[SHADER_GS] = gs;
+    pd.shaders[gfx::SHADER_VS] = vs;
+    pd.shaders[gfx::SHADER_PS] = ps;
+    pd.shaders[gfx::SHADER_GS] = gs;
 
     for( const XmlNode * n = node.child; n; n = n->sibling )
     {
@@ -451,7 +452,7 @@ static void sParseTechniques( EffectDesc & desc, const XmlElement & node )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx::EffectDesc::loadFromXmlNode( const XmlNode & root, const StrA & )
+bool GN::engine::EffectDesc::loadFromXmlNode( const XmlNode & root, const StrA & )
 {
     GN_GUARD;
 
