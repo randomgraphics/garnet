@@ -1,22 +1,25 @@
 #include "pch.h"
 #include "triangle.h"
+#include "cube.h"
 
 using namespace GN;
 using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
 
-void runcase( RenderEngine & re, TestCase & c )
+bool runcase( RenderEngine & re, TestCase & c )
 {
     while( 1 )
     {
         gInput.processInputEvents();
 
-        if( gInput.getKeyStatus( KEY_ESCAPE ).down )
+        KeyEvent k = gInput.popLastKeyEvent();
+        if( k.status.down )
         {
-            break;
+            if( KEY_ESCAPE == k.code ) return false;
+            if( KEY_SPACEBAR == k.code ) return true;
         }
-        
+
         re.frameBegin();
 
         re.clearScreen( Vector4f(0,0,1,0) );
@@ -31,6 +34,7 @@ void run( EntityManager & em, RenderEngine & re )
 {
     TestCase * cases[] =
     {
+        new TestCube(em,re),
         new TestTriangle(em,re),
     };
 
@@ -39,14 +43,18 @@ void run( EntityManager & em, RenderEngine & re )
         TestCase * c = cases[i];
         GN_ASSERT( c );
 
+        bool next = false;
+
         if( c->init() )
         {
-            runcase( re, *c );
+            next = runcase( re, *c );
         }
 
         c->quit();
         delete c;
         cases[i] = 0;
+
+        if( !next ) break;
     }
 }
 

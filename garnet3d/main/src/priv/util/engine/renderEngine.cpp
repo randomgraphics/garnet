@@ -4,6 +4,7 @@
 #include "drawThread.h"
 #include "resourceThread.h"
 #include "fenceManager.h"
+#include "dump.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 
@@ -190,6 +191,72 @@ static void sSetupDrawCommandWaitingList(
             (GraphicsResourceItem*)context.idxBuf,
             dr );
     }
+}
+
+///
+/// loader for shader and vertex format
+///
+class DummyLoader : public GN::engine::GraphicsResourceLoader
+{
+public:
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GN::engine::GraphicsResource &, const void * , size_t, int )
+    {
+        return true;
+    }
+
+    virtual void freebuf( void *, size_t )
+    {
+    }
+};
+
+// *****************************************************************************
+// graphics resource descriptor
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+static const char * sGraphicsResourceType2Str( GN::engine::GraphicsResourceType type )
+{
+    static const char * table[] = {
+        "SHADER",
+        "TEXTURE",
+        "VTXBUF",
+        "IDXBUF",
+        "CONSTBUF",
+        "VTXFMT",
+    };
+
+    if( 0 <= type && type < GN::engine::NUM_GRAPHICS_RESOURCE_TYPES ) return table[type];
+    else return "INVALID";
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::StrA GN::engine::GraphicsResourceDesc::toString() const
+{
+    StrA s;
+
+    s.format( "type=\"%s\" name=\"%s\"",
+        sGraphicsResourceType2Str(type),
+        name.empty() ? "unnamed" : name.cptr() );
+
+    return s;
 }
 
 // *****************************************************************************
@@ -435,6 +502,11 @@ void GN::engine::RenderEngine::draw(
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::allocResource( const GraphicsResourceDesc & desc )
 {
+    if( GN_ENGINE_DUMP_ENABLED )
+    {
+        dumpString( strFormat( "<CreateGraphicsResource %s/>", desc.toString().cptr() ) );
+    }
+
     GraphicsResourceItem * item = mResourceCache->alloc( desc );
     if( 0 == item ) return 0;
     mResourceLRU->insert( item );
@@ -450,12 +522,18 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 
     if( !mResourceCache->check( item ) ) return;
 
+    // TODO: check if the resource is using by current context.
+
     // make sure the the resource item is disposed.
     mResourceLRU->dispose( item );
     mDrawThread->waitForIdle();
 
-    mResourceLRU->remove( item );
+    if( GN_ENGINE_DUMP_ENABLED )
+    {
+        dumpString( strFormat( "<FreeGraphicsResource %s/>", res->desc.toString().cptr() ) );
+    }
 
+    mResourceLRU->remove( item );
     return mResourceCache->free( item );
 }
 
@@ -503,4 +581,86 @@ void GN::engine::RenderEngine::updateResource(
     mResourceLRU->realize( item, 0 );
 
     mResourceThread->submitResourceLoadingCommand( item, lod, loader );
+}
+
+// *****************************************************************************
+// global helper functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::createShader(
+    RenderEngine     & eng,
+    const ShaderDesc & sd,
+    const StrA       & name )
+{
+    return createShader( eng, sd.type, sd.lang, sd.code, sd.hints, name );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::createShader(
+    RenderEngine       & eng,
+    gfx::ShaderType      type,
+    gfx::ShadingLanguage lang,
+    const StrA         & code,
+    const StrA         & hints,
+    const StrA         & name)
+{
+    GraphicsResourceDesc desc;
+    desc.name = name;
+    desc.type = GRT_SHADER;
+    desc.sd.type = type;
+    desc.sd.lang = lang;
+    desc.sd.code = code;
+    desc.sd.hints = hints;
+
+    GraphicsResource * res = eng.allocResource( desc );
+    if( 0 == res ) return 0;
+
+    AutoRef<DummyLoader> dummyloader( new DummyLoader );
+
+    eng.updateResource( res, 0, dummyloader );
+
+    return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::createVtxFmt(
+    GN::engine::RenderEngine & eng,
+    const gfx::VtxFmtDesc    & fd,
+    const StrA               & name )
+{
+    GraphicsResourceDesc desc;
+    desc.name = name;
+    desc.type = GRT_VTXFMT;
+    desc.fd = fd;
+
+    GraphicsResource * res = eng.allocResource( desc );
+    if( 0 == res ) return 0;
+
+    AutoRef<DummyLoader> dummyloader( new DummyLoader );
+
+    eng.updateResource( res, 0, dummyloader );
+
+    return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::clearDrawContext( RenderEngine & eng )
+{
+    static struct Local
+    {
+       DrawContext ctx;
+
+       Local() { ctx.resetToDefault(); }
+    } local;
+
+    eng.setContext( local.ctx );
 }

@@ -180,7 +180,7 @@ namespace GN
             /// structured key states
             struct
             {
-                UInt8   code;   ///< Key code
+                UInt8     code;   ///< Key code
                 KeyStatus status; ///< Key status
             };
 
@@ -265,6 +265,11 @@ namespace GN
             /// 获取并处理最新的输入事件
             ///
             virtual void processInputEvents() = 0;
+
+            ///
+            /// get the latest key event from event queue, then pop it out of event queue
+            ///
+            virtual KeyEvent popLastKeyEvent() = 0;
 
             ///
             /// Return keyboard status indexed by KeyCode.

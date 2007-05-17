@@ -2,6 +2,7 @@
 #include "drawThread.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNwin.h"
+#include "dump.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread");
 
@@ -343,7 +344,7 @@ namespace GN { namespace engine
 
         GN_ASSERT( engine.resourceCache().check( cmd.resource ) );
 
-        if( 0 == cmd.resource->shader )
+        if( 0 == cmd.resource->data )
         {
             if( DUMP_COMMANDS )
             {
@@ -750,7 +751,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 prev = cmd;
                 cmd = cmd->next;
                 mResourceCommands.remove( prev );
-                if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
                 mResourceMutex.unlock();
 
                 // update resource's complete fence
@@ -758,6 +758,10 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
                 if( prev->noerr )
                 {
+                    if( GN_ENGINE_DUMP_ENABLED )
+                    {
+                        dumpResourceCommand( *prev );
+                    }
                     switch( prev->op )
                     {
                         case GROP_COPY :
@@ -776,6 +780,8 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
                 // the resource command is done. Free it.
                 ResourceCommand::free( prev );
+
+                if( mResourceCommands.empty() ) mResourceCommandEmpty = true;
 
                 loopAgain = true;
             }

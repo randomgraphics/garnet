@@ -60,6 +60,11 @@ namespace GN { namespace engine
         GraphicsResource * buffer; ///< buffer pointer
         size_t             offset; ///< offset (in bytes) of the first vertex
         size_t             stride; ///< vertex stride in bytes.
+
+        ///
+        /// ctor
+        ///
+        MeshVtxBuf() : buffer( 0 ) {}
     };
 
     ///
@@ -85,16 +90,29 @@ namespace GN { namespace engine
         ///
         /// ctor
         ///
-        Mesh( RenderEngine & e ) : engine(e) {}
+        Mesh( RenderEngine & e )
+            : engine( e )
+            , vtxfmt( 0 )
+            , idxbuf( 0 )
+        {}
+
+        ///
+        /// dtor
+        ///
+        ~Mesh() { clear(); }
 
         ///
         /// clear to empty mesh
         ///
         void clear()
         {
-            vtxfmt = 0;
+            if( vtxfmt ) engine.freeResource( vtxfmt ), vtxfmt = 0;
+            for( size_t i = 0; i < vtxbufs.size(); ++i )
+            {
+                if( vtxbufs[i].buffer ) engine.freeResource( vtxbufs[i].buffer );
+            }
             vtxbufs.clear();
-            idxbuf = 0;
+            if( idxbuf ) engine.freeResource( idxbuf ), idxbuf = 0;
             primtype = gfx::POINT_LIST;
             numprim = 0;
             startvtx = 0;

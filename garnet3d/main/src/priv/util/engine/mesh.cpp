@@ -77,7 +77,7 @@ GN_CASSERT( sizeof(BinFileHeader) == 4 );
 
 class BinFileLoader : public GN::engine::GraphicsResourceLoader
 {
-    const StrA & mFileName;
+    const StrA   mFileName;
     const size_t mDataOffset;
     const size_t mDataBytes;
 
@@ -86,7 +86,17 @@ public:
     ///
     /// ctor
     ///
-    BinFileLoader( const StrA & filename, size_t offset, size_t bytes ) : mFileName(filename), mDataOffset(offset), mDataBytes(bytes)
+    BinFileLoader( const StrA & filename, size_t offset, size_t bytes )
+        : mFileName(filename)
+        , mDataOffset(offset)
+        , mDataBytes(bytes)
+    {
+    }
+
+    ///
+    /// dtor
+    ///
+    ~BinFileLoader()
     {
     }
 
@@ -155,14 +165,14 @@ public:
     }
 };
 
-class VtxBufLoader : public BinFileLoader
+class MeshVtxBufLoader : public BinFileLoader
 {
 public:
 
     ///
     /// ctor
     ///
-    VtxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
+    MeshVtxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
@@ -176,14 +186,14 @@ public:
     }
 };
 
-class IdxBufLoader : public BinFileLoader
+class MeshIdxBufLoader : public BinFileLoader
 {
 public:
 
     ///
     /// ctor
     ///
-    IdxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
+    MeshIdxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
@@ -264,8 +274,6 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
     // get start index
     if( !sGetIntAttrib( *e, "startidx", startidx ) ) return false;
 
-    GraphicsResourceDesc grd;
-
     // load vertex format
     XmlNode * vfnode = e->findChildElement( "vtxfmt" );
     if( !vfnode )
@@ -273,13 +281,13 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
         sPostError( *e, "No valid vertex format definition found!" );
         return false;
     }
-    grd.type = GRT_VTXFMT;
-    if( !grd.fd.loadFromXml( vfnode ) ) return false;
-    vtxfmt = engine.allocResource( grd );
+    VtxFmtDesc vfd;
+    if( !vfd.loadFromXml( vfnode ) ) return false;
+    vtxfmt = createVtxFmt( engine, vfd );
     if( 0 == vtxfmt ) return false;
 
     // handle child elements
-    size_t numStreams = grd.fd.calcNumStreams();
+    size_t numStreams = vfd.calcNumStreams();
     for( XmlNode * c = root.child; c; c = c->sibling )
     {
         e = c->toElement();
@@ -310,6 +318,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             ref = core::resolvePath( basedir, ref );
 
             // compose vb descriptor
+            GraphicsResourceDesc grd;
             grd.name = ref;
             grd.type = GRT_VTXBUF;
             grd.vd.dynamic  = sGetOptionalBoolAttrib( *e, "dynamic", false );
@@ -321,7 +330,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             if( 0 == vb.buffer ) return false;
 
             // load vb content
-            AutoRef<VtxBufLoader> loader( new VtxBufLoader( ref, 0, grd.vd.bytes ) );
+            AutoRef<MeshVtxBufLoader> loader( new MeshVtxBufLoader( ref, 0, grd.vd.bytes ) );
             engine.updateResource( vb.buffer, 0, loader );
         }
 
@@ -334,15 +343,20 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             ref = core::resolvePath( basedir, ref );
 
             // compose ib descriptor
+            GraphicsResourceDesc grd;
             grd.name = ref;
             grd.type = GRT_IDXBUF;
             grd.id.dynamic  = sGetOptionalBoolAttrib( *e, "dynamic", false );
             grd.id.readback = sGetOptionalBoolAttrib( *e, "readback", false );
             grd.id.numidx = (UInt32)gfx::calcVertexCount( primtype, numprim );
 
+            // create ib
+            idxbuf = engine.allocResource( grd );
+            if( 0 == idxbuf ) return false;
+
             // load ib content
             size_t bytes = grd.id.numidx * 2; // 16-bit index buffer
-            AutoRef<IdxBufLoader> loader( new IdxBufLoader( ref, 0, bytes ) );
+            AutoRef<MeshIdxBufLoader> loader( new MeshIdxBufLoader( ref, 0, bytes ) );
             engine.updateResource( idxbuf, 0, loader );
         }
 

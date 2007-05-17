@@ -6,7 +6,35 @@
 #include <algorithm>
 
 // *****************************************************************************
-//                  protected functions
+// public functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::input::KeyEvent GN::input::BasicInput::popLastKeyEvent()
+{
+    mKeyEventQueueMutex.lock();
+
+    KeyEvent k;
+
+    if( mKeyEventQueue.empty() )
+    {
+        k.u16 = 0;
+    }
+    else
+    {
+        k = mKeyEventQueue.front();
+        mKeyEventQueue.pop();
+    }
+
+    mKeyEventQueueMutex.unlock();
+
+    return k;
+}
+
+// *****************************************************************************
+// protected functions
 // *****************************************************************************
 
 //
@@ -34,6 +62,15 @@ void GN::input::BasicInput::triggerKeyPress( KeyCode code, bool keydown )
 
     // 更新键盘状态数组
     mKeyboardStatus[code] = k.status;
+
+    //update last key event
+    mKeyEventQueueMutex.lock();
+    if( mKeyEventQueue.size() >= 32 ) // buffer 32 key events
+    {
+        mKeyEventQueue.pop();
+    }
+    mKeyEventQueue.push( k );
+    mKeyEventQueueMutex.unlock();
 
     // 触发按键信号
     gSigKeyPress( k );
