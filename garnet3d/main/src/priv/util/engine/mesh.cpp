@@ -283,7 +283,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
     }
     VtxFmtDesc vfd;
     if( !vfd.loadFromXml( vfnode ) ) return false;
-    vtxfmt = createVtxFmt( engine, vfd );
+    vtxfmt = engine.createVtxFmt( vfd );
     if( 0 == vtxfmt ) return false;
 
     // handle child elements
@@ -526,7 +526,9 @@ bool GN::engine::Mesh::loadFromFile( const StrA & filename )
     }
     else
     {
-        AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+        // reopen in text mode
+        fp.clear();
+        fp.attach( core::openFile( filename, "rt" ) );
         if( !fp ) return false;
 
         StrA basedir = dirName( filename );

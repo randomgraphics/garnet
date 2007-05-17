@@ -15,11 +15,9 @@ namespace GN { namespace engine
     ///
     class Drawable
     {
-        DrawContext     context;
+        DrawContext     mContext;
 
     public:
-
-        ///
 
         ///
         /// texture item
@@ -48,6 +46,11 @@ namespace GN { namespace engine
         //@}
 
         ///
+        /// constructor
+        ///
+        Drawable() : effect( 0 ), mesh( 0 ) {}
+
+        ///
         /// clear to empty
         ///
         void clear()
@@ -56,7 +59,7 @@ namespace GN { namespace engine
             mesh = 0;
             textures.clear();
             uniforms.clear();
-            context.clearToNull();
+            mContext.clearToNull();
         }
 
         ///
@@ -65,9 +68,21 @@ namespace GN { namespace engine
         bool empty() const { return 0 == effect || 0 == mesh; }
 
         ///
-        /// load drawable from XML
+        /// load drawable from XML node
         ///
-        bool loadFromXmlNode( const XmlNode & node, const StrA & basedir );
+        bool loadFromXmlNode(
+            EntityManager & em,
+            RenderEngine  & re,
+            const XmlNode & node,
+            const StrA    & basedir );
+
+        ///
+        /// load drawable from XML file
+        ///
+        bool loadFromXmlFile(
+            EntityManager & em,
+            RenderEngine  & re,
+            const StrA    & filename );
 
         //@{
 
@@ -86,7 +101,7 @@ namespace GN { namespace engine
 
             for( size_t i = 0; i < eff->getNumPasses(); ++i )
             {
-                eff->passBegin( context, i );
+                eff->passBegin( mContext, i );
                 drawPass();
                 eff->passEnd();
             }
@@ -110,13 +125,13 @@ namespace GN { namespace engine
             // bind mesh
             Mesh * m = entity2Object<Mesh*>( mesh, 0 );
             GN_ASSERT( m );
-            m->updateContext( context );
+            m->updateContext( mContext );
 
             // commit changes
             eff->commitChanges();
 
-            // apply context to renderer
-            gRenderer.setContext( context );
+            // apply mContext to renderer
+            eff->renderEngine().setContext( mContext );
 
             // do draw
             m->draw();

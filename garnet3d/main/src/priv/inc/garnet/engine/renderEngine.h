@@ -306,6 +306,32 @@ namespace GN { namespace engine
         //@}
 
         // ********************************
+        /// \name helpers
+        // ********************************
+    public:
+
+        //@{
+
+        GraphicsResource * createShader( const ShaderDesc & desc,
+                                         const StrA       & name = StrA::EMPTYSTR );
+
+        GraphicsResource * createShader( gfx::ShaderType      type,
+                                         gfx::ShadingLanguage lang,
+                                         const StrA         & code,
+                                         const StrA         & hints,
+                                         const StrA         & name = StrA::EMPTYSTR );
+
+        GraphicsResource * createVtxFmt( const gfx::VtxFmtDesc & desc,
+                                         const StrA            & name = StrA::EMPTYSTR );
+
+        ///
+        /// reset draw context to default value (not referencing any resources)
+        ///
+        void clearDrawContext();
+
+        //@}
+
+        // ********************************
         /// \name sub component accessor
         // ********************************
     public:
@@ -347,31 +373,6 @@ namespace GN { namespace engine
         // ********************************
     private:
     };
-
-    /// \name helpers
-    //@{
-
-    GraphicsResource * createShader( RenderEngine     & eng,
-                                     const ShaderDesc & desc,
-                                     const StrA       & name = StrA::EMPTYSTR );
-
-    GraphicsResource * createShader( RenderEngine       & eng,
-                                     gfx::ShaderType      type,
-                                     gfx::ShadingLanguage lang,
-                                     const StrA         & code,
-                                     const StrA         & hints,
-                                     const StrA         & name = StrA::EMPTYSTR );
-
-    GraphicsResource * createVtxFmt( RenderEngine          & eng,
-                                     const gfx::VtxFmtDesc & desc,
-                                     const StrA            & name = StrA::EMPTYSTR );
-
-    ///
-    /// clear draw context to null context (not using any resources)
-    ///
-    void clearDrawContext( RenderEngine & eng );
-
-    //@}
 }}
 
 // *****************************************************************************

@@ -67,11 +67,11 @@ bool TestTriangle::init()
     VtxFmtDesc vfd;
     vfd.clear();
     vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-    vf = createVtxFmt( re, vfd, "vf1" );
+    vf = re.createVtxFmt( vfd, "vf1" );
     if( 0 == vf ) return false;
 
     // create vertex shader
-    vs = createShader( re, SHADER_VS, LANG_D3D_HLSL, vscode, "", "vs1" );
+    vs = re.createShader( SHADER_VS, LANG_D3D_HLSL, vscode, "", "vs1" );
 
     // create vertex buffer
     desc.name = "vb1";
@@ -106,7 +106,7 @@ bool TestTriangle::init()
 void TestTriangle::quit()
 {
     // make sure that all resources are unbinded from render engine.
-    clearDrawContext( renderEngine() );
+    renderEngine().clearDrawContext();
 
     deleteEntity( tex );
 }

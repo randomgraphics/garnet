@@ -677,7 +677,7 @@ bool GN::engine::Effect::createShader( ShaderData & data, const StrA & name, con
     // create shaders instance
     if( 0 == data.value && !desc.code.empty() )
     {
-        data.value = engine::createShader( mEngine, desc.type, desc.lang, desc.code, desc.hints );
+        data.value = mEngine.createShader( desc.type, desc.lang, desc.code, desc.hints );
         if( 0 == data.value )
         {
             GN_ERROR(sLogger)( "Fail to create shader '%s'.", name.cptr() );
@@ -836,6 +836,94 @@ void GN::engine::Effect::sSetFfpUniform(
         default:
             GN_UNEXPECTED();
     }
+
+    GN_UNGUARD;
+}
+
+// *****************************************************************************
+// global entity functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::EntityTypeId GN::engine::getEffectEntityType( EntityManager & em )
+{
+    static EntityTypeId type = em.createEntityType( "effect" );
+    return type;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::Entity * GN::engine::loadEffectEntityFromXmlFile( EntityManager & em, RenderEngine & re, const StrA & filename )
+{
+    GN_GUARD;
+
+    GN_TODO( "convert filename to absolute/full path" );
+
+    // check if the entity is already loaded
+    Entity * e = em.getEntityByName( filename, true );
+    if( e ) return e;
+
+    // open XML file
+    AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+    if( !fp ) return 0;
+
+    // parse XML file
+    XmlDocument doc;
+    XmlParseResult xpr;
+    if( !doc.parse( xpr, *fp ) )
+    {
+        GN_ERROR(sLogger)(
+            "Fail to parse XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            filename.cptr(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
+        return 0;
+    }
+    GN_ASSERT( xpr.root );
+
+    StrA basedir = dirName( filename );
+    EffectDesc desc;
+    if( !desc.loadFromXmlNode( *xpr.root, basedir ) ) return 0;
+
+    // success
+    return createEffectEntity( em, re, filename, desc );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::Entity * GN::engine::createEffectEntity( EntityManager & em, RenderEngine & re, const StrA & name, const EffectDesc & desc )
+{
+    GN_GUARD;
+
+    // check if the entity is already loaded
+    Entity * e = em.getEntityByName( name, true );
+    if( e )
+    {
+        GN_ERROR(sLogger)( "effect entity creation failed: entity named '%s' does already exist!", name.cptr() );
+        return 0;
+    }
+
+    // create effect instance
+    AutoObjPtr<Effect> eff( new Effect(re) );
+    if( !eff->init( desc ) ) return 0;
+
+    // create entity
+    e = em.createEntity<Effect*>( getMeshEntityType(em), name, eff.get(), &safeDelete<Effect> );
+    if( 0 == e ) return 0;
+
+    // success
+    eff.detach();
+    return e;
 
     GN_UNGUARD;
 }
