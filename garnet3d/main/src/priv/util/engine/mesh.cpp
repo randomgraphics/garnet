@@ -582,8 +582,12 @@ GN::engine::Entity * GN::engine::loadMeshEntityFromFile(
     AutoObjPtr<Mesh> mesh( new Mesh(re) );
     if( !mesh->loadFromFile( filename ) ) return 0;
 
+    e = em.createEntity( getMeshEntityType(em), filename, mesh.get() );
+    if( 0 == e ) return 0;
+
     // success
-    return em.createEntity( getMeshEntityType(em), filename, mesh.get() );
+    mesh.detach();
+    return e;
 }
 
 /*
