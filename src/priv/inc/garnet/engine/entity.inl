@@ -30,6 +30,9 @@ GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, c
         return 0;
     }
 
+    // add to handle list
+    ec.entities[id] = e;
+
     // add to name list
     mEntityNames.insert( std::make_pair( name, e ) );
 

@@ -142,7 +142,7 @@ GN::engine::EntityTypeId GN::engine::getTextureEntityType( EntityManager & em )
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::Entity * GN::engine::loadTextureEntity(
+GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
     EntityManager & em, RenderEngine & re, const StrA & filename )
 {
     GN_TODO( "convert filename to absolute/full path" );
@@ -216,10 +216,8 @@ void GN::engine::deleteTextureEntity( Entity * e )
 {
     if( 0 == e ) return;
 
-    GraphicsResource * tex = entity2Object<GraphicsResource*>( e, 0 );
-    if( 0 == tex ) return;
-
-    tex->engine.freeResource( tex );
+    GraphicsResource * tex = entity2Texture( e );
+    if( tex ) tex->engine.freeResource( tex );
 
     e->manager.eraseEntity( e );
 }
