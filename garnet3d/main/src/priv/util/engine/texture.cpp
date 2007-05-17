@@ -126,6 +126,18 @@ public:
     }
 };
 
+//
+//
+// -----------------------------------------------------------------------------
+static void sTextureDtor( GraphicsResource * & tex )
+{
+    if( tex )
+    {
+        tex->engine.freeResource( tex );
+        tex = 0;
+    }
+}
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -178,7 +190,7 @@ GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
     re.updateResource( res, 0, loader );
 
     // success
-    return em.createEntity( getTextureEntityType(em), filename, res );
+    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), filename, res, &sTextureDtor );
 }
 
 //
@@ -204,28 +216,7 @@ GN::engine::Entity * GN::engine::createTextureEntity(
     grd.td = desc;
     GraphicsResource * res = re.allocResource( grd );
     if( 0 == res ) return 0;
-    
+
     // success
-    return em.createEntity( getTextureEntityType(em), name, res );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::deleteTextureEntity( Entity * e )
-{
-    if( 0 == e ) return;
-
-    GraphicsResource * tex = entity2Texture( e );
-    if( tex ) tex->engine.freeResource( tex );
-
-    e->manager.eraseEntity( e );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::deleteAllTextureEntities( EntityManager & )
-{
-    GN_UNIMPL();
+    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &sTextureDtor );
 }

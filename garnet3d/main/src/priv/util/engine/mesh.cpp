@@ -582,7 +582,7 @@ GN::engine::Entity * GN::engine::loadMeshEntityFromFile(
     AutoObjPtr<Mesh> mesh( new Mesh(re) );
     if( !mesh->loadFromFile( filename ) ) return 0;
 
-    e = em.createEntity( getMeshEntityType(em), filename, mesh.get() );
+    e = em.createEntity<Mesh*>( getMeshEntityType(em), filename, mesh.get(), &safeDelete<Mesh> );
     if( 0 == e ) return 0;
 
     // success
@@ -597,29 +597,6 @@ GN::engine::Entity * GN::engine::generateCubeMeshEntity(
     EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength )
 {
 }*/
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::deleteMeshEntity( Entity * e )
-{
-    if( 0 == e ) return;
-
-    Mesh * object = entity2Object<Mesh*>( e, 0 );
-    if( 0 == object ) return;
-
-    delete object;
-
-    e->manager.eraseEntity( e );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::deleteAllMeshEntities( EntityManager & )
-{
-    GN_UNIMPL();
-}
 
 /*
 //

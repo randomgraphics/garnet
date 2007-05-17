@@ -102,7 +102,7 @@ bool GN::engine::EntityManager::checkEntity( const Entity * e, bool silence ) co
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::EntityManager::eraseEntity( const Entity * e )
+void GN::engine::EntityManager::deleteEntity( const Entity * e )
 {
     if( 0 == e || !checkEntity( e ) ) return;
 
@@ -122,9 +122,9 @@ void GN::engine::EntityManager::eraseEntity( const Entity * e )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::EntityManager::eraseEntityByName( const StrA & name )
+void GN::engine::EntityManager::deleteEntityByName( const StrA & name )
 {
-    eraseEntity( getEntityByName( name ) );
+    deleteEntity( getEntityByName( name ) );
 }
 
 //

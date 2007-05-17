@@ -243,21 +243,21 @@ namespace GN { namespace engine
     template<class T>
     struct EntityT : public Entity
     {
-        T data; ///< TBD
+        T                  data; ///< user data
+        Delegate1<void,T&> dtor; ///< Optional data destructor, that is used to destroy user data, while entity is deleted.
 
     protected:
 
         //@{
 
-        EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
-            : Entity( m, n, t, i )
+        EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d, const Delegate1<void,T&> & dt )
+            : Entity( m, n, t, i ), data(d), dtor(dt)
         {}
 
-        EntityT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
-            : Entity( m, n, t, i ), data(d)
-        {}
-
-        ~EntityT() {}
+        ~EntityT()
+        {
+            if( dtor ) dtor( data );
+        }
 
         //@}
     };
@@ -288,11 +288,11 @@ namespace GN { namespace engine
         /// create new entity. Name must be unique.
         ///
         template<class T>
-        EntityT<T> * createEntity( EntityTypeId type, const StrA & name, const T & data );
+        EntityT<T> * createEntity( EntityTypeId type, const StrA & name, const T & data, const Delegate1<void,T&> & dtor = Delegate1<void,T&>() );
 
         // delete
-        void eraseEntity( const Entity * );
-        void eraseEntityByName( const StrA & name );
+        void deleteEntity( const Entity * );
+        void deleteEntityByName( const StrA & name );
 
         // check
         bool checkEntityType( EntityTypeId, bool silence = false ) const;
@@ -326,12 +326,8 @@ namespace GN { namespace engine
         template<typename T>
         struct EntityItemT : public EntityT<T>, public EntityDeletor
         {
-            EntityItemT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i )
-                : EntityT( m, n, t, i )
-            {}
-
-            EntityItemT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d )
-                : EntityT( m, n, t, i, d )
+            EntityItemT( EntityManager & m, const StrA & n, EntityTypeId t, UIntPtr i, const T & d, const Delegate1<void,T&> & dt )
+                : EntityT( m, n, t, i, d, dt )
             {}
         };
 
@@ -355,7 +351,7 @@ namespace GN { namespace engine
     ///
     /// delete specific entity
     ///
-    void eraseEntity( Entity * );
+    void deleteEntity( Entity * );
 
     // interation
     Entity * getNextEntity( const Entity * );
