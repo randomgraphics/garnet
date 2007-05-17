@@ -12,10 +12,16 @@ namespace GN { namespace engine
 
     EntityTypeId getTextureEntityType( EntityManager & em );
 
+    inline GraphicsResource * entity2Texture( const Entity * e, GraphicsResource * nil = 0 )
+    {
+        GN_ASSERT( 0 == e || e->type == getTextureEntityType( e->manager ) );
+        return entity2Object<GraphicsResource*>( e, nil );
+    }
+
     ///
     /// try find exising texture entity named "filename", if not found, create new one.
     ///
-    Entity * loadTextureEntity( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * loadTextureEntityFromFile( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
     /// create new texture entity (content of the texture is leaving undefined)

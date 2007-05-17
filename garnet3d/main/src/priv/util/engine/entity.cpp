@@ -75,21 +75,28 @@ bool GN::engine::EntityManager::checkEntityType( EntityTypeId type, bool silence
 // -----------------------------------------------------------------------------
 bool GN::engine::EntityManager::checkEntity( const Entity * e, bool silence ) const
 {
-    if( e &&
-        this == &e->manager &&
-        mEntityNames.end() != mEntityNames.find( e->name ) &&
-        e == mEntityNames.find(e->name)->second &&
-        mEntityTypes.validHandle(e->type) &&
-        mEntityTypes[e->type].entities.validHandle( e->id ) &&
-        e == mEntityTypes[e->type].entities[e->id] )
-        return true;
-
-    if( !silence )
+    struct Local
     {
-        GN_ERROR(sLogger)( "invalid entity pointer : 0x%p.", e );
-    }
+        static inline bool failure( const Entity * e, bool silence )
+        {
+            if( !silence )
+            {
+                GN_ERROR(sLogger)( "invalid entity pointer : 0x%p.", e );
+            }
+            return false;
+        }
+    };
 
-    return false;
+    if( 0 == e ) return Local::failure( e, silence );
+    if( this !=&e->manager ) return Local::failure( e, silence );
+    if( mEntityNames.end() == mEntityNames.find( e->name ) ) return Local::failure( e, silence );
+    if( e != mEntityNames.find(e->name)->second ) return Local::failure( e, silence );
+    if( !mEntityTypes.validHandle(e->type) ) return Local::failure( e, silence );
+    if( !mEntityTypes[e->type].entities.validHandle( e->id ) ) return Local::failure( e, silence );
+    if( e != mEntityTypes[e->type].entities[e->id] ) return Local::failure( e, silence );
+
+    // success
+    return true;
 }
 
 //

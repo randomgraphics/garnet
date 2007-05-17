@@ -450,6 +450,10 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 
     if( !mResourceCache->check( item ) ) return;
 
+    // make sure the the resource item is disposed.
+    mResourceLRU->dispose( item );
+    mDrawThread->waitForIdle();
+
     mResourceLRU->remove( item );
 
     return mResourceCache->free( item );

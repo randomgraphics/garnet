@@ -8,7 +8,9 @@ using namespace GN::engine;
 ///
 class TestTriangle : public TestCase
 {
-    GraphicsResource *vf, *vs, *ps, *vb, *ib, *tex;
+    GraphicsResource *vf, *vs, *ps, *vb, *ib;
+
+    Entity * tex;
 
 public:
 
