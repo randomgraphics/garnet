@@ -252,8 +252,8 @@ namespace GN { namespace engine {
         ///
         struct UniformDesc
         {
-            bool              hasDefaultValue;      ///< Indicates that the uniform has a default value.
-            gfx::UniformValue defaultValue; ///< Default value of the uniform. Ignored if hasDefaultValue is false.
+            bool              hasDefaultValue; ///< Indicates that the uniform has a default value.
+            gfx::UniformValue defaultValue;    ///< Default value of the uniform. Ignored if hasDefaultValue is false.
 
             UniformDesc() : hasDefaultValue(false) {}
         };
@@ -420,6 +420,7 @@ namespace GN { namespace engine {
     public:
         Effect( RenderEngine & engine ) : mEngine(engine) { clear(); }
         virtual ~Effect() { quit(); }
+        RenderEngine & renderEngine() const { return mEngine; }
         //@}
 
         // ********************************
@@ -667,12 +668,12 @@ namespace GN { namespace engine {
     ///
     /// try find exising effect entity named "filename", if not found, create new one.
     ///
-    Entity * loadEffectEntityFromFile( EntityManager & em, RenderEngine & re, const StrA & filename );
+    Entity * loadEffectEntityFromXmlFile( EntityManager & em, RenderEngine & re, const StrA & filename );
 
     ///
     /// create new effect entity. name must be unique.
     ///
-    Entity * createEffectEntity( EntityManager & em, RenderEngine & re, const StrA & name, const gfx::EffectDesc & desc );
+    Entity * createEffectEntity( EntityManager & em, RenderEngine & re, const StrA & name, const EffectDesc & desc );
 
     //@}
 }}

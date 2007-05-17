@@ -584,25 +584,23 @@ void GN::engine::RenderEngine::updateResource(
 }
 
 // *****************************************************************************
-// global helper functions
+// helpers
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::GraphicsResource * GN::engine::createShader(
-    RenderEngine     & eng,
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createShader(
     const ShaderDesc & sd,
     const StrA       & name )
 {
-    return createShader( eng, sd.type, sd.lang, sd.code, sd.hints, name );
+    return createShader( sd.type, sd.lang, sd.code, sd.hints, name );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::GraphicsResource * GN::engine::createShader(
-    RenderEngine       & eng,
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createShader(
     gfx::ShaderType      type,
     gfx::ShadingLanguage lang,
     const StrA         & code,
@@ -617,12 +615,12 @@ GN::engine::GraphicsResource * GN::engine::createShader(
     desc.sd.code = code;
     desc.sd.hints = hints;
 
-    GraphicsResource * res = eng.allocResource( desc );
+    GraphicsResource * res = allocResource( desc );
     if( 0 == res ) return 0;
 
     AutoRef<DummyLoader> dummyloader( new DummyLoader );
 
-    eng.updateResource( res, 0, dummyloader );
+    updateResource( res, 0, dummyloader );
 
     return res;
 }
@@ -630,8 +628,7 @@ GN::engine::GraphicsResource * GN::engine::createShader(
 //
 //
 // -----------------------------------------------------------------------------
-GN::engine::GraphicsResource * GN::engine::createVtxFmt(
-    GN::engine::RenderEngine & eng,
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
     const gfx::VtxFmtDesc    & fd,
     const StrA               & name )
 {
@@ -640,12 +637,12 @@ GN::engine::GraphicsResource * GN::engine::createVtxFmt(
     desc.type = GRT_VTXFMT;
     desc.fd = fd;
 
-    GraphicsResource * res = eng.allocResource( desc );
+    GraphicsResource * res = allocResource( desc );
     if( 0 == res ) return 0;
 
     AutoRef<DummyLoader> dummyloader( new DummyLoader );
 
-    eng.updateResource( res, 0, dummyloader );
+    updateResource( res, 0, dummyloader );
 
     return res;
 }
@@ -653,7 +650,7 @@ GN::engine::GraphicsResource * GN::engine::createVtxFmt(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::clearDrawContext( RenderEngine & eng )
+void GN::engine::RenderEngine::clearDrawContext()
 {
     static struct Local
     {
@@ -662,5 +659,5 @@ void GN::engine::clearDrawContext( RenderEngine & eng )
        Local() { ctx.resetToDefault(); }
     } local;
 
-    eng.setContext( local.ctx );
+    setContext( local.ctx );
 }
