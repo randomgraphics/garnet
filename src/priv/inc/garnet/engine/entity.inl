@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 template<class T>
 inline GN::engine::EntityT<T> *
-GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, const T & data )
+GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, const T & data, const Delegate1<void,T&> & dtor )
 {
     if( !mEntityTypes.validHandle( type ) )
     {
@@ -22,7 +22,7 @@ GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, c
     UIntPtr id = ec.entities.newItem();
 
     // create new entity
-    EntityItemT<T> * e = new (std::nothrow) EntityItemT<T>( *this, name, type, id, data );
+    EntityItemT<T> * e = new (std::nothrow) EntityItemT<T>( *this, name, type, id, data, dtor );
     if( 0 == e )
     {
         GN_ERROR(sLogger)( "out of memory!" );
@@ -60,10 +60,10 @@ inline const T & GN::engine::entity2Object( const Entity * e, const T & nil )
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::eraseEntity( Entity * e )
+inline void GN::engine::deleteEntity( Entity * e )
 {
     if( 0 == e ) return;
-    e->manager.eraseEntity( e );
+    e->manager.deleteEntity( e );
 }
 
 //

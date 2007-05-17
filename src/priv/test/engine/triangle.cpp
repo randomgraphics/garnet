@@ -108,7 +108,7 @@ void TestTriangle::quit()
     // make sure that all resources are unbinded from render engine.
     clearDrawContext( renderEngine() );
 
-    deleteTextureEntity( tex );
+    deleteEntity( tex );
 }
 
 void TestTriangle::draw()

@@ -54,8 +54,8 @@ void TestCube::quit()
     // make sure that all resources are unbinded from render engine.
     clearDrawContext( renderEngine() );
 
-    deleteMeshEntity( mesh );
-    deleteTextureEntity( tex );
+    deleteEntity( mesh );
+    deleteEntity( tex );
 }
 
 void TestCube::draw()

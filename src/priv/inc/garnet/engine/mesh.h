@@ -186,16 +186,6 @@ namespace GN { namespace engine
     ///
     Entity * generateCubeMeshEntity( EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength );
 
-    ///
-    /// delete mesh entity
-    ///
-    void deleteMeshEntity( Entity * );
-
-    ///
-    /// delete all mesh entities
-    ///
-    void deleteAllMeshEntities( EntityManager & em );
-
     //@}
 }}
 
