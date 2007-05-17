@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "resourceThread.h"
 #include "drawThread.h"
+#include "dump.h"
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceThread");
 
@@ -114,7 +115,10 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
         GN_ASSERT( GROP_LOAD == cmd->op );
         GN_ASSERT( cmd->loader );
 
-        GN_INFO(sLogger)( "Load %s", cmd->resource->desc.name.cptr() );
+        if( GN_ENGINE_DUMP_ENABLED )
+        {
+            dumpResourceCommand( *cmd );
+        }
 
         cmd->noerr = cmd->loader->load(
             cmd->resource->desc,
@@ -149,7 +153,10 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
             void * olddata = cmd->data;
             size_t oldbytes = cmd->bytes;
 
-            GN_INFO(sLogger)( "Decompress %s", cmd->resource->desc.name.cptr() );
+            if( GN_ENGINE_DUMP_ENABLED )
+            {
+                dumpResourceCommand( *cmd );
+            }
 
             cmd->noerr = cmd->loader->decompress(
                 cmd->resource->desc,

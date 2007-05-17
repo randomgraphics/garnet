@@ -7,6 +7,7 @@
 // *****************************************************************************
 
 #include "garnet/GNinput.h"
+#include <queue>
 
 namespace GN { namespace input
 {
@@ -27,6 +28,7 @@ namespace GN { namespace input
         // ********************************
     public:
 
+        KeyEvent popLastKeyEvent();
         const KeyStatus * getKeyboardStatus() const { return mKeyboardStatus; }
         const int * getAxisStatus() const { return mAxisStatus; }
 
@@ -89,6 +91,9 @@ namespace GN { namespace input
         // private variables
         // ********************************
     private:
+
+        std::queue<KeyEvent> mKeyEventQueue;
+        SpinLoop             mKeyEventQueueMutex;
 
         ///
         /// 记录键盘的状态，用来过滤/修正不匹配的按键操作

@@ -45,7 +45,7 @@ public:
     }
 };
 
-const char * vscode =
+static const char * vscode =
     "uniform float4x4 pvw;\n"
     "void main( in float4 ipos : POSITION, \n"
     "          out float4 opos : POSITION, \n"
@@ -61,28 +61,17 @@ bool TestTriangle::init()
 {
     RenderEngine & re = renderEngine();
 
-    AutoRef<DummyLoader> dummyloader( new DummyLoader );
-
     GraphicsResourceDesc desc;
 
-    // create vertex format handle
-    desc.name = "vf1";
-    desc.type = GRT_VTXFMT;
-    desc.fd.clear();
-    desc.fd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-    vf = re.allocResource( desc );
+    // create vertex format
+    VtxFmtDesc vfd;
+    vfd.clear();
+    vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
+    vf = createVtxFmt( re, vfd, "vf1" );
     if( 0 == vf ) return false;
-    re.updateResource( vf, 0, dummyloader );
 
     // create vertex shader
-    desc.name = "vs1";
-    desc.type = GRT_SHADER;
-    desc.sd.type = SHADER_VS;
-    desc.sd.lang = LANG_D3D_HLSL;
-    desc.sd.code = vscode;
-    vs = re.allocResource( desc );
-    if( 0 == vs ) return 0;
-    re.updateResource( vs, 0, dummyloader );
+    vs = createShader( re, SHADER_VS, LANG_D3D_HLSL, vscode, "", "vs1" );
 
     // create vertex buffer
     desc.name = "vb1";
@@ -116,6 +105,9 @@ bool TestTriangle::init()
 
 void TestTriangle::quit()
 {
+    // make sure that all resources are unbinded from render engine.
+    clearDrawContext( renderEngine() );
+
     deleteTextureEntity( tex );
 }
 

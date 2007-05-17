@@ -1,6 +1,7 @@
 Import( 'GN' )
 sources = [
 	'main.cpp',
+	'cube.cpp',
 	'triangle.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

@@ -22,6 +22,7 @@ namespace GN { namespace input
     public:
         virtual bool attachToWindow( HandleType displayHandle, HandleType windowHandle ) { return true; }
         virtual void processInputEvents() {}
+        virtual KeyEvent popLastKeyEvent() { KeyEvent k; k.u16 = 0; return k; }
         virtual const KeyStatus * getKeyboardStatus() const { static KeyStatus ks[256]; return ks; }
         virtual const int * getAxisStatus() const { static int as[NUM_AXISES]; return as; }
         virtual void getMousePosition( int & x, int & y ) const { x = 0; y = 0; }

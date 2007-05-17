@@ -75,6 +75,8 @@ namespace GN { namespace engine
         gfx::VtxFmtDesc      fd;
         DynaArray<UInt8>     userdata; ///< unchangable during life time of the resource.
         //@}
+
+        StrA toString() const; ///< convert to string
     };
 
     ///
@@ -345,6 +347,31 @@ namespace GN { namespace engine
         // ********************************
     private:
     };
+
+    /// \name helpers
+    //@{
+
+    GraphicsResource * createShader( RenderEngine     & eng,
+                                     const ShaderDesc & desc,
+                                     const StrA       & name = StrA::EMPTYSTR );
+
+    GraphicsResource * createShader( RenderEngine       & eng,
+                                     gfx::ShaderType      type,
+                                     gfx::ShadingLanguage lang,
+                                     const StrA         & code,
+                                     const StrA         & hints,
+                                     const StrA         & name = StrA::EMPTYSTR );
+
+    GraphicsResource * createVtxFmt( RenderEngine          & eng,
+                                     const gfx::VtxFmtDesc & desc,
+                                     const StrA            & name = StrA::EMPTYSTR );
+
+    ///
+    /// clear draw context to null context (not using any resources)
+    ///
+    void clearDrawContext( RenderEngine & eng );
+
+    //@}
 }}
 
 // *****************************************************************************

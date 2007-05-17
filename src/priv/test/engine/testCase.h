@@ -50,36 +50,6 @@ public:
 ///
 /// coming soon ...
 ///
-class DummyLoader : public GraphicsResourceLoader
-{
-public:
-    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
-    bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
-    {
-        outbuf = 0;
-        outbytes = 0;
-        return true;
-    }
-
-    virtual bool copy( GraphicsResource &, const void * , size_t, int )
-    {
-        return true;
-    }
-
-    virtual void freebuf( void *, size_t )
-    {
-    }
-};
-
-///
-/// coming soon ...
-///
 class BasicVtxBufLoader : public GraphicsResourceLoader
 {
 public:
