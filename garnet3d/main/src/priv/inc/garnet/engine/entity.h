@@ -94,7 +94,7 @@ namespace GN
             H handle = mItems.newItem();
             if( 0 == handle ) return 0;
 
-            AutoObjPtr<NamedItem> item( new NamedItem(*this,handle,name) );
+            mItems[handle] = new NamedItem(*this,handle,name);
 
             mNames.insert( std::make_pair(name,handle) );
 
@@ -115,7 +115,7 @@ namespace GN
             size_t handle = mItems.newItem();
             if( 0 == handle ) return 0;
 
-            AutoObjPtr<NamedItem> item( new NamedItem(*this,handle,name,data) );
+            mItems[handle] = new NamedItem(*this,handle,name,data);
 
             mNames.insert( std::make_pair(name,handle) );
 

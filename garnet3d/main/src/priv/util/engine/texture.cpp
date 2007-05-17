@@ -227,7 +227,7 @@ void GN::engine::deleteTextureEntity( Entity * e )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::deleteAllTextureEntitys( EntityManager & )
+void GN::engine::deleteAllTextureEntities( EntityManager & )
 {
     GN_UNIMPL();
 }

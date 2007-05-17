@@ -134,6 +134,7 @@ namespace GN
                 size_t i = mFreeList.back();
                 mFreeList.pop_back();
                 GN_ASSERT( !mItems[i].occupied );
+                new (&mItems[i].value) T();
                 mItems[i].occupied = true;
                 return (HANDLE_TYPE)(i+1);
             }
@@ -150,6 +151,7 @@ namespace GN
             }
             else
             {
+                mItems[h-1].value.~T();
                 mFreeList.push_back(h-1);
                 mItems[h-1].occupied = false;
             }
