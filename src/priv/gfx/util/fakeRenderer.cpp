@@ -213,7 +213,7 @@ namespace GN { namespace gfx
             if( !tex->init( desc ) ) return 0;
             return tex.detach();
         }
-        virtual UInt32 createVtxFmt( const VtxFmtDesc & ) { return 1; }
+        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) { return 1; }
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc ) { return new FakeVtxBuf( desc.bytes ); }
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc ) { return new FakeIdxBuf( desc.numidx ); }
 

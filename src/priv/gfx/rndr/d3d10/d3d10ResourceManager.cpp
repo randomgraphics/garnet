@@ -162,11 +162,11 @@ GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
-UInt32 GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
+GN::gfx::VtxFmtHandle  GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;
 
-    UInt32 h = mVtxFmts.findIf( EqualFormat(format) );
+    VtxFmtHandle  h = mVtxFmts.findIf( EqualFormat(format) );
 
     if( 0 == h )
     {

@@ -1457,9 +1457,9 @@ static void reorgMeshFor16bitsIndex(
     {
         ranges.resize( 1 );
         ranges[0].vboffset = 0;
-        ranges[0].vbcount  = vb.size();
+        ranges[0].vbcount  = (UInt32)vb.size();
         ranges[0].iboffset = 0;
-        ranges[0].ibcount  = ib.size();
+        ranges[0].ibcount  = (UInt32)ib.size();
     }
     else
     {
@@ -1690,7 +1690,7 @@ static bool sWriteNode(
 
         const AseFaceChunk & c = o.mesh.chunks[ci];
 
-        const AseMaterial & mtl = scene.getChunkMaterial( o, ci );
+        const AseMaterial & mtl = scene.getChunkMaterial( o, (UInt32)ci );
 
         // build vertex and index array
         VertexBuffer      vb;

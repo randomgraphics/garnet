@@ -29,7 +29,7 @@ struct GfxResources
     GN::AutoRef<GN::gfx::VtxBuf> vb1, vb2;
     GN::AutoRef<GN::gfx::IdxBuf> ib1, ib2;
     GN::gfx::RenderStateBlockDesc rsb1, rsb2;
-    UInt32 vtxFmt1, vtxFmt2;
+    GN::gfx::VtxFmtHandle vtxFmt1, vtxFmt2;
 
     bool create()
     {
