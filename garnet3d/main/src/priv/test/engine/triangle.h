@@ -9,11 +9,16 @@ class TestTriangle : public TestCase
 
     Entity * tex;
 
+    AsciiFont font;
+
 public:
 
     //@{
 
-    TestTriangle( EntityManager & em, RenderEngine & re, QuadRenderer & qr ) : TestCase( em, re, qr ) {}
+    TestTriangle( EntityManager & em, RenderEngine & re, QuadRenderer & qr )
+        : TestCase( em, re, qr )
+        , font( qr )
+    {}
 
     virtual bool init();
     virtual void quit();
