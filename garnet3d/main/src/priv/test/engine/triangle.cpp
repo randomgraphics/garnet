@@ -57,6 +57,14 @@ static const char * vscode =
     "    oclr = 1; \n"
     "}";
 
+static const char * pscode =
+    "sampler s0 : register(s0); \n"
+    "void main( in float2 itex : TEXCOORD0, \n"
+    "          out float4 oclr : COLOR0 ) \n"
+    "{ \n"
+    "    oclr = tex2D( s0, itex ); \n"
+    "}";
+
 bool TestTriangle::init()
 {
     RenderEngine & re = renderEngine();
@@ -70,8 +78,9 @@ bool TestTriangle::init()
     vf = re.createVtxFmt( vfd, "vf1" );
     if( 0 == vf ) return false;
 
-    // create vertex shader
+    // create shader
     vs = re.createShader( SHADER_VS, LANG_D3D_HLSL, vscode, "", "vs1" );
+    ps = re.createShader( SHADER_PS, LANG_D3D_HLSL, pscode, "", "ps1" );
 
     // create vertex buffer
     desc.name = "vb1";
@@ -126,11 +135,12 @@ void TestTriangle::draw()
     // bind context
     DrawContext ctx;
     ctx.resetToDefault();
-    ctx.setVS( (const Shader*)vs );
-    ctx.setVtxBuf( 0, (const VtxBuf *)vb, 0, sizeof(Vertex) );
-    ctx.setIdxBuf( (const IdxBuf*)ib );
-    ctx.setVtxFmt( (VtxFmtHandle)vf );
-    ctx.setTexture( 0, (const Texture*)entity2Texture(tex) );
+    ctx.setVS( vs );
+    ctx.setPS( ps );
+    ctx.setVtxBuf( 0, vb, 0, sizeof(Vertex) );
+    ctx.setIdxBuf( ib );
+    ctx.setVtxFmt( vf );
+    ctx.setTexture( 0, entity2Texture(tex) );
     re.setContext( ctx );
 
     // do draw

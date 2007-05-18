@@ -1,22 +1,19 @@
 #include "testCase.h"
 
-using namespace GN;
-using namespace GN::engine;
-
 ///
 /// simple cube test case
 ///
 class TestCube : public TestCase
 {
-    Drawable cube;
-    Entity * tex;
+    engine::Drawable cube;
+    engine::Entity * tex;
 
 public:
 
     //@{
 
-    TestCube( EntityManager & em, RenderEngine & re )
-        : TestCase( em, re )
+    TestCube( EntityManager & em, RenderEngine & re, QuadRenderer & qr )
+        : TestCase( em, re, qr )
         , tex( 0 )
     {
     }

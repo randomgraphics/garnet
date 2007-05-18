@@ -1,14 +1,14 @@
 Import( 'GN' )
 sources = [
-	'actor.cpp',
-	'asciifont.cpp',
-	'bitmapFontRenderer.cpp',
-	'charBitmap8x13.cpp',
-	'drawable.cpp',
-	'fontft2.cpp',
+#	'actor.cpp',
+#	'asciifont.cpp',
+#	'bitmapFontRenderer.cpp',
+#	'charBitmap8x13.cpp',
+#	'drawable.cpp',
+#	'fontft2.cpp',
 	'quad.cpp',
-	'resource.cpp',
-	'scene.cpp',
+#	'resource.cpp',
+#	'scene.cpp',
 	]
 r = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
 Return( 'r' )

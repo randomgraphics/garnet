@@ -2,157 +2,151 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.scene.QuadRenderer");
 
-GN::scene::QuadRenderer GN::scene::gQuadRenderer;
-
-using namespace GN::gfx;
+using namespace GN;
+using namespace GN::engine;
 
 // *****************************************************************************
 // local functions
 // *****************************************************************************
 
-// *****************************************************************************
-// ctor / dtor
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-GN::scene::QuadRenderer::QuadRenderer()
-    : mDrawBegun(false)
+class QuadVtxBufLoader : public GraphicsResourceLoader
 {
-    // attach to renderer
-    gSigRendererRestore.connect( this, &QuadRenderer::onRendererRestore );
-    gSigRendererDispose.connect( this, &QuadRenderer::onRendererDispose );
-}
+    void * mBuffer;
+    size_t mBytes;
 
-//
-//
-// -----------------------------------------------------------------------------
-GN::scene::QuadRenderer::~QuadRenderer()
-{
-    // Note: classes that inherited from SlotBase can disconnect from signals automaticlly.
-}
+public:
 
-// *****************************************************************************
-// public functions
-// *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::QuadRenderer::drawBegin( gfx::Texture * tex, BitFields options )
-{
-    GN_GUARD_SLOW;
-
-    GN_ASSERT( !mDrawBegun );
-    mDrawBegun = true;
-    mNumQuads = 0;
-    mTexture = tex;
-    mOptions = options;
-
-    VtxBuf * vb = mMesh.vb[mActiveVB];
-    GN_ASSERT( vb );
-
-    mContext.setTexture( 0, tex );
-    mContext.setVtxBuf( 0, vb, 0, sizeof(QuadVertex) );
-
-    if( OPT_USER_CONTEXT & options )
+    QuadVtxBufLoader( void * buf, size_t bytes ) : mBuffer(buf), mBytes(bytes)
     {
-        mContext.flags.shaders = 0;
-        mContext.flags.rsb = 0;
-    }
-    else
-    {
-        mContext.setVS( mMesh.vs );
-        mContext.setPS( tex ? mMesh.pstexed : mMesh.pssolid );
-
-        if( OPT_OPAQUE & options )
-        {
-            mContext.setRenderState( RS_BLENDING, 0 );
-            mContext.setRenderState( RS_ALPHA_TEST, 0 );
-        }
-        else
-        {
-            mContext.setRenderState( RS_BLENDING, 1 );
-            mContext.setRenderState( RS_ALPHA_TEST, 1 );
-            mContext.setRenderState( RS_ALPHA_FUNC, RSV_CMP_GREATER );
-            mContext.setRenderState( RS_ALPHA_REF, 0 );
-        }
-        mContext.setRenderState( RS_DEPTH_TEST, !!( (OPT_DEPTH_TEST|OPT_DEPTH_WRITE) & options ) );
-        mContext.setRenderState( RS_DEPTH_WRITE, !!( OPT_DEPTH_WRITE & options ) );
+        GN_ASSERT( mBuffer );
     }
 
-    mNextVtx = (QuadVertex*)vb->lock( 0, 0, LOCK_DISCARD );
+    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
 
-    GN_UNGUARD_SLOW;
-}
+    virtual bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int )
+    {
+        GN_ASSERT( 0 == inbuf && 0 == inbytes );
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
 
-//
-//
-// -----------------------------------------------------------------------------
-void GN::scene::QuadRenderer::drawEnd()
+    virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
+    {
+        GN_ASSERT( 0 == inbuf && 0 == inbytes );
+
+        if( mBytes > 0 )
+        {
+            gfx::VtxBuf * vb = gfxres.vtxbuf;
+            void * data = vb->lock( 0, 0, gfx::LOCK_DISCARD );
+            if( 0 == data ) return false;
+            memcpy( data, mBuffer, mBytes );
+            vb->unlock();
+        }
+
+        return true;
+    }
+
+    virtual void freebuf( void * inbuf, size_t )
+    {
+        heapFree( inbuf );
+    }
+};
+
+class QuadIdxBufLoader : public GraphicsResourceLoader
 {
-    GN_GUARD_SLOW;
+    const size_t mQuadCount;
+public:
 
-    GN_ASSERT( mDrawBegun && mNextVtx );
+    QuadIdxBufLoader( size_t count ) : mQuadCount(count) {}
 
-    mMesh.vb[mActiveVB]->unlock();
+    virtual bool load( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
 
-    Renderer & r = gRenderer;
-    r.setContext( mContext );
-    r.drawIndexed(
-        TRIANGLE_LIST,
-        mNumQuads * 2,
-        0,
-        0,
-        mNumQuads * 4,
-        0 );
+    virtual bool decompress( const GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int )
+    {
+        GN_ASSERT( 0 == inbuf && 0 == inbytes );
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
 
-    mDrawBegun = false;
-    mActiveVB = ( mActiveVB + 1 ) % NUM_VTXBUFS;
+    virtual bool copy( GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
+    {
+        GN_ASSERT( 0 == inbuf && 0 == inbytes );
+        gfx::IdxBuf * ib = gfxres.idxbuf;
+        UInt16 * indices = ib->lock( 0, 0, gfx::LOCK_DISCARD );
+        if( 0 == indices ) return false;
+        for( UInt16 i = 0; i < mQuadCount; ++i )
+        {
+            indices[i*6+0] = i*4+0;
+            indices[i*6+1] = i*4+1;
+            indices[i*6+2] = i*4+2;
+            indices[i*6+3] = i*4+0;
+            indices[i*6+4] = i*4+2;
+            indices[i*6+5] = i*4+3;
+        }
+        ib->unlock();
+        return true;
+    }
 
-    GN_UNGUARD_SLOW;
-}
+    virtual void freebuf( void *, size_t )
+    {
+        // do nothing
+    }
+};
+
 
 // *****************************************************************************
-// private functions
+// Initialize and shutdown
 // *****************************************************************************
 
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::QuadRenderer::onRendererRestore()
+bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
 {
     GN_GUARD;
 
+    // standard init procedure
+    GN_STDCLASS_INIT( GN::scene::QuadRenderer, () );
+
     mContext.clearToNull();
 
-    Renderer & r = gRenderer;
+    GraphicsResourceDesc grd;
 
     // create vb
     for( int i = 0; i < NUM_VTXBUFS; ++i )
     {
-        mMesh.vb[i].attach( r.createDynamicVtxBuf( sizeof(QuadVertex) * 4 * MAX_QUADS ) );
-        if( !mMesh.vb[i] ) return false;
+        GraphicsResourceDesc grd;
+        grd.name        = "Quad renderer vertex buffer";
+        grd.type        = GRT_VTXBUF;
+        grd.vd.bytes    = sizeof(QuadVertex) * 4 * MAX_QUADS;
+        grd.vd.dynamic  = false;
+        grd.vd.readback = false;
+
+        mMesh.vb[i].attach( engine.allocResource( grd ) );
+        if( !mMesh.vb[i] ) return failure();
     }
 
     // create ib
-    mMesh.ib.attach( r.createIdxBuf( 6*MAX_QUADS ) );
-    if( !mMesh.ib ) return false;
-    UInt16 * indices = mMesh.ib->lock( 0, 0, LOCK_DISCARD );
-    for( UInt16 i = 0; i < MAX_QUADS; ++i )
-    {
-        indices[i*6+0] = i*4+0;
-        indices[i*6+1] = i*4+1;
-        indices[i*6+2] = i*4+2;
-        indices[i*6+3] = i*4+0;
-        indices[i*6+4] = i*4+2;
-        indices[i*6+5] = i*4+3;
-    }
-    mMesh.ib->unlock();
+    mMesh.ib.attach( engine.createIdxBuf( 6*MAX_QUADS, false, false, "Quad renderer index buffer" ) );
+    if( !mMesh.ib ) return failure();
+    AutoRef<QuadIdxBufLoader> ibloader( new QuadIdxBufLoader(MAX_QUADS) );
+    engine.updateResource( mMesh.ib, 0, ibloader );
+
+    gfx::Renderer & r = gRenderer;
 
     // create vs
-
     static const char * hlsl_vs =
         "struct VSOUT                       \n"
         "{                                  \n"
@@ -173,10 +167,9 @@ bool GN::scene::QuadRenderer::onRendererRestore()
         "   o.tex = tex;                    \n"
         "   return o;                       \n"
         "}";
-
     if( r.supportShader( "vs_1_1" ) )
     {
-        mMesh.vs.attach( r.createVS( LANG_D3D_HLSL, hlsl_vs ) );
+        mMesh.vs.attach( engine.createShader( gfx::SHADER_VS, gfx::LANG_D3D_HLSL, hlsl_vs, "", "Quad renderer VS" ) );
     }
     else if( r.supportShader( "arbvp1" ) )
     {
@@ -189,21 +182,20 @@ bool GN::scene::QuadRenderer::onRendererRestore()
             "MAD result.position.y, vertex.position, c.x, c.y;  \n"
             "MAD result.position.x, vertex.position, c.z, -c.y; \n"
             "END";
-        mMesh.vs.attach( r.createVS( LANG_OGL_ARB, code ) );
+        mMesh.vs.attach( engine.createShader( gfx::SHADER_VS, gfx::LANG_OGL_ARB, code, "", "Quad renderer VS" ) );
     }
     else if( r.supportShader( "cgvs" ) )
     {
-        mMesh.vs.attach( r.createVS( LANG_CG, hlsl_vs ) );
+        mMesh.vs.attach( engine.createShader( gfx::SHADER_VS, gfx::LANG_CG, hlsl_vs, "", "Quad renderer VS" ) );
     }
     else
     {
         GN_ERROR(sLogger)( "current hardware does not support vertex shader" );
-        return false;
+        return failure();
     }
-    if( !mMesh.vs ) return false;
+    if( !mMesh.vs ) return failure();
 
     // create ps
-
     static const char * hlsl_pstexed =
         "struct VSOUT                       \n"
         "{                                  \n"
@@ -231,8 +223,8 @@ bool GN::scene::QuadRenderer::onRendererRestore()
 
     if( r.supportShader( "ps_1_1" ) )
     {
-        mMesh.pstexed.attach( r.createPS( LANG_D3D_HLSL, hlsl_pstexed ) );
-        mMesh.pssolid.attach( r.createPS( LANG_D3D_HLSL, hlsl_pssolid ) );
+        mMesh.pstexed.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pstexed, "", "Quad renderer PS" ) );
+        mMesh.pssolid.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pssolid, "", "Quad renderer PS" ) );
     }
     else if( r.supportShader( "arbfp1" ) )
     {
@@ -246,35 +238,35 @@ bool GN::scene::QuadRenderer::onRendererRestore()
             "MOV result.color, fragment.color.primary; \n"
             "END";
 
-        mMesh.pstexed.attach( r.createPS( LANG_OGL_ARB, texed ) );
-        mMesh.pssolid.attach( r.createPS( LANG_OGL_ARB, solid ) );
+        mMesh.pstexed.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_OGL_ARB, texed, "", "Quad renderer PS" ) );
+        mMesh.pssolid.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_OGL_ARB, solid, "", "Quad renderer PS" ) );
     }
     else if( r.supportShader( "cgps" ) )
     {
-        mMesh.pstexed.attach( r.createPS( LANG_CG, hlsl_pstexed ) );
-        mMesh.pssolid.attach( r.createPS( LANG_CG, hlsl_pssolid ) );
+        mMesh.pstexed.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_CG, hlsl_pstexed, "", "Quad renderer PS" ) );
+        mMesh.pssolid.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_CG, hlsl_pssolid, "", "Quad renderer PS" ) );
     }
     else
     {
         GN_ERROR(sLogger)( "current hardware does not support pixel shader" );
-        return false;
+        return failure();
     }
-    if( !mMesh.pstexed || !mMesh.pssolid ) return false;
+    if( !mMesh.pstexed || !mMesh.pssolid ) return failure();
 
     // create vertex format handle
-    VtxFmtDesc vfd;
+    gfx::VtxFmtDesc vfd;
     vfd.clear();
-    vfd.addAttrib( 0,  0, VTXSEM_POS0, FMT_FLOAT3 );
-    vfd.addAttrib( 0, 12, VTXSEM_CLR0, FMT_RGBA32 );
-    vfd.addAttrib( 0, 16, VTXSEM_TEX0, FMT_FLOAT2 );
-    VtxFmtHandle vfh = r.createVtxFmt( vfd );
-    if( 0 == vfh ) return false;
+    vfd.addAttrib( 0,  0, gfx::VTXSEM_POS0, gfx::FMT_FLOAT3 );
+    vfd.addAttrib( 0, 12, gfx::VTXSEM_CLR0, gfx::FMT_RGBA32 );
+    vfd.addAttrib( 0, 16, gfx::VTXSEM_TEX0, gfx::FMT_FLOAT2 );
+    mMesh.vf.attach( engine.createVtxFmt( vfd, "Quad renderer vertex format" ) );
+    if( 0 == mMesh.vf ) return failure();
 
     // success
-    mContext.setVtxFmt( vfh );
+    mContext.setVtxFmt( mMesh.vf );
     mContext.setIdxBuf( mMesh.ib );
     mContext.setVS( mMesh.vs );
-    return true;
+    return success();
 
     GN_UNGUARD;
 }
@@ -282,15 +274,106 @@ bool GN::scene::QuadRenderer::onRendererRestore()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::scene::QuadRenderer::onRendererDispose()
+void GN::scene::QuadRenderer::quit()
 {
     GN_GUARD;
 
-    for( int i = 0; i < NUM_VTXBUFS; ++i ) mMesh.vb[i].clear();
-    mMesh.ib.clear();
-    mMesh.vs.clear();
-    mMesh.pstexed.clear();
-    mMesh.pssolid.clear();
+    // standard quit procedure
+    GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
 }
+
+// *****************************************************************************
+// public functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::QuadRenderer::drawBegin( engine::GraphicsResource * tex, BitFields options )
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( !mDrawBegun );
+    mDrawBegun = true;
+    mNumQuads  = 0;
+    mTexture   = tex;
+    mOptions   = options;
+
+    GraphicsResource * vb = mMesh.vb[mActiveVB];
+    GN_ASSERT( vb );
+
+    mContext.setTexture( 0, tex );
+    mContext.setVtxBuf( 0, vb, 0, sizeof(QuadVertex) );
+
+    if( OPT_USER_CONTEXT & options )
+    {
+        mContext.flags.shaders = 0;
+        mContext.flags.rsb = 0;
+    }
+    else
+    {
+        mContext.setVS( mMesh.vs );
+        mContext.setPS( (tex ? mMesh.pstexed : mMesh.pssolid) );
+
+        if( OPT_OPAQUE & options )
+        {
+            mContext.setRenderState( gfx::RS_BLENDING, 0 );
+            mContext.setRenderState( gfx::RS_ALPHA_TEST, 0 );
+        }
+        else
+        {
+            mContext.setRenderState( gfx::RS_BLENDING, 1 );
+            mContext.setRenderState( gfx::RS_ALPHA_TEST, 1 );
+            mContext.setRenderState( gfx::RS_ALPHA_FUNC, gfx::RSV_CMP_GREATER );
+            mContext.setRenderState( gfx::RS_ALPHA_REF, 0 );
+        }
+        mContext.setRenderState( gfx::RS_DEPTH_TEST, !!( (OPT_DEPTH_TEST|OPT_DEPTH_WRITE) & options ) );
+        mContext.setRenderState( gfx::RS_DEPTH_WRITE, !!( OPT_DEPTH_WRITE & options ) );
+    }
+
+    mNextVtx = (QuadVertex*) heapAlloc( sizeof(QuadVertex) * 4 * MAX_QUADS );
+
+    GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::scene::QuadRenderer::drawEnd()
+{
+    GN_GUARD_SLOW;
+
+    GN_ASSERT( mDrawBegun && mNextVtx );
+
+    RenderEngine & eng = mMesh.vb[mActiveVB]->engine;
+
+    // update vertex buffer
+    mNextVtx -= mNumQuads * 4; // reverse pointer to start of the buffer
+    AutoRef<QuadVtxBufLoader> loader( new QuadVtxBufLoader( mNextVtx, sizeof(QuadVertex) * 4 * MAX_QUADS ) );
+    eng.updateResource( mMesh.vb[mActiveVB], 0, loader );
+
+    // do draw
+    eng.setContext( mContext );
+    eng.drawIndexed(
+        gfx::TRIANGLE_LIST,
+        mNumQuads * 2,
+        0,
+        0,
+        mNumQuads * 4,
+        0 );
+
+    mDrawBegun = false;
+    mActiveVB = ( mActiveVB + 1 ) % NUM_VTXBUFS;
+
+    GN_UNGUARD_SLOW;
+}
+
+// *****************************************************************************
+// private functions
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------

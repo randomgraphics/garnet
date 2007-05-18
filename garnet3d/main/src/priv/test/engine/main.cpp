@@ -6,6 +6,7 @@ using namespace GN;
 using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
+using namespace GN::scene;
 
 bool runcase( RenderEngine & re, TestCase & c )
 {
@@ -30,12 +31,12 @@ bool runcase( RenderEngine & re, TestCase & c )
     }
 }
 
-void run( EntityManager & em, RenderEngine & re )
+void run( EntityManager & em, RenderEngine & re, QuadRenderer & qr )
 {
     TestCase * cases[] =
     {
-        new TestCube(em,re),
-        new TestTriangle(em,re),
+        new TestCube(em,re,qr),
+        new TestTriangle(em,re,qr),
     };
 
     for( size_t i = 0; i < GN_ARRAY_COUNT(cases); ++i )
@@ -77,6 +78,7 @@ int main()
 
     EntityManager em;
     RenderEngine  re;
+    QuadRenderer  qr;
 
     UInt32 MB = 1024 * 1024;
     RenderEngineInitParameters reip = { 32*MB, 32*MB, 4*MB };
@@ -87,7 +89,9 @@ int main()
 
     if( !re.resetRenderer( API_D3D9, ro ) ) return -1;
 
-    run( em, re );
+    if( !qr.init( re ) ) return -1;
+
+    run( em, re, qr );
 
     // success
     return 0;

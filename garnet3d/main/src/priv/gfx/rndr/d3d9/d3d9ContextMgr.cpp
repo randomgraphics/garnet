@@ -646,14 +646,14 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     //
     // bind vertex format
     //
-    if( newFlags.vtxFmt )
+    if( newFlags.vtxfmt )
     {
-        if( newContext.vtxFmt )
+        if( newContext.vtxfmt )
         {
             const D3D9VtxDeclDesc * decl;
-            decl = &mVtxFmts[newContext.vtxFmt];
+            decl = &mVtxFmts[newContext.vtxfmt];
             GN_ASSERT( decl->decl );
-            if( newContext.vtxFmt != mContext.vtxFmt || forceRebind )
+            if( newContext.vtxfmt != mContext.vtxfmt || forceRebind )
             {
                 GN_DX9_CHECK( mDevice->SetVertexDeclaration( decl->decl ) );
             }
@@ -663,12 +663,12 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     ///
     /// bind vertex buffers
     ///
-    if( newFlags.vtxBufs )
+    if( newFlags.vtxbufs )
     {
         for( UINT i = 0; i < newContext.numVtxBufs; ++i )
         {
-            const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
-            if( vb != mContext.vtxBufs[i] || forceRebind )
+            const RendererContext::VtxBufDesc & vb = newContext.vtxbufs[i];
+            if( vb != mContext.vtxbufs[i] || forceRebind )
             {
                 GN_ASSERT( vb.buffer );
                 GN_DX9_CHECK( mDevice->SetStreamSource(
@@ -683,11 +683,11 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
     //
     // bind index buffer
     //
-    if( newFlags.idxBuf &&
-      ( newContext.idxBuf != mContext.idxBuf || forceRebind ) )
+    if( newFlags.idxbuf &&
+      ( newContext.idxbuf != mContext.idxbuf || forceRebind ) )
     {
-        GN_DX9_CHECK( mDevice->SetIndices( newContext.idxBuf
-            ? safeCast<const D3D9IdxBuf*>(newContext.idxBuf)->getD3DIb()
+        GN_DX9_CHECK( mDevice->SetIndices( newContext.idxbuf
+            ? safeCast<const D3D9IdxBuf*>(newContext.idxbuf)->getD3DIb()
             : 0 ) );
     }
 

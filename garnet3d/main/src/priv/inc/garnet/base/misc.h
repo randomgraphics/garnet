@@ -538,6 +538,11 @@ namespace GN
             }
 
             ///
+            /// dereference the pointer
+            ///
+            T & dereference() const { GN_ASSERT( mPtr ); return *mPtr; }
+
+            ///
             /// Convert to T *
             ///
             operator T*() const { return mPtr; }

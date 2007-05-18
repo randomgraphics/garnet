@@ -12,6 +12,7 @@ using namespace GN;
 using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
+using namespace GN::scene;
 
 ///
 /// coming soon ...
@@ -19,14 +20,20 @@ using namespace GN::engine;
 class TestCase
 {
     EntityManager & mEntityManager;
-    RenderEngine & mRenderEngine;
+    RenderEngine  & mRenderEngine;
+    QuadRenderer  & mQuadRenderer;
 
 public:
 
     ///
     /// ctor
     ///
-    TestCase( EntityManager & em, RenderEngine & re ) : mEntityManager(em), mRenderEngine( re ) {}
+    TestCase( EntityManager & em, RenderEngine & re, QuadRenderer & qr ) : mEntityManager(em), mRenderEngine( re ), mQuadRenderer(qr) {}
+
+    ///
+    /// get entity manager
+    ///
+    EntityManager & entityManager() const { return mEntityManager; }
 
     ///
     /// get engine reference
@@ -34,9 +41,9 @@ public:
     RenderEngine & renderEngine() const { return mRenderEngine; }
 
     ///
-    /// get entity manager
+    /// get quad renderer
     ///
-    EntityManager & entityManager() const { return mEntityManager; }
+    QuadRenderer & quadRenderer() const { return mQuadRenderer; }
 
     //@{
 

@@ -631,14 +631,14 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     //
     // bind vertex format
     //
-    if( newFlags.vtxFmt )
+    if( newFlags.vtxfmt )
     {
-        if( newContext.vtxFmt )
+        if( newContext.vtxfmt )
         {
-            if( newContext.vtxFmt != mContext.vtxFmt || forceRebind )
+            if( newContext.vtxfmt != mContext.vtxfmt || forceRebind )
             {
-                GN_ASSERT( mVtxFmts[newContext.vtxFmt] );
-                mVtxFmts[newContext.vtxFmt]->bind();
+                GN_ASSERT( mVtxFmts[newContext.vtxfmt] );
+                mVtxFmts[newContext.vtxfmt]->bind();
             }
         }
     }
@@ -647,12 +647,12 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     // check if we need to bind vertex buffers
     //
     mNeedRebindVtxBufs = 0;
-    if( newFlags.vtxBufs )
+    if( newFlags.vtxbufs )
     {
         for( UInt32 i = 0; i < newContext.numVtxBufs; ++i )
         {
-            const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
-            if( vb != mContext.vtxBufs[i] || forceRebind )
+            const RendererContext::VtxBufDesc & vb = newContext.vtxbufs[i];
+            if( vb != mContext.vtxbufs[i] || forceRebind )
             {
                 mNeedRebindVtxBufs |= 1 << i;
             }

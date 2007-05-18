@@ -38,7 +38,7 @@ inline void GN::engine::Effect::passBegin(
         ShaderData & sd = mShaders.items[p.shaders[i]];
 
         // bind shader
-        ctx.setShader( (gfx::ShaderType)i, (const gfx::Shader*)sd.value );
+        ctx.setShader( (gfx::ShaderType)i, sd.value );
 
         // apply texture/sampler properties
         for( size_t iTexture = 0; iTexture < sd.textures.size(); ++iTexture )
@@ -46,7 +46,7 @@ inline void GN::engine::Effect::passBegin(
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            ctx.setTexture( trd.stage, (const gfx::Texture*)entity2Texture(td.value) );
+            ctx.setTexture( trd.stage, entity2Texture(td.value) );
         }
 
         // apply dirty uniforms
@@ -97,7 +97,7 @@ inline void GN::engine::Effect::commitChanges() const
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            mActiveContext->setTexture( trd.stage, (const gfx::Texture*)entity2Texture(td.value) );
+            mActiveContext->setTexture( trd.stage, entity2Texture(td.value) );
         }
 
         // apply dirty uniforms again, in case user may change uniforms between passBegin() and commitChanges()

@@ -42,16 +42,16 @@ void GN::gfx::BasicRenderer::holdContextResources( const RendererContext & conte
             context.textures, );
     }
 
-    if( context.flags.vtxBufs )
+    if( context.flags.vtxbufs )
     {
         UPDATE_AUTOREF_ARRAY(
-            mResourceHolder.vtxBufs,
+            mResourceHolder.vtxbufs,
             context.numVtxBufs,
-            context.vtxBufs,
+            context.vtxbufs,
             .buffer );
     }
 
-    if( context.flags.idxBuf ) mResourceHolder.idxBuf.set( context.idxBuf );
+    if( context.flags.idxbuf ) mResourceHolder.idxbuf.set( context.idxbuf );
 
     GN_UNGUARD_SLOW;
 }
@@ -66,7 +66,7 @@ void GN::gfx::BasicRenderer::clearContextResources()
     mResourceHolder.cbuffers.clear();
     mResourceHolder.zbuffer.clear();
     mResourceHolder.textures.clear();
-    mResourceHolder.vtxBufs.clear();
-    mResourceHolder.idxBuf.clear();
+    mResourceHolder.vtxbufs.clear();
+    mResourceHolder.idxbuf.clear();
     GN_UNGUARD;
 }

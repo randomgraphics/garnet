@@ -294,8 +294,8 @@ void GN::gfx::D3D9Line::drawLines(
 #endif
 
     // bind buffers
-    cf.vtxFmt = 1;
-    cf.vtxBufs = 1;
+    cf.vtxfmt = 1;
+    cf.vtxbufs = 1;
     GN_ASSERT( mVtxBuf );
     GN_ASSERT( sizeof(D3D9LineVertex) == D3DXGetDeclVertexSize( sDecl, 0 ) );
     GN_DX9_CHECK( dev->SetStreamSource( 0, mVtxBuf, 0, sizeof(D3D9LineVertex) ) );

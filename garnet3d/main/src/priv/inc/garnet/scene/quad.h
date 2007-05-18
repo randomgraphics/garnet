@@ -10,51 +10,37 @@ namespace GN { namespace scene
 {
     ///
     /// screen aligned quad renderer
-    ///
-    class QuadRenderer : public SlotBase
+    ///    
+    class QuadRenderer : public StdClass
     {
-        struct QuadVertex
-        {
-            GN::Vector3f pos;
-            UInt32       clr; // color in R-G-B-A format
-            GN::Vector2f tex;
-            float        _[2]; // padding to 32 bytes
-        };
-        GN_CASSERT( sizeof(QuadVertex) == 32 );
+        GN_DECLARE_STDCLASS( QuadRenderer, StdClass );
 
-        enum
-        {
-            NUM_VTXBUFS = 16,
-            MAX_QUADS   = 256,
-        };
-
-        struct QuadMesh
-        {
-            AutoRef<gfx::VtxBuf> vb[NUM_VTXBUFS];
-            AutoRef<gfx::IdxBuf> ib;
-            AutoRef<gfx::Shader> vs;
-            AutoRef<gfx::Shader> pstexed;
-            AutoRef<gfx::Shader> pssolid;
-        };
-
-        QuadMesh             mMesh;
-        gfx::RendererContext mContext;
-        size_t               mNumQuads;
-        size_t               mActiveVB;
-        gfx::Texture *       mTexture;
-        BitFields            mOptions;
-        QuadVertex *         mNextVtx;
-        bool                 mDrawBegun;
-
-    public:
+        // ********************************
+        // ctor/dtor
+        // ********************************
 
         //@{
-
-        QuadRenderer();
-
-        ~QuadRenderer();
-
+    public:
+        QuadRenderer()          { clear(); }
+        virtual ~QuadRenderer() { quit(); }
         //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init( engine::RenderEngine & );
+        void quit();
+    private:
+        void clear() { mActiveVB = 0; mDrawBegun = false; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
 
         //@{
 
@@ -69,7 +55,7 @@ namespace GN { namespace scene
         ///
         /// \note set texture to NULL, to draw solid colored quads
         ///
-        void drawBegin( gfx::Texture * tex, BitFields options = 0 );
+        void drawBegin( engine::GraphicsResource * texture, BitFields options = 0 );
         void drawSolidBegin( BitFields options = 0 ) { drawBegin( 0, options ); }
         void drawEnd();
 
@@ -162,7 +148,7 @@ namespace GN { namespace scene
         //@{
 
         void drawSingleTexturedQuad(
-            gfx::Texture * tex,
+            engine::GraphicsResource * tex,
             BitFields options,
             float z  = 0.0f,
             float x1 = 0.0f,
@@ -195,26 +181,51 @@ namespace GN { namespace scene
 
         //@}
 
+        // ********************************
+        // private variables
+        // ********************************
     private:
 
-        bool onRendererRestore();
-        void onRendererDispose();
-
-        void submitPendingQuads()
+        struct QuadVertex
         {
-            GN_GUARD_SLOW;
+            GN::Vector3f pos;
+            UInt32       clr; // color in R-G-B-A format
+            GN::Vector2f tex;
+            float        _[2]; // padding to 32 bytes
+        };
+        GN_CASSERT( sizeof(QuadVertex) == 32 );
 
-            using namespace gfx;
+        enum
+        {
+            NUM_VTXBUFS = 16,
+            MAX_QUADS   = 256,
+        };
 
+        struct QuadMesh
+        {
+            engine::AutoGraphicsResource vf; ///< vertex format
+            engine::AutoGraphicsResource vb[NUM_VTXBUFS];
+            engine::AutoGraphicsResource ib;
+            engine::AutoGraphicsResource vs;
+            engine::AutoGraphicsResource pstexed;
+            engine::AutoGraphicsResource pssolid;
+        };
 
-            GN_UNGUARD_SLOW;
-        }
+        QuadMesh                     mMesh;
+        engine::DrawContext          mContext;
+        size_t                       mNumQuads;
+        size_t                       mActiveVB;
+        engine::GraphicsResource *   mTexture;
+        BitFields                    mOptions;
+        bool                         mDrawBegun;
+
+        QuadVertex *                 mNextVtx;
+
+        // ********************************
+        // private functions
+        // ********************************
+    private:
     };
-
-    ///
-    /// global instance of quad renderer
-    ///
-    extern QuadRenderer gQuadRenderer;
 }}
 
 // *****************************************************************************
