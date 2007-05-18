@@ -6,7 +6,7 @@
 /// \author  chenlee (2006.1.7)
 // *****************************************************************************
 
-#include "garnet/GNgfx.h"
+#include "garnet/GNengine.h"
 #include "garnet/GNscene.h"
 #include "garnet/GNinput.h"
 
@@ -88,22 +88,6 @@ namespace GN { namespace app
     };
 
     ///
-    /// Represent raw data block
-    ///
-    struct RawData : public NoCopy
-    {
-        ///
-        /// get data size
-        ///
-        virtual size_t size() const = 0;
-
-        ///
-        /// get data pointer
-        ///
-        virtual void * data() const = 0;
-    };
-
-    ///
     /// Sample application framework
     ///
     class SampleApp : public SlotBase
@@ -145,13 +129,9 @@ namespace GN { namespace app
         ///     - only non-standard/unknown argument will be send to this function.
         ///
         virtual bool onCheckCmdLine( int argc, const char * const argv[] );
-        virtual bool onAppInit() { return true; }
-        virtual void onAppQuit() {}
         virtual void onDetermineInitParam( InitParam & ) {}
-        virtual bool onRendererCreate() { return true; }
-        virtual bool onRendererRestore() { return true; }
-        virtual void onRendererDispose() {}
-        virtual void onRendererDestroy() {}
+        virtual bool onInit() { return true; }
+        virtual void onQuit() {}
         virtual void onUpdate() {}
         virtual void onRender() {}
         virtual void onKeyPress( input::KeyEvent );
@@ -194,9 +174,19 @@ namespace GN { namespace app
         float getFps() const { return mFps.getFps(); }
 
         ///
+        /// as is
+        ///
+        engine::EntityManager & getEntityManager() { return mEntityManager; }
+
+        ///
+        /// as is
+        ///
+        engine::RenderEngine & getRenderEngine() { return mRenderEngine; }
+
+        ///
         /// get font renderer
         ///
-        scene::BitmapFontRenderer & getFontRenderer() { return mFontRenderer; }
+        scene::BitmapFont & getFont() { return mFont; }
 
         //@}
 
@@ -205,18 +195,21 @@ namespace GN { namespace app
         // ********************************
     private:
 
-        InitParam mInitParam;
+        InitParam             mInitParam;
+
+        engine::EntityManager mEntityManager;
+        engine::RenderEngine  mRenderEngine;
+        scene::QuadRenderer   mQuadRenderer;
+        scene::BitmapFont     mFont;
 
         // time stuff
-        bool mShowHUD;
-        bool mShowHelp;
-        FpsCounter mFps;
-        double mLastFrameTime;
-        double mTimeSinceLastUpdate;
+        FpsCounter            mFps;
+        double                mLastFrameTime;
+        double                mTimeSinceLastUpdate;
 
-        scene::BitmapFontRenderer mFontRenderer;
-
-        bool mDone; // exit flag
+        bool                  mShowHUD;
+        bool                  mShowHelp;
+        bool                  mDone; // exit flag
 
         // ********************************
         // private functions
@@ -225,8 +218,6 @@ namespace GN { namespace app
 
         bool init( int argc, const char *  const argv[] );
         void quit();
-        bool initApp();
-        void quitApp();
         bool checkCmdLine( int argc, const char * const argv[] );
         bool initRenderer();
         void quitRenderer();

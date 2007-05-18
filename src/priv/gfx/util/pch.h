@@ -7,9 +7,6 @@
 // *****************************************************************************
 
 #include "../rndr/rndr.h"
-#include "garnet/gfx/effect.h"
-#include "garnet/gfx/mesh.h"
-#include "garnet/gfx/fatMesh.h"
 
 // *****************************************************************************
 //                           End of pch.h

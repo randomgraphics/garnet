@@ -16,7 +16,9 @@ static GN::Logger * sLogger = GN::getLogger("GN.app.SampleApp");
 //
 // -----------------------------------------------------------------------------
 GN::app::SampleApp::SampleApp()
-    : mShowHUD(true)
+    : mQuadRenderer(mRenderEngine)
+    , mFont(mQuadRenderer)
+    , mShowHUD(true)
     , mShowHelp(false)
     , mFps( L"FPS: %.2f\n(Press F1 for help)" )
 {
@@ -64,14 +66,14 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
         }
 
         // do render
-        if( gRenderer.drawBegin() )
+        mRenderEngine.frameBegin();
         {
             mLastFrameTime = 1.0 / mFps.getFps();
             mTimeSinceLastUpdate = mFps.getCurrentTime() - lastUpdateTime;
             onRender();
             drawHUD();
-            gRenderer.drawEnd();
         }
+        mRenderEngine.frameEnd();
     }
 
     // success
@@ -109,13 +111,17 @@ void GN::app::SampleApp::onKeyPress( input::KeyEvent ke )
 {
     if( input::KEY_XB360_X == ke.code && ke.status.down ) mDone = true;
     else if( input::KEY_ESCAPE == ke.code && !ke.status.down ) mDone = true;
-    else if( input::KEY_R == ke.code && !ke.status.down ) gSceneResMgr.disposeAll();
-    else if( input::KEY_F == ke.code && !ke.status.down ) gRenderer.dumpNextFrame();
+    else if( input::KEY_R == ke.code && !ke.status.down ) mRenderEngine.disposeAllResources();
+    else if( input::KEY_F == ke.code && !ke.status.down )
+    {
+        GN_TODO( "make it thread safe" );
+        gRenderer.dumpNextFrame();
+    }
     else if( input::KEY_RETURN == ke.code && ke.status.down && ke.status.altDown() )
     {
-        GN::gfx::RendererOptions ro = gRenderer.getOptions();
+        GN::gfx::RendererOptions ro = mRenderEngine.getRendererOptions();
         ro.fullscreen = !ro.fullscreen;
-        if( !gRenderer.changeOptions(ro) ) postExitEvent();
+        if( !mRenderEngine.resetRenderer( mInitParam.rapi, ro ) ) postExitEvent();
     }
     else if( input::KEY_F1 == ke.code && !ke.status.down )
     {
@@ -149,14 +155,12 @@ bool GN::app::SampleApp::init( int argc, const char * const argv[] )
 
     if( !checkCmdLine(argc,argv) ) return false;
 
-    // create global resource manager instance
-    new scene::ResourceManager;
-
-    if( !initApp() ) return false;
     onDetermineInitParam( mInitParam );
+
     if( !initRenderer() ) return false;
     if( !initInput() ) return false;
     if( !initFont() ) return false;
+    if( !onInit() ) return false;
 
     // success
     return true;
@@ -173,13 +177,10 @@ void GN::app::SampleApp::quit()
 {
     GN_GUARD_ALWAYS;
 
+    onQuit();
+    quitFont();
     quitRenderer();
     quitInput();
-    quitFont();
-    quitApp();
-
-    // delete global resource manager instance
-    delete scene::ResourceManager::sGetInstancePtr();
 
     GN_UNGUARD_ALWAYS_NO_THROW;
 }
@@ -373,43 +374,16 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::app::SampleApp::initApp()
-{
-    GN_GUARD;
-
-    if( !onAppInit() ) return false;
-
-    // success
-    return true;
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::app::SampleApp::quitApp()
-{
-    GN_GUARD;
-
-    onAppQuit();
-
-    GN_UNGUARD;
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 bool GN::app::SampleApp::initRenderer()
 {
     GN_GUARD;
 
     // connect to renderer signals
-    gSigRendererCreate.connect( this, &SampleApp::onRendererCreate );
-    gSigRendererRestore.connect( this, &SampleApp::onRendererRestore );
-    gSigRendererDispose.connect( this, &SampleApp::onRendererDispose );
-    gSigRendererDestroy.connect( this, &SampleApp::onRendererDestroy );
     gSigRendererWindowClosing.connect( this, &SampleApp::postExitEvent );
+
+    UInt32 MB = 1024 * 1024;
+    engine::RenderEngineInitParameters reip = { 32*MB, 32*MB, 32*MB };
+    if( !mRenderEngine.init( reip ) ) return false;
 
     // create renderer
     return recreateRenderer();
@@ -425,13 +399,9 @@ void GN::app::SampleApp::quitRenderer()
     GN_GUARD;
 
     // delete Renderer
-    GN::gfx::deleteRenderer();
+    mRenderEngine.quit();
 
     // disconnect to renderer signals
-    gSigRendererDestroy.disconnect( this );
-    gSigRendererDispose.disconnect( this );
-    gSigRendererRestore.disconnect( this );
-    gSigRendererCreate.disconnect( this );
     gSigRendererWindowClosing.disconnect( this );
 
     GN_UNGUARD;
@@ -444,20 +414,7 @@ bool GN::app::SampleApp::recreateRenderer()
 {
     GN_GUARD;
 
-    // (re)create renderer
-    GN::gfx::Renderer * r = gfx::createRenderer( mInitParam.rapi );
-    if( NULL == r ) return false;
-    if( !r->changeOptions( mInitParam.ro ) ) return false;
-
-    // reattach input window
-    const GN::gfx::DispDesc & dd = r->getDispDesc();
-    if( gInputPtr && !gInput.attachToWindow( dd.displayHandle,dd.windowHandle ) )
-    {
-        return false;
-    }
-
-    // success
-    return true;
+    return mRenderEngine.resetRenderer( mInitParam.rapi, mInitParam.ro );
 
     GN_UNGUARD;
 }
@@ -512,7 +469,9 @@ bool GN::app::SampleApp::initFont()
 {
     GN_GUARD;
 
-    return mFontRenderer.init( mInitParam.ffd );
+    if( !mQuadRenderer.init() ) return false;
+
+    return mFont.init( mInitParam.ffd );
 
     GN_UNGUARD;
 }
@@ -524,7 +483,9 @@ void GN::app::SampleApp::quitFont()
 {
     GN_GUARD;
 
-    mFontRenderer.quit();
+    mFont.quit();
+
+    mQuadRenderer.quit();
 
     GN_UNGUARD;
 }
@@ -547,11 +508,11 @@ void GN::app::SampleApp::drawHUD()
                 L"F              : dump next frame\n"
                 L"ALT+ENTER      : ÇÐ»»È«ÆÁÄ£Ê½\n"
                 L"F1             : ÇÐ»»°ïÖúÆÁÄ»";
-            mFontRenderer.drawText( help, 0, 0 );
+            mFont.drawText( help, 0, 0 );
         }
         else
         {
-            mFontRenderer.drawText( mFps.getFpsString().cptr(), 0, 0 );
+            mFont.drawText( mFps.getFpsString().cptr(), 0, 0 );
         }
     }
 

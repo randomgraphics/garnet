@@ -277,6 +277,9 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     // standard init procedure
     GN_STDCLASS_INIT( GN::engine::RenderEngine, () );
 
+    // connect to renderer signals
+    gSigRendererDispose.connect( this, &RenderEngine::disposeAllResources );
+
     // create sub components
     mFenceManager = new FenceManager( *this );
 
@@ -319,6 +322,9 @@ void GN::engine::RenderEngine::quit()
     safeDelete( mResourceCache );
     safeDelete( mFenceManager );
 
+    // disconnect to renderer signals
+    gSigRendererDispose.disconnect( this );
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
@@ -347,6 +353,15 @@ bool GN::engine::RenderEngine::resetRenderer(
     // then reset the renderer
     return mDrawThread->resetRenderer( api, ro );
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx::RendererOptions & GN::engine::RenderEngine::getRendererOptions() const
+{
+    return mDrawThread->getRendererOptions();
+}
+
 
 //
 //
@@ -416,10 +431,14 @@ void GN::engine::RenderEngine::setShaderUniform(
             bytes = value.matrix44s.size() * sizeof(Matrix44f);
             break;
 
+        case gfx::UVT_VECTOR4 :
+            data = &value.vector4s[0];
+            bytes = value.vector4s.size() * sizeof(Vector4f);
+            break;
+
         case gfx::UVT_BOOL :
         case gfx::UVT_INT :
         case gfx::UVT_FLOAT :
-        case gfx::UVT_VECTOR4 :
             GN_UNIMPL();
             data = 0;
             bytes = 0;
@@ -471,6 +490,9 @@ void GN::engine::RenderEngine::clearScreen(
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::drawIndexed(
     SInt32 prim,
     UInt32 numprim,
@@ -485,6 +507,9 @@ void GN::engine::RenderEngine::drawIndexed(
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 }
 
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::draw(
     SInt32 prim,
     UInt32 numprim,
@@ -493,6 +518,49 @@ void GN::engine::RenderEngine::draw(
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, prim, numprim, startvtx );
     if( 0 == dr ) return;
+    sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::drawLines(
+    BitFields         options,
+    const void *      positions,
+    size_t            stride,
+    size_t            count,
+    UInt32            rgba,
+    const Matrix44f & model,
+    const Matrix44f & view,
+    const Matrix44f & proj )
+{
+    sPrepareContextResources( *this, mDrawContext );
+
+    struct Param
+    {
+        BitFields options;
+        size_t    stride;
+        size_t    count;
+        UInt32    rgba;
+        Matrix44f model;
+        Matrix44f view;
+        Matrix44f proj;
+    };
+    size_t bufsize = stride * count * 2;
+
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand( DCT_DRAW_LINE, sizeof(Param)+bufsize );
+    if( 0 == dr ) return;
+
+    Param * p = (Param*)dr->param();
+    p->options = options;
+    p->stride = stride;
+    p->count = count;
+    p->rgba = rgba;
+    p->model = model;
+    p->view = view;
+    p->proj = proj;
+    memcpy( (p+1), positions, bufsize );
+
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 }
 

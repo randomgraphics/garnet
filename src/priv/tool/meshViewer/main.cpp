@@ -2,6 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
 using namespace GN::input;
 using namespace GN::util;
@@ -40,7 +41,10 @@ class MeshViewerApp : public app::SampleApp
 
 public:
 
-    MeshViewerApp() : mActor(0) {}
+    MeshViewerApp()
+        : mScene( getEntityManager(), getRenderEngine() )
+        , mActor(0)
+    {}
 
     bool onCheckCmdLine( int argc, const char * const argv[] )
     {
@@ -64,8 +68,9 @@ public:
         return true;
     }
 
-    bool onRendererRestore()
+    bool onInit()
     {
+        showHUD( false );
         if( !mActor )
         {
             // (re)load actor
@@ -91,7 +96,7 @@ public:
         return true;
     }
 
-    void onRendererDispose()
+    void onQuit()
     {
         releaseActorHiearacy( mActor );
         mActor = 0;
@@ -125,17 +130,18 @@ public:
 
     void onRender()
     {
-        Renderer & r = gRenderer;
-        r.clearScreen();
+        RenderEngine & e = getRenderEngine();
+
+        e.clearScreen();
 
         static const float X[] = { 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f, 0.0f };
         static const float Y[] = { 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.0f };
         static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
 
         const Matrix44f & world = mArcBall.getRotationMatrix44();
-        r.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), world, mView, mProj );
-        r.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), world, mView, mProj );
-        r.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), world, mView, mProj );
+        e.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), world, mView, mProj );
+        e.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), world, mView, mProj );
+        e.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), world, mView, mProj );
 
         mActor->draw();
 
@@ -150,7 +156,7 @@ public:
                 mWorld.print().cptr(),
                 mView.print().cptr(),
                 mProj.print().cptr() );
-            getFontRenderer().drawText( text.cptr(), 0, 100 );
+            getFont().drawText( text.cptr(), 0, 100 );
         }
 #endif
     }

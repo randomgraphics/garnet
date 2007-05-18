@@ -65,7 +65,7 @@ namespace GN { namespace scene
     ///
     /// bitmap image of single character
     ///
-    struct FontBitmap
+    struct FontImage
     {
         size_t        width;  ///< bitmap width in pixel
         size_t        height; ///< bitmap height in pixel
@@ -125,10 +125,10 @@ namespace GN { namespace scene
         ///
         /// load font data of specific unicode character.
         ///
-        /// \note This function will erase previously loaded character (invalidate previous FontBitmap::buffer)
+        /// \note This function will erase previously loaded character (invalidate previous FontImage::buffer)
         ///
-        virtual bool loadFontBitmap(
-            FontBitmap & result,
+        virtual bool loadFontImage(
+            FontImage & result,
             wchar_t ch,
             FontFaceQuality quality = FFQ_MONOCHROM ) = 0;
 
@@ -161,9 +161,9 @@ namespace GN { namespace scene
     ///
     /// Bitmap font renderer
     ///
-    class BitmapFontRenderer : public StdClass
+    class BitmapFont : public StdClass
     {
-        GN_DECLARE_STDCLASS( BitmapFontRenderer, StdClass );
+        GN_DECLARE_STDCLASS( BitmapFont, StdClass );
 
         // ********************************
         // ctor/dtor
@@ -171,8 +171,8 @@ namespace GN { namespace scene
 
         //@{
     public:
-        BitmapFontRenderer()          { clear(); }
-        virtual ~BitmapFontRenderer() { quit(); }
+        BitmapFont( QuadRenderer & qr ) : mQuadRenderer(qr) { clear(); }
+        virtual ~BitmapFont() { quit(); }
         //@}
 
         // ********************************
@@ -227,11 +227,6 @@ namespace GN { namespace scene
             td.background = true;
             drawText( td );
         }
-
-        ///
-        /// purge font cache (release all textures, clear slot map)
-        ///
-        void purge();
 
         // ********************************
         // private variables
@@ -297,11 +292,19 @@ namespace GN { namespace scene
             float          x, y;
         };
 
+        struct FontTexture
+        {
+            engine::AutoGraphicsResource texture;
+            DynaArray<UInt8>             syscopy;
+        };
+
+        QuadRenderer &           mQuadRenderer;
+
         // font face data
         AutoRef<FontFace>        mFont;
 
         // font texture list
-        AutoRef<gfx::Texture>    mTextures[MAX_TEXTURES];
+        FontTexture              mTextures[MAX_TEXTURES];
         size_t                   mNumTextures;
 
         // texture size

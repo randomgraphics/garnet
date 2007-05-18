@@ -17,14 +17,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread")
 //
 //
 // -----------------------------------------------------------------------------
-static void sDumpCommandText( const GN::StrA & s )
-{
-    GN_INFO(sLogger)( "%s", s.cptr() );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 static bool sCreateDeviceData( GN::engine::GraphicsResource & res )
 {
     using namespace GN::engine;
@@ -119,7 +111,6 @@ static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
 // -----------------------------------------------------------------------------
 template<typename T>
 static inline void sResolveResourceId(
-    GN::engine::RenderEngine & eng,
     T & result,
     const GN::engine::GraphicsResource * res )
 {
@@ -129,7 +120,7 @@ static inline void sResolveResourceId(
     }
     else
     {
-        GN_ASSERT( eng.checkResource( res ) );
+        GN_ASSERT( res->engine.checkResource( res ) );
         result = (T)res->data;
     }
 }
@@ -138,7 +129,6 @@ static inline void sResolveResourceId(
 //
 // -----------------------------------------------------------------------------
 static void sDrawContext2RendererContext(
-    GN::engine::RenderEngine & eng,
     GN::gfx::RendererContext & rc,
     const GN::engine::DrawContext & dc )
 {
@@ -152,7 +142,7 @@ static void sDrawContext2RendererContext(
     // shaders
     for( int i = 0; i < NUM_SHADER_TYPES; ++i )
     {
-        if( dc.flags.shaderBit( i ) ) sResolveResourceId( eng, rc.shaders[i], dc.shaders[i] );
+        if( dc.flags.shaderBit( i ) ) sResolveResourceId( rc.shaders[i], dc.shaders[i] );
     }
 
     // rsb
@@ -166,12 +156,12 @@ static void sDrawContext2RendererContext(
         {
             const DrawContext::RenderTargetTexture& src = dc.renderTargets.cbuffers[i];
             gfx::RenderTargetTexture              & dst = rc.renderTargets.cbuffers[i];
-            sResolveResourceId( eng, dst.texture, src.texture );
+            sResolveResourceId( dst.texture, src.texture );
             dst.subidx = src.subidx;
         }
 
         // z buffer
-        sResolveResourceId( eng, rc.renderTargets.zbuffer.texture, dc.renderTargets.zbuffer.texture );
+        sResolveResourceId( rc.renderTargets.zbuffer.texture, dc.renderTargets.zbuffer.texture );
         rc.renderTargets.zbuffer.subidx = dc.renderTargets.zbuffer.subidx;
 
         rc.renderTargets.count = dc.renderTargets.count;
@@ -188,7 +178,7 @@ static void sDrawContext2RendererContext(
     {
         for( unsigned int i = 0; i < dc.numTextures; ++i )
         {
-            sResolveResourceId( eng, rc.textures[i], dc.textures[i] );
+            sResolveResourceId( rc.textures[i], dc.textures[i] );
         }
         rc.numTextures = dc.numTextures;
     }
@@ -196,7 +186,7 @@ static void sDrawContext2RendererContext(
     // vtxfmt
     if( dc.flags.vtxfmt )
     {
-        sResolveResourceId( eng, rc.vtxfmt, dc.vtxfmt );
+        sResolveResourceId( rc.vtxfmt, dc.vtxfmt );
     }
 
     // vtxbufs
@@ -204,7 +194,7 @@ static void sDrawContext2RendererContext(
     {
         for( unsigned int i = 0; i < dc.numVtxBufs; ++i )
         {
-            sResolveResourceId( eng, rc.vtxbufs[i].buffer, dc.vtxbufs[i].buffer );
+            sResolveResourceId( rc.vtxbufs[i].buffer, dc.vtxbufs[i].buffer );
             rc.vtxbufs[i].offset = dc.vtxbufs[i].offset;
             rc.vtxbufs[i].stride = dc.vtxbufs[i].stride;
         }
@@ -214,7 +204,7 @@ static void sDrawContext2RendererContext(
     // idxbuf
     if( dc.flags.idxbuf )
     {
-        sResolveResourceId( eng, rc.idxbuf, dc.idxbuf );
+        sResolveResourceId( rc.idxbuf, dc.idxbuf );
     }
 }
 
@@ -226,9 +216,16 @@ static void sDrawContext2RendererContext(
 // draw command functions
 // *****************************************************************************
 
+#if ( GN_BUILD_VARIANT != GN_DEBUG_BUILD ) && GN_MSVC
+#pragma warning(disable:4100)
+#endif
+
 namespace GN { namespace engine
 {
-    void DRAWFUNC_SET_CONTEXT( RenderEngine & engine, const void * param, size_t bytes )
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_SET_CONTEXT( RenderEngine &, const void * param, size_t bytes )
     {
         using namespace GN::gfx;
 
@@ -238,17 +235,20 @@ namespace GN { namespace engine
 
         static gfx::RendererContext rc;
 
-        sDrawContext2RendererContext( engine, rc, *dc );
+        sDrawContext2RendererContext( rc, *dc );
 
         gRenderer.setContext( rc );
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( GN_FUNCTION );
+            dumpString( GN_FUNCTION );
         }
     }
 
-    void DRAWFUNC_SET_UNIFORM( RenderEngine & engine, const void * param, size_t bytes )
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_SET_UNIFORM( RenderEngine & engine, const void * param, size_t bytes )
     {
         using namespace gfx;
 
@@ -272,16 +272,20 @@ namespace GN { namespace engine
         unival.type = (UniformValueType)header->unitype;
         switch( unival.type )
         {
-            case UVT_BOOL:
-            case UVT_FLOAT:
-            case UVT_INT :
-            case UVT_VECTOR4:
-                GN_UNIMPL();
-                break;
-
             case UVT_MATRIX44:
                 unival.matrix44s.resize( bytes / sizeof(Matrix44f) );
                 memcpy( &unival.matrix44s[0], data, bytes );
+                break;
+
+            case UVT_VECTOR4:
+                unival.vector4s.resize( bytes / sizeof(Vector4f) );
+                memcpy( &unival.vector4s[0], data, bytes );
+                break;
+
+            case UVT_BOOL:
+            case UVT_FLOAT:
+            case UVT_INT :
+                GN_UNIMPL();
                 break;
 
             default:
@@ -305,11 +309,14 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( GN_FUNCTION );
+            dumpString( GN_FUNCTION );
         }
     }
 
-    void DRAWFUNC_CLEAR( RenderEngine &, const void * param, size_t bytes )
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_CLEAR( RenderEngine &, const void * param, size_t bytes )
     {
         #pragma pack(push,1)
         struct Param
@@ -331,11 +338,14 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( GN_FUNCTION );
+            dumpString( GN_FUNCTION );
         }
     }
 
-    void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t bytes )
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_DRAW( RenderEngine &, const void * param, size_t bytes )
     {
         struct Param
         {
@@ -354,11 +364,14 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( GN_FUNCTION );
+            dumpString( GN_FUNCTION );
         }
     }
 
-    void DRAWFUNC_DRAW_INDEXED( RenderEngine &, const void * param, size_t bytes )
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_DRAW_INDEXED( RenderEngine &, const void * param, size_t bytes )
     {
         struct Param
         {
@@ -385,7 +398,46 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( GN_FUNCTION );
+            dumpString( GN_FUNCTION );
+        }
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_DRAW_LINE( RenderEngine &, const void * param, size_t bytes )
+    {
+        struct Param
+        {
+            BitFields options;
+            size_t    stride;
+            size_t    count;
+            UInt32    rgba;
+            Matrix44f model;
+            Matrix44f view;
+            Matrix44f proj;
+        };
+        GN_ASSERT( param && sizeof(Param) <= bytes );
+
+        const Param * p = (const Param*)param;
+
+        GN_ASSERT( sizeof(Param) + p->count * p->stride * 2 == bytes );
+
+        gfx::Renderer & r = gRenderer;
+
+        r.drawLines(
+            p->options,
+            (p+1),
+            p->stride,
+            p->count,
+            p->rgba,
+            p->model,
+            p->view,
+            p->proj );
+
+        if( DUMP_COMMANDS )
+        {
+            dumpString( GN_FUNCTION );
         }
     }
 }};
@@ -406,7 +458,7 @@ namespace GN { namespace engine
         {
             if( DUMP_COMMANDS )
             {
-                sDumpCommandText( strFormat( "Create resource: %s", cmd.resource->desc.name.cptr() ) );
+                dumpString( strFormat( "Create resource: %s", cmd.resource->desc.name.cptr() ) );
             }
             if( !sCreateDeviceData( *cmd.resource ) )
             {
@@ -421,7 +473,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( strFormat( "Load resource: %s", cmd.resource->desc.name.cptr() ) );
+            dumpString( strFormat( "Load resource: %s", cmd.resource->desc.name.cptr() ) );
         }
 
         GN_ASSERT( cmd.loader );
@@ -444,7 +496,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( strFormat( "Dispose resource: %s", cmd.resource->desc.name.cptr() ) );
+            dumpString( strFormat( "Dispose resource: %s", cmd.resource->desc.name.cptr() ) );
         }
 
         GN_UNGUARD;
@@ -472,6 +524,14 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDrawFunctions[DCT_CLEAR]        = &DRAWFUNC_CLEAR;
     mDrawFunctions[DCT_DRAW]         = &DRAWFUNC_DRAW;
     mDrawFunctions[DCT_DRAW_INDEXED] = &DRAWFUNC_DRAW_INDEXED;
+    mDrawFunctions[DCT_DRAW_LINE]    = &DRAWFUNC_DRAW_LINE;
+    if( GN_ASSERT_ENABLED )
+    {
+        for( int i = 0; i < NUM_DRAW_COMMAND_TYPES; ++i )
+        {
+            GN_ASSERT( mDrawFunctions[i] );
+        }
+    }
 
     // initialize draw buffers
     for( int i = 0; i < DRAW_BUFFER_COUNT; ++i )
@@ -709,7 +769,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
     {
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( "Frame BEGIN" );
+            dumpString( "Frame BEGIN" );
         }
 
         DrawBuffer & db = mDrawBuffers[mReadingIndex];
@@ -773,7 +833,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 
         if( DUMP_COMMANDS )
         {
-            sDumpCommandText( "Frame END" );
+            dumpString( "Frame END" );
         }
     }
 }

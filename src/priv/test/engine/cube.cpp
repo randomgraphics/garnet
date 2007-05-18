@@ -15,7 +15,11 @@ bool TestCube::init()
     RenderEngine & re = renderEngine();
 
     // create ascii font
-    if( !font.init() ) return false;
+    FontFaceDesc ffd;
+    ffd.fontname = "font::/simsun.ttc";
+    ffd.width = 32;
+    ffd.height = 32;
+    if( !font.init( ffd ) ) return false;
 
     // create cube
     if( !cube.loadFromXmlFile( em, re, "media::/cube/cube_on_cube.drawable.xml" ) ) return false;
@@ -52,8 +56,7 @@ void TestCube::draw()
     renderEngine().disposeAllResources();
 
     // draw a quad
-    //.drawSingleSolidQuad( GN_RGBA32(255,0,0,255), 0 );
-    font.drawText( "render engine cube test", 10, 10 );
+    font.drawText( L"render engine cube test", 10, 10 );
 
     // draw cube
     cube.draw();

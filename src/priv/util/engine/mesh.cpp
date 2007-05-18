@@ -508,6 +508,8 @@ bool GN::engine::Mesh::loadFromFile( const StrA & filename )
 {
     GN_GUARD;
 
+    GN_INFO(sLogger)( "Load %s", filename.cptr() );
+
     // open mesh file
     AutoObjPtr<File> fp( core::openFile( filename, "rb" ) );
     if( !fp ) return false;

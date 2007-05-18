@@ -19,6 +19,7 @@ namespace GN { namespace engine
         DCT_CLEAR,
         DCT_DRAW,
         DCT_DRAW_INDEXED,
+        DCT_DRAW_LINE,
         NUM_DRAW_COMMAND_TYPES
         //@}
     };

@@ -71,6 +71,11 @@ namespace GN { namespace engine
         bool resetRenderer( gfx::RendererAPI, const gfx::RendererOptions & );
 
         ///
+        /// get renderer options
+        ///
+        const gfx::RendererOptions & getRendererOptions() const;
+
+        ///
         /// get display properties
         ///
         const gfx::DispDesc & getDispDesc() const;
@@ -121,6 +126,28 @@ namespace GN { namespace engine
         void draw( SInt32 prim,
                    UInt32 numprim,
                    UInt32 startvtx );
+
+        void drawIndexedUp( SInt32         prim,
+                            size_t         numprim,
+                            size_t         numvtx,
+                            const void *   vertexData,
+                            size_t         strideInBytes,
+                            const UInt16 * indexData );
+
+        void drawUp( SInt32        prim,
+                     size_t        numprim,
+                     const void *  vertexData,
+                     size_t        strideInBytes );
+
+        void drawLines(
+            BitFields         options,
+            const void *      positions,
+            size_t            stride,
+            size_t            count,
+            UInt32            rgba,
+            const Matrix44f & model,
+            const Matrix44f & view,
+            const Matrix44f & proj );
 
         //@}
 

@@ -193,7 +193,7 @@ public:
         int x = 1, y = 1;
         gInput.getMousePosition( x, y );
         mousePos.format( L"Mouse Position : %d, %d", x, y );
-        getFontRenderer().drawText( mousePos.cptr(), 0, 100 );
+        getFont().drawText( mousePos.cptr(), 0, 100 );
     }
 };
 

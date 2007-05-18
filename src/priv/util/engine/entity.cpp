@@ -115,7 +115,7 @@ void GN::engine::EntityManager::deleteEntity( const Entity * e )
     mEntityNames.erase( e->name );
 
     // delete the entity instance
-    const EntityDeletor * ed = safeCast<const EntityDeletor*>(e);
+    const EntityDeletor * ed = (const EntityDeletor*)e;
     delete ed;
 }
 

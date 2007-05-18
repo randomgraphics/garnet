@@ -34,7 +34,7 @@ namespace GN { namespace scene
         bool init();
         void quit();
     private:
-        void clear() { mActiveVB = 0; mDrawBegun = false; }
+        void clear() { mMesh = 0; mActiveVB = 0; mDrawBegun = false; }
         //@}
 
         // ********************************
@@ -217,7 +217,7 @@ namespace GN { namespace scene
         };
 
         engine::RenderEngine     & mRenderEngine;
-        QuadMesh                   mMesh;
+        QuadMesh                 * mMesh;
         engine::DrawContext        mContext;
         size_t                     mNumQuads;
         size_t                     mActiveVB;

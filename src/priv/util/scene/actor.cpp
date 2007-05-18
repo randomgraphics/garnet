@@ -4,6 +4,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.scene.Actor");
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
 
 // *****************************************************************************
@@ -252,7 +253,7 @@ bool GN::scene::Actor::loadFromXmlNode( const XmlNode & root, const StrA & based
         else if( "drawable" == e->name )
         {
             Drawable d;
-            if( !d.loadFromXmlNode( *e, basedir ) ) return false;
+            if( !d.loadFromXmlNode( mScene.entityManager(), mScene.renderEngine(), *e, basedir ) ) return false;
             addDrawable( d );
         }
         else if( "actor" == e->name )
@@ -293,7 +294,7 @@ void GN::scene::Actor::draw()
     {
         Drawable & d = mDrawables[i];
 
-        e = gSceneResMgr.getResourceT<Effect>( d.effect );
+        e = entity2Object<Effect*>( d.effect, 0 );
 
         if( d.hasUniform( "pvw" ) )
         {
