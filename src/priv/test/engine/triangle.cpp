@@ -108,6 +108,9 @@ bool TestTriangle::init()
     tex = loadTextureEntityFromFile( entityManager(), re, "media::/texture/earth.jpg" );
     if( 0 == tex ) return false;
 
+    // create ascii font
+    if( !font.init() ) return false;
+
     // success
     return true;
 }
@@ -145,4 +148,6 @@ void TestTriangle::draw()
 
     // do draw
     re.drawIndexed( TRIANGLE_LIST, 1, 0, 0, 3, 0 );
+
+    font.drawText( "render engine triangle test", 10, 10 );
 }
