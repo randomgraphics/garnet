@@ -677,7 +677,7 @@ bool GN::engine::Effect::createShader( ShaderData & data, const StrA & name, con
     // create shaders instance
     if( 0 == data.value && !desc.code.empty() )
     {
-        data.value = mEngine.createShader( desc.type, desc.lang, desc.code, desc.hints );
+        data.value = mEngine.createShader( name, desc.type, desc.lang, desc.code, desc.hints );
         if( 0 == data.value )
         {
             GN_ERROR(sLogger)( "Fail to create shader '%s'.", name.cptr() );

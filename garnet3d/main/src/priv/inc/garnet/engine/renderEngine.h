@@ -159,25 +159,117 @@ namespace GN { namespace engine
 
         //@{
 
-        GraphicsResource * createShader( const ShaderDesc & desc,
-                                         const StrA       & name = StrA::EMPTYSTR );
+        GraphicsResource *
+        createShader( const StrA       & name,
+                      const ShaderDesc & desc );
 
-        GraphicsResource * createShader( gfx::ShaderType      type,
-                                         gfx::ShadingLanguage lang,
-                                         const StrA         & code,
-                                         const StrA         & hints,
-                                         const StrA         & name = StrA::EMPTYSTR );
+        GraphicsResource *
+        createShader( const StrA         & name,
+                      gfx::ShaderType      type,
+                      gfx::ShadingLanguage lang,
+                      const StrA         & code,
+                      const StrA         & hints = StrA::EMPTYSTR );
 
-        GraphicsResource * createVtxFmt( const gfx::VtxFmtDesc & desc,
-                                         const StrA            & name = StrA::EMPTYSTR );
+        ///
+        /// Create new texture
+        /// See TextureDesc for detail explaination of each fields in descriptor.
+        ///
+        GraphicsResource *
+        createTexture( const StrA & name, const gfx::TextureDesc & desc );
 
-        GraphicsResource * createIdxBuf( const gfx::IdxBufDesc & desc,
-                                         const StrA            & name = StrA::EMPTYSTR );
+        ///
+        /// Create new texture, with individual creation parameters.
+        ///
+        GraphicsResource *
+        createTexture( const StrA & name,
+                       gfx::TexDim  dim,
+                       size_t       sx,
+                       size_t       sy,
+                       size_t       sz,
+                       size_t       faces = 0,
+                       size_t       levels = 0,
+                       gfx::ClrFmt  format = gfx::FMT_DEFAULT,
+                       BitFields    usage = 0 )
+        {
+            gfx::TextureDesc desc =
+            {
+                dim,
+                (UInt32)sx, (UInt32)sy, (UInt32)sz,
+                (UInt32)faces, (UInt32)levels,
+                format,
+                { usage }
+            };
+            return createTexture( name, desc );
+        }
 
-        GraphicsResource * createIdxBuf( UInt32       numidx,
-                                         bool         dynamic,
-                                         bool         readback,
-                                         const StrA & name = StrA::EMPTYSTR );
+        ///
+        /// Create 1D texture
+        ///
+        GraphicsResource *
+        create1DTexture( const StrA & name,
+                         size_t       sx,
+                         size_t       levels = 0,
+                         gfx::ClrFmt  format = gfx::FMT_DEFAULT,
+                         BitFields    usage = 0 )
+        {
+            return createTexture( name, gfx::TEXDIM_1D, sx, 1, 1, 1, levels, format, usage );
+        }
+
+        ///
+        /// Create 2D texture
+        ///
+        GraphicsResource *
+        create2DTexture( const StrA & name,
+                         size_t       sx,
+                         size_t       sy,
+                         size_t       levels = 0,
+                         gfx::ClrFmt  format = gfx::FMT_DEFAULT,
+                         BitFields    usage = 0 )
+        {
+            return createTexture( name, gfx::TEXDIM_2D, sx, sy, 1, 1, levels, format, usage );
+        }
+
+        ///
+        /// Create 3D texture
+        ///
+        GraphicsResource *
+        create3DTexture( const StrA & name,
+                         size_t       sx,
+                         size_t       sy,
+                         size_t       sz,
+                         size_t       levels = 0,
+                         gfx::ClrFmt  format = gfx::FMT_DEFAULT,
+                         BitFields    usage = 0 )
+        {
+            return createTexture( name, gfx::TEXDIM_3D, sx, sy, sz, 1, levels, format, usage );
+        }
+
+        ///
+        /// Create CUBE texture
+        ///
+        GraphicsResource *
+        createCubeTexture( const StrA & name,
+                           size_t       sx,
+                           size_t       levels = 0,
+                           gfx::ClrFmt  format = gfx::FMT_DEFAULT,
+                           BitFields    usage = 0 )
+        {
+            return createTexture( name, gfx::TEXDIM_CUBE, sx, sx, 1, 6, levels, format, usage );
+        }
+
+        GraphicsResource *
+        createVtxFmt( const StrA            & name,
+                      const gfx::VtxFmtDesc & desc );
+
+        GraphicsResource *
+        createIdxBuf( const StrA            & name,
+                      const gfx::IdxBufDesc & desc );
+
+        GraphicsResource *
+        createIdxBuf( const StrA & name,
+                      UInt32       numidx,
+                      bool         dynamic = false,
+                      bool         readback = false );
 
         ///
         /// reset draw context to default value (not referencing any resources)
@@ -228,6 +320,18 @@ namespace GN { namespace engine
         // ********************************
     private:
     };
+
+    ///
+    /// free graphics resource safely
+    ///
+    inline void safeFreeGraphicsResource( GraphicsResource * & res )
+    {
+        if( res )
+        {
+            res->engine.freeResource( res );
+            res = 0;
+        }
+    }
 
     ///
     /// automatic graphics resource pointer (free resource when out of life scope)

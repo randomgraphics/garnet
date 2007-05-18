@@ -113,7 +113,7 @@ public:
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
+bool GN::scene::QuadRenderer::init()
 {
     GN_GUARD;
 
@@ -134,15 +134,15 @@ bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
         grd.vd.dynamic  = false;
         grd.vd.readback = false;
 
-        mMesh.vb[i].attach( engine.allocResource( grd ) );
+        mMesh.vb[i].attach( mRenderEngine.allocResource( grd ) );
         if( !mMesh.vb[i] ) return failure();
     }
 
     // create ib
-    mMesh.ib.attach( engine.createIdxBuf( 6*MAX_QUADS, false, false, "Quad renderer index buffer" ) );
+    mMesh.ib.attach( mRenderEngine.createIdxBuf( "Quad renderer index buffer", 6*MAX_QUADS ) );
     if( !mMesh.ib ) return failure();
     AutoRef<QuadIdxBufLoader> ibloader( new QuadIdxBufLoader(MAX_QUADS) );
-    engine.updateResource( mMesh.ib, 0, ibloader );
+    mRenderEngine.updateResource( mMesh.ib, 0, ibloader );
 
     gfx::Renderer & r = gRenderer;
 
@@ -169,7 +169,7 @@ bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
         "}";
     if( r.supportShader( "vs_1_1" ) )
     {
-        mMesh.vs.attach( engine.createShader( gfx::SHADER_VS, gfx::LANG_D3D_HLSL, hlsl_vs, "", "Quad renderer VS" ) );
+        mMesh.vs.attach( mRenderEngine.createShader( "Quad renderer VS", gfx::SHADER_VS, gfx::LANG_D3D_HLSL, hlsl_vs ) );
     }
     else if( r.supportShader( "arbvp1" ) )
     {
@@ -182,11 +182,11 @@ bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
             "MAD result.position.y, vertex.position, c.x, c.y;  \n"
             "MAD result.position.x, vertex.position, c.z, -c.y; \n"
             "END";
-        mMesh.vs.attach( engine.createShader( gfx::SHADER_VS, gfx::LANG_OGL_ARB, code, "", "Quad renderer VS" ) );
+        mMesh.vs.attach( mRenderEngine.createShader( "Quad renderer VS", gfx::SHADER_VS, gfx::LANG_OGL_ARB, code ) );
     }
     else if( r.supportShader( "cgvs" ) )
     {
-        mMesh.vs.attach( engine.createShader( gfx::SHADER_VS, gfx::LANG_CG, hlsl_vs, "", "Quad renderer VS" ) );
+        mMesh.vs.attach( mRenderEngine.createShader( "Quad renderer VS", gfx::SHADER_VS, gfx::LANG_CG, hlsl_vs ) );
     }
     else
     {
@@ -223,8 +223,8 @@ bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
 
     if( r.supportShader( "ps_1_1" ) )
     {
-        mMesh.pstexed.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pstexed, "", "Quad renderer PS" ) );
-        mMesh.pssolid.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pssolid, "", "Quad renderer PS" ) );
+        mMesh.pstexed.attach( mRenderEngine.createShader( "Quad renderer PS textured", gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pstexed ) );
+        mMesh.pssolid.attach( mRenderEngine.createShader( "Quad renderer PS solid", gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pssolid ) );
     }
     else if( r.supportShader( "arbfp1" ) )
     {
@@ -238,13 +238,13 @@ bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
             "MOV result.color, fragment.color.primary; \n"
             "END";
 
-        mMesh.pstexed.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_OGL_ARB, texed, "", "Quad renderer PS" ) );
-        mMesh.pssolid.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_OGL_ARB, solid, "", "Quad renderer PS" ) );
+        mMesh.pstexed.attach( mRenderEngine.createShader( "Quad renderer PS textured", gfx::SHADER_PS, gfx::LANG_OGL_ARB, texed ) );
+        mMesh.pssolid.attach( mRenderEngine.createShader( "Quad renderer PS solid", gfx::SHADER_PS, gfx::LANG_OGL_ARB, solid ) );
     }
     else if( r.supportShader( "cgps" ) )
     {
-        mMesh.pstexed.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_CG, hlsl_pstexed, "", "Quad renderer PS" ) );
-        mMesh.pssolid.attach( engine.createShader( gfx::SHADER_PS, gfx::LANG_CG, hlsl_pssolid, "", "Quad renderer PS" ) );
+        mMesh.pstexed.attach( mRenderEngine.createShader( "Quad renderer PS textured", gfx::SHADER_PS, gfx::LANG_CG, hlsl_pstexed ) );
+        mMesh.pssolid.attach( mRenderEngine.createShader( "Quad renderer PS solid", gfx::SHADER_PS, gfx::LANG_CG, hlsl_pssolid ) );
     }
     else
     {
@@ -259,7 +259,7 @@ bool GN::scene::QuadRenderer::init( engine::RenderEngine & engine )
     vfd.addAttrib( 0,  0, gfx::VTXSEM_POS0, gfx::FMT_FLOAT3 );
     vfd.addAttrib( 0, 12, gfx::VTXSEM_CLR0, gfx::FMT_RGBA32 );
     vfd.addAttrib( 0, 16, gfx::VTXSEM_TEX0, gfx::FMT_FLOAT2 );
-    mMesh.vf.attach( engine.createVtxFmt( vfd, "Quad renderer vertex format" ) );
+    mMesh.vf.attach( mRenderEngine.createVtxFmt( "Quad renderer vertex format", vfd ) );
     if( 0 == mMesh.vf ) return failure();
 
     // success
@@ -294,6 +294,8 @@ void GN::scene::QuadRenderer::quit()
 void GN::scene::QuadRenderer::drawBegin( engine::GraphicsResource * tex, BitFields options )
 {
     GN_GUARD_SLOW;
+
+    GN_ASSERT( 0 == tex || &tex->engine == &mRenderEngine );
 
     GN_ASSERT( !mDrawBegun );
     mDrawBegun = true;
@@ -347,16 +349,14 @@ void GN::scene::QuadRenderer::drawEnd()
 
     GN_ASSERT( mDrawBegun && mNextVtx );
 
-    RenderEngine & eng = mMesh.vb[mActiveVB]->engine;
-
     // update vertex buffer
     mNextVtx -= mNumQuads * 4; // reverse pointer to start of the buffer
     AutoRef<QuadVtxBufLoader> loader( new QuadVtxBufLoader( mNextVtx, sizeof(QuadVertex) * 4 * MAX_QUADS ) );
-    eng.updateResource( mMesh.vb[mActiveVB], 0, loader );
+    mRenderEngine.updateResource( mMesh.vb[mActiveVB], 0, loader );
 
     // do draw
-    eng.setContext( mContext );
-    eng.drawIndexed(
+    mRenderEngine.setContext( mContext );
+    mRenderEngine.drawIndexed(
         gfx::TRIANGLE_LIST,
         mNumQuads * 2,
         0,

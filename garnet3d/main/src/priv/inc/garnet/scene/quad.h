@@ -21,7 +21,7 @@ namespace GN { namespace scene
 
         //@{
     public:
-        QuadRenderer()          { clear(); }
+        QuadRenderer( engine::RenderEngine & eng ) : mRenderEngine(eng) { clear(); }
         virtual ~QuadRenderer() { quit(); }
         //@}
 
@@ -31,7 +31,7 @@ namespace GN { namespace scene
 
         //@{
     public:
-        bool init( engine::RenderEngine & );
+        bool init();
         void quit();
     private:
         void clear() { mActiveVB = 0; mDrawBegun = false; }
@@ -51,6 +51,11 @@ namespace GN { namespace scene
             OPT_DEPTH_TEST   = 4, ///< enable depth test. ignored when OPT_USER_CONTEXT is set.
             OPT_DEPTH_WRITE  = 8, ///< enable depth write. ignored when OPT_USER_CONTEXT is set.
         };
+
+        ///
+        /// get the render engine
+        ///
+        engine::RenderEngine & renderEngine() const { return mRenderEngine; }
 
         ///
         /// \note set texture to NULL, to draw solid colored quads
@@ -211,15 +216,16 @@ namespace GN { namespace scene
             engine::AutoGraphicsResource pssolid;
         };
 
-        QuadMesh                     mMesh;
-        engine::DrawContext          mContext;
-        size_t                       mNumQuads;
-        size_t                       mActiveVB;
-        engine::GraphicsResource *   mTexture;
-        BitFields                    mOptions;
-        bool                         mDrawBegun;
+        engine::RenderEngine     & mRenderEngine;
+        QuadMesh                   mMesh;
+        engine::DrawContext        mContext;
+        size_t                     mNumQuads;
+        size_t                     mActiveVB;
+        engine::GraphicsResource * mTexture;
+        BitFields                  mOptions;
+        bool                       mDrawBegun;
 
-        QuadVertex *                 mNextVtx;
+        QuadVertex *               mNextVtx;
 
         // ********************************
         // private functions

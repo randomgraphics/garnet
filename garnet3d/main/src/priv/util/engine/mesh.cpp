@@ -283,7 +283,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
     }
     VtxFmtDesc vfd;
     if( !vfd.loadFromXml( vfnode ) ) return false;
-    vtxfmt.attach( engine.createVtxFmt( vfd ) );
+    vtxfmt.attach( engine.createVtxFmt( "mesh vtxfmt", vfd ) );
     if( 0 == vtxfmt ) return false;
 
     // handle child elements
