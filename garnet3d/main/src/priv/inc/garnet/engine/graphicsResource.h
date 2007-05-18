@@ -130,7 +130,6 @@ namespace GN { namespace engine
     /// The possible implementation could be:
     ///  - keep data used by each method separated. So they won't mess with each other, when called concurrently.
     ///  - do not modify any states in decompress(). So it can be safely called anytime anywhere, w/o using sync objects.
-    ///  - Seems that freebuf() has to be protected by sync object, to achieve thread safety.
     ///
     struct GraphicsResourceLoader : public RefCounter
     {

@@ -316,28 +316,28 @@ namespace GN { namespace scene
     ///
     class Actor
     {
-        Scene             & mScene;
+        Scene                     & mScene;
 
-        TreeNode<Actor>     mNode;
+        TreeNode<Actor>             mNode;
 
-        DynaArray<Drawable> mDrawables;
+        DynaArray<engine::Drawable> mDrawables;
 
-        Vector3f            mPosition;       ///< position in parent space
-        Vector3f            mPivot;          ///< origin of rotation, in local space.
-        Quaternionf         mRotation;       ///< rotation in parent space
-        Matrix44f           mLocal2Parent;   ///< local->parent space transformation
-        Matrix44f           mParent2Local;   ///< parent->local space transformation
-        Matrix44f           mLocal2Root;     ///< local->root space transformation
-        Matrix44f           mRoot2Local;     ///< root->local transformation
-        Spheref             mBoundingSphere; ///< bounding sphere.
+        Vector3f                    mPosition;       ///< position in parent space
+        Vector3f                    mPivot;          ///< origin of rotation, in local space.
+        Quaternionf                 mRotation;       ///< rotation in parent space
+        Matrix44f                   mLocal2Parent;   ///< local->parent space transformation
+        Matrix44f                   mParent2Local;   ///< parent->local space transformation
+        Matrix44f                   mLocal2Root;     ///< local->root space transformation
+        Matrix44f                   mRoot2Local;     ///< root->local transformation
+        Spheref                     mBoundingSphere; ///< bounding sphere.
 
         union
         {
-            UInt32          mDirtyFlags; ///< all dirty flags as one integer
+            UInt32                  mDirtyFlags;     ///< all dirty flags as one integer
             struct
             {
-                unsigned int mTransformDirty :  1;
-                unsigned int                 : 31; // reserved
+                unsigned int        mTransformDirty :  1;
+                unsigned int                        : 31; // reserved
             };
         };
 
@@ -353,28 +353,28 @@ namespace GN { namespace scene
         //@{
 
         void setNumDrawables( size_t );
-        void setDrawable( size_t, const Drawable & );
-        void addDrawable( const Drawable & );
+        void setDrawable( size_t, const engine::Drawable & );
+        void addDrawable( const engine::Drawable & );
         void setParent( Actor * newParent, Actor * newPrev = 0 );
         void setPosition( const Vector3f & );
         void setPivot( const Vector3f & );
         void setRotation( const Quaternionf & );
         void setBoundingSphere( const Spheref & );
 
-        Scene             & getScene() const { return mScene; }
-        size_t              getNumDrawables() const { return mDrawables.size(); }
-        const Drawable    & getDrawable( size_t i ) const { return mDrawables[i]; }
-        Actor             * getParent() const { return node2actor( mNode.getParent() ); }
-        Actor             * getPrevSibling() const { return node2actor( mNode.getPrevSibling() ); }
-        Actor             * getNextSibling() const { return node2actor( mNode.getNextSibling() ); }
-        Actor             * getFirstChild() const { return node2actor( mNode.getFirstChild() ); }
-        Actor             * getLastChild() const;
-        const Vector3f    & getPosition() const { return mPosition; }
-        const Vector3f    & getPivot() const { return mPivot; }
-        const Quaternionf & getRotation() const { return mRotation; }
-        const Matrix44f   & getLocal2Parent() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Parent; }
-        const Matrix44f   & getLocal2Root() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Root; }
-        const Spheref     & getBoundingSphere() const { return mBoundingSphere; }
+        Scene                  & getScene() const { return mScene; }
+        size_t                   getNumDrawables() const { return mDrawables.size(); }
+        const engine::Drawable & getDrawable( size_t i ) const { return mDrawables[i]; }
+        Actor                  * getParent() const { return node2actor( mNode.getParent() ); }
+        Actor                  * getPrevSibling() const { return node2actor( mNode.getPrevSibling() ); }
+        Actor                  * getNextSibling() const { return node2actor( mNode.getNextSibling() ); }
+        Actor                  * getFirstChild() const { return node2actor( mNode.getFirstChild() ); }
+        Actor                  * getLastChild() const;
+        const Vector3f         & getPosition() const { return mPosition; }
+        const Vector3f         & getPivot() const { return mPivot; }
+        const Quaternionf      & getRotation() const { return mRotation; }
+        const Matrix44f        & getLocal2Parent() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Parent; }
+        const Matrix44f        & getLocal2Root() const { if( mTransformDirty ) { const_cast<Actor*>(this)->calcTransform(); } return mLocal2Root; }
+        const Spheref          & getBoundingSphere() const { return mBoundingSphere; }
 
         //@}
 

@@ -74,7 +74,7 @@ private:
 public:
 
     virtual const FontFaceDesc & getDesc() const { return mDesc; }
-    virtual bool loadFontBitmap( FontBitmap &, wchar_t, FontFaceQuality );
+    virtual bool loadFontImage( FontImage &, wchar_t, FontFaceQuality );
     virtual void getKerning( int & dx, int & dy, wchar_t ch1, wchar_t ch2 );
 
     // ********************************
@@ -225,7 +225,7 @@ void FontFaceFt2::quit()
 //
 //
 // -----------------------------------------------------------------------------
-bool FontFaceFt2::loadFontBitmap( FontBitmap & result, wchar_t ch, FontFaceQuality quality )
+bool FontFaceFt2::loadFontImage( FontImage & result, wchar_t ch, FontFaceQuality quality )
 {
     GN_GUARD;
 

@@ -138,6 +138,205 @@ static void sTextureDtor( GraphicsResource * & tex )
     }
 }
 
+//
+// get integer value of specific attribute
+// -----------------------------------------------------------------------------
+template<typename T>
+static bool sGetIntAttrib( const XmlElement & node, const char * attribName, T & result, bool silence = false )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if ( !a || !str2Int<T>( result, a->value.cptr() ) )
+    {
+        if( !silence ) GN_ERROR(sLogger)( "attribute '%s' is missing!", attribName );
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+//
+// get integer value of specific attribute
+// -----------------------------------------------------------------------------
+static bool sGetBoolAttrib( const XmlElement & node, const char * attribName, bool defval = false )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if( !a )
+    {
+        return defval;
+    }
+    else
+    {
+        StrA value(a->value);
+        value.toLower();
+        return "1" == value
+            || "yes" == value
+            || "true" == value;
+    }
+}
+
+//
+// get string value of specific attribute
+// -----------------------------------------------------------------------------
+static bool sGetStringAttrib( const XmlElement & node, const char * attribName, GN::StrA & result, bool silence = false )
+{
+    const XmlAttrib * a = node.findAttrib( attribName );
+    if ( !a )
+    {
+        if( !silence ) GN_ERROR(sLogger)( "attribute '%s' is missing!", attribName );
+        return false;
+    }
+    else
+    {
+        result = a->value;
+        return true;
+    }
+}
+
+
+//
+//
+// -----------------------------------------------------------------------------
+static Entity * sLoadTextureEntityFromImageFile(
+    EntityManager & em,
+    RenderEngine  & re,
+    const StrA    & name,
+    File          & file,
+    BitFields     usage )
+{
+    GN_GUARD;
+
+    GN_ASSERT( !em.getEntityByName( name, true ) );
+
+    GN_INFO(sLogger)( "Load texture entity from image %s", name.cptr() );
+
+    // read image header
+    ImageReader ir;
+    ImageDesc   id;
+    if( !ir.reset( file ) ) return false;
+    if( !ir.readHeader( id ) ) return false;
+
+    // initialize texture descriptor
+    gfx::TextureDesc td;
+    if( !td.fromImageDesc( id ) ) return 0;
+    td.usage.u32 = usage;
+
+    // create the resource
+    GraphicsResource * res = re.createTexture( name, td );
+    if( 0 == res ) return 0;
+
+    // do load
+    AutoRef<TextureLoader> loader( new TextureLoader(name) );
+    re.updateResource( res, 0, loader );
+
+    // success
+    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &sTextureDtor );
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static Entity * sLoadTextureEntityFromXml(
+    EntityManager & em,
+    RenderEngine  & re,
+    const StrA    & name,
+    File          & fp,
+    const StrA    & dirname )
+{
+    GN_GUARD;
+
+    // parse texture definition
+    XmlDocument doc;
+    XmlParseResult xpr;
+    if( !doc.parse( xpr, fp ) )
+    {
+        GN_ERROR(sLogger)(
+            "Fail to read XML file (%s):\n"
+            "    line   : %d\n"
+            "    column : %d\n"
+            "    error  : %s",
+            fp.name().cptr(),
+            xpr.errLine,
+            xpr.errColumn,
+            xpr.errInfo.cptr() );
+        return false;
+    }
+
+    // check root node
+    if( 0 == xpr.root )
+    {
+        GN_ERROR(sLogger)( "NULL parameter!" );
+        return false;
+    }
+    const XmlElement * e = xpr.root->toElement();
+    if( 0 == e || "texture" != e->name )
+    {
+        GN_ERROR(sLogger)( "root node must be \"<texture>\"." );
+        return false;
+    }
+
+    gfx::TextureDesc desc;
+
+    // get texture usages
+    desc.usage.u32          = 0;
+    desc.usage.dynamic      = sGetBoolAttrib( *e, "dynamic" );
+    desc.usage.automip      = sGetBoolAttrib( *e, "automip" );
+    desc.usage.rendertarget = sGetBoolAttrib( *e, "rendertarget" );
+    desc.usage.depthstencil = sGetBoolAttrib( *e, "depthstencil" );
+    desc.usage.readback     = sGetBoolAttrib( *e, "readback" );
+    desc.usage.tiled        = sGetBoolAttrib( *e, "tiled" );
+
+    const XmlAttrib * ref = e->findAttrib( "ref" );
+    if( ref )
+    {
+        StrA texname;
+        core::resolvePath( texname, dirname, ref->value );
+        AutoObjPtr<File> texfile( core::openFile( texname, "rb" ) );
+        if( !texfile ) return 0;
+        return sLoadTextureEntityFromImageFile( em, re, texname, *texfile, desc.usage.u32 );
+    }
+    else
+    {
+        StrA s;
+
+        // get texture dimension
+        if( !sGetStringAttrib( *e, "dim", s ) ) return false;
+        if( !str2TexDim( desc.dim, s.cptr() ) )
+        {
+            GN_ERROR(sLogger)( "invalid texture dimension: %s", s.cptr() );
+            return false;
+        }
+
+        // get texture size
+        if( !sGetIntAttrib( *e, "faces" , desc.faces  ) ) return false;
+        if( !sGetIntAttrib( *e, "width" , desc.width  ) ) return false;
+        if( !sGetIntAttrib( *e, "height", desc.height ) ) return false;
+        if( !sGetIntAttrib( *e, "depth" , desc.depth  ) ) return false;
+        if( !sGetIntAttrib( *e, "levels", desc.levels ) ) return false;
+
+        // get texture format, optional, default is FMT_DEFAULT
+        if( sGetStringAttrib( *e, "format", s, true ) )
+        {
+            if( !str2ClrFmt( desc.format, s ) )
+            {
+                GN_ERROR(sLogger)( "invalid texture format: %s", s.cptr() );
+                return false;
+            }
+        }
+        else
+        {
+            desc.format = FMT_DEFAULT;
+        }
+
+        return createTextureEntity( em, re, name, desc );
+    }
+
+    GN_UNGUARD;
+}
+
 // *****************************************************************************
 // public functions
 // *****************************************************************************
@@ -159,37 +358,35 @@ GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
 {
     GN_TODO( "convert filename to absolute/full path" );
 
+    GN_INFO(sLogger)( "Load %s", filename.cptr() );
+
     // check if the texture is already loaded
     Entity * e = em.getEntityByName( filename, true );
     if( e ) return e;
 
-    // open file
-    AutoObjPtr<File> fp( core::openFile( filename, "rb" ) );
-    if( 0 == fp ) return false;
+    StrA ext = extName(filename);
+    if( 0 == strCmpI( ".xml", ext.cptr() ) )
+    {
+        // open file
+        AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+        if( !fp ) return 0;
 
-    // read image header
-    ImageReader ir;
-    ImageDesc   id;
-    if( !ir.reset( *fp ) ) return false;
-    if( !ir.readHeader( id ) ) return false;
+        // parse texture definition
+        return sLoadTextureEntityFromXml( em, re, filename, *fp, dirName(filename) );
+    }
+    else
+    {
+        // open texture file
+        AutoObjPtr<File> fp( core::openFile( filename, "rb" ) );
+        if( !fp )
+        {
+            GN_ERROR(sLogger)( "Fail to open texture file '%s'.", filename.cptr() );
+            return 0;
+        }
 
-    // close file
-    fp.clear();
-
-    // initialize resource descriptor
-    gfx::TextureDesc td;
-    if( !td.fromImageDesc( id ) ) return 0;
-
-    // create the resource
-    GraphicsResource * res = re.createTexture( filename, td );
-    if( 0 == res ) return 0;
-
-    // do load
-    AutoRef<TextureLoader> loader( new TextureLoader(filename) );
-    re.updateResource( res, 0, loader );
-
-    // success
-    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), filename, res, &sTextureDtor );
+        // create texture instance
+        return sLoadTextureEntityFromImageFile( em, re, filename, *fp, 0 );
+    }
 }
 
 //

@@ -11,7 +11,7 @@ using namespace GN::scene;
 ///
 class TestCube : public TestCase
 {
-    AsciiFont        font;
+    BitmapFont       font;
     engine::Drawable cube;
     engine::Entity * tex;
 

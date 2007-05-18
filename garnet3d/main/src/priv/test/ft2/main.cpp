@@ -75,8 +75,8 @@ public:
         xCharTexture& charTex = g_TexID[ch];
 		
 		//取道位图数据
-		FontBitmap fbm;
-        if( !mFace->loadFontBitmap( fbm, ch ) ) exit(-1);
+		FontImage fbm;
+        if( !mFace->loadFontImage( fbm, ch ) ) exit(-1);
 
         //imdebug( "lum b=8 w=%d h=%d %p", bitmap.width, bitmap.rows, bitmap.buffer );
 

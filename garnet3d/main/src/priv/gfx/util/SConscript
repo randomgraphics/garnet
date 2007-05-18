@@ -1,12 +1,7 @@
 Import( 'GN' )
 sources = [
     'createRenderer.cpp',
-    'effect.cpp',
-    'effectFromXml.cpp',
     'fakeRenderer.cpp',
-    'fatMesh.cpp',
-    'fatMeshLoader.cpp',
-    'mesh.cpp',
     #'nes.cpp',
 ]
 cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )

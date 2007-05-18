@@ -49,13 +49,6 @@ namespace GN
 #include "gfx/context.h"
 #include "gfx/renderer.h"
 
-
-// More graphics classes and utilities that use renderer interfaces,
-// such as mesh effects and etc.
-#include "gfx/effect.h"
-#include "gfx/mesh.h"
-#include "gfx/fatMesh.h"
-
 // *****************************************************************************
 //                         END of GNgfx.h
 // *****************************************************************************
