@@ -361,8 +361,8 @@ namespace GN { namespace gfx
         void drawDeviceDestroy();
 
         inline void applyVtxBuf(
-            const GN::gfx::OGLVtxFmt & vtxFmt,
-            const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
+            const GN::gfx::OGLVtxFmt & vtxfmt,
+            const GN::gfx::RendererContext::VtxBufDesc * vtxbufs,
             size_t startvtx );
 
     private:

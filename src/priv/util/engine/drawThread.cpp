@@ -118,20 +118,110 @@ static void sDeleteDeviceData( GN::engine::GraphicsResource & res )
 //
 // -----------------------------------------------------------------------------
 template<typename T>
-static void sResolveResourceId(
-    GN::engine::RenderEngine & engine,
-    T & data )
+static inline void sResolveResourceId(
+    GN::engine::RenderEngine & eng,
+    T & result,
+    const GN::engine::GraphicsResource * res )
 {
+    if( 0 == res )
+    {
+        result = 0;
+    }
+    else
+    {
+        GN_ASSERT( eng.checkResource( res ) );
+        result = (T)res->data;
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static void sDrawContext2RendererContext(
+    GN::engine::RenderEngine & eng,
+    GN::gfx::RendererContext & rc,
+    const GN::engine::DrawContext & dc )
+{
+    using namespace GN;
+    using namespace GN::gfx;
     using namespace GN::engine;
 
-    if( 0 == data ) return;
+    // flags
+    rc.flags.u32 = dc.flags.u32;
 
-    GraphicsResourceItem * item = (GraphicsResourceItem*)data;
+    // shaders
+    for( int i = 0; i < NUM_SHADER_TYPES; ++i )
+    {
+        if( dc.flags.shaderBit( i ) ) sResolveResourceId( eng, rc.shaders[i], dc.shaders[i] );
+    }
 
-    GN_ASSERT( engine.resourceCache().check( item ) );
+    // rsb
+    if( dc.flags.rsb ) rc.rsb = dc.rsb;
 
-    data = (T)item->data;
+    // renderTargets
+    if( dc.flags.renderTargets )
+    {
+        // color buffers
+        for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+        {
+            const DrawContext::RenderTargetTexture& src = dc.renderTargets.cbuffers[i];
+            gfx::RenderTargetTexture              & dst = rc.renderTargets.cbuffers[i];
+            sResolveResourceId( eng, dst.texture, src.texture );
+            dst.subidx = src.subidx;
+        }
+
+        // z buffer
+        sResolveResourceId( eng, rc.renderTargets.zbuffer.texture, dc.renderTargets.zbuffer.texture );
+        rc.renderTargets.zbuffer.subidx = dc.renderTargets.zbuffer.subidx;
+
+        rc.renderTargets.count = dc.renderTargets.count;
+        rc.renderTargets.aa    = dc.renderTargets.aa;
+    }
+
+    // viewport
+    if( dc.flags.viewport ) rc.viewport = dc.viewport;
+
+    // TODO: FFP parameters
+
+    // textures
+    if( dc.flags.textures )
+    {
+        for( unsigned int i = 0; i < dc.numTextures; ++i )
+        {
+            sResolveResourceId( eng, rc.textures[i], dc.textures[i] );
+        }
+        rc.numTextures = dc.numTextures;
+    }
+
+    // vtxfmt
+    if( dc.flags.vtxfmt )
+    {
+        sResolveResourceId( eng, rc.vtxfmt, dc.vtxfmt );
+    }
+
+    // vtxbufs
+    if( dc.flags.vtxbufs )
+    {
+        for( unsigned int i = 0; i < dc.numVtxBufs; ++i )
+        {
+            sResolveResourceId( eng, rc.vtxbufs[i].buffer, dc.vtxbufs[i].buffer );
+            rc.vtxbufs[i].offset = dc.vtxbufs[i].offset;
+            rc.vtxbufs[i].stride = dc.vtxbufs[i].stride;
+        }
+        rc.numVtxBufs = dc.numVtxBufs;
+    }
+
+    // idxbuf
+    if( dc.flags.idxbuf )
+    {
+        sResolveResourceId( eng, rc.idxbuf, dc.idxbuf );
+    }
 }
+
+// *****************************************************************************
+// draw command functions
+// *****************************************************************************
+
 // *****************************************************************************
 // draw command functions
 // *****************************************************************************
@@ -144,45 +234,13 @@ namespace GN { namespace engine
 
         GN_ASSERT( param && bytes == align<size_t>( sizeof(DrawContext), 4 ) );
 
-        DrawContext * context = (DrawContext*)param;
+        DrawContext * dc = (DrawContext*)param;
 
-        // convert ID to resource pointer
-        for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
-        {
-            if( context->flags.shaderBit( i ) ) sResolveResourceId( engine, context->shaders[i] );
-        }
-        if( context->flags.renderTargets )
-        {
-            for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
-            {
-                sResolveResourceId( engine, context->renderTargets.cbuffers[i].texture );
-            }
-            sResolveResourceId( engine, context->renderTargets.zbuffer.texture );
-        }
-        if( context->flags.vtxFmt )
-        {
-            sResolveResourceId( engine, context->vtxFmt );
-        }
-        if( context->flags.textures )
-        {
-            for( unsigned int i = 0; i < context->numTextures; ++i )
-            {
-                sResolveResourceId( engine, context->textures[i] );
-            }
-        }
-        if( context->flags.vtxBufs )
-        {
-            for( unsigned int i = 0; i < context->numVtxBufs; ++i )
-            {
-                sResolveResourceId( engine, context->vtxBufs[i].buffer );
-            }
-        }
-        if( context->flags.idxBuf )
-        {
-            sResolveResourceId( engine, context->idxBuf );
-        }
+        static gfx::RendererContext rc;
 
-        gRenderer.setContext( *context );
+        sDrawContext2RendererContext( engine, rc, *dc );
+
+        gRenderer.setContext( rc );
 
         if( DUMP_COMMANDS )
         {

@@ -172,9 +172,9 @@ struct DenseMesh
         // restore renderer states
         RendererContext::FieldFlags ff;
         ff.u32 = 0;
-        ff.vtxFmt = 1;
-        ff.vtxBufs = 1;
-        ff.idxBuf = 1;
+        ff.vtxfmt = 1;
+        ff.vtxbufs = 1;
+        ff.idxbuf = 1;
         r.rebindContext( ff );
     }
 };

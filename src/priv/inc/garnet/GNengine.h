@@ -19,6 +19,8 @@ namespace GN
     }
 }
 
+#include "engine/graphicsResource.h"
+#include "engine/drawContext.h"
 #include "engine/renderEngine.h"
 #include "engine/entity.h"
 #include "engine/mesh.h"

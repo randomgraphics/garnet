@@ -6,6 +6,7 @@ using namespace GN;
 using namespace GN::input;
 using namespace GN::gfx;
 using namespace GN::engine;
+using namespace GN::scene;
 
 static GN::Logger * sLogger = GN::getLogger("GN.test.engine.Cube");
 
@@ -46,5 +47,9 @@ void TestCube::draw()
     // dispose all
     renderEngine().disposeAllResources();
 
+    // draw a quad
+    quadRenderer().drawSingleSolidQuad( GN_RGBA32(255,0,0,255), 0 );
+
+    // draw cube
     cube.draw();
 }

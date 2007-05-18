@@ -117,7 +117,7 @@ bool GN::engine::Drawable::loadFromXmlNode(
                 GN_ERROR(sLogger)( "missing texture binding attribute." );
                 return false;
             }
-            gfx::EffectItemID binding;
+            EffectItemID binding;
             if( effptr->hasTexture( bindingstr, &binding ) )
             {
                 GN_ASSERT( binding );
@@ -151,7 +151,7 @@ bool GN::engine::Drawable::loadFromXmlNode(
                 return false;
             }
 
-            gfx::EffectItemID binding;
+            EffectItemID binding;
             if( effptr->hasUniform( bindingstr, &binding ) )
             {
                 GN_ASSERT( binding );

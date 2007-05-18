@@ -53,9 +53,9 @@ namespace GN { namespace engine
         //@{
         GraphicsResourceItem * alloc( const GraphicsResourceDesc & );
         void                   free( GraphicsResourceItem * );
-        bool                   check( GraphicsResourceItem * ) const;
+        bool                   check( const GraphicsResourceItem * ) const;
         GraphicsResourceItem * first() const;
-        GraphicsResourceItem * next( GraphicsResourceItem * ) const;
+        GraphicsResourceItem * next( const GraphicsResourceItem * ) const;
         //@}
 
         // ********************************

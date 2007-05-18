@@ -76,7 +76,7 @@ namespace GN { namespace engine
         /// \name mesh data
         //@{
         RenderEngine &        engine;
-        GraphicsResource *    vtxfmt;
+        AutoGraphicsResource  vtxfmt;
         DynaArray<MeshVtxBuf> vtxbufs;
         GraphicsResource *    idxbuf;
         gfx::PrimitiveType    primtype;
@@ -106,7 +106,7 @@ namespace GN { namespace engine
         ///
         void clear()
         {
-            if( vtxfmt ) engine.freeResource( vtxfmt ), vtxfmt = 0;
+            vtxfmt.clear();
             for( size_t i = 0; i < vtxbufs.size(); ++i )
             {
                 if( vtxbufs[i].buffer ) engine.freeResource( vtxbufs[i].buffer );
@@ -127,16 +127,16 @@ namespace GN { namespace engine
         void updateContext( DrawContext & context ) const
         {
             GN_ASSERT( engine.checkResource( vtxfmt ) );
-            context.setVtxFmt( (gfx::VtxFmtHandle)vtxfmt );
+            context.setVtxFmt( vtxfmt );
             for( size_t i = 0; i < vtxbufs.size(); ++i )
             {
                 GN_ASSERT( engine.checkResource( vtxbufs[i].buffer ) );
-                context.setVtxBuf( i, (const gfx::VtxBuf *)vtxbufs[i].buffer, vtxbufs[i].offset, vtxbufs[i].stride );
+                context.setVtxBuf( i, vtxbufs[i].buffer, vtxbufs[i].offset, vtxbufs[i].stride );
             }
             if( idxbuf )
             {
                 GN_ASSERT( engine.checkResource( idxbuf ) );
-                context.setIdxBuf( (const gfx::IdxBuf*)idxbuf );
+                context.setIdxBuf( idxbuf );
             }
         }
 

@@ -1,8 +1,5 @@
 #include "testCase.h"
 
-using namespace GN;
-using namespace GN::engine;
-
 ///
 /// simple triangle test case
 ///
@@ -16,7 +13,7 @@ public:
 
     //@{
 
-    TestTriangle( EntityManager & em, RenderEngine & re ) : TestCase( em, re ) {}
+    TestTriangle( EntityManager & em, RenderEngine & re, QuadRenderer & qr ) : TestCase( em, re, qr ) {}
 
     virtual bool init();
     virtual void quit();

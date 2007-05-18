@@ -17,11 +17,13 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 // -----------------------------------------------------------------------------
 static inline void sPrepareResource(
     GN::engine::RenderEngine & engine,
-    GN::engine::GraphicsResourceItem * item )
+    const GN::engine::GraphicsResource * res )
 {
     using namespace GN::engine;
 
-    if( 0 == item ) return;
+    if( 0 == res ) return;
+
+    GN::engine::GraphicsResourceItem * item = (GN::engine::GraphicsResourceItem*)res;
 
     if( !engine.resourceCache().check(item) ) return;
 
@@ -53,37 +55,37 @@ static inline void sPrepareContextResources(
     // make sure all resources referenced in contex is ready to use.
     for( int i = 0; i < gfx::NUM_SHADER_TYPES; ++i )
     {
-        if( context.flags.shaderBit( i ) ) sPrepareResource( engine, (GraphicsResourceItem*)context.shaders[i] );
+        if( context.flags.shaderBit( i ) ) sPrepareResource( engine, context.shaders[i] );
     }
     if( context.flags.renderTargets )
     {
         for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
         {
-            sPrepareResource( engine, (GraphicsResourceItem*)context.renderTargets.cbuffers[i].texture );
+            sPrepareResource( engine, context.renderTargets.cbuffers[i].texture );
         }
-        sPrepareResource( engine, (GraphicsResourceItem*)context.renderTargets.zbuffer.texture );
+        sPrepareResource( engine, context.renderTargets.zbuffer.texture );
     }
-    if( context.flags.vtxFmt )
+    if( context.flags.vtxfmt )
     {
-        sPrepareResource( engine, (GraphicsResourceItem*)context.vtxFmt );
+        sPrepareResource( engine, context.vtxfmt );
     }
     if( context.flags.textures )
     {
         for( unsigned int i = 0; i < context.numTextures; ++i )
         {
-            sPrepareResource( engine, (GraphicsResourceItem*)context.textures[i] );
+            sPrepareResource( engine, context.textures[i] );
         }
     }
-    if( context.flags.vtxBufs )
+    if( context.flags.vtxbufs )
     {
         for( unsigned int i = 0; i < context.numVtxBufs; ++i )
         {
-            sPrepareResource( engine, (GraphicsResourceItem*)context.vtxBufs[i].buffer );
+            sPrepareResource( engine, context.vtxbufs[i].buffer );
         }
     }
-    if( context.flags.idxBuf )
+    if( context.flags.idxbuf )
     {
-        sPrepareResource( engine, (GraphicsResourceItem*)context.idxBuf );
+        sPrepareResource( engine, context.idxbuf );
     }
 }
 
@@ -92,12 +94,14 @@ static inline void sPrepareContextResources(
 // -----------------------------------------------------------------------------
 static inline void sSetupWaitingListAndReferenceFence(
     GN::engine::RenderEngine::GraphicsResourceCache & cache,
-    GN::engine::GraphicsResourceItem * item,
+    const GN::engine::GraphicsResource * res,
     GN::engine::DrawCommandHeader & dr )
 {
     using namespace GN::engine;
 
-    if( 0 == item ) return;
+    if( 0 == res ) return;
+
+    GN::engine::GraphicsResourceItem * item = (GN::engine::GraphicsResourceItem*)res;
 
     if( !cache.check( item ) ) return;
 
@@ -139,7 +143,7 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceItem*)context.shaders[i],
+                context.shaders[i],
                 dr );
         }
     }
@@ -149,19 +153,19 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceItem*)context.renderTargets.cbuffers[i].texture,
+                context.renderTargets.cbuffers[i].texture,
                 dr );
         }
         sSetupWaitingListAndReferenceFence(
             cache,
-            (GraphicsResourceItem*)context.renderTargets.zbuffer.texture,
+            context.renderTargets.zbuffer.texture,
             dr );
     }
-    if( context.flags.vtxFmt )
+    if( context.flags.vtxfmt )
     {
         sSetupWaitingListAndReferenceFence(
             cache,
-            (GraphicsResourceItem*)context.vtxFmt,
+            context.vtxfmt,
             dr );
     }
     if( context.flags.textures )
@@ -170,25 +174,25 @@ static void sSetupDrawCommandWaitingList(
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceItem*)context.textures[i],
+                context.textures[i],
                 dr );
         }
     }
-    if( context.flags.vtxBufs )
+    if( context.flags.vtxbufs )
     {
         for( unsigned int i = 0; i < context.numVtxBufs; ++i )
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
-                (GraphicsResourceItem*)context.vtxBufs[i].buffer,
+                context.vtxbufs[i].buffer,
                 dr );
         }
     }
-    if( context.flags.idxBuf )
+    if( context.flags.idxbuf )
     {
         sSetupWaitingListAndReferenceFence(
             cache,
-            (GraphicsResourceItem*)context.idxBuf,
+            context.idxbuf,
             dr );
     }
 }
@@ -540,9 +544,9 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::RenderEngine::checkResource( GraphicsResource * res )
+bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) const
 {
-    GraphicsResourceItem * item = (GraphicsResourceItem*)res;
+    const GraphicsResourceItem * item = (const GraphicsResourceItem*)res;
     return mResourceCache->check( item );
 }
 
@@ -645,6 +649,34 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
     updateResource( res, 0, dummyloader );
 
     return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
+    const gfx::IdxBufDesc & desc,
+    const StrA            & name )
+{
+    return createIdxBuf( desc.numidx, desc.dynamic, desc.readback, name );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
+    UInt32       numidx,
+    bool         dynamic,
+    bool         readback,
+    const StrA & name )
+{
+    GraphicsResourceDesc grd;
+    grd.name        = name;
+    grd.type        = GRT_IDXBUF;
+    grd.id.numidx   = numidx;
+    grd.id.dynamic  = dynamic;
+    grd.id.readback = readback;
+    return allocResource( grd );
 }
 
 //

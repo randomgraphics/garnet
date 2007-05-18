@@ -34,9 +34,16 @@ namespace GN { namespace gfx
     struct RenderTargetTexture
     {
         const Texture * texture; ///< render target texture
-        unsigned int face  : 14; ///< cubemap face. Must be zero for non-cube/stack texture.
-        unsigned int slice : 14; ///< slice index. Must be zero for non 3D texture.
-        unsigned int level :  4; ///< mipmap level
+        union
+        {
+            UInt32      subidx; ///< index of sub resource
+            struct
+            {
+                unsigned int face  : 14; ///< cubemap face. Must be zero for non-cube/stack texture.
+                unsigned int slice : 14; ///< slice index. Must be zero for non 3D texture.
+                unsigned int level :  4; ///< mipmap level
+            };
+        };
 
         ///
         /// equality check
@@ -45,7 +52,7 @@ namespace GN { namespace gfx
         {
             if( texture != rhs.texture ) return false;
             if( NULL == texture ) return true; // ignore remaining parameters, if texture is NULL.
-            return face == rhs.face && level == rhs.level && slice == rhs.slice;
+            return subidx == rhs.subidx;
         }
 
         ///
@@ -55,7 +62,7 @@ namespace GN { namespace gfx
         {
             if( texture != rhs.texture ) return true;
             if( NULL == texture ) return false; // ignore remaining parameters, if texture is NULL.
-            return face != rhs.face || level != rhs.level || slice != rhs.slice;
+            return subidx != rhs.subidx;
         }
     };
 
@@ -192,9 +199,9 @@ namespace GN { namespace gfx
                 unsigned int tsb                : 1; ///< texture state block
                 // byte 2 (graphics resources)
                 unsigned int textures           : 1; ///< textures
-                unsigned int vtxFmt             : 1; ///< vertex format
-                unsigned int vtxBufs            : 1; ///< vertex buffers
-                unsigned int idxBuf             : 1; ///< index buffer
+                unsigned int vtxfmt             : 1; ///< vertex format
+                unsigned int vtxbufs            : 1; ///< vertex buffers
+                unsigned int idxbuf             : 1; ///< index buffer
                 unsigned int                    : 4; ///< reserved
                 // byte 3 (reserved)
                 unsigned int                    : 8; ///< reserved
@@ -259,10 +266,10 @@ namespace GN { namespace gfx
         // graphics resources
         const Texture *       textures[MAX_TEXTURE_STAGES]; ///< texture list
         UInt32                numTextures; ///< texture count
-        VtxFmtHandle          vtxFmt; ///< vertex format handle. 0 means no vertex data at all.
-        VtxBufDesc            vtxBufs[MAX_VERTEX_ATTRIBUTES]; ///< vertex buffers.
+        VtxFmtHandle          vtxfmt; ///< vertex format handle. 0 means no vertex data at all.
+        VtxBufDesc            vtxbufs[MAX_VERTEX_ATTRIBUTES]; ///< vertex buffers.
         UInt32                numVtxBufs; ///< vertex buffer count.
-        const IdxBuf *        idxBuf; ///< index buffer
+        const IdxBuf *        idxbuf; ///< index buffer
 
         ///
         /// Clear to null context, all fields are unused/undefined.
@@ -305,9 +312,9 @@ namespace GN { namespace gfx
             tsb.resetToDefault();
 
             numTextures = 0;
-            vtxFmt = 0;
+            vtxfmt = 0;
             numVtxBufs = 0;
-            idxBuf = 0;
+            idxbuf = 0;
         }
 
         ///
@@ -345,13 +352,13 @@ namespace GN { namespace gfx
                     for( size_t i = 0; i < another.numTextures; ++i ) textures[i] = another.textures[i];
                     numTextures = another.numTextures;
                 }
-                if( another.flags.vtxFmt ) vtxFmt = another.vtxFmt;
-                if( another.flags.vtxBufs )
+                if( another.flags.vtxfmt ) vtxfmt = another.vtxfmt;
+                if( another.flags.vtxbufs )
                 {
-                    for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxBufs[i] = another.vtxBufs[i];
+                    for( size_t i = 0; i < another.numVtxBufs; ++i ) vtxbufs[i] = another.vtxbufs[i];
                     numVtxBufs = another.numVtxBufs;
                 }
-                if( another.flags.idxBuf ) idxBuf = another.idxBuf;
+                if( another.flags.idxbuf ) idxbuf = another.idxbuf;
             }
 
             flags.u32 |= another.flags.u32;

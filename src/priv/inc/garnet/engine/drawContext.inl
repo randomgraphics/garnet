@@ -1,18 +1,19 @@
-namespace GN { namespace gfx
+namespace GN { namespace engine
 {
     // *************************************************************************
-    // RendererContext methods
+    // DrawContext methods
     // *************************************************************************
 
-#define _GNGFX_CONTEXT_UPDATE( FLAG, NAME, VALUE ) \
+#define _GN_ENGINE_DRAWCONTEXT_UPDATE( FLAG, NAME, VALUE ) \
     if( (!this->flags.FLAG) || (this->NAME)!=(VALUE) ) { this->flags.FLAG = 1; (this->NAME) = (VALUE); } else void(0)
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setShader( ShaderType type, const Shader * shader )
+    inline void DrawContext::setShader( gfx::ShaderType type, const GraphicsResource * shader )
     {
-        GN_ASSERT( 0 <= type && type < NUM_SHADER_TYPES );
+        GN_ASSERT( 0 <= type && type < gfx::NUM_SHADER_TYPES );
+        GN_ASSERT( 0 == shader || GRT_SHADER == shader->desc.type );
         //GN_ASSERT( !shader || type == shader->getType() );
         if( !flags.shaderBit(type) || shaders[type] != shader )
         {
@@ -24,49 +25,49 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setShaders( const Shader * vs, const Shader * ps, const Shader * gs )
+    inline void DrawContext::setShaders( const GraphicsResource * vs, const GraphicsResource * ps, const GraphicsResource * gs )
     {
-        setShader( SHADER_VS, vs );
-        setShader( SHADER_PS, ps );
-        setShader( SHADER_GS, gs );
+        setShader( gfx::SHADER_VS, vs );
+        setShader( gfx::SHADER_PS, ps );
+        setShader( gfx::SHADER_GS, gs );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setVS( const Shader * s )
+    inline void DrawContext::setVS( const GraphicsResource * s )
     {
-        setShader( SHADER_VS, s );
+        setShader( gfx::SHADER_VS, s );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setPS( const Shader * s )
+    inline void DrawContext::setPS( const GraphicsResource * s )
     {
-        setShader( SHADER_PS, s );
+        setShader( gfx::SHADER_PS, s );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setGS( const Shader * s )
+    inline void DrawContext::setGS( const GraphicsResource * s )
     {
-        setShader( SHADER_GS, s );
+        setShader( gfx::SHADER_GS, s );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setRenderStateBlock( const RenderStateBlockDesc & newRsb )
+    inline void DrawContext::setRenderStateBlock( const gfx::RenderStateBlockDesc & newRsb )
     {
-        _GNGFX_CONTEXT_UPDATE( rsb, rsb, newRsb );
+        _GN_ENGINE_DRAWCONTEXT_UPDATE( rsb, rsb, newRsb );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setRenderState( RenderState state, SInt32 value )
+    inline void DrawContext::setRenderState( gfx::RenderState state, SInt32 value )
     {
         if( !flags.rsb || !rsb.isSet(state) || rsb.get(state) != value )
         {
@@ -78,16 +79,16 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setRenderTargets( const RenderTargetDesc & desc )
+    inline void DrawContext::setRenderTargets( const RenderTargetDesc & desc )
     {
         GN_ASSERT( desc.valid() );
-        _GNGFX_CONTEXT_UPDATE( renderTargets, renderTargets, desc );
+        _GN_ENGINE_DRAWCONTEXT_UPDATE( renderTargets, renderTargets, desc );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setDrawToBackBuf()
+    inline void DrawContext::setDrawToBackBuf()
     {
         RenderTargetDesc rtd;
         rtd.drawToBackbuffer();
@@ -97,14 +98,14 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setDrawToTextures(
+    inline void DrawContext::setDrawToTextures(
             UInt32 count,
-            const Texture * rt0,
-            const Texture * rt1,
-            const Texture * rt2,
-            const Texture * rt3,
-            const Texture * z,
-            MsaaType aa )
+            const GraphicsResource * rt0,
+            const GraphicsResource * rt1,
+            const GraphicsResource * rt2,
+            const GraphicsResource * rt3,
+            const GraphicsResource * z,
+            gfx::MsaaType aa )
 
     {
         RenderTargetDesc desc;
@@ -115,12 +116,12 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setDrawToTextureWithoutDepth(
-            const Texture * tex,
+    inline void DrawContext::setDrawToTextureWithoutDepth(
+            const GraphicsResource * tex,
             UInt32 level,
             UInt32 face,
             UInt32 slice,
-            MsaaType aa_ )
+            gfx::MsaaType aa_ )
     {
         RenderTargetDesc desc;
         desc.count = 1;
@@ -133,15 +134,15 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setViewport( const Rectf & vp )
+    inline void DrawContext::setViewport( const Rectf & vp )
     {
-        _GNGFX_CONTEXT_UPDATE( viewport, viewport, vp );
+        _GN_ENGINE_DRAWCONTEXT_UPDATE( viewport, viewport, vp );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setViewport( float left, float top, float width, float height )
+    inline void DrawContext::setViewport( float left, float top, float width, float height )
     {
         setViewport( Rectf( left, top, width, height ) );
     }
@@ -149,20 +150,20 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setTextureStateBlock( const TextureStateBlockDesc & value )
+    inline void DrawContext::setTextureStateBlock( const gfx::TextureStateBlockDesc & value )
     {
-        _GNGFX_CONTEXT_UPDATE( tsb, tsb, value );
+        _GN_ENGINE_DRAWCONTEXT_UPDATE( tsb, tsb, value );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setTextureState( size_t stage, TextureState state, TextureStateValue value )
+    inline void DrawContext::setTextureState( size_t stage, gfx::TextureState state, gfx::TextureStateValue value )
     {
         GN_ASSERT(
-            stage < (size_t)MAX_TEXTURE_STAGES &&
-            0 <= state && state < NUM_TEXTURE_STATES &&
-            0 <= value && value < NUM_TEXTURE_STATE_VALUES );
+            stage < (size_t)gfx::MAX_TEXTURE_STAGES &&
+            0 <= state && state < gfx::NUM_TEXTURE_STATES &&
+            0 <= value && value < gfx::NUM_TEXTURE_STATE_VALUES );
         if( !flags.tsb || tsb.isSet( stage, state ) || value != tsb.get( stage, state ) )
         {
             flags.tsb = 1;
@@ -173,9 +174,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setTexture( size_t stage, const Texture * tex )
+    inline void DrawContext::setTexture( size_t stage, const GraphicsResource * tex )
     {
-        GN_ASSERT( stage < (size_t)MAX_TEXTURE_STAGES );
+        GN_ASSERT( stage < (size_t)gfx::MAX_TEXTURE_STAGES );
 
         flags.textures = 1;
 
@@ -190,7 +191,7 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setTextures( const Texture * const texlist[], size_t start, size_t count )
+    inline void DrawContext::setTextures( const GraphicsResource * const texlist[], size_t start, size_t count )
     {
         for( size_t i = 0; i < count; ++i, ++start )
         {
@@ -201,17 +202,19 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setVtxFmt( VtxFmtHandle h )
+    inline void DrawContext::setVtxFmt( const GraphicsResource * vtxfmt )
     {
-        _GNGFX_CONTEXT_UPDATE( vtxfmt, vtxfmt, h );
+        GN_ASSERT( 0 == vtxfmt || GRT_VTXFMT == vtxfmt->desc.type );
+        _GN_ENGINE_DRAWCONTEXT_UPDATE( vtxfmt, vtxfmt, vtxfmt );
     }
 
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setVtxBuf( size_t index, const VtxBuf * buffer, size_t offset, size_t stride )
+    inline void DrawContext::setVtxBuf( size_t index, const GraphicsResource * buffer, size_t offset, size_t stride )
     {
-        GN_ASSERT( index < (size_t)MAX_VERTEX_ATTRIBUTES );
+        GN_ASSERT( index < (size_t)gfx::MAX_VERTEX_ATTRIBUTES );
+        GN_ASSERT( 0 == buffer || GRT_VTXBUF == buffer->desc.type );
         if( !flags.vtxbufs || index >= numVtxBufs )
         {
             if( index >= numVtxBufs && NULL == buffer ) return;
@@ -236,10 +239,11 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void RendererContext::setIdxBuf( const IdxBuf * idxbuf )
+    inline void DrawContext::setIdxBuf( const GraphicsResource * idxbuf )
     {
-        _GNGFX_CONTEXT_UPDATE( idxbuf, idxbuf, idxbuf );
+        GN_ASSERT( 0 == idxbuf || GRT_IDXBUF == idxbuf->desc.type );
+        _GN_ENGINE_DRAWCONTEXT_UPDATE( idxbuf, idxbuf, idxbuf );
     }
 
-#undef _GNGFX_CONTEXT_UPDATE
+#undef _GN_ENGINE_DRAWCONTEXT_UPDATE
 }}

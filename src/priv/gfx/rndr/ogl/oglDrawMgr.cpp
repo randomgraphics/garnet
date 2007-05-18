@@ -283,17 +283,17 @@ void GN::gfx::OGLRenderer::drawIndexed(
 
     // bind vertex buffer based on current startvtx
     GN_ASSERT(
-        mVtxFmts.validHandle(mContext.vtxFmt) &&
-        mVtxFmts[mContext.vtxFmt] &&
-        mVtxFmts[mContext.vtxFmt]->getNumStreams() <= mContext.numVtxBufs );
+        mVtxFmts.validHandle(mContext.vtxfmt) &&
+        mVtxFmts[mContext.vtxfmt] &&
+        mVtxFmts[mContext.vtxfmt]->getNumStreams() <= mContext.numVtxBufs );
     applyVtxBuf(
-        *mVtxFmts[mContext.vtxFmt],
-        mContext.vtxBufs,
+        *mVtxFmts[mContext.vtxfmt],
+        mContext.vtxbufs,
         startvtx );
 
     // get current index buffer
-    GN_ASSERT( mContext.idxBuf );
-    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mContext.idxBuf );
+    GN_ASSERT( mContext.idxbuf );
+    const OGLIdxBuf * ib = safeCast<const OGLIdxBuf*>( mContext.idxbuf );
 
 #if GN_DEBUG_BUILD
     // Verify index buffer
@@ -359,12 +359,12 @@ void GN::gfx::OGLRenderer::draw( PrimitiveType prim, size_t numprim, size_t star
 
     // bind vertex buffer based on current startvtx
     GN_ASSERT(
-        mVtxFmts.validHandle(mContext.vtxFmt) &&
-        mVtxFmts[mContext.vtxFmt] &&
-        mVtxFmts[mContext.vtxFmt]->getNumStreams() <= mContext.numVtxBufs );
+        mVtxFmts.validHandle(mContext.vtxfmt) &&
+        mVtxFmts[mContext.vtxfmt] &&
+        mVtxFmts[mContext.vtxfmt]->getNumStreams() <= mContext.numVtxBufs );
     applyVtxBuf(
-        *mVtxFmts[mContext.vtxFmt],
-        mContext.vtxBufs,
+        *mVtxFmts[mContext.vtxfmt],
+        mContext.vtxbufs,
         startvtx );
 
     if( GLEW_EXT_compiled_vertex_array )
@@ -418,15 +418,15 @@ void GN::gfx::OGLRenderer::drawIndexedUp(
 
     // bind immediate vertex buffer
     GN_ASSERT(
-        mVtxFmts.validHandle(mContext.vtxFmt) &&
-        mVtxFmts[mContext.vtxFmt] &&
-        1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
+        mVtxFmts.validHandle(mContext.vtxfmt) &&
+        mVtxFmts[mContext.vtxfmt] &&
+        1 == mVtxFmts[mContext.vtxfmt]->getNumStreams() );
     if( GLEW_ARB_vertex_buffer_object )
     {
         // disable VBO
         GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
     }
-    mVtxFmts[mContext.vtxFmt]->bindBuffer(
+    mVtxFmts[mContext.vtxfmt]->bindBuffer(
         0, // stream index
         (const UInt8* )vertexData,
         strideInBytes );
@@ -501,15 +501,15 @@ void GN::gfx::OGLRenderer::drawUp(
 
     // bind immeidate vertex buffer
     GN_ASSERT(
-        mVtxFmts.validHandle(mContext.vtxFmt) &&
-        mVtxFmts[mContext.vtxFmt] &&
-        1 == mVtxFmts[mContext.vtxFmt]->getNumStreams() );
+        mVtxFmts.validHandle(mContext.vtxfmt) &&
+        mVtxFmts[mContext.vtxfmt] &&
+        1 == mVtxFmts[mContext.vtxfmt]->getNumStreams() );
     if( GLEW_ARB_vertex_buffer_object )
     {
         // disable VBO
         GN_OGL_CHECK( glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 ) );
     }
-    mVtxFmts[mContext.vtxFmt]->bindBuffer(
+    mVtxFmts[mContext.vtxfmt]->bindBuffer(
         0, // stream index
         (const UInt8* )vertexData,
         strideInBytes );
@@ -579,23 +579,23 @@ void GN::gfx::OGLRenderer::drawLines(
 //
 // -----------------------------------------------------------------------------
 inline void GN::gfx::OGLRenderer::applyVtxBuf(
-    const GN::gfx::OGLVtxFmt & vtxFmt,
-    const GN::gfx::RendererContext::VtxBufDesc * vtxBufs,
+    const GN::gfx::OGLVtxFmt & vtxfmt,
+    const GN::gfx::RendererContext::VtxBufDesc * vtxbufs,
     size_t startvtx )
 {
     GN_GUARD_SLOW;
 
     bool forceRebind = startvtx != mCurrentStartVtx;
 
-    for( size_t i = 0; i < vtxFmt.getNumStreams(); ++i )
+    for( size_t i = 0; i < vtxfmt.getNumStreams(); ++i )
     {
         if( forceRebind || ( mNeedRebindVtxBufs & (1<<i) ) )
         {
-            const RendererContext::VtxBufDesc & vbd = vtxBufs[i];
+            const RendererContext::VtxBufDesc & vbd = vtxbufs[i];
             if( vbd.buffer )
             {
                 const UInt8 * data = safeCast<const OGLBasicVtxBuf*>(vbd.buffer)->getVtxData();
-                vtxFmt.bindBuffer(
+                vtxfmt.bindBuffer(
                     i,
                     data + vbd.offset + startvtx * vbd.stride,
                     vbd.stride );

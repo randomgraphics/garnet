@@ -10,7 +10,7 @@ struct FatMeshDesc
 {
     UInt32 numvtx;        // vertex count
     UInt32 numFace;       // face count
-    UInt64 vtxFmt;        // vertex format
+    UInt64 vtxfmt;        // vertex format
     UInt8  hasFaceNormal; // as is
     UInt8  reserved[3];   // reserved, must be zero
 };
@@ -91,7 +91,7 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
         // read mesh descriptor
         if( !fp.read( &desc, sizeof(desc), &readen ) || sizeof(desc) != readen )
         { GN_ERROR(sLogger)( "fail to read mesh descriptor." ); return false; }
-        mFatFmt.u64 = desc.vtxFmt;
+        mFatFmt.u64 = desc.vtxfmt;
         mHasFaceNormal = !!desc.hasFaceNormal;
         if( !mFatFmt.valid() ) { GN_ERROR(sLogger)( "invalid vertex format." ); return false; }
 
@@ -118,19 +118,19 @@ bool GN::gfx::FatMesh::readFromFile( File & fp )
         // read file header
         if( !sReadLn( s, fp ) ) { GN_ERROR(sLogger)( "fail to read file header." ); return false; }
         UInt32 numVerts, numFaces, faceNormal;
-        UInt64 vtxFmt;
+        UInt64 vtxfmt;
         if( 4 != sscanf(
             s.cptr(),
             " NumVertices=%lu NumFaces=%lu VertexFormat=%llu FaceNormal=%lu",
             (unsigned long*)&numVerts,
             (unsigned long*)&numFaces,
-            (unsigned long long*)&vtxFmt,
+            (unsigned long long*)&vtxfmt,
             (unsigned long*)&faceNormal ) )
         {
             GN_ERROR(sLogger)( "invalid file header: %s", s.cptr() );
             return false;
         }
-        mFatFmt.u64 = vtxFmt;
+        mFatFmt.u64 = vtxfmt;
         mHasFaceNormal = !!faceNormal;
 
         // read vertex header
@@ -237,7 +237,7 @@ bool GN::gfx::FatMesh::writeToFile( File & fp, char mode ) const
         FatMeshDesc desc;
         desc.numvtx = (UInt32)mVertices.size();
         desc.numFace = (UInt32)mFaces.size();
-        desc.vtxFmt = mFatFmt.u64;
+        desc.vtxfmt = mFatFmt.u64;
         desc.hasFaceNormal = (UInt8)mHasFaceNormal;
         desc.reserved[0] = desc.reserved[1] = desc.reserved[2] = 0;
         if( !fp.write( &desc, sizeof(desc), 0 ) ) { GN_ERROR(sLogger)( "fail to write mesh descriptor." ); return false; }

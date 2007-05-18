@@ -2,7 +2,7 @@
 //
 // -----------------------------------------------------------------------------
 inline bool
-GN::engine::RenderEngine::GraphicsResourceCache::check( GraphicsResourceItem * item ) const
+GN::engine::RenderEngine::GraphicsResourceCache::check( const GraphicsResourceItem * item ) const
 {
     mResourceMutex.lock();
 
@@ -43,7 +43,7 @@ GN::engine::RenderEngine::GraphicsResourceCache::first() const
 //
 // -----------------------------------------------------------------------------
 inline GN::engine::GraphicsResourceItem *
-GN::engine::RenderEngine::GraphicsResourceCache::next( GraphicsResourceItem * item ) const
+GN::engine::RenderEngine::GraphicsResourceCache::next( const GraphicsResourceItem * item ) const
 {
     GN_ASSERT( check( item ) );
     UInt32 nextid = mResources.next( item->id );

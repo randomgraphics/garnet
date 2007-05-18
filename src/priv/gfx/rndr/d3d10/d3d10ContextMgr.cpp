@@ -301,14 +301,14 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
     //
     // bind vertex format
     //
-    if( newFlags.vtxFmt )
+    if( newFlags.vtxfmt )
     {
-        if( newContext.vtxFmt )
+        if( newContext.vtxfmt )
         {
             const D3D10VtxLayoutDesc * layout;
-            layout = &mVtxFmts[newContext.vtxFmt];
+            layout = &mVtxFmts[newContext.vtxfmt];
             GN_ASSERT( layout->layout );
-            if( newContext.vtxFmt != mContext.vtxFmt || forceRebind )
+            if( newContext.vtxfmt != mContext.vtxfmt || forceRebind )
             {
                 mDevice->IASetInputLayout( layout->layout );
             }
@@ -318,7 +318,7 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
     ///
     /// bind vertex buffers
     ///
-    if( newFlags.vtxBufs )
+    if( newFlags.vtxbufs )
     {
         ID3D10Buffer * buf[16];
         UINT           stride[16];
@@ -329,8 +329,8 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
         bool bind = false;
         for( UINT i = 0; i < newContext.numVtxBufs; ++i )
         {
-            const RendererContext::VtxBufDesc & vb = newContext.vtxBufs[i];
-            if( vb != mContext.vtxBufs[i] || forceRebind )
+            const RendererContext::VtxBufDesc & vb = newContext.vtxbufs[i];
+            if( vb != mContext.vtxbufs[i] || forceRebind )
             {
                 bind      = true;
                 buf[i]    = safeCast<const D3D10VtxBuf*>(vb.buffer)->getD3DBuffer();
@@ -348,11 +348,11 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextData(
     //
     // bind index buffer
     //
-    if( newFlags.idxBuf &&
-      ( newContext.idxBuf != mContext.idxBuf || forceRebind ) )
+    if( newFlags.idxbuf &&
+      ( newContext.idxbuf != mContext.idxbuf || forceRebind ) )
     {
         mDevice->IASetIndexBuffer(
-            newContext.idxBuf ? safeCast<const D3D10IdxBuf*>(newContext.idxBuf)->getD3DBuffer() : 0,
+            newContext.idxbuf ? safeCast<const D3D10IdxBuf*>(newContext.idxbuf)->getD3DBuffer() : 0,
             DXGI_FORMAT_R16_UINT,
             0 );
     }

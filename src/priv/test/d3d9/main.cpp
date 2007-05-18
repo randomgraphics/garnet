@@ -218,7 +218,7 @@ public:
         ff.u32 = 0;
         ff.setShaderBit( SHADER_VS );
         ff.setShaderBit( SHADER_PS );
-        ff.vtxFmt = 1;
+        ff.vtxfmt = 1;
         ff.rsb = 1;
         r.rebindContext( ff );
     }

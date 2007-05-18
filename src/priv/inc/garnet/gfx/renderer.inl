@@ -281,9 +281,9 @@ namespace GN { namespace gfx
     //
     //
     // -------------------------------------------------------------------------
-    inline void Renderer::setIdxBuf( const IdxBuf * idxBuf )
+    inline void Renderer::setIdxBuf( const IdxBuf * idxbuf )
     {
-        _GNGFX_CONTEXT_UPDATE( setIdxBuf( idxBuf ) );
+        _GNGFX_CONTEXT_UPDATE( setIdxBuf( idxbuf ) );
     }
 
 #undef _GNGFX_CONTEXT_UPDATE

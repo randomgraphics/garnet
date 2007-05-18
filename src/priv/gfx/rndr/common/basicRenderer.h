@@ -173,8 +173,8 @@ namespace GN { namespace gfx
             AutoRefArray<Texture,MAX_RENDER_TARGETS>   cbuffers;
             AutoRef<const Texture>                     zbuffer;
             AutoRefArray<Texture,MAX_TEXTURE_STAGES>   textures;
-            AutoRefArray<VtxBuf,MAX_VERTEX_ATTRIBUTES> vtxBufs;
-            AutoRef<const IdxBuf>                      idxBuf;
+            AutoRefArray<VtxBuf,MAX_VERTEX_ATTRIBUTES> vtxbufs;
+            AutoRef<const IdxBuf>                      idxbuf;
         };
 
         //
