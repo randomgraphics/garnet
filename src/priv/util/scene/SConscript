@@ -1,9 +1,9 @@
 Import( 'GN' )
 sources = [
 #	'actor.cpp',
-#	'asciifont.cpp',
+	'asciifont.cpp',
 #	'bitmapFontRenderer.cpp',
-#	'charBitmap8x13.cpp',
+	'charBitmap8x13.cpp',
 #	'drawable.cpp',
 #	'fontft2.cpp',
 	'quad.cpp',

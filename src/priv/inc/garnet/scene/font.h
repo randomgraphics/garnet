@@ -11,16 +11,36 @@ namespace GN { namespace scene
     ///
     /// Bitmap ASCII font renderer
     ///
-    class AsciiFont
+    class AsciiFont : public StdClass
     {
-    public:
+        GN_DECLARE_STDCLASS( AsciiFont, StdClass );
+
+        // ********************************
+        // ctor/dtor
+        // ********************************
 
         //@{
-
-        AsciiFont();
-        ~AsciiFont();
-
+    public:
+        AsciiFont( QuadRenderer & qr ) : mQuadRenderer(qr) { clear(); }
+        virtual ~AsciiFont() { quit(); }
         //@}
+
+        // ********************************
+        // from StdClass
+        // ********************************
+
+        //@{
+    public:
+        bool init();
+        void quit();
+    private:
+        void clear() { mTexture = 0; }
+        //@}
+
+        // ********************************
+        // public functions
+        // ********************************
+    public:
 
         ///
         /// Draw ASCII string. [0,0] is left top corner of the screen.
@@ -32,21 +52,15 @@ namespace GN { namespace scene
         // ********************************
     private:
 
-        AutoRef<gfx::Texture> mTexture;
+        QuadRenderer & mQuadRenderer;
+
+        engine::GraphicsResource * mTexture;
 
         // ********************************
         // private functions
         // ********************************
     private:
-
-        bool rendererRestore();
-        void rendererDispose() { mTexture.clear(); }
     };
-
-    ///
-    /// global ascii font instance
-    ///
-    extern AsciiFont gAsciiFont;
 
     ///
     /// bitmap image of single character

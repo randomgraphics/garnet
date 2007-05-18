@@ -21,7 +21,9 @@ static size_t sEstimateTextureSize( const GN::gfx::TextureDesc & desc )
 
     if( !d.validate() ) return 0;
 
-    size_t basebytes = desc.width * desc.height * desc.depth * desc.faces * getClrFmtDesc(desc.format).bits / 8;
+    size_t basebytes = d.width * d.height * d.depth * d.faces * getClrFmtDesc(d.format).bits / 8;
+
+    GN_ASSERT( basebytes > 0 );
 
     return basebytes * 4 / 3; // that is: 1 / ( 1 - 1/4 ) 
 }

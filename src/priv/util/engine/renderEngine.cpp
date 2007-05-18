@@ -595,21 +595,21 @@ void GN::engine::RenderEngine::updateResource(
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createShader(
-    const ShaderDesc & sd,
-    const StrA       & name )
+    const StrA       & name,
+    const ShaderDesc & sd )
 {
-    return createShader( sd.type, sd.lang, sd.code, sd.hints, name );
+    return createShader( name, sd.type, sd.lang, sd.code, sd.hints );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createShader(
+    const StrA         & name,
     gfx::ShaderType      type,
     gfx::ShadingLanguage lang,
     const StrA         & code,
-    const StrA         & hints,
-    const StrA         & name)
+    const StrA         & hints )
 {
     GraphicsResourceDesc desc;
     desc.name = name;
@@ -633,8 +633,8 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createShader(
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
-    const gfx::VtxFmtDesc    & fd,
-    const StrA               & name )
+    const StrA            & name,
+    const gfx::VtxFmtDesc & fd )
 {
     GraphicsResourceDesc desc;
     desc.name = name;
@@ -655,20 +655,20 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
-    const gfx::IdxBufDesc & desc,
-    const StrA            & name )
+    const StrA            & name,
+    const gfx::IdxBufDesc & desc )
 {
-    return createIdxBuf( desc.numidx, desc.dynamic, desc.readback, name );
+    return createIdxBuf( name, desc.numidx, desc.dynamic, desc.readback );
 }
 
 //
 //
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
+    const StrA & name,
     UInt32       numidx,
     bool         dynamic,
-    bool         readback,
-    const StrA & name )
+    bool         readback )
 {
     GraphicsResourceDesc grd;
     grd.name        = name;
@@ -676,6 +676,20 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
     grd.id.numidx   = numidx;
     grd.id.dynamic  = dynamic;
     grd.id.readback = readback;
+    return allocResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createTexture(
+    const StrA             & name,
+    const gfx::TextureDesc & desc )
+{
+    GraphicsResourceDesc grd;
+    grd.name        = name;
+    grd.type        = GRT_TEXTURE;
+    grd.td          = desc;
     return allocResource( grd );
 }
 

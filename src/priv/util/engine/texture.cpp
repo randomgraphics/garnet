@@ -177,12 +177,11 @@ GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
     fp.clear();
 
     // initialize resource descriptor
-    GraphicsResourceDesc grd;
-    grd.type = GRT_TEXTURE;
-    if( !grd.td.fromImageDesc( id ) ) return 0;
+    gfx::TextureDesc td;
+    if( !td.fromImageDesc( id ) ) return 0;
 
     // create the resource
-    GraphicsResource * res = re.allocResource( grd );
+    GraphicsResource * res = re.createTexture( filename, td );
     if( 0 == res ) return 0;
 
     // do load
@@ -211,10 +210,7 @@ GN::engine::Entity * GN::engine::createTextureEntity(
     }
 
     // create the resource (note that content of the texture is leaving undefined)
-    GraphicsResourceDesc grd;
-    grd.type = GRT_TEXTURE;
-    grd.td = desc;
-    GraphicsResource * res = re.allocResource( grd );
+    GraphicsResource * res = re.createTexture( name, desc );
     if( 0 == res ) return 0;
 
     // success

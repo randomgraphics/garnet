@@ -78,7 +78,7 @@ int main()
 
     EntityManager em;
     RenderEngine  re;
-    QuadRenderer  qr;
+    QuadRenderer  qr(re);
 
     UInt32 MB = 1024 * 1024;
     RenderEngineInitParameters reip = { 32*MB, 32*MB, 4*MB };
@@ -89,7 +89,7 @@ int main()
 
     if( !re.resetRenderer( API_D3D9, ro ) ) return -1;
 
-    if( !qr.init( re ) ) return -1;
+    if( !qr.init() ) return -1;
 
     run( em, re, qr );
 

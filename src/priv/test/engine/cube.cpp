@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "cube.h"
-#include "garnet/GNscene.h"
-
+ 
 using namespace GN;
 using namespace GN::input;
 using namespace GN::gfx;
@@ -14,6 +13,9 @@ bool TestCube::init()
 {
     EntityManager & em = entityManager();
     RenderEngine & re = renderEngine();
+
+    // create ascii font
+    if( !font.init() ) return false;
 
     // create cube
     if( !cube.loadFromXmlFile( em, re, "media::/cube/cube_on_cube.drawable.xml" ) ) return false;
@@ -40,6 +42,8 @@ void TestCube::quit()
 
     cube.clear();
     deleteEntity( tex );
+
+    font.quit();
 }
 
 void TestCube::draw()
@@ -48,7 +52,8 @@ void TestCube::draw()
     renderEngine().disposeAllResources();
 
     // draw a quad
-    quadRenderer().drawSingleSolidQuad( GN_RGBA32(255,0,0,255), 0 );
+    //.drawSingleSolidQuad( GN_RGBA32(255,0,0,255), 0 );
+    font.drawText( "render engine cube test", 10, 10 );
 
     // draw cube
     cube.draw();

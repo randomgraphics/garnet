@@ -75,12 +75,12 @@ bool TestTriangle::init()
     VtxFmtDesc vfd;
     vfd.clear();
     vfd.addAttrib( 0, 0, VTXSEM_POS0, FMT_FLOAT3 );
-    vf = re.createVtxFmt( vfd, "vf1" );
+    vf = re.createVtxFmt( "vf1", vfd );
     if( 0 == vf ) return false;
 
     // create shader
-    vs = re.createShader( SHADER_VS, LANG_D3D_HLSL, vscode, "", "vs1" );
-    ps = re.createShader( SHADER_PS, LANG_D3D_HLSL, pscode, "", "ps1" );
+    vs = re.createShader( "vs1", SHADER_VS, LANG_D3D_HLSL, vscode );
+    ps = re.createShader( "ps1", SHADER_PS, LANG_D3D_HLSL, pscode );
 
     // create vertex buffer
     desc.name = "vb1";
