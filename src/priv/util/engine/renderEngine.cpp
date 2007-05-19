@@ -31,6 +31,8 @@ static inline void sPrepareResource(
 
     engine.resourceLRU().realize( item, &reload );
 
+    GN_ASSERT( GRS_REALIZED == item->state );
+
     if( reload )
     {
         // reload using it's current loader and lod
@@ -267,6 +269,39 @@ GN::StrA GN::engine::GraphicsResourceDesc::toString() const
 // Initialize and shutdown
 // *****************************************************************************
 
+///
+/// Render engine API is not reentrant safe.
+///
+struct ApiReentrantChecker
+{
+    volatile SInt32 * mFlag;
+
+    ApiReentrantChecker( volatile SInt32 * flag ) : mFlag(flag)
+    {
+        if( 0 != GN::atomCmpXchg32( mFlag, 1, 0 ) )
+        {
+            // We're doomed....
+            GN_FATAL(sLogger)( "Render engine API reentrant!" );
+            GN_DEBUG_BREAK();
+        }
+    }
+
+    ~ApiReentrantChecker()
+    {
+        GN::atomDec32( mFlag );
+    }
+};
+
+
+#if GN_RENDER_ENGINE_API_DUMP_ENABLED
+#define RENDER_ENGINE_API( api ) \
+    ApiReentrantChecker checker( &mApiReentrantFlag ); \
+    RenderEngineApiDumper apidumper( api )
+#else
+#define RENDER_ENGINE_API( api ) \
+    ApiReentrantChecker checker( &mApiReentrantFlag );
+#endif
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -274,11 +309,10 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
 {
     GN_GUARD;
 
+    RENDER_ENGINE_API( "init" );
+
     // standard init procedure
     GN_STDCLASS_INIT( GN::engine::RenderEngine, () );
-
-    // connect to renderer signals
-    gSigRendererDispose.connect( this, &RenderEngine::disposeAllResources );
 
     // create sub components
     mFenceManager = new FenceManager( *this );
@@ -295,6 +329,9 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     mResourceThread = new ResourceThread( *this );
     if( !mResourceThread->init() ) return failure();
 
+    // connect to renderer signals
+    gSigRendererDispose.connect( mResourceLRU, &ResourceLRU::disposeAll );
+
     // success
     return success();
 
@@ -307,6 +344,11 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
 void GN::engine::RenderEngine::quit()
 {
     GN_GUARD;
+
+    RENDER_ENGINE_API( "quit" );
+
+    // disconnect to renderer signals
+    gSigRendererDispose.disconnect( this );
 
     // dispose all resources
     if( ok() )
@@ -322,13 +364,22 @@ void GN::engine::RenderEngine::quit()
     safeDelete( mResourceCache );
     safeDelete( mFenceManager );
 
-    // disconnect to renderer signals
-    gSigRendererDispose.disconnect( this );
-
     // standard quit procedure
     GN_STDCLASS_QUIT();
 
     GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::clear()
+{
+    mResourceCache = 0;
+    mResourceLRU = 0;
+    mDrawThread = 0;
+    mResourceThread = 0;
+    mFenceManager = 0;
 }
 
 // *****************************************************************************
@@ -342,6 +393,8 @@ bool GN::engine::RenderEngine::resetRenderer(
     gfx::RendererAPI api,
     const gfx::RendererOptions & ro )
 {
+    RENDER_ENGINE_API( "reset" );
+
     // dispose all resources
     mResourceLRU->disposeAll();
     mResourceThread->waitForIdle();
@@ -359,6 +412,8 @@ bool GN::engine::RenderEngine::resetRenderer(
 // -----------------------------------------------------------------------------
 const GN::gfx::RendererOptions & GN::engine::RenderEngine::getRendererOptions() const
 {
+    RENDER_ENGINE_API( "getRenderOptions" );
+
     return mDrawThread->getRendererOptions();
 }
 
@@ -368,6 +423,8 @@ const GN::gfx::RendererOptions & GN::engine::RenderEngine::getRendererOptions() 
 // -----------------------------------------------------------------------------
 const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 {
+    RENDER_ENGINE_API( "getDispDesc" );
+
     return mDrawThread->getDispDesc();
 }
 
@@ -380,6 +437,8 @@ const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::frameBegin()
 {
+    RENDER_ENGINE_API( "frameBegin" );
+
     return mDrawThread->frameBegin();
 }
 
@@ -388,6 +447,8 @@ void GN::engine::RenderEngine::frameBegin()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::frameEnd()
 {
+    RENDER_ENGINE_API( "frameEnd" );
+
     return mDrawThread->frameEnd();
 }
 
@@ -396,14 +457,16 @@ void GN::engine::RenderEngine::frameEnd()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::setContext( const DrawContext & context )
 {
-    sPrepareContextResources( *this, context );
+    RENDER_ENGINE_API( "setContext" );
+
+    mDrawContext.mergeWith( context );
+
+    sPrepareContextResources( *this, mDrawContext );
 
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand1( DCT_SET_CONTEXT, context );
     if( 0 == dr ) return;
 
-    sSetupDrawCommandWaitingList( *mResourceCache, context, *dr );
-
-    mDrawContext.mergeWith( context );
+    sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 }
 
 //
@@ -414,6 +477,8 @@ void GN::engine::RenderEngine::setShaderUniform(
     const StrA              & uniformName,
     const gfx::UniformValue & value )
 {
+    RENDER_ENGINE_API( "setShaderUniform" );
+
     GraphicsResourceItem * item = (GraphicsResourceItem*)shader;
 
     if( !mResourceCache->check( item ) ) return;
@@ -454,18 +519,17 @@ void GN::engine::RenderEngine::setShaderUniform(
         GraphicsResourceItem * shader;
         char                   uniname[32];
         SInt32                 unitype;
-    } header;
+    };
 
-    header.shader = item;
-    memcpy( header.uniname, uniformName.cptr(), std::min<size_t>(uniformName.size()+1,32) );
-    header.uniname[31] = 0;
-    header.unitype = value.type;
 
     // create new draw command
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand( DCT_SET_UNIFORM, sizeof(ParamHeader) + bytes );
     if( 0 == dr ) return;
     ParamHeader * h = (ParamHeader*)dr->param();
-    *h = header;
+    h->shader = item;
+    memcpy( h->uniname, uniformName.cptr(), std::min<size_t>(uniformName.size()+1,32) );
+    h->uniname[31] = 0;
+    h->unitype = value.type;
     ++h;
     memcpy( h, data, bytes );
 
@@ -484,6 +548,8 @@ void GN::engine::RenderEngine::clearScreen(
     float z, UInt8 s,
     BitFields flags )
 {
+    RENDER_ENGINE_API( "clearScreen" );
+
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand4( DCT_CLEAR, c, z, s, flags );
     if( 0 == dr ) return;
@@ -501,6 +567,8 @@ void GN::engine::RenderEngine::drawIndexed(
     UInt32 numvtx,
     UInt32 startidx )
 {
+    RENDER_ENGINE_API( "drawIndexed" );
+
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand6( DCT_DRAW_INDEXED, prim, numprim, startvtx, minvtxidx, numvtx, startidx );
     if( 0 == dr ) return;
@@ -515,6 +583,8 @@ void GN::engine::RenderEngine::draw(
     UInt32 numprim,
     UInt32 startvtx )
 {
+    RENDER_ENGINE_API( "draw" );
+
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, prim, numprim, startvtx );
     if( 0 == dr ) return;
@@ -534,6 +604,8 @@ void GN::engine::RenderEngine::drawLines(
     const Matrix44f & view,
     const Matrix44f & proj )
 {
+    RENDER_ENGINE_API( "drawLines" );
+
     sPrepareContextResources( *this, mDrawContext );
 
     struct Param
@@ -574,9 +646,11 @@ void GN::engine::RenderEngine::drawLines(
 GN::engine::GraphicsResource *
 GN::engine::RenderEngine::allocResource( const GraphicsResourceDesc & desc )
 {
-    if( GN_ENGINE_DUMP_ENABLED )
+    RENDER_ENGINE_API( "allocResource" );
+
+    if( GN_RENDER_ENGINE_API_DUMP_ENABLED )
     {
-        dumpString( strFormat( "<CreateGraphicsResource %s/>", desc.toString().cptr() ) );
+        dumpApiString( strFormat( "<CreateGraphicsResource %s/>", desc.toString().cptr() ) );
     }
 
     GraphicsResourceItem * item = mResourceCache->alloc( desc );
@@ -590,6 +664,8 @@ GN::engine::RenderEngine::allocResource( const GraphicsResourceDesc & desc )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 {
+    RENDER_ENGINE_API( "freeResource" );
+
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 
     if( !mResourceCache->check( item ) ) return;
@@ -600,9 +676,9 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
     mResourceLRU->dispose( item );
     mDrawThread->waitForIdle();
 
-    if( GN_ENGINE_DUMP_ENABLED )
+    if( GN_RENDER_ENGINE_API_DUMP_ENABLED )
     {
-        dumpString( strFormat( "<FreeGraphicsResource %s/>", res->desc.toString().cptr() ) );
+        dumpApiString( strFormat( "<FreeGraphicsResource %s/>", res->desc.toString().cptr() ) );
     }
 
     mResourceLRU->remove( item );
@@ -614,6 +690,8 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 // -----------------------------------------------------------------------------
 bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) const
 {
+    RENDER_ENGINE_API( "checkResource" );
+
     const GraphicsResourceItem * item = (const GraphicsResourceItem*)res;
     return mResourceCache->check( item );
 }
@@ -623,6 +701,8 @@ bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) con
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
+    RENDER_ENGINE_API( "disposeResource" );
+
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 
     if( !mResourceCache->check( item ) ) return;
@@ -635,6 +715,8 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeAllResources()
 {
+    RENDER_ENGINE_API( "disposeAllResources" );
+
     mResourceLRU->disposeAll();
 }
 
@@ -646,6 +728,8 @@ void GN::engine::RenderEngine::updateResource(
     int                      lod,
     GraphicsResourceLoader * loader )
 {
+    RENDER_ENGINE_API( "updateResource" );
+
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 
     if( !mResourceCache->check( item ) ) return;

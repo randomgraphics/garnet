@@ -209,7 +209,7 @@ static Entity * sLoadTextureEntityFromImageFile(
 
     GN_ASSERT( !em.getEntityByName( name, true ) );
 
-    GN_INFO(sLogger)( "Load texture entity from image %s", name.cptr() );
+    GN_INFO(sLogger)( "Load %s", name.cptr() );
 
     // read image header
     ImageReader ir;
@@ -247,6 +247,8 @@ static Entity * sLoadTextureEntityFromXml(
     const StrA    & dirname )
 {
     GN_GUARD;
+
+    GN_INFO(sLogger)( "Load %s", name.cptr() );
 
     // parse texture definition
     XmlDocument doc;
@@ -356,36 +358,35 @@ GN::engine::EntityTypeId GN::engine::getTextureEntityType( EntityManager & em )
 GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
     EntityManager & em, RenderEngine & re, const StrA & filename )
 {
-    GN_TODO( "convert filename to absolute/full path" );
-
-    GN_INFO(sLogger)( "Load %s", filename.cptr() );
+    StrA fullpath;
+    normalizePathSeparator( fullpath, core::toNative( filename ) );
 
     // check if the texture is already loaded
-    Entity * e = em.getEntityByName( filename, true );
+    Entity * e = em.getEntityByName( fullpath, true );
     if( e ) return e;
 
-    StrA ext = extName(filename);
+    StrA ext = extName(fullpath);
     if( 0 == strCmpI( ".xml", ext.cptr() ) )
     {
         // open file
-        AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+        AutoObjPtr<File> fp( core::openFile( fullpath, "rt" ) );
         if( !fp ) return 0;
 
         // parse texture definition
-        return sLoadTextureEntityFromXml( em, re, filename, *fp, dirName(filename) );
+        return sLoadTextureEntityFromXml( em, re, fullpath, *fp, dirName(fullpath) );
     }
     else
     {
         // open texture file
-        AutoObjPtr<File> fp( core::openFile( filename, "rb" ) );
+        AutoObjPtr<File> fp( core::openFile( fullpath, "rb" ) );
         if( !fp )
         {
-            GN_ERROR(sLogger)( "Fail to open texture file '%s'.", filename.cptr() );
+            GN_ERROR(sLogger)( "Fail to open texture file '%s'.", fullpath.cptr() );
             return 0;
         }
 
         // create texture instance
-        return sLoadTextureEntityFromImageFile( em, re, filename, *fp, 0 );
+        return sLoadTextureEntityFromImageFile( em, re, fullpath, *fp, 0 );
     }
 }
 

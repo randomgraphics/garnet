@@ -313,4 +313,12 @@ Thread * GN::generateCurrentThreadObject()
     GN_UNGUARD;
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+SInt32 GN::getCurrentThreadId()
+{
+    return (SInt32)GetCurrentThreadId();
+}
+
 #endif

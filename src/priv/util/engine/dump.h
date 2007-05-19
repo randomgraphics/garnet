@@ -9,23 +9,74 @@
 #include "resourceCommandBuffer.h"
 
 ///
-/// macro to switch engine dump
+/// macro to switch render engine command dump
 ///
-#define GN_ENGINE_DUMP_ENABLED (GN_BUILD_VARIANT != GN_RETAIL_BUILD)
+#define GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED GN_DEBUG_BUILD
+
+///
+/// macro to switch render engine API dump (includes everyting that directly called by render engine API)
+///
+#define GN_RENDER_ENGINE_API_DUMP_ENABLED GN_DEBUG_BUILD
 
 namespace GN { namespace engine
 {
+    inline void dumpApiString( const StrA & text );
+
     ///
     /// TBD
     ///
-    inline void dumpString( const StrA & text )
+    class RenderEngineApiDumper
     {
-        static Logger * sLogger = getLogger("GN.engine.dump");
+        static StrA ident;
+
+        StrA mApiName;
+
+    public:
+
+        /// get current ident
+        static const char * getIdent() { return ident.cptr(); }
+
+        /// ctor
+        RenderEngineApiDumper( const char * api ) : mApiName(api)
+        {
+            GN_ASSERT( !mApiName.empty() );
+
+            dumpApiString( strFormat( "<%s>", api ) );
+
+            ident += '\t';
+        }
+
+        /// dtor
+        ~RenderEngineApiDumper()
+        {
+            GN_ASSERT( !ident.empty() );
+            ident.remove( ident.size() - 1 );
+
+            dumpApiString( strFormat( "</%s>", mApiName.cptr() ) );
+        }
+    };
+
+    ///
+    /// dump API text
+    ///
+    inline void dumpApiString( const StrA & text )
+    {
+        static Logger * sLogger = getLogger("GN.engine.dump.api");
+
+        GN_DETAIL(sLogger)( "%s%s", RenderEngineApiDumper::getIdent(), text.cptr() );
+    }
+
+    ///
+    /// dump command status
+    ///
+    inline void dumpCommandString( const StrA & text )
+    {
+        static Logger * sLogger = getLogger("GN.engine.dump.command");
         GN_DETAIL(sLogger)( "%s", text.cptr() );
     }
 
     ///
-    /// TBD
+    /// dump resource command
     ///
     inline void dumpResourceCommand( const ResourceCommand & cmd )
     {
@@ -39,7 +90,7 @@ namespace GN { namespace engine
             default              : GN_UNEXPECTED(); opstr = ""; break;
         }
 
-        dumpString( strFormat( "<ResourceCommand op=\"%s\" %s/>",
+        dumpCommandString( strFormat( "<ResourceCommand op=\"%s\" %s/>",
             opstr,
             cmd.resource->desc.toString().cptr() ) );
     }

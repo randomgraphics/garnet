@@ -115,7 +115,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
         GN_ASSERT( GROP_LOAD == cmd->op );
         GN_ASSERT( cmd->loader );
 
-        if( GN_ENGINE_DUMP_ENABLED )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpResourceCommand( *cmd );
         }
@@ -153,7 +153,7 @@ UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
             void * olddata = cmd->data;
             size_t oldbytes = cmd->bytes;
 
-            if( GN_ENGINE_DUMP_ENABLED )
+            if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
             {
                 dumpResourceCommand( *cmd );
             }

@@ -296,6 +296,13 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
         // load vertex buffer
         if( "vtxbuf" == e->name )
         {
+            // get vb file name
+            StrA ref;
+            if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
+            ref = core::resolvePath( basedir, ref );
+
+            GN_INFO(sLogger)( "Load %s", ref.cptr() );
+
             // get vertex stream index
             size_t stream;
             if( !sGetIntAttrib( *e, "stream", stream ) ) return false;
@@ -311,11 +318,6 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             // get stream offset and stride
             if( !sGetIntAttrib( *e, "offset", vb.offset ) ) return false;
             if( !sGetIntAttrib( *e, "stride", vb.stride ) ) return false;
-
-            // get vb file name
-            StrA ref;
-            if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
-            ref = core::resolvePath( basedir, ref );
 
             // compose vb descriptor
             GraphicsResourceDesc grd;
@@ -341,6 +343,8 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             StrA ref;
             if( !sGetStringAttrib( *e, "ref", ref ) ) return false;
             ref = core::resolvePath( basedir, ref );
+
+            GN_INFO(sLogger)( "Load %s", ref.cptr() );
 
             // compose ib descriptor
             GraphicsResourceDesc grd;
@@ -576,17 +580,18 @@ GN::engine::EntityTypeId GN::engine::getMeshEntityType( EntityManager & em )
 GN::engine::Entity * GN::engine::loadMeshEntityFromFile(
     EntityManager & em, RenderEngine & re, const StrA & filename )
 {
-    GN_TODO( "convert filename to absolute/full path" );
+    StrA fullpath;
+    normalizePathSeparator( fullpath, core::toNative( filename ) );
 
     // check if the entity exists already
-    Entity * e = em.getEntityByName( filename, true );
+    Entity * e = em.getEntityByName( fullpath, true );
     if( e ) return e;
 
     // load mesh
     AutoObjPtr<Mesh> mesh( new Mesh(re) );
-    if( !mesh->loadFromFile( filename ) ) return 0;
+    if( !mesh->loadFromFile( fullpath ) ) return 0;
 
-    e = em.createEntity<Mesh*>( getMeshEntityType(em), filename, mesh.get(), &safeDelete<Mesh> );
+    e = em.createEntity<Mesh*>( getMeshEntityType(em), fullpath, mesh.get(), &safeDelete<Mesh> );
     if( 0 == e ) return 0;
 
     // success

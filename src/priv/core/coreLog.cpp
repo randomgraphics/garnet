@@ -16,7 +16,9 @@ public:
     {
         // store console attributes
         mConsole = GetStdHandle(
-            GN::Logger::LL_INFO <= level ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE );
+            ( GN::Logger::LL_INFO == level || GN::Logger::LL_DETAIL == level )
+                ? STD_OUTPUT_HANDLE
+                : STD_ERROR_HANDLE );
         CONSOLE_SCREEN_BUFFER_INFO csbf;
         GetConsoleScreenBufferInfo( mConsole, &csbf );
         mAttrib = csbf.wAttributes;
@@ -64,12 +66,13 @@ static inline GN::StrA sLevel2Str( int level )
 {
     switch( level )
     {
-        case GN::Logger::LL_FATAL : return "FATAL";
-        case GN::Logger::LL_ERROR : return "ERROR";
-        case GN::Logger::LL_WARN  : return "WARN";
-        case GN::Logger::LL_INFO  : return "INFO";
-        case GN::Logger::LL_TRACE : return "TRACE";
-        default                   : return GN::strFormat( "%d", level );
+        case GN::Logger::LL_FATAL  : return "FATAL";
+        case GN::Logger::LL_ERROR  : return "ERROR";
+        case GN::Logger::LL_WARN   : return "WARN";
+        case GN::Logger::LL_INFO   : return "INFO";
+        case GN::Logger::LL_DETAIL : return "DETAIL";
+        case GN::Logger::LL_TRACE  : return "TRACE";
+        default                    : return GN::strFormat( "%d", level );
     }
 }
 
@@ -188,7 +191,7 @@ namespace GN
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
-            if( GN::Logger::LL_INFO == desc.level )
+            if( GN::Logger::LL_INFO == desc.level || GN::Logger::LL_DETAIL == desc.level )
             {
                 ::fprintf( stdout, "%s\n", msg.cptr() );
             }
@@ -207,7 +210,7 @@ namespace GN
         {
             if( getEnvBoolean( "GN_LOG_QUIET" ) ) return;
             ConsoleColor cc(desc.level);
-            if( GN::Logger::LL_INFO == desc.level )
+            if( GN::Logger::LL_INFO == desc.level || GN::Logger::LL_DETAIL == desc.level )
             {
                 ::fprintf( stdout, "%S\n", msg.cptr() );
             }

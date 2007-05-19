@@ -2,6 +2,7 @@
 #include "resourceLRU.h"
 #include "resourceCache.h"
 #include "drawThread.h"
+#include "dump.h"
 
 // *****************************************************************************
 // Initialize and shutdown
@@ -124,12 +125,17 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
             GN_ASSERT( *realizedBytes <= *maxBytes );
         }
 
-        return;
+        if( GN_RENDER_ENGINE_API_DUMP_ENABLED )
+        {
+            dumpApiString( strFormat( "<RealizeGraphicsResource %s/>", item->desc.toString().cptr() ) );
+        }
     }
-
-    // no enough space in cache. We have to dispose some old resources, or try
-    // reusing one of old resources.
-    GN_UNIMPL();
+    else
+    {
+        // no enough space in cache. We have to dispose some old resources, or try
+        // reusing one of old resources.
+        GN_UNIMPL();
+    }
 }
 
 //
@@ -140,6 +146,11 @@ void GN::engine::RenderEngine::ResourceLRU::dispose( GraphicsResourceItem * item
     GN_ASSERT( mEngine.resourceCache().check( item ) );
 
     if( GRS_DISPOSED == item->state ) return;
+
+    if( GN_RENDER_ENGINE_API_DUMP_ENABLED )
+    {
+        dumpApiString( strFormat( "<DisposeGraphicsResource %s/>", item->desc.toString().cptr() ) );
+    }
 
     item->state = GRS_DISPOSED;
 

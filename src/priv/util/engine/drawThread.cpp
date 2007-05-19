@@ -120,7 +120,7 @@ static inline void sResolveResourceId(
     }
     else
     {
-        GN_ASSERT( res->engine.checkResource( res ) );
+        GN_ASSERT( res->engine.resourceCache().check( (const GN::engine::GraphicsResourceItem*)res ) );
         result = (T)res->data;
     }
 }
@@ -241,7 +241,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( GN_FUNCTION );
+            dumpCommandString( GN_FUNCTION );
         }
     }
 
@@ -309,7 +309,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( GN_FUNCTION );
+            dumpCommandString( GN_FUNCTION );
         }
     }
 
@@ -338,7 +338,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( GN_FUNCTION );
+            dumpCommandString( GN_FUNCTION );
         }
     }
 
@@ -364,7 +364,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( GN_FUNCTION );
+            dumpCommandString( GN_FUNCTION );
         }
     }
 
@@ -398,7 +398,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( GN_FUNCTION );
+            dumpCommandString( GN_FUNCTION );
         }
     }
 
@@ -437,7 +437,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( GN_FUNCTION );
+            dumpCommandString( GN_FUNCTION );
         }
     }
 }};
@@ -458,7 +458,7 @@ namespace GN { namespace engine
         {
             if( DUMP_COMMANDS )
             {
-                dumpString( strFormat( "Create resource: %s", cmd.resource->desc.name.cptr() ) );
+                dumpCommandString( strFormat( "Create resource: %s", cmd.resource->desc.name.cptr() ) );
             }
             if( !sCreateDeviceData( *cmd.resource ) )
             {
@@ -473,7 +473,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( strFormat( "Load resource: %s", cmd.resource->desc.name.cptr() ) );
+            dumpCommandString( strFormat( "Load resource: %s", cmd.resource->desc.name.cptr() ) );
         }
 
         GN_ASSERT( cmd.loader );
@@ -496,7 +496,7 @@ namespace GN { namespace engine
 
         if( DUMP_COMMANDS )
         {
-            dumpString( strFormat( "Dispose resource: %s", cmd.resource->desc.name.cptr() ) );
+            dumpCommandString( strFormat( "Dispose resource: %s", cmd.resource->desc.name.cptr() ) );
         }
 
         GN_UNGUARD;
@@ -769,7 +769,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
     {
         if( DUMP_COMMANDS )
         {
-            dumpString( "Frame BEGIN" );
+            dumpCommandString( "Frame BEGIN" );
         }
 
         DrawBuffer & db = mDrawBuffers[mReadingIndex];
@@ -833,7 +833,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 
         if( DUMP_COMMANDS )
         {
-            dumpString( "Frame END" );
+            dumpCommandString( "Frame END" );
         }
     }
 }
@@ -876,7 +876,7 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
                 if( prev->noerr )
                 {
-                    if( GN_ENGINE_DUMP_ENABLED )
+                    if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
                     {
                         dumpResourceCommand( *prev );
                     }

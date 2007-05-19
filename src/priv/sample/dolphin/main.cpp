@@ -2,6 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
 
 static const Vector4f WATER_COLOR( 0.0f, 0.25f, 0.5f, 1.0f );
@@ -11,30 +12,32 @@ static GN::Logger * sLogger = GN::getLogger("GN.sample.dolphin");
 class TestScene
 {
     GN::app::SampleApp & mApp;
-    
-    UInt32 mCaustics[32];
+
+    Entity * mCaustics[32];
 
     Drawable mDolphin, mSeafloor;
 
 public:
 
-    TestScene( GN::app::SampleApp & app ) : mApp(app) {}
+     TestScene( GN::app::SampleApp & app ) : mApp(app) {}
 
     ~TestScene() { }
 
     bool create()
     {
+        EntityManager & em = mApp.getEntityManager();
+        RenderEngine & re = mApp.getRenderEngine();
+
         // load caustic textures
-        ResourceManager & rm = gSceneResMgr;
         for( int i = 0; i < 32; ++i )
         {
-            mCaustics[i] = rm.getResourceId( strFormat( "media::dolphin/caust%02d.tga", i ) );
+            mCaustics[i] = loadTextureEntityFromFile( em, re, strFormat( "media::dolphin/caust%02d.tga", i ) );
             if( 0 == mCaustics[i] ) return false;
         }
 
         // load dolphin and seafloor
-        if( !loadFromXmlFile( mDolphin, "media::dolphin/dolphin.drawable.xml" ) ) return false;
-        if( !loadFromXmlFile( mSeafloor, "media::dolphin/seafloor.drawable.xml" ) ) return false;
+        if( !mDolphin.loadFromXmlFile( em, re, "media::dolphin/dolphin.drawable.xml" ) ) return false;
+        if( !mSeafloor.loadFromXmlFile(  em, re, "media::dolphin/seafloor.drawable.xml" ) ) return false;
 
         // success
         return true;
@@ -50,7 +53,7 @@ public:
         mSeafloor.uniforms["view"].value = view;
         mSeafloor.uniforms["proj"].value = proj;
         mSeafloor.uniforms["caustic"].value = caustics;
-        mSeafloor.textures["caustic"].texid = mCaustics[causticTex];
+        mSeafloor.textures["caustic"].texture = mCaustics[causticTex];
 
         // Animation attributes for the dolphin
         float fKickFreq    = 2*time;
@@ -88,14 +91,14 @@ public:
         mDolphin.uniforms["pvw"].value = proj * view * world;
         mDolphin.uniforms["viewworld"].value = view * world;
         mDolphin.uniforms["weights"].value = vWeight;
-        mDolphin.textures["caustic"].texid = mCaustics[causticTex];
+        mDolphin.textures["caustic"].texture = mCaustics[causticTex];
     }
 
     void render()
     {
-        Renderer & r = gRenderer;
+        RenderEngine & re = mApp.getRenderEngine();
 
-        r.clearScreen( WATER_COLOR );
+        re.clearScreen( WATER_COLOR );
 
         mSeafloor.draw();
         mDolphin.draw();
@@ -111,8 +114,8 @@ class Dolphin : public GN::app::SampleApp
 
     Matrix44f world, view, proj;
 
-    AutoRef<Texture> rt[2];
-    RenderTargetDesc rtdesc;
+    AutoGraphicsResource rt[2];
+    DrawContext::RenderTargetDesc rtdesc;
 
 public:
 
@@ -130,19 +133,19 @@ public:
         world.identity();
     }
 
-    bool onRendererRestore()
+    bool onInit()
     {
-        Renderer & r = gRenderer;
+        RenderEngine & re = getRenderEngine();
 
         UInt32 width = 1024;
         UInt32 height = 720;
 
         float aspect = (float)width / height;
-        r.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
+        gRenderer.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
 
         // create render targets
-        rt[0].attach( r.create2DTexture( width, height, 1, FMT_FLOAT16_4, TEXUSAGE_RENDER_TARGET ) );
-        rt[1].attach( r.create2DTexture( width, height, 1, FMT_RG_32_32_FLOAT, TEXUSAGE_RENDER_TARGET ) );
+        rt[0].attach( re.create2DTexture( "rt0", width, height, 1, FMT_FLOAT16_4, TEXUSAGE_RENDER_TARGET ) );
+        rt[1].attach( re.create2DTexture( "rt1", width, height, 1, FMT_RG_32_32_FLOAT, TEXUSAGE_RENDER_TARGET ) );
 
         rtdesc.count = 2;
         rtdesc.aa = MSAA_NONE;
@@ -155,7 +158,7 @@ public:
         return scene->create();
     }
 
-    void onRendererDispose()
+    void onQuit()
     {
         safeDelete( scene );
         rt[0].clear();
