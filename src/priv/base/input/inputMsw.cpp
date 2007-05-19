@@ -34,44 +34,44 @@ void GN::input::InputMsw::msgHandler( UINT msg, WPARAM wp, LPARAM lp )
                 bool down = !(lp&0x80000000); // 最高位表示该键是否按下（0：按下，1：抬起）
                 if( VK_MENU == wp )
                 {
-                    triggerKeyPress( KEY_LALT, down );
-                    triggerKeyPress( KEY_RALT, down );
+                    pushKeyPress( KEY_LALT, down );
+                    pushKeyPress( KEY_RALT, down );
                 }
                 else if( VK_CONTROL == wp )
                 {
-                    triggerKeyPress( KEY_LCTRL, down );
-                    triggerKeyPress( KEY_RCTRL, down );
+                    pushKeyPress( KEY_LCTRL, down );
+                    pushKeyPress( KEY_RCTRL, down );
                 }
                 else if( VK_SHIFT == wp )
                 {
-                    triggerKeyPress( KEY_LSHIFT, down );
-                    triggerKeyPress( KEY_RSHIFT, down );
+                    pushKeyPress( KEY_LSHIFT, down );
+                    pushKeyPress( KEY_RSHIFT, down );
                 }
                 else if( KEY_NONE != mKeyMap[wp] )
                 {
-                    triggerKeyPress( mKeyMap[wp], down );
+                    pushKeyPress( mKeyMap[wp], down );
                 }
             }
             break;
 
-            // trigger mouse button events
+            // push mouse button events
         case WM_LBUTTONDOWN :
-            triggerKeyPress( KEY_MOUSEBTN_0, true );
+            pushKeyPress( KEY_MOUSEBTN_0, true );
             break;
         case WM_LBUTTONUP   :
-            triggerKeyPress( KEY_MOUSEBTN_0, false );
+            pushKeyPress( KEY_MOUSEBTN_0, false );
             break;
         case WM_RBUTTONDOWN :
-            triggerKeyPress( KEY_MOUSEBTN_1, true );
+            pushKeyPress( KEY_MOUSEBTN_1, true );
             break;
         case WM_RBUTTONUP   :
-            triggerKeyPress( KEY_MOUSEBTN_1, false );
+            pushKeyPress( KEY_MOUSEBTN_1, false );
             break;
         case WM_MBUTTONDOWN :
-            triggerKeyPress( KEY_MOUSEBTN_2, true );
+            pushKeyPress( KEY_MOUSEBTN_2, true );
             break;
         case WM_MBUTTONUP   :
-            triggerKeyPress( KEY_MOUSEBTN_2, false );
+            pushKeyPress( KEY_MOUSEBTN_2, false );
             break;
     }
 

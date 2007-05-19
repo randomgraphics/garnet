@@ -60,6 +60,32 @@ void GN::input::BasicInputMsw::quit()
 //
 //
 // -----------------------------------------------------------------------------
+void GN::input::BasicInputMsw::processInputEvents()
+{
+    BasicXInput::processInputEvents();
+
+    ScopeMutex<Mutex> mutex( mEventQueueMutex );
+
+    while( !mInputEvents.empty() )
+    {
+        const InputEvent & e = mInputEvents.front();
+
+        switch( e.type )
+        {
+            case 0  : triggerKeyPress( e.key.code, e.key.down ); break;
+            case 1  : triggerCharPress( e.ch ); break;
+            case 2  : triggerAxisMove( e.axis.a, e.axis.d ); break;
+            case 3  : triggerAxisMoveAbs( e.axis.a, e.axis.d, 0 ); break;
+            default : GN_UNEXPECTED();
+        }
+
+        mInputEvents.pop();
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::input::BasicInputMsw::attachToWindow( HandleType, HandleType window )
 {
     GN_GUARD;
@@ -127,7 +153,7 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
     {
         // process WM_CHAR message
         case WM_CHAR :
-            triggerCharPress( (char)wp );
+            pushCharPress( (char)wp );
             break;
 
         // capture mouse when mouse-button pressed
@@ -155,13 +181,14 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
             {
                 POINT pos;
                 GN_MSW_CHECK( ::GetCursorPos( &pos ) );
-                updateMousePosition( pos.x, pos.y );
+                pushAxisAbs( AXIS_MOUSE_X, pos.x );
+                pushAxisAbs( AXIS_MOUSE_Y, pos.y );
             }
             break;
 
         // mouse wheel
         case WM_MOUSEWHEEL :
-            triggerAxisMove( AXIS_MOUSE_WHEEL_0, (short)HIWORD(wp)/10 );
+            pushAxisMove( AXIS_MOUSE_WHEEL_0, (short)HIWORD(wp)/10 );
             break;
 
         case WM_DESTROY :
@@ -171,6 +198,83 @@ void GN::input::BasicInputMsw::msgHandler( UINT message, WPARAM wp, LPARAM )
     }
 
     GN_UNGUARD;
+}
+
+// *****************************************************************************
+//                             private functions
+// *****************************************************************************
+
+#define EVENT_QUEUE_SIZE 32
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::input::BasicInputMsw::pushKeyPress( KeyCode key, bool keydown )
+{
+    InputEvent e;
+    e.type = 0;
+    e.key.code = key;
+    e.key.down = keydown;
+
+    ScopeMutex<Mutex> mutex( mEventQueueMutex );
+    if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
+    {
+        mInputEvents.pop();
+    }
+    mInputEvents.push( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::input::BasicInputMsw::pushCharPress( char ch )
+{
+    InputEvent e;
+    e.type = 1;
+    e.ch = ch;
+
+    ScopeMutex<Mutex> mutex( mEventQueueMutex );
+    if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
+    {
+        mInputEvents.pop();
+    }
+    mInputEvents.push( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::input::BasicInputMsw::pushAxisMove( Axis axis, int distance )
+{
+    InputEvent e;
+    e.type = 2;
+    e.axis.a = axis;
+    e.axis.d = distance;
+
+    ScopeMutex<Mutex> mutex( mEventQueueMutex );
+    if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
+    {
+        mInputEvents.pop();
+    }
+    mInputEvents.push( e );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::input::BasicInputMsw::pushAxisAbs( Axis axis, int pos )
+{
+    InputEvent e;
+    e.type = 3;
+    e.axis.a = axis;
+    e.axis.d = pos;
+
+    ScopeMutex<Mutex> mutex( mEventQueueMutex );
+    if( mInputEvents.size() >= EVENT_QUEUE_SIZE )
+    {
+        mInputEvents.pop();
+    }
+    mInputEvents.push( e );
 }
 
 // *****************************************************************************

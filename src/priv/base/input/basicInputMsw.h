@@ -52,6 +52,7 @@ namespace GN { namespace input
         // ********************************
     public:
 
+        void processInputEvents();
         bool attachToWindow( HandleType, HandleType );
         void getMousePosition( int & x, int & y ) const;
 
@@ -61,30 +62,53 @@ namespace GN { namespace input
     protected:
 
         ///
-        /// Get window handle
-        ///
-        HWND getAttachedWindow() const { return mWindow; }
-
-        ///
-        /// process mouse movement
-        ///
-        void processMouseMove();
-
-        ///
         /// window message handler (overridable)
         ///
         virtual void msgHandler( UINT, WPARAM, LPARAM );
+
+        ///
+        /// called in msgHandler to add input event to event queue
+        //@{
+        void pushKeyPress( KeyCode key, bool keydown );
+        void pushCharPress( char ch );
+        void pushAxisMove( Axis axis, int distance );
+        void pushAxisAbs( Axis axis, int pos );
+        //@}
 
         // ********************************
         // private variables
         // ********************************
     private:
 
-        HMODULE mXInputLibrary;
-        HHOOK mMsgHook, mCwpHook;
-        bool  mMouseCapture;
+        struct InputEvent
+        {
+            int type; // 0 : key, 1: char, 2: axis_move, 3: axis_abs
 
-        HWND mWindow;
+            union
+            {
+                struct
+                {
+                    KeyCode code;
+                    bool    down;
+                } key;
+
+                char ch;
+
+                struct
+                {
+                    Axis a;
+                    int  d;
+                } axis;
+            };
+        };
+
+        HMODULE mXInputLibrary;
+        HHOOK   mMsgHook, mCwpHook;
+        bool    mMouseCapture;
+        HWND    mWindow;
+
+        std::queue<InputEvent> mInputEvents;
+        Mutex                  mEventQueueMutex;
 
         // ********************************
         // private functions
