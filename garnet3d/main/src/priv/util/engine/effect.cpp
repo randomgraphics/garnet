@@ -860,14 +860,17 @@ GN::engine::Entity * GN::engine::loadEffectEntityFromXmlFile( EntityManager & em
 {
     GN_GUARD;
 
-    GN_TODO( "convert filename to absolute/full path" );
+    StrA fullpath;
+    normalizePathSeparator( fullpath, core::toNative( filename ) );
 
     // check if the entity is already loaded
     Entity * e = em.getEntityByName( filename, true );
     if( e ) return e;
 
+    GN_INFO(sLogger)( "Load %s", fullpath.cptr() );
+
     // open XML file
-    AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+    AutoObjPtr<File> fp( core::openFile( fullpath, "rt" ) );
     if( !fp ) return 0;
 
     // parse XML file
@@ -880,7 +883,7 @@ GN::engine::Entity * GN::engine::loadEffectEntityFromXmlFile( EntityManager & em
             "    line   : %d\n"
             "    column : %d\n"
             "    error  : %s",
-            filename.cptr(),
+            fullpath.cptr(),
             xpr.errLine,
             xpr.errColumn,
             xpr.errInfo.cptr() );
@@ -888,12 +891,12 @@ GN::engine::Entity * GN::engine::loadEffectEntityFromXmlFile( EntityManager & em
     }
     GN_ASSERT( xpr.root );
 
-    StrA basedir = dirName( filename );
+    StrA basedir = dirName( fullpath );
     EffectDesc desc;
     if( !desc.loadFromXmlNode( *xpr.root, basedir ) ) return 0;
 
     // success
-    return createEffectEntity( em, re, filename, desc );
+    return createEffectEntity( em, re, fullpath, desc );
 
     GN_UNGUARD;
 }

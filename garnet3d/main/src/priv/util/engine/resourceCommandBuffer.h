@@ -6,6 +6,7 @@
 //! \author  chenli@@FAREAST (2007.4.29)
 // *****************************************************************************
 
+#include "resourceItem.h"
 #include "fence.h"
 
 namespace GN { namespace engine

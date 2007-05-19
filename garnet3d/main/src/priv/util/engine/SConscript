@@ -2,6 +2,7 @@ Import( 'GN' )
 sources = [
 	'drawable.cpp',
 	'drawThread.cpp',
+	'dump.cpp',
 	'effect.cpp',
 	'effectFromXml.cpp',
 	'entity.cpp',

@@ -70,7 +70,6 @@ public:
 
     bool onInit()
     {
-        showHUD( false );
         if( !mActor )
         {
             // (re)load actor

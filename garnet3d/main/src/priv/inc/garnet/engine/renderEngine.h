@@ -37,7 +37,7 @@ namespace GN { namespace engine
 
         //@{
     public:
-        RenderEngine()          { clear(); }
+        RenderEngine() : mApiReentrantFlag(0) { clear(); }
         virtual ~RenderEngine() { quit(); }
         //@}
 
@@ -50,12 +50,7 @@ namespace GN { namespace engine
         bool init( const RenderEngineInitParameters & );
         void quit();
     private:
-        void clear()
-        {
-            mResourceCache = 0;
-            mDrawThread = 0;
-            mResourceThread = 0;
-        }
+        void clear();
         //@}
 
         // ********************************
@@ -340,7 +335,10 @@ namespace GN { namespace engine
         ResourceThread        * mResourceThread;
         FenceManager          * mFenceManager;
 
-        DrawContext mDrawContext;
+        DrawContext             mDrawContext;
+
+        // render engine API is not reentrant-safe
+        mutable volatile SInt32 mApiReentrantFlag;
 
         // ********************************
         // private functions

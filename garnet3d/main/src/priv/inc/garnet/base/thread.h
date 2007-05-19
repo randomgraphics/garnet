@@ -68,6 +68,13 @@ namespace GN
     ///
     Thread * generateCurrentThreadObject();
 
+    ///
+    /// Returns a platform dependent identifier of the current thread.
+    ///
+    /// Note that this function is much fater then generateCurrentThreadObject().
+    ///
+    SInt32 getCurrentThreadId();
+
     //@}
 }
 
