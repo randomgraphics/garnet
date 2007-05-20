@@ -70,7 +70,7 @@ public:
 
     bool onInit()
     {
-        if( !mActor )
+        if( !mActor && !mFileName.empty() )
         {
             // (re)load actor
             releaseActorHiearacy( mActor );
@@ -121,10 +121,13 @@ public:
             (float)axises[input::AXIS_XB360_THUMB_LX] /  2000.0f,
             (float)axises[input::AXIS_XB360_THUMB_LY] / -2000.0f );
 
-        Vector3f pos = mArcBall.getTranslation();
-        mActor->setPosition( pos );
-        mActor->setPivot( -pos );
-        mActor->setRotation( mArcBall.getRotation() );
+        if( mActor )
+        {
+            Vector3f pos = mArcBall.getTranslation();
+            mActor->setPosition( pos );
+            mActor->setPivot( -pos );
+            mActor->setRotation( mArcBall.getRotation() );
+        }
     }
 
     void onRender()
@@ -142,7 +145,7 @@ public:
         e.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), world, mView, mProj );
         e.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), world, mView, mProj );
 
-        mActor->draw();
+        if( mActor ) mActor->draw();
 
 #if 0
         // draw matrices onto screen

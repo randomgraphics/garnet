@@ -127,18 +127,6 @@ public:
 };
 
 //
-//
-// -----------------------------------------------------------------------------
-static void sTextureDtor( GraphicsResource * & tex )
-{
-    if( tex )
-    {
-        tex->engine.freeResource( tex );
-        tex = 0;
-    }
-}
-
-//
 // get integer value of specific attribute
 // -----------------------------------------------------------------------------
 template<typename T>
@@ -231,7 +219,7 @@ static Entity * sLoadTextureEntityFromImageFile(
     re.updateResource( res, 0, loader );
 
     // success
-    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &sTextureDtor );
+    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &safeFreeGraphicsResource );
 
     GN_UNGUARD;
 }
@@ -412,5 +400,5 @@ GN::engine::Entity * GN::engine::createTextureEntity(
     if( 0 == res ) return 0;
 
     // success
-    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &sTextureDtor );
+    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &safeFreeGraphicsResource );
 }

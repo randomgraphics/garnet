@@ -15,6 +15,10 @@ GN::engine::EntityManager::createEntity( EntityTypeId type, const StrA & name, c
         GN_ERROR(sLogger)( "entity named '%s' does exist." );
         return 0;
     }
+    if( dtor.empty() )
+    {
+        GN_WARN(sLogger)( "entity named '%s' has no user data destructor." );
+    }
 
     EntityCategory & ec = mEntityTypes[type];
 
@@ -60,10 +64,21 @@ inline const T & GN::engine::entity2Object( const Entity * e, const T & nil )
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::deleteEntity( Entity * e )
+inline void GN::engine::safeDeleteEntity( const Entity * & e )
 {
     if( 0 == e ) return;
     e->manager.deleteEntity( e );
+    e = 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+inline void GN::engine::safeDeleteEntity( Entity * & e )
+{
+    if( 0 == e ) return;
+    e->manager.deleteEntity( e );
+    e = 0;
 }
 
 //

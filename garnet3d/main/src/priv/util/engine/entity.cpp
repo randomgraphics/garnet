@@ -35,6 +35,7 @@ GN::engine::EntityManager::EntityManager()
 // -----------------------------------------------------------------------------
 GN::engine::EntityManager::~EntityManager()
 {
+    deleteAllEntities();
 }
 
 // *****************************************************************************
@@ -125,6 +126,29 @@ void GN::engine::EntityManager::deleteEntity( const Entity * e )
 void GN::engine::EntityManager::deleteEntityByName( const StrA & name )
 {
     deleteEntity( getEntityByName( name ) );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::EntityManager::deleteAllEntities()
+{
+    std::map<StrA,Entity*>::const_iterator i;
+    for( i = mEntityNames.begin(); i != mEntityNames.end(); ++i )
+    {
+        const EntityDeletor * ed = (const EntityDeletor*)(i->second);
+        GN_ASSERT( ed );
+        delete ed;
+    }
+
+    mEntityNames.clear();
+
+    EntityTypeId type = mEntityTypes.first();
+    while( type )
+    {
+        mEntityTypes[type].entities.clear();
+        type = mEntityTypes.next( type );
+    }
 }
 
 //

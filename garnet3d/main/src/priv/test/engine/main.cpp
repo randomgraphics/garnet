@@ -76,8 +76,8 @@ int main()
 {
     InputInitiator input;
 
-    EntityManager em;
     RenderEngine  re;
+    EntityManager em;
     QuadRenderer  qr(re);
 
     UInt32 MB = 1024 * 1024;

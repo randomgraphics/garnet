@@ -3,6 +3,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 
 // *****************************************************************************
 // ASE loader
@@ -1437,10 +1438,10 @@ public:
 
 struct FaceRange
 {
-    UInt32 vboffset;
-    UInt32 vbcount;
-    UInt32 iboffset;
-    UInt32 ibcount;
+    UInt32 vboffset; ///< index of the first vertex
+    UInt32 vbcount;  ///< number of vertices
+    UInt32 iboffset; ///< index of first index
+    UInt32 ibcount;  ///< number of indices
 };
 
 //
@@ -1487,16 +1488,8 @@ static bool sWriteMeshChunkXml(
 
     size_t written;
 
-    struct BinHeader
-    {
-        char   tag[2];
-        UInt16 endian;
-    };
-    GN_CASSERT( 4 == sizeof(BinHeader) );
-
-    const BinHeader header = { {'G', 'N'}, 0x0201 };
-
     // write VB
+    const BinaryFileHeader vbh = { {'G','N'}, 0x0201, 0, sizeof(MeshVertex)*r.vbcount, {"VTXBUF V0.1"} };
     DynaArray<MeshVertex> memvb( r.vbcount );
     for( size_t vi = 0; vi < r.vbcount; ++vi )
     {
@@ -1508,8 +1501,8 @@ static bool sWriteMeshChunkXml(
     }
     AutoObjPtr<File> fvb( core::openFile( vbname, "wb" ) );
     if( !fvb ||
-        !fvb->write( &header, sizeof(header), &written ) ||
-        written != sizeof(header) ||
+        !fvb->write( &vbh, sizeof(vbh), &written ) ||
+        written != sizeof(vbh) ||
         !fvb->write( memvb.cptr(), sizeof(MeshVertex)*memvb.size(), &written ) ||
         written != sizeof(MeshVertex)*memvb.size() )
     {
@@ -1519,10 +1512,11 @@ static bool sWriteMeshChunkXml(
     fvb.clear();
 
     // write IB
+    const BinaryFileHeader ibh = { {'G','N'}, 0x0201, 0, r.ibcount*2, {"IDXBUF V0.1"} };
     AutoObjPtr<File> fib( core::openFile( ibname, "wb" ) );
     if( !fib ) return false;
-    if( !fib->write( &header, sizeof(header), &written ) ||
-        sizeof(header) != written )
+    if( !fib->write( &ibh, sizeof(ibh), &written ) ||
+        sizeof(ibh) != written )
     {
         GN_ERROR(sLogger)( "fail to write IB header." );
         return false;
@@ -1599,36 +1593,37 @@ static bool sWriteMeshChunkBinary(
     // calculate mesh bytes
     size_t totalBytes =
         sizeof(MeshBinaryHeader) +
-        sizeof(MeshVtxBufBinaryHeader) +
         sizeof(MeshVertex)*r.vbcount +
-        sizeof(MeshIdxBufBinaryHeader) +
         sizeof(UInt16)*r.ibcount;
 
     // define chunk header
-    struct ChunkHeader
-    {
-        char   tag[22]; // up to 22 characters to idenity chunk type
-        UInt16 endian; 
-        UInt64 bytes;   // chunk size in bytes, not including this header.
-    };
-    const ChunkHeader chunkheader = { {"GARNET MESH V0.1"}, 0x0201, totalBytes };
+    BinaryFileHeader fileheader = { {'G','N'}, 0x0201, 0, totalBytes, {"MESH V0.1"} };
 
     // create mesh file
     AutoObjPtr<File> fp( core::openFile( name, "wb" ) );
     if( !fp ) return false;
 
     // write chunk header
-    if( !fp->write( &chunkheader, sizeof(chunkheader), 0 ) ) return false;
+    if( !fp->write( &fileheader, sizeof(fileheader), 0 ) ) return false;
 
     // write mesh header
-    MeshBinaryHeader mbh = { TRIANGLE_LIST, r.ibcount / 3, 0, 0, r.vbcount, 0, VtxFmtDesc::XYZ_NORM_UV };
+    MeshBinaryHeader mbh =
+    {
+        TRIANGLE_LIST,
+        r.ibcount / 3,
+        0,
+        0,
+        r.vbcount,
+        0,
+        VtxFmtDesc::XYZ_NORM_UV,
+        {
+            { 0, sizeof(MeshVertex), 0, 0 }
+        },
+        { 0, 0, 0 }
+    };
     if( !fp->write( &mbh, sizeof(mbh), 0 ) ) return false;
 
-    // write VB header
-    MeshVtxBufBinaryHeader mvbbh = { 0, sizeof(MeshVertex), 0, 0 };
-    if( !fp->write( &mvbbh, sizeof(mvbbh), 0 ) ) return false;
-
-    // write VB
+    // write VB data
     DynaArray<MeshVertex> memvb( r.vbcount );
     for( size_t vi = 0; vi < r.vbcount; ++vi )
     {
@@ -1640,11 +1635,7 @@ static bool sWriteMeshChunkBinary(
     }
     if( !fp->write( memvb.cptr(), r.vbcount * sizeof(MeshVertex), 0 ) ) return false;
 
-    // write IB header
-    MeshIdxBufBinaryHeader mibbh = { 0, 0, 0 };
-    if( !fp->write( &mibbh, sizeof(mibbh), 0 ) ) return false;
-
-    // write IB
+    // write IB data
     DynaArray<UInt16> memib( r.ibcount );
     for( size_t ii = 0; ii < r.ibcount; ++ii )
     {

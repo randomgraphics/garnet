@@ -179,6 +179,7 @@ void GN::app::SampleApp::quit()
 
     onQuit();
     quitFont();
+    mEntityManager.deleteAllEntities();
     quitRenderer();
     quitInput();
 

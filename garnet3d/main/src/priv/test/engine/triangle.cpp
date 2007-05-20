@@ -120,7 +120,7 @@ void TestTriangle::quit()
     // make sure that all resources are unbinded from render engine.
     renderEngine().clearDrawContext();
 
-    deleteEntity( tex );
+    safeDeleteEntity( tex );
 }
 
 void TestTriangle::draw()

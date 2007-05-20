@@ -94,6 +94,23 @@ void GN::engine::RenderEngine::GraphicsResourceCache::quit()
 {
     GN_GUARD;
 
+    // free all resources
+    mResourceMutex.lock();
+    UInt32 id = mResources.first();
+    UInt32 id2;
+    while( id )
+    {
+        GraphicsResourceItem * item = mResources.get( id );
+
+        id2 = mResources.next( id );
+
+        mResources.remove( id );
+        delete item;
+
+        id = id2;
+    }
+    mResourceMutex.unlock();
+
     // standard quit procedure
     GN_STDCLASS_QUIT();
 

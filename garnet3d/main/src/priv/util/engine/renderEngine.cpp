@@ -302,6 +302,11 @@ struct ApiReentrantChecker
     ApiReentrantChecker checker( &mApiReentrantFlag );
 #endif
 
+///
+/// define to non-zero value to use fake render engine.
+///
+#define FAKE_RENDER_ENGINE 0
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -457,6 +462,8 @@ void GN::engine::RenderEngine::frameEnd()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::setContext( const DrawContext & context )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "setContext" );
 
     mDrawContext.mergeWith( context );
@@ -477,6 +484,8 @@ void GN::engine::RenderEngine::setShaderUniform(
     const StrA              & uniformName,
     const gfx::UniformValue & value )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "setShaderUniform" );
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)shader;
@@ -548,6 +557,8 @@ void GN::engine::RenderEngine::clearScreen(
     float z, UInt8 s,
     BitFields flags )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "clearScreen" );
 
     sPrepareContextResources( *this, mDrawContext );
@@ -567,6 +578,8 @@ void GN::engine::RenderEngine::drawIndexed(
     UInt32 numvtx,
     UInt32 startidx )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "drawIndexed" );
 
     sPrepareContextResources( *this, mDrawContext );
@@ -583,6 +596,8 @@ void GN::engine::RenderEngine::draw(
     UInt32 numprim,
     UInt32 startvtx )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "draw" );
 
     sPrepareContextResources( *this, mDrawContext );
@@ -604,6 +619,8 @@ void GN::engine::RenderEngine::drawLines(
     const Matrix44f & view,
     const Matrix44f & proj )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "drawLines" );
 
     sPrepareContextResources( *this, mDrawContext );
@@ -701,6 +718,8 @@ bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) con
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "disposeResource" );
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
@@ -715,6 +734,8 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeAllResources()
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "disposeAllResources" );
 
     mResourceLRU->disposeAll();
@@ -728,6 +749,8 @@ void GN::engine::RenderEngine::updateResource(
     int                      lod,
     GraphicsResourceLoader * loader )
 {
+    if( FAKE_RENDER_ENGINE ) return;
+
     RENDER_ENGINE_API( "updateResource" );
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
@@ -806,6 +829,34 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
 //
 //
 // -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxBuf(
+    const StrA            & name,
+    const gfx::VtxBufDesc & desc )
+{
+    return createVtxBuf( name, desc.bytes, desc.dynamic, desc.readback );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxBuf(
+    const StrA & name,
+    size_t       bytes,
+    bool         dynamic,
+    bool         readback )
+{
+    GraphicsResourceDesc grd;
+    grd.name        = name;
+    grd.type        = GRT_VTXBUF;
+    grd.vd.bytes    = (UInt32)bytes;
+    grd.vd.dynamic  = dynamic;
+    grd.vd.readback = readback;
+    return allocResource( grd );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
     const StrA            & name,
     const gfx::IdxBufDesc & desc )
@@ -818,14 +869,14 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
     const StrA & name,
-    UInt32       numidx,
+    size_t       numidx,
     bool         dynamic,
     bool         readback )
 {
     GraphicsResourceDesc grd;
     grd.name        = name;
     grd.type        = GRT_IDXBUF;
-    grd.id.numidx   = numidx;
+    grd.id.numidx   = (UInt32)numidx;
     grd.id.dynamic  = dynamic;
     grd.id.readback = readback;
     return allocResource( grd );

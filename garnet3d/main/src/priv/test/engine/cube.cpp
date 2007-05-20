@@ -45,7 +45,7 @@ void TestCube::quit()
     renderEngine().clearDrawContext();
 
     cube.clear();
-    deleteEntity( tex );
+    safeDeleteEntity( tex );
 
     font.quit();
 }

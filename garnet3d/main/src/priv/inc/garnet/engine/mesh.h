@@ -9,10 +9,50 @@
 namespace GN { namespace engine
 {
     ///
+    /// garnet binary file header
+    ///
+    struct BinaryFileHeader
+    {
+        char   tag[2];   ///< must be 'G','N'
+        UInt16 endian;   ///< endian type: 0x0201 means little endian, else, big endian
+        UInt32 reserved; ///< reserved.
+        UInt64 bytes;    ///< file size in bytes, not including this header.
+        char   name[16]; ///< up to 16 characters to idenity chunk name
+    };
+    GN_CASSERT( sizeof(BinaryFileHeader) == 32 );
+
+    ///
     /// mesh binary header
     ///
     struct MeshBinaryHeader
     {
+        ///
+        /// mesh vertex buffer header
+        ///
+        struct VtxBufHeader
+        {
+            //@{
+            UInt32 offset;
+            UInt16 stride;
+            UInt8  dynamic;
+            UInt8  readback;
+            //@}
+        };
+        GN_CASSERT( sizeof(VtxBufHeader) == 8 );
+
+        ///
+        /// mesh index buffer header
+        ///
+        struct IdxBufHeader
+        {
+            //@{
+            UInt8  dynamic;
+            UInt8  readback;
+            UInt16 reserved;
+            //@}
+        };
+        GN_CASSERT( sizeof(IdxBufHeader) == 4 );
+
         //@{
         gfx::PrimitiveType    primtype;
         UInt32                numprim;
@@ -21,36 +61,10 @@ namespace GN { namespace engine
         UInt32                numvtx;
         UInt32                startidx;
         gfx::VtxFmtDesc       vtxfmt;
+        VtxBufHeader          vtxbuf[16]; // support 16 streams at most
+        IdxBufHeader          idxbuf;
         //@}
     };
-    GN_CASSERT( sizeof(MeshBinaryHeader) == 6 * 4 + sizeof(gfx::VtxFmtDesc) );
-
-    ///
-    /// mesh vertex buffer header
-    ///
-    struct MeshVtxBufBinaryHeader
-    {
-        //@{
-        UInt32 offset;
-        UInt16 stride;
-        UInt8  dynamic;
-        UInt8  readback;
-        //@}
-    };
-    GN_CASSERT( sizeof(MeshVtxBufBinaryHeader) == 8 );
-
-    ///
-    /// mesh index buffer header
-    ///
-    struct MeshIdxBufBinaryHeader
-    {
-        //@{
-        UInt8  dynamic;
-        UInt8  readback;
-        UInt16 reserved;
-        //@}
-    };
-    GN_CASSERT( sizeof(MeshIdxBufBinaryHeader) == 4 );
 
     ///
     /// vertex buffer descriptor used by mesh class
@@ -76,7 +90,7 @@ namespace GN { namespace engine
         /// \name mesh data
         //@{
         RenderEngine &        engine;
-        AutoGraphicsResource  vtxfmt;
+        GraphicsResource *    vtxfmt;
         DynaArray<MeshVtxBuf> vtxbufs;
         GraphicsResource *    idxbuf;
         gfx::PrimitiveType    primtype;
@@ -106,13 +120,13 @@ namespace GN { namespace engine
         ///
         void clear()
         {
-            vtxfmt.clear();
+            safeFreeGraphicsResource( vtxfmt );
             for( size_t i = 0; i < vtxbufs.size(); ++i )
             {
-                if( vtxbufs[i].buffer ) engine.freeResource( vtxbufs[i].buffer );
+                safeFreeGraphicsResource( vtxbufs[i].buffer );
             }
             vtxbufs.clear();
-            if( idxbuf ) engine.freeResource( idxbuf ), idxbuf = 0;
+            safeFreeGraphicsResource( idxbuf );
             primtype = gfx::POINT_LIST;
             numprim = 0;
             startvtx = 0;
