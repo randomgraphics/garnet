@@ -197,8 +197,8 @@ namespace GN { namespace app
 
         InitParam             mInitParam;
 
-        engine::EntityManager mEntityManager;
         engine::RenderEngine  mRenderEngine;
+        engine::EntityManager mEntityManager;
         scene::QuadRenderer   mQuadRenderer;
         scene::BitmapFont     mFont;
 

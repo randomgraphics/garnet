@@ -864,7 +864,7 @@ GN::engine::Entity * GN::engine::loadEffectEntityFromXmlFile( EntityManager & em
     normalizePathSeparator( fullpath, core::toNative( filename ) );
 
     // check if the entity is already loaded
-    Entity * e = em.getEntityByName( filename, true );
+    Entity * e = em.getEntityByName( fullpath, true );
     if( e ) return e;
 
     GN_INFO(sLogger)( "Load %s", fullpath.cptr() );

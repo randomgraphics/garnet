@@ -106,26 +106,41 @@ public:
         AutoObjPtr<File> fp( core::openFile( mFileName, "rb" ) );
         if( fp.empty() ) return false;
 
+        // read file header
+        GN::engine::BinaryFileHeader header;
+        if( !fp->read( &header, sizeof(header), 0 ) ) return false;
+
+        // check file header
+        if( 'G' != header.tag[0] || 'N' != header.tag[1] )
+        {
+            GN_ERROR(sLogger)( "File %s is not a valid garnet binary file!", mFileName.cptr() );
+            return false;
+        }
+        if( ( header.bytes + sizeof(header) ) < (mDataOffset+mDataBytes) )
+        {
+            GN_ERROR(sLogger)( "File %s is not large enough (maybe corrupted)!", mFileName.cptr() );
+            return false;
+        }
+
         // alloc data buffer
-        size_t bytes = sizeof(BinFileHeader) + mDataBytes;
-        AutoObjPtr<UInt8> buf( new UInt8[bytes] );
-        if( buf.empty() ) return false;
+        AutoObjPtr<UInt32> buf( new UInt32[( mDataBytes + 3 ) / 4 + 1] );
+        if( buf.empty() )
+        {
+            GN_ERROR(sLogger)( "out of memory!" );
+            return false;
+        }
+
+        // store endian tag
+        buf[0] = header.endian;
 
         // read file
         if( !fp->seek( (int)mDataOffset, FSEEK_SET ) ) return false;
         size_t readen;
-        if( !fp->read( buf, bytes, &readen ) || bytes != readen ) return false;
-
-        // check file header
-        if( 'G' != buf[0] || 'N' != buf[1] )
-        {
-            GN_ERROR(sLogger)( "%s is not a valid garnet binary file!", mFileName.cptr() );
-            return false;
-        }
+        if( !fp->read( &buf[1], mDataBytes, &readen ) || mDataBytes != readen ) return false;
 
         // success
         outbuf = buf.detach();
-        outbytes = bytes;
+        outbytes = mDataBytes + 4;
         return true;
     }
 
@@ -133,16 +148,18 @@ public:
     {
         GN_ASSERT( inbuf && inbytes >= 4 );
 
-        const BinFileHeader * header = (const BinFileHeader*)inbuf;
-        const UInt32 * data = (const UInt32 *)( header + 1 );
+        const UInt32 * endian = (const UInt32*)inbuf;
+        const UInt32 * data = endian + 1;
 
-        GN_ASSERT( 'G' == header->tag[0] && 'N' == header->tag[1] );
-
-        size_t dwcount = ( inbytes - sizeof(BinFileHeader) + 3 ) / 4;
+        size_t dwcount = ( inbytes - 1 ) / 4;
         AutoTypePtr<UInt32> buf( new UInt32[dwcount] );
-        if( buf.empty() ) return false;
+        if( buf.empty() )
+        {
+            GN_ERROR(sLogger)( "out of memory!" );
+            return false;
+        }
 
-        if( header->endian == 0x0201 )
+        if( *endian == 0x0201 )
         {
             // file and machine endian are same.
             memcpy( buf, data, dwcount * 4 );
@@ -283,7 +300,7 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
     }
     VtxFmtDesc vfd;
     if( !vfd.loadFromXml( vfnode ) ) return false;
-    vtxfmt.attach( engine.createVtxFmt( "mesh vtxfmt", vfd ) );
+    vtxfmt = engine.createVtxFmt( "mesh vtxfmt", vfd );
     if( 0 == vtxfmt ) return false;
 
     // handle child elements
@@ -319,20 +336,18 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
             if( !sGetIntAttrib( *e, "offset", vb.offset ) ) return false;
             if( !sGetIntAttrib( *e, "stride", vb.stride ) ) return false;
 
-            // compose vb descriptor
-            GraphicsResourceDesc grd;
-            grd.name = ref;
-            grd.type = GRT_VTXBUF;
-            grd.vd.dynamic  = sGetOptionalBoolAttrib( *e, "dynamic", false );
-            grd.vd.readback = sGetOptionalBoolAttrib( *e, "readback", false );
-            grd.vd.bytes = (UInt32)(vb.stride * numvtx);
+            size_t bytes = vb.stride * numvtx;
 
             // create vb
-            vb.buffer = engine.allocResource( grd );
+            vb.buffer = engine.createVtxBuf(
+                ref,
+                bytes,
+                sGetOptionalBoolAttrib( *e, "dynamic", false ),
+                sGetOptionalBoolAttrib( *e, "readback", false ) );
             if( 0 == vb.buffer ) return false;
 
             // load vb content
-            AutoRef<MeshVtxBufLoader> loader( new MeshVtxBufLoader( ref, 0, grd.vd.bytes ) );
+            AutoRef<MeshVtxBufLoader> loader( new MeshVtxBufLoader( ref, sizeof(BinaryFileHeader), bytes ) );
             engine.updateResource( vb.buffer, 0, loader );
         }
 
@@ -346,21 +361,19 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
 
             GN_INFO(sLogger)( "Load %s", ref.cptr() );
 
-            // compose ib descriptor
-            GraphicsResourceDesc grd;
-            grd.name = ref;
-            grd.type = GRT_IDXBUF;
-            grd.id.dynamic  = sGetOptionalBoolAttrib( *e, "dynamic", false );
-            grd.id.readback = sGetOptionalBoolAttrib( *e, "readback", false );
-            grd.id.numidx = (UInt32)gfx::calcVertexCount( primtype, numprim );
+            size_t numidx = gfx::calcVertexCount( primtype, numprim );
 
             // create ib
-            idxbuf = engine.allocResource( grd );
+            idxbuf = engine.createIdxBuf(
+                ref,
+                numidx,
+                sGetOptionalBoolAttrib( *e, "dynamic", false ),
+                sGetOptionalBoolAttrib( *e, "readback", false ) );
             if( 0 == idxbuf ) return false;
 
             // load ib content
-            size_t bytes = grd.id.numidx * 2; // 16-bit index buffer
-            AutoRef<MeshIdxBufLoader> loader( new MeshIdxBufLoader( ref, 0, bytes ) );
+            size_t bytes = numidx * 2; // 16-bit index buffer
+            AutoRef<MeshIdxBufLoader> loader( new MeshIdxBufLoader( ref, sizeof(BinaryFileHeader), bytes ) );
             engine.updateResource( idxbuf, 0, loader );
         }
 
@@ -376,22 +389,17 @@ bool GN::engine::Mesh::loadFromXmlNode( const XmlNode & root, const StrA & based
     GN_UNGUARD;
 }
 
-/*
+//
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::Mesh::loadFromBinaryStream( const StrA & meshname, File & fp )
+bool GN::engine::Mesh::loadFromBinaryStream( File & fp )
 {
     GN_GUARD;
 
     size_t readen;
 
     // read chunk header
-    struct ChunkHeader
-    {
-        char   tag[22]; // up to 22 characters to idenity chunk type
-        UInt16 endian;  // 0x0201 means little endian; else, big endian
-        UInt64 bytes;   // chunk size in bytes, not including this header.
-    } header;
+    BinaryFileHeader header;
     if( !fp.read( &header, sizeof(header), &readen ) || readen != sizeof(header) )
     {
         GN_ERROR(sLogger)( "fail to read binary chunk header!" );
@@ -399,14 +407,12 @@ bool GN::engine::Mesh::loadFromBinaryStream( const StrA & meshname, File & fp )
     }
 
     // verify chunk header
-    static const char MESH_TAG[] = {"GARNET MESH V0.1"};
-    if( 0 != strCmp( header.tag, MESH_TAG, sizeof(MESH_TAG) ) )
+    static const char MESH_TAG[] = {"MESH V0.1"};
+    if( 0 != strCmp( header.name, MESH_TAG, sizeof(MESH_TAG) ) )
     {
         GN_ERROR(sLogger)( "Not a mesh chunk!" );
         return false;
     }
-
-    size_t readen;
 
     // read mesh binary header
     MeshBinaryHeader mbh;
@@ -415,14 +421,9 @@ bool GN::engine::Mesh::loadFromBinaryStream( const StrA & meshname, File & fp )
         GN_ERROR(sLogger)( "Fail to read mesh header." );
         return false;
     }
-    header.bytes -= sizeof(mbh);
-
-    GraphicsResourceDesc grd;
 
     // load vertex format
-    grd.type = GRT_VTXFMT;
-    grd.fd = mbh.vtxfmt;
-    vtxfmt = engine.allocResource( grd );
+    vtxfmt = engine.createVtxFmt( "mesh vertex format", mbh.vtxfmt );
     if( 0 == vtxfmt ) return false;
 
     // store other fields
@@ -433,77 +434,56 @@ bool GN::engine::Mesh::loadFromBinaryStream( const StrA & meshname, File & fp )
     numvtx    = mbh.numvtx;
     startidx  = mbh.startidx;
 
-    // create vertex buffers
-    size_t numStreams = mbh->vtxfmt.calcNumStreams();
+    size_t offset = sizeof(BinaryFileHeader) + sizeof(MeshBinaryHeader);
+
+    // load vertex buffers
+    size_t numStreams = mbh.vtxfmt.calcNumStreams();
+    GN_ASSERT( numStreams < 15 );
     vtxbufs.resize( numStreams );
     for( size_t i = 0; i < numStreams; ++i )
     {
-        MeshVtxBufBinaryHeader * mvbbh = (const MeshVtxBufBinaryHeader *)ptr;
-        ptr += sizeof(MeshVtxBufBinaryHeader);
-        if( ptr > end )
-        {
-            GN_ERROR(sLogger)( "fail to read vertex buffer %d", i );
-            return false;
-        }
+        const MeshBinaryHeader::VtxBufHeader & vbh = mbh.vtxbuf[i];
 
         MeshVtxBuf & vb = vtxbufs[i];
-        vb.offset = mvbbh->offset;
-        vb.stride = mvbbh->stride;
+        vb.offset = vbh.offset;
+        vb.stride = vbh.stride;
 
         // calculate vb size
         size_t bytes = numvtx * vb.stride;
-        if( (ptr+bytes) > end )
-        {
-            GN_ERROR(sLogger)( "fail to read vertex buffer %d", i );
-            return false;
-        }
 
         // create new VB
-        vb.buffer.attach( r.createVtxBuf( bytes, !!mvbbh->dynamic, !!mvbbh->readback ) );
-        if( vb.buffer.empty() ) return false;
+        vb.buffer = engine.createVtxBuf( "mesh vertex buffer", bytes, !!vbh.dynamic, !!vbh.readback );
+        if( 0 == vb.buffer ) return false;
 
-        // fill data
-        UInt8 * dst = (UInt8*)vb.buffer->lock( 0, 0, LOCK_WO );
-        if( 0 == dst ) return false;
-        AutoSurfaceUnlocker<VtxBuf> unlocker( vb.buffer );
-        memcpy( dst, ptr, bytes );
-        ptr += bytes;
-        GN_ASSERT( ptr <= end );
+        // load vb content
+        AutoRef<MeshVtxBufLoader> loader( new MeshVtxBufLoader( fp.name(), offset, bytes ) );
+        engine.updateResource( vb.buffer, 0, loader );
+
+        // update offset
+        offset += bytes;
     }
 
-    // check index buffer header
-    const MeshIdxBufBinaryHeader * mibbh = (const MeshIdxBufBinaryHeader*)ptr;
-    ptr += sizeof(MeshIdxBufBinaryHeader);
-    if( ptr > end )
+    // load index buffer
     {
-        GN_ERROR(sLogger)( "fail to read index buffer header." );
-        return false;
+        // calculate index buffer size
+        size_t numidx = calcVertexCount( primtype, numprim );
+
+        // create index buffer
+        const MeshBinaryHeader::IdxBufHeader & ibh = mbh.idxbuf;
+        idxbuf = engine.createIdxBuf( "mesh idxbuf", numidx, !!ibh.dynamic, !!ibh.readback );
+        if( 0 == idxbuf ) return false;
+
+        // load ib content
+        size_t bytes  = numidx * 2; // 16-bit index buffer
+        AutoRef<MeshIdxBufLoader> ibloader( new MeshIdxBufLoader( fp.name(), offset, bytes ) );
+        engine.updateResource( idxbuf, 0, ibloader );
     }
-
-    // calculate index buffer size
-    size_t numidx = calcVertexCount( primtype, numprim );
-    size_t bytes  = numidx * 2; // 16-bit index buffer
-    if( (ptr+bytes) > end )
-    {
-        GN_ERROR(sLogger)( "fail to read index buffer data." );
-        return false;
-    }
-
-    // create index buffer
-    idxbuf.attach( r.createIdxBuf( bytes, !!mibbh->dynamic, !!mibbh->readback ) );
-    if( idxbuf.empty() ) return false;
-
-    // fill index buffer
-    UInt16 * dst = (UInt16*)idxbuf->lock( 0, 0, LOCK_WO );
-    if( 0 == dst ) return false;
-    AutoSurfaceUnlocker<IdxBuf> unlocker( idxbuf );
-    memcpy( dst, ptr, bytes );
 
     // success
     return true;
 
     GN_UNGUARD;
-}*/
+}
 
 //
 //
@@ -519,16 +499,13 @@ bool GN::engine::Mesh::loadFromFile( const StrA & filename )
     if( !fp ) return false;
 
     // read file header
-    static const char bintag[] = { "GARNET MESH" };
-    StackArray<char,sizeof(bintag)> buf;
-    if( !fp->read( buf.cptr(), sizeof(bintag), 0 ) ) return 0;
-
-    if( 0 == strCmp( bintag, buf.cptr(), sizeof(bintag)-1 ) )
+    BinaryFileHeader binheader;
+    if( !fp->read( &binheader, sizeof(binheader), 0 ) ) return 0;
+    if( 'G' == binheader.tag[0] && 'N' == binheader.tag[1] )
     {
         // load as mesh binary
-        //if( !mesh->loadFromBinaryStream( *fp ) ) return 0;
-        GN_UNIMPL();
-        return false;
+        fp->seek( 0, FSEEK_SET );
+        return loadFromBinaryStream( *fp );
     }
     else
     {

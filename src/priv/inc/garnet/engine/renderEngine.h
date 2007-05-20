@@ -284,12 +284,22 @@ namespace GN { namespace engine
                       const gfx::VtxFmtDesc & desc );
 
         GraphicsResource *
+        createVtxBuf( const StrA            & name,
+                      const gfx::VtxBufDesc & desc );
+
+        GraphicsResource *
+        createVtxBuf( const StrA & name,
+                      size_t       bytes,
+                      bool         dynamic = false,
+                      bool         readback = false );
+
+        GraphicsResource *
         createIdxBuf( const StrA            & name,
                       const gfx::IdxBufDesc & desc );
 
         GraphicsResource *
         createIdxBuf( const StrA & name,
-                      UInt32       numidx,
+                      size_t       numidx,
                       bool         dynamic = false,
                       bool         readback = false );
 

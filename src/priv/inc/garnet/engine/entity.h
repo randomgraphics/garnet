@@ -293,6 +293,7 @@ namespace GN { namespace engine
         // delete
         void deleteEntity( const Entity * );
         void deleteEntityByName( const StrA & name );
+        void deleteAllEntities();
 
         // check
         bool checkEntityType( EntityTypeId, bool silence = false ) const;
@@ -351,7 +352,12 @@ namespace GN { namespace engine
     ///
     /// delete specific entity
     ///
-    void deleteEntity( Entity * );
+    void safeDeleteEntity( const Entity * & );
+
+    ///
+    /// delete specific entity
+    ///
+    void safeDeleteEntity( Entity * & );
 
     // interation
     Entity * getNextEntity( const Entity * );
