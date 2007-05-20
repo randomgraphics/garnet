@@ -107,6 +107,8 @@ void GN::engine::EntityManager::deleteEntity( const Entity * e )
 {
     if( 0 == e || !checkEntity( e ) ) return;
 
+    GN_INFO(sLogger)( "delete entity: %s", e->name.cptr() );
+
     EntityCategory & ec = mEntityTypes[e->type];
 
     // remove from ec
@@ -136,6 +138,7 @@ void GN::engine::EntityManager::deleteAllEntities()
     std::map<StrA,Entity*>::const_iterator i;
     for( i = mEntityNames.begin(); i != mEntityNames.end(); ++i )
     {
+        GN_INFO(sLogger)( "delete entity: %s", i->first.cptr() );
         const EntityDeletor * ed = (const EntityDeletor*)(i->second);
         GN_ASSERT( ed );
         delete ed;

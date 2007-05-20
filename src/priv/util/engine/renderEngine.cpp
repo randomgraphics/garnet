@@ -307,6 +307,19 @@ struct ApiReentrantChecker
 ///
 #define FAKE_RENDER_ENGINE 0
 
+///
+/// force render engine runs in serialize way.
+///
+#if 0
+#define FORCE_SERALIZE()
+#else
+#define FORCE_SERALIZE() \
+    if(1) { \
+        mResourceThread->waitForIdle(); \
+        mDrawThread->waitForIdle(); \
+    } else void(0)
+#endif
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -454,7 +467,9 @@ void GN::engine::RenderEngine::frameEnd()
 {
     RENDER_ENGINE_API( "frameEnd" );
 
-    return mDrawThread->frameEnd();
+    mDrawThread->frameEnd();
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -474,6 +489,8 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
     if( 0 == dr ) return;
 
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -547,6 +564,8 @@ void GN::engine::RenderEngine::setShaderUniform(
         *mResourceCache,
         item,
         *dr );
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -565,6 +584,8 @@ void GN::engine::RenderEngine::clearScreen(
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand4( DCT_CLEAR, c, z, s, flags );
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -586,6 +607,8 @@ void GN::engine::RenderEngine::drawIndexed(
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand6( DCT_DRAW_INDEXED, prim, numprim, startvtx, minvtxidx, numvtx, startidx );
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -604,6 +627,8 @@ void GN::engine::RenderEngine::draw(
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, prim, numprim, startvtx );
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -651,6 +676,8 @@ void GN::engine::RenderEngine::drawLines(
     memcpy( (p+1), positions, bufsize );
 
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+
+    FORCE_SERALIZE();
 }
 
 // *****************************************************************************
@@ -727,6 +754,8 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
     if( !mResourceCache->check( item ) ) return;
 
     mResourceLRU->dispose( item );
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -739,6 +768,8 @@ void GN::engine::RenderEngine::disposeAllResources()
     RENDER_ENGINE_API( "disposeAllResources" );
 
     mResourceLRU->disposeAll();
+
+    FORCE_SERALIZE();
 }
 
 //
@@ -760,6 +791,8 @@ void GN::engine::RenderEngine::updateResource(
     mResourceLRU->realize( item, 0 );
 
     mResourceThread->submitResourceLoadingCommand( item, lod, loader );
+
+    FORCE_SERALIZE();
 }
 
 // *****************************************************************************

@@ -68,13 +68,7 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
     }
 }
 
-struct BinFileHeader
-{
-    char   tag[2]; // 'G','N'
-    UInt16 endian; // 0x0201
-};
-GN_CASSERT( sizeof(BinFileHeader) == 4 );
-
+#if 1
 class BinFileLoader : public GN::engine::GraphicsResourceLoader
 {
     const StrA   mFileName;
@@ -223,6 +217,72 @@ public:
         return true;
     }
 };
+
+#else
+
+class BinFileLoader : public GN::engine::GraphicsResourceLoader
+{
+    const StrA   mFileName;
+    const size_t mDataOffset;
+    const size_t mDataBytes;
+
+public:
+
+    ///
+    /// ctor
+    ///
+    BinFileLoader( const StrA & filename, size_t offset, size_t bytes )
+        : mFileName(filename)
+        , mDataOffset(offset)
+        , mDataBytes(bytes)
+    {
+    }
+
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GN::engine::GraphicsResource &, const void * , size_t, int )
+    {
+        return true;
+    }
+
+    virtual void freebuf( void *, size_t )
+    {
+    }
+};
+
+class MeshVtxBufLoader : public BinFileLoader
+{
+public:
+
+    ///
+    /// ctor
+    ///
+    MeshVtxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
+};
+
+class MeshIdxBufLoader : public BinFileLoader
+{
+public:
+
+    ///
+    /// ctor
+    ///
+    MeshIdxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
+};
+
+#endif
 
 // *****************************************************************************
 // public methods
@@ -563,6 +623,8 @@ GN::engine::Entity * GN::engine::loadMeshEntityFromFile(
     // check if the entity exists already
     Entity * e = em.getEntityByName( fullpath, true );
     if( e ) return e;
+
+    GN_INFO(sLogger)( "Create mesh entity: %s", fullpath.cptr() );
 
     // load mesh
     AutoObjPtr<Mesh> mesh( new Mesh(re) );

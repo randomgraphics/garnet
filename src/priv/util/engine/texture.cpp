@@ -10,6 +10,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.Texture");
 // local functions
 // *****************************************************************************
 
+#if 1
 class TextureLoader : public GraphicsResourceLoader
 {
     const StrA mFileName;
@@ -126,6 +127,42 @@ public:
     }
 };
 
+#else
+
+class TextureLoader : public GN::engine::GraphicsResourceLoader
+{
+    const StrA mFileName;
+
+public:
+
+    TextureLoader( const StrA & filename ) : mFileName(filename) {}
+
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GN::engine::GraphicsResource &, const void * , size_t, int )
+    {
+        return true;
+    }
+
+    virtual void freebuf( void *, size_t )
+    {
+    }
+};
+
+#endif
+
 //
 // get integer value of specific attribute
 // -----------------------------------------------------------------------------
@@ -197,7 +234,7 @@ static Entity * sLoadTextureEntityFromImageFile(
 
     GN_ASSERT( !em.getEntityByName( name, true ) );
 
-    GN_INFO(sLogger)( "Load %s", name.cptr() );
+    GN_INFO(sLogger)( "Load %s", file.name().cptr() );
 
     // read image header
     ImageReader ir;
@@ -286,7 +323,7 @@ static Entity * sLoadTextureEntityFromXml(
         core::resolvePath( texname, dirname, ref->value );
         AutoObjPtr<File> texfile( core::openFile( texname, "rb" ) );
         if( !texfile ) return 0;
-        return sLoadTextureEntityFromImageFile( em, re, texname, *texfile, desc.usage.u32 );
+        return sLoadTextureEntityFromImageFile( em, re, name, *texfile, desc.usage.u32 );
     }
     else
     {
@@ -353,6 +390,8 @@ GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
     Entity * e = em.getEntityByName( fullpath, true );
     if( e ) return e;
 
+    GN_INFO(sLogger)( "Create texture entity: %s", fullpath.cptr() );
+
     StrA ext = extName(fullpath);
     if( 0 == strCmpI( ".xml", ext.cptr() ) )
     {
@@ -394,6 +433,8 @@ GN::engine::Entity * GN::engine::createTextureEntity(
         GN_ERROR(sLogger)( "entity named '%s' does exist already!", name.cptr() );
         return 0;
     }
+
+    GN_INFO(sLogger)( "Create texture entity: %s", name.cptr() );
 
     // create the resource (note that content of the texture is leaving undefined)
     GraphicsResource * res = re.createTexture( name, desc );
