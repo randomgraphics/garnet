@@ -40,11 +40,16 @@ namespace GN
         typedef typename H ItemHandle;
 
         ///
+        /// dtor
+        ///
+        ~NamedHandleManager() { clear(); }
+
+        ///
         /// clear all handles
         ///
         void clear()
         {
-            for( size_t i = mItems.first(); i != 0; i = mItems.next( i ) )
+            for( H i = mItems.first(); i != 0; i = mItems.next( i ) )
             {
                 delete mItems[i];
             }
