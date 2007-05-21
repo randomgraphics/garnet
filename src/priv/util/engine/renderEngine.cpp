@@ -308,17 +308,9 @@ struct ApiReentrantChecker
 #define FAKE_RENDER_ENGINE 0
 
 ///
-/// force render engine runs in serialize way.
+/// force render engine runs in serialize way (not implemented)
 ///
-#if 0
 #define FORCE_SERALIZE()
-#else
-#define FORCE_SERALIZE() \
-    if(1) { \
-        mResourceThread->waitForIdle(); \
-        mDrawThread->waitForIdle(); \
-    } else void(0)
-#endif
 
 //
 //
@@ -349,6 +341,8 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
 
     // connect to renderer signals
     gSigRendererDispose.connect( mResourceLRU, &ResourceLRU::disposeAll );
+
+    mFrameBegun = false;
 
     // success
     return success();
@@ -413,6 +407,12 @@ bool GN::engine::RenderEngine::resetRenderer(
 {
     RENDER_ENGINE_API( "reset" );
 
+    if( mFrameBegun )
+    {
+        GN_ERROR(sLogger)( "can not call resetRenderer() between frameBegin() and frameEnd()!" );
+        return false;
+    }
+
     // dispose all resources
     mResourceLRU->disposeAll();
     mResourceThread->waitForIdle();
@@ -457,7 +457,11 @@ void GN::engine::RenderEngine::frameBegin()
 {
     RENDER_ENGINE_API( "frameBegin" );
 
-    return mDrawThread->frameBegin();
+    GN_ASSERT( !mFrameBegun );
+
+    mFrameBegun = true;
+
+    mDrawThread->frameBegin();
 }
 
 //
@@ -466,6 +470,10 @@ void GN::engine::RenderEngine::frameBegin()
 void GN::engine::RenderEngine::frameEnd()
 {
     RENDER_ENGINE_API( "frameEnd" );
+
+    GN_ASSERT( mFrameBegun );
+
+    mFrameBegun = false;
 
     mDrawThread->frameEnd();
 
@@ -709,6 +717,12 @@ GN::engine::RenderEngine::allocResource( const GraphicsResourceDesc & desc )
 void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 {
     RENDER_ENGINE_API( "freeResource" );
+
+    if( mFrameBegun )
+    {
+        GN_ERROR(sLogger)( "can not call freeResource() between frameBegin() and frameEnd()!" );
+        return;
+    }
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 

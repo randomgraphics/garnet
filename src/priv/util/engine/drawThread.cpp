@@ -10,10 +10,6 @@ static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.DrawThread")
 // local functions
 // *****************************************************************************
 
-#define DUMP_COMMANDS 0
-
-#define DRAW_THREAD_ACTION(X)
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -239,7 +235,7 @@ namespace GN { namespace engine
 
         gRenderer.setContext( rc );
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( GN_FUNCTION );
         }
@@ -307,7 +303,7 @@ namespace GN { namespace engine
             GN_ERROR(sLogger)( "Set uniform for null shader is not allowed." );
         }
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( GN_FUNCTION );
         }
@@ -336,7 +332,7 @@ namespace GN { namespace engine
 
         r.clearScreen( p->color, p->z, p->s, p->flags );
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( GN_FUNCTION );
         }
@@ -362,7 +358,7 @@ namespace GN { namespace engine
 
         r.draw( (gfx::PrimitiveType)p->prim, p->numprim, p->startvtx );
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( GN_FUNCTION );
         }
@@ -396,7 +392,7 @@ namespace GN { namespace engine
             p->numvtx,
             p->startidx );
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( GN_FUNCTION );
         }
@@ -435,7 +431,7 @@ namespace GN { namespace engine
             p->view,
             p->proj );
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( GN_FUNCTION );
         }
@@ -456,7 +452,7 @@ namespace GN { namespace engine
 
         if( 0 == cmd.resource->data )
         {
-            if( DUMP_COMMANDS )
+            if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
             {
                 dumpCommandString( strFormat( "Create resource: %s", cmd.resource->desc.name.cptr() ) );
             }
@@ -471,7 +467,7 @@ namespace GN { namespace engine
             }
         }
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( strFormat( "Load resource: %s", cmd.resource->desc.name.cptr() ) );
         }
@@ -494,7 +490,7 @@ namespace GN { namespace engine
 
         sDeleteDeviceData( *cmd.resource );
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
             dumpCommandString( strFormat( "Dispose resource: %s", cmd.resource->desc.name.cptr() ) );
         }
@@ -767,9 +763,9 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 
     if( r.drawBegin() )
     {
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
-            dumpCommandString( "Frame BEGIN" );
+            dumpCommandString( "<FrameBEGIN/>" );
         }
 
         DrawBuffer & db = mDrawBuffers[mReadingIndex];
@@ -810,7 +806,10 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             if( 0 == command->resourceWaitingCount )
             {
                 // all resources are ready. do it!
-                DRAW_THREAD_ACTION( strFormat( "run draw command %d\n", command->fence ) );
+                if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+                {
+                    dumpCommandString(strFormat( "<ExecuteDrawCommand fence=\"%d\"/>", command->fence ) );
+                }
                 GN_ASSERT( command->func );
                 command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
 
@@ -824,16 +823,19 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             else
             {
                 // sleep for a while, then repeat current command
-                DRAW_THREAD_ACTION( strFormat( "postpone draw command %d: wait for resources...\n", command->fence ) );
+                if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+                {
+                    dumpCommandString(strFormat( "<PostponeDrawCommand fence=\"%d\"/>", command->fence ) );
+                }
                 sleepCurrentThread( 0 );
             }
         }
 
         r.drawEnd();
 
-        if( DUMP_COMMANDS )
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
         {
-            dumpCommandString( "Frame END" );
+            dumpCommandString( "<FrameEND/>" );
         }
     }
 }
@@ -862,8 +864,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             if( cmd->mustAfterThisDrawFence <= mDrawFence &&
                 cmd->mustAfterThisResourceFence <= cmd->resource->lastCompletedFence )
             {
-                DRAW_THREAD_ACTION( strFormat( "run resource command %d\n", cmd->submittedAtThisFence ) );
-
                 // remove it from resource command buffer
                 mResourceMutex.lock();
                 prev = cmd;
@@ -905,11 +905,10 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             }
             else
             {
-                // leave it in buffer, continue search.
-                DRAW_THREAD_ACTION( strFormat( "skip resource command %d : wait for draw fence %d and resource fence %d\n",
-                    cmd->submittedAtThisFence,
-                    cmd->mustAfterThisDrawFence,
-                    cmd->mustAfterThisResourceFence ) );
+                if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+                {
+                    dumpPostponedResourceCommand( *cmd );
+                }
                 mResourceMutex.lock();
                 cmd = cmd->next;
                 mResourceMutex.unlock();

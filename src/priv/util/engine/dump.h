@@ -90,8 +90,32 @@ namespace GN { namespace engine
             default              : GN_UNEXPECTED(); opstr = ""; break;
         }
 
-        dumpCommandString( strFormat( "<ResourceCommand op=\"%s\" %s/>",
+        dumpCommandString( strFormat( "<ExecuteResourceCommand op=\"%s\" fence=\"%d\" %s/>",
             opstr,
+            cmd.submittedAtThisFence,
+            cmd.resource->desc.toString().cptr() ) );
+    }
+
+    ///
+    /// dump postponed resource command
+    ///
+    inline void dumpPostponedResourceCommand( const ResourceCommand & cmd )
+    {
+        const char * opstr;
+        switch( cmd.op )
+        {
+            case GROP_LOAD       : opstr = "LOAD"; break;
+            case GROP_DECOMPRESS : opstr = "DECOMPRESS"; break;
+            case GROP_COPY       : opstr = cmd.resource->data ? "COPY" : "CRETE and COPY"; break;
+            case GROP_DISPOSE    : opstr = "DISPOSE"; break;
+            default              : GN_UNEXPECTED(); opstr = ""; break;
+        }
+
+        dumpCommandString( strFormat( "<PostponeResourceCommand op=\"%s\" fence=\"%d\" wait_for_resource_fence=\"%d\" wait_for_draw_fence=\"%d\" %s/>",
+            opstr,
+            cmd.submittedAtThisFence,
+            cmd.mustAfterThisResourceFence,
+            cmd.mustAfterThisDrawFence,
             cmd.resource->desc.toString().cptr() ) );
     }
 }}
