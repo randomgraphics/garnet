@@ -11,30 +11,96 @@
 
 /// \name prof macros
 //@{
-#ifdef GN_PROFILE_BUILD
+#if GN_PROFILE_BUILD || GN_DEBUG_BUILD
+
 ///
-/// start a profile timer
+/// define a static instance of the timer
 ///
-#define GN_PROF(name) ::GN::core::ScopeTimer GN_JOIN(__prof_,name)( #name )
+#define GN_DEFINE_STATIC_PROFILER(name) static GN::ProfileTimer & GN_JOIN(__GN_profiler_,name) = GN::ProfilerManager::sGetGlobalInstance().getTimer( #name )
+
+///
+/// start a previously defined profile timer
+///
+#define GN_START_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).start()
+
 ///
 /// stop a previously defined profile timer
 ///
-/// Normally, you don't need to use this macro, because profile timer
-/// will stop automatically when out of its life scope.
+#define GN_STOP_PROFILER( name ) if(0) {} else GN_JOIN(__GN_profiler_,name).stop()
+
 ///
-#define GN_PROF_END(name) GN_JOIN(__prof_,name).end()
+/// define an automatic profiler that evaluate the time of its life-scope.
+///
+#define GN_SCOPE_PROFILER( name ) GN_DEFINE_STATIC_PROFILER(name); GN::ScopeTimer GN_JOIN(__GN_scope_profiler,name)( &GN_JOIN(__GN_profiler_,name) )
+
 #else
-#define GN_PROF(name)
-#define GN_PROF_END(name)
+
+#define GN_DEFINE_STATIC_PROFILER( name )
+#define GN_START_PROFILER( name )
+#define GN_STOP_PROFILER( name )
+#define GN_SCOPE_PROFILER( name )
+
 #endif
 //@}
 
 namespace GN
 {
     ///
+    /// profile timer
+    ///
+    class ProfileTimer
+    {
+        Clock & clock;
+        size_t count;
+        double timesum, timemin, timemax, timestart;
+
+        friend class ProfilerManager;
+
+    protected:
+
+        ProfileTimer( Clock & c )
+            : clock(c)
+            , count(0)
+            , timesum(0)
+            , timemin( std::numeric_limits<double>::max() )
+            , timemax( 0 )
+            , timestart(0)
+        {}
+
+        virtual ~ProfileTimer() {}
+
+    public:
+
+        ///
+        /// start the timer
+        ///
+        void start()
+        {
+            GN_ASSERT( 0 == timestart );
+            timestart = clock.getTimeD();
+        }
+
+        ///
+        /// stop the timer
+        ///
+        void stop()
+        {
+            GN_ASSERT( 0 != timestart );
+            double t = clock.getTimeD() - timestart;
+            if( t < timemin ) timemin = t;
+            if( t > timemax ) timemax = t;
+            timesum += t;
+            timestart = 0;
+            ++count;
+        }
+    };
+
+    ///
     /// Profiler Manager
     ///
-    class ProfilerManager : public CrossDllSingleton<ProfilerManager>
+    /// \todo Make it thread-safe.
+    ///
+    class ProfilerManager
     {
         // ********************************
         // ctor/dtor
@@ -43,7 +109,7 @@ namespace GN
         //@{
     public:
         ProfilerManager() {}
-        ~ProfilerManager() {}
+        ~ProfilerManager();
         //@}
 
         // ********************************
@@ -52,9 +118,19 @@ namespace GN
     public:
 
         ///
+        /// return global instance of the profiler
+        ///
+        static GN_PUBLIC ProfilerManager & sGetGlobalInstance();
+
+        ///
         /// reset profiler, clear all timers
         ///
-        void reset() { mTimers.clear(); mClock.reset(); }
+        void reset()
+        {
+            ScopeMutex<SpinLoop> lock( mMutex );
+            mTimers.clear();
+            mClock.reset();
+        }
 
         ///
         /// print profile result to string
@@ -67,23 +143,36 @@ namespace GN
         StrA toString() { StrA str; toString(str); return str; }
 
         ///
+        /// return a named timer
+        ///
+        ProfileTimer & getTimer( const StrA & name )
+        {
+            GN_ASSERT( name );
+
+            ScopeMutex<SpinLoop> lock( mMutex );
+
+            std::map<StrA,ProfilerTimerImpl>::iterator i = mTimers.find( name );
+            if( mTimers.end() != i ) return i->second;
+
+            // create new timer
+            ProfilerTimerImpl newTimer( mClock );
+            return mTimers.insert( std::make_pair( name, newTimer ) ).first->second;
+        }
+
+        ///
         /// start a profile timer
         ///
-        void startTimer( const char * name )
+        void startTimer( const StrA & name )
         {
-            GN_GUARD_SLOW;
-            mTimers[name].start( mClock );
-            GN_UNGUARD_SLOW;
+            getTimer(name).start();
         }
 
         ///
         /// stop a profile timer
         ///
-        void stopTimer( const char * name )
+        void stopTimer( const StrA & name )
         {
-            GN_GUARD_SLOW;
-            mTimers[name].stop( mClock );
-            GN_UNGUARD_SLOW;
+            getTimer(name).stop();
         }
 
         // ********************************
@@ -91,41 +180,15 @@ namespace GN
         // ********************************
     private:
 
-        ///
-        /// private timer structure
-        ///
-        struct TimerDesc
+        struct ProfilerTimerImpl : public ProfileTimer
         {
-            double count, timesum, timemin, timemax, timestart;
-
-            TimerDesc()
-                : count(0)
-                , timesum(0)
-                , timemin( std::numeric_limits<double>::max() )
-                , timemax( 0 )
-                , timestart(0)
-            {}
-
-            void start( Clock & c )
-            {
-                GN_ASSERT( 0 == timestart );
-                timestart = c.getTimeD();
-            }
-
-            void stop( Clock & c )
-            {
-                GN_ASSERT( 0 != timestart );
-                double t = c.getTimeD() - timestart;
-                if( t < timemin ) timemin = t;
-                if( t > timemax ) timemax = t;
-                timesum += t;
-                timestart = 0;
-                ++count;
-            }
+            ProfilerTimerImpl( Clock & c ) : ProfileTimer( c ) {}
+            ~ProfilerTimerImpl() {}
         };
 
         Clock                            mClock;
-        std::map<const char *,TimerDesc> mTimers;
+        std::map<StrA,ProfilerTimerImpl> mTimers;
+        mutable SpinLoop                 mMutex;
 
         // ********************************
         //   private functions
@@ -138,21 +201,28 @@ namespace GN
     ///
     class ScopeTimer
     {
-        const char * mName;
+        ProfileTimer * mTimer;
 
     public :
 
         ///
         /// start the timer
         ///
-        ScopeTimer( const char * name ) : mName(name)
+        ScopeTimer( const char * name ) : mTimer( &ProfilerManager::sGetGlobalInstance().getTimer(name) )
         {
-            GN_ASSERT( name );
-            ProfilerManager::sGetInstance().startTimer(name);
+            mTimer->start();
         }
 
         ///
-        /// end the timer
+        /// start the user-defined timer
+        ///
+        ScopeTimer( ProfileTimer * timer ) : mTimer( timer )
+        {
+            mTimer->start();
+        }
+
+        ///
+        /// end the mTimer
         ///
         ~ScopeTimer()
         {
@@ -160,14 +230,14 @@ namespace GN
         }
 
         ///
-        /// end the timer manually
+        /// end the mTimer manually
         ///
         void stop()
         {
-            if( mName )
+            if( mTimer )
             {
-                ProfilerManager::sGetInstance().stopTimer(mName);
-                mName = 0;
+                mTimer->stop();
+                mTimer = 0;
             }
         }
     };

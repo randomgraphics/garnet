@@ -450,12 +450,16 @@ const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 // draw request management
 // *****************************************************************************
 
+GN_DEFINE_STATIC_PROFILER( RenderEngine_frame_time );
+
 //
 //
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::frameBegin()
 {
     RENDER_ENGINE_API( "frameBegin" );
+
+    GN_START_PROFILER( RenderEngine_frame_time );
 
     GN_ASSERT( !mFrameBegun );
 
@@ -478,6 +482,8 @@ void GN::engine::RenderEngine::frameEnd()
     mDrawThread->frameEnd();
 
     FORCE_SERALIZE();
+
+    GN_STOP_PROFILER( RenderEngine_frame_time );
 }
 
 //
@@ -601,18 +607,18 @@ void GN::engine::RenderEngine::clearScreen(
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::drawIndexed(
     SInt32 prim,
-    UInt32 numprim,
-    UInt32 startvtx,
-    UInt32 minvtxidx,
-    UInt32 numvtx,
-    UInt32 startidx )
+    size_t numprim,
+    size_t startvtx,
+    size_t minvtxidx,
+    size_t numvtx,
+    size_t startidx )
 {
     if( FAKE_RENDER_ENGINE ) return;
 
     RENDER_ENGINE_API( "drawIndexed" );
 
     sPrepareContextResources( *this, mDrawContext );
-    DrawCommandHeader * dr = mDrawThread->submitDrawCommand6( DCT_DRAW_INDEXED, prim, numprim, startvtx, minvtxidx, numvtx, startidx );
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand6( DCT_DRAW_INDEXED, prim, (UInt32)numprim, (UInt32)startvtx, (UInt32)minvtxidx, (UInt32)numvtx, (UInt32)startidx );
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
@@ -624,15 +630,15 @@ void GN::engine::RenderEngine::drawIndexed(
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::draw(
     SInt32 prim,
-    UInt32 numprim,
-    UInt32 startvtx )
+    size_t numprim,
+    size_t startvtx )
 {
     if( FAKE_RENDER_ENGINE ) return;
 
     RENDER_ENGINE_API( "draw" );
 
     sPrepareContextResources( *this, mDrawContext );
-    DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, prim, numprim, startvtx );
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, prim, (UInt32)numprim, (UInt32)startvtx );
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 

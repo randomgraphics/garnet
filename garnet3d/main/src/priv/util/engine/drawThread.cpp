@@ -684,8 +684,11 @@ void GN::engine::RenderEngine::DrawThread::submitDrawBuffer()
 
     // switch to next command buffer
     // note: this is the only place to modify write pointer
-    mDrawBufferNotFull->wait();
-    mDrawBufferMutex.lock();
+    {
+        GN_SCOPE_PROFILER( RenderEngine_frame_idle );
+        mDrawBufferNotFull->wait();
+        mDrawBufferMutex.lock();
+    }
     GN_ASSERT( ( ( mWritingIndex + 1 ) & (DRAW_BUFFER_COUNT-1) ) != mReadingIndex ); // make sure command buffer pool is not full.
     mWritingIndex = ( mWritingIndex + 1 ) & (DRAW_BUFFER_COUNT-1);
     mDrawBufferEmpty->unsignal(); // block any thread that waits for idle.
@@ -703,10 +706,15 @@ void GN::engine::RenderEngine::DrawThread::submitDrawBuffer()
 // -----------------------------------------------------------------------------
 UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 {
+    GN_SCOPE_PROFILER( RenderEngine_DrawThread_all );
+
     while( !mActionQuit )
     {
         // wait for something to do
-        mDoSomething->wait();
+        {
+            GN_SCOPE_PROFILER( RenderEngine_DrawThread_idle );
+            mDoSomething->wait();
+        }
 
         if( mActionQuit )
         {
@@ -756,6 +764,8 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 {
+    GN_SCOPE_PROFILER( RenderEngine_DrawThread_frame_time );
+
     gfx::Renderer & r = gRenderer;
 
     // process windows messages
@@ -822,6 +832,8 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             }
             else
             {
+                GN_SCOPE_PROFILER( RenderEngine_DrawThread_wait_for_resources );
+
                 // sleep for a while, then repeat current command
                 if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
                 {
@@ -905,6 +917,8 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             }
             else
             {
+                GN_SCOPE_PROFILER( RenderEngine_DrawThread_resource_postponed );
+
                 if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
                 {
                     dumpPostponedResourceCommand( *cmd );

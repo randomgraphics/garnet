@@ -5,9 +5,9 @@
 
 // implement global singletons
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::PluginManager )
-GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::ProfilerManager )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::input::Input )
 GN_IMPLEMENT_CROSS_DLL_SINGLETON( GN::gfx::Renderer )
+
 
 namespace GN
 {
@@ -15,6 +15,15 @@ namespace GN
     GN_PUBLIC RuntimeAssertBehavior gRuntimeAssertBehavior = RAB_ASK_USER;
 
     static Logger * sHeapLogger = getLogger("GN.core.heapAllocation");
+
+    //
+    //
+    // -----------------------------------------------------------------------------
+    GN_PUBLIC ProfilerManager & ProfilerManager::sGetGlobalInstance()
+    {
+        static GN::ProfilerManager sInstance;
+        return sInstance;
+    }
 
     //
     //

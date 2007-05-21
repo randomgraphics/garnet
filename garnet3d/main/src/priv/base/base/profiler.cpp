@@ -1,25 +1,44 @@
 #include "pch.h"
 #include "garnet/base/profiler.h"
 
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::ProfilerManager::~ProfilerManager()
+{
+#if GN_PROFILE_BUILD
+    // print profile result
+    StrA s;
+    toString( s );
+    printf( "%s\n", s.cptr() );
+#endif
+}
+
 //
 //
 // -----------------------------------------------------------------------------
 void GN::ProfilerManager::toString( GN::StrA & rval ) const
 {
+    ScopeMutex<SpinLoop> lock( mMutex );
+
     if( mTimers.empty() ) { rval = ""; return; }
 
     rval =
         "\n"
-        "=======================================\n"
-        "            profile result\n"
-        "---------------------------------------\n";
-    std::map<const char *,TimerDesc>::const_iterator i, e = mTimers.end();
+        "=====================================================================\n"
+        "                         profile result\n"
+        "---------------------------------------------------------------------\n"
+        "\n";
+    std::map<StrA,ProfilerTimerImpl>::const_iterator i, e = mTimers.end();
     for( i = mTimers.begin(); i != e; ++i )
     {
-        const TimerDesc & t = i->second;
+        const ProfilerTimerImpl & t = i->second;
         rval += GN::strFormat(
-            "    %s : count(%.0f), sum(%.0f), ave(%.0f), min(%.0f), max(%.0f)\n",
-            i->first,
+            "    %s :\n"
+            "        count(%d), sum(%f), ave(%f), min(%f), max(%f)\n"
+            "\n",
+            i->first.cptr(),
             t.count,
             t.timesum,
             t.timesum / t.count,
@@ -27,7 +46,7 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
             t.timemax );
     }
     rval +=
-        "=======================================\n"
+        "=====================================================================\n"
         "\n";
 }
 

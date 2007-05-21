@@ -112,15 +112,15 @@ namespace GN { namespace engine
             BitFields flags = gfx::CLEAR_ALL );
 
         void drawIndexed( SInt32 prim,
-                          UInt32 numprim,
-                          UInt32 startvtx,
-                          UInt32 minvtxidx,
-                          UInt32 numvtx,
-                          UInt32 startidx );
+                          size_t numprim,
+                          size_t startvtx,
+                          size_t minvtxidx,
+                          size_t numvtx,
+                          size_t startidx );
 
         void draw( SInt32 prim,
-                   UInt32 numprim,
-                   UInt32 startvtx );
+                   size_t numprim,
+                   size_t startvtx );
 
         void drawIndexedUp( SInt32         prim,
                             size_t         numprim,
