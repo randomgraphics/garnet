@@ -42,6 +42,7 @@ namespace GN { namespace util
             , mStep( ( to - from ) / time )
             , mRemainingTime( time )
         {
+            GN_ASSERT( .0f != time );
         }
 
         ///
@@ -56,6 +57,7 @@ namespace GN { namespace util
         ///
         void reset( const T & from, const T & to, float time )
         {
+            GN_ASSERT( .0f != time );
             mDelta = from * 0.0f;
             mValue = from;
             mTarget = to;

@@ -105,13 +105,22 @@ void GN::engine::RenderEngine::ResourceThread::waitForIdle()
 // -----------------------------------------------------------------------------
 UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
 {
+    GN_SCOPE_PROFILER( RenderEngine_ResourceThread_load );
+
     GN_ASSERT( param );
     ResourceCommandBuffer * commands = (ResourceCommandBuffer*)param;
 
     ResourceCommand * cmd;
 
-    while( NULL != ( cmd = commands->get() ) )
+    for(;;)
     {
+        {
+            GN_SCOPE_PROFILER( RenderEngine_ResourceThread_load_idle );
+            cmd = commands->get();
+        }
+
+        if( NULL == cmd ) break;        
+
         GN_ASSERT( GROP_LOAD == cmd->op );
         GN_ASSERT( cmd->loader );
 
@@ -139,13 +148,22 @@ UInt32 GN::engine::RenderEngine::ResourceThread::load( void * param )
 // -----------------------------------------------------------------------------
 UInt32 GN::engine::RenderEngine::ResourceThread::decompress( void * param )
 {
+    GN_SCOPE_PROFILER( RenderEngine_ResourceThread_decompress );
+
     GN_ASSERT( param );
     ResourceCommandBuffer * commands = (ResourceCommandBuffer*)param;
 
     ResourceCommand * cmd;
 
-    while( NULL != ( cmd = commands->get() ) )
+    for(;;)
     {
+        {
+            GN_SCOPE_PROFILER( RenderEngine_ResourceThread_decompress_idle );
+            cmd = commands->get();
+        }
+
+        if( 0 == cmd ) break; 
+
         if( cmd->noerr )
         {
             GN_ASSERT( GROP_DECOMPRESS == cmd->op );

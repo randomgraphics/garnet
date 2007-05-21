@@ -30,6 +30,9 @@ static inline void sEuler2Matrix( Matrix33f & m, const Vector3f & e )
 // ctor / dtor
 // *****************************************************************************
 
+static const float INTERP_TIME = 0.05f;
+static const Vector3f ZERO3(0,0,0);
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -43,8 +46,8 @@ FirstPersonCamera::FirstPersonCamera( Handness h )
     , mRotation3x3( Matrix33f::IDENTITY )
     , mRotation4x4( Matrix44f::IDENTITY )
     , mView( Matrix44f::IDENTITY )
-    , mTargetPosition( mPosition, mPosition, 0 )
-    , mTargetAngle( mAngle, mAngle, 0 )
+    , mTargetPosition( mPosition, mPosition, INTERP_TIME )
+    , mTargetAngle( mAngle, mAngle, INTERP_TIME )
 {
     mKeys[MOVE_L] = KEY_A;
     mKeys[MOVE_R] = KEY_D;
@@ -62,11 +65,6 @@ FirstPersonCamera::FirstPersonCamera( Handness h )
     mAxises[TURN_Y] = AXIS_MOUSE_Y;
     mAxises[TURN_Z] = AXIS_MOUSE_WHEEL_0;
 }
-
-
-static const float INTERP_TIME = 0.05f;
-
-static const Vector3f ZERO3(0,0,0);
 
 // *****************************************************************************
 // public functions
