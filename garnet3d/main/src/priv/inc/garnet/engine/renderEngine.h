@@ -347,6 +347,8 @@ namespace GN { namespace engine
 
         DrawContext             mDrawContext;
 
+        bool                    mFrameBegun;
+
         // render engine API is not reentrant-safe
         mutable volatile SInt32 mApiReentrantFlag;
 
