@@ -252,7 +252,7 @@ static Entity * sLoadTextureEntityFromImageFile(
     if( 0 == res ) return 0;
 
     // do load
-    AutoRef<TextureLoader> loader( new TextureLoader(name) );
+    AutoRef<TextureLoader> loader( new TextureLoader(file.name()) );
     re.updateResource( res, 0, loader );
 
     // success
