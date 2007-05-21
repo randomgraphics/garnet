@@ -340,7 +340,10 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     if( !mResourceThread->init() ) return failure();
 
     // connect to renderer signals
-    gSigRendererDispose.connect( mResourceLRU, &ResourceLRU::disposeAll );
+    gSigRendererCreate.connect( this, &RenderEngine::onRendererCreate );
+    gSigRendererRestore.connect( this, &RenderEngine::onRendererRestore );
+    gSigRendererDispose.connect( this, &RenderEngine::onRendererDispose );
+    gSigRendererDestroy.connect( this, &RenderEngine::onRendererDestroy );
 
     mFrameBegun = false;
 
@@ -413,7 +416,9 @@ bool GN::engine::RenderEngine::resetRenderer(
         return false;
     }
 
-    // dispose all resources
+    GN_TODO( "take care mini-applications." );
+
+    // dispose all graphics resources
     mResourceLRU->disposeAll();
     mResourceThread->waitForIdle();
     mDrawThread->waitForIdle();
@@ -481,6 +486,36 @@ void GN::engine::RenderEngine::frameEnd()
 
     mDrawThread->frameEnd();
 
+    // handle renderer signals
+    {
+        ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
+        for( size_t i = 0; i < mRendererSignals.size(); ++i )
+        {
+            GN_TODO( "take care mini-applications." );
+            switch( mRendererSignals[i] )
+            {
+                case RENDERER_CREATE:
+                    break;
+
+                case RENDERER_RESTORE:
+                    break;
+
+                case RENDERER_DISPOSE:
+                    mResourceLRU->disposeAll();
+                    break;
+
+                case RENDERER_DESTROY:
+                    break;
+
+                default:
+                    GN_UNEXPECTED();
+            }
+        }
+
+        mRendererSignals.clear();
+    }
+
     FORCE_SERALIZE();
 
     GN_STOP_PROFILER( RenderEngine_frame_time );
@@ -491,9 +526,11 @@ void GN::engine::RenderEngine::frameEnd()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::setContext( const DrawContext & context )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "setContext" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     mDrawContext.mergeWith( context );
 
@@ -515,9 +552,11 @@ void GN::engine::RenderEngine::setShaderUniform(
     const StrA              & uniformName,
     const gfx::UniformValue & value )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "setShaderUniform" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)shader;
 
@@ -590,9 +629,11 @@ void GN::engine::RenderEngine::clearScreen(
     float z, UInt8 s,
     BitFields flags )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "clearScreen" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand4( DCT_CLEAR, c, z, s, flags );
@@ -613,9 +654,11 @@ void GN::engine::RenderEngine::drawIndexed(
     size_t numvtx,
     size_t startidx )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "drawIndexed" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand6( DCT_DRAW_INDEXED, prim, (UInt32)numprim, (UInt32)startvtx, (UInt32)minvtxidx, (UInt32)numvtx, (UInt32)startidx );
@@ -633,9 +676,11 @@ void GN::engine::RenderEngine::draw(
     size_t numprim,
     size_t startvtx )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "draw" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
     DrawCommandHeader * dr = mDrawThread->submitDrawCommand3( DCT_DRAW, prim, (UInt32)numprim, (UInt32)startvtx );
@@ -658,9 +703,11 @@ void GN::engine::RenderEngine::drawLines(
     const Matrix44f & view,
     const Matrix44f & proj )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "drawLines" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
 
@@ -765,9 +812,9 @@ bool GN::engine::RenderEngine::checkResource( const GraphicsResource * res ) con
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "disposeResource" );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 
@@ -783,9 +830,9 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::disposeAllResources()
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "disposeAllResources" );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     mResourceLRU->disposeAll();
 
@@ -800,9 +847,9 @@ void GN::engine::RenderEngine::updateResource(
     int                      lod,
     GraphicsResourceLoader * loader )
 {
-    if( FAKE_RENDER_ENGINE ) return;
-
     RENDER_ENGINE_API( "updateResource" );
+
+    if( FAKE_RENDER_ENGINE ) return;
 
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
 
@@ -811,6 +858,100 @@ void GN::engine::RenderEngine::updateResource(
     mResourceLRU->realize( item, 0 );
 
     mResourceThread->submitResourceLoadingCommand( item, lod, loader );
+
+    FORCE_SERALIZE();
+}
+
+// *****************************************************************************
+// Mini application management
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::MiniAppId GN::engine::RenderEngine::registerMiniApp( MiniApp * ma )
+{
+    RENDER_ENGINE_API( "registerMiniApp" );
+
+    if( 0 == ma )
+    {
+        GN_ERROR(sLogger)( "NULL application pointer!" );
+        return 0;
+    }
+    if( mMiniApps.find( ma ) )
+    {
+        GN_ERROR(sLogger)( "redundant mini-application registration: 0x%p!", ma );
+        return 0;
+    }
+
+    MiniAppId id = mMiniApps.add( ma );
+
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_CTOR, ma );
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_CREATE, ma );
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_RESTORE, ma );
+
+    FORCE_SERALIZE();
+
+    return id;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::MiniApp * GN::engine::RenderEngine::unregisterMiniApp( MiniAppId id )
+{
+    RENDER_ENGINE_API( "unregisterMiniApp" );
+
+    if( !mMiniApps.validHandle( id ) )
+    {
+        GN_ERROR(sLogger)( "Invalid mini application id: %d", id );
+        return 0;
+    }
+
+    MiniApp * ma = mMiniApps.get( id );
+    GN_ASSERT( ma );
+    mMiniApps.remove( id );
+
+    bool needFrameEnd = false;
+    if( !mFrameBegun )
+    {
+        mDrawThread->frameBegin();
+        needFrameEnd = true;
+    }
+
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_DISPOSE, ma );
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_DELETE, ma );
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_DTOR, ma );
+
+    if( needFrameEnd )
+    {
+        mDrawThread->frameEnd();
+    }
+
+    mResourceThread->waitForIdle();
+    mDrawThread->waitForIdle();
+
+    FORCE_SERALIZE();
+
+    return ma;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::runMiniApp( MiniAppId id )
+{
+    if( FAKE_RENDER_ENGINE ) return;
+
+    RENDER_ENGINE_API( "runMiniApp" );
+
+    if( !mMiniApps.validHandle( id ) )
+    {
+        GN_ERROR(sLogger)( "Invalid mini application id: %d", id );
+        return;
+    }
+
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_RUN, mMiniApps[id] );
 
     FORCE_SERALIZE();
 }

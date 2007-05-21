@@ -9,14 +9,39 @@
 namespace GN { namespace engine
 {
     ///
-    /// coming soon ...
+    /// Mini-application ID
+    ///
+    typedef UIntPtr MiniAppId;
+
+    ///
+    /// Mini-application that runs in draw thread. For fast prototype only.
+    ///
+    /// \note Can not use GraphicsResource and Entity explicitly or implicitly in this class.
+    ///
+    struct MiniApp
+    {
+        //@{
+        virtual bool onInit() = 0;
+        virtual bool onRendererCreate() = 0;
+        virtual bool onRendererRestore() = 0;
+        virtual void onRendererDelete() = 0;
+        virtual void onRendererDispose() = 0;
+        virtual void onQuit() = 0;
+        virtual void onFrame() = 0;
+        //@}
+
+        bool noerr; ///< this value is managed by render engine. Do not modify it in your own code.
+    };
+
+    ///
+    /// render engine initialization parameters
     ///
     struct RenderEngineInitParameters
     {
         //@{
-        UInt32 maxTexBytes;   ///< zero for default value: 3/4 of total video memory
-        UInt32 maxMeshBytes;  ///< zero for default value: 1/4 of total video memory
-        UInt32 maxDrawCommandBufferBytes;
+        UInt32 maxTexBytes;               ///< zero for default value: 3/4 of total video memory
+        UInt32 maxMeshBytes;              ///< zero for default value: 1/4 of total video memory
+        UInt32 maxDrawCommandBufferBytes; ///< maximum draw command buffer bytes. Must be large enough to hold draw requests of one frame.
         //@}
     };
 
@@ -171,6 +196,19 @@ namespace GN { namespace engine
         void updateResource( GraphicsResource       * resource,
                              int                      lod,
                              GraphicsResourceLoader * loader );
+
+        //@}
+
+        // ********************************
+        /// \name mini application management
+        // ********************************
+    public:
+
+        //@{
+
+        MiniAppId registerMiniApp( MiniApp * );
+        MiniApp * unregisterMiniApp( MiniAppId );
+        void      runMiniApp( MiniAppId );
 
         //@}
 
@@ -352,10 +390,28 @@ namespace GN { namespace engine
         // render engine API is not reentrant-safe
         mutable volatile SInt32 mApiReentrantFlag;
 
+        HandleManager<MiniApp*,MiniAppId> mMiniApps;
+
+        enum RendererSignals
+        {
+            RENDERER_CREATE,
+            RENDERER_RESTORE,
+            RENDERER_DISPOSE,
+            RENDERER_DESTROY,
+        };
+        DynaArray<RendererSignals> mRendererSignals;
+        mutable SpinLoop           mRendererSignalMutex;
+
         // ********************************
         // private functions
         // ********************************
     private:
+
+        // these 4 methods run in draw thread (called by renderer signals)
+        bool onRendererCreate()  { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_CREATE ); return true; }
+        bool onRendererRestore() { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_RESTORE ); return true; }
+        void onRendererDispose() { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_DISPOSE ); }
+        void onRendererDestroy() { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_DESTROY ); }
     };
 
     ///

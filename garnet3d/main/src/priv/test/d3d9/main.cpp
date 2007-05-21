@@ -28,13 +28,14 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::app;
 
 // *****************************************************************************
 // main application class
 // *****************************************************************************
 
-class MyApp : public SampleApp
+class MyMiniApp : public MiniApp
 {
     struct Vertex
     {
@@ -59,7 +60,8 @@ class MyApp : public SampleApp
     util::ArcBall arcball;
 
 public:
-    bool onAppInit()
+
+    bool onInit()
     {
         static const float E = 100.0f;
         createBox(
@@ -102,15 +104,14 @@ public:
         return true;
     }
 
-    void onAppQuit()
+    void onQuit()
     {
+        arcball.disconnectFromInput();
     }
 
-    void onDetermineInitParam( InitParam & ip )
-    {
-        ip.rapi = API_D3D9;
-        ip.ro.vsync = true;
-    }
+    bool onRendererCreate() { return true; }
+
+    void onRendererDelete() {}
 
     bool onRendererRestore()
     {
@@ -178,15 +179,13 @@ public:
         ps.clear();
     }
 
-    void onUpdate()
+    void onFrame()
     {
+        // update shader const
         world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
         dev->SetVertexShaderConstantF( 0, (const float*)&pvw, 4 );
-    }
 
-    void onRender()
-    {
         Renderer & r = gRenderer;
 
         // reset to default context
@@ -194,7 +193,7 @@ public:
         ctx.resetToDefault();
         r.setContext( ctx );
 
-        dev->Clear( 0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0, 1.0f, 0 );
+        //dev->Clear( 0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0xFFFF0000, 1.0f, 0 );
 
         // set render state
         dev->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
@@ -223,6 +222,35 @@ public:
         r.rebindContext( ff );
     }
 };
+
+class MyApp : public SampleApp
+{
+    MiniAppId mMiniApp;
+
+public:
+
+    MyApp() : mMiniApp(0) {}
+
+    bool onInit()
+    {
+        mMiniApp = getRenderEngine().registerMiniApp( new MyMiniApp );
+        if( 0 == mMiniApp ) return false;
+        return true;
+    }
+
+    void onQuit()
+    {
+        delete getRenderEngine().unregisterMiniApp( mMiniApp ); 
+    }
+
+    void onRender()
+    {
+        RenderEngine & e = getRenderEngine();
+        e.clearScreen();
+        e.runMiniApp( mMiniApp );
+    }
+};
+
 int main( int argc, const char * argv[] )
 {
     MyApp app;
