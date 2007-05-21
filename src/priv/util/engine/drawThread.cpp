@@ -436,6 +436,104 @@ namespace GN { namespace engine
             dumpCommandString( GN_FUNCTION );
         }
     }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_CTOR( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        app->noerr = app->onInit();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_CREATE( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        if( app->noerr ) app->noerr = app->onRendererCreate();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_RESTORE( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        if( app->noerr ) app->noerr = app->onRendererRestore();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_DISPOSE( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        app->onRendererDispose();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_DELETE( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        app->onRendererDelete();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_DTOR( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        app->onQuit();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_MINIAPP_RUN( RenderEngine &, const void * param, size_t )
+    {
+        GN_ASSERT( param );
+
+        MiniApp * app = *(MiniApp **)param;
+
+        GN_ASSERT( app );
+
+        if( app->noerr ) app->onFrame();
+    }
 }};
 
 // *****************************************************************************
@@ -515,12 +613,19 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
 
     // initialize draw function pointers
     memset( mDrawFunctions, 0, sizeof(mDrawFunctions) );
-    mDrawFunctions[DCT_SET_CONTEXT]  = &DRAWFUNC_SET_CONTEXT;
-    mDrawFunctions[DCT_SET_UNIFORM]  = &DRAWFUNC_SET_UNIFORM;
-    mDrawFunctions[DCT_CLEAR]        = &DRAWFUNC_CLEAR;
-    mDrawFunctions[DCT_DRAW]         = &DRAWFUNC_DRAW;
-    mDrawFunctions[DCT_DRAW_INDEXED] = &DRAWFUNC_DRAW_INDEXED;
-    mDrawFunctions[DCT_DRAW_LINE]    = &DRAWFUNC_DRAW_LINE;
+    mDrawFunctions[DCT_SET_CONTEXT]     = &DRAWFUNC_SET_CONTEXT;
+    mDrawFunctions[DCT_SET_UNIFORM]     = &DRAWFUNC_SET_UNIFORM;
+    mDrawFunctions[DCT_CLEAR]           = &DRAWFUNC_CLEAR;
+    mDrawFunctions[DCT_DRAW]            = &DRAWFUNC_DRAW;
+    mDrawFunctions[DCT_DRAW_INDEXED]    = &DRAWFUNC_DRAW_INDEXED;
+    mDrawFunctions[DCT_DRAW_LINE]       = &DRAWFUNC_DRAW_LINE;
+    mDrawFunctions[DCT_MINIAPP_CTOR]    = &DRAWFUNC_MINIAPP_CTOR;
+    mDrawFunctions[DCT_MINIAPP_CREATE]  = &DRAWFUNC_MINIAPP_CREATE;
+    mDrawFunctions[DCT_MINIAPP_RESTORE] = &DRAWFUNC_MINIAPP_RESTORE;
+    mDrawFunctions[DCT_MINIAPP_DISPOSE] = &DRAWFUNC_MINIAPP_DISPOSE;
+    mDrawFunctions[DCT_MINIAPP_DELETE]  = &DRAWFUNC_MINIAPP_DELETE;
+    mDrawFunctions[DCT_MINIAPP_DTOR]    = &DRAWFUNC_MINIAPP_DTOR;
+    mDrawFunctions[DCT_MINIAPP_RUN]     = &DRAWFUNC_MINIAPP_RUN;
     if( GN_ASSERT_ENABLED )
     {
         for( int i = 0; i < NUM_DRAW_COMMAND_TYPES; ++i )
