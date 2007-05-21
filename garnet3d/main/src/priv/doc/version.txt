@@ -1,11 +1,28 @@
+0.8.1 (2007.5.21)
+=================
+- add
+  - support Cg shader
+  - new scene module
+  - d3d10 renderer is almost usable
+  - freetype2 font renderer
+  - covert 3dsmax ASE file to custom garnet mesh file
+  - new tool: mesh viewer
+  - portable thread and syncronization interface
+  - D3D9 single frame state dumper
+  - new sample: render to cubemap
+- improve
+  - new path and file system
+- experimental
+  - new multi-thread render engine (under construction)
+
 0.8.0 (2006.9.22)
 =================
-- added
+- add
   - custom array template
   - BMP image loader
   - endian swap util functions
   - str2Int() functions
-- refined
+- improve
   - user-supplied hints to shader creation
   - call convension support to functor
   - switchable runtime assert behavior
@@ -21,13 +38,13 @@
 
 0.7.2a (2005.6.11)
 ==================
-- refined
+- improve
   - reimplement autoscope using boost::bind, to fix immediate number bug.
 
 0.7.2 (2005.4.9)
 ================
 
-- added
+- add
   - load image from .PGN file
   - new option to enable/disable auto-restore of desktop display mode, to
     support multi-screen debugging.
@@ -58,7 +75,7 @@
 0.7.1 (2004.1.8)
 ================
 
-- added
+- add
   - build-in jpeg and dds support, no more depends on DevIL
   - OpenGL compressed texture support
   - .X support to meshmaker
@@ -86,7 +103,7 @@
 0.7.0a (2004.11.16)
 ===================
 
-- added
+- add
   - General
     - 全新的以scons(www.scons.org)为基础的跨平台编译环境
     - 新的app模块，方便用户建立自己的应用程序
@@ -137,7 +154,7 @@
 0.6.8 ( 2003-07-28 )
 ====================
 
-- added :
+- add :
   - 对Programmable Pixel Shader的支持
   - 对高级shader语言Cg的支持
   - 新的effect系统以取代原先的FX类
