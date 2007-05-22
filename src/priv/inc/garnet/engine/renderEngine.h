@@ -110,6 +110,13 @@ namespace GN { namespace engine
         ///
         void setResourceCacheCapacity( size_t maxTexBytes, size_t maxMeshBytes );
 
+    private:
+
+        ///
+        /// do reset w/o checking API reentrance
+        ///
+        bool internalResetRenderer( gfx::RendererAPI, const gfx::RendererOptions & );
+
         //@}
 
         // ********************************
@@ -377,30 +384,48 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        GraphicsResourceCache * mResourceCache;
-        ResourceLRU           * mResourceLRU;
-        DrawThread            * mDrawThread;
-        ResourceThread        * mResourceThread;
-        FenceManager          * mFenceManager;
-
-        DrawContext             mDrawContext;
-
-        bool                    mFrameBegun;
-
-        // render engine API is not reentrant-safe
-        mutable volatile SInt32 mApiReentrantFlag;
-
-        HandleManager<MiniApp*,MiniAppId> mMiniApps;
-
-        enum RendererSignals
+        enum RendererSignalType
         {
             RENDERER_CREATE,
             RENDERER_RESTORE,
             RENDERER_DISPOSE,
             RENDERER_DESTROY,
+            RENDERER_SIZEMOVE,
         };
-        DynaArray<RendererSignals> mRendererSignals;
-        mutable SpinLoop           mRendererSignalMutex;
+        struct RendererSignal
+        {
+            RendererSignalType type;
+            union
+            {
+                struct
+                {
+                    HandleType monitor;
+                    UInt32     width;
+                    UInt32     height;
+                } sizemove;
+            };
+
+            RendererSignal() {}
+            RendererSignal( RendererSignalType t ) : type(t) {}
+        };
+
+        GraphicsResourceCache           * mResourceCache;
+        ResourceLRU                     * mResourceLRU;
+        DrawThread                      * mDrawThread;
+        ResourceThread                  * mResourceThread;
+        FenceManager                    * mFenceManager;
+
+        DrawContext                       mDrawContext;
+
+        bool                              mFrameBegun;
+
+        // render engine API is not reentrant-safe
+        mutable volatile SInt32           mApiReentrantFlag;
+
+        HandleManager<MiniApp*,MiniAppId> mMiniApps;
+
+        DynaArray<RendererSignal>         mRendererSignals;
+        mutable SpinLoop                  mRendererSignalMutex;
 
         // ********************************
         // private functions
@@ -408,10 +433,11 @@ namespace GN { namespace engine
     private:
 
         // these 4 methods run in draw thread (called by renderer signals)
-        bool onRendererCreate()  { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_CREATE ); return true; }
-        bool onRendererRestore() { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_RESTORE ); return true; }
-        void onRendererDispose() { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_DISPOSE ); }
-        void onRendererDestroy() { ScopeMutex<SpinLoop> lock(mRendererSignalMutex); mRendererSignals.append( RENDERER_DESTROY ); }
+        bool onRendererCreate();
+        bool onRendererRestore();
+        void onRendererDispose();
+        void onRendererDestroy();
+        void onRenderWindowSizeMove( HandleType m, UInt32 w, UInt32 h );
     };
 
     ///

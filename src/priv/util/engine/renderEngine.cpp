@@ -346,6 +346,7 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     gSigRendererRestore.connect( this, &RenderEngine::onRendererRestore );
     gSigRendererDispose.connect( this, &RenderEngine::onRendererDispose );
     gSigRendererDestroy.connect( this, &RenderEngine::onRendererDestroy );
+    gSigRendererWindowSizeMove.connect( this, &RenderEngine::onRenderWindowSizeMove );
 
     mFrameBegun = false;
 
@@ -365,7 +366,11 @@ void GN::engine::RenderEngine::quit()
     RENDER_ENGINE_API( "quit" );
 
     // disconnect to renderer signals
+    gSigRendererCreate.disconnect( this );
+    gSigRendererRestore.disconnect( this );
     gSigRendererDispose.disconnect( this );
+    gSigRendererDestroy.disconnect( this );
+    gSigRendererWindowSizeMove.disconnect( this );
 
     // dispose all resources
     if( ok() )
@@ -412,24 +417,7 @@ bool GN::engine::RenderEngine::resetRenderer(
 {
     RENDER_ENGINE_API( "reset" );
 
-    if( mFrameBegun )
-    {
-        GN_ERROR(sLogger)( "can not call resetRenderer() between frameBegin() and frameEnd()!" );
-        return false;
-    }
-
-    GN_TODO( "take care mini-applications." );
-
-    // dispose all graphics resources
-    mResourceLRU->disposeAll();
-    mResourceThread->waitForIdle();
-    mDrawThread->waitForIdle();
-
-    // clear context
-    mDrawContext.clearToNull();
-
-    // then reset the renderer
-    return mDrawThread->resetRenderer( api, ro );
+    return internalResetRenderer( api, ro );
 }
 
 //
@@ -452,6 +440,37 @@ const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 
     return mDrawThread->getDispDesc();
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::internalResetRenderer(
+    gfx::RendererAPI api,
+    const gfx::RendererOptions & ro )
+{
+    if( mFrameBegun )
+    {
+        GN_ERROR(sLogger)( "can not call resetRenderer() between frameBegin() and frameEnd()!" );
+        return false;
+    }
+
+    GN_TODO( "take care mini-applications." );
+
+    // dispose all graphics resources
+    mResourceLRU->disposeAll();
+    mResourceThread->waitForIdle();
+    mDrawThread->waitForIdle();
+
+    // clear context
+    mDrawContext.clearToNull();
+
+    // then reset the renderer
+    bool result = mDrawThread->resetRenderer( api, ro );
+
+
+    return result;
+}
+
 
 // *****************************************************************************
 // draw request management
@@ -488,12 +507,27 @@ void GN::engine::RenderEngine::frameEnd()
 
     // handle renderer signals
     {
-        ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
-
-        for( size_t i = 0; i < mRendererSignals.size(); ++i )
+        // make a local copy of the signals.
+        DynaArray<RendererSignal> signals;
         {
+            ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+            if( !mRendererSignals.empty() )
+            {
+                signals.resize( mRendererSignals.size() );
+                memcpy(
+                    signals.cptr(),
+                    mRendererSignals.cptr(),
+                    sizeof(RendererSignal)*mRendererSignals.size() );
+                mRendererSignals.clear();
+            }
+        }
+
+        for( size_t i = 0; i < signals.size(); ++i )
+        {
+            const RendererSignal & s = signals[i];
+
             GN_TODO( "take care mini-applications." );
-            switch( mRendererSignals[i] )
+            switch( s.type )
             {
                 case RENDERER_CREATE:
                     break;
@@ -508,12 +542,23 @@ void GN::engine::RenderEngine::frameEnd()
                 case RENDERER_DESTROY:
                     break;
 
+                case RENDERER_SIZEMOVE:
+                {
+                    /*gfx::RendererOptions o = mDrawThread->getRendererOptions();
+                    o.monitorHandle = s.sizemove.monitor;
+                    o.windowedWidth = s.sizemove.width;
+                    o.windowedHeight = s.sizemove.height;
+                    if( !internalResetRenderer( mDrawThread->getRendererApi(), o ) )
+                    {
+                        GN_THROW( "fail to handle renderer sizemove signal!" );
+                    }*/
+                    break;
+                }
+
                 default:
                     GN_UNEXPECTED();
             }
         }
-
-        mRendererSignals.clear();
     }
 
     FORCE_SERALIZE();
@@ -1103,4 +1148,62 @@ void GN::engine::RenderEngine::clearDrawContext()
     } local;
 
     setContext( local.ctx );
+}
+
+// *****************************************************************************
+// private methods
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::onRendererCreate()
+{
+    ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+    mRendererSignals.append( RENDERER_CREATE );
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::onRendererRestore()
+{
+    ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+    mRendererSignals.append( RENDERER_RESTORE );
+    return true;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::onRendererDispose()
+{
+    ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+    mRendererSignals.append( RENDERER_DISPOSE );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::onRendererDestroy()
+{
+    ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+    mRendererSignals.append( RENDERER_DESTROY );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::onRenderWindowSizeMove( HandleType m, UInt32 w, UInt32 h )
+{
+    ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
+    RendererSignal s( RENDERER_SIZEMOVE );
+
+    s.sizemove.monitor = m;
+    s.sizemove.width = w;
+    s.sizemove.height = h;
+
+    mRendererSignals.append( s );
 }
