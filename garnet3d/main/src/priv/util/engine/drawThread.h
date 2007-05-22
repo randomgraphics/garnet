@@ -59,6 +59,7 @@ namespace GN { namespace engine
 
         //@{
         bool resetRenderer( gfx::RendererAPI, const gfx::RendererOptions & );
+        gfx::RendererAPI getRendererApi() const { return mRendererApi; }
         const gfx::RendererOptions & getRendererOptions() const { return mRendererOptions; }
         const gfx::DispDesc & getDispDesc() const { return mDispDesc; }
         //@}

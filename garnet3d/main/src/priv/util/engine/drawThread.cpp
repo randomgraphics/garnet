@@ -832,6 +832,10 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
             mActionReset = false;
             mResetSuccess = doDeviceReset();
             mResetRendererComplete->signal();
+            if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+            {
+                dumpCommandString( "<ResetRenderer/>" );
+            }
         }
 
         handleResourceCommands();
@@ -1051,6 +1055,7 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
     mDispDesc = r->getDispDesc();
 
     // reattach input window
+    // TODO: make it thread safe
     if( gInputPtr && !gInput.attachToWindow( mDispDesc.displayHandle, mDispDesc.windowHandle ) )
     {
         return false;
