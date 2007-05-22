@@ -175,9 +175,6 @@ bool GN::gfx::OGLRenderer::drawBegin()
 
     GN_ASSERT( !mDrawBegan );
 
-    // handle render window size move
-    if( !handleRenderWindowSizeMove() ) return false;
-
     mDrawBegan = 1;
     mNumPrims = 0;
     mNumBatches = 0;
@@ -207,6 +204,9 @@ void GN::gfx::OGLRenderer::drawEnd()
 
     ++mFrameCounter;
     mDrawCounter = 0;
+
+    // handle render window size move
+    handleRenderWindowSizeMove();
 
     GN_UNGUARD_SLOW;
 }

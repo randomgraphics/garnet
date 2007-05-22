@@ -18,11 +18,12 @@
 
 /// \name aliases for global renderer signals
 //@{
-#define gSigRendererCreate        (GN::gfx::getSigRendererCreate())
-#define gSigRendererRestore       (GN::gfx::getSigRendererRestore())
-#define gSigRendererDispose       (GN::gfx::getSigRendererDispose())
-#define gSigRendererDestroy       (GN::gfx::getSigRendererDestroy())
-#define gSigRendererWindowClosing (GN::gfx::getSigRendererWindowClosing())
+#define gSigRendererCreate         (GN::gfx::getSigRendererCreate())
+#define gSigRendererRestore        (GN::gfx::getSigRendererRestore())
+#define gSigRendererDispose        (GN::gfx::getSigRendererDispose())
+#define gSigRendererDestroy        (GN::gfx::getSigRendererDestroy())
+#define gSigRendererWindowSizeMove (GN::gfx::getSigRendererWindowSizeMove())
+#define gSigRendererWindowClose    (GN::gfx::getSigRendererWindowClose())
 //@}
 
 namespace GN { namespace gfx
@@ -84,6 +85,16 @@ namespace GN { namespace gfx
     GN_PUBLIC Signal0<void> & getSigRendererDestroy();
 
     ///
+    /// Happens when render windows is moved or resized.
+    ///
+    /// The 3 parameters are:
+    ///  - HandleType monior   : monitor handle that render window stays in
+    ///  - UInt32 clientWidth  : width of client area of render window
+    ///  - UInt32 clientHeight : height of client area of render window
+    ///
+    GN_PUBLIC Signal3<void, HandleType, UInt32, UInt32> & getSigRendererWindowSizeMove();
+
+    ///
     /// 当用户试图关闭渲染窗口时被触发，如点击窗口的关闭按钮或者按ALT-F4。
     ///
     /// This signal is useful when you want your application to quit when
@@ -99,7 +110,7 @@ namespace GN { namespace gfx
     /// should have external window messages handled already somewhere else
     /// in your code. So you may safely ignore this signal.
     ///
-    GN_PUBLIC Signal0<void> & getSigRendererWindowClosing();
+    GN_PUBLIC Signal0<void> & getSigRendererWindowClose();
 
     //@}
 
@@ -155,12 +166,6 @@ namespace GN { namespace gfx
         HandleType monitorHandle;
 
         //@}
-
-        ///
-        /// 是否监视渲染窗口的大小，并自动对渲染设备作相应的调整
-        /// 缺省为true.
-        ///
-        bool trackWindowSizeMove;
 
         ///
         /// Display mode for fullscreen mode. Ignored in windowed mode.
@@ -234,7 +239,6 @@ namespace GN { namespace gfx
             , renderWindow(0)
             , parentWindow(0)
             , monitorHandle(0)
-            , trackWindowSizeMove(true)
             , windowedWidth(0)
             , windowedHeight(0)
             , msaa(MSAA_NONE)
@@ -259,10 +263,10 @@ namespace GN { namespace gfx
         HandleType displayHandle;    ///< Display handle. For X Window only.
         HandleType windowHandle;     ///< Render window handle
         HandleType monitorHandle;    ///< Monitor handle.
-        UInt32 width;              ///< Back buffer width
-        UInt32 height;             ///< Back buffer height
-        UInt32 depth;              ///< Back buffer depth
-        UInt32 refrate;            ///< Screen refresh rate
+        UInt32     width;            ///< Back buffer width
+        UInt32     height;           ///< Back buffer height
+        UInt32     depth;            ///< Back buffer depth
+        UInt32     refrate;          ///< Screen refresh rate
 
         ///
         /// equality operator
@@ -368,12 +372,12 @@ namespace GN { namespace gfx
     ///
     enum RendererAPI
     {
-        API_OGL,   ///< OpenGL
-        API_D3D9,  ///< D3D9
-        API_D3D10, ///< D3D10
-        API_FAKE,  ///< Fake API
+        API_OGL,          ///< OpenGL
+        API_D3D9,         ///< D3D9
+        API_D3D10,        ///< D3D10
+        API_FAKE,         ///< Fake API
         NUM_RENDERER_API, ///< Number of avaliable API.
-        API_AUTO, ///< determine rendering API automatically.
+        API_AUTO,         ///< determine rendering API automatically.
     };
 
     ///

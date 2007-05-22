@@ -62,9 +62,6 @@ bool GN::gfx::D3D9Renderer::drawBegin()
     GN_ASSERT( !mDrawBegan );
 
 #if !GN_XENON
-    // handle render window size move
-    if( !handleRenderWindowSizeMove() ) return false;
-
     // check for device lost
     if( !handleDeviceLost() ) return false;
 #endif
@@ -112,6 +109,11 @@ void GN::gfx::D3D9Renderer::drawEnd()
 
 #if !GN_RETAIL_BUILD
     mDumpThisFrame = false;
+#endif
+
+    // handle render window size move
+#if !GN_XENON
+    handleRenderWindowSizeMove();
 #endif
 
     GN_UNGUARD_SLOW;
