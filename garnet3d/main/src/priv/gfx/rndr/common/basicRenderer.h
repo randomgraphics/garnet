@@ -93,7 +93,7 @@ namespace GN { namespace gfx
         ///
         /// Called by sub class to respond to render window resizing/moving
         ///
-        bool handleRenderWindowSizeMove();
+        void handleRenderWindowSizeMove();
 
 #if GN_MSWIN
     protected:

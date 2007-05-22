@@ -8,6 +8,8 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 
+GN_DEFINE_STATIC_PROFILER( RenderEngine_frame_time );
+
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -454,8 +456,6 @@ const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 // *****************************************************************************
 // draw request management
 // *****************************************************************************
-
-GN_DEFINE_STATIC_PROFILER( RenderEngine_frame_time );
 
 //
 //

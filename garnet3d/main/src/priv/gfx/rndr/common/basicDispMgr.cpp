@@ -329,7 +329,7 @@ GN::gfx::BasicRenderer::processUserOptions( const RendererOptions & ro )
 //
 //
 // ----------------------------------------------------------------------------
-bool
+void
 GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
 {
     GN_GUARD;
@@ -337,21 +337,23 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
     // handle render window size move
     const RendererOptions & ro = getOptions();
     if( !ro.fullscreen && // only when we're in windowed mode
-        ro.trackWindowSizeMove &&
         mWindow.getSizeChangeFlag() )
     {
-        RendererOptions newOptions = ro;
-        newOptions.monitorHandle = mWindow.getMonitor();
-        mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
-        if( !changeOptions( newOptions, false ) )
-        {
-            GN_FATAL(sLogger)( "Fail to respond to render window size and position change!" );
-            return false;
-        }
-    }
+        HandleType monitor = mWindow.getMonitor();
+        UInt32 width, height;
+        mWindow.getClientSize( width, height );
 
-    // success
-    return true;
+        getSigRendererWindowSizeMove()( monitor, width, height );
+
+        //RendererOptions newOptions = ro;
+        //newOptions.monitorHandle = mWindow.getMonitor();
+        //mWindow.getClientSize( newOptions.windowedWidth, newOptions.windowedHeight );
+        //if( !changeOptions( newOptions, false ) )
+        //{
+        //    GN_FATAL(sLogger)( "Fail to respond to render window size and position change!" );
+        //    return false;
+        //}
+    }
 
     GN_UNGUARD;
 }

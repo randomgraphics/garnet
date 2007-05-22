@@ -380,7 +380,7 @@ bool GN::app::SampleApp::initRenderer()
     GN_GUARD;
 
     // connect to renderer signals
-    gSigRendererWindowClosing.connect( this, &SampleApp::postExitEvent );
+    gSigRendererWindowClose.connect( this, &SampleApp::postExitEvent );
 
     UInt32 MB = 1024 * 1024;
     engine::RenderEngineInitParameters reip = { 32*MB, 32*MB, 32*MB };
@@ -403,7 +403,7 @@ void GN::app::SampleApp::quitRenderer()
     mRenderEngine.quit();
 
     // disconnect to renderer signals
-    gSigRendererWindowClosing.disconnect( this );
+    gSigRendererWindowClose.disconnect( this );
 
     GN_UNGUARD;
 }
