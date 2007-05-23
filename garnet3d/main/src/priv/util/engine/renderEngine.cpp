@@ -583,8 +583,6 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
 {
     RENDER_ENGINE_API( "setContext" );
 
-    GN_ASSERT( mFrameBegun );
-
     if( FAKE_RENDER_ENGINE ) return;
 
     mDrawContext.mergeWith( context );
@@ -608,8 +606,6 @@ void GN::engine::RenderEngine::setShaderUniform(
     const gfx::UniformValue & value )
 {
     RENDER_ENGINE_API( "setShaderUniform" );
-
-    GN_ASSERT( mFrameBegun );
 
     if( FAKE_RENDER_ENGINE ) return;
 
@@ -685,8 +681,6 @@ void GN::engine::RenderEngine::clearScreen(
     BitFields flags )
 {
     RENDER_ENGINE_API( "clearScreen" );
-
-    GN_ASSERT( mFrameBegun );
 
     if( FAKE_RENDER_ENGINE ) return;
 

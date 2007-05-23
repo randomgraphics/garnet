@@ -6,9 +6,7 @@
 // \author  chenlee (2005.10.1)
 // *****************************************************************************
 
-#include "garnet/GNbase.h"
-#include "garnet/GNcore.h"
-#include "garnet/GNgfx.h"
+#include "garnet/GNengine.h"
 #include "garnet/GNscene.h"
 #include "garnet/GNinput.h"
 #include "garnet/GNapp.h"

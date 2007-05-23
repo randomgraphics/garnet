@@ -198,7 +198,7 @@ namespace GN { namespace engine
     ///
     /// Generate a cube mesh, with texcoord and normal
     ///
-    Entity * generateCubeMeshEntity( EntityManager & em, RenderEngine & re, const StrA & name, float edgeLength );
+    bool generateCubeMesh( Mesh & mesh, float edgeLength );
 
     //@}
 }}
