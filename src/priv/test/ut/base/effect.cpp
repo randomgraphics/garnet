@@ -1,29 +1,34 @@
 #include "../testCommon.h"
-#include "garnet/GNgfx.h"
+#include "garnet/GNengine.h"
 #include "garnet/GNscene.h"
 
 class EffectTest : public CxxTest::TestSuite
 {
+    GN::engine::RenderEngine re;
+    GN::engine::EntityManager em;
+
 public:
 
     void setUp()
     {
         using namespace GN;
         using namespace GN::gfx;
-        TS_ASSERT( createRenderer( API_FAKE ) );
-        RendererOptions ro;
-        gRenderer.changeOptions( ro );
+        using namespace GN::engine;
+        //TS_ASSERT( createRenderer( API_FAKE ) );
+        //RendererOptions ro;
+        //gRenderer.changeOptions( ro );
     }
 
     void tearDown()
     {
-        GN::gfx::deleteRenderer();
+        //GN::gfx::deleteRenderer();
     }
 
     void testCondExp()
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         // empty condition
         EffectDesc::CondExp emptyExp;
@@ -51,10 +56,11 @@ public:
         TS_ASSERT( ((c0==c1)||(c2==c3)||(c1==c3)).evaluate() );
     }
 
-    void initDesc1( GN::gfx::EffectDesc & desc )
+    void initDesc1( GN::engine::EffectDesc & desc )
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         desc.clear();
 
@@ -128,14 +134,13 @@ public:
         desc.techniques.push_back( tech1 );
     }
 
-    void doDraw( const GN::gfx::Effect & e )
+    void doDraw( const GN::engine::Effect & )
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
-        if( !gRendererPtr ) return;
-
-        gRenderer.clearScreen();
+        /*gRenderer.clearScreen();
         if( gRenderer.drawBegin() )
         {
             RendererContext ctx;
@@ -149,20 +154,21 @@ public:
                 e.passEnd();
             }
             gRenderer.drawEnd();
-        }
+        }*/
     }
 
     void testEmptyTechniqueList()
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.techniques.clear();
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -170,13 +176,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["vs0"].type = NUM_SHADER_TYPES;
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -184,13 +191,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["vs0"].lang = NUM_SHADING_LANGUAGES;
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -198,13 +206,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["ps0"].textures[0] = "haha";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -212,13 +221,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["ps0"].textures[MAX_TEXTURE_STAGES] = "t0";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -226,13 +236,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["vs0"].uniforms["c0"] = "haha";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -240,13 +251,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["vs0"].uniforms["haha"] = "pvw";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( e.init( desc ) );
 
         doDraw( e );
@@ -256,6 +268,7 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -265,7 +278,7 @@ public:
         p0.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
         GN::setRuntimeAssertBehavior( rab );
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -273,6 +286,7 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -280,7 +294,7 @@ public:
         EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
         p0.shaders[SHADER_VS] = "haha";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -288,6 +302,7 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -295,7 +310,7 @@ public:
         EffectDesc::PassDesc & p0 = desc.techniques[0].passes[0];
         p0.shaders[SHADER_VS] = "ps0";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -303,6 +318,7 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -311,7 +327,7 @@ public:
         desc.techniques[0].rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
         GN::setRuntimeAssertBehavior( rab );
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -319,6 +335,7 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
@@ -327,7 +344,7 @@ public:
         desc.rsb.set( RS_ALPHA_TEST, NUM_RENDER_STATE_VALUES );
         GN::setRuntimeAssertBehavior( rab );
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( !e.init( desc ) );
     }
 
@@ -335,13 +352,14 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
         desc.shaders["vs0"].code = "haha";
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( e.init( desc ) );
 
         doDraw( e );
@@ -351,11 +369,12 @@ public:
     {
         using namespace GN;
         using namespace GN::gfx;
+        using namespace GN::engine;
 
         EffectDesc desc;
         initDesc1( desc );
 
-        Effect e;
+        Effect e(re);
         TS_ASSERT( e.init( desc ) );
 
         doDraw( e );

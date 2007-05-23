@@ -102,8 +102,8 @@ struct GfxResources
 
             // draw to rt3
             r.setDrawToTextures( 1, rt3 );
-            gQuadRenderer.drawSingleTexturedQuad( rt1, 0, 0, 0, 1, 0.5 );
-            gQuadRenderer.drawSingleTexturedQuad( rt2, 0, 0, 0.5, 1, 1 );
+            //gQuadRenderer.drawSingleTexturedQuad( rt1, 0, 0, 0, 1, 0.5 );
+            //gQuadRenderer.drawSingleTexturedQuad( rt2, 0, 0, 0.5, 1, 1 );
 
             // draw to screen
             r.setDrawToBackBuf();
