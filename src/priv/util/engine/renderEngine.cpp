@@ -454,8 +454,6 @@ bool GN::engine::RenderEngine::internalResetRenderer(
         return false;
     }
 
-    GN_TODO( "take care mini-applications." );
-
     // dispose all graphics resources
     mResourceLRU->disposeAll();
     mResourceThread->waitForIdle();
@@ -464,10 +462,18 @@ bool GN::engine::RenderEngine::internalResetRenderer(
     // clear context
     mDrawContext.clearToNull();
 
-    // then reset the renderer
+    // renderer signal queue should be empty now.
+    // Note that here we don't need to use mutex, because draw thread must be idle now.
+    GN_ASSERT( mRendererSignals.empty() );
+
+    // reset the renderer
     bool result = mDrawThread->resetRenderer( api, ro );
 
+    // clear renderer signals
+    // Do not have to use mutex, for the same reason as above.
+    mRendererSignals.clear();
 
+    // done.
     return result;
 }
 
@@ -506,58 +512,63 @@ void GN::engine::RenderEngine::frameEnd()
     mDrawThread->frameEnd();
 
     // handle renderer signals
+    mRendererSignalMutex.lock();
+    bool hasSignals = !mRendererSignals.empty();
+    mRendererSignalMutex.unlock();
+    if( hasSignals )
     {
         // make a local copy of the signals.
         DynaArray<RendererSignal> signals;
         {
             ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
-            if( !mRendererSignals.empty() )
-            {
-                signals.resize( mRendererSignals.size() );
-                memcpy(
-                    signals.cptr(),
-                    mRendererSignals.cptr(),
-                    sizeof(RendererSignal)*mRendererSignals.size() );
-                mRendererSignals.clear();
-            }
+
+            signals.resize( mRendererSignals.size() );
+            memcpy(
+                signals.cptr(),
+                mRendererSignals.cptr(),
+                sizeof(RendererSignal)*mRendererSignals.size() );
+            mRendererSignals.clear();
         }
 
+        bool needDispose = false;
+        bool needReset = false;
+        gfx::RendererOptions o;
         for( size_t i = 0; i < signals.size(); ++i )
         {
             const RendererSignal & s = signals[i];
-
-            GN_TODO( "take care mini-applications." );
             switch( s.type )
             {
-                case RENDERER_CREATE:
-                    break;
-
-                case RENDERER_RESTORE:
-                    break;
-
-                case RENDERER_DISPOSE:
-                    mResourceLRU->disposeAll();
-                    break;
-
-                case RENDERER_DESTROY:
-                    break;
-
-                case RENDERER_SIZEMOVE:
-                {
-                    /*gfx::RendererOptions o = mDrawThread->getRendererOptions();
+                case RENDERER_SIZEMOVE :
+                    needReset = true;
+                    o = mDrawThread->getRendererOptions();
                     o.monitorHandle = s.sizemove.monitor;
                     o.windowedWidth = s.sizemove.width;
                     o.windowedHeight = s.sizemove.height;
-                    if( !internalResetRenderer( mDrawThread->getRendererApi(), o ) )
-                    {
-                        GN_THROW( "fail to handle renderer sizemove signal!" );
-                    }*/
                     break;
-                }
 
-                default:
+                case RENDERER_DISPOSE  :
+                    needDispose = true;
+                    break;
+
+                case RENDERER_CREATE   :
+                case RENDERER_RESTORE  :
+                case RENDERER_DESTROY  :
+                    break; // do nothing
+
+                default                :
                     GN_UNEXPECTED();
             }
+        }
+
+        if( needReset )
+        {
+            if( !internalResetRenderer( mDrawThread->getRendererApi(), o ) )
+            {
+                GN_THROW( "fail to handle renderer sizemove signal!" );
+            }
+        } else if( needDispose )
+        {
+           mResourceLRU->disposeAll();
         }
     }
 
@@ -965,7 +976,7 @@ GN::engine::MiniApp * GN::engine::RenderEngine::unregisterMiniApp( MiniAppId id 
     }
 
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DISPOSE, ma );
-    mDrawThread->submitDrawCommand1( DCT_MINIAPP_DELETE, ma );
+    mDrawThread->submitDrawCommand1( DCT_MINIAPP_DESTROY, ma );
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DTOR, ma );
 
     if( needFrameEnd )
@@ -1154,13 +1165,26 @@ void GN::engine::RenderEngine::clearDrawContext()
 // private methods
 // *****************************************************************************
 
+// Note : onRendererXXXX() methods must be called in draw thread.
+
 //
 //
 // -----------------------------------------------------------------------------
 bool GN::engine::RenderEngine::onRendererCreate()
 {
+    GN_ASSERT( mDrawThread->isDrawThread() );
+
     ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
     mRendererSignals.append( RENDERER_CREATE );
+
+    for( MiniAppId i = mMiniApps.first(); 0 != i ; i = mMiniApps.next( i ) )
+    {
+        MiniApp * ma = mMiniApps[i];
+        GN_ASSERT( ma );
+        if( ma->noerr ) ma->noerr = ma->onRendererCreate();
+    }
+
     return true;
 }
 
@@ -1169,8 +1193,19 @@ bool GN::engine::RenderEngine::onRendererCreate()
 // -----------------------------------------------------------------------------
 bool GN::engine::RenderEngine::onRendererRestore()
 {
+    GN_ASSERT( mDrawThread->isDrawThread() );
+
     ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
     mRendererSignals.append( RENDERER_RESTORE );
+
+    for( MiniAppId i = mMiniApps.first(); 0 != i ; i = mMiniApps.next( i ) )
+    {
+        MiniApp * ma = mMiniApps[i];
+        GN_ASSERT( ma );
+        if( ma->noerr ) ma->noerr = ma->onRendererRestore();
+    }
+
     return true;
 }
 
@@ -1179,8 +1214,18 @@ bool GN::engine::RenderEngine::onRendererRestore()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::onRendererDispose()
 {
+    GN_ASSERT( mDrawThread->isDrawThread() );
+
     ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
     mRendererSignals.append( RENDERER_DISPOSE );
+
+    for( MiniAppId i = mMiniApps.first(); 0 != i ; i = mMiniApps.next( i ) )
+    {
+        MiniApp * ma = mMiniApps[i];
+        GN_ASSERT( ma );
+        ma->onRendererDispose();
+    }
 }
 
 //
@@ -1188,8 +1233,18 @@ void GN::engine::RenderEngine::onRendererDispose()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::onRendererDestroy()
 {
+    GN_ASSERT( mDrawThread->isDrawThread() );
+
     ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
     mRendererSignals.append( RENDERER_DESTROY );
+
+    for( MiniAppId i = mMiniApps.first(); 0 != i ; i = mMiniApps.next( i ) )
+    {
+        MiniApp * ma = mMiniApps[i];
+        GN_ASSERT( ma );
+        ma->onRendererDestroy();
+    }
 }
 
 //
@@ -1197,6 +1252,8 @@ void GN::engine::RenderEngine::onRendererDestroy()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::onRenderWindowSizeMove( HandleType m, UInt32 w, UInt32 h )
 {
+    GN_ASSERT( mDrawThread->isDrawThread() );
+
     ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
 
     RendererSignal s( RENDERER_SIZEMOVE );
