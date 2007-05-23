@@ -24,7 +24,7 @@ namespace GN { namespace engine
         DCT_MINIAPP_CREATE,
         DCT_MINIAPP_RESTORE,
         DCT_MINIAPP_DISPOSE,
-        DCT_MINIAPP_DELETE,
+        DCT_MINIAPP_DESTROY,
         DCT_MINIAPP_DTOR,
         DCT_MINIAPP_RUN,
         NUM_DRAW_COMMAND_TYPES

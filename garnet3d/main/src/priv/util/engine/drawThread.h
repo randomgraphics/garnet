@@ -67,6 +67,11 @@ namespace GN { namespace engine
         //@{
 
         ///
+        /// check if current thread is draw thread
+        ///
+        bool isDrawThread() const { return mDrawThread->isCurrentThread(); }
+
+        ///
         /// wait for draw thread idle: all submitted draw commands are executed
         ///
         void waitForIdle( float time = INFINITE_TIME ) const;
@@ -167,11 +172,13 @@ namespace GN { namespace engine
         SyncEvent   * mDoSomething;
 
         // data to handle renderer device
-        volatile gfx::RendererAPI     mRendererApi;
-        gfx::RendererOptions          mRendererOptions;
-        gfx::DispDesc                 mDispDesc;
-        volatile bool                 mResetSuccess;
-        SyncEvent *                   mResetRendererComplete;
+        gfx::RendererAPI     mRendererApi;
+        gfx::RendererOptions mRendererOptions;
+        gfx::RendererAPI     mRendererNewApi;
+        gfx::RendererOptions mRendererNewOptions;
+        gfx::DispDesc        mDispDesc;
+        volatile bool        mResetSuccess;
+        SyncEvent *          mResetRendererComplete;
 
         // data to handle resource commands
         DoubleLinkedList<ResourceCommand> mResourceCommands;

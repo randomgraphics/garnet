@@ -111,7 +111,7 @@ public:
 
     bool onRendererCreate() { return true; }
 
-    void onRendererDelete() {}
+    void onRendererDestroy() {}
 
     bool onRendererRestore()
     {

@@ -21,11 +21,12 @@ namespace GN { namespace engine
     struct MiniApp
     {
         //@{
+        virtual ~MiniApp() {}
         virtual bool onInit() = 0;
         virtual bool onRendererCreate() = 0;
         virtual bool onRendererRestore() = 0;
-        virtual void onRendererDelete() = 0;
         virtual void onRendererDispose() = 0;
+        virtual void onRendererDestroy() = 0;
         virtual void onQuit() = 0;
         virtual void onFrame() = 0;
         //@}

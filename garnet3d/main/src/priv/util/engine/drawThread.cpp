@@ -496,7 +496,7 @@ namespace GN { namespace engine
     //
     //
     // -------------------------------------------------------------------------
-    static void DRAWFUNC_MINIAPP_DELETE( RenderEngine &, const void * param, size_t )
+    static void DRAWFUNC_MINIAPP_DESTROY( RenderEngine &, const void * param, size_t )
     {
         GN_ASSERT( param );
 
@@ -504,7 +504,7 @@ namespace GN { namespace engine
 
         GN_ASSERT( app );
 
-        app->onRendererDelete();
+        app->onRendererDestroy();
     }
 
     //
@@ -519,6 +519,7 @@ namespace GN { namespace engine
         GN_ASSERT( app );
 
         app->onQuit();
+        app->noerr = false; // clear error flag
     }
 
     //
@@ -623,7 +624,7 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDrawFunctions[DCT_MINIAPP_CREATE]  = &DRAWFUNC_MINIAPP_CREATE;
     mDrawFunctions[DCT_MINIAPP_RESTORE] = &DRAWFUNC_MINIAPP_RESTORE;
     mDrawFunctions[DCT_MINIAPP_DISPOSE] = &DRAWFUNC_MINIAPP_DISPOSE;
-    mDrawFunctions[DCT_MINIAPP_DELETE]  = &DRAWFUNC_MINIAPP_DELETE;
+    mDrawFunctions[DCT_MINIAPP_DESTROY]  = &DRAWFUNC_MINIAPP_DESTROY;
     mDrawFunctions[DCT_MINIAPP_DTOR]    = &DRAWFUNC_MINIAPP_DTOR;
     mDrawFunctions[DCT_MINIAPP_RUN]     = &DRAWFUNC_MINIAPP_RUN;
     if( GN_ASSERT_ENABLED )
@@ -739,8 +740,8 @@ bool GN::engine::RenderEngine::DrawThread::resetRenderer(
      const gfx::RendererOptions & ro )
 {
     mActionReset = true;
-    mRendererApi = api;
-    mRendererOptions = ro;
+    mRendererNewApi = api;
+    mRendererNewOptions = ro;
     mDoSomething->signal();
 
     if( !mResetRendererComplete->wait() ) return false;
@@ -1047,12 +1048,17 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
 {
     GN_GUARD;
 
-    // (re)create renderer
-    GN::gfx::Renderer * r = gfx::createRenderer( mRendererApi );
-    if( NULL == r ) return false;
-    if( !r->changeOptions( mRendererOptions ) ) return false;
+    if( 0 == gRendererPtr || mRendererNewApi != mRendererApi )
+    {
+        if( NULL == gfx::createRenderer( mRendererNewApi ) ) return false;
+        mRendererApi = mRendererNewApi;
+    }
 
-    mDispDesc = r->getDispDesc();
+    GN::gfx::Renderer & r = gRenderer;
+    if( !r.changeOptions( mRendererNewOptions ) ) return false;
+    mRendererOptions = mRendererNewOptions;
+
+    mDispDesc = r.getDispDesc();
 
     // reattach input window
     // TODO: make it thread safe

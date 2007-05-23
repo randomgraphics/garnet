@@ -103,6 +103,7 @@ namespace GN { namespace gfx
             if( mContext )
             {
                 cgDestroyContext( mContext );
+                mContext = 0;
             }
             cgSetErrorHandler( 0, 0 );
         }
