@@ -49,6 +49,7 @@ inline void GN::engine::Effect::passBegin(
             ctx.setTexture( trd.stage, entity2Texture(td.value) );
         }
 
+#if 0
         // apply dirty uniforms
         for( size_t iUniform = 0; iUniform < sd.dirtyUniforms.size(); ++iUniform )
         {
@@ -65,6 +66,23 @@ inline void GN::engine::Effect::passBegin(
             }
         }
         sd.dirtyUniforms.clear();
+#else
+        // apply all uniforms (need optimize)
+        for( size_t i = 0; i < sd.uniforms.size(); ++i )
+        {
+            const UniformRefData & urd = sd.uniforms[i];
+            const UniformData & ud = mUniforms.items[urd.id];
+            if( urd.ffp )
+            {
+                sSetFfpUniform( ctx, urd.ffpType, ud );
+            }
+            else
+            {
+                mEngine.setShaderUniform( sd.value, urd.binding, ud.value );
+            }
+        }
+        sd.dirtyUniforms.clear();
+#endif
     }
 
     GN_UNGUARD_SLOW;
