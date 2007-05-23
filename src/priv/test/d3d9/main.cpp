@@ -243,6 +243,10 @@ public:
         delete getRenderEngine().unregisterMiniApp( mMiniApp ); 
     }
 
+    void onUpdate()
+    {
+    }
+
     void onRender()
     {
         RenderEngine & e = getRenderEngine();
