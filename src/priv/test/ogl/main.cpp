@@ -2,10 +2,51 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::app;
+
+class MyMiniApp : public MiniApp
+{
+public:
+
+    bool onInit()
+    {
+        return true;
+    }
+
+    bool onRendererCreate()
+    {
+        GN_OGL_CHECK( glClearColor( 0, 0, 1, 1 ) );
+        return true;
+    }
+
+    bool onRendererRestore()
+    {
+        return true;
+    }
+
+    void onRendererDispose()
+    {
+    }
+
+    void onRendererDestroy()
+    {
+    }
+
+    void onQuit()
+    {
+    }
+
+    void onFrame()
+    {
+        GN_OGL_CHECK( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT ) );
+    }
+};
 
 class MyApp : public SampleApp
 {
+    MiniAppId app;
+
 public:
 
     void onDetermineInitParam( InitParam & ip )
@@ -13,14 +54,15 @@ public:
         ip.rapi = API_OGL;
     }
 
-    bool onRendererCreate()
+    bool onInit()
     {
-        GN_OGL_CHECK( glClearColor( 1, 1, 1, 1 ) );
-        return true;
+        app = getRenderEngine().registerMiniApp( new MyMiniApp );
+        return 0 != app;
     }
 
-    void onRendererDestroy()
+    void onQuit()
     {
+        delete getRenderEngine().unregisterMiniApp( app );
     }
 
     void onUpdate()
@@ -29,7 +71,7 @@ public:
 
     void onRender()
     {
-        GN_OGL_CHECK( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT ) );
+        getRenderEngine().runMiniApp( app );
     }
 };
 
