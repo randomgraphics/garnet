@@ -58,6 +58,7 @@ namespace GN
 
     protected:
 
+        /// ctor
         ProfileTimer( Clock & c )
             : clock(c)
             , count(0)
@@ -67,6 +68,7 @@ namespace GN
             , timestart(0)
         {}
 
+        /// dtor
         virtual ~ProfileTimer() {}
 
     public:

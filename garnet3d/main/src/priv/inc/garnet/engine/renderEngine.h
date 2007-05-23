@@ -485,7 +485,7 @@ namespace GN { namespace engine
     ///
     /// automatic graphics resource pointer (free resource when out of life scope)
     ///
-    struct AutoGraphicsResource : public detail::BaseAutoPtr<GraphicsResource, AutoGraphicsResource>
+    class AutoGraphicsResource : public detail::BaseAutoPtr<GraphicsResource, AutoGraphicsResource>
     {
         typedef detail::BaseAutoPtr<GraphicsResource, AutoGraphicsResource> ParentType;
 #if GN_GCC

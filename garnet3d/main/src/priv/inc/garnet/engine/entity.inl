@@ -81,8 +81,8 @@ inline void GN::engine::safeDeleteEntity( Entity * & e )
     e = 0;
 }
 
-//
-//
+///
+/// get next entity. Return NULL if there's no more entities
 // -----------------------------------------------------------------------------
 inline GN::engine::Entity * GN::engine::getNextEntity( const Entity * e )
 {
@@ -95,8 +95,8 @@ inline GN::engine::Entity * GN::engine::getNextEntity( const Entity * e )
     return e->manager.getNextEntity( e );
 }
 
-//
-//
+///
+/// get next entity with same type as input entity. Return NULL if there's no more entities
 // -----------------------------------------------------------------------------
 inline GN::engine::Entity * GN::engine::getNextEntityWithSameType( const Entity * e )
 {

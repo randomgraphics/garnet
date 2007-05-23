@@ -23,7 +23,7 @@ class MeshViewerApp : public app::SampleApp
 
     void updateRadius()
     {
-        const DispDesc & dd = r.getDispDesc();
+        const DispDesc & dd = getRenderEngine().getDispDesc();
 
         mView.lookAtRh( Vector3f(0,0,mRadius), Vector3f(0,0,0), Vector3f(0,1,0) );
         getRenderEngine().composePerspectiveMatrixRh( mProj, GN_PI/4.0f, (float)dd.width/dd.height, mRadius / 100.0f, mRadius * 2.0f );
