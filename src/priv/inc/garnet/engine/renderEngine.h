@@ -130,8 +130,6 @@ namespace GN { namespace engine
         void frameBegin();
         void frameEnd();
 
-        // below commands must called between frameBegin() and frameEnd().
-
         void setContext( const DrawContext & context );
 
         void setShaderUniform(
@@ -143,6 +141,8 @@ namespace GN { namespace engine
             const Vector4f & c = Vector4f(0,0,0,1),
             float z = 1.0f, UInt8 s = 0,
             BitFields flags = gfx::CLEAR_ALL );
+
+        // below commands must called between frameBegin() and frameEnd(), unless explicitly specified.
 
         void drawIndexed( SInt32 prim,
                           size_t numprim,

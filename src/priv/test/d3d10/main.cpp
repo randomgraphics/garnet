@@ -10,6 +10,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::app;
 using namespace GN::scene;
 
@@ -50,12 +51,15 @@ static const char * ps_code =
 
 class MyApp : public SampleApp
 {
-    AutoRef<Shader> vs, ps;
-    AutoRef<Mesh> mesh;
+    GraphicsResource * vs, * ps;
+    Mesh * mesh;
     Matrix44f world, view, proj;
     util::ArcBall arcball;
+    DrawContext ctx;
 
 public:
+
+    MyApp() : mesh(0) {}
 
     void onDetermineInitParam( InitParam & ip )
     {
@@ -63,61 +67,59 @@ public:
         //ip.ro.reference = true;
     }
 
-    bool onAppInit()
+    bool onInit()
     {
+        RenderEngine & re = getRenderEngine();
+
         world.identity();
-        view.translate( 0, 0, -4 );
-        proj.perspectiveD3DRh( 1.0f, 4.0f/3.0f, 1.0f, 100.0f );
-        arcball.setHandness( util::RIGHT_HAND );
+        view.translate( 0, 0, 200 );
+        proj.perspectiveD3DLh( 1.0f, 4.0f/3.0f, 10.0f, 1000.0f );
+        arcball.setHandness( util::LEFT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();
 
-        return true;
-    }
-
-    bool onRendererCreate()
-    {
-        Renderer & r = gRenderer;
-
         // load shaders
-        vs.attach( r.createVS( LANG_D3D_HLSL, vs_code ) );
-        ps.attach( r.createPS( LANG_D3D_HLSL, ps_code ) );
+        vs = re.createShader( "vs", SHADER_VS, LANG_D3D_HLSL, vs_code );
+        ps = re.createShader( "ps", SHADER_PS, LANG_D3D_HLSL, ps_code );
         if( !vs || !ps ) return false;
 
-        // load cube mesh
-        mesh.attach( new Mesh );
-        if( !generateCubeMesh( *mesh, 2 ) ) return false;
+        // create cube mesh
+        mesh = new Mesh(re);
+        if( !mesh->loadFromFile( "media::/cube/cube.mesh.xml" ) ) return false;
+
+        // initialize context
+        ctx.resetToDefault();
+        ctx.setShaders( vs, ps, 0 );
+        mesh->updateContext( ctx );
 
         // initial arcball window
-        const DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = re.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
-        // success
         return true;
     }
 
-    void onRendererDestroy()
+    void onQuit()
     {
-        vs.clear();
-        ps.clear();
-        mesh.clear();
+        safeFreeGraphicsResource( vs );
+        safeFreeGraphicsResource( ps );
+        safeDelete( mesh );
     }
 
     void onUpdate()
     {
         world = arcball.getRotationMatrix44();
         Matrix44f pvw = proj * view * world;
-        vs->setUniformByName( "gPvw", pvw );
+        getRenderEngine().setShaderUniform( vs, "gPvw", pvw );
     }
 
     void onRender()
     {
-        Renderer & r = gRenderer;
+        RenderEngine & re = getRenderEngine();
 
-        r.clearScreen( Vector4f(0,0,0,1) );
+        re.clearScreen( Vector4f(0,0,0,1) );
 
-        r.setShaders( vs, ps, 0 );
-        mesh->updateContext();
+        re.setContext( ctx );
         mesh->draw();
     }
 };
