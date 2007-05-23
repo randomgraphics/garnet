@@ -354,6 +354,35 @@ namespace GN { namespace engine
         ///
         void clearDrawContext();
 
+        // These methods are provided because different APIs have different ways
+        // to compose projection matrix.
+        Matrix44f &
+        composePerspectiveMatrixLh( Matrix44f & result,
+                                    float fovy,
+                                    float ratio,
+                                    float znear,
+                                    float zfar ) const;
+        Matrix44f &
+        composePerspectiveMatrixRh( Matrix44f & result,
+                                    float fovy,
+                                    float ratio,
+                                    float znear,
+                                    float zfar ) const;
+        Matrix44f &
+        composePerspectiveMatrix( Matrix44f & result,
+                                  float fovy,
+                                  float ratio,
+                                  float znear,
+                                  float zfar ) const;
+        Matrix44f &
+        composeOrthoMatrix( Matrix44f & result,
+                            float left,
+                            float bottom,
+                            float width,
+                            float height,
+                            float znear,
+                            float zfar ) const;
+
         //@}
 
         // ********************************
