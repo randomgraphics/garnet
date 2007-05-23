@@ -383,7 +383,7 @@ bool GN::app::SampleApp::initRenderer()
     gSigRendererWindowClose.connect( this, &SampleApp::postExitEvent );
 
     UInt32 MB = 1024 * 1024;
-    engine::RenderEngineInitParameters reip = { 32*MB, 32*MB, 32*MB };
+    engine::RenderEngineInitParameters reip = { 64*MB, 64*MB, 32*MB };
     if( !mRenderEngine.init( reip ) ) return false;
 
     // create renderer

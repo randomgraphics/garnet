@@ -40,8 +40,8 @@ namespace GN { namespace engine
     struct RenderEngineInitParameters
     {
         //@{
-        UInt32 maxTexBytes;               ///< zero for default value: 3/4 of total video memory
-        UInt32 maxMeshBytes;              ///< zero for default value: 1/4 of total video memory
+        UInt32 maxTexBytes;               ///< maximum texture bytes.
+        UInt32 maxMeshBytes;              ///< maximum mesh (vb+ib) bytes.
         UInt32 maxDrawCommandBufferBytes; ///< maximum draw command buffer bytes. Must be large enough to hold draw requests of one frame.
         //@}
     };
