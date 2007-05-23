@@ -76,7 +76,7 @@ namespace GN { namespace engine
         // ********************************
     private:
 
-        void markAsRecentlyUsed( GraphicsResourceItem * item );
+        inline void markAsRecentlyUsed( GraphicsResourceItem * item );
     };
 }}
 // *****************************************************************************

@@ -4,6 +4,8 @@
 #include "drawThread.h"
 #include "dump.h"
 
+static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceLRU");
+
 // *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
@@ -93,7 +95,7 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
     size_t * maxBytes = 0;
     switch( item->desc.type )
     {
-        case GRT_TEXTURE:
+        case GRT_TEXTURE :
             realizedBytes = &mRealizedTexBytes;
             maxBytes      = &mMaxTexBytes;
             break;
@@ -104,9 +106,9 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
             maxBytes      = &mMaxMeshBytes;
             break;
 
-        case GRT_SHADER :
+        case GRT_SHADER   :
         case GRT_CONSTBUF :
-        case GRT_VTXFMT :
+        case GRT_VTXFMT   :
             // do nothing
             break;
 
@@ -114,27 +116,60 @@ void GN::engine::RenderEngine::ResourceLRU::realize( GraphicsResourceItem * item
             GN_UNEXPECTED();
     }
 
-    if( !realizedBytes || (*realizedBytes + item->bytes) <= *maxBytes )
+    if( maxBytes && item->bytes > *maxBytes )
     {
-        // Cool! There's enough space.
-        item->state = GRS_REALIZED;
-
-        if( realizedBytes )
+        GN_FATAL(sLogger)( "resource cache (%dMB) is not large enough to hold resources '%s' (%dMB).",
+            *maxBytes/1024/1024, item->desc.name.cptr(), item->bytes/1024/1024 );
+        GN_UNEXPECTED();
+        return;
+    }
+    else if( realizedBytes && (*realizedBytes + item->bytes) > *maxBytes )
+    {
+        if( GRT_TEXTURE == item->desc.type )
         {
-            *realizedBytes += item->bytes;
-            GN_ASSERT( *realizedBytes <= *maxBytes );
+            GN_ASSERT( realizedBytes && maxBytes );
+
+            GraphicsResourceItem * old = mLRUList.tail();
+
+            while( *realizedBytes + item->bytes > *maxBytes )
+            {
+                GN_ASSERT( old && old != item );
+                if( GRT_TEXTURE == old->desc.type )
+                {
+                    // TODO: check if we can reuse it.
+                    dispose( old );
+                }
+                old = old->prev;
+            }
         }
-
-        if( GN_RENDER_ENGINE_API_DUMP_ENABLED )
+        else if( GRT_VTXBUF == item->desc.type )
         {
-            dumpApiString( strFormat( "<RealizeGraphicsResource %s/>", item->desc.toString().cptr() ) );
+            GN_UNIMPL();
+        }
+        else if( GRT_IDXBUF == item->desc.type )
+        {
+            GN_UNIMPL();
+        }
+        else
+        {
+            GN_UNEXPECTED();
+            return;
         }
     }
-    else
+
+    GN_ASSERT( !realizedBytes || (*realizedBytes + item->bytes) <= *maxBytes );
+
+    item->state = GRS_REALIZED;
+
+    if( realizedBytes )
     {
-        // no enough space in cache. We have to dispose some old resources, or try
-        // reusing one of old resources.
-        GN_UNIMPL();
+        *realizedBytes += item->bytes;
+        GN_ASSERT( *realizedBytes <= *maxBytes );
+    }
+
+    if( GN_RENDER_ENGINE_API_DUMP_ENABLED )
+    {
+        dumpApiString( strFormat( "<RealizeGraphicsResource %s/>", item->desc.toString().cptr() ) );
     }
 }
 
@@ -200,7 +235,7 @@ void GN::engine::RenderEngine::ResourceLRU::disposeAll()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
+inline void GN::engine::RenderEngine::ResourceLRU::markAsRecentlyUsed( GraphicsResourceItem * item )
 {
     GN_ASSERT( mEngine.resourceCache().check( item ) );
     mLRUList.remove( item );
