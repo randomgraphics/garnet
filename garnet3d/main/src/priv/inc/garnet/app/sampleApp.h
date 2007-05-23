@@ -99,7 +99,7 @@ namespace GN { namespace app
         //@{
     public:
         SampleApp();
-        virtual ~SampleApp() { quit(); }
+        virtual ~SampleApp() {}
         //@}
 
         // ********************************
@@ -130,10 +130,10 @@ namespace GN { namespace app
         ///
         virtual bool onCheckCmdLine( int argc, const char * const argv[] );
         virtual void onDetermineInitParam( InitParam & ) {}
-        virtual bool onInit() { return true; }
-        virtual void onQuit() {}
-        virtual void onUpdate() {}
-        virtual void onRender() {}
+        virtual bool onInit() = 0;
+        virtual void onQuit() = 0;
+        virtual void onUpdate() = 0;
+        virtual void onRender() = 0;
         virtual void onKeyPress( input::KeyEvent );
         virtual void onCharPress( wchar_t ) {}
         virtual void onAxisMove( input::Axis, int ) {}
@@ -182,6 +182,11 @@ namespace GN { namespace app
         /// as is
         ///
         engine::RenderEngine & getRenderEngine() { return mRenderEngine; }
+
+        ///
+        /// as is
+        ///
+        scene::QuadRenderer & getQuadRenderer() { return mQuadRenderer; }
 
         ///
         /// get font renderer

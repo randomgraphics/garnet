@@ -477,7 +477,6 @@ bool GN::engine::RenderEngine::internalResetRenderer(
     return result;
 }
 
-
 // *****************************************************************************
 // draw request management
 // *****************************************************************************
@@ -1159,6 +1158,68 @@ void GN::engine::RenderEngine::clearDrawContext()
     } local;
 
     setContext( local.ctx );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::Matrix44f &
+GN::engine::RenderEngine::composePerspectiveMatrixLh( Matrix44f & result,
+                            float fovy,
+                            float ratio,
+                            float znear,
+                            float zfar ) const
+{
+    return gfx::API_OGL == mDrawThread->getRendererApi()
+        ? result.perspectiveOGLLh( fovy, ratio, znear, zfar )
+        : result.perspectiveD3DLh( fovy, ratio, znear, zfar );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::Matrix44f &
+GN::engine::RenderEngine::composePerspectiveMatrixRh( Matrix44f & result,
+                            float fovy,
+                            float ratio,
+                            float znear,
+                            float zfar ) const
+{
+    return gfx::API_OGL == mDrawThread->getRendererApi()
+        ? result.perspectiveOGLRh( fovy, ratio, znear, zfar )
+        : result.perspectiveD3DRh( fovy, ratio, znear, zfar );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::Matrix44f &
+GN::engine::RenderEngine::composePerspectiveMatrix( Matrix44f & result,
+                          float fovy,
+                          float ratio,
+                          float znear,
+                          float zfar ) const
+{
+    return gfx::API_OGL == mDrawThread->getRendererApi()
+        ? result.perspectiveOGL( fovy, ratio, znear, zfar )
+        : result.perspectiveD3D( fovy, ratio, znear, zfar );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::Matrix44f &
+GN::engine::RenderEngine::composeOrthoMatrix( Matrix44f & result,
+                    float left,
+                    float bottom,
+                    float width,
+                    float height,
+                    float znear,
+                    float zfar ) const
+{
+    return gfx::API_OGL == mDrawThread->getRendererApi()
+        ? result.orthoOGL( left, left+width, bottom, bottom+height, znear, zfar )
+        : result.orthoD3D( left, left+width, bottom, bottom+height, znear, zfar );
 }
 
 // *****************************************************************************
