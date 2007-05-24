@@ -19,6 +19,11 @@ namespace GN { namespace engine
     }
 
     ///
+    /// create new texture from file
+    ///
+    GraphicsResource * loadTextureFromFile( RenderEngine & re, const StrA & filename );
+
+    ///
     /// try find exising texture entity named "filename", if not found, create new one.
     ///
     Entity * loadTextureEntityFromFile( EntityManager & em, RenderEngine & re, const StrA & filename );
