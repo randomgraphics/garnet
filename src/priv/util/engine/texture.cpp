@@ -223,16 +223,13 @@ static bool sGetStringAttrib( const XmlElement & node, const char * attribName, 
 //
 //
 // -----------------------------------------------------------------------------
-static Entity * sLoadTextureEntityFromImageFile(
-    EntityManager & em,
+static GraphicsResource * sLoadTextureFromImageFile(
     RenderEngine  & re,
     const StrA    & name,
     File          & file,
     BitFields     usage )
 {
     GN_GUARD;
-
-    GN_ASSERT( !em.getEntityByName( name, true ) );
 
     GN_INFO(sLogger)( "Load %s", file.name().cptr() );
 
@@ -256,7 +253,7 @@ static Entity * sLoadTextureEntityFromImageFile(
     re.updateResource( res, 0, loader );
 
     // success
-    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), name, res, &safeFreeGraphicsResource );
+    return res;
 
     GN_UNGUARD;
 }
@@ -264,8 +261,7 @@ static Entity * sLoadTextureEntityFromImageFile(
 //
 //
 // -----------------------------------------------------------------------------
-static Entity * sLoadTextureEntityFromXml(
-    EntityManager & em,
+static GraphicsResource * sLoadTextureFromXml(
     RenderEngine  & re,
     const StrA    & name,
     File          & fp,
@@ -323,7 +319,7 @@ static Entity * sLoadTextureEntityFromXml(
         core::resolvePath( texname, dirname, ref->value );
         AutoObjPtr<File> texfile( core::openFile( texname, "rb" ) );
         if( !texfile ) return 0;
-        return sLoadTextureEntityFromImageFile( em, re, name, *texfile, desc.usage.u32 );
+        return sLoadTextureFromImageFile( re, name, *texfile, desc.usage.u32 );
     }
     else
     {
@@ -358,7 +354,7 @@ static Entity * sLoadTextureEntityFromXml(
             desc.format = FMT_DEFAULT;
         }
 
-        return createTextureEntity( em, re, name, desc );
+        return re.createTexture( name, desc );
     }
 
     GN_UNGUARD;
@@ -380,6 +376,40 @@ GN::engine::EntityTypeId GN::engine::getTextureEntityType( EntityManager & em )
 //
 //
 // -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::loadTextureFromFile( RenderEngine & re, const StrA & filename )
+{
+    GN_GUARD;
+
+    StrA ext = extName( filename );
+    if( 0 == strCmpI( ".xml", ext.cptr() ) )
+    {
+        // open file
+        AutoObjPtr<File> fp( core::openFile( filename, "rt" ) );
+        if( !fp ) return 0;
+
+        // parse texture definition
+        return sLoadTextureFromXml( re, filename, *fp, dirName(filename) );
+    }
+    else
+    {
+        // open texture file
+        AutoObjPtr<File> fp( core::openFile( filename, "rb" ) );
+        if( !fp )
+        {
+            GN_ERROR(sLogger)( "Fail to open texture file '%s'.", filename.cptr() );
+            return 0;
+        }
+
+        // create texture instance
+        return sLoadTextureFromImageFile( re, filename, *fp, 0 );
+    }
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
     EntityManager & em, RenderEngine & re, const StrA & filename )
 {
@@ -392,29 +422,10 @@ GN::engine::Entity * GN::engine::loadTextureEntityFromFile(
 
     GN_INFO(sLogger)( "Create texture entity: %s", fullpath.cptr() );
 
-    StrA ext = extName(fullpath);
-    if( 0 == strCmpI( ".xml", ext.cptr() ) )
-    {
-        // open file
-        AutoObjPtr<File> fp( core::openFile( fullpath, "rt" ) );
-        if( !fp ) return 0;
+    GraphicsResource * res = loadTextureFromFile( re, fullpath );
+    if( 0 == res ) return false;
 
-        // parse texture definition
-        return sLoadTextureEntityFromXml( em, re, fullpath, *fp, dirName(fullpath) );
-    }
-    else
-    {
-        // open texture file
-        AutoObjPtr<File> fp( core::openFile( fullpath, "rb" ) );
-        if( !fp )
-        {
-            GN_ERROR(sLogger)( "Fail to open texture file '%s'.", fullpath.cptr() );
-            return 0;
-        }
-
-        // create texture instance
-        return sLoadTextureEntityFromImageFile( em, re, fullpath, *fp, 0 );
-    }
+    return em.createEntity<GraphicsResource*>( getTextureEntityType(em), fullpath, res, &safeFreeGraphicsResource );
 }
 
 //
