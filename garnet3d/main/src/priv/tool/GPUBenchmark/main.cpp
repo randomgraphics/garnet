@@ -2,6 +2,7 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
 
 static GN::Logger * sLogger = GN::getLogger("GN.gfx.tool.gpuBenchmark");
@@ -66,6 +67,8 @@ struct ManyManyQuads
         float _[3]; // padding to 32 bytes
     };
 
+    RenderEngine & re;
+
     size_t DRAW_COUNT;
     const size_t VTX_COUNT;
     const size_t QUAD_COUNT;
@@ -73,26 +76,28 @@ struct ManyManyQuads
     const size_t INDEX_COUNT;
     const PrimitiveType PRIM_TYPE;
 
-    VtxFmtHandle    vtxfmt;
-    AutoRef<VtxBuf> vtxbuf;
-    AutoRef<IdxBuf> idxbuf;
+    GraphicsResource * vtxfmt;
+    GraphicsResource * vtxbuf;
+    GraphicsResource * idxbuf;
 
-    ManyManyQuads( size_t drawCount = 1, size_t quadCount = 32 )
-        : DRAW_COUNT( drawCount )
+    ManyManyQuads( RenderEngine & e, size_t drawCount = 1, size_t quadCount = 32 )
+        : re(e)
+        , DRAW_COUNT( drawCount )
         , VTX_COUNT( 4 )
         , QUAD_COUNT( quadCount )
         , PRIM_COUNT( quadCount * 2 )
         , INDEX_COUNT( quadCount * 6 )
         , PRIM_TYPE( TRIANGLE_LIST )
+        , vtxfmt( 0 )
+        , vtxbuf( 0 )
+        , idxbuf( 0 )
     {
     }
 
     bool create()
     {
-        Renderer & r = gRenderer;
-
         // create vertex format
-        vtxfmt = gRenderer.createVtxFmt( VtxFmtDesc::XYZ_UV );
+        vtxfmt = re.createVtxFmt( "ManyManyQuads::vtxfmt", VtxFmtDesc::XYZ_UV );
         if( 0 == vtxfmt ) return false;
 
         // create vertex buffer
@@ -103,29 +108,23 @@ struct ManyManyQuads
             {  1.0f, -1.0f, 0.0f, 1.0f, 1.0f },
             {  1.0f,  1.0f, 0.0f, 1.0f, 0.0f },
         };
-        vtxbuf.attach( r.createVtxBuf( sizeof(Vertex)*4 ) );
+        vtxbuf = re.createVtxBuf( "ManyManyQuads::vtxbuf", sizeof(Vertex)*4, false, false, sVertices );
         if( !vtxbuf ) return false;
-        Vertex * vtxptr = (Vertex*)vtxbuf->lock( 0, 0, LOCK_DISCARD );
-        if( 0 == vtxptr ) return false;
-        memcpy( vtxptr, sVertices, sizeof(Vertex)*4 );
-        vtxbuf->unlock();
 
-        // create index buffer
-        idxbuf.attach( r.createIdxBuf( INDEX_COUNT ) );
-        if( !idxbuf ) return false;
-        UInt16 * idxptr = idxbuf->lock( 0, 0, LOCK_DISCARD );
-        if( 0 == idxptr ) return false;
+        DynaArray<UInt16> indices( INDEX_COUNT );
         for( size_t i = 0; i < QUAD_COUNT; ++i )
         {
-            idxptr[0] = 0;
-            idxptr[1] = 1;
-            idxptr[2] = 2;
-            idxptr[3] = 0;
-            idxptr[4] = 2;
-            idxptr[5] = 3;
-            idxptr += 6;
+            indices[i*6+0] = 0;
+            indices[i*6+1] = 1;
+            indices[i*6+2] = 2;
+            indices[i*6+3] = 0;
+            indices[i*6+4] = 2;
+            indices[i*6+5] = 3;
         }
-        idxbuf->unlock();
+
+        // create index buffer
+        idxbuf = re.createIdxBuf( "ManyManyQuads::idxbuf", INDEX_COUNT, false, false, indices.cptr() );
+        if( !idxbuf ) return false;
 
         // success
         return true;
@@ -133,25 +132,25 @@ struct ManyManyQuads
 
     void destroy()
     {
-        idxbuf.clear();
-        vtxbuf.clear();
-        vtxfmt = 0;
+        safeFreeGraphicsResource( idxbuf );
+        safeFreeGraphicsResource( vtxbuf );
+        safeFreeGraphicsResource( vtxfmt );
     }
 
     void draw()
     {
-        Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            r.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
+        {
+            re.drawIndexed( PRIM_TYPE, PRIM_COUNT, 0, 0, VTX_COUNT, 0 );
+        }
     }
 
     void drawPrimRange( UInt32 startPrim, UInt32 numprim )
     {
         GN_ASSERT( startPrim < PRIM_COUNT && (startPrim+numprim) <= PRIM_COUNT );
         UInt32 startidx = startPrim * 3;
-        Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            r.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
+            re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 
     void drawQuadRange( UInt32 startQuad, UInt32 numQuads )
@@ -159,34 +158,32 @@ struct ManyManyQuads
         GN_ASSERT( startQuad < QUAD_COUNT && (startQuad+numQuads) <= QUAD_COUNT );
         UInt32 numprim = numQuads * 2;
         UInt32 startidx = startQuad * 6;
-        Renderer & r = gRenderer;
         for( size_t i = 0; i < DRAW_COUNT; ++i )
-            r.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
+            re.drawIndexed( PRIM_TYPE, numprim, 0, 0, VTX_COUNT, startidx );
     }
 };
 
 struct BasicEffect
 {
-    AutoRef<Shader>  vs, ps;
+    RenderEngine & re;
+    GraphicsResource *vs, *ps;
 
-    BasicEffect() {}
+    BasicEffect( RenderEngine & e ) : re(e), vs(0), ps(0) {}
 
-    virtual ~BasicEffect() {}
+    virtual ~BasicEffect() { destroy(); }
 
     virtual bool create() = 0;
 
     void destroy()
     {
-        vs.clear();
-        ps.clear();
+        safeFreeGraphicsResource( vs );
+        safeFreeGraphicsResource( ps );
     }
 
 protected:
 
     bool createD3DVs()
     {
-        Renderer & r = gRenderer;
-
         static const char * code =
             "struct IO { float4 pos : POSITION; float2 uv : TEXCOORD0; }; \n"
             "uniform float4x4 pvw; \n"
@@ -195,7 +192,7 @@ protected:
             "   o = i; \n"
             "}";
 
-        vs.attach( r.createVS( LANG_D3D_HLSL, code, "sm30=no" ) );
+        vs = re.createShader( "BaseEffect::d3dvs", SHADER_VS, LANG_D3D_HLSL, code, "sm30=no" );
 
         return !!vs;
     };
@@ -203,11 +200,11 @@ protected:
 
 struct SolidEffect : public BasicEffect
 {
+    SolidEffect( RenderEngine & e ) : BasicEffect( e ) {}
+
     bool create()
     {
-        Renderer & r = gRenderer;
-
-        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) ) return false;
+        if( !re.supportShader( "vs_1_1" ) || !re.supportShader( "ps_1_1" ) ) return false;
 
         // create VS
         static const char * vscode =
@@ -217,12 +214,12 @@ struct SolidEffect : public BasicEffect
             "{ \n"
             "   o = i; \n"
             "}";
-        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs = re.createShader( "SolidEffect::d3dvs", SHADER_VS, LANG_D3D_HLSL, vscode, "sm30=no" );
         if( !vs ) return false;
 
         // create PS
         static const char * pscode = "float4 main() : COLOR0 { return float4(0,0,1,1); }";
-        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps = re.createShader( "SolidEffect::d3dps", SHADER_PS, LANG_D3D_HLSL, pscode, "sm30=no" );
         if( !ps ) return false;
 
         // success
@@ -234,14 +231,12 @@ struct TexturedEffect : public BasicEffect
 {
     UInt32 mCount;
     
-    TexturedEffect( UInt32 count ) : mCount(count) {}
+    TexturedEffect( RenderEngine & e, UInt32 count ) : BasicEffect(e), mCount(count) {}
 
     bool create()
     {
-        Renderer & r = gRenderer;
-
         // check renderer caps
-        if( !r.supportShader( "vs_1_1" ) || !r.supportShader( "ps_1_1" ) )
+        if( !re.supportShader( "vs_1_1" ) || !re.supportShader( "ps_1_1" ) )
         {
             GN_ERROR(sLogger)( "hardware support to vs.1.1 and ps.1.1 is required." );
             return false;
@@ -255,7 +250,7 @@ struct TexturedEffect : public BasicEffect
             "{ \n"
             "   o = i; \n"
             "}";
-        vs.attach( r.createVS( LANG_D3D_HLSL, vscode, "sm30=no" ) );
+        vs = re.createShader( "TexturedEffect::d3dvs", SHADER_VS, LANG_D3D_HLSL, vscode, "sm30=no" );
         if( !vs ) return false;
 
         // create PS
@@ -273,7 +268,7 @@ struct TexturedEffect : public BasicEffect
             "       return o;                                    \n"
             "}",
             mCount );
-        ps.attach( r.createPS( LANG_D3D_HLSL, pscode, "sm30=no" ) );
+        ps = re.createShader( "TexturedEffect::d3dps", SHADER_PS, LANG_D3D_HLSL, pscode, "sm30=no" );
         if( !ps ) return false;
 
         // success
@@ -285,14 +280,21 @@ struct TexturedEffect : public BasicEffect
 // Test cases
 // *****************************************************************************
 
+class BenchmarkingApp;
+
 class BasicTestCase
 {
-    app::SampleApp & mApp;
-    StrA             mName;
+    BenchmarkingApp & mApp;
+
+    StrA              mName;
+
 protected:
-    BasicTestCase( app::SampleApp & app, const StrA & name ) : mApp(app), mName(name) {}
+
+    BasicTestCase( BenchmarkingApp & app, const StrA & name ) : mApp(app), mName(name) {}
+
 public:
-    app::SampleApp & getApp() const { return mApp; }
+
+    BenchmarkingApp & getApp() const { return mApp; }
     const StrA & getName() const { return mName; }
     virtual ~BasicTestCase() {}
     virtual bool create() = 0;
@@ -304,28 +306,21 @@ public:
     virtual StrA printResult() = 0;
 };
 
-#include "fillrate.inl" // pixel pipeline speed
-#ifdef HAS_D3D9
-#include "verticeThroughput.inl" // vertex pipeline speed
-#include "dynatex.inl" // dynamic texture bandwidth
-#include "batchSize.inl" // batch size test
-#endif
-
 // *****************************************************************************
 // Main benchmark application
 // *****************************************************************************
 
 class BenchmarkingApp : public app::SampleApp
 {
-    Clock mClock;
-    bool mFirstFrame;
-
     struct CaseDesc
     {
         BasicTestCase * theCase;
     };
 
+    Clock                 mClock;
+    AsciiFont             mAsciiFont;
     std::vector<CaseDesc> mTestCases;
+    bool                  mFirstFrame;
 
     // return false, if error and/or no more cases.
     bool nextCase()
@@ -350,10 +345,12 @@ class BenchmarkingApp : public app::SampleApp
 
 public:
 
-    BenchmarkingApp() : mFirstFrame(true)
+    BenchmarkingApp() : mFirstFrame(true), mAsciiFont( getQuadRenderer() )
     {
         mClock.reset();
     }
+
+    AsciiFont & asciiFont() { return mAsciiFont; }
 
     void onDetermineInitParam( InitParam & ip )
     {
@@ -364,66 +361,9 @@ public:
         #endif
     }
 
-    bool onAppInit()
-    {
-        GN_GUARD;
+    bool onInit();
 
-        CaseDesc cd;
-
-        //*
-        cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , 0, true , false );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE"    , 0, false, false );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", 1 , false, false );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestFillrate( *this, "Fillrate - TWO_TEXTURES", 2 , false, false );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );
-
-        cd.theCase = new TestFillrate( *this, "Fillrate - FOUR_TEXTURES", 4 , false, false );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );//*/
-
-        /*
-        cd.theCase = new VerticeThroughput( *this, "Vertice throughput" );
-        if( !cd.theCase ) return false;
-        mTestCases.push_back( cd );//*/
-
-        /*
-        UInt32 texSize = 1024;
-        while( texSize >= 8 )
-        {
-            cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, texSize );
-            if( !cd.theCase ) return false;
-            mTestCases.push_back( cd );
-            texSize /= 2;
-        }
-        //*/
-
-        /*
-        static UInt32 batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
-        for( size_t i = 0; i < GN_ARRAY_COUNT(batchSizes); ++i )
-        {
-            cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );
-            if( !cd.theCase ) return false;
-            mTestCases.push_back( cd );
-        }
-        //*/
-
-        // success
-        return true;
-
-        GN_UNGUARD;
-    }
-
-    void onAppQuit()
+    void onQuit()
     {
         GN_GUARD;
 
@@ -435,36 +375,7 @@ public:
         }
         mTestCases.clear();
 
-        GN_UNGUARD;
-    }
-
-    bool onRendererRestore()
-    {
-        GN_GUARD;
-
-        if( !mTestCases.empty() )
-        {
-            CaseDesc & cd = mTestCases.back();
-            GN_ASSERT( cd.theCase );
-            if( !cd.theCase->create() ) return false;
-        }
-
-        // success
-        return true;
-
-        GN_UNGUARD;
-    }
-
-    void onRendererDispose()
-    {
-        GN_GUARD;
-
-        if( !mTestCases.empty() )
-        {
-            CaseDesc & cd = mTestCases.back();
-            GN_ASSERT( cd.theCase );
-            cd.theCase->destroy();
-        }
+        mAsciiFont.quit();
 
         GN_UNGUARD;
     }
@@ -547,6 +458,78 @@ public:
         GN_UNGUARD_SLOW;
     }
 };
+
+#include "fillrate.inl" // pixel pipeline speed
+#if 0 //def HAS_D3D9
+#include "verticeThroughput.inl" // vertex pipeline speed
+#include "dynatex.inl" // dynamic texture bandwidth
+#include "batchSize.inl" // batch size test
+#endif
+
+bool BenchmarkingApp::onInit()
+{
+    GN_GUARD;
+
+    // create font
+    if( !mAsciiFont.init() ) return false;
+
+    CaseDesc cd;
+
+    //*
+    cd.theCase = new TestFillrate( *this, "Fillrate - DOUBLE_DEPTH"  , 0, true , false );
+    if( !cd.theCase ) return false;
+    mTestCases.push_back( cd );
+
+    cd.theCase = new TestFillrate( *this, "Fillrate - NO_TEXTURE"    , 0, false, false );
+    if( !cd.theCase ) return false;
+    mTestCases.push_back( cd );
+
+    cd.theCase = new TestFillrate( *this, "Fillrate - SINGLE_TEXTURE", 1 , false, false );
+    if( !cd.theCase ) return false;
+    mTestCases.push_back( cd );
+
+    cd.theCase = new TestFillrate( *this, "Fillrate - TWO_TEXTURES", 2 , false, false );
+    if( !cd.theCase ) return false;
+    mTestCases.push_back( cd );
+
+    cd.theCase = new TestFillrate( *this, "Fillrate - FOUR_TEXTURES", 4 , false, false );
+    if( !cd.theCase ) return false;
+    mTestCases.push_back( cd );//*/
+
+    // create the first case
+    if( !mTestCases.back().theCase->create() ) return false;
+
+    /*
+    cd.theCase = new VerticeThroughput( *this, "Vertice throughput" );
+    if( !cd.theCase ) return false;
+    mTestCases.push_back( cd );//*/
+
+    /*
+    UInt32 texSize = 1024;
+    while( texSize >= 8 )
+    {
+        cd.theCase = new TestTextureBandwidth( *this, "Texture bandwidth", FMT_FLOAT4, texSize );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+        texSize /= 2;
+    }
+    //*/
+
+    /*
+    static UInt32 batchSizes[] = { 2048 };//, 32, 128, 512, 2048, 8192, 32768 };
+    for( size_t i = 0; i < GN_ARRAY_COUNT(batchSizes); ++i )
+    {
+        cd.theCase = new TestBatchSize( *this, "Batch size", batchSizes[i] );
+        if( !cd.theCase ) return false;
+        mTestCases.push_back( cd );
+    }
+    //*/
+
+    // success
+    return true;
+
+    GN_UNGUARD;
+}
 
 int main( int argc, const char * argv[] )
 {

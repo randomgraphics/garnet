@@ -231,6 +231,62 @@ public:
     }
 };
 
+///
+/// static vertex buffer loader
+///
+class StaticVtxBufLoader : public DummyLoader
+{
+    GN::DynaArray<UInt8> mData;
+
+public:
+
+    StaticVtxBufLoader( const void * data, size_t bytes )
+    {
+        mData.resize( bytes );
+        memcpy( mData.cptr(), data, bytes );
+    }
+
+    virtual bool copy( GN::engine::GraphicsResource & res, const void * , size_t, int )
+    {
+        GN_ASSERT( GN::engine::GRT_VTXBUF == res.desc.type );
+        GN_ASSERT( res.desc.vd.bytes == mData.size() );
+        GN::gfx::VtxBuf * vb = res.vtxbuf;
+        void * data = vb->lock( 0, 0, GN::gfx::LOCK_DISCARD );
+        if( 0 == data ) return false;
+        memcpy( data, mData.cptr(), mData.size() );
+        vb->unlock();
+        return true;
+    }
+};
+
+///
+/// static index buffer loader
+///
+class StaticIdxBufLoader : public DummyLoader
+{
+    GN::DynaArray<UInt8> mData;
+
+public:
+
+    StaticIdxBufLoader( const void * data, size_t bytes )
+    {
+        mData.resize( bytes );
+        memcpy( mData.cptr(), data, bytes );
+    }
+
+    virtual bool copy( GN::engine::GraphicsResource & res, const void * , size_t, int )
+    {
+        GN_ASSERT( GN::engine::GRT_IDXBUF == res.desc.type );
+        GN_ASSERT( res.desc.id.numidx*2 == mData.size() );
+        GN::gfx::IdxBuf * ib = res.idxbuf;
+        void * data = ib->lock( 0, 0, GN::gfx::LOCK_DISCARD );
+        if( 0 == data ) return false;
+        memcpy( data, mData.cptr(), mData.size() );
+        ib->unlock();
+        return true;
+    }
+};
+
 // *****************************************************************************
 // graphics resource descriptor
 // *****************************************************************************
@@ -439,6 +495,30 @@ const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
     RENDER_ENGINE_API( "getDispDesc" );
 
     return mDrawThread->getDispDesc();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+UInt32 GN::engine::RenderEngine::getCaps( SInt32 c ) const
+{
+    return gRenderer.getCaps( c );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::supportShader( const StrA & profile )
+{
+    return gRenderer.supportShader( profile );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+bool GN::engine::RenderEngine::supportTextureFormat( gfx::TexDim type, BitFields usage, gfx::ClrFmt format )
+{
+    return gRenderer.supportTextureFormat( type, usage, format );
 }
 
 //
@@ -1074,9 +1154,22 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxBuf(
     const StrA            & name,
-    const gfx::VtxBufDesc & desc )
+    const gfx::VtxBufDesc & desc,
+    const void            * initialData )
 {
-    return createVtxBuf( name, desc.bytes, desc.dynamic, desc.readback );
+    GraphicsResourceDesc grd;
+    grd.name = name;
+    grd.type = GRT_VTXBUF;
+    grd.vd   = desc;
+    GraphicsResource * res = allocResource( grd );
+
+    if( res && initialData )
+    {
+        AutoRef<StaticVtxBufLoader> loader( new StaticVtxBufLoader( initialData, grd.vd.bytes ) );
+        updateResource( res, 0, loader );
+    }
+
+    return res;
 }
 
 //
@@ -1086,15 +1179,14 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxBuf(
     const StrA & name,
     size_t       bytes,
     bool         dynamic,
-    bool         readback )
+    bool         readback,
+    const void * initialData )
 {
-    GraphicsResourceDesc grd;
-    grd.name        = name;
-    grd.type        = GRT_VTXBUF;
-    grd.vd.bytes    = (UInt32)bytes;
-    grd.vd.dynamic  = dynamic;
-    grd.vd.readback = readback;
-    return allocResource( grd );
+    gfx::VtxBufDesc desc;
+    desc.bytes    = (UInt32)bytes;
+    desc.dynamic  = dynamic;
+    desc.readback = readback;
+    return createVtxBuf( name, desc, initialData );
 }
 
 //
@@ -1102,9 +1194,22 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxBuf(
 // -----------------------------------------------------------------------------
 GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
     const StrA            & name,
-    const gfx::IdxBufDesc & desc )
+    const gfx::IdxBufDesc & desc,
+    const void            * initialData )
 {
-    return createIdxBuf( name, desc.numidx, desc.dynamic, desc.readback );
+    GraphicsResourceDesc grd;
+    grd.name = name;
+    grd.type = GRT_IDXBUF;
+    grd.id   = desc;
+    GraphicsResource * res = allocResource( grd );
+
+    if( res && initialData )
+    {
+        AutoRef<StaticIdxBufLoader> loader( new StaticIdxBufLoader( initialData, grd.id.numidx*2 ) );
+        updateResource( res, 0, loader );
+    }
+
+    return res;
 }
 
 //
@@ -1114,15 +1219,14 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createIdxBuf(
     const StrA & name,
     size_t       numidx,
     bool         dynamic,
-    bool         readback )
+    bool         readback,
+    const void * initialData )
 {
-    GraphicsResourceDesc grd;
-    grd.name        = name;
-    grd.type        = GRT_IDXBUF;
-    grd.id.numidx   = (UInt32)numidx;
-    grd.id.dynamic  = dynamic;
-    grd.id.readback = readback;
-    return allocResource( grd );
+    gfx::IdxBufDesc id;
+    id.numidx   = (UInt32)numidx;
+    id.dynamic  = dynamic;
+    id.readback = readback;
+    return createIdxBuf( name, id, initialData );
 }
 
 //

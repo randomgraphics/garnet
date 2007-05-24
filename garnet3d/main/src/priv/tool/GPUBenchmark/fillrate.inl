@@ -8,9 +8,41 @@ class TestFillrate : public BasicTestCase
 {
     ManyManyQuads mGeometry;
     BasicEffect * mEffect;
-    AutoRef<Texture> mTextures[16];
-    RendererContext mContext;
+    AutoGraphicsResource mTextures[16];
+    DrawContext mContext;
     StrA mFillrateStr;
+
+    class TexLoader : public GN::engine::GraphicsResourceLoader
+    {
+    public:
+        virtual bool load( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+        {
+            outbuf = 0;
+            outbytes = 0;
+            return true;
+        }
+
+        bool decompress( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
+        {
+            outbuf = 0;
+            outbytes = 0;
+            return true;
+        }
+
+        virtual bool copy( GN::engine::GraphicsResource & res, const void * , size_t, int )
+        {
+            GN_ASSERT( GRT_TEXTURE == res.desc.type );
+            TexLockedResult tlr;
+            res.texture->lock( tlr, 0, 0, 0, LOCK_DISCARD );
+            memset( tlr.data, 0xFF, tlr.sliceBytes );
+            res.texture->unlock();
+            return true;
+        }
+
+        virtual void freebuf( void *, size_t )
+        {
+        }
+    };
 
 public:
 
@@ -22,12 +54,13 @@ public:
 
 public:
 
-    TestFillrate( app::SampleApp & app, const StrA & name,
+    TestFillrate( BenchmarkingApp & app, const StrA & name,
                   UInt texCount,
                   bool doubleDepth,
                   bool maxBandwidth )
         : BasicTestCase(app,name)
-        , mEffect( 0 )
+        , mGeometry(app.getRenderEngine())
+        , mEffect(0)
         , mInitTexCount(texCount)
         , mInitDoubleDepth(doubleDepth)
         , mInitMaxBandwidth(maxBandwidth)
@@ -35,27 +68,26 @@ public:
 
     bool create()
     {
-        Renderer & r = gRenderer;
-        
         // create geometry
         if( !mGeometry.create() ) return false;
 
+        RenderEngine & re = getApp().getRenderEngine();
+
         // create effect
         if( mInitTexCount )
-            mEffect = new TexturedEffect( mInitTexCount );
+            mEffect = new TexturedEffect( re, mInitTexCount );
         else
-            mEffect = new SolidEffect;
+            mEffect = new SolidEffect( re );
         if( !mEffect || !mEffect->create() ) return false;
 
         // create texture
         for( UInt i = 0; i < mInitTexCount; ++i )
         {
-            mTextures[i].attach( r.create2DTexture( 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
+            mTextures[i].attach( re.create2DTexture( strFormat("TestFillrate::mTexture[%d]",i), 2, 2, 1, FMT_RGBA32, TEXUSAGE_TILED ) );
             if( !mTextures[i] ) return false;
-            TexLockedResult tlr;
-            mTextures[i]->lock( tlr, 0, 0, 0, LOCK_DISCARD );
-            memset( tlr.data, 0xFF, tlr.sliceBytes );
-            mTextures[i]->unlock();
+            GraphicsResourceLoader * loader = new TexLoader;
+            re.updateResource( mTextures[i], 0, loader );
+            loader->decref();
         }
 
         // initialize the context
@@ -116,7 +148,7 @@ public:
 
     void update()
     {
-        const DispDesc & dd = gRenderer.getDispDesc();
+        const DispDesc & dd = getApp().getRenderEngine().getDispDesc();
         float pixfr = dd.width * dd.height / 1000000000.0f * mGeometry.QUAD_COUNT * mGeometry.DRAW_COUNT * getApp().getFps();
         float texfr = pixfr * mInitTexCount;
         float bandwidth = pixfr * dd.depth / 8;
@@ -136,12 +168,10 @@ public:
 
     void render()
     {
-        Renderer & r = gRenderer;
-
-        r.setContext( mContext );
+        RenderEngine & re = getApp().getRenderEngine();
+        re.setContext( mContext );
         mGeometry.draw();
-
-        scene::gAsciiFont.drawText( mFillrateStr.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
+        getApp().asciiFont().drawText( mFillrateStr.cptr(), 0, 100, GN_RGBA32(255,0,0,255) );
     }
 
     StrA printResult()

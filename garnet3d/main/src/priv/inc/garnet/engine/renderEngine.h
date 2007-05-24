@@ -101,6 +101,12 @@ namespace GN { namespace engine
         ///
         const gfx::DispDesc & getDispDesc() const;
 
+        UInt32 getCaps( SInt32 c ) const;
+
+        bool supportShader( const StrA & profile );
+
+        bool supportTextureFormat( gfx::TexDim type, BitFields usage, gfx::ClrFmt format );
+
         ///
         /// get total video meory size in bytes
         ///
@@ -331,23 +337,27 @@ namespace GN { namespace engine
 
         GraphicsResource *
         createVtxBuf( const StrA            & name,
-                      const gfx::VtxBufDesc & desc );
+                      const gfx::VtxBufDesc & desc,
+                      const void *            initialData = 0 );
 
         GraphicsResource *
         createVtxBuf( const StrA & name,
                       size_t       bytes,
                       bool         dynamic = false,
-                      bool         readback = false );
+                      bool         readback = false,
+                      const void * initialData = 0 );
 
         GraphicsResource *
         createIdxBuf( const StrA            & name,
-                      const gfx::IdxBufDesc & desc );
+                      const gfx::IdxBufDesc & desc,
+                      const void *            initialData = 0 );
 
         GraphicsResource *
         createIdxBuf( const StrA & name,
                       size_t       numidx,
                       bool         dynamic = false,
-                      bool         readback = false );
+                      bool         readback = false,
+                      const void * initialData = 0 );
 
         ///
         /// reset draw context to default value (not referencing any resources)
