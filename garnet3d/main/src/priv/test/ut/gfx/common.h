@@ -42,9 +42,9 @@ struct GfxResources
         texcube.attach( r.createTexture( GN::gfx::TEXDIM_CUBE, 128, 128, 128, 128 ) );
 
         // create render targets
-        rt1.attach( r.create2DTexture(  64, 64, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt2.attach( r.create2DTexture(  64, 64, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
-        rt3.attach( r.create2DTexture( 128, 64, 0, GN::gfx::FMT_DEFAULT, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt1.attach( r.create2DTexture(  64, 64, 0, GN::gfx::FMT_UNKNOWN, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt2.attach( r.create2DTexture(  64, 64, 0, GN::gfx::FMT_UNKNOWN, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
+        rt3.attach( r.create2DTexture( 128, 64, 0, GN::gfx::FMT_UNKNOWN, GN::gfx::TEXUSAGE_RENDER_TARGET ) );
         TS_ASSERT( rt1 );
         TS_ASSERT( rt2 );
         TS_ASSERT( rt3 );
@@ -361,10 +361,10 @@ protected:
         GN::AutoRef<Texture> rt1, rt2, rt3, rt4;
 
         // create render targets
-        rt1.attach( r->create1DTexture( 256, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
-        rt2.attach( r->create2DTexture( 256, 256, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
-        rt3.attach( r->create3DTexture( 128, 128, 4, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
-        rt4.attach( r->createCubeTexture( 128, 0, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        rt1.attach( r->create1DTexture( 256, 0, FMT_UNKNOWN, TEXUSAGE_RENDER_TARGET ) );
+        rt2.attach( r->create2DTexture( 256, 256, 0, FMT_UNKNOWN, TEXUSAGE_RENDER_TARGET ) );
+        rt3.attach( r->create3DTexture( 128, 128, 4, 0, FMT_UNKNOWN, TEXUSAGE_RENDER_TARGET ) );
+        rt4.attach( r->createCubeTexture( 128, 0, FMT_UNKNOWN, TEXUSAGE_RENDER_TARGET ) );
         TS_ASSERT( rt1 );
         TS_ASSERT( rt2 );
         TS_ASSERT( !rt3 );

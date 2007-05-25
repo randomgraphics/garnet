@@ -48,11 +48,11 @@ public:
         UInt32 h = 100;
 
         // create color texture
-        mColor.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_RENDER_TARGET ) );
+        mColor.attach( r.create2DTexture( w, h, 1, FMT_UNKNOWN, TEXUSAGE_RENDER_TARGET ) );
         if( mColor.empty() ) return false;
 
         // create depth texture
-        mDepth.attach( r.create2DTexture( w, h, 1, FMT_DEFAULT, TEXUSAGE_DEPTH ) );
+        mDepth.attach( r.create2DTexture( w, h, 1, FMT_UNKNOWN, TEXUSAGE_DEPTH ) );
         //if( mDepth.empty() ) return false;
 
         // create texture

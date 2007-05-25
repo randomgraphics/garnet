@@ -141,6 +141,7 @@ namespace GN { namespace gfx
 
         virtual bool supportShader( const StrA & );
         virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const;
+        virtual ClrFmt getDefaultTextureFormat( TexDim type, BitFields usage ) const;
 
     private :
 

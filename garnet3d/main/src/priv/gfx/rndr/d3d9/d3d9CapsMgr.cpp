@@ -323,11 +323,11 @@ GN::gfx::ClrFmt GN::gfx::D3D9Renderer::getDefaultTextureFormat(
 
     if( TEXUSAGE_DEPTH & usage )
     {
-        return GN::gfx::FMT_DS_24_8_FLOAT;
+        return FMT_DS_24_8_FLOAT;
     }
     else
     {
-        return GN::gfx::FMT_RGBA32;
+        return FMT_BGRA_8_8_8_8_UNORM;
     }
 
 #else
@@ -338,8 +338,16 @@ GN::gfx::ClrFmt GN::gfx::D3D9Renderer::getDefaultTextureFormat(
     {
         static D3DFORMAT candidates[] =
         {
-            (D3DFORMAT)MAKEFOURCC('D','F','2','4'), (D3DFORMAT)MAKEFOURCC('D','F','1','6'), // for ATI
-            D3DFMT_D32, D3DFMT_D24FS8, D3DFMT_D24S8, D3DFMT_D24X8, D3DFMT_D16 // for NVIDIA
+            // for ATI
+            (D3DFORMAT)MAKEFOURCC('D','F','2','4'),
+            (D3DFORMAT)MAKEFOURCC('D','F','1','6'),
+
+            // for NVIDIA
+            D3DFMT_D32,
+            D3DFMT_D24FS8,
+            D3DFMT_D24S8,
+            D3DFMT_D24X8,
+            D3DFMT_D16
         };
         for( size_t i = 0; i < sizeof(candidates)/sizeof(candidates[0]); ++i )
         {
@@ -354,13 +362,21 @@ GN::gfx::ClrFmt GN::gfx::D3D9Renderer::getDefaultTextureFormat(
         }
 
         // failed
-        GN_ERROR(sLogger)( "Current renderer does not support depth texture." );
-        return D3DFMT_UNKNOWN;
-
-        GN_UNGUARD;
+        GN_ERROR(sLogger)( "Fail to get default depth texture format." );
+        return FMT_UNKNOWN;
     }
-    else if( TEXUSAGE_RENDER_TARGET & usage )
+    else if( D3D_OK == checkD3DDeviceFormat(
+            texUsage2D3DUsage(usage),
+            texType2D3DResourceType(type),
+            D3DFMT_A8R8G8B8 ) )
     {
+        // success
+        return FMT_BGRA_8_8_8_8_UNORM;
+    }
+    else
+    {
+        GN_ERROR(sLogger)( "Fail to get default texture format." );
+        return FMT_UNKNOWN;
     }
 
     GN_UNGUARD;

@@ -18,7 +18,6 @@
         will lost.
         - possible solution: use independent constant buffer
   - shared uniform
-  - replace FMT_DEFAULT with Renderer::getDefaultTextureFormat(...);
 
 - p2
   - render state block redesign: using packed bit fields.

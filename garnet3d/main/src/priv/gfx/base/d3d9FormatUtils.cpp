@@ -95,7 +95,7 @@ GN::gfx::ClrFmt GN::gfx::d3d9::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
         d3dfmt = (D3DFORMAT)( d3dfmt | (1 << D3DFORMAT_TILED_SHIFT) );
 #endif
 
-    switch( d3dfmt )
+    switch( (int)d3dfmt )
     {
         // 128 bits
         case D3DFMT_A32B32G32R32F   : return FMT_RGBA_32_32_32_32_FLOAT;

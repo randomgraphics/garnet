@@ -149,27 +149,11 @@ bool GN::gfx::D3D10Texture::createTexture()
     const TextureDesc & desc = getDesc();
 
     // determine texture format
-    DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
-    if( FMT_DEFAULT == desc.format )
+    DXGI_FORMAT format = d3d10::clrFmt2DxgiFormat( desc.format );
+    if( DXGI_FORMAT_UNKNOWN == format )
     {
-        format = desc.usage.depthstencil
-            ? DXGI_FORMAT_D32_FLOAT // TODO: is this correct depth texture format?
-            : DXGI_FORMAT_B8G8R8A8_UNORM;
-        if( DXGI_FORMAT_UNKNOWN == format )
-        {
-            GN_ERROR(sLogger)( "Fail to detect default texture format." );
-            return false;
-        }
-        GN_TRACE(sLogger)( "Use default texture format: %s", d3d10::dxgiFormat2Str( format ) );
-    }
-    else
-    {
-        format = d3d10::clrFmt2DxgiFormat( desc.format );
-        if( DXGI_FORMAT_UNKNOWN == format )
-        {
-            GN_ERROR(sLogger)( "Fail to convert color format '%s' to DXGI_FORMAT.", clrFmt2Str(desc.format) );
-            return false;
-        }
+        GN_ERROR(sLogger)( "Fail to convert color format '%s' to DXGI_FORMAT.", clrFmt2Str(desc.format) );
+        return false;
     }
 
     // determine usage

@@ -1246,6 +1246,30 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createTexture(
 //
 //
 // -----------------------------------------------------------------------------
+GN::engine::GraphicsResource * GN::engine::RenderEngine::createTexture( const StrA & name,
+    gfx::TexDim  dim,
+    size_t       sx,
+    size_t       sy,
+    size_t       sz,
+    size_t       faces,
+    size_t       levels,
+    gfx::ClrFmt  format,
+    BitFields    usage )
+{
+    gfx::TextureDesc desc =
+    {
+        dim,
+        (UInt32)sx, (UInt32)sy, (UInt32)sz,
+        (UInt32)faces, (UInt32)levels,
+        gfx::FMT_UNKNOWN == format ? gRenderer.getDefaultTextureFormat( dim, usage ) : format,
+        { usage }
+    };
+    return createTexture( name, desc );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::clearDrawContext()
 {
     static struct Local

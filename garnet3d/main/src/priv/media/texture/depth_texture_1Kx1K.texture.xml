@@ -6,7 +6,7 @@
 	height       = "1024"
 	depth        = "1"
 	levels       = "1"
-	format       = "FMT_DEFAULT"
+	format       = "FMT_UNKNOWN"
 
 	dynamic      = "0"
 	automip      = "0"

@@ -295,3 +295,21 @@ bool GN::gfx::OGLRenderer::supportTextureFormat( TexDim, BitFields, ClrFmt ) con
     GN_UNIMPL_WARNING();
     return true;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ClrFmt GN::gfx::OGLRenderer::getDefaultTextureFormat(
+    TexDim type, BitFields usage ) const
+{
+    GN_UNUSED_PARAM( type );
+
+    if( TEXUSAGE_DEPTH & usage )
+    {
+        return FMT_D_32;
+    }
+    else
+    {
+        return FMT_RGBA_8_8_8_8_UNORM;
+    }
+}

@@ -586,7 +586,7 @@ namespace GN { namespace gfx
                        size_t    sx, size_t sy, size_t sz,
                        size_t    faces = 0,
                        size_t    levels = 0,
-                       ClrFmt    format = FMT_DEFAULT,
+                       ClrFmt    format = FMT_UNKNOWN,
                        BitFields usage = 0 )
         {
             TextureDesc desc =
@@ -594,7 +594,7 @@ namespace GN { namespace gfx
                 dim,
                 (UInt32)sx, (UInt32)sy, (UInt32)sz,
                 (UInt32)faces, (UInt32)levels,
-                format,
+                FMT_UNKNOWN == format ? getDefaultTextureFormat( dim, usage ) : format,
                 { usage }
             };
             return createTexture( desc );
@@ -606,7 +606,7 @@ namespace GN { namespace gfx
         Texture *
         create1DTexture( size_t    sx,
                          size_t    levels = 0,
-                         ClrFmt    format = FMT_DEFAULT,
+                         ClrFmt    format = FMT_UNKNOWN,
                          BitFields usage = 0 )
         {
             return createTexture( TEXDIM_1D, sx, 0, 0, 1, levels, format, usage );
@@ -618,7 +618,7 @@ namespace GN { namespace gfx
         Texture *
         create2DTexture( size_t    sx, size_t sy,
                          size_t    levels = 0,
-                         ClrFmt    format = FMT_DEFAULT,
+                         ClrFmt    format = FMT_UNKNOWN,
                          BitFields usage = 0 )
         {
             return createTexture( TEXDIM_2D, sx, sy, 0, 1, levels, format, usage );
@@ -630,7 +630,7 @@ namespace GN { namespace gfx
         Texture *
         create3DTexture( size_t    sx, size_t sy, size_t sz,
                          size_t    levels = 0,
-                         ClrFmt    format = FMT_DEFAULT,
+                         ClrFmt    format = FMT_UNKNOWN,
                          BitFields usage = 0 )
         {
             return createTexture( TEXDIM_3D, sx, sy, sz, 1, levels, format, usage );
@@ -642,7 +642,7 @@ namespace GN { namespace gfx
         Texture *
         createCubeTexture( size_t    sx,
                            size_t    levels = 0,
-                           ClrFmt    format = FMT_DEFAULT,
+                           ClrFmt    format = FMT_UNKNOWN,
                            BitFields usage = 0 )
         {
             return createTexture( TEXDIM_CUBE, sx, 0, 0, 6, levels, format, usage );
