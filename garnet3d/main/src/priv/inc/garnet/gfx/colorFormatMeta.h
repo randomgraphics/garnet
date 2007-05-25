@@ -181,7 +181,9 @@ GN_COLOR_FORMAT( A_8_UNORM                    , 8     , CH1( SWIZZLE(1,1,1,R) , 
 // depth format
 GN_COLOR_FORMAT( D_32                         , 32    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 32  , UNORM)                                                                      ) )
 GN_COLOR_FORMAT( D_24                         , 32    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 24  , UNORM)                                                                      ) )
+GN_COLOR_FORMAT( D_24_FLOAT                   , 32    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 24  , FLOAT)                                                                      ) )
 GN_COLOR_FORMAT( D_16                         , 16    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 16  , UNORM)                                                                      ) )
+GN_COLOR_FORMAT( D_16_FLOAT                   , 16    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 16  , FLOAT)                                                                      ) )
 GN_COLOR_FORMAT( DS_24_8                      , 32    , CH2( SWIZZLE(R,R,R,G) , CH(0   , 24  , UNORM), CH(24   , 8  , UINT )                                               ) )
 GN_COLOR_FORMAT( DS_24_8_FLOAT                , 32    , CH2( SWIZZLE(R,R,R,G) , CH(0   , 24  , FLOAT), CH(24   , 8  , UINT )                                               ) )
 GN_COLOR_FORMAT( DX_24_8                      , 32    , CH1( SWIZZLE(R,R,R,1) , CH(0   , 24  , UNORM)                                                                      ) )

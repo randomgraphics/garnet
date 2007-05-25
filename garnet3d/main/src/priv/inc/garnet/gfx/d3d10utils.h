@@ -75,7 +75,7 @@ namespace GN { namespace gfx
         const char * dxgiFormat2Str( DXGI_FORMAT );
 
         ///
-        /// Convert DXGI_FORMAT to ClrFmt. Return FMT_INVALID if failed.
+        /// Convert DXGI_FORMAT to ClrFmt. Return FMT_UNKNOWN if failed.
         ///
         ClrFmt dxgiFormat2ClrFmt( DXGI_FORMAT );
 

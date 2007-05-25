@@ -93,7 +93,7 @@ namespace GN { namespace gfx
         const char * d3dFormat2Str( D3DFORMAT );
 
         ///
-        /// Convert D3DFORMAT to ClrFmt. Return FMT_INVALID if failed.
+        /// Convert D3DFORMAT to ClrFmt. Return FMT_UNKNOWN if failed.
         ///
         ClrFmt d3dFormat2ClrFmt( D3DFORMAT );
 

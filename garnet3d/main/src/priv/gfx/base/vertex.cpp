@@ -260,7 +260,7 @@ static bool sParseAttribute( VtxFmtDesc & desc, const XmlElement & node )
     a = node.findAttrib( "format" );
     if( !a ) { sPostError( node, "format is missing" ); return false; }
     format = str2ClrFmt( a->value );
-    if( FMT_INVALID == format )
+    if( FMT_UNKNOWN == format )
     {
         sPostError( node, strFormat( "invalid format : %s", a->value.cptr() ) );
         return false;

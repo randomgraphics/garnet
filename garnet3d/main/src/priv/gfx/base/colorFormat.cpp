@@ -116,9 +116,9 @@ const GN::gfx::ClrFmtDesc * GN::gfx::detail::generateClrFmtDescTable()
             #include "garnet/gfx/colorFormatMeta.h"
             #undef GN_COLOR_FORMAT
 
-            // special case for FMT_INVALID
-            pdesc = &table[FMT_INVALID];
-            pdesc->name = "FMT_INVALID";
+            // special case for FMT_UNKNOWN
+            pdesc = &table[FMT_UNKNOWN];
+            pdesc->name = "FMT_UNKNOWN";
             pdesc->numChannels = 0;
             pdesc->bits = 0;
         }
@@ -147,8 +147,6 @@ bool GN::gfx::str2ClrFmt( ClrFmt & fmt, const StrA & s )
 #define CHECK_ALIAS( X ) if( #X == s ) { fmt = X; return true; }
 
     CHECK_ALIAS( FMT_UNKNOWN );
-    CHECK_ALIAS( FMT_DEFAULT );
-    CHECK_ALIAS( FMT_DONTCARE );
 
     CHECK_ALIAS( FMT_RGBA32 );
     CHECK_ALIAS( FMT_BGRA32 );

@@ -222,7 +222,7 @@ static GN::gfx::ClrFmt getImageFormat( const DDPixelFormat & ddpf )
 
     // failed
     GN_ERROR(sLogger)( "unknown DDS format!" );
-    return GN::gfx::FMT_INVALID;
+    return GN::gfx::FMT_UNKNOWN;
 
     GN_UNGUARD;
 }
@@ -296,7 +296,7 @@ bool DDSReader::readHeader(
 
     // grok image format
     mImgDesc.format = getImageFormat( mHeader.ddpf );
-    if( GN::gfx::FMT_INVALID == mImgDesc.format ) return false;
+    if( GN::gfx::FMT_UNKNOWN == mImgDesc.format ) return false;
 
     // grok image dimension
     size_t faces = sGetImageFaceCount( mHeader );
