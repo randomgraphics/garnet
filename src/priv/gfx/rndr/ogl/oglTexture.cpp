@@ -461,19 +461,6 @@ bool GN::gfx::OGLTexture::init( TextureDesc desc )
 
     OGLAutoAttribStack autoAttribStack; // auto-restore OGL states
 
-    // determine pixelformat
-    if( FMT_DEFAULT == desc.format )
-    {
-        if( desc.usage.depthstencil )
-        {
-            desc.format = FMT_D_32; // default depth format
-        }
-        else
-        {
-            desc.format = FMT_RGBA_8_8_8_8_UNORM; // default color format
-        }
-    }
-
     // store texture properties
     if( !setDesc( desc ) ) return failure();
 

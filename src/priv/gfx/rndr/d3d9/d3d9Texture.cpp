@@ -118,40 +118,6 @@ static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
 //
 //
 // ----------------------------------------------------------------------------
-static D3DFORMAT sGetDefaultDepthTextureFormat( GN::gfx::D3D9Renderer & r )
-{
-#if GN_XENON
-
-    return GN::gfx::DEFAULT_DEPTH_FORMAT;
-
-#else
-    GN_GUARD;
-
-    static D3DFORMAT candidates[] =
-    {
-        (D3DFORMAT)MAKEFOURCC('D','F','2','4'), (D3DFORMAT)MAKEFOURCC('D','F','1','6'), // for ATI
-        D3DFMT_D32, D3DFMT_D24FS8, D3DFMT_D24S8, D3DFMT_D24X8, D3DFMT_D16 // for NVIDIA
-    };
-    for( size_t i = 0; i < sizeof(candidates)/sizeof(candidates[0]); ++i )
-    {
-        if( D3D_OK == r.checkD3DDeviceFormat( D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_TEXTURE, candidates[i] ) )
-        {
-            // success
-            return candidates[i];
-        }
-    }
-
-    // failed
-    GN_ERROR(sLogger)( "Current renderer does not support depth texture." );
-    return D3DFMT_UNKNOWN;
-
-    GN_UNGUARD;
-#endif
-}
-
-//
-//
-// ----------------------------------------------------------------------------
 static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexDim type, size_t level )
 {
     GN_GUARD_SLOW;
@@ -321,21 +287,11 @@ bool GN::gfx::D3D9Texture::deviceRestore()
     const TextureDesc & desc = getDesc();
 
     // determine texture format
-    mD3DFormat = D3DFMT_UNKNOWN;
-    if( FMT_DEFAULT == desc.format )
+    mD3DFormat = d3d9::clrFmt2D3DFormat( desc.format, desc.usage.tiled );
+    if( D3DFMT_UNKNOWN == mD3DFormat )
     {
-        mD3DFormat = desc.usage.depthstencil ? sGetDefaultDepthTextureFormat( getRenderer() ) : D3DFMT_A8B8G8R8;
-        if( D3DFMT_UNKNOWN == mD3DFormat ) return false;
-        GN_TRACE(sLogger)( "Use default texture format: %s", d3d9::d3dFormat2Str( mD3DFormat ) );
-    }
-    else
-    {
-        mD3DFormat = d3d9::clrFmt2D3DFormat( desc.format, desc.usage.tiled );
-        if( D3DFMT_UNKNOWN == mD3DFormat )
-        {
-            GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(desc.format) );
-            return false;
-        }
+        GN_ERROR(sLogger)( "Fail to convert color format '%s' to D3DFORMAT.", clrFmt2Str(desc.format) );
+        return false;
     }
 
     // special case for R-G-B-A texture

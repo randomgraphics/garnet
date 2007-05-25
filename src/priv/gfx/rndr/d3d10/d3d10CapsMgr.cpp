@@ -211,3 +211,21 @@ bool GN::gfx::D3D10Renderer::supportTextureFormat(
     // TODO: check d3dUsages against input type and usage.
     return true;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ClrFmt GN::gfx::D3D10Renderer::getDefaultTextureFormat(
+    TexDim type, BitFields usage ) const
+{
+    GN_UNUSED_PARAM( type );
+
+    if( TEXUSAGE_DEPTH & usage )
+    {
+        return FMT_DS_24_8;
+    }
+    else
+    {
+        return FMT_RGBA_8_8_8_8_UNORM;
+    }
+}

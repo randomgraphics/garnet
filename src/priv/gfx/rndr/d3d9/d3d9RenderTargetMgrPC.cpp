@@ -167,10 +167,12 @@ void GN::gfx::D3D9RTMgrPC::bind(
         }
         else
         {
+            D3DFORMAT format = D3DFMT_D24S8;
+
             GN_DX9_CHECK_R( dev.CreateDepthStencilSurface(
                 rt0Desc.Width,
                 rt0Desc.Height,
-                DEFAULT_DEPTH_FORMAT, // TODO: enumerate appropriate depth buffer format.
+                format,
                 rt0Desc.MultiSampleType,
                 rt0Desc.MultiSampleQuality,
                 TRUE,
@@ -178,7 +180,7 @@ void GN::gfx::D3D9RTMgrPC::bind(
             GN_DX9_CHECK( dev.SetDepthStencilSurface( mAutoDepth ) );
             GN_TRACE(sLogger)( "Create depth surface: width(%d), height(%d), format(%s), msaa(%d), quality(%d)",
                 rt0Desc.Width, rt0Desc.Height,
-                d3d9::d3dFormat2Str(DEFAULT_DEPTH_FORMAT),
+                d3d9::d3dFormat2Str(format),
                 rt0Desc.MultiSampleType,
                 rt0Desc.MultiSampleQuality );
         }

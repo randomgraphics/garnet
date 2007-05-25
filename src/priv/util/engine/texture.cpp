@@ -340,7 +340,7 @@ static GraphicsResource * sLoadTextureFromXml(
         if( !sGetIntAttrib( *e, "depth" , desc.depth  ) ) return false;
         if( !sGetIntAttrib( *e, "levels", desc.levels ) ) return false;
 
-        // get texture format, optional, default is FMT_DEFAULT
+        // get texture format, optional, default is FMT_UNKNOWN
         if( sGetStringAttrib( *e, "format", s, true ) )
         {
             if( !str2ClrFmt( desc.format, s ) )
@@ -351,7 +351,7 @@ static GraphicsResource * sLoadTextureFromXml(
         }
         else
         {
-            desc.format = FMT_DEFAULT;
+            desc.format = FMT_UNKNOWN;
         }
 
         return re.createTexture( name, desc );

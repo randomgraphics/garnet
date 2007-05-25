@@ -107,8 +107,7 @@ namespace GN { namespace gfx
                              ///< you may set it to 0 to use default face count: 6 for cubemap, 1 for others.
         UInt32    levels;    ///< mipmap level count. When used as parameter of Renderer::createTexture(),
                              ///< you may set it to 0 to create full mipmap tower (down to 1x1).
-        ClrFmt    format;    ///< pixel format. When used as parameter of Renderer::createTexture(),
-                             ///< you may set it to FMT_DEFAULT. To use default texture format.
+        ClrFmt    format;    ///< pixel format.
 
         ///
         /// get basemap size
@@ -261,8 +260,7 @@ namespace GN { namespace gfx
             levels = ( 0 == levels ) ? maxLevels : min( maxLevels, levels );
 
             // check format
-            if( ( format < 0 || format >= NUM_CLRFMTS ) &&
-                FMT_DEFAULT != format )
+            if( format < 0 || format >= NUM_CLRFMTS )
             {
                 static Logger * sLogger = getLogger("GN.gfx.TextureDesc");
                 GN_ERROR(sLogger)( "invalid texture format: %s", clrFmt2Str(format) );
