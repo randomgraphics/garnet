@@ -197,7 +197,7 @@ GN::gfx::ClrFmt GN::gfx::d3d10::dxgiFormat2ClrFmt( DXGI_FORMAT dxgifmt )
         case DXGI_FORMAT_D16_UNORM             : return FMT_D_16;
 
         // failed
-        default : return FMT_INVALID;
+        default : return FMT_UNKNOWN;
     }
 }
 

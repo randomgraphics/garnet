@@ -310,3 +310,61 @@ bool GN::gfx::D3D9Renderer::supportTextureFormat(
 
     GN_UNGUARD;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::ClrFmt GN::gfx::D3D9Renderer::getDefaultTextureFormat(
+    TexDim type, BitFields usage ) const
+{
+#if GN_XENON
+
+    GN_UNUSED_PARAM( type );
+
+    if( TEXUSAGE_DEPTH & usage )
+    {
+        return GN::gfx::FMT_DS_24_8_FLOAT;
+    }
+    else
+    {
+        return GN::gfx::FMT_RGBA32;
+    }
+
+#else
+
+    GN_GUARD;
+
+    if( TEXUSAGE_DEPTH & usage )
+    {
+        static D3DFORMAT candidates[] =
+        {
+            (D3DFORMAT)MAKEFOURCC('D','F','2','4'), (D3DFORMAT)MAKEFOURCC('D','F','1','6'), // for ATI
+            D3DFMT_D32, D3DFMT_D24FS8, D3DFMT_D24S8, D3DFMT_D24X8, D3DFMT_D16 // for NVIDIA
+        };
+        for( size_t i = 0; i < sizeof(candidates)/sizeof(candidates[0]); ++i )
+        {
+            if( D3D_OK == checkD3DDeviceFormat(
+                texUsage2D3DUsage(usage),
+                texType2D3DResourceType(type),
+                candidates[i] ) )
+            {
+                // success
+                return d3d9::d3dFormat2ClrFmt( candidates[i] );
+            }
+        }
+
+        // failed
+        GN_ERROR(sLogger)( "Current renderer does not support depth texture." );
+        return D3DFMT_UNKNOWN;
+
+        GN_UNGUARD;
+    }
+    else if( TEXUSAGE_RENDER_TARGET & usage )
+    {
+    }
+
+    GN_UNGUARD;
+
+#endif
+}
+

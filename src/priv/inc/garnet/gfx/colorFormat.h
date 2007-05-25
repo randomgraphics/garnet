@@ -23,10 +23,7 @@ namespace GN { namespace gfx
         NUM_CLRFMTS,
 
         // common aliases
-        FMT_INVALID     = NUM_CLRFMTS,
-        FMT_UNKNOWN     = FMT_INVALID,
-        FMT_DEFAULT     = FMT_INVALID,
-        FMT_DONTCARE    = FMT_INVALID,
+        FMT_UNKNOWN     = NUM_CLRFMTS,
 
         FMT_RGBA32      = FMT_RGBA_8_8_8_8_UNORM,
         FMT_BGRA32      = FMT_BGRA_8_8_8_8_UNORM,
@@ -182,7 +179,7 @@ namespace GN { namespace gfx
     {
         static const ClrFmtDesc * const sTable = detail::generateClrFmtDescTable();
         if( 0 <= fmt && fmt <= NUM_CLRFMTS ) return sTable[fmt];
-        else return sTable[FMT_INVALID];
+        else return sTable[FMT_UNKNOWN];
     }
 
     ///
@@ -196,12 +193,12 @@ namespace GN { namespace gfx
     bool str2ClrFmt( ClrFmt &, const StrA & );
 
     ///
-    /// convert string to color format tag. Return FMT_INVALID, if failed.
+    /// convert string to color format tag. Return FMT_UNKNOWN, if failed.
     ///
     inline ClrFmt str2ClrFmt( const StrA & s )
     {
         ClrFmt fmt;
-        if( !str2ClrFmt( fmt, s ) ) return FMT_INVALID;
+        if( !str2ClrFmt( fmt, s ) ) return FMT_UNKNOWN;
         return fmt;
     }
 

@@ -29,15 +29,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// Default depth surface format
-    ///
-#if GN_XENON
-    static const D3DFORMAT DEFAULT_DEPTH_FORMAT = D3DFMT_D24FS8;
-#else
-    static const D3DFORMAT DEFAULT_DEPTH_FORMAT = D3DFMT_D24S8;
-#endif
-
-    ///
     /// D3D9 renderer class
     ///
     class D3D9Renderer : public BasicRenderer
@@ -196,6 +187,7 @@ namespace GN { namespace gfx
 
         virtual bool supportShader( const StrA & );
         virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const;
+        virtual ClrFmt getDefaultTextureFormat( TexDim type, BitFields usage ) const;
 
         ///
         /// define API dependent caps

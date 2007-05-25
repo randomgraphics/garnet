@@ -512,6 +512,12 @@ namespace GN { namespace gfx
         ///
         virtual bool supportTextureFormat( TexDim type, BitFields usage, ClrFmt format ) const = 0;
 
+        ///
+        /// Get default texture format.
+        /// Return FMT_UNKNOWN, if the type and/or usage are not supported by current renderer.
+        ///
+        virtual ClrFmt getDefaultTextureFormat( TexDim type, BitFields usage ) const = 0;
+
         //@}
 
         // ********************************************************************

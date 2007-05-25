@@ -157,8 +157,12 @@ GN::gfx::ClrFmt GN::gfx::d3d9::d3dFormat2ClrFmt( D3DFORMAT d3dfmt )
         case D3DFMT_D24X8           : return FMT_DX_24_8;
       //case D3DFMT_D24X4S4         : return FMT_DXS_24_4_4;
 
+        // ATI only format:
+        case (D3DFORMAT)MAKEFOURCC('D','F','2','4') : return FMT_D_24_FLOAT;
+        case (D3DFORMAT)MAKEFOURCC('D','F','1','6') : return FMT_D_16_FLOAT;
+
         // failed
-        default : return FMT_INVALID;
+        default : return FMT_UNKNOWN;
     }
 }
 
@@ -208,6 +212,10 @@ D3DFORMAT GN::gfx::d3d9::clrFmt2D3DFormat( ClrFmt clrfmt, bool tiled )
         case FMT_DX_24_8                : d3dfmt = D3DFMT_D24X8; break;
         case FMT_DS_24_8                : d3dfmt = D3DFMT_D24S8; break;
         case FMT_D_32                   : d3dfmt = D3DFMT_D32; break;
+
+        // ATI only format:
+        case FMT_D_24_FLOAT             : d3dfmt = (D3DFORMAT)MAKEFOURCC('D','F','2','4'); break;
+        case FMT_D_16_FLOAT             : d3dfmt = (D3DFORMAT)MAKEFOURCC('D','F','1','6'); break;;
 
         // failed
         default : return D3DFMT_UNKNOWN;

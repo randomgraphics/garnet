@@ -181,13 +181,8 @@ sSetupD3dpp( D3DPRESENT_PARAMETERS & d3dpp,
         d3dpp.MultiSampleType, d3dpp.MultiSampleQuality );
 
     // setup depth parameters
-    d3dpp.AutoDepthStencilFormat = GN::gfx::DEFAULT_DEPTH_FORMAT;
-#if GN_XENON
-    d3dpp.EnableAutoDepthStencil = TRUE;
-#else
-    d3dpp.EnableAutoDepthStencil = TRUE;
-#endif
-    d3dpp.Flags                 |= D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+    d3dpp.EnableAutoDepthStencil = FALSE;
 
     // set display mode parameters
     d3dpp.Windowed = !fullscreen;
