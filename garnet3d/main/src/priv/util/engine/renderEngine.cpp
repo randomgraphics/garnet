@@ -63,7 +63,7 @@ static inline void sPrepareContextResources(
     }
     if( context.flags.renderTargets )
     {
-        for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+        for( unsigned int i = 0; i < context.renderTargets.count; ++i )
         {
             sPrepareResource( engine, context.renderTargets.cbuffers[i].texture );
         }
@@ -153,7 +153,7 @@ static void sSetupDrawCommandWaitingList(
     }
     if( context.flags.renderTargets )
     {
-        for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+        for( unsigned int i = 0; i < context.renderTargets.count; ++i )
         {
             sSetupWaitingListAndReferenceFence(
                 cache,
@@ -202,11 +202,54 @@ static void sSetupDrawCommandWaitingList(
 }
 
 ///
-/// loader for shader and vertex format
+/// loader for shader and vertex format and render target texture
 ///
 class DummyLoader : public GN::engine::GraphicsResourceLoader
 {
+protected:
+
+    DummyLoader() {}
+    ~DummyLoader() {}
+
 public:
+
+    static DummyLoader * sGetInstance()
+    {
+        static GN::AutoRef<DummyLoader> sInstance( new DummyLoader );
+        return sInstance;
+    }
+
+    virtual bool load( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    bool decompress( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void *, size_t, int )
+    {
+        outbuf = 0;
+        outbytes = 0;
+        return true;
+    }
+
+    virtual bool copy( GN::engine::GraphicsResource &, const void * , size_t, int )
+    {
+        return true;
+    }
+
+    virtual void freebuf( void *, size_t )
+    {
+    }
+};
+
+///
+/// basic loader for vertex and index buffer
+///
+class BasicLoader : public GN::engine::GraphicsResourceLoader
+{
+public:
+
     virtual bool load( const GN::engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, int )
     {
         outbuf = 0;
@@ -234,7 +277,7 @@ public:
 ///
 /// static vertex buffer loader
 ///
-class StaticVtxBufLoader : public DummyLoader
+class StaticVtxBufLoader : public BasicLoader
 {
     GN::DynaArray<UInt8> mData;
 
@@ -262,7 +305,7 @@ public:
 ///
 /// static index buffer loader
 ///
-class StaticIdxBufLoader : public DummyLoader
+class StaticIdxBufLoader : public BasicLoader
 {
     GN::DynaArray<UInt8> mData;
 
@@ -1120,9 +1163,7 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createShader(
     GraphicsResource * res = allocResource( desc );
     if( 0 == res ) return 0;
 
-    AutoRef<DummyLoader> dummyloader( new DummyLoader );
-
-    updateResource( res, 0, dummyloader );
+    updateResource( res, 0, DummyLoader::sGetInstance() );
 
     return res;
 }
@@ -1142,9 +1183,7 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createVtxFmt(
     GraphicsResource * res = allocResource( desc );
     if( 0 == res ) return 0;
 
-    AutoRef<DummyLoader> dummyloader( new DummyLoader );
-
-    updateResource( res, 0, dummyloader );
+    updateResource( res, 0, DummyLoader::sGetInstance() );
 
     return res;
 }
@@ -1265,6 +1304,65 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createTexture( const St
         { usage }
     };
     return createTexture( name, desc );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::create2DRenderTargetTexture(
+    const StrA & name,
+    size_t       sx,
+    size_t       sy,
+    size_t       levels,
+    gfx::ClrFmt  format )
+{
+    GraphicsResource * res = createTexture( name, gfx::TEXDIM_2D, sx, sy, 1, 1, levels, format, gfx::TEXUSAGE_RENDER_TARGET );
+
+    if( res )
+    {
+        updateResource( res, 0, DummyLoader::sGetInstance() );
+    }
+
+    return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createCubeRenderTargetTexture(
+    const StrA & name,
+    size_t       sx,
+    size_t       levels,
+    gfx::ClrFmt  format )
+{
+    GraphicsResource * res = createTexture( name, gfx::TEXDIM_CUBE, sx, sx, 1, 6, levels, format, gfx::TEXUSAGE_RENDER_TARGET );
+
+    if( res )
+    {
+        updateResource( res, 0, DummyLoader::sGetInstance() );
+    }
+
+    return res;
+}
+
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::create2DDepthTexture(
+    const StrA & name,
+    size_t       sx,
+    size_t       sy,
+    size_t       levels,
+    gfx::ClrFmt  format )
+{
+    GraphicsResource * res = createTexture( name, gfx::TEXDIM_2D, sx, sy, 1, 1, levels, format, gfx::TEXUSAGE_DEPTH );
+
+    if( res )
+    {
+        updateResource( res, 0, DummyLoader::sGetInstance() );
+    }
+
+    return res;
 }
 
 //

@@ -6,6 +6,8 @@ using namespace GN::engine;
 using namespace GN::app;
 using namespace GN::scene;
 
+
+
 class RenderToTexture : public SampleApp
 {
     AutoGraphicsResource mRt0, mRt1, mTex0, mTex1;
@@ -18,8 +20,8 @@ public:
     {
         RenderEngine & re = getRenderEngine();
 
-        mRt0.attach( re.create2DTexture( "RenderToTexture::rt0", 256, 256, 1, FMT_RGBA32, TEXUSAGE_RENDER_TARGET ) );
-        mRt1.attach( re.create2DTexture( "RenderToTexture::rt1", 256, 256, 1, FMT_RGBA32, TEXUSAGE_RENDER_TARGET ) );
+        mRt0.attach( re.create2DRenderTargetTexture( "RenderToTexture::rt0", 256, 256, 1, FMT_RGBA32 ) );
+        mRt1.attach( re.create2DRenderTargetTexture( "RenderToTexture::rt1", 256, 256, 1, FMT_RGBA32 ) );
         if( mRt0.empty() || mRt1.empty() ) return false;
 
         mTex0.attach( loadTextureFromFile( re, "media::texture/rabit.png" ) );

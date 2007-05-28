@@ -541,8 +541,8 @@ namespace GN { namespace engine {
         //@{
         bool hasTexture( const StrA & name, EffectItemID * id ) const;
         EffectItemID getTextureID( const StrA & ) const;
-        void setTexture( EffectItemID, Entity * ) const;
-        void setTextureByName( const StrA &, Entity * ) const;
+        void setTexture( EffectItemID, GraphicsResource * ) const;
+        void setTextureByName( const StrA &, GraphicsResource * ) const;
         //@}
 
         // ********************************
@@ -552,9 +552,8 @@ namespace GN { namespace engine {
 
         struct TextureData
         {
-            StrA     name;  // texture name
-            Entity * value;
-
+            StrA               name;  // texture name
+            GraphicsResource * value;
             TextureData() : value(0) {}
         };
 

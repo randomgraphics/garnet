@@ -46,7 +46,7 @@ inline void GN::engine::Effect::passBegin(
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            ctx.setTexture( trd.stage, entity2Texture(td.value) );
+            ctx.setTexture( trd.stage, td.value );
         }
 
 #if 0
@@ -115,7 +115,7 @@ inline void GN::engine::Effect::commitChanges() const
             const TextureRefData & trd = sd.textures[iTexture];
             GN_ASSERT( mTextures.items.validHandle(trd.id) );
             const TextureData & td = mTextures.items[trd.id];
-            mActiveContext->setTexture( trd.stage, entity2Texture(td.value) );
+            mActiveContext->setTexture( trd.stage, td.value );
         }
 
         // apply dirty uniforms again, in case user may change uniforms between passBegin() and commitChanges()
@@ -310,7 +310,7 @@ inline GN::engine::EffectItemID GN::engine::Effect::getTextureID( const StrA & n
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::Effect::setTexture( EffectItemID id, Entity * tex ) const
+inline void GN::engine::Effect::setTexture( EffectItemID id, GraphicsResource * tex ) const
 {
     GN_GUARD_SLOW;
 
@@ -328,7 +328,7 @@ inline void GN::engine::Effect::setTexture( EffectItemID id, Entity * tex ) cons
 //
 //
 // -----------------------------------------------------------------------------
-inline void GN::engine::Effect::setTextureByName( const StrA & name, Entity * tex ) const
+inline void GN::engine::Effect::setTextureByName( const StrA & name, GraphicsResource * tex ) const
 {
     GN_GUARD_SLOW;
     EffectItemID id = getTextureID( name );

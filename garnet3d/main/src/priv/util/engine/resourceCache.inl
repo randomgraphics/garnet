@@ -11,6 +11,7 @@ GN::engine::RenderEngine::GraphicsResourceCache::check( const GraphicsResourceIt
         mResourceMutex.unlock();
         static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
         GN_ERROR(sLogger)( "invalid graphics resource pointer : 0x%p", item );
+        GN_ASSERT_EX( 0, "invalid graphics resource pointer" );
         return false;
     }
 
@@ -21,6 +22,7 @@ GN::engine::RenderEngine::GraphicsResourceCache::check( const GraphicsResourceIt
         mResourceMutex.unlock();
         static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine.ResourceCache");
         GN_ERROR(sLogger)( "invalid graphics resource pointer : 0x%p", item );
+        GN_ASSERT_EX( 0, "invalid graphics resource pointer" );
         return false;
     }
 

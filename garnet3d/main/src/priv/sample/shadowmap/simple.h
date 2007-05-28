@@ -9,10 +9,13 @@
 #include "garnet/GNgfx.h"
 #include "garnet/GNscene.h"
 #include "garnet/GNutil.h"
+#include "garnet/GNapp.h"
 
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
 using namespace GN::util;
+using namespace GN::app;
 
 namespace GN
 {    
@@ -29,7 +32,11 @@ namespace GN
 
         //@{
     public:
-        SimpleShadowMap() : mCamera(RIGHT_HAND) { clear(); mCamera.connectToInput(); }
+        SimpleShadowMap( SampleApp & app )
+            : mApp(app)
+            , mCamera(RIGHT_HAND)
+            , mScene( app.getEntityManager(), app.getRenderEngine() )
+        { clear(); mCamera.connectToInput(); }
         virtual ~SimpleShadowMap() { quit(); mCamera.disconnectFromInput(); }
         //@}
 
@@ -62,8 +69,10 @@ namespace GN
         // ********************************
     private:
 
-        UInt32 mColorMap;
-        UInt32 mShadowMap;
+        SampleApp & mApp;
+
+        GraphicsResource * mColorMap;
+        GraphicsResource * mShadowMap;
 
         FirstPersonCamera mCamera;
 
@@ -75,6 +84,8 @@ namespace GN
 
         Actor * mShadowProjectors;
         Actor * mShadowReceivers;
+
+        DrawContext mCtx;
 
         // ********************************
         // private functions

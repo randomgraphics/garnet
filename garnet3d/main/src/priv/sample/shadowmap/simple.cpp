@@ -2,6 +2,7 @@
 #include "simple.h"
 
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
 
 GN::Logger * sLogger = GN::getLogger("GN.sample.ShadowMap");
@@ -20,11 +21,12 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
     // standard init procedure
     GN_STDCLASS_INIT( GN::SimpleShadowMap, () );
 
-    Renderer & r = gRenderer;
+    RenderEngine & re = mApp.getRenderEngine();
+    EntityManager & em = mApp.getEntityManager();
 
     // initialize shadow textures
-    mColorMap  = gSceneResMgr.getResourceId( "media::/texture/R32F_1Kx1K_2D.texture.xml" ); 
-    mShadowMap = gSceneResMgr.getResourceId( "media::/texture/depth_texture_1Kx1K.texture.xml" );
+    mColorMap  = re.create2DRenderTargetTexture( "colormap", 1024, 1024, 1, FMT_R_32_FLOAT ); 
+    mShadowMap = re.create2DDepthTexture( "shadowmap", 1024, 1024 );
     if(0 == mColorMap || 0 == mShadowMap ) return failure();
 
     // load actor
@@ -44,7 +46,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
     // setup light
     mScene.light(0).position.set( radius * 1.5f, radius * 1.5f, radius * 1.5f );
     mLightView.lookAtRh( mScene.light(0).position, Vector3f(0,0,0), Vector3f(0,1,0) );
-    r.composePerspectiveMatrixRh(
+    re.composePerspectiveMatrixRh(
         mLightProj,
         1.0f,
         1.0f,
@@ -53,7 +55,7 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
 
     // set light transform for shadow map look-up
     EffectItemID id = 0;
-    Effect * e = gSceneResMgr.getResourceT<Effect>( "media::/effect/shadowmap.xml" );
+    Effect * e = entity2Object<Effect*>( loadEffectEntityFromXmlFile( em, re, "media::/effect/shadowmap.xml" ), 0 );
     if( e && e->hasUniform( "light0_pvw", &id ) )
     {
         float fOffsetX = 0.5f + (0.5f / 1024);
@@ -68,6 +70,8 @@ bool GN::SimpleShadowMap::init( const StrA & actorName )
         Matrix44f lpvw = scaleBias * mLightProj * mLightView * mShadowProjectors->getLocal2Root();
         e->setUniform( id, lpvw );
     }
+
+    mCtx.resetToDefault();
 
     // success
     return success();
@@ -117,15 +121,17 @@ void GN::SimpleShadowMap::update()
     // update camera
     mCamera.update( app::SampleApp::UPDATE_INTERVAL );
 
+    RenderEngine & re = mApp.getRenderEngine();
+
     // update projection matrix
-    const DispDesc & dd = gRenderer.getDispDesc();
+    const DispDesc & dd = re.getDispDesc();
     const Spheref & bs = mShadowProjectors->getBoundingSphere();
     float d = mCamera.getPosition().length();
     float n_min = bs.radius / 100.0f;
     float n = d - bs.radius;
     float f = d + bs.radius;
     if( n < n_min ) n = n_min;
-    gRenderer.composePerspectiveMatrixRh( mProj, 0.6f, (float)dd.width/dd.height, n, f );
+    re.composePerspectiveMatrixRh( mProj, 0.6f, (float)dd.width/dd.height, n, f );
 }
  
 //
@@ -133,22 +139,22 @@ void GN::SimpleShadowMap::update()
 // -----------------------------------------------------------------------------
 void GN::SimpleShadowMap::draw()
 {
-    Renderer & r = gRenderer;
+    RenderEngine & re = mApp.getRenderEngine();
 
     // draw to shadow map
-    Texture * t0 = gSceneResMgr.getResourceT<Texture>( mColorMap );
-    Texture * t1 = gSceneResMgr.getResourceT<Texture>( mShadowMap );
     mScene.setProj( mLightProj );
     mScene.setView( mLightView );
-    r.setDrawToTextures( 1, t0, 0, 0, 0, t1, MSAA_NONE );
-    r.clearScreen();
+    mCtx.setDrawToTextures( 1, mColorMap, 0, 0, 0, mShadowMap, MSAA_NONE );
+    re.setContext( mCtx );
+    re.clearScreen();
     mShadowProjectors->draw();
 
     // draw to back buffer
     mScene.setProj( mProj );
     mScene.setView( mCamera.getViewMatrix() );
-    r.setDrawToBackBuf();
-    r.clearScreen();
+    mCtx.setDrawToBackBuf();
+    re.setContext( mCtx );
+    re.clearScreen();
     mShadowReceivers->draw();
 
     // draw axises
@@ -157,9 +163,9 @@ void GN::SimpleShadowMap::draw()
     static const float Z[] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10000.0f };
     const Matrix44f & view = mScene.getView();
     const Matrix44f & proj = mScene.getProj();
-    r.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), Matrix44f::IDENTITY, view, proj );
-    r.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), Matrix44f::IDENTITY, view, proj );
-    r.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), Matrix44f::IDENTITY, view, proj );
+    re.drawLines( 0, X, 3*sizeof(float), 1, GN_RGBA32(255,0,0,255), Matrix44f::IDENTITY, view, proj );
+    re.drawLines( 0, Y, 3*sizeof(float), 1, GN_RGBA32(0,255,0,255), Matrix44f::IDENTITY, view, proj );
+    re.drawLines( 0, Z, 3*sizeof(float), 1, GN_RGBA32(0,0,255,255), Matrix44f::IDENTITY, view, proj );
 }
 
 // *****************************************************************************
@@ -182,10 +188,13 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
     mShadowProjectors->setRotation( r );
     mShadowProjectors->setPosition( -mShadowProjectors->getBoundingSphere().center );
 
+    RenderEngine & re = mApp.getRenderEngine();
+    EntityManager & em = mApp.getEntityManager();
+
     // load depth only effect
-    ResourceId effid = gSceneResMgr.getResourceId( "media::/effect/depth_only.xml" );
-    if( 0 == effid ) return false;
-    Effect * eff = gSceneResMgr.getResourceT<Effect>( effid );
+    Entity * effent = loadEffectEntityFromXmlFile( em, re, "media::/effect/depth_only.xml" );
+    if( 0 == effent ) return false;
+    Effect * eff = entity2Object<Effect*>( effent, 0 );
     if( 0 == eff ) return false;
 
     TreeTraversePreOrder<Actor> ttpre(mShadowProjectors);
@@ -194,7 +203,7 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
         for( size_t i = 0; i < a->getNumDrawables(); ++i )
         {
             Drawable d = a->getDrawable( i );
-            d.effect = effid;
+            d.effect = effent;
             d.textures.clear();
             d.uniforms.clear();
             d.uniforms["pvw"].binding = eff->getUniformID( "pvw" );
@@ -206,9 +215,9 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
     mShadowReceivers = cloneActorHiearacy( mShadowProjectors );
 
     // load shadowmap effect
-    effid = gSceneResMgr.getResourceId( "media::/effect/shadowmap.xml" );
-    if( 0 == effid ) return false;
-    eff = gSceneResMgr.getResourceT<Effect>( effid );
+    effent = loadEffectEntityFromXmlFile( em, re, "media::/effect/shadowmap.xml" );
+    if( 0 == effent ) return false;
+    eff = entity2Object<Effect*>( effent, 0 );
     if( 0 == eff ) return false;
 
     // prepare shadow receivers
@@ -218,10 +227,9 @@ bool GN::SimpleShadowMap::loadActor( const StrA & name )
         for( size_t i = 0; i < a->getNumDrawables(); ++i )
         {
             Drawable d = a->getDrawable( i );
-            d.effect = effid;
-
+            d.effect = effent;
             d.textures.clear();
-            d.textures["shadowmap"].texid   = mShadowMap;
+            d.textures["shadowmap"].texture = mShadowMap;
             d.textures["shadowmap"].binding = eff->getTextureID( "shadowmap" );
 
             d.uniforms.clear();
