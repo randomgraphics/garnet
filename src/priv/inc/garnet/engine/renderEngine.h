@@ -320,6 +320,35 @@ namespace GN { namespace engine
             return createTexture( name, gfx::TEXDIM_CUBE, sx, sx, 1, 6, levels, format, usage );
         }
 
+        ///
+        /// create 2D render target texture, with a dummy loader.
+        ///
+        GraphicsResource *
+        create2DRenderTargetTexture( const StrA & name,
+                                     size_t       sx,
+                                     size_t       sy,
+                                     size_t       levels = 1,
+                                     gfx::ClrFmt  format = gfx::FMT_UNKNOWN );
+
+        ///
+        /// create cube render target texture, with a dummy loader.
+        ///
+        GraphicsResource *
+        createCubeRenderTargetTexture( const StrA & name,
+                                       size_t       sx,
+                                       size_t       levels = 1,
+                                       gfx::ClrFmt  format = gfx::FMT_UNKNOWN );
+
+        ///
+        /// create 2D depth texture, with a dummy loader.
+        ///
+        GraphicsResource *
+        create2DDepthTexture( const StrA & name,
+                              size_t       sx,
+                              size_t       sy,
+                              size_t       levels = 1,
+                              gfx::ClrFmt  format = gfx::FMT_UNKNOWN );
+
         GraphicsResource *
         createVtxFmt( const StrA            & name,
                       const gfx::VtxFmtDesc & desc );

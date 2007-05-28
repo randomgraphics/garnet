@@ -7,36 +7,37 @@ using namespace GN::scene;
 
 class ShadowMap : public GN::app::SampleApp
 {
-    SimpleShadowMap mSimple;
+    SimpleShadowMap * mSimple;
 
 public:
 
-    ShadowMap() 
+    ShadowMap() : mSimple(0)
     {
     }
 
-    bool onRendererRestore()
+    bool onInit()
     {
-
-        if( !mSimple.init( "b/objects.actor.xml" ) ) return false;
+        mSimple = new SimpleShadowMap(*this);
+        if( !mSimple->init( "a/objects.actor.xml" ) ) return false;
 
         // success
         return true;
     }
 
-    void onRendererDispose()
+    void onQuit()
     {
-        mSimple.quit();
+        delete mSimple;
+        mSimple = 0;
     }
 
     void onUpdate()
     {
-        mSimple.update();
+        mSimple->update();
     }
 
     void onRender()
     {
-        mSimple.draw();
+        mSimple->draw();
     }
 };
 

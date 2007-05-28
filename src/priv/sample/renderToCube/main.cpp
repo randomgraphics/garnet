@@ -2,14 +2,15 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::app;
 using namespace GN::scene;
 
 class RenderToTexture : public GN::app::SampleApp
 {
-    ResourceId faces[6];
+    GraphicsResource * faces[6];
 
-    ResourceId cubemap;
+    GraphicsResource * cubemap;
 
     Drawable box;
 
@@ -17,9 +18,11 @@ class RenderToTexture : public GN::app::SampleApp
 
     util::ArcBall arcball;
 
+    DrawContext ctx;
+
 public:
 
-    bool onAppInit()
+    bool onInit()
     {
         world.identity();
         view.translate( 0, 0, -200 );
@@ -27,39 +30,37 @@ public:
         arcball.setHandness( util::RIGHT_HAND );
         arcball.setViewMatrix( view );
         arcball.connectToInput();
-        return true;
-    }
 
-    bool onRendererCreate()
-    {
-        Renderer & r = gRenderer;
-        ResourceManager & rm = gSceneResMgr;
+        RenderEngine & re = getRenderEngine();
 
         // load 2D faces
         StrA name = "media::/texture/cube2/a.bmp";
         for( unsigned char i = 0; i < 6; ++i )
         {
             name[22] = 'a' + i;
-            faces[i] = rm.getResourceId( name );
+            faces[i] = loadTextureFromFile( re, name );
             if( 0 == faces[i] ) return false;
         }
 
-        // load cubemap
-        cubemap = rm.getResourceId( "media::texture/cube_512_rendertarget.texture.xml" );
+        // create cube render target
+        cubemap = re.createCubeRenderTargetTexture( "cube", 512, 512 );
         if( 0 == cubemap ) return false;
 
         // load box
-        if( !loadFromXmlFile( box, "media::cube/cube_on_cube.drawable.xml" ) ) return false;
-        box.textures["cube"].texid = cubemap;
+        if( !box.loadFromXmlFile( getEntityManager(), re, "media::cube/cube_on_cube.drawable.xml" ) ) return false;
+        box.textures["cube"].texture = cubemap;
 
         // initial arcball window
-        const DispDesc & dd = r.getDispDesc();
+        const DispDesc & dd = re.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
+
+        // setup context
+        ctx.resetToDefault();
 
         return true;
     }
 
-    void onRendererDestroy()
+    void onQuit()
     {
     }
 
@@ -72,20 +73,21 @@ public:
 
     void onRender()
     {
-        Renderer & r = gRenderer;
-        ResourceManager & rm = gSceneResMgr;
+        RenderEngine & re = getRenderEngine();
+        QuadRenderer & qr = getQuadRenderer();
 
         // draw to cube
-        Texture * rt = rm.getResourceT<Texture>( cubemap );
         for( int i = 0; i < 6; ++i )
         {
-            r.setDrawToTextureWithoutDepth( rt, 0, i );
-            gQuadRenderer.drawSingleTexturedQuad( rm.getResourceT<Texture>( faces[i] ), 0 );
+            ctx.setDrawToTextureWithoutDepth( cubemap, 0, i );
+            re.setContext( ctx );
+            qr.drawSingleTexturedQuad( faces[i], 0 );
         }
 
         // draw cube to screen
-        r.setDrawToBackBuf();
-        r.clearScreen();
+        ctx.setDrawToBackBuf();
+        re.setContext( ctx );
+        re.clearScreen();
         box.draw();
     }
 };

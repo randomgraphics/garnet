@@ -148,7 +148,7 @@ static void sDrawContext2RendererContext(
     if( dc.flags.renderTargets )
     {
         // color buffers
-        for( int i = 0; i < gfx::MAX_RENDER_TARGETS; ++i )
+        for( unsigned int i = 0; i < dc.renderTargets.count; ++i )
         {
             const DrawContext::RenderTargetTexture& src = dc.renderTargets.cbuffers[i];
             gfx::RenderTargetTexture              & dst = rc.renderTargets.cbuffers[i];

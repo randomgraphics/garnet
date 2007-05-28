@@ -129,7 +129,7 @@ bool GN::engine::Drawable::loadFromXmlNode(
                 StrA texname;
                 if( sLoadRefAttrib( texname, *e, basedir, true ) )
                 {
-                    ti.texture = loadTextureEntityFromFile( em, re, texname );
+                    ti.texture = entity2Texture( loadTextureEntityFromFile( em, re, texname ) );
                 }
                 else
                 {

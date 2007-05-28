@@ -19,13 +19,15 @@ namespace GN { namespace engine
 
     public:
 
+        //@{
+
         ///
         /// texture item
         ///
         struct TexItem
         {
             EffectItemID       binding; ///< effect item ID that this texture is binding to.
-            Entity *           texture; ///< texture entity ID
+            GraphicsResource * texture; ///< texture entity ID
         };
 
         ///
@@ -36,13 +38,16 @@ namespace GN { namespace engine
             EffectItemID      binding; ///< effect item ID that this uniform is binding to.
             gfx::UniformValue value;   ///< uniform value.
         };
+
         //@}
 
         //@{
+
         Entity *               effect;
         Entity *               mesh;
         std::map<StrA,TexItem> textures;
         std::map<StrA,UniItem> uniforms;
+
         //@}
 
         ///
@@ -96,17 +101,51 @@ namespace GN { namespace engine
         {
             if( 0 == effect || 0 == mesh ) return;
 
-            Effect * eff = entity2Object<Effect*>( effect, 0 );
-            GN_ASSERT( eff );
+            Effect * e = entity2Object<Effect*>( effect, 0 );
+            GN_ASSERT( e );
 
-            for( size_t i = 0; i < eff->getNumPasses(); ++i )
+            // bind textures
+            BindTexture bt(e);
+            std::for_each( textures.begin(), textures.end(), bt );
+
+            // bind uniforms
+            BindUniform bu(e);
+            std::for_each( uniforms.begin(), uniforms.end(), bu );
+
+            // bind mesh
+            Mesh * m = entity2Object<Mesh*>( mesh, 0 );
+            GN_ASSERT( m );
+            m->updateContext( mContext );
+
+            RenderEngine & re = e->renderEngine();
+
+            for( size_t i = 0; i < e->getNumPasses(); ++i )
             {
-                eff->passBegin( mContext, i );
-                drawPass();
-                eff->passEnd();
+                e->passBegin( mContext, i );
+
+                re.setContext( mContext );
+
+                m->draw();
+
+                e->passEnd();
             }
         }
 
+        ///
+        /// call this if you have multiple meshes that are using same effect, and you want draw these meshes like this:
+        /// <pre>
+        ///     for_each_pass( i )
+        ///     {
+        ///       effect->passBegin( i );
+        ///
+        ///       draw_mesh_0_pass_i();
+        ///       draw_mesh_1_pass_i();
+        ///       ...
+        ///       draw_mesh_n_pass_i();
+        ///
+        ///       effect->passEnd();
+        ///     }
+        /// </pre>
         void drawPass()
         {
             if( 0 == effect || 0 == mesh ) return;

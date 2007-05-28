@@ -353,7 +353,7 @@ bool TGAReader::readImage( void * o_data )
     std::vector<UInt8> tempBuf;
     if( 0 != id.interleaved || 0 == id.flip )
     {
-        tempBuf.resize( numPixels * srcBpp );
+        tempBuf.resize( numPixels * mOutputBytesPerPixel );
         dst = &tempBuf[0];
     }
 

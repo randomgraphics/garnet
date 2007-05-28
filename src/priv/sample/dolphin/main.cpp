@@ -53,7 +53,7 @@ public:
         mSeafloor.uniforms["view"].value = view;
         mSeafloor.uniforms["proj"].value = proj;
         mSeafloor.uniforms["caustic"].value = caustics;
-        mSeafloor.textures["caustic"].texture = mCaustics[causticTex];
+        mSeafloor.textures["caustic"].texture = entity2Texture( mCaustics[causticTex], 0 );
 
         // Animation attributes for the dolphin
         float fKickFreq    = 2*time;
@@ -91,7 +91,7 @@ public:
         mDolphin.uniforms["pvw"].value = proj * view * world;
         mDolphin.uniforms["viewworld"].value = view * world;
         mDolphin.uniforms["weights"].value = vWeight;
-        mDolphin.textures["caustic"].texture = mCaustics[causticTex];
+        mDolphin.textures["caustic"].texture = entity2Texture( mCaustics[causticTex], 0 );
     }
 
     void render()
