@@ -119,8 +119,6 @@ bool GN::scene::QuadRenderer::init()
     // standard init procedure
     GN_STDCLASS_INIT( GN::scene::QuadRenderer, () );
 
-    mContext.clearToNull();
-
     // create mesh
     mMesh = new QuadMesh;
 
@@ -263,6 +261,7 @@ bool GN::scene::QuadRenderer::init()
     if( 0 == mMesh->vf ) return failure();
 
     // success
+    mContext.clearToNull();
     mContext.setVtxFmt( mMesh->vf );
     mContext.setIdxBuf( mMesh->ib );
     mContext.setVS( mMesh->vs );

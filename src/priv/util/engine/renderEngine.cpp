@@ -862,6 +862,57 @@ void GN::engine::RenderEngine::draw(
     FORCE_SERALIZE();
 }
 
+void GN::engine::RenderEngine::drawIndexedUp(
+    gfx::PrimitiveType prim,
+    size_t             numprim,
+    size_t             numvtx,
+    const void       * vertexData,
+    size_t             strideInBytes,
+    const UInt16     * indexData )
+{
+    RENDER_ENGINE_API( "draw" );
+
+    GN_ASSERT( mFrameBegun );
+
+    if( FAKE_RENDER_ENGINE ) return;
+
+    sPrepareContextResources( *this, mDrawContext );
+
+    struct Param
+    {
+        SInt32 prim;
+        size_t numprim;
+        size_t numvtx;
+        size_t vtxstride;
+        size_t numidx;
+    };
+
+    size_t numidx  = gfx::calcVertexCount( prim, numprim );
+    size_t vbsize  = numvtx * strideInBytes;
+    size_t ibsize  = numidx * sizeof(UInt16);
+    size_t bufsize = sizeof(Param) + vbsize + ibsize;
+
+    DrawCommandHeader * dr = mDrawThread->submitDrawCommand( DCT_DRAW_INDEXED_UP, bufsize );
+    if( 0 == dr ) return;
+
+    Param * p = (Param*)dr->param();
+    p->prim      = prim;
+    p->numprim   = numprim;
+    p->numvtx    = numvtx;
+    p->vtxstride = strideInBytes;
+    p->numidx    = numidx;
+
+    UInt8 * vertices = (UInt8*)(p+1);
+    void * indices   = vertices + vbsize;
+
+    memcpy( vertices, vertexData, vbsize );
+    memcpy( indices, indexData, ibsize );
+
+    sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
+
+    FORCE_SERALIZE();
+}
+
 //
 //
 // -----------------------------------------------------------------------------
