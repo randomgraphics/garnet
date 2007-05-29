@@ -19,6 +19,22 @@ struct ARBAutoDel
     void dismiss() { mProgram = 0; }
 };
 
+struct ProgramBindingRestore
+{
+    GLenum mTarget;
+    GLint  mProg;
+
+    ProgramBindingRestore( GLenum target ) : mTarget(target)
+    {
+        glGetProgramivARB( target, GL_PROGRAM_BINDING_ARB, &mProg );
+    }
+
+    ~ProgramBindingRestore()
+    {
+        glBindProgramARB( mTarget, mProg );
+    }
+};
+
 //
 //
 // ----------------------------------------------------------------------------
@@ -90,6 +106,8 @@ static GLuint sCompileShader( GLenum target, const GN::StrA & code )
 bool GN::gfx::OGLBasicShaderARB::init( const StrA & code )
 {
     GN_GUARD;
+
+    ProgramBindingRestore bindingRestore( mTarget );
 
     OGLAutoAttribStack autoAttribStack;
 

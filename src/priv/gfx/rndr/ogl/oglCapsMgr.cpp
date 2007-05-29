@@ -253,6 +253,21 @@ bool GN::gfx::OGLRenderer::capsDeviceCreate()
         glClientActiveTextureARB = sFake_glClientActiveTexture;
     }
 
+    // setup shader support flags
+    mShaderSupportFlags.u8 = 0;
+    mShaderSupportFlags.arbvp1 = !!GLEW_ARB_vertex_program;
+    mShaderSupportFlags.arbfp1 = !!GLEW_ARB_fragment_program;
+    mShaderSupportFlags.glslvs = GLEW_ARB_shader_objects &&
+                                 GLEW_ARB_vertex_shader &&
+                                 GLEW_ARB_shading_language_100;
+    mShaderSupportFlags.glslvs = GLEW_ARB_shader_objects &&
+                                 GLEW_ARB_fragment_shader &&
+                                 GLEW_ARB_shading_language_100;
+#ifdef HAS_CG_OGL
+    mShaderSupportFlags.cgvs = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
+    mShaderSupportFlags.cgps = CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
+#endif
+
     // success;
     return true;
 
@@ -270,18 +285,12 @@ bool GN::gfx::OGLRenderer::supportShader( const StrA & profile )
 {
     GN_GUARD;
 
-    if( "arbvp1" == profile ) return !!GLEW_ARB_vertex_program;
-    else if( "arbfp1" == profile ) return !!GLEW_ARB_fragment_program;
-    else if( "glslvs" == profile ) return GLEW_ARB_shader_objects &&
-                                          GLEW_ARB_vertex_shader &&
-                                          GLEW_ARB_shading_language_100;
-    else if( "glslps" == profile ) return GLEW_ARB_shader_objects &&
-                                          GLEW_ARB_fragment_shader &&
-                                          GLEW_ARB_shading_language_100;
-#ifdef HAS_CG_OGL
-    else if( "cgvs" == profile ) return CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_VERTEX );
-    else if( "cgps" == profile ) return CG_PROFILE_UNKNOWN != cgGLGetLatestProfile( CG_GL_FRAGMENT );
-#endif
+    if( "arbvp1" == profile ) return mShaderSupportFlags.arbvp1;
+    else if( "arbfp1" == profile ) return mShaderSupportFlags.arbfp1;
+    else if( "glslvs" == profile ) return mShaderSupportFlags.glslvs;
+    else if( "glslps" == profile ) return mShaderSupportFlags.glslps;
+    else if( "cgvs" == profile ) return mShaderSupportFlags.cgvs;
+    else if( "cgps" == profile ) return mShaderSupportFlags.cgps;
     else return false;
 
     GN_UNGUARD;
