@@ -491,6 +491,16 @@ namespace GN { namespace engine
     //
     //
     // -------------------------------------------------------------------------
+    static void DRAWFUNC_PRESENT( RenderEngine &, const void *, size_t )
+    {
+        // dummy function.
+        // program should not reach here.
+        GN_UNEXPECTED();
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     static void DRAWFUNC_MINIAPP_CTOR( RenderEngine &, const void * param, size_t )
     {
         GN_ASSERT( param );
@@ -672,6 +682,7 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDrawFunctions[DCT_DRAW_INDEXED]    = &DRAWFUNC_DRAW_INDEXED;
     mDrawFunctions[DCT_DRAW_INDEXED_UP] = &DRAWFUNC_DRAW_INDEXED_UP;
     mDrawFunctions[DCT_DRAW_LINE]       = &DRAWFUNC_DRAW_LINE;
+    mDrawFunctions[DCT_PRESENT]         = &DRAWFUNC_PRESENT;
     mDrawFunctions[DCT_MINIAPP_CTOR]    = &DRAWFUNC_MINIAPP_CTOR;
     mDrawFunctions[DCT_MINIAPP_CREATE]  = &DRAWFUNC_MINIAPP_CREATE;
     mDrawFunctions[DCT_MINIAPP_RESTORE] = &DRAWFUNC_MINIAPP_RESTORE;
@@ -825,6 +836,7 @@ void GN::engine::RenderEngine::DrawThread::frameBegin()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::frameEnd()
 {
+    submitDrawCommand( DCT_PRESENT, 0 );
     submitDrawBuffer();
 }
 
@@ -865,6 +877,9 @@ void GN::engine::RenderEngine::DrawThread::submitDrawBuffer()
 UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 {
     GN_SCOPE_PROFILER( RenderEngine_DrawThread_all );
+
+    // do some initialization
+    mDrawBegun = false;
 
     while( !mActionQuit )
     {
@@ -914,6 +929,13 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
         }
     }
 
+    if( mDrawBegun )
+    {
+        mDrawBegun = false;
+        GN_ASSERT( gRendererPtr );
+        gRenderer.drawEnd();
+    }
+
     // delete Renderer
     GN::gfx::deleteRenderer();
 
@@ -930,52 +952,57 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 
     gfx::Renderer & r = gRenderer;
 
-    // process windows messages
-    GN::win::processWindowMessages( r.getDispDesc().windowHandle, true );
+    DrawBuffer & db = mDrawBuffers[mReadingIndex];
 
-    if( r.drawBegin() )
+    DrawCommandHeader * command = (DrawCommandHeader*)db.buffer;
+
+    DrawCommandHeader * end = (DrawCommandHeader*)db.next;
+
+    while( command < end && !mActionQuit )
     {
-        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+        // resource command has priority
+        handleResourceCommands();
+
+        // update command's resource waiting list
+        int count = (int)command->resourceWaitingCount;
+        GN_ASSERT( count >= 0 );
+        for( int i = count - 1; i >= 0; --i )
         {
-            dumpCommandString( "<FrameBEGIN/>" );
-        }
-
-        DrawBuffer & db = mDrawBuffers[mReadingIndex];
-
-        DrawCommandHeader * command = (DrawCommandHeader*)db.buffer;
-
-        DrawCommandHeader * end = (DrawCommandHeader*)db.next;
-
-        while( command < end && !mActionQuit )
-        {
-            // resource command has priority
-            handleResourceCommands();
-
-            // update command's resource waiting list
-            int count = (int)command->resourceWaitingCount;
-            GN_ASSERT( count >= 0 );
-            for( int i = count - 1; i >= 0; --i )
+            DrawCommandHeader::ResourceWaitingItem & wi = command->resourceWaitingList[i];
+            GN_ASSERT( mEngine.resourceCache().check( wi.resource ) );
+            if( wi.resource->lastCompletedFence >= wi.waitForUpdate )
             {
-                DrawCommandHeader::ResourceWaitingItem & wi = command->resourceWaitingList[i];
-                GN_ASSERT( mEngine.resourceCache().check( wi.resource ) );
-                if( wi.resource->lastCompletedFence >= wi.waitForUpdate )
+                // remove from waiting list
+                if( (i+1) < count )
                 {
-                    // remove from waiting list
-                    if( (i+1) < count )
-                    {
-                        memcpy(
-                            &command->resourceWaitingList[i],
-                            &command->resourceWaitingList[i+1],
-                            sizeof(wi) * (count - ( i + 1 )) );
-                    }
-                    GN_ASSERT( count > 0 );
-                    --count;
+                    memcpy(
+                        &command->resourceWaitingList[i],
+                        &command->resourceWaitingList[i+1],
+                        sizeof(wi) * (count - ( i + 1 )) );
                 }
+                GN_ASSERT( count > 0 );
+                --count;
             }
-            GN_ASSERT( count >= 0 );
-            command->resourceWaitingCount = (UInt32)count;
+        }
+        GN_ASSERT( count >= 0 );
+        command->resourceWaitingCount = (UInt32)count;
 
-            if( 0 == command->resourceWaitingCount )
+        if( 0 == command->resourceWaitingCount )
+        {
+            if( &DRAWFUNC_PRESENT == command->func )
+            {
+                if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+                {
+                    dumpCommandString(strFormat( "<ExecuteDrawCommand command=\"PRESENT\" fence=\"%d\"/>", command->fence ) );
+                }
+
+                if( mDrawBegun ) r.drawEnd();
+                mDrawBegun = r.drawBegin();
+
+                // process windows messages
+                GN::win::processWindowMessages( r.getDispDesc().windowHandle, true );
+            }
+            else if( mDrawBegun )
             {
                 // all resources are ready. do it!
                 if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
@@ -984,32 +1011,29 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
                 }
                 GN_ASSERT( command->func );
                 command->func( mEngine, command->param(), command->bytes - sizeof(DrawCommandHeader) );
-
-                // update draw fence
-                mDrawFence = command->fence;
-
-                // next command
-                command = command->next();
-                GN_ASSERT( command <= end );
             }
-            else
+            else if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
             {
-                GN_SCOPE_PROFILER( RenderEngine_DrawThread_wait_for_resources );
-
-                // sleep for a while, then repeat current command
-                if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
-                {
-                    dumpCommandString(strFormat( "<PostponeDrawCommand fence=\"%d\"/>", command->fence ) );
-                }
-                sleepCurrentThread( 0 );
+                dumpCommandString(strFormat( "<SkipDrawCommand fence=\"%d\" reason=\"device lost\"/>", command->fence ) );
             }
+
+            // update draw fence
+            mDrawFence = command->fence;
+
+            // next command
+            command = command->next();
+            GN_ASSERT( command <= end );
         }
-
-        r.drawEnd();
-
-        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+        else
         {
-            dumpCommandString( "<FrameEND/>" );
+            GN_SCOPE_PROFILER( RenderEngine_DrawThread_wait_for_resources );
+
+            // sleep for a while, then repeat current command
+            if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+            {
+                dumpCommandString(strFormat( "<PostponeDrawCommand fence=\"%d\"/>", command->fence ) );
+            }
+            sleepCurrentThread( 0 );
         }
     }
 }
@@ -1100,6 +1124,14 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
 {
     GN_GUARD;
 
+    // end scene
+    if( mDrawBegun )
+    {
+        GN_ASSERT( gRendererPtr );
+        gRenderer.drawEnd();
+        mDrawBegun = false;
+    }
+
     if( 0 == gRendererPtr || mRendererNewApi != mRendererApi )
     {
         if( NULL == gfx::createRenderer( mRendererNewApi ) ) return false;
@@ -1118,6 +1150,10 @@ bool GN::engine::RenderEngine::DrawThread::doDeviceReset()
     {
         return false;
     }
+
+    // begin draw
+    GN_ASSERT( 0 == mDrawBegun );
+    mDrawBegun = r.drawBegin();
 
     // success
     return true;

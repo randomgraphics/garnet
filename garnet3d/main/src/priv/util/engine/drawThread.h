@@ -196,6 +196,8 @@ namespace GN { namespace engine
         Semaphore     * mDrawBufferNotFull;
         //Semaphore     * mDrawBufferNotEmpty;
 
+        bool            mDrawBegun;
+
         Thread        * mDrawThread;
 
         // ********************************
