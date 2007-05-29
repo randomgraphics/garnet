@@ -168,7 +168,25 @@ namespace GN { namespace gfx
         bool capsDeviceCreate();
         bool capsDeviceRestore() { return true; }
         void capsDeviceDispose() {}
-        void capsDeviceDestroy() {}
+        void capsDeviceDestroy() { mShaderSupportFlags.u8 = 0; }
+
+    private:
+
+        union ShaderSupportFlags
+        {
+            struct
+            {
+                unsigned int arbvp1 : 1;
+                unsigned int arbfp1 : 1;
+                unsigned int glslvs : 1;
+                unsigned int glslps : 1;
+                unsigned int cgvs   : 1;
+                unsigned int cgps   : 1;
+            };
+            UInt8            u8;
+        };
+
+        ShaderSupportFlags mShaderSupportFlags;
 
         //@}
 

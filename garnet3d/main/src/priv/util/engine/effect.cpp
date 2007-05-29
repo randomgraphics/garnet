@@ -137,6 +137,7 @@ GN::engine::EffectDesc::OpCode GN::engine::EffectDesc::sStr2OpCode( const StrA &
 //
 // -----------------------------------------------------------------------------
 static bool sCalc(
+    GN::engine::RenderEngine & eng,
     GN::engine::EffectDesc::Token & result,
     SInt32 op,
     const GN::engine::EffectDesc::Token * s0,
@@ -198,10 +199,10 @@ static bool sCalc(
         case GN::engine::EffectDesc::REL_NOT : result.valueI = !s0->valueI; break;
 
         case GN::engine::EffectDesc::CHECK_RENDERER_CAPS :
-            result.valueI = gRenderer.getCaps( s0->valueI ); break;
+            result.valueI = eng.getCaps( s0->valueI ); break;
 
         case GN::engine::EffectDesc::CHECK_SHADER_PROFILE :
-            result.valueI = gRenderer.supportShader( s0->valueS ); break;
+            result.valueI = eng.supportShader( s0->valueS ); break;
 
         default : GN_UNEXPECTED(); return false; // program should not reach here.
     }
@@ -214,6 +215,7 @@ static bool sCalc(
 //
 // -----------------------------------------------------------------------------
 static bool sDoEval(
+    GN::engine::RenderEngine & eng,
     GN::engine::EffectDesc::Token & result,
     const GN::engine::EffectDesc::Token * & p,
     const GN::engine::EffectDesc::Token * e )
@@ -239,11 +241,11 @@ static bool sDoEval(
 
         // get value of arguments
         GN::engine::EffectDesc::Token s0, s1;
-        if( ocd.numArgs > 0 && !sDoEval( s0, p, e ) ) return false;
-        if( ocd.numArgs > 1 && !sDoEval( s1, p, e ) ) return false;
+        if( ocd.numArgs > 0 && !sDoEval( eng, s0, p, e ) ) return false;
+        if( ocd.numArgs > 1 && !sDoEval( eng, s1, p, e ) ) return false;
 
         // do operation
-        if( !sCalc( result, op, &s0, &s1 ) ) return false;
+        if( !sCalc( eng, result, op, &s0, &s1 ) ) return false;
     }
     else
     {
@@ -258,13 +260,13 @@ static bool sDoEval(
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::engine::EffectDesc::CondExp::evaluate() const
+bool GN::engine::EffectDesc::CondExp::evaluate( RenderEngine & eng ) const
 {
     if( tokens.empty() ) return true;
 
     Token result;
     const Token * p = &tokens[0];
-    if( !sDoEval( result, p, p + tokens.size() ) ) return false;
+    if( !sDoEval( eng, result, p, p + tokens.size() ) ) return false;
 
     switch( result.type )
     {
@@ -665,7 +667,7 @@ bool GN::engine::Effect::createShader( ShaderData & data, const StrA & name, con
     GN_GUARD;
 
     // check shader prerequisites
-    if( !desc.prerequisites.evaluate() )
+    if( !desc.prerequisites.evaluate( mEngine ) )
     {
         GN_TRACE(sLogger)( "Shader named '%s' does not pass prerequisites check. Ignored", name.cptr() );
         return false;

@@ -194,7 +194,7 @@ namespace GN { namespace engine {
             ///   - non-zero integer
             ///   - non-empty string
             ///
-            bool evaluate() const;
+            bool evaluate( RenderEngine & eng ) const;
 
             ///
             /// Construct expression from two existing expression
