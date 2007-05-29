@@ -21,6 +21,7 @@ namespace GN { namespace engine
         DCT_DRAW_INDEXED,
         DCT_DRAW_INDEXED_UP,
         DCT_DRAW_LINE,
+        DCT_PRESENT,
         DCT_MINIAPP_CTOR,
         DCT_MINIAPP_CREATE,
         DCT_MINIAPP_RESTORE,

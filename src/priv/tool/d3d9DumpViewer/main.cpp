@@ -360,8 +360,6 @@ struct D3D9StateDump
         dev.SetPixelShaderConstantI( 0, psconsti[0], GN_ARRAY_COUNT(psconsti) );
         dev.SetPixelShaderConstantB( 0, psconstb, GN_ARRAY_COUNT(psconstb) );
 
-        // psc
-
         // decl
         dev.SetVertexDeclaration( vtxdecl.decl );
 
@@ -942,7 +940,7 @@ protected:
 
         if( D3D_OK == dev.BeginScene() )
         {
-            mState.bind( d3d9dev() );
+            mState.bind( dev );
             mState.draw( dev );
 
 #if !RENDER_TO_BACKBUF
