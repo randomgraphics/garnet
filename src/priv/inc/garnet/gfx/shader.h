@@ -1,7 +1,7 @@
 #ifndef __GN_GFX_SHADER_H__
 #define __GN_GFX_SHADER_H__
 // *****************************************************************************
-/// \file    shader.h
+/// \file    gfx/shader.h
 /// \brief   Vertex and pixel shader interface
 /// \author  chenlee (2005.9.30)
 // *****************************************************************************

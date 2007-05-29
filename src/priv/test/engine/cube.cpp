@@ -33,7 +33,7 @@ bool TestCube::init()
     // create texture entity
     tex = loadTextureEntityFromFile( em, re, "media::/texture/cube1.dds" );
     if( 0 == tex ) return false;
-    cube.textures["cube"].texture = tex;
+    cube.textures["cube"].texture = entity2Texture( tex );
 
     // success
     return true;

@@ -32,28 +32,28 @@ public:
 
         // empty condition
         EffectDesc::CondExp emptyExp;
-        TS_ASSERT( emptyExp.evaluate() );
+        TS_ASSERT( emptyExp.evaluate(re) );
 
         // comparasion
         EffectDesc::CondExp c0( (SInt32)0 );
         EffectDesc::CondExp c1( 1 );
-        TS_ASSERT( (c0< c1).evaluate() );
-        TS_ASSERT( (c0<=c1).evaluate() );
-        TS_ASSERT( (c0==c0).evaluate() );
-        TS_ASSERT( (c0!=c1).evaluate() );
-        TS_ASSERT( (c1>=c0).evaluate() );
-        TS_ASSERT( (c1> c0).evaluate() );
+        TS_ASSERT( (c0< c1).evaluate(re) );
+        TS_ASSERT( (c0<=c1).evaluate(re) );
+        TS_ASSERT( (c0==c0).evaluate(re) );
+        TS_ASSERT( (c0!=c1).evaluate(re) );
+        TS_ASSERT( (c1>=c0).evaluate(re) );
+        TS_ASSERT( (c1> c0).evaluate(re) );
 
         // relation
-        TS_ASSERT( !(c0&&c1).evaluate() );
-        TS_ASSERT(  (c1&&c1).evaluate() );
-        TS_ASSERT( !(c0||c0).evaluate() );
-        TS_ASSERT(  (c0||c1).evaluate() );
+        TS_ASSERT( !(c0&&c1).evaluate(re) );
+        TS_ASSERT(  (c1&&c1).evaluate(re) );
+        TS_ASSERT( !(c0||c0).evaluate(re) );
+        TS_ASSERT(  (c0||c1).evaluate(re) );
 
         // complex
         EffectDesc::CondExp c2(2);
         EffectDesc::CondExp c3(2);
-        TS_ASSERT( ((c0==c1)||(c2==c3)||(c1==c3)).evaluate() );
+        TS_ASSERT( ((c0==c1)||(c2==c3)||(c1==c3)).evaluate(re) );
     }
 
     void initDesc1( GN::engine::EffectDesc & desc )

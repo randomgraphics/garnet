@@ -18,16 +18,7 @@ public:
     /// \name from SampleApp
     //@{
 
-    bool onAppInit()
-    {
-        return true;
-    }
-
-    void onAppQuit()
-    {
-    }
-
-    bool onRendererCreate()
+    bool onInit()
     {
         using namespace CEGUI;
 
@@ -92,7 +83,7 @@ public:
         return true;
     }
 
-    void onRendererDestroy()
+    void onQuit()
     {
         CEGUI::System * sys = CEGUI::System::getSingletonPtr();
         if( sys )
