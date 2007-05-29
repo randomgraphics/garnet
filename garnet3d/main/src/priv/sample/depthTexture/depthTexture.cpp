@@ -2,38 +2,37 @@
 
 using namespace GN;
 using namespace GN::gfx;
+using namespace GN::engine;
 using namespace GN::scene;
+using namespace GN::app;
 
 class TestScene
 {
-    GN::app::SampleApp & mApp;
-    
-    AutoRef<Texture> mColor;
-    AutoRef<Texture> mDepth;
+    SampleApp & mApp;
+
+    AutoGraphicsResource mColor;
+    AutoGraphicsResource mDepth;
+    AutoGraphicsResource mVs, mPs;
+    AutoGraphicsResource mDecl;
+    AutoGraphicsResource mTex0;
+
+    DrawContext mCtx;
 
     struct BoxVert
     {
         float x, y, z, nx, ny, nz, u, v;
     };
 
-    VtxFmtHandle mDecl;
-
     BoxVert mBoxVerts[24];
-    UInt16 mBoxIndices[36];
+    UInt16  mBoxIndices[36];
 
     util::ArcBall mArcBall;
 
-    Matrix44f mModel, mView, mProj;
-
-    ResourceId mTex0;
-
-    AutoRef<Shader> mVs, mPs;
-
-    RendererContext mCtx;
+    Matrix44f  mModel, mView, mProj;
 
 public:
 
-    TestScene( GN::app::SampleApp & app ) : mApp(app)
+    TestScene( SampleApp & app ) : mApp(app)
     {
         mArcBall.connectToInput();
     }
@@ -42,24 +41,24 @@ public:
 
     bool create()
     {
-        Renderer & r = gRenderer;
+        RenderEngine & re = mApp.getRenderEngine();
 
         UInt32 w = 100;
         UInt32 h = 100;
 
         // create color texture
-        mColor.attach( r.create2DTexture( w, h, 1, FMT_UNKNOWN, TEXUSAGE_RENDER_TARGET ) );
+        mColor.attach( re.create2DRenderTargetTexture( "color", w, h ) );
         if( mColor.empty() ) return false;
 
         // create depth texture
-        mDepth.attach( r.create2DTexture( w, h, 1, FMT_UNKNOWN, TEXUSAGE_DEPTH ) );
+        mDepth.attach( re.create2DDepthTexture( "depth", w, h ) );
         //if( mDepth.empty() ) return false;
 
         // create texture
-        mTex0 = gSceneResMgr.getResourceId( "media::/texture/rabit.png" );
+        mTex0.attach( loadTextureFromFile( re, "media::/texture/rabit.png" ) );
 
         // create decl
-        mDecl = r.createVtxFmt( VtxFmtDesc::XYZ_NORM_UV );
+        mDecl.attach( re.createVtxFmt( "vtxfmt", VtxFmtDesc::XYZ_NORM_UV ) );
         if( 0 == mDecl ) return false;
 
         // create box
@@ -76,21 +75,21 @@ public:
         // initialize matrices
         mModel.identity();
         mView.lookAtRh( Vector3f(200,200,200), Vector3f(0,0,0), Vector3f(0,1,0) );
-        r.composePerspectiveMatrix( mProj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
+        re.composePerspectiveMatrix( mProj, 1.0f, 4.0f/3.0f, 80.0f, 600.0f );
 
         // initialize arcball
-        mArcBall.setMouseMoveWindow( 0, 0, r.getDispDesc().width, r.getDispDesc().height );
+        mArcBall.setMouseMoveWindow( 0, 0, re.getDispDesc().width, re.getDispDesc().height );
         mArcBall.setViewMatrix( mView );
 
         // try create shaders
-        if( r.supportShader( "vs_1_1" ) )
+        if( re.supportShader( "vs_1_1" ) )
         {
-            mVs.attach( r.createShaderFromFile( SHADER_VS, LANG_D3D_HLSL, "media::depthTexture/d3dVs.txt" ) );
+            mVs.attach( loadShaderFromFile( re, SHADER_VS, LANG_D3D_HLSL, "", "media::depthTexture/d3dVs.txt" ) );
             if( mVs.empty() ) return false;
         }
-        if( r.supportShader( "ps_1_1" ) )
+        if( re.supportShader( "ps_1_1" ) )
         {
-            mPs.attach( r.createShaderFromFile( SHADER_PS, LANG_D3D_HLSL, "media::depthTexture/d3dPs.txt" ) );
+            mPs.attach( loadShaderFromFile( re, SHADER_PS, LANG_D3D_HLSL, "", "media::depthTexture/d3dPs.txt" ) );
             if( !mPs ) return false;
         }
 
@@ -98,8 +97,7 @@ public:
         mCtx.resetToDefault();
         mCtx.setShaders( 0, 0, 0 );
         mCtx.setRenderState( RS_CULL_MODE, RSV_CULL_NONE );
-        mCtx.setDrawToTextures( 1, mColor, 0, 0, 0, mDepth );
-        mCtx.setTexture( 0, gSceneResMgr.getResourceT<Texture>( mTex0 ) );
+        mCtx.setTexture( 0, mTex0 );
         mCtx.setVtxFmt( mDecl );
 
         // success
@@ -112,6 +110,8 @@ public:
         mDepth.clear();
         mVs.clear();
         mPs.clear();
+        mDecl.clear();
+        mTex0.clear();
     }
 
     void update()
@@ -124,20 +124,22 @@ public:
 
     void render()
     {
-        Renderer & r = gRenderer;
+        RenderEngine & re = mApp.getRenderEngine();
 
         // render to depth texture
-        r.setContext( mCtx );
-        r.clearScreen();
-        r.drawIndexedUp( TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
+        mCtx.setDrawToTextures( 1, mColor, 0, 0, 0, mDepth );
+        re.setContext( mCtx );
+        re.clearScreen();
+        re.drawIndexedUp( TRIANGLE_LIST, 12, 24, mBoxVerts, sizeof(BoxVert), mBoxIndices );
 
         // render depth texture to screen
-        r.setDrawToBackBuf();
-        gQuadRenderer.drawSingleTexturedQuad( mDepth ? mDepth : mColor, QuadRenderer::OPT_OPAQUE );
+        mCtx.setDrawToBackBuf();
+        re.setContext( mCtx );
+        mApp.getQuadRenderer().drawSingleTexturedQuad( mDepth ? mDepth : mColor, QuadRenderer::OPT_OPAQUE );
     }
 };
 
-class DepthTexture : public GN::app::SampleApp
+class DepthTexture : public SampleApp
 {
     TestScene * mScene;
 
@@ -145,13 +147,13 @@ public:
 
     DepthTexture() : mScene(0) {}
 
-    bool onRendererRestore()
+    bool onInit()
     {
         mScene = new TestScene(*this);
         return mScene->create();
     }
 
-    void onRendererDispose()
+    void onQuit()
     {
         safeDelete( mScene );
     }

@@ -168,6 +168,17 @@ static void sDrawContext2RendererContext(
     if( dc.flags.viewport ) rc.viewport = dc.viewport;
 
     // TODO: FFP parameters
+    if( dc.flags.ffp )
+    {
+        rc.world            = dc.world;
+        rc.view             = dc.view;
+        rc.proj             = dc.proj;
+        rc.light0Pos        = dc.light0Pos;
+        rc.light0Diffuse    = dc.light0Diffuse;
+        rc.materialDiffuse  = dc.materialDiffuse;
+        rc.materialSpecular = dc.materialSpecular;
+        rc.tsb              = dc.tsb;
+    }
 
     // textures
     if( dc.flags.textures )
@@ -401,6 +412,46 @@ namespace GN { namespace engine
     //
     //
     // -------------------------------------------------------------------------
+    static void DRAWFUNC_DRAW_INDEXED_UP( RenderEngine &, const void * param, size_t bytes )
+    {
+        struct Param
+        {
+            SInt32 prim;
+            size_t numprim;
+            size_t numvtx;
+            size_t vtxstride;
+            size_t numidx;
+        };
+        GN_ASSERT( param );
+
+        const Param * p = (const Param*)param;
+
+        size_t vbsize  = p->numvtx * p->vtxstride;
+
+        GN_ASSERT( bytes == sizeof(Param) + vbsize + p->numidx * sizeof(UInt16) );
+
+        const UInt8 * vertices = (const UInt8*)( p + 1 );
+        const UInt16 * indices = (const UInt16*)(vertices + vbsize);
+
+        gfx::Renderer & r = gRenderer;
+
+        r.drawIndexedUp(
+            (gfx::PrimitiveType)p->prim,
+            p->numprim,
+            p->numvtx,
+            vertices,
+            p->vtxstride,
+            indices );
+
+        if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
+        {
+            dumpCommandString( GN_FUNCTION );
+        }
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     static void DRAWFUNC_DRAW_LINE( RenderEngine &, const void * param, size_t bytes )
     {
         struct Param
@@ -619,12 +670,13 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDrawFunctions[DCT_CLEAR]           = &DRAWFUNC_CLEAR;
     mDrawFunctions[DCT_DRAW]            = &DRAWFUNC_DRAW;
     mDrawFunctions[DCT_DRAW_INDEXED]    = &DRAWFUNC_DRAW_INDEXED;
+    mDrawFunctions[DCT_DRAW_INDEXED_UP] = &DRAWFUNC_DRAW_INDEXED_UP;
     mDrawFunctions[DCT_DRAW_LINE]       = &DRAWFUNC_DRAW_LINE;
     mDrawFunctions[DCT_MINIAPP_CTOR]    = &DRAWFUNC_MINIAPP_CTOR;
     mDrawFunctions[DCT_MINIAPP_CREATE]  = &DRAWFUNC_MINIAPP_CREATE;
     mDrawFunctions[DCT_MINIAPP_RESTORE] = &DRAWFUNC_MINIAPP_RESTORE;
     mDrawFunctions[DCT_MINIAPP_DISPOSE] = &DRAWFUNC_MINIAPP_DISPOSE;
-    mDrawFunctions[DCT_MINIAPP_DESTROY]  = &DRAWFUNC_MINIAPP_DESTROY;
+    mDrawFunctions[DCT_MINIAPP_DESTROY] = &DRAWFUNC_MINIAPP_DESTROY;
     mDrawFunctions[DCT_MINIAPP_DTOR]    = &DRAWFUNC_MINIAPP_DTOR;
     mDrawFunctions[DCT_MINIAPP_RUN]     = &DRAWFUNC_MINIAPP_RUN;
     if( GN_ASSERT_ENABLED )

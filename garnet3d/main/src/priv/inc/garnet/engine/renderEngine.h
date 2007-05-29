@@ -161,21 +161,21 @@ namespace GN { namespace engine
                    size_t numprim,
                    size_t startvtx );
 
-        void drawIndexedUp( SInt32         prim,
-                            size_t         numprim,
-                            size_t         numvtx,
-                            const void *   vertexData,
-                            size_t         strideInBytes,
-                            const UInt16 * indexData );
+        void drawIndexedUp( gfx::PrimitiveType prim,
+                            size_t             numprim,
+                            size_t             numvtx,
+                            const void       * vertexData,
+                            size_t             strideInBytes,
+                            const UInt16     * indexData );
 
-        void drawUp( SInt32        prim,
-                     size_t        numprim,
-                     const void *  vertexData,
-                     size_t        strideInBytes );
+        void drawUp( SInt32       prim,
+                     size_t       numprim,
+                     const void * vertexData,
+                     size_t       strideInBytes );
 
         void drawLines(
             BitFields         options,
-            const void *      positions,
+            const void      * positions,
             size_t            stride,
             size_t            count,
             UInt32            rgba,

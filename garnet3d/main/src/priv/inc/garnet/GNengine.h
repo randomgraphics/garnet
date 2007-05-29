@@ -25,6 +25,7 @@ namespace GN
 #include "engine/entity.h"
 #include "engine/mesh.h"
 #include "engine/texture.h"
+#include "engine/shader.h"
 #include "engine/effect.h"
 #include "engine/drawable.h"
 
