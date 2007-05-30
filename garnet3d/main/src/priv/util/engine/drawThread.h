@@ -38,7 +38,7 @@ namespace GN { namespace engine
 
         //@{
     public:
-        bool init( UInt32 maxDrawCommandCount );
+        bool init( UInt32 drawCommandBufferBytes );
         void quit();
     private:
         void clear()
@@ -74,7 +74,7 @@ namespace GN { namespace engine
         ///
         /// wait for draw thread idle: all submitted draw commands are executed
         ///
-        void waitForIdle( float time = INFINITE_TIME ) const;
+        void waitForIdle( float time = INFINITE_TIME );
 
         ///
         /// get current draw fence
@@ -86,14 +86,9 @@ namespace GN { namespace engine
         //@{
 
         ///
-        /// start of a frame
+        /// do present: submit current draw buffer
         ///
-        void frameBegin();
-
-        ///
-        /// end of a frame: submit current draw buffer
-        ///
-        void frameEnd();
+        void present();
 
         // alloc new draw command, fill the header, but leave parameter array uninitialized.
         DrawCommandHeader * submitDrawCommand( DrawCommandType type, size_t parameterBytes );
@@ -129,6 +124,30 @@ namespace GN { namespace engine
         // private variables
         // ********************************
     private:
+
+        struct FrameProfiler
+        {
+            ProfileTimer & timer;
+            bool           start;
+
+            FrameProfiler()
+                : timer( ProfilerManager::sGetGlobalInstance().getTimer("RenderEngine_DrawThread_FrameTime") )
+                , start( 0 )
+            {
+            }
+
+            ~FrameProfiler()
+            {
+                if( start ) timer.stop();
+            }
+
+            void nextFrame()
+            {
+                if( start ) timer.stop();
+                timer.start();
+                start = true;
+            }
+        };
 
         struct DrawBuffer
         {
@@ -195,8 +214,8 @@ namespace GN { namespace engine
         SyncEvent     * mDrawBufferEmpty;
         Semaphore     * mDrawBufferNotFull;
         //Semaphore     * mDrawBufferNotEmpty;
-
         bool            mDrawBegun;
+        FrameProfiler   mFrameProfiler;
 
         Thread        * mDrawThread;
 

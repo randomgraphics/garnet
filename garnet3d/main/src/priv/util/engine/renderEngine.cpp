@@ -8,8 +8,6 @@
 
 static GN::Logger * sLogger = GN::getLogger("GN.engine.RenderEngine");
 
-GN_DEFINE_STATIC_PROFILER( RenderEngine_frame_time );
-
 // *****************************************************************************
 // local functions
 // *****************************************************************************
@@ -409,9 +407,9 @@ struct ApiReentrantChecker
 #define FAKE_RENDER_ENGINE 0
 
 ///
-/// force render engine runs in serialize way (not implemented)
+/// uncomment this macro to force render engine runs in serialize way
 ///
-#define FORCE_SERALIZE()
+#define FORCE_SERALIZE() // mDrawThread->waitForIdle();
 
 //
 //
@@ -446,8 +444,6 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     gSigRendererDispose.connect( this, &RenderEngine::onRendererDispose );
     gSigRendererDestroy.connect( this, &RenderEngine::onRendererDestroy );
     gSigRendererWindowSizeMove.connect( this, &RenderEngine::onRenderWindowSizeMove );
-
-    mFrameBegun = false;
 
     // success
     return success();
@@ -571,12 +567,6 @@ bool GN::engine::RenderEngine::internalResetRenderer(
     gfx::RendererAPI api,
     const gfx::RendererOptions & ro )
 {
-    if( mFrameBegun )
-    {
-        GN_ERROR(sLogger)( "can not call resetRenderer() between frameBegin() and frameEnd()!" );
-        return false;
-    }
-
     // dispose all graphics resources
     mResourceLRU->disposeAll();
     mResourceThread->waitForIdle();
@@ -603,101 +593,6 @@ bool GN::engine::RenderEngine::internalResetRenderer(
 // *****************************************************************************
 // draw request management
 // *****************************************************************************
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::frameBegin()
-{
-    RENDER_ENGINE_API( "frameBegin" );
-
-    GN_START_PROFILER( RenderEngine_frame_time );
-
-    GN_ASSERT( !mFrameBegun );
-
-    mFrameBegun = true;
-
-    mDrawThread->frameBegin();
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::frameEnd()
-{
-    RENDER_ENGINE_API( "frameEnd" );
-
-    GN_ASSERT( mFrameBegun );
-
-    mFrameBegun = false;
-
-    mDrawThread->frameEnd();
-
-    // handle renderer signals
-    mRendererSignalMutex.lock();
-    bool hasSignals = !mRendererSignals.empty();
-    mRendererSignalMutex.unlock();
-    if( hasSignals )
-    {
-        // make a local copy of the signals.
-        DynaArray<RendererSignal> signals;
-        {
-            ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
-
-            signals.resize( mRendererSignals.size() );
-            memcpy(
-                signals.cptr(),
-                mRendererSignals.cptr(),
-                sizeof(RendererSignal)*mRendererSignals.size() );
-            mRendererSignals.clear();
-        }
-
-        bool needDispose = false;
-        bool needReset = false;
-        gfx::RendererOptions o;
-        for( size_t i = 0; i < signals.size(); ++i )
-        {
-            const RendererSignal & s = signals[i];
-            switch( s.type )
-            {
-                case RENDERER_SIZEMOVE :
-                    needReset = true;
-                    o = mDrawThread->getRendererOptions();
-                    o.monitorHandle = s.sizemove.monitor;
-                    o.windowedWidth = s.sizemove.width;
-                    o.windowedHeight = s.sizemove.height;
-                    break;
-
-                case RENDERER_DISPOSE  :
-                    needDispose = true;
-                    break;
-
-                case RENDERER_CREATE   :
-                case RENDERER_RESTORE  :
-                case RENDERER_DESTROY  :
-                    break; // do nothing
-
-                default                :
-                    GN_UNEXPECTED();
-            }
-        }
-
-        if( needReset )
-        {
-            if( !internalResetRenderer( mDrawThread->getRendererApi(), o ) )
-            {
-                GN_THROW( "fail to handle renderer sizemove signal!" );
-            }
-        } else if( needDispose )
-        {
-           mResourceLRU->disposeAll();
-        }
-    }
-
-    FORCE_SERALIZE();
-
-    GN_STOP_PROFILER( RenderEngine_frame_time );
-}
 
 //
 //
@@ -828,8 +723,6 @@ void GN::engine::RenderEngine::drawIndexed(
 {
     RENDER_ENGINE_API( "drawIndexed" );
 
-    GN_ASSERT( mFrameBegun );
-
     if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
@@ -850,8 +743,6 @@ void GN::engine::RenderEngine::draw(
 {
     RENDER_ENGINE_API( "draw" );
 
-    GN_ASSERT( mFrameBegun );
-
     if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
@@ -871,8 +762,6 @@ void GN::engine::RenderEngine::drawIndexedUp(
     const UInt16     * indexData )
 {
     RENDER_ENGINE_API( "draw" );
-
-    GN_ASSERT( mFrameBegun );
 
     if( FAKE_RENDER_ENGINE ) return;
 
@@ -928,8 +817,6 @@ void GN::engine::RenderEngine::drawLines(
 {
     RENDER_ENGINE_API( "drawLines" );
 
-    GN_ASSERT( mFrameBegun );
-
     if( FAKE_RENDER_ENGINE ) return;
 
     sPrepareContextResources( *this, mDrawContext );
@@ -964,6 +851,84 @@ void GN::engine::RenderEngine::drawLines(
     FORCE_SERALIZE();
 }
 
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::present()
+{
+    RENDER_ENGINE_API( "present" );
+
+    mDrawThread->present();
+
+    // handle renderer signals
+    mRendererSignalMutex.lock();
+    bool hasSignals = !mRendererSignals.empty();
+    mRendererSignalMutex.unlock();
+    if( hasSignals )
+    {
+        // make a local copy of the signals.
+        DynaArray<RendererSignal> signals;
+        {
+            ScopeMutex<SpinLoop> lock(mRendererSignalMutex);
+
+            signals.resize( mRendererSignals.size() );
+            memcpy(
+                signals.cptr(),
+                mRendererSignals.cptr(),
+                sizeof(RendererSignal)*mRendererSignals.size() );
+            mRendererSignals.clear();
+        }
+
+        bool needDispose = false;
+        bool needReset = false;
+        gfx::RendererOptions o;
+        for( size_t i = 0; i < signals.size(); ++i )
+        {
+            const RendererSignal & s = signals[i];
+            switch( s.type )
+            {
+                case RENDERER_SIZEMOVE :
+                    needReset = true;
+                    o = mDrawThread->getRendererOptions();
+                    o.monitorHandle = s.sizemove.monitor;
+                    o.windowedWidth = s.sizemove.width;
+                    o.windowedHeight = s.sizemove.height;
+                    break;
+
+                case RENDERER_DISPOSE  :
+                    needDispose = true;
+                    break;
+
+                case RENDERER_CREATE   :
+                case RENDERER_RESTORE  :
+                case RENDERER_DESTROY  :
+                    break; // do nothing
+
+                default                :
+                    GN_UNEXPECTED();
+            }
+        }
+
+        if( needReset )
+        {
+            if( !internalResetRenderer( mDrawThread->getRendererApi(), o ) )
+            {
+                GN_THROW( "fail to handle renderer sizemove signal!" );
+            }
+        } else if( needDispose )
+        {
+           mResourceLRU->disposeAll();
+        }
+    }
+
+    FORCE_SERALIZE();
+
+    // profile frame time
+#if GN_PROFILE_ENABLED
+    mFrameProfiler.nextFrame();
+#endif
+}
+
 // *****************************************************************************
 // resource commands
 // *****************************************************************************
@@ -994,14 +959,7 @@ void GN::engine::RenderEngine::freeResource( GraphicsResource * res )
 {
     RENDER_ENGINE_API( "freeResource" );
 
-    if( mFrameBegun )
-    {
-        GN_ERROR(sLogger)( "can not call freeResource() between frameBegin() and frameEnd()!" );
-        return;
-    }
-
     GraphicsResourceItem * item = (GraphicsResourceItem*)res;
-
     if( !mResourceCache->check( item ) ) return;
 
     // TODO: check if the resource is using by current context.
@@ -1135,21 +1093,9 @@ GN::engine::MiniApp * GN::engine::RenderEngine::unregisterMiniApp( MiniAppId id 
     GN_ASSERT( ma );
     mMiniApps.remove( id );
 
-    bool needFrameEnd = false;
-    if( !mFrameBegun )
-    {
-        mDrawThread->frameBegin();
-        needFrameEnd = true;
-    }
-
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DISPOSE, ma );
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DESTROY, ma );
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DTOR, ma );
-
-    if( needFrameEnd )
-    {
-        mDrawThread->frameEnd();
-    }
 
     mResourceThread->waitForIdle();
     mDrawThread->waitForIdle();

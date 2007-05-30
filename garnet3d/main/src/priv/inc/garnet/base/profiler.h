@@ -9,9 +9,13 @@
 #include <limits>
 #include <map>
 
+
 /// \name prof macros
 //@{
-#if GN_PROFILE_BUILD || GN_DEBUG_BUILD
+
+#define GN_PROFILE_ENABLED GN_PROFILE_BUILD || GN_DEBUG_BUILD
+
+#if GN_PROFILE_ENABLED
 
 ///
 /// define a static instance of the timer

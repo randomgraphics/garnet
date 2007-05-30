@@ -21,13 +21,9 @@ bool runcase( RenderEngine & re, TestCase & c )
             if( KEY_SPACEBAR == k.code ) return true;
         }
 
-        re.frameBegin();
-
         re.clearScreen( Vector4f(0,0,1,0) );
-
         c.draw();
-
-        re.frameEnd();
+        re.present();
     }
 }
 

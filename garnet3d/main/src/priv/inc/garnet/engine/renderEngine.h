@@ -39,11 +39,22 @@ namespace GN { namespace engine
     ///
     struct RenderEngineInitParameters
     {
-        //@{
-        UInt32 maxTexBytes;               ///< maximum texture bytes.
-        UInt32 maxMeshBytes;              ///< maximum mesh (vb+ib) bytes.
-        UInt32 maxDrawCommandBufferBytes; ///< maximum draw command buffer bytes. Must be large enough to hold draw requests of one frame.
-        //@}
+        ///
+        /// maximum texture bytes.
+        ///
+        UInt32 maxTexBytes;
+
+        ///
+        /// maximum mesh (vb+ib) bytes.
+        ///
+        UInt32 maxMeshBytes;
+
+        ///
+        /// maximum draw command buffer bytes.
+        ///
+        /// Better be large enough to hold draw requests of one frame for optimal performance.
+        ///
+        UInt32 maxDrawCommandBufferBytes;
     };
 
     ///
@@ -133,9 +144,6 @@ namespace GN { namespace engine
 
         //@{
 
-        void frameBegin();
-        void frameEnd();
-
         void setContext( const DrawContext & context );
 
         void setShaderUniform(
@@ -182,6 +190,8 @@ namespace GN { namespace engine
             const Matrix44f & model,
             const Matrix44f & view,
             const Matrix44f & proj );
+
+        void present();
 
         //@}
 
@@ -467,6 +477,30 @@ namespace GN { namespace engine
             RendererSignal( RendererSignalType t ) : type(t) {}
         };
 
+        struct FrameProfiler
+        {
+            ProfileTimer & timer;
+            bool           start;
+
+            FrameProfiler()
+                : timer( ProfilerManager::sGetGlobalInstance().getTimer("RenderEngine_FrameTime") )
+                , start( 0 )
+            {
+            }
+
+            ~FrameProfiler()
+            {
+                if( start ) timer.stop();
+            }
+
+            void nextFrame()
+            {
+                if( start ) timer.stop();
+                timer.start();
+                start = true;
+            }
+        };
+
         GraphicsResourceCache           * mResourceCache;
         ResourceLRU                     * mResourceLRU;
         DrawThread                      * mDrawThread;
@@ -475,7 +509,7 @@ namespace GN { namespace engine
 
         DrawContext                       mDrawContext;
 
-        bool                              mFrameBegun;
+        FrameProfiler                     mFrameProfiler;
 
         // render engine API is not reentrant-safe
         mutable volatile SInt32           mApiReentrantFlag;
