@@ -1,6 +1,15 @@
 //
 //
 // -----------------------------------------------------------------------------
+inline void GN::engine::RenderEngine::DrawThread::present()
+{
+    submitDrawCommand( DCT_PRESENT, 0 );
+    submitDrawBuffer();
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 inline GN::engine::DrawCommandHeader *
 GN::engine::RenderEngine::DrawThread::submitDrawCommand(
     DrawCommandType type, size_t parameterBytes )
@@ -8,18 +17,17 @@ GN::engine::RenderEngine::DrawThread::submitDrawCommand(
     GN_ASSERT( 0 <= type && type < NUM_DRAW_COMMAND_TYPES );
     GN_ASSERT( mDrawFunctions[type] );
 
-    DrawBuffer & db = mDrawBuffers[mWritingIndex];
-
     // DWORD aligned command size
     size_t commandBytes = align<size_t>( sizeof(DrawCommandHeader) + parameterBytes, 4 );
 
-    if( db.rooms() < commandBytes )
+    if( mDrawBuffers[mWritingIndex].rooms() < commandBytes )
     {
-        static Logger * sLogger = getLogger("GN.engine.RenderEngine.DrawThread");
-        GN_ERROR(sLogger)( "No enough room in draw buffer to hold more drawing commands!" );
-
-        return 0;
+        submitDrawBuffer();
     }
+
+    DrawBuffer & db = mDrawBuffers[mWritingIndex];
+
+    GN_ASSERT( db.rooms() >= commandBytes );
 
     DrawCommandHeader * header = (DrawCommandHeader * )db.next;
 

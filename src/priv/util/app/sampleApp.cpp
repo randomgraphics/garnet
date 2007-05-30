@@ -66,14 +66,11 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
         }
 
         // do render
-        mRenderEngine.frameBegin();
-        {
-            mLastFrameTime = 1.0 / mFps.getFps();
-            mTimeSinceLastUpdate = mFps.getCurrentTime() - lastUpdateTime;
-            onRender();
-            drawHUD();
-        }
-        mRenderEngine.frameEnd();
+        mLastFrameTime = 1.0 / mFps.getFps();
+        mTimeSinceLastUpdate = mFps.getCurrentTime() - lastUpdateTime;
+        onRender();
+        drawHUD();
+        mRenderEngine.present();
     }
 
     // success

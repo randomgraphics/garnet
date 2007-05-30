@@ -1,6 +1,23 @@
 #include "pch.h"
 #include "garnet/base/profiler.h"
 
+static GN::StrA sTime2Str( double time )
+{
+    using namespace GN;
+
+    if( time < 0.000001 )
+    {
+        return strFormat( "%fus", time * 1000000 );
+    }
+    else if( time < 0.001 )
+    {
+        return strFormat( "%fms", time * 1000 );
+    }
+    else
+    {
+        return strFormat( "%fs", time );
+    }
+}
 
 //
 //
@@ -36,14 +53,14 @@ void GN::ProfilerManager::toString( GN::StrA & rval ) const
         const ProfilerTimerImpl & t = i->second;
         rval += GN::strFormat(
             "    %s :\n"
-            "        count(%d), sum(%f), ave(%f), min(%f), max(%f)\n"
+            "        count(%d), sum(%s), ave(%s), min(%s), max(%s)\n"
             "\n",
             i->first.cptr(),
             t.count,
-            t.timesum,
-            t.timesum / t.count,
-            t.timemin,
-            t.timemax );
+            sTime2Str( t.timesum ).cptr(),
+            sTime2Str( t.timesum / t.count ).cptr(),
+            sTime2Str( t.timemin ).cptr(),
+            sTime2Str( t.timemax ).cptr() );
     }
     rval +=
         "=====================================================================\n"

@@ -815,29 +815,15 @@ bool GN::engine::RenderEngine::DrawThread::resetRenderer(
 //
 //
 // -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::DrawThread::waitForIdle( float time ) const
+void GN::engine::RenderEngine::DrawThread::waitForIdle( float time )
 {
+    // flush pending draw commands
+    submitDrawBuffer();
+
     if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time );
 
     while( !mResourceCommandEmpty )
         sleepCurrentThread( 0 );
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::DrawThread::frameBegin()
-{
-    // do nothing
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-void GN::engine::RenderEngine::DrawThread::frameEnd()
-{
-    submitDrawCommand( DCT_PRESENT, 0 );
-    submitDrawBuffer();
 }
 
 // *****************************************************************************
@@ -948,10 +934,6 @@ UInt32 GN::engine::RenderEngine::DrawThread::threadProc( void * )
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
 {
-    GN_SCOPE_PROFILER( RenderEngine_DrawThread_frame_time );
-
-    gfx::Renderer & r = gRenderer;
-
     DrawBuffer & db = mDrawBuffers[mReadingIndex];
 
     DrawCommandHeader * command = (DrawCommandHeader*)db.buffer;
@@ -996,11 +978,16 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
                     dumpCommandString(strFormat( "<ExecuteDrawCommand command=\"PRESENT\" fence=\"%d\"/>", command->fence ) );
                 }
 
+                gfx::Renderer & r = gRenderer;
                 if( mDrawBegun ) r.drawEnd();
                 mDrawBegun = r.drawBegin();
 
                 // process windows messages
                 GN::win::processWindowMessages( r.getDispDesc().windowHandle, true );
+
+#if GN_PROFILE_ENABLED
+                mFrameProfiler.nextFrame();
+#endif
             }
             else if( mDrawBegun )
             {
