@@ -142,8 +142,6 @@ bool GN::scene::QuadRenderer::init()
     AutoRef<QuadIdxBufLoader> ibloader( new QuadIdxBufLoader(MAX_QUADS) );
     mRenderEngine.updateResource( mMesh->ib, 0, ibloader );
 
-    gfx::Renderer & r = gRenderer;
-
     // create vs
     static const char * hlsl_vs =
         "struct VSOUT                       \n"
@@ -165,11 +163,11 @@ bool GN::scene::QuadRenderer::init()
         "   o.tex = tex;                    \n"
         "   return o;                       \n"
         "}";
-    if( r.supportShader( "vs_1_1" ) )
+    if( mRenderEngine.supportShader( "vs_1_1" ) )
     {
         mMesh->vs.attach( mRenderEngine.createShader( "Quad renderer VS", gfx::SHADER_VS, gfx::LANG_D3D_HLSL, hlsl_vs ) );
     }
-    else if( r.supportShader( "arbvp1" ) )
+    else if( mRenderEngine.supportShader( "arbvp1" ) )
     {
         static const char * code =
             "!!ARBvp1.0                                         \n"
@@ -182,7 +180,7 @@ bool GN::scene::QuadRenderer::init()
             "END";
         mMesh->vs.attach( mRenderEngine.createShader( "Quad renderer VS", gfx::SHADER_VS, gfx::LANG_OGL_ARB, code ) );
     }
-    else if( r.supportShader( "cgvs" ) )
+    else if( mRenderEngine.supportShader( "cgvs" ) )
     {
         mMesh->vs.attach( mRenderEngine.createShader( "Quad renderer VS", gfx::SHADER_VS, gfx::LANG_CG, hlsl_vs ) );
     }
@@ -219,12 +217,12 @@ bool GN::scene::QuadRenderer::init()
         "   return i.clr;                   \n"
         "}";
 
-    if( r.supportShader( "ps_1_1" ) )
+    if( mRenderEngine.supportShader( "ps_1_1" ) )
     {
         mMesh->pstexed.attach( mRenderEngine.createShader( "Quad renderer PS textured", gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pstexed ) );
         mMesh->pssolid.attach( mRenderEngine.createShader( "Quad renderer PS solid", gfx::SHADER_PS, gfx::LANG_D3D_HLSL, hlsl_pssolid ) );
     }
-    else if( r.supportShader( "arbfp1" ) )
+    else if( mRenderEngine.supportShader( "arbfp1" ) )
     {
         static const char * texed =
             "!!ARBfp1.0                                              \n"
@@ -239,7 +237,7 @@ bool GN::scene::QuadRenderer::init()
         mMesh->pstexed.attach( mRenderEngine.createShader( "Quad renderer PS textured", gfx::SHADER_PS, gfx::LANG_OGL_ARB, texed ) );
         mMesh->pssolid.attach( mRenderEngine.createShader( "Quad renderer PS solid", gfx::SHADER_PS, gfx::LANG_OGL_ARB, solid ) );
     }
-    else if( r.supportShader( "cgps" ) )
+    else if( mRenderEngine.supportShader( "cgps" ) )
     {
         mMesh->pstexed.attach( mRenderEngine.createShader( "Quad renderer PS textured", gfx::SHADER_PS, gfx::LANG_CG, hlsl_pstexed ) );
         mMesh->pssolid.attach( mRenderEngine.createShader( "Quad renderer PS solid", gfx::SHADER_PS, gfx::LANG_CG, hlsl_pssolid ) );

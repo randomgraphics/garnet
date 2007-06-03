@@ -1,8 +1,38 @@
 #include "../testCommon.h"
 
+
 class HandleTest : public CxxTest::TestSuite
 {
+    struct TestItem
+    {
+        int * ptr;
+
+        TestItem()
+            : ptr( new int[100] )
+        {
+        }
+
+        ~TestItem()
+        {
+            delete [] ptr;
+        }
+    };
+
 public:
+
+    void testCtor()
+    {
+        using namespace GN;
+
+        HandleManager<TestItem> hm;
+
+        size_t h = hm.newItem();
+        TS_ASSERT( h );
+
+        hm.remove( h );
+
+        TS_ASSERT( hm.empty() );
+    }
 
     void test1()
     {

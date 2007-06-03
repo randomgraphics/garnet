@@ -27,14 +27,16 @@ namespace GN { namespace engine
     ///
     class RenderEngineApiDumper
     {
-        static StrA ident;
-
         StrA mApiName;
 
     public:
 
         /// get current ident
-        static const char * getIdent() { return ident.cptr(); }
+        static StrA & sGetIdent()
+        {
+            static StrA ident("\t");
+            return ident;
+        }
 
         /// ctor
         RenderEngineApiDumper( const char * api ) : mApiName(api)
@@ -43,14 +45,14 @@ namespace GN { namespace engine
 
             dumpApiString( strFormat( "<%s>", api ) );
 
-            ident += '\t';
+            sGetIdent() += '\t';
         }
 
         /// dtor
         ~RenderEngineApiDumper()
         {
-            GN_ASSERT( !ident.empty() );
-            ident.remove( ident.size() - 1 );
+            GN_ASSERT( !sGetIdent().empty() );
+            sGetIdent().remove( sGetIdent().size() - 1 );
 
             dumpApiString( strFormat( "</%s>", mApiName.cptr() ) );
         }
@@ -63,7 +65,7 @@ namespace GN { namespace engine
     {
         static Logger * sLogger = getLogger("GN.engine.dump.api");
 
-        GN_DETAIL(sLogger)( "%s%s", RenderEngineApiDumper::getIdent(), text.cptr() );
+        GN_DETAIL(sLogger)( "%s%s", RenderEngineApiDumper::sGetIdent().cptr(), text.cptr() );
     }
 
     ///
