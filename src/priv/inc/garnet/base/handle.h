@@ -21,14 +21,40 @@ namespace GN
         ///
         struct Item
         {
-            mutable T value;
-            bool      occupied;
+            UInt8 buf[sizeof(T)];
+            bool  occupied;
 
-            Item() : occupied(true) {}
-            Item( const T & v ) : value(v), occupied(true) {}
+            Item() : occupied(false) {}
+
+            T & t() const
+            {
+                GN_ASSERT( occupied );
+                return *(T*)buf;
+            }
+
+            void ctor()
+            {
+                GN_ASSERT( !occupied );
+                new (buf) T();
+                occupied = true;
+            }
+
+            void ctor( const T & v )
+            {
+                GN_ASSERT( !occupied );
+                new (buf) T( v );
+                occupied = true;
+            }
+
+            void dtor()
+            {
+                GN_ASSERT( occupied );
+                t().T::~T();
+                occupied = false;
+            }
         };
 
-        std::vector<Item>   mItems;
+        std::vector<Item*>  mItems;
         std::vector<size_t> mFreeList;
 
     public:
@@ -38,6 +64,13 @@ namespace GN
         ///
         void clear()
         {
+            for( size_t i = 0; i < mItems.size(); ++i )
+            {
+                GN_ASSERT( mItems[i] );
+                if( !mItems[i]->occupied ) continue;
+                mItems[i]->dtor();
+                delete mItems[i];
+            }
             mItems.clear();
             mFreeList.clear();
         }
@@ -75,7 +108,7 @@ namespace GN
         {
             if( empty() ) return (HANDLE_TYPE)0;
             size_t idx = 0;
-            while( !mItems[idx].occupied )
+            while( !mItems[idx]->occupied )
             {
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
@@ -90,7 +123,7 @@ namespace GN
         {
             if( !validHandle(h) ) return (HANDLE_TYPE)0;
             size_t idx = h; // That is: (h-1)+1
-            while( idx < mItems.size() && !mItems[idx].occupied )
+            while( idx < mItems.size() && !mItems[idx]->occupied )
             {
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
@@ -105,16 +138,22 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                mItems.push_back( Item(val) );
+                Item * newItem = new Item;
+                if( 0 == newItem )
+                {
+                    GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
+                    return 0;
+                }
+                newItem->ctor( val );
+                mItems.push_back( newItem );
                 return (HANDLE_TYPE)mItems.size();
             }
             else
             {
                 size_t i = mFreeList.back();
                 mFreeList.pop_back();
-                GN_ASSERT( !mItems[i].occupied );
-                mItems[i].value = val;
-                mItems[i].occupied = true;
+                GN_ASSERT( mItems[i] );
+                mItems[i]->ctor( val );
                 return (HANDLE_TYPE)(i+1);
             }
         }
@@ -126,16 +165,22 @@ namespace GN
         {
             if( mFreeList.empty() )
             {
-                mItems.resize( mItems.size() + 1 );
+                Item * newItem = new Item;
+                if( 0 == newItem )
+                {
+                    GN_ERROR(getLogger("GN.base.HandleManager"))( "out of memory" );
+                    return 0;
+                }
+                newItem->ctor();
+                mItems.push_back( newItem );
                 return (HANDLE_TYPE)mItems.size();
             }
             else
             {
                 size_t i = mFreeList.back();
                 mFreeList.pop_back();
-                GN_ASSERT( !mItems[i].occupied );
-                new (&mItems[i].value) T();
-                mItems[i].occupied = true;
+                GN_ASSERT( mItems[i] );
+                mItems[i]->ctor();
                 return (HANDLE_TYPE)(i+1);
             }
         }
@@ -151,9 +196,9 @@ namespace GN
             }
             else
             {
-                mItems[h-1].value.~T();
+                GN_ASSERT( mItems[h-1] );
+                mItems[h-1]->dtor();
                 mFreeList.push_back(h-1);
-                mItems[h-1].occupied = false;
             }
         }
 
@@ -164,8 +209,8 @@ namespace GN
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
-                if( !mItems[i].occupied ) continue;
-                if( mItems[i].value == val ) return (HANDLE_TYPE)(i+1); // found!
+                if( !mItems[i]->occupied ) continue;
+                if( mItems[i]->t() == val ) return (HANDLE_TYPE)(i+1); // found!
             }
             return (HANDLE_TYPE)0; // not found
         }
@@ -178,8 +223,8 @@ namespace GN
         {
             for( size_t i = 0; i < mItems.size(); ++i )
             {
-                if( !mItems[i].occupied ) continue;
-                if( fp( mItems[i].value ) ) return (HANDLE_TYPE)(i+1); // found!
+                if( !mItems[i]->occupied ) continue;
+                if( fp( mItems[i]->t() ) ) return (HANDLE_TYPE)(i+1); // found!
             }
             return (HANDLE_TYPE)0; // not found
         }
@@ -189,7 +234,7 @@ namespace GN
         ///
         bool validHandle( HANDLE_TYPE h ) const
         {
-            return 0 != h && h <= mItems.size() && mItems[h-1].occupied;
+            return 0 != h && h <= mItems.size() && mItems[h-1]->occupied;
         }
 
         ///
@@ -198,7 +243,7 @@ namespace GN
         T & get( HANDLE_TYPE h ) const
         {
             GN_ASSERT( validHandle(h) );
-            return mItems[h-1].value;
+            return mItems[h-1]->t();
         }
 
         ///

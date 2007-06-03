@@ -141,7 +141,7 @@ public:
         UInt32 height = 720;
 
         float aspect = (float)width / height;
-        gRenderer.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
+        re.composePerspectiveMatrixLh( proj, GN_PI/3, aspect, 1.0f, 1000.0f );
 
         // create render targets
         rt[0].attach( re.create2DTexture( "rt0", width, height, 1, FMT_FLOAT16_4, TEXUSAGE_RENDER_TARGET ) );

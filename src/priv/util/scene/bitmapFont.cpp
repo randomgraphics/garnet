@@ -227,7 +227,7 @@ void GN::scene::BitmapFont::drawText( const TextDesc & td )
     }
 
     // get current screen size
-    const DispDesc & dd = gRenderer.getDispDesc();
+    const DispDesc & dd = mQuadRenderer.renderEngine().getDispDesc();
     float scalex = 1.0f / dd.width;
     float scaley = 1.0f / dd.height;
 
@@ -416,7 +416,7 @@ bool GN::scene::BitmapFont::slotInit( UInt16 fontw, UInt16 fonth )
     UInt16 recth = fonth + 0;
 
     // query maximum texture size
-    UInt32 max_size = gRenderer.getCaps( CAPS_MAX_2D_TEXTURE_SIZE );
+    UInt32 max_size = mQuadRenderer.renderEngine().getCaps( CAPS_MAX_2D_TEXTURE_SIZE );
 
     // calculate texture size
     UInt32 texw = ceilPowerOf2(rectw*32);

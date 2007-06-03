@@ -43,8 +43,8 @@ int GN::app::SampleApp::run( int argc, const char * const argv[] )
 
     while( !mDone )
     {
-        // process windows messages
-        GN::win::processWindowMessages( gRenderer.getDispDesc().windowHandle, true );
+        //// process windows messages
+        //GN::win::processWindowMessages( mRenderEngine.getDispDesc().windowHandle, true );
 
         // update time stuff
         mFps.onFrame();
@@ -438,7 +438,7 @@ bool GN::app::SampleApp::initInput()
 
     if( gRendererPtr )
     {
-        const GN::gfx::DispDesc & dd = gRenderer.getDispDesc();
+        const GN::gfx::DispDesc & dd = mRenderEngine.getDispDesc();
         if( !input->attachToWindow(dd.displayHandle,dd.windowHandle) ) return false;
     }
 
