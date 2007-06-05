@@ -67,8 +67,7 @@ namespace GN
             for( size_t i = 0; i < mItems.size(); ++i )
             {
                 GN_ASSERT( mItems[i] );
-                if( !mItems[i]->occupied ) continue;
-                mItems[i]->dtor();
+                if( mItems[i]->occupied ) mItems[i]->dtor();
                 delete mItems[i];
             }
             mItems.clear();
