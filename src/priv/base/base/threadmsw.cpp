@@ -174,6 +174,22 @@ public:
         mPriority = p;
     }
 
+    virtual void setAffinity( UInt32 hardwareThread )
+    {
+#if GN_XENON
+        if( (DWORD)-1 == XSetThreadProcessor( mHandle, hardwareThread ) )
+        {
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getOSErrorInfo() );
+        }
+#elif GN_MSWIN
+        if( (DWORD)-1 == SetThreadIdealProcessor( mHandle, hardwareThread ) )
+        {
+            GN_ERROR(sLogger)( "fail to set thread affinity: %s", getOSErrorInfo() );
+        }
+#else
+#endif
+    }
+
     bool isCurrentThread() const
     {
         return ::GetCurrentThreadId() == mId;

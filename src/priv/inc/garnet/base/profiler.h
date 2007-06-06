@@ -6,7 +6,7 @@
 /// \author  chenlee (2005.8.4)
 // *****************************************************************************
 
-#include <limits>
+#include <limits.h>
 #include <map>
 
 
@@ -67,7 +67,7 @@ namespace GN
             : clock(c)
             , count(0)
             , timesum(0)
-            , timemin( std::numeric_limits<double>::max() )
+            , timemin( DBL_MAX )
             , timemax( 0 )
             , timestart(0)
         {}
