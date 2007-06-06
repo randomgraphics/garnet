@@ -130,19 +130,18 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
     _GNGFX_DEVICE_TRACE();
 
     // get d3ddevcaps
-    D3DCAPS9 d3dcaps;
-    GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+    GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&mDeviceCaps), false );
 
     // 逐一的检查每一个caps，保证它们都未被改变过
     #define GNGFX_CAPS( name ) \
-        if( getCaps(CAPS_##name) != sCapsInit_##name( d3dcaps ) ) \
+        if( getCaps(CAPS_##name) != sCapsInit_##name( mDeviceCaps ) ) \
         { \
             GN_ERROR(sLogger)( "CAPS_" #name \
                       " is modified by device reset" ); \
             return false; \
         }
     #define GNGFX_D3D9CAPS( name ) \
-        if( getD3DCaps(D3D9CAPS_##name) != sD3D9CapsInit_##name( d3dcaps ) ) \
+        if( getD3DCaps(D3D9CAPS_##name) != sD3D9CapsInit_##name( mDeviceCaps ) ) \
         { \
             GN_ERROR(sLogger)( "D3D9CAPS_" #name \
                       " is modified by device reset" ); \
@@ -155,7 +154,7 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
 
     // output device info
     StrA devtype;
-    switch( d3dcaps.DeviceType )
+    switch( mDeviceCaps.DeviceType )
     {
         case D3DDEVTYPE_HAL : devtype = "HAL";     break;
 #if !GN_XENON
@@ -184,14 +183,14 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
     }
 #endif
     UInt32 vsVerMajor, vsVerMinor, psVerMajor, psVerMinor;
-    vsVerMajor = (d3dcaps.VertexShaderVersion & 0xFF00) >> 8;
-    vsVerMinor = d3dcaps.VertexShaderVersion & 0xFF;
-    psVerMajor = (d3dcaps.PixelShaderVersion & 0xFF00) >> 8;
-    psVerMinor = d3dcaps.PixelShaderVersion & 0xFF;
+    vsVerMajor = (mDeviceCaps.VertexShaderVersion & 0xFF00) >> 8;
+    vsVerMinor = mDeviceCaps.VertexShaderVersion & 0xFF;
+    psVerMajor = (mDeviceCaps.PixelShaderVersion & 0xFF00) >> 8;
+    psVerMinor = mDeviceCaps.PixelShaderVersion & 0xFF;
     StrA vsver = strFormat( "%d.%d", vsVerMajor, vsVerMinor );
     StrA psver = strFormat( "%d.%d", psVerMajor, psVerMinor );
     StrA hwtnl;
-    if( D3DDEVCAPS_HWTRANSFORMANDLIGHT & d3dcaps.DevCaps )
+    if( D3DDEVCAPS_HWTRANSFORMANDLIGHT & mDeviceCaps.DevCaps )
         hwtnl = "Supported";
     else
         hwtnl = "Unsupported";
@@ -237,9 +236,9 @@ bool GN::gfx::D3D9Renderer::capsDeviceRestore()
         vsver.cptr(),
         psver.cptr(),
         hwtnl.cptr(),
-        d3dcaps.MaxTextureBlendStages,
-        d3dcaps.MaxSimultaneousTextures,
-        d3dcaps.NumSimultaneousRTs,
+        mDeviceCaps.MaxTextureBlendStages,
+        mDeviceCaps.MaxSimultaneousTextures,
+        mDeviceCaps.NumSimultaneousRTs,
         sD3DMsaaType2Str( mPresentParameters.MultiSampleType ),
         mPresentParameters.MultiSampleQuality );
 
@@ -260,33 +259,31 @@ bool GN::gfx::D3D9Renderer::supportShader( const StrA & profile )
 {
     GN_GUARD;
 
-    // get d3ddevcaps
-    D3DCAPS9 d3dcaps;
-    GN_DX9_CHECK_RV( mDevice->GetDeviceCaps(&d3dcaps), false );
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     // vs
-    if( "vs_1_1" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(1,1);
-    else if( "vs_2_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(2,0);
-    else if( "vs_3_0" == profile ) return d3dcaps.VertexShaderVersion >= D3DVS_VERSION(3,0);
+    if( "vs_1_1" == profile ) return mDeviceCaps.VertexShaderVersion >= D3DVS_VERSION(1,1);
+    else if( "vs_2_0" == profile ) return mDeviceCaps.VertexShaderVersion >= D3DVS_VERSION(2,0);
+    else if( "vs_3_0" == profile ) return mDeviceCaps.VertexShaderVersion >= D3DVS_VERSION(3,0);
 #if GN_XENON
     else if( "xvs" == profile ) return true;
 #endif
 #ifdef HAS_CG_D3D9
-    else if( "cgvs" == profile ) return d3dcaps.VertexShaderVersion > 0;
+    else if( "cgvs" == profile ) return mDeviceCaps.VertexShaderVersion > 0;
 #endif
 
     // ps
-    else if( "ps_1_1" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,1);
-    else if( "ps_1_2" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,2);
-    else if( "ps_1_3" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,3);
-    else if( "ps_1_4" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(1,4);
-    else if( "ps_2_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(2,0);
-    else if( "ps_3_0" == profile ) return d3dcaps.PixelShaderVersion >= D3DPS_VERSION(3,0);
+    else if( "ps_1_1" == profile ) return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(1,1);
+    else if( "ps_1_2" == profile ) return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(1,2);
+    else if( "ps_1_3" == profile ) return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(1,3);
+    else if( "ps_1_4" == profile ) return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(1,4);
+    else if( "ps_2_0" == profile ) return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(2,0);
+    else if( "ps_3_0" == profile ) return mDeviceCaps.PixelShaderVersion >= D3DPS_VERSION(3,0);
 #if GN_XENON
     else if( "xps" == profile ) return true;
 #endif
 #ifdef HAS_CG_D3D9
-    else if( "cgps" == profile ) return d3dcaps.PixelShaderVersion > 0;
+    else if( "cgps" == profile ) return mDeviceCaps.PixelShaderVersion > 0;
 #endif
 
     // no shader support
@@ -303,6 +300,8 @@ bool GN::gfx::D3D9Renderer::supportTextureFormat(
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     return D3D_OK == checkD3DDeviceFormat(
         texUsage2D3DUsage(usage),
         texType2D3DResourceType(type),
@@ -317,6 +316,8 @@ bool GN::gfx::D3D9Renderer::supportTextureFormat(
 GN::gfx::ClrFmt GN::gfx::D3D9Renderer::getDefaultTextureFormat(
     TexDim type, BitFields usage ) const
 {
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
 #if GN_XENON
 
     GN_UNUSED_PARAM( type );

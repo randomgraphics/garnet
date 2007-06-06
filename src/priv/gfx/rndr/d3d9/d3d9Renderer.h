@@ -43,8 +43,11 @@ namespace GN { namespace gfx
 
         //@{
     public :
-        D3D9Renderer()          { clear(); }
+        D3D9Renderer() : mThreadId(getCurrentThreadId()) { clear(); }
         virtual ~D3D9Renderer() { quit(); }
+        SInt32 getThreadId() const { return mThreadId; }
+    private:
+        SInt32 mThreadId;
         //@}
 
         // ********************************
@@ -169,6 +172,7 @@ namespace GN { namespace gfx
         D3DPRESENT_PARAMETERS   mPresentParameters;
         IDirect3D9            * mD3D;
         IDirect3DDevice9      * mDevice;
+        D3DCAPS9                mDeviceCaps;
 
         typedef std::map<D3DFORMAT,StackArray<D3DMsaaDesc,NUM_MSAA_TYPES> > MsaaDescTable;
         MsaaDescTable mMsaaDescTable;

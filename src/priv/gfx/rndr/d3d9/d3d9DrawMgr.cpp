@@ -55,6 +55,8 @@ bool GN::gfx::D3D9Renderer::drawBegin()
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     if( mFakeDraw ) return true;
 
     PIXPERF_FUNCTION_EVENT();
@@ -96,6 +98,8 @@ void GN::gfx::D3D9Renderer::drawEnd()
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     if( mFakeDraw ) return;
 
     PIXPERF_FUNCTION_EVENT();
@@ -127,6 +131,8 @@ void GN::gfx::D3D9Renderer::clearScreen(
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     if( mFakeDraw ) return;
 
     // build d3d clear flag
@@ -152,6 +158,8 @@ void GN::gfx::D3D9Renderer::drawIndexed(
     size_t        startidx )
 {
     GN_GUARD_SLOW;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     DUMP_STATE( dumpD3D9DrawIndexed(
         sPrimMap[prim],
@@ -198,6 +206,8 @@ void GN::gfx::D3D9Renderer::draw(
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     DUMP_STATE( dumpD3D9Draw(
         sPrimMap[prim],
         (UINT)startvtx,
@@ -241,6 +251,8 @@ void GN::gfx::D3D9Renderer::drawIndexedUp(
     const UInt16 * indexData )
 {
     GN_GUARD_SLOW;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     // TODO: dump state
 
@@ -294,6 +306,8 @@ void GN::gfx::D3D9Renderer::drawUp(
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     // TODO: dump state
 
     ++mDrawCounter;
@@ -341,6 +355,8 @@ void GN::gfx::D3D9Renderer::drawLines(
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     // TODO: dump state
 
     ++mDrawCounter;
@@ -364,6 +380,7 @@ void GN::gfx::D3D9Renderer::drawLines(
 // -----------------------------------------------------------------------------
 void GN::gfx::D3D9Renderer::dumpNextFrame( size_t startBatchIndex, size_t numBatches )
 {
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
     mDumpNextFrame = true;
     mDumpStart = startBatchIndex;
     mDumpEnd   = startBatchIndex + numBatches;

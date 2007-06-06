@@ -142,6 +142,8 @@ GN::gfx::D3D9Renderer::createShader(
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     switch( type )
     {
         case SHADER_VS :
@@ -223,6 +225,8 @@ GN::gfx::D3D9Renderer::createTexture( const TextureDesc & desc )
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     AutoRef<D3D9Texture> p( new D3D9Texture(*this) );
     if( !p->init( desc ) ) return 0;
     return p.detach();
@@ -236,6 +240,8 @@ GN::gfx::D3D9Renderer::createTexture( const TextureDesc & desc )
 GN::gfx::VtxFmtHandle GN::gfx::D3D9Renderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     VtxFmtHandle  h = mVtxFmts.findIf( EqualFormat(format) );
 
@@ -264,6 +270,8 @@ GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf( const VtxBufDesc & desc )
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     AutoRef<D3D9VtxBuf> buf( new D3D9VtxBuf(*this) );
 
     if( !buf->init( desc ) ) return 0;
@@ -279,6 +287,8 @@ GN::gfx::VtxBuf * GN::gfx::D3D9Renderer::createVtxBuf( const VtxBufDesc & desc )
 GN::gfx::IdxBuf * GN::gfx::D3D9Renderer::createIdxBuf( const IdxBufDesc & desc )
 {
     GN_GUARD;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     AutoRef<D3D9IdxBuf> buf( new D3D9IdxBuf(*this) );
 

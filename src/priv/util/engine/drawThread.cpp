@@ -501,6 +501,63 @@ namespace GN { namespace engine
     //
     //
     // -------------------------------------------------------------------------
+    static void DRAWFUNC_GET_CAPS( RenderEngine &, const void * param, size_t )
+    {
+        struct Param
+        {
+            UInt32 * result;
+            UInt32   caps;
+        };
+
+        GN_ASSERT( param );
+
+        const Param * p = (const Param*)param;
+        GN_ASSERT( p->result );
+
+        *p->result = gRenderer.getCaps( p->caps );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_SUPPORT_SHADER( RenderEngine &, const void * param, size_t )
+    {
+        struct Param
+        {
+            bool result;
+            char profile[16];
+        };
+
+        GN_ASSERT( param );
+
+        Param * p = *(Param**)param;
+
+        p->result = gRenderer.supportShader( p->profile );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
+    static void DRAWFUNC_SUPPORT_TEXFMT( RenderEngine &, const void * param, size_t )
+    {
+        struct Param
+        {
+            bool        result;
+            gfx::TexDim dim;
+            BitFields   usage;
+            gfx::ClrFmt format;
+        };
+
+        GN_ASSERT( param );
+
+        Param * p = *(Param**)param;
+
+        p->result = gRenderer.supportTextureFormat( p->dim, p->usage, p->format );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     static void DRAWFUNC_MINIAPP_CTOR( RenderEngine &, const void * param, size_t )
     {
         GN_ASSERT( param );
@@ -683,6 +740,9 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDrawFunctions[DCT_DRAW_INDEXED_UP] = &DRAWFUNC_DRAW_INDEXED_UP;
     mDrawFunctions[DCT_DRAW_LINE]       = &DRAWFUNC_DRAW_LINE;
     mDrawFunctions[DCT_PRESENT]         = &DRAWFUNC_PRESENT;
+    mDrawFunctions[DCT_GET_CAPS]        = &DRAWFUNC_GET_CAPS;
+    mDrawFunctions[DCT_SUPPORT_SHADER]  = &DRAWFUNC_SUPPORT_SHADER;
+    mDrawFunctions[DCT_SUPPORT_TEXFMT]  = &DRAWFUNC_SUPPORT_TEXFMT;
     mDrawFunctions[DCT_MINIAPP_CTOR]    = &DRAWFUNC_MINIAPP_CTOR;
     mDrawFunctions[DCT_MINIAPP_CREATE]  = &DRAWFUNC_MINIAPP_CREATE;
     mDrawFunctions[DCT_MINIAPP_RESTORE] = &DRAWFUNC_MINIAPP_RESTORE;
