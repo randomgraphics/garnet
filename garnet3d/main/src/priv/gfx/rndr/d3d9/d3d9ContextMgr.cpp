@@ -199,6 +199,8 @@ void GN::gfx::D3D9Renderer::setContext( const RendererContext & newContext )
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
 #if GN_DEBUG_BUILD
     // make sure bindContext() does not rely on flags in tmp structure.
     RendererContext tmp = newContext;
@@ -230,6 +232,7 @@ void GN::gfx::D3D9Renderer::rebindContext( RendererContext::FieldFlags flags )
 // -----------------------------------------------------------------------------
 const GN::gfx::RenderStateBlockDesc & GN::gfx::D3D9Renderer::getCurrentRenderStateBlock() const
 {
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
     GN_ASSERT( mContext.flags.rsb );
     return mContext.rsb;
 }

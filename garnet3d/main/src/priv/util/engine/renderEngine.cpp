@@ -558,7 +558,10 @@ const GN::gfx::DispDesc & GN::engine::RenderEngine::getDispDesc() const
 // -----------------------------------------------------------------------------
 UInt32 GN::engine::RenderEngine::getCaps( SInt32 c ) const
 {
-    return gRenderer.getCaps( c );
+    volatile UInt32 result;
+    mDrawThread->submitDrawCommand2( DCT_GET_CAPS, &result, c );
+    mDrawThread->waitForIdle();
+    return result;
 }
 
 //
@@ -566,7 +569,19 @@ UInt32 GN::engine::RenderEngine::getCaps( SInt32 c ) const
 // -----------------------------------------------------------------------------
 bool GN::engine::RenderEngine::supportShader( const StrA & profile )
 {
-    return gRenderer.supportShader( profile );
+    struct Param
+    {
+        bool result;
+        char name[16];
+    } param;
+
+    GN_ASSERT( profile.size() < 16 );
+    memcpy( param.name, profile.cptr(), profile.size()+1 );
+
+    mDrawThread->submitDrawCommand1( DCT_SUPPORT_SHADER, &param );
+    mDrawThread->waitForIdle();
+
+    return param.result;
 }
 
 //
@@ -574,7 +589,18 @@ bool GN::engine::RenderEngine::supportShader( const StrA & profile )
 // -----------------------------------------------------------------------------
 bool GN::engine::RenderEngine::supportTextureFormat( gfx::TexDim type, BitFields usage, gfx::ClrFmt format )
 {
-    return gRenderer.supportTextureFormat( type, usage, format );
+    struct Param
+    {
+        bool        result;
+        gfx::TexDim dim;
+        BitFields   usage;
+        gfx::ClrFmt format;
+    } param = { 0, type, usage, format };
+
+    mDrawThread->submitDrawCommand1( DCT_SUPPORT_TEXFMT, &param );
+    mDrawThread->waitForIdle();
+
+    return param.result;
 }
 
 //

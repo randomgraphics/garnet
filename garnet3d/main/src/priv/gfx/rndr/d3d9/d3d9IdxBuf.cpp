@@ -128,6 +128,8 @@ UInt16 * GN::gfx::D3D9IdxBuf::lock( size_t startidx, size_t numidx, LockFlag fla
 {
     GN_GUARD_SLOW;
 
+    GN_ASSERT( getCurrentThreadId() == getRenderer().getThreadId() );
+
     GN_ASSERT( ok() );
 
     if( !basicLock( startidx, numidx, flag ) ) return 0;

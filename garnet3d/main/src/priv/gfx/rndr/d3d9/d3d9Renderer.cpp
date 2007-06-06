@@ -85,6 +85,8 @@ bool GN::gfx::D3D9Renderer::init()
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     PIXPERF_FUNCTION_EVENT();
 
     // standard init procedure
@@ -109,6 +111,8 @@ bool GN::gfx::D3D9Renderer::init()
 void GN::gfx::D3D9Renderer::quit()
 {
     GN_GUARD;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -135,6 +139,8 @@ void GN::gfx::D3D9Renderer::quit()
 bool GN::gfx::D3D9Renderer::changeOptions( const RendererOptions & options, bool forceRecreation )
 {
     GN_GUARD;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 
@@ -207,6 +213,8 @@ bool GN::gfx::D3D9Renderer::deviceCreate()
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
@@ -243,6 +251,8 @@ bool GN::gfx::D3D9Renderer::deviceRestore()
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
@@ -270,6 +280,8 @@ void GN::gfx::D3D9Renderer::deviceDispose()
 {
     GN_GUARD;
 
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
     PIXPERF_FUNCTION_EVENT();
 
     _GNGFX_DEVICE_TRACE();
@@ -292,6 +304,8 @@ void GN::gfx::D3D9Renderer::deviceDispose()
 void GN::gfx::D3D9Renderer::deviceDestroy()
 {
     GN_GUARD;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
 
     PIXPERF_FUNCTION_EVENT();
 

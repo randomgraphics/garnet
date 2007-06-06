@@ -343,7 +343,12 @@ GN::gfx::BasicRenderer::handleRenderWindowSizeMove()
         UInt32 width, height;
         mWindow.getClientSize( width, height );
 
-        getSigRendererWindowSizeMove()( monitor, width, height );
+        const DispDesc & dd = getDispDesc();
+
+        if( dd.width != width || dd.height != height || dd.monitorHandle != monitor )
+        {
+            getSigRendererWindowSizeMove()( monitor, width, height );
+        }
 
         //RendererOptions newOptions = ro;
         //newOptions.monitorHandle = mWindow.getMonitor();
