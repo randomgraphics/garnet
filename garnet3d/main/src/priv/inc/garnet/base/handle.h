@@ -60,6 +60,11 @@ namespace GN
     public:
 
         ///
+        /// dtor
+        ///
+        ~HandleManager() { clear(); }
+
+        ///
         /// clear all handles
         ///
         void clear()
