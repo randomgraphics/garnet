@@ -64,7 +64,7 @@ namespace GN { namespace engine
     /// - render engine is _NOT_ thread safe.
     /// - all the methods, except explicitly stated, must be called in serialized way.
     ///
-    class RenderEngine : public StdClass
+    class RenderEngine : public StdClass, public SlotBase
     {
         GN_DECLARE_STDCLASS( RenderEngine, StdClass );
 
@@ -74,8 +74,8 @@ namespace GN { namespace engine
 
         //@{
     public:
-        RenderEngine() : mApiReentrantFlag(0) { clear(); }
-        virtual ~RenderEngine() { quit(); }
+        RenderEngine();
+        virtual ~RenderEngine();
         //@}
 
         // ********************************

@@ -365,7 +365,7 @@ GN::StrA GN::engine::GraphicsResourceDesc::toString() const
 }
 
 // *****************************************************************************
-// Initialize and shutdown
+// Render engine
 // *****************************************************************************
 
 ///
@@ -411,6 +411,37 @@ struct ApiReentrantChecker
 ///
 #define FORCE_SERALIZE() // mDrawThread->waitForIdle();
 
+// *****************************************************************************
+// ctor / dtor
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::RenderEngine::RenderEngine() : mApiReentrantFlag(0)
+{
+    clear();
+
+    // connect to renderer signals
+    gSigRendererCreate.connect( this, &RenderEngine::onRendererCreate );
+    gSigRendererRestore.connect( this, &RenderEngine::onRendererRestore );
+    gSigRendererDispose.connect( this, &RenderEngine::onRendererDispose );
+    gSigRendererDestroy.connect( this, &RenderEngine::onRendererDestroy );
+    gSigRendererWindowSizeMove.connect( this, &RenderEngine::onRenderWindowSizeMove );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::engine::RenderEngine::~RenderEngine()
+{
+    quit();
+}
+
+// *****************************************************************************
+// Initialize and shutdown
+// *****************************************************************************
+
 //
 //
 // -----------------------------------------------------------------------------
@@ -438,13 +469,6 @@ bool GN::engine::RenderEngine::init( const RenderEngineInitParameters & p )
     mResourceThread = new ResourceThread( *this );
     if( !mResourceThread->init() ) return failure();
 
-    // connect to renderer signals
-    gSigRendererCreate.connect( this, &RenderEngine::onRendererCreate );
-    gSigRendererRestore.connect( this, &RenderEngine::onRendererRestore );
-    gSigRendererDispose.connect( this, &RenderEngine::onRendererDispose );
-    gSigRendererDestroy.connect( this, &RenderEngine::onRendererDestroy );
-    gSigRendererWindowSizeMove.connect( this, &RenderEngine::onRenderWindowSizeMove );
-
     // success
     return success();
 
@@ -459,13 +483,6 @@ void GN::engine::RenderEngine::quit()
     GN_GUARD;
 
     RENDER_ENGINE_API( "quit" );
-
-    // disconnect to renderer signals
-    gSigRendererCreate.disconnect( this );
-    gSigRendererRestore.disconnect( this );
-    gSigRendererDispose.disconnect( this );
-    gSigRendererDestroy.disconnect( this );
-    gSigRendererWindowSizeMove.disconnect( this );
 
     // dispose all resources
     if( ok() )
