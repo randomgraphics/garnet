@@ -61,6 +61,12 @@ bool GN::engine::RenderEngine::ResourceThread::init()
             "Decompressing thread" ) )
         return failure();
 
+#if GN_XENON
+    // set thread affinity on xenon platform
+    mLoader.thread->setAffinity( 4 );
+    mDecompressor.thread->setAffinity( 5 );
+#endif
+
     // success
     return success();
 

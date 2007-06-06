@@ -110,6 +110,11 @@ public:
             GN_ERROR(sLogger)( "File %s is not a valid garnet binary file!", mFileName.cptr() );
             return false;
         }
+		// do endian swap
+		if( 0x0201 != header.endian )
+		{
+            header.bytes = swap8in64( header.bytes );
+		}
         if( ( header.bytes + sizeof(header) ) < (mDataOffset+mDataBytes) )
         {
             GN_ERROR(sLogger)( "File %s is not large enough (maybe corrupted)!", mFileName.cptr() );
@@ -138,6 +143,21 @@ public:
         return true;
     }
 
+    virtual void freebuf( void * inbuf, size_t )
+    {
+        safeDeleteArray( inbuf );
+    }
+};
+
+class MeshVtxBufLoader : public BinFileLoader
+{
+public:
+
+    ///
+    /// ctor
+    ///
+    MeshVtxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
+
     bool decompress( const engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int )
     {
         GN_ASSERT( inbuf && inbytes >= 4 );
@@ -161,6 +181,7 @@ public:
         else
         {
             // file and machine has different endian. do endian swap.
+            // Note: this endian swap is wrong, if vertex buffer contains data that are not 32 bits.
             swap8in32( buf, data, dwcount );
         }
 
@@ -169,21 +190,6 @@ public:
         outbytes = dwcount * 4;
         return true;
     }
-
-    virtual void freebuf( void * inbuf, size_t )
-    {
-        safeDeleteArray( inbuf );
-    }
-};
-
-class MeshVtxBufLoader : public BinFileLoader
-{
-public:
-
-    ///
-    /// ctor
-    ///
-    MeshVtxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
@@ -205,6 +211,38 @@ public:
     /// ctor
     ///
     MeshIdxBufLoader( const StrA & filename, size_t offset, size_t bytes ) : BinFileLoader(filename,offset,bytes) {}
+
+    bool decompress( const engine::GraphicsResourceDesc &, void * & outbuf, size_t & outbytes, const void * inbuf, size_t inbytes, int )
+    {
+        GN_ASSERT( inbuf && inbytes >= 4 );
+
+        const UInt32 * endian = (const UInt32*)inbuf;
+        const UInt16 * data = (const UInt16*)( endian + 1 );
+
+        size_t wcount = ( inbytes - 1 ) / 2;
+        AutoTypePtr<UInt16> buf( new UInt16[wcount] );
+        if( buf.empty() )
+        {
+            GN_ERROR(sLogger)( "out of memory!" );
+            return false;
+        }
+
+        if( *endian == 0x0201 )
+        {
+            // file and machine endian are same.
+            memcpy( buf, data, wcount * 2 );
+        }
+        else
+        {
+            // file and machine has different endian. do endian swap.
+            swap8in16( buf, data, wcount );
+        }
+
+        // success
+        outbuf   = buf.detach();
+        outbytes = wcount * 2;
+        return true;
+    }
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
@@ -472,6 +510,12 @@ bool GN::engine::Mesh::loadFromBinaryStream( File & fp )
     {
         GN_ERROR(sLogger)( "Not a mesh chunk!" );
         return false;
+    }
+
+    // check endian
+    if( header.endian != 0x0201 )
+    {
+        GN_UNIMPL();
     }
 
     // read mesh binary header

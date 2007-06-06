@@ -35,6 +35,7 @@ namespace GN
         //@{
         virtual ThreadPriority getPriority() const = 0;
         virtual void           setPriority( ThreadPriority ) = 0;
+        virtual void           setAffinity( UInt32 hardwareThread ) = 0;
         virtual bool           isCurrentThread() const = 0;
         //@}
 

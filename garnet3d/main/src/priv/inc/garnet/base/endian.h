@@ -9,14 +9,19 @@
 namespace GN
 {
     ///
+    /// endian swap 8 in 16.
+    ///
+    void swap8in16( UInt16 * out, const UInt16 * in, size_t count );
+
+    ///
     /// endian swap 8 in 32.
     ///
     void swap8in32( UInt32 * out, const UInt32 * in, size_t count );
 
     ///
-    /// endian swap 8 in 16.
+    /// endian swap 8 in 64
     ///
-    void swap8in16( UInt16 * out, const UInt16 * in, size_t count );
+    void swap8in64( UInt64 * out, const UInt64 * in, size_t count );
 
     ///
     /// endian swap 16 in 32.
@@ -24,8 +29,9 @@ namespace GN
     void swap16in32( UInt32 * out, const UInt32 * in, size_t count );
 
     //@{
-    inline UInt32 swap8in32( UInt32 i ) { UInt32 o; swap8in32( &o, &i, 1 ); return o; }
     inline UInt16 swap8in16( UInt16 i ) { UInt16 o; swap8in16( &o, &i, 1 ); return o; }
+    inline UInt32 swap8in32( UInt32 i ) { UInt32 o; swap8in32( &o, &i, 1 ); return o; }
+    inline UInt64 swap8in64( UInt64 i ) { UInt64 o; swap8in64( &o, &i, 1 ); return o; }
     inline UInt32 swap16in32( UInt32 i ) { UInt32 o; swap16in32( &o, &i, 1 ); return o; }
     //@}
 }

@@ -60,12 +60,10 @@ namespace GN { namespace engine
     ///
     inline void dumpApiString( const StrA & text )
     {
-        static Logger * sLogger = getLogger("GN.engine.dump.api");
-
         StrA ident;
         for( int i = 0; i < RenderEngineApiDumper::sGetIdent(); ++i ) ident += '\t';
 
-        GN_DETAIL(sLogger)( "%s%s", ident.cptr(), text.cptr() );
+        GN_DETAIL(getLogger("GN.engine.dump.api"))( "%s%s", ident.cptr(), text.cptr() );
     }
 
     ///
@@ -73,8 +71,7 @@ namespace GN { namespace engine
     ///
     inline void dumpCommandString( const StrA & text )
     {
-        static Logger * sLogger = getLogger("GN.engine.dump.command");
-        GN_DETAIL(sLogger)( "%s", text.cptr() );
+        GN_DETAIL(getLogger("GN.engine.dump.command"))( "%s", text.cptr() );
     }
 
     ///

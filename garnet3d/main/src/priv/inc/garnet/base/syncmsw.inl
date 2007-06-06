@@ -1,13 +1,21 @@
 #if GN_MSWIN
 
+#if GN_XENON
+#include <xtl.h>
+#else
 #include <intrin.h>
+#endif
 
 //
 //
 // -----------------------------------------------------------------------------
 inline void GN::memoryBarrier()
 {
-    _ReadWriteBarrier();
+#if GN_XENON
+    __lwsync();
+#else
+    ReadWriteBarrier();
+#endif
 }
 
 //

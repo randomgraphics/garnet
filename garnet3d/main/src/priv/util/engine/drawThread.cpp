@@ -787,6 +787,11 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
         "RenderEngine.DrawThread" );
     if( 0 == mDrawThread ) return failure();
 
+#if GN_XENON
+    // set thread affinity on xenon platform
+    mDrawThread->setAffinity( 2 );
+#endif
+
     // success
     return success();
 
