@@ -14,7 +14,7 @@ inline void GN::memoryBarrier()
 #if GN_XENON
     __lwsync();
 #else
-    ReadWriteBarrier();
+    _ReadWriteBarrier();
 #endif
 }
 
