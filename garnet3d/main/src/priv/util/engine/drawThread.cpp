@@ -558,6 +558,26 @@ namespace GN { namespace engine
     //
     //
     // -------------------------------------------------------------------------
+    static void DRAWFUNC_DEFAULT_TEXFMT( RenderEngine &, const void * param, size_t )
+    {
+        using namespace gfx;
+        struct Param
+        {
+            ClrFmt    result;
+            TexDim    dim;
+            BitFields usage;
+        };
+
+        GN_ASSERT( param );
+
+        Param * p = *(Param**)param;
+
+        p->result = gRenderer.getDefaultTextureFormat( p->dim, p->usage );
+    }
+
+    //
+    //
+    // -------------------------------------------------------------------------
     static void DRAWFUNC_MINIAPP_CTOR( RenderEngine &, const void * param, size_t )
     {
         GN_ASSERT( param );
@@ -743,6 +763,7 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mDrawFunctions[DCT_GET_CAPS]        = &DRAWFUNC_GET_CAPS;
     mDrawFunctions[DCT_SUPPORT_SHADER]  = &DRAWFUNC_SUPPORT_SHADER;
     mDrawFunctions[DCT_SUPPORT_TEXFMT]  = &DRAWFUNC_SUPPORT_TEXFMT;
+    mDrawFunctions[DCT_DEFAULT_TEXFMT]  = &DRAWFUNC_DEFAULT_TEXFMT;
     mDrawFunctions[DCT_MINIAPP_CTOR]    = &DRAWFUNC_MINIAPP_CTOR;
     mDrawFunctions[DCT_MINIAPP_CREATE]  = &DRAWFUNC_MINIAPP_CREATE;
     mDrawFunctions[DCT_MINIAPP_RESTORE] = &DRAWFUNC_MINIAPP_RESTORE;

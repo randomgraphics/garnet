@@ -118,6 +118,8 @@ namespace GN { namespace engine
 
         bool supportTextureFormat( gfx::TexDim type, BitFields usage, gfx::ClrFmt format );
 
+        gfx::ClrFmt getDefaultTextureFormat( gfx::TexDim type, BitFields usage );
+
         ///
         /// get total video meory size in bytes
         ///

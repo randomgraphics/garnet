@@ -606,6 +606,27 @@ bool GN::engine::RenderEngine::supportTextureFormat( gfx::TexDim type, BitFields
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::ClrFmt
+GN::engine::RenderEngine::getDefaultTextureFormat( gfx::TexDim type, BitFields usage )
+{
+    using namespace gfx;
+
+    struct Param
+    {
+        ClrFmt    result;
+        TexDim    dim;
+        BitFields usage;
+    } param = { FMT_UNKNOWN, type, usage };
+
+    mDrawThread->submitDrawCommand1( DCT_DEFAULT_TEXFMT, &param );
+    mDrawThread->waitForIdle();
+
+    return param.result;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 bool GN::engine::RenderEngine::internalResetRenderer(
     gfx::RendererAPI api,
     const gfx::RendererOptions & ro )
@@ -1340,7 +1361,7 @@ GN::engine::GraphicsResource * GN::engine::RenderEngine::createTexture( const St
         dim,
         (UInt32)sx, (UInt32)sy, (UInt32)sz,
         (UInt32)faces, (UInt32)levels,
-        gfx::FMT_UNKNOWN == format ? gRenderer.getDefaultTextureFormat( dim, usage ) : format,
+        gfx::FMT_UNKNOWN == format ? getDefaultTextureFormat( dim, usage ) : format,
         { usage }
     };
     return createTexture( name, desc );

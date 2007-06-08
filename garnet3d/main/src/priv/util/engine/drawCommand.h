@@ -25,6 +25,7 @@ namespace GN { namespace engine
         DCT_GET_CAPS,
         DCT_SUPPORT_SHADER,
         DCT_SUPPORT_TEXFMT,
+        DCT_DEFAULT_TEXFMT, ///< get default texture format
         DCT_MINIAPP_CTOR,
         DCT_MINIAPP_CREATE,
         DCT_MINIAPP_RESTORE,
