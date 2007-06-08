@@ -190,11 +190,16 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
 {
     GN_GUARD;
 
+    UInt32 MB = 1024 * 1024;
+
 #if GN_XENON
     GN_UNUSED_PARAM( argc );
     GN_UNUSED_PARAM( argv );
     mInitParam.rapi = gfx::API_D3D9;
     mInitParam.ro = gfx::RendererOptions();
+    mInitParam.reip.maxTexBytes = 256*MB;
+    mInitParam.reip.maxMeshBytes = 128*MB;
+    mInitParam.reip.maxDrawCommandBufferBytes = 32*MB;
     mInitParam.iapi = input::API_NATIVE;
     mInitParam.ffd.fontname = "font::/simsun.ttc";
     mInitParam.ffd.width = 16;
@@ -206,6 +211,9 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.ro.windowedWidth = 640;
     mInitParam.ro.windowedHeight = 480;
+    mInitParam.reip.maxTexBytes = 64*MB;
+    mInitParam.reip.maxMeshBytes = 64*MB;
+    mInitParam.reip.maxDrawCommandBufferBytes = 32*MB;
     mInitParam.iapi = input::API_NATIVE;
     mInitParam.ffd.fontname = "font::/simsun.ttc";
     mInitParam.ffd.width = 16;
@@ -379,9 +387,8 @@ bool GN::app::SampleApp::initRenderer()
     // connect to renderer signals
     gSigRendererWindowClose.connect( this, &SampleApp::postExitEvent );
 
-    UInt32 MB = 1024 * 1024;
-    engine::RenderEngineInitParameters reip = { 64*MB, 64*MB, 32*MB };
-    if( !mRenderEngine.init( reip ) ) return false;
+    // initialize render engine
+    if( !mRenderEngine.init( mInitParam.reip ) ) return false;
 
     // create renderer
     return recreateRenderer();
