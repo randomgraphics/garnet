@@ -141,6 +141,7 @@ void GN::gfx::OGLRTMgrFBO::bind(
             // unbind FBO, render to back buffer
             GN_OGL_CHECK( glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 ) );
             GN_OGL_CHECK( glDrawBuffer( GL_BACK ) );
+            GN_OGL_CHECK( glReadBuffer( GL_BACK ) );
 
             // update render target size
             UInt32 oldw = mWidth, oldh = mHeight;
@@ -170,6 +171,7 @@ void GN::gfx::OGLRTMgrFBO::bind(
         if( oldDesc.count > 0 || 0 == oldDesc.zbuffer.texture )
         {
             GN_OGL_CHECK( glDrawBuffer( GL_NONE ) );
+            GN_OGL_CHECK( glReadBuffer( GL_NONE ) );
         }
     }
     else
