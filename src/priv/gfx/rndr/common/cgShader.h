@@ -81,7 +81,7 @@ namespace GN { namespace gfx
             GN_ASSERT( 0 == mContext );
 
             // set Cg error hanlder
-            cgSetErrorHandler( &sCgErrorHandler, 0 );
+            //cgSetErrorHandler( &sCgErrorHandler, 0 );
 
             // create Cg context
             mContext = cgCreateContext();
@@ -105,7 +105,7 @@ namespace GN { namespace gfx
                 cgDestroyContext( mContext );
                 mContext = 0;
             }
-            cgSetErrorHandler( 0, 0 );
+            //cgSetErrorHandler( 0, 0 );
         }
 
         ///
