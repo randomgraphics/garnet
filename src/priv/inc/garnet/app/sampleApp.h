@@ -114,10 +114,11 @@ namespace GN { namespace app
         ///
         struct InitParam
         {
-            gfx::RendererAPI     rapi; ///< renderer API
-            gfx::RendererOptions ro;   ///< renderer options
-            input::InputApi      iapi; ///< input API
-            scene::FontFaceDesc  ffd;  ///< default font face descriptor
+            gfx::RendererAPI                   rapi; ///< renderer API
+            gfx::RendererOptions               ro;   ///< renderer options
+            engine::RenderEngineInitParameters reip; ///< render engine initialization parameters
+            input::InputApi                    iapi; ///< input API
+            scene::FontFaceDesc                ffd;  ///< default font face descriptor
         };
 
         static float UPDATE_INTERVAL; ///< Time interval for calling onUpdate(), in seconds.

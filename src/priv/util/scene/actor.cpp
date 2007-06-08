@@ -94,10 +94,6 @@ void GN::scene::Actor::setRotation( const Quaternionf & q )
         mRotation = q;
         dirtyTransform();
     }
-    else
-    {
-        GN_TRACE(sLogger)( "redundant rotation update." );
-    }
 }
 
 //

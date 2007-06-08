@@ -87,8 +87,8 @@ static void sPrintShaderCompileInfo( const char * hlsl, ID3DXBuffer * bin )
         "\n---------------------------------------------------------\n"
         "%s\n"
         "\n=========================================================\n",
-        hlsl,
-        asm_->GetBufferPointer() );
+        sAddLineCount(hlsl).cptr(),
+        sAddLineCount((const char*)asm_->GetBufferPointer()).cptr() );
 
     GN_UNGUARD;
 }
