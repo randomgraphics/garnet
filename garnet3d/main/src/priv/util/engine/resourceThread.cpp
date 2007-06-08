@@ -98,6 +98,7 @@ void GN::engine::RenderEngine::ResourceThread::quit()
 // -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::ResourceThread::waitForIdle()
 {
+    // serious bug!!
     while( !mLoader.commands.empty() || !mDecompressor.commands.empty() )
         sleepCurrentThread( 0 );
 }

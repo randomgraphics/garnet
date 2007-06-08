@@ -38,6 +38,7 @@ GN::engine::RenderEngine::DrawThread::submitDrawCommand(
 
     db.last = (UInt8*)header;
     db.next += commandBytes;
+    GN_ASSERT( db.next <= db.end );
 
     return header;
 }
