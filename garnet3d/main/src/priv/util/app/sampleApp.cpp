@@ -211,7 +211,7 @@ bool GN::app::SampleApp::checkCmdLine( int argc, const char * const argv[] )
     mInitParam.ro = gfx::RendererOptions();
     mInitParam.ro.windowedWidth = 640;
     mInitParam.ro.windowedHeight = 480;
-    mInitParam.reip.maxTexBytes = 64*MB;
+    mInitParam.reip.maxTexBytes = 128*MB;
     mInitParam.reip.maxMeshBytes = 64*MB;
     mInitParam.reip.maxDrawCommandBufferBytes = 32*MB;
     mInitParam.iapi = input::API_NATIVE;
