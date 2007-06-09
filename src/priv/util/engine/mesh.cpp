@@ -73,6 +73,9 @@ class BinFileLoader : public GN::engine::GraphicsResourceLoader
 {
     const StrA   mFileName;
     const size_t mDataOffset;
+
+protected:
+
     const size_t mDataBytes;
 
 public:
@@ -165,7 +168,7 @@ public:
         const UInt32 * endian = (const UInt32*)inbuf;
         const UInt32 * data = endian + 1;
 
-        size_t dwcount = ( inbytes - 1 ) / 4;
+        size_t dwcount = ( inbytes - 4 ) / 4;
         AutoTypePtr<UInt32> buf( new UInt32[dwcount] );
         if( buf.empty() )
         {
@@ -188,13 +191,17 @@ public:
         // success
         outbuf   = buf.detach();
         outbytes = dwcount * 4;
+        GN_ASSERT( outbytes == mDataBytes );
         return true;
     }
 
     virtual bool copy( engine::GraphicsResource & gfxres, const void * inbuf, size_t inbytes, int )
     {
         using namespace GN::gfx;
+
         VtxBuf * vb = gfxres.vtxbuf;
+        GN_ASSERT( mDataBytes == inbytes );
+        GN_ASSERT( vb->getDesc().bytes == inbytes );
         void * data = vb->lock( 0, 0, LOCK_DISCARD );
         if( 0 == data ) return false;
         memcpy( data, inbuf, inbytes );
@@ -219,7 +226,7 @@ public:
         const UInt32 * endian = (const UInt32*)inbuf;
         const UInt16 * data = (const UInt16*)( endian + 1 );
 
-        size_t wcount = ( inbytes - 1 ) / 2;
+        size_t wcount = ( inbytes - 4 ) / 2;
         AutoTypePtr<UInt16> buf( new UInt16[wcount] );
         if( buf.empty() )
         {
@@ -241,6 +248,7 @@ public:
         // success
         outbuf   = buf.detach();
         outbytes = wcount * 2;
+        GN_ASSERT( outbytes == mDataBytes );
         return true;
     }
 
@@ -248,6 +256,8 @@ public:
     {
         using namespace GN::gfx;
         IdxBuf * ib = gfxres.idxbuf;
+        GN_ASSERT( mDataBytes == inbytes );
+        GN_ASSERT( ib->getDesc().numidx * 2 == inbytes );
         void * data = ib->lock( 0, 0, LOCK_DISCARD );
         if( 0 == data ) return false;
         memcpy( data, inbuf, inbytes );

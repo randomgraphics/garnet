@@ -51,6 +51,7 @@ inline void GN::engine::RenderEngine::ResourceThread::submitResourceLoadingComma
     item->lastSubmittedLod    = lod;
 
     GN_ASSERT( item->lastSubmissionFence > item->lastReferenceFence );
+    GN_ASSERT( item->lastCompletedFence < item->lastSubmissionFence );
 
     submitResourceCommand( cmd );
 }

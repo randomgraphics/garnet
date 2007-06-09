@@ -154,12 +154,7 @@ void GN::engine::RenderEngine::GraphicsResourceCache::free( GraphicsResourceItem
 
     GN_ASSERT( check( item ) );
 
-    // wait until the resouce is not used any more
-    while( mEngine.drawThread().getCurrentDrawFence() < item->lastReferenceFence
-        || item->lastCompletedFence < item->lastSubmissionFence )
-    {
-        sleepCurrentThread( 0 );
-    }
+    mEngine.drawThread().waitForResource( item );
 
     mResourceMutex.lock();
 

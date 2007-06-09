@@ -797,7 +797,8 @@ bool GN::engine::RenderEngine::DrawThread::init( UInt32 maxDrawCommandBufferByte
     mActionReset = false;
     mReadingIndex = 0;
     mWritingIndex = 0;
-    mDrawFence = 0;
+    mCompletedResourceFence = 0;
+    mCompletedDrawFence = 0;
 
     // create thread
     mDrawThread = createThread(
@@ -909,7 +910,22 @@ void GN::engine::RenderEngine::DrawThread::waitForIdle( float time )
     if(mDrawBufferEmpty) mDrawBufferEmpty->wait( time );
 
     while( !mResourceCommandEmpty )
+    {
         sleepCurrentThread( 0 );
+    }
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::engine::RenderEngine::DrawThread::waitForResource( GraphicsResourceItem * item )
+{
+    submitDrawBuffer();
+
+    while( item->lastCompletedFence < item->lastSubmissionFence )
+    {
+        sleepCurrentThread( 0 );
+    }
 }
 
 // *****************************************************************************
@@ -1091,7 +1107,7 @@ void GN::engine::RenderEngine::DrawThread::handleDrawCommands()
             }
 
             // update draw fence
-            mDrawFence = command->fence;
+            mCompletedDrawFence = command->fence;
 
             // next command
             command = command->next();
@@ -1127,12 +1143,14 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
 
         ResourceCommand * prev;
 
+        bool postponed = false;
+
         while( cmd && !mActionQuit )
         {
             GN_ASSERT( mEngine.resourceCache().check( cmd->resource ) );
 
             // process the resource command
-            if( cmd->mustAfterThisDrawFence <= mDrawFence &&
+            if( cmd->mustAfterThisDrawFence <= mCompletedDrawFence &&
                 cmd->mustAfterThisResourceFence <= cmd->resource->lastCompletedFence )
             {
                 // remove it from resource command buffer
@@ -1141,9 +1159,6 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                 cmd = cmd->next;
                 mResourceCommands.remove( prev );
                 mResourceMutex.unlock();
-
-                // update resource's complete fence
-                prev->resource->lastCompletedFence = prev->submittedAtThisFence;
 
                 if( prev->noerr )
                 {
@@ -1167,6 +1182,12 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
                     }
                 }
 
+                // update resource's complete fence
+                prev->resource->lastCompletedFence = prev->submittedAtThisFence;
+
+                // update resource fence
+                mCompletedResourceFence = prev->submittedAtThisFence;
+
                 // the resource command is done. Free it.
                 ResourceCommand::free( prev );
 
@@ -1177,6 +1198,8 @@ void GN::engine::RenderEngine::DrawThread::handleResourceCommands()
             else
             {
                 GN_SCOPE_PROFILER( RenderEngine_DrawThread_resource_postponed );
+
+                postponed = true;
 
                 if( GN_RENDER_ENGINE_COMMAND_DUMP_ENABLED )
                 {
