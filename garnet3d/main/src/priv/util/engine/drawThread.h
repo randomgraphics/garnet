@@ -77,9 +77,9 @@ namespace GN { namespace engine
         void waitForIdle( float time = INFINITE_TIME );
 
         ///
-        /// get current draw fence
+        /// wait until specific resource is processed by both resource and draw thread
         ///
-        FenceId getCurrentDrawFence() const { return mDrawFence; }
+        void waitForResource( GraphicsResourceItem * item );
 
         //@}
 
@@ -203,21 +203,22 @@ namespace GN { namespace engine
         DoubleLinkedList<ResourceCommand> mResourceCommands;
         Mutex                             mResourceMutex;
         volatile bool                     mResourceCommandEmpty;
+        volatile FenceId                  mCompletedResourceFence;
 
         // data to handle draw commands
-        DrawFunction    mDrawFunctions[NUM_DRAW_COMMAND_TYPES];
-        DrawBuffer      mDrawBuffers[DRAW_BUFFER_COUNT];
-        volatile SInt32 mReadingIndex;
-        volatile SInt32 mWritingIndex;
-        FenceId         mDrawFence;   // means that draws before or equal this fence are done.
-        Mutex           mDrawBufferMutex;
-        SyncEvent     * mDrawBufferEmpty;
-        Semaphore     * mDrawBufferNotFull;
+        DrawFunction     mDrawFunctions[NUM_DRAW_COMMAND_TYPES];
+        DrawBuffer       mDrawBuffers[DRAW_BUFFER_COUNT];
+        volatile SInt32  mReadingIndex;
+        volatile SInt32  mWritingIndex;
+        volatile FenceId mCompletedDrawFence;   // means that draws before or equal this fence are done.
+        Mutex            mDrawBufferMutex;
+        SyncEvent      * mDrawBufferEmpty;
+        Semaphore      * mDrawBufferNotFull;
         //Semaphore     * mDrawBufferNotEmpty;
-        bool            mDrawBegun;
-        FrameProfiler   mFrameProfiler;
+        bool             mDrawBegun;
+        FrameProfiler    mFrameProfiler;
 
-        Thread        * mDrawThread;
+        Thread         * mDrawThread;
 
         // ********************************
         // private functions

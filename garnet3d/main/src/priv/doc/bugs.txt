@@ -1,10 +1,6 @@
 OPENNING
 ========
 
-- RenderEngine FORCE_SERIALIZE() macro has serious bug
-
-- GNtoolMeshViewer has multi-thread bug when loading large model.
-
 - GfxOGLTest::testChangeUserOptions: assert failure on NVIDIA 7800GTX
 
 - Render target image is up-side-down in OGL, comparing with D3D.

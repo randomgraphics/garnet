@@ -407,9 +407,9 @@ struct ApiReentrantChecker
 #define FAKE_RENDER_ENGINE 0
 
 ///
-/// uncomment this macro to force render engine runs in serialize way
+/// define to non-zero value to force render engine runs in serialize way
 ///
-#define FORCE_SERALIZE() // mDrawThread->waitForIdle();
+#define FORCE_SERALIZE 0
 
 // *****************************************************************************
 // ctor / dtor
@@ -676,7 +676,10 @@ void GN::engine::RenderEngine::setContext( const DrawContext & context )
 
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -751,7 +754,10 @@ void GN::engine::RenderEngine::setShaderUniform(
         item,
         *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -771,7 +777,10 @@ void GN::engine::RenderEngine::clearScreen(
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -794,7 +803,10 @@ void GN::engine::RenderEngine::drawIndexed(
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -814,7 +826,10 @@ void GN::engine::RenderEngine::draw(
     if( 0 == dr ) return;
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 void GN::engine::RenderEngine::drawIndexedUp(
@@ -863,7 +878,10 @@ void GN::engine::RenderEngine::drawIndexedUp(
 
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -912,7 +930,10 @@ void GN::engine::RenderEngine::drawLines(
 
     sSetupDrawCommandWaitingList( *mResourceCache, mDrawContext, *dr );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -985,7 +1006,10 @@ void GN::engine::RenderEngine::present()
         }
     }
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 
     // profile frame time
 #if GN_PROFILE_ENABLED
@@ -1067,7 +1091,10 @@ void GN::engine::RenderEngine::disposeResource( GraphicsResource * res )
 
     mResourceLRU->dispose( item );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForResource( item );
+    }
 }
 
 //
@@ -1081,7 +1108,10 @@ void GN::engine::RenderEngine::disposeAllResources()
 
     mResourceLRU->disposeAll();
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 //
@@ -1104,7 +1134,10 @@ void GN::engine::RenderEngine::updateResource(
 
     mResourceThread->submitResourceLoadingCommand( item, lod, loader );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForResource( item );
+    }
 }
 
 // *****************************************************************************
@@ -1135,7 +1168,10 @@ GN::engine::MiniAppId GN::engine::RenderEngine::registerMiniApp( MiniApp * ma )
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_CREATE, ma );
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_RESTORE, ma );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 
     return id;
 }
@@ -1161,10 +1197,7 @@ GN::engine::MiniApp * GN::engine::RenderEngine::unregisterMiniApp( MiniAppId id 
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DESTROY, ma );
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_DTOR, ma );
 
-    mResourceThread->waitForIdle();
     mDrawThread->waitForIdle();
-
-    FORCE_SERALIZE();
 
     return ma;
 }
@@ -1186,7 +1219,10 @@ void GN::engine::RenderEngine::runMiniApp( MiniAppId id )
 
     mDrawThread->submitDrawCommand1( DCT_MINIAPP_RUN, mMiniApps[id] );
 
-    FORCE_SERALIZE();
+    if( FORCE_SERALIZE )
+    {
+        mDrawThread->waitForIdle();
+    }
 }
 
 // *****************************************************************************
