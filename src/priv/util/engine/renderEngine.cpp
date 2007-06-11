@@ -1465,6 +1465,27 @@ GN::engine::RenderEngine::create2DDepthTexture(
 //
 //
 // -----------------------------------------------------------------------------
+GN::engine::GraphicsResource *
+GN::engine::RenderEngine::createSampler(
+    const StrA             & name,
+    const gfx::SamplerDesc & desc )
+{
+    GraphicsResourceDesc grd;
+    grd.name    = name;
+    grd.type    = GRT_SAMPLER;
+    grd.sampler = desc;
+
+    GraphicsResource * res = allocResource( grd );
+    if( 0 == res ) return 0;
+
+    updateResource( res, 0, DummyLoader::sGetInstance() );
+
+    return res;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 void GN::engine::RenderEngine::clearDrawContext()
 {
     static struct Local

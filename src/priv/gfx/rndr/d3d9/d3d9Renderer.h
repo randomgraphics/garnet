@@ -8,6 +8,7 @@
 
 #include "../common/basicRenderer.h"
 #include "../common/cgShader.h"
+#include "d3d9Sampler.h"
 
 /// \def GNGFX_D3D9CAPS
 /// Define D3D special caps.
@@ -238,6 +239,7 @@ namespace GN { namespace gfx
 
         virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints );
         virtual Texture * createTexture( const TextureDesc & desc );
+        virtual SamplerHandle createSampler( const SamplerDesc & );
         virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
@@ -273,7 +275,7 @@ namespace GN { namespace gfx
 
         bool resourceInit() { return true; }
         void resourceQuit() {}
-        void resourceClear() {}
+        void resourceClear() { mDefaultSampler = 0; }
         bool resourceDeviceCreate();
         bool resourceDeviceRestore();
         void resourceDeviceDispose();
@@ -285,8 +287,10 @@ namespace GN { namespace gfx
         CgContextWrapper mCgContext;
 #endif
 
-        std::list<D3D9Resource*> mResourceList;
-        HandleManager<D3D9VtxDeclDesc,VtxFmtHandle> mVtxFmts;
+        std::list<D3D9Resource*>                       mResourceList;
+        HandleManager<D3D9VtxDeclDesc,VtxFmtHandle>    mVtxFmts;
+        HandleManager<D3D9SamplerObject,SamplerHandle> mSamplers;
+        SamplerHandle                                  mDefaultSampler;
 
         //@}
 

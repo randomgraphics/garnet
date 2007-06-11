@@ -12,6 +12,7 @@ sources = [
     'imageTGA.cpp',
     'renderState.cpp',
     #'nes.cpp',
+    'sampler.cpp',
     'shape.cpp',
     'uniform.cpp',
     'vertex.cpp',

@@ -8,7 +8,9 @@
 
 namespace GN { namespace gfx
 {
-    typedef UIntPtr VtxFmtHandle; ///< Vertex format handle
+    GN_DEFINE_HANDLE( VtxFmtHandle ); ///< Vertex format handle
+
+    GN_DEFINE_HANDLE( SamplerHandle ); ///< sampler state handle
 
     enum
     {
@@ -198,11 +200,12 @@ namespace GN { namespace gfx
                 unsigned int materialSpecular   : 1; ///< material specular color
                 unsigned int tsb                : 1; ///< texture state block
                 // byte 2 (graphics resources)
-                unsigned int textures           : 1; ///< textures
                 unsigned int vtxfmt             : 1; ///< vertex format
                 unsigned int vtxbufs            : 1; ///< vertex buffers
                 unsigned int idxbuf             : 1; ///< index buffer
-                unsigned int                    : 4; ///< reserved
+                unsigned int samplers           : 1; ///< samplers
+                unsigned int textures           : 1; ///< textures
+                unsigned int                    : 3; ///< reserved
                 // byte 3 (reserved)
                 unsigned int                    : 8; ///< reserved
             };
@@ -264,12 +267,14 @@ namespace GN { namespace gfx
         TextureStateBlockDesc tsb;              ///< texture state block
 
         // graphics resources
-        const Texture *       textures[MAX_TEXTURE_STAGES]; ///< texture list
-        UInt32                numTextures; ///< texture count
-        VtxFmtHandle          vtxfmt; ///< vertex format handle. 0 means no vertex data at all.
+        VtxFmtHandle          vtxfmt;                         ///< vertex format handle. 0 means no vertex data at all.
         VtxBufDesc            vtxbufs[MAX_VERTEX_ATTRIBUTES]; ///< vertex buffers.
-        UInt32                numVtxBufs; ///< vertex buffer count.
-        const IdxBuf *        idxbuf; ///< index buffer
+        UInt32                numVtxBufs;                     ///< vertex buffer count.
+        const IdxBuf *        idxbuf;                         ///< index buffer
+        SamplerHandle         samplers[MAX_TEXTURE_STAGES];   ///< sampler list
+        UInt32                numSamplers;                    ///< sampler count
+        const Texture *       textures[MAX_TEXTURE_STAGES];   ///< texture list
+        UInt32                numTextures;                    ///< texture count
 
         ///
         /// Clear to null context, all fields are unused/undefined.
@@ -283,6 +288,7 @@ namespace GN { namespace gfx
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
             rsb.resetToEmpty();
+            numSamplers = 0;
             numTextures = 0;
             numVtxBufs = 0;
         }
@@ -311,6 +317,7 @@ namespace GN { namespace gfx
             materialSpecular.set( 0.2f, 0.2f, 0.2f, 1.0f );
             tsb.resetToDefault();
 
+            numSamplers = 0;
             numTextures = 0;
             vtxfmt = 0;
             numVtxBufs = 0;

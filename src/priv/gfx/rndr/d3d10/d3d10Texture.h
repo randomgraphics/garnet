@@ -50,8 +50,6 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void setFilter( TexFilter min, TexFilter mag ) const;
-        virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const TexLockArea * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap();

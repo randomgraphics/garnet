@@ -162,6 +162,16 @@ GN::gfx::D3D10Renderer::createTexture( const TextureDesc & desc )
 //
 //
 // -----------------------------------------------------------------------------
+GN::gfx::SamplerHandle GN::gfx::D3D10Renderer::createSampler( const SamplerDesc & desc )
+{
+    GN_UNUSED_PARAM( desc );
+    GN_UNIMPL();
+    return 0;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
 GN::gfx::VtxFmtHandle  GN::gfx::D3D10Renderer::createVtxFmt( const VtxFmtDesc & format )
 {
     GN_GUARD;

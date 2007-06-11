@@ -43,31 +43,6 @@ namespace GN { namespace gfx
     };
 
     ///
-    /// ÌùÍ¼¹ýÂËÆ÷
-    ///
-    enum TexFilter
-    {
-        TEXFILTER_NEAREST,      ///< nearest
-        TEXFILTER_LINEAR,       ///< linear
-        TEXFILTER_N_MIP_N,      ///< NEAREST_MIPMAP_NEAREST
-        TEXFILTER_N_MIP_L,      ///< NEAREST_MIPMAP_LINEAR
-        TEXFILTER_L_MIP_N,      ///< LINEAR_MIPMAP_NEAREST
-        TEXFILTER_L_MIP_L,      ///< LINEAR_MIPMAP_LINEAR
-        NUM_TEXFILTERS
-    };
-
-    ///
-    /// ÌùÍ¼Wrap Mode
-    ///
-    enum TexWrap
-    {
-        TEXWRAP_REPEAT,
-        TEXWRAP_CLAMP,
-        TEXWRAP_CLAMP_TO_EDGE,
-        NUM_TEXWRAPS
-    };
-
-    ///
     /// cube texture face
     ///
     enum CubeFace
@@ -352,22 +327,6 @@ namespace GN { namespace gfx
             if( sz ) *sz = (T)mipSize.z;
         }
 
-        ///
-        /// set texture filters
-        ///
-        /// \note default is [linear, linear]
-        ///
-        virtual void setFilter( TexFilter min, TexFilter mag ) const = 0;
-
-        ///
-        /// set texture address mode
-        ///
-        /// \note default is TEXWRAP_REPEAT
-        ///
-        virtual void setWrap( TexWrap s,
-                              TexWrap t = TEXWRAP_REPEAT,
-                              TexWrap r = TEXWRAP_REPEAT ) const = 0;
-
         /// \name lock/unlock functions
         //@{
 
@@ -530,118 +489,6 @@ namespace GN { namespace gfx
                 if( 0 == ::strcmp(sTable[i],name) )
                 {
                     value = static_cast<TexDim>(i);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline bool
-    texFilter2Str( StrA & str, TexFilter filter )
-    {
-        static const char * sTable [] =
-        {
-            "NEAREST", "LINEAR",
-            "N_MIP_N", "N_MIP_L",
-            "L_MIP_N", "L_MIP_L",
-        };
-
-        if( 0 <= filter && filter < NUM_TEXFILTERS )
-        {
-            str = sTable[filter];
-            return true;
-        }
-        else return false;
-    }
-    //
-    inline const char *
-    texFilter2Str( TexFilter filter )
-    {
-        static const char * sTable [] =
-        {
-            "NEAREST", "LINEAR",
-            "N_MIP_N", "N_MIP_L",
-            "L_MIP_N", "L_MIP_L",
-        };
-
-        if( 0 <= filter && filter < NUM_TEXFILTERS )
-        {
-            return sTable[filter];
-        }
-        else return "BAD_TEXTURE_FILTER";
-    }
-    //
-    inline bool
-    str2TexFilter( TexFilter & value, const char * name )
-    {
-        static const char * sTable [] =
-        {
-            "NEAREST", "LINEAR",
-            "N_MIP_N", "N_MIP_L",
-            "L_MIP_N", "L_MIP_L",
-        };
-
-        if( name )
-        {
-            for( size_t i = 0; i < NUM_TEXFILTERS; ++i )
-            {
-                if( 0 ==::strcmp(sTable[i],name) )
-                {
-                    value = static_cast<TexFilter>(i);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    //
-    //
-    // -------------------------------------------------------------------------
-    inline bool
-    texWrap2Str( StrA & str, TexWrap texwrap )
-    {
-        static const char * sTable [] =
-        { "REPEAT", "CLAMP", "CLAMP_TO_EDGE" };
-
-        if( 0 <= texwrap && texwrap < NUM_TEXWRAPS )
-        {
-            str = sTable[texwrap];
-            return true;
-        }
-        else return false;
-    }
-    //
-    inline const char *
-    texWrap2Str( TexWrap texwrap )
-    {
-        static const char * sTable [] =
-        { "REPEAT", "CLAMP", "CLAMP_TO_EDGE" };
-
-        if( 0 <= texwrap && texwrap < NUM_TEXWRAPS )
-        {
-            return sTable[texwrap];
-        }
-        else return "BAD_TEXTURE_WRAP";
-    }
-    //
-    inline bool
-    str2TexWrap( TexWrap & value, const char * name )
-    {
-        static const char * sTable [] =
-        { "REPEAT", "CLAMP", "CLAMP_TO_EDGE" };
-
-        if( name )
-        {
-            for( size_t i = 0; i < NUM_TEXWRAPS; ++i )
-            {
-                if( 0 ==::strcmp(sTable[i],name) )
-                {
-                    value = static_cast<TexWrap>(i);
                     return true;
                 }
             }

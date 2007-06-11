@@ -15,6 +15,7 @@ namespace GN { namespace gfx
     // Forward declarations
     class D3D10Resource;
     class D3D10RTMgr;
+    class D3D10StateObjectManager;
 
     ///
     /// D3D9 vertex buffer layout descriptor
@@ -169,6 +170,7 @@ namespace GN { namespace gfx
 
         virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints );
         virtual Texture * createTexture( const TextureDesc & desc );
+        virtual SamplerHandle createSampler( const SamplerDesc & );
         virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
@@ -229,7 +231,7 @@ namespace GN { namespace gfx
         bool contextInit() { return true; }
         void contextQuit() {}
         bool contextOK() const { return true; }
-        void contextClear() { mContext.resetToDefault(); mRTMgr = 0; }
+        void contextClear() { mContext.resetToDefault(); mSOMgr = 0; mRTMgr = 0; }
         bool contextDeviceCreate();
         void contextDeviceDestroy();
 
@@ -250,9 +252,9 @@ namespace GN { namespace gfx
 
     private:
 
-        RendererContext mContext;
-
-        D3D10RTMgr * mRTMgr;
+        RendererContext           mContext;
+        D3D10StateObjectManager * mSOMgr;
+        D3D10RTMgr              * mRTMgr;
 
         //@}
 

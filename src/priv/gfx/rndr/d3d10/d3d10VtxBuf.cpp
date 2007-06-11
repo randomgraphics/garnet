@@ -2,7 +2,7 @@
 #include "d3d10Buffer.h"
 #include "d3d10Renderer.h"
 
-GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.VtxBuf");
+static GN::Logger * sLogger = GN::getLogger("GN.gfx.rndr.D3D10.VtxBuf");
 
 // *****************************************************************************
 // Local functions

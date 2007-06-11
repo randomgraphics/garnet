@@ -5,10 +5,11 @@
 #endif
 #include "oglRenderTargetMgr.h"
 #include "oglShader.h"
-#include "oglTexture.h"
 #include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
+#include "oglTexture.h"
+#include "oglSampler.h"
 
 // *****************************************************************************
 // local function
@@ -664,7 +665,7 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
     //
 
     //
-    // bind textures
+    // bind textures and samplers
     //
     if( newFlags.textures )
     {
@@ -679,7 +680,11 @@ GN_INLINE void GN::gfx::OGLRenderer::bindContextData(
             if( newContext.textures[i] )
             {
                 chooseTextureStage( i );
+
                 safeCast<const OGLTexture *>(newContext.textures[i])->bind();
+
+                SamplerHandle samp = ( i < newContext.numSamplers ) ? newContext.samplers[i] : mDefaultSampler;
+                mSamplers[samp]->bind();
             }
             else
             {

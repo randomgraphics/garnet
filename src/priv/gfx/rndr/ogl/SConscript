@@ -16,6 +16,7 @@ sources = [
     'oglRenderTargetMgrFBO.cpp',
     'oglResource.cpp',
     'oglResourceMgr.cpp',
+    'oglSampler.cpp',
     'oglTexture.cpp',
     'oglVtxBufNormal.cpp',
     'oglVtxBufVBO.cpp',

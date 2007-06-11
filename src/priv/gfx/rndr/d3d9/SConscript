@@ -15,6 +15,7 @@ sources = [
     'd3d9Resource.cpp',
     'd3d9ResourceManager.cpp',
     'd3d9StateDumper.cpp',
+    'd3d9Sampler.cpp',
     'd3d9Texture.cpp',
     'd3d9VertexDecl.cpp',
     'd3d9VtxBuf.cpp',

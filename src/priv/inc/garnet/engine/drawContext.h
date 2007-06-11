@@ -47,11 +47,12 @@ namespace GN { namespace engine
                 unsigned int materialSpecular   : 1; ///< material specular color
                 unsigned int tsb                : 1; ///< texture state block
                 // byte 2 (graphics resources)
-                unsigned int textures           : 1; ///< textures
                 unsigned int vtxfmt             : 1; ///< vertex format
                 unsigned int vtxbufs            : 1; ///< vertex buffers
                 unsigned int idxbuf             : 1; ///< index buffer
-                unsigned int                    : 4; ///< reserved
+                unsigned int samplers           : 1; ///< samplers
+                unsigned int textures           : 1; ///< textures
+                unsigned int                    : 3; ///< reserved
                 // byte 3 (reserved)
                 unsigned int                    : 8; ///< reserved
             };
@@ -246,12 +247,14 @@ namespace GN { namespace engine
         gfx::TextureStateBlockDesc tsb;              ///< texture state block
 
         // graphics resources
-        const GraphicsResource   * textures[gfx::MAX_TEXTURE_STAGES];   ///< texture list
-        UInt32                     numTextures;                         ///< texture count
         const GraphicsResource   * vtxfmt;                              ///< vertex format handle. 0 means no vertex data at all.
         VtxBufDesc                 vtxbufs[gfx::MAX_VERTEX_ATTRIBUTES]; ///< vertex buffers.
         UInt32                     numVtxBufs;                          ///< vertex buffer count.
         const GraphicsResource   * idxbuf;                              ///< index buffer
+        const GraphicsResource   * samplers[gfx::MAX_TEXTURE_STAGES];   ///< sampler list
+        UInt32                     numSamplers;                         ///< sampler count
+        const GraphicsResource   * textures[gfx::MAX_TEXTURE_STAGES];   ///< texture list
+        UInt32                     numTextures;                         ///< texture count
 
         ///
         /// Clear to null context, all fields are unused/undefined.
@@ -265,8 +268,9 @@ namespace GN { namespace engine
             GN_CASSERT( 4 == sizeof(FieldFlags) );
             flags.u32 = 0;
             rsb.resetToEmpty();
-            numTextures = 0;
             numVtxBufs = 0;
+            numSamplers = 0;
+            numTextures = 0;
         }
 
         ///
@@ -293,10 +297,11 @@ namespace GN { namespace engine
             materialSpecular.set( 0.2f, 0.2f, 0.2f, 1.0f );
             tsb.resetToDefault();
 
-            numTextures = 0;
             vtxfmt = 0;
             numVtxBufs = 0;
             idxbuf = 0;
+            numSamplers = 0;
+            numTextures = 0;
         }
 
         ///

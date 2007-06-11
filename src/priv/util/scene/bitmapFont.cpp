@@ -63,7 +63,8 @@ public:
 
         tex->unlock();
 
-        tex->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
+        //tex->setFilter( TEXFILTER_NEAREST, TEXFILTER_NEAREST );
+        GN_TODO( "setup sampler" );
 
         // success
         return true;

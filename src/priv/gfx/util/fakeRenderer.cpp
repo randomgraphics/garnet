@@ -158,8 +158,6 @@ namespace GN { namespace gfx
                 }
                 return true;
             }
-            virtual void setFilter( TexFilter, TexFilter ) const {}
-            virtual void setWrap( TexWrap, TexWrap, TexWrap ) const {}
             virtual bool lock(
                 TexLockedResult & result,
                 size_t face,
@@ -214,7 +212,8 @@ namespace GN { namespace gfx
             if( !tex->init( desc ) ) return 0;
             return tex.detach();
         }
-        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) { return 1; }
+        SamplerHandle createSampler( const SamplerDesc & ) { return (SamplerHandle)1; }
+        virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) { return (VtxFmtHandle)1; }
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc ) { return new FakeVtxBuf( desc.bytes ); }
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc ) { return new FakeIdxBuf( desc.numidx ); }
 

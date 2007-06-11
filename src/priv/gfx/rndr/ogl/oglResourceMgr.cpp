@@ -1,14 +1,26 @@
 #include "pch.h"
 #include "oglRenderer.h"
 #include "oglShader.h"
-#include "oglTexture.h"
 #include "oglVtxFmt.h"
 #include "oglVtxBuf.h"
 #include "oglIdxBuf.h"
+#include "oglTexture.h"
+#include "oglSampler.h"
 
 // *****************************************************************************
 // local function
 // *****************************************************************************
+
+struct EqualSampler
+{
+    const GN::gfx::SamplerDesc & desc;
+    EqualSampler( const GN::gfx::SamplerDesc & d ) : desc(d) {}
+    bool operator()( const GN::gfx::OGLSamplerObject * so ) const
+    {
+        GN_ASSERT( so );
+        return desc == so->getDesc();
+    }
+};
 
 struct EqualFormat
 {
@@ -42,6 +54,10 @@ bool GN::gfx::OGLRenderer::resourceDeviceCreate()
         return false;
     }
 
+    // create default sampler
+    mDefaultSampler = createSampler( SamplerDesc::DEFAULT );
+    if( 0 == mDefaultSampler ) return false;
+
 #ifdef HAS_CG_OGL
     if( !mCgContext.init() ) return false;
 #endif
@@ -68,6 +84,14 @@ void GN::gfx::OGLRenderer::resourceDeviceDestroy()
         delete mVtxFmts[h];
     }
     mVtxFmts.clear();
+
+    // release all samplers
+    for( SamplerHandle h = mSamplers.first(); h != 0; h = mSamplers.next( h ) )
+    {
+        GN_ASSERT( mSamplers[h] );
+        delete mSamplers[h];
+    }
+    mSamplers.clear();
 
     // check for non-released resources
     if( !mResourceList.empty() )
@@ -186,6 +210,31 @@ GN::gfx::OGLRenderer::createTexture( const TextureDesc & desc )
 
     GN_UNGUARD;
 }
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::SamplerHandle  GN::gfx::OGLRenderer::createSampler( const SamplerDesc & desc )
+{
+    GN_GUARD;
+
+    SamplerHandle  h = mSamplers.findIf( EqualSampler(desc) );
+
+    if( 0 == h )
+    {
+        // create new vertex binding object
+        AutoObjPtr<OGLSamplerObject> p( new OGLSamplerObject(*this) );
+        if( !p->init( desc ) ) return 0;
+        h = mSamplers.add( p );
+        p.detach();
+    }
+
+    // success
+    return h;
+
+    GN_UNGUARD;
+}
+
 
 //
 //

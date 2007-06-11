@@ -13,6 +13,7 @@ sources = [
 	'd3d10ResourceManager.cpp',
 	'd3d10RenderTargetMgr.cpp',
 	'd3d10ShaderHlsl.cpp',
+	'd3d10StateObject.cpp',
 	'd3d10Texture.cpp',
 	'd3d10VtxBuf.cpp',
 	'd3d10VtxLayout.cpp',

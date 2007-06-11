@@ -13,6 +13,7 @@ namespace GN { namespace gfx
 {
     struct OGLResource;
     class OGLVtxFmt;
+    class OGLSamplerObject;
     class OGLLine;
     class OGLBasicRTMgr;
 
@@ -202,6 +203,7 @@ namespace GN { namespace gfx
 
         virtual Shader * createShader( ShaderType type, ShadingLanguage lang, const StrA & code, const StrA & hints );
         virtual Texture * createTexture( const TextureDesc & desc );
+        virtual SamplerHandle createSampler( const SamplerDesc & );
         virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & );
         virtual VtxBuf * createVtxBuf( const VtxBufDesc & desc );
         virtual IdxBuf * createIdxBuf( const IdxBufDesc & desc );
@@ -237,7 +239,7 @@ namespace GN { namespace gfx
 
         bool resourceInit() { return true; }
         void resourceQuit() {}
-        void resourceClear() {}
+        void resourceClear() { mDefaultSampler = 0; }
         bool resourceDeviceCreate();
         bool resourceDeviceRestore() { return true; }
         void resourceDeviceDispose() {}
@@ -266,12 +268,16 @@ namespace GN { namespace gfx
 
         typedef HandleManager<OGLVtxFmt*,VtxFmtHandle> VtxFmtManager;
 
+        typedef HandleManager<OGLSamplerObject*,SamplerHandle> SamplerManager;
+
 #if HAS_CG
         CgContextWrapper mCgContext;
 #endif
         std::list<OGLResource*> mResourceList;
         GLSLProgramMap          mGLSLProgramMap;
         VtxFmtManager           mVtxFmts;
+        SamplerManager          mSamplers;
+        SamplerHandle           mDefaultSampler;
 
         //@}
 
