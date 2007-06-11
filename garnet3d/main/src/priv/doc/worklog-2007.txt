@@ -1,3 +1,7 @@
+- 2007.6.11
+  - multi-thread rendering architecture: RenderEngine class
+  - independent sampler object.
+
 - 2007.5.21
   - upgrade to version 0.8.1
 
