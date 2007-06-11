@@ -10,6 +10,7 @@ SORT_BY_SCOPE_NAME     = YES
 QUIET                  = YES
 INPUT                  = src/priv
 FILE_PATTERNS          = *.h *.inl
+EXCLUDE                = src/priv/experimental
 EXCLUDE_PATTERNS       = pch.h pch.cpp
 RECURSIVE              = YES
 GENERATE_HTMLHELP      = "$GENERATE_HTMLHELP"
