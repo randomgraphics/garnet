@@ -23,7 +23,8 @@ namespace GN { namespace gfx2
 
     enum
     {
-        MAX_SUB_SURFACES = 256, ///< max sub surfaces count in single surface
+        MAX_SURFACE_ELEMENT_ATTRIBUTES = 16,  ///< max attributes in single surface element
+        MAX_SUB_SURFACES               = 256, ///< max sub surfaces count in single surface
     };
 
     ///
@@ -40,9 +41,35 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// element format structure
+    /// syrface element attribute. This is the minimal unit of a surface.
     ///
-    typedef GN::gfx::VtxFmtDesc ElementFormat;
+    struct SurfaceElementAttribute
+    {
+        FOURCC semantic; ///< FORCC encoded sementic. (must be unique in single surfel)
+        SInt16 format;   ///< attribute format. (FMT_XXX).
+        UInt16 offset;   ///< offset in element.
+
+        ///
+        /// set values in attribute descriptor
+        ///
+        void set( FOURCC sem_, SInt16 fmt_, UInt16 offset_ )
+        {
+            semantic = sem_;
+            offset   = offset_;
+            format   = fmt_;
+        }
+    };
+    GN_CASSERT( sizeof(SurfaceElementAttribute) == 8 );
+
+    ///
+    /// Surface element (surfel)
+    ///
+    struct SurfaceElement
+    {
+        SurfaceElementAttribute attribs[MAX_SURFACE_ELEMENT_ATTRIBUTES]; ///< surfel attribute list
+        UInt32                  count;                                   ///< surfel attribute count
+        UInt32                  stride;                                  ///< surfel stride in bytes
+    };
 
     ///
     /// describe sub surface data orgnization
@@ -51,11 +78,11 @@ namespace GN { namespace gfx2
     {
         // all values are in unit of element
         //@{
-        UInt32 width;
-        UInt32 height;
-        UInt32 depth;
-        UInt32 rowPitch;
-        UInt32 slicePitch;
+        UInt32 width;        ///< sub surface width in element
+        UInt32 height;       ///< sub surface height in element
+        UInt32 depth;        ///< sub surface depth in element
+        UInt32 rowBytes;     ///< row pitch in bytes
+        UInt32 sliceBytes;   ///< slice pitch in bytes
         //@}
     };
 
@@ -64,10 +91,10 @@ namespace GN { namespace gfx2
     ///
     struct SurfaceLayout
     {
-        int                     orgnization; ///< 1D, 1D array, 2D, 2D array, 3D, 3D array
-        int                     levels;
-        int                     faces;
-        ElementFormat           format;
+        int              orgnization; ///< 1D, 1D array, 2D, 2D array, 3D, 3D array
+        int              levels;      ///< LOD levels
+        int              faces;       ///< number of faces
+        SurfaceElement   element;     ///< element descriptor
         SubSurfaceLayout subsurfaces[MAX_SUB_SURFACES]; ///< indexed by (arrayIndex * mipcount + mipIndex)
     };
 
@@ -86,9 +113,9 @@ namespace GN { namespace gfx2
     struct SubSurfaceData
     {
         //@{
-        void * data;       ///< sub surface data pointer
-        UInt32 rowPitch;   ///< row pitch in element
-        UInt32 slicePitch; ///< slice pitch in element
+        void * data;         ///< sub surface data pointer
+        UInt32 rowBytes;     ///< row pitch in bytes (at least "element stride * sub surface width" )
+        UInt32 sliceBytes;   ///< slice pitch in bytes (at least "rowBytes * sub surface height" )
         //@}
     };
 
@@ -128,8 +155,8 @@ namespace GN { namespace gfx2
             UInt32              subsurface,
             const Box<UInt32> & area,
             const void        * source,
-            UInt32              rowPitch,
-            UInt32              slicePitch,
+            UInt32              rowBytes,
+            UInt32              sliceBytes,
             ) = 0;
 
         ///
@@ -163,12 +190,12 @@ namespace GN { namespace gfx2
     // *************************************************************************
 
     ///
-    /// define template of the surface data structure that can be used to match one or mutiple data structures.
+    /// define template of the surface data layout that can be used to match one or mutiple data layouts.
     ///
-    struct SurfaceDataStructureTemplate
+    struct SurfaceLayoutTemplate
     {
         ///
-        /// check whether a format matches the template
+        /// check whether a layout matches the template
         ///
         bool match( const SurfaceLayout & ) const;
     };
@@ -179,8 +206,8 @@ namespace GN { namespace gfx2
     struct EffectPortDesc
     {
         //@{
-        StrA                         sementic;
-        SurfaceDataStructureTemplate format;
+        StrA                  sementic;
+        SurfaceLayoutTemplate layout;
         //@}
     };
 
@@ -193,6 +220,31 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// define surface to effect binding
+    ///
+    struct EffectInputOutputLayout
+    {
+        struct PortBinding
+        {
+            StrA      port;       ///< effect port name
+            Surface * surf;       ///< surface pointer
+            StrA      semantic;   ///< semantic of the attribute that will be binded.
+            //@{
+            UInt32    firstLevel;
+            UInt32    numLevels;
+            UInt32    firstFace;
+            UInt32    numFaces;
+            //@}
+        };
+        DynaArray<PortBinding> bindings;
+    };
+
+    ///
+    /// effect binding handle
+    ///
+    typedef UIntPtr EffectBinding;
+
+    ///
     /// effect interface: represents a process kernel function
     ///
     struct Effect : public NoCopy
@@ -201,6 +253,21 @@ namespace GN { namespace gfx2
         /// check whether a surface is compatible with the effect
         ///
         virtual bool compatible( Surface * surf, const StrA & port ) = 0;
+
+        ///
+        /// create a binding handle
+        ///
+        virtual EffectBinding createBinding( EffectInputOutputLayout & ) = 0;
+
+        ///
+        /// delete a binding handle
+        ///
+        virtual void deleteBinding( EffectBinding ) = 0;
+
+        ///
+        /// bind surfaces to effect
+        ///
+        virtual void bind( EffectBinding ) = 0;
     };
 
     // *************************************************************************
@@ -263,6 +330,21 @@ namespace GN { namespace gfx2
 
         //@}
     };
+
+    // *************************************************************************
+    // Sample code
+    // *************************************************************************
+
+    //@{
+
+    GraphicsSystem gs;
+
+    void RenderToCube()
+    {
+        // render-to-cube effect has 
+    }
+
+    //@}
 }}
 
 // *****************************************************************************
