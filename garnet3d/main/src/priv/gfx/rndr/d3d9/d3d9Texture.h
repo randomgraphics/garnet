@@ -53,12 +53,6 @@ namespace GN { namespace gfx
         {
             mD3DTexture = 0;
             mShadowCopy = 0;
-            mD3DFilters[0] =
-            mD3DFilters[1] = D3DTEXF_LINEAR;
-            mD3DFilters[2] = D3DTEXF_NONE;
-            mD3DWraps[0] =
-            mD3DWraps[1] =
-            mD3DWraps[2] = D3DTADDRESS_WRAP;
         }
         //@}
 
@@ -75,8 +69,6 @@ namespace GN { namespace gfx
         // ********************************
     public:
 
-        virtual void setFilter( TexFilter min, TexFilter mag ) const;
-        virtual void setWrap( TexWrap s, TexWrap t, TexWrap r ) const;
         virtual bool lock( TexLockedResult & result, size_t face, size_t level, const TexLockArea * area, LockFlag flag );
         virtual void unlock();
         virtual void updateMipmap();
@@ -93,16 +85,15 @@ namespace GN { namespace gfx
         void bind( UINT stage ) const
         {
             D3D9Renderer & r = getRenderer();
-            
             r.getDevice()->SetTexture( stage, mD3DTexture );
-
+/*
             r.setD3DSamplerState( stage, D3DSAMP_MINFILTER, mD3DFilters[0] );
             r.setD3DSamplerState( stage, D3DSAMP_MAGFILTER, mD3DFilters[1] );
             r.setD3DSamplerState( stage, D3DSAMP_MIPFILTER, mD3DFilters[2] );
 
             r.setD3DSamplerState( stage, D3DSAMP_ADDRESSU, mD3DWraps[0] );
             r.setD3DSamplerState( stage, D3DSAMP_ADDRESSV, mD3DWraps[1] );
-            r.setD3DSamplerState( stage, D3DSAMP_ADDRESSW, mD3DWraps[2] );
+            r.setD3DSamplerState( stage, D3DSAMP_ADDRESSW, mD3DWraps[2] );*/
         }
 
         ///
@@ -178,12 +169,12 @@ namespace GN { namespace gfx
         ///
         /// D3D filters( min, mag, mip )
         ///
-        mutable D3DTEXTUREFILTERTYPE mD3DFilters[3];
+        //mutable D3DTEXTUREFILTERTYPE mD3DFilters[3];
 
         ///
         /// texture wrapping modes
         ///
-        mutable D3DTEXTUREADDRESS mD3DWraps[3];
+        //mutable D3DTEXTUREADDRESS mD3DWraps[3];
 
         ///
         /// \name locking related variables

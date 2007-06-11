@@ -5,7 +5,7 @@ using namespace GN::gfx;
 using namespace GN::engine;
 using namespace GN::scene;
 
-GN::Logger * sLogger = GN::getLogger("GN.sample.ShadowMap");
+static GN::Logger * sLogger = GN::getLogger("GN.sample.ShadowMap");
 
 // *****************************************************************************
 // Initialize and shutdown

@@ -256,25 +256,17 @@ public:
 
     void testTexFilter()
     {
-        GN::gfx::TexFilter tag[] = {
-            GN::gfx::TEXFILTER_NEAREST,
-            GN::gfx::TEXFILTER_LINEAR,
-            GN::gfx::TEXFILTER_N_MIP_N,
-            GN::gfx::TEXFILTER_N_MIP_L,
-            GN::gfx::TEXFILTER_L_MIP_N,
-            GN::gfx::TEXFILTER_L_MIP_L,
+        GN::gfx::TextureFilter tag[] = {
+            GN::gfx::TF_POINT,
+            GN::gfx::TF_LINEAR,
         };
         const char * str[] = {
             "NEAREST",
             "LINEAR",
-            "N_MIP_N",
-            "N_MIP_L",
-            "L_MIP_N",
-            "L_MIP_L",
         };
 
         GN::StrA           s;
-        GN::gfx::TexFilter t = GN::gfx::NUM_TEXFILTERS;
+        GN::gfx::TextureFilter t = GN::gfx::NUM_TEXTURE_FILTERS;
 
         for( int i = 0; i < 6; ++i )
         {
@@ -287,18 +279,18 @@ public:
             TS_ASSERT_EQUALS( tag[i], t );
         }
 
-        TS_ASSERT( !GN::gfx::texFilter2Str(s,GN::gfx::NUM_TEXFILTERS) );
-        TS_ASSERT_EQUALS( "BAD_TEXTURE_FILTER", GN::gfx::texFilter2Str(GN::gfx::NUM_TEXFILTERS) );
+        TS_ASSERT( !GN::gfx::texFilter2Str(s,GN::gfx::NUM_TEXTURE_FILTERS) );
+        TS_ASSERT_EQUALS( "BAD_TEXTURE_FILTER", GN::gfx::texFilter2Str(GN::gfx::NUM_TEXTURE_FILTERS) );
         TS_ASSERT( !GN::gfx::str2TexFilter( t, "haha" ) );
         TS_ASSERT( !GN::gfx::str2TexFilter( t, NULL ) );
     }
 
-    void testTexWrap()
+    void testTexAddress()
     {
-        GN::gfx::TexWrap tag[] = {
-            GN::gfx::TEXWRAP_REPEAT,
-            GN::gfx::TEXWRAP_CLAMP,
-            GN::gfx::TEXWRAP_CLAMP_TO_EDGE,
+        GN::gfx::TextureAddressMode tag[] = {
+            GN::gfx::TA_REPEAT,
+            GN::gfx::TA_CLAMP,
+            GN::gfx::TA_CLAMP_TO_EDGE,
         };
         const char * str[] = {
             "REPEAT",
@@ -306,23 +298,23 @@ public:
             "CLAMP_TO_EDGE",
         };
 
-        GN::StrA         s;
-        GN::gfx::TexWrap t = GN::gfx::NUM_TEXWRAPS;
+        GN::StrA                    s;
+        GN::gfx::TextureAddressMode t = GN::gfx::NUM_TEXTURE_ADDRESS_MODES;
 
         for( int i = 0; i < 3; ++i )
         {
-            TS_ASSERT( GN::gfx::texWrap2Str(s,tag[i]) );
+            TS_ASSERT( GN::gfx::texAddrMode2Str(s,tag[i]) );
             TS_ASSERT_EQUALS( str[i], s );
 
-            TS_ASSERT_EQUALS( str[i], GN::gfx::texWrap2Str(tag[i]) );
+            TS_ASSERT_EQUALS( str[i], GN::gfx::texAddrMode2Str(tag[i]) );
 
-            TS_ASSERT( GN::gfx::str2TexWrap( t, str[i] ) );
+            TS_ASSERT( GN::gfx::str2TexAddrMode( t, str[i] ) );
             TS_ASSERT_EQUALS( tag[i], t );
         }
 
-        TS_ASSERT( !GN::gfx::texWrap2Str(s,GN::gfx::NUM_TEXWRAPS) );
-        TS_ASSERT_EQUALS( "BAD_TEXTURE_WRAP", GN::gfx::texWrap2Str(GN::gfx::NUM_TEXWRAPS) );
-        TS_ASSERT( !GN::gfx::str2TexWrap( t, "haha" ) );
-        TS_ASSERT( !GN::gfx::str2TexWrap( t, NULL ) );
+        TS_ASSERT( !GN::gfx::texAddrMode2Str(s,GN::gfx::NUM_TEXTURE_ADDRESS_MODES) );
+        TS_ASSERT_EQUALS( "BAD_TEXTURE_WRAP", GN::gfx::texAddrMode2Str(GN::gfx::NUM_TEXTURE_ADDRESS_MODES) );
+        TS_ASSERT( !GN::gfx::str2TexAddrMode( t, "haha" ) );
+        TS_ASSERT( !GN::gfx::str2TexAddrMode( t, NULL ) );
     }
 };

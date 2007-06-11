@@ -90,27 +90,35 @@ struct GfxResources
         using namespace GN::scene;
         GN::gfx::Renderer & r = gRenderer;
 
+        GN::gfx::RendererContext c;
+        c.clearToNull();
+
         if( r.drawBegin() )
         {
             // draw to rt1
-            r.setDrawToTextures( 1, rt1 );
+            c.setDrawToTextures( 1, rt1 );
+            r.setContext( c );
             r.clearScreen( GN::Vector4f(1,0,0,1) ); // clear to red
 
             // draw to rt2
-            r.setDrawToTextures( 1, rt2 );
+            c.setDrawToTextures( 1, rt2 );
+            r.setContext( c );
             r.clearScreen( GN::Vector4f(0,0,1,1) ); // clear to blue
 
             // draw to rt3
-            r.setDrawToTextures( 1, rt3 );
+            c.setDrawToTextures( 1, rt3 );
+            r.setContext( c );
             //gQuadRenderer.drawSingleTexturedQuad( rt1, 0, 0, 0, 1, 0.5 );
             //gQuadRenderer.drawSingleTexturedQuad( rt2, 0, 0, 0.5, 1, 1 );
 
             // draw to screen
-            r.setDrawToBackBuf();
+            c.setDrawToBackBuf();
+            r.setContext( c );
             r.clearScreen( GN::Vector4f(0,1,0,1) ); // clear to green
-            r.setTexture( 0, rt3 );
-            r.setRenderStateBlock( rsb1 );
-            r.setRenderStateBlock( rsb2 );
+
+            c.setTexture( 0, rt3 );
+            c.setRenderStateBlock( rsb1 );
+            c.setRenderStateBlock( rsb2 );
 
             // draw end
             r.drawEnd();
@@ -315,14 +323,19 @@ protected:
         RendererOptions ro;
         CREATE_RENDERER( r, ro );
 
+        RendererContext c;
+        c.clearToNull();
+
         // renderer should be initialized with default render state
         TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock(), RenderStateBlockDesc::DEFAULT );
 
         // try setRenderState
-        r->setRenderState( RS_BLENDING, RSV_TRUE );
+        c.setRenderState( RS_BLENDING, RSV_TRUE );
+        r->setContext( c );
         TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock().get(RS_BLENDING), RSV_TRUE );
 
-        r->setRenderState( RS_BLENDING, RSV_FALSE );
+        c.setRenderState( RS_BLENDING, RSV_FALSE );
+        r->setContext( c );
         TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock().get(RS_BLENDING), RSV_FALSE );
 
         TS_ASSERT_EQUALS( r->getCurrentRenderStateBlock(), RenderStateBlockDesc::DEFAULT );

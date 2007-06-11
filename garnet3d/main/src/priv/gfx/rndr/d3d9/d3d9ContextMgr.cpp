@@ -6,6 +6,7 @@
 #include "d3d9RenderTargetMgr.h"
 #include "d3d9Shader.h"
 #include "d3d9Texture.h"
+#include "d3d9Sampler.h"
 #include "d3d9VertexDecl.h"
 #include "d3d9VtxBuf.h"
 #include "d3d9IdxBuf.h"
@@ -724,6 +725,27 @@ GN_INLINE void GN::gfx::D3D9Renderer::bindContextData(
         for( ; stage < numTex; ++stage )
         {
             mDevice->SetTexture( stage, 0 );
+        }
+    }
+
+    //
+    // bind samplers
+    //
+    if( newFlags.samplers )
+    {
+        UINT maxStages = getCaps(CAPS_MAX_TEXTURE_STAGES);
+        UINT numTex = min<UINT>( (UINT)newContext.numTextures, maxStages );
+        UINT stage;
+        for( stage = 0; stage < numTex; ++stage )
+        {
+            SamplerHandle samp = newContext.samplers[stage];
+            if( samp != mContext.samplers[stage] ||
+                stage > mContext.numSamplers ||
+                !forceRebind )
+            {
+                if( 0 == samp ) samp = mDefaultSampler;
+                mSamplers[samp].bind( stage );
+            }
         }
     }
 

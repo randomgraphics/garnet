@@ -361,6 +361,11 @@ namespace GN { namespace engine
                               size_t       levels = 1,
                               gfx::ClrFmt  format = gfx::FMT_UNKNOWN );
 
+
+        GraphicsResource *
+        createSampler( const StrA             & name,
+                       const gfx::SamplerDesc & desc );
+
         GraphicsResource *
         createVtxFmt( const StrA            & name,
                       const gfx::VtxFmtDesc & desc );

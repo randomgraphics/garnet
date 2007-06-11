@@ -57,6 +57,11 @@ namespace GN
         std::vector<Item*>  mItems;
         std::vector<size_t> mFreeList;
 
+
+        static inline size_t h2idx( HANDLE_TYPE h ) { return (UIntPtr)h - 1; }
+
+        static HANDLE_TYPE idx2h( size_t idx ) { return (HANDLE_TYPE)( idx + 1 ); }
+
     public:
 
         ///
@@ -117,7 +122,7 @@ namespace GN
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
             }
-            return (HANDLE_TYPE)(idx+1);
+            return idx2h( idx );
         }
 
         ///
@@ -126,13 +131,13 @@ namespace GN
         HANDLE_TYPE next( HANDLE_TYPE h ) const
         {
             if( !validHandle(h) ) return (HANDLE_TYPE)0;
-            size_t idx = h; // That is: (h-1)+1
+            size_t idx = h2idx( h ) + 1;
             while( idx < mItems.size() && !mItems[idx]->occupied )
             {
                 GN_ASSERT( idx < mItems.size() );
                 ++idx;
             }
-            return idx < mItems.size() ? (HANDLE_TYPE)(idx+1) : (HANDLE_TYPE)0;
+            return idx < mItems.size() ? idx2h( idx ) : (HANDLE_TYPE)0;
         }
 
         ///
@@ -158,7 +163,7 @@ namespace GN
                 mFreeList.pop_back();
                 GN_ASSERT( mItems[i] );
                 mItems[i]->ctor( val );
-                return (HANDLE_TYPE)(i+1);
+                return idx2h( i );
             }
         }
 
@@ -185,7 +190,7 @@ namespace GN
                 mFreeList.pop_back();
                 GN_ASSERT( mItems[i] );
                 mItems[i]->ctor();
-                return (HANDLE_TYPE)(i+1);
+                return idx2h( i );
             }
         }
 
@@ -200,9 +205,10 @@ namespace GN
             }
             else
             {
-                GN_ASSERT( mItems[h-1] );
-                mItems[h-1]->dtor();
-                mFreeList.push_back(h-1);
+                size_t idx = h2idx(h);
+                GN_ASSERT( mItems[idx] );
+                mItems[idx]->dtor();
+                mFreeList.push_back(idx);
             }
         }
 
@@ -214,7 +220,7 @@ namespace GN
             for( size_t i = 0; i < mItems.size(); ++i )
             {
                 if( !mItems[i]->occupied ) continue;
-                if( mItems[i]->t() == val ) return (HANDLE_TYPE)(i+1); // found!
+                if( mItems[i]->t() == val ) return idx2h( i ); // found!
             }
             return (HANDLE_TYPE)0; // not found
         }
@@ -228,7 +234,7 @@ namespace GN
             for( size_t i = 0; i < mItems.size(); ++i )
             {
                 if( !mItems[i]->occupied ) continue;
-                if( fp( mItems[i]->t() ) ) return (HANDLE_TYPE)(i+1); // found!
+                if( fp( mItems[i]->t() ) ) return idx2h( i ); // found!
             }
             return (HANDLE_TYPE)0; // not found
         }
@@ -238,7 +244,8 @@ namespace GN
         ///
         bool validHandle( HANDLE_TYPE h ) const
         {
-            return 0 != h && h <= mItems.size() && mItems[h-1]->occupied;
+            size_t idx = h2idx(h);
+            return idx < mItems.size() && mItems[idx]->occupied;
         }
 
         ///
@@ -247,7 +254,7 @@ namespace GN
         T & get( HANDLE_TYPE h ) const
         {
             GN_ASSERT( validHandle(h) );
-            return mItems[h-1]->t();
+            return mItems[h2idx(h)]->t();
         }
 
         ///

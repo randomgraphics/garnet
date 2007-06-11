@@ -54,69 +54,6 @@ static inline DWORD sLockFlag2D3D( DWORD d3dUsage, GN::gfx::LockFlag flag )
 
 //
 //
-// -----------------------------------------------------------------------------
-static inline void
-sTexFilter2D3D(
-    D3DTEXTUREFILTERTYPE & minmag,
-    D3DTEXTUREFILTERTYPE * mip,
-    GN::gfx::TexFilter f )
-{
-    switch( f )
-    {
-        case GN::gfx::TEXFILTER_NEAREST    :
-            minmag  = D3DTEXF_POINT;
-            if( mip ) *mip = D3DTEXF_NONE;
-            break;
-
-        case GN::gfx::TEXFILTER_LINEAR     :
-            minmag  = D3DTEXF_LINEAR;
-            if( mip ) *mip = D3DTEXF_NONE;
-            break;
-
-        case GN::gfx::TEXFILTER_N_MIP_N    :
-            minmag  = D3DTEXF_POINT;
-            if( mip ) *mip = D3DTEXF_POINT;
-            break;
-
-        case GN::gfx::TEXFILTER_N_MIP_L    :
-            minmag  = D3DTEXF_POINT;
-            if( mip ) *mip = D3DTEXF_LINEAR;
-            break;
-
-        case GN::gfx::TEXFILTER_L_MIP_N    :
-            minmag  = D3DTEXF_LINEAR;
-            if( mip ) *mip = D3DTEXF_POINT;
-            break;
-
-        case GN::gfx::TEXFILTER_L_MIP_L    :
-            minmag  = D3DTEXF_LINEAR;
-            if( mip ) *mip = D3DTEXF_LINEAR;
-            break;
-
-        default             :
-            GN_ASSERT_EX( 0, "invaid filter type!" );
-            minmag  = D3DTEXF_LINEAR;
-            if( mip ) *mip = D3DTEXF_NONE;
-    }
-}
-
-//
-//
-// -----------------------------------------------------------------------------
-static inline D3DTEXTUREADDRESS sTexWrap2D3D( GN::gfx::TexWrap w )
-{
-    switch( w )
-    {
-        case GN::gfx::TEXWRAP_REPEAT : return D3DTADDRESS_WRAP;
-        case GN::gfx::TEXWRAP_CLAMP  : return D3DTADDRESS_CLAMP;
-        case GN::gfx::TEXWRAP_CLAMP_TO_EDGE : return D3DTADDRESS_CLAMP;
-        default : GN_ASSERT_EX( 0, "invalid wrap mode!" );
-            return D3DTADDRESS_WRAP;
-    }
-}
-
-//
-//
 // ----------------------------------------------------------------------------
 static GN::Vector3<UInt32> sGetMipSize( LPDIRECT3DBASETEXTURE9 tex, GN::gfx::TexDim type, size_t level )
 {
@@ -400,7 +337,7 @@ void GN::gfx::D3D9Texture::deviceDispose()
 //      interface functions
 // ****************************************************************************
 
-//
+/*
 //
 // ----------------------------------------------------------------------------
 void GN::gfx::D3D9Texture::setFilter( TexFilter min, TexFilter mag ) const
@@ -418,7 +355,7 @@ void GN::gfx::D3D9Texture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
     mD3DWraps[0] = sTexWrap2D3D( s );
     mD3DWraps[1] = sTexWrap2D3D( t );
     mD3DWraps[2] = sTexWrap2D3D( r );
-}
+}*/
 
 //
 //

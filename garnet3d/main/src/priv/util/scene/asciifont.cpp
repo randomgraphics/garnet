@@ -102,7 +102,8 @@ public:
 
         tex->unlock();
 
-        tex->setFilter( gfx::TEXFILTER_NEAREST, gfx::TEXFILTER_NEAREST );
+        //tex->setFilter( gfx::TEXFILTER_NEAREST, gfx::TEXFILTER_NEAREST );
+        GN_TODO( "setup sampler" );
 
         // success
         return true;

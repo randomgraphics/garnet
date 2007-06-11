@@ -71,24 +71,6 @@ void GN::gfx::D3D10Texture::quit()
 //
 //
 // ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::setFilter( TexFilter min, TexFilter mag ) const
-{
-    GN_ASSERT( ok() );
-    GN_UNIMPL_WARNING();
-}
-
-//
-//
-// ----------------------------------------------------------------------------
-void GN::gfx::D3D10Texture::setWrap( TexWrap s, TexWrap t, TexWrap r ) const
-{
-    GN_ASSERT( ok() );
-    GN_UNIMPL_WARNING();
-}
-
-//
-//
-// ----------------------------------------------------------------------------
 bool GN::gfx::D3D10Texture::lock(
     TexLockedResult & result,
     size_t face,

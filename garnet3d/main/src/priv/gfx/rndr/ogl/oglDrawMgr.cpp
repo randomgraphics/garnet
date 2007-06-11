@@ -557,10 +557,11 @@ void GN::gfx::OGLRenderer::drawLines(
 
     GN_ASSERT( mDrawBegan && mLine );
 
-    contextUpdateBegin();
-    if( !(DL_USE_CURRENT_VS & options) ) setVS( 0 );
-    if( !(DL_USE_CURRENT_PS & options) ) setPS( 0 );
-    contextUpdateEnd();
+    RendererContext ctx;
+    ctx.clearToNull();
+    if( !(DL_USE_CURRENT_VS & options) ) ctx.setVS( 0 );
+    if( !(DL_USE_CURRENT_PS & options) ) ctx.setPS( 0 );
+    setContext( ctx );
 
     DUMP_STATE();
 

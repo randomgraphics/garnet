@@ -304,6 +304,10 @@
 ///
 #define GN_CASSERT( exp ) GN_CASSERT_EX( exp, _ )
 
+///
+/// define handle type
+///
+#define GN_DEFINE_HANDLE( type ) typedef struct type##Struct {} * type
 
 // *****************************************************************************
 //                           End of basicDefines.h

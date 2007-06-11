@@ -649,6 +649,11 @@ namespace GN { namespace gfx
         }
 
         ///
+        /// create sampler
+        ///
+        virtual SamplerHandle createSampler( const SamplerDesc & ) = 0;
+
+        ///
         /// Create vertex format handle.
         ///
         virtual VtxFmtHandle createVtxFmt( const VtxFmtDesc & ) = 0;
@@ -744,68 +749,6 @@ namespace GN { namespace gfx
         /// Get current render state block descriptor
         ///
         virtual const RenderStateBlockDesc & getCurrentRenderStateBlock() const = 0;
-
-        // ********************************************************************
-        ///
-        /// \name Helper functions to update rendering context.
-        ///
-        /// - See corresponding methods in RendererContext for detail usage.
-        /// - Recommended call sequence is:
-        /// <pre>
-        ///     contextUpdateBegin();
-        ///     ... // call context update methods here.
-        ///     contextUpdateEnd();
-        /// </pre>
-        /// - Calling update method outside of contextUpdateBegin() and
-        ///   contextUpdateEnd() will take effect immediatly, but is not
-        ///   recommented for performance reason.
-        ///
-        // ********************************************************************
-
-        //@{
-
-    private:
-
-        RendererContext      mHelperContext;
-        AutoInit<bool,false> mHelperContextUpdateBegun;
-
-    public:
-
-        ///
-        /// start context update
-        ///
-        inline void contextUpdateBegin();
-
-        ///
-        /// end context update, flush modified context to renderer.
-        ///
-        inline void contextUpdateEnd();
-
-        inline void setShader( ShaderType type, const Shader * shader );
-        inline void setShaders( const Shader * vs, const Shader * ps, const Shader * gs );
-        inline void setVS( const Shader * s );
-        inline void setPS( const Shader * s );
-        inline void setGS( const Shader * s );
-        inline void setRenderStateBlock( const RenderStateBlockDesc & );
-        inline void setRenderState( RenderState state, SInt32 value );
-        inline void setRenderTargets( const RenderTargetDesc & );
-        inline void setDrawToBackBuf();
-        inline void setDrawToTextures( UInt32 count, const Texture * rt0, const Texture * rt1=0, const Texture * rt2=0, const Texture * rt3=0, const Texture * z=0, MsaaType aa=MSAA_NONE );
-        inline void setDrawToTextureWithoutDepth( const Texture * tex, UInt32 level = 0, UInt32 face = 0, UInt32 slice = 0, MsaaType aa_ = MSAA_NONE );
-        inline void setViewport( const Rectf & );
-        inline void setViewport( float left, float top, float width, float height );
-
-        inline void setWorld( const Matrix44f & );
-        inline void setView( const Matrix44f & );
-        inline void setProj( const Matrix44f & );
-        inline void setTextureStateBlock( const TextureStateBlockDesc & );
-        inline void setTextureState( size_t stage, TextureState state, TextureStateValue value );
-
-        inline void setTexture( size_t stage, const Texture * tex );
-        inline void setTextures( const Texture * const texlist[], size_t start, size_t count );
-        inline void setVtxFmt( VtxFmtHandle );
-        inline void setVtxBuf( size_t index, const VtxBuf * buffer, size_t offset, size_t stride );
-        inline void setIdxBuf( const IdxBuf * );
 
         //@}
 

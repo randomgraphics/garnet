@@ -47,11 +47,12 @@ namespace GN { namespace engine
     {
         //@{
         GRT_SHADER,
-        GRT_TEXTURE,
-        GRT_VTXBUF,
-        GRT_IDXBUF,
         GRT_CONSTBUF,
         GRT_VTXFMT,
+        GRT_VTXBUF,
+        GRT_IDXBUF,
+        GRT_TEXTURE,
+        GRT_SAMPLER,
         NUM_GRAPHICS_RESOURCE_TYPES,
         GRT_INVALID = NUM_GRAPHICS_RESOURCE_TYPES,
         //@}
@@ -68,11 +69,12 @@ namespace GN { namespace engine
         StrA                 name; ///< this field is for log and debug. you may set it to any value.
         GraphicsResourceType type;
         ShaderDesc           sd;
-        gfx::TextureDesc     td;
+        gfx::VtxFmtDesc      fd;
         gfx::VtxBufDesc      vd;
         gfx::IdxBufDesc      id;
         ConstBufDesc         cd;
-        gfx::VtxFmtDesc      fd;
+        gfx::TextureDesc     td;
+        gfx::SamplerDesc     sampler;
         DynaArray<UInt8>     userdata; ///< unchangable during life time of the resource.
         //@}
 

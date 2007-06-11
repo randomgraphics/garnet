@@ -12,6 +12,16 @@
 // *****************************************************************************
 
 //
+// Functor to compare sampler descriptor
+//
+struct EqualSampler
+{
+    const GN::gfx::SamplerDesc & desc;
+    EqualSampler( const GN::gfx::SamplerDesc & d ) : desc(d) {}
+    bool operator()( const GN::gfx::D3D9SamplerObject & so ) const { return desc == so.getDesc(); }
+};
+
+//
 // Functor to compare vertex format
 //
 struct EqualFormat
@@ -38,6 +48,10 @@ bool GN::gfx::D3D9Renderer::resourceDeviceCreate()
         GN_ERROR(sLogger)( "Not _ALL_ graphics resouces are released!" );
         return false;
     }
+
+    // create default sampler
+    mDefaultSampler = createSampler( SamplerDesc::DEFAULT );
+    if( 0 == mDefaultSampler ) return false;
 
 #ifdef HAS_CG_D3D9
     if( !mCgContext.init() ) return false;
@@ -104,6 +118,9 @@ void GN::gfx::D3D9Renderer::resourceDeviceDestroy()
     _GNGFX_DEVICE_TRACE();
 
     safeDelete( mLine );
+
+    // release samplers
+    mSamplers.clear();
 
     // release vertex formats
     mVtxFmts.clear();
@@ -230,6 +247,31 @@ GN::gfx::D3D9Renderer::createTexture( const TextureDesc & desc )
     AutoRef<D3D9Texture> p( new D3D9Texture(*this) );
     if( !p->init( desc ) ) return 0;
     return p.detach();
+
+    GN_UNGUARD;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx::SamplerHandle GN::gfx::D3D9Renderer::createSampler( const SamplerDesc & desc )
+{
+    GN_GUARD;
+
+    GN_ASSERT( getCurrentThreadId() == mThreadId );
+
+    SamplerHandle  h = mSamplers.findIf( EqualSampler(desc) );
+
+    if( 0 == h )
+    {
+        // create new vertex decl
+        D3D9SamplerObject s;
+        if( !s.init(desc) ) return false;
+        h = mSamplers.add( s );
+    }
+
+    // success
+    return h;
 
     GN_UNGUARD;
 }

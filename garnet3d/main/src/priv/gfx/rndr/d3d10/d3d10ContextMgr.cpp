@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d10Renderer.h"
 #include "d3d10RenderTargetMgr.h"
+#include "d3d10StateObject.h"
 #include "d3d10Shader.h"
 #include "d3d10Texture.h"
 #include "d3d10VtxLayout.h"
@@ -63,6 +64,9 @@ bool GN::gfx::D3D10Renderer::contextDeviceCreate()
 
     _GNGFX_DEVICE_TRACE();
 
+    mSOMgr = new D3D10StateObjectManager( *this );
+    if( 0 == mSOMgr ) return false;
+
     // create render target manager
     mRTMgr = new D3D10RTMgr( *this );
     if( !mRTMgr->init() ) return false;
@@ -90,6 +94,8 @@ void GN::gfx::D3D10Renderer::contextDeviceDestroy()
 	clearContextResources();
 
     safeDelete( mRTMgr );
+
+    safeDelete( mSOMgr );
 
     GN_UNGUARD;
 }
@@ -218,18 +224,18 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
         }
     }
 
-    //
+    /*
     // bind render states
     //
     if( newFlags.rsb )
     {
-        /*const RenderStateBlockDesc & newrsb = newContext.rsb;
+        const RenderStateBlockDesc & newrsb = newContext.rsb;
         GN_ASSERT( newrsb.valid() );
 
         if( forceRebind )
         {
             #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
-                if( newrsb.isSet(RS_##tag) ) sSet_##tag( *this, newrsb.get(RS_##tag) );
+                if( newrsb.isSet(RS_##tag) ) mSOMgr->Set_##tag( newrsb.get(RS_##tag) );
             #include "garnet/gfx/renderStateMeta.h"
             #undef GNGFX_DEFINE_RS
         }
@@ -240,11 +246,13 @@ GN_INLINE void GN::gfx::D3D10Renderer::bindContextState(
             #define GNGFX_DEFINE_RS( tag, type, defval, minVal, maxVal ) \
                 GN_ASSERT( oldrsb.isSet( RS_##tag ) ); \
                 if( newrsb.isSet(RS_##tag) && newrsb.get(RS_##tag) != oldrsb.get(RS_##tag) ) \
-                    sSet_##tag( *this, newrsb.get(RS_##tag) );
+                    mSOMgr->Set_##tag( newrsb.get(RS_##tag) );
             #include "garnet/gfx/renderStateMeta.h"
             #undef GNGFX_DEFINE_RS
-        }*/
-    }
+        }
+
+        mSOMgr->apply();
+    }*/
 
     //
     // bind render targets
