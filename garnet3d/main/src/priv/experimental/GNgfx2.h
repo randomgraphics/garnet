@@ -220,23 +220,26 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// describe binding a surface to specific effect port.
+    struct EffectPortBinding
+    {
+        StrA      port;       ///< effect port name
+        Surface * surf;       ///< surface pointer
+        StrA      semantic;   ///< semantic of the surface attribute that will be binded.
+        //@{
+        UInt32    firstLevel;
+        UInt32    numLevels;
+        UInt32    firstFace;
+        UInt32    numFaces;
+        //@}
+    };
+
+    ///
     /// define surface to effect binding
     ///
-    struct EffectInputOutputLayout
+    struct EffectBindingDesc
     {
-        struct PortBinding
-        {
-            StrA      port;       ///< effect port name
-            Surface * surf;       ///< surface pointer
-            StrA      semantic;   ///< semantic of the attribute that will be binded.
-            //@{
-            UInt32    firstLevel;
-            UInt32    numLevels;
-            UInt32    firstFace;
-            UInt32    numFaces;
-            //@}
-        };
-        DynaArray<PortBinding> bindings;
+        DynaArray<EffectPortBinding> bindings;
     };
 
     ///
@@ -245,10 +248,41 @@ namespace GN { namespace gfx2
     typedef UIntPtr EffectBinding;
 
     ///
+    /// Effect parameter value
+    ///
+    struct EffectParameterValue
+    {
+        int        type; ///< value type. Could be: string, float, int, vector4, matrix44, raw
+        union
+        {
+            float  float1;
+            int    int1;
+            float  float4[4];
+            float  float4x4[4][4];
+            struct
+            {
+                void * ptr;
+                size_t bytes;
+            } raw;
+        };
+    };
+
+    ///
     /// effect interface: represents a process kernel function
     ///
     struct Effect : public NoCopy
     {
+        ///
+        /// set private value of a parameter
+        ///
+        virtual void setParameter( const StrA & name, const EffectParameterValue & value ) = 0;
+
+        ///
+        /// clear private parameter value. So next time effect using this parameter,
+        /// it'll use global/shared value.
+        ///
+        virtual void unsetParameter( const StrA & name ) = 0;
+
         ///
         /// check whether a surface is compatible with the effect
         ///
@@ -257,7 +291,7 @@ namespace GN { namespace gfx2
         ///
         /// create a binding handle
         ///
-        virtual EffectBinding createBinding( EffectInputOutputLayout & ) = 0;
+        virtual EffectBinding createBinding( const EffectBindingDesc & ) = 0;
 
         ///
         /// delete a binding handle
@@ -268,6 +302,11 @@ namespace GN { namespace gfx2
         /// bind surfaces to effect
         ///
         virtual void bind( EffectBinding ) = 0;
+
+        ///
+        /// bind surface to effect
+        ///
+        inline void bind( const EffectBindingDesc & ebd ) { bind( createBinding( ebd ) ); }
     };
 
     // *************************************************************************
@@ -294,13 +333,18 @@ namespace GN { namespace gfx2
         DynaArray<EffectBinding> binding;
 
         ///
+        /// surface data layout
+        ///
+        SurfaceLayoutTemplate layout;
+
+        ///
         /// Force the created surface supports some access flags.
         ///
         /// Normally set to zero to let graphics system to determine the optimal access flags.
         ///
         /// Set to non-zero value may fail the creation process.
         ///
-        int forceAccessFlag;
+        int forcedAccessFlags;
     };
 
     ///
@@ -308,10 +352,18 @@ namespace GN { namespace gfx2
     ///
     struct GraphicsSystem : public NoCopy
     {
-        /// \name global states
+        /// \name global effect parameter management
         //@{
 
-        // ...
+        ///
+        /// set global value of a parameter
+        ///
+        virtual void setGlobalEffectParameter( const StrA & name, const EffectParameterValue & value ) = 0;
+
+        ///
+        /// clear global parameter value.
+        ///
+        virtual void unsetGlobalEffectParameter( const StrA & name ) = 0;
 
         //@}
 
@@ -327,6 +379,7 @@ namespace GN { namespace gfx2
         //@{
 
         Surface * createSurface( const SurfaceCreationParameter & );
+        void      deleteSurface( Surface * );
 
         //@}
     };
@@ -341,7 +394,71 @@ namespace GN { namespace gfx2
 
     void RenderToCube()
     {
-        // render-to-cube effect has 
+        // effect that do screen clear
+        //
+        // output ports: color0, depth0
+        //
+        Effect * clear = gs.getEffect( "Clear" );
+
+        // effect that do present
+        //
+        // input ports: color0
+        //
+        Effect * present = gs.getEffect( "Present" );
+
+        // effect that draws cube map on cube mesh
+        //
+        // input ports: cubemap, cubemesh
+        //
+        // output ports: color0, depth0
+        //
+        Effect * cubeOnCube = gs.getEffect( "CubeOnCube" );
+
+        // single textured diffuse lighting to cubemap
+        //
+        // input ports: diffuseTexture
+        //
+        // output ports: cubeColor, cubeDepth
+        //
+        Effect * singleDiffuseToCube = gs.getEffect( "SingleDiffuseToCube" );
+
+        SurfaceCreationParameter scp;
+
+        // allocate color and depth surface
+        // TODO: setup scp to bind to port Clear::color0 and Present::color0
+        Surface * color0 = gs.createSurface( scp );
+
+        // create cubedepth
+        // TODO: setup scp to bind to port SingleDiffuseToCube::cubeDepth and Clear::depth0
+        Surface * cubedepth = gs.createSurface( scp );
+
+        // create cubemap
+        // TODO: setup scp to bind to port CubeOnCube::cubemap and SingleDiffuseToCube::cubeColor
+        Surface * cubemap = gs.createSurface( scp );
+
+        EffectBindingDesc ebd;
+
+        // bind surfaces to effects
+        // TODO: setup ebd to bind color0 and depth to clear effect
+        clear->bind( ebd );
+        // ...
+
+        // do rendering
+        clear->setParameter( "Viewport", ... );
+        clear->setParameter( "ClearColor", ... );
+        clear->setParameter( "ClearDepth", ... );
+        clear->setParameter( "ClearStencil", ... );
+        clear->render();
+
+        singleDiffuseToCube->setParameter( "MaterialColor", ... );
+        singleDiffuseToCube->setParameter( "LightColor", ... );
+        singleDiffuseToCube->setParameter( "LightPosition", ... );
+        singleDiffuseToCube->setParameter( "ProjViewWorld", ... );
+        singleDiffuseToCube->render();
+
+        cubeOnCube->render();
+
+        present->bind( ebd );
     }
 
     //@}
