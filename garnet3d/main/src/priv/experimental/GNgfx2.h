@@ -87,14 +87,27 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// surface dimension
+    ///
+    enum SurfaceDimension
+    {
+        //@{
+        SURF_DIM_1D,
+        SURF_DIM_2D,
+        SURF_DIM_3D,
+        SURF_DIM_COUNT,
+        //@}
+    };
+
+    ///
     /// fully describe surface data orgnization
     ///
     struct SurfaceLayout
     {
-        int              orgnization; ///< 1D, 1D array, 2D, 2D array, 3D, 3D array
-        int              levels;      ///< LOD levels
-        int              faces;       ///< number of faces
-        SurfaceElement   element;     ///< element descriptor
+        SurfaceDimension dim;     ///< 1D, 2D, 3D
+        int              levels;  ///< LOD levels
+        int              faces;   ///< number of faces
+        SurfaceElement   element; ///< element descriptor
         SubSurfaceLayout subsurfaces[MAX_SUB_SURFACES]; ///< indexed by (arrayIndex * mipcount + mipIndex)
     };
 
@@ -198,6 +211,14 @@ namespace GN { namespace gfx2
         /// check whether a layout matches the template
         ///
         bool match( const SurfaceLayout & ) const;
+
+        ///
+        /// merge 2 templates. Return false, if they are confict with each other.
+        ///
+        static bool sMerge(
+           SurfaceLayoutTemplate & result,
+           const SurfaceLayoutTemplate & t1,
+           const SurfaceLayoutTemplate & t2 );
     };
 
     ///
@@ -212,11 +233,14 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// effect descriptor: fully describe what the effect is.
+    /// effect descriptor: describe public interface of the effect
     ///
     struct EffectDesc
     {
-        DynaArray<EffectPortDesc> ports; ///< input output ports. Note that port semantic must be unique.
+        ///
+        /// input output ports. Note that port semantic must be unique.
+        ///
+        DynaArray<EffectPortDesc> ports;
     };
 
     ///
@@ -272,6 +296,11 @@ namespace GN { namespace gfx2
     ///
     struct Effect : public NoCopy
     {
+        ///
+        /// get effect descriptor
+        ///
+        virtual const EffectDesc & getDesc() const = 0;
+
         ///
         /// set private value of a parameter
         ///
@@ -345,13 +374,29 @@ namespace GN { namespace gfx2
         /// Set to non-zero value may fail the creation process.
         ///
         int forcedAccessFlags;
+
+        ///
+        /// creation hints (name and value pairs)
+        ///
+        std::map<StrA,StrA> hints;
+    };
+
+    ///
+    /// effect factory
+    ///
+    struct EffectFactory
+    {
+        int       quality;                       ///< effect quality 
+        Effect * (*creator)( GraphicsSystem & ); ///< effect creator
     };
 
     ///
     /// Major interface of new graphics system
     ///
-    struct GraphicsSystem : public NoCopy
+    class GraphicsSystem : public NoCopy
     {
+    public:
+
         /// \name global effect parameter management
         //@{
 
@@ -365,24 +410,99 @@ namespace GN { namespace gfx2
         ///
         virtual void unsetGlobalEffectParameter( const StrA & name ) = 0;
 
+        ///
+        /// get value of global effect parameter
+        ///
+        virtual const EffectParameterValue * getGlobalEffectParameter( const StrA & name ) = 0;
+
         //@}
 
         /// \name effect management
         //@{
 
-        void     registerEffects( ... );
-        Effect * getEffect( const StrA & name );
+        virtual void     registerEffect( const Str & name, const EffectFactory & ) = 0;
+        virtual Effect * getEffect( const StrA & name ) = 0;
+        virtual void     deleteEffect( const StrA & name ) = 0;
+        virtual void     deleteAllEffects() = 0;
 
         //@}
 
         /// \name surface management
         //@{
 
-        Surface * createSurface( const SurfaceCreationParameter & );
-        void      deleteSurface( Surface * );
+        virtual Surface * createSurface( const SurfaceCreationParameter & scp ) = 0;
 
         //@}
     };
+
+    // *************************************************************************
+    // D3D9 effect library (for effect developer)
+    // *************************************************************************
+
+    //@{
+
+    ///
+    /// D3D9 surface descriptor
+    ///
+    struct D3D9SurfaceDesc : public SurfaceDesc
+    {
+        // D3D9 specific fields
+    };
+
+    ///
+    /// base D3D9 surface
+    ///
+    class D3D9Surface : public Surface
+    {
+    };
+
+    ///
+    /// D3D9 effect descriptor
+    ///
+    struct D3D9EffectDesc : public EffectDesc
+    {
+    };
+
+    ///
+    /// base D3D9 effect
+    ///
+    class D3D9Effect : public Effect
+    {
+    };
+
+    ///
+    /// clear effect on  
+    class D3D9ClearEffect : public D3D9Effect
+    {
+    };
+
+    //@}
+
+    // *************************************************************************
+    // D3D9 graphics system
+    // *************************************************************************
+
+    //@{
+
+    ///
+    /// D3D9 graphics system
+    ///
+    class D3D9GraphicsSystem : public GraphicsSystem
+    {
+        virtual Surface * createSurface( const SurfaceCreationParameter & scp )
+        {
+            // compose D3D9 surface descriptor:
+            //  1. merge all surface templates
+            //  2. merge other D3D9 effect specific requirements.
+            //  3. check hints
+
+            // create D3D9 surface using the descriptor.
+        }
+
+        D3D9Surface * createD3D9Surface( const D3D9SurfaceDesc & );
+    };
+
+    //@}
 
     // *************************************************************************
     // Sample code

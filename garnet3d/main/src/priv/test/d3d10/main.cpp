@@ -14,6 +14,46 @@ using namespace GN::engine;
 using namespace GN::app;
 using namespace GN::scene;
 
+// *****************************************************************************
+// mini application
+// *****************************************************************************
+
+class MyMiniApp : public MiniApp
+{
+public:
+
+    bool onInit()
+    {
+        return true;
+    }
+
+    void onQuit()
+    {
+    }
+
+    bool onRendererCreate() { return true; }
+
+    void onRendererDestroy() {}
+
+    bool onRendererRestore()
+    {
+        // success
+        return true;
+    }
+
+    void onRendererDispose()
+    {
+    }
+
+    void onFrame()
+    {
+    }
+};
+
+// *****************************************************************************
+// main application
+// *****************************************************************************
+
 static const char * vs_code =
 "uniform float4x4 gPvw : register(c0);      \n"
 "struct vsi                                 \n"
@@ -57,9 +97,11 @@ class MyApp : public SampleApp
     util::ArcBall arcball;
     DrawContext ctx;
 
+    MiniAppId miniapp;
+
 public:
 
-    MyApp() : mesh(0) {}
+    MyApp() : mesh(0), miniapp(0) {}
 
     void onDetermineInitParam( InitParam & ip )
     {
@@ -96,11 +138,15 @@ public:
         const DispDesc & dd = re.getDispDesc();
         arcball.setMouseMoveWindow( 0, 0, (int)dd.width, (int)dd.height );
 
+        miniapp = re.registerMiniApp( new MyMiniApp );
+        if( 0 == miniapp ) return false;
+
         return true;
     }
 
     void onQuit()
     {
+        delete getRenderEngine().unregisterMiniApp( miniapp ); 
         safeFreeGraphicsResource( vs );
         safeFreeGraphicsResource( ps );
         safeDelete( mesh );
@@ -121,6 +167,8 @@ public:
 
         re.setContext( ctx );
         mesh->draw();
+
+        re.runMiniApp( miniapp );
     }
 };
 
