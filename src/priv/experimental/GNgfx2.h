@@ -24,7 +24,7 @@ namespace GN { namespace gfx2
     enum
     {
         MAX_SURFACE_ELEMENT_ATTRIBUTES = 16,  ///< max attributes in single surface element
-        MAX_SUB_SURFACES               = 256, ///< max sub surfaces count in single surface
+        MAX_SUB_SURFACES               = 256, ///< max subsurfaces in single surface
     };
 
     ///
@@ -33,42 +33,58 @@ namespace GN { namespace gfx2
     enum SurfaceAccessFlag
     {
         //@{
-        SAF_HOST_READ     = 0x1, ///< can be readen by host application.
-        SAF_HOST_WRITE    = 0x2, ///< can be modified by host application.
-        SAF_DEVICE_READ   = 0x4, ///< can bind to input port of a effect
-        SAF_DEVICE_WRITE  = 0x8, ///< can bind to output port of a effect
+        HOST_READ    = 0x1, ///< can be readen by host application.
+        HOST_WRITE   = 0x2, ///< can be modified by host application.
+        DEVICE_READ  = 0x4, ///< can bind to input port of a effect
+        DEVICE_WRITE = 0x8, ///< can bind to output port of a effect
+        //@}
+    };
+
+    ///
+    /// surface dimension
+    ///
+    enum SurfaceDimension
+    {
+        //@{
+        DIM_1D,
+        DIM_2D,
+        DIM_3D,
         //@}
     };
 
     ///
     /// syrface element attribute. This is the minimal unit of a surface.
     ///
-    struct SurfaceElementAttribute
+    union SurfaceAttribute
     {
-        FOURCC semantic; ///< FORCC encoded sementic. (must be unique in single surfel)
-        SInt16 format;   ///< attribute format. (FMT_XXX).
-        UInt16 offset;   ///< offset in element.
+        UInt16     u64;      ///< attribute as 64bit integer
+        struct
+        {
+            FOURCC semantic; ///< FORCC encoded sementic. (must be unique in single surfel)
+            UInt16 offset;   ///< offset in element.
+            SInt16 format;   ///< attribute format. (FMT_XXX).
+        };
 
         ///
         /// set values in attribute descriptor
         ///
-        void set( FOURCC sem_, SInt16 fmt_, UInt16 offset_ )
+        void set( FOURCC s, UInt16 o, SInt16 f )
         {
-            semantic = sem_;
-            offset   = offset_;
-            format   = fmt_;
+            semantic = s;
+            offset   = o;
+            format   = f;
         }
     };
-    GN_CASSERT( sizeof(SurfaceElementAttribute) == 8 );
+    GN_CASSERT( sizeof(SurfaceAttribute) == 8 );
 
     ///
     /// Surface element (surfel)
     ///
     struct SurfaceElement
     {
-        SurfaceElementAttribute attribs[MAX_SURFACE_ELEMENT_ATTRIBUTES]; ///< surfel attribute list
-        UInt32                  count;                                   ///< surfel attribute count
-        UInt32                  stride;                                  ///< surfel stride in bytes
+        SurfaceAttribute attribs[MAX_SURFACE_ELEMENT_ATTRIBUTES]; ///< surfel attribute list
+        UInt32           count;                                   ///< surfel attribute count
+        UInt32           stride;                                  ///< surfel stride in bytes
     };
 
     ///
@@ -87,28 +103,15 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// surface dimension
-    ///
-    enum SurfaceDimension
-    {
-        //@{
-        SURF_DIM_1D,
-        SURF_DIM_2D,
-        SURF_DIM_3D,
-        SURF_DIM_COUNT,
-        //@}
-    };
-
-    ///
-    /// fully describe surface data orgnization
+    /// describe surface data orgnization
     ///
     struct SurfaceLayout
     {
         SurfaceDimension dim;     ///< 1D, 2D, 3D
-        int              levels;  ///< LOD levels
-        int              faces;   ///< number of faces
+        UInt32           levels;  ///< LOD levels
+        UInt32           faces;   ///< number of faces
+        SubSurfaceLayout basemap; ///< properties of base map
         SurfaceElement   element; ///< element descriptor
-        SubSurfaceLayout subsurfaces[MAX_SUB_SURFACES]; ///< indexed by (arrayIndex * mipcount + mipIndex)
     };
 
     ///
@@ -117,19 +120,7 @@ namespace GN { namespace gfx2
     struct SurfaceDesc
     {
         SurfaceLayout layout; ///< surface data layout
-        int           access; ///< surface access flags, combination of SurfaceAccessFlag.
-    };
-
-    ///
-    /// sub surface data
-    ///
-    struct SubSurfaceData
-    {
-        //@{
-        void * data;         ///< sub surface data pointer
-        UInt32 rowBytes;     ///< row pitch in bytes (at least "element stride * sub surface width" )
-        UInt32 sliceBytes;   ///< slice pitch in bytes (at least "rowBytes * sub surface height" )
-        //@}
+        UInt32        access; ///< surface access flags, combination of SurfaceAccessFlag.
     };
 
     ///
@@ -162,25 +153,33 @@ namespace GN { namespace gfx2
         virtual const SurfaceDesc & getDesc() const = 0;
 
         ///
-        /// copy data to surface. Surface must have SAF_HOST_WRITE flag.
+        /// get sub surface information.
         ///
-        virtual void download(
-            UInt32              subsurface,
-            const Box<UInt32> & area,
-            const void        * source,
-            UInt32              rowBytes,
-            UInt32              sliceBytes,
-            ) = 0;
+        /// Note that sub surface are index as 2D array: [face,level].
+        /// That is:
+        ///   subsurface index = face * levels + level.
+        ///
+        virtual const SubSurfaceLayout * getSubSurfaceLayout( size_t subsurface ) const = 0;
 
         ///
-        /// transfer data from device to host. Surface must have SAF_HOST_READ flag.
+        /// copy data to surface. Surface must have HOST_WRITE flag.
         ///
-        /// Note that destination buffer must be large enough to hold the whole sub surface.
+        virtual void download(
+            size_t                 subsurface,
+            const Box<size_t>    & area,
+            const void           * source,
+            size_t                 srcRowBytes,
+            size_t                 srcSliceBytes ) = 0;
+
+        ///
+        /// transfer data from device to host. Surface must have HOST_READ flag.
         ///
         virtual void upload(
-            UInt32              subsurface,
+            size_t              subsurface,
+            const Box<size_t> & area,
             void              * destination,
-            UInt32              bytes ) = 0;
+            size_t              destRowBytes,
+            size_t              destSliceBytes ) = 0;
 
         /// \name save and load surface content in device native format.
         ///
@@ -203,10 +202,63 @@ namespace GN { namespace gfx2
     // *************************************************************************
 
     ///
+    /// surface attribute template
+    ///
+    struct SurfaceAttributeTemplate
+    {
+        FOURCC           semantic;
+        UInt16           offset;         ///< -1, means any offset is ok.
+        std::set<SInt16> allowedFormats; ///< empty, means any format is ok.
+    };
+
+    ///
     /// define template of the surface data layout that can be used to match one or mutiple data layouts.
     ///
     struct SurfaceLayoutTemplate
     {
+        union
+        {
+            UInt32 u32; ///< all flags as 32-bits integer.
+            struct
+            {
+                //@{
+
+                // byte 0:
+                unsigned int dim        : 1;
+                unsigned int levels     : 1;
+                unsigned int faces      : 1;
+                unsigned int width      : 1;
+                unsigned int height     : 1;
+                unsigned int depth      : 1;
+                unsigned int rowBytes   : 1;
+                unsigned int sliceBytes : 1;
+
+                // byte 1
+                unsigned int stride     : 1; ///< element stride
+                unsigned int            : 7;
+
+                // byte 2-3
+                unsigned int            : 16;
+
+                //@}
+            };
+        } flags; ///< template data field flags
+
+        typedef StackArray<SurfaceAttributeTemplate,MAX_SURFACE_ELEMENT_ATTRIBUTES> AttributeArray;
+
+        SurfaceDimension dim;
+        UInt16           levels;
+        UInt16           faces;
+        SubSurfaceLayout basemap;
+        AttributeArray   requiredAttributes;
+        AttributeArray   optionalAttributes;
+        //@}
+
+        ///
+        /// self check. Make sure itself a valid template.
+        ///
+        bool check() const; 
+
         ///
         /// check whether a layout matches the template
         ///

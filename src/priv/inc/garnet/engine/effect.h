@@ -185,12 +185,12 @@ namespace GN { namespace engine {
             ///
             /// Evaluate the expression.
             ///
-            /// - Return true for:
-            ///   - empty expression
-            ///   - zero integer
-            ///   - empty string
             /// - Return false for:
             ///   - invalid expression
+            ///   - zero integer
+            ///   - empty string
+            /// - Return true for:
+            ///   - empty expression
             ///   - non-zero integer
             ///   - non-empty string
             ///
