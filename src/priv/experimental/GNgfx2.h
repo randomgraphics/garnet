@@ -23,7 +23,7 @@ namespace GN { namespace gfx2
 
     enum
     {
-        MAX_SURFACE_ELEMENT_ATTRIBUTES = 16,  ///< max attributes in single surface element
+        MAX_SURFACE_ELEMENT_ATTRIBUTES = 64,  ///< max attributes in single surface element
         MAX_SUB_SURFACES               = 256, ///< max subsurfaces in single surface
     };
 
@@ -328,18 +328,19 @@ namespace GN { namespace gfx2
     ///
     struct EffectParameterValue
     {
-        int        type; ///< value type. Could be: string, float, int, vector4, matrix44, raw
+        int        type; ///< value type. Could be: bool, int, float, vector4, float4x4, raw
         union
         {
-            float  float1;
-            int    int1;
-            float  float4[4];
-            float  float4x4[4][4];
+            bool   bool1;          ///< boolean value
+            int    int1;           ///< integer value
+            float  float1;         ///< float value
+            float  float4[4];      ///< 4D vector
+            float  float4x4[4][4]; ///< raw major 4x4 matrix
             struct
             {
-                void * ptr;
-                size_t bytes;
-            } raw;
+                void * ptr;        ///< raw data pointer
+                size_t bytes;      ///< raw data bytes
+            } raw;                 ///< raw data
         };
     };
 

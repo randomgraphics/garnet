@@ -17,50 +17,80 @@ forum:
 RESOLVED ISSUES
 ===============
 - Is effect ID compiled-time constant?
-  - yes
+  - Yes
   - pros:
     - less error prone: can do compile time check.
   - cons: runtime creation of new effect is impossible.
 
-OPEN ISSUES
-===========
-- Is it possible to create multiple instances of single effect? Each instance 
-  holds everything it needs. like:
-  - create a shadow effect instance, it holds its own shadow map buffers.
-- Still need a better buffer management mechanism
+- Is it desirable to create multiple instances of single effect?
+  - No.
+    Why we need that?
+
 - Is it beneficial to group different types of constants into single buffer?
-  - Check D3D10 constant buffer for more ideas.
+  - No.
+    Independant constants are easy and intuitive to use.
+
 - Is it possible to use meta data to describe interface of a effect class? Then 
   use an script to generate the c++ class interface.
-  - pros: not rely on complicate compiler tricks.
-  - cons: not easy for quick prototyping of new effects.
+  - No.
+    All effects will have same interface. Effect parameters are referenced 
+    by name and/or handle.
+    Could be implemented using wrapper class in the future.
+
+- Is it possible to extend an exising effect library without knowing its 
+  internal implementation details?
+  - No.
+    If a effect library is mean to be extensible, it should provide its own
+    interfaces and rules for effect and surface implementation.
+
+OPEN ISSUES
+===========
+
+- Is it possible to implement effect with CUDA?
 
 RESOLVED USER SCENARIOS
 =======================
+
+- create MSAA surface, render to it, then use it as texture.
+  - create surface with hint: "msaa=true"
+  - inside surface class, it'll hold a MSAA render target and a non-MSAA 
+    texture, and copy/downsample data from RT to texture as needed.
+
 - one shader output a 2D texture that is used as input of another shader that 
-  requires 3D texture:
+  requires 3D texture.
+
 - one shader output a 2D texture that is used by many-many of other shaders.
+
 - 2 draws use same shader. the 1st draw render to texture; the second draw 
   to back buffer.
+
 - render to one face of a cubemap, or one slice of a 3D texture, or one mipmap 
-  level of a 2D texture:
-- adjust effect behavior from outside, like: switching existing effects to
-  double-depth mode.
-  - bad design. Effect should be self-contain.
+  level of a 2D texture
+
+- adjust effect behavior from outside
+  - use effect parameter.
+
 - separate depth and stencil buffer.
-  - user won't need this in recent future.
+  - why?
+
 - Adjust global quality parameter (like texture filtering), to increase overall
   rendering quality.
   - bad design. effects should control quality by themselves.
 
 OPENED USER SCENARIOS
 =====================
+
 - user creates too many render targets that can't fit into hardware's local
   memory (like EDRAM)
   - may be resolved by lazy creation
   - check CPU "register renaming" and "buffer renaming" in graphics driver for
     more ideas.
-- shader get data from general CPU data buffer.
-  - read vertices from fat vertex buffer
-  - read DXT texture from uncompressed texture
-  - read cubemap from 6 2D textures
+  - by now, we leave that to application: application should always check
+    return value of surface creation method.
+
+- effect convert general CPU data buffer to whatever format it needs:
+  - create specific vertice buffer from fat vertex buffer
+  - create DXT texture from bitmap image
+  - create cubemap from 6 2D textures
+  - create mipmpas from single image
+  - create normal map from height map
