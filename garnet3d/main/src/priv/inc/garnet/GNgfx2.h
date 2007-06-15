@@ -1,10 +1,13 @@
 #ifndef __GN_GFX2_GNGFX2_H__
 #define __GN_GFX2_GNGFX2_H__
 // *****************************************************************************
-//! \file    experimental/GNgfx2.h
+//! \file    garnet/GNgfx2.h
 //! \brief   experimental effect based GFX interface
 //! \author  chenli@@FAREAST (2007.6.11)
 // *****************************************************************************
+
+#include "garnet/GNcore.h"
+#include <set>
 
 namespace GN
 {
@@ -57,7 +60,7 @@ namespace GN { namespace gfx2
     ///
     union SurfaceAttribute
     {
-        UInt16     u64;      ///< attribute as 64bit integer
+        UInt64     u64;      ///< attribute as 64bit integer
         struct
         {
             FOURCC semantic; ///< FORCC encoded sementic. (must be unique in single surfel)
@@ -434,6 +437,8 @@ namespace GN { namespace gfx2
         std::map<StrA,StrA> hints;
     };
 
+    class GraphicsSystem;
+
     ///
     /// effect factory
     ///
@@ -444,11 +449,40 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// Describe common graphics system properties (platform independent)
+    ///
+    struct GraphicSystemDesc
+    {
+        UInt32 width;   ///< graphics screen width
+        UInt32 height;  ///< graphics screen height
+        UInt32 depth;   ///< graphics screen color depth
+        UInt32 refrate; ///< graphics screen refresh rate
+
+        ///
+        /// equality operator
+        ///
+        bool operator!=( const GraphicSystemDesc & rhs ) const
+        {
+            if( this == &rhs ) return false;
+            return
+                width != rhs.width ||
+                height != rhs.height ||
+                depth != rhs.depth ||
+                refrate != rhs.refrate;
+        }
+    };
+
+    ///
     /// Major interface of new graphics system
     ///
     class GraphicsSystem : public NoCopy
     {
     public:
+
+        ///
+        /// get graphics descriptor
+        ///
+        virtual const GraphicSystemDesc & getDesc() const = 0;
 
         /// \name global effect parameter management
         //@{
@@ -473,7 +507,7 @@ namespace GN { namespace gfx2
         /// \name effect management
         //@{
 
-        virtual void     registerEffect( const Str & name, const EffectFactory & ) = 0;
+        virtual void     registerEffect( const StrA & name, const EffectFactory & ) = 0;
         virtual Effect * getEffect( const StrA & name ) = 0;
         virtual void     deleteEffect( const StrA & name ) = 0;
         virtual void     deleteAllEffects() = 0;
@@ -488,151 +522,29 @@ namespace GN { namespace gfx2
         //@}
     };
 
-    // *************************************************************************
-    // D3D9 effect library (for effect developer)
-    // *************************************************************************
-
     //@{
 
     ///
-    /// D3D9 surface descriptor
+    /// use to create graphics system
     ///
-    struct D3D9SurfaceDesc : public SurfaceDesc
+    struct GraphicsSystemCreationParameter
     {
-        // D3D9 specific fields
+        //@{
+        UInt32 fullscrWidth;
+        UInt32 fullscrHeight;
+        UInt32 fullscrDepth;
+        UInt32 fullscrRefrate;
+        UInt32 windowedWidth;
+        UInt32 windowedHeight;
+        bool   fullscr;
+        bool   vsync;
+        //@}
     };
 
     ///
-    /// base D3D9 surface
+    /// create graphics system
     ///
-    class D3D9Surface : public Surface
-    {
-    };
-
-    ///
-    /// D3D9 effect descriptor
-    ///
-    struct D3D9EffectDesc : public EffectDesc
-    {
-    };
-
-    ///
-    /// base D3D9 effect
-    ///
-    class D3D9Effect : public Effect
-    {
-    };
-
-    ///
-    /// clear effect on  
-    class D3D9ClearEffect : public D3D9Effect
-    {
-    };
-
-    //@}
-
-    // *************************************************************************
-    // D3D9 graphics system
-    // *************************************************************************
-
-    //@{
-
-    ///
-    /// D3D9 graphics system
-    ///
-    class D3D9GraphicsSystem : public GraphicsSystem
-    {
-        virtual Surface * createSurface( const SurfaceCreationParameter & scp )
-        {
-            // compose D3D9 surface descriptor:
-            //  1. merge all surface templates
-            //  2. merge other D3D9 effect specific requirements.
-            //  3. check hints
-
-            // create D3D9 surface using the descriptor.
-        }
-
-        D3D9Surface * createD3D9Surface( const D3D9SurfaceDesc & );
-    };
-
-    //@}
-
-    // *************************************************************************
-    // Sample code
-    // *************************************************************************
-
-    //@{
-
-    GraphicsSystem gs;
-
-    void RenderToCube()
-    {
-        // effect that do screen clear
-        //
-        // output ports: color0, depth0
-        //
-        Effect * clear = gs.getEffect( "Clear" );
-
-        // effect that do present
-        //
-        // input ports: color0
-        //
-        Effect * present = gs.getEffect( "Present" );
-
-        // effect that draws cube map on cube mesh
-        //
-        // input ports: cubemap, cubemesh
-        //
-        // output ports: color0, depth0
-        //
-        Effect * cubeOnCube = gs.getEffect( "CubeOnCube" );
-
-        // single textured diffuse lighting to cubemap
-        //
-        // input ports: diffuseTexture
-        //
-        // output ports: cubeColor, cubeDepth
-        //
-        Effect * singleDiffuseToCube = gs.getEffect( "SingleDiffuseToCube" );
-
-        SurfaceCreationParameter scp;
-
-        // allocate color and depth surface
-        // TODO: setup scp to bind to port Clear::color0 and Present::color0
-        Surface * color0 = gs.createSurface( scp );
-
-        // create cubedepth
-        // TODO: setup scp to bind to port SingleDiffuseToCube::cubeDepth and Clear::depth0
-        Surface * cubedepth = gs.createSurface( scp );
-
-        // create cubemap
-        // TODO: setup scp to bind to port CubeOnCube::cubemap and SingleDiffuseToCube::cubeColor
-        Surface * cubemap = gs.createSurface( scp );
-
-        EffectBindingDesc ebd;
-
-        // bind surfaces to effects
-        // TODO: setup ebd to bind color0 and depth to clear effect
-        clear->bind( ebd );
-        // ...
-
-        // do rendering
-        clear->setParameter( "Viewport", ... );
-        clear->setParameter( "ClearColor", ... );
-        clear->setParameter( "ClearDepth", ... );
-        clear->setParameter( "ClearStencil", ... );
-        clear->render();
-
-        singleDiffuseToCube->setParameter( "MaterialColor", ... );
-        singleDiffuseToCube->setParameter( "LightColor", ... );
-        singleDiffuseToCube->setParameter( "LightPosition", ... );
-        singleDiffuseToCube->setParameter( "ProjViewWorld", ... );
-        singleDiffuseToCube->render();
-
-        cubeOnCube->render();
-
-        present->bind( ebd );
-    }
+    GraphicsSystem * createGraphicsSystem( const GraphicsSystemCreationParameter & );
 
     //@}
 }}

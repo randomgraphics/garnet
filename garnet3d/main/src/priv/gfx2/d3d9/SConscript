@@ -1,0 +1,9 @@
+Import( 'GN' )
+sources = [
+    'd3d9GraphicsSystem.cpp',
+]
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+target = GN.newTarget( 'shlib', 'GNgfx2D3D9', [cluster], dependencies = [] )
+if GN.conf['has_cg_d3d9'] :
+    cluster.addCompileFlags( CPPDEFINES = ['HAS_CG=1','HAS_CG_D3D9=1'] )
+    target.externalDependencies += ['cgD3D9']

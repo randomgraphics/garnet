@@ -373,7 +373,7 @@ namespace GN
                 return 0;
             }
 
-            size_t handle = mItems.newItem();
+            H handle = mItems.newItem();
             if( 0 == handle ) return 0;
 
             mItems[handle] = new NamedItem(*this,handle,name,data);

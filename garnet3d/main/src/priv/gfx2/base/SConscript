@@ -1,0 +1,10 @@
+Import( 'GN' )
+sources = [
+    'baseGraphicsSystem.cpp',
+    'createRenderer.cpp',
+]
+cluster = GN.newSourceCluster( sources, 'pch.h', 'pch.cpp' )
+if GN.conf['has_d3d9'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D9'] )
+if GN.conf['has_d3d10'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_D3D10'] )
+if GN.conf['has_ogl'] : cluster.addCompileFlags( CPPDEFINES = ['HAS_OGL'] )
+GN.newTarget( 'stlib', 'GNgfx2Base', [cluster] )
