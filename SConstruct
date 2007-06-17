@@ -1054,6 +1054,7 @@ for compiler, variants in ALL_targets.iteritems() :
 		    'GNtestEngine',
 		    'GNtestFt2',
 		    'GNtestGfx',
+		    'GNtestGfx2',
 		    'GNtestInput',
 		    'GNtestOGL',
 		    'GNtestPcre',
