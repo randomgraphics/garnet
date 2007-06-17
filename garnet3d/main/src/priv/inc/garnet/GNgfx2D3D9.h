@@ -12,9 +12,9 @@
 /// macro use to export/import d3d9 graphics system symbols
 ///
 #ifdef GN_GFX2_D3D9_IMPL
-#define GN_GFX2_D3D9_PUBLIC GN_IMPORT
-#else
 #define GN_GFX2_D3D9_PUBLIC GN_EXPORT
+#else
+#define GN_GFX2_D3D9_PUBLIC GN_IMPORT
 #endif
 
 #include "gfx2/d3d9Surface.h"

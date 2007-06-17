@@ -77,23 +77,6 @@ void GN::getEnv( StrA & result, const char * name )
 //
 //
 // -----------------------------------------------------------------------------
-void GN::sleep( UInt32 microSeconds )
-{
-#if GN_MSWIN
-    ::Sleep( microSeconds );
-#elif GN_POSIX
-    UInt32 s = microSeconds / 1000;
-    UInt32 us = microSeconds % 1000;
-    ::sleep( s );
-    ::usleep( us );
-#else
-    GN_CASSERT_EX( 0, unimplemented );
-#endif
-}
-
-//
-//
-// -----------------------------------------------------------------------------
 #if GN_MSVC
 #include <crtdbg.h>
 void GN::enableCRTMemoryCheck()

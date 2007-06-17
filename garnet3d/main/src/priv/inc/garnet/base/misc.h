@@ -273,11 +273,6 @@ namespace GN
     }
 
     ///
-    /// Sleep calling thread
-    ///
-    void sleep( UInt32 microSeconds );
-
-    ///
     /// enable CRT memory leak checking. Currently only work for MSVC compiler
     ///
     void enableCRTMemoryCheck();

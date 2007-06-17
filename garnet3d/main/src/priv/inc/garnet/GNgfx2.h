@@ -204,6 +204,17 @@ namespace GN { namespace gfx2
     //
     // *************************************************************************
 
+    enum EffectParameterValueType
+    {
+        EFFECT_PARAMETER_VALUE_TYPE_BOOL,
+        EFFECT_PARAMETER_VALUE_TYPE_INT1,
+        EFFECT_PARAMETER_VALUE_TYPE_FLOAT1,
+        EFFECT_PARAMETER_VALUE_TYPE_FLOAT4,
+        EFFECT_PARAMETER_VALUE_TYPE_FLOAT4X4,
+        EFFECT_PARAMETER_VALUE_TYPE_STRING,
+        EFFECT_PARAMETER_VALUE_TYPE_RAW,
+    };
+
     ///
     /// surface attribute template
     ///
@@ -260,7 +271,7 @@ namespace GN { namespace gfx2
         ///
         /// self check. Make sure itself a valid template.
         ///
-        bool check() const; 
+        bool check() const;
 
         ///
         /// check whether a layout matches the template
@@ -282,8 +293,9 @@ namespace GN { namespace gfx2
     struct EffectPortDesc
     {
         //@{
-        StrA                  sementic;
         SurfaceLayoutTemplate layout;
+        unsigned int          input  : 1; ///< non zero for input port
+        unsigned int          output : 1; ///< non zero for output port
         //@}
     };
 
@@ -293,9 +305,14 @@ namespace GN { namespace gfx2
     struct EffectDesc
     {
         ///
-        /// input output ports. Note that port semantic must be unique.
+        /// input output ports, indexed by port semantic.
         ///
-        DynaArray<EffectPortDesc> ports;
+        std::map<StrA,EffectPortDesc> ports;
+
+        ///
+        /// effect parameters, indexed by name
+        ///
+        std::map<StrA,EffectParameterValueType> parameters;
     };
 
     ///
@@ -331,19 +348,20 @@ namespace GN { namespace gfx2
     ///
     struct EffectParameterValue
     {
-        int        type; ///< value type. Could be: bool, int, float, vector4, float4x4, raw
+        EffectParameterValueType type; ///< value type.
         union
         {
-            bool   bool1;          ///< boolean value
-            int    int1;           ///< integer value
-            float  float1;         ///< float value
-            float  float4[4];      ///< 4D vector
-            float  float4x4[4][4]; ///< raw major 4x4 matrix
+            bool         bool1;          ///< boolean value
+            int          int1;           ///< integer value
+            float        float1;         ///< float value
+            float        float4[4];      ///< 4D vector
+            float        float4x4[4][4]; ///< raw major 4x4 matrix
+            const char * str;            ///< null terminated string
             struct
             {
-                void * ptr;        ///< raw data pointer
-                size_t bytes;      ///< raw data bytes
-            } raw;                 ///< raw data
+                void * ptr;              ///< raw data pointer
+                size_t bytes;            ///< raw data bytes
+            } raw;                       ///< raw data
         };
     };
 
@@ -444,7 +462,7 @@ namespace GN { namespace gfx2
     ///
     struct EffectFactory
     {
-        int       quality;                       ///< effect quality 
+        int       quality;                       ///< effect quality
         Effect * (*creator)( GraphicsSystem & ); ///< effect creator
     };
 
@@ -483,6 +501,12 @@ namespace GN { namespace gfx2
         /// get graphics descriptor
         ///
         virtual const GraphicSystemDesc & getDesc() const = 0;
+
+
+        ///
+        /// called by host application to do per-frame job
+        ///
+        virtual void onFrame() = 0;
 
         /// \name global effect parameter management
         //@{
@@ -525,11 +549,13 @@ namespace GN { namespace gfx2
     //@{
 
     ///
-    /// use to create graphics system
+    /// graphics system creation parameters
     ///
     struct GraphicsSystemCreationParameter
     {
         //@{
+        FOURCC api;     ///< could be: 'OGL', 'DX9', 'DX10', 'XB2'
+        UInt32 monitor; ///< monitor index. 0 is the first monitor.
         UInt32 fullscrWidth;
         UInt32 fullscrHeight;
         UInt32 fullscrDepth;
@@ -542,9 +568,26 @@ namespace GN { namespace gfx2
     };
 
     ///
-    /// create graphics system
+    /// create and destroy graphics system instance
     ///
-    GraphicsSystem * createGraphicsSystem( const GraphicsSystemCreationParameter & );
+    class GraphicsSystemCreator
+    {
+        SharedLib        mDll;
+        GraphicsSystem * mInstance;
+
+    public:
+
+        //@{
+
+        GraphicsSystemCreator() : mInstance(0) {}
+        ~GraphicsSystemCreator() { destroy(); }
+
+        GraphicsSystem * create( const GraphicsSystemCreationParameter & );
+        void             destroy();
+        GraphicsSystem * get() const { return mInstance; }
+
+        //@}
+    };
 
     //@}
 }}

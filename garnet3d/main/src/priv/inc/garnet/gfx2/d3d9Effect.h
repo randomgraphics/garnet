@@ -8,6 +8,8 @@
 
 namespace GN { namespace gfx2
 {
+    class D3D9GraphicsSystem;
+
     ///
     /// D3D9 effect descriptor
     ///
@@ -18,8 +20,68 @@ namespace GN { namespace gfx2
     ///
     /// base D3D9 effect
     ///
-    class GN_GFX2_D3D9_PUBLIC D3D9Effect : public Effect
+    class GN_GFX2_D3D9_PUBLIC D3D9Effect : public BaseEffect
     {
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9Effect( GraphicsSystem & gs ) : BaseEffect(gs) {}
+
+        /// \name from Effect
+        //@{
+        virtual const EffectDesc & getDesc() const { return mDesc; }
+        virtual bool               compatible( Surface * surf, const StrA & port ) = 0;
+        virtual EffectBinding      createBinding( const EffectBindingDesc & ) = 0;
+        virtual void               deleteBinding( EffectBinding ) = 0;
+        virtual void               bind( EffectBinding ) = 0;
+        //@}
+
+    protected:
+
+        ///
+        /// effect descriptor
+        ///
+        D3D9EffectDesc mDesc;
+    };
+
+    ///
+    /// build-in clear effect
+    ///
+    class D3D9ClearEffect : public D3D9Effect
+    {
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9ClearEffect( GraphicsSystem & gs ) : D3D9Effect(gs)
+        {
+            // setup effect descriptor
+            EffectPortDesc & c0 = mDesc.ports["color0"];
+            c0.input  = true;
+            c0.output = true;
+            c0.layout.flags.u32 = 0;
+            GN_UNIMPL();
+        }
+    };
+
+    ///
+    /// build-in present effect
+    ///
+    class D3D9PresentEffect : public D3D9Effect
+    {
+    public:
+
+        ///
+        /// ctor
+        ///
+        D3D9PresentEffect( GraphicsSystem & gs ) : D3D9Effect(gs)
+        {
+            // setup effect descriptor
+            GN_UNIMPL();
+        }
     };
 }}
 

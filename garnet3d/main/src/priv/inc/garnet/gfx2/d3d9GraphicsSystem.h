@@ -6,6 +6,21 @@
 //! \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
+#define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
+#include <d3d9.h>
+#include <d3dx9.h>
+#include <dxerr9.h>
+
+#ifdef HAS_CG_D3D9
+#include <Cg/cg.h>
+#include <Cg/cgD3D9.h>
+#endif
+
 namespace GN { namespace gfx2
 {
     ///
@@ -13,6 +28,15 @@ namespace GN { namespace gfx2
     ///
     struct D3D9GraphicsSystemDesc : public GraphicSystemDesc
     {
+        //@{
+        HWND                  window;
+        IDirect3D9          * d3d;
+        IDirect3DDevice9    * device;
+        UINT                  adapter;
+        D3DDEVTYPE            devtype;
+        D3DPRESENT_PARAMETERS pp;
+        D3DCAPS9              caps;
+        //@}
     };
 
     ///
@@ -41,7 +65,7 @@ namespace GN { namespace gfx2
         bool init( const GraphicsSystemCreationParameter & );
         void quit();
     private:
-        void clear() {}
+        void clear();
         //@}
 
         // ********************************
@@ -52,7 +76,36 @@ namespace GN { namespace gfx2
         //@{
 
         virtual const GraphicSystemDesc & getDesc() const { return mDesc; }
-        virtual Surface * createSurface( const SurfaceCreationParameter & scp ) { GN_UNUSED_PARAM(scp); return 0; }
+        virtual void onFrame();
+        virtual Surface * createSurface( const SurfaceCreationParameter & scp );
+
+        //@}
+
+        // ********************************
+        // public methods
+        // ********************************
+    public:
+
+        //@{
+
+        void present()
+        {
+            endScene();
+            mDesc.device->Present( 0, 0, 0, 0 );
+            beginScene();
+        }
+
+        //@}
+
+        // ********************************
+        // public signals
+        // ********************************
+    public:
+
+        //@{
+
+        Signal0<bool> sigDeviceRestore;
+        Signal0<void> sigDeviceDispose;
 
         //@}
 
@@ -62,12 +115,38 @@ namespace GN { namespace gfx2
     private:
 
         D3D9GraphicsSystemDesc mDesc;
+        bool                   mSceneBegun;
 
         // ********************************
         // private functions
         // ********************************
     private:
+
+        bool beginScene()
+        {
+            if( mSceneBegun ) return true;
+            if( !handleDeviceLost() ) return false;
+            GN_DX9_CHECK_RV( mDesc.device->BeginScene(), false );
+            mSceneBegun = true;
+            return true;
+        }
+
+        void endScene()
+        {
+            if( mSceneBegun )
+            {
+                mSceneBegun = false;
+                GN_DX9_CHECK( mDesc.device->EndScene() );
+            }
+        }
+
+        bool handleDeviceLost();
     };
+
+    ///
+    /// create D3D9 graphics system
+    ///
+    extern "C" GN_GFX2_D3D9_PUBLIC D3D9GraphicsSystem * createD3D9GraphicsSystem( const GraphicsSystemCreationParameter & );
 }}
 
 // *****************************************************************************

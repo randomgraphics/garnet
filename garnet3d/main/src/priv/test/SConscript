@@ -1,1 +1,1 @@
-SConscript( dirs=Split('cegui d3d9 d3d10 engine ft2 gfx input ogl pcre ut xml xenon') )
+SConscript( dirs=Split('cegui d3d9 d3d10 engine ft2 gfx gfx2 input ogl pcre ut xml xenon') )
