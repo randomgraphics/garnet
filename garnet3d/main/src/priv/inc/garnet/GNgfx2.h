@@ -55,30 +55,50 @@ namespace GN { namespace gfx2
         //@}
     };
 
+    union SurfaceAttributeSemantic
+    {
+        UInt64 u64;   ///< as 64-bit integer
+        char   c8[8]; ///< as 8 characters
+
+        ///
+        /// set semantic value
+        ///
+        void set(const char * str )
+        {
+            u64 = 0;
+            if( str )
+            {
+                int i = 0;
+                while( *str && i < 8 )
+                {
+                    c8[i] = *str;
+                    ++str;
+                    ++i;
+                }
+            }
+        }
+    };
+
     ///
     /// syrface element attribute. This is the minimal unit of a surface.
     ///
-    union SurfaceAttribute
+    struct SurfaceAttribute
     {
-        UInt64     u64;      ///< attribute as 64bit integer
-        struct
-        {
-            FOURCC semantic; ///< FORCC encoded sementic. (must be unique in single surfel)
-            UInt16 offset;   ///< offset in element.
-            SInt16 format;   ///< attribute format. (FMT_XXX).
-        };
+        SurfaceAttributeSemantic semantic; ///< 8-character sementic. (must be unique in single surfel)
+        UInt32                   offset;   ///< offset in element.
+        SInt32                   format;   ///< attribute format. (FMT_XXX).
 
         ///
         /// set values in attribute descriptor
         ///
-        void set( FOURCC s, UInt16 o, SInt16 f )
+        void set( SurfaceAttributeSemantic s, UInt32 o, SInt32 f )
         {
             semantic = s;
             offset   = o;
             format   = f;
         }
     };
-    GN_CASSERT( sizeof(SurfaceAttribute) == 8 );
+    GN_CASSERT( sizeof(SurfaceAttribute) == 16 );
 
     ///
     /// Surface element (surfel)
@@ -220,9 +240,9 @@ namespace GN { namespace gfx2
     ///
     struct SurfaceAttributeTemplate
     {
-        FOURCC           semantic;
-        UInt16           offset;         ///< -1, means any offset is ok.
-        std::set<SInt16> allowedFormats; ///< empty, means any format is ok.
+        SurfaceAttributeSemantic semantic;       ///< attribute semantic
+        UInt32                   offset;         ///< -1, means any offset is ok.
+        std::set<SInt32>         allowedFormats; ///< empty, means any format is ok.
     };
 
     ///
@@ -230,6 +250,8 @@ namespace GN { namespace gfx2
     ///
     struct SurfaceLayoutTemplate
     {
+        //@{
+
         union
         {
             UInt32 u32; ///< all flags as 32-bits integer.
@@ -248,6 +270,7 @@ namespace GN { namespace gfx2
                 unsigned int sliceBytes : 1;
 
                 // byte 1
+                unsigned int attributes : 1; ///< number of attributes.
                 unsigned int stride     : 1; ///< element stride
                 unsigned int            : 7;
 
@@ -260,10 +283,12 @@ namespace GN { namespace gfx2
 
         typedef StackArray<SurfaceAttributeTemplate,MAX_SURFACE_ELEMENT_ATTRIBUTES> AttributeArray;
 
-        SurfaceDimension dim;
-        UInt16           levels;
-        UInt16           faces;
-        SubSurfaceLayout basemap;
+        SurfaceDimension dim;        ///< surface dimension.
+        UInt32           levels;     ///< level count
+        UInt32           faces;      ///< face count
+        SubSurfaceLayout basemap;    ///< basemap properties
+        UInt32           attributes; ///< attribute count
+        UInt32           stride;     ///< 
         AttributeArray   requiredAttributes;
         AttributeArray   optionalAttributes;
         //@}
