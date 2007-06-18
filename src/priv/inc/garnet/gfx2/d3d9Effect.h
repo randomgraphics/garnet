@@ -63,7 +63,22 @@ namespace GN { namespace gfx2
             c0.input  = true;
             c0.output = true;
             c0.layout.flags.u32 = 0;
-            GN_UNIMPL();
+            c0.layout.flags.attributes = 1;
+            c0.layout.attributes = 1;
+            c0.layout.requiredAttributes.resize( 1 );
+            c0.layout.requiredAttributes[0].semantic.set( "PIXEL" );
+            c0.layout.requiredAttributes[0].offset = 0;
+
+            EffectPortDesc & d0 = mDesc.ports["depth"];
+            c0.input  = true;
+            c0.output = true;
+            c0.layout.flags.u32 = 0;
+            c0.layout.flags.attributes = 1;
+            c0.layout.attributes = 1;
+            c0.layout.requiredAttributes.resize( 1 );
+            c0.layout.requiredAttributes[0].semantic.set( "PIXEL" );
+            c0.layout.requiredAttributes[0].offset = 0;
+            c0.layout.requiredAttributes[0].format = ;
         }
     };
 
