@@ -48,7 +48,7 @@ void GN::gfx2::BaseGraphicsSystem::quit()
 //
 // -----------------------------------------------------------------------------
 void GN::gfx2::BaseGraphicsSystem::setGlobalEffectParameter(
-    const StrA & name, const EffectParameterValue & value )
+    const StrA & name, const EffectParameter & value )
 {
     GN_GUARD;
 
@@ -89,7 +89,7 @@ void GN::gfx2::BaseGraphicsSystem::unsetGlobalEffectParameter( const StrA & name
 //
 //
 // -----------------------------------------------------------------------------
-const GN::gfx2::EffectParameterValue *
+const GN::gfx2::EffectParameter *
 GN::gfx2::BaseGraphicsSystem::getGlobalEffectParameter( const StrA & name )
 {
     GN_GUARD;
@@ -128,7 +128,7 @@ void GN::gfx2::BaseGraphicsSystem::registerEffect(
     }
 
     EffectItem ei;
-    ei.factory = factory;
+    ei.factory  = factory;
     ei.instance = 0;
 
     mEffects.add( name, ei );

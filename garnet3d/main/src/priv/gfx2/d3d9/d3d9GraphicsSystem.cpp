@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "d3d9DepthBuffer.h"
+#include "d3d9BackBuffer.h"
 #include "garnet/GNwin.h"
 
 #if GN_MSVC
@@ -16,7 +18,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.D3D9GraphicsSystem");
 bool gD3D9EnablePixPerf = true;
 
 // *****************************************************************************
-// Local functions
+// device management
 // *****************************************************************************
 
 //
@@ -283,6 +285,178 @@ static void sDeleteDevice( GN::gfx2::D3D9GraphicsSystemDesc & desc )
 }
 
 // *****************************************************************************
+// surface management
+// *****************************************************************************
+
+///
+/// convert surface type to string
+///
+static const char * d3d9SurfaceType2Str( int type )
+{
+    using namespace GN::gfx2;
+
+    static const char * table[] =
+    {
+        "VB",
+        "IB",
+        "TEX_2D",
+        "TEX_3D",
+        "TEX_CUBE",
+        "RTT_2D",
+        "RTT_CUBE",
+        "RTS_COLOR",
+        "RTS_DEPTH",
+        "RTS_BACKBUF",
+    };
+    if( 0 <= type && type <= SURFACE_TYPE_BACKBUF ) return table[type];
+    if( -1 == type ) return "ANY";
+    return "INVALID";
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+static bool sMergeSurfaceType(
+    GN::gfx2::D3D9SurfaceType & result,
+    GN::gfx2::D3D9SurfaceType t1,
+    GN::gfx2::D3D9SurfaceType t2 )
+{
+    using namespace GN::gfx2;
+
+    if( t1 == t2 )
+    {
+        result = t1;
+        return true;
+    }
+    else if( SURFACE_TYPE_ANY == t1 )
+    {
+        result = t2;
+        return true;
+    }
+    else if( SURFACE_TYPE_ANY == t2 )
+    {
+        result = t1;
+        return true;
+    }
+
+    switch( t1 )
+    {
+        case SURFACE_TYPE_VB        :
+        case SURFACE_TYPE_IB        :
+        case SURFACE_TYPE_TEX_3D    :
+            break;
+
+        case SURFACE_TYPE_TEX_2D    :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_RTT_2D    :
+                case SURFACE_TYPE_RTS_COLOR :
+                case SURFACE_TYPE_RTS_DEPTH :
+                case SURFACE_TYPE_BACKBUF   :
+                    result = SURFACE_TYPE_RTT_2D;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        case SURFACE_TYPE_TEX_CUBE  :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_RTT_CUBE  :
+                    result = SURFACE_TYPE_RTT_CUBE;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        case SURFACE_TYPE_RTT_2D    :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_TEX_2D    :
+                case SURFACE_TYPE_RTS_COLOR :
+                case SURFACE_TYPE_RTS_DEPTH :
+                case SURFACE_TYPE_BACKBUF   :
+                    result = SURFACE_TYPE_RTT_2D;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        case SURFACE_TYPE_RTT_CUBE  :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_RTT_2D  :
+                    result = SURFACE_TYPE_RTT_CUBE;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        case SURFACE_TYPE_RTS_COLOR :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_TEX_2D    :
+                case SURFACE_TYPE_RTT_2D    :
+                    result = SURFACE_TYPE_RTT_2D;
+                    return true;
+
+                case SURFACE_TYPE_BACKBUF   :
+                    result = SURFACE_TYPE_RTS_COLOR;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        case SURFACE_TYPE_RTS_DEPTH :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_TEX_2D    :
+                case SURFACE_TYPE_RTT_2D    :
+                    result = SURFACE_TYPE_RTT_2D;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        case SURFACE_TYPE_BACKBUF :
+            switch( t2 )
+            {
+                case SURFACE_TYPE_TEX_2D    :
+                case SURFACE_TYPE_RTT_2D    :
+                    result = SURFACE_TYPE_RTT_2D;
+                    return true;
+
+                case SURFACE_TYPE_RTS_COLOR :
+                    result = SURFACE_TYPE_RTS_COLOR;
+                    return true;
+
+                default:
+                    break;
+            }
+            break;
+
+        default:
+            GN_UNEXPECTED();
+    }
+
+    // failed
+    GN_ERROR(sLogger)( " '%s' and '%s' is incompatible.", d3d9SurfaceType2Str(t1), d3d9SurfaceType2Str(t2) );
+    return false;
+}
+
+// *****************************************************************************
 // Initialize and shutdown
 // *****************************************************************************
 
@@ -366,8 +540,61 @@ void GN::gfx2::D3D9GraphicsSystem::onFrame()
 GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
     const SurfaceCreationParameter & scp )
 {
-    GN_UNUSED_PARAM(scp);
-    return 0;
+    GN_GUARD;
+
+    // check input parameter
+    if( !scp.layout.check() ) return 0;
+
+    // get surface layout template
+    D3D9SurfaceType surftype = SURFACE_TYPE_ANY;
+    SurfaceLayoutTemplate templ = scp.layout;
+    for( size_t i = 0; i < scp.bindings.size(); ++i )
+    {
+        const SurfaceCreationParameter::EffectBinding & eb = scp.bindings[i];
+
+        const D3D9EffectDesc * desc = getEffectDesc( eb.effect );
+        if( 0 == desc ) return 0;
+
+        const D3D9EffectPortDesc * port = (const D3D9EffectPortDesc *)desc->getPortDesc( eb.port );
+        if( 0 == port ) return 0;
+
+        // merge layout template
+        if( !templ.mergeWith( port->layout ) ) return false;
+
+        // merget surface type
+        if( !sMergeSurfaceType( surftype, surftype, port->surfaceType ) ) return false;
+    }
+
+    // create surface using the layout and type
+    switch( surftype )
+    {
+        case SURFACE_TYPE_VB        :
+        case SURFACE_TYPE_IB        :
+        case SURFACE_TYPE_TEX_2D    :
+        case SURFACE_TYPE_TEX_3D    :
+        case SURFACE_TYPE_TEX_CUBE  :
+        case SURFACE_TYPE_RTT_2D    :
+        case SURFACE_TYPE_RTT_CUBE  :
+        case SURFACE_TYPE_RTS_COLOR :
+            GN_UNIMPL();
+            return 0;
+
+        case SURFACE_TYPE_RTS_DEPTH :
+            return D3D9DepthBuffer::sNewInstance( templ, scp.forcedAccessFlags, scp.hints );
+
+        case SURFACE_TYPE_BACKBUF :
+            return D3D9BackBuffer::sNewInstance( templ, scp.forcedAccessFlags, scp.hints );
+
+        case SURFACE_TYPE_ANY :
+            GN_ERROR(sLogger)( "fail to determine surface type." );
+            return 0;
+
+        default :
+            GN_UNEXPECTED();
+            return 0;
+    }
+
+    GN_UNGUARD;
 }
 
 // *****************************************************************************

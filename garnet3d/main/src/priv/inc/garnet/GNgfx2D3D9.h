@@ -8,6 +8,21 @@
 
 #include "gfx2/baseGraphicsSystem.h"
 
+#ifndef NOMINMAX
+#define NOMINMAX ///< disable min/max macro in windows.h
+#endif
+#include <windows.h>
+
+#define D3D_DEBUG_INFO ///< Enable "Enhanced D3DDebugging"
+#include <d3d9.h>
+#include <d3dx9.h>
+#include <dxerr9.h>
+
+#ifdef HAS_CG_D3D9
+#include <Cg/cg.h>
+#include <Cg/cgD3D9.h>
+#endif
+
 ///
 /// macro use to export/import d3d9 graphics system symbols
 ///

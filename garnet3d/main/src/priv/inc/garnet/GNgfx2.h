@@ -55,6 +55,9 @@ namespace GN { namespace gfx2
         //@}
     };
 
+    ///
+    /// surface attribute semantic (8 characters at most)
+    ///
     union SurfaceAttributeSemantic
     {
         UInt64 u64;   ///< as 64-bit integer
@@ -76,6 +79,24 @@ namespace GN { namespace gfx2
                     ++i;
                 }
             }
+        }
+
+        ///
+        /// convert to string
+        ///
+        const char * str() const
+        {
+            static char s[9];
+            s[0] = c8[0];
+            s[1] = c8[1];
+            s[2] = c8[2];
+            s[3] = c8[3];
+            s[4] = c8[4];
+            s[5] = c8[5];
+            s[6] = c8[6];
+            s[7] = c8[7];
+            s[8] = 0;
+            return s;
         }
     };
 
@@ -224,15 +245,20 @@ namespace GN { namespace gfx2
     //
     // *************************************************************************
 
-    enum EffectParameterValueType
+    ///
+    /// effect parameter type
+    ///
+    enum EffectParameterType
     {
-        EFFECT_PARAMETER_VALUE_TYPE_BOOL,
-        EFFECT_PARAMETER_VALUE_TYPE_INT1,
-        EFFECT_PARAMETER_VALUE_TYPE_FLOAT1,
-        EFFECT_PARAMETER_VALUE_TYPE_FLOAT4,
-        EFFECT_PARAMETER_VALUE_TYPE_FLOAT4X4,
-        EFFECT_PARAMETER_VALUE_TYPE_STRING,
-        EFFECT_PARAMETER_VALUE_TYPE_RAW,
+        //@{
+        EFFECT_PARAMETER_TYPE_BOOL,
+        EFFECT_PARAMETER_TYPE_INT1,
+        EFFECT_PARAMETER_TYPE_FLOAT1,
+        EFFECT_PARAMETER_TYPE_FLOAT4,
+        EFFECT_PARAMETER_TYPE_FLOAT4X4,
+        EFFECT_PARAMETER_TYPE_STRING,
+        EFFECT_PARAMETER_TYPE_RAW,
+        //@}
     };
 
     ///
@@ -288,10 +314,20 @@ namespace GN { namespace gfx2
         UInt32           faces;      ///< face count
         SubSurfaceLayout basemap;    ///< basemap properties
         UInt32           attributes; ///< attribute count
-        UInt32           stride;     ///< 
+        UInt32           stride;     ///< surface element stride
         AttributeArray   requiredAttributes;
         AttributeArray   optionalAttributes;
         //@}
+
+        ///
+        /// clear template (allow any layout)
+        ///
+        void clear()
+        {
+            flags.u32 = 0;
+            requiredAttributes.clear();
+            optionalAttributes.clear();
+        }
 
         ///
         /// self check. Make sure itself a valid template.
@@ -304,12 +340,14 @@ namespace GN { namespace gfx2
         bool match( const SurfaceLayout & ) const;
 
         ///
-        /// merge 2 templates. Return false, if they are confict with each other.
+        /// apply template to a layout.
         ///
-        static bool sMerge(
-           SurfaceLayoutTemplate & result,
-           const SurfaceLayoutTemplate & t1,
-           const SurfaceLayoutTemplate & t2 );
+        void apply( SurfaceLayout & ) const;
+
+        ///
+        /// merge with another template. Return false, if their are conficts.
+        ///
+        bool mergeWith( const SurfaceLayoutTemplate & );
     };
 
     ///
@@ -325,34 +363,36 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// effect parameter value descriptor
+    ///
+    struct EffectParameterDesc
+    {
+        EffectParameterType type;  ///< value type
+        UInt32              count; ///< value array count
+    };
+
+    ///
     /// effect descriptor: describe public interface of the effect
     ///
-    struct EffectDesc
+    struct EffectDesc : public NoCopy
     {
-        ///
-        /// input output ports, indexed by port semantic.
-        ///
-        std::map<StrA,EffectPortDesc> ports;
-
-        ///
-        /// effect parameters, indexed by name
-        ///
-        std::map<StrA,EffectParameterValueType> parameters;
+        //@{
+        virtual const EffectPortDesc      * getPortDesc( const StrA & name ) const = 0;
+        virtual const EffectParameterDesc * getParameterDesc( const StrA & name ) const = 0;
+        //@}
     };
 
     ///
     /// describe binding a surface to specific effect port.
+    ///
     struct EffectPortBinding
     {
         StrA      port;       ///< effect port name
         Surface * surf;       ///< surface pointer
-        StrA      semantic;   ///< semantic of the surface attribute that will be binded.
-        //@{
-        UInt32    firstLevel;
-        UInt32    numLevels;
-        UInt32    firstFace;
-        UInt32    numFaces;
-        //@}
+        UInt32    firstLevel; ///< first mipmap level. 0 means the most detailed level.
+        UInt32    numLevels;  ///< set 0 for all levels staring from firstLevel.
+        UInt32    firstFace;  ///< first face index, starting from 0
+        UInt32    numFaces;   ///< set to 0 for all faces starting from firstFace.
     };
 
     ///
@@ -360,7 +400,9 @@ namespace GN { namespace gfx2
     ///
     struct EffectBindingDesc
     {
+        //@{
         DynaArray<EffectPortBinding> bindings;
+        //@}
     };
 
     ///
@@ -369,11 +411,11 @@ namespace GN { namespace gfx2
     typedef UIntPtr EffectBinding;
 
     ///
-    /// Effect parameter value
+    /// Effect parameter
     ///
-    struct EffectParameterValue
+    struct EffectParameter
     {
-        EffectParameterValueType type; ///< value type.
+        EffectParameterType type; ///< value type.
         union
         {
             bool         bool1;          ///< boolean value
@@ -403,7 +445,7 @@ namespace GN { namespace gfx2
         ///
         /// set private value of a parameter
         ///
-        virtual void setParameter( const StrA & name, const EffectParameterValue & value ) = 0;
+        virtual void setParameter( const StrA & name, const EffectParameter & value ) = 0;
 
         ///
         /// clear private parameter value. So next time effect using this parameter,
@@ -414,7 +456,7 @@ namespace GN { namespace gfx2
         ///
         /// check whether a surface is compatible with the effect
         ///
-        virtual bool compatible( Surface * surf, const StrA & port ) = 0;
+        virtual bool compatible( const Surface * surf, const StrA & port ) = 0;
 
         ///
         /// create a binding handle
@@ -435,11 +477,21 @@ namespace GN { namespace gfx2
         /// bind surface to effect
         ///
         inline void bind( const EffectBindingDesc & ebd ) { bind( createBinding( ebd ) ); }
+
+        ///
+        /// do rendering, using the effect and current binding.
+        ///
+        virtual void render() = 0;
     };
 
     // *************************************************************************
     // Graphics system
     // *************************************************************************
+
+    ///
+    /// surface creation hints
+    ///
+    typedef std::map<StrA,StrA> SurfaceCreationHints;
 
     ///
     /// surface creation parameters
@@ -458,7 +510,7 @@ namespace GN { namespace gfx2
         ///
         /// define required bindings of the resources
         ///
-        DynaArray<EffectBinding> binding;
+        DynaArray<EffectBinding> bindings;
 
         ///
         /// surface data layout
@@ -477,7 +529,7 @@ namespace GN { namespace gfx2
         ///
         /// creation hints (name and value pairs)
         ///
-        std::map<StrA,StrA> hints;
+        SurfaceCreationHints hints;
     };
 
     class GraphicsSystem;
@@ -539,7 +591,7 @@ namespace GN { namespace gfx2
         ///
         /// set global value of a parameter
         ///
-        virtual void setGlobalEffectParameter( const StrA & name, const EffectParameterValue & value ) = 0;
+        virtual void setGlobalEffectParameter( const StrA & name, const EffectParameter & value ) = 0;
 
         ///
         /// clear global parameter value.
@@ -549,7 +601,7 @@ namespace GN { namespace gfx2
         ///
         /// get value of global effect parameter
         ///
-        virtual const EffectParameterValue * getGlobalEffectParameter( const StrA & name ) = 0;
+        virtual const EffectParameter * getGlobalEffectParameter( const StrA & name ) = 0;
 
         //@}
 

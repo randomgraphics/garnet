@@ -11,7 +11,7 @@ static GN::Logger * sLogger = GN::getLogger("GN.gfx2.base.BaseEffect");
 //
 // -----------------------------------------------------------------------------
 void GN::gfx2::BaseEffect::setParameter(
-    const StrA & name, const EffectParameterValue & value )
+    const StrA & name, const EffectParameter & value )
 {
     GN_GUARD;
 
@@ -20,7 +20,7 @@ void GN::gfx2::BaseEffect::setParameter(
     if( 0 == h )
     {
         const EffectDesc & desc = getDesc();
-        if( desc.parameters.end() == desc.parameters.find( name ) )
+        if( 0 == desc.getParameterDesc( name ) )
         {
             GN_ERROR(sLogger)( "parameter named '%s' does not exist.", name.cptr() );
             return;

@@ -6,21 +6,6 @@
 //! \author  chenli@@FAREAST (2007.6.15)
 // *****************************************************************************
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-
-#define D3D_DEBUG_INFO // Enable "Enhanced D3DDebugging"
-#include <d3d9.h>
-#include <d3dx9.h>
-#include <dxerr9.h>
-
-#ifdef HAS_CG_D3D9
-#include <Cg/cg.h>
-#include <Cg/cgD3D9.h>
-#endif
-
 namespace GN { namespace gfx2
 {
     ///
@@ -138,6 +123,13 @@ namespace GN { namespace gfx2
                 mSceneBegun = false;
                 GN_DX9_CHECK( mDesc.device->EndScene() );
             }
+        }
+
+        const D3D9EffectDesc * getEffectDesc( const StrA & name )
+        {
+            Effect * e = getEffect( name );
+            if( 0 == e ) return 0;
+            return (const D3D9EffectDesc*)&e->getDesc();
         }
 
         bool handleDeviceLost();
