@@ -12,15 +12,9 @@ static GN::Logger * sLogger = GN::getLogger( "GN.gfx2.D3D9Effect" );
 const GN::gfx2::EffectPortDesc *
 GN::gfx2::D3D9EffectDesc::getPortDesc( const StrA & name ) const
 {
-    PortDescContainer::const_iterator i = ports.find( name);
-
-    if( ports.end() == i )
-    {
-        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
-        return 0;
-    }
-
-    return &i->second;
+    GN_ASSERT( effect );
+    const D3D9EffectPort * port = effect->getPort( name );
+    return port ? &port->getDesc() : 0;
 }
 
 //
@@ -29,7 +23,7 @@ GN::gfx2::D3D9EffectDesc::getPortDesc( const StrA & name ) const
 const GN::gfx2::EffectParameterDesc *
 GN::gfx2::D3D9EffectDesc::getParameterDesc( const StrA & name ) const
 {
-    ParameterValueDescContainer::const_iterator i = parameters.find( name);
+    ParameterDescContainer::const_iterator i = parameters.find( name);
 
     if( parameters.end() == i )
     {
@@ -61,17 +55,44 @@ GN::gfx2::D3D9EffectBinding::~D3D9EffectBinding()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9EffectBinding::setup( const EffectBindingDesc & )
+bool GN::gfx2::D3D9EffectBinding::setup( D3D9Effect & effect, const EffectBindingDesc & ebd )
 {
-    GN_UNIMPL();
+    GN_GUARD;
+
+    BindItem b;
+    D3D9EffectPort * port;
+
+    for( size_t i = 0; i < ebd.bindings.size(); ++i )
+    {
+        const EffectPortBinding & epb = ebd.bindings[i];
+
+        port = effect.getPort( epb.port );
+
+        if( !port->compatible( epb.surf ) ) return false;
+
+        b.port = port;
+        b.bind = epb;
+        mBindItems.append( b );
+    }
+
     return true;
+
+    GN_UNGUARD;
 }
 
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9EffectBinding::apply()
+void GN::gfx2::D3D9EffectBinding::apply() const
 {
+    for( size_t i = 0; i < mBindItems.size(); ++i )
+    {
+        const BindItem & b = mBindItems[i];
+
+        GN_ASSERT( b.port );
+
+        b.port->bind( b.bind );
+    }
 }
 
 // *****************************************************************************
@@ -81,32 +102,11 @@ void GN::gfx2::D3D9EffectBinding::apply()
 //
 //
 // -----------------------------------------------------------------------------
-bool GN::gfx2::D3D9Effect::compatible( const Surface * surf, const StrA & port )
+bool GN::gfx2::D3D9Effect::compatible( const Surface * surf, const StrA & portName )
 {
-    /*if( 0 == surf )
-    {
-        GN_ERROR(sLogger)( "NULL surface pointr", port.cptr() );
-        return false;
-    }
-
-    const EffectPortDesc * epd = mDesc.getPortDesc( port );
-    if( 0 == epd )
-    {
-        GN_ERROR(sLogger)( "invalid port name: %s", port.cptr() );
-        return false;
-    }
-
-    const D3D9Surface * d3dsurf = safeCast<const D3D9Surface*>(surf);
-
-    const SurfaceDesc & sd = d3dsurf->getDesc();
-
-    */
-
-    GN_UNUSED_PARAM( surf );
-    GN_UNUSED_PARAM( port );
-    GN_UNIMPL_WARNING();
-
-    return true;
+    const D3D9EffectPort * port = getPort( portName );
+    if( 0 == port ) return false;
+    return port->compatible( surf );
 }
 
 //
@@ -118,7 +118,7 @@ GN::gfx2::EffectBinding GN::gfx2::D3D9Effect::createBinding( const EffectBinding
 
     AutoObjPtr<D3D9EffectBinding> b( new D3D9EffectBinding );
 
-    if( !b || !b->setup( ebd ) ) return 0;
+    if( !b || !b->setup( *this, ebd ) ) return 0;
 
     return mBindings.add( b.detach() );
 
@@ -157,4 +157,78 @@ void GN::gfx2::D3D9Effect::bind( EffectBinding b )
     mBindings[b]->apply();
 
     GN_UNGUARD_SLOW;
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+const GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name ) const
+{
+    UInt32 h = mPorts.name2handle( name );
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
+        return 0;
+    }
+
+    GN_ASSERT( mPorts[h] );
+
+    return mPorts[h];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx2::D3D9EffectPort * GN::gfx2::D3D9Effect::getPort( const StrA & name )
+{
+    UInt32 h = mPorts.name2handle( name );
+    if( 0 == h )
+    {
+        GN_ERROR(sLogger)( "invalid port name: %s", name.cptr() );
+        return 0;
+    }
+
+    GN_ASSERT( mPorts[h] );
+
+    return mPorts[h];
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+void GN::gfx2::D3D9Effect::addPortRef( const StrA & name, D3D9EffectPort * port )
+{
+    if( mPorts.name2handle( name ) )
+    {
+        GN_ERROR(sLogger)( "addPortRef() failed: port named '%s' does exist already.", name.cptr() );
+        GN_UNEXPECTED();
+        return;
+    }
+
+    if( 0 == port )
+    {
+        GN_ERROR(sLogger)( "addPortRef() failed: NULL port pointer." );
+        GN_UNEXPECTED();
+        return;
+    }
+
+    mPorts.add( name, port );
+}
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx2::EffectParameterHandle
+GN::gfx2::D3D9Effect::addParameter( const StrA & name, const EffectParameterDesc & param )
+{
+    if( mDesc.parameters.end() != mDesc.parameters.find( name ) )
+    {
+        GN_ERROR(sLogger)( "addParameter() failed: parameter named '%s' does exist already.", name.cptr() );
+        GN_UNEXPECTED();
+        return 0;
+    }
+
+    mDesc.parameters[name] = param;
+
+    return getParameterHandle( name );
 }

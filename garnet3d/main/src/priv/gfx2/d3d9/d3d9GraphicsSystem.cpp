@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "d3d9DepthBuffer.h"
-#include "d3d9BackBuffer.h"
+#include "d3d9BuildInEffects.h"
+
 #include "garnet/GNwin.h"
 
 #if GN_MSVC
@@ -167,7 +168,7 @@ static bool sCreateDevice(
 {
     GN_GUARD;
 
-    GN_ASSERT( ::IsWindow( desc.window ) );
+    GN_ASSERT( ::IsWindow( (HWND)desc.window ) );
 
     // create D3D
     desc.d3d = Direct3DCreate9( D3D_SDK_VERSION );
@@ -208,7 +209,7 @@ static bool sCreateDevice(
     desc.pp.Windowed               = !gscp.fullscr;
     desc.pp.SwapEffect             = D3DSWAPEFFECT_DISCARD;
     desc.pp.PresentationInterval   = gscp.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-    desc.pp.hDeviceWindow          = desc.window;
+    desc.pp.hDeviceWindow          = (HWND)desc.window;
     desc.pp.MultiSampleType        = D3DMULTISAMPLE_NONE;
     desc.pp.MultiSampleQuality     = 0;
     if( gscp.fullscr )
@@ -228,7 +229,7 @@ static bool sCreateDevice(
         desc.d3d->CreateDevice(
             desc.adapter,
             desc.devtype,
-            desc.window,
+            (HWND)desc.window,
             behavior,
             &desc.pp,
             &desc.device ),
@@ -288,31 +289,6 @@ static void sDeleteDevice( GN::gfx2::D3D9GraphicsSystemDesc & desc )
 // surface management
 // *****************************************************************************
 
-///
-/// convert surface type to string
-///
-static const char * d3d9SurfaceType2Str( int type )
-{
-    using namespace GN::gfx2;
-
-    static const char * table[] =
-    {
-        "VB",
-        "IB",
-        "TEX_2D",
-        "TEX_3D",
-        "TEX_CUBE",
-        "RTT_2D",
-        "RTT_CUBE",
-        "RTS_COLOR",
-        "RTS_DEPTH",
-        "RTS_BACKBUF",
-    };
-    if( 0 <= type && type <= SURFACE_TYPE_BACKBUF ) return table[type];
-    if( -1 == type ) return "ANY";
-    return "INVALID";
-}
-
 //
 //
 // -----------------------------------------------------------------------------
@@ -352,7 +328,6 @@ static bool sMergeSurfaceType(
                 case SURFACE_TYPE_RTT_2D    :
                 case SURFACE_TYPE_RTS_COLOR :
                 case SURFACE_TYPE_RTS_DEPTH :
-                case SURFACE_TYPE_BACKBUF   :
                     result = SURFACE_TYPE_RTT_2D;
                     return true;
 
@@ -379,7 +354,6 @@ static bool sMergeSurfaceType(
                 case SURFACE_TYPE_TEX_2D    :
                 case SURFACE_TYPE_RTS_COLOR :
                 case SURFACE_TYPE_RTS_DEPTH :
-                case SURFACE_TYPE_BACKBUF   :
                     result = SURFACE_TYPE_RTT_2D;
                     return true;
 
@@ -408,10 +382,6 @@ static bool sMergeSurfaceType(
                     result = SURFACE_TYPE_RTT_2D;
                     return true;
 
-                case SURFACE_TYPE_BACKBUF   :
-                    result = SURFACE_TYPE_RTS_COLOR;
-                    return true;
-
                 default:
                     break;
             }
@@ -430,23 +400,6 @@ static bool sMergeSurfaceType(
             }
             break;
 
-        case SURFACE_TYPE_BACKBUF :
-            switch( t2 )
-            {
-                case SURFACE_TYPE_TEX_2D    :
-                case SURFACE_TYPE_RTT_2D    :
-                    result = SURFACE_TYPE_RTT_2D;
-                    return true;
-
-                case SURFACE_TYPE_RTS_COLOR :
-                    result = SURFACE_TYPE_RTS_COLOR;
-                    return true;
-
-                default:
-                    break;
-            }
-            break;
-
         default:
             GN_UNEXPECTED();
     }
@@ -454,6 +407,21 @@ static bool sMergeSurfaceType(
     // failed
     GN_ERROR(sLogger)( " '%s' and '%s' is incompatible.", d3d9SurfaceType2Str(t1), d3d9SurfaceType2Str(t2) );
     return false;
+}
+
+// *****************************************************************************
+// ctor / dtor
+// *****************************************************************************
+
+//
+//
+// -----------------------------------------------------------------------------
+GN::gfx2::D3D9GraphicsSystem::D3D9GraphicsSystem()
+{
+    clear();
+
+    // register build-in effects
+    registerEffect( "clear", D3D9ClearEffect::sGetFactory() );
 }
 
 // *****************************************************************************
@@ -472,7 +440,8 @@ bool GN::gfx2::D3D9GraphicsSystem::init( const GraphicsSystemCreationParameter &
 
     mSceneBegun = false;
 
-    mDesc.window = sCreateWindow( gscp );
+    mDesc.display = (HandleType)0xdeadbeef;
+    mDesc.window  = sCreateWindow( gscp );
     if( 0 == mDesc.window ) return failure();
 
     if( !sCreateDevice( mDesc, gscp ) ) return failure();
@@ -503,7 +472,7 @@ void GN::gfx2::D3D9GraphicsSystem::quit()
 
     sDeleteDevice( mDesc );
 
-    sDeleteWindow( mDesc.window );
+    sDeleteWindow( (HWND)mDesc.window );
 
     // standard quit procedure
     GN_STDCLASS_QUIT();
@@ -526,12 +495,22 @@ void GN::gfx2::D3D9GraphicsSystem::clear()
 //
 //
 // -----------------------------------------------------------------------------
-void GN::gfx2::D3D9GraphicsSystem::onFrame()
+void GN::gfx2::D3D9GraphicsSystem::present()
 {
+    endScene();
+
+    mDesc.device->Present( 0, 0, 0, 0 );
+
     // process render window messages
     GN::win::processWindowMessages( mDesc.window, true );
 
-    // per-frame statistics
+    // TODO: per-frame statistics
+
+    if( !beginScene() )
+    {
+        GN_FATAL(sLogger)( "beginScene() failed!" );
+        GN_UNEXPECTED();
+    }
 }
 
 //
@@ -581,9 +560,6 @@ GN::gfx2::Surface * GN::gfx2::D3D9GraphicsSystem::createSurface(
 
         case SURFACE_TYPE_RTS_DEPTH :
             return D3D9DepthBuffer::sNewInstance( templ, scp.forcedAccessFlags, scp.hints );
-
-        case SURFACE_TYPE_BACKBUF :
-            return D3D9BackBuffer::sNewInstance( templ, scp.forcedAccessFlags, scp.hints );
 
         case SURFACE_TYPE_ANY :
             GN_ERROR(sLogger)( "fail to determine surface type." );

@@ -11,16 +11,20 @@ namespace GN { namespace gfx2
     ///
     /// D3D9 graphics system descriptor
     ///
-    struct D3D9GraphicsSystemDesc : public GraphicSystemDesc
+    struct D3D9GraphicsSystemDesc : public GraphicsSystemDesc
     {
         //@{
-        HWND                  window;
+
         IDirect3D9          * d3d;
         IDirect3DDevice9    * device;
+
         UINT                  adapter;
         D3DDEVTYPE            devtype;
         D3DPRESENT_PARAMETERS pp;
         D3DCAPS9              caps;
+
+        bool                  zbuffer; ///< has zbuffer or not
+
         //@}
     };
 
@@ -37,7 +41,7 @@ namespace GN { namespace gfx2
 
         //@{
     public:
-        D3D9GraphicsSystem()          { clear(); }
+        D3D9GraphicsSystem();
         virtual ~D3D9GraphicsSystem() { quit(); }
         //@}
 
@@ -60,8 +64,8 @@ namespace GN { namespace gfx2
 
         //@{
 
-        virtual const GraphicSystemDesc & getDesc() const { return mDesc; }
-        virtual void onFrame();
+        virtual const GraphicsSystemDesc & getDesc() const { return mDesc; }
+        virtual void present();
         virtual Surface * createSurface( const SurfaceCreationParameter & scp );
 
         //@}
@@ -73,12 +77,11 @@ namespace GN { namespace gfx2
 
         //@{
 
-        void present()
-        {
-            endScene();
-            mDesc.device->Present( 0, 0, 0, 0 );
-            beginScene();
-        }
+        const D3D9GraphicsSystemDesc & getD3D9Desc() const { return mDesc; }
+
+        IDirect3DDevice9 * d3ddev() const { GN_ASSERT(mDesc.device); return mDesc.device; }
+
+        void setZBuffer( IDirect3DSurface9 * surf ) { mDesc.device->SetDepthStencilSurface( surf ); mDesc.zbuffer = !!surf; }
 
         //@}
 

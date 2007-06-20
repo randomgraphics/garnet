@@ -251,6 +251,7 @@ namespace GN { namespace gfx2
     enum EffectParameterType
     {
         //@{
+        EFFECT_PARAMETER_TYPE_UNKNOWN,
         EFFECT_PARAMETER_TYPE_BOOL,
         EFFECT_PARAMETER_TYPE_INT1,
         EFFECT_PARAMETER_TYPE_FLOAT1,
@@ -383,6 +384,56 @@ namespace GN { namespace gfx2
     };
 
     ///
+    /// Effect parameter
+    ///
+    struct EffectParameter
+    {
+        EffectParameterType type; ///< value type.
+        union
+        {
+            bool         bool1;          ///< boolean value
+            int          int1;           ///< integer value
+            float        float1;         ///< float value
+            float        float4[4];      ///< 4D vector
+            float        float4x4[4][4]; ///< raw major 4x4 matrix
+            const char * str;            ///< null terminated string
+            struct
+            {
+                void * ptr;              ///< raw data pointer
+                size_t bytes;            ///< raw data bytes
+            } raw;                       ///< raw data
+        };
+
+        /// \name constructors
+        //@{
+
+        EffectParameter() : type(EFFECT_PARAMETER_TYPE_UNKNOWN) {}
+
+        EffectParameter( bool b ) : type(EFFECT_PARAMETER_TYPE_BOOL), bool1(b) {}
+
+        EffectParameter( int i ) : type(EFFECT_PARAMETER_TYPE_INT1), int1(i) {}
+
+        EffectParameter( float f ) : type(EFFECT_PARAMETER_TYPE_FLOAT1), float1(f) {}
+
+        EffectParameter( float x, float y, float z, float w ) : type(EFFECT_PARAMETER_TYPE_FLOAT4)
+        {
+            float4[0] = x;
+            float4[1] = y;
+            float4[2] = z;
+            float4[3] = w;
+        }
+
+        EffectParameter( const char * s ) : type(EFFECT_PARAMETER_TYPE_STRING), str(s) {}
+
+        //@}
+    };
+
+    ///
+    /// effect parameter handle
+    ///
+    typedef UIntPtr EffectParameterHandle;
+
+    ///
     /// describe binding a surface to specific effect port.
     ///
     struct EffectPortBinding
@@ -411,28 +462,6 @@ namespace GN { namespace gfx2
     typedef UIntPtr EffectBinding;
 
     ///
-    /// Effect parameter
-    ///
-    struct EffectParameter
-    {
-        EffectParameterType type; ///< value type.
-        union
-        {
-            bool         bool1;          ///< boolean value
-            int          int1;           ///< integer value
-            float        float1;         ///< float value
-            float        float4[4];      ///< 4D vector
-            float        float4x4[4][4]; ///< raw major 4x4 matrix
-            const char * str;            ///< null terminated string
-            struct
-            {
-                void * ptr;              ///< raw data pointer
-                size_t bytes;            ///< raw data bytes
-            } raw;                       ///< raw data
-        };
-    };
-
-    ///
     /// effect interface: represents a process kernel function
     ///
     struct Effect : public NoCopy
@@ -442,41 +471,27 @@ namespace GN { namespace gfx2
         ///
         virtual const EffectDesc & getDesc() const = 0;
 
-        ///
-        /// set private value of a parameter
-        ///
-        virtual void setParameter( const StrA & name, const EffectParameter & value ) = 0;
+        /// \name parameter management
+        //@{
 
-        ///
-        /// clear private parameter value. So next time effect using this parameter,
-        /// it'll use global/shared value.
-        ///
-        virtual void unsetParameter( const StrA & name ) = 0;
+        virtual EffectParameterHandle getParameterHandle( const StrA & name ) const = 0;
+        virtual void                  setParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
+        inline  void                  setParameter( const StrA & name, const EffectParameter & value );
+        virtual void                  unsetParameter( EffectParameterHandle handle ) = 0;
+        inline  void                  unsetParameter( const StrA & name );
 
-        ///
-        /// check whether a surface is compatible with the effect
-        ///
-        virtual bool compatible( const Surface * surf, const StrA & port ) = 0;
+        //@}
 
-        ///
-        /// create a binding handle
-        ///
+        ///! \name port & binding management
+        //@{
+
+        virtual bool          compatible( const Surface * surf, const StrA & port ) = 0;
         virtual EffectBinding createBinding( const EffectBindingDesc & ) = 0;
+        virtual void          deleteBinding( EffectBinding ) = 0;
+        virtual void          bind( EffectBinding ) = 0;
+        inline  void          bind( const EffectBindingDesc & ebd ) { bind( createBinding( ebd ) ); }
 
-        ///
-        /// delete a binding handle
-        ///
-        virtual void deleteBinding( EffectBinding ) = 0;
-
-        ///
-        /// bind surfaces to effect
-        ///
-        virtual void bind( EffectBinding ) = 0;
-
-        ///
-        /// bind surface to effect
-        ///
-        inline void bind( const EffectBindingDesc & ebd ) { bind( createBinding( ebd ) ); }
+        //@}
 
         ///
         /// do rendering, using the effect and current binding.
@@ -546,25 +561,14 @@ namespace GN { namespace gfx2
     ///
     /// Describe common graphics system properties (platform independent)
     ///
-    struct GraphicSystemDesc
+    struct GraphicsSystemDesc
     {
-        UInt32 width;   ///< graphics screen width
-        UInt32 height;  ///< graphics screen height
-        UInt32 depth;   ///< graphics screen color depth
-        UInt32 refrate; ///< graphics screen refresh rate
-
-        ///
-        /// equality operator
-        ///
-        bool operator!=( const GraphicSystemDesc & rhs ) const
-        {
-            if( this == &rhs ) return false;
-            return
-                width != rhs.width ||
-                height != rhs.height ||
-                depth != rhs.depth ||
-                refrate != rhs.refrate;
-        }
+        HandleType display; ///< platform specific display handle.
+        HandleType window;  ///< platform specific render window handle.
+        UInt32     width;   ///< graphics screen width
+        UInt32     height;  ///< graphics screen height
+        UInt32     depth;   ///< graphics screen color depth
+        UInt32     refrate; ///< graphics screen refresh rate
     };
 
     ///
@@ -577,31 +581,20 @@ namespace GN { namespace gfx2
         ///
         /// get graphics descriptor
         ///
-        virtual const GraphicSystemDesc & getDesc() const = 0;
-
+        virtual const GraphicsSystemDesc & getDesc() const = 0;
 
         ///
-        /// called by host application to do per-frame job
+        /// called per-frame by host application to present rendering result to screen, as well as some per-frame statistics task.
         ///
-        virtual void onFrame() = 0;
+        virtual void present() = 0;
 
         /// \name global effect parameter management
         //@{
 
-        ///
-        /// set global value of a parameter
-        ///
-        virtual void setGlobalEffectParameter( const StrA & name, const EffectParameter & value ) = 0;
-
-        ///
-        /// clear global parameter value.
-        ///
-        virtual void unsetGlobalEffectParameter( const StrA & name ) = 0;
-
-        ///
-        /// get value of global effect parameter
-        ///
-        virtual const EffectParameter * getGlobalEffectParameter( const StrA & name ) = 0;
+        virtual EffectParameterHandle   getGlobalEffectParameterHandle( const StrA & name ) = 0;
+        virtual void                    setGlobalEffectParameter( EffectParameterHandle handle, const EffectParameter & value ) = 0;
+        virtual void                    unsetGlobalEffectParameter( EffectParameterHandle handle ) = 0;
+        virtual const EffectParameter * getGlobalEffectParameter( EffectParameterHandle ) = 0;
 
         //@}
 
@@ -668,6 +661,8 @@ namespace GN { namespace gfx2
 
     //@}
 }}
+
+#include "gfx2/GNgfx2.inl"
 
 // *****************************************************************************
 //                           End of GNgfx2.h
